@@ -1196,3 +1196,28 @@ Tuesday` 07:00 (was 08:30; already wake-to-run), Claude drift check 07:15
 consensus/weekly projections (sources still updating earlier), 10:00 export.
 Watch the 06:45 refresh for two or three Tuesdays - if nflverse is late, the
 Tuesday chain's own update_simlab.bat call (~07:05) is the safety net.
+
+## NOTES tab - TD-luck leaderboard + per-game notes sheet (2026-09-15)
+
+Jack: "build the LUCK leaderboard and per-game notes sheet" (video prep).
+app.js `renderNotesTab()`, pane `#pane-notes` (tab after ZONES). No new data
+files - reads the shipped luck maps in sim_routes.js, pace_2026.js,
+sim_weather.js, sleeper_meta.js (CB1 / OL), sim_2026.js (FPA), zones_2026.js.
+
+- LEADERBOARD: per position, DUE UP (unlucky, luck > 0) and DUE DOWN
+  (lucky, luck < 0) top 8, min touches QB 30 / RB 10 / WR-TE 8; columns G,
+  touches, xTD, TD, luck/g and ADJ = engine `tdLuckAdj(p, sc)` = the points
+  the layer adds to THIS week's mean (grows with g/(P+g)).
+- GAME SHEET (week + game selectors, "All games" for the full slate): line,
+  spread, implied totals, weather (+ whether a wind dock is live), per side
+  pace drift vs baseline, opp FPA by position vs league, opp pass-rush proxy
+  vs league (soft = QB boost live), opp CB1 name/status, own OL starters
+  out; every player of both teams with PROJ (effMean), model (jsMean),
+  market (propMean) and WHY chips computed from the same engine functions
+  weeklyProjection uses (injAdj OUT/docked/role boost, tdLuckAdj x min(1,iA),
+  weatherMult, pressureMult, cbShadowMult, cb1OutBoost, olOutDock, snapMult,
+  routeMult, market-vs-model gap >= 1.5) plus the ZONES read; then both
+  defenses' zone cards.
+- PLAIN TEXT: the whole sheet as text in a textarea; COPY NOTES copies it
+  (clipboard API with execCommand fallback).
+Intel only. Backups app.js/index.html .bak_pre_notes_20260915.

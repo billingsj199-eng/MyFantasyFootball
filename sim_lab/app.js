@@ -163,6 +163,7 @@
     renderTracking();
     renderPaceTab();
     renderZonesTab();
+    renderNotesTab();
   });
 
   function showTab(name) {
@@ -3368,6 +3369,210 @@
       '<p class="dim" style="font-size:11px">Pick a game above for the matchup view (defense zone card next to the opposing receivers\' target mixes with auto-generated reads). ' +
       'Shares = where opponents target this defense (season-to-date, shrunk toward its 2025 shares) vs league; pts/tgt = half-PPR receiving points allowed per target in that zone vs league, shrunk toward 1.0x. Click a header to sort.</p>';
     wireSort('zn-body', COLS, ss, renderZonesTab);
+  }
+
+  // ---------------- NOTES (video prep: TD-luck leaderboard + per-game sheet) ----------------
+  // Jack 2026-09-15: "build the LUCK leaderboard and per-game notes sheet".
+  // Leaderboard reads the shipped luck maps (sim_routes.js: SIM_RB_TDLUCK_2026 /
+  // SIM_REC_TDLUCK_2026 / SIM_QB_TDLUCK_2026) and the engine's tdLuckAdj for the
+  // points actually added this week. The game sheet calls the SAME engine
+  // functions weeklyProjection uses (weatherMult, pressureMult, cbShadowMult,
+  // cb1OutBoost, olOutDock, snapMult, routeMult, injAdj, tdLuckAdj) so every
+  // chip is exactly what moved the number. Intel only.
+  var NT_MIN_N = { QB: 30, RB: 10, WR: 8, TE: 8 };
+  function ntF(v, d) { return (v == null || isNaN(v)) ? '—' : (+v).toFixed(d == null ? 1 : d); }
+  function ntSigned(v, d) { return (v >= 0 ? '+' : '') + ntF(v, d); }
+  function ntLuckRows(pos, sc) {
+    var wnd = window;
+    var m = pos === 'QB' ? wnd.SIM_QB_TDLUCK_2026 : (pos === 'RB' ? wnd.SIM_RB_TDLUCK_2026 : wnd.SIM_REC_TDLUCK_2026);
+    if (!m) return [];
+    var rows = [];
+    Object.keys(m).forEach(function (nk) {
+      var r = m[nk];
+      var p = state.players.byNorm[nk];
+      if (!p || p.pos !== pos || !r.g || (r.n || 0) < NT_MIN_N[pos]) return;
+      rows.push({ p: p, nk: nk, r: r, luck: (r.xtd - r.td) / r.g, adj: E.tdLuckAdj(p, sc) });
+    });
+    return rows;
+  }
+  function ntLuckTable(rows, title, sc) {
+    var html = '<table style="width:auto;min-width:420px"><thead><tr><th class="l" colspan="8">' + title + '</th></tr>' +
+      '<tr><th class="l">Player</th><th>Tm</th><th>G</th><th>Touches</th><th>xTD</th><th>TD</th><th>Luck/g</th><th>Adj</th></tr></thead><tbody>';
+    rows.forEach(function (o) {
+      var col = o.adj > 0.05 ? 'var(--acc)' : (o.adj < -0.05 ? '#f85149' : 'var(--dim)');
+      html += '<tr><td class="l"><b>' + esc(o.p.name) + '</b></td><td>' + o.p.tm + '</td><td>' + o.r.g + '</td><td>' + o.r.n + '</td><td>' + ntF(o.r.xtd, 2) +
+        '</td><td>' + o.r.td + '</td><td>' + ntSigned(o.luck, 2) + '</td><td style="color:' + col + '"><b>' + ntSigned(o.adj, 2) + '</b></td></tr>';
+    });
+    return html + '</tbody></table>';
+  }
+  function renderLuckBoard(sc) {
+    var html = '', text = [];
+    ['QB', 'RB', 'WR', 'TE'].forEach(function (pos) {
+      var rows = ntLuckRows(pos, sc);
+      if (!rows.length) return;
+      rows.sort(function (x, y) { return y.luck - x.luck; });
+      // one side each: unlucky (luck > 0) vs lucky (luck < 0) - thin early-season pools must not overlap
+      var up = rows.filter(function (o) { return o.luck >= 0.05; }).slice(0, 8);        // >= 1 TD over/under per 20 games is the floor
+      var down = rows.filter(function (o) { return o.luck <= -0.05; }).sort(function (x, y) { return x.luck - y.luck; }).slice(0, 8);
+      html += '<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;margin-bottom:14px">' +
+        '<div>' + ntLuckTable(up, pos + ' — DUE UP (unlucky so far)', sc) + '</div>' +
+        '<div>' + ntLuckTable(down, pos + ' — DUE DOWN (lucky so far)', sc) + '</div></div>';
+      text.push(pos + ' DUE UP: ' + up.slice(0, 5).map(function (o) { return o.p.name + ' (' + o.r.td + ' TD on ' + ntF(o.r.xtd, 1) + ' xTD, ' + ntSigned(o.adj, 1) + ')'; }).join('; '));
+      text.push(pos + ' DUE DOWN: ' + down.slice(0, 5).map(function (o) { return o.p.name + ' (' + o.r.td + ' TD on ' + ntF(o.r.xtd, 1) + ' xTD, ' + ntSigned(o.adj, 1) + ')'; }).join('; '));
+    });
+    $('nt-luck').innerHTML = html || '<p class="dim">No luck data yet (maps fill after the first 2026 games).</p>';
+    return text;
+  }
+  function ntPressure(team) {
+    var m = window.SIM_PRESSURE_2026; if (!m || !m[team]) return null;
+    var p = 0, n = 0; Object.keys(m).forEach(function (t) { p += m[t][0]; n += m[t][1]; });
+    if (n < 500 || m[team][1] < 40) return null;
+    return { rate: m[team][0] / m[team][1], lg: p / n, n: m[team][1] };
+  }
+  function ntPace(team) {
+    var d = window.SIM_PACE_2026; var t = d && d.teams && d.teams[team]; if (!t || !t.cur || !t.games) return null;
+    return t;
+  }
+  function ntFpa(def) {
+    var d = window.SIM_2026; if (!d || !d.fpa || !d.fpa[def] || !d.lgFpa) return null;
+    return { f: d.fpa[def], lg: d.lgFpa };
+  }
+  function ntTeamBlock(team, opp, wk, slot) {
+    var lines = [];
+    var pc = ntPace(team);
+    if (pc) {
+      var c = pc.cur, b = pc.base || {};
+      lines.push('Pace (' + pc.games + ' gm): ' + ntF(c.plays, 1) + ' plays/gm' + (b.plays != null ? ' (base ' + ntF(b.plays, 1) + ', ' + ntSigned(c.plays - b.plays, 1) + ')' : '') +
+        ' · neutral pass ' + ntF(100 * c.npr, 0) + '%' + (b.npr != null ? ' (base ' + ntF(100 * b.npr, 0) + '%)' : '') +
+        ' · PROE ' + ntSigned(c.proe, 1) + (b.proe != null ? ' (base ' + ntSigned(b.proe, 1) + ')' : ''));
+    }
+    var fp = ntFpa(opp);
+    if (fp) {
+      lines.push('vs ' + opp + ' D allows (' + (fp.f._g || '?') + ' gm): ' + ['QB', 'RB', 'WR', 'TE'].map(function (pos) {
+        var v = fp.f[pos], l = fp.lg[pos]; if (v == null || !l) return pos + ' —';
+        var pct = 100 * (v / l - 1); return pos + ' ' + ntF(v, 1) + ' (' + ntSigned(pct, 0) + '%)';
+      }).join(' · '));
+    }
+    var pr = ntPressure(opp);
+    if (pr) lines.push(opp + ' pass rush: ' + ntF(100 * pr.rate, 1) + '% hit/sack rate vs lg ' + ntF(100 * pr.lg, 1) + '%' + (pr.rate <= pr.lg - 0.02 ? ' — SOFT (QB boost live)' : (pr.rate >= pr.lg + 0.03 ? ' — heavy' : '')));
+    var cb = window.SIM_CB1_2026 && window.SIM_CB1_2026[opp];
+    if (cb) lines.push(opp + ' CB1: ' + cb.name + (cb.out ? ' — OUT (WR boost live)' : ' active'));
+    var ol = window.SIM_OL_2026 && window.SIM_OL_2026[team];
+    if (ol) lines.push(team + ' OL: ' + ol + ' starter' + (ol > 1 ? 's' : '') + ' out (dock live)');
+    return lines;
+  }
+  function ntWeather(home, wk) {
+    var m = window.SIM_WEATHER_2026; var t = m && (m[home] || m[E.normTeam(home)]); var w = t && (t[wk] || t[String(wk)]);
+    if (!w) return 'Weather: dome / no forecast in window';
+    return 'Weather @' + home + ': wind ' + w.wind + ' mph' + (w.gust != null ? ' (gusts ' + w.gust + ')' : '') + ', ' + w.temp + '°F' + (w.pop != null ? ', ' + w.pop + '% precip' : '') +
+      (w.wind >= 15 ? ' — WIND DOCK live (QB/WR/TE/K)' : (w.wind >= 10 ? ' — mild wind dock live' : ''));
+  }
+  function ntPlayerChips(p, wk, sc, slot, wp) {
+    var chips = [];
+    var iA = E.injAdj(p, wk);
+    if (iA === 0) chips.push('OUT');
+    else if (iA < 1) chips.push('docked ×' + ntF(iA, 2));
+    else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
+    if (p.isDST) return chips;
+    var l = E.tdLuckAdj(p, sc) * Math.min(1, iA);
+    if (Math.abs(l) >= 0.05) chips.push('TD luck ' + ntSigned(l, 1));
+    var w = E.weatherMult(p, wk, slot); if (w !== 1) chips.push('weather ×' + ntF(w, 2));
+    var pr = E.pressureMult(slot.opp, p.pos); if (pr !== 1) chips.push('soft rush ×' + ntF(pr, 2));
+    var cs = E.cbShadowMult(slot.opp, p.pos, p); if (cs !== 1) chips.push('CB shadow ×' + ntF(cs, 2));
+    var cb = E.cb1OutBoost(slot.opp, p.pos, p); if (cb !== 1) chips.push('CB1 out ×' + ntF(cb, 2));
+    var ol = E.olOutDock(p.tm, p.pos); if (ol !== 1) chips.push('OL out ×' + ntF(ol, 2));
+    var sn = E.snapMult(p, wk); if (Math.abs(sn - 1) >= 0.02) chips.push('snap trend ×' + ntF(sn, 2));
+    var rt = E.routeMult(p, wk); if (Math.abs(rt - 1) >= 0.02) chips.push('route trend ×' + ntF(rt, 2));
+    if (wp && wp.propMean != null && wp.jsMean != null && Math.abs(wp.propMean - wp.jsMean) >= 1.5) {
+      chips.push('market ' + (wp.propMean > wp.jsMean ? 'higher' : 'lower') + ' (' + ntF(wp.propMean, 1) + ' vs model ' + ntF(wp.jsMean, 1) + ')');
+    }
+    return chips;
+  }
+  function ntGameSheet(g, wk, sc) {
+    var Z = window.SIM_ZONES_2026, lg = (Z && (Z.lg || Z.lgPrior)) ? znLg(Z) : null;
+    var slotA = state.schedule.byTeam[g.away] && state.schedule.byTeam[g.away][wk];
+    var slotH = state.schedule.byTeam[g.home] && state.schedule.byTeam[g.home][wk];
+    if (!slotA || !slotH) return { html: '<p class="dim">No line for ' + esc(g.away + ' @ ' + g.home) + '.</p>', text: '' };
+    var fav = g.spread === 0 ? 'pick' : (g.spread < 0 ? g.home + ' by ' + ntF(-g.spread, 1) : g.away + ' by ' + ntF(g.spread, 1));
+    var head = g.away + ' @ ' + g.home + ' — total ' + ntF(g.total, 1) + ', ' + fav + ' · implied ' + g.away + ' ' + ntF(slotA.implied, 1) + ' / ' + g.home + ' ' + ntF(slotH.implied, 1);
+    var T = [head, ntWeather(g.home, wk)];
+    var html = '<div style="border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:18px">' +
+      '<h3 style="margin:0 0 6px">' + esc(head) + '</h3><div class="dim" style="font-size:12px">' + esc(T[1]) + '</div>';
+    [[g.away, g.home, slotA], [g.home, g.away, slotH]].forEach(function (pair) {
+      var team = pair[0], opp = pair[1];
+      var lines = ntTeamBlock(team, opp, wk, pair[2]);
+      html += '<div style="margin-top:10px"><b>' + team + ' offense vs ' + opp + ' defense</b><ul style="margin:4px 0 0 18px;padding:0;font-size:12px">' +
+        lines.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div>';
+      T.push(''); T.push(team + ' offense vs ' + opp + ' defense'); lines.forEach(function (s) { T.push('  - ' + s); });
+    });
+    // players of both teams
+    var rows = [];
+    state.players.list.forEach(function (p) {
+      if (p.tm !== g.away && p.tm !== g.home) return;
+      var wp = E.weeklyProjection(p, wk, sc, state.schedule); if (!wp) return;
+      var slot = p.tm === g.away ? slotA : slotH;
+      var eff = E.effMean(wp);
+      if (eff < 3 && !p.isDST) return;
+      var chips = ntPlayerChips(p, wk, sc, slot, wp);
+      var read = '';
+      if (lg && !p.isDST && ['WR', 'TE', 'RB'].indexOf(p.pos) >= 0) {
+        var pl = znPlayer(Z, p.norm, lg); if (pl && (pl.N + pl.Np) >= 10) read = znReads(pl, znDef(Z, slot.opp, lg), lg);
+      }
+      rows.push({ p: p, eff: eff, wp: wp, chips: chips, read: read });
+    });
+    rows.sort(function (x, y) { return y.eff - x.eff; });
+    html += '<table style="margin-top:10px"><thead><tr><th class="l">Player</th><th>Tm</th><th>Pos</th><th>PROJ</th><th>Model</th><th>Market</th><th class="l">Why / notes</th><th class="l">Zone read</th></tr></thead><tbody>';
+    T.push(''); T.push('PLAYERS (PROJ ' + $('nt-scoring').value + '):');
+    rows.forEach(function (o) {
+      html += '<tr><td class="l"><b>' + esc(o.p.name) + '</b></td><td>' + o.p.tm + '</td><td>' + o.p.pos + '</td><td><b>' + ntF(o.eff, 1) + '</b></td><td class="dim">' +
+        ntF(o.wp.jsMean, 1) + '</td><td class="dim">' + (o.wp.propMean != null ? ntF(o.wp.propMean, 1) : '—') + '</td>' +
+        '<td class="l" style="font-size:11px;white-space:normal;min-width:220px">' + o.chips.map(function (c) {
+          var col = /OUT|docked|×0\.|luck -|lower|shadow/.test(c) ? '#f85149' : (/boost|×1\.|luck \+|higher|soft/.test(c) ? 'var(--acc)' : 'var(--dim)');
+          return '<span style="border:1px solid ' + col + ';color:' + col + ';border-radius:9px;padding:0 6px;margin:1px 3px 1px 0;display:inline-block">' + esc(c) + '</span>';
+        }).join('') + '</td><td class="l" style="font-size:11px;white-space:normal;min-width:220px">' + esc(o.read) + '</td></tr>';
+      var line = '  ' + o.p.name + ' (' + o.p.tm + ' ' + o.p.pos + ') ' + ntF(o.eff, 1);
+      if (o.chips.length) line += ' [' + o.chips.join(', ') + ']';
+      if (o.read) line += ' — ' + o.read;
+      T.push(line);
+    });
+    html += '</tbody></table>';
+    if (lg) {
+      html += '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">' +
+        '<div>' + znDefCard(Z, g.home, lg, g.home + ' defense zones (vs ' + g.away + ')') + '</div>' +
+        '<div>' + znDefCard(Z, g.away, lg, g.away + ' defense zones (vs ' + g.home + ')') + '</div></div>';
+    }
+    html += '</div>';
+    return { html: html, text: T.join('\n') };
+  }
+  function renderNotesTab() {
+    var wkSel = $('nt-week'), gSel = $('nt-game');
+    if (!wkSel.options.length) {
+      for (var w = 1; w <= 18; w++) wkSel.add(new Option('Week ' + w, w));
+      var Z = window.SIM_ZONES_2026;
+      wkSel.value = state.injuryWeek || ((Z && Z.weeks && Z.weeks.length) ? Math.min(18, Z.weeks[Z.weeks.length - 1] + 1) : 1);
+      wkSel.addEventListener('change', function () { state.ntGame = ''; renderNotesTab(); });
+      gSel.addEventListener('change', function () { state.ntGame = gSel.value; renderNotesTab(); });
+      $('nt-scoring').addEventListener('change', renderNotesTab);
+      $('nt-copy').addEventListener('click', function () {
+        var txt = $('nt-text').value;
+        var done = function () { $('nt-copied').textContent = 'copied ' + txt.length + ' chars'; setTimeout(function () { $('nt-copied').textContent = ''; }, 2500); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () { $('nt-text').select(); document.execCommand('copy'); done(); });
+        else { $('nt-text').select(); document.execCommand('copy'); done(); }
+      });
+    }
+    var wk = +wkSel.value, sc = currentScoring('nt-scoring');
+    var games = state.schedule.byWeek[wk] || [];
+    gSel.innerHTML = '<option value="__all">All games (long)</option>' + games.map(function (g) { return '<option value="' + g.key + '">' + g.away + ' @ ' + g.home + '</option>'; }).join('');
+    if (!state.ntGame && games.length) state.ntGame = games[0].key;
+    gSel.value = state.ntGame || '__all';
+    var luckText = renderLuckBoard(sc);
+    var pick = gSel.value === '__all' ? games : games.filter(function (g) { return g.key === gSel.value; });
+    var html = '', T = ['SIM LAB NOTES — Week ' + wk + ' (' + $('nt-scoring').value + ') — ' + new Date().toISOString().slice(0, 16).replace('T', ' '), ''];
+    T.push('TD LUCK (top 5 each way):'); luckText.forEach(function (s) { T.push('  ' + s); }); T.push('');
+    pick.forEach(function (g) { var r = ntGameSheet(g, wk, sc); html += r.html; T.push(r.text); T.push(''); });
+    $('nt-body').innerHTML = html || '<p class="dim">No games with lines for this week.</p>';
+    $('nt-text').value = T.join('\n');
+    $('nt-note').textContent = games.length + ' games with lines in week ' + wk + (state.injuryWeek ? ' · injury layer armed for week ' + state.injuryWeek : '') + ' · intel only — nothing here changes projections.';
   }
 
   // ---------------- TRACKING & ACCURACY ----------------

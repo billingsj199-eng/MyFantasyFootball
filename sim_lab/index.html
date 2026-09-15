@@ -33,7 +33,7 @@
   th.l, td.l { text-align:left; }
   td.dim { color:var(--dim); }
   tbody tr:hover { background:var(--panel); }
-  #wk-table, #sn-table, #sn-detail, #lg-table, #lg-week-table, #lg-teams, #lg-detail, #tk-body, #pc-table, #zn-body { overflow-x:auto; }
+  #wk-table, #sn-table, #sn-detail, #lg-table, #lg-week-table, #lg-teams, #lg-detail, #tk-body, #pc-table, #zn-body, #nt-body { overflow-x:auto; }
   h3 { margin:20px 0 8px; font-size:14px; color:var(--acc2); }
   .hint { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--dim); margin-bottom:14px; }
   .hint b { color:var(--tx); }
@@ -52,6 +52,7 @@
   <button class="tab" data-tab="bb">BEST BALL</button>
   <button class="tab" data-tab="pace">TEAM PACE</button>
   <button class="tab" data-tab="zones">ZONES</button>
+  <button class="tab" data-tab="notes">NOTES</button>
   <button class="tab" data-tab="track">TRACKING &amp; ACCURACY</button>
 </nav>
 
@@ -223,6 +224,29 @@
   <div id="zn-body"></div>
 </div>
 
+<div class="pane" id="pane-notes">
+  <div class="hint"><b>Video prep notes:</b> a TD-luck leaderboard (who is due to regress up or down, from the shipped
+    RB / WR-TE / QB luck layers: expected TDs from every touch's field position and depth vs actual, season-to-date) and a
+    one-page sheet per game that pulls together everything the engine knows: line and implied totals, weather, pace drift,
+    the opposing defense's points allowed / pressure / CB1 / OL status, the zone funnel, and every player's projection with
+    the layers that moved it (luck, weather, pressure, CB, OL, snap and route trends, injury docks) plus his zone read.
+    COPY NOTES puts a plain-text version on the clipboard. Numbers are the live engine (same as WEEK SIM means).</div>
+  <div class="bar">
+    <select id="nt-week"></select>
+    <select id="nt-game"></select>
+    <select id="nt-scoring"><option value="half">Half PPR</option><option value="ppr">Full PPR</option><option value="std">Standard</option></select>
+    <button class="go" id="nt-copy">COPY NOTES</button>
+    <span class="dim" id="nt-copied" style="font-size:12px"></span>
+  </div>
+  <div class="note" id="nt-note"></div>
+  <h3 style="margin-top:6px">TD LUCK LEADERBOARD <span class="dim" style="font-weight:normal;font-size:12px">season-to-date · adj = points the layer adds to THIS week's mean</span></h3>
+  <div id="nt-luck" style="overflow-x:auto"></div>
+  <h3>GAME SHEET</h3>
+  <div id="nt-body"></div>
+  <h3>PLAIN TEXT <span class="dim" style="font-weight:normal;font-size:12px">what COPY NOTES copies</span></h3>
+  <textarea id="nt-text" style="width:100%;min-height:220px;font:12px/1.4 Consolas,monospace;background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:8px"></textarea>
+</div>
+
 <div class="pane" id="pane-track">
   <div class="hint"><b>Private accuracy loop:</b> LOCK a week before kickoff (freezes projections + that week's UD/PP/DK prop
     lines). SCORE it after the games (pulls actuals from Sleeper, grades MAE / calibration, and counts how often our number was
@@ -242,26 +266,26 @@
 </div>
 
 <!-- data (refresh with: python refresh_data.py) -->
-<script src="data/refresh_stamp.js?v=1789476052"></script>
-<script src="data/mike_clay_projections.js?v=1789476052"></script>
-<script src="data/player_weekly_sigma.js?v=1789476052"></script>
-<script src="data/betting_lines_2026.js?v=1789476052"></script>
-<script src="data/clay_team_grades_2026.js?v=1789476052"></script>
-<script src="data/sleeper_players.js?v=1789476052"></script>
-<script src="data/sleeper_meta.js?v=1789476052"></script>
-<script src="data/sim_snaps.js?v=1789476052"></script>
-<script src="data/sim_routes.js?v=1789476052"></script>
-<script src="data/sim_weather.js?v=1789476052"></script>
-<script src="data/sim_practice.js?v=1789476052"></script>
-<script src="data/sim_depth.js?v=1789476052"></script>
-<script src="data/sim_2026.js?v=1789476052"></script>
-<script src="data/pace_2026.js?v=1789476052"></script>
-<script src="data/zones_2026.js?v=1789476052"></script>
-<script src="data/sim_tuning.js?v=1789476052"></script>
-<script src="data/yahoo_normalize.js?v=1789476052"></script>
+<script src="data/refresh_stamp.js?v=1789478323"></script>
+<script src="data/mike_clay_projections.js?v=1789478323"></script>
+<script src="data/player_weekly_sigma.js?v=1789478323"></script>
+<script src="data/betting_lines_2026.js?v=1789478323"></script>
+<script src="data/clay_team_grades_2026.js?v=1789478323"></script>
+<script src="data/sleeper_players.js?v=1789478323"></script>
+<script src="data/sleeper_meta.js?v=1789478323"></script>
+<script src="data/sim_snaps.js?v=1789478323"></script>
+<script src="data/sim_routes.js?v=1789478323"></script>
+<script src="data/sim_weather.js?v=1789478323"></script>
+<script src="data/sim_practice.js?v=1789478323"></script>
+<script src="data/sim_depth.js?v=1789478323"></script>
+<script src="data/sim_2026.js?v=1789478323"></script>
+<script src="data/pace_2026.js?v=1789478323"></script>
+<script src="data/zones_2026.js?v=1789478323"></script>
+<script src="data/sim_tuning.js?v=1789478323"></script>
+<script src="data/yahoo_normalize.js?v=1789478323"></script>
 <!-- app -->
-<script src="overrides.js?v=1789476052"></script>
-<script src="engine.js?v=1789476052"></script>
-<script src="app.js?v=1789476052"></script>
+<script src="overrides.js?v=1789478323"></script>
+<script src="engine.js?v=1789478323"></script>
+<script src="app.js?v=1789478323"></script>
 </body>
 </html>

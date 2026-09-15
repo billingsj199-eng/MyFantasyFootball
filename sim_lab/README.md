@@ -1253,3 +1253,92 @@ weeks 2019-25, LOYO. Log: k_fgluck_backtest.log.
   the reverse; threshold +-0.5 pts/g, >= 4 attempts) with the persistence
   caveat printed under it, and K lines in the COPY NOTES text. Backups
   pull_pace_tracker.py / app.js .bak_pre_kluck_20260915.
+
+## DST TD regression (backtest_dst_regression.py) - REJECTED, Vegas-only DST mean confirmed 2026-09-15
+
+Jack: "backtest the DST TD regression next" - last of the luck family. DST
+weekly points rebuilt from pbp (sack 1, INT/FR 2, def+return TD 6, safety/
+block 2, PA buckets) and split into components; shipped = dstWeeklyMean
+16.2 - 0.436 x oppImplied (Vegas only). 3,518 team-weeks 2019-25, LOYO.
+Log: dst_regression_backtest.log.
+
+- Persistence (early->late / YoY): PA .22/.28, sacks .21/.21, turnovers
+  .09/.20, TDs .06/.11, misc 0, total .22/.30. TDs are noise, as the D/ST
+  research said; even the sticky parts are weak.
+- NO realized component adds information over the Vegas-only mean: PA
+  +0.11% worse, sacks +0.08%, turnovers -0.00%, TDs +0.01%, misc +0.03%
+  (best k = 0 or a hair above, no year pattern).
+- Realized-PPG blend at ANY strength is worse (P=1000 ~ shipped picked in
+  every fold; P=5 is +5.8% worse). Replacing TD points by the league rate
+  helps only relative to that blend (c: -0.38% at P=12) - i.e. TD regression
+  is real but the correct amount of realized DST history to use is zero.
+- NOT SHIPPED. The engine's DST mean stays opponent-implied-total only (+
+  tuner dstShift). Do not add a DST realized half.
+- INTEL: pull_pace_tracker.py `build_dst_luck_2026()` -> `SIM_DST_LUCK_2026`
+  {TEAM: {g, pts, td, sack, to, pa, misc}}; NOTES leaderboard "DST - RIDING
+  TDs" table (TD pts/g >= 3 vs league .73) with the noise caveat + a COPY
+  NOTES line. Backups pull_pace_tracker.py / app.js .bak_pre_dstluck_20260915.
+
+LUCK FAMILY - FINAL: shipped RB k .75 (-0.36%), WR/TE k 1.0 (-0.93%), QB
+pass k .5 (-0.44%); intel-only K (accuracy = luck, own history ~worthless)
+and DST (TDs = noise, Vegas-only mean is right); QB rush luck flat.
+
+## Luck-layer live grading + morning NOTES export (2026-09-15)
+
+Jack: "grade the luck layers live, not just in backtest" and "write the notes
+sheet to a file every morning".
+
+- **Live grading.** weeklyProjection now returns `luckAdj`; simWeek rows carry
+  `luck` (TD-luck points inside jsProj); both lock writers (export_site_proj.js
+  auto-lock, app.js LOCK) store `luck` per row. `luck_scorecard.py --week N`
+  (added to the weekly_scorecard.py script list -> scorecards/wN.log) prints
+  per position and cumulatively: n rows the layer moved (|luck| >= .05),
+  MAE of jsMean vs jsMean-minus-luck, MAE of the shipped mean vs shipped with
+  (1-w) x luck removed (w = tun.wa, else .70 with a propMean, else 0), win
+  share, delta (negative = layer helped). W1 rows predate the layers and
+  report as not instrumented; first real read = W2 (Tue 09-22 chain).
+  Backtest expectations: RB -0.36% / WR-TE -0.93% / QB -0.44% MSE.
+- **Morning notes file.** `export_notes.js` = headless twin of the NOTES tab
+  (Playwright chromium from the site repo's tests/node_modules + a local
+  static server over E:\MyFantasyFootball; Windows gotcha: path guard must
+  compare path.resolve'd paths). Waits for the injury layer to arm, selects
+  "All games", saves #nt-text to notes/notes_w<N>_half.txt + notes/
+  notes_latest.txt (~39k chars / 16 games, ~1s). Hooked into update_simlab.bat
+  after pull_pace_tracker.py (06:45 daily, non-fatal), so the sheet exists
+  before Jack's morning; notes/ deploys with hosting ->
+  https://jb-simlab-2026.web.app/notes/notes_latest.txt. Flags:
+  --week N, --scoring half|ppr|std.
+Backups engine.js / app.js / export_site_proj.js .bak_pre_luckgrade_20260915.
+
+## Variance by TD-heaviness (backtest_sigma_tdshare.py) - REJECTED 2026-09-15
+
+Does a player's scoring mix (prior-season TD share of points; receptions per
+point as the mirror) predict weekly dispersion beyond the engine's sigma? 15,106
+RB/WR/TE player-weeks 2019-25, gamma(mean = P=5 blend x Vegas, sd = engine
+total width), graded by closed-form gamma CRPS + p10-p90 coverage, LOYO.
+Log: sigma_tdshare_backtest.log.
+
+- corr(TD share, |relative residual|) RB -.05 / WR +.03 / TE +.03 - nothing;
+  the engine sigma already correlates with TD share (WR +.20, TE +.26)
+  because TD-heavy players have higher historical weekly CV.
+- sigma x (1 + e x tdShare_z): CRPS worse at every e, 0/7. Rec-per-point
+  version: 0/7. Flat width x0.95: -0.05% (5/7) - the engine width is
+  already about right (coverage 68-80% across terciles, tails symmetric).
+- NOT SHIPPED. Scoring mix is not a variance signal once historical CV is in.
+
+## Receiver yardage / catch luck (backtest_yds_luck.py) - REJECTED 2026-09-15
+
+Does yardage or catch "luck" regress like TD luck? xYds and catch rate per
+target by air-yards bucket (pooled 2018-25); luck = (expected - actual)/g
+season-to-date, half-PPR 0.1/yd and 0.5/rec, tested ON TOP of the shipped
+WR/TE TD-luck term. 10,592 WR/TE player-weeks 2019-25, LOYO. Log:
+yds_luck_backtest.log.
+
+- GATE says why it fails: yards over expected per target persists YoY at
+  r +.34 and catch rate over expected at +.32 - those are SKILLS (YAC,
+  hands), unlike TD over expected at +.09 (luck). Skills don't regress.
+- Terciles flat (WR 1.02 / 1.05 / 1.06 - all under-projection level, no
+  slope); sweeps worse at every k for yards, catches and combined, 0/7;
+  per position 0/7; centered per season -0.01%.
+- NOT SHIPPED. The luck family is exactly the TD family: TD conversion is
+  luck, yardage and catch efficiency are talent already embedded in PPG.

@@ -28,6 +28,17 @@ if errorlevel 1 (
 python pull_pace_tracker.py >> "%LOG%" 2>&1
 if errorlevel 1 echo PACE PULL FAILED - continuing >> "%LOG%"
 
+REM NOTES sheet (2026-09-15): headless twin of the NOTES tab -> notes
+otes_w<N>_half.txt
+REM + notes
+otes_latest.txt (deploys with the site: /notes/notes_latest.txt). Non-fatal.
+set NODE=E:
+ode
+ode.exe
+if not exist "%NODE%" set NODE=node
+"%NODE%" export_notes.js >> "%LOG%" 2>&1
+if errorlevel 1 echo NOTES EXPORT FAILED - continuing >> "%LOG%"
+
 cd /d E:\MyFantasyFootball
 call C:\Users\billi\AppData\Roaming\npm\firebase.cmd deploy --only hosting:simlab --project jackb933-website >> "%LOG%" 2>&1
 if errorlevel 1 (

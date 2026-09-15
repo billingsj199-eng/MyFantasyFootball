@@ -1,0 +1,58 @@
+  pbp 2018: 17172 targets
+  pbp 2019: 17142 targets
+  pbp 2020: 17308 targets
+  pbp 2021: 18057 targets
+  pbp 2022: 17306 targets
+  pbp 2023: 17483 targets
+  pbp 2024: 17013 targets
+  pbp 2025: 16609 targets
+  xYds/target by air yards: <0:4.9  0-4:5.4  5-9:6.8  10-14:9.0  15-19:11.4  20-29:11.9  30+:13.5
+  catch rate by air yards : <0:0.84  0-4:0.76  5-9:0.70  10-14:0.59  15-19:0.55  20-29:0.42  30+:0.30
+
+=== GATE. persistence YoY (>= 60 targets both seasons) ===
+  yards over expected / target   r=+0.34 (n=474, sd 1.187)
+  catch rate over expected       r=+0.32 (n=474, sd 0.053)
+  TD over expected / target      r=+0.09 (n=474, sd 0.022)
+  2019: samples so far 1092
+  2020: samples so far 2292
+  2021: samples so far 3729
+  2022: samples so far 5254
+  2023: samples so far 7078
+  2024: samples so far 8928
+  2025: samples so far 10592
+  skipped: {'team': 127, 'weekly': 230, 'gsis': 2, 'notgt': 6}
+
+10592 WR/TE player-weeks | MSE base x chain 36.8556 -> + TD luck (shipped) 36.5026
+  yards luck mean -1.03 yds/g (sd 11.8) | catch luck mean -0.083 rec/g (sd 0.56) | corr(yards luck, TD luck) +0.39
+
+=== 1. actual / shipped (TD luck already in) by tercile ===
+  WR yards luck yds/g    low -14.32: 1.023 (n=2394) | mid +0.13: 1.046 (n=2394) | high +11.76: 1.061 (n=2395)   corr(x, act-shipped) +0.016
+  WR catch luck rec/g    low -0.67: 1.029 (n=2394) | mid -0.06: 1.034 (n=2394) | high +0.51: 1.065 (n=2395)   corr(x, act-shipped) +0.010
+  TE yards luck yds/g    low -10.47: 1.059 (n=1136) | mid -0.90: 1.092 (n=1136) | high +6.90: 1.089 (n=1137)   corr(x, act-shipped) +0.028
+  TE catch luck rec/g    low -0.60: 1.064 (n=1136) | mid -0.11: 1.118 (n=1136) | high +0.39: 1.054 (n=1137)   corr(x, act-shipped) -0.003
+
+=== 2. LOYO on top of the shipped TD-luck base (grid[0] = shipped) ===
+  a) yards luck: + k * 0.1 * (xYds - yds)/g * g/(P+g)
+    grid pooled MSE: +0.00:36.663  +0.25:36.670  +0.50:36.714  +0.75:36.796  +1.00:36.916  +1.50:37.269
+    pooled best +0.00 | LOYO MSE 36.5147 vs shipped 36.5026 (+0.03%), years better 0/7, picks [0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0]
+  b) catch luck: + k * 0.5 * (xRec - rec)/g * g/(P+g)
+    grid pooled MSE: +0.00:36.663  +0.25:36.665  +0.50:36.670  +0.75:36.676  +1.00:36.685  +1.50:36.708
+    pooled best +0.00 | LOYO MSE 36.5026 vs shipped 36.5026 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  c) yards + catches combined
+    grid pooled MSE: +0.00:36.663  +0.25:36.678  +0.50:36.745  +0.75:36.865  +1.00:37.036  +1.50:37.536
+    pooled best +0.00 | LOYO MSE 36.5026 vs shipped 36.5026 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+     WR yards luck
+    grid pooled MSE: +0.00:41.746  +0.25:41.753  +0.50:41.805  +0.75:41.902  +1.00:42.045  +1.50:42.467
+    pooled best +0.00 | LOYO MSE 41.3885 vs shipped 41.3608 (+0.07%), years better 0/7, picks [0.0, 0.0, 0.25, 0.0, 0.25, 0.0, 0.0]
+     WR catch luck
+    grid pooled MSE: +0.00:41.746  +0.25:41.745  +0.50:41.746  +0.75:41.749  +1.00:41.755  +1.50:41.774
+    pooled best +0.25 | LOYO MSE 41.3677 vs shipped 41.3608 (+0.02%), years better 0/7, picks [0.0, 0.5, 0.25, 0.0, 0.5, 0.25, 0.25]
+     TE yards luck
+    grid pooled MSE: +0.00:26.127  +0.25:26.134  +0.50:26.162  +0.75:26.212  +1.00:26.284  +1.50:26.492
+    pooled best +0.00 | LOYO MSE 26.2905 vs shipped 26.2661 (+0.09%), years better 0/7, picks [0.0, 0.0, 0.0, 0.25, 0.0, 0.25, 0.0]
+     TE catch luck
+    grid pooled MSE: +0.00:26.127  +0.25:26.136  +0.50:26.147  +0.75:26.159  +1.00:26.173  +1.50:26.206
+    pooled best +0.00 | LOYO MSE 26.2661 vs shipped 26.2661 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  d) yards luck centered per season x position
+    grid pooled MSE: +0.00:36.663  +0.25:36.655  +0.50:36.684  +0.75:36.750  +1.00:36.852  +1.50:37.165
+    pooled best +0.25 | LOYO MSE 36.4977 vs shipped 36.5026 (-0.01%), years better 5/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]

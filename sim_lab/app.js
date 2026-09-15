@@ -3447,6 +3447,26 @@
       text.push('K DUE UP: ' + kup.slice(0, 5).map(function (o) { return o.r.name + ' (' + o.r.pts + ' pts on ' + ntF(o.r.xpts, 1) + ' expected, ' + ntSigned(o.luck, 1) + '/g)'; }).join('; '));
       text.push('K DUE DOWN: ' + kdown.slice(0, 5).map(function (o) { return o.r.name + ' (' + o.r.pts + ' pts on ' + ntF(o.r.xpts, 1) + ' expected, ' + ntSigned(o.luck, 1) + '/g)'; }).join('; '));
     }
+    // DST: points riding def/ST TDs (backtest_dst_regression.py: TDs early->late r .06, YoY .11 -
+    // pure noise; NO realized component beats the Vegas-only DST mean). INTEL ONLY.
+    var dm = window.SIM_DST_LUCK_2026 || {};
+    var drows = Object.keys(dm).map(function (t) { var r = dm[t]; return { t: t, r: r, tdpg: r.g ? r.td / r.g : 0, ppg: r.g ? r.pts / r.g : 0 }; })
+      .filter(function (o) { return o.r.g >= 1; });
+    if (drows.length) {
+      drows.sort(function (x, y) { return y.tdpg - x.tdpg; });
+      var riding = drows.filter(function (o) { return o.tdpg >= 3; }).slice(0, 8);        // >= half a TD per game over the .73 league rate
+      var dtable = '<table style="width:auto;min-width:460px"><thead><tr><th class="l" colspan="7">DST — RIDING TDs (def/ST TD points are noise: YoY r .11)</th></tr>' +
+        '<tr><th class="l">Team</th><th>G</th><th>Pts/g</th><th>TD pts/g</th><th>Sacks/g</th><th>TO pts/g</th><th>PA pts/g</th></tr></thead><tbody>';
+      riding.forEach(function (o) {
+        var g = o.r.g;
+        dtable += '<tr><td class="l"><b>' + o.t + '</b></td><td>' + g + '</td><td>' + ntF(o.ppg, 1) + '</td><td style="color:#f85149"><b>' + ntF(o.tdpg, 1) + '</b> <span class="dim" style="font-size:11px">(lg 0.7)</span></td><td>' +
+          ntF(o.r.sack / g, 1) + '</td><td>' + ntF(o.r.to / g, 1) + '</td><td>' + ntF(o.r.pa / g, 1) + '</td></tr>';
+      });
+      dtable += '</tbody></table>';
+      html += '<div style="margin-bottom:14px">' + (riding.length ? dtable : '<p class="dim">No DST is riding defensive TDs right now.</p>') +
+        '<p class="dim" style="font-size:11px">A DST whose season-to-date points come from return/defensive TDs is over-rated by everyone else; the sims never counted them (DST mean = opponent implied total only).</p></div>';
+      if (riding.length) text.push('DST RIDING TDs: ' + riding.slice(0, 5).map(function (o) { return o.t + ' (' + ntF(o.tdpg, 1) + ' TD pts/g of ' + ntF(o.ppg, 1) + ')'; }).join('; '));
+    }
     $('nt-luck').innerHTML = html || '<p class="dim">No luck data yet (maps fill after the first 2026 games).</p>';
     return text;
   }
@@ -3662,7 +3682,8 @@
         // model stored separately or they degenerate to self-comparison
         clayMean: r.proj != null ? +r.proj.toFixed(2) : null,
         propMean: r.propProj != null ? +r.propProj.toFixed(2) : null,
-        propSrc: r.propSrc || null, // 'line' = direct anchor, 'rate' = market rate track
+        propSrc: r.propSrc || null,
+        luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live) // 'line' = direct anchor, 'rate' = market rate track
 
         comps: r.comps, lines: propByNorm[r.player.norm] || null
       });

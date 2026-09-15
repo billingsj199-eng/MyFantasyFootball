@@ -1,0 +1,41 @@
+  2019: samples so far 1500
+  2020: samples so far 3152
+  2021: samples so far 5154
+  2022: samples so far 7303
+  2023: samples so far 9934
+  2024: samples so far 12663
+  2025: samples so far 15106
+  skipped: {'weekly': 370, 'team': 212}
+  RB: prior TD share of points mean 0.25 sd 0.10 | rec per point mean 0.242 sd 0.123 | n=4493
+  WR: prior TD share of points mean 0.23 sd 0.10 | rec per point mean 0.457 sd 0.109 | n=7204
+  TE: prior TD share of points mean 0.23 sd 0.11 | rec per point mean 0.547 sd 0.128 | n=3409
+
+15106 RB/WR/TE player-weeks | engine width CRPS 3.3549
+
+=== 1. realized weekly dispersion by prior TD-share tercile (within position) ===
+  RB low TD-share  n= 1485  realized rel-sd 0.895  engine sd_rel 0.790  p10-p90 cov 78.5% (above p90 13.1%)  CRPS 3.599
+  RB mid           n= 1507  realized rel-sd 1.176  engine sd_rel 0.708  p10-p90 cov 68.1% (above p90 18.4%)  CRPS 3.542
+  RB high TD-share n= 1501  realized rel-sd 0.782  engine sd_rel 0.754  p10-p90 cov 80.1% (above p90 10.1%)  CRPS 4.051
+     corr(prior TD share, engine sigma) -0.08 | corr(TD share, |rel resid|) -0.049 | corr(rec/pt, |rel resid|) +0.021
+  WR low TD-share  n= 2389  realized rel-sd 0.863  engine sd_rel 0.782  p10-p90 cov 77.6% (above p90 11.4%)  CRPS 3.555
+  WR mid           n= 2404  realized rel-sd 0.996  engine sd_rel 0.808  p10-p90 cov 71.8% (above p90 14.6%)  CRPS 3.334
+  WR high TD-share n= 2411  realized rel-sd 0.963  engine sd_rel 0.856  p10-p90 cov 76.9% (above p90 10.5%)  CRPS 3.415
+     corr(prior TD share, engine sigma) +0.20 | corr(TD share, |rel resid|) +0.030 | corr(rec/pt, |rel resid|) +0.036
+  TE low TD-share  n= 1122  realized rel-sd 0.907  engine sd_rel 0.788  p10-p90 cov 76.1% (above p90 13.5%)  CRPS 2.889
+  TE mid           n= 1136  realized rel-sd 1.087  engine sd_rel 0.857  p10-p90 cov 73.8% (above p90 15.1%)  CRPS 2.618
+  TE high TD-share n= 1151  realized rel-sd 1.002  engine sd_rel 0.900  p10-p90 cov 74.7% (above p90 11.9%)  CRPS 2.572
+     corr(prior TD share, engine sigma) +0.26 | corr(TD share, |rel resid|) +0.032 | corr(rec/pt, |rel resid|) +0.069
+
+=== 2. LOYO CRPS sweeps (grid[0] = engine width) ===
+  a) sigma x (1 + e * tdShare_z)
+    grid pooled CRPS: +0.00:3.3576  +0.05:3.3578  +0.10:3.3605  +0.15:3.3657  +0.20:3.3733  +0.30:3.3954
+    LOYO CRPS 3.3558 vs engine 3.3549 (+0.03%), years better 0/7, picks [0.05, 0.05, 0.0, 0.05, 0.0, 0.0, 0.0]
+  b) sigma x (1 - e * recPerPoint_z)
+    grid pooled CRPS: +0.00:3.3576  +0.05:3.3613  +0.10:3.3674  +0.15:3.3759  +0.20:3.3867  +0.30:3.4152
+    LOYO CRPS 3.3549 vs engine 3.3549 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  c) reference: flat width scale
+    grid pooled CRPS: +1.00:3.3576  +0.85:3.3660  +0.90:3.3584  +0.95:3.3557  +1.05:3.3635  +1.10:3.3732  +1.20:3.4028
+    LOYO CRPS 3.3533 vs engine 3.3549 (-0.05%), years better 5/7, picks [0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95]
+   RB pooled CRPS by e: 0.00:3.7308  0.05:3.7315  0.10:3.7349  0.15:3.7411  0.20:3.7499  0.30:3.7753
+   WR pooled CRPS by e: 0.00:3.4342  0.05:3.4340  0.10:3.4363  0.15:3.4409  0.20:3.4479  0.30:3.4686
+   TE pooled CRPS by e: 0.00:2.6919  0.05:2.6914  0.10:2.6931  0.15:2.6971  0.20:2.7033  0.30:2.7220

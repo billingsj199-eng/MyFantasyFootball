@@ -1585,7 +1585,7 @@
         }
       }
     }
-    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed };
+    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj };
   }
 
   // ---------- correlated sampling ----------
@@ -1730,6 +1730,7 @@
       return {
         player: p, week: wk, mean: mean,
         proj: p._wk.mean, jsProj: p._wk.jsMean, propProj: p._wk.propMean != null ? p._wk.propMean : null, propW: p._wk.propW != null ? p._wk.propW : null,
+        luck: p._wk.luckAdj != null ? p._wk.luckAdj : 0,   // TD-luck points inside jsProj (live grading: luck_scorecard.py)
         propSrc: p._wk.propSrc || null,
         mult: p._wk.mult, slot: p._wk.slot, comps: p._wk.comps,
         p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),

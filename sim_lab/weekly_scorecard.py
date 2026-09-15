@@ -59,7 +59,7 @@ def main():
     os.makedirs(outdir, exist_ok=True)
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
     with open(os.path.join(outdir, f"w{wk}.log"), "w", encoding="utf-8") as f:
-        for script in ("score_week.py", "diagnose_week.py", "vs_books_week.py"):
+        for script in ("score_week.py", "diagnose_week.py", "vs_books_week.py", "luck_scorecard.py"):
             r = subprocess.run([sys.executable, os.path.join(HERE, script), "--week", str(wk)],
                                capture_output=True, text=True, encoding="utf-8", env=env, cwd=HERE)
             f.write(f"##### {script} --week {wk}\n{r.stdout}\n{r.stderr}\n")

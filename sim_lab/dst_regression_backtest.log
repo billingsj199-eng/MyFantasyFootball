@@ -1,0 +1,55 @@
+  pbp 2018: 512 DST team-weeks
+  pbp 2019: 512 DST team-weeks
+  pbp 2020: 512 DST team-weeks
+  pbp 2021: 544 DST team-weeks
+  pbp 2022: 542 DST team-weeks
+  pbp 2023: 544 DST team-weeks
+  pbp 2024: 544 DST team-weeks
+  pbp 2025: 544 DST team-weeks
+  league DST pts/g by component 2025: pa 0.48  sack 2.37  to 2.31  td 0.73  misc 0.16  pts 6.04
+
+=== GATE. component persistence per team-season (per-game rates) ===
+  pa    early->late r=+0.22 (n=256)   YoY r=+0.28 (n=224)
+  sack  early->late r=+0.21 (n=256)   YoY r=+0.21 (n=224)
+  to    early->late r=+0.09 (n=256)   YoY r=+0.20 (n=224)
+  td    early->late r=+0.06 (n=256)   YoY r=+0.11 (n=224)
+  misc  early->late r=-0.01 (n=256)   YoY r=-0.02 (n=224)
+  pts   early->late r=+0.22 (n=256)   YoY r=+0.30 (n=224)
+
+3518 DST team-weeks | shipped (Vegas-only) MSE 30.9750 | mean act/shipped 1.000
+
+=== 1. actual / shipped by season-to-date tercile of each component's rate (vs league) ===
+  pa    low -1.27: 1.024 | mid -0.06: 0.967 | high +1.33: 1.012   corr(x, act-ship) +0.016
+  sack  low -0.81: 1.003 | mid -0.01: 0.990 | high +0.87: 1.007   corr(x, act-ship) +0.018
+  to    low -1.12: 0.976 | mid -0.11: 1.001 | high +1.18: 1.021   corr(x, act-ship) +0.021
+  td    low -0.78: 1.023 | mid -0.34: 0.972 | high +0.96: 1.010   corr(x, act-ship) +0.005
+  misc  low -0.18: 1.030 | mid -0.09: 0.982 | high +0.28: 0.997   corr(x, act-ship) +0.004
+  ppg   low +3.39: 0.967 | mid +6.19: 1.012 | high +9.46: 1.017   corr(x, act-ship) +0.026
+
+=== 2. LOYO: shipped + k * (component rate - league) * g/(P+g)   (grid[0] = shipped) ===
+  pa: season-to-date pa pts/g over league
+    grid pooled MSE: +0.00:31.023  +0.25:31.031  +0.50:31.088  +0.75:31.193  +1.00:31.348
+    pooled best +0.00 | LOYO MSE 31.0075 vs shipped 30.9750 (+0.11%), years better 0/7, picks [0.0, 0.0, 0.25, 0.25, 0.25, 0.0, 0.0]
+  sack: season-to-date sack pts/g over league
+    grid pooled MSE: +0.00:31.023  +0.25:31.006  +0.50:31.010  +0.75:31.033  +1.00:31.076
+    pooled best +0.25 | LOYO MSE 30.9993 vs shipped 30.9750 (+0.08%), years better 4/7, picks [0.25, 0.0, 0.5, 0.25, 0.5, 0.25, 0.25]
+  to: season-to-date to pts/g over league
+    grid pooled MSE: +0.00:31.023  +0.25:31.005  +0.50:31.021  +0.75:31.073  +1.00:31.159
+    pooled best +0.25 | LOYO MSE 30.9743 vs shipped 30.9750 (-0.00%), years better 4/7, picks [0.25, 0.25, 0.25, 0.5, 0.25, 0.25, 0.25]
+  td: season-to-date td pts/g over league
+    grid pooled MSE: +0.00:31.023  +0.25:31.013  +0.50:31.028  +0.75:31.068  +1.00:31.133
+    pooled best +0.25 | LOYO MSE 30.9788 vs shipped 30.9750 (+0.01%), years better 3/7, picks [0.0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  misc: season-to-date misc pts/g over league
+    grid pooled MSE: +0.00:31.023  +0.25:31.024  +0.50:31.027  +0.75:31.032  +1.00:31.038
+    pooled best +0.00 | LOYO MSE 30.9838 vs shipped 30.9750 (+0.03%), years better 0/7, picks [0.0, 0.25, 0.0, 0.5, 0.0, 0.0, 0.0]
+
+=== 3. realized-PPG blend: (P*shipped + g*ppg)/(P+g) - with and WITHOUT the TD points ===
+  a) full realized PPG (1000 ~ shipped)
+    grid pooled MSE: +1000.00:31.017  +40.00:31.089  +20.00:31.330  +12.00:31.694  +5.00:32.769  +3.00:33.620
+    pooled best +1000.00 | LOYO MSE 30.9697 vs shipped 30.9697 (+0.00%), years better 0/7, picks [1000, 1000, 1000, 1000, 1000, 1000, 1000]
+  b) realized PPG with TDs replaced by the league TD pts/g (TD regression)
+    grid pooled MSE: +1000.00:31.019  +40.00:31.085  +20.00:31.282  +12.00:31.572  +5.00:32.407  +3.00:33.050
+    pooled best +1000.00 | LOYO MSE 30.9712 vs shipped 30.9712 (+0.00%), years better 0/7, picks [1000, 1000, 1000, 1000, 1000, 1000, 1000]
+  c) P=12 blend then remove k x TD excess
+    grid pooled MSE: +0.00:31.694  +0.25:31.648  +0.50:31.612  +0.75:31.587  +1.00:31.572
+    pooled best +1.00 | LOYO MSE 31.5308 vs shipped 31.6510 (-0.38%), years better 6/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]

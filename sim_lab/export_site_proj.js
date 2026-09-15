@@ -318,6 +318,7 @@ function kickoffMs(kicks, wk, tm) {
           clayMean: r.proj != null ? +r.proj.toFixed(2) : null,
           propMean: r.propProj != null ? +r.propProj.toFixed(2) : null,
           propSrc: r.propSrc || null,
+          luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live)
           comps: r.comps, lines: propByNorm[r.player.norm] || null,
           // tuner values LIVE at lock (tune_weekly.py divides them back out so
           // next week's evidence is measured against the raw prior)

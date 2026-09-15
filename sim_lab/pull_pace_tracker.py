@@ -473,6 +473,52 @@ def build_k_luck_2026():
         print(f"WARN k luck skipped ({e})")
     return out
 
+# DST COMPONENT INTEL (backtest_dst_regression.py, 2026-09-15) - INTEL ONLY.
+# Season-to-date DST points split into components (Sleeper-default scoring:
+# sack 1, INT/FR 2, def+return TD 6, safety/block 2, points-allowed buckets).
+# Def/ST TDs are pure noise (early->late r .06, YoY .11) and NO realized
+# component beats the Vegas-only DST mean (dstWeeklyMean), so nothing here
+# feeds projections - it flags DSTs whose season-to-date points are riding
+# TDs (people over-rate them) for the NOTES leaderboard.
+DST_LG_TD_PG = 0.73   # league def/ST TD points per team-game, 2025
+
+def build_dst_luck_2026():
+    """{TEAM: {g, pts, td, sack, to, pa}} season-to-date (points by component)."""
+    out = {}
+    pbp_p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+    try:
+        if not os.path.exists(pbp_p):
+            return out
+        df = pd.read_csv(pbp_p, usecols=["season_type", "week", "defteam", "game_id", "home_team", "away_team",
+                                         "home_score", "away_score", "sack", "interception", "fumble_lost",
+                                         "touchdown", "td_team", "safety", "field_goal_result", "punt_blocked"], low_memory=False)
+        df = df[df.season_type == "REG"]
+        acc = {}
+        def add(team, wk, k, p):
+            if not isinstance(team, str) or not team: return
+            a = acc.setdefault(tm(team), {"td": 0, "sack": 0, "to": 0, "pa": 0, "misc": 0, "wks": set()})
+            a[k] += p; a["wks"].add(int(wk))
+        d = df[df.defteam.notna()]
+        for r in d[d.sack == 1][["defteam", "week"]].itertuples(index=False): add(r.defteam, r.week, "sack", 1)
+        for r in d[d.interception == 1][["defteam", "week"]].itertuples(index=False): add(r.defteam, r.week, "to", 2)
+        for r in d[d.fumble_lost == 1][["defteam", "week"]].itertuples(index=False): add(r.defteam, r.week, "to", 2)
+        for r in d[(d.touchdown == 1) & d.td_team.notna()][["defteam", "td_team", "week"]].itertuples(index=False):
+            if r.td_team == r.defteam: add(r.defteam, r.week, "td", 6)
+        for r in d[d.safety == 1][["defteam", "week"]].itertuples(index=False): add(r.defteam, r.week, "misc", 2)
+        for r in d[d.field_goal_result == "blocked"][["defteam", "week"]].itertuples(index=False): add(r.defteam, r.week, "misc", 2)
+        for r in d[d.punt_blocked == 1][["defteam", "week"]].itertuples(index=False): add(r.defteam, r.week, "misc", 2)
+        def pa_pts(pa):
+            return 10 if pa == 0 else 7 if pa <= 6 else 4 if pa <= 13 else 1 if pa <= 20 else 0 if pa <= 27 else -1 if pa <= 34 else -4
+        games = df.dropna(subset=["home_team"]).groupby("game_id").first()
+        for _, gm in games.iterrows():
+            add(gm.home_team, gm.week, "pa", pa_pts(int(gm.away_score))); add(gm.away_team, gm.week, "pa", pa_pts(int(gm.home_score)))
+        for t, a in acc.items():
+            out[t] = {"g": len(a["wks"]), "td": a["td"], "sack": a["sack"], "to": a["to"], "pa": a["pa"], "misc": a["misc"],
+                      "pts": a["td"] + a["sack"] + a["to"] + a["pa"] + a["misc"]}
+    except Exception as e:
+        print(f"WARN dst luck skipped ({e})")
+    return out
+
 def build_routes_2026():
     """TE weekly route participation (%% of team dropbacks on the field) from
     2026 pbp + participation — feeds engine routeMult (backtest_route_trend.py:
@@ -530,6 +576,7 @@ def build_routes_2026():
     rectd = build_rec_tdluck_2026()
     qbtd = build_qb_tdluck_2026()
     kluck = build_k_luck_2026()
+    dstluck = build_dst_luck_2026()
     with open(ROUTES_OUT, "w", encoding="utf-8") as f:
         f.write("// built by pull_pace_tracker.py — TE weekly route participation (% of team dropbacks)\n")
         f.write("window.SIM_ROUTES_2026 = ")
@@ -555,7 +602,11 @@ def build_routes_2026():
         f.write("window.SIM_K_LUCK_2026 = ")
         json.dump(kluck, f, separators=(",", ":"))
         f.write(";\n")
-    print(f"wrote {ROUTES_OUT} — {len(routes)} players with 2026 route data ({n_pff} from repo route_pct.js / PFF weekly), {len(pressure)} defenses with pressure data, {len(tdluck)} RBs + {len(rectd)} WR/TEs + {len(qbtd)} QBs with TD-luck data, {len(kluck)} kickers with FG-luck data")
+        f.write("// per-DST season-to-date points by component {TEAM: {g, pts, td, sack, to, pa, misc}} (backtest_dst_regression.py) - INTEL ONLY (NOTES tab)\n")
+        f.write("window.SIM_DST_LUCK_2026 = ")
+        json.dump(dstluck, f, separators=(",", ":"))
+        f.write(";\n")
+    print(f"wrote {ROUTES_OUT} — {len(routes)} players with 2026 route data ({n_pff} from repo route_pct.js / PFF weekly), {len(pressure)} defenses with pressure data, {len(tdluck)} RBs + {len(rectd)} WR/TEs + {len(qbtd)} QBs with TD-luck data, {len(kluck)} kickers with FG-luck data, {len(dstluck)} DSTs")
 
 # ---------------------------------------------------------------------------
 # TARGET-AREA ZONES (backtest_target_area.py, 2026-09-14) - INTEL ONLY.

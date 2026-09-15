@@ -3947,6 +3947,22 @@
       html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
         RC.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
     }
+    var OP = window.SIM_OPPPRIOR_BT;
+    if (OP && OP.segments) {
+      html += '<h4 style="margin:14px 0 4px">Opportunity prior vs Clay (backtest_opp_prior.py, ' + esc(OP.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(OP.summary || '') + '</b> Preseason season-PPG projections for RB / WR / TE, graded 2019-25 with every fit refit without the test season. ' +
+        'OPP = projected target and carry shares (last year, vacated work, team change, age; rookies by draft pick) x team volume x value per opportunity (site xFP) x efficiency. HIST = 3-year weighted PPG, HISTREG = regressed to the position mean, SHADOW = HISTREG for veterans and OPP for rookies. CAL = linear calibration fit on the training seasons (Clay\'s per-game number carries missed games, so raw Clay is off in scale, not ranking); + = regression blend; SHADOWCAL = the Clay-free prior. Lower MSE is better; the parenthesis counts seasons it beat calibrated Clay.</p>';
+      var models = ['CLAY', 'CLAYCAL', 'HISTCAL', 'OPPCAL', 'HIST+OPP', 'CLAY+OPP', 'SHADOWCAL'];
+      html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Segment</th><th>Pos</th><th>n</th>' + models.map(function (m) { return '<th>' + esc(m) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        OP.segments.map(function (sg) {
+          var best = null; Object.keys(sg.models).forEach(function (m) { if (best == null || sg.models[m].mse < sg.models[best].mse) best = m; });
+          return '<tr><td class="l">' + esc(sg.seg) + '</td><td>' + esc(sg.pos) + '</td><td class="dim">' + sg.n + '</td>' + models.map(function (m) {
+            var v = sg.models[m]; if (!v) return '<td class="dim">\u2014</td>';
+            var col = m === best ? 'var(--acc)' : (sg.models.CLAYCAL && v.mse > sg.models.CLAYCAL.mse ? '#f85149' : 'inherit');
+            return '<td style="color:' + col + '">' + (m === best ? '<b>' : '') + v.mse.toFixed(2) + (m === best ? '</b>' : '') + ' <span class="dim" style="font-size:10px">(' + esc(v.beatsClayYears) + ')</span></td>';
+          }).join('') + '</tr>';
+        }).join('') + '</tbody></table></div>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {

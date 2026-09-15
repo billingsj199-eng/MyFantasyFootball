@@ -71,6 +71,7 @@ global.window = global;
   'data/sim_practice.js',
   'data/sim_news.js',
   'data/sim_context.js',
+  'data/opp_prior_2026.js',
   'data/sim_depth.js',
   'data/sim_2026.js',
   'data/pace_2026.js',

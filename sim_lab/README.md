@@ -2038,3 +2038,42 @@ data/role_change_backtest.js on ZONES.
 - Why: the preseason prior already sees last season's breakout, the P=5 blend
   gives 2026 games most of the weight by week 5, and the snap trend adds the
   rest. The ASCENDING shadow chip stays as intel.
+
+## Opportunity prior (backtest_opp_prior.py) - 2026-09-15
+
+Jack: "start on the opportunity prior next" (roadmap step 5 for the Clay-free
+shadow). Preseason season-PPG projection for RB / WR / TE from our own inputs:
+projected target and carry shares (last season's share, allocated vacated work,
+team change, age; rookies by log draft pick + vacated share) x team volume (.5
+last season + .5 league) x value per opportunity (his site-xFP per target /
+carry, shrunk K 60) x efficiency (shrunk, lambda 1.0 every fold). pbp 2016-25,
+2,523 player-seasons; test seasons 2019-25 with every fit refit without the
+test season. Log opp_prior_backtest.log; data/opp_prior_backtest.js on ZONES.
+
+- Raw MSE made the opportunity prior look better than Clay everywhere - but
+  Clay's per-game number is season points / scheduled games (it carries missed
+  games), so raw MSE punished Clay for SCALE. With a per-position linear
+  calibration fit on the training seasons for every model:
+    overall  calibrated Clay 7.15 | Clay-free shadow 8.48 | Clay + OPP 7.05 (5/7)
+    vets     calibrated Clay 7.08 | history 9.06 | OPP 8.46 | HIST + OPP 8.32 | Clay + OPP 6.96
+    movers   calibrated Clay 7.14 | HIST + OPP 8.49 | Clay + OPP 6.90 (6/7)
+    rookies  calibrated Clay 7.50 | OPP 9.28 | Clay + OPP 7.57
+  Clay still ranks players best (r .78 vs .73) and beats every Clay-free prior
+  in every segment - consistent with Jack keeping Clay live.
+- The opportunity prior DOES beat the history prior for veterans (8.46 vs
+  9.06, HIST + OPP 8.32), so it upgrades the shadow; for rookies it is worse
+  than Clay, so the shadow keeps its Clay fallback there.
+- Clay + OPP beats calibrated Clay (-1.3% overall 5/7, team-changers -3.3% 6/7)
+  - that would change the LIVE base and is Jack's call; NOT wired.
+- Share models (all seasons): target share = .02-.03 + .67 (RB) / .78 (WR/TE) x
+  last share + small vacated allocation - .08 to .16 x last share when he
+  changes teams; rookies .19-.26 - .03-.04 x log(pick). Value per target 1.13
+  RB / 1.43 WR / 1.38 TE, per carry .57-.75.
+- SHADOW WIRING: build_opp_prior.py -> data/opp_prior_2026.js (262 vets with
+  >= 6 games in 2025, 2026 team from Sleeper sTm, full-fit calAll). engine.js
+  blends it into the Clay-free ncMean prior after the age curve: a + b x
+  history + c x opp (RB -.42/.22/.82, WR -.97/.37/.74, TE -.50/.41/.67);
+  ncSrc gains "+opp". Only when the history prior is >= 4 half PPG (the
+  calibration lifted deep backups: Kaleb Johnson .8 -> 2.9). Rookies stay on
+  the Clay fallback. Live mean untouched (checked: 0 of 366 changed wk 2).
+  Kill: window.SIM_SHADOW_OPP = false. Rerun backtest then build after trades.

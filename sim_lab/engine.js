@@ -1742,6 +1742,15 @@
     if (ncSrc !== 'clay-fallback') {
       var sa = shadowAgeAdjust(p, ncPrior / scale);   // curves live in half-PPR units
       ncPrior = sa.v * scale; ncSrc += sa.tag;
+      // OPPORTUNITY PRIOR (backtest_opp_prior.py / build_opp_prior.py, 2026-09-15): for veterans the calibrated
+      // HIST + OPP blend beat the history prior 8.32 vs 9.06 season MSE (calibrated Clay 7.08 still best, so SHADOW
+      // ONLY). cal = [a, b history, c opportunity] in half-PPR. Rookies are not in the file (OPP lost to Clay there).
+      var opd = typeof window !== 'undefined' ? window.SIM_OPP_PRIOR_2026 : null;
+      var opr = opd && opd.players ? opd.players[p.norm] : null, occ = opd && opd.cal ? opd.cal[p.pos] : null;
+      if (opr && occ && occ.length === 3 && ncPrior / scale >= 4 && !(typeof window !== 'undefined' && window.SIM_SHADOW_OPP === false)) {   // >= 4 half PPG like the age curve: the calibration was fit on real roles and lifts deep backups
+        var hbo = occ[0] + occ[1] * (ncPrior / scale) + occ[2] * opr.half;
+        if (hbo > 0) { ncPrior = hbo * scale; ncSrc += '+opp'; }
+      }
     }
     var ncMean = Math.max(0, jsBasePg(p, sc, ncPrior) * jsChain + luckAdj);
     var compsWk = {};

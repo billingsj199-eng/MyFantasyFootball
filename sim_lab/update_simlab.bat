@@ -1,8 +1,10 @@
 @echo off
 REM ============================================================
 REM Sim Lab daily refresh + deploy.
-REM Runs after the 9:00 AM MFF data pulls (consensus ADP, betting
-REM lines) so it picks up the freshest repo data, then pushes to
+REM Task 'MFF Sim Lab Daily' 06:45 (was 09:45 until 2026-09-15, wake-to-run
+REM on) - after nflverse's ~06:20 ET pbp publish so the TD-luck / zones /
+REM pressure maps include Monday night; the 08:00 betting pull and the 10:00
+REM export re-run refresh_data.py with the day's fresh lines/Clay. Pushes to
 REM https://jb-simlab-2026.web.app
 REM Log: E:\MyFantasyFootball\sim_lab\last_refresh.log
 REM NOTE (2026-08-28): the draft-helper extension export does NOT

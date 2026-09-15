@@ -3,7 +3,9 @@
 Tuesday wrapper: archive last week's consensus projections, then run
 score_week.py + diagnose_week.py for that week into scorecards/wN.log.
 
-Runs from tuesday_stats.ps1 at 8:30 — BEFORE the 9am consensus job flips
+Runs from tuesday_stats.ps1 at 7:00 (was 8:30 until 2026-09-15; moved so the
+chain finishes before Jack's morning; nflverse pbp with MNF lands ~06:20 ET,
+Sleeper actuals at 01:45) — BEFORE the 9am consensus job flips
 data/weekly_projections.json to the new week, so the file on disk is still
 the week just played (its own `week` field says which). Idempotent: the
 consensus archive is only written once per week; the logs are rewritten

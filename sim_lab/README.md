@@ -1183,3 +1183,16 @@ TD-luck family status: RB k .75 (-0.36%), WR/TE k 1.0 (-0.93%), QB pass
 k .5 (-0.44%) - all additive after the chain, x availability, floor 0.
 Watch the weekly tuner's tdMult (league-level TD multiplier) for drift now
 that per-player luck sits under it.
+
+## Morning schedule retime (2026-09-15)
+
+Jack: run the checks before he gets on. Constraint found: nflverse publishes
+the play-by-play containing Monday night's game at ~06:20 ET Tuesday (observed
+2026-09-15 10:20 GMT), Sleeper finals import at 00:45 / Tue 01:45, weekly
+projection sources keep updating through Tuesday morning. New times:
+`MFF Sim Lab Daily` 06:45 (was 09:45; wake-to-run ON), `MFF Weekly Stats
+Tuesday` 07:00 (was 08:30; already wake-to-run), Claude drift check 07:15
+(was 09:30; read-only, no shell). Left alone: 08:00 betting pull, 09:00
+consensus/weekly projections (sources still updating earlier), 10:00 export.
+Watch the 06:45 refresh for two or three Tuesdays - if nflverse is late, the
+Tuesday chain's own update_simlab.bat call (~07:05) is the safety net.

@@ -1846,3 +1846,13 @@ ASCENDING flag rows. W2 sample: Jacobs 15.8 vs JS 9.4 (history says more),
 Parker Washington 6.3 vs 8.9 (history drags an ascending player - the case
 the ledger has to settle), Chase 13.6 vs 13.4, Allen 28.0 vs 26.3. Nothing
 shipped changes; the season ledger decides.
+
+- 14:20 follow-ups (Jack): (1) prior = 0.5 x 3-yr weighted PPG + 0.5 x LAST 8
+  PLAYED GAMES (refresh_data players26 l8/l8g, 2024-26 tail, also for players
+  without a 2026 game yet) - Parker Washington shadow 6.3 -> 9.0 (JS 8.9),
+  Chase 12.2, Allen 25.8; ncSrc hist+l8 / l8 / hist / clay-fallback (132 of
+  428 W2 rows still fall back = rookies + no history). (2) Sleeper
+  injury_status "NA" (commissioner's exempt list / personal - Josh Jacobs)
+  never matched Out/IR: engine zeroes NA for a 4-week window when Sleeper's
+  weekly projection is also 0 (src 'na'), else x0.75 'na-unconfirmed'.
+  Jacobs wk2-5 zero, exported + pushed.

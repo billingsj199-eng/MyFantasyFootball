@@ -102,18 +102,41 @@ try:
     wall, _ = json.JSONDecoder().raw_decode(wsa, wsa.index("{"))
     STATS = ["rec", "tgt", "ry", "rcy", "rtd", "rctd", "py", "ptd"]
     players26, fpa, defgames = {}, {}, {}
+    l8only = {}
     for name, rec in wall.items():
         wks = (rec.get("seasons") or {}).get("2026") or []
         pos = rec.get("pos")
         rows = [w for w in wks if isinstance(w.get("fpts"), (int, float))]
         if not rows:
+            # no 2026 game yet: still record the last-8 prior (2024-25 tail) for the shadow base
+            tail = []
+            for yr_, wl in (rec.get("seasons") or {}).items():
+                if str(yr_).isdigit() and 2024 <= int(yr_) <= 2025:
+                    for w in wl:
+                        if isinstance(w.get("fpts"), (int, float)) and str(w.get("wk", "")).isdigit():
+                            tail.append((int(yr_), int(w["wk"]), float(w["fpts"])))
+            tail.sort(); tail = tail[-8:]
+            if tail:
+                l8only[_norm(name)] = {"g": 0, "l8": round(sum(x[2] for x in tail) / len(tail), 2), "l8g": len(tail)}
             continue
         g = len(rows)
         pg = {k: round(sum(w.get(k) or 0 for w in rows) / g, 2) for k in STATS}
         # wks = weeks with a stat row: the engine's rate-track teammate guard
         # reads it to tell "teammate sat this week" from "teammate played".
         wks_played = sorted({int(w["wk"]) for w in rows if str(w.get("wk", "")).isdigit()})
-        players26[_norm(name)] = {"g": g, "ppg": round(sum(w["fpts"] for w in rows) / g, 2), "pg": pg, "wks": wks_played}
+        # last-8-played-games PPG across seasons (recency prior for the Clay-free shadow base;
+        # Jack 2026-09-15: a player "great over the last 7ish games" must not be averaged away)
+        allrows = []
+        for yr_, wl in (rec.get("seasons") or {}).items():
+            if not str(yr_).isdigit() or int(yr_) < 2024:
+                continue
+            for w in wl:
+                if isinstance(w.get("fpts"), (int, float)) and str(w.get("wk", "")).isdigit():
+                    allrows.append((int(yr_), int(w["wk"]), float(w["fpts"])))
+        allrows.sort()
+        l8 = allrows[-8:]
+        players26[_norm(name)] = {"g": g, "ppg": round(sum(w["fpts"] for w in rows) / g, 2), "pg": pg, "wks": wks_played,
+                                  "l8": round(sum(x[2] for x in l8) / len(l8), 2) if l8 else None, "l8g": len(l8)}
         for w in rows:
             opp = _ALIAS.get(w.get("opp") or "", w.get("opp") or "")
             if not opp or not pos:
@@ -168,6 +191,8 @@ try:
         f.write("// players: {normName: {g, ppg (half-PPR), pg: per-game stat mix}}\n")
         f.write("// fpa: {DEF: {pos: fantasy pts allowed/gm, _g: games}}; lgFpa: league avg by pos\n")
         f.write("window.SIM_2026 = ")
+        for _k, _v in l8only.items():
+            players26.setdefault(_k, _v)
         json.dump({"players": players26, "fpa": fpa, "lgFpa": lg}, f, separators=(",", ":"))
         f.write(";\n")
     print(f"wrapped sim_2026.js  ({len(players26)} players with 2026 games, {len(fpa)} defenses; FPA {fpa_src})")

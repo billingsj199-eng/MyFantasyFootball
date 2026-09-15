@@ -1389,6 +1389,13 @@
       if (t && t !== '|') {
         if (/\bir\b|injured reserve|\bpup\b|\bnfi\b|non football/.test(t)) { map[p.norm] = { from: currentWeek, to: Math.min(WEEKS, currentWeek + 3), mult: 0, src: 'ir' }; return; }
         if (/\bsus\b|suspend/.test(t)) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'sus' }; return; }
+        if (/^na\b|\bna\|/.test(t)) {
+          // 'NA' = not active for a non-injury reason (exempt list / personal / league discipline);
+          // indefinite like IR, corroborated by Sleeper's own weekly projection like Out
+          var swk2 = wnd.SIM_SLEEPER_WEEKLY || null, sw2 = swk2 && swk2.p && (+swk2.week === +currentWeek) ? swk2.p[p.norm] : null;
+          if (!(swk2 && swk2.p && (+swk2.week === +currentWeek)) || sw2 == null || sw2 <= 0) { map[p.norm] = { from: currentWeek, to: Math.min(WEEKS, currentWeek + 3), mult: 0, src: 'na' }; return; }
+          map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.75, src: 'na-unconfirmed' }; return;
+        }
         if (/\bout\b/.test(t)) {
           // Jack 2026-09-15: never zero a player before he is actually out (or at least doubtful).
           // Sleeper's injury_status "Out" lingers from last week's inactives and gets applied
@@ -1625,11 +1632,14 @@
     // this sheet by the Clay stat mix) instead of Clay. Graded every Tuesday next to the
     // shipped mean (score_week.py "No-Clay shadow"); the season ledger decides whether
     // Clay can go. No history -> Clay prior, flagged 'clay-fallback'.
-    var ncSrc = 'hist', ncPrior = clayPg;
-    if (p.histPpg != null && p.histGames >= 8) {
-      var halfPg = seasonPoints(p, PRESETS.half) / perGameDiv;
-      ncPrior = halfPg > 0 && clayPg > 0 ? p.histPpg * (clayPg / halfPg) : p.histPpg;
-    } else ncSrc = 'clay-fallback';
+    var ncSrc = 'clay-fallback', ncPrior = clayPg;
+    var halfPg = seasonPoints(p, PRESETS.half) / perGameDiv, scale = (halfPg > 0 && clayPg > 0) ? clayPg / halfPg : 1;
+    var jsRec = jsData().players ? jsData().players[p.norm] : null;
+    var h3 = (p.histPpg != null && p.histGames >= 8) ? p.histPpg * scale : null;          // 3-yr weighted PPG
+    var l8 = (jsRec && jsRec.l8 != null && jsRec.l8g >= 4) ? jsRec.l8 * scale : null;      // last 8 played games (2024-26)
+    if (h3 != null && l8 != null) { ncPrior = 0.5 * h3 + 0.5 * l8; ncSrc = 'hist+l8'; }
+    else if (l8 != null) { ncPrior = l8; ncSrc = 'l8'; }
+    else if (h3 != null) { ncPrior = h3; ncSrc = 'hist'; }
     var ncMean = Math.max(0, jsBasePg(p, sc, ncPrior) * jsChain + luckAdj);
     var compsWk = {};
     Object.keys(p.comps).forEach(function (k) {

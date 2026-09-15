@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 2 (half) — generated 2026-09-15 14:30Z
-# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 10:30 · wk 2 injury layer: 48 out/docked
+# Sim Lab notes — Week 2 (half) — generated 2026-09-15 14:37Z
+# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 10:36 · wk 2 injury layer: 48 out/docked
 
-SIM LAB NOTES — Week 2 (half) — 2026-09-15 14:30
+SIM LAB NOTES — Week 2 (half) — 2026-09-15 14:37
 
 TD LUCK (top 5 each way):
   QB DUE UP: Aaron Rodgers (1 TD on 1.6 xTD, +0.2); Joe Burrow (1 TD on 1.6 xTD, +0.2); Jacoby Brissett (1 TD on 1.5 xTD, +0.2); Jordan Love (2 TD on 2.4 xTD, +0.1); Drake Maye (1 TD on 1.1 xTD, +0.0)
@@ -15,6 +15,14 @@ TD LUCK (top 5 each way):
   K DUE UP: Nick Folk (8 pts on 13.3 expected, +5.3/g); Drew Stevens (4 pts on 7.5 expected, +3.5/g); Daniel Carlson (5 pts on 8.1 expected, +3.1/g); Riley Patterson (7 pts on 9.5 expected, +2.5/g); Chris Boswell (8 pts on 10.1 expected, +2.1/g)
   K DUE DOWN: Evan McPherson (19 pts on 13.2 expected, -5.8/g); Tyler Loop (14 pts on 9.8 expected, -4.2/g); Ka'imi Fairbairn (9 pts on 6.0 expected, -3.0/g); Cam Little (12 pts on 9.4 expected, -2.6/g); Chase McLaughlin (11 pts on 8.7 expected, -2.3/g)
   DST RIDING TDs: PIT (6.0 TD pts/g of 18.0); CIN (6.0 TD pts/g of 18.0); TB (6.0 TD pts/g of 8.0)
+  XFP UNDER QB: Matthew Stafford (5.1 vs 14.7 xFP, -9.6, TD -2.7); Aaron Rodgers (12.5 vs 19.7 xFP, -7.2, TD -2.5); Bo Nix (6.4 vs 11.3 xFP, -4.9, TD +1.5); Joe Burrow (15.2 vs 19.6 xFP, -4.4, TD -2.3); Drake Maye (12.8 vs 17.0 xFP, -4.2, TD -0.5)
+  XFP OVER QB: Josh Allen (35.7 vs 22.2 xFP, +13.5, TD +1.9); Caleb Williams (37.3 vs 24.7 xFP, +12.6, TD +2.2); Trevor Lawrence (26.1 vs 13.5 xFP, +12.6, TD +10.4); Bryce Young (32.4 vs 19.9 xFP, +12.5, TD +4.9); Jalen Hurts (24.7 vs 14.2 xFP, +10.5, TD +8.3)
+  XFP UNDER RB: Rico Dowdle (3.1 vs 9.3 xFP, -6.2, TD -0.8); MarShawn Lloyd (3.7 vs 8.8 xFP, -5.1, TD -1.6); Tyler Allgeier (8.0 vs 12.9 xFP, -4.9, TD -3.8); Jaylen Warren (7.8 vs 12.6 xFP, -4.8, TD -2.6); Rhamondre Stevenson (12.0 vs 15.1 xFP, -3.1, TD -0.8)
+  XFP OVER RB: Derrick Henry (34.8 vs 17.3 xFP, +17.5, TD +11.5); D'Andre Swift (31.9 vs 17.2 xFP, +14.7, TD +8.7); Kyle Monangai (19.4 vs 7.4 xFP, +12.0, TD +5.0); Ashton Jeanty (29.7 vs 20.0 xFP, +9.7, TD +8.2); Chuba Hubbard (22.2 vs 13.6 xFP, +8.6, TD +5.8)
+  XFP UNDER WR: DK Metcalf (6.0 vs 15.0 xFP, -9.0, TD -2.1); Matthew Golden (12.5 vs 19.3 xFP, -6.8, TD -5.4); Malik Washington (4.8 vs 10.7 xFP, -5.9, TD -0.3); Jameson Williams (6.5 vs 12.2 xFP, -5.7, TD -1.2); Jayden Reed (3.5 vs 9.2 xFP, -5.7, TD -1.8)
+  XFP OVER WR: Jalen Coker (29.8 vs 12.2 xFP, +17.6, TD +10.2); Christian Watson (29.7 vs 13.5 xFP, +16.2, TD +8.3); Zay Flowers (23.5 vs 7.9 xFP, +15.6, TD +5.7); Justin Jefferson (27.2 vs 16.1 xFP, +11.1, TD +6.8); Parker Washington (16.8 vs 8.2 xFP, +8.6, TD +5.5)
+  XFP UNDER TE: Sam LaPorta (7.3 vs 12.4 xFP, -5.1, TD -4.7); George Kittle (2.2 vs 7.1 xFP, -4.9, TD -1.6); Colston Loveland (0.0 vs 4.7 xFP, -4.7, TD -2.0); Dalton Schultz (5.5 vs 8.9 xFP, -3.4, TD -0.5); Michael Mayer (6.2 vs 9.5 xFP, -3.3, TD -2.4)
+  XFP OVER TE: Dallas Goedert (21.7 vs 8.3 xFP, +13.4, TD +9.4); Isaiah Likely (23.8 vs 13.6 xFP, +10.2, TD +7.3); Dalton Kincaid (15.5 vs 7.8 xFP, +7.7, TD -0.4); Evan Engram (12.3 vs 7.2 xFP, +5.1, TD +3.9); Pat Freiermuth (13.1 vs 8.2 xFP, +4.9, TD +3.1)
 
 DET @ BUF — total 53.5, BUF by 4.5 · implied DET 24.5 / BUF 29.0
 Weather @BUF: wind 3 mph (gusts 2), 64°F, 14% precip

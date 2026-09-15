@@ -1397,3 +1397,14 @@ jsBasePg) minus xFP/g. Two columns after Market (green FPOE <= -1.5 = under
 expected / due up, red >= +1.5) and " · xFP 22.2/g (+13.5 over expected)" in
 the COPY NOTES text and the 06:45 notes file. Backup app.js
 .bak_pre_notesxfp_20260915.
+
+## xFP leaderboard in NOTES (2026-09-15)
+
+Jack: "add the xFP leaderboard to NOTES". Below the TD-luck / K / DST tables:
+per position UNDER EXPECTED (FPOE/g <= -1.5, scoring below usage = due up)
+and OVER EXPECTED (>= +1.5) top 8 with PPG, xFP/g, FPOE/g and the split into
+TD part (from the TD-luck maps, regresses) and skill part (yards/catches,
+mostly repeats). Text lines "XFP UNDER/OVER <pos>: ..." in COPY NOTES and
+the 06:45 file. W1 read: OVER RB Henry +17.5 (TD +11.5), WR Coker +17.6 (TD
++10.2); UNDER WR Metcalf -9.0 (TD -2.1), Golden -6.8 (TD -5.4). Backup app.js
+.bak_pre_xfpboard_20260915.

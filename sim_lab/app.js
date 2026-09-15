@@ -3467,6 +3467,46 @@
         '<p class="dim" style="font-size:11px">A DST whose season-to-date points come from return/defensive TDs is over-rated by everyone else; the sims never counted them (DST mean = opponent implied total only).</p></div>';
       if (riding.length) text.push('DST RIDING TDs: ' + riding.slice(0, 5).map(function (o) { return o.t + ' (' + ntF(o.tdpg, 1) + ' TD pts/g of ' + ntF(o.ppg, 1) + ')'; }).join('; '));
     }
+    // xFP leaderboard: points over / under expected per game (standard usage-based xFP,
+    // SIM_XFP_2026 components) with the TD share of the gap - the part that regresses.
+    var xrows = [];
+    state.players.list.forEach(function (p) {
+      if (p.isDST || ['QB', 'RB', 'WR', 'TE'].indexOf(p.pos) < 0) return;
+      var xf = ntXfp(p, sc);
+      if (!xf || xf.fpoeg == null || xf.g < 1) return;
+      var m = p.pos === 'QB' ? window.SIM_QB_TDLUCK_2026 : (p.pos === 'RB' ? window.SIM_RB_TDLUCK_2026 : window.SIM_REC_TDLUCK_2026);
+      var r = m && m[p.norm];
+      var tdPts = p.pos === 'QB' ? sc.pass_td : sc.rec_td;
+      var tdPart = (r && r.g) ? -tdPts * (r.xtd - r.td) / r.g : null;   // TD points over expected per game
+      xrows.push({ p: p, xf: xf, tdPart: tdPart });
+    });
+    if (xrows.length) {
+      function xtable(rows, title) {
+        var h = '<table style="width:auto;min-width:520px"><thead><tr><th class="l" colspan="8">' + title + '</th></tr>' +
+          '<tr><th class="l">Player</th><th>Tm</th><th>G</th><th>PPG</th><th>xFP/g</th><th>FPOE/g</th><th>TD part</th><th>Skill part</th></tr></thead><tbody>';
+        rows.forEach(function (o) {
+          var f = o.xf.fpoeg, col = f <= -1.5 ? 'var(--acc)' : (f >= 1.5 ? '#f85149' : 'var(--dim)');
+          h += '<tr><td class="l"><b>' + esc(o.p.name) + '</b> <span class="dim">' + o.p.pos + '</span></td><td>' + o.p.tm + '</td><td>' + o.xf.g + '</td><td>' + ntF(o.xf.ppg, 1) +
+            '</td><td>' + ntF(o.xf.xfpg, 1) + '</td><td style="color:' + col + '"><b>' + ntSigned(f, 1) + '</b></td>' +
+            '<td>' + (o.tdPart != null ? ntSigned(o.tdPart, 1) : '—') + '</td><td>' + (o.tdPart != null ? ntSigned(f - o.tdPart, 1) : '—') + '</td></tr>';
+        });
+        return h + '</tbody></table>';
+      }
+      var byPos = {};
+      xrows.forEach(function (o) { (byPos[o.p.pos] = byPos[o.p.pos] || []).push(o); });
+      html += '<h3 style="margin-top:6px">EXPECTED FANTASY POINTS <span class="dim" style="font-weight:normal;font-size:12px">2026 to date · standard usage-based xFP · FPOE = actual − expected · TD part regresses, skill part mostly repeats</span></h3>';
+      ['QB', 'RB', 'WR', 'TE'].forEach(function (pos) {
+        var rows = byPos[pos]; if (!rows) return;
+        rows.sort(function (x, y) { return y.xf.fpoeg - x.xf.fpoeg; });
+        var over = rows.filter(function (o) { return o.xf.fpoeg >= 1.5; }).slice(0, 8);
+        var under = rows.filter(function (o) { return o.xf.fpoeg <= -1.5; }).sort(function (x, y) { return x.xf.fpoeg - y.xf.fpoeg; }).slice(0, 8);
+        html += '<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;margin-bottom:14px">' +
+          '<div>' + xtable(under, pos + ' — UNDER EXPECTED (scoring below his usage)') + '</div>' +
+          '<div>' + xtable(over, pos + ' — OVER EXPECTED (scoring above his usage)') + '</div></div>';
+        text.push('XFP UNDER ' + pos + ': ' + under.slice(0, 5).map(function (o) { return o.p.name + ' (' + ntF(o.xf.ppg, 1) + ' vs ' + ntF(o.xf.xfpg, 1) + ' xFP, ' + ntSigned(o.xf.fpoeg, 1) + (o.tdPart != null ? ', TD ' + ntSigned(o.tdPart, 1) : '') + ')'; }).join('; '));
+        text.push('XFP OVER ' + pos + ': ' + over.slice(0, 5).map(function (o) { return o.p.name + ' (' + ntF(o.xf.ppg, 1) + ' vs ' + ntF(o.xf.xfpg, 1) + ' xFP, ' + ntSigned(o.xf.fpoeg, 1) + (o.tdPart != null ? ', TD ' + ntSigned(o.tdPart, 1) : '') + ')'; }).join('; '));
+      });
+    }
     $('nt-luck').innerHTML = html || '<p class="dim">No luck data yet (maps fill after the first 2026 games).</p>';
     return text;
   }

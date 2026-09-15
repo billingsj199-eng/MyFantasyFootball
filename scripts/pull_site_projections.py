@@ -64,9 +64,19 @@ UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
 ESPN_URL = ('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{season}'
             '/segments/0/leaguedefaults/3?view=kona_player_info')
 ESPN_POS = {1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE', 5: 'K'}
+# 2026-09-15: the /season/ page silently became the CURRENT-WEEK table once
+# the season kicked off (title "Week 2 Proj"), which put per-game numbers
+# where app.js expects season totals (card showed "CBS 1.0" PPG for every
+# player). /restofseason/ still serves remaining-season totals with a "Games
+# Played" column, so pull_cbs scales ROS totals back up to a 17-game season
+# (× 17 / games_remaining); preseason the two pages are identical.
 CBS_URL = ('https://www.cbssports.com/fantasy/football/stats/{pos}/{season}'
-           '/season/projections/ppr/')
+           '/restofseason/projections/ppr/')
 CBS_POS = ['QB', 'RB', 'WR', 'TE']
+CBS_SEASON_GAMES = 17
+# Sanity gate: a top-QB season total below this means CBS handed us a weekly
+# or otherwise mis-scaled table — refuse the source rather than ship it.
+CBS_MIN_TOP = 150
 CAP = 600
 
 # feed name -> d.js canonical, for spellings normalization can't bridge.
@@ -133,20 +143,31 @@ CBS_COLS = {
 
 
 def pull_cbs(season):
-    """Season stat components from the projection tables, rescored to the
-    house formula so CBS reads on the same scale as Sleeper/ESPN."""
+    """Rest-of-season stat components from the projection tables, rescored
+    to the house formula so CBS reads on the same scale as Sleeper/ESPN,
+    then scaled to a full 17-game season off CBS's own "Games Played"
+    (= games remaining) column so app.js's ÷17 still yields PPG in-season."""
     out = {}
+    scaled_rows = 0
     for pos in CBS_POS:
         try:
             r = requests.get(CBS_URL.format(pos=pos, season=season),
                              headers=UA, timeout=60)
             r.raise_for_status()
             txt = r.text
+            title = re.search(r'<title>(.*?)</title>', txt, re.S)
+            title = title.group(1).strip() if title else ''
+            if re.search(r'\bWeek \d+ Proj', title, re.I):
+                # The URL handed us a single-week table — never ship that as
+                # a season number.
+                print(f'  !! CBS {pos}: page is a weekly table ({title!r}) — skipped')
+                continue
             thead = re.search(r'<thead>(.*?)</thead>', txt, re.S)
             heads = re.findall(r'<th[^>]*>.*?<div[^>]*>\s*(.*?)\s*</div>',
                                thead.group(1), re.S) if thead else []
             heads = [re.sub(r'<[^>]+>|\s+', ' ', h).strip() for h in heads]
             idx = {key: heads.index(h) for h, key in CBS_COLS.items() if h in heads}
+            gp_i = heads.index('Games Played') if 'Games Played' in heads else None
             if not ({'py', 'ry', 'rcy'} & set(idx)):
                 print(f'  !! CBS {pos}: no yardage columns found — skipped')
                 continue
@@ -161,6 +182,7 @@ def pull_cbs(season):
                 name = name_m.group(1).strip()
                 try:
                     c = {k: float(cells[i]) for k, i in idx.items()}
+                    gp = float(cells[gp_i]) if gp_i is not None else CBS_SEASON_GAMES
                 except ValueError:
                     continue
                 base = (c.get('py', 0) / 25 + c.get('ptd', 0) * 4 +
@@ -169,12 +191,26 @@ def pull_cbs(season):
                 rec = c.get('rec', 0)
                 if base <= 0 or name in out:
                     continue
-                out[name] = [r1(base + rec * 0.5), r1(base + rec), r1(base)]
+                # ROS -> 17-game season. gp is CBS's projected games remaining
+                # for THIS player (injury/bye aware), so a player they project
+                # for 12 of 16 remaining games stays on their per-game pace.
+                scale = 1.0
+                if 0 < gp < CBS_SEASON_GAMES:
+                    scale = CBS_SEASON_GAMES / gp
+                    scaled_rows += 1
+                out[name] = [r1((base + rec * 0.5) * scale), r1((base + rec) * scale),
+                             r1(base * scale)]
                 n += 1
             print(f'  CBS {pos}: {n} rows')
             time.sleep(0.4)
         except Exception as e:
             print(f'  !! CBS {pos}: {e} — position skipped')
+    if out:
+        top = max(v[1] for v in out.values())
+        if top < CBS_MIN_TOP:
+            raise ValueError(f'top CBS season total {top} < {CBS_MIN_TOP} — '
+                             'table is not season-scale, refusing')
+        print(f'  CBS: top PPR season total {top}; {scaled_rows} rows scaled ROS->17g')
     return out
 
 

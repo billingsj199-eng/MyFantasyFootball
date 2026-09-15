@@ -9365,6 +9365,49 @@ function _simProjCells(d, wk, fmt, isBye) {
     ? '<td style="color:#ef4444;font-weight:700" title="Ruled out (injury/suspension)">0</td>'
     : '<td style="font-weight:700">' + proj + '</td>';
 }
+// TD / FG luck row for the player card (SIM_PROJ_2026.luck, exported by
+// sim_lab/export_site_proj.js): [pos, expected, actual, games, adjThisWeek].
+// RB/WR/TE/QB: expected TDs from every touch's field position (and throw
+// depth) vs actual TDs, season to date; adj = points the Sim Lab luck layer
+// adds to this week's half-PPR mean (backtested: TD conversion regresses,
+// LOYO -0.36% RB / -0.93% WR-TE / -0.44% QB). K: expected kicking points from
+// attempt distances vs actual — intel only (kicker accuracy is luck, r .09).
+function _simLuckRow(d) {
+  const SP = window.SIM_PROJ_2026;
+  const lk = SP && SP.luck;
+  if (!lk || d.s === 'DST') return null;
+  let r = lk[d.n];
+  if (!r && typeof _campNewsNorm === 'function') {
+    let idx = window._simLuckIdx;
+    if (!idx || idx._src !== SP) {
+      idx = { _src: SP };
+      Object.keys(lk).forEach(k => { idx[_campNewsNorm(k)] = lk[k]; });
+      if (typeof _foldSimAliases === 'function') _foldSimAliases(idx);
+      window._simLuckIdx = idx;
+    }
+    r = idx[_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+// The card's TD LUCK / FG LUCK box (null when nothing to say).
+function _simLuckBoxHtml(d, box, esc) {
+  const r = _simLuckRow(d);
+  if (!r) return '';
+  const pos = r[0], exp = r[1], act = r[2], g = r[3], adj = r[4];
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  if (pos === 'K') {
+    const luck = g ? (exp - act) / g : 0;
+    if (Math.abs(luck) < 0.5) return '';
+    const up = luck > 0;
+    const val = '<span style="color:' + (up ? '#22c55e' : '#f87171') + '">' + (up ? 'DUE UP' : 'DUE DOWN') + '</span> <span style="font-size:.62rem;color:var(--text2)">' + act + ' pts on ' + f1(exp) + ' expected</span>';
+    return box('FG LUCK', val, '', (up ? 'Has missed kicks the distances say he makes (' : 'Has made more than his attempt distances predict (') + act + ' kicking pts vs ' + f1(exp) + ' expected over ' + g + ' game' + (g > 1 ? 's' : '') + '). Kicker accuracy does not carry over year to year, so a streak either way is luck, not a slump or a hot hand. Informational — kicker projections do not use it.');
+  }
+  if (adj == null || Math.abs(adj) < 0.1) return '';
+  const up = adj > 0;
+  const val = '<span style="color:' + (up ? '#22c55e' : '#f87171') + '">' + (up ? '+' : '') + f1(adj) + '</span> <span style="font-size:.62rem;color:var(--text2)">' + act + ' TD on ' + f1(exp) + ' expected</span>';
+  return box('TD LUCK', val, '', act + ' TD' + (act === 1 ? '' : 's') + ' this season on ' + f1(exp) + ' expected from where his touches came (field position' + (pos === 'RB' ? '' : ' and throw depth') + '). TD conversion does not persist, so the Sim Lab projection already ' + (up ? 'adds ' : 'removes ') + f1(Math.abs(adj)) + ' half-PPR points this week — regression is priced in, not a reason to move him further.');
+}
+
 // Sim season PPG row [half, ppr, std] from SIM_PROJ_2026.seasonPpg (mean of
 // the player's weekly sim means across his playable weeks).
 function _simSeasonPpgRow(d) {
@@ -11649,6 +11692,10 @@ function buildWeeklyCardView(d) {
       + (ws.sub ? ' <span style="font-size:.62rem;color:var(--text2)">' + esc(ws.sub) + '</span>' : ''), '', ws.tip);
     html += '</div>';
   }
+  // TD / FG luck (SIM_PROJ_2026.luck): what he has scored vs what his touch
+  // locations predicted, and the regression the sim already prices in.
+  const luckBox = (typeof _simLuckBoxHtml === 'function') ? _simLuckBoxHtml(d, box, esc) : '';
+  if (luckBox) html += '<div class="card-rank-row" style="grid-template-columns:1fr;margin-top:.4rem">' + luckBox + '</div>';
   html += '</div>';
 
   // Projection + provenance

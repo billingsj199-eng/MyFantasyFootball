@@ -28904,14 +28904,22 @@ window.fmtHeight = fmtHeight;
     // Never loaded the official board this session (see loadJacksFromCloud)?
     // Then what's on screen may be the bundled default — saving would
     // overwrite the real rankings. Explicit override only.
-    if (!window._jacksOfficialLoaded) {
+    // 2026-09-15: this used to be an OK/Cancel confirm and was clicked through —
+    // the bundled default order went out over every format. Now a hard refusal;
+    // the only override is deliberate, from the console:
+    //   window._jacksAllowUnloadedSave = true
+    if (!window._jacksOfficialLoaded && window._jacksAllowUnloadedSave !== true) {
       const _why = window._jacksOfficialLoadFailed ? ' (' + window._jacksOfficialLoadFailed + ')' : '';
-      if (!confirm("SAFETY CHECK: this session never loaded Jack's official board from the cloud" + _why + ", so the board on screen may be the bundled default order.\n\nSaving now would overwrite the real rankings.\n\nSave anyway?")) {
-        toast('Save cancelled — official board was never loaded this session');
-        return;
-      }
-      console.warn('[Save] Override: saving without an official-board load this session');
+      console.error("[Save] REFUSED: this session never loaded Jack's official board" + _why + " — the board on screen may be the bundled default. Reload the page; console override: window._jacksAllowUnloadedSave = true");
+      toast("⚠ SAVE REFUSED — Jack's official board never loaded this session, so this is probably the default order. Reload the page and try again.");
+      return false;
     }
+    if (!window._jacksOfficialLoaded) console.warn('[Save] Override: saving without an official-board load this session');
+    // Typed override for the remaining safety checks (no more OK/Cancel).
+    const _typedOverride = (msg) => {
+      const ans = prompt(msg + '\n\nType OVERWRITE to save anyway (anything else cancels):');
+      return (ans || '').trim().toUpperCase() === 'OVERWRITE';
+    };
     showSaving();
     try {
       // === Capture previous snapshot (for the WEEKLY MOVERS ticker) ===
@@ -28995,14 +29003,33 @@ window.fmtHeight = fmtHeight;
             if (oldTiers > 0 && newTiers === 0) shrunk.push(m + ' tiers: ' + oldTiers + '→0');
           });
           if (shrunk.length) {
-            const msg = 'SAFETY CHECK: this save would shrink your rankings:\n\n' + shrunk.join('\n') + '\n\nThis usually means the page didn\'t fully load. Save anyway?';
-            if (!confirm(msg)) {
+            const msg = 'SAFETY CHECK: this save would shrink your rankings:\n\n' + shrunk.join('\n') + '\n\nThis usually means the page didn\'t fully load. The safe move is CANCEL, then reload the page.';
+            if (!_typedOverride(msg)) {
               console.warn('[Save] Aborted by safety check:', shrunk);
               hideSaving();
-              toast('Save cancelled — boards looked degraded');
-              return;
+              toast('Save cancelled — boards looked degraded. Reload the page.');
+              return false;
             }
-            console.warn('[Save] Safety check warned, user overrode:', shrunk);
+            console.warn('[Save] Safety check warned, user typed OVERWRITE:', shrunk);
+          }
+          // ── STALE-BASE CHECK ──────────────────────────────────────────
+          // The boards in this tab came from doc version _jacksBaseUpdatedAt.
+          // If the cloud doc is NEWER than that, another tab/device saved in
+          // between (this tab kept its unsaved edits instead of applying that
+          // save — see listenForJacksUpdates). Writing now discards it.
+          const _cloudAt = existing.data().updatedAt || '';
+          const _baseAt = window._jacksBaseUpdatedAt || '';
+          if (_cloudAt && _baseAt && _cloudAt > _baseAt) {
+            const smsg = "SAFETY CHECK: Jack's board was saved from another tab or device at "
+              + new Date(_cloudAt).toLocaleString() + ' (this tab is working from the '
+              + new Date(_baseAt).toLocaleString() + ' version).\n\nSaving now REPLACES that newer save with what is on screen here.';
+            if (!_typedOverride(smsg)) {
+              console.warn('[Save] Aborted: cloud board newer than this tab\'s base', _cloudAt, _baseAt);
+              hideSaving();
+              toast('Save cancelled — a newer save exists. Reload to see it.');
+              return false;
+            }
+            console.warn('[Save] Stale-base warned, user typed OVERWRITE:', _cloudAt, _baseAt);
           }
         }
       } catch(scErr) { console.warn('[Save] Safety check read failed:', scErr); }
@@ -29018,13 +29045,13 @@ window.fmtHeight = fmtHeight;
           + 'cannot be verified against what\'s already saved.\n\n'
           + 'If this page loaded from a stale snapshot (e.g. after a network hiccup), '
           + 'saving now could overwrite good rankings.\n\nSave anyway?';
-        if (!confirm(blindMsg)) {
+        if (!_typedOverride(blindMsg)) {
           console.warn('[Save] Aborted: cloud board unreadable, user declined blind save');
           hideSaving();
           toast('Save cancelled — could not verify cloud board');
-          return;
+          return false;
         }
-        console.warn('[Save] Blind save — cloud board unreadable, user overrode');
+        console.warn('[Save] Blind save — cloud board unreadable, user typed OVERWRITE');
       }
 
       // ── LOCAL ROLLING BACKUP (PRE-WRITE) ────────────────────────────────
@@ -29045,6 +29072,7 @@ window.fmtHeight = fmtHeight;
         updatedBy: currentUser.email || '',
         updatedAt: _savedAt
       }, {merge: true});
+      window._jacksBaseUpdatedAt = _savedAt;   // this tab's boards now match this doc version
       console.log('[Save] Jacks rankings saved OK');
 
       // ── POST-SAVE SERVER VERIFY ─────────────────────────────────────────
@@ -29100,16 +29128,20 @@ window.fmtHeight = fmtHeight;
       throw e;
     }
     hideSaving();
+    return true;
   }
 
-  // Main save dispatcher — routes to the right save function
+  // Main save dispatcher — routes to the right save function.
+  // Resolves false when the official-board save was refused/cancelled by a
+  // safety check, so the SAVE button does not report "SAVED".
   async function saveToCloud() {
     if (!currentUser || !db) return;
     // Always save user's personal rankings
     await saveUserRankings();
     // If admin, also save Jack's rankings to the shared document
     if (isAdmin()) {
-      await saveJacksRankings();
+      const _ok = await saveJacksRankings();
+      if (_ok === false) return false;
     }
   }
 
@@ -29208,17 +29240,27 @@ window.fmtHeight = fmtHeight;
         window._jacksPrevRanks = (obj._prevRanks && typeof obj._prevRanks === 'object') ? obj._prevRanks : null;
         if (!window._jacksPrevSavedAt && obj._prevSavedAt) window._jacksPrevSavedAt = obj._prevSavedAt;
         if (obj.jacks) {
-          _bypassEditCheck = true;
-          if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
-          if (obj.jacks.bestball) loadModeData('bestball', obj.jacks.bestball, 'jacks');
-          if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
-          if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
-          if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
-          _bypassEditCheck = false;
-          // Weekly follows redraft unless this week was saved (see _weeklyReconcileBoard)
-          if (typeof window._weeklyStashSaved === 'function') {
-            if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
-            else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
+          // Explicit (re)load with unsaved edits on screen: if the doc is the
+          // same version this tab already applied, keep the edits (nothing new
+          // to load). A genuinely newer doc still replaces — this is the load path.
+          const _atL = doc.data().updatedAt || null;
+          const _sameVer = !!(_atL && window._jacksBaseUpdatedAt && _atL === window._jacksBaseUpdatedAt);
+          if (!(_hasUnsavedChanges && _sameVer)) {
+            _bypassEditCheck = true;
+            if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
+            if (obj.jacks.bestball) loadModeData('bestball', obj.jacks.bestball, 'jacks');
+            if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
+            if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
+            if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
+            _bypassEditCheck = false;
+            // Weekly follows redraft unless this week was saved (see _weeklyReconcileBoard)
+            if (typeof window._weeklyStashSaved === 'function') {
+              if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
+              else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
+            }
+            if (_docId === 'jacks-official') window._jacksBaseUpdatedAt = _atL;
+          } else {
+            console.log('[Auth] Jack\'s board reload skipped — same doc version already applied and this tab has unsaved edits');
           }
           // Virgin "mine" formats mirror the freshly-loaded Jack's boards
           if (typeof window._mineSeedFromJacks === 'function') window._mineSeedFromJacks();
@@ -29377,17 +29419,42 @@ window.fmtHeight = fmtHeight;
         window._jacksPrevRanks = (obj._prevRanks && typeof obj._prevRanks === 'object') ? obj._prevRanks : null;
         if (!window._jacksPrevSavedAt && obj._prevSavedAt) window._jacksPrevSavedAt = obj._prevSavedAt;
         if (obj.jacks) {
-          _bypassEditCheck = true;
-          if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
-          if (obj.jacks.bestball) loadModeData('bestball', obj.jacks.bestball, 'jacks');
-          if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
-          if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
-          if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
-          _bypassEditCheck = false;
-          // Weekly tracks the fresh redraft order unless this week was saved
-          if (typeof window._weeklyStashSaved === 'function') {
-            if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
-            else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
+          // ── UNSAVED-EDIT GUARD (2026-09-15) ───────────────────────────
+          // This handler used to re-apply the cloud boards on EVERY snapshot,
+          // including this tab's own writes (the save echo, and the OUT FOR
+          // SEASON toggle's `ir` merge-write) — any unsaved reorder on screen
+          // silently reverted to the last save ("my ranks keep resetting").
+          //  • own write (hasPendingWrites): boards already match — skip.
+          //  • another tab/device saved while this tab has unsaved edits:
+          //    keep the edits, say so; saveJacksRankings' stale-base check
+          //    then asks before this tab overwrites that save.
+          const _atS = doc.data().updatedAt || null;
+          const _ownWrite = !!(doc.metadata && doc.metadata.hasPendingWrites);
+          const _foreignNewer = !_ownWrite && !!(_atS && window._jacksBaseUpdatedAt && _atS !== window._jacksBaseUpdatedAt);
+          let _skipBoards = false;
+          if (_ownWrite) {
+            _skipBoards = true;
+            if (_docId === 'jacks-official' && _atS) window._jacksBaseUpdatedAt = _atS;
+          } else if (_hasUnsavedChanges && _foreignNewer && _docId === 'jacks-official') {
+            _skipBoards = true;
+            window._jacksForeignSaveAt = _atS;
+            console.warn('[Auth] Jack\'s board was saved elsewhere (' + _atS + ') — keeping this tab\'s unsaved edits; save will ask before overwriting');
+            if (typeof toast === 'function') toast("⚠ Jack's board was saved from another tab/device at " + new Date(_atS).toLocaleTimeString() + ". Your unsaved edits here are kept — reload to discard them, or SAVE to replace that save.");
+          }
+          if (!_skipBoards) {
+            _bypassEditCheck = true;
+            if (obj.jacks.redraft) loadModeData('redraft', obj.jacks.redraft, 'jacks');
+            if (obj.jacks.bestball) loadModeData('bestball', obj.jacks.bestball, 'jacks');
+            if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
+            if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
+            if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
+            _bypassEditCheck = false;
+            // Weekly tracks the fresh redraft order unless this week was saved
+            if (typeof window._weeklyStashSaved === 'function') {
+              if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
+              else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
+            }
+            if (_docId === 'jacks-official' && _atS) window._jacksBaseUpdatedAt = _atS;
           }
           // Virgin "mine" formats track Jack's newest saves live (re-renders
           // itself if the user is currently viewing a reseeded board)
@@ -29528,13 +29595,20 @@ window.fmtHeight = fmtHeight;
     try {
       // With persistence enabled, writes resolve from cache even if offline.
       // Add a safety timeout — if it takes >15s, the write is cached and will sync later.
-      let done = false;
-      const savePromise = saveToCloud().then(() => { done = true; });
+      let done = false, refused = false;
+      const savePromise = saveToCloud().then(r => { done = true; refused = (r === false); });
       const timer = new Promise(resolve => setTimeout(() => {
         if (!done) console.warn('[Save] Still waiting — write is cached, will sync when online');
         resolve();
       }, 15000));
       await Promise.race([savePromise, timer]);
+      // A safety check refused/cancelled the official-board save: the edits
+      // are still unsaved — never show SAVED (2026-09-15).
+      if (refused) {
+        _hasUnsavedChanges = true;
+        resetSaveBtn();
+        return;
+      }
       markSaved();
       btn.classList.remove('saving');
       btn.classList.add('saved');

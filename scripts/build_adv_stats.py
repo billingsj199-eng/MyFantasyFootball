@@ -7,8 +7,9 @@ Advanced stats tables for the admin Research page -> data/adv_stats_<yr>.js
     QB: {f: [field keys], r: [[row values], ...]},
     RB: {...}, WR: {...}, TE: {...}
   }
-  One file per season (2019-2026) so the page lazy-loads only the season on
-  screen. Column labels / glossary / formats live in app.js (_ADV_COLS) - keep
+  One file per season (2019-2026) plus one per week (adv_stats_<yr>_w<N>.js ->
+  window.ADV_STATS["<yr>-w<N>"], same shape + wk; the season file lists `wks`)
+  so the page lazy-loads only what is on screen. Column labels / glossary / formats live in app.js (_ADV_COLS) - keep
   the field keys below in sync with it. No build timestamp in the payload, so
   an unchanged season rebuilds byte-identical (no empty daily commits).
 
@@ -147,8 +148,11 @@ def weekly_weeks(facet, yr):
     return sorted(out)
 
 
-def weekly(facet, yr):
+def weekly(facet, yr, only=None):
+    """Rows of a PFF weekly facet; only=<week> reads just that week's file."""
     for wk in weekly_weeks(facet, yr):
+        if only is not None and wk != only:
+            continue
         with open(os.path.join(PFF_WEEKLY, f'pff_{facet}_{yr}_w{wk}.csv'), encoding='utf-8-sig', newline='') as fh:
             for row in csv.DictReader(fh):
                 pid = (row.get('player_id') or '').strip()
@@ -182,9 +186,9 @@ QB_COUNTS = ['dropbacks', 'attempts', 'completions', 'yards', 'touchdowns', 'int
              'scrambles', 'passing_snaps', 'def_gen_pressures']
 
 
-def agg_passing(yr):
+def agg_passing(yr, only=None):
     out = {}
-    for wk, pid, row in weekly('passing_pressure', yr):
+    for wk, pid, row in weekly('passing_pressure', yr, only):
         a = out.setdefault(pid, Acc())
         touch(a, wk, row)
         # pressure_ + no_pressure_ partition every dropback; blitz_ is a subset
@@ -211,10 +215,10 @@ REC_SUM = ['targets', 'receptions', 'yards', 'touchdowns', 'drops', 'contested_t
            'slot_snaps', 'wide_snaps', 'inline_snaps', 'pass_blocks', 'pass_plays']
 
 
-def agg_receiving(yr):
+def agg_receiving(yr, only=None):
     facet = 'receiving' if weekly_weeks('receiving', yr) else 'receiving_summary'
     out = {}
-    for wk, pid, row in weekly(facet, yr):
+    for wk, pid, row in weekly(facet, yr, only):
         a = out.setdefault(pid, Acc())
         touch(a, wk, row)
         # 2026 file: routes_pff = PFF's targeted-table routes, routes = pass-route
@@ -237,9 +241,9 @@ RUSH_SUM = ['attempts', 'yards', 'touchdowns', 'yards_after_contact', 'elu_rush_
             'targets', 'receptions', 'rec_yards', 'run_plays']
 
 
-def agg_rushing(yr):
+def agg_rushing(yr, only=None):
     out = {}
-    for wk, pid, row in weekly('rushing_summary', yr):
+    for wk, pid, row in weekly('rushing_summary', yr, only):
         a = out.setdefault(pid, Acc())
         touch(a, wk, row)
         for c in RUSH_SUM:
@@ -251,9 +255,9 @@ def agg_rushing(yr):
     return out
 
 
-def agg_facet(facet, yr, cols):
+def agg_facet(facet, yr, cols, only=None):
     out = {}
-    for wk, pid, row in weekly(facet, yr):
+    for wk, pid, row in weekly(facet, yr, only):
         a = out.setdefault(pid, Acc())
         touch(a, wk, row)
         for c in cols:
@@ -420,23 +424,35 @@ def build_year(yr, xw, dlookup):
     weeks = set()
     for fac in ('passing_pressure', 'rushing_summary', 'receiving', 'receiving_summary'):
         weeks.update(weekly_weeks(fac, yr))
-    thru = max(weeks) if weeks else 0
-    if not thru:
+    if not weeks:
         print(f'{yr}: no PFF weekly files - skipped')
         return
-
-    qb = agg_passing(yr)
-    rec = agg_receiving(yr)
-    rush = agg_rushing(yr)
-    sch = agg_facet('receiving_scheme', yr, ['man_routes', 'man_targets', 'man_yards', 'zone_routes', 'zone_targets', 'zone_yards'])
-    con = agg_facet('receiving_concept', yr, ['slot_routes', 'slot_yards', 'screen_targets', 'base_targets'])
-    dep = agg_facet('receiving_depth', yr, ['deep_targets', 'deep_receptions', 'deep_yards', 'medium_yards', 'short_yards',
-                                           'behind_los_yards', 'behind_los_targets', 'base_targets'])
-    rec_s = season_csv('receiving', yr)
-    rush_s = season_csv('rushing', yr)
-    pbp = load_pbp(yr)
-    P, T, PT = pbp_agg(pbp) if pbp is not None else ({}, {}, {})
+    wks = sorted(weeks)
+    pbp = load_pbp(yr)      # loaded once, sliced per week
     snaps = load_snaps(yr)
+    build_table(yr, xw, dlookup, pbp, snaps, wks[-1], wks=wks)
+    written = sum(build_table(yr, xw, dlookup, pbp, snaps, w, week=w) for w in wks)
+    print(f'  {yr}: {len(wks)} week files ({written} written)')
+
+
+def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None):
+    """One table set -> data/adv_stats_<yr>.js (week=None: whole season) or
+    data/adv_stats_<yr>_w<week>.js (that week only). True when the file changed."""
+    qb = agg_passing(yr, week)
+    rec = agg_receiving(yr, week)
+    rush = agg_rushing(yr, week)
+    sch = agg_facet('receiving_scheme', yr, ['man_routes', 'man_targets', 'man_yards', 'zone_routes', 'zone_targets', 'zone_yards'], week)
+    con = agg_facet('receiving_concept', yr, ['slot_routes', 'slot_yards', 'screen_targets', 'base_targets'], week)
+    dep = agg_facet('receiving_depth', yr, ['deep_targets', 'deep_receptions', 'deep_yards', 'medium_yards', 'short_yards',
+                                           'behind_los_yards', 'behind_los_targets', 'base_targets'], week)
+    # PFF season CSVs are full-season numbers - a week table uses the weekly facets only
+    rec_s = season_csv('receiving', yr) if week is None else {}
+    rush_s = season_csv('rushing', yr) if week is None else {}
+    if week is not None:
+        pbp = pbp[pbp.week == week] if pbp is not None else None
+        snaps = {k: {w: v for w, v in d.items() if w == week} for k, d in snaps.items()}
+        snaps = {k: d for k, d in snaps.items() if d}
+    P, T, PT = pbp_agg(pbp) if pbp is not None and len(pbp) else ({}, {}, {})
     empty = collections.defaultdict(float)
     stats = collections.Counter()
 
@@ -629,7 +645,7 @@ def build_year(yr, xw, dlookup):
             ])
 
     fields = {'QB': QB_F, 'RB': RB_F, 'WR': REC_F, 'TE': REC_F}
-    # team season totals for the page's team view: [targets, carries, air yards, inside-10 carries, games]
+    # team totals (season, or that week) for the page's team view: [targets, carries, air yards, inside-10 carries, games]
     teams = collections.defaultdict(lambda: [0.0, 0.0, 0.0, 0.0, 0])
     for (tm, wk), v in T.items():
         if not isinstance(tm, str):
@@ -638,7 +654,12 @@ def build_year(yr, xw, dlookup):
         t[0] += v.get('tgt', 0.0); t[1] += v.get('car', 0.0); t[2] += v.get('ay', 0.0); t[3] += v.get('i10', 0.0)
         if v.get('db', 0.0) > 0:
             t[4] += 1
-    payload = {'yr': yr, 'thru': thru, 'teams': {tm: [int(round(x)) for x in t] for tm, t in sorted(teams.items())}}
+    payload = {'yr': yr, 'thru': thru}
+    if week is not None:
+        payload['wk'] = week
+    if wks:
+        payload['wks'] = wks
+    payload['teams'] = {tm: [int(round(x)) for x in t] for tm, t in sorted(teams.items())}
     for pos in ('QB', 'RB', 'WR', 'TE'):
         f = fields[pos]
         for r in rows[pos]:
@@ -647,16 +668,21 @@ def build_year(yr, xw, dlookup):
         rows[pos].sort(key=lambda r: -(r[fi] if r[fi] is not None else -99))
         payload[pos] = {'f': f, 'r': rows[pos]}
     body = json.dumps(payload, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
-    out = os.path.join(ROOT, 'data', f'adv_stats_{yr}.js')
-    text = f'window.ADV_STATS=window.ADV_STATS||{{}};window.ADV_STATS[{yr}]={body};\n'
+    if week is None:
+        out = os.path.join(ROOT, 'data', f'adv_stats_{yr}.js')
+        text = f'window.ADV_STATS=window.ADV_STATS||{{}};window.ADV_STATS[{yr}]={body};\n'
+    else:
+        out = os.path.join(ROOT, 'data', f'adv_stats_{yr}_w{week}.js')
+        text = f'window.ADV_STATS=window.ADV_STATS||{{}};window.ADV_STATS["{yr}-w{week}"]={body};\n'
     old = open(out, encoding='utf-8').read() if os.path.exists(out) else None
     if old != text:
         with open(out, 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(text)
-    print(f'{yr}: thru W{thru}  QB {len(rows["QB"])}  RB {len(rows["RB"])}  WR {len(rows["WR"])}  TE {len(rows["TE"])}'
-          f'  | ids {stats["gsis"]}/{stats["gsis"] + stats["no_gsis"]}  snaps {stats["snaps"]}'
-          f'  | {len(text) // 1024} KB {"(unchanged)" if old == text else "written"}')
-    return payload
+    if week is None:
+        print(f'{yr}: thru W{thru}  QB {len(rows["QB"])}  RB {len(rows["RB"])}  WR {len(rows["WR"])}  TE {len(rows["TE"])}'
+              f'  | ids {stats["gsis"]}/{stats["gsis"] + stats["no_gsis"]}  snaps {stats["snaps"]}'
+              f'  | {len(text) // 1024} KB {"(unchanged)" if old == text else "written"}')
+    return old != text
 
 
 def main():

@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-15-adv4" as="script">
+<link rel="preload" href="app.js?v=2026-09-15-adv5" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2651,6 +2651,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div class="rs-controls">
 <label>Season <select id="rsAdvYr" class="rs-select"></select></label>
+<label title="Full season, or one week's stats only">Week <select id="rsAdvWk" class="rs-select"><option value="">Season</option></select></label>
 <label title="Pick a team to see every player it used at this position (the minimum filter drops to 0)">Team <select id="rsAdvTm" class="rs-select"><option value="">All</option></select></label>
 <label><span id="rsAdvMinLbl">Min dropbacks</span> <input type="number" id="rsAdvMin" class="rs-num" min="0" step="5"></label>
 <input type="text" id="rsAdvQ" class="rs-search rs-adv-q" placeholder="Filter players&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter players">
@@ -5499,21 +5500,23 @@ window._ensureResearchData = (function() {
 })();
 
 // Research page Advanced Stats: data/adv_stats_<yr>.js (window.ADV_STATS[yr], one
-// season per file, 2019-2026, scripts/build_adv_stats.py). Loaded one season at a
-// time when the section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-09-15-team';
+// season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
+// that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
+// section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
+window._ADV_STATS_V = '2026-09-15-wk';
 window._ensureAdvStats = (function() {
   const cache = {};
-  return function _ensureAdvStats(yr) {
-    if (cache[yr]) return cache[yr];
-    cache[yr] = new Promise(function(resolve) {
+  return function _ensureAdvStats(yr, wk) {
+    const key = wk ? yr + '-w' + wk : String(yr);
+    if (cache[key]) return cache[key];
+    cache[key] = new Promise(function(resolve) {
       const s = document.createElement('script');
-      s.src = 'data/adv_stats_' + yr + '.js?v=' + window._ADV_STATS_V;
-      s.onload = function() { resolve((window.ADV_STATS || {})[yr] || null); };
-      s.onerror = function() { console.warn('[AdvStats] load failed', yr); delete cache[yr]; resolve(null); };
+      s.src = 'data/adv_stats_' + yr + (wk ? '_w' + wk : '') + '.js?v=' + window._ADV_STATS_V;
+      s.onload = function() { resolve((window.ADV_STATS || {})[key] || null); };
+      s.onerror = function() { console.warn('[AdvStats] load failed', key); delete cache[key]; resolve(null); };
       document.head.appendChild(s);
     });
-    return cache[yr];
+    return cache[key];
   };
 })();
 
@@ -5754,7 +5757,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-15-adv4"></script>
+<script defer src="app.js?v=2026-09-15-adv5"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

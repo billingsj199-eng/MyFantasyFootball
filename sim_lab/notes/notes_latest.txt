@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 2 (half) — generated 2026-09-15 13:44Z
-# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 09:33 · wk 2 injury layer: 48 out/docked
+# Sim Lab notes — Week 2 (half) — generated 2026-09-15 14:30Z
+# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 10:30 · wk 2 injury layer: 48 out/docked
 
-SIM LAB NOTES — Week 2 (half) — 2026-09-15 13:44
+SIM LAB NOTES — Week 2 (half) — 2026-09-15 14:30
 
 TD LUCK (top 5 each way):
   QB DUE UP: Aaron Rodgers (1 TD on 1.6 xTD, +0.2); Joe Burrow (1 TD on 1.6 xTD, +0.2); Jacoby Brissett (1 TD on 1.5 xTD, +0.2); Jordan Love (2 TD on 2.4 xTD, +0.1); Drake Maye (1 TD on 1.1 xTD, +0.0)
@@ -32,22 +32,22 @@ BUF offense vs DET defense
   - DET CB1: D.J. Reed active
 
 PLAYERS (PROJ half):
-  Josh Allen (BUF QB) 25.3 [TD luck -0.2]
-  Jahmyr Gibbs (DET RB) 23.8 [TD luck +0.1] — Behind LOS guy (43% of targets, lg 18%)
-  Jared Goff (DET QB) 17.4 [TD luck -0.1]
-  James Cook (BUF RB) 16.8 [role boost ×1.07, TD luck +0.2] — Behind LOS guy (36% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%) · right-heavy (52%) · D funnels short 0-9 (53% of targets faced)
-  Amon-Ra St. Brown (DET WR) 16.6 [TD luck -1.3] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (3%)
-  DJ Moore (BUF WR) 12.7 [TD luck -0.9] — rarely short 0-9 (31%) · Deep 20+ guy (28% of targets, lg 13%)
-  Jameson Williams (DET WR) 11.2 [TD luck +0.2] — rarely behind los (9%) · rarely short 0-9 (37%) · Int 10-19 guy (33% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (27% of targets faced)
-  Dalton Kincaid (BUF TE) 10.1 [TD luck +0.1] — rarely short 0-9 (31%) · Int 10-19 guy (43% of targets, lg 22%)
-  Khalil Shakir (BUF WR) 9.8 [role boost ×1.03, TD luck +0.7] — Behind LOS guy (36% of targets, lg 18%) · rarely deep 20+ (5%)
-  Sam LaPorta (DET TE) 9.8 [TD luck +0.8] — Short 0-9 guy (68% of targets, lg 48%) · rarely deep 20+ (3%)
-  Tyler Bass (BUF K) 8.9
+  Josh Allen (BUF QB) 25.1 · xFP 22.2/g (+13.5 over expected) [TD luck -0.2]
+  Jahmyr Gibbs (DET RB) 23.8 · xFP 28.9/g (+2.2 over expected) [TD luck +0.1] — Behind LOS guy (43% of targets, lg 18%)
+  Jared Goff (DET QB) 17.4 · xFP 18.7/g (-2.3 over expected) [TD luck -0.1]
+  James Cook (BUF RB) 16.9 · xFP 11.0/g (-2.6 over expected) [role boost ×1.07, TD luck +0.2] — Behind LOS guy (36% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%) · right-heavy (52%) · D funnels short 0-9 (53% of targets faced)
+  Amon-Ra St. Brown (DET WR) 16.6 · xFP 18.7/g (+5.0 over expected) [TD luck -1.3] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (3%)
+  DJ Moore (BUF WR) 12.7 · xFP 10.6/g (+7.9 over expected) [TD luck -0.9] — rarely short 0-9 (31%) · Deep 20+ guy (28% of targets, lg 13%)
+  Jameson Williams (DET WR) 11.2 · xFP 12.2/g (-5.7 over expected) [TD luck +0.2] — rarely behind los (9%) · rarely short 0-9 (37%) · Int 10-19 guy (33% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (27% of targets faced)
+  Dalton Kincaid (BUF TE) 10.1 · xFP 7.8/g (+7.7 over expected) [TD luck +0.1] — rarely short 0-9 (31%) · Int 10-19 guy (43% of targets, lg 22%)
+  Sam LaPorta (DET TE) 9.9 · xFP 12.4/g (-5.1 over expected) [TD luck +0.8] — Short 0-9 guy (68% of targets, lg 48%) · rarely deep 20+ (3%)
+  Khalil Shakir (BUF WR) 9.9 · xFP 10.7/g (-3.7 over expected) [role boost ×1.03, TD luck +0.7] — Behind LOS guy (36% of targets, lg 18%) · rarely deep 20+ (5%)
+  Tyler Bass (BUF K) 9.3
   Jake Bates (DET K) 7.7
   Bills D/ST (BUF DST) 5.4
-  Keon Coleman (BUF WR) 3.8 [role boost ×1.08, TD luck +0.3] — rarely behind los (3%) · left-heavy (54%) · D funnels short 0-9 (53% of targets faced)
-  Isaac TeSlaa (DET WR) 3.6 — rarely behind los (4%) · rarely short 0-9 (31%) · Int 10-19 guy (51% of targets, lg 22%) · left-heavy (53%) · D funnels int 10-19 (27% of targets faced)
-  Dawson Knox (BUF TE) 3.5 — Int 10-19 guy (30% of targets, lg 22%) · rarely deep 20+ (4%)
+  Keon Coleman (BUF WR) 3.7 · xFP 3.6/g (-3.0 over expected) [role boost ×1.08, TD luck +0.3] — rarely behind los (3%) · left-heavy (54%) · D funnels short 0-9 (53% of targets faced)
+  Isaac TeSlaa (DET WR) 3.7 · xFP 1.0/g (-1.0 over expected) — rarely behind los (4%) · rarely short 0-9 (31%) · Int 10-19 guy (51% of targets, lg 22%) · left-heavy (53%) · D funnels int 10-19 (27% of targets faced)
+  Dawson Knox (BUF TE) 3.5 · xFP 1.0/g (+0.2 over expected) — Int 10-19 guy (30% of targets, lg 22%) · rarely deep 20+ (4%)
   Lions D/ST (DET DST) 3.4
 
 CAR @ ATL — total 44.5, CAR by 1.5 · implied CAR 23.0 / ATL 21.5
@@ -65,23 +65,23 @@ ATL offense vs CAR defense
   - CAR CB1: Jaycee Horn active
 
 PLAYERS (PROJ half):
-  Bijan Robinson (ATL RB) 20.3 [TD luck -0.6] — Behind LOS guy (56% of targets, lg 18%) · left-heavy (50%)
-  Bryce Young (CAR QB) 18.2 [TD luck -0.4]
-  Chuba Hubbard (CAR RB) 12.5 [TD luck -0.7, market higher (12.5 vs model 11.0)] — Behind LOS guy (57% of targets, lg 18%)
+  Bijan Robinson (ATL RB) 20.3 · xFP 20.4/g (+6.9 over expected) [TD luck -0.6] — Behind LOS guy (56% of targets, lg 18%) · left-heavy (50%)
+  Bryce Young (CAR QB) 18.2 · xFP 19.9/g (+12.5 over expected) [TD luck -0.4]
+  Chuba Hubbard (CAR RB) 12.5 · xFP 13.6/g (+8.6 over expected) [TD luck -0.7, market higher (12.5 vs model 11.0)] — Behind LOS guy (57% of targets, lg 18%)
   Cooper Rush (ATL QB) 12.1 [role boost ×210.89, TD luck -0.3]
-  Tetairoa McMillan (CAR WR) 11.9 [TD luck +0.2] — rarely behind los (1%) · Int 10-19 guy (38% of targets, lg 22%) · D funnels deep 20+ (17% of targets faced)
-  Drake London (ATL WR) 11.7 [TD luck +0.1] — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%)
-  Jalen Coker (CAR WR) 10.3 [TD luck -1.7] — Int 10-19 guy (31% of targets, lg 22%)
-  Jonathon Brooks (CAR RB) 8.6
-  Kyle Pitts (ATL TE) 7.6 — right-heavy (55%)
+  Tetairoa McMillan (CAR WR) 11.9 · xFP 11.4/g (-3.4 over expected) [TD luck +0.2] — rarely behind los (1%) · Int 10-19 guy (38% of targets, lg 22%) · D funnels deep 20+ (17% of targets faced)
+  Drake London (ATL WR) 11.7 · xFP 5.1/g (-0.6 over expected) [TD luck +0.1] — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%)
+  Jalen Coker (CAR WR) 10.3 · xFP 12.2/g (+17.6 over expected) [TD luck -1.7] — Int 10-19 guy (31% of targets, lg 22%)
+  Jonathon Brooks (CAR RB) 8.6 · xFP 4.6/g (+2.1 over expected)
+  Kyle Pitts (ATL TE) 7.6 · xFP 1.5/g (-1.5 over expected) — right-heavy (55%)
   Nick Folk (ATL K) 7.4
   Ryan Fitzgerald (CAR K) 7.3
   Panthers D/ST (CAR DST) 6.7
   Falcons D/ST (ATL DST) 6.0
-  Darren Waller (CAR TE) 5.5 [role boost ×1.09] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%) · middle-heavy (36%)
-  Brian Robinson Jr. (ATL RB) 4.8 [TD luck +0.1]
-  Xavier Legette (CAR WR) 4.1 — rarely behind los (9%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%)
-  Jahan Dotson (ATL WR) 4.1 — rarely behind los (3%) · rarely short 0-9 (34%) · Int 10-19 guy (38% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%)
+  Darren Waller (CAR TE) 5.5 · xFP 1.9/g (+1.9 over expected) [role boost ×1.09] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%) · middle-heavy (36%)
+  Brian Robinson Jr. (ATL RB) 4.8 · xFP 4.5/g (-1.4 over expected) [TD luck +0.1]
+  Xavier Legette (CAR WR) 4.1 · xFP 2.4/g (-2.4 over expected) — rarely behind los (9%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%)
+  Jahan Dotson (ATL WR) 4.1 · xFP 4.4/g (-2.0 over expected) — rarely behind los (3%) · rarely short 0-9 (34%) · Int 10-19 guy (38% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%)
 
 NO @ BAL — total 46.5, BAL by 8.5 · implied NO 19.0 / BAL 27.5
 Weather @BAL: wind 7 mph (gusts 9), 85°F, 9% precip
@@ -98,19 +98,19 @@ BAL offense vs NO defense
   - NO CB1: Kool-Aid McKinstry active
 
 PLAYERS (PROJ half):
-  Lamar Jackson (BAL QB) 22.7
-  Derrick Henry (BAL RB) 18.7 [TD luck -1.4] — Behind LOS guy (35% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · right-heavy (51%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy)
-  Tyler Shough (NO QB) 18.1 [TD luck -0.1, market higher (18.1 vs model 16.4)]
-  Chris Olave (NO WR) 13.4 [TD luck +0.2] — rarely behind los (7%) · Deep 20+ guy (23% of targets, lg 13%)
-  Travis Etienne (NO RB) 12.5 [TD luck +0.2] — Behind LOS guy (57% of targets, lg 18%)
-  Mark Andrews (BAL TE) 10.2 [role boost ×1.14, TD luck +0.1] — rarely behind los (1%) · Short 0-9 guy (73% of targets, lg 48%) · rarely deep 20+ (2%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy)
+  Lamar Jackson (BAL QB) 22.7 · xFP 17.1/g (+7.9 over expected)
+  Derrick Henry (BAL RB) 18.7 · xFP 17.3/g (+17.5 over expected) [TD luck -1.4] — Behind LOS guy (35% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · right-heavy (51%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy)
+  Tyler Shough (NO QB) 18.0 · xFP 28.5/g (-3.3 over expected) [TD luck -0.1, market higher (18.0 vs model 16.4)]
+  Chris Olave (NO WR) 13.4 · xFP 16.6/g (+6.6 over expected) [TD luck +0.2] — rarely behind los (7%) · Deep 20+ guy (23% of targets, lg 13%)
+  Travis Etienne (NO RB) 12.5 · xFP 14.4/g (-3.1 over expected) [TD luck +0.2] — Behind LOS guy (57% of targets, lg 18%)
+  Mark Andrews (BAL TE) 10.2 · xFP 7.0/g (-0.1 over expected) [role boost ×1.14, TD luck +0.1] — rarely behind los (1%) · Short 0-9 guy (73% of targets, lg 48%) · rarely deep 20+ (2%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy)
   Tyler Loop (BAL K) 8.7
-  Devaughn Vele (NO WR) 8.0 [TD luck -0.4] — rarely behind los (4%) · Int 10-19 guy (38% of targets, lg 22%)
-  Juwan Johnson (NO TE) 7.9 [TD luck -0.1] — rarely behind los (7%) · Short 0-9 guy (59% of targets, lg 48%)
+  Juwan Johnson (NO TE) 7.9 · xFP 13.3/g (-0.4 over expected) [TD luck -0.1] — rarely behind los (7%) · Short 0-9 guy (59% of targets, lg 48%)
   Ravens D/ST (BAL DST) 7.8
-  Rashod Bateman (BAL WR) 7.0 [role boost ×1.30] — rarely behind los (0%) · Int 10-19 guy (36% of targets, lg 22%)
+  Devaughn Vele (NO WR) 7.7 · xFP 12.6/g (+3.8 over expected) [TD luck -0.4] — rarely behind los (4%) · Int 10-19 guy (38% of targets, lg 22%)
+  Rashod Bateman (BAL WR) 7.0 · xFP 1.5/g (-1.5 over expected) [role boost ×1.30] — rarely behind los (0%) · Int 10-19 guy (36% of targets, lg 22%)
   Daniel Carlson (NO K) 6.9
-  Justice Hill (BAL RB) 5.9 — Behind LOS guy (57% of targets, lg 18%)
+  Justice Hill (BAL RB) 5.9 · xFP 3.9/g (-0.6 over expected) — Behind LOS guy (57% of targets, lg 18%)
   Saints D/ST (NO DST) 4.1
 
 MIN @ CHI — total 49.5, CHI by 5.5 · implied MIN 22.0 / CHI 27.5
@@ -128,24 +128,24 @@ CHI offense vs MIN defense
   - MIN CB1: Isaiah Rodgers active
 
 PLAYERS (PROJ half):
-  Caleb Williams (CHI QB) 21.4 [role boost ×1.03, TD luck -0.2]
-  D'Andre Swift (CHI RB) 14.9 [TD luck -1.1] — Behind LOS guy (57% of targets, lg 18%)
-  Justin Jefferson (MIN WR) 14.8 [TD luck -1.1, CB shadow ×0.95] — rarely short 0-9 (35%) · Int 10-19 guy (31% of targets, lg 22%)
-  Luther Burden III (CHI WR) 11.6 [TD luck +0.1, market higher (11.6 vs model 10.1)] — rarely short 0-9 (40%)
-  Colston Loveland (CHI TE) 11.1 [TD luck +0.3, market higher (11.1 vs model 9.3)] — rarely behind los (1%) · Short 0-9 guy (63% of targets, lg 48%) · middle-heavy (31%)
-  Rome Odunze (CHI WR) 10.9 — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (30% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%) · right-heavy (55%) · D funnels int 10-19 (27% of targets faced)
-  Kyle Monangai (CHI RB) 10.3 [TD luck -0.6] — Behind LOS guy (41% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%)
-  Jordan Mason (MIN RB) 9.2 [TD luck -0.2]
-  Aaron Jones (MIN RB) 9.1 [role boost ×1.03, TD luck -0.4] — Behind LOS guy (57% of targets, lg 18%) · right-heavy (57%)
+  Caleb Williams (CHI QB) 21.3 · xFP 24.7/g (+12.6 over expected) [role boost ×1.03, TD luck -0.2]
+  D'Andre Swift (CHI RB) 14.8 · xFP 17.2/g (+14.7 over expected) [TD luck -1.1] — Behind LOS guy (57% of targets, lg 18%)
+  Justin Jefferson (MIN WR) 14.8 · xFP 16.1/g (+11.1 over expected) [TD luck -1.1, CB shadow ×0.95] — rarely short 0-9 (35%) · Int 10-19 guy (31% of targets, lg 22%)
+  Luther Burden III (CHI WR) 11.6 · xFP 6.5/g (+0.5 over expected) [TD luck +0.1] — rarely short 0-9 (40%)
+  Colston Loveland (CHI TE) 11.1 · xFP 4.7/g (-4.7 over expected) [TD luck +0.3, market higher (11.1 vs model 9.3)] — rarely behind los (1%) · Short 0-9 guy (63% of targets, lg 48%) · middle-heavy (31%)
+  Rome Odunze (CHI WR) 10.9 · xFP 4.2/g (+2.0 over expected) — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (30% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%) · right-heavy (55%) · D funnels int 10-19 (27% of targets faced)
+  Kyle Monangai (CHI RB) 10.4 · xFP 7.4/g (+12.0 over expected) [TD luck -0.6] — Behind LOS guy (41% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%)
+  Aaron Jones (MIN RB) 9.5 · xFP 9.0/g (+1.0 over expected) [role boost ×1.03, TD luck -0.4] — Behind LOS guy (57% of targets, lg 18%) · right-heavy (57%)
+  Jordan Mason (MIN RB) 9.1 · xFP 11.0/g (+0.9 over expected) [TD luck -0.2]
   Cairo Santos (CHI K) 8.7
-  Will Reichard (MIN K) 7.5
-  T.J. Hockenson (MIN TE) 7.2 [TD luck -0.6] — Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (12%) · rarely deep 20+ (3%) · middle-heavy (38%)
-  Jordan Addison (MIN WR) 6.6 [TD luck +0.1, CB shadow ×0.95] — rarely behind los (4%) · rarely short 0-9 (39%) · Int 10-19 guy (31% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%)
+  Will Reichard (MIN K) 7.4
+  Jordan Addison (MIN WR) 7.1 · xFP 3.1/g (-3.1 over expected) [TD luck +0.1, CB shadow ×0.95] — rarely behind los (4%) · rarely short 0-9 (39%) · Int 10-19 guy (31% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%)
+  T.J. Hockenson (MIN TE) 6.6 · xFP 7.8/g (+3.8 over expected) [TD luck -0.6] — Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (12%) · rarely deep 20+ (3%) · middle-heavy (38%)
   Bears D/ST (CHI DST) 6.5
-  Kalif Raymond (CHI WR) 4.3 [TD luck +0.2] — Short 0-9 guy (60% of targets, lg 48%) · rarely int 10-19 (12%) · middle-heavy (34%)
-  Jauan Jennings (MIN WR) 4.3 [CB shadow ×0.95] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%)
+  Kalif Raymond (CHI WR) 4.3 · xFP 10.9/g (+1.5 over expected) [TD luck +0.2] — Short 0-9 guy (60% of targets, lg 48%) · rarely int 10-19 (12%) · middle-heavy (34%)
+  Jauan Jennings (MIN WR) 4.3 · xFP 1.6/g (-1.6 over expected) [CB shadow ×0.95] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%)
   Vikings D/ST (MIN DST) 4.1
-  Cole Kmet (CHI TE) 3.6 [TD luck -0.7] — rarely short 0-9 (35%) · D funnels int 10-19 (27% of targets faced)
+  Cole Kmet (CHI TE) 3.6 · xFP 5.7/g (+4.8 over expected) [TD luck -0.7] — rarely short 0-9 (35%) · D funnels int 10-19 (27% of targets faced)
 
 CIN @ HOU — total 46.5, HOU by 3.0 · implied CIN 21.8 / HOU 24.8
 Weather: dome / no forecast in window
@@ -161,27 +161,27 @@ HOU offense vs CIN defense
   - CIN CB1: Daxton Hill active
 
 PLAYERS (PROJ half):
-  Joe Burrow (CIN QB) 19.3 [TD luck +0.2, CB shadow ×0.96, market higher (19.3 vs model 16.9)]
-  C.J. Stroud (HOU QB) 16.5 [TD luck -0.3, market higher (16.5 vs model 14.9)]
-  Ja'Marr Chase (CIN WR) 15.7 [TD luck +0.1, CB shadow ×0.97, market higher (15.7 vs model 13.4)] — Int 10-19 guy (30% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced)
-  Chase Brown (CIN RB) 14.8 [TD luck +0.1] — Behind LOS guy (42% of targets, lg 18%)
-  David Montgomery (HOU RB) 13.8 [TD luck -0.8] — Behind LOS guy (41% of targets, lg 18%) · middle-heavy (40%) · D funnels behind los (26% of targets faced)
-  Nico Collins (HOU WR) 13.5 [TD luck -0.4] — rarely behind los (3%) · rarely short 0-9 (40%) · Int 10-19 guy (39% of targets, lg 22%) · middle-heavy (31%)
-  Tee Higgins (CIN WR) 10.9 [TD luck +0.1, CB shadow ×0.95] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced) · D funnels deep 20+ (17% of targets faced)
+  Joe Burrow (CIN QB) 19.3 · xFP 19.6/g (-4.4 over expected) [TD luck +0.2, CB shadow ×0.96, market higher (19.3 vs model 16.9)]
+  C.J. Stroud (HOU QB) 16.5 · xFP 17.1/g (-0.6 over expected) [TD luck -0.3, market higher (16.5 vs model 14.9)]
+  Ja'Marr Chase (CIN WR) 15.7 · xFP 5.3/g (-3.1 over expected) [TD luck +0.1, CB shadow ×0.97, market higher (15.7 vs model 13.4)] — Int 10-19 guy (30% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced)
+  Chase Brown (CIN RB) 14.8 · xFP 18.2/g (-1.9 over expected) [TD luck +0.1] — Behind LOS guy (42% of targets, lg 18%)
+  David Montgomery (HOU RB) 13.8 · xFP 22.2/g (+5.2 over expected) [TD luck -0.8] — Behind LOS guy (41% of targets, lg 18%) · middle-heavy (40%) · D funnels behind los (26% of targets faced)
+  Nico Collins (HOU WR) 13.5 · xFP 15.8/g (+1.9 over expected) [TD luck -0.4] — rarely behind los (3%) · rarely short 0-9 (40%) · Int 10-19 guy (39% of targets, lg 22%) · middle-heavy (31%)
+  Tee Higgins (CIN WR) 10.9 · xFP 8.0/g (-0.6 over expected) [TD luck +0.1, CB shadow ×0.95] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced) · D funnels deep 20+ (17% of targets faced)
   Ka'imi Fairbairn (HOU K) 8.9
   Evan McPherson (CIN K) 7.9
-  Woody Marks (HOU RB) 7.3 — Behind LOS guy (43% of targets, lg 18%) · right-heavy (51%) · D funnels behind los (26% of targets faced)
-  Dalton Schultz (HOU TE) 6.7 [TD luck +0.1] — rarely behind los (9%) · Short 0-9 guy (72% of targets, lg 48%)
+  Woody Marks (HOU RB) 7.3 · xFP 5.4/g (-0.9 over expected) — Behind LOS guy (43% of targets, lg 18%) · right-heavy (51%) · D funnels behind los (26% of targets faced)
+  Dalton Schultz (HOU TE) 6.7 · xFP 8.9/g (-3.4 over expected) [TD luck +0.1] — rarely behind los (9%) · Short 0-9 guy (72% of targets, lg 48%)
   Texans D/ST (HOU DST) 6.6
-  Mike Gesicki (CIN TE) 6.1 [TD luck -0.2] — rarely behind los (2%) · Int 10-19 guy (37% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced)
-  Kayshon Boutte (HOU WR) 5.9 — rarely behind los (0%) · rarely short 0-9 (27%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · left-heavy (56%)
-  Jaylin Noel (HOU WR) 5.8 — rarely int 10-19 (13%) · Deep 20+ guy (22% of targets, lg 13%) · left-heavy (52%)
-  Samaje Perine (CIN RB) 5.4 [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%)
+  Mike Gesicki (CIN TE) 6.1 · xFP 12.6/g (+3.7 over expected) [TD luck -0.2] — rarely behind los (2%) · Int 10-19 guy (37% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced)
+  Kayshon Boutte (HOU WR) 5.9 · xFP 2.8/g (-0.2 over expected) — rarely behind los (0%) · rarely short 0-9 (27%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · left-heavy (56%)
+  Jaylin Noel (HOU WR) 5.8 · xFP 2.6/g (+3.7 over expected) — rarely int 10-19 (13%) · Deep 20+ guy (22% of targets, lg 13%) · left-heavy (52%)
+  Samaje Perine (CIN RB) 5.4 · xFP 5.6/g (+0.9 over expected) [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%)
   Bengals D/ST (CIN DST) 5.3
-  Xavier Hutchinson (HOU WR) 4.7 [TD luck +0.1] — rarely behind los (4%) · Int 10-19 guy (35% of targets, lg 22%)
-  Andrei Iosivas (CIN WR) 3.4 [TD luck +0.3, CB shadow ×0.97] — rarely behind los (3%) · Short 0-9 guy (58% of targets, lg 48%) · middle-heavy (45%)
+  Xavier Hutchinson (HOU WR) 4.7 · xFP 7.4/g (-2.7 over expected) [TD luck +0.1] — rarely behind los (4%) · Int 10-19 guy (35% of targets, lg 22%)
+  Andrei Iosivas (CIN WR) 3.4 · xFP 4.8/g (-2.6 over expected) [TD luck +0.3, CB shadow ×0.97] — rarely behind los (3%) · Short 0-9 guy (58% of targets, lg 48%) · middle-heavy (45%)
 
-PIT @ NE — total 42.5, NE by 5.5 · implied PIT 18.5 / NE 24.0
+PIT @ NE — total 41.5, NE by 5.5 · implied PIT 18.0 / NE 23.5
 Weather @NE: wind 7 mph (gusts 24), 63°F, 40% precip
 
 PIT offense vs NE defense
@@ -195,23 +195,23 @@ NE offense vs PIT defense
   - PIT CB1: Asante Samuel Jr. active
 
 PLAYERS (PROJ half):
-  Drake Maye (NE QB) 19.7 [market higher (19.7 vs model 18.0)]
-  Rhamondre Stevenson (NE RB) 16.9 [role boost ×1.28, TD luck +0.1, market higher (16.9 vs model 15.0)] — Behind LOS guy (32% of targets, lg 18%) · D funnels behind los (24% of targets faced)
-  Aaron Rodgers (PIT QB) 13.7 [role boost ×1.03, TD luck +0.2, CB shadow ×0.96]
-  Rico Dowdle (PIT RB) 9.5 [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%) · left-heavy (52%)
-  Jaylen Warren (PIT RB) 9.4 [TD luck +0.3] — Behind LOS guy (68% of targets, lg 18%) · right-heavy (61%)
-  DK Metcalf (PIT WR) 8.7 [TD luck +0.4, CB shadow ×0.95] — rarely behind los (8%) · Deep 20+ guy (27% of targets, lg 13%)
-  Hunter Henry (NE TE) 8.3 [role boost ×1.11] — rarely behind los (9%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%)
-  Michael Pittman Jr. (PIT WR) 8.1 [CB shadow ×0.95] — D funnels short 0-9 (51% of targets faced)
-  Patriots D/ST (NE DST) 8.0
-  Andy Borregales (NE K) 7.5
+  Drake Maye (NE QB) 19.7 · xFP 17.0/g (-4.2 over expected) [market higher (19.7 vs model 17.9)]
+  Rhamondre Stevenson (NE RB) 16.7 · xFP 15.1/g (-3.1 over expected) [role boost ×1.28, TD luck +0.1, market higher (16.7 vs model 14.8)] — Behind LOS guy (32% of targets, lg 18%) · D funnels behind los (24% of targets faced)
+  Aaron Rodgers (PIT QB) 13.7 · xFP 19.7/g (-7.2 over expected) [role boost ×1.03, TD luck +0.2, CB shadow ×0.96]
+  Rico Dowdle (PIT RB) 9.4 · xFP 9.3/g (-6.2 over expected) [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%) · left-heavy (52%)
+  Jaylen Warren (PIT RB) 9.2 · xFP 12.6/g (-4.8 over expected) [TD luck +0.3] — Behind LOS guy (68% of targets, lg 18%) · right-heavy (61%)
+  DK Metcalf (PIT WR) 8.7 · xFP 15.0/g (-9.0 over expected) [TD luck +0.4, CB shadow ×0.95] — rarely behind los (8%) · Deep 20+ guy (27% of targets, lg 13%)
+  Patriots D/ST (NE DST) 8.2
+  Hunter Henry (NE TE) 8.2 · xFP 3.3/g (+0.8 over expected) [role boost ×1.11] — rarely behind los (9%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%)
+  Michael Pittman Jr. (PIT WR) 8.1 · xFP 3.6/g (+3.7 over expected) [CB shadow ×0.95] — D funnels short 0-9 (51% of targets faced)
+  Andy Borregales (NE K) 7.4
   Chris Boswell (PIT K) 7.4
-  Romeo Doubs (NE WR) 7.0 [role boost ×1.16] — rarely behind los (3%) · rarely short 0-9 (38%) · Int 10-19 guy (37% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%)
-  Pat Freiermuth (PIT TE) 6.6 [TD luck -0.5] — Short 0-9 guy (57% of targets, lg 48%) · D funnels short 0-9 (51% of targets faced)
-  DeMario Douglas (NE WR) 5.7 [role boost ×1.40, TD luck +0.1] — rarely short 0-9 (40%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels behind los (24% of targets faced)
-  Steelers D/ST (PIT DST) 5.6
-  Mack Hollins (NE WR) 5.6 [role boost ×1.53, TD luck +0.4] — rarely behind los (1%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%)
-  Darnell Washington (PIT TE) 3.4 — rarely behind los (9%) · Short 0-9 guy (69% of targets, lg 48%) · rarely deep 20+ (4%) · D funnels short 0-9 (51% of targets faced)
+  Romeo Doubs (NE WR) 7.0 · xFP 4.2/g (-4.2 over expected) [role boost ×1.16] — rarely behind los (3%) · rarely short 0-9 (38%) · Int 10-19 guy (37% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%)
+  Pat Freiermuth (PIT TE) 6.5 · xFP 8.2/g (+4.9 over expected) [TD luck -0.5] — Short 0-9 guy (57% of targets, lg 48%) · D funnels short 0-9 (51% of targets faced)
+  Steelers D/ST (PIT DST) 5.8
+  DeMario Douglas (NE WR) 5.7 · xFP 7.9/g (-3.4 over expected) [role boost ×1.40, TD luck +0.1] — rarely short 0-9 (40%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels behind los (24% of targets faced)
+  Mack Hollins (NE WR) 5.6 · xFP 8.4/g (-1.3 over expected) [role boost ×1.53, TD luck +0.4] — rarely behind los (1%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%)
+  Darnell Washington (PIT TE) 3.4 · xFP 1.9/g (+0.9 over expected) — rarely behind los (9%) · Short 0-9 guy (69% of targets, lg 48%) · rarely deep 20+ (4%) · D funnels short 0-9 (51% of targets faced)
 
 GB @ NYJ — total 44.5, GB by 4.5 · implied GB 24.5 / NYJ 20.0
 Weather @NYJ: wind 9 mph (gusts 24), 70°F, 37% precip
@@ -227,24 +227,24 @@ NYJ offense vs GB defense
   - GB CB1: Keisean Nixon active
 
 PLAYERS (PROJ half):
-  Jordan Love (GB QB) 17.8 [TD luck +0.1]
-  Geno Smith (NYJ QB) 16.1 [TD luck +0.1, market higher (16.1 vs model 12.9)]
-  Breece Hall (NYJ RB) 15.3 [TD luck -0.2] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (58% of targets, lg 48%) · D funnels behind los (22% of targets faced)
-  Garrett Wilson (NYJ WR) 12.4 [TD luck +0.1] — rarely behind los (6%) · Short 0-9 guy (56% of targets, lg 48%)
-  Christian Watson (GB WR) 12.3 [TD luck -1.4] — rarely behind los (0%) · rarely short 0-9 (34%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (31% of targets, lg 13%)
-  Matthew Golden (GB WR) 10.8 [role boost ×1.03, TD luck +0.9] — rarely short 0-9 (38%) · Deep 20+ guy (25% of targets, lg 13%)
-  Tucker Kraft (GB TE) 9.8 [TD luck +0.1] — right-heavy (52%)
-  MarShawn Lloyd (GB RB) 9.7 [TD luck +0.2, market higher (9.7 vs model 7.2)]
+  Jordan Love (GB QB) 17.8 · xFP 23.8/g (-3.3 over expected) [TD luck +0.1]
+  Geno Smith (NYJ QB) 16.1 · xFP 11.5/g (-2.2 over expected) [TD luck +0.1, market higher (16.1 vs model 12.9)]
+  Breece Hall (NYJ RB) 15.3 · xFP 15.6/g (+3.2 over expected) [TD luck -0.2] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (58% of targets, lg 48%) · D funnels behind los (22% of targets faced)
+  Garrett Wilson (NYJ WR) 12.4 · xFP 9.0/g (+1.9 over expected) [TD luck +0.1] — rarely behind los (6%) · Short 0-9 guy (56% of targets, lg 48%)
+  Christian Watson (GB WR) 12.2 · xFP 13.5/g (+16.2 over expected) [TD luck -1.4] — rarely behind los (0%) · rarely short 0-9 (34%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (31% of targets, lg 13%)
+  Matthew Golden (GB WR) 10.8 · xFP 19.3/g (-6.8 over expected) [role boost ×1.03, TD luck +0.9] — rarely short 0-9 (38%) · Deep 20+ guy (25% of targets, lg 13%)
+  Tucker Kraft (GB TE) 9.8 · xFP 7.7/g (+0.3 over expected) [TD luck +0.1] — right-heavy (52%)
+  MarShawn Lloyd (GB RB) 9.6 · xFP 8.8/g (-5.1 over expected) [TD luck +0.2, market higher (9.6 vs model 7.2)]
   Josh Jacobs (GB RB) 9.4 — Behind LOS guy (50% of targets, lg 18%)
   Trey Smack (GB K) 8.5
-  Jayden Reed (GB WR) 7.4 [TD luck +0.3] — rarely short 0-9 (40%)
+  Jayden Reed (GB WR) 7.4 · xFP 9.2/g (-5.7 over expected) [TD luck +0.3] — rarely short 0-9 (40%)
   Packers D/ST (GB DST) 7.4
-  Adonai Mitchell (NYJ WR) 6.8 [role boost ×1.08] — rarely behind los (3%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (52%)
-  Kenyon Sadiq (NYJ TE) 5.9 [TD luck -0.6]
+  Adonai Mitchell (NYJ WR) 6.8 · xFP 4.0/g (+3.5 over expected) [role boost ×1.08] — rarely behind los (3%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (52%)
+  Kenyon Sadiq (NYJ TE) 5.9 · xFP 5.2/g (+4.7 over expected) [TD luck -0.6]
   Jets D/ST (NYJ DST) 5.4
-  Braelon Allen (NYJ RB) 4.2 [TD luck +0.1]
-  Mason Taylor (NYJ TE) 4.2 — rarely behind los (8%) · Short 0-9 guy (81% of targets, lg 48%) · rarely int 10-19 (9%) · rarely deep 20+ (3%)
-  Chris Brooks (GB RB) 3.8 [TD luck +0.1]
+  Braelon Allen (NYJ RB) 4.2 · xFP 6.4/g (-2.4 over expected) [TD luck +0.1]
+  Mason Taylor (NYJ TE) 4.2 · xFP 3.1/g (-2.3 over expected) — rarely behind los (8%) · Short 0-9 guy (81% of targets, lg 48%) · rarely int 10-19 (9%) · rarely deep 20+ (3%)
+  Chris Brooks (GB RB) 3.8 · xFP 4.8/g (-1.9 over expected) [TD luck +0.1]
 
 CLE @ TB — total 40.5, TB by 8.5 · implied CLE 16.0 / TB 24.5
 Weather @TB: wind 7 mph (gusts 6), 90°F, 16% precip
@@ -260,23 +260,23 @@ TB offense vs CLE defense
   - CLE CB1: Denzel Ward active
 
 PLAYERS (PROJ half):
-  Baker Mayfield (TB QB) 18.1 [TD luck +0.3, market higher (18.1 vs model 15.7)]
-  Deshaun Watson (CLE QB) 13.0 [TD luck -0.1, market higher (13.0 vs model 10.9)]
-  Bucky Irving (TB RB) 12.9 [role boost ×1.04, TD luck -0.6] — Behind LOS guy (71% of targets, lg 18%)
-  Emeka Egbuka (TB WR) 11.8 [TD luck +0.1] — rarely behind los (9%) · rarely short 0-9 (36%) · Int 10-19 guy (34% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced)
-  Quinshon Judkins (CLE RB) 11.4 [role boost ×1.10, TD luck +0.2] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%)
+  Baker Mayfield (TB QB) 18.1 · xFP 14.8/g (-3.2 over expected) [TD luck +0.3, market higher (18.1 vs model 15.7)]
+  Deshaun Watson (CLE QB) 13.0 · xFP 12.6/g (+2.4 over expected) [TD luck -0.1, market higher (13.0 vs model 10.9)]
+  Bucky Irving (TB RB) 12.9 · xFP 11.2/g (+5.6 over expected) [role boost ×1.04, TD luck -0.6] — Behind LOS guy (71% of targets, lg 18%)
+  Emeka Egbuka (TB WR) 11.8 · xFP 7.5/g (+1.3 over expected) [TD luck +0.1] — rarely behind los (9%) · rarely short 0-9 (36%) · Int 10-19 guy (34% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced)
+  Quinshon Judkins (CLE RB) 11.4 · xFP 8.9/g (-2.9 over expected) [role boost ×1.10, TD luck +0.2] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%)
   Kenneth Gainwell (TB RB) 9.9 [role boost ×1.03]
   Buccaneers D/ST (TB DST) 9.1
-  Chris Godwin (TB WR) 8.8 [role boost ×1.08, TD luck +0.1]
-  Harold Fannin Jr. (CLE TE) 8.2 — Short 0-9 guy (67% of targets, lg 48%)
+  Chris Godwin (TB WR) 8.8 · xFP 4.7/g (+1.6 over expected) [role boost ×1.08, TD luck +0.1]
+  Harold Fannin Jr. (CLE TE) 8.2 · xFP 3.0/g (+0.1 over expected) — Short 0-9 guy (67% of targets, lg 48%)
   Chase McLaughlin (TB K) 8.2
-  KC Concepcion (CLE WR) 7.4 [TD luck +0.1]
-  Denzel Boston (CLE WR) 6.8 [TD luck -0.5]
-  Cade Otton (TB TE) 6.7 [TD luck +0.2, market higher (6.7 vs model 4.9)] — Short 0-9 guy (75% of targets, lg 48%) · rarely deep 20+ (1%)
-  Jerry Jeudy (CLE WR) 5.9 [TD luck +0.1] — rarely behind los (2%) · rarely short 0-9 (40%) · Int 10-19 guy (43% of targets, lg 22%) · left-heavy (54%)
+  KC Concepcion (CLE WR) 7.4 · xFP 7.5/g (-1.7 over expected) [TD luck +0.1]
+  Denzel Boston (CLE WR) 6.8 · xFP 7.9/g (+5.0 over expected) [TD luck -0.5]
+  Cade Otton (TB TE) 6.7 · xFP 6.6/g (-2.5 over expected) [TD luck +0.2, market higher (6.7 vs model 4.9)] — Short 0-9 guy (75% of targets, lg 48%) · rarely deep 20+ (1%)
+  Jerry Jeudy (CLE WR) 5.9 · xFP 4.8/g (-1.2 over expected) [TD luck +0.1] — rarely behind los (2%) · rarely short 0-9 (40%) · Int 10-19 guy (43% of targets, lg 22%) · left-heavy (54%)
   Browns D/ST (CLE DST) 5.4
   Andre Szmyt (CLE K) 5.2
-  Ted Hurst (TB WR) 4.7 [role boost ×1.27, TD luck +0.1]
+  Ted Hurst (TB WR) 4.7 · xFP 4.1/g (+1.0 over expected) [role boost ×1.27, TD luck +0.1]
 
 PHI @ TEN — total 39.5, PHI by 7.0 · implied PHI 23.3 / TEN 16.3
 Weather @TEN: wind 7 mph (gusts 9), 93°F, 4% precip
@@ -293,24 +293,24 @@ TEN offense vs PHI defense
   - PHI CB1: Quinyon Mitchell active
 
 PLAYERS (PROJ half):
-  Jalen Hurts (PHI QB) 21.0 [TD luck -0.7]
-  Saquon Barkley (PHI RB) 15.1 [TD luck +0.1, OL out ×0.98] — Behind LOS guy (46% of targets, lg 18%) · left-heavy (50%)
-  DeVonta Smith (PHI WR) 11.8
+  Jalen Hurts (PHI QB) 21.0 · xFP 14.2/g (+10.5 over expected) [TD luck -0.7]
+  Saquon Barkley (PHI RB) 15.1 · xFP 9.6/g (-1.1 over expected) [TD luck +0.1, OL out ×0.98] — Behind LOS guy (46% of targets, lg 18%) · left-heavy (50%)
+  DeVonta Smith (PHI WR) 11.8 · xFP 7.7/g (-0.9 over expected)
   Cameron Ward (TEN QB) 11.6 [CB shadow ×0.96]
-  Dallas Goedert (PHI TE) 9.2 [TD luck -1.6] — rarely behind los (9%) · Short 0-9 guy (66% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced)
-  Tony Pollard (TEN RB) 9.1 [role boost ×1.03] — Behind LOS guy (33% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%)
+  Dallas Goedert (PHI TE) 9.2 · xFP 8.3/g (+13.4 over expected) [TD luck -1.6] — rarely behind los (9%) · Short 0-9 guy (66% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced)
+  Tony Pollard (TEN RB) 9.1 · xFP 6.0/g (-2.1 over expected) [role boost ×1.03] — Behind LOS guy (33% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%)
   Eagles D/ST (PHI DST) 9.0
-  Carnell Tate (TEN WR) 8.5 [CB shadow ×0.96]
+  Carnell Tate (TEN WR) 8.5 · xFP 7.4/g (-1.6 over expected) [CB shadow ×0.96]
   Jake Elliott (PHI K) 8.2
-  Wan'Dale Robinson (TEN WR) 8.1
-  Tyjae Spears (TEN RB) 6.8 [role boost ×1.02] — Behind LOS guy (65% of targets, lg 18%)
-  Dontayvion Wicks (PHI WR) 6.6 [TD luck -0.6] — rarely behind los (2%)
+  Wan'Dale Robinson (TEN WR) 8.1 · xFP 6.0/g (+0.3 over expected)
+  Tyjae Spears (TEN RB) 6.8 · xFP 5.4/g (-2.0 over expected) [role boost ×1.02] — Behind LOS guy (65% of targets, lg 18%)
+  Dontayvion Wicks (PHI WR) 6.6 · xFP 7.4/g (+6.9 over expected) [TD luck -0.6] — rarely behind los (2%)
   Joey Slye (TEN K) 6.1
   Titans D/ST (TEN DST) 5.9
-  Makai Lemon (PHI WR) 5.9
-  Gunnar Helm (TEN TE) 5.3 [TD luck +0.4] — Short 0-9 guy (61% of targets, lg 48%) · rarely deep 20+ (3%)
+  Makai Lemon (PHI WR) 5.9 · xFP 3.9/g (-2.9 over expected)
+  Gunnar Helm (TEN TE) 5.3 · xFP 7.1/g (-2.3 over expected) [TD luck +0.4] — Short 0-9 guy (61% of targets, lg 48%) · rarely deep 20+ (3%)
   Calvin Ridley (TEN WR) 4.9 [CB shadow ×0.95] — rarely behind los (6%) · Int 10-19 guy (39% of targets, lg 22%)
-  Tank Bigsby (PHI RB) 3.4 [OL out ×0.98]
+  Tank Bigsby (PHI RB) 3.4 · xFP 0.6/g (-0.3 over expected) [OL out ×0.98]
 
 JAX @ DEN — total 44.5, DEN by 2.5 · implied JAX 21.0 / DEN 23.5
 Weather @DEN: wind 7 mph (gusts 5), 74°F, 30% precip
@@ -326,24 +326,24 @@ DEN offense vs JAX defense
   - JAX CB1: Montaric Brown active
 
 PLAYERS (PROJ half):
-  Trevor Lawrence (JAX QB) 19.0 [role boost ×1.03, TD luck -0.9, CB shadow ×0.96, market higher (19.0 vs model 17.4)]
-  Bo Nix (DEN QB) 17.2 [TD luck -0.1]
-  Bhayshul Tuten (JAX RB) 11.1 [TD luck +0.1]
-  Parker Washington (JAX WR) 10.5 [TD luck -0.9, CB shadow ×0.97, market higher (10.5 vs model 8.9)] — rarely behind los (5%) · rarely short 0-9 (37%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%)
-  Jaylen Waddle (DEN WR) 9.6 — rarely behind los (5%) · Int 10-19 guy (38% of targets, lg 22%)
-  J.K. Dobbins (DEN RB) 9.1
-  Courtland Sutton (DEN WR) 8.8 [TD luck +0.1] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%)
+  Trevor Lawrence (JAX QB) 19.0 · xFP 13.5/g (+12.6 over expected) [role boost ×1.03, TD luck -0.9, CB shadow ×0.96, market higher (19.0 vs model 17.4)]
+  Bo Nix (DEN QB) 17.2 · xFP 11.3/g (-4.9 over expected) [TD luck -0.1]
+  Bhayshul Tuten (JAX RB) 11.1 · xFP 8.5/g (+0.8 over expected) [TD luck +0.1]
+  Parker Washington (JAX WR) 10.5 · xFP 8.2/g (+8.6 over expected) [TD luck -0.9, CB shadow ×0.97, market higher (10.5 vs model 8.9)] — rarely behind los (5%) · rarely short 0-9 (37%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%)
+  Jaylen Waddle (DEN WR) 9.6 · xFP 3.0/g (-2.3 over expected) — rarely behind los (5%) · Int 10-19 guy (38% of targets, lg 22%)
+  J.K. Dobbins (DEN RB) 9.1 · xFP 3.9/g (-0.3 over expected)
+  Courtland Sutton (DEN WR) 8.8 · xFP 6.1/g (-4.0 over expected) [TD luck +0.1] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%)
   Wil Lutz (DEN K) 8.1
-  Brian Thomas Jr. (JAX WR) 8.0 [CB shadow ×0.95] — rarely behind los (2%) · rarely short 0-9 (33%) · Int 10-19 guy (42% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (50%)
-  Jakobi Meyers (JAX WR) 7.8 [TD luck -0.7, CB shadow ×0.97] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%)
+  Brian Thomas Jr. (JAX WR) 8.0 · xFP 4.3/g (+1.2 over expected) [CB shadow ×0.95] — rarely behind los (2%) · rarely short 0-9 (33%) · Int 10-19 guy (42% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (50%)
+  Jakobi Meyers (JAX WR) 7.8 · xFP 4.6/g (+6.6 over expected) [TD luck -0.7, CB shadow ×0.97] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%)
   Cam Little (JAX K) 7.6
-  RJ Harvey (DEN RB) 7.5 — Behind LOS guy (47% of targets, lg 18%)
-  Brenton Strange (JAX TE) 7.2 [TD luck -0.6] — rarely behind los (6%) · Short 0-9 guy (69% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced)
+  RJ Harvey (DEN RB) 7.5 · xFP 5.3/g (+0.8 over expected) — Behind LOS guy (47% of targets, lg 18%)
+  Brenton Strange (JAX TE) 7.2 · xFP 5.6/g (+3.7 over expected) [TD luck -0.6] — rarely behind los (6%) · Short 0-9 guy (69% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced)
   Broncos D/ST (DEN DST) 6.9
   Jaguars D/ST (JAX DST) 5.8
-  Evan Engram (DEN TE) 5.5 [TD luck -0.6] — Short 0-9 guy (65% of targets, lg 48%) · rarely int 10-19 (12%) · D funnels short 0-9 (51% of targets faced)
-  Chris Rodriguez (JAX RB) 4.7 [TD luck +0.1]
-  Pat Bryant (DEN WR) 4.7 [TD luck +0.1] — rarely behind los (8%) · Short 0-9 guy (61% of targets, lg 48%) · left-heavy (51%) · D funnels short 0-9 (51% of targets faced)
+  Evan Engram (DEN TE) 5.5 · xFP 7.2/g (+5.1 over expected) [TD luck -0.6] — Short 0-9 guy (65% of targets, lg 48%) · rarely int 10-19 (12%) · D funnels short 0-9 (51% of targets faced)
+  Chris Rodriguez (JAX RB) 4.7 · xFP 3.4/g (-1.1 over expected) [TD luck +0.1]
+  Pat Bryant (DEN WR) 4.7 · xFP 6.7/g (-0.5 over expected) [TD luck +0.1] — rarely behind los (8%) · Short 0-9 guy (61% of targets, lg 48%) · left-heavy (51%) · D funnels short 0-9 (51% of targets faced)
   Travis Hunter (JAX WR) 4.1
   Marvin Mims (DEN WR) 3.1 — Behind LOS guy (39% of targets, lg 18%) · rarely short 0-9 (29%) · rarely int 10-19 (6%) · Deep 20+ guy (25% of targets, lg 13%)
 
@@ -361,25 +361,25 @@ LAC offense vs LV defense
   - LV CB1: Eric Stokes active
 
 PLAYERS (PROJ half):
-  Justin Herbert (LAC QB) 18.6 [market higher (18.6 vs model 16.9)]
-  Ashton Jeanty (LV RB) 16.0 [TD luck -1.0] — Behind LOS guy (58% of targets, lg 18%)
-  Omarion Hampton (LAC RB) 14.0 [TD luck -0.6] — Behind LOS guy (60% of targets, lg 18%) · D funnels behind los (21% of targets faced)
-  Ladd McConkey (LAC WR) 11.7 [TD luck -0.3] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%) · middle-heavy (31%)
-  Kirk Cousins (LV QB) 11.4 [TD luck -0.6]
+  Justin Herbert (LAC QB) 18.6 · xFP 16.9/g (-2.6 over expected) [market higher (18.6 vs model 16.9)]
+  Ashton Jeanty (LV RB) 16.0 · xFP 20.0/g (+9.7 over expected) [TD luck -1.0] — Behind LOS guy (58% of targets, lg 18%)
+  Omarion Hampton (LAC RB) 14.4 · xFP 6.5/g (+1.8 over expected) [TD luck -0.6] — Behind LOS guy (60% of targets, lg 18%) · D funnels behind los (21% of targets faced)
+  Ladd McConkey (LAC WR) 11.7 · xFP 12.6/g (+4.1 over expected) [TD luck -0.3] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%) · middle-heavy (31%)
+  Kirk Cousins (LV QB) 11.6 · xFP 16.3/g (-0.5 over expected) [TD luck -0.6]
   Brock Bowers (LV TE) 11.0 — Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (53% of targets faced)
   Cameron Dicker (LAC K) 9.1
-  Quentin Johnston (LAC WR) 8.3 [TD luck +0.1] — D funnels deep 20+ (17% of targets faced)
+  Quentin Johnston (LAC WR) 8.3 · xFP 6.8/g (-4.1 over expected) [TD luck +0.1] — D funnels deep 20+ (17% of targets faced)
   Chargers D/ST (LAC DST) 8.1
   Matt Gay (LV K) 6.2
-  Tre Tucker (LV WR) 6.1 [TD luck +0.2] — Deep 20+ guy (22% of targets, lg 13%)
-  Jalen Nailor (LV WR) 5.5 [TD luck +0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (41% of targets, lg 22%)
-  David Njoku (LAC TE) 5.1 [TD luck +0.1] — Short 0-9 guy (64% of targets, lg 48%) · rarely deep 20+ (4%) · middle-heavy (45%)
+  Tre Tucker (LV WR) 6.1 · xFP 6.1/g (-2.4 over expected) [TD luck +0.2] — Deep 20+ guy (22% of targets, lg 13%)
+  Jalen Nailor (LV WR) 5.5 · xFP 6.4/g (-2.2 over expected) [TD luck +0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (41% of targets, lg 22%)
+  David Njoku (LAC TE) 5.1 · xFP 6.0/g (+2.3 over expected) [TD luck +0.1] — Short 0-9 guy (64% of targets, lg 48%) · rarely deep 20+ (4%) · middle-heavy (45%)
   Raiders D/ST (LV DST) 5.1
-  Keaton Mitchell (LAC RB) 5.1 [TD luck +0.1]
-  Tre Harris (LAC WR) 5.0
-  Michael Mayer (LV TE) 4.5 [TD luck +0.4] — Short 0-9 guy (75% of targets, lg 48%) · rarely int 10-19 (7%) · rarely deep 20+ (3%) · D funnels short 0-9 (53% of targets faced)
-  Oronde Gadsden II (LAC TE) 4.0 — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%) · right-heavy (51%)
-  Jack Bech (LV WR) 3.2 [TD luck -0.8] — rarely behind los (3%) · Short 0-9 guy (63% of targets, lg 48%) · left-heavy (52%) · D funnels short 0-9 (53% of targets faced)
+  Keaton Mitchell (LAC RB) 5.1 · xFP 2.5/g (-1.6 over expected) [TD luck +0.1]
+  Tre Harris (LAC WR) 5.0 · xFP 6.9/g (-3.4 over expected)
+  Michael Mayer (LV TE) 4.5 · xFP 9.5/g (-3.3 over expected) [TD luck +0.4] — Short 0-9 guy (75% of targets, lg 48%) · rarely int 10-19 (7%) · rarely deep 20+ (3%) · D funnels short 0-9 (53% of targets faced)
+  Oronde Gadsden II (LAC TE) 4.0 · xFP 1.9/g (+2.3 over expected) — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%) · right-heavy (51%)
+  Jack Bech (LV WR) 3.2 · xFP 5.4/g (+4.4 over expected) [TD luck -0.8] — rarely behind los (3%) · Short 0-9 guy (63% of targets, lg 48%) · left-heavy (52%) · D funnels short 0-9 (53% of targets faced)
 
 SEA @ ARI — total 41.5, SEA by 4.5 · implied SEA 23.0 / ARI 18.5
 Weather: dome / no forecast in window
@@ -396,23 +396,23 @@ ARI offense vs SEA defense
   - SEA CB1: Devon Witherspoon active
 
 PLAYERS (PROJ half):
-  Jaxon Smith-Njigba (SEA WR) 16.4 [TD luck -0.2] — rarely behind los (9%) · Int 10-19 guy (36% of targets, lg 22%) · D funnels int 10-19 (28% of targets faced)
-  Jacoby Brissett (ARI QB) 14.0 [TD luck +0.2, market higher (14.0 vs model 12.0)]
+  Jaxon Smith-Njigba (SEA WR) 16.4 · xFP 16.5/g (+5.7 over expected) [TD luck -0.2] — rarely behind los (9%) · Int 10-19 guy (36% of targets, lg 22%) · D funnels int 10-19 (28% of targets faced)
+  Jacoby Brissett (ARI QB) 14.0 · xFP 19.6/g (-3.1 over expected) [TD luck +0.2, market higher (14.0 vs model 12.0)]
   Drew Lock (SEA QB) 12.8 [role boost ×26.71]
-  Trey McBride (ARI TE) 12.5 — Short 0-9 guy (63% of targets, lg 48%)
-  Jeremiyah Love (ARI RB) 11.4 [TD luck -0.4]
-  Jadarian Price (SEA RB) 11.0
-  Marvin Harrison Jr. (ARI WR) 8.7 — rarely behind los (4%) · rarely short 0-9 (32%) · Int 10-19 guy (39% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%) · left-heavy (49%)
+  Trey McBride (ARI TE) 12.5 · xFP 19.4/g (+0.6 over expected) — Short 0-9 guy (63% of targets, lg 48%)
+  Jeremiyah Love (ARI RB) 11.4 · xFP 11.1/g (+0.9 over expected) [TD luck -0.4]
+  Jadarian Price (SEA RB) 11.0 · xFP 7.0/g (-0.2 over expected)
+  Marvin Harrison Jr. (ARI WR) 8.7 · xFP 4.2/g (-0.4 over expected) — rarely behind los (4%) · rarely short 0-9 (32%) · Int 10-19 guy (39% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%) · left-heavy (49%)
   Jason Myers (SEA K) 8.6
-  Michael Wilson (ARI WR) 8.3 [TD luck +0.1] — rarely behind los (2%) · Int 10-19 guy (33% of targets, lg 22%)
+  Michael Wilson (ARI WR) 8.3 · xFP 8.8/g (-0.7 over expected) [TD luck +0.1] — rarely behind los (2%) · Int 10-19 guy (33% of targets, lg 22%)
   Seahawks D/ST (SEA DST) 8.0
-  Rashid Shaheed (SEA WR) 6.5 [role boost ×1.05] — rarely behind los (9%)
+  Rashid Shaheed (SEA WR) 6.5 · xFP 3.2/g (-2.3 over expected) [role boost ×1.05] — rarely behind los (9%)
   Chad Ryland (ARI K) 6.1
   Cardinals D/ST (ARI DST) 6.0
-  Tyler Allgeier (ARI RB) 5.8 [TD luck +0.5]
-  Cooper Kupp (SEA WR) 5.3 [role boost ×1.08, TD luck +0.1] — rarely behind los (8%) · D funnels short 0-9 (51% of targets faced) · D funnels int 10-19 (28% of targets faced)
-  A.J. Barner (SEA TE) 5.1 — Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (6%) · D funnels short 0-9 (51% of targets faced)
-  Kendrick Bourne (ARI WR) 4.1 [TD luck +0.2] — rarely behind los (2%) · Int 10-19 guy (34% of targets, lg 22%)
+  Tyler Allgeier (ARI RB) 5.8 · xFP 12.9/g (-4.9 over expected) [TD luck +0.5]
+  Cooper Kupp (SEA WR) 5.3 · xFP 4.3/g (+0.2 over expected) [role boost ×1.08, TD luck +0.1] — rarely behind los (8%) · D funnels short 0-9 (51% of targets faced) · D funnels int 10-19 (28% of targets faced)
+  A.J. Barner (SEA TE) 5.1 · xFP 1.9/g (+0.4 over expected) — Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (6%) · D funnels short 0-9 (51% of targets faced)
+  Kendrick Bourne (ARI WR) 4.1 · xFP 9.0/g (+2.5 over expected) [TD luck +0.2] — rarely behind los (2%) · Int 10-19 guy (34% of targets, lg 22%)
 
 WAS @ DAL — total 50.5, DAL by 3.5 · implied WAS 23.5 / DAL 27.0
 Weather: dome / no forecast in window
@@ -428,26 +428,26 @@ DAL offense vs WAS defense
   - WAS CB1: Amik Robertson active
 
 PLAYERS (PROJ half):
-  Jayden Daniels (WAS QB) 20.6 [TD luck -0.1, market higher (20.6 vs model 19.0)]
-  Dak Prescott (DAL QB) 18.9 [TD luck -0.3]
-  Javonte Williams (DAL RB) 17.1 [role boost ×1.06, TD luck -0.2] — Behind LOS guy (57% of targets, lg 18%)
-  CeeDee Lamb (DAL WR) 14.5 [TD luck -0.4] — rarely behind los (8%) · Int 10-19 guy (31% of targets, lg 22%)
-  George Pickens (DAL WR) 12.2 — rarely behind los (1%) · left-heavy (51%)
-  Jacory Croskey-Merritt (WAS RB) 10.8 [TD luck -0.3]
-  Terry McLaurin (WAS WR) 10.1 [TD luck +0.3] — rarely behind los (4%) · rarely short 0-9 (36%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (23% of targets, lg 13%) · left-heavy (58%) · D funnels int 10-19 (26% of targets faced)
+  Jayden Daniels (WAS QB) 20.6 · xFP 19.2/g (-1.5 over expected) [TD luck -0.1, market higher (20.6 vs model 19.0)]
+  Dak Prescott (DAL QB) 18.9 · xFP 14.9/g (+0.5 over expected) [TD luck -0.3]
+  Javonte Williams (DAL RB) 17.1 · xFP 19.2/g (+2.5 over expected) [role boost ×1.06, TD luck -0.2] — Behind LOS guy (57% of targets, lg 18%)
+  CeeDee Lamb (DAL WR) 14.5 · xFP 13.4/g (-0.5 over expected) [TD luck -0.4] — rarely behind los (8%) · Int 10-19 guy (31% of targets, lg 22%)
+  George Pickens (DAL WR) 12.2 · xFP 7.6/g (-3.3 over expected) — rarely behind los (1%) · left-heavy (51%)
+  Jacory Croskey-Merritt (WAS RB) 10.8 · xFP 11.8/g (+0.3 over expected) [TD luck -0.3]
+  Terry McLaurin (WAS WR) 10.1 · xFP 5.7/g (-3.3 over expected) [TD luck +0.3] — rarely behind los (4%) · rarely short 0-9 (36%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (23% of targets, lg 13%) · left-heavy (58%) · D funnels int 10-19 (26% of targets faced)
   Brandon Aubrey (DAL K) 10.0
-  Stefon Diggs (WAS WR) 9.7 [role boost ×1.03, TD luck -0.7] — rarely behind los (2%) · Short 0-9 guy (65% of targets, lg 48%)
-  Rachaad White (WAS RB) 8.3 [TD luck +0.1] — Behind LOS guy (77% of targets, lg 18%)
+  Stefon Diggs (WAS WR) 9.7 · xFP 11.7/g (+1.8 over expected) [role boost ×1.03, TD luck -0.7] — rarely behind los (2%) · Short 0-9 guy (65% of targets, lg 48%)
+  Rachaad White (WAS RB) 8.3 · xFP 6.0/g (-2.3 over expected) [TD luck +0.1] — Behind LOS guy (77% of targets, lg 18%)
   Drew Stevens (WAS K) 7.8
-  Jake Ferguson (DAL TE) 7.4 [TD luck +0.3] — Short 0-9 guy (57% of targets, lg 48%) · rarely deep 20+ (4%)
+  Jake Ferguson (DAL TE) 7.4 · xFP 3.6/g (-2.0 over expected) [TD luck +0.3] — Short 0-9 guy (57% of targets, lg 48%) · rarely deep 20+ (4%)
   Cowboys D/ST (DAL DST) 5.8
   Chigoziem Okonkwo (WAS TE) 5.8
-  Ryan Flournoy (DAL WR) 5.6 — left-heavy (48%)
+  Ryan Flournoy (DAL WR) 5.6 · xFP 4.4/g (-1.2 over expected) — left-heavy (48%)
   Commanders D/ST (WAS DST) 4.3
-  Antonio Williams (WAS WR) 3.9 [role boost ×1.11, TD luck -0.4]
-  Kavontae Turpin (DAL WR) 3.3 — Behind LOS guy (28% of targets, lg 18%) · left-heavy (59%)
+  Antonio Williams (WAS WR) 3.9 · xFP 8.2/g (+6.2 over expected) [role boost ×1.11, TD luck -0.4]
+  Kavontae Turpin (DAL WR) 3.3 · xFP 1.1/g (+0.2 over expected) — Behind LOS guy (28% of targets, lg 18%) · left-heavy (59%)
 
-MIA @ SF — total 45.5, SF by 13.5 · implied MIA 16.0 / SF 29.5
+MIA @ SF — total 45.5, SF by 12.5 · implied MIA 16.5 / SF 29.0
 Weather @SF: wind 8 mph (gusts 7), 74°F, 0% precip
 
 MIA offense vs SF defense
@@ -461,23 +461,23 @@ SF offense vs MIA defense
   - MIA CB1: Chris Johnson active
 
 PLAYERS (PROJ half):
-  Christian McCaffrey (SF RB) 20.9 [role boost ×1.03, TD luck +0.2] — Behind LOS guy (30% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced)
-  Brock Purdy (SF QB) 19.1 [TD luck -0.1]
-  Malik Willis (MIA QB) 15.6 [TD luck +0.1, market higher (15.6 vs model 13.8)]
-  De'Von Achane (MIA RB) 13.2 [TD luck +0.1] — Behind LOS guy (57% of targets, lg 18%)
-  Mike Evans (SF WR) 10.3 [TD luck -0.4] — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (39% of targets, lg 22%)
-  Deebo Samuel (SF WR) 10.2 [role boost ×1.10, TD luck -0.1] — Behind LOS guy (41% of targets, lg 18%) · rarely short 0-9 (29%)
+  Christian McCaffrey (SF RB) 20.7 · xFP 13.7/g (-2.3 over expected) [role boost ×1.03, TD luck +0.2] — Behind LOS guy (30% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced)
+  Brock Purdy (SF QB) 19.1 · xFP 22.4/g (-0.3 over expected) [TD luck -0.1]
+  Malik Willis (MIA QB) 15.7 · xFP 13.4/g (+4.3 over expected) [TD luck +0.1, market higher (15.7 vs model 13.8)]
+  De'Von Achane (MIA RB) 13.3 · xFP 11.1/g (-2.5 over expected) [TD luck +0.1] — Behind LOS guy (57% of targets, lg 18%)
+  Mike Evans (SF WR) 10.3 · xFP 11.3/g (+2.6 over expected) [TD luck -0.4] — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (39% of targets, lg 22%)
+  Deebo Samuel (SF WR) 10.2 · xFP 12.8/g (+2.3 over expected) [role boost ×1.10, TD luck -0.1] — Behind LOS guy (41% of targets, lg 18%) · rarely short 0-9 (29%)
   Eddy Pineiro (SF K) 9.6
-  49ers D/ST (SF DST) 9.1
-  George Kittle (SF TE) 8.9 [TD luck +0.3]
-  Caleb Douglas (MIA WR) 7.7 [role boost ×1.06, TD luck +0.1]
-  Malik Washington (MIA WR) 5.7 [TD luck +0.1, market higher (5.7 vs model 4.2)] — Behind LOS guy (29% of targets, lg 18%) · rarely int 10-19 (14%)
-  Greg Dulcich (MIA TE) 5.4 — Short 0-9 guy (66% of targets, lg 48%) · rarely deep 20+ (0%) · middle-heavy (38%)
+  49ers D/ST (SF DST) 8.9
+  George Kittle (SF TE) 8.8 · xFP 7.1/g (-4.9 over expected) [TD luck +0.3]
+  Caleb Douglas (MIA WR) 7.7 · xFP 8.9/g (+3.0 over expected) [role boost ×1.06, TD luck +0.1]
+  Malik Washington (MIA WR) 5.8 · xFP 10.7/g (-5.9 over expected) [TD luck +0.1, market higher (5.8 vs model 4.2)] — Behind LOS guy (29% of targets, lg 18%) · rarely int 10-19 (14%)
+  Greg Dulcich (MIA TE) 5.4 · xFP 1.9/g (+0.9 over expected) — Short 0-9 guy (66% of targets, lg 48%) · rarely deep 20+ (0%) · middle-heavy (38%)
   Riley Patterson (MIA K) 5.3
-  Chris Bell (MIA WR) 5.1 [role boost ×1.09]
-  Demarcus Robinson (SF WR) 3.9 [role boost ×1.33, TD luck -0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%)
-  Kaelon Black (SF RB) 3.4 [role boost ×1.07, TD luck +0.1]
-  Dolphins D/ST (MIA DST) 3.2
+  Chris Bell (MIA WR) 5.1 · xFP 2.9/g (+0.1 over expected) [role boost ×1.09]
+  Demarcus Robinson (SF WR) 3.8 · xFP 8.4/g (+3.6 over expected) [role boost ×1.33, TD luck -0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%)
+  Dolphins D/ST (MIA DST) 3.4
+  Kaelon Black (SF RB) 3.4 · xFP 8.1/g (-0.6 over expected) [role boost ×1.07, TD luck +0.1]
 
 IND @ KC — total 47.5, KC by 6.5 · implied IND 20.5 / KC 27.0
 Weather @KC: wind 12 mph (gusts 20), 69°F, 22% precip — mild wind dock live
@@ -493,23 +493,23 @@ KC offense vs IND defense
   - IND CB1: Sauce Gardner active
 
 PLAYERS (PROJ half):
-  Patrick Mahomes (KC QB) 18.5 [TD luck -0.4, weather ×0.97, CB shadow ×0.96]
-  Jonathan Taylor (IND RB) 17.9 [TD luck -0.5] — Behind LOS guy (54% of targets, lg 18%) · D funnels behind los (24% of targets faced)
-  Daniel Jones (IND QB) 17.3 [role boost ×1.03, weather ×0.97, market higher (17.3 vs model 14.5)]
+  Patrick Mahomes (KC QB) 18.5 · xFP 15.0/g (+7.7 over expected) [TD luck -0.4, weather ×0.97, CB shadow ×0.96]
+  Jonathan Taylor (IND RB) 17.8 · xFP 19.3/g (+4.3 over expected) [TD luck -0.5] — Behind LOS guy (54% of targets, lg 18%) · D funnels behind los (24% of targets faced)
+  Daniel Jones (IND QB) 17.3 · xFP 12.1/g (-2.1 over expected) [role boost ×1.03, weather ×0.97, market higher (17.3 vs model 14.5)]
   Ken Walker III (KC RB) 16.6
-  Rashee Rice (KC WR) 11.1 [TD luck -0.9, weather ×0.97, CB shadow ×0.97] — Behind LOS guy (34% of targets, lg 18%)
-  Tyler Warren (IND TE) 9.7 [TD luck -0.7, weather ×0.98] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (2%)
+  Rashee Rice (KC WR) 11.1 · xFP 2.5/g (+6.4 over expected) [TD luck -0.9, weather ×0.97, CB shadow ×0.97] — Behind LOS guy (34% of targets, lg 18%)
+  Tyler Warren (IND TE) 9.3 · xFP 6.4/g (+2.4 over expected) [TD luck -0.7, weather ×0.98] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (2%)
+  Travis Kelce (KC TE) 9.2 · xFP 5.6/g (+3.0 over expected) [TD luck +0.1, weather ×0.98] — Short 0-9 guy (63% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced)
   Harrison Butker (KC K) 8.6 [weather ×0.95]
-  Travis Kelce (KC TE) 8.5 [TD luck +0.1, weather ×0.98] — Short 0-9 guy (63% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced)
-  Alec Pierce (IND WR) 7.8 [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · rarely short 0-9 (19%) · Int 10-19 guy (53% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%)
-  Xavier Worthy (KC WR) 7.8 [TD luck +0.2, weather ×0.97, CB shadow ×0.97] — rarely short 0-9 (35%) · Deep 20+ guy (22% of targets, lg 13%) · right-heavy (52%)
-  Josh Downs (IND WR) 7.3 [TD luck +0.1, weather ×0.97] — rarely behind los (6%) · Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (13%)
+  Alec Pierce (IND WR) 7.8 · xFP 8.8/g (-0.7 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · rarely short 0-9 (19%) · Int 10-19 guy (53% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%)
+  Xavier Worthy (KC WR) 7.8 · xFP 7.3/g (-4.0 over expected) [TD luck +0.2, weather ×0.97, CB shadow ×0.97] — rarely short 0-9 (35%) · Deep 20+ guy (22% of targets, lg 13%) · right-heavy (52%)
+  Josh Downs (IND WR) 7.3 · xFP 5.0/g (-0.3 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (6%) · Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (13%)
   Chiefs D/ST (KC DST) 7.1
   Spencer Shrader (IND K) 7.0 [weather ×0.95]
-  Keenan Allen (IND WR) 6.3 [TD luck +0.3, weather ×0.97] — rarely behind los (4%) · Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (12%)
+  Keenan Allen (IND WR) 6.3 · xFP 7.5/g (-1.3 over expected) [TD luck +0.3, weather ×0.97] — rarely behind los (4%) · Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (12%)
   Colts D/ST (IND DST) 4.3
-  Tyquan Thornton (KC WR) 3.6 [weather ×0.97, CB shadow ×0.97] — rarely behind los (3%) · rarely short 0-9 (16%) · Deep 20+ guy (63% of targets, lg 13%)
-  Emmett Johnson (KC RB) 3.0 [TD luck +0.1]
+  Tyquan Thornton (KC WR) 3.6 · xFP 1.6/g (-1.6 over expected) [weather ×0.97, CB shadow ×0.97] — rarely behind los (3%) · rarely short 0-9 (16%) · Deep 20+ guy (63% of targets, lg 13%)
+  Emmett Johnson (KC RB) 3.0 · xFP 6.2/g (+1.6 over expected) [TD luck +0.1]
 
 NYG @ LAR — total 48.5, LAR by 7.0 · implied NYG 20.8 / LAR 27.8
 Weather @LAR: wind 10 mph (gusts 6), 74°F, 0% precip — mild wind dock live
@@ -525,21 +525,21 @@ LAR offense vs NYG defense
   - NYG CB1: Greg Newsome II active
 
 PLAYERS (PROJ half):
-  Jaxson Dart (NYG QB) 21.1 [TD luck -0.5, weather ×0.97, market higher (21.1 vs model 17.7)]
-  Puka Nacua (LAR WR) 17.5 [TD luck +0.3, weather ×0.97]
-  Matthew Stafford (LAR QB) 17.4 [role boost ×1.03, TD luck +0.2, weather ×0.97]
-  Kyren Williams (LAR RB) 14.0 [TD luck -0.2] — Short 0-9 guy (85% of targets, lg 48%) · D funnels short 0-9 (51% of targets faced)
-  Cam Skattebo (NYG RB) 13.4 [role boost ×1.10, TD luck -0.2] — Behind LOS guy (44% of targets, lg 18%) · D funnels behind los (22% of targets faced)
-  Malik Nabers (NYG WR) 12.7 [TD luck +0.2, weather ×0.97, market higher (12.7 vs model 11.1)] — rarely behind los (7%) · rarely short 0-9 (31%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (55%)
-  Davante Adams (LAR WR) 11.5 [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · Int 10-19 guy (39% of targets, lg 22%) · left-heavy (51%)
-  Blake Corum (LAR RB) 9.4
-  Isaiah Likely (NYG TE) 9.3 [TD luck -1.2, weather ×0.98] — rarely behind los (7%) · Short 0-9 guy (57% of targets, lg 48%) · middle-heavy (39%)
+  Jaxson Dart (NYG QB) 21.0 · xFP 20.4/g (+6.2 over expected) [TD luck -0.5, weather ×0.97, market higher (21.0 vs model 17.7)]
+  Puka Nacua (LAR WR) 17.4 · xFP 12.8/g (-2.9 over expected) [TD luck +0.3, weather ×0.97]
+  Matthew Stafford (LAR QB) 17.4 · xFP 14.7/g (-9.6 over expected) [role boost ×1.03, TD luck +0.2, weather ×0.97]
+  Kyren Williams (LAR RB) 14.0 · xFP 11.4/g (+2.6 over expected) [TD luck -0.2] — Short 0-9 guy (85% of targets, lg 48%) · D funnels short 0-9 (51% of targets faced)
+  Cam Skattebo (NYG RB) 13.1 · xFP 12.0/g (+2.1 over expected) [role boost ×1.10, TD luck -0.2] — Behind LOS guy (44% of targets, lg 18%) · D funnels behind los (22% of targets faced)
+  Malik Nabers (NYG WR) 12.4 · xFP 11.7/g (-1.8 over expected) [TD luck +0.2, weather ×0.97] — rarely behind los (7%) · rarely short 0-9 (31%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (55%)
+  Davante Adams (LAR WR) 11.2 · xFP 7.7/g (-3.6 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · Int 10-19 guy (39% of targets, lg 22%) · left-heavy (51%)
+  Blake Corum (LAR RB) 9.4 · xFP 4.9/g (+0.5 over expected)
+  Isaiah Likely (NYG TE) 9.3 · xFP 13.6/g (+10.2 over expected) [TD luck -1.2, weather ×0.98] — rarely behind los (7%) · Short 0-9 guy (57% of targets, lg 48%) · middle-heavy (39%)
   Harrison Mevis (LAR K) 8.7 [weather ×0.95]
   Rams D/ST (LAR DST) 7.0
   Dominic Zvada (NYG K) 6.5 [weather ×0.95]
-  Terrance Ferguson (LAR TE) 5.8 [weather ×0.98] — rarely behind los (0%) · rarely short 0-9 (20%) · Deep 20+ guy (57% of targets, lg 13%) · left-heavy (62%)
-  Colby Parkinson (LAR TE) 4.6 [TD luck +0.2, weather ×0.98] — Short 0-9 guy (69% of targets, lg 48%) · rarely int 10-19 (7%) · right-heavy (53%) · D funnels short 0-9 (51% of targets faced)
-  Malachi Fields (NYG WR) 4.3 [TD luck +0.1, weather ×0.97]
-  Darnell Mooney (NYG WR) 4.0 [TD luck +0.1, weather ×0.97] — rarely behind los (4%) · rarely short 0-9 (26%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (49%)
+  Terrance Ferguson (LAR TE) 5.8 · xFP 1.5/g (-1.5 over expected) [weather ×0.98] — rarely behind los (0%) · rarely short 0-9 (20%) · Deep 20+ guy (57% of targets, lg 13%) · left-heavy (62%)
+  Colby Parkinson (LAR TE) 4.6 · xFP 3.3/g (-2.2 over expected) [TD luck +0.2, weather ×0.98] — Short 0-9 guy (69% of targets, lg 48%) · rarely int 10-19 (7%) · right-heavy (53%) · D funnels short 0-9 (51% of targets faced)
+  Malachi Fields (NYG WR) 4.3 · xFP 5.2/g (-1.7 over expected) [TD luck +0.1, weather ×0.97]
+  Darnell Mooney (NYG WR) 4.0 · xFP 2.8/g (+0.9 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (4%) · rarely short 0-9 (26%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (49%)
   Giants D/ST (NYG DST) 4.0
 

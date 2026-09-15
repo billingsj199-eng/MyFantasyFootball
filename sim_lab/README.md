@@ -1387,3 +1387,13 @@ the AVERAGE player produces from that spot, summed; FPOE = actual - xFP.
   r .34/.32); totals row carries season xFP with the same split.
   Coker W1: 29.8 actual vs 12.2 xFP = +17.6 (TD +10.3, yards/catches +7.4).
 Backups pull_pace_tracker.py .bak_pre_xfp_20260915 / .bak_pre_xfpstd_20260915.
+
+## xFP/g + FPOE/g columns in the NOTES game sheet (2026-09-15)
+
+Jack: "add xFP to the NOTES sheet". app.js `ntXfp(p, sc)`: season-to-date
+expected fantasy points per game from SIM_XFP_2026 components scored in the
+sheet's format, and FPOE/g = actual PPG (SIM_2026 ppg re-scored like
+jsBasePg) minus xFP/g. Two columns after Market (green FPOE <= -1.5 = under
+expected / due up, red >= +1.5) and " · xFP 22.2/g (+13.5 over expected)" in
+the COPY NOTES text and the 06:45 notes file. Backup app.js
+.bak_pre_notesxfp_20260915.

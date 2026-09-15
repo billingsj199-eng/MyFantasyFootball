@@ -3514,6 +3514,29 @@
     return 'Weather @' + home + ': wind ' + w.wind + ' mph' + (w.gust != null ? ' (gusts ' + w.gust + ')' : '') + ', ' + w.temp + '°F' + (w.pop != null ? ', ' + w.pop + '% precip' : '') +
       (w.wind >= 15 ? ' — WIND DOCK live (QB/WR/TE/K)' : (w.wind >= 10 ? ' — mild wind dock live' : ''));
   }
+  // Season-to-date expected fantasy points per game (standard xFP, the same
+  // per-game components the site card uses: SIM_XFP_2026 from
+  // pull_pace_tracker.py) and points over expected vs the player's actual
+  // PPG (SIM_2026, re-scored to the sheet's format like jsBasePg does).
+  function ntXfp(p, sc) {
+    var X = window.SIM_XFP_2026 && window.SIM_XFP_2026[p.norm];
+    if (!X || !X.w || p.pos === 'K' || p.pos === 'DST') return null;
+    var n = 0, x = 0;
+    Object.keys(X.w).forEach(function (wk) {
+      var c = X.w[wk]; n++;
+      if (p.pos === 'QB') x += sc.pass_yd * c[1] + sc.pass_td * c[2] + sc.rush_yd * c[4] + sc.rush_td * c[5];
+      else x += sc.rec * c[1] + sc.rec_yd * c[2] + sc.rec_td * c[3] + sc.rush_yd * c[5] + sc.rush_td * c[6];
+    });
+    if (!n) return null;
+    var d = (window.SIM_2026 && window.SIM_2026.players) ? window.SIM_2026.players[p.norm] : null;
+    var ppg = null;
+    if (d && d.g) {
+      var pg = d.pg || {};
+      ppg = d.ppg + (sc.rec - 0.5) * (pg.rec || 0) + (sc.pass_td - 4) * (pg.ptd || 0) + (sc.pass_yd - 0.04) * (pg.py || 0)
+        + (sc.rush_yd - 0.1) * (pg.ry || 0) + (sc.rec_yd - 0.1) * (pg.rcy || 0) + (sc.rush_td - 6) * (pg.rtd || 0) + (sc.rec_td - 6) * (pg.rctd || 0);
+    }
+    return { g: n, xfpg: x / n, ppg: ppg, fpoeg: ppg != null ? ppg - x / n : null };
+  }
   function ntPlayerChips(p, wk, sc, slot, wp) {
     var chips = [];
     var iA = E.injAdj(p, wk);
@@ -3561,23 +3584,27 @@
       var eff = E.effMean(wp);
       if (eff < 3 && !p.isDST) return;
       var chips = ntPlayerChips(p, wk, sc, slot, wp);
+      var xf = ntXfp(p, sc);
       var read = '';
       if (lg && !p.isDST && ['WR', 'TE', 'RB'].indexOf(p.pos) >= 0) {
         var pl = znPlayer(Z, p.norm, lg); if (pl && (pl.N + pl.Np) >= 10) read = znReads(pl, znDef(Z, slot.opp, lg), lg);
       }
-      rows.push({ p: p, eff: eff, wp: wp, chips: chips, read: read });
+      rows.push({ p: p, eff: eff, wp: wp, chips: chips, read: read, xf: xf });
     });
     rows.sort(function (x, y) { return y.eff - x.eff; });
-    html += '<table style="margin-top:10px"><thead><tr><th class="l">Player</th><th>Tm</th><th>Pos</th><th>PROJ</th><th>Model</th><th>Market</th><th class="l">Why / notes</th><th class="l">Zone read</th></tr></thead><tbody>';
+    html += '<table style="margin-top:10px"><thead><tr><th class="l">Player</th><th>Tm</th><th>Pos</th><th>PROJ</th><th>Model</th><th>Market</th><th title="Expected fantasy points per game, 2026 to date (standard usage-based xFP)">xFP/g</th><th title="Actual PPG minus xFP/g: + = scoring over his usage, - = under (due up)">FPOE/g</th><th class="l">Why / notes</th><th class="l">Zone read</th></tr></thead><tbody>';
     T.push(''); T.push('PLAYERS (PROJ ' + $('nt-scoring').value + '):');
     rows.forEach(function (o) {
       html += '<tr><td class="l"><b>' + esc(o.p.name) + '</b></td><td>' + o.p.tm + '</td><td>' + o.p.pos + '</td><td><b>' + ntF(o.eff, 1) + '</b></td><td class="dim">' +
         ntF(o.wp.jsMean, 1) + '</td><td class="dim">' + (o.wp.propMean != null ? ntF(o.wp.propMean, 1) : '—') + '</td>' +
+        '<td class="dim">' + (o.xf ? ntF(o.xf.xfpg, 1) : '—') + '</td>' +
+        '<td' + (o.xf && o.xf.fpoeg != null ? ' style="color:' + (o.xf.fpoeg <= -1.5 ? 'var(--acc)' : o.xf.fpoeg >= 1.5 ? '#f85149' : 'var(--dim)') + '"' : ' class="dim"') + '>' + (o.xf && o.xf.fpoeg != null ? ntSigned(o.xf.fpoeg, 1) : '—') + '</td>' +
         '<td class="l" style="font-size:11px;white-space:normal;min-width:220px">' + o.chips.map(function (c) {
           var col = /OUT|docked|×0\.|luck -|lower|shadow/.test(c) ? '#f85149' : (/boost|×1\.|luck \+|higher|soft/.test(c) ? 'var(--acc)' : 'var(--dim)');
           return '<span style="border:1px solid ' + col + ';color:' + col + ';border-radius:9px;padding:0 6px;margin:1px 3px 1px 0;display:inline-block">' + esc(c) + '</span>';
         }).join('') + '</td><td class="l" style="font-size:11px;white-space:normal;min-width:220px">' + esc(o.read) + '</td></tr>';
       var line = '  ' + o.p.name + ' (' + o.p.tm + ' ' + o.p.pos + ') ' + ntF(o.eff, 1);
+      if (o.xf && o.xf.fpoeg != null) line += ' · xFP ' + ntF(o.xf.xfpg, 1) + '/g (' + ntSigned(o.xf.fpoeg, 1) + ' over expected)';
       if (o.chips.length) line += ' [' + o.chips.join(', ') + ']';
       if (o.read) line += ' — ' + o.read;
       T.push(line);

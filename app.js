@@ -9352,6 +9352,61 @@ function _simProjRow(d, wk) {
   return r || null;
 }
 
+// Expected fantasy points (xFP) for one 2026 game-log row — the standard
+// opportunity-based definition (PFF / Fantasy Points Data / ESPN): every
+// target, carry and pass attempt valued at what the AVERAGE player produces
+// from that spot (air yards, field position, end-zone throws), summed.
+// Components come from SIM_PROJ_2026.xfp[name][wk] (sim_lab/pull_pace_tracker.py,
+// nflverse pbp 2018-25 tables) and are scored here in the viewer's format:
+//   RB/WR/TE [tg, xrec, xrecyd, xrectd, car, xruyd, xrutd]
+//   QB       [att, xpyd, xptd, car, xruyd, xrutd]
+// FPOE = actual − xFP. Sim Lab backtests split the gap: the TD part is luck
+// (year-to-year r .09) and regresses; the yards/catch part is skill (r .34 /
+// .32) and mostly repeats — the tooltip shows both halves.
+const _XFP_HDR = '<th><span data-gloss="Expected fantasy points: what an average player scores from this exact usage — every target valued by its depth and field position, every carry by field position (league conversion rates, 2018-25). Actual minus xFP = points over expected. Hover a value: the TD part of the gap is luck and regresses; the yards/catch part is skill and mostly repeats. 2026 only.">xFP</span></th>';
+function _xfpRow(d, wk) {
+  const SP = window.SIM_PROJ_2026;
+  const X = SP && SP.xfp;
+  if (!X || d.s === 'DST' || d.s === 'K') return null;
+  let m = X[d.n];
+  if (!m && typeof _campNewsNorm === 'function') {
+    let idx = window._simXfpIdx;
+    if (!idx || idx._src !== SP) {
+      idx = { _src: SP };
+      Object.keys(X).forEach(k => { idx[_campNewsNorm(k)] = X[k]; });
+      if (typeof _foldSimAliases === 'function') _foldSimAliases(idx);
+      window._simXfpIdx = idx;
+    }
+    m = idx[_campNewsNorm(d.n)];
+  }
+  return (m && m[String(wk)]) || null;
+}
+function _xfpFor(d, w, pos, fmt) {
+  if (!w || typeof w.fpts !== 'number') return null;
+  const c = _xfpRow(d, w.wk);
+  if (!c) return null;
+  const recV = fmt === 'ppr' ? 1 : fmt === 'std' ? 0 : 0.5;
+  let xfp, xtd, td;
+  if (pos === 'QB') {
+    xfp = 0.04 * c[1] + 4 * c[2] + 0.1 * c[4] + 6 * c[5];
+    xtd = 4 * c[2] + 6 * c[5]; td = 4 * (w.ptd || 0) + 6 * (w.rtd || 0);
+  } else {
+    xfp = recV * c[1] + 0.1 * (c[2] + c[5]) + 6 * (c[3] + c[6]);
+    xtd = 6 * (c[3] + c[6]); td = 6 * ((w.rctd || 0) + (w.rtd || 0));
+  }
+  const diff = w.fpts - xfp;                 // FPOE: actual over expected
+  const tdPart = td - xtd;                   // the luck half (TD points over expected)
+  return { xfp: Math.round(xfp * 10) / 10, diff: Math.round(diff * 10) / 10, tdPart: Math.round(tdPart * 10) / 10, skillPart: Math.round((diff - tdPart) * 10) / 10 };
+}
+function _xfpCell(d, w, pos, fmt) {
+  const x = _xfpFor(d, w, pos, fmt);
+  if (!x) return '<td style="color:var(--text2)">—</td>';
+  const sg = v => (v >= 0 ? '+' : '') + v.toFixed(1);
+  const col = x.diff <= -1.5 ? '#22c55e' : x.diff >= 1.5 ? '#f87171' : null;   // scored UNDER expected = green (due up)
+  const tip = ('Scored ' + sg(x.diff) + ' vs expected: TD luck ' + sg(x.tdPart) + ' (regresses), yards/catches ' + sg(x.skillPart) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
+  return '<td title="' + tip + '" style="cursor:help' + (col ? ';color:' + col + ';font-weight:700' : '') + '">' + x.xfp.toFixed(1) + '</td>';
+}
+
 // The PROJ cell for one 2026 log row ('' outside 2026). BOOM/BUST columns
 // were dropped from the card's game log 2026-09-14 (Jack) — the odds still
 // ship in SIM_PROJ_2026 for the rankings WEEKLY view (_wkSimBoomBustCell).
@@ -10164,7 +10219,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   const _is26 = +season === 2026;
   // Column order (Jack 2026-09-14): WK · OPP · PROJ · RNK · FPTS · SNP% · then every
   // share % (CAR% / TS%) BEFORE the counting stats.
-  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th>FPTS</th><th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
+  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th>FPTS</th>' + (_is26 ? _XFP_HDR : '') + '<th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
   else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">CAR%</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>ATT</th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
   else hdr += '<th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RyD</th><th>FL</th>';
@@ -10181,6 +10236,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
       if (_is26) r += _simProjCells(d, w.wk, fmt, !!w._bye);
       r += '<td style="color:var(--text2)">—</td>';   // RNK
       r += '<td class="fpts-cell" style="color:var(--text2)">' + (w._dnp ? '0' : '—') + '</td>';
+      if (_is26) r += '<td style="color:var(--text2)">—</td>';   // xFP
       for (let i = 0; i < 1 + _posStatCols; i++) r += '<td style="color:var(--text2)">—</td>';   // SNP% + position columns
       return r + '</tr>';
     }
@@ -10202,6 +10258,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
       const fptsClass = w.fpts === bestFpts && bestFpts > 0 ? ' class="fpts-cell best-yr"' : ' class="fpts-cell"';
       row += '<td' + fptsClass + '>' + w.fpts + '</td>';
     }
+    if (_is26) row += _xfpCell(d, w, pos, fmt);   // expected fantasy points (opportunity-based)
     const _wkSnp = _snapWeek(d.n, season, w.wk);
     row += _statCell(_wkSnp != null ? _wkSnp + '%' : '—', _wkSnp, 40, 90);
     const _wkTs = isQB ? null : _tsPctWeek(d.n, season, w);
@@ -10244,6 +10301,12 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   // Season-level SNP% and TS% for the totals row
   const _totSnp = _snapSeason(d.n, season);
   totalRow += '<td style="color:var(--accent)">TOT</td><td></td>' + (_is26 ? '<td></td>' : '') + '<td style="color:var(--text2)">—</td><td style="font-weight:700">' + totals.fpts + '</td>';
+  if (_is26) {
+    let _xs = 0, _xd = 0, _xt = 0, _xn = 0;
+    adjusted.forEach(w => { const x = _xfpFor(d, w, pos, fmt); if (x) { _xs += x.xfp; _xd += x.diff; _xt += x.tdPart; _xn++; } });
+    const _sg = v => (v >= 0 ? '+' : '') + (Math.round(v * 10) / 10).toFixed(1);
+    totalRow += _xn ? '<td title="Season: scored ' + _sg(_xd) + ' vs expected over ' + _xn + ' game' + (_xn > 1 ? 's' : '') + ' — TD luck ' + _sg(_xt) + ', yards/catches ' + _sg(_xd - _xt) + '" style="cursor:help;font-weight:700' + (_xd <= -1.5 ? ';color:#22c55e' : _xd >= 1.5 ? ';color:#f87171' : '') + '">' + (Math.round(_xs * 10) / 10).toFixed(1) + '</td>' : '<td style="color:var(--text2)">—</td>';
+  }
   totalRow += '<td>' + (_totSnp != null ? Math.round(_totSnp) + '%' : '—') + '</td>';
   let _totTsCell = '<td style="color:var(--text2)">—</td>';
   let _totCarCell = '<td style="color:var(--text2)">—</td>';

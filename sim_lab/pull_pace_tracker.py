@@ -425,6 +425,54 @@ def build_qb_tdluck_2026():
         print(f"WARN qb tdluck skipped ({e})")
     return out
 
+# KICKER FG/XP LUCK (backtest_k_fgluck.py, 2026-09-15) - INTEL ONLY. Expected
+# points per attempt from league make rates by distance (pooled pbp 2018-25:
+# <30 .979, 30-39 .932, 40-49 .784, 50-54 .712, 55+ .576; XP .946) x points if
+# made (3/4/5 by distance, XP 1) minus miss (-1). Kicker accuracy over
+# expected does NOT persist (YoY r .09), so a run of misses is luck, not a
+# slump. NOT an engine layer: the live K mean is Clay x kLevel x Vegas x the
+# kicking-points market and has no realized-points half to correct. Feeds the
+# NOTES leaderboard K section.
+K_FG_RATE = [(29, 0.979), (39, 0.932), (49, 0.784), (54, 0.712), (999, 0.576)]
+K_XP_RATE = 0.946
+
+def _k_xpts(dist):
+    pm = next(r for hi, r in K_FG_RATE if dist <= hi)
+    pts = 5 if dist >= 50 else (4 if dist >= 40 else 3)
+    return pm * pts - (1 - pm) * 1
+
+def build_k_luck_2026():
+    """{norm: {xpts, pts, g, att, xp}} for every kicker with a 2026 attempt."""
+    out = {}
+    pbp_p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+    try:
+        if not os.path.exists(pbp_p):
+            return out
+        pbp = pd.read_csv(pbp_p, usecols=["season_type", "week", "kicker_player_id", "kicker_player_name",
+                                          "field_goal_result", "kick_distance", "extra_point_result"], low_memory=False)
+        pbp = pbp[(pbp.season_type == "REG") & pbp.kicker_player_id.notna()]
+        acc = {}
+        for r in pbp.itertuples(index=False):
+            a = acc.setdefault(r.kicker_player_id, {"name": r.kicker_player_name, "xpts": 0.0, "pts": 0, "att": 0, "xp": 0, "wks": set()})
+            if isinstance(r.field_goal_result, str):
+                d = float(r.kick_distance) if pd.notna(r.kick_distance) else 40.0
+                a["xpts"] += _k_xpts(d); a["att"] += 1; a["wks"].add(int(r.week))
+                a["pts"] += (5 if d >= 50 else (4 if d >= 40 else 3)) if r.field_goal_result == "made" else -1
+            elif isinstance(r.extra_point_result, str):
+                a["xpts"] += K_XP_RATE * 1 - (1 - K_XP_RATE) * 1; a["xp"] += 1; a["wks"].add(int(r.week))
+                a["pts"] += 1 if r.extra_point_result == "good" else -1
+        for pid, a in acc.items():
+            # pbp names are 'B.Aubrey' - resolve via players.csv display name when possible
+            out[pid] = {"name": a["name"], "xpts": round(a["xpts"], 2), "pts": a["pts"], "g": len(a["wks"]), "att": a["att"], "xp": a["xp"]}
+        players_p = os.path.join(CACHE, "players.csv")
+        if os.path.exists(players_p):
+            pl = pd.read_csv(players_p, usecols=["gsis_id", "display_name"], low_memory=False)
+            full = dict(zip(pl.gsis_id, pl.display_name))
+            out = {norm_name(str(full.get(pid, v["name"]))): dict(v, name=str(full.get(pid, v["name"]))) for pid, v in out.items()}
+    except Exception as e:
+        print(f"WARN k luck skipped ({e})")
+    return out
+
 def build_routes_2026():
     """TE weekly route participation (%% of team dropbacks on the field) from
     2026 pbp + participation — feeds engine routeMult (backtest_route_trend.py:
@@ -481,6 +529,7 @@ def build_routes_2026():
     tdluck = build_rb_tdluck_2026()
     rectd = build_rec_tdluck_2026()
     qbtd = build_qb_tdluck_2026()
+    kluck = build_k_luck_2026()
     with open(ROUTES_OUT, "w", encoding="utf-8") as f:
         f.write("// built by pull_pace_tracker.py — TE weekly route participation (% of team dropbacks)\n")
         f.write("window.SIM_ROUTES_2026 = ")
@@ -502,7 +551,11 @@ def build_routes_2026():
         f.write("window.SIM_QB_TDLUCK_2026 = ")
         json.dump(qbtd, f, separators=(",", ":"))
         f.write(";\n")
-    print(f"wrote {ROUTES_OUT} — {len(routes)} players with 2026 route data ({n_pff} from repo route_pct.js / PFF weekly), {len(pressure)} defenses with pressure data, {len(tdluck)} RBs + {len(rectd)} WR/TEs + {len(qbtd)} QBs with TD-luck data")
+        f.write("// per-kicker season-to-date FG/XP luck {norm: {name, xpts, pts, g, att, xp}} (backtest_k_fgluck.py) - INTEL ONLY (NOTES tab)\n")
+        f.write("window.SIM_K_LUCK_2026 = ")
+        json.dump(kluck, f, separators=(",", ":"))
+        f.write(";\n")
+    print(f"wrote {ROUTES_OUT} — {len(routes)} players with 2026 route data ({n_pff} from repo route_pct.js / PFF weekly), {len(pressure)} defenses with pressure data, {len(tdluck)} RBs + {len(rectd)} WR/TEs + {len(qbtd)} QBs with TD-luck data, {len(kluck)} kickers with FG-luck data")
 
 # ---------------------------------------------------------------------------
 # TARGET-AREA ZONES (backtest_target_area.py, 2026-09-14) - INTEL ONLY.

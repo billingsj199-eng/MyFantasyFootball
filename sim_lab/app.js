@@ -3420,6 +3420,33 @@
       text.push(pos + ' DUE UP: ' + up.slice(0, 5).map(function (o) { return o.p.name + ' (' + o.r.td + ' TD on ' + ntF(o.r.xtd, 1) + ' xTD, ' + ntSigned(o.adj, 1) + ')'; }).join('; '));
       text.push(pos + ' DUE DOWN: ' + down.slice(0, 5).map(function (o) { return o.p.name + ' (' + o.r.td + ' TD on ' + ntF(o.r.xtd, 1) + ' xTD, ' + ntSigned(o.adj, 1) + ')'; }).join('; '));
     });
+    // Kickers: FG/XP luck = expected points from attempt distances - actual (backtest_k_fgluck.py:
+    // accuracy over expected does NOT persist YoY, r .09). INTEL ONLY - the live K mean has no
+    // realized half to correct, so there is no engine adjustment; ADJ shows the luck in points/game.
+    var km = window.SIM_K_LUCK_2026 || {};
+    var krows = Object.keys(km).map(function (nk) { var r = km[nk]; return { nk: nk, r: r, luck: r.g ? (r.xpts - r.pts) / r.g : 0 }; })
+      .filter(function (o) { return o.r.g >= 1 && (o.r.att + o.r.xp) >= 4; });
+    if (krows.length) {
+      krows.sort(function (x, y) { return y.luck - x.luck; });
+      var kup = krows.filter(function (o) { return o.luck >= 0.5; }).slice(0, 8);
+      var kdown = krows.filter(function (o) { return o.luck <= -0.5; }).sort(function (x, y) { return x.luck - y.luck; }).slice(0, 8);
+      function ktable(rows, title) {
+        var h = '<table style="width:auto;min-width:420px"><thead><tr><th class="l" colspan="7">' + title + '</th></tr>' +
+          '<tr><th class="l">Kicker</th><th>G</th><th>FGA</th><th>XPA</th><th>xPts</th><th>Pts</th><th>Luck/g</th></tr></thead><tbody>';
+        rows.forEach(function (o) {
+          var col = o.luck >= 0.5 ? 'var(--acc)' : (o.luck <= -0.5 ? '#f85149' : 'var(--dim)');
+          h += '<tr><td class="l"><b>' + esc(o.r.name) + '</b></td><td>' + o.r.g + '</td><td>' + o.r.att + '</td><td>' + o.r.xp + '</td><td>' + ntF(o.r.xpts, 1) +
+            '</td><td>' + o.r.pts + '</td><td style="color:' + col + '"><b>' + ntSigned(o.luck, 1) + '</b></td></tr>';
+        });
+        return h + '</tbody></table>';
+      }
+      html += '<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;margin-bottom:14px">' +
+        '<div>' + ktable(kup, 'K — DUE UP (missed kicks the distances say he makes)') + '</div>' +
+        '<div>' + ktable(kdown, 'K — DUE DOWN (made more than the distances say)') + '</div></div>' +
+        '<p class="dim" style="font-size:11px;margin-top:-6px">Kicker accuracy over expected does not persist (YoY r .09; backtest_k_fgluck.py) — a miss streak is luck, not a slump. Intel only: the engine\'s kicker mean is Clay × level × Vegas × kicking-points lines and carries no realized half to correct.</p>';
+      text.push('K DUE UP: ' + kup.slice(0, 5).map(function (o) { return o.r.name + ' (' + o.r.pts + ' pts on ' + ntF(o.r.xpts, 1) + ' expected, ' + ntSigned(o.luck, 1) + '/g)'; }).join('; '));
+      text.push('K DUE DOWN: ' + kdown.slice(0, 5).map(function (o) { return o.r.name + ' (' + o.r.pts + ' pts on ' + ntF(o.r.xpts, 1) + ' expected, ' + ntSigned(o.luck, 1) + '/g)'; }).join('; '));
+    }
     $('nt-luck').innerHTML = html || '<p class="dim">No luck data yet (maps fill after the first 2026 games).</p>';
     return text;
   }

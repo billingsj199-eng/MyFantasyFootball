@@ -1221,3 +1221,35 @@ sim_weather.js, sleeper_meta.js (CB1 / OL), sim_2026.js (FPA), zones_2026.js.
 - PLAIN TEXT: the whole sheet as text in a textarea; COPY NOTES copies it
   (clipboard API with execCommand fallback).
 Intel only. Backups app.js/index.html .bak_pre_notes_20260915.
+
+## Kicker FG-distance luck (backtest_k_fgluck.py) - NOT A LAYER, K section in NOTES 2026-09-15
+
+Jack: "backtest the kicker FG-distance luck next". Kicker weekly points
+rebuilt from pbp (FG 3/4/5 by distance, miss -1, XP +1/-1); xPts per attempt
+= league make rate by distance (<30 .979 / 30-39 .932 / 40-49 .784 / 50-54
+.712 / 55+ .576, XP .946) x points - miss. Base = P=5 blend of the kicker's
+prior-season pts/g toward season-to-date x Vegas (K e=.50); 3,291 kicker-
+weeks 2019-25, LOYO. Log: k_fgluck_backtest.log.
+
+- GATE: accuracy over expected does NOT persist - YoY r +.09, early->late
+  +.13. FG attempts/game YoY r +.05. Kicker points are team + luck.
+- Luck on the realized half: + .75 x luck x g/(P+g) LOYO -0.98% (7/7).
+  Unlucky tercile actual/base 1.036, lucky 0.919.
+- BUT the realized half itself is the problem: prior strength P=12 beats
+  P=5 (-1.11%, 6/7), and a LEAGUE-mean prior with P=40 beats everything
+  (-3.15%, 7/7, picks 40 every fold) - a kicker's own prior season and his
+  season-to-date barely carry information; luck on top of P=12 adds only
+  -0.21%.
+- LIVE RELEVANCE: none as a layer. K is not in weekly_stats_active, so
+  SIM_2026 has no kicker rows and jsBasePg returns pure Clay; the live K
+  mean = Clay fgm/xpm x tuner kLevel x Vegas x kicking-points market. There
+  is no realized half to correct, and the backtest says there should not be
+  one (or a heavily shrunk, league-anchored one at most). Do NOT add a K
+  realized-PPG blend at P=5.
+- SHIPPED AS INTEL: pull_pace_tracker.py `build_k_luck_2026()` ->
+  `SIM_K_LUCK_2026` {norm: {name, xpts, pts, g, att, xp}} in sim_routes.js
+  (rates baked as K_FG_RATE / K_XP_RATE); NOTES tab leaderboard gets a K
+  section (DUE UP = missed kicks the distances say he makes, DUE DOWN =
+  the reverse; threshold +-0.5 pts/g, >= 4 attempts) with the persistence
+  caveat printed under it, and K lines in the COPY NOTES text. Backups
+  pull_pace_tracker.py / app.js .bak_pre_kluck_20260915.

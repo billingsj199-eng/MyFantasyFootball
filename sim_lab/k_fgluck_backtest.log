@@ -1,0 +1,51 @@
+  pbp 2018: 946 FG att, 1235 XP att
+  pbp 2019: 983 FG att, 1210 XP att
+  pbp 2020: 960 FG att, 1338 XP att
+  pbp 2021: 1027 FG att, 1257 XP att
+  pbp 2022: 1062 FG att, 1187 XP att
+  pbp 2023: 1060 FG att, 1169 XP att
+  pbp 2024: 1115 FG att, 1241 XP att
+  pbp 2025: 1088 FG att, 1262 XP att
+  FG make rate: <30:0.979  30-39:0.932  40-49:0.784  50-54:0.712  55+:0.576  | XP 0.946
+  league K pts/game: 2019:7.29 2020:7.59 2021:7.54 2022:7.71 2023:7.81 2024:8.10 2025:8.25
+
+=== GATE. kicker (pts - xPts)/g persistence YoY (>= 10 games both seasons) ===
+  YoY r = +0.09 (n=162, sd 0.69 pts/g)
+  early->late (wk<=8 vs 9+) r = +0.13 (n=222)
+  FG attempts/game YoY r = +0.05 (opportunity - expected to persist somewhat)
+
+3291 kicker-weeks 2019-25 | MSE prior-blend 21.4052 -> x Vegas 21.3760 | mean act/shipped 0.981
+  luck mean -0.149 pts/g; by year: 2019:+0.44 2020:+0.07 2021:+0.03 2022:-0.20 2023:-0.40 2024:-0.51 2025:-0.43
+
+=== 1. actual / shipped by tercile ===
+  FG/XP luck pts/g       low -1.44: 0.919 (n=1097) | mid -0.21: 0.998 (n=1097) | high +1.21: 1.036 (n=1097)   corr(x, act-shipped) +0.097
+  FG attempts/g (opp.)   low +1.36: 1.078 (n=1092) | mid +1.98: 0.975 (n=1096) | high +2.67: 0.909 (n=1103)   corr(x, act-shipped) -0.111
+   games 1-4: lucky tercile 0.919  unlucky tercile 1.064 (n=1042)
+   games 5-9: lucky tercile 0.872  unlucky tercile 1.015 (n=1079)
+   games 10-20: lucky tercile 0.970  unlucky tercile 1.042 (n=1170)
+
+=== 2. LOYO sweeps (grid[0] = shipped) ===
+  a) FG/XP luck: + k * luck * g/(P+g)
+    grid pooled MSE: +0.00:21.349  +0.25:21.234  +0.50:21.161  +0.75:21.129  +1.00:21.138  +1.50:21.280
+    pooled best +0.75 | LOYO MSE 21.1661 vs shipped 21.3760 (-0.98%), years better 7/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 1.0, 0.75]
+  b) luck centered per season
+    grid pooled MSE: +0.00:21.349  +0.25:21.241  +0.50:21.172  +0.75:21.140  +1.00:21.145  +1.50:21.269
+    pooled best +0.75 | LOYO MSE 21.1801 vs shipped 21.3760 (-0.92%), years better 6/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 1.0, 0.75]
+  c) multiplicative form
+    grid pooled MSE: +0.00:21.349  +0.25:21.233  +0.50:21.159  +0.75:21.126  +1.00:21.134  +1.50:21.275
+    pooled best +0.75 | LOYO MSE 21.1629 vs shipped 21.3760 (-1.00%), years better 7/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 1.0, 0.75]
+
+=== 3. how much should the realized K half be trusted at all? P sweep (no luck) and P + luck ===
+  sanity: rebuilt P=5 base MSE 21.3760 vs shipped 21.3760
+  a) prior strength P (1000 ~ prior/league only)
+    grid pooled MSE: +5.00:21.349  +3.00:21.693  +8.00:21.162  +12.00:21.096  +20.00:21.111  +40.00:21.221  +1000.00:21.532
+    pooled best +12.00 | LOYO MSE 21.1387 vs shipped 21.3760 (-1.11%), years better 6/7, picks [20, 12, 12, 12, 12, 12, 12]
+  b) P with luck k=.75 on the realized half
+    grid pooled MSE: +5.00:21.126  +8.00:21.045  +12.00:21.042  +20.00:21.102  +40.00:21.234
+    pooled best +12.00 | LOYO MSE 21.0894 vs shipped 21.1531 (-0.30%), years better 6/7, picks [12, 12, 12, 8, 8, 8, 12]
+  c) luck k at P=12
+    grid pooled MSE: +0.00:21.096  +0.25:21.062  +0.50:21.043  +0.75:21.042  +1.00:21.057
+    pooled best +0.75 | LOYO MSE 21.0774 vs shipped 21.1214 (-0.21%), years better 5/7, picks [0.75, 0.5, 0.75, 0.75, 0.75, 0.75, 0.5]
+  d) league-mean prior instead of own prior season
+    grid pooled MSE: +5.00:20.987  +12.00:20.506  +20.00:20.381  +40.00:20.326
+    pooled best +40.00 | LOYO MSE 20.3538 vs shipped 21.0168 (-3.15%), years better 7/7, picks [40, 40, 40, 40, 40, 40, 40]

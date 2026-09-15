@@ -2,6 +2,7 @@
 """
 PFF Premium weekly receiving exports -> E:\\MyFantasyFootball\\pbp_cache\\pff\\weekly\\
     pff_receiving_<season>_w<N>.csv          (one file per completed week)
+    pff_<facet>_<season>_w<N>.csv            scheme/alignment facets (see FACETS below)
 
 These are the files scripts/pull_route_pct.py turns into the REAL current-season
 RT% column (routes / team dropbacks). Without them the card shows a ~estimate
@@ -48,6 +49,28 @@ API = 'https://premium.pff.com/api/v1/facet/receiving/summary?league=nfl&season=
 # row too (routes only; no route_rate/grades - pull_route_pct.py divides by
 # nflverse dropbacks anyway).
 API_OFF = 'https://premium.pff.com/api/v1/facet/offense/summary?league=nfl&season={season}&week={week}'
+# SCHEME / ALIGNMENT facets (2026-09-15, Jack: "where each defense gets targeted or
+# what type of runs outside/inside... maybe pff"). PFF serves these weekly in-season
+# (probe 2026-09-15: HTTP 200 for every entry below; rushing/gap_zone,
+# passing/time_in_pocket, defense/run_defense, defense/slot_coverage and blocking/*
+# are 404 and NOT requested). One CSV per facet per week:
+#     pff_<key>_<season>_w<N>.csv
+# Consumers: E:\MyFantasyFootball\sim_lab\build_scheme.py (team + player scheme
+# cards on the Sim Lab ZONES / NOTES tabs). Nested values (rushing/direction
+# "directions") are flattened to <col>_<key>[_<sub>] columns; lists become JSON.
+FACET_API = 'https://premium.pff.com/api/v1/facet/{facet}?league=nfl&season={season}&week={week}'
+FACETS = [
+    ('receiving_scheme', 'receiving/scheme'),          # per receiver man/zone routes, targets, yprr
+    ('receiving_depth', 'receiving/depth'),            # per receiver depth x side splits (509 cols)
+    ('receiving_concept', 'receiving/concept'),        # per receiver screen / slot splits
+    ('rushing_summary', 'rushing/summary'),            # gap vs zone attempts, yco, breakaway, elusive
+    ('rushing_direction', 'rushing/direction'),        # carries by direction (left/mid/right end/tackle/guard)
+    ('passing_pressure', 'passing/pressure'),          # per QB blitz / pressure dropback splits
+    ('defense_summary', 'defense/summary'),            # per defender alignment snaps (box/slot/corner/DL gaps), grades
+    ('defense_coverage_scheme', 'defense/coverage_scheme'),  # per defender man vs zone coverage snaps + results
+    ('defense_pass_rush', 'defense/pass_rush'),        # per rusher pass-rush win rate / pressures
+]
+FACET_LEAD = ['season', 'week', 'player', 'player_id', 'position', 'team_name', 'franchise_id', 'player_game_count']
 # Column order of the season exports already in pbp_cache/pff (kept identical so
 # every consumer can read both shapes); anything else PFF sends is appended.
 LEAD_COLS = ['season', 'player', 'player_id', 'position', 'team_name', 'player_game_count', 'routes',
@@ -165,8 +188,56 @@ def _add_zero_target_routes(driver, season, week, live):
     return live
 
 
-def _write_csv(path, season, week, rows):
-    cols = list(LEAD_COLS)
+def _flatten(row):
+    """One level of nesting -> flat columns (rushing/direction ships a `directions`
+    dict); lists are kept as JSON text so nothing is lost."""
+    out = {}
+    for k, v in row.items():
+        if isinstance(v, dict):
+            for k2, v2 in v.items():
+                if isinstance(v2, dict):
+                    for k3, v3 in v2.items():
+                        out[f'{k}_{k2}_{k3}'] = json.dumps(v3) if isinstance(v3, (dict, list)) else v3
+                else:
+                    out[f'{k}_{k2}'] = json.dumps(v2) if isinstance(v2, list) else v2
+        elif isinstance(v, list):
+            out[k] = json.dumps(v)
+        else:
+            out[k] = v
+    return out
+
+
+def facet_path(key, season, week):
+    return os.path.join(PFF_WEEKLY, f'pff_{key}_{season}_w{week}.csv')
+
+
+def pull_facets(driver, season, week, force=False):
+    """Fetch every FACETS entry for one played week; skip files that already exist
+    unless force. -> list of (key, rows) written."""
+    done = []
+    for key, facet in FACETS:
+        path = facet_path(key, season, week)
+        if os.path.exists(path) and not force:
+            continue
+        status, body = _page_fetch(driver, FACET_API.format(facet=facet, season=season, week=week))
+        if status != 200:
+            print(f'  week {week}: {facet} HTTP {status} - skipped')
+            continue
+        rows = _rows(body)
+        if not isinstance(rows, list):
+            print(f'  week {week}: {facet} unreadable - skipped')
+            continue
+        rows = [_flatten(r) for r in rows if isinstance(r, dict)]
+        _write_csv(path, season, week, rows, lead=FACET_LEAD)
+        done.append((key, len(rows)))
+        time.sleep(0.6)
+    if done:
+        print(f'  week {week}: facets ' + ', '.join(f'{k} {n}' for k, n in done))
+    return done
+
+
+def _write_csv(path, season, week, rows, lead=None):
+    cols = list(lead or LEAD_COLS)
     for r in rows:
         for k in r.keys():
             if k not in cols:
@@ -190,6 +261,7 @@ def main():
     ap.add_argument('--all', action='store_true', help='refetch every week, not just the newest --refetch')
     ap.add_argument('--refetch', type=int, default=2, help='always refetch this many newest existing weeks')
     ap.add_argument('--login-wait', type=int, default=300, help='seconds to wait for a manual PFF login')
+    ap.add_argument('--no-facets', action='store_true', help='skip the scheme/alignment facet files (receiving only)')
     a = ap.parse_args()
     today = dt.date.today()
     season = a.season or (today.year if today.month >= 8 else today.year - 1)
@@ -258,7 +330,14 @@ def main():
             _write_csv(os.path.join(PFF_WEEKLY, f'pff_receiving_{season}_w{wk}.csv'), season, wk, live)
             written.append((wk, len(live)))
             print(f'  week {wk}: {len(live)} players with routes -> pff_receiving_{season}_w{wk}.csv')
+            if not a.no_facets:
+                pull_facets(driver, season, wk, force=True)
             time.sleep(1.0)
+        # scheme facets for weeks whose receiving file was kept (first run after
+        # the 2026-09-15 facet addition, or a facet PFF was down for)
+        if not a.no_facets:
+            for wk in kept:
+                pull_facets(driver, season, wk, force=False)
         print(f'done: wrote {[w for w, _ in written]}, kept {kept}')
         return 0
     finally:

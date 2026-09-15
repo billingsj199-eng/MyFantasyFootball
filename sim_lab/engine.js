@@ -648,16 +648,47 @@
   // Clay's guide updates. Stale data (last game >3 weeks back) = no adjust;
   // the injury layer owns absences. RB/WR/TE only.
   var SNAP_W = [0.5, 0.3, 0.2];
+  // ---------- blowout context (Jack 2026-09-15) ----------
+  // SIM_GAMECTX_2026[team][wk] = {pl, gp, db, gdb}: offensive plays / dropbacks and the
+  // garbage-time subset (Q4 |margin| >= 17, Q3 >= 28). A share measured in a blowout week
+  // is re-measured against COMPETITIVE plays when the player's count fits inside them
+  // (a pulled starter: 42 of 42 competitive snaps, not 42 of 66) and the week's weight in
+  // the trend is scaled by its competitive share. Never penalizes, never inflates a
+  // part-timer (his count exceeds nothing). Kill: window.SIM_BLOWOUT_CTX = false.
+  var CTX_MIN_GARBAGE = 6;
+  function ctxOf(p, w) {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_BLOWOUT_CTX === false || !wnd.SIM_GAMECTX_2026) return null;
+    var t = wnd.SIM_GAMECTX_2026[p.tm]; var c = t && (t[w] || t[String(w)]);
+    return c || null;
+  }
+  function ctxShare(pct, c, dropbacks) {
+    // -> {pct, wt} for one week: pct re-measured on competitive plays if it fits, wt = competitive share
+    var tot = dropbacks ? c.db : c.pl, gar = dropbacks ? c.gdb : c.gp;
+    if (!tot || gar < CTX_MIN_GARBAGE) return { pct: pct, wt: 1 };
+    var comp = tot - gar, cnt = pct / 100 * tot;
+    var adj = cnt <= comp + 0.5 ? Math.min(100, 100 * cnt / comp) : pct;   // fits inside competitive plays -> that is his real share
+    return { pct: cnt >= 0.85 * comp ? adj : pct, wt: comp / tot, adjusted: cnt >= 0.85 * comp && adj > pct + 0.5 };
+  }
+  function ctxNote(p, wk) {
+    // weeks whose snap or route share was re-measured (NOTES chip)
+    var out = [];
+    var sn = (typeof window !== 'undefined' && window.SIM_SNAPS_2026) ? window.SIM_SNAPS_2026[p.name] : null;
+    if (sn && sn.w) Object.keys(sn.w).forEach(function (w) { var c = ctxOf(p, +w); if (c && +w < wk && ctxShare(sn.w[w], c, false).adjusted) out.push('wk' + w); });
+    return out;
+  }
   function snapMult(p, wk) {
     if (p.pos !== 'RB' && p.pos !== 'WR' && p.pos !== 'TE') return 1;
     var sn = (typeof window !== 'undefined' && window.SIM_SNAPS_2026) ? window.SIM_SNAPS_2026[p.name] : null;
     if (!sn || !sn.w) return 1;
     var past = Object.keys(sn.w).map(Number).filter(function (w) { return w < wk; }).sort(function (a, b) { return b - a; });
     if (past.length < 2 || past[0] < wk - 3) return 1;
+    var val = {}, wt = {};
+    past.forEach(function (w) { var c = ctxOf(p, w); var r = c ? ctxShare(sn.w[w], c, false) : { pct: sn.w[w], wt: 1 }; val[w] = r.pct; wt[w] = r.wt; });
     var recent = 0, wsum = 0;
-    past.slice(0, 3).forEach(function (w, i) { recent += sn.w[w] * SNAP_W[i]; wsum += SNAP_W[i]; });
+    past.slice(0, 3).forEach(function (w, i) { recent += val[w] * SNAP_W[i] * wt[w]; wsum += SNAP_W[i] * wt[w]; });
     recent /= wsum;
-    var seasonAvg = past.reduce(function (t, w) { return t + sn.w[w]; }, 0) / past.length;
+    var seasonAvg = past.reduce(function (t, w) { return t + val[w] * wt[w]; }, 0) / past.reduce(function (t, w) { return t + wt[w]; }, 0);
     // 1.0%/snap-pt: backtested 2019-25 vs nflverse snap history
     // (backtest_snap_defense.py) — monotonic dose-response, empirical slope
     // 1.09%/pt, the original 0.8 was the only UNDERSIZED layer in the engine.
@@ -686,10 +717,12 @@
     if (!rr) return 1;
     var past = Object.keys(rr).map(Number).filter(function (w) { return w < wk; }).sort(function (a, b) { return b - a; });
     if (past.length < 2 || past[0] < wk - 3) return 1;
+    var val = {}, wt = {};
+    past.forEach(function (w) { var c = ctxOf(p, w); var r = c ? ctxShare(rr[w], c, true) : { pct: rr[w], wt: 1 }; val[w] = r.pct; wt[w] = r.wt; });
     var recent = 0, wsum = 0;
-    past.slice(0, 3).forEach(function (w, i) { recent += rr[w] * SNAP_W[i]; wsum += SNAP_W[i]; });
+    past.slice(0, 3).forEach(function (w, i) { recent += val[w] * SNAP_W[i] * wt[w]; wsum += SNAP_W[i] * wt[w]; });
     recent /= wsum;
-    var avg = past.reduce(function (t, w) { return t + rr[w]; }, 0) / past.length;
+    var avg = past.reduce(function (t, w) { return t + val[w] * wt[w]; }, 0) / past.reduce(function (t, w) { return t + wt[w]; }, 0);
     return Math.min(1.30, Math.max(0.75, 1 + 1.0 * (recent - avg) / 100));
   }
 
@@ -1517,6 +1550,32 @@
     return a && a[wk] != null ? a[wk] : 1;
   }
   function injuryState() { return _inj; }
+
+  // ---- SHADOW FLAGS (2026-09-15, Jack: "young and ascending, only good reports ... increasing
+  // snaps, targets, routes"). INTEL ONLY until the Tuesday scorecard shows the flagged rows
+  // beat their projection: backtest_fprr.py graded the analytic ascending flag at +9% actual
+  // over projection on 474 rows but a flat LOYO multiplier (noise), and beat reports have no
+  // history to grade, so both are logged on every locked row (rep / asc) and shown as chips.
+  var NEWS_DAYS = 10;
+  function newsFlags(p, days) {
+    // {riser, faller, injury, role, last} from SIM_NEWS_2026 items for this player in the last N days
+    var N = typeof window !== 'undefined' ? window.SIM_NEWS_2026 : null;
+    if (!N || !N.items || !N.items.length) return null;
+    var cut = Date.now() - (days || NEWS_DAYS) * 86400000, nk = p.norm, out = { riser: 0, faller: 0, injury: 0, role: 0, last: null };
+    for (var i = 0; i < N.items.length; i++) {
+      var it = N.items[i]; if (!it || !it.player || norm(it.player) !== nk) continue;
+      var t = Date.parse(it.date || ''); if (!(t >= cut)) continue;
+      if (it.tag === 'riser') out.riser++; else if (it.tag === 'faller') out.faller++; else if (it.tag === 'injury') out.injury++; else if (it.tag === 'role') out.role++;
+      if (!out.last || it.date > out.last.date) out.last = { date: it.date, tag: it.tag, headline: it.headline };
+    }
+    return (out.riser || out.faller || out.injury || out.role) ? out : null;
+  }
+  function ascendingFlag(p, wk) {
+    // analytic "ascending": 25 or younger, 3 seasons or fewer, snap trend AND route trend up
+    if (p.isDST || ['WR', 'TE', 'RB'].indexOf(p.pos) < 0) return false;
+    if (!(p.age != null && p.age <= 25) || !(p.exp != null && p.exp <= 3)) return false;
+    return snapMult(p, wk) >= 1.05 && routeMult(p, wk) >= 1.03;
+  }
 
   // Weekly mean + per-stat component means for player p in week wk.
   // Returns null on bye / no game.
@@ -2562,7 +2621,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState,
+    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,

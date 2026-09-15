@@ -40,7 +40,10 @@ for src, name in COPIES:
 # share. Missing repo file -> empty object -> engine falls back to the
 # Sleeper-only behaviour.
 for jname, out_name, var in (("practice_2026.json", "sim_practice.js", "SIM_PRACTICE_2026"),
-                             ("depth_charts_2026.json", "sim_depth.js", "SIM_DEPTH_2026")):
+                             ("depth_charts_2026.json", "sim_depth.js", "SIM_DEPTH_2026"),
+                             # beat-report feed (cloud camp-news routine, in-season items tagged riser/faller/injury/role)
+                             # -> REPORTS shadow flag on the NOTES sheet + lock rows (Jack 2026-09-15)
+                             ("camp_news_2026.json", "sim_news.js", "SIM_NEWS_2026")):
     payload = {}
     try:
         payload = json.load(open(os.path.join(REPO, "data", jname), encoding="utf-8"))
@@ -51,7 +54,7 @@ for jname, out_name, var in (("practice_2026.json", "sim_practice.js", "SIM_PRAC
         f.write(f"window.{var} = ")
         json.dump(payload, f, separators=(",", ":"))
         f.write(";\n")
-    n = len((payload.get("players") or payload.get("teams") or {}))
+    n = len((payload.get("players") or payload.get("teams") or payload.get("items") or {}))
     print(f"wrapped {out_name}  ({n} entries, {str(payload.get('updated', ''))[:16]})")
 
 # players.json (sleeper ids + ADP) -> JS global so file:// pages can load it

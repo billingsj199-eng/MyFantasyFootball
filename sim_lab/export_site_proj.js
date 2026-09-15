@@ -69,6 +69,8 @@ global.window = global;
   'data/sim_routes.js',
   'data/sim_weather.js',
   'data/sim_practice.js',
+  'data/sim_news.js',
+  'data/sim_context.js',
   'data/sim_depth.js',
   'data/sim_2026.js',
   'data/pace_2026.js',
@@ -319,6 +321,8 @@ function kickoffMs(kicks, wk, tm) {
           propMean: r.propProj != null ? +r.propProj.toFixed(2) : null,
           propSrc: r.propSrc || null,
           luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live)
+          rep: (function () { var nf = E.newsFlags(r.player); return nf ? nf.riser - nf.faller : 0; })(),   // SHADOW: beat-report riser minus faller, last 10 days
+          asc: E.ascendingFlag(r.player, currentWeek) ? 1 : 0,   // SHADOW: young + snaps/routes trending up
           comps: r.comps, lines: propByNorm[r.player.norm] || null,
           // tuner values LIVE at lock (tune_weekly.py divides them back out so
           // next week's evidence is measured against the raw prior)

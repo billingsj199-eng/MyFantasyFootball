@@ -1730,6 +1730,14 @@ league view. Ship bar <= -0.3% MSE with >= 5/7 years better.
   blitz .79 vs .54, edge faced .75 vs .37, slot yds .58 vs .12) - tendencies
   travel with the playcaller. "new DC vs HIS last D" needs the full coaches.json
   (first run had 2018-21 only; re-run after pull_coaches.py finishes).
+
+- Coach split with the FULL coaches.json (rerun 13:55): same-DC YoY man .68 /
+  blitz .76 / S-box .64 / DB-LB rush .64 (n=129); new-DC vs OLD TEAM .35 / .32
+  / .15 / .36 (n=95); new-DC vs HIS LAST DEFENSE (n=21): blitz .67, DB-LB rush
+  .59, edge faced .47, rusher win .34 - the pressure STRUCTURE travels with
+  the coordinator; man rate does not (.17) and S-in-box barely (.22). So the
+  coach-aware prior is right for blitz / rush-share / lanes and the cards say
+  "weak" for a new DC's coverage lean.
 - Conclusion (same as zones / lanes / pairings): the scheme data describes
   WHO a defense is and WHAT a player does - reliable enough to quote, and the
   coach-aware prior makes the Week-1 read trustworthy - but no scheme x player
@@ -1758,3 +1766,65 @@ Grupe) or lands Monday before any Week-2 designation exists (Murray, Tua).
   Henderson, McMillan, Grupe, Kamara, Najee Harris, Atwell, Tolbert ... =
   x0.75 unconfirmed. NOTES chip: "OUT flag unconfirmed (Sleeper still projects
   him) x0.75". The Wednesday/Thursday NFL report flips them either way.
+
+## FP per route run base + ascending flag (backtest_fprr.py) - 2026-09-15
+
+Jack: "young and ascending, only good reports, increasing snaps/targets/routes,
+scoring a ton over a medium sample (Parker Washington) ... fantasy points per
+route run" -> "lets do it but if a player isnt increasing their routes when
+scoring lots per route then we can assume they will stay a part time player".
+PFF weekly routes 2018-25 (pff_receiving_summary_<yr>_w<N>.csv), 10,611 WR/TE
+player-weeks 2019-25 LOYO on the shipped base. Routes projected from ROUTES
+ONLY (0.5 x last-3 + 0.5 x season/g); FP/RR = half-PPR rec pts / route,
+shrunk to last season (K=150 routes) then the position prior (.269).
+Log fprr_backtest.log; data/fprr_backtest.js (SIM_FPRR_BT) on the ZONES tab.
+
+- FP/RR base as a REPLACEMENT is worse than the shipped base (MSE 37.99 vs
+  36.92, corr .471 vs .492). As a blend: WR +0.01%, TE -0.45% 4/7 (w=.3),
+  WR+TE -0.04%. Not shipped.
+- Jack's rule confirmed and then some: actual/shipped by FP/RR tercile x route
+  trend - LOW FP/RR + rising routes 1.20, low + flat 1.18; HIGH FP/RR 0.95 /
+  0.98 / 0.99 (falling / flat / rising). Hot efficiency does not persist;
+  the PPG blend already prices it and it regresses. Rising routes with LOW
+  efficiency is where the model lags (volume arrives before points).
+- ASCENDING flag (age <= 25, exp <= 3, 3-game route slope > +3 and target
+  slope > +0.7, PPG > Clay): 474 rows at 1.093 actual/shipped, but the LOYO
+  multiplier is flat (+0.01%, 3/7) - the flagged rows are too noisy for a
+  fixed bump. "young + high FP/RR + flat routes" (the part-timer) 1.069 on 306
+  rows, x1.06 -0.00% 5/7. Rising routes any age (1,329 rows) 1.066, +0.03%.
+- LEVEL terms (shipped x (1 + k z)): FP/RR z with k = -0.04 -> WR -0.18% 6/7,
+  TE -0.72% 4/7, WR+TE -0.28% 6/7 (one tick under the -0.3% bar). WITHOUT
+  TDs (rec + yds per route): WR -0.09% 5/7, WR+TE -0.13% 6/7 -> about half of
+  the efficiency-regression signal is the TD luck the engine already
+  regresses (bt_common's base has no TD-luck term). Route slope / target
+  slope as level terms: -0.02 to -0.05%, noise.
+- Verdict: nothing ships. The one lead is the same efficiency-regression
+  family the scheme scan found for QBs (hot YPA / grade over-projected);
+  a unified "efficiency luck" study (QB clean-pocket YPA, WR/TE non-TD FP/RR,
+  vs the player's own multi-year level) is the candidate that could pass.
+
+## Shadow flags: REPORTS + ASCENDING (2026-09-15)
+
+Intel only, logged so the Tuesday scorecard can grade them. engine.js
+newsFlags(p, days) counts riser / faller / injury / role items for the player
+in the last 10 days from data/sim_news.js (refresh_data.py copies the repo's
+camp_news_2026.json, the cloud beat-report routine, 269 items with in-season
+tags); ascendingFlag(p, wk) = age <= 25, exp <= 3, snapMult >= 1.05 and
+routeMult >= 1.03. NOTES chips "REPORTS +2 riser (10d) - shadow" /
+"ASCENDING (age 24, yr 2, snaps+routes up) - shadow" (blue; fallers red); lock
+rows carry `rep` (riser minus faller) and `asc` (0/1) in both the exporter
+and the app so score_week / luck_scorecard can split by flag. No multiplier.
+
+## Blowout context for snap + route trends (2026-09-15)
+
+Jack: "if a team is getting blown out or blowing out another team in the 4th
+we dont penalize them". pull_pace_tracker.build_context_2026() ->
+data/sim_context.js (SIM_GAMECTX_2026 = {TEAM: {wk: {pl, gp, db, gdb}}}:
+offensive plays / dropbacks and the garbage subset, Q4 |margin| >= 17 or Q3
+>= 28; W1 2026: 11 of 32 team-games had 6+ garbage plays, CLE 26 of 49).
+engine ctxShare(): a blowout week's snap (or route) share is re-measured
+against COMPETITIVE plays when the player's count fits inside them and is at
+least 85% of them (a pulled starter: 42 of 42 competitive snaps, not 42 of
+66), and the week's weight in snapMult / routeMult is scaled by its
+competitive share. Never penalizes, never inflates a part-timer. NOTES chip
+"blowout wk1: role read on competitive snaps". Kill: SIM_BLOWOUT_CTX=false.

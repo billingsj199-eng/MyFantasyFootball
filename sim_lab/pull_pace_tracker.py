@@ -818,12 +818,44 @@ def build_zones_2026():
     except Exception as e:
         print(f"WARN zones skipped ({e})")
 
+# ---------------------------------------------------------------------------
+# GAME CONTEXT for the snap / route trends (Jack 2026-09-15): a starter pulled
+# up 24 in the 4th must not read as a shrinking role. Per team-week: offensive
+# plays, dropbacks, and the GARBAGE share (Q4 with |margin| >= 17, Q3 with
+# |margin| >= 28). The engine re-measures such weeks against competitive plays
+# and down-weights them in the trend (snapMult / routeMult). Written to
+# data/sim_context.js as SIM_GAMECTX_2026 = {TEAM: {wk: {pl, gp, db, gdb}}}.
+CTX_OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "sim_context.js")
+
+def build_context_2026():
+    try:
+        p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+        df = pd.read_csv(p, usecols=["season_type", "week", "posteam", "qtr", "score_differential", "play_type", "qb_dropback"], low_memory=False)
+        df = df[(df.season_type == "REG") & df.posteam.notna() & df.play_type.isin(["run", "pass", "qb_spike", "qb_kneel"])]
+        df["garbage"] = ((df.qtr >= 4) & (df.score_differential.abs() >= 17)) | ((df.qtr == 3) & (df.score_differential.abs() >= 28))
+        df["db"] = df.qb_dropback.fillna(0) == 1
+        out = {}
+        for (team, wk), g in df.groupby(["posteam", "week"]):
+            t = tm(str(team))
+            out.setdefault(t, {})[str(int(wk))] = {"pl": int(len(g)), "gp": int(g.garbage.sum()),
+                                                   "db": int(g.db.sum()), "gdb": int((g.db & g.garbage).sum())}
+        with open(CTX_OUT, "w", encoding="utf-8") as f:
+            f.write("// built by pull_pace_tracker.py - per team-week offensive plays / dropbacks and GARBAGE-TIME plays (Q4 |margin|>=17, Q3 >=28) for the blowout-aware snap & route trends\n")
+            f.write("window.SIM_GAMECTX_2026 = ")
+            json.dump(out, f, separators=(",", ":"))
+            f.write(";\n")
+        nb = sum(1 for t in out.values() for w in t.values() if w["gp"] >= 6)
+        print(f"wrote {CTX_OUT} - {sum(len(t) for t in out.values())} team-weeks, {nb} with 6+ garbage plays")
+    except Exception as e:
+        print(f"WARN game context skipped ({e})")
+
 def build():
     # in-season the 2026 pbp grows weekly — re-fetch every run
     got_pbp = fetch(f"https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_{SEASON}.csv.gz",
                     os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz"))
     fetch(f"https://github.com/nflverse/nflverse-data/releases/download/pbp_participation/pbp_participation_{SEASON}.parquet",
           os.path.join(CACHE, f"pbp_participation_{SEASON}.parquet"))
+    build_context_2026()
     build_routes_2026()
     build_zones_2026()
     try:   # PFF scheme/alignment intel (build_scheme.py) - needs the weekly facet CSVs from scripts/pull_pff_weekly.py

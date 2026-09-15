@@ -3834,6 +3834,19 @@
       });
       html += '</div>';
     }
+    var F = window.SIM_FPRR_BT;
+    if (F && F.loyo) {
+      html += '<h4 style="margin:14px 0 4px">Fantasy points per route run + ascending players (backtest_fprr.py, ' + esc(F.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(F.summary || '') + '</b> Routes are projected from routes only (last 3 games + season to date); FP/RR is shrunk toward last season and the position prior, so an efficient part-timer stays a part-timer until his routes move (Jack 09-15).</p>';
+      if (F.buckets && F.buckets.length) {
+        html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">FP/RR tercile x 3-game route trend</th><th>n</th><th title="actual / shipped projection; 1.00 = the model had it right">act / proj</th></tr></thead><tbody>' +
+          F.buckets.map(function (b) { var col = b.ratio == null ? 'var(--dim)' : (b.ratio >= 1.08 ? 'var(--acc)' : b.ratio <= 0.96 ? '#f85149' : 'inherit'); return '<tr><td class="l">' + esc(b.name) + '</td><td class="dim">' + b.n + '</td><td style="color:' + col + '">' + (b.ratio == null ? '\u2014' : b.ratio.toFixed(3)) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+      }
+      html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
+        F.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+      var ff = Object.keys(F.flags || {});
+      if (ff.length) html += '<p class="dim" style="font-size:11px">Flag rows (actual / projection): ' + ff.map(function (k) { var v = F.flags[k]; return esc(k) + ' n' + v.n + (v.ratio != null ? ' (' + v.ratio.toFixed(3) + ')' : '') + (v.verdict ? ' ' + v.verdict : ''); }).join(' \u00b7 ') + '.</p>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {
@@ -4105,7 +4118,11 @@
     var cb = E.cb1OutBoost(slot.opp, p.pos, p); if (cb !== 1) chips.push('CB1 out ×' + ntF(cb, 2));
     var ol = E.olOutDock(p.tm, p.pos); if (ol !== 1) chips.push('OL out ×' + ntF(ol, 2));
     var sn = E.snapMult(p, wk); if (Math.abs(sn - 1) >= 0.02) chips.push('snap trend ×' + ntF(sn, 2));
+    var cx = E.ctxNote(p, wk); if (cx.length) chips.push('blowout ' + cx.join('/') + ': role read on competitive snaps');
     var rt = E.routeMult(p, wk); if (Math.abs(rt - 1) >= 0.02) chips.push('route trend ×' + ntF(rt, 2));
+    if (E.ascendingFlag(p, wk)) chips.push('ASCENDING (age ' + p.age + ', yr ' + (p.exp + 1) + ', snaps+routes up) - shadow');
+    var nf = E.newsFlags(p);
+    if (nf) { var np_ = []; if (nf.riser) np_.push('+' + nf.riser + ' riser'); if (nf.faller) np_.push(nf.faller + ' faller'); if (!nf.riser && !nf.faller) { if (nf.injury) np_.push(nf.injury + ' injury'); if (nf.role) np_.push(nf.role + ' role'); } chips.push('REPORTS ' + np_.join(', ') + ' (10d) - shadow'); }
     if (wp && wp.propMean != null && wp.jsMean != null && Math.abs(wp.propMean - wp.jsMean) >= 1.5) {
       chips.push('market ' + (wp.propMean > wp.jsMean ? 'higher' : 'lower') + ' (' + ntF(wp.propMean, 1) + ' vs model ' + ntF(wp.jsMean, 1) + ')');
     }
@@ -4154,7 +4171,7 @@
         '<td class="dim">' + (o.xf ? ntF(o.xf.xfpg, 1) : '—') + '</td>' +
         '<td' + (o.xf && o.xf.fpoeg != null ? ' style="color:' + (o.xf.fpoeg <= -1.5 ? 'var(--acc)' : o.xf.fpoeg >= 1.5 ? '#f85149' : 'var(--dim)') + '"' : ' class="dim"') + '>' + (o.xf && o.xf.fpoeg != null ? ntSigned(o.xf.fpoeg, 1) : '—') + '</td>' +
         '<td class="l" style="font-size:11px;white-space:normal;min-width:220px">' + o.chips.map(function (c) {
-          var col = /OUT|docked|×0\.|luck -|lower|shadow/.test(c) ? '#f85149' : (/boost|×1\.|luck \+|higher|soft/.test(c) ? 'var(--acc)' : 'var(--dim)');
+          var col = /- shadow$/.test(c) ? (/faller/.test(c) ? '#f85149' : '#58a7ff') : /OUT|docked|×0\.|luck -|lower|shadow/.test(c) ? '#f85149' : (/boost|×1\.|luck \+|higher|soft/.test(c) ? 'var(--acc)' : 'var(--dim)');
           return '<span style="border:1px solid ' + col + ';color:' + col + ';border-radius:9px;padding:0 6px;margin:1px 3px 1px 0;display:inline-block">' + esc(c) + '</span>';
         }).join('') + '</td><td class="l" style="font-size:11px;white-space:normal;min-width:220px">' + esc(o.read) + '</td></tr>';
       var line = '  ' + o.p.name + ' (' + o.p.tm + ' ' + o.p.pos + ') ' + ntF(o.eff, 1);
@@ -4270,6 +4287,8 @@
         propMean: r.propProj != null ? +r.propProj.toFixed(2) : null,
         propSrc: r.propSrc || null,
         luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live) // 'line' = direct anchor, 'rate' = market rate track
+        rep: (function () { var nf = E.newsFlags(r.player); return nf ? nf.riser - nf.faller : 0; })(),   // SHADOW: beat-report riser minus faller count, last 10 days
+        asc: E.ascendingFlag(r.player, wk) ? 1 : 0,   // SHADOW: young + snaps/routes trending up
 
         comps: r.comps, lines: propByNorm[r.player.norm] || null
       });

@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 2 (half) — generated 2026-09-15 16:30Z
-# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 10:36 · wk 2 injury layer: 48 out/docked
+# Sim Lab notes — Week 2 (half) — generated 2026-09-15 18:05Z
+# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 14:02 · wk 2 injury layer: 48 out/docked
 
-SIM LAB NOTES — Week 2 (half) — 2026-09-15 16:30
+SIM LAB NOTES — Week 2 (half) — 2026-09-15 18:05
 
 TD LUCK (top 5 each way):
   QB DUE UP: Aaron Rodgers (1 TD on 1.6 xTD, +0.2); Joe Burrow (1 TD on 1.6 xTD, +0.2); Jacoby Brissett (1 TD on 1.5 xTD, +0.2); Jordan Love (2 TD on 2.4 xTD, +0.1); Drake Maye (1 TD on 1.1 xTD, +0.0)
@@ -15,14 +15,14 @@ TD LUCK (top 5 each way):
   K DUE UP: Nick Folk (8 pts on 13.3 expected, +5.3/g); Drew Stevens (4 pts on 7.5 expected, +3.5/g); Daniel Carlson (5 pts on 8.1 expected, +3.1/g); Riley Patterson (7 pts on 9.5 expected, +2.5/g); Chris Boswell (8 pts on 10.1 expected, +2.1/g)
   K DUE DOWN: Evan McPherson (19 pts on 13.2 expected, -5.8/g); Tyler Loop (14 pts on 9.8 expected, -4.2/g); Ka'imi Fairbairn (9 pts on 6.0 expected, -3.0/g); Cam Little (12 pts on 9.4 expected, -2.6/g); Chase McLaughlin (11 pts on 8.7 expected, -2.3/g)
   DST RIDING TDs: PIT (6.0 TD pts/g of 18.0); CIN (6.0 TD pts/g of 18.0); TB (6.0 TD pts/g of 8.0)
-  XFP UNDER QB: Matthew Stafford (5.1 vs 14.7 xFP, -9.6, TD -2.7); Aaron Rodgers (12.5 vs 19.7 xFP, -7.2, TD -2.5); Bo Nix (6.4 vs 11.3 xFP, -4.9, TD +1.5); Joe Burrow (15.2 vs 19.6 xFP, -4.4, TD -2.3); Drake Maye (12.8 vs 17.0 xFP, -4.2, TD -0.5)
-  XFP OVER QB: Josh Allen (35.7 vs 22.2 xFP, +13.5, TD +1.9); Caleb Williams (37.3 vs 24.7 xFP, +12.6, TD +2.2); Trevor Lawrence (26.1 vs 13.5 xFP, +12.6, TD +10.4); Bryce Young (32.4 vs 19.9 xFP, +12.5, TD +4.9); Jalen Hurts (24.7 vs 14.2 xFP, +10.5, TD +8.3)
-  XFP UNDER RB: Rico Dowdle (3.1 vs 9.3 xFP, -6.2, TD -0.8); MarShawn Lloyd (3.7 vs 8.8 xFP, -5.1, TD -1.6); Tyler Allgeier (8.0 vs 12.9 xFP, -4.9, TD -3.8); Jaylen Warren (7.8 vs 12.6 xFP, -4.8, TD -2.6); Rhamondre Stevenson (12.0 vs 15.1 xFP, -3.1, TD -0.8)
-  XFP OVER RB: Derrick Henry (34.8 vs 17.3 xFP, +17.5, TD +11.5); D'Andre Swift (31.9 vs 17.2 xFP, +14.7, TD +8.7); Kyle Monangai (19.4 vs 7.4 xFP, +12.0, TD +5.0); Ashton Jeanty (29.7 vs 20.0 xFP, +9.7, TD +8.2); Chuba Hubbard (22.2 vs 13.6 xFP, +8.6, TD +5.8)
-  XFP UNDER WR: DK Metcalf (6.0 vs 15.0 xFP, -9.0, TD -2.1); Matthew Golden (12.5 vs 19.3 xFP, -6.8, TD -5.4); Malik Washington (4.8 vs 10.7 xFP, -5.9, TD -0.3); Jameson Williams (6.5 vs 12.2 xFP, -5.7, TD -1.2); Jayden Reed (3.5 vs 9.2 xFP, -5.7, TD -1.8)
-  XFP OVER WR: Jalen Coker (29.8 vs 12.2 xFP, +17.6, TD +10.2); Christian Watson (29.7 vs 13.5 xFP, +16.2, TD +8.3); Zay Flowers (23.5 vs 7.9 xFP, +15.6, TD +5.7); Justin Jefferson (27.2 vs 16.1 xFP, +11.1, TD +6.8); Parker Washington (16.8 vs 8.2 xFP, +8.6, TD +5.5)
-  XFP UNDER TE: Sam LaPorta (7.3 vs 12.4 xFP, -5.1, TD -4.7); George Kittle (2.2 vs 7.1 xFP, -4.9, TD -1.6); Colston Loveland (0.0 vs 4.7 xFP, -4.7, TD -2.0); Dalton Schultz (5.5 vs 8.9 xFP, -3.4, TD -0.5); Michael Mayer (6.2 vs 9.5 xFP, -3.3, TD -2.4)
-  XFP OVER TE: Dallas Goedert (21.7 vs 8.3 xFP, +13.4, TD +9.4); Isaiah Likely (23.8 vs 13.6 xFP, +10.2, TD +7.3); Dalton Kincaid (15.5 vs 7.8 xFP, +7.7, TD -0.4); Evan Engram (12.3 vs 7.2 xFP, +5.1, TD +3.9); Pat Freiermuth (13.1 vs 8.2 xFP, +4.9, TD +3.1)
+  XFP UNDER QB: Matthew Stafford (5.1 vs 14.5 xFP, -9.4, TD -2.7); Aaron Rodgers (12.5 vs 18.8 xFP, -6.3, TD -2.5); Bo Nix (6.4 vs 10.9 xFP, -4.5, TD +1.5); Tyler Shough (25.2 vs 29.0 xFP, -3.8, TD +1.4); Drake Maye (12.8 vs 16.5 xFP, -3.7, TD -0.5)
+  XFP OVER QB: Josh Allen (35.7 vs 22.4 xFP, +13.3, TD +1.9); Bryce Young (32.4 vs 19.1 xFP, +13.3, TD +4.9); Caleb Williams (37.3 vs 24.3 xFP, +13.0, TD +2.2); Trevor Lawrence (26.1 vs 13.3 xFP, +12.8, TD +10.4); Jalen Hurts (24.7 vs 14.0 xFP, +10.7, TD +8.3)
+  XFP UNDER RB: Rico Dowdle (3.1 vs 9.5 xFP, -6.4, TD -0.8); Tyler Allgeier (8.0 vs 12.7 xFP, -4.7, TD -3.8); Jaylen Warren (7.8 vs 12.3 xFP, -4.5, TD -2.6); MarShawn Lloyd (3.7 vs 8.2 xFP, -4.5, TD -1.6); Rhamondre Stevenson (12.0 vs 15.5 xFP, -3.5, TD -0.8)
+  XFP OVER RB: Derrick Henry (34.8 vs 17.4 xFP, +17.4, TD +11.5); D'Andre Swift (31.9 vs 17.4 xFP, +14.5, TD +8.7); Kyle Monangai (19.4 vs 7.7 xFP, +11.7, TD +5.0); Ashton Jeanty (29.7 vs 19.9 xFP, +9.8, TD +8.2); Chuba Hubbard (22.2 vs 13.8 xFP, +8.4, TD +5.8)
+  XFP UNDER WR: DK Metcalf (6.0 vs 15.1 xFP, -9.1, TD -2.1); Malik Washington (4.8 vs 11.8 xFP, -7.0, TD -0.3); Matthew Golden (12.5 vs 19.1 xFP, -6.6, TD -5.4); Jayden Reed (3.5 vs 9.8 xFP, -6.3, TD -1.8); Jameson Williams (6.5 vs 12.6 xFP, -6.1, TD -1.2)
+  XFP OVER WR: Jalen Coker (29.8 vs 12.2 xFP, +17.6, TD +10.2); Christian Watson (29.7 vs 14.5 xFP, +15.2, TD +8.3); Zay Flowers (23.5 vs 9.1 xFP, +14.4, TD +5.7); Justin Jefferson (27.2 vs 16.9 xFP, +10.3, TD +6.8); Parker Washington (16.8 vs 8.3 xFP, +8.5, TD +5.5)
+  XFP UNDER TE: Colston Loveland (0.0 vs 5.2 xFP, -5.2, TD -2.0); Sam LaPorta (7.3 vs 11.9 xFP, -4.6, TD -4.7); George Kittle (2.2 vs 6.7 xFP, -4.5, TD -1.6); Michael Mayer (6.2 vs 10.2 xFP, -4.0, TD -2.4); Gunnar Helm (4.8 vs 7.4 xFP, -2.6, TD -2.3)
+  XFP OVER TE: Dallas Goedert (21.7 vs 8.5 xFP, +13.2, TD +9.4); Isaiah Likely (23.8 vs 12.7 xFP, +11.1, TD +7.3); Dalton Kincaid (15.5 vs 8.8 xFP, +6.7, TD -0.4); Evan Engram (12.3 vs 6.8 xFP, +5.5, TD +3.9); Pat Freiermuth (13.1 vs 8.2 xFP, +4.9, TD +3.1)
 
 DET @ BUF — total 53.5, BUF by 4.5 · implied DET 24.5 / BUF 29.0
 Weather @BUF: wind 3 mph (gusts 2), 64°F, 14% precip
@@ -33,7 +33,9 @@ DET offense vs BUF defense
   - BUF pass rush: 21.4% hit/sack rate vs lg 15.7% — heavy
   - BUF CB1: Christian Benford active
   - BUF D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 21% #20 (lg 24%, 2025 29%) · blitz 31% #19 (2025 28%) · pressure 33% #21 (2025 37%) · rusher win 14% · S in box 41% · run D 3.6 ypc #25, 2.6 after contact, edge runs 37% of carries faced · gets run at RE 20%
+  - BUF DC Jim Leonhard (new, no playcalling history in the data; replaced Bobby Babich — prior = team 2025, weak)
   - DET O style (PFF): 48% gap / 52% zone, edge 23%, 5.3 ypc · sees man 3% (lg 25%) · screens 6% · blitzed 29% / pressured 22%
+  - DET OC Drew Petzing (new; prior = ARI 2025 under him, replaced John Morton) — Drew Petzing as playcaller: sees man 23%/32%/21% · screens 10%/11%/10% · gap runs 52%/69%/70% · edge runs 35%/38%/41% (2023 ARI, 2024 ARI, 2025 ARI)
 
 BUF offense vs DET defense
   - Pace (1 gm): 52.0 plays/gm (base 62.6, -10.6) · neutral pass 57% (base 55%) · PROE +1.1 (base -3.5)
@@ -41,26 +43,30 @@ BUF offense vs DET defense
   - DET pass rush: 14.3% hit/sack rate vs lg 15.7%
   - DET CB1: D.J. Reed active
   - DET D scheme (PFF, 1 gm; NEW LOOK vs 2025 2/7, flipped Blitz rate): man 30% #7 (lg 24%, 2025 40%) · blitz 48% #5 (2025 26%) · pressure 35% #20 (2025 37%) · rusher win 12% · S in box 28% · run D 3.8 ypc #21, 2.5 after contact, edge runs 29% of carries faced · gets run at LE 24%/RG 19%/RT 24%
+  - DET DC Kelvin Sheppard (2nd yr here) — Kelvin Sheppard as playcaller: man 40% · blitz 26% · pressure 37% · S in box 26% · gap faced 41% · edge faced 42% (2025 DET)
   - BUF O style (PFF): 40% gap / 60% zone, edge 27%, 4.2 ypc · sees man 22% (lg 25%) · screens 12% · blitzed 9% / pressured 38%
+  - BUF OC Pete Carmichael (new; prior = NO 2023 under him, replaced Joe Brady) — Pete Carmichael as playcaller: sees man 27% · screens 10% · gap runs 44% · edge runs 33% (2023 NO)
 
 PLAYERS (PROJ half):
-  Josh Allen (BUF QB) 25.2 · xFP 22.2/g (+13.5 over expected) [TD luck -0.2] — struggles vs blitz (7.5 YPA vs 9.0) · D blitzes 48% (#5) — TOUGH SPOT
-  Jahmyr Gibbs (DET RB) 23.8 · xFP 28.9/g (+2.2 over expected) [TD luck +0.1] — Behind LOS guy (43% of targets, lg 18%) · D lives in heavy boxes (S in box 41%) · screen guy (25% of targets)
-  Jared Goff (DET QB) 17.4 · xFP 18.7/g (-2.3 over expected) [TD luck -0.1]
-  James Cook (BUF RB) 16.8 · xFP 11.0/g (-2.6 over expected) [role boost ×1.07, TD luck +0.2] — Behind LOS guy (36% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%) · right-heavy (52%) · D funnels short 0-9 (53% of targets faced) · man-beater (YPRR 1.97 vs man, 0.88 vs zone; small n) (2025 too) · D bleeds slot yards (43% of rec yds, lg 29%, noisy)
-  Amon-Ra St. Brown (DET WR) 16.6 · xFP 18.7/g (+5.0 over expected) [TD luck -1.3] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (3%)
-  DJ Moore (BUF WR) 12.7 · xFP 10.6/g (+7.9 over expected) [TD luck -0.9] — rarely short 0-9 (31%) · Deep 20+ guy (28% of targets, lg 13%)
-  Jameson Williams (DET WR) 11.2 · xFP 12.2/g (-5.7 over expected) [TD luck +0.2] — rarely behind los (9%) · rarely short 0-9 (37%) · Int 10-19 guy (33% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (27% of targets faced)
-  Dalton Kincaid (BUF TE) 10.1 · xFP 7.8/g (+7.7 over expected) [TD luck +0.1] — rarely short 0-9 (31%) · Int 10-19 guy (43% of targets, lg 22%) · detached TE (26% inline) · zone-beater (YPRR 2.32 vs man, 3.92 vs zone; small n) (2025 too)
-  Sam LaPorta (DET TE) 9.9 · xFP 12.4/g (-5.1 over expected) [TD luck +0.8] — Short 0-9 guy (68% of targets, lg 48%) · rarely deep 20+ (3%) · zone-beater (YPRR 0.98 vs man, 1.93 vs zone; small n) (2025 too)
-  Khalil Shakir (BUF WR) 9.9 · xFP 10.7/g (-3.7 over expected) [role boost ×1.03, TD luck +0.7] — Behind LOS guy (36% of targets, lg 18%) · rarely deep 20+ (5%) · slot (69%) · screen guy (36% of targets) · zone-beater (YPRR 1.23 vs man, 2.10 vs zone; small n) (2025 too) · D bleeds slot yards (43% of rec yds, lg 29%, noisy)
+  Josh Allen (BUF QB) 25.2 · xFP 22.4/g (+13.3 over expected) [TD luck -0.2, REPORTS +1 riser (10d) - shadow] — struggles vs blitz (7.5 YPA vs 9.0) · D blitzes 48% (#5) — TOUGH SPOT
+  Jahmyr Gibbs (DET RB) 23.8 · xFP 29.3/g (+1.8 over expected) [TD luck +0.1] — Behind LOS guy (43% of targets, lg 18%) · D lives in heavy boxes (S in box 41%) · screen guy (25% of targets)
+  Jared Goff (DET QB) 17.4 · xFP 17.8/g (-1.4 over expected) [TD luck -0.1]
+  Amon-Ra St. Brown (DET WR) 16.6 · xFP 17.3/g (+6.4 over expected) [TD luck -1.3] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (3%)
+  James Cook (BUF RB) 16.5 · xFP 10.9/g (-2.5 over expected) [TD luck +0.2] — Behind LOS guy (36% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%) · right-heavy (52%) · D funnels short 0-9 (53% of targets faced) · man-beater (YPRR 1.97 vs man, 0.88 vs zone; small n) (2025 too) · D bleeds slot yards (43% of rec yds, lg 29%, noisy)
+  DJ Moore (BUF WR) 12.6 · xFP 12.3/g (+6.2 over expected) [TD luck -0.9] — rarely short 0-9 (31%) · Deep 20+ guy (28% of targets, lg 13%)
+  Jameson Williams (DET WR) 11.2 · xFP 12.6/g (-6.1 over expected) [TD luck +0.2] — rarely behind los (9%) · rarely short 0-9 (37%) · Int 10-19 guy (33% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (27% of targets faced)
+  Dalton Kincaid (BUF TE) 10.1 · xFP 8.8/g (+6.7 over expected) [TD luck +0.1, REPORTS +1 riser (10d) - shadow] — rarely short 0-9 (31%) · Int 10-19 guy (43% of targets, lg 22%) · detached TE (26% inline) · zone-beater (YPRR 2.32 vs man, 3.92 vs zone; small n) (2025 too)
+  Sam LaPorta (DET TE) 9.9 · xFP 11.9/g (-4.6 over expected) [TD luck +0.8] — Short 0-9 guy (68% of targets, lg 48%) · rarely deep 20+ (3%) · zone-beater (YPRR 0.98 vs man, 1.93 vs zone; small n) (2025 too)
+  Khalil Shakir (BUF WR) 9.8 · xFP 11.1/g (-4.1 over expected) [TD luck +0.7, REPORTS +1 riser (10d) - shadow] — Behind LOS guy (36% of targets, lg 18%) · rarely deep 20+ (5%) · slot (69%) · screen guy (36% of targets) · zone-beater (YPRR 1.23 vs man, 2.10 vs zone; small n) (2025 too) · D bleeds slot yards (43% of rec yds, lg 29%, noisy)
   Tyler Bass (BUF K) 9.3
   Jake Bates (DET K) 7.6
   Bills D/ST (BUF DST) 5.4
-  Keon Coleman (BUF WR) 3.7 · xFP 3.6/g (-3.0 over expected) [role boost ×1.08, TD luck +0.3] — rarely behind los (3%) · left-heavy (54%) · D funnels short 0-9 (53% of targets faced)
-  Isaac TeSlaa (DET WR) 3.7 · xFP 1.0/g (-1.0 over expected) — rarely behind los (4%) · rarely short 0-9 (31%) · Int 10-19 guy (51% of targets, lg 22%) · left-heavy (53%) · D funnels int 10-19 (27% of targets faced)
-  Dawson Knox (BUF TE) 3.5 · xFP 1.0/g (+0.2 over expected) — Int 10-19 guy (30% of targets, lg 22%) · rarely deep 20+ (4%)
+  Ty Johnson (BUF RB) 3.8 [OUT flag unconfirmed (Sleeper still projects him) ×0.75] — Behind LOS guy (67% of targets, lg 18%) · left-heavy (67%) · zone-scheme back (72% zone) (2025 too) · needs a lane (2.28 after contact/att) · screen guy (57% of targets) · zone-beater (YPRR 1.18 vs man, 1.82 vs zone) (2025 too) · D bleeds slot yards (43% of rec yds, lg 29%, noisy)
+  Isaac TeSlaa (DET WR) 3.7 · xFP 1.1/g (-1.1 over expected) — rarely behind los (4%) · rarely short 0-9 (31%) · Int 10-19 guy (51% of targets, lg 22%) · left-heavy (53%) · D funnels int 10-19 (27% of targets faced)
+  Keon Coleman (BUF WR) 3.6 · xFP 3.7/g (-3.1 over expected) [TD luck +0.3] — rarely behind los (3%) · left-heavy (54%) · D funnels short 0-9 (53% of targets faced)
+  Dawson Knox (BUF TE) 3.5 · xFP 1.1/g (+0.1 over expected) — Int 10-19 guy (30% of targets, lg 22%) · rarely deep 20+ (4%)
   Lions D/ST (DET DST) 3.4
+  Josh Palmer (BUF WR) 3.3 · xFP 4.6/g (+5.3 over expected) [TD luck -0.7] — rarely behind los (5%) · rarely short 0-9 (31%) · Int 10-19 guy (46% of targets, lg 22%)
 
 CAR @ ATL — total 44.5, CAR by 1.5 · implied CAR 23.0 / ATL 21.5
 Weather: dome / no forecast in window
@@ -71,33 +77,37 @@ CAR offense vs ATL defense
   - ATL pass rush: 14.0% hit/sack rate vs lg 15.7%
   - ATL CB1: Mike Hughes active
   - ATL D scheme (PFF, 1 gm; NEW LOOK vs 2025 2/7, flipped Blitz rate): man 27% #11 (lg 24%, 2025 23%) · blitz 26% #24 (2025 42%) · pressure 42% #11 (2025 37%) · rusher win 12% · S in box 46% · run D 3.4 ypc #27, 2.7 after contact, edge runs 33% of carries faced · gets run at LE 28%
+  - ATL DC Jeff Ulbrich (2nd yr here) — Jeff Ulbrich as playcaller: man 36%/36%/23% · blitz 17%/28%/42% · pressure 40%/37%/37% · S in box 31%/38%/49% · gap faced 52%/52%/58% · edge faced 37%/38%/30% (2023 NYJ, 2024 NYJ, 2025 ATL)
   - CAR O style (PFF): 37% gap / 63% zone, edge 32%, 4.8 ypc · sees man 49% (lg 25%) · screens 3% · blitzed 37% / pressured 40%
+  - CAR OC Brad Idzik (3rd yr here) — Brad Idzik as playcaller: sees man 35%/23% · screens 10%/9% · gap runs 33%/44% · edge runs 28%/27% (2024 CAR, 2025 CAR)
 
 ATL offense vs CAR defense
   - Pace (1 gm): 57.0 plays/gm (base 60.5, -3.5) · neutral pass 50% (base 57%) · PROE -17.3 (base -6.2)
   - vs CAR D allows (1 gm): QB 37.3 (+105%) · RB 51.3 (+143%) · WR 33.2 (+32%) · TE 10.5 (-3%)
   - CAR CB1: Jaycee Horn active
   - CAR D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 10% #28 (lg 24%, 2025 18%) · blitz 55% #2 (2025 33%) · pressure 42% #9 (2025 30%) · rusher win 12% · S in box 27% · run D 7.8 ypc #1, 5.5 after contact, edge runs 24% of carries faced · gets run at ML 24%/RE 21%
+  - CAR DC Ejiro Evero (4th yr here) — Ejiro Evero as playcaller: man 17%/26%/18% · blitz 41%/35%/33% · pressure 29%/25%/30% · S in box 30%/27%/28% · gap faced 38%/39%/38% · edge faced 38%/35%/36% (2023 CAR, 2024 CAR, 2025 CAR)
   - ATL O style (PFF): 38% gap / 62% zone, edge 42%, 3.9 ypc · sees man 0% (lg 25%) · screens 41% · blitzed 8% / pressured 31%
+  - ATL OC Tommy Rees (new; prior = CLE 2025 under him, replaced Zac Robinson) — Tommy Rees as playcaller: sees man 34% · screens 13% · gap runs 49% · edge runs 30% (2025 CLE)
 
 PLAYERS (PROJ half):
   Bijan Robinson (ATL RB) 20.3 · xFP 20.4/g (+6.9 over expected) [TD luck -0.6] — Behind LOS guy (56% of targets, lg 18%) · left-heavy (50%) · zone-scheme back (75% zone) (2025 too) · contact-balance back (3.78 after contact/att, lg 3.04) · makes people miss (0.28 MTF/att) · screen guy (40% of targets) · zone-beater (YPRR 1.07 vs man, 2.52 vs zone; small n) (2025 too) · D zone-heavy (man 10%) — GOOD SPOT
-  Bryce Young (CAR QB) 18.2 · xFP 19.9/g (+12.5 over expected) [TD luck -0.4] — holds up under pressure (grade 61 vs 69 clean) (2025 too)
-  Chuba Hubbard (CAR RB) 12.5 · xFP 13.6/g (+8.6 over expected) [TD luck -0.7, market higher (12.5 vs model 10.9)] — Behind LOS guy (57% of targets, lg 18%) · D lives in heavy boxes (S in box 46%) · screen guy (31% of targets)
-  Cooper Rush (ATL QB) 12.1 [role boost ×210.81, TD luck -0.3] — holds up under pressure (grade 55 vs 56 clean) · punishes the blitz (10.4 YPA vs 5.2 no blitz) · D blitzes 55% (#2) — GOOD SPOT
-  Tetairoa McMillan (CAR WR) 11.9 · xFP 11.4/g (-3.4 over expected) [TD luck +0.2] — rarely behind los (1%) · Int 10-19 guy (38% of targets, lg 22%) · D funnels deep 20+ (17% of targets faced)
-  Drake London (ATL WR) 11.7 · xFP 5.1/g (-0.6 over expected) [TD luck +0.1] — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%) · zone-beater (YPRR 1.17 vs man, 2.70 vs zone; small n) (2025 too) · D zone-heavy (man 10%) — GOOD SPOT
-  Jalen Coker (CAR WR) 10.3 · xFP 12.2/g (+17.6 over expected) [TD luck -1.7] — Int 10-19 guy (31% of targets, lg 22%) · man-beater (YPRR 2.16 vs man, 1.48 vs zone; small n) (2025 too)
-  Jonathon Brooks (CAR RB) 8.6 · xFP 4.6/g (+2.1 over expected)
-  Kyle Pitts (ATL TE) 7.6 · xFP 1.5/g (-1.5 over expected) — right-heavy (55%) · man-beater (YPRR 2.09 vs man, 1.35 vs zone; small n) (2025 too) · D zone-heavy (man 10%) — TOUGH SPOT
-  Nick Folk (ATL K) 7.3
+  Bryce Young (CAR QB) 18.2 · xFP 19.1/g (+13.3 over expected) [TD luck -0.4] — holds up under pressure (grade 61 vs 69 clean) (2025 too)
+  Chuba Hubbard (CAR RB) 12.5 · xFP 13.8/g (+8.4 over expected) [TD luck -0.7, blowout wk1: role read on competitive snaps, REPORTS 1 faller (10d) - shadow, market higher (12.5 vs model 10.9)] — Behind LOS guy (57% of targets, lg 18%) · D lives in heavy boxes (S in box 46%) · screen guy (31% of targets)
+  Tetairoa McMillan (CAR WR) 11.9 · xFP 10.8/g (-2.8 over expected) [TD luck +0.2] — rarely behind los (1%) · Int 10-19 guy (38% of targets, lg 22%) · D funnels deep 20+ (17% of targets faced)
+  Drake London (ATL WR) 11.7 · xFP 5.5/g (-1.0 over expected) [TD luck +0.1] — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%) · zone-beater (YPRR 1.17 vs man, 2.70 vs zone; small n) (2025 too) · D zone-heavy (man 10%) — GOOD SPOT
+  Tua Tagovailoa (ATL QB) 10.8 [OUT flag unconfirmed (Sleeper still projects him) ×0.75, REPORTS 3 injury, 2 role (10d) - shadow] — D blitzes 55% (#2)
+  Jalen Coker (CAR WR) 10.3 · xFP 12.2/g (+17.6 over expected) [TD luck -1.7, REPORTS +1 riser (10d) - shadow] — Int 10-19 guy (31% of targets, lg 22%) · man-beater (YPRR 2.16 vs man, 1.48 vs zone; small n) (2025 too)
+  Jonathon Brooks (CAR RB) 8.6 · xFP 4.7/g (+2.0 over expected) [REPORTS +1 riser (10d) - shadow]
   Ryan Fitzgerald (CAR K) 7.2
+  Nick Folk (ATL K) 7.2
+  Kyle Pitts (ATL TE) 7.2 · xFP 1.5/g (-1.5 over expected) — right-heavy (55%) · man-beater (YPRR 2.09 vs man, 1.35 vs zone; small n) (2025 too) · D zone-heavy (man 10%) — TOUGH SPOT
   Panthers D/ST (CAR DST) 6.7
   Falcons D/ST (ATL DST) 6.1
-  Darren Waller (CAR TE) 5.5 · xFP 1.9/g (+1.9 over expected) [role boost ×1.09] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%) · middle-heavy (36%) · detached TE (21% inline)
-  Brian Robinson Jr. (ATL RB) 4.8 · xFP 4.5/g (-1.4 over expected) [TD luck +0.1] — D zone-heavy (man 10%)
-  Xavier Legette (CAR WR) 4.1 · xFP 2.4/g (-2.4 over expected) — rarely behind los (9%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%)
-  Jahan Dotson (ATL WR) 4.1 · xFP 4.4/g (-2.0 over expected) — rarely behind los (3%) · rarely short 0-9 (34%) · Int 10-19 guy (38% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · D zone-heavy (man 10%)
+  Darren Waller (CAR TE) 5.2 · xFP 2.2/g (+1.6 over expected) [role boost ×1.02] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%) · middle-heavy (36%) · detached TE (21% inline)
+  Brian Robinson Jr. (ATL RB) 4.9 · xFP 4.5/g (-1.4 over expected) [TD luck +0.1] — D zone-heavy (man 10%)
+  Xavier Legette (CAR WR) 4.1 · xFP 2.7/g (-2.7 over expected) — rarely behind los (9%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%)
+  Jahan Dotson (ATL WR) 4.1 · xFP 4.8/g (-2.4 over expected) — rarely behind los (3%) · rarely short 0-9 (34%) · Int 10-19 guy (38% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · D zone-heavy (man 10%)
 
 NO @ BAL — total 46.5, BAL by 8.5 · implied NO 19.0 / BAL 27.5
 Weather @BAL: wind 7 mph (gusts 9), 85°F, 9% precip
@@ -106,8 +116,10 @@ NO offense vs BAL defense
   - Pace (1 gm): 86.0 plays/gm (base 62.6, +23.4) · neutral pass 69% (base 58%) · PROE +3.9 (base -3.0)
   - vs BAL D allows (1 gm): QB 10.0 (-45%) · RB 24.1 (+14%) · WR 19.0 (-25%) · TE 8.8 (-19%)
   - BAL CB1: Nate Wiggins active
-  - BAL D scheme (PFF, 1 gm; MIXED vs 2025 3/7): man 23% #19 (lg 24%, 2025 39%) · blitz 38% #12 (2025 31%) · pressure 41% #12 (2025 31%) · rusher win 9% · S in box 23% · run D 5.2 ypc #6, 2.8 after contact, edge runs 11% of carries faced · gets run at MR 32%/RG 21%
+  - BAL D scheme (PFF, 1 gm; NEW LOOK vs MIA 2025 2/7): man 23% #19 (lg 24%, 2025 26%) · blitz 38% #12 (2025 42%) · pressure 41% #12 (2025 32%) · rusher win 9% · S in box 23% · run D 5.2 ypc #6, 2.8 after contact, edge runs 11% of carries faced · gets run at MR 32%/RG 21%
+  - BAL DC Anthony Weaver (new; prior = MIA 2025 under him, replaced Zach Orr) — Anthony Weaver as playcaller: man 27%/26% · blitz 35%/42% · pressure 34%/32% · S in box 28%/29% · gap faced 51%/41% · edge faced 33%/31% (2024 MIA, 2025 MIA)
   - NO O style (PFF): 12% gap / 88% zone, edge 29%, 3.8 ypc · sees man 29% (lg 25%) · screens 4% · blitzed 48% / pressured 35%
+  - NO OC Doug Nussmeier (2nd yr here) — Doug Nussmeier as playcaller: sees man 19% · screens 8% · gap runs 34% · edge runs 31% (2025 NO)
 
 BAL offense vs NO defense
   - Pace (1 gm): 60.0 plays/gm (base 64.5, -4.5) · neutral pass 53% (base 52%) · PROE -6.6 (base -8.8)
@@ -115,22 +127,25 @@ BAL offense vs NO defense
   - NO pass rush: 19.5% hit/sack rate vs lg 15.7% — heavy
   - NO CB1: Kool-Aid McKinstry active
   - NO D scheme (PFF, 1 gm; RELIABLE vs 2025 6/7): man 3% #31 (lg 24%, 2025 19%) · blitz 29% #21 (2025 38%) · pressure 22% #31 (2025 34%) · rusher win 8% · S in box 32% · run D 5.3 ypc #5, 2.7 after contact, edge runs 23% of carries faced · gets run at LG 26%/RE 23%
+  - NO DC Brandon Staley (2nd yr here) — Brandon Staley as playcaller: man 19% · blitz 38% · pressure 34% · S in box 33% · gap faced 40% · edge faced 32% (2025 NO)
   - BAL O style (PFF): 30% gap / 70% zone, edge 27%, 5.4 ypc · sees man 60% (lg 25%) · screens 4% · blitzed 47% / pressured 47%
+  - BAL OC Declan Doyle (new; prior = CHI 2025 under him, replaced Todd Monken) — Declan Doyle as playcaller: sees man 27% · screens 12% · gap runs 33% · edge runs 31% (2025 CHI)
 
 PLAYERS (PROJ half):
-  Lamar Jackson (BAL QB) 22.7 · xFP 17.1/g (+7.9 over expected) — punishes the blitz (10.1 YPA vs 8.2 no blitz) · D pressure only 22% (clean pockets)
-  Derrick Henry (BAL RB) 18.7 · xFP 17.3/g (+17.5 over expected) [TD luck -1.4] — Behind LOS guy (35% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · right-heavy (51%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy) · contact-balance back (3.74 after contact/att, lg 3.04) · man-beater (YPRR 2.73 vs man, 1.17 vs zone; small n) · D zone-heavy (man 3%) — TOUGH SPOT
-  Tyler Shough (NO QB) 18.0 · xFP 28.5/g (-3.3 over expected) [TD luck -0.1, market higher (18.0 vs model 16.4)]
-  Chris Olave (NO WR) 13.4 · xFP 16.6/g (+6.6 over expected) [TD luck +0.2] — rarely behind los (7%) · Deep 20+ guy (23% of targets, lg 13%)
-  Travis Etienne (NO RB) 12.5 · xFP 14.4/g (-3.1 over expected) [TD luck +0.2] — Behind LOS guy (57% of targets, lg 18%) · screen guy (52% of targets) · D bleeds slot yards (39% of rec yds, lg 29%, noisy)
-  Mark Andrews (BAL TE) 10.2 · xFP 7.0/g (-0.1 over expected) [role boost ×1.14, TD luck +0.1] — rarely behind los (1%) · Short 0-9 guy (73% of targets, lg 48%) · rarely deep 20+ (2%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy) · slot (67%) · detached TE (15% inline) · man-beater (YPRR 1.77 vs man, 1.10 vs zone; small n) (2025 too) · D zone-heavy (man 3%) — TOUGH SPOT
+  Lamar Jackson (BAL QB) 22.7 · xFP 17.4/g (+7.6 over expected) — punishes the blitz (10.1 YPA vs 8.2 no blitz) · D pressure only 22% (clean pockets)
+  Derrick Henry (BAL RB) 18.7 · xFP 17.4/g (+17.4 over expected) [TD luck -1.4, REPORTS +1 riser (10d) - shadow] — Behind LOS guy (35% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · right-heavy (51%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy) · contact-balance back (3.74 after contact/att, lg 3.04) · man-beater (YPRR 2.73 vs man, 1.17 vs zone; small n) · D zone-heavy (man 3%) — TOUGH SPOT
+  Tyler Shough (NO QB) 18.0 · xFP 29.0/g (-3.8 over expected) [TD luck -0.1, market higher (18.0 vs model 16.4)]
+  Chris Olave (NO WR) 13.4 · xFP 19.1/g (+4.1 over expected) [TD luck +0.2] — rarely behind los (7%) · Deep 20+ guy (23% of targets, lg 13%)
+  Travis Etienne (NO RB) 12.5 · xFP 14.7/g (-3.4 over expected) [TD luck +0.2] — Behind LOS guy (57% of targets, lg 18%) · screen guy (52% of targets) · D bleeds slot yards (39% of rec yds, lg 29%, noisy)
+  Zay Flowers (BAL WR) 10.0 · xFP 9.1/g (+14.4 over expected) [OUT flag unconfirmed (Sleeper still projects him) ×0.75, TD luck -0.7, REPORTS 2 injury (10d) - shadow] — rarely short 0-9 (39%) · Int 10-19 guy (30% of targets, lg 22%) · D zone-heavy (man 3%)
+  Mark Andrews (BAL TE) 9.5 · xFP 7.6/g (-0.7 over expected) [role boost ×1.06, TD luck +0.1] — rarely behind los (1%) · Short 0-9 guy (73% of targets, lg 48%) · rarely deep 20+ (2%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.79x, noisy) · slot (67%) · detached TE (15% inline) · man-beater (YPRR 1.77 vs man, 1.10 vs zone; small n) (2025 too) · D zone-heavy (man 3%) — TOUGH SPOT
   Tyler Loop (BAL K) 8.7
-  Juwan Johnson (NO TE) 7.9 · xFP 13.3/g (-0.4 over expected) [TD luck -0.1] — rarely behind los (7%) · Short 0-9 guy (59% of targets, lg 48%) · detached TE (29% inline)
+  Juwan Johnson (NO TE) 7.9 · xFP 13.8/g (-0.9 over expected) [TD luck -0.1] — rarely behind los (7%) · Short 0-9 guy (59% of targets, lg 48%) · detached TE (29% inline)
   Ravens D/ST (BAL DST) 7.8
-  Devaughn Vele (NO WR) 7.7 · xFP 12.6/g (+3.8 over expected) [TD luck -0.4] — rarely behind los (4%) · Int 10-19 guy (38% of targets, lg 22%)
-  Rashod Bateman (BAL WR) 7.0 · xFP 1.5/g (-1.5 over expected) [role boost ×1.30] — rarely behind los (0%) · Int 10-19 guy (36% of targets, lg 22%) · D zone-heavy (man 3%)
+  Devaughn Vele (NO WR) 7.7 · xFP 13.4/g (+3.0 over expected) [TD luck -0.4, REPORTS +1 riser (10d) - shadow] — rarely behind los (4%) · Int 10-19 guy (38% of targets, lg 22%)
   Daniel Carlson (NO K) 6.9
-  Justice Hill (BAL RB) 5.9 · xFP 3.9/g (-0.6 over expected) — Behind LOS guy (57% of targets, lg 18%) · zone-scheme back (73% zone) · contact-balance back (4.13 after contact/att, lg 3.04) · screen guy (28% of targets) · zone-beater (YPRR 0.11 vs man, 1.97 vs zone; small n) · D zone-heavy (man 3%) — GOOD SPOT
+  Rashod Bateman (BAL WR) 6.1 · xFP 1.6/g (-1.6 over expected) [role boost ×1.13] — rarely behind los (0%) · Int 10-19 guy (36% of targets, lg 22%) · D zone-heavy (man 3%)
+  Justice Hill (BAL RB) 5.9 · xFP 4.0/g (-0.7 over expected) — Behind LOS guy (57% of targets, lg 18%) · zone-scheme back (73% zone) · contact-balance back (4.13 after contact/att, lg 3.04) · screen guy (28% of targets) · zone-beater (YPRR 0.11 vs man, 1.97 vs zone; small n) · D zone-heavy (man 3%) — GOOD SPOT
   Saints D/ST (NO DST) 4.1
 
 MIN @ CHI — total 49.5, CHI by 5.5 · implied MIN 22.0 / CHI 27.5
@@ -141,7 +156,9 @@ MIN offense vs CHI defense
   - vs CHI D allows (1 gm): QB 34.8 (+91%) · RB 31.7 (+50%) · WR 35.8 (+42%) · TE 9.2 (-15%)
   - CHI pass rush: 11.6% hit/sack rate vs lg 15.7% — SOFT (QB boost live)
   - CHI D scheme (PFF, 1 gm; MIXED vs 2025 3/7): man 50% #3 (lg 24%, 2025 27%) · blitz 37% #13 (2025 32%) · pressure 40% #15 (2025 31%) · rusher win 7% · S in box 26% · run D 4.8 ypc #9, 2.3 after contact, edge runs 32% of carries faced · gets run at LE 32% · missed tackles 24% (lg 14%)
+  - CHI DC Dennis Allen (2nd yr here) — Dennis Allen as playcaller: man 27% · blitz 32% · pressure 31% · S in box 27% · gap faced 35% · edge faced 33% (2025 CHI)
   - MIN O style (PFF): 54% gap / 46% zone, edge 26%, 3.7 ypc · sees man 14% (lg 25%) · screens 18% · blitzed 37% / pressured 40%
+  - MIN OC Wes Phillips (4th yr here) — Wes Phillips as playcaller: sees man 26%/25%/31% · screens 10%/13%/14% · gap runs 39%/40%/42% · edge runs 27%/34%/30% (2023 MIN, 2024 MIN, 2025 MIN)
 
 CHI offense vs MIN defense
   - Pace (1 gm): 70.0 plays/gm (base 64.5, +5.5) · neutral pass 60% (base 58%) · PROE -1.5 (base -3.9)
@@ -149,27 +166,30 @@ CHI offense vs MIN defense
   - MIN pass rush: 32.6% hit/sack rate vs lg 15.7% — heavy
   - MIN CB1: Isaiah Rodgers active
   - MIN D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 4% #30 (lg 24%, 2025 22%) · blitz 87% #1 (2025 63%) · pressure 54% #1 (2025 44%) · rusher win 10% · S in box 25% · run D 3.3 ypc #28, 2.2 after contact, edge runs 40% of carries faced · gets run at LE 40%
+  - MIN DC Brian Flores (4th yr here) — Brian Flores as playcaller: man 19%/23%/22% · blitz 58%/55%/63% · pressure 32%/36%/44% · S in box 29%/28%/30% · gap faced 32%/35%/37% · edge faced 26%/29%/28% (2023 MIN, 2024 MIN, 2025 MIN)
   - CHI O style (PFF): 25% gap / 75% zone, edge 24%, 7.8 ypc · sees man 11% (lg 25%) · screens 12% · blitzed 55% / pressured 42%
+  - CHI OC Press Taylor (new; prior = JAX 2024 under him, replaced Declan Doyle) — Press Taylor as playcaller: sees man 24%/32% · screens 14%/11% · gap runs 57%/57% · edge runs 40%/32% (2023 JAX, 2024 JAX)
 
 PLAYERS (PROJ half):
-  Caleb Williams (CHI QB) 21.3 · xFP 24.7/g (+12.6 over expected) [role boost ×1.03, TD luck -0.2] — holds up under pressure (grade 59 vs 68 clean) (2025 too) · D blitzes 87% (#1) — GOOD SPOT · D pressure 54% (#1)
-  D'Andre Swift (CHI RB) 14.8 · xFP 17.2/g (+14.7 over expected) [TD luck -1.1] — Behind LOS guy (57% of targets, lg 18%) · screen guy (37% of targets) · man-beater (YPRR 2.19 vs man, 0.56 vs zone; small n) (2025 too) · D zone-heavy (man 4%) — TOUGH SPOT
-  Justin Jefferson (MIN WR) 14.8 · xFP 16.1/g (+11.1 over expected) [TD luck -1.1, CB shadow ×0.95] — rarely short 0-9 (35%) · Int 10-19 guy (31% of targets, lg 22%) · zone-beater (YPRR 1.49 vs man, 2.66 vs zone; small n) (2025 too) · D plays man 50% (#3) — TOUGH SPOT
-  Luther Burden III (CHI WR) 11.6 · xFP 6.5/g (+0.5 over expected) [TD luck +0.1] — rarely short 0-9 (40%) · screen guy (35% of targets) · D zone-heavy (man 4%)
-  Colston Loveland (CHI TE) 11.1 · xFP 4.7/g (-4.7 over expected) [TD luck +0.3, market higher (11.1 vs model 9.3)] — rarely behind los (1%) · Short 0-9 guy (63% of targets, lg 48%) · middle-heavy (31%) · D zone-heavy (man 4%)
-  Rome Odunze (CHI WR) 10.9 · xFP 4.2/g (+2.0 over expected) — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (30% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%) · right-heavy (55%) · D funnels int 10-19 (27% of targets faced) · D zone-heavy (man 4%)
-  Kyle Monangai (CHI RB) 10.4 · xFP 7.4/g (+12.0 over expected) [TD luck -0.6] — Behind LOS guy (41% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%) · screen guy (29% of targets) · D zone-heavy (man 4%)
-  Aaron Jones (MIN RB) 9.5 · xFP 9.0/g (+1.0 over expected) [role boost ×1.03, TD luck -0.4] — Behind LOS guy (57% of targets, lg 18%) · right-heavy (57%) · screen guy (52% of targets) · D plays man 50% (#3)
-  Jordan Mason (MIN RB) 9.1 · xFP 11.0/g (+0.9 over expected) [TD luck -0.2] — screen guy (69% of targets) · D plays man 50% (#3)
+  Caleb Williams (CHI QB) 21.3 · xFP 24.3/g (+13.0 over expected) [role boost ×1.03, TD luck -0.2, REPORTS +1 riser (10d) - shadow] — holds up under pressure (grade 59 vs 68 clean) (2025 too) · D blitzes 87% (#1) — GOOD SPOT · D pressure 54% (#1)
+  D'Andre Swift (CHI RB) 14.8 · xFP 17.4/g (+14.5 over expected) [TD luck -1.1] — Behind LOS guy (57% of targets, lg 18%) · screen guy (37% of targets) · man-beater (YPRR 2.19 vs man, 0.56 vs zone; small n) (2025 too) · D zone-heavy (man 4%) — TOUGH SPOT
+  Justin Jefferson (MIN WR) 14.8 · xFP 16.9/g (+10.3 over expected) [TD luck -1.1, CB shadow ×0.95] — rarely short 0-9 (35%) · Int 10-19 guy (31% of targets, lg 22%) · zone-beater (YPRR 1.49 vs man, 2.66 vs zone; small n) (2025 too) · D plays man 50% (#3) — TOUGH SPOT
+  Luther Burden III (CHI WR) 11.6 · xFP 6.4/g (+0.6 over expected) [TD luck +0.1, REPORTS +1 riser (10d) - shadow] — rarely short 0-9 (40%) · screen guy (35% of targets) · D zone-heavy (man 4%)
+  Kyler Murray (MIN QB) 11.5 · xFP 2.2/g (-1.6 over expected) [OUT flag unconfirmed (Sleeper still projects him) ×0.75, CB shadow ×0.96, REPORTS 2 injury (10d) - shadow] — D plays man 50% (#3)
+  Colston Loveland (CHI TE) 11.1 · xFP 5.2/g (-5.2 over expected) [TD luck +0.3, REPORTS +1 riser (10d) - shadow, market higher (11.1 vs model 9.3)] — rarely behind los (1%) · Short 0-9 guy (63% of targets, lg 48%) · middle-heavy (31%) · D zone-heavy (man 4%)
+  Rome Odunze (CHI WR) 10.9 · xFP 4.4/g (+1.8 over expected) [REPORTS 1 faller (10d) - shadow] — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (30% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%) · right-heavy (55%) · D funnels int 10-19 (27% of targets faced) · D zone-heavy (man 4%)
+  Kyle Monangai (CHI RB) 10.4 · xFP 7.7/g (+11.7 over expected) [TD luck -0.6] — Behind LOS guy (41% of targets, lg 18%) · Short 0-9 guy (59% of targets, lg 48%) · screen guy (29% of targets) · D zone-heavy (man 4%)
+  Aaron Jones (MIN RB) 9.5 · xFP 9.3/g (+0.7 over expected) [TD luck -0.4] — Behind LOS guy (57% of targets, lg 18%) · right-heavy (57%) · screen guy (52% of targets) · D plays man 50% (#3)
+  Jordan Mason (MIN RB) 9.0 · xFP 11.0/g (+0.9 over expected) [TD luck -0.2] — screen guy (69% of targets) · D plays man 50% (#3)
   Cairo Santos (CHI K) 8.7
   Will Reichard (MIN K) 7.4
-  Jordan Addison (MIN WR) 7.1 · xFP 3.1/g (-3.1 over expected) [TD luck +0.1, CB shadow ×0.95] — rarely behind los (4%) · rarely short 0-9 (39%) · Int 10-19 guy (31% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · D plays man 50% (#3)
-  T.J. Hockenson (MIN TE) 6.6 · xFP 7.8/g (+3.8 over expected) [TD luck -0.6] — Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (12%) · rarely deep 20+ (3%) · middle-heavy (38%) · zone-beater (YPRR 0.40 vs man, 1.62 vs zone; small n) (2025 too) · D plays man 50% (#3) — TOUGH SPOT
+  Jordan Addison (MIN WR) 7.1 · xFP 3.0/g (-3.0 over expected) [TD luck +0.1, CB shadow ×0.95] — rarely behind los (4%) · rarely short 0-9 (39%) · Int 10-19 guy (31% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · D plays man 50% (#3)
+  T.J. Hockenson (MIN TE) 6.6 · xFP 8.3/g (+3.3 over expected) [TD luck -0.6] — Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (12%) · rarely deep 20+ (3%) · middle-heavy (38%) · zone-beater (YPRR 0.40 vs man, 1.62 vs zone; small n) (2025 too) · D plays man 50% (#3) — TOUGH SPOT
   Bears D/ST (CHI DST) 6.5
   Kalif Raymond (CHI WR) 4.3 · xFP 10.9/g (+1.5 over expected) [TD luck +0.2] — Short 0-9 guy (60% of targets, lg 48%) · rarely int 10-19 (12%) · middle-heavy (34%) · man-beater (YPRR 2.49 vs man, 1.49 vs zone; small n) (2025 too) · D zone-heavy (man 4%) — TOUGH SPOT
-  Jauan Jennings (MIN WR) 4.3 · xFP 1.6/g (-1.6 over expected) [CB shadow ×0.95] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%) · D plays man 50% (#3)
+  Jauan Jennings (MIN WR) 4.2 · xFP 1.3/g (-1.3 over expected) [CB shadow ×0.95] — rarely behind los (3%) · Int 10-19 guy (31% of targets, lg 22%) · D plays man 50% (#3)
   Vikings D/ST (MIN DST) 4.1
-  Cole Kmet (CHI TE) 3.7 · xFP 5.7/g (+4.8 over expected) [TD luck -0.7] — rarely short 0-9 (35%) · D funnels int 10-19 (27% of targets faced) · D zone-heavy (man 4%)
+  Cole Kmet (CHI TE) 3.7 · xFP 5.8/g (+4.7 over expected) [TD luck -0.7] — rarely short 0-9 (35%) · D funnels int 10-19 (27% of targets faced) · D zone-heavy (man 4%)
 
 CIN @ HOU — total 46.5, HOU by 3.0 · implied CIN 21.8 / HOU 24.8
 Weather: dome / no forecast in window
@@ -179,35 +199,39 @@ CIN offense vs HOU defense
   - vs HOU D allows (1 gm): QB 35.7 (+96%) · RB 9.0 (-57%) · WR 36.0 (+43%) · TE 16.7 (+54%)
   - HOU CB1: Derek Stingley Jr. active
   - HOU D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 24% #14 (lg 24%, 2025 26%) · blitz 9% #31 (2025 19%) · pressure 38% #18 (2025 42%) · rusher win 13% · S in box 24% · run D 4.2 ypc #16, 3.0 after contact, edge runs 27% of carries faced · gets run at ML 47%/RE 20%
+  - HOU DC Matt Burke (4th yr here) — Matt Burke as playcaller: man 20%/29%/26% · blitz 21%/25%/19% · pressure 37%/33%/42% · S in box 21%/23%/23% · gap faced 48%/46%/53% · edge faced 27%/29%/25% (2023 HOU, 2024 HOU, 2025 HOU)
   - CIN O style (PFF): 57% gap / 43% zone, edge 36%, 3.9 ypc · sees man 25% (lg 25%) · screens 9% · blitzed 43% / pressured 22%
+  - CIN OC Dan Pitcher (3rd yr here) — Dan Pitcher as playcaller: sees man 38%/28% · screens 6%/7% · gap runs 48%/47% · edge runs 28%/21% (2024 CIN, 2025 CIN)
 
 HOU offense vs CIN defense
   - Pace (1 gm): 73.0 plays/gm (base 63.4, +9.6) · neutral pass 51% (base 62%) · PROE -7.1 (base -1.0)
   - vs CIN D allows (1 gm): QB 11.6 (-36%) · RB 19.1 (-9%) · WR 19.8 (-21%) · TE 4.1 (-62%)
   - CIN CB1: Daxton Hill active
   - CIN D scheme (PFF, 1 gm; RELIABLE vs 2025 5/7): man 55% #2 (lg 24%, 2025 34%) · blitz 14% #28 (2025 25%) · pressure 28% #25 (2025 33%) · rusher win 9% · S in box 25% · run D 3.9 ypc #18, 3.3 after contact, edge runs 53% of carries faced · gets run at LE 27%/RE 27% · missed tackles 21% (lg 14%)
+  - CIN DC Al Golden (2nd yr here) — Al Golden as playcaller: man 34% · blitz 25% · pressure 33% · S in box 29% · gap faced 44% · edge faced 34% (2025 CIN)
   - HOU O style (PFF): 54% gap / 46% zone, edge 37%, 3.6 ypc · sees man 21% (lg 25%) · screens 8% · blitzed 31% / pressured 33%
+  - HOU OC Nick Caley (2nd yr here) — Nick Caley as playcaller: sees man 30% · screens 6% · gap runs 52% · edge runs 28% (2025 HOU)
 
 PLAYERS (PROJ half):
-  Joe Burrow (CIN QB) 19.3 · xFP 19.6/g (-4.4 over expected) [TD luck +0.2, CB shadow ×0.96, market higher (19.3 vs model 16.9)]
-  C.J. Stroud (HOU QB) 16.5 · xFP 17.1/g (-0.6 over expected) [TD luck -0.3, market higher (16.5 vs model 14.9)] — D pressure only 28% (clean pockets) · D plays man 55% (#2)
-  Ja'Marr Chase (CIN WR) 15.7 · xFP 5.3/g (-3.1 over expected) [TD luck +0.1, CB shadow ×0.97, market higher (15.7 vs model 13.4)] — Int 10-19 guy (30% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced) · zone-beater (YPRR 1.05 vs man, 2.20 vs zone; small n) (2025 too)
-  Chase Brown (CIN RB) 14.8 · xFP 18.2/g (-1.9 over expected) [TD luck +0.1] — Behind LOS guy (42% of targets, lg 18%)
-  David Montgomery (HOU RB) 13.8 · xFP 22.2/g (+5.2 over expected) [TD luck -0.8] — Behind LOS guy (41% of targets, lg 18%) · middle-heavy (40%) · D funnels behind los (26% of targets faced) · screen guy (32% of targets) · D plays man 55% (#2)
-  Nico Collins (HOU WR) 13.5 · xFP 15.8/g (+1.9 over expected) [TD luck -0.4] — rarely behind los (3%) · rarely short 0-9 (40%) · Int 10-19 guy (39% of targets, lg 22%) · middle-heavy (31%) · man-beater (YPRR 2.97 vs man, 1.91 vs zone; small n) (2025 too) · D plays man 55% (#2) — GOOD SPOT
-  Tee Higgins (CIN WR) 10.9 · xFP 8.0/g (-0.6 over expected) [TD luck +0.1, CB shadow ×0.95] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced) · D funnels deep 20+ (17% of targets faced) · man-beater (YPRR 3.18 vs man, 1.03 vs zone; small n) (2025 too)
+  Joe Burrow (CIN QB) 19.3 · xFP 18.8/g (-3.6 over expected) [TD luck +0.2, CB shadow ×0.96, market higher (19.3 vs model 16.9)]
+  C.J. Stroud (HOU QB) 16.5 · xFP 16.7/g (-0.2 over expected) [TD luck -0.3, market higher (16.5 vs model 14.9)] — D pressure only 28% (clean pockets) · D plays man 55% (#2)
+  Ja'Marr Chase (CIN WR) 15.7 · xFP 4.8/g (-2.6 over expected) [TD luck +0.1, CB shadow ×0.97, REPORTS +1 riser, 1 faller (10d) - shadow, market higher (15.7 vs model 13.4)] — Int 10-19 guy (30% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced) · zone-beater (YPRR 1.05 vs man, 2.20 vs zone; small n) (2025 too)
+  Chase Brown (CIN RB) 14.8 · xFP 18.4/g (-2.1 over expected) [TD luck +0.1, REPORTS 1 role (10d) - shadow] — Behind LOS guy (42% of targets, lg 18%)
+  David Montgomery (HOU RB) 13.8 · xFP 22.3/g (+5.1 over expected) [TD luck -0.8] — Behind LOS guy (41% of targets, lg 18%) · middle-heavy (40%) · D funnels behind los (26% of targets faced) · screen guy (32% of targets) · D plays man 55% (#2)
+  Nico Collins (HOU WR) 13.5 · xFP 16.0/g (+1.7 over expected) [TD luck -0.4] — rarely behind los (3%) · rarely short 0-9 (40%) · Int 10-19 guy (39% of targets, lg 22%) · middle-heavy (31%) · man-beater (YPRR 2.97 vs man, 1.91 vs zone; small n) (2025 too) · D plays man 55% (#2) — GOOD SPOT
+  Tee Higgins (CIN WR) 10.9 · xFP 8.9/g (-1.5 over expected) [TD luck +0.1, CB shadow ×0.95, REPORTS +1 riser (10d) - shadow] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced) · D funnels deep 20+ (17% of targets faced) · man-beater (YPRR 3.18 vs man, 1.03 vs zone; small n) (2025 too)
   Ka'imi Fairbairn (HOU K) 8.8
   Evan McPherson (CIN K) 7.9
-  Woody Marks (HOU RB) 7.3 · xFP 5.4/g (-0.9 over expected) — Behind LOS guy (43% of targets, lg 18%) · right-heavy (51%) · D funnels behind los (26% of targets faced) · screen guy (28% of targets) · D plays man 55% (#2)
-  Dalton Schultz (HOU TE) 6.7 · xFP 8.9/g (-3.4 over expected) [TD luck +0.1] — rarely behind los (9%) · Short 0-9 guy (72% of targets, lg 48%) · zone-beater (YPRR 0.88 vs man, 1.65 vs zone; small n) (2025 too) · D plays man 55% (#2) — TOUGH SPOT
+  Woody Marks (HOU RB) 7.3 · xFP 5.6/g (-1.1 over expected) — Behind LOS guy (43% of targets, lg 18%) · right-heavy (51%) · D funnels behind los (26% of targets faced) · screen guy (28% of targets) · D plays man 55% (#2)
+  Dalton Schultz (HOU TE) 6.7 · xFP 7.9/g (-2.4 over expected) [TD luck +0.1] — rarely behind los (9%) · Short 0-9 guy (72% of targets, lg 48%) · zone-beater (YPRR 0.88 vs man, 1.65 vs zone; small n) (2025 too) · D plays man 55% (#2) — TOUGH SPOT
   Texans D/ST (HOU DST) 6.6
-  Mike Gesicki (CIN TE) 6.2 · xFP 12.6/g (+3.7 over expected) [TD luck -0.2] — rarely behind los (2%) · Int 10-19 guy (37% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced) · slot (78%) · detached TE (2% inline) · zone-beater (YPRR 0.65 vs man, 1.86 vs zone; small n) (2025 too)
-  Kayshon Boutte (HOU WR) 5.9 · xFP 2.8/g (-0.2 over expected) — rarely behind los (0%) · rarely short 0-9 (27%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · left-heavy (56%) · outside only (12% slot) · zone-beater (YPRR 1.10 vs man, 1.81 vs zone; small n) (2025 too) · D plays man 55% (#2) — TOUGH SPOT
-  Jaylin Noel (HOU WR) 5.8 · xFP 2.6/g (+3.7 over expected) — rarely int 10-19 (13%) · Deep 20+ guy (22% of targets, lg 13%) · left-heavy (52%) · slot (69%) · zone-beater (YPRR 0.86 vs man, 2.52 vs zone; small n) (2025 too) · D plays man 55% (#2) — TOUGH SPOT
-  Samaje Perine (CIN RB) 5.4 · xFP 5.6/g (+0.9 over expected) [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%) · between the tackles (edge 10%)
+  Mike Gesicki (CIN TE) 6.2 · xFP 12.1/g (+4.2 over expected) [TD luck -0.2] — rarely behind los (2%) · Int 10-19 guy (37% of targets, lg 22%) · D funnels int 10-19 (25% of targets faced) · slot (78%) · detached TE (2% inline) · zone-beater (YPRR 0.65 vs man, 1.86 vs zone; small n) (2025 too)
+  Kayshon Boutte (HOU WR) 5.9 · xFP 3.4/g (-0.8 over expected) — rarely behind los (0%) · rarely short 0-9 (27%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (27% of targets, lg 13%) · left-heavy (56%) · outside only (12% slot) · zone-beater (YPRR 1.10 vs man, 1.81 vs zone; small n) (2025 too) · D plays man 55% (#2) — TOUGH SPOT
+  Jaylin Noel (HOU WR) 5.8 · xFP 3.2/g (+3.1 over expected) — rarely int 10-19 (13%) · Deep 20+ guy (22% of targets, lg 13%) · left-heavy (52%) · slot (69%) · zone-beater (YPRR 0.86 vs man, 2.52 vs zone; small n) (2025 too) · D plays man 55% (#2) — TOUGH SPOT
+  Samaje Perine (CIN RB) 5.4 · xFP 5.7/g (+0.8 over expected) [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%) · between the tackles (edge 10%)
   Bengals D/ST (CIN DST) 5.3
-  Xavier Hutchinson (HOU WR) 4.7 · xFP 7.4/g (-2.7 over expected) [TD luck +0.1] — rarely behind los (4%) · Int 10-19 guy (35% of targets, lg 22%) · man-beater (YPRR 1.63 vs man, 1.13 vs zone; small n) (new vs 2025) · D plays man 55% (#2) — GOOD SPOT
-  Andrei Iosivas (CIN WR) 3.4 · xFP 4.8/g (-2.6 over expected) [TD luck +0.3, CB shadow ×0.97] — rarely behind los (3%) · Short 0-9 guy (58% of targets, lg 48%) · middle-heavy (45%)
+  Xavier Hutchinson (HOU WR) 4.7 · xFP 7.7/g (-3.0 over expected) [TD luck +0.1] — rarely behind los (4%) · Int 10-19 guy (35% of targets, lg 22%) · man-beater (YPRR 1.63 vs man, 1.13 vs zone; small n) (new vs 2025) · D plays man 55% (#2) — GOOD SPOT
+  Andrei Iosivas (CIN WR) 3.4 · xFP 4.0/g (-1.8 over expected) [TD luck +0.3, CB shadow ×0.97] — rarely behind los (3%) · Short 0-9 guy (58% of targets, lg 48%) · middle-heavy (45%)
 
 PIT @ NE — total 41.5, NE by 5.5 · implied PIT 18.0 / NE 23.5
 Weather @NE: wind 7 mph (gusts 24), 63°F, 40% precip
@@ -217,33 +241,38 @@ PIT offense vs NE defense
   - vs NE D allows (1 gm): QB 13.3 (-27%) · RB 13.0 (-38%) · WR 27.6 (+10%) · TE 2.3 (-79%)
   - NE CB1: Christian Gonzalez active
   - NE D scheme (PFF, 1 gm; NEW LOOK vs 2025 1/7): man 36% #4 (lg 24%, 2025 32%) · blitz 48% #4 (2025 31%) · pressure 52% #2 (2025 38%) · rusher win 16% · S in box 37% · run D 4.2 ypc #16, 2.5 after contact, edge runs 45% of carries faced · gets run at RE 30%
+  - NE DC Zak Kuhr (new, no playcalling history in the data; replaced Terrell Williams — prior = team 2025, weak)
   - PIT O style (PFF): 33% gap / 67% zone, edge 33%, 3.4 ypc · sees man 26% (lg 25%) · screens 11% · blitzed 26% / pressured 42%
+  - PIT OC Brian Angelichio (new, no playcalling history in the data; replaced Arthur Smith — prior = team 2025, weak)
 
 NE offense vs PIT defense
   - Pace (1 gm): 67.0 plays/gm (base 59.8, +7.2) · neutral pass 60% (base 62%) · PROE -2.6 (base +2.4)
   - vs PIT D allows (1 gm): QB 7.7 (-58%) · RB 30.4 (+44%) · WR 7.9 (-69%) · TE 0.0 (-100%)
   - PIT CB1: Asante Samuel Jr. active
-  - PIT D scheme (PFF, 1 gm; MIXED vs 2025 3/7, flipped Man coverage/Blitz rate): man 0% #32 (lg 24%, 2025 36%) · blitz 8% #32 (2025 39%) · pressure 31% #22 (2025 37%) · rusher win 11% · S in box 36% · run D 3.9 ypc #20, 3.3 after contact, edge runs 42% of carries faced · gets run at LE 26%/MR 23% · missed tackles 17% (lg 14%)
+  - PIT D scheme (PFF, 1 gm; RELIABLE vs LV 2025 6/7): man 0% #32 (lg 24%, 2025 17%) · blitz 8% #32 (2025 24%) · pressure 31% #22 (2025 33%) · rusher win 11% · S in box 36% · run D 3.9 ypc #20, 3.3 after contact, edge runs 42% of carries faced · gets run at LE 26%/MR 23% · missed tackles 17% (lg 14%)
+  - PIT DC Patrick Graham (new; prior = LV 2025 under him, replaced Teryl Austin) — Patrick Graham as playcaller: man 22%/32%/17% · blitz 21%/35%/24% · pressure 35%/30%/33% · S in box 26%/28%/28% · gap faced 41%/39%/47% · edge faced 28%/29%/34% (2023 LV, 2024 LV, 2025 LV)
   - NE O style (PFF): 62% gap / 38% zone, edge 29%, 2.6 ypc · sees man 13% (lg 25%) · screens 19% · blitzed 31% / pressured 38%
+  - NE OC Josh McDaniels (2nd yr here) — Josh McDaniels as playcaller: sees man 30% · screens 6% · gap runs 63% · edge runs 36% (2025 NE)
 
 PLAYERS (PROJ half):
-  Drake Maye (NE QB) 19.7 · xFP 17.0/g (-4.2 over expected) [market higher (19.7 vs model 17.9)]
-  Rhamondre Stevenson (NE RB) 16.7 · xFP 15.1/g (-3.1 over expected) [role boost ×1.28, TD luck +0.1, market higher (16.7 vs model 14.8)] — Behind LOS guy (32% of targets, lg 18%) · D funnels behind los (24% of targets faced) · gap/power back (65% gap) (2025 too) · man-beater (YPRR 3.26 vs man, 0.98 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — TOUGH SPOT
-  Aaron Rodgers (PIT QB) 13.7 · xFP 19.7/g (-7.2 over expected) [role boost ×1.03, TD luck +0.2, CB shadow ×0.96] — holds up under pressure (grade 61 vs 70 clean) (2025 too) · D blitzes 48% (#4) · D pressure 52% (#2) · D plays man 36% (#4)
-  Rico Dowdle (PIT RB) 9.4 · xFP 9.3/g (-6.2 over expected) [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%) · left-heavy (52%) · screen guy (29% of targets) · D plays man 36% (#4)
-  Jaylen Warren (PIT RB) 9.2 · xFP 12.6/g (-4.8 over expected) [TD luck +0.3] — Behind LOS guy (68% of targets, lg 18%) · right-heavy (61%) · screen guy (50% of targets) · man-beater (YPRR 1.91 vs man, 1.34 vs zone; small n) · D plays man 36% (#4) — GOOD SPOT
-  DK Metcalf (PIT WR) 8.7 · xFP 15.0/g (-9.0 over expected) [TD luck +0.4, CB shadow ×0.95] — rarely behind los (8%) · Deep 20+ guy (27% of targets, lg 13%) · zone-beater (YPRR 1.44 vs man, 2.12 vs zone; small n) (2025 too) · D plays man 36% (#4) — TOUGH SPOT
+  Drake Maye (NE QB) 19.7 · xFP 16.5/g (-3.7 over expected) [market higher (19.7 vs model 17.9)]
+  Aaron Rodgers (PIT QB) 13.7 · xFP 18.8/g (-6.3 over expected) [role boost ×1.03, TD luck +0.2, CB shadow ×0.96] — holds up under pressure (grade 61 vs 70 clean) (2025 too) · D blitzes 48% (#4) · D pressure 52% (#2) · D plays man 36% (#4)
+  Rhamondre Stevenson (NE RB) 12.4 · xFP 15.5/g (-3.5 over expected) [role boost ×1.07, TD luck +0.1] — Behind LOS guy (32% of targets, lg 18%) · D funnels behind los (24% of targets faced) · gap/power back (65% gap) (2025 too) · man-beater (YPRR 3.26 vs man, 0.98 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — TOUGH SPOT
+  Rico Dowdle (PIT RB) 9.4 · xFP 9.5/g (-6.4 over expected) [TD luck +0.1] — Behind LOS guy (58% of targets, lg 18%) · left-heavy (52%) · screen guy (29% of targets) · D plays man 36% (#4)
+  Jaylen Warren (PIT RB) 9.2 · xFP 12.3/g (-4.5 over expected) [TD luck +0.3] — Behind LOS guy (68% of targets, lg 18%) · right-heavy (61%) · screen guy (50% of targets) · man-beater (YPRR 1.91 vs man, 1.34 vs zone; small n) · D plays man 36% (#4) — GOOD SPOT
+  DK Metcalf (PIT WR) 8.7 · xFP 15.1/g (-9.1 over expected) [TD luck +0.4, CB shadow ×0.95] — rarely behind los (8%) · Deep 20+ guy (27% of targets, lg 13%) · zone-beater (YPRR 1.44 vs man, 2.12 vs zone; small n) (2025 too) · D plays man 36% (#4) — TOUGH SPOT
   Patriots D/ST (NE DST) 8.2
-  Hunter Henry (NE TE) 8.2 · xFP 3.3/g (+0.8 over expected) [role boost ×1.11] — rarely behind los (9%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%) · zone-beater (YPRR 1.16 vs man, 1.94 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — GOOD SPOT
+  TreVeyon Henderson (NE RB) 8.2 [OUT flag unconfirmed (Sleeper still projects him) ×0.75, REPORTS 1 faller (10d) - shadow] — Behind LOS guy (50% of targets, lg 18%) · left-heavy (62%) · D funnels behind los (24% of targets faced) · gap/power back (65% gap) (2025 too) · screen guy (26% of targets) · D zone-heavy (man 0%)
+  Hunter Henry (NE TE) 8.1 · xFP 3.4/g (+0.7 over expected) [role boost ×1.10] — rarely behind los (9%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%) · zone-beater (YPRR 1.16 vs man, 1.94 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — GOOD SPOT
   Michael Pittman Jr. (PIT WR) 8.1 · xFP 3.6/g (+3.7 over expected) [CB shadow ×0.95] — D funnels short 0-9 (51% of targets faced) · zone-beater (YPRR 0.94 vs man, 1.71 vs zone; small n) (2025 too) · D plays man 36% (#4) — TOUGH SPOT
   Andy Borregales (NE K) 7.4
   Chris Boswell (PIT K) 7.3
-  Romeo Doubs (NE WR) 7.0 · xFP 4.2/g (-4.2 over expected) [role boost ×1.16] — rarely behind los (3%) · rarely short 0-9 (38%) · Int 10-19 guy (37% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · zone-beater (YPRR 1.40 vs man, 1.90 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — GOOD SPOT
+  Romeo Doubs (NE WR) 6.9 · xFP 4.0/g (-4.0 over expected) [role boost ×1.14] — rarely behind los (3%) · rarely short 0-9 (38%) · Int 10-19 guy (37% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · zone-beater (YPRR 1.40 vs man, 1.90 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — GOOD SPOT
   Pat Freiermuth (PIT TE) 6.5 · xFP 8.2/g (+4.9 over expected) [TD luck -0.5] — Short 0-9 guy (57% of targets, lg 48%) · D funnels short 0-9 (51% of targets faced) · detached TE (24% inline) · zone-beater (YPRR 1.02 vs man, 1.86 vs zone; small n) (2025 too) · D plays man 36% (#4) — TOUGH SPOT
   Steelers D/ST (PIT DST) 5.8
-  DeMario Douglas (NE WR) 5.7 · xFP 7.9/g (-3.4 over expected) [role boost ×1.40, TD luck +0.1] — rarely short 0-9 (40%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels behind los (24% of targets faced) · slot (84%) · man-beater (YPRR 3.20 vs man, 1.86 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — TOUGH SPOT
-  Mack Hollins (NE WR) 5.6 · xFP 8.4/g (-1.3 over expected) [role boost ×1.53, TD luck +0.4] — rarely behind los (1%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%) · zone-beater (YPRR 1.16 vs man, 1.84 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — GOOD SPOT
-  Darnell Washington (PIT TE) 3.4 · xFP 1.9/g (+0.9 over expected) — rarely behind los (9%) · Short 0-9 guy (69% of targets, lg 48%) · rarely deep 20+ (4%) · D funnels short 0-9 (51% of targets faced) · zone-beater (YPRR 1.26 vs man, 1.93 vs zone; small n) · D plays man 36% (#4) — TOUGH SPOT
+  DeMario Douglas (NE WR) 5.6 · xFP 7.9/g (-3.4 over expected) [role boost ×1.39, TD luck +0.1] — rarely short 0-9 (40%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels behind los (24% of targets faced) · slot (84%) · man-beater (YPRR 3.20 vs man, 1.86 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — TOUGH SPOT
+  Mack Hollins (NE WR) 5.5 · xFP 8.8/g (-1.7 over expected) [role boost ×1.51, TD luck +0.4] — rarely behind los (1%) · Int 10-19 guy (35% of targets, lg 22%) · right-heavy (51%) · zone-beater (YPRR 1.16 vs man, 1.84 vs zone; small n) (2025 too) · D zone-heavy (man 0%) — GOOD SPOT
+  Darnell Washington (PIT TE) 3.4 · xFP 2.0/g (+0.8 over expected) — rarely behind los (9%) · Short 0-9 guy (69% of targets, lg 48%) · rarely deep 20+ (4%) · D funnels short 0-9 (51% of targets faced) · zone-beater (YPRR 1.26 vs man, 1.93 vs zone; small n) · D plays man 36% (#4) — TOUGH SPOT
 
 GB @ NYJ — total 44.5, GB by 4.5 · implied GB 24.5 / NYJ 20.0
 Weather @NYJ: wind 9 mph (gusts 24), 70°F, 37% precip
@@ -253,34 +282,39 @@ GB offense vs NYJ defense
   - vs NYJ D allows (1 gm): QB 11.7 (-36%) · RB 7.3 (-65%) · WR 18.9 (-25%) · TE 6.0 (-44%)
   - NYJ CB1: Azareye'h Thomas active
   - NYJ D scheme (PFF, 1 gm; NEW LOOK vs 2025 2/7): man 29% #10 (lg 24%, 2025 34%) · blitz 46% #7 (2025 30%) · pressure 41% #13 (2025 28%) · rusher win 8% · S in box 10% · run D 4.7 ypc #10, 2.3 after contact, edge runs 30% of carries faced · gets run at LG 20%/RG 30%
+  - NYJ DC Brian Duker (new, no playcalling history in the data; replaced Steve Wilks — prior = team 2025, weak)
   - GB O style (PFF): 50% gap / 50% zone, edge 40%, 3.3 ypc · sees man 3% (lg 25%) · screens 0% · blitzed 87% / pressured 54%
+  - GB OC Adam Stenavich (4th yr here) — Adam Stenavich as playcaller: sees man 27%/30%/31% · screens 13%/16%/11% · gap runs 42%/44%/42% · edge runs 35%/31%/33% (2023 GB, 2024 GB, 2025 GB)
 
 NYJ offense vs GB defense
   - Pace (1 gm): 60.0 plays/gm (base 64.4, -4.4) · neutral pass 48% (base 52%) · PROE -10.2 (base -8.8)
   - vs GB D allows (1 gm): QB 19.8 (+9%) · RB 22.5 (+7%) · WR 27.2 (+8%) · TE 14.8 (+37%)
   - GB CB1: Keisean Nixon active
   - GB D scheme (PFF, 1 gm; NEW LOOK vs 2025 2/7): man 19% #22 (lg 24%, 2025 21%) · blitz 37% #14 (2025 27%) · pressure 40% #14 (2025 39%) · rusher win 6% · S in box 30% · run D 3.7 ypc #23, 3.4 after contact, edge runs 26% of carries faced · gets run at ML 33%
+  - GB DC Jonathan Gannon (new, no playcalling history in the data; replaced Jeff Hafley — prior = team 2025, weak)
   - NYJ O style (PFF): 50% gap / 50% zone, edge 24%, 4.4 ypc · sees man 14% (lg 25%) · screens 9% · blitzed 27% / pressured 23%
+  - NYJ OC Frank Reich (new, no playcalling history in the data; replaced Tanner Engstrand — prior = team 2025, weak)
 
 PLAYERS (PROJ half):
-  Jordan Love (GB QB) 17.8 · xFP 23.8/g (-3.3 over expected) [TD luck +0.1] — punishes the blitz (8.9 YPA vs 7.2 no blitz) · D blitzes 46% (#7) — GOOD SPOT
-  Geno Smith (NYJ QB) 16.1 · xFP 11.5/g (-2.2 over expected) [TD luck +0.1, market higher (16.1 vs model 12.9)] — punishes the blitz (8.5 YPA vs 6.3 no blitz)
-  Breece Hall (NYJ RB) 15.3 · xFP 15.6/g (+3.2 over expected) [TD luck -0.2] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (58% of targets, lg 48%) · D funnels behind los (22% of targets faced) · screen guy (29% of targets)
-  Garrett Wilson (NYJ WR) 12.4 · xFP 9.0/g (+1.9 over expected) [TD luck +0.1] — rarely behind los (6%) · Short 0-9 guy (56% of targets, lg 48%)
-  Christian Watson (GB WR) 12.2 · xFP 13.5/g (+16.2 over expected) [TD luck -1.4] — rarely behind los (0%) · rarely short 0-9 (34%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (31% of targets, lg 13%)
-  Matthew Golden (GB WR) 10.8 · xFP 19.3/g (-6.8 over expected) [role boost ×1.03, TD luck +0.9] — rarely short 0-9 (38%) · Deep 20+ guy (25% of targets, lg 13%)
-  Tucker Kraft (GB TE) 9.8 · xFP 7.7/g (+0.3 over expected) [TD luck +0.1] — right-heavy (52%) · man-beater (YPRR 4.08 vs man, 1.63 vs zone; small n) (2025 too)
-  MarShawn Lloyd (GB RB) 9.6 · xFP 8.8/g (-5.1 over expected) [TD luck +0.2, market higher (9.6 vs model 7.2)]
+  Jordan Love (GB QB) 17.8 · xFP 23.1/g (-2.6 over expected) [TD luck +0.1] — punishes the blitz (8.9 YPA vs 7.2 no blitz) · D blitzes 46% (#7) — GOOD SPOT
+  Geno Smith (NYJ QB) 16.1 · xFP 11.3/g (-2.0 over expected) [TD luck +0.1, market higher (16.1 vs model 12.9)] — punishes the blitz (8.5 YPA vs 6.3 no blitz)
+  Breece Hall (NYJ RB) 15.3 · xFP 15.6/g (+3.2 over expected) [TD luck -0.2, REPORTS +1 riser (10d) - shadow] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (58% of targets, lg 48%) · D funnels behind los (22% of targets faced) · screen guy (29% of targets)
+  Garrett Wilson (NYJ WR) 12.4 · xFP 9.5/g (+1.4 over expected) [TD luck +0.1, blowout wk1: role read on competitive snaps] — rarely behind los (6%) · Short 0-9 guy (56% of targets, lg 48%)
+  Christian Watson (GB WR) 12.2 · xFP 14.5/g (+15.2 over expected) [TD luck -1.4, blowout wk1: role read on competitive snaps, REPORTS 1 injury (10d) - shadow] — rarely behind los (0%) · rarely short 0-9 (34%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (31% of targets, lg 13%)
+  Matthew Golden (GB WR) 10.8 · xFP 19.1/g (-6.6 over expected) [role boost ×1.03, TD luck +0.9, blowout wk1: role read on competitive snaps] — rarely short 0-9 (38%) · Deep 20+ guy (25% of targets, lg 13%)
+  Tucker Kraft (GB TE) 9.8 · xFP 8.4/g (-0.4 over expected) [TD luck +0.1] — right-heavy (52%) · man-beater (YPRR 4.08 vs man, 1.63 vs zone; small n) (2025 too)
+  MarShawn Lloyd (GB RB) 9.6 · xFP 8.2/g (-4.5 over expected) [TD luck +0.2, market higher (9.6 vs model 7.2)]
   Josh Jacobs (GB RB) 9.4 — Behind LOS guy (50% of targets, lg 18%) · screen guy (33% of targets) · zone-beater (YPRR 0.55 vs man, 1.67 vs zone) (2025 too)
   Trey Smack (GB K) 8.5
-  Jayden Reed (GB WR) 7.4 · xFP 9.2/g (-5.7 over expected) [TD luck +0.3] — rarely short 0-9 (40%) · slot (78%)
+  Jayden Reed (GB WR) 7.4 · xFP 9.8/g (-6.3 over expected) [TD luck +0.3] — rarely short 0-9 (40%) · slot (78%)
   Packers D/ST (GB DST) 7.4
-  Adonai Mitchell (NYJ WR) 6.8 · xFP 4.0/g (+3.5 over expected) [role boost ×1.08] — rarely behind los (3%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (52%) · zone-beater (YPRR 1.18 vs man, 1.92 vs zone; small n) (2025 too)
-  Kenyon Sadiq (NYJ TE) 5.9 · xFP 5.2/g (+4.7 over expected) [TD luck -0.6]
+  Adonai Mitchell (NYJ WR) 6.8 · xFP 4.1/g (+3.4 over expected) — rarely behind los (3%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (52%) · zone-beater (YPRR 1.18 vs man, 1.92 vs zone; small n) (2025 too)
+  Kenyon Sadiq (NYJ TE) 5.9 · xFP 5.0/g (+4.9 over expected) [TD luck -0.6, REPORTS +1 riser (10d) - shadow]
   Jets D/ST (NYJ DST) 5.4
-  Braelon Allen (NYJ RB) 4.2 · xFP 6.4/g (-2.4 over expected) [TD luck +0.1] — zone-scheme back (73% zone) · between the tackles (edge 14%)
-  Mason Taylor (NYJ TE) 4.2 · xFP 3.1/g (-2.3 over expected) — rarely behind los (8%) · Short 0-9 guy (81% of targets, lg 48%) · rarely int 10-19 (9%) · rarely deep 20+ (3%)
-  Chris Brooks (GB RB) 3.7 · xFP 4.8/g (-1.9 over expected) [TD luck +0.1] — zone-beater (YPRR 0.00 vs man, 1.64 vs zone)
+  Blake Grupe (NYJ K) 4.6 [OUT flag unconfirmed (Sleeper still projects him) ×0.75]
+  Braelon Allen (NYJ RB) 4.2 · xFP 6.2/g (-2.2 over expected) [TD luck +0.1] — zone-scheme back (73% zone) · between the tackles (edge 14%)
+  Mason Taylor (NYJ TE) 4.2 · xFP 3.2/g (-2.4 over expected) — rarely behind los (8%) · Short 0-9 guy (81% of targets, lg 48%) · rarely int 10-19 (9%) · rarely deep 20+ (3%)
+  Chris Brooks (GB RB) 3.7 · xFP 4.7/g (-1.8 over expected) [TD luck +0.1] — zone-beater (YPRR 0.00 vs man, 1.64 vs zone)
 
 CLE @ TB — total 40.5, TB by 8.5 · implied CLE 16.0 / TB 24.5
 Weather @TB: wind 7 mph (gusts 6), 90°F, 16% precip
@@ -290,33 +324,37 @@ CLE offense vs TB defense
   - vs TB D allows (1 gm): QB 15.2 (-16%) · RB 22.8 (+8%) · WR 15.1 (-40%) · TE 20.6 (+91%)
   - TB CB1: Zyon McCollum active
   - TB D scheme (PFF, 1 gm; RELIABLE vs 2025 5/7): man 25% #13 (lg 24%, 2025 23%) · blitz 43% #10 (2025 42%) · pressure 22% #32 (2025 38%) · rusher win 10% · S in box 37% · run D 3.9 ypc #19, 3.0 after contact, edge runs 36% of carries faced
+  - TB HC Todd Bowles (2nd yr here) — Todd Bowles as playcaller: man 23% · blitz 42% · pressure 38% · S in box 32% · gap faced 39% · edge faced 35% (2025 TB)
   - CLE O style (PFF): 43% gap / 57% zone, edge 56%, 3.1 ypc · sees man 29% (lg 25%) · screens 10% · blitzed 36% / pressured 48%
+  - CLE OC Travis Switzer (new, no playcalling history in the data; replaced Tommy Rees — prior = team 2025, weak)
 
 TB offense vs CLE defense
   - Pace (1 gm): 51.0 plays/gm (base 60.9, -9.9) · neutral pass 65% (base 56%) · PROE +2.0 (base -3.5)
   - vs CLE D allows (1 gm): QB 25.8 (+42%) · RB 15.3 (-27%) · WR 42.5 (+69%) · TE 10.7 (-1%)
   - CLE CB1: Denzel Ward active
   - CLE D scheme (PFF, 1 gm; NEW LOOK vs 2025 1/7, flipped Man coverage/Rusher win rate): man 15% #25 (lg 24%, 2025 42%) · blitz 20% #26 (2025 27%) · pressure 24% #27 (2025 39%) · rusher win 7% · S in box 31% · run D 4.7 ypc #11, 4.0 after contact, edge runs 48% of carries faced · gets run at LE 26%/RE 22% · missed tackles 18% (lg 14%)
+  - CLE DC Mike Rutenberg (new, no playcalling history in the data; replaced Jim Schwartz — prior = team 2025, weak)
   - TB O style (PFF): 39% gap / 62% zone, edge 53%, 3.9 ypc · sees man 59% (lg 25%) · screens 15% · blitzed 14% / pressured 28%
+  - TB OC Zac Robinson (new; prior = ATL 2025 under him, replaced Josh Grizzard) — Zac Robinson as playcaller: sees man 29%/30% · screens 10%/10% · gap runs 25%/23% · edge runs 29%/27% (2024 ATL, 2025 ATL)
 
 PLAYERS (PROJ half):
-  Baker Mayfield (TB QB) 18.1 · xFP 14.8/g (-3.2 over expected) [TD luck +0.3, market higher (18.1 vs model 15.7)] — struggles vs blitz (5.4 YPA vs 7.6) · D pressure only 24% (clean pockets)
-  Deshaun Watson (CLE QB) 13.0 · xFP 12.6/g (+2.4 over expected) [TD luck -0.1, market higher (13.0 vs model 10.9)] — falls apart under pressure (grade 19 vs 78 clean) · pressure-to-sack 33% (takes sacks) · D blitzes 43% (#10) · D pressure only 22% (clean pockets)
-  Bucky Irving (TB RB) 12.9 · xFP 11.2/g (+5.6 over expected) [role boost ×1.04, TD luck -0.6] — Behind LOS guy (71% of targets, lg 18%) · screen guy (32% of targets)
-  Emeka Egbuka (TB WR) 11.8 · xFP 7.5/g (+1.3 over expected) [TD luck +0.1] — rarely behind los (9%) · rarely short 0-9 (36%) · Int 10-19 guy (34% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced) · zone-beater (YPRR 1.35 vs man, 2.07 vs zone; small n) (2025 too)
-  Quinshon Judkins (CLE RB) 11.4 · xFP 8.9/g (-2.9 over expected) [role boost ×1.10, TD luck +0.2] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%) · screen guy (38% of targets) · zone-beater (YPRR -0.08 vs man, 1.74 vs zone; small n)
-  Kenneth Gainwell (TB RB) 9.8 [role boost ×1.03] — bounces outside (edge 50%, lg 31%) · screen guy (40% of targets)
+  Baker Mayfield (TB QB) 18.1 · xFP 14.7/g (-3.1 over expected) [TD luck +0.3, market higher (18.1 vs model 15.7)] — struggles vs blitz (5.4 YPA vs 7.6) · D pressure only 24% (clean pockets)
+  Deshaun Watson (CLE QB) 13.0 · xFP 12.1/g (+2.9 over expected) [TD luck -0.1, market higher (13.0 vs model 10.9)] — falls apart under pressure (grade 19 vs 78 clean) · pressure-to-sack 33% (takes sacks) · D blitzes 43% (#10) · D pressure only 22% (clean pockets)
+  Bucky Irving (TB RB) 12.7 · xFP 11.1/g (+5.7 over expected) [TD luck -0.6] — Behind LOS guy (71% of targets, lg 18%) · screen guy (32% of targets)
+  Emeka Egbuka (TB WR) 11.8 · xFP 8.3/g (+0.5 over expected) [TD luck +0.1] — rarely behind los (9%) · rarely short 0-9 (36%) · Int 10-19 guy (34% of targets, lg 22%) · Deep 20+ guy (21% of targets, lg 13%) · D funnels int 10-19 (25% of targets faced) · zone-beater (YPRR 1.35 vs man, 2.07 vs zone; small n) (2025 too)
+  Quinshon Judkins (CLE RB) 11.4 · xFP 8.8/g (-2.8 over expected) [role boost ×1.10, TD luck +0.2, REPORTS 1 role (10d) - shadow] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (60% of targets, lg 48%) · middle-heavy (37%) · screen guy (38% of targets) · zone-beater (YPRR -0.08 vs man, 1.74 vs zone; small n)
   Buccaneers D/ST (TB DST) 9.1
-  Chris Godwin (TB WR) 8.8 · xFP 4.7/g (+1.6 over expected) [role boost ×1.08, TD luck +0.1]
-  Harold Fannin Jr. (CLE TE) 8.2 · xFP 3.0/g (+0.1 over expected) — Short 0-9 guy (67% of targets, lg 48%) · zone-beater (YPRR 1.41 vs man, 1.93 vs zone; small n) (2025 too)
+  Kenneth Gainwell (TB RB) 8.8 [REPORTS 1 role (10d) - shadow] — bounces outside (edge 50%, lg 31%) · screen guy (40% of targets)
+  Chris Godwin (TB WR) 8.6 · xFP 5.2/g (+1.1 over expected) [role boost ×1.02, TD luck +0.1]
+  Harold Fannin Jr. (CLE TE) 8.2 · xFP 2.5/g (+0.6 over expected) — Short 0-9 guy (67% of targets, lg 48%) · zone-beater (YPRR 1.41 vs man, 1.93 vs zone; small n) (2025 too)
   Chase McLaughlin (TB K) 8.2
-  KC Concepcion (CLE WR) 7.4 · xFP 7.5/g (-1.7 over expected) [TD luck +0.1]
-  Denzel Boston (CLE WR) 6.8 · xFP 7.9/g (+5.0 over expected) [TD luck -0.5]
-  Cade Otton (TB TE) 6.7 · xFP 6.6/g (-2.5 over expected) [TD luck +0.2, market higher (6.7 vs model 4.9)] — Short 0-9 guy (75% of targets, lg 48%) · rarely deep 20+ (1%)
-  Jerry Jeudy (CLE WR) 5.9 · xFP 4.8/g (-1.2 over expected) [TD luck +0.1] — rarely behind los (2%) · rarely short 0-9 (40%) · Int 10-19 guy (43% of targets, lg 22%) · left-heavy (54%)
+  KC Concepcion (CLE WR) 7.4 · xFP 7.6/g (-1.8 over expected) [TD luck +0.1]
+  Denzel Boston (CLE WR) 6.8 · xFP 7.6/g (+5.3 over expected) [TD luck -0.5, REPORTS 1 role (10d) - shadow]
+  Cade Otton (TB TE) 6.7 · xFP 6.3/g (-2.2 over expected) [TD luck +0.2, market higher (6.7 vs model 4.9)] — Short 0-9 guy (75% of targets, lg 48%) · rarely deep 20+ (1%)
+  Jerry Jeudy (CLE WR) 5.9 · xFP 4.9/g (-1.3 over expected) [TD luck +0.1] — rarely behind los (2%) · rarely short 0-9 (40%) · Int 10-19 guy (43% of targets, lg 22%) · left-heavy (54%)
   Browns D/ST (CLE DST) 5.4
   Andre Szmyt (CLE K) 5.2
-  Ted Hurst (TB WR) 4.6 · xFP 4.1/g (+1.0 over expected) [role boost ×1.27, TD luck +0.1]
+  Jalen McMillan (TB WR) 5.0 [OUT flag unconfirmed (Sleeper still projects him) ×0.75, REPORTS 1 injury (10d) - shadow] — man-beater (YPRR 3.29 vs man, 1.87 vs zone)
 
 PHI @ TEN — total 39.5, PHI by 7.0 · implied PHI 23.3 / TEN 16.3
 Weather @TEN: wind 7 mph (gusts 9), 93°F, 4% precip
@@ -326,34 +364,38 @@ PHI offense vs TEN defense
   - vs TEN D allows (1 gm): QB 9.3 (-49%) · RB 22.8 (+8%) · WR 23.1 (-8%) · TE 11.6 (+7%)
   - TEN CB1: Alontae Taylor active
   - PHI OL: 1 starter out (dock live)
-  - TEN D scheme (PFF, 1 gm; MIXED vs 2025 3/7): man 12% #27 (lg 24%, 2025 22%) · blitz 27% #23 (2025 28%) · pressure 23% #28 (2025 36%) · rusher win 7% · S in box 50% · run D 4.4 ypc #12, 2.4 after contact, edge runs 24% of carries faced · gets run at MR 30%
+  - TEN D scheme (PFF, 1 gm; MIXED vs IND 2024 4/7): man 12% #27 (lg 24%, 2025 16%) · blitz 27% #23 (2025 22%) · pressure 23% #28 (2025 29%) · rusher win 7% · S in box 50% · run D 4.4 ypc #12, 2.4 after contact, edge runs 24% of carries faced · gets run at MR 30%
+  - TEN DC Gus Bradley (new; prior = IND 2024 under him, replaced Dennard Wilson) — Gus Bradley as playcaller: man 10%/16% · blitz 17%/22% · pressure 32%/29% · S in box 26%/28% · gap faced 57%/46% · edge faced 30%/27% (2023 IND, 2024 IND)
   - PHI O style (PFF): 29% gap / 71% zone, edge 24%, 5.0 ypc · sees man 19% (lg 25%) · screens 14% · blitzed 44% / pressured 38%
+  - PHI OC Sean Mannion (new, no playcalling history in the data; replaced Kevin Patullo — prior = team 2025, weak)
 
 TEN offense vs PHI defense
   - Pace (1 gm): 49.0 plays/gm (base 63.5, -14.5) · neutral pass 77% (base 58%) · PROE +4.9 (base -3.9)
   - vs PHI D allows (1 gm): QB 17.7 (-3%) · RB 17.4 (-17%) · WR 31.2 (+24%) · TE 4.9 (-55%)
   - PHI CB1: Quinyon Mitchell active
   - PHI D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 33% #5 (lg 24%, 2025 37%) · blitz 32% #18 (2025 31%) · pressure 42% #9 (2025 40%) · rusher win 12% · S in box 24% · run D 3.7 ypc #22, 2.4 after contact, edge runs 7% of carries faced · gets run at MR 48%
+  - PHI DC Vic Fangio (3rd yr here) — Vic Fangio as playcaller: man 32%/30%/37% · blitz 31%/25%/31% · pressure 42%/37%/40% · S in box 25%/22%/19% · gap faced 42%/39%/43% · edge faced 30%/26%/26% (2023 MIA, 2024 PHI, 2025 PHI)
   - TEN O style (PFF): 60% gap / 40% zone, edge 30%, 4.7 ypc · sees man 33% (lg 25%) · screens 15% · blitzed 46% / pressured 41%
+  - TEN OC Brian Daboll (new, no playcalling history in the data; replaced Nick Holz — prior = team 2025, weak)
 
 PLAYERS (PROJ half):
-  Jalen Hurts (PHI QB) 21.0 · xFP 14.2/g (+10.5 over expected) [TD luck -0.7] — holds up under pressure (grade 60 vs 72 clean) (2025 too) · struggles vs blitz (6.3 YPA vs 7.8) · D pressure only 23% (clean pockets)
-  Saquon Barkley (PHI RB) 15.1 · xFP 9.6/g (-1.1 over expected) [TD luck +0.1, OL out ×0.98] — Behind LOS guy (46% of targets, lg 18%) · left-heavy (50%) · D lives in heavy boxes (S in box 50%) · man-beater (YPRR 1.77 vs man, 0.64 vs zone; small n) (2025 too) · D zone-heavy (man 12%) — TOUGH SPOT
-  DeVonta Smith (PHI WR) 11.8 · xFP 7.7/g (-0.9 over expected) — D zone-heavy (man 12%)
+  Jalen Hurts (PHI QB) 21.0 · xFP 14.0/g (+10.7 over expected) [TD luck -0.7] — holds up under pressure (grade 60 vs 72 clean) (2025 too) · struggles vs blitz (6.3 YPA vs 7.8) · D pressure only 23% (clean pockets)
+  Saquon Barkley (PHI RB) 15.1 · xFP 9.8/g (-1.3 over expected) [TD luck +0.1, OL out ×0.98] — Behind LOS guy (46% of targets, lg 18%) · left-heavy (50%) · D lives in heavy boxes (S in box 50%) · man-beater (YPRR 1.77 vs man, 0.64 vs zone; small n) (2025 too) · D zone-heavy (man 12%) — TOUGH SPOT
+  DeVonta Smith (PHI WR) 11.8 · xFP 8.2/g (-1.4 over expected) — D zone-heavy (man 12%)
   Cameron Ward (TEN QB) 11.6 [CB shadow ×0.96]
-  Dallas Goedert (PHI TE) 9.3 · xFP 8.3/g (+13.4 over expected) [TD luck -1.6] — rarely behind los (9%) · Short 0-9 guy (66% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced) · D zone-heavy (man 12%)
-  Tony Pollard (TEN RB) 9.1 · xFP 6.0/g (-2.1 over expected) [role boost ×1.03] — Behind LOS guy (33% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · D bleeds slot yards (71% of rec yds, lg 29%, noisy)
+  Dallas Goedert (PHI TE) 9.3 · xFP 8.5/g (+13.2 over expected) [TD luck -1.6] — rarely behind los (9%) · Short 0-9 guy (66% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced) · D zone-heavy (man 12%)
+  Tony Pollard (TEN RB) 9.0 · xFP 5.8/g (-1.9 over expected) — Behind LOS guy (33% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · D bleeds slot yards (71% of rec yds, lg 29%, noisy)
   Eagles D/ST (PHI DST) 9.0
-  Carnell Tate (TEN WR) 8.5 · xFP 7.4/g (-1.6 over expected) [CB shadow ×0.96]
+  Carnell Tate (TEN WR) 8.5 · xFP 7.8/g (-2.0 over expected) [CB shadow ×0.96, REPORTS +2 riser (10d) - shadow]
   Jake Elliott (PHI K) 8.2
-  Wan'Dale Robinson (TEN WR) 8.1 · xFP 6.0/g (+0.3 over expected) — slot (70%) · zone-beater (YPRR 1.27 vs man, 2.10 vs zone; small n) (2025 too) · D bleeds slot yards (71% of rec yds, lg 29%, noisy)
-  Tyjae Spears (TEN RB) 6.8 · xFP 5.4/g (-2.0 over expected) [role boost ×1.02] — Behind LOS guy (65% of targets, lg 18%) · screen guy (39% of targets) · D bleeds slot yards (71% of rec yds, lg 29%, noisy)
-  Dontayvion Wicks (PHI WR) 6.6 · xFP 7.4/g (+6.9 over expected) [TD luck -0.6] — rarely behind los (2%) · man-beater (YPRR 1.90 vs man, 1.14 vs zone; small n) (2025 too) · D zone-heavy (man 12%) — TOUGH SPOT
+  Wan'Dale Robinson (TEN WR) 8.1 · xFP 6.5/g (-0.2 over expected) — slot (70%) · zone-beater (YPRR 1.27 vs man, 2.10 vs zone; small n) (2025 too) · D bleeds slot yards (71% of rec yds, lg 29%, noisy)
+  Tyjae Spears (TEN RB) 6.7 · xFP 5.5/g (-2.1 over expected) — Behind LOS guy (65% of targets, lg 18%) · screen guy (39% of targets) · D bleeds slot yards (71% of rec yds, lg 29%, noisy)
+  Dontayvion Wicks (PHI WR) 6.6 · xFP 7.5/g (+6.8 over expected) [TD luck -0.6, REPORTS +1 riser (10d) - shadow] — rarely behind los (2%) · man-beater (YPRR 1.90 vs man, 1.14 vs zone; small n) (2025 too) · D zone-heavy (man 12%) — TOUGH SPOT
   Joey Slye (TEN K) 6.1
   Titans D/ST (TEN DST) 5.9
   Makai Lemon (PHI WR) 5.9 · xFP 3.9/g (-2.9 over expected)
-  Gunnar Helm (TEN TE) 5.3 · xFP 7.1/g (-2.3 over expected) [TD luck +0.4] — Short 0-9 guy (61% of targets, lg 48%) · rarely deep 20+ (3%) · zone-beater (YPRR 0.88 vs man, 1.74 vs zone; small n) (2025 too)
-  Calvin Ridley (TEN WR) 4.9 [CB shadow ×0.95] — rarely behind los (6%) · Int 10-19 guy (39% of targets, lg 22%)
+  Gunnar Helm (TEN TE) 5.3 · xFP 7.4/g (-2.6 over expected) [TD luck +0.4] — Short 0-9 guy (61% of targets, lg 48%) · rarely deep 20+ (3%) · zone-beater (YPRR 0.88 vs man, 1.74 vs zone; small n) (2025 too)
+  Calvin Ridley (TEN WR) 4.9 [CB shadow ×0.95, blowout wk1: role read on competitive snaps] — rarely behind los (6%) · Int 10-19 guy (39% of targets, lg 22%)
   Tank Bigsby (PHI RB) 3.4 · xFP 0.6/g (-0.3 over expected) [OL out ×0.98] — contact-balance back (3.83 after contact/att, lg 3.04) · makes people miss (0.28 MTF/att) · D lives in heavy boxes (S in box 50%) · D zone-heavy (man 12%)
 
 JAX @ DEN — total 44.5, DEN by 2.5 · implied JAX 21.0 / DEN 23.5
@@ -364,35 +406,39 @@ JAX offense vs DEN defense
   - vs DEN D allows (1 gm): QB 22.7 (+25%) · RB 40.4 (+92%) · WR 12.2 (-52%) · TE 11.0 (+2%)
   - DEN CB1: Patrick Surtain II active
   - DEN D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 33% #6 (lg 24%, 2025 35%) · blitz 49% #3 (2025 39%) · pressure 36% #19 (2025 42%) · rusher win 10% · S in box 51% · run D 6.3 ypc #2, 6.5 after contact, edge runs 26% of carries faced · gets run at ML 26% · missed tackles 27% (lg 14%)
+  - DEN DC Vance Joseph (4th yr here) — Vance Joseph as playcaller: man 30%/36%/35% · blitz 39%/41%/39% · pressure 34%/40%/42% · S in box 24%/27%/30% · gap faced 48%/43%/51% · edge faced 31%/30%/30% (2023 DEN, 2024 DEN, 2025 DEN)
   - JAX O style (PFF): 56% gap / 44% zone, edge 48%, 4.7 ypc · sees man 15% (lg 25%) · screens 19% · blitzed 20% / pressured 24%
+  - JAX OC Grant Udinski (2nd yr here) — Grant Udinski as playcaller: sees man 26% · screens 11% · gap runs 44% · edge runs 37% (2025 JAX)
 
 DEN offense vs JAX defense
   - Pace (1 gm): 46.0 plays/gm (base 63.5, -17.5) · neutral pass 76% (base 63%) · PROE +1.9 (base +1.6)
   - vs JAX D allows (1 gm): QB 15.0 (-18%) · RB 10.1 (-52%) · WR 22.3 (-12%) · TE 5.0 (-54%)
   - JAX CB1: Montaric Brown active
   - JAX D scheme (PFF, 1 gm; MIXED vs 2025 3/7): man 29% #9 (lg 24%, 2025 24%) · blitz 36% #15 (2025 32%) · pressure 48% #4 (2025 36%) · rusher win 6% · S in box 32% · run D 3.1 ypc #30, 1.9 after contact, edge runs 56% of carries faced · gets run at LE 38% · missed tackles 18% (lg 14%)
+  - JAX DC Anthony Campanile (2nd yr here) — Anthony Campanile as playcaller: man 24% · blitz 32% · pressure 36% · S in box 26% · gap faced 48% · edge faced 33% (2025 JAX)
   - DEN O style (PFF): 40% gap / 60% zone, edge 50%, 4.9 ypc · sees man 27% (lg 25%) · screens 24% · blitzed 42% / pressured 52%
+  - DEN OC Davis Webb (new, no playcalling history in the data; replaced Joe Lombardi — prior = team 2025, weak)
 
 PLAYERS (PROJ half):
-  Trevor Lawrence (JAX QB) 18.9 · xFP 13.5/g (+12.6 over expected) [role boost ×1.03, TD luck -0.9, CB shadow ×0.96, market higher (18.9 vs model 17.4)] — holds up under pressure (grade 63 vs 74 clean) (2025 too) · D blitzes 49% (#3)
-  Bo Nix (DEN QB) 17.3 · xFP 11.3/g (-4.9 over expected) [TD luck -0.1] — D pressure 48% (#4)
+  Trevor Lawrence (JAX QB) 18.9 · xFP 13.3/g (+12.8 over expected) [role boost ×1.03, TD luck -0.9, CB shadow ×0.96, market higher (18.9 vs model 17.4)] — holds up under pressure (grade 63 vs 74 clean) (2025 too) · D blitzes 49% (#3)
+  Bo Nix (DEN QB) 17.3 · xFP 10.9/g (-4.5 over expected) [TD luck -0.1] — D pressure 48% (#4)
   Bhayshul Tuten (JAX RB) 11.1 · xFP 8.5/g (+0.8 over expected) [TD luck +0.1] — D misses tackles (27%) — GOOD SPOT · D lives in heavy boxes (S in box 51%) · screen guy (36% of targets)
-  Parker Washington (JAX WR) 10.5 · xFP 8.2/g (+8.6 over expected) [TD luck -0.9, CB shadow ×0.97, market higher (10.5 vs model 8.9)] — rarely behind los (5%) · rarely short 0-9 (37%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%)
-  Jaylen Waddle (DEN WR) 9.6 · xFP 3.0/g (-2.3 over expected) — rarely behind los (5%) · Int 10-19 guy (38% of targets, lg 22%) · zone-beater (YPRR 1.25 vs man, 2.37 vs zone; small n) (2025 too)
+  Parker Washington (JAX WR) 10.5 · xFP 8.3/g (+8.5 over expected) [TD luck -0.9, CB shadow ×0.97, blowout wk1: role read on competitive snaps, REPORTS +1 riser (10d) - shadow, market higher (10.5 vs model 8.9)] — rarely behind los (5%) · rarely short 0-9 (37%) · Int 10-19 guy (32% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%)
+  Jaylen Waddle (DEN WR) 9.6 · xFP 3.1/g (-2.4 over expected) [blowout wk1: role read on competitive snaps] — rarely behind los (5%) · Int 10-19 guy (38% of targets, lg 22%) · zone-beater (YPRR 1.25 vs man, 2.37 vs zone; small n) (2025 too)
   J.K. Dobbins (DEN RB) 9.1 · xFP 3.9/g (-0.3 over expected) — screen guy (42% of targets)
-  Courtland Sutton (DEN WR) 8.8 · xFP 6.1/g (-4.0 over expected) [TD luck +0.1] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%) · man-beater (YPRR 2.15 vs man, 1.50 vs zone; small n) (2025 too)
+  Courtland Sutton (DEN WR) 8.8 · xFP 6.5/g (-4.3 over expected) [TD luck +0.1, blowout wk1: role read on competitive snaps] — rarely behind los (1%) · Int 10-19 guy (32% of targets, lg 22%) · man-beater (YPRR 2.15 vs man, 1.50 vs zone; small n) (2025 too)
   Wil Lutz (DEN K) 8.1
-  Brian Thomas Jr. (JAX WR) 8.0 · xFP 4.3/g (+1.2 over expected) [CB shadow ×0.95] — rarely behind los (2%) · rarely short 0-9 (33%) · Int 10-19 guy (42% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (50%) · man-beater (YPRR 2.20 vs man, 1.56 vs zone; small n) (new vs 2025)
-  Jakobi Meyers (JAX WR) 7.8 · xFP 4.6/g (+6.6 over expected) [TD luck -0.7, CB shadow ×0.97] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%)
+  Brian Thomas Jr. (JAX WR) 8.0 · xFP 4.1/g (+1.4 over expected) [CB shadow ×0.95] — rarely behind los (2%) · rarely short 0-9 (33%) · Int 10-19 guy (42% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (50%) · man-beater (YPRR 2.20 vs man, 1.56 vs zone; small n) (new vs 2025)
+  Jakobi Meyers (JAX WR) 7.7 · xFP 4.6/g (+6.6 over expected) [TD luck -0.7, CB shadow ×0.97, blowout wk1: role read on competitive snaps] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%)
   Cam Little (JAX K) 7.6
-  RJ Harvey (DEN RB) 7.5 · xFP 5.3/g (+0.8 over expected) — Behind LOS guy (47% of targets, lg 18%) · gap/power back (63% gap) (2025 too) · bounces outside (edge 43%, lg 31%) · screen guy (34% of targets)
-  Brenton Strange (JAX TE) 7.2 · xFP 5.6/g (+3.7 over expected) [TD luck -0.6] — rarely behind los (6%) · Short 0-9 guy (69% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced)
+  RJ Harvey (DEN RB) 7.5 · xFP 5.5/g (+0.6 over expected) — Behind LOS guy (47% of targets, lg 18%) · gap/power back (63% gap) (2025 too) · bounces outside (edge 43%, lg 31%) · screen guy (34% of targets)
+  Brenton Strange (JAX TE) 7.2 · xFP 6.0/g (+3.3 over expected) [TD luck -0.6, blowout wk1: role read on competitive snaps] — rarely behind los (6%) · Short 0-9 guy (69% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced)
   Broncos D/ST (DEN DST) 6.9
   Jaguars D/ST (JAX DST) 5.8
-  Evan Engram (DEN TE) 5.5 · xFP 7.2/g (+5.1 over expected) [TD luck -0.6] — Short 0-9 guy (65% of targets, lg 48%) · rarely int 10-19 (12%) · D funnels short 0-9 (51% of targets faced)
+  Evan Engram (DEN TE) 5.5 · xFP 6.8/g (+5.5 over expected) [TD luck -0.6] — Short 0-9 guy (65% of targets, lg 48%) · rarely int 10-19 (12%) · D funnels short 0-9 (51% of targets faced)
   Chris Rodriguez (JAX RB) 4.7 · xFP 3.4/g (-1.1 over expected) [TD luck +0.1] — D lives in heavy boxes (S in box 51%)
-  Pat Bryant (DEN WR) 4.7 · xFP 6.7/g (-0.5 over expected) [TD luck +0.1] — rarely behind los (8%) · Short 0-9 guy (61% of targets, lg 48%) · left-heavy (51%) · D funnels short 0-9 (51% of targets faced)
-  Travis Hunter (JAX WR) 4.1 — slot (65%) · man-beater (YPRR 1.94 vs man, 1.21 vs zone; small n)
+  Pat Bryant (DEN WR) 4.7 · xFP 7.1/g (-0.9 over expected) [TD luck +0.1, REPORTS 1 faller (10d) - shadow] — rarely behind los (8%) · Short 0-9 guy (61% of targets, lg 48%) · left-heavy (51%) · D funnels short 0-9 (51% of targets faced)
+  Travis Hunter (JAX WR) 3.7 — slot (65%) · man-beater (YPRR 1.94 vs man, 1.21 vs zone; small n)
   Marvin Mims (DEN WR) 3.1 — Behind LOS guy (39% of targets, lg 18%) · rarely short 0-9 (29%) · rarely int 10-19 (6%) · Deep 20+ guy (25% of targets, lg 13%) · screen guy (37% of targets) · man-beater (YPRR 3.20 vs man, 0.87 vs zone) (2025 too)
 
 LV @ LAC — total 43.5, LAC by 7.0 · implied LV 18.3 / LAC 25.3
@@ -403,35 +449,39 @@ LV offense vs LAC defense
   - vs LAC D allows (1 gm): QB 16.5 (-9%) · RB 20.0 (-5%) · WR 23.4 (-7%) · TE 20.0 (+85%)
   - LAC CB1: Tarheeb Still active
   - LAC D scheme (PFF, 1 gm; NEW LOOK vs 2025 2/7): man 23% #16 (lg 24%, 2025 19%) · blitz 33% #17 (2025 27%) · pressure 26% #26 (2025 37%) · rusher win 8% · S in box 29% · run D 3.6 ypc #24, 3.4 after contact, edge runs 21% of carries faced · gets run at LG 25%
+  - LAC DC Chris O'Leary (new, no playcalling history in the data; replaced Jesse Minter — prior = team 2025, weak)
   - LV O style (PFF): 35% gap / 66% zone, edge 36%, 4.3 ypc · sees man 30% (lg 25%) · screens 7% · blitzed 36% / pressured 23%
+  - LV OC Andrew Janocko (new, no playcalling history in the data; replaced Chip Kelly, Greg Olson — prior = team 2025, weak)
 
 LAC offense vs LV defense
   - Pace (1 gm): 51.0 plays/gm (base 63.3, -12.3) · neutral pass 57% (base 64%) · PROE -2.1 (base +0.6)
   - vs LV D allows (1 gm): QB 17.7 (-3%) · RB 8.5 (-60%) · WR 19.7 (-22%) · TE 2.8 (-74%)
   - LV CB1: Eric Stokes active
   - LV D scheme (PFF, 1 gm; NEW LOOK vs 2025 2/7): man 19% #21 (lg 24%, 2025 17%) · blitz 24% #25 (2025 24%) · pressure 46% #6 (2025 33%) · rusher win 16% · S in box 38% · run D 2.9 ypc #31, 1.5 after contact, edge runs 17% of carries faced · gets run at LG 33%/ML 25%/RT 17% · missed tackles 19% (lg 14%)
+  - LV DC Rob Leonard (new, no playcalling history in the data; replaced Patrick Graham — prior = team 2025, weak)
   - LAC O style (PFF): 25% gap / 75% zone, edge 19%, 3.3 ypc · sees man 4% (lg 25%) · screens 8% · blitzed 17% / pressured 43%
+  - LAC OC Mike McDaniel (new, no playcalling history in the data; replaced Greg Roman — prior = team 2025, weak)
 
 PLAYERS (PROJ half):
-  Justin Herbert (LAC QB) 18.6 · xFP 16.9/g (-2.6 over expected) [market higher (18.6 vs model 16.9)] — D pressure 46% (#6)
-  Ashton Jeanty (LV RB) 16.0 · xFP 20.0/g (+9.7 over expected) [TD luck -1.0] — Behind LOS guy (58% of targets, lg 18%) · screen guy (38% of targets)
+  Justin Herbert (LAC QB) 18.6 · xFP 17.7/g (-3.4 over expected) [market higher (18.6 vs model 16.9)] — D pressure 46% (#6)
+  Ashton Jeanty (LV RB) 16.0 · xFP 19.9/g (+9.8 over expected) [TD luck -1.0, REPORTS +2 riser (10d) - shadow] — Behind LOS guy (58% of targets, lg 18%) · screen guy (38% of targets)
   Omarion Hampton (LAC RB) 14.4 · xFP 6.5/g (+1.8 over expected) [TD luck -0.6] — Behind LOS guy (60% of targets, lg 18%) · D funnels behind los (21% of targets faced) · makes people miss (0.28 MTF/att) · D misses tackles (19%) — GOOD SPOT · screen guy (34% of targets)
-  Ladd McConkey (LAC WR) 11.6 · xFP 12.6/g (+4.1 over expected) [TD luck -0.3] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%) · middle-heavy (31%) · D bleeds slot yards (53% of rec yds, lg 29%, noisy)
-  Kirk Cousins (LV QB) 11.6 · xFP 16.3/g (-0.5 over expected) [TD luck -0.6] — D pressure only 26% (clean pockets)
-  Brock Bowers (LV TE) 11.0 — Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (53% of targets faced) · detached TE (33% inline)
+  Ladd McConkey (LAC WR) 11.6 · xFP 14.2/g (+2.5 over expected) [TD luck -0.3, REPORTS 3 injury (10d) - shadow] — rarely behind los (7%) · Int 10-19 guy (35% of targets, lg 22%) · middle-heavy (31%) · D bleeds slot yards (53% of rec yds, lg 29%, noisy)
+  Kirk Cousins (LV QB) 11.6 · xFP 16.4/g (-0.6 over expected) [TD luck -0.6] — D pressure only 26% (clean pockets)
+  Brock Bowers (LV TE) 11.0 [REPORTS 4 injury (10d) - shadow] — Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (53% of targets faced) · detached TE (33% inline)
   Cameron Dicker (LAC K) 9.1
-  Quentin Johnston (LAC WR) 8.3 · xFP 6.8/g (-4.1 over expected) [TD luck +0.1] — D funnels deep 20+ (17% of targets faced)
+  Quentin Johnston (LAC WR) 8.3 · xFP 7.5/g (-4.8 over expected) [TD luck +0.1] — D funnels deep 20+ (17% of targets faced)
   Chargers D/ST (LAC DST) 8.1
   Matt Gay (LV K) 6.2
-  Tre Tucker (LV WR) 6.1 · xFP 6.1/g (-2.4 over expected) [TD luck +0.2] — Deep 20+ guy (22% of targets, lg 13%)
-  Jalen Nailor (LV WR) 5.5 · xFP 6.4/g (-2.2 over expected) [TD luck +0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (41% of targets, lg 22%) · man-beater (YPRR 2.04 vs man, 0.87 vs zone; small n) (2025 too)
-  David Njoku (LAC TE) 5.1 · xFP 6.0/g (+2.3 over expected) [TD luck +0.1] — Short 0-9 guy (64% of targets, lg 48%) · rarely deep 20+ (4%) · middle-heavy (45%) · zone-beater (YPRR 0.37 vs man, 1.67 vs zone; small n) (2025 too)
+  Tre Tucker (LV WR) 6.1 · xFP 6.2/g (-2.5 over expected) [TD luck +0.2] — Deep 20+ guy (22% of targets, lg 13%)
+  Jalen Nailor (LV WR) 5.5 · xFP 7.2/g (-3.0 over expected) [TD luck +0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (41% of targets, lg 22%) · man-beater (YPRR 2.04 vs man, 0.87 vs zone; small n) (2025 too)
+  David Njoku (LAC TE) 5.1 · xFP 6.3/g (+2.0 over expected) [TD luck +0.1] — Short 0-9 guy (64% of targets, lg 48%) · rarely deep 20+ (4%) · middle-heavy (45%) · zone-beater (YPRR 0.37 vs man, 1.67 vs zone; small n) (2025 too)
   Raiders D/ST (LV DST) 5.1
   Keaton Mitchell (LAC RB) 5.0 · xFP 2.5/g (-1.6 over expected) [TD luck +0.1] — bounces outside (edge 57%, lg 31%) · screen guy (70% of targets) · D bleeds slot yards (53% of rec yds, lg 29%, noisy)
-  Tre Harris (LAC WR) 4.9 · xFP 6.9/g (-3.4 over expected)
-  Michael Mayer (LV TE) 4.5 · xFP 9.5/g (-3.3 over expected) [TD luck +0.4] — Short 0-9 guy (75% of targets, lg 48%) · rarely int 10-19 (7%) · rarely deep 20+ (3%) · D funnels short 0-9 (53% of targets faced)
-  Oronde Gadsden II (LAC TE) 4.0 · xFP 1.9/g (+2.3 over expected) — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%) · right-heavy (51%) · zone-beater (YPRR 0.73 vs man, 2.56 vs zone; small n) (2025 too)
-  Jack Bech (LV WR) 3.2 · xFP 5.4/g (+4.4 over expected) [TD luck -0.8] — rarely behind los (3%) · Short 0-9 guy (63% of targets, lg 48%) · left-heavy (52%) · D funnels short 0-9 (53% of targets faced) · man-beater (YPRR 1.93 vs man, 1.02 vs zone; small n) (2025 too)
+  Tre Harris (LAC WR) 4.9 · xFP 7.9/g (-4.4 over expected)
+  Michael Mayer (LV TE) 4.5 · xFP 10.2/g (-4.0 over expected) [TD luck +0.4, REPORTS 1 role (10d) - shadow] — Short 0-9 guy (75% of targets, lg 48%) · rarely int 10-19 (7%) · rarely deep 20+ (3%) · D funnels short 0-9 (53% of targets faced)
+  Oronde Gadsden II (LAC TE) 4.0 · xFP 2.1/g (+2.1 over expected) — rarely behind los (6%) · Int 10-19 guy (30% of targets, lg 22%) · right-heavy (51%) · zone-beater (YPRR 0.73 vs man, 2.56 vs zone; small n) (2025 too)
+  Jack Bech (LV WR) 3.2 · xFP 5.8/g (+4.0 over expected) [TD luck -0.8] — rarely behind los (3%) · Short 0-9 guy (63% of targets, lg 48%) · left-heavy (52%) · D funnels short 0-9 (53% of targets faced) · man-beater (YPRR 1.93 vs man, 1.02 vs zone; small n) (2025 too)
 
 SEA @ ARI — total 41.5, SEA by 4.5 · implied SEA 23.0 / ARI 18.5
 Weather: dome / no forecast in window
@@ -441,7 +491,9 @@ SEA offense vs ARI defense
   - vs ARI D allows (1 gm): QB 14.3 (-21%) · RB 9.2 (-56%) · WR 22.9 (-9%) · TE 12.5 (+16%)
   - ARI CB1: Will Johnson active
   - ARI D scheme (PFF, 1 gm; MIXED vs 2025 3/7): man 7% #29 (lg 24%, 2025 21%) · blitz 17% #27 (2025 28%) · pressure 43% #8 (2025 31%) · rusher win 9% · S in box 34% · run D 3.3 ypc #29, 3.4 after contact, edge runs 19% of carries faced · gets run at LT 13%/RT 13%
+  - ARI DC Nick Rallis (4th yr here) — Nick Rallis as playcaller: man 18%/24%/21% · blitz 26%/40%/28% · pressure 32%/30%/31% · S in box 37%/43%/41% · gap faced 35%/41%/38% · edge faced 27%/27%/30% (2023 ARI, 2024 ARI, 2025 ARI)
   - SEA O style (PFF): 16% gap / 84% zone, edge 45%, 4.2 ypc · sees man 40% (lg 25%) · screens 8% · blitzed 48% / pressured 52%
+  - SEA OC Brian Fleury (new, no playcalling history in the data; replaced Klint Kubiak — prior = team 2025, weak)
 
 ARI offense vs SEA defense
   - Pace (1 gm): 69.0 plays/gm (base 62.5, +6.5) · neutral pass 65% (base 66%) · PROE -1.5 (base +4.0)
@@ -449,26 +501,28 @@ ARI offense vs SEA defense
   - SEA pass rush: 14.3% hit/sack rate vs lg 15.7%
   - SEA CB1: Devon Witherspoon active
   - SEA D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 14% #26 (lg 24%, 2025 22%) · blitz 31% #19 (2025 27%) · pressure 38% #17 (2025 40%) · rusher win 6% · S in box 9% · run D 2.6 ypc #32, 2.5 after contact, edge runs 29% of carries faced · gets run at ML 25%
+  - SEA DC Aden Durde (3rd yr here) — Aden Durde as playcaller: man 34%/22% · blitz 30%/27% · pressure 38%/40% · S in box 22%/24% · gap faced 41%/47% · edge faced 32%/26% (2024 SEA, 2025 SEA)
   - ARI O style (PFF): 30% gap / 70% zone, edge 21%, 3.6 ypc · sees man 23% (lg 25%) · screens 6% · blitzed 33% / pressured 26%
+  - ARI OC Nathaniel Hackett (new; prior = NYJ 2024 under him, replaced Drew Petzing) — Nathaniel Hackett as playcaller: sees man 33%/34% · screens 12%/14% · gap runs 43%/39% · edge runs 34%/32% (2023 NYJ, 2024 NYJ)
 
 PLAYERS (PROJ half):
-  Jaxon Smith-Njigba (SEA WR) 16.4 · xFP 16.5/g (+5.7 over expected) [TD luck -0.2] — rarely behind los (9%) · Int 10-19 guy (36% of targets, lg 22%) · D funnels int 10-19 (28% of targets faced) · D zone-heavy (man 7%)
-  Jacoby Brissett (ARI QB) 13.9 · xFP 19.6/g (-3.1 over expected) [TD luck +0.2, market higher (13.9 vs model 12.0)]
+  Jaxon Smith-Njigba (SEA WR) 16.4 · xFP 17.0/g (+5.2 over expected) [TD luck -0.2, REPORTS +1 riser (10d) - shadow] — rarely behind los (9%) · Int 10-19 guy (36% of targets, lg 22%) · D funnels int 10-19 (28% of targets faced) · D zone-heavy (man 7%)
+  Jacoby Brissett (ARI QB) 13.9 · xFP 19.1/g (-2.6 over expected) [TD luck +0.2, market higher (13.9 vs model 12.0)]
   Drew Lock (SEA QB) 12.8 [role boost ×26.72] — D pressure 43% (#8)
-  Trey McBride (ARI TE) 12.5 · xFP 19.4/g (+0.6 over expected) — Short 0-9 guy (63% of targets, lg 48%) · detached TE (27% inline) · zone-beater (YPRR 1.23 vs man, 2.19 vs zone; small n) (2025 too)
-  Jeremiyah Love (ARI RB) 11.4 · xFP 11.1/g (+0.9 over expected) [TD luck -0.4] — zone-scheme back (73% zone) · bounces outside (edge 45%, lg 31%)
-  Jadarian Price (SEA RB) 10.9 · xFP 7.0/g (-0.2 over expected) — zone-scheme back (90% zone) · bounces outside (edge 60%, lg 31%)
-  Marvin Harrison Jr. (ARI WR) 8.7 · xFP 4.2/g (-0.4 over expected) — rarely behind los (4%) · rarely short 0-9 (32%) · Int 10-19 guy (39% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%) · left-heavy (49%) · man-beater (YPRR 2.63 vs man, 1.45 vs zone; small n) (2025 too)
+  Trey McBride (ARI TE) 12.5 · xFP 19.9/g (+0.1 over expected) [REPORTS +1 riser (10d) - shadow] — Short 0-9 guy (63% of targets, lg 48%) · detached TE (27% inline) · zone-beater (YPRR 1.23 vs man, 2.19 vs zone; small n) (2025 too)
+  Jeremiyah Love (ARI RB) 11.4 · xFP 11.1/g (+0.9 over expected) [TD luck -0.4, REPORTS +2 riser (10d) - shadow] — zone-scheme back (73% zone) · bounces outside (edge 45%, lg 31%)
+  Jadarian Price (SEA RB) 10.9 · xFP 7.1/g (-0.3 over expected) [REPORTS +1 riser (10d) - shadow] — zone-scheme back (90% zone) · bounces outside (edge 60%, lg 31%)
+  Marvin Harrison Jr. (ARI WR) 8.7 · xFP 4.3/g (-0.5 over expected) — rarely behind los (4%) · rarely short 0-9 (32%) · Int 10-19 guy (39% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 13%) · left-heavy (49%) · man-beater (YPRR 2.63 vs man, 1.45 vs zone; small n) (2025 too)
   Jason Myers (SEA K) 8.6
-  Michael Wilson (ARI WR) 8.3 · xFP 8.8/g (-0.7 over expected) [TD luck +0.1] — rarely behind los (2%) · Int 10-19 guy (33% of targets, lg 22%) · man-beater (YPRR 2.14 vs man, 1.54 vs zone; small n) (2025 too)
+  Michael Wilson (ARI WR) 8.2 · xFP 8.9/g (-0.8 over expected) [TD luck +0.1] — rarely behind los (2%) · Int 10-19 guy (33% of targets, lg 22%) · man-beater (YPRR 2.14 vs man, 1.54 vs zone; small n) (2025 too)
   Seahawks D/ST (SEA DST) 8.0
-  Rashid Shaheed (SEA WR) 6.5 · xFP 3.2/g (-2.3 over expected) [role boost ×1.05] — rarely behind los (9%) · D zone-heavy (man 7%)
+  Rashid Shaheed (SEA WR) 6.3 · xFP 3.4/g (-2.5 over expected) — rarely behind los (9%) · D zone-heavy (man 7%)
   Cardinals D/ST (ARI DST) 6.1
   Chad Ryland (ARI K) 6.0
-  Tyler Allgeier (ARI RB) 5.8 · xFP 12.9/g (-4.9 over expected) [TD luck +0.5] — zone-scheme back (74% zone) (2025 too) · man-beater (YPRR 1.94 vs man, 0.97 vs zone; small n)
-  Cooper Kupp (SEA WR) 5.3 · xFP 4.3/g (+0.2 over expected) [role boost ×1.08, TD luck +0.1] — rarely behind los (8%) · D funnels short 0-9 (51% of targets faced) · D funnels int 10-19 (28% of targets faced) · man-beater (YPRR 1.91 vs man, 1.33 vs zone; small n) (2025 too) · D zone-heavy (man 7%) — TOUGH SPOT
-  A.J. Barner (SEA TE) 5.2 · xFP 1.9/g (+0.4 over expected) — Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (6%) · D funnels short 0-9 (51% of targets faced) · man-beater (YPRR 1.89 vs man, 1.21 vs zone; small n) (2025 too) · D zone-heavy (man 7%) — TOUGH SPOT
-  Kendrick Bourne (ARI WR) 4.1 · xFP 9.0/g (+2.5 over expected) [TD luck +0.2] — rarely behind los (2%) · Int 10-19 guy (34% of targets, lg 22%) · zone-beater (YPRR 0.96 vs man, 2.17 vs zone; small n) (2025 too)
+  Tyler Allgeier (ARI RB) 5.8 · xFP 12.7/g (-4.7 over expected) [TD luck +0.5] — zone-scheme back (74% zone) (2025 too) · man-beater (YPRR 1.94 vs man, 0.97 vs zone; small n)
+  A.J. Barner (SEA TE) 5.2 · xFP 2.1/g (+0.2 over expected) — Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (6%) · D funnels short 0-9 (51% of targets faced) · man-beater (YPRR 1.89 vs man, 1.21 vs zone; small n) (2025 too) · D zone-heavy (man 7%) — TOUGH SPOT
+  Cooper Kupp (SEA WR) 5.0 · xFP 4.0/g (+0.5 over expected) [role boost ×1.02, TD luck +0.1] — rarely behind los (8%) · D funnels short 0-9 (51% of targets faced) · D funnels int 10-19 (28% of targets faced) · man-beater (YPRR 1.91 vs man, 1.33 vs zone; small n) (2025 too) · D zone-heavy (man 7%) — TOUGH SPOT
+  Kendrick Bourne (ARI WR) 4.0 · xFP 9.6/g (+1.9 over expected) [TD luck +0.2] — rarely behind los (2%) · Int 10-19 guy (34% of targets, lg 22%) · zone-beater (YPRR 0.96 vs man, 2.17 vs zone; small n) (2025 too)
 
 WAS @ DAL — total 50.5, DAL by 3.5 · implied WAS 23.5 / DAL 27.0
 Weather: dome / no forecast in window
@@ -478,33 +532,37 @@ WAS offense vs DAL defense
   - vs DAL D allows (1 gm): QB 26.6 (+46%) · RB 25.3 (+20%) · WR 17.1 (-32%) · TE 25.2 (+133%)
   - DAL CB1: DaRon Bland active
   - DAL D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 23% #17 (lg 24%, 2025 25%) · blitz 44% #8 (2025 29%) · pressure 29% #24 (2025 39%) · rusher win 10% · S in box 23% · run D 4.3 ypc #14, 3.0 after contact, edge runs 42% of carries faced · gets run at LE 35%/RG 19%
+  - DAL DC Christian Parker (new, no playcalling history in the data; replaced Matt Eberflus — prior = team 2025, weak)
   - WAS O style (PFF): 30% gap / 70% zone, edge 7%, 3.7 ypc · sees man 36% (lg 25%) · screens 14% · blitzed 32% / pressured 42%
+  - WAS OC David Blough (new, no playcalling history in the data; replaced Kliff Kingsbury — prior = team 2025, weak)
 
 DAL offense vs WAS defense
   - Pace (1 gm): 52.0 plays/gm (base 64.9, -12.9) · neutral pass 61% (base 59%) · PROE -0.1 (base -1.0)
   - vs WAS D allows (1 gm): QB 24.7 (+36%) · RB 10.5 (-50%) · WR 22.1 (-12%) · TE 21.7 (+101%)
   - WAS CB1: Amik Robertson active
   - WAS D scheme (PFF, 1 gm; NEW LOOK vs 2025 1/7): man 17% #23 (lg 24%, 2025 27%) · blitz 44% #8 (2025 32%) · pressure 38% #16 (2025 35%) · rusher win 7% · S in box 19% · run D 5.0 ypc #7, 4.7 after contact, edge runs 24% of carries faced · gets run at LG 35% · missed tackles 18% (lg 14%)
+  - WAS DC Daronte Jones (new, no playcalling history in the data; replaced Joe Whitt, Dan Quinn — prior = team 2025, weak)
   - DAL O style (PFF): 33% gap / 67% zone, edge 31%, 3.4 ypc · sees man 26% (lg 25%) · screens 10% · blitzed 28% / pressured 31%
+  - DAL OC Klayton Adams (2nd yr here) — Klayton Adams as playcaller: sees man 31% · screens 7% · gap runs 41% · edge runs 29% (2025 DAL)
 
 PLAYERS (PROJ half):
-  Jayden Daniels (WAS QB) 20.6 · xFP 19.2/g (-1.5 over expected) [TD luck -0.1, market higher (20.6 vs model 19.0)] — D blitzes 44% (#8) — TOUGH SPOT
-  Dak Prescott (DAL QB) 18.9 · xFP 14.9/g (+0.5 over expected) [TD luck -0.3] — holds up under pressure (grade 66 vs 74 clean) (2025 too) · D blitzes 44% (#8) — GOOD SPOT
-  Javonte Williams (DAL RB) 17.1 · xFP 19.2/g (+2.5 over expected) [role boost ×1.06, TD luck -0.2] — Behind LOS guy (57% of targets, lg 18%)
-  CeeDee Lamb (DAL WR) 14.5 · xFP 13.4/g (-0.5 over expected) [TD luck -0.4] — rarely behind los (8%) · Int 10-19 guy (31% of targets, lg 22%) · man-beater (YPRR 3.35 vs man, 2.03 vs zone; small n) (2025 too)
-  George Pickens (DAL WR) 12.2 · xFP 7.6/g (-3.3 over expected) — rarely behind los (1%) · left-heavy (51%) · outside only (9% slot) · man-beater (YPRR 3.19 vs man, 2.25 vs zone; small n) (2025 too)
-  Jacory Croskey-Merritt (WAS RB) 10.8 · xFP 11.8/g (+0.3 over expected) [TD luck -0.3] — screen guy (55% of targets) · D bleeds slot yards (43% of rec yds, lg 29%, noisy)
-  Terry McLaurin (WAS WR) 10.1 · xFP 5.7/g (-3.3 over expected) [TD luck +0.3] — rarely behind los (4%) · rarely short 0-9 (36%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (23% of targets, lg 13%) · left-heavy (58%) · D funnels int 10-19 (26% of targets faced) · zone-beater (YPRR 0.80 vs man, 2.46 vs zone; small n) (2025 too)
+  Jayden Daniels (WAS QB) 20.6 · xFP 18.4/g (-0.7 over expected) [TD luck -0.1, market higher (20.6 vs model 19.0)] — D blitzes 44% (#8) — TOUGH SPOT
+  Dak Prescott (DAL QB) 18.9 · xFP 13.7/g (+1.7 over expected) [TD luck -0.3] — holds up under pressure (grade 66 vs 74 clean) (2025 too) · D blitzes 44% (#8) — GOOD SPOT
+  Javonte Williams (DAL RB) 17.1 · xFP 19.0/g (+2.7 over expected) [role boost ×1.06, TD luck -0.2] — Behind LOS guy (57% of targets, lg 18%)
+  CeeDee Lamb (DAL WR) 14.5 · xFP 12.7/g (+0.2 over expected) [TD luck -0.4] — rarely behind los (8%) · Int 10-19 guy (31% of targets, lg 22%) · man-beater (YPRR 3.35 vs man, 2.03 vs zone; small n) (2025 too)
+  George Pickens (DAL WR) 12.2 · xFP 7.4/g (-3.1 over expected) — rarely behind los (1%) · left-heavy (51%) · outside only (9% slot) · man-beater (YPRR 3.19 vs man, 2.25 vs zone; small n) (2025 too)
+  Jacory Croskey-Merritt (WAS RB) 10.8 · xFP 11.7/g (+0.4 over expected) [TD luck -0.3] — screen guy (55% of targets) · D bleeds slot yards (43% of rec yds, lg 29%, noisy)
+  Terry McLaurin (WAS WR) 10.1 · xFP 6.1/g (-3.7 over expected) [TD luck +0.3] — rarely behind los (4%) · rarely short 0-9 (36%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (23% of targets, lg 13%) · left-heavy (58%) · D funnels int 10-19 (26% of targets faced) · zone-beater (YPRR 0.80 vs man, 2.46 vs zone; small n) (2025 too)
   Brandon Aubrey (DAL K) 9.9
-  Stefon Diggs (WAS WR) 9.7 · xFP 11.7/g (+1.8 over expected) [role boost ×1.03, TD luck -0.7] — rarely behind los (2%) · Short 0-9 guy (65% of targets, lg 48%)
-  Rachaad White (WAS RB) 8.3 · xFP 6.0/g (-2.3 over expected) [TD luck +0.1] — Behind LOS guy (77% of targets, lg 18%) · screen guy (70% of targets)
+  Stefon Diggs (WAS WR) 9.6 · xFP 12.0/g (+1.5 over expected) [TD luck -0.7] — rarely behind los (2%) · Short 0-9 guy (65% of targets, lg 48%)
+  Rachaad White (WAS RB) 8.3 · xFP 5.8/g (-2.1 over expected) [TD luck +0.1] — Behind LOS guy (77% of targets, lg 18%) · screen guy (70% of targets)
   Drew Stevens (WAS K) 7.7
-  Jake Ferguson (DAL TE) 7.5 · xFP 3.6/g (-2.0 over expected) [TD luck +0.3] — Short 0-9 guy (57% of targets, lg 48%) · rarely deep 20+ (4%)
+  Jake Ferguson (DAL TE) 7.5 · xFP 3.1/g (-1.5 over expected) [TD luck +0.3] — Short 0-9 guy (57% of targets, lg 48%) · rarely deep 20+ (4%)
   Cowboys D/ST (DAL DST) 5.8
   Chigoziem Okonkwo (WAS TE) 5.8 — screen guy (32% of targets) · zone-beater (YPRR 0.80 vs man, 1.60 vs zone; small n) (2025 too)
-  Ryan Flournoy (DAL WR) 5.6 · xFP 4.4/g (-1.2 over expected) — left-heavy (48%) · man-beater (YPRR 2.84 vs man, 1.47 vs zone; small n) (2025 too)
+  Ryan Flournoy (DAL WR) 5.6 · xFP 4.6/g (-1.4 over expected) — left-heavy (48%) · man-beater (YPRR 2.84 vs man, 1.47 vs zone; small n) (2025 too)
   Commanders D/ST (WAS DST) 4.3
-  Antonio Williams (WAS WR) 3.9 · xFP 8.2/g (+6.2 over expected) [role boost ×1.11, TD luck -0.4]
+  Antonio Williams (WAS WR) 3.6 · xFP 8.0/g (+6.4 over expected) [role boost ×1.03, TD luck -0.4]
   Kavontae Turpin (DAL WR) 3.3 · xFP 1.1/g (+0.2 over expected) — Behind LOS guy (28% of targets, lg 18%) · left-heavy (59%) · slot (74%) · zone-beater (YPRR 0.70 vs man, 2.02 vs zone; small n) (2025 too)
 
 MIA @ SF — total 45.5, SF by 12.5 · implied MIA 16.5 / SF 29.0
@@ -514,34 +572,38 @@ MIA offense vs SF defense
   - Pace (1 gm): 50.0 plays/gm (base 61.5, -11.5) · neutral pass 63% (base 55%) · PROE -0.9 (base -5.8)
   - vs SF D allows (1 gm): QB 6.5 (-64%) · RB 22.3 (+6%) · WR 15.3 (-39%) · TE 3.1 (-71%)
   - SF CB1: Renardo Green active
-  - SF D scheme (PFF, 1 gm; MIXED vs 2025 4/7, flipped Safety in box): man 23% #18 (lg 24%, 2025 24%) · blitz 14% #29 (2025 23%) · pressure 45% #7 (2025 30%) · rusher win 13% · S in box 22% · run D 4.4 ypc #13, 1.9 after contact, edge runs 23% of carries faced · gets run at ML 35%
+  - SF D scheme (PFF, 1 gm; NEW LOOK vs LAR 2023 2/7): man 23% #18 (lg 24%, 2025 20%) · blitz 14% #29 (2025 36%) · pressure 45% #7 (2025 35%) · rusher win 13% · S in box 22% · run D 4.4 ypc #13, 1.9 after contact, edge runs 23% of carries faced · gets run at ML 35%
+  - SF DC Raheem Morris (new; prior = LAR 2023 under him, replaced Robert Saleh) — Raheem Morris as playcaller: man 20% · blitz 36% · pressure 35% · S in box 23% · gap faced 36% · edge faced 25% (2023 LAR)
   - MIA O style (PFF): 58% gap / 42% zone, edge 17%, 2.9 ypc · sees man 21% (lg 25%) · screens 16% · blitzed 24% / pressured 46%
+  - MIA OC Bobby Slowik (new; prior = HOU 2024 under him, replaced Frank Smith) — Bobby Slowik as playcaller: sees man 25%/28% · screens 10%/12% · gap runs 44%/35% · edge runs 31%/35% (2023 HOU, 2024 HOU)
 
 SF offense vs MIA defense
   - Pace (1 gm): 64.0 plays/gm (base 62.6, +1.4) · neutral pass 64% (base 60%) · PROE +5.0 (base -0.9)
   - vs MIA D allows (1 gm): QB 15.8 (-13%) · RB 33.9 (+61%) · WR 18.0 (-29%) · TE 6.2 (-43%)
   - MIA CB1: Chris Johnson active
   - MIA D scheme (PFF, 1 gm; MIXED vs 2025 3/7): man 25% #12 (lg 24%, 2025 26%) · blitz 36% #15 (2025 42%) · pressure 23% #29 (2025 32%) · rusher win 9% · S in box 36% · run D 4.3 ypc #15, 2.9 after contact, edge runs 36% of carries faced · gets run at MR 23%
+  - MIA DC Sean Duggan (new, no playcalling history in the data; replaced Anthony Weaver — prior = team 2025, weak)
   - SF O style (PFF): 21% gap / 79% zone, edge 12%, 5.8 ypc · sees man 18% (lg 25%) · screens 32% · blitzed 11% / pressured 22%
+  - SF OC Klay Kubiak (2nd yr here) — Klay Kubiak as playcaller: sees man 23% · screens 8% · gap runs 30% · edge runs 27% (2025 SF)
 
 PLAYERS (PROJ half):
-  Christian McCaffrey (SF RB) 20.6 · xFP 13.7/g (-2.3 over expected) [role boost ×1.03, TD luck +0.2] — Behind LOS guy (30% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced) · zone-scheme back (73% zone) (2025 too) · screen guy (33% of targets) · zone-beater (YPRR 1.07 vs man, 1.86 vs zone; small n) (2025 too)
-  Brock Purdy (SF QB) 19.1 · xFP 22.4/g (-0.3 over expected) [TD luck -0.1] — holds up under pressure (grade 62 vs 73 clean) (2025 too) · D pressure only 23% (clean pockets)
-  Malik Willis (MIA QB) 15.7 · xFP 13.4/g (+4.3 over expected) [TD luck +0.1, market higher (15.7 vs model 13.8)] — holds up under pressure (grade 68 vs 71 clean) · D pressure 45% (#7)
-  De'Von Achane (MIA RB) 13.3 · xFP 11.1/g (-2.5 over expected) [TD luck +0.1] — Behind LOS guy (57% of targets, lg 18%) · contact-balance back (3.86 after contact/att, lg 3.04) · screen guy (49% of targets)
-  Mike Evans (SF WR) 10.3 · xFP 11.3/g (+2.6 over expected) [TD luck -0.4] — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (39% of targets, lg 22%)
-  Deebo Samuel (SF WR) 10.2 · xFP 12.8/g (+2.3 over expected) [role boost ×1.10, TD luck -0.1] — Behind LOS guy (41% of targets, lg 18%) · rarely short 0-9 (29%) · screen guy (36% of targets) · man-beater (YPRR 2.20 vs man, 1.63 vs zone; small n) (2025 too)
+  Christian McCaffrey (SF RB) 20.2 · xFP 14.1/g (-2.8 over expected) [TD luck +0.2, REPORTS +1 riser, 1 faller (10d) - shadow] — Behind LOS guy (30% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced) · zone-scheme back (73% zone) (2025 too) · screen guy (33% of targets) · zone-beater (YPRR 1.07 vs man, 1.86 vs zone; small n) (2025 too)
+  Brock Purdy (SF QB) 19.1 · xFP 21.9/g (+0.2 over expected) [TD luck -0.1] — holds up under pressure (grade 62 vs 73 clean) (2025 too) · D pressure only 23% (clean pockets)
+  Malik Willis (MIA QB) 15.7 · xFP 13.7/g (+4.0 over expected) [TD luck +0.1, market higher (15.7 vs model 13.8)] — holds up under pressure (grade 68 vs 71 clean) · D pressure 45% (#7)
+  De'Von Achane (MIA RB) 13.3 · xFP 11.0/g (-2.4 over expected) [TD luck +0.1] — Behind LOS guy (57% of targets, lg 18%) · contact-balance back (3.86 after contact/att, lg 3.04) · screen guy (49% of targets)
+  Mike Evans (SF WR) 10.3 · xFP 11.6/g (+2.3 over expected) [TD luck -0.4, blowout wk1: role read on competitive snaps] — rarely behind los (3%) · rarely short 0-9 (39%) · Int 10-19 guy (39% of targets, lg 22%)
+  Deebo Samuel (SF WR) 10.1 · xFP 12.8/g (+2.2 over expected) [role boost ×1.10, TD luck -0.1, REPORTS +1 riser (10d) - shadow] — Behind LOS guy (41% of targets, lg 18%) · rarely short 0-9 (29%) · screen guy (36% of targets) · man-beater (YPRR 2.20 vs man, 1.63 vs zone; small n) (2025 too)
   Eddy Pineiro (SF K) 9.6
   49ers D/ST (SF DST) 8.9
-  George Kittle (SF TE) 8.9 · xFP 7.1/g (-4.9 over expected) [TD luck +0.3] — zone-beater (YPRR 1.44 vs man, 2.45 vs zone; small n) (2025 too)
-  Caleb Douglas (MIA WR) 7.7 · xFP 8.9/g (+3.0 over expected) [role boost ×1.06, TD luck +0.1]
-  Malik Washington (MIA WR) 5.8 · xFP 10.7/g (-5.9 over expected) [TD luck +0.1, market higher (5.8 vs model 4.2)] — Behind LOS guy (29% of targets, lg 18%) · rarely int 10-19 (14%) · screen guy (37% of targets)
-  Greg Dulcich (MIA TE) 5.4 · xFP 1.9/g (+0.9 over expected) — Short 0-9 guy (66% of targets, lg 48%) · rarely deep 20+ (0%) · middle-heavy (38%)
+  George Kittle (SF TE) 8.8 · xFP 6.7/g (-4.5 over expected) [TD luck +0.3, REPORTS +2 riser (10d) - shadow] — zone-beater (YPRR 1.44 vs man, 2.45 vs zone; small n) (2025 too)
+  Caleb Douglas (MIA WR) 7.5 · xFP 10.4/g (+1.5 over expected) [TD luck +0.1, REPORTS +1 riser (10d) - shadow]
+  Malik Washington (MIA WR) 5.8 · xFP 11.8/g (-7.0 over expected) [TD luck +0.1, market higher (5.8 vs model 4.2)] — Behind LOS guy (29% of targets, lg 18%) · rarely int 10-19 (14%) · screen guy (37% of targets)
+  Greg Dulcich (MIA TE) 5.4 · xFP 2.1/g (+0.7 over expected) — Short 0-9 guy (66% of targets, lg 48%) · rarely deep 20+ (0%) · middle-heavy (38%)
   Riley Patterson (MIA K) 5.3
-  Chris Bell (MIA WR) 5.1 · xFP 2.9/g (+0.1 over expected) [role boost ×1.09]
+  Chris Bell (MIA WR) 5.0 · xFP 3.4/g (-0.4 over expected) [role boost ×1.02]
   Demarcus Robinson (SF WR) 3.8 · xFP 8.4/g (+3.6 over expected) [role boost ×1.33, TD luck -0.1] — rarely behind los (3%) · rarely short 0-9 (37%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · zone-beater (YPRR 0.76 vs man, 1.63 vs zone; small n) (2025 too)
   Dolphins D/ST (MIA DST) 3.4
-  Kaelon Black (SF RB) 3.4 · xFP 8.1/g (-0.6 over expected) [role boost ×1.07, TD luck +0.1] — between the tackles (edge 14%)
+  Kaelon Black (SF RB) 3.2 · xFP 7.8/g (-0.3 over expected) [TD luck +0.1, REPORTS +2 riser (10d) - shadow] — between the tackles (edge 14%)
 
 IND @ KC — total 47.5, KC by 6.5 · implied IND 20.5 / KC 27.0
 Weather @KC: wind 12 mph (gusts 20), 69°F, 22% precip — mild wind dock live
@@ -551,33 +613,37 @@ IND offense vs KC defense
   - vs KC D allows (1 gm): QB 6.4 (-65%) · RB 9.7 (-54%) · WR 9.5 (-62%) · TE 14.3 (+32%)
   - KC CB1: Kristian Fulton active
   - KC D scheme (PFF, 1 gm; NEW LOOK vs 2025 2/7): man 23% #15 (lg 24%, 2025 28%) · blitz 42% #11 (2025 36%) · pressure 52% #3 (2025 39%) · rusher win 15% · S in box 34% · run D 4.9 ypc #8, 3.6 after contact, edge runs 50% of carries faced · gets run at LE 33%
+  - KC DC Steve Spagnuolo (4th yr here) — Steve Spagnuolo as playcaller: man 38%/33%/28% · blitz 34%/34%/36% · pressure 39%/36%/39% · S in box 25%/38%/38% · gap faced 44%/38%/37% · edge faced 39%/32%/35% (2023 KC, 2024 KC, 2025 KC)
   - IND O style (PFF): 32% gap / 68% zone, edge 11%, 5.2 ypc · sees man 22% (lg 25%) · screens 11% · blitzed 38% / pressured 41%
+  - IND OC Jim Bob Cooter (4th yr here) — Jim Bob Cooter as playcaller: sees man 32%/32%/26% · screens 11%/9%/7% · gap runs 32%/48%/57% · edge runs 21%/26%/27% (2023 IND, 2024 IND, 2025 IND)
 
 KC offense vs IND defense
   - Pace (1 gm): 64.0 plays/gm (base 61.6, +2.4) · neutral pass 54% (base 65%) · PROE +0.1 (base +4.0)
   - vs IND D allows (1 gm): QB 25.0 (+37%) · RB 38.1 (+81%) · WR 33.4 (+33%) · TE 9.6 (-11%)
   - IND CB1: Sauce Gardner active
   - IND D scheme (PFF, 1 gm; MIXED vs 2025 3/7): man 62% #1 (lg 24%, 2025 32%) · blitz 47% #6 (2025 35%) · pressure 47% #5 (2025 34%) · rusher win 11% · S in box 36% · run D 5.4 ypc #4, 3.8 after contact, edge runs 27% of carries faced · gets run at RT 20%
+  - IND DC Lou Anarumo (2nd yr here) — Lou Anarumo as playcaller: man 30%/29%/32% · blitz 29%/28%/35% · pressure 35%/31%/34% · S in box 29%/33%/31% · gap faced 57%/38%/39% · edge faced 36%/30%/29% (2023 CIN, 2024 CIN, 2025 IND)
   - KC O style (PFF): 55% gap / 45% zone, edge 26%, 6.3 ypc · sees man 36% (lg 25%) · screens 21% · blitzed 49% / pressured 36%
+  - KC OC Eric Bieniemy (new; prior = WAS 2023 under him, replaced Matt Nagy) — Eric Bieniemy as playcaller: sees man 37% · screens 12% · gap runs 33% · edge runs 20% (2023 WAS)
 
 PLAYERS (PROJ half):
-  Patrick Mahomes (KC QB) 18.6 · xFP 15.0/g (+7.7 over expected) [TD luck -0.4, weather ×0.97, CB shadow ×0.96] — holds up under pressure (grade 59 vs 66 clean) (2025 too) · D blitzes 47% (#6) — GOOD SPOT · D pressure 47% (#5) · D plays man 62% (#1)
-  Jonathan Taylor (IND RB) 17.8 · xFP 19.3/g (+4.3 over expected) [TD luck -0.5] — Behind LOS guy (54% of targets, lg 18%) · D funnels behind los (24% of targets faced) · screen guy (25% of targets)
-  Daniel Jones (IND QB) 17.3 · xFP 12.1/g (-2.1 over expected) [role boost ×1.03, weather ×0.97, market higher (17.3 vs model 14.5)] — holds up under pressure (grade 56 vs 67 clean) (2025 too) · D blitzes 42% (#11) · D pressure 52% (#3)
+  Patrick Mahomes (KC QB) 18.6 · xFP 14.6/g (+8.1 over expected) [TD luck -0.4, weather ×0.97, CB shadow ×0.96, REPORTS +4 riser (10d) - shadow] — holds up under pressure (grade 59 vs 66 clean) (2025 too) · D blitzes 47% (#6) — GOOD SPOT · D pressure 47% (#5) · D plays man 62% (#1)
+  Jonathan Taylor (IND RB) 17.7 · xFP 19.5/g (+4.1 over expected) [TD luck -0.5] — Behind LOS guy (54% of targets, lg 18%) · D funnels behind los (24% of targets faced) · screen guy (25% of targets)
+  Daniel Jones (IND QB) 17.3 · xFP 12.4/g (-2.4 over expected) [role boost ×1.03, weather ×0.97, market higher (17.3 vs model 14.5)] — holds up under pressure (grade 56 vs 67 clean) (2025 too) · D blitzes 42% (#11) · D pressure 52% (#3)
   Ken Walker III (KC RB) 16.6
-  Rashee Rice (KC WR) 11.1 · xFP 2.5/g (+6.4 over expected) [TD luck -0.9, weather ×0.97, CB shadow ×0.97] — Behind LOS guy (34% of targets, lg 18%) · screen guy (47% of targets) · zone-beater (YPRR 0.79 vs man, 2.73 vs zone; small n) (2025 too) · D plays man 62% (#1) — TOUGH SPOT
-  Tyler Warren (IND TE) 9.3 · xFP 6.4/g (+2.4 over expected) [TD luck -0.7, weather ×0.98] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (2%) · zone-beater (YPRR 0.69 vs man, 1.97 vs zone; small n) (2025 too)
-  Travis Kelce (KC TE) 9.2 · xFP 5.6/g (+3.0 over expected) [TD luck +0.1, weather ×0.98] — Short 0-9 guy (63% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced) · D plays man 62% (#1)
+  Rashee Rice (KC WR) 11.1 · xFP 2.3/g (+6.6 over expected) [TD luck -0.9, weather ×0.97, CB shadow ×0.97, REPORTS +1 riser (10d) - shadow] — Behind LOS guy (34% of targets, lg 18%) · screen guy (47% of targets) · zone-beater (YPRR 0.79 vs man, 2.73 vs zone; small n) (2025 too) · D plays man 62% (#1) — TOUGH SPOT
+  Tyler Warren (IND TE) 9.3 · xFP 6.9/g (+1.9 over expected) [TD luck -0.7, weather ×0.98] — Short 0-9 guy (60% of targets, lg 48%) · rarely deep 20+ (2%) · zone-beater (YPRR 0.69 vs man, 1.97 vs zone; small n) (2025 too)
+  Travis Kelce (KC TE) 9.2 · xFP 5.7/g (+2.9 over expected) [TD luck +0.1, weather ×0.98, blowout wk1: role read on competitive snaps] — Short 0-9 guy (63% of targets, lg 48%) · D funnels short 0-9 (52% of targets faced) · D plays man 62% (#1)
   Harrison Butker (KC K) 8.5 [weather ×0.95]
-  Alec Pierce (IND WR) 7.8 · xFP 8.8/g (-0.7 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · rarely short 0-9 (19%) · Int 10-19 guy (53% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%)
-  Xavier Worthy (KC WR) 7.8 · xFP 7.3/g (-4.0 over expected) [TD luck +0.2, weather ×0.97, CB shadow ×0.97] — rarely short 0-9 (35%) · Deep 20+ guy (22% of targets, lg 13%) · right-heavy (52%) · D plays man 62% (#1)
-  Josh Downs (IND WR) 7.3 · xFP 5.0/g (-0.3 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (6%) · Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (13%) · slot (79%)
+  Alec Pierce (IND WR) 7.8 · xFP 10.0/g (-1.9 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · rarely short 0-9 (19%) · Int 10-19 guy (53% of targets, lg 22%) · Deep 20+ guy (28% of targets, lg 13%)
+  Xavier Worthy (KC WR) 7.8 · xFP 7.7/g (-4.4 over expected) [TD luck +0.2, weather ×0.97, CB shadow ×0.97, blowout wk1: role read on competitive snaps] — rarely short 0-9 (35%) · Deep 20+ guy (22% of targets, lg 13%) · right-heavy (52%) · D plays man 62% (#1)
+  Josh Downs (IND WR) 7.3 · xFP 5.2/g (-0.5 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (6%) · Short 0-9 guy (70% of targets, lg 48%) · rarely int 10-19 (13%) · slot (79%)
   Chiefs D/ST (KC DST) 7.1
   Spencer Shrader (IND K) 6.9 [weather ×0.95]
-  Keenan Allen (IND WR) 6.3 · xFP 7.5/g (-1.3 over expected) [TD luck +0.3, weather ×0.97] — rarely behind los (4%) · Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (12%)
+  Keenan Allen (IND WR) 6.3 · xFP 8.0/g (-1.8 over expected) [TD luck +0.3, weather ×0.97] — rarely behind los (4%) · Short 0-9 guy (74% of targets, lg 48%) · rarely int 10-19 (12%)
   Colts D/ST (IND DST) 4.3
-  Tyquan Thornton (KC WR) 3.6 · xFP 1.6/g (-1.6 over expected) [weather ×0.97, CB shadow ×0.97] — rarely behind los (3%) · rarely short 0-9 (16%) · Deep 20+ guy (63% of targets, lg 13%) · D plays man 62% (#1)
-  Emmett Johnson (KC RB) 3.0 · xFP 6.2/g (+1.6 over expected) [TD luck +0.1]
+  Tyquan Thornton (KC WR) 3.6 · xFP 1.8/g (-1.8 over expected) [weather ×0.97, CB shadow ×0.97, blowout wk1: role read on competitive snaps] — rarely behind los (3%) · rarely short 0-9 (16%) · Deep 20+ guy (63% of targets, lg 13%) · D plays man 62% (#1)
+  Emmett Johnson (KC RB) 3.0 · xFP 6.0/g (+1.8 over expected) [TD luck +0.1]
 
 NYG @ LAR — total 48.5, LAR by 7.0 · implied NYG 20.8 / LAR 27.8
 Weather @LAR: wind 10 mph (gusts 6), 74°F, 0% precip — mild wind dock live
@@ -587,31 +653,35 @@ NYG offense vs LAR defense
   - vs LAR D allows (1 gm): QB 22.1 (+21%) · RB 18.8 (-11%) · WR 40.9 (+62%) · TE 5.1 (-53%)
   - LAR CB1: Jaylen Watson active
   - LAR D scheme (PFF, 1 gm; MIXED vs 2025 4/7, flipped Rusher win rate): man 17% #23 (lg 24%, 2025 22%) · blitz 11% #30 (2025 27%) · pressure 22% #30 (2025 41%) · rusher win 6% · S in box 30% · run D 5.8 ypc #3, 2.8 after contact, edge runs 12% of carries faced · gets run at LG 32%
+  - LAR DC Chris Shula (3rd yr here) — Chris Shula as playcaller: man 26%/22% · blitz 30%/27% · pressure 34%/41% · S in box 25%/25% · gap faced 48%/38% · edge faced 35%/30% (2024 LAR, 2025 LAR)
   - NYG O style (PFF): 54% gap / 46% zone, edge 42%, 4.3 ypc · sees man 24% (lg 25%) · screens 4% · blitzed 44% / pressured 29%
+  - NYG OC Matt Nagy (new; prior = KC 2025 under him, replaced Mike Kafka) — Matt Nagy as playcaller: sees man 30%/35%/36% · screens 18%/14%/16% · gap runs 35%/38%/29% · edge runs 23%/27%/22% (2023 KC, 2024 KC, 2025 KC)
 
 LAR offense vs NYG defense
   - Pace (1 gm): 56.0 plays/gm (base 62.1, -6.1) · neutral pass 44% (base 61%) · PROE -17.3 (base +3.0)
   - vs NYG D allows (1 gm): QB 15.4 (-15%) · RB 22.4 (+6%) · WR 23.2 (-8%) · TE 5.7 (-47%)
   - NYG CB1: Greg Newsome II active
-  - NYG D scheme (PFF, 1 gm; MIXED vs 2025 4/7): man 30% #8 (lg 24%, 2025 39%) · blitz 28% #22 (2025 32%) · pressure 31% #23 (2025 35%) · rusher win 10% · S in box 16% · run D 3.4 ypc #26, 2.6 after contact, edge runs 31% of carries faced · gets run at RG 19% · missed tackles 18% (lg 14%)
+  - NYG D scheme (PFF, 1 gm; MIXED vs TEN 2025 3/7, flipped Man coverage): man 30% #8 (lg 24%, 2025 22%) · blitz 28% #22 (2025 28%) · pressure 31% #23 (2025 36%) · rusher win 10% · S in box 16% · run D 3.4 ypc #26, 2.6 after contact, edge runs 31% of carries faced · gets run at RG 19% · missed tackles 18% (lg 14%)
+  - NYG DC Dennard Wilson (new; prior = TEN 2025 under him, replaced Shane Bowen, Charlie Bullen) — Dennard Wilson as playcaller: man 27%/22% · blitz 33%/28% · pressure 28%/36% · S in box 25%/31% · gap faced 46%/50% · edge faced 27%/35% (2024 TEN, 2025 TEN)
   - LAR O style (PFF): 77% gap / 23% zone, edge 23%, 4.4 ypc · sees man 29% (lg 25%) · screens 4% · blitzed 14% / pressured 45%
+  - LAR OC Nate Scheelhaase (new, no playcalling history in the data; replaced Mike LaFleur — prior = team 2025, weak)
 
 PLAYERS (PROJ half):
-  Jaxson Dart (NYG QB) 21.0 · xFP 20.4/g (+6.2 over expected) [TD luck -0.5, weather ×0.97, market higher (21.0 vs model 17.8)] — D pressure only 22% (clean pockets)
-  Puka Nacua (LAR WR) 17.4 · xFP 12.8/g (-2.9 over expected) [TD luck +0.3, weather ×0.97]
-  Matthew Stafford (LAR QB) 17.4 · xFP 14.7/g (-9.6 over expected) [role boost ×1.03, TD luck +0.2, weather ×0.97]
-  Kyren Williams (LAR RB) 13.9 · xFP 11.4/g (+2.6 over expected) [TD luck -0.2] — Short 0-9 guy (85% of targets, lg 48%) · D funnels short 0-9 (51% of targets faced) · D bleeds slot yards (45% of rec yds, lg 29%, noisy)
-  Cam Skattebo (NYG RB) 13.0 · xFP 12.0/g (+2.1 over expected) [role boost ×1.10, TD luck -0.2] — Behind LOS guy (44% of targets, lg 18%) · D funnels behind los (22% of targets faced) · zone-beater (YPRR 0.60 vs man, 2.06 vs zone)
-  Malik Nabers (NYG WR) 12.4 · xFP 11.7/g (-1.8 over expected) [TD luck +0.2, weather ×0.97] — rarely behind los (7%) · rarely short 0-9 (31%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (55%)
-  Davante Adams (LAR WR) 11.2 · xFP 7.7/g (-3.6 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · Int 10-19 guy (39% of targets, lg 22%) · left-heavy (51%) · zone-beater (YPRR 1.30 vs man, 1.77 vs zone; small n) (2025 too)
+  Jaxson Dart (NYG QB) 21.0 · xFP 19.5/g (+7.1 over expected) [TD luck -0.5, weather ×0.97, REPORTS +1 riser (10d) - shadow, market higher (21.0 vs model 17.8)] — D pressure only 22% (clean pockets)
+  Puka Nacua (LAR WR) 17.4 · xFP 13.8/g (-3.9 over expected) [TD luck +0.3, weather ×0.97, REPORTS +2 riser (10d) - shadow]
+  Matthew Stafford (LAR QB) 17.4 · xFP 14.5/g (-9.4 over expected) [role boost ×1.03, TD luck +0.2, weather ×0.97]
+  Kyren Williams (LAR RB) 13.9 · xFP 11.6/g (+2.4 over expected) [TD luck -0.2, blowout wk1: role read on competitive snaps] — Short 0-9 guy (85% of targets, lg 48%) · D funnels short 0-9 (51% of targets faced) · D bleeds slot yards (45% of rec yds, lg 29%, noisy)
+  Cam Skattebo (NYG RB) 12.7 · xFP 12.0/g (+2.1 over expected) [role boost ×1.03, TD luck -0.2, REPORTS +1 riser (10d) - shadow] — Behind LOS guy (44% of targets, lg 18%) · D funnels behind los (22% of targets faced) · zone-beater (YPRR 0.60 vs man, 2.06 vs zone)
+  Malik Nabers (NYG WR) 12.4 · xFP 12.3/g (-2.4 over expected) [TD luck +0.2, weather ×0.97, REPORTS +5 riser (10d) - shadow] — rarely behind los (7%) · rarely short 0-9 (31%) · Int 10-19 guy (36% of targets, lg 22%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (55%)
+  Davante Adams (LAR WR) 11.1 · xFP 7.7/g (-3.6 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (0%) · Int 10-19 guy (39% of targets, lg 22%) · left-heavy (51%) · zone-beater (YPRR 1.30 vs man, 1.77 vs zone; small n) (2025 too)
   Blake Corum (LAR RB) 9.4 · xFP 4.9/g (+0.5 over expected) — D bleeds slot yards (45% of rec yds, lg 29%, noisy)
-  Isaiah Likely (NYG TE) 9.3 · xFP 13.6/g (+10.2 over expected) [TD luck -1.2, weather ×0.98] — rarely behind los (7%) · Short 0-9 guy (57% of targets, lg 48%) · middle-heavy (39%) · slot (72%) · detached TE (15% inline) · man-beater (YPRR 2.11 vs man, 1.53 vs zone; small n) (new vs 2025)
+  Isaiah Likely (NYG TE) 9.3 · xFP 12.7/g (+11.1 over expected) [TD luck -1.2, weather ×0.98, REPORTS +1 riser (10d) - shadow] — rarely behind los (7%) · Short 0-9 guy (57% of targets, lg 48%) · middle-heavy (39%) · slot (72%) · detached TE (15% inline) · man-beater (YPRR 2.11 vs man, 1.53 vs zone; small n) (new vs 2025)
   Harrison Mevis (LAR K) 8.7 [weather ×0.95]
   Rams D/ST (LAR DST) 7.0
   Dominic Zvada (NYG K) 6.5 [weather ×0.95]
-  Terrance Ferguson (LAR TE) 5.8 · xFP 1.5/g (-1.5 over expected) [weather ×0.98] — rarely behind los (0%) · rarely short 0-9 (20%) · Deep 20+ guy (57% of targets, lg 13%) · left-heavy (62%) · detached TE (31% inline) · man-beater (YPRR 2.17 vs man, 1.39 vs zone; small n) (2025 too)
+  Terrance Ferguson (LAR TE) 5.8 · xFP 1.1/g (-1.1 over expected) [weather ×0.98] — rarely behind los (0%) · rarely short 0-9 (20%) · Deep 20+ guy (57% of targets, lg 13%) · left-heavy (62%) · detached TE (31% inline) · man-beater (YPRR 2.17 vs man, 1.39 vs zone; small n) (2025 too)
   Colby Parkinson (LAR TE) 4.6 · xFP 3.3/g (-2.2 over expected) [TD luck +0.2, weather ×0.98] — Short 0-9 guy (69% of targets, lg 48%) · rarely int 10-19 (7%) · right-heavy (53%) · D funnels short 0-9 (51% of targets faced) · man-beater (YPRR 2.32 vs man, 1.36 vs zone; small n)
-  Malachi Fields (NYG WR) 4.3 · xFP 5.2/g (-1.7 over expected) [TD luck +0.1, weather ×0.97]
-  Darnell Mooney (NYG WR) 4.0 · xFP 2.8/g (+0.9 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (4%) · rarely short 0-9 (26%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (49%)
+  Malachi Fields (NYG WR) 4.3 · xFP 4.9/g (-1.4 over expected) [TD luck +0.1, weather ×0.97, REPORTS +1 riser (10d) - shadow]
+  Darnell Mooney (NYG WR) 4.0 · xFP 3.1/g (+0.6 over expected) [TD luck +0.1, weather ×0.97] — rarely behind los (4%) · rarely short 0-9 (26%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 13%) · left-heavy (49%)
   Giants D/ST (NYG DST) 4.0
 

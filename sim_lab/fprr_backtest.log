@@ -1,0 +1,121 @@
+loading PFF weekly receiving 2018-2025...
+  2018: 480 receivers
+  2019: 478 receivers
+  2020: 501 receivers
+  2021: 511 receivers
+  2022: 493 receivers
+  2023: 467 receivers
+  2024: 471 receivers
+  2025: 478 receivers
+
+loading base samples (bt_common)...
+  2019: samples so far 1092
+  2020: samples so far 2299
+  2021: samples so far 3737
+  2022: samples so far 5263
+  2023: samples so far 7088
+  2024: samples so far 8940
+  2025: samples so far 10611
+  skipped: {'team': 127, 'weekly': 230}
+  10611 WR/TE player-weeks
+  league FP/RR prior (all receivers pooled 2018-24): 0.269
+
+rows with >= 3 games of route data: 8850 of 10611; young(<=25, exp<=3): 5134
+corr with actual: shipped 0.492 | FP/RR base 0.471 | MSE shipped 36.924 vs FP/RR 37.989 (n=8850)
+mean actual 7.98 | shipped 7.73 | FP/RR base 8.22
+
+=== actual/shipped by FP/RR tercile x 3-game route trend tercile ===
+  lowFPRR x routes falling   QB — (n=0) | RB — (n=0) | WR 1.020 (n=664) | TE 1.101 (n=418) | ALL 1.048 (n=1082)
+  lowFPRR x routes flat      QB — (n=0) | RB — (n=0) | WR 1.126 (n=521) | TE 1.256 (n=411) | ALL 1.178 (n=932)
+  lowFPRR x routes rising    QB — (n=0) | RB — (n=0) | WR 1.146 (n=602) | TE 1.305 (n=334) | ALL 1.199 (n=936)
+  midFPRR x routes falling   QB — (n=0) | RB — (n=0) | WR 1.057 (n=654) | TE 0.962 (n=312) | ALL 1.032 (n=966)
+  midFPRR x routes flat      QB — (n=0) | RB — (n=0) | WR 0.996 (n=637) | TE 1.118 (n=361) | ALL 1.033 (n=998)
+  midFPRR x routes rising    QB — (n=0) | RB — (n=0) | WR 1.090 (n=641) | TE 1.097 (n=345) | ALL 1.092 (n=986)
+  hiFPRR x routes falling    QB — (n=0) | RB — (n=0) | WR 0.953 (n=759) | TE 0.954 (n=192) | ALL 0.953 (n=951)
+  hiFPRR x routes flat       QB — (n=0) | RB — (n=0) | WR 0.971 (n=736) | TE 1.013 (n=230) | ALL 0.979 (n=966)
+  hiFPRR x routes rising     QB — (n=0) | RB — (n=0) | WR 0.987 (n=788) | TE 1.020 (n=245) | ALL 0.994 (n=1033)
+  terciles: FP/RR 0.251/0.310, route slope -1.7/+2.0 routes/g
+
+=== LOYO blend: shipped x (1-w) + FP/RR base x w (rows without route data keep shipped) ===
+  FP/RR blend WR (routes-gated; n route rows=6002)
+    grid pooled MSE: +0.00:42.093  +0.10:42.081  +0.20:42.102  +0.30:42.156  +0.50:42.365  +0.75:42.813  +1.00:43.469
+    pooled best +0.10 | LOYO MSE 41.6987 vs shipped 41.6966 (+0.01%), years better 2/7, picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.0]
+  FP/RR blend TE (routes-gated; n route rows=2848)
+    grid pooled MSE: +0.00:26.434  +0.10:26.355  +0.20:26.301  +0.30:26.271  +0.50:26.284  +0.75:26.437  +1.00:26.742
+    pooled best +0.30 | LOYO MSE 26.4512 vs shipped 26.5694 (-0.45%), years better 4/7, picks [0.5, 0.5, 0.3, 0.5, 0.3, 0.3, 0.3]
+  FP/RR blend WR+TE (routes-gated; n route rows=8850)
+    grid pooled MSE: +0.00:37.008  +0.10:36.975  +0.20:36.972  +0.30:36.999  +0.50:37.145  +0.75:37.498  +1.00:38.041
+    pooled best +0.20 | LOYO MSE 36.8237 vs shipped 36.8367 (-0.04%), years better 3/7, picks [0.2, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1]
+  FP/RR blend, routes = last-3 only
+    grid pooled MSE: +0.00:37.008  +0.10:36.959  +0.20:36.960  +0.30:37.010  +0.50:37.257
+    pooled best +0.10 | LOYO MSE 36.8178 vs shipped 36.8367 (-0.05%), years better 3/7, picks [0.2, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1]
+
+=== ASCENDING flag (young, routes AND targets rising, PPG > Clay) ===
+
+=== flag rows: actual / shipped ===
+  ASCENDING (young+routes+tgts up+PPG>Clay) QB — (n=0) | RB — (n=0) | WR 1.083 (n=361) | TE 1.143 (n=113) | ALL 1.093 (n=474)
+  routes+targets rising (any age) QB — (n=0) | RB — (n=0) | WR 1.053 (n=925) | TE 1.107 (n=404) | ALL 1.066 (n=1329)
+  young + hi FP/RR + flat routes (part-timer) QB — (n=0) | RB — (n=0) | WR 1.064 (n=255) | TE 1.104 (n=51) | ALL 1.069 (n=306)
+  hi FP/RR + routes rising   QB — (n=0) | RB — (n=0) | WR 0.985 (n=616) | TE 1.021 (n=179) | ALL 0.992 (n=795)
+  ASCENDING (young+routes+tgts up+PPG>Clay) (flagged n=474)
+    grid pooled MSE: +1.00:37.008  +1.03:37.004  +1.06:37.007  +1.10:37.023  +1.15:37.060  +0.97:37.019  +0.94:37.037
+    pooled best +1.03 | LOYO MSE 36.8401 vs shipped 36.8367 (+0.01%), years better 3/7, picks [1.03, 1.06, 1.03, 1.03, 1.0, 1.03, 1.03]
+  routes+targets rising (any age) (flagged n=1329)
+    grid pooled MSE: +1.00:37.008  +1.03:37.004  +1.06:37.020  +1.10:37.069  +1.15:37.178  +0.97:37.030  +0.94:37.071
+    pooled best +1.03 | LOYO MSE 36.8477 vs shipped 36.8367 (+0.03%), years better 1/7, picks [1.03, 1.0, 1.03, 1.03, 1.0, 1.0, 1.03]
+  young + hi FP/RR + flat routes (part-timer) (flagged n=306)
+    grid pooled MSE: +1.00:37.008  +1.03:36.998  +1.06:36.994  +1.10:36.997  +1.15:37.017  +0.97:37.024  +0.94:37.046
+    pooled best +1.06 | LOYO MSE 36.8351 vs shipped 36.8367 (-0.00%), years better 5/7, picks [1.1, 1.06, 1.06, 1.1, 1.06, 1.03, 1.06]
+  hi FP/RR + routes rising (flagged n=795)
+    grid pooled MSE: +1.00:37.008  +1.03:37.028  +1.06:37.068  +1.10:37.152  +1.15:37.306  +0.97:37.007  +0.94:37.026
+    pooled best +0.97 | LOYO MSE 36.8444 vs shipped 36.8367 (+0.02%), years better 1/7, picks [1.0, 0.97, 1.0, 0.97, 0.97, 0.97, 0.97]
+
+=== LOYO level terms: shipped x (1 + k x z), z standardized within rows with route data ===
+  FP/RR level WR
+    grid pooled MSE: +0.00:42.093  +0.01:42.192  +0.02:42.318  +0.04:42.652  +0.06:43.094  -0.01:42.021  -0.02:41.977  -0.04:41.969  -0.06:42.070
+    pooled best -0.04 | LOYO MSE 41.6214 vs shipped 41.6966 (-0.18%), years better 6/7, picks [-0.02, -0.04, -0.04, -0.04, -0.04, -0.04, -0.04]
+  FP/RR level WITHOUT TDs (rec+yds per route) WR
+    grid pooled MSE: +0.00:42.093  +0.01:42.161  +0.02:42.255  +0.04:42.521  +0.06:42.892  -0.01:42.051  -0.02:42.036  -0.04:42.082  -0.06:42.233
+    pooled best -0.02 | LOYO MSE 41.6593 vs shipped 41.6966 (-0.09%), years better 5/7, picks [-0.01, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02]
+  route slope (3g vs prior 3g) WR
+    grid pooled MSE: +0.00:42.093  +0.01:42.078  +0.02:42.077  +0.04:42.119  +0.06:42.219  -0.01:42.123  -0.02:42.167  -0.04:42.299  -0.06:42.489
+    pooled best +0.02 | LOYO MSE 41.6862 vs shipped 41.6966 (-0.02%), years better 3/7, picks [0.02, 0.02, 0.02, 0.02, 0.02, 0.01, 0.01]
+  target slope WR
+    grid pooled MSE: +0.00:42.093  +0.01:42.075  +0.02:42.077  +0.04:42.141  +0.06:42.284  -0.01:42.131  -0.02:42.188  -0.04:42.362  -0.06:42.616
+    pooled best +0.01 | LOYO MSE 41.6929 vs shipped 41.6966 (-0.01%), years better 4/7, picks [0.02, 0.01, 0.02, 0.02, 0.01, 0.01, 0.01]
+  route slope x (1 - FP/RR z) WR
+    grid pooled MSE: +0.00:42.093  +0.01:42.097  +0.02:42.120  +0.04:42.219  +0.06:42.389  -0.01:42.107  -0.02:42.139  -0.04:42.257  -0.06:42.426
+    pooled best +0.00 | LOYO MSE 41.7178 vs shipped 41.6966 (+0.05%), years better 0/7, picks [0.0, 0.0, 0.0, 0.01, 0.01, 0.0, 0.0]
+  FP/RR level TE
+    grid pooled MSE: +0.00:26.434  +0.01:26.492  +0.02:26.558  +0.04:26.716  +0.06:26.907  -0.01:26.384  -0.02:26.342  -0.04:26.284  -0.06:26.259
+    pooled best -0.06 | LOYO MSE 26.3786 vs shipped 26.5694 (-0.72%), years better 4/7, picks [-0.06, -0.06, -0.06, -0.06, -0.06, -0.06, -0.06]
+  FP/RR level WITHOUT TDs (rec+yds per route) TE
+    grid pooled MSE: +0.00:26.434  +0.01:26.467  +0.02:26.509  +0.04:26.613  +0.06:26.749  -0.01:26.408  -0.02:26.389  -0.04:26.375  -0.06:26.391
+    pooled best -0.04 | LOYO MSE 26.5651 vs shipped 26.5694 (-0.02%), years better 4/7, picks [-0.06, -0.06, -0.04, -0.02, -0.02, -0.04, -0.04]
+  route slope (3g vs prior 3g) TE
+    grid pooled MSE: +0.00:26.434  +0.01:26.409  +0.02:26.391  +0.04:26.375  +0.06:26.386  -0.01:26.466  -0.02:26.504  -0.04:26.601  -0.06:26.726
+    pooled best +0.04 | LOYO MSE 26.5550 vs shipped 26.5694 (-0.05%), years better 4/7, picks [0.04, 0.04, 0.06, 0.04, 0.04, 0.04, 0.02]
+  target slope TE
+    grid pooled MSE: +0.00:26.434  +0.01:26.419  +0.02:26.411  +0.04:26.419  +0.06:26.457  -0.01:26.457  -0.02:26.487  -0.04:26.570  -0.06:26.684
+    pooled best +0.02 | LOYO MSE 26.5779 vs shipped 26.5694 (+0.03%), years better 5/7, picks [0.01, 0.02, 0.04, 0.02, 0.02, 0.02, 0.02]
+  route slope x (1 - FP/RR z) TE
+    grid pooled MSE: +0.00:26.434  +0.01:26.403  +0.02:26.381  +0.04:26.363  +0.06:26.374  -0.01:26.474  -0.02:26.522  -0.04:26.646  -0.06:26.804
+    pooled best +0.04 | LOYO MSE 26.5563 vs shipped 26.5694 (-0.05%), years better 4/7, picks [0.04, 0.06, 0.04, 0.06, 0.02, 0.02, 0.04]
+  FP/RR level WR+TE
+    grid pooled MSE: +0.00:37.008  +0.01:37.093  +0.02:37.200  +0.04:37.476  +0.06:37.836  -0.01:36.944  -0.02:36.900  -0.04:36.877  -0.06:36.938
+    pooled best -0.04 | LOYO MSE 36.7337 vs shipped 36.8367 (-0.28%), years better 6/7, picks [-0.02, -0.04, -0.04, -0.04, -0.04, -0.04, -0.04]
+  FP/RR level WITHOUT TDs (rec+yds per route) WR+TE
+    grid pooled MSE: +0.00:37.008  +0.01:37.064  +0.02:37.141  +0.04:37.355  +0.06:37.649  -0.01:36.972  -0.02:36.955  -0.04:36.983  -0.06:37.092
+    pooled best -0.02 | LOYO MSE 36.7872 vs shipped 36.8367 (-0.13%), years better 6/7, picks [-0.02, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02]
+  route slope (3g vs prior 3g) WR+TE
+    grid pooled MSE: +0.00:37.008  +0.01:36.990  +0.02:36.983  +0.04:37.007  +0.06:37.078  -0.01:37.038  -0.02:37.080  -0.04:37.201  -0.06:37.369
+    pooled best +0.02 | LOYO MSE 36.8214 vs shipped 36.8367 (-0.04%), years better 4/7, picks [0.02, 0.02, 0.02, 0.02, 0.02, 0.01, 0.01]
+  target slope WR+TE
+    grid pooled MSE: +0.00:37.008  +0.01:36.991  +0.02:36.990  +0.04:37.035  +0.06:37.144  -0.01:37.041  -0.02:37.090  -0.04:37.235  -0.06:37.443
+    pooled best +0.02 | LOYO MSE 36.8303 vs shipped 36.8367 (-0.02%), years better 4/7, picks [0.02, 0.01, 0.02, 0.02, 0.01, 0.01, 0.01]
+  route slope x (1 - FP/RR z) WR+TE
+    grid pooled MSE: +0.00:37.008  +0.01:37.002  +0.02:37.010  +0.04:37.073  +0.06:37.194  -0.01:37.029  -0.02:37.066  -0.04:37.184  -0.06:37.348
+    pooled best +0.01 | LOYO MSE 36.8566 vs shipped 36.8367 (+0.05%), years better 2/7, picks [0.01, 0.01, 0.01, 0.02, 0.01, 0.0, 0.0]
+
+wrote data/fprr_backtest.js: FP/RR base + ascending flag, 10611 WR/TE player-weeks 2019-25 LOYO; none pass the ship bar
+done

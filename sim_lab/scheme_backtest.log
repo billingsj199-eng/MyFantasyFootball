@@ -11,3 +11,291 @@ loading PFF weekly facets 2018-2025 (walk-forward per week)...
   2019: walk-forward weeks 2..18
   2020: walk-forward weeks 2..18
   2021: walk-forward weeks 2..19
+  2022: walk-forward weeks 2..19
+  2023: walk-forward weeks 2..19
+  2024: walk-forward weeks 2..19
+  2025: walk-forward weeks 2..19
+
+loading base samples (bt_common)...
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 389, 'team': 247}
+  17657 player-weeks
+
+=== correlation scan: feature vs actual/shipped (per position; |r| ranked; cross = D metric x player feature) ===
+  QB: 230 features/cross terms scanned; top 12 by |r|:
+    P:pGr                                    r -0.123  n 2475
+    P:nbYpa                                  r -0.108  n 2475
+    P:nYpa                                   r -0.092  n 2475
+    P:nGr                                    r -0.087  n 2475
+    P:pYpa                                   r -0.072  n 2449
+    D:prs x P:cleanMinusPrsGrade             r -0.071  n 2475
+    D:prs x P:pGr                            r +0.070  n 2475
+    D:mtRate x P:cleanMinusPrsGrade          r -0.066  n 2475
+    D:screenTg x P:nbYpa                     r -0.052  n 2475
+    D:run.edge x P:cleanMinusPrsGrade        r -0.052  n 2475
+    P:bYpa                                   r -0.051  n 2454
+    D:run.mtf x P:cleanMinusPrsGrade         r -0.051  n 2475
+  RB: 251 features/cross terms scanned; top 12 by |r|:
+    D:run.gap x P:zYprr                      r -0.057  n 4025
+    D:sBox x P:mtfA                          r +0.052  n 4248
+    D:prs                                    r -0.049  n 4492
+    D:grPrsh x P:mtfA                        r -0.047  n 4248
+    D:prwr x P:mtfA                          r -0.046  n 4248
+    D:prs x P:gapS                           r +0.043  n 4248
+    D:prwr x P:gapS                          r +0.043  n 4248
+    D:blitz                                  r -0.042  n 4492
+    D:dbRush x P:mYprr                       r +0.042  n 3545
+    D:run.gap x P:yprr                       r -0.040  n 4029
+    D:grPrsh x P:ycoA                        r -0.037  n 4248
+    D:grPrsh x P:gapS                        r +0.037  n 4248
+  WR: 146 features/cross terms scanned; top 12 by |r|:
+    P:yprr                                   r -0.053  n 7020
+    P:zYprr                                  r -0.046  n 7008
+    P:mYprr                                  r -0.037  n 6842
+    D:grRun x P:zYprr                        r +0.034  n 7008
+    D:run.brk x P:slot                       r -0.033  n 7020
+    D:run.edge x P:slot                      r -0.030  n 7020
+    D:run.edge x P:zYprr                     r -0.030  n 7008
+    D:prwr x P:manMinusZoneYprr              r -0.029  n 6839
+    D:sBox x P:zYprr                         r -0.028  n 7008
+    D:grRun x P:yprr                         r +0.027  n 7020
+    D:run.edge x P:manSeen                   r -0.023  n 7020
+    D:run.ypc x P:manSeen                    r +0.023  n 7020
+  TE: 146 features/cross terms scanned; top 12 by |r|:
+    P:yprr                                   r -0.062  n 3359
+    P:zYprr                                  r -0.060  n 3352
+    D:prs x P:zYprr                          r +0.047  n 3352
+    D:prs x P:yprr                           r +0.045  n 3359
+    D:run.mtf x P:yprr                       r -0.044  n 3359
+    P:manSeen                                r -0.044  n 3359
+    D:grPrsh x P:zYprr                       r +0.043  n 3352
+    D:grDef x P:manSeen                      r +0.041  n 3359
+    D:prs                                    r -0.041  n 3409
+    D:run.ypc x P:mYprr                      r -0.040  n 3280
+    D:grCov                                  r -0.040  n 3409
+    D:prwr x P:zYprr                         r +0.040  n 3352
+
+=== LOYO on the scan's top 3 per position (shipped x (1 + k x z), z = standardized feature) ===
+  scan QB P:pGr (n=2475)
+    grid pooled MSE: +0.00:61.180  +0.01:61.026  +0.02:60.926  +0.04:60.888  -0.01:61.388  -0.02:61.651
+    pooled best +0.04 | LOYO MSE 60.8070 vs shipped 61.0091 (-0.33%), years better 4/7, picks [0.02, 0.04, 0.04, 0.04, 0.02, 0.04, 0.04]
+  scan QB P:nbYpa (n=2475)
+    grid pooled MSE: +0.00:61.180  +0.01:61.035  +0.02:60.947  +0.04:60.943  -0.01:61.383  -0.02:61.643
+    pooled best +0.04 | LOYO MSE 60.8706 vs shipped 61.0091 (-0.23%), years better 5/7, picks [0.04, 0.04, 0.02, 0.02, 0.04, 0.02, 0.02]
+  scan QB P:nYpa (n=2475)
+    grid pooled MSE: +0.00:61.180  +0.01:61.041  +0.02:60.954  +0.04:60.935  -0.01:61.371  -0.02:61.613
+    pooled best +0.04 | LOYO MSE 60.8668 vs shipped 61.0091 (-0.23%), years better 5/7, picks [0.02, 0.04, 0.04, 0.02, 0.04, 0.04, 0.02]
+  scan RB D:run.gap x P:zYprr (n=4025)
+    grid pooled MSE: +0.00:48.868  +0.01:48.848  +0.02:48.851  +0.04:48.924  -0.01:48.910  -0.02:48.974
+    pooled best +0.01 | LOYO MSE 48.5378 vs shipped 48.4770 (+0.13%), years better 3/7, picks [0.01, 0.0, 0.01, 0.01, 0.02, 0.02, 0.02]
+  scan RB D:sBox x P:mtfA (n=4248)
+    grid pooled MSE: +0.00:48.868  +0.01:48.901  +0.02:48.955  +0.04:49.129  -0.01:48.856  -0.02:48.867
+    pooled best -0.01 | LOYO MSE 48.5272 vs shipped 48.4770 (+0.10%), years better 2/7, picks [0.0, -0.01, -0.01, -0.01, -0.01, -0.01, -0.02]
+  scan RB D:prs (n=4492)
+    grid pooled MSE: +0.00:48.868  +0.01:48.823  +0.02:48.799  +0.04:48.818  -0.01:48.935  -0.02:49.023
+    pooled best +0.02 | LOYO MSE 48.4236 vs shipped 48.4770 (-0.11%), years better 6/7, picks [0.04, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]
+  scan WR P:yprr (n=7020)
+    grid pooled MSE: +0.00:42.093  +0.01:42.061  +0.02:42.049  +0.04:42.090  -0.01:42.147  -0.02:42.221
+    pooled best +0.02 | LOYO MSE 41.6538 vs shipped 41.6966 (-0.10%), years better 5/7, picks [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]
+  scan WR P:zYprr (n=7008)
+    grid pooled MSE: +0.00:42.093  +0.01:42.054  +0.02:42.034  +0.04:42.052  -0.01:42.152  -0.02:42.229
+    pooled best +0.02 | LOYO MSE 41.6631 vs shipped 41.6966 (-0.08%), years better 6/7, picks [0.02, 0.02, 0.02, 0.02, 0.04, 0.02, 0.02]
+  scan WR P:mYprr (n=6842)
+    grid pooled MSE: +0.00:42.093  +0.01:42.084  +0.02:42.095  +0.04:42.180  -0.01:42.123  -0.02:42.174
+    pooled best +0.01 | LOYO MSE 41.6951 vs shipped 41.6966 (-0.00%), years better 6/7, picks [0.01, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01]
+  scan TE P:yprr (n=3359)
+    grid pooled MSE: +0.00:26.434  +0.01:26.412  +0.02:26.405  +0.04:26.436  -0.01:26.471  -0.02:26.524
+    pooled best +0.02 | LOYO MSE 26.5467 vs shipped 26.5694 (-0.09%), years better 4/7, picks [0.02, 0.02, 0.01, 0.02, 0.02, 0.02, 0.02]
+  scan TE P:zYprr (n=3352)
+    grid pooled MSE: +0.00:26.434  +0.01:26.414  +0.02:26.408  +0.04:26.436  -0.01:26.467  -0.02:26.513
+    pooled best +0.02 | LOYO MSE 26.5582 vs shipped 26.5694 (-0.04%), years better 4/7, picks [0.02, 0.02, 0.01, 0.02, 0.01, 0.02, 0.02]
+  scan TE D:prs x P:zYprr (n=3352)
+    grid pooled MSE: +0.00:26.434  +0.01:26.439  +0.02:26.454  +0.04:26.520  -0.01:26.440  -0.02:26.458
+    pooled best +0.00 | LOYO MSE 26.5968 vs shipped 26.5694 (+0.10%), years better 0/7, picks [-0.01, -0.01, 0.0, 0.0, 0.0, 0.0, 0.01]
+
+feature coverage: {'dman': 17657, 'dblitz': 17657, 'dprs': 17657, 'dman_rel': 17657, 'dblitz_rel': 17657, 'dprs_rel': 17657, 'q1': 2475, 'q2': 2454, 'r1': 13659, 'b1': 4237, 'dypc_rel': 4248}
+flag counts: q1_bad 0, q1_good 4, q2_good 64, q2_bad 56, r2_good 855, r2_bad 918, r3_slot_leak 27, r3_slot_tight 41, b2_yco_good 76, b2_yco_bad 35, b2_mtf_good 4
+
+=== R1 coverage-fit ratio (WR/TE) ===
+  R1 coverage-fit ratio (WR/TE) low (<0.992) QB — (n=0) | RB — (n=0) | WR 1.034 (n=2316) | TE 1.075 (n=1056) | ALL 1.044 (n=3372)
+  R1 coverage-fit ratio (WR/TE) mid QB — (n=0) | RB — (n=0) | WR 1.018 (n=2353) | TE 1.102 (n=1018) | ALL 1.038 (n=3371)
+  R1 coverage-fit ratio (WR/TE) high (>1.008) QB — (n=0) | RB — (n=0) | WR 1.034 (n=2170) | TE 1.040 (n=1202) | ALL 1.036 (n=3372)
+  corr(R1 coverage-fit ratio (WR/TE), act/shipped) = +0.004 (n=10115)
+
+=== R1 coverage-fit ratio (RB) ===
+  R1 coverage-fit ratio (RB) low (<0.979) QB — (n=0) | RB 1.047 (n=1182) | WR — (n=0) | TE — (n=0) | ALL 1.047 (n=1182)
+  R1 coverage-fit ratio (RB) mid QB — (n=0) | RB 1.053 (n=1180) | WR — (n=0) | TE — (n=0) | ALL 1.053 (n=1180)
+  R1 coverage-fit ratio (RB) high (>1.008) QB — (n=0) | RB 1.045 (n=1182) | WR — (n=0) | TE — (n=0) | ALL 1.045 (n=1182)
+  corr(R1 coverage-fit ratio (RB), act/shipped) = +0.032 (n=3544)
+
+=== B1 lane fit (RB) ===
+  B1 lane fit (RB) low (<0.977) QB — (n=0) | RB 1.043 (n=1413) | WR — (n=0) | TE — (n=0) | ALL 1.043 (n=1413)
+  B1 lane fit (RB) mid       QB — (n=0) | RB 1.061 (n=1411) | WR — (n=0) | TE — (n=0) | ALL 1.061 (n=1411)
+  B1 lane fit (RB) high (>1.027) QB — (n=0) | RB 1.100 (n=1413) | WR — (n=0) | TE — (n=0) | ALL 1.100 (n=1413)
+  corr(B1 lane fit (RB), act/shipped) = +0.015 (n=4237)
+
+=== D run ypc allowed rel (RB) ===
+  D run ypc allowed rel (RB) low (<0.962) QB — (n=0) | RB 1.053 (n=1416) | WR — (n=0) | TE — (n=0) | ALL 1.053 (n=1416)
+  D run ypc allowed rel (RB) mid QB — (n=0) | RB 1.060 (n=1416) | WR — (n=0) | TE — (n=0) | ALL 1.060 (n=1416)
+  D run ypc allowed rel (RB) high (>1.042) QB — (n=0) | RB 1.091 (n=1416) | WR — (n=0) | TE — (n=0) | ALL 1.091 (n=1416)
+  corr(D run ypc allowed rel (RB), act/shipped) = +0.012 (n=4248)
+
+=== Q1 pressure-fit ratio (QB) ===
+  Q1 pressure-fit ratio (QB) low (<0.996) QB 1.033 (n=825) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.033 (n=825)
+  Q1 pressure-fit ratio (QB) mid QB 1.026 (n=825) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.026 (n=825)
+  Q1 pressure-fit ratio (QB) high (>1.006) QB 1.053 (n=825) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.053 (n=825)
+  corr(Q1 pressure-fit ratio (QB), act/shipped) = +0.056 (n=2475)
+
+=== Q2 blitz split x D blitz (QB) ===
+  Q2 blitz split x D blitz (QB) low (<-0.017) QB 1.043 (n=818) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.043 (n=818)
+  Q2 blitz split x D blitz (QB) mid QB 1.033 (n=818) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.033 (n=818)
+  Q2 blitz split x D blitz (QB) high (>0.011) QB 1.029 (n=818) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.029 (n=818)
+  corr(Q2 blitz split x D blitz (QB), act/shipped) = -0.012 (n=2454)
+
+=== D man rate (WR/TE) ===
+  D man rate (WR/TE) low (<-0.042) QB — (n=0) | RB — (n=0) | WR 1.021 (n=2424) | TE 1.073 (n=1120) | ALL 1.034 (n=3544)
+  D man rate (WR/TE) mid     QB — (n=0) | RB — (n=0) | WR 1.047 (n=2385) | TE 1.112 (n=1144) | ALL 1.064 (n=3529)
+  D man rate (WR/TE) high (>0.036) QB — (n=0) | RB — (n=0) | WR 1.023 (n=2393) | TE 1.032 (n=1145) | ALL 1.025 (n=3538)
+  corr(D man rate (WR/TE), act/shipped) = -0.012 (n=10611)
+
+=== D man rate (RB) ===
+  D man rate (RB) low (<-0.040) QB — (n=0) | RB 1.092 (n=1499) | WR — (n=0) | TE — (n=0) | ALL 1.092 (n=1499)
+  D man rate (RB) mid        QB — (n=0) | RB 1.079 (n=1495) | WR — (n=0) | TE — (n=0) | ALL 1.079 (n=1495)
+  D man rate (RB) high (>0.036) QB — (n=0) | RB 1.038 (n=1498) | WR — (n=0) | TE — (n=0) | ALL 1.038 (n=1498)
+  corr(D man rate (RB), act/shipped) = -0.020 (n=4492)
+
+=== D blitz rate (RB) ===
+  D blitz rate (RB) low (<-0.038) QB — (n=0) | RB 1.109 (n=1498) | WR — (n=0) | TE — (n=0) | ALL 1.109 (n=1498)
+  D blitz rate (RB) mid      QB — (n=0) | RB 1.060 (n=1496) | WR — (n=0) | TE — (n=0) | ALL 1.060 (n=1496)
+  D blitz rate (RB) high (>0.022) QB — (n=0) | RB 1.040 (n=1498) | WR — (n=0) | TE — (n=0) | ALL 1.040 (n=1498)
+  corr(D blitz rate (RB), act/shipped) = -0.042 (n=4492)
+
+=== D blitz rate (WR/TE) ===
+  D blitz rate (WR/TE) low (<-0.038) QB — (n=0) | RB — (n=0) | WR 1.021 (n=2409) | TE 1.065 (n=1129) | ALL 1.032 (n=3538)
+  D blitz rate (WR/TE) mid   QB — (n=0) | RB — (n=0) | WR 1.023 (n=2401) | TE 1.085 (n=1135) | ALL 1.039 (n=3536)
+  D blitz rate (WR/TE) high (>0.024) QB — (n=0) | RB — (n=0) | WR 1.046 (n=2392) | TE 1.068 (n=1145) | ALL 1.051 (n=3537)
+  corr(D blitz rate (WR/TE), act/shipped) = +0.007 (n=10611)
+
+=== D pressure rate PFF (QB) ===
+  D pressure rate PFF (QB) low (<-0.017) QB 1.070 (n=853) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.070 (n=853)
+  D pressure rate PFF (QB) mid QB 1.039 (n=849) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.039 (n=849)
+  D pressure rate PFF (QB) high (>0.015) QB 1.014 (n=852) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.014 (n=852)
+  corr(D pressure rate PFF (QB), act/shipped) = -0.043 (n=2554)
+
+=== D pressure rate PFF (WR/TE) ===
+  D pressure rate PFF (WR/TE) low (<-0.016) QB — (n=0) | RB — (n=0) | WR 1.038 (n=2387) | TE 1.080 (n=1152) | ALL 1.049 (n=3539)
+  D pressure rate PFF (WR/TE) mid QB — (n=0) | RB — (n=0) | WR 1.033 (n=2404) | TE 1.108 (n=1124) | ALL 1.051 (n=3528)
+  D pressure rate PFF (WR/TE) high (>0.015) QB — (n=0) | RB — (n=0) | WR 1.020 (n=2411) | TE 1.030 (n=1133) | ALL 1.022 (n=3544)
+  corr(D pressure rate PFF (WR/TE), act/shipped) = -0.018 (n=10611)
+
+=== flagged rows ===
+  q1_bad                     QB — (n=0) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL —
+  q1_good                    QB — (n=4) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.726 (n=4)
+  q2_good                    QB 1.092 (n=64) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.092 (n=64)
+  q2_bad                     QB 1.088 (n=56) | RB — (n=0) | WR — (n=0) | TE — (n=0) | ALL 1.088 (n=56)
+  r2_good                    QB — (n=0) | RB 1.113 (n=267) | WR 1.000 (n=408) | TE 1.121 (n=180) | ALL 1.059 (n=855)
+  r2_bad                     QB — (n=0) | RB 0.979 (n=324) | WR 1.037 (n=372) | TE 0.992 (n=222) | ALL 1.005 (n=918)
+  r3_slot_leak               QB — (n=0) | RB — (n=12) | WR — (n=13) | TE — (n=2) | ALL 0.942 (n=27)
+  r3_slot_tight              QB — (n=0) | RB — (n=14) | WR — (n=21) | TE — (n=6) | ALL 1.066 (n=41)
+  b2_yco_good                QB — (n=0) | RB 1.139 (n=76) | WR — (n=0) | TE — (n=0) | ALL 1.139 (n=76)
+  b2_yco_bad                 QB — (n=0) | RB — (n=35) | WR — (n=0) | TE — (n=0) | ALL 1.136 (n=35)
+  b2_mtf_good                QB — (n=0) | RB — (n=4) | WR — (n=0) | TE — (n=0) | ALL 1.323 (n=4)
+
+=== LOYO continuous multipliers (shipped x ratio^k, missing -> 1) ===
+  R1 coverage fit WR/TE (n=10115 of 10611)
+    grid pooled MSE: +0.00:37.008  +0.25:37.015  +0.50:37.035  +0.75:37.071  +1.00:37.121  -0.25:37.016
+    pooled best +0.00 | LOYO MSE 36.8556 vs shipped 36.8367 (+0.05%), years better 0/7, picks [0.0, -0.25, 0.0, 0.0, 0.0, 0.25, 0.0]
+  R1 coverage fit RB (n=3544 of 4492)
+    grid pooled MSE: +0.00:48.868  +0.25:48.879  +0.50:48.947  +0.75:49.068  +1.00:49.235  -0.25:48.923
+    pooled best +0.00 | LOYO MSE 48.5105 vs shipped 48.4770 (+0.07%), years better 0/7, picks [0.0, 0.0, 0.0, 0.25, 0.25, 0.0, 0.0]
+  B1 lane fit RB (n=4237 of 4492)
+    grid pooled MSE: +0.00:48.868  +0.25:48.777  +0.50:48.733  +0.75:48.739  +1.00:48.793  -0.25:49.006
+    pooled best +0.50 | LOYO MSE 48.4763 vs shipped 48.4770 (-0.00%), years better 4/7, picks [0.75, 0.25, 0.75, 0.5, 0.5, 0.75, 0.75]
+  D ypc allowed rel RB (n=4248 of 4492)
+    grid pooled MSE: +0.00:48.868  +0.25:48.753  +0.50:48.764  +0.75:48.902  +1.00:49.172  -0.25:49.108
+    pooled best +0.25 | LOYO MSE 48.5052 vs shipped 48.4770 (+0.06%), years better 4/7, picks [0.25, 0.25, 0.5, 0.25, 0.25, 0.5, 0.5]
+  Q1 pressure fit QB (n=2475 of 2554)
+    grid pooled MSE: +0.00:61.180  +0.25:61.143  +0.50:61.113  +0.75:61.089  +1.00:61.073  -0.25:61.225
+    pooled best +1.00 | LOYO MSE 60.9659 vs shipped 61.0091 (-0.07%), years better 4/7, picks [1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0]
+
+=== LOYO defense identity levels (shipped x (1 + k x (rate - lg))) ===
+  D man rate -> WR/TE (n=10611)
+    grid pooled MSE: +0.00:37.008  +0.25:37.042  +0.50:37.151  +1.00:37.590  -0.25:37.049  -0.50:37.164  -1.00:37.616
+    pooled best +0.00 | LOYO MSE 36.8367 vs shipped 36.8367 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  D man rate -> RB (n=4492)
+    grid pooled MSE: +0.00:48.868  +0.25:49.029  +0.50:49.302  +1.00:50.183  -0.25:48.818  -0.50:48.880  -1.00:49.338
+    pooled best -0.25 | LOYO MSE 48.4207 vs shipped 48.4770 (-0.12%), years better 4/7, picks [-0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25]
+  D blitz rate -> RB (n=4492)
+    grid pooled MSE: +0.00:48.868  +0.25:49.056  +0.50:49.332  +1.00:50.147  -0.25:48.768  -0.50:48.756  -1.00:48.996
+    pooled best -0.50 | LOYO MSE 48.3812 vs shipped 48.4770 (-0.20%), years better 4/7, picks [-0.5, -0.25, -0.5, -0.5, -0.5, -0.5, -0.5]
+  D blitz rate -> WR/TE (n=10611)
+    grid pooled MSE: +0.00:37.008  +0.25:37.017  +0.50:37.086  +1.00:37.404  -0.25:37.058  -0.50:37.168  -1.00:37.568
+    pooled best +0.00 | LOYO MSE 36.8604 vs shipped 36.8367 (+0.06%), years better 0/7, picks [0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.25]
+  D blitz rate -> QB (n=2554)
+    grid pooled MSE: +0.00:61.180  +0.25:61.315  +0.50:61.693  +1.00:63.181  -0.25:61.289  -0.50:61.641  -1.00:63.077
+    pooled best +0.00 | LOYO MSE 61.0091 vs shipped 61.0091 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  D PFF pressure rate -> QB (n=2554)
+    grid pooled MSE: +0.00:61.180  +0.25:61.297  +0.50:61.462  +1.00:61.942  -0.25:61.113  -0.50:61.096  -1.00:61.209
+    pooled best -0.50 | LOYO MSE 60.9815 vs shipped 61.0091 (-0.05%), years better 4/7, picks [-0.25, -0.5, -0.5, -0.25, -0.5, -0.5, -0.5]
+  D PFF pressure rate -> WR/TE (n=10611)
+    grid pooled MSE: +0.00:37.008  +0.25:37.021  +0.50:37.046  +1.00:37.131  -0.25:37.006  -0.50:37.016  -1.00:37.070
+    pooled best -0.25 | LOYO MSE 36.8415 vs shipped 36.8367 (+0.01%), years better 2/7, picks [-0.25, -0.25, 0.0, -0.25, -0.25, -0.25, 0.0]
+  Q2 blitz split x D blitz -> QB (n=2454)
+    grid pooled MSE: +0.00:61.180  +0.50:61.827  +1.00:63.267  +2.00:66.680  -0.50:61.661
+    pooled best +0.00 | LOYO MSE 61.0091 vs shipped 61.0091 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+=== LOYO flagged-row multipliers ===
+  q1_bad: too few flagged rows (0)
+  q1_good: too few flagged rows (4)
+  q2_good (flagged n=64)
+    grid pooled MSE: +1.00:61.180  +0.97:61.220  +0.94:61.273  +0.91:61.341  +1.03:61.155  +1.06:61.144  +1.10:61.151
+    pooled best +1.06 | LOYO MSE 61.0208 vs shipped 61.0091 (+0.02%), years better 3/7, picks [1.1, 1.06, 1.03, 1.06, 1.03, 1.06, 1.1]
+  q2_bad: too few flagged rows (56)
+  r2_good WR/TE (flagged n=588)
+    grid pooled MSE: +1.00:43.518  +0.97:43.517  +0.94:43.520  +0.91:43.527  +1.03:43.524  +1.06:43.535  +1.10:43.555
+    pooled best +0.97 | LOYO MSE 43.2995 vs shipped 43.2945 (+0.01%), years better 1/7, picks [1.0, 0.97, 0.97, 0.97, 0.97, 0.97, 1.0]
+  r2_good RB (flagged n=267)
+    grid pooled MSE: +1.00:43.518  +0.97:43.529  +0.94:43.543  +0.91:43.560  +1.03:43.511  +1.06:43.506  +1.10:43.505
+    pooled best +1.10 | LOYO MSE 43.2859 vs shipped 43.2945 (-0.02%), years better 4/7, picks [1.1, 1.1, 1.1, 1.06, 1.06, 1.1, 1.1]
+  r2_bad WR/TE (flagged n=594)
+    grid pooled MSE: +1.00:43.518  +0.97:43.521  +0.94:43.528  +0.91:43.538  +1.03:43.520  +1.06:43.525  +1.10:43.539
+    pooled best +1.00 | LOYO MSE 43.2970 vs shipped 43.2945 (+0.01%), years better 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.03]
+  r2_bad RB (flagged n=324)
+    grid pooled MSE: +1.00:43.518  +0.97:43.516  +0.94:43.518  +0.91:43.523  +1.03:43.525  +1.06:43.535  +1.10:43.555
+    pooled best +0.97 | LOYO MSE 43.2932 vs shipped 43.2945 (-0.00%), years better 4/7, picks [0.94, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97]
+  r3_slot_leak WR/TE: too few flagged rows (15)
+  r3_slot_tight WR/TE: too few flagged rows (27)
+  b2_yco_good (flagged n=76)
+    grid pooled MSE: +1.00:48.868  +0.97:48.889  +0.94:48.915  +0.91:48.946  +1.03:48.852  +1.06:48.843  +1.10:48.838
+    pooled best +1.10 | LOYO MSE 48.4639 vs shipped 48.4770 (-0.03%), years better 4/7, picks [1.1, 1.1, 1.06, 1.1, 1.1, 1.1, 1.1]
+  b2_yco_bad: too few flagged rows (35)
+  b2_mtf_good: too few flagged rows (4)
+
+=== defense metric persistence (identity vs noise) ===
+  man          early(1-4)->late r 0.73 (n=224) | YoY r 0.55 (n=224) | same-DC r 0.68 (n=129) | new-DC vs old team r 0.35 (n=95) | new-DC vs HIS last D r 0.17 (n=21)
+  blitz        early(1-4)->late r 0.76 (n=224) | YoY r 0.6 (n=224) | same-DC r 0.76 (n=129) | new-DC vs old team r 0.32 (n=95) | new-DC vs HIS last D r 0.67 (n=21)
+  prs          early(1-4)->late r 0.42 (n=224) | YoY r 0.31 (n=224) | same-DC r 0.4 (n=129) | new-DC vs old team r 0.11 (n=95) | new-DC vs HIS last D r 0.23 (n=21)
+  prwr         early(1-4)->late r 0.45 (n=224) | YoY r 0.4 (n=224) | same-DC r 0.46 (n=129) | new-DC vs old team r 0.31 (n=95) | new-DC vs HIS last D r 0.34 (n=21)
+  sBox         early(1-4)->late r 0.67 (n=224) | YoY r 0.43 (n=224) | same-DC r 0.64 (n=129) | new-DC vs old team r 0.15 (n=95) | new-DC vs HIS last D r 0.22 (n=21)
+  dbRush       early(1-4)->late r 0.77 (n=224) | YoY r 0.53 (n=224) | same-DC r 0.64 (n=129) | new-DC vs old team r 0.36 (n=95) | new-DC vs HIS last D r 0.59 (n=21)
+  mtRate       early(1-4)->late r 0.17 (n=224) | YoY r 0.38 (n=224) | same-DC r 0.43 (n=129) | new-DC vs old team r 0.27 (n=95) | new-DC vs HIS last D r -0.04 (n=21)
+  slotYd       early(1-4)->late r 0.05 (n=224) | YoY r 0.23 (n=224) | same-DC r 0.29 (n=129) | new-DC vs old team r 0.15 (n=95) | new-DC vs HIS last D r 0.22 (n=21)
+  screenTg     early(1-4)->late r 0.24 (n=224) | YoY r 0.3 (n=224) | same-DC r 0.36 (n=129) | new-DC vs old team r 0.19 (n=95) | new-DC vs HIS last D r -0.1 (n=21)
+  grCov        early(1-4)->late r 0.25 (n=224) | YoY r 0.17 (n=224) | same-DC r 0.18 (n=129) | new-DC vs old team r 0.14 (n=95) | new-DC vs HIS last D r -0.27 (n=21)
+  grRun        early(1-4)->late r 0.31 (n=224) | YoY r 0.4 (n=224) | same-DC r 0.44 (n=129) | new-DC vs old team r 0.32 (n=95) | new-DC vs HIS last D r -0.22 (n=21)
+  grPrsh       early(1-4)->late r 0.47 (n=224) | YoY r 0.41 (n=224) | same-DC r 0.46 (n=129) | new-DC vs old team r 0.3 (n=95) | new-DC vs HIS last D r 0.34 (n=21)
+  run.ypc      early(1-4)->late r 0.18 (n=224) | YoY r 0.21 (n=224) | same-DC r 0.29 (n=129) | new-DC vs old team r 0.1 (n=95) | new-DC vs HIS last D r -0.28 (n=21)
+  run.yco      early(1-4)->late r 0.15 (n=224) | YoY r 0.29 (n=224) | same-DC r 0.33 (n=129) | new-DC vs old team r 0.22 (n=95) | new-DC vs HIS last D r 0.0 (n=21)
+  run.gap      early(1-4)->late r 0.3 (n=224) | YoY r 0.2 (n=224) | same-DC r 0.22 (n=129) | new-DC vs old team r 0.15 (n=95) | new-DC vs HIS last D r 0.23 (n=21)
+  run.edge     early(1-4)->late r 0.45 (n=224) | YoY r 0.44 (n=224) | same-DC r 0.55 (n=129) | new-DC vs old team r 0.31 (n=95) | new-DC vs HIS last D r 0.47 (n=21)
+  run.exp      early(1-4)->late r 0.17 (n=224) | YoY r 0.34 (n=224) | same-DC r 0.43 (n=129) | new-DC vs old team r 0.22 (n=95) | new-DC vs HIS last D r 0.01 (n=21)
+  run.mtf      early(1-4)->late r 0.27 (n=224) | YoY r 0.29 (n=224) | same-DC r 0.36 (n=129) | new-DC vs old team r 0.17 (n=95) | new-DC vs HIS last D r 0.35 (n=21)
+wrote E:\MyFantasyFootball\sim_lab\data\scheme_backtest.js: 31 interactions graded LOYO 2019-25 on 17657 player-weeks; none pass the ship bar (<= -0.3% MSE with >= 5/7 years better)
+
+done

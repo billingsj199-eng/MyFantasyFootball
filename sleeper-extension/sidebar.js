@@ -2082,8 +2082,22 @@
   // START/SIT verdicts — those stay on the pregame projection.
   const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
   const ESPN_TEAM_FIX = { WSH: 'WAS', JAC: 'JAX', LA: 'LAR', OAK: 'LV', SD: 'LAC' };
-  function parseScoreboard(sb) {
+  // WEEK PIN (0.29.33, Jack 09-15: "showing week 1 scores for week 2"). Without
+  // a week the scoreboard returns ESPN's OWN current week, which stays on the
+  // finished week through Tuesday/Wednesday — every game came back FINAL and
+  // last week's totals rendered as this week's "final". Ask for the fantasy
+  // week explicitly and refuse a reply that reports any other week.
+  function scoreboardQuery() {
+    const season = (state.nflState && (state.nflState.season || state.nflState.league_season)) || '';
+    return '?seasontype=2&week=' + state.seasonWeek + (season ? '&dates=' + season : '');
+  }
+  function parseScoreboard(sb, wantWeek) {
     const out = {};
+    const sbWk = sb && sb.week && +sb.week.number;
+    if (wantWeek && sbWk && sbWk !== wantWeek) {
+      console.warn('[MFF] scoreboard returned week ' + sbWk + ' (wanted ' + wantWeek + ') — ignored, games treated as not started');
+      return out;
+    }
     for (const ev of (sb && sb.events) || []) {
       const c = ev.competitions && ev.competitions[0];
       if (!c) continue;
@@ -2125,8 +2139,8 @@
     if (!force && now < state.liveNextAt) return;
     state.liveNextAt = now + 60 * 1000;
     try {
-      const sb = await bgFetch(SCOREBOARD_URL + '?t=' + now);
-      state.liveGames = parseScoreboard(sb); liveFeedBaseline();
+      const sb = await bgFetch(SCOREBOARD_URL + scoreboardQuery() + '&t=' + now);
+      state.liveGames = parseScoreboard(sb, state.seasonWeek); liveFeedBaseline();
       state.liveAt = now;
       // Idle throttle: nothing in progress and no kickoff inside 20 min →
       // one scoreboard call every 10 min instead of every poll.

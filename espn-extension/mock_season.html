@@ -192,6 +192,9 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
       const st = LIVE_ST[e.playerPoolEntry.player.proTeamId];
       if (!st) return;
       e.playerPoolEntry.appliedStatTotal = Math.round(((i % 6) * 2.4 + (st === 'post' ? 5.5 : 1.5)) * 10) / 10;
+      // 0.20.43: the sidebar reads THIS period's statSourceId 0 row, not appliedStatTotal
+      e.playerPoolEntry.player.stats.push({ scoringPeriodId: 1, seasonId: 2026, statSourceId: 0, statSplitTypeId: 1,
+        appliedTotal: e.playerPoolEntry.appliedStatTotal });
       e.playerPoolEntry.lineupLocked = true;
     }));
   }

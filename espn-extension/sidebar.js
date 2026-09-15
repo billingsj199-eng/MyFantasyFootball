@@ -1901,7 +1901,15 @@
           slotId: e.lineupSlotId, p, inj,
           espnProj: pst ? Math.round(pst.appliedTotal * 10) / 10 : null,
           key: p ? keyOf(p) : norm(name) + '|' + pos,
-          pts: typeof ppe.appliedStatTotal === 'number' ? ppe.appliedStatTotal : null, // this period, league-scored, live
+          // THIS period's league-scored total = the statSourceId 0 / split 1 row
+          // for wk (0.20.43). ppe.appliedStatTotal is the LAST COMPLETED period's
+          // total until this one starts — even with scoringPeriodId pinned — so
+          // W1 finals rendered as W2 finals (Jack 09-15). No row yet = not started.
+          pts: (function () {
+            const a = (pl.stats || []).find((x) => x && x.statSourceId === 0 && x.statSplitTypeId === 1 &&
+              x.scoringPeriodId === wk && typeof x.appliedTotal === 'number');
+            return a ? a.appliedTotal : null;
+          })(),
           locked: !!ppe.lineupLocked,
         };
       }).filter(Boolean);
@@ -2873,8 +2881,22 @@
   // START/SIT verdicts stay on the pregame projection.
   const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
   const ESPN_TEAM_FIX = { WSH: 'WAS', JAC: 'JAX', LA: 'LAR', OAK: 'LV', SD: 'LAC' };
-  function parseScoreboard(sb) {
+  // WEEK PIN (0.20.43, Jack 09-15: "showing week 1 scores for week 2"). Without
+  // a week the scoreboard returns ESPN's OWN current week, which stays on the
+  // finished week through Tuesday/Wednesday — every game came back FINAL and
+  // last week's totals rendered as this week's "final". Ask for the fantasy
+  // week explicitly and refuse a reply that reports any other week.
+  function scoreboardQuery() {
+    const season = state.seasonId || (state.nflState && state.nflState.season) || '';
+    return '?seasontype=2&week=' + state.seasonWeek + (season ? '&dates=' + season : '');
+  }
+  function parseScoreboard(sb, wantWeek) {
     const out = {};
+    const sbWk = sb && sb.week && +sb.week.number;
+    if (wantWeek && sbWk && sbWk !== wantWeek) {
+      console.warn('[MFF] scoreboard returned week ' + sbWk + ' (wanted ' + wantWeek + ') — ignored, games treated as not started');
+      return out;
+    }
     for (const ev of (sb && sb.events) || []) {
       const c = ev.competitions && ev.competitions[0];
       if (!c) continue;
@@ -2916,8 +2938,8 @@
     if (!force && now < state.liveNextAt) return;
     state.liveNextAt = now + 60 * 1000;
     try {
-      const sb = await fetchJson(SCOREBOARD_URL + '?t=' + now); // CORS * (direct), bg proxy fallback
-      state.liveGames = parseScoreboard(sb); liveFeedBaseline();
+      const sb = await fetchJson(SCOREBOARD_URL + scoreboardQuery() + '&t=' + now); // CORS * (direct), bg proxy fallback
+      state.liveGames = parseScoreboard(sb, state.seasonWeek); liveFeedBaseline();
       state.liveAt = now;
       // Idle throttle: nothing in progress and no kickoff inside 20 min →
       // one scoreboard call every 10 min instead of every poll.

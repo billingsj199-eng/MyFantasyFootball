@@ -9466,7 +9466,7 @@ function _simProjRow(d, wk) {
 // FPOE = actual − xFP. Sim Lab backtests split the gap: the TD part is luck
 // (year-to-year r .09) and regresses; the yards/catch part is skill (r .34 /
 // .32) and mostly repeats — the tooltip shows both halves.
-const _XFP_HDR = '<th><span data-gloss="Expected fantasy points: what an average player scores from this exact usage — every target valued by its depth and field position, every carry by field position (league conversion rates, 2018-25). Actual minus xFP = points over expected. Hover a value: the TD part of the gap is luck and regresses; the yards/catch part is skill and mostly repeats. 2026 only.">xFP</span></th>';
+const _XFP_HDR = '<th><span data-gloss="Expected fantasy points: what an average player scores from this exact usage — every target valued by its completion probability and expected yards after the catch (nflfastR play models) plus league TD rates by field position; every carry by field position; QB attempts also net the expected interceptions. Actual minus xFP = points over expected. Hover a value: the TD part of the gap is luck and regresses; the yards/catch part is skill and mostly repeats. 2026 only.">xFP</span></th>';
 function _xfpRow(d, wk) {
   const SP = window.SIM_PROJ_2026;
   const X = SP && SP.xfp;
@@ -9489,24 +9489,26 @@ function _xfpFor(d, w, pos, fmt) {
   const c = _xfpRow(d, w.wk);
   if (!c) return null;
   const recV = fmt === 'ppr' ? 1 : fmt === 'std' ? 0 : 0.5;
-  let xfp, xtd, td;
+  let xfp, xtd, td, intPart = 0;
   if (pos === 'QB') {
-    xfp = 0.04 * c[1] + 4 * c[2] + 0.1 * c[4] + 6 * c[5];
+    const xint = c[6] || 0;                  // expected INTs (league rate by pass depth); WEEKLY_STATS fpts score an INT -1
+    xfp = 0.04 * c[1] + 4 * c[2] + 0.1 * c[4] + 6 * c[5] - 1 * xint;
     xtd = 4 * c[2] + 6 * c[5]; td = 4 * (w.ptd || 0) + 6 * (w.rtd || 0);
+    intPart = -((w.int || 0) - xint);        // INT luck: fewer picks than expected = positive
   } else {
     xfp = recV * c[1] + 0.1 * (c[2] + c[5]) + 6 * (c[3] + c[6]);
     xtd = 6 * (c[3] + c[6]); td = 6 * ((w.rctd || 0) + (w.rtd || 0));
   }
   const diff = w.fpts - xfp;                 // FPOE: actual over expected
   const tdPart = td - xtd;                   // the luck half (TD points over expected)
-  return { xfp: Math.round(xfp * 10) / 10, diff: Math.round(diff * 10) / 10, tdPart: Math.round(tdPart * 10) / 10, skillPart: Math.round((diff - tdPart) * 10) / 10 };
+  return { xfp: Math.round(xfp * 10) / 10, diff: Math.round(diff * 10) / 10, tdPart: Math.round(tdPart * 10) / 10, intPart: Math.round(intPart * 10) / 10, skillPart: Math.round((diff - tdPart - intPart) * 10) / 10 };
 }
 function _xfpCell(d, w, pos, fmt) {
   const x = _xfpFor(d, w, pos, fmt);
   if (!x) return '<td style="color:var(--text2)">—</td>';
   const sg = v => (v >= 0 ? '+' : '') + v.toFixed(1);
   const col = x.diff <= -1.5 ? '#22c55e' : x.diff >= 1.5 ? '#f87171' : null;   // scored UNDER expected = green (due up)
-  const tip = ('Scored ' + sg(x.diff) + ' vs expected: TD luck ' + sg(x.tdPart) + ' (regresses), yards/catches ' + sg(x.skillPart) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
+  const tip = ('Scored ' + sg(x.diff) + ' vs expected: TD luck ' + sg(x.tdPart) + ' (regresses), ' + (pos === 'QB' && x.intPart ? 'INTs ' + sg(x.intPart) + ', ' : '') + 'yards/catches ' + sg(x.skillPart) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
   return '<td title="' + tip + '" style="cursor:help' + (col ? ';color:' + col + ';font-weight:700' : '') + '">' + x.xfp.toFixed(1) + '</td>';
 }
 
@@ -10450,10 +10452,10 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   const _totSnp = _snapSeason(d.n, season);
   totalRow += '<td style="color:var(--accent)">TOT</td><td></td>' + (_is26 ? '<td></td>' : '') + '<td style="color:var(--text2)">—</td><td style="font-weight:700">' + totals.fpts + '</td>';
   if (_is26) {
-    let _xs = 0, _xd = 0, _xt = 0, _xn = 0;
-    adjusted.forEach(w => { const x = _xfpFor(d, w, pos, fmt); if (x) { _xs += x.xfp; _xd += x.diff; _xt += x.tdPart; _xn++; } });
+    let _xs = 0, _xd = 0, _xt = 0, _xi = 0, _xn = 0;
+    adjusted.forEach(w => { const x = _xfpFor(d, w, pos, fmt); if (x) { _xs += x.xfp; _xd += x.diff; _xt += x.tdPart; _xi += x.intPart || 0; _xn++; } });
     const _sg = v => (v >= 0 ? '+' : '') + (Math.round(v * 10) / 10).toFixed(1);
-    totalRow += _xn ? '<td title="Season: scored ' + _sg(_xd) + ' vs expected over ' + _xn + ' game' + (_xn > 1 ? 's' : '') + ' — TD luck ' + _sg(_xt) + ', yards/catches ' + _sg(_xd - _xt) + '" style="cursor:help;font-weight:700' + (_xd <= -1.5 ? ';color:#22c55e' : _xd >= 1.5 ? ';color:#f87171' : '') + '">' + (Math.round(_xs * 10) / 10).toFixed(1) + '</td>' : '<td style="color:var(--text2)">—</td>';
+    totalRow += _xn ? '<td title="Season: scored ' + _sg(_xd) + ' vs expected over ' + _xn + ' game' + (_xn > 1 ? 's' : '') + ' — TD luck ' + _sg(_xt) + ', ' + (pos === 'QB' && _xi ? 'INTs ' + _sg(_xi) + ', ' : '') + 'yards/catches ' + _sg(_xd - _xt - _xi) + '" style="cursor:help;font-weight:700' + (_xd <= -1.5 ? ';color:#22c55e' : _xd >= 1.5 ? ';color:#f87171' : '') + '">' + (Math.round(_xs * 10) / 10).toFixed(1) + '</td>' : '<td style="color:var(--text2)">—</td>';
   }
   totalRow += '<td>' + (_totSnp != null ? Math.round(_totSnp) + '%' : '—') + '</td>';
   let _totTsCell = '<td style="color:var(--text2)">—</td>';

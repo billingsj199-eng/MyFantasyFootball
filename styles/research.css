@@ -58,6 +58,10 @@
 .rs-adv-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .rs-adv-chip { background: transparent; border: 1px solid var(--border); color: var(--text3); border-radius: 999px; padding: 3px 11px; font-size: .72rem; font-weight: 600; letter-spacing: .03em; cursor: pointer; }
 .rs-adv-chip.on { border-color: rgba(245,158,11,.5); color: var(--text); background: rgba(245,158,11,.1); }
+.rs-adv-mode { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.rs-adv-mode button { background: var(--surface); border: 0; color: var(--text3); font-size: .75rem; font-weight: 600; padding: 6px 12px; cursor: pointer; }
+.rs-adv-mode button + button { border-left: 1px solid var(--border); }
+.rs-adv-mode button.on { background: rgba(245,158,11,.15); color: var(--accent); }
 .rs-adv-wrap { max-height: 72vh; overflow: auto; }
 /* content-width table that scrolls inside .rs-adv-wrap: beats the global mobile
    `table{table-layout:fixed}` (main.css <=600px) that crushed 44 columns into the screen */

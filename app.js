@@ -62730,15 +62730,17 @@ Rules:
   const N = { heat: false };   // descriptive column: no good/bad shading
   const LO = { lo: true };     // lower is better
   function c(k, l, g, d, t, o) { return Object.assign({ k: k, l: l, g: g, d: d, t: t }, o || {}); }
+  // counting stat stored as a season total; Per game mode shows it / G with label lg, dg decimals
+  function n(k, l, lg, g, d, dg, t, o) { return Object.assign(c(k, l, g, d, t, o), { cnt: true, lg: lg, dg: dg }); }
 
   const VOL = 'Volume';
   const QB_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
-    c('fp', 'FP/G', VOL, 1, 'Half-PPR fantasy points per game (nflverse play-by-play; 2-pt conversions not counted)'),
-    c('db', 'DB', VOL, 0, 'Dropbacks (PFF)'),
-    c('att', 'Att', VOL, 0, 'Pass attempts (PFF)'),
-    c('td', 'TD', VOL, 0, 'Passing touchdowns'),
-    c('int', 'INT', VOL, 0, 'Interceptions', LO),
+    n('fpt', 'FPTS', 'FP/G', VOL, 1, 1, 'Half-PPR fantasy points (nflverse play-by-play; 2-pt conversions not counted)'),
+    n('db', 'DB', 'DB/G', VOL, 0, 1, 'Dropbacks (PFF)'),
+    n('att', 'Att', 'Att/G', VOL, 0, 1, 'Pass attempts (PFF)'),
+    n('td', 'TD', 'TD/G', VOL, 0, 2, 'Passing touchdowns'),
+    n('int', 'INT', 'INT/G', VOL, 0, 2, 'Interceptions', LO),
     c('cmpp', 'Cmp%', 'Efficiency', 1, 'Completion percentage'),
     c('ypa', 'Y/A', 'Efficiency', 2, 'Passing yards per attempt'),
     c('anya', 'ANY/A', 'Efficiency', 2, 'Adjusted net yards per attempt: (yards + 20×TD − 45×INT − sack yards) / (attempts + sacks)'),
@@ -62764,26 +62766,26 @@ Rules:
     c('blz', 'Blitzed%', 'Pressure', 1, 'Share of dropbacks facing a blitz', N),
     c('bgr', 'Blitz Grd', 'Pressure', 1, 'PFF passing grade vs the blitz'),
     c('bypa', 'Blitz Y/A', 'Pressure', 2, 'Yards per attempt vs the blitz'),
-    c('rug', 'Rush/G', 'Rushing', 1, 'Rush attempts per game incl. scrambles (kneels excluded)'),
-    c('ruy', 'RuYd/G', 'Rushing', 1, 'Rushing yards per game'),
-    c('rtd', 'Rush TD', 'Rushing', 0, 'Rushing touchdowns'),
-    c('scr', 'Scrambles', 'Rushing', 0, 'Scrambles (nflverse)', N)
+    n('ra', 'Rush Att', 'Rush/G', 'Rushing', 0, 1, 'Rush attempts incl. scrambles (kneels excluded)'),
+    n('ry', 'Rush Yds', 'RuYd/G', 'Rushing', 0, 1, 'Rushing yards'),
+    n('rtd', 'Rush TD', 'RuTD/G', 'Rushing', 0, 2, 'Rushing touchdowns'),
+    n('scr', 'Scrambles', 'Scr/G', 'Rushing', 0, 1, 'Scrambles (nflverse)', N)
   ];
   const RB_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
-    c('fp', 'FP/G', VOL, 1, 'Half-PPR fantasy points per game (nflverse play-by-play; 2-pt conversions not counted)'),
-    c('att', 'Att', VOL, 0, 'Rush attempts (PFF)'),
-    c('tgt', 'Tgt', VOL, 0, 'Targets'),
-    c('tchg', 'Tch/G', VOL, 1, 'Carries + receptions per game'),
-    c('scyg', 'ScrYd/G', VOL, 1, 'Scrimmage yards per game'),
-    c('tds', 'TD', VOL, 0, 'Rushing + receiving touchdowns'),
+    n('fpt', 'FPTS', 'FP/G', VOL, 1, 1, 'Half-PPR fantasy points (nflverse play-by-play; 2-pt conversions not counted)'),
+    n('att', 'Att', 'Att/G', VOL, 0, 1, 'Rush attempts (PFF)'),
+    n('tgt', 'Tgt', 'Tgt/G', VOL, 0, 1, 'Targets'),
+    n('tch', 'Touches', 'Tch/G', VOL, 0, 1, 'Carries + receptions'),
+    n('scy', 'ScrYds', 'ScrYd/G', VOL, 0, 1, 'Scrimmage yards'),
+    n('tds', 'TD', 'TD/G', VOL, 0, 2, 'Rushing + receiving touchdowns'),
     c('car', 'Carry%', 'Usage', 1, 'Share of team carries in games played (designed runs; scrambles and kneels out)'),
     c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
     c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played'),
-    c('i5', 'Inside 5', 'Usage', 0, 'Carries inside the opponent 5'),
+    n('i5', 'Inside 5', 'I5/G', 'Usage', 0, 2, 'Carries inside the opponent 5'),
     c('i10s', 'I10 Car%', 'Usage', 1, 'Share of team carries inside the opponent 10'),
-    c('hvt', 'HVT/G', 'Usage', 1, 'High-value touches per game: receptions + carries inside the 10'),
+    n('hvt', 'HVT', 'HVT/G', 'Usage', 0, 1, 'High-value touches: receptions + carries inside the 10'),
     c('ypc', 'YPC', 'Rushing', 2, 'Yards per carry'),
     c('yco', 'YCO/A', 'Rushing', 2, 'Yards after contact per attempt (PFF)'),
     c('mtf', 'MTF/A', 'Rushing', 2, 'Missed tackles forced per rush (PFF)'),
@@ -62795,7 +62797,7 @@ Rules:
     c('repa', 'EPA/Car', 'Rushing', 3, 'Expected points added per carry (nflverse)'),
     c('rgr', 'Run Grd', 'Rushing', 1, 'PFF rushing grade'),
     c('gap', 'Gap%', 'Rushing', 1, 'Gap-scheme share of gap + zone runs (PFF)', N),
-    c('rts', 'Routes', 'Receiving', 0, 'Routes run (PFF)'),
+    n('rts', 'Routes', 'Rts/G', 'Receiving', 0, 1, 'Routes run (PFF)'),
     c('tprr', 'TPRR', 'Receiving', 2, 'Targets per route run'),
     c('yprr', 'YPRR', 'Receiving', 2, 'Receiving yards per route run'),
     c('recg', 'Route Grd', 'Receiving', 1, 'PFF receiving grade'),
@@ -62804,19 +62806,18 @@ Rules:
   const REC_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
-    c('fp', 'FP/G', VOL, 1, 'Half-PPR fantasy points per game (nflverse play-by-play; 2-pt conversions not counted)'),
-    c('rts', 'Routes', VOL, 0, 'Routes run (PFF)'),
-    c('tgt', 'Tgt', VOL, 0, 'Targets'),
-    c('tg', 'Tgt/G', VOL, 1, 'Targets per game'),
-    c('ydg', 'Yd/G', VOL, 1, 'Receiving yards per game'),
-    c('tds', 'TD', VOL, 0, 'Receiving touchdowns'),
+    n('fpt', 'FPTS', 'FP/G', VOL, 1, 1, 'Half-PPR fantasy points (nflverse play-by-play; 2-pt conversions not counted)'),
+    n('rts', 'Routes', 'Rts/G', VOL, 0, 1, 'Routes run (PFF)'),
+    n('tgt', 'Tgt', 'Tgt/G', VOL, 0, 1, 'Targets'),
+    n('yds', 'Yds', 'Yd/G', VOL, 0, 1, 'Receiving yards'),
+    n('tds', 'TD', 'TD/G', VOL, 0, 2, 'Receiving touchdowns'),
     c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played (RT%)'),
     c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
     c('ays', 'AY%', 'Usage', 1, 'Share of team air yards in games played (nflverse)'),
     c('wopr', 'WOPR', 'Usage', 2, 'Weighted opportunity: 1.5 × target share + 0.7 × air-yards share'),
     c('tprr', 'TPRR', 'Usage', 2, 'Targets per route run'),
-    c('rz', 'RZ Tgt', 'Usage', 0, 'Targets inside the opponent 20'),
-    c('ez', 'EZ Tgt', 'Usage', 0, 'End-zone targets (air yards reach the goal line)'),
+    n('rz', 'RZ Tgt', 'RZ/G', 'Usage', 0, 2, 'Targets inside the opponent 20'),
+    n('ez', 'EZ Tgt', 'EZ/G', 'Usage', 0, 2, 'End-zone targets (air yards reach the goal line)'),
     c('slot', 'Slot%', 'Usage', 1, 'Share of snaps lined up in the slot (PFF)', N),
     c('wide', 'Wide%', 'Usage', 1, 'Share of snaps lined up out wide (PFF)', N),
     c('inl', 'Inline%', 'Usage', 1, 'Share of snaps lined up in-line (PFF)', N),
@@ -62853,10 +62854,11 @@ Rules:
     TE: 'PFF lists a receiver in a week\'s man/zone and slot tables only when he was targeted, so those route counts are scaled up to his season route total. PBlk% = pass-block snaps per pass play.'
   };
 
-  let _pos = 'QB', _yr = YEARS[0], _sortK = 'fp', _sortAsc = false;
+  let _pos = 'QB', _yr = YEARS[0], _sortK = 'fpt', _sortAsc = false;
   let _wired = false, _started = false, _rowCache = {};
-  let _hidden = {};
+  let _hidden = {}, _mode = 'pg';   // 'pg' = per game, 'tot' = season totals
   try { _hidden = JSON.parse(localStorage.getItem('rsAdvHidden') || '{}') || {}; } catch (e) { _hidden = {}; }
+  try { if (localStorage.getItem('rsAdvMode') === 'tot') _mode = 'tot'; } catch (e) { /* storage blocked */ }
 
   function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
   function _norm(s) { return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
@@ -62930,10 +62932,14 @@ Rules:
     const rows = all.filter(r => (r[minKey] || 0) >= min && (!tmSel.value || r.tm === tmSel.value) && (!q || _norm(r.n).indexOf(q) >= 0));
     const hid = _hidden[_pos] || {};
     const cols = COLS[_pos].filter(col => !hid[col.g]);
+    // counting stats are stored as season totals; Per game divides by games played
+    const pg = _mode === 'pg';
+    const cntKeys = new Set(COLS[_pos].filter(col => col.cnt).map(col => col.k));
+    const val = (r, k) => (pg && cntKeys.has(k) && r[k] != null ? (r.g ? r[k] / r.g : null) : r[k]);
 
     const sk = _sortK;
     rows.sort((a, b) => {
-      const av = a[sk], bv = b[sk];
+      const av = val(a, sk), bv = val(b, sk);
       if (av == null && bv == null) return 0;
       if (av == null) return 1;
       if (bv == null) return -1;
@@ -62945,7 +62951,7 @@ Rules:
     const dist = {};
     if (heatOn) cols.forEach(col => {
       if (col.heat === false) return;
-      const v = rows.map(r => r[col.k]).filter(x => x != null).sort((a, b) => a - b);
+      const v = rows.map(r => val(r, col.k)).filter(x => x != null).sort((a, b) => a - b);
       if (v.length >= 8 && v[0] !== v[v.length - 1]) dist[col.k] = v;
     });
     function bg(col, x) {
@@ -62971,7 +62977,9 @@ Rules:
     html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">Player</th>' +
       '<th data-k="tm" class="rs-adv-tm' + sortCls('tm') + '">Tm</th>';
     cols.forEach((col, i) => {
-      html += '<th data-k="' + col.k + '" title="' + _esc(col.t) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' + _esc(col.l) + '</th>';
+      const tip = col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
+      html += '<th data-k="' + col.k + '" title="' + _esc(tip) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' +
+        _esc(pg && col.cnt ? col.lg : col.l) + '</th>';
     });
     html += '</tr></thead><tbody>';
     rows.forEach((r, idx) => {
@@ -62979,9 +62987,9 @@ Rules:
         '<td class="rs-adv-nm' + (r.on ? ' rs-name' : ' rs-adv-off') + '" title="' + _esc(r.n) + (r.on ? '' : ' (not on the site board)') + '">' +
         '<span class="rs-adv-rk">' + (idx + 1) + '</span>' + _esc(r.n) + '</td><td class="rs-adv-tm">' + _esc(r.tm || '') + '</td>';
       cols.forEach((col, i) => {
-        const x = r[col.k];
+        const x = val(r, col.k);
         html += '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + bg(col, x) + '>' +
-          (x == null ? '<span class="rs-fmt">&ndash;</span>' : Number(x).toFixed(col.d)) + '</td>';
+          (x == null ? '<span class="rs-fmt">&ndash;</span>' : Number(x).toFixed(pg && col.cnt ? col.dg : col.d)) + '</td>';
       });
       html += '</tr>';
     });
@@ -63014,6 +63022,21 @@ Rules:
     YEARS.forEach(y => yrSel.add(new Option(y, y)));
     yrSel.value = _yr;
     yrSel.addEventListener('change', () => { _yr = +yrSel.value; _load(); });
+    const modeEl = _el('rsAdvMode');
+    const syncMode = () => modeEl.querySelectorAll('button[data-mode]').forEach(b => {
+      const on = b.dataset.mode === _mode;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    syncMode();
+    modeEl.addEventListener('click', e => {
+      const b = e.target.closest('button[data-mode]');
+      if (!b || b.dataset.mode === _mode) return;
+      _mode = b.dataset.mode;
+      try { localStorage.setItem('rsAdvMode', _mode); } catch (err) { /* private mode */ }
+      syncMode();
+      _render();
+    });
     _el('rsAdvTabs').addEventListener('click', e => {
       const b = e.target.closest('.rs-adv-tab');
       if (!b || b.dataset.pos === _pos) return;
@@ -63023,7 +63046,7 @@ Rules:
         t.classList.toggle('active', on);
         t.setAttribute('aria-selected', on ? 'true' : 'false');
       });
-      if (!COLS[_pos].some(col => col.k === _sortK)) { _sortK = 'fp'; _sortAsc = false; }
+      if (!COLS[_pos].some(col => col.k === _sortK)) { _sortK = 'fpt'; _sortAsc = false; }
       _resetMin();
       _renderGroups();
       _render();

@@ -61,15 +61,17 @@ POS_MAP = {'HB': 'RB', 'FB': 'RB', 'RB': 'RB', 'WR': 'WR', 'TE': 'TE', 'QB': 'QB
 # QB dropbacks / RB carries + targets / WR-TE routes. The page filters further.
 MIN_FULL = {'QB': 50, 'RB': 20, 'WR': 50, 'TE': 40}
 
-QB_F = ['n', 'on', 'tm', 'g', 'fp', 'db', 'att', 'cmpp', 'ypa', 'anya', 'td', 'int',
+# Counting stats are SEASON TOTALS (fpt, db, att, ra, ry, tch, scy, hvt, rts, yds,
+# td, rz ...); the page's Per game / Totals toggle divides by g client-side.
+QB_F = ['n', 'on', 'tm', 'g', 'fpt', 'db', 'att', 'cmpp', 'ypa', 'anya', 'td', 'int',
         'cpoe', 'epa', 'grd', 'acc', 'adot', 'ttt', 'deep', 'btt', 'twp', 'tdp', 'intp',
         'prs', 'p2s', 'skp', 'cgr', 'cacc', 'pgr', 'pacc', 'pypa', 'blz', 'bgr', 'bypa',
-        'rug', 'ruy', 'rtd', 'scr']
-RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fp', 'att', 'tgt', 'tchg', 'scyg', 'tds',
+        'ra', 'ry', 'rtd', 'scr']
+RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'att', 'tgt', 'tch', 'scy', 'tds',
         'car', 'tsh', 'rtp', 'i5', 'i10s', 'hvt',
         'ypc', 'yco', 'mtf', 'elu', 'bay', 'exp', 'fdp', 'suc', 'repa', 'rgr', 'gap',
         'rts', 'tprr', 'yprr', 'recg', 'pbg']
-REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fp', 'rts', 'tgt', 'tg', 'ydg', 'tds',
+REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
          'rtp', 'tsh', 'ays', 'wopr', 'tprr', 'rz', 'ez', 'slot', 'wide', 'inl', 'pbr',
          'yprr', 'grd', 'adot', 'racr', 'yac', 'mtfr', 'fdr', 'ctch', 'drp', 'cc', 'ctg',
          'tqbr', 'epat',
@@ -469,9 +471,8 @@ def build_year(yr, xw, dlookup):
 
         disp = PFF_NAME_FIX.get(name, name)
         site = next((dlookup[v] for v in norm_variants(disp) if v in dlookup), None)
-        g = games or None
         return {'n': site or disp, 'on': 1 if site else 0, 'tm': tm, 'g': games, 'snp': snp,
-                'p': p, 'tt': tt, 'fp': div(half_ppr(p), g, 1, 1) if g and ids.get('gsis') else None}
+                'p': p, 'tt': tt, 'fpt': rnd(half_ppr(p)) if ids.get('gsis') else None}
 
     rows = {'QB': [], 'RB': [], 'WR': [], 'TE': []}
     for pid in set(qb) | set(rec) | set(rush) | set(rec_s) | set(rush_s):
@@ -482,12 +483,12 @@ def build_year(yr, xw, dlookup):
                 continue
             s = a.s
             c = ctx(pid, [a, rush.get(pid)], [])
-            p, g = c['p'], c['g'] or None
+            p = c['p']
             att, sk, db = s['attempts'], s['sacks'], s['dropbacks']
             ns = s['passing_snaps'] - sk - s['scrambles']
             anya = div(s['yards'] + 20 * s['touchdowns'] - 45 * s['interceptions'] + p['skyds'], att + sk, 1, 2)
             rows['QB'].append([
-                c['n'], c['on'], c['tm'], c['g'], c['fp'], int(db), int(att),
+                c['n'], c['on'], c['tm'], c['g'], c['fpt'], int(db), int(att),
                 div(s['completions'], att, 100), div(s['yards'], att, 1, 2), anya,
                 int(s['touchdowns']), int(s['interceptions']),
                 div(p['cpoe_s'], p['cpoe_n'], 1, 1), div(p['dbepa'], p['dbn'], 1, 3),
@@ -500,7 +501,7 @@ def build_year(yr, xw, dlookup):
                 rnd(a.avg('pgr')), div(s['p_completions'] + s['p_drops'], s['p_aimed_passes'], 100),
                 div(s['p_yards'], s['p_attempts'], 1, 2),
                 div(s['b_dropbacks'], db, 100), rnd(a.avg('bgr')), div(s['b_yards'], s['b_attempts'], 1, 2),
-                div(p['car'] + p['scr'], g, 1, 1), div(p['ruyds'], g, 1, 1), int(p['rutd']), int(p['scr']),
+                int(p['car'] + p['scr']), int(round(p['ruyds'])), int(p['rutd']), int(p['scr']),
             ])
         elif pos == 'RB':
             rw, rs = rush.get(pid), rush_s.get(pid)
@@ -524,7 +525,7 @@ def build_year(yr, xw, dlookup):
             if att + tgt < MIN_FULL['RB'] * frac:
                 continue
             c = ctx(pid, [rw, cw], [rs, cs])
-            p, g = c['p'], c['g'] or None
+            p = c['p']
             if ryd is None:
                 ryd = p['recyds']
             yds = ru['yards'] if rw else ((fnum(rs.get('yards')) or 0) if rs else 0)
@@ -533,11 +534,11 @@ def build_year(yr, xw, dlookup):
             pbg = fnum(rs.get('grades_pass_block')) if rs else (rw.avg('pbg') if rw else None)
             mtf = ru['elu_rush_mtf'] if ru.get('elu_rush_mtf') is not None else None
             rows['RB'].append([
-                c['n'], c['on'], c['tm'], c['g'], c['snp'], c['fp'], int(att), int(tgt),
-                div(att + recs, g, 1, 1), div(yds + (ryd or 0), g, 1, 1), int(p['rutd'] + p['rectd']),
+                c['n'], c['on'], c['tm'], c['g'], c['snp'], c['fpt'], int(att), int(tgt),
+                int(att + recs), int(round(yds + (ryd or 0))), int(p['rutd'] + p['rectd']),
                 div(p['car'], c['tt']('car'), 100), div(p['tgt'], c['tt']('tgt'), 100),
                 div(min(rts, c['tt']('db')) if c['tt']('db') else rts, c['tt']('db'), 100),
-                int(p['i5']), div(p['i10'], c['tt']('i10'), 100), div(p['rec'] + p['i10'], g, 1, 1),
+                int(p['i5']), div(p['i10'], c['tt']('i10'), 100), int(p['rec'] + p['i10']),
                 div(yds, att, 1, 2), div(ru['yards_after_contact'], att, 1, 2), div(mtf, att, 1, 2),
                 rnd(elu), div(ru['breakaway_yards'], yds, 100), div(ru['explosive'], att, 100),
                 div(p['rufd'], p['car'], 100), div(p['rusucc'], p['car'], 100), div(p['ruepa'], p['car'], 1, 3),
@@ -569,7 +570,7 @@ def build_year(yr, xw, dlookup):
                 continue
             ch, cn, cd = sch.get(pid), con.get(pid), dep.get(pid)
             c = ctx(pid, [cw, ch, cn, cd], [cs])
-            p, g = c['p'], c['g'] or None
+            p = c['p']
             tt_db, tt_tgt, tt_ay = c['tt']('db'), c['tt']('tgt'), c['tt']('ay')
             tsh = div(p['tgt'], tt_tgt, 1, 4)
             ays = div(p['ay'], tt_ay, 1, 4) if tt_ay > 0 else None
@@ -588,8 +589,8 @@ def build_year(yr, xw, dlookup):
             d = cd.s if cd else empty
             dy = d['deep_yards'] + d['medium_yards'] + d['short_yards'] + d['behind_los_yards']
             rows[pos].append([
-                c['n'], c['on'], c['tm'], c['g'], c['snp'], c['fp'], int(rts), int(tgt),
-                div(tgt, g, 1, 1), div(yds, g, 1, 1), int(tds),
+                c['n'], c['on'], c['tm'], c['g'], c['snp'], c['fpt'], int(rts), int(tgt),
+                int(round(yds)), int(tds),
                 div(min(rts, tt_db), tt_db, 100) if tt_db else None,
                 rnd(tsh * 100) if tsh is not None else None, rnd(ays * 100) if ays is not None else None,
                 rnd(1.5 * tsh + 0.7 * ays, 2) if tsh is not None and ays is not None else None,
@@ -615,7 +616,7 @@ def build_year(yr, xw, dlookup):
         f = fields[pos]
         for r in rows[pos]:
             assert len(r) == len(f), (pos, len(r), len(f), r[0])
-        fi = f.index('fp')
+        fi = f.index('fpt')
         rows[pos].sort(key=lambda r: -(r[fi] if r[fi] is not None else -99))
         payload[pos] = {'f': f, 'r': rows[pos]}
     body = json.dumps(payload, separators=(',', ':'), ensure_ascii=False, allow_nan=False)

@@ -1321,6 +1321,12 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .lg-pos-btns{display:flex;gap:2px}
 .lg-pos-btn{padding:4px 9px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:.68rem;font-weight:600;border-radius:3px;cursor:pointer;letter-spacing:.5px;transition:all .12s;font-family:inherit}
 .lg-pos-btn.active{color:#fff}
+/* Phones (2026-09-15 mobile audit): the position pills on Compare / Start-Sit
+   measured 24px tall. Wrap the row so the taller pills still fit at 375px. */
+@media (max-width:600px){
+  .lg-pos-btns{flex-wrap:wrap;gap:4px}
+  .lg-pos-btn{min-height:32px;padding:6px 11px;font-size:.74rem}
+}
 .lg-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.8rem}
 .lg-chip{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:16px;font-size:.78rem}
 .lg-chip-x{background:none;border:none;color:#ef4444;cursor:pointer;font-size:.9rem;line-height:1;padding:0;font-family:inherit}
@@ -1906,6 +1912,39 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .pm-ras.ras-good{color:#3b82f6}
 .pm-ras.ras-avg{color:#eab308}
 .pm-ras.ras-below{color:var(--text2)}
+/* Phones (2026-09-15 mobile audit): the prospect table was a 1000px grid in a
+   sideways scroller. Re-flow each row as a two-line card — name/pos/chips + JM
+   badge on line one; TIER · RISK · DC · AGE · RAS on line two with labels under
+   the values (same treatment as the rankings cards). Columns 1-14 are fixed in
+   getColumns() regardless of position, so nth-child targeting is stable; the
+   position-specific YPC/YPR/TM/FILM tail (15+) and the secondary 7-12 / 14
+   columns are hidden — every one is on the player card's PROSPECT tab. The
+   paywall rows (a single colspan td) fall through to a full-width block. */
+@media (max-width:600px){
+  .pm-table-wrap{max-height:none;overflow:visible;border:none;background:transparent;border-radius:0;padding:0 .25rem}
+  .pm-table{min-width:0;white-space:normal;display:block;border-spacing:0}
+  .pm-table thead{display:none}
+  .pm-table tbody{display:block}
+  .pm-table tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:9px 10px;margin:0 0 5px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .pm-table tbody tr td{display:block;border:none!important;padding:0!important;background:transparent!important;position:static!important;box-shadow:none!important;min-width:0}
+  /* line 1: name + chips fill; JM badge pinned right */
+  .pm-table tbody tr td:first-child{flex:1 1 calc(100% - 72px);max-width:none!important;width:auto!important;white-space:normal!important;overflow:visible!important;line-height:1.4}
+  .pm-table tbody tr td:first-child .pm-name{font-size:.86rem}
+  .pm-table tbody tr td:nth-child(2){flex:0 0 58px;text-align:center!important;min-width:0}
+  .pm-cmp-btn{width:26px;height:26px;margin-right:8px;vertical-align:middle}
+  /* line 2: labeled stats */
+  .pm-table tbody tr td:nth-child(3),.pm-table tbody tr td:nth-child(4),.pm-table tbody tr td:nth-child(5),.pm-table tbody tr td:nth-child(6),.pm-table tbody tr td:nth-child(13){flex:0 0 auto;text-align:center!important;font-size:.78rem;font-weight:600;line-height:1.1}
+  .pm-table tbody tr td:nth-child(3){flex:1 1 auto;text-align:left!important}
+  .pm-table tbody tr td:nth-child(4)::after{content:"RISK"}
+  .pm-table tbody tr td:nth-child(5)::after{content:"DC"}
+  .pm-table tbody tr td:nth-child(6)::after{content:"AGE"}
+  .pm-table tbody tr td:nth-child(13)::after{content:"RAS"}
+  .pm-table tbody tr td:nth-child(4)::after,.pm-table tbody tr td:nth-child(5)::after,.pm-table tbody tr td:nth-child(6)::after,.pm-table tbody tr td:nth-child(13)::after{display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+  .pm-table tbody tr td:nth-child(n+7):not(:nth-child(13)){display:none}
+  /* paywall / message rows */
+  .pm-table tbody tr td[colspan]{flex:1 1 100%;display:block!important;width:100%!important;max-width:none!important}
+  .pm-table tbody tr:has(> td[colspan]){display:block;padding:0;background:transparent;border:none}
+}
 .pm-jm{font-family:'Bebas Neue',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:.5px;text-align:center;min-width:42px}
 .pm-jm-badge{display:inline-block;padding:2px 8px;border-radius:5px;min-width:36px;text-align:center;white-space:nowrap}
 .pm-jm-gen{background:rgba(251,191,36,.2);color:#fbbf24}

@@ -1976,3 +1976,65 @@ the shadow's 3-yr weighted PPG >= 4):
   half-PPR (ncSrc gains "+reg+age"); refreshed from this file by scratch
   patch_shadow_age.py. Kill: window.SIM_SHADOW_AGE = false. The Tuesday
   scorecard grades the result as "No-Clay shadow".
+
+## Usage in context (backtest_usage_context.py) - 2026-09-15
+
+Jack: "projections need to heavily take into consideration not just past
+production but snap counts / routes run, what game scripts these happen in,
+where on the field (snaps near the goal line are more valuable), playing more
+snaps in 2WR sets vs just slot usage, team totals" + "and spreads".
+nflverse pbp_participation 2018-25 (on-field players + personnel per play,
+published after the season) x play_by_play. 12 context cells = zone (goal line
+<= 5 / red zone / field) x dropback / run x neutral (score within 8) /
+lopsided. League half-PPR points per on-field snap per cell, fit on the other
+seasons. Graded on bt_common base x shipped snap trend, LOYO 2019-25. Log
+usage_context_backtest.log; data/usage_context_backtest.js on ZONES.
+
+- VALUE per on-field snap: RB goal-line run 1.77 (neutral) / 1.92 vs 0.315
+  overall; RB red-zone run .57-.60, field run .41; WR goal-line dropback .56
+  vs .175 overall; TE goal-line dropback .56-.58 vs .123. Goal-line snaps ARE
+  worth 3-6x a normal snap.
+- But as predictors beyond production: every LEVEL term fails (red-zone share,
+  goal-line share, neutral-script share, 2-or-fewer-WR-set share, dropback
+  share, context richness). Context-rich RBs / TEs land slightly UNDER
+  projection (terciles 1.12 -> 1.03) - realized PPG already embeds the role
+  and the goal-line TDs regress (same as the RB role study and TD luck).
+- SPREAD beyond the implied total: fails for QB / RB / WR / TE and RB x role
+  (again - see the RB role study). Underdogs by 7+ ran 1.10 (QB) / 1.11 (RB)
+  but the continuous term does not hold out of sample.
+- USAGE BLEND (1-w) base2 + w x usage projection: RB flat snaps -0.65% 6/7
+  (w .2-.3) PASS, RB context-valued -0.48% 6/7 (worse than flat); WR context
+  -0.27% 7/7 / flat -0.25% 5/7 (lean); TE -0.12 / -0.19%.
+- SHIPPED: engine RB_USAGE {w .15, ptsPerSnap .315, minWeeks 3} / rbUsagePg:
+  jsPg = .85 jsPg + .15 x (season-to-date snap share x team plays per game
+  [SIM_PACE_2026] x .315, rescaled to the sheet by the Clay stat mix) once the
+  back has 3+ games of 2026 snaps (SIM_SNAPS_2026). Plain snaps because the
+  context version was worse AND participation is post-season only. NOTES chip
+  "snap usage 60% x 62 plays = 11.7 half-PPR/g (15% blend)". Kill:
+  window.SIM_RB_USAGE = false. Backup engine.js.bak_pre_rbusage_20260915.
+
+## Ascending / descending players (backtest_role_change.py) - REJECTED as a layer 2026-09-15
+
+Jack: "if a player's career average is 6 points on 50% of snaps but in the
+last 10 games he averages 12 PPG on 85%, that recent sample should be way more
+accurate, especially if it is not due to an injury to a player in front of
+him". Last 10 played games (any season) vs the career window (3 prior seasons
+before them), snap share (nflverse snap counts) and PPG; vacated = a teammate
+who out-snapped him sat those games and later played for the team again
+(departures count as organic). 10,355 RB/WR/TE player-weeks, base = shipped x
+snap trend, LOYO 2019-25, 17 tests, none pass. Log role_change_backtest.log;
+data/role_change_backtest.js on ZONES.
+
+- The shipped projection ALREADY follows the recent sample: organic ascending
+  RBs (snap share +20, PPG x1.5; 6.1 career -> 12.5 last 10) projected 11.2,
+  scored 11.3. Organic ascending WRs 0.97 and TEs 0.96 of projection (slightly
+  over-projected); descending organic RB 4.9 vs 4.9, WR 1.02, TE 1.03.
+- Pushing harder toward last-10 PPG: RB +0.04%, WR +0.01%, TE -0.05% (all
+  rows, organic only, or ascending/descending only - never better). Flags and
+  snap-jump level terms flat.
+- Ascents while a teammate ahead was hurt fade (WR 0.94, n 43) - direction as
+  Jack expected, too few rows to grade; the live opportunity pool already
+  removes that boost when the teammate returns.
+- Why: the preseason prior already sees last season's breakout, the P=5 blend
+  gives 2026 games most of the weight by week 5, and the snap trend adds the
+  rest. The ASCENDING shadow chip stays as intel.

@@ -1,0 +1,149 @@
+loading pbp x participation 2018-2025 ...
+  2018: 5229 skill player-team-weeks with snaps, 512 team-weeks
+  2019: 5218 skill player-team-weeks with snaps, 512 team-weeks
+  2020: 5429 skill player-team-weeks with snaps, 512 team-weeks
+  2021: 5788 skill player-team-weeks with snaps, 544 team-weeks
+  2022: 5746 skill player-team-weeks with snaps, 542 team-weeks
+  2023: 5797 skill player-team-weeks with snaps, 544 team-weeks
+  2024: 5741 skill player-team-weeks with snaps, 544 team-weeks
+  2025: 5754 skill player-team-weeks with snaps, 544 team-weeks
+
+=== league half-PPR points per on-field snap by context cell (all seasons) ===
+  RB: overall 0.315 | gl|db|neu 0.283  gl|db|lop 0.230  gl|run|neu 1.770  gl|run|lop 1.921  rz|db|neu 0.279  rz|db|lop 0.250  rz|run|neu 0.569  rz|run|lop 0.600  fd|db|neu 0.163  fd|db|lop 0.172  fd|run|neu 0.412  fd|run|lop 0.426
+  WR: overall 0.175 | gl|db|neu 0.562  gl|db|lop 0.522  gl|run|neu 0.025  gl|run|lop 0.012  rz|db|neu 0.335  rz|db|lop 0.325  rz|run|neu 0.022  rz|run|lop 0.022  fd|db|neu 0.253  fd|db|lop 0.234  fd|run|neu 0.010  fd|run|lop 0.008
+  TE: overall 0.123 | gl|db|neu 0.560  gl|db|lop 0.583  gl|run|neu 0.019  gl|run|lop 0.028  rz|db|neu 0.331  rz|db|lop 0.345  rz|run|neu 0.007  rz|run|lop 0.006  fd|db|neu 0.180  fd|db|lop 0.182  fd|run|neu 0.002  fd|run|lop 0.002
+
+loading base samples (bt_common)...
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 389, 'team': 247}
+  17657 player-weeks; usage features on 12451 RB/WR/TE rows (weeks >= 4); spread on 17657
+  RB: corr with actual - shipped x snap trend 0.546 | context usage 0.509 | flat snaps 0.498  (n 3628)
+  WR: corr with actual - shipped x snap trend 0.488 | context usage 0.355 | flat snaps 0.362  (n 5945)
+  TE: corr with actual - shipped x snap trend 0.475 | context usage 0.402 | flat snaps 0.390  (n 2878)
+
+=== T1 usage blend: (1-w) base2 + w x usage projection (rows without features keep base2) ===
+  RB blend with context-valued snaps
+    grid pooled MSE: +0.00:48.071  +0.10:47.904  +0.20:47.822  +0.30:47.825  +0.50:48.088  +0.75:48.896  +1.00:50.236
+    pooled best +0.20 | LOYO MSE 47.4660 vs base 47.6959 (-0.48%), years better 6/7, picks [0.3, 0.3, 0.2, 0.2, 0.2, 0.3, 0.2]
+  RB blend with flat snaps (no context)
+    grid pooled MSE: +0.00:48.071  +0.10:47.853  +0.20:47.746  +0.30:47.750  +0.50:48.087  +0.75:49.128  +1.00:50.858
+    pooled best +0.20 | LOYO MSE 47.3882 vs base 47.6959 (-0.65%), years better 6/7, picks [0.3, 0.3, 0.2, 0.2, 0.2, 0.3, 0.2]
+  WR blend with context-valued snaps
+    grid pooled MSE: +0.00:41.915  +0.10:41.799  +0.20:41.826  +0.30:41.996  +0.50:42.766  +0.75:44.532  +1.00:47.193
+    pooled best +0.10 | LOYO MSE 41.4339 vs base 41.5481 (-0.27%), years better 7/7, picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+  WR blend with flat snaps (no context)
+    grid pooled MSE: +0.00:41.915  +0.10:41.784  +0.20:41.797  +0.30:41.954  +0.50:42.703  +0.75:44.454  +1.00:47.108
+    pooled best +0.10 | LOYO MSE 41.4457 vs base 41.5481 (-0.25%), years better 5/7, picks [0.1, 0.2, 0.2, 0.1, 0.1, 0.1, 0.1]
+  TE blend with context-valued snaps
+    grid pooled MSE: +0.00:26.239  +0.10:26.167  +0.20:26.171  +0.30:26.251  +0.50:26.640  +0.75:27.555  +1.00:28.946
+    pooled best +0.10 | LOYO MSE 26.3178 vs base 26.3500 (-0.12%), years better 4/7, picks [0.2, 0.2, 0.1, 0.1, 0.1, 0.2, 0.2]
+  TE blend with flat snaps (no context)
+    grid pooled MSE: +0.00:26.239  +0.10:26.187  +0.20:26.240  +0.30:26.398  +0.50:27.030  +0.75:28.410  +1.00:30.448
+    pooled best +0.10 | LOYO MSE 26.3000 vs base 26.3500 (-0.19%), years better 5/7, picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+
+=== T2 context level terms: base2 x clip(1 + k x z), z standardized within the position ===
+  RB ctx_ratio: terciles actual/base2 low 1.116 mid 1.064 high 1.026 (cuts 0.93 / 1.05, n 3628)
+  RB ctx_ratio level
+    grid pooled MSE: +0.00:48.071  +0.01:48.116  +0.02:48.177  +0.04:48.341  +0.06:48.563  -0.01:48.040  -0.02:48.023  -0.04:48.034
+    pooled best -0.02 | LOYO MSE 47.6659 vs base 47.6959 (-0.06%), years better 6/7, picks [-0.02, -0.02, -0.04, -0.02, -0.02, -0.02, -0.02]
+  RB rz_rel: terciles actual/base2 low 1.100 mid 1.051 high 1.048 (cuts 0.93 / 1.07, n 3628)
+  RB rz_rel level
+    grid pooled MSE: +0.00:48.071  +0.01:48.085  +0.02:48.108  +0.04:48.178  +0.06:48.282  -0.01:48.065  -0.02:48.067  -0.04:48.098
+    pooled best -0.01 | LOYO MSE 47.7317 vs base 47.6959 (+0.08%), years better 1/7, picks [-0.02, 0.01, -0.02, -0.01, -0.02, -0.01, -0.02]
+  RB gl_rel: terciles actual/base2 low 1.119 mid 1.046 high 1.043 (cuts 0.84 / 1.17, n 3626)
+  RB gl_rel level
+    grid pooled MSE: +0.00:48.071  +0.01:48.072  +0.02:48.084  +0.04:48.134  +0.06:48.221  -0.01:48.078  -0.02:48.095  -0.04:48.156
+    pooled best +0.00 | LOYO MSE 47.7017 vs base 47.6959 (+0.01%), years better 0/7, picks [0.0, 0.01, 0.0, 0.0, 0.01, 0.0, 0.0]
+  RB neu_rel: terciles actual/base2 low 1.095 mid 1.069 high 1.035 (cuts 0.99 / 1.04, n 3628)
+  RB neu_rel level
+    grid pooled MSE: +0.00:48.071  +0.01:48.069  +0.02:48.077  +0.04:48.120  +0.06:48.198  -0.01:48.081  -0.02:48.100  -0.04:48.166
+    pooled best +0.01 | LOYO MSE 47.7135 vs base 47.6959 (+0.04%), years better 1/7, picks [-0.01, 0.01, 0.01, 0.01, 0.01, 0.0, 0.01]
+  RB db_rel: terciles actual/base2 low 1.093 mid 1.040 high 1.057 (cuts 0.92 / 1.04, n 3628)
+  RB db_rel level
+    grid pooled MSE: +0.00:48.071  +0.01:48.104  +0.02:48.147  +0.04:48.268  +0.06:48.431  -0.01:48.048  -0.02:48.037  -0.04:48.047
+    pooled best -0.02 | LOYO MSE 47.7215 vs base 47.6959 (+0.05%), years better 5/7, picks [-0.02, -0.02, -0.02, -0.02, -0.02, -0.04, -0.04]
+  WR ctx_ratio: terciles actual/base2 low 1.013 mid 1.025 high 0.996 (cuts 0.97 / 1.06, n 5945)
+  WR ctx_ratio level
+    grid pooled MSE: +0.00:41.915  +0.01:41.944  +0.02:41.984  +0.04:42.098  +0.06:42.257  -0.01:41.898  -0.02:41.892  -0.04:41.915
+    pooled best -0.02 | LOYO MSE 41.5781 vs base 41.5481 (+0.07%), years better 6/7, picks [-0.01, -0.02, -0.02, -0.01, -0.02, -0.04, -0.02]
+  WR rz_rel: terciles actual/base2 low 1.021 mid 1.009 high 1.006 (cuts 0.92 / 1.00, n 5945)
+  WR rz_rel level
+    grid pooled MSE: +0.00:41.915  +0.01:41.922  +0.02:41.935  +0.04:41.978  +0.06:42.045  -0.01:41.914  -0.02:41.920  -0.04:41.948
+    pooled best -0.01 | LOYO MSE 41.5497 vs base 41.5481 (+0.00%), years better 4/7, picks [-0.01, -0.01, -0.01, 0.0, -0.01, 0.0, -0.01]
+  WR gl_rel: terciles actual/base2 low 1.008 mid 1.019 high 1.006 (cuts 0.76 / 0.94, n 5940)
+  WR gl_rel level
+    grid pooled MSE: +0.00:41.915  +0.01:41.928  +0.02:41.948  +0.04:42.010  +0.06:42.103  -0.01:41.910  -0.02:41.913  -0.04:41.941
+    pooled best -0.01 | LOYO MSE 41.5623 vs base 41.5481 (+0.03%), years better 2/7, picks [-0.01, -0.01, -0.02, 0.0, 0.0, -0.02, -0.01]
+  WR neu_rel: terciles actual/base2 low 1.033 mid 1.001 high 1.007 (cuts 0.99 / 1.02, n 5945)
+  WR neu_rel level
+    grid pooled MSE: +0.00:41.915  +0.01:41.927  +0.02:41.945  +0.04:42.000  +0.06:42.081  -0.01:41.910  -0.02:41.911  -0.04:41.932
+    pooled best -0.01 | LOYO MSE 41.5489 vs base 41.5481 (+0.00%), years better 4/7, picks [-0.01, -0.02, -0.01, -0.02, -0.02, -0.01, -0.01]
+  WR two_rel: terciles actual/base2 low 1.011 mid 1.028 high 0.997 (cuts 0.65 / 0.87, n 5893)
+  WR two_rel level
+    grid pooled MSE: +0.00:41.915  +0.01:41.931  +0.02:41.957  +0.04:42.039  +0.06:42.160  -0.01:41.909  -0.02:41.913  -0.04:41.952
+    pooled best -0.01 | LOYO MSE 41.5660 vs base 41.5481 (+0.04%), years better 4/7, picks [-0.01, -0.01, 0.0, -0.02, -0.01, -0.02, -0.01]
+  WR db_rel: terciles actual/base2 low 0.988 mid 1.018 high 1.028 (cuts 1.04 / 1.09, n 5945)
+  WR db_rel level
+    grid pooled MSE: +0.00:41.915  +0.01:41.905  +0.02:41.902  +0.04:41.917  +0.06:41.963  -0.01:41.933  -0.02:41.958  -0.04:42.030
+    pooled best +0.02 | LOYO MSE 41.5630 vs base 41.5481 (+0.04%), years better 5/7, picks [0.02, 0.01, 0.01, 0.04, 0.02, 0.02, 0.02]
+  TE ctx_ratio: terciles actual/base2 low 1.111 mid 1.109 high 1.022 (cuts 1.01 / 1.15, n 2878)
+  TE ctx_ratio level
+    grid pooled MSE: +0.00:26.239  +0.01:26.262  +0.02:26.291  +0.04:26.369  +0.06:26.472  -0.01:26.223  -0.02:26.213  -0.04:26.212
+    pooled best -0.04 | LOYO MSE 26.3473 vs base 26.3500 (-0.01%), years better 5/7, picks [-0.02, -0.04, -0.04, -0.04, -0.02, -0.04, -0.02]
+  TE rz_rel: terciles actual/base2 low 1.042 mid 1.069 high 1.122 (cuts 1.00 / 1.08, n 2878)
+  TE rz_rel level
+    grid pooled MSE: +0.00:26.239  +0.01:26.233  +0.02:26.231  +0.04:26.238  +0.06:26.260  -0.01:26.248  -0.02:26.261  -0.04:26.297
+    pooled best +0.02 | LOYO MSE 26.3918 vs base 26.3500 (+0.16%), years better 3/7, picks [0.01, 0.04, 0.0, 0.04, 0.01, 0.04, 0.01]
+  TE gl_rel: terciles actual/base2 low 1.059 mid 1.069 high 1.101 (cuts 1.01 / 1.18, n 2876)
+  TE gl_rel level
+    grid pooled MSE: +0.00:26.239  +0.01:26.244  +0.02:26.253  +0.04:26.283  +0.06:26.329  -0.01:26.238  -0.02:26.241  -0.04:26.260
+    pooled best -0.01 | LOYO MSE 26.3819 vs base 26.3500 (+0.12%), years better 0/7, picks [-0.01, 0.0, -0.02, 0.0, 0.0, 0.01, -0.02]
+  TE neu_rel: terciles actual/base2 low 1.111 mid 1.039 high 1.083 (cuts 0.99 / 1.03, n 2878)
+  TE neu_rel level
+    grid pooled MSE: +0.00:26.239  +0.01:26.242  +0.02:26.249  +0.04:26.274  +0.06:26.315  -0.01:26.240  -0.02:26.245  -0.04:26.266
+    pooled best +0.00 | LOYO MSE 26.3930 vs base 26.3500 (+0.16%), years better 0/7, picks [0.02, 0.0, 0.0, -0.02, -0.01, -0.02, 0.01]
+  TE two_rel: terciles actual/base2 low 1.072 mid 1.066 high 1.091 (cuts 1.01 / 1.23, n 2858)
+  TE two_rel level
+    grid pooled MSE: +0.00:26.239  +0.01:26.250  +0.02:26.264  +0.04:26.302  +0.06:26.353  -0.01:26.231  -0.02:26.227  -0.04:26.228
+    pooled best -0.02 | LOYO MSE 26.3563 vs base 26.3500 (+0.02%), years better 3/7, picks [-0.04, -0.02, -0.04, -0.04, -0.02, -0.01, -0.04]
+  TE db_rel: terciles actual/base2 low 1.076 mid 1.092 high 1.055 (cuts 0.99 / 1.07, n 2878)
+  TE db_rel level
+    grid pooled MSE: +0.00:26.239  +0.01:26.225  +0.02:26.215  +0.04:26.210  +0.06:26.222  -0.01:26.258  -0.02:26.281  -0.04:26.340
+    pooled best +0.04 | LOYO MSE 26.3335 vs base 26.3500 (-0.06%), years better 5/7, picks [0.04, 0.04, 0.04, 0.04, 0.04, 0.02, 0.04]
+
+=== T3 spread beyond the implied total: base2 x clip(1 + k x team spread / 7) (+ = favorite) ===
+  QB spread
+    grid pooled MSE: +0.00:60.865  +0.01:60.936  +0.02:61.060  +0.04:61.469  +0.06:62.095  -0.01:60.849  -0.02:60.887  -0.04:61.124
+    pooled best -0.01 | LOYO MSE 60.6827 vs base 60.6251 (+0.09%), years better 0/7, picks [-0.01, -0.01, 0.0, 0.0, -0.01, -0.01, 0.0]
+  QB favored by 7+: actual/base2 1.008 vs rest 1.049 (n 434)
+  QB underdog by 7+: actual/base2 1.101 vs rest 1.035 (n 277)
+  RB spread
+    grid pooled MSE: +0.00:48.071  +0.01:48.097  +0.02:48.143  +0.04:48.293  +0.06:48.522  -0.01:48.064  -0.02:48.077  -0.04:48.162
+    pooled best -0.01 | LOYO MSE 47.7093 vs base 47.6959 (+0.03%), years better 3/7, picks [0.0, -0.02, -0.01, -0.01, -0.01, -0.01, -0.01]
+  RB spread x receiving back (dropback share above median)
+    grid pooled MSE: +0.00:48.071  +0.01:48.077  +0.02:48.090  +0.04:48.142  +0.06:48.225  -0.01:48.073  -0.02:48.083  -0.04:48.127
+    pooled best +0.00 | LOYO MSE 47.7139 vs base 47.6959 (+0.04%), years better 0/7, picks [0.01, 0.0, 0.0, -0.01, 0.0, 0.0, -0.01]
+  RB spread x early-down back (below median)
+    grid pooled MSE: +0.00:48.071  +0.01:48.091  +0.02:48.121  +0.04:48.206  +0.06:48.327  -0.01:48.059  -0.02:48.056  -0.04:48.077
+    pooled best -0.02 | LOYO MSE 47.6922 vs base 47.6959 (-0.01%), years better 4/7, picks [-0.02, -0.02, -0.02, -0.01, -0.01, -0.02, -0.02]
+  RB favored by 7+: actual/base2 1.037 vs rest 1.071 (n 688)
+  RB underdog by 7+: actual/base2 1.114 vs rest 1.059 (n 568)
+  WR spread
+    grid pooled MSE: +0.00:41.915  +0.01:41.939  +0.02:41.978  +0.04:42.100  +0.06:42.280  -0.01:41.906  -0.02:41.911  -0.04:41.967
+    pooled best -0.01 | LOYO MSE 41.5463 vs base 41.5481 (-0.00%), years better 5/7, picks [-0.02, -0.02, -0.01, -0.01, -0.01, -0.01, -0.01]
+  WR favored by 7+: actual/base2 0.989 vs rest 1.033 (n 1126)
+  WR underdog by 7+: actual/base2 1.023 vs rest 1.025 (n 896)
+  TE spread
+    grid pooled MSE: +0.00:26.239  +0.01:26.245  +0.02:26.260  +0.04:26.314  +0.06:26.402  -0.01:26.241  -0.02:26.251  -0.04:26.297
+    pooled best +0.00 | LOYO MSE 26.3656 vs base 26.3500 (+0.06%), years better 0/7, picks [-0.01, -0.01, 0.01, 0.0, 0.0, 0.0, 0.0]
+  TE favored by 7+: actual/base2 1.056 vs rest 1.066 (n 543)
+  TE underdog by 7+: actual/base2 1.060 vs rest 1.065 (n 474)
+
+wrote data/usage_context_backtest.js: Usage in context: 29 LOYO tests on 17657 player-weeks 2019-25; 2 pass: RB context-valued snaps -0.48% (6/7); RB flat snaps (no context) -0.65% (6/7)
+done

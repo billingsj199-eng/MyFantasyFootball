@@ -3914,6 +3914,39 @@
       html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
         AG.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
     }
+    var UC = window.SIM_USAGE_BT;
+    if (UC && UC.loyo) {
+      html += '<h4 style="margin:14px 0 4px">Usage in context: snaps by field zone, dropback, game script, personnel, spread (backtest_usage_context.py, ' + esc(UC.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(UC.summary || '') + '</b> Every play 2018-25 is placed in a cell: goal line (inside the 5) / red zone / field, dropback / run, neutral score (within 8) / lopsided. ' +
+        'League points per on-field snap by cell turn each player\'s snaps into a usage projection. Graded on top of the shipped projection x snap trend; team totals are already in through the Vegas multiplier.</p>';
+      if (UC.values) {
+        html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Points per on-field snap</th>' +
+          ['gl|db|neu', 'gl|run|neu', 'rz|db|neu', 'rz|run|neu', 'fd|db|neu', 'fd|run|neu', 'fd|db|lop', 'fd|run|lop'].map(function (c) { return '<th>' + esc(c.replace(/\|/g, ' ')) + '</th>'; }).join('') + '<th>overall</th></tr></thead><tbody>' +
+          ['RB', 'WR', 'TE'].map(function (p) {
+            var v = UC.values[p] || {};
+            return '<tr><td class="l">' + p + '</td>' + ['gl|db|neu', 'gl|run|neu', 'rz|db|neu', 'rz|run|neu', 'fd|db|neu', 'fd|run|neu', 'fd|db|lop', 'fd|run|lop'].map(function (c) { return '<td>' + (v[c] != null ? v[c].toFixed(3) : '\u2014') + '</td>'; }).join('') + '<td class="dim">' + (v.all != null ? v.all.toFixed(3) : '\u2014') + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+      }
+      var ub = (UC.buckets || []).filter(function (b) { return b.terciles; });
+      if (ub.length) html += '<p class="dim" style="font-size:11px;margin:6px 0">Terciles (actual / projection for low, mid, high thirds of each feature; a real edge slopes): ' +
+        ub.map(function (b) { return esc(b.pos + ' ' + b.feature) + ' ' + b.terciles.map(function (t) { return t.toFixed(3); }).join(' / '); }).join(' \u00b7 ') + '.</p>';
+      var sb = (UC.buckets || []).filter(function (b) { return b.ratio != null; });
+      if (sb.length) html += '<p class="dim" style="font-size:11px;margin:6px 0">Spread: ' + sb.map(function (b) { return esc(b.pos + ' ' + b.feature) + ' ' + b.ratio.toFixed(3) + ' vs ' + b.rest.toFixed(3) + ' (n ' + b.n + ')'; }).join(' \u00b7 ') + '.</p>';
+      html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
+        UC.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+    }
+    var RC = window.SIM_ROLECHG_BT;
+    if (RC && RC.loyo) {
+      html += '<h4 style="margin:14px 0 4px">Ascending / descending players (backtest_role_change.py, ' + esc(RC.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(RC.summary || '') + '</b> Last 10 played games (any season) vs his career window (3 prior seasons before them), on snap share and PPG. ' +
+        'Ascending = snap share up 20+ points and PPG up 50%+; descending = the reverse. "Teammate ahead was hurt" = a same-position teammate who out-snapped him sat those games and later returned; a teammate who left the team counts as an organic opening.</p>';
+      if (RC.buckets && RC.buckets.length) {
+        html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Pos</th><th class="l">Group</th><th>n</th><th>Career PPG</th><th>Last-10 PPG</th><th>Projected</th><th>Scored</th><th title="actual / projection vs the whole position">REL</th></tr></thead><tbody>' +
+          RC.buckets.map(function (b) { var col = b.rel >= 1.05 ? 'var(--acc)' : b.rel <= 0.95 ? '#f85149' : 'inherit'; return '<tr><td class="l">' + esc(b.pos) + '</td><td class="l">' + esc(b.name) + '</td><td class="dim">' + b.n + '</td><td>' + b.carPpg.toFixed(1) + '</td><td>' + b.recPpg.toFixed(1) + '</td><td>' + b.proj.toFixed(1) + '</td><td>' + b.act.toFixed(1) + '</td><td style="color:' + col + '"><b>' + b.rel.toFixed(3) + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+      }
+      html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
+        RC.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {
@@ -4207,6 +4240,7 @@
     var ol = E.olOutDock(p.tm, p.pos); if (ol !== 1) chips.push('OL out ×' + ntF(ol, 2));
     var sn = E.snapMult(p, wk); if (Math.abs(sn - 1) >= 0.02) chips.push('snap trend ×' + ntF(sn, 2));
     var rkL = E.rookieLevel ? E.rookieLevel(p) : 1; if (rkL !== 1) chips.push('rookie level ×' + ntF(rkL, 2));
+    var rbU = E.rbUsagePg ? E.rbUsagePg(p, wk) : null; if (rbU) chips.push('snap usage ' + ntF(rbU.share, 0) + '% x ' + ntF(rbU.plays, 0) + ' plays = ' + ntF(rbU.half, 1) + ' half-PPR/g (15% blend)');
     var cx = E.ctxNote(p, wk); if (cx.length) chips.push('blowout ' + cx.join('/') + ': role read on competitive snaps');
     var rt = E.routeMult(p, wk); if (Math.abs(rt - 1) >= 0.02) chips.push('route trend ×' + ntF(rt, 2));
     if (E.ascendingFlag(p, wk)) chips.push('ASCENDING (age ' + p.age + ', yr ' + (p.exp + 1) + ', snaps+routes up) - shadow');

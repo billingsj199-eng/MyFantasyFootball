@@ -951,6 +951,27 @@
     var d = jsData(), rec = d.players && d.players[p.norm];
     return rec && rec.g >= 1 ? ROOKIE_LEVEL[p.pos] : 1;
   }
+  // RB SNAP-USAGE BLEND (backtest_usage_context.py, 2026-09-15; Jack: "heavily take into consideration
+  // snap counts, not just past production"). On the shipped base x snap trend, blending a snap-volume
+  // projection into RB means cut LOYO MSE -0.65% (6/7, w .2-.3 every fold); valuing the snaps by field zone
+  // x dropback x game script did WORSE (-0.48%) and needs post-season participation data, so the live
+  // layer uses plain snaps: season-to-date snap share x team plays per game x league half-PPR points per
+  // on-field RB snap (.315, participation 2018-25), rescaled to the sheet by the Clay stat mix. WR leaned
+  // (-0.25%), TE flat. Shipped at w .15 after >= 3 games of 2026 snaps. Kill: window.SIM_RB_USAGE = false.
+  var RB_USAGE = { w: 0.15, ptsPerSnap: 0.315, minWeeks: 3 };
+  function rbUsagePg(p, wk) {
+    if (!p || p.pos !== 'RB' || p.isDST) return null;
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_RB_USAGE === false) return null;
+    var sn = wnd.SIM_SNAPS_2026 ? wnd.SIM_SNAPS_2026[p.name] : null;
+    var pace = wnd.SIM_PACE_2026 && wnd.SIM_PACE_2026.teams ? wnd.SIM_PACE_2026.teams[p.tm] : null;
+    if (!sn || !sn.w || !pace || !pace.cur || !(pace.cur.plays > 0)) return null;
+    var wks = Object.keys(sn.w).map(Number).filter(function (w) { return w < wk && sn.w[w] > 0; });
+    if (wks.length < RB_USAGE.minWeeks) return null;
+    var avg = wks.reduce(function (t, w) { return t + sn.w[w]; }, 0) / wks.length;
+    var halfPg = seasonPoints(p, PRESETS.half) / 17;
+    return { half: avg / 100 * pace.cur.plays * RB_USAGE.ptsPerSnap, halfPg: halfPg, share: avg, plays: pace.cur.plays, games: wks.length };
+  }
   function jsBasePg(p, sc, clayPg) {
     var d = jsData();
     var rec = d.players && d.players[p.norm];
@@ -1693,6 +1714,11 @@
     // sample grows. Preseason (no 2026 data) both terms collapse to Clay's,
     // so jsMean === mean until real games exist.
     var jsPg = jsBasePg(p, sc, clayPg) * rookieLevel(p);
+    var rbU = rbUsagePg(p, wk);
+    if (rbU) {
+      var uScale = rbU.halfPg > 0 && clayPg > 0 ? clayPg / rbU.halfPg : 1;   // half-PPR -> this sheet's scoring
+      jsPg = (1 - RB_USAGE.w) * jsPg + RB_USAGE.w * rbU.half * uScale;
+    }
     var jsChain = mult * jsOppMult(slot.opp, p.pos, dAdj) * cbM * sM * rampF * iA;
     // TD-luck mean reversion (RB/WR/TE/QB), additive after the chain. Scaled by
     // AVAILABILITY only: iA also carries the vacated-opportunity boost for
@@ -2724,7 +2750,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, ctxNote: ctxNote,
+    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,

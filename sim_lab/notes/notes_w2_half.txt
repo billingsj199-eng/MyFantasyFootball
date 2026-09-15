@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 2 (half) — generated 2026-09-15 20:56Z
+# Sim Lab notes — Week 2 (half) — generated 2026-09-15 21:23Z
 # 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 15:03 · wk 2 injury layer: 49 out/docked
 
-SIM LAB NOTES — Week 2 (half) — 2026-09-15 20:56
+SIM LAB NOTES — Week 2 (half) — 2026-09-15 21:23
 
 TD LUCK (top 5 each way):
   QB DUE UP: Aaron Rodgers (1 TD on 1.6 xTD, +0.2); Joe Burrow (1 TD on 1.6 xTD, +0.2); Jacoby Brissett (1 TD on 1.5 xTD, +0.2); Jordan Love (2 TD on 2.4 xTD, +0.1); Drake Maye (1 TD on 1.1 xTD, +0.0)

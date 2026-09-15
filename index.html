@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-15-adv6" as="script">
+<link rel="preload" href="app.js?v=2026-09-15-adv7" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2665,6 +2665,30 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="rs-adv-groups" id="rsAdvGroups"></div>
 <div class="rs-table-wrap rs-adv-wrap" id="rsAdvWrap"><div class="rs-empty">Loading advanced stats&hellip;</div></div>
 <div class="rs-adv-foot" id="rsAdvFoot"></div>
+</div>
+
+<!-- Coach profiles -->
+<div class="rs-section" id="rsCoSection">
+<div class="rs-section-title">Coach Profiles</div>
+<div class="rs-help">Playcalling tendencies by coach, combined across the seasons you pick. Hover a header for its definition; click a header to sort. Tick "One row per season" to see each team-season separately.</div>
+<div class="rs-adv-tabs" id="rsCoRole" role="tablist" aria-label="Coach role">
+<button type="button" class="rs-adv-tab active" data-role="op" role="tab" aria-selected="true">OFFENSIVE PLAYCALLER</button>
+<button type="button" class="rs-adv-tab" data-role="hc" role="tab" aria-selected="false">HEAD COACH</button>
+<button type="button" class="rs-adv-tab" data-role="dp" role="tab" aria-selected="false">DEFENSIVE PLAYCALLER</button>
+</div>
+<div class="rs-controls">
+<label>Seasons <select id="rsCoFrom" class="rs-select"></select></label>
+<label>to <select id="rsCoTo" class="rs-select"></select></label>
+<label>Min games <input type="number" id="rsCoMin" class="rs-num" value="8" min="0" step="1"></label>
+<label class="rs-check"><input type="checkbox" id="rsCoSplit"> One row per season</label>
+<input type="text" id="rsCoQ" class="rs-search rs-adv-q" placeholder="Filter coaches or teams&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter coaches or teams">
+<label class="rs-check"><input type="checkbox" id="rsCoHeat" checked> Shading</label>
+<button type="button" class="rs-adv-export" id="rsCoCsv">Export CSV</button>
+<span class="rs-count" id="rsCoCount"></span>
+</div>
+<div class="rs-adv-groups" id="rsCoGroups"></div>
+<div class="rs-table-wrap rs-adv-wrap" id="rsCoWrap"><div class="rs-empty">Loading coach profiles&hellip;</div></div>
+<div class="rs-adv-foot" id="rsCoFoot"></div>
 </div>
 
 <!-- Player lookup -->
@@ -5522,6 +5546,25 @@ window._ensureAdvStats = (function() {
   };
 })();
 
+// Research page Coach Profiles: data/coach_profiles.js (window.COACH_PROFILES, one row per
+// team-season, scripts/build_coach_profiles.py), loaded when the section opens.
+// route_pct_daily.ps1 bumps _COACH_V.
+window._COACH_V = '2026-09-15';
+window._ensureCoachProfiles = (function() {
+  let promise = null;
+  return function _ensureCoachProfiles() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/coach_profiles.js?v=' + window._COACH_V;
+      s.onload = function() { resolve(window.COACH_PROFILES || null); };
+      s.onerror = function() { console.warn('[CoachProfiles] load failed'); promise = null; resolve(null); };
+      document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
+
 // Player-card extras: nfl_prospect_grades.js (~118 KB, window._NFL_PROSPECT_GRADES →
 // NFL.com grade section). Single consumer inside openPlayerCard's template — the card
 // fires this on open and re-renders itself once when the data lands (see openPlayerCard).
@@ -5759,7 +5802,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-15-adv6"></script>
+<script defer src="app.js?v=2026-09-15-adv7"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

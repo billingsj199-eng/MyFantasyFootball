@@ -62700,6 +62700,7 @@ Rules:
     if (!document.getElementById('pageResearch')) return;
     // Advanced Stats has its own per-season data and doesn't wait on the retired DB
     if (typeof window._renderAdvStats === 'function') window._renderAdvStats();
+    if (typeof window._renderCoachProfiles === 'function') window._renderCoachProfiles();
     const dataP = typeof window._ensureResearchData === 'function' ? window._ensureResearchData() : Promise.resolve();
     dataP.then(function() {
       if (typeof ALL_PLAYERS_DB !== 'undefined') { _init(); return; }
@@ -62732,6 +62733,30 @@ Rules:
   function c(k, l, g, d, t, o) { return Object.assign({ k: k, l: l, g: g, d: d, t: t }, o || {}); }
   // counting stat stored as a season total; Per game mode shows it / G with label lg, dg decimals
   function n(k, l, lg, g, d, dg, t, o) { return Object.assign(c(k, l, g, d, t, o), { cnt: true, lg: lg, dg: dg }); }
+
+  // Usage score 0-100 (scripts/backtest_usage_score.py, 2026-09-15): non-negative weights fit on
+  // 2019-2025 week tables so the last 3 games' usage predicts the next 3 games of half-PPR points.
+  // Leave-one-season-out R2 RB .539 / WR .466 / TE .523 vs recent fantasy points .489 / .422 / .436.
+  // Shares in %, hvtg / rzg per game. score = 100 * (pred - b) / (p99 - b); pred = implied PPG.
+  const USAGE = {
+    RB: { w: { car: 0.1158, tsh: 0.0523, rtp: 0.0616, hvtg: 0.2524 }, b: 0.87, p99: 17.0 },
+    WR: { w: { snp: 0.0246, rtp: 0.0078, tsh: 0.2728, rzg: 0.6818 }, b: 0.38, p99: 13.9 },
+    TE: { w: { snp: 0.0082, rtp: 0.0417, tsh: 0.145, ays: 0.0565, rzg: 0.4186 }, b: 0.29, p99: 10.7 }
+  };
+  function _usage(pos, r) {
+    const u = USAGE[pos];
+    if (!u || !r.g) return null;
+    const x = { car: r.car, tsh: r.tsh, rtp: r.rtp, snp: r.snp, ays: r.ays, hvtg: (r.hvt || 0) / r.g, rzg: (r.rz || 0) / r.g };
+    let pred = u.b;
+    Object.keys(u.w).forEach(k => { pred += u.w[k] * (x[k] || 0); });
+    return { score: 100 * (pred - u.b) / (u.p99 - u.b), ppg: pred };
+  }
+  const USE_COL = {
+    k: 'use', l: 'Usage', g: 'Usage', d: 0,
+    t: 'Usage score 0-100: backtested blend of this position\'s usage signals fit to predict the next 3 games of half-PPR points (RB: carry share, route%, high-value touches, target share; WR: target share, snap%, route%, red-zone targets; TE: route%, target share, snap%, air-yards share, red-zone targets). Top 1% of usage at the position is about 100. Always uses per-game-played shares. Hover a cell for the implied PPG.',
+    calc: r => { const u = _usage(_pos, r); return u ? u.score : null; },
+    tip: r => { const u = _usage(_pos, r); return u ? 'Usage implies ' + u.ppg.toFixed(1) + ' half-PPR points per game' : ''; }
+  };
 
   const VOL = 'Volume';
   const QB_COLS = [
@@ -62780,6 +62805,7 @@ Rules:
     n('tch', 'Touches', 'Tch/G', VOL, 0, 1, 'Carries + receptions'),
     n('scy', 'ScrYds', 'ScrYd/G', VOL, 0, 1, 'Scrimmage yards'),
     n('tds', 'TD', 'TD/G', VOL, 0, 2, 'Rushing + receiving touchdowns'),
+    USE_COL,
     c('car', 'Carry%', 'Usage', 1, 'Share of team carries in games played (designed runs; scrambles and kneels out)'),
     c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
     c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played'),
@@ -62811,6 +62837,7 @@ Rules:
     n('tgt', 'Tgt', 'Tgt/G', VOL, 0, 1, 'Targets'),
     n('yds', 'Yds', 'Yd/G', VOL, 0, 1, 'Receiving yards'),
     n('tds', 'TD', 'TD/G', VOL, 0, 2, 'Receiving touchdowns'),
+    USE_COL,
     c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played (RT%)'),
     c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
     c('ays', 'AY%', 'Usage', 1, 'Share of team air yards in games played (nflverse)'),
@@ -63101,7 +63128,10 @@ Rules:
     const teamTot = _pos !== 'TM' && tmSel.value && season.teams ? season.teams[tmSel.value] : null;  // [tgt, car, ay, i10, games]
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
     const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3) };
+    const calcs = {};   // computed columns (Usage) read the row's own per-game-played shares
+    COLS[_pos].forEach(col => { if (col.calc) calcs[col.k] = col.calc; });
     const val = (r, k) => {
+      if (calcs[k]) return calcs[k](r);
       if (teamTot && TEAM_SHARE[k]) return TEAM_SHARE[k](r);
       if (teamTot && k === 'wopr') {
         const t = TEAM_SHARE.tsh(r), a = TEAM_SHARE.ays(r);
@@ -63164,7 +63194,7 @@ Rules:
         '<span class="rs-adv-rk">' + (idx + 1) + '</span>' + _esc(r.n) + '</td><td class="rs-adv-tm">' + _esc(r.tm || '') + '</td>';
       cols.forEach((col, i) => {
         const x = val(r, col.k);
-        html += '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + bg(col, x) + '>' +
+        html += '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + bg(col, x) + (col.tip && x != null ? ' title="' + _esc(col.tip(r)) + '"' : '') + '>' +
           (x == null ? '<span class="rs-fmt">&ndash;</span>' : Number(x).toFixed(pg && col.cnt ? col.dg : col.d)) + '</td>';
       });
       html += '</tr>';
@@ -63357,5 +63387,316 @@ Rules:
     _started = true;
     _renderGroups();
     _load();
+  };
+})();
+
+// === RESEARCH: COACH PROFILES (admin-only) ===
+// Playcalling tendencies by offensive playcaller / head coach / defensive playcaller from
+// data/coach_profiles.js (window.COACH_PROFILES, one row per team-season 2019-2026, built by
+// scripts/build_coach_profiles.py). Career rows combine seasons with every rate weighted by its
+// own denominator (the trailing hidden fields in that file). Keys must match F in the script.
+(function _coachProfilesModule() {
+  const N = { heat: false };   // tendency: shaded by intensity (amber), not good / bad
+  const LO = { lo: true };
+  function c(k, l, g, d, t, o) { return Object.assign({ k: k, l: l, g: g, d: d, t: t }, o || {}); }
+  const TEN = 'Tendency', PACE = 'Pace & formation', PERS = 'Personnel (thru 2025)', DES = 'Play design (2022+)', GAME = 'Pass & run game';
+  const OFF_COLS = [
+    c('npr', 'Neutral Pass%', TEN, 1, 'Pass rate in neutral situations (win probability 20-80%, not the last 2 min of a half)', N),
+    c('edpr', 'Early-Down Pass%', TEN, 1, 'Neutral pass rate on 1st and 2nd down', N),
+    c('proe', 'PROE', TEN, 1, 'Pass rate over expected on neutral plays (nflverse xpass), percentage points', N),
+    c('go4', '4th Go%', TEN, 1, 'Goes for it on 4th down (pass or run vs punt / field goal), win probability 10-90%', N),
+    c('go4s', '4th & 2 Go%', TEN, 1, 'Go rate on 4th and 2 or less, win probability 10-90%', N),
+    c('npace', 'Neutral Pace', PACE, 1, 'Seconds per play in neutral situations; lower = faster', N),
+    c('nh', 'No-Huddle%', PACE, 1, 'Plays without a huddle', N),
+    c('sg', 'Shotgun%', PACE, 1, 'Plays from shotgun (nflverse flag, which counts pistol as shotgun)', N),
+    c('uc', 'Under Center%', PACE, 1, 'Snaps under center (nflverse participation, through 2025)', N),
+    c('pis', 'Pistol%', PACE, 1, 'Snaps from pistol (through 2025)', N),
+    c('p11', '11%', PERS, 1, '1 back, 1 TE, 3 WR', N),
+    c('p12', '12%', PERS, 1, '1 back, 2 TE', N),
+    c('p13', '13%', PERS, 1, '1 back, 3 TE', N),
+    c('p21', '21%', PERS, 1, '2 backs, 1 TE', N),
+    c('p22', '22%', PERS, 1, '2 backs, 2 TE', N),
+    c('p10', '10%', PERS, 1, '1 back, 0 TE, 4 WR', N),
+    c('pa', 'Play-Action%', DES, 1, 'Dropbacks with play action (FTN charting)', N),
+    c('mot', 'Motion%', DES, 1, 'Plays with pre-snap motion (FTN)', N),
+    c('rpo', 'RPO%', DES, 1, 'Run-pass options (FTN)', N),
+    c('scr', 'Screen%', DES, 1, 'Dropbacks that are screens (FTN)', N),
+    c('oop', 'Out of Pocket%', DES, 1, 'Dropbacks where the QB leaves the pocket (FTN)', N),
+    c('emp', 'Empty%', DES, 1, 'Plays from an empty backfield (FTN)', N),
+    c('adot', 'aDOT', GAME, 1, 'Air yards per pass attempt', N),
+    c('deep', 'Deep%', GAME, 1, 'Attempts 20+ air yards downfield', N),
+    c('rbt', 'RB Tgt%', GAME, 1, 'Share of targets to RBs / FBs (PFF)', N),
+    c('tet', 'TE Tgt%', GAME, 1, 'Share of targets to TEs (PFF)', N),
+    c('wrt', 'WR Tgt%', GAME, 1, 'Share of targets to WRs (PFF)', N),
+    c('outr', 'Outside Run%', GAME, 1, 'Designed runs to the edge (nflverse run gap = end)', N),
+    c('epa', 'EPA/Play', 'Offense results', 3, 'Offensive EPA per play'),
+    c('sr', 'Success%', 'Offense results', 1, 'Offensive success rate')
+  ];
+  const SHELL = 'Coverage shells (thru 2025)';
+  const DEF_COLS = [
+    c('dblz', 'Blitz%', 'Defense scheme', 1, 'Share of opponent dropbacks facing a blitz (PFF)', N),
+    c('dman', 'Man%', 'Defense scheme', 1, 'Share of opponent receiver routes against man coverage (PFF)', N),
+    c('dprs', 'Pressure%', 'Defense scheme', 1, 'Share of opponent dropbacks under pressure (PFF)'),
+    c('box', 'Box vs Run', 'Defense scheme', 2, 'Average defenders in the box on designed runs (through 2025)', N),
+    c('box8', '8+ Box%', 'Defense scheme', 1, 'Designed runs facing 8 or more in the box (through 2025)', N),
+    c('c0', 'Cover-0%', SHELL, 1, 'Dropbacks in Cover 0, where charted', N),
+    c('c1', 'Cover-1%', SHELL, 1, 'Cover 1 (single-high man)', N),
+    c('c2', 'Cover-2%', SHELL, 1, 'Cover 2', N),
+    c('c3', 'Cover-3%', SHELL, 1, 'Cover 3 (single-high zone)', N),
+    c('c4', 'Cover-4%', SHELL, 1, 'Cover 4 (quarters)', N),
+    c('c6', 'Cover-6%', SHELL, 1, 'Cover 6', N),
+    c('hi2', '2-High%', SHELL, 1, 'Two-high shells: Cover 2, 4, 6 and 2-man', N),
+    c('depa', 'EPA/Play', 'Defense results', 3, 'EPA per play allowed', LO),
+    c('dsr', 'Success%', 'Defense results', 1, 'Success rate allowed', LO),
+    c('dskp', 'Sack%', 'Defense results', 1, 'Sacks per opponent dropback')
+  ];
+  const ROLE_COLS = { op: OFF_COLS, hc: OFF_COLS.concat(DEF_COLS), dp: DEF_COLS };
+  const ROLE_NAME = { op: 'offensive playcallers', hc: 'head coaches', dp: 'defensive playcallers' };
+  const ROLE_FILE = { op: 'OffensivePlaycallers', hc: 'HeadCoaches', dp: 'DefensivePlaycallers' };
+  // weight (denominator) behind every rate, for combining seasons
+  const W = {
+    npr: 'npl', edpr: 'edn', proe: 'pon', go4: 'f4n', go4s: 'f4sn', npace: 'pcn', nh: 'pl', sg: 'pl', uc: 'fmn', pis: 'fmn',
+    p11: 'prn', p12: 'prn', p13: 'prn', p21: 'prn', p22: 'prn', p10: 'prn',
+    pa: 'ftdb', mot: 'ftpl', rpo: 'ftpl', scr: 'ftdb', oop: 'ftdb', emp: 'ftpl',
+    adot: 'ayn', deep: 'ayn', rbt: 'tgn', tet: 'tgn', wrt: 'tgn', outr: 'rln', epa: 'pl', sr: 'pl',
+    dblz: 'dpdbt', dman: 'dmzr', dprs: 'dpdbt', box: 'boxn', box8: 'boxn',
+    c0: 'covn', c1: 'covn', c2: 'covn', c3: 'covn', c4: 'covn', c6: 'covn', hi2: 'covn',
+    depa: 'dpl', dsr: 'dpl', dskp: 'dpa'
+  };
+  const STR_KEYS = ['name', 'teams', 'span'];
+
+  let _role = 'op', _from = 0, _to = 0, _sortK = 'g', _sortAsc = false;
+  let _wired = false, _started = false, _objs = null, _last = null;
+  let _hidden = {};
+  try { _hidden = JSON.parse(localStorage.getItem('rsCoHidden') || '{}') || {}; } catch (e) { _hidden = {}; }
+
+  function _el(id) { return document.getElementById(id); }
+  function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+  function _norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function _pctile(v, x) {
+    let lo = 0, hi = v.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (v[m] < x) lo = m + 1; else hi = m; }
+    const lt = lo;
+    hi = v.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (v[m] <= x) lo = m + 1; else hi = m; }
+    return ((lt + lo - 1) / 2) / (v.length - 1);
+  }
+
+  function _all() {
+    const d = window.COACH_PROFILES;
+    if (!d) return [];
+    if (_objs && _objs.src === d) return _objs.rows;
+    const rows = d.r.map(r => { const o = {}; d.f.forEach((k, i) => { o[k] = r[i]; }); return o; });
+    _objs = { src: d, rows: rows };
+    return rows;
+  }
+
+  function _rows() {
+    const lo = Math.min(_from, _to), hi = Math.max(_from, _to);
+    const list = _all().filter(o => o.yr >= lo && o.yr <= hi);
+    if (_el('rsCoSplit').checked) return list.map(o => Object.assign({}, o, { name: o[_role], teams: o.tm, span: String(o.yr) }));
+    const byCoach = new Map();
+    list.forEach(o => {
+      if (!byCoach.has(o[_role])) byCoach.set(o[_role], []);
+      byCoach.get(o[_role]).push(o);
+    });
+    const out = [];
+    byCoach.forEach((grp, name) => {
+      grp.sort((a, b) => a.yr - b.yr);
+      const first = grp[0].yr, last = grp[grp.length - 1].yr;
+      const res = {
+        name: name,
+        teams: Array.from(new Set(grp.map(o => o.tm))).join(', '),
+        span: first === last ? String(first) : first + '-' + last,
+        g: grp.reduce((s, o) => s + (o.g || 0), 0)
+      };
+      Object.keys(W).forEach(k => {
+        let num = 0, den = 0;
+        grp.forEach(o => { const v = o[k], w = o[W[k]]; if (v != null && w > 0) { num += v * w; den += w; } });
+        res[k] = den ? num / den : null;
+      });
+      out.push(res);
+    });
+    return out;
+  }
+
+  function _renderGroups() {
+    const host = _el('rsCoGroups');
+    if (!host) return;
+    const groups = [];
+    ROLE_COLS[_role].forEach(col => { if (groups.indexOf(col.g) < 0) groups.push(col.g); });
+    const hid = _hidden[_role] || {};
+    host.innerHTML = groups.map(g => '<button type="button" class="rs-adv-chip' + (hid[g] ? '' : ' on') +
+      '" data-g="' + _esc(g) + '" aria-pressed="' + (hid[g] ? 'false' : 'true') + '">' + _esc(g) + '</button>').join('');
+  }
+
+  function _render() {
+    const wrap = _el('rsCoWrap');
+    if (!wrap) return;
+    if (!window.COACH_PROFILES) { wrap.innerHTML = '<div class="rs-empty">Coach profiles did not load.</div>'; return; }
+    const min = +(_el('rsCoMin').value || 0);
+    const q = _norm(_el('rsCoQ').value);
+    const rows = _rows().filter(r => (r.g || 0) >= min && (!q || _norm(r.name).indexOf(q) >= 0 || _norm(r.teams).indexOf(q) >= 0));
+    const hid = _hidden[_role] || {};
+    const cols = ROLE_COLS[_role].filter(col => !hid[col.g]);
+    const sk = _sortK, isStr = STR_KEYS.indexOf(sk) >= 0;
+    rows.sort((a, b) => {
+      const av = a[sk], bv = b[sk];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (isStr) return _sortAsc ? String(av).localeCompare(bv) : String(bv).localeCompare(av);
+      return _sortAsc ? av - bv : bv - av;
+    });
+
+    const heatOn = _el('rsCoHeat').checked && rows.length >= 8;
+    const dist = {};
+    if (heatOn) cols.forEach(col => {
+      const v = rows.map(r => r[col.k]).filter(x => x != null).sort((a, b) => a - b);
+      if (v.length >= 8 && v[0] !== v[v.length - 1]) dist[col.k] = v;
+    });
+    function bg(col, x) {
+      const v = dist[col.k];
+      if (!v || x == null) return '';
+      let p = _pctile(v, x);
+      if (col.heat === false) {
+        const a = p * 0.38;
+        return a < 0.04 ? '' : ' style="background:rgba(245,158,11,' + a.toFixed(3) + ')"';
+      }
+      if (col.lo) p = 1 - p;
+      const a = Math.abs(p - 0.5) * 0.7;
+      return a < 0.035 ? '' : ' style="background:rgba(' + (p >= 0.5 ? '34,197,94,' : '239,68,68,') + a.toFixed(3) + ')"';
+    }
+
+    const groupStart = new Set();
+    cols.forEach((col, i) => { if (i === 0 || cols[i - 1].g !== col.g) groupStart.add(i); });
+    const sortCls = k => (k === _sortK ? (_sortAsc ? ' sorted-asc' : ' sorted-desc') : '');
+    let html = '<table class="rs-table rs-adv"><thead><tr class="rs-adv-grp"><th colspan="4"></th>';
+    for (let i = 0; i < cols.length;) {
+      let j = i;
+      while (j < cols.length && cols[j].g === cols[i].g) j++;
+      html += '<th colspan="' + (j - i) + '">' + _esc(cols[i].g) + '</th>';
+      i = j;
+    }
+    html += '</tr><tr class="rs-adv-hdr">' +
+      '<th data-k="name" class="rs-adv-nm' + sortCls('name') + '">Coach</th>' +
+      '<th data-k="teams" class="rs-adv-tm' + sortCls('teams') + '">Team</th>' +
+      '<th data-k="span" class="rs-adv-tm' + sortCls('span') + '">Seasons</th>' +
+      '<th data-k="g" title="Games in the selected seasons" class="' + sortCls('g') + '">G</th>';
+    cols.forEach((col, i) => {
+      html += '<th data-k="' + col.k + '" title="' + _esc(col.t) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' + _esc(col.l) + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+    rows.forEach((r, idx) => {
+      html += '<tr><td class="rs-adv-nm rs-name" title="' + _esc(r.name) + '"><span class="rs-adv-rk">' + (idx + 1) + '</span>' + _esc(r.name) + '</td>' +
+        '<td class="rs-adv-tm">' + _esc(r.teams) + '</td><td class="rs-adv-tm">' + _esc(r.span) + '</td><td>' + (r.g || 0) + '</td>';
+      cols.forEach((col, i) => {
+        const x = r[col.k];
+        html += '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + bg(col, x) + '>' +
+          (x == null ? '<span class="rs-fmt">&ndash;</span>' : Number(x).toFixed(col.d)) + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    if (!rows.length) html = '<div class="rs-empty">No coaches match these filters.</div>';
+    wrap.innerHTML = html;
+    const split = _el('rsCoSplit').checked;
+    _last = { rows: rows, cols: cols, split: split };
+    const lo = Math.min(_from, _to), hi = Math.max(_from, _to);
+    const cnt = _el('rsCoCount'), csvBtn = _el('rsCoCsv'), foot = _el('rsCoFoot');
+    if (cnt) cnt.textContent = rows.length + ' ' + (split ? 'team-seasons' : ROLE_NAME[_role]) + ' · ' + (lo === hi ? lo : lo + '-' + hi);
+    if (csvBtn) csvBtn.disabled = !rows.length;
+    if (foot) foot.textContent = 'Playcaller = the offensive / defensive coordinator Pro Football Reference lists, unless coach_overrides.json names a head coach who calls plays; a season with a mid-year coordinator change shows both names ("A / B"). ' +
+      'Sources: nflverse play-by-play (tendency, pace, 4th down, run direction, results), nflverse participation (formation, personnel, coverage shells, box counts; published after each season, so 2026 stays blank), FTN charting via nflverse (play design, 2022+), PFF (target share by position; blitz, man and pressure the opponent faced). ' +
+      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better.';
+  }
+
+  function _exportCsv() {
+    const L = _last;
+    if (!L || !L.rows.length) return;
+    const q = v => { const s = String(v == null ? '' : v); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const lines = [['Rank', 'Coach', 'Teams', 'Seasons', 'G'].concat(L.cols.map(col => col.l)).map(q).join(',')];
+    L.rows.forEach((r, i) => {
+      lines.push([i + 1, r.name, r.teams, r.span, r.g].concat(L.cols.map(col => (r[col.k] == null ? '' : Number(r[col.k]).toFixed(col.d)))).map(q).join(','));
+    });
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'MFF-Coach-Profiles-' + ROLE_FILE[_role] + '-' + Math.min(_from, _to) + '-' + Math.max(_from, _to) + (L.split ? '-BySeason' : '') + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    if (typeof toast === 'function') toast('Exported ' + L.rows.length + ' rows to CSV');
+  }
+
+  function _fillSeasons() {
+    const yrs = Array.from(new Set(_all().map(o => o.yr))).sort((a, b) => a - b);
+    if (!yrs.length) return;
+    const opts = yrs.map(y => '<option value="' + y + '">' + y + '</option>').join('');
+    const from = _el('rsCoFrom'), to = _el('rsCoTo');
+    from.innerHTML = opts;
+    to.innerHTML = opts;
+    if (!_from) _from = yrs[0];
+    if (!_to) _to = yrs[yrs.length - 1];
+    from.value = String(_from);
+    to.value = String(_to);
+  }
+
+  function _wire() {
+    if (_wired) return;
+    _wired = true;
+    _el('rsCoRole').addEventListener('click', e => {
+      const b = e.target.closest('.rs-adv-tab');
+      if (!b || b.dataset.role === _role) return;
+      _role = b.dataset.role;
+      document.querySelectorAll('#rsCoRole .rs-adv-tab').forEach(t => {
+        const on = t === b;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      if (STR_KEYS.indexOf(_sortK) < 0 && _sortK !== 'g' && !ROLE_COLS[_role].some(col => col.k === _sortK)) { _sortK = 'g'; _sortAsc = false; }
+      _renderGroups();
+      _render();
+    });
+    _el('rsCoGroups').addEventListener('click', e => {
+      const b = e.target.closest('.rs-adv-chip');
+      if (!b) return;
+      const hid = _hidden[_role] = _hidden[_role] || {};
+      if (hid[b.dataset.g]) delete hid[b.dataset.g]; else hid[b.dataset.g] = true;
+      try { localStorage.setItem('rsCoHidden', JSON.stringify(_hidden)); } catch (err) { /* private mode */ }
+      _renderGroups();
+      _render();
+    });
+    ['rsCoFrom', 'rsCoTo'].forEach(id => _el(id).addEventListener('change', () => {
+      _from = +_el('rsCoFrom').value;
+      _to = +_el('rsCoTo').value;
+      _render();
+    }));
+    ['rsCoSplit', 'rsCoHeat'].forEach(id => _el(id).addEventListener('change', _render));
+    ['rsCoMin', 'rsCoQ'].forEach(id => _el(id).addEventListener('input', _render));
+    _el('rsCoCsv').addEventListener('click', _exportCsv);
+    _el('rsCoWrap').addEventListener('click', e => {
+      const th = e.target.closest('th[data-k]');
+      if (!th) return;
+      const k = th.dataset.k;
+      if (_sortK === k) _sortAsc = !_sortAsc;
+      else {
+        _sortK = k;
+        const col = ROLE_COLS[_role].find(cc => cc.k === k);
+        _sortAsc = STR_KEYS.indexOf(k) >= 0 || !!(col && col.lo);
+      }
+      _render();
+    });
+  }
+
+  window._renderCoachProfiles = function _renderCoachProfiles() {
+    if (!_el('rsCoWrap')) return;
+    _wire();
+    if (_started) return;
+    _started = true;
+    _renderGroups();
+    const p = typeof window._ensureCoachProfiles === 'function' ? window._ensureCoachProfiles() : Promise.resolve(null);
+    p.then(function() { _fillSeasons(); _render(); });
   };
 })();

@@ -20,6 +20,8 @@
 #                                     facets + nflverse pbp + snap counts), current season only
 #                                     -> data/adv_stats_2026.js + data/adv_stats_2026_w<N>.js
 #                                        (index.html _ADV_STATS_V bump)
+#   6. scripts/build_coach_profiles.py  Research page Coach Profiles, current season only (FTN charting
+#                                     re-downloaded) -> data/coach_profiles.js (_COACH_V bump)
 # Schedule: daily 06:15 (WakeToRun). PFF has Sunday's routes by Monday morning, MNF by
 # Tuesday, TNF by Friday. Commits + pushes ONLY when either data file changed, bumping
 # both ?v= in index.html (read fresh from disk - other jobs bump ?v= concurrently).
@@ -40,7 +42,7 @@ Set-Location $Repo
 Write-Log '=== route pct start ==='
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
-$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'index.html')
+$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'data/coach_profiles.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -71,7 +73,11 @@ $out = & $Python 'scripts\build_adv_stats.py' '--years' '2026' 2>&1 | Out-String
 Write-Log ('adv stats: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "ADV STATS BUILD FAILED (exit $LASTEXITCODE) - adv stats file left as is" }
 
-$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js'
+$out = & $Python 'scripts\build_coach_profiles.py' '--years' '2026' 2>&1 | Out-String
+Write-Log ('coach profiles: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "COACH PROFILES BUILD FAILED (exit $LASTEXITCODE) - coach file left as is" }
+
+$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/coach_profiles.js
 if (-not $changed) {
     Write-Log 'no snap / route changes - nothing to commit'
 } else {
@@ -82,9 +88,10 @@ if (-not $changed) {
     $html = $html -replace 'route_pct\.js\?v=[0-9A-Za-z.-]+', ('route_pct.js?v=' + $stamp)
     $html = $html -replace 'player_roles_2026\.js\?v=[0-9A-Za-z.-]+', ('player_roles_2026.js?v=' + $stamp)
     $html = $html -replace "_ADV_STATS_V = '[0-9A-Za-z.-]+'", ("_ADV_STATS_V = '" + $stamp + "'")
+    $html = $html -replace "_COACH_V = '[0-9A-Za-z.-]+'", ("_COACH_V = '" + $stamp + "'")
     [System.IO.File]::WriteAllText($idxPath, $html)
-    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' index.html
-    git commit -m ('Auto snap share + route participation + player roles + adv stats {0} (snap_counts + route_pct + player_roles + adv_stats_2026 + ?v= bump)' -f $stamp)
+    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/coach_profiles.js index.html
+    git commit -m ('Auto snap share + route participation + player roles + adv stats + coach profiles {0} (?v= bump)' -f $stamp)
     git pull --rebase --autostash origin main
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'snap/route data committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

@@ -16,6 +16,9 @@
 #   4. scripts/build_player_roles.py depth-chart archetypes for the card ROLE row (ESPN depth
 #                                     chart + nflverse pbp usage + PFF alignment)
 #                                     -> data/player_roles_2026.js
+#   5. scripts/build_adv_stats.py    admin Research page Advanced Stats tables (PFF weekly
+#                                     facets + nflverse pbp + snap counts), current season only
+#                                     -> data/adv_stats_2026.js (index.html _ADV_STATS_V bump)
 # Schedule: daily 06:15 (WakeToRun). PFF has Sunday's routes by Monday morning, MNF by
 # Tuesday, TNF by Friday. Commits + pushes ONLY when either data file changed, bumping
 # both ?v= in index.html (read fresh from disk - other jobs bump ?v= concurrently).
@@ -36,7 +39,7 @@ Set-Location $Repo
 Write-Log '=== route pct start ==='
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
-$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'index.html')
+$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/adv_stats_2026.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -63,7 +66,11 @@ $out = & $Python 'scripts\build_player_roles.py' 2>&1 | Out-String
 Write-Log ('player roles: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "ROLE BUILD FAILED (exit $LASTEXITCODE) - roles file left as is" }
 
-$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js
+$out = & $Python 'scripts\build_adv_stats.py' '--years' '2026' 2>&1 | Out-String
+Write-Log ('adv stats: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "ADV STATS BUILD FAILED (exit $LASTEXITCODE) - adv stats file left as is" }
+
+$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js
 if (-not $changed) {
     Write-Log 'no snap / route changes - nothing to commit'
 } else {
@@ -73,9 +80,10 @@ if (-not $changed) {
     $html = $html -replace 'snap_counts\.js\?v=[0-9A-Za-z.-]+', ('snap_counts.js?v=' + $stamp)
     $html = $html -replace 'route_pct\.js\?v=[0-9A-Za-z.-]+', ('route_pct.js?v=' + $stamp)
     $html = $html -replace 'player_roles_2026\.js\?v=[0-9A-Za-z.-]+', ('player_roles_2026.js?v=' + $stamp)
+    $html = $html -replace "_ADV_STATS_V = '[0-9A-Za-z.-]+'", ("_ADV_STATS_V = '" + $stamp + "'")
     [System.IO.File]::WriteAllText($idxPath, $html)
-    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js index.html
-    git commit -m ('Auto snap share + route participation + player roles {0} (snap_counts + route_pct + player_roles + ?v= bump)' -f $stamp)
+    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js index.html
+    git commit -m ('Auto snap share + route participation + player roles + adv stats {0} (snap_counts + route_pct + player_roles + adv_stats_2026 + ?v= bump)' -f $stamp)
     git pull --rebase --autostash origin main
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'snap/route data committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

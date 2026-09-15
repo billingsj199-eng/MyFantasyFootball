@@ -62698,6 +62698,8 @@ Rules:
   }
   window._renderResearch = function _renderResearch() {
     if (!document.getElementById('pageResearch')) return;
+    // Advanced Stats has its own per-season data and doesn't wait on the retired DB
+    if (typeof window._renderAdvStats === 'function') window._renderAdvStats();
     const dataP = typeof window._ensureResearchData === 'function' ? window._ensureResearchData() : Promise.resolve();
     dataP.then(function() {
       if (typeof ALL_PLAYERS_DB !== 'undefined') { _init(); return; }
@@ -62713,5 +62715,358 @@ Rules:
         if (++tries < 40) setTimeout(_poll, 500);
       })();
     });
+  };
+})();
+
+// === RESEARCH: ADVANCED STATS (admin-only) ===
+// One sortable table per position from data/adv_stats_<yr>.js (window.ADV_STATS,
+// lazy per season via window._ensureAdvStats). Built by scripts/build_adv_stats.py
+// from PFF Premium season + weekly facets, nflverse play-by-play and snap counts.
+// Column keys MUST match QB_F / RB_F / REC_F in that script.
+(function _advStatsModule() {
+  const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019];
+  // [row key the min filter reads, its label, default per week played]
+  const MIN = { QB: ['db', 'Min dropbacks', 12], RB: ['opp', 'Min att + tgt', 5], WR: ['rts', 'Min routes', 12], TE: ['rts', 'Min routes', 9] };
+  const N = { heat: false };   // descriptive column: no good/bad shading
+  const LO = { lo: true };     // lower is better
+  function c(k, l, g, d, t, o) { return Object.assign({ k: k, l: l, g: g, d: d, t: t }, o || {}); }
+
+  const VOL = 'Volume';
+  const QB_COLS = [
+    c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
+    c('fp', 'FP/G', VOL, 1, 'Half-PPR fantasy points per game (nflverse play-by-play; 2-pt conversions not counted)'),
+    c('db', 'DB', VOL, 0, 'Dropbacks (PFF)'),
+    c('att', 'Att', VOL, 0, 'Pass attempts (PFF)'),
+    c('td', 'TD', VOL, 0, 'Passing touchdowns'),
+    c('int', 'INT', VOL, 0, 'Interceptions', LO),
+    c('cmpp', 'Cmp%', 'Efficiency', 1, 'Completion percentage'),
+    c('ypa', 'Y/A', 'Efficiency', 2, 'Passing yards per attempt'),
+    c('anya', 'ANY/A', 'Efficiency', 2, 'Adjusted net yards per attempt: (yards + 20×TD − 45×INT − sack yards) / (attempts + sacks)'),
+    c('cpoe', 'CPOE', 'Efficiency', 1, 'Completion % over expected (nflverse model)'),
+    c('epa', 'EPA/DB', 'Efficiency', 3, 'Expected points added per dropback (nflverse qb_epa, scrambles included)'),
+    c('grd', 'Pass Grd', 'Efficiency', 1, 'PFF passing grade (dropback-weighted weekly grades)'),
+    c('acc', 'Acc%', 'Efficiency', 1, 'PFF adjusted accuracy: (completions + drops) / aimed passes'),
+    c('tdp', 'TD%', 'Efficiency', 1, 'Touchdowns per attempt'),
+    c('intp', 'INT%', 'Efficiency', 1, 'Interceptions per attempt', LO),
+    c('adot', 'aDOT', 'Style', 1, 'Average depth of target in air yards (PFF)', N),
+    c('ttt', 'TTT', 'Style', 2, 'Average time to throw in seconds (PFF)', N),
+    c('deep', 'Deep%', 'Style', 1, 'Share of attempts thrown 20+ air yards (nflverse)', N),
+    c('btt', 'BTT%', 'Style', 1, 'PFF big-time throw rate'),
+    c('twp', 'TWP%', 'Style', 1, 'PFF turnover-worthy play rate', LO),
+    c('prs', 'Prs%', 'Pressure', 1, 'Share of dropbacks under pressure (PFF)', LO),
+    c('p2s', 'P2S%', 'Pressure', 1, 'Pressure-to-sack rate: sacks / pressures', LO),
+    c('skp', 'Sack%', 'Pressure', 1, 'Sacks per dropback', LO),
+    c('cgr', 'Clean Grd', 'Pressure', 1, 'PFF passing grade from a clean pocket'),
+    c('cacc', 'Clean Acc%', 'Pressure', 1, 'Adjusted accuracy from a clean pocket'),
+    c('pgr', 'Prs Grd', 'Pressure', 1, 'PFF passing grade under pressure'),
+    c('pacc', 'Prs Acc%', 'Pressure', 1, 'Adjusted accuracy under pressure'),
+    c('pypa', 'Prs Y/A', 'Pressure', 2, 'Yards per attempt under pressure'),
+    c('blz', 'Blitzed%', 'Pressure', 1, 'Share of dropbacks facing a blitz', N),
+    c('bgr', 'Blitz Grd', 'Pressure', 1, 'PFF passing grade vs the blitz'),
+    c('bypa', 'Blitz Y/A', 'Pressure', 2, 'Yards per attempt vs the blitz'),
+    c('rug', 'Rush/G', 'Rushing', 1, 'Rush attempts per game incl. scrambles (kneels excluded)'),
+    c('ruy', 'RuYd/G', 'Rushing', 1, 'Rushing yards per game'),
+    c('rtd', 'Rush TD', 'Rushing', 0, 'Rushing touchdowns'),
+    c('scr', 'Scrambles', 'Rushing', 0, 'Scrambles (nflverse)', N)
+  ];
+  const RB_COLS = [
+    c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
+    c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
+    c('fp', 'FP/G', VOL, 1, 'Half-PPR fantasy points per game (nflverse play-by-play; 2-pt conversions not counted)'),
+    c('att', 'Att', VOL, 0, 'Rush attempts (PFF)'),
+    c('tgt', 'Tgt', VOL, 0, 'Targets'),
+    c('tchg', 'Tch/G', VOL, 1, 'Carries + receptions per game'),
+    c('scyg', 'ScrYd/G', VOL, 1, 'Scrimmage yards per game'),
+    c('tds', 'TD', VOL, 0, 'Rushing + receiving touchdowns'),
+    c('car', 'Carry%', 'Usage', 1, 'Share of team carries in games played (designed runs; scrambles and kneels out)'),
+    c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
+    c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played'),
+    c('i5', 'Inside 5', 'Usage', 0, 'Carries inside the opponent 5'),
+    c('i10s', 'I10 Car%', 'Usage', 1, 'Share of team carries inside the opponent 10'),
+    c('hvt', 'HVT/G', 'Usage', 1, 'High-value touches per game: receptions + carries inside the 10'),
+    c('ypc', 'YPC', 'Rushing', 2, 'Yards per carry'),
+    c('yco', 'YCO/A', 'Rushing', 2, 'Yards after contact per attempt (PFF)'),
+    c('mtf', 'MTF/A', 'Rushing', 2, 'Missed tackles forced per rush (PFF)'),
+    c('elu', 'Elusive', 'Rushing', 1, 'PFF elusive rating'),
+    c('bay', 'Brkaway%', 'Rushing', 1, 'Share of rushing yards gained on 15+ yard runs (PFF breakaway)'),
+    c('exp', 'Expl%', 'Rushing', 1, 'PFF explosive runs per attempt'),
+    c('fdp', '1D%', 'Rushing', 1, 'First downs per carry (nflverse)'),
+    c('suc', 'Success%', 'Rushing', 1, 'nflverse success rate (EPA > 0) on carries'),
+    c('repa', 'EPA/Car', 'Rushing', 3, 'Expected points added per carry (nflverse)'),
+    c('rgr', 'Run Grd', 'Rushing', 1, 'PFF rushing grade'),
+    c('gap', 'Gap%', 'Rushing', 1, 'Gap-scheme share of gap + zone runs (PFF)', N),
+    c('rts', 'Routes', 'Receiving', 0, 'Routes run (PFF)'),
+    c('tprr', 'TPRR', 'Receiving', 2, 'Targets per route run'),
+    c('yprr', 'YPRR', 'Receiving', 2, 'Receiving yards per route run'),
+    c('recg', 'Route Grd', 'Receiving', 1, 'PFF receiving grade'),
+    c('pbg', 'PBlk Grd', 'Receiving', 1, 'PFF pass-blocking grade')
+  ];
+  const REC_COLS = [
+    c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
+    c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
+    c('fp', 'FP/G', VOL, 1, 'Half-PPR fantasy points per game (nflverse play-by-play; 2-pt conversions not counted)'),
+    c('rts', 'Routes', VOL, 0, 'Routes run (PFF)'),
+    c('tgt', 'Tgt', VOL, 0, 'Targets'),
+    c('tg', 'Tgt/G', VOL, 1, 'Targets per game'),
+    c('ydg', 'Yd/G', VOL, 1, 'Receiving yards per game'),
+    c('tds', 'TD', VOL, 0, 'Receiving touchdowns'),
+    c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played (RT%)'),
+    c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
+    c('ays', 'AY%', 'Usage', 1, 'Share of team air yards in games played (nflverse)'),
+    c('wopr', 'WOPR', 'Usage', 2, 'Weighted opportunity: 1.5 × target share + 0.7 × air-yards share'),
+    c('tprr', 'TPRR', 'Usage', 2, 'Targets per route run'),
+    c('rz', 'RZ Tgt', 'Usage', 0, 'Targets inside the opponent 20'),
+    c('ez', 'EZ Tgt', 'Usage', 0, 'End-zone targets (air yards reach the goal line)'),
+    c('slot', 'Slot%', 'Usage', 1, 'Share of snaps lined up in the slot (PFF)', N),
+    c('wide', 'Wide%', 'Usage', 1, 'Share of snaps lined up out wide (PFF)', N),
+    c('inl', 'Inline%', 'Usage', 1, 'Share of snaps lined up in-line (PFF)', N),
+    c('pbr', 'PBlk%', 'Usage', 1, 'Pass-block snaps / pass plays on the field (PFF)', N),
+    c('yprr', 'YPRR', 'Efficiency', 2, 'Receiving yards per route run'),
+    c('grd', 'Route Grd', 'Efficiency', 1, 'PFF receiving grade'),
+    c('adot', 'aDOT', 'Efficiency', 1, 'Average depth of target (PFF)', N),
+    c('racr', 'RACR', 'Efficiency', 2, 'Receiver air conversion ratio: receiving yards / air yards'),
+    c('yac', 'YAC/Rec', 'Efficiency', 1, 'Yards after catch per reception (PFF)'),
+    c('mtfr', 'MTF/Rec', 'Efficiency', 2, 'Avoided tackles per reception (PFF)'),
+    c('fdr', '1D/RR', 'Efficiency', 3, 'First downs per route run'),
+    c('ctch', 'Catch%', 'Efficiency', 1, 'Receptions / targets'),
+    c('drp', 'Drop%', 'Efficiency', 1, 'PFF drop rate: drops / (drops + receptions)', LO),
+    c('cc', 'CC%', 'Efficiency', 1, 'Contested catch rate (PFF)'),
+    c('ctg', 'Cont Tgt%', 'Efficiency', 1, 'Share of targets that were contested (PFF)', N),
+    c('tqbr', 'Tgt Rtg', 'Efficiency', 1, 'Passer rating when targeted (PFF)'),
+    c('epat', 'EPA/Tgt', 'Efficiency', 2, 'Expected points added per target (nflverse)'),
+    c('myprr', 'YPRR Man', 'Coverage & depth', 2, 'Yards per route run vs man coverage (PFF)'),
+    c('zyprr', 'YPRR Zone', 'Coverage & depth', 2, 'Yards per route run vs zone coverage (PFF)'),
+    c('mtprr', 'TPRR Man', 'Coverage & depth', 2, 'Targets per route run vs man coverage'),
+    c('ztprr', 'TPRR Zone', 'Coverage & depth', 2, 'Targets per route run vs zone coverage'),
+    c('slyprr', 'Slot YPRR', 'Coverage & depth', 2, 'Yards per route run from the slot'),
+    c('scr', 'Screen%', 'Coverage & depth', 1, 'Share of targets on screens (PFF)', N),
+    c('deep', 'Deep Tgt%', 'Coverage & depth', 1, 'Share of targets 20+ air yards downfield (PFF)', N),
+    c('dyd', 'Deep Yd%', 'Coverage & depth', 1, 'Share of receiving yards on 20+ air-yard targets', N),
+    c('dctch', 'Deep Catch%', 'Coverage & depth', 1, 'Catch rate on 20+ air-yard targets'),
+    c('blos', 'bLOS Tgt%', 'Coverage & depth', 1, 'Share of targets caught at or behind the line of scrimmage (PFF)', N)
+  ];
+  const COLS = { QB: QB_COLS, RB: RB_COLS, WR: REC_COLS, TE: REC_COLS };
+  const NOTES = {
+    QB: 'Clean / pressured / blitz splits and grades are PFF (weekly grades weighted by dropbacks). CPOE and EPA are nflverse.',
+    RB: 'Rush efficiency is PFF charting except 1D%, Success% and EPA (nflverse). Grades 2019-2025 are PFF season grades; 2026 weights weekly grades by attempts.',
+    WR: 'PFF lists a receiver in a week\'s man/zone and slot tables only when he was targeted, so those route counts are scaled up to his season route total.',
+    TE: 'PFF lists a receiver in a week\'s man/zone and slot tables only when he was targeted, so those route counts are scaled up to his season route total. PBlk% = pass-block snaps per pass play.'
+  };
+
+  let _pos = 'QB', _yr = YEARS[0], _sortK = 'fp', _sortAsc = false;
+  let _wired = false, _started = false, _rowCache = {};
+  let _hidden = {};
+  try { _hidden = JSON.parse(localStorage.getItem('rsAdvHidden') || '{}') || {}; } catch (e) { _hidden = {}; }
+
+  function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+  function _norm(s) { return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
+  function _season() { return (window.ADV_STATS || {})[_yr] || null; }
+  function _thru() { const s = _season(); return s && s.thru ? Math.min(s.thru, 17) : 17; }
+  function _el(id) { return document.getElementById(id); }
+
+  function _rows() {
+    const key = _yr + '|' + _pos;
+    if (_rowCache[key]) return _rowCache[key];
+    const s = _season();
+    const t = s && s[_pos];
+    if (!t) return null;
+    const out = t.r.map(r => {
+      const o = {};
+      for (let i = 0; i < t.f.length; i++) o[t.f[i]] = r[i];
+      o.opp = (o.att || 0) + (o.tgt || 0);
+      return o;
+    });
+    _rowCache[key] = out;
+    return out;
+  }
+
+  function _resetMin() {
+    const m = MIN[_pos];
+    const inp = _el('rsAdvMin'), lbl = _el('rsAdvMinLbl');
+    if (inp) inp.value = Math.round(m[2] * _thru());
+    if (lbl) lbl.textContent = m[1];
+  }
+
+  function _renderGroups() {
+    const host = _el('rsAdvGroups');
+    if (!host) return;
+    const groups = [];
+    COLS[_pos].forEach(col => { if (groups.indexOf(col.g) < 0) groups.push(col.g); });
+    const hid = _hidden[_pos] || {};
+    host.innerHTML = groups.map(g => '<button type="button" class="rs-adv-chip' + (hid[g] ? '' : ' on') +
+      '" data-g="' + _esc(g) + '" aria-pressed="' + (hid[g] ? 'false' : 'true') + '">' + _esc(g) + '</button>').join('');
+  }
+
+  // percentile of x inside sorted array v (ties share the midpoint)
+  function _pctile(v, x) {
+    let lo = 0, hi = v.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (v[m] < x) lo = m + 1; else hi = m; }
+    const lt = lo;
+    hi = v.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (v[m] <= x) lo = m + 1; else hi = m; }
+    return ((lt + lo - 1) / 2) / (v.length - 1);
+  }
+
+  function _render() {
+    const wrap = _el('rsAdvWrap');
+    if (!wrap) return;
+    const all = _rows();
+    const cnt = _el('rsAdvCount'), foot = _el('rsAdvFoot');
+    if (!all) {
+      wrap.innerHTML = '<div class="rs-empty">No advanced stats file for ' + _yr + '.</div>';
+      if (cnt) cnt.textContent = '';
+      if (foot) foot.textContent = '';
+      return;
+    }
+    const tmSel = _el('rsAdvTm');
+    const teams = Array.from(new Set(all.map(r => r.tm).filter(Boolean))).sort();
+    const curTm = tmSel.value;
+    tmSel.innerHTML = '<option value="">All</option>' + teams.map(t => '<option>' + _esc(t) + '</option>').join('');
+    tmSel.value = teams.indexOf(curTm) >= 0 ? curTm : '';
+
+    const minKey = MIN[_pos][0];
+    const min = +(_el('rsAdvMin').value || 0);
+    const q = _norm(_el('rsAdvQ').value);
+    const rows = all.filter(r => (r[minKey] || 0) >= min && (!tmSel.value || r.tm === tmSel.value) && (!q || _norm(r.n).indexOf(q) >= 0));
+    const hid = _hidden[_pos] || {};
+    const cols = COLS[_pos].filter(col => !hid[col.g]);
+
+    const sk = _sortK;
+    rows.sort((a, b) => {
+      const av = a[sk], bv = b[sk];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (sk === 'n' || sk === 'tm') return _sortAsc ? String(av).localeCompare(bv) : String(bv).localeCompare(av);
+      return _sortAsc ? av - bv : bv - av;
+    });
+
+    const heatOn = _el('rsAdvHeat').checked && rows.length >= 8;
+    const dist = {};
+    if (heatOn) cols.forEach(col => {
+      if (col.heat === false) return;
+      const v = rows.map(r => r[col.k]).filter(x => x != null).sort((a, b) => a - b);
+      if (v.length >= 8 && v[0] !== v[v.length - 1]) dist[col.k] = v;
+    });
+    function bg(col, x) {
+      const v = dist[col.k];
+      if (!v || x == null) return '';
+      let p = _pctile(v, x);
+      if (col.lo) p = 1 - p;
+      const a = Math.abs(p - 0.5) * 0.7;
+      if (a < 0.035) return '';
+      return ' style="background:rgba(' + (p >= 0.5 ? '34,197,94,' : '239,68,68,') + a.toFixed(3) + ')"';
+    }
+
+    const groupStart = new Set();
+    cols.forEach((col, i) => { if (i === 0 || cols[i - 1].g !== col.g) groupStart.add(i); });
+    const sortCls = k => (k === _sortK ? (_sortAsc ? ' sorted-asc' : ' sorted-desc') : '');
+    let html = '<table class="rs-table rs-adv"><thead><tr class="rs-adv-grp"><th colspan="2"></th>';
+    for (let i = 0; i < cols.length;) {
+      let j = i;
+      while (j < cols.length && cols[j].g === cols[i].g) j++;
+      html += '<th colspan="' + (j - i) + '">' + _esc(cols[i].g) + '</th>';
+      i = j;
+    }
+    html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">Player</th>' +
+      '<th data-k="tm" class="rs-adv-tm' + sortCls('tm') + '">Tm</th>';
+    cols.forEach((col, i) => {
+      html += '<th data-k="' + col.k + '" title="' + _esc(col.t) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' + _esc(col.l) + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+    rows.forEach((r, idx) => {
+      html += '<tr' + (r.on ? ' class="rs-adv-click" data-n="' + _esc(r.n) + '"' : '') + '>' +
+        '<td class="rs-adv-nm' + (r.on ? ' rs-name' : ' rs-adv-off') + '" title="' + _esc(r.n) + (r.on ? '' : ' (not on the site board)') + '">' +
+        '<span class="rs-adv-rk">' + (idx + 1) + '</span>' + _esc(r.n) + '</td><td class="rs-adv-tm">' + _esc(r.tm || '') + '</td>';
+      cols.forEach((col, i) => {
+        const x = r[col.k];
+        html += '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + bg(col, x) + '>' +
+          (x == null ? '<span class="rs-fmt">&ndash;</span>' : Number(x).toFixed(col.d)) + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    if (!rows.length) html = '<div class="rs-empty">No players match these filters.</div>';
+    wrap.innerHTML = html;
+
+    const thru = (_season() || {}).thru;
+    if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yr + (thru && thru < 17 ? ' thru Week ' + thru : '');
+    if (foot) foot.textContent = NOTES[_pos] + ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played. ' +
+      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (thru && thru < 17 ? ' ' + _yr + ' updates daily as PFF posts each week.' : '');
+  }
+
+  function _load() {
+    const wrap = _el('rsAdvWrap');
+    const yr = _yr;
+    if (wrap && !_season()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + ' advanced stats&hellip;</div>';
+    const p = typeof window._ensureAdvStats === 'function' ? window._ensureAdvStats(yr) : Promise.resolve(null);
+    p.then(function() {
+      if (yr !== _yr) return;
+      _resetMin();
+      _render();
+    });
+  }
+
+  function _wire() {
+    if (_wired) return;
+    _wired = true;
+    const yrSel = _el('rsAdvYr');
+    YEARS.forEach(y => yrSel.add(new Option(y, y)));
+    yrSel.value = _yr;
+    yrSel.addEventListener('change', () => { _yr = +yrSel.value; _load(); });
+    _el('rsAdvTabs').addEventListener('click', e => {
+      const b = e.target.closest('.rs-adv-tab');
+      if (!b || b.dataset.pos === _pos) return;
+      _pos = b.dataset.pos;
+      document.querySelectorAll('#rsAdvTabs .rs-adv-tab').forEach(t => {
+        const on = t === b;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      if (!COLS[_pos].some(col => col.k === _sortK)) { _sortK = 'fp'; _sortAsc = false; }
+      _resetMin();
+      _renderGroups();
+      _render();
+    });
+    _el('rsAdvGroups').addEventListener('click', e => {
+      const b = e.target.closest('.rs-adv-chip');
+      if (!b) return;
+      const hid = _hidden[_pos] = _hidden[_pos] || {};
+      if (hid[b.dataset.g]) delete hid[b.dataset.g]; else hid[b.dataset.g] = true;
+      try { localStorage.setItem('rsAdvHidden', JSON.stringify(_hidden)); } catch (err) { /* private mode */ }
+      _renderGroups();
+      _render();
+    });
+    ['rsAdvTm', 'rsAdvHeat'].forEach(id => _el(id).addEventListener('change', _render));
+    ['rsAdvMin', 'rsAdvQ'].forEach(id => _el(id).addEventListener('input', _render));
+    _el('rsAdvWrap').addEventListener('click', e => {
+      const th = e.target.closest('th[data-k]');
+      if (th) {
+        const k = th.dataset.k;
+        if (_sortK === k) _sortAsc = !_sortAsc;
+        else {
+          _sortK = k;
+          const col = COLS[_pos].find(cc => cc.k === k);
+          // names/teams A-Z; lower-is-better stats start ascending; everything else high first
+          _sortAsc = k === 'n' || k === 'tm' || !!(col && col.lo);
+        }
+        _render();
+        return;
+      }
+      const tr = e.target.closest('tr[data-n]');
+      if (tr && typeof openPlayerCard === 'function' && typeof D !== 'undefined') {
+        const d = D.find(p => p.n === tr.dataset.n);
+        if (d) openPlayerCard(d);
+      }
+    });
+  }
+
+  window._renderAdvStats = function _renderAdvStats() {
+    if (!_el('rsAdvWrap')) return;
+    _wire();
+    if (_started) return;
+    _started = true;
+    _renderGroups();
+    _load();
   };
 })();

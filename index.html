@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-15i" as="script">
+<link rel="preload" href="app.js?v=2026-09-15-adv" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2630,13 +2630,36 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-08-06">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-15-adv2">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
 <div class="rs-header">
 <div class="rs-title">Research</div>
-<div class="rs-subtitle">Historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: MFL 1999-2007 (via Wayback; top 32 for 1999-2005, top 100 for 2006, top 200 for 2007), FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year), ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
+<div class="rs-subtitle">Advanced stats by position (PFF Premium charting + nflverse play-by-play, 2019-2026), historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: MFL 1999-2007 (via Wayback; top 32 for 1999-2005, top 100 for 2006, top 200 for 2007), FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year), ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
+</div>
+
+<!-- Advanced stats -->
+<div class="rs-section" id="rsAdvSection">
+<div class="rs-section-title">Advanced Stats</div>
+<div class="rs-help">PFF Premium charting + nflverse play-by-play, regular season only. Pick a position, click any column header to sort, hover a header for its definition. Shading = percentile rank among the rows shown (green = better). Click a player to open their card.</div>
+<div class="rs-adv-tabs" id="rsAdvTabs" role="tablist" aria-label="Position">
+<button type="button" class="rs-adv-tab active" data-pos="QB" role="tab" aria-selected="true">QB</button>
+<button type="button" class="rs-adv-tab" data-pos="RB" role="tab" aria-selected="false">RB</button>
+<button type="button" class="rs-adv-tab" data-pos="WR" role="tab" aria-selected="false">WR</button>
+<button type="button" class="rs-adv-tab" data-pos="TE" role="tab" aria-selected="false">TE</button>
+</div>
+<div class="rs-controls">
+<label>Season <select id="rsAdvYr" class="rs-select"></select></label>
+<label>Team <select id="rsAdvTm" class="rs-select"><option value="">All</option></select></label>
+<label><span id="rsAdvMinLbl">Min dropbacks</span> <input type="number" id="rsAdvMin" class="rs-num" min="0" step="5"></label>
+<input type="text" id="rsAdvQ" class="rs-search rs-adv-q" placeholder="Filter players&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter players">
+<label class="rs-check"><input type="checkbox" id="rsAdvHeat" checked> Shading</label>
+<span class="rs-count" id="rsAdvCount"></span>
+</div>
+<div class="rs-adv-groups" id="rsAdvGroups"></div>
+<div class="rs-table-wrap rs-adv-wrap" id="rsAdvWrap"><div class="rs-empty">Loading advanced stats&hellip;</div></div>
+<div class="rs-adv-foot" id="rsAdvFoot"></div>
 </div>
 
 <!-- Player lookup -->
@@ -5473,6 +5496,25 @@ window._ensureResearchData = (function() {
   };
 })();
 
+// Research page Advanced Stats: data/adv_stats_<yr>.js (window.ADV_STATS[yr], one
+// season per file, 2019-2026, scripts/build_adv_stats.py). Loaded one season at a
+// time when the section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
+window._ADV_STATS_V = '2026-09-15';
+window._ensureAdvStats = (function() {
+  const cache = {};
+  return function _ensureAdvStats(yr) {
+    if (cache[yr]) return cache[yr];
+    cache[yr] = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/adv_stats_' + yr + '.js?v=' + window._ADV_STATS_V;
+      s.onload = function() { resolve((window.ADV_STATS || {})[yr] || null); };
+      s.onerror = function() { console.warn('[AdvStats] load failed', yr); delete cache[yr]; resolve(null); };
+      document.head.appendChild(s);
+    });
+    return cache[yr];
+  };
+})();
+
 // Player-card extras: nfl_prospect_grades.js (~118 KB, window._NFL_PROSPECT_GRADES →
 // NFL.com grade section). Single consumer inside openPlayerCard's template — the card
 // fires this on open and re-renders itself once when the data lands (see openPlayerCard).
@@ -5710,7 +5752,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-15i"></script>
+<script defer src="app.js?v=2026-09-15-adv"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

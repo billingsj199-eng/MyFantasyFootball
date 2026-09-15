@@ -1495,3 +1495,26 @@ vs OTHER defenses. 17,657 player-weeks 2019-25. Log: pairing_history_backtest.lo
   arrives after the season - a 2026 in-season alignment layer is not
   possible; a post-season research pass could use PFF slot/wide snaps
   (weekly, available now) vs defense slot/wide allowed if participation lands.
+
+## Run direction matchup (backtest_run_direction.py) - REJECTED as a layer 2026-09-15
+
+Jack: "where each defense gets targeted or what type of runs outside/inside".
+nflverse pbp run_location (left/middle/right) + run_gap (end = edge vs
+interior) on ~95% of designed runs, NIGHTLY. 102k RB-group carries 2018-25;
+per defense yds/carry (capped -10..40) and success (>= 4 yds) ratios by zone
+vs league, shrunk K=60; funnel = share of carries faced by zone; RB mix
+season-to-date shrunk toward prior season (K=40). Matchup M = sum w_z r_z /
+r_all on 3,802 RB player-weeks (defense >= 60 carries faced), LOYO.
+Log: run_direction_backtest.log.
+
+- Persistence: defense per-direction EFFICIENCY residual is noise (early->late
+  r .11 left / .16 middle / -.03 right / .09 edge / .10 interior; YoY <= .17),
+  while overall run defense persists (.34 / .28) - the run-game twin of the
+  passing-zone finding. Direction FUNNELS persist (left .41, middle .61,
+  right .41, edge/interior .52) and RB direction mix persists (.42-.60).
+- Every matchup multiplier flat or worse: side/lane x yards 0/7, x success
+  0/7, funnels 0/7 and 4/7 at +0.04%; quintiles have no slope.
+- NOT SHIPPED. Same conclusion as zones: identities exist (where a defense
+  gets run at, where a back runs), no exploitable interaction. INTEL value
+  only ("KC gets run at left edge 30% of the time, lg 22%"; "Henry: 46%
+  interior right") - candidate RUN LANES card for the ZONES tab.

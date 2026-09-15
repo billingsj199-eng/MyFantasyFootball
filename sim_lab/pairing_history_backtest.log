@@ -1,0 +1,50 @@
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 392, 'team': 244}
+
+17657 player-weeks | with a prior meeting vs this defense: 8643 (>= 2 prior: 4599) | same-season rematch: 2384
+
+=== GATE. does the pairing history predict the current residual? (corr with actual/shipped - 1) ===
+  prior meetings vs THIS defense (n>=1): r = -0.000  (n=8643)
+  prior meetings vs THIS defense (n>=2): r = +0.020  (n=4599)
+  same-season rematch (game 1 -> game 2): r = +0.012  (n=2384)
+  CONTROL general form vs OTHER defenses:  r = +0.054  (n=8643)
+  pairing EXCESS (pair - general):          r = -0.018
+    QB: pair r +0.016 | general r +0.036 | excess r +0.002 (n=1357)
+    RB: pair r -0.004 | general r +0.071 | excess r -0.028 (n=2138)
+    WR: pair r -0.010 | general r +0.036 | excess r -0.021 (n=3444)
+    TE: pair r +0.014 | general r +0.065 | excess r -0.008 (n=1704)
+
+=== 1. actual / shipped by prior-pairing residual tercile (players who crushed / flopped vs this D before) ===
+  flopped before   prior resid -0.52 -> now 1.032 (n=2881)
+  middle           prior resid +0.02 -> now 1.018 (n=2881)
+  crushed before   prior resid +0.81 -> now 1.050 (n=2881)
+  rematch game-1 flop  game-1 resid -0.66 -> game 2 1.029 (n=795)
+  rematch middle       game-1 resid -0.09 -> game 2 1.001 (n=794)
+  rematch game-1 crush game-1 resid +0.96 -> game 2 1.032 (n=795)
+
+=== 1b. home / away (harness has no home term; Vegas spread carries it) ===
+  home                       QB 1.063 (n=1280) | RB 1.081 (n=2258) | WR 1.043 (n=3603) | TE 1.066 (n=1684) | ALL 1.061 (n=8825)
+  away                       QB 1.018 (n=1274) | RB 1.058 (n=2234) | WR 1.017 (n=3599) | TE 1.080 (n=1725) | ALL 1.035 (n=8832)
+
+=== 2. LOYO: shipped x (1 + k x shrunk predictor) (grid[0] = shipped) ===
+  a) pairing residual (shrunk n/(n+2))
+    grid pooled MSE: +0.00:43.518  +0.10:43.516  +0.20:43.580  +0.30:43.709  +0.50:44.127
+    pooled best +0.10 | LOYO MSE 43.3297 vs shipped 43.2945 (+0.08%), years better 0/7, picks [0.0, 0.0, 0.1, 0.1, 0.0, 0.0, 0.1]
+  b) pairing EXCESS over general form
+    grid pooled MSE: +0.00:43.518  +0.10:43.535  +0.20:43.622  +0.30:43.779  +0.50:44.268
+    pooled best +0.00 | LOYO MSE 43.3173 vs shipped 43.2945 (+0.05%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1]
+  c) same-season rematch: game-1 residual
+    grid pooled MSE: +0.00:43.518  +0.10:43.543  +0.20:43.688  +0.30:43.877  +0.50:44.296
+    pooled best +0.00 | LOYO MSE 43.2945 vs shipped 43.2945 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  d) CONTROL: general form vs other defenses (recent 16)
+    grid pooled MSE: +0.00:43.518  +0.10:43.461  +0.20:43.468  +0.30:43.541  +0.50:43.879
+    pooled best +0.10 | LOYO MSE 43.2567 vs shipped 43.2945 (-0.09%), years better 5/7, picks [0.2, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1]
+  e) home multiplier
+    grid pooled MSE: +1.00:43.518  +0.98:43.623  +0.96:43.776  +1.02:43.461  +1.04:43.452
+    pooled best +1.04 | LOYO MSE 43.2639 vs shipped 43.2945 (-0.07%), years better 4/7, picks [1.04, 1.02, 1.04, 1.04, 1.02, 1.02, 1.04]

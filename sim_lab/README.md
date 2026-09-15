@@ -1464,3 +1464,34 @@ parsed: rain 763, snow 175, cold (<=32F) 692, freezing 212.
   if it survives, QB/WR x0.93 on rain (not RB/TE) is the shape. Data live:
   Open-Meteo `pop` (precip probability) is already in sim_weather.js.
   Log: precip_backtest.log.
+
+## Player x defense pairing history (backtest_pairing_history.py) - REJECTED 2026-09-15
+
+Jack: "find specific players that do great or horrible against specific
+defenses". Walk-forward residual r = actual/shipped - 1 per player-week;
+predictors from EARLIER games only: mean residual of prior meetings vs THIS
+defense (8,643 rows with >= 1 prior meeting, 4,599 with >= 2), the same-season
+rematch (game 1 -> game 2, 2,384), and as control the player's recent residual
+vs OTHER defenses. 17,657 player-weeks 2019-25. Log: pairing_history_backtest.log.
+
+- Pairing history predicts NOTHING: r = -0.000 (n>=1), +0.020 (n>=2),
+  rematch +0.012; pairing excess over general form -0.018. Terciles flat:
+  players who "flopped before" vs a defense run 1.032 now, "crushed before"
+  1.050 - both the ordinary under-projection level. LOYO worse at every k
+  (0/7) for pairing, excess and rematch.
+- The CONTROL is the only signal: recent form vs other defenses r +.054,
+  x(1 + .1 x form) -0.09% (5/7) - that is player momentum the P=5 blend only
+  partly carries, not a matchup effect. Small; not shipped.
+- Home/away: home 1.061 vs away 1.035 after Vegas (~2.5% relative); home
+  x1.04 -0.07% (4/7). Marginal, below bar; Vegas spread carries most of it.
+- CONCLUSION for the "alignments / strengths vs weaknesses" question: at the
+  player x defense level there is no season-long memory to exploit. What
+  survives testing is (1) defense position-level points allowed (shipped FPA
+  layer, e=.25), (2) elite/CB1 corner presence (shipped CB layers), (3) the
+  player's own profile (target depth mix is sticky - ZONES intel), and (4)
+  luck regression (TD family). Defense-by-zone efficiency, man/zone, pressure
+  docks, pairing history and rematches all graded as noise. True alignment
+  data (who lined up where, coverage type) is FTN/participation and only
+  arrives after the season - a 2026 in-season alignment layer is not
+  possible; a post-season research pass could use PFF slot/wide snaps
+  (weekly, available now) vs defense slot/wide allowed if participation lands.

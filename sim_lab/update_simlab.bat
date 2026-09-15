@@ -28,13 +28,9 @@ if errorlevel 1 (
 python pull_pace_tracker.py >> "%LOG%" 2>&1
 if errorlevel 1 echo PACE PULL FAILED - continuing >> "%LOG%"
 
-REM NOTES sheet (2026-09-15): headless twin of the NOTES tab -> notes
-otes_w<N>_half.txt
-REM + notes
-otes_latest.txt (deploys with the site: /notes/notes_latest.txt). Non-fatal.
-set NODE=E:
-ode
-ode.exe
+REM NOTES sheet (2026-09-15): headless twin of the NOTES tab -> notes/notes_w<N>_half.txt
+REM + notes/notes_latest.txt (deploys with the site: /notes/notes_latest.txt). Non-fatal.
+set NODE=E:\node\node.exe
 if not exist "%NODE%" set NODE=node
 "%NODE%" export_notes.js >> "%LOG%" 2>&1
 if errorlevel 1 echo NOTES EXPORT FAILED - continuing >> "%LOG%"

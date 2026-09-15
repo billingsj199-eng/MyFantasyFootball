@@ -3,7 +3,12 @@ SCHEME / ALIGNMENT intel from the PFF Premium weekly facets -> data/scheme_2026.
 (window.SIM_SCHEME_2026). INTEL ONLY - nothing here moves a projection.
 
 Jack 2026-09-15: "we can definitely find alignments and where each defense gets
-targeted or what type of runs outside/inside zone etc somewhere maybe pff" -> "do it".
+targeted or what type of runs outside/inside zone etc somewhere maybe pff" -> "do it";
+then "get the info from last season and see if there are any similarities to week 1
+because then that team defense or offensive players will be somewhat reliable" ->
+the same profiles are built for the PRIOR season (PFF weekly facets 1-18, fetched once
+by the puller) and shipped as *Prior maps plus a league-wide W1-vs-prior correlation
+per metric (`persist`), so the tab can flag what carried over.
 
 Source files (scripts/pull_pff_weekly.py in the site repo, one CSV per facet per
 played week, E:\\MyFantasyFootball\\pbp_cache\\pff\\weekly\\pff_<facet>_<season>_w<N>.csv):
@@ -13,10 +18,11 @@ played week, E:\\MyFantasyFootball\\pbp_cache\\pff\\weekly\\pff_<facet>_<season>
   passing_pressure         per QB blitz / pressure dropback splits       -> QB splits; BLITZ % and PRESSURE % *generated* by
                                                                             the defense he faced (opponent map from nflverse pbp)
   rushing_summary          per rusher gap vs zone attempts, yco, breakaway-> RB style; run defense faced (ypc, yco, gap share...)
-  rushing_direction        per rusher carries by lane (LE LT LG MID RG RT RE) -> RB lane mix; lanes a defense gets run at
+  rushing_direction        per rusher carries by lane (LE LT LG ML MR RG RT RE) -> RB lane mix; lanes a defense gets run at
   receiving_scheme         per receiver man / zone routes, targets, yards -> man-beater / zone-beater profiles; team man seen
   receiving_concept        per receiver screen + slot routes / targets    -> screen share, slot share
   receiving (summary)      slot / wide / inline snaps                      -> alignment mix
+                           (current season = pff_receiving_<yr>_w<N>.csv, prior = pff_receiving_summary_<yr>_w<N>.csv)
   (receiving_depth is saved by the puller but not aggregated here - the ZONES
    tab already carries target depth x side from pbp.)
 
@@ -29,7 +35,7 @@ Team codes: PFF uses ARZ/BLT/CLV/HST/LA -> ARI/BAL/CLE/HOU/LAR (Sim Lab codes).
 Player keys: pull_pace_tracker.norm_name (same key the engine uses).
 Run standalone (python build_scheme.py) or via pull_pace_tracker.build().
 """
-import glob, json, os, re, sys, time
+import glob, json, math, os, re, sys, time
 
 import pandas as pd
 
@@ -37,11 +43,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = r"E:\MyFantasyFootball\pbp_cache"
 PFF_WEEKLY = os.path.join(CACHE, "pff", "weekly")
 OUT = os.path.join(HERE, "data", "scheme_2026.js")
-SEASON = 2026
+SEASON, PRIOR = 2026, 2025
 PFF_ALIAS = {"ARZ": "ARI", "BLT": "BAL", "CLV": "CLE", "HST": "HOU", "LA": "LAR", "OAK": "LV", "SD": "LAC", "WSH": "WAS"}
 LANES = ["LE", "LT", "LG", "ML", "MR", "RG", "RT", "RE"]      # PFF direction codes (W1 2026 counts confirm)
 LANE_ALIAS = {"JS-L": "LE", "EA-L": "LE", "JS-R": "RE", "EA-R": "RE"}  # jet sweeps / end-arounds = edge; QB* codes ignored
 EDGE = {"LE", "RE"}
+# defense metrics compared season-over-season (key, sub) - identities first
+PERSIST_KEYS = [("man", None), ("blitz", None), ("prs", None), ("prwr", None), ("sBox", None), ("dbRush", None),
+                ("mtRate", None), ("slotYd", None), ("screenTg", None), ("grCov", None), ("grRun", None), ("grPrsh", None),
+                ("ypc", "run"), ("yco", "run"), ("gap", "run"), ("edge", "run"), ("exp", "run"), ("mtf", "run")]
 
 
 def tm(t):
@@ -55,9 +65,9 @@ def norm_name(n):
     return re.sub(r"\s+", " ", n).strip()
 
 
-def load(facet):
-    """All weeks of one facet -> DataFrame with numeric columns coerced; None when absent."""
-    files = sorted(glob.glob(os.path.join(PFF_WEEKLY, f"pff_{facet}_{SEASON}_w*.csv")),
+def load(facet, season):
+    """All weeks of one facet for one season -> DataFrame (numeric coerced); None when absent."""
+    files = sorted(glob.glob(os.path.join(PFF_WEEKLY, f"pff_{facet}_{season}_w*.csv")),
                    key=lambda p: int(re.search(r"_w(\d+)\.csv$", p).group(1)))
     if not files:
         return None
@@ -67,17 +77,23 @@ def load(facet):
         d["week"] = int(re.search(r"_w(\d+)\.csv$", p).group(1))   # receiving files predate the week column
         parts.append(d)
     df = pd.concat(parts, ignore_index=True)
-    num = {c: pd.to_numeric(df[c], errors="coerce") for c in df.columns
-           if c not in ("player", "position", "team_name", "team", "directions", "week")}
-    df = pd.concat([df[["player", "position", "team_name", "week"] + [c for c in ("directions",) if c in df.columns]],
-                    pd.DataFrame(num)], axis=1)
+    keep = ["player", "position", "team_name", "week"] + [c for c in ("directions",) if c in df.columns]
+    num = {c: pd.to_numeric(df[c], errors="coerce") for c in df.columns if c not in keep and c != "team"}
+    df = pd.concat([df[keep], pd.DataFrame(num)], axis=1)
     df["tm"] = df["team_name"].map(tm)
     return df
 
 
-def opp_map():
+def load_all(season, receiving_key):
+    F = {k: load(k, season) for k in ("defense_coverage_scheme", "defense_summary", "defense_pass_rush", "passing_pressure",
+                                      "rushing_summary", "rushing_direction", "receiving_scheme", "receiving_concept")}
+    F["receiving"] = load(receiving_key, season)
+    return F
+
+
+def opp_map(season):
     """{(week, team): opponent} from nflverse pbp (nightly)."""
-    p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+    p = os.path.join(CACHE, f"play_by_play_{season}.csv.gz")
     out = {}
     if not os.path.exists(p):
         return out
@@ -91,7 +107,7 @@ def opp_map():
 
 
 def S(df, col):
-    return float(df[col].fillna(0).sum()) if col in df.columns else 0.0
+    return float(df[col].fillna(0).sum()) if df is not None and col in df.columns else 0.0
 
 
 def rate(a, b, nd=3):
@@ -99,7 +115,7 @@ def rate(a, b, nd=3):
 
 
 def wmean(df, col, wcol):
-    if col not in df.columns or wcol not in df.columns:
+    if df is None or col not in df.columns or wcol not in df.columns:
         return None
     d = df[[col, wcol]].dropna()
     w = d[wcol].sum()
@@ -109,6 +125,8 @@ def wmean(df, col, wcol):
 def lanes_of(df):
     """Sum rushing_direction JSON per lane -> {lane: [att, yds]}."""
     acc = {l: [0, 0] for l in LANES}
+    if df is None or "directions" not in df.columns:
+        return acc
     for s in df["directions"].dropna():
         try:
             for d in json.loads(s):
@@ -140,21 +158,21 @@ def run_block(rs, rd):
     return out
 
 
-def build():
-    cov, ds, pr, pp = load("defense_coverage_scheme"), load("defense_summary"), load("defense_pass_rush"), load("passing_pressure")
-    rs, rd, rsc, rcc, rsum = load("rushing_summary"), load("rushing_direction"), load("receiving_scheme"), load("receiving_concept"), load("receiving")
-    if cov is None and rsc is None:
-        print("scheme: no PFF facet files yet - nothing written")
+def aggregate(F, opp):
+    """One season's frames -> (DEF, OFF, REC, RB, QB, LG, weeks)."""
+    cov, ds, pr, pp = F["defense_coverage_scheme"], F["defense_summary"], F["defense_pass_rush"], F["passing_pressure"]
+    rs, rd, rsc, rcc, rsum = F["rushing_summary"], F["rushing_direction"], F["receiving_scheme"], F["receiving_concept"], F["receiving"]
+    frames = [d for d in (cov, ds, pr, pp, rs, rd, rsc, rcc, rsum) if d is not None]
+    if not frames:
         return None
-    opp = opp_map()
-    weeks = sorted(set().union(*[set(d.week.unique()) for d in (cov, ds, pr, pp, rs, rd, rsc, rcc, rsum) if d is not None]))
+    weeks = sorted(set().union(*[set(int(w) for w in d.week.unique()) for d in frames]))
     teams = sorted(set().union(*[set(d.tm.unique()) for d in (cov, ds, rs, rsc) if d is not None]))
 
     def faced(df):
         """rows of players who played AGAINST team T (via opponent map)."""
         if df is None or df.empty or not opp:
             return {}
-        df = df.assign(opp=[opp.get((w, t)) for w, t in zip(df.week, df.tm)])
+        df = df.assign(opp=[opp.get((int(w), t)) for w, t in zip(df.week, df.tm)])
         return {t: g for t, g in df[df.opp.notna()].groupby("opp")}
     noqb = lambda df: None if df is None else df[~df.position.isin(["QB"])]   # run D faced = RB/WR/FB carries, no scrambles/kneels
     pp_faced, rs_faced, rd_faced, rcc_faced, rsum_faced = faced(pp), faced(noqb(rs)), faced(noqb(rd)), faced(rcc), faced(rsum)
@@ -290,11 +308,10 @@ def build():
             if v is not None:
                 vals.append(v)
         return round(sum(vals) / len(vals), 3) if vals else None
-    for k in ("man", "blitz", "prs", "prwr", "sBox", "dbRush", "mtRate", "sk", "slotYd", "screenTg", "grDef", "grRun", "grCov", "grPrsh", "qbGr"):
+    for k in ("man", "blitz", "prs", "prwr", "sBox", "dbRush", "mtRate", "sk", "slotYd", "screenTg", "grDef", "grRun", "grCov", "grPrsh", "qbGr", "prsRaw"):
         LG[k] = lg_mean(k)
     LG["run"] = {k: lg_mean(k, "run") for k in ("ypc", "yco", "gap", "exp", "mtf", "brk", "edge")}
     if rs is not None:
-        allr = rs[~rs.position.isin(["QB"])]
         lanes = lanes_of(rd[~rd.position.isin(["QB"])]) if rd is not None else {}
         la = sum(v[0] for v in lanes.values())
         LG["lanes"] = {l: rate(v[0], la) for l, v in lanes.items()} if la else None
@@ -313,17 +330,62 @@ def build():
         LG["qb"] = {"blitz": rate(S(pp, "blitz_dropbacks"), db), "prs": rate(S(pp, "pressure_dropbacks"), db),
                     "pGr": wmean(pp, "pressure_grades_pass", "pressure_dropbacks"), "nGr": wmean(pp, "no_pressure_grades_pass", "no_pressure_dropbacks"),
                     "pYpa": rate(S(pp, "pressure_yards"), S(pp, "pressure_attempts"), 2), "nYpa": rate(S(pp, "no_pressure_yards"), S(pp, "no_pressure_attempts"), 2)}
+    return DEF, OFF, REC, RB, QB, LG, weeks
 
-    payload = {"updated": time.strftime("%Y-%m-%d %H:%M"), "season": SEASON, "weeks": [int(w) for w in weeks],
-               "oppMap": bool(opp), "lg": LG, "def": DEF, "off": OFF, "rec": REC, "rb": RB, "qb": QB}
+
+def pearson(pairs):
+    n = len(pairs)
+    if n < 8:
+        return None
+    mx = sum(a for a, _ in pairs) / n; my = sum(b for _, b in pairs) / n
+    sxx = sum((a - mx) ** 2 for a, _ in pairs); syy = sum((b - my) ** 2 for _, b in pairs)
+    if not sxx or not syy:
+        return None
+    return round(sum((a - mx) * (b - my) for a, b in pairs) / math.sqrt(sxx * syy), 2)
+
+
+def persistence(DEF, DEFP):
+    """League-wide correlation of each defense metric: current season-to-date vs prior full season."""
+    out = {}
+    for key, sub in PERSIST_KEYS:
+        pairs = []
+        for t, d in DEF.items():
+            p = DEFP.get(t)
+            if not p:
+                continue
+            a = (d.get(sub) or {}).get(key) if sub else d.get(key)
+            b = (p.get(sub) or {}).get(key) if sub else p.get(key)
+            if a is not None and b is not None:
+                pairs.append((a, b))
+        out[(sub + "." if sub else "") + key] = {"r": pearson(pairs), "n": len(pairs)}
+    return out
+
+
+def build():
+    cur = aggregate(load_all(SEASON, "receiving"), opp_map(SEASON))
+    if cur is None:
+        print("scheme: no PFF facet files yet - nothing written")
+        return None
+    DEF, OFF, REC, RB, QB, LG, weeks = cur
+    payload = {"updated": time.strftime("%Y-%m-%d %H:%M"), "season": SEASON, "prior": PRIOR, "weeks": weeks,
+               "lg": LG, "def": DEF, "off": OFF, "rec": REC, "rb": RB, "qb": QB}
+    pri = aggregate(load_all(PRIOR, "receiving_summary"), opp_map(PRIOR))
+    if pri is not None:
+        DEFP, OFFP, RECP, RBP, QBP, LGP, weeksP = pri
+        payload.update({"lgPrior": LGP, "defPrior": DEFP, "offPrior": OFFP, "recPrior": RECP, "rbPrior": RBP, "qbPrior": QBP,
+                        "weeksPrior": weeksP, "persist": persistence(DEF, DEFP)})
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
-        f.write("// built by build_scheme.py from PFF Premium weekly facets - defense scheme (man rate, blitz, pressure, run lanes) + player style profiles; INTEL ONLY\n")
+        f.write("// built by build_scheme.py from PFF Premium weekly facets - defense scheme (man rate, blitz, pressure, run lanes) + player style profiles, current season + prior season + persistence; INTEL ONLY\n")
         f.write("window.SIM_SCHEME_2026 = ")
         json.dump(payload, f, separators=(",", ":"))
         f.write(";\n")
-    print(f"wrote {OUT} - weeks {weeks}, {len(DEF)} defenses, {len(REC)} receivers, {len(RB)} rushers, {len(QB)} QBs"
-          + ("" if opp else " (no pbp opponent map: blitz/pressure/run-faced omitted)"))
+    msg = f"wrote {OUT} - {SEASON} weeks {weeks}, {len(DEF)} defenses, {len(REC)} receivers, {len(RB)} rushers, {len(QB)} QBs"
+    if pri is not None:
+        pz = payload["persist"]
+        msg += f"; {PRIOR} prior weeks {weeksP[0]}-{weeksP[-1]} ({len(DEFP)} D, {len(RECP)} rec); W1-vs-{PRIOR} r: " + \
+               ", ".join(f"{k} {v['r']}" for k, v in pz.items() if v["r"] is not None)
+    print(msg)
     return payload
 
 

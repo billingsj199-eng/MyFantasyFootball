@@ -1,6 +1,6 @@
 ﻿
-[2026-09-14 10:14:34] === tuesday stats chain start ===
-[2026-09-14 10:15:56] Loading D array...
+[2026-09-15 12:28:25] === tuesday stats chain start ===
+[2026-09-15 12:29:53] Loading D array...
   506 active players to fetch (QB/RB/WR/TE)
 
 Fetching Sleeper player database...
@@ -19,7 +19,7 @@ Fetching Sleeper weekly stats (2017-2026)...
   2024: ..................
   2025: ..................
   2026: ..................
-  Sleeper data collected for 446 players
+  Sleeper data collected for 454 players
 
 26 players need pre-2017 data (nflfastr)
   Fetching years: 2007-2016
@@ -35,27 +35,27 @@ Fetching Sleeper weekly stats (2017-2026)...
   2016: 328 rows matched
 
 Merging with existing data...
-  Loaded 437 existing players
+  Loaded 435 existing players
 
 Finalizing output...
 
 ============================================================
 DONE! weekly_stats_active.js written
-  Players: 437
-  File size: 2,569,353 bytes (2.5 MB)
-  By position: {'QB': 63, 'RB': 117, 'TE': 79, 'WR': 178}
-  D coverage: 415/506 active players
-  Still missing (91): ['Aaron Anderson', 'Adam Randall', 'Amare Thomas', 'Anthony Smith', 'Athan Kaliakmanis', 'Behren Morton', 'CJ Daniels', 'Carson Beck', 'Caullin Lacy', 'Chase Roberts', 'Chip Trayanum', 'Chris Brazzell II', 'Cole Payton', 'Coleman Bennett', 'Cyrus Allen']...
+  Players: 435
+  File size: 2,549,179 bytes (2.4 MB)
+  By position: {'QB': 63, 'RB': 116, 'TE': 79, 'WR': 177}
+  D coverage: 418/506 active players
+  Still missing (88): ['Aaron Anderson', 'Adam Randall', 'Amare Thomas', 'Anthony Smith', 'Athan Kaliakmanis', 'Behren Morton', 'CJ Daniels', 'Carson Beck', 'Caullin Lacy', 'Chase Roberts', 'Chip Trayanum', 'Chris Brazzell II', 'Cole Payton', 'Coleman Bennett', 'DJ Rogers']...
 
-[2026-09-14 10:15:56] Loading E:\MyFantasyFootball\MyFantasyFootball Files\data\weekly_stats_active.js ...
-  437 players in source file
+[2026-09-15 12:29:53] Loading E:\MyFantasyFootball\MyFantasyFootball Files\data\weekly_stats_active.js ...
+  435 players in source file
 
-DONE ΓÇö wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\player_weekly_sigma.js  (57.5 KB)
-  Players with ╧â:        350
+DONE ΓÇö wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\player_weekly_sigma.js  (56.6 KB)
+  Players with ╧â:        345
   Skipped (too few games): 16
-  Skipped (no recent data): 71
+  Skipped (no recent data): 74
 
-135 starter-caliber players (╬╝ ΓëÑ 8 PPG, ΓëÑ 16 games)
+132 starter-caliber players (╬╝ ΓëÑ 8 PPG, ΓëÑ 16 games)
 
 Top 10 most boom/bust:
   Michael Wilson                       ╧â%=0.88  ╧â_abs=7.3  ╬╝=8.2  trend=+0.49  (35g)
@@ -93,19 +93,19 @@ Biggest year-over-year volatility shifts (starters):
   Alec Pierce                          Γåômore consistent      trend=-0.38  ╧â%=0.54  ╬╝=8.4
   Javonte Williams                     Γåômore consistent      trend=-0.37  ╧â%=0.43  ╬╝=11.9
 
-[2026-09-14 10:15:57] scoring W1 (latest lock with actuals)
+[2026-09-15 12:29:55] scoring W1 (latest lock with actuals)
 scorecard W1 -> E:\MyFantasyFootball\sim_lab\scorecards\w1.log
-scored rows: 170 skill + 29 K + 30 DST across weeks [1]
-  QB: n= 28 anchored= 28  propW 0.70 -> 0.730 (best 0.85)  sigma x1.003 (inside 0.786)  TD ptd x1.030 rtd x1.121
-  RB: n= 44 anchored= 43  propW 0.70 -> 0.592 (best 0.15)  sigma x0.983 (inside 0.886)  TD rtd x1.090 rctd x1.100
-  WR: n= 71 anchored= 66  propW 0.70 -> 0.568 (best 0.0)  sigma x0.999 (inside 0.803)  TD rctd x1.006
-  TE: n= 27 anchored= 26  propW 0.70 -> 0.632 (best 0.35)  sigma x1.019 (inside 0.704)  TD rctd x1.137
+scored rows: 181 skill + 31 K + 32 DST across weeks [1]
+  QB: n= 30 anchored= 30  propW 0.70 -> 0.730 (best 0.85)  sigma x1.007 (inside 0.767)  TD ptd x1.029 rtd x1.136
+  RB: n= 46 anchored= 44  propW 0.70 -> 0.594 (best 0.15)  sigma x0.986 (inside 0.87)  TD rtd x1.081 rctd x1.084
+  WR: n= 76 anchored= 71  propW 0.70 -> 0.567 (best 0.0)  sigma x1.002 (inside 0.789)  TD rctd x1.000
+  TE: n= 29 anchored= 28  propW 0.70 -> 0.632 (best 0.35)  sigma x1.022 (inside 0.69)  TD rctd x1.150
   BELOW-market starters: n= 14  belowW 0.70 -> 0.690 (best 0.65, actual under market 0.714)
-  DST: n= 30  shift -0.123 pts (evidence -0.613)  sigma x0.973 (inside 0.933)
-  K : n= 29  level x1.027 (ratio 1.133)  sigma x0.994 (inside 0.828)
+  DST: n= 32  shift -0.113 pts (evidence -0.566)  sigma x0.972 (inside 0.938)
+  K : n= 31  level x1.022 (ratio 1.112)  sigma x0.992 (inside 0.839)
 wrote E:\MyFantasyFootball\sim_lab\data\sim_tuning.js
 
-[2026-09-14 10:16:45] d.js players: 585 (633 name variants)
+[2026-09-15 12:30:46] d.js players: 585 (633 name variants)
 2012: 0 rows, 0 matched to d.js players
 2013: 5998 rows, 121 matched to d.js players
 2014: 6087 rows, 205 matched to d.js players
@@ -120,7 +120,7 @@ wrote E:\MyFantasyFootball\sim_lab\data\sim_tuning.js
 2023: 6677 rows, 3188 matched to d.js players
 2024: 6624 rows, 3893 matched to d.js players
 2025: 6565 rows, 4566 matched to d.js players
-2026: 363 rows, 285 matched to d.js players
+2026: 388 rows, 305 matched to d.js players
 team 1999: 32 teams
 team 2000: 31 teams
 team 2001: 31 teams
@@ -148,25 +148,12 @@ team 2022: 32 teams
 team 2023: 32 teams
 team 2024: 32 teams
 team 2025: 32 teams
-team 2026: 30 teams
-wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\snap_counts.js: 405 players, 28 team seasons, 425 KB
+team 2026: 32 teams
+wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\snap_counts.js: 408 players, 28 team seasons, 425 KB
 
-[2026-09-14 10:16:48] site weekly stats committed + pushed
-[2026-09-14 10:16:49] wrote E:\MyFantasyFootball\js_model_site\data\volume_share_model.js: 388 players, 32 teams (lg 25.3 tgt/g, 23.9 car/g)
+[2026-09-15 12:30:47] d.js RB/WR/TE targets: 428
+  2026: PFF weekly exports for weeks [1]
+  2026: ratio medians by pos {RB: 0.97, TE: 1.03, WR: 1.08}
+  2026: 270 players (pff-weekly, 0s); 0 with estimated weeks pending PFF, 4 estimate-only
+wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\route_pct.js: 350 players, 167 KB
 
-[2026-09-14 10:16:59] IR out for 2026: 4 -> brandon aiyuk, chris brazzell, jayden higgins, ricky pearsall
-Jacks boards: {'jR': 617, 'jSf': 617, 'jDy': 617, 'jDsf': 617}  tiers: {'rank': 20, 'jSf': 4, 'jDy': 4, 'jDsf': 7}  updated: 2026-09-14T14:15:37.365Z
-Clay projections: 468  def grades: 32  kicker splits: 29  team byes: 32
-KTC SF: 500  KTC 1QB: 500  Sleeper names: 4119
-Players: 585  sleeper-id matched: 577  KTC-SF matched: 383  JM matched: 461
-Wrote 585 players + 84 pick assets -> sleeper-extension/data/players.json
-Synced copy -> espn-extension/data/players.json
-Synced copy -> yahoo-extension/data/players.json
-Wrote sleeper-extension/data/sim_pack.js
-Wrote espn-extension/data/sim_pack.js
-Synced ../sim_lab/engine.js -> sleeper-extension/engine_sim.js
-Synced ../sim_lab/overrides.js -> sleeper-extension/data/sim_overrides.js
-Synced ../sim_lab/engine.js -> espn-extension/engine_sim.js
-Synced ../sim_lab/overrides.js -> espn-extension/data/sim_overrides.js
-
-[2026-09-14 10:16:59] === done ===

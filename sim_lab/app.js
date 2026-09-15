@@ -3440,43 +3440,135 @@
         l + ' ' + (100 * s).toFixed(0) + '%' + (withYpc && m.ypc[l] != null ? ' <span class="dim">(' + m.ypc[l].toFixed(1) + ')</span>' : '') + '</span>';
     }).join(' \u00b7 ') + ' <span class="dim">(' + m.n + ' carries' + (withYpc ? ', yds/att in parens' : '') + ')</span>';
   }
+  // ---- prior season (Jack 2026-09-15: "see if there are any similarities to week 1 because
+  // then that team defense or offensive players will be somewhat reliable") ----
+  var SC_IDENTITY = ['man', 'blitz', 'dbRush', 'sBox', 'prwr', 'run.gap', 'run.edge', 'run.mtf'];   // scheme choices, not results
+  function scPrior(S, team) { return S.defPrior ? S.defPrior[team] : null; }
+  function scLgOf(S, key, sub, prior) { var L = prior ? S.lgPrior : S.lg; if (!L) return null; return sub ? (L[sub] ? L[sub][key] : null) : L[key]; }
+  function scAgree(v, p, lg, lgp, pct, thr) {
+    // both on the same side of the league by >= thr -> 1 (match), opposite sides -> -1, else 0 (neither leans / mixed)
+    if (v == null || p == null || lg == null || lgp == null) return null;
+    var a = pct ? 100 * (v - lg) : v - lg, b = pct ? 100 * (p - lgp) : p - lgp;
+    var la = Math.abs(a) >= thr ? (a > 0 ? 1 : -1) : 0, lb = Math.abs(b) >= thr ? (b > 0 ? 1 : -1) : 0;
+    if (la && lb) return la === lb ? 1 : -1;
+    if (!la && !lb) return 1;
+    return 0;
+  }
+  function scPersist(S, key, sub) { var P = S.persist && S.persist[(sub ? sub + '.' : '') + key]; return P && P.r != null ? P.r : null; }
+  function scPersistTag(r) {
+    if (r == null) return '';
+    var col = r >= 0.3 ? 'var(--acc)' : (r >= 0.15 ? 'var(--dim)' : '#f85149');
+    return ' <span style="color:' + col + ';font-size:10px" title="league-wide correlation of this metric, 2026 to date vs 2025 full season (32 defenses); >= .30 = a real identity you can quote, ~0 = noise so far">r ' + r.toFixed(2) + '</span>';
+  }
+  function scReliability(S, team) {
+    // how many identity metrics keep their 2025 lean -> RELIABLE / MIXED / NEW LOOK
+    var d = S.def[team], p = scPrior(S, team); if (!d || !p) return null;
+    var n = 0, ok = 0, flips = [];
+    SC_DEF_ROWS.forEach(function (r) {
+      var id = (r[2] ? r[2] + '.' : '') + r[0]; if (SC_IDENTITY.indexOf(id) < 0) return;
+      var a = scAgree(scGet(d, r[0], r[2]), scGet(p, r[0], r[2]), scLgOf(S, r[0], r[2], false), scLgOf(S, r[0], r[2], true), r[3], r[4]);
+      if (a == null) return; n++; if (a === 1) ok++; else if (a === -1) flips.push(r[1]);
+    });
+    if (!n) return null;
+    var f = ok / n;
+    return { n: n, ok: ok, flips: flips, label: f >= 0.7 ? 'RELIABLE' : (f <= 0.4 ? 'NEW LOOK' : 'MIXED'), col: f >= 0.7 ? 'var(--acc)' : (f <= 0.4 ? '#f85149' : 'var(--dim)') };
+  }
+  function scBlendRec(cur, pri, K) {
+    // season-to-date counts + prior season scaled so the prior never outweighs K routes
+    if (!cur && !pri) return null;
+    var out = {}; var keys = ['mR', 'zR', 'mT', 'zT', 'mY', 'zY', 'mRec', 'zRec', 'mTd', 'zTd', 'sl', 'wd', 'il', 'scT', 'scY', 'slT', 'slY'];
+    var pr = pri ? (pri.mR + pri.zR) : 0, f = pr ? Math.min(1, K / pr) : 0;
+    keys.forEach(function (k) { out[k] = ((cur && cur[k]) || 0) + ((pri && pri[k]) || 0) * f; });
+    out.tm = (cur || pri).tm; out.pos = (cur || pri).pos; out.g = cur ? cur.g : 0; out.gPrior = pri ? pri.g : 0;
+    return out;
+  }
+  function scBlendRb(cur, pri, K) {
+    if (!cur && !pri) return null;
+    var out = {}; var keys = ['att', 'yds', 'gap', 'zone', 'yco', 'exp', 'mtf', 'brkY'];
+    var f = pri && pri.att ? Math.min(1, K / pri.att) : 0;
+    keys.forEach(function (k) { out[k] = ((cur && cur[k]) || 0) + ((pri && pri[k]) || 0) * f; });
+    out.lanes = {};
+    SC_LANES.forEach(function (l) { var c = cur && cur.lanes ? cur.lanes[l] || [0, 0] : [0, 0], p = pri && pri.lanes ? pri.lanes[l] || [0, 0] : [0, 0]; out.lanes[l] = [c[0] + p[0] * f, c[1] + p[1] * f]; });
+    out.elu = cur && cur.elu != null ? cur.elu : (pri ? pri.elu : null);
+    out.tm = (cur || pri).tm; out.pos = (cur || pri).pos; out.g = cur ? cur.g : 0; out.gPrior = pri ? pri.g : 0;
+    return out;
+  }
+  function scBlendQb(cur, pri, K) {
+    if (!cur && !pri) return null;
+    var out = {}; var keys = ['db', 'bDb', 'pDb', 'pAtt', 'pY', 'pTd', 'pInt', 'pSk', 'pTwp', 'nAtt', 'nY', 'nTd', 'nInt', 'bAtt', 'bY', 'bTd', 'nbAtt', 'nbY', 'nbTd'];
+    var f = pri && pri.db ? Math.min(1, K / pri.db) : 0;
+    keys.forEach(function (k) { out[k] = ((cur && cur[k]) || 0) + ((pri && pri[k]) || 0) * f; });
+    ['pGr', 'nGr', 'bGr', 'nbGr'].forEach(function (k) {
+      var wc = cur ? (k === 'pGr' ? cur.pDb : k === 'nGr' ? cur.db - cur.pDb : k === 'bGr' ? cur.bDb : cur.db - cur.bDb) : 0;
+      var wp = pri ? (k === 'pGr' ? pri.pDb : k === 'nGr' ? pri.db - pri.pDb : k === 'bGr' ? pri.bDb : pri.db - pri.bDb) * f : 0;
+      var vc = cur && cur[k] != null ? cur[k] : null, vp = pri && pri[k] != null ? pri[k] : null;
+      out[k] = (vc != null && vp != null && wc + wp) ? (vc * wc + vp * wp) / (wc + wp) : (vc != null ? vc : vp);
+    });
+    out.p2s = out.pDb ? out.pSk / out.pDb : null;
+    out.tm = (cur || pri).tm; out.g = cur ? cur.g : 0; out.gPrior = pri ? pri.g : 0;
+    return out;
+  }
   function scDefCard(S, team, title) {
     var d = S.def[team];
     if (!d) return '<h3>' + esc(title) + '</h3><p class="dim">No PFF scheme data for ' + esc(team) + '.</p>';
-    var html = '<h3>' + esc(title) + ' <span class="dim" style="font-weight:normal;font-size:12px">' + d.g + ' gm' + (d.g > 1 ? 's' : '') + ', PFF</span></h3>' +
-      '<table style="width:auto"><thead><tr><th class="l">Metric</th><th>Value</th><th>vs lg</th><th>Rank</th></tr></thead><tbody>';
+    var p = scPrior(S, team), rel = scReliability(S, team);
+    var html = '<h3>' + esc(title) + ' <span class="dim" style="font-weight:normal;font-size:12px">' + d.g + ' gm' + (d.g > 1 ? 's' : '') + ', PFF</span>' +
+      (rel ? ' <span style="font-size:12px;color:' + rel.col + '" title="identity metrics (man, blitz, DB/LB rush, S in box, rusher win, gap/edge/MTF faced) that keep their 2025 lean vs the league' + (rel.flips.length ? '; flipped: ' + esc(rel.flips.join(', ')) : '') + '">' + rel.label + ' vs 2025 (' + rel.ok + '/' + rel.n + ')</span>' : '') + '</h3>' +
+      '<table style="width:auto"><thead><tr><th class="l">Metric</th><th>Value</th><th>vs lg</th><th>Rank</th>' + (p ? '<th title="2025 full season">2025</th><th title="same lean vs the league as 2025? check = yes, arrows = flipped, ~ = one side neutral">vs 25</th>' : '') + '</tr></thead><tbody>';
     SC_DEF_ROWS.forEach(function (r) {
       var v = scGet(d, r[0], r[2]); if (v == null) return;
-      var lg = r[2] ? (S.lg[r[2]] ? S.lg[r[2]][r[0]] : null) : S.lg[r[0]];
+      var lg = scLgOf(S, r[0], r[2], false), fmt = function (x) { return r[3] ? scPct(x) : scNum(x, r[0].indexOf('gr') === 0 ? 1 : 2); };
       var rk = scRank(S, r[0], r[2], v);
-      html += '<tr title="' + esc(r[5]) + '"><td class="l">' + r[1] + '</td><td><b>' + (r[3] ? scPct(v) : scNum(v, r[0].indexOf('gr') === 0 ? 1 : 2)) + '</b></td>' +
-        '<td>' + scDelta(v, lg, r[3], r[4]) + ' <span class="dim" style="font-size:11px">(lg ' + (r[3] ? scPct(lg) : scNum(lg, r[0].indexOf('gr') === 0 ? 1 : 2)) + ')</span></td>' +
-        '<td class="dim">' + (rk ? '#' + rk.r + '/' + rk.n : '\u2014') + '</td></tr>';
+      var pv = p ? scGet(p, r[0], r[2]) : null, ag = p ? scAgree(v, pv, lg, scLgOf(S, r[0], r[2], true), r[3], r[4]) : null;
+      html += '<tr title="' + esc(r[5]) + '"><td class="l">' + r[1] + scPersistTag(scPersist(S, r[0], r[2])) + '</td><td><b>' + fmt(v) + '</b></td>' +
+        '<td>' + scDelta(v, lg, r[3], r[4]) + ' <span class="dim" style="font-size:11px">(lg ' + fmt(lg) + ')</span></td>' +
+        '<td class="dim">' + (rk ? '#' + rk.r + '/' + rk.n : '\u2014') + '</td>' +
+        (p ? '<td class="dim">' + (pv != null ? fmt(pv) + scDelta(pv, scLgOf(S, r[0], r[2], true), r[3], r[4]) : '\u2014') + '</td><td>' +
+          (ag == null ? '<span class="dim">\u2014</span>' : ag === 1 ? '<span style="color:var(--acc)">\u2713</span>' : ag === -1 ? '<span style="color:#f85149">\u2195 flip</span>' : '<span class="dim">~</span>') + '</td>' : '') + '</tr>';
     });
     html += '</tbody></table>';
     if (d.run && d.run.lanes) html += '<div style="font-size:12px;margin-top:6px"><b>Gets run at:</b> ' + scLaneLine(d.run.lanes, S.lg.lanes, S.lg.laneYpc, true) + '</div>';
+    if (p && p.run && p.run.lanes) html += '<div style="font-size:11px;margin-top:3px" class="dim"><b>2025:</b> ' + scLaneLine(p.run.lanes, S.lgPrior ? S.lgPrior.lanes : null, null, false) + '</div>';
     return html;
   }
   // ---- player profiles ----
-  function scRec(S, nk) {
-    var r = S.rec[nk]; if (!r) return null;
+  var SC_K_REC = 200, SC_K_RB = 100, SC_K_QB = 200;   // prior-season cap (routes / carries / dropbacks) in the blend
+  function scRecOf(r) {
+    if (!r) return null;
     var R = r.mR + r.zR, al = (r.sl || 0) + (r.wd || 0) + (r.il || 0), T = r.mT + r.zT;
     return { raw: r, routes: R, manSeen: R ? r.mR / R : null, mTgR: r.mR ? r.mT / r.mR : null, zTgR: r.zR ? r.zT / r.zR : null,
       mYprr: r.mR ? r.mY / r.mR : null, zYprr: r.zR ? r.zY / r.zR : null, slot: al ? r.sl / al : null, inline: al ? r.il / al : null,
       screen: T && r.scT != null ? r.scT / T : null, tg: T };
   }
-  function scRb(S, nk) {
-    var r = S.rb[nk]; if (!r) return null;
+  function scRec(S, nk) {
+    var c = S.rec[nk], p = S.recPrior ? S.recPrior[nk] : null; if (!c && !p) return null;
+    var o = scRecOf(scBlendRec(c, p, SC_K_REC)); o.cur = scRecOf(c); o.pri = scRecOf(p); return o;
+  }
+  function scRbOf(r) {
+    if (!r) return null;
     var gz = r.gap + r.zone, m = scLaneMix(r.lanes);
     return { raw: r, att: r.att, ypc: r.att ? r.yds / r.att : null, gap: gz ? r.gap / gz : null, yco: r.att ? r.yco / r.att : null,
       exp: r.att ? r.exp / r.att : null, mtf: r.att ? r.mtf / r.att : null, brk: r.yds ? r.brkY / r.yds : null,
       edge: m ? m.share.LE + m.share.RE : null, lanes: m, elu: r.elu };
   }
-  function scQb(S, nk) {
-    var q = S.qb[nk]; if (!q) return null;
+  function scRb(S, nk) {
+    var c = S.rb[nk], p = S.rbPrior ? S.rbPrior[nk] : null; if (!c && !p) return null;
+    var o = scRbOf(scBlendRb(c, p, SC_K_RB)); o.cur = scRbOf(c); o.pri = scRbOf(p); return o;
+  }
+  function scQbOf(q) {
+    if (!q) return null;
     return { raw: q, db: q.db, blitz: q.db ? q.bDb / q.db : null, prs: q.db ? q.pDb / q.db : null,
       pYpa: q.pAtt ? q.pY / q.pAtt : null, nYpa: q.nAtt ? q.nY / q.nAtt : null, bYpa: q.bAtt ? q.bY / q.bAtt : null, nbYpa: q.nbAtt ? q.nbY / q.nbAtt : null,
       pGr: q.pGr, nGr: q.nGr, bGr: q.bGr, nbGr: q.nbGr, p2s: q.p2s };
+  }
+  function scQb(S, nk) {
+    var c = S.qb[nk], p = S.qbPrior ? S.qbPrior[nk] : null; if (!c && !p) return null;
+    var o = scQbOf(scBlendQb(c, p, SC_K_QB)); o.cur = scQbOf(c); o.pri = scQbOf(p); return o;
+  }
+  function scPriTag(cur, pri, test) {
+    // '(2025 too)' when last season alone also qualifies, '(new)' when it had enough volume and did not
+    if (!pri) return '';
+    return test(pri) ? ' (2025 too)' : (test(pri, true) ? ' (new vs 2025)' : '');
   }
   function scReads(S, p, prof, D) {
     // strengths / weaknesses + matchup callouts for videos; D = opposing defense entry
@@ -3485,8 +3577,9 @@
     if (p.pos === 'QB') {
       var q = prof; if (!q || q.db < 20) return '';
       if (q.pGr != null && q.nGr != null) {
-        if (q.nGr - q.pGr >= 35) r.push('falls apart under pressure (grade ' + scNum(q.pGr, 0) + ' vs ' + scNum(q.nGr, 0) + ' clean)');
-        else if (q.nGr - q.pGr <= 12) r.push('holds up under pressure (grade ' + scNum(q.pGr, 0) + ' vs ' + scNum(q.nGr, 0) + ' clean)');
+        var ptag = scPriTag(q.cur, q.pri, function (p, vol) { if (!p || p.db < 150 || p.pGr == null || p.nGr == null) return false; if (vol) return true; return (q.nGr - q.pGr >= 35) ? (p.nGr - p.pGr >= 28) : (p.nGr - p.pGr <= 18); });
+        if (q.nGr - q.pGr >= 35) r.push('falls apart under pressure (grade ' + scNum(q.pGr, 0) + ' vs ' + scNum(q.nGr, 0) + ' clean)' + ptag);
+        else if (q.nGr - q.pGr <= 12) r.push('holds up under pressure (grade ' + scNum(q.pGr, 0) + ' vs ' + scNum(q.nGr, 0) + ' clean)' + ptag);
       }
       if (q.bYpa != null && q.nbYpa != null && q.raw.bAtt >= 10) {
         if (q.bYpa >= q.nbYpa + 1.5) r.push('punishes the blitz (' + scNum(q.bYpa) + ' YPA vs ' + scNum(q.nbYpa) + ' no blitz)');
@@ -3503,7 +3596,10 @@
     }
     if (p.pos === 'RB' && prof && prof.rb && prof.rb.att >= 8) {
       var b = prof.rb;
-      if (b.gap != null && LR.gap != null) { if (b.gap >= 0.62) r.push('gap/power back (' + scPct(b.gap) + ' gap)'); else if (b.gap <= 0.30) r.push('zone-scheme back (' + scPct(1 - b.gap) + ' zone)'); }
+      if (b.gap != null && LR.gap != null) {
+        var gtag = scPriTag(b.cur, b.pri, function (p, vol) { if (!p || p.att < 40) return false; if (vol) return true; return b.gap >= 0.62 ? p.gap >= 0.55 : p.gap <= 0.38; });
+        if (b.gap >= 0.62) r.push('gap/power back (' + scPct(b.gap) + ' gap)' + gtag); else if (b.gap <= 0.30) r.push('zone-scheme back (' + scPct(1 - b.gap) + ' zone)' + gtag);
+      }
       if (b.edge != null && LR.edge != null) { if (b.edge >= LR.edge + 0.12) r.push('bounces outside (edge ' + scPct(b.edge) + ', lg ' + scPct(LR.edge) + ')'); else if (b.edge <= LR.edge - 0.15) r.push('between the tackles (edge ' + scPct(b.edge) + ')'); }
       if (b.yco != null && LR.yco != null && b.att >= 15) { if (b.yco >= LR.yco + 0.7) r.push('contact-balance back (' + scNum(b.yco, 2) + ' after contact/att, lg ' + scNum(LR.yco, 2) + ')'); else if (b.yco <= LR.yco - 0.7) r.push('needs a lane (' + scNum(b.yco, 2) + ' after contact/att)'); }
       if (b.mtf != null && LR.mtf != null && b.att >= 15 && b.mtf >= LR.mtf + 0.08) r.push('makes people miss (' + scNum(b.mtf, 2) + ' MTF/att)');
@@ -3529,7 +3625,9 @@
       if (manOK && w.mYprr != null && w.zYprr != null) {
         if (w.mYprr >= w.zYprr * 1.35 && w.mYprr >= (L.mYprr || 1.5)) beater = 'man';
         else if (w.zYprr >= w.mYprr * 1.35 && w.zYprr >= (L.zYprr || 1.5)) beater = 'zone';
-        if (beater) r.push(beater + '-beater (YPRR ' + scNum(w.mYprr, 2) + ' vs man, ' + scNum(w.zYprr, 2) + ' vs zone; small n)');
+        if (beater) r.push(beater + '-beater (YPRR ' + scNum(w.mYprr, 2) + ' vs man, ' + scNum(w.zYprr, 2) + ' vs zone' + (w.cur && w.cur.routes < 100 ? '; small n' : '') + ')' +
+          scPriTag(w.cur, w.pri, function (p, vol) { if (!p || p.raw.mR < 40 || p.raw.zR < 40) return false; if (vol) return true;
+            return beater === 'man' ? (p.mYprr >= p.zYprr * 1.25) : (p.zYprr >= p.mYprr * 1.25); }));
       }
       if (D && dman != null && lg.man != null) {
         if (dman >= lg.man + 0.10) r.push('D plays man ' + scPct(dman) + ' (#' + scRank(S, 'man', null, dman).r + ')' + (beater === 'man' ? ' \u2014 GOOD SPOT' : beater === 'zone' ? ' \u2014 TOUGH SPOT' : ''));
@@ -3563,7 +3661,7 @@
     });
     rows.sort(function (a, b) { return (a.p.pos === 'QB' ? 1 : 0) - (b.p.pos === 'QB' ? 1 : 0) || b.vol - a.vol; });
     if (!rows.length) return '<p class="dim">No PFF profiles for ' + esc(team) + ' yet.</p>';
-    var html = '<table><thead><tr><th class="l">Player</th><th>Pos</th><th title="routes run (WR/TE/RB) or dropbacks (QB)">Vol</th>' +
+    var html = '<table><thead><tr><th class="l">Player</th><th>Pos</th><th title="routes run (WR/TE/RB) or dropbacks (QB): 2026 to date + 2025 scaled to at most 200 routes / 100 carries / 200 dropbacks (the blend every column uses); parens = 2026 only">Vol</th>' +
       '<th title="WR/TE/RB: share of routes vs man coverage. QB: share of dropbacks blitzed">Man seen / Blitz%</th>' +
       '<th title="WR/TE/RB: yards per route run vs man | vs zone. RB: gap-scheme carry share. QB: pressure rate faced">YPRR man | zone / Gap% / Prs%</th>' +
       '<th title="WR/TE/RB: slot share of alignment snaps. RB: edge (LE+RE) carry share. QB: PFF pass grade under pressure | clean">Slot% / Edge% / Grade prs | clean</th>' +
@@ -3572,16 +3670,16 @@
     rows.forEach(function (o) {
       var p = o.p, w = o.prof.rec, b = o.prof.rb, q = o.prof.qb, c = [];
       if (q) {
-        c = [q.db, scPct(q.blitz) + scDelta(q.blitz, LQ.blitz, 1, 5), scPct(q.prs) + scDelta(q.prs, LQ.prs, 1, 5),
+        c = [Math.round(q.db) + (q.pri ? ' db <span class="dim">(' + Math.round(q.cur ? q.cur.db : 0) + ' this yr)</span>' : ' db'), scPct(q.blitz) + scDelta(q.blitz, LQ.blitz, 1, 5), scPct(q.prs) + scDelta(q.prs, LQ.prs, 1, 5),
              scNum(q.pGr, 0) + ' | ' + scNum(q.nGr, 0), scNum(q.bYpa) + ' | ' + scNum(q.nbYpa)];
       } else if (p.pos === 'RB') {
-        c = [(w ? w.routes + ' rt' : '') + (b ? (w ? ' / ' : '') + b.att + ' car' : ''),
+        c = [(w ? Math.round(w.routes) + ' rt' : '') + (b ? (w ? ' / ' : '') + Math.round(b.att) + ' car' : '') + ((w && w.pri) || (b && b.pri) ? ' <span class="dim">(' + ((w && w.cur) ? Math.round(w.cur.routes) : 0) + (b ? '/' + ((b.cur) ? Math.round(b.cur.att) : 0) : '') + ' this yr)</span>' : ''),
              w ? scPct(w.manSeen) : '\u2014',
              b ? scPct(b.gap) + scDelta(b.gap, LR.gap, 1, 8) : '\u2014',
              b ? scPct(b.edge) + scDelta(b.edge, LR.edge, 1, 8) : '\u2014',
              b ? scNum(b.yco, 2) + scDelta(b.yco, LR.yco, 0, 0.4) : '\u2014'];
       } else {
-        c = [w.routes + ' rt', scPct(w.manSeen) + scDelta(w.manSeen, L.manSeen, 1, 6),
+        c = [Math.round(w.routes) + ' rt' + (w.pri ? ' <span class="dim">(' + (w.cur ? Math.round(w.cur.routes) : 0) + ' this yr)</span>' : ''), scPct(w.manSeen) + scDelta(w.manSeen, L.manSeen, 1, 6),
              scNum(w.mYprr, 2) + ' | ' + scNum(w.zYprr, 2),
              scPct(w.slot) + (p.pos === 'TE' && w.inline != null ? ' <span class="dim">(inline ' + scPct(w.inline) + ')</span>' : ''),
              scPct(w.screen)];
@@ -3611,14 +3709,23 @@
     var ss = state.scSort = state.scSort || { key: 'team', dir: 'asc' };
     var rows = Object.keys(S.def).map(function (t) { return { t: t, d: S.def[t] }; });
     var COLS = [{ h: 'Defense', l: 1, k: 'team', dir: 'asc', get: function (o) { return o.t; } }];
+    if (S.defPrior) COLS.push({ h: 'vs 2025', k: 'rel', tip: 'identity metrics keeping their 2025 lean (RELIABLE >= 70%, NEW LOOK <= 40%)', get: function (o) { var r = scReliability(S, o.t); return r ? r.ok / r.n : -1; }, rel: 1 });
     SC_DEF_ROWS.forEach(function (r) {
       if (['grCov', 'grRun', 'grPrsh', 'slotYd'].indexOf(r[0]) >= 0) return;
       COLS.push({ h: r[1].replace('Run D: ', 'Run '), k: r[0], sub: r[2], pct: r[3], thr: r[4], tip: r[5], get: function (o) { var v = scGet(o.d, r[0], r[2]); return v == null ? -999 : v; } });
     });
     var sorted = applySort(rows, COLS, ss);
-    var html = '<h3 style="margin-top:26px">Defense scheme (PFF, ' + esc(S.updated) + ')</h3><div id="zn-scheme"><table><thead>' + thRow(COLS, ss) + '</thead><tbody>';
+    var html = '<h3 style="margin-top:26px">Defense scheme (PFF, ' + esc(S.updated) + ')</h3>';
+    if (S.persist) {
+      var ps = Object.keys(S.persist).filter(function (k) { return S.persist[k].r != null; }).sort(function (a, b) { return S.persist[b].r - S.persist[a].r; });
+      html += '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>What carried over from 2025</b> (league-wide r, 2026 to date vs 2025 full season): ' +
+        ps.map(function (k) { var r = S.persist[k].r; return '<span style="color:' + (r >= 0.3 ? 'var(--acc)' : r >= 0.15 ? 'inherit' : '#f85149') + '">' + k.replace('run.', 'run ') + ' ' + r.toFixed(2) + '</span>'; }).join(' \u00b7 ') +
+        '. Quote the green ones as identities; the red ones have not separated from noise yet this season.</p>';
+    }
+    html += '<div id="zn-scheme"><table><thead>' + thRow(COLS, ss) + '</thead><tbody>';
     sorted.forEach(function (o) {
       html += '<tr><td class="l"><b>' + o.t + '</b></td>' + COLS.slice(1).map(function (c) {
+        if (c.rel) { var rl = scReliability(S, o.t); return '<td title="' + esc(c.tip) + (rl && rl.flips.length ? '; flipped: ' + esc(rl.flips.join(', ')) : '') + '">' + (rl ? '<span style="color:' + rl.col + '">' + rl.label + ' ' + rl.ok + '/' + rl.n + '</span>' : '<span class="dim">\u2014</span>') + '</td>'; }
         var v = scGet(o.d, c.k, c.sub), lg = c.sub ? (S.lg[c.sub] ? S.lg[c.sub][c.k] : null) : S.lg[c.k];
         return '<td title="' + esc(c.tip) + '">' + (v == null ? '<span class="dim">\u2014</span>' : (c.pct ? scPct(v) : scNum(v, 2)) + scDelta(v, lg, c.pct, c.thr)) + '</td>';
       }).join('') + '</tr>';
@@ -3633,9 +3740,11 @@
     function rk(k, sub, v) { var r = scRank(S, k, sub, v); return r ? ' #' + r.r : ''; }
     if (d) {
       var bits = [];
-      if (d.man != null) bits.push('man ' + scPct(d.man) + rk('man', null, d.man) + ' (lg ' + scPct(lg.man) + ')');
-      if (d.blitz != null) bits.push('blitz ' + scPct(d.blitz) + rk('blitz', null, d.blitz));
-      if (d.prs != null) bits.push('pressure ' + scPct(d.prs) + rk('prs', null, d.prs));
+      var p = scPrior(S, opp), rel = scReliability(S, opp);
+      function p25(k) { var v = p ? p[k] : null; return v != null ? ', 2025 ' + scPct(v) : ''; }
+      if (d.man != null) bits.push('man ' + scPct(d.man) + rk('man', null, d.man) + ' (lg ' + scPct(lg.man) + p25('man') + ')');
+      if (d.blitz != null) bits.push('blitz ' + scPct(d.blitz) + rk('blitz', null, d.blitz) + (p25('blitz') ? ' (' + p25('blitz').slice(2) + ')' : ''));
+      if (d.prs != null) bits.push('pressure ' + scPct(d.prs) + rk('prs', null, d.prs) + (p25('prs') ? ' (' + p25('prs').slice(2) + ')' : ''));
       if (d.prwr != null) bits.push('rusher win ' + scPct(d.prwr));
       if (d.sBox != null) bits.push('S in box ' + scPct(d.sBox));
       if (d.run) {
@@ -3647,7 +3756,7 @@
         }
       }
       if (d.mtRate != null && lg.mtRate != null && d.mtRate >= lg.mtRate + 0.03) bits.push('missed tackles ' + scPct(d.mtRate) + ' (lg ' + scPct(lg.mtRate) + ')');
-      out.push(opp + ' D scheme (PFF, ' + d.g + ' gm): ' + bits.join(' \u00b7 '));
+      out.push(opp + ' D scheme (PFF, ' + d.g + ' gm' + (rel ? '; ' + rel.label + ' vs 2025 ' + rel.ok + '/' + rel.n + (rel.flips.length ? ', flipped ' + rel.flips.join('/') : '') : '') + '): ' + bits.join(' \u00b7 '));
     }
     if (o && (o.run || o.manSeen != null)) {
       var b2 = [];

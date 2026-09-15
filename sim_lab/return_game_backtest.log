@@ -1,0 +1,40 @@
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 392, 'team': 244}
+
+17657 player-weeks | return1 rows 425 (>=4 missed: 142) | return2 rows 346
+  return-game snap share: mean 53.7% vs own prior median 61.2% (ratio 0.879); share of returns below 80% of median: 38%
+
+=== 1. actual / shipped ===
+  return game 1              QB 0.858 (n=69) | RB 0.842 (n=131) | WR 0.865 (n=158) | TE 1.063 (n=67) | ALL 0.878 (n=425)
+  return after >=4 missed    QB — (n=23) | RB 0.967 (n=42) | WR 0.725 (n=50) | TE — (n=27) | ALL 0.835 (n=142)
+  return game 2              QB 1.028 (n=46) | RB 0.973 (n=105) | WR 0.945 (n=134) | TE 0.879 (n=61) | ALL 0.964 (n=346)
+  all other rows             QB 1.045 (n=2439) | RB 1.078 (n=4256) | WR 1.035 (n=6910) | TE 1.076 (n=3281) | ALL 1.054 (n=16886)
+
+=== 2. LOYO multipliers on return rows (grid[0] = shipped) ===
+  return game 1 (flagged n=425)
+    grid pooled MSE: +1.00:43.518  +0.95:43.492  +0.90:43.477  +0.85:43.474  +0.80:43.483  +0.75:43.504
+    pooled best +0.85 | LOYO MSE 43.2571 vs shipped 43.2945 (-0.09%), years better 5/7, picks [0.85, 0.85, 0.85, 0.9, 0.9, 0.85, 0.85]
+  return after >=4 missed (flagged n=142)
+    grid pooled MSE: +1.00:43.518  +0.95:43.505  +0.90:43.496  +0.85:43.491  +0.80:43.489  +0.75:43.492
+    pooled best +0.80 | LOYO MSE 43.2689 vs shipped 43.2945 (-0.06%), years better 6/7, picks [0.8, 0.8, 0.85, 0.8, 0.8, 0.8, 0.8]
+  return game 2 (flagged n=346)
+    grid pooled MSE: +1.00:43.518  +0.95:43.511  +0.90:43.513  +0.85:43.525  +0.80:43.546  +0.75:43.576
+    pooled best +0.95 | LOYO MSE 43.2960 vs shipped 43.2945 (+0.00%), years better 5/7, picks [0.95, 0.9, 0.95, 0.95, 0.9, 0.95, 0.95]
+  return game 1 QB (flagged n=69)
+    grid pooled MSE: +1.00:61.180  +0.95:61.101  +0.90:61.050  +0.85:61.029  +0.80:61.037  +0.75:61.075
+    pooled best +0.85 | LOYO MSE 60.9129 vs shipped 61.0091 (-0.16%), years better 4/7, picks [0.8, 0.85, 0.8, 0.85, 0.85, 0.8, 0.85]
+  return game 1 RB (flagged n=131)
+    grid pooled MSE: +1.00:48.868  +0.95:48.823  +0.90:48.793  +0.85:48.777  +0.80:48.775  +0.75:48.787
+    pooled best +0.80 | LOYO MSE 48.4215 vs shipped 48.4770 (-0.11%), years better 4/7, picks [0.85, 0.8, 0.8, 0.8, 0.8, 0.8, 0.85]
+  return game 1 WR (flagged n=158)
+    grid pooled MSE: +1.00:42.093  +0.95:42.073  +0.90:42.061  +0.85:42.057  +0.80:42.061  +0.75:42.074
+    pooled best +0.85 | LOYO MSE 41.6749 vs shipped 41.6966 (-0.05%), years better 5/7, picks [0.85, 0.8, 0.85, 0.85, 0.85, 0.8, 0.9]
+  return game 1 TE (flagged n=67)
+    grid pooled MSE: +1.00:26.434  +0.95:26.448  +0.90:26.466  +0.85:26.489  +0.80:26.517  +0.75:26.549
+    pooled best +1.00 | LOYO MSE 26.5694 vs shipped 26.5694 (+0.00%), years better 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]

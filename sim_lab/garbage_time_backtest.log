@@ -1,0 +1,48 @@
+E:\MyFantasyFootball\sim_lab\backtest_garbage_time.py:97: RuntimeWarning: Mean of empty slice
+  parts.append(f"{lab} {gtppg[mm].mean():.2f}/g: {act[mm].mean()/ship[mm].mean():.3f} (n={mm.sum()})")
+C:\Users\billi\AppData\Local\Programs\Python\Python313\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  garbage-time share of all fantasy points (pbp basis): 6.1% (4Q |diff|>=17) | 5.8% (2H |diff|>=21)
+
+=== GATE. garbage-time share persistence ===
+  YoY r = +0.12 (n=959, mean share 5.3%)
+  early->late r = +0.13 (n=1206)
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 392, 'team': 244}
+
+17555 player-weeks with garbage-time history | shipped MSE 43.3656
+
+=== 1. actual / shipped by garbage-time points-per-game tercile (per position) ===
+  QB: low 0.02/g: 1.063 (n=851) | mid 0.58/g: 1.046 (n=850) | high 2.15/g: 1.014 (n=853)   corr(gt ppg, act-ship) -0.021
+  RB: low 0.00/g: 1.072 (n=1460) | mid 0.27/g: 1.058 (n=1471) | high 1.39/g: 1.077 (n=1473)   corr(gt ppg, act-ship) -0.019
+  WR: low -0.05/g: 1.054 (n=34) | mid 0.08/g: 1.048 (n=4750) | high 1.22/g: 0.999 (n=2404)   corr(gt ppg, act-ship) -0.018
+  TE: low nan/g: nan (n=0) | mid 0.04/g: 1.074 (n=2265) | high 0.99/g: 1.070 (n=1144)   corr(gt ppg, act-ship) -0.001
+
+=== 2. LOYO: shipped - k * gt_ppg * g/(P+g)  (grid[0] = shipped) ===
+  a) 4Q |diff|>=17 garbage points removed from the realized half
+    grid pooled MSE: +0.00:43.583  +0.25:43.623  +0.50:43.695  +0.75:43.800  +1.00:43.937
+    pooled best +0.00 | LOYO MSE 43.3656 vs shipped 43.3656 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  b) 2H |diff|>=21 variant
+    grid pooled MSE: +0.00:43.583  +0.25:43.632  +0.50:43.712  +0.75:43.823  +1.00:43.965
+    pooled best +0.00 | LOYO MSE 43.3656 vs shipped 43.3656 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+     QB (a)
+    grid pooled MSE: +0.00:61.180  +0.25:61.284  +0.50:61.454  +0.75:61.693  +1.00:61.998
+    pooled best +0.00 | LOYO MSE 61.0091 vs shipped 61.0091 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+     RB (a)
+    grid pooled MSE: +0.00:49.148  +0.25:49.233  +0.50:49.349  +0.75:49.498  +1.00:49.678
+    pooled best +0.00 | LOYO MSE 48.8203 vs shipped 48.8203 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+     WR (a)
+    grid pooled MSE: +0.00:42.132  +0.25:42.128  +0.50:42.152  +0.75:42.203  +1.00:42.282
+    pooled best +0.25 | LOYO MSE 41.7542 vs shipped 41.7204 (+0.08%), years better 1/7, picks [0.0, 0.25, 0.0, 0.25, 0.25, 0.25, 0.0]
+     TE (a)
+    grid pooled MSE: +0.00:26.434  +0.25:26.471  +0.50:26.524  +0.75:26.593  +1.00:26.678
+    pooled best +0.00 | LOYO MSE 26.5694 vs shipped 26.5694 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  c) (a) centered per season x position (pure regression, no level)
+    grid pooled MSE: +0.00:43.583  +0.25:43.566  +0.50:43.567  +0.75:43.588  +1.00:43.627
+    pooled best +0.25 | LOYO MSE 43.3658 vs shipped 43.3656 (+0.00%), years better 4/7, picks [0.25, 0.5, 0.25, 0.25, 0.5, 0.5, 0.25]

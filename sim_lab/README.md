@@ -1408,3 +1408,59 @@ mostly repeats). Text lines "XFP UNDER/OVER <pos>: ..." in COPY NOTES and
 the 06:45 file. W1 read: OVER RB Henry +17.5 (TD +11.5), WR Coker +17.6 (TD
 +10.2); UNDER WR Metcalf -9.0 (TD -2.1), Golden -6.8 (TD -5.4). Backup app.js
 .bak_pre_xfpboard_20260915.
+
+## Game-context backtests (rest / return / garbage time / precipitation) - 2026-09-15
+
+Jack: "lets do it" - four backtests on a shared harness (`bt_common.py`:
+iter_samples = P=5 blend x Vegas(pos) x in-season FPA = shipped; NOTE the
+harness does NOT include the wind dock or CB/OL/pressure layers). 17,657
+QB/RB/WR/TE player-weeks 2019-25, LOYO. Nothing wired yet - engine changes
+wait for the Week 2 live grades (Tue 09-22).
+
+**1. Rest / schedule (backtest_rest_context.py) - REJECTED.** Short week,
+extra rest, off bye, opponent off bye / short, 3rd straight road game, West
+team at 1pm ET, East team late out West, primetime: pooled multipliers all
+within +-0.02% (0-5/7). Per-position scatter (TE primetime x1.06 -0.41% 6/7,
+WR off-bye x0.91 -0.06%) is the multiple-comparisons tax across 9 flags x 4
+positions - not shippable. Vegas prices the calendar. Log: rest_context_backtest.log.
+
+**2. First game back (backtest_return_game.py) - PASSED (rare-event dock,
+same class as CB1-out / OL-out).** Return game = first game with snaps after
+>= 2 consecutive missed team games (nflverse snap counts; player had played
+earlier that season). 425 return rows (2.4%), 142 after >= 4 missed.
+- Snap share in the return game = 88% of the player's own prior median; 38%
+  of returns play under 80% of it.
+- actual / shipped: return game 1 0.878 (QB .858 RB .842 WR .865 TE 1.063)
+  vs 1.054 on all other rows (~ -17% relative); after >= 4 missed 0.835 (WR
+  .725); return game 2 0.964 (mostly recovered).
+- LOYO: x0.85 on return rows -0.09% (5/7, picks .85-.90); >= 4 missed x0.80
+  -0.06% (6/7); game 2 nothing. Per position: QB x0.85 -0.16% (4/7), RB x0.80
+  -0.11% (4/7), WR x0.85 -0.05% (5/7), TE nothing (0/7). Small pooled % because
+  the event is rare; on the flagged rows it is a ~15% correction.
+- SHIP PLAN (after W2 grades): `returnDock(p, wk)` in engine.js from
+  SIM_SNAPS_2026 weeks vs the team's game weeks: >= 2 consecutive missed team
+  games immediately before wk and an earlier played game -> x0.85 (>= 4 missed
+  x0.80), QB/RB/WR only, second game back untouched, kill switch
+  `window.SIM_RETURN_DOCK`. Also a NOTES chip ("1st game back, 3 missed").
+  Log: return_game_backtest.log.
+
+**3. Garbage time (backtest_garbage_time.py) - REJECTED.** 4Q |diff|>=17
+(6.1% of all fantasy points) or 2H |diff|>=21. Share persistence YoY .12 /
+early->late .13 (noise), but removing garbage points from the realized half
+is WORSE at every k (0/7), all positions; centered +0.00%. Garbage-time points
+are as predictive as any other points. Log: garbage_time_backtest.log.
+
+**4. Precipitation / cold (backtest_precip.py) - MARGINAL, needs a re-test on
+top of the wind dock.** pbp weather strings, 12,087 outdoor player-weeks
+parsed: rain 763, snow 175, cold (<=32F) 692, freezing 212.
+- Rain: QB 0.902 / WR 0.890 after Vegas, identical without Vegas -> the line
+  does NOT price rain (same as wind). RB 1.005 (unaffected, like wind). LOYO
+  rain x0.91 pooled -0.06% (5/7); QB x0.88 -0.20% (4/7), WR x0.88 -0.09%
+  (4/7), TE +0.05%, RB 0.
+- Snow: nothing (n small, RB 1.25 = noise). Cold / freezing: nothing (0/7).
+- CAVEAT: rainy games are often windy and the shipped weatherMult already
+  docks wind 10+/15+; this harness has no wind dock, so part of the rain
+  effect is already live. Re-run with weatherMult in the base before deciding;
+  if it survives, QB/WR x0.93 on rain (not RB/TE) is the shape. Data live:
+  Open-Meteo `pop` (precip probability) is already in sim_weather.js.
+  Log: precip_backtest.log.

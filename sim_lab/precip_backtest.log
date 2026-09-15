@@ -1,0 +1,93 @@
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 392, 'team': 244}
+
+17657 player-weeks | outdoor 12105 | weather string parsed 12087 | rain 763 snow 175 cold 692 freezing 212 wind15 1279
+
+=== 1. actual / shipped (AFTER Vegas) ===
+  rain                       QB 0.902 (n=113) | RB 1.005 (n=204) | WR 0.890 (n=296) | TE 0.968 (n=150) | ALL 0.933 (n=763)
+  snow                       QB — (n=22) | RB 1.247 (n=50) | WR 0.968 (n=66) | TE — (n=37) | ALL 1.047 (n=175)
+  any_precip                 QB 0.924 (n=135) | RB 1.051 (n=254) | WR 0.903 (n=362) | TE 0.954 (n=187) | ALL 0.954 (n=938)
+  cold                       QB 1.015 (n=97) | RB 1.108 (n=196) | WR 0.974 (n=264) | TE 1.054 (n=135) | ALL 1.033 (n=692)
+  freezing                   QB — (n=32) | RB 0.977 (n=60) | WR 0.879 (n=78) | TE 0.953 (n=42) | ALL 0.919 (n=212)
+  wind15                     QB 0.947 (n=195) | RB 1.044 (n=343) | WR 0.897 (n=488) | TE 1.004 (n=253) | ALL 0.963 (n=1279)
+  dry_mild                   QB 1.072 (n=869) | RB 1.089 (n=1526) | WR 1.059 (n=2496) | TE 1.114 (n=1139) | ALL 1.077 (n=6030)
+
+=== 1b. actual / (base x FPA, NO Vegas) - if these are lower than 1., Vegas is pricing it ===
+  rain                       QB 0.906 (n=113) | RB 0.983 (n=204) | WR 0.885 (n=296) | TE 0.965 (n=150) | ALL 0.926 (n=763)
+  snow                       QB — (n=22) | RB 1.249 (n=50) | WR 0.971 (n=66) | TE — (n=37) | ALL 1.054 (n=175)
+  any_precip                 QB 0.931 (n=135) | RB 1.033 (n=254) | WR 0.900 (n=362) | TE 0.951 (n=187) | ALL 0.950 (n=938)
+  cold                       QB 1.028 (n=97) | RB 1.108 (n=196) | WR 0.976 (n=264) | TE 1.054 (n=135) | ALL 1.037 (n=692)
+  wind15                     QB 0.955 (n=195) | RB 1.032 (n=343) | WR 0.896 (n=488) | TE 1.005 (n=253) | ALL 0.962 (n=1279)
+
+=== 2. LOYO multipliers on flagged rows, shipped base (grid[0] = shipped) ===
+  rain (flagged n=763)
+    grid pooled MSE: +1.00:43.518  +0.97:43.493  +0.94:43.476  +0.91:43.469  +0.88:43.471  +1.03:43.554
+    pooled best +0.91 | LOYO MSE 43.2701 vs shipped 43.2945 (-0.06%), years better 5/7, picks [0.94, 0.91, 0.88, 0.91, 0.91, 0.91, 0.88]
+     rain QB (flagged n=113)
+    grid pooled MSE: +1.00:61.180  +0.97:61.094  +0.94:61.033  +0.91:60.999  +0.88:60.991  +1.03:61.293
+    pooled best +0.88 | LOYO MSE 60.8886 vs shipped 61.0091 (-0.20%), years better 4/7, picks [0.91, 0.91, 0.88, 0.88, 0.88, 0.88, 0.88]
+     rain RB (flagged n=204)
+    grid pooled MSE: +1.00:48.868  +0.97:48.860  +0.94:48.860  +0.91:48.869  +0.88:48.887  +1.03:48.885
+    pooled best +0.97 | LOYO MSE 48.4782 vs shipped 48.4770 (+0.00%), years better 4/7, picks [0.97, 0.97, 0.94, 0.94, 0.94, 0.97, 0.97]
+     rain WR (flagged n=296)
+    grid pooled MSE: +1.00:42.093  +0.97:42.071  +0.94:42.055  +0.91:42.045  +0.88:42.042  +1.03:42.122
+    pooled best +0.88 | LOYO MSE 41.6590 vs shipped 41.6966 (-0.09%), years better 4/7, picks [0.91, 0.88, 0.88, 0.88, 0.88, 0.88, 0.88]
+     rain TE (flagged n=150)
+    grid pooled MSE: +1.00:26.434  +0.97:26.427  +0.94:26.423  +0.91:26.423  +0.88:26.427  +1.03:26.444
+    pooled best +0.94 | LOYO MSE 26.5827 vs shipped 26.5694 (+0.05%), years better 3/7, picks [0.97, 0.91, 0.91, 0.91, 0.97, 0.94, 0.88]
+  snow (flagged n=175)
+    grid pooled MSE: +1.00:43.518  +0.97:43.519  +0.94:43.522  +0.91:43.528  +0.88:43.535  +1.03:43.520
+    pooled best +1.00 | LOYO MSE 43.3061 vs shipped 43.2945 (+0.03%), years better 0/7, picks [1.0, 1.03, 1.0, 1.0, 1.0, 1.03, 0.94]
+     snow QB: too few flagged rows (22)
+     snow RB: too few flagged rows (50)
+     snow WR (flagged n=66)
+    grid pooled MSE: +1.00:42.093  +0.97:42.096  +0.94:42.100  +0.91:42.105  +0.88:42.112  +1.03:42.092
+    pooled best +1.03 | LOYO MSE 41.7064 vs shipped 41.6966 (+0.02%), years better 2/7, picks [1.03, 0.94, 1.03, 1.03, 1.03, 1.03, 1.03]
+     snow TE: too few flagged rows (37)
+  any_precip (flagged n=938)
+    grid pooled MSE: +1.00:43.518  +0.97:43.494  +0.94:43.480  +0.91:43.478  +0.88:43.488  +1.03:43.555
+    pooled best +0.91 | LOYO MSE 43.2751 vs shipped 43.2945 (-0.04%), years better 5/7, picks [0.94, 0.94, 0.91, 0.91, 0.91, 0.94, 0.91]
+     any_precip QB (flagged n=135)
+    grid pooled MSE: +1.00:61.180  +0.97:61.095  +0.94:61.041  +0.91:61.020  +0.88:61.032  +1.03:61.298
+    pooled best +0.91 | LOYO MSE 60.9523 vs shipped 61.0091 (-0.09%), years better 5/7, picks [0.91, 0.94, 0.91, 0.91, 0.91, 0.91, 0.88]
+     any_precip RB (flagged n=254)
+    grid pooled MSE: +1.00:48.868  +0.97:48.863  +0.94:48.870  +0.91:48.886  +0.88:48.914  +1.03:48.883
+    pooled best +0.97 | LOYO MSE 48.4953 vs shipped 48.4770 (+0.04%), years better 1/7, picks [1.0, 1.0, 0.94, 0.97, 0.97, 0.97, 0.97]
+     any_precip WR (flagged n=362)
+    grid pooled MSE: +1.00:42.093  +0.97:42.073  +0.94:42.061  +0.91:42.057  +0.88:42.061  +1.03:42.121
+    pooled best +0.91 | LOYO MSE 41.6820 vs shipped 41.6966 (-0.03%), years better 4/7, picks [0.94, 0.88, 0.88, 0.91, 0.91, 0.91, 0.88]
+     any_precip TE (flagged n=187)
+    grid pooled MSE: +1.00:26.434  +0.97:26.419  +0.94:26.409  +0.91:26.404  +0.88:26.403  +1.03:26.453
+    pooled best +0.88 | LOYO MSE 26.5580 vs shipped 26.5694 (-0.04%), years better 5/7, picks [0.88, 0.88, 0.88, 0.88, 0.94, 0.91, 0.88]
+  cold (flagged n=692)
+    grid pooled MSE: +1.00:43.518  +0.97:43.522  +0.94:43.533  +0.91:43.553  +0.88:43.581  +1.03:43.523
+    pooled best +1.00 | LOYO MSE 43.2945 vs shipped 43.2945 (+0.00%), years better 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+     cold QB (flagged n=97)
+    grid pooled MSE: +1.00:61.180  +0.97:61.188  +0.94:61.219  +0.91:61.272  +0.88:61.348  +1.03:61.194
+    pooled best +1.00 | LOYO MSE 61.0244 vs shipped 61.0091 (+0.03%), years better 0/7, picks [1.0, 1.0, 1.0, 0.97, 1.0, 1.0, 1.0]
+     cold RB (flagged n=196)
+    grid pooled MSE: +1.00:48.868  +0.97:48.878  +0.94:48.897  +0.91:48.924  +0.88:48.960  +1.03:48.866
+    pooled best +1.03 | LOYO MSE 48.4882 vs shipped 48.4770 (+0.02%), years better 0/7, picks [1.03, 1.03, 1.0, 1.03, 1.0, 1.0, 1.0]
+     cold WR (flagged n=264)
+    grid pooled MSE: +1.00:42.093  +0.97:42.092  +0.94:42.096  +0.91:42.105  +0.88:42.120  +1.03:42.099
+    pooled best +0.97 | LOYO MSE 41.7020 vs shipped 41.6966 (+0.01%), years better 0/7, picks [0.97, 0.97, 1.0, 1.0, 0.97, 0.97, 1.0]
+     cold TE (flagged n=135)
+    grid pooled MSE: +1.00:26.434  +0.97:26.431  +0.94:26.432  +0.91:26.437  +0.88:26.444  +1.03:26.440
+    pooled best +0.97 | LOYO MSE 26.5821 vs shipped 26.5694 (+0.05%), years better 2/7, picks [0.94, 1.0, 0.97, 0.97, 1.0, 0.94, 0.94]
+  freezing (flagged n=212)
+    grid pooled MSE: +1.00:43.518  +0.97:43.511  +0.94:43.506  +0.91:43.504  +0.88:43.504  +1.03:43.529
+    pooled best +0.91 | LOYO MSE 43.2821 vs shipped 43.2945 (-0.03%), years better 3/7, picks [0.88, 0.91, 0.88, 0.88, 0.91, 0.91, 0.91]
+     freezing QB: too few flagged rows (32)
+     freezing RB (flagged n=60)
+    grid pooled MSE: +1.00:48.868  +0.97:48.864  +0.94:48.863  +0.91:48.865  +0.88:48.869  +1.03:48.874
+    pooled best +0.94 | LOYO MSE 48.4760 vs shipped 48.4770 (-0.00%), years better 3/7, picks [0.94, 0.94, 0.94, 0.97, 0.94, 0.94, 0.97]
+     freezing WR (flagged n=78)
+    grid pooled MSE: +1.00:42.093  +0.97:42.088  +0.94:42.085  +0.91:42.083  +0.88:42.083  +1.03:42.100
+    pooled best +0.88 | LOYO MSE 41.6888 vs shipped 41.6966 (-0.02%), years better 4/7, picks [0.88, 0.88, 0.88, 0.88, 0.88, 0.94, 0.88]
+     freezing TE: too few flagged rows (42)

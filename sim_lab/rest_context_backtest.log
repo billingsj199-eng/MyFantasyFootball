@@ -1,0 +1,102 @@
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 392, 'team': 244}
+
+17657 player-weeks | shipped MSE 43.2945
+  flag counts: short 1262  extra 1359  offbye 1168  opp_offbye 1133  opp_short 1254  road3 147  west_early 950  east_late 161  prime 3660
+
+=== 1. actual / shipped by schedule flag ===
+  short                      QB 1.074 (n=186) | RB 1.057 (n=321) | WR 1.021 (n=517) | TE 1.174 (n=238) | ALL 1.062 (n=1262)
+  extra                      QB 1.005 (n=194) | RB 1.051 (n=341) | WR 0.992 (n=564) | TE 1.084 (n=260) | ALL 1.021 (n=1359)
+  offbye                     QB 0.981 (n=170) | RB 1.037 (n=300) | WR 0.925 (n=478) | TE 0.947 (n=220) | ALL 0.971 (n=1168)
+  opp_offbye                 QB 1.016 (n=163) | RB 0.984 (n=280) | WR 0.984 (n=465) | TE 1.067 (n=225) | ALL 1.003 (n=1133)
+  opp_short                  QB 1.088 (n=185) | RB 1.045 (n=320) | WR 1.017 (n=513) | TE 1.200 (n=236) | ALL 1.064 (n=1254)
+  road3                      QB — (n=19) | RB 1.182 (n=41) | WR 1.027 (n=61) | TE — (n=26) | ALL 1.069 (n=147)
+  west_early                 QB 1.030 (n=149) | RB 1.004 (n=214) | WR 1.109 (n=413) | TE 1.063 (n=174) | ALL 1.059 (n=950)
+  east_late                  QB — (n=24) | RB 0.998 (n=44) | WR 0.929 (n=59) | TE — (n=34) | ALL 0.934 (n=161)
+  prime                      QB 1.005 (n=539) | RB 1.053 (n=918) | WR 0.965 (n=1510) | TE 1.138 (n=693) | ALL 1.018 (n=3660)
+  normal rest (6-8d) home    QB 1.071 (n=1015) | RB 1.096 (n=1773) | WR 1.054 (n=2841) | TE 1.092 (n=1327) | ALL 1.074 (n=6956)
+
+=== 2. LOYO multipliers on flagged rows (grid[0] = shipped) ===
+  short (flagged n=1262)
+    grid pooled MSE: +1.00:43.518  +0.97:43.541  +0.94:43.578  +0.91:43.630  +1.03:43.511  +1.06:43.520
+    pooled best +1.03 | LOYO MSE 43.2865 vs shipped 43.2945 (-0.02%), years better 3/7, picks [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.03]
+  extra (flagged n=1359)
+    grid pooled MSE: +1.00:43.518  +0.97:43.519  +0.94:43.537  +0.91:43.570  +1.03:43.534  +1.06:43.566
+    pooled best +1.00 | LOYO MSE 43.3124 vs shipped 43.2945 (+0.04%), years better 0/7, picks [0.97, 0.97, 1.0, 1.0, 0.97, 0.97, 1.0]
+  offbye (flagged n=1168)
+    grid pooled MSE: +1.00:43.518  +0.97:43.505  +0.94:43.506  +0.91:43.521  +1.03:43.546  +1.06:43.588
+    pooled best +0.97 | LOYO MSE 43.2989 vs shipped 43.2945 (+0.01%), years better 4/7, picks [0.97, 0.97, 0.97, 0.94, 0.94, 0.94, 0.94]
+  opp_offbye (flagged n=1133)
+    grid pooled MSE: +1.00:43.518  +0.97:43.520  +0.94:43.534  +0.91:43.561  +1.03:43.529  +1.06:43.553
+    pooled best +1.00 | LOYO MSE 43.3051 vs shipped 43.2945 (+0.02%), years better 0/7, picks [0.97, 0.97, 1.0, 0.97, 1.0, 1.0, 1.0]
+  opp_short (flagged n=1254)
+    grid pooled MSE: +1.00:43.518  +0.97:43.543  +0.94:43.582  +0.91:43.637  +1.03:43.509  +1.06:43.515
+    pooled best +1.03 | LOYO MSE 43.2843 vs shipped 43.2945 (-0.02%), years better 4/7, picks [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.03]
+  road3 (flagged n=147)
+    grid pooled MSE: +1.00:43.518  +0.97:43.521  +0.94:43.526  +0.91:43.532  +1.03:43.517  +1.06:43.517
+    pooled best +1.03 | LOYO MSE 43.2941 vs shipped 43.2945 (-0.00%), years better 5/7, picks [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.06]
+  west_early (flagged n=950)
+    grid pooled MSE: +1.00:43.518  +0.97:43.527  +0.94:43.547  +0.91:43.579  +1.03:43.521  +1.06:43.536
+    pooled best +1.00 | LOYO MSE 43.2971 vs shipped 43.2945 (+0.01%), years better 0/7, picks [1.0, 1.03, 1.0, 1.0, 1.0, 1.0, 1.0]
+  east_late (flagged n=161)
+    grid pooled MSE: +1.00:43.518  +0.97:43.515  +0.94:43.514  +0.91:43.514  +1.03:43.524  +1.06:43.531
+    pooled best +0.94 | LOYO MSE 43.3039 vs shipped 43.2945 (+0.02%), years better 3/7, picks [0.94, 0.91, 0.91, 0.94, 0.97, 0.91, 1.0]
+  prime (flagged n=3660)
+    grid pooled MSE: +1.00:43.518  +0.97:43.531  +0.94:43.590  +0.91:43.696  +1.03:43.553  +1.06:43.634
+    pooled best +1.00 | LOYO MSE 43.3252 vs shipped 43.2945 (+0.07%), years better 0/7, picks [1.0, 0.97, 1.0, 1.0, 1.0, 0.97, 1.0]
+
+  -- per position where the pooled read moved --
+  short QB (flagged n=186)
+    grid pooled MSE: +1.00:61.180  +0.97:61.258  +0.94:61.375  +0.91:61.533  +1.03:61.143  +1.06:61.145
+    pooled best +1.03 | LOYO MSE 61.0226 vs shipped 61.0091 (+0.02%), years better 4/7, picks [1.03, 1.03, 1.06, 1.06, 1.03, 1.03, 1.06]
+  short RB (flagged n=321)
+    grid pooled MSE: +1.00:48.868  +0.97:48.884  +0.94:48.914  +0.91:48.958  +1.03:48.866  +1.06:48.879
+    pooled best +1.03 | LOYO MSE 48.5233 vs shipped 48.4770 (+0.10%), years better 0/7, picks [1.06, 0.97, 1.0, 1.03, 1.0, 1.03, 1.03]
+  short WR (flagged n=517)
+    grid pooled MSE: +1.00:42.093  +0.97:42.098  +0.94:42.114  +0.91:42.141  +1.03:42.100  +1.06:42.118
+    pooled best +1.00 | LOYO MSE 41.7026 vs shipped 41.6966 (+0.01%), years better 0/7, picks [1.0, 1.0, 1.0, 1.0, 0.97, 1.0, 1.0]
+  short TE (flagged n=238)
+    grid pooled MSE: +1.00:26.434  +0.97:26.461  +0.94:26.494  +0.91:26.532  +1.03:26.412  +1.06:26.396
+    pooled best +1.06 | LOYO MSE 26.5263 vs shipped 26.5694 (-0.16%), years better 6/7, picks [1.06, 1.06, 1.06, 1.06, 1.06, 1.06, 1.06]
+  offbye QB (flagged n=170)
+    grid pooled MSE: +1.00:61.180  +0.97:61.158  +0.94:61.174  +0.91:61.227  +1.03:61.239  +1.06:61.335
+    pooled best +0.97 | LOYO MSE 61.0369 vs shipped 61.0091 (+0.05%), years better 3/7, picks [1.0, 0.97, 0.97, 0.97, 0.97, 0.94, 0.97]
+  offbye RB (flagged n=300)
+    grid pooled MSE: +1.00:48.868  +0.97:48.876  +0.94:48.897  +0.91:48.933  +1.03:48.874  +1.06:48.894
+    pooled best +1.00 | LOYO MSE 48.4914 vs shipped 48.4770 (+0.03%), years better 0/7, picks [1.03, 1.0, 1.0, 1.0, 1.0, 1.03, 1.0]
+  offbye WR (flagged n=478)
+    grid pooled MSE: +1.00:42.093  +0.97:42.066  +0.94:42.051  +0.91:42.046  +1.03:42.131  +1.06:42.179
+    pooled best +0.91 | LOYO MSE 41.6730 vs shipped 41.6966 (-0.06%), years better 5/7, picks [0.94, 0.91, 0.94, 0.91, 0.91, 0.91, 0.91]
+  offbye TE (flagged n=220)
+    grid pooled MSE: +1.00:26.434  +0.97:26.430  +0.94:26.432  +0.91:26.440  +1.03:26.442  +1.06:26.456
+    pooled best +0.97 | LOYO MSE 26.5965 vs shipped 26.5694 (+0.10%), years better 2/7, picks [0.94, 0.97, 1.0, 1.0, 0.97, 0.97, 0.91]
+  west_early QB (flagged n=149)
+    grid pooled MSE: +1.00:61.180  +0.97:61.182  +0.94:61.215  +0.91:61.280  +1.03:61.210  +1.06:61.271
+    pooled best +1.00 | LOYO MSE 61.0364 vs shipped 61.0091 (+0.04%), years better 0/7, picks [1.0, 1.0, 1.0, 0.97, 0.97, 0.97, 1.0]
+  west_early RB (flagged n=214)
+    grid pooled MSE: +1.00:48.868  +0.97:48.858  +0.94:48.857  +0.91:48.865  +1.03:48.887  +1.06:48.915
+    pooled best +0.94 | LOYO MSE 48.4858 vs shipped 48.4770 (+0.02%), years better 4/7, picks [0.94, 0.97, 0.94, 0.91, 0.97, 0.94, 0.97]
+  west_early WR (flagged n=413)
+    grid pooled MSE: +1.00:42.093  +0.97:42.116  +0.94:42.149  +0.91:42.191  +1.03:42.079  +1.06:42.074
+    pooled best +1.06 | LOYO MSE 41.6734 vs shipped 41.6966 (-0.06%), years better 5/7, picks [1.06, 1.06, 1.06, 1.06, 1.06, 1.06, 1.06]
+  west_early TE (flagged n=174)
+    grid pooled MSE: +1.00:26.434  +0.97:26.443  +0.94:26.457  +0.91:26.476  +1.03:26.429  +1.06:26.428
+    pooled best +1.06 | LOYO MSE 26.5699 vs shipped 26.5694 (+0.00%), years better 4/7, picks [1.03, 1.03, 1.06, 1.06, 1.06, 1.03, 1.06]
+  prime QB (flagged n=539)
+    grid pooled MSE: +1.00:61.180  +0.97:61.199  +0.94:61.343  +0.91:61.613  +1.03:61.287  +1.06:61.519
+    pooled best +1.00 | LOYO MSE 61.1470 vs shipped 61.0091 (+0.23%), years better 0/7, picks [1.0, 0.97, 0.97, 1.0, 1.0, 0.97, 1.0]
+  prime RB (flagged n=918)
+    grid pooled MSE: +1.00:48.868  +0.97:48.912  +0.94:48.999  +0.91:49.129  +1.03:48.867  +1.06:48.910
+    pooled best +1.03 | LOYO MSE 48.5104 vs shipped 48.4770 (+0.07%), years better 0/7, picks [1.03, 1.03, 1.0, 1.0, 1.0, 1.0, 1.03]
+  prime WR (flagged n=1510)
+    grid pooled MSE: +1.00:42.093  +0.97:42.048  +0.94:42.038  +0.91:42.062  +1.03:42.173  +1.06:42.287
+    pooled best +0.94 | LOYO MSE 41.6517 vs shipped 41.6966 (-0.11%), years better 5/7, picks [0.94, 0.94, 0.94, 0.94, 0.94, 0.94, 0.97]
+  prime TE (flagged n=693)
+    grid pooled MSE: +1.00:26.434  +0.97:26.514  +0.94:26.612  +0.91:26.728  +1.03:26.371  +1.06:26.327
+    pooled best +1.06 | LOYO MSE 26.4607 vs shipped 26.5694 (-0.41%), years better 6/7, picks [1.06, 1.06, 1.06, 1.06, 1.06, 1.06, 1.06]

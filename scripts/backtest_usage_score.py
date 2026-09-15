@@ -120,6 +120,10 @@ def main():
         consts[pos] = {'w': {k: round(float(w), 4) for k, w in zip(FEAT[pos], c[:-1]) if w > 0},
                        'b': round(float(c[-1]), 2), 'p99': round(float(np.percentile(pred, 99)), 1)}
     print('\nconst USAGE = ' + json.dumps(consts) + ';')
+    # build_usage_trend.py (player-card USAGE row) reads the same numbers from here
+    with open(os.path.join(ROOT, 'scripts', 'usage_weights.json'), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write('{\n' + ',\n'.join(f'  {json.dumps(p)}: {json.dumps(v)}' for p, v in consts.items()) + '\n}\n')
+    print('wrote scripts/usage_weights.json - paste the USAGE constant into app.js too')
 
 
 if __name__ == '__main__':

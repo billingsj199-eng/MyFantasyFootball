@@ -13323,6 +13323,47 @@ function _playerRoleRow(d) {
 }
 window._playerRoleRow = _playerRoleRow;
 
+// USAGE row on the player card (admin-only for now): the Research page usage score over the
+// last 3 games with an arrow vs the 3 games before (data/usage_trend.js, lazy; built daily by
+// scripts/build_usage_trend.py). The arrow describes the change, not a forecast: in 2019-2025
+// testing, at equal recent usage, risers scored LESS over the next 3 games and fallers MORE.
+const USAGE_TREND_MIN = 15;   // about one SD of a 3-game usage change; smaller moves read as steady
+const USAGE_TREND_MIX = {
+  RB: 'carry share, route%, high-value touches, target share',
+  WR: 'target share, snap%, route%, red-zone targets',
+  TE: 'route%, target share, snap%, air-yards share, red-zone targets'
+};
+function _usageTrendRow(d) {
+  try {
+    if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return '';
+    const T = window.USAGE_TREND;
+    if (!T || !d || !d.n || !/^(RB|WR|TE)$/.test(d.s) || d._retired || d._isDevy) return '';
+    const yrs = Object.keys(T).sort();
+    const yr = yrs.slice().reverse().find((y) => T[y].p && T[y].p[d.n]);
+    if (!yr) return '';
+    const S = T[yr];
+    const [pos, g, season, l3, p3, byGame] = S.p[d.n];
+    if (l3 == null) return '';
+    const esc = (x) => String(x).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const delta = p3 != null ? l3 - p3 : null;
+    const sign = (v) => (v > 0 ? '+' : '') + Math.round(v);
+    const trail = (byGame || []).map((x) => 'W' + x[0] + ' ' + Math.round(x[1])).join(' → ');
+    const tip = 'Usage score 0-100 (Research page formula: backtested blend of ' + (USAGE_TREND_MIX[pos] || 'usage') + '; top 1% of usage at the position is about 100).'
+      + '\nLast ' + Math.min(g, 3) + ' game' + (g === 1 ? '' : 's') + ' ' + Math.round(l3)
+      + (p3 != null ? ' · prior 3 ' + Math.round(p3) : '') + ' · season ' + Math.round(season) + ' (' + g + ' game' + (g === 1 ? '' : 's') + ')'
+      + (trail ? '\nBy game: ' + trail : '')
+      + '\nThe arrow shows a 15+ point change and is not a forecast: in 2019-2025 testing, players at the same recent usage who had risen scored less over the next 3 games, and players who had fallen scored more.';
+    const chips = [`<span class="card-role tag">${Math.round(l3)}</span>`];
+    if (delta == null) chips.push('<span class="card-role tag dim">trend after 4 games</span>');
+    else if (Math.abs(delta) >= USAGE_TREND_MIN) chips.push(`<span class="card-role chg">${delta > 0 ? '▲' : '▼'} ${sign(delta)}</span>`);
+    else chips.push(`<span class="card-role tag dim">steady ${sign(delta)}</span>`);
+    const latest = yr === yrs[yrs.length - 1];
+    const note = `<span class="card-role-thru">${delta == null ? 'last ' + Math.min(g, 3) + ' game' + (g === 1 ? '' : 's') : 'last 3 vs prior 3'} · ${latest ? 'thru W' + S.thru : yr}</span>`;
+    return `<div class="card-role-row"><span class="card-role-lbl" data-gloss="${esc(tip)}">USAGE</span>${chips.join('')}${note}</div>`;
+  } catch (_e) { return ''; }
+}
+window._usageTrendRow = _usageTrendRow;
+
 function openPlayerCard(d, ctxMode) {
   // Compare-strip cycling (← →) needs to know which player is on screen
   window._cardOpenName = d && d.n ? d.n : null;
@@ -13358,6 +13399,18 @@ function openPlayerCard(d, ctxMode) {
   // 2026-07-20 — it's no longer eager). Fire the loads on click so the card fills in
   // (the idle preload usually beats this).
   if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
+  // Admin-only USAGE row (data/usage_trend.js): load on the first admin card open and re-open
+  // this card in place once it lands. _usageTrendPending blocks a retry loop after a failed load.
+  if (typeof window.isAdmin === 'function' && window.isAdmin() && typeof window._ensureUsageTrend === 'function'
+      && !window.USAGE_TREND && !window._usageTrendPending) {
+    window._usageTrendPending = true;
+    const _utName = d && d.n;
+    window._ensureUsageTrend().then(function() {
+      if (window.USAGE_TREND && window._cardOpenName === _utName && modal && modal.classList.contains('open')) {
+        try { openPlayerCard(d, ctxMode); } catch (e) {}
+      }
+    });
+  }
   if (d && d._retired) {
     if (typeof window._loadRetiredData === 'function') window._loadRetiredData();
   }
@@ -13461,6 +13514,7 @@ function openPlayerCard(d, ctxMode) {
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026) ? `<button id="cardIrToggle" title="${window._irIsOut(d.n) ? 'Restore this player to the season rankings (their board slot was kept)' : 'Hide this player from the ' + IR_SEASON + ' Redraft / Best Ball / Superflex / Weekly rankings — board slot, dynasty ranks, card and search are kept, and the flag auto-clears next season'}" style="padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid ${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};background:transparent;color:${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};white-space:nowrap">${window._irIsOut(d.n) ? 'RESTORE TO RANKINGS' : 'MARK OUT FOR SEASON'}</button>` : ''}
           </div>
           ${_playerRoleRow(d)}
+          ${_usageTrendRow(d)}
         </div>
       </div>
     </div>

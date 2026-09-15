@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-15-adv7" as="script">
+<link rel="preload" href="app.js?v=2026-09-15-adv8" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -5591,6 +5591,25 @@ window._ensureCardExtras = (function() {
   };
 })();
 
+// Player-card USAGE row (admin-only): data/usage_trend.js (window.USAGE_TREND, built daily by
+// scripts/build_usage_trend.py). openPlayerCard loads it for admins and re-renders once.
+// route_pct_daily.ps1 bumps _USAGE_TREND_V.
+window._USAGE_TREND_V = '2026-09-15';
+window._ensureUsageTrend = (function() {
+  let promise = null;
+  return function _ensureUsageTrend() {
+    if (promise) return promise;
+    promise = new Promise(function(resolve) {
+      const s = document.createElement('script');
+      s.src = 'data/usage_trend.js?v=' + window._USAGE_TREND_V;
+      s.onload = function() { resolve(window.USAGE_TREND || null); };
+      s.onerror = function() { console.warn('[UsageTrend] load failed'); resolve(null); };
+      document.head.appendChild(s);
+    });
+    return promise;
+  };
+})();
+
 // _bundle_bbm.js (~280 KB) — BBM tournament tables (BBM_DATA build rates, pick-by-
 // rank-round, path/stack/structural multistage lifts) split out of _bundle_lookups.js
 // 2026-08-04. Consumed ONLY by the My Teams construction-score path
@@ -5802,7 +5821,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-15-adv7"></script>
+<script defer src="app.js?v=2026-09-15-adv8"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

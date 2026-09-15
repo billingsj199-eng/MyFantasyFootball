@@ -3,6 +3,7 @@
 PFF Premium weekly receiving exports -> E:\\MyFantasyFootball\\pbp_cache\\pff\\weekly\\
     pff_receiving_<season>_w<N>.csv          (one file per completed week)
     pff_<facet>_<season>_w<N>.csv            scheme/alignment facets (see FACETS below)
+    pff_<facet>_<season-1>_w<N>.csv          prior-season weekly facets (fetched once; the comparison prior)
 
 These are the files scripts/pull_route_pct.py turns into the REAL current-season
 RT% column (routes / team dropbacks). Without them the card shows a ~estimate
@@ -207,6 +208,33 @@ def _flatten(row):
     return out
 
 
+def pull_prior_season(driver, season, force=False):
+    """PRIOR season, weeks 1-18, every facet + receiving/summary (saved as
+    receiving_summary so pull_route_pct.py's pff_receiving_<yr>_w* glob never sees
+    it) -> pff_<facet>_<prior>_w<N>.csv. Skips files already on disk, so after the
+    first run this costs one probe. build_scheme.py compares each defense's / player's
+    current profile with last season and flags what carried over."""
+    prior = season - 1
+    done, missing = [], 0
+    for wk in range(1, 19):
+        for key, facet in FACETS + [('receiving_summary', 'receiving/summary')]:
+            path = facet_path(key, prior, wk)
+            if os.path.exists(path) and not force:
+                continue
+            status, body = _page_fetch(driver, FACET_API.format(facet=facet, season=prior, week=wk))
+            rows = _rows(body) if status == 200 else None
+            if not isinstance(rows, list) or not rows:
+                print(f'  {prior} week {wk}: {facet} HTTP {status} - skipped')
+                missing += 1
+                continue
+            _write_csv(path, prior, wk, [_flatten(r) for r in rows if isinstance(r, dict)], lead=FACET_LEAD)
+            done.append((wk, key))
+            time.sleep(0.5)
+    if done:
+        print(f'  {prior} weekly facets: wrote {len(done)} files' + (f', {missing} skipped' if missing else ''))
+    return done
+
+
 def facet_path(key, season, week):
     return os.path.join(PFF_WEEKLY, f'pff_{key}_{season}_w{week}.csv')
 
@@ -262,6 +290,7 @@ def main():
     ap.add_argument('--refetch', type=int, default=2, help='always refetch this many newest existing weeks')
     ap.add_argument('--login-wait', type=int, default=300, help='seconds to wait for a manual PFF login')
     ap.add_argument('--no-facets', action='store_true', help='skip the scheme/alignment facet files (receiving only)')
+    ap.add_argument('--prior-refetch', action='store_true', help='refetch the prior-season weekly facet files')
     a = ap.parse_args()
     today = dt.date.today()
     season = a.season or (today.year if today.month >= 8 else today.year - 1)
@@ -338,6 +367,7 @@ def main():
         if not a.no_facets:
             for wk in kept:
                 pull_facets(driver, season, wk, force=False)
+            pull_prior_season(driver, season, force=a.prior_refetch)
         print(f'done: wrote {[w for w, _ in written]}, kept {kept}')
         return 0
     finally:

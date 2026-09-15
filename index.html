@@ -5630,7 +5630,7 @@ window._loadWeeklyData = function(opts) {
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
     'data/snap_counts.js?v=2026-09-15',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-09-15'
+    'data/route_pct.js?v=2026-09-15-rtdb'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }

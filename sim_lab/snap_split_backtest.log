@@ -1,0 +1,89 @@
+  2018: 9567 player-weeks with snaps/usage
+  2019: 9484 player-weeks with snaps/usage
+  2020: 9762 player-weeks with snaps/usage
+  2021: 10277 player-weeks with snaps/usage
+  2022: 10207 player-weeks with snaps/usage
+  2023: 10270 player-weeks with snaps/usage
+  2024: 10239 player-weeks with snaps/usage
+  2025: 10181 player-weeks with snaps/usage
+  league anchors 2025: RB TPRR 0.144 CPRS 0.813  WR TPRR 0.185 CPRS 0.013  TE TPRR 0.157 CPRS 0.006
+
+=== GATE. persistence of targets-per-pass-snap (TPRR) and carries-per-run-snap (CPRS), YoY ===
+  RB: TPRR YoY r=+0.53 (n=361, sd 0.051, mean 0.161) | CPRS YoY r=+0.90 (n=369, sd 0.209, mean 0.800)
+  WR: TPRR YoY r=+0.65 (n=737, sd 0.049, mean 0.193)
+  TE: TPRR YoY r=+0.65 (n=399, sd 0.051, mean 0.150)
+  in-season: TPRR through wk 8 -> wk 9+ (same season, >=60 pass snaps each half)
+  RB: early->late TPRR r=+0.57 (n=398)
+  WR: early->late TPRR r=+0.65 (n=878)
+  TE: early->late TPRR r=+0.70 (n=463)
+  2019: samples so far 1357
+  2020: samples so far 2852
+  2021: samples so far 4655
+  2022: samples so far 6596
+  2023: samples so far 9004
+  2024: samples so far 11482
+  2025: samples so far 13694
+  skipped: {'weekly': 370, 'team': 212, 'notrend': 1240, 'nosnaps': 68, 'gsis': 8}
+
+13694 RB/WR/TE player-weeks | MSE base*Vegas*FPA 40.1997 -> +snapMult(total, participation twin) 39.7859
+  RB: n=3984  no-snap 48.849 -> shipped 47.952
+  WR: n=6583  no-snap 41.417 -> shipped 41.216
+  TE: n=3127  no-snap 26.616 -> shipped 26.370
+
+=== A. ROLE-vs-USAGE GAPS: actual/shipped by tercile (per position) ===
+  route_gap RB: low -0.030: 1.035 (n=1328) | mid +0.002: 1.096 (n=1328) | high +0.036: 1.069 (n=1328)   corr rel-resid +0.020
+  route_gap WR: low -0.045: 1.005 (n=2194) | mid +0.001: 1.011 (n=2194) | high +0.043: 1.039 (n=2195)   corr rel-resid +0.022
+  route_gap TE: low -0.039: 1.069 (n=1042) | mid +0.002: 1.062 (n=1042) | high +0.044: 1.080 (n=1043)   corr rel-resid +0.005
+  run_gap   RB: low -0.052: 1.089 (n=1328) | mid -0.006: 1.048 (n=1328) | high +0.041: 1.052 (n=1328)   corr rel-resid -0.000
+  split     RB: low +0.465: 1.058 (n=1328) | mid +0.594: 1.052 (n=1327) | high +0.713: 1.092 (n=1329)   corr rel-resid +0.016
+  split     WR: low +0.577: 1.026 (n=2194) | mid +0.655: 1.014 (n=2194) | high +0.723: 1.012 (n=2195)   corr rel-resid +0.004
+  split     TE: low +0.499: 1.104 (n=1042) | mid +0.616: 1.110 (n=1042) | high +0.719: 1.016 (n=1043)   corr rel-resid -0.024
+
+=== A2. LOYO sweeps: shipped x (1 + e * gap_z) per position ===
+  RB route_gap (sd 0.032 share-pts)
+    grid pooled MSE:   0.0:48.498   0.02:48.456   0.04:48.522   0.06:48.696   0.08:48.978   0.12:49.695
+    pooled best 0.02 | LOYO MSE 47.9225 vs shipped 47.9523 (-0.06%), years better 4/7, picks [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]
+  WR route_gap (sd 0.042 share-pts)
+    grid pooled MSE:   0.0:41.688   0.02:41.611   0.04:41.609   0.06:41.681   0.08:41.827   0.12:42.184
+    pooled best 0.04 | LOYO MSE 41.1751 vs shipped 41.2163 (-0.10%), years better 5/7, picks [0.02, 0.04, 0.04, 0.02, 0.02, 0.04, 0.04]
+  TE route_gap (sd 0.039 share-pts)
+    grid pooled MSE:   0.0:26.161   0.02:26.158   0.04:26.197   0.06:26.276   0.08:26.396   0.12:26.641
+    pooled best 0.02 | LOYO MSE 26.4003 vs shipped 26.3701 (+0.11%), years better 0/7, picks [0.02, 0.02, 0.0, 0.0, 0.02, 0.02, 0.0]
+  RB run_gap (sd 0.047 share-pts)
+    grid pooled MSE:   0.0:48.498   0.02:48.638   0.04:48.875   0.06:49.209   0.08:49.639   0.12:50.332
+    pooled best 0.0 | LOYO MSE 47.9523 vs shipped 47.9523 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+=== B. TREND DECOMPOSITION: replace snapMult(total) with 1 + a*passTrend + b*runTrend (%/pt) ===
+  -- RB (n=3984) shipped total-trend MSE 47.9523; a=b=1 recomposed 47.9860
+     RB (a=pass, b=run)
+    grid pooled MSE: (1.0, 1.0):48.541  (0.0, 0.0):49.413  (0.0, 0.5):49.169  (0.0, 1.0):48.997  (0.0, 1.5):48.899  (0.0, 2.0):48.879  (0.5, 0.0):49.004  (0.5, 0.5):48.818  (0.5, 1.0):48.705  (0.5, 1.5):48.668  (0.5, 2.0):48.700  (1.0, 0.0):48.725  (1.0, 0.5):48.597  (1.0, 1.5):48.556  (1.0, 2.0):48.638  (1.5, 0.0):48.575  (1.5, 0.5):48.501  (1.5, 1.0):48.501  (1.5, 1.5):48.568  (1.5, 2.0):48.688  (2.0, 0.0):48.545  (2.0, 0.5):48.527  (2.0, 1.0):48.579  (2.0, 1.5):48.673  (2.0, 2.0):48.804
+    pooled best (1.5, 0.5) | LOYO MSE 48.0464 vs shipped 47.9860 (+0.13%), years better 2/7, picks [(1.0, 1.5), (1.5, 0.5), (1.5, 0.5), (1.5, 0.5), (1.5, 0.5), (1.5, 1.0), (1.5, 1.0)]
+     RB pass-snap trend ONLY (no run, no total)
+    grid pooled MSE:   0.0:49.413    0.5:48.817    1.0:48.596    1.5:48.707    2.0:48.996
+    pooled best 1.0 | LOYO MSE 48.0493 vs shipped 48.8495 (-1.64%), years better 7/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+     RB run-snap trend ONLY
+    grid pooled MSE:   0.0:49.413    0.5:48.891    1.0:48.794    1.5:49.051    2.0:49.524
+    pooled best 1.0 | LOYO MSE 48.3098 vs shipped 48.8495 (-1.10%), years better 5/7, picks [1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0]
+     RB shipped x (1 + c*(passTrend - runTrend))
+    grid pooled MSE:   0.0:48.498   0.25:48.528    0.5:48.634   0.75:48.818    1.0:49.077
+    pooled best 0.0 | LOYO MSE 47.9825 vs shipped 47.9523 (+0.06%), years better 0/7, picks [0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0]
+  -- WR (n=6583) shipped total-trend MSE 41.2163; a=b=1 recomposed 41.2035
+     WR (a=pass, b=run)
+    grid pooled MSE: (1.0, 1.0):41.676  (0.0, 0.0):41.920  (0.0, 0.5):41.822  (0.0, 1.0):41.764  (0.0, 1.5):41.748  (0.0, 2.0):41.777  (0.5, 0.0):41.750  (0.5, 0.5):41.692  (0.5, 1.0):41.675  (0.5, 1.5):41.704  (0.5, 2.0):41.767  (1.0, 0.0):41.666  (1.0, 0.5):41.648  (1.0, 1.5):41.732  (1.0, 2.0):41.820  (1.5, 0.0):41.668  (1.5, 0.5):41.688  (1.5, 1.0):41.733  (1.5, 1.5):41.814  (1.5, 2.0):41.920  (2.0, 0.0):41.730  (2.0, 0.5):41.769  (2.0, 1.0):41.839  (2.0, 1.5):41.934  (2.0, 2.0):42.046
+    pooled best (1.0, 0.5) | LOYO MSE 41.1920 vs shipped 41.2035 (-0.03%), years better 3/7, picks [(1.0, 0.5), (1.0, 0.5), (1.0, 0.5), (1.5, 0.0), (1.0, 0.5), (1.0, 0.5), (1.0, 0.5)]
+     WR pass-snap trend ONLY (no run, no total)
+    grid pooled MSE:   0.0:41.920    0.5:41.691    1.0:41.670    1.5:41.786    2.0:41.981
+    pooled best 1.0 | LOYO MSE 41.1932 vs shipped 41.4174 (-0.54%), years better 5/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+     WR shipped x (1 + c*(passTrend - runTrend))
+    grid pooled MSE:   0.0:41.688   0.25:41.663    0.5:41.683   0.75:41.748    1.0:41.855
+    pooled best 0.25 | LOYO MSE 41.1878 vs shipped 41.2163 (-0.07%), years better 5/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+  -- TE (n=3127) shipped total-trend MSE 26.3701; a=b=1 recomposed 26.3845
+     TE (a=pass, b=run)
+    grid pooled MSE: (1.0, 1.0):26.180  (0.0, 0.0):26.375  (0.0, 0.5):26.328  (0.0, 1.0):26.299  (0.0, 1.5):26.289  (0.0, 2.0):26.302  (0.5, 0.0):26.261  (0.5, 0.5):26.229  (0.5, 1.0):26.218  (0.5, 1.5):26.229  (0.5, 2.0):26.255  (1.0, 0.0):26.189  (1.0, 0.5):26.177  (1.0, 1.5):26.202  (1.0, 2.0):26.241  (1.5, 0.0):26.157  (1.5, 0.5):26.157  (1.5, 1.0):26.178  (1.5, 1.5):26.211  (1.5, 2.0):26.256  (2.0, 0.0):26.163  (2.0, 0.5):26.177  (2.0, 1.0):26.207  (2.0, 1.5):26.247  (2.0, 2.0):26.296
+    pooled best (1.5, 0.5) | LOYO MSE 26.4209 vs shipped 26.3845 (+0.14%), years better 2/7, picks [(2.0, 0.0), (1.5, 0.0), (1.5, 0.5), (1.5, 0.5), (2.0, 0.0), (1.0, 0.5), (1.5, 0.0)]
+     TE pass-snap trend ONLY (no run, no total)
+    grid pooled MSE:   0.0:26.375    0.5:26.204    1.0:26.141    1.5:26.170    2.0:26.257
+    pooled best 1.0 | LOYO MSE 26.3353 vs shipped 26.6161 (-1.05%), years better 5/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+     TE shipped x (1 + c*(passTrend - runTrend))
+    grid pooled MSE:   0.0:26.161   0.25:26.124    0.5:26.116   0.75:26.134    1.0:26.181
+    pooled best 0.5 | LOYO MSE 26.3411 vs shipped 26.3701 (-0.11%), years better 5/7, picks [0.5, 0.75, 0.5, 0.5, 0.5, 0.5, 0.25]

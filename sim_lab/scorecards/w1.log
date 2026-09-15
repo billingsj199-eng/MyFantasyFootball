@@ -1,7 +1,7 @@
 ##### score_week.py --week 1
-W1 lock: 342 players, 15 games, preset half, sims 2000
+W1 lock: 368 players, 16 games, preset half, sims 2000
 actuals: 303 game rows | consensus file: yes (2026-09-14T13:00:39.005104+00:00)
-scored: 170 played (shipped mean >= 5.0) | DNP/unmatched: 5
+scored: 170 played (shipped mean >= 5.0) | DNP/unmatched: 17
 
 === ALL positions (same rows for every model where available) ===
   model               n    MAE   bias   RMSE
@@ -51,8 +51,8 @@ scored: 170 played (shipped mean >= 5.0) | DNP/unmatched: 5
   Isaiah Likely          TE NYG vs DAL  proj   9.3  act  23.8  (-14.5)  js 10.16 clay  7.33 cons   9.1
   Josh Allen             QB BUF vs HOU  proj  21.6  act  35.7  (-14.1)  js 20.64 clay 20.64 cons  18.3
 
-=== locked but no game row (5) ===
-  Cameron Ward (QB 12.8), Cooper Rush (QB 11.4), Kenneth Gainwell (RB 10.0), Josh Jacobs (RB 9.0), Chigoziem Okonkwo (TE 5.6)
+=== locked but no game row (17) ===
+  Bo Nix (QB 18.5), Patrick Mahomes (QB 17.3), Ken Walker III (RB 15.1), Cameron Ward (QB 12.8), Cooper Rush (QB 11.4), Rashee Rice (WR 11.2), Jaylen Waddle (WR 10.4), Kenneth Gainwell (RB 10.0), J.K. Dobbins (RB 9.0), Josh Jacobs (RB 9.0), Courtland Sutton (WR 8.6), Travis Kelce (TE 8.5), Xavier Worthy (WR 7.8), RJ Harvey (RB 6.9), Chigoziem Okonkwo (TE 5.6), Pat Bryant (WR 5.2), Evan Engram (TE 5.0)
 
 
 ##### diagnose_week.py --week 1

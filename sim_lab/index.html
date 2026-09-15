@@ -33,7 +33,7 @@
   th.l, td.l { text-align:left; }
   td.dim { color:var(--dim); }
   tbody tr:hover { background:var(--panel); }
-  #wk-table, #sn-table, #sn-detail, #lg-table, #lg-week-table, #lg-teams, #lg-detail, #tk-body, #pc-table { overflow-x:auto; }
+  #wk-table, #sn-table, #sn-detail, #lg-table, #lg-week-table, #lg-teams, #lg-detail, #tk-body, #pc-table, #zn-body { overflow-x:auto; }
   h3 { margin:20px 0 8px; font-size:14px; color:var(--acc2); }
   .hint { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--dim); margin-bottom:14px; }
   .hint b { color:var(--tx); }
@@ -51,6 +51,7 @@
   <button class="tab" data-tab="league">LEAGUE SIM</button>
   <button class="tab" data-tab="bb">BEST BALL</button>
   <button class="tab" data-tab="pace">TEAM PACE</button>
+  <button class="tab" data-tab="zones">ZONES</button>
   <button class="tab" data-tab="track">TRACKING &amp; ACCURACY</button>
 </nav>
 
@@ -204,6 +205,24 @@
   <div id="pc-table"></div>
 </div>
 
+<div class="pane" id="pane-zones">
+  <div class="hint"><b>Target-area zones (intel only):</b> where each defense gets targeted (share of targets faced by depth and
+    side vs league = the <i>funnel</i>) and what it allows per target there, next to each receiver's own target mix
+    (behind LOS / 0&ndash;9 / 10&ndash;19 / 20+ air yards, left / middle / right) and aDOT. Backtested 2019&ndash;25
+    (<code>backtest_target_area.py</code>): receiver mix is a real, sticky profile (deep share YoY r .75, behind-LOS .88);
+    a defense's funnel is a soft scheme identity (early&rarr;late r .2&ndash;.5); a defense's per-zone <i>efficiency</i>
+    beyond its overall rate is noise (r ~0 in-season and YoY) &mdash; quote it as "so far", never as an identity. The
+    matchup multiplier graded flat, so the sims do not use any of this. Season-to-date numbers are shrunk toward the 2025
+    profile (receivers 40 targets, defenses 60) so Week 1&ndash;3 reads are not pure noise.</div>
+  <div class="bar">
+    <select id="zn-week"></select>
+    <select id="zn-game"><option value="">All defenses</option></select>
+    <select id="zn-pos"><option value="">WR + TE + RB</option><option>WR</option><option>TE</option><option>RB</option></select>
+  </div>
+  <div class="note" id="zn-note"></div>
+  <div id="zn-body"></div>
+</div>
+
 <div class="pane" id="pane-track">
   <div class="hint"><b>Private accuracy loop:</b> LOCK a week before kickoff (freezes projections + that week's UD/PP/DK prop
     lines). SCORE it after the games (pulls actuals from Sleeper, grades MAE / calibration, and counts how often our number was
@@ -223,25 +242,26 @@
 </div>
 
 <!-- data (refresh with: python refresh_data.py) -->
-<script src="data/refresh_stamp.js?v=1789395410"></script>
-<script src="data/mike_clay_projections.js?v=1789395410"></script>
-<script src="data/player_weekly_sigma.js?v=1789395410"></script>
-<script src="data/betting_lines_2026.js?v=1789395410"></script>
-<script src="data/clay_team_grades_2026.js?v=1789395410"></script>
-<script src="data/sleeper_players.js?v=1789395410"></script>
-<script src="data/sleeper_meta.js?v=1789395410"></script>
-<script src="data/sim_snaps.js?v=1789395410"></script>
-<script src="data/sim_routes.js?v=1789395410"></script>
-<script src="data/sim_weather.js?v=1789395410"></script>
-<script src="data/sim_practice.js?v=1789395410"></script>
-<script src="data/sim_depth.js?v=1789395410"></script>
-<script src="data/sim_2026.js?v=1789395410"></script>
-<script src="data/pace_2026.js?v=1789395410"></script>
-<script src="data/sim_tuning.js?v=1789395410"></script>
-<script src="data/yahoo_normalize.js?v=1789395410"></script>
+<script src="data/refresh_stamp.js?v=1789442494"></script>
+<script src="data/mike_clay_projections.js?v=1789442494"></script>
+<script src="data/player_weekly_sigma.js?v=1789442494"></script>
+<script src="data/betting_lines_2026.js?v=1789442494"></script>
+<script src="data/clay_team_grades_2026.js?v=1789442494"></script>
+<script src="data/sleeper_players.js?v=1789442494"></script>
+<script src="data/sleeper_meta.js?v=1789442494"></script>
+<script src="data/sim_snaps.js?v=1789442494"></script>
+<script src="data/sim_routes.js?v=1789442494"></script>
+<script src="data/sim_weather.js?v=1789442494"></script>
+<script src="data/sim_practice.js?v=1789442494"></script>
+<script src="data/sim_depth.js?v=1789442494"></script>
+<script src="data/sim_2026.js?v=1789442494"></script>
+<script src="data/pace_2026.js?v=1789442494"></script>
+<script src="data/zones_2026.js?v=1789442494"></script>
+<script src="data/sim_tuning.js?v=1789442494"></script>
+<script src="data/yahoo_normalize.js?v=1789442494"></script>
 <!-- app -->
-<script src="overrides.js?v=1789395410"></script>
-<script src="engine.js?v=1789395410"></script>
-<script src="app.js?v=1789395410"></script>
+<script src="overrides.js?v=1789442494"></script>
+<script src="engine.js?v=1789442494"></script>
+<script src="app.js?v=1789442494"></script>
 </body>
 </html>

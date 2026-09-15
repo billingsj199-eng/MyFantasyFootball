@@ -1,0 +1,93 @@
+  pbp 2018: 14405 RB touches, 256 games with lines
+  pbp 2019: 14583 RB touches, 256 games with lines
+  pbp 2020: 14384 RB touches, 256 games with lines
+  pbp 2021: 15200 RB touches, 272 games with lines
+  pbp 2022: 15080 RB touches, 271 games with lines
+  pbp 2023: 14926 RB touches, 272 games with lines
+  pbp 2024: 14734 RB touches, 272 games with lines
+  pbp 2025: 14795 RB touches, 272 games with lines
+  xTD rates (rush): <=1:0.540  <=2:0.379  <=3:0.339  <=4:0.257  <=5:0.215  <=10:0.105  <=20:0.042  <=40:0.011  <=100:0.003
+  xTD rates (tgt) : <=1:0.405  <=2:0.405  <=3:0.405  <=4:0.405  <=5:0.405  <=10:0.247  <=20:0.094  <=40:0.029  <=100:0.003
+  2019: lgAvg implied 22.6, samples so far 408
+  2020: lgAvg implied 24.0, samples so far 852
+  2021: lgAvg implied 23.2, samples so far 1401
+  2022: lgAvg implied 22.1, samples so far 2008
+  2023: lgAvg implied 21.5, samples so far 2798
+  2024: lgAvg implied 22.2, samples so far 3648
+  2025: lgAvg implied 22.4, samples so far 4405
+  skipped: {'weekly': 140, 'team': 85, 'gsis': 6}
+
+4405 RB player-weeks 2019-25 with base + lines + role profile
+  MSE base-only 49.5152 | shipped (e=.50) 48.9458 | MAE shipped 5.2144
+
+=== 1. actual / shipped by metric tercile (is the metric new information?) ===
+  touch_share  low +0.253: 1.143 (n=1468) | mid +0.496: 1.078 (n=1468) | high +0.724: 1.036 (n=1469)   corr(x, act-shipped) -0.011
+  pass_role    low -0.228: 1.076 (n=1468) | mid -0.020: 1.074 (n=1468) | high +0.172: 1.055 (n=1469)   corr(x, act-shipped) -0.015
+  tilt         low -0.122: 1.042 (n=1468) | mid -0.010: 1.056 (n=1468) | high +0.106: 1.114 (n=1469)   corr(x, act-shipped) +0.031
+  tilt7        low -0.169: 1.032 (n=1468) | mid -0.017: 1.107 (n=1468) | high +0.135: 1.077 (n=1469)   corr(x, act-shipped) +0.011
+  d3_gap       low -0.196: 1.075 (n=1468) | mid -0.024: 1.072 (n=1468) | high +0.143: 1.057 (n=1469)   corr(x, act-shipped) -0.027
+  rz_gap       low -0.123: 1.100 (n=1468) | mid +0.011: 1.074 (n=1468) | high +0.143: 1.042 (n=1469)   corr(x, act-shipped) -0.029
+  td_luck      low -0.188: 0.996 (n=1468) | mid +0.010: 1.104 (n=1468) | high +0.161: 1.134 (n=1469)   corr(x, act-shipped) +0.078
+
+=== 2. empirical Vegas elasticity by role tercile (slope of actual/base vs implied dev; vs spread) ===
+  tilt        | low: e_implied 0.44 e_spread 0.33 (n=1468) | mid: e_implied 0.33 e_spread 0.22 (n=1468) | high: e_implied 0.38 e_spread 0.26 (n=1469)
+  tilt7       | low: e_implied 0.42 e_spread 0.34 (n=1468) | mid: e_implied 0.42 e_spread 0.24 (n=1468) | high: e_implied 0.38 e_spread 0.22 (n=1469)
+  pass_role   | low: e_implied 0.24 e_spread 0.22 (n=1468) | mid: e_implied 0.41 e_spread 0.29 (n=1468) | high: e_implied 0.55 e_spread 0.30 (n=1469)
+  rz_gap      | low: e_implied 0.47 e_spread 0.30 (n=1468) | mid: e_implied 0.37 e_spread 0.32 (n=1468) | high: e_implied 0.36 e_spread 0.19 (n=1469)
+  touch_share | low: e_implied 0.61 e_spread 0.46 (n=1468) | mid: e_implied 0.36 e_spread 0.20 (n=1468) | high: e_implied 0.31 e_spread 0.24 (n=1469)
+  ALL RB      e_implied 0.39  e_spread 0.26
+
+=== 3. LOYO MSE sweeps (grid[0] = shipped, negative delta = better) ===
+  metric sds: tilt 0.108  pass_role 0.186  rz_gap 0.122
+  a) role-dependent implied elasticity: e = 0.50 + e1*tilt_z
+    grid pooled MSE: +0.00:49.284  -0.30:49.383  -0.20:49.296  -0.10:49.266  +0.10:49.362  +0.20:49.499  +0.30:49.692  +0.40:49.931
+    pooled best -0.10 | LOYO MSE 48.9713 vs shipped 48.9458 (+0.05%), years better 4/7, picks [-0.2, -0.1, -0.1, -0.1, 0.0, -0.1, -0.1]
+  a7) same with tilt7_z
+    grid pooled MSE: +0.00:49.284  -0.30:49.396  -0.20:49.300  -0.10:49.266  +0.10:49.364  +0.20:49.507  +0.30:49.708  +0.40:49.958
+    pooled best -0.10 | LOYO MSE 48.9724 vs shipped 48.9458 (+0.05%), years better 4/7, picks [-0.2, -0.1, -0.1, -0.1, 0.0, -0.1, -0.1]
+  ap) e = 0.50 - e1*pass_role_z (passing-down backs less Vegas-elastic)
+    grid pooled MSE: +0.00:49.284  -0.30:49.308  -0.20:49.235  -0.10:49.227  +0.10:49.403  +0.20:49.587  +0.30:49.805  +0.40:50.043
+    pooled best -0.10 | LOYO MSE 48.9227 vs shipped 48.9458 (-0.05%), years better 3/7, picks [-0.2, -0.2, -0.2, -0.1, -0.1, -0.2, -0.1]
+  b) spread x tilt interaction on top of shipped: x(1 + s*spreadFrac*tilt_z)
+    grid pooled MSE: +0.00:49.284  +0.10:49.440  +0.20:49.770  +0.30:50.223  +0.50:51.397  +0.75:52.798  +1.00:53.929
+    pooled best +0.00 | LOYO MSE 48.9458 vs shipped 48.9458 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  b7) spread x tilt7
+    grid pooled MSE: +0.00:49.284  +0.10:49.469  +0.20:49.846  +0.30:50.357  +0.50:51.555  +0.75:52.946  +1.00:54.148
+    pooled best +0.00 | LOYO MSE 48.9458 vs shipped 48.9458 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  c) spread x pass_role: passing-down backs gain as underdogs, x(1 - s*spreadFrac*passRole_z)
+    grid pooled MSE: +0.00:49.284  +0.10:49.428  +0.20:49.771  +0.30:50.247  +0.50:51.422  +0.75:52.809  +1.00:53.868
+    pooled best +0.00 | LOYO MSE 48.9458 vs shipped 48.9458 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  c3) spread x d3_gap (3rd-down/2-min share)
+    grid pooled MSE: +0.00:49.284  +0.10:49.460  +0.20:49.841  +0.30:50.347  +0.50:51.493  +0.75:52.678  +1.00:53.744
+    pooled best +0.00 | LOYO MSE 48.9458 vs shipped 48.9458 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  d) TD-luck correction: + k * 6 * (xTD - TD)/g * realizedWeight
+    grid pooled MSE: +0.00:49.284  +0.25:49.166  +0.50:49.091  +0.75:49.058  +1.00:49.068  +1.50:49.213
+    pooled best +0.75 | LOYO MSE 48.7689 vs shipped 48.9458 (-0.36%), years better 5/7, picks [1.0, 0.75, 0.75, 0.75, 1.0, 0.75, 0.5]
+  td_luck mean -0.0054/g (overall), by year: 2019:-0.024 2020:+0.019 2021:-0.010 2022:-0.002 2023:+0.010 2024:-0.007 2025:-0.024
+  dc) TD-luck CENTERED per season (pure mean reversion, no level effect)
+    grid pooled MSE: +0.00:49.284  +0.25:49.164  +0.50:49.086  +0.75:49.050  +1.00:49.055  +1.50:49.190
+    pooled best +0.75 | LOYO MSE 48.7693 vs shipped 48.9458 (-0.36%), years better 5/7, picks [1.0, 1.0, 0.75, 0.75, 1.0, 0.75, 0.5]
+  dl) TD-luck + flat level shift +0.65 (does luck add beyond a level fix?)
+    grid pooled MSE: +0.00:49.284  +0.25:48.758  +0.50:48.673  +0.75:48.631  +1.00:48.630  +1.50:48.757
+    pooled best +1.00 | LOYO MSE 48.3308 vs shipped 48.9458 (-1.26%), years better 6/7, picks [1.0, 1.0, 1.0, 0.75, 1.0, 1.0, 0.5]
+  l0) flat level shift alone (reference)
+    grid pooled MSE: +0.00:49.284  +1.00:48.885
+    pooled best +1.00 | LOYO MSE 48.5241 vs shipped 48.9458 (-0.86%), years better 6/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  e) goal-line share multiplier: x(1 + r * rz_gap)
+    grid pooled MSE: +0.00:49.284  +0.25:49.462  +0.50:49.871  +0.75:50.510  +1.00:51.327  +1.50:53.254
+    pooled best +0.00 | LOYO MSE 48.9458 vs shipped 48.9458 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+  COMBINED (a +0.00, c 0.00, d 0.75, e 0.00) pooled: MSE 48.6785 vs shipped 48.9458 (-0.55%), MAE 5.1983 vs 5.2144
+    2019: shipped 48.605 -> combined 48.918  (n=408)
+    2020: shipped 51.476 -> combined 51.333  (n=444)
+    2021: shipped 50.134 -> combined 49.995  (n=549)
+    2022: shipped 51.030 -> combined 50.583  (n=607)
+    2023: shipped 48.545 -> combined 48.548  (n=790)
+    2024: shipped 43.093 -> combined 42.931  (n=850)
+    2025: shipped 52.102 -> combined 51.101  (n=757)
+
+=== 4. combined delta by season-to-date touches (does the role need data?) ===
+  touches 0-30: n=861  shipped 38.897  combined 38.733
+  touches 30-80: n=1291  shipped 42.757  combined 42.614
+  touches 80-160: n=1263  shipped 47.443  combined 47.278
+  touches 160-9999: n=990  shipped 67.673  combined 67.023

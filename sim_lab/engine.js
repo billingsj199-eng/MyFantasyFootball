@@ -740,6 +740,65 @@
     return 1 + (PRESSURE_BOOST - 1) * Math.min(1, v[1] / 250);
   }
 
+  // ---------- RB TD-luck mean reversion ----------
+  // backtest_rb_role.py (2026-09-14, 4,405 RB player-weeks 2019-25, P=5 base
+  // x Vegas): a back's realized PPG carries TD luck his red-zone USAGE says
+  // should regress. xTD = league TD rate per touch by yardline bucket (pooled
+  // pbp 2018-25) summed over his season-to-date carries + targets; luck =
+  // (xTD - TD)/g. Unlucky tercile (+0.16/g) runs actual/base 1.134, lucky
+  // tercile 0.996. Additive correction on the REALIZED half of the blend:
+  //   + TDLUCK_K * tdPts * luck * g/(P+g)
+  // LOYO -0.36%, 5/7 years, k picks .5-1.0 every fold; identical when luck is
+  // centered per season (pure per-player mean reversion, not a level fix -
+  // the level is the weekly tuner's tdMult job). Same size class as the
+  // pressure boost. Every game-script ROLE interaction (closer x favored,
+  // passing-down back x underdog, goal-line share) graded WORSE - not shipped.
+  // Data: SIM_RB_TDLUCK_2026 {norm: {xtd, td, g, n}} in sim_routes.js
+  // (pull_pace_tracker.py, nightly pbp) - empty preseason, provable no-op.
+  // Applied AFTER the chain (the backtest added it to base x Vegas), scaled by
+  // availability so a zeroed/docked player is not handed TD points back.
+  // Kill switch: window.SIM_TD_LUCK = false.
+  // RECEIVERS (backtest_wr_tdluck.py, 2026-09-14, 10,597 WR/TE player-weeks):
+  // the same regression is LARGER for pass-catchers - xTD per target from a
+  // yardline x end-zone-throw table (depth matters: EZ throw from the 30 =
+  // .27 vs a screen at the 30 = .03). Unlucky tercile runs actual/base WR
+  // 1.112 / TE 1.186, lucky 0.954 / 0.974. LOYO -0.93% (WR -0.79%, TE
+  // -1.26%), 7/7 years, k=1.0 every fold, identical centered per season
+  // (pure regression). The biggest single-layer gain in the lab. Data:
+  // SIM_REC_TDLUCK_2026 (same file). Kill: window.SIM_TD_LUCK_REC = false
+  // (SIM_TD_LUCK = false kills both).
+  // QB (backtest_qb_tdluck.py, 2026-09-14, 2,554 QB player-weeks): PASSING
+  // TD luck only - xPassTD from his targets' yardline x end-zone-throw
+  // probabilities (throwaways 0); QB RUSH luck graded flat (+0.02%) and is
+  // excluded. Unlucky tercile actual/base 1.097, lucky 0.991. LOYO pass-
+  // only -0.44% (5/7), k=.5 x pass-TD value, every fold picks .5-.75.
+  // NOT centered: subtracting the live season-to-date league mean graded
+  // weaker (-0.34%) than the plain form, so QB matches RB/WR/TE exactly.
+  // Data: SIM_QB_TDLUCK_2026. Kill: window.SIM_TD_LUCK_QB = false.
+  var TDLUCK_K = 0.75;        // RB (backtest_rb_role.py)
+  var TDLUCK_K_REC = 1.0;     // WR/TE (backtest_wr_tdluck.py)
+  var TDLUCK_K_QB = 0.5;      // QB passing (backtest_qb_tdluck.py)
+  function tdLuckAdj(p, sc) {
+    var isRec = p.pos === 'WR' || p.pos === 'TE', isQb = p.pos === 'QB';
+    if (p.pos !== 'RB' && !isRec && !isQb) return 0;
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_TD_LUCK === false) return 0;
+    if (isRec && wnd.SIM_TD_LUCK_REC === false) return 0;
+    if (isQb && wnd.SIM_TD_LUCK_QB === false) return 0;
+    var m = (isQb ? wnd.SIM_QB_TDLUCK_2026 : isRec ? wnd.SIM_REC_TDLUCK_2026 : wnd.SIM_RB_TDLUCK_2026) || null;
+    var r = m ? m[p.norm] : null;
+    if (!r || !r.g) return 0;
+    var d = jsData();
+    var rec = d.players && d.players[p.norm];
+    var g = (rec && rec.g) ? rec.g : r.g;            // games in the P=5 blend
+    var luck = (r.xtd - r.td) / r.g;
+    var tdPts = isQb ? ((sc && sc.pass_td) || 4)
+      : isRec ? ((sc && sc.rec_td) || 6)
+      : (((sc && sc.rush_td) || 6) + ((sc && sc.rec_td) || 6)) / 2;
+    var k = isQb ? TDLUCK_K_QB : isRec ? TDLUCK_K_REC : TDLUCK_K;
+    return k * tdPts * luck * (g / (JS_PRIOR_STRENGTH + g));
+  }
+
   // ---------- weather (wind) docks ----------
   // backtest_weather.py (2019-25, pbp game weather, 97% outdoor coverage):
   // wind dose-response survives BOTH Vegas adjustment (books underprice
@@ -1480,7 +1539,12 @@
     // so jsMean === mean until real games exist.
     var jsPg = jsBasePg(p, sc, clayPg);
     var jsChain = mult * jsOppMult(slot.opp, p.pos, dAdj) * cbM * sM * rampF * iA;
-    var jsMean = jsPg * jsChain;
+    // TD-luck mean reversion (RB/WR/TE/QB), additive after the chain. Scaled by
+    // AVAILABILITY only: iA also carries the vacated-opportunity boost for
+    // backups (>1, Cooper Rush x210 on a near-zero base) which must not
+    // multiply a points term - min(1, iA) keeps Out/Doubtful docks and drops the boost.
+    var luckAdj = tdLuckAdj(p, sc) * Math.min(1, iA);
+    var jsMean = Math.max(0, jsPg * jsChain + luckAdj);
     var compsWk = {};
     Object.keys(p.comps).forEach(function (k) {
       if (p.comps[k]) compsWk[k] = +(p.comps[k] / perGameDiv * factor).toFixed(2);
@@ -1516,7 +1580,7 @@
       if (mkt) {
         var mw = propWeight(p) * mkt.conf;
         if (mw > 0) {
-          propMean = (mw * mkt.rate + (1 - mw) * jsPg) * jsChain;
+          propMean = Math.max(0, (mw * mkt.rate + (1 - mw) * jsPg) * jsChain + (1 - mw) * luckAdj);
           propSrc = 'rate';
         }
       }
@@ -2483,7 +2547,7 @@
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
     applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
-    weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
+    weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,
     propAnchorMean: propAnchorMean, gammaMedRatio: gammaMedRatio, marketRate: marketRate, propImpliedFp: propImpliedFp, propCacheReset: propCacheReset,
     marketObsContaminated: marketObsContaminated,

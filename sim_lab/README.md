@@ -962,3 +962,224 @@ the engine currently shrinks TOTAL fpts_pg at a single point in the pipeline
 separately through the layer stack, which is a real refactor of the QB path.
 Worth doing, but as a deliberate change rather than a bolt-on — the payoff is
 small enough that a subtle plumbing bug would erase it.
+
+## RB role decomposition (backtest_rb_role.py) — GAME-SCRIPT ROLES REJECTED, TD-LUCK PASSED 2026-09-14
+
+Jack: "backtest the RB role decomposition first." Role metrics rebuilt from
+nflverse pbp SEASON-TO-DATE (weeks < W, shrunk toward the prior-season profile
+with a 30-touch prior; RB = players.csv position; shares of the team's RB room):
+touch_share, pass_role (tgt share − carry share), tilt (touch share leading −
+trailing, pre-snap score diff; tilt7 at ±7), d3_gap (3rd-down + two-minute
+share − touch share), rz_gap (inside-10 carry share − carry share), td_luck
+(xTD from touch yardline − actual TD, per game; league xTD rates by
+yardline bucket pooled 2018-25, targets inside the 5 one bucket). 4,405 RB
+player-weeks 2019-25, base = P=5 blend × shipped Vegas e=.50, LOYO sweeps.
+Log: rb_role_backtest.log.
+
+- **Every game-script interaction is dead.** Role-dependent implied
+  elasticity (e = .50 ± e1·tilt_z or ·pass_role_z): ±0.05%, 3-4/7 years.
+  Spread × tilt, spread × pass_role, spread × d3_gap: MSE worse at every
+  elasticity, monotone, 0/7 years. Closers do NOT gain when favored and
+  passing-down backs do NOT gain as underdogs beyond what the implied total
+  already carries. Goal-line share multiplier (rz_gap): worse at every r,
+  0/7 — a back's realized PPG already embeds his goal-line role.
+- Empirical elasticity note: pass-role backs are MORE implied-elastic
+  (.55 vs .24 low tercile) and low-share backs most of all (.61) — high
+  totals mean more passing and more garbage volume, not the spread story.
+  Whole-RB slope .39 vs shipped .50 — consistent with the Vegas backtest.
+- **TD luck is real, per-player mean reversion**: unlucky-so-far tercile
+  (xTD−TD +0.16/g) runs actual/shipped 1.134, lucky tercile 0.996;
+  corr(luck, act−shipped) +.078. Additive correction
+  `+ k · 6 · (xTD−TD)/g · g/(P+g)` (i.e. luck removed from the realized
+  half of the blend): pooled best k=.75, **LOYO −0.36%, 5/7 years**, picks
+  .5-1.0 every fold. Centering luck per season gives the identical −0.36%
+  → not a level effect. Gain holds in every season-to-date touch bucket.
+  Same size class as the pressure boost (−0.46%), the largest shipped layer.
+- Side finding: a flat +0.65 RB level shift is worth −0.86% on this base —
+  the RB TD under-projection the weekly tuner's tdMult (RB rtd 1.09 / rctd
+  1.10) already handles live; the backtest base has no tuner. Luck adds on
+  top of the level fix (−1.26% combined vs −0.86% level alone).
+- SHIPPED 2026-09-14 (Jack: "wire it up"). `tdLuckAdj(p, sc)` (engine.js,
+  before the weather block): RB only, `TDLUCK_K = 0.75` x avg(rush_td,
+  rec_td value) x (xTD-TD)/g x g/(P+g), g = the SIM_2026 games in the blend.
+  Applied AFTER the chain (the backtest added it to base x Vegas) as an
+  additive term scaled by availability iA (zeroed/docked backs get nothing
+  back), floored at 0; the market-rate fallback adds (1-mw) x the same term.
+  Kill switch `window.SIM_TD_LUCK = false`. Data `SIM_RB_TDLUCK_2026`
+  {norm: {xtd, td, g, n}} appended to data/sim_routes.js by
+  pull_pace_tracker.py `build_rb_tdluck_2026()` (nightly pbp; xTD rates
+  baked as XTD_RUSH/XTD_TGT constants; players.csv refetched weekly for the
+  RB filter) - already loaded by index.html AND export_site_proj.js, so site
+  projections inherit at the next exporter run. Smoke (W2, half-PPR, 74 RBs
+  mapped after W1): 64 RBs move, 0 non-RB, 0 zeroed; Henry 3 TD on 1.08 xTD
+  -> -1.44 (21.67 -> 20.23), Allgeier 0 TD on 0.64 xTD -> +0.48; formula
+  check exact. Backups engine.js.bak_pre_tdluck_20260914,
+  pull_pace_tracker.py.bak_pre_tdluck_20260914.
+
+## Target-area matchup (backtest_target_area.py) - REJECTED as a layer, SHIPPED as the ZONES tab 2026-09-14
+
+Jack: "backtest the target-area matchup next" + "regardless ... note the
+strengths and weaknesses of players and defenses that I can mention in
+videos". Zones from nflverse pbp: depth by air yards (behind LOS / 0-9 /
+10-19 / 20+) and side (pass_location left / middle / right); half-PPR
+receiving pts per target. Defense r_z = pts/tgt allowed in zone vs league
+(shrunk, K=60 tgts), funnel s_z = share of targets faced in zone vs league;
+receiver w_z = his target mix season-to-date shrunk toward prior season
+(K=40). Matchup M = sum w_z r_z / r_all (isolates the zone interaction from
+position FPA). 10,598 WR/TE player-weeks 2019-25, base = P=5 x Vegas .25 x
+shipped in-season FPA layer, LOYO. Log: target_area_backtest.log.
+
+- **Gate 1 PASSED - receiver profiles are real**: target-mix YoY r: behind
+  LOS .88, deep .75, intermediate .75, short .57; sides .34-.45.
+- **Gate 2 FAILED - defense per-zone efficiency is noise**: residual
+  pts/tgt ratio (zone / overall) early->late r -.01..+.03 every depth zone,
+  YoY .00-.07. "Bad vs deep passes" does not exist as an identity; the
+  overall rate (what position FPA prices) is all there is.
+- Defense FUNNEL (share of targets faced per zone) is a soft identity:
+  early->late r behind-LOS .37, middle .53, deep .23, short .15.
+- Bucket table: deep-share WR tercile x defense deep-ratio tercile has NO
+  diagonal (high-deep vs leaky .941, vs stingy .950). Sweeps: depth matchup
+  +0.03% (2/7), side +0.01%, depth funnel +0.02% (4/7), matchup x funnel
+  -0.02% (5/7, e=.25 - below the ship bar), zone-aware defense REPLACING
+  position FPA +0.02%. WR-only and TE-only identical. NOT SHIPPED as a
+  multiplier - joins man/zone in the rejected pile (same failure mode).
+- Side finding worth its own test: actual/shipped by receiver DEEP SHARE
+  tercile = low 1.09 / mid 1.04 / high 0.95 - the model under-projects
+  short-area receivers and over-projects deep-ball receivers as a LEVEL.
+  Candidate layer: player aDOT as a level predictor on the P=5 base.
+- **ZONES tab (Sim Lab, intel only)** - pull_pace_tracker.py
+  `build_zones_2026()` -> data/zones_2026.js (`SIM_ZONES_2026`: league,
+  per-defense and per-receiver zone counts for 2026 + 2025 prior, nightly);
+  app.js `renderZonesTab()`: league table of all defenses (funnel share vs
+  lg per depth zone + middle/left/right, pts/tgt allowed shrunk to 1.0x with
+  a NOISY tooltip), and a per-game matchup view (week + game selectors):
+  defense zone card next to the opposing WR/TE/RB target mixes (aDOT, depth,
+  side, 2026 + 2025 targets) with auto-generated READ callouts ("Deep 20+
+  guy (28%, lg 13%)", "D funnels int 10-19", "D leaky deep so far (1.4x,
+  noisy)"). Receivers come from the engine board grouped by team.
+  Backups app.js/index.html .bak_pre_zones_20260914.
+
+## Run-vs-pass snap split (backtest_snap_split.py) - REJECTED 2026-09-14 (TE route feed revived)
+
+Jack: "backtest the run vs pass snap split next (rbs most important but wrs
+and tes useful too)". Per player-week PASS-play snaps vs designed-RUN snaps
+from participation offense_players x pbp play type, plus targets/carries and
+team totals, season-to-date. 13,694 RB/WR/TE player-weeks 2019-25, base =
+P=5 x Vegas x in-season FPA x participation-twin snapMult (total, 1.0%/pt)
+= shipped; LOYO. Log: snap_split_backtest.log.
+
+- GATE: targets-per-pass-snap is a real skill (YoY r RB .53 / WR .65 /
+  TE .65; early->late .57/.65/.70); RB carries-per-run-snap YoY .90.
+- A. ROLE-vs-USAGE GAP (expected target share from pass snaps x his anchor
+  TPRR minus actual target share -> "under-targeted for his routes"):
+  WR -0.10% (5/7, e=.02-.04 on z), RB -0.06% (4/7), TE +0.11% (0/7).
+  RB run gap (run snaps vs carries): worse at every e, 0/7. Real but tiny -
+  below the ship bar (pressure -0.36%, TD luck -0.36%).
+- B. TREND DECOMPOSITION (separate pass-snap / run-snap trend elasticities
+  replacing the total-snap trend): RB +0.13% worse (2/7), WR -0.03%, TE
+  +0.14% worse. Pass-snap trend ALONE ~= the total trend for every position
+  (the components are collinear); adding (passTrend - runTrend) on top of
+  the total: TE -0.11% (5/7, c=.5) = the shipped TE routeMult in another
+  form, WR -0.07%, RB nothing.
+- NOT SHIPPED as a layer. Practical outcome: the TE route trend we already
+  ship has been a silent no-op all 2026 (participation postseason-only).
+  pull_pace_tracker.py `route_pct_fallback()` now fills SIM_ROUTES_2026 from
+  the repo's data/route_pct.js (PFF Premium weekly routes / team dropbacks,
+  same definition as the participation proxy; `est` seasons skipped) so
+  routeMult goes live from Week 3 (needs >=2 past games). Live twin for a
+  run/pass split intel column would be PFF offense/summary
+  snap_counts_pass_play / run_play (the weekly puller keeps only
+  snap_counts_pass_route today).
+
+## aDOT level layer (backtest_adot_level.py) - REJECTED 2026-09-14
+
+Follow-up to the target-area side finding (actual/shipped by deep-share
+tercile 1.09 / 1.04 / 0.95). aDOT = air yards per target season-to-date
+shrunk toward the prior season (K=40), z-scored within position. 10,598
+WR/TE player-weeks 2019-25, base = P=5 x Vegas .25 x in-season FPA, LOYO.
+Log: adot_level_backtest.log.
+
+- Direction is real and one-sided: low-aDOT WRs beat the shipped mean 6-7%
+  in EVERY season (terciles 1.03-1.09), the high-aDOT side is ~1.00 and
+  flips sign year to year. TE noisier, same shape.
+- Where it lives: Clay's prior runs 7-14% under for ALL WRs (a level the
+  weekly tuner owns); the realized-PPG half carries the tilt (act/ownPPG
+  1.05 low-aDOT -> 0.95 high-aDOT, also at g>=8) - deep-ball receivers
+  under-run their own season-to-date mean, short-area receivers beat it.
+  Games 1-4 buckets are flat (pure Clay level); the tilt appears once the
+  realized half has weight.
+- Sweeps: whole-mean x(1 - .02*adot_z) LOYO -0.07% (5/7); prior-only inside
+  the blend -0.04%; deep-share z -0.05%; behind-LOS 0; prior-season aDOT
+  only -0.01%. WR-only -0.06%, TE-only -0.06%. Flat WR/TE level x1.041 is
+  WORSE (+0.17%, skew: mean ratio != MSE optimum).
+- Mechanism test - shrink noisy players harder (P_i = 5 x sigrel^k): worse
+  at every k, 0/7; the engine's sigma correlates with aDOT at only +.06, so
+  volatility is not what the tilt is. Flat P re-swept on WR/TE alone picks
+  6-7 (-0.06%, 5/7) - noise-level vs the twice-validated P=5; not changed.
+- NOT SHIPPED. A ~2%/sd aDOT multiplier is real but a fifth of the ship
+  bar; revisit only if a mechanism turns up (candidate: TD share of points -
+  deep receivers' PPG is TD-heavier, and TDs regress).
+
+## Receiver TD-share regression (backtest_wr_tdluck.py) - SHIPPED 2026-09-14
+
+Jack: "backtest the receiver TD-share regression next". The RB TD-luck
+mechanism on WR/TE. xTD per TARGET = league TD rate by yardline bucket
+(<=5/10/20/40/100) x END-ZONE-THROW flag (air_yards >= yardline_100), pooled
+pbp 2018-25 - depth matters: EZ throw from inside 5 = .50, from 20-40 = .27;
+non-EZ inside 5 = .26, 20-40 = .03. WR/TE carries use the RB rush table.
+luck = (xTD - TD)/g season-to-date. 10,597 WR/TE player-weeks 2019-25, base
+= P=5 x Vegas .25 x in-season FPA, LOYO. Log: wr_tdluck_backtest.log.
+
+- Unlucky tercile (xTD-TD +0.19/g) runs actual/shipped WR 1.112 / TE 1.186;
+  lucky tercile 0.954 / 0.974; corr(luck, resid) +.10/+.11. Present in
+  every games-into-season bucket (strongest games 1-4: WR 0.95 vs 1.17).
+- **Additive correction + k x 6 x luck x g/(P+g): LOYO -0.93% (WR -0.79%,
+  TE -1.26%), 7/7 years, k=1.0 in EVERY fold (1.5 worse).** Centered per
+  season x position: -0.94% (pure regression). Multiplicative form -0.92%.
+  Largest single-layer gain in the lab (pressure -0.46%, RB TD luck -0.36%).
+  By games: 1-4 -1.22%, 5-9 -1.11%, 10+ -0.31%. Every season -0.57..-1.68%.
+- TD SHARE of realized points alone (weekly-DB predictor, no pbp) is a
+  weaker twin: -0.77% at k=.6 - fallback if pbp ever goes dark.
+- Does NOT explain the aDOT/xTD-level tilt (low-xTD/g receivers still 1.14
+  after the correction) - that level puzzle stays open.
+- SHIPPED: engine `tdLuckAdj` generalised - WR/TE read `SIM_REC_TDLUCK_2026`
+  with `TDLUCK_K_REC = 1.0` x rec_td value (RB unchanged: SIM_RB_TDLUCK_2026,
+  k .75); same additive-after-chain, x availability, floor 0 placement; kill
+  `window.SIM_TD_LUCK_REC = false` (SIM_TD_LUCK = false kills both). Data:
+  pull_pace_tracker.py `build_rec_tdluck_2026()` (XTD_REC_NONEZ / XTD_REC_EZ
+  constants) appended to data/sim_routes.js nightly. Smoke W2 half-PPR
+  (182 WR/TE mapped after W1): 171 move, 0 RB/QB/K move on the REC switch,
+  0 zeroed move, master kill verified; Coker 2 TD on .29 xTD -1.71
+  (10.62 -> 8.91), Golden 0 on .90 +0.90, LaPorta 0 on .78 +0.78; formula
+  exact. Backups engine.js / pull_pace_tracker.py .bak_pre_wrtdluck_20260914.
+
+## QB passing-TD luck (backtest_qb_tdluck.py) - SHIPPED 2026-09-14 (passing only)
+
+Jack: "backtest the QB passing-TD luck next" - last member of the TD-luck
+family. xPassTD = sum over his targeted attempts of the receiver table
+(yardline x end-zone-throw; throwaways 0); xRushTD from a QB-specific rush
+table (sneaks at the 1 convert 62% vs RB 54%). 2,554 QB player-weeks
+2019-25, base = P=5 x Vegas .25 x in-season QB FPA, LOYO. Log:
+qb_tdluck_backtest.log.
+
+- PASS luck: unlucky tercile actual/shipped 1.097, lucky 0.991; corr +.08.
+  Additive + k x 4 x luck x g/(P+g): **LOYO -0.44% (5/7), k=.5, folds pick
+  .5-.75**. By games 1-4 / 5-9 / 10+: -0.46 / -0.89 / -0.41%. 2020 hurt
+  (+1.1%), 2021 flat, the other five -0.5..-2.1%.
+- RUSH luck: nothing (+0.02%, 3/7) - QB rushing TDs are not luck in this
+  sense (designed goal-line usage is the identity). Excluded.
+- Combined pass+rush -0.31% (rush drags it). Centering per season with
+  hindsight -0.45%; centering on the LIVE season-to-date league mean -0.34%
+  -> shipped UNCENTERED, same form as RB and WR/TE.
+- SHIPPED: `tdLuckAdj` QB branch, `TDLUCK_K_QB = 0.5` x pass_td value,
+  reads `SIM_QB_TDLUCK_2026` (pull_pace_tracker.py `build_qb_tdluck_2026()`,
+  nightly into data/sim_routes.js); kill `window.SIM_TD_LUCK_QB = false`
+  (SIM_TD_LUCK kills all four). Smoke W2 half-PPR (34 QBs after W1): 29
+  move, 0 non-QB, 0 zeroed, master kill OK, formula exact; Lawrence 4 TD on
+  1.39 xTD -0.87 (18.11 -> 17.24), Mayfield 0 on .85 +0.28; the additive term is now scaled by min(1, iA) - iA carries the next-man-up boost (Rush x210) which had zeroed him. Backups
+  engine.js / pull_pace_tracker.py .bak_pre_qbtdluck_20260914.
+
+TD-luck family status: RB k .75 (-0.36%), WR/TE k 1.0 (-0.93%), QB pass
+k .5 (-0.44%) - all additive after the chain, x availability, floor 0.
+Watch the weekly tuner's tdMult (league-level TD multiplier) for drift now
+that per-player luck sits under it.

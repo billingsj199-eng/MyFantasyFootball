@@ -1,0 +1,69 @@
+  pbp 2018: 30565 touches
+  pbp 2019: 30639 touches
+  pbp 2020: 31230 touches
+  pbp 2021: 32700 touches
+  pbp 2022: 32191 touches
+  pbp 2023: 32209 touches
+  pbp 2024: 31826 touches
+  pbp 2025: 31332 touches
+  xTD per target (not end-zone throw): <=1:0.428  <=2:0.097  <=3:0.435  <=5:0.376  <=10:0.213  <=20:0.080  <=40:0.030  <=100:0.007
+  xTD per target (END-ZONE throw)    : <=1:0.572  <=2:0.541  <=3:0.467  <=5:0.464  <=10:0.384  <=20:0.330  <=40:0.271  <=100:0.232
+  2019: samples so far 1092
+  2020: samples so far 2292
+  2021: samples so far 3730
+  2022: samples so far 5256
+  2023: samples so far 7081
+  2024: samples so far 8932
+  2025: samples so far 10597
+  skipped: {'team': 127, 'weekly': 230, 'gsis': 2, 'notouch': 1}
+
+10597 WR/TE player-weeks | shipped MSE 36.8464 | mean act/shipped 1.041
+  luck mean -0.0147/g (xTD/g 0.276 vs TD/g 0.291); by year: 2019:-0.046 2020:-0.059 2021:-0.037 2022:+0.007 2023:+0.013 2024:+0.000 2025:-0.010
+
+=== 1. actual / shipped by tercile ===
+  WR TD luck (xTD-TD)/g      low -0.269: 0.954 (n=2396) | mid +0.004: 1.052 (n=2396) | high +0.191: 1.112 (n=2396)   corr(x, act-pred) +0.096
+  WR TD share of pts         low +0.032: 1.156 (n=2396) | mid +0.197: 1.011 (n=2395) | high +0.355: 0.958 (n=2397)   corr(x, act-pred) -0.098
+     WR luck, games 1-4      low -0.387: 0.950 (n=758) | mid +0.030: 1.130 (n=757) | high +0.278: 1.173 (n=758)   corr(x, act-pred) +0.121
+     WR luck, games 5-9      low -0.232: 0.943 (n=870) | mid -0.001: 1.037 (n=869) | high +0.169: 1.095 (n=870)   corr(x, act-pred) +0.107
+     WR luck, games 10-20    low -0.193: 0.975 (n=769) | mid -0.010: 1.017 (n=768) | high +0.126: 1.052 (n=769)   corr(x, act-pred) +0.060
+  TE TD luck (xTD-TD)/g      low -0.181: 0.974 (n=1136) | mid +0.026: 1.078 (n=1136) | high +0.172: 1.186 (n=1137)   corr(x, act-pred) +0.108
+  TE TD share of pts         low +0.001: 1.229 (n=1135) | mid +0.185: 1.082 (n=1132) | high +0.396: 0.952 (n=1142)   corr(x, act-pred) -0.109
+     TE luck, games 1-4      low -0.233: 0.920 (n=353) | mid +0.050: 1.134 (n=384) | high +0.247: 1.207 (n=369)   corr(x, act-pred) +0.119
+     TE luck, games 5-9      low -0.169: 0.935 (n=429) | mid +0.015: 1.094 (n=429) | high +0.146: 1.206 (n=430)   corr(x, act-pred) +0.138
+     TE luck, games 10-20    low -0.140: 1.041 (n=338) | mid +0.008: 1.033 (n=338) | high +0.118: 1.145 (n=339)   corr(x, act-pred) +0.069
+
+=== 2. LOYO: shipped + k * 6 * luck * g/(P+g)   (RB layer form; grid[0] = shipped) ===
+  a) WR + TE
+    grid pooled MSE: +0.00:37.025  +0.25:36.870  +0.50:36.758  +0.75:36.691  +1.00:36.668  +1.50:36.755
+    pooled best +1.00 | LOYO MSE 36.5031 vs shipped 36.8464 (-0.93%), years better 7/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+     WR only
+    grid pooled MSE: +0.00:42.132  +0.25:41.964  +0.50:41.848  +0.75:41.781  +1.00:41.766  +1.50:41.886
+    pooled best +1.00 | LOYO MSE 41.3892 vs shipped 41.7204 (-0.79%), years better 7/7, picks [0.75, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+     TE only
+    grid pooled MSE: +0.00:26.434  +0.25:26.303  +0.50:26.203  +0.75:26.135  +1.00:26.097  +1.50:26.115
+    pooled best +1.00 | LOYO MSE 26.2345 vs shipped 26.5694 (-1.26%), years better 7/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  b) CENTERED per season x position (pure regression, no level)
+    grid pooled MSE: +0.00:37.025  +0.25:36.869  +0.50:36.756  +0.75:36.685  +1.00:36.657  +1.50:36.727
+    pooled best +1.00 | LOYO MSE 36.4986 vs shipped 36.8464 (-0.94%), years better 7/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  c) multiplicative form (same points, scaled through the chain)
+    grid pooled MSE: +0.00:37.025  +0.25:36.869  +0.50:36.759  +0.75:36.694  +1.00:36.674  +1.50:36.756
+    pooled best +1.00 | LOYO MSE 36.5089 vs shipped 36.8464 (-0.92%), years better 7/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  d) TD-SHARE dev only (weekly-DB predictor, no pbp): x(1 - k*(tdShare - posAvg)*g/(P+g))
+    grid pooled MSE: +0.00:37.025  +0.10:36.962  +0.20:36.904  +0.30:36.851  +0.40:36.804  +0.60:36.727
+    pooled best +0.60 | LOYO MSE 36.5622 vs shipped 36.8464 (-0.77%), years better 7/7, picks [0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]
+
+=== 3. by games-into-season (k=.75 pooled) and by touches ===
+  games 1-4: n=3379  shipped 36.528 -> luck 36.081 (-1.22%)
+  games 5-9: n=3897  shipped 34.189 -> luck 33.808 (-1.11%)
+  games 10-20: n=3321  shipped 40.289 -> luck 40.162 (-0.31%)
+  2019: shipped 38.792 -> 38.141 (-1.68%)
+  2020: shipped 38.799 -> 38.576 (-0.57%)
+  2021: shipped 35.813 -> 35.538 (-0.77%)
+  2022: shipped 36.533 -> 36.204 (-0.90%)
+  2023: shipped 34.877 -> 34.499 (-1.08%)
+  2024: shipped 36.720 -> 36.467 (-0.69%)
+  2025: shipped 37.640 -> 37.413 (-0.61%)
+
+=== 4. does it explain the aDOT tilt? need aDOT: TD-heaviness by xTD/g quintile instead ===
+  shipped          xTD/g 0.07->1.135 | xTD/g 0.18->1.053 | xTD/g 0.27->1.058 | xTD/g 0.38->1.016 | xTD/g 0.59->0.967
+  with luck k=.75  xTD/g 0.07->1.145 | xTD/g 0.18->1.059 | xTD/g 0.27->1.068 | xTD/g 0.38->1.024 | xTD/g 0.59->0.972

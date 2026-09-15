@@ -1,0 +1,64 @@
+  pbp 2018: 17712 QB attempts, 1838 QB rushes
+  pbp 2019: 17881 QB attempts, 1812 QB rushes
+  pbp 2020: 17934 QB attempts, 2071 QB rushes
+  pbp 2021: 18630 QB attempts, 2116 QB rushes
+  pbp 2022: 18110 QB attempts, 2317 QB rushes
+  pbp 2023: 18350 QB attempts, 2301 QB rushes
+  pbp 2024: 17875 QB attempts, 2361 QB rushes
+  pbp 2025: 17506 QB attempts, 2225 QB rushes
+  QB rush xTD by yardline: <=1:0.619(n=467)  <=2:0.302(n=215)  <=3:0.366(n=145)  <=5:0.304(n=303)  <=10:0.201(n=716)  <=20:0.059(n=1533)  <=40:0.011(n=3306)  <=100:0.001(n=10356)
+  2019: samples so far 296
+  2020: samples so far 580
+  2021: samples so far 971
+  2022: samples so far 1330
+  2023: samples so far 1713
+  2024: samples so far 2154
+  2025: samples so far 2554
+  skipped: {'team': 32, 'weekly': 22}
+
+2554 QB player-weeks | shipped MSE 61.0091 | mean act/shipped 1.041
+  pass luck mean -0.0553/g (xTD/g 1.468 vs TD/g 1.523) | rush luck mean -0.0103/g
+  by year pass luck: 2019:-0.145 2020:-0.182 2021:-0.163 2022:+0.098 2023:+0.046 2024:+0.027 2025:-0.118
+
+=== 1. actual / shipped by tercile ===
+  pass luck (xTD-TD)/g       low -0.624: 0.991 (n=851) | mid -0.054: 1.048 (n=851) | high +0.511: 1.097 (n=852)   corr(x, act-shipped) +0.076
+  rush luck (xTD-TD)/g       low -0.183: 1.023 (n=851) | mid +0.012: 1.074 (n=851) | high +0.140: 1.029 (n=852)   corr(x, act-shipped) +0.020
+  combined luck pts/g        low -2.844: 0.994 (n=851) | mid -0.190: 1.034 (n=851) | high +2.182: 1.108 (n=852)   corr(x, act-shipped) +0.077
+     combined, games 1-4     low -4.121: 1.056 (n=272) | mid -0.170: 1.080 (n=272) | high +3.326: 1.138 (n=273)   corr(x, act-shipped) +0.073
+     combined, games 5-9     low -2.331: 0.975 (n=306) | mid -0.054: 1.069 (n=306) | high +1.929: 1.100 (n=306)   corr(x, act-shipped) +0.108
+     combined, games 10-20   low -2.137: 0.973 (n=273) | mid -0.317: 0.990 (n=273) | high +1.267: 1.033 (n=273)   corr(x, act-shipped) +0.067
+
+=== 2. LOYO: shipped + k * luckPts * g/(P+g)  (grid[0] = shipped) ===
+  a) PASS luck only (x4 pts)
+    grid pooled MSE: +0.00:61.180  +0.25:60.952  +0.50:60.848  +0.75:60.870  +1.00:61.015  +1.50:61.680
+    pooled best +0.50 | LOYO MSE 60.7414 vs shipped 61.0091 (-0.44%), years better 5/7, picks [0.5, 0.75, 0.75, 0.5, 0.5, 0.5, 0.5]
+  b) RUSH luck only (x6 pts)
+    grid pooled MSE: +0.00:61.180  +0.25:61.169  +0.50:61.184  +0.75:61.227  +1.00:61.298  +1.50:61.519
+    pooled best +0.25 | LOYO MSE 61.0226 vs shipped 61.0091 (+0.02%), years better 3/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.0]
+  a2) PASS luck CENTERED per season (league mean removed - the live form)
+    grid pooled MSE: +0.00:61.180  +0.25:60.946  +0.50:60.829  +0.75:60.830  +1.00:60.947  +1.50:61.532
+    pooled best +0.50 | LOYO MSE 60.7364 vs shipped 61.0091 (-0.45%), years better 5/7, picks [0.5, 0.75, 0.75, 0.75, 0.5, 0.75, 0.5]
+  a3) PASS luck centered on SEASON-TO-DATE league mean (no hindsight)
+    grid pooled MSE: +0.00:61.180  +0.25:60.980  +0.50:60.899  +0.75:60.937  +1.00:61.094  +1.50:61.764
+    pooled best +0.50 | LOYO MSE 60.8044 vs shipped 61.0091 (-0.34%), years better 5/7, picks [0.5, 0.75, 0.75, 0.5, 0.5, 0.5, 0.5]
+  c) COMBINED
+    grid pooled MSE: +0.00:61.180  +0.25:60.941  +0.50:60.855  +0.75:60.921  +1.00:61.140  +1.50:62.035
+    pooled best +0.50 | LOYO MSE 60.8209 vs shipped 61.0091 (-0.31%), years better 5/7, picks [0.5, 0.75, 0.5, 0.5, 0.5, 0.5, 0.25]
+  d) combined CENTERED per season (regression only)
+    grid pooled MSE: +0.00:61.180  +0.25:60.918  +0.50:60.797  +0.75:60.818  +1.00:60.980  +1.50:61.730
+    pooled best +0.50 | LOYO MSE 60.6915 vs shipped 61.0091 (-0.52%), years better 5/7, picks [0.5, 0.75, 0.75, 0.5, 0.5, 0.5, 0.5]
+  e) multiplicative form
+    grid pooled MSE: +0.00:61.180  +0.25:60.941  +0.50:60.861  +0.75:60.939  +1.00:61.176  +1.50:62.123
+    pooled best +0.50 | LOYO MSE 60.8287 vs shipped 61.0091 (-0.30%), years better 6/7, picks [0.5, 0.75, 0.5, 0.5, 0.5, 0.5, 0.25]
+
+=== 3. combined k=0.5 by games-into-season and by year ===
+  games 1-4: n=817  59.651 -> 59.375 (-0.46%)
+  games 5-9: n=918  61.538 -> 60.991 (-0.89%)
+  games 10-20: n=819  61.771 -> 61.514 (-0.41%)
+  2019: 64.335 -> 63.901 (-0.67%)
+  2020: 64.996 -> 65.708 (+1.10%)
+  2021: 58.575 -> 58.620 (+0.08%)
+  2022: 56.563 -> 56.208 (-0.63%)
+  2023: 54.912 -> 54.390 (-0.95%)
+  2024: 61.539 -> 61.241 (-0.49%)
+  2025: 67.340 -> 65.915 (-2.12%)

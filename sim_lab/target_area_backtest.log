@@ -1,0 +1,102 @@
+  pbp 2018: 17172 targets with air yards + location
+  pbp 2019: 17142 targets with air yards + location
+  pbp 2020: 17307 targets with air yards + location
+  pbp 2021: 18055 targets with air yards + location
+  pbp 2022: 17305 targets with air yards + location
+  pbp 2023: 17483 targets with air yards + location
+  pbp 2024: 17013 targets with air yards + location
+  pbp 2025: 16609 targets with air yards + location
+  league pts/tgt by depth (2025): bl 1.00 (17%)  sh 1.28 (49%)  in 1.56 (22%)  dp 1.95 (12%)
+  league pts/tgt by side  (2025): left 1.31 (39%)  middle 1.50 (21%)  right 1.35 (40%)
+
+=== G1. player zone mix persistence (YoY, >=40 targets both seasons) ===
+  depth bl     share YoY r=+0.88 (n=775, sd 0.150)
+  depth sh     share YoY r=+0.57 (n=775, sd 0.108)
+  depth in     share YoY r=+0.75 (n=775, sd 0.117)
+  depth dp     share YoY r=+0.75 (n=775, sd 0.087)
+  side left   share YoY r=+0.39 (n=775, sd 0.084)
+  side middle share YoY r=+0.45 (n=775, sd 0.079)
+  side right  share YoY r=+0.34 (n=775, sd 0.081)
+
+=== G2. defense zone RESIDUAL persistence (pts/tgt ratio in zone / overall ratio) ===
+  depth bl     early->late r=-0.01 (n=224, sd early 0.189)   YoY r=+0.04 (n=192)
+  depth sh     early->late r=+0.03 (n=224, sd early 0.093)   YoY r=+0.07 (n=192)
+  depth in     early->late r=-0.01 (n=224, sd early 0.157)   YoY r=+0.01 (n=192)
+  depth dp     early->late r=-0.01 (n=202, sd early 0.268)   YoY r=+0.00 (n=175)
+  side left   early->late r=-0.12 (n=224, sd early 0.104)   YoY r=+0.02 (n=192)
+  side middle early->late r=+0.00 (n=223, sd early 0.148)   YoY r=+0.08 (n=191)
+  side right  early->late r=+0.01 (n=224, sd early 0.112)   YoY r=-0.11 (n=192)
+
+=== G2b. defense zone FUNNEL persistence (share of targets faced in zone) ===
+  depth bl     early->late r=+0.37 (n=224, sd 0.032)
+  depth sh     early->late r=+0.15 (n=224, sd 0.042)
+  depth in     early->late r=+0.28 (n=224, sd 0.032)
+  depth dp     early->late r=+0.23 (n=224, sd 0.026)
+  side left   early->late r=+0.11 (n=224, sd 0.038)
+  side middle early->late r=+0.53 (n=224, sd 0.048)
+  side right  early->late r=+0.30 (n=224, sd 0.043)
+  2019: samples so far 1092
+  2020: samples so far 2292
+  2021: samples so far 3730
+  2022: samples so far 5256
+  2023: samples so far 7081
+  2024: samples so far 8933
+  2025: samples so far 10598
+  skipped: {'team': 127, 'weekly': 230, 'gsis': 2}
+
+10598 WR/TE player-weeks | MSE base 36.9495 | base*Vegas 36.8653 | shipped (+FPA) 36.8505
+
+=== 1. actual/shipped: player DEEP share tercile x defense DEEP ratio tercile (defN>=150) ===
+  deep_w cuts [0.097 0.164]  deep_r cuts [0.95 1.04]
+  rows = player deep share (low/mid/high); cols = defense deep ratio (stingy/avg/leaky)
+    low : 1.096 (n=857)  1.082 (n=894)  1.096 (n=831)
+    mid : 1.014 (n=881)  1.045 (n=844)  1.042 (n=857)
+    high: 0.950 (n=844)  1.052 (n=844)  0.941 (n=895)
+  Md depth matchup         quintiles: 0.950->1.014 | 0.984->1.018 | 1.003->1.041 | 1.020->1.040 | 1.054->1.037   corr w/ rel resid +0.001
+  Ms side matchup          quintiles: 0.970->1.009 | 0.989->1.010 | 1.000->1.033 | 1.012->1.069 | 1.037->1.032   corr w/ rel resid -0.003
+  Fd depth funnel          quintiles: 0.968->0.990 | 0.991->1.014 | 1.000->1.067 | 1.009->1.034 | 1.033->1.047   corr w/ rel resid +0.010
+  Fs side funnel           quintiles: 0.979->1.002 | 0.995->1.027 | 1.000->1.082 | 1.005->1.047 | 1.020->0.995   corr w/ rel resid +0.002
+  Rall overall (FPA-like)  quintiles: 0.891->1.036 | 0.962->1.061 | 0.999->1.021 | 1.040->1.020 | 1.114->1.013   corr w/ rel resid -0.002
+
+=== 2. LOYO MSE sweeps on shipped (grid[0] = shipped) ===
+  a) depth matchup M_d: x(1 + e*trust*(Md-1))
+    grid pooled MSE: +0.00:37.029  +0.25:37.025  +0.50:37.033  +0.75:37.050  +1.00:37.079  +1.50:37.165
+    pooled best +0.25 | LOYO MSE 36.8619 vs shipped 36.8505 (+0.03%), years better 2/7, picks [0.5, 0.25, 0.0, 0.25, 0.25, 0.0, 0.25]
+  b) side matchup M_s
+    grid pooled MSE: +0.00:37.029  +0.25:37.025  +0.50:37.026  +0.75:37.032  +1.00:37.043  +1.50:37.079
+    pooled best +0.25 | LOYO MSE 36.8557 vs shipped 36.8505 (+0.01%), years better 3/7, picks [0.5, 0.5, 0.25, 0.25, 0.25, 0.0, 0.5]
+  c) depth funnel F_d
+    grid pooled MSE: +0.00:37.029  +0.25:37.022  +0.50:37.019  +0.75:37.020  +1.00:37.026  +1.50:37.050
+    pooled best +0.50 | LOYO MSE 36.8570 vs shipped 36.8505 (+0.02%), years better 4/7, picks [0.5, 0.5, 0.75, 0.75, 0.25, 0.75, 0.25]
+  d) side funnel F_s
+    grid pooled MSE: +0.00:37.029  +0.25:37.031  +0.50:37.035  +0.75:37.041  +1.00:37.049  +1.50:37.071
+    pooled best +0.00 | LOYO MSE 36.8505 vs shipped 36.8505 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  e) depth matchup x depth funnel
+    grid pooled MSE: +0.00:37.029  +0.25:37.017  +0.50:37.018  +0.75:37.031  +1.00:37.056  +1.50:37.136
+    pooled best +0.25 | LOYO MSE 36.8437 vs shipped 36.8505 (-0.02%), years better 5/7, picks [0.5, 0.25, 0.25, 0.5, 0.25, 0.25, 0.25]
+  -- WR only (7189) --
+     WR depth matchup
+    grid pooled MSE: +0.00:42.136  +0.25:42.134  +0.50:42.143  +0.75:42.164  +1.00:42.198  +1.50:42.298
+    pooled best +0.25 | LOYO MSE 41.7390 vs shipped 41.7258 (+0.03%), years better 0/7, picks [0.25, 0.25, 0.0, 0.0, 0.25, 0.0, 0.25]
+     WR depth funnel
+    grid pooled MSE: +0.00:42.136  +0.25:42.126  +0.50:42.122  +0.75:42.122  +1.00:42.128  +1.50:42.157
+    pooled best +0.50 | LOYO MSE 41.7307 vs shipped 41.7258 (+0.01%), years better 3/7, picks [0.75, 0.5, 0.75, 0.75, 0.25, 0.75, 0.5]
+     WR side matchup
+    grid pooled MSE: +0.00:42.136  +0.25:42.134  +0.50:42.137  +0.75:42.145  +1.00:42.159  +1.50:42.204
+    pooled best +0.25 | LOYO MSE 41.7378 vs shipped 41.7258 (+0.03%), years better 1/7, picks [0.5, 0.5, 0.25, 0.0, 0.25, 0.0, 0.25]
+  -- TE only (3409) --
+     TE depth matchup
+    grid pooled MSE: +0.00:26.434  +0.25:26.430  +0.50:26.433  +0.75:26.444  +1.00:26.463  +1.50:26.523
+    pooled best +0.25 | LOYO MSE 26.5780 vs shipped 26.5694 (+0.03%), years better 3/7, picks [0.5, 0.0, 0.25, 0.5, 0.25, 0.25, 0.25]
+     TE depth funnel
+    grid pooled MSE: +0.00:26.434  +0.25:26.433  +0.50:26.433  +0.75:26.436  +1.00:26.440  +1.50:26.454
+    pooled best +0.25 | LOYO MSE 26.5844 vs shipped 26.5694 (+0.06%), years better 1/7, picks [0.0, 1.0, 0.5, 0.25, 0.0, 0.25, 0.0]
+     TE side matchup
+    grid pooled MSE: +0.00:26.434  +0.25:26.429  +0.50:26.427  +0.75:26.429  +1.00:26.433  +1.50:26.450
+    pooled best +0.50 | LOYO MSE 26.5799 vs shipped 26.5694 (+0.04%), years better 3/7, picks [0.75, 0.25, 0.75, 0.75, 0.25, 0.25, 0.75]
+
+=== 3. zone-aware defense INSTEAD of position FPA: base*Vegas*(1 + e*trust*(sum w_z r_z - 1)) ===
+     depth-weighted pts/tgt allowed (replaces FPA)
+    grid pooled MSE: +0.00:37.053  +0.25:37.049  +0.50:37.066  +0.75:37.102  +1.00:37.160  +1.50:37.337
+    pooled best +0.25 | LOYO MSE 36.8735 vs shipped 36.8653 (+0.02%), years better 2/7, picks [0.0, 0.0, 0.25, 0.25, 0.25, 0.25, 0.25]
+   reference: shipped FPA layer MSE 36.8505 vs no-FPA 36.8653

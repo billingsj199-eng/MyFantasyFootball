@@ -162,6 +162,7 @@
     renderGameList();
     renderTracking();
     renderPaceTab();
+    renderZonesTab();
   });
 
   function showTab(name) {
@@ -3171,6 +3172,202 @@
       'a returning caller keeps his own 2025 numbers even if his title changed, a new caller brings the pace identity of his last ' +
       'play-calling stop, a first-time caller inherits the offense he trained under (his tree\'s trend). Pass mix (neutral pass%, PROE) always stays with the roster — the QB decides those. Click a column header to sort.</p>';
     wireSort('pc-table', PACE_COLS, ss, renderPaceTab);
+  }
+
+  // ---------------- ZONES (target-area intel) ----------------
+  // Renders data/zones_2026.js (pull_pace_tracker.py build_zones_2026):
+  // defense funnel + pts/tgt allowed by depth/side, receiver target mix.
+  // INTEL ONLY - backtest_target_area.py graded the matchup multiplier flat
+  // (LOYO +0.03%, 2/7 years) because per-zone defense efficiency does not
+  // persist (r ~0); the funnel and the receiver profiles DO, so this tab
+  // exists for start/sit + video reads. Nothing here touches projections.
+  var ZN_DEPTH = [['bl', 'Behind LOS'], ['sh', 'Short 0-9'], ['in', 'Int 10-19'], ['dp', 'Deep 20+']];
+  var ZN_SIDE = [['left', 'Left'], ['middle', 'Middle'], ['right', 'Right']];
+  var ZN_K_DEF = 60, ZN_K_PLR = 40;
+  function znLg(Z) {
+    // league share + pts/tgt per zone: 2026 season-to-date, 2025 when empty
+    var L = (Z.lg && Z.lg.N >= 500) ? Z.lg : Z.lgPrior;
+    var out = { depth: {}, side: {} };
+    ['depth', 'side'].forEach(function (k) {
+      Object.keys(L[k]).forEach(function (z) {
+        var c = L[k][z];
+        out[k][z] = { share: c.n / L.N, rate: c.n ? c.p / c.n : 0 };
+      });
+    });
+    return out;
+  }
+  function znDef(Z, team, lg) {
+    // funnel share (shrunk toward 2025 own share, K=60 tgts) + efficiency
+    // ratio (shrunk toward 1, K=60) per zone; null when no data at all
+    var c = Z.def[team], p = Z.defPrior[team];
+    if (!c && !p) return null;
+    var out = { N: c ? c.N : 0, gms: c ? c.gms : 0, depth: {}, side: {} };
+    ['depth', 'side'].forEach(function (k) {
+      Object.keys(lg[k]).forEach(function (z) {
+        var cn = c ? c[k][z].n : 0, cp = c ? c[k][z].p : 0, N = c ? c.N : 0;
+        var ps = p && p.N ? p[k][z].n / p.N : lg[k][z].share;
+        var share = N ? (N * (cn / N) + ZN_K_DEF * ps) / (N + ZN_K_DEF) : ps;
+        var raw = cn ? (cp / cn) / lg[k][z].rate : 1;
+        var eff = (cn * raw + ZN_K_DEF) / (cn + ZN_K_DEF);
+        var pr = (p && p[k][z].n) ? (p[k][z].p / p[k][z].n) / lg[k][z].rate : null;
+        out[k][z] = { share: share, cur: N ? cn / N : null, prior: ps, n: cn, eff: eff, rawEff: cn ? raw : null, priorEff: pr };
+      });
+    });
+    return out;
+  }
+  function znPlayer(Z, nk, lg) {
+    var c = Z.players[nk], p = Z.playersPrior[nk];
+    if (!c && !p) return null;
+    var out = { N: c ? c.N : 0, Np: p ? p.N : 0, depth: {}, side: {}, adot: null, adotPrior: p && p.N ? p.ay / p.N : null,
+      ppt: c && c.N ? c.p / c.N : null, name: (c || p).name, pos: (c || p).pos, tm: (c || p).tm };
+    var n = c ? c.N : 0;
+    var ayc = c ? c.ay : 0, ayp = p ? p.ay : 0;
+    out.adot = (n + (p ? p.N : 0)) ? (ayc + ayp * (ZN_K_PLR / Math.max(ZN_K_PLR, p ? p.N : 0)) * (p ? 1 : 0)) / (n + (p ? Math.min(ZN_K_PLR, p.N) : 0)) : null;
+    ['depth', 'side'].forEach(function (k) {
+      Object.keys(lg[k]).forEach(function (z) {
+        var cv = n ? ((c[k][z] || 0) / n) : null;
+        var pv = (p && p.N) ? ((p[k][z] || 0) / p.N) : lg[k][z].share;
+        out[k][z] = cv == null ? pv : (n * cv + ZN_K_PLR * pv) / (n + ZN_K_PLR);
+      });
+    });
+    return out;
+  }
+  function znPP(v) { return v == null ? '—' : (100 * v).toFixed(0) + '%'; }
+  function znDelta(v, lgv, thr) {
+    if (v == null) return '';
+    var d = 100 * (v - lgv);
+    var col = Math.abs(d) < thr ? 'var(--dim)' : (d > 0 ? 'var(--acc)' : '#f85149');
+    return ' <span style="color:' + col + ';font-size:11px">' + (d >= 0 ? '+' : '') + d.toFixed(0) + '</span>';
+  }
+  function znEff(e, n) {
+    if (e == null) return '<span class="dim">—</span>';
+    var col = Math.abs(e - 1) < 0.10 ? 'var(--dim)' : (e > 1 ? '#f85149' : 'var(--acc)');
+    return '<span style="color:' + col + '" title="pts/target allowed vs league in this zone, shrunk toward 1 (n=' + n + ' targets). NOISY - per-zone efficiency does not persist.">' + e.toFixed(2) + 'x</span>';
+  }
+  function znReads(pl, d, lg) {
+    // one-line strengths / matchup callouts for videos
+    var r = [];
+    ZN_DEPTH.forEach(function (zz) {
+      var z = zz[0], w = pl.depth[z], L = lg.depth[z].share;
+      if (w >= L + 0.08) r.push(zz[1] + ' guy (' + znPP(w) + ' of targets, lg ' + znPP(L) + ')');
+      else if (w <= L - 0.08 && L > 0.12 && pl.pos !== 'RB') r.push('rarely ' + zz[1].toLowerCase() + ' (' + znPP(w) + ')');
+    });
+    ZN_SIDE.forEach(function (zz) {
+      var z = zz[0], w = pl.side[z], L = lg.side[z].share;
+      if (w >= L + 0.10) r.push(zz[1].toLowerCase() + '-heavy (' + znPP(w) + ')');
+    });
+    if (d) {
+      ZN_DEPTH.forEach(function (zz) {
+        var z = zz[0], w = pl.depth[z], L = lg.depth[z].share, dz = d.depth[z];
+        if (w >= L + 0.05 && dz.share >= L + 0.03) r.push('D funnels ' + zz[1].toLowerCase() + ' (' + znPP(dz.share) + ' of targets faced)');
+        if (w >= L + 0.05 && dz.rawEff != null && dz.n >= 25 && dz.rawEff >= 1.2) r.push('D leaky ' + zz[1].toLowerCase() + ' so far (' + dz.rawEff.toFixed(2) + 'x, noisy)');
+        if (w >= L + 0.05 && dz.rawEff != null && dz.n >= 25 && dz.rawEff <= 0.8) r.push('D stingy ' + zz[1].toLowerCase() + ' so far (' + dz.rawEff.toFixed(2) + 'x, noisy)');
+      });
+    }
+    return r.join(' · ');
+  }
+  function znDefCard(Z, team, lg, title) {
+    var d = znDef(Z, team, lg);
+    if (!d) return '<h3>' + esc(title) + '</h3><p class="dim">No target data for ' + esc(team) + '.</p>';
+    var html = '<h3>' + esc(title) + ' <span class="dim" style="font-weight:normal;font-size:12px">' + d.N + ' targets faced, ' + d.gms + ' gms</span></h3>' +
+      '<table style="width:auto"><thead><tr><th class="l">Zone</th><th>Share faced</th><th>vs lg</th><th>2025 share</th><th>Pts/tgt allowed</th><th>2025</th></tr></thead><tbody>';
+    ZN_DEPTH.concat([['__', null]]).concat(ZN_SIDE).forEach(function (zz) {
+      if (!zz[1]) { html += '<tr><td colspan="6" style="padding:2px"></td></tr>'; return; }
+      var k = zz[0].length === 2 ? 'depth' : 'side', z = zz[0], v = d[k][z], L = lg[k][z];
+      html += '<tr><td class="l">' + zz[1] + '</td><td>' + znPP(v.share) + '</td><td>' + znDelta(v.share, L.share, 3) + ' <span class="dim" style="font-size:11px">(lg ' + znPP(L.share) + ')</span></td>' +
+        '<td class="dim">' + znPP(v.prior) + '</td><td>' + znEff(v.rawEff != null ? v.eff : null, v.n) + '</td><td class="dim">' + (v.priorEff != null ? v.priorEff.toFixed(2) + 'x' : '—') + '</td></tr>';
+    });
+    return html + '</tbody></table>';
+  }
+  function znPlayerRows(Z, team, lg, posF, d) {
+    var rows = [];
+    var seen = {};
+    state.players.list.forEach(function (p) {
+      if (p.isDST || p.tm !== team || ['WR', 'TE', 'RB'].indexOf(p.pos) < 0) return;
+      if (posF && p.pos !== posF) return;
+      var pl = znPlayer(Z, p.norm, lg);
+      if (!pl || (pl.N + pl.Np) < 10) return;
+      seen[p.norm] = 1;
+      rows.push({ p: p, pl: pl });
+    });
+    rows.sort(function (a, b) { return (b.pl.N * 10 + b.pl.Np) - (a.pl.N * 10 + a.pl.Np); });
+    if (!rows.length) return '<p class="dim">No receivers with target data.</p>';
+    var html = '<table><thead><tr><th class="l">Receiver</th><th>Pos</th><th>2026 tgts</th><th>2025</th><th>aDOT</th>' +
+      ZN_DEPTH.map(function (z) { return '<th>' + z[1] + '</th>'; }).join('') +
+      ZN_SIDE.map(function (z) { return '<th>' + z[1] + '</th>'; }).join('') + '<th class="l">Read</th></tr></thead><tbody>';
+    rows.forEach(function (o) {
+      var pl = o.pl;
+      html += '<tr><td class="l"><b>' + esc(o.p.name) + '</b></td><td>' + o.p.pos + '</td><td>' + pl.N + '</td><td class="dim">' + pl.Np + '</td><td>' + (pl.adot != null ? pl.adot.toFixed(1) : '—') + '</td>' +
+        ZN_DEPTH.map(function (z) { return '<td>' + znPP(pl.depth[z[0]]) + znDelta(pl.depth[z[0]], lg.depth[z[0]].share, 5) + '</td>'; }).join('') +
+        ZN_SIDE.map(function (z) { return '<td>' + znPP(pl.side[z[0]]) + znDelta(pl.side[z[0]], lg.side[z[0]].share, 6) + '</td>'; }).join('') +
+        '<td class="l" style="font-size:11px;white-space:normal;min-width:260px">' + esc(znReads(pl, d, lg)) + '</td></tr>';
+    });
+    return html + '</tbody></table>';
+  }
+  function renderZonesTab() {
+    var Z = window.SIM_ZONES_2026;
+    if (!Z || (!Z.lg && !Z.lgPrior)) { $('zn-note').textContent = 'No zone data — run pull_pace_tracker.py.'; return; }
+    var lg = znLg(Z);
+    var wkSel = $('zn-week'), gSel = $('zn-game');
+    if (!wkSel.options.length) {
+      for (var w = 1; w <= 18; w++) wkSel.add(new Option('Week ' + w, w));
+      var cur = state.injuryWeek || ((Z.weeks && Z.weeks.length) ? Math.min(18, Z.weeks[Z.weeks.length - 1] + 1) : 1);
+      wkSel.value = cur;
+      wkSel.addEventListener('change', function () { state.znGame = ''; renderZonesTab(); });
+      gSel.addEventListener('change', function () { state.znGame = gSel.value; renderZonesTab(); });
+      $('zn-pos').addEventListener('change', renderZonesTab);
+    }
+    var wk = +wkSel.value;
+    var games = (state.schedule.byWeek[wk] || []);
+    gSel.innerHTML = '<option value="">All defenses</option>' + games.map(function (g) {
+      return '<option value="' + g.key + '">' + g.away + ' @ ' + g.home + '</option>';
+    }).join('');
+    gSel.value = state.znGame || '';
+    var posF = $('zn-pos').value;
+    var nData = Z.weeks && Z.weeks.length ? 'weeks ' + Z.weeks[0] + '-' + Z.weeks[Z.weeks.length - 1] : 'no 2026 targets yet (2025 profiles shown)';
+    $('zn-note').textContent = 'Updated ' + Z.updated + ' — 2026 ' + nData + '. League mix: ' +
+      ZN_DEPTH.map(function (z) { return z[1] + ' ' + znPP(lg.depth[z[0]].share); }).join(' · ') + ' · ' +
+      ZN_SIDE.map(function (z) { return z[1] + ' ' + znPP(lg.side[z[0]].share); }).join(' · ') + '. Intel only — does not move projections.';
+    var g = null;
+    games.forEach(function (x) { if (x.key === gSel.value) g = x; });
+    if (g) {
+      $('zn-body').innerHTML =
+        '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">' +
+        '<div>' + znDefCard(Z, g.home, lg, g.home + ' defense (vs ' + g.away + ' receivers)') + '</div>' +
+        '<div style="flex:1;min-width:520px">' + '<h3>' + esc(g.away) + ' receivers</h3>' + znPlayerRows(Z, g.away, lg, posF, znDef(Z, g.home, lg)) + '</div></div>' +
+        '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:26px">' +
+        '<div>' + znDefCard(Z, g.away, lg, g.away + ' defense (vs ' + g.home + ' receivers)') + '</div>' +
+        '<div style="flex:1;min-width:520px">' + '<h3>' + esc(g.home) + ' receivers</h3>' + znPlayerRows(Z, g.home, lg, posF, znDef(Z, g.away, lg)) + '</div></div>' +
+        '<p class="dim" style="font-size:11px">Share columns: green/red = 3+ points off the league share (defense funnel) or 5+/6+ (receiver mix). Pts/tgt allowed: red = leaky, green = stingy, ' +
+        'shrunk toward 1.0x with a 60-target prior — treat as "so far"; the backtest found NO year-to-year or early-to-late persistence in per-zone efficiency. ' +
+        'Receiver mixes are shrunk toward their 2025 profile (40-target prior) — those DO persist (deep share r .75, behind-LOS .88).</p>';
+      return;
+    }
+    // league table: every defense, funnel by depth (+ middle share) and efficiency
+    var ss = state.znSort = state.znSort || { key: 'team', dir: 'asc' };
+    var teams = Object.keys(Z.def).length ? Object.keys(Z.def) : Object.keys(Z.defPrior);
+    var rows = teams.map(function (t) { return { t: t, d: znDef(Z, t, lg) }; }).filter(function (o) { return o.d; });
+    var COLS = [{ h: 'Defense', l: 1, k: 'team', dir: 'asc', get: function (o) { return o.t; } },
+                { h: 'Tgts', k: 'N', get: function (o) { return o.d.N; } }];
+    ZN_DEPTH.forEach(function (z) {
+      COLS.push({ h: z[1] + ' share', k: 's_' + z[0], get: function (o) { return o.d.depth[z[0]].share; } });
+      COLS.push({ h: z[1] + ' pts/tgt', k: 'e_' + z[0], get: function (o) { return o.d.depth[z[0]].eff; } });
+    });
+    ZN_SIDE.forEach(function (z) { COLS.push({ h: z[1] + ' share', k: 's_' + z[0], get: function (o) { return o.d.side[z[0]].share; } }); });
+    var sorted = applySort(rows, COLS, ss);
+    var html = '<table><thead>' + thRow(COLS, ss) + '</thead><tbody>';
+    sorted.forEach(function (o) {
+      html += '<tr><td class="l"><b>' + o.t + '</b></td><td>' + o.d.N + '</td>' +
+        ZN_DEPTH.map(function (z) {
+          var v = o.d.depth[z[0]];
+          return '<td>' + znPP(v.share) + znDelta(v.share, lg.depth[z[0]].share, 3) + '</td><td>' + znEff(v.rawEff != null ? v.eff : null, v.n) + '</td>';
+        }).join('') +
+        ZN_SIDE.map(function (z) { var v = o.d.side[z[0]]; return '<td>' + znPP(v.share) + znDelta(v.share, lg.side[z[0]].share, 3) + '</td>'; }).join('') + '</tr>';
+    });
+    $('zn-body').innerHTML = html + '</tbody></table>' +
+      '<p class="dim" style="font-size:11px">Pick a game above for the matchup view (defense zone card next to the opposing receivers\' target mixes with auto-generated reads). ' +
+      'Shares = where opponents target this defense (season-to-date, shrunk toward its 2025 shares) vs league; pts/tgt = half-PPR receiving points allowed per target in that zone vs league, shrunk toward 1.0x. Click a header to sort.</p>';
+    wireSort('zn-body', COLS, ss, renderZonesTab);
   }
 
   // ---------------- TRACKING & ACCURACY ----------------

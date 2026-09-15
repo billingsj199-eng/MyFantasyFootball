@@ -252,6 +252,179 @@ def norm_name(n):
     n = _re.sub(r"\b(jr|sr|ii|iii|iv|v)\b", "", n)
     return _re.sub(r"\s+", " ", n).strip()
 
+# ---------------------------------------------------------------------------
+# RB TD LUCK (backtest_rb_role.py, 2026-09-14): per RB season-to-date expected
+# TDs from the yardline of every carry/target vs actual TDs. Unlucky-so-far
+# backs beat the P=5 base by ~13%, lucky ones land on it; the engine adds
+# 0.75 x 6 x (xTD-TD)/g x g/(P+g) (LOYO -0.36%, 5/7 years, identical when
+# centered per season -> real per-player mean reversion, not a level effect).
+# League TD rates per touch by yardline bucket, pooled nflverse pbp 2018-25
+# (targets inside the 5 are one bucket - thin n at the 1-3). RB = players.csv
+# position (refetched when older than 7 days).
+XTD_BINS = [1, 2, 3, 4, 5, 10, 20, 40, 100]
+XTD_RUSH = [0.540, 0.379, 0.339, 0.257, 0.215, 0.105, 0.042, 0.011, 0.003]
+XTD_TGT  = [0.405, 0.405, 0.405, 0.405, 0.405, 0.247, 0.094, 0.029, 0.003]
+
+def _xtd(yl, is_rush):
+    tbl = XTD_RUSH if is_rush else XTD_TGT
+    for i, hi in enumerate(XTD_BINS):
+        if yl <= hi:
+            return tbl[i]
+    return tbl[-1]
+
+def build_rb_tdluck_2026():
+    """{norm: {xtd, td, g, n}} for every RB with a 2026 touch (g = games with
+    >= 1 touch, n = touches). Empty preseason -> engine tdLuckAdj is a no-op."""
+    out = {}
+    pbp_p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+    players_p = os.path.join(CACHE, "players.csv")
+    try:
+        if not os.path.exists(players_p) or time.time() - os.path.getmtime(players_p) > 7 * 86400:
+            fetch("https://github.com/nflverse/nflverse-data/releases/download/players/players.csv", players_p)
+        if not (os.path.exists(pbp_p) and os.path.exists(players_p)):
+            return out
+        pl = pd.read_csv(players_p, usecols=["gsis_id", "display_name", "position"], low_memory=False)
+        pl = pl[(pl.position == "RB") & pl.gsis_id.notna()]
+        rb_name = dict(zip(pl.gsis_id, pl.display_name))
+        pbp = pd.read_csv(pbp_p, usecols=["season_type", "week", "rush_attempt", "pass_attempt",
+                                          "rusher_player_id", "receiver_player_id", "yardline_100",
+                                          "rush_touchdown", "pass_touchdown"], low_memory=False)
+        pbp = pbp[pbp.season_type == "REG"]
+        rush = pbp[(pbp.rush_attempt == 1) & pbp.rusher_player_id.isin(rb_name)]
+        tgt = pbp[(pbp.pass_attempt == 1) & pbp.receiver_player_id.isin(rb_name)]
+        acc = {}
+        for df, pid_col, td_col, is_rush in ((rush, "rusher_player_id", "rush_touchdown", True),
+                                             (tgt, "receiver_player_id", "pass_touchdown", False)):
+            for pid, td, yl, wk in df[[pid_col, td_col, "yardline_100", "week"]].itertuples(index=False):
+                a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
+                a["xtd"] += _xtd(float(yl) if pd.notna(yl) else 99.0, is_rush)
+                a["td"] += int(td == 1)
+                a["n"] += 1
+                a["wks"].add(int(wk))
+        for pid, a in acc.items():
+            out[norm_name(str(rb_name[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"],
+                                                 "g": len(a["wks"]), "n": a["n"]}
+    except Exception as e:
+        print(f"WARN rb tdluck skipped ({e})")
+    return out
+
+REPO_DATA = r"E:\MyFantasyFootball\MyFantasyFootball Files\data"
+
+def route_pct_fallback(routes):
+    """In-season source for SIM_ROUTES_2026 (2026-09-14, backtest_snap_split.py):
+    nflverse participation is postseason-only, so the participation join above
+    leaves `routes` empty all season and the shipped TE routeMult is a no-op.
+    The repo's data/route_pct.js (scripts/pull_route_pct.py) carries REAL weekly
+    route participation for the current season from the PFF Premium weekly
+    export (routes / team dropbacks - the same definition). Fill any player
+    the join did not cover; skip seasons flagged `est` (snap-share estimates
+    would double-count the snap trend)."""
+    p = os.path.join(REPO_DATA, "route_pct.js")
+    if not os.path.exists(p):
+        return routes, 0
+    try:
+        raw = open(p, encoding="utf-8").read()
+        i = raw.index("window.ROUTE_PCT = ") + len("window.ROUTE_PCT = ")
+        d, _ = json.JSONDecoder().raw_decode(raw, i)
+    except Exception as e:
+        print(f"WARN route_pct.js unreadable ({e})")
+        return routes, 0
+    added = 0
+    for name, yrs in d.items():
+        y = yrs.get(str(SEASON))
+        if not y or y.get("est") or not y.get("w"):
+            continue
+        k = norm_name(name)
+        if k in routes:
+            continue
+        wk = {str(w): float(v) for w, v in y["w"].items() if v is not None}
+        if wk:
+            routes[k] = wk
+            added += 1
+    return routes, added
+
+# RECEIVER TD LUCK (backtest_wr_tdluck.py, 2026-09-14): the same mean
+# reversion for WR/TE. xTD per TARGET depends on depth as well as field
+# position (an end-zone throw from the 30 is not a screen from the 30):
+# league TD rate by yardline bucket x end-zone-throw flag (air_yards >=
+# yardline_100), pooled pbp 2018-25; WR/TE carries use the RB rush table.
+# LOYO -0.93% (WR -0.79%, TE -1.26%), 7/7 years, k=1.0 every fold, identical
+# centered per season. Engine: tdLuckAdj, TDLUCK_K_REC = 1.0.
+XTD_REC_BINS = [5, 10, 20, 40, 100]
+XTD_REC_NONEZ = [0.264, 0.213, 0.080, 0.030, 0.007]
+XTD_REC_EZ    = [0.501, 0.384, 0.330, 0.271, 0.232]
+
+def _xtd_rec(yl, ez):
+    tbl = XTD_REC_EZ if ez else XTD_REC_NONEZ
+    for i, hi in enumerate(XTD_REC_BINS):
+        if yl <= hi:
+            return tbl[i]
+    return tbl[-1]
+
+def build_rec_tdluck_2026():
+    """{norm: {xtd, td, g, n}} for every WR/TE with a 2026 touch."""
+    out = {}
+    pbp_p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+    players_p = os.path.join(CACHE, "players.csv")
+    try:
+        if not (os.path.exists(pbp_p) and os.path.exists(players_p)):
+            return out
+        pl = pd.read_csv(players_p, usecols=["gsis_id", "display_name", "position"], low_memory=False)
+        pl = pl[pl.position.isin(["WR", "TE"]) & pl.gsis_id.notna()]
+        names = dict(zip(pl.gsis_id, pl.display_name))
+        pbp = pd.read_csv(pbp_p, usecols=["season_type", "week", "rush_attempt", "pass_attempt", "sack",
+                                          "rusher_player_id", "receiver_player_id", "yardline_100", "air_yards",
+                                          "rush_touchdown", "pass_touchdown"], low_memory=False)
+        pbp = pbp[pbp.season_type == "REG"]
+        tg = pbp[(pbp.pass_attempt == 1) & (pbp.sack != 1) & pbp.receiver_player_id.isin(names)]
+        ru = pbp[(pbp.rush_attempt == 1) & pbp.rusher_player_id.isin(names)]
+        acc = {}
+        for pid, td, yl, ay, wk in tg[["receiver_player_id", "pass_touchdown", "yardline_100", "air_yards", "week"]].itertuples(index=False):
+            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
+            yl = float(yl) if pd.notna(yl) else 99.0
+            ez = pd.notna(ay) and float(ay) >= yl
+            a["xtd"] += _xtd_rec(yl, ez); a["td"] += int(td == 1); a["n"] += 1; a["wks"].add(int(wk))
+        for pid, td, yl, wk in ru[["rusher_player_id", "rush_touchdown", "yardline_100", "week"]].itertuples(index=False):
+            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
+            a["xtd"] += _xtd(float(yl) if pd.notna(yl) else 99.0, True); a["td"] += int(td == 1); a["n"] += 1; a["wks"].add(int(wk))
+        for pid, a in acc.items():
+            out[norm_name(str(names[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"], "g": len(a["wks"]), "n": a["n"]}
+    except Exception as e:
+        print(f"WARN rec tdluck skipped ({e})")
+    return out
+
+# QB PASSING-TD LUCK (backtest_qb_tdluck.py, 2026-09-14): xPassTD = sum over
+# his targeted attempts of the receiver table (yardline x end-zone throw);
+# throwaways count 0. QB RUSH luck graded flat and is NOT included. LOYO
+# pass-only -0.44% (5/7), k = 0.5 x pass-TD value, uncentered (live
+# season-to-date centering graded weaker, -0.34%).
+def build_qb_tdluck_2026():
+    """{norm: {xtd, td, g, n}} passing only, every QB with a 2026 attempt."""
+    out = {}
+    pbp_p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+    players_p = os.path.join(CACHE, "players.csv")
+    try:
+        if not (os.path.exists(pbp_p) and os.path.exists(players_p)):
+            return out
+        pl = pd.read_csv(players_p, usecols=["gsis_id", "display_name", "position"], low_memory=False)
+        pl = pl[(pl.position == "QB") & pl.gsis_id.notna()]
+        names = dict(zip(pl.gsis_id, pl.display_name))
+        pbp = pd.read_csv(pbp_p, usecols=["season_type", "week", "pass_attempt", "sack", "passer_player_id",
+                                          "receiver_player_id", "yardline_100", "air_yards", "pass_touchdown"], low_memory=False)
+        pbp = pbp[(pbp.season_type == "REG") & (pbp.pass_attempt == 1) & (pbp.sack != 1) & pbp.passer_player_id.isin(names)]
+        acc = {}
+        for pid, rcv, td, yl, ay, wk in pbp[["passer_player_id", "receiver_player_id", "pass_touchdown", "yardline_100", "air_yards", "week"]].itertuples(index=False):
+            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
+            yl = float(yl) if pd.notna(yl) else 99.0
+            if pd.notna(rcv):
+                a["xtd"] += _xtd_rec(yl, pd.notna(ay) and float(ay) >= yl)
+            a["td"] += int(td == 1); a["n"] += 1; a["wks"].add(int(wk))
+        for pid, a in acc.items():
+            out[norm_name(str(names[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"], "g": len(a["wks"]), "n": a["n"]}
+    except Exception as e:
+        print(f"WARN qb tdluck skipped ({e})")
+    return out
+
 def build_routes_2026():
     """TE weekly route participation (%% of team dropbacks on the field) from
     2026 pbp + participation — feeds engine routeMult (backtest_route_trend.py:
@@ -304,6 +477,10 @@ def build_routes_2026():
                     routes.setdefault(nm_, {})[str(wk)] = round(100.0 * c / db, 1)
     except Exception as e:
         print(f"WARN routes/pressure skipped ({e})")
+    routes, n_pff = route_pct_fallback(routes)
+    tdluck = build_rb_tdluck_2026()
+    rectd = build_rec_tdluck_2026()
+    qbtd = build_qb_tdluck_2026()
     with open(ROUTES_OUT, "w", encoding="utf-8") as f:
         f.write("// built by pull_pace_tracker.py — TE weekly route participation (% of team dropbacks)\n")
         f.write("window.SIM_ROUTES_2026 = ")
@@ -313,7 +490,113 @@ def build_routes_2026():
         f.write("window.SIM_PRESSURE_2026 = ")
         json.dump(pressure, f, separators=(",", ":"))
         f.write(";\n")
-    print(f"wrote {ROUTES_OUT} — {len(routes)} TEs with 2026 route data, {len(pressure)} defenses with pressure data")
+        f.write("// per-RB season-to-date TD luck {norm: {xtd, td, g, n}} (pbp only; backtest_rb_role.py) -> engine tdLuckAdj\n")
+        f.write("window.SIM_RB_TDLUCK_2026 = ")
+        json.dump(tdluck, f, separators=(",", ":"))
+        f.write(";\n")
+        f.write("// per-WR/TE season-to-date TD luck (targets: yardline x end-zone-throw table; backtest_wr_tdluck.py)\n")
+        f.write("window.SIM_REC_TDLUCK_2026 = ")
+        json.dump(rectd, f, separators=(",", ":"))
+        f.write(";\n")
+        f.write("// per-QB season-to-date PASSING TD luck (targets: yardline x end-zone-throw table; backtest_qb_tdluck.py)\n")
+        f.write("window.SIM_QB_TDLUCK_2026 = ")
+        json.dump(qbtd, f, separators=(",", ":"))
+        f.write(";\n")
+    print(f"wrote {ROUTES_OUT} — {len(routes)} players with 2026 route data ({n_pff} from repo route_pct.js / PFF weekly), {len(pressure)} defenses with pressure data, {len(tdluck)} RBs + {len(rectd)} WR/TEs + {len(qbtd)} QBs with TD-luck data")
+
+# ---------------------------------------------------------------------------
+# TARGET-AREA ZONES (backtest_target_area.py, 2026-09-14) - INTEL ONLY.
+# Per defense: targets faced by depth (behind LOS / 0-9 / 10-19 / 20+) and
+# side (left / middle / right) with half-PPR receiving pts allowed per target;
+# per receiver: his target mix by depth/side + aDOT. 2025 full season rides
+# along as the prior. Persistence (2019-25): player mix YoY r .75-.88 (deep,
+# behind-LOS) = a real profile; defense FUNNEL (share of targets faced per
+# zone) early->late r .2-.5 = a soft scheme identity; defense EFFICIENCY
+# allowed per zone beyond its overall rate r ~0 in-season AND YoY = noise.
+# The matchup multiplier graded flat (LOYO +0.03%, 2/7) and is NOT applied;
+# the ZONES tab shows the profiles for start/sit + video reads.
+ZONES_OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "zones_2026.js")
+Z_DEPTH = ["bl", "sh", "in", "dp"]
+Z_SIDE = ["left", "middle", "right"]
+
+def _zone_frame(year):
+    p = os.path.join(CACHE, f"play_by_play_{year}.csv.gz")
+    if not os.path.exists(p):
+        return None
+    df = pd.read_csv(p, usecols=["season_type", "week", "posteam", "defteam", "pass_attempt", "sack",
+                                 "receiver_player_id", "air_yards", "pass_location", "complete_pass",
+                                 "yards_gained", "pass_touchdown"], low_memory=False)
+    t = df[(df.season_type == "REG") & (df.pass_attempt == 1) & df.receiver_player_id.notna()
+           & (df.sack != 1) & df.air_yards.notna() & df.pass_location.isin(Z_SIDE)].copy()
+    if t.empty:
+        return t
+    t["def"] = t.defteam.map(tm)
+    t["off"] = t.posteam.map(tm)
+    t["depth"] = pd.cut(t.air_yards, [-100, -0.01, 9.99, 19.99, 200], labels=Z_DEPTH).astype(str)
+    t["side"] = t.pass_location
+    comp = t.complete_pass.fillna(0)
+    t["pts"] = 0.5 * comp + 0.1 * t.yards_gained.fillna(0) * comp + 6 * t.pass_touchdown.fillna(0)
+    return t
+
+def _zone_counts(t, zone_cols):
+    """{zone: {'n': targets, 'p': pts}} for each zone column."""
+    out = {}
+    for zc, zones in zone_cols:
+        g = t.groupby(zc).pts.agg(["count", "sum"])
+        out[zc] = {z: {"n": int(g["count"].get(z, 0)), "p": round(float(g["sum"].get(z, 0.0)), 1)} for z in zones}
+    return out
+
+def _zone_league(t):
+    return {"N": int(len(t)), **_zone_counts(t, (("depth", Z_DEPTH), ("side", Z_SIDE)))}
+
+def _zone_defs(t):
+    out = {}
+    for d, g in t.groupby("def"):
+        out[d] = {"N": int(len(g)), "gms": int(g.week.nunique()),
+                  **_zone_counts(g, (("depth", Z_DEPTH), ("side", Z_SIDE)))}
+    return out
+
+def _zone_players(t, names, min_n):
+    out = {}
+    for pid, g in t.groupby("receiver_player_id"):
+        if len(g) < min_n or pid not in names:
+            continue
+        nm, pos, team = names[pid]
+        rec = {"name": nm, "pos": pos, "tm": team, "N": int(len(g)), "ay": round(float(g.air_yards.sum()), 1),
+               "p": round(float(g.pts.sum()), 1)}
+        rec["depth"] = {z: int(v) for z, v in g.depth.value_counts().items()}
+        rec["side"] = {z: int(v) for z, v in g.pass_location.value_counts().items()}
+        # team = the offense he was targeted with most (trades)
+        rec["tm"] = tm(g.off.value_counts().index[0]) if len(g.off.value_counts()) else team
+        out[norm_name(str(nm))] = rec
+    return out
+
+def build_zones_2026():
+    try:
+        pl = pd.read_csv(os.path.join(CACHE, "players.csv"),
+                         usecols=["gsis_id", "display_name", "position", "latest_team"], low_memory=False)
+        pl = pl[pl.gsis_id.notna() & pl.position.isin(["WR", "TE", "RB", "QB", "FB"])]
+        names = {r.gsis_id: (r.display_name, r.position, tm(str(r.latest_team)) if pd.notna(r.latest_team) else "")
+                 for r in pl.itertuples(index=False)}
+        cur = _zone_frame(SEASON)
+        prior = _zone_frame(PREV)
+        payload = {"updated": time.strftime("%Y-%m-%d %H:%M"), "season": SEASON, "prev": PREV,
+                   "weeks": sorted(int(w) for w in cur.week.unique()) if cur is not None and not cur.empty else [],
+                   "lg": _zone_league(cur) if cur is not None and not cur.empty else None,
+                   "lgPrior": _zone_league(prior) if prior is not None and not prior.empty else None,
+                   "def": _zone_defs(cur) if cur is not None and not cur.empty else {},
+                   "defPrior": _zone_defs(prior) if prior is not None and not prior.empty else {},
+                   "players": _zone_players(cur, names, 1) if cur is not None and not cur.empty else {},
+                   "playersPrior": _zone_players(prior, names, 20) if prior is not None and not prior.empty else {}}
+        with open(ZONES_OUT, "w", encoding="utf-8") as f:
+            f.write("// built by pull_pace_tracker.py - target-area zones (defense funnel/efficiency by depth+side, receiver target mix); INTEL ONLY (backtest_target_area.py)\n")
+            f.write("window.SIM_ZONES_2026 = ")
+            json.dump(payload, f, separators=(",", ":"))
+            f.write(";\n")
+        print(f"wrote {ZONES_OUT} - {len(payload['def'])} defenses, {len(payload['players'])} receivers with {SEASON} targets, "
+              f"{len(payload['playersPrior'])} with {PREV} priors")
+    except Exception as e:
+        print(f"WARN zones skipped ({e})")
 
 def build():
     # in-season the 2026 pbp grows weekly — re-fetch every run
@@ -322,6 +605,7 @@ def build():
     fetch(f"https://github.com/nflverse/nflverse-data/releases/download/pbp_participation/pbp_participation_{SEASON}.parquet",
           os.path.join(CACHE, f"pbp_participation_{SEASON}.parquet"))
     build_routes_2026()
+    build_zones_2026()
     R = research_metrics()
     weeks, coach = team_weeks(SEASON) if got_pbp else ({}, {})
     teams = {}

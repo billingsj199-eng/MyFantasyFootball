@@ -3808,14 +3808,14 @@ function getFiltered(applyTopN) {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': av = _consRankFor(a) ?? 999; bv = _consRankFor(b) ?? 999; break;
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
-        case 'l4ppg': if (_sm === 'adp') { av = _smAdp(a,'espn'); bv = _smAdp(b,'espn'); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'pts': if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
+        case 'fpts25': if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
+        case 'l4ppg': if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { av = _smAdp(a,'espn'); bv = _smAdp(b,'espn'); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'yrr': if (_sm === 'xfp') { av = _xfpSortVal(a, 'tdg'); bv = _xfpSortVal(b, 'tdg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
         case 'jm': if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -6076,6 +6076,26 @@ function render() {
       // Tail column: Total Yds (per game on the weekly board). Season Top-12
       // odds are no longer surfaced (table + card chip removed 2026-09-08).
       _statYdsTail = _totYdsCellHtml(d, _isWeekly);
+    } else if (_statMode === 'xfp') {
+      // xFP view: actual · expected · over expected (+ TD-luck part in the tail).
+      const _xa = _xfpAgg(d, rankingScoringFmt, _isWeekly ? (window._weeklyActiveWeek || 1) : null);
+      const _f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+      const _sg = v => (v >= 0 ? '+' : '') + _f1(v);
+      if (!_xa) {
+        _statTd1 = '<td class="pts-cell ppg-proj-cell">—</td>';
+        _statTds = '<td class="pts-cell ppg25-cell">—</td><td class="pts-cell l4ppg-cell">—</td>';
+        _statYdsTail = '—';
+      } else {
+        const _scope = _isWeekly ? 'Week ' + (window._weeklyActiveWeek || 1) : _xa.n + ' game' + (_xa.n > 1 ? 's' : '') + ' to date';
+        const _tip = ' title="' + (_scope + ': scored ' + _sg(_xa.fpoe) + ' vs expected — TD luck ' + _sg(_xa.td) + ' (regresses), yards/catches ' + _sg(_xa.fpoe - _xa.td) + ' (skill, mostly repeats)').replace(/"/g, '&quot;') + '" style="cursor:help';
+        const _pc = posFptsColor(_xa.ppg, d.s);
+        const _oc = _xa.fpoeg <= -1.5 ? '#22c55e' : _xa.fpoeg >= 1.5 ? '#f87171' : null;
+        const _tc = _xa.tdg <= -1 ? '#22c55e' : _xa.tdg >= 1 ? '#f87171' : null;
+        _statTd1 = '<td class="pts-cell ppg-proj-cell"' + _tip + (_pc ? ';color:' + _pc + ';font-weight:700' : '') + '">' + _f1(_xa.ppg) + '</td>';
+        _statTds = '<td class="pts-cell ppg25-cell"' + _tip + '">' + _f1(_xa.xfpg) + '</td>'
+          + '<td class="pts-cell l4ppg-cell"' + _tip + (_oc ? ';color:' + _oc + ';font-weight:700' : '') + '">' + _sg(_xa.fpoeg) + '</td>';
+        _statYdsTail = '<span' + _tip + (_tc ? ';color:' + _tc + ';font-weight:700' : '') + '">' + _sg(_xa.tdg) + '</span>';
+      }
     } else if (_statMode === 'adp') {
       // ADP comparison view: platform ADPs side by side vs the current board's rank
       // (4th column — CBS — rides the repurposed Y/RR cell below).
@@ -6230,12 +6250,12 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const _simsMode = _statMode === 'sims';
   const yrrH = document.getElementById('yrrHeader');
-  const _yrrShow = showYrr || _adpCmpMode || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
+  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
   yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'xfp' ? 'TD Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -6272,6 +6292,7 @@ function render() {
       ? 'Total yards PER GAME — passing + rushing + receiving, over the latest season with games played (2026 to date once the season is underway, else 2025). Hover a value for the breakdown.'
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
+  if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The TD-luck part of points over expected: touchdown points scored minus TD points expected from where the touches came' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
   window._applyCellVisibility = function () {
@@ -7218,6 +7239,12 @@ window._updateRnkStatHeaders = function() {
       _set(c2, 'ppg25Header', 'Chance of finishing 25%+ ABOVE his own median simulated season (400 seasons).', 'Boom', 'Season');
       _set(c3, 'l4ppgHeader', 'Chance of finishing 25%+ BELOW his own median simulated season — injuries and role collapse drive this tail (400 seasons).', 'Bust', 'Season');
     }
+  } else if (rnkStatMode === 'xfp') {
+    const _wkX = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const _wkly = currentMode === 'weekly';
+    _set(c1, null, 'Actual fantasy points ' + (_wkly ? 'scored in Week ' + _wkX : 'per game, 2026 to date') + ' (' + fmtLabel + ') — games with expected-points data only.', _wkly ? 'FPTS' : 'PPG', _wkly ? 'Wk' + _wkX : 'Actual');
+    _set(c2, 'ppg25Header', 'Expected fantasy points ' + (_wkly ? 'for Week ' + _wkX : 'per game, 2026 to date') + ' — what an average player scores from this exact usage: every target valued by depth and field position, every carry by field position (league rates 2018-25). The industry xFP definition; K and D/ST have none.', 'xFP', _wkly ? 'Wk' + _wkX : '/Gm');
+    _set(c3, 'l4ppgHeader', 'Points over expected (actual minus xFP) ' + (_wkly ? 'in Week ' + _wkX : 'per game, 2026 to date') + '. Green = scored UNDER expected (due up), red = over. Hover a value for the split: the TD part is luck and regresses (year-to-year r .09); the yards/catches part is skill and mostly repeats (r .34 / .32).', 'FPOE', _wkly ? 'Wk' + _wkX : '/Gm');
   } else if (rnkStatMode === 'adp') {
     const _cmpGloss = ' compared to the current ranks. Green = that site has the player later than this rank (value), red = earlier (reach). CBS is in the 4th column.';
     // Platform logos only — no text label, no ADP/RANK sub (same icons as
@@ -9405,6 +9432,36 @@ function _xfpCell(d, w, pos, fmt) {
   const col = x.diff <= -1.5 ? '#22c55e' : x.diff >= 1.5 ? '#f87171' : null;   // scored UNDER expected = green (due up)
   const tip = ('Scored ' + sg(x.diff) + ' vs expected: TD luck ' + sg(x.tdPart) + ' (regresses), yards/catches ' + sg(x.skillPart) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
   return '<td title="' + tip + '" style="cursor:help' + (col ? ';color:' + col + ';font-weight:700' : '') + '">' + x.xfp.toFixed(1) + '</td>';
+}
+
+// Rankings STATS "xFP" view (Jack 2026-09-15): actual PPG / expected PPG /
+// points over expected / TD-luck part, aggregated from the same per-game
+// components the card column uses. Season boards = 2026 games to date;
+// WEEKLY board = the active week only (weekly-only numbers rule). Rows without
+// expected-points data (K, DST, no touches) show dashes.
+function _xfpRowsFor(d) {
+  const wd = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS) ? WEEKLY_STATS[d.n] : null;
+  const wks = wd && wd.seasons && wd.seasons['2026'];
+  return (wks && wks.length) ? wks : [];
+}
+function _xfpAgg(d, fmt, wk) {
+  if (d.s === 'K' || d.s === 'DST') return null;
+  const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;   // WEEKLY_STATS fpts are half-PPR
+  let n = 0, fp = 0, xfp = 0, td = 0;
+  for (const w of _xfpRowsFor(d)) {
+    if (typeof w.fpts !== 'number') continue;
+    if (wk != null && w.wk !== wk) continue;
+    const f = w.fpts + (w.rec || 0) * recAdj;
+    const x = _xfpFor(d, Object.assign({}, w, { fpts: f }), d.s, fmt);
+    if (!x) continue;
+    n++; fp += f; xfp += x.xfp; td += x.tdPart;
+  }
+  if (!n) return null;
+  return { n, fp, xfp, fpoe: fp - xfp, td, ppg: fp / n, xfpg: xfp / n, fpoeg: (fp - xfp) / n, tdg: td / n };
+}
+function _xfpSortVal(d, k) {
+  const x = _xfpAgg(d, rankingScoringFmt, currentMode === 'weekly' ? (window._weeklyActiveWeek || 1) : null);
+  return x ? x[k] : -Infinity;
 }
 
 // The PROJ cell for one 2026 log row ('' outside 2026). BOOM/BUST columns

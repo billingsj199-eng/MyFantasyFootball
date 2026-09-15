@@ -3855,6 +3855,13 @@ function getFiltered(applyTopN) {
           };
           av = _tt(a); bv = _tt(b); break;
         }
+        case 'oppPpg': {
+          const _op = d => {
+            const r = (typeof window._weeklyOppPpgFor === 'function') ? window._weeklyOppPpgFor(d.t, d.s) : null;
+            return r ? r.v : -Infinity;
+          };
+          av = _op(a); bv = _op(b); break;
+        }
         case 'simBoom': case 'simBust': {
           const _bi = sortKey === 'simBoom' ? 3 : 4;
           const _bb = d => {
@@ -5917,6 +5924,7 @@ function render() {
         <td class="opp-cell weekly-only-cell" style="display:none">—</td>
         <td class="spread-cell weekly-only-cell" style="display:none">—</td>
         <td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>
+        <td class="oppppg-cell weekly-only-cell" style="display:none">—</td>
         <td class="pts-cell ppg25-cell">—</td>
         <td class="pts-cell l4ppg-cell">—</td>
         <td class="pts-cell yrr-cell" style="display:none">—</td>
@@ -6176,7 +6184,8 @@ function render() {
         // with the color scale inverted accordingly. Everyone else shows their
         // own team's implied total (higher = better environment).
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
-        if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>'}
+        if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>
+      ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
       ${_statTds}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
@@ -7474,6 +7483,58 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     return Math.round(t * 10) / 10;
   };
 
+  // OPP PPG (2026-09-15) — fantasy points the opponent ALLOWS per game to
+  // this player's position in 2026, from data/fpa_2026.js (complete league,
+  // FINAL games only, built by scripts/pull_postgame_stats.py). Scored in the
+  // board's active format via the RB_ppr / RB (half) / RB_std keys; K and
+  // D/ST read what opposing kickers / D/STs scored AGAINST that offense.
+  // Returns {v, rank, n, games, opp} or null. rank 1 = allows the MOST.
+  const _WK_OPP_ABBR = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
+  let _wkOppPpgCache = null;
+  function _wkOppPpgTable() {
+    const FP = window.FPA_2026;
+    if (!FP || !FP.weeks) return null;
+    const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
+    if (_wkOppPpgCache && _wkOppPpgCache.src === FP.weeks && _wkOppPpgCache.fmt === fmt) return _wkOppPpgCache;
+    const suf = fmt === 'ppr' ? '_ppr' : fmt === 'std' ? '_std' : '';
+    const acc = {};
+    Object.keys(FP.weeks).forEach(wk => {
+      const teams = FP.weeks[wk];
+      Object.keys(teams).forEach(team => {
+        const rec = teams[team];
+        ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(pos => {
+          const key = (pos === 'K' || pos === 'DST') ? pos : (typeof rec[pos + suf] === 'number' ? pos + suf : pos);
+          const v = rec[key];
+          if (typeof v !== 'number') return;
+          const slot = acc[pos] || (acc[pos] = {});
+          const t = slot[team] || (slot[team] = { pts: 0, g: 0 });
+          t.pts += v; t.g++;
+        });
+      });
+    });
+    const out = { src: FP.weeks, fmt, pos: {} };
+    Object.keys(acc).forEach(pos => {
+      const rows = Object.keys(acc[pos]).map(team => ({ team, v: acc[pos][team].pts / acc[pos][team].g, g: acc[pos][team].g }));
+      rows.sort((a, b) => b.v - a.v);
+      const m = {};
+      rows.forEach((r, i) => { m[r.team] = { v: Math.round(r.v * 10) / 10, rank: i + 1, n: rows.length, games: r.g }; });
+      out.pos[pos] = m;
+    });
+    _wkOppPpgCache = out;
+    return out;
+  }
+  window._weeklyOppPpgFor = function(team, pos) {
+    if (!team || !pos || typeof window._weeklyOppFor !== 'function') return null;
+    let opp = window._weeklyOppFor(team);
+    if (!opp || opp === 'BYE') return null;
+    opp = String(opp).replace(/^@/, '').toUpperCase();
+    opp = _WK_OPP_ABBR[opp] || opp;
+    const T = _wkOppPpgTable();
+    const m = T && T.pos[pos];
+    const r = m && m[opp];
+    return r ? Object.assign({ opp }, r) : null;
+  };
+
   // PLAYER PROP PROJECTION — converts a player's SEASON-LONG sportsbook prop
   // lines (BETTING_2026.seasonProps, manually pasted) into a blended fantasy
   // projection for PPR / Half / STD: a full-season point total and a PPG
@@ -8710,7 +8771,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -9644,6 +9705,21 @@ function _wkSimBoomBustCell(d, which) {
     ? (v >= 30 ? '#22c55e' : v >= 22 ? '#4ade80' : v >= 15 ? '#facc15' : 'var(--text2)')
     : (v >= 35 ? '#ef4444' : v >= 25 ? '#f59e0b' : v >= 18 ? '#facc15' : 'var(--text2)');
   return '<td class="' + cls + ' weekly-only-cell" style="display:none"><span style="color:' + c + ';font-weight:700">' + v + '%</span></td>';
+}
+
+// OPP PPG cell for the rankings WEEKLY view — points the opponent allows per
+// game to this position (see window._weeklyOppPpgFor). Colored by league
+// thirds: green = allows the most (soft), red = allows the least (tough).
+function _wkOppPpgCell(d) {
+  const r = (typeof window._weeklyOppPpgFor === 'function') ? window._weeklyOppPpgFor(d.t, d.s) : null;
+  if (!r) return '<td class="oppppg-cell weekly-only-cell" style="display:none">—</td>';
+  const third = r.n / 3;
+  const c = r.rank <= third ? '#22c55e' : r.rank > 2 * third ? '#ef4444' : '#f59e0b';
+  const _kd = d.s === 'K' || d.s === 'DST';   // reception format is meaningless for K / D/ST
+  const fmtLbl = _kd ? '' : ((typeof _scoringLabelsRnk !== 'undefined' && _scoringLabelsRnk[rankingScoringFmt]) || 'Half PPR') + ' ';
+  const posLbl = d.s === 'DST' ? 'opposing D/STs' : d.s === 'K' ? 'opposing kickers' : d.s + 's';
+  const tip = r.opp + ' allows ' + r.v + ' ' + fmtLbl + 'pts/game to ' + posLbl + ' in 2026 — #' + r.rank + ' most of ' + r.n + ' (' + r.games + ' gm)';
+  return '<td class="oppppg-cell weekly-only-cell" style="display:none" title="' + tip.replace(/"/g, '&quot;') + '"><span style="color:' + c + ';font-weight:700;cursor:help">' + r.v + '</span><span class="oppppg-rk">#' + r.rank + '</span></td>';
 }
 
 const _SIM_PROJ_HDR = '<th><span data-gloss="Sim Lab projected fantasy points for this game — recomputed daily and again before kickoffs, then frozen once the game starts. Reflects Vegas lines, matchup, usage trends, and injuries (a ruled-out player shows 0 and his points shift to teammates).">PROJ</span></th>';

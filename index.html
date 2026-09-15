@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-15d" as="script">
+<link rel="preload" href="app.js?v=2026-09-15e" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1326,9 +1326,11 @@ CLEAR ALL
   body.format-weekly #pageRankings #oppHeader,
   body.format-weekly #pageRankings #spreadHeader,
   body.format-weekly #pageRankings #teamTotalHeader,
+  body.format-weekly #pageRankings #oppPpgHeader,
   body.format-weekly #pageRankings .opp-cell,
   body.format-weekly #pageRankings .spread-cell,
-  body.format-weekly #pageRankings .teamtotal-cell { display: table-cell !important; }
+  body.format-weekly #pageRankings .teamtotal-cell,
+  body.format-weekly #pageRankings .oppppg-cell { display: table-cell !important; }
   /* The always-on weekly Boom/Bust pair (simboom/simbust) stays hidden since
      2026-09-08 (Jack) — the SIMS stats view still shows boom/bust in the
      '25 PPG / L4 PPG swap columns. */
@@ -1341,6 +1343,8 @@ CLEAR ALL
   #pageRankings tbody .opp-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
   #pageRankings tbody .spread-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
   #pageRankings tbody .teamtotal-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:56px}
+  #pageRankings tbody .oppppg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
+  #pageRankings tbody .oppppg-cell .oppppg-rk{font-size:.58rem;opacity:.55;margin-left:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;vertical-align:1px}
   #pageRankings tbody .simboom-cell,
   #pageRankings tbody .simbust-cell{text-align:center;font-size:.8rem;font-weight:600;color:var(--text);min-width:42px}
   #pageRankings tbody .opp-cell.opp-home{color:#a7f3d0}
@@ -1737,6 +1741,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color reflects defensive difficulty: green = bottom 1/3, amber = middle, red = top 1/3. The chip underneath is the game status: kickoff day/time (ET) before the game, LIVE with the clock and points so far while it's on, FINAL with the player's actual points after.">Opp</span> <span class="arrow"></span></th>
 <th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
+<th data-sort="oppPpg" id="oppPpgHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Fantasy points the OPPONENT allows per game to this position in 2026 (board scoring, final games only). RB facing CAR = what CAR gives up to RBs per game; D/ST facing TEN = what opposing D/STs have scored against TEN. Green = allows the most (top third, soft matchup), red = allows the least (tough). #n = league rank, 1 = allows the most.">Opp PPG</span> <span class="arrow"></span></th>
 <th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
@@ -5590,7 +5595,7 @@ window._loadWeeklyData = function(opts) {
     'data/weekly_stats_active.js?v=2026-09-14-2317',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-09-14-2317',
+    'data/fpa_2026.js?v=2026-09-15-oppppg',
     'data/weekly_stats_retired_1.js?v=2026-07-21',
     'data/weekly_stats_retired_2.js?v=2026-07-21',
     'data/weekly_stats_retired_3.js?v=2026-07-21',
@@ -5682,7 +5687,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-15d"></script>
+<script defer src="app.js?v=2026-09-15e"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

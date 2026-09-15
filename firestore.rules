@@ -148,11 +148,18 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isJack();
     }
+    // prospect_draft_capital / prospect_bio: Jack's manual DC + ht/wt/pos/PFF
+    // overrides for prospects. app.js _dcLoad/_bioLoad read them for EVERY
+    // visitor (the JM score must reflect the edits on everyone's view), so
+    // reads are public; writes stay admin-only. Was isJack() read until
+    // 2026-09-15 — visitors silently fell back to DraftBuzz projections.
     match /prospect_draft_capital/{doc} {
-      allow read, write: if isJack();
+      allow read: if true;
+      allow write: if isJack();
     }
     match /prospect_bio/{doc} {
-      allow read, write: if isJack();
+      allow read: if true;
+      allow write: if isJack();
     }
     match /trivia_catalog/{docId} {
       allow read: if true;

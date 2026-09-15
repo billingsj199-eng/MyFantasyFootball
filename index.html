@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-15-adv8" as="script">
+<link rel="preload" href="app.js?v=2026-09-15-adv9" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2630,7 +2630,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-09-15-adv5">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-15-adv6">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -2683,9 +2683,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <label class="rs-check"><input type="checkbox" id="rsCoSplit"> One row per season</label>
 <input type="text" id="rsCoQ" class="rs-search rs-adv-q" placeholder="Filter coaches or teams&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter coaches or teams">
 <label class="rs-check"><input type="checkbox" id="rsCoHeat" checked> Shading</label>
+<label title="Metric charted when you click a coach">Chart <select id="rsCoMetric" class="rs-select"></select></label>
 <button type="button" class="rs-adv-export" id="rsCoCsv">Export CSV</button>
 <span class="rs-count" id="rsCoCount"></span>
 </div>
+<div class="rs-co-chart" id="rsCoChart" hidden></div>
 <div class="rs-adv-groups" id="rsCoGroups"></div>
 <div class="rs-table-wrap rs-adv-wrap" id="rsCoWrap"><div class="rs-empty">Loading coach profiles&hellip;</div></div>
 <div class="rs-adv-foot" id="rsCoFoot"></div>
@@ -5821,7 +5823,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-15-adv8"></script>
+<script defer src="app.js?v=2026-09-15-adv9"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -63521,6 +63521,7 @@ Rules:
 
   let _role = 'op', _from = 0, _to = 0, _sortK = 'g', _sortAsc = false;
   let _wired = false, _started = false, _objs = null, _last = null;
+  let _sel = '', _metric = 'proe';   // charted coach + metric (click a row to chart it)
   let _hidden = {};
   try { _hidden = JSON.parse(localStorage.getItem('rsCoHidden') || '{}') || {}; } catch (e) { _hidden = {}; }
 
@@ -63572,6 +63573,118 @@ Rules:
       out.push(res);
     });
     return out;
+  }
+
+  // --- per-coach season chart ------------------------------------------------
+  // One series (the coach) against a league-average line in the same unit - one axis, never
+  // two. PROE / RROE are signed around zero, so they get diverging columns (blue = passed
+  // over expected, amber = ran over expected); every other metric is one hue from a zero
+  // baseline. Colors validated against this section's surface in both themes
+  // (dataviz scripts/validate_palette.js); the "One row per season" table is the table twin.
+  const CHART_SIGNED = { proe: 1, rroe: 1 };
+
+  function _leagueAvg(key) {
+    const den = W[key], by = new Map();
+    _all().forEach(o => {
+      const v = o[key], w = den ? o[den] : 1;
+      if (v == null || !(w > 0)) return;
+      const t = by.get(o.yr) || [0, 0];
+      by.set(o.yr, [t[0] + v * w, t[1] + w]);
+    });
+    const out = {};
+    by.forEach((t, yr) => { out[yr] = t[0] / t[1]; });
+    return out;
+  }
+
+  function _fillMetrics() {
+    const sel = _el('rsCoMetric');
+    if (!sel) return;
+    const cols = ROLE_COLS[_role];
+    if (!cols.some(col => col.k === _metric)) _metric = cols.some(col => col.k === 'proe') ? 'proe' : cols[0].k;
+    sel.innerHTML = cols.map(col => '<option value="' + col.k + '">' + _esc(col.l) + '</option>').join('');
+    sel.value = _metric;
+  }
+
+  function _coChart() {
+    const host = _el('rsCoChart');
+    if (!host) return;
+    const col = ROLE_COLS[_role].find(cc => cc.k === _metric);
+    if (!_sel || !col) { host.hidden = true; host.innerHTML = ''; return; }
+    host.hidden = false;
+    const rows = _all().filter(o => o[_role] === _sel && o[col.k] != null).sort((a, b) => a.yr - b.yr);
+    const head = '<div class="rs-co-head"><span class="rs-co-title">' + _esc(_sel) + ' · ' + _esc(col.l) + ' by season</span>' +
+      '<span class="rs-co-sub">' + _esc(col.t) + '</span>' +
+      '<button type="button" class="rs-co-close" id="rsCoChartClose">Close</button></div>';
+    if (!rows.length) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(col.l) + ' for ' + _esc(_sel) + '.</div>'; return; }
+    const avg = _leagueAvg(col.k);
+    const fmt = v => (v > 0 && CHART_SIGNED[col.k] ? '+' : '') + Number(v).toFixed(col.d);
+    if (rows.length === 1) {   // one season is a number, not a chart
+      const o = rows[0];
+      host.innerHTML = head + '<div class="rs-co-single">' + o.yr + ' ' + _esc(o.tm) + ' · <strong>' + fmt(o[col.k]) + '</strong>' +
+        (avg[o.yr] != null ? ' · league average ' + fmt(avg[o.yr]) : '') + ' · ' + o.g + ' games</div>';
+      return;
+    }
+    const signed = !!CHART_SIGNED[col.k];
+    const vals = rows.map(o => o[col.k]);
+    const avgVals = rows.map(o => avg[o.yr]).filter(v => v != null);
+    let lo = Math.min(...vals, ...avgVals), hi = Math.max(...vals, ...avgVals);
+    // signed metrics are columns on a zero baseline; a rate (55-60% every year) would draw
+    // near-identical zero-based bars, so it becomes a line - which carries no zero obligation
+    if (signed) { const m = (Math.max(Math.abs(lo), Math.abs(hi)) || 1) * 1.25; lo = -m; hi = m; }
+    else { const pad = (hi - lo) * 0.25 || 1; hi += pad; lo -= pad; }
+    const BAND = 64, PADL = 46, PADR = 16, PADT = 22, PLOT = 148, XLAB = 36;
+    const WIDTH = PADL + BAND * rows.length + PADR, HEIGHT = PADT + PLOT + XLAB;
+    const y = v => PADT + (hi - v) / (hi - lo) * PLOT;
+    const cxOf = i => PADL + i * BAND + BAND / 2;
+    const base = y(0);
+    const barW = Math.min(24, BAND * 0.42);
+    const ticks = signed ? [hi, 0, lo] : [hi, (hi + lo) / 2, lo];
+    const extreme = rows.reduce((a, b) => (signed
+      ? (Math.abs(b[col.k]) > Math.abs(a[col.k]) ? b : a)
+      : (b[col.k] > a[col.k] ? b : a)));
+    // 1 viewBox unit = 1px up to the natural width, so bars stay <= 24px and labels keep their size
+    let svg = '<svg class="rs-co-svg" style="max-width:' + WIDTH + 'px" viewBox="0 0 ' + WIDTH + ' ' + HEIGHT + '" role="img" aria-label="' +
+      _esc(col.l + ' by season for ' + _sel + ', with the league average') + '">';
+    ticks.forEach(t => {
+      svg += '<line class="' + (signed && Math.abs(t) < 1e-9 ? 'zero' : 'grid') + '" x1="' + PADL + '" y1="' + y(t).toFixed(1) + '" x2="' + (WIDTH - PADR) + '" y2="' + y(t).toFixed(1) + '"/>' +
+        '<text class="tick" x="' + (PADL - 8) + '" y="' + (y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + Number(t).toFixed(col.d) + '</text>';
+    });
+    const linePts = [], dots = [];
+    rows.forEach((o, i) => {
+      const cx = cxOf(i), v = o[col.k], yv = y(v);
+      if (signed) {
+        const top = Math.min(yv, base), bot = Math.max(yv, base), h = Math.max(1, bot - top);
+        const r = Math.min(4, h, barW / 2), x0 = cx - barW / 2, x1 = cx + barW / 2;
+        svg += '<path class="' + (v >= 0 ? 'pos' : 'neg') + '" d="' + (v >= 0
+          ? 'M' + x0 + ' ' + bot + ' L' + x0 + ' ' + (top + r) + ' Q' + x0 + ' ' + top + ' ' + (x0 + r) + ' ' + top + ' L' + (x1 - r) + ' ' + top + ' Q' + x1 + ' ' + top + ' ' + x1 + ' ' + (top + r) + ' L' + x1 + ' ' + bot + ' Z'
+          : 'M' + x0 + ' ' + top + ' L' + x0 + ' ' + (bot - r) + ' Q' + x0 + ' ' + bot + ' ' + (x0 + r) + ' ' + bot + ' L' + (x1 - r) + ' ' + bot + ' Q' + x1 + ' ' + bot + ' ' + x1 + ' ' + (bot - r) + ' L' + x1 + ' ' + top + ' Z') + '"/>';
+      } else {
+        linePts.push(cx + ',' + yv.toFixed(1));
+        dots.push('<circle class="dot" cx="' + cx + '" cy="' + yv.toFixed(1) + '" r="4.5"/>');
+      }
+      svg += '<text class="xlab" x="' + cx + '" y="' + (PADT + PLOT + 16) + '" text-anchor="middle">' + o.yr + '</text>' +
+        '<text class="xteam" x="' + cx + '" y="' + (PADT + PLOT + 28) + '" text-anchor="middle">' + _esc(o.tm) + '</text>';
+      if (o === rows[rows.length - 1] || o === extreme) {
+        const ly = signed ? (v >= 0 ? Math.min(yv, base) - 8 : Math.max(yv, base) + 14) : yv - 10;
+        svg += '<text class="val" x="' + cx + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + fmt(v) + '</text>';
+      }
+    });
+    if (!signed && linePts.length > 1) svg += '<polyline class="series" points="' + linePts.join(' ') + '"/>' + dots.join('');
+    const pts = rows.map((o, i) => (avg[o.yr] != null ? cxOf(i) + ',' + y(avg[o.yr]).toFixed(1) : null)).filter(Boolean);
+    if (pts.length > 1) svg += '<polyline class="avg" points="' + pts.join(' ') + '"/>';
+    rows.forEach((o, i) => {
+      svg += '<rect class="hit" x="' + (PADL + i * BAND) + '" y="' + PADT + '" width="' + BAND + '" height="' + PLOT + '">' +
+        '<title>' + _esc(o.yr + ' ' + o.tm + ' · ' + col.l + ' ' + fmt(o[col.k]) +
+          (avg[o.yr] != null ? ' · league average ' + fmt(avg[o.yr]) : '') + ' · ' + o.g + ' games') + '</title></rect>';
+    });
+    svg += '</svg>';
+    const legend = '<div class="rs-co-legend">' +
+      (signed
+        ? '<span><span class="rs-co-key pass"></span>passed over expected</span><span><span class="rs-co-key run"></span>ran over expected</span>'
+        : '<span><span class="rs-co-key line series"></span>' + _esc(_sel) + '</span>') +
+      '<span><span class="rs-co-key line"></span>league average</span>' +
+      '<span class="rs-co-sub">every season on record, whatever the season filter says · values also in the table with "One row per season" ticked</span></div>';
+    host.innerHTML = head + legend + svg;
   }
 
   function _renderGroups() {
@@ -63642,7 +63755,8 @@ Rules:
     });
     html += '</tr></thead><tbody>';
     rows.forEach((r, idx) => {
-      html += '<tr><td class="rs-adv-nm rs-name" title="' + _esc(r.name) + '"><span class="rs-adv-rk">' + (idx + 1) + '</span>' + _esc(r.name) + '</td>' +
+      html += '<tr class="rs-adv-click' + (r.name === _sel ? ' rs-co-selected' : '') + '" data-coach="' + _esc(r.name) + '" title="Click to chart this coach by season">' +
+        '<td class="rs-adv-nm rs-name" title="' + _esc(r.name) + '"><span class="rs-adv-rk">' + (idx + 1) + '</span>' + _esc(r.name) + '</td>' +
         '<td class="rs-adv-tm">' + _esc(r.teams) + '</td><td class="rs-adv-tm">' + _esc(r.span) + '</td><td>' + (r.g || 0) + '</td>';
       cols.forEach((col, i) => {
         const x = r[col.k];
@@ -63662,7 +63776,8 @@ Rules:
     if (csvBtn) csvBtn.disabled = !rows.length;
     if (foot) foot.textContent = 'Playcaller = the offensive / defensive coordinator Pro Football Reference lists, unless coach_overrides.json names a head coach who calls plays; a season with a mid-year coordinator change shows both names ("A / B"). ' +
       'Sources: nflverse play-by-play (tendency, pace, 4th down, run direction, results), nflverse participation (formation, personnel, coverage shells, box counts; published after each season, so 2026 stays blank), FTN charting via nflverse (play design, 2022+), PFF (target share by position; blitz, man and pressure the opponent faced). ' +
-      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better.';
+      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season.';
+    _coChart();
   }
 
   function _exportCsv() {
@@ -63710,9 +63825,13 @@ Rules:
         t.setAttribute('aria-selected', on ? 'true' : 'false');
       });
       if (STR_KEYS.indexOf(_sortK) < 0 && _sortK !== 'g' && !ROLE_COLS[_role].some(col => col.k === _sortK)) { _sortK = 'g'; _sortAsc = false; }
+      if (!ROLE_COLS[_role].some(col => col.k === _metric)) _metric = _role === 'dp' ? 'dblz' : 'proe';
+      _sel = '';   // a coach charted as a playcaller isn't the same list as head coaches
+      _fillMetrics();
       _renderGroups();
       _render();
     });
+    _el('rsCoMetric').addEventListener('change', e => { _metric = e.target.value; _coChart(); });
     _el('rsCoGroups').addEventListener('click', e => {
       const b = e.target.closest('.rs-adv-chip');
       if (!b) return;
@@ -63730,7 +63849,12 @@ Rules:
     ['rsCoSplit', 'rsCoHeat'].forEach(id => _el(id).addEventListener('change', _render));
     ['rsCoMin', 'rsCoQ'].forEach(id => _el(id).addEventListener('input', _render));
     _el('rsCoCsv').addEventListener('click', _exportCsv);
+    _el('rsCoChart').addEventListener('click', e => {
+      if (e.target.closest('#rsCoChartClose')) { _sel = ''; _render(); }
+    });
     _el('rsCoWrap').addEventListener('click', e => {
+      const tr = e.target.closest('tr[data-coach]');
+      if (tr) { _sel = _sel === tr.dataset.coach ? '' : tr.dataset.coach; _render(); return; }
       const th = e.target.closest('th[data-k]');
       if (!th) return;
       const k = th.dataset.k;
@@ -63749,6 +63873,7 @@ Rules:
     _wire();
     if (_started) return;
     _started = true;
+    _fillMetrics();
     _renderGroups();
     const p = typeof window._ensureCoachProfiles === 'function' ? window._ensureCoachProfiles() : Promise.resolve(null);
     p.then(function() { _fillSeasons(); _render(); });

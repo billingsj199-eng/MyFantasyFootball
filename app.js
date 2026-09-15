@@ -23642,6 +23642,9 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
           + (ws.sub ? ' <span class="sst-dim">' + esc(ws.sub) + '</span>' : ''), '', ws.tip);
         html += '</div>';
       }
+      // TD / FG luck box (same helper as the player card's WEEKLY view)
+      const luckBox = (typeof _simLuckBoxHtml === 'function') ? _simLuckBoxHtml(d, box, esc) : '';
+      if (luckBox) html += '<div class="card-rank-row" style="grid-template-columns:1fr;margin-top:.4rem">' + luckBox + '</div>';
     }
     html += '</div>';
 

@@ -1,0 +1,174 @@
+loading nflverse injury reports + snap counts 2019-2025...
+  2019: 1617 skill player-weeks on the report, 5805 skill player-weeks with snaps
+  2020: 1732 skill player-weeks on the report, 6008 skill player-weeks with snaps
+  2021: 1696 skill player-weeks on the report, 6469 skill player-weeks with snaps
+  2022: 1631 skill player-weeks on the report, 6403 skill player-weeks with snaps
+  2023: 1687 skill player-weeks on the report, 6486 skill player-weeks with snaps
+  2024: 1713 skill player-weeks on the report, 6468 skill player-weeks with snaps
+  2025: 1750 skill player-weeks on the report, 6394 skill player-weeks with snaps
+
+=== PLAY RATE for relevant players (prior avg offense share >= 40%), by class ===
+  none-LP   ALL 0.97 (n 594) | QB 0.93 (n 43) | RB 0.97 (n 113) | WR 0.98 (n 329) | TE 0.96 (n 109)
+  none-DNP  ALL 0.81 (n 338) | QB 0.33 (n 21) | RB 0.73 (n 67) | WR 0.88 (n 186) | TE 0.88 (n 64)
+  Q-FP      ALL 0.87 (n 264) | QB 0.75 (n 32) | RB 0.93 (n 43) | WR 0.89 (n 119) | TE 0.86 (n 70)
+  Q-LP      ALL 0.72 (n 1105) | QB 0.47 (n 130) | RB 0.71 (n 234) | WR 0.77 (n 537) | TE 0.77 (n 204)
+  Q-DNP     ALL 0.49 (n 268) | QB 0.26 (n 19) | RB 0.41 (n 61) | WR 0.54 (n 151) | TE 0.51 (n 37)
+  D         ALL 0.01 (n 195) | QB 0.00 (n 35) | RB 0.00 (n 46) | WR 0.03 (n 75) | TE 0.00 (n 39)
+  Out       ALL 0.00 (n 1164) | QB 0.00 (n 167) | RB 0.00 (n 195) | WR 0.00 (n 560) | TE 0.00 (n 242)
+
+=== SNAP SHARE when they play: game-day / prior-3-game average ===
+  healthy baseline 0.991 (n 16323)
+  none-LP   ALL 0.989 (n 578) | QB 0.995 (n 40) | RB 0.954 (n 110) | WR 1.005 (n 323) | TE 0.973 (n 105)
+  none-DNP  ALL 0.994 (n 275) | RB 0.960 (n 49) | WR 0.990 (n 163) | TE 1.034 (n 56)
+  Q-FP      ALL 0.963 (n 230) | QB 1.043 (n 24) | RB 0.849 (n 40) | WR 0.959 (n 106) | TE 1.013 (n 60)
+  Q-LP      ALL 0.920 (n 798) | QB 0.948 (n 61) | RB 0.905 (n 167) | WR 0.921 (n 412) | TE 0.923 (n 158)
+  Q-DNP     ALL 0.896 (n 130) | RB 0.906 (n 25) | WR 0.914 (n 81)
+  D         
+
+loading base samples (bt_common)...
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 389, 'team': 247}
+  17657 played player-weeks; class counts: healthy 16149, none-LP 456, none-DNP 147, Q-FP 197, Q-LP 596, Q-DNP 110, D 2
+
+=== COND: actual / shipped when the player PLAYS, by class (REL vs healthy, same pos + week band) ===
+  ALL  none-LP                                              n   456  act/ship 0.995  REL 0.943
+  QB   none-LP                                              n    30  act/ship 1.049  REL 1.016
+  RB   none-LP                                              n   119  act/ship 0.974  REL 0.903
+  WR   none-LP                                              n   241  act/ship 0.984  REL 0.948
+  TE   none-LP                                              n    66  act/ship 1.058  REL 0.978
+  ALL  none-DNP                                             n   147  act/ship 0.909  REL 0.856
+  QB   none-DNP                                             n     6  act/ship 0.933  REL -
+  RB   none-DNP                                             n    11  act/ship 0.684  REL -
+  WR   none-DNP                                             n   105  act/ship 0.910  REL 0.869
+  TE   none-DNP                                             n    25  act/ship 1.107  REL 1.005
+  ALL  Q-FP                                                 n   197  act/ship 0.960  REL 0.907
+  QB   Q-FP                                                 n    23  act/ship 0.897  REL 0.876
+  RB   Q-FP                                                 n    47  act/ship 0.965  REL 0.895
+  WR   Q-FP                                                 n    82  act/ship 0.984  REL 0.948
+  TE   Q-FP                                                 n    45  act/ship 0.984  REL 0.919
+  ALL  Q-LP                                                 n   596  act/ship 0.935  REL 0.882
+  QB   Q-LP                                                 n    48  act/ship 0.920  REL 0.886
+  RB   Q-LP                                                 n   154  act/ship 0.961  REL 0.885
+  WR   Q-LP                                                 n   285  act/ship 0.928  REL 0.889
+  TE   Q-LP                                                 n   109  act/ship 0.912  REL 0.846
+  ALL  Q-DNP                                                n   110  act/ship 0.822  REL 0.781
+  QB   Q-DNP                                                n     4  act/ship 1.046  REL -
+  RB   Q-DNP                                                n    23  act/ship 0.886  REL 0.579
+  WR   Q-DNP                                                n    69  act/ship 0.770  REL 0.741
+  TE   Q-DNP                                                n    14  act/ship 0.863  REL -
+  ALL  D                                                    n     2  act/ship 0.513  REL -
+  QB   D                                                    n     0  act/ship -  REL -
+  RB   D                                                    n     0  act/ship -  REL -
+  WR   D                                                    n     2  act/ship 0.513  REL -
+  TE   D                                                    n     0  act/ship -  REL -
+
+  injury type (soft tissue = hamstring / groin / calf / quad / thigh / hip flexor):
+  ALL  Q-LP soft tissue                                     n   165  act/ship 0.867  REL 0.818
+  ALL  Q-LP other injury                                    n   431  act/ship 0.960  REL 0.906
+  ALL  Q-DNP soft tissue                                    n    20  act/ship 0.800  REL 0.812
+  ALL  Q-DNP other injury                                   n    90  act/ship 0.827  REL 0.788
+  ALL  D soft tissue                                        n     0  act/ship -  REL -
+  ALL  D other injury                                       n     2  act/ship 0.513  REL -
+
+=== IMPLIED unconditional multiplier = P(play) x conditional REL (vs the shipped dock) ===
+  none-LP   ALL  P(play) 0.97 x REL 0.943 = 0.917   shipped 1.00
+  none-LP   QB   P(play) 0.93 x REL 1.016 = 0.945   shipped 1.00
+  none-LP   RB   P(play) 0.97 x REL 0.903 = 0.878   shipped 1.00
+  none-LP   WR   P(play) 0.98 x REL 0.948 = 0.931   shipped 1.00
+  none-LP   TE   P(play) 0.96 x REL 0.978 = 0.941   shipped 1.00
+  none-DNP  ALL  P(play) 0.81 x REL 0.856 = 0.697   shipped 1.00
+  none-DNP  WR   P(play) 0.88 x REL 0.869 = 0.761   shipped 1.00
+  none-DNP  TE   P(play) 0.88 x REL 1.005 = 0.880   shipped 1.00
+  Q-FP      ALL  P(play) 0.87 x REL 0.907 = 0.790   shipped 1.00
+  Q-FP      QB   P(play) 0.75 x REL 0.876 = 0.657   shipped 1.00
+  Q-FP      RB   P(play) 0.93 x REL 0.895 = 0.833   shipped 1.00
+  Q-FP      WR   P(play) 0.89 x REL 0.948 = 0.845   shipped 1.00
+  Q-FP      TE   P(play) 0.86 x REL 0.919 = 0.788   shipped 1.00
+  Q-LP      ALL  P(play) 0.72 x REL 0.882 = 0.637   shipped 1.00
+  Q-LP      QB   P(play) 0.47 x REL 0.886 = 0.416   shipped 1.00
+  Q-LP      RB   P(play) 0.71 x REL 0.885 = 0.632   shipped 1.00
+  Q-LP      WR   P(play) 0.77 x REL 0.889 = 0.682   shipped 1.00
+  Q-LP      TE   P(play) 0.78 x REL 0.846 = 0.655   shipped 1.00
+  Q-DNP     ALL  P(play) 0.48 x REL 0.781 = 0.379   shipped 0.75
+  Q-DNP     RB   P(play) 0.41 x REL 0.579 = 0.237   shipped 0.75
+  Q-DNP     WR   P(play) 0.54 x REL 0.741 = 0.397   shipped 0.75
+
+=== LOYO conditional flagged multipliers (played weeks; shipped x m on the class rows) ===
+  Q-FP ALL (flagged n=197)
+    grid pooled MSE: +1.00:43.518  +0.97:43.515  +0.94:43.514  +0.91:43.516  +0.88:43.519  +0.85:43.525  +1.03:43.524
+    pooled best +0.94 | LOYO MSE 43.2980 vs shipped 43.2945 (+0.01%), years better 5/7, picks [0.88, 0.97, 0.94, 0.94, 0.94, 0.97, 0.97]
+  Q-FP WR (flagged n=82)
+    grid pooled MSE: +1.00:42.093  +0.97:42.090  +0.94:42.088  +0.91:42.088  +0.88:42.090  +0.85:42.094  +1.03:42.098
+    pooled best +0.94 | LOYO MSE 41.7198 vs shipped 41.6966 (+0.06%), years better 4/7, picks [0.94, 0.88, 0.94, 0.94, 0.85, 0.94, 1.0]
+  Q-LP ALL (flagged n=596)
+    grid pooled MSE: +1.00:43.518  +0.97:43.498  +0.94:43.484  +0.91:43.477  +0.88:43.478  +0.85:43.485  +1.03:43.546
+    pooled best +0.91 | LOYO MSE 43.2682 vs shipped 43.2945 (-0.06%), years better 4/7, picks [0.88, 0.91, 0.88, 0.91, 0.88, 0.88, 0.88]
+  Q-LP RB (flagged n=154)
+    grid pooled MSE: +1.00:48.868  +0.97:48.852  +0.94:48.846  +0.91:48.848  +0.88:48.859  +0.85:48.879  +1.03:48.892
+    pooled best +0.94 | LOYO MSE 48.4905 vs shipped 48.4770 (+0.03%), years better 4/7, picks [0.97, 0.97, 0.91, 0.91, 0.94, 0.91, 0.94]
+  Q-LP WR (flagged n=285)
+    grid pooled MSE: +1.00:42.093  +0.97:42.068  +0.94:42.050  +0.91:42.039  +0.88:42.034  +0.85:42.037  +1.03:42.125
+    pooled best +0.88 | LOYO MSE 41.6566 vs shipped 41.6966 (-0.10%), years better 5/7, picks [0.85, 0.91, 0.88, 0.88, 0.88, 0.85, 0.88]
+  Q-LP TE (flagged n=109)
+    grid pooled MSE: +1.00:26.434  +0.97:26.421  +0.94:26.411  +0.91:26.404  +0.88:26.400  +0.85:26.400  +1.03:26.450
+    pooled best +0.85 | LOYO MSE 26.5625 vs shipped 26.5694 (-0.03%), years better 4/7, picks [0.85, 0.88, 0.91, 0.91, 0.85, 0.85, 0.85]
+  Q-DNP ALL (flagged n=110)
+    grid pooled MSE: +1.00:43.518  +0.97:43.509  +0.94:43.501  +0.91:43.494  +0.88:43.489  +0.85:43.485  +1.03:43.529
+    pooled best +0.85 | LOYO MSE 43.2629 vs shipped 43.2945 (-0.07%), years better 7/7, picks [0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85]
+  Q-DNP WR (flagged n=69)
+    grid pooled MSE: +1.00:42.093  +0.97:42.079  +0.94:42.066  +0.91:42.056  +0.88:42.047  +0.85:42.040  +1.03:42.109
+    pooled best +0.85 | LOYO MSE 41.6464 vs shipped 41.6966 (-0.12%), years better 5/7, picks [0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85]
+  none-LP ALL (flagged n=456)
+    grid pooled MSE: +1.00:43.518  +0.97:43.514  +0.94:43.515  +0.91:43.523  +0.88:43.538  +0.85:43.559  +1.03:43.530
+    pooled best +0.97 | LOYO MSE 43.3031 vs shipped 43.2945 (+0.02%), years better 3/7, picks [0.97, 0.97, 0.94, 0.94, 0.94, 0.94, 0.97]
+  none-LP RB (flagged n=119)
+    grid pooled MSE: +1.00:48.868  +0.97:48.850  +0.94:48.839  +0.91:48.836  +0.88:48.841  +0.85:48.853  +1.03:48.893
+    pooled best +0.91 | LOYO MSE 48.4904 vs shipped 48.4770 (+0.03%), years better 5/7, picks [0.91, 0.97, 0.91, 0.91, 0.88, 0.91, 0.91]
+  none-LP WR (flagged n=241)
+    grid pooled MSE: +1.00:42.093  +0.97:42.086  +0.94:42.087  +0.91:42.095  +0.88:42.111  +0.85:42.134  +1.03:42.108
+    pooled best +0.97 | LOYO MSE 41.7138 vs shipped 41.6966 (+0.04%), years better 1/7, picks [1.0, 0.94, 0.94, 0.94, 0.94, 0.94, 0.97]
+  none-LP TE (flagged n=66)
+    grid pooled MSE: +1.00:26.434  +0.97:26.433  +0.94:26.433  +0.91:26.435  +0.88:26.439  +0.85:26.443  +1.03:26.436
+    pooled best +0.97 | LOYO MSE 26.6040 vs shipped 26.5694 (+0.13%), years better 2/7, picks [1.03, 1.0, 0.97, 0.91, 0.88, 0.91, 0.97]
+  none-DNP ALL (flagged n=147)
+    grid pooled MSE: +1.00:43.518  +0.97:43.510  +0.94:43.503  +0.91:43.499  +0.88:43.497  +0.85:43.497  +1.03:43.529
+    pooled best +0.88 | LOYO MSE 43.2772 vs shipped 43.2945 (-0.04%), years better 4/7, picks [0.88, 0.85, 0.85, 0.88, 0.88, 0.85, 0.88]
+  none-DNP WR (flagged n=105)
+    grid pooled MSE: +1.00:42.093  +0.97:42.079  +0.94:42.069  +0.91:42.063  +0.88:42.062  +0.85:42.064  +1.03:42.111
+    pooled best +0.88 | LOYO MSE 41.6803 vs shipped 41.6966 (-0.04%), years better 3/7, picks [0.91, 0.88, 0.88, 0.91, 0.85, 0.88, 0.88]
+  Q-LP soft tissue ALL (flagged n=165)
+    grid pooled MSE: +1.00:43.518  +0.97:43.508  +0.94:43.500  +0.91:43.494  +0.88:43.490  +0.85:43.487  +1.03:43.530
+    pooled best +0.85 | LOYO MSE 43.2676 vs shipped 43.2945 (-0.06%), years better 6/7, picks [0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85]
+
+=== TEAMMATES of banged-up players who played (own player healthy; rows with a same-group teammate who SAT excluded) ===
+  RB   same-group teammate played banged up                 n   119  act/ship 1.123  REL 1.060
+  RB   QB played banged up                                  n    73  act/ship 1.027  REL 0.966
+  RB same-group teammate played banged up (flagged n=119)
+    grid pooled MSE: +1.00:48.868  +1.02:48.866  +1.04:48.866  +1.06:48.867  +0.98:48.870  +0.96:48.874
+    pooled best +1.04 | LOYO MSE 48.4959 vs shipped 48.4770 (+0.04%), years better 3/7, picks [1.02, 1.06, 0.98, 0.98, 1.04, 1.0, 1.04]
+  RB QB played banged up (flagged n=73)
+    grid pooled MSE: +1.00:48.868  +1.02:48.869  +1.04:48.871  +1.06:48.874  +0.98:48.868  +0.96:48.869
+    pooled best +1.00 | LOYO MSE 48.5056 vs shipped 48.4770 (+0.06%), years better 0/7, picks [1.0, 0.98, 1.06, 1.04, 0.96, 1.0, 0.96]
+  WR   same-group teammate played banged up                 n   576  act/ship 1.032  REL 1.016
+  WR   QB played banged up                                  n    81  act/ship 1.075  REL 1.066
+  WR same-group teammate played banged up (flagged n=576)
+    grid pooled MSE: +1.00:42.093  +1.02:42.090  +1.04:42.091  +1.06:42.097  +0.98:42.101  +0.96:42.115
+    pooled best +1.02 | LOYO MSE 41.7001 vs shipped 41.6966 (+0.01%), years better 2/7, picks [1.04, 1.0, 1.02, 1.02, 1.02, 1.02, 1.02]
+  WR QB played banged up (flagged n=81)
+    grid pooled MSE: +1.00:42.093  +1.02:42.092  +1.04:42.092  +1.06:42.092  +0.98:42.095  +0.96:42.097
+    pooled best +1.04 | LOYO MSE 41.6953 vs shipped 41.6966 (-0.00%), years better 4/7, picks [1.04, 1.06, 1.04, 1.04, 1.04, 1.04, 1.04]
+  TE   same-group teammate played banged up                 n   292  act/ship 1.140  REL 1.106
+  TE   QB played banged up                                  n    34  act/ship 1.039  REL 0.978
+  TE same-group teammate played banged up (flagged n=292)
+    grid pooled MSE: +1.00:26.434  +1.02:26.422  +1.04:26.413  +1.06:26.407  +0.98:26.449  +0.96:26.466
+    pooled best +1.06 | LOYO MSE 26.5371 vs shipped 26.5694 (-0.12%), years better 5/7, picks [1.06, 1.06, 1.06, 1.06, 1.06, 1.06, 1.06]
+  TE QB played banged up: too few rows (34)
+
+wrote data/banged_up_backtest.js: Banged up: 20 LOYO tests on 17657 played player-weeks 2019-25; none pass the ship bar
+done

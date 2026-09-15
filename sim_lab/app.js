@@ -3864,6 +3864,27 @@
       html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
         DV.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
     }
+    var BU = window.SIM_BANGED_BT;
+    if (BU && BU.loyo) {
+      html += '<h4 style="margin:14px 0 4px">Banged up: injury designation x practice (backtest_banged_up.py, ' + esc(BU.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(BU.summary || '') + '</b> Classes come from the final injury report and the latest practice: Q = Questionable, D = Doubtful, FP / LP / DNP = full, limited, did not practice; "none-LP" = limited practice with no game designation. ' +
+        'Play rates count players averaging 40%+ of offensive snaps. REL compares players in the class who played with healthy players of the same position and week band. Implied = P(play) x REL, the expected-value multiplier a projection should carry before kickoff.</p>';
+      if (BU.implied && BU.implied.length) {
+        html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Class</th><th>Pos</th><th>P(play)</th><th title="actual / projection when they play, vs healthy">REL if plays</th><th title="P(play) x REL">Implied</th><th>Shipped dock</th></tr></thead><tbody>' +
+          BU.implied.map(function (r) {
+            var gap = r.ev - r.shipped, col = Math.abs(gap) < 0.05 ? 'inherit' : (gap < 0 ? '#f85149' : 'var(--acc)');
+            return '<tr><td class="l">' + esc(r.cls) + '</td><td>' + esc(r.pos) + '</td><td>' + r.play.toFixed(2) + '</td><td>' + r.rel.toFixed(3) + '</td><td style="color:' + col + '"><b>' + r.ev.toFixed(2) + '</b></td><td class="dim">x' + r.shipped.toFixed(2) + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+      }
+      if (BU.snaps && BU.snaps.length) {
+        html += '<p class="dim" style="font-size:11px;margin:6px 0">Snap share when they play (game day / prior 3 games, vs healthy): ' +
+          BU.snaps.filter(function (x) { return x.pos === 'ALL'; }).map(function (x) { return esc(x.cls) + ' ' + x.rel.toFixed(3) + ' (n ' + x.n + ')'; }).join(' \u00b7 ') + '.</p>';
+      }
+      var tb = (BU.buckets || []).filter(function (b) { return /teammate|QB played/.test(b.name); });
+      if (tb.length) html += '<p class="dim" style="font-size:11px;margin:6px 0">Teammates (own player healthy, no same-group teammate sat): ' + tb.map(function (b) { return esc(b.pos + ' ' + b.name) + ' REL ' + (b.rel == null ? '\u2014' : b.rel.toFixed(3)) + ' (n ' + b.n + ')'; }).join(' \u00b7 ') + '.</p>';
+      html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
+        BU.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {
@@ -4144,7 +4165,7 @@
     if (iA === 0) chips.push('OUT');
     else if (iA < 1) {
       var im = E.injuryState() && E.injuryState().map ? E.injuryState().map[p.norm] : null;
-      chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him) ×' : im && im.src === 'q-dnp' ? 'Q + DNP ×' : im && /doubtful/.test(im.src || '') ? 'DOUBTFUL ×' : 'docked ×') + ntF(iA, 2));
+      chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him) ×' : im && /^q-(dnp|lp|fp)$/.test(im.src || '') ? ('Q + ' + im.src.slice(2).toUpperCase() + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%, x' + im.cond.toFixed(2) + ' if he plays)' : '') + ' ×') : im && /doubtful/.test(im.src || '') ? ('DOUBTFUL' + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%)' : im.src === 'doubtful-unconfirmed' ? ' unconfirmed' : '') + ' ×') : 'docked ×') + ntF(iA, 2));
     }
     else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
     if (p.isDST) return chips;

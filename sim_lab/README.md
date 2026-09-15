@@ -1892,3 +1892,46 @@ Log def_avail_backtest.log; data/def_avail_backtest.js on the ZONES tab.
   shown with "?"). Revisit as a layer only with a new angle (e.g. RB front-7 +
   TE combined, or in-season sample grows); the effects are real-looking but under
   the bar at +3-10% on a few hundred rows.
+
+## Banged-up docks (backtest_banged_up.py) - CALIBRATED + SHIPPED 2026-09-15
+
+Jack: "banged up playing or missing actual time" -> "start on the banged up layer
+next". The 09-09 practice-report docks (Doubtful x0.5, Questionable + DNP x0.75,
+Questionable + Limited/Full = nothing) were judgment calls, never backtested.
+nflverse injuries_<yr> (final report status + latest practice) x snap_counts_<yr>,
+2019-25, skill players averaging 40%+ of snaps. Log banged_up_backtest.log;
+data/banged_up_backtest.js on the ZONES tab.
+
+- PLAY RATE (the dominant factor, direct frequencies): Doubtful 1% (n 195),
+  Q+DNP 48% (n 268; QB 26%, RB 41%, WR 54%), Q+LP 72% (n 1,105; QB 47% n 130),
+  Q+FP 87% (n 264), no designation + DNP 81% (QB 33%), no designation + LP 97%,
+  Out 0%.
+- WHEN THEY PLAY (bt_common base, vs healthy same position + week band): snap
+  share Q+FP .96 / Q+LP .92 / Q+DNP .90; production Q+FP .91 (n 197), Q+LP .88
+  (n 596), Q+DNP .78 (n 110; x0.85 picked in 7/7 held-out years), soft-tissue
+  Q+LP .82, no designation + DNP .86, + LP .94. LOYO pooled over 17,657 rows
+  stays within -0.12% (rare flags dilute) - same situation as CB1-out / OL-out.
+- TEAMMATES of players who played hurt: TE teammate x1.06 5/7 (-0.12%), RB
+  same-group REL 1.06 (3/7), WR QB-hurt REL 1.07 (n 81); not shipped.
+- SHIPPED (engine BANGED table, applyInSeasonInjuries putDock): mult = play x
+  cond per class x position; play shrunk K=50 to the pooled rate, cond shrunk
+  K=150 then shaved halfway (lines carry part of it):
+    Doubtful  .01 QB / .01 RB / .02 WR / .01 TE          (was x0.50)
+    Q + DNP   .38 / .39 / .46 / .44                       (was x0.75)
+    Q + LP    .51 / .67 / .72 / .71                       (was none)
+    Q + FP    .78 / .85 / .85 / .82                       (was none)
+  Fires ONLY when the current week's NFL report carries the status (the Friday
+  final report - the population measured); Sleeper Doubtful alone gets the
+  near-zero dock only when Sleeper has also pulled the weekly projection,
+  else x0.5 'doubtful-unconfirmed'; Sleeper Questionable alone = old rules.
+  No-designation practice statuses: NOT docked (Wednesday rest days).
+- Prop anchor: _inj.play / injPlay(p, wk) carries the play probability; the
+  direct-line anchor undoes only that (lines posted after the designation
+  price playing hurt), the market-rate fallback keeps the full dock (healthy-
+  week rates). Vacated EV flows to teammates through the opportunity pool as
+  before (McCaffrey Q+DNP x0.39 -> Kaelon Black x1.76 in the scenario check).
+- NOTES chip "Q + LP (plays 72%, x0.94 if he plays) x0.68" / "DOUBTFUL (plays
+  2%) x0.02". Kill: window.SIM_BANGED = false restores the 09-09 docks.
+  Backup engine.js.bak_pre_banged_20260915. Scorecard note: score_week.py
+  grades played rows only, so docked players who play will read under-
+  projected there by design (the dock is an expected value).

@@ -1306,6 +1306,19 @@
   // or the NFL report to zero; otherwise x0.75 'out-unconfirmed'.
   var _inj = null;
   var INJ_SHARE = { QB: 0.85, RB: 0.60, WR: 0.60, TE: 0.60 };
+  // BANGED-UP DOCKS (backtest_banged_up.py, 2026-09-15). Final-report designation x latest practice:
+  //   play = P(plays) by position, nflverse injuries x snap counts 2019-25, players averaging 40%+ of
+  //          snaps (Doubtful 1%, Q+DNP 48%, Q+LP 72% - QB 47%, Q+FP 87%), shrunk K=50 to the pooled rate;
+  //   cond = production when he plays vs healthy, same position + week band (Q+FP .91, Q+LP .88,
+  //          Q+DNP .78; snap share .96/.92/.90), shrunk K=150, shaved halfway for line overlap.
+  // mult = play x cond replaces the 09-09 judgment docks (Doubtful x0.5, Q+DNP x0.75, Q+LP/FP none) only
+  // when the CURRENT week's NFL report carries the status; the prop anchor undoes only `play`.
+  // Kill: window.SIM_BANGED = false.
+  var BANGED = {"Q-FP":{"QB":{"play":0.824,"cond":0.951},"RB":{"play":0.898,"cond":0.952},"WR":{"play":0.885,"cond":0.961},"TE":{"play":0.863,"cond":0.955}},"Q-LP":{"QB":{"play":0.539,"cond":0.941},"RB":{"play":0.715,"cond":0.942},"WR":{"play":0.763,"cond":0.943},"TE":{"play":0.765,"cond":0.933}},"Q-DNP":{"QB":{"play":0.424,"cond":0.891},"RB":{"play":0.444,"cond":0.877},"WR":{"play":0.523,"cond":0.884},"TE":{"play":0.497,"cond":0.891}},"D":{"QB":{"play":0.006,"cond":1.0},"RB":{"play":0.005,"cond":1.0},"WR":{"play":0.02,"cond":1.0},"TE":{"play":0.006,"cond":1.0}}};
+  function bangedDock(cls, pos) {
+    var t = BANGED[cls], d = t && (t[pos] || t.WR);
+    return d ? { mult: +(d.play * d.cond).toFixed(3), play: d.play, cond: d.cond } : null;
+  }
   // ---------- TEAM OPPORTUNITY POOL (2026-09-11, Jack: Clay-style) ----------
   // Replaces the flat "60% of his fantasy points to his position group, 1.6x
   // to the listed next man" rule for RB/WR/TE absences with a redistribution
@@ -1361,10 +1374,16 @@
     opts = opts || {};
     var list = players.list || players;
     var wnd = typeof window !== 'undefined' ? window : {};
-    _inj = { week: currentWeek, map: {}, adj: {}, zeros: [] };
+    _inj = { week: currentWeek, map: {}, adj: {}, play: {}, zeros: [] };
     if (opts.active === false || wnd.SIM_INJ_LAYER === false || !(currentWeek >= 1)) return _inj;
     var ov = wnd.IN_SEASON_OUT_OVERRIDES || {};
     var map = _inj.map;
+    var bangedOn = wnd.SIM_BANGED !== false;
+    var putDock = function (p, cls, src, legacy) {
+      var d = bangedOn ? bangedDock(cls, p.pos) : null;
+      if (d) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: d.mult, play: d.play, cond: d.cond, src: src }; return; }
+      if (legacy < 1) map[p.norm] = { from: currentWeek, to: currentWeek, mult: legacy, src: src };
+    };
     // PRACTICE REPORT (data/sim_practice.js <- nfl.com/injuries, 2026-09-09):
     // latest practice participation + the NFL's own game status. Rules on
     // top of Sleeper's designation: NFL Out/Doubtful counts even if Sleeper
@@ -1407,16 +1426,29 @@
           var swOK = swk && swk.p && (+swk.week === +currentWeek);
           var swProj = swOK ? swk.p[p.norm] : null;
           if (!swOK || swProj == null || swProj <= 0 || gs === 'out') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'out' }; return; }
-          if (gs === 'doubtful') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.5, src: 'nfl-doubtful' }; return; }
+          if (gs === 'doubtful') { putDock(p, 'D', 'nfl-doubtful', 0.5); return; }
           map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.75, src: 'out-unconfirmed' }; return;
         }
-        if (/doubtful/.test(t)) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.5, src: 'doubtful' }; return; }
+        if (/doubtful/.test(t)) {
+          // Sleeper Doubtful: the calibrated near-zero dock only when corroborated (current NFL report Doubtful,
+          // or Sleeper has pulled his weekly projection); a current Questionable report is fresher and falls
+          // through to the questionable classes; otherwise the old x0.5 'doubtful-unconfirmed'.
+          var swk3 = wnd.SIM_SLEEPER_WEEKLY || null, sw3ok = swk3 && swk3.p && (+swk3.week === +currentWeek), sw3 = sw3ok ? swk3.p[p.norm] : null;
+          if (gs === 'out') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'nfl-out' }; return; }
+          if (gs === 'doubtful' || (sw3ok && (sw3 == null || sw3 <= 0))) { putDock(p, 'D', 'doubtful', 0.5); return; }
+          if (gs !== 'questionable') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.5, src: 'doubtful-unconfirmed' }; return; }
+        }
       }
       // NFL report as a second opinion (Sleeper lagging the official status)
       if (gs === 'out') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'nfl-out' }; return; }
-      if (gs === 'doubtful') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.5, src: 'nfl-doubtful' }; return; }
+      if (gs === 'doubtful') { putDock(p, 'D', 'nfl-doubtful', 0.5); return; }
       var questionable = gs === 'questionable' || /questionable/.test(t);
-      if (questionable && practiced === 'DNP') map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.75, src: 'q-dnp' };
+      if (questionable && gs === 'questionable') {
+        // the current week's NFL report says Questionable: calibrated by the latest practice
+        if (practiced === 'DNP') putDock(p, 'Q-DNP', 'q-dnp', 0.75);
+        else if (practiced === 'LP') putDock(p, 'Q-LP', 'q-lp', 1);
+        else putDock(p, 'Q-FP', 'q-fp', 1);
+      } else if (questionable && practiced === 'DNP') map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.75, src: 'q-dnp' };
     });
     // DEPTH CHART WEIGHTS (data/sim_depth.js <- ESPN depth charts): the
     // vacated share flows to the healthy group in proportion to each
@@ -1546,15 +1578,23 @@
           }
         }
         if (f !== 1) (_inj.adj[p.norm] = _inj.adj[p.norm] || {})[wk] = f;
+        var mp = map[p.norm];
+        if (mp && mp.play != null && mult < 1 && wk >= mp.from && wk <= mp.to) (_inj.play[p.norm] = _inj.play[p.norm] || {})[wk] = mp.play;
       });
     });
-    list.forEach(function (p) { var m = map[p.norm]; if (m) _inj.zeros.push({ name: p.name, tm: p.tm, pos: p.pos, from: m.from, to: m.to, mult: m.mult, src: m.src }); });
+    list.forEach(function (p) { var m = map[p.norm]; if (m) _inj.zeros.push({ name: p.name, tm: p.tm, pos: p.pos, from: m.from, to: m.to, mult: m.mult, play: m.play, cond: m.cond, src: m.src }); });
     return _inj;
   }
   function injAdj(p, wk) {
     if (!_inj) return 1;
     var a = _inj.adj[p.norm];
     return a && a[wk] != null ? a[wk] : 1;
+  }
+  function injPlay(p, wk) {
+    // availability part of the dock (P plays); equals min(1, injAdj) for docks without a production split
+    if (!_inj) return 1;
+    var a = _inj.play && _inj.play[p.norm];
+    return a && a[wk] != null ? a[wk] : Math.min(1, injAdj(p, wk));
   }
   function injuryState() { return _inj; }
 
@@ -1661,9 +1701,13 @@
     if (iA >= 1) propMean = propAnchorMean(p, wk, sc, compsWk, baseM);
     else if (iA > 0) {
       var compsPlay = {};
-      Object.keys(compsWk).forEach(function (k) { compsPlay[k] = compsWk[k] / iA; });
-      var anchoredPlay = propAnchorMean(p, wk, sc, compsPlay, baseM / iA, PROP_DOCKED_MAX_AGE_DAYS);
-      if (anchoredPlay != null) propMean = anchoredPlay * iA;
+      // Undo only the AVAILABILITY part (P plays, 2026-09-15): this week's lines are posted after the
+      // designation and already price playing hurt, so the model side keeps its production dock (cond)
+      // and the lines are not docked twice. Docks without a split: iP = iA, as before.
+      var iP = Math.max(iA, Math.min(1, injPlay(p, wk)));
+      Object.keys(compsWk).forEach(function (k) { compsPlay[k] = compsWk[k] / iP; });
+      var anchoredPlay = propAnchorMean(p, wk, sc, compsPlay, baseM / iP, PROP_DOCKED_MAX_AGE_DAYS);
+      if (anchoredPlay != null) propMean = anchoredPlay * iP;
     }
     var propSrc = propMean != null ? 'line' : null;
     var propWUsed = propMean != null ? p._propWUsed : null;
@@ -2643,7 +2687,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, ctxNote: ctxNote,
+    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,

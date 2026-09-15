@@ -3847,6 +3847,23 @@
       var ff = Object.keys(F.flags || {});
       if (ff.length) html += '<p class="dim" style="font-size:11px">Flag rows (actual / projection): ' + ff.map(function (k) { var v = F.flags[k]; return esc(k) + ' n' + v.n + (v.ratio != null ? ' (' + v.ratio.toFixed(3) + ')' : '') + (v.verdict ? ' ' + v.verdict : ''); }).join(' \u00b7 ') + '.</p>';
     }
+    var DV = window.SIM_DEFAV_BT;
+    if (DV && DV.loyo) {
+      html += '<h4 style="margin:14px 0 4px">Defense availability (backtest_def_avail.py, ' + esc(DV.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(DV.summary || '') + '</b> Regulars are found walk-forward from PFF snap shares (no lookahead), weighted by their PFF unit grade above replacement. ' +
+        '"known" rows use only absences knowable before the Sim Lab lock: final injury report Out or Doubtful, reserve lists (IR, PUP, exempt, suspended), or the game-day inactive list. REL compares flagged rows with unflagged rows of the same position and week band, because injuries pile up late in seasons.</p>';
+      if (DV.buckets && DV.buckets.length) {
+        html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Pos</th><th class="l">Opposing defense state</th><th>n</th><th title="actual / shipped projection">act / proj</th><th title="flagged ratio divided by unflagged ratio, same position and week band">REL</th></tr></thead><tbody>' +
+          DV.buckets.map(function (b) {
+            var v = b.pos === 'DST' ? b.diff : b.rel;
+            var col = v == null ? 'var(--dim)' : b.pos === 'DST' ? (v <= -0.5 ? '#f85149' : v >= 0.5 ? 'var(--acc)' : 'inherit') : (v >= 1.04 ? 'var(--acc)' : v <= 0.96 ? '#f85149' : 'inherit');
+            return '<tr><td class="l">' + esc(b.pos) + '</td><td class="l">' + esc(b.name) + '</td><td class="dim">' + b.n + '</td><td>' + (b.ratio == null ? '\u2014' : b.ratio.toFixed(3)) + '</td><td style="color:' + col + '">' +
+              (b.pos === 'DST' ? (b.diff >= 0 ? '+' : '') + b.diff.toFixed(2) + ' pts' : (b.rel == null ? '\u2014' : b.rel.toFixed(3))) + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+      }
+      html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
+        DV.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + (r.best >= 0 ? '+' : '') + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {
@@ -4069,6 +4086,27 @@
     var ol = window.SIM_OL_2026 && window.SIM_OL_2026[team];
     if (ol) lines.push(team + ' OL: ' + ol + ' starter' + (ol > 1 ? 's' : '') + ' out (dock live)');
     if (scS()) scNotesLines(scS(), team, opp).forEach(function (s) { lines.push(s); });
+    // DEFENSE AVAILABILITY intel (sleeper_meta.js SIM_DEF_AVAIL_2026; backtest_def_avail.py). Confirmed = IR/PUP/NA/Sus
+    // or the current week's NFL report Out/Doubtful; Sleeper Out/Doubtful alone = unconfirmed ("?").
+    var DA = window.SIM_DEF_AVAIL_2026;
+    if (DA && DA.teams && DA.teams[opp]) {
+      var miss = [], qlost = 0;
+      DA.teams[opp].forEach(function (d) {
+        var gs = String(d.gs || '').toLowerCase(), sl = String(d.sl || '');
+        var nflNow = DA.prWeek != null && +DA.prWeek === +wk;
+        var conf = /\b(IR|PUP|NFI|NA|Sus)/i.test(sl) || /inactive/i.test(sl) || (nflNow && (gs === 'out' || gs === 'doubtful'));
+        var unconf = !conf && /^(Out|Doubtful)/i.test(sl);
+        var q = !conf && !unconf && (/^Questionable/i.test(sl) || (nflNow && gs === 'questionable'));
+        if (!conf && !unconf && !q) return;
+        var lab = conf ? (nflNow && gs ? gs.charAt(0).toUpperCase() + gs.slice(1) : sl) : unconf ? sl + '?' : 'Q';
+        miss.push({ t: d.pos + ' ' + d.n + ' (' + (d.g != null ? d.g.toFixed(0) : '?') + ', ' + lab + ')', g: d.g || 0, out: conf || unconf });
+        if (conf || unconf) qlost += Math.max(0, (d.g || 55) - 55) / 10 * (d.sh || 0.8);
+      });
+      if (miss.length) {
+        miss.sort(function (x, y) { return (y.out - x.out) || (y.g - x.g); });
+        lines.push(opp + ' D availability: ' + miss.map(function (m) { return m.t; }).join(' \u00b7 ') + (qlost >= 0.5 ? ' \u2014 quality lost ' + qlost.toFixed(1) + ' (grade pts above 55 / 10, snap-weighted)' : '') + ' [intel]');
+      }
+    }
     return lines;
   }
   function ntWeather(home, wk) {

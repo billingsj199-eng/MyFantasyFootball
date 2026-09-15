@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 2 (half) — generated 2026-09-15 18:05Z
-# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 14:02 · wk 2 injury layer: 48 out/docked
+# Sim Lab notes — Week 2 (half) — generated 2026-09-15 19:03Z
+# 500 players · 272 Vegas games · avg implied 22.9 · data 2026-09-15 15:03 · wk 2 injury layer: 49 out/docked
 
-SIM LAB NOTES — Week 2 (half) — 2026-09-15 18:05
+SIM LAB NOTES — Week 2 (half) — 2026-09-15 19:03
 
 TD LUCK (top 5 each way):
   QB DUE UP: Aaron Rodgers (1 TD on 1.6 xTD, +0.2); Joe Burrow (1 TD on 1.6 xTD, +0.2); Jacoby Brissett (1 TD on 1.5 xTD, +0.2); Jordan Love (2 TD on 2.4 xTD, +0.1); Drake Maye (1 TD on 1.1 xTD, +0.0)
@@ -36,6 +36,7 @@ DET offense vs BUF defense
   - BUF DC Jim Leonhard (new, no playcalling history in the data; replaced Bobby Babich — prior = team 2025, weak)
   - DET O style (PFF): 48% gap / 52% zone, edge 23%, 5.3 ypc · sees man 3% (lg 25%) · screens 6% · blitzed 29% / pressured 22%
   - DET OC Drew Petzing (new; prior = ARI 2025 under him, replaced John Morton) — Drew Petzing as playcaller: sees man 23%/32%/21% · screens 10%/11%/10% · gap runs 52%/69%/70% · edge runs 35%/38%/41% (2023 ARI, 2024 ARI, 2025 ARI)
+  - BUF D availability: S Cole Bishop (66, Q) · LB Terrel Bernard (58, Q) [intel]
 
 BUF offense vs DET defense
   - Pace (1 gm): 52.0 plays/gm (base 62.6, -10.6) · neutral pass 57% (base 55%) · PROE +1.1 (base -3.5)
@@ -46,6 +47,7 @@ BUF offense vs DET defense
   - DET DC Kelvin Sheppard (2nd yr here) — Kelvin Sheppard as playcaller: man 40% · blitz 26% · pressure 37% · S in box 26% · gap faced 41% · edge faced 42% (2025 DET)
   - BUF O style (PFF): 40% gap / 60% zone, edge 27%, 4.2 ypc · sees man 22% (lg 25%) · screens 12% · blitzed 9% / pressured 38%
   - BUF OC Pete Carmichael (new; prior = NO 2023 under him, replaced Joe Brady) — Pete Carmichael as playcaller: sees man 27% · screens 10% · gap runs 44% · edge runs 33% (2023 NO)
+  - DET D availability: S Brian Branch (67, PUP) — quality lost 1.2 (grade pts above 55 / 10, snap-weighted) [intel]
 
 PLAYERS (PROJ half):
   Josh Allen (BUF QB) 25.2 · xFP 22.4/g (+13.3 over expected) [TD luck -0.2, REPORTS +1 riser (10d) - shadow] — struggles vs blitz (7.5 YPA vs 9.0) · D blitzes 48% (#5) — TOUGH SPOT
@@ -80,6 +82,7 @@ CAR offense vs ATL defense
   - ATL DC Jeff Ulbrich (2nd yr here) — Jeff Ulbrich as playcaller: man 36%/36%/23% · blitz 17%/28%/42% · pressure 40%/37%/37% · S in box 31%/38%/49% · gap faced 52%/52%/58% · edge faced 37%/38%/30% (2023 NYJ, 2024 NYJ, 2025 ATL)
   - CAR O style (PFF): 37% gap / 63% zone, edge 32%, 4.8 ypc · sees man 49% (lg 25%) · screens 3% · blitzed 37% / pressured 40%
   - CAR OC Brad Idzik (3rd yr here) — Brad Idzik as playcaller: sees man 35%/23% · screens 10%/9% · gap runs 33%/44% · edge runs 28%/27% (2024 CAR, 2025 CAR)
+  - ATL D availability: DI Da'Shawn Hand (59, Out?) · ED James Pearce Jr. (58, Sus) [intel]
 
 ATL offense vs CAR defense
   - Pace (1 gm): 57.0 plays/gm (base 60.5, -3.5) · neutral pass 50% (base 57%) · PROE -17.3 (base -6.2)
@@ -89,6 +92,7 @@ ATL offense vs CAR defense
   - CAR DC Ejiro Evero (4th yr here) — Ejiro Evero as playcaller: man 17%/26%/18% · blitz 41%/35%/33% · pressure 29%/25%/30% · S in box 30%/27%/28% · gap faced 38%/39%/38% · edge faced 38%/35%/36% (2023 CAR, 2024 CAR, 2025 CAR)
   - ATL O style (PFF): 38% gap / 62% zone, edge 42%, 3.9 ypc · sees man 0% (lg 25%) · screens 41% · blitzed 8% / pressured 31%
   - ATL OC Tommy Rees (new; prior = CLE 2025 under him, replaced Zac Robinson) — Tommy Rees as playcaller: sees man 34% · screens 13% · gap runs 49% · edge runs 30% (2025 CLE)
+  - CAR D availability: ED Nic Scourton (64, IR) — quality lost 0.6 (grade pts above 55 / 10, snap-weighted) [intel]
 
 PLAYERS (PROJ half):
   Bijan Robinson (ATL RB) 20.3 · xFP 20.4/g (+6.9 over expected) [TD luck -0.6] — Behind LOS guy (56% of targets, lg 18%) · left-heavy (50%) · zone-scheme back (75% zone) (2025 too) · contact-balance back (3.78 after contact/att, lg 3.04) · makes people miss (0.28 MTF/att) · screen guy (40% of targets) · zone-beater (YPRR 1.07 vs man, 2.52 vs zone; small n) (2025 too) · D zone-heavy (man 10%) — GOOD SPOT
@@ -120,6 +124,7 @@ NO offense vs BAL defense
   - BAL DC Anthony Weaver (new; prior = MIA 2025 under him, replaced Zach Orr) — Anthony Weaver as playcaller: man 27%/26% · blitz 35%/42% · pressure 34%/32% · S in box 28%/29% · gap faced 51%/41% · edge faced 33%/31% (2024 MIA, 2025 MIA)
   - NO O style (PFF): 12% gap / 88% zone, edge 29%, 3.8 ypc · sees man 29% (lg 25%) · screens 4% · blitzed 48% / pressured 35%
   - NO OC Doug Nussmeier (2nd yr here) — Doug Nussmeier as playcaller: sees man 19% · screens 8% · gap runs 34% · edge runs 31% (2025 NO)
+  - BAL D availability: LB Teddye Buchanan (60, Out?) [intel]
 
 BAL offense vs NO defense
   - Pace (1 gm): 60.0 plays/gm (base 64.5, -4.5) · neutral pass 53% (base 52%) · PROE -6.6 (base -8.8)
@@ -130,6 +135,7 @@ BAL offense vs NO defense
   - NO DC Brandon Staley (2nd yr here) — Brandon Staley as playcaller: man 19% · blitz 38% · pressure 34% · S in box 33% · gap faced 40% · edge faced 32% (2025 NO)
   - BAL O style (PFF): 30% gap / 70% zone, edge 27%, 5.4 ypc · sees man 60% (lg 25%) · screens 4% · blitzed 47% / pressured 47%
   - BAL OC Declan Doyle (new; prior = CHI 2025 under him, replaced Todd Monken) — Declan Doyle as playcaller: sees man 27% · screens 12% · gap runs 33% · edge runs 31% (2025 CHI)
+  - NO D availability: DI Bryan Bresee (56, IR) [intel]
 
 PLAYERS (PROJ half):
   Lamar Jackson (BAL QB) 22.7 · xFP 17.4/g (+7.6 over expected) — punishes the blitz (10.1 YPA vs 8.2 no blitz) · D pressure only 22% (clean pockets)
@@ -159,6 +165,7 @@ MIN offense vs CHI defense
   - CHI DC Dennis Allen (2nd yr here) — Dennis Allen as playcaller: man 27% · blitz 32% · pressure 31% · S in box 27% · gap faced 35% · edge faced 33% (2025 CHI)
   - MIN O style (PFF): 54% gap / 46% zone, edge 26%, 3.7 ypc · sees man 14% (lg 25%) · screens 18% · blitzed 37% / pressured 40%
   - MIN OC Wes Phillips (4th yr here) — Wes Phillips as playcaller: sees man 26%/25%/31% · screens 10%/13%/14% · gap runs 39%/40%/42% · edge runs 27%/34%/30% (2023 MIN, 2024 MIN, 2025 MIN)
+  - CHI D availability: S Coby Bryant (62, IR) · CB Tyrique Stevenson (37, Q) — quality lost 0.7 (grade pts above 55 / 10, snap-weighted) [intel]
 
 CHI offense vs MIN defense
   - Pace (1 gm): 70.0 plays/gm (base 64.5, +5.5) · neutral pass 60% (base 58%) · PROE -1.5 (base -3.9)
@@ -202,6 +209,7 @@ CIN offense vs HOU defense
   - HOU DC Matt Burke (4th yr here) — Matt Burke as playcaller: man 20%/29%/26% · blitz 21%/25%/19% · pressure 37%/33%/42% · S in box 21%/23%/23% · gap faced 48%/46%/53% · edge faced 27%/29%/25% (2023 HOU, 2024 HOU, 2025 HOU)
   - CIN O style (PFF): 57% gap / 43% zone, edge 36%, 3.9 ypc · sees man 25% (lg 25%) · screens 9% · blitzed 43% / pressured 22%
   - CIN OC Dan Pitcher (3rd yr here) — Dan Pitcher as playcaller: sees man 38%/28% · screens 6%/7% · gap runs 48%/47% · edge runs 28%/21% (2024 CIN, 2025 CIN)
+  - HOU D availability: LB Henry To'oTo'o (60, Q) [intel]
 
 HOU offense vs CIN defense
   - Pace (1 gm): 73.0 plays/gm (base 63.4, +9.6) · neutral pass 51% (base 62%) · PROE -7.1 (base -1.0)
@@ -244,6 +252,7 @@ PIT offense vs NE defense
   - NE DC Zak Kuhr (new, no playcalling history in the data; replaced Terrell Williams — prior = team 2025, weak)
   - PIT O style (PFF): 33% gap / 67% zone, edge 33%, 3.4 ypc · sees man 26% (lg 25%) · screens 11% · blitzed 26% / pressured 42%
   - PIT OC Brian Angelichio (new, no playcalling history in the data; replaced Arthur Smith — prior = team 2025, weak)
+  - NE D availability: ED Harold Landry III (65, PUP) — quality lost 0.7 (grade pts above 55 / 10, snap-weighted) [intel]
 
 NE offense vs PIT defense
   - Pace (1 gm): 67.0 plays/gm (base 59.8, +7.2) · neutral pass 60% (base 62%) · PROE -2.6 (base +2.4)
@@ -253,6 +262,7 @@ NE offense vs PIT defense
   - PIT DC Patrick Graham (new; prior = LV 2025 under him, replaced Teryl Austin) — Patrick Graham as playcaller: man 22%/32%/17% · blitz 21%/35%/24% · pressure 35%/30%/33% · S in box 26%/28%/28% · gap faced 41%/39%/47% · edge faced 28%/29%/34% (2023 LV, 2024 LV, 2025 LV)
   - NE O style (PFF): 62% gap / 38% zone, edge 29%, 2.6 ypc · sees man 13% (lg 25%) · screens 19% · blitzed 31% / pressured 38%
   - NE OC Josh McDaniels (2nd yr here) — Josh McDaniels as playcaller: sees man 30% · screens 6% · gap runs 63% · edge runs 36% (2025 NE)
+  - PIT D availability: CB Joey Porter Jr. (63, Out?) — quality lost 0.7 (grade pts above 55 / 10, snap-weighted) [intel]
 
 PLAYERS (PROJ half):
   Drake Maye (NE QB) 19.7 · xFP 16.5/g (-3.7 over expected) [market higher (19.7 vs model 17.9)]
@@ -285,6 +295,7 @@ GB offense vs NYJ defense
   - NYJ DC Brian Duker (new, no playcalling history in the data; replaced Steve Wilks — prior = team 2025, weak)
   - GB O style (PFF): 50% gap / 50% zone, edge 40%, 3.3 ypc · sees man 3% (lg 25%) · screens 0% · blitzed 87% / pressured 54%
   - GB OC Adam Stenavich (4th yr here) — Adam Stenavich as playcaller: sees man 27%/30%/31% · screens 13%/16%/11% · gap runs 42%/44%/42% · edge runs 35%/31%/33% (2023 GB, 2024 GB, 2025 GB)
+  - NYJ D availability: ED Joseph Ossai (63, Out?) · LB Trevin Wallace (58, Out?) · CB Jarvis Brownlee Jr. (82, Q) · S Minkah Fitzpatrick (68, Q) — quality lost 0.7 (grade pts above 55 / 10, snap-weighted) [intel]
 
 NYJ offense vs GB defense
   - Pace (1 gm): 60.0 plays/gm (base 64.4, -4.4) · neutral pass 48% (base 52%) · PROE -10.2 (base -8.8)
@@ -294,27 +305,27 @@ NYJ offense vs GB defense
   - GB DC Jonathan Gannon (new, no playcalling history in the data; replaced Jeff Hafley — prior = team 2025, weak)
   - NYJ O style (PFF): 50% gap / 50% zone, edge 24%, 4.4 ypc · sees man 14% (lg 25%) · screens 9% · blitzed 27% / pressured 23%
   - NYJ OC Frank Reich (new, no playcalling history in the data; replaced Tanner Engstrand — prior = team 2025, weak)
+  - GB D availability: ED Micah Parsons (78, PUP) · CB Brandon Cisse (55, Q) — quality lost 1.8 (grade pts above 55 / 10, snap-weighted) [intel]
 
 PLAYERS (PROJ half):
   Jordan Love (GB QB) 17.8 · xFP 23.1/g (-2.6 over expected) [TD luck +0.1] — punishes the blitz (8.9 YPA vs 7.2 no blitz) · D blitzes 46% (#7) — GOOD SPOT
   Geno Smith (NYJ QB) 16.1 · xFP 11.3/g (-2.0 over expected) [TD luck +0.1, market higher (16.1 vs model 12.9)] — punishes the blitz (8.5 YPA vs 6.3 no blitz)
   Breece Hall (NYJ RB) 15.3 · xFP 15.6/g (+3.2 over expected) [TD luck -0.2, REPORTS +1 riser (10d) - shadow] — Behind LOS guy (40% of targets, lg 18%) · Short 0-9 guy (58% of targets, lg 48%) · D funnels behind los (22% of targets faced) · screen guy (29% of targets)
   Garrett Wilson (NYJ WR) 12.4 · xFP 9.5/g (+1.4 over expected) [TD luck +0.1, blowout wk1: role read on competitive snaps] — rarely behind los (6%) · Short 0-9 guy (56% of targets, lg 48%)
-  Christian Watson (GB WR) 12.2 · xFP 14.5/g (+15.2 over expected) [TD luck -1.4, blowout wk1: role read on competitive snaps, REPORTS 1 injury (10d) - shadow] — rarely behind los (0%) · rarely short 0-9 (34%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (31% of targets, lg 13%)
-  Matthew Golden (GB WR) 10.8 · xFP 19.1/g (-6.6 over expected) [role boost ×1.03, TD luck +0.9, blowout wk1: role read on competitive snaps] — rarely short 0-9 (38%) · Deep 20+ guy (25% of targets, lg 13%)
+  Christian Watson (GB WR) 12.3 · xFP 14.5/g (+15.2 over expected) [TD luck -1.4, blowout wk1: role read on competitive snaps, REPORTS 1 injury (10d) - shadow] — rarely behind los (0%) · rarely short 0-9 (34%) · Int 10-19 guy (35% of targets, lg 22%) · Deep 20+ guy (31% of targets, lg 13%)
+  Matthew Golden (GB WR) 10.9 · xFP 19.1/g (-6.6 over expected) [role boost ×1.04, TD luck +0.9, blowout wk1: role read on competitive snaps] — rarely short 0-9 (38%) · Deep 20+ guy (25% of targets, lg 13%)
+  MarShawn Lloyd (GB RB) 10.6 · xFP 8.2/g (-4.5 over expected) [role boost ×1.49, TD luck +0.2]
   Tucker Kraft (GB TE) 9.8 · xFP 8.4/g (-0.4 over expected) [TD luck +0.1] — right-heavy (52%) · man-beater (YPRR 4.08 vs man, 1.63 vs zone; small n) (2025 too)
-  MarShawn Lloyd (GB RB) 9.6 · xFP 8.2/g (-4.5 over expected) [TD luck +0.2, market higher (9.6 vs model 7.2)]
-  Josh Jacobs (GB RB) 9.4 — Behind LOS guy (50% of targets, lg 18%) · screen guy (33% of targets) · zone-beater (YPRR 0.55 vs man, 1.67 vs zone) (2025 too)
   Trey Smack (GB K) 8.5
-  Jayden Reed (GB WR) 7.4 · xFP 9.8/g (-6.3 over expected) [TD luck +0.3] — rarely short 0-9 (40%) · slot (78%)
+  Jayden Reed (GB WR) 7.5 · xFP 9.8/g (-6.3 over expected) [role boost ×1.03, TD luck +0.3] — rarely short 0-9 (40%) · slot (78%)
   Packers D/ST (GB DST) 7.4
   Adonai Mitchell (NYJ WR) 6.8 · xFP 4.1/g (+3.4 over expected) — rarely behind los (3%) · Deep 20+ guy (26% of targets, lg 13%) · left-heavy (52%) · zone-beater (YPRR 1.18 vs man, 1.92 vs zone; small n) (2025 too)
+  Chris Brooks (GB RB) 6.5 · xFP 4.7/g (-1.8 over expected) [role boost ×1.55, TD luck +0.1] — zone-beater (YPRR 0.00 vs man, 1.64 vs zone)
   Kenyon Sadiq (NYJ TE) 5.9 · xFP 5.0/g (+4.9 over expected) [TD luck -0.6, REPORTS +1 riser (10d) - shadow]
   Jets D/ST (NYJ DST) 5.4
   Blake Grupe (NYJ K) 4.6 [OUT flag unconfirmed (Sleeper still projects him) ×0.75]
   Braelon Allen (NYJ RB) 4.2 · xFP 6.2/g (-2.2 over expected) [TD luck +0.1] — zone-scheme back (73% zone) · between the tackles (edge 14%)
   Mason Taylor (NYJ TE) 4.2 · xFP 3.2/g (-2.4 over expected) — rarely behind los (8%) · Short 0-9 guy (81% of targets, lg 48%) · rarely int 10-19 (9%) · rarely deep 20+ (3%)
-  Chris Brooks (GB RB) 3.7 · xFP 4.7/g (-1.8 over expected) [TD luck +0.1] — zone-beater (YPRR 0.00 vs man, 1.64 vs zone)
 
 CLE @ TB — total 40.5, TB by 8.5 · implied CLE 16.0 / TB 24.5
 Weather @TB: wind 7 mph (gusts 6), 90°F, 16% precip
@@ -327,6 +338,7 @@ CLE offense vs TB defense
   - TB HC Todd Bowles (2nd yr here) — Todd Bowles as playcaller: man 23% · blitz 42% · pressure 38% · S in box 32% · gap faced 39% · edge faced 35% (2025 TB)
   - CLE O style (PFF): 43% gap / 57% zone, edge 56%, 3.1 ypc · sees man 29% (lg 25%) · screens 10% · blitzed 36% / pressured 48%
   - CLE OC Travis Switzer (new, no playcalling history in the data; replaced Tommy Rees — prior = team 2025, weak)
+  - TB D availability: CB Jacob Parrish (64, Q) [intel]
 
 TB offense vs CLE defense
   - Pace (1 gm): 51.0 plays/gm (base 60.9, -9.9) · neutral pass 65% (base 56%) · PROE +2.0 (base -3.5)
@@ -368,6 +380,7 @@ PHI offense vs TEN defense
   - TEN DC Gus Bradley (new; prior = IND 2024 under him, replaced Dennard Wilson) — Gus Bradley as playcaller: man 10%/16% · blitz 17%/22% · pressure 32%/29% · S in box 26%/28% · gap faced 57%/46% · edge faced 30%/27% (2023 IND, 2024 IND)
   - PHI O style (PFF): 29% gap / 71% zone, edge 24%, 5.0 ypc · sees man 19% (lg 25%) · screens 14% · blitzed 44% / pressured 38%
   - PHI OC Sean Mannion (new, no playcalling history in the data; replaced Kevin Patullo — prior = team 2025, weak)
+  - TEN D availability: LB Cedric Gray (69, Out?) — quality lost 1.3 (grade pts above 55 / 10, snap-weighted) [intel]
 
 TEN offense vs PHI defense
   - Pace (1 gm): 49.0 plays/gm (base 63.5, -14.5) · neutral pass 77% (base 58%) · PROE +4.9 (base -3.9)
@@ -377,6 +390,7 @@ TEN offense vs PHI defense
   - PHI DC Vic Fangio (3rd yr here) — Vic Fangio as playcaller: man 32%/30%/37% · blitz 31%/25%/31% · pressure 42%/37%/40% · S in box 25%/22%/19% · gap faced 42%/39%/43% · edge faced 30%/26%/26% (2023 MIA, 2024 PHI, 2025 PHI)
   - TEN O style (PFF): 60% gap / 40% zone, edge 30%, 4.7 ypc · sees man 33% (lg 25%) · screens 15% · blitzed 46% / pressured 41%
   - TEN OC Brian Daboll (new, no playcalling history in the data; replaced Nick Holz — prior = team 2025, weak)
+  - PHI D availability: ED Jonathan Greenard (67, Out?) · S Marcus Epps (80, Q) — quality lost 0.9 (grade pts above 55 / 10, snap-weighted) [intel]
 
 PLAYERS (PROJ half):
   Jalen Hurts (PHI QB) 21.0 · xFP 14.0/g (+10.7 over expected) [TD luck -0.7] — holds up under pressure (grade 60 vs 72 clean) (2025 too) · struggles vs blitz (6.3 YPA vs 7.8) · D pressure only 23% (clean pockets)
@@ -409,6 +423,7 @@ JAX offense vs DEN defense
   - DEN DC Vance Joseph (4th yr here) — Vance Joseph as playcaller: man 30%/36%/35% · blitz 39%/41%/39% · pressure 34%/40%/42% · S in box 24%/27%/30% · gap faced 48%/43%/51% · edge faced 31%/30%/30% (2023 DEN, 2024 DEN, 2025 DEN)
   - JAX O style (PFF): 56% gap / 44% zone, edge 48%, 4.7 ypc · sees man 15% (lg 25%) · screens 19% · blitzed 20% / pressured 24%
   - JAX OC Grant Udinski (2nd yr here) — Grant Udinski as playcaller: sees man 26% · screens 11% · gap runs 44% · edge runs 37% (2025 JAX)
+  - DEN D availability: ED Jonathon Cooper (63, NA) — quality lost 0.5 (grade pts above 55 / 10, snap-weighted) [intel]
 
 DEN offense vs JAX defense
   - Pace (1 gm): 46.0 plays/gm (base 63.5, -17.5) · neutral pass 76% (base 63%) · PROE +1.9 (base +1.6)
@@ -452,6 +467,7 @@ LV offense vs LAC defense
   - LAC DC Chris O'Leary (new, no playcalling history in the data; replaced Jesse Minter — prior = team 2025, weak)
   - LV O style (PFF): 35% gap / 66% zone, edge 36%, 4.3 ypc · sees man 30% (lg 25%) · screens 7% · blitzed 36% / pressured 23%
   - LV OC Andrew Janocko (new, no playcalling history in the data; replaced Chip Kelly, Greg Olson — prior = team 2025, weak)
+  - LAC D availability: S Elijah Molden (61, Q) [intel]
 
 LAC offense vs LV defense
   - Pace (1 gm): 51.0 plays/gm (base 63.3, -12.3) · neutral pass 57% (base 64%) · PROE -2.1 (base +0.6)
@@ -461,6 +477,7 @@ LAC offense vs LV defense
   - LV DC Rob Leonard (new, no playcalling history in the data; replaced Patrick Graham — prior = team 2025, weak)
   - LAC O style (PFF): 25% gap / 75% zone, edge 19%, 3.3 ypc · sees man 4% (lg 25%) · screens 8% · blitzed 17% / pressured 43%
   - LAC OC Mike McDaniel (new, no playcalling history in the data; replaced Greg Roman — prior = team 2025, weak)
+  - LV D availability: CB Darien Porter (49, Q) [intel]
 
 PLAYERS (PROJ half):
   Justin Herbert (LAC QB) 18.6 · xFP 17.7/g (-3.4 over expected) [market higher (18.6 vs model 16.9)] — D pressure 46% (#6)
@@ -504,6 +521,7 @@ ARI offense vs SEA defense
   - SEA DC Aden Durde (3rd yr here) — Aden Durde as playcaller: man 34%/22% · blitz 30%/27% · pressure 38%/40% · S in box 22%/24% · gap faced 41%/47% · edge faced 32%/26% (2024 SEA, 2025 SEA)
   - ARI O style (PFF): 30% gap / 70% zone, edge 21%, 3.6 ypc · sees man 23% (lg 25%) · screens 6% · blitzed 33% / pressured 26%
   - ARI OC Nathaniel Hackett (new; prior = NYJ 2024 under him, replaced Drew Petzing) — Nathaniel Hackett as playcaller: sees man 33%/34% · screens 12%/14% · gap runs 43%/39% · edge runs 34%/32% (2023 NYJ, 2024 NYJ)
+  - SEA D availability: S Ty Okada (66, Out?) · S Nick Emmanwori (65, Out?) — quality lost 1.6 (grade pts above 55 / 10, snap-weighted) [intel]
 
 PLAYERS (PROJ half):
   Jaxon Smith-Njigba (SEA WR) 16.4 · xFP 17.0/g (+5.2 over expected) [TD luck -0.2, REPORTS +1 riser (10d) - shadow] — rarely behind los (9%) · Int 10-19 guy (36% of targets, lg 22%) · D funnels int 10-19 (28% of targets faced) · D zone-heavy (man 7%)
@@ -535,6 +553,7 @@ WAS offense vs DAL defense
   - DAL DC Christian Parker (new, no playcalling history in the data; replaced Matt Eberflus — prior = team 2025, weak)
   - WAS O style (PFF): 30% gap / 70% zone, edge 7%, 3.7 ypc · sees man 36% (lg 25%) · screens 14% · blitzed 32% / pressured 42%
   - WAS OC David Blough (new, no playcalling history in the data; replaced Kliff Kingsbury — prior = team 2025, weak)
+  - DAL D availability: S Malik Hooker (60, Out?) · LB DeMarvion Overshown (29, Q) [intel]
 
 DAL offense vs WAS defense
   - Pace (1 gm): 52.0 plays/gm (base 64.9, -12.9) · neutral pass 61% (base 59%) · PROE -0.1 (base -1.0)
@@ -544,6 +563,7 @@ DAL offense vs WAS defense
   - WAS DC Daronte Jones (new, no playcalling history in the data; replaced Joe Whitt, Dan Quinn — prior = team 2025, weak)
   - DAL O style (PFF): 33% gap / 67% zone, edge 31%, 3.4 ypc · sees man 26% (lg 25%) · screens 10% · blitzed 28% / pressured 31%
   - DAL OC Klayton Adams (2nd yr here) — Klayton Adams as playcaller: sees man 31% · screens 7% · gap runs 41% · edge runs 29% (2025 DAL)
+  - WAS D availability: LB Frankie Luvu (56, Q) [intel]
 
 PLAYERS (PROJ half):
   Jayden Daniels (WAS QB) 20.6 · xFP 18.4/g (-0.7 over expected) [TD luck -0.1, market higher (20.6 vs model 19.0)] — D blitzes 44% (#8) — TOUGH SPOT
@@ -576,6 +596,7 @@ MIA offense vs SF defense
   - SF DC Raheem Morris (new; prior = LAR 2023 under him, replaced Robert Saleh) — Raheem Morris as playcaller: man 20% · blitz 36% · pressure 35% · S in box 23% · gap faced 36% · edge faced 25% (2023 LAR)
   - MIA O style (PFF): 58% gap / 42% zone, edge 17%, 2.9 ypc · sees man 21% (lg 25%) · screens 16% · blitzed 24% / pressured 46%
   - MIA OC Bobby Slowik (new; prior = HOU 2024 under him, replaced Frank Smith) — Bobby Slowik as playcaller: sees man 25%/28% · screens 10%/12% · gap runs 44%/35% · edge runs 31%/35% (2023 HOU, 2024 HOU)
+  - SF D availability: ED Sam Okuayinonu (60, IR) [intel]
 
 SF offense vs MIA defense
   - Pace (1 gm): 64.0 plays/gm (base 62.6, +1.4) · neutral pass 64% (base 60%) · PROE +5.0 (base -0.9)
@@ -585,6 +606,7 @@ SF offense vs MIA defense
   - MIA DC Sean Duggan (new, no playcalling history in the data; replaced Anthony Weaver — prior = team 2025, weak)
   - SF O style (PFF): 21% gap / 79% zone, edge 12%, 5.8 ypc · sees man 18% (lg 25%) · screens 32% · blitzed 11% / pressured 22%
   - SF OC Klay Kubiak (2nd yr here) — Klay Kubiak as playcaller: sees man 23% · screens 8% · gap runs 30% · edge runs 27% (2025 SF)
+  - MIA D availability: CB Darrell Baker Jr. (57, PUP) [intel]
 
 PLAYERS (PROJ half):
   Christian McCaffrey (SF RB) 20.2 · xFP 14.1/g (-2.8 over expected) [TD luck +0.2, REPORTS +1 riser, 1 faller (10d) - shadow] — Behind LOS guy (30% of targets, lg 18%) · Short 0-9 guy (65% of targets, lg 48%) · D funnels short 0-9 (55% of targets faced) · zone-scheme back (73% zone) (2025 too) · screen guy (33% of targets) · zone-beater (YPRR 1.07 vs man, 1.86 vs zone; small n) (2025 too)
@@ -616,6 +638,7 @@ IND offense vs KC defense
   - KC DC Steve Spagnuolo (4th yr here) — Steve Spagnuolo as playcaller: man 38%/33%/28% · blitz 34%/34%/36% · pressure 39%/36%/39% · S in box 25%/38%/38% · gap faced 44%/38%/37% · edge faced 39%/32%/35% (2023 KC, 2024 KC, 2025 KC)
   - IND O style (PFF): 32% gap / 68% zone, edge 11%, 5.2 ypc · sees man 22% (lg 25%) · screens 11% · blitzed 38% / pressured 41%
   - IND OC Jim Bob Cooter (4th yr here) — Jim Bob Cooter as playcaller: sees man 32%/32%/26% · screens 11%/9%/7% · gap runs 32%/48%/57% · edge runs 21%/26%/27% (2023 IND, 2024 IND, 2025 IND)
+  - KC D availability: S Chamarri Conner (57, Out?) [intel]
 
 KC offense vs IND defense
   - Pace (1 gm): 64.0 plays/gm (base 61.6, +2.4) · neutral pass 54% (base 65%) · PROE +0.1 (base +4.0)
@@ -656,6 +679,7 @@ NYG offense vs LAR defense
   - LAR DC Chris Shula (3rd yr here) — Chris Shula as playcaller: man 26%/22% · blitz 30%/27% · pressure 34%/41% · S in box 25%/25% · gap faced 48%/38% · edge faced 35%/30% (2024 LAR, 2025 LAR)
   - NYG O style (PFF): 54% gap / 46% zone, edge 42%, 4.3 ypc · sees man 24% (lg 25%) · screens 4% · blitzed 44% / pressured 29%
   - NYG OC Matt Nagy (new; prior = KC 2025 under him, replaced Mike Kafka) — Matt Nagy as playcaller: sees man 30%/35%/36% · screens 18%/14%/16% · gap runs 35%/38%/29% · edge runs 23%/27%/22% (2023 KC, 2024 KC, 2025 KC)
+  - LAR D availability: ED Myles Garrett (79, Out?) · LB Omar Speights (65, Q) · LB Nate Landman (62, Q) — quality lost 1.5 (grade pts above 55 / 10, snap-weighted) [intel]
 
 LAR offense vs NYG defense
   - Pace (1 gm): 56.0 plays/gm (base 62.1, -6.1) · neutral pass 44% (base 61%) · PROE -17.3 (base +3.0)
@@ -665,6 +689,7 @@ LAR offense vs NYG defense
   - NYG DC Dennard Wilson (new; prior = TEN 2025 under him, replaced Shane Bowen, Charlie Bullen) — Dennard Wilson as playcaller: man 27%/22% · blitz 33%/28% · pressure 28%/36% · S in box 25%/31% · gap faced 46%/50% · edge faced 27%/35% (2024 TEN, 2025 TEN)
   - LAR O style (PFF): 77% gap / 23% zone, edge 23%, 4.4 ypc · sees man 29% (lg 25%) · screens 4% · blitzed 14% / pressured 45%
   - LAR OC Nate Scheelhaase (new, no playcalling history in the data; replaced Mike LaFleur — prior = team 2025, weak)
+  - NYG D availability: DI Roy Robertson-Harris (57, IR) [intel]
 
 PLAYERS (PROJ half):
   Jaxson Dart (NYG QB) 21.0 · xFP 19.5/g (+7.1 over expected) [TD luck -0.5, weather ×0.97, REPORTS +1 riser (10d) - shadow, market higher (21.0 vs model 17.8)] — D pressure only 22% (clean pockets)

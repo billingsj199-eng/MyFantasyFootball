@@ -1,0 +1,243 @@
+loading PFF weekly defense 2018-2025 + nflverse injury reports...
+  2018: 512 team-weeks, 923 defenders
+  2019: 512 team-weeks, 952 defenders
+  2020: 512 team-weeks, 1006 defenders
+  2021: 544 team-weeks, 1049 defenders
+  2022: 542 team-weeks, 1008 defenders
+  2023: 544 team-weeks, 994 defenders
+  2024: 544 team-weeks, 1011 defenders
+  2025: 544 team-weeks, 1013 defenders
+  2019: 416 graded team-weeks, regulars/team median 10, absent regular-weeks 567, on final report Out/Doubtful 178 (both 177); KNOWN before lock (report + reserve/PUP/exempt/inactive) 407 (absent 403, played anyway 4)
+  2020: 416 graded team-weeks, regulars/team median 10, absent regular-weeks 540, on final report Out/Doubtful 143 (both 143); KNOWN before lock (report + reserve/PUP/exempt/inactive) 440 (absent 440, played anyway 0)
+  2021: 448 graded team-weeks, regulars/team median 10, absent regular-weeks 614, on final report Out/Doubtful 159 (both 158); KNOWN before lock (report + reserve/PUP/exempt/inactive) 510 (absent 509, played anyway 1)
+  2022: 446 graded team-weeks, regulars/team median 10, absent regular-weeks 576, on final report Out/Doubtful 227 (both 226); KNOWN before lock (report + reserve/PUP/exempt/inactive) 468 (absent 467, played anyway 1)
+  2023: 448 graded team-weeks, regulars/team median 10, absent regular-weeks 600, on final report Out/Doubtful 187 (both 185); KNOWN before lock (report + reserve/PUP/exempt/inactive) 373 (absent 371, played anyway 2)
+  2024: 448 graded team-weeks, regulars/team median 10, absent regular-weeks 590, on final report Out/Doubtful 208 (both 208); KNOWN before lock (report + reserve/PUP/exempt/inactive) 410 (absent 410, played anyway 0)
+  2025: 448 graded team-weeks, regulars/team median 10, absent regular-weeks 572, on final report Out/Doubtful 209 (both 209); KNOWN before lock (report + reserve/PUP/exempt/inactive) 420 (absent 420, played anyway 0)
+
+loading offensive samples (bt_common)...
+  2019: samples so far 1796
+  2020: samples so far 3731
+  2021: samples so far 6124
+  2022: samples so far 8631
+  2023: samples so far 11644
+  2024: samples so far 14814
+  2025: samples so far 17657
+  skipped: {'weekly': 389, 'team': 247}
+  17657 player-weeks, 15341 with opponent availability features (weeks >= 4)
+
+=== buckets: opposing defense availability ===
+  QB    healthy (no regular out)                     n   591  act/ship 1.022  REL (same pos + week band) 0.983
+  QB    CB1 out (shipped boost covers WR/QB)         n   243  act/ship 1.039  REL (same pos + week band) 1.013
+  QB    1 DB regular out                             n   841  act/ship 1.035  REL (same pos + week band) 1.005
+  QB    2+ DB regulars out                           n   314  act/ship 1.07  REL (same pos + week band) 1.046
+  QB    quality DB out beyond CB1 (cov_q_nocb1 >= 1) n   109  act/ship 1.128  REL (same pos + week band) 1.1
+  QB    quality DB out beyond CB1, KNOWN before lock n    73  act/ship 1.117  REL (same pos + week band) 1.09
+  QB    2+ DB regulars out, KNOWN before lock        n   180  act/ship 1.079  REL (same pos + week band) 1.056
+  QB    quality pass rush out (rush_q >= 1.5)        n    39  act/ship 1.092  REL (same pos + week band) 1.015
+  QB    2+ pass rushers out                          n   103  act/ship 0.986  REL (same pos + week band) 0.958
+  QB    3+ regulars out (any unit)                   n   295  act/ship 1.08  REL (same pos + week band) 1.06
+  QB    3+ regulars out, KNOWN before lock           n   178  act/ship 1.072  REL (same pos + week band) 1.05
+  QB    heavy quality loss (all_q >= 3)              n    29  act/ship 1.065  REL (same pos + week band) 0.906
+  RB    healthy (no regular out)                     n  1008  act/ship 1.035  REL (same pos + week band) 0.957
+  RB    1 front-7 regular out                        n  1364  act/ship 1.084  REL (same pos + week band) 1.027
+  RB    2+ front-7 regulars out                      n   436  act/ship 1.114  REL (same pos + week band) 1.05
+  RB    quality run defender out (run_q >= 1.5)      n    86  act/ship 1.098  REL (same pos + week band) 1.025
+  RB    quality run defender out, KNOWN before lock  n    68  act/ship 1.139  REL (same pos + week band) 1.062
+  RB    2+ front-7 regulars out, KNOWN before lock   n   295  act/ship 1.109  REL (same pos + week band) 1.042
+  RB    3+ regulars out (any unit)                   n   535  act/ship 1.122  REL (same pos + week band) 1.065
+  RB    3+ regulars out, KNOWN before lock           n   304  act/ship 1.116  REL (same pos + week band) 1.052
+  RB    heavy quality loss (all_q >= 3)              n    60  act/ship 1.025  REL (same pos + week band) 0.877
+  WR    healthy (no regular out)                     n  1663  act/ship 1.015  REL (same pos + week band) 0.994
+  WR    CB1 out (shipped boost covers WR/QB)         n   731  act/ship 1.02  REL (same pos + week band) 1.004
+  WR    1 DB regular out                             n  2413  act/ship 1.02  REL (same pos + week band) 1.006
+  WR    2+ DB regulars out                           n   935  act/ship 1.007  REL (same pos + week band) 0.99
+  WR    quality DB out beyond CB1 (cov_q_nocb1 >= 1) n   330  act/ship 0.99  REL (same pos + week band) 0.972
+  WR    quality DB out beyond CB1, KNOWN before lock n   229  act/ship 0.994  REL (same pos + week band) 0.976
+  WR    2+ DB regulars out, KNOWN before lock        n   520  act/ship 1.004  REL (same pos + week band) 0.989
+  WR    quality pass rush out (rush_q >= 1.5)        n   102  act/ship 0.947  REL (same pos + week band) 0.931
+  WR    2+ pass rushers out                          n   277  act/ship 0.997  REL (same pos + week band) 0.981
+  WR    3+ regulars out (any unit)                   n   866  act/ship 1.029  REL (same pos + week band) 1.016
+  WR    3+ regulars out, KNOWN before lock           n   502  act/ship 1.007  REL (same pos + week band) 0.991
+  WR    heavy quality loss (all_q >= 3)              n    90  act/ship 0.96  REL (same pos + week band) 0.949
+  TE    healthy (no regular out)                     n   799  act/ship 1.083  REL (same pos + week band) 0.995
+  TE    CB1 out (shipped boost covers WR/QB)         n   329  act/ship 1.073  REL (same pos + week band) 0.993
+  TE    1 DB regular out                             n  1142  act/ship 1.045  REL (same pos + week band) 0.945
+  TE    2+ DB regulars out                           n   425  act/ship 1.169  REL (same pos + week band) 1.095
+  TE    quality DB out beyond CB1 (cov_q_nocb1 >= 1) n   155  act/ship 1.158  REL (same pos + week band) 1.067
+  TE    quality DB out beyond CB1, KNOWN before lock n   104  act/ship 1.147  REL (same pos + week band) 1.057
+  TE    2+ DB regulars out, KNOWN before lock        n   232  act/ship 1.106  REL (same pos + week band) 1.025
+  TE    quality pass rush out (rush_q >= 1.5)        n    47  act/ship 1.056  REL (same pos + week band) 1.005
+  TE    2+ pass rushers out                          n   129  act/ship 1.093  REL (same pos + week band) 1.013
+  TE    3+ regulars out (any unit)                   n   398  act/ship 1.138  REL (same pos + week band) 1.069
+  TE    3+ regulars out, KNOWN before lock           n   227  act/ship 1.17  REL (same pos + week band) 1.1
+  TE    heavy quality loss (all_q >= 3)              n    34  act/ship 0.915  REL (same pos + week band) 0.875
+
+=== LOYO continuous: shipped x clip(1 + k x feature, 0.8, 1.25) ===
+  WR x cov_q (rows with feature > 0: 3245)
+    grid pooled MSE: +0.00:42.093  +0.01:42.097  +0.02:42.106  +0.03:42.120  +0.05:42.161  +0.08:42.255  +0.12:42.431  -0.02:42.098
+    pooled best +0.00 | LOYO MSE 41.7340 vs shipped 41.6966 (+0.09%), years better 0/7, picks [0.0, -0.02, 0.0, -0.02, 0.0, -0.02, 0.01]
+  WR x cov_q_nocb1 (rows with feature > 0: 2844)
+    grid pooled MSE: +0.00:42.093  +0.01:42.096  +0.02:42.103  +0.03:42.112  +0.05:42.140  +0.08:42.205  +0.12:42.334  -0.02:42.096
+    pooled best +0.00 | LOYO MSE 41.7228 vs shipped 41.6966 (+0.06%), years better 0/7, picks [0.0, -0.02, 0.0, -0.02, 0.0, -0.02, 0.01]
+  WR x cov_q_nocb1_known (rows with feature > 0: 2199)
+    grid pooled MSE: +0.00:42.093  +0.01:42.094  +0.02:42.097  +0.03:42.102  +0.05:42.119  +0.08:42.163  +0.12:42.253  -0.02:42.099
+    pooled best +0.00 | LOYO MSE 41.7352 vs shipped 41.6966 (+0.09%), years better 0/7, picks [0.01, -0.02, 0.01, 0.0, 0.01, -0.02, 0.03]
+  WR x cov_q_fresh (rows with feature > 0: 1830)
+    grid pooled MSE: +0.00:42.093  +0.01:42.099  +0.02:42.106  +0.03:42.116  +0.05:42.144  +0.08:42.202  +0.12:42.306  -0.02:42.089
+    pooled best -0.02 | LOYO MSE 41.7171 vs shipped 41.6966 (+0.05%), years better 0/7, picks [0.0, -0.02, 0.0, -0.02, 0.0, -0.02, 0.0]
+  WR x rush_q (rows with feature > 0: 1871)
+    grid pooled MSE: +0.00:42.093  +0.01:42.100  +0.02:42.110  +0.03:42.123  +0.05:42.159  +0.08:42.229  +0.12:42.343  -0.02:42.089
+    pooled best -0.02 | LOYO MSE 41.7053 vs shipped 41.6966 (+0.02%), years better 1/7, picks [0.0, -0.02, -0.02, -0.02, -0.02, -0.02, 0.0]
+  WR x all_q (rows with feature > 0: 4439)
+    grid pooled MSE: +0.00:42.093  +0.01:42.106  +0.02:42.134  +0.03:42.176  +0.05:42.296  +0.08:42.550  +0.12:42.965  -0.02:42.116
+    pooled best +0.00 | LOYO MSE 41.7651 vs shipped 41.6966 (+0.16%), years better 0/7, picks [0.0, -0.02, 0.0, 0.0, 0.0, -0.02, 0.01]
+  WR x all_q_known (rows with feature > 0: 3757)
+    grid pooled MSE: +0.00:42.093  +0.01:42.105  +0.02:42.127  +0.03:42.161  +0.05:42.262  +0.08:42.474  +0.12:42.807  -0.02:42.103
+    pooled best +0.00 | LOYO MSE 41.7363 vs shipped 41.6966 (+0.10%), years better 0/7, picks [0.0, -0.02, 0.0, 0.0, 0.0, -0.02, 0.0]
+  TE x cov_q (rows with feature > 0: 1518)
+    grid pooled MSE: +0.00:26.434  +0.01:26.421  +0.02:26.411  +0.03:26.403  +0.05:26.395  +0.08:26.399  +0.12:26.433  -0.02:26.466
+    pooled best +0.05 | LOYO MSE 26.5993 vs shipped 26.5694 (+0.11%), years better 3/7, picks [0.08, 0.03, 0.08, 0.08, 0.08, 0.02, 0.05]
+  TE x cov_q_known (rows with feature > 0: 1166)
+    grid pooled MSE: +0.00:26.434  +0.01:26.424  +0.02:26.416  +0.03:26.409  +0.05:26.401  +0.08:26.402  +0.12:26.426  -0.02:26.459
+    pooled best +0.05 | LOYO MSE 26.5767 vs shipped 26.5694 (+0.03%), years better 4/7, picks [0.08, 0.03, 0.08, 0.08, 0.05, 0.03, 0.05]
+  TE x rush_q (rows with feature > 0: 893)
+    grid pooled MSE: +0.00:26.434  +0.01:26.420  +0.02:26.407  +0.03:26.396  +0.05:26.379  +0.08:26.364  +0.12:26.361  -0.02:26.467
+    pooled best +0.12 | LOYO MSE 26.5212 vs shipped 26.5694 (-0.18%), years better 5/7, picks [0.08, 0.08, 0.12, 0.12, 0.12, 0.08, 0.12]
+  TE x rush_q_known (rows with feature > 0: 755)
+    grid pooled MSE: +0.00:26.434  +0.01:26.421  +0.02:26.409  +0.03:26.399  +0.05:26.383  +0.08:26.369  +0.12:26.368  -0.02:26.464
+    pooled best +0.12 | LOYO MSE 26.5191 vs shipped 26.5694 (-0.19%), years better 5/7, picks [0.08, 0.08, 0.12, 0.12, 0.08, 0.08, 0.12]
+  TE x all_q (rows with feature > 0: 2083)
+    grid pooled MSE: +0.00:26.434  +0.01:26.408  +0.02:26.391  +0.03:26.380  +0.05:26.381  +0.08:26.426  +0.12:26.538  -0.02:26.507
+    pooled best +0.03 | LOYO MSE 26.5523 vs shipped 26.5694 (-0.06%), years better 4/7, picks [0.05, 0.03, 0.05, 0.05, 0.05, 0.02, 0.03]
+  TE x all_q_known (rows with feature > 0: 1767)
+    grid pooled MSE: +0.00:26.434  +0.01:26.410  +0.02:26.391  +0.03:26.379  +0.05:26.370  +0.08:26.402  +0.12:26.474  -0.02:26.499
+    pooled best +0.05 | LOYO MSE 26.5220 vs shipped 26.5694 (-0.18%), years better 5/7, picks [0.05, 0.03, 0.05, 0.05, 0.05, 0.03, 0.05]
+  TE x n_db_known (rows with feature > 0: 1191)
+    grid pooled MSE: +0.00:26.434  +0.01:26.408  +0.02:26.389  +0.03:26.375  +0.05:26.365  +0.08:26.396  +0.12:26.494  -0.02:26.502
+    pooled best +0.05 | LOYO MSE 26.5597 vs shipped 26.5694 (-0.04%), years better 5/7, picks [0.05, 0.03, 0.05, 0.08, 0.05, 0.03, 0.05]
+  QB x cov_q (rows with feature > 0: 1120)
+    grid pooled MSE: +0.00:61.180  +0.01:61.119  +0.02:61.075  +0.03:61.046  +0.05:61.035  +0.08:61.137  +0.12:61.475  -0.02:61.349
+    pooled best +0.05 | LOYO MSE 61.0011 vs shipped 61.0091 (-0.01%), years better 2/7, picks [0.05, 0.02, 0.05, 0.05, 0.05, 0.03, 0.05]
+  QB x cov_q_nocb1 (rows with feature > 0: 986)
+    grid pooled MSE: +0.00:61.180  +0.01:61.133  +0.02:61.097  +0.03:61.072  +0.05:61.056  +0.08:61.114  +0.12:61.341  -0.02:61.307
+    pooled best +0.05 | LOYO MSE 61.0110 vs shipped 61.0091 (+0.00%), years better 3/7, picks [0.05, 0.02, 0.05, 0.05, 0.05, 0.03, 0.05]
+  QB x cov_q_known (rows with feature > 0: 868)
+    grid pooled MSE: +0.00:61.180  +0.01:61.131  +0.02:61.093  +0.03:61.066  +0.05:61.048  +0.08:61.107  +0.12:61.352  -0.02:61.314
+    pooled best +0.05 | LOYO MSE 61.0437 vs shipped 61.0091 (+0.06%), years better 3/7, picks [0.05, 0.03, 0.05, 0.05, 0.05, 0.03, 0.08]
+  QB x rush_q (rows with feature > 0: 663)
+    grid pooled MSE: +0.00:61.180  +0.01:61.177  +0.02:61.185  +0.03:61.203  +0.05:61.274  +0.08:61.462  +0.12:61.793  -0.02:61.220
+    pooled best +0.01 | LOYO MSE 61.0811 vs shipped 61.0091 (+0.12%), years better 2/7, picks [0.02, 0.0, 0.0, 0.03, 0.01, 0.0, 0.01]
+  QB x rush_q_known (rows with feature > 0: 555)
+    grid pooled MSE: +0.00:61.180  +0.01:61.177  +0.02:61.184  +0.03:61.199  +0.05:61.256  +0.08:61.407  +0.12:61.722  -0.02:61.212
+    pooled best +0.01 | LOYO MSE 61.0579 vs shipped 61.0091 (+0.08%), years better 2/7, picks [0.01, 0.01, 0.0, 0.03, 0.01, 0.0, 0.01]
+  QB x all_q (rows with feature > 0: 1544)
+    grid pooled MSE: +0.00:61.180  +0.01:61.120  +0.02:61.116  +0.03:61.162  +0.05:61.393  +0.08:62.013  +0.12:63.226  -0.02:61.466
+    pooled best +0.02 | LOYO MSE 61.0222 vs shipped 61.0091 (+0.02%), years better 3/7, picks [0.02, 0.01, 0.02, 0.02, 0.02, 0.01, 0.02]
+  QB x all_q_known (rows with feature > 0: 1310)
+    grid pooled MSE: +0.00:61.180  +0.01:61.127  +0.02:61.114  +0.03:61.141  +0.05:61.321  +0.08:61.879  +0.12:62.833  -0.02:61.406
+    pooled best +0.02 | LOYO MSE 61.0506 vs shipped 61.0091 (+0.07%), years better 3/7, picks [0.02, 0.01, 0.02, 0.03, 0.02, 0.01, 0.02]
+  RB x run_q (rows with feature > 0: 1614)
+    grid pooled MSE: +0.00:48.868  +0.01:48.835  +0.02:48.808  +0.03:48.786  +0.05:48.758  +0.08:48.759  +0.12:48.822  -0.02:48.950
+    pooled best +0.05 | LOYO MSE 48.4221 vs shipped 48.4770 (-0.11%), years better 4/7, picks [0.05, 0.05, 0.08, 0.08, 0.05, 0.08, 0.05]
+  RB x run_q_known (rows with feature > 0: 1310)
+    grid pooled MSE: +0.00:48.868  +0.01:48.838  +0.02:48.812  +0.03:48.790  +0.05:48.758  +0.08:48.743  +0.12:48.758  -0.02:48.941
+    pooled best +0.08 | LOYO MSE 48.4503 vs shipped 48.4770 (-0.06%), years better 4/7, picks [0.05, 0.08, 0.12, 0.12, 0.08, 0.12, 0.08]
+  RB x run_q_fresh (rows with feature > 0: 867)
+    grid pooled MSE: +0.00:48.868  +0.01:48.856  +0.02:48.848  +0.03:48.842  +0.05:48.838  +0.08:48.855  +0.12:48.907  -0.02:48.899
+    pooled best +0.05 | LOYO MSE 48.4974 vs shipped 48.4770 (+0.04%), years better 4/7, picks [0.02, 0.05, 0.05, 0.08, 0.03, 0.05, 0.03]
+  RB x n_front (rows with feature > 0: 1800)
+    grid pooled MSE: +0.00:48.868  +0.01:48.811  +0.02:48.775  +0.03:48.761  +0.05:48.796  +0.08:48.938  +0.12:49.230  -0.02:49.046
+    pooled best +0.03 | LOYO MSE 48.3755 vs shipped 48.4770 (-0.21%), years better 5/7, picks [0.03, 0.03, 0.03, 0.03, 0.02, 0.03, 0.03]
+  RB x n_front_known (rows with feature > 0: 1450)
+    grid pooled MSE: +0.00:48.868  +0.01:48.815  +0.02:48.777  +0.03:48.754  +0.05:48.754  +0.08:48.832  +0.12:48.998  -0.02:49.020
+    pooled best +0.03 | LOYO MSE 48.3844 vs shipped 48.4770 (-0.19%), years better 6/7, picks [0.05, 0.03, 0.05, 0.05, 0.03, 0.05, 0.03]
+  RB x all_q (rows with feature > 0: 2794)
+    grid pooled MSE: +0.00:48.868  +0.01:48.796  +0.02:48.747  +0.03:48.723  +0.05:48.734  +0.08:48.834  +0.12:49.076  -0.02:49.082
+    pooled best +0.03 | LOYO MSE 48.4137 vs shipped 48.4770 (-0.13%), years better 4/7, picks [0.03, 0.03, 0.05, 0.05, 0.03, 0.05, 0.03]
+  RB x all_q_known (rows with feature > 0: 2353)
+    grid pooled MSE: +0.00:48.868  +0.01:48.808  +0.02:48.763  +0.03:48.735  +0.05:48.721  +0.08:48.785  +0.12:48.907  -0.02:49.037
+    pooled best +0.05 | LOYO MSE 48.4056 vs shipped 48.4770 (-0.15%), years better 4/7, picks [0.03, 0.05, 0.05, 0.05, 0.05, 0.05, 0.03]
+
+=== LOYO flagged rows: shipped x m ===
+  WR 2+ DB regulars out (flagged n=935)
+    grid pooled MSE: +1.00:42.093  +1.02:42.103  +1.04:42.122  +1.06:42.150  +1.08:42.186  +1.10:42.232  +0.98:42.092
+    pooled best +0.98 | LOYO MSE 41.7089 vs shipped 41.6966 (+0.03%), years better 0/7, picks [1.0, 0.98, 1.0, 0.98, 1.0, 0.98, 1.0]
+  WR quality DB out beyond CB1 (flagged n=330)
+    grid pooled MSE: +1.00:42.093  +1.02:42.099  +1.04:42.108  +1.06:42.120  +1.08:42.135  +1.10:42.153  +0.98:42.090
+    pooled best +0.98 | LOYO MSE 41.6960 vs shipped 41.6966 (-0.00%), years better 4/7, picks [0.98, 0.98, 0.98, 1.0, 0.98, 0.98, 0.98]
+  WR quality DB out beyond CB1, known (flagged n=229)
+    grid pooled MSE: +1.00:42.093  +1.02:42.097  +1.04:42.103  +1.06:42.111  +1.08:42.121  +1.10:42.133  +0.98:42.091
+    pooled best +0.98 | LOYO MSE 41.7019 vs shipped 41.6966 (+0.01%), years better 2/7, picks [0.98, 0.98, 0.98, 1.0, 1.0, 0.98, 1.0]
+  TE 2+ DB regulars out (flagged n=425)
+    grid pooled MSE: +1.00:26.434  +1.02:26.408  +1.04:26.388  +1.06:26.371  +1.08:26.360  +1.10:26.353  +0.98:26.464
+    pooled best +1.10 | LOYO MSE 26.4982 vs shipped 26.5694 (-0.27%), years better 4/7, picks [1.1, 1.08, 1.1, 1.1, 1.1, 1.08, 1.1]
+  TE 2+ DB regulars out, known (flagged n=232)
+    grid pooled MSE: +1.00:26.434  +1.02:26.427  +1.04:26.423  +1.06:26.421  +1.08:26.422  +1.10:26.425  +0.98:26.443
+    pooled best +1.06 | LOYO MSE 26.6035 vs shipped 26.5694 (+0.13%), years better 3/7, picks [1.1, 1.0, 1.04, 1.1, 1.06, 1.04, 1.08]
+  QB 2+ DB regulars out (flagged n=314)
+    grid pooled MSE: +1.00:61.180  +1.02:61.115  +1.04:61.083  +1.06:61.082  +1.08:61.115  +1.10:61.179  +0.98:61.277
+    pooled best +1.06 | LOYO MSE 61.0704 vs shipped 61.0091 (+0.10%), years better 3/7, picks [1.04, 1.02, 1.06, 1.06, 1.08, 1.04, 1.06]
+  QB 2+ DB regulars out, known (flagged n=180)
+    grid pooled MSE: +1.00:61.180  +1.02:61.130  +1.04:61.098  +1.06:61.086  +1.08:61.092  +1.10:61.118  +0.98:61.250
+    pooled best +1.06 | LOYO MSE 61.1373 vs shipped 61.0091 (+0.21%), years better 3/7, picks [1.04, 1.02, 1.08, 1.08, 1.08, 1.04, 1.1]
+  QB quality DB out beyond CB1, known (flagged n=73)
+    grid pooled MSE: +1.00:61.180  +1.02:61.150  +1.04:61.127  +1.06:61.110  +1.08:61.101  +1.10:61.099  +0.98:61.217
+    pooled best +1.10 | LOYO MSE 61.0398 vs shipped 61.0091 (+0.05%), years better 3/7, picks [1.08, 1.02, 1.1, 1.1, 1.1, 1.08, 1.1]
+  QB quality pass rush out: too few flagged rows (39)
+  QB quality pass rush out, known: too few flagged rows (31)
+  RB 2+ front-7 regulars out (flagged n=436)
+    grid pooled MSE: +1.00:48.868  +1.02:48.834  +1.04:48.810  +1.06:48.795  +1.08:48.789  +1.10:48.793  +0.98:48.911
+    pooled best +1.08 | LOYO MSE 48.4473 vs shipped 48.4770 (-0.06%), years better 4/7, picks [1.1, 1.04, 1.1, 1.08, 1.06, 1.1, 1.08]
+  RB 2+ front-7 regulars out, known (flagged n=295)
+    grid pooled MSE: +1.00:48.868  +1.02:48.848  +1.04:48.835  +1.06:48.828  +1.08:48.829  +1.10:48.836  +0.98:48.894
+    pooled best +1.06 | LOYO MSE 48.4805 vs shipped 48.4770 (+0.01%), years better 5/7, picks [1.08, 1.02, 1.1, 1.08, 1.06, 1.08, 1.06]
+  RB quality run defender out (flagged n=86)
+    grid pooled MSE: +1.00:48.868  +1.02:48.863  +1.04:48.859  +1.06:48.857  +1.08:48.857  +1.10:48.859  +0.98:48.875
+    pooled best +1.08 | LOYO MSE 48.4892 vs shipped 48.4770 (+0.03%), years better 2/7, picks [1.0, 1.1, 1.08, 1.1, 1.06, 1.08, 1.08]
+  RB quality run defender out, known (flagged n=68)
+    grid pooled MSE: +1.00:48.868  +1.02:48.861  +1.04:48.856  +1.06:48.852  +1.08:48.850  +1.10:48.850  +0.98:48.876
+    pooled best +1.10 | LOYO MSE 48.4771 vs shipped 48.4770 (+0.00%), years better 3/7, picks [1.02, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1]
+  RB 3+ regulars out, known (flagged n=304)
+    grid pooled MSE: +1.00:48.868  +1.02:48.842  +1.04:48.824  +1.06:48.814  +1.08:48.810  +1.10:48.815  +0.98:48.901
+    pooled best +1.08 | LOYO MSE 48.4686 vs shipped 48.4770 (-0.02%), years better 4/7, picks [1.08, 1.08, 1.1, 1.08, 1.1, 1.1, 1.04]
+  TE 3+ regulars out, known (flagged n=227)
+    grid pooled MSE: +1.00:26.434  +1.02:26.421  +1.04:26.412  +1.06:26.405  +1.08:26.400  +1.10:26.399  +0.98:26.449
+    pooled best +1.10 | LOYO MSE 26.5470 vs shipped 26.5694 (-0.08%), years better 4/7, picks [1.1, 1.06, 1.1, 1.1, 1.08, 1.1, 1.1]
+
+=== DST: own defense availability vs DST points (shipped = 16.2 - .436 x opp implied) ===
+  3070 DST team-weeks (weeks >= 4); mean actual 6.38 vs shipped 6.39
+  DST healthy                            n  813  actual - shipped +0.37 pts
+  DST 1-2 regulars out                   n 1824  actual - shipped -0.01 pts
+  DST 3+ regulars out                    n  433  actual - shipped -0.73 pts
+  DST all_q >= 3 (heavy quality loss)    n   43  actual - shipped -1.50 pts
+  DST pass rush q >= 1.5 out             n   55  actual - shipped -0.91 pts
+  DST 3+ regulars out, known before lock n  251  actual - shipped -0.64 pts
+  DST all_q >= 3, known before lock      n   23  actual - shipped -1.36 pts
+  DST shipped + k x all_q
+    grid pooled MSE: +0.00:30.865  -0.25:30.791  -0.50:30.859  -1.00:31.389  -1.50:32.331  -2.00:33.577  +0.50:31.439
+    pooled best -0.25 | LOYO MSE 30.7130 vs shipped 30.7905 (-0.25%), years better 5/7, picks [-0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25]
+  DST shipped + k x all_q_pre
+    grid pooled MSE: +0.00:30.865  -0.25:30.810  -0.50:30.791  -1.00:30.859  -1.50:31.060  -2.00:31.389  +0.50:31.081
+    pooled best -0.50 | LOYO MSE 30.7409 vs shipped 30.7905 (-0.16%), years better 5/7, picks [-0.5, -0.5, -0.5, -0.5, -0.5, -0.25, -0.5]
+  DST shipped + k x all_q_known
+    grid pooled MSE: +0.00:30.865  -0.25:30.800  -0.50:30.829  -1.00:31.171  -1.50:31.851  -2.00:32.813  +0.50:31.283
+    pooled best -0.25 | LOYO MSE 30.7600 vs shipped 30.7905 (-0.10%), years better 5/7, picks [-0.5, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25]
+  DST shipped + k x rush_q
+    grid pooled MSE: +0.00:30.865  -0.25:30.851  -0.50:30.865  -1.00:30.976  -1.50:31.191  -2.00:31.508  +0.50:30.978
+    pooled best -0.25 | LOYO MSE 30.8147 vs shipped 30.7905 (+0.08%), years better 4/7, picks [-0.5, -0.25, -0.25, -0.25, -0.25, 0.0, -0.25]
+  DST shipped + k x cov_q
+    grid pooled MSE: +0.00:30.865  -0.25:30.807  -0.50:30.788  -1.00:30.868  -1.50:31.106  -2.00:31.493  +0.50:31.101
+    pooled best -0.50 | LOYO MSE 30.7364 vs shipped 30.7905 (-0.18%), years better 5/7, picks [-0.5, -0.5, -0.5, -0.5, -0.5, -0.25, -0.5]
+  DST shipped + k x cov_q_known
+    grid pooled MSE: +0.00:30.865  -0.25:30.830  -0.50:30.822  -1.00:30.885  -1.50:31.056  -2.00:31.329  +0.50:31.017
+    pooled best -0.50 | LOYO MSE 30.7713 vs shipped 30.7905 (-0.06%), years better 5/7, picks [-0.5, -0.5, -0.5, -0.25, -0.5, -0.25, -0.5]
+  DST shipped + k x n_out
+    grid pooled MSE: +0.00:30.865  -0.25:30.844  -0.50:31.225  -1.00:33.012  -1.50:35.699  -2.00:38.836  +0.50:32.121
+    pooled best -0.25 | LOYO MSE 30.8860 vs shipped 30.7905 (+0.31%), years better 2/7, picks [-0.25, -0.25, -0.25, 0.0, -0.25, 0.0, -0.25]
+  DST shipped + k x n_out_known
+    grid pooled MSE: +0.00:30.865  -0.25:30.832  -0.50:31.050  -1.00:32.200  -1.50:34.054  -2.00:36.241  +0.50:31.690
+    pooled best -0.25 | LOYO MSE 30.8141 vs shipped 30.7905 (+0.08%), years better 4/7, picks [-0.25, -0.25, -0.25, -0.25, -0.25, 0.0, -0.25]
+
+wrote data/def_avail_backtest.js: Defense availability: 50 tests on 17657 player-weeks + DST, LOYO 2019-25; none pass the ship bar
+done

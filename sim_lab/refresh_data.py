@@ -262,6 +262,88 @@ try:
         f.write("window.SIM_SLEEPER_WEEKLY = ")
         json.dump(sw, f, separators=(",", ":"))
         f.write(";\n")
+        # DEFENSE AVAILABILITY intel (2026-09-15; backtest_def_avail.py grades whether it moves projections).
+        defav = {"prWeek": None, "teams": {}}
+        try:
+            import glob as _gdav, re as _rdav, pandas as _pddav
+            _PFFW = r"E:\MyFantasyFootball\pbp_cache\pff\weekly"
+            _PAL = {"ARZ": "ARI", "BLT": "BAL", "CLV": "CLE", "HST": "HOU", "LA": "LAR", "OAK": "LV", "SD": "LAC", "WSH": "WAS"}
+            def _dav_load(yr):
+                parts = []
+                for fp in sorted(_gdav.glob(os.path.join(_PFFW, f"pff_defense_summary_{yr}_w*.csv"))):
+                    d = _pddav.read_csv(fp, low_memory=False, usecols=lambda c: c in ("player", "position", "team_name", "snap_counts_defense", "grades_defense"))
+                    d["week"] = int(_rdav.search(r"_w(\d+)\.csv$", fp).group(1))
+                    parts.append(d)
+                if not parts:
+                    return None
+                d = _pddav.concat(parts, ignore_index=True)
+                d = d[d.position.isin(["CB", "S", "LB", "ED", "DI"])].copy()
+                d["tm"] = d.team_name.map(lambda t: _PAL.get(str(t), str(t)))
+                d["snaps"] = _pddav.to_numeric(d.snap_counts_defense, errors="coerce").fillna(0)
+                d["gr"] = _pddav.to_numeric(d.grades_defense, errors="coerce")
+                tsn = d.groupby(["tm", "week"]).snaps.transform("max")
+                d["share"] = d.snaps / tsn.where(tsn > 0, 1)
+                return d
+            def _dav_regs(d, min_games):
+                # {(tm, name): (pos, share, grade_sum, snaps)} for regulars in frame d
+                out = {}
+                games = d.groupby("tm").week.nunique().to_dict()
+                for (tm_, nm), rows in d.groupby(["tm", "player"]):
+                    g = games.get(tm_, 0)
+                    q = int((rows.share >= 0.5).sum())
+                    if g >= min_games and q >= max(1, int(0.6 * g + 0.999)):
+                        ok = rows[rows.gr.notna() & (rows.snaps > 0)]
+                        out[(tm_, nm)] = (rows.position.iloc[-1], float(rows.share.mean()), float((ok.gr * ok.snaps).sum()), float(ok.snaps.sum()))
+                return out
+            sl_def = {}
+            for rec in allp.values():
+                if isinstance(rec, dict) and rec.get("position") in ("CB", "S", "SS", "FS", "DB", "LB", "ILB", "OLB", "MLB", "DE", "DT", "DL", "NT", "EDGE"):
+                    k = _cbnorm(rec.get("full_name") or "")
+                    if k and (k not in sl_def or (rec.get("team") and not sl_def[k].get("team"))):
+                        sl_def[k] = rec
+            prac = {}
+            try:
+                _pr = json.load(open(os.path.join(REPO, "data", "practice_2026.json"), encoding="utf-8"))
+                defav["prWeek"] = _pr.get("week")
+                prac = {_cbnorm(n_): v_ for n_, v_ in (_pr.get("players") or {}).items()}
+            except Exception:  # noqa: BLE001
+                pass
+            d25, d26 = _dav_load(2025), _dav_load(2026)
+            r25 = _dav_regs(d25, 6) if d25 is not None else {}
+            r26 = _dav_regs(d26, 1) if d26 is not None else {}
+            g25 = {nm: (gs, sn) for (tm_, nm), (_, _, gs, sn) in r25.items()}
+            teams = {}
+            def _add(tm_, nm, pos, sh, gsum, sn, src):
+                gs25, sn25 = g25.get(nm, (0.0, 0.0))
+                w25 = min(sn25, 300.0)
+                num = gsum + (gs25 / sn25 * w25 if sn25 else 0.0)
+                den = sn + w25
+                grade = round(num / den, 1) if den else None
+                s_ = sl_def.get(_cbnorm(nm)) or {}
+                p_ = prac.get(_cbnorm(nm)) or {}
+                sl = s_.get("injury_status") or ("" if (s_.get("status") in (None, "Active")) else s_.get("status"))
+                teams.setdefault(tm_, {})[nm] = {"n": nm, "pos": pos, "g": grade, "sh": round(sh, 2), "sl": sl or "", "gs": p_.get("gs") or "", "src": src}
+            for (tm_, nm), (pos, sh, gsum, sn) in r26.items():
+                _add(tm_, nm, pos, sh, gsum if nm not in g25 else gsum, sn, "2026")
+            for (tm_, nm), (pos, sh, gsum, sn) in r25.items():
+                cur_tm = (sl_def.get(_cbnorm(nm)) or {}).get("team")
+                if not cur_tm:
+                    continue
+                cur_tm = _PAL.get(cur_tm, cur_tm)
+                if nm in teams.get(cur_tm, {}):
+                    continue
+                if d26 is not None and ((d26.player == nm) & (d26.tm != cur_tm)).any():
+                    continue
+                _add(cur_tm, nm, pos, sh, 0.0, 0.0, "2025")
+            defav["teams"] = {t_: sorted(v_.values(), key=lambda x: -(x["g"] or 0)) for t_, v_ in teams.items()}
+        except Exception as e_dav:  # noqa: BLE001
+            print(f"WARN defense availability skipped ({e_dav})")
+        f.write("// defense availability intel: regular defenders per team with PFF grade + Sleeper / NFL-report status (backtest_def_avail.py)\n")
+        f.write("window.SIM_DEF_AVAIL_2026 = ")
+        json.dump(defav, f, separators=(",", ":"))
+        f.write(";\n")
+        print(f"defense availability: {len(defav['teams'])} teams, {sum(len(v) for v in defav['teams'].values())} regular defenders, "
+              f"{sum(1 for v in defav['teams'].values() for x in v if x['sl'] or x['gs'])} with a status")
         f.write("// elite shadow-CB availability (ELITE_CBS_2026 in overrides.js)\n")
         f.write("window.SIM_CB_STATUS = ")
         json.dump(cb_status, f, separators=(",", ":"))

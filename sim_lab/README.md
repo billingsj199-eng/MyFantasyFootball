@@ -1856,3 +1856,39 @@ shipped changes; the season ledger decides.
   never matched Out/IR: engine zeroes NA for a 4-week window when Sleeper's
   weekly projection is also 0 (src 'na'), else x0.75 'na-unconfirmed'.
   Jacobs wk2-5 zero, exported + pushed.
+
+## Defense availability (backtest_def_avail.py) - NOT SHIPPED as a layer, live INTEL 2026-09-15
+
+Jack: "injuries ... how that impacts ... even on defense" -> "start on the defense
+availability layer". Regular defenders found WALK-FORWARD from PFF weekly snap
+shares 2018-25 (share >= .5 in >= 60% of prior team games, graded weeks 4+),
+weighted by PFF unit grade above 55 (coverage / pass rush / run D / overall,
+season-to-date blended with last season, 300-snap cap) x avg snap share.
+Absence sets: realized (share < .2 - includes benchings), and KNOWN BEFORE LOCK
+= final injury report Out/Doubtful (nflverse injuries_<yr>) OR weekly roster
+status RES / PUP / EXE / SUS / NFI / INA (nflverse roster_weekly_<yr>, joined on
+pff_id). The report alone missed IR players (31% of absences); the known set
+covers 70-80% and almost never played anyway (0-4 a season). 17,657 QB/RB/WR/TE
+player-weeks + 3,070 DST team-weeks, LOYO 2019-25 on bt_common's base (no CB1
+boost in base, so coverage tests also run "beyond CB1"). 50 tests, NONE pass.
+Log def_avail_backtest.log; data/def_avail_backtest.js on the ZONES tab.
+
+- Direction is consistent: depleted defenses help RB / TE / QB, not WR. Known
+  before lock, same position + week band: RB 2+ front-7 out 1.042 REL (n 295),
+  3+ regulars out 1.052; TE 3+ out 1.10 (n 227), quality DB beyond CB1 1.057;
+  QB quality DB beyond CB1 1.09 (n 73), 2+ DBs out 1.056. WR 0.98-0.99 across
+  the board (the shipped CB1 boost is the WR piece; nothing beyond it).
+- Best LOYO (known): RB x front-7 starters out +3%/starter -0.19% 6/7; TE x pass
+  rush quality out -0.19% 5/7; TE x total quality out -0.18% 5/7; RB x total
+  quality -0.15% 4/7. Flag multipliers flat (-0.08% to +0.21%). Realized-absence
+  versions similar or worse (benchings dilute).
+- DST (own defense): 3+ regulars known out -0.64 pts, heavy quality loss -1.36
+  (n 23); additive LOYO best -0.25% 5/7 on realized, -0.10% on known. Not shipped.
+- LIVE INTEL (refresh_data.py -> sleeper_meta.js SIM_DEF_AVAIL_2026): each team's
+  regular defenders (PFF 2026 weeks + 2025 regulars on their current Sleeper team),
+  grade, share, Sleeper status, NFL report status; NOTES team block line
+  "<OPP> D availability: S Brian Branch (67, PUP) ... quality lost 1.2 [intel]"
+  (confirmed = IR/PUP/NA/Sus or the current week's NFL report; Sleeper Out alone
+  shown with "?"). Revisit as a layer only with a new angle (e.g. RB front-7 +
+  TE combined, or in-season sample grows); the effects are real-looking but under
+  the bar at +3-10% on a few hundred rows.

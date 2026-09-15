@@ -1342,3 +1342,48 @@ yds_luck_backtest.log.
   per position 0/7; centered per season -0.01%.
 - NOT SHIPPED. The luck family is exactly the TD family: TD conversion is
   luck, yardage and catch efficiency are talent already embedded in PPG.
+
+## Site player-card TD LUCK / FG LUCK box (2026-09-15)
+
+Jack: "do item 5 in a worktree". export_site_proj.js now adds `luck` to the
+SIM_PROJ_2026 payload: `luck[name] = [pos, expected, actual, games,
+adjThisWeekHalf|null]` - RB/WR/TE/QB from the SIM_*_TDLUCK_2026 maps with
+E.tdLuckAdj(p, half) (the points the layer adds this week), kickers from
+SIM_K_LUCK_2026 with adj null (intel). Site (repo branch
+worktree-worktree-card-luck-chip, commit f0eaab8, ?v=2026-09-15a):
+`_simLuckRow` / `_simLuckBoxHtml` in app.js, box under WEATHER in
+buildWeeklyCardView when |adj| >= 0.1 (K: |luck| >= 0.5 pts/g); tooltip says
+the regression is already priced in. Site picks it up once the branch is
+merged AND the exporter's next scheduled run writes the luck map (the extra
+key is ignored by the old app.js, so order does not matter). Backup
+export_site_proj.js.bak_pre_cardluck_20260915.
+
+## Expected fantasy points (xFP) for the site card (2026-09-15)
+
+Jack: "maybe we should create an expected fantasy points to remove luck" ->
+"use the standard definition" after reviewing PFF / Fantasy Points Data /
+ESPN / Open Source Football: every target, carry and attempt valued at what
+the AVERAGE player produces from that spot, summed; FPOE = actual - xFP.
+
+- pull_pace_tracker.py `build_xfp_2026()` -> `SIM_XFP_2026` {norm: {pos, w:
+  {wk: components}}} in sim_routes.js. Tables pooled nflverse pbp 2018-25:
+  targets by air-yards bucket (<0/0-4/5-9/10-14/15-19/20-29/30+): catch rate
+  .837/.755/.703/.589/.547/.416/.302, yards 4.9/5.4/6.8/9.0/11.4/11.9/13.5;
+  TD by yardline x end-zone throw (the receiver xTD table); carries by yardline
+  (<=5/6-10/11-20/21-40/41+): RB-group 1.10/2.88/3.82/4.45/4.75, QB
+  1.07/3.22/4.05/4.48/4.77; rush TD by yardline (RB table; QB own table).
+  QB attempts: targeted attempts use the target tables, throwaways 0.
+  Components: RB/WR/TE [tg, xrec, xrecyd, xrectd, car, xruyd, xrutd]; QB
+  [att, xpyd, xptd, car, xruyd, xrutd]. Fumbles / INTs ignored (standard).
+- export_site_proj.js payload `xfp[name][wk]` (board players; 287 after W1)
+  next to `luck` (which also carries [5] = weekly xtd/td for the TD box).
+  Header comment must stay brace-free (indexOf('{') readers).
+- Site (branch worktree-worktree-card-luck-chip, ?v=2026-09-15c): app.js
+  `_xfpRow` / `_xfpFor` / `_xfpCell` + `_XFP_HDR`; xFP column right after
+  FPTS on the 2026 game log (QB/RB/WR/TE builder buildWeeklyTable), scored in
+  the viewer's format (rec .5/1/0, 0.1/yd, TD 6, pass TD 4, 0.04/pass yd);
+  cell colour: green = scored UNDER expected (due up), red = over; tooltip
+  splits FPOE into TD luck (regresses, YoY r .09) and yards/catches (skill,
+  r .34/.32); totals row carries season xFP with the same split.
+  Coker W1: 29.8 actual vs 12.2 xFP = +17.6 (TD +10.3, yards/catches +7.4).
+Backups pull_pace_tracker.py .bak_pre_xfp_20260915 / .bak_pre_xfpstd_20260915.

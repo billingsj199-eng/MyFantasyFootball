@@ -394,6 +394,32 @@ function kickoffMs(kicks, wk, tm) {
     }
   } catch (e) { console.warn('live_model.json skipped: ' + e.message); }
 
+  // TD / FG luck for the site's player card (2026-09-15): season-to-date
+  // expected TDs from touch locations vs actual (RB/WR/TE/QB) with the points
+  // the engine's tdLuckAdj adds to THIS week's half-PPR mean; kickers carry
+  // expected-vs-actual kicking points (intel only, no adjustment). Maps come
+  // from sim_routes.js (pull_pace_tracker.py). Row = [pos, expected, actual, g, adjHalf|null].
+  const luck = {};
+  (players.list || []).forEach(p => {
+    if (p.isDST) return;
+    if (p.pos === 'QB' || p.pos === 'RB' || p.pos === 'WR' || p.pos === 'TE') {
+      const m = p.pos === 'QB' ? global.SIM_QB_TDLUCK_2026 : (p.pos === 'RB' ? global.SIM_RB_TDLUCK_2026 : global.SIM_REC_TDLUCK_2026);
+      const r = m && m[p.norm];
+      if (r && r.g) luck[p.name] = [p.pos, +(+r.xtd).toFixed(2), r.td, r.g, +E.tdLuckAdj(p, scH).toFixed(2), r.w || null];   // [5] = {wk: [xtd, td]} for the card's xFP column
+    } else if (p.pos === 'K') {
+      const r = global.SIM_K_LUCK_2026 && global.SIM_K_LUCK_2026[p.norm];
+      if (r && r.g) luck[p.name] = ['K', +(+r.xpts).toFixed(1), r.pts, r.g, null];
+    }
+  });
+  console.log('luck rows for the card: ' + Object.keys(luck).length);
+  // Standard expected-fantasy-point components per game (SIM_XFP_2026, pull_pace_tracker.py):
+  // RB/WR/TE [tg, xrec, xrecyd, xrectd, car, xruyd, xrutd]; QB [att, xpyd, xptd, car, xruyd, xrutd].
+  // Board players only, keyed like the weeks rows; the site scores them in the viewer's format.
+  const xfp = {};
+  const XM = global.SIM_XFP_2026 || {};
+  (players.list || []).forEach(p => { if (!p.isDST && XM[p.norm] && XM[p.norm].w) xfp[p.name] = XM[p.norm].w; });
+  console.log('xFP rows for the card: ' + Object.keys(xfp).length);
+
   const payload = {
     updated: new Date().toISOString(),
     season: SEASON,
@@ -406,7 +432,9 @@ function kickoffMs(kicks, wk, tm) {
     seasonSim: seasonSim,
     seasonPpg: seasonPpg,
     baselinePpg: baselinePpg,
-    teamOf: teamOf
+    teamOf: teamOf,
+    luck: luck,
+    xfp: xfp
   };
   fs.writeFileSync(OUT_JSON, JSON.stringify(payload));
   const jsHeader =
@@ -414,7 +442,9 @@ function kickoffMs(kicks, wk, tm) {
     '// Per-week Sim Lab projections + boom/bust % for the 2026 LOGS view.\n' +
     '// weeks[wk][name] = [half, ppr, std, boom%, bust%]; DST keyed DST_<abbr>.\n' +
     '// Rows for teams whose game already kicked off are FROZEN at their\n' +
-    '// pre-kickoff values by the exporter (never recomputed).\n';
+    '// pre-kickoff values by the exporter (never recomputed).\n' +
+    '// luck[name] = [pos, expectedTD|expectedKickPts, actual, games, adjThisWeekHalf|null, weekly xtd/td map|null] (card TD/FG LUCK box).\n' +
+    '// xfp[name][wk] = expected components: RB/WR/TE tg,xrec,xrecyd,xrectd,car,xruyd,xrutd; QB att,xpyd,xptd,car,xruyd,xrutd (card xFP column).\n';
   fs.writeFileSync(OUT_JS, jsHeader + 'window.SIM_PROJ_2026 = ' + JSON.stringify(payload) + ';\n');
   const kb = Math.round(fs.statSync(OUT_JS).size / 1024);
   console.log('wrote ' + OUT_JS + ' (' + kb + ' KB)');

@@ -296,14 +296,14 @@ def build_rb_tdluck_2026():
         for df, pid_col, td_col, is_rush in ((rush, "rusher_player_id", "rush_touchdown", True),
                                              (tgt, "receiver_player_id", "pass_touchdown", False)):
             for pid, td, yl, wk in df[[pid_col, td_col, "yardline_100", "week"]].itertuples(index=False):
-                a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
-                a["xtd"] += _xtd(float(yl) if pd.notna(yl) else 99.0, is_rush)
-                a["td"] += int(td == 1)
-                a["n"] += 1
-                a["wks"].add(int(wk))
+                a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set(), "w": {}})
+                x = _xtd(float(yl) if pd.notna(yl) else 99.0, is_rush); t = int(td == 1)
+                a["xtd"] += x; a["td"] += t; a["n"] += 1; a["wks"].add(int(wk))
+                wv = a["w"].setdefault(str(int(wk)), [0.0, 0]); wv[0] += x; wv[1] += t
         for pid, a in acc.items():
             out[norm_name(str(rb_name[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"],
-                                                 "g": len(a["wks"]), "n": a["n"]}
+                                                 "g": len(a["wks"]), "n": a["n"],
+                                                 "w": {k: [round(v[0], 2), v[1]] for k, v in a["w"].items()}}
     except Exception as e:
         print(f"WARN rb tdluck skipped ({e})")
     return out
@@ -379,16 +379,20 @@ def build_rec_tdluck_2026():
         tg = pbp[(pbp.pass_attempt == 1) & (pbp.sack != 1) & pbp.receiver_player_id.isin(names)]
         ru = pbp[(pbp.rush_attempt == 1) & pbp.rusher_player_id.isin(names)]
         acc = {}
+        def _tally(a, x, t, wk):
+            a["xtd"] += x; a["td"] += t; a["n"] += 1; a["wks"].add(int(wk))
+            wv = a["w"].setdefault(str(int(wk)), [0.0, 0]); wv[0] += x; wv[1] += t
         for pid, td, yl, ay, wk in tg[["receiver_player_id", "pass_touchdown", "yardline_100", "air_yards", "week"]].itertuples(index=False):
-            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
+            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set(), "w": {}})
             yl = float(yl) if pd.notna(yl) else 99.0
             ez = pd.notna(ay) and float(ay) >= yl
-            a["xtd"] += _xtd_rec(yl, ez); a["td"] += int(td == 1); a["n"] += 1; a["wks"].add(int(wk))
+            _tally(a, _xtd_rec(yl, ez), int(td == 1), wk)
         for pid, td, yl, wk in ru[["rusher_player_id", "rush_touchdown", "yardline_100", "week"]].itertuples(index=False):
-            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
-            a["xtd"] += _xtd(float(yl) if pd.notna(yl) else 99.0, True); a["td"] += int(td == 1); a["n"] += 1; a["wks"].add(int(wk))
+            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set(), "w": {}})
+            _tally(a, _xtd(float(yl) if pd.notna(yl) else 99.0, True), int(td == 1), wk)
         for pid, a in acc.items():
-            out[norm_name(str(names[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"], "g": len(a["wks"]), "n": a["n"]}
+            out[norm_name(str(names[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"], "g": len(a["wks"]), "n": a["n"],
+                                               "w": {k: [round(v[0], 2), v[1]] for k, v in a["w"].items()}}
     except Exception as e:
         print(f"WARN rec tdluck skipped ({e})")
     return out
@@ -414,13 +418,15 @@ def build_qb_tdluck_2026():
         pbp = pbp[(pbp.season_type == "REG") & (pbp.pass_attempt == 1) & (pbp.sack != 1) & pbp.passer_player_id.isin(names)]
         acc = {}
         for pid, rcv, td, yl, ay, wk in pbp[["passer_player_id", "receiver_player_id", "pass_touchdown", "yardline_100", "air_yards", "week"]].itertuples(index=False):
-            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set()})
+            a = acc.setdefault(pid, {"xtd": 0.0, "td": 0, "n": 0, "wks": set(), "w": {}})
             yl = float(yl) if pd.notna(yl) else 99.0
-            if pd.notna(rcv):
-                a["xtd"] += _xtd_rec(yl, pd.notna(ay) and float(ay) >= yl)
-            a["td"] += int(td == 1); a["n"] += 1; a["wks"].add(int(wk))
+            x = _xtd_rec(yl, pd.notna(ay) and float(ay) >= yl) if pd.notna(rcv) else 0.0
+            t = int(td == 1)
+            a["xtd"] += x; a["td"] += t; a["n"] += 1; a["wks"].add(int(wk))
+            wv = a["w"].setdefault(str(int(wk)), [0.0, 0]); wv[0] += x; wv[1] += t
         for pid, a in acc.items():
-            out[norm_name(str(names[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"], "g": len(a["wks"]), "n": a["n"]}
+            out[norm_name(str(names[pid]))] = {"xtd": round(a["xtd"], 3), "td": a["td"], "g": len(a["wks"]), "n": a["n"],
+                                               "w": {k: [round(v[0], 2), v[1]] for k, v in a["w"].items()}}
     except Exception as e:
         print(f"WARN qb tdluck skipped ({e})")
     return out
@@ -519,6 +525,96 @@ def build_dst_luck_2026():
         print(f"WARN dst luck skipped ({e})")
     return out
 
+# EXPECTED FANTASY POINTS components (2026-09-15, Jack: "use the standard
+# definition"). Industry xFP: every target / carry / attempt valued at what the
+# AVERAGE player produces from that spot, summed. Tables pooled from nflverse
+# pbp 2018-25 (n = 138k targets, 97k RB-group carries, 17k QB carries):
+#   target  -> catch rate + yards by air-yards bucket; TD by yardline x end-zone throw
+#   carry   -> yards by yardline bucket (RB group / QB separate); TD by yardline
+#   QB att  -> targeted attempts use the target tables (throwaways 0)
+# Exported per player per week as raw expected COMPONENTS so the site can score
+# them in any format:  RB/WR/TE [tg, xrec, xrecyd, xrectd, car, xruyd, xrutd]
+#                      QB       [att, xpyd, xptd, car, xruyd, xrutd]
+# FPOE = actual - xFP. Our backtests: the TD part of FPOE is luck (YoY r .09),
+# the yards/catch part is skill (r .34/.32) - the card tooltip splits them.
+XFP_AB_BINS = [-0.01, 4.99, 9.99, 14.99, 19.99, 29.99]            # <0, 0-4, 5-9, 10-14, 15-19, 20-29, 30+
+XFP_CATCH = [0.837, 0.755, 0.703, 0.589, 0.547, 0.416, 0.302]
+XFP_TGT_YDS = [4.87, 5.39, 6.83, 9.00, 11.42, 11.88, 13.46]
+XFP_RUSH_BINS = [5, 10, 20, 40]                                   # <=5, 6-10, 11-20, 21-40, 41+
+XFP_RUSH_YDS = [1.10, 2.88, 3.82, 4.45, 4.75]
+XFP_RUSH_YDS_QB = [1.07, 3.22, 4.05, 4.48, 4.77]
+XFP_QB_RUSH_TD = [(1, 0.619), (2, 0.302), (3, 0.366), (5, 0.304), (10, 0.201), (20, 0.059), (40, 0.011), (999, 0.001)]
+
+def _xfp_ab(ay):
+    for i, hi in enumerate(XFP_AB_BINS):
+        if ay <= hi:
+            return i
+    return len(XFP_AB_BINS)
+
+def _xfp_rush(yl, is_qb):
+    tbl = XFP_RUSH_YDS_QB if is_qb else XFP_RUSH_YDS
+    for i, hi in enumerate(XFP_RUSH_BINS):
+        if yl <= hi:
+            return tbl[i]
+    return tbl[-1]
+
+def _xfp_qb_rush_td(yl):
+    return next(r for hi, r in XFP_QB_RUSH_TD if yl <= hi)
+
+def build_xfp_2026():
+    """{norm: {pos, w: {wk: [components]}}} for every QB/RB/WR/TE with a 2026 touch."""
+    out = {}
+    pbp_p = os.path.join(CACHE, f"play_by_play_{SEASON}.csv.gz")
+    players_p = os.path.join(CACHE, "players.csv")
+    try:
+        if not (os.path.exists(pbp_p) and os.path.exists(players_p)):
+            return out
+        pl = pd.read_csv(players_p, usecols=["gsis_id", "display_name", "position"], low_memory=False)
+        pl = pl[pl.position.isin(["QB", "RB", "WR", "TE"]) & pl.gsis_id.notna()]
+        pos_of = dict(zip(pl.gsis_id, pl.position)); name_of = dict(zip(pl.gsis_id, pl.display_name))
+        pbp = pd.read_csv(pbp_p, usecols=["season_type", "week", "pass_attempt", "rush_attempt", "sack", "passer_player_id",
+                                          "receiver_player_id", "rusher_player_id", "yardline_100", "air_yards"], low_memory=False)
+        pbp = pbp[pbp.season_type == "REG"]
+        acc = {}
+        def row(pid, wk):
+            a = acc.setdefault(pid, {})
+            return a.setdefault(str(int(wk)), {"tg": 0, "xrec": 0.0, "xrecyd": 0.0, "xrectd": 0.0, "car": 0, "xruyd": 0.0, "xrutd": 0.0,
+                                                "att": 0, "xpyd": 0.0, "xptd": 0.0})
+        # targets (receivers) + attempts (passers)
+        pa = pbp[(pbp.pass_attempt == 1) & (pbp.sack != 1)]
+        for pid, rcv, yl, ay, wk in pa[["passer_player_id", "receiver_player_id", "yardline_100", "air_yards", "week"]].itertuples(index=False):
+            yl = float(yl) if pd.notna(yl) else 50.0
+            targeted = pd.notna(rcv)
+            if targeted:
+                a = float(ay) if pd.notna(ay) else 0.0
+                b = _xfp_ab(a); ez = a >= yl
+                xtd = _xtd_rec(yl, ez)
+                if rcv in pos_of:
+                    r = row(rcv, wk); r["tg"] += 1; r["xrec"] += XFP_CATCH[b]; r["xrecyd"] += XFP_TGT_YDS[b]; r["xrectd"] += xtd
+            if pd.notna(pid) and pos_of.get(pid) == "QB":
+                q = row(pid, wk); q["att"] += 1
+                if targeted:
+                    q["xpyd"] += XFP_TGT_YDS[b]; q["xptd"] += xtd
+        ru = pbp[(pbp.rush_attempt == 1) & pbp.rusher_player_id.notna()]
+        for pid, yl, wk in ru[["rusher_player_id", "yardline_100", "week"]].itertuples(index=False):
+            if pid not in pos_of: continue
+            yl = float(yl) if pd.notna(yl) else 50.0
+            is_qb = pos_of[pid] == "QB"
+            r = row(pid, wk); r["car"] += 1; r["xruyd"] += _xfp_rush(yl, is_qb)
+            r["xrutd"] += _xfp_qb_rush_td(yl) if is_qb else _xtd(yl, True)
+        for pid, wks in acc.items():
+            pos = pos_of[pid]
+            w = {}
+            for wk, r in wks.items():
+                if pos == "QB":
+                    w[wk] = [r["att"], round(r["xpyd"], 1), round(r["xptd"], 2), r["car"], round(r["xruyd"], 1), round(r["xrutd"], 2)]
+                else:
+                    w[wk] = [r["tg"], round(r["xrec"], 2), round(r["xrecyd"], 1), round(r["xrectd"], 2), r["car"], round(r["xruyd"], 1), round(r["xrutd"], 2)]
+            out[norm_name(str(name_of[pid]))] = {"pos": pos, "w": w}
+    except Exception as e:
+        print(f"WARN xfp skipped ({e})")
+    return out
+
 def build_routes_2026():
     """TE weekly route participation (%% of team dropbacks on the field) from
     2026 pbp + participation — feeds engine routeMult (backtest_route_trend.py:
@@ -577,6 +673,7 @@ def build_routes_2026():
     qbtd = build_qb_tdluck_2026()
     kluck = build_k_luck_2026()
     dstluck = build_dst_luck_2026()
+    xfp = build_xfp_2026()
     with open(ROUTES_OUT, "w", encoding="utf-8") as f:
         f.write("// built by pull_pace_tracker.py — TE weekly route participation (% of team dropbacks)\n")
         f.write("window.SIM_ROUTES_2026 = ")
@@ -606,7 +703,11 @@ def build_routes_2026():
         f.write("window.SIM_DST_LUCK_2026 = ")
         json.dump(dstluck, f, separators=(",", ":"))
         f.write(";\n")
-    print(f"wrote {ROUTES_OUT} — {len(routes)} players with 2026 route data ({n_pff} from repo route_pct.js / PFF weekly), {len(pressure)} defenses with pressure data, {len(tdluck)} RBs + {len(rectd)} WR/TEs + {len(qbtd)} QBs with TD-luck data, {len(kluck)} kickers with FG-luck data, {len(dstluck)} DSTs")
+        f.write("// per-player per-week expected fantasy point COMPONENTS (standard opportunity-based xFP; site scores them per format)\n")
+        f.write("window.SIM_XFP_2026 = ")
+        json.dump(xfp, f, separators=(",", ":"))
+        f.write(";\n")
+    print(f"wrote {ROUTES_OUT} — {len(routes)} players with 2026 route data ({n_pff} from repo route_pct.js / PFF weekly), {len(pressure)} defenses with pressure data, {len(tdluck)} RBs + {len(rectd)} WR/TEs + {len(qbtd)} QBs with TD-luck data, {len(kluck)} kickers with FG-luck data, {len(dstluck)} DSTs, {len(xfp)} players with xFP components")
 
 # ---------------------------------------------------------------------------
 # TARGET-AREA ZONES (backtest_target_area.py, 2026-09-14) - INTEL ONLY.

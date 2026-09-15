@@ -1,27 +1,30 @@
-===== Sim Lab refresh Tue 09/15/2026  8:40:49.37 ===== 
+===== Sim Lab refresh Tue 09/15/2026 10:04:31.61 ===== 
 copied mike_clay_projections.js  (36 KB)
 copied player_weekly_sigma.js  (57 KB)
-copied betting_lines_2026.js  (185 KB)
+copied betting_lines_2026.js  (187 KB)
 copied clay_team_grades_2026.js  (4 KB)
 copied yahoo_normalize.js  (13 KB)
-wrapped sim_practice.js  (182 entries, 2026-09-15T12:40)
-wrapped sim_depth.js  (32 entries, 2026-09-15T12:40)
-wrapped sleeper_players.js  (585 players, exported 2026-09-15 08:40:49)
-wrapped sim_snaps.js  (285 players with 2026 snaps)
+wrapped sim_practice.js  (182 entries, 2026-09-15T14:03)
+wrapped sim_depth.js  (32 entries, 2026-09-15T14:04)
+wrapped sleeper_players.js  (585 players, exported 2026-09-15 10:04:31)
+wrapped sim_snaps.js  (305 players with 2026 snaps)
 wrapped sim_2026.js  (325 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
 wrapped sleeper_meta.js  (577 players, 127 true rookies, 6 elite CBs)
-wrapped sim_weather.js  (12 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-15T12:40))
-cache-busted index.html scripts (?v=1789476052)
-stamped 2026-09-15 08:40
-wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 254 players with 2026 route data (254 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 78 RBs + 195 WR/TEs + 36 QBs with TD-luck data
+wrapped sim_weather.js  (12 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-15T14:04))
+cache-busted index.html scripts (?v=1789481073)
+stamped 2026-09-15 10:04
+wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 270 players with 2026 route data (270 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 78 RBs + 195 WR/TEs + 36 QBs with TD-luck data, 34 kickers with FG-luck data, 32 DSTs
 wrote E:\MyFantasyFootball\sim_lab\data\zones_2026.js - 32 defenses, 251 receivers with 2026 targets, 249 with 2025 priors
 wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 32 with 2026 data
+'"E:"' is not recognized as an internal or external command,
+operable program or batch file.
+NOTES EXPORT FAILED - continuing 
 
 [1m[37m===[39m Deploying to 'jackb933-website'...[22m
 
 [36m[1mi [22m[39m deploying [1mhosting[22m
 [36m[1mi  hosting[jb-simlab-2026]:[22m[39m beginning deploy...
-[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 195 files in [1msim_lab[22m
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 213 files in [1msim_lab[22m
 [32m[1m+  hosting[jb-simlab-2026]:[22m[39m file upload complete
 [36m[1mi  hosting[jb-simlab-2026]:[22m[39m finalizing version...
 [32m[1m+  hosting[jb-simlab-2026]:[22m[39m version finalized
@@ -32,4 +35,4 @@ wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 32 with 2026 da
 
 [1mProject Console:[22m https://console.firebase.google.com/project/jackb933-website/overview
 [1mHosting URL:[22m https://jb-simlab-2026.web.app
-===== done Tue 09/15/2026  8:41:35.75 ===== 
+===== done Tue 09/15/2026 10:04:48.20 ===== 

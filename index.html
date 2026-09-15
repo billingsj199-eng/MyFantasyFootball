@@ -4285,7 +4285,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weekly_projections.js?v=2026-09-14" defer></script>
 <script src="data/weather_2026.js?v=2026-09-15-08" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
-<script src="data/player_roles_2026.js?v=2026-09-14c" defer></script>
+<script src="data/player_roles_2026.js?v=2026-09-15-0848" defer></script>
 <script src="data/sim_proj_2026.js?v=2026-09-14-23" defer></script>
 <script src="data/site_projections.js?v=2026-09-14" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -5599,9 +5599,9 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-09-14-1444',
+    'data/snap_counts.js?v=2026-09-15-0848',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-09-14-1444'
+    'data/route_pct.js?v=2026-09-15-0848'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }

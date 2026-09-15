@@ -3815,7 +3815,7 @@ function getFiltered(applyTopN) {
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'xfp') { av = _xfpSortVal(a, 'tdg'); bv = _xfpSortVal(b, 'tdg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'yrr': if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
         case 'jm': if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -6110,14 +6110,14 @@ function render() {
         _statYdsTail = '—';
       } else {
         const _scope = _isWeekly ? 'Week ' + (window._weeklyActiveWeek || 1) : _xa.n + ' game' + (_xa.n > 1 ? 's' : '') + ' to date';
-        const _tip = ' title="' + (_scope + ': scored ' + _sg(_xa.fpoe) + ' vs expected — TD luck ' + _sg(_xa.td) + ' (regresses), yards/catches ' + _sg(_xa.fpoe - _xa.td) + ' (skill, mostly repeats)').replace(/"/g, '&quot;') + '" style="cursor:help';
+        const _tip = ' title="' + (_scope + ': scored ' + _sg(_xa.fpoe) + ' vs expected — TD luck ' + _sg(_xa.td) + ' (regresses), ' + (d.s === 'QB' && _xa.int ? 'INTs ' + _sg(_xa.int) + ', ' : '') + 'yards/catches ' + _sg(_xa.fpoe - _xa.luck) + ' (skill, mostly repeats)').replace(/"/g, '&quot;') + '" style="cursor:help';
         const _pc = posFptsColor(_xa.ppg, d.s);
         const _oc = _xa.fpoeg <= -1.5 ? '#22c55e' : _xa.fpoeg >= 1.5 ? '#f87171' : null;
-        const _tc = _xa.tdg <= -1 ? '#22c55e' : _xa.tdg >= 1 ? '#f87171' : null;
+        const _tc = _xa.luckg <= -1 ? '#22c55e' : _xa.luckg >= 1 ? '#f87171' : null;
         _statTd1 = '<td class="pts-cell ppg-proj-cell"' + _tip + (_pc ? ';color:' + _pc + ';font-weight:700' : '') + '">' + _f1(_xa.ppg) + '</td>';
         _statTds = '<td class="pts-cell ppg25-cell"' + _tip + '">' + _f1(_xa.xfpg) + '</td>'
           + '<td class="pts-cell l4ppg-cell"' + _tip + (_oc ? ';color:' + _oc + ';font-weight:700' : '') + '">' + _sg(_xa.fpoeg) + '</td>';
-        _statYdsTail = '<span' + _tip + (_tc ? ';color:' + _tc + ';font-weight:700' : '') + '">' + _sg(_xa.tdg) + '</span>';
+        _statYdsTail = '<span' + _tip + (_tc ? ';color:' + _tc + ';font-weight:700' : '') + '">' + _sg(_xa.luckg) + '</span>';
       }
     } else if (_statMode === 'adp') {
       // ADP comparison view: platform ADPs side by side vs the current board's rank
@@ -6279,7 +6279,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'xfp' ? 'TD Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -6316,7 +6316,7 @@ function render() {
       ? 'Total yards PER GAME — passing + rushing + receiving, over the latest season with games played (2026 to date once the season is underway, else 2025). Hover a value for the breakdown.'
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
-  if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The TD-luck part of points over expected: touchdown points scored minus TD points expected from where the touches came' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.');
+  if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
   window._applyCellVisibility = function () {
@@ -9466,7 +9466,7 @@ function _simProjRow(d, wk) {
 // FPOE = actual − xFP. Sim Lab backtests split the gap: the TD part is luck
 // (year-to-year r .09) and regresses; the yards/catch part is skill (r .34 /
 // .32) and mostly repeats — the tooltip shows both halves.
-const _XFP_HDR = '<th><span data-gloss="Expected fantasy points: what an average player scores from this exact usage — every target valued by its completion probability and expected yards after the catch (nflfastR play models) plus league TD rates by field position; every carry by field position; QB attempts also net the expected interceptions. Actual minus xFP = points over expected. Hover a value: the TD part of the gap is luck and regresses; the yards/catch part is skill and mostly repeats. 2026 only.">xFP</span></th>';
+const _XFP_HDR = '<th><span data-gloss="Expected fantasy points: what an average player scores from this exact usage — every target valued by its completion probability and expected yards after the catch (nflfastR play models) plus league TD rates by field position; every carry by field position; QB attempts also net the expected interceptions. Actual minus xFP = points over expected. Hover a value: the TD part of the gap is luck and regresses; the yards/catch part is skill and mostly repeats. Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict. 2026 only.">xFP</span></th>';
 function _xfpRow(d, wk) {
   const SP = window.SIM_PROJ_2026;
   const X = SP && SP.xfp;
@@ -9525,17 +9525,18 @@ function _xfpRowsFor(d) {
 function _xfpAgg(d, fmt, wk) {
   if (d.s === 'K' || d.s === 'DST') return null;
   const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;   // WEEKLY_STATS fpts are half-PPR
-  let n = 0, fp = 0, xfp = 0, td = 0;
+  let n = 0, fp = 0, xfp = 0, td = 0, it = 0;
   for (const w of _xfpRowsFor(d)) {
     if (typeof w.fpts !== 'number') continue;
     if (wk != null && w.wk !== wk) continue;
     const f = w.fpts + (w.rec || 0) * recAdj;
     const x = _xfpFor(d, Object.assign({}, w, { fpts: f }), d.s, fmt);
     if (!x) continue;
-    n++; fp += f; xfp += x.xfp; td += x.tdPart;
+    n++; fp += f; xfp += x.xfp; td += x.tdPart; it += x.intPart || 0;
   }
   if (!n) return null;
-  return { n, fp, xfp, fpoe: fp - xfp, td, ppg: fp / n, xfpg: xfp / n, fpoeg: (fp - xfp) / n, tdg: td / n };
+  // luck = TD luck (+ INT luck for QBs): the part of FPOE that regresses
+  return { n, fp, xfp, fpoe: fp - xfp, td, int: it, luck: td + it, ppg: fp / n, xfpg: xfp / n, fpoeg: (fp - xfp) / n, tdg: td / n, intg: it / n, luckg: (td + it) / n };
 }
 function _xfpSortVal(d, k) {
   const x = _xfpAgg(d, rankingScoringFmt, currentMode === 'weekly' ? (window._weeklyActiveWeek || 1) : null);

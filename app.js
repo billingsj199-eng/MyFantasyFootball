@@ -63116,6 +63116,56 @@ Rules:
     });
   }
 
+  // ---- Explorer scatter (Jack 2026-09-16: "add a scatter to the players lookup too") ----
+  // The Season Explorer's rows (the same filters, the first 400 the table shows) on any two of
+  // ADP / positional ADP / ESPN ADP / finish / +/- / points / PPG / games / year / draft round.
+  // Default = positional ADP vs finish with a "finished at ADP" line: below it beat the ADP.
+  // Shares the _rsScatter drawer with Advanced Stats, Coach and Movers.
+  let _exLast = null, _scX = null;
+  const EX_COLS = [
+    { k: 'pAdp', l: 'Pos ADP', d: 0, lo: true }, { k: 'f', l: 'Overall ADP', d: 0, lo: true }, { k: 'e', l: 'ESPN ADP', d: 0, lo: true },
+    { k: 'fin', l: 'Finish', d: 0, lo: true }, { k: 'val', l: '+/- (Pos ADP minus finish)', d: 0 },
+    { k: 'fpts', l: 'FPTS (half-PPR)', d: 1 }, { k: 'ppg', l: 'PPG', d: 1 }, { k: 'gp', l: 'GP', d: 0 },
+    { k: 'yr', l: 'Year', d: 0 }, { k: 'round', l: 'NFL draft round (0 = undrafted)', d: 0, lo: true }
+  ];
+  function _exFilters() {
+    const g = id => (document.getElementById(id) || {});
+    const yFrom = +(g('rsYrFrom').value || _yrMin), yTo = +(g('rsYrTo').value || _yrMax);
+    const round = g('rsRound').value || '', rookie = !!g('rsRookie').checked, minGp = +(g('rsMinGp').value || 0);
+    const RL = { '1': 'round 1', '2': 'round 2', '3': 'round 3', d2: 'day 2', d3: 'day 3', udfa: 'undrafted' };
+    return { pos: g('rsPos').value || '', yFrom: yFrom, yTo: yTo, round: RL[round] || '', rookie: rookie, minGp: minGp };
+  }
+  function _exScatter() {
+    return _rsScatter({
+      pfx: 'rsExSc', host: 'rsExScatter', btn: 'rsExPlot', store: 'rsExScatter',
+      group: () => 'ex',
+      cols: () => EX_COLS,
+      defaults: () => ['pAdp', 'fin'],
+      data: () => (_exLast && _exLast.rows.length ? { rows: _exLast.rows, pg: false, val: (r, col) => r[col.k] } : null),
+      label: col => col.l,
+      dec: col => col.d,
+      short: r => {
+        const parts = String(r.name || '').split(' ');
+        return (parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : r.name) + " '" + String(r.yr).slice(-2);
+      },
+      tm: r => r.tm || '',
+      tipHead: r => '<strong>' + _esc(r.name) + '</strong> <span class="rs-fmt">' + _esc(r.pos) + ' · ' + r.yr + (r.tm ? ' · ' + _esc(r.tm) : '') + '</span>',
+      canOpen: () => true,
+      open: r => { _selectPlayer(r.name); const el = document.getElementById('rsPlayerPanel'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
+      openNote: () => ', click to open the player above',
+      same: (cx, cy) => ((cx.k === 'pAdp' && cy.k === 'fin') || (cx.k === 'fin' && cy.k === 'pAdp') ? 'finished at ADP' : null),
+      sameNote: 'dotted = finished exactly at positional ADP (with Finish on Y, below it beat the ADP)',
+      noun: () => 'player-seasons',
+      title: () => {
+        const F = _exFilters();
+        const bits = [F.round, F.rookie ? 'rookie seasons' : '', F.minGp ? 'min ' + F.minGp + ' GP' : ''].filter(Boolean);
+        return { main: (F.yFrom === F.yTo ? F.yFrom : F.yFrom + '-' + F.yTo) + ' ' + (F.pos === 'DEF' ? 'DST' : F.pos || 'all positions') + ' seasons',
+          sub: (bits.length ? bits.join(' · ') + ' · ' : '') + 'preseason ADP vs the season that followed' + (_exLast && _exLast.total > _exLast.rows.length ? ' · first ' + _exLast.rows.length + ' of ' + _exLast.total + ' as the table' : '') };
+      },
+      file: () => { const F = _exFilters(); return 'MFF-Scatter-Seasons-' + F.yFrom + '-' + F.yTo + (F.pos ? '-' + F.pos : '') + (F.rookie ? '-rookies' : ''); }
+    });
+  }
+
   // ---- Explorer ----
   const _COLS = [
     { k: 'name', label: 'Player', num: false },
@@ -63170,6 +63220,7 @@ Rules:
     });
     const total = rows.length;
     rows = rows.slice(0, 400);
+    _exLast = { rows: rows, total: total };
     const cnt = document.getElementById('rsCount');
     if (cnt) cnt.textContent = total + ' seasons' + (total > 400 ? ' (showing 400)' : '');
     let html = '<table class="rs-table rs-explorer"><thead><tr>' + _COLS.map(c =>
@@ -63184,6 +63235,7 @@ Rules:
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
+    if (_scX) _scX.render();
     if (!wrap._rsWired) {
       wrap._rsWired = true;
       wrap.addEventListener('click', e => {
@@ -63209,6 +63261,7 @@ Rules:
     _build();
     _wireSearch();
     _wireControls();
+    if (!_scX && typeof _rsScatter === 'function') { _scX = _exScatter(); _scX.wire(); }
     _renderExplorer();
   }
   window._renderResearch = function _renderResearch() {
@@ -63568,7 +63621,7 @@ function _rsScatter(cfg) {
       const ctx = c.getContext('2d');
       ctx.setTransform(S, 0, 0, S, 0, 0);
       draw(ctx, W, H, D, theme(host), lab);
-      const clean = s => String(s).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      const clean = s => String(s).replace(/Δ/g, 'Delta').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       const name = cfg.file() + '-' + clean(cfg.label(D.cy, D.pg)) + '-vs-' + clean(cfg.label(D.cx, D.pg)) + '.png';
       const send = () => {
         const a = document.createElement('a');
@@ -65096,6 +65149,58 @@ function _rsScatter(cfg) {
     if (localStorage.getItem('rsMvWin') === '3') _mvWin = 3;
   } catch (e) { /* storage blocked */ }
 
+  // --- movers scatter (Jack 2026-09-16: "add a scatter to the movers view too") ---------
+  // Every qualifying mover (both tables, all of them, not just the top 20) on any two of: the
+  // last window, the prior 3, the change, the season average, games, and on the current
+  // season this week's projection / book / gap / DK lines. Default = prior 3 vs last with a
+  // "no change" line: above it rose, below it fell.
+  let _mvLast = null;
+  const MV_WK_COLS = [
+    { k: 'w_proj', l: 'Proj', g: 'This week', d: 1 }, { k: 'w_book', l: 'Book', g: 'This week', d: 1 },
+    { k: 'w_edge', l: 'Site-Book', g: 'This week', d: 1 }, { k: 'w_tt', l: 'Team total', g: 'This week', d: 1 },
+    { k: 'w_spread', l: 'Spread', g: 'This week', d: 1, lo: true }, { k: 'w_gt', l: 'Game total', g: 'This week', d: 1 }
+  ];
+  function _mvScCols() {
+    const L = _mvLast, met = L ? L.met : MV_METRICS[0], winL = _mvWin === 1 ? 'Last game' : 'Last 3';
+    const cols = [
+      { k: 'last', l: winL + ' ' + met.l, g: 'Movers', d: met.d }, { k: 'prev', l: 'Prior 3 ' + met.l, g: 'Movers', d: met.d },
+      { k: 'd', l: '\u0394 ' + met.l, g: 'Movers', d: met.d }, { k: 'season', l: 'Season ' + met.l, g: 'Movers', d: met.d },
+      { k: 'games', l: 'Games played', g: 'Movers', d: 0 }
+    ];
+    return L && L.wkOn ? cols.concat(MV_WK_COLS) : cols;
+  }
+  function _mvScVal(r, col) {
+    switch (col.k) {
+      case 'w_proj': return _wkProj(r);
+      case 'w_book': return _wkBook(r, r.pos);
+      case 'w_edge': { const a = _wkProj(r), b = _wkBook(r, r.pos); return a != null && b != null ? a - b : null; }
+      case 'w_tt': { const g = _wkGame(r.tm); return g ? g.implied : null; }
+      case 'w_spread': { const g = _wkGame(r.tm); return g ? g.spread : null; }
+      case 'w_gt': { const g = _wkGame(r.tm); return g ? g.total : null; }
+      default: return r[col.k];
+    }
+  }
+  const _scM = _rsScatter({
+    pfx: 'rsMvSc', host: 'rsMvScatter', btn: 'rsMvPlot', store: 'rsMvScatter',
+    group: () => 'mv',
+    cols: _mvScCols,
+    defaults: () => ['prev', 'last'],
+    data: () => (_mvLast && _mvLast.rows.length ? { rows: _mvLast.rows, pg: false, val: _mvScVal } : null),
+    label: col => (col.g === 'This week' ? col.l + ' (Wk ' + _wkNum() + (col.k === 'w_proj' || col.k === 'w_book' || col.k === 'w_edge' ? ', ' + FMT_NAME[_fmt] : '') + ')' : col.l + (_mvLast && _mvLast.met.pct && col.k !== 'games' ? ' (%)' : '')),
+    dec: col => col.d,
+    short: r => { const parts = String(r.n || '').split(' '); return parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : r.n; },
+    tm: r => r.tm || '',
+    tipHead: r => '<strong>' + _esc(r.n) + '</strong> <span class="rs-fmt">' + _esc(r.tm || '') + ' ' + _esc(r.pos) + '</span>',
+    canOpen: r => !!r.on && typeof openPlayerCard === 'function' && typeof D !== 'undefined',
+    open: r => { const d = D.find(q => q.n === r.n); if (d) openPlayerCard(d); },
+    openNote: () => ', click to open the card',
+    same: (cx, cy) => ((cx.k === 'prev' && cy.k === 'last') || (cx.k === 'last' && cy.k === 'prev') ? 'no change' : null),
+    sameNote: 'dotted = no change (above it rose, below it fell)',
+    noun: () => 'movers',
+    title: () => ({ main: _mvYr + ' MOVERS' + (_mvPos ? ' ' + _mvPos : ''), sub: 'through Week ' + _mvWk + ' · ' + (_mvWin === 1 ? 'last game vs prior 3' : 'last 3 vs prior 3') + (_mvTm ? ' · ' + _mvTm : '') }),
+    file: () => 'MFF-Scatter-Movers-' + _mvYr + '-W' + _mvWk + (_mvPos ? '-' + _mvPos : '') + (_mvTm ? '-' + _mvTm : '')
+  });
+
   // one entry per player: his played weeks up to the anchor week with the metric and his volume
   function _mvCompute(met) {
     const sf = _seasonFile(_mvYr);
@@ -65153,26 +65258,45 @@ function _rsScatter(cfg) {
       tmSel.innerHTML = '<option value="">All teams</option>' + teams.map(t => '<option value="' + t + '"' + (t === _mvTm ? ' selected' : '') + '>' + t + '</option>').join('');
     }
     const f = rows.filter(r => (!_mvPos || r.pos === _mvPos) && (!_mvTm || r.tm === _mvTm));
+    _mvLast = { rows: f, met: met, wkOn: _mvYr === 2026 && !!(window.SIM_PROJ_2026 || window.BETTING_2026) };
     const risers = f.filter(r => r.d > 0).sort((a, b) => b.d - a.d), fallers = f.filter(r => r.d < 0).sort((a, b) => a.d - b.d);
     const N = _mvAll ? Infinity : 20;
     const winL = _mvWin === 1 ? 'Last game' : 'Last 3';
+    // this week's projections + lines on the current season (Jack 2026-09-16: "add the week
+    // columns to the movers view too") - same helpers as the Advanced Stats Week group
+    const wk = _wkNum(), wkOn = _mvYr === 2026 && !!(window.SIM_PROJ_2026 || window.BETTING_2026);
+    const n1 = v => (v == null ? '<span class="rs-fmt">&ndash;</span>' : Number(v).toFixed(1));
+    const wkCells = r => {
+      const pr = _wkProj(r), bk = _wkBook(r, r.pos), g = _wkGame(r.tm);
+      const gap = pr != null && bk != null ? pr - bk : null;
+      return '<td class="rs-adv-gs">' + n1(pr) + '</td><td>' + n1(bk) + '</td>' +
+        '<td' + (gap == null ? '' : ' class="' + (gap >= 0.05 ? 'rs-mv-up' : gap <= -0.05 ? 'rs-mv-dn' : '') + '"') + '>' + (gap == null ? '<span class="rs-fmt">&ndash;</span>' : (gap > 0 ? '+' : '') + gap.toFixed(1)) + '</td>' +
+        '<td>' + n1(g ? g.implied : null) + '</td><td>' + (g ? (g.spread > 0 ? '+' : '') + g.spread.toFixed(1) : '<span class="rs-fmt">&ndash;</span>') + '</td>';
+    };
     const tbl = (list, cls, title, word) => {
       const head = '<div class="rs-co-head"><span class="rs-co-title">' + title + '</span><span class="rs-co-sub">' +
         (list.length > N ? 'top ' + N + ' of ' + list.length : list.length + ' player' + (list.length === 1 ? '' : 's')) + ' · ' + _esc(met.l) + '</span></div>';
       if (!list.length) return head + '<div class="rs-empty">No ' + word + ' in ' + _esc(met.l) + ' for these filters.</div>';
       let h = '<div class="rs-table-wrap rs-mv-wrap"><table class="rs-table rs-adv rs-mv"><thead><tr class="rs-adv-hdr">' +
         '<th class="rs-adv-nm">Player</th><th class="rs-adv-tm">Tm</th><th class="rs-adv-tm">Pos</th><th title="' + _esc(met.l) + (_mvWin === 1 ? ' in the last game played' : ' averaged over the last 3 games played') + '">' + winL + '</th>' +
-        '<th title="Average over the 3 games played before that (fewer in brackets)">Prior 3</th><th title="Change; hover a cell for the by-game trail">&Delta;</th><th title="Season average over every game played through this week">Season</th></tr></thead><tbody>';
+        '<th title="Average over the 3 games played before that (fewer in brackets)">Prior 3</th><th title="Change; hover a cell for the by-game trail">&Delta;</th><th title="Season average over every game played through this week">Season</th>' +
+        (wkOn ? '<th class="rs-adv-gs" title="This week\'s site projection (Sim Lab export, ' + FMT_NAME[_fmt] + ')">Wk' + wk + ' Proj</th>' +
+          '<th title="This week\'s sportsbook props scored as fantasy points (DK / FD / MGM / UD / PP average, TDs from the anytime odds)">Book</th>' +
+          '<th title="Site projection minus book: positive = the site is higher on the player than the sportsbooks">Site-Book</th>' +
+          '<th title="Points the team is expected to score this week (DK line)">Team tot</th>' +
+          '<th title="This week\'s DK spread from the team\'s side: negative = favored">Spread</th>' : '') +
+        '</tr></thead><tbody>';
       list.slice(0, N).forEach((r, i) => {
         h += '<tr' + (r.on ? ' class="rs-adv-click" data-n="' + _esc(r.n) + '"' : '') + '><td class="rs-adv-nm' + (r.on ? ' rs-name' : ' rs-adv-off') + '" title="' + _esc(r.n) + (r.on ? '' : ' (not on the site board)') + '"><span class="rs-adv-rk">' + (i + 1) + '</span>' + _esc(r.n) + '</td>' +
           '<td class="rs-adv-tm">' + _esc(r.tm || '') + '</td><td class="rs-adv-tm">' + r.pos + '</td><td>' + fmt(r.last) + '</td>' +
           '<td>' + fmt(r.prev) + (r.np < 3 ? ' <span class="rs-fmt">(' + r.np + ')</span>' : '') + '</td>' +
           '<td class="' + cls + '" title="' + _esc(r.trail) + '">' + (r.d > 0 ? '+' : '') + fmt(r.d).replace('%', '') + (met.pct ? ' pts' : '') + '</td>' +
-          '<td>' + fmt(r.season) + ' <span class="rs-fmt">' + r.games + 'g</span></td></tr>';
+          '<td>' + fmt(r.season) + ' <span class="rs-fmt">' + r.games + 'g</span></td>' + (wkOn ? wkCells(r) : '') + '</tr>';
       });
       return head + h + '</tbody></table></div>';
     };
     up.innerHTML = tbl(risers, 'rs-mv-up', '&#9650; Risers', 'risers');
+    _scM.render();
     dn.innerHTML = tbl(fallers, 'rs-mv-dn', '&#9660; Fallers', 'fallers');
     if (more) { more.hidden = risers.length <= 20 && fallers.length <= 20; more.textContent = _mvAll ? 'Top 20' : 'Show all'; }
     if (cnt) cnt.textContent = f.length + ' qualify · ' + _mvYr + ' through Week ' + _mvWk + ' · ' + (_mvWin === 1 ? 'last game vs prior 3' : 'last 3 vs prior 3');
@@ -65180,7 +65304,8 @@ function _rsScatter(cfg) {
       'Each row compares ' + met.l.toLowerCase() + ' in the ' + (_mvWin === 1 ? 'last game played' : 'last 3 games played (2 or more of the 3 weeks ending at the week picked)') +
       ' with the player\'s average over the 3 games played before that, from the same week files as the Advanced Stats table (shares are of that week\'s team volume). ' +
       'Players need an average of 3 opportunities (RB) or 6 routes (WR, TE) per game in one of the two windows. Δ is descriptive, not a forecast: in 2019-2025 testing, players who had risen scored less over the next 3 games than others at the same recent usage, and players who had fallen scored more. ' +
-      'Hover Δ for the by-game trail; click a player to open the card.';
+      'Hover Δ for the by-game trail; click a player to open the card.' +
+      (wkOn ? ' Week ' + wk + ' columns: Proj = the site\'s Sim Lab projection (' + FMT_NAME[_fmt] + ', the Advanced Stats scoring toggle), Book = DK / FD / MGM / UD / PP props scored as fantasy points, Site-Book = the gap, team total and spread = DK lines.' : '');
   }
 
   function _mvLoad() {
@@ -65248,6 +65373,7 @@ function _rsScatter(cfg) {
       _mvRender();
     });
     _el('rsMvMore').addEventListener('click', () => { _mvAll = !_mvAll; _mvRender(); });
+    _scM.wire();
     ['rsMvUp', 'rsMvDn'].forEach(id => _el(id).addEventListener('click', e => {
       const tr = e.target.closest('tr[data-n]');
       if (tr && typeof openPlayerCard === 'function' && typeof D !== 'undefined') {
@@ -65261,7 +65387,7 @@ function _rsScatter(cfg) {
   window._renderMovers = function _renderMovers() {
     if (!_el('rsMvUp')) return;
     _mvWire();
-    if (_mvStarted) return;
+    if (_mvStarted) { if (_scM.isOn()) _scM.render(); return; }
     _mvStarted = true;
     _mvLoad();
   };
@@ -65330,15 +65456,24 @@ function _rsScatter(cfg) {
   // This week (Jack 2026-09-16: "add the week columns to the coach view too"): DK game lines for
   // the coach's current team, stamped in _rows() on coaches whose latest season is 2026
   const WK = 'This week';
-  const WK_COLS = [
+  const WK_GAME = [
     c('w_tt', 'Team total', WK, 1, 'Points the coach\'s team is expected to score this week: (game total - team spread) / 2 from the DK line'),
     c('w_spread', 'Spread', WK, 1, 'This week\'s DK spread from the team\'s side: negative = favored', LO),
-    c('w_gt', 'Game total', WK, 1, 'This week\'s DK over / under'),
+    c('w_gt', 'Game total', WK, 1, 'This week\'s DK over / under')
+  ];
+  const WK_OWN = [
     c('w_tproj', 'Team proj', WK, 1, 'Sum of this week\'s site (Sim Lab) projections for the team\'s QB / RB / WR / TE, in the Advanced Stats scoring format'),
     c('w_tbook', 'Team book', WK, 1, 'Sum of this week\'s sportsbook projections (props scored as fantasy points, TDs from the anytime odds) for the team\'s skill players who have posted props'),
     c('w_tgap', 'Site-Book', WK, 1, 'Team projection gap: site minus book, summed over the players who have both; positive = the site is higher on this offense than the sportsbooks')
   ];
-  const ROLE_COLS = { op: OFF_COLS.concat(WK_COLS), hc: OFF_COLS.concat(DEF_COLS, WK_COLS), dp: DEF_COLS.concat(WK_COLS) };
+  // the offense a defense faces (Jack 2026-09-16: "add the opponent team's numbers for defensive playcallers")
+  const WK_OPP = [
+    c('w_ott', 'Opp total', WK, 1, 'Points the opponent is expected to score against this team this week: game total minus the team\'s implied total (DK line)', LO),
+    c('w_oproj', 'Opp proj', WK, 1, 'Sum of this week\'s site (Sim Lab) projections for the opponent\'s QB / RB / WR / TE - what this defense faces', LO),
+    c('w_obook', 'Opp book', WK, 1, 'Sum of this week\'s sportsbook projections for the opponent\'s skill players who have posted props', LO),
+    c('w_ogap', 'Opp Site-Book', WK, 1, 'Opponent offense gap: site minus book over the opponent\'s players who have both; positive = the site expects more from that offense than the sportsbooks', LO)
+  ];
+  const ROLE_COLS = { op: OFF_COLS.concat(WK_GAME, WK_OWN), hc: OFF_COLS.concat(DEF_COLS, WK_GAME, WK_OWN, WK_OPP), dp: DEF_COLS.concat(WK_GAME, WK_OPP) };
   function _wkStamp(o, tm, yr) {
     const W = window._rsWeek;
     const g = W && yr === 2026 ? W.game(tm) : null;
@@ -65349,6 +65484,11 @@ function _rsScatter(cfg) {
     o.w_tproj = T ? T.proj : null;
     o.w_tbook = T ? T.book : null;
     o.w_tgap = T ? T.gap : null;
+    const O = g && W ? W.team(g.opp) : null;
+    o.w_ott = g ? g.total - g.implied : null;
+    o.w_oproj = O ? O.proj : null;
+    o.w_obook = O ? O.book : null;
+    o.w_ogap = O ? O.gap : null;
     return o;
   }
   const ROLE_NAME = { op: 'offensive playcallers', hc: 'head coaches', dp: 'defensive playcallers' };
@@ -65728,7 +65868,7 @@ function _rsScatter(cfg) {
     if (csvBtn) csvBtn.disabled = !rows.length;
     if (foot) foot.textContent = 'Playcaller = the offensive / defensive coordinator Pro Football Reference lists, unless coach_overrides.json names a head coach who calls plays; a season with a mid-year coordinator change shows both names ("A / B"). ' +
       'Sources: nflverse play-by-play (tendency, pace, 4th down, run direction, results), nflverse participation (formation, personnel, coverage shells, box counts; published after each season, so 2026 stays blank), FTN charting via nflverse (play design, 2022+), PFF (target share by position; blitz, man and pressure the opponent faced). ' +
-      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.' + (window._rsWeek ? ' Week ' + window._rsWeek.num() + ' columns = this week\'s DK team total / spread / game total for the coach\'s current team, plus the team\'s skill-player projections (site = Sim Lab, book = props scored, ' + window._rsWeek.fmt() + '; the gap is summed over players with both) - coaches whose latest season is 2026.' : '');
+      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.' + (window._rsWeek ? ' Week ' + window._rsWeek.num() + ' columns = this week\'s DK team total / spread / game total for the coach\'s current team, plus skill-player projections rolled up per team (site = Sim Lab, book = props scored, ' + window._rsWeek.fmt() + '; the gap is summed over players with both): the coach\'s own offense for playcallers, the opponent\'s offense (Opp columns) for defensive playcallers, both for head coaches - coaches whose latest season is 2026.' : '');
     _fillVs();
     _coChart();
     _scC.render();

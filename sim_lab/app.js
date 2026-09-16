@@ -4332,6 +4332,186 @@
     }
     return chips;
   }
+  // ---------------- WHY notes + MATCHUP EDGES (Jack 2026-09-16: "build the per-player why notes for videos ... also
+  // highlight players with the biggest advanced weekly matchups positives and negatives") ----------------
+  // ntWhy turns weeklyProjection's why pieces into a points waterfall in the engine's own order, so the steps add up
+  // to the model number exactly; the market step closes the gap to PROJ. ntShadowWhy adds the learned shadow's top
+  // drivers (half-PPR, path attribution; shadow only). ntMatchup scores the week's matchup in % of the projection:
+  // PRICED = layers already inside PROJ (opponent FPA / Clay grade, pass rush, CB, OL, wind); INTEL = advanced reads
+  // the backtests did NOT validate as projection inputs (coverage fit, pressure vs the QB's splits, run defense,
+  // target zones, defensive injuries) - for content, not for changing the number.
+  var NT_FEAT_LABEL = { HAND: 'size of the projection', snap_l1: 'last-game snap share', snap_std: 'season snap share', snap_trend: 'snap trend', plays_pg_std: 'team pace',
+    clay: 'Clay level', ppg: 'PPG so far', g: 'games played', wk: 'week of season', blend: 'Clay/PPG blend', veg: 'team total', implied: 'team total', game_total: 'game total',
+    spread: 'spread', fpa_mult: 'opponent FPA', snapmult: 'snap-trend layer', td_luck_pg: 'TD luck', td_luck_adj: 'TD luck', cond_mult: 'injury tag', rep_q: 'Questionable tag',
+    prac_dnp: 'missed practice', prac_lim: 'limited practice', rookie_mult: 'rookie', usage_half: 'snap usage', weather_mult: 'wind', wind: 'wind', pool_mult: 'vacated work',
+    qb_inherit_mult: 'backup QB role', pos_qb: 'position', pos_rb: 'position', pos_wr: 'position', pos_te: 'position' };
+  function ntWhy(p, wk, sc, slot, wp) {
+    var w = wp && wp.why; if (!w || p.isDST) return null;
+    var steps = [], run = w.clayPg;
+    var push = function (key, d, lab) { if (Math.abs(d) >= 0.1) steps.push({ key: key, d: d, lab: lab }); };
+    var rec = window.SIM_2026 && window.SIM_2026.players ? window.SIM_2026.players[p.norm] : null;
+    if (rec && rec.g) push('form', w.jsBase - w.clayPg, '2026 form (' + ntF(rec.ppg, 1) + ' half PPG in ' + rec.g + ' gm, ' + Math.round(100 * rec.g / (5 + rec.g)) + '% weight)');
+    push('rookie', w.jsPgRook - w.jsBase, 'rookie level x' + ntF(w.rook, 2));
+    if (w.usage) push('usage', w.jsPg - w.jsPgRook, 'snap usage ' + ntF(w.usage.share, 0) + '% x ' + ntF(w.usage.plays, 0) + ' plays');
+    run = w.jsPg;
+    var fp = ntFpa(slot.opp), oppLab = 'opp ' + slot.opp;
+    if (fp && fp.f[p.pos] != null && fp.lg[p.pos]) oppLab += ' allows ' + ntSigned(100 * (fp.f[p.pos] / fp.lg[p.pos] - 1), 0) + '% to ' + p.pos + 's (' + (fp.f._g || '?') + ' gm)';
+    else if (Math.abs(w.dAdj - 1) >= 0.01) oppLab += ' (Clay unit grade x' + ntF(w.dAdj, 2) + ')';
+    var im = E.injuryState() && E.injuryState().map ? E.injuryState().map[p.norm] : null;
+    var avLab = w.iA > 1 ? (p.pos === 'QB' ? 'starting QB out: backup inherits 85% of his level' : 'vacated work from injured teammates x' + ntF(w.iA, 2)) : (im ? 'availability ' + (im.src || '') + ' x' + ntF(w.iA, 2) : 'availability x' + ntF(w.iA, 2));
+    var sn = window.SIM_SNAPS_2026 ? window.SIM_SNAPS_2026[p.name] : null, snLab = 'snap trend';
+    if (sn && sn.w) { var sw = Object.keys(sn.w).map(Number).filter(function (x) { return x < wk; }).sort(function (x, y) { return x - y; }); if (sw.length >= 2) snLab += ' (last ' + ntF(sn.w[sw[sw.length - 1]], 0) + '% vs avg ' + ntF(sw.reduce(function (t, x) { return t + sn.w[x]; }, 0) / sw.length, 0) + '%)'; }
+    [['vegas', w.veg, 'Vegas (' + p.tm + ' implied ' + ntF(w.implied, 1) + ' vs avg ' + ntF(w.avgImplied, 1) + ')'], ['opp', w.opp, oppLab], ['cbShadow', w.cbShadow, 'CB shadow'],
+     ['cb1Out', w.cb1Out, slot.opp + ' CB1 out'], ['olOut', w.olOut, p.tm + ' OL starters out'], ['pressure', w.pressure, 'soft pass rush'], ['weather', w.weather, 'wind'],
+     ['snap', w.snap, snLab], ['route', w.route, 'route trend'], ['ramp', w.ramp, 'return-from-injury ramp'], ['avail', w.iA, avLab]].forEach(function (m) {
+      if (m[1] == null || m[1] === 1) return;
+      var d = run * (m[1] - 1); run *= m[1]; push(m[0], d, m[2]);
+    });
+    var lm = (p.pos === 'QB' ? window.SIM_QB_TDLUCK_2026 : (p.pos === 'RB' ? window.SIM_RB_TDLUCK_2026 : window.SIM_REC_TDLUCK_2026)) || null, lr = lm ? lm[p.norm] : null;
+    push('luck', w.luck, 'TD luck (' + (lr ? lr.td + ' TD on ' + ntF(lr.xtd, 1) + ' expected' : 'regression') + ')');
+    var model = Math.max(0, run + w.luck), eff = E.effMean(wp);
+    var mk = eff - model;
+    if (Math.abs(mk) >= 0.1) steps.push({ key: 'market', d: mk, lab: wp.propSrc === 'line' ? 'books\' lines (' + ntF(wp.propMean, 1) + ', anchored ' + Math.round(100 * (wp.propW || 0.7)) + '%)' : wp.propSrc === 'rate' ? 'market rate from other weeks (' + ntF(wp.propMean, 1) + ')' : 'market / effective mean' });
+    var top = steps.slice().sort(function (x, y) { return Math.abs(y.d) - Math.abs(x.d); })[0];
+    var text = 'PROJ ' + ntF(eff, 1) + ' = Clay ' + ntF(w.clayPg, 1) + steps.map(function (s) { return ' \u00b7 ' + s.lab + ' ' + ntSigned(s.d, 1); }).join('') +
+      (top ? ' \u2014 biggest driver: ' + top.lab.split(' (')[0] + ' ' + ntSigned(top.d, 1) : '');
+    return { text: text, steps: steps, model: model, eff: eff, top: top };
+  }
+  function ntShadowWhy(p, wk) {
+    if (!E.learnedShadowExplain || p.isDST) return null;
+    var x = E.learnedShadowExplain(p, wk, state.schedule); if (!x || x.corr == null || Math.abs(x.corr) < 0.3) return null;
+    var g = {};
+    Object.keys(x.contrib).forEach(function (k) { var lab = NT_FEAT_LABEL[k] || k; g[lab] = (g[lab] || 0) + x.contrib[k]; });
+    var top = Object.keys(g).map(function (k) { return [k, g[k]]; }).filter(function (t) { return Math.abs(t[1]) >= 0.1; }).sort(function (u, v) { return Math.abs(v[1]) - Math.abs(u[1]); }).slice(0, 3);
+    return 'learned shadow ' + ntSigned(x.corr, 1) + ' half-PPR (not in PROJ)' + (top.length ? ': ' + top.map(function (t) { return t[0] + ' ' + ntSigned(t[1], 1); }).join(', ') : '');
+  }
+  var NT_COV = { CB: 1, S: 1, FS: 1, SS: 1, DB: 1, NB: 1 }, NT_FRONT = { DE: 1, DT: 1, DL: 1, NT: 1, EDGE: 1, LB: 1, ILB: 1, OLB: 1, MLB: 1 };
+  function ntClamp(v, a) { return Math.max(-a, Math.min(a, v)); }
+  var NT_PRIOR_G = 4;   // prior season (playcaller-aware) worth 4 games of 2026 defense
+  function ntDefRate(S, team, key, sub) {
+    // blended defense rate + blended league rate: (g x 2026 + 4 x prior) / (g + 4); {v, lg, g, cur, pri}
+    var D = S.def[team], P = scPrior(S, team), g = D && D.g ? D.g : 0;
+    var cur = D ? scGet(D, key, sub) : null, pri = P ? scGet(P, key, sub) : null;
+    var lc = scLgOf(S, key, sub, false), lp = scLgOf(S, key, sub, true);
+    if (cur == null && pri == null) return null;
+    if (cur == null) return { v: pri, lg: lp != null ? lp : lc, g: 0, cur: null, pri: pri };
+    if (pri == null) return g >= 3 ? { v: cur, lg: lc, g: g, cur: cur, pri: null } : null;
+    var wv = function (x, y) { return (x == null || y == null) ? (x != null ? x : y) : (g * x + NT_PRIOR_G * y) / (g + NT_PRIOR_G); };
+    return { v: wv(cur, pri), lg: wv(lc, lp), g: g, cur: cur, pri: pri };
+  }
+  function ntRateLab(S, team, r, name) {
+    return team + ' ' + name + ' ' + scPct(r.v) + ' (' + (r.cur != null ? r.g + ' gm ' + scPct(r.cur) : 'no 2026') + (r.pri != null ? ', prior ' + scPct(r.pri) : '') + '; lg ' + scPct(r.lg) + ')';
+  }
+  function ntMatchup(p, wk, sc, slot, wp) {
+    var w = wp && wp.why; if (!w || p.isDST || ['QB', 'RB', 'WR', 'TE'].indexOf(p.pos) < 0) return null;
+    var it = [];
+    var add = function (pct, lab, priced) { if (Math.abs(pct) >= 1) it.push({ pct: pct, lab: lab, priced: priced }); };
+    // ---- priced (already inside PROJ) ----
+    var fp = ntFpa(slot.opp);
+    var fpPct = fp && fp.f[p.pos] != null && fp.lg[p.pos] ? 100 * (fp.f[p.pos] / fp.lg[p.pos] - 1) : null;
+    add(100 * (w.opp - 1), fpPct != null && Math.abs(fpPct) >= 5 ? slot.opp + ' allows ' + ntSigned(fpPct, 0) + '% to ' + p.pos + 's (' + (fp.f._g || '?') + ' gm, priced at 25%)' : slot.opp + ' defense grade vs ' + p.pos + 's', true);
+    add(100 * (w.pressure - 1), 'soft pass rush', true); add(100 * (w.cbShadow - 1), 'CB shadow', true); add(100 * (w.cb1Out - 1), slot.opp + ' CB1 out', true);
+    add(100 * (w.olOut - 1), p.tm + ' OL starters out', true); add(100 * (w.weather - 1), 'wind', true);
+    // ---- intel (advanced reads, not validated as projection inputs) ----
+    var S = scS(), D = S ? S.def[slot.opp] : null, prof = S ? scProfile(S, p) : null, lg = S ? S.lg : null;
+    if (S && D && prof) {
+      var rMan = ntDefRate(S, slot.opp, 'man'), rPrs = ntDefRate(S, slot.opp, 'prs'), rBl = ntDefRate(S, slot.opp, 'blitz');
+      var r = prof.rec, isRb = p.pos === 'RB';
+      if (p.pos !== 'QB' && r && r.routes >= (isRb ? 60 : 25) && r.raw.mR >= (isRb ? 25 : 15) && r.raw.zR >= (isRb ? 25 : 15) && r.mYprr != null && r.zYprr && rMan && rMan.lg != null) {
+        var dev = rMan.v - rMan.lg, gap = Math.max(-1, Math.min(1, r.mYprr / r.zYprr - 1));
+        if (Math.abs(dev) >= 0.04 && Math.abs(gap) >= 0.2) add(ntClamp(dev / 0.10 * gap * 10 * (isRb ? 0.35 : 1), 10), ntRateLab(S, slot.opp, rMan, 'man') + ' vs his YPRR ' + scNum(r.mYprr, 2) + ' man / ' + scNum(r.zYprr, 2) + ' zone', false);
+      }
+      var rSlot = ntDefRate(S, slot.opp, 'slotYd');
+      if (p.pos !== 'QB' && r && r.slot != null && r.slot >= 0.55 && rSlot && rSlot.lg != null && rSlot.v >= rSlot.lg + 0.08) add(4, ntRateLab(S, slot.opp, rSlot, 'slot share of rec yds allowed'), false);
+      var q = prof.qb;
+      if (p.pos === 'QB' && q && q.db >= 20) {
+        if (rPrs && rPrs.lg != null && q.pGr != null && q.nGr != null) {
+          var pdev = rPrs.v - rPrs.lg, sens = Math.max(-1, Math.min(2, (q.nGr - q.pGr - 20) / 15));
+          if (pdev >= 0.03) add(-ntClamp(pdev / 0.06 * Math.max(0.3, sens) * 5, 10), ntRateLab(S, slot.opp, rPrs, 'pressure') + ', his grade ' + scNum(q.pGr, 0) + ' pressured vs ' + scNum(q.nGr, 0) + ' clean', false);
+          else if (pdev <= -0.04) add(ntClamp(-pdev / 0.06 * 3, 6), ntRateLab(S, slot.opp, rPrs, 'pressure') + ' - clean pockets', false);
+        }
+        if (rBl && rBl.lg != null && q.bYpa != null && q.nbYpa != null && q.raw.bAtt >= 10 && rBl.v >= rBl.lg + 0.05) add(ntClamp((rBl.v - rBl.lg) / 0.08 * (q.bYpa - q.nbYpa) / 1.5 * 5, 8), ntRateLab(S, slot.opp, rBl, 'blitz') + ' vs his ' + scNum(q.bYpa, 1) + ' YPA blitzed / ' + scNum(q.nbYpa, 1) + ' not', false);
+      }
+      var b = prof.rb, LR = lg.run || {};
+      if (p.pos === 'RB' && b && b.att >= 8 && D.run) {
+        var dr = D.run;
+        var PR = scPrior(S, slot.opp), prr = PR && PR.run ? PR.run : null, LRp = (S.lgPrior && S.lgPrior.run) || LR;
+        var runB = function (k) {   // carries-weighted: prior season worth 150 carries
+          var c = dr[k], pv = prr ? prr[k] : null, n = dr.att || 0;
+          if (c == null && pv == null) return null;
+          var v = c == null ? pv : pv == null ? (n >= 40 ? c : null) : (n * c + 150 * pv) / (n + 150);
+          var L = LR[k] == null ? LRp[k] : LRp[k] == null ? LR[k] : (n * LR[k] + 150 * LRp[k]) / (n + 150);
+          return v == null || L == null ? null : { v: v, lg: L, n: n, cur: c, pri: pv };
+        };
+        var ry = runB('ypc'), rc = runB('yco');
+        if (ry) add(ntClamp((ry.v - ry.lg) / 0.7 * 6, 10), slot.opp + ' run D ' + scNum(ry.v, 1) + ' ypc blended (' + Math.round(ry.n) + ' car ' + scNum(ry.cur, 1) + (ry.pri != null ? ', prior ' + scNum(ry.pri, 1) : '') + '; lg ' + scNum(ry.lg, 1) + ')', false);
+        if (rc && Math.abs(rc.v - rc.lg) >= 0.2) add(ntClamp((rc.v - rc.lg) / 0.5 * 3, 5), slot.opp + ' allows ' + scNum(rc.v, 2) + ' after contact/att blended (lg ' + scNum(rc.lg, 2) + ')', false);
+        var rMt = ntDefRate(S, slot.opp, 'mtRate'), rBox = ntDefRate(S, slot.opp, 'sBox');
+        if (rMt && rMt.lg != null && rMt.v >= rMt.lg + 0.03 && b.mtf != null && LR.mtf != null && b.mtf >= LR.mtf + 0.05) add(4, ntRateLab(S, slot.opp, rMt, 'missed-tackle rate') + ' vs an elusive back', false);
+        if (rBox && rBox.lg != null && rBox.v >= rBox.lg + 0.08) add(-4, ntRateLab(S, slot.opp, rBox, 'safety in box'), false);
+      }
+    }
+    var Z = window.SIM_ZONES_2026;
+    if (Z && (Z.lg || Z.lgPrior) && p.pos !== 'QB') {
+      var zlg = znLg(Z), pl = znPlayer(Z, p.norm, zlg), zd = znDef(Z, slot.opp, zlg);
+      if (pl && zd && (pl.N + pl.Np) >= 10) {
+        ZN_DEPTH.forEach(function (zz) {
+          var z = zz[0], sh = pl.depth[z], L = zlg.depth[z].share, dz = zd.depth[z];
+          if (sh >= L + 0.05 && dz && dz.rawEff != null && dz.n >= 25 && Math.abs(dz.rawEff - 1) >= 0.15) add(ntClamp((dz.rawEff - 1) * 12, 8), slot.opp + ' ' + (dz.rawEff > 1 ? 'leaky' : 'stingy') + ' ' + zz[1].toLowerCase() + ' (' + dz.rawEff.toFixed(2) + 'x pts/tgt, his ' + Math.round(100 * sh) + '% of targets)', false);
+        });
+      }
+    }
+    var DA = window.SIM_DEF_AVAIL_2026;
+    if (DA && DA.teams && DA.teams[slot.opp]) {
+      var qCov = 0, qFront = 0, names = [];
+      DA.teams[slot.opp].forEach(function (d) {
+        var gs = String(d.gs || '').toLowerCase(), sl = String(d.sl || ''), nflNow = DA.prWeek != null && +DA.prWeek === +wk;
+        var out = /\b(IR|PUP|NFI|NA|Sus)/i.test(sl) || /inactive/i.test(sl) || (nflNow && (gs === 'out' || gs === 'doubtful')) || /^(Out|Doubtful)/i.test(sl);
+        if (!out) return;
+        var ql = Math.max(0, (d.g || 55) - 55) / 10 * (d.sh || 0.8);
+        if (ql < 0.3) return;
+        var ps = String(d.pos || '').toUpperCase();
+        if (NT_COV[ps]) qCov += ql; else if (NT_FRONT[ps]) qFront += ql; else return;
+        names.push(ps + ' ' + d.n + ' (' + (d.g != null ? d.g.toFixed(0) : '?') + ')');
+      });
+      var ql2 = (p.pos === 'WR' || p.pos === 'TE') ? qCov : p.pos === 'RB' ? qFront : 0.5 * (qCov + qFront);
+      if (ql2 >= 0.3) add(Math.min(10, ql2 * 3), slot.opp + ' missing ' + names.join(', '), false);
+    }
+    if (!it.length) return { pct: 0, priced: 0, intel: 0, items: [] };
+    var pr = 0, inl = 0; it.forEach(function (x) { if (x.priced) pr += x.pct; else inl += x.pct; });
+    it.sort(function (x, y) { return Math.abs(y.pct) - Math.abs(x.pct); });
+    return { pct: pr + inl, priced: pr, intel: inl, items: it };
+  }
+  function ntMatchupText(mu) {
+    return mu.items.slice(0, 4).map(function (x) { return x.lab + ' ' + ntSigned(x.pct, 0) + '%' + (x.priced ? '' : ' [intel]'); }).join('; ');
+  }
+  function ntMatchupBoard(wk, sc) {
+    var rows = [];
+    state.players.list.forEach(function (p) {
+      if (p.isDST || ['QB', 'RB', 'WR', 'TE'].indexOf(p.pos) < 0) return;
+      var slot = state.schedule.byTeam[p.tm] && state.schedule.byTeam[p.tm][wk]; if (!slot) return;
+      var wp = E.weeklyProjection(p, wk, sc, state.schedule); if (!wp) return;
+      if (E.injAdj(p, wk) === 0) return;
+      var eff = E.effMean(wp); if (eff < (p.pos === 'QB' ? 12 : 6)) return;
+      var mu = ntMatchup(p, wk, sc, slot, wp); if (!mu || !mu.items.length) return;
+      rows.push({ p: p, slot: slot, eff: eff, mu: mu });
+    });
+    var pos = rows.filter(function (r) { return r.mu.pct > 0; }).sort(function (x, y) { return y.mu.pct - x.mu.pct; }).slice(0, 15);
+    var neg = rows.filter(function (r) { return r.mu.pct < 0; }).sort(function (x, y) { return x.mu.pct - y.mu.pct; }).slice(0, 15);
+    var table = function (list, title, col) {
+      return '<h3 style="margin:10px 0 4px;color:' + col + '">' + title + '</h3><div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Player</th><th>Pos</th><th>Matchup</th><th>PROJ</th><th title="% of the projection: priced = already inside PROJ">Edge</th><th>Priced</th><th>Intel</th><th class="l">Why</th></tr></thead><tbody>' +
+        list.map(function (r) { return '<tr><td class="l"><b>' + esc(r.p.name) + '</b></td><td>' + r.p.pos + '</td><td>' + r.p.tm + (r.slot.home ? ' vs ' : ' @ ') + r.slot.opp + '</td><td>' + ntF(r.eff, 1) + '</td><td style="color:' + col + '"><b>' + ntSigned(r.mu.pct, 0) + '%</b></td><td class="dim">' + ntSigned(r.mu.priced, 0) + '%</td><td class="dim">' + ntSigned(r.mu.intel, 0) + '%</td><td class="l" style="font-size:11px;white-space:normal;min-width:280px">' + esc(ntMatchupText(r.mu)) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>';
+    };
+    var html = '<div style="border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:18px"><h3 style="margin:0 0 4px">Matchup edges \u2014 week ' + wk + '</h3>' +
+      '<p class="dim" style="font-size:11px;margin:0">Matchup score in % of each player\'s projection (QB 12+ / others 6+ PROJ). Priced = already inside PROJ (opponent FPA or Clay grade at the backtested 25%, soft pass rush, CB, OL, wind). Intel = advanced reads the backtests did not validate as projection inputs: coverage fit (opponent man rate x his man/zone YPRR), pressure and blitz vs the QB\'s splits, run defense vs RBs, target zones, and defensive injuries by unit. Use for video angles, not as projection changes; early-season defense samples are small.</p>' +
+      table(pos, 'Best matchups', 'var(--acc)') + table(neg, 'Toughest matchups', '#f85149') + '</div>';
+    var T = ['MATCHUP EDGES (week ' + wk + ', % of projection; [intel] = advanced read not in PROJ):', '  BEST:'];
+    pos.forEach(function (r) { T.push('    ' + r.p.name + ' (' + r.p.tm + ' ' + r.p.pos + (r.slot.home ? ' vs ' : ' @ ') + r.slot.opp + ') PROJ ' + ntF(r.eff, 1) + ' edge ' + ntSigned(r.mu.pct, 0) + '% (priced ' + ntSigned(r.mu.priced, 0) + ', intel ' + ntSigned(r.mu.intel, 0) + '): ' + ntMatchupText(r.mu)); });
+    T.push('  TOUGHEST:');
+    neg.forEach(function (r) { T.push('    ' + r.p.name + ' (' + r.p.tm + ' ' + r.p.pos + (r.slot.home ? ' vs ' : ' @ ') + r.slot.opp + ') PROJ ' + ntF(r.eff, 1) + ' edge ' + ntSigned(r.mu.pct, 0) + '% (priced ' + ntSigned(r.mu.priced, 0) + ', intel ' + ntSigned(r.mu.intel, 0) + '): ' + ntMatchupText(r.mu)); });
+    return { html: html, text: T.join('\n') };
+  }
   function ntGameSheet(g, wk, sc) {
     var Z = window.SIM_ZONES_2026, lg = (Z && (Z.lg || Z.lgPrior)) ? znLg(Z) : null;
     var slotA = state.schedule.byTeam[g.away] && state.schedule.byTeam[g.away][wk];
@@ -4364,7 +4544,8 @@
         var pl = znPlayer(Z, p.norm, lg); if (pl && (pl.N + pl.Np) >= 10) read = znReads(pl, znDef(Z, slot.opp, lg), lg);
       }
       if (scS() && !p.isDST) { var sr = scRead(scS(), p, scS().def[slot.opp]); if (sr) read = read ? read + ' \u00b7 ' + sr : sr; }
-      rows.push({ p: p, eff: eff, wp: wp, chips: chips, read: read, xf: xf });
+      var why = ntWhy(p, wk, sc, slot, wp), swhy = ntShadowWhy(p, wk), mu = ntMatchup(p, wk, sc, slot, wp);
+      rows.push({ p: p, eff: eff, wp: wp, chips: chips, read: read, xf: xf, why: why, swhy: swhy, mu: mu });
     });
     rows.sort(function (x, y) { return y.eff - x.eff; });
     html += '<table style="margin-top:10px"><thead><tr><th class="l">Player</th><th>Tm</th><th>Pos</th><th>PROJ</th><th>Model</th><th>Market</th><th title="Expected fantasy points per game, 2026 to date (standard usage-based xFP)">xFP/g</th><th title="Actual PPG minus xFP/g: + = scoring over his usage, - = under (due up)">FPOE/g</th><th class="l">Why / notes</th><th class="l">Zone / scheme read</th></tr></thead><tbody>';
@@ -4378,11 +4559,17 @@
           var col = /- shadow$/.test(c) ? (/faller/.test(c) ? '#f85149' : '#58a7ff') : /OUT|docked|×0\.|luck -|lower|shadow/.test(c) ? '#f85149' : (/boost|×1\.|luck \+|higher|soft/.test(c) ? 'var(--acc)' : 'var(--dim)');
           return '<span style="border:1px solid ' + col + ';color:' + col + ';border-radius:9px;padding:0 6px;margin:1px 3px 1px 0;display:inline-block">' + esc(c) + '</span>';
         }).join('') + '</td><td class="l" style="font-size:11px;white-space:normal;min-width:220px">' + esc(o.read) + '</td></tr>';
+      if (o.why || o.swhy || (o.mu && o.mu.items.length)) html += '<tr><td colspan="10" class="l dim" style="font-size:11px;white-space:normal;padding:0 8px 6px 18px;border-top:none">' +
+        (o.why ? '<b>Why:</b> ' + esc(o.why.text) : '') + (o.mu && o.mu.items.length ? '<br><b>Matchup ' + ntSigned(o.mu.pct, 0) + '%</b> (priced ' + ntSigned(o.mu.priced, 0) + ', intel ' + ntSigned(o.mu.intel, 0) + '): ' + esc(ntMatchupText(o.mu)) : '') +
+        (o.swhy ? '<br><span style="color:#58a7ff">' + esc(o.swhy) + '</span>' : '') + '</td></tr>';
       var line = '  ' + o.p.name + ' (' + o.p.tm + ' ' + o.p.pos + ') ' + ntF(o.eff, 1);
       if (o.xf && o.xf.fpoeg != null) line += ' · xFP ' + ntF(o.xf.xfpg, 1) + '/g (' + ntSigned(o.xf.fpoeg, 1) + ' over expected)';
       if (o.chips.length) line += ' [' + o.chips.join(', ') + ']';
       if (o.read) line += ' — ' + o.read;
       T.push(line);
+      if (o.why) T.push('      why: ' + o.why.text);
+      if (o.mu && o.mu.items.length) T.push('      matchup ' + ntSigned(o.mu.pct, 0) + '% (priced ' + ntSigned(o.mu.priced, 0) + ', intel ' + ntSigned(o.mu.intel, 0) + '): ' + ntMatchupText(o.mu));
+      if (o.swhy) T.push('      ' + o.swhy);
     });
     html += '</tbody></table>';
     if (lg) {
@@ -4423,6 +4610,7 @@
     var pick = gSel.value === '__all' ? games : games.filter(function (g) { return g.key === gSel.value; });
     var html = '', T = ['SIM LAB NOTES — Week ' + wk + ' (' + $('nt-scoring').value + ') — ' + new Date().toISOString().slice(0, 16).replace('T', ' '), ''];
     T.push('TD LUCK (top 5 each way):'); luckText.forEach(function (s) { T.push('  ' + s); }); T.push('');
+    var board = ntMatchupBoard(wk, sc); html += board.html; T.push(board.text); T.push('');
     pick.forEach(function (g) { var r = ntGameSheet(g, wk, sc); html += r.html; T.push(r.text); T.push(''); });
     $('nt-body').innerHTML = html || '<p class="dim">No games with lines for this week.</p>';
     $('nt-text').value = T.join('\n');

@@ -987,6 +987,25 @@
     }
     return n;
   }
+  function lgbExplain(M, x) {
+    // Saabas path attribution: each split credits its feature with (child value - node value); needs node values ([6])
+    var c = {}, bias = 0;
+    for (var i = 0; i < M.trees.length; i++) {
+      var n = M.trees[i];
+      if (typeof n === 'number') { bias += n; continue; }
+      bias += n[6] || 0;
+      while (typeof n !== 'number') {
+        var v = x[n[0]], isNan = v == null || v !== v;
+        if (isNan && n[3] !== 2) { v = 0; isNan = false; }
+        var nx = ((n[3] === 1 && Math.abs(v) <= 1e-35) || (n[3] === 2 && isNan)) ? (n[2] ? n[4] : n[5]) : (v <= n[1] ? n[4] : n[5]);
+        var nv = typeof nx === 'number' ? nx : (nx[6] || 0);
+        var f = M.features[n[0]];
+        c[f] = (c[f] || 0) + nv - (n[6] || 0);
+        n = nx;
+      }
+    }
+    return { bias: bias, contrib: c };
+  }
   function lgbPredict(M, x) {
     var s = 0;
     for (var i = 0; i < M.trees.length; i++) s += lgbTree(M.trees[i], x);
@@ -1037,8 +1056,20 @@
     var iP = o.iA < 1 ? Math.max(0.05, Math.max(o.iA, Math.min(1, injPlay(p, wk)))) : 1;
     f.HAND = o.jsMean / iP;
     var x = M.features.map(function (k) { return f[k]; });
+    if (o.explain) {
+      var ex = lgbExplain(M, x), kk = (M.k != null ? M.k : 1) * iP, out = {};
+      Object.keys(ex.contrib).forEach(function (k2) { out[k2] = ex.contrib[k2] * kk; });
+      return { corr: (M.k != null ? M.k : 1) * lgbPredict(M, x) * iP, bias: ex.bias * kk, contrib: out, features: f };
+    }
     var corr = (M.k != null ? M.k : 1) * lgbPredict(M, x) * iP;
     return isFinite(corr) ? corr : null;
+  }
+  function learnedShadowExplain(p, wk, schedule) {
+    // half-PPR learned-shadow correction with per-feature contributions (for NOTES why lines)
+    var wp = weeklyProjection(p, wk, PRESETS.half, schedule);
+    if (!wp || !wp.why) return null;
+    var w = wp.why;
+    try { return learnedShadowCorr(p, wk, PRESETS.half, wp.slot, { clayPg: w.clayPg, mult: w.veg, rbU: w.usage, iA: w.iA, jsMean: w.jsMean, explain: true }); } catch (_) { return null; }
   }
   function jsBasePg(p, sc, clayPg) {
     var d = jsData();
@@ -1764,10 +1795,11 @@
     mult = vegasMult(slot.implied, schedule.avgImplied, p.pos);
     var perGameDiv = p.qbWindow ? p.qbWindow.games : 17;
     var dAdj = (defenseAdj()[slot.opp] || {})[p.pos] || 1;
-    var cbM = cbShadowMult(slot.opp, p.pos, p) * cb1OutBoost(slot.opp, p.pos, p)
-      * olOutDock(p.tm, p.pos) * pressureMult(slot.opp, p.pos)
-      * weatherMult(p, wk, slot);
-    var sM = snapMult(p, wk) * routeMult(p, wk);
+    var mCbS = cbShadowMult(slot.opp, p.pos, p), mCb1 = cb1OutBoost(slot.opp, p.pos, p), mOl = olOutDock(p.tm, p.pos),
+      mPr = pressureMult(slot.opp, p.pos), mWx = weatherMult(p, wk, slot);
+    var cbM = mCbS * mCb1 * mOl * mPr * mWx;
+    var mSnap = snapMult(p, wk), mRoute = routeMult(p, wk);
+    var sM = mSnap * mRoute;
     var rampF = 1;
     if (p.ramp) {
       var R = RAMP[p.ramp];
@@ -1781,13 +1813,16 @@
     // actual FPA-by-position opponent adj replacing Clay unit grades as the
     // sample grows. Preseason (no 2026 data) both terms collapse to Clay's,
     // so jsMean === mean until real games exist.
-    var jsPg = jsBasePg(p, sc, clayPg) * rookieLevel(p);
+    var jsBase0 = jsBasePg(p, sc, clayPg), mRook = rookieLevel(p);
+    var jsPg = jsBase0 * mRook;
+    var jsPgRook = jsPg;
     var rbU = rbUsagePg(p, wk);
     if (rbU) {
       var uScale = rbU.halfPg > 0 && clayPg > 0 ? clayPg / rbU.halfPg : 1;   // half-PPR -> this sheet's scoring
       jsPg = (1 - RB_USAGE.w) * jsPg + RB_USAGE.w * rbU.half * uScale;
     }
-    var jsChain = mult * jsOppMult(slot.opp, p.pos, dAdj) * cbM * sM * rampF * iA;
+    var oppM = jsOppMult(slot.opp, p.pos, dAdj);
+    var jsChain = mult * oppM * cbM * sM * rampF * iA;
     // TD-luck mean reversion (RB/WR/TE/QB), additive after the chain. Scaled by
     // AVAILABILITY only: iA also carries the vacated-opportunity boost for
     // backups (>1, Cooper Rush x210 on a near-zero base) which must not
@@ -1867,7 +1902,11 @@
         }
       }
     }
-    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, lcCorr: lcCorr };
+    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, lcCorr: lcCorr,
+      // WHY (2026-09-16, NOTES per-player why notes): every factor of the JS model in engine order - app.js ntWhy turns it into a points waterfall
+      why: { clayPg: clayPg, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied,
+             opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, snap: mSnap, route: mRoute, ramp: rampF, iA: iA,
+             luck: luckAdj, jsMean: jsMean, perGameDiv: perGameDiv } };
   }
 
   // ---------- correlated sampling ----------
@@ -2830,7 +2869,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, ctxNote: ctxNote,
+    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, lgbExplain: lgbExplain, learnedShadowExplain: learnedShadowExplain, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,

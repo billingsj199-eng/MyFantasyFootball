@@ -92,7 +92,7 @@ def compact(node):
     mt = {"None": 0, "Zero": 1, "NaN": 2}[node.get("missing_type", "None")]
     assert node.get("decision_type", "<=") == "<="
     return [int(node["split_feature"]), float(node["threshold"]), 1 if node.get("default_left") else 0, mt,
-            compact(node["left_child"]), compact(node["right_child"])]
+            compact(node["left_child"]), compact(node["right_child"]), round(float(node.get("internal_value", 0.0)), 6)]   # [6] = node value (engine lgbExplain path attribution)
 
 
 def main():

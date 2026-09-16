@@ -3862,6 +3862,10 @@ function getFiltered(applyTopN) {
           };
           av = _op(a); bv = _op(b); break;
         }
+        case 'xfpG': {
+          const _xg = d => { const x = _xfpAgg(d, rankingScoringFmt, null); return x ? x.xfpg : -Infinity; };
+          av = _xg(a); bv = _xg(b); break;
+        }
         case 'simBoom': case 'simBust': {
           const _bi = sortKey === 'simBoom' ? 3 : 4;
           const _bb = d => {
@@ -5958,6 +5962,8 @@ function render() {
   // (non-weekly, non-dynasty) view. Reused by the header/cell toggles after the loop.
   const _isWeekly = currentMode === 'weekly';
   const _statMode = _effStatMode();
+  // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
+  document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
   // view carries boom/bust in the ppg25/l4ppg swap columns instead.
@@ -6261,7 +6267,7 @@ function render() {
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>
       ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
-      ${_statTds}
+      ${_wkXfpInject(_statTds, d, _isWeekly && _statMode === 'fantasy')}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
@@ -8929,6 +8935,13 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     }
     // Toggle the body class + admin week selector visibility for WEEKLY format
     document.body.classList.toggle('format-weekly', currentMode === 'weekly');
+    // WEEKLY hides the xFP STATS view (it only fills after the week's games) —
+    // fall back to FANTASY, which carries season xFP as its own column there.
+    if (currentMode === 'weekly' && rnkStatMode === 'xfp') {
+      rnkStatMode = 'fantasy';
+      document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'fantasy'));
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+    }
     const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
     if (wkSelWrap) wkSelWrap.style.display = (currentMode === 'weekly') ? 'inline-flex' : 'none';
     // Entering WEEKLY: apply the non-admin published-week lock + LIVE chip
@@ -9103,7 +9116,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -10045,6 +10058,30 @@ function _wkSimBoomBustCell(d, which) {
 // OPP PPG cell for the rankings WEEKLY view — points the opponent allows per
 // game to this position (see window._weeklyOppPpgFor). Colored by league
 // thirds: green = allows the most (soft), red = allows the least (tough).
+// WEEKLY board xFP column (2026-09-16, Jack): season expected fantasy points
+// per game to date, slotted between '26 PPG and L4 PPG in the FANTASY stats
+// view — the xFP STATS view only fills after the week's games, so it's hidden
+// on the weekly board. Other stats views keep a hidden placeholder cell so
+// the column count holds.
+function _wkXfpCellHtml(d, show) {
+  const blank = '<td class="xfpg-cell weekly-only-cell" style="display:none">—</td>';
+  if (!show) return blank;
+  const x = _xfpAgg(d, rankingScoringFmt, null);
+  if (!x) return blank;
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  const sg = v => (v >= 0 ? '+' : '') + f1(v);
+  const oc = x.fpoeg <= -1.5 ? '#22c55e' : x.fpoeg >= 1.5 ? '#f87171' : null;
+  const tip = (x.n + ' game' + (x.n > 1 ? 's' : '') + ' to date: expected ' + f1(x.xfpg) + ' /gm vs actual ' + f1(x.ppg)
+    + ' — scored ' + sg(x.fpoeg) + ' /gm vs expected: TD luck ' + sg(x.tdg) + ' (regresses), '
+    + (d.s === 'QB' && x.int ? 'INTs ' + sg(x.intg) + ', ' : '') + 'yards/catches ' + sg(x.fpoeg - x.luckg) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
+  return '<td class="xfpg-cell weekly-only-cell" style="display:none" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span>'
+    + '<span class="xfpg-oe" style="' + (oc ? 'color:' + oc : 'opacity:.55') + '">' + sg(x.fpoeg) + '</span></td>';
+}
+function _wkXfpInject(tds, d, show) {
+  const cell = _wkXfpCellHtml(d, show);
+  const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
+  return i < 0 ? tds + cell : tds.slice(0, i) + cell + tds.slice(i);
+}
 function _wkOppPpgCell(d) {
   const r = (typeof window._weeklyOppPpgFor === 'function') ? window._weeklyOppPpgFor(d.t, d.s) : null;
   if (!r) return '<td class="oppppg-cell weekly-only-cell" style="display:none">—</td>';

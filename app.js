@@ -64015,6 +64015,7 @@ function _rsScatter(cfg) {
   REC_COLS.push.apply(REC_COLS, WK_PLAYER);
   TM_COLS.push.apply(TM_COLS, WK_GAME);
   const WK_FMT_KEYS = ['w_proj', 'w_book', 'w_edge', 'w_cons', 'w_slp', 'w_espn', 'w_fp', 'w_cbs'];
+  window._rsWeek = { num: _wkNum, game: _wkGame };   // Coach Profiles reads this week's DK lines through here
   const NOTES = {
     QB: 'Clean / pressured / blitz splits and grades are PFF (weekly grades weighted by dropbacks). CPOE and EPA are nflverse.',
     RB: 'Rush efficiency is PFF charting except 1D%, Success% and EPA (nflverse). Grades 2019-2025 are PFF season grades; 2026 weights weekly grades by attempts.',
@@ -65044,7 +65045,23 @@ function _rsScatter(cfg) {
     c('dsr', 'Success%', 'Defense results', 1, 'Success rate allowed', LO),
     c('dskp', 'Sack%', 'Defense results', 1, 'Sacks per opponent dropback')
   ];
-  const ROLE_COLS = { op: OFF_COLS, hc: OFF_COLS.concat(DEF_COLS), dp: DEF_COLS };
+  // This week (Jack 2026-09-16: "add the week columns to the coach view too"): DK game lines for
+  // the coach's current team, stamped in _rows() on coaches whose latest season is 2026
+  const WK = 'This week';
+  const WK_COLS = [
+    c('w_tt', 'Team total', WK, 1, 'Points the coach\'s team is expected to score this week: (game total - team spread) / 2 from the DK line'),
+    c('w_spread', 'Spread', WK, 1, 'This week\'s DK spread from the team\'s side: negative = favored', LO),
+    c('w_gt', 'Game total', WK, 1, 'This week\'s DK over / under')
+  ];
+  const ROLE_COLS = { op: OFF_COLS.concat(WK_COLS), hc: OFF_COLS.concat(DEF_COLS, WK_COLS), dp: DEF_COLS.concat(WK_COLS) };
+  function _wkStamp(o, tm, yr) {
+    const W = window._rsWeek;
+    const g = W && yr === 2026 ? W.game(tm) : null;
+    o.w_tt = g ? g.implied : null;
+    o.w_spread = g ? g.spread : null;
+    o.w_gt = g ? g.total : null;
+    return o;
+  }
   const ROLE_NAME = { op: 'offensive playcallers', hc: 'head coaches', dp: 'defensive playcallers' };
   const ROLE_FILE = { op: 'OffensivePlaycallers', hc: 'HeadCoaches', dp: 'DefensivePlaycallers' };
   // weight (denominator) behind every rate, for combining seasons
@@ -65090,7 +65107,7 @@ function _rsScatter(cfg) {
   function _rows() {
     const lo = Math.min(_from, _to), hi = Math.max(_from, _to);
     const list = _all().filter(o => o.yr >= lo && o.yr <= hi);
-    if (_el('rsCoSplit').checked) return list.map(o => Object.assign({}, o, { name: o[_role], teams: o.tm, span: String(o.yr) }));
+    if (_el('rsCoSplit').checked) return list.map(o => _wkStamp(Object.assign({}, o, { name: o[_role], teams: o.tm, span: String(o.yr) }), o.tm, o.yr));
     const byCoach = new Map();
     list.forEach(o => {
       if (!byCoach.has(o[_role])) byCoach.set(o[_role], []);
@@ -65111,7 +65128,7 @@ function _rsScatter(cfg) {
         grp.forEach(o => { const v = o[k], w = o[W[k]]; if (v != null && w > 0) { num += v * w; den += w; } });
         res[k] = den ? num / den : null;
       });
-      out.push(res);
+      out.push(_wkStamp(res, grp[grp.length - 1].tm, last));
     });
     return out;
   }
@@ -65388,7 +65405,7 @@ function _rsScatter(cfg) {
     for (let i = 0; i < cols.length;) {
       let j = i;
       while (j < cols.length && cols[j].g === cols[i].g) j++;
-      html += '<th colspan="' + (j - i) + '">' + _esc(cols[i].g) + '</th>';
+      html += '<th colspan="' + (j - i) + '">' + _esc(cols[i].g === WK && window._rsWeek ? 'Week ' + window._rsWeek.num() : cols[i].g) + '</th>';
       i = j;
     }
     html += '</tr><tr class="rs-adv-hdr">' +
@@ -65422,7 +65439,7 @@ function _rsScatter(cfg) {
     if (csvBtn) csvBtn.disabled = !rows.length;
     if (foot) foot.textContent = 'Playcaller = the offensive / defensive coordinator Pro Football Reference lists, unless coach_overrides.json names a head coach who calls plays; a season with a mid-year coordinator change shows both names ("A / B"). ' +
       'Sources: nflverse play-by-play (tendency, pace, 4th down, run direction, results), nflverse participation (formation, personnel, coverage shells, box counts; published after each season, so 2026 stays blank), FTN charting via nflverse (play design, 2022+), PFF (target share by position; blitz, man and pressure the opponent faced). ' +
-      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.';
+      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.' + (window._rsWeek ? ' Week ' + window._rsWeek.num() + ' columns = this week\'s DK team total / spread / game total for the coach\'s current team (coaches whose latest season is 2026).' : '');
     _fillVs();
     _coChart();
     _scC.render();

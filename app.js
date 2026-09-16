@@ -24040,14 +24040,72 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     return html;
   }
 
-  window._sstRender = render;
+  // MATCHUP EDGES (2026-09-16, Jack: "add the matchup edges board to the main site too"). Built headless from the
+  // Sim Lab NOTES board (sim_lab/export_notes.js --repo, run by scripts/sim_proj_task.ps1) into
+  // data/matchup_edges_2026.js: every QB 12+ / RB-WR-TE 6+ projection with its matchup score in % of the projection.
+  // "In projection" items are already inside PROJ (opponent points allowed, pass rush, CB, O-line injuries, wind);
+  // "matchup read" items (coverage fit, pressure / blitz vs the QB, run defense, target zones, defensive injuries)
+  // are context and never change the number. Tap a row to add the player to the Start/Sit cards above.
+  let ePos = 'ALL';
+  const eNorm = s => String(s || '').toLowerCase().replace(/[.'’]/g, '').replace(/-/g, ' ').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/\s+/g, ' ').trim();
+  function renderEdges() {
+    const el = document.getElementById('sstEdges');
+    if (!el) return;
+    const M = window.MATCHUP_EDGES_2026;
+    if (!M || !M.weeks) { el.innerHTML = ''; return; }
+    const siteWk = week();
+    const wk = M.weeks[siteWk] ? siteWk : M.latest;
+    const Wk = M.weeks[wk];
+    if (!Wk || !Wk.rows || !Wk.rows.length) { el.innerHTML = ''; return; }
+    const rows = Wk.rows.filter(r => ePos === 'ALL' || r.pos === ePos);
+    const best = rows.filter(r => r.pct >= 1).sort((x, y) => y.pct - x.pct).slice(0, 12);
+    const worst = rows.filter(r => r.pct <= -1).sort((x, y) => x.pct - y.pct).slice(0, 12);
+    const sgn = v => (v > 0 ? '+' : '') + Math.round(v) + '%';
+    const rowHtml = r => {
+      const good = r.pct > 0;
+      const why = (r.items || []).slice(0, 3).map(it => '<span class="sst-edge-item">' + esc(it.lab) + ' <b>' + sgn(it.pct) + '</b>'
+        + '<span class="sst-edge-tag ' + (it.priced ? 'in' : 'read') + '">' + (it.priced ? 'IN PROJ' : 'READ') + '</span></span>').join('');
+      return '<div class="sst-edge-row" data-n="' + esc(r.n) + '" title="Add ' + esc(r.n) + ' to Start/Sit">'
+        + '<span class="lg-badge" style="background:' + (PB[r.pos] || '') + ';color:' + (PC[r.pos] || '') + '">' + r.pos + '</span>'
+        + '<div class="sst-edge-main"><div class="sst-edge-name">' + esc(r.n) + '<span class="sst-dim">' + esc(r.tm) + (r.home ? ' vs ' : ' @ ') + esc(r.opp) + '</span></div>'
+        + '<div class="sst-edge-why">' + why + '</div></div>'
+        + '<div><div class="sst-edge-pct ' + (good ? 'good' : 'bad') + '">' + sgn(r.pct) + '</div>'
+        + '<div class="sst-edge-split">proj ' + sgn(r.priced) + ' · read ' + sgn(r.intel) + '</div></div></div>';
+    };
+    const upd = Wk.generated ? new Date(Wk.generated) : null;
+    let html = '<div class="sst-edges-head"><span class="sst-edges-title">MATCHUP EDGES · WEEK ' + wk + '</span>'
+      + '<div class="lg-pos-btns" id="sstEdgePos">' + ['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => '<button class="lg-pos-btn' + (p === ePos ? ' active' : '') + '" data-p="' + p + '"'
+        + (p === ePos ? ' style="' + (p === 'ALL' ? 'border-color:var(--accent);background:var(--accent);color:#0a0e17' : 'border-color:' + PC[p] + ';background:' + PC[p] + ';color:#fff') + '"' : '') + '>' + p + '</button>').join('') + '</div></div>';
+    html += '<div class="sst-sub" style="margin-bottom:.2rem">How much this week\'s matchup moves each player, as a % of his projection. '
+      + '<span class="sst-edge-tag in">IN PROJ</span> is already baked into the projection (opponent points allowed, pass rush, cornerback matchup, O-line injuries, wind). '
+      + '<span class="sst-edge-tag read">READ</span> is advanced matchup context that does not change the number: man/zone coverage fit, pressure and blitz vs the QB, run defense, target zones and defensive injuries. '
+      + 'Early-season defense rates are blended with last season. Tap a player to add him to Start/Sit.'
+      + (upd && !isNaN(upd) ? ' <span class="sst-dim">Updated ' + upd.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '.</span>' : '') + '</div>';
+    html += '<div class="sst-edges-cols">'
+      + '<div><div class="sst-edge-col-title" style="color:#22c55e">BEST MATCHUPS</div>' + (best.length ? best.map(rowHtml).join('') : '<div class="sst-edges-empty">No positive edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '<div><div class="sst-edge-col-title" style="color:#ef4444">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '</div>';
+    el.innerHTML = html;
+    el.querySelectorAll('#sstEdgePos .lg-pos-btn').forEach(b => { b.onclick = () => { ePos = b.dataset.p; renderEdges(); }; });
+    el.querySelectorAll('.sst-edge-row').forEach(r => {
+      r.onclick = () => {
+        const k = eNorm(r.dataset.n);
+        const d = D.find(x => x && x.n && x.t && !x._retired && !x.rm && !x.devy && eNorm(x.n) === k);
+        if (!d) { if (typeof toast === 'function') toast(r.dataset.n + ' is not on the board yet'); return; }
+        add(d.n);
+        const g = document.getElementById('sstGrid'); if (g && g.scrollIntoView) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }
+
+  window._sstRender = function () { render(); renderEdges(); };
   // Re-render if the page is already open when the Firestore week listener
   // (_weeklyApplySettings) or a deferred data bundle lands.
   window._sstRefresh = function() {
     const pg = document.getElementById('pageStartSit');
     if (pg && pg.classList.contains('active') && names.length) render();
   };
-  window.addEventListener('load', () => setTimeout(window._sstRefresh, 800));
+  window.addEventListener('load', () => setTimeout(() => { window._sstRefresh(); const pg = document.getElementById('pageStartSit'); if (pg && pg.classList.contains('active')) renderEdges(); }, 800));
 })();
 
 // === PLAYER BIO HELPERS ===

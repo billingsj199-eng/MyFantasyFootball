@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-16-scatter13" as="script">
+<link rel="preload" href="app.js?v=2026-09-16-scatter14" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2639,7 +2639,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter13">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter14">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -2702,6 +2702,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <label>Metric <select id="rsMvMetric" class="rs-select"></select></label>
 <label>Window <select id="rsMvWin" class="rs-select"><option value="1">Last game vs prior 3</option><option value="3">Last 3 vs prior 3</option></select></label>
 <label>Team <select id="rsMvTm" class="rs-select"><option value="">All teams</option></select></label>
+<button type="button" class="rs-adv-export" id="rsMvPlot" aria-pressed="false" title="Plot every qualifying mover on any two of the windows, the change, the season average or this week's projections and lines; download the chart as a PNG">Scatter</button>
 <button type="button" class="rs-adv-export" id="rsMvMore" hidden>Show all</button>
 <span class="rs-count" id="rsMvCount"></span>
 </div>
@@ -2711,6 +2712,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" class="rs-adv-chip" data-p="WR" aria-pressed="false">WR</button>
 <button type="button" class="rs-adv-chip" data-p="TE" aria-pressed="false">TE</button>
 </div>
+<!-- movers scatterplot: toggled by the Scatter button; Download PNG -->
+<div class="rs-co-chart rs-scatter" id="rsMvScatter" hidden></div>
 <div class="rs-mv-grid">
 <div class="rs-co-chart" id="rsMvUp"><div class="rs-empty">Loading&hellip;</div></div>
 <div class="rs-co-chart" id="rsMvDn"></div>
@@ -5879,7 +5882,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-16-scatter13"></script>
+<script defer src="app.js?v=2026-09-16-scatter14"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

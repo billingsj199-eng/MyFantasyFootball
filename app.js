@@ -63568,7 +63568,7 @@ function _rsScatter(cfg) {
       const ctx = c.getContext('2d');
       ctx.setTransform(S, 0, 0, S, 0, 0);
       draw(ctx, W, H, D, theme(host), lab);
-      const clean = s => String(s).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      const clean = s => String(s).replace(/0394/g, 'Delta').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       const name = cfg.file() + '-' + clean(cfg.label(D.cy, D.pg)) + '-vs-' + clean(cfg.label(D.cx, D.pg)) + '.png';
       const send = () => {
         const a = document.createElement('a');
@@ -65048,6 +65048,58 @@ function _rsScatter(cfg) {
     if (localStorage.getItem('rsMvWin') === '3') _mvWin = 3;
   } catch (e) { /* storage blocked */ }
 
+  // --- movers scatter (Jack 2026-09-16: "add a scatter to the movers view too") ---------
+  // Every qualifying mover (both tables, all of them, not just the top 20) on any two of: the
+  // last window, the prior 3, the change, the season average, games, and on the current
+  // season this week's projection / book / gap / DK lines. Default = prior 3 vs last with a
+  // "no change" line: above it rose, below it fell.
+  let _mvLast = null;
+  const MV_WK_COLS = [
+    { k: 'w_proj', l: 'Proj', g: 'This week', d: 1 }, { k: 'w_book', l: 'Book', g: 'This week', d: 1 },
+    { k: 'w_edge', l: 'Site-Book', g: 'This week', d: 1 }, { k: 'w_tt', l: 'Team total', g: 'This week', d: 1 },
+    { k: 'w_spread', l: 'Spread', g: 'This week', d: 1, lo: true }, { k: 'w_gt', l: 'Game total', g: 'This week', d: 1 }
+  ];
+  function _mvScCols() {
+    const L = _mvLast, met = L ? L.met : MV_METRICS[0], winL = _mvWin === 1 ? 'Last game' : 'Last 3';
+    const cols = [
+      { k: 'last', l: winL + ' ' + met.l, g: 'Movers', d: met.d }, { k: 'prev', l: 'Prior 3 ' + met.l, g: 'Movers', d: met.d },
+      { k: 'd', l: '\u0394 ' + met.l, g: 'Movers', d: met.d }, { k: 'season', l: 'Season ' + met.l, g: 'Movers', d: met.d },
+      { k: 'games', l: 'Games played', g: 'Movers', d: 0 }
+    ];
+    return L && L.wkOn ? cols.concat(MV_WK_COLS) : cols;
+  }
+  function _mvScVal(r, col) {
+    switch (col.k) {
+      case 'w_proj': return _wkProj(r);
+      case 'w_book': return _wkBook(r, r.pos);
+      case 'w_edge': { const a = _wkProj(r), b = _wkBook(r, r.pos); return a != null && b != null ? a - b : null; }
+      case 'w_tt': { const g = _wkGame(r.tm); return g ? g.implied : null; }
+      case 'w_spread': { const g = _wkGame(r.tm); return g ? g.spread : null; }
+      case 'w_gt': { const g = _wkGame(r.tm); return g ? g.total : null; }
+      default: return r[col.k];
+    }
+  }
+  const _scM = _rsScatter({
+    pfx: 'rsMvSc', host: 'rsMvScatter', btn: 'rsMvPlot', store: 'rsMvScatter',
+    group: () => 'mv',
+    cols: _mvScCols,
+    defaults: () => ['prev', 'last'],
+    data: () => (_mvLast && _mvLast.rows.length ? { rows: _mvLast.rows, pg: false, val: _mvScVal } : null),
+    label: col => (col.g === 'This week' ? col.l + ' (Wk ' + _wkNum() + (col.k === 'w_proj' || col.k === 'w_book' || col.k === 'w_edge' ? ', ' + FMT_NAME[_fmt] : '') + ')' : col.l + (_mvLast && _mvLast.met.pct && col.k !== 'games' ? ' (%)' : '')),
+    dec: col => col.d,
+    short: r => { const parts = String(r.n || '').split(' '); return parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : r.n; },
+    tm: r => r.tm || '',
+    tipHead: r => '<strong>' + _esc(r.n) + '</strong> <span class="rs-fmt">' + _esc(r.tm || '') + ' ' + _esc(r.pos) + '</span>',
+    canOpen: r => !!r.on && typeof openPlayerCard === 'function' && typeof D !== 'undefined',
+    open: r => { const d = D.find(q => q.n === r.n); if (d) openPlayerCard(d); },
+    openNote: () => ', click to open the card',
+    same: (cx, cy) => ((cx.k === 'prev' && cy.k === 'last') || (cx.k === 'last' && cy.k === 'prev') ? 'no change' : null),
+    sameNote: 'dotted = no change (above it rose, below it fell)',
+    noun: () => 'movers',
+    title: () => ({ main: _mvYr + ' MOVERS' + (_mvPos ? ' ' + _mvPos : ''), sub: 'through Week ' + _mvWk + ' · ' + (_mvWin === 1 ? 'last game vs prior 3' : 'last 3 vs prior 3') + (_mvTm ? ' · ' + _mvTm : '') }),
+    file: () => 'MFF-Scatter-Movers-' + _mvYr + '-W' + _mvWk + (_mvPos ? '-' + _mvPos : '') + (_mvTm ? '-' + _mvTm : '')
+  });
+
   // one entry per player: his played weeks up to the anchor week with the metric and his volume
   function _mvCompute(met) {
     const sf = _seasonFile(_mvYr);
@@ -65105,6 +65157,7 @@ function _rsScatter(cfg) {
       tmSel.innerHTML = '<option value="">All teams</option>' + teams.map(t => '<option value="' + t + '"' + (t === _mvTm ? ' selected' : '') + '>' + t + '</option>').join('');
     }
     const f = rows.filter(r => (!_mvPos || r.pos === _mvPos) && (!_mvTm || r.tm === _mvTm));
+    _mvLast = { rows: f, met: met, wkOn: _mvYr === 2026 && !!(window.SIM_PROJ_2026 || window.BETTING_2026) };
     const risers = f.filter(r => r.d > 0).sort((a, b) => b.d - a.d), fallers = f.filter(r => r.d < 0).sort((a, b) => a.d - b.d);
     const N = _mvAll ? Infinity : 20;
     const winL = _mvWin === 1 ? 'Last game' : 'Last 3';
@@ -65142,6 +65195,7 @@ function _rsScatter(cfg) {
       return head + h + '</tbody></table></div>';
     };
     up.innerHTML = tbl(risers, 'rs-mv-up', '&#9650; Risers', 'risers');
+    _scM.render();
     dn.innerHTML = tbl(fallers, 'rs-mv-dn', '&#9660; Fallers', 'fallers');
     if (more) { more.hidden = risers.length <= 20 && fallers.length <= 20; more.textContent = _mvAll ? 'Top 20' : 'Show all'; }
     if (cnt) cnt.textContent = f.length + ' qualify · ' + _mvYr + ' through Week ' + _mvWk + ' · ' + (_mvWin === 1 ? 'last game vs prior 3' : 'last 3 vs prior 3');
@@ -65218,6 +65272,7 @@ function _rsScatter(cfg) {
       _mvRender();
     });
     _el('rsMvMore').addEventListener('click', () => { _mvAll = !_mvAll; _mvRender(); });
+    _scM.wire();
     ['rsMvUp', 'rsMvDn'].forEach(id => _el(id).addEventListener('click', e => {
       const tr = e.target.closest('tr[data-n]');
       if (tr && typeof openPlayerCard === 'function' && typeof D !== 'undefined') {
@@ -65231,7 +65286,7 @@ function _rsScatter(cfg) {
   window._renderMovers = function _renderMovers() {
     if (!_el('rsMvUp')) return;
     _mvWire();
-    if (_mvStarted) return;
+    if (_mvStarted) { if (_scM.isOn()) _scM.render(); return; }
     _mvStarted = true;
     _mvLoad();
   };

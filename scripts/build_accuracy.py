@@ -339,7 +339,7 @@ def build_week(week, idx, actuals, locks, kick, snap):
             names.add(n)
     for u in week_versions:
         names.update(locks['versions'][u]['players'].keys())
-    for n in names:
+    for n in sorted(names):  # sorted so a rebuild without new data is a no-op diff
         meta = idx.by_norm.get(norm(n))
         if not meta:
             continue
@@ -431,7 +431,17 @@ def main():
     season = {'season': SEASON, 'updated': datetime.now(timezone.utc).isoformat(timespec='seconds'),
               'preseason': {'commit': pre['commit'], 'consDay': pre['consDay'], 'simUpdated': pre.get('simUpdated')},
               'weeks': week_meta, 'players': players}
-    json.dump(season, open(os.path.join(OUT_DIR, f'season_{SEASON}.json'), 'w', encoding='utf-8'), separators=(',', ':'))
+    # Keep the old `updated` stamp when nothing else changed, so the postgame job
+    # (which commits whenever accuracy/data differs) stays quiet on no-news runs.
+    season_p = os.path.join(OUT_DIR, f'season_{SEASON}.json')
+    if os.path.exists(season_p):
+        try:
+            old = json.load(open(season_p, encoding='utf-8'))
+            if {k: v for k, v in old.items() if k != 'updated'} == {k: v for k, v in season.items() if k != 'updated'}:
+                season['updated'] = old['updated']
+        except Exception:
+            pass
+    json.dump(season, open(season_p, 'w', encoding='utf-8'), separators=(',', ':'))
     print(f'season_{SEASON}.json: {len(players)} players, weeks {[w["week"] for w in week_meta]}')
     for src, names in idx.unmatched.items():
         print(f'  unmatched names [{src}]: {len(names)} e.g. {sorted(names)[:8]}')

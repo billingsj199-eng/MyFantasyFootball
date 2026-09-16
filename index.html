@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-16-wkxfp5" as="script">
+<link rel="preload" href="app.js?v=2026-09-16-mv1" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2639,7 +2639,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-09-16-wkchart1">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-16-mv1">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -2652,6 +2652,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      + player lookup + season explorer; Coach = playcalling profiles -->
 <div class="rs-adv-tabs rs-top-tabs" id="rsTopTabs" role="tablist" aria-label="Research view">
 <button type="button" class="rs-adv-tab active" data-view="players" role="tab" aria-selected="true">PLAYERS</button>
+<button type="button" class="rs-adv-tab" data-view="movers" role="tab" aria-selected="false">MOVERS</button>
 <button type="button" class="rs-adv-tab" data-view="coach" role="tab" aria-selected="false">COACH</button>
 </div>
 
@@ -2689,6 +2690,32 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- weeks chart: two or more weeks ticked -> the top rows of the table by week (_weeksChart in app.js) -->
 <div class="rs-co-chart rs-room rs-weeks" id="rsAdvWeeks" hidden></div>
 <div class="rs-adv-foot" id="rsAdvFoot"></div>
+</div>
+
+<!-- Movers: biggest week-over-week role changes at RB / WR / TE (_renderMovers in app.js) -->
+<div class="rs-section" id="rsMvSection" data-rsview="movers" hidden>
+<div class="rs-section-title">Movers</div>
+<div class="rs-help">Who changed role this week: a usage metric in the last game (or last 3) against the player's average over the 3 games before it. Risers left, fallers right; hover a &Delta; for the by-game trail, click a player to open the card.</div>
+<div class="rs-controls">
+<label>Season <select id="rsMvYr" class="rs-select"></select></label>
+<label title="The week the comparison ends at">Through <select id="rsMvWk" class="rs-select"></select></label>
+<label>Metric <select id="rsMvMetric" class="rs-select"></select></label>
+<label>Window <select id="rsMvWin" class="rs-select"><option value="1">Last game vs prior 3</option><option value="3">Last 3 vs prior 3</option></select></label>
+<label>Team <select id="rsMvTm" class="rs-select"><option value="">All teams</option></select></label>
+<button type="button" class="rs-adv-export" id="rsMvMore" hidden>Show all</button>
+<span class="rs-count" id="rsMvCount"></span>
+</div>
+<div class="rs-adv-groups" id="rsMvPos" role="group" aria-label="Position">
+<button type="button" class="rs-adv-chip on" data-p="" aria-pressed="true">All</button>
+<button type="button" class="rs-adv-chip" data-p="RB" aria-pressed="false">RB</button>
+<button type="button" class="rs-adv-chip" data-p="WR" aria-pressed="false">WR</button>
+<button type="button" class="rs-adv-chip" data-p="TE" aria-pressed="false">TE</button>
+</div>
+<div class="rs-mv-grid">
+<div class="rs-co-chart" id="rsMvUp"><div class="rs-empty">Loading&hellip;</div></div>
+<div class="rs-co-chart" id="rsMvDn"></div>
+</div>
+<div class="rs-adv-foot" id="rsMvFoot"></div>
 </div>
 
 <!-- Coach profiles -->
@@ -5849,7 +5876,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-16-wkxfp5"></script>
+<script defer src="app.js?v=2026-09-16-mv1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

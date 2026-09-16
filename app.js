@@ -63944,7 +63944,7 @@ function _rsScatter(cfg) {
     if (ps.length) avg.tdp = ps.reduce((a, b) => a + b, 0) / ps.length;
     return avg;
   }
-  function _wkBook(r) {
+  function _wkBook(r, pos) {
     const st = _wkLines(r);
     if (!st) return null;
     const py = st.py || 0, ry = st.ry || 0, rcy = st.rcy || 0;
@@ -63954,8 +63954,40 @@ function _rsScatter(cfg) {
     if (st.int != null) fp -= st.int * 2;
     if (st.rec != null) fp += st.rec * (_fmt === 'ppr' ? 1 : _fmt === 'std' ? 0 : 0.5);
     if (st.tdp != null) fp += 6 * st.tdp;
-    else if (_pos !== 'QB' && st.rrtd != null) fp += st.rrtd * 6;
+    else if ((pos || _pos) !== 'QB' && st.rrtd != null) fp += st.rrtd * 6;
     return fp;
+  }
+  // team-level view of the same numbers (Jack 2026-09-16: "add the team level projection gap for
+  // coaches too"): every QB / RB / WR / TE with a sim row this week rolled up by team. proj =
+  // the site's total; book + gap = over the players who also have posted props, so the gap
+  // compares like with like. Cached per week + scoring format.
+  let _wkTeamCache = { key: '', map: null };
+  function _wkTeam(tm) {
+    const wk = _wkNum(), key = wk + '|' + _fmt;
+    if (_wkTeamCache.key !== key || !_wkTeamCache.map) {
+      const map = {};
+      const S = window.SIM_PROJ_2026, week = S && S.weeks && (S.weeks[wk] || S.weeks[String(wk)]);
+      if (week && typeof D !== 'undefined' && Array.isArray(D)) {
+        const byName = new Map();
+        D.forEach(d => { if (!byName.has(d.n)) byName.set(d.n, d); });
+        Object.keys(week).forEach(name => {
+          const d = byName.get(name);
+          if (!d || ['QB', 'RB', 'WR', 'TE'].indexOf(d.s) < 0) return;
+          const t = (S.teamOf && S.teamOf[name]) || (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || null;
+          if (!t) return;
+          const r = { n: name, tm: t };
+          const pr = _wkProj(r);
+          if (pr == null) return;
+          const e = map[t] = map[t] || { proj: 0, book: 0, mproj: 0, n: 0, m: 0 };
+          e.proj += pr; e.n++;
+          const bk = _wkBook(r, d.s);
+          if (bk != null) { e.book += bk; e.mproj += pr; e.m++; }
+        });
+        Object.keys(map).forEach(t => { const e = map[t]; e.gap = e.m ? e.mproj - e.book : null; if (!e.m) e.book = null; });
+      }
+      _wkTeamCache = { key: key, map: map };
+    }
+    return _wkTeamCache.map[tm] || null;
   }
   // outside weekly projections (data/weekly_projections.js): Sleeper h/p/s, ESPN e, FantasyPros f, CBS c
   function _wkSrc(r, key) {
@@ -64015,7 +64047,7 @@ function _rsScatter(cfg) {
   REC_COLS.push.apply(REC_COLS, WK_PLAYER);
   TM_COLS.push.apply(TM_COLS, WK_GAME);
   const WK_FMT_KEYS = ['w_proj', 'w_book', 'w_edge', 'w_cons', 'w_slp', 'w_espn', 'w_fp', 'w_cbs'];
-  window._rsWeek = { num: _wkNum, game: _wkGame };   // Coach Profiles reads this week's DK lines through here
+  window._rsWeek = { num: _wkNum, game: _wkGame, team: _wkTeam, fmt: () => FMT_NAME[_fmt] };   // Coach Profiles reads this week's lines + team projections through here
   const NOTES = {
     QB: 'Clean / pressured / blitz splits and grades are PFF (weekly grades weighted by dropbacks). CPOE and EPA are nflverse.',
     RB: 'Rush efficiency is PFF charting except 1D%, Success% and EPA (nflverse). Grades 2019-2025 are PFF season grades; 2026 weights weekly grades by attempts.',
@@ -65051,7 +65083,10 @@ function _rsScatter(cfg) {
   const WK_COLS = [
     c('w_tt', 'Team total', WK, 1, 'Points the coach\'s team is expected to score this week: (game total - team spread) / 2 from the DK line'),
     c('w_spread', 'Spread', WK, 1, 'This week\'s DK spread from the team\'s side: negative = favored', LO),
-    c('w_gt', 'Game total', WK, 1, 'This week\'s DK over / under')
+    c('w_gt', 'Game total', WK, 1, 'This week\'s DK over / under'),
+    c('w_tproj', 'Team proj', WK, 1, 'Sum of this week\'s site (Sim Lab) projections for the team\'s QB / RB / WR / TE, in the Advanced Stats scoring format'),
+    c('w_tbook', 'Team book', WK, 1, 'Sum of this week\'s sportsbook projections (props scored as fantasy points, TDs from the anytime odds) for the team\'s skill players who have posted props'),
+    c('w_tgap', 'Site-Book', WK, 1, 'Team projection gap: site minus book, summed over the players who have both; positive = the site is higher on this offense than the sportsbooks')
   ];
   const ROLE_COLS = { op: OFF_COLS.concat(WK_COLS), hc: OFF_COLS.concat(DEF_COLS, WK_COLS), dp: DEF_COLS.concat(WK_COLS) };
   function _wkStamp(o, tm, yr) {
@@ -65060,6 +65095,10 @@ function _rsScatter(cfg) {
     o.w_tt = g ? g.implied : null;
     o.w_spread = g ? g.spread : null;
     o.w_gt = g ? g.total : null;
+    const T = W && yr === 2026 ? W.team(tm) : null;
+    o.w_tproj = T ? T.proj : null;
+    o.w_tbook = T ? T.book : null;
+    o.w_tgap = T ? T.gap : null;
     return o;
   }
   const ROLE_NAME = { op: 'offensive playcallers', hc: 'head coaches', dp: 'defensive playcallers' };
@@ -65439,7 +65478,7 @@ function _rsScatter(cfg) {
     if (csvBtn) csvBtn.disabled = !rows.length;
     if (foot) foot.textContent = 'Playcaller = the offensive / defensive coordinator Pro Football Reference lists, unless coach_overrides.json names a head coach who calls plays; a season with a mid-year coordinator change shows both names ("A / B"). ' +
       'Sources: nflverse play-by-play (tendency, pace, 4th down, run direction, results), nflverse participation (formation, personnel, coverage shells, box counts; published after each season, so 2026 stays blank), FTN charting via nflverse (play design, 2022+), PFF (target share by position; blitz, man and pressure the opponent faced). ' +
-      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.' + (window._rsWeek ? ' Week ' + window._rsWeek.num() + ' columns = this week\'s DK team total / spread / game total for the coach\'s current team (coaches whose latest season is 2026).' : '');
+      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.' + (window._rsWeek ? ' Week ' + window._rsWeek.num() + ' columns = this week\'s DK team total / spread / game total for the coach\'s current team, plus the team\'s skill-player projections (site = Sim Lab, book = props scored, ' + window._rsWeek.fmt() + '; the gap is summed over players with both) - coaches whose latest season is 2026.' : '');
     _fillVs();
     _coChart();
     _scC.render();

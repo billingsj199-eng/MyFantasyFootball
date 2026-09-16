@@ -478,6 +478,7 @@ def main():
 
     players = []
     rank_counter = 0
+    board_extras_nk = {_sx.norm(n) for n in _sx.BOARD_EXTRAS}
     ud_matched = 0
     ppg_matched = 0
     dropped = []
@@ -505,6 +506,9 @@ def main():
         # reached the extension. Absent from the board = he removed the player,
         # so drop him from the export.
         jbb = lookup_with_aliases(nk, format_boards.get("jBb") or {})
+        if jbb is None and nk in board_extras_nk and format_boards.get("jBb"):
+            # _sx.BOARD_EXTRAS: in-season fill-ins not yet ranked — end of board
+            jbb = len(format_boards["jBb"]) + 1 + sorted(board_extras_nk).index(nk)
         if jbb is None:
             if format_boards.get("jBb"):
                 dropped.append(entry["n"])

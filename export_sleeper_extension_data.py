@@ -14,6 +14,11 @@ OUT_PATH = "sleeper-extension/data/players.json"
 D_JS = "data/d.js"
 BUNDLE_JS = "data/_bundle_lookups.js"
 SLEEPER_JSON = "sleeper_nfl.json"
+# In-season fill-in starters Jack hasn't put on his board yet (2026-09-16:
+# Drew Lock — Darnold out 4-6 wks; Cooper Rush — started W1 for PIT). They
+# ship at the END of the board rank so the helpers know them; once Jack ranks
+# a name the board lookup wins and the entry here is a no-op. Delete when ranked.
+BOARD_EXTRAS = ["Drew Lock", "Cooper Rush"]
 # Jack's live per-mode boards (superflex/dynasty/dynastysf) — public-read Firestore doc
 FIRESTORE_URL = (
     "https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)"
@@ -515,7 +520,8 @@ def write_sim_pack():
             parts.append("\n// ---- " + p + " ----\n")
             parts.append(open(p, encoding="utf-8").read())
         for pack_dst in ("sleeper-extension/data/sim_pack.js",
-                         "espn-extension/data/sim_pack.js"):
+                         "espn-extension/data/sim_pack.js",
+                         "yahoo-extension/data/sim_pack.js"):
             if os.path.isdir(os.path.dirname(pack_dst)):
                 with open(pack_dst, "w", encoding="utf-8") as f:
                     f.write("".join(parts))
@@ -525,7 +531,9 @@ def write_sim_pack():
     for src, dst in [("../sim_lab/engine.js", "sleeper-extension/engine_sim.js"),
                      ("../sim_lab/overrides.js", "sleeper-extension/data/sim_overrides.js"),
                      ("../sim_lab/engine.js", "espn-extension/engine_sim.js"),
-                     ("../sim_lab/overrides.js", "espn-extension/data/sim_overrides.js")]:
+                     ("../sim_lab/overrides.js", "espn-extension/data/sim_overrides.js"),
+                     ("../sim_lab/engine.js", "yahoo-extension/engine_sim.js"),
+                     ("../sim_lab/overrides.js", "yahoo-extension/data/sim_overrides.js")]:
         if os.path.exists(src):
             header = ("// COPY of " + src + " (synced " + stamp
                       + " by export_sleeper_extension_data.py — edit the sim_lab original)\n")
@@ -556,6 +564,7 @@ def main():
 
     players = []
     rank_counter = 0
+    board_extras_nk = {norm(n) for n in BOARD_EXTRAS}
     sid_matched = 0
     ktc_matched = 0
     dropped = []
@@ -572,6 +581,8 @@ def main():
         # off the board is simply absent here, so he drops out of the export:
         # that removal reaching the extensions is the whole point.
         jr = lookup_with_aliases(nk, jacks_boards["jR"])
+        if jr is None and nk in board_extras_nk and jacks_boards["jR"]:
+            jr = len(jacks_boards["jR"]) + 1 + sorted(board_extras_nk).index(nk)   # BOARD_EXTRAS: end of board
         if jr is None:
             if jacks_boards["jR"]:
                 dropped.append(entry["n"])

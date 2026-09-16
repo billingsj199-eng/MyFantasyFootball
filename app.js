@@ -63128,6 +63128,28 @@ Rules:
     { k: 'fpts', l: 'FPTS (half-PPR)', d: 1 }, { k: 'ppg', l: 'PPG', d: 1 }, { k: 'gp', l: 'GP', d: 0 },
     { k: 'yr', l: 'Year', d: 0 }, { k: 'round', l: 'NFL draft round (0 = undrafted)', d: 0, lo: true }
   ];
+  // this week's numbers for the season's player (Jack 2026-09-16: "add the week columns to the
+  // season explorer too") - the same for every season row of an active player, blank for
+  // retired ones; read through window._rsWeek from the Advanced Stats module
+  const EX_WK = [
+    { k: 'w_proj', l: 'Proj', d: 1, wk: true, pts: true, t: 'This week\'s site projection (Sim Lab export) for the season\'s player, in the Advanced Stats scoring format' },
+    { k: 'w_book', l: 'Book', d: 1, wk: true, pts: true, t: 'This week\'s sportsbook props scored as fantasy points (DK / FD / MGM / UD / PP average, TDs from the anytime odds)' },
+    { k: 'w_edge', l: 'Site-Book', d: 1, wk: true, pts: true, t: 'Site projection minus book: positive = the site is higher on the player than the sportsbooks' },
+    { k: 'w_tt', l: 'Team total', d: 1, wk: true, t: 'Points the player\'s current team is expected to score this week (DK line)' },
+    { k: 'w_spread', l: 'Spread', d: 1, wk: true, lo: true, t: 'This week\'s DK spread from the current team\'s side: negative = favored' }
+  ];
+  function _exWkOn() { return !!(window._rsWeek && (window.SIM_PROJ_2026 || window.BETTING_2026)); }
+  function _exWkLabel(col) { return col.wk ? col.l + ' (Wk ' + window._rsWeek.num() + (col.pts ? ', ' + window._rsWeek.fmt() : '') + ')' : col.l; }
+  // stamp the rows on screen (one lookup per player per render)
+  function _exStampWeek(rows) {
+    if (!_exWkOn()) return;
+    const cache = new Map();
+    rows.forEach(r => {
+      let w = cache.get(r.name);
+      if (!w) { w = window._rsWeek.player(r.name, r.pos); cache.set(r.name, w); }
+      r.w_proj = w.proj; r.w_book = w.book; r.w_edge = w.gap; r.w_tt = w.tt; r.w_spread = w.spread; r.w_tm = w.tm;
+    });
+  }
   function _exFilters() {
     const g = id => (document.getElementById(id) || {});
     const yFrom = +(g('rsYrFrom').value || _yrMin), yTo = +(g('rsYrTo').value || _yrMax);
@@ -63139,10 +63161,10 @@ Rules:
     return _rsScatter({
       pfx: 'rsExSc', host: 'rsExScatter', btn: 'rsExPlot', store: 'rsExScatter',
       group: () => 'ex',
-      cols: () => EX_COLS,
+      cols: () => (_exWkOn() ? EX_COLS.concat(EX_WK) : EX_COLS),
       defaults: () => ['pAdp', 'fin'],
       data: () => (_exLast && _exLast.rows.length ? { rows: _exLast.rows, pg: false, val: (r, col) => r[col.k] } : null),
-      label: col => col.l,
+      label: _exWkLabel,
       dec: col => col.d,
       short: r => {
         const parts = String(r.name || '').split(' ');
@@ -63210,7 +63232,9 @@ Rules:
         (round === '1' && r.round === 1) || (round === '2' && r.round === 2) ||
         (round === '3' && r.round === 3) || (round === 'd2' && (r.round === 2 || r.round === 3)) ||
         (round === 'd3' && r.round === 4) || (round === 'udfa' && r.round === 0)));
-    const col = _COLS.find(c => c.k === _sortKey) || _COLS[4];
+    _exStampWeek(rows);
+    const wkOn = _exWkOn();
+    const col = _COLS.find(c => c.k === _sortKey) || (wkOn && EX_WK.find(c => c.k === _sortKey) && { k: _sortKey, num: true }) || _COLS[4];
     rows.sort((a, b) => {
       let av = a[col.k], bv = b[col.k];
       if (av == null) return 1;
@@ -63225,13 +63249,19 @@ Rules:
     if (cnt) cnt.textContent = total + ' seasons' + (total > 400 ? ' (showing 400)' : '');
     let html = '<table class="rs-table rs-explorer"><thead><tr>' + _COLS.map(c =>
       '<th data-k="' + c.k + '"' + (c.title ? ' title="' + c.title + '"' : '') +
-      (c.k === _sortKey ? ' class="' + (_sortAsc ? 'sorted-asc' : 'sorted-desc') + '"' : '') + '>' + c.label + '</th>').join('') + '</tr></thead><tbody>';
+      (c.k === _sortKey ? ' class="' + (_sortAsc ? 'sorted-asc' : 'sorted-desc') + '"' : '') + '>' + c.label + '</th>').join('') +
+      (wkOn ? EX_WK.map((c, i) => '<th data-k="' + c.k + '" title="' + _esc(c.t) + '"' + (c.k === _sortKey ? ' class="' + (_sortAsc ? 'sorted-asc' : 'sorted-desc') + '"' : '') + '>' +
+        (i === 0 ? 'Wk' + window._rsWeek.num() + ' ' : '') + c.l + '</th>').join('') : '') + '</tr></thead><tbody>';
+    const n1 = v => (v == null ? '' : Number(v).toFixed(1));
+    const wkCells = r => '<td>' + n1(r.w_proj) + '</td><td>' + n1(r.w_book) + '</td>' +
+      '<td class="' + (r.w_edge == null ? '' : r.w_edge >= 0.05 ? 'rs-pos-val' : r.w_edge <= -0.05 ? 'rs-neg-val' : '') + '">' + (r.w_edge == null ? '' : (r.w_edge > 0 ? '+' : '') + r.w_edge.toFixed(1)) + '</td>' +
+      '<td>' + n1(r.w_tt) + '</td><td>' + (r.w_spread == null ? '' : (r.w_spread > 0 ? '+' : '') + r.w_spread.toFixed(1)) + '</td>';
     rows.forEach(r => {
       html += '<tr data-name="' + _esc(r.name) + '"><td class="rs-name">' + _esc(r.name) + '</td><td>' + _esc(r.pos) + '</td><td>' + r.yr + '</td><td>' + _esc(r.tm || '') + '</td>' +
         '<td>' + (r.f != null ? r.f + ' <span class="rs-fmt">' + (_FMT[r.fm] || '') + '</span>' : '') + '</td>' +
         '<td>' + (r.pAdp != null ? r.pAdp : '') + '</td><td>' + (r.e != null ? r.e : '') + '</td>' +
         '<td>' + (r.gp != null ? r.gp : '') + '</td><td>' + (r.fpts != null ? r.fpts : '') + '</td><td>' + (r.ppg != null ? r.ppg : '') + '</td>' +
-        '<td>' + (r.fin != null ? _esc(r.pos) + r.fin : '') + '</td>' + _valCell(r.val) + '</tr>';
+        '<td>' + (r.fin != null ? _esc(r.pos) + r.fin : '') + '</td>' + _valCell(r.val) + (wkOn ? wkCells(r) : '') + '</tr>';
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
@@ -63246,7 +63276,7 @@ Rules:
           else {
             _sortKey = k;
             // sensible default direction: production columns start descending
-            _sortAsc = !(k === 'fpts' || k === 'ppg' || k === 'gp' || k === 'val');
+            _sortAsc = !(k === 'fpts' || k === 'ppg' || k === 'gp' || k === 'val' || k === 'w_proj' || k === 'w_book' || k === 'w_edge' || k === 'w_tt');
           }
           _renderExplorer();
           return;
@@ -64100,7 +64130,20 @@ function _rsScatter(cfg) {
   REC_COLS.push.apply(REC_COLS, WK_PLAYER);
   TM_COLS.push.apply(TM_COLS, WK_GAME);
   const WK_FMT_KEYS = ['w_proj', 'w_book', 'w_edge', 'w_cons', 'w_slp', 'w_espn', 'w_fp', 'w_cbs'];
-  window._rsWeek = { num: _wkNum, game: _wkGame, team: _wkTeam, fmt: () => FMT_NAME[_fmt] };   // Coach Profiles reads this week's lines + team projections through here
+  // one player's this-week bundle for other sections (Season Explorer): current team from the
+  // sim export or the board, not the season row's team
+  function _wkPlayer(name, pos) {
+    const S = window.SIM_PROJ_2026;
+    let tm = S && S.teamOf ? S.teamOf[name] : null;
+    if (!tm && typeof D !== 'undefined' && Array.isArray(D) && typeof TEAM_ABBR_MAP !== 'undefined') {
+      const d = D.find(q => q.n === name);
+      if (d) tm = TEAM_ABBR_MAP[d.t] || null;
+    }
+    const r = { n: name, tm: tm || '' };
+    const pr = _wkProj(r), bk = _wkBook(r, pos), g = _wkGame(tm);
+    return { tm: tm || '', proj: pr, book: bk, gap: pr != null && bk != null ? pr - bk : null, tt: g ? g.implied : null, spread: g ? g.spread : null, gt: g ? g.total : null };
+  }
+  window._rsWeek = { num: _wkNum, game: _wkGame, team: _wkTeam, player: _wkPlayer, fmt: () => FMT_NAME[_fmt] };   // Coach Profiles / Season Explorer read this week's numbers through here
   const NOTES = {
     QB: 'Clean / pressured / blitz splits and grades are PFF (weekly grades weighted by dropbacks). CPOE and EPA are nflverse.',
     RB: 'Rush efficiency is PFF charting except 1D%, Success% and EPA (nflverse). Grades 2019-2025 are PFF season grades; 2026 weights weekly grades by attempts.',

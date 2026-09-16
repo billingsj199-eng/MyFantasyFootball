@@ -63630,11 +63630,69 @@ Rules:
     _scAx = s.ax || {};
     if (['both', 'logo', 'name', 'dot'].indexOf(s.lab) >= 0) _scLab = s.lab;
   } catch (e) { _scAx = {}; }
+  // Board group (Jack 2026-09-16): ADP, consensus / Jack's / my rank and JM score from the site
+  // database, matched to the stats rows by name, for the rankings page's current format
+  // (redraft / dynasty / ...). My rank is a toggle because a virgin "mine" board just mirrors
+  // Jack's and the PNG is meant to be shared.
+  const BOARD_MODES = ['redraft', 'bestball', 'superflex', 'dynasty', 'dynastysf'];
+  const MODE_LABEL = { redraft: 'Redraft', bestball: 'Best Ball', superflex: 'Superflex', dynasty: 'Dynasty', dynastysf: 'Dynasty SF' };
+  let _scMine = false, _scJmWait = 0;
+  try { _scMine = localStorage.getItem('rsAdvScatterMine') === '1'; } catch (e) { /* storage blocked */ }
+  function _scMode() { return typeof currentMode === 'string' && BOARD_MODES.indexOf(currentMode) >= 0 ? currentMode : 'redraft'; }
+  function _scBoardCols() {
+    if (_pos === 'TM' || typeof D === 'undefined') return [];
+    const ml = MODE_LABEL[_scMode()];
+    const cols = [
+      { k: 'b_adp', l: 'ADP', g: 'Board', d: 1, lo: true, t: ml + ' consensus ADP from the site board (lower = drafted earlier)' },
+      { k: 'b_cons', l: 'Consensus rank', g: 'Board', d: 0, lo: true, t: ml + ' consensus rank: the site blend of Jack, market ADP, Sleeper and FantasyPros' }
+    ];
+    if (typeof hasPremium !== 'function' || hasPremium()) cols.push({ k: 'b_jacks', l: "Jack's rank", g: 'Board', d: 0, lo: true, t: 'Where Jack has the player on his ' + ml + ' board' });
+    if (_scMine) cols.push({ k: 'b_mine', l: 'My rank', g: 'Board', d: 0, lo: true, t: 'Where the player sits on your ' + ml + ' board (an untouched board mirrors Jack\'s)' });
+    cols.push({ k: 'b_jm', l: 'JM score', g: 'Board', d: 0, t: 'JM prospect model score 0-100 (draft capital, production, age, athleticism, film ...)' });
+    return cols;
+  }
+  function _scAllCols() { return COLS[_pos].concat(_scBoardCols()); }
+  function _scBoardCtx() {
+    if (_pos === 'TM' || typeof D === 'undefined' || !Array.isArray(D)) return null;
+    const mode = _scMode();
+    const rank = src => {
+      const b = typeof versionBoards !== 'undefined' && versionBoards[src] && versionBoards[src][mode];
+      const m = {};
+      if (Array.isArray(b)) b.forEach((idx, r) => { m[idx] = r + 1; });
+      return m;
+    };
+    const byName = new Map();
+    D.forEach(d => { if (!byName.has(d.n)) byName.set(d.n, d); });
+    return { byName: byName, adpF: mode === 'dynastysf' ? 'sa' : mode === 'dynasty' ? 'da' : mode === 'superflex' ? 'sfa' : 'a', cons: rank('consensus'), jacks: rank('jacks'), mine: rank('mine') };
+  }
+  function _scBoardVal(ctx, r, k) {
+    const d = ctx && ctx.byName.get(r.n);
+    if (!d) return null;
+    if (k === 'b_adp') { const v = d[ctx.adpF]; return v != null && v > 0 && v < 900 ? v : null; }   // K/DST carry a 900+ placeholder
+    if (k === 'b_cons') return ctx.cons[d.idx] || null;
+    if (k === 'b_jacks') return ctx.jacks[d.idx] || null;
+    if (k === 'b_mine') return ctx.mine[d.idx] || null;
+    if (k === 'b_jm') return d._pmJm != null ? d._pmJm : null;
+    return null;
+  }
+  // JM scores are stamped onto D by the prospect module (lazy data); ask for them and redraw when they land
+  function _scEnsureJm() {
+    if (typeof D === 'undefined' || D.some(d => d._pmJm != null) || typeof window._attachJmScores !== 'function') return;
+    if (window._attachJmScores() === true || _scJmWait) return;
+    let n = 0;
+    _scJmWait = setInterval(() => {
+      if (D.some(d => d._pmJm != null) || ++n > 40) { clearInterval(_scJmWait); _scJmWait = 0; _scatter(); }
+    }, 500);
+  }
   function _scSave() {
-    try { localStorage.setItem('rsAdvScatter', _scOn ? '1' : '0'); localStorage.setItem('rsAdvScatterAxes', JSON.stringify({ ax: _scAx, lab: _scLab })); } catch (e) { /* private mode */ }
+    try {
+      localStorage.setItem('rsAdvScatter', _scOn ? '1' : '0');
+      localStorage.setItem('rsAdvScatterAxes', JSON.stringify({ ax: _scAx, lab: _scLab }));
+      localStorage.setItem('rsAdvScatterMine', _scMine ? '1' : '0');
+    } catch (e) { /* private mode */ }
   }
   function _scAxes() {
-    const cols = COLS[_pos];
+    const cols = _scAllCols();
     const has = k => cols.some(col => col.k === k && col.k !== 'g');
     const a = _scAx[_pos] || [];
     let x = has(a[0]) ? a[0] : SC_DEF[_pos][0], y = has(a[1]) ? a[1] : SC_DEF[_pos][1];
@@ -63642,10 +63700,11 @@ Rules:
     if (!has(y)) y = (cols.find(col => col.k !== 'g' && col.k !== x) || cols[0]).k;
     return [x, y];
   }
-  function _scCol(k) { return COLS[_pos].find(col => col.k === k) || { k: k, l: k, g: '', d: 1, dg: 1 }; }
+  function _scCol(k) { return _scAllCols().find(col => col.k === k) || { k: k, l: k, g: '', d: 1, dg: 1 }; }
   // axis label as the table header reads it (Per game swaps FPTS -> FP/G); FPTS / xFP name the scoring
   function _scLabel(col, pg) {
     const l = pg && col.cnt ? col.lg : col.l;
+    if (col.g === 'Board') return l + ' (' + MODE_LABEL[_scMode()] + ')';
     return (col.k === 'fpt' || col.k === 'xfpt') && _pos !== 'TM' ? l + ' (' + FMT_NAME[_fmt] + ')' : l;
   }
   function _scDec(col, pg) { return pg && col.cnt ? col.dg : col.d; }
@@ -63696,9 +63755,12 @@ Rules:
     const L = _last;
     if (!L || !L.rows.length) return null;
     const ax = _scAxes(), cx = _scCol(ax[0]), cy = _scCol(ax[1]);
+    if (cx.k === 'b_jm' || cy.k === 'b_jm') _scEnsureJm();
+    const ctx = cx.g === 'Board' || cy.g === 'Board' ? _scBoardCtx() : null;
+    const get = (r, col) => (col.g === 'Board' ? _scBoardVal(ctx, r, col.k) : L.val(r, col.k));
     const pts = [];
     L.rows.forEach(r => {
-      const x = L.val(r, cx.k), y = L.val(r, cy.k);
+      const x = get(r, cx), y = get(r, cy);
       if (x == null || y == null || !isFinite(x) || !isFinite(y)) return;
       pts.push({ r: r, x: +x, y: +y });
     });
@@ -63883,13 +63945,14 @@ Rules:
     if (!_scOn || !D) { host.hidden = true; host.innerHTML = ''; _scPts = []; return; }
     host.hidden = false;
     const pg = D.pg;
-    const opt = (sel) => COLS[_pos].filter(col => col.k !== 'g').map(col => '<option value="' + col.k + '"' + (col.k === sel ? ' selected' : '') + '>' +
-      _esc(col.g + ' · ' + _scLabel(col, pg)) + '</option>').join('');
+    const opt = (sel) => _scAllCols().filter(col => col.k !== 'g').map(col => '<option value="' + col.k + '"' + (col.k === sel ? ' selected' : '') + '>' +
+      _esc(col.g + ' · ' + (col.g === 'Board' ? col.l : _scLabel(col, pg))) + '</option>').join('');
     if (!host.querySelector('#rsScCanvas')) {
       host.innerHTML = '<div class="rs-co-head"><span class="rs-co-title">Scatter</span>' +
         '<label class="rs-room-pick">X <select id="rsScX" class="rs-select"></select></label>' +
         '<label class="rs-room-pick">Y <select id="rsScY" class="rs-select"></select></label>' +
         '<label class="rs-room-pick">Show <select id="rsScLab" class="rs-select"><option value="both">Logos + names</option><option value="logo">Logos</option><option value="name">Names</option><option value="dot">Dots</option></select></label>' +
+        '<label class="rs-room-pick rs-check" id="rsScMineLbl" title="Offer your own board rank in the X / Y lists (off keeps a shared PNG free of your personal ranks)"><input type="checkbox" id="rsScMine"> My rank</label>' +
         '<button type="button" class="rs-co-close rs-sc-btn" id="rsScSwap" title="Swap the axes">Swap</button>' +
         '<button type="button" class="rs-co-close rs-sc-btn rs-sc-dl" id="rsScPng" title="Download this chart as a 2x PNG">Download PNG</button>' +
         '<button type="button" class="rs-co-close" id="rsScHide">Hide chart</button></div>' +
@@ -63899,6 +63962,8 @@ Rules:
     _el('rsScX').innerHTML = opt(D.cx.k);
     _el('rsScY').innerHTML = opt(D.cy.k);
     _el('rsScLab').value = _scLab;
+    _el('rsScMine').checked = _scMine;
+    _el('rsScMineLbl').hidden = _pos === 'TM';
     const cap = _el('rsScCap');
     if (!D.pts.length) {
       cap.textContent = 'No rows have both ' + _scLabel(D.cx, pg) + ' and ' + _scLabel(D.cy, pg) + '.';
@@ -64006,6 +64071,9 @@ Rules:
         _scSave(); _scatter();
       } else if (t.id === 'rsScLab') {
         _scLab = t.value;
+        _scSave(); _scatter();
+      } else if (t.id === 'rsScMine') {
+        _scMine = t.checked;
         _scSave(); _scatter();
       }
     });

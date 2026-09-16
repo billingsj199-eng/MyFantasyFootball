@@ -179,6 +179,7 @@
 .rs-adv-export.on { border-color: rgba(245,158,11,.55); color: var(--accent); background: rgba(245,158,11,.12); }
 .rs-scatter .rs-co-head { gap: 10px 14px; align-items: center; }
 .rs-scatter .rs-co-close { margin-left: 0; }
+.rs-scatter .rs-room-pick[hidden] { display: none; }
 .rs-scatter .rs-co-close#rsScHide { margin-left: auto; }
 .rs-scatter .rs-sc-dl { color: var(--accent); border-color: rgba(245,158,11,.5); }
 .rs-scatter .rs-sc-dl:disabled { opacity: .5; cursor: default; }

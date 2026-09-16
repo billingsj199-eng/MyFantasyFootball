@@ -5964,6 +5964,7 @@ function render() {
   const _statMode = _effStatMode();
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
+  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy');
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
   // view carries boom/bust in the ppg25/l4ppg swap columns instead.
@@ -6248,6 +6249,7 @@ function render() {
       }
     }
 
+    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
@@ -6255,7 +6257,7 @@ function render() {
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? _cc.r : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
-      ${_statTd1}
+      ${_statTd1}${_wkSplit.pre}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
       <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}"${(()=>{ const n = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : ''; return n ? ' title="' + n.replace(/"/g, '&quot;') + '"' : ''; })()} style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
@@ -6267,7 +6269,7 @@ function render() {
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>
       ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
-      ${_wkXfpInject(_statTds, d, _isWeekly && _statMode === 'fantasy')}
+      ${_wkSplit.post}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
@@ -10070,17 +10072,34 @@ function _wkXfpCellHtml(d, show) {
   if (!x) return blank;
   const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
   const sg = v => (v >= 0 ? '+' : '') + f1(v);
-  const oc = x.fpoeg <= -1.5 ? '#22c55e' : x.fpoeg >= 1.5 ? '#f87171' : null;
+  // Same positional color scale as PROJ / '26 PPG (it sits right beside them);
+  // the over-expected split lives in the tooltip — the gap vs '26 PPG is visible.
+  const xc = posFptsColor(x.xfpg, d.s);
   const tip = (x.n + ' game' + (x.n > 1 ? 's' : '') + ' to date: expected ' + f1(x.xfpg) + ' /gm vs actual ' + f1(x.ppg)
     + ' — scored ' + sg(x.fpoeg) + ' /gm vs expected: TD luck ' + sg(x.tdg) + ' (regresses), '
     + (d.s === 'QB' && x.int ? 'INTs ' + sg(x.intg) + ', ' : '') + 'yards/catches ' + sg(x.fpoeg - x.luckg) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
-  return '<td class="xfpg-cell weekly-only-cell" style="display:none" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span>'
-    + '<span class="xfpg-oe" style="' + (oc ? 'color:' + oc : 'opacity:.55') + '">' + sg(x.fpoeg) + '</span></td>';
+  return '<td class="xfpg-cell weekly-only-cell pts-cell" style="display:none' + (xc ? ';color:' + xc + ';font-weight:700' : '') + '" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span></td>';
 }
-function _wkXfpInject(tds, d, show) {
-  const cell = _wkXfpCellHtml(d, show);
+// WEEKLY FANTASY view column order (Jack 2026-09-16): PROJ · '26 PPG · xFP ·
+// matchup block · L4 PPG. Splits the '26 PPG / L4 PPG pair so the row can
+// emit '26 PPG + xFP right after PROJ; every other view keeps the pair
+// together after the matchup block (xFP placeholder hidden).
+function _wkSplitStatTds(tds, d, wkFant) {
+  const cell = _wkXfpCellHtml(d, wkFant);
   const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
-  return i < 0 ? tds + cell : tds.slice(0, i) + cell + tds.slice(i);
+  const td26 = i < 0 ? tds : tds.slice(0, i), tdL4 = i < 0 ? '' : tds.slice(i);
+  return wkFant ? { pre: td26 + cell, post: tdL4 } : { pre: '', post: td26 + cell + tdL4 };
+}
+// Matching <th> order: move '26 PPG + xFP headers right after PROJ in the
+// weekly FANTASY view, back after Opp PPG otherwise. Idempotent; listeners
+// ride along with the nodes.
+function _wkFantasyColOrder(on) {
+  const proj = document.getElementById('ppgProjHeader'), p26 = document.getElementById('ppg25HeaderTh');
+  const xfp = document.getElementById('xfpGHeader'), opp = document.getElementById('oppPpgHeader');
+  if (!proj || !p26 || !xfp || !opp) return;
+  const anchor = on ? proj : opp;
+  if (anchor.nextElementSibling !== p26) anchor.after(p26);
+  if (p26.nextElementSibling !== xfp) p26.after(xfp);
 }
 function _wkOppPpgCell(d) {
   const r = (typeof window._weeklyOppPpgFor === 'function') ? window._weeklyOppPpgFor(d.t, d.s) : null;

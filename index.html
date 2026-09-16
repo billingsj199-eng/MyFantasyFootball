@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-16-wkchart1" as="script">
+<link rel="preload" href="app.js?v=2026-09-16-wkxfp5" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -74,7 +74,7 @@
 <link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-09-16" as="script">
-<link rel="preload" href="data/d.js?v=2026-09-16" as="script">
+<link rel="preload" href="data/d.js?v=2026-09-16-lock" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-09-16-wkxfp2">
 
@@ -1348,7 +1348,6 @@ CLEAR ALL
   body.format-weekly.wk-xfp-col #pageRankings .xfpg-cell { display: table-cell !important; }
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
-  #pageRankings tbody .xfpg-cell .xfpg-oe{font-size:.58rem;margin-left:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;vertical-align:1px}
   /* The always-on weekly Boom/Bust pair (simboom/simbust) stays hidden since
      2026-09-08 (Jack) — the SIMS stats view still shows boom/bust in the
      '25 PPG / L4 PPG swap columns. */
@@ -1774,7 +1773,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="oppPpg" id="oppPpgHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Fantasy points the OPPONENT allows per game to this position in 2026 (board scoring, final games only). RB facing CAR = what CAR gives up to RBs per game; D/ST facing TEN = what opposing D/STs have scored against TEN. Green = allows the most (top third, soft matchup), red = allows the least (tough). #n = league rank, 1 = allows the most.">Opp PPG</span> <span class="arrow"></span></th>
 <th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
-<th data-sort="xfpG" id="xfpGHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span class="th-stack"><span data-gloss="Expected fantasy points per game, 2026 to date — what an average player scores from this exact usage: every target valued by depth and field position, every carry by field position (league rates 2018-25). The small figure is points over expected per game: green = scored UNDER expected (due up), red = over. Hover a value for the TD-luck split. Weekly board only, FANTASY stats view; the game-by-game version lives on the player card.">xFP</span><span class="hide-on-mobile th-fmt">'26 /Gm</span></span><span class="arrow"></span></th>
+<th data-sort="xfpG" id="xfpGHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span class="th-stack"><span data-gloss="Expected fantasy points per game, 2026 to date — what an average player scores from this exact usage: every target valued by depth and field position, every carry by field position (league rates 2018-25). Same color scale as PROJ and '26 PPG — the gap to '26 PPG is the points over expected; hover a value for the TD-luck split. Weekly board only, FANTASY stats view; the game-by-game version lives on the player card.">xFP</span><span class="hide-on-mobile th-fmt">'26 /Gm</span></span><span class="arrow"></span></th>
 <th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
@@ -4389,13 +4388,13 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-09-16" defer></script>
-<script src="data/d.js?v=2026-09-16" defer></script>
+<script src="data/d.js?v=2026-09-16-lock" defer></script>
 <script src="data/injury_updates.js?v=2026-09-16-10" defer></script>
 <script src="data/weekly_projections.js?v=2026-09-16" defer></script>
 <script src="data/weather_2026.js?v=2026-09-16-10" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-09-16-0738" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-09-16-10" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-09-16-lock" defer></script>
 <script src="data/matchup_edges_2026.js?v=2026-09-16-edges1" defer></script>
 <script src="data/site_projections.js?v=2026-09-16" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -4460,7 +4459,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
 <script src="data/betting_lines_2026.js?v=2026-09-16c" defer></script>
-<script src="data/headshot_espn_ids.js?v=2026-09-03" defer></script>
+<script src="data/headshot_espn_ids.js?v=2026-09-16-lock" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
@@ -5755,10 +5754,10 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-09-16',
+    'data/weekly_stats_active.js?v=2026-09-16-lock',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-09-15-oppppg',
+    'data/fpa_2026.js?v=2026-09-16-lock',
     'data/weekly_stats_retired_1.js?v=2026-07-21',
     'data/weekly_stats_retired_2.js?v=2026-07-21',
     'data/weekly_stats_retired_3.js?v=2026-07-21',
@@ -5850,7 +5849,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-16-wkchart1"></script>
+<script defer src="app.js?v=2026-09-16-wkxfp5"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

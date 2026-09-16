@@ -1,0 +1,301 @@
+Every 2019-2026 team-season where PFR lists an OC (teams with no OC listed already credit the head coach). * = oc_play override present.
+Mark the HC playcallers in coach_overrides.json as {season: {TEAM: {"oc_play": "Head Coach Name"}}}; dc_play works the same for defense.
+
+=== 2019  (29 teams list an OC; * = already marked HC calls plays)
+    NYJ  HC Adam Gase              OC listed: Dowell Loggains
+  * KC   HC Andy Reid              OC listed: Eric Bieniemy
+    LAC  HC Anthony Lynn           OC listed: Shane Steichen, Ken Whisenhunt
+    NE   HC Bill Belichick         OC listed: Josh McDaniels
+    HOU  HC Bill O'Brien           OC listed: Tim Kelly
+    MIA  HC Brian Flores           OC listed: Chad O'Shea
+    TB   HC Bruce Arians           OC listed: Byron Leftwich
+    ATL  HC Dan Quinn              OC listed: Dirk Koetter
+    JAX  HC Doug Marrone           OC listed: John DeFilippo
+    PHI  HC Doug Pederson          OC listed: Mike Groh
+    IND  HC Frank Reich            OC listed: Nick Sirianni
+    CLE  HC Freddie Kitchens       OC listed: Todd Monken
+    DAL  HC Jason Garrett          OC listed: Kellen Moore
+    WAS  HC Jay Gruden, Bill Callahan OC listed: Kevin O'Connell
+    BAL  HC John Harbaugh          OC listed: Greg Roman
+    LV   HC Jon Gruden             OC listed: Greg Olson
+    GB   HC Matt LaFleur           OC listed: Nathaniel Hackett
+    CHI  HC Matt Nagy              OC listed: Mark Helfrich
+    DET  HC Matt Patricia          OC listed: Darrell Bevell
+    PIT  HC Mike Tomlin            OC listed: Randy Fichtner
+    TEN  HC Mike Vrabel            OC listed: Arthur Smith
+    MIN  HC Mike Zimmer            OC listed: Kevin Stefanski
+    NYG  HC Pat Shurmur            OC listed: Mike Shula
+    CAR  HC Perry Fewell, Ron Rivera OC listed: Norv Turner, Scott Turner
+    SEA  HC Pete Carroll           OC listed: Brian Schottenheimer
+    BUF  HC Sean McDermott         OC listed: Brian Daboll
+    NO   HC Sean Payton            OC listed: Pete Carmichael
+    DEN  HC Vic Fangio             OC listed: Rich Scangarello
+    CIN  HC Zac Taylor             OC listed: Brian Callahan
+
+=== 2020  (29 teams list an OC; * = already marked HC calls plays)
+    NYJ  HC Adam Gase              OC listed: Dowell Loggains
+  * KC   HC Andy Reid              OC listed: Eric Bieniemy
+    LAC  HC Anthony Lynn           OC listed: Shane Steichen
+    NE   HC Bill Belichick         OC listed: Josh McDaniels
+    HOU  HC Bill O'Brien, Romeo Crennel OC listed: Tim Kelly
+    MIA  HC Brian Flores           OC listed: Chan Gailey
+    TB   HC Bruce Arians           OC listed: Byron Leftwich
+    ATL  HC Dan Quinn, Raheem Morris OC listed: Dirk Koetter
+    DET  HC Darrell Bevell, Matt Patricia OC listed: Darrell Bevell
+    JAX  HC Doug Marrone           OC listed: Jay Gruden
+    IND  HC Frank Reich            OC listed: Nick Sirianni
+    NYG  HC Joe Judge              OC listed: Jason Garrett
+    BAL  HC John Harbaugh          OC listed: Greg Roman
+    LV   HC Jon Gruden             OC listed: Greg Olson
+    CLE  HC Kevin Stefanski        OC listed: Alex Van Pelt
+    GB   HC Matt LaFleur           OC listed: Nathaniel Hackett
+    CHI  HC Matt Nagy              OC listed: Bill Lazor
+    CAR  HC Matt Rhule             OC listed: Joe Brady
+    DAL  HC Mike McCarthy          OC listed: Kellen Moore
+    PIT  HC Mike Tomlin            OC listed: Randy Fichtner
+    TEN  HC Mike Vrabel            OC listed: Arthur Smith
+    MIN  HC Mike Zimmer            OC listed: Gary Kubiak
+    SEA  HC Pete Carroll           OC listed: Brian Schottenheimer
+    WAS  HC Ron Rivera             OC listed: Scott Turner
+    BUF  HC Sean McDermott         OC listed: Brian Daboll
+  * LAR  HC Sean McVay             OC listed: Kevin O'Connell
+    NO   HC Sean Payton            OC listed: Pete Carmichael
+    DEN  HC Vic Fangio             OC listed: Pat Shurmur
+    CIN  HC Zac Taylor             OC listed: Brian Callahan
+
+=== 2021  (31 teams list an OC; * = already marked HC calls plays)
+  * KC   HC Andy Reid              OC listed: Eric Bieniemy
+    ATL  HC Arthur Smith           OC listed: Dave Ragone
+    NE   HC Bill Belichick         OC listed: Josh McDaniels
+    LAC  HC Brandon Staley         OC listed: Joe Lombardi
+    MIA  HC Brian Flores           OC listed: George Godsey, Eric Studesville
+    TB   HC Bruce Arians           OC listed: Byron Leftwich
+    DET  HC Dan Campbell           OC listed: Anthony Lynn
+    JAX  HC Darrell Bevell, Urban Meyer OC listed: Darrell Bevell
+    HOU  HC David Culley           OC listed: Tim Kelly
+    IND  HC Frank Reich            OC listed: Marcus Brady
+    NYG  HC Joe Judge              OC listed: Jason Garrett, Freddie Kitchens
+    BAL  HC John Harbaugh          OC listed: Greg Roman
+    LV   HC Jon Gruden, Rich Bisaccia OC listed: Greg Olson
+    CLE  HC Kevin Stefanski        OC listed: Alex Van Pelt
+  * SF   HC Kyle Shanahan          OC listed: Mike McDaniel
+    GB   HC Matt LaFleur           OC listed: Nathaniel Hackett
+    CHI  HC Matt Nagy              OC listed: Bill Lazor
+    CAR  HC Matt Rhule             OC listed: Joe Brady, Jeff Nixon
+    DAL  HC Mike McCarthy          OC listed: Kellen Moore
+    PIT  HC Mike Tomlin            OC listed: Matt Canada
+    TEN  HC Mike Vrabel            OC listed: Todd Downing
+    MIN  HC Mike Zimmer            OC listed: Klint Kubiak
+    PHI  HC Nick Sirianni          OC listed: Shane Steichen
+    SEA  HC Pete Carroll           OC listed: Shane Waldron
+    NYJ  HC Robert Saleh           OC listed: Mike LaFleur
+    WAS  HC Ron Rivera             OC listed: Scott Turner
+    BUF  HC Sean McDermott         OC listed: Brian Daboll
+  * LAR  HC Sean McVay             OC listed: Kevin O'Connell
+    NO   HC Sean Payton            OC listed: Pete Carmichael
+    DEN  HC Vic Fangio             OC listed: Pat Shurmur
+    CIN  HC Zac Taylor             OC listed: Brian Callahan
+
+=== 2022  (29 teams list an OC; * = already marked HC calls plays)
+  * KC   HC Andy Reid              OC listed: Eric Bieniemy
+    ATL  HC Arthur Smith           OC listed: Dave Ragone
+    LAC  HC Brandon Staley         OC listed: Joe Lombardi
+    NYG  HC Brian Daboll           OC listed: Mike Kafka
+    DET  HC Dan Campbell           OC listed: Ben Johnson
+    NO   HC Dennis Allen           OC listed: Pete Carmichael
+    JAX  HC Doug Pederson          OC listed: Press Taylor
+    IND  HC Jeff Saturday, Frank Reich OC listed: Marcus Brady
+    DEN  HC Jerry Rosburg, Nathaniel Hackett OC listed: Justin Outten
+    BAL  HC John Harbaugh          OC listed: Greg Roman
+    LV   HC Josh McDaniels         OC listed: Mick Lombardi
+    MIN  HC Kevin O'Connell        OC listed: Wes Phillips
+    CLE  HC Kevin Stefanski        OC listed: Alex Van Pelt
+    HOU  HC Lovie Smith            OC listed: Pep Hamilton
+    CHI  HC Matt Eberflus          OC listed: Luke Getsy
+    GB   HC Matt LaFleur           OC listed: Adam Stenavich
+    CAR  HC Matt Rhule, Steve Wilks OC listed: Ben McAdoo
+    DAL  HC Mike McCarthy          OC listed: Kellen Moore
+    MIA  HC Mike McDaniel          OC listed: Frank Smith
+    PIT  HC Mike Tomlin            OC listed: Matt Canada
+    TEN  HC Mike Vrabel            OC listed: Todd Downing
+    PHI  HC Nick Sirianni          OC listed: Shane Steichen
+    SEA  HC Pete Carroll           OC listed: Shane Waldron
+    NYJ  HC Robert Saleh           OC listed: Mike LaFleur
+    WAS  HC Ron Rivera             OC listed: Scott Turner
+    BUF  HC Sean McDermott         OC listed: Ken Dorsey
+  * LAR  HC Sean McVay             OC listed: Liam Coen
+    TB   HC Todd Bowles            OC listed: Byron Leftwich
+    CIN  HC Zac Taylor             OC listed: Brian Callahan
+
+=== 2023  (31 teams list an OC; * = already marked HC calls plays)
+  * KC   HC Andy Reid              OC listed: Matt Nagy
+    ATL  HC Arthur Smith           OC listed: Dave Ragone
+    NE   HC Bill Belichick         OC listed: Bill O'Brien
+    NYG  HC Brian Daboll           OC listed: Mike Kafka
+    DET  HC Dan Campbell           OC listed: Ben Johnson
+    HOU  HC DeMeco Ryans           OC listed: Bobby Slowik
+    NO   HC Dennis Allen           OC listed: Pete Carmichael
+    JAX  HC Doug Pederson          OC listed: Press Taylor
+    CAR  HC Frank Reich, Chris Tabor OC listed: Thomas Brown
+    LAC  HC Giff Smith, Brandon Staley OC listed: Kellen Moore
+    BAL  HC John Harbaugh          OC listed: Todd Monken
+    ARI  HC Jonathan Gannon        OC listed: Drew Petzing
+    LV   HC Josh McDaniels, Antonio Pierce OC listed: Bo Hardegree, Mick Lombardi
+    MIN  HC Kevin O'Connell        OC listed: Wes Phillips
+    CLE  HC Kevin Stefanski        OC listed: Alex Van Pelt
+    CHI  HC Matt Eberflus          OC listed: Luke Getsy
+    GB   HC Matt LaFleur           OC listed: Adam Stenavich
+    DAL  HC Mike McCarthy          OC listed: Brian Schottenheimer
+    MIA  HC Mike McDaniel          OC listed: Frank Smith
+    PIT  HC Mike Tomlin            OC listed: Matt Canada, Eddie Faulkner
+    TEN  HC Mike Vrabel            OC listed: Tim Kelly
+    PHI  HC Nick Sirianni          OC listed: Brian Johnson
+    SEA  HC Pete Carroll           OC listed: Shane Waldron
+    NYJ  HC Robert Saleh           OC listed: Nathaniel Hackett
+    WAS  HC Ron Rivera             OC listed: Eric Bieniemy
+    BUF  HC Sean McDermott         OC listed: Joe Brady, Ken Dorsey
+  * LAR  HC Sean McVay             OC listed: Mike LaFleur
+    DEN  HC Sean Payton            OC listed: Joe Lombardi
+    IND  HC Shane Steichen         OC listed: Jim Bob Cooter
+    TB   HC Todd Bowles            OC listed: Dave Canales
+    CIN  HC Zac Taylor             OC listed: Brian Callahan
+
+=== 2024  (31 teams list an OC; * = already marked HC calls plays)
+  * KC   HC Andy Reid              OC listed: Matt Nagy
+    LV   HC Antonio Pierce         OC listed: Luke Getsy, Scott Turner
+    TEN  HC Brian Callahan         OC listed: Nick Holz
+    NYG  HC Brian Daboll           OC listed: Mike Kafka
+    DET  HC Dan Campbell           OC listed: Ben Johnson
+    WAS  HC Dan Quinn              OC listed: Kliff Kingsbury
+    CAR  HC Dave Canales           OC listed: Brad Idzik
+    HOU  HC DeMeco Ryans           OC listed: Bobby Slowik
+    NO   HC Dennis Allen, Darren Rizzi OC listed: Klint Kubiak
+    JAX  HC Doug Pederson          OC listed: Press Taylor
+    NE   HC Jerod Mayo             OC listed: Alex Van Pelt
+    LAC  HC Jim Harbaugh           OC listed: Greg Roman
+    BAL  HC John Harbaugh          OC listed: Todd Monken
+    ARI  HC Jonathan Gannon        OC listed: Drew Petzing
+    MIN  HC Kevin O'Connell        OC listed: Wes Phillips
+    CLE  HC Kevin Stefanski        OC listed: Ken Dorsey
+    GB   HC Matt LaFleur           OC listed: Adam Stenavich
+    SEA  HC Mike Macdonald         OC listed: Ryan Grubb
+    DAL  HC Mike McCarthy          OC listed: Brian Schottenheimer
+    MIA  HC Mike McDaniel          OC listed: Frank Smith
+    PIT  HC Mike Tomlin            OC listed: Arthur Smith
+    PHI  HC Nick Sirianni          OC listed: Kellen Moore
+    ATL  HC Raheem Morris          OC listed: Zac Robinson
+    NYJ  HC Robert Saleh, Jeff Ulbrich OC listed: Nathaniel Hackett
+    BUF  HC Sean McDermott         OC listed: Joe Brady
+  * LAR  HC Sean McVay             OC listed: Mike LaFleur
+    DEN  HC Sean Payton            OC listed: Joe Lombardi
+    IND  HC Shane Steichen         OC listed: Jim Bob Cooter
+    CHI  HC Thomas Brown, Matt Eberflus OC listed: Shane Waldron, Thomas Brown, Chris Beatty
+    TB   HC Todd Bowles            OC listed: Liam Coen
+    CIN  HC Zac Taylor             OC listed: Dan Pitcher
+
+=== 2025  (32 teams list an OC; * = already marked HC calls plays)
+    NYJ  HC Aaron Glenn            OC listed: Tanner Engstrand
+  * KC   HC Andy Reid              OC listed: Matt Nagy
+    CHI  HC Ben Johnson            OC listed: Declan Doyle
+    TEN  HC Brian Callahan, Mike McCoy OC listed: Nick Holz
+    NYG  HC Brian Daboll, Mike Kafka OC listed: Mike Kafka
+    DAL  HC Brian Schottenheimer   OC listed: Klayton Adams
+    DET  HC Dan Campbell           OC listed: John Morton
+    WAS  HC Dan Quinn              OC listed: Kliff Kingsbury
+    CAR  HC Dave Canales           OC listed: Brad Idzik
+    HOU  HC DeMeco Ryans           OC listed: Nick Caley
+    LAC  HC Jim Harbaugh           OC listed: Greg Roman
+    BAL  HC John Harbaugh          OC listed: Todd Monken
+    ARI  HC Jonathan Gannon        OC listed: Drew Petzing
+    NO   HC Kellen Moore           OC listed: Doug Nussmeier
+    MIN  HC Kevin O'Connell        OC listed: Wes Phillips
+    CLE  HC Kevin Stefanski        OC listed: Tommy Rees
+  * SF   HC Kyle Shanahan          OC listed: Klay Kubiak
+    JAX  HC Liam Coen              OC listed: Grant Udinski
+    GB   HC Matt LaFleur           OC listed: Adam Stenavich
+    SEA  HC Mike Macdonald         OC listed: Klint Kubiak
+    MIA  HC Mike McDaniel          OC listed: Frank Smith
+    PIT  HC Mike Tomlin            OC listed: Arthur Smith
+    NE   HC Mike Vrabel            OC listed: Josh McDaniels
+    PHI  HC Nick Sirianni          OC listed: Kevin Patullo
+    LV   HC Pete Carroll           OC listed: Chip Kelly, Greg Olson
+    ATL  HC Raheem Morris          OC listed: Zac Robinson
+    BUF  HC Sean McDermott         OC listed: Joe Brady
+  * LAR  HC Sean McVay             OC listed: Mike LaFleur
+    DEN  HC Sean Payton            OC listed: Joe Lombardi
+    IND  HC Shane Steichen         OC listed: Jim Bob Cooter
+    TB   HC Todd Bowles            OC listed: Josh Grizzard
+    CIN  HC Zac Taylor             OC listed: Dan Pitcher
+
+=== 2026  (32 teams list an OC; * = already marked HC calls plays)
+    NYJ  HC Aaron Glenn            OC listed: Frank Reich
+  * KC   HC Andy Reid              OC listed: Eric Bieniemy
+    CHI  HC Ben Johnson            OC listed: Press Taylor
+    DAL  HC Brian Schottenheimer   OC listed: Klayton Adams
+    DET  HC Dan Campbell           OC listed: Drew Petzing
+    WAS  HC Dan Quinn              OC listed: David Blough
+    CAR  HC Dave Canales           OC listed: Brad Idzik
+    HOU  HC DeMeco Ryans           OC listed: Nick Caley
+    MIA  HC Jeff Hafley            OC listed: Bobby Slowik
+    BAL  HC Jesse Minter           OC listed: Declan Doyle
+    LAC  HC Jim Harbaugh           OC listed: Mike McDaniel
+    BUF  HC Joe Brady              OC listed: Pete Carmichael
+    NYG  HC John Harbaugh          OC listed: Matt Nagy
+    NO   HC Kellen Moore           OC listed: Doug Nussmeier
+    MIN  HC Kevin O'Connell        OC listed: Wes Phillips
+    ATL  HC Kevin Stefanski        OC listed: Tommy Rees
+    LV   HC Klint Kubiak           OC listed: Andrew Janocko
+  * SF   HC Kyle Shanahan          OC listed: Klay Kubiak
+    JAX  HC Liam Coen              OC listed: Grant Udinski
+    GB   HC Matt LaFleur           OC listed: Adam Stenavich
+    ARI  HC Mike LaFleur           OC listed: Nathaniel Hackett
+    SEA  HC Mike Macdonald         OC listed: Brian Fleury
+    PIT  HC Mike McCarthy          OC listed: Brian Angelichio
+    NE   HC Mike Vrabel            OC listed: Josh McDaniels
+    PHI  HC Nick Sirianni          OC listed: Sean Mannion
+    TEN  HC Robert Saleh           OC listed: Brian Daboll
+  * LAR  HC Sean McVay             OC listed: Nate Scheelhaase
+    DEN  HC Sean Payton            OC listed: Davis Webb
+    IND  HC Shane Steichen         OC listed: Jim Bob Cooter
+    TB   HC Todd Bowles            OC listed: Zac Robinson
+    CLE  HC Todd Monken            OC listed: Travis Switzer
+    CIN  HC Zac Taylor             OC listed: Dan Pitcher
+
+Head coaches with an OC listed in 3+ seasons (the ones most worth a look):
+  Andy Reid              2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026
+  John Harbaugh          2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026
+  Matt LaFleur           2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026
+  Zac Taylor             2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026
+  Kevin Stefanski        2020, 2021, 2022, 2023, 2024, 2025, 2026
+  Mike Tomlin            2019, 2020, 2021, 2022, 2023, 2024, 2025
+  Mike Vrabel            2019, 2020, 2021, 2022, 2023, 2025, 2026
+  Sean McDermott         2019, 2020, 2021, 2022, 2023, 2024, 2025
+  Sean McVay             2020, 2021, 2022, 2023, 2024, 2025, 2026
+  Sean Payton            2019, 2020, 2021, 2023, 2024, 2025, 2026
+  Dan Campbell           2021, 2022, 2023, 2024, 2025, 2026
+  Mike McCarthy          2020, 2021, 2022, 2023, 2024, 2026
+  Nick Sirianni          2021, 2022, 2023, 2024, 2025, 2026
+  Pete Carroll           2019, 2020, 2021, 2022, 2023, 2025
+  Kevin O'Connell        2022, 2023, 2024, 2025, 2026
+  Todd Bowles            2022, 2023, 2024, 2025, 2026
+  Bill Belichick         2019, 2020, 2021, 2023
+  Dan Quinn              2019, 2024, 2025, 2026
+  DeMeco Ryans           2023, 2024, 2025, 2026
+  Doug Pederson          2019, 2022, 2023, 2024
+  Mike McDaniel          2022, 2023, 2024, 2025
+  Robert Saleh           2021, 2022, 2023, 2026
+  Ron Rivera             2020, 2021, 2022, 2023
+  Shane Steichen         2023, 2024, 2025, 2026
+  Arthur Smith           2021, 2022, 2023
+  Brian Daboll           2022, 2023, 2024
+  Brian Flores           2019, 2020, 2021
+  Bruce Arians           2019, 2020, 2021
+  Dave Canales           2024, 2025, 2026
+  Frank Reich            2019, 2020, 2021
+  Jim Harbaugh           2024, 2025, 2026
+  Jonathan Gannon        2023, 2024, 2025
+  Kyle Shanahan          2021, 2025, 2026
+  Matt Nagy              2019, 2020, 2021
+  Mike Macdonald         2024, 2025, 2026
+  Mike Zimmer            2019, 2020, 2021
+  Vic Fangio             2019, 2020, 2021

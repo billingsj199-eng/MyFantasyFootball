@@ -2093,3 +2093,40 @@ opp_prior_preds.json, written by backtest_opp_prior.py).
   Week bands at k=1: wk2-4 +.15%, wk5-8 -.11%, later ~0.
 - Verdict: Clay stays the live base with no OPP adjustment; the opportunity
   prior stays shadow-only (and is a preseason/draft-season tool).
+
+## Joint context model (build_context_features.py + backtest_context_model.py) - 2026-09-16
+
+Jack: "create the ultimate projections ... context to all players" -> steps 1-2,
+"backtest it all before we actually apply it". Research only, nothing live.
+
+Step 1 - ctx_features.parquet: 17,657 QB/RB/WR/TE player-weeks 2019-25 (week
+2+, same rows as every layer test), 91 pre-kickoff variables in 11 groups:
+usage (shares, RZ/GL, WOPR, xFP, trends, snaps, QB dropback share), prior
+season, team PROE / plays, coach (new HC / playcaller + the playcaller's own
+history: PROE, RB/TE target share, RB1 carry share), injury vacancy (Out /
+Doubtful / IR / gone teammates' shares, expected inheritance, starting QB out),
+own injury tag, prospect (pick, JM score, age, exp), env (implied, spread,
+total, dome, precip, wind, temp, kickoff), coverage matchup (opp man rate x the
+player's man vs zone YPRR), and the OFFENSIVE LINE lineman by lineman (expected
+starting five from prior-week snaps, each graded by LAST season's PFF pass /
+run block grade shrunk to replacement, starters on the final report as Out /
+Doubtful swapped for replacement; 2019 has no prior grades).
+
+Step 2 - LightGBM on actual - (shipped x snap trend), LOYO with a held-out
+validation season for rounds + shrink, plus ridge, a calibration-only model,
+group ablation, and a forward (train on the past only) check.
+- All context: -2.38% MSE vs shipped (7/7), forward -2.12% (5/5).
+- BUT calibration-only (projection-level variables) is -1.61%, and the
+  groups that help (usage +.60, vacancy +.32, env +.23) are signals the live
+  engine already ships (TD luck, snap trend, vacancy pool, weather/Vegas,
+  banged-up docks, rookie level). Individual OL -.31% (hurts), prior / team /
+  coach / prospect / matchup / own tag ~noise.
+- INCREMENT test: REF = base + those already-shipped signals = -2.84% vs
+  shipped. Adding ANY new group on top is worse than REF (usage shares +.13%,
+  coach +.10%, prospect +.09%, matchup +.20%, OL +.47%, every group +.48%;
+  forward worse for all). Nothing new passes.
+- Verdict: do NOT apply the context model. The new variables (coach, OL,
+  coverage, prospect) add nothing beyond what ships. Open question worth a
+  test: whether a learned combination of the ALREADY-shipped signals beats the
+  hand-tuned live layers (REF's -2.84% is vs the harness base, which lacks
+  them, and the live props anchor can't be replayed historically).

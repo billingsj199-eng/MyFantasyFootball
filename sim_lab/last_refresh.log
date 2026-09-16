@@ -1,20 +1,20 @@
-===== Sim Lab refresh Wed 09/16/2026  7:41:42.86 ===== 
+===== Sim Lab refresh Wed 09/16/2026  8:04:21.45 ===== 
 copied mike_clay_projections.js  (36 KB)
 copied player_weekly_sigma.js  (56 KB)
 copied betting_lines_2026.js  (202 KB)
 copied clay_team_grades_2026.js  (4 KB)
 copied yahoo_normalize.js  (13 KB)
 wrapped sim_practice.js  (182 entries, 2026-09-15T14:18)
-wrapped sim_depth.js  (32 entries, 2026-09-16T11:41)
+wrapped sim_depth.js  (32 entries, 2026-09-16T12:03)
 wrapped sim_news.js  (272 entries, 2026-09-16T02:10)
-wrapped sleeper_players.js  (585 players, exported 2026-09-16 07:41:42)
+wrapped sleeper_players.js  (585 players, exported 2026-09-16 08:04:21)
 wrapped sim_snaps.js  (305 players with 2026 snaps)
 wrapped sim_2026.js  (437 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
 defense availability: 32 teams, 416 regular defenders, 37 with a status
 wrapped sleeper_meta.js  (577 players, 127 true rookies, 6 elite CBs)
-wrapped sim_weather.js  (25 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-16T11:41))
-cache-busted index.html scripts (?v=1789558905)
-stamped 2026-09-16 07:41
+wrapped sim_weather.js  (25 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-16T12:04))
+cache-busted index.html scripts (?v=1789560263)
+stamped 2026-09-16 08:04
 wrote E:\MyFantasyFootball\sim_lab\data\sim_context.js - 32 team-weeks, 11 with 6+ garbage plays
 wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 270 players with 2026 route data (270 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 78 RBs + 195 WR/TEs + 36 QBs with TD-luck data, 34 kickers with FG-luck data, 32 DSTs, 310 players with xFP components
 wrote E:\MyFantasyFootball\sim_lab\data\zones_2026.js - 32 defenses, 251 receivers with 2026 targets, 249 with 2025 priors
@@ -35,7 +35,7 @@ NOTES EXPORT FAILED - continuing
 
 [36m[1mi [22m[39m deploying [1mhosting[22m
 [36m[1mi  hosting[jb-simlab-2026]:[22m[39m beginning deploy...
-[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 268 files in [1msim_lab[22m
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 273 files in [1msim_lab[22m
 [32m[1m+  hosting[jb-simlab-2026]:[22m[39m file upload complete
 [36m[1mi  hosting[jb-simlab-2026]:[22m[39m finalizing version...
 [32m[1m+  hosting[jb-simlab-2026]:[22m[39m version finalized
@@ -46,4 +46,4 @@ NOTES EXPORT FAILED - continuing
 
 [1mProject Console:[22m https://console.firebase.google.com/project/jackb933-website/overview
 [1mHosting URL:[22m https://jb-simlab-2026.web.app
-===== done Wed 09/16/2026  7:42:19.33 ===== 
+===== done Wed 09/16/2026  8:04:52.85 ===== 

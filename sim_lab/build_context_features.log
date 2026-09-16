@@ -1,0 +1,15 @@
+loading pbp 2017-2025 ...
+  pbp done 22s
+loading bt_common samples ...
+  17657 player-weeks (31s)
+  2019: rows 1796 (33s)
+  2020: rows 3731 (36s)
+  2021: rows 6124 (39s)
+  2022: rows 8631 (42s)
+  2023: rows 11644 (45s)
+  2024: rows 14814 (48s)
+  2025: rows 17657 (51s)
+
+wrote E:\MyFantasyFootball\sim_lab\ctx_features.parquet: 17657 rows x 91 features (51s)
+coverage (share non-missing), lowest 15: ppg_py 0.64, pc_rb1_car 0.70, pc_plays_pg 0.70, pc_te_tgt 0.70, pc_rb_tgt 0.70, pc_proe 0.70, yprr_man 0.71, yprr_zone 0.71, man_gap_x_opp 0.71, jm 0.77, snap_trend 0.83, tgt_sh_py 0.84, car_sh_py 0.84, xfp_pg_py 0.84, team_change 0.84
+means by position: QB vac_tgt_same 0.000 inherit_tgt 0.000 tgt_sh 0.000 jm 70.3 | RB vac_tgt_same 0.029 inherit_tgt 0.013 tgt_sh 0.088 jm 54.6 | TE vac_tgt_same 0.023 inherit_tgt 0.013 tgt_sh 0.135 jm 54.1 | WR vac_tgt_same 0.097 inherit_tgt 0.028 tgt_sh 0.181 jm 57.6

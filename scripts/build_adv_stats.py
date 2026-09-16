@@ -42,6 +42,7 @@ Run from the project root:
   python scripts/build_adv_stats.py --years 2026
 """
 import argparse, collections, csv, glob, io, json, math, os, re, sys
+import numpy as np
 import pandas as pd
 import requests
 
@@ -69,7 +70,9 @@ QB_F = ['n', 'on', 'tm', 'g', 'fpt', 'db', 'att', 'cmpp', 'ypa', 'anya', 'td', '
         'cpoe', 'epa', 'grd', 'acc', 'adot', 'ttt', 'deep', 'btt', 'twp', 'tdp', 'intp',
         'prs', 'p2s', 'skp', 'cgr', 'cacc', 'pgr', 'pacc', 'pypa', 'blz', 'bgr', 'bypa',
         'ra', 'ry', 'rtd', 'scr',
-        'sk', 'cpn', 'dbn', 'aim', 'airn', 'ns', 'psn', 'dgp', 'pdb', 'cdb', 'caim', 'paim', 'patt', 'bdb', 'batt']
+        'sk', 'cpn', 'dbn', 'aim', 'airn', 'ns', 'psn', 'dgp', 'pdb', 'cdb', 'caim', 'paim', 'patt', 'bdb', 'batt',
+        'xfpt']
+# xfpt = season expected half-PPR points (xFP) - displayed, appended last so the page reads it by key
 # Trailing short keys on every table are NOT displayed: they are the denominators the
 # page uses to rebuild a multi-week range from week files (each rate re-weighted by its
 # own base - see _ADV_AGG in app.js). Keep both sides in sync.
@@ -78,7 +81,10 @@ RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'att', 'tgt', 'tch', 'scy', 'tds',
         'ypc', 'yco', 'mtf', 'elu', 'bay', 'exp', 'fdp', 'suc', 'repa', 'rgr', 'gap',
         'rts', 'tprr', 'yprr', 'recg', 'pbg',
         'xt', 'xc', 'xi',
-        'tsn', 'ttc', 'tmt', 'tmd', 'tmi', 'rsy', 'pcar', 'gz', 'rpl']
+        'tsn', 'ttc', 'tmt', 'tmd', 'tmi', 'rsy', 'pcar', 'gz', 'rpl',
+        'xfpt', 'xrec']
+# xrec = expected receptions (hidden) so the page can re-score xFP as PPR / STD; actual
+# receptions come from tch - att (RB) or the hidden rec field (WR/TE)
 # x* (not displayed) = raw pbp targets / carries / inside-10 carries / air yards while on
 # the listed team; with payload `teams` they give the page's team-view season shares
 REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
@@ -87,7 +93,8 @@ REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
          'tqbr', 'epat',
          'myprr', 'zyprr', 'mtprr', 'ztprr', 'slyprr', 'scr', 'deep', 'dyd', 'dctch', 'blos',
          'xt', 'xa',
-         'tsn', 'tmd', 'tmt', 'tma', 'al', 'ppl', 'rec', 'dr', 'ct', 'pry', 'pay', 'mr', 'zr', 'slr', 'cbt', 'dbt', 'dy', 'dtg']
+         'tsn', 'tmd', 'tmt', 'tma', 'al', 'ppl', 'rec', 'dr', 'ct', 'pry', 'pay', 'mr', 'zr', 'slr', 'cbt', 'dbt', 'dy', 'dtg',
+         'xfpt', 'xrec']
 # TEAM table: one row per team (n = team name, tm = code). Offense, tendency and defense from
 # nflverse pbp; protection / pressure / man coverage from PFF (defense = what opponents saw).
 TM_F = ['n', 'on', 'tm', 'g',
@@ -306,7 +313,35 @@ PBP_FLAG = ['pass', 'rush', 'rush_attempt', 'pass_attempt', 'qb_dropback', 'qb_s
             'passing_yards', 'rushing_yards', 'receiving_yards', 'yards_gained',
             'shotgun', 'no_huddle', 'third_down_converted', 'third_down_failed']
 PBP_NUM = ['air_yards', 'yardline_100', 'epa', 'qb_epa', 'cpoe', 'xpass', 'pass_oe', 'down', 'wp',
-           'half_seconds_remaining', 'game_seconds_remaining', 'fixed_drive', 'yards_after_catch']
+           'half_seconds_remaining', 'game_seconds_remaining', 'fixed_drive', 'yards_after_catch',
+           'cp', 'xyac_mean_yardage']
+
+# Expected fantasy points (xFP) - the STANDARD opportunity definition, same tables as
+# sim_lab/pull_pace_tracker.build_xfp_2026 (the 2026 player-card column): a target is worth
+# nflverse catch probability x (air yards + expected YAC) where those per-play models exist,
+# else the pooled 2018-25 air-yards bucket tables; carries and touchdowns come from yardline
+# tables. Keep these in step with pull_pace_tracker.py.
+XFP_AB_BINS = [-0.01, 4.99, 9.99, 14.99, 19.99, 29.99]            # <0, 0-4, 5-9, 10-14, 15-19, 20-29, 30+
+XFP_CATCH = [0.837, 0.755, 0.703, 0.589, 0.547, 0.416, 0.302]
+XFP_TGT_YDS = [4.87, 5.39, 6.83, 9.00, 11.42, 11.88, 13.46]
+XFP_INT = [0.0077, 0.0107, 0.0188, 0.0318, 0.0416, 0.0557, 0.0692]
+XTD_REC_BINS = [5, 10, 20, 40, 100]
+XTD_REC_NONEZ = [0.264, 0.213, 0.080, 0.030, 0.007]
+XTD_REC_EZ = [0.501, 0.384, 0.330, 0.271, 0.232]
+XFP_RUSH_BINS = [5, 10, 20, 40]                                   # <=5, 6-10, 11-20, 21-40, 41+
+XFP_RUSH_YDS = [1.10, 2.88, 3.82, 4.45, 4.75]
+XFP_RUSH_YDS_QB = [1.07, 3.22, 4.05, 4.48, 4.77]
+XTD_BINS = [1, 2, 3, 4, 5, 10, 20, 40, 100]
+XTD_RUSH = [0.540, 0.379, 0.339, 0.257, 0.215, 0.105, 0.042, 0.011, 0.003]
+XFP_QB_RUSH_TD_BINS = [1, 2, 3, 5, 10, 20, 40]
+XFP_QB_RUSH_TD = [0.619, 0.302, 0.366, 0.304, 0.201, 0.059, 0.011, 0.001]
+
+
+def _lut(vals, bins, table):
+    """value <= bins[i] -> table[i]; past the last bin -> table[-1] (the scalar loops in
+    pull_pace_tracker, vectorised)."""
+    idx = np.searchsorted(np.asarray(bins, float), np.asarray(vals, float), side='left')
+    return np.asarray(table, float)[np.minimum(idx, len(table) - 1)]
 PBP_COLS = ['season_type', 'week', 'posteam'] + PBP_ID + PBP_STR + PBP_FLAG + PBP_NUM
 
 
@@ -391,6 +426,31 @@ def pbp_agg(df):
 
     fl = df[(df.fumble_lost == 1) & df.fumbled_1_player_id.notna()]
     put(fl.groupby('fumbled_1_player_id').size(), 'fl')
+
+    # xFP components (tables above). Rush values are kept in both the RB and QB flavour
+    # because a rusher's position is only known once the PFF tables are joined.
+    tgx = tg[(tg.pass_attempt == 1) & (tg.sack != 1)]
+    if len(tgx):
+        yl = tgx.yardline_100.fillna(50.0).to_numpy(float)
+        ay = tgx.air_yards.fillna(0.0).to_numpy(float)
+        b = np.minimum(np.searchsorted(np.asarray(XFP_AB_BINS, float), ay, side='left'), len(XFP_CATCH) - 1)
+        xtd = np.where(ay >= yl, _lut(yl, XTD_REC_BINS, XTD_REC_EZ), _lut(yl, XTD_REC_BINS, XTD_REC_NONEZ))
+        cp = tgx.cp.to_numpy(float)
+        xyac = tgx.xyac_mean_yardage.to_numpy(float)
+        model = ~np.isnan(cp) & ~np.isnan(xyac)
+        xr = np.where(model, cp, np.asarray(XFP_CATCH)[b])
+        xy = np.where(model, np.nan_to_num(cp) * (ay + np.nan_to_num(xyac)), np.asarray(XFP_TGT_YDS)[b])
+        tgx = tgx.assign(_xr=xr, _xy=xy, _xtd=xtd, _xint=np.asarray(XFP_INT)[b])
+        g = tgx.groupby('receiver_player_id')
+        put(g._xr.sum(), 'xrec'); put(g._xy.sum(), 'xrecyd'); put(g._xtd.sum(), 'xrectd')
+        gq = tgx[tgx.passer_player_id.notna()].groupby('passer_player_id')
+        put(gq._xy.sum(), 'xpyd'); put(gq._xtd.sum(), 'xptd'); put(gq._xint.sum(), 'xint')
+    if len(ru):
+        ylr = ru.yardline_100.fillna(50.0).to_numpy(float)
+        rx = ru.assign(_yrb=_lut(ylr, XFP_RUSH_BINS, XFP_RUSH_YDS), _yqb=_lut(ylr, XFP_RUSH_BINS, XFP_RUSH_YDS_QB),
+                       _trb=_lut(ylr, XTD_BINS, XTD_RUSH), _tqb=_lut(ylr, XFP_QB_RUSH_TD_BINS, XFP_QB_RUSH_TD))
+        g = rx.groupby('rusher_player_id')
+        put(g._yrb.sum(), 'xruyd'); put(g._yqb.sum(), 'xruyd_qb'); put(g._trb.sum(), 'xrutd'); put(g._tqb.sum(), 'xrutd_qb')
     # team dropbacks = pull_route_pct.dropbacks(): pass flag incl. penalty-nullified
     # pass plays, 2-pt tries kept, spikes out (the RT% denominator)
     db = df[((df.qb_dropback == 1) | (df['pass'] == 1)) & (df.qb_spike != 1) & df.posteam.notna()]
@@ -401,6 +461,14 @@ def pbp_agg(df):
 def half_ppr(p):
     return (p['pyds'] * 0.04 + p['ptd'] * 4 - p['int'] * 2 + p['ruyds'] * 0.1 + p['rutd'] * 6 +
             p['rec'] * 0.5 + p['recyds'] * 0.1 + p['rectd'] * 6 - p['fl'] * 2)
+
+
+def half_xfp(p, is_qb):
+    """Expected half-PPR points from the xFP components, scored like half_ppr above (an
+    expected INT costs 2, matching this table's FPTS; the card scores INTs -1)."""
+    if is_qb:
+        return 0.04 * p['xpyd'] + 4 * p['xptd'] + 0.1 * p['xruyd_qb'] + 6 * p['xrutd_qb'] - 2 * p['xint']
+    return 0.5 * p['xrec'] + 0.1 * (p['xrecyd'] + p['xruyd']) + 6 * (p['xrectd'] + p['xrutd'])
 
 
 def team_rows(yr, pbp, sel):
@@ -701,6 +769,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(sk), int(p['cpoe_n']), int(p['dbn']), int(s['aimed_passes']), int(p['airn']), int(ns), int(s['passing_snaps']),
                 int(s['def_gen_pressures']), int(s['p_dropbacks']), int(s['c_dropbacks']), int(s['c_aimed_passes']),
                 int(s['p_aimed_passes']), int(s['p_attempts']), int(s['b_dropbacks']), int(s['b_attempts']),
+                rnd(half_xfp(p, True)) if c['fpt'] is not None else None,
             ])
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
@@ -750,6 +819,8 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(c['x'].get('tgt', 0)), int(c['x'].get('car', 0)), int(c['x'].get('i10', 0)),
                 c['tsn'], int(c['tt']('car')), int(c['tt']('tgt')), int(c['tt']('db')), int(c['tt']('i10')),
                 int(round(yds)), int(p['car']), int(ru['gap_attempts'] + ru['zone_attempts']), int(ru['run_plays']),
+                rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
+                rnd(p['xrec'], 2) if c['fpt'] is not None else None,
             ])
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
@@ -823,6 +894,8 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 rnd(m['man_routes'] * ms) if ms else None, rnd(m['zone_routes'] * ms) if ms else None,
                 rnd(k['slot_routes'] * cs_) if cs_ else None,
                 int(k['base_targets']), int(d['base_targets']), int(round(dy)), int(d['deep_targets']),
+                rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
+                rnd(p['xrec'], 2) if c['fpt'] is not None else None,
             ])
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])

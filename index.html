@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-15-adv9" as="script">
+<link rel="preload" href="app.js?v=2026-09-16-adv11" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2630,7 +2630,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-09-15-adv6">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-16-adv9">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -2639,8 +2639,15 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="rs-subtitle">Advanced stats by position (PFF Premium charting + nflverse play-by-play, 2019-2026), historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: MFL 1999-2007 (via Wayback; top 32 for 1999-2005, top 100 for 2006, top 200 for 2007), FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year), ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
 </div>
 
+<!-- One view at a time: 2026 = this season's advanced stats, Coach = profiles, Past seasons = 2019-2025 stats + ADP history -->
+<div class="rs-adv-tabs rs-top-tabs" id="rsTopTabs" role="tablist" aria-label="Research view">
+<button type="button" class="rs-adv-tab active" data-view="cur" role="tab" aria-selected="true">2026</button>
+<button type="button" class="rs-adv-tab" data-view="coach" role="tab" aria-selected="false">COACH</button>
+<button type="button" class="rs-adv-tab" data-view="past" role="tab" aria-selected="false">PAST SEASONS</button>
+</div>
+
 <!-- Advanced stats -->
-<div class="rs-section" id="rsAdvSection">
+<div class="rs-section" id="rsAdvSection" data-rsview="cur past">
 <div class="rs-section-title">Advanced Stats</div>
 <div class="rs-help">PFF Premium charting + nflverse play-by-play, regular season only. Pick a position, click any column header to sort, hover a header for its definition. Shading = percentile rank among the rows shown (green = better). Click a player to open their card.</div>
 <div class="rs-adv-tabs" id="rsAdvTabs" role="tablist" aria-label="Position">
@@ -2658,6 +2665,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <label><span id="rsAdvMinLbl">Min dropbacks</span> <input type="number" id="rsAdvMin" class="rs-num" min="0" step="5"></label>
 <input type="text" id="rsAdvQ" class="rs-search rs-adv-q" placeholder="Filter players&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter players">
 <div class="rs-adv-mode" id="rsAdvMode" role="group" aria-label="Counting stats"><button type="button" data-mode="pg" class="on" aria-pressed="true">Per game</button><button type="button" data-mode="tot" aria-pressed="false">Totals</button></div>
+<div class="rs-adv-mode" id="rsAdvFmt" role="group" aria-label="Scoring for FPTS and xFP" title="Scoring for FPTS and xFP: receptions worth 0.5 / 1 / 0"><button type="button" data-fmt="half" class="on" aria-pressed="true">Half</button><button type="button" data-fmt="ppr" aria-pressed="false">PPR</button><button type="button" data-fmt="std" aria-pressed="false">STD</button></div>
 <label class="rs-check"><input type="checkbox" id="rsAdvHeat" checked> Shading</label>
 <button type="button" class="rs-adv-export" id="rsAdvCsv" title="Download the table as shown: filters, sort order, visible column groups and Per game / Totals">Export CSV</button>
 <span class="rs-count" id="rsAdvCount"></span>
@@ -2668,7 +2676,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Coach profiles -->
-<div class="rs-section" id="rsCoSection">
+<div class="rs-section" id="rsCoSection" data-rsview="coach">
 <div class="rs-section-title">Coach Profiles</div>
 <div class="rs-help">Playcalling tendencies by coach, combined across the seasons you pick. Hover a header for its definition; click a header to sort. Tick "One row per season" to see each team-season separately.</div>
 <div class="rs-adv-tabs" id="rsCoRole" role="tablist" aria-label="Coach role">
@@ -2684,6 +2692,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <input type="text" id="rsCoQ" class="rs-search rs-adv-q" placeholder="Filter coaches or teams&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter coaches or teams">
 <label class="rs-check"><input type="checkbox" id="rsCoHeat" checked> Shading</label>
 <label title="Metric charted when you click a coach">Chart <select id="rsCoMetric" class="rs-select"></select></label>
+<label title="Second coach to overlay on the chart (or shift-click a row)">vs <select id="rsCoVs" class="rs-select"><option value="">none</option></select></label>
 <button type="button" class="rs-adv-export" id="rsCoCsv">Export CSV</button>
 <span class="rs-count" id="rsCoCount"></span>
 </div>
@@ -2694,7 +2703,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Player lookup -->
-<div class="rs-section">
+<div class="rs-section" data-rsview="past">
 <div class="rs-section-title">Player Lookup</div>
 <div class="rs-search-row">
 <input type="text" id="rsSearch" class="rs-search" placeholder="Search any player (active or retired)..." autocomplete="off" spellcheck="false" aria-label="Search players">
@@ -2704,7 +2713,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Explorer -->
-<div class="rs-section">
+<div class="rs-section" data-rsview="past">
 <div class="rs-section-title">Season Explorer</div>
 <div class="rs-help">Every player-season with a recorded preseason ADP, joined to what they actually did. Filter, then click any column header to sort. Click a row to open that player above.</div>
 <div class="rs-controls">
@@ -5531,7 +5540,7 @@ window._ensureResearchData = (function() {
 // season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
 // that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
 // section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-09-15-rng';
+window._ADV_STATS_V = '2026-09-16-fmt';
 window._ensureAdvStats = (function() {
   const cache = {};
   return function _ensureAdvStats(yr, wk) {
@@ -5823,7 +5832,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-15-adv9"></script>
+<script defer src="app.js?v=2026-09-16-adv11"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

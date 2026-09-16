@@ -49,12 +49,20 @@
 .rs-check input { accent-color: var(--accent); }
 .rs-count { margin-left: auto; color: var(--text3); font-size: .75rem; }
 
+/* research views: one of 2026 / Coach / Past seasons at a time */
+.rs-top-tabs { margin-bottom: 18px; }
+.rs-top-tabs .rs-adv-tab { font-size: 1.2rem; padding: 9px 24px; }
+.rs-section[hidden], .rs-controls label[hidden] { display: none; }
+
 /* advanced stats */
 .rs-adv-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .rs-adv-tab { background: var(--surface); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 7px 18px; font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: .06em; cursor: pointer; }
 .rs-adv-tab:hover { color: var(--text); border-color: rgba(245,158,11,.45); }
 .rs-adv-tab.active { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.55); color: var(--accent); }
 .rs-adv-q { width: 180px; padding: 5px 10px; font-size: .8rem; }
+/* a select sizes itself to its longest option (109 coach names): cap it so a phone-width
+   Coach view never scrolls sideways; the picked name truncates natively */
+#rsCoVs { max-width: 220px; min-width: 0; }
 .rs-adv-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .rs-adv-chip { background: transparent; border: 1px solid var(--border); color: var(--text3); border-radius: 999px; padding: 3px 11px; font-size: .72rem; font-weight: 600; letter-spacing: .03em; cursor: pointer; }
 .rs-adv-chip.on { border-color: rgba(245,158,11,.5); color: var(--text); background: rgba(245,158,11,.1); }
@@ -72,8 +80,10 @@
    Both pairs validated against this section's surface with the dataviz validator:
    dark #3987e5/#c98500 on #1a2236 passes every check; light #2a78d6/#d97706 passes with a
    contrast warning on the amber, relieved by the value labels and the by-season table. */
-.rs-co-chart { --viz-pass: #3987e5; --viz-run: #c98500; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 6px; margin-bottom: 14px; }
-:root[data-theme="light"] .rs-co-chart { --viz-pass: #2a78d6; --viz-run: #d97706; }
+.rs-co-chart { --viz-pass: #3987e5; --viz-run: #c98500; --viz-b: #d95926; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 6px; margin-bottom: 14px; }
+:root[data-theme="light"] .rs-co-chart { --viz-pass: #2a78d6; --viz-run: #d97706; --viz-b: #eb6834; }
+/* --viz-b = the second coach when comparing (blue vs orange = identity; validated with
+   --viz-pass on the panel surface #111827 dark / #ffffff light, every check passing) */
 .rs-co-chart[hidden] { display: none; }
 .rs-co-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .rs-co-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: .05em; color: var(--text); }
@@ -102,6 +112,24 @@
 .rs-co-svg .avg { fill: none; stroke: var(--text2); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; opacity: .8; }
 .rs-co-svg .hit { fill: transparent; cursor: default; }
 .rs-co-svg .hit:hover { fill: rgba(245,158,11,.06); }
+/* coach identities - element-qualified so a polyline never picks up a fill */
+.rs-co-svg path.a { fill: var(--viz-pass); }
+.rs-co-svg path.b { fill: var(--viz-b); }
+.rs-co-svg polyline.series.b { stroke: var(--viz-b); }
+.rs-co-svg circle.dot.b { fill: var(--viz-b); }
+.rs-co-key.a { background: var(--viz-pass); }
+.rs-co-key.b { background: var(--viz-b); }
+.rs-co-key.line.a { background: none; border-top-color: var(--viz-pass); }
+.rs-co-key.line.b { background: none; border-top-color: var(--viz-b); }
+.rs-co-cmp-wrap { overflow-x: auto; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.rs-co-cmp { width: auto; min-width: 0; table-layout: auto; border-collapse: collapse; font-size: .76rem; }
+.rs-co-cmp th, .rs-co-cmp td { padding: 4px 14px 4px 0; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--text2); }
+.rs-co-cmp th { color: var(--text); font-weight: 600; vertical-align: bottom; }
+.rs-co-cmp th .rs-co-sub { font-weight: 400; }
+.rs-co-cmp th:first-child, .rs-co-cmp td:first-child { text-align: left; }
+.rs-co-cmp tbody tr { cursor: pointer; }
+.rs-co-cmp tbody tr:hover td { color: var(--text); }
+.rs-co-cmp tbody tr.on td { color: var(--accent); }
 .rs-adv tbody tr.rs-co-selected td { box-shadow: inset 0 0 0 999px rgba(245,158,11,.1); }
 .rs-adv-wrap { max-height: 72vh; overflow: auto; }
 /* content-width table that scrolls inside .rs-adv-wrap: beats the global mobile
@@ -132,4 +160,5 @@
   .rs-count { margin-left: 0; width: 100%; }
   .rs-adv-q { width: 100%; }
   .rs-adv .rs-adv-nm { max-width: 118px; }
+  #rsCoVs { max-width: calc(100vw - 150px); }
 }

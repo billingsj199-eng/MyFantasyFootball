@@ -65108,19 +65108,36 @@ function _rsScatter(cfg) {
     const risers = f.filter(r => r.d > 0).sort((a, b) => b.d - a.d), fallers = f.filter(r => r.d < 0).sort((a, b) => a.d - b.d);
     const N = _mvAll ? Infinity : 20;
     const winL = _mvWin === 1 ? 'Last game' : 'Last 3';
+    // this week's projections + lines on the current season (Jack 2026-09-16: "add the week
+    // columns to the movers view too") - same helpers as the Advanced Stats Week group
+    const wk = _wkNum(), wkOn = _mvYr === 2026 && !!(window.SIM_PROJ_2026 || window.BETTING_2026);
+    const n1 = v => (v == null ? '<span class="rs-fmt">&ndash;</span>' : Number(v).toFixed(1));
+    const wkCells = r => {
+      const pr = _wkProj(r), bk = _wkBook(r, r.pos), g = _wkGame(r.tm);
+      const gap = pr != null && bk != null ? pr - bk : null;
+      return '<td class="rs-adv-gs">' + n1(pr) + '</td><td>' + n1(bk) + '</td>' +
+        '<td' + (gap == null ? '' : ' class="' + (gap >= 0.05 ? 'rs-mv-up' : gap <= -0.05 ? 'rs-mv-dn' : '') + '"') + '>' + (gap == null ? '<span class="rs-fmt">&ndash;</span>' : (gap > 0 ? '+' : '') + gap.toFixed(1)) + '</td>' +
+        '<td>' + n1(g ? g.implied : null) + '</td><td>' + (g ? (g.spread > 0 ? '+' : '') + g.spread.toFixed(1) : '<span class="rs-fmt">&ndash;</span>') + '</td>';
+    };
     const tbl = (list, cls, title, word) => {
       const head = '<div class="rs-co-head"><span class="rs-co-title">' + title + '</span><span class="rs-co-sub">' +
         (list.length > N ? 'top ' + N + ' of ' + list.length : list.length + ' player' + (list.length === 1 ? '' : 's')) + ' · ' + _esc(met.l) + '</span></div>';
       if (!list.length) return head + '<div class="rs-empty">No ' + word + ' in ' + _esc(met.l) + ' for these filters.</div>';
       let h = '<div class="rs-table-wrap rs-mv-wrap"><table class="rs-table rs-adv rs-mv"><thead><tr class="rs-adv-hdr">' +
         '<th class="rs-adv-nm">Player</th><th class="rs-adv-tm">Tm</th><th class="rs-adv-tm">Pos</th><th title="' + _esc(met.l) + (_mvWin === 1 ? ' in the last game played' : ' averaged over the last 3 games played') + '">' + winL + '</th>' +
-        '<th title="Average over the 3 games played before that (fewer in brackets)">Prior 3</th><th title="Change; hover a cell for the by-game trail">&Delta;</th><th title="Season average over every game played through this week">Season</th></tr></thead><tbody>';
+        '<th title="Average over the 3 games played before that (fewer in brackets)">Prior 3</th><th title="Change; hover a cell for the by-game trail">&Delta;</th><th title="Season average over every game played through this week">Season</th>' +
+        (wkOn ? '<th class="rs-adv-gs" title="This week\'s site projection (Sim Lab export, ' + FMT_NAME[_fmt] + ')">Wk' + wk + ' Proj</th>' +
+          '<th title="This week\'s sportsbook props scored as fantasy points (DK / FD / MGM / UD / PP average, TDs from the anytime odds)">Book</th>' +
+          '<th title="Site projection minus book: positive = the site is higher on the player than the sportsbooks">Site-Book</th>' +
+          '<th title="Points the team is expected to score this week (DK line)">Team tot</th>' +
+          '<th title="This week\'s DK spread from the team\'s side: negative = favored">Spread</th>' : '') +
+        '</tr></thead><tbody>';
       list.slice(0, N).forEach((r, i) => {
         h += '<tr' + (r.on ? ' class="rs-adv-click" data-n="' + _esc(r.n) + '"' : '') + '><td class="rs-adv-nm' + (r.on ? ' rs-name' : ' rs-adv-off') + '" title="' + _esc(r.n) + (r.on ? '' : ' (not on the site board)') + '"><span class="rs-adv-rk">' + (i + 1) + '</span>' + _esc(r.n) + '</td>' +
           '<td class="rs-adv-tm">' + _esc(r.tm || '') + '</td><td class="rs-adv-tm">' + r.pos + '</td><td>' + fmt(r.last) + '</td>' +
           '<td>' + fmt(r.prev) + (r.np < 3 ? ' <span class="rs-fmt">(' + r.np + ')</span>' : '') + '</td>' +
           '<td class="' + cls + '" title="' + _esc(r.trail) + '">' + (r.d > 0 ? '+' : '') + fmt(r.d).replace('%', '') + (met.pct ? ' pts' : '') + '</td>' +
-          '<td>' + fmt(r.season) + ' <span class="rs-fmt">' + r.games + 'g</span></td></tr>';
+          '<td>' + fmt(r.season) + ' <span class="rs-fmt">' + r.games + 'g</span></td>' + (wkOn ? wkCells(r) : '') + '</tr>';
       });
       return head + h + '</tbody></table></div>';
     };
@@ -65132,7 +65149,8 @@ function _rsScatter(cfg) {
       'Each row compares ' + met.l.toLowerCase() + ' in the ' + (_mvWin === 1 ? 'last game played' : 'last 3 games played (2 or more of the 3 weeks ending at the week picked)') +
       ' with the player\'s average over the 3 games played before that, from the same week files as the Advanced Stats table (shares are of that week\'s team volume). ' +
       'Players need an average of 3 opportunities (RB) or 6 routes (WR, TE) per game in one of the two windows. Δ is descriptive, not a forecast: in 2019-2025 testing, players who had risen scored less over the next 3 games than others at the same recent usage, and players who had fallen scored more. ' +
-      'Hover Δ for the by-game trail; click a player to open the card.';
+      'Hover Δ for the by-game trail; click a player to open the card.' +
+      (wkOn ? ' Week ' + wk + ' columns: Proj = the site\'s Sim Lab projection (' + FMT_NAME[_fmt] + ', the Advanced Stats scoring toggle), Book = DK / FD / MGM / UD / PP props scored as fantasy points, Site-Book = the gap, team total and spread = DK lines.' : '');
   }
 
   function _mvLoad() {

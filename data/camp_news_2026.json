@@ -1,6 +1,36 @@
 {
-  "updated": "2026-09-15T16:10:44Z",
+  "updated": "2026-09-16T02:10:32Z",
   "items": [
+    {
+      "player": "Sam Darnold",
+      "team": "SEA",
+      "pos": "QB",
+      "date": "2026-09-15",
+      "headline": "Hip/glute strain given firm 4-6 week timeline, no surgery needed",
+      "take": "Bench-and-forget for at least a month; stream elsewhere",
+      "url": "https://www.fieldgulls.com/seattle-seahawks-injury-report/174685/mike-florio-seahawks-injury-update-sam-darnold-could-miss-4-6-weeks-nfl-news",
+      "tag": "injury"
+    },
+    {
+      "player": "KeAndre Lambert-Smith",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-09-15",
+      "headline": "Hamstring injury from Week 1 vs. Cardinals headed to IR, out multiple weeks",
+      "take": "Opens deep Chargers WR snaps behind injured McConkey; not rosterable yet",
+      "url": "https://www.rotowire.com/football/headlines/keandre-lambert-smith-injury-set-to-miss-time-with-hamstring-injury-637420",
+      "tag": "injury"
+    },
+    {
+      "player": "Tyler Goodson",
+      "team": "DAL",
+      "pos": "RB",
+      "date": "2026-09-15",
+      "headline": "Cowboys sign RB off Falcons practice squad after waiving Israel Abanikanda",
+      "take": "Deep-league Cowboys backfield churn following Malik Davis' season-ending injury; not rosterable yet",
+      "url": "https://www.si.com/nfl/cowboys/onsi/dallas-cowboys-signing-running-back-atlanta-falcons-practice-squad",
+      "tag": "transaction"
+    },
     {
       "player": "Kenneth Walker III",
       "team": "KC",

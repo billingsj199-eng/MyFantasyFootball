@@ -2130,3 +2130,30 @@ group ablation, and a forward (train on the past only) check.
   test: whether a learned combination of the ALREADY-shipped signals beats the
   hand-tuned live layers (REF's -2.84% is vs the harness base, which lacks
   them, and the live props anchor can't be replayed historically).
+
+## Learned combination vs hand-tuned live layers (build_live_layers.py + backtest_learned_combo.py) - 2026-09-16
+
+Jack: "set up the learned combination test". The live stack was rebuilt with
+the engine's own constants on the 17,657 context player-weeks: TD luck (RB .75
+/ WR-TE 1.0 / QB .5 pass), banged-up cond (played Questionable by practice),
+rookie x1.08 (QB/RB), RB snap usage .15, wind docks, opportunity pool (engine
+POOL weights by depth), backup-QB .85 inheritance. Not replayable: the 70%
+prop anchor, availability of players who sat, forecast wind, TE route trend.
+
+- Ladder (each layer on the previous step): TD luck -.74% (7/7), banged -.10%
+  (5/7), rookie -.21% (7/7), RB usage -.05% (4/7), wind -.07% (4/7), pool
+  -.68% (6/7), backup QB +.18% (1/7, only 11 rows - reconstruction is crude,
+  but worth a look). HAND = -1.65% vs the harness base.
+- Refit layer strengths (shippable constants): LOYO -.24% (5/7) but FORWARD
+  +.45% -> the hand-tuned constants are fine; don't retune.
+- Per-position recalibration of HAND: -.63% (7/7), forward -.64% - almost all
+  QB (-2.71%); the harness QB base likely differs from live (tuner + props).
+- Learned correction ON TOP of HAND (LightGBM on the layer ingredients):
+  -1.07% (7/7), forward -.87% (4/5); QB -2.40, WR -.89, RB -.56, TE -.58;
+  helps where layers are active (wind -1.06%, rookies -1.59%, pool -.63%,
+  TD luck -.35%) but not on played-Questionable rows (+.32%).
+- Learned replacement from base2: -1.22% (7/7), forward -.77%, worse on
+  Questionable rows (+2.14%).
+- Verdict: PASSES historically, but the harness can't replay the prop anchor,
+  so NOT applied. Next step = a live shadow of the learned correction on the
+  lock rows (ncMean-style field), graded weekly by score_week.py.

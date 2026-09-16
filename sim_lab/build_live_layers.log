@@ -1,0 +1,9 @@
+  2019: 1796 rows (10s)
+  2020: 3731 rows (12s)
+  2021: 6124 rows (14s)
+  2022: 8631 rows (16s)
+  2023: 11644 rows (18s)
+  2024: 14814 rows (21s)
+  2025: 17657 rows (23s)
+wrote ctx_live_layers.parquet: 17657 rows
+layer activity: td luck nonzero 0.97 (mean |adj| 0.42), banged 0.049, rookie 0.062, rb usage 0.209, weather 0.171, pool 0.336 (mean mult when on 1.100), backup qb 0.001

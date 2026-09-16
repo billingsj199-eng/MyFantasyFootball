@@ -3989,6 +3989,24 @@
       if (CM.importance && CM.importance.length) html += '<p class="dim" style="font-size:11px;margin:6px 0">Share of model splits by group: ' + CM.importance.map(function (g) { return esc(g.group) + ' ' + (100 * g.share).toFixed(0) + '%' + (g.top.length ? ' (' + esc(g.top.join(', ')) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
       if (CM.forward && CM.forward.length) html += '<p class="dim" style="font-size:11px;margin:6px 0">Forward (train on earlier seasons only): ' + CM.forward.map(function (f) { return f.year + ' ' + cmPct((f.gbm / f.base - 1) * 100); }).join(' \u00b7 ') + (CM.forwardSummary ? ' \u00b7 pooled ' + cmPct(CM.forwardSummary.pct) + ' (' + CM.forwardSummary.wins + '/' + CM.forwardSummary.years + '), calibration only ' + cmPct(CM.forwardSummary.calPct) : '') + '.</p>';
     }
+    var LB = window.SIM_LEARNED_BT;
+    if (LB && LB.models) {
+      var lbPct = function (p) { return p == null ? '\u2014' : (p >= 0 ? '+' : '') + (+p).toFixed(2) + '%'; };
+      var lbCol = function (p) { return p <= -0.3 ? 'var(--acc)' : (p >= 0 ? '#f85149' : 'inherit'); };
+      var lbName = { 'STRENGTH': 'Refit layer strengths (+ position scale)', 'STRENGTH-NS': 'Refit layer strengths only', 'CAL': 'Recalibrate the hand stack (per position)', 'GBM+HAND': 'Learned correction on top of the hand stack', 'GBM': 'Learned replacement of the hand stack' };
+      html += '<h4 style="margin:14px 0 4px">Learned combination vs the hand-tuned live layers (backtest_learned_combo.py, ' + esc(LB.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(LB.summary || '') + '</b> The live stack (TD luck, banged-up docks, rookie level, RB snap usage, wind, opportunity pool, backup-QB inheritance) was rebuilt with the engine\'s own constants on every graded player-week. ' +
+        'Not replayable: the 70% player-prop anchor, availability of players who sat, forecast wind, the TE route trend. So a pass here earns a live shadow graded by the weekly scorecard, not a swap.</p>';
+      if (LB.ladder) html += '<p class="dim" style="font-size:11px;margin:4px 0">Hand stack, one layer at a time: ' + LB.ladder.slice(1).map(function (s) { return esc(s.step.replace('+ ', '').replace(' = HAND', '')) + ' <span style="color:' + lbCol(s.pct) + '">' + lbPct(s.pct) + '</span> (' + s.wins + '/7)'; }).join(' \u00b7 ') + '.</p>';
+      var lbAll = LB.models.filter(function (r) { return r.pos === 'ALL'; });
+      html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Learned version</th><th>vs hand</th><th>Seasons better</th><th>Forward</th><th>QB</th><th>RB</th><th>WR</th><th>TE</th><th>Verdict</th></tr></thead><tbody>' +
+        lbAll.map(function (r) {
+          var byPos = function (p) { var x = LB.models.filter(function (m) { return m.model === r.model && m.pos === p; })[0]; return x ? '<td style="color:' + lbCol(x.pct) + '">' + lbPct(x.pct) + '</td>' : '<td>\u2014</td>'; };
+          var vc = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149');
+          return '<tr><td class="l">' + esc(lbName[r.model] || r.model) + '</td><td style="color:' + lbCol(r.pct) + '">' + lbPct(r.pct) + '</td><td>' + r.wins + '/7</td><td style="color:' + lbCol(r.fwdPct) + '">' + lbPct(r.fwdPct) + ' (' + r.fwdWins + '/5)</td>' + byPos('QB') + byPos('RB') + byPos('WR') + byPos('TE') + '<td style="color:' + vc + '"><b>' + esc(r.verdict) + '</b></td></tr>';
+        }).join('') + '</tbody></table></div>';
+      if (LB.subsets && LB.subsets.length) html += '<p class="dim" style="font-size:11px;margin:6px 0">Where layers are active (learned correction vs hand): ' + LB.subsets.map(function (s) { return esc(s.label) + ' ' + lbPct(s['GBM+HAND']) + ' (n ' + s.n + ', actual/hand ' + s.actOverHand.toFixed(3) + ')'; }).join(' \u00b7 ') + '.</p>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {

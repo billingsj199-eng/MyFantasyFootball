@@ -1,0 +1,75 @@
+17657 player-weeks (features 17657, layers 17657)
+
+=== HAND ladder: each live layer added in turn (vs the previous step) ===
+  base2 (blend x Vegas x FPA x snap trend)     MSE 42.9372
+  + TD luck                                    MSE 42.6200  step -0.739% (7/7)
+  + banged-up cond                             MSE 42.5780  step -0.099% (5/7)
+  + rookie level                               MSE 42.4893  step -0.208% (7/7)
+  + RB snap usage                              MSE 42.4677  step -0.051% (4/7)
+  + wind                                       MSE 42.4387  step -0.068% (4/7)
+  + opportunity pool                           MSE 42.1505  step -0.679% (6/7)
+  + backup QB = HAND                           MSE 42.2269  step +0.181% (1/7)
+  HAND vs base2 -1.65%
+
+=== LOYO ===
+  2019: HAND 44.397 | STRENGTH 44.399 | STRENGTH-NS 44.455 | CAL 44.274 | GBM+HAND 44.228 | GBM 44.113 | k 1.25/0.75 (2s)
+  2020: HAND 44.559 | STRENGTH 44.283 | STRENGTH-NS 44.514 | CAL 44.348 | GBM+HAND 44.162 | GBM 43.878 | k 0.75/0.75 (4s)
+  2021: HAND 41.721 | STRENGTH 41.840 | STRENGTH-NS 41.805 | CAL 41.582 | GBM+HAND 41.554 | GBM 41.515 | k 0.75/0.75 (5s)
+  2022: HAND 41.860 | STRENGTH 41.799 | STRENGTH-NS 41.818 | CAL 41.539 | GBM+HAND 41.501 | GBM 41.653 | k 1.0/1.0 (8s)
+  2023: HAND 39.506 | STRENGTH 39.458 | STRENGTH-NS 39.585 | CAL 39.339 | GBM+HAND 38.761 | GBM 38.911 | k 1.25/1.0 (10s)
+  2024: HAND 40.401 | STRENGTH 40.205 | STRENGTH-NS 40.434 | CAL 40.090 | GBM+HAND 39.847 | GBM 39.906 | k 1.0/1.0 (12s)
+  2025: HAND 44.938 | STRENGTH 44.728 | STRENGTH-NS 44.651 | CAL 44.417 | GBM+HAND 44.368 | GBM 43.914 | k 1.0/1.0 (13s)
+
+=== vs HAND (LOYO) ===
+  STRENGTH     ALL n 17657 HAND 42.227 -> 42.127 (-0.24%) better 5/7
+  STRENGTH     QB  n  2554 HAND 60.416 -> 59.959 (-0.76%) better 6/7
+  STRENGTH     RB  n  4492 HAND 46.301 -> 46.356 (+0.12%) better 3/7
+  STRENGTH     WR  n  7202 HAND 40.930 -> 40.834 (-0.23%) better 6/7
+  STRENGTH     TE  n  3409 HAND 25.972 -> 25.928 (-0.17%) better 6/7
+  STRENGTH-NS  ALL n 17657 HAND 42.227 -> 42.206 (-0.05%) better 3/7
+  STRENGTH-NS  QB  n  2554 HAND 60.416 -> 60.190 (-0.37%) better 4/7
+  STRENGTH-NS  RB  n  4492 HAND 46.301 -> 46.372 (+0.15%) better 2/7
+  STRENGTH-NS  WR  n  7202 HAND 40.930 -> 40.897 (-0.08%) better 3/7
+  STRENGTH-NS  TE  n  3409 HAND 25.972 -> 26.011 (+0.15%) better 2/7
+  CAL          ALL n 17657 HAND 42.227 -> 41.959 (-0.63%) better 7/7
+  CAL          QB  n  2554 HAND 60.416 -> 58.778 (-2.71%) better 7/7
+  CAL          RB  n  4492 HAND 46.301 -> 46.255 (-0.10%) better 4/7
+  CAL          WR  n  7202 HAND 40.930 -> 40.926 (-0.01%) better 4/7
+  CAL          TE  n  3409 HAND 25.972 -> 25.878 (-0.36%) better 3/7
+  GBM+HAND     ALL n 17657 HAND 42.227 -> 41.774 (-1.07%) better 7/7
+  GBM+HAND     QB  n  2554 HAND 60.416 -> 58.968 (-2.40%) better 7/7
+  GBM+HAND     RB  n  4492 HAND 46.301 -> 46.042 (-0.56%) better 5/7
+  GBM+HAND     WR  n  7202 HAND 40.930 -> 40.567 (-0.89%) better 7/7
+  GBM+HAND     TE  n  3409 HAND 25.972 -> 25.820 (-0.58%) better 4/7
+  GBM          ALL n 17657 HAND 42.227 -> 41.711 (-1.22%) better 7/7
+  GBM          QB  n  2554 HAND 60.416 -> 58.418 (-3.31%) better 7/7
+  GBM          RB  n  4492 HAND 46.301 -> 46.137 (-0.35%) better 5/7
+  GBM          WR  n  7202 HAND 40.930 -> 40.566 (-0.89%) better 7/7
+  GBM          TE  n  3409 HAND 25.972 -> 25.779 (-0.74%) better 4/7
+
+=== FORWARD (train on earlier seasons only) vs HAND ===
+  2021: HAND 41.721 | STRENGTH +4.03% | STRENGTH-NS +3.45% | CAL +0.15% | GBM+HAND +0.26% | GBM +1.04%
+  2022: HAND 41.860 | STRENGTH -0.20% | STRENGTH-NS -0.07% | CAL -0.75% | GBM+HAND -0.40% | GBM -0.37%
+  2023: HAND 39.506 | STRENGTH +0.08% | STRENGTH-NS +0.39% | CAL -0.39% | GBM+HAND -1.00% | GBM -0.68%
+  2024: HAND 40.401 | STRENGTH -0.54% | STRENGTH-NS +0.06% | CAL -0.87% | GBM+HAND -1.63% | GBM -1.09%
+  2025: HAND 44.938 | STRENGTH -0.47% | STRENGTH-NS -0.64% | CAL -1.16% | GBM+HAND -1.27% | GBM -2.28%
+  forward pooled STRENGTH     +0.45% (3/5)
+  forward pooled STRENGTH-NS  +0.53% (2/5)
+  forward pooled CAL          -0.64% (4/5)
+  forward pooled GBM+HAND     -0.87% (4/5)
+  forward pooled GBM          -0.77% (4/5)
+
+=== where the live layers are active (LOYO, vs HAND) ===
+  TD luck |adj| >= 0.5 pts     n  5518 act/HAND 1.024 | STRENGTH +0.06% | STRENGTH-NS +0.08% | CAL -0.14% | GBM+HAND -0.35% | GBM -0.06%
+  played Questionable          n   871 act/HAND 0.988 | STRENGTH -0.18% | STRENGTH-NS -0.09% | CAL -0.18% | GBM+HAND +0.32% | GBM +2.14%
+  rookie QB/RB                 n  1086 act/HAND 1.054 | STRENGTH +0.78% | STRENGTH-NS +0.76% | CAL -2.72% | GBM+HAND -1.59% | GBM -1.34%
+  RB usage blend active        n  3691 act/HAND 1.016 | STRENGTH +0.11% | STRENGTH-NS +0.14% | CAL +0.01% | GBM+HAND -0.51% | GBM -0.10%
+  wind >= 10 (QB/WR/TE)        n  3012 act/HAND 1.010 | STRENGTH +0.35% | STRENGTH-NS +0.47% | CAL -0.15% | GBM+HAND -1.06% | GBM -1.07%
+  opportunity pool boost       n  5926 act/HAND 1.016 | STRENGTH +0.13% | STRENGTH-NS +0.14% | CAL -0.06% | GBM+HAND -0.63% | GBM -0.69%
+  backup QB inheriting: too few (11)
+
+  refit strengths, all seasons: e_snap 0.766, e_wind 1.746, e_cond 1.917, e_pool 0.804, e_qbinh 0.02, e_rookie 1.188, w_usage 0.134, k_luck 1.056, c_QB 1.042, c_RB 1.025, c_WR 1.031, c_TE 1.056
+  refit strengths without position scale: e_snap 0.786, e_wind 1.07, e_cond 1.6, e_pool 0.887, e_qbinh 0.075, e_rookie 1.521, w_usage 0.133, k_luck 0.942
+
+wrote data/learned_combo_backtest.js: Hand-tuned live stack rebuilt on 17657 player-weeks: -1.65% vs the harness base. Learned vs hand: STRENGTH -0.24% (5/7, forward +0.45%); STRENGTH-NS -0.05% (3/7, forward +0.53%); CAL -0.64% (7/7, forward -0.64%); GBM+HAND -1.07% (7/7, forward -0.87%); GBM -1.22% (7/7, forward -0.77%). Passing: CAL, GBM+HAND, GBM
+done (22s)

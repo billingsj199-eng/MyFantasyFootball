@@ -2084,13 +2084,14 @@
   // fpa_2026.json, FINAL games only; the strength of the offenses faced is
   // stripped out by an additive defense-effect / offense-effect ridge fit)
   // blended with Clay's preseason unit rank (sim_pack's
-  // CLAY_TEAM_GRADES_2026) as a prior worth 2 games: 1 gm 33% in-season,
-  // 2 gm 50%, 4 gm 67%, 8 gm 80%. Blended rank 1 = softest; top third easy
+  // CLAY_TEAM_GRADES_2026) as a prior that fades OUT by game 8 (Jack
+  // 2026-09-16): weight = min(1, sqrt(g / 8)) → 1 gm 35% in-season, 2 gm 50%,
+  // 4 gm 71%, 8+ gm 100%. Blended rank 1 = softest; top third easy
   // (green), bottom third hard (red), middle = tooltip only. D/ST grades the
   // opposing OFFENSE (offRk + D/ST points allowed). K gets no grade, so
   // wkOppInfo keeps its Vegas fallback there (and whenever the fetch fails).
   // Same math as app.js _wkSchedAdjust / _wkOppBlendTable — keep in sync.
-  const OPP_PRIOR_GAMES = 2;
+  const OPP_FADE_GAMES = 8;   // Clay prior gone once the opponent has this many final games
   const OPP_ABBR_FIX = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
   let _oppGradeCache = null;
   function oppSchedAdjust(games, K) {
@@ -2142,7 +2143,7 @@
       adj.sort((a, b) => b.v - a.v);
       adj.forEach((r, i) => { A[r.team].adjV = Math.round(r.v * 10) / 10; A[r.team].adjRank = i + 1; });
     }
-    // 2) blend with Clay's preseason rank (prior worth OPP_PRIOR_GAMES games)
+    // 2) blend with Clay's preseason rank (fades out by OPP_FADE_GAMES games)
     const CG = (typeof window !== 'undefined' && window.CLAY_TEAM_GRADES_2026) || {};
     const teams = {};
     Object.keys(CG).forEach((t) => { teams[t] = 1; });
@@ -2154,7 +2155,7 @@
       const a = A[t];
       const pIn = (a && a.n > 1 && typeof a.adjRank === 'number') ? 1 - (a.adjRank - 1) / (a.n - 1) : null;   // rank 1 = allows most → 1
       const g = a ? a.games : 0;
-      const w = g / (g + OPP_PRIOR_GAMES);
+      const w = Math.min(1, Math.sqrt(g / OPP_FADE_GAMES));
       let score = null;
       if (pIn == null && pClay == null) score = null;
       else if (pIn == null) score = pClay;

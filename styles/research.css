@@ -209,6 +209,21 @@
 .rs-sc-tip[hidden] { display: none; }
 .rs-sc-tip strong { color: var(--text); }
 
+/* movers: risers and fallers side by side (one column on a narrow screen); each panel is a
+   .rs-co-chart surface, so the sticky name cells take that surface instead of the section's */
+.rs-mv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.rs-mv-grid .rs-co-chart { margin-bottom: 0; padding-bottom: 12px; min-width: 0; }
+.rs-mv-wrap { margin-top: 8px; max-height: 62vh; overflow: auto; }
+.rs-mv { min-width: 0; }
+.rs-mv thead tr.rs-adv-hdr th { cursor: default; }
+.rs-mv .rs-adv-nm, .rs-mv tbody tr:nth-child(even) td.rs-adv-nm { background: var(--surface); }
+.rs-mv-up { color: #22c55e; font-weight: 700; }
+.rs-mv-dn { color: #ef4444; font-weight: 700; }
+:root[data-theme="light"] .rs-mv-up { color: #15803d; }
+:root[data-theme="light"] .rs-mv-dn { color: #b91c1c; }
+.rs-adv-export[hidden] { display: none; }
+@media (max-width: 900px) { .rs-mv-grid { grid-template-columns: 1fr; } }
+
 @media (max-width: 640px) {
   .rs-wrapper { padding: 14px 10px 40px; }
   .rs-controls { gap: 10px; }

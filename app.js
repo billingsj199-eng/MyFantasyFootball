@@ -65015,6 +65015,208 @@ function _rsScatter(cfg) {
     _renderGroups();
     _load();
   };
+
+  // --- MOVERS view (Jack 2026-09-16: "do the movers panel first") -----------------------------
+  // The biggest role changes at RB / WR / TE: a usage metric in the last game played (or the
+  // last 3) against the player's mean over the 3 games played before that, from the same week
+  // files as the table. Risers and fallers side by side, filtered by position and team; the
+  // by-game trail is the Δ cell's tooltip. Descriptive, not a forecast: the usage-trend backtest
+  // (scripts/build_usage_trend.py) found last-3 rises score LESS over the next 3 games.
+  const MV_METRICS = [
+    { k: 'use', l: 'Usage score', d: 0 },
+    { k: 'snp', l: 'Snap %', d: 0, pct: true },
+    { k: 'rtp', l: 'Route %', d: 0, pct: true },
+    { k: 'tsh', l: 'Target share', d: 0, pct: true },
+    { k: 'car', l: 'Carry share (RB)', d: 0, pct: true },
+    { k: 'ays', l: 'Air-yard share', d: 0, pct: true },
+    { k: 'edo', l: 'Early-down opp share', d: 0, pct: true },
+    { k: 'syo', l: 'Short-yardage opp share', d: 0, pct: true },
+    { k: 'd3o', l: '3rd-down opp share', d: 0, pct: true },
+    { k: 'tgt', l: 'Targets', d: 1 },
+    { k: 'att', l: 'Carries (RB)', d: 1 },
+    { k: 'xfpt', l: 'Expected points', d: 1 },
+    { k: 'fpt', l: 'Fantasy points', d: 1 }
+  ];
+  const MV_POS = ['RB', 'WR', 'TE'];
+  // per-game volume one of the two windows must average: opportunities (RB) or routes (WR / TE)
+  const MV_FLOOR = { RB: 3, WR: 6, TE: 6 };
+  let _mvYr = YEARS[0], _mvAuto = true, _mvWk = null, _mvMet = 'use', _mvWin = 1, _mvTm = '', _mvPos = '', _mvAll = false;
+  let _mvWired = false, _mvStarted = false, _mvSeq = 0, _mvNote = '', _mvTeams = '';
+  try {
+    const m = localStorage.getItem('rsMvMetric');
+    if (MV_METRICS.some(x => x.k === m)) _mvMet = m;
+    if (localStorage.getItem('rsMvWin') === '3') _mvWin = 3;
+  } catch (e) { /* storage blocked */ }
+
+  // one entry per player: his played weeks up to the anchor week with the metric and his volume
+  function _mvCompute(met) {
+    const sf = _seasonFile(_mvYr);
+    if (!sf) return [];
+    const wks = (sf.wks || []).filter(w => w <= _mvWk);
+    const by = new Map();
+    wks.forEach(w => MV_POS.forEach(p => _wkRows(_mvYr, w, p).forEach(o => {
+      if (!o.g) return;
+      const key = p + '|' + o.n;
+      if (!by.has(key)) by.set(key, { n: o.n, pos: p, tm: o.tm, on: !!o.on, g: [] });
+      const e = by.get(key);
+      e.tm = o.tm;
+      e.on = e.on || !!o.on;
+      e.g.push({ w: w, v: _roomVal(o, met.k), vol: p === 'RB' ? (o.att || 0) + (o.tgt || 0) : (o.rts || 0) });
+    })));
+    const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+    const fmt = v => (v == null ? '–' : Number(v).toFixed(met.d) + (met.pct ? '%' : ''));
+    const out = [];
+    by.forEach(e => {
+      // last window = the anchor week (win 1) or 2+ of the 3 weeks ending there (win 3);
+      // prior = the 3 games played before that window
+      const lastW = e.g.filter(x => x.w > _mvWk - _mvWin);
+      if (!lastW.length || (_mvWin === 1 ? lastW[0].w !== _mvWk : lastW.length < 2)) return;
+      const prior = e.g.filter(x => x.w <= _mvWk - _mvWin).slice(-3);
+      if (!prior.length) return;
+      const lv = lastW.map(x => x.v).filter(v => v != null), pv = prior.map(x => x.v).filter(v => v != null);
+      if (!lv.length || !pv.length) return;
+      if (mean(lastW.map(x => x.vol)) < MV_FLOOR[e.pos] && mean(prior.map(x => x.vol)) < MV_FLOOR[e.pos]) return;
+      const all = e.g.map(x => x.v).filter(v => v != null);
+      const last = mean(lv), prev = mean(pv);
+      out.push({ n: e.n, pos: e.pos, tm: e.tm, on: e.on, last: last, prev: prev, np: prior.length, d: last - prev, season: mean(all), games: e.g.length,
+        trail: prior.map(x => 'W' + x.w + ' ' + fmt(x.v)).join(' · ') + ' | ' + lastW.map(x => 'W' + x.w + ' ' + fmt(x.v)).join(' · ') });
+    });
+    return out;
+  }
+
+  function _mvFillWeeks(wks) {
+    const sel = _el('rsMvWk');
+    if (!sel) return;
+    sel.innerHTML = wks.map(w => '<option value="' + w + '"' + (w === _mvWk ? ' selected' : '') + '>Week ' + w + '</option>').join('');
+  }
+
+  function _mvRender() {
+    const up = _el('rsMvUp'), dn = _el('rsMvDn'), cnt = _el('rsMvCount'), foot = _el('rsMvFoot'), more = _el('rsMvMore');
+    if (!up || !dn) return;
+    const met = MV_METRICS.find(m => m.k === _mvMet) || MV_METRICS[0];
+    const fmt = v => Number(v).toFixed(met.d) + (met.pct ? '%' : '');
+    const rows = _mvCompute(met);
+    // team options follow the season on screen
+    const teams = Array.from(new Set(rows.map(r => r.tm).filter(Boolean))).sort();
+    const tmSel = _el('rsMvTm');
+    if (tmSel && teams.join('|') !== _mvTeams) {
+      _mvTeams = teams.join('|');
+      if (teams.indexOf(_mvTm) < 0) _mvTm = '';
+      tmSel.innerHTML = '<option value="">All teams</option>' + teams.map(t => '<option value="' + t + '"' + (t === _mvTm ? ' selected' : '') + '>' + t + '</option>').join('');
+    }
+    const f = rows.filter(r => (!_mvPos || r.pos === _mvPos) && (!_mvTm || r.tm === _mvTm));
+    const risers = f.filter(r => r.d > 0).sort((a, b) => b.d - a.d), fallers = f.filter(r => r.d < 0).sort((a, b) => a.d - b.d);
+    const N = _mvAll ? Infinity : 20;
+    const winL = _mvWin === 1 ? 'Last game' : 'Last 3';
+    const tbl = (list, cls, title, word) => {
+      const head = '<div class="rs-co-head"><span class="rs-co-title">' + title + '</span><span class="rs-co-sub">' +
+        (list.length > N ? 'top ' + N + ' of ' + list.length : list.length + ' player' + (list.length === 1 ? '' : 's')) + ' · ' + _esc(met.l) + '</span></div>';
+      if (!list.length) return head + '<div class="rs-empty">No ' + word + ' in ' + _esc(met.l) + ' for these filters.</div>';
+      let h = '<div class="rs-table-wrap rs-mv-wrap"><table class="rs-table rs-adv rs-mv"><thead><tr class="rs-adv-hdr">' +
+        '<th class="rs-adv-nm">Player</th><th class="rs-adv-tm">Tm</th><th class="rs-adv-tm">Pos</th><th title="' + _esc(met.l) + (_mvWin === 1 ? ' in the last game played' : ' averaged over the last 3 games played') + '">' + winL + '</th>' +
+        '<th title="Average over the 3 games played before that (fewer in brackets)">Prior 3</th><th title="Change; hover a cell for the by-game trail">&Delta;</th><th title="Season average over every game played through this week">Season</th></tr></thead><tbody>';
+      list.slice(0, N).forEach((r, i) => {
+        h += '<tr' + (r.on ? ' class="rs-adv-click" data-n="' + _esc(r.n) + '"' : '') + '><td class="rs-adv-nm' + (r.on ? ' rs-name' : ' rs-adv-off') + '" title="' + _esc(r.n) + (r.on ? '' : ' (not on the site board)') + '"><span class="rs-adv-rk">' + (i + 1) + '</span>' + _esc(r.n) + '</td>' +
+          '<td class="rs-adv-tm">' + _esc(r.tm || '') + '</td><td class="rs-adv-tm">' + r.pos + '</td><td>' + fmt(r.last) + '</td>' +
+          '<td>' + fmt(r.prev) + (r.np < 3 ? ' <span class="rs-fmt">(' + r.np + ')</span>' : '') + '</td>' +
+          '<td class="' + cls + '" title="' + _esc(r.trail) + '">' + (r.d > 0 ? '+' : '') + fmt(r.d).replace('%', '') + (met.pct ? ' pts' : '') + '</td>' +
+          '<td>' + fmt(r.season) + ' <span class="rs-fmt">' + r.games + 'g</span></td></tr>';
+      });
+      return head + h + '</tbody></table></div>';
+    };
+    up.innerHTML = tbl(risers, 'rs-mv-up', '&#9650; Risers', 'risers');
+    dn.innerHTML = tbl(fallers, 'rs-mv-dn', '&#9660; Fallers', 'fallers');
+    if (more) { more.hidden = risers.length <= 20 && fallers.length <= 20; more.textContent = _mvAll ? 'Top 20' : 'Show all'; }
+    if (cnt) cnt.textContent = f.length + ' qualify · ' + _mvYr + ' through Week ' + _mvWk + ' · ' + (_mvWin === 1 ? 'last game vs prior 3' : 'last 3 vs prior 3');
+    if (foot) foot.textContent = (_mvNote ? _mvNote + ' ' : '') +
+      'Each row compares ' + met.l.toLowerCase() + ' in the ' + (_mvWin === 1 ? 'last game played' : 'last 3 games played (2 or more of the 3 weeks ending at the week picked)') +
+      ' with the player\'s average over the 3 games played before that, from the same week files as the Advanced Stats table (shares are of that week\'s team volume). ' +
+      'Players need an average of 3 opportunities (RB) or 6 routes (WR, TE) per game in one of the two windows. Δ is descriptive, not a forecast: in 2019-2025 testing, players who had risen scored less over the next 3 games than others at the same recent usage, and players who had fallen scored more. ' +
+      'Hover Δ for the by-game trail; click a player to open the card.';
+  }
+
+  function _mvLoad() {
+    const seq = ++_mvSeq;
+    const up = _el('rsMvUp'), dn = _el('rsMvDn');
+    const ens = typeof window._ensureAdvStats === 'function' ? window._ensureAdvStats : function() { return Promise.resolve(null); };
+    if (up) up.innerHTML = '<div class="rs-empty">Loading ' + _mvYr + ' weeks&hellip;</div>';
+    if (dn) dn.innerHTML = '';
+    ens(_mvYr).then(sf => {
+      if (seq !== _mvSeq) return null;
+      const wks = (sf && sf.wks) || [];
+      // the current season needs two posted weeks before anyone can move; show the last full one until then
+      if (wks.length < 2 && _mvAuto) {
+        const i = YEARS.indexOf(_mvYr);
+        if (i >= 0 && i + 1 < YEARS.length) {
+          _mvNote = _mvYr + ' has ' + (wks.length ? 'only Week ' + wks[0] : 'no weeks') + ' posted, so this shows ' + YEARS[i + 1] + ' until a second ' + _mvYr + ' week is in.';
+          _mvYr = YEARS[i + 1];
+          const ysel = _el('rsMvYr');
+          if (ysel) ysel.value = String(_mvYr);
+          _mvLoad();
+          return null;
+        }
+      }
+      if (!wks.length) { if (up) up.innerHTML = '<div class="rs-empty">No week data for ' + _mvYr + '.</div>'; return null; }
+      if (_mvWk == null || wks.indexOf(_mvWk) < 0) _mvWk = wks[wks.length - 1];
+      _mvFillWeeks(wks);
+      const need = wks.filter(w => w <= _mvWk && !(window.ADV_STATS || {})[_mvYr + '-w' + w]);
+      return Promise.all(need.map(w => ens(_mvYr, w)));
+    }).then(r => { if (seq === _mvSeq && r !== null) _mvRender(); });
+  }
+
+  function _mvWire() {
+    if (_mvWired) return;
+    _mvWired = true;
+    const ysel = _el('rsMvYr');
+    ysel.innerHTML = YEARS.map(y => '<option value="' + y + '">' + y + '</option>').join('');
+    ysel.value = String(_mvYr);
+    ysel.addEventListener('change', () => { _mvYr = +ysel.value; _mvAuto = false; _mvNote = ''; _mvWk = null; _mvLoad(); });
+    _el('rsMvWk').addEventListener('change', e => { _mvWk = +e.target.value; _mvLoad(); });
+    const msel = _el('rsMvMetric');
+    msel.innerHTML = MV_METRICS.map(m => '<option value="' + m.k + '">' + _esc(m.l) + '</option>').join('');
+    msel.value = _mvMet;
+    msel.addEventListener('change', () => {
+      _mvMet = msel.value;
+      try { localStorage.setItem('rsMvMetric', _mvMet); } catch (err) { /* private mode */ }
+      _mvRender();
+    });
+    const wsel = _el('rsMvWin');
+    wsel.value = String(_mvWin);
+    wsel.addEventListener('change', () => {
+      _mvWin = +wsel.value === 3 ? 3 : 1;
+      try { localStorage.setItem('rsMvWin', String(_mvWin)); } catch (err) { /* private mode */ }
+      _mvRender();
+    });
+    _el('rsMvTm').addEventListener('change', e => { _mvTm = e.target.value; _mvRender(); });
+    _el('rsMvPos').addEventListener('click', e => {
+      const b = e.target.closest('.rs-adv-chip');
+      if (!b) return;
+      _mvPos = b.dataset.p || '';
+      document.querySelectorAll('#rsMvPos .rs-adv-chip').forEach(x => {
+        const on = (x.dataset.p || '') === _mvPos;
+        x.classList.toggle('on', on);
+        x.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      _mvRender();
+    });
+    _el('rsMvMore').addEventListener('click', () => { _mvAll = !_mvAll; _mvRender(); });
+    ['rsMvUp', 'rsMvDn'].forEach(id => _el(id).addEventListener('click', e => {
+      const tr = e.target.closest('tr[data-n]');
+      if (tr && typeof openPlayerCard === 'function' && typeof D !== 'undefined') {
+        const d = D.find(p => p.n === tr.dataset.n);
+        if (d) openPlayerCard(d);
+      }
+    }));
+  }
+
+  // the Movers view tab calls this each time it shows; data loads once
+  window._renderMovers = function _renderMovers() {
+    if (!_el('rsMvUp')) return;
+    _mvWire();
+    if (_mvStarted) return;
+    _mvStarted = true;
+    _mvLoad();
+  };
 })();
 
 // === RESEARCH: COACH PROFILES (admin-only) ===
@@ -65617,7 +65819,7 @@ function _rsScatter(cfg) {
 // Advanced Stats (any seasons / weeks / teams via its multi-pick filters) + Player Lookup +
 // Season Explorer; the old 2026 / Past seasons split is gone. Last view sticks in localStorage.
 (function _researchViewsModule() {
-  const VIEWS = ['players', 'coach'];
+  const VIEWS = ['players', 'movers', 'coach'];
   let _view = 'players', _wired = false;
   try {
     let v = localStorage.getItem('rsView');
@@ -65634,6 +65836,7 @@ function _rsScatter(cfg) {
       b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     if (_view === 'players' && typeof window._advRedraw === 'function') window._advRedraw();
+    if (_view === 'movers' && typeof window._renderMovers === 'function') window._renderMovers();
     if (_view === 'coach' && typeof window._coachRedraw === 'function') window._coachRedraw();
   }
   window._rsApplyView = function _rsApplyView() {

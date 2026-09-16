@@ -1,25 +1,29 @@
 ##### score_week.py --week 1
 W1 lock: 368 players, 16 games, preset half, sims 2000
-actuals: 325 game rows | consensus file: yes (2026-09-14T13:00:39.005104+00:00)
-scored: 181 played (shipped mean >= 5.0) | DNP/unmatched: 6
+actuals: 330 game rows | consensus file: yes (2026-09-14T13:00:39.005104+00:00)
+scored: 182 played (shipped mean >= 5.0) | DNP/unmatched: 5
+  No-Clay shadow: 182 rows on the player's own 3-yr prior, 0 still on the Clay fallback (no history)
+  shadow REPORTS riser (rep>0): n=0 (too few to read)
+  shadow REPORTS faller (rep<0): n=0 (too few to read)
+  shadow ASCENDING flag: n=0 (too few to read)
 
 === ALL positions (same rows for every model where available) ===
   model               n    MAE   bias   RMSE
-  SHIPPED mean      181   5.64  +0.39   7.08
-  JS Weekly         181   5.59  -0.49   7.19
-  Clay stack        181   5.64  -0.50   7.25
-  prop-anchored     181   5.62  +0.29   7.06
+  SHIPPED mean      182   5.66  +0.43   7.08
+  JS Weekly         182   5.59  -0.45   7.19
+  Clay stack        182   5.65  -0.46   7.25
+  prop-anchored     182   5.63  +0.33   7.06
   site consensus    181   5.68  -0.02   7.18
   ESPN              181   5.64  -0.32   7.21
-  CBS               178   5.86  +0.27   7.28
+  CBS               179   5.87  +0.32   7.29
   FantasyPros       181   5.68  -0.07   7.19
 
 === by position (MAE) ===
-  pos    n    mean     js   clay   prop   cons   espn    cbs     fp
-  QB    30    6.64   7.06   7.13   6.65   7.00   6.76   6.80   6.85 
-  RB    46    5.48   5.46   5.50   5.51   5.52   5.78   5.50   5.69 
-  WR    76    5.50   5.28   5.31   5.45   5.39   5.32   5.91   5.38 
-  TE    29    5.25   5.05   5.19   5.18   5.33   5.06   5.33   5.23 
+  pos    n    mean     js     nc   clay   prop   cons   espn    cbs     fp
+  QB    30    6.64   7.06      -   7.13   6.65   7.00   6.76   6.80   6.85 
+  RB    47    5.52   5.49      -   5.53   5.55   5.52   5.78   5.55   5.69 
+  WR    76    5.50   5.28      -   5.31   5.45   5.39   5.32   5.91   5.38 
+  TE    29    5.25   5.05      -   5.19   5.18   5.33   5.06   5.33   5.23 
 
 === head-to-head, row-level |error| (wins-losses-ties, tie = within 0.1) ===
   SHIPPED    vs consensus : 88-80-13  (52% of decided)
@@ -30,12 +34,12 @@ scored: 181 played (shipped mean >= 5.0) | DNP/unmatched: 6
   Clay stack vs ESPN      : 86-80-15  (52% of decided)
 
 === p10-p90 band (target 80% inside / 10% / 10%) ===
-  n=181 inside 79.0%  below p10 10.5%  above p90 10.5%
+  n=182 inside 79.1%  below p10 10.4%  above p90 10.4%
     QB: n=30 inside 77% below 13% above 10%
-    RB: n=46 inside 87% below 2% above 11%
+    RB: n=47 inside 87% below 2% above 11%
     WR: n=76 inside 79% below 14% above 7%
     TE: n=29 inside 69% below 10% above 21%
-  prop anchor source mix: {'line': 181}
+  prop anchor source mix: {'line': 182}
 
 === biggest misses, shipped mean (top 12) ===
   Jalen Coker            WR CAR vs CHI  proj   8.9  act  29.8  (-20.9)  js  6.59 clay  6.59 cons   9.8
@@ -51,20 +55,20 @@ scored: 181 played (shipped mean >= 5.0) | DNP/unmatched: 6
   Isaiah Likely          TE NYG vs DAL  proj   9.3  act  23.8  (-14.5)  js 10.16 clay  7.33 cons   9.1
   Josh Allen             QB BUF vs HOU  proj  21.6  act  35.7  (-14.1)  js 20.64 clay 20.64 cons  18.3
 
-=== locked but no game row (6) ===
-  Ken Walker III (RB 15.1), Cameron Ward (QB 12.8), Cooper Rush (QB 11.4), Kenneth Gainwell (RB 10.0), Josh Jacobs (RB 9.0), Chigoziem Okonkwo (TE 5.6)
+=== locked but no game row (5) ===
+  Ken Walker III (RB 15.1), Cameron Ward (QB 12.8), Cooper Rush (QB 11.4), Josh Jacobs (RB 9.0), Chigoziem Okonkwo (TE 5.6)
 
 
 ##### diagnose_week.py --week 1
-W1: 181 skill rows scored (mean >= 5.0)
+W1: 182 skill rows scored (mean >= 5.0)
 
 === 1. bias (proj − act) and MAE by position ===
   pos   n         SHIPPED              JS            Clay            prop       consensus            ESPN
   QB   30    +0.32 /  6.64  -1.60 /  7.06  -1.65 /  7.13  +0.21 /  6.65  -0.37 /  7.00  -1.39 /  6.76
-  RB   46    -0.61 /  5.48  -1.03 /  5.46  -1.07 /  5.50  -0.61 /  5.51  -0.95 /  5.52  -0.77 /  5.78
+  RB   47    -0.44 /  5.52  -0.86 /  5.49  -0.90 /  5.53  -0.44 /  5.55  -0.95 /  5.52  -0.77 /  5.78
   WR   76    +1.21 /  5.50  +0.45 /  5.28  +0.48 /  5.31  +1.06 /  5.45  +0.93 /  5.39  +0.63 /  5.32
   TE   29    -0.08 /  5.25  -0.93 /  5.05  -0.99 /  5.19  -0.25 /  5.18  -0.68 /  5.33  -0.97 /  5.06
-  ALL 181    +0.39 /  5.64  -0.49 /  5.59  -0.50 /  5.64  +0.29 /  5.62  -0.02 /  5.68  -0.32 /  5.64
+  ALL 182    +0.43 /  5.66  -0.45 /  5.59  -0.46 /  5.65  +0.33 /  5.63  -0.02 /  5.68  -0.32 /  5.64
 
 === 2. K + DST (fitted Vegas models, first live grade) ===
   K   n=31  SHIPPED bias -0.28 MAE  3.36 | model bias -0.82 MAE  3.39 | prop bias -0.30 MAE  3.35 | consensus bias -1.84 MAE  3.34 | band inside 84%
@@ -73,12 +77,12 @@ W1: 181 skill rows scored (mean >= 5.0)
     proj mean 6.34 vs actual mean 5.78; Spearman +0.36
 
 === 3. PROP_W sweep (market anchor weight; shipped .70) ===
-  173 rows with a direct-line anchor that moved the mean
-  market-implied MAE 5.743 | model base MAE 5.621
+  174 rows with a direct-line anchor that moved the mean
+  market-implied MAE 5.755 | model base MAE 5.628
   w:   0.00  0.30  0.50  0.60  0.70  0.80  0.90  1.00
-  MAE: 5.62  5.60  5.62  5.64  5.66  5.68  5.71  5.74
+  MAE: 5.63  5.61  5.63  5.65  5.67  5.69  5.72  5.76
     QB n= 30: 7.06  6.88  6.76  6.65  6.61  6.65
-    RB n= 44: 5.64  5.62  5.65  5.69  5.73  5.75
+    RB n= 45: 5.66  5.65  5.69  5.73  5.77  5.79
     WR n= 71: 5.27  5.31  5.37  5.45  5.53  5.57
     TE n= 28: 4.95  4.93  4.99  5.08  5.17  5.22
 
@@ -88,68 +92,68 @@ W1: 181 skill rows scored (mean >= 5.0)
 
 === 5. tier buckets by shipped mean: bias / MAE / act÷proj ===
   [ 5, 9) n= 71  bias +0.64  MAE  4.48  act/proj 0.910
-  [ 9,13) n= 53  bias +1.08  MAE  5.45  act/proj 0.899
+  [ 9,13) n= 54  bias +1.20  MAE  5.49  act/proj 0.888
   [13,17) n= 30  bias -1.05  MAE  6.43  act/proj 1.070
   [17,99) n= 27  bias +0.01  MAE  8.23  act/proj 0.999
 
 === 6. team implied-total terciles: act÷proj (Vegas elasticity check) ===
   low  implied (n= 47, avg 18.9): act/proj 0.803  bias +2.00
-  mid  implied (n= 66, avg 22.4): act/proj 1.126  bias -1.41
+  mid  implied (n= 67, avg 22.4): act/proj 1.114  bias -1.28
   high implied (n= 68, avg 25.7): act/proj 0.914  bias +1.04
 
 === 7. rank accuracy per position: Spearman | top-12 overlap (of 12) ===
   pos          SHIPPED              JS            Clay            prop       consensus            ESPN
   QB      +0.31 |  7/12     +0.23 |  6/12     +0.19 |  6/12     +0.33 |  7/12     +0.23 |  7/12     +0.26 |  5/12   
-  RB      +0.71 |  6/12     +0.69 |  6/12     +0.69 |  6/12     +0.70 |  6/12     +0.67 |  5/12     +0.63 |  7/12   
+  RB      +0.70 |  6/12     +0.69 |  6/12     +0.69 |  6/12     +0.69 |  6/12     +0.67 |  5/12     +0.63 |  7/12   
   WR      +0.40 |  6/12     +0.36 |  5/12     +0.35 |  4/12     +0.41 |  5/12     +0.39 |  5/12     +0.37 |  5/12   
   TE      +0.26 |  7/12     +0.19 |  5/12     +0.08 |  4/12     +0.24 |  6/12     +0.12 |  5/12     +0.16 |  5/12   
 
 === 8. stat-component bias: projected comps vs actual stat line (per game, played rows) ===
   QB: py 225.5→220.3 (-2%) | ptd 1.4→1.6 (+14%) | ry 18.8→19.7 (+5%) | rtd 0.2→0.3 (+66%)
-  RB: ry 54.2→54.6 (+1%) | rtd 0.4→0.5 (+40%) | rec 2.3→2.4 (+7%) | rcy 17.3→17.1 (-1%) | rctd 0.1→0.1 (+42%)
+  RB: ry 53.7→53.7 (+0%) | rtd 0.4→0.5 (+38%) | rec 2.3→2.4 (+5%) | rcy 17.4→16.8 (-3%) | rctd 0.1→0.1 (+38%)
   WR: ry 1.9→1.0 (-49%) | rec 3.9→3.6 (-7%) | rcy 50.8→48.6 (-4%) | rctd 0.3→0.3 (+0%)
   TE: rec 3.7→3.4 (-8%) | rcy 37.6→38.9 (+3%) | rctd 0.2→0.4 (+74%)
 
 === 9. band calibration by tier (inside / below p10 / above p90) ===
   [ 5, 9) n= 71  inside   75%  below   14%  above   11%   avg (p90−p10)/mean 1.93
-  [ 9,13) n= 53  inside   85%  below    8%  above    8%   avg (p90−p10)/mean 1.76
+  [ 9,13) n= 54  inside   85%  below    7%  above    7%   avg (p90−p10)/mean 1.76
   [13,17) n= 30  inside   83%  below    3%  above   13%   avg (p90−p10)/mean 1.45
   [17,99) n= 27  inside   74%  below   15%  above   11%   avg (p90−p10)/mean 1.12
 
 
 ##### vs_books_week.py --week 1
-W1: 492 stat-prop calls, 292 anytime-TD calls, 244 market-vs-model means
+W1: 499 stat-prop calls, 297 anytime-TD calls, 248 market-vs-model means
 
 === 1. stat props: model vs consensus line (RAW mean-vs-line) ===
-  all: 257/489 = 52.6%  (p vs coin 0.278) | model called OVER 62%, actual went OVER 50%
+  all: 262/496 = 52.8%  (p vs coin 0.225) | model called OVER 62%, actual went OVER 50%
   per-stat table (raw):  stat   n   hit%   p     over-call%  over-act%   median line/model
     py     30   53.3%  0.855       60%        47%      0.994
     ptd    30   50.0%  1.000       43%        53%      1.027
-    ry     72   52.8%  0.724       76%        57%      0.909
-    rec   188   54.8%  0.215       52%        49%      0.996
-    rcy   169   50.3%  1.000       71%        49%      0.904
+    ry     73   52.1%  0.815       77%        56%      0.903
+    rec   192   55.2%  0.170       51%        48%      0.997
+    rcy   171   50.9%  0.878       71%        49%      0.906
 
 === 1b. stat props, MEDIAN-ADJUSTED (model scaled by the median line/model ratio per stat) ===
-  all: 260/491 = 53.0%  (p 0.206) | OVER calls 50%
+  all: 262/495 = 52.9%  (p 0.208) | OVER calls 50%
     QB: 44/81 = 54.3%  (p 0.505)
-    RB: 65/123 = 52.8%  (p 0.589)
-    WR: 104/198 = 52.5%  (p 0.522)
-    TE: 47/89 = 52.8%  (p 0.672)
+    RB: 68/126 = 54.0%  (p 0.423)
+    WR: 104/201 = 51.7%  (p 0.672)
+    TE: 46/87 = 52.9%  (p 0.668)
 
 === 2. does a bigger disagreement win more? (median-adjusted, |model−line|/line) ===
-  edge [0.00,0.05) n=127  hit  54.3%  p 0.375
-  edge [0.05,0.10) n= 91  hit  52.7%  p 0.675
-  edge [0.10,0.20) n=128  hit  51.6%  p 0.791
-  edge [0.20,0.35) n= 67  hit  56.7%  p 0.328
-  edge [0.35,9.00) n= 78  hit  50.0%  p 1.000
+  edge [0.00,0.05) n=125  hit  53.6%  p 0.474
+  edge [0.05,0.10) n= 92  hit  53.3%  p 0.602
+  edge [0.10,0.20) n=128  hit  50.8%  p 0.930
+  edge [0.20,0.35) n= 70  hit  60.0%  p 0.120
+  edge [0.35,9.00) n= 80  hit  48.8%  p 0.911
   biggest 12 disagreements:
     Jayden Daniels       QB ptd  line    0.5 model    1.2 -> O  act    2.0  HIT
-    Kenyon Sadiq         TE rec  line    1.5 model    3.3 -> O  act    3.0  HIT
-    Kenyon Sadiq         TE rcy  line   14.5 model   31.4 -> O  act   21.0  HIT
-    Kayshon Boutte       WR rec  line    1.5 model    2.9 -> O  act    1.0  miss
-    Jaylin Noel          WR rec  line    1.5 model    2.9 -> O  act    2.0  HIT
-    Chris Bell           WR rcy  line   17.5 model   34.4 -> O  act   25.0  HIT
-    Jaylin Noel          WR rcy  line   15.5 model   30.3 -> O  act   53.0  HIT
+    Kenyon Sadiq         TE rec  line    1.5 model    3.4 -> O  act    3.0  HIT
+    Kenyon Sadiq         TE rcy  line   14.5 model   31.5 -> O  act   21.0  HIT
+    Chris Bell           WR rcy  line   17.5 model   34.5 -> O  act   25.0  HIT
+    Kayshon Boutte       WR rec  line    1.5 model    3.0 -> O  act    1.0  miss
+    Jaylin Noel          WR rec  line    1.5 model    3.0 -> O  act    2.0  HIT
+    Jaylin Noel          WR rcy  line   15.5 model   30.4 -> O  act   53.0  HIT
     Terrance Ferguson    TE rec  line    1.5 model    2.8 -> O  act    0.0  miss
     Chris Bell           WR rec  line    1.5 model    2.8 -> O  act    1.0  miss
     Jauan Jennings       WR rec  line    1.5 model    2.8 -> O  act    0.0  miss
@@ -157,33 +161,34 @@ W1: 492 stat-prop calls, 292 anytime-TD calls, 244 market-vs-model means
     Darren Waller        TE rec  line    1.5 model    2.7 -> O  act    2.0  HIT
 
 === 3. anytime-TD: model P(TD) vs devigged book P(TD) ===
-  n=292  scored 23% | model avg P 19%  book avg P 23%
-  Brier: model 0.1569  book 0.1516  (lower = better)
-  disagreements >=5pts: 139; model side right 94 (68%) -- BASE-RATE TRAP: split by direction:
-    model HIGHER than book: n= 16  scored 25%  vs book avg P 28%  model avg P 34%
-    model LOWER than book : n=123  scored 27%  vs book avg P 24%  model avg P 14%
-    |ΔP| [0.05,0.10) n=103 model right 67%
+  n=297  scored 23% | model avg P 19%  book avg P 23%
+  Brier: model 0.1578  book 0.1523  (lower = better)
+  disagreements >=5pts: 141; model side right 95 (67%) -- BASE-RATE TRAP: split by direction:
+    model HIGHER than book: n= 17  scored 24%  vs book avg P 27%  model avg P 33%
+    model LOWER than book : n=124  scored 27%  vs book avg P 23%  model avg P 14%
+    |ΔP| [0.05,0.10) n=105 model right 67%
     |ΔP| [0.10,0.20) n= 34 model right 68%
 
 === 4. fantasy points: JS model vs market-implied mean ===
-  n=244  MAE model 4.898  market 5.013 | bias model -0.53 market +0.48
-  model closer on 129/244 rows (53%, p 0.405)
+  n=248  MAE model 4.899  market 5.005 | bias model -0.51 market +0.49
+  model closer on 131/248 rows (53%, p 0.409)
   by |model − market| bucket: who was closer, and did the actual land on the model's side of the market?
   (a) ABSOLUTE gap, half-PPR fantasy points
-    Δ [0,1) pts  n= 97  model closer   54%  actual on model's side   56%  MAE model 4.27 mkt 4.34
+    Δ [0,1) pts  n=100  model closer   54%  actual on model's side   56%  MAE model 4.30 mkt 4.38
     Δ [1,2) pts  n= 82  model closer   48%  actual on model's side   50%  MAE model 5.11 mkt 5.04
-    Δ [2,3) pts  n= 45  model closer   60%  actual on model's side   60%  MAE model 5.44 mkt 5.88
+    Δ [2,3) pts  n= 46  model closer   59%  actual on model's side   59%  MAE model 5.39 mkt 5.78
     Δ [3,99) pts  n= 20  model closer   55%  actual on model's side   80%  MAE model 5.88 mkt 6.18
   (b) RELATIVE gap, |model − market| / market
     Δ [  0%,  5%) n= 43  model closer   47%  actual on model's side   47%  MAE model 5.17 mkt 5.18  avg mkt 10.4
-    Δ [  5%, 10%) n= 38  model closer   61%  actual on model's side   61%  MAE model 4.45 mkt 4.60  avg mkt 10.8
-    Δ [ 10%, 20%) n= 81  model closer   49%  actual on model's side   56%  MAE model 5.83 mkt 5.88  avg mkt 11.2
+    Δ [  5%, 10%) n= 40  model closer   62%  actual on model's side   62%  MAE model 4.45 mkt 4.62  avg mkt 10.6
+    Δ [ 10%, 20%) n= 82  model closer   49%  actual on model's side   55%  MAE model 5.86 mkt 5.90  avg mkt 11.1
     Δ [ 20%, 30%) n= 28  model closer   57%  actual on model's side   61%  MAE model 5.10 mkt 5.27  avg mkt 8.7
-    Δ [ 30%,900%) n= 54  model closer   56%  actual on model's side   61%  MAE model 3.49 mkt 3.73  avg mkt 5.3
+    Δ [ 30%,900%) n= 55  model closer   55%  actual on model's side   60%  MAE model 3.49 mkt 3.68  avg mkt 5.3
     abs >=3 pts  model BELOW market: n= 19  actual on model's side   79%  avg model   8.8 mkt  13.0 actual  11.6
-    rel >=30%    model ABOVE market: n= 11  actual on model's side   55%  avg model   6.8 mkt   4.7 actual   5.9
+    rel >=30%    model ABOVE market: n= 12  actual on model's side   50%  avg model   6.6 mkt   4.5 actual   5.6
     rel >=30%    model BELOW market: n= 43  actual on model's side   63%  avg model   3.0 mkt   5.5 actual   5.4
   players in either tail (>=3 pts or >=30%):
+    Travis Hunter          WR  model   5.0  market   2.6 ( +92%)  actual   1.6  -> market side
     Brashard Smith         RB  model   3.1  market   1.6 ( +92%)  actual   0.0  -> market side
     Kaleb Johnson          RB  model   0.4  market   2.4 ( -82%)  actual   0.0  -> model side
     Kenyon Sadiq           TE  model   6.5  market   3.6 ( +81%)  actual   9.9  -> model side
@@ -248,8 +253,8 @@ W1: 492 stat-prop calls, 292 anytime-TD calls, 244 market-vs-model means
     Baker Mayfield         QB  model  15.7  market  18.7 ( -16%)  actual  11.6  -> model side
 
 === 5. randomness of the stat-prop outcomes (median-adjusted) ===
-  observed hit 53.0% | coin-flip 90% band [46.4, 53.8] (n=491)
-  players with >=3 calls: 50; all-hit 6, all-miss 6 (coin-flip expectation ~6.2 each)
+  observed hit 52.9% | coin-flip 90% band [46.3, 53.7] (n=495)
+  players with >=3 calls: 51; all-hit 6, all-miss 6 (coin-flip expectation ~6.4 each)
 
 
 ##### luck_scorecard.py --week 1

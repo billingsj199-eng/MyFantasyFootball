@@ -1,0 +1,57 @@
+  2019: samples so far 1500
+  2020: samples so far 3151
+  2021: samples so far 5153
+  2022: samples so far 7301
+  2023: samples so far 9931
+  2024: samples so far 12660
+  2025: samples so far 15103
+  skipped: {'weekly': 367, 'team': 215}
+  15103 RB/WR/TE player-weeks; opportunity prior matched 14237 (94.3%): stay 10174, mover 1897, rookie 2166
+  ratio CLAY+OPP / CLAYCAL on matched rows: p10 0.936 median 0.998 p90 1.051
+
+=== Clay + OPP ratio on the weekly Clay prior, graded vs shipped ===
+  ALL RB/WR/TE, every matched player (rows 15103)
+    grid pooled MSE: +0.00:40.477  +0.25:40.473  +0.50:40.473  +0.75:40.477  +1.00:40.483  +1.50:40.505
+    pooled best +0.50 | LOYO MSE 40.3045 vs shipped 40.2988 (+0.01%), years better 5/7, picks [0.5, 0.25, 0.25, 0.25, 0.25, 0.75, 0.25]
+  ALL RB/WR/TE, veterans only adjusted (rows 15103)
+    grid pooled MSE: +0.00:40.477  +0.25:40.472  +0.50:40.469  +0.75:40.470  +1.00:40.473  +1.50:40.487
+    pooled best +0.50 | LOYO MSE 40.3014 vs shipped 40.2988 (+0.01%), years better 5/7, picks [0.75, 0.5, 0.75, 0.5, 0.5, 1.0, 0.5]
+  matched rows only (rows 14237)
+    grid pooled MSE: +0.00:41.029  +0.25:41.026  +0.50:41.026  +0.75:41.029  +1.00:41.036  +1.50:41.059
+    pooled best +0.50 | LOYO MSE 40.8318 vs shipped 40.8300 (+0.00%), years better 5/7, picks [0.5, 0.25, 0.25, 0.25, 0.25, 0.5, 0.25]
+  rookies only (rows 2166)
+    grid pooled MSE: +0.00:38.932  +0.25:38.944  +0.50:38.959  +0.75:38.976  +1.00:38.996  +1.50:39.044
+    pooled best +0.00 | LOYO MSE 38.5859 vs shipped 38.5859 (+0.00%), years better 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  team-changers only (rows 1897)
+    grid pooled MSE: +0.00:31.503  +0.25:31.487  +0.50:31.475  +0.75:31.468  +1.00:31.466  +1.50:31.474
+    pooled best +1.00 | LOYO MSE 33.4246 vs shipped 33.3802 (+0.13%), years better 4/7, picks [0.25, 1.0, 1.0, 1.5, 1.0, 1.5, 1.0]
+  ALL, adjustment only through week 8 (rows 15103)
+    grid pooled MSE: +0.00:40.477  +0.25:40.474  +0.50:40.473  +0.75:40.474  +1.00:40.478  +1.50:40.492
+    pooled best +0.50 | LOYO MSE 40.3007 vs shipped 40.2988 (+0.00%), years better 4/7, picks [0.75, 0.25, 0.5, 0.5, 0.5, 0.75, 0.25]
+  RB every matched player (rows 4492)
+    grid pooled MSE: +0.00:48.868  +0.25:48.866  +0.50:48.866  +0.75:48.868  +1.00:48.871  +1.50:48.882
+    pooled best +0.50 | LOYO MSE 48.4884 vs shipped 48.4770 (+0.02%), years better 1/7, picks [0.5, 0.0, 0.75, 0.25, 0.0, 0.75, 0.5]
+  RB veterans only adjusted (rows 4492)
+    grid pooled MSE: +0.00:48.868  +0.25:48.864  +0.50:48.861  +0.75:48.860  +1.00:48.860  +1.50:48.865
+    pooled best +0.75 | LOYO MSE 48.4740 vs shipped 48.4770 (-0.01%), years better 5/7, picks [1.0, 0.75, 1.0, 0.75, 0.75, 1.0, 0.75]
+  WR every matched player (rows 7202)
+    grid pooled MSE: +0.00:42.093  +0.25:42.089  +0.50:42.090  +0.75:42.095  +1.00:42.104  +1.50:42.136
+    pooled best +0.25 | LOYO MSE 41.7163 vs shipped 41.6966 (+0.05%), years better 4/7, picks [0.5, 0.25, 0.25, 0.25, 0.25, 0.75, 0.0]
+  WR veterans only adjusted (rows 7202)
+    grid pooled MSE: +0.00:42.093  +0.25:42.088  +0.50:42.086  +0.75:42.088  +1.00:42.095  +1.50:42.118
+    pooled best +0.50 | LOYO MSE 41.7193 vs shipped 41.6966 (+0.05%), years better 3/7, picks [0.5, 0.25, 0.5, 0.5, 0.25, 1.0, 0.25]
+  TE every matched player (rows 3409)
+    grid pooled MSE: +0.00:26.434  +0.25:26.429  +0.50:26.426  +0.75:26.427  +1.00:26.429  +1.50:26.441
+    pooled best +0.50 | LOYO MSE 26.5777 vs shipped 26.5694 (+0.03%), years better 4/7, picks [1.0, 1.0, 0.25, 0.5, 0.25, 0.5, 0.75]
+  TE veterans only adjusted (rows 3409)
+    grid pooled MSE: +0.00:26.434  +0.25:26.427  +0.50:26.422  +0.75:26.420  +1.00:26.420  +1.50:26.426
+    pooled best +1.00 | LOYO MSE 26.5667 vs shipped 26.5694 (-0.01%), years better 4/7, picks [1.0, 1.5, 0.75, 0.75, 0.75, 0.75, 1.0]
+
+=== by week band (pooled k=1 vs shipped, all matched rows) ===
+  wk2-4: n 2751 shipped 43.092 k=1 43.155 (+0.15%)
+  wk5-8: n 3331 shipped 39.663 k=1 39.618 (-0.11%)
+  wk9-13: n 4145 shipped 38.403 k=1 38.414 (+0.03%)
+  wk14-18: n 4010 shipped 42.756 k=1 42.758 (+0.00%)
+
+wrote data/opp_weekly_backtest.js: Opportunity prior weekly: 12 LOYO tests on 15103 RB/WR/TE player-weeks; none pass the ship bar
+done

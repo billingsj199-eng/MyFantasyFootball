@@ -2077,3 +2077,19 @@ test season. Log opp_prior_backtest.log; data/opp_prior_backtest.js on ZONES.
   calibration lifted deep backups: Kaleb Johnson .8 -> 2.9). Rookies stay on
   the Clay fallback. Live mean untouched (checked: 0 of 366 changed wk 2).
   Kill: window.SIM_SHADOW_OPP = false. Rerun backtest then build after trades.
+
+## Opportunity prior on the weekly projection (backtest_opp_weekly.py) - 2026-09-16
+
+Does Clay + OPP (the preseason winner) help the WEEKLY projection we ship?
+The Clay per-game number inside the P=5 blend is scaled by the out-of-sample
+season ratio (CLAY+OPP / CLAYCAL)^k, k picked LOYO. 15,103 RB/WR/TE
+player-weeks 2019-25 (94% matched; out-of-sample preds from
+opp_prior_preds.json, written by backtest_opp_prior.py).
+
+- 12 tests, NONE pass: every variant is within +-0.05% of shipped (all
+  +0.01% 5/7, vets +0.01%, movers +0.13%, rookies 0/7, RB vets -0.01% 5/7).
+- Why: the ratio is small (p10 .94, median 1.00, p90 1.05) and the blend
+  gives the season-to-date PPG most of the weight after a few games.
+  Week bands at k=1: wk2-4 +.15%, wk5-8 -.11%, later ~0.
+- Verdict: Clay stays the live base with no OPP adjustment; the opportunity
+  prior stays shadow-only (and is a preseason/draft-season tool).

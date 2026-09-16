@@ -299,6 +299,15 @@ def main():
             preds[k]["SHADOWCAL"] = apply("ROOKIE_OPP", [o]) if r["seg"] == "rookie" else preds[k]["HIST+OPP"]
     P(f"  efficiency lambda picks per test season: {lam_picks}")
 
+    # out-of-sample season predictions per player-season, for the weekly in-season test (backtest_opp_weekly.py)
+    dump = {}
+    for r in rows:
+        pr = preds.get(id(r))
+        if pr and r["Y"] in TEST:
+            dump[f"{r['Y']}|{r['pid']}"] = {"seg": r["seg"], "pos": r["pos"], **{m: (round(pr[m], 4) if pr.get(m) is not None else None) for m in ("CLAY", "CLAYCAL", "OPPCAL", "CLAY+OPP", "SHADOWCAL")}}
+    with open(os.path.join(HERE, "opp_prior_preds.json"), "w", encoding="utf-8") as fh:
+        json.dump(dump, fh)
+    P(f"  wrote opp_prior_preds.json: {len(dump)} player-seasons")
     models = ["CLAY", "CLAYCAL", "HIST", "HISTREG", "HISTCAL", "OPP", "OPPCAL", "HIST+OPP", "CLAY+OPP", "SHADOW", "SHADOWCAL"]
     P("\n=== season PPG prediction, test seasons 2019-2025 (every model on the same rows per segment; parenthesis = seasons better than CALIBRATED Clay) ===")
     test_rows = [r for r in rows if r["Y"] in TEST and r.get("clay") is not None]

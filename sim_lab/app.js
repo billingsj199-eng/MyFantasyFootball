@@ -3963,6 +3963,15 @@
           }).join('') + '</tr>';
         }).join('') + '</tbody></table></div>';
     }
+    var OW = window.SIM_OPPWEEKLY_BT;
+    if (OW && OW.loyo) {
+      html += '<h4 style="margin:14px 0 4px">Opportunity prior on the WEEKLY projection (backtest_opp_weekly.py, ' + esc(OW.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px"><b>' + esc(OW.summary || '') + '</b> The Clay per-game number inside the shipped weekly blend is scaled by the out-of-sample Clay + OPP / calibrated Clay season ratio to the power k (k from the other seasons). ' +
+        'The ratio rarely moves Clay more than 5%, and the blend hands weight to the season-to-date PPG after a few games, so the weekly effect is tiny. Graded on RB / WR / TE player-weeks 2019-25 vs the shipped projection.</p>';
+      html += '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Test</th><th class="l">Form</th><th>n</th><th>best k</th><th>LOYO MSE</th><th>Years better</th><th>Verdict</th></tr></thead><tbody>' +
+        OW.loyo.map(function (r) { var col = r.verdict === 'PASS' ? 'var(--acc)' : (r.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(r.pos) + '</td><td class="l dim" style="font-size:11px">' + esc(r.family) + '</td><td>' + r.n + '</td><td>' + r.best.toFixed(2) + '</td><td style="color:' + col + '">' + (r.pct >= 0 ? '+' : '') + r.pct.toFixed(2) + '%</td><td>' + r.wins + '/' + r.years + '</td><td style="color:' + col + '"><b>' + r.verdict + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+      if (OW.bands) html += '<p class="dim" style="font-size:11px;margin:6px 0">By week band at k = 1: ' + OW.bands.map(function (b) { return esc(b.band) + ' ' + (b.pct >= 0 ? '+' : '') + b.pct.toFixed(2) + '% (n ' + b.n + ')'; }).join(' \u00b7 ') + '.</p>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {

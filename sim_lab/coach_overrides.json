@@ -1,5 +1,43 @@
 {
-  "_comment": "Playcaller overrides when the HEAD COACH calls plays (PFR only lists coordinators). Keys: season -> team -> oc_play / dc_play. Edit by hand; build_scheme.py reads it.",
-  "2026": {},
-  "2025": {}
+  "_comment": "Playcaller overrides when the HEAD COACH calls plays (PFR only lists coordinators). Keys: season -> team -> oc_play / dc_play. Edit by hand; build_scheme.py and scripts/build_coach_profiles.py read it. Jack 2026-09-15: McVay calls LAR plays, Shanahan SF, Reid KC - every season they are head coach.",
+  "2019": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  },
+  "2020": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  },
+  "2021": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  },
+  "2022": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  },
+  "2023": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  },
+  "2024": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  },
+  "2025": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  },
+  "2026": {
+    "LAR": { "oc_play": "Sean McVay" },
+    "SF": { "oc_play": "Kyle Shanahan" },
+    "KC": { "oc_play": "Andy Reid" }
+  }
 }

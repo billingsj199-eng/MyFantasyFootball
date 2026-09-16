@@ -63222,6 +63222,425 @@ Rules:
 // lazy per season via window._ensureAdvStats). Built by scripts/build_adv_stats.py
 // from PFF Premium season + weekly facets, nflverse play-by-play and snap counts.
 // Column keys MUST match QB_F / RB_F / REC_F in that script.
+// === RESEARCH: shared scatterplot (canvas + PNG download) ===
+// One drawer for the Advanced Stats and Coach Profiles tables (Jack 2026-09-16: "make a
+// scatterplot with the players' names and team logo for a specific stat ... download the
+// visual", then "add the scatter to the coach view too"). The table module supplies rows,
+// columns, labels and identity through cfg; this owns the panel, X / Y pickers, logos, hover,
+// click and the PNG. Canvas so the download is the picture on screen at 2x; ESPN logos load
+// crossOrigin so toDataURL stays clean (a tainted canvas falls back to dots). Dashed lines =
+// averages (quadrants), solid = least-squares fit with r; cfg.same() adds a y = x reference.
+const _rsLogoImg = {};   // team abbr -> HTMLImageElement | null (failed) | Promise (loading)
+function _rsLogoUrl(tm) {
+  if (typeof TEAM_ABBR_MAP === 'undefined' || typeof TEAM_LOGO_IDS === 'undefined') return '';
+  const full = Object.keys(TEAM_ABBR_MAP).find(f => TEAM_ABBR_MAP[f] === tm);
+  const id = full && TEAM_LOGO_IDS[full];
+  return id ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png' : '';
+}
+// resolves once every team's logo has loaded or failed
+function _rsLoadLogos(tms) {
+  return Promise.all(tms.map(tm => {
+    if (_rsLogoImg[tm] !== undefined) return _rsLogoImg[tm];
+    const url = _rsLogoUrl(tm);
+    if (!url) { _rsLogoImg[tm] = null; return null; }
+    const p = new Promise(res => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const to = setTimeout(() => res(null), 8000);
+      img.onload = () => { clearTimeout(to); res(img); };
+      img.onerror = () => { clearTimeout(to); res(null); };
+      img.src = url;
+    }).then(img => { _rsLogoImg[tm] = img; return img; });
+    _rsLogoImg[tm] = p;
+    return p;
+  }));
+}
+// cfg: pfx (element id prefix), host / btn (element ids), store (localStorage key), group() (axis
+// memory key, e.g. the position), cols() -> [{k,l,g,d,lo,...}], defaults() -> [xk, yk],
+// data() -> { rows, pg, val(r, col) } | null, label(col, pg), dec(col, pg), short(r), tm(r),
+// tipHead(r) (html), canOpen(r), open(r), openNote(), same(cx, cy) -> label | null, sameNote,
+// noun(), title() -> { main, sub }, file(), head() / syncHead() / onChange(target) for extras.
+function _rsScatter(cfg) {
+  const LABS = ['both', 'logo', 'name', 'dot'];
+  const el = s => document.getElementById(cfg.pfx + s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  let on = false, ax = {}, lab = 'both', pts = [], seq = 0, hover = -1;
+  try { on = localStorage.getItem(cfg.store) === '1'; } catch (e) { /* storage blocked */ }
+  try {
+    const s = JSON.parse(localStorage.getItem(cfg.store + 'Axes') || '{}') || {};
+    ax = s.ax || {};
+    if (LABS.indexOf(s.lab) >= 0) lab = s.lab;
+  } catch (e) { ax = {}; }
+  function save() {
+    try { localStorage.setItem(cfg.store, on ? '1' : '0'); localStorage.setItem(cfg.store + 'Axes', JSON.stringify({ ax: ax, lab: lab })); } catch (e) { /* private mode */ }
+  }
+  function axes() {
+    const cs = cfg.cols();
+    const has = k => cs.some(c => c.k === k);
+    const a = ax[cfg.group()] || [], def = cfg.defaults() || [];
+    let x = has(a[0]) ? a[0] : def[0], y = has(a[1]) ? a[1] : def[1];
+    if (!has(x)) x = cs[0].k;
+    if (!has(y)) y = (cs.find(c => c.k !== x) || cs[0]).k;
+    return [x, y];
+  }
+  function col(k) { return cfg.cols().find(c => c.k === k) || { k: k, l: k, g: '', d: 1 }; }
+  // the dataset the chart plots: table rows with both axis values
+  function data() {
+    const T = cfg.data();
+    if (!T || !T.rows.length) return null;
+    const a = axes(), cx = col(a[0]), cy = col(a[1]);
+    const out = [];
+    T.rows.forEach(r => {
+      const x = T.val(r, cx), y = T.val(r, cy);
+      if (x == null || y == null || !isFinite(x) || !isFinite(y)) return;
+      out.push({ r: r, x: +x, y: +y });
+    });
+    return { pts: out, cx: cx, cy: cy, pg: T.pg };
+  }
+  function ticks(lo, hi, n) {
+    const raw = (hi - lo) / n, p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw) || 10 * p;
+    const t = [];
+    for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(8));
+    return t;
+  }
+  function theme(host) {
+    const cs = getComputedStyle(host);
+    const v = (name, fb) => (cs.getPropertyValue(name) || '').trim() || fb;
+    return { bg: v('--surface', '#111827'), border: v('--border', '#2a3a58'), text: v('--text', '#e2e8f0'), text2: v('--text2', '#8899b4'),
+      text3: v('--text3', '#64748b'), accent: v('--accent', '#f59e0b') };
+  }
+  // draws the chart into ctx at logical W x H (scale applied by the caller); returns hit boxes + r
+  function draw(ctx, W, H, D, th, labMode) {
+    const P = D.pts, cx = D.cx, cy = D.cy, pg = D.pg;
+    const n = P.length;
+    const big = W >= 1000, F = big ? 1.35 : 1;   // export size gets bigger type
+    const fs = Math.round(11 * F), TITLE = Math.round(20 * F), SUB = Math.round(11 * F);
+    const PADL = Math.round(58 * F), PADR = Math.round(22 * F), PADT = Math.round(58 * F), PADB = Math.round(52 * F);
+    const PW = W - PADL - PADR, PH = H - PADT - PADB;
+    ctx.fillStyle = th.bg;
+    ctx.fillRect(0, 0, W, H);
+    const xs = P.map(p => p.x), ys = P.map(p => p.y);
+    let xlo = Math.min(...xs), xhi = Math.max(...xs), ylo = Math.min(...ys), yhi = Math.max(...ys);
+    const padD = (lo, hi) => { const s = hi - lo || Math.abs(hi) || 1; return [lo - s * 0.08, hi + s * 0.08]; };
+    [xlo, xhi] = padD(xlo, xhi); [ylo, yhi] = padD(ylo, yhi);
+    const X = v => PADL + (v - xlo) / (xhi - xlo) * PW, Y = v => PADT + (yhi - v) / (yhi - ylo) * PH;
+    const dx = cfg.dec(cx, pg), dy = cfg.dec(cy, pg);
+    const fx = v => Number(v).toFixed(dx), fy = v => Number(v).toFixed(dy);
+    const SANS = '"DM Sans", system-ui, sans-serif', BEB = '"Bebas Neue", Impact, "Arial Narrow", sans-serif';
+    // grid + ticks
+    ctx.lineWidth = 1;
+    ctx.font = fs + 'px ' + SANS;
+    ctx.strokeStyle = th.border;
+    ctx.fillStyle = th.text3;
+    ctx.textAlign = 'end'; ctx.textBaseline = 'middle';
+    ticks(ylo, yhi, 6).forEach(t => {
+      const y = Y(t);
+      ctx.beginPath(); ctx.moveTo(PADL, y); ctx.lineTo(W - PADR, y); ctx.stroke();
+      ctx.fillText(fy(t), PADL - 8 * F, y);
+    });
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ticks(xlo, xhi, Math.max(4, Math.min(8, Math.round(PW / (70 * F))))).forEach(t => {
+      const x = X(t);
+      ctx.beginPath(); ctx.moveTo(x, PADT); ctx.lineTo(x, PADT + PH); ctx.stroke();
+      ctx.fillText(fx(t), x, PADT + PH + 6 * F);
+    });
+    // axis titles
+    const xl = cfg.label(cx, pg), yl = cfg.label(cy, pg);
+    ctx.fillStyle = th.text2;
+    ctx.font = '600 ' + fs + 'px ' + SANS;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(xl + (cx.lo ? ' (lower is better)' : ''), PADL + PW / 2, H - 12 * F);
+    ctx.save();
+    ctx.translate(14 * F, PADT + PH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText(yl + (cy.lo ? ' (lower is better)' : ''), 0, 0);
+    ctx.restore();
+    // averages (quadrants)
+    const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+    ctx.save();
+    ctx.setLineDash([4 * F, 4 * F]);
+    ctx.strokeStyle = th.text3; ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.moveTo(X(mx), PADT); ctx.lineTo(X(mx), PADT + PH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PADL, Y(my)); ctx.lineTo(W - PADR, Y(my)); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = th.text3;
+    ctx.font = Math.round(10 * F) + 'px ' + SANS;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText('avg ' + fx(mx), X(mx) + 4 * F, PADT + PH - 3 * F);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('avg ' + fy(my), W - PADR - 4 * F, Y(my) - 3 * F);
+    // y = x when the two axes share a scale (FPTS vs xFP)
+    const sameLbl = cfg.same ? cfg.same(cx, cy) : null;
+    if (sameLbl) {
+      const lo = Math.max(xlo, ylo), hi = Math.min(xhi, yhi);
+      if (hi > lo) {
+        ctx.save();
+        ctx.setLineDash([2 * F, 5 * F]);
+        ctx.strokeStyle = th.text2; ctx.globalAlpha = 0.8;
+        ctx.beginPath(); ctx.moveTo(X(lo), Y(lo)); ctx.lineTo(X(hi), Y(hi)); ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle = th.text2;
+        ctx.font = Math.round(10 * F) + 'px ' + SANS;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.translate(X(hi), Y(hi)); ctx.rotate(-Math.atan2(PH / (yhi - ylo), PW / (xhi - xlo)));
+        ctx.fillText(sameLbl, -70 * F, -4 * F);
+        ctx.restore();
+      }
+    }
+    // least-squares fit + r
+    let r = null;
+    if (n >= 3) {
+      let sxx = 0, syy = 0, sxy = 0;
+      P.forEach(p => { sxx += (p.x - mx) * (p.x - mx); syy += (p.y - my) * (p.y - my); sxy += (p.x - mx) * (p.y - my); });
+      if (sxx > 0 && syy > 0) {
+        r = sxy / Math.sqrt(sxx * syy);
+        const b = sxy / sxx, a = my - b * mx;
+        const yAt = x => a + b * x;
+        let x0 = xlo, x1 = xhi;   // clip the fit to the plot box
+        const inY = x => yAt(x) >= ylo && yAt(x) <= yhi;
+        if (!inY(x0)) x0 = b > 0 ? (ylo - a) / b : (yhi - a) / b;
+        if (!inY(x1)) x1 = b > 0 ? (yhi - a) / b : (ylo - a) / b;
+        if (x1 > x0) {
+          ctx.save();
+          ctx.strokeStyle = th.accent; ctx.lineWidth = 1.5 * F; ctx.globalAlpha = 0.75;
+          ctx.beginPath(); ctx.moveTo(X(x0), Y(yAt(x0))); ctx.lineTo(X(x1), Y(yAt(x1))); ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+    // plot frame
+    ctx.strokeStyle = th.border;
+    ctx.strokeRect(PADL, PADT, PW, PH);
+    // markers: crowded boards (80+ receivers) get smaller logos so the middle still reads
+    const LOGO = Math.round((big ? (n > 60 ? 26 : 30) : (n > 60 ? 18 : 22)) * F), R = (n > 60 ? 4 : 5) * F;
+    const useLogo = labMode === 'both' || labMode === 'logo';
+    const hits = [];
+    ctx.save();
+    ctx.beginPath(); ctx.rect(PADL - LOGO, PADT - LOGO, PW + 2 * LOGO, PH + 2 * LOGO); ctx.clip();
+    P.forEach((p, i) => {
+      const px = X(p.x), py = Y(p.y);
+      const img = useLogo ? _rsLogoImg[cfg.tm(p.r)] : null;
+      if (img && !(img instanceof Promise)) {
+        ctx.drawImage(img, px - LOGO / 2, py - LOGO / 2, LOGO, LOGO);
+        hits.push({ i: i, x: px, y: py, hw: LOGO / 2 });
+      } else {
+        ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2);
+        ctx.fillStyle = th.accent; ctx.fill();
+        ctx.lineWidth = 1.5 * F; ctx.strokeStyle = th.bg; ctx.stroke();
+        hits.push({ i: i, x: px, y: py, hw: R + 2 });
+      }
+    });
+    ctx.restore();
+    // name labels: extremes first (they carry the story), then anything that still fits
+    if (labMode === 'both' || labMode === 'name') {
+      const sx = (xhi - xlo) || 1, sy = (yhi - ylo) || 1;
+      const order = P.map((p, i) => ({ i: i, d: Math.abs(p.x - mx) / sx + Math.abs(p.y - my) / sy })).sort((a, b) => b.d - a.d);
+      const placed = hits.map(h => ({ x: h.x - h.hw, y: h.y - h.hw, w: 2 * h.hw, h: 2 * h.hw }));
+      const clash = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      ctx.font = '500 ' + fs + 'px ' + SANS;
+      ctx.fillStyle = th.text;
+      ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+      order.forEach(o => {
+        const p = P[o.i], h = hits[o.i];
+        const t = cfg.short(p.r), tw = ctx.measureText(t).width, tht = fs + 2, g = 3 * F;
+        const cands = [
+          { x: h.x + h.hw + g, y: h.y - tht / 2 }, { x: h.x - h.hw - g - tw, y: h.y - tht / 2 },
+          { x: h.x - tw / 2, y: h.y - h.hw - g - tht }, { x: h.x - tw / 2, y: h.y + h.hw + g }
+        ];
+        const box = cands.map(c => ({ x: c.x - 1, y: c.y, w: tw + 2, h: tht })).find(b =>
+          b.x >= 2 && b.x + b.w <= W - 2 && b.y >= PADT - tht && b.y + b.h <= H - PADB + tht && !placed.some(q => clash(b, q)));
+        if (!box) return;
+        placed.push(box);
+        ctx.fillText(t, box.x + 1, box.y + 1);
+      });
+    }
+    // title + caption + watermark
+    const T = cfg.title();
+    ctx.fillStyle = th.text;
+    ctx.font = TITLE + 'px ' + BEB;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    try { ctx.letterSpacing = '1px'; } catch (e) { /* older canvas */ }
+    ctx.fillText((T.main + ' · ' + yl + ' vs ' + xl).toUpperCase(), PADL, 26 * F);
+    try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
+    ctx.fillStyle = th.text3;
+    ctx.font = SUB + 'px ' + SANS;
+    ctx.fillText((T.sub ? T.sub + ' · ' : '') + n + ' ' + cfg.noun() + (r != null ? ' · r = ' + r.toFixed(2) : '') + ' · dashed = averages · solid = trend', PADL, 44 * F);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = th.text3;
+    ctx.font = Math.round(10 * F) + 'px ' + BEB;
+    try { ctx.letterSpacing = '1.5px'; } catch (e) { /* older canvas */ }
+    ctx.fillText('MYFANTASYFOOTBALL.ORG', W - PADR, H - 12 * F);
+    try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
+    return { hits: hits, r: r };
+  }
+  function render() {
+    const host = document.getElementById(cfg.host), btn = document.getElementById(cfg.btn);
+    if (!host) return;
+    if (btn) { btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+    const D = on ? data() : null;
+    if (!on || !D) { host.hidden = true; host.innerHTML = ''; pts = []; return; }
+    host.hidden = false;
+    const pg = D.pg;
+    const opt = sel => cfg.cols().map(c => '<option value="' + c.k + '"' + (c.k === sel ? ' selected' : '') + '>' +
+      esc((c.g ? c.g + ' · ' : '') + (c.g === 'Board' ? c.l : cfg.label(c, pg))) + '</option>').join('');
+    if (!el('Canvas')) {
+      host.innerHTML = '<div class="rs-co-head"><span class="rs-co-title">Scatter</span>' +
+        '<label class="rs-room-pick">X <select id="' + cfg.pfx + 'X" class="rs-select"></select></label>' +
+        '<label class="rs-room-pick">Y <select id="' + cfg.pfx + 'Y" class="rs-select"></select></label>' +
+        '<label class="rs-room-pick">Show <select id="' + cfg.pfx + 'Lab" class="rs-select"><option value="both">Logos + names</option><option value="logo">Logos</option><option value="name">Names</option><option value="dot">Dots</option></select></label>' +
+        (cfg.head ? cfg.head() : '') +
+        '<button type="button" class="rs-co-close rs-sc-btn" id="' + cfg.pfx + 'Swap" title="Swap the axes">Swap</button>' +
+        '<button type="button" class="rs-co-close rs-sc-btn rs-sc-dl" id="' + cfg.pfx + 'Png" title="Download this chart as a 2x PNG">Download PNG</button>' +
+        '<button type="button" class="rs-co-close rs-sc-hide" id="' + cfg.pfx + 'Hide">Hide chart</button></div>' +
+        '<div class="rs-sc-wrap"><canvas id="' + cfg.pfx + 'Canvas" role="img"></canvas><div class="rs-sc-tip" id="' + cfg.pfx + 'Tip" hidden></div></div>' +
+        '<div class="rs-co-legend"><span class="rs-co-sub" id="' + cfg.pfx + 'Cap"></span></div>';
+    }
+    el('X').innerHTML = opt(D.cx.k);
+    el('Y').innerHTML = opt(D.cy.k);
+    el('Lab').value = lab;
+    if (cfg.syncHead) cfg.syncHead();
+    const cap = el('Cap');
+    if (!D.pts.length) {
+      cap.textContent = 'No rows have both ' + cfg.label(D.cx, pg) + ' and ' + cfg.label(D.cy, pg) + '.';
+      el('Canvas').hidden = true; pts = [];
+      return;
+    }
+    el('Canvas').hidden = false;
+    const mySeq = ++seq;
+    const go = () => {
+      if (mySeq !== seq || !el('Canvas')) return;
+      const canvas = el('Canvas'), tip = el('Tip');
+      if (tip) tip.hidden = true;   // a redraw moves the points under a stale tooltip
+      hover = -1;
+      const w = Math.max(320, host.clientWidth - 30), h = Math.round(Math.max(300, Math.min(620, w * 0.62)));
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const out = draw(ctx, w, h, D, theme(host), lab);
+      pts = out.hits.map(hh => Object.assign({ p: D.pts[hh.i] }, hh));
+      canvas.setAttribute('aria-label', cfg.title().main + ' ' + cfg.label(D.cy, pg) + ' vs ' + cfg.label(D.cx, pg));
+      const sameLbl = cfg.same ? cfg.same(D.cx, D.cy) : null;
+      cap.textContent = D.pts.length + ' ' + cfg.noun() + ' from the table below (its filters apply)' +
+        (out.r != null ? ' · r = ' + out.r.toFixed(2) : '') + ' · dashed lines = averages, solid = least-squares trend' +
+        (sameLbl && cfg.sameNote ? ', ' + cfg.sameNote : '') +
+        ' · hover a point for its values' + (cfg.openNote ? cfg.openNote() : '') + ' · names drop where they would overlap (the PNG has more room)';
+    };
+    go();
+    if (lab === 'both' || lab === 'logo') {
+      const need = Array.from(new Set(D.pts.map(p => cfg.tm(p.r)).filter(Boolean))).filter(t => _rsLogoImg[t] === undefined || _rsLogoImg[t] instanceof Promise);
+      if (need.length) _rsLoadLogos(need).then(go);
+    }
+  }
+  function exportPng() {
+    const D = data();
+    const host = document.getElementById(cfg.host);
+    if (!D || !D.pts.length || !host) return;
+    const btn = el('Png');
+    if (btn) { btn.disabled = true; btn.textContent = 'Rendering…'; }
+    const tms = Array.from(new Set(D.pts.map(p => cfg.tm(p.r)).filter(Boolean)));
+    const ready = (lab === 'both' || lab === 'logo') ? _rsLoadLogos(tms) : Promise.resolve();
+    ready.then(() => {
+      const W = 1400, H = 900, S = 2;
+      const c = document.createElement('canvas');
+      c.width = W * S; c.height = H * S;
+      const ctx = c.getContext('2d');
+      ctx.setTransform(S, 0, 0, S, 0, 0);
+      draw(ctx, W, H, D, theme(host), lab);
+      const clean = s => String(s).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      const name = cfg.file() + '-' + clean(cfg.label(D.cy, D.pg)) + '-vs-' + clean(cfg.label(D.cx, D.pg)) + '.png';
+      const send = () => {
+        const a = document.createElement('a');
+        a.href = c.toDataURL('image/png');
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      };
+      try {
+        send();
+        if (typeof toast === 'function') toast('Downloaded ' + name);
+      } catch (e) {
+        // a logo that came back without CORS headers taints the canvas: redraw with dots
+        lab = 'dot';
+        const ctx2 = c.getContext('2d');
+        ctx2.setTransform(S, 0, 0, S, 0, 0);
+        draw(ctx2, W, H, D, theme(host), 'dot');
+        send();
+        if (typeof toast === 'function') toast('Logos blocked the download; saved with dots');
+      }
+      if (btn) { btn.disabled = false; btn.textContent = 'Download PNG'; }
+    });
+  }
+  function wire() {
+    const host = document.getElementById(cfg.host), btn = document.getElementById(cfg.btn);
+    if (!host || !btn) return;
+    btn.addEventListener('click', () => { on = !on; save(); render(); if (on) host.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    host.addEventListener('click', e => {
+      if (e.target.closest('#' + cfg.pfx + 'Hide')) { on = false; save(); render(); return; }
+      if (e.target.closest('#' + cfg.pfx + 'Png')) { exportPng(); return; }
+      if (e.target.closest('#' + cfg.pfx + 'Swap')) {
+        const a = axes();
+        ax[cfg.group()] = [a[1], a[0]];
+        save(); render();
+        return;
+      }
+      if (e.target.closest('#' + cfg.pfx + 'Canvas') && hover >= 0) {
+        const p = pts[hover] && pts[hover].p;
+        if (p && cfg.canOpen(p.r)) cfg.open(p.r);
+      }
+    });
+    host.addEventListener('change', e => {
+      const t = e.target;
+      if (t.id === cfg.pfx + 'X' || t.id === cfg.pfx + 'Y') {
+        const a = axes();
+        if (t.id === cfg.pfx + 'X') a[0] = t.value; else a[1] = t.value;
+        ax[cfg.group()] = a;
+        save(); render();
+      } else if (t.id === cfg.pfx + 'Lab') {
+        lab = t.value;
+        save(); render();
+      } else if (cfg.onChange && cfg.onChange(t)) {
+        render();
+      }
+    });
+    host.addEventListener('mousemove', e => {
+      const canvas = e.target.closest('#' + cfg.pfx + 'Canvas'), tip = el('Tip');
+      if (!canvas || !tip) return;
+      const b = canvas.getBoundingClientRect();
+      const x = e.clientX - b.left, y = e.clientY - b.top;
+      let best = -1, bd = 1e9;
+      pts.forEach((h, i) => {
+        const d = Math.hypot(h.x - x, h.y - y);
+        if (d <= Math.max(14, h.hw + 2) && d < bd) { bd = d; best = i; }
+      });
+      if (best !== hover) {
+        hover = best;
+        canvas.style.cursor = best >= 0 && cfg.canOpen(pts[best].p.r) ? 'pointer' : 'default';
+      }
+      if (best < 0) { tip.hidden = true; return; }
+      const D = data();
+      if (!D) return;
+      const p = pts[best].p;
+      tip.innerHTML = cfg.tipHead(p.r) +
+        '<br>' + esc(cfg.label(D.cx, D.pg)) + ': ' + Number(p.x).toFixed(cfg.dec(D.cx, D.pg)) +
+        '<br>' + esc(cfg.label(D.cy, D.pg)) + ': ' + Number(p.y).toFixed(cfg.dec(D.cy, D.pg));
+      tip.hidden = false;
+      const wrap = canvas.parentElement.getBoundingClientRect();
+      let tx = e.clientX - wrap.left + 14, ty = e.clientY - wrap.top + 14;
+      if (tx + tip.offsetWidth > wrap.width - 4) tx = e.clientX - wrap.left - tip.offsetWidth - 14;
+      if (ty + tip.offsetHeight > wrap.height - 4) ty = e.clientY - wrap.top - tip.offsetHeight - 14;
+      tip.style.left = Math.max(0, tx) + 'px'; tip.style.top = Math.max(0, ty) + 'px';
+    });
+    host.addEventListener('mouseleave', () => { const tip = el('Tip'); if (tip) tip.hidden = true; hover = -1; });
+    let rsz = null;
+    window.addEventListener('resize', () => { if (host.hidden) return; clearTimeout(rsz); rsz = setTimeout(render, 150); });
+  }
+  return { render: render, wire: wire, isOn: () => on };
+}
+
 (function _advStatsModule() {
   const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019];
   // [row key the min filter reads, its label, default per week played]
@@ -63667,20 +64086,10 @@ Rules:
   }
   // --- scatterplot (Jack 2026-09-16: "make a scatterplot with the players' names and team
   // logo for a specific stat, e.g. fantasy points over xFP for QBs, and download the visual") ---
-  // Any two columns of the position table, for exactly the rows the table shows (same season /
-  // weeks / team / minimum / search, Per game vs Totals, scoring format). Drawn on a canvas so
-  // the PNG download is the picture on screen at 2x; ESPN logos load crossOrigin so the canvas
-  // stays clean for toDataURL. Dashed lines = averages (quadrants), solid = least-squares fit;
-  // FPTS vs xFP also draws the y = x line (above it = scored more than opportunity implies).
+  // The drawer is _rsScatter (shared with Coach Profiles); this feeds it the table rows plus
+  // the Board group. Any two columns, for exactly the rows the table shows (same seasons /
+  // weeks / teams / minimum / search, Per game vs Totals, scoring format).
   const SC_DEF = { QB: ['xfpt', 'fpt'], RB: ['xfpt', 'fpt'], WR: ['xfpt', 'fpt'], TE: ['xfpt', 'fpt'], TM: ['proe', 'epa'] };
-  let _scOn = false, _scAx = {}, _scLab = 'both', _scPts = [], _scSeq = 0, _scHover = -1;
-  const _scImg = {};   // team abbr -> HTMLImageElement | null (failed) | Promise (loading)
-  try { _scOn = localStorage.getItem('rsAdvScatter') === '1'; } catch (e) { /* storage blocked */ }
-  try {
-    const s = JSON.parse(localStorage.getItem('rsAdvScatterAxes') || '{}') || {};
-    _scAx = s.ax || {};
-    if (['both', 'logo', 'name', 'dot'].indexOf(s.lab) >= 0) _scLab = s.lab;
-  } catch (e) { _scAx = {}; }
   // Board group (Jack 2026-09-16): ADP, consensus / Jack's / my rank and JM score from the site
   // database, matched to the stats rows by name, for the rankings page's current format
   // (redraft / dynasty / ...). My rank is a toggle because a virgin "mine" board just mirrors
@@ -63702,7 +64111,6 @@ Rules:
     cols.push({ k: 'b_jm', l: 'JM score', g: 'Board', d: 0, t: 'JM prospect model score 0-100 (draft capital, production, age, athleticism, film ...)' });
     return cols;
   }
-  function _scAllCols() { return COLS[_pos].concat(_scBoardCols()); }
   function _scBoardCtx() {
     if (_pos === 'TM' || typeof D === 'undefined' || !Array.isArray(D)) return null;
     const mode = _scMode();
@@ -63735,434 +64143,63 @@ Rules:
       if (D.some(d => d._pmJm != null) || ++n > 40) { clearInterval(_scJmWait); _scJmWait = 0; _scatter(); }
     }, 500);
   }
-  function _scSave() {
-    try {
-      localStorage.setItem('rsAdvScatter', _scOn ? '1' : '0');
-      localStorage.setItem('rsAdvScatterAxes', JSON.stringify({ ax: _scAx, lab: _scLab }));
-      localStorage.setItem('rsAdvScatterMine', _scMine ? '1' : '0');
-    } catch (e) { /* private mode */ }
-  }
-  function _scAxes() {
-    const cols = _scAllCols();
-    const has = k => cols.some(col => col.k === k && col.k !== 'g');
-    const a = _scAx[_pos] || [];
-    let x = has(a[0]) ? a[0] : SC_DEF[_pos][0], y = has(a[1]) ? a[1] : SC_DEF[_pos][1];
-    if (!has(x)) x = (cols.find(col => col.k !== 'g') || cols[0]).k;
-    if (!has(y)) y = (cols.find(col => col.k !== 'g' && col.k !== x) || cols[0]).k;
-    return [x, y];
-  }
-  function _scCol(k) { return _scAllCols().find(col => col.k === k) || { k: k, l: k, g: '', d: 1, dg: 1 }; }
   // axis label as the table header reads it (Per game swaps FPTS -> FP/G); FPTS / xFP name the scoring
   function _scLabel(col, pg) {
     const l = pg && col.cnt ? col.lg : col.l;
     if (col.g === 'Board') return l + ' (' + MODE_LABEL[_scMode()] + ')';
     return (col.k === 'fpt' || col.k === 'xfpt') && _pos !== 'TM' ? l + ' (' + FMT_NAME[_fmt] + ')' : l;
   }
-  function _scDec(col, pg) { return pg && col.cnt ? col.dg : col.d; }
-  function _scLogoUrl(tm) {
-    if (typeof TEAM_ABBR_MAP === 'undefined' || typeof TEAM_LOGO_IDS === 'undefined') return '';
-    const full = Object.keys(TEAM_ABBR_MAP).find(f => TEAM_ABBR_MAP[f] === tm);
-    const id = full && TEAM_LOGO_IDS[full];
-    return id ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png' : '';
-  }
-  // resolves once every team's logo has loaded or failed (failed teams fall back to a dot)
-  function _scLoadLogos(tms) {
-    return Promise.all(tms.map(tm => {
-      if (_scImg[tm] !== undefined) return _scImg[tm];
-      const url = _scLogoUrl(tm);
-      if (!url) { _scImg[tm] = null; return null; }
-      const p = new Promise(res => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        const to = setTimeout(() => res(null), 8000);
-        img.onload = () => { clearTimeout(to); res(img); };
-        img.onerror = () => { clearTimeout(to); res(null); };
-        img.src = url;
-      }).then(img => { _scImg[tm] = img; return img; });
-      _scImg[tm] = p;
-      return p;
-    }));
-  }
-  function _scTicks(lo, hi, n) {
-    const raw = (hi - lo) / n, p = Math.pow(10, Math.floor(Math.log10(raw)));
-    const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw) || 10 * p;
-    const t = [];
-    for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(8));
-    return t;
-  }
-  function _scTheme(host) {
-    const cs = getComputedStyle(host);
-    const v = (name, fb) => (cs.getPropertyValue(name) || '').trim() || fb;
-    return { bg: v('--surface', '#111827'), border: v('--border', '#2a3a58'), text: v('--text', '#e2e8f0'), text2: v('--text2', '#8899b4'),
-      text3: v('--text3', '#64748b'), accent: v('--accent', '#f59e0b'), blue: v('--viz-1', '#3987e5') };
-  }
   function _scShort(r) {
     if (_pos === 'TM') return r.tm || r.n;
     const parts = String(r.n || '').split(' ');
     return parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : r.n;
   }
-  // the dataset the chart plots: table rows with both axis values (also what the CSV twin lists)
-  function _scData() {
-    const L = _last;
-    if (!L || !L.rows.length) return null;
-    const ax = _scAxes(), cx = _scCol(ax[0]), cy = _scCol(ax[1]);
-    if (cx.k === 'b_jm' || cy.k === 'b_jm') _scEnsureJm();
-    const ctx = cx.g === 'Board' || cy.g === 'Board' ? _scBoardCtx() : null;
-    const get = (r, col) => (col.g === 'Board' ? _scBoardVal(ctx, r, col.k) : L.val(r, col.k));
-    const pts = [];
-    L.rows.forEach(r => {
-      const x = get(r, cx), y = get(r, cy);
-      if (x == null || y == null || !isFinite(x) || !isFinite(y)) return;
-      pts.push({ r: r, x: +x, y: +y });
-    });
-    return { pts: pts, cx: cx, cy: cy, pg: L.pg };
-  }
-  // draws the chart into ctx at logical W x H (scale applied by the caller); returns point hit boxes
-  function _scDraw(ctx, W, H, D, th, lab) {
-    const pts = D.pts, cx = D.cx, cy = D.cy, pg = D.pg;
-    const n = pts.length;
-    const big = W >= 1000, F = big ? 1.35 : 1;   // export size gets bigger type
-    const fs = Math.round(11 * F), TITLE = Math.round(20 * F), SUB = Math.round(11 * F);
-    const PADL = Math.round(58 * F), PADR = Math.round(22 * F), PADT = Math.round(58 * F), PADB = Math.round(52 * F);
-    const PW = W - PADL - PADR, PH = H - PADT - PADB;
-    ctx.fillStyle = th.bg;
-    ctx.fillRect(0, 0, W, H);
-    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
-    let xlo = Math.min(...xs), xhi = Math.max(...xs), ylo = Math.min(...ys), yhi = Math.max(...ys);
-    const padD = (lo, hi) => { const s = hi - lo || Math.abs(hi) || 1; return [lo - s * 0.08, hi + s * 0.08]; };
-    [xlo, xhi] = padD(xlo, xhi); [ylo, yhi] = padD(ylo, yhi);
-    const X = v => PADL + (v - xlo) / (xhi - xlo) * PW, Y = v => PADT + (yhi - v) / (yhi - ylo) * PH;
-    const dx = _scDec(cx, pg), dy = _scDec(cy, pg);
-    const fx = v => Number(v).toFixed(dx), fy = v => Number(v).toFixed(dy);
-    const SANS = '"DM Sans", system-ui, sans-serif', BEB = '"Bebas Neue", Impact, "Arial Narrow", sans-serif';
-    // grid + ticks
-    ctx.lineWidth = 1;
-    ctx.font = fs + 'px ' + SANS;
-    ctx.strokeStyle = th.border;
-    ctx.fillStyle = th.text3;
-    ctx.textAlign = 'end'; ctx.textBaseline = 'middle';
-    _scTicks(ylo, yhi, 6).forEach(t => {
-      const y = Y(t);
-      ctx.beginPath(); ctx.moveTo(PADL, y); ctx.lineTo(W - PADR, y); ctx.stroke();
-      ctx.fillText(fy(t), PADL - 8 * F, y);
-    });
-    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    _scTicks(xlo, xhi, Math.max(4, Math.min(8, Math.round(PW / (70 * F))))).forEach(t => {
-      const x = X(t);
-      ctx.beginPath(); ctx.moveTo(x, PADT); ctx.lineTo(x, PADT + PH); ctx.stroke();
-      ctx.fillText(fx(t), x, PADT + PH + 6 * F);
-    });
-    // axis titles
-    const xl = _scLabel(cx, pg), yl = _scLabel(cy, pg);
-    ctx.fillStyle = th.text2;
-    ctx.font = '600 ' + fs + 'px ' + SANS;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    ctx.fillText(xl + (cx.lo ? ' (lower is better)' : ''), PADL + PW / 2, H - 12 * F);
-    ctx.save();
-    ctx.translate(14 * F, PADT + PH / 2); ctx.rotate(-Math.PI / 2);
-    ctx.fillText(yl + (cy.lo ? ' (lower is better)' : ''), 0, 0);
-    ctx.restore();
-    // averages (quadrants)
-    const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
-    ctx.save();
-    ctx.setLineDash([4 * F, 4 * F]);
-    ctx.strokeStyle = th.text3; ctx.globalAlpha = 0.7;
-    ctx.beginPath(); ctx.moveTo(X(mx), PADT); ctx.lineTo(X(mx), PADT + PH); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(PADL, Y(my)); ctx.lineTo(W - PADR, Y(my)); ctx.stroke();
-    ctx.restore();
-    ctx.fillStyle = th.text3;
-    ctx.font = Math.round(10 * F) + 'px ' + SANS;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-    ctx.fillText('avg ' + fx(mx), X(mx) + 4 * F, PADT + PH - 3 * F);
-    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-    ctx.fillText('avg ' + fy(my), W - PADR - 4 * F, Y(my) - 3 * F);
-    // y = x when both axes are the same points scale
-    const same = (cx.k === 'fpt' || cx.k === 'xfpt') && (cy.k === 'fpt' || cy.k === 'xfpt') && cx.k !== cy.k;
-    if (same) {
-      const lo = Math.max(xlo, ylo), hi = Math.min(xhi, yhi);
-      if (hi > lo) {
-        ctx.save();
-        ctx.setLineDash([2 * F, 5 * F]);
-        ctx.strokeStyle = th.text2; ctx.globalAlpha = 0.8;
-        ctx.beginPath(); ctx.moveTo(X(lo), Y(lo)); ctx.lineTo(X(hi), Y(hi)); ctx.stroke();
-        ctx.restore();
-        ctx.save();
-        ctx.fillStyle = th.text2;
-        ctx.font = Math.round(10 * F) + 'px ' + SANS;
-        ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-        ctx.translate(X(hi), Y(hi)); ctx.rotate(-Math.atan2(PH / (yhi - ylo), PW / (xhi - xlo)));
-        ctx.fillText(cy.k === 'fpt' ? 'scored = expected' : 'expected = scored', -70 * F, -4 * F);
-        ctx.restore();
-      }
+  const _scA = _rsScatter({
+    pfx: 'rsSc', host: 'rsAdvScatter', btn: 'rsAdvPlot', store: 'rsAdvScatter',
+    group: () => _pos,
+    cols: () => COLS[_pos].filter(col => col.k !== 'g').concat(_scBoardCols()),
+    defaults: () => SC_DEF[_pos],
+    data: () => {
+      const L = _last;
+      if (!L || !L.rows.length) return null;
+      let ctx = null;
+      return { rows: L.rows, pg: L.pg, val: (r, col) => {
+        if (col.g !== 'Board') return L.val(r, col.k);
+        if (col.k === 'b_jm') _scEnsureJm();
+        if (!ctx) ctx = _scBoardCtx();
+        return _scBoardVal(ctx, r, col.k);
+      } };
+    },
+    label: _scLabel,
+    dec: (col, pg) => (pg && col.cnt ? col.dg : col.d),
+    short: _scShort,
+    tm: r => r.tm || '',
+    tipHead: r => '<strong>' + _esc(r.n) + '</strong>' + (r.tm && _pos !== 'TM' ? ' <span class="rs-fmt">' + _esc(r.tm) + '</span>' : ''),
+    canOpen: r => !!r.on && _pos !== 'TM' && typeof openPlayerCard === 'function' && typeof D !== 'undefined',
+    open: r => { const d = D.find(q => q.n === r.n); if (d) openPlayerCard(d); },
+    openNote: () => (_pos === 'TM' ? '' : ', click to open the card'),
+    same: (cx, cy) => ((cx.k === 'fpt' || cx.k === 'xfpt') && (cy.k === 'fpt' || cy.k === 'xfpt') && cx.k !== cy.k ? (cy.k === 'fpt' ? 'scored = expected' : 'expected = scored') : null),
+    sameNote: 'dotted = scored exactly what opportunity implies',
+    noun: () => (_pos === 'TM' ? 'teams' : 'players'),
+    title: () => {
+      const scope = _scope(), thru = _yrs.length === 1 ? (_seasonFile() || {}).thru : 0;   // "thru Week N" only reads for one season
+      const when = scope ? scope : (thru && thru < 17 ? 'thru Week ' + thru : _yrs.length > 1 ? 'seasons' : 'season');
+      const tm = _tms.join(' / '), minV = +((_el('rsAdvMin') || {}).value || 0);
+      return { main: _yrLabel() + ' ' + (_pos === 'TM' ? 'TEAMS' : _pos),
+        sub: when + (tm ? ' · ' + tm : '') + (minV ? ' · ' + MIN[_pos][1].toLowerCase() + ' ' + minV : '') };
+    },
+    file: () => 'MFF-Scatter-' + _pos + '-' + _yrLabel().replace(/,\s*/g, '+') + (_scope() ? '-W' + _scope().replace(/^Weeks? /, '').replace(/,\s*/g, '_') : ''),
+    head: () => '<label class="rs-room-pick rs-check" id="rsScMineLbl" title="Offer your own board rank in the X / Y lists (off keeps a shared PNG free of your personal ranks)"><input type="checkbox" id="rsScMine"> My rank</label>',
+    syncHead: () => { _el('rsScMine').checked = _scMine; _el('rsScMineLbl').hidden = _pos === 'TM'; },
+    onChange: t => {
+      if (t.id !== 'rsScMine') return false;
+      _scMine = t.checked;
+      try { localStorage.setItem('rsAdvScatterMine', _scMine ? '1' : '0'); } catch (e) { /* private mode */ }
+      return true;
     }
-    // least-squares fit + r
-    let r = null;
-    if (n >= 3) {
-      let sxx = 0, syy = 0, sxy = 0;
-      pts.forEach(p => { sxx += (p.x - mx) * (p.x - mx); syy += (p.y - my) * (p.y - my); sxy += (p.x - mx) * (p.y - my); });
-      if (sxx > 0 && syy > 0) {
-        r = sxy / Math.sqrt(sxx * syy);
-        const b = sxy / sxx, a = my - b * mx;
-        const yAt = x => a + b * x;
-        // clip the fit to the plot box
-        let x0 = xlo, x1 = xhi;
-        const inY = x => yAt(x) >= ylo && yAt(x) <= yhi;
-        if (!inY(x0)) x0 = b > 0 ? (ylo - a) / b : (yhi - a) / b;
-        if (!inY(x1)) x1 = b > 0 ? (yhi - a) / b : (ylo - a) / b;
-        if (x1 > x0) {
-          ctx.save();
-          ctx.strokeStyle = th.accent; ctx.lineWidth = 1.5 * F; ctx.globalAlpha = 0.75;
-          ctx.beginPath(); ctx.moveTo(X(x0), Y(yAt(x0))); ctx.lineTo(X(x1), Y(yAt(x1))); ctx.stroke();
-          ctx.restore();
-        }
-      }
-    }
-    // plot frame
-    ctx.strokeStyle = th.border;
-    ctx.strokeRect(PADL, PADT, PW, PH);
-    // markers
-    // crowded boards (80+ receivers) get smaller logos so the middle still reads
-    const LOGO = Math.round((big ? (n > 60 ? 26 : 30) : (n > 60 ? 18 : 22)) * F), R = (n > 60 ? 4 : 5) * F;
-    const useLogo = lab === 'both' || lab === 'logo';
-    const hits = [];
-    ctx.save();
-    ctx.beginPath(); ctx.rect(PADL - LOGO, PADT - LOGO, PW + 2 * LOGO, PH + 2 * LOGO); ctx.clip();
-    pts.forEach((p, i) => {
-      const px = X(p.x), py = Y(p.y);
-      const img = useLogo ? _scImg[p.r.tm] : null;
-      const ok = img && !(img instanceof Promise);
-      if (ok) {
-        ctx.drawImage(img, px - LOGO / 2, py - LOGO / 2, LOGO, LOGO);
-        hits.push({ i: i, x: px, y: py, hw: LOGO / 2 });
-      } else {
-        ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2);
-        ctx.fillStyle = th.accent; ctx.fill();
-        ctx.lineWidth = 1.5 * F; ctx.strokeStyle = th.bg; ctx.stroke();
-        hits.push({ i: i, x: px, y: py, hw: R + 2 });
-      }
-    });
-    ctx.restore();
-    // name labels: extremes first (they carry the story), then anything that still fits
-    if (lab === 'both' || lab === 'name') {
-      const sx = (xhi - xlo) || 1, sy = (yhi - ylo) || 1;
-      const order = pts.map((p, i) => ({ i: i, d: Math.abs(p.x - mx) / sx + Math.abs(p.y - my) / sy })).sort((a, b) => b.d - a.d);
-      const placed = hits.map(h => ({ x: h.x - h.hw, y: h.y - h.hw, w: 2 * h.hw, h: 2 * h.hw }));
-      const clash = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-      ctx.font = '500 ' + fs + 'px ' + SANS;
-      ctx.fillStyle = th.text;
-      ctx.textBaseline = 'top'; ctx.textAlign = 'left';
-      order.forEach(o => {
-        const p = pts[o.i], h = hits[o.i];
-        const t = _scShort(p.r), tw = ctx.measureText(t).width, tht = fs + 2, g = 3 * F;
-        const cands = [
-          { x: h.x + h.hw + g, y: h.y - tht / 2 }, { x: h.x - h.hw - g - tw, y: h.y - tht / 2 },
-          { x: h.x - tw / 2, y: h.y - h.hw - g - tht }, { x: h.x - tw / 2, y: h.y + h.hw + g }
-        ];
-        const box = cands.map(c => ({ x: c.x - 1, y: c.y, w: tw + 2, h: tht })).find(b =>
-          b.x >= 2 && b.x + b.w <= W - 2 && b.y >= PADT - tht && b.y + b.h <= H - PADB + tht && !placed.some(q => clash(b, q)));
-        if (!box) return;
-        placed.push(box);
-        ctx.fillText(t, box.x + 1, box.y + 1);
-      });
-    }
-    // title + caption + watermark
-    const scope = _scope(), thru = _yrs.length === 1 ? (_seasonFile() || {}).thru : 0;   // "thru Week N" only reads for one season
-    const when = scope ? scope : (thru && thru < 17 ? 'thru Week ' + thru : _yrs.length > 1 ? 'seasons' : 'season');
-    ctx.fillStyle = th.text;
-    ctx.font = TITLE + 'px ' + BEB;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    try { ctx.letterSpacing = '1px'; } catch (e) { /* older canvas */ }
-    ctx.fillText((_yrLabel() + ' ' + (_pos === 'TM' ? 'TEAMS' : _pos) + ' · ' + yl + ' vs ' + xl).toUpperCase(), PADL, 26 * F);
-    try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
-    ctx.fillStyle = th.text3;
-    ctx.font = SUB + 'px ' + SANS;
-    const tm = _tms.join(' / '), minV = +((_el('rsAdvMin') || {}).value || 0);
-    ctx.fillText(when + (tm ? ' · ' + tm : '') + ' · ' + n + (_pos === 'TM' ? ' teams' : ' players') +
-      (minV ? ' · ' + MIN[_pos][1].toLowerCase().replace(/^min /, 'min ') + ' ' + minV : '') +
-      (r != null ? ' · r = ' + r.toFixed(2) : '') + ' · dashed = averages · solid = trend', PADL, 44 * F);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = th.text3;
-    ctx.font = Math.round(10 * F) + 'px ' + BEB;
-    try { ctx.letterSpacing = '1.5px'; } catch (e) { /* older canvas */ }
-    ctx.fillText('MYFANTASYFOOTBALL.ORG', W - PADR, H - 12 * F);
-    try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
-    return { hits: hits, r: r };
-  }
-  function _scatter() {
-    const host = _el('rsAdvScatter'), btn = _el('rsAdvPlot');
-    if (!host) return;
-    if (btn) { btn.classList.toggle('on', _scOn); btn.setAttribute('aria-pressed', _scOn ? 'true' : 'false'); }
-    const D = _scOn ? _scData() : null;
-    if (!_scOn || !D) { host.hidden = true; host.innerHTML = ''; _scPts = []; return; }
-    host.hidden = false;
-    const pg = D.pg;
-    const opt = (sel) => _scAllCols().filter(col => col.k !== 'g').map(col => '<option value="' + col.k + '"' + (col.k === sel ? ' selected' : '') + '>' +
-      _esc(col.g + ' · ' + (col.g === 'Board' ? col.l : _scLabel(col, pg))) + '</option>').join('');
-    if (!host.querySelector('#rsScCanvas')) {
-      host.innerHTML = '<div class="rs-co-head"><span class="rs-co-title">Scatter</span>' +
-        '<label class="rs-room-pick">X <select id="rsScX" class="rs-select"></select></label>' +
-        '<label class="rs-room-pick">Y <select id="rsScY" class="rs-select"></select></label>' +
-        '<label class="rs-room-pick">Show <select id="rsScLab" class="rs-select"><option value="both">Logos + names</option><option value="logo">Logos</option><option value="name">Names</option><option value="dot">Dots</option></select></label>' +
-        '<label class="rs-room-pick rs-check" id="rsScMineLbl" title="Offer your own board rank in the X / Y lists (off keeps a shared PNG free of your personal ranks)"><input type="checkbox" id="rsScMine"> My rank</label>' +
-        '<button type="button" class="rs-co-close rs-sc-btn" id="rsScSwap" title="Swap the axes">Swap</button>' +
-        '<button type="button" class="rs-co-close rs-sc-btn rs-sc-dl" id="rsScPng" title="Download this chart as a 2x PNG">Download PNG</button>' +
-        '<button type="button" class="rs-co-close" id="rsScHide">Hide chart</button></div>' +
-        '<div class="rs-sc-wrap"><canvas id="rsScCanvas" role="img"></canvas><div class="rs-sc-tip" id="rsScTip" hidden></div></div>' +
-        '<div class="rs-co-legend"><span class="rs-co-sub" id="rsScCap"></span></div>';
-    }
-    _el('rsScX').innerHTML = opt(D.cx.k);
-    _el('rsScY').innerHTML = opt(D.cy.k);
-    _el('rsScLab').value = _scLab;
-    _el('rsScMine').checked = _scMine;
-    _el('rsScMineLbl').hidden = _pos === 'TM';
-    const cap = _el('rsScCap');
-    if (!D.pts.length) {
-      cap.textContent = 'No rows have both ' + _scLabel(D.cx, pg) + ' and ' + _scLabel(D.cy, pg) + '.';
-      _el('rsScCanvas').hidden = true; _scPts = [];
-      return;
-    }
-    _el('rsScCanvas').hidden = false;
-    const seq = ++_scSeq;
-    const draw = () => {
-      if (seq !== _scSeq || !host.querySelector('#rsScCanvas')) return;
-      const canvas = _el('rsScCanvas'), tip = _el('rsScTip');
-      if (tip) tip.hidden = true;   // a redraw moves the points under a stale tooltip
-      _scHover = -1;
-      const w = Math.max(320, host.clientWidth - 30), h = Math.round(Math.max(300, Math.min(620, w * 0.62)));
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const out = _scDraw(ctx, w, h, D, _scTheme(host), _scLab);
-      _scPts = out.hits.map(hh => Object.assign({ p: D.pts[hh.i] }, hh));
-      canvas.setAttribute('aria-label', _yrLabel() + ' ' + _pos + ' ' + _scLabel(D.cy, pg) + ' vs ' + _scLabel(D.cx, pg));
-      cap.textContent = D.pts.length + (_pos === 'TM' ? ' teams' : ' players') + ' from the table below (its filters apply)' +
-        (out.r != null ? ' · r = ' + out.r.toFixed(2) : '') + ' · dashed lines = averages, solid = least-squares trend' +
-        ((D.cx.k === 'fpt' || D.cx.k === 'xfpt') && (D.cy.k === 'fpt' || D.cy.k === 'xfpt') && D.cx.k !== D.cy.k ? ', dotted = scored exactly what opportunity implies' : '') +
-        ' · hover a point for its values' + (_pos === 'TM' ? '' : ', click to open the card') + ' · names drop where they would overlap (the PNG has more room)';
-    };
-    draw();
-    if (_scLab === 'both' || _scLab === 'logo') {
-      const need = Array.from(new Set(D.pts.map(p => p.r.tm).filter(Boolean))).filter(t => _scImg[t] === undefined || _scImg[t] instanceof Promise);
-      if (need.length) _scLoadLogos(need).then(draw);
-    }
-  }
-  function _scExport() {
-    const D = _scData();
-    const host = _el('rsAdvScatter');
-    if (!D || !D.pts.length || !host) return;
-    const btn = _el('rsScPng');
-    if (btn) { btn.disabled = true; btn.textContent = 'Rendering…'; }
-    const tms = Array.from(new Set(D.pts.map(p => p.r.tm).filter(Boolean)));
-    const ready = (_scLab === 'both' || _scLab === 'logo') ? _scLoadLogos(tms) : Promise.resolve();
-    ready.then(() => {
-      const W = 1400, H = 900, S = 2;
-      const c = document.createElement('canvas');
-      c.width = W * S; c.height = H * S;
-      const ctx = c.getContext('2d');
-      ctx.setTransform(S, 0, 0, S, 0, 0);
-      _scDraw(ctx, W, H, D, _scTheme(host), _scLab);
-      const clean = s => String(s).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-      const name = 'MFF-Scatter-' + _pos + '-' + _yrLabel().replace(/,\s*/g, '+') + (_scope() ? '-W' + _scope().replace(/^Weeks? /, '').replace(/,\s*/g, '_') : '') + '-' +
-        clean(_scLabel(D.cy, D.pg)) + '-vs-' + clean(_scLabel(D.cx, D.pg)) + '.png';
-      const done = () => { if (btn) { btn.disabled = false; btn.textContent = 'Download PNG'; } };
-      try {
-        const a = document.createElement('a');
-        a.href = c.toDataURL('image/png');
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        if (typeof toast === 'function') toast('Downloaded ' + name);
-      } catch (e) {
-        // a logo that came back without CORS headers taints the canvas: redraw with dots
-        _scLab = 'dot';
-        const ctx2 = c.getContext('2d');
-        ctx2.setTransform(S, 0, 0, S, 0, 0);
-        _scDraw(ctx2, W, H, D, _scTheme(host), 'dot');
-        const a = document.createElement('a');
-        a.href = c.toDataURL('image/png');
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        if (typeof toast === 'function') toast('Logos blocked the download; saved with dots');
-      }
-      done();
-    });
-  }
-  function _scWire() {
-    const host = _el('rsAdvScatter'), btn = _el('rsAdvPlot');
-    if (!host || !btn) return;
-    btn.addEventListener('click', () => { _scOn = !_scOn; _scSave(); _scatter(); if (_scOn) host.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
-    host.addEventListener('click', e => {
-      if (e.target.closest('#rsScHide')) { _scOn = false; _scSave(); _scatter(); return; }
-      if (e.target.closest('#rsScPng')) { _scExport(); return; }
-      if (e.target.closest('#rsScSwap')) {
-        const ax = _scAxes();
-        _scAx[_pos] = [ax[1], ax[0]];
-        _scSave(); _scatter();
-        return;
-      }
-      if (e.target.closest('#rsScCanvas') && _scHover >= 0) {
-        const p = _scPts[_scHover] && _scPts[_scHover].p;
-        if (p && p.r.on && typeof openPlayerCard === 'function' && typeof D !== 'undefined') {
-          const d = D.find(q => q.n === p.r.n);
-          if (d) openPlayerCard(d);
-        }
-      }
-    });
-    host.addEventListener('change', e => {
-      const t = e.target;
-      if (t.id === 'rsScX' || t.id === 'rsScY') {
-        const ax = _scAxes();
-        if (t.id === 'rsScX') ax[0] = t.value; else ax[1] = t.value;
-        _scAx[_pos] = ax;
-        _scSave(); _scatter();
-      } else if (t.id === 'rsScLab') {
-        _scLab = t.value;
-        _scSave(); _scatter();
-      } else if (t.id === 'rsScMine') {
-        _scMine = t.checked;
-        _scSave(); _scatter();
-      }
-    });
-    const tipFor = (p, D) => {
-      const pg = D.pg;
-      return '<strong>' + _esc(p.r.n) + '</strong>' + (p.r.tm && _pos !== 'TM' ? ' <span class="rs-fmt">' + _esc(p.r.tm) + '</span>' : '') +
-        '<br>' + _esc(_scLabel(D.cx, pg)) + ': ' + Number(p.x).toFixed(_scDec(D.cx, pg)) +
-        '<br>' + _esc(_scLabel(D.cy, pg)) + ': ' + Number(p.y).toFixed(_scDec(D.cy, pg));
-    };
-    host.addEventListener('mousemove', e => {
-      const canvas = e.target.closest('#rsScCanvas'), tip = _el('rsScTip');
-      if (!canvas || !tip) return;
-      const b = canvas.getBoundingClientRect();
-      const x = e.clientX - b.left, y = e.clientY - b.top;
-      let best = -1, bd = 1e9;
-      _scPts.forEach((h, i) => {
-        const d = Math.hypot(h.x - x, h.y - y);
-        if (d <= Math.max(14, h.hw + 2) && d < bd) { bd = d; best = i; }
-      });
-      if (best !== _scHover) {
-        _scHover = best;
-        canvas.style.cursor = best >= 0 && _scPts[best].p.r.on ? 'pointer' : 'default';
-      }
-      if (best < 0) { tip.hidden = true; return; }
-      const D = _scData();
-      if (!D) return;
-      tip.innerHTML = tipFor(_scPts[best].p, D);
-      tip.hidden = false;
-      const wrap = canvas.parentElement.getBoundingClientRect();
-      let tx = e.clientX - wrap.left + 14, ty = e.clientY - wrap.top + 14;
-      if (tx + tip.offsetWidth > wrap.width - 4) tx = e.clientX - wrap.left - tip.offsetWidth - 14;
-      if (ty + tip.offsetHeight > wrap.height - 4) ty = e.clientY - wrap.top - tip.offsetHeight - 14;
-      tip.style.left = Math.max(0, tx) + 'px'; tip.style.top = Math.max(0, ty) + 'px';
-    });
-    host.addEventListener('mouseleave', () => { const tip = _el('rsScTip'); if (tip) tip.hidden = true; _scHover = -1; });
-    let rsz = null;
-    window.addEventListener('resize', () => { if (host.hidden) return; clearTimeout(rsz); rsz = setTimeout(_scatter, 150); });
-  }
+  });
+  function _scatter() { _scA.render(); }
+  function _scWire() { _scA.wire(); }
 
   let _wired = false, _started = false, _rowCache = {};
   let _last = null;                 // what the table last rendered (CSV export reads it)
@@ -64809,6 +64846,38 @@ Rules:
     return out;
   }
 
+  // --- scatter (Jack 2026-09-16: "add the scatter to the coach view too") ---------------
+  // Any two coach columns for the rows the table shows; logo = the coach's latest team in the
+  // picked seasons (each team-season's own team when split). Drawer shared with Advanced Stats.
+  const CO_SC_DEF = { op: ['proe', 'epa'], hc: ['proe', 'epa'], dp: ['dblz', 'depa'] };
+  const _scC = _rsScatter({
+    pfx: 'rsCoSc', host: 'rsCoScatter', btn: 'rsCoPlot', store: 'rsCoScatter',
+    group: () => _role,
+    cols: () => [{ k: 'g', l: 'G', g: 'Games', d: 0, t: 'Games in the selected seasons' }].concat(ROLE_COLS[_role]),
+    defaults: () => CO_SC_DEF[_role],
+    data: () => (_last && _last.rows.length ? { rows: _last.rows, pg: false, val: (r, col) => r[col.k] } : null),
+    label: col => col.l,
+    dec: col => col.d,
+    short: r => {
+      const parts = String(r.name || '').split(' ');
+      const nm = parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : r.name;
+      return _last && _last.split ? nm + " '" + String(r.span).slice(-2) : nm;
+    },
+    tm: r => (_last && _last.split ? r.tm : String(r.teams || '').split(', ').pop()) || '',
+    tipHead: r => '<strong>' + _esc(r.name) + '</strong> <span class="rs-fmt">' + _esc(r.teams) + ' · ' + _esc(r.span) + '</span>',
+    canOpen: () => false,
+    open: () => {},
+    openNote: () => '',
+    same: () => null,
+    sameNote: '',
+    noun: () => (_last && _last.split ? 'team-seasons' : ROLE_NAME[_role]),
+    title: () => {
+      const lo = Math.min(_from, _to), hi = Math.max(_from, _to), min = +(_el('rsCoMin').value || 0);
+      return { main: (lo === hi ? lo : lo + '-' + hi) + ' ' + ROLE_NAME[_role], sub: min ? 'min games ' + min : '' };
+    },
+    file: () => 'MFF-Scatter-Coaches-' + ROLE_FILE[_role] + '-' + Math.min(_from, _to) + '-' + Math.max(_from, _to) + (_last && _last.split ? '-BySeason' : '')
+  });
+
   // --- per-coach season chart ------------------------------------------------
   // One series (the coach) against a league-average line in the same unit - one axis, never
   // two. PROE / RROE are signed around zero, so they get diverging columns (blue = passed
@@ -65086,6 +65155,7 @@ Rules:
       'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.';
     _fillVs();
     _coChart();
+    _scC.render();
   }
 
   function _exportCsv() {
@@ -65160,6 +65230,7 @@ Rules:
     ['rsCoSplit', 'rsCoHeat'].forEach(id => _el(id).addEventListener('change', _render));
     ['rsCoMin', 'rsCoQ'].forEach(id => _el(id).addEventListener('input', _render));
     _el('rsCoCsv').addEventListener('click', _exportCsv);
+    _scC.wire();
     _el('rsCoChart').addEventListener('click', e => {
       if (e.target.closest('#rsCoChartClose')) { _sel = ''; _vs = ''; _render(); return; }
       const mr = e.target.closest('tr[data-metric]');
@@ -65187,7 +65258,7 @@ Rules:
   }
 
   // the Coach view just became visible: a chart drawn while hidden measured a 0-wide panel
-  window._coachRedraw = function _coachRedraw() { if (_sel) _coChart(); };
+  window._coachRedraw = function _coachRedraw() { if (_sel) _coChart(); if (_scC.isOn()) _scC.render(); };
 
   window._renderCoachProfiles = function _renderCoachProfiles() {
     if (!_el('rsCoWrap')) return;

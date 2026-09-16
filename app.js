@@ -11907,7 +11907,89 @@ function _campNewsSectionHtml(d) {
 // the rankings table shows the number, this shows where it came from),
 // opponent defense vs this position, and recent 2026 games once the season
 // starts. Full prop-line detail stays on the LINES tab.
+// === WHY THIS PROJECTION (player card WEEKLY tab) ===============================
+// Jack 2026-09-16: "add the why notes to the player cards on the main site". data/proj_why_2026.json is built
+// headless from the Sim Lab NOTES why lines (sim_lab/export_notes.js --repo, run by scripts/sim_proj_task.ps1):
+// for the current week, every QB/RB/WR/TE sim projection as a waterfall in [half, ppr, std] - preseason baseline
+// (Clay per game) -> each factor the sim applied, in the order it applies them -> the sim projection. Lazy-loaded
+// on the first WEEKLY tab (hour-stamped ?d=, not ?v=, so sw.js never pins it). Shown only when the card's
+// projection source is Sim Lab, so the steps add up to the number on the card.
+window._PROJ_WHY = window._PROJ_WHY || null;
+function _loadProjWhy() {
+  if (window._projWhyPromise) return window._projWhyPromise;
+  const now = new Date();
+  const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  window._projWhyPromise = fetch('data/proj_why_2026.json?d=' + stamp)
+    .then(r => (r && r.ok) ? r.json() : null)
+    .then(j => {
+      window._PROJ_WHY = (j && j.players) ? j : { players: {}, failed: true };
+      const host = document.getElementById('cardWeeklyView');
+      if (host && window._weeklyCardD && typeof buildWeeklyCardView === 'function') host.innerHTML = buildWeeklyCardView(window._weeklyCardD);
+      return window._PROJ_WHY;
+    })
+    .catch(() => { window._PROJ_WHY = { players: {}, failed: true }; return null; });
+  return window._projWhyPromise;
+}
+function _projWhyFor(d) {
+  const J = window._PROJ_WHY;
+  if (!J || !J.players) return null;
+  let r = J.players[d.n];
+  if (!r && typeof _campNewsNorm === 'function') {
+    if (!J._idx) { J._idx = {}; Object.keys(J.players).forEach(k => { J._idx[_campNewsNorm(k)] = J.players[k]; }); }
+    r = J._idx[_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+function _projWhyHtml(d, wk, cardProj, esc) {
+  if (!['QB', 'RB', 'WR', 'TE'].includes(d.s)) return '';
+  const J = window._PROJ_WHY;
+  if (!J) { _loadProjWhy(); return ''; }
+  if (!J.players || +J.week !== +wk) return '';
+  const r = _projWhyFor(d);
+  if (!r) return '';
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  const sg = v => (v >= 0 ? '+' : '\u2212') + f1(Math.abs(v));
+  const clay = r.c[fi], proj = r.p[fi];
+  if (clay == null || proj == null) return '';
+  const steps = (r.s || []).map(s => ({ l: s.l, v: s.d[fi], k: s.k })).filter(s => Math.abs(s.v) >= 0.1);
+  const rest = proj - clay - steps.reduce((t, s) => t + s.v, 0);
+  if (Math.abs(rest) >= 0.1) steps.push({ l: 'smaller factors combined', v: rest, k: 'rest' });
+  const maxAbs = Math.max(0.5, ...steps.map(s => Math.abs(s.v)));
+  const top = steps.filter(s => s.k !== 'rest').sort((x, y) => Math.abs(y.v) - Math.abs(x.v))[0];
+  let html = '<div class="card-section"><div class="card-section-title">Why this projection '
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
+  html += '<div class="why-list">';
+  html += '<div class="why-row why-base"><span class="why-lbl">Preseason baseline <span class="why-dim">(Mike Clay per game)</span></span><span class="why-bar"></span><span class="why-val">' + f1(clay) + '</span></div>';
+  steps.forEach(s => {
+    const pct = Math.round(100 * Math.abs(s.v) / maxAbs);
+    html += '<div class="why-row' + (top && s === top ? ' why-top' : '') + '"><span class="why-lbl">' + esc(s.l) + '</span>'
+      + '<span class="why-bar"><span class="why-fill ' + (s.v >= 0 ? 'pos' : 'neg') + '" style="width:' + pct + '%"></span></span>'
+      + '<span class="why-val ' + (s.v >= 0 ? 'pos' : 'neg') + '">' + sg(s.v) + '</span></div>';
+  });
+  html += '<div class="why-row why-total"><span class="why-lbl">Sim projection</span><span class="why-bar"></span><span class="why-val">' + f1(proj) + '</span></div>';
+  html += '</div>';
+  if (top) html += '<div class="why-note">Biggest driver: <b>' + esc(top.l.split(' (')[0]) + '</b> (' + sg(top.v) + ').'
+    + (typeof cardProj === 'number' && Math.abs(cardProj - proj) >= 0.3 ? ' The projection above has moved ' + sg(cardProj - proj) + ' since this breakdown was built (a newer injury or line update).' : '') + '</div>';
+  // matchup reads for this player (Start/Sit MATCHUP EDGES data)
+  const M = window.MATCHUP_EDGES_2026, Wk = M && M.weeks ? M.weeks[wk] : null;
+  if (Wk && Wk.rows) {
+    const nk = typeof _campNewsNorm === 'function' ? _campNewsNorm(d.n) : d.n;
+    const m = Wk.rows.find(x => x.n === d.n || (typeof _campNewsNorm === 'function' && _campNewsNorm(x.n) === nk));
+    if (m && m.items && m.items.length) {
+      const pc = v => (v > 0 ? '+' : '') + Math.round(v) + '%';
+      html += '<div class="why-mu"><div class="why-mu-head">Matchup <b class="' + (m.pct >= 0 ? 'pos' : 'neg') + '">' + pc(m.pct) + '</b> <span class="why-dim">of his projection</span></div>'
+        + m.items.slice(0, 4).map(it => '<div class="why-mu-item">' + esc(it.lab) + ' <b class="' + (it.pct >= 0 ? 'pos' : 'neg') + '">' + pc(it.pct) + '</b>'
+          + '<span class="sst-edge-tag ' + (it.priced ? 'in' : 'read') + '">' + (it.priced ? 'IN PROJ' : 'READ') + '</span></div>').join('')
+        + '<div class="why-dim" style="margin-top:3px">IN PROJ = already in the number above · READ = matchup context that does not change it</div></div>';
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
 function buildWeeklyCardView(d) {
+  window._weeklyCardD = d;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const wk = window._weeklyActiveWeek || 1;
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
@@ -12023,6 +12105,7 @@ function buildWeeklyCardView(d) {
   html += '<div style="margin-top:7px;font-size:.62rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
     + (out.src === 'props' ? ' · full prop board on the <b>LINES</b> tab' : '') + '</div>';
   html += '</div>';
+  if (out.src === 'sim' && typeof _projWhyHtml === 'function') html += _projWhyHtml(d, wk, proj, esc);
 
   // Recent games (in-season only — WEEKLY_STATS gets 2026 rows from the
   // Tuesday stats pull; empty preseason so the section self-hides).

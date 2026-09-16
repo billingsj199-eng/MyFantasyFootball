@@ -4026,7 +4026,7 @@ const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1
 // chip, the ROW card and the PNG export all agree:
 //   null (not weekly / no schedule) | {bye:true, wk} |
 //   {bye:false, away, abbr, diff, logoId, logoUrl, wk}
-// diff = opponent difficulty (Clay def rank; D/ST = opp offense rank).
+// diff = opponent difficulty (schedule-adjusted pts allowed blended with Clay's preseason rank; D/ST = opp offense).
 function _tcvOppInfo(d) {
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
   if (typeof window._weeklyOppFor !== 'function') return null;
@@ -6252,7 +6252,7 @@ function render() {
       ${_statTd1}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
-      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
+      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}"${(()=>{ const n = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : ''; return n ? ' title="' + n.replace(/"/g, '&quot;') + '"' : ''; })()} style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{
         // D/ST rows show the OPPONENT's implied total (lower = better matchup),
@@ -7509,26 +7509,94 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     return ctx.home ? ctx.game.spread : -ctx.game.spread;
   };
 
-  // OPP DIFFICULTY — 'easy' / 'medium' / 'hard' based on opponent's Clay
-  // defensive rank (1 = toughest defense in the league, 32 = softest).
-  //   defRk 1-10  → hard  (red)
-  //   defRk 11-22 → medium (amber)
-  //   defRk 23-32 → easy   (green)
-  // For D/ST rows (pos='DST') the matchup flips: what matters is the opponent
-  // OFFENSE, so we grade on offRk instead (offRk 1-10 = elite offense = hard).
+  // OPP DIFFICULTY — 'easy' / 'medium' / 'hard' for this week's matchup.
+  // (2026-09-16) In-season it grades the opponent's SCHEDULE-ADJUSTED fantasy
+  // points allowed per game to this position (FPA_2026, final games only —
+  // see _wkOppPpgTable), blended with Mike Clay's preseason unit rank as a
+  // prior that fades as games accrue: in-season weight = g / (g + 2)
+  // (1 gm 33%, 2 gm 50%, 4 gm 67%, 8 gm 80%). Before any final game it's
+  // Clay only (defRk for skill positions, offRk for D/ST). Blended rank 1 =
+  // softest (allows the most): top third → easy (green), bottom third → hard
+  // (red), middle → medium (amber).
   // Kickers get no color — opposing defense quality cuts both ways for FG
   // volume, so we don't imply a signal we haven't validated.
   window._weeklyOppDifficulty = function(team, pos) {
-    if (pos === 'K') return null;
-    const ctx = _weeklyGameContext(team);
-    if (!ctx) return null;
-    const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[ctx.opp];
-    const rk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
-    if (typeof rk !== 'number') return null;
-    if (rk <= 10) return 'hard';
-    if (rk >= 23) return 'easy';
-    return 'medium';
+    const m = window._weeklyOppMatchup(team, pos);
+    return m ? m.diff : null;
   };
+  // Full matchup grade bundle for tooltips / cards:
+  //   {opp, diff, rank, n, games, w, clayRk, raw:{v,rank}|null, adj:{v,rank}|null}
+  window._weeklyOppMatchup = function(team, pos) {
+    if (!team || !pos || pos === 'K') return null;
+    if (typeof window._weeklyOppFor !== 'function') return null;
+    let opp = window._weeklyOppFor(team);
+    if (!opp || opp === 'BYE') return null;
+    opp = String(opp).replace(/^@/, '').toUpperCase();
+    opp = _WK_OPP_ABBR[opp] || opp;
+    const B = _wkOppBlendTable(pos);
+    const r = B && B[opp];
+    if (!r) return null;
+    return Object.assign({ opp }, r);
+  };
+  // One-line explanation of the grade for tooltips.
+  window._weeklyOppDiffNote = function(team, pos) {
+    const m = window._weeklyOppMatchup(team, pos);
+    if (!m) return '';
+    const lbl = m.diff === 'hard' ? 'Tough' : m.diff === 'easy' ? 'Soft' : 'Average';
+    const posLbl = pos === 'DST' ? 'D/STs' : pos + 's';
+    let s = lbl + ' matchup for ' + posLbl + ' (#' + m.rank + ' of ' + m.n + ', 1 = softest)';
+    if (m.adj) s += ' — allows ' + m.raw.v + ' pts/gm (#' + m.raw.rank + ' raw, #' + m.adj.rank + ' schedule-adjusted, ' + m.games + ' gm)';
+    if (typeof m.clayRk === 'number') s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
+    if (m.adj) s += ' · in-season weight ' + Math.round(m.w * 100) + '%';
+    else s += ' · preseason only until final games post';
+    return s;
+  };
+  // Blended table per position: team → grade bundle. Cached alongside the
+  // Opp PPG table (same FPA_2026 + scoring-format key) so it rebuilds only
+  // when the postgame importer publishes a new week.
+  const _WK_OPP_PRIOR_GAMES = 2;   // Clay prior worth this many games
+  let _wkOppBlendCache = null;
+  function _wkOppBlendTable(pos) {
+    const T = _wkOppPpgTable();   // null before any final game
+    const FP = window.FPA_2026;
+    const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
+    const src = FP && FP.weeks || null;
+    if (!_wkOppBlendCache || _wkOppBlendCache.src !== src || _wkOppBlendCache.fmt !== fmt) _wkOppBlendCache = { src, fmt, pos: {} };
+    if (_wkOppBlendCache.pos[pos]) return _wkOppBlendCache.pos[pos];
+    const CG = window.CLAY_TEAM_GRADES_2026 || {};
+    const A = T && T.pos[pos] || {};
+    const teams = {};
+    Object.keys(CG).forEach(t => { teams[t] = 1; });
+    Object.keys(A).forEach(t => { teams[t] = 1; });
+    const list = Object.keys(teams);
+    const rows = list.map(t => {
+      const cg = CG[t];
+      const clayRk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
+      const pClay = typeof clayRk === 'number' ? (clayRk - 1) / 31 : null;   // 1 = toughest → 0, 32 → 1
+      const a = A[t];
+      const pIn = (a && a.n > 1 && typeof a.adjRank === 'number') ? 1 - (a.adjRank - 1) / (a.n - 1) : null;   // rank 1 = allows most → 1
+      const g = a ? a.games : 0;
+      const w = g / (g + _WK_OPP_PRIOR_GAMES);
+      let score;
+      if (pIn == null && pClay == null) score = null;
+      else if (pIn == null) score = pClay;
+      else if (pClay == null) score = pIn;
+      else score = w * pIn + (1 - w) * pClay;
+      return { team: t, score, clayRk, games: g, w: pIn == null ? 0 : w,
+        raw: a ? { v: a.v, rank: a.rank } : null,
+        adj: (a && typeof a.adjRank === 'number') ? { v: a.adjV, rank: a.adjRank } : null };
+    }).filter(r => r.score != null);
+    rows.sort((a, b) => b.score - a.score);
+    const n = rows.length, third = n / 3;
+    const out = {};
+    rows.forEach((r, i) => {
+      const rank = i + 1;
+      out[r.team] = { diff: rank <= third ? 'easy' : rank > 2 * third ? 'hard' : 'medium', rank, n,
+        games: r.games, w: r.w, clayRk: r.clayRk, raw: r.raw, adj: r.adj };
+    });
+    _wkOppBlendCache.pos[pos] = out;
+    return out;
+  }
 
   // TEAM TOTAL — derive from DK game total + spread (BETTING_2026.gameTotals).
   // team_total = (total - spread) / 2 if home, (total + spread) / 2 if away.
@@ -7565,6 +7633,28 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // D/ST read what opposing kickers / D/STs scored AGAINST that offense.
   // Returns {v, rank, n, games, opp} or null. rank 1 = allows the MOST.
   const _WK_OPP_ABBR = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
+  // Additive defense-effect / offense-effect fit for one position:
+  //   pts(game) ≈ mu + dE[defense] + oE[offense]
+  // solved by alternating ridge means (each effect shrunk toward 0 with a
+  // prior worth K games, so a 1-game sample doesn't swing the rank). Also
+  // returns facedE[defense] = mean offense effect it has faced (+ = tougher
+  // offenses than average, which inflates the raw points-allowed number).
+  function _wkSchedAdjust(games, K) {
+    if (!games || !games.length) return null;
+    if (typeof K !== 'number') K = 1;
+    let mu = 0; games.forEach(g => { mu += g.v; }); mu /= games.length;
+    const dE = {}, oE = {}, dN = {}, oN = {};
+    games.forEach(g => { dE[g.d] = 0; oE[g.o] = 0; dN[g.d] = (dN[g.d] || 0) + 1; oN[g.o] = (oN[g.o] || 0) + 1; });
+    for (let it = 0; it < 50; it++) {
+      const ds = {}; games.forEach(g => { ds[g.d] = (ds[g.d] || 0) + (g.v - mu - oE[g.o]); });
+      Object.keys(dE).forEach(t => { dE[t] = ds[t] / (dN[t] + K); });
+      const os = {}; games.forEach(g => { os[g.o] = (os[g.o] || 0) + (g.v - mu - dE[g.d]); });
+      Object.keys(oE).forEach(t => { oE[t] = os[t] / (oN[t] + K); });
+    }
+    const facedE = {};
+    games.forEach(g => { facedE[g.d] = (facedE[g.d] || 0) + oE[g.o] / dN[g.d]; });
+    return { mu, dE, oE, facedE };
+  }
   let _wkOppPpgCache = null;
   function _wkOppPpgTable() {
     const FP = window.FPA_2026;
@@ -7572,7 +7662,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
     if (_wkOppPpgCache && _wkOppPpgCache.src === FP.weeks && _wkOppPpgCache.fmt === fmt) return _wkOppPpgCache;
     const suf = fmt === 'ppr' ? '_ppr' : fmt === 'std' ? '_std' : '';
-    const acc = {};
+    const acc = {}, games = {};
     Object.keys(FP.weeks).forEach(wk => {
       const teams = FP.weeks[wk];
       Object.keys(teams).forEach(team => {
@@ -7584,6 +7674,8 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
           const slot = acc[pos] || (acc[pos] = {});
           const t = slot[team] || (slot[team] = { pts: 0, g: 0 });
           t.pts += v; t.g++;
+          let o = rec.opp ? String(rec.opp).toUpperCase() : null;
+          if (o) { o = _WK_OPP_ABBR[o] || o; (games[pos] || (games[pos] = [])).push({ d: team, o, v }); }
         });
       });
     });
@@ -7593,6 +7685,15 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       rows.sort((a, b) => b.v - a.v);
       const m = {};
       rows.forEach((r, i) => { m[r.team] = { v: Math.round(r.v * 10) / 10, rank: i + 1, n: rows.length, games: r.g }; });
+      // Schedule-adjusted: strip out the quality of the offenses each defense
+      // has faced (a defense that gave up 30 to the Bills isn't as soft as one
+      // that gave up 30 to the Panthers). adjV = league avg + defense effect.
+      const S = _wkSchedAdjust(games[pos] || []);
+      if (S) {
+        const adjRows = rows.map(r => ({ team: r.team, v: S.mu + (S.dE[r.team] || 0) }));
+        adjRows.sort((a, b) => b.v - a.v);
+        adjRows.forEach((r, i) => { if (m[r.team]) { m[r.team].adjV = Math.round(r.v * 10) / 10; m[r.team].adjRank = i + 1; m[r.team].offFaced = Math.round((S.facedE[r.team] || 0) * 10) / 10; } });
+      }
       out.pos[pos] = m;
     });
     _wkOppPpgCache = out;
@@ -9796,7 +9897,8 @@ function _wkOppPpgCell(d) {
   const _kd = d.s === 'K' || d.s === 'DST';   // reception format is meaningless for K / D/ST
   const fmtLbl = _kd ? '' : ((typeof _scoringLabelsRnk !== 'undefined' && _scoringLabelsRnk[rankingScoringFmt]) || 'Half PPR') + ' ';
   const posLbl = d.s === 'DST' ? 'opposing D/STs' : d.s === 'K' ? 'opposing kickers' : d.s + 's';
-  const tip = r.opp + ' allows ' + r.v + ' ' + fmtLbl + 'pts/game to ' + posLbl + ' in 2026 — #' + r.rank + ' most of ' + r.n + ' (' + r.games + ' gm)';
+  let tip = r.opp + ' allows ' + r.v + ' ' + fmtLbl + 'pts/game to ' + posLbl + ' in 2026 — #' + r.rank + ' most of ' + r.n + ' (' + r.games + ' gm)';
+  if (typeof r.adjRank === 'number') tip += ' · schedule-adjusted ' + r.adjV + ' (#' + r.adjRank + ')' + ((r.offFaced && r.games >= 2) ? ' — faced ' + (r.offFaced > 0 ? 'tougher' : 'softer') + ' offenses than avg (' + (r.offFaced > 0 ? '+' : '') + r.offFaced + ' pts/gm)' : '');
   return '<td class="oppppg-cell weekly-only-cell" style="display:none" title="' + tip.replace(/"/g, '&quot;') + '"><span style="color:' + c + ';font-weight:700;cursor:help">' + r.v + '</span><span class="oppppg-rk">#' + r.rank + '</span></td>';
 }
 
@@ -12017,7 +12119,10 @@ function buildWeeklyCardView(d) {
   const isDst = d.s === 'DST';
   let html = '<div class="card-section">' + title('Matchup');
   html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), 'accent');
+  const oppDiff = (typeof window._weeklyOppDifficulty === 'function') ? window._weeklyOppDifficulty(d.t, d.s) : null;
+  const oppNote = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : '';
+  const oppCol = oppDiff === 'hard' ? '#ef4444' : oppDiff === 'easy' ? '#22c55e' : oppDiff === 'medium' ? '#facc15' : null;
+  html += box('OPP', (oppCol ? '<span style="color:' + oppCol + '">' : '') + (entry.home ? 'vs ' : '@ ') + esc(entry.opp) + (oppCol ? '</span>' : ''), oppCol ? '' : 'accent', oppNote || null);
   html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', sp != null && sp < 0 ? 'green' : '');
   html += isDst
     ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)')
@@ -24037,7 +24142,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       const oppHtml = '<span class="sst-opp' + (diffColor ? '" style="color:' + diffColor : '') + '">' + (c.home ? 'vs ' : '@ ')
         + (oppLogo ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + oppLogo + '.png" alt="" loading="lazy">' : '') + esc(c.opp) + '</span>';
       html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-      html += box('OPP', oppHtml, '', c.diff ? (c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent Clay ' + (isDst ? 'offense' : 'defense') + ' rank)' : null);
+      html += box('OPP', oppHtml, '', c.diff ? ((typeof window._weeklyOppDiffNote === 'function' && window._weeklyOppDiffNote(d.t, d.s)) || ((c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent ' + (isDst ? 'offense' : 'defense') + ' rank)')) : null);
       html += box('SPREAD', '<span class="' + bestCls(isBest('spread', c.spread)) + (c.spread != null && c.spread < 0 ? ' green' : '') + '">' + fmtSpread(c.spread) + '</span>', '', 'This team\'s spread (negative = favored)');
       html += isDst
         ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>', '', 'Points the opponent is priced to score — lower = better D/ST spot')

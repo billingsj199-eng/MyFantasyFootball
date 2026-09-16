@@ -4347,36 +4347,65 @@
     qb_inherit_mult: 'backup QB role', pos_qb: 'position', pos_rb: 'position', pos_wr: 'position', pos_te: 'position' };
   function ntWhy(p, wk, sc, slot, wp) {
     var w = wp && wp.why; if (!w || p.isDST) return null;
-    var steps = [], run = w.clayPg;
-    var push = function (key, d, lab) { if (Math.abs(d) >= 0.1) steps.push({ key: key, d: d, lab: lab }); };
+    var steps = [], all = [], run = w.clayPg;
+    // lab = Sim Lab wording (NOTES); pub = plain wording for the main-site player card
+    var push = function (key, d, lab, pub) { all.push({ key: key, d: d, lab: lab, pub: pub || lab }); if (Math.abs(d) >= 0.1) steps.push({ key: key, d: d, lab: lab, pub: pub || lab }); };
     var rec = window.SIM_2026 && window.SIM_2026.players ? window.SIM_2026.players[p.norm] : null;
-    if (rec && rec.g) push('form', w.jsBase - w.clayPg, '2026 form (' + ntF(rec.ppg, 1) + ' half PPG in ' + rec.g + ' gm, ' + Math.round(100 * rec.g / (5 + rec.g)) + '% weight)');
-    push('rookie', w.jsPgRook - w.jsBase, 'rookie level x' + ntF(w.rook, 2));
-    if (w.usage) push('usage', w.jsPg - w.jsPgRook, 'snap usage ' + ntF(w.usage.share, 0) + '% x ' + ntF(w.usage.plays, 0) + ' plays');
+    if (rec && rec.g) push('form', w.jsBase - w.clayPg, '2026 form (' + ntF(rec.ppg, 1) + ' half PPG in ' + rec.g + ' gm, ' + Math.round(100 * rec.g / (5 + rec.g)) + '% weight)',
+      '2026 production so far (' + rec.g + ' game' + (rec.g > 1 ? 's' : '') + ', ' + Math.round(100 * rec.g / (5 + rec.g)) + '% weight vs the preseason baseline)');
+    push('rookie', w.jsPgRook - w.jsBase, 'rookie level x' + ntF(w.rook, 2), 'rookie role growth (rookies outscore their early numbers)');
+    if (w.usage) push('usage', w.jsPg - w.jsPgRook, 'snap usage ' + ntF(w.usage.share, 0) + '% x ' + ntF(w.usage.plays, 0) + ' plays', 'snap share ' + ntF(w.usage.share, 0) + '% of ' + ntF(w.usage.plays, 0) + ' team plays per game');
     run = w.jsPg;
-    var fp = ntFpa(slot.opp), oppLab = 'opp ' + slot.opp;
-    if (fp && fp.f[p.pos] != null && fp.lg[p.pos]) oppLab += ' allows ' + ntSigned(100 * (fp.f[p.pos] / fp.lg[p.pos] - 1), 0) + '% to ' + p.pos + 's (' + (fp.f._g || '?') + ' gm)';
-    else if (Math.abs(w.dAdj - 1) >= 0.01) oppLab += ' (Clay unit grade x' + ntF(w.dAdj, 2) + ')';
+    var fp = ntFpa(slot.opp), oppLab = 'opp ' + slot.opp, oppPub = slot.opp + ' defense';
+    if (fp && fp.f[p.pos] != null && fp.lg[p.pos]) { var fpp = ntSigned(100 * (fp.f[p.pos] / fp.lg[p.pos] - 1), 0); oppLab += ' allows ' + fpp + '% to ' + p.pos + 's (' + (fp.f._g || '?') + ' gm)'; oppPub = slot.opp + ' allows ' + fpp + '% fantasy points to ' + p.pos + 's (' + (fp.f._g || '?') + ' gm, blended with its preseason grade)'; }
+    else if (Math.abs(w.dAdj - 1) >= 0.01) { oppLab += ' (Clay unit grade x' + ntF(w.dAdj, 2) + ')'; oppPub = slot.opp + ' defense grade vs ' + p.pos + 's'; }
     var im = E.injuryState() && E.injuryState().map ? E.injuryState().map[p.norm] : null;
     var avLab = w.iA > 1 ? (p.pos === 'QB' ? 'starting QB out: backup inherits 85% of his level' : 'vacated work from injured teammates x' + ntF(w.iA, 2)) : (im ? 'availability ' + (im.src || '') + ' x' + ntF(w.iA, 2) : 'availability x' + ntF(w.iA, 2));
-    var sn = window.SIM_SNAPS_2026 ? window.SIM_SNAPS_2026[p.name] : null, snLab = 'snap trend';
-    if (sn && sn.w) { var sw = Object.keys(sn.w).map(Number).filter(function (x) { return x < wk; }).sort(function (x, y) { return x - y; }); if (sw.length >= 2) snLab += ' (last ' + ntF(sn.w[sw[sw.length - 1]], 0) + '% vs avg ' + ntF(sw.reduce(function (t, x) { return t + sn.w[x]; }, 0) / sw.length, 0) + '%)'; }
-    [['vegas', w.veg, 'Vegas (' + p.tm + ' implied ' + ntF(w.implied, 1) + ' vs avg ' + ntF(w.avgImplied, 1) + ')'], ['opp', w.opp, oppLab], ['cbShadow', w.cbShadow, 'CB shadow'],
-     ['cb1Out', w.cb1Out, slot.opp + ' CB1 out'], ['olOut', w.olOut, p.tm + ' OL starters out'], ['pressure', w.pressure, 'soft pass rush'], ['weather', w.weather, 'wind'],
-     ['snap', w.snap, snLab], ['route', w.route, 'route trend'], ['ramp', w.ramp, 'return-from-injury ramp'], ['avail', w.iA, avLab]].forEach(function (m) {
+    var avPub = w.iA > 1 ? (p.pos === 'QB' ? 'starting QB out - he takes over the job' : 'extra targets / carries from injured teammates') : 'injury status (' + (im && im.src ? String(im.src).replace(/-/g, ' ') : 'designated') + ')';
+    var sn = window.SIM_SNAPS_2026 ? window.SIM_SNAPS_2026[p.name] : null, snLab = 'snap trend', snPub = 'snap share trend';
+    if (sn && sn.w) { var sw = Object.keys(sn.w).map(Number).filter(function (x) { return x < wk; }).sort(function (x, y) { return x - y; }); if (sw.length >= 2) { var sLast = ntF(sn.w[sw[sw.length - 1]], 0), sAvg = ntF(sw.reduce(function (t, x) { return t + sn.w[x]; }, 0) / sw.length, 0); snLab += ' (last ' + sLast + '% vs avg ' + sAvg + '%)'; snPub += ' (last game ' + sLast + '% vs ' + sAvg + '% season)'; } }
+    [['vegas', w.veg, 'Vegas (' + p.tm + ' implied ' + ntF(w.implied, 1) + ' vs avg ' + ntF(w.avgImplied, 1) + ')', 'Vegas team total (' + p.tm + ' ' + ntF(w.implied, 1) + ' vs ' + ntF(w.avgImplied, 1) + ' league avg)'],
+     ['opp', w.opp, oppLab, oppPub], ['cbShadow', w.cbShadow, 'CB shadow', 'shadowed by a top cornerback'],
+     ['cb1Out', w.cb1Out, slot.opp + ' CB1 out', slot.opp + ' top cornerback out'], ['olOut', w.olOut, p.tm + ' OL starters out', p.tm + ' offensive line starters out'],
+     ['pressure', w.pressure, 'soft pass rush', slot.opp + ' soft pass rush'], ['weather', w.weather, 'wind', 'wind forecast'],
+     ['snap', w.snap, snLab, snPub], ['route', w.route, 'route trend', 'route share trend'], ['ramp', w.ramp, 'return-from-injury ramp', 'first games back from injury'], ['avail', w.iA, avLab, avPub]].forEach(function (m) {
       if (m[1] == null || m[1] === 1) return;
-      var d = run * (m[1] - 1); run *= m[1]; push(m[0], d, m[2]);
+      var d = run * (m[1] - 1); run *= m[1]; push(m[0], d, m[2], m[3]);
     });
     var lm = (p.pos === 'QB' ? window.SIM_QB_TDLUCK_2026 : (p.pos === 'RB' ? window.SIM_RB_TDLUCK_2026 : window.SIM_REC_TDLUCK_2026)) || null, lr = lm ? lm[p.norm] : null;
-    push('luck', w.luck, 'TD luck (' + (lr ? lr.td + ' TD on ' + ntF(lr.xtd, 1) + ' expected' : 'regression') + ')');
+    push('luck', w.luck, 'TD luck (' + (lr ? lr.td + ' TD on ' + ntF(lr.xtd, 1) + ' expected' : 'regression') + ')',
+      'TD regression (' + (lr ? lr.td + ' TD' + (lr.td === 1 ? '' : 's') + ' on ' + ntF(lr.xtd, 1) + ' expected from where he got the ball' : 'scoring back toward his usage') + ')');
     var model = Math.max(0, run + w.luck), eff = E.effMean(wp);
     var mk = eff - model;
-    if (Math.abs(mk) >= 0.1) steps.push({ key: 'market', d: mk, lab: wp.propSrc === 'line' ? 'books\' lines (' + ntF(wp.propMean, 1) + ', anchored ' + Math.round(100 * (wp.propW || 0.7)) + '%)' : wp.propSrc === 'rate' ? 'market rate from other weeks (' + ntF(wp.propMean, 1) + ')' : 'market / effective mean' });
+    var mkLab = wp.propSrc === 'line' ? 'books\' lines (' + ntF(wp.propMean, 1) + ', anchored ' + Math.round(100 * (wp.propW || 0.7)) + '%)' : wp.propSrc === 'rate' ? 'market rate from other weeks (' + ntF(wp.propMean, 1) + ')' : 'market / effective mean';
+    var mkPub = wp.propSrc === 'line' ? 'sportsbook player props (they imply ' + ntF(wp.propMean, 1) + ')' : wp.propSrc === 'rate' ? 'sportsbook props from his other weeks' : 'market adjustment';
+    all.push({ key: 'market', d: mk, lab: mkLab, pub: mkPub });
+    if (Math.abs(mk) >= 0.1) steps.push({ key: 'market', d: mk, lab: mkLab, pub: mkPub });
     var top = steps.slice().sort(function (x, y) { return Math.abs(y.d) - Math.abs(x.d); })[0];
     var text = 'PROJ ' + ntF(eff, 1) + ' = Clay ' + ntF(w.clayPg, 1) + steps.map(function (s) { return ' \u00b7 ' + s.lab + ' ' + ntSigned(s.d, 1); }).join('') +
       (top ? ' \u2014 biggest driver: ' + top.lab.split(' (')[0] + ' ' + ntSigned(top.d, 1) : '');
-    return { text: text, steps: steps, model: model, eff: eff, top: top };
+    return { text: text, steps: steps, all: all, model: model, eff: eff, top: top, clay: w.clayPg };
   }
+  // main-site export (export_notes.js --repo -> data/proj_why_2026.json, player card WEEKLY tab "Why this projection")
+  window.SimLabWhy = function (wk) {
+    wk = +wk || +(document.getElementById('nt-week') || {}).value || state.injuryWeek || 1;
+    var fmts = [E.PRESETS.half, E.PRESETS.ppr, E.PRESETS.std], out = {};
+    var r2 = function (v) { return Math.round(v * 100) / 100; };
+    state.players.list.forEach(function (p) {
+      if (p.isDST || ['QB', 'RB', 'WR', 'TE'].indexOf(p.pos) < 0) return;
+      var slot = state.schedule.byTeam[p.tm] && state.schedule.byTeam[p.tm][wk]; if (!slot) return;
+      var ws = fmts.map(function (sc) { var wp = E.weeklyProjection(p, wk, sc, state.schedule); return wp ? ntWhy(p, wk, sc, slot, wp) : null; });
+      if (!ws[0] || ws[0].eff < 1) return;
+      var keys = [], lab = {};
+      ws.forEach(function (x) { if (x) x.all.forEach(function (s) { if (keys.indexOf(s.key) < 0) { keys.push(s.key); lab[s.key] = s.pub; } }); });
+      var steps = keys.map(function (k) {
+        var d = ws.map(function (x) { if (!x) return 0; var s = x.all.filter(function (y) { return y.key === k; })[0]; return s ? r2(s.d) : 0; });
+        return { k: k, l: lab[k], d: d };
+      }).filter(function (s) { return s.d.some(function (v) { return Math.abs(v) >= 0.1; }); });
+      out[p.name] = { pos: p.pos, tm: p.tm, opp: slot.opp, home: !!slot.home, c: ws.map(function (x) { return x ? r2(x.clay) : null; }), p: ws.map(function (x) { return x ? r2(x.eff) : null; }), s: steps };
+    });
+    return { week: wk, generated: new Date().toISOString(), players: out };
+  };
   function ntShadowWhy(p, wk) {
     if (!E.learnedShadowExplain || p.isDST) return null;
     var x = E.learnedShadowExplain(p, wk, state.schedule); if (!x || x.corr == null || Math.abs(x.corr) < 0.3) return null;

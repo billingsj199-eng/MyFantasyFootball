@@ -88,6 +88,15 @@ function serve() {
         if (strip(old) !== strip(out)) { fs.writeFileSync(f2, out); console.log(`wrote ${f2} (week ${edges.week}, ${edges.rows.length} players)`); }
         else console.log('matchup edges unchanged');
       } else console.log('matchup edges: nothing to write');
+      const why = await page.evaluate(({ week }) => window.SimLabWhy ? window.SimLabWhy(week) : null, { week: info.week });
+      if (why && why.players && Object.keys(why.players).length) {
+        const f3 = path.join(REPO, 'data', 'proj_why_2026.json');
+        const body3 = JSON.stringify(why);
+        let old3 = ''; try { old3 = fs.readFileSync(f3, 'utf8'); } catch (_) {}
+        const strip3 = s => s.replace(/"generated":"[^"]*"/g, '');
+        if (strip3(old3) !== strip3(body3)) { fs.writeFileSync(f3, body3); console.log(`wrote ${f3} (week ${why.week}, ${Object.keys(why.players).length} players, ${Math.round(body3.length / 1024)} KB)`); }
+        else console.log('projection why unchanged');
+      } else console.log('projection why: nothing to write');
     }
   } finally {
     await browser.close(); srv.close();

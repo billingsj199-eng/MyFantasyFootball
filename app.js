@@ -8026,6 +8026,44 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // null = nothing currently published (non-admins can't enter WEEKLY mode).
   window._weeklyPublishedWeek = window._weeklyPublishedWeek || null;
 
+  function _weeklyIsAdmin(u) {
+    if (!u && typeof firebase !== 'undefined' && firebase.auth) {
+      try { u = firebase.auth().currentUser; } catch(_e) {}
+    }
+    if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
+    const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
+    const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
+    return adminByEmail || adminByFn;
+  }
+  window._weeklyIsAdmin = _weeklyIsAdmin;
+
+  // FANTASY-WEEK ROLLOVER (Jack, 2026-09-16): a week is "over" — and the next
+  // one becomes the site's current week — at TUESDAY 07:00 ET after its
+  // Monday-night game. Derived from _SEASON_KICKS_2026 (each week's first
+  // kickoff): week N's end = the Tuesday on/after kickoff+2d at 07:00 ET
+  // (11:00 UTC on EDT dates, 12:00 UTC from Nov 1 2026 when DST ends).
+  // Returns the current fantasy week 1-18, or null outside the season.
+  // `now` is a test hook (ms).
+  window._weeklyScheduleWeek = function(now) {
+    now = now || Date.now();
+    let kicks = null;
+    try { kicks = _SEASON_KICKS_2026; } catch (_e) { return null; } // TDZ before the const runs
+    if (!Array.isArray(kicks)) return null;
+    const wkEnd = kick => {
+      const d = new Date(kick + 2 * 86400000);
+      while (d.getUTCDay() !== 2) d.setUTCDate(d.getUTCDate() + 1);
+      const est = d.getTime() >= Date.UTC(2026, 10, 1, 6, 0); // US DST ends Nov 1 2026 2am ET
+      d.setUTCHours(est ? 12 : 11, 0, 0, 0);
+      return d.getTime();
+    };
+    const cur = kicks.find(w => now < wkEnd(w.kick));
+    return cur ? cur.wk : null;
+  };
+  // Master switch for the automatic roll (active week + published week move
+  // to the schedule week at Tuesday 07:00 ET). Set false to go back to
+  // manual selector + PUBLISH only.
+  window._WEEKLY_AUTO_ROLL = (window._WEEKLY_AUTO_ROLL == null) ? true : window._WEEKLY_AUTO_ROLL;
+
   function _weeklyAdminCheck(userArg) {
     const tab = document.getElementById('weeklyModeTab');
     const selWrap = document.getElementById('weeklyWeekSelectorWrap');
@@ -8036,9 +8074,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       try { u = firebase.auth().currentUser; } catch(_e) {}
     }
     if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
-    const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
-    const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
-    const admin = adminByEmail || adminByFn;
+    const admin = _weeklyIsAdmin(u);
     const published = window._weeklyPublishedWeek;
     // Tab is visible to admins always, and to everyone else only when a week
     // is currently published.
@@ -8088,15 +8124,44 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // once Firebase auth IS ready, so the Firestore read still happens.
   function _weeklyApplySettings(d) {
     const sel = document.getElementById('activeWeekSelect');
-    const wk = parseInt(d.week, 10);
+    window._weeklyLastSettings = d;
+    let wk = parseInt(d.week, 10);
+    let pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
+    if (!(pw >= 1 && pw <= 18)) pw = null;
+    // Automatic roll: once the schedule week passes the stored week (Tuesday
+    // 07:00 ET), the active week — and the published week, if one is live —
+    // jump to it, so users land on the new week's projection-ordered board
+    // before Jack ranks it. `autoRolledWeek` records the roll in Firestore
+    // so a later manual selector/PUBLISH choice is never bumped back; until
+    // an admin client writes it, every client applies the same roll locally.
+    // Only ever moves FORWARD; never publishes when nothing is published.
+    const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+    window._weeklyLastScheduleWeek = sw;
+    if (sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw) {
+      const roll = {};
+      if (!(wk >= 1) || wk < sw) { wk = sw; roll.week = sw; }
+      if (pw != null && pw < sw) { pw = sw; roll.publishedWeek = sw; }
+      if (Object.keys(roll).length && _weeklyIsAdmin() && window._weeklyRollWritten !== sw) {
+        window._weeklyRollWritten = sw;
+        let db = null;
+        try { db = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
+        if (db) {
+          roll.autoRolledWeek = sw;
+          roll.autoRolledAt = new Date().toISOString();
+          db.collection('settings').doc('active_week').set(roll, { merge: true })
+            .then(() => { console.log('[Weekly] auto-rolled to week ' + sw, roll); })
+            .catch(e => { console.warn('[Weekly] auto-roll write failed:', e); window._weeklyRollWritten = null; });
+        }
+      }
+    }
     if (wk >= 1 && wk <= 18) {
       window._weeklyActiveWeek = wk;
       localStorage.setItem('mff_active_week', String(wk));
       if (sel) sel.value = String(wk);
     }
-    const pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
-    window._weeklyPublishedWeek = (pw >= 1 && pw <= 18) ? pw : null;
-    // Active week is now known — re-derive untouched weekly boards from redraft.
+    window._weeklyPublishedWeek = pw;
+    // Active week is now known — re-derive untouched weekly boards (PPR
+    // projection order for unowned positions / untouched weeks).
     if (typeof window._weeklyReconcileBoard === 'function') {
       window._weeklyReconcileBoard('jacks');
       window._weeklyReconcileBoard('mine');
@@ -8139,6 +8204,18 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     } catch(_e) {}
   }
   _weeklyLoadActiveWeek();
+  // Roll a tab that stays open across Tuesday 07:00 ET, and let an admin
+  // client that signed in AFTER the settings snapshot arrived write the roll.
+  setInterval(() => {
+    try {
+      const d = window._weeklyLastSettings;
+      if (!d) return;
+      const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+      const pendingAdminWrite = !!(sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw
+        && window._weeklyRollWritten !== sw && _weeklyIsAdmin());
+      if (sw !== window._weeklyLastScheduleWeek || pendingAdminWrite) _weeklyApplySettings(d);
+    } catch (_e) {}
+  }, 60000);
 
   // Wire PUBLISH / REMOVE buttons (admin-only via the rule + UI gating).
   const _pubBtn = document.getElementById('weeklyPublishBtn');
@@ -8291,10 +8368,49 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   window._weeklyBaseline = window._weeklyBaseline || {};     // ver -> board snapshot at last reconcile (edit detection)
   window._weeklySessionOwned = window._weeklySessionOwned || {};
 
+  // DEFAULT WEEKLY ORDER = strictly by this week's PPR projection (Jack,
+  // 2026-09-16): an untouched week — and every position Jack hasn't
+  // re-ranked yet — ranks by the PROJ column's number (Sim Lab row where one
+  // exists, else the props/consensus/heuristic chain) in PPR regardless of
+  // the scoring toggle. Ties and no-projection players keep the redraft
+  // order; byes / ruled-out players project 0 and sink. The moment a
+  // position is edited + saved it is owned and this stops applying to it.
+  window._weeklyProjPprOf = function(d) {
+    if (!d) return null;
+    const prev = rankingScoringFmt;
+    rankingScoringFmt = 'ppr';
+    try {
+      const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+      const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, base) : base;
+      return (typeof v === 'number' && isFinite(v)) ? v : null;
+    } catch (e) { return null; }
+    finally { rankingScoringFmt = prev; }
+  };
+  // Regime gate: the projection default starts with WEEK 2 (Jack, 2026-09-16 —
+  // week 1 was hand-ranked the old way) and only ever applies to the current
+  // schedule week or later, so a past week viewed from the selector is never
+  // re-derived differently than it was.
+  window._WEEKLY_PROJ_DEFAULT_FROM = 2;
+  window._weeklyProjDefaultFor = function(wk) {
+    wk = wk || window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    if (wk < window._WEEKLY_PROJ_DEFAULT_FROM) return false;
+    const sw = (typeof window._weeklyScheduleWeek === 'function') ? window._weeklyScheduleWeek() : null;
+    return sw == null || wk >= sw;
+  };
+  window._weeklyProjOrder = function(ver) {
+    const redraft = (versionBoards[ver] && versionBoards[ver].redraft) || [];
+    const score = new Map();
+    redraft.forEach(idx => { const v = window._weeklyProjPprOf(D[idx]); score.set(idx, v == null ? -1 : v); });
+    // Stable sort: proj desc, redraft slot breaks ties (and orders the no-proj tail).
+    return redraft.map((idx, slot) => ({ idx, slot, v: score.get(idx) }))
+      .sort((a, b) => (b.v - a.v) || (a.slot - b.slot))
+      .map(o => o.idx);
+  };
+
   // Slot-stable merge: keep `base`'s order for OWNED positions, but re-fill
-  // the slots occupied by unowned positions with the redraft-relative order
-  // of those positions — so the QB list keeps following redraft even after
-  // the RB list was hand-ranked and saved.
+  // the slots occupied by unowned positions with the projection order of
+  // those positions — so the QB list keeps following this week's PROJ even
+  // after the RB list was hand-ranked and saved.
   window._weeklyMergeUnowned = function(base, redraft, ownedPos) {
     const unownedSlots = [];
     base.forEach((idx, slot) => { const p = D[idx] && D[idx].s; if (p && !ownedPos[p]) unownedSlots.push(slot); });
@@ -8333,12 +8449,20 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const _wkAF = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     const _ownedAF = window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][_wkAF];
     if (_ownedAF && _ownedAF.FLEX) return;
+    // Projection-default regime (week 2+, current/future weeks): the WHOLE
+    // board interleaves by PPR projection — QB, K and D/ST slots included —
+    // so an untouched week reads strictly by PROJ and a hand-ranked position
+    // keeps its internal order while its players sit where their projection
+    // puts them. Earlier weeks keep the RB/WR/TE-only interleave.
+    const _allPos = (typeof window._weeklyProjDefaultFor === 'function') && window._weeklyProjDefaultFor(_wkAF);
+    const POS = _allPos ? ['QB', 'RB', 'WR', 'TE', 'K', 'DST'] : ['RB', 'WR', 'TE'];
     const b = versionBoards[ver].weekly;
     const flexSlots = [];
-    const queues = { RB: [], WR: [], TE: [] };
+    const queues = {};
+    POS.forEach(p => queues[p] = []);
     b.forEach((idx, sl) => {
       const p = D[idx] && D[idx].s;
-      if (p === 'RB' || p === 'WR' || p === 'TE') { flexSlots.push(sl); queues[p].push(idx); }
+      if (queues[p]) { flexSlots.push(sl); queues[p].push(idx); }
     });
     if (flexSlots.length < 2) return;
     const score = {};
@@ -8346,17 +8470,22 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (score[idx] == null) {
         let v = null;
         try {
-          const base = (typeof adjProjPpg === 'function') ? adjProjPpg(D[idx]) : null;
-          v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(D[idx], base) : base;
+          v = _allPos
+            ? window._weeklyProjPprOf(D[idx])
+            : (function() {
+                const base = (typeof adjProjPpg === 'function') ? adjProjPpg(D[idx]) : null;
+                return (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(D[idx], base) : base;
+              })();
         } catch (e) { v = null; }
         score[idx] = (v != null && isFinite(v)) ? v : -1;
       }
       return score[idx];
     };
-    const heads = { RB: 0, WR: 0, TE: 0 };
+    const heads = {};
+    POS.forEach(p => heads[p] = 0);
     flexSlots.forEach(sl => {
       let best = null, bestScore = -Infinity;
-      ['RB', 'WR', 'TE'].forEach(p => {
+      POS.forEach(p => {
         const idx = queues[p][heads[p]];
         if (idx != null && scoreOf(idx) > bestScore) { best = p; bestScore = scoreOf(idx); }
       });
@@ -8510,6 +8639,19 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // it clobber a live board; reconcile will derive from redraft instead.
     if (!obj || !obj._order || !obj._order.length) { window._weeklyReconcileBoard(ver); return; }
     window._weeklySaved[ver] = obj;
+    // ONE-TIME (Jack, 2026-09-16): week 2 was saved under the old
+    // redraft-derived default with only D/ST hand-ranked. Any week-2 save
+    // written BEFORE this shipped keeps D/ST ownership only, so the other
+    // positions (K included) drop to the projection order; every save made
+    // after the cutoff carries Jack's real intent and is left alone.
+    // Self-expiring: the cutoff is fixed, and week 3+ saves never match.
+    if (ver === 'jacks' && obj._week === 2 && Array.isArray(obj._ownedPos)) {
+      const at = Date.parse(window._jacksUpdatedAt || '');
+      if (isFinite(at) && at < Date.parse('2026-09-16T16:00:00Z')) {
+        obj = Object.assign({}, obj, { _ownedPos: obj._ownedPos.filter(p => p === 'DST') });
+        window._weeklySaved[ver] = obj;
+      }
+    }
     if (obj._week != null && Array.isArray(obj._ownedPos)) {
       const set = {};
       obj._ownedPos.forEach(p => set[p] = true);
@@ -8575,11 +8717,16 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         base = null;
       }
     }
+    // Source for unowned positions / untouched weeks: this week's PPR
+    // projection order from week 2 on (current + future weeks only — past
+    // weeks keep deriving from redraft exactly as before), else redraft.
+    const projDefault = window._weeklyProjDefaultFor(wk);
+    const freshSrc = () => projDefault ? window._weeklyProjOrder(ver) : versionBoards[ver].redraft.slice();
     if (base) {
-      // Owned positions keep the edited order; everything else re-follows redraft.
-      versionBoards[ver].weekly = window._weeklyMergeUnowned(base, versionBoards[ver].redraft, ownedPos || {});
+      // Owned positions keep the edited order; everything else re-follows the fresh source.
+      versionBoards[ver].weekly = window._weeklyMergeUnowned(base, freshSrc(), ownedPos || {});
     } else if (!(saved && saved._week === wk)) {
-      versionBoards[ver].weekly = versionBoards[ver].redraft.slice();
+      versionBoards[ver].weekly = freshSrc();
     }
     // FLEX interleave derives from positional order + weekly PROJ PPG.
     window._weeklyAutoFlex(ver);
@@ -8653,7 +8800,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       // weekly slate-average cache keys off the week — refresh both.
       window._weeklySlateAvgCache = null;
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
-      // New week: an untouched board re-derives from the current Redraft order.
+      // New week: an untouched board re-derives (week 2+: PPR projection order; earlier: redraft).
       if (typeof window._weeklyReconcileBoard === 'function') {
         window._weeklyReconcileBoard('jacks');
         window._weeklyReconcileBoard('mine');
@@ -29086,7 +29233,10 @@ window.fmtHeight = fmtHeight;
   //   2 (2026-09-03): + _cut / _cutPos per mode — free/anon viewers loaded the
   //     slice with no cut line, so the fallback-filled board showed every
   //     below-cut player (and a +/- sort floated them to the top).
-  const _PUB_SCHEMA = 2;
+  //   3 (2026-09-16): + weekly _ownedPos — without it the free slice was a
+  //     "legacy" weekly save that froze every position, so free viewers never
+  //     got the projection-ordered default for positions Jack hasn't ranked.
+  const _PUB_SCHEMA = 3;
   function _buildJacksPublicPayload(fullData) {
     const out = { jacks: {}, _pubSchema: _PUB_SCHEMA };
     ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => {
@@ -29100,6 +29250,7 @@ window.fmtHeight = fmtHeight;
         if (kept.length) slice._posTiers[pk] = kept;
       });
       if (m === 'weekly' && src._week != null) slice._week = src._week;
+      if (m === 'weekly' && Array.isArray(src._ownedPos)) slice._ownedPos = src._ownedPos.slice();
       // Cut lines ride along: loadModeData / _weeklyStashSaved apply them, and
       // getFiltered then hides below-cut players from non-editors.
       if (src._cut >= 1) slice._cut = src._cut;

@@ -172,6 +172,23 @@
 .rs-adv tbody tr.rs-adv-total td { background: var(--surface); color: var(--text); font-weight: 700; border-top: 2px solid var(--border); }
 .rs-adv-foot { color: var(--text3); font-size: .72rem; margin-top: 8px; line-height: 1.45; }
 
+/* scatterplot: canvas so Download PNG is the picture on screen; the head reuses the room
+   chart's pick / close styles. --viz-1 only feeds the theme read for the fit line fallback. */
+.rs-scatter { --viz-1: #3987e5; margin-bottom: 12px; }
+:root[data-theme="light"] .rs-scatter { --viz-1: #2a78d6; }
+.rs-adv-export.on { border-color: rgba(245,158,11,.55); color: var(--accent); background: rgba(245,158,11,.12); }
+.rs-scatter .rs-co-head { gap: 10px 14px; align-items: center; }
+.rs-scatter .rs-co-close { margin-left: 0; }
+.rs-scatter .rs-co-close#rsScHide { margin-left: auto; }
+.rs-scatter .rs-sc-dl { color: var(--accent); border-color: rgba(245,158,11,.5); }
+.rs-scatter .rs-sc-dl:disabled { opacity: .5; cursor: default; }
+.rs-sc-wrap { position: relative; margin-top: 10px; }
+.rs-sc-wrap canvas { display: block; max-width: 100%; border-radius: 8px; }
+.rs-sc-wrap canvas[hidden] { display: none; }
+.rs-sc-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: .74rem; line-height: 1.4; color: var(--text2); white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+.rs-sc-tip[hidden] { display: none; }
+.rs-sc-tip strong { color: var(--text); }
+
 @media (max-width: 640px) {
   .rs-wrapper { padding: 14px 10px 40px; }
   .rs-controls { gap: 10px; }
@@ -179,4 +196,5 @@
   .rs-adv-q { width: 100%; }
   .rs-adv .rs-adv-nm { max-width: 118px; }
   #rsCoVs { max-width: calc(100vw - 150px); }
+  .rs-scatter .rs-co-close#rsScHide { margin-left: 0; }
 }

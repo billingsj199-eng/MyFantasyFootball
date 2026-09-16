@@ -156,6 +156,8 @@
 :root[data-theme="light"] .rs-room { --viz-1: #2a78d6; --viz-2: #eb6834; --viz-3: #1baf7a; --viz-4: #eda100; --viz-5: #e87ba4; --viz-6: #008300; }
 .rs-room .rs-room-pick { display: inline-flex; align-items: center; gap: 6px; color: var(--text3); font-size: .74rem; }
 .rs-room .rs-room-scroll { overflow-x: auto; overflow-y: hidden; }
+/* weeks chart sits under the table */
+.rs-weeks { margin-top: 12px; }
 .rs-room .rs-co-svg .endlab { fill: var(--text); font-size: 10.5px; font-variant-numeric: tabular-nums; }
 .rs-room .rs-co-svg polyline.series.s1 { stroke: var(--viz-1); } .rs-room .rs-co-svg circle.dot.s1 { fill: var(--viz-1); } .rs-room .rs-co-key.line.s1 { border-top-color: var(--viz-1); }
 .rs-room .rs-co-svg polyline.series.s2 { stroke: var(--viz-2); } .rs-room .rs-co-svg circle.dot.s2 { fill: var(--viz-2); } .rs-room .rs-co-key.line.s2 { border-top-color: var(--viz-2); }

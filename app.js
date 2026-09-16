@@ -5964,6 +5964,7 @@ function render() {
   const _statMode = _effStatMode();
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
+  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy');
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
   // view carries boom/bust in the ppg25/l4ppg swap columns instead.
@@ -6248,6 +6249,7 @@ function render() {
       }
     }
 
+    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
@@ -6255,7 +6257,7 @@ function render() {
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? _cc.r : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
-      ${_statTd1}
+      ${_statTd1}${_wkSplit.pre}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
       <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}"${(()=>{ const n = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : ''; return n ? ' title="' + n.replace(/"/g, '&quot;') + '"' : ''; })()} style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
@@ -6267,7 +6269,7 @@ function render() {
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>
       ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
-      ${_wkXfpInject(_statTds, d, _isWeekly && _statMode === 'fantasy')}
+      ${_wkSplit.post}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
@@ -10070,17 +10072,34 @@ function _wkXfpCellHtml(d, show) {
   if (!x) return blank;
   const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
   const sg = v => (v >= 0 ? '+' : '') + f1(v);
-  const oc = x.fpoeg <= -1.5 ? '#22c55e' : x.fpoeg >= 1.5 ? '#f87171' : null;
+  // Same positional color scale as PROJ / '26 PPG (it sits right beside them);
+  // the over-expected split lives in the tooltip — the gap vs '26 PPG is visible.
+  const xc = posFptsColor(x.xfpg, d.s);
   const tip = (x.n + ' game' + (x.n > 1 ? 's' : '') + ' to date: expected ' + f1(x.xfpg) + ' /gm vs actual ' + f1(x.ppg)
     + ' — scored ' + sg(x.fpoeg) + ' /gm vs expected: TD luck ' + sg(x.tdg) + ' (regresses), '
     + (d.s === 'QB' && x.int ? 'INTs ' + sg(x.intg) + ', ' : '') + 'yards/catches ' + sg(x.fpoeg - x.luckg) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
-  return '<td class="xfpg-cell weekly-only-cell" style="display:none" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span>'
-    + '<span class="xfpg-oe" style="' + (oc ? 'color:' + oc : 'opacity:.55') + '">' + sg(x.fpoeg) + '</span></td>';
+  return '<td class="xfpg-cell weekly-only-cell pts-cell" style="display:none' + (xc ? ';color:' + xc + ';font-weight:700' : '') + '" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span></td>';
 }
-function _wkXfpInject(tds, d, show) {
-  const cell = _wkXfpCellHtml(d, show);
+// WEEKLY FANTASY view column order (Jack 2026-09-16): PROJ · '26 PPG · xFP ·
+// matchup block · L4 PPG. Splits the '26 PPG / L4 PPG pair so the row can
+// emit '26 PPG + xFP right after PROJ; every other view keeps the pair
+// together after the matchup block (xFP placeholder hidden).
+function _wkSplitStatTds(tds, d, wkFant) {
+  const cell = _wkXfpCellHtml(d, wkFant);
   const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
-  return i < 0 ? tds + cell : tds.slice(0, i) + cell + tds.slice(i);
+  const td26 = i < 0 ? tds : tds.slice(0, i), tdL4 = i < 0 ? '' : tds.slice(i);
+  return wkFant ? { pre: td26 + cell, post: tdL4 } : { pre: '', post: td26 + cell + tdL4 };
+}
+// Matching <th> order: move '26 PPG + xFP headers right after PROJ in the
+// weekly FANTASY view, back after Opp PPG otherwise. Idempotent; listeners
+// ride along with the nodes.
+function _wkFantasyColOrder(on) {
+  const proj = document.getElementById('ppgProjHeader'), p26 = document.getElementById('ppg25HeaderTh');
+  const xfp = document.getElementById('xfpGHeader'), opp = document.getElementById('oppPpgHeader');
+  if (!proj || !p26 || !xfp || !opp) return;
+  const anchor = on ? proj : opp;
+  if (anchor.nextElementSibling !== p26) anchor.after(p26);
+  if (p26.nextElementSibling !== xfp) p26.after(xfp);
 }
 function _wkOppPpgCell(d) {
   const r = (typeof window._weeklyOppPpgFor === 'function') ? window._weeklyOppPpgFor(d.t, d.s) : null;
@@ -63725,6 +63744,22 @@ function _rsScatter(cfg) {
     n('rtd', 'Rush TD', 'RuTD/G', 'Rushing', 0, 2, 'Rushing touchdowns'),
     n('scr', 'Scrambles', 'Scr/G', 'Rushing', 0, 1, 'Scrambles (nflverse)', N)
   ];
+  // Situational usage (RB and WR/TE): opportunity shares from play-by-play for every season;
+  // on-field snap shares need nflverse participation, published after each season.
+  const SITG = 'Situational';
+  const SIT_OPP = ' Share of the team\'s carries + targets in that situation, over games played (team view: share of the team\'s season).';
+  const SIT_SNAP = ' Share of the team\'s plays in that situation the player was on the field for (nflverse participation, through 2025; the current season fills in after it ends).';
+  const SIT_COLS = [
+    c('edo', 'Early-Down Opp%', SITG, 1, '1st and 2nd down.' + SIT_OPP),
+    c('d3o', '3rd-Down Opp%', SITG, 1, '3rd down.' + SIT_OPP),
+    c('d3lo', '3rd & Long Opp%', SITG, 1, '3rd down with 7+ to go.' + SIT_OPP),
+    c('syo', 'Short-Yd Opp%', SITG, 1, '3rd or 4th down with 2 or fewer to go.' + SIT_OPP),
+    n('d4c', '4th-Down Opp', '4th/G', SITG, 0, 2, 'Carries + targets on 4th down'),
+    c('eds', 'Early Snap%', SITG, 1, '1st and 2nd down.' + SIT_SNAP),
+    c('d3s', '3rd-Down Snap%', SITG, 1, '3rd down.' + SIT_SNAP),
+    c('d3ls', '3rd & Long Snap%', SITG, 1, '3rd down with 7+ to go.' + SIT_SNAP),
+    c('sys', 'Short-Yd Snap%', SITG, 1, '3rd or 4th down with 2 or fewer to go.' + SIT_SNAP)
+  ];
   const RB_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
@@ -63758,7 +63793,7 @@ function _rsScatter(cfg) {
     c('yprr', 'YPRR', 'Receiving', 2, 'Receiving yards per route run'),
     c('recg', 'Route Grd', 'Receiving', 1, 'PFF receiving grade'),
     c('pbg', 'PBlk Grd', 'Receiving', 1, 'PFF pass-blocking grade')
-  ];
+  ].concat(SIT_COLS);
   const REC_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
@@ -63803,7 +63838,7 @@ function _rsScatter(cfg) {
     c('dyd', 'Deep Yd%', 'Coverage & depth', 1, 'Share of receiving yards on 20+ air-yard targets', N),
     c('dctch', 'Deep Catch%', 'Coverage & depth', 1, 'Catch rate on 20+ air-yard targets'),
     c('blos', 'bLOS Tgt%', 'Coverage & depth', 1, 'Share of targets caught at or behind the line of scrimmage (PFF)', N)
-  ];
+  ].concat(SIT_COLS);
   const OFF = 'Offense', DEF = 'Defense';
   const TM_COLS = [
     c('g', 'G', VOL, 0, 'Games played', N),
@@ -63999,12 +64034,16 @@ function _rsScatter(cfg) {
       cgr: 'cdb', cacc: 'caim', pgr: 'pdb', pacc: 'paim', pypa: 'patt', blz: 'db', bgr: 'bdb', bypa: 'batt' },
     RB: { snp: 'tsn', car: 'ttc', tsh: 'tmt', rtp: 'tmd', i10s: 'tmi', ypc: 'att', yco: 'att', mtf: 'att', elu: 'att',
       bay: 'rsy', exp: 'att', fdp: 'pcar', suc: 'pcar', repa: 'pcar', rgr: 'att', gap: 'gz',
-      tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl' },
+      tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl',
+      edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
+      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 } },
     REC: { snp: 'tsn', rtp: 'tmd', tsh: 'tmt', ays: 'tma', wopr: { wopr: 1 }, tprr: 'rts', slot: 'al', wide: 'al', inl: 'al',
       pbr: 'ppl', yprr: 'rts', grd: 'rts', adot: 'tgt', racr: { r: ['pry', 'pay'] }, yac: 'rec', mtfr: 'rec', fdr: 'rts',
       ctch: 'tgt', drp: 'dr', cc: 'ct', ctg: 'tgt', tqbr: 'tgt', epat: 'xt',
       myprr: { sc: 'mr' }, zyprr: { sc: 'zr' }, mtprr: { sc: 'mr' }, ztprr: { sc: 'zr' }, slyprr: { sc: 'slr' },
-      scr: 'cbt', deep: 'dbt', dyd: 'dy', dctch: 'dtg', blos: 'dbt' },
+      scr: 'cbt', deep: 'dbt', dyd: 'dy', dctch: 'dtg', blos: 'dbt',
+      edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
+      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 } },
     TM: { npace: 'pcn', sg: 'pl', nh: 'pl', pr: 'pl', npr: 'npl', edpr: 'edn', proe: 'pon', rroe: 'pon',
       epa: 'pl', dbepa: 'pa', ruepa: 'rua', sr: 'pl', dbsr: 'pa', rusr: 'rua', xpp: 'pa', xrp: 'rua', adot: 'ayn', yac: 'cmp',
       tdc: 'tdn', rztd: 'rzt', tdd: 'drv', skp: 'pa', prsa: 'pdbt', blzf: 'pdbt', ttt: 'tttw', manf: 'mzr',
@@ -64054,7 +64093,7 @@ function _rsScatter(cfg) {
           else if (k === 'on') res[k] = list.some(o => o.on) ? 1 : 0;
           else if (!sp) res[k] = sum(k);
           else if (typeof sp === 'string') res[k] = wavg(k, sp);
-          else if (sp.r) { const d = sum(sp.r[1]); res[k] = d > 0 ? sum(sp.r[0]) / d : null; }
+          else if (sp.r) { const d = sum(sp.r[1]); res[k] = d > 0 ? sum(sp.r[0]) / d * (sp.pct ? 100 : 1) : null; }
           else if (sp.sc) {
             // build scales facet routes by season routes / routes in the weeks the facet saw him
             const all = sum('rts') || 0, seen = list.reduce((a, o) => a + (o[sp.sc] != null ? (o.rts || 0) : 0), 0);
@@ -64095,7 +64134,14 @@ function _rsScatter(cfg) {
     { k: 'tgt', l: 'Targets', d: 0 },
     { k: 'fpt', l: 'Fantasy points', d: 1 },
     { k: 'xfpt', l: 'Expected points', d: 1 },
-    { k: 'ays', l: 'Air-yard share', d: 0, pct: true }
+    { k: 'ays', l: 'Air-yard share', d: 0, pct: true },
+    { k: 'edo', l: 'Early-down opp share', d: 0, pct: true },
+    { k: 'd3o', l: '3rd-down opp share', d: 0, pct: true },
+    { k: 'd3lo', l: '3rd & long opp share', d: 0, pct: true },
+    { k: 'syo', l: 'Short-yardage opp share', d: 0, pct: true },
+    { k: 'eds', l: 'Early-down snap % (thru 2025)', d: 0, pct: true },
+    { k: 'd3s', l: '3rd-down snap % (thru 2025)', d: 0, pct: true },
+    { k: 'sys', l: 'Short-yardage snap % (thru 2025)', d: 0, pct: true }
   ];
   let _roomMetric = 'tsh', _roomOff = false, _roomSeq = 0;
   try {
@@ -64114,6 +64160,120 @@ function _rsScatter(cfg) {
     if (k === 'use') { const u = _usage(o._pos, o); return u ? u.score : null; }
     if (k === 'fpt' || k === 'xfpt') return _scored(o, k);
     return o[k] == null ? null : o[k];
+  }
+
+  // One line per series across evenly spaced x bands (weeks). x = [{ l: axis label, sub: second
+  // line (season) or '', t: hover title }], series = [{ n: name, v: [value | null] }] (null = a
+  // missed week leaves a gap). Fixed 1:1 width inside a scrolling box: 18 weeks of lines and end
+  // labels must never shrink to fit a narrow window - the reader scrolls instead. Returns the
+  // svg html, or '' when nothing can be drawn. Shared by the team room chart and the weeks chart.
+  function _lineSvg(host, x, series, fmt, pct, aria) {
+    const flat = [].concat(...series.map(s => s.v)).filter(v => v != null);
+    if (!flat.length) return '';
+    let hi = Math.max(...flat), lo = Math.min(...flat);
+    hi = hi > 0 ? hi * 1.15 : hi < 0 ? hi * 0.85 : 1;
+    lo = lo < 0 ? lo * 1.15 : 0;
+    if (pct) hi = Math.min(hi, 100);
+    if (hi <= lo) hi = lo + 1;
+    const sub = x.some(p => p.sub);
+    const PADL = 46, PADR = 100, PADT = 22, PLOT = 160, XLAB = sub ? 36 : 24;
+    const avail = host.clientWidth > 0 ? host.clientWidth - 30 : 0;
+    const BAND = avail > 0 ? Math.max(40, Math.min(110, Math.floor((avail - PADL - PADR) / x.length))) : 44;
+    const WIDTH = PADL + BAND * x.length + PADR, HEIGHT = PADT + PLOT + XLAB;
+    const y = v => PADT + (hi - v) / (hi - lo) * PLOT;
+    const cxOf = i => PADL + i * BAND + BAND / 2;
+    let svg = '<div class="rs-room-scroll"><svg class="rs-co-svg" style="width:' + WIDTH + 'px;max-width:none" viewBox="0 0 ' + WIDTH + ' ' + HEIGHT + '" role="img" aria-label="' + _esc(aria) + '">';
+    (lo < 0 ? [hi, 0, lo] : [hi, hi / 2, 0]).forEach(t => {
+      svg += '<line class="' + (t === 0 ? 'zero' : 'grid') + '" x1="' + PADL + '" y1="' + y(t).toFixed(1) + '" x2="' + (WIDTH - PADR) + '" y2="' + y(t).toFixed(1) + '"/>' +
+        '<text class="tick" x="' + (PADL - 8) + '" y="' + (y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(t) + '</text>';
+    });
+    x.forEach((p, i) => {
+      svg += '<text class="xlab" x="' + cxOf(i) + '" y="' + (PADT + PLOT + 16) + '" text-anchor="middle">' + _esc(p.l) + '</text>';
+      if (p.sub) svg += '<text class="xteam" x="' + cxOf(i) + '" y="' + (PADT + PLOT + 29) + '" text-anchor="middle">' + _esc(p.sub) + '</text>';
+    });
+    let dots = '';
+    const ends = [];
+    series.forEach((s, si) => {
+      const c2 = 's' + (si + 1);
+      let run = [];
+      const flush = () => { if (run.length > 1) svg += '<polyline class="series ' + c2 + '" points="' + run.join(' ') + '"/>'; run = []; };
+      s.v.forEach((v, i) => {
+        if (v == null) { flush(); return; }
+        run.push(cxOf(i) + ',' + y(v).toFixed(1));
+        dots += '<circle class="dot ' + c2 + '" cx="' + cxOf(i) + '" cy="' + y(v).toFixed(1) + '" r="4.5"/>';
+      });
+      flush();
+      let last = -1;
+      s.v.forEach((v, i) => { if (v != null) last = i; });
+      if (last >= 0) ends.push({ si: si, x: cxOf(last) + 9, y: y(s.v[last]), name: s.n.replace(/^(\w)\w* /, '$1. '), v: s.v[last] });
+    });
+    svg += dots;
+    // end labels: nudge apart so converging lines stay readable
+    ends.sort((p, q) => p.y - q.y);
+    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 12) ends[i].y = ends[i - 1].y + 12;
+    for (let i = ends.length - 1; i >= 0; i--) { const max = PADT + PLOT - 2 - 12 * (ends.length - 1 - i); if (ends[i].y > max) ends[i].y = max; }
+    ends.forEach(e => { svg += '<text class="endlab s' + (e.si + 1) + '" x="' + e.x.toFixed(1) + '" y="' + (e.y + 4).toFixed(1) + '">' + _esc(e.name) + ' ' + fmt(e.v) + '</text>'; });
+    x.forEach((p, i) => {
+      const parts = series.map(s => (s.v[i] == null ? null : s.n + ' ' + fmt(s.v[i]))).filter(Boolean);
+      svg += '<rect class="hit" x="' + (PADL + i * BAND) + '" y="' + PADT + '" width="' + BAND + '" height="' + PLOT + '">' +
+        '<title>' + _esc(p.t + (parts.length ? ' · ' + parts.join(' · ') : ' · no games')) + '</title></rect>';
+    });
+    return svg + '</svg></div>';
+  }
+
+  // --- weeks chart (Jack 2026-09-16: "a chart under the table for the weeks selected") ---
+  // Two or more week-samples on screen -> one line per player (top 6 of the table's current
+  // sort) across those weeks, for any column of the table. Values come from the week files the
+  // sample was built from (Per game / Totals and the scoring format follow the table). The
+  // metric follows the sorted column unless one is pinned (localStorage rsWkMetric).
+  let _wkMet = 'sort', _wkOff = false;
+  try {
+    _wkMet = localStorage.getItem('rsWkMetric') || 'sort';
+    _wkOff = localStorage.getItem('rsWkOff') === '1';
+  } catch (e) { /* storage blocked */ }
+  // the week-samples on screen, in time order
+  function _samples() {
+    const out = [];
+    _yrsAsc().forEach(y => (_weekList(y) || []).forEach(w => out.push({ yr: y, w: w })));
+    return out;
+  }
+  function _weeksChart() {
+    const host = _el('rsAdvWeeks');
+    if (!host) return;
+    const xs = _samples(), L = _last;
+    if (xs.length < 2 || !L || !L.rows.length || L.pos !== _pos) { host.hidden = true; host.innerHTML = ''; return; }
+    host.hidden = false;
+    const cols = COLS[_pos].filter(c => c.k !== 'g');
+    const pg = L.pg;
+    const lab = c => (pg && c.cnt ? c.lg : c.l);
+    const col = (_wkMet !== 'sort' && cols.find(c => c.k === _wkMet)) || cols.find(c => c.k === _sortK) || cols.find(c => c.k === (_pos === 'TM' ? 'epa' : 'fpt')) || cols[0];
+    const head = '<div class="rs-co-head"><span class="rs-co-title">' + _esc(lab(col)) + ' by week · ' + _esc(_yrLabel() + ' ' + _scope()) + '</span>' +
+      '<label class="rs-room-pick">Metric <select id="rsWkMetric" class="rs-select"><option value="sort"' + (_wkMet === 'sort' || !cols.some(c => c.k === _wkMet) ? ' selected' : '') + '>Sorted column</option>' +
+      cols.map(c => '<option value="' + c.k + '"' + (c.k === _wkMet ? ' selected' : '') + '>' + _esc(lab(c)) + '</option>').join('') +
+      '</select></label><button type="button" class="rs-co-close" id="rsWkHide">' + (_wkOff ? 'Show chart' : 'Hide chart') + '</button></div>';
+    if (_wkOff) { host.innerHTML = head; return; }
+    const multiYr = _yrs.length > 1;
+    const x = xs.map(s => ({ l: 'W' + s.w, sub: multiYr ? String(s.yr) : '', t: (multiYr ? s.yr + ' ' : '') + 'Week ' + s.w }));
+    const byWeek = xs.map(s => { const m = new Map(); _wkRows(s.yr, s.w, _pos).forEach(o => m.set(o.n, o)); return m; });
+    const shown = L.rows.slice(0, 6);
+    const wv = o => {
+      if (col.calc) return col.calc(o);
+      const raw = _scored(o, col.k);
+      return pg && col.cnt && raw != null ? (o.g ? raw / o.g : null) : raw;
+    };
+    const series = shown.map(r => ({ n: r.n, v: byWeek.map(m => { const o = m.get(r.n); return o && o.g ? wv(o) : null; }) }));
+    const d = pg && col.cnt ? col.dg : col.d;
+    const fmt = v => Number(v).toFixed(d);
+    const svg = _lineSvg(host, x, series, fmt, false, lab(col) + ' by week for the top ' + shown.length + ' ' + _pos + 's shown');
+    if (!svg) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(lab(col)) + ' in these weeks for the players shown.</div>'; return; }
+    const legend = '<div class="rs-co-legend">' + series.map((s, si) => {
+      const played = s.v.filter(v => v != null);
+      const mean = played.length ? played.reduce((p, q) => p + q, 0) / played.length : null;
+      return '<span><span class="rs-co-key line s' + (si + 1) + '"></span>' + _esc(s.n) + (mean == null ? '' : ' <strong>' + fmt(mean) + '</strong> avg · ' + played.length + ' wk' + (played.length === 1 ? '' : 's')) + '</span>';
+    }).join('') +
+      '<span class="rs-co-sub">top ' + shown.length + ' of the table\'s current sort, one point per week played' + (L.tm ? ' · ' + _esc(L.tm) : '') +
+      ' · pick a column above or sort the table to change the line · counting stats ' + (pg ? 'per game' : 'as week totals') + '</span></div>';
+    host.innerHTML = head + legend + svg;
   }
 
   function _roomChart() {
@@ -64151,54 +64311,9 @@ function _rsScatter(cfg) {
     if (_roomOff) { host.innerHTML = head; return; }
     if (!shown.length) { host.innerHTML = head + '<div class="rs-empty">No ' + roomName + ' data for ' + _esc(tm) + ' in ' + yr + '.</div>'; return; }
     const fmt = v => Number(v).toFixed(met.d) + (met.pct ? '%' : '');
-    const series = shown.map(e => ({ e: e, v: wks.map(w => (e.w[w] ? _roomVal(e.w[w], met.k) : null)) }));
-    const flat = [].concat(...series.map(s => s.v)).filter(v => v != null);
-    if (!flat.length) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(met.l) + ' for this room yet.</div>'; return; }
-    let hi = Math.max(...flat) * 1.15 || 1, lo = 0;
-    if (met.pct) hi = Math.min(hi, 100);
-    const PADL = 46, PADR = 100, PADT = 22, PLOT = 160, XLAB = 24;
-    const avail = host.clientWidth > 0 ? host.clientWidth - 30 : 0;
-    const BAND = avail > 0 ? Math.max(40, Math.min(110, Math.floor((avail - PADL - PADR) / wks.length))) : 44;
-    const WIDTH = PADL + BAND * wks.length + PADR, HEIGHT = PADT + PLOT + XLAB;
-    const y = v => PADT + (hi - v) / (hi - lo) * PLOT;
-    const cxOf = i => PADL + i * BAND + BAND / 2;
-    // fixed 1:1 width inside a scrolling box: 18 weeks of lines and end labels must never shrink
-    // to fit a narrow window - the reader scrolls instead
-    let svg = '<div class="rs-room-scroll"><svg class="rs-co-svg" style="width:' + WIDTH + 'px;max-width:none" viewBox="0 0 ' + WIDTH + ' ' + HEIGHT + '" role="img" aria-label="' +
-      _esc(met.l + ' by week for the ' + tm + ' ' + roomName) + '">';
-    [hi, hi / 2, 0].forEach(t => {
-      svg += '<line class="' + (t === 0 ? 'zero' : 'grid') + '" x1="' + PADL + '" y1="' + y(t).toFixed(1) + '" x2="' + (WIDTH - PADR) + '" y2="' + y(t).toFixed(1) + '"/>' +
-        '<text class="tick" x="' + (PADL - 8) + '" y="' + (y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(t) + '</text>';
-    });
-    wks.forEach((w, i) => { svg += '<text class="xlab" x="' + cxOf(i) + '" y="' + (PADT + PLOT + 16) + '" text-anchor="middle">' + w + '</text>'; });
-    let dots = '';
-    const ends = [];
-    series.forEach((s, si) => {
-      const c2 = 's' + (si + 1);
-      let run = [];
-      const flush = () => { if (run.length > 1) svg += '<polyline class="series ' + c2 + '" points="' + run.join(' ') + '"/>'; run = []; };
-      s.v.forEach((v, i) => {
-        if (v == null) { flush(); return; }   // a missed week leaves a gap
-        run.push(cxOf(i) + ',' + y(v).toFixed(1));
-        dots += '<circle class="dot ' + c2 + '" cx="' + cxOf(i) + '" cy="' + y(v).toFixed(1) + '" r="4.5"/>';
-      });
-      flush();
-      let last = -1;
-      s.v.forEach((v, i) => { if (v != null) last = i; });
-      if (last >= 0) ends.push({ si: si, x: cxOf(last) + 9, y: y(s.v[last]), name: s.e.n.replace(/^(\w)\w* /, '$1. '), v: s.v[last] });
-    });
-    svg += dots;
-    // end labels: nudge apart so converging lines stay readable
-    ends.sort((a, b) => a.y - b.y);
-    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 12) ends[i].y = ends[i - 1].y + 12;
-    for (let i = ends.length - 1; i >= 0; i--) { const max = PADT + PLOT - 2 - 12 * (ends.length - 1 - i); if (ends[i].y > max) ends[i].y = max; }
-    ends.forEach(e => { svg += '<text class="endlab s' + (e.si + 1) + '" x="' + e.x.toFixed(1) + '" y="' + (e.y + 4).toFixed(1) + '">' + _esc(e.name) + ' ' + fmt(e.v) + '</text>'; });
-    wks.forEach((w, i) => {
-      const parts = series.map(s => (s.v[i] == null ? null : s.e.n + ' ' + fmt(s.v[i]))).filter(Boolean);
-      svg += '<rect class="hit" x="' + (PADL + i * BAND) + '" y="' + PADT + '" width="' + BAND + '" height="' + PLOT + '">' +
-        '<title>' + _esc('Week ' + w + (parts.length ? ' · ' + parts.join(' · ') : ' · no games')) + '</title></rect>';
-    });
-    svg += '</svg></div>';
+    const series = shown.map(e => ({ e: e, n: e.n, v: wks.map(w => (e.w[w] ? _roomVal(e.w[w], met.k) : null)) }));
+    const svg = _lineSvg(host, wks.map(w => ({ l: String(w), t: 'Week ' + w })), series, fmt, met.pct, met.l + ' by week for the ' + tm + ' ' + roomName);
+    if (!svg) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(met.l) + ' for this room yet.</div>'; return; }
     // legend: latest value + last 3 games vs the 3 before (trend needs 4+ played weeks)
     const legend = '<div class="rs-co-legend">' + series.map((s, si) => {
       const played = s.v.filter(v => v != null);
@@ -64459,6 +64574,7 @@ function _rsScatter(cfg) {
       if (csvBtn) csvBtn.disabled = true;
       _roomChart();
       _scatter();
+      _weeksChart();
       wrap.innerHTML = '<div class="rs-empty">No advanced stats for ' + _esc(_yrLabel()) + (_scope() ? ' ' + _esc(_scope()) : '') + '.</div>';
       if (cnt) cnt.textContent = '';
       if (foot) foot.textContent = '';
@@ -64482,7 +64598,8 @@ function _rsScatter(cfg) {
     const season = _season() || {};
     const teamTot = _pos !== 'TM' && tm1 && season.teams ? season.teams[tm1] : null;  // [tgt, car, ay, i10, games]
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
-    const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3) };
+    const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3),
+      edo: r => pctOf(r.xed, 5), d3o: r => pctOf(r.xd3, 6), d3lo: r => pctOf(r.xd3l, 7), syo: r => pctOf(r.xsy, 8) };
     const calcs = {};   // computed columns (Usage) read the row's own per-game-played shares
     COLS[_pos].forEach(col => { if (col.calc) calcs[col.k] = col.calc; });
     const val = (r, k) => {
@@ -64536,7 +64653,8 @@ function _rsScatter(cfg) {
     html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">' + (_pos === 'TM' ? 'Team' : 'Player') + '</th>' +
       '<th data-k="tm" class="rs-adv-tm' + sortCls('tm') + '">Tm</th>';
     cols.forEach((col, i) => {
-      const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)' };
+      const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)',
+        edo: 'early-down carries + targets', d3o: '3rd-down carries + targets', d3lo: '3rd-and-long (7+) carries + targets', syo: 'short-yardage (3rd/4th and 2 or less) carries + targets' };
       const tip = teamTot && TEAM_TIP[col.k]
         ? 'Share of ' + tm1 + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tm1 + ')'
         : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
@@ -64575,6 +64693,7 @@ function _rsScatter(cfg) {
     if (csvBtn) csvBtn.disabled = !rows.length;
     _roomChart();
     _scatter();
+    _weeksChart();
 
     const one = _yrs.length === 1, thru = one ? (_seasonFile() || {}).thru : 0;
     const scope = _scope(), cur = _yrs.indexOf(YEARS[0]) >= 0 && (_seasonFile(YEARS[0]) || {}).thru < 17;
@@ -64742,6 +64861,23 @@ function _rsScatter(cfg) {
       });
       let _rsz = null;
       window.addEventListener('resize', () => { if (room.hidden) return; clearTimeout(_rsz); _rsz = setTimeout(_roomChart, 150); });
+    }
+    const wkc = _el('rsAdvWeeks');
+    if (wkc) {
+      wkc.addEventListener('click', e => {
+        if (!e.target.closest('#rsWkHide')) return;
+        _wkOff = !_wkOff;
+        try { localStorage.setItem('rsWkOff', _wkOff ? '1' : '0'); } catch (err) { /* private mode */ }
+        _weeksChart();
+      });
+      wkc.addEventListener('change', e => {
+        if (!e.target.closest('#rsWkMetric')) return;
+        _wkMet = e.target.value;
+        try { localStorage.setItem('rsWkMetric', _wkMet); } catch (err) { /* private mode */ }
+        _weeksChart();
+      });
+      let _wsz = null;
+      window.addEventListener('resize', () => { if (wkc.hidden) return; clearTimeout(_wsz); _wsz = setTimeout(_weeksChart, 150); });
     }
     const asc = a => a.map(Number).sort((x, y) => x - y);
     _yrPick = _multi('rsAdvYr', {

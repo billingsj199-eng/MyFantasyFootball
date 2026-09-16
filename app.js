@@ -7521,9 +7521,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // (2026-09-16) In-season it grades the opponent's SCHEDULE-ADJUSTED fantasy
   // points allowed per game to this position (FPA_2026, final games only —
   // see _wkOppPpgTable), blended with Mike Clay's preseason unit rank as a
-  // prior that fades as games accrue: in-season weight = g / (g + 2)
-  // (1 gm 33%, 2 gm 50%, 4 gm 67%, 8 gm 80%). Before any final game it's
-  // Clay only (defRk for skill positions, offRk for D/ST). Blended rank 1 =
+  // prior that fades OUT by game 8 (Jack 2026-09-16): in-season weight =
+  // min(1, sqrt(g / 8)) → 1 gm 35%, 2 gm 50%, 4 gm 71%, 6 gm 87%, 8+ gm 100%.
+  // Before any final game it's Clay only (defRk for skill positions, offRk
+  // for D/ST). Blended rank 1 =
   // softest (allows the most): top third → easy (green), bottom third → hard
   // (red), middle → medium (amber).
   // Kickers get no color — opposing defense quality cuts both ways for FG
@@ -7562,7 +7563,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // Blended table per position: team → grade bundle. Cached alongside the
   // Opp PPG table (same FPA_2026 + scoring-format key) so it rebuilds only
   // when the postgame importer publishes a new week.
-  const _WK_OPP_PRIOR_GAMES = 2;   // Clay prior worth this many games
+  const _WK_OPP_FADE_GAMES = 8;   // Clay prior is gone once the opponent has this many final games
   let _wkOppBlendCache = null;
   function _wkOppBlendTable(pos) {
     const T = _wkOppPpgTable();   // null before any final game
@@ -7584,7 +7585,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const a = A[t];
       const pIn = (a && a.n > 1 && typeof a.adjRank === 'number') ? 1 - (a.adjRank - 1) / (a.n - 1) : null;   // rank 1 = allows most → 1
       const g = a ? a.games : 0;
-      const w = g / (g + _WK_OPP_PRIOR_GAMES);
+      const w = Math.min(1, Math.sqrt(g / _WK_OPP_FADE_GAMES));
       let score;
       if (pIn == null && pClay == null) score = null;
       else if (pIn == null) score = pClay;

@@ -1,0 +1,115 @@
+17657 player-weeks, 32 shadow features; HAND MSE 42.227
+
+=== 1. current shadow: LOYO -0.94% (7/7), forward -0.78% (4/5) (6s)
+  level only (per position x week mean correction)     -0.33% (6/7)
+  player signal only (centered)                        -0.60% (7/7)
+  both (shipped shadow)                                -0.94% (7/7)
+  average correction +0.32 pts; by position QB +0.65, RB +0.11, WR +0.29, TE +0.42
+
+=== 2. correlation of each feature with actual - HAND (all rows | QB RB WR TE) ===
+  snap_l1            r +0.037 | QB +0.000 RB +0.023 WR +0.021 TE +0.068
+  wk                 r -0.037 | QB -0.058 RB -0.033 WR -0.042 TE -0.007
+  snap_std           r +0.034 | QB -0.029 RB +0.007 WR +0.033 TE +0.048
+  plays_pg_std       r -0.033 | QB -0.032 RB -0.064 WR -0.026 TE -0.002
+  temp               r +0.033 | QB +0.069 RB -0.002 WR +0.052 TE +0.009   (not in shadow)
+  db_sh              r +0.033 | QB -0.028 RB -0.030 WR -0.013 TE +0.014   (not in shadow)
+  qb_inherit_mult    r -0.033 | QB -0.077 RB   -   WR   -   TE   -  
+  precip             r -0.033 | QB -0.057 RB -0.016 WR -0.035 TE -0.030   (not in shadow)
+  pos_qb             r +0.031 | QB   -   RB   -   WR   -   TE   -  
+  g                  r -0.030 | QB -0.067 RB -0.024 WR -0.032 TE +0.005
+  proe_std           r -0.030 | QB -0.047 RB -0.019 WR -0.021 TE -0.059   (not in shadow)
+  rz_tgt_sh          r -0.028 | QB -0.011 RB -0.003 WR -0.023 TE -0.030   (not in shadow)
+  att_pg             r +0.028 | QB -0.023 RB -0.025 WR -0.009 TE +0.017   (not in shadow)
+  pool_mult          r -0.026 | QB   -   RB -0.010 WR -0.031 TE -0.044
+  pc_proe            r -0.023 | QB -0.029 RB -0.007 WR -0.013 TE -0.070   (not in shadow)
+  xfp_pg             r -0.022 | QB +0.004 RB -0.017 WR -0.003 TE -0.014   (not in shadow)
+  pc_plays_pg        r -0.021 | QB -0.059 RB -0.005 WR -0.011 TE -0.025   (not in shadow)
+  qb_out             r -0.020 | QB   -   RB -0.000 WR -0.041 TE -0.004   (not in shadow)
+  hour               r -0.020 | QB -0.047 RB -0.005 WR -0.040 TE +0.034   (not in shadow)
+  wind               r -0.020 | QB -0.039 RB +0.006 WR -0.036 TE -0.003
+  proe_py            r -0.019 | QB -0.018 RB -0.026 WR -0.005 TE -0.052   (not in shadow)
+  prac_dnp           r -0.018 | QB +0.002 RB -0.016 WR -0.027 TE -0.002
+  ol_out_n           r -0.018 | QB -0.013 RB -0.027 WR -0.027 TE +0.016   (not in shadow)
+  xfp_pg_py          r -0.018 | QB -0.013 RB +0.006 WR +0.001 TE -0.015   (not in shadow)
+  team_change        r -0.018 | QB -0.025 RB -0.028 WR -0.009 TE -0.015   (not in shadow)
+
+=== 3. what drives the shadow (out-of-fold SHAP: mean |pts|, direction = r(feature, its contribution)) ===
+  snap_l1          0.198 pts (10.2%)  direction +0.87
+  HAND             0.196 pts (10.1%)  direction -0.78
+  plays_pg_std     0.161 pts ( 8.3%)  direction -0.77
+  clay             0.147 pts ( 7.5%)  direction -0.42
+  snap_std         0.138 pts ( 7.1%)  direction +0.78
+  pos_qb           0.113 pts ( 5.8%)  direction +0.90
+  snap_trend       0.108 pts ( 5.5%)  direction -0.67
+  wk               0.101 pts ( 5.2%)  direction -0.79
+  ppg              0.080 pts ( 4.1%)  direction -0.43
+  wind             0.074 pts ( 3.8%)  direction -0.61
+  fpa_mult         0.072 pts ( 3.7%)  direction -0.70
+  blend            0.072 pts ( 3.7%)  direction -0.58
+  game_total       0.051 pts ( 2.6%)  direction +0.58
+  veg              0.050 pts ( 2.6%)  direction +0.63
+  snapmult         0.050 pts ( 2.5%)  direction -0.36
+  snap_l1: Q1 [1.0..45.0] act/HAND 0.982 shap -0.37 | Q2 [45.0..65.0] act/HAND 1.046 shap -0.05 | Q3 [65.0..80.0] act/HAND 1.033 shap +0.01 | Q4 [80.0..94.0] act/HAND 1.038 shap +0.13 | Q5 [94.0..100.0] act/HAND 1.047 shap +0.34
+  HAND: Q1 [1.21..4.86] act/HAND 1.09 shap +0.15 | Q2 [4.86..7.31] act/HAND 1.045 shap +0.14 | Q3 [7.31..10.26] act/HAND 1.052 shap +0.13 | Q4 [10.26..13.91] act/HAND 1.043 shap +0.01 | Q5 [13.91..32.82] act/HAND 1.001 shap -0.49
+  plays_pg_std: Q1 [43.0..59.53] act/HAND 1.077 shap +0.23 | Q2 [59.53..62.0] act/HAND 1.051 shap +0.17 | Q3 [62.0..64.0] act/HAND 1.025 shap +0.03 | Q4 [64.0..66.0] act/HAND 1.024 shap -0.08 | Q5 [66.0..94.0] act/HAND 0.996 shap -0.28
+  clay: Q1 [1.91..4.24] act/HAND 1.137 shap +0.29 | Q2 [4.24..6.71] act/HAND 1.035 shap +0.03 | Q3 [6.71..9.44] act/HAND 1.017 shap -0.13 | Q4 [9.44..12.82] act/HAND 1.026 shap -0.05 | Q5 [12.82..22.18] act/HAND 1.019 shap -0.00
+  snap_std: Q1 [1.0..46.67] act/HAND 1.012 shap -0.15 | Q2 [46.67..63.58] act/HAND 1.025 shap -0.11 | Q3 [63.58..77.55] act/HAND 1.017 shap -0.06 | Q4 [77.55..90.6] act/HAND 1.053 shap +0.07 | Q5 [90.6..100.0] act/HAND 1.047 shap +0.25
+  pos_qb: Q1 [0.0..0.0] act/HAND 1.023 shap -0.05 | Q2 [0.0..0.0] act/HAND 1.002 shap -0.08 | Q3 [0.0..0.0] act/HAND 1.049 shap -0.09 | Q4 [0.0..0.0] act/HAND 1.04 shap -0.09 | Q5 [0.0..1.0] act/HAND 1.045 shap +0.21
+
+=== 4. hand-layer audit: actual / HAND by layer bins (rows where the layer is active; REL = / same-position rows where it is not) ===
+  TD luck adj                       -9..-0.5    n  3455 act/HAND 1.023 REL 1.113
+  TD luck adj                     -0.5..-0.1    n  3724 act/HAND 1.027 REL 1.119
+  TD luck adj                     -0.1..0.1     n  3670 act/HAND 1.041 REL 1.107
+  TD luck adj                      0.1..0.5     n  4745 act/HAND 1.047 REL 1.134
+  TD luck adj                      0.5..9       n  2063 act/HAND 1.024 REL 1.104
+  opportunity pool              1.0001..1.05    n  3133 act/HAND 1.031 REL 0.992
+  opportunity pool                1.05..1.15    n  1561 act/HAND 1.006 REL 0.972
+  opportunity pool                1.15..1.35    n   883 act/HAND 1.011 REL 0.979
+  opportunity pool                1.35..9       n   349 act/HAND 0.936 REL 0.887
+  banged cond                     0.85..0.9     n   108 act/HAND 0.933 REL 0.836
+  banged cond                      0.9..0.95    n   584 act/HAND 0.988 REL 0.954
+  banged cond                     0.95..0.9999  n   179 act/HAND 1.022 REL 1.002
+  rookie level                  1.0001..9       n  1086 act/HAND 1.054 REL 1.021
+  wind dock                          0..0.95    n   928 act/HAND 0.997 REL 0.955
+  wind dock                       0.95..0.9999  n  2084 act/HAND 1.016 REL 0.973
+  snap trend                         0..0.9     n  1090 act/HAND 1.015 REL 0.986
+  snap trend                       0.9..0.97    n  2596 act/HAND 1.046 REL 0.997
+  snap trend                      1.03..1.1     n  3235 act/HAND 1.016 REL 0.975
+  snap trend                       1.1..9       n  1387 act/HAND 1.012 REL 0.967
+  vegas                              0..0.9     n   559 act/HAND 1.046 REL 1.035
+  vegas                            0.9..0.97    n  3855 act/HAND 1.024 REL 0.988
+  vegas                           1.03..1.1     n  4689 act/HAND 1.028 REL 0.992
+  vegas                            1.1..9       n   636 act/HAND 1.010 REL 0.998
+  RB usage blend (usage/blend)       0..0.8     n   643 act/HAND 1.019 REL 0.967
+  RB usage blend (usage/blend)     0.8..1.0     n   944 act/HAND 1.014 REL 0.963
+  RB usage blend (usage/blend)     1.0..1.25    n  1175 act/HAND 1.025 REL 0.973
+  RB usage blend (usage/blend)    1.25..9       n   929 act/HAND 0.998 REL 0.948
+
+=== 5. sweeps (vs HAND; current shadow LOYO -0.94% / forward -0.78%) ===
+  leaves 7, min rows 200, L2 20                  LOYO -1.12% (7/7) forward -0.90% (4/5)  <- beats current on both (13s)
+  leaves 31, min rows 200, L2 20                 LOYO -0.99% (7/7) forward -0.80% (4/5)  <- beats current on both (19s)
+  leaves 15, min rows 100, L2 20                 LOYO -0.94% (6/7) forward -0.79% (4/5) (23s)
+  leaves 15, min rows 400, L2 20                 LOYO -0.88% (6/7) forward -0.66% (4/5) (29s)
+  leaves 15, min rows 200, L2 5                  LOYO -0.87% (7/7) forward -0.76% (4/5) (33s)
+  leaves 15, min rows 200, L2 60                 LOYO -1.00% (7/7) forward -0.84% (4/5)  <- beats current on both (39s)
+  leaves 7, min rows 400, L2 60                  LOYO -0.99% (7/7) forward -0.68% (4/5) (44s)
+  Huber loss (delta 8)                           LOYO -0.58% (7/7) forward -0.48% (5/5) (50s)
+  feature_fraction .5                            LOYO -0.96% (7/7) forward -0.77% (4/5) (55s)
+  separate model per position                    LOYO -0.88% (7/7) forward -0.28% (4/5) (61s)
+
+  drop-one-feature (LOYO only; + = the feature helps):
+  snap_std -0.17 | prac_lim -0.16 | veg -0.15 | td_luck_adj -0.15 | rep_q -0.14 | implied -0.14 | rookie_mult -0.13 | snap_l1 -0.13 | blend -0.11 | spread -0.11 | cond_mult -0.11 | pool_mult -0.10 | snap_trend -0.09 | usage_half -0.07 | game_total -0.06 | fpa_mult -0.06 | wind -0.05 | weather_mult -0.04 | ppg -0.04 | td_luck_pg -0.03 | pos_te -0.03 | prac_dnp -0.03 | HAND -0.03 | plays_pg_std -0.01 | snapmult +0.00 | qb_inherit_mult +0.00 | clay +0.02 | pos_rb +0.02 | wk +0.02 | pos_wr +0.04 | g +0.07 | pos_qb +0.09
+  pruned: without snap_std, prac_lim, veg, td_luck_adj, rep_q, implied, rookie_mult, snap_l1, blend, spread, cond_mult, pool_mult, snap_trend, usage_half, game_total, fpa_mult, wind, weather_mult, ppg, td_luck_pg, pos_te, prac_dnp, HAND LOYO -0.63% (6/7) forward -0.34% (4/5) (183s)
+
+  add context groups (would need live builders):
+  + usage (15)                                   LOYO -1.20% (7/7) forward -0.77% (4/5) (190s)
+  + prior (6)                                    LOYO -0.98% (6/7) forward -0.84% (4/5)  <- beats current on both (197s)
+  + team (3)                                     LOYO -1.10% (7/7) forward -0.87% (5/5)  <- beats current on both (203s)
+  + coach (8)                                    LOYO -0.83% (6/7) forward -0.75% (4/5) (209s)
+  + vacancy (7)                                  LOYO -1.02% (7/7) forward -0.79% (4/5)  <- beats current on both (215s)
+  + prospect (7)                                 LOYO -0.97% (7/7) forward -0.66% (4/5) (221s)
+  + matchup (5)                                  LOYO -0.87% (7/7) forward -0.55% (4/5) (227s)
+  + oline (10)                                   LOYO -0.82% (6/7) forward -0.56% (4/5) (233s)
+
+wrote data/learned_shadow_tuning.js: Current shadow LOYO -0.94% / forward -0.78% vs the hand stack. Level vs signal: level only -0.33%; player signal only -0.60%; both -0.94%. Biggest raw correlation with the miss: snap_l1 (r +0.037); biggest model driver: snap_l1 (10% of attribution). Best tweak on both LOYO and forward: leaves 7, min rows 200, L2 20 (-1.12% / -0.90%).
+done (233s)

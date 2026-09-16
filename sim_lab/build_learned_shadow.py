@@ -23,7 +23,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 YEARS = list(range(2019, 2026))
 K_GRID = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25]
-GBM = dict(objective="regression", learning_rate=0.02, num_leaves=15, min_data_in_leaf=200, feature_fraction=0.8,
+GBM = dict(objective="regression", learning_rate=0.02, num_leaves=7,   # 7 not 15: tune_learned_shadow.py + seed check (3 seeds) LOYO -1.04 vs -0.98, forward -0.89 vs -0.81
+           min_data_in_leaf=200, feature_fraction=0.8,
            bagging_fraction=0.8, bagging_freq=1, lambda_l2=20.0, verbose=-1, seed=11, num_threads=4)
 FEATS = ["pos_qb", "pos_rb", "pos_wr", "pos_te", "wk", "g", "ppg", "clay", "blend", "veg", "fpa_mult", "snapmult", "snap_std", "snap_l1",
          "snap_trend", "td_luck_pg", "td_luck_adj", "cond_mult", "rep_q", "prac_dnp", "prac_lim", "rookie_mult", "usage_half", "plays_pg_std",

@@ -2157,3 +2157,59 @@ prop anchor, availability of players who sat, forecast wind, TE route trend.
 - Verdict: PASSES historically, but the harness can't replay the prop anchor,
   so NOT applied. Next step = a live shadow of the learned correction on the
   lock rows (ncMean-style field), graded weekly by score_week.py.
+
+## Learned shadow (build_learned_shadow.py -> engine learnedShadowCorr) - 2026-09-16
+
+Jack: "yes build the live shadow". The learned correction retrained on the 32
+features the engine computes the same way live (vacancy shares, pool gains and
+dome dropped): LOYO -0.94% (7/7; QB -2.27, WR -.83, TE -.46, RB -.31), forward
+-0.78% (4/5) vs the rebuilt hand stack. Final model 133 trees, k 1.0, exported
+as JSON trees -> data/learned_shadow_model.js (69 KB).
+
+- engine.js lgbTree / lgbPredict evaluate the trees (LightGBM missing-value
+  rules); verify_learned_shadow.js checks 200 Python test vectors (max diff
+  8.6e-6). learnedShadowCorr(p, wk, sc, slot, o): half-PPR only, QB/RB/WR/TE,
+  week 2+, players with a 2026 game, not zeroed. HAND = jsMean conditioned on
+  playing (/ P plays), correction scaled back by P plays.
+- weeklyProjection returns lcCorr; simWeek rows carry it; both lock-row
+  builders (export_site_proj.js auto-lock, app.js) log lcCorr and lcMean =
+  shipped mean + lcCorr. PROJ never reads it.
+- score_week.py grades "Learned shadow" (lcMean) and "Learned centered"
+  (position-average correction removed = player signal only) next to the
+  shipped mean, plus closer-than-shipped counts.
+- W2 check: fires on 312 players, live mean / jsMean unchanged on all 461,
+  average correction +0.64 (QB +1.19) - mostly a LEVEL shift the harness base
+  needed; the centered grade shows whether the player-level part is real.
+- Kill: window.SIM_LEARNED_SHADOW = false. Tuning study: tune_learned_shadow.py.
+
+## Learned shadow tuning (tune_learned_shadow.py + seedcheck_learned_shadow.py) - 2026-09-16
+
+Jack: "tinker with the shadow model and try to find the biggest correlation and
+what we need to tweak to improve it over a large sample". 17,657 player-weeks
+2019-25, LOYO + forward vs the rebuilt hand stack.
+
+- Level vs signal: position-week level only -.33% (6/7), centered player
+  signal -.60% (7/7), both -.94%. The player-level part is real.
+- Raw correlations with the miss are all tiny (|r| < .04: last-game snap share
+  +, week -, team plays -, temperature +, precipitation -, QB inheritance -).
+  The model finds interactions, not one big lever.
+- Drivers (out-of-fold SHAP): last-game snap share 10% (high snaps -> up, Q5
+  +0.34 / Q1 -0.37), the hand number itself 10% (projections 13.9+ shrink
+  -0.49: stars over-projected, low projections run 1.09x), team plays/g 8%
+  (fast teams -0.28, slow +0.23: early pace regresses), Clay 8%, season snap
+  share 7%, QB flag 6% (+), snap trend 6% (rising trend -> down: the snap-trend
+  layer runs hot), week 5% (later weeks down), wind 4%, FPA 4%.
+- Hand-layer audit (REL vs same-position rows without the layer): big pool
+  boosts (x1.35+) run 0.887 -> cap the pool; Q + DNP played (cond .85-.90) runs
+  0.836 -> that dock is too soft for players who suit up; strong wind 0.955 ->
+  wind dock too soft (refit exponent 1.75 agreed); rookie level 1.021 (fine).
+- Sweeps: 7 leaves -1.12/-0.90, L2 60 -1.00/-0.84, Huber worse (-.58/-.48),
+  per-position models worse forward (-.28), adding team pace/PROE -1.10/-0.87,
+  usage shares -1.20/-0.77, coach / prospect / matchup / OL worse. Drop-one-
+  feature "gains" were noise (dropping all of them together: -0.63/-0.34).
+- Seed check (3 seeds, noise ~+-0.08): current -0.98/-0.81, 7 leaves
+  -1.04/-0.89, + team -1.07/-0.90. ADOPTED 7 leaves only (no new live inputs):
+  rebuilt shadow LOYO -1.12% (7/7; QB -2.82, WR -.93, RB -.48, TE -.33),
+  forward -0.90% (4/5), 345 trees, JS verified (1.0e-5).
+- Candidate hand-layer tweaks to TEST next (not applied): cap pool multiplier,
+  deeper Q+DNP cond, stronger wind docks, snap-trend slope below 1.0.

@@ -3862,6 +3862,10 @@ function getFiltered(applyTopN) {
           };
           av = _op(a); bv = _op(b); break;
         }
+        case 'xfpG': {
+          const _xg = d => { const x = _xfpAgg(d, rankingScoringFmt, null); return x ? x.xfpg : -Infinity; };
+          av = _xg(a); bv = _xg(b); break;
+        }
         case 'simBoom': case 'simBust': {
           const _bi = sortKey === 'simBoom' ? 3 : 4;
           const _bb = d => {
@@ -4026,7 +4030,7 @@ const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1
 // chip, the ROW card and the PNG export all agree:
 //   null (not weekly / no schedule) | {bye:true, wk} |
 //   {bye:false, away, abbr, diff, logoId, logoUrl, wk}
-// diff = opponent difficulty (Clay def rank; D/ST = opp offense rank).
+// diff = opponent difficulty (schedule-adjusted pts allowed blended with Clay's preseason rank; D/ST = opp offense).
 function _tcvOppInfo(d) {
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
   if (typeof window._weeklyOppFor !== 'function') return null;
@@ -5958,6 +5962,8 @@ function render() {
   // (non-weekly, non-dynasty) view. Reused by the header/cell toggles after the loop.
   const _isWeekly = currentMode === 'weekly';
   const _statMode = _effStatMode();
+  // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
+  document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
   // view carries boom/bust in the ppg25/l4ppg swap columns instead.
@@ -6252,7 +6258,7 @@ function render() {
       ${_statTd1}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
-      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
+      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}"${(()=>{ const n = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : ''; return n ? ' title="' + n.replace(/"/g, '&quot;') + '"' : ''; })()} style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{
         // D/ST rows show the OPPONENT's implied total (lower = better matchup),
@@ -6261,7 +6267,7 @@ function render() {
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>
       ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
-      ${_statTds}
+      ${_wkXfpInject(_statTds, d, _isWeekly && _statMode === 'fantasy')}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
@@ -7509,26 +7515,94 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     return ctx.home ? ctx.game.spread : -ctx.game.spread;
   };
 
-  // OPP DIFFICULTY — 'easy' / 'medium' / 'hard' based on opponent's Clay
-  // defensive rank (1 = toughest defense in the league, 32 = softest).
-  //   defRk 1-10  → hard  (red)
-  //   defRk 11-22 → medium (amber)
-  //   defRk 23-32 → easy   (green)
-  // For D/ST rows (pos='DST') the matchup flips: what matters is the opponent
-  // OFFENSE, so we grade on offRk instead (offRk 1-10 = elite offense = hard).
+  // OPP DIFFICULTY — 'easy' / 'medium' / 'hard' for this week's matchup.
+  // (2026-09-16) In-season it grades the opponent's SCHEDULE-ADJUSTED fantasy
+  // points allowed per game to this position (FPA_2026, final games only —
+  // see _wkOppPpgTable), blended with Mike Clay's preseason unit rank as a
+  // prior that fades as games accrue: in-season weight = g / (g + 2)
+  // (1 gm 33%, 2 gm 50%, 4 gm 67%, 8 gm 80%). Before any final game it's
+  // Clay only (defRk for skill positions, offRk for D/ST). Blended rank 1 =
+  // softest (allows the most): top third → easy (green), bottom third → hard
+  // (red), middle → medium (amber).
   // Kickers get no color — opposing defense quality cuts both ways for FG
   // volume, so we don't imply a signal we haven't validated.
   window._weeklyOppDifficulty = function(team, pos) {
-    if (pos === 'K') return null;
-    const ctx = _weeklyGameContext(team);
-    if (!ctx) return null;
-    const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[ctx.opp];
-    const rk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
-    if (typeof rk !== 'number') return null;
-    if (rk <= 10) return 'hard';
-    if (rk >= 23) return 'easy';
-    return 'medium';
+    const m = window._weeklyOppMatchup(team, pos);
+    return m ? m.diff : null;
   };
+  // Full matchup grade bundle for tooltips / cards:
+  //   {opp, diff, rank, n, games, w, clayRk, raw:{v,rank}|null, adj:{v,rank}|null}
+  window._weeklyOppMatchup = function(team, pos) {
+    if (!team || !pos || pos === 'K') return null;
+    if (typeof window._weeklyOppFor !== 'function') return null;
+    let opp = window._weeklyOppFor(team);
+    if (!opp || opp === 'BYE') return null;
+    opp = String(opp).replace(/^@/, '').toUpperCase();
+    opp = _WK_OPP_ABBR[opp] || opp;
+    const B = _wkOppBlendTable(pos);
+    const r = B && B[opp];
+    if (!r) return null;
+    return Object.assign({ opp }, r);
+  };
+  // One-line explanation of the grade for tooltips.
+  window._weeklyOppDiffNote = function(team, pos) {
+    const m = window._weeklyOppMatchup(team, pos);
+    if (!m) return '';
+    const lbl = m.diff === 'hard' ? 'Tough' : m.diff === 'easy' ? 'Soft' : 'Average';
+    const posLbl = pos === 'DST' ? 'D/STs' : pos + 's';
+    let s = lbl + ' matchup for ' + posLbl + ' (#' + m.rank + ' of ' + m.n + ', 1 = softest)';
+    if (m.adj) s += ' — allows ' + m.raw.v + ' pts/gm (#' + m.raw.rank + ' raw, #' + m.adj.rank + ' schedule-adjusted, ' + m.games + ' gm)';
+    if (typeof m.clayRk === 'number') s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
+    if (m.adj) s += ' · in-season weight ' + Math.round(m.w * 100) + '%';
+    else s += ' · preseason only until final games post';
+    return s;
+  };
+  // Blended table per position: team → grade bundle. Cached alongside the
+  // Opp PPG table (same FPA_2026 + scoring-format key) so it rebuilds only
+  // when the postgame importer publishes a new week.
+  const _WK_OPP_PRIOR_GAMES = 2;   // Clay prior worth this many games
+  let _wkOppBlendCache = null;
+  function _wkOppBlendTable(pos) {
+    const T = _wkOppPpgTable();   // null before any final game
+    const FP = window.FPA_2026;
+    const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
+    const src = FP && FP.weeks || null;
+    if (!_wkOppBlendCache || _wkOppBlendCache.src !== src || _wkOppBlendCache.fmt !== fmt) _wkOppBlendCache = { src, fmt, pos: {} };
+    if (_wkOppBlendCache.pos[pos]) return _wkOppBlendCache.pos[pos];
+    const CG = window.CLAY_TEAM_GRADES_2026 || {};
+    const A = T && T.pos[pos] || {};
+    const teams = {};
+    Object.keys(CG).forEach(t => { teams[t] = 1; });
+    Object.keys(A).forEach(t => { teams[t] = 1; });
+    const list = Object.keys(teams);
+    const rows = list.map(t => {
+      const cg = CG[t];
+      const clayRk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
+      const pClay = typeof clayRk === 'number' ? (clayRk - 1) / 31 : null;   // 1 = toughest → 0, 32 → 1
+      const a = A[t];
+      const pIn = (a && a.n > 1 && typeof a.adjRank === 'number') ? 1 - (a.adjRank - 1) / (a.n - 1) : null;   // rank 1 = allows most → 1
+      const g = a ? a.games : 0;
+      const w = g / (g + _WK_OPP_PRIOR_GAMES);
+      let score;
+      if (pIn == null && pClay == null) score = null;
+      else if (pIn == null) score = pClay;
+      else if (pClay == null) score = pIn;
+      else score = w * pIn + (1 - w) * pClay;
+      return { team: t, score, clayRk, games: g, w: pIn == null ? 0 : w,
+        raw: a ? { v: a.v, rank: a.rank } : null,
+        adj: (a && typeof a.adjRank === 'number') ? { v: a.adjV, rank: a.adjRank } : null };
+    }).filter(r => r.score != null);
+    rows.sort((a, b) => b.score - a.score);
+    const n = rows.length, third = n / 3;
+    const out = {};
+    rows.forEach((r, i) => {
+      const rank = i + 1;
+      out[r.team] = { diff: rank <= third ? 'easy' : rank > 2 * third ? 'hard' : 'medium', rank, n,
+        games: r.games, w: r.w, clayRk: r.clayRk, raw: r.raw, adj: r.adj };
+    });
+    _wkOppBlendCache.pos[pos] = out;
+    return out;
+  }
 
   // TEAM TOTAL — derive from DK game total + spread (BETTING_2026.gameTotals).
   // team_total = (total - spread) / 2 if home, (total + spread) / 2 if away.
@@ -7565,6 +7639,28 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // D/ST read what opposing kickers / D/STs scored AGAINST that offense.
   // Returns {v, rank, n, games, opp} or null. rank 1 = allows the MOST.
   const _WK_OPP_ABBR = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
+  // Additive defense-effect / offense-effect fit for one position:
+  //   pts(game) ≈ mu + dE[defense] + oE[offense]
+  // solved by alternating ridge means (each effect shrunk toward 0 with a
+  // prior worth K games, so a 1-game sample doesn't swing the rank). Also
+  // returns facedE[defense] = mean offense effect it has faced (+ = tougher
+  // offenses than average, which inflates the raw points-allowed number).
+  function _wkSchedAdjust(games, K) {
+    if (!games || !games.length) return null;
+    if (typeof K !== 'number') K = 1;
+    let mu = 0; games.forEach(g => { mu += g.v; }); mu /= games.length;
+    const dE = {}, oE = {}, dN = {}, oN = {};
+    games.forEach(g => { dE[g.d] = 0; oE[g.o] = 0; dN[g.d] = (dN[g.d] || 0) + 1; oN[g.o] = (oN[g.o] || 0) + 1; });
+    for (let it = 0; it < 50; it++) {
+      const ds = {}; games.forEach(g => { ds[g.d] = (ds[g.d] || 0) + (g.v - mu - oE[g.o]); });
+      Object.keys(dE).forEach(t => { dE[t] = ds[t] / (dN[t] + K); });
+      const os = {}; games.forEach(g => { os[g.o] = (os[g.o] || 0) + (g.v - mu - dE[g.d]); });
+      Object.keys(oE).forEach(t => { oE[t] = os[t] / (oN[t] + K); });
+    }
+    const facedE = {};
+    games.forEach(g => { facedE[g.d] = (facedE[g.d] || 0) + oE[g.o] / dN[g.d]; });
+    return { mu, dE, oE, facedE };
+  }
   let _wkOppPpgCache = null;
   function _wkOppPpgTable() {
     const FP = window.FPA_2026;
@@ -7572,7 +7668,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
     if (_wkOppPpgCache && _wkOppPpgCache.src === FP.weeks && _wkOppPpgCache.fmt === fmt) return _wkOppPpgCache;
     const suf = fmt === 'ppr' ? '_ppr' : fmt === 'std' ? '_std' : '';
-    const acc = {};
+    const acc = {}, games = {};
     Object.keys(FP.weeks).forEach(wk => {
       const teams = FP.weeks[wk];
       Object.keys(teams).forEach(team => {
@@ -7584,6 +7680,8 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
           const slot = acc[pos] || (acc[pos] = {});
           const t = slot[team] || (slot[team] = { pts: 0, g: 0 });
           t.pts += v; t.g++;
+          let o = rec.opp ? String(rec.opp).toUpperCase() : null;
+          if (o) { o = _WK_OPP_ABBR[o] || o; (games[pos] || (games[pos] = [])).push({ d: team, o, v }); }
         });
       });
     });
@@ -7593,6 +7691,15 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       rows.sort((a, b) => b.v - a.v);
       const m = {};
       rows.forEach((r, i) => { m[r.team] = { v: Math.round(r.v * 10) / 10, rank: i + 1, n: rows.length, games: r.g }; });
+      // Schedule-adjusted: strip out the quality of the offenses each defense
+      // has faced (a defense that gave up 30 to the Bills isn't as soft as one
+      // that gave up 30 to the Panthers). adjV = league avg + defense effect.
+      const S = _wkSchedAdjust(games[pos] || []);
+      if (S) {
+        const adjRows = rows.map(r => ({ team: r.team, v: S.mu + (S.dE[r.team] || 0) }));
+        adjRows.sort((a, b) => b.v - a.v);
+        adjRows.forEach((r, i) => { if (m[r.team]) { m[r.team].adjV = Math.round(r.v * 10) / 10; m[r.team].adjRank = i + 1; m[r.team].offFaced = Math.round((S.facedE[r.team] || 0) * 10) / 10; } });
+      }
       out.pos[pos] = m;
     });
     _wkOppPpgCache = out;
@@ -7925,6 +8032,44 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // null = nothing currently published (non-admins can't enter WEEKLY mode).
   window._weeklyPublishedWeek = window._weeklyPublishedWeek || null;
 
+  function _weeklyIsAdmin(u) {
+    if (!u && typeof firebase !== 'undefined' && firebase.auth) {
+      try { u = firebase.auth().currentUser; } catch(_e) {}
+    }
+    if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
+    const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
+    const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
+    return adminByEmail || adminByFn;
+  }
+  window._weeklyIsAdmin = _weeklyIsAdmin;
+
+  // FANTASY-WEEK ROLLOVER (Jack, 2026-09-16): a week is "over" — and the next
+  // one becomes the site's current week — at TUESDAY 07:00 ET after its
+  // Monday-night game. Derived from _SEASON_KICKS_2026 (each week's first
+  // kickoff): week N's end = the Tuesday on/after kickoff+2d at 07:00 ET
+  // (11:00 UTC on EDT dates, 12:00 UTC from Nov 1 2026 when DST ends).
+  // Returns the current fantasy week 1-18, or null outside the season.
+  // `now` is a test hook (ms).
+  window._weeklyScheduleWeek = function(now) {
+    now = now || Date.now();
+    let kicks = null;
+    try { kicks = _SEASON_KICKS_2026; } catch (_e) { return null; } // TDZ before the const runs
+    if (!Array.isArray(kicks)) return null;
+    const wkEnd = kick => {
+      const d = new Date(kick + 2 * 86400000);
+      while (d.getUTCDay() !== 2) d.setUTCDate(d.getUTCDate() + 1);
+      const est = d.getTime() >= Date.UTC(2026, 10, 1, 6, 0); // US DST ends Nov 1 2026 2am ET
+      d.setUTCHours(est ? 12 : 11, 0, 0, 0);
+      return d.getTime();
+    };
+    const cur = kicks.find(w => now < wkEnd(w.kick));
+    return cur ? cur.wk : null;
+  };
+  // Master switch for the automatic roll (active week + published week move
+  // to the schedule week at Tuesday 07:00 ET). Set false to go back to
+  // manual selector + PUBLISH only.
+  window._WEEKLY_AUTO_ROLL = (window._WEEKLY_AUTO_ROLL == null) ? true : window._WEEKLY_AUTO_ROLL;
+
   function _weeklyAdminCheck(userArg) {
     const tab = document.getElementById('weeklyModeTab');
     const selWrap = document.getElementById('weeklyWeekSelectorWrap');
@@ -7935,9 +8080,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       try { u = firebase.auth().currentUser; } catch(_e) {}
     }
     if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
-    const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
-    const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
-    const admin = adminByEmail || adminByFn;
+    const admin = _weeklyIsAdmin(u);
     const published = window._weeklyPublishedWeek;
     // Tab is visible to admins always, and to everyone else only when a week
     // is currently published.
@@ -7987,15 +8130,44 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // once Firebase auth IS ready, so the Firestore read still happens.
   function _weeklyApplySettings(d) {
     const sel = document.getElementById('activeWeekSelect');
-    const wk = parseInt(d.week, 10);
+    window._weeklyLastSettings = d;
+    let wk = parseInt(d.week, 10);
+    let pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
+    if (!(pw >= 1 && pw <= 18)) pw = null;
+    // Automatic roll: once the schedule week passes the stored week (Tuesday
+    // 07:00 ET), the active week — and the published week, if one is live —
+    // jump to it, so users land on the new week's projection-ordered board
+    // before Jack ranks it. `autoRolledWeek` records the roll in Firestore
+    // so a later manual selector/PUBLISH choice is never bumped back; until
+    // an admin client writes it, every client applies the same roll locally.
+    // Only ever moves FORWARD; never publishes when nothing is published.
+    const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+    window._weeklyLastScheduleWeek = sw;
+    if (sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw) {
+      const roll = {};
+      if (!(wk >= 1) || wk < sw) { wk = sw; roll.week = sw; }
+      if (pw != null && pw < sw) { pw = sw; roll.publishedWeek = sw; }
+      if (Object.keys(roll).length && _weeklyIsAdmin() && window._weeklyRollWritten !== sw) {
+        window._weeklyRollWritten = sw;
+        let db = null;
+        try { db = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
+        if (db) {
+          roll.autoRolledWeek = sw;
+          roll.autoRolledAt = new Date().toISOString();
+          db.collection('settings').doc('active_week').set(roll, { merge: true })
+            .then(() => { console.log('[Weekly] auto-rolled to week ' + sw, roll); })
+            .catch(e => { console.warn('[Weekly] auto-roll write failed:', e); window._weeklyRollWritten = null; });
+        }
+      }
+    }
     if (wk >= 1 && wk <= 18) {
       window._weeklyActiveWeek = wk;
       localStorage.setItem('mff_active_week', String(wk));
       if (sel) sel.value = String(wk);
     }
-    const pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
-    window._weeklyPublishedWeek = (pw >= 1 && pw <= 18) ? pw : null;
-    // Active week is now known — re-derive untouched weekly boards from redraft.
+    window._weeklyPublishedWeek = pw;
+    // Active week is now known — re-derive untouched weekly boards (PPR
+    // projection order for unowned positions / untouched weeks).
     if (typeof window._weeklyReconcileBoard === 'function') {
       window._weeklyReconcileBoard('jacks');
       window._weeklyReconcileBoard('mine');
@@ -8038,6 +8210,18 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     } catch(_e) {}
   }
   _weeklyLoadActiveWeek();
+  // Roll a tab that stays open across Tuesday 07:00 ET, and let an admin
+  // client that signed in AFTER the settings snapshot arrived write the roll.
+  setInterval(() => {
+    try {
+      const d = window._weeklyLastSettings;
+      if (!d) return;
+      const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+      const pendingAdminWrite = !!(sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw
+        && window._weeklyRollWritten !== sw && _weeklyIsAdmin());
+      if (sw !== window._weeklyLastScheduleWeek || pendingAdminWrite) _weeklyApplySettings(d);
+    } catch (_e) {}
+  }, 60000);
 
   // Wire PUBLISH / REMOVE buttons (admin-only via the rule + UI gating).
   const _pubBtn = document.getElementById('weeklyPublishBtn');
@@ -8190,10 +8374,49 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   window._weeklyBaseline = window._weeklyBaseline || {};     // ver -> board snapshot at last reconcile (edit detection)
   window._weeklySessionOwned = window._weeklySessionOwned || {};
 
+  // DEFAULT WEEKLY ORDER = strictly by this week's PPR projection (Jack,
+  // 2026-09-16): an untouched week — and every position Jack hasn't
+  // re-ranked yet — ranks by the PROJ column's number (Sim Lab row where one
+  // exists, else the props/consensus/heuristic chain) in PPR regardless of
+  // the scoring toggle. Ties and no-projection players keep the redraft
+  // order; byes / ruled-out players project 0 and sink. The moment a
+  // position is edited + saved it is owned and this stops applying to it.
+  window._weeklyProjPprOf = function(d) {
+    if (!d) return null;
+    const prev = rankingScoringFmt;
+    rankingScoringFmt = 'ppr';
+    try {
+      const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+      const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, base) : base;
+      return (typeof v === 'number' && isFinite(v)) ? v : null;
+    } catch (e) { return null; }
+    finally { rankingScoringFmt = prev; }
+  };
+  // Regime gate: the projection default starts with WEEK 2 (Jack, 2026-09-16 —
+  // week 1 was hand-ranked the old way) and only ever applies to the current
+  // schedule week or later, so a past week viewed from the selector is never
+  // re-derived differently than it was.
+  window._WEEKLY_PROJ_DEFAULT_FROM = 2;
+  window._weeklyProjDefaultFor = function(wk) {
+    wk = wk || window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    if (wk < window._WEEKLY_PROJ_DEFAULT_FROM) return false;
+    const sw = (typeof window._weeklyScheduleWeek === 'function') ? window._weeklyScheduleWeek() : null;
+    return sw == null || wk >= sw;
+  };
+  window._weeklyProjOrder = function(ver) {
+    const redraft = (versionBoards[ver] && versionBoards[ver].redraft) || [];
+    const score = new Map();
+    redraft.forEach(idx => { const v = window._weeklyProjPprOf(D[idx]); score.set(idx, v == null ? -1 : v); });
+    // Stable sort: proj desc, redraft slot breaks ties (and orders the no-proj tail).
+    return redraft.map((idx, slot) => ({ idx, slot, v: score.get(idx) }))
+      .sort((a, b) => (b.v - a.v) || (a.slot - b.slot))
+      .map(o => o.idx);
+  };
+
   // Slot-stable merge: keep `base`'s order for OWNED positions, but re-fill
-  // the slots occupied by unowned positions with the redraft-relative order
-  // of those positions — so the QB list keeps following redraft even after
-  // the RB list was hand-ranked and saved.
+  // the slots occupied by unowned positions with the projection order of
+  // those positions — so the QB list keeps following this week's PROJ even
+  // after the RB list was hand-ranked and saved.
   window._weeklyMergeUnowned = function(base, redraft, ownedPos) {
     const unownedSlots = [];
     base.forEach((idx, slot) => { const p = D[idx] && D[idx].s; if (p && !ownedPos[p]) unownedSlots.push(slot); });
@@ -8232,12 +8455,20 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const _wkAF = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     const _ownedAF = window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][_wkAF];
     if (_ownedAF && _ownedAF.FLEX) return;
+    // Projection-default regime (week 2+, current/future weeks): the WHOLE
+    // board interleaves by PPR projection — QB, K and D/ST slots included —
+    // so an untouched week reads strictly by PROJ and a hand-ranked position
+    // keeps its internal order while its players sit where their projection
+    // puts them. Earlier weeks keep the RB/WR/TE-only interleave.
+    const _allPos = (typeof window._weeklyProjDefaultFor === 'function') && window._weeklyProjDefaultFor(_wkAF);
+    const POS = _allPos ? ['QB', 'RB', 'WR', 'TE', 'K', 'DST'] : ['RB', 'WR', 'TE'];
     const b = versionBoards[ver].weekly;
     const flexSlots = [];
-    const queues = { RB: [], WR: [], TE: [] };
+    const queues = {};
+    POS.forEach(p => queues[p] = []);
     b.forEach((idx, sl) => {
       const p = D[idx] && D[idx].s;
-      if (p === 'RB' || p === 'WR' || p === 'TE') { flexSlots.push(sl); queues[p].push(idx); }
+      if (queues[p]) { flexSlots.push(sl); queues[p].push(idx); }
     });
     if (flexSlots.length < 2) return;
     const score = {};
@@ -8245,17 +8476,22 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (score[idx] == null) {
         let v = null;
         try {
-          const base = (typeof adjProjPpg === 'function') ? adjProjPpg(D[idx]) : null;
-          v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(D[idx], base) : base;
+          v = _allPos
+            ? window._weeklyProjPprOf(D[idx])
+            : (function() {
+                const base = (typeof adjProjPpg === 'function') ? adjProjPpg(D[idx]) : null;
+                return (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(D[idx], base) : base;
+              })();
         } catch (e) { v = null; }
         score[idx] = (v != null && isFinite(v)) ? v : -1;
       }
       return score[idx];
     };
-    const heads = { RB: 0, WR: 0, TE: 0 };
+    const heads = {};
+    POS.forEach(p => heads[p] = 0);
     flexSlots.forEach(sl => {
       let best = null, bestScore = -Infinity;
-      ['RB', 'WR', 'TE'].forEach(p => {
+      POS.forEach(p => {
         const idx = queues[p][heads[p]];
         if (idx != null && scoreOf(idx) > bestScore) { best = p; bestScore = scoreOf(idx); }
       });
@@ -8409,6 +8645,22 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // it clobber a live board; reconcile will derive from redraft instead.
     if (!obj || !obj._order || !obj._order.length) { window._weeklyReconcileBoard(ver); return; }
     window._weeklySaved[ver] = obj;
+    // ONE-TIME (Jack, 2026-09-16): week 2 was saved under the old
+    // redraft-derived default with only D/ST hand-ranked. Any week-2 save
+    // written BEFORE this shipped keeps D/ST ownership only, so the other
+    // positions (K included) drop to the projection order; every save made
+    // after the cutoff carries Jack's real intent and is left alone.
+    // Self-expiring: the cutoff is fixed, and week 3+ saves never match.
+    // Same for Jack's own MY RANKINGS doc (admin session only — never other
+    // users' week-2 edits).
+    const _resetVer = ver === 'jacks' || (ver === 'mine' && typeof window._weeklyIsAdmin === 'function' && window._weeklyIsAdmin());
+    if (_resetVer && obj._week === 2 && Array.isArray(obj._ownedPos)) {
+      const at = Date.parse((ver === 'jacks' ? window._jacksUpdatedAt : window._mineUpdatedAt) || '');
+      if (isFinite(at) && at < Date.parse('2026-09-16T16:00:00Z')) {
+        obj = Object.assign({}, obj, { _ownedPos: obj._ownedPos.filter(p => p === 'DST') });
+        window._weeklySaved[ver] = obj;
+      }
+    }
     if (obj._week != null && Array.isArray(obj._ownedPos)) {
       const set = {};
       obj._ownedPos.forEach(p => set[p] = true);
@@ -8446,7 +8698,13 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // 'jacks' before 'mine', so Jack's weekly is already up to date here.
     if (ver === 'mine' && typeof window._mineWeeklyVirgin === 'function' && window._mineWeeklyVirgin(wk)) {
       const _useJacksWeekly = !!(versionBoards.jacks.weekly && versionBoards.jacks.weekly.length);
-      const src = _useJacksWeekly ? versionBoards.jacks.weekly : versionBoards.jacks.redraft;
+      // Projection-default regime (week 2+, current/future): a virgin MY
+      // RANKINGS week starts strictly by PPR projection too (Jack 2026-09-16,
+      // "do this for my rankings not just jacks") — the first save takes
+      // ownership exactly like Jack's board. Earlier weeks mirror Jack's.
+      const _projVirgin = (typeof window._weeklyProjDefaultFor === 'function') && window._weeklyProjDefaultFor(wk);
+      const src = _projVirgin ? window._weeklyProjOrder('mine')
+        : (_useJacksWeekly ? versionBoards.jacks.weekly : versionBoards.jacks.redraft);
       versionBoards.mine.weekly = src.slice();
       // Tiers come from whichever jacks board the order came from, so
       // afterRank boundaries line up with the mirrored order.
@@ -8474,11 +8732,16 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         base = null;
       }
     }
+    // Source for unowned positions / untouched weeks: this week's PPR
+    // projection order from week 2 on (current + future weeks only — past
+    // weeks keep deriving from redraft exactly as before), else redraft.
+    const projDefault = window._weeklyProjDefaultFor(wk);
+    const freshSrc = () => projDefault ? window._weeklyProjOrder(ver) : versionBoards[ver].redraft.slice();
     if (base) {
-      // Owned positions keep the edited order; everything else re-follows redraft.
-      versionBoards[ver].weekly = window._weeklyMergeUnowned(base, versionBoards[ver].redraft, ownedPos || {});
+      // Owned positions keep the edited order; everything else re-follows the fresh source.
+      versionBoards[ver].weekly = window._weeklyMergeUnowned(base, freshSrc(), ownedPos || {});
     } else if (!(saved && saved._week === wk)) {
-      versionBoards[ver].weekly = versionBoards[ver].redraft.slice();
+      versionBoards[ver].weekly = freshSrc();
     }
     // FLEX interleave derives from positional order + weekly PROJ PPG.
     window._weeklyAutoFlex(ver);
@@ -8552,7 +8815,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       // weekly slate-average cache keys off the week — refresh both.
       window._weeklySlateAvgCache = null;
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
-      // New week: an untouched board re-derives from the current Redraft order.
+      // New week: an untouched board re-derives (week 2+: PPR projection order; earlier: redraft).
       if (typeof window._weeklyReconcileBoard === 'function') {
         window._weeklyReconcileBoard('jacks');
         window._weeklyReconcileBoard('mine');
@@ -8672,6 +8935,13 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     }
     // Toggle the body class + admin week selector visibility for WEEKLY format
     document.body.classList.toggle('format-weekly', currentMode === 'weekly');
+    // WEEKLY hides the xFP STATS view (it only fills after the week's games) —
+    // fall back to FANTASY, which carries season xFP as its own column there.
+    if (currentMode === 'weekly' && rnkStatMode === 'xfp') {
+      rnkStatMode = 'fantasy';
+      document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'fantasy'));
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+    }
     const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
     if (wkSelWrap) wkSelWrap.style.display = (currentMode === 'weekly') ? 'inline-flex' : 'none';
     // Entering WEEKLY: apply the non-admin published-week lock + LIVE chip
@@ -8846,7 +9116,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -9788,6 +10058,30 @@ function _wkSimBoomBustCell(d, which) {
 // OPP PPG cell for the rankings WEEKLY view — points the opponent allows per
 // game to this position (see window._weeklyOppPpgFor). Colored by league
 // thirds: green = allows the most (soft), red = allows the least (tough).
+// WEEKLY board xFP column (2026-09-16, Jack): season expected fantasy points
+// per game to date, slotted between '26 PPG and L4 PPG in the FANTASY stats
+// view — the xFP STATS view only fills after the week's games, so it's hidden
+// on the weekly board. Other stats views keep a hidden placeholder cell so
+// the column count holds.
+function _wkXfpCellHtml(d, show) {
+  const blank = '<td class="xfpg-cell weekly-only-cell" style="display:none">—</td>';
+  if (!show) return blank;
+  const x = _xfpAgg(d, rankingScoringFmt, null);
+  if (!x) return blank;
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  const sg = v => (v >= 0 ? '+' : '') + f1(v);
+  const oc = x.fpoeg <= -1.5 ? '#22c55e' : x.fpoeg >= 1.5 ? '#f87171' : null;
+  const tip = (x.n + ' game' + (x.n > 1 ? 's' : '') + ' to date: expected ' + f1(x.xfpg) + ' /gm vs actual ' + f1(x.ppg)
+    + ' — scored ' + sg(x.fpoeg) + ' /gm vs expected: TD luck ' + sg(x.tdg) + ' (regresses), '
+    + (d.s === 'QB' && x.int ? 'INTs ' + sg(x.intg) + ', ' : '') + 'yards/catches ' + sg(x.fpoeg - x.luckg) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
+  return '<td class="xfpg-cell weekly-only-cell" style="display:none" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span>'
+    + '<span class="xfpg-oe" style="' + (oc ? 'color:' + oc : 'opacity:.55') + '">' + sg(x.fpoeg) + '</span></td>';
+}
+function _wkXfpInject(tds, d, show) {
+  const cell = _wkXfpCellHtml(d, show);
+  const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
+  return i < 0 ? tds + cell : tds.slice(0, i) + cell + tds.slice(i);
+}
 function _wkOppPpgCell(d) {
   const r = (typeof window._weeklyOppPpgFor === 'function') ? window._weeklyOppPpgFor(d.t, d.s) : null;
   if (!r) return '<td class="oppppg-cell weekly-only-cell" style="display:none">—</td>';
@@ -9796,7 +10090,8 @@ function _wkOppPpgCell(d) {
   const _kd = d.s === 'K' || d.s === 'DST';   // reception format is meaningless for K / D/ST
   const fmtLbl = _kd ? '' : ((typeof _scoringLabelsRnk !== 'undefined' && _scoringLabelsRnk[rankingScoringFmt]) || 'Half PPR') + ' ';
   const posLbl = d.s === 'DST' ? 'opposing D/STs' : d.s === 'K' ? 'opposing kickers' : d.s + 's';
-  const tip = r.opp + ' allows ' + r.v + ' ' + fmtLbl + 'pts/game to ' + posLbl + ' in 2026 — #' + r.rank + ' most of ' + r.n + ' (' + r.games + ' gm)';
+  let tip = r.opp + ' allows ' + r.v + ' ' + fmtLbl + 'pts/game to ' + posLbl + ' in 2026 — #' + r.rank + ' most of ' + r.n + ' (' + r.games + ' gm)';
+  if (typeof r.adjRank === 'number') tip += ' · schedule-adjusted ' + r.adjV + ' (#' + r.adjRank + ')' + ((r.offFaced && r.games >= 2) ? ' — faced ' + (r.offFaced > 0 ? 'tougher' : 'softer') + ' offenses than avg (' + (r.offFaced > 0 ? '+' : '') + r.offFaced + ' pts/gm)' : '');
   return '<td class="oppppg-cell weekly-only-cell" style="display:none" title="' + tip.replace(/"/g, '&quot;') + '"><span style="color:' + c + ';font-weight:700;cursor:help">' + r.v + '</span><span class="oppppg-rk">#' + r.rank + '</span></td>';
 }
 
@@ -11907,7 +12202,89 @@ function _campNewsSectionHtml(d) {
 // the rankings table shows the number, this shows where it came from),
 // opponent defense vs this position, and recent 2026 games once the season
 // starts. Full prop-line detail stays on the LINES tab.
+// === WHY THIS PROJECTION (player card WEEKLY tab) ===============================
+// Jack 2026-09-16: "add the why notes to the player cards on the main site". data/proj_why_2026.json is built
+// headless from the Sim Lab NOTES why lines (sim_lab/export_notes.js --repo, run by scripts/sim_proj_task.ps1):
+// for the current week, every QB/RB/WR/TE sim projection as a waterfall in [half, ppr, std] - preseason baseline
+// (Clay per game) -> each factor the sim applied, in the order it applies them -> the sim projection. Lazy-loaded
+// on the first WEEKLY tab (hour-stamped ?d=, not ?v=, so sw.js never pins it). Shown only when the card's
+// projection source is Sim Lab, so the steps add up to the number on the card.
+window._PROJ_WHY = window._PROJ_WHY || null;
+function _loadProjWhy() {
+  if (window._projWhyPromise) return window._projWhyPromise;
+  const now = new Date();
+  const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  window._projWhyPromise = fetch('data/proj_why_2026.json?d=' + stamp)
+    .then(r => (r && r.ok) ? r.json() : null)
+    .then(j => {
+      window._PROJ_WHY = (j && j.players) ? j : { players: {}, failed: true };
+      const host = document.getElementById('cardWeeklyView');
+      if (host && window._weeklyCardD && typeof buildWeeklyCardView === 'function') host.innerHTML = buildWeeklyCardView(window._weeklyCardD);
+      return window._PROJ_WHY;
+    })
+    .catch(() => { window._PROJ_WHY = { players: {}, failed: true }; return null; });
+  return window._projWhyPromise;
+}
+function _projWhyFor(d) {
+  const J = window._PROJ_WHY;
+  if (!J || !J.players) return null;
+  let r = J.players[d.n];
+  if (!r && typeof _campNewsNorm === 'function') {
+    if (!J._idx) { J._idx = {}; Object.keys(J.players).forEach(k => { J._idx[_campNewsNorm(k)] = J.players[k]; }); }
+    r = J._idx[_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+function _projWhyHtml(d, wk, cardProj, esc) {
+  if (!['QB', 'RB', 'WR', 'TE'].includes(d.s)) return '';
+  const J = window._PROJ_WHY;
+  if (!J) { _loadProjWhy(); return ''; }
+  if (!J.players || +J.week !== +wk) return '';
+  const r = _projWhyFor(d);
+  if (!r) return '';
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  const sg = v => (v >= 0 ? '+' : '\u2212') + f1(Math.abs(v));
+  const clay = r.c[fi], proj = r.p[fi];
+  if (clay == null || proj == null) return '';
+  const steps = (r.s || []).map(s => ({ l: s.l, v: s.d[fi], k: s.k })).filter(s => Math.abs(s.v) >= 0.1);
+  const rest = proj - clay - steps.reduce((t, s) => t + s.v, 0);
+  if (Math.abs(rest) >= 0.1) steps.push({ l: 'smaller factors combined', v: rest, k: 'rest' });
+  const maxAbs = Math.max(0.5, ...steps.map(s => Math.abs(s.v)));
+  const top = steps.filter(s => s.k !== 'rest').sort((x, y) => Math.abs(y.v) - Math.abs(x.v))[0];
+  let html = '<div class="card-section"><div class="card-section-title">Why this projection '
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
+  html += '<div class="why-list">';
+  html += '<div class="why-row why-base"><span class="why-lbl">Preseason baseline <span class="why-dim">(Mike Clay per game)</span></span><span class="why-bar"></span><span class="why-val">' + f1(clay) + '</span></div>';
+  steps.forEach(s => {
+    const pct = Math.round(100 * Math.abs(s.v) / maxAbs);
+    html += '<div class="why-row' + (top && s === top ? ' why-top' : '') + '"><span class="why-lbl">' + esc(s.l) + '</span>'
+      + '<span class="why-bar"><span class="why-fill ' + (s.v >= 0 ? 'pos' : 'neg') + '" style="width:' + pct + '%"></span></span>'
+      + '<span class="why-val ' + (s.v >= 0 ? 'pos' : 'neg') + '">' + sg(s.v) + '</span></div>';
+  });
+  html += '<div class="why-row why-total"><span class="why-lbl">Sim projection</span><span class="why-bar"></span><span class="why-val">' + f1(proj) + '</span></div>';
+  html += '</div>';
+  if (top) html += '<div class="why-note">Biggest driver: <b>' + esc(top.l.split(' (')[0]) + '</b> (' + sg(top.v) + ').'
+    + (typeof cardProj === 'number' && Math.abs(cardProj - proj) >= 0.3 ? ' The projection above has moved ' + sg(cardProj - proj) + ' since this breakdown was built (a newer injury or line update).' : '') + '</div>';
+  // matchup reads for this player (Start/Sit MATCHUP EDGES data)
+  const M = window.MATCHUP_EDGES_2026, Wk = M && M.weeks ? M.weeks[wk] : null;
+  if (Wk && Wk.rows) {
+    const nk = typeof _campNewsNorm === 'function' ? _campNewsNorm(d.n) : d.n;
+    const m = Wk.rows.find(x => x.n === d.n || (typeof _campNewsNorm === 'function' && _campNewsNorm(x.n) === nk));
+    if (m && m.items && m.items.length) {
+      const pc = v => (v > 0 ? '+' : '') + Math.round(v) + '%';
+      html += '<div class="why-mu"><div class="why-mu-head">Matchup <b class="' + (m.pct >= 0 ? 'pos' : 'neg') + '">' + pc(m.pct) + '</b> <span class="why-dim">of his projection</span></div>'
+        + m.items.slice(0, 4).map(it => '<div class="why-mu-item">' + esc(it.lab) + ' <b class="' + (it.pct >= 0 ? 'pos' : 'neg') + '">' + pc(it.pct) + '</b>'
+          + '<span class="sst-edge-tag ' + (it.priced ? 'in' : 'read') + '">' + (it.priced ? 'IN PROJ' : 'READ') + '</span></div>').join('')
+        + '<div class="why-dim" style="margin-top:3px">IN PROJ = already in the number above · READ = matchup context that does not change it</div></div>';
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
 function buildWeeklyCardView(d) {
+  window._weeklyCardD = d;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const wk = window._weeklyActiveWeek || 1;
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
@@ -11935,7 +12312,10 @@ function buildWeeklyCardView(d) {
   const isDst = d.s === 'DST';
   let html = '<div class="card-section">' + title('Matchup');
   html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), 'accent');
+  const oppDiff = (typeof window._weeklyOppDifficulty === 'function') ? window._weeklyOppDifficulty(d.t, d.s) : null;
+  const oppNote = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : '';
+  const oppCol = oppDiff === 'hard' ? '#ef4444' : oppDiff === 'easy' ? '#22c55e' : oppDiff === 'medium' ? '#facc15' : null;
+  html += box('OPP', (oppCol ? '<span style="color:' + oppCol + '">' : '') + (entry.home ? 'vs ' : '@ ') + esc(entry.opp) + (oppCol ? '</span>' : ''), oppCol ? '' : 'accent', oppNote || null);
   html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', sp != null && sp < 0 ? 'green' : '');
   html += isDst
     ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)')
@@ -12023,6 +12403,7 @@ function buildWeeklyCardView(d) {
   html += '<div style="margin-top:7px;font-size:.62rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
     + (out.src === 'props' ? ' · full prop board on the <b>LINES</b> tab' : '') + '</div>';
   html += '</div>';
+  if (out.src === 'sim' && typeof _projWhyHtml === 'function') html += _projWhyHtml(d, wk, proj, esc);
 
   // Recent games (in-season only — WEEKLY_STATS gets 2026 rows from the
   // Tuesday stats pull; empty preseason so the section self-hides).
@@ -23954,7 +24335,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       const oppHtml = '<span class="sst-opp' + (diffColor ? '" style="color:' + diffColor : '') + '">' + (c.home ? 'vs ' : '@ ')
         + (oppLogo ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + oppLogo + '.png" alt="" loading="lazy">' : '') + esc(c.opp) + '</span>';
       html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-      html += box('OPP', oppHtml, '', c.diff ? (c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent Clay ' + (isDst ? 'offense' : 'defense') + ' rank)' : null);
+      html += box('OPP', oppHtml, '', c.diff ? ((typeof window._weeklyOppDiffNote === 'function' && window._weeklyOppDiffNote(d.t, d.s)) || ((c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent ' + (isDst ? 'offense' : 'defense') + ' rank)')) : null);
       html += box('SPREAD', '<span class="' + bestCls(isBest('spread', c.spread)) + (c.spread != null && c.spread < 0 ? ' green' : '') + '">' + fmtSpread(c.spread) + '</span>', '', 'This team\'s spread (negative = favored)');
       html += isDst
         ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>', '', 'Points the opponent is priced to score — lower = better D/ST spot')
@@ -24040,14 +24421,72 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     return html;
   }
 
-  window._sstRender = render;
+  // MATCHUP EDGES (2026-09-16, Jack: "add the matchup edges board to the main site too"). Built headless from the
+  // Sim Lab NOTES board (sim_lab/export_notes.js --repo, run by scripts/sim_proj_task.ps1) into
+  // data/matchup_edges_2026.js: every QB 12+ / RB-WR-TE 6+ projection with its matchup score in % of the projection.
+  // "In projection" items are already inside PROJ (opponent points allowed, pass rush, CB, O-line injuries, wind);
+  // "matchup read" items (coverage fit, pressure / blitz vs the QB, run defense, target zones, defensive injuries)
+  // are context and never change the number. Tap a row to add the player to the Start/Sit cards above.
+  let ePos = 'ALL';
+  const eNorm = s => String(s || '').toLowerCase().replace(/[.'’]/g, '').replace(/-/g, ' ').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/\s+/g, ' ').trim();
+  function renderEdges() {
+    const el = document.getElementById('sstEdges');
+    if (!el) return;
+    const M = window.MATCHUP_EDGES_2026;
+    if (!M || !M.weeks) { el.innerHTML = ''; return; }
+    const siteWk = week();
+    const wk = M.weeks[siteWk] ? siteWk : M.latest;
+    const Wk = M.weeks[wk];
+    if (!Wk || !Wk.rows || !Wk.rows.length) { el.innerHTML = ''; return; }
+    const rows = Wk.rows.filter(r => ePos === 'ALL' || r.pos === ePos);
+    const best = rows.filter(r => r.pct >= 1).sort((x, y) => y.pct - x.pct).slice(0, 12);
+    const worst = rows.filter(r => r.pct <= -1).sort((x, y) => x.pct - y.pct).slice(0, 12);
+    const sgn = v => (v > 0 ? '+' : '') + Math.round(v) + '%';
+    const rowHtml = r => {
+      const good = r.pct > 0;
+      const why = (r.items || []).slice(0, 3).map(it => '<span class="sst-edge-item">' + esc(it.lab) + ' <b>' + sgn(it.pct) + '</b>'
+        + '<span class="sst-edge-tag ' + (it.priced ? 'in' : 'read') + '">' + (it.priced ? 'IN PROJ' : 'READ') + '</span></span>').join('');
+      return '<div class="sst-edge-row" data-n="' + esc(r.n) + '" title="Add ' + esc(r.n) + ' to Start/Sit">'
+        + '<span class="lg-badge" style="background:' + (PB[r.pos] || '') + ';color:' + (PC[r.pos] || '') + '">' + r.pos + '</span>'
+        + '<div class="sst-edge-main"><div class="sst-edge-name">' + esc(r.n) + '<span class="sst-dim">' + esc(r.tm) + (r.home ? ' vs ' : ' @ ') + esc(r.opp) + '</span></div>'
+        + '<div class="sst-edge-why">' + why + '</div></div>'
+        + '<div><div class="sst-edge-pct ' + (good ? 'good' : 'bad') + '">' + sgn(r.pct) + '</div>'
+        + '<div class="sst-edge-split">proj ' + sgn(r.priced) + ' · read ' + sgn(r.intel) + '</div></div></div>';
+    };
+    const upd = Wk.generated ? new Date(Wk.generated) : null;
+    let html = '<div class="sst-edges-head"><span class="sst-edges-title">MATCHUP EDGES · WEEK ' + wk + '</span>'
+      + '<div class="lg-pos-btns" id="sstEdgePos">' + ['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => '<button class="lg-pos-btn' + (p === ePos ? ' active' : '') + '" data-p="' + p + '"'
+        + (p === ePos ? ' style="' + (p === 'ALL' ? 'border-color:var(--accent);background:var(--accent);color:#0a0e17' : 'border-color:' + PC[p] + ';background:' + PC[p] + ';color:#fff') + '"' : '') + '>' + p + '</button>').join('') + '</div></div>';
+    html += '<div class="sst-sub" style="margin-bottom:.2rem">How much this week\'s matchup moves each player, as a % of his projection. '
+      + '<span class="sst-edge-tag in">IN PROJ</span> is already baked into the projection (opponent points allowed, pass rush, cornerback matchup, O-line injuries, wind). '
+      + '<span class="sst-edge-tag read">READ</span> is advanced matchup context that does not change the number: man/zone coverage fit, pressure and blitz vs the QB, run defense, target zones and defensive injuries. '
+      + 'Early-season defense rates are blended with last season. Tap a player to add him to Start/Sit.'
+      + (upd && !isNaN(upd) ? ' <span class="sst-dim">Updated ' + upd.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '.</span>' : '') + '</div>';
+    html += '<div class="sst-edges-cols">'
+      + '<div><div class="sst-edge-col-title" style="color:#22c55e">BEST MATCHUPS</div>' + (best.length ? best.map(rowHtml).join('') : '<div class="sst-edges-empty">No positive edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '<div><div class="sst-edge-col-title" style="color:#ef4444">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '</div>';
+    el.innerHTML = html;
+    el.querySelectorAll('#sstEdgePos .lg-pos-btn').forEach(b => { b.onclick = () => { ePos = b.dataset.p; renderEdges(); }; });
+    el.querySelectorAll('.sst-edge-row').forEach(r => {
+      r.onclick = () => {
+        const k = eNorm(r.dataset.n);
+        const d = D.find(x => x && x.n && x.t && !x._retired && !x.rm && !x.devy && eNorm(x.n) === k);
+        if (!d) { if (typeof toast === 'function') toast(r.dataset.n + ' is not on the board yet'); return; }
+        add(d.n);
+        const g = document.getElementById('sstGrid'); if (g && g.scrollIntoView) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }
+
+  window._sstRender = function () { render(); renderEdges(); };
   // Re-render if the page is already open when the Firestore week listener
   // (_weeklyApplySettings) or a deferred data bundle lands.
   window._sstRefresh = function() {
     const pg = document.getElementById('pageStartSit');
     if (pg && pg.classList.contains('active') && names.length) render();
   };
-  window.addEventListener('load', () => setTimeout(window._sstRefresh, 800));
+  window.addEventListener('load', () => setTimeout(() => { window._sstRefresh(); const pg = document.getElementById('pageStartSit'); if (pg && pg.classList.contains('active')) renderEdges(); }, 800));
 })();
 
 // === PLAYER BIO HELPERS ===
@@ -28840,7 +29279,10 @@ window.fmtHeight = fmtHeight;
   //   2 (2026-09-03): + _cut / _cutPos per mode — free/anon viewers loaded the
   //     slice with no cut line, so the fallback-filled board showed every
   //     below-cut player (and a +/- sort floated them to the top).
-  const _PUB_SCHEMA = 2;
+  //   3 (2026-09-16): + weekly _ownedPos — without it the free slice was a
+  //     "legacy" weekly save that froze every position, so free viewers never
+  //     got the projection-ordered default for positions Jack hasn't ranked.
+  const _PUB_SCHEMA = 3;
   function _buildJacksPublicPayload(fullData) {
     const out = { jacks: {}, _pubSchema: _PUB_SCHEMA };
     ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => {
@@ -28854,6 +29296,7 @@ window.fmtHeight = fmtHeight;
         if (kept.length) slice._posTiers[pk] = kept;
       });
       if (m === 'weekly' && src._week != null) slice._week = src._week;
+      if (m === 'weekly' && Array.isArray(src._ownedPos)) slice._ownedPos = src._ownedPos.slice();
       // Cut lines ride along: loadModeData / _weeklyStashSaved apply them, and
       // getFiltered then hides below-cut players from non-editors.
       if (src._cut >= 1) slice._cut = src._cut;
@@ -29379,6 +29822,7 @@ window.fmtHeight = fmtHeight;
       const doc = await db.collection('rankings').doc(currentUser.uid).get();
       if (doc.exists && doc.data().data) {
         const obj = JSON.parse(doc.data().data);
+        window._mineUpdatedAt = doc.data().updatedAt || null;
         // Custom-format flags first — they decide which saved orders below are
         // the user's own work vs. mirrored Jack's copies to be re-seeded fresh.
         if (typeof window._mineMetaLoad === 'function') window._mineMetaLoad(obj.mineMeta, !!obj.mine);
@@ -62750,7 +63194,7 @@ Rules:
   }
   window._renderResearch = function _renderResearch() {
     if (!document.getElementById('pageResearch')) return;
-    // view tabs first (they pin the Advanced Stats season), then the sections
+    // view tabs first (they show / hide the sections), then the sections
     if (typeof window._rsApplyView === 'function') window._rsApplyView();
     // Advanced Stats has its own per-season data and doesn't wait on the retired DB
     if (typeof window._renderAdvStats === 'function') window._renderAdvStats();
@@ -63037,11 +63481,13 @@ Rules:
       depa: 'dpl', ddbepa: 'dpa', druepa: 'drua', dsr: 'dpl', dxp: 'dpl', dskp: 'dpa', dprs: 'dpdbt', dblz: 'dpdbt',
       dman: 'dmzr', dtdc: 'dtdn', drztd: 'drzt' }
   };
-  function _aggregate(yr, wl) {
-    const A = window.ADV_STATS || {};
-    const sets = wl.map(w => A[yr + '-w' + w]).filter(Boolean);
+  // sets = season and / or week datasets in time order (the last one names a player's team);
+  // whole seasons combine the same way because the season files carry the same hidden fields
+  function _aggregate(sets) {
+    sets = (sets || []).filter(Boolean);
     if (!sets.length) return null;
-    const out = { yr: yr, thru: wl[wl.length - 1], span: [wl[0], wl[wl.length - 1]], teams: {} };
+    const last = sets[sets.length - 1];
+    const out = { yr: last.yr, thru: last.thru, teams: {} };
     sets.forEach(s => Object.keys(s.teams || {}).forEach(tm => {
       const t = out.teams[tm] = out.teams[tm] || [0, 0, 0, 0, 0];
       s.teams[tm].forEach((v, i) => { t[i] += v || 0; });
@@ -63098,11 +63544,12 @@ Rules:
     return out;
   }
 
-  let _pos = 'QB', _yr = YEARS[0], _sortK = 'fpt', _sortAsc = false;
-  // Weeks filter: '' = season, 'N' = one week, 'L3' / 'L5' = last 3 / 5 weeks, 'R' = custom From-To
-  let _wsel = '', _rFrom = 0, _rTo = 0, _loadSeq = 0;
-  // Research view: 'cur' pins the season to YEARS[0]; 'past' offers the rest (last pick remembered)
-  let _advView = 'cur', _pastYr = YEARS[1];
+  let _pos = 'QB', _sortK = 'fpt', _sortAsc = false;
+  // Multi-pick filters (Jack 2026-09-16 "select multiple so we can see samples of multiple weeks"):
+  // seasons (always at least one), weeks ([] = the full season files), teams ([] = all). Every
+  // season and week ticked combines into ONE sample (_aggregate: counts add, rates re-weight).
+  let _yrs = [YEARS[0]], _wks = [], _tms = [], _loadSeq = 0;
+  let _yrPick = null, _wkPick = null, _tmPick = null;   // the three _multi() controls
 
   // --- team room chart (Jack 2026-09-16: "who's trending up/down or just compare roles") ------
   // Team view + RB / WR / TE tab -> one line per player across every week of the season for a
@@ -63149,10 +63596,11 @@ Rules:
   function _roomChart() {
     const host = _el('rsAdvRoom');
     if (!host) return;
-    const tm = (_el('rsAdvTm') || {}).value, poss = _roomPositions(), sf = _seasonFile();
+    // one team on one season: several seasons or teams have no single room to chart
+    const tm = _tms.length === 1 && _yrs.length === 1 ? _tms[0] : '', poss = _roomPositions(), sf = _seasonFile();
     if (!tm || !poss || !sf || !(sf.wks || []).length) { host.hidden = true; host.innerHTML = ''; return; }
     host.hidden = false;
-    const wks = sf.wks, yr = _yr;
+    const wks = sf.wks, yr = _yrs[0];
     const missing = wks.filter(w => !(window.ADV_STATS || {})[yr + '-w' + w]);
     if (missing.length) {
       host.innerHTML = '<div class="rs-empty">Loading ' + yr + ' weeks for ' + _esc(tm) + '…</div>';
@@ -63244,6 +63692,505 @@ Rules:
       ' · legend trend = last 3 games vs the 3 before · the table below (pick a week or range) is the twin</span></div>';
     host.innerHTML = head + legend + svg;
   }
+  // --- scatterplot (Jack 2026-09-16: "make a scatterplot with the players' names and team
+  // logo for a specific stat, e.g. fantasy points over xFP for QBs, and download the visual") ---
+  // Any two columns of the position table, for exactly the rows the table shows (same season /
+  // weeks / team / minimum / search, Per game vs Totals, scoring format). Drawn on a canvas so
+  // the PNG download is the picture on screen at 2x; ESPN logos load crossOrigin so the canvas
+  // stays clean for toDataURL. Dashed lines = averages (quadrants), solid = least-squares fit;
+  // FPTS vs xFP also draws the y = x line (above it = scored more than opportunity implies).
+  const SC_DEF = { QB: ['xfpt', 'fpt'], RB: ['xfpt', 'fpt'], WR: ['xfpt', 'fpt'], TE: ['xfpt', 'fpt'], TM: ['proe', 'epa'] };
+  let _scOn = false, _scAx = {}, _scLab = 'both', _scPts = [], _scSeq = 0, _scHover = -1;
+  const _scImg = {};   // team abbr -> HTMLImageElement | null (failed) | Promise (loading)
+  try { _scOn = localStorage.getItem('rsAdvScatter') === '1'; } catch (e) { /* storage blocked */ }
+  try {
+    const s = JSON.parse(localStorage.getItem('rsAdvScatterAxes') || '{}') || {};
+    _scAx = s.ax || {};
+    if (['both', 'logo', 'name', 'dot'].indexOf(s.lab) >= 0) _scLab = s.lab;
+  } catch (e) { _scAx = {}; }
+  // Board group (Jack 2026-09-16): ADP, consensus / Jack's / my rank and JM score from the site
+  // database, matched to the stats rows by name, for the rankings page's current format
+  // (redraft / dynasty / ...). My rank is a toggle because a virgin "mine" board just mirrors
+  // Jack's and the PNG is meant to be shared.
+  const BOARD_MODES = ['redraft', 'bestball', 'superflex', 'dynasty', 'dynastysf'];
+  const MODE_LABEL = { redraft: 'Redraft', bestball: 'Best Ball', superflex: 'Superflex', dynasty: 'Dynasty', dynastysf: 'Dynasty SF' };
+  let _scMine = false, _scJmWait = 0;
+  try { _scMine = localStorage.getItem('rsAdvScatterMine') === '1'; } catch (e) { /* storage blocked */ }
+  function _scMode() { return typeof currentMode === 'string' && BOARD_MODES.indexOf(currentMode) >= 0 ? currentMode : 'redraft'; }
+  function _scBoardCols() {
+    if (_pos === 'TM' || typeof D === 'undefined') return [];
+    const ml = MODE_LABEL[_scMode()];
+    const cols = [
+      { k: 'b_adp', l: 'ADP', g: 'Board', d: 1, lo: true, t: ml + ' consensus ADP from the site board (lower = drafted earlier)' },
+      { k: 'b_cons', l: 'Consensus rank', g: 'Board', d: 0, lo: true, t: ml + ' consensus rank: the site blend of Jack, market ADP, Sleeper and FantasyPros' }
+    ];
+    if (typeof hasPremium !== 'function' || hasPremium()) cols.push({ k: 'b_jacks', l: "Jack's rank", g: 'Board', d: 0, lo: true, t: 'Where Jack has the player on his ' + ml + ' board' });
+    if (_scMine) cols.push({ k: 'b_mine', l: 'My rank', g: 'Board', d: 0, lo: true, t: 'Where the player sits on your ' + ml + ' board (an untouched board mirrors Jack\'s)' });
+    cols.push({ k: 'b_jm', l: 'JM score', g: 'Board', d: 0, t: 'JM prospect model score 0-100 (draft capital, production, age, athleticism, film ...)' });
+    return cols;
+  }
+  function _scAllCols() { return COLS[_pos].concat(_scBoardCols()); }
+  function _scBoardCtx() {
+    if (_pos === 'TM' || typeof D === 'undefined' || !Array.isArray(D)) return null;
+    const mode = _scMode();
+    const rank = src => {
+      const b = typeof versionBoards !== 'undefined' && versionBoards[src] && versionBoards[src][mode];
+      const m = {};
+      if (Array.isArray(b)) b.forEach((idx, r) => { m[idx] = r + 1; });
+      return m;
+    };
+    const byName = new Map();
+    D.forEach(d => { if (!byName.has(d.n)) byName.set(d.n, d); });
+    return { byName: byName, adpF: mode === 'dynastysf' ? 'sa' : mode === 'dynasty' ? 'da' : mode === 'superflex' ? 'sfa' : 'a', cons: rank('consensus'), jacks: rank('jacks'), mine: rank('mine') };
+  }
+  function _scBoardVal(ctx, r, k) {
+    const d = ctx && ctx.byName.get(r.n);
+    if (!d) return null;
+    if (k === 'b_adp') { const v = d[ctx.adpF]; return v != null && v > 0 && v < 900 ? v : null; }   // K/DST carry a 900+ placeholder
+    if (k === 'b_cons') return ctx.cons[d.idx] || null;
+    if (k === 'b_jacks') return ctx.jacks[d.idx] || null;
+    if (k === 'b_mine') return ctx.mine[d.idx] || null;
+    if (k === 'b_jm') return d._pmJm != null ? d._pmJm : null;
+    return null;
+  }
+  // JM scores are stamped onto D by the prospect module (lazy data); ask for them and redraw when they land
+  function _scEnsureJm() {
+    if (typeof D === 'undefined' || D.some(d => d._pmJm != null) || typeof window._attachJmScores !== 'function') return;
+    if (window._attachJmScores() === true || _scJmWait) return;
+    let n = 0;
+    _scJmWait = setInterval(() => {
+      if (D.some(d => d._pmJm != null) || ++n > 40) { clearInterval(_scJmWait); _scJmWait = 0; _scatter(); }
+    }, 500);
+  }
+  function _scSave() {
+    try {
+      localStorage.setItem('rsAdvScatter', _scOn ? '1' : '0');
+      localStorage.setItem('rsAdvScatterAxes', JSON.stringify({ ax: _scAx, lab: _scLab }));
+      localStorage.setItem('rsAdvScatterMine', _scMine ? '1' : '0');
+    } catch (e) { /* private mode */ }
+  }
+  function _scAxes() {
+    const cols = _scAllCols();
+    const has = k => cols.some(col => col.k === k && col.k !== 'g');
+    const a = _scAx[_pos] || [];
+    let x = has(a[0]) ? a[0] : SC_DEF[_pos][0], y = has(a[1]) ? a[1] : SC_DEF[_pos][1];
+    if (!has(x)) x = (cols.find(col => col.k !== 'g') || cols[0]).k;
+    if (!has(y)) y = (cols.find(col => col.k !== 'g' && col.k !== x) || cols[0]).k;
+    return [x, y];
+  }
+  function _scCol(k) { return _scAllCols().find(col => col.k === k) || { k: k, l: k, g: '', d: 1, dg: 1 }; }
+  // axis label as the table header reads it (Per game swaps FPTS -> FP/G); FPTS / xFP name the scoring
+  function _scLabel(col, pg) {
+    const l = pg && col.cnt ? col.lg : col.l;
+    if (col.g === 'Board') return l + ' (' + MODE_LABEL[_scMode()] + ')';
+    return (col.k === 'fpt' || col.k === 'xfpt') && _pos !== 'TM' ? l + ' (' + FMT_NAME[_fmt] + ')' : l;
+  }
+  function _scDec(col, pg) { return pg && col.cnt ? col.dg : col.d; }
+  function _scLogoUrl(tm) {
+    if (typeof TEAM_ABBR_MAP === 'undefined' || typeof TEAM_LOGO_IDS === 'undefined') return '';
+    const full = Object.keys(TEAM_ABBR_MAP).find(f => TEAM_ABBR_MAP[f] === tm);
+    const id = full && TEAM_LOGO_IDS[full];
+    return id ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png' : '';
+  }
+  // resolves once every team's logo has loaded or failed (failed teams fall back to a dot)
+  function _scLoadLogos(tms) {
+    return Promise.all(tms.map(tm => {
+      if (_scImg[tm] !== undefined) return _scImg[tm];
+      const url = _scLogoUrl(tm);
+      if (!url) { _scImg[tm] = null; return null; }
+      const p = new Promise(res => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const to = setTimeout(() => res(null), 8000);
+        img.onload = () => { clearTimeout(to); res(img); };
+        img.onerror = () => { clearTimeout(to); res(null); };
+        img.src = url;
+      }).then(img => { _scImg[tm] = img; return img; });
+      _scImg[tm] = p;
+      return p;
+    }));
+  }
+  function _scTicks(lo, hi, n) {
+    const raw = (hi - lo) / n, p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw) || 10 * p;
+    const t = [];
+    for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(8));
+    return t;
+  }
+  function _scTheme(host) {
+    const cs = getComputedStyle(host);
+    const v = (name, fb) => (cs.getPropertyValue(name) || '').trim() || fb;
+    return { bg: v('--surface', '#111827'), border: v('--border', '#2a3a58'), text: v('--text', '#e2e8f0'), text2: v('--text2', '#8899b4'),
+      text3: v('--text3', '#64748b'), accent: v('--accent', '#f59e0b'), blue: v('--viz-1', '#3987e5') };
+  }
+  function _scShort(r) {
+    if (_pos === 'TM') return r.tm || r.n;
+    const parts = String(r.n || '').split(' ');
+    return parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : r.n;
+  }
+  // the dataset the chart plots: table rows with both axis values (also what the CSV twin lists)
+  function _scData() {
+    const L = _last;
+    if (!L || !L.rows.length) return null;
+    const ax = _scAxes(), cx = _scCol(ax[0]), cy = _scCol(ax[1]);
+    if (cx.k === 'b_jm' || cy.k === 'b_jm') _scEnsureJm();
+    const ctx = cx.g === 'Board' || cy.g === 'Board' ? _scBoardCtx() : null;
+    const get = (r, col) => (col.g === 'Board' ? _scBoardVal(ctx, r, col.k) : L.val(r, col.k));
+    const pts = [];
+    L.rows.forEach(r => {
+      const x = get(r, cx), y = get(r, cy);
+      if (x == null || y == null || !isFinite(x) || !isFinite(y)) return;
+      pts.push({ r: r, x: +x, y: +y });
+    });
+    return { pts: pts, cx: cx, cy: cy, pg: L.pg };
+  }
+  // draws the chart into ctx at logical W x H (scale applied by the caller); returns point hit boxes
+  function _scDraw(ctx, W, H, D, th, lab) {
+    const pts = D.pts, cx = D.cx, cy = D.cy, pg = D.pg;
+    const n = pts.length;
+    const big = W >= 1000, F = big ? 1.35 : 1;   // export size gets bigger type
+    const fs = Math.round(11 * F), TITLE = Math.round(20 * F), SUB = Math.round(11 * F);
+    const PADL = Math.round(58 * F), PADR = Math.round(22 * F), PADT = Math.round(58 * F), PADB = Math.round(52 * F);
+    const PW = W - PADL - PADR, PH = H - PADT - PADB;
+    ctx.fillStyle = th.bg;
+    ctx.fillRect(0, 0, W, H);
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+    let xlo = Math.min(...xs), xhi = Math.max(...xs), ylo = Math.min(...ys), yhi = Math.max(...ys);
+    const padD = (lo, hi) => { const s = hi - lo || Math.abs(hi) || 1; return [lo - s * 0.08, hi + s * 0.08]; };
+    [xlo, xhi] = padD(xlo, xhi); [ylo, yhi] = padD(ylo, yhi);
+    const X = v => PADL + (v - xlo) / (xhi - xlo) * PW, Y = v => PADT + (yhi - v) / (yhi - ylo) * PH;
+    const dx = _scDec(cx, pg), dy = _scDec(cy, pg);
+    const fx = v => Number(v).toFixed(dx), fy = v => Number(v).toFixed(dy);
+    const SANS = '"DM Sans", system-ui, sans-serif', BEB = '"Bebas Neue", Impact, "Arial Narrow", sans-serif';
+    // grid + ticks
+    ctx.lineWidth = 1;
+    ctx.font = fs + 'px ' + SANS;
+    ctx.strokeStyle = th.border;
+    ctx.fillStyle = th.text3;
+    ctx.textAlign = 'end'; ctx.textBaseline = 'middle';
+    _scTicks(ylo, yhi, 6).forEach(t => {
+      const y = Y(t);
+      ctx.beginPath(); ctx.moveTo(PADL, y); ctx.lineTo(W - PADR, y); ctx.stroke();
+      ctx.fillText(fy(t), PADL - 8 * F, y);
+    });
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    _scTicks(xlo, xhi, Math.max(4, Math.min(8, Math.round(PW / (70 * F))))).forEach(t => {
+      const x = X(t);
+      ctx.beginPath(); ctx.moveTo(x, PADT); ctx.lineTo(x, PADT + PH); ctx.stroke();
+      ctx.fillText(fx(t), x, PADT + PH + 6 * F);
+    });
+    // axis titles
+    const xl = _scLabel(cx, pg), yl = _scLabel(cy, pg);
+    ctx.fillStyle = th.text2;
+    ctx.font = '600 ' + fs + 'px ' + SANS;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(xl + (cx.lo ? ' (lower is better)' : ''), PADL + PW / 2, H - 12 * F);
+    ctx.save();
+    ctx.translate(14 * F, PADT + PH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText(yl + (cy.lo ? ' (lower is better)' : ''), 0, 0);
+    ctx.restore();
+    // averages (quadrants)
+    const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+    ctx.save();
+    ctx.setLineDash([4 * F, 4 * F]);
+    ctx.strokeStyle = th.text3; ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.moveTo(X(mx), PADT); ctx.lineTo(X(mx), PADT + PH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PADL, Y(my)); ctx.lineTo(W - PADR, Y(my)); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = th.text3;
+    ctx.font = Math.round(10 * F) + 'px ' + SANS;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText('avg ' + fx(mx), X(mx) + 4 * F, PADT + PH - 3 * F);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('avg ' + fy(my), W - PADR - 4 * F, Y(my) - 3 * F);
+    // y = x when both axes are the same points scale
+    const same = (cx.k === 'fpt' || cx.k === 'xfpt') && (cy.k === 'fpt' || cy.k === 'xfpt') && cx.k !== cy.k;
+    if (same) {
+      const lo = Math.max(xlo, ylo), hi = Math.min(xhi, yhi);
+      if (hi > lo) {
+        ctx.save();
+        ctx.setLineDash([2 * F, 5 * F]);
+        ctx.strokeStyle = th.text2; ctx.globalAlpha = 0.8;
+        ctx.beginPath(); ctx.moveTo(X(lo), Y(lo)); ctx.lineTo(X(hi), Y(hi)); ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle = th.text2;
+        ctx.font = Math.round(10 * F) + 'px ' + SANS;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.translate(X(hi), Y(hi)); ctx.rotate(-Math.atan2(PH / (yhi - ylo), PW / (xhi - xlo)));
+        ctx.fillText(cy.k === 'fpt' ? 'scored = expected' : 'expected = scored', -70 * F, -4 * F);
+        ctx.restore();
+      }
+    }
+    // least-squares fit + r
+    let r = null;
+    if (n >= 3) {
+      let sxx = 0, syy = 0, sxy = 0;
+      pts.forEach(p => { sxx += (p.x - mx) * (p.x - mx); syy += (p.y - my) * (p.y - my); sxy += (p.x - mx) * (p.y - my); });
+      if (sxx > 0 && syy > 0) {
+        r = sxy / Math.sqrt(sxx * syy);
+        const b = sxy / sxx, a = my - b * mx;
+        const yAt = x => a + b * x;
+        // clip the fit to the plot box
+        let x0 = xlo, x1 = xhi;
+        const inY = x => yAt(x) >= ylo && yAt(x) <= yhi;
+        if (!inY(x0)) x0 = b > 0 ? (ylo - a) / b : (yhi - a) / b;
+        if (!inY(x1)) x1 = b > 0 ? (yhi - a) / b : (ylo - a) / b;
+        if (x1 > x0) {
+          ctx.save();
+          ctx.strokeStyle = th.accent; ctx.lineWidth = 1.5 * F; ctx.globalAlpha = 0.75;
+          ctx.beginPath(); ctx.moveTo(X(x0), Y(yAt(x0))); ctx.lineTo(X(x1), Y(yAt(x1))); ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+    // plot frame
+    ctx.strokeStyle = th.border;
+    ctx.strokeRect(PADL, PADT, PW, PH);
+    // markers
+    // crowded boards (80+ receivers) get smaller logos so the middle still reads
+    const LOGO = Math.round((big ? (n > 60 ? 26 : 30) : (n > 60 ? 18 : 22)) * F), R = (n > 60 ? 4 : 5) * F;
+    const useLogo = lab === 'both' || lab === 'logo';
+    const hits = [];
+    ctx.save();
+    ctx.beginPath(); ctx.rect(PADL - LOGO, PADT - LOGO, PW + 2 * LOGO, PH + 2 * LOGO); ctx.clip();
+    pts.forEach((p, i) => {
+      const px = X(p.x), py = Y(p.y);
+      const img = useLogo ? _scImg[p.r.tm] : null;
+      const ok = img && !(img instanceof Promise);
+      if (ok) {
+        ctx.drawImage(img, px - LOGO / 2, py - LOGO / 2, LOGO, LOGO);
+        hits.push({ i: i, x: px, y: py, hw: LOGO / 2 });
+      } else {
+        ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2);
+        ctx.fillStyle = th.accent; ctx.fill();
+        ctx.lineWidth = 1.5 * F; ctx.strokeStyle = th.bg; ctx.stroke();
+        hits.push({ i: i, x: px, y: py, hw: R + 2 });
+      }
+    });
+    ctx.restore();
+    // name labels: extremes first (they carry the story), then anything that still fits
+    if (lab === 'both' || lab === 'name') {
+      const sx = (xhi - xlo) || 1, sy = (yhi - ylo) || 1;
+      const order = pts.map((p, i) => ({ i: i, d: Math.abs(p.x - mx) / sx + Math.abs(p.y - my) / sy })).sort((a, b) => b.d - a.d);
+      const placed = hits.map(h => ({ x: h.x - h.hw, y: h.y - h.hw, w: 2 * h.hw, h: 2 * h.hw }));
+      const clash = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      ctx.font = '500 ' + fs + 'px ' + SANS;
+      ctx.fillStyle = th.text;
+      ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+      order.forEach(o => {
+        const p = pts[o.i], h = hits[o.i];
+        const t = _scShort(p.r), tw = ctx.measureText(t).width, tht = fs + 2, g = 3 * F;
+        const cands = [
+          { x: h.x + h.hw + g, y: h.y - tht / 2 }, { x: h.x - h.hw - g - tw, y: h.y - tht / 2 },
+          { x: h.x - tw / 2, y: h.y - h.hw - g - tht }, { x: h.x - tw / 2, y: h.y + h.hw + g }
+        ];
+        const box = cands.map(c => ({ x: c.x - 1, y: c.y, w: tw + 2, h: tht })).find(b =>
+          b.x >= 2 && b.x + b.w <= W - 2 && b.y >= PADT - tht && b.y + b.h <= H - PADB + tht && !placed.some(q => clash(b, q)));
+        if (!box) return;
+        placed.push(box);
+        ctx.fillText(t, box.x + 1, box.y + 1);
+      });
+    }
+    // title + caption + watermark
+    const scope = _scope(), thru = _yrs.length === 1 ? (_seasonFile() || {}).thru : 0;   // "thru Week N" only reads for one season
+    const when = scope ? scope : (thru && thru < 17 ? 'thru Week ' + thru : _yrs.length > 1 ? 'seasons' : 'season');
+    ctx.fillStyle = th.text;
+    ctx.font = TITLE + 'px ' + BEB;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    try { ctx.letterSpacing = '1px'; } catch (e) { /* older canvas */ }
+    ctx.fillText((_yrLabel() + ' ' + (_pos === 'TM' ? 'TEAMS' : _pos) + ' · ' + yl + ' vs ' + xl).toUpperCase(), PADL, 26 * F);
+    try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
+    ctx.fillStyle = th.text3;
+    ctx.font = SUB + 'px ' + SANS;
+    const tm = _tms.join(' / '), minV = +((_el('rsAdvMin') || {}).value || 0);
+    ctx.fillText(when + (tm ? ' · ' + tm : '') + ' · ' + n + (_pos === 'TM' ? ' teams' : ' players') +
+      (minV ? ' · ' + MIN[_pos][1].toLowerCase().replace(/^min /, 'min ') + ' ' + minV : '') +
+      (r != null ? ' · r = ' + r.toFixed(2) : '') + ' · dashed = averages · solid = trend', PADL, 44 * F);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = th.text3;
+    ctx.font = Math.round(10 * F) + 'px ' + BEB;
+    try { ctx.letterSpacing = '1.5px'; } catch (e) { /* older canvas */ }
+    ctx.fillText('MYFANTASYFOOTBALL.ORG', W - PADR, H - 12 * F);
+    try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
+    return { hits: hits, r: r };
+  }
+  function _scatter() {
+    const host = _el('rsAdvScatter'), btn = _el('rsAdvPlot');
+    if (!host) return;
+    if (btn) { btn.classList.toggle('on', _scOn); btn.setAttribute('aria-pressed', _scOn ? 'true' : 'false'); }
+    const D = _scOn ? _scData() : null;
+    if (!_scOn || !D) { host.hidden = true; host.innerHTML = ''; _scPts = []; return; }
+    host.hidden = false;
+    const pg = D.pg;
+    const opt = (sel) => _scAllCols().filter(col => col.k !== 'g').map(col => '<option value="' + col.k + '"' + (col.k === sel ? ' selected' : '') + '>' +
+      _esc(col.g + ' · ' + (col.g === 'Board' ? col.l : _scLabel(col, pg))) + '</option>').join('');
+    if (!host.querySelector('#rsScCanvas')) {
+      host.innerHTML = '<div class="rs-co-head"><span class="rs-co-title">Scatter</span>' +
+        '<label class="rs-room-pick">X <select id="rsScX" class="rs-select"></select></label>' +
+        '<label class="rs-room-pick">Y <select id="rsScY" class="rs-select"></select></label>' +
+        '<label class="rs-room-pick">Show <select id="rsScLab" class="rs-select"><option value="both">Logos + names</option><option value="logo">Logos</option><option value="name">Names</option><option value="dot">Dots</option></select></label>' +
+        '<label class="rs-room-pick rs-check" id="rsScMineLbl" title="Offer your own board rank in the X / Y lists (off keeps a shared PNG free of your personal ranks)"><input type="checkbox" id="rsScMine"> My rank</label>' +
+        '<button type="button" class="rs-co-close rs-sc-btn" id="rsScSwap" title="Swap the axes">Swap</button>' +
+        '<button type="button" class="rs-co-close rs-sc-btn rs-sc-dl" id="rsScPng" title="Download this chart as a 2x PNG">Download PNG</button>' +
+        '<button type="button" class="rs-co-close" id="rsScHide">Hide chart</button></div>' +
+        '<div class="rs-sc-wrap"><canvas id="rsScCanvas" role="img"></canvas><div class="rs-sc-tip" id="rsScTip" hidden></div></div>' +
+        '<div class="rs-co-legend"><span class="rs-co-sub" id="rsScCap"></span></div>';
+    }
+    _el('rsScX').innerHTML = opt(D.cx.k);
+    _el('rsScY').innerHTML = opt(D.cy.k);
+    _el('rsScLab').value = _scLab;
+    _el('rsScMine').checked = _scMine;
+    _el('rsScMineLbl').hidden = _pos === 'TM';
+    const cap = _el('rsScCap');
+    if (!D.pts.length) {
+      cap.textContent = 'No rows have both ' + _scLabel(D.cx, pg) + ' and ' + _scLabel(D.cy, pg) + '.';
+      _el('rsScCanvas').hidden = true; _scPts = [];
+      return;
+    }
+    _el('rsScCanvas').hidden = false;
+    const seq = ++_scSeq;
+    const draw = () => {
+      if (seq !== _scSeq || !host.querySelector('#rsScCanvas')) return;
+      const canvas = _el('rsScCanvas'), tip = _el('rsScTip');
+      if (tip) tip.hidden = true;   // a redraw moves the points under a stale tooltip
+      _scHover = -1;
+      const w = Math.max(320, host.clientWidth - 30), h = Math.round(Math.max(300, Math.min(620, w * 0.62)));
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const out = _scDraw(ctx, w, h, D, _scTheme(host), _scLab);
+      _scPts = out.hits.map(hh => Object.assign({ p: D.pts[hh.i] }, hh));
+      canvas.setAttribute('aria-label', _yrLabel() + ' ' + _pos + ' ' + _scLabel(D.cy, pg) + ' vs ' + _scLabel(D.cx, pg));
+      cap.textContent = D.pts.length + (_pos === 'TM' ? ' teams' : ' players') + ' from the table below (its filters apply)' +
+        (out.r != null ? ' · r = ' + out.r.toFixed(2) : '') + ' · dashed lines = averages, solid = least-squares trend' +
+        ((D.cx.k === 'fpt' || D.cx.k === 'xfpt') && (D.cy.k === 'fpt' || D.cy.k === 'xfpt') && D.cx.k !== D.cy.k ? ', dotted = scored exactly what opportunity implies' : '') +
+        ' · hover a point for its values' + (_pos === 'TM' ? '' : ', click to open the card') + ' · names drop where they would overlap (the PNG has more room)';
+    };
+    draw();
+    if (_scLab === 'both' || _scLab === 'logo') {
+      const need = Array.from(new Set(D.pts.map(p => p.r.tm).filter(Boolean))).filter(t => _scImg[t] === undefined || _scImg[t] instanceof Promise);
+      if (need.length) _scLoadLogos(need).then(draw);
+    }
+  }
+  function _scExport() {
+    const D = _scData();
+    const host = _el('rsAdvScatter');
+    if (!D || !D.pts.length || !host) return;
+    const btn = _el('rsScPng');
+    if (btn) { btn.disabled = true; btn.textContent = 'Rendering…'; }
+    const tms = Array.from(new Set(D.pts.map(p => p.r.tm).filter(Boolean)));
+    const ready = (_scLab === 'both' || _scLab === 'logo') ? _scLoadLogos(tms) : Promise.resolve();
+    ready.then(() => {
+      const W = 1400, H = 900, S = 2;
+      const c = document.createElement('canvas');
+      c.width = W * S; c.height = H * S;
+      const ctx = c.getContext('2d');
+      ctx.setTransform(S, 0, 0, S, 0, 0);
+      _scDraw(ctx, W, H, D, _scTheme(host), _scLab);
+      const clean = s => String(s).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      const name = 'MFF-Scatter-' + _pos + '-' + _yrLabel().replace(/,\s*/g, '+') + (_scope() ? '-W' + _scope().replace(/^Weeks? /, '').replace(/,\s*/g, '_') : '') + '-' +
+        clean(_scLabel(D.cy, D.pg)) + '-vs-' + clean(_scLabel(D.cx, D.pg)) + '.png';
+      const done = () => { if (btn) { btn.disabled = false; btn.textContent = 'Download PNG'; } };
+      try {
+        const a = document.createElement('a');
+        a.href = c.toDataURL('image/png');
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        if (typeof toast === 'function') toast('Downloaded ' + name);
+      } catch (e) {
+        // a logo that came back without CORS headers taints the canvas: redraw with dots
+        _scLab = 'dot';
+        const ctx2 = c.getContext('2d');
+        ctx2.setTransform(S, 0, 0, S, 0, 0);
+        _scDraw(ctx2, W, H, D, _scTheme(host), 'dot');
+        const a = document.createElement('a');
+        a.href = c.toDataURL('image/png');
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        if (typeof toast === 'function') toast('Logos blocked the download; saved with dots');
+      }
+      done();
+    });
+  }
+  function _scWire() {
+    const host = _el('rsAdvScatter'), btn = _el('rsAdvPlot');
+    if (!host || !btn) return;
+    btn.addEventListener('click', () => { _scOn = !_scOn; _scSave(); _scatter(); if (_scOn) host.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    host.addEventListener('click', e => {
+      if (e.target.closest('#rsScHide')) { _scOn = false; _scSave(); _scatter(); return; }
+      if (e.target.closest('#rsScPng')) { _scExport(); return; }
+      if (e.target.closest('#rsScSwap')) {
+        const ax = _scAxes();
+        _scAx[_pos] = [ax[1], ax[0]];
+        _scSave(); _scatter();
+        return;
+      }
+      if (e.target.closest('#rsScCanvas') && _scHover >= 0) {
+        const p = _scPts[_scHover] && _scPts[_scHover].p;
+        if (p && p.r.on && typeof openPlayerCard === 'function' && typeof D !== 'undefined') {
+          const d = D.find(q => q.n === p.r.n);
+          if (d) openPlayerCard(d);
+        }
+      }
+    });
+    host.addEventListener('change', e => {
+      const t = e.target;
+      if (t.id === 'rsScX' || t.id === 'rsScY') {
+        const ax = _scAxes();
+        if (t.id === 'rsScX') ax[0] = t.value; else ax[1] = t.value;
+        _scAx[_pos] = ax;
+        _scSave(); _scatter();
+      } else if (t.id === 'rsScLab') {
+        _scLab = t.value;
+        _scSave(); _scatter();
+      } else if (t.id === 'rsScMine') {
+        _scMine = t.checked;
+        _scSave(); _scatter();
+      }
+    });
+    const tipFor = (p, D) => {
+      const pg = D.pg;
+      return '<strong>' + _esc(p.r.n) + '</strong>' + (p.r.tm && _pos !== 'TM' ? ' <span class="rs-fmt">' + _esc(p.r.tm) + '</span>' : '') +
+        '<br>' + _esc(_scLabel(D.cx, pg)) + ': ' + Number(p.x).toFixed(_scDec(D.cx, pg)) +
+        '<br>' + _esc(_scLabel(D.cy, pg)) + ': ' + Number(p.y).toFixed(_scDec(D.cy, pg));
+    };
+    host.addEventListener('mousemove', e => {
+      const canvas = e.target.closest('#rsScCanvas'), tip = _el('rsScTip');
+      if (!canvas || !tip) return;
+      const b = canvas.getBoundingClientRect();
+      const x = e.clientX - b.left, y = e.clientY - b.top;
+      let best = -1, bd = 1e9;
+      _scPts.forEach((h, i) => {
+        const d = Math.hypot(h.x - x, h.y - y);
+        if (d <= Math.max(14, h.hw + 2) && d < bd) { bd = d; best = i; }
+      });
+      if (best !== _scHover) {
+        _scHover = best;
+        canvas.style.cursor = best >= 0 && _scPts[best].p.r.on ? 'pointer' : 'default';
+      }
+      if (best < 0) { tip.hidden = true; return; }
+      const D = _scData();
+      if (!D) return;
+      tip.innerHTML = tipFor(_scPts[best].p, D);
+      tip.hidden = false;
+      const wrap = canvas.parentElement.getBoundingClientRect();
+      let tx = e.clientX - wrap.left + 14, ty = e.clientY - wrap.top + 14;
+      if (tx + tip.offsetWidth > wrap.width - 4) tx = e.clientX - wrap.left - tip.offsetWidth - 14;
+      if (ty + tip.offsetHeight > wrap.height - 4) ty = e.clientY - wrap.top - tip.offsetHeight - 14;
+      tip.style.left = Math.max(0, tx) + 'px'; tip.style.top = Math.max(0, ty) + 'px';
+    });
+    host.addEventListener('mouseleave', () => { const tip = _el('rsScTip'); if (tip) tip.hidden = true; _scHover = -1; });
+    let rsz = null;
+    window.addEventListener('resize', () => { if (host.hidden) return; clearTimeout(rsz); rsz = setTimeout(_scatter, 150); });
+  }
+
   let _wired = false, _started = false, _rowCache = {};
   let _last = null;                 // what the table last rendered (CSV export reads it)
   let _hidden = {}, _mode = 'pg';   // 'pg' = per game, 'tot' = season totals
@@ -63263,31 +64210,55 @@ Rules:
 
   function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
   function _norm(s) { return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
-  function _seasonFile() { return (window.ADV_STATS || {})[_yr] || null; }
-  function _weekList() {
-    if (!_wsel) return null;
-    const wks = (_seasonFile() || {}).wks || [];
-    if (_wsel === 'L3' || _wsel === 'L5') return wks.slice(-(+_wsel.slice(1)));
-    if (_wsel === 'R') return wks.filter(w => w >= Math.min(_rFrom, _rTo) && w <= Math.max(_rFrom, _rTo));
-    return [+_wsel];
+  function _yrsAsc() { return _yrs.slice().sort((a, b) => a - b); }
+  // sorted numbers as "1-3", "1, 3, 5-7" (also seasons: "2024-2026", "2024, 2026")
+  function _spanLabel(nums) {
+    const parts = [];
+    for (let i = 0; i < nums.length;) {
+      let j = i;
+      while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+      parts.push(j > i + 1 ? nums[i] + '-' + nums[j] : j === i + 1 ? nums[i] + ', ' + nums[j] : String(nums[i]));
+      i = j + 1;
+    }
+    return parts.join(', ');
   }
-  // the dataset on screen: season file, one week's file, or a range rebuilt from week files
-  function _dataKey() {
-    const wl = _weekList();
-    if (!wl || !wl.length) return String(_yr);
-    return wl.length === 1 ? _yr + '-w' + wl[0] : _yr + '-r' + wl[0] + '-' + wl[wl.length - 1];
+  function _yrLabel() { return _spanLabel(_yrsAsc()); }
+  function _seasonFile(yr) { return (window.ADV_STATS || {})[yr == null ? _yrs[0] : yr] || null; }
+  // every week any picked season has (the Weeks picker's options)
+  function _allWeeks() {
+    const s = new Set();
+    _yrs.forEach(y => ((_seasonFile(y) || {}).wks || []).forEach(w => s.add(w)));
+    return Array.from(s).sort((a, b) => a - b);
   }
+  // the picked weeks that season actually has (sorted); null = full season
+  function _weekList(yr) {
+    if (!_wks.length) return null;
+    const wks = (_seasonFile(yr) || {}).wks || [];
+    return _wks.filter(w => wks.indexOf(w) >= 0).sort((a, b) => a - b);
+  }
+  // one season's dataset key: its season file, one week's file, or a set of weeks rebuilt
+  // from week files (null when none of the picked weeks exist in that season)
+  function _yearKey(yr) {
+    const wl = _weekList(yr);
+    if (!wl) return String(yr);
+    return wl.length ? yr + '-w' + wl.join(',') : null;
+  }
+  // the dataset on screen; several seasons join their keys with '+'
+  function _dataKey() { return _yrsAsc().map(_yearKey).filter(Boolean).join('+'); }
   function _scope() {
-    const wl = _weekList();
-    if (!wl || !wl.length) return '';
-    return wl.length === 1 ? 'Week ' + wl[0] : 'Weeks ' + wl[0] + '-' + wl[wl.length - 1];
+    if (!_wks.length) return '';
+    const wl = _wks.slice().sort((a, b) => a - b);
+    return (wl.length === 1 ? 'Week ' : 'Weeks ') + _spanLabel(wl);
   }
-  function _season() { return (window.ADV_STATS || {})[_dataKey()] || null; }
+  function _season() { const k = _dataKey(); return k ? (window.ADV_STATS || {})[k] || null : null; }
+  // week-samples on screen (the min filter scales its per-week floor by this)
   function _thru() {
-    const wl = _weekList();
-    if (wl && wl.length) return wl.length;
-    const s = _season();
-    return s && s.thru ? Math.min(s.thru, 17) : 17;
+    let n = 0;
+    _yrs.forEach(y => {
+      const wl = _weekList(y), s = _seasonFile(y);
+      n += wl ? wl.length : s && s.thru ? Math.min(s.thru, 17) : 17;
+    });
+    return n || 1;
   }
   function _el(id) { return document.getElementById(id); }
 
@@ -63311,8 +64282,8 @@ Rules:
   // league-wide views get the per-week volume floor.
   function _resetMin() {
     const m = MIN[_pos];
-    const inp = _el('rsAdvMin'), lbl = _el('rsAdvMinLbl'), tm = _el('rsAdvTm');
-    if (inp) inp.value = tm && tm.value ? 0 : Math.round(m[2] * _thru());
+    const inp = _el('rsAdvMin'), lbl = _el('rsAdvMinLbl');
+    if (inp) inp.value = _tms.length ? 0 : Math.round(m[2] * _thru());
     if (lbl) lbl.textContent = m[1];
   }
 
@@ -63345,21 +64316,20 @@ Rules:
       _last = null;
       if (csvBtn) csvBtn.disabled = true;
       _roomChart();
-      wrap.innerHTML = '<div class="rs-empty">No advanced stats file for ' + _yr + '.</div>';
+      _scatter();
+      wrap.innerHTML = '<div class="rs-empty">No advanced stats for ' + _esc(_yrLabel()) + (_scope() ? ' ' + _esc(_scope()) : '') + '.</div>';
       if (cnt) cnt.textContent = '';
       if (foot) foot.textContent = '';
       return;
     }
-    const tmSel = _el('rsAdvTm');
     const teams = Array.from(new Set(all.map(r => r.tm).filter(Boolean))).sort();
-    const curTm = tmSel.value;
-    tmSel.innerHTML = '<option value="">All</option>' + teams.map(t => '<option>' + _esc(t) + '</option>').join('');
-    tmSel.value = teams.indexOf(curTm) >= 0 ? curTm : '';
+    if (_tmPick) { _tmPick.setOptions(teams.map(t => ({ v: t, l: t }))); _tms = _tmPick.get(); }
+    const tm1 = _tms.length === 1 ? _tms[0] : '';   // one team = "room" view (shares of its totals)
 
     const minKey = MIN[_pos][0];
     const min = +(_el('rsAdvMin').value || 0);
     const q = _norm(_el('rsAdvQ').value);
-    const rows = all.filter(r => (r[minKey] || 0) >= min && (!tmSel.value || r.tm === tmSel.value) && (!q || _norm(r.n).indexOf(q) >= 0));
+    const rows = all.filter(r => (r[minKey] || 0) >= min && (!_tms.length || _tms.indexOf(r.tm) >= 0) && (!q || _norm(r.n).indexOf(q) >= 0));
     const hid = _hidden[_pos] || {};
     const cols = COLS[_pos].filter(col => !hid[col.g]);
     // counting stats are stored as season totals; Per game divides by games played
@@ -63368,7 +64338,7 @@ Rules:
     // Team view: shares become share of that team's FULL-SEASON totals (volume while on
     // that team), so a room adds up. League view keeps "share over games played".
     const season = _season() || {};
-    const teamTot = _pos !== 'TM' && tmSel.value && season.teams ? season.teams[tmSel.value] : null;  // [tgt, car, ay, i10, games]
+    const teamTot = _pos !== 'TM' && tm1 && season.teams ? season.teams[tm1] : null;  // [tgt, car, ay, i10, games]
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
     const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3),
       edo: r => pctOf(r.xed, 5), d3o: r => pctOf(r.xd3, 6), d3lo: r => pctOf(r.xd3l, 7), syo: r => pctOf(r.xsy, 8) };
@@ -63428,7 +64398,7 @@ Rules:
       const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)',
         edo: 'early-down carries + targets', d3o: '3rd-down carries + targets', d3lo: '3rd-and-long (7+) carries + targets', syo: 'short-yardage (3rd/4th and 2 or less) carries + targets' };
       const tip = teamTot && TEAM_TIP[col.k]
-        ? 'Share of ' + tmSel.value + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tmSel.value + ')'
+        ? 'Share of ' + tm1 + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tm1 + ')'
         : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
       html += '<th data-k="' + col.k + '" title="' + _esc(tip) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' +
         _esc(pg && col.cnt ? col.lg : col.l) + '</th>';
@@ -63455,73 +64425,128 @@ Rules:
         if (!pg) return sum.toFixed(col.d);
         return teamTot[4] ? (sum / teamTot[4]).toFixed(col.dg) : '';
       });
-      html += '<tr class="rs-adv-total"><td class="rs-adv-nm">' + _esc(tmSel.value) + ' total</td><td class="rs-adv-tm"></td>' +
+      html += '<tr class="rs-adv-total"><td class="rs-adv-nm">' + _esc(tm1) + ' total</td><td class="rs-adv-tm"></td>' +
         total.map((x, i) => '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + '>' + x + '</td>').join('') + '</tr>';
     }
     html += '</tbody></table>';
     if (!rows.length) html = '<div class="rs-empty">No players match these filters.</div>';
     wrap.innerHTML = html;
-    _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yr, scope: _scope(), tm: tmSel.value, total: total };
+    _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yrLabel().replace(/,\s*/g, '+'), scope: _scope(), tm: tm1, total: total };
     if (csvBtn) csvBtn.disabled = !rows.length;
     _roomChart();
+    _scatter();
 
-    const thru = (_season() || {}).thru;
-    const scope = _scope();
-    if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yr + (scope ? ' ' + scope : thru && thru < 17 ? ' thru Week ' + thru : '') + (_pos === 'TM' ? '' : ' · ' + FMT_NAME[_fmt]);
+    const one = _yrs.length === 1, thru = one ? (_seasonFile() || {}).thru : 0;
+    const scope = _scope(), cur = _yrs.indexOf(YEARS[0]) >= 0 && (_seasonFile(YEARS[0]) || {}).thru < 17;
+    const combined = _yrs.length > 1 || _wks.length > 1;
+    if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yrLabel() + (scope ? ' ' + scope : thru && thru < 17 ? ' thru Week ' + thru : '') + (_pos === 'TM' ? '' : ' · ' + FMT_NAME[_fmt]);
     if (foot) foot.textContent = NOTES[_pos] + (teamTot
-      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tmSel.value + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tmSel.value + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
-      : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick a team to see its season split. ') +
-      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!scope && thru && thru < 17 ? ' ' + _yr + ' updates daily as PFF posts each week.' : '') +
-      (scope && _yr < 2026 && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
-      (/^Weeks /.test(scope) ? ' Week ranges are rebuilt from the week files: counting stats add up and every rate is re-weighted by its own denominator.' : '');
+      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tm1 + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tm1 + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
+      : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick one team to see its season split. ') +
+      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
+      (scope && _yrs.some(y => y < 2026) && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
+      (combined ? ' The seasons and weeks you ticked are combined into one sample: counting stats add up and every rate is re-weighted by its own denominator; a player\'s team is his latest.' : '');
   }
 
-  // week options come from the season file's `wks`
+  // week options = every week any picked season lists in its `wks`
   function _fillWeeks() {
-    const sel = _el('rsAdvWk'), from = _el('rsAdvWkFrom'), to = _el('rsAdvWkTo'), box = _el('rsAdvRange');
-    if (!sel) return;
-    const wks = (_seasonFile() || {}).wks || [];
-    sel.innerHTML = '<option value="">Season</option>' +
-      (wks.length > 1 ? '<option value="L3">Last 3 weeks</option><option value="L5">Last 5 weeks</option><option value="R">Custom range</option>' : '') +
-      wks.map(w => '<option value="' + w + '">Week ' + w + '</option>').join('');
-    const opts = wks.map(w => '<option value="' + w + '">' + w + '</option>').join('');
-    if (from) from.innerHTML = opts;
-    if (to) to.innerHTML = opts;
-    if (_wsel && !Array.from(sel.options).some(o => o.value === _wsel)) _wsel = '';
-    sel.value = _wsel;
-    if (_wsel === 'R' && wks.length) {
-      if (wks.indexOf(_rFrom) < 0) _rFrom = wks[Math.max(0, wks.length - 3)];
-      if (wks.indexOf(_rTo) < 0) _rTo = wks[wks.length - 1];
-      if (from) from.value = String(_rFrom);
-      if (to) to.value = String(_rTo);
-    }
-    if (box) box.hidden = _wsel !== 'R';
+    const wks = _allWeeks();
+    _wks = _wks.filter(w => wks.indexOf(w) >= 0);
+    if (_wkPick) _wkPick.setOptions(wks.map(w => ({ v: w, l: 'Week ' + w })), _wks);
   }
 
-  // season file first (it lists the weeks), then the week file(s); a multi-week range is
-  // aggregated once and cached under its key
+  // season files first (they list the weeks), then every week file the picks need; each
+  // season's week set is aggregated once and cached under its key, and several seasons are
+  // aggregated once more under the '+'-joined key
   function _load() {
     const seq = ++_loadSeq;
     const wrap = _el('rsAdvWrap');
-    const yr = _yr;
+    const yrs = _yrsAsc();
     const ens = typeof window._ensureAdvStats === 'function' ? window._ensureAdvStats : function() { return Promise.resolve(null); };
-    if (wrap && !_seasonFile()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + ' advanced stats&hellip;</div>';
-    ens(yr).then(function() {
+    if (wrap && !yrs.every(y => _seasonFile(y))) wrap.innerHTML = '<div class="rs-empty">Loading ' + _esc(_yrLabel()) + ' advanced stats&hellip;</div>';
+    Promise.all(yrs.map(y => ens(y))).then(function() {
       if (seq !== _loadSeq) return null;
       _fillWeeks();
-      const wl = _weekList();
-      if (!wl || !wl.length) return null;
-      if (wrap && !_season()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + ' ' + _scope() + '&hellip;</div>';
-      return Promise.all(wl.map(w => ens(yr, w))).then(function() {
+      const need = [];
+      yrs.forEach(y => { const wl = _weekList(y); if (wl) wl.forEach(w => need.push([y, w])); });
+      if (!need.length && yrs.length < 2) return null;
+      if (wrap && !_season()) wrap.innerHTML = '<div class="rs-empty">Loading ' + _esc(_yrLabel()) + ' ' + _esc(_scope() || 'seasons') + '&hellip;</div>';
+      return Promise.all(need.map(p => ens(p[0], p[1]))).then(function() {
+        if (seq !== _loadSeq) return;
         const A = window.ADV_STATS = window.ADV_STATS || {};
-        const key = _dataKey();
-        if (wl.length > 1 && !A[key]) A[key] = _aggregate(yr, wl);
+        const keys = [];
+        yrs.forEach(y => {
+          const k = _yearKey(y), wl = _weekList(y);
+          if (!k) return;
+          if (wl && wl.length > 1 && !A[k]) A[k] = _aggregate(wl.map(w => A[y + '-w' + w]));
+          if (A[k]) keys.push(k);
+        });
+        const dk = keys.join('+');
+        if (keys.length > 1 && !A[dk]) A[dk] = _aggregate(keys.map(k => A[k]));
       });
     }).then(function() {
       if (seq !== _loadSeq) return;
       _resetMin();
       _render();
     });
+  }
+
+  // Multi-pick control: a select-looking button that opens a checklist with quick picks.
+  // cfg.summary(sel) -> button text, cfg.onChange(sel) after a 300 ms settle (ticking several
+  // boxes loads once), cfg.quick = [[label, (sel, allValues) => newSel]], cfg.keep = min picks.
+  function _multi(id, cfg) {
+    const host = _el(id);
+    if (!host) return { setOptions: function() {}, get: function() { return []; } };
+    host.innerHTML = '<button type="button" class="rs-multi-btn" aria-haspopup="true" aria-expanded="false"><span class="rs-multi-txt"></span><span class="rs-multi-caret" aria-hidden="true">&#9662;</span></button><div class="rs-multi-pop" hidden></div>';
+    const btn = host.querySelector('.rs-multi-btn'), txt = host.querySelector('.rs-multi-txt'), pop = host.querySelector('.rs-multi-pop');
+    let opts = [], sel = [], timer = null, drawn = '', pending = null;   // pending = a pick not yet reported
+    const same = (a, b) => String(a) === String(b);
+    const pick = (list, vals) => list.filter(o => vals.some(v => same(v, o.v))).map(o => o.v);   // option order + types
+    function label() { txt.textContent = cfg.summary(sel.slice()); }
+    function draw() {
+      const key = opts.map(o => o.v).join('|') + '#' + sel.join('|');
+      if (key === drawn) return;
+      drawn = key;
+      pop.innerHTML = (cfg.quick && cfg.quick.length ? '<div class="rs-multi-quick">' + cfg.quick.map((q, i) => '<button type="button" data-q="' + i + '">' + _esc(q[0]) + '</button>').join('') + '</div>' : '') +
+        '<div class="rs-multi-list' + (opts.length > 12 ? ' cols3' : opts.length > 4 ? ' cols2' : '') + '">' + opts.map(o => '<label class="rs-multi-opt"><input type="checkbox" value="' + _esc(o.v) + '"' + (sel.some(v => same(v, o.v)) ? ' checked' : '') + '> ' + _esc(o.l) + '</label>').join('') + '</div>';
+    }
+    function apply(next) {
+      sel = pending = pick(opts, next);
+      label(); draw();
+      clearTimeout(timer);
+      timer = setTimeout(() => { const p = pending; pending = null; cfg.onChange(p.slice()); }, 300);
+    }
+    function close() { if (pop.hidden) return; pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+    btn.addEventListener('click', () => {
+      if (!pop.hidden) { close(); return; }
+      document.querySelectorAll('.rs-multi-btn[aria-expanded="true"]').forEach(b => { if (b !== btn) b.click(); });
+      pop.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      // hang from the right edge when the list would run off a narrow screen
+      pop.style.left = ''; pop.style.right = '';
+      if (pop.getBoundingClientRect().right > window.innerWidth - 8) { pop.style.left = 'auto'; pop.style.right = '0'; }
+    });
+    pop.addEventListener('change', e => {
+      const cb = e.target.closest('input[type=checkbox]');
+      if (!cb) return;
+      const next = sel.filter(v => !same(v, cb.value));
+      if (cb.checked) next.push(cb.value);
+      if (next.length < (cfg.keep || 0)) { cb.checked = true; return; }   // never fewer than cfg.keep
+      apply(next);
+    });
+    pop.addEventListener('click', e => {
+      const q = e.target.closest('button[data-q]');
+      if (q) apply(cfg.quick[+q.dataset.q][1](sel.slice(), opts.map(o => o.v)));
+    });
+    document.addEventListener('click', e => { if (!host.contains(e.target)) close(); });
+    host.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); btn.focus(); } });
+    return {
+      // new option list; keeps the picks that still exist (fires no change). A pick still
+      // settling wins over the caller's (stale) picks - e.g. a season change refills the
+      // weeks while the user's "Season" click is 300 ms from being reported.
+      setOptions: function(list, picks) { opts = list; sel = pick(opts, pending || picks || sel); if (pending) pending = sel; label(); draw(); },
+      get: function() { return sel.slice(); }
+    };
   }
 
   // CSV of exactly what the table shows: filtered + sorted rows, visible column
@@ -63542,7 +64567,7 @@ Rules:
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'MFF-Advanced-Stats-' + L.pos + '-' + L.yr + (L.scope ? '-W' + L.scope.replace(/^Weeks? /, '') : '') + (L.tm ? '-' + L.tm : '') + '-' + (L.pg ? 'PerGame' : 'Totals') + '.csv';
+    a.download = 'MFF-Advanced-Stats-' + L.pos + '-' + L.yr + (L.scope ? '-W' + L.scope.replace(/^Weeks? /, '').replace(/,\s*/g, '_') : '') + (L.tm ? '-' + L.tm : '') + '-' + (L.pg ? 'PerGame' : 'Totals') + '.csv';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -63550,29 +64575,15 @@ Rules:
     if (typeof toast === 'function') toast('Exported ' + L.rows.length + ' ' + L.pos + 's to CSV');
   }
 
-  function _fillYears() {
-    const yrSel = _el('rsAdvYr');
-    if (!yrSel) return;
-    const years = _advView === 'cur' ? [YEARS[0]] : YEARS.slice(1);
-    yrSel.innerHTML = years.map(y => '<option value="' + y + '">' + y + '</option>').join('');
-    yrSel.value = String(_yr);
-    const lbl = yrSel.closest('label');
-    if (lbl) lbl.hidden = _advView === 'cur';   // one season: nothing to pick
-  }
-  // called by the Research view tabs (2026 / Past seasons)
-  window._advSetView = function _advSetView(view) {
-    if (view !== 'cur' && view !== 'past') return;
-    _advView = view;
-    _yr = view === 'cur' ? YEARS[0] : _pastYr;
-    _wsel = ''; _rFrom = _rTo = 0;
-    _fillYears();
-    if (_started) _load();
-  };
+  // the Research view tabs call this when the Players view comes back (a room chart drawn
+  // while the section was hidden measured a 0-wide panel)
+  window._advRedraw = function _advRedraw() { if (_started) _roomChart(); };
 
   function _wire() {
     if (_wired) return;
     _wired = true;
     _el('rsAdvCsv').addEventListener('click', _exportCsv);
+    _scWire();
     const room = _el('rsAdvRoom');
     if (room) {
       room.addEventListener('click', e => {
@@ -63590,15 +64601,24 @@ Rules:
       let _rsz = null;
       window.addEventListener('resize', () => { if (room.hidden) return; clearTimeout(_rsz); _rsz = setTimeout(_roomChart, 150); });
     }
-    const yrSel = _el('rsAdvYr');
-    _fillYears();
-    yrSel.addEventListener('change', () => { _yr = +yrSel.value; if (_advView === 'past') _pastYr = _yr; _wsel = ''; _load(); });
-    _el('rsAdvWk').addEventListener('change', e => { _wsel = e.target.value; _rFrom = _rTo = 0; _load(); });
-    ['rsAdvWkFrom', 'rsAdvWkTo'].forEach(id => _el(id).addEventListener('change', () => {
-      _rFrom = +_el('rsAdvWkFrom').value;
-      _rTo = +_el('rsAdvWkTo').value;
-      _load();
-    }));
+    const asc = a => a.map(Number).sort((x, y) => x - y);
+    _yrPick = _multi('rsAdvYr', {
+      keep: 1,
+      summary: sel => _spanLabel(asc(sel)),
+      quick: [['Latest', () => [YEARS[0]]], ['All', (s, all) => all.slice()]],
+      onChange: sel => { _yrs = sel.map(Number); _load(); }
+    });
+    _yrPick.setOptions(YEARS.map(y => ({ v: y, l: String(y) })), _yrs);
+    _wkPick = _multi('rsAdvWk', {
+      summary: sel => (sel.length ? (sel.length === 1 ? 'Week ' : 'Wks ') + _spanLabel(asc(sel)) : 'Season'),
+      quick: [['Season', () => []], ['Last 3', (s, all) => all.slice(-3)], ['Last 5', (s, all) => all.slice(-5)], ['All', (s, all) => all.slice()]],
+      onChange: sel => { _wks = sel.map(Number); _load(); }
+    });
+    _tmPick = _multi('rsAdvTm', {
+      summary: sel => (!sel.length ? 'All' : sel.length <= 3 ? sel.join(', ') : sel.length + ' teams'),
+      quick: [['All', () => []]],
+      onChange: sel => { _tms = sel.slice(); _resetMin(); _render(); }
+    });
     const fmtEl = _el('rsAdvFmt');
     const syncFmt = () => fmtEl && fmtEl.querySelectorAll('button[data-fmt]').forEach(b => {
       const on = b.dataset.fmt === _fmt;
@@ -63652,7 +64672,6 @@ Rules:
       _renderGroups();
       _render();
     });
-    _el('rsAdvTm').addEventListener('change', () => { _resetMin(); _render(); });
     _el('rsAdvHeat').addEventListener('change', _render);
     ['rsAdvMin', 'rsAdvQ'].forEach(id => _el(id).addEventListener('input', _render));
     _el('rsAdvWrap').addEventListener('click', e => {
@@ -64211,14 +65230,18 @@ Rules:
   };
 })();
 
-// === RESEARCH: top-level views (2026 / Coach / Past seasons) ===
-// One view at a time (Jack 2026-09-16). Sections carry data-rsview="cur|coach|past" (space-
-// separated when shared); Advanced Stats serves both 2026 and Past seasons and gets its season
-// picker retargeted through window._advSetView. Last view sticks in localStorage.
+// === RESEARCH: top-level views (Players / Coach) ===
+// One view at a time (Jack 2026-09-16). Sections carry data-rsview="players|coach". Players =
+// Advanced Stats (any seasons / weeks / teams via its multi-pick filters) + Player Lookup +
+// Season Explorer; the old 2026 / Past seasons split is gone. Last view sticks in localStorage.
 (function _researchViewsModule() {
-  const VIEWS = ['cur', 'coach', 'past'];
-  let _view = 'cur', _wired = false;
-  try { const v = localStorage.getItem('rsView'); if (VIEWS.indexOf(v) >= 0) _view = v; } catch (e) { /* storage blocked */ }
+  const VIEWS = ['players', 'coach'];
+  let _view = 'players', _wired = false;
+  try {
+    let v = localStorage.getItem('rsView');
+    if (v === 'cur' || v === 'past') v = 'players';   // pre-multi-pick values
+    if (VIEWS.indexOf(v) >= 0) _view = v;
+  } catch (e) { /* storage blocked */ }
   function apply() {
     document.querySelectorAll('#pageResearch [data-rsview]').forEach(el => {
       el.hidden = el.dataset.rsview.split(' ').indexOf(_view) < 0;
@@ -64228,7 +65251,7 @@ Rules:
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    if (_view !== 'coach' && typeof window._advSetView === 'function') window._advSetView(_view);
+    if (_view === 'players' && typeof window._advRedraw === 'function') window._advRedraw();
     if (_view === 'coach' && typeof window._coachRedraw === 'function') window._coachRedraw();
   }
   window._rsApplyView = function _rsApplyView() {

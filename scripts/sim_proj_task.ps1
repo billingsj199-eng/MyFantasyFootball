@@ -49,7 +49,7 @@ Write-Log '=== sim proj export start ==='
 
 # Refuse to run over uncommitted work on the target files.
 $Files = @('data/sim_proj_2026.js', 'data/sim_proj_2026.json', 'data/injury_updates.js', 'data/weather_2026.js', 'index.html',
-           'data/practice_2026.js', 'data/depth_charts_2026.js')  # the .json twins are gitignored (local-only, like weather_2026.json)
+           'data/practice_2026.js', 'data/depth_charts_2026.js', 'data/matchup_edges_2026.js', 'data/proj_why_2026.json')  # the .json twins are gitignored (local-only, like weather_2026.json)
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -95,6 +95,13 @@ $out = & $Node (Join-Path $SimLab 'export_site_proj.js') --repo $Repo 2>&1 | Out
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "EXPORT FAILED (exit $LASTEXITCODE) - nothing committed"; exit 1 }
 
+# 2a. Start/Sit MATCHUP EDGES + player-card WHY (2026-09-16): headless Sim Lab NOTES -> data/matchup_edges_2026.js
+#     and data/proj_why_2026.json.
+#     Needs the sim_lab page (scheme / zones / defense availability), so it runs through export_notes.js
+#     (Playwright); non-fatal - a failure just leaves the previous board up.
+$out = & $Node (Join-Path $SimLab 'export_notes.js') --scoring half --repo $Repo 2>&1 | Out-String
+Write-Log ("matchup edges: " + (($out -split "`n" | Where-Object { $_ -match 'matchup|failed' } | Select-Object -First 2) -join ' | '))
+
 # 2b. Sim Lab deploy when a per-game lock landed (hosting only — no data
 #     refresh; refresh_data.py already ran in step 1 for this same export).
 if ((Get-SnapSig) -ne $snapBefore) {
@@ -124,12 +131,15 @@ if (-not $changed) {
     if ($changed -match 'injury_updates') {
         $html2 = $html2 -replace 'injury_updates\.js\?v=[\w.-]+', ('injury_updates.js?v=' + $stamp)
     }
+    if ($changed -match 'matchup_edges_2026') {
+        $html2 = $html2 -replace 'matchup_edges_2026\.js\?v=[\w.-]+', ('matchup_edges_2026.js?v=' + $stamp)
+    }
     if ($changed -match 'weather_2026') {
         $html2 = $html2 -replace 'weather_2026\.js\?v=[\w.-]+', ('weather_2026.js?v=' + $stamp)
     }
     if ($html2 -ne $html) { [System.IO.File]::WriteAllText($idx, $html2) }
 
-    git add data/sim_proj_2026.js data/sim_proj_2026.json data/injury_updates.js data/weather_2026.js index.html data/practice_2026.js data/depth_charts_2026.js
+    git add data/sim_proj_2026.js data/sim_proj_2026.json data/injury_updates.js data/weather_2026.js index.html data/practice_2026.js data/depth_charts_2026.js data/matchup_edges_2026.js data/proj_why_2026.json   # proj_why: lazy-loaded with ?d= (no ?v= bump); tracked despite the local data/*.json exclude
     git commit -m ('Sim proj auto-export {0}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     git pull --rebase --autostash origin main
     git push origin main

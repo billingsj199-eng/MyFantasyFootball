@@ -61,22 +61,22 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-09-15d" as="style">
+<link rel="preload" href="styles/main.css?v=2026-09-16-wkxfp2" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-16-adv14" as="script">
+<link rel="preload" href="app.js?v=2026-09-16-sit1" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
 <link rel="preload" href="data/combine_data.js?v=2026-04-25b" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
-<link rel="preload" href="data/_bundle_lookups.js?v=2026-09-15" as="script">
-<link rel="preload" href="data/d.js?v=2026-09-15" as="script">
+<link rel="preload" href="data/_bundle_lookups.js?v=2026-09-16" as="script">
+<link rel="preload" href="data/d.js?v=2026-09-16" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-09-15d">
+<link rel="stylesheet" href="styles/main.css?v=2026-09-16-wkxfp2">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1341,6 +1341,14 @@ CLEAR ALL
   body.format-weekly #pageRankings .spread-cell,
   body.format-weekly #pageRankings .teamtotal-cell,
   body.format-weekly #pageRankings .oppppg-cell { display: table-cell !important; }
+  /* WEEKLY xFP column (season xFP/G beside '26 PPG) — FANTASY stats view only;
+     render() sets body.wk-xfp-col. The xFP STATS view itself is post-game only,
+     so its button is hidden on the weekly board. */
+  body.format-weekly.wk-xfp-col #pageRankings #xfpGHeader,
+  body.format-weekly.wk-xfp-col #pageRankings .xfpg-cell { display: table-cell !important; }
+  body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
+  #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
+  #pageRankings tbody .xfpg-cell .xfpg-oe{font-size:.58rem;margin-left:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;vertical-align:1px}
   /* The always-on weekly Boom/Bust pair (simboom/simbust) stays hidden since
      2026-09-08 (Jack) — the SIMS stats view still shows boom/bust in the
      '25 PPG / L4 PPG swap columns. */
@@ -1761,11 +1769,12 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Sim Lab projected fantasy points per game — season boards show the REST-OF-SEASON average (games already played excluded); the WEEKLY board shows this week's sim. Refreshed daily and ~30 min before kickoffs (Vegas lines, matchups, usage, injuries priced in).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="simBoom" id="simBoomHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome this week (1,000 Sim Lab runs). High boom + high bust = wide-range player.">Boom</span> <span class="arrow"></span></th>
 <th data-sort="simBust" id="simBustHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ BELOW his own median sim outcome this week (1,000 Sim Lab runs). Steady floor players run low on both boom and bust.">Bust</span> <span class="arrow"></span></th>
-<th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color reflects defensive difficulty: green = bottom 1/3, amber = middle, red = top 1/3. The chip underneath is the game status: kickoff day/time (ET) before the game, LIVE with the clock and points so far while it's on, FINAL with the player's actual points after.">Opp</span> <span class="arrow"></span></th>
+<th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color = matchup difficulty for this position: green = soft (top 1/3), amber = middle, red = tough (bottom 1/3). Graded on schedule-adjusted fantasy points the opponent allows per game this season (final games only, strength of offenses faced stripped out), blended with Clay&apos;s preseason unit rank as a prior that fades as games accrue (1 gm 33% in-season, 2 gm 50%, 4 gm 67%). Hover the cell for the breakdown. The chip underneath is the game status: kickoff day/time (ET) before the game, LIVE with the clock and points so far while it's on, FINAL with the player's actual points after.">Opp</span> <span class="arrow"></span></th>
 <th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="oppPpg" id="oppPpgHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Fantasy points the OPPONENT allows per game to this position in 2026 (board scoring, final games only). RB facing CAR = what CAR gives up to RBs per game; D/ST facing TEN = what opposing D/STs have scored against TEN. Green = allows the most (top third, soft matchup), red = allows the least (tough). #n = league rank, 1 = allows the most.">Opp PPG</span> <span class="arrow"></span></th>
 <th data-sort="fpts25" id="ppg25HeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="ppg25Header"><span data-gloss="Actual fantasy points per game from the 2025 season (PPR scoring).">'25 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
+<th data-sort="xfpG" id="xfpGHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span class="th-stack"><span data-gloss="Expected fantasy points per game, 2026 to date — what an average player scores from this exact usage: every target valued by depth and field position, every carry by field position (league rates 2018-25). The small figure is points over expected per game: green = scored UNDER expected (due up), red = over. Hover a value for the TD-luck split. Weekly board only, FANTASY stats view; the game-by-game version lives on the player card.">xFP</span><span class="hide-on-mobile th-fmt">'26 /Gm</span></span><span class="arrow"></span></th>
 <th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
@@ -1851,6 +1860,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 <div class="lg-chips" id="sstChips"></div>
 <div class="compare-grid" id="sstGrid"></div>
+<div class="sst-edges" id="sstEdges"></div>
 </div>
 </div>
 
@@ -2630,7 +2640,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-09-16-adv12">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter5">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -2639,17 +2649,17 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="rs-subtitle">Advanced stats by position (PFF Premium charting + nflverse play-by-play, 2019-2026), historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: MFL 1999-2007 (via Wayback; top 32 for 1999-2005, top 100 for 2006, top 200 for 2007), FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year), ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
 </div>
 
-<!-- One view at a time: 2026 = this season's advanced stats, Coach = profiles, Past seasons = 2019-2025 stats + ADP history -->
+<!-- One view at a time: Players = advanced stats for any seasons / weeks / teams (multi-pick, 2019-2026)
+     + player lookup + season explorer; Coach = playcalling profiles -->
 <div class="rs-adv-tabs rs-top-tabs" id="rsTopTabs" role="tablist" aria-label="Research view">
-<button type="button" class="rs-adv-tab active" data-view="cur" role="tab" aria-selected="true">2026</button>
+<button type="button" class="rs-adv-tab active" data-view="players" role="tab" aria-selected="true">PLAYERS</button>
 <button type="button" class="rs-adv-tab" data-view="coach" role="tab" aria-selected="false">COACH</button>
-<button type="button" class="rs-adv-tab" data-view="past" role="tab" aria-selected="false">PAST SEASONS</button>
 </div>
 
 <!-- Advanced stats -->
-<div class="rs-section" id="rsAdvSection" data-rsview="cur past">
+<div class="rs-section" id="rsAdvSection" data-rsview="players">
 <div class="rs-section-title">Advanced Stats</div>
-<div class="rs-help">PFF Premium charting + nflverse play-by-play, regular season only. Pick a position, click any column header to sort, hover a header for its definition. Shading = percentile rank among the rows shown (green = better). Click a player to open their card.</div>
+<div class="rs-help">PFF Premium charting + nflverse play-by-play, regular season only. Pick a position, click any column header to sort, hover a header for its definition. Season, Weeks and Team each take several picks: the seasons and weeks you tick combine into one sample. Shading = percentile rank among the rows shown (green = better). Click a player to open their card.</div>
 <div class="rs-adv-tabs" id="rsAdvTabs" role="tablist" aria-label="Position">
 <button type="button" class="rs-adv-tab active" data-pos="QB" role="tab" aria-selected="true">QB</button>
 <button type="button" class="rs-adv-tab" data-pos="RB" role="tab" aria-selected="false">RB</button>
@@ -2658,19 +2668,22 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" class="rs-adv-tab" data-pos="TM" role="tab" aria-selected="false">TEAM</button>
 </div>
 <div class="rs-controls">
-<label>Season <select id="rsAdvYr" class="rs-select"></select></label>
-<label title="Full season, one week, the last 3 or 5 weeks, or a custom range">Weeks <select id="rsAdvWk" class="rs-select"><option value="">Season</option></select></label>
-<span class="rs-adv-range" id="rsAdvRange" hidden><label>From <select id="rsAdvWkFrom" class="rs-select"></select></label><label>To <select id="rsAdvWkTo" class="rs-select"></select></label></span>
-<label title="Pick a team to see every player it used at this position (the minimum filter drops to 0)">Team <select id="rsAdvTm" class="rs-select"><option value="">All</option></select></label>
+<!-- multi-pick filters (Jack 2026-09-16): rendered by _multi() in app.js; several seasons / weeks combine into one sample -->
+<span class="rs-ctl" title="Tick one or more seasons; several combine into one sample">Season <span class="rs-multi" id="rsAdvYr"></span></span>
+<span class="rs-ctl" title="Season = full season files. Tick any weeks (or Last 3 / Last 5) to rebuild the sample from those weeks">Weeks <span class="rs-multi" id="rsAdvWk"></span></span>
+<span class="rs-ctl" title="Pick one team to see its whole room side by side (the minimum filter drops to 0), or several teams">Team <span class="rs-multi" id="rsAdvTm"></span></span>
 <label><span id="rsAdvMinLbl">Min dropbacks</span> <input type="number" id="rsAdvMin" class="rs-num" min="0" step="5"></label>
 <input type="text" id="rsAdvQ" class="rs-search rs-adv-q" placeholder="Filter players&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter players">
 <div class="rs-adv-mode" id="rsAdvMode" role="group" aria-label="Counting stats"><button type="button" data-mode="pg" class="on" aria-pressed="true">Per game</button><button type="button" data-mode="tot" aria-pressed="false">Totals</button></div>
 <div class="rs-adv-mode" id="rsAdvFmt" role="group" aria-label="Scoring for FPTS and xFP" title="Scoring for FPTS and xFP: receptions worth 0.5 / 1 / 0"><button type="button" data-fmt="half" class="on" aria-pressed="true">Half</button><button type="button" data-fmt="ppr" aria-pressed="false">PPR</button><button type="button" data-fmt="std" aria-pressed="false">STD</button></div>
 <label class="rs-check"><input type="checkbox" id="rsAdvHeat" checked> Shading</label>
+<button type="button" class="rs-adv-export" id="rsAdvPlot" aria-pressed="false" title="Plot any two columns against each other for the rows shown, with team logos and names; download the chart as a PNG">Scatter</button>
 <button type="button" class="rs-adv-export" id="rsAdvCsv" title="Download the table as shown: filters, sort order, visible column groups and Per game / Totals">Export CSV</button>
 <span class="rs-count" id="rsAdvCount"></span>
 </div>
 <div class="rs-adv-groups" id="rsAdvGroups"></div>
+<!-- scatterplot: any two columns for the rows shown, toggled by the Scatter button; Download PNG -->
+<div class="rs-co-chart rs-scatter" id="rsAdvScatter" hidden></div>
 <!-- team room chart: shows when a team is picked on the RB / WR / TE tab -->
 <div class="rs-co-chart rs-room" id="rsAdvRoom" hidden></div>
 <div class="rs-table-wrap rs-adv-wrap" id="rsAdvWrap"><div class="rs-empty">Loading advanced stats&hellip;</div></div>
@@ -2705,7 +2718,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Player lookup -->
-<div class="rs-section" data-rsview="past">
+<div class="rs-section" data-rsview="players">
 <div class="rs-section-title">Player Lookup</div>
 <div class="rs-search-row">
 <input type="text" id="rsSearch" class="rs-search" placeholder="Search any player (active or retired)..." autocomplete="off" spellcheck="false" aria-label="Search players">
@@ -2715,7 +2728,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Explorer -->
-<div class="rs-section" data-rsview="past">
+<div class="rs-section" data-rsview="players">
 <div class="rs-section-title">Season Explorer</div>
 <div class="rs-help">Every player-season with a recorded preseason ADP, joined to what they actually did. Filter, then click any column header to sort. Click a row to open that player above.</div>
 <div class="rs-controls">
@@ -4373,15 +4386,16 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
-<script src="data/_bundle_lookups.js?v=2026-09-15" defer></script>
-<script src="data/d.js?v=2026-09-15" defer></script>
-<script src="data/injury_updates.js?v=2026-09-16-08" defer></script>
-<script src="data/weekly_projections.js?v=2026-09-15" defer></script>
-<script src="data/weather_2026.js?v=2026-09-16-08" defer></script>
+<script src="data/_bundle_lookups.js?v=2026-09-16" defer></script>
+<script src="data/d.js?v=2026-09-16" defer></script>
+<script src="data/injury_updates.js?v=2026-09-16-10" defer></script>
+<script src="data/weekly_projections.js?v=2026-09-16" defer></script>
+<script src="data/weather_2026.js?v=2026-09-16-10" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-09-16-0738" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-09-16-07" defer></script>
-<script src="data/site_projections.js?v=2026-09-15b" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-09-16-10" defer></script>
+<script src="data/matchup_edges_2026.js?v=2026-09-16-edges1" defer></script>
+<script src="data/site_projections.js?v=2026-09-16" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
 <!-- ep_retired.js (~795 KB) + daily_retired_pool.js DEFERRED (2026-07-10). EP_RETIRED is
@@ -4443,7 +4457,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-09-16b" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-09-16c" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-09-03" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
 <script>
@@ -5834,7 +5848,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-16-adv14"></script>
+<script defer src="app.js?v=2026-09-16-sit1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -49,7 +49,7 @@
 .rs-check input { accent-color: var(--accent); }
 .rs-count { margin-left: auto; color: var(--text3); font-size: .75rem; }
 
-/* research views: one of 2026 / Coach / Past seasons at a time */
+/* research views: Players or Coach, one at a time */
 .rs-top-tabs { margin-bottom: 18px; }
 .rs-top-tabs .rs-adv-tab { font-size: 1.2rem; padding: 9px 24px; }
 .rs-section[hidden], .rs-controls label[hidden] { display: none; }
@@ -70,8 +70,25 @@
 .rs-adv-mode button { background: var(--surface); border: 0; color: var(--text3); font-size: .75rem; font-weight: 600; padding: 6px 12px; cursor: pointer; }
 .rs-adv-mode button + button { border-left: 1px solid var(--border); }
 .rs-adv-mode button.on { background: rgba(245,158,11,.15); color: var(--accent); }
-.rs-adv-range { display: inline-flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.rs-adv-range[hidden] { display: none; }
+/* multi-pick filters (Season / Weeks / Team): a select-looking button opening a checklist with
+   quick picks; built by _multi() in app.js */
+.rs-controls .rs-ctl { display: inline-flex; align-items: center; gap: 6px; }
+.rs-multi { position: relative; display: inline-block; }
+.rs-multi-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: .8rem; padding: 5px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; max-width: 210px; }
+.rs-multi-btn:hover, .rs-multi-btn[aria-expanded="true"] { border-color: rgba(245,158,11,.5); }
+.rs-multi-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rs-multi-caret { color: var(--text3); font-size: .7rem; }
+.rs-multi-pop { position: absolute; left: 0; top: calc(100% + 4px); z-index: 30; width: max-content; min-width: 120px; max-width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.45); padding: 8px; }
+.rs-multi-pop[hidden] { display: none; }
+.rs-multi-quick { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid var(--border); }
+.rs-multi-quick button { background: transparent; border: 1px solid var(--border); color: var(--text3); border-radius: 999px; padding: 2px 9px; font-size: .7rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.rs-multi-quick button:hover { color: var(--accent); border-color: rgba(245,158,11,.5); }
+.rs-multi-list { max-height: 260px; overflow-y: auto; display: grid; gap: 2px 10px; }
+.rs-multi-list.cols2 { grid-template-columns: repeat(2, auto); }
+.rs-multi-list.cols3 { grid-template-columns: repeat(3, auto); }
+.rs-multi-opt { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text2); padding: 3px 4px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+.rs-multi-opt:hover { background: rgba(255,255,255,.06); color: var(--text); }
+.rs-multi-opt input { accent-color: var(--accent); margin: 0; }
 .rs-adv-export { background: var(--surface); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 6px 12px; font-size: .75rem; font-weight: 600; cursor: pointer; }
 .rs-adv-export:hover:not(:disabled) { color: var(--accent); border-color: rgba(245,158,11,.5); }
 .rs-adv-export:disabled { opacity: .45; cursor: default; }
@@ -172,6 +189,24 @@
 .rs-adv tbody tr.rs-adv-total td { background: var(--surface); color: var(--text); font-weight: 700; border-top: 2px solid var(--border); }
 .rs-adv-foot { color: var(--text3); font-size: .72rem; margin-top: 8px; line-height: 1.45; }
 
+/* scatterplot: canvas so Download PNG is the picture on screen; the head reuses the room
+   chart's pick / close styles. --viz-1 only feeds the theme read for the fit line fallback. */
+.rs-scatter { --viz-1: #3987e5; margin-bottom: 12px; }
+:root[data-theme="light"] .rs-scatter { --viz-1: #2a78d6; }
+.rs-adv-export.on { border-color: rgba(245,158,11,.55); color: var(--accent); background: rgba(245,158,11,.12); }
+.rs-scatter .rs-co-head { gap: 10px 14px; align-items: center; }
+.rs-scatter .rs-co-close { margin-left: 0; }
+.rs-scatter .rs-room-pick[hidden] { display: none; }
+.rs-scatter .rs-co-close#rsScHide { margin-left: auto; }
+.rs-scatter .rs-sc-dl { color: var(--accent); border-color: rgba(245,158,11,.5); }
+.rs-scatter .rs-sc-dl:disabled { opacity: .5; cursor: default; }
+.rs-sc-wrap { position: relative; margin-top: 10px; }
+.rs-sc-wrap canvas { display: block; max-width: 100%; border-radius: 8px; }
+.rs-sc-wrap canvas[hidden] { display: none; }
+.rs-sc-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: .74rem; line-height: 1.4; color: var(--text2); white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+.rs-sc-tip[hidden] { display: none; }
+.rs-sc-tip strong { color: var(--text); }
+
 @media (max-width: 640px) {
   .rs-wrapper { padding: 14px 10px 40px; }
   .rs-controls { gap: 10px; }
@@ -179,4 +214,5 @@
   .rs-adv-q { width: 100%; }
   .rs-adv .rs-adv-nm { max-width: 118px; }
   #rsCoVs { max-width: calc(100vw - 150px); }
+  .rs-scatter .rs-co-close#rsScHide { margin-left: 0; }
 }

@@ -63083,6 +63083,140 @@ Rules:
   let _wsel = '', _rFrom = 0, _rTo = 0, _loadSeq = 0;
   // Research view: 'cur' pins the season to YEARS[0]; 'past' offers the rest (last pick remembered)
   let _advView = 'cur', _pastYr = YEARS[1];
+
+  // --- team room chart (Jack 2026-09-16: "who's trending up/down or just compare roles") ------
+  // Team view + RB / WR / TE tab -> one line per player across every week of the season for a
+  // usage metric (the week filter doesn't apply; the table below is the twin). Top 6 by season
+  // volume get lines in a validated 6-slot palette, fixed by that order; the rest are named in the
+  // caption. End labels carry identity; the legend shows the latest value and last-3 vs prior-3.
+  const ROOM_METRICS = [
+    { k: 'tsh', l: 'Target share', d: 0, pct: true },
+    { k: 'rtp', l: 'Route %', d: 0, pct: true },
+    { k: 'car', l: 'Carry share', d: 0, pct: true, rb: true },
+    { k: 'snp', l: 'Snap %', d: 0, pct: true },
+    { k: 'use', l: 'Usage score', d: 0 },
+    { k: 'tgt', l: 'Targets', d: 0 },
+    { k: 'fpt', l: 'Fantasy points', d: 1 },
+    { k: 'xfpt', l: 'Expected points', d: 1 },
+    { k: 'ays', l: 'Air-yard share', d: 0, pct: true }
+  ];
+  let _roomMetric = 'tsh', _roomOff = false, _roomSeq = 0;
+  try {
+    const m = localStorage.getItem('rsRoomMetric');
+    if (ROOM_METRICS.some(x => x.k === m)) _roomMetric = m;
+    _roomOff = localStorage.getItem('rsRoomOff') === '1';
+  } catch (e) { /* storage blocked */ }
+
+  function _wkRows(yr, wk, pos) {
+    const t = ((window.ADV_STATS || {})[yr + '-w' + wk] || {})[pos];
+    if (!t) return [];
+    return t.r.map(r => { const o = {}; t.f.forEach((k, i) => { o[k] = r[i]; }); o._pos = pos; return o; });
+  }
+  function _roomPositions() { return _pos === 'RB' ? ['RB'] : (_pos === 'WR' || _pos === 'TE') ? ['WR', 'TE'] : null; }
+  function _roomVal(o, k) {
+    if (k === 'use') { const u = _usage(o._pos, o); return u ? u.score : null; }
+    if (k === 'fpt' || k === 'xfpt') return _scored(o, k);
+    return o[k] == null ? null : o[k];
+  }
+
+  function _roomChart() {
+    const host = _el('rsAdvRoom');
+    if (!host) return;
+    const tm = (_el('rsAdvTm') || {}).value, poss = _roomPositions(), sf = _seasonFile();
+    if (!tm || !poss || !sf || !(sf.wks || []).length) { host.hidden = true; host.innerHTML = ''; return; }
+    host.hidden = false;
+    const wks = sf.wks, yr = _yr;
+    const missing = wks.filter(w => !(window.ADV_STATS || {})[yr + '-w' + w]);
+    if (missing.length) {
+      host.innerHTML = '<div class="rs-empty">Loading ' + yr + ' weeks for ' + _esc(tm) + '…</div>';
+      const seq = ++_roomSeq;
+      const ens = typeof window._ensureAdvStats === 'function' ? window._ensureAdvStats : () => Promise.resolve(null);
+      Promise.all(missing.map(w => ens(yr, w))).then(() => { if (seq === _roomSeq) _roomChart(); });
+      return;
+    }
+    const met = ROOM_METRICS.find(m => m.k === _roomMetric && (!m.rb || _pos === 'RB')) || ROOM_METRICS[0];
+    const roomName = _pos === 'RB' ? 'backfield' : 'receiving corps';
+    const by = new Map();
+    wks.forEach(w => poss.forEach(p => _wkRows(yr, w, p).forEach(o => {
+      if (o.tm !== tm || !o.g) return;
+      if (!by.has(o.n)) by.set(o.n, { n: o.n, pos: p, w: {}, vol: 0 });
+      const e = by.get(o.n);
+      e.w[w] = o;
+      e.vol += p === 'RB' ? ((o.att || 0) + (o.tgt || 0)) : (o.tgt || 0);
+    })));
+    const all = Array.from(by.values()).sort((a, b) => b.vol - a.vol);
+    const shown = all.slice(0, 6), rest = all.slice(6);
+    const head = '<div class="rs-co-head"><span class="rs-co-title">' + _esc(tm) + ' ' + roomName + ' · ' + _esc(met.l) + ' by week</span>' +
+      '<label class="rs-room-pick">Metric <select id="rsRoomMetric" class="rs-select">' +
+      ROOM_METRICS.filter(m => !m.rb || _pos === 'RB').map(m => '<option value="' + m.k + '"' + (m.k === met.k ? ' selected' : '') + '>' + _esc(m.l) + '</option>').join('') +
+      '</select></label><button type="button" class="rs-co-close" id="rsRoomHide">' + (_roomOff ? 'Show chart' : 'Hide chart') + '</button></div>';
+    if (_roomOff) { host.innerHTML = head; return; }
+    if (!shown.length) { host.innerHTML = head + '<div class="rs-empty">No ' + roomName + ' data for ' + _esc(tm) + ' in ' + yr + '.</div>'; return; }
+    const fmt = v => Number(v).toFixed(met.d) + (met.pct ? '%' : '');
+    const series = shown.map(e => ({ e: e, v: wks.map(w => (e.w[w] ? _roomVal(e.w[w], met.k) : null)) }));
+    const flat = [].concat(...series.map(s => s.v)).filter(v => v != null);
+    if (!flat.length) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(met.l) + ' for this room yet.</div>'; return; }
+    let hi = Math.max(...flat) * 1.15 || 1, lo = 0;
+    if (met.pct) hi = Math.min(hi, 100);
+    const PADL = 46, PADR = 100, PADT = 22, PLOT = 160, XLAB = 24;
+    const avail = host.clientWidth > 0 ? host.clientWidth - 30 : 0;
+    const BAND = avail > 0 ? Math.max(40, Math.min(110, Math.floor((avail - PADL - PADR) / wks.length))) : 44;
+    const WIDTH = PADL + BAND * wks.length + PADR, HEIGHT = PADT + PLOT + XLAB;
+    const y = v => PADT + (hi - v) / (hi - lo) * PLOT;
+    const cxOf = i => PADL + i * BAND + BAND / 2;
+    // fixed 1:1 width inside a scrolling box: 18 weeks of lines and end labels must never shrink
+    // to fit a narrow window - the reader scrolls instead
+    let svg = '<div class="rs-room-scroll"><svg class="rs-co-svg" style="width:' + WIDTH + 'px;max-width:none" viewBox="0 0 ' + WIDTH + ' ' + HEIGHT + '" role="img" aria-label="' +
+      _esc(met.l + ' by week for the ' + tm + ' ' + roomName) + '">';
+    [hi, hi / 2, 0].forEach(t => {
+      svg += '<line class="' + (t === 0 ? 'zero' : 'grid') + '" x1="' + PADL + '" y1="' + y(t).toFixed(1) + '" x2="' + (WIDTH - PADR) + '" y2="' + y(t).toFixed(1) + '"/>' +
+        '<text class="tick" x="' + (PADL - 8) + '" y="' + (y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(t) + '</text>';
+    });
+    wks.forEach((w, i) => { svg += '<text class="xlab" x="' + cxOf(i) + '" y="' + (PADT + PLOT + 16) + '" text-anchor="middle">' + w + '</text>'; });
+    let dots = '';
+    const ends = [];
+    series.forEach((s, si) => {
+      const c2 = 's' + (si + 1);
+      let run = [];
+      const flush = () => { if (run.length > 1) svg += '<polyline class="series ' + c2 + '" points="' + run.join(' ') + '"/>'; run = []; };
+      s.v.forEach((v, i) => {
+        if (v == null) { flush(); return; }   // a missed week leaves a gap
+        run.push(cxOf(i) + ',' + y(v).toFixed(1));
+        dots += '<circle class="dot ' + c2 + '" cx="' + cxOf(i) + '" cy="' + y(v).toFixed(1) + '" r="4.5"/>';
+      });
+      flush();
+      let last = -1;
+      s.v.forEach((v, i) => { if (v != null) last = i; });
+      if (last >= 0) ends.push({ si: si, x: cxOf(last) + 9, y: y(s.v[last]), name: s.e.n.replace(/^(\w)\w* /, '$1. '), v: s.v[last] });
+    });
+    svg += dots;
+    // end labels: nudge apart so converging lines stay readable
+    ends.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 12) ends[i].y = ends[i - 1].y + 12;
+    for (let i = ends.length - 1; i >= 0; i--) { const max = PADT + PLOT - 2 - 12 * (ends.length - 1 - i); if (ends[i].y > max) ends[i].y = max; }
+    ends.forEach(e => { svg += '<text class="endlab s' + (e.si + 1) + '" x="' + e.x.toFixed(1) + '" y="' + (e.y + 4).toFixed(1) + '">' + _esc(e.name) + ' ' + fmt(e.v) + '</text>'; });
+    wks.forEach((w, i) => {
+      const parts = series.map(s => (s.v[i] == null ? null : s.e.n + ' ' + fmt(s.v[i]))).filter(Boolean);
+      svg += '<rect class="hit" x="' + (PADL + i * BAND) + '" y="' + PADT + '" width="' + BAND + '" height="' + PLOT + '">' +
+        '<title>' + _esc('Week ' + w + (parts.length ? ' · ' + parts.join(' · ') : ' · no games')) + '</title></rect>';
+    });
+    svg += '</svg></div>';
+    // legend: latest value + last 3 games vs the 3 before (trend needs 4+ played weeks)
+    const legend = '<div class="rs-co-legend">' + series.map((s, si) => {
+      const played = s.v.filter(v => v != null);
+      const l3 = played.slice(-3), p3 = played.slice(-6, -3);
+      const mean = a => a.reduce((x, b) => x + b, 0) / a.length;
+      let trend = '';
+      if (played.length >= 4 && p3.length) {
+        const dlt = mean(l3) - mean(p3);
+        trend = ' <span class="rs-fmt">' + (Math.abs(dlt) < 1 ? 'steady' : (dlt > 0 ? '▲ +' : '▼ ') + fmt(dlt).replace('%', '') + (met.pct ? ' pts' : '')) + '</span>';
+      }
+      return '<span><span class="rs-co-key line s' + (si + 1) + '"></span>' + _esc(s.e.n) + ' <strong>' + fmt(played[played.length - 1]) + '</strong>' + trend + '</span>';
+    }).join('') +
+      '<span class="rs-co-sub">every ' + yr + ' week · top ' + shown.length + ' by season volume' + (rest.length ? ' · not drawn: ' + _esc(rest.map(e => e.n).join(', ')) : '') +
+      ' · legend trend = last 3 games vs the 3 before · the table below (pick a week or range) is the twin</span></div>';
+    host.innerHTML = head + legend + svg;
+  }
   let _wired = false, _started = false, _rowCache = {};
   let _last = null;                 // what the table last rendered (CSV export reads it)
   let _hidden = {}, _mode = 'pg';   // 'pg' = per game, 'tot' = season totals
@@ -63183,6 +63317,7 @@ Rules:
     if (!all) {
       _last = null;
       if (csvBtn) csvBtn.disabled = true;
+      _roomChart();
       wrap.innerHTML = '<div class="rs-empty">No advanced stats file for ' + _yr + '.</div>';
       if (cnt) cnt.textContent = '';
       if (foot) foot.textContent = '';
@@ -63299,6 +63434,7 @@ Rules:
     wrap.innerHTML = html;
     _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yr, scope: _scope(), tm: tmSel.value, total: total };
     if (csvBtn) csvBtn.disabled = !rows.length;
+    _roomChart();
 
     const thru = (_season() || {}).thru;
     const scope = _scope();
@@ -63408,6 +63544,23 @@ Rules:
     if (_wired) return;
     _wired = true;
     _el('rsAdvCsv').addEventListener('click', _exportCsv);
+    const room = _el('rsAdvRoom');
+    if (room) {
+      room.addEventListener('click', e => {
+        if (!e.target.closest('#rsRoomHide')) return;
+        _roomOff = !_roomOff;
+        try { localStorage.setItem('rsRoomOff', _roomOff ? '1' : '0'); } catch (err) { /* private mode */ }
+        _roomChart();
+      });
+      room.addEventListener('change', e => {
+        if (!e.target.closest('#rsRoomMetric')) return;
+        _roomMetric = e.target.value;
+        try { localStorage.setItem('rsRoomMetric', _roomMetric); } catch (err) { /* private mode */ }
+        _roomChart();
+      });
+      let _rsz = null;
+      window.addEventListener('resize', () => { if (room.hidden) return; clearTimeout(_rsz); _rsz = setTimeout(_roomChart, 150); });
+    }
     const yrSel = _el('rsAdvYr');
     _fillYears();
     yrSel.addEventListener('change', () => { _yr = +yrSel.value; if (_advView === 'past') _pastYr = _yr; _wsel = ''; _load(); });

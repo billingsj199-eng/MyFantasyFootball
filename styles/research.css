@@ -131,6 +131,24 @@
 .rs-co-cmp tbody tr:hover td { color: var(--text); }
 .rs-co-cmp tbody tr.on td { color: var(--accent); }
 .rs-adv tbody tr.rs-co-selected td { box-shadow: inset 0 0 0 999px rgba(245,158,11,.1); }
+
+/* team room chart: up to 6 players, the reference categorical order stepped per theme -
+   validated on the panel surface (#111827 dark all pass; #ffffff light passes with contrast
+   warnings on aqua / yellow / magenta, relieved by the end labels and the table below) */
+.rs-room { --viz-1: #3987e5; --viz-2: #d95926; --viz-3: #199e70; --viz-4: #c98500; --viz-5: #d55181; --viz-6: #008300; margin-bottom: 12px; }
+:root[data-theme="light"] .rs-room { --viz-1: #2a78d6; --viz-2: #eb6834; --viz-3: #1baf7a; --viz-4: #eda100; --viz-5: #e87ba4; --viz-6: #008300; }
+.rs-room .rs-room-pick { display: inline-flex; align-items: center; gap: 6px; color: var(--text3); font-size: .74rem; }
+.rs-room .rs-room-scroll { overflow-x: auto; overflow-y: hidden; }
+.rs-room .rs-co-svg .endlab { fill: var(--text); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.rs-room .rs-co-svg polyline.series.s1 { stroke: var(--viz-1); } .rs-room .rs-co-svg circle.dot.s1 { fill: var(--viz-1); } .rs-room .rs-co-key.line.s1 { border-top-color: var(--viz-1); }
+.rs-room .rs-co-svg polyline.series.s2 { stroke: var(--viz-2); } .rs-room .rs-co-svg circle.dot.s2 { fill: var(--viz-2); } .rs-room .rs-co-key.line.s2 { border-top-color: var(--viz-2); }
+.rs-room .rs-co-svg polyline.series.s3 { stroke: var(--viz-3); } .rs-room .rs-co-svg circle.dot.s3 { fill: var(--viz-3); } .rs-room .rs-co-key.line.s3 { border-top-color: var(--viz-3); }
+.rs-room .rs-co-svg polyline.series.s4 { stroke: var(--viz-4); } .rs-room .rs-co-svg circle.dot.s4 { fill: var(--viz-4); } .rs-room .rs-co-key.line.s4 { border-top-color: var(--viz-4); }
+.rs-room .rs-co-svg polyline.series.s5 { stroke: var(--viz-5); } .rs-room .rs-co-svg circle.dot.s5 { fill: var(--viz-5); } .rs-room .rs-co-key.line.s5 { border-top-color: var(--viz-5); }
+.rs-room .rs-co-svg polyline.series.s6 { stroke: var(--viz-6); } .rs-room .rs-co-svg circle.dot.s6 { fill: var(--viz-6); } .rs-room .rs-co-key.line.s6 { border-top-color: var(--viz-6); }
+.rs-room .rs-co-legend > span { white-space: nowrap; }
+.rs-room .rs-co-legend > span.rs-co-sub { white-space: normal; flex-basis: 100%; }   /* the caption wraps */
+.rs-room .rs-co-legend strong { color: var(--text); font-weight: 600; }
 .rs-adv-wrap { max-height: 72vh; overflow: auto; }
 /* content-width table that scrolls inside .rs-adv-wrap: beats the global mobile
    `table{table-layout:fixed}` (main.css <=600px) that crushed 44 columns into the screen */

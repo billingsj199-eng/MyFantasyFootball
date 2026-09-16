@@ -2581,3 +2581,46 @@ td.cons-cell .cons-lock{font-size:.72rem;opacity:.55;cursor:help}
 .card-role.chg{background:rgba(168,85,247,.12);color:#c084fc;border-color:rgba(168,85,247,.4);cursor:help}
 .card-role-thru{font-size:.6rem;color:var(--text2);opacity:.7;letter-spacing:.5px}
 .card-role-lbl[data-gloss]::after{left:0;transform:none;max-width:320px;white-space:pre-line}
+/* Start/Sit MATCHUP EDGES (2026-09-16) */
+.sst-edges{margin-top:1.6rem}
+.sst-edges-head{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-bottom:.3rem}
+.sst-edges-title{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:1.5px}
+.sst-edges-cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.6rem}
+.sst-edge-col-title{font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:1.05rem;margin:0 0 .4rem}
+.sst-edge-row{display:flex;gap:.6rem;align-items:flex-start;padding:.5rem .65rem;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:.4rem;cursor:pointer;transition:border-color .15s}
+.sst-edge-row:hover{border-color:var(--accent)}
+.sst-edge-main{flex:1;min-width:0}
+.sst-edge-name{font-weight:700;font-size:.86rem}
+.sst-edge-name .sst-dim{font-weight:400;margin-left:.3rem}
+.sst-edge-why{font-size:.68rem;color:var(--text2);line-height:1.45;margin-top:.2rem}
+.sst-edge-item{display:inline}
+.sst-edge-item+.sst-edge-item:before{content:' \00b7 '}
+.sst-edge-tag{font-size:.55rem;padding:0 4px;border-radius:3px;margin-left:3px;white-space:nowrap;vertical-align:1px}
+.sst-edge-tag.in{background:rgba(59,130,246,.15);color:#60a5fa}
+.sst-edge-tag.read{background:rgba(168,85,247,.15);color:#c084fc}
+.sst-edge-pct{font-family:'Bebas Neue',sans-serif;font-size:1.45rem;min-width:3.4rem;text-align:right;line-height:1.1}
+.sst-edge-pct.good{color:#22c55e}.sst-edge-pct.bad{color:#ef4444}
+.sst-edge-split{font-size:.58rem;color:var(--text2);text-align:right;white-space:nowrap}
+.sst-edges-empty{font-size:.74rem;color:var(--text2);padding:.4rem 0}
+@media (max-width:800px){.sst-edges-cols{grid-template-columns:1fr}}
+@media (max-width:600px){.sst-edge-row{padding:.45rem .5rem}.sst-edge-pct{font-size:1.25rem;min-width:2.9rem}}
+/* Player card WEEKLY: why this projection (2026-09-16) */
+.why-list{display:flex;flex-direction:column;gap:3px}
+.why-row{display:grid;grid-template-columns:1fr 64px 46px;gap:8px;align-items:center;font-size:.68rem;line-height:1.3;padding:2px 0}
+.why-lbl{color:var(--text);min-width:0}
+.why-dim{color:var(--text2);font-size:.6rem}
+.why-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;display:block}
+.why-base .why-bar,.why-total .why-bar{background:none}
+.why-fill{display:block;height:100%;border-radius:3px}
+.why-fill.pos{background:#22c55e}.why-fill.neg{background:#ef4444}
+.why-val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.why-val.pos,.why-mu .pos{color:#22c55e}.why-val.neg,.why-mu .neg{color:#ef4444}
+.why-base{border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:2px}
+.why-total{border-top:1px solid var(--border);padding-top:4px;margin-top:2px;font-weight:700}
+.why-total .why-val{color:var(--accent);font-size:.8rem}
+.why-top .why-lbl{font-weight:700}
+.why-note{font-size:.62rem;color:var(--text2);margin-top:6px;line-height:1.4}
+.why-mu{margin-top:8px;padding-top:6px;border-top:1px dashed var(--border);font-size:.66rem;line-height:1.45}
+.why-mu-head{margin-bottom:2px}
+.why-mu-item{color:var(--text)}
+@media (max-width:600px){.why-row{grid-template-columns:1fr 44px 42px;gap:6px}}

@@ -4026,7 +4026,7 @@ const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1
 // chip, the ROW card and the PNG export all agree:
 //   null (not weekly / no schedule) | {bye:true, wk} |
 //   {bye:false, away, abbr, diff, logoId, logoUrl, wk}
-// diff = opponent difficulty (Clay def rank; D/ST = opp offense rank).
+// diff = opponent difficulty (schedule-adjusted pts allowed blended with Clay's preseason rank; D/ST = opp offense).
 function _tcvOppInfo(d) {
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
   if (typeof window._weeklyOppFor !== 'function') return null;
@@ -6252,7 +6252,7 @@ function render() {
       ${_statTd1}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
-      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}" style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
+      <td class="opp-cell weekly-only-cell${(()=>{ if(typeof window._weeklyOppDifficulty!=='function') return ''; const diff = window._weeklyOppDifficulty(d.t, d.s); return diff ? (' opp-' + diff) : ''; })()}"${(()=>{ const n = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : ''; return n ? ' title="' + n.replace(/"/g, '&quot;') + '"' : ''; })()} style="display:none">${(()=>{ if(typeof window._weeklyOppFor !== 'function') return '—'; const o = window._weeklyOppFor(d.t); return (o || '—') + (o && o !== 'BYE' && typeof window._wkStatusChipHtml === 'function' ? window._wkStatusChipHtml(d) : ''); })()}</td>
       <td class="spread-cell weekly-only-cell" style="display:none">${(()=>{ if(typeof window._weeklySpreadFor !== 'function') return '—'; const s = window._weeklySpreadFor(d.t); if (s == null) return '—'; return s > 0 ? ('+' + s) : (s === 0 ? 'PK' : String(s)); })()}</td>
       <td class="teamtotal-cell weekly-only-cell" style="display:none">${(()=>{
         // D/ST rows show the OPPONENT's implied total (lower = better matchup),
@@ -7509,26 +7509,94 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     return ctx.home ? ctx.game.spread : -ctx.game.spread;
   };
 
-  // OPP DIFFICULTY — 'easy' / 'medium' / 'hard' based on opponent's Clay
-  // defensive rank (1 = toughest defense in the league, 32 = softest).
-  //   defRk 1-10  → hard  (red)
-  //   defRk 11-22 → medium (amber)
-  //   defRk 23-32 → easy   (green)
-  // For D/ST rows (pos='DST') the matchup flips: what matters is the opponent
-  // OFFENSE, so we grade on offRk instead (offRk 1-10 = elite offense = hard).
+  // OPP DIFFICULTY — 'easy' / 'medium' / 'hard' for this week's matchup.
+  // (2026-09-16) In-season it grades the opponent's SCHEDULE-ADJUSTED fantasy
+  // points allowed per game to this position (FPA_2026, final games only —
+  // see _wkOppPpgTable), blended with Mike Clay's preseason unit rank as a
+  // prior that fades as games accrue: in-season weight = g / (g + 2)
+  // (1 gm 33%, 2 gm 50%, 4 gm 67%, 8 gm 80%). Before any final game it's
+  // Clay only (defRk for skill positions, offRk for D/ST). Blended rank 1 =
+  // softest (allows the most): top third → easy (green), bottom third → hard
+  // (red), middle → medium (amber).
   // Kickers get no color — opposing defense quality cuts both ways for FG
   // volume, so we don't imply a signal we haven't validated.
   window._weeklyOppDifficulty = function(team, pos) {
-    if (pos === 'K') return null;
-    const ctx = _weeklyGameContext(team);
-    if (!ctx) return null;
-    const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[ctx.opp];
-    const rk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
-    if (typeof rk !== 'number') return null;
-    if (rk <= 10) return 'hard';
-    if (rk >= 23) return 'easy';
-    return 'medium';
+    const m = window._weeklyOppMatchup(team, pos);
+    return m ? m.diff : null;
   };
+  // Full matchup grade bundle for tooltips / cards:
+  //   {opp, diff, rank, n, games, w, clayRk, raw:{v,rank}|null, adj:{v,rank}|null}
+  window._weeklyOppMatchup = function(team, pos) {
+    if (!team || !pos || pos === 'K') return null;
+    if (typeof window._weeklyOppFor !== 'function') return null;
+    let opp = window._weeklyOppFor(team);
+    if (!opp || opp === 'BYE') return null;
+    opp = String(opp).replace(/^@/, '').toUpperCase();
+    opp = _WK_OPP_ABBR[opp] || opp;
+    const B = _wkOppBlendTable(pos);
+    const r = B && B[opp];
+    if (!r) return null;
+    return Object.assign({ opp }, r);
+  };
+  // One-line explanation of the grade for tooltips.
+  window._weeklyOppDiffNote = function(team, pos) {
+    const m = window._weeklyOppMatchup(team, pos);
+    if (!m) return '';
+    const lbl = m.diff === 'hard' ? 'Tough' : m.diff === 'easy' ? 'Soft' : 'Average';
+    const posLbl = pos === 'DST' ? 'D/STs' : pos + 's';
+    let s = lbl + ' matchup for ' + posLbl + ' (#' + m.rank + ' of ' + m.n + ', 1 = softest)';
+    if (m.adj) s += ' — allows ' + m.raw.v + ' pts/gm (#' + m.raw.rank + ' raw, #' + m.adj.rank + ' schedule-adjusted, ' + m.games + ' gm)';
+    if (typeof m.clayRk === 'number') s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
+    if (m.adj) s += ' · in-season weight ' + Math.round(m.w * 100) + '%';
+    else s += ' · preseason only until final games post';
+    return s;
+  };
+  // Blended table per position: team → grade bundle. Cached alongside the
+  // Opp PPG table (same FPA_2026 + scoring-format key) so it rebuilds only
+  // when the postgame importer publishes a new week.
+  const _WK_OPP_PRIOR_GAMES = 2;   // Clay prior worth this many games
+  let _wkOppBlendCache = null;
+  function _wkOppBlendTable(pos) {
+    const T = _wkOppPpgTable();   // null before any final game
+    const FP = window.FPA_2026;
+    const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
+    const src = FP && FP.weeks || null;
+    if (!_wkOppBlendCache || _wkOppBlendCache.src !== src || _wkOppBlendCache.fmt !== fmt) _wkOppBlendCache = { src, fmt, pos: {} };
+    if (_wkOppBlendCache.pos[pos]) return _wkOppBlendCache.pos[pos];
+    const CG = window.CLAY_TEAM_GRADES_2026 || {};
+    const A = T && T.pos[pos] || {};
+    const teams = {};
+    Object.keys(CG).forEach(t => { teams[t] = 1; });
+    Object.keys(A).forEach(t => { teams[t] = 1; });
+    const list = Object.keys(teams);
+    const rows = list.map(t => {
+      const cg = CG[t];
+      const clayRk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
+      const pClay = typeof clayRk === 'number' ? (clayRk - 1) / 31 : null;   // 1 = toughest → 0, 32 → 1
+      const a = A[t];
+      const pIn = (a && a.n > 1 && typeof a.adjRank === 'number') ? 1 - (a.adjRank - 1) / (a.n - 1) : null;   // rank 1 = allows most → 1
+      const g = a ? a.games : 0;
+      const w = g / (g + _WK_OPP_PRIOR_GAMES);
+      let score;
+      if (pIn == null && pClay == null) score = null;
+      else if (pIn == null) score = pClay;
+      else if (pClay == null) score = pIn;
+      else score = w * pIn + (1 - w) * pClay;
+      return { team: t, score, clayRk, games: g, w: pIn == null ? 0 : w,
+        raw: a ? { v: a.v, rank: a.rank } : null,
+        adj: (a && typeof a.adjRank === 'number') ? { v: a.adjV, rank: a.adjRank } : null };
+    }).filter(r => r.score != null);
+    rows.sort((a, b) => b.score - a.score);
+    const n = rows.length, third = n / 3;
+    const out = {};
+    rows.forEach((r, i) => {
+      const rank = i + 1;
+      out[r.team] = { diff: rank <= third ? 'easy' : rank > 2 * third ? 'hard' : 'medium', rank, n,
+        games: r.games, w: r.w, clayRk: r.clayRk, raw: r.raw, adj: r.adj };
+    });
+    _wkOppBlendCache.pos[pos] = out;
+    return out;
+  }
 
   // TEAM TOTAL — derive from DK game total + spread (BETTING_2026.gameTotals).
   // team_total = (total - spread) / 2 if home, (total + spread) / 2 if away.
@@ -7565,6 +7633,28 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // D/ST read what opposing kickers / D/STs scored AGAINST that offense.
   // Returns {v, rank, n, games, opp} or null. rank 1 = allows the MOST.
   const _WK_OPP_ABBR = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
+  // Additive defense-effect / offense-effect fit for one position:
+  //   pts(game) ≈ mu + dE[defense] + oE[offense]
+  // solved by alternating ridge means (each effect shrunk toward 0 with a
+  // prior worth K games, so a 1-game sample doesn't swing the rank). Also
+  // returns facedE[defense] = mean offense effect it has faced (+ = tougher
+  // offenses than average, which inflates the raw points-allowed number).
+  function _wkSchedAdjust(games, K) {
+    if (!games || !games.length) return null;
+    if (typeof K !== 'number') K = 1;
+    let mu = 0; games.forEach(g => { mu += g.v; }); mu /= games.length;
+    const dE = {}, oE = {}, dN = {}, oN = {};
+    games.forEach(g => { dE[g.d] = 0; oE[g.o] = 0; dN[g.d] = (dN[g.d] || 0) + 1; oN[g.o] = (oN[g.o] || 0) + 1; });
+    for (let it = 0; it < 50; it++) {
+      const ds = {}; games.forEach(g => { ds[g.d] = (ds[g.d] || 0) + (g.v - mu - oE[g.o]); });
+      Object.keys(dE).forEach(t => { dE[t] = ds[t] / (dN[t] + K); });
+      const os = {}; games.forEach(g => { os[g.o] = (os[g.o] || 0) + (g.v - mu - dE[g.d]); });
+      Object.keys(oE).forEach(t => { oE[t] = os[t] / (oN[t] + K); });
+    }
+    const facedE = {};
+    games.forEach(g => { facedE[g.d] = (facedE[g.d] || 0) + oE[g.o] / dN[g.d]; });
+    return { mu, dE, oE, facedE };
+  }
   let _wkOppPpgCache = null;
   function _wkOppPpgTable() {
     const FP = window.FPA_2026;
@@ -7572,7 +7662,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
     if (_wkOppPpgCache && _wkOppPpgCache.src === FP.weeks && _wkOppPpgCache.fmt === fmt) return _wkOppPpgCache;
     const suf = fmt === 'ppr' ? '_ppr' : fmt === 'std' ? '_std' : '';
-    const acc = {};
+    const acc = {}, games = {};
     Object.keys(FP.weeks).forEach(wk => {
       const teams = FP.weeks[wk];
       Object.keys(teams).forEach(team => {
@@ -7584,6 +7674,8 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
           const slot = acc[pos] || (acc[pos] = {});
           const t = slot[team] || (slot[team] = { pts: 0, g: 0 });
           t.pts += v; t.g++;
+          let o = rec.opp ? String(rec.opp).toUpperCase() : null;
+          if (o) { o = _WK_OPP_ABBR[o] || o; (games[pos] || (games[pos] = [])).push({ d: team, o, v }); }
         });
       });
     });
@@ -7593,6 +7685,15 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       rows.sort((a, b) => b.v - a.v);
       const m = {};
       rows.forEach((r, i) => { m[r.team] = { v: Math.round(r.v * 10) / 10, rank: i + 1, n: rows.length, games: r.g }; });
+      // Schedule-adjusted: strip out the quality of the offenses each defense
+      // has faced (a defense that gave up 30 to the Bills isn't as soft as one
+      // that gave up 30 to the Panthers). adjV = league avg + defense effect.
+      const S = _wkSchedAdjust(games[pos] || []);
+      if (S) {
+        const adjRows = rows.map(r => ({ team: r.team, v: S.mu + (S.dE[r.team] || 0) }));
+        adjRows.sort((a, b) => b.v - a.v);
+        adjRows.forEach((r, i) => { if (m[r.team]) { m[r.team].adjV = Math.round(r.v * 10) / 10; m[r.team].adjRank = i + 1; m[r.team].offFaced = Math.round((S.facedE[r.team] || 0) * 10) / 10; } });
+      }
       out.pos[pos] = m;
     });
     _wkOppPpgCache = out;
@@ -7925,6 +8026,44 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // null = nothing currently published (non-admins can't enter WEEKLY mode).
   window._weeklyPublishedWeek = window._weeklyPublishedWeek || null;
 
+  function _weeklyIsAdmin(u) {
+    if (!u && typeof firebase !== 'undefined' && firebase.auth) {
+      try { u = firebase.auth().currentUser; } catch(_e) {}
+    }
+    if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
+    const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
+    const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
+    return adminByEmail || adminByFn;
+  }
+  window._weeklyIsAdmin = _weeklyIsAdmin;
+
+  // FANTASY-WEEK ROLLOVER (Jack, 2026-09-16): a week is "over" — and the next
+  // one becomes the site's current week — at TUESDAY 07:00 ET after its
+  // Monday-night game. Derived from _SEASON_KICKS_2026 (each week's first
+  // kickoff): week N's end = the Tuesday on/after kickoff+2d at 07:00 ET
+  // (11:00 UTC on EDT dates, 12:00 UTC from Nov 1 2026 when DST ends).
+  // Returns the current fantasy week 1-18, or null outside the season.
+  // `now` is a test hook (ms).
+  window._weeklyScheduleWeek = function(now) {
+    now = now || Date.now();
+    let kicks = null;
+    try { kicks = _SEASON_KICKS_2026; } catch (_e) { return null; } // TDZ before the const runs
+    if (!Array.isArray(kicks)) return null;
+    const wkEnd = kick => {
+      const d = new Date(kick + 2 * 86400000);
+      while (d.getUTCDay() !== 2) d.setUTCDate(d.getUTCDate() + 1);
+      const est = d.getTime() >= Date.UTC(2026, 10, 1, 6, 0); // US DST ends Nov 1 2026 2am ET
+      d.setUTCHours(est ? 12 : 11, 0, 0, 0);
+      return d.getTime();
+    };
+    const cur = kicks.find(w => now < wkEnd(w.kick));
+    return cur ? cur.wk : null;
+  };
+  // Master switch for the automatic roll (active week + published week move
+  // to the schedule week at Tuesday 07:00 ET). Set false to go back to
+  // manual selector + PUBLISH only.
+  window._WEEKLY_AUTO_ROLL = (window._WEEKLY_AUTO_ROLL == null) ? true : window._WEEKLY_AUTO_ROLL;
+
   function _weeklyAdminCheck(userArg) {
     const tab = document.getElementById('weeklyModeTab');
     const selWrap = document.getElementById('weeklyWeekSelectorWrap');
@@ -7935,9 +8074,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       try { u = firebase.auth().currentUser; } catch(_e) {}
     }
     if (!u && typeof window._authCurrentUser !== 'undefined') u = window._authCurrentUser;
-    const adminByEmail = !!(u && u.email && _JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
-    const adminByFn = typeof window.isAdmin === 'function' && window.isAdmin();
-    const admin = adminByEmail || adminByFn;
+    const admin = _weeklyIsAdmin(u);
     const published = window._weeklyPublishedWeek;
     // Tab is visible to admins always, and to everyone else only when a week
     // is currently published.
@@ -7987,15 +8124,44 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // once Firebase auth IS ready, so the Firestore read still happens.
   function _weeklyApplySettings(d) {
     const sel = document.getElementById('activeWeekSelect');
-    const wk = parseInt(d.week, 10);
+    window._weeklyLastSettings = d;
+    let wk = parseInt(d.week, 10);
+    let pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
+    if (!(pw >= 1 && pw <= 18)) pw = null;
+    // Automatic roll: once the schedule week passes the stored week (Tuesday
+    // 07:00 ET), the active week — and the published week, if one is live —
+    // jump to it, so users land on the new week's projection-ordered board
+    // before Jack ranks it. `autoRolledWeek` records the roll in Firestore
+    // so a later manual selector/PUBLISH choice is never bumped back; until
+    // an admin client writes it, every client applies the same roll locally.
+    // Only ever moves FORWARD; never publishes when nothing is published.
+    const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+    window._weeklyLastScheduleWeek = sw;
+    if (sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw) {
+      const roll = {};
+      if (!(wk >= 1) || wk < sw) { wk = sw; roll.week = sw; }
+      if (pw != null && pw < sw) { pw = sw; roll.publishedWeek = sw; }
+      if (Object.keys(roll).length && _weeklyIsAdmin() && window._weeklyRollWritten !== sw) {
+        window._weeklyRollWritten = sw;
+        let db = null;
+        try { db = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
+        if (db) {
+          roll.autoRolledWeek = sw;
+          roll.autoRolledAt = new Date().toISOString();
+          db.collection('settings').doc('active_week').set(roll, { merge: true })
+            .then(() => { console.log('[Weekly] auto-rolled to week ' + sw, roll); })
+            .catch(e => { console.warn('[Weekly] auto-roll write failed:', e); window._weeklyRollWritten = null; });
+        }
+      }
+    }
     if (wk >= 1 && wk <= 18) {
       window._weeklyActiveWeek = wk;
       localStorage.setItem('mff_active_week', String(wk));
       if (sel) sel.value = String(wk);
     }
-    const pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
-    window._weeklyPublishedWeek = (pw >= 1 && pw <= 18) ? pw : null;
-    // Active week is now known — re-derive untouched weekly boards from redraft.
+    window._weeklyPublishedWeek = pw;
+    // Active week is now known — re-derive untouched weekly boards (PPR
+    // projection order for unowned positions / untouched weeks).
     if (typeof window._weeklyReconcileBoard === 'function') {
       window._weeklyReconcileBoard('jacks');
       window._weeklyReconcileBoard('mine');
@@ -8038,6 +8204,18 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     } catch(_e) {}
   }
   _weeklyLoadActiveWeek();
+  // Roll a tab that stays open across Tuesday 07:00 ET, and let an admin
+  // client that signed in AFTER the settings snapshot arrived write the roll.
+  setInterval(() => {
+    try {
+      const d = window._weeklyLastSettings;
+      if (!d) return;
+      const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+      const pendingAdminWrite = !!(sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw
+        && window._weeklyRollWritten !== sw && _weeklyIsAdmin());
+      if (sw !== window._weeklyLastScheduleWeek || pendingAdminWrite) _weeklyApplySettings(d);
+    } catch (_e) {}
+  }, 60000);
 
   // Wire PUBLISH / REMOVE buttons (admin-only via the rule + UI gating).
   const _pubBtn = document.getElementById('weeklyPublishBtn');
@@ -8190,10 +8368,49 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   window._weeklyBaseline = window._weeklyBaseline || {};     // ver -> board snapshot at last reconcile (edit detection)
   window._weeklySessionOwned = window._weeklySessionOwned || {};
 
+  // DEFAULT WEEKLY ORDER = strictly by this week's PPR projection (Jack,
+  // 2026-09-16): an untouched week — and every position Jack hasn't
+  // re-ranked yet — ranks by the PROJ column's number (Sim Lab row where one
+  // exists, else the props/consensus/heuristic chain) in PPR regardless of
+  // the scoring toggle. Ties and no-projection players keep the redraft
+  // order; byes / ruled-out players project 0 and sink. The moment a
+  // position is edited + saved it is owned and this stops applying to it.
+  window._weeklyProjPprOf = function(d) {
+    if (!d) return null;
+    const prev = rankingScoringFmt;
+    rankingScoringFmt = 'ppr';
+    try {
+      const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+      const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, base) : base;
+      return (typeof v === 'number' && isFinite(v)) ? v : null;
+    } catch (e) { return null; }
+    finally { rankingScoringFmt = prev; }
+  };
+  // Regime gate: the projection default starts with WEEK 2 (Jack, 2026-09-16 —
+  // week 1 was hand-ranked the old way) and only ever applies to the current
+  // schedule week or later, so a past week viewed from the selector is never
+  // re-derived differently than it was.
+  window._WEEKLY_PROJ_DEFAULT_FROM = 2;
+  window._weeklyProjDefaultFor = function(wk) {
+    wk = wk || window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    if (wk < window._WEEKLY_PROJ_DEFAULT_FROM) return false;
+    const sw = (typeof window._weeklyScheduleWeek === 'function') ? window._weeklyScheduleWeek() : null;
+    return sw == null || wk >= sw;
+  };
+  window._weeklyProjOrder = function(ver) {
+    const redraft = (versionBoards[ver] && versionBoards[ver].redraft) || [];
+    const score = new Map();
+    redraft.forEach(idx => { const v = window._weeklyProjPprOf(D[idx]); score.set(idx, v == null ? -1 : v); });
+    // Stable sort: proj desc, redraft slot breaks ties (and orders the no-proj tail).
+    return redraft.map((idx, slot) => ({ idx, slot, v: score.get(idx) }))
+      .sort((a, b) => (b.v - a.v) || (a.slot - b.slot))
+      .map(o => o.idx);
+  };
+
   // Slot-stable merge: keep `base`'s order for OWNED positions, but re-fill
-  // the slots occupied by unowned positions with the redraft-relative order
-  // of those positions — so the QB list keeps following redraft even after
-  // the RB list was hand-ranked and saved.
+  // the slots occupied by unowned positions with the projection order of
+  // those positions — so the QB list keeps following this week's PROJ even
+  // after the RB list was hand-ranked and saved.
   window._weeklyMergeUnowned = function(base, redraft, ownedPos) {
     const unownedSlots = [];
     base.forEach((idx, slot) => { const p = D[idx] && D[idx].s; if (p && !ownedPos[p]) unownedSlots.push(slot); });
@@ -8232,12 +8449,20 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const _wkAF = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     const _ownedAF = window._weeklyOwnedPos[ver] && window._weeklyOwnedPos[ver][_wkAF];
     if (_ownedAF && _ownedAF.FLEX) return;
+    // Projection-default regime (week 2+, current/future weeks): the WHOLE
+    // board interleaves by PPR projection — QB, K and D/ST slots included —
+    // so an untouched week reads strictly by PROJ and a hand-ranked position
+    // keeps its internal order while its players sit where their projection
+    // puts them. Earlier weeks keep the RB/WR/TE-only interleave.
+    const _allPos = (typeof window._weeklyProjDefaultFor === 'function') && window._weeklyProjDefaultFor(_wkAF);
+    const POS = _allPos ? ['QB', 'RB', 'WR', 'TE', 'K', 'DST'] : ['RB', 'WR', 'TE'];
     const b = versionBoards[ver].weekly;
     const flexSlots = [];
-    const queues = { RB: [], WR: [], TE: [] };
+    const queues = {};
+    POS.forEach(p => queues[p] = []);
     b.forEach((idx, sl) => {
       const p = D[idx] && D[idx].s;
-      if (p === 'RB' || p === 'WR' || p === 'TE') { flexSlots.push(sl); queues[p].push(idx); }
+      if (queues[p]) { flexSlots.push(sl); queues[p].push(idx); }
     });
     if (flexSlots.length < 2) return;
     const score = {};
@@ -8245,17 +8470,22 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (score[idx] == null) {
         let v = null;
         try {
-          const base = (typeof adjProjPpg === 'function') ? adjProjPpg(D[idx]) : null;
-          v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(D[idx], base) : base;
+          v = _allPos
+            ? window._weeklyProjPprOf(D[idx])
+            : (function() {
+                const base = (typeof adjProjPpg === 'function') ? adjProjPpg(D[idx]) : null;
+                return (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(D[idx], base) : base;
+              })();
         } catch (e) { v = null; }
         score[idx] = (v != null && isFinite(v)) ? v : -1;
       }
       return score[idx];
     };
-    const heads = { RB: 0, WR: 0, TE: 0 };
+    const heads = {};
+    POS.forEach(p => heads[p] = 0);
     flexSlots.forEach(sl => {
       let best = null, bestScore = -Infinity;
-      ['RB', 'WR', 'TE'].forEach(p => {
+      POS.forEach(p => {
         const idx = queues[p][heads[p]];
         if (idx != null && scoreOf(idx) > bestScore) { best = p; bestScore = scoreOf(idx); }
       });
@@ -8409,6 +8639,19 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // it clobber a live board; reconcile will derive from redraft instead.
     if (!obj || !obj._order || !obj._order.length) { window._weeklyReconcileBoard(ver); return; }
     window._weeklySaved[ver] = obj;
+    // ONE-TIME (Jack, 2026-09-16): week 2 was saved under the old
+    // redraft-derived default with only D/ST hand-ranked. Any week-2 save
+    // written BEFORE this shipped keeps D/ST ownership only, so the other
+    // positions (K included) drop to the projection order; every save made
+    // after the cutoff carries Jack's real intent and is left alone.
+    // Self-expiring: the cutoff is fixed, and week 3+ saves never match.
+    if (ver === 'jacks' && obj._week === 2 && Array.isArray(obj._ownedPos)) {
+      const at = Date.parse(window._jacksUpdatedAt || '');
+      if (isFinite(at) && at < Date.parse('2026-09-16T16:00:00Z')) {
+        obj = Object.assign({}, obj, { _ownedPos: obj._ownedPos.filter(p => p === 'DST') });
+        window._weeklySaved[ver] = obj;
+      }
+    }
     if (obj._week != null && Array.isArray(obj._ownedPos)) {
       const set = {};
       obj._ownedPos.forEach(p => set[p] = true);
@@ -8474,11 +8717,16 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         base = null;
       }
     }
+    // Source for unowned positions / untouched weeks: this week's PPR
+    // projection order from week 2 on (current + future weeks only — past
+    // weeks keep deriving from redraft exactly as before), else redraft.
+    const projDefault = window._weeklyProjDefaultFor(wk);
+    const freshSrc = () => projDefault ? window._weeklyProjOrder(ver) : versionBoards[ver].redraft.slice();
     if (base) {
-      // Owned positions keep the edited order; everything else re-follows redraft.
-      versionBoards[ver].weekly = window._weeklyMergeUnowned(base, versionBoards[ver].redraft, ownedPos || {});
+      // Owned positions keep the edited order; everything else re-follows the fresh source.
+      versionBoards[ver].weekly = window._weeklyMergeUnowned(base, freshSrc(), ownedPos || {});
     } else if (!(saved && saved._week === wk)) {
-      versionBoards[ver].weekly = versionBoards[ver].redraft.slice();
+      versionBoards[ver].weekly = freshSrc();
     }
     // FLEX interleave derives from positional order + weekly PROJ PPG.
     window._weeklyAutoFlex(ver);
@@ -8552,7 +8800,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       // weekly slate-average cache keys off the week — refresh both.
       window._weeklySlateAvgCache = null;
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
-      // New week: an untouched board re-derives from the current Redraft order.
+      // New week: an untouched board re-derives (week 2+: PPR projection order; earlier: redraft).
       if (typeof window._weeklyReconcileBoard === 'function') {
         window._weeklyReconcileBoard('jacks');
         window._weeklyReconcileBoard('mine');
@@ -9796,7 +10044,8 @@ function _wkOppPpgCell(d) {
   const _kd = d.s === 'K' || d.s === 'DST';   // reception format is meaningless for K / D/ST
   const fmtLbl = _kd ? '' : ((typeof _scoringLabelsRnk !== 'undefined' && _scoringLabelsRnk[rankingScoringFmt]) || 'Half PPR') + ' ';
   const posLbl = d.s === 'DST' ? 'opposing D/STs' : d.s === 'K' ? 'opposing kickers' : d.s + 's';
-  const tip = r.opp + ' allows ' + r.v + ' ' + fmtLbl + 'pts/game to ' + posLbl + ' in 2026 — #' + r.rank + ' most of ' + r.n + ' (' + r.games + ' gm)';
+  let tip = r.opp + ' allows ' + r.v + ' ' + fmtLbl + 'pts/game to ' + posLbl + ' in 2026 — #' + r.rank + ' most of ' + r.n + ' (' + r.games + ' gm)';
+  if (typeof r.adjRank === 'number') tip += ' · schedule-adjusted ' + r.adjV + ' (#' + r.adjRank + ')' + ((r.offFaced && r.games >= 2) ? ' — faced ' + (r.offFaced > 0 ? 'tougher' : 'softer') + ' offenses than avg (' + (r.offFaced > 0 ? '+' : '') + r.offFaced + ' pts/gm)' : '');
   return '<td class="oppppg-cell weekly-only-cell" style="display:none" title="' + tip.replace(/"/g, '&quot;') + '"><span style="color:' + c + ';font-weight:700;cursor:help">' + r.v + '</span><span class="oppppg-rk">#' + r.rank + '</span></td>';
 }
 
@@ -11907,7 +12156,89 @@ function _campNewsSectionHtml(d) {
 // the rankings table shows the number, this shows where it came from),
 // opponent defense vs this position, and recent 2026 games once the season
 // starts. Full prop-line detail stays on the LINES tab.
+// === WHY THIS PROJECTION (player card WEEKLY tab) ===============================
+// Jack 2026-09-16: "add the why notes to the player cards on the main site". data/proj_why_2026.json is built
+// headless from the Sim Lab NOTES why lines (sim_lab/export_notes.js --repo, run by scripts/sim_proj_task.ps1):
+// for the current week, every QB/RB/WR/TE sim projection as a waterfall in [half, ppr, std] - preseason baseline
+// (Clay per game) -> each factor the sim applied, in the order it applies them -> the sim projection. Lazy-loaded
+// on the first WEEKLY tab (hour-stamped ?d=, not ?v=, so sw.js never pins it). Shown only when the card's
+// projection source is Sim Lab, so the steps add up to the number on the card.
+window._PROJ_WHY = window._PROJ_WHY || null;
+function _loadProjWhy() {
+  if (window._projWhyPromise) return window._projWhyPromise;
+  const now = new Date();
+  const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  window._projWhyPromise = fetch('data/proj_why_2026.json?d=' + stamp)
+    .then(r => (r && r.ok) ? r.json() : null)
+    .then(j => {
+      window._PROJ_WHY = (j && j.players) ? j : { players: {}, failed: true };
+      const host = document.getElementById('cardWeeklyView');
+      if (host && window._weeklyCardD && typeof buildWeeklyCardView === 'function') host.innerHTML = buildWeeklyCardView(window._weeklyCardD);
+      return window._PROJ_WHY;
+    })
+    .catch(() => { window._PROJ_WHY = { players: {}, failed: true }; return null; });
+  return window._projWhyPromise;
+}
+function _projWhyFor(d) {
+  const J = window._PROJ_WHY;
+  if (!J || !J.players) return null;
+  let r = J.players[d.n];
+  if (!r && typeof _campNewsNorm === 'function') {
+    if (!J._idx) { J._idx = {}; Object.keys(J.players).forEach(k => { J._idx[_campNewsNorm(k)] = J.players[k]; }); }
+    r = J._idx[_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+function _projWhyHtml(d, wk, cardProj, esc) {
+  if (!['QB', 'RB', 'WR', 'TE'].includes(d.s)) return '';
+  const J = window._PROJ_WHY;
+  if (!J) { _loadProjWhy(); return ''; }
+  if (!J.players || +J.week !== +wk) return '';
+  const r = _projWhyFor(d);
+  if (!r) return '';
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
+  const sg = v => (v >= 0 ? '+' : '\u2212') + f1(Math.abs(v));
+  const clay = r.c[fi], proj = r.p[fi];
+  if (clay == null || proj == null) return '';
+  const steps = (r.s || []).map(s => ({ l: s.l, v: s.d[fi], k: s.k })).filter(s => Math.abs(s.v) >= 0.1);
+  const rest = proj - clay - steps.reduce((t, s) => t + s.v, 0);
+  if (Math.abs(rest) >= 0.1) steps.push({ l: 'smaller factors combined', v: rest, k: 'rest' });
+  const maxAbs = Math.max(0.5, ...steps.map(s => Math.abs(s.v)));
+  const top = steps.filter(s => s.k !== 'rest').sort((x, y) => Math.abs(y.v) - Math.abs(x.v))[0];
+  let html = '<div class="card-section"><div class="card-section-title">Why this projection '
+    + '<span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
+  html += '<div class="why-list">';
+  html += '<div class="why-row why-base"><span class="why-lbl">Preseason baseline <span class="why-dim">(Mike Clay per game)</span></span><span class="why-bar"></span><span class="why-val">' + f1(clay) + '</span></div>';
+  steps.forEach(s => {
+    const pct = Math.round(100 * Math.abs(s.v) / maxAbs);
+    html += '<div class="why-row' + (top && s === top ? ' why-top' : '') + '"><span class="why-lbl">' + esc(s.l) + '</span>'
+      + '<span class="why-bar"><span class="why-fill ' + (s.v >= 0 ? 'pos' : 'neg') + '" style="width:' + pct + '%"></span></span>'
+      + '<span class="why-val ' + (s.v >= 0 ? 'pos' : 'neg') + '">' + sg(s.v) + '</span></div>';
+  });
+  html += '<div class="why-row why-total"><span class="why-lbl">Sim projection</span><span class="why-bar"></span><span class="why-val">' + f1(proj) + '</span></div>';
+  html += '</div>';
+  if (top) html += '<div class="why-note">Biggest driver: <b>' + esc(top.l.split(' (')[0]) + '</b> (' + sg(top.v) + ').'
+    + (typeof cardProj === 'number' && Math.abs(cardProj - proj) >= 0.3 ? ' The projection above has moved ' + sg(cardProj - proj) + ' since this breakdown was built (a newer injury or line update).' : '') + '</div>';
+  // matchup reads for this player (Start/Sit MATCHUP EDGES data)
+  const M = window.MATCHUP_EDGES_2026, Wk = M && M.weeks ? M.weeks[wk] : null;
+  if (Wk && Wk.rows) {
+    const nk = typeof _campNewsNorm === 'function' ? _campNewsNorm(d.n) : d.n;
+    const m = Wk.rows.find(x => x.n === d.n || (typeof _campNewsNorm === 'function' && _campNewsNorm(x.n) === nk));
+    if (m && m.items && m.items.length) {
+      const pc = v => (v > 0 ? '+' : '') + Math.round(v) + '%';
+      html += '<div class="why-mu"><div class="why-mu-head">Matchup <b class="' + (m.pct >= 0 ? 'pos' : 'neg') + '">' + pc(m.pct) + '</b> <span class="why-dim">of his projection</span></div>'
+        + m.items.slice(0, 4).map(it => '<div class="why-mu-item">' + esc(it.lab) + ' <b class="' + (it.pct >= 0 ? 'pos' : 'neg') + '">' + pc(it.pct) + '</b>'
+          + '<span class="sst-edge-tag ' + (it.priced ? 'in' : 'read') + '">' + (it.priced ? 'IN PROJ' : 'READ') + '</span></div>').join('')
+        + '<div class="why-dim" style="margin-top:3px">IN PROJ = already in the number above · READ = matchup context that does not change it</div></div>';
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
 function buildWeeklyCardView(d) {
+  window._weeklyCardD = d;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const wk = window._weeklyActiveWeek || 1;
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t;
@@ -11935,7 +12266,10 @@ function buildWeeklyCardView(d) {
   const isDst = d.s === 'DST';
   let html = '<div class="card-section">' + title('Matchup');
   html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), 'accent');
+  const oppDiff = (typeof window._weeklyOppDifficulty === 'function') ? window._weeklyOppDifficulty(d.t, d.s) : null;
+  const oppNote = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : '';
+  const oppCol = oppDiff === 'hard' ? '#ef4444' : oppDiff === 'easy' ? '#22c55e' : oppDiff === 'medium' ? '#facc15' : null;
+  html += box('OPP', (oppCol ? '<span style="color:' + oppCol + '">' : '') + (entry.home ? 'vs ' : '@ ') + esc(entry.opp) + (oppCol ? '</span>' : ''), oppCol ? '' : 'accent', oppNote || null);
   html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', sp != null && sp < 0 ? 'green' : '');
   html += isDst
     ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)')
@@ -12023,6 +12357,7 @@ function buildWeeklyCardView(d) {
   html += '<div style="margin-top:7px;font-size:.62rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
     + (out.src === 'props' ? ' · full prop board on the <b>LINES</b> tab' : '') + '</div>';
   html += '</div>';
+  if (out.src === 'sim' && typeof _projWhyHtml === 'function') html += _projWhyHtml(d, wk, proj, esc);
 
   // Recent games (in-season only — WEEKLY_STATS gets 2026 rows from the
   // Tuesday stats pull; empty preseason so the section self-hides).
@@ -23954,7 +24289,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       const oppHtml = '<span class="sst-opp' + (diffColor ? '" style="color:' + diffColor : '') + '">' + (c.home ? 'vs ' : '@ ')
         + (oppLogo ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + oppLogo + '.png" alt="" loading="lazy">' : '') + esc(c.opp) + '</span>';
       html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-      html += box('OPP', oppHtml, '', c.diff ? (c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent Clay ' + (isDst ? 'offense' : 'defense') + ' rank)' : null);
+      html += box('OPP', oppHtml, '', c.diff ? ((typeof window._weeklyOppDiffNote === 'function' && window._weeklyOppDiffNote(d.t, d.s)) || ((c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent ' + (isDst ? 'offense' : 'defense') + ' rank)')) : null);
       html += box('SPREAD', '<span class="' + bestCls(isBest('spread', c.spread)) + (c.spread != null && c.spread < 0 ? ' green' : '') + '">' + fmtSpread(c.spread) + '</span>', '', 'This team\'s spread (negative = favored)');
       html += isDst
         ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>', '', 'Points the opponent is priced to score — lower = better D/ST spot')
@@ -24040,14 +24375,72 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     return html;
   }
 
-  window._sstRender = render;
+  // MATCHUP EDGES (2026-09-16, Jack: "add the matchup edges board to the main site too"). Built headless from the
+  // Sim Lab NOTES board (sim_lab/export_notes.js --repo, run by scripts/sim_proj_task.ps1) into
+  // data/matchup_edges_2026.js: every QB 12+ / RB-WR-TE 6+ projection with its matchup score in % of the projection.
+  // "In projection" items are already inside PROJ (opponent points allowed, pass rush, CB, O-line injuries, wind);
+  // "matchup read" items (coverage fit, pressure / blitz vs the QB, run defense, target zones, defensive injuries)
+  // are context and never change the number. Tap a row to add the player to the Start/Sit cards above.
+  let ePos = 'ALL';
+  const eNorm = s => String(s || '').toLowerCase().replace(/[.'’]/g, '').replace(/-/g, ' ').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/\s+/g, ' ').trim();
+  function renderEdges() {
+    const el = document.getElementById('sstEdges');
+    if (!el) return;
+    const M = window.MATCHUP_EDGES_2026;
+    if (!M || !M.weeks) { el.innerHTML = ''; return; }
+    const siteWk = week();
+    const wk = M.weeks[siteWk] ? siteWk : M.latest;
+    const Wk = M.weeks[wk];
+    if (!Wk || !Wk.rows || !Wk.rows.length) { el.innerHTML = ''; return; }
+    const rows = Wk.rows.filter(r => ePos === 'ALL' || r.pos === ePos);
+    const best = rows.filter(r => r.pct >= 1).sort((x, y) => y.pct - x.pct).slice(0, 12);
+    const worst = rows.filter(r => r.pct <= -1).sort((x, y) => x.pct - y.pct).slice(0, 12);
+    const sgn = v => (v > 0 ? '+' : '') + Math.round(v) + '%';
+    const rowHtml = r => {
+      const good = r.pct > 0;
+      const why = (r.items || []).slice(0, 3).map(it => '<span class="sst-edge-item">' + esc(it.lab) + ' <b>' + sgn(it.pct) + '</b>'
+        + '<span class="sst-edge-tag ' + (it.priced ? 'in' : 'read') + '">' + (it.priced ? 'IN PROJ' : 'READ') + '</span></span>').join('');
+      return '<div class="sst-edge-row" data-n="' + esc(r.n) + '" title="Add ' + esc(r.n) + ' to Start/Sit">'
+        + '<span class="lg-badge" style="background:' + (PB[r.pos] || '') + ';color:' + (PC[r.pos] || '') + '">' + r.pos + '</span>'
+        + '<div class="sst-edge-main"><div class="sst-edge-name">' + esc(r.n) + '<span class="sst-dim">' + esc(r.tm) + (r.home ? ' vs ' : ' @ ') + esc(r.opp) + '</span></div>'
+        + '<div class="sst-edge-why">' + why + '</div></div>'
+        + '<div><div class="sst-edge-pct ' + (good ? 'good' : 'bad') + '">' + sgn(r.pct) + '</div>'
+        + '<div class="sst-edge-split">proj ' + sgn(r.priced) + ' · read ' + sgn(r.intel) + '</div></div></div>';
+    };
+    const upd = Wk.generated ? new Date(Wk.generated) : null;
+    let html = '<div class="sst-edges-head"><span class="sst-edges-title">MATCHUP EDGES · WEEK ' + wk + '</span>'
+      + '<div class="lg-pos-btns" id="sstEdgePos">' + ['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => '<button class="lg-pos-btn' + (p === ePos ? ' active' : '') + '" data-p="' + p + '"'
+        + (p === ePos ? ' style="' + (p === 'ALL' ? 'border-color:var(--accent);background:var(--accent);color:#0a0e17' : 'border-color:' + PC[p] + ';background:' + PC[p] + ';color:#fff') + '"' : '') + '>' + p + '</button>').join('') + '</div></div>';
+    html += '<div class="sst-sub" style="margin-bottom:.2rem">How much this week\'s matchup moves each player, as a % of his projection. '
+      + '<span class="sst-edge-tag in">IN PROJ</span> is already baked into the projection (opponent points allowed, pass rush, cornerback matchup, O-line injuries, wind). '
+      + '<span class="sst-edge-tag read">READ</span> is advanced matchup context that does not change the number: man/zone coverage fit, pressure and blitz vs the QB, run defense, target zones and defensive injuries. '
+      + 'Early-season defense rates are blended with last season. Tap a player to add him to Start/Sit.'
+      + (upd && !isNaN(upd) ? ' <span class="sst-dim">Updated ' + upd.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '.</span>' : '') + '</div>';
+    html += '<div class="sst-edges-cols">'
+      + '<div><div class="sst-edge-col-title" style="color:#22c55e">BEST MATCHUPS</div>' + (best.length ? best.map(rowHtml).join('') : '<div class="sst-edges-empty">No positive edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '<div><div class="sst-edge-col-title" style="color:#ef4444">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '</div>';
+    el.innerHTML = html;
+    el.querySelectorAll('#sstEdgePos .lg-pos-btn').forEach(b => { b.onclick = () => { ePos = b.dataset.p; renderEdges(); }; });
+    el.querySelectorAll('.sst-edge-row').forEach(r => {
+      r.onclick = () => {
+        const k = eNorm(r.dataset.n);
+        const d = D.find(x => x && x.n && x.t && !x._retired && !x.rm && !x.devy && eNorm(x.n) === k);
+        if (!d) { if (typeof toast === 'function') toast(r.dataset.n + ' is not on the board yet'); return; }
+        add(d.n);
+        const g = document.getElementById('sstGrid'); if (g && g.scrollIntoView) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }
+
+  window._sstRender = function () { render(); renderEdges(); };
   // Re-render if the page is already open when the Firestore week listener
   // (_weeklyApplySettings) or a deferred data bundle lands.
   window._sstRefresh = function() {
     const pg = document.getElementById('pageStartSit');
     if (pg && pg.classList.contains('active') && names.length) render();
   };
-  window.addEventListener('load', () => setTimeout(window._sstRefresh, 800));
+  window.addEventListener('load', () => setTimeout(() => { window._sstRefresh(); const pg = document.getElementById('pageStartSit'); if (pg && pg.classList.contains('active')) renderEdges(); }, 800));
 })();
 
 // === PLAYER BIO HELPERS ===
@@ -28840,7 +29233,10 @@ window.fmtHeight = fmtHeight;
   //   2 (2026-09-03): + _cut / _cutPos per mode — free/anon viewers loaded the
   //     slice with no cut line, so the fallback-filled board showed every
   //     below-cut player (and a +/- sort floated them to the top).
-  const _PUB_SCHEMA = 2;
+  //   3 (2026-09-16): + weekly _ownedPos — without it the free slice was a
+  //     "legacy" weekly save that froze every position, so free viewers never
+  //     got the projection-ordered default for positions Jack hasn't ranked.
+  const _PUB_SCHEMA = 3;
   function _buildJacksPublicPayload(fullData) {
     const out = { jacks: {}, _pubSchema: _PUB_SCHEMA };
     ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => {
@@ -28854,6 +29250,7 @@ window.fmtHeight = fmtHeight;
         if (kept.length) slice._posTiers[pk] = kept;
       });
       if (m === 'weekly' && src._week != null) slice._week = src._week;
+      if (m === 'weekly' && Array.isArray(src._ownedPos)) slice._ownedPos = src._ownedPos.slice();
       // Cut lines ride along: loadModeData / _weeklyStashSaved apply them, and
       // getFiltered then hides below-cut players from non-editors.
       if (src._cut >= 1) slice._cut = src._cut;

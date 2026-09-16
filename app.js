@@ -65080,15 +65080,24 @@ function _rsScatter(cfg) {
   // This week (Jack 2026-09-16: "add the week columns to the coach view too"): DK game lines for
   // the coach's current team, stamped in _rows() on coaches whose latest season is 2026
   const WK = 'This week';
-  const WK_COLS = [
+  const WK_GAME = [
     c('w_tt', 'Team total', WK, 1, 'Points the coach\'s team is expected to score this week: (game total - team spread) / 2 from the DK line'),
     c('w_spread', 'Spread', WK, 1, 'This week\'s DK spread from the team\'s side: negative = favored', LO),
-    c('w_gt', 'Game total', WK, 1, 'This week\'s DK over / under'),
+    c('w_gt', 'Game total', WK, 1, 'This week\'s DK over / under')
+  ];
+  const WK_OWN = [
     c('w_tproj', 'Team proj', WK, 1, 'Sum of this week\'s site (Sim Lab) projections for the team\'s QB / RB / WR / TE, in the Advanced Stats scoring format'),
     c('w_tbook', 'Team book', WK, 1, 'Sum of this week\'s sportsbook projections (props scored as fantasy points, TDs from the anytime odds) for the team\'s skill players who have posted props'),
     c('w_tgap', 'Site-Book', WK, 1, 'Team projection gap: site minus book, summed over the players who have both; positive = the site is higher on this offense than the sportsbooks')
   ];
-  const ROLE_COLS = { op: OFF_COLS.concat(WK_COLS), hc: OFF_COLS.concat(DEF_COLS, WK_COLS), dp: DEF_COLS.concat(WK_COLS) };
+  // the offense a defense faces (Jack 2026-09-16: "add the opponent team's numbers for defensive playcallers")
+  const WK_OPP = [
+    c('w_ott', 'Opp total', WK, 1, 'Points the opponent is expected to score against this team this week: game total minus the team\'s implied total (DK line)', LO),
+    c('w_oproj', 'Opp proj', WK, 1, 'Sum of this week\'s site (Sim Lab) projections for the opponent\'s QB / RB / WR / TE - what this defense faces', LO),
+    c('w_obook', 'Opp book', WK, 1, 'Sum of this week\'s sportsbook projections for the opponent\'s skill players who have posted props', LO),
+    c('w_ogap', 'Opp Site-Book', WK, 1, 'Opponent offense gap: site minus book over the opponent\'s players who have both; positive = the site expects more from that offense than the sportsbooks', LO)
+  ];
+  const ROLE_COLS = { op: OFF_COLS.concat(WK_GAME, WK_OWN), hc: OFF_COLS.concat(DEF_COLS, WK_GAME, WK_OWN, WK_OPP), dp: DEF_COLS.concat(WK_GAME, WK_OPP) };
   function _wkStamp(o, tm, yr) {
     const W = window._rsWeek;
     const g = W && yr === 2026 ? W.game(tm) : null;
@@ -65099,6 +65108,11 @@ function _rsScatter(cfg) {
     o.w_tproj = T ? T.proj : null;
     o.w_tbook = T ? T.book : null;
     o.w_tgap = T ? T.gap : null;
+    const O = g && W ? W.team(g.opp) : null;
+    o.w_ott = g ? g.total - g.implied : null;
+    o.w_oproj = O ? O.proj : null;
+    o.w_obook = O ? O.book : null;
+    o.w_ogap = O ? O.gap : null;
     return o;
   }
   const ROLE_NAME = { op: 'offensive playcallers', hc: 'head coaches', dp: 'defensive playcallers' };
@@ -65478,7 +65492,7 @@ function _rsScatter(cfg) {
     if (csvBtn) csvBtn.disabled = !rows.length;
     if (foot) foot.textContent = 'Playcaller = the offensive / defensive coordinator Pro Football Reference lists, unless coach_overrides.json names a head coach who calls plays; a season with a mid-year coordinator change shows both names ("A / B"). ' +
       'Sources: nflverse play-by-play (tendency, pace, 4th down, run direction, results), nflverse participation (formation, personnel, coverage shells, box counts; published after each season, so 2026 stays blank), FTN charting via nflverse (play design, 2022+), PFF (target share by position; blitz, man and pressure the opponent faced). ' +
-      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.' + (window._rsWeek ? ' Week ' + window._rsWeek.num() + ' columns = this week\'s DK team total / spread / game total for the coach\'s current team, plus the team\'s skill-player projections (site = Sim Lab, book = props scored, ' + window._rsWeek.fmt() + '; the gap is summed over players with both) - coaches whose latest season is 2026.' : '');
+      'Neutral = win probability 20-80% outside the last two minutes of a half. Career rows weight every rate by its own plays. Tendency columns shade by how high the value is, results green = better. Click any coach to chart a metric by season; shift-click another (or pick one under "vs") to compare two.' + (window._rsWeek ? ' Week ' + window._rsWeek.num() + ' columns = this week\'s DK team total / spread / game total for the coach\'s current team, plus skill-player projections rolled up per team (site = Sim Lab, book = props scored, ' + window._rsWeek.fmt() + '; the gap is summed over players with both): the coach\'s own offense for playcallers, the opponent\'s offense (Opp columns) for defensive playcallers, both for head coaches - coaches whose latest season is 2026.' : '');
     _fillVs();
     _coChart();
     _scC.render();

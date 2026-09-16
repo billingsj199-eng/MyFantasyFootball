@@ -63568,7 +63568,7 @@ function _rsScatter(cfg) {
       const ctx = c.getContext('2d');
       ctx.setTransform(S, 0, 0, S, 0, 0);
       draw(ctx, W, H, D, theme(host), lab);
-      const clean = s => String(s).replace(/0394/g, 'Delta').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      const clean = s => String(s).replace(/Δ/g, 'Delta').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       const name = cfg.file() + '-' + clean(cfg.label(D.cy, D.pg)) + '-vs-' + clean(cfg.label(D.cx, D.pg)) + '.png';
       const send = () => {
         const a = document.createElement('a');

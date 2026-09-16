@@ -4485,7 +4485,7 @@
   function ntMatchupText(mu) {
     return mu.items.slice(0, 4).map(function (x) { return x.lab + ' ' + ntSigned(x.pct, 0) + '%' + (x.priced ? '' : ' [intel]'); }).join('; ');
   }
-  function ntMatchupBoard(wk, sc) {
+  function ntMatchupRows(wk, sc) {
     var rows = [];
     state.players.list.forEach(function (p) {
       if (p.isDST || ['QB', 'RB', 'WR', 'TE'].indexOf(p.pos) < 0) return;
@@ -4496,6 +4496,21 @@
       var mu = ntMatchup(p, wk, sc, slot, wp); if (!mu || !mu.items.length) return;
       rows.push({ p: p, slot: slot, eff: eff, mu: mu });
     });
+    return rows;
+  }
+  // main-site export (export_notes.js --repo -> data/matchup_edges_2026.js, Start/Sit page MATCHUP EDGES)
+  window.SimLabMatchupEdges = function (wk, scKey) {
+    var sc = E.PRESETS[scKey || 'half'] || E.PRESETS.half;
+    wk = +wk || +(document.getElementById('nt-week') || {}).value || state.injuryWeek || 1;
+    return { week: wk, scoring: scKey || 'half', generated: new Date().toISOString(),
+      rows: ntMatchupRows(wk, sc).map(function (r) {
+        return { n: r.p.name, pos: r.p.pos, tm: r.p.tm, opp: r.slot.opp, home: !!r.slot.home, proj: +r.eff.toFixed(1),
+          pct: +r.mu.pct.toFixed(1), priced: +r.mu.priced.toFixed(1), intel: +r.mu.intel.toFixed(1),
+          items: r.mu.items.slice(0, 5).map(function (x) { return { pct: +x.pct.toFixed(1), lab: x.lab, priced: !!x.priced }; }) };
+      }).sort(function (x, y) { return y.pct - x.pct; }) };
+  };
+  function ntMatchupBoard(wk, sc) {
+    var rows = ntMatchupRows(wk, sc);
     var pos = rows.filter(function (r) { return r.mu.pct > 0; }).sort(function (x, y) { return y.mu.pct - x.mu.pct; }).slice(0, 15);
     var neg = rows.filter(function (r) { return r.mu.pct < 0; }).sort(function (x, y) { return x.mu.pct - y.mu.pct; }).slice(0, 15);
     var table = function (list, title, col) {

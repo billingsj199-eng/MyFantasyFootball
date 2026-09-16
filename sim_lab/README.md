@@ -2233,3 +2233,31 @@ flagged rows. NONE PASS - nothing changed in the engine.
   (TE 1.06), WR 15+ 0.959. Stronger docks are worse every season (0/7).
 - Lesson: layer-level REL ratios from the audit mix positions and weeks; grade
   the fix itself before believing them.
+
+## NOTES why lines + matchup edges - 2026-09-16
+
+Jack: "build the per-player why notes for videos ... also highlight players with
+the biggest advanced weekly matchups positives and negatives". NOTES tab + the
+headless export (export_notes.js -> notes/notes_latest.txt). Intel only.
+
+- engine.js weeklyProjection returns wp.why (every factor in engine order:
+  clayPg, jsBase, rookie, RB usage, Vegas, opp, CB shadow, CB1 out, OL out,
+  pass rush, wind, snap, route, ramp, availability/pool, TD luck, jsMean).
+  Projections unchanged (2,962 rows weeks 2-4 half + PPR, max diff 0).
+- WHY line per player (app.js ntWhy): points waterfall that adds up to the
+  model exactly, then the market step to PROJ, and the biggest driver.
+  Learned shadow drivers (ntShadowWhy): engine learnedShadowExplain = Saabas
+  path attribution over the 345 trees (node values now in
+  learned_shadow_model.js); contributions + bias = correction (2e-15).
+- MATCHUP EDGES board (ntMatchupBoard, top of NOTES + text export): QB 12+ /
+  others 6+ PROJ, score in % of projection. PRICED = inside PROJ (opp FPA /
+  Clay grade at 25%, soft rush, CB shadow, CB1 out, OL out, wind). INTEL (not
+  validated as projection inputs): coverage fit (opp man rate x man/zone YPRR;
+  RBs need 60+ routes, 35%), pressure / blitz vs QB splits, run D ypc / YCO /
+  missed tackles / heavy boxes vs RBs, target zones leaky/stingy, defensive
+  injuries by unit (coverage -> WR/TE, front -> RB, QB half each).
+- Early-season shrink: every defense scheme rate = (g x 2026 + 4 x prior) /
+  (g + 4) with the playcaller-aware prior (scPrior); run D by carries (prior =
+  150 carries). Without it 1-game man rates (PIT 0%, NO 3%) swamped the board.
+- Top 15 best / toughest per week; each row shows edge, priced, intel, and
+  the reasons with the 2026 value, prior and league.

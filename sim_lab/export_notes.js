@@ -26,6 +26,7 @@ const ARGS = process.argv.slice(2);
 function argOf(flag, dflt) { const i = ARGS.indexOf(flag); return i >= 0 && ARGS[i + 1] ? ARGS[i + 1] : dflt; }
 const WEEK = argOf('--week', null);
 const SCORING = argOf('--scoring', 'half');
+const REPO = argOf('--repo', null);   // when set: also write <repo>/data/matchup_edges_2026.js (main site Start/Sit MATCHUP EDGES)
 
 const MIME = { '.html': 'text/html', '.js': 'application/javascript', '.json': 'application/json', '.css': 'text/css', '.txt': 'text/plain' };
 function serve() {
@@ -70,6 +71,24 @@ function serve() {
     fs.writeFileSync(f1, body); fs.writeFileSync(path.join(OUT_DIR, 'notes_latest.txt'), body);
     console.log(`wrote ${f1} (${body.length} chars, ${info.games} games) + notes_latest.txt` + (errors.length ? ` | page errors: ${errors.slice(0, 2).join(' | ')}` : ''));
     if (!/injury layer/.test(info.status)) console.log('note: injury layer did not arm within 15s (kickoffs fetch) - OUT/docked chips may be missing');
+    if (REPO) {
+      const edges = await page.evaluate(({ week }) => window.SimLabMatchupEdges ? window.SimLabMatchupEdges(week, 'half') : null, { week: info.week });
+      if (edges && edges.rows && edges.rows.length) {
+        const f2 = path.join(REPO, 'data', 'matchup_edges_2026.js');
+        // keep earlier weeks so a published week never loses its board mid-week
+        let prev = {};
+        try { const t = fs.readFileSync(f2, 'utf8'); prev = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)).weeks || {}; } catch (_) {}
+        const keep = {}; Object.keys(prev).map(Number).filter(w => w >= edges.week - 2 && w !== edges.week).forEach(w => { keep[w] = prev[w]; });
+        keep[edges.week] = { generated: edges.generated, scoring: edges.scoring, rows: edges.rows };
+        const out = '// built by sim_lab/export_notes.js --repo (Sim Lab NOTES matchup edges) - Start/Sit page MATCHUP EDGES. % of each player\'s projection;\n'
+          + '// priced = already inside the projection, the rest are matchup reads (context, not added to the number).\n'
+          + 'window.MATCHUP_EDGES_2026 = ' + JSON.stringify({ latest: edges.week, weeks: keep }) + ';\n';
+        let old = ''; try { old = fs.readFileSync(f2, 'utf8'); } catch (_) {}
+        const strip = s => s.replace(/"generated":"[^"]*"/g, '');
+        if (strip(old) !== strip(out)) { fs.writeFileSync(f2, out); console.log(`wrote ${f2} (week ${edges.week}, ${edges.rows.length} players)`); }
+        else console.log('matchup edges unchanged');
+      } else console.log('matchup edges: nothing to write');
+    }
   } finally {
     await browser.close(); srv.close();
   }

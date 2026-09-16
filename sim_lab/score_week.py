@@ -84,13 +84,29 @@ def main():
         c = cons.get(k) or {}
         rows.append({"name": p["name"], "pos": p["pos"], "tm": p["tm"], "opp": p["opp"], "act": act[k],
                      "mean": p["mean"], "js": p.get("jsMean"), "clay": p.get("clayMean"), "prop": p.get("propMean"),
-                     "nc": p.get("ncMean"), "ncSrc": p.get("ncSrc"), "rep": p.get("rep"), "asc": p.get("asc"),
+                     "nc": p.get("ncMean"), "ncSrc": p.get("ncSrc"), "lc": p.get("lcMean"), "rep": p.get("rep"), "asc": p.get("asc"),
                      "p10": p.get("p10"), "p90": p.get("p90"), "propSrc": p.get("propSrc"),
                      "cons": c.get("h"), "espn": (c.get("e") or [None])[0], "cbs": (c.get("c") or [None])[0],
                      "fp": (c.get("f") or [None])[0]})
     print(f"scored: {len(rows)} played (shipped mean >= {a.min_proj}) | DNP/unmatched: {len(dnp)}")
     ncfb = sum(1 for r in rows if r.get("ncSrc") == "clay-fallback")
     print(f"  No-Clay shadow: {len(rows) - ncfb} rows on the player's own 3-yr prior, {ncfb} still on the Clay fallback (no history)")
+    # centered learned shadow: remove the average correction per position this week, keeping only the player-level signal
+    _lcd = {}
+    for r in rows:
+        if isinstance(r.get("lc"), (int, float)):
+            _lcd.setdefault(r["pos"], []).append(r["lc"] - r["mean"])
+    for r in rows:
+        if isinstance(r.get("lc"), (int, float)) and _lcd.get(r["pos"]):
+            r["lcc"] = r["lc"] - sum(_lcd[r["pos"]]) / len(_lcd[r["pos"]])
+    lcr = [r for r in rows if isinstance(r.get("lc"), (int, float))]
+    if lcr:
+        w_ = sum(1 for r in lcr if abs(r["lc"] - r["act"]) < abs(r["mean"] - r["act"]) - 0.1)
+        l_ = sum(1 for r in lcr if abs(r["lc"] - r["act"]) > abs(r["mean"] - r["act"]) + 0.1)
+        print(f"  Learned shadow: {len(lcr)} rows, avg correction {sum(r['lc'] - r['mean'] for r in lcr) / len(lcr):+.2f}, "
+              f"closer than shipped {w_}-{l_} (MAE shipped {sum(abs(r['mean'] - r['act']) for r in lcr) / len(lcr):.2f} vs learned {sum(abs(r['lc'] - r['act']) for r in lcr) / len(lcr):.2f})")
+    else:
+        print("  Learned shadow: no lcMean on this lock (locked before 2026-09-16)")
     for lab, mk in (("REPORTS riser (rep>0)", lambda r: (r.get("rep") or 0) > 0), ("REPORTS faller (rep<0)", lambda r: (r.get("rep") or 0) < 0), ("ASCENDING flag", lambda r: r.get("asc") == 1)):
         sub = [r for r in rows if mk(r) and r.get("mean")]
         if len(sub) >= 5:
@@ -100,7 +116,7 @@ def main():
         else:
             print(f"  shadow {lab}: n={len(sub)} (too few to read)")
 
-    models = [("mean", "SHIPPED mean"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("clay", "Clay stack"), ("prop", "prop-anchored"),
+    models = [("mean", "SHIPPED mean"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("lc", "Learned shadow"), ("lcc", "Learned centered"), ("clay", "Clay stack"), ("prop", "prop-anchored"),
               ("cons", "site consensus"), ("espn", "ESPN"), ("cbs", "CBS"), ("fp", "FantasyPros")]
     print("\n=== ALL positions (same rows for every model where available) ===")
     print(f"  {'model':16s} {'n':>4s} {'MAE':>6s} {'bias':>6s} {'RMSE':>6s}")
@@ -125,7 +141,7 @@ def main():
 
     # head-to-head vs consensus (row-level |err|)
     print("\n=== head-to-head, row-level |error| (wins-losses-ties, tie = within 0.1) ===")
-    for key, lab in (("mean", "SHIPPED"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("clay", "Clay stack")):
+    for key, lab in (("mean", "SHIPPED"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("lc", "Learned shadow"), ("clay", "Clay stack")):
         for okey, olab in (("cons", "consensus"), ("espn", "ESPN")):
             w = l = t = 0
             for r in rows:

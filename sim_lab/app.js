@@ -4471,6 +4471,7 @@
         propSrc: r.propSrc || null,
         luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live) // 'line' = direct anchor, 'rate' = market rate track
         ncMean: r.ncProj != null ? +r.ncProj.toFixed(2) : null, ncSrc: r.ncSrc || null,   // SHADOW: Clay-free base (own 3-yr PPG prior)
+        lcCorr: r.lcCorr != null ? +r.lcCorr.toFixed(2) : null, lcMean: r.lcCorr != null ? +Math.max(0, r.mean + r.lcCorr).toFixed(2) : null,   // SHADOW: learned correction on the hand stack (build_learned_shadow.py)
         rep: (function () { var nf = E.newsFlags(r.player); return nf ? nf.riser - nf.faller : 0; })(),   // SHADOW: beat-report riser minus faller count, last 10 days
         asc: E.ascendingFlag(r.player, wk) ? 1 : 0,   // SHADOW: young + snaps/routes trending up
 

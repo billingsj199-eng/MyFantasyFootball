@@ -972,6 +972,74 @@
     var halfPg = seasonPoints(p, PRESETS.half) / 17;
     return { half: avg / 100 * pace.cur.plays * RB_USAGE.ptsPerSnap, halfPg: halfPg, share: avg, plays: pace.cur.plays, games: wks.length };
   }
+  // LEARNED SHADOW (build_learned_shadow.py, 2026-09-16; Jack: "build the live shadow"). A LightGBM correction on
+  // top of the hand-tuned stack, trained on actual - (rebuilt live layers) over 17,657 player-weeks 2019-25 with only
+  // features the engine computes the same way: LOYO -0.94% (7/7), forward -0.78% (4/5) vs the hand stack
+  // (backtest_learned_combo.py). The history can't replay the prop anchor, so it is SHADOW ONLY: weeklyProjection
+  // returns lcCorr (half-PPR points, availability-scaled) and the lock rows log lcMean = shipped mean + lcCorr for
+  // score_week.py to grade. Half-PPR, QB/RB/WR/TE, week 2+, players with a 2026 game. Kill: window.SIM_LEARNED_SHADOW = false.
+  function lgbTree(n, x) {
+    while (typeof n !== 'number') {
+      var v = x[n[0]], isNan = v == null || v !== v;
+      if (isNan && n[3] !== 2) { v = 0; isNan = false; }
+      if ((n[3] === 1 && Math.abs(v) <= 1e-35) || (n[3] === 2 && isNan)) n = n[2] ? n[4] : n[5];
+      else n = v <= n[1] ? n[4] : n[5];
+    }
+    return n;
+  }
+  function lgbPredict(M, x) {
+    var s = 0;
+    for (var i = 0; i < M.trees.length; i++) s += lgbTree(M.trees[i], x);
+    return s;
+  }
+  var _lcPrac = { src: null, map: null };
+  function learnedShadowCorr(p, wk, sc, slot, o) {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    var M = wnd ? wnd.SIM_LEARNED_SHADOW : null;
+    if (!M || !M.trees || !M.features || sc !== PRESETS.half || !slot) return null;
+    if (p.isDST || ['QB', 'RB', 'WR', 'TE'].indexOf(p.pos) < 0 || !(wk >= 2) || !(o.iA > 0)) return null;
+    var d = jsData(), rec = d.players && d.players[p.norm];
+    if (!rec || !(rec.g >= 1)) return null;
+    var f = {};
+    f.pos_qb = p.pos === 'QB' ? 1 : 0; f.pos_rb = p.pos === 'RB' ? 1 : 0; f.pos_wr = p.pos === 'WR' ? 1 : 0; f.pos_te = p.pos === 'TE' ? 1 : 0;
+    f.wk = wk; f.g = rec.g; f.ppg = rec.ppg; f.clay = o.clayPg;
+    f.blend = jsBasePg(p, sc, o.clayPg); f.veg = o.mult;
+    var fp = d.fpa && d.fpa[slot.opp], lg = d.lgFpa && d.lgFpa[p.pos];
+    f.fpa_mult = 1;
+    if (fp && lg && fp[p.pos] != null && fp._g) f.fpa_mult = 1 + Math.min(1, fp._g / JS_FPA_FULL_TRUST) * JS_FPA_ELASTICITY * (Math.min(1.25, Math.max(0.8, fp[p.pos] / lg)) - 1);
+    f.snapmult = snapMult(p, wk);
+    var sn = wnd.SIM_SNAPS_2026 ? wnd.SIM_SNAPS_2026[p.name] : null, sv = [];
+    if (sn && sn.w) Object.keys(sn.w).map(Number).filter(function (w) { return w < wk; }).sort(function (a, b) { return a - b; }).forEach(function (w) { sv.push(+sn.w[w]); });
+    var mean = function (a) { return a.reduce(function (t, v) { return t + v; }, 0) / a.length; };
+    f.snap_std = sv.length ? mean(sv) : NaN; f.snap_l1 = sv.length ? sv[sv.length - 1] : NaN;
+    f.snap_trend = sv.length >= 3 ? mean(sv.slice(-3)) - f.snap_std : NaN;
+    var lm = (p.pos === 'QB' ? wnd.SIM_QB_TDLUCK_2026 : (p.pos === 'RB' ? wnd.SIM_RB_TDLUCK_2026 : wnd.SIM_REC_TDLUCK_2026)) || null, lr = lm ? lm[p.norm] : null;
+    f.td_luck_pg = lr && lr.g ? (lr.xtd - lr.td) / lr.g : 0;
+    f.td_luck_adj = tdLuckAdj(p, sc);
+    var st = injuryState(), ie = st && st.map ? st.map[p.norm] : null;
+    f.cond_mult = ie && ie.cond != null && wk >= ie.from && wk <= ie.to ? ie.cond : 1;
+    var pr = wnd.SIM_PRACTICE_2026;
+    if (_lcPrac.src !== pr) { _lcPrac.src = pr; _lcPrac.map = {}; if (pr && pr.players) Object.keys(pr.players).forEach(function (nm) { _lcPrac.map[norm(nm)] = pr.players[nm]; }); }
+    var pe = pr && (!pr.week || +pr.week === +wk) ? _lcPrac.map[p.norm] : null;
+    f.rep_q = pe && /questionable/i.test(pe.gs || '') ? 1 : 0;
+    f.prac_dnp = pe && pe.pr === 'DNP' ? 1 : 0; f.prac_lim = pe && pe.pr === 'LP' ? 1 : 0;
+    f.rookie_mult = rookieLevel(p);
+    f.usage_half = o.rbU ? o.rbU.half : NaN;
+    var pace = wnd.SIM_PACE_2026 && wnd.SIM_PACE_2026.teams ? wnd.SIM_PACE_2026.teams[p.tm] : null;
+    f.plays_pg_std = pace && pace.cur && pace.cur.plays > 0 ? pace.cur.plays : NaN;
+    f.weather_mult = weatherMult(p, wk, slot);
+    var wx = wnd.SIM_WEATHER_2026, home = slot.home ? p.tm : slot.opp, wt = wx ? (wx[home] || wx[normTeam(home)]) : null, ww = wt ? (wt[wk] || wt[String(wk)]) : null;
+    f.wind = ww && ww.wind != null ? +ww.wind : 0;
+    f.pool_mult = p.pos !== 'QB' && o.iA > 1 ? o.iA : 1;
+    f.qb_inherit_mult = p.pos === 'QB' && o.iA > 1 ? o.iA : 1;
+    f.implied = slot.implied; f.spread = slot.implied - slot.oppImplied; f.game_total = slot.implied + slot.oppImplied;
+    // the model learned on games PLAYED: condition the hand number on playing, then scale the correction back by P(plays)
+    var iP = o.iA < 1 ? Math.max(0.05, Math.max(o.iA, Math.min(1, injPlay(p, wk)))) : 1;
+    f.HAND = o.jsMean / iP;
+    var x = M.features.map(function (k) { return f[k]; });
+    var corr = (M.k != null ? M.k : 1) * lgbPredict(M, x) * iP;
+    return isFinite(corr) ? corr : null;
+  }
   function jsBasePg(p, sc, clayPg) {
     var d = jsData();
     var rec = d.players && d.players[p.norm];
@@ -1726,6 +1794,8 @@
     // multiply a points term - min(1, iA) keeps Out/Doubtful docks and drops the boost.
     var luckAdj = tdLuckAdj(p, sc) * Math.min(1, iA);
     var jsMean = Math.max(0, jsPg * jsChain + luckAdj);
+    var lcCorr = null;
+    try { lcCorr = learnedShadowCorr(p, wk, sc, slot, { clayPg: clayPg, mult: mult, rbU: rbU, iA: iA, jsMean: jsMean }); } catch (_) { lcCorr = null; }   // SHADOW (learned correction)
     // CLAY-FREE SHADOW BASE (2026-09-15): same blend and chain, but the prior is the
     // player's OWN 3-yr weighted PPG (player_weekly_sigma mean_ppg, half-PPR, rescaled to
     // this sheet by the Clay stat mix) instead of Clay. Graded every Tuesday next to the
@@ -1797,7 +1867,7 @@
         }
       }
     }
-    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc };
+    return { mean: mean, mult: mult, slot: slot, comps: compsWk, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, lcCorr: lcCorr };
   }
 
   // ---------- correlated sampling ----------
@@ -1944,6 +2014,7 @@
         proj: p._wk.mean, jsProj: p._wk.jsMean, propProj: p._wk.propMean != null ? p._wk.propMean : null, propW: p._wk.propW != null ? p._wk.propW : null,
         luck: p._wk.luckAdj != null ? p._wk.luckAdj : 0,   // TD-luck points inside jsProj (live grading: luck_scorecard.py)
         ncProj: p._wk.ncMean != null ? p._wk.ncMean : null, ncSrc: p._wk.ncSrc || null,   // Clay-free shadow base
+        lcCorr: p._wk.lcCorr != null ? p._wk.lcCorr : null,   // learned-correction shadow (half-PPR points)
         propSrc: p._wk.propSrc || null,
         mult: p._wk.mult, slot: p._wk.slot, comps: p._wk.comps,
         p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),
@@ -2759,7 +2830,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, ctxNote: ctxNote,
+    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult,

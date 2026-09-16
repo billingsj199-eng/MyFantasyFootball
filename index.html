@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-16-scatter16" as="script">
+<link rel="preload" href="app.js?v=2026-09-16-scatter17" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1768,7 +1768,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Sim Lab projected fantasy points per game — season boards show the REST-OF-SEASON average (games already played excluded); the WEEKLY board shows this week's sim. Refreshed daily and ~30 min before kickoffs (Vegas lines, matchups, usage, injuries priced in).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="simBoom" id="simBoomHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome this week (1,000 Sim Lab runs). High boom + high bust = wide-range player.">Boom</span> <span class="arrow"></span></th>
 <th data-sort="simBust" id="simBustHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ BELOW his own median sim outcome this week (1,000 Sim Lab runs). Steady floor players run low on both boom and bust.">Bust</span> <span class="arrow"></span></th>
-<th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color = matchup difficulty for this position: green = soft (top 1/3), amber = middle, red = tough (bottom 1/3). Graded on schedule-adjusted fantasy points the opponent allows per game this season (final games only, strength of offenses faced stripped out), blended with Clay&apos;s preseason unit rank as a prior that fades as games accrue (1 gm 33% in-season, 2 gm 50%, 4 gm 67%). Hover the cell for the breakdown. The chip underneath is the game status: kickoff day/time (ET) before the game, LIVE with the clock and points so far while it's on, FINAL with the player's actual points after.">Opp</span> <span class="arrow"></span></th>
+<th data-sort="opp" id="oppHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Opponent this week. @TM = away game, BYE = bye week. Color = matchup difficulty for this position: green = soft (top 1/3), amber = middle, red = tough (bottom 1/3). Graded on schedule-adjusted fantasy points the opponent allows per game this season (final games only, strength of offenses faced stripped out), blended with Clay&apos;s preseason unit rank as a prior that fades out by the opponent&apos;s 8th game (1 gm 35% in-season, 2 gm 50%, 4 gm 71%, 8+ gm 100%). Hover the cell for the breakdown. The chip underneath is the game status: kickoff day/time (ET) before the game, LIVE with the clock and points so far while it's on, FINAL with the player's actual points after.">Opp</span> <span class="arrow"></span></th>
 <th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="oppPpg" id="oppPpgHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Fantasy points the OPPONENT allows per game to this position in 2026 (board scoring, final games only). RB facing CAR = what CAR gives up to RBs per game; D/ST facing TEN = what opposing D/STs have scored against TEN. Green = allows the most (top third, soft matchup), red = allows the least (tough). #n = league rank, 1 = allows the most.">Opp PPG</span> <span class="arrow"></span></th>
@@ -2639,7 +2639,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter16">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter17">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -5593,7 +5593,7 @@ window._ensureResearchData = (function() {
 // season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
 // that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
 // section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-09-16-sit';
+window._ADV_STATS_V = '2026-09-16-ftn';
 window._ensureAdvStats = (function() {
   const cache = {};
   return function _ensureAdvStats(yr, wk) {
@@ -5885,7 +5885,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-16-scatter16"></script>
+<script defer src="app.js?v=2026-09-16-scatter17"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -7521,9 +7521,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // (2026-09-16) In-season it grades the opponent's SCHEDULE-ADJUSTED fantasy
   // points allowed per game to this position (FPA_2026, final games only —
   // see _wkOppPpgTable), blended with Mike Clay's preseason unit rank as a
-  // prior that fades as games accrue: in-season weight = g / (g + 2)
-  // (1 gm 33%, 2 gm 50%, 4 gm 67%, 8 gm 80%). Before any final game it's
-  // Clay only (defRk for skill positions, offRk for D/ST). Blended rank 1 =
+  // prior that fades OUT by game 8 (Jack 2026-09-16): in-season weight =
+  // min(1, sqrt(g / 8)) → 1 gm 35%, 2 gm 50%, 4 gm 71%, 6 gm 87%, 8+ gm 100%.
+  // Before any final game it's Clay only (defRk for skill positions, offRk
+  // for D/ST). Blended rank 1 =
   // softest (allows the most): top third → easy (green), bottom third → hard
   // (red), middle → medium (amber).
   // Kickers get no color — opposing defense quality cuts both ways for FG
@@ -7562,7 +7563,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // Blended table per position: team → grade bundle. Cached alongside the
   // Opp PPG table (same FPA_2026 + scoring-format key) so it rebuilds only
   // when the postgame importer publishes a new week.
-  const _WK_OPP_PRIOR_GAMES = 2;   // Clay prior worth this many games
+  const _WK_OPP_FADE_GAMES = 8;   // Clay prior is gone once the opponent has this many final games
   let _wkOppBlendCache = null;
   function _wkOppBlendTable(pos) {
     const T = _wkOppPpgTable();   // null before any final game
@@ -7584,7 +7585,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const a = A[t];
       const pIn = (a && a.n > 1 && typeof a.adjRank === 'number') ? 1 - (a.adjRank - 1) / (a.n - 1) : null;   // rank 1 = allows most → 1
       const g = a ? a.games : 0;
-      const w = g / (g + _WK_OPP_PRIOR_GAMES);
+      const w = Math.min(1, Math.sqrt(g / _WK_OPP_FADE_GAMES));
       let score;
       if (pIn == null && pClay == null) score = null;
       else if (pIn == null) score = pClay;
@@ -63789,6 +63790,37 @@ function _rsScatter(cfg) {
   );
 
   const VOL = 'Volume';
+  // FTN charting splits (Jack 2026-09-16; nflverse ftn_charting, 2022 on, refreshed in season).
+  // Defined before the tables that concat them (a later const would be a TDZ error).
+  const CHG = 'Charting';
+  const FTN_NOTE = ' FTN charting, 2022 on.';
+  const FTN_COLS = [
+    c('pats', 'PA Tgt%', CHG, 1, 'Share of the team\'s play-action targets in games played (team view: of the team\'s season).' + FTN_NOTE),
+    c('pap', 'PA/Own%', CHG, 1, 'Share of the player\'s own targets that came on play action.' + FTN_NOTE, N),
+    c('r1p', '1st Read%', CHG, 1, 'Share of the player\'s targets (with a charted read) where he was the quarterback\'s first read.' + FTN_NOTE),
+    c('chkp', 'Checkdown%', CHG, 1, 'Share of the player\'s targets (with a charted read) charted as checkdowns.' + FTN_NOTE, N),
+    c('motp', 'Motion%', CHG, 1, 'Share of the player\'s targets with pre-snap motion on the play.' + FTN_NOTE, N),
+    c('rpop', 'RPO%', CHG, 1, 'Share of the player\'s carries + targets on run-pass options.' + FTN_NOTE, N),
+    c('sgcp', 'Shotgun Car%', CHG, 1, 'Share of the player\'s carries with the quarterback in shotgun.' + FTN_NOTE, N),
+    c('boxa', 'Box', CHG, 1, 'Average defenders in the box on the player\'s carries.' + FTN_NOTE, N),
+    c('lbxp', '8+ Box%', CHG, 1, 'Share of the player\'s carries against 8 or more in the box.' + FTN_NOTE, N),
+    c('catp', 'Catchable%', CHG, 1, 'Share of the player\'s targets charted as catchable.' + FTN_NOTE)
+  ];
+  const QB_FTN_COLS = [
+    c('qpar', 'PA%', CHG, 1, 'Share of dropbacks with play action.' + FTN_NOTE, N),
+    c('qiwp', 'INT-Worthy%', CHG, 1, 'Interception-worthy throws per pass attempt.' + FTN_NOTE, LO),
+    c('qcatp', 'Catchable%', CHG, 1, 'Catchable throws per pass attempt, throwaways excluded.' + FTN_NOTE),
+    c('qoop', 'Out of Pocket%', CHG, 1, 'Share of dropbacks where the quarterback left the pocket.' + FTN_NOTE, N),
+    c('qscr', 'Screen%', CHG, 1, 'Screens per pass attempt.' + FTN_NOTE, N)
+  ];
+  const TM_FTN_COLS = [
+    c('par', 'PA%', CHG, 1, 'Share of dropbacks with play action.' + FTN_NOTE, N),
+    c('motr', 'Motion%', CHG, 1, 'Share of plays with pre-snap motion.' + FTN_NOTE, N),
+    c('rpor', 'RPO%', CHG, 1, 'Share of plays that were run-pass options.' + FTN_NOTE, N),
+    c('scrr', 'Screen%', CHG, 1, 'Screens per dropback.' + FTN_NOTE, N),
+    c('boxr', 'Box Faced', CHG, 1, 'Average defenders in the box on designed runs.' + FTN_NOTE, N),
+    c('lbxr', '8+ Box%', CHG, 1, 'Share of designed runs against 8 or more in the box.' + FTN_NOTE, N)
+  ];
   const QB_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     n('fpt', 'FPTS', 'FP/G', VOL, 1, 1, 'Half-PPR fantasy points (nflverse play-by-play; 2-pt conversions not counted)'),
@@ -63826,7 +63858,7 @@ function _rsScatter(cfg) {
     n('ry', 'Rush Yds', 'RuYd/G', 'Rushing', 0, 1, 'Rushing yards'),
     n('rtd', 'Rush TD', 'RuTD/G', 'Rushing', 0, 2, 'Rushing touchdowns'),
     n('scr', 'Scrambles', 'Scr/G', 'Rushing', 0, 1, 'Scrambles (nflverse)', N)
-  ];
+  ].concat(QB_FTN_COLS);
   // Situational usage (RB and WR/TE): opportunity shares from play-by-play for every season;
   // on-field snap shares need nflverse participation, published after each season.
   const SITG = 'Situational';
@@ -63876,7 +63908,7 @@ function _rsScatter(cfg) {
     c('yprr', 'YPRR', 'Receiving', 2, 'Receiving yards per route run'),
     c('recg', 'Route Grd', 'Receiving', 1, 'PFF receiving grade'),
     c('pbg', 'PBlk Grd', 'Receiving', 1, 'PFF pass-blocking grade')
-  ].concat(SIT_COLS);
+  ].concat(SIT_COLS).concat(FTN_COLS);
   const REC_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
@@ -63921,7 +63953,7 @@ function _rsScatter(cfg) {
     c('dyd', 'Deep Yd%', 'Coverage & depth', 1, 'Share of receiving yards on 20+ air-yard targets', N),
     c('dctch', 'Deep Catch%', 'Coverage & depth', 1, 'Catch rate on 20+ air-yard targets'),
     c('blos', 'bLOS Tgt%', 'Coverage & depth', 1, 'Share of targets caught at or behind the line of scrimmage (PFF)', N)
-  ].concat(SIT_COLS);
+  ].concat(SIT_COLS).concat(FTN_COLS);
   const OFF = 'Offense', DEF = 'Defense';
   const TM_COLS = [
     c('g', 'G', VOL, 0, 'Games played', N),
@@ -63965,7 +63997,7 @@ function _rsScatter(cfg) {
     c('dman', 'Man%', DEF, 1, 'Share of opponent receiver routes against man coverage (PFF)', N),
     c('dtdc', '3D Conv%', DEF, 1, 'Third-down conversion rate allowed', LO),
     c('drztd', 'RZ TD%', DEF, 1, 'Opponent red-zone drives ending in a touchdown', LO)
-  ];
+  ].concat(TM_FTN_COLS);
   const COLS = { QB: QB_COLS, RB: RB_COLS, WR: REC_COLS, TE: REC_COLS, TM: TM_COLS };
 
   // --- THIS WEEK group (Jack 2026-09-16: "add the current week projections / betting odds to
@@ -64160,24 +64192,34 @@ function _rsScatter(cfg) {
   const _ADV_AGG = {
     QB: { cmpp: 'att', ypa: 'att', anya: 'att+sk', cpoe: 'cpn', epa: 'dbn', grd: 'db', acc: 'aim', adot: 'att', ttt: 'db',
       deep: 'airn', btt: 'ns', twp: 'psn', tdp: 'att', intp: 'att', prs: 'db', p2s: 'dgp', skp: 'db',
-      cgr: 'cdb', cacc: 'caim', pgr: 'pdb', pacc: 'paim', pypa: 'patt', blz: 'db', bgr: 'bdb', bypa: 'batt' },
+      cgr: 'cdb', cacc: 'caim', pgr: 'pdb', pacc: 'paim', pypa: 'patt', blz: 'db', bgr: 'bdb', bypa: 'batt',
+      qpar: { r: ['fqpa', 'fqdb'], pct: 1 }, qiwp: { r: ['fqiw', 'fqatt'], pct: 1 }, qcatp: { r: ['fqcat', 'fqcd'], pct: 1 },
+      qoop: { r: ['fqoop', 'fqdb'], pct: 1 }, qscr: { r: ['fqscr', 'fqatt'], pct: 1 } },
     RB: { snp: 'tsn', car: 'ttc', tsh: 'tmt', rtp: 'tmd', i10s: 'tmi', ypc: 'att', yco: 'att', mtf: 'att', elu: 'att',
       bay: 'rsy', exp: 'att', fdp: 'pcar', suc: 'pcar', repa: 'pcar', rgr: 'att', gap: 'gz',
       tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl',
       edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
-      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 } },
+      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 },
+      pats: { r: ['fpa', 'tfpa'], pct: 1 }, pap: { r: ['fpa', 'ftg'], pct: 1 }, r1p: { r: ['fr1', 'frd'], pct: 1 }, chkp: { r: ['fchk', 'frd'], pct: 1 },
+      motp: { r: ['fmot', 'ftg'], pct: 1 }, rpop: { r: ['frpo', 'fopp'], pct: 1 }, sgcp: { r: ['fsg', 'fcar'], pct: 1 },
+      boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 } },
     REC: { snp: 'tsn', rtp: 'tmd', tsh: 'tmt', ays: 'tma', wopr: { wopr: 1 }, tprr: 'rts', slot: 'al', wide: 'al', inl: 'al',
       pbr: 'ppl', yprr: 'rts', grd: 'rts', adot: 'tgt', racr: { r: ['pry', 'pay'] }, yac: 'rec', mtfr: 'rec', fdr: 'rts',
       ctch: 'tgt', drp: 'dr', cc: 'ct', ctg: 'tgt', tqbr: 'tgt', epat: 'xt',
       myprr: { sc: 'mr' }, zyprr: { sc: 'zr' }, mtprr: { sc: 'mr' }, ztprr: { sc: 'zr' }, slyprr: { sc: 'slr' },
       scr: 'cbt', deep: 'dbt', dyd: 'dy', dctch: 'dtg', blos: 'dbt',
       edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
-      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 } },
+      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 },
+      pats: { r: ['fpa', 'tfpa'], pct: 1 }, pap: { r: ['fpa', 'ftg'], pct: 1 }, r1p: { r: ['fr1', 'frd'], pct: 1 }, chkp: { r: ['fchk', 'frd'], pct: 1 },
+      motp: { r: ['fmot', 'ftg'], pct: 1 }, rpop: { r: ['frpo', 'fopp'], pct: 1 }, sgcp: { r: ['fsg', 'fcar'], pct: 1 },
+      boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 } },
     TM: { npace: 'pcn', sg: 'pl', nh: 'pl', pr: 'pl', npr: 'npl', edpr: 'edn', proe: 'pon', rroe: 'pon',
       epa: 'pl', dbepa: 'pa', ruepa: 'rua', sr: 'pl', dbsr: 'pa', rusr: 'rua', xpp: 'pa', xrp: 'rua', adot: 'ayn', yac: 'cmp',
       tdc: 'tdn', rztd: 'rzt', tdd: 'drv', skp: 'pa', prsa: 'pdbt', blzf: 'pdbt', ttt: 'tttw', manf: 'mzr',
       depa: 'dpl', ddbepa: 'dpa', druepa: 'drua', dsr: 'dpl', dxp: 'dpl', dskp: 'dpa', dprs: 'dpdbt', dblz: 'dpdbt',
-      dman: 'dmzr', dtdc: 'dtdn', drztd: 'drzt' }
+      dman: 'dmzr', dtdc: 'dtdn', drztd: 'drzt',
+      par: { r: ['fpa', 'fdb'], pct: 1 }, motr: { r: ['fmot', 'fpl'], pct: 1 }, rpor: { r: ['frpo', 'fpl'], pct: 1 }, scrr: { r: ['fscr', 'fdb'], pct: 1 },
+      boxr: { r: ['fbox', 'fbxn'] }, lbxr: { r: ['flbx', 'fbxn'], pct: 1 } }
   };
   // sets = season and / or week datasets in time order (the last one names a player's team);
   // whole seasons combine the same way because the season files carry the same hidden fields
@@ -64186,9 +64228,10 @@ function _rsScatter(cfg) {
     if (!sets.length) return null;
     const last = sets[sets.length - 1];
     const out = { yr: last.yr, thru: last.thru, teams: {} };
+    // team totals grow with the build (situational, play-action ...): add slot by slot
     sets.forEach(s => Object.keys(s.teams || {}).forEach(tm => {
-      const t = out.teams[tm] = out.teams[tm] || [0, 0, 0, 0, 0];
-      s.teams[tm].forEach((v, i) => { t[i] += v || 0; });
+      const t = out.teams[tm] = out.teams[tm] || [];
+      s.teams[tm].forEach((v, i) => { t[i] = (t[i] || 0) + (v || 0); });
     }));
     ['QB', 'RB', 'WR', 'TE', 'TM'].forEach(pos => {
       const spec = _ADV_AGG[pos === 'WR' || pos === 'TE' ? 'REC' : pos];
@@ -64270,7 +64313,9 @@ function _rsScatter(cfg) {
     { k: 'syo', l: 'Short-yardage opp share', d: 0, pct: true },
     { k: 'eds', l: 'Early-down snap % (thru 2025)', d: 0, pct: true },
     { k: 'd3s', l: '3rd-down snap % (thru 2025)', d: 0, pct: true },
-    { k: 'sys', l: 'Short-yardage snap % (thru 2025)', d: 0, pct: true }
+    { k: 'sys', l: 'Short-yardage snap % (thru 2025)', d: 0, pct: true },
+    { k: 'pats', l: 'Play-action target share (2022 on)', d: 0, pct: true },
+    { k: 'r1p', l: '1st-read share of targets (2022 on)', d: 0, pct: true }
   ];
   let _roomMetric = 'tsh', _roomOff = false, _roomSeq = 0;
   try {
@@ -64728,7 +64773,8 @@ function _rsScatter(cfg) {
     const teamTot = _pos !== 'TM' && tm1 && season.teams ? season.teams[tm1] : null;  // [tgt, car, ay, i10, games]
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
     const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3),
-      edo: r => pctOf(r.xed, 5), d3o: r => pctOf(r.xd3, 6), d3lo: r => pctOf(r.xd3l, 7), syo: r => pctOf(r.xsy, 8) };
+      edo: r => pctOf(r.xed, 5), d3o: r => pctOf(r.xd3, 6), d3lo: r => pctOf(r.xd3l, 7), syo: r => pctOf(r.xsy, 8),
+      pats: r => (r.xfpa == null ? null : pctOf(r.xfpa, 9)) };
     const calcs = {};   // computed columns (Usage) read the row's own per-game-played shares
     COLS[_pos].forEach(col => { if (col.calc) calcs[col.k] = col.calc; });
     const val = (r, k) => {
@@ -64783,7 +64829,8 @@ function _rsScatter(cfg) {
       '<th data-k="tm" class="rs-adv-tm' + sortCls('tm') + '">Tm</th>';
     cols.forEach((col, i) => {
       const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)',
-        edo: 'early-down carries + targets', d3o: '3rd-down carries + targets', d3lo: '3rd-and-long (7+) carries + targets', syo: 'short-yardage (3rd/4th and 2 or less) carries + targets' };
+        edo: 'early-down carries + targets', d3o: '3rd-down carries + targets', d3lo: '3rd-and-long (7+) carries + targets', syo: 'short-yardage (3rd/4th and 2 or less) carries + targets',
+        pats: 'play-action targets (FTN charting)' };
       const tip = teamTot && TEAM_TIP[col.k]
         ? 'Share of ' + tm1 + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tm1 + ')'
         : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
@@ -64831,7 +64878,7 @@ function _rsScatter(cfg) {
     if (foot) foot.textContent = NOTES[_pos] + (teamTot
       ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tm1 + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tm1 + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
       : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick one team to see its season split. ') +
-      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
+      'Sources: PFF Premium, nflverse play-by-play + snap counts; Charting columns are FTN charting (2022 on, refreshed in season).' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
       (scope && _yrs.some(y => y < 2026) && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
       (combined ? ' The seasons and weeks you ticked are combined into one sample: counting stats add up and every rate is re-weighted by its own denominator; a player\'s team is his latest.' : '') +
       (!hid[WK] ? ' WEEK ' + _wkNum() + ' columns: Proj = the site\'s Sim Lab export' + ((window.SIM_PROJ_2026 || {}).updated ? ' (' + String(window.SIM_PROJ_2026.updated).slice(0, 16).replace('T', ' ') + ' UTC)' : '') +
@@ -65128,6 +65175,8 @@ function _rsScatter(cfg) {
     { k: 'edo', l: 'Early-down opp share', d: 0, pct: true },
     { k: 'syo', l: 'Short-yardage opp share', d: 0, pct: true },
     { k: 'd3o', l: '3rd-down opp share', d: 0, pct: true },
+    { k: 'pats', l: 'Play-action target share', d: 0, pct: true },
+    { k: 'r1p', l: '1st-read share of targets', d: 0, pct: true },
     { k: 'tgt', l: 'Targets', d: 1 },
     { k: 'att', l: 'Carries (RB)', d: 1 },
     { k: 'xfpt', l: 'Expected points', d: 1 },

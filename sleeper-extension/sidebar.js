@@ -51,6 +51,17 @@
         if (n) console.log('[MFF/Sleeper] live Vegas overlay: ' + n + ' SOS records refreshed'
           + (res.data.generatedAt ? ' (site lines from ' + res.data.generatedAt + ')' : ''));
       });
+    // Fantasy points allowed per defense-week (site postgame importer, FINAL
+    // games only) → schedule-adjusted opponent matchup grade (wkOppInfo).
+    chrome.runtime.sendMessage(
+      { type: 'mffFetch',
+        url: 'https://www.myfantasyfootball.co/data/fpa_2026.json?t=' + Date.now() },
+      (res) => {
+        if (chrome.runtime.lastError || !res || !res.ok || !res.data || !res.data.weeks) return;
+        state.fpa = res.data;
+        _oppGradeCache = null;
+        if (state.appMode === 'season') render();
+      });
     // Site consensus weekly projections (Sleeper h/p/s + ESPN/FP e/f arrays) —
     // reference row in the expanded player profile, never a scoring input.
     chrome.runtime.sendMessage(
@@ -182,6 +193,7 @@
     nflState: null,
     slMeta: {},              // sid -> {n, pos, tm, inj} from Sleeper /players/nfl
     schedule: {},            // TEAM -> wk -> {opp, home, total, implied} from site Vegas lines
+    fpa: null,               // site fpa_2026.json: fantasy pts allowed per defense-week → opp matchup grade
     wkPropsAll: null,        // site weeklyProps: {"1": {name: {UD:{...}, PP:{...}}}}
     seasonStats: null,       // {upToWk, byId: {sid: {ppr, half, std, gp}}} — 2026 actuals
     liveGames: {},           // TEAM -> {st:'pre'|'in'|'post', f, tag, opp, home, pts, oppPts, kick} (ESPN public scoreboard)
@@ -1659,12 +1671,133 @@
   // Matchup info for the current week, colored by Vegas implied total
   // (for DST: the OPPONENT's implied — lower is better). Shared by the
   // sidebar pill and the on-page team decorator.
+  // ---- Opponent matchup grade — mirrors the site's WEEKLY OPP color ----
+  // Grades this week's opponent for the player's position on SCHEDULE-
+  // ADJUSTED fantasy points allowed per game this season (site
+  // fpa_2026.json, FINAL games only; the strength of the offenses faced is
+  // stripped out by an additive defense-effect / offense-effect ridge fit)
+  // blended with Clay's preseason unit rank (sim_pack's
+  // CLAY_TEAM_GRADES_2026) as a prior worth 2 games: 1 gm 33% in-season,
+  // 2 gm 50%, 4 gm 67%, 8 gm 80%. Blended rank 1 = softest; top third easy
+  // (green), bottom third hard (red), middle = tooltip only. D/ST grades the
+  // opposing OFFENSE (offRk + D/ST points allowed). K gets no grade, so
+  // wkOppInfo keeps its Vegas fallback there (and whenever the fetch fails).
+  // Same math as app.js _wkSchedAdjust / _wkOppBlendTable — keep in sync.
+  const OPP_PRIOR_GAMES = 2;
+  const OPP_ABBR_FIX = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
+  let _oppGradeCache = null;
+  function oppSchedAdjust(games, K) {
+    if (!games || !games.length) return null;
+    if (typeof K !== 'number') K = 1;
+    let mu = 0; games.forEach((g) => { mu += g.v; }); mu /= games.length;
+    const dE = {}, oE = {}, dN = {}, oN = {};
+    games.forEach((g) => { dE[g.d] = 0; oE[g.o] = 0; dN[g.d] = (dN[g.d] || 0) + 1; oN[g.o] = (oN[g.o] || 0) + 1; });
+    for (let it = 0; it < 50; it++) {
+      const ds = {}; games.forEach((g) => { ds[g.d] = (ds[g.d] || 0) + (g.v - mu - oE[g.o]); });
+      Object.keys(dE).forEach((t) => { dE[t] = ds[t] / (dN[t] + K); });
+      const os = {}; games.forEach((g) => { os[g.o] = (os[g.o] || 0) + (g.v - mu - dE[g.d]); });
+      Object.keys(oE).forEach((t) => { oE[t] = os[t] / (oN[t] + K); });
+    }
+    return { mu, dE, oE };
+  }
+  function oppFmtSuffix() {
+    const recPts = (state.scoringVals && state.scoringVals.recPts != null) ? state.scoringVals.recPts : 1;
+    return recPts >= 0.75 ? '_ppr' : recPts >= 0.25 ? '' : '_std';
+  }
+  function oppGradeTable(pos) {
+    const FP = state.fpa;
+    const suf = oppFmtSuffix();
+    const src = (FP && FP.weeks) || null;
+    if (!_oppGradeCache || _oppGradeCache.src !== src || _oppGradeCache.suf !== suf) _oppGradeCache = { src, suf, pos: {} };
+    if (_oppGradeCache.pos[pos]) return _oppGradeCache.pos[pos];
+    // 1) raw + schedule-adjusted points allowed per game to this position
+    const acc = {}, games = [];
+    if (src) Object.keys(src).forEach((wk) => {
+      const teams = src[wk];
+      Object.keys(teams).forEach((team) => {
+        const rec = teams[team];
+        const key = (pos === 'K' || pos === 'DST') ? pos : (typeof rec[pos + suf] === 'number' ? pos + suf : pos);
+        const v = rec[key];
+        if (typeof v !== 'number') return;
+        const t = acc[team] || (acc[team] = { pts: 0, g: 0 });
+        t.pts += v; t.g++;
+        let o = rec.opp ? String(rec.opp).toUpperCase() : null;
+        if (o) { o = OPP_ABBR_FIX[o] || o; games.push({ d: team, o, v }); }
+      });
+    });
+    const A = {};
+    const rows = Object.keys(acc).map((team) => ({ team, v: acc[team].pts / acc[team].g, g: acc[team].g }));
+    rows.sort((a, b) => b.v - a.v);
+    rows.forEach((r, i) => { A[r.team] = { v: Math.round(r.v * 10) / 10, rank: i + 1, n: rows.length, games: r.g }; });
+    const S = oppSchedAdjust(games, 1);
+    if (S) {
+      const adj = rows.map((r) => ({ team: r.team, v: S.mu + (S.dE[r.team] || 0) }));
+      adj.sort((a, b) => b.v - a.v);
+      adj.forEach((r, i) => { A[r.team].adjV = Math.round(r.v * 10) / 10; A[r.team].adjRank = i + 1; });
+    }
+    // 2) blend with Clay's preseason rank (prior worth OPP_PRIOR_GAMES games)
+    const CG = (typeof window !== 'undefined' && window.CLAY_TEAM_GRADES_2026) || {};
+    const teams = {};
+    Object.keys(CG).forEach((t) => { teams[t] = 1; });
+    Object.keys(A).forEach((t) => { teams[t] = 1; });
+    const list = Object.keys(teams).map((t) => {
+      const cg = CG[t];
+      const clayRk = cg ? (pos === 'DST' ? cg.offRk : cg.defRk) : null;
+      const pClay = typeof clayRk === 'number' ? (clayRk - 1) / 31 : null;   // 1 = toughest → 0
+      const a = A[t];
+      const pIn = (a && a.n > 1 && typeof a.adjRank === 'number') ? 1 - (a.adjRank - 1) / (a.n - 1) : null;   // rank 1 = allows most → 1
+      const g = a ? a.games : 0;
+      const w = g / (g + OPP_PRIOR_GAMES);
+      let score = null;
+      if (pIn == null && pClay == null) score = null;
+      else if (pIn == null) score = pClay;
+      else if (pClay == null) score = pIn;
+      else score = w * pIn + (1 - w) * pClay;
+      return { team: t, score, clayRk, games: g, w: pIn == null ? 0 : w,
+        raw: a ? { v: a.v, rank: a.rank } : null,
+        adj: (a && typeof a.adjRank === 'number') ? { v: a.adjV, rank: a.adjRank } : null };
+    }).filter((r) => r.score != null);
+    list.sort((a, b) => b.score - a.score);
+    const n = list.length, third = n / 3;
+    const out = {};
+    list.forEach((r, i) => {
+      const rank = i + 1;
+      out[r.team] = { diff: rank <= third ? 'easy' : rank > 2 * third ? 'hard' : 'medium', rank, n,
+        games: r.games, w: r.w, clayRk: r.clayRk, raw: r.raw, adj: r.adj };
+    });
+    _oppGradeCache.pos[pos] = out;
+    return out;
+  }
+  function oppGradeFor(opp, pos) {
+    if (!opp || !pos || pos === 'K') return null;
+    let o = String(opp).replace(/^@/, '').toUpperCase();
+    o = OPP_ABBR_FIX[o] || o;
+    const T = oppGradeTable(pos);
+    return T[o] ? Object.assign({ opp: o }, T[o]) : null;
+  }
+  function oppGradeNote(m, pos) {
+    if (!m) return '';
+    const lbl = m.diff === 'hard' ? 'Tough' : m.diff === 'easy' ? 'Soft' : 'Average';
+    const posLbl = pos === 'DST' ? 'D/STs' : pos + 's';
+    let s = lbl + ' matchup for ' + posLbl + ' (#' + m.rank + ' of ' + m.n + ', 1 = softest)';
+    if (m.adj) s += ' — allows ' + m.raw.v + ' pts/gm (#' + m.raw.rank + ' raw, #' + m.adj.rank + ' schedule-adjusted, ' + m.games + ' gm)';
+    if (typeof m.clayRk === 'number') s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
+    s += m.adj ? ' · in-season weight ' + Math.round(m.w * 100) + '%' : ' · preseason only until final games post';
+    return s;
+  }
   function wkOppInfo(p) {
     const g = p.sTm && state.schedule[p.sTm] && state.schedule[p.sTm][state.seasonWeek];
     if (!g) return null;
     let val = g.implied, good, bad;
-    if (p.s === 'DST') {
-      val = (g.total != null && g.implied != null) ? Math.round((g.total - g.implied) * 10) / 10 : null;
+    if (p.s === 'DST') val = (g.total != null && g.implied != null) ? Math.round((g.total - g.implied) * 10) / 10 : null;
+    // Site-style matchup grade first (schedule-adjusted pts allowed + fading
+    // Clay prior, see oppGradeTable); Vegas implied-total thresholds only
+    // when there's no grade (K, or the fpa_2026.json fetch hasn't landed).
+    const m = oppGradeFor(g.opp, p.s);
+    if (m) {
+      good = m.diff === 'easy';
+      bad = m.diff === 'hard';
+    } else if (p.s === 'DST') {
       good = val != null && val <= 20.5;
       bad = val != null && val >= 25.5;
     } else {
@@ -1678,7 +1811,8 @@
       tip: 'Wk ' + state.seasonWeek + ' ' + txt +
         (g.total != null ? ' · O/U ' + g.total : '') +
         (g.implied != null ? ' · implied ' + g.implied : '') +
-        (p.s === 'DST' && val != null ? ' · opp implied ' + val : ''),
+        (p.s === 'DST' && val != null ? ' · opp implied ' + val : '') +
+        (m ? ' — ' + oppGradeNote(m, p.s) : ''),
     };
   }
   function wkOppHTML(p) {
@@ -2082,7 +2216,7 @@
   // START/SIT verdicts — those stay on the pregame projection.
   const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
   const ESPN_TEAM_FIX = { WSH: 'WAS', JAC: 'JAX', LA: 'LAR', OAK: 'LV', SD: 'LAC' };
-  // WEEK PIN (0.29.33, Jack 09-15: "showing week 1 scores for week 2"). Without
+  // WEEK PIN (0.29.34, Jack 09-15: "showing week 1 scores for week 2"). Without
   // a week the scoreboard returns ESPN's OWN current week, which stays on the
   // finished week through Tuesday/Wednesday — every game came back FINAL and
   // last week's totals rendered as this week's "final". Ask for the fantasy
@@ -5937,6 +6071,7 @@
       window.BETTING_2026 = MOCK.vegas; // season-sim engine reads gameTotals here
       buildSchedule(MOCK.vegas.gameTotals);
       state.wkPropsAll = MOCK.vegas.weeklyProps || null;
+      if (MOCK.fpa) state.fpa = MOCK.fpa; // harness stand-in for fpa_2026.json (opp matchup grade)
     }
     if (MOCK && MOCK.simProj) { // harness stand-in for the sim_proj_2026.json fetch
       state.simProj = MOCK.simProj;

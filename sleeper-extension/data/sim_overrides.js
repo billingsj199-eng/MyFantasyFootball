@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/overrides.js (synced 2026-09-01 07:45:38 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/overrides.js (synced 2026-09-16 10:04:23 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // MANUAL OVERRIDES — edit this file as camp/season news breaks, then reload.
 //
@@ -33,7 +33,24 @@ window.INJURY_WINDOW_OVERRIDES = {
 //   'Puka Nacua': [5, 6],     // "out ~2 weeks" — weeks 5-6 zeroed
 //   'Bijan Robinson': 0,      // tag is stale — confirmed playing
 window.IN_SEASON_OUT_OVERRIDES = {
+  'Brock Bowers': [1, 1],   // 2026-09-09: ruled out for Week 1 (Jack)
 };
+
+// ELITE_CBS_2026: the shadow-corner list (backtest_cb_shadow.py — an elite
+// CB on the field is worth ~6% of an opposing-WR week, and the FPA layer
+// doesn't catch it). Opposing WRs get a flat ×0.96 while the listed CB's
+// team defense has him available. Names must match SLEEPER full names
+// (refresh_data.py resolves team + weekly injury status from the Sleeper
+// dump into SIM_CB_STATUS — a CB who is Out/Doubtful/IR docks nothing).
+// Edit as reputations change; kill switch: window.SIM_CB_DOCK = false.
+window.ELITE_CBS_2026 = [
+  'Pat Surtain',        // DEN
+  'Derek Stingley',     // HOU
+  'Sauce Gardner',      // IND (traded from NYJ Nov 2025)
+  'Christian Gonzalez', // NE
+  'Quinyon Mitchell',   // PHI
+  'Jaylon Johnson',     // CHI
+];
 
 // PROP_ANCHOR_OVERRIDES: per-player prop-anchor weight (PROP_ANCHOR_SPEC.md).
 // 0 = don't anchor this player this week (his lines are stale — late scratch,

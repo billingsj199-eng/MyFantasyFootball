@@ -63137,7 +63137,12 @@ Rules:
     { k: 'w_book', l: 'Book', d: 1, wk: true, pts: true, t: 'This week\'s sportsbook props scored as fantasy points (DK / FD / MGM / UD / PP average, TDs from the anytime odds)' },
     { k: 'w_edge', l: 'Site-Book', d: 1, wk: true, pts: true, t: 'Site projection minus book: positive = the site is higher on the player than the sportsbooks' },
     { k: 'w_tt', l: 'Team total', d: 1, wk: true, t: 'Points the player\'s current team is expected to score this week (DK line)' },
-    { k: 'w_spread', l: 'Spread', d: 1, wk: true, lo: true, t: 'This week\'s DK spread from the current team\'s side: negative = favored' }
+    { k: 'w_spread', l: 'Spread', d: 1, wk: true, lo: true, t: 'This week\'s DK spread from the current team\'s side: negative = favored' },
+    { k: 'w_opp', l: 'Opp', wk: true, num: false, t: 'This week\'s opponent of the player\'s current team (@ = on the road)' },
+    { k: 'w_ott', l: 'Opp total', d: 1, wk: true, t: 'Points the opponent is expected to score this week: game total minus the team\'s implied total (DK line)' },
+    { k: 'w_oproj', l: 'Opp proj', d: 1, wk: true, pts: true, t: 'Sum of this week\'s site projections for the opponent\'s QB / RB / WR / TE' },
+    { k: 'w_obook', l: 'Opp book', d: 1, wk: true, pts: true, t: 'Sum of this week\'s sportsbook projections for the opponent\'s skill players with posted props' },
+    { k: 'w_ogap', l: 'Opp Site-Book', d: 1, wk: true, pts: true, t: 'Opponent offense gap: site minus book over the opponent\'s players who have both' }
   ];
   function _exWkOn() { return !!(window._rsWeek && (window.SIM_PROJ_2026 || window.BETTING_2026)); }
   function _exWkLabel(col) { return col.wk ? col.l + ' (Wk ' + window._rsWeek.num() + (col.pts ? ', ' + window._rsWeek.fmt() : '') + ')' : col.l; }
@@ -63149,6 +63154,7 @@ Rules:
       let w = cache.get(r.name);
       if (!w) { w = window._rsWeek.player(r.name, r.pos); cache.set(r.name, w); }
       r.w_proj = w.proj; r.w_book = w.book; r.w_edge = w.gap; r.w_tt = w.tt; r.w_spread = w.spread; r.w_tm = w.tm;
+      r.w_opp = w.opp; r.w_ott = w.ott; r.w_oproj = w.oproj; r.w_obook = w.obook; r.w_ogap = w.ogap;
     });
   }
   function _exFilters() {
@@ -63162,7 +63168,7 @@ Rules:
     return _rsScatter({
       pfx: 'rsExSc', host: 'rsExScatter', btn: 'rsExPlot', store: 'rsExScatter',
       group: () => 'ex',
-      cols: () => (_exWkOn() ? EX_COLS.concat(EX_WK) : EX_COLS),
+      cols: () => (_exWkOn() ? EX_COLS.concat(EX_WK.filter(c => c.num !== false)) : EX_COLS),
       defaults: () => ['pAdp', 'fin'],
       data: () => (_exLast && _exLast.rows.length ? { rows: _exLast.rows, pg: false, val: (r, col) => r[col.k] } : null),
       label: _exWkLabel,
@@ -63235,11 +63241,12 @@ Rules:
         (round === 'd3' && r.round === 4) || (round === 'udfa' && r.round === 0)));
     _exStampWeek(rows);
     const wkOn = _exWkOn();
-    const col = _COLS.find(c => c.k === _sortKey) || (wkOn && EX_WK.find(c => c.k === _sortKey) && { k: _sortKey, num: true }) || _COLS[4];
+    const wkCol = wkOn ? EX_WK.find(c => c.k === _sortKey) : null;
+    const col = _COLS.find(c => c.k === _sortKey) || (wkCol && { k: _sortKey, num: wkCol.num !== false }) || _COLS[4];
     rows.sort((a, b) => {
       let av = a[col.k], bv = b[col.k];
-      if (av == null) return 1;
-      if (bv == null) return -1;
+      if (av == null || av === '') return 1;   // blanks (retired players, no game) sort last either way
+      if (bv == null || bv === '') return -1;
       if (!col.num) { av = String(av); bv = String(bv); return _sortAsc ? av.localeCompare(bv) : bv.localeCompare(av); }
       return _sortAsc ? av - bv : bv - av;
     });
@@ -63256,7 +63263,9 @@ Rules:
     const n1 = v => (v == null ? '' : Number(v).toFixed(1));
     const wkCells = r => '<td>' + n1(r.w_proj) + '</td><td>' + n1(r.w_book) + '</td>' +
       '<td class="' + (r.w_edge == null ? '' : r.w_edge >= 0.05 ? 'rs-pos-val' : r.w_edge <= -0.05 ? 'rs-neg-val' : '') + '">' + (r.w_edge == null ? '' : (r.w_edge > 0 ? '+' : '') + r.w_edge.toFixed(1)) + '</td>' +
-      '<td>' + n1(r.w_tt) + '</td><td>' + (r.w_spread == null ? '' : (r.w_spread > 0 ? '+' : '') + r.w_spread.toFixed(1)) + '</td>';
+      '<td>' + n1(r.w_tt) + '</td><td>' + (r.w_spread == null ? '' : (r.w_spread > 0 ? '+' : '') + r.w_spread.toFixed(1)) + '</td>' +
+      '<td>' + _esc(r.w_opp || '') + '</td><td>' + n1(r.w_ott) + '</td><td>' + n1(r.w_oproj) + '</td><td>' + n1(r.w_obook) + '</td>' +
+      '<td class="' + (r.w_ogap == null ? '' : r.w_ogap >= 0.05 ? 'rs-pos-val' : r.w_ogap <= -0.05 ? 'rs-neg-val' : '') + '">' + (r.w_ogap == null ? '' : (r.w_ogap > 0 ? '+' : '') + r.w_ogap.toFixed(1)) + '</td>';
     rows.forEach(r => {
       html += '<tr data-name="' + _esc(r.name) + '"><td class="rs-name">' + _esc(r.name) + '</td><td>' + _esc(r.pos) + '</td><td>' + r.yr + '</td><td>' + _esc(r.tm || '') + '</td>' +
         '<td>' + (r.f != null ? r.f + ' <span class="rs-fmt">' + (_FMT[r.fm] || '') + '</span>' : '') + '</td>' +
@@ -63277,7 +63286,7 @@ Rules:
           else {
             _sortKey = k;
             // sensible default direction: production columns start descending
-            _sortAsc = !(k === 'fpts' || k === 'ppg' || k === 'gp' || k === 'val' || k === 'w_proj' || k === 'w_book' || k === 'w_edge' || k === 'w_tt');
+            _sortAsc = !(k === 'fpts' || k === 'ppg' || k === 'gp' || k === 'val' || k === 'w_proj' || k === 'w_book' || k === 'w_edge' || k === 'w_tt' || k === 'w_ott' || k === 'w_oproj' || k === 'w_obook' || k === 'w_ogap');
           }
           _renderExplorer();
           return;
@@ -64172,8 +64181,9 @@ function _rsScatter(cfg) {
       if (d) tm = TEAM_ABBR_MAP[d.t] || null;
     }
     const r = { n: name, tm: tm || '' };
-    const pr = _wkProj(r), bk = _wkBook(r, pos), g = _wkGame(tm);
-    return { tm: tm || '', proj: pr, book: bk, gap: pr != null && bk != null ? pr - bk : null, tt: g ? g.implied : null, spread: g ? g.spread : null, gt: g ? g.total : null };
+    const pr = _wkProj(r), bk = _wkBook(r, pos), g = _wkGame(tm), O = g ? _wkTeam(g.opp) : null;
+    return { tm: tm || '', proj: pr, book: bk, gap: pr != null && bk != null ? pr - bk : null, tt: g ? g.implied : null, spread: g ? g.spread : null, gt: g ? g.total : null,
+      opp: g ? (g.home ? '' : '@') + g.opp : '', ott: g ? g.total - g.implied : null, oproj: O ? O.proj : null, obook: O ? O.book : null, ogap: O ? O.gap : null };
   }
   window._rsWeek = { num: _wkNum, game: _wkGame, team: _wkTeam, player: _wkPlayer, fmt: () => FMT_NAME[_fmt] };   // Coach Profiles / Season Explorer read this week's numbers through here
   const NOTES = {

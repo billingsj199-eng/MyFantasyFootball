@@ -63849,6 +63849,137 @@ function _rsScatter(cfg) {
     c('drztd', 'RZ TD%', DEF, 1, 'Opponent red-zone drives ending in a touchdown', LO)
   ];
   const COLS = { QB: QB_COLS, RB: RB_COLS, WR: REC_COLS, TE: REC_COLS, TM: TM_COLS };
+
+  // --- THIS WEEK group (Jack 2026-09-16: "add the current week projections / betting odds to
+  // the research where I can also make charts ... what players the betting lines or we are
+  // higher / lower on ... team total vs projected betting line fp for RBs") ---
+  // Computed columns on the 2026 rows, matched by name: the site's Sim Lab projection, the
+  // sportsbook props scored as fantasy points, their gap, the outside consensus and its
+  // sources, anytime-TD odds, DK game lines (team total / spread / game total), sim boom /
+  // bust. The week is the Sim Lab export's current week; seasons other than 2026 read blank.
+  // Every column is a calc, so the table, CSV and the scatter pickers all see it.
+  const WK = 'This week';
+  const FMT_I = { half: 0, ppr: 1, std: 2 };
+  function _wkNum() {
+    const S = window.SIM_PROJ_2026;
+    return (S && S.currentWeek) || window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+  }
+  function _wkOn() { return _yrs.indexOf(2026) >= 0; }
+  // name lookup with a suffix-insensitive fallback, one index per source object
+  const _wkNormIdx = new WeakMap();
+  function _wkNorm(x) { return String(x || '').toLowerCase().replace(/\b(jr|sr|ii|iii|iv)\b/g, '').replace(/[^a-z]/g, ''); }
+  function _wkFind(obj, name) {
+    if (!obj || typeof obj !== 'object') return null;
+    if (obj[name] != null) return obj[name];
+    let m = _wkNormIdx.get(obj);
+    if (!m) {
+      m = new Map();
+      Object.keys(obj).forEach(k => { const nk = _wkNorm(k); if (!m.has(nk)) m.set(nk, k); });
+      _wkNormIdx.set(obj, m);
+    }
+    const k = m.get(_wkNorm(name));
+    return k != null ? obj[k] : null;
+  }
+  function _wkSim(r) {
+    const S = window.SIM_PROJ_2026;
+    if (!S || !S.weeks) return null;
+    const v = _wkFind(S.weeks[_wkNum()] || S.weeks[String(_wkNum())], r.n);
+    return Array.isArray(v) ? v : null;
+  }
+  function _wkProj(r) { const v = _wkSim(r); return v && typeof v[FMT_I[_fmt]] === 'number' && (v[0] || v[1] || v[2]) ? v[FMT_I[_fmt]] : null; }
+  // this week's props averaged per stat across DK / FD / MGM / UD / PP; anytime-TD odds become
+  // an implied probability (tdp) the way the rankings Book PPG does it
+  function _wkLines(r) {
+    const B = window.BETTING_2026;
+    const board = B && B.weeklyProps && (B.weeklyProps[_wkNum()] || B.weeklyProps[String(_wkNum())]);
+    const rec = _wkFind(board, r.n);
+    if (!rec) return null;
+    const stats = {}, ps = [];
+    Object.keys(rec).forEach(book => {
+      const L = rec[book];
+      if (book === 'asOf' || !L || typeof L !== 'object') return;
+      Object.keys(L).forEach(st => {
+        if (typeof L[st] !== 'number') return;
+        if (st === 'atd') { ps.push(L[st] < 0 ? -L[st] / (-L[st] + 100) : 100 / (L[st] + 100)); return; }
+        (stats[st] = stats[st] || []).push(L[st]);
+      });
+    });
+    const avg = {};
+    Object.keys(stats).forEach(st => { avg[st] = stats[st].reduce((a, b) => a + b, 0) / stats[st].length; });
+    if (ps.length) avg.tdp = ps.reduce((a, b) => a + b, 0) / ps.length;
+    return avg;
+  }
+  function _wkBook(r) {
+    const st = _wkLines(r);
+    if (!st) return null;
+    const py = st.py || 0, ry = st.ry || 0, rcy = st.rcy || 0;
+    if (!py && !ry && !rcy) return null;
+    let fp = py / 25 + ry / 10 + rcy / 10;
+    if (st.ptd != null) fp += st.ptd * 4;
+    if (st.int != null) fp -= st.int * 2;
+    if (st.rec != null) fp += st.rec * (_fmt === 'ppr' ? 1 : _fmt === 'std' ? 0 : 0.5);
+    if (st.tdp != null) fp += 6 * st.tdp;
+    else if (_pos !== 'QB' && st.rrtd != null) fp += st.rrtd * 6;
+    return fp;
+  }
+  // outside weekly projections (data/weekly_projections.js): Sleeper h/p/s, ESPN e, FantasyPros f, CBS c
+  function _wkSrc(r, key) {
+    const P = window.WEEKLY_PROJ;
+    if (!P || !P.players || +P.week !== +_wkNum()) return null;
+    const row = _wkFind(P.players, r.n);
+    if (!row) return null;
+    const i = FMT_I[_fmt];
+    if (key === 'slp') { const v = row[['h', 'p', 's'][i]]; return typeof v === 'number' ? v : null; }
+    const a = row[key];
+    return Array.isArray(a) && typeof a[i] === 'number' ? a[i] : null;
+  }
+  function _wkCons(r) {
+    const v = ['slp', 'e', 'f', 'c'].map(k => _wkSrc(r, k)).filter(x => x != null);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  }
+  // DK game lines for the week: team -> { opp, home, total, spread (from the team's side), implied }
+  let _wkGames = { wk: 0, map: null };
+  function _wkGame(tm) {
+    const wk = _wkNum(), B = window.BETTING_2026;
+    if (!tm || !B || !B.gameTotals) return null;
+    if (_wkGames.wk !== wk || !_wkGames.map) {
+      const map = {}, pre = 'W' + wk + '_';
+      Object.keys(B.gameTotals).forEach(k => {
+        if (k.indexOf(pre) !== 0) return;
+        const g = B.gameTotals[k], p = k.slice(pre.length).split('_');
+        if (p.length !== 2 || typeof g.total !== 'number' || typeof g.spread !== 'number') return;
+        map[p[1]] = { opp: p[0], home: true, total: g.total, spread: g.spread, implied: (g.total - g.spread) / 2 };
+        map[p[0]] = { opp: p[1], home: false, total: g.total, spread: -g.spread, implied: (g.total + g.spread) / 2 };
+      });
+      _wkGames = { wk: wk, map: map };
+    }
+    return _wkGames.map[tm] || null;
+  }
+  function wc(k, l, d, t, fn, o) { return Object.assign({ k: k, l: l, g: WK, d: d, t: t, calc: r => (_wkOn() ? fn(r) : null) }, o || {}); }
+  const WK_GAME = [
+    wc('w_tt', 'Team total', 1, 'Points the team is expected to score this week: (game total - team spread) / 2 from the DK line', r => { const g = _wkGame(r.tm); return g ? g.implied : null; }),
+    wc('w_spread', 'Spread', 1, 'This week\'s DK spread from the team\'s side: negative = favored', r => { const g = _wkGame(r.tm); return g ? g.spread : null; }, LO),
+    wc('w_gt', 'Game total', 1, 'This week\'s DK over / under', r => { const g = _wkGame(r.tm); return g ? g.total : null; })
+  ];
+  const WK_PLAYER = [
+    wc('w_proj', 'Proj', 1, 'This week\'s site projection (Sim Lab export, mean) in the scoring toggle\'s format', _wkProj),
+    wc('w_book', 'Book', 1, 'This week\'s sportsbook props scored as fantasy points: yards, pass TDs, INTs and receptions at the book average (DK / FD / MGM / UD / PP), rush + rec TDs from the anytime-TD odds', _wkBook),
+    wc('w_edge', 'Site-Book', 1, 'Site projection minus the book projection: positive = the site is higher on the player than the sportsbooks', r => { const a = _wkProj(r), b = _wkBook(r); return a != null && b != null ? a - b : null; }),
+    wc('w_cons', 'Consensus', 1, 'Mean of the outside weekly projections the site tracks: Sleeper, ESPN, FantasyPros, CBS', _wkCons),
+    wc('w_slp', 'Sleeper', 1, 'Sleeper weekly projection', r => _wkSrc(r, 'slp')),
+    wc('w_espn', 'ESPN', 1, 'ESPN weekly projection', r => _wkSrc(r, 'e')),
+    wc('w_fp', 'FantasyPros', 1, 'FantasyPros weekly projection (rank-to-points)', r => _wkSrc(r, 'f')),
+    wc('w_cbs', 'CBS', 1, 'CBS weekly projection', r => _wkSrc(r, 'c')),
+    wc('w_tdp', 'TD%', 0, 'Anytime-TD probability implied by the sportsbook odds (average across books)', r => { const st = _wkLines(r); return st && st.tdp != null ? 100 * st.tdp : null; })
+  ].concat(WK_GAME, [
+    wc('w_boom', 'Boom%', 0, 'Sim Lab: chance of at least 1.5x the player\'s own median this week', r => { const v = _wkSim(r); return v && typeof v[3] === 'number' ? v[3] : null; }),
+    wc('w_bust', 'Bust%', 0, 'Sim Lab: chance of at most half the player\'s own median this week', r => { const v = _wkSim(r); return v && typeof v[4] === 'number' ? v[4] : null; }, LO)
+  ]);
+  QB_COLS.push.apply(QB_COLS, WK_PLAYER);
+  RB_COLS.push.apply(RB_COLS, WK_PLAYER);
+  REC_COLS.push.apply(REC_COLS, WK_PLAYER);
+  TM_COLS.push.apply(TM_COLS, WK_GAME);
+  const WK_FMT_KEYS = ['w_proj', 'w_book', 'w_edge', 'w_cons', 'w_slp', 'w_espn', 'w_fp', 'w_cbs'];
   const NOTES = {
     QB: 'Clean / pressured / blitz splits and grades are PFF (weekly grades weighted by dropbacks). CPOE and EPA are nflverse.',
     RB: 'Rush efficiency is PFF charting except 1D%, Success% and EPA (nflverse). Grades 2019-2025 are PFF season grades; 2026 weights weekly grades by attempts.',
@@ -64147,6 +64278,7 @@ function _rsScatter(cfg) {
   function _scLabel(col, pg) {
     const l = pg && col.cnt ? col.lg : col.l;
     if (col.g === 'Board') return l + ' (' + MODE_LABEL[_scMode()] + ')';
+    if (col.g === WK) return l + ' (Wk ' + _wkNum() + (WK_FMT_KEYS.indexOf(col.k) >= 0 ? ', ' + FMT_NAME[_fmt] : '') + ')';
     return (col.k === 'fpt' || col.k === 'xfpt') && _pos !== 'TM' ? l + ' (' + FMT_NAME[_fmt] + ')' : l;
   }
   function _scShort(r) {
@@ -64398,7 +64530,7 @@ function _rsScatter(cfg) {
     for (let i = 0; i < cols.length;) {
       let j = i;
       while (j < cols.length && cols[j].g === cols[i].g) j++;
-      html += '<th colspan="' + (j - i) + '">' + _esc(cols[i].g) + '</th>';
+      html += '<th colspan="' + (j - i) + '">' + _esc(cols[i].g === WK ? 'Week ' + _wkNum() : cols[i].g) + '</th>';
       i = j;
     }
     html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">' + (_pos === 'TM' ? 'Team' : 'Player') + '</th>' +
@@ -64453,7 +64585,9 @@ function _rsScatter(cfg) {
       : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick one team to see its season split. ') +
       'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
       (scope && _yrs.some(y => y < 2026) && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
-      (combined ? ' The seasons and weeks you ticked are combined into one sample: counting stats add up and every rate is re-weighted by its own denominator; a player\'s team is his latest.' : '');
+      (combined ? ' The seasons and weeks you ticked are combined into one sample: counting stats add up and every rate is re-weighted by its own denominator; a player\'s team is his latest.' : '') +
+      (!hid[WK] ? ' WEEK ' + _wkNum() + ' columns: Proj = the site\'s Sim Lab export' + ((window.SIM_PROJ_2026 || {}).updated ? ' (' + String(window.SIM_PROJ_2026.updated).slice(0, 16).replace('T', ' ') + ' UTC)' : '') +
+        ', Book = DK / FD / MGM / UD / PP props scored as fantasy points (TDs from the anytime odds), Consensus = Sleeper / ESPN / FantasyPros / CBS mean, team total / spread / game total = DK lines; blank unless 2026 is a picked season.' : '');
   }
 
   // week options = every week any picked season lists in its `wks`

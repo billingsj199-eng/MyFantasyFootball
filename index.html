@@ -4373,12 +4373,12 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-09-15" defer></script>
 <script src="data/d.js?v=2026-09-15" defer></script>
-<script src="data/injury_updates.js?v=2026-09-15-10" defer></script>
+<script src="data/injury_updates.js?v=2026-09-16-07" defer></script>
 <script src="data/weekly_projections.js?v=2026-09-15" defer></script>
-<script src="data/weather_2026.js?v=2026-09-15-10" defer></script>
+<script src="data/weather_2026.js?v=2026-09-16-07" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
-<script src="data/player_roles_2026.js?v=2026-09-15-0848" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-09-15-16" defer></script>
+<script src="data/player_roles_2026.js?v=2026-09-16-0738" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-09-16-07" defer></script>
 <script src="data/site_projections.js?v=2026-09-15b" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
@@ -4432,7 +4432,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/kicker_weekly.js?v=2026-09-15" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
-<script src="data/player_weekly_sigma.js?v=2026-09-15" defer></script>
+<script src="data/player_weekly_sigma.js?v=2026-09-16" defer></script>
 <!-- injury_history.js tag removed 2026-07-23: its only consumer was the JS Model
      engine, which moved to the standalone js_model_site project. The data file
      stays in data/ — the standalone site loads it via a relative path. -->
@@ -4441,7 +4441,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-09-15c" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-09-16" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-09-03" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
 <script>
@@ -5560,7 +5560,7 @@ window._ensureAdvStats = (function() {
 // Research page Coach Profiles: data/coach_profiles.js (window.COACH_PROFILES, one row per
 // team-season, scripts/build_coach_profiles.py), loaded when the section opens.
 // route_pct_daily.ps1 bumps _COACH_V.
-window._COACH_V = '2026-09-15b';
+window._COACH_V = '2026-09-16-0738';
 window._ensureCoachProfiles = (function() {
   let promise = null;
   return function _ensureCoachProfiles() {
@@ -5605,7 +5605,7 @@ window._ensureCardExtras = (function() {
 // Player-card USAGE row (admin-only): data/usage_trend.js (window.USAGE_TREND, built daily by
 // scripts/build_usage_trend.py). openPlayerCard loads it for admins and re-renders once.
 // route_pct_daily.ps1 bumps _USAGE_TREND_V.
-window._USAGE_TREND_V = '2026-09-15';
+window._USAGE_TREND_V = '2026-09-16-0738';
 window._ensureUsageTrend = (function() {
   let promise = null;
   return function _ensureUsageTrend() {
@@ -5737,7 +5737,7 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-09-15-1234',
+    'data/weekly_stats_active.js?v=2026-09-16',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
     'data/fpa_2026.js?v=2026-09-15-oppppg',
@@ -5750,9 +5750,9 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-09-15',
+    'data/snap_counts.js?v=2026-09-16',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-09-15-rtdb'
+    'data/route_pct.js?v=2026-09-16'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }

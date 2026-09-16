@@ -66,6 +66,29 @@ MIN_FLOOR = {'QB': 1, 'RB': 1, 'WR': 1, 'TE': 1}
 
 # Counting stats are SEASON TOTALS (fpt, db, att, ra, ry, tch, scy, hvt, rts, yds,
 # td, rz ...); the page's Per game / Totals toggle divides by g client-side.
+# Situational usage (RB + WR/TE tables). Displayed: opportunity shares (edo d3o d3lo syo, %),
+# 4th-down opportunities (d4c), on-field snap shares in the situation (eds d3s d3ls sys, %,
+# participation seasons only). Hidden: player opps o*, team opps t* over games played, player
+# on-field plays s*, team plays n*, and x* = opps while on the listed team (team view).
+SIT_F = ['edo', 'd3o', 'd3lo', 'syo', 'd4c', 'eds', 'd3s', 'd3ls', 'sys',
+         'oed', 'od3', 'od3l', 'osy', 'ted', 'td3', 'td3l', 'tsy',
+         'sed', 'sd3', 'sd3l', 'ssy', 'ned', 'nd3', 'nd3l', 'nsy',
+         'xed', 'xd3', 'xd3l', 'xsy']
+
+
+def sit_values(c, p):
+    """The SIT_F values for one RB / WR / TE row (c = ctx(), p = its pbp dict)."""
+    tt, xx = c['tt'], c['x']
+    if c['fpt'] is None:      # no play-by-play identity: nothing situational either
+        return [None] * len(SIT_F)
+    return [div(p['oed'], tt('oed'), 100), div(p['od3'], tt('od3'), 100), div(p['od3l'], tt('od3l'), 100), div(p['osy'], tt('osy'), 100),
+            int(p['od4']),
+            div(p['sed'], tt('ned'), 100), div(p['sd3'], tt('nd3'), 100), div(p['sd3l'], tt('nd3l'), 100), div(p['ssy'], tt('nsy'), 100),
+            int(p['oed']), int(p['od3']), int(p['od3l']), int(p['osy']), int(tt('oed')), int(tt('od3')), int(tt('od3l')), int(tt('osy')),
+            int(p['sed']), int(p['sd3']), int(p['sd3l']), int(p['ssy']), int(tt('ned')), int(tt('nd3')), int(tt('nd3l')), int(tt('nsy')),
+            int(xx.get('oed', 0)), int(xx.get('od3', 0)), int(xx.get('od3l', 0)), int(xx.get('osy', 0))]
+
+
 QB_F = ['n', 'on', 'tm', 'g', 'fpt', 'db', 'att', 'cmpp', 'ypa', 'anya', 'td', 'int',
         'cpoe', 'epa', 'grd', 'acc', 'adot', 'ttt', 'deep', 'btt', 'twp', 'tdp', 'intp',
         'prs', 'p2s', 'skp', 'cgr', 'cacc', 'pgr', 'pacc', 'pypa', 'blz', 'bgr', 'bypa',
@@ -82,7 +105,8 @@ RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'att', 'tgt', 'tch', 'scy', 'tds',
         'rts', 'tprr', 'yprr', 'recg', 'pbg',
         'xt', 'xc', 'xi',
         'tsn', 'ttc', 'tmt', 'tmd', 'tmi', 'rsy', 'pcar', 'gz', 'rpl',
-        'xfpt', 'xrec']
+        'xfpt', 'xrec'] + SIT_F
+# SIT_F (defined below the tables) = situational usage: displayed shares + hidden counts
 # xrec = expected receptions (hidden) so the page can re-score xFP as PPR / STD; actual
 # receptions come from tch - att (RB) or the hidden rec field (WR/TE)
 # x* (not displayed) = raw pbp targets / carries / inside-10 carries / air yards while on
@@ -94,7 +118,7 @@ REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
          'myprr', 'zyprr', 'mtprr', 'ztprr', 'slyprr', 'scr', 'deep', 'dyd', 'dctch', 'blos',
          'xt', 'xa',
          'tsn', 'tmd', 'tmt', 'tma', 'al', 'ppl', 'rec', 'dr', 'ct', 'pry', 'pay', 'mr', 'zr', 'slr', 'cbt', 'dbt', 'dy', 'dtg',
-         'xfpt', 'xrec']
+         'xfpt', 'xrec'] + SIT_F
 # TEAM table: one row per team (n = team name, tm = code). Offense, tendency and defense from
 # nflverse pbp; protection / pressure / man coverage from PFF (defense = what opponents saw).
 TM_F = ['n', 'on', 'tm', 'g',
@@ -314,7 +338,29 @@ PBP_FLAG = ['pass', 'rush', 'rush_attempt', 'pass_attempt', 'qb_dropback', 'qb_s
             'shotgun', 'no_huddle', 'third_down_converted', 'third_down_failed']
 PBP_NUM = ['air_yards', 'yardline_100', 'epa', 'qb_epa', 'cpoe', 'xpass', 'pass_oe', 'down', 'wp',
            'half_seconds_remaining', 'game_seconds_remaining', 'fixed_drive', 'yards_after_catch',
-           'cp', 'xyac_mean_yardage']
+           'cp', 'xyac_mean_yardage', 'ydstogo', 'play_id']
+
+# Situational usage (Jack 2026-09-16): opportunities = carries + targets in the situation, from
+# pbp for every season; on-field snaps in the situation need nflverse participation, which is
+# published after each season (2019-2025 here; the current season fills in post-season).
+SIT = {
+    'ed': lambda d: d.down <= 2,                            # early downs
+    'd3': lambda d: d.down == 3,                            # 3rd down
+    'd3l': lambda d: (d.down == 3) & (d.ydstogo >= 7),      # 3rd and long
+    'sy': lambda d: (d.down >= 3) & (d.ydstogo <= 2),       # short yardage: 3rd / 4th and <= 2
+    'd4': lambda d: d.down == 4,                            # 4th down (opportunities only)
+}
+
+
+def load_onfield(yr):
+    """nflverse participation: [nflverse_game_id, play_id, offense_players (GSIS ids ;-joined)]."""
+    p = os.path.join(CACHE, f'pbp_participation_{yr}.parquet')
+    if not os.path.exists(p):
+        return None
+    df = pd.read_parquet(p, columns=['nflverse_game_id', 'play_id', 'offense_players'])
+    df = df[df.offense_players.notna() & (df.offense_players != '')].copy()
+    df['play_id'] = df.play_id.astype('int64')
+    return df
 
 # Expected fantasy points (xFP) - the STANDARD opportunity definition, same tables as
 # sim_lab/pull_pace_tracker.build_xfp_2026 (the 2026 player-card column): a target is worth
@@ -364,9 +410,10 @@ def load_pbp(yr):
     return df
 
 
-def pbp_agg(df):
+def pbp_agg(df, part=None):
     """P[gsis][stat] season sums, T[(team, wk)][stat] team-week totals,
-    PT[(gsis, team)][stat] a player's volume while on that team."""
+    PT[(gsis, team)][stat] a player's volume while on that team.
+    part = participation rows (load_onfield) for situational snap shares, or None."""
     P = collections.defaultdict(lambda: collections.defaultdict(float))
     T = collections.defaultdict(lambda: collections.defaultdict(float))
     PT = collections.defaultdict(lambda: collections.defaultdict(float))
@@ -426,6 +473,30 @@ def pbp_agg(df):
 
     fl = df[(df.fumble_lost == 1) & df.fumbled_1_player_id.notna()]
     put(fl.groupby('fumbled_1_player_id').size(), 'fl')
+
+    # situational opportunities (carries + targets) per player, team-week and player-team
+    opp = pd.concat([
+        tg[(tg.pass_attempt == 1) & (tg.sack != 1)][['receiver_player_id', 'posteam', 'week', 'down', 'ydstogo']].rename(columns={'receiver_player_id': 'pid'}),
+        car[['rusher_player_id', 'posteam', 'week', 'down', 'ydstogo']].rename(columns={'rusher_player_id': 'pid'}),
+    ])
+    for key, fn in SIT.items():
+        sub = opp[fn(opp)]
+        put(sub.groupby('pid').size(), 'o' + key)
+        put_team(sub.groupby(['posteam', 'week']).size(), 'o' + key)
+        put_pt(sub.groupby(['pid', 'posteam']).size(), 'o' + key)
+    # situational snaps: plays the player was on the field for / team plays in the situation
+    if part is not None and len(part):
+        plays = x[((x['pass'] == 1) | (x.rush == 1)) & (x.qb_kneel != 1) & (x.qb_spike != 1) & x.posteam.notna() & x.play_id.notna()].copy()
+        plays['play_id'] = plays.play_id.astype('int64')
+        m = plays.merge(part, left_on=['game_id', 'play_id'], right_on=['nflverse_game_id', 'play_id'], how='inner')
+        for key, fn in SIT.items():
+            if key == 'd4':
+                continue
+            sub = m[fn(m)]
+            put_team(sub.groupby(['posteam', 'week']).size(), 'n' + key)
+            ex = sub[['offense_players']].assign(pid=sub.offense_players.str.split(';')).explode('pid')
+            ex = ex[ex.pid.notna() & (ex.pid != '')]
+            put(ex.groupby('pid').size(), 's' + key)
 
     # xFP components (tables above). Rush values are kept in both the RB and QB flavour
     # because a rusher's position is only known once the PFF tables are joined.
@@ -640,14 +711,15 @@ def build_year(yr, xw, dlookup):
     wks = sorted(weeks)
     pbp = load_pbp(yr)      # loaded once, sliced per week
     snaps = load_snaps(yr)
+    part = load_onfield(yr)
     universe = {}   # pid -> (pos, name, team) of every season-table player
-    build_table(yr, xw, dlookup, pbp, snaps, wks[-1], wks=wks, collect=universe)
-    written = sum(build_table(yr, xw, dlookup, pbp, snaps, w, week=w, forced=universe) for w in wks)
+    build_table(yr, xw, dlookup, pbp, snaps, wks[-1], wks=wks, collect=universe, part=part)
+    written = sum(build_table(yr, xw, dlookup, pbp, snaps, w, week=w, forced=universe, part=part) for w in wks)
     print(f'  {yr}: {len(wks)} week files ({written} written)')
 
 
 def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=None, out_path=None,
-                collect=None, forced=None):
+                collect=None, forced=None, part=None):
     """One table set -> data/adv_stats_<yr>.js (whole season) or data/adv_stats_<yr>_w<week>.js
     (that week only). span=(a, b) + out_path builds weeks a-b directly as JSON - only used to
     check the page's client-side range rebuild. True when the file changed."""
@@ -666,7 +738,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
         pbp = pbp[pbp.week.isin(sel)] if pbp is not None else None
         snaps = {k: {w: v for w, v in d.items() if w in sel} for k, d in snaps.items()}
         snaps = {k: d for k, d in snaps.items() if d}
-    P, T, PT = pbp_agg(pbp) if pbp is not None and len(pbp) else ({}, {}, {})
+    P, T, PT = pbp_agg(pbp, part) if pbp is not None and len(pbp) else ({}, {}, {})
     empty = collections.defaultdict(float)
     stats = collections.Counter()
 
@@ -821,7 +893,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(round(yds)), int(p['car']), int(ru['gap_attempts'] + ru['zone_attempts']), int(ru['run_plays']),
                 rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
                 rnd(p['xrec'], 2) if c['fpt'] is not None else None,
-            ])
+            ] + sit_values(c, p))
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
         elif pos in ('WR', 'TE'):
@@ -896,14 +968,15 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(k['base_targets']), int(d['base_targets']), int(round(dy)), int(d['deep_targets']),
                 rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
                 rnd(p['xrec'], 2) if c['fpt'] is not None else None,
-            ])
+            ] + sit_values(c, p))
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
 
     rows['TM'] = team_rows(yr, pbp, sel)
     fields = {'QB': QB_F, 'RB': RB_F, 'WR': REC_F, 'TE': REC_F, 'TM': TM_F}
-    # team totals (season, or that week) for the page's team view: [targets, carries, air yards, inside-10 carries, games]
-    teams = collections.defaultdict(lambda: [0.0, 0.0, 0.0, 0.0, 0])
+    # team totals (season, or that week) for the page's team view:
+    # [targets, carries, air yards, inside-10 carries, games, early-down opps, 3rd-down opps, 3rd&long opps, short-yardage opps]
+    teams = collections.defaultdict(lambda: [0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0])
     for (tm, wk), v in T.items():
         if not isinstance(tm, str):
             continue
@@ -911,6 +984,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
         t[0] += v.get('tgt', 0.0); t[1] += v.get('car', 0.0); t[2] += v.get('ay', 0.0); t[3] += v.get('i10', 0.0)
         if v.get('db', 0.0) > 0:
             t[4] += 1
+        t[5] += v.get('oed', 0.0); t[6] += v.get('od3', 0.0); t[7] += v.get('od3l', 0.0); t[8] += v.get('osy', 0.0)
     payload = {'yr': yr, 'thru': thru}
     if week is not None:
         payload['wk'] = week
@@ -964,8 +1038,9 @@ def main():
         pbp, snaps = load_pbp(y), load_snaps(y)
         wks = sorted(set().union(*(weekly_weeks(f, y) for f in ('passing_pressure', 'rushing_summary', 'receiving', 'receiving_summary'))))
         universe = {}   # season positions, exactly as the week files use them
-        build_table(y, xw, dlookup, pbp, snaps, wks[-1], wks=wks, collect=universe, out_path=os.devnull)
-        build_table(y, xw, dlookup, pbp, snaps, b, span=(a, b), out_path=args.out, forced=universe)
+        part = load_onfield(y)
+        build_table(y, xw, dlookup, pbp, snaps, wks[-1], wks=wks, collect=universe, out_path=os.devnull, part=part)
+        build_table(y, xw, dlookup, pbp, snaps, b, span=(a, b), out_path=args.out, forced=universe, part=part)
         print(f'span {y} W{a}-{b} -> {args.out}')
         return
     for yr in years:

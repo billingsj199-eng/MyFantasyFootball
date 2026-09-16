@@ -62862,6 +62862,22 @@ Rules:
     n('rtd', 'Rush TD', 'RuTD/G', 'Rushing', 0, 2, 'Rushing touchdowns'),
     n('scr', 'Scrambles', 'Scr/G', 'Rushing', 0, 1, 'Scrambles (nflverse)', N)
   ];
+  // Situational usage (RB and WR/TE): opportunity shares from play-by-play for every season;
+  // on-field snap shares need nflverse participation, published after each season.
+  const SITG = 'Situational';
+  const SIT_OPP = ' Share of the team\'s carries + targets in that situation, over games played (team view: share of the team\'s season).';
+  const SIT_SNAP = ' Share of the team\'s plays in that situation the player was on the field for (nflverse participation, through 2025; the current season fills in after it ends).';
+  const SIT_COLS = [
+    c('edo', 'Early-Down Opp%', SITG, 1, '1st and 2nd down.' + SIT_OPP),
+    c('d3o', '3rd-Down Opp%', SITG, 1, '3rd down.' + SIT_OPP),
+    c('d3lo', '3rd & Long Opp%', SITG, 1, '3rd down with 7+ to go.' + SIT_OPP),
+    c('syo', 'Short-Yd Opp%', SITG, 1, '3rd or 4th down with 2 or fewer to go.' + SIT_OPP),
+    n('d4c', '4th-Down Opp', '4th/G', SITG, 0, 2, 'Carries + targets on 4th down'),
+    c('eds', 'Early Snap%', SITG, 1, '1st and 2nd down.' + SIT_SNAP),
+    c('d3s', '3rd-Down Snap%', SITG, 1, '3rd down.' + SIT_SNAP),
+    c('d3ls', '3rd & Long Snap%', SITG, 1, '3rd down with 7+ to go.' + SIT_SNAP),
+    c('sys', 'Short-Yd Snap%', SITG, 1, '3rd or 4th down with 2 or fewer to go.' + SIT_SNAP)
+  ];
   const RB_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
@@ -62895,7 +62911,7 @@ Rules:
     c('yprr', 'YPRR', 'Receiving', 2, 'Receiving yards per route run'),
     c('recg', 'Route Grd', 'Receiving', 1, 'PFF receiving grade'),
     c('pbg', 'PBlk Grd', 'Receiving', 1, 'PFF pass-blocking grade')
-  ];
+  ].concat(SIT_COLS);
   const REC_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
@@ -62940,7 +62956,7 @@ Rules:
     c('dyd', 'Deep Yd%', 'Coverage & depth', 1, 'Share of receiving yards on 20+ air-yard targets', N),
     c('dctch', 'Deep Catch%', 'Coverage & depth', 1, 'Catch rate on 20+ air-yard targets'),
     c('blos', 'bLOS Tgt%', 'Coverage & depth', 1, 'Share of targets caught at or behind the line of scrimmage (PFF)', N)
-  ];
+  ].concat(SIT_COLS);
   const OFF = 'Offense', DEF = 'Defense';
   const TM_COLS = [
     c('g', 'G', VOL, 0, 'Games played', N),
@@ -63005,12 +63021,16 @@ Rules:
       cgr: 'cdb', cacc: 'caim', pgr: 'pdb', pacc: 'paim', pypa: 'patt', blz: 'db', bgr: 'bdb', bypa: 'batt' },
     RB: { snp: 'tsn', car: 'ttc', tsh: 'tmt', rtp: 'tmd', i10s: 'tmi', ypc: 'att', yco: 'att', mtf: 'att', elu: 'att',
       bay: 'rsy', exp: 'att', fdp: 'pcar', suc: 'pcar', repa: 'pcar', rgr: 'att', gap: 'gz',
-      tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl' },
+      tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl',
+      edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
+      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 } },
     REC: { snp: 'tsn', rtp: 'tmd', tsh: 'tmt', ays: 'tma', wopr: { wopr: 1 }, tprr: 'rts', slot: 'al', wide: 'al', inl: 'al',
       pbr: 'ppl', yprr: 'rts', grd: 'rts', adot: 'tgt', racr: { r: ['pry', 'pay'] }, yac: 'rec', mtfr: 'rec', fdr: 'rts',
       ctch: 'tgt', drp: 'dr', cc: 'ct', ctg: 'tgt', tqbr: 'tgt', epat: 'xt',
       myprr: { sc: 'mr' }, zyprr: { sc: 'zr' }, mtprr: { sc: 'mr' }, ztprr: { sc: 'zr' }, slyprr: { sc: 'slr' },
-      scr: 'cbt', deep: 'dbt', dyd: 'dy', dctch: 'dtg', blos: 'dbt' },
+      scr: 'cbt', deep: 'dbt', dyd: 'dy', dctch: 'dtg', blos: 'dbt',
+      edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
+      eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 } },
     TM: { npace: 'pcn', sg: 'pl', nh: 'pl', pr: 'pl', npr: 'npl', edpr: 'edn', proe: 'pon', rroe: 'pon',
       epa: 'pl', dbepa: 'pa', ruepa: 'rua', sr: 'pl', dbsr: 'pa', rusr: 'rua', xpp: 'pa', xrp: 'rua', adot: 'ayn', yac: 'cmp',
       tdc: 'tdn', rztd: 'rzt', tdd: 'drv', skp: 'pa', prsa: 'pdbt', blzf: 'pdbt', ttt: 'tttw', manf: 'mzr',
@@ -63058,7 +63078,7 @@ Rules:
           else if (k === 'on') res[k] = list.some(o => o.on) ? 1 : 0;
           else if (!sp) res[k] = sum(k);
           else if (typeof sp === 'string') res[k] = wavg(k, sp);
-          else if (sp.r) { const d = sum(sp.r[1]); res[k] = d > 0 ? sum(sp.r[0]) / d : null; }
+          else if (sp.r) { const d = sum(sp.r[1]); res[k] = d > 0 ? sum(sp.r[0]) / d * (sp.pct ? 100 : 1) : null; }
           else if (sp.sc) {
             // build scales facet routes by season routes / routes in the weeks the facet saw him
             const all = sum('rts') || 0, seen = list.reduce((a, o) => a + (o[sp.sc] != null ? (o.rts || 0) : 0), 0);
@@ -63098,7 +63118,14 @@ Rules:
     { k: 'tgt', l: 'Targets', d: 0 },
     { k: 'fpt', l: 'Fantasy points', d: 1 },
     { k: 'xfpt', l: 'Expected points', d: 1 },
-    { k: 'ays', l: 'Air-yard share', d: 0, pct: true }
+    { k: 'ays', l: 'Air-yard share', d: 0, pct: true },
+    { k: 'edo', l: 'Early-down opp share', d: 0, pct: true },
+    { k: 'd3o', l: '3rd-down opp share', d: 0, pct: true },
+    { k: 'd3lo', l: '3rd & long opp share', d: 0, pct: true },
+    { k: 'syo', l: 'Short-yardage opp share', d: 0, pct: true },
+    { k: 'eds', l: 'Early-down snap % (thru 2025)', d: 0, pct: true },
+    { k: 'd3s', l: '3rd-down snap % (thru 2025)', d: 0, pct: true },
+    { k: 'sys', l: 'Short-yardage snap % (thru 2025)', d: 0, pct: true }
   ];
   let _roomMetric = 'tsh', _roomOff = false, _roomSeq = 0;
   try {
@@ -63343,7 +63370,8 @@ Rules:
     const season = _season() || {};
     const teamTot = _pos !== 'TM' && tmSel.value && season.teams ? season.teams[tmSel.value] : null;  // [tgt, car, ay, i10, games]
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
-    const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3) };
+    const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3),
+      edo: r => pctOf(r.xed, 5), d3o: r => pctOf(r.xd3, 6), d3lo: r => pctOf(r.xd3l, 7), syo: r => pctOf(r.xsy, 8) };
     const calcs = {};   // computed columns (Usage) read the row's own per-game-played shares
     COLS[_pos].forEach(col => { if (col.calc) calcs[col.k] = col.calc; });
     const val = (r, k) => {
@@ -63397,7 +63425,8 @@ Rules:
     html += '</tr><tr class="rs-adv-hdr"><th data-k="n" class="rs-adv-nm' + sortCls('n') + '">' + (_pos === 'TM' ? 'Team' : 'Player') + '</th>' +
       '<th data-k="tm" class="rs-adv-tm' + sortCls('tm') + '">Tm</th>';
     cols.forEach((col, i) => {
-      const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)' };
+      const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)',
+        edo: 'early-down carries + targets', d3o: '3rd-down carries + targets', d3lo: '3rd-and-long (7+) carries + targets', syo: 'short-yardage (3rd/4th and 2 or less) carries + targets' };
       const tip = teamTot && TEAM_TIP[col.k]
         ? 'Share of ' + tmSel.value + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tmSel.value + ')'
         : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');

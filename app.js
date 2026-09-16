@@ -13323,8 +13323,8 @@ function _playerRoleRow(d) {
 }
 window._playerRoleRow = _playerRoleRow;
 
-// USAGE row on the player card (admin-only for now): the Research page usage score over the
-// last 3 games with an arrow vs the 3 games before (data/usage_trend.js, lazy; built daily by
+// USAGE row on the player card (everyone, since 2026-09-16): the Research page usage score over
+// the last 3 games with an arrow vs the 3 games before (data/usage_trend.js, lazy; built daily by
 // scripts/build_usage_trend.py). The arrow describes the change, not a forecast: in 2019-2025
 // testing, at equal recent usage, risers scored LESS over the next 3 games and fallers MORE.
 const USAGE_TREND_MIN = 15;   // about one SD of a 3-game usage change; smaller moves read as steady
@@ -13335,7 +13335,6 @@ const USAGE_TREND_MIX = {
 };
 function _usageTrendRow(d) {
   try {
-    if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return '';
     const T = window.USAGE_TREND;
     if (!T || !d || !d.n || !/^(RB|WR|TE)$/.test(d.s) || d._retired || d._isDevy) return '';
     const yrs = Object.keys(T).sort();
@@ -13399,10 +13398,9 @@ function openPlayerCard(d, ctxMode) {
   // 2026-07-20 — it's no longer eager). Fire the loads on click so the card fills in
   // (the idle preload usually beats this).
   if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData();
-  // Admin-only USAGE row (data/usage_trend.js): load on the first admin card open and re-open
-  // this card in place once it lands. _usageTrendPending blocks a retry loop after a failed load.
-  if (typeof window.isAdmin === 'function' && window.isAdmin() && typeof window._ensureUsageTrend === 'function'
-      && !window.USAGE_TREND && !window._usageTrendPending) {
+  // USAGE row (data/usage_trend.js, 63 KB): load on the first card open and re-open this card in
+  // place once it lands. _usageTrendPending blocks a retry loop after a failed load.
+  if (typeof window._ensureUsageTrend === 'function' && !window.USAGE_TREND && !window._usageTrendPending) {
     window._usageTrendPending = true;
     const _utName = d && d.n;
     window._ensureUsageTrend().then(function() {

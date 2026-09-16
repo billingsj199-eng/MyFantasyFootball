@@ -4020,6 +4020,14 @@
         LT.sweeps.map(function (s) { return '<tr><td class="l">' + esc(s.label) + '</td><td>' + ltPct(s.loyo) + '</td><td>' + s.wins + '/7</td><td>' + ltPct(s.fwd) + ' (' + s.fwdWins + '/5)</td><td>' + (s.better ? '<b style="color:var(--acc)">yes</b>' : 'no') + '</td></tr>'; }).join('') + '</tbody></table></div>';
       if (LT.seedcheck) html += '<p class="dim" style="font-size:11px;margin:6px 0">Seed check (3 random seeds each; run-to-run noise is about \u00b10.08%): ' + LT.seedcheck.map(function (s) { return esc(s.label) + ' LOYO ' + ltPct(s.loyoMean) + ' / forward ' + ltPct(s.fwdMean); }).join(' \u00b7 ') + '. Drop-one-feature gains of 0.1-0.17% were noise: removing them all together scored worse.</p>';
     }
+    var LF = window.SIM_LAYERFIX_BT;
+    if (LF && LF.tests) {
+      var lfPct = function (p) { return p == null ? '\u2014' : (p >= 0 ? '+' : '') + (+p).toFixed(2) + '%'; };
+      html += '<h4 style="margin:14px 0 4px">Hand-layer fixes: pool cap, Questionable no-practice dock, wind strength (backtest_layer_fixes.py, ' + esc(LF.updated || '') + ')</h4>' +
+        '<p class="dim" style="font-size:11px;margin:0 0 6px">The three fixes the learned-shadow audit pointed at, graded on the rebuilt live stack (17,657 player-weeks 2019-25). Strength picked on the other seasons (LOYO) and on earlier seasons only (forward); flagged = rows the fix touches. None pass: the audit ratios compared rows with different mixes (position, week), and once the fix is graded directly the gains vanish or reverse forward.</p>' +
+        '<div style="overflow-x:auto"><table style="width:auto"><thead><tr><th class="l">Fix</th><th>Flagged rows</th><th>LOYO all</th><th>LOYO flagged</th><th>Forward all</th><th>Forward flagged</th><th>Picks</th><th>Verdict</th></tr></thead><tbody>' +
+        LF.tests.map(function (t) { var vc = /PASS/.test(t.verdict) ? 'var(--acc)' : (t.verdict === 'lean' ? 'inherit' : '#f85149'); return '<tr><td class="l">' + esc(t.label) + '</td><td class="dim">' + t.nFlag + '</td><td>' + lfPct(t.loyo_all) + ' (' + t.loyo_all_wins + '/7)</td><td>' + lfPct(t.loyo_flag) + ' (' + (t.loyo_flag_wins || 0) + '/7)</td><td>' + lfPct(t.fwd_all) + '</td><td>' + lfPct(t.fwd_flag) + ' (' + (t.fwd_flag_wins || 0) + '/5)</td><td class="dim" style="font-size:10px">' + esc((t.loyo_picks || []).join(' ')) + '</td><td style="color:' + vc + '"><b>' + esc(t.verdict) + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+    }
     var few = Object.keys(B.flags || {}).filter(function (k) { return B.flags[k].verdict === 'too few'; });
     if (few.length) html += '<p class="dim" style="font-size:11px">Flags with too few player-weeks to grade (actual/shipped in parens): ' + few.map(function (k) { return esc(k) + ' n' + B.flags[k].n + (B.flags[k].ratio != null ? ' (' + B.flags[k].ratio.toFixed(2) + ')' : ''); }).join(' \u00b7 ') + '.</p>';
     if (B.buckets && B.buckets.length) {

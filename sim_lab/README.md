@@ -2213,3 +2213,23 @@ what we need to tweak to improve it over a large sample". 17,657 player-weeks
   forward -0.90% (4/5), 345 trees, JS verified (1.0e-5).
 - Candidate hand-layer tweaks to TEST next (not applied): cap pool multiplier,
   deeper Q+DNP cond, stronger wind docks, snap-trend slope below 1.0.
+
+## Hand-layer fixes (backtest_layer_fixes.py) - 2026-09-16
+
+Jack: "yes test those three layer fixes". Graded directly on the rebuilt live
+stack (17,657 player-weeks), strength picked LOYO and forward, all rows +
+flagged rows. NONE PASS - nothing changed in the engine.
+
+- POOL CAP: boosts x1.35+ do run 0.936 of the hand number (n 349), and a 1.35
+  cap is -2.3% on those rows pooled, but LOYO flagged -0.90% (4/7) and FORWARD
+  flagged +2.43% (picks drift to 1.20-1.25 and hurt). Shrinking every boost:
+  flat. Keep the pool as is.
+- Q + DID NOT PRACTICE (played): 108 rows, actual/hand 0.933 - all WR (0.857,
+  n 67; RB 1.04, TE 1.01). Extra x0.90 dock: flagged LOYO -1.69% (4/7),
+  forward -0.77% (3/5) -> lean, not a pass. Too few rows; WR-only would be
+  fishing. Watch it on the live scorecards. Q + limited practice: worse.
+- WIND: the audit's 0.955 was a composition artifact - docked rows run 1.016
+  (10-15 mph) and 0.997 (15+) of the hand number; QB and TE run ABOVE it
+  (TE 1.06), WR 15+ 0.959. Stronger docks are worse every season (0/7).
+- Lesson: layer-level REL ratios from the audit mix positions and weeks; grade
+  the fix itself before believing them.

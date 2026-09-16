@@ -63593,6 +63593,120 @@ Rules:
     return o[k] == null ? null : o[k];
   }
 
+  // One line per series across evenly spaced x bands (weeks). x = [{ l: axis label, sub: second
+  // line (season) or '', t: hover title }], series = [{ n: name, v: [value | null] }] (null = a
+  // missed week leaves a gap). Fixed 1:1 width inside a scrolling box: 18 weeks of lines and end
+  // labels must never shrink to fit a narrow window - the reader scrolls instead. Returns the
+  // svg html, or '' when nothing can be drawn. Shared by the team room chart and the weeks chart.
+  function _lineSvg(host, x, series, fmt, pct, aria) {
+    const flat = [].concat(...series.map(s => s.v)).filter(v => v != null);
+    if (!flat.length) return '';
+    let hi = Math.max(...flat), lo = Math.min(...flat);
+    hi = hi > 0 ? hi * 1.15 : hi < 0 ? hi * 0.85 : 1;
+    lo = lo < 0 ? lo * 1.15 : 0;
+    if (pct) hi = Math.min(hi, 100);
+    if (hi <= lo) hi = lo + 1;
+    const sub = x.some(p => p.sub);
+    const PADL = 46, PADR = 100, PADT = 22, PLOT = 160, XLAB = sub ? 36 : 24;
+    const avail = host.clientWidth > 0 ? host.clientWidth - 30 : 0;
+    const BAND = avail > 0 ? Math.max(40, Math.min(110, Math.floor((avail - PADL - PADR) / x.length))) : 44;
+    const WIDTH = PADL + BAND * x.length + PADR, HEIGHT = PADT + PLOT + XLAB;
+    const y = v => PADT + (hi - v) / (hi - lo) * PLOT;
+    const cxOf = i => PADL + i * BAND + BAND / 2;
+    let svg = '<div class="rs-room-scroll"><svg class="rs-co-svg" style="width:' + WIDTH + 'px;max-width:none" viewBox="0 0 ' + WIDTH + ' ' + HEIGHT + '" role="img" aria-label="' + _esc(aria) + '">';
+    (lo < 0 ? [hi, 0, lo] : [hi, hi / 2, 0]).forEach(t => {
+      svg += '<line class="' + (t === 0 ? 'zero' : 'grid') + '" x1="' + PADL + '" y1="' + y(t).toFixed(1) + '" x2="' + (WIDTH - PADR) + '" y2="' + y(t).toFixed(1) + '"/>' +
+        '<text class="tick" x="' + (PADL - 8) + '" y="' + (y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(t) + '</text>';
+    });
+    x.forEach((p, i) => {
+      svg += '<text class="xlab" x="' + cxOf(i) + '" y="' + (PADT + PLOT + 16) + '" text-anchor="middle">' + _esc(p.l) + '</text>';
+      if (p.sub) svg += '<text class="xteam" x="' + cxOf(i) + '" y="' + (PADT + PLOT + 29) + '" text-anchor="middle">' + _esc(p.sub) + '</text>';
+    });
+    let dots = '';
+    const ends = [];
+    series.forEach((s, si) => {
+      const c2 = 's' + (si + 1);
+      let run = [];
+      const flush = () => { if (run.length > 1) svg += '<polyline class="series ' + c2 + '" points="' + run.join(' ') + '"/>'; run = []; };
+      s.v.forEach((v, i) => {
+        if (v == null) { flush(); return; }
+        run.push(cxOf(i) + ',' + y(v).toFixed(1));
+        dots += '<circle class="dot ' + c2 + '" cx="' + cxOf(i) + '" cy="' + y(v).toFixed(1) + '" r="4.5"/>';
+      });
+      flush();
+      let last = -1;
+      s.v.forEach((v, i) => { if (v != null) last = i; });
+      if (last >= 0) ends.push({ si: si, x: cxOf(last) + 9, y: y(s.v[last]), name: s.n.replace(/^(\w)\w* /, '$1. '), v: s.v[last] });
+    });
+    svg += dots;
+    // end labels: nudge apart so converging lines stay readable
+    ends.sort((p, q) => p.y - q.y);
+    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 12) ends[i].y = ends[i - 1].y + 12;
+    for (let i = ends.length - 1; i >= 0; i--) { const max = PADT + PLOT - 2 - 12 * (ends.length - 1 - i); if (ends[i].y > max) ends[i].y = max; }
+    ends.forEach(e => { svg += '<text class="endlab s' + (e.si + 1) + '" x="' + e.x.toFixed(1) + '" y="' + (e.y + 4).toFixed(1) + '">' + _esc(e.name) + ' ' + fmt(e.v) + '</text>'; });
+    x.forEach((p, i) => {
+      const parts = series.map(s => (s.v[i] == null ? null : s.n + ' ' + fmt(s.v[i]))).filter(Boolean);
+      svg += '<rect class="hit" x="' + (PADL + i * BAND) + '" y="' + PADT + '" width="' + BAND + '" height="' + PLOT + '">' +
+        '<title>' + _esc(p.t + (parts.length ? ' · ' + parts.join(' · ') : ' · no games')) + '</title></rect>';
+    });
+    return svg + '</svg></div>';
+  }
+
+  // --- weeks chart (Jack 2026-09-16: "a chart under the table for the weeks selected") ---
+  // Two or more week-samples on screen -> one line per player (top 6 of the table's current
+  // sort) across those weeks, for any column of the table. Values come from the week files the
+  // sample was built from (Per game / Totals and the scoring format follow the table). The
+  // metric follows the sorted column unless one is pinned (localStorage rsWkMetric).
+  let _wkMet = 'sort', _wkOff = false;
+  try {
+    _wkMet = localStorage.getItem('rsWkMetric') || 'sort';
+    _wkOff = localStorage.getItem('rsWkOff') === '1';
+  } catch (e) { /* storage blocked */ }
+  // the week-samples on screen, in time order
+  function _samples() {
+    const out = [];
+    _yrsAsc().forEach(y => (_weekList(y) || []).forEach(w => out.push({ yr: y, w: w })));
+    return out;
+  }
+  function _weeksChart() {
+    const host = _el('rsAdvWeeks');
+    if (!host) return;
+    const xs = _samples(), L = _last;
+    if (xs.length < 2 || !L || !L.rows.length || L.pos !== _pos) { host.hidden = true; host.innerHTML = ''; return; }
+    host.hidden = false;
+    const cols = COLS[_pos].filter(c => c.k !== 'g');
+    const pg = L.pg;
+    const lab = c => (pg && c.cnt ? c.lg : c.l);
+    const col = (_wkMet !== 'sort' && cols.find(c => c.k === _wkMet)) || cols.find(c => c.k === _sortK) || cols.find(c => c.k === (_pos === 'TM' ? 'epa' : 'fpt')) || cols[0];
+    const head = '<div class="rs-co-head"><span class="rs-co-title">' + _esc(lab(col)) + ' by week · ' + _esc(_yrLabel() + ' ' + _scope()) + '</span>' +
+      '<label class="rs-room-pick">Metric <select id="rsWkMetric" class="rs-select"><option value="sort"' + (_wkMet === 'sort' || !cols.some(c => c.k === _wkMet) ? ' selected' : '') + '>Sorted column</option>' +
+      cols.map(c => '<option value="' + c.k + '"' + (c.k === _wkMet ? ' selected' : '') + '>' + _esc(lab(c)) + '</option>').join('') +
+      '</select></label><button type="button" class="rs-co-close" id="rsWkHide">' + (_wkOff ? 'Show chart' : 'Hide chart') + '</button></div>';
+    if (_wkOff) { host.innerHTML = head; return; }
+    const multiYr = _yrs.length > 1;
+    const x = xs.map(s => ({ l: 'W' + s.w, sub: multiYr ? String(s.yr) : '', t: (multiYr ? s.yr + ' ' : '') + 'Week ' + s.w }));
+    const byWeek = xs.map(s => { const m = new Map(); _wkRows(s.yr, s.w, _pos).forEach(o => m.set(o.n, o)); return m; });
+    const shown = L.rows.slice(0, 6);
+    const wv = o => {
+      if (col.calc) return col.calc(o);
+      const raw = _scored(o, col.k);
+      return pg && col.cnt && raw != null ? (o.g ? raw / o.g : null) : raw;
+    };
+    const series = shown.map(r => ({ n: r.n, v: byWeek.map(m => { const o = m.get(r.n); return o && o.g ? wv(o) : null; }) }));
+    const d = pg && col.cnt ? col.dg : col.d;
+    const fmt = v => Number(v).toFixed(d);
+    const svg = _lineSvg(host, x, series, fmt, false, lab(col) + ' by week for the top ' + shown.length + ' ' + _pos + 's shown');
+    if (!svg) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(lab(col)) + ' in these weeks for the players shown.</div>'; return; }
+    const legend = '<div class="rs-co-legend">' + series.map((s, si) => {
+      const played = s.v.filter(v => v != null);
+      const mean = played.length ? played.reduce((p, q) => p + q, 0) / played.length : null;
+      return '<span><span class="rs-co-key line s' + (si + 1) + '"></span>' + _esc(s.n) + (mean == null ? '' : ' <strong>' + fmt(mean) + '</strong> avg · ' + played.length + ' wk' + (played.length === 1 ? '' : 's')) + '</span>';
+    }).join('') +
+      '<span class="rs-co-sub">top ' + shown.length + ' of the table\'s current sort, one point per week played' + (L.tm ? ' · ' + _esc(L.tm) : '') +
+      ' · pick a column above or sort the table to change the line · counting stats ' + (pg ? 'per game' : 'as week totals') + '</span></div>';
+    host.innerHTML = head + legend + svg;
+  }
+
   function _roomChart() {
     const host = _el('rsAdvRoom');
     if (!host) return;
@@ -63628,54 +63742,9 @@ Rules:
     if (_roomOff) { host.innerHTML = head; return; }
     if (!shown.length) { host.innerHTML = head + '<div class="rs-empty">No ' + roomName + ' data for ' + _esc(tm) + ' in ' + yr + '.</div>'; return; }
     const fmt = v => Number(v).toFixed(met.d) + (met.pct ? '%' : '');
-    const series = shown.map(e => ({ e: e, v: wks.map(w => (e.w[w] ? _roomVal(e.w[w], met.k) : null)) }));
-    const flat = [].concat(...series.map(s => s.v)).filter(v => v != null);
-    if (!flat.length) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(met.l) + ' for this room yet.</div>'; return; }
-    let hi = Math.max(...flat) * 1.15 || 1, lo = 0;
-    if (met.pct) hi = Math.min(hi, 100);
-    const PADL = 46, PADR = 100, PADT = 22, PLOT = 160, XLAB = 24;
-    const avail = host.clientWidth > 0 ? host.clientWidth - 30 : 0;
-    const BAND = avail > 0 ? Math.max(40, Math.min(110, Math.floor((avail - PADL - PADR) / wks.length))) : 44;
-    const WIDTH = PADL + BAND * wks.length + PADR, HEIGHT = PADT + PLOT + XLAB;
-    const y = v => PADT + (hi - v) / (hi - lo) * PLOT;
-    const cxOf = i => PADL + i * BAND + BAND / 2;
-    // fixed 1:1 width inside a scrolling box: 18 weeks of lines and end labels must never shrink
-    // to fit a narrow window - the reader scrolls instead
-    let svg = '<div class="rs-room-scroll"><svg class="rs-co-svg" style="width:' + WIDTH + 'px;max-width:none" viewBox="0 0 ' + WIDTH + ' ' + HEIGHT + '" role="img" aria-label="' +
-      _esc(met.l + ' by week for the ' + tm + ' ' + roomName) + '">';
-    [hi, hi / 2, 0].forEach(t => {
-      svg += '<line class="' + (t === 0 ? 'zero' : 'grid') + '" x1="' + PADL + '" y1="' + y(t).toFixed(1) + '" x2="' + (WIDTH - PADR) + '" y2="' + y(t).toFixed(1) + '"/>' +
-        '<text class="tick" x="' + (PADL - 8) + '" y="' + (y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(t) + '</text>';
-    });
-    wks.forEach((w, i) => { svg += '<text class="xlab" x="' + cxOf(i) + '" y="' + (PADT + PLOT + 16) + '" text-anchor="middle">' + w + '</text>'; });
-    let dots = '';
-    const ends = [];
-    series.forEach((s, si) => {
-      const c2 = 's' + (si + 1);
-      let run = [];
-      const flush = () => { if (run.length > 1) svg += '<polyline class="series ' + c2 + '" points="' + run.join(' ') + '"/>'; run = []; };
-      s.v.forEach((v, i) => {
-        if (v == null) { flush(); return; }   // a missed week leaves a gap
-        run.push(cxOf(i) + ',' + y(v).toFixed(1));
-        dots += '<circle class="dot ' + c2 + '" cx="' + cxOf(i) + '" cy="' + y(v).toFixed(1) + '" r="4.5"/>';
-      });
-      flush();
-      let last = -1;
-      s.v.forEach((v, i) => { if (v != null) last = i; });
-      if (last >= 0) ends.push({ si: si, x: cxOf(last) + 9, y: y(s.v[last]), name: s.e.n.replace(/^(\w)\w* /, '$1. '), v: s.v[last] });
-    });
-    svg += dots;
-    // end labels: nudge apart so converging lines stay readable
-    ends.sort((a, b) => a.y - b.y);
-    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 12) ends[i].y = ends[i - 1].y + 12;
-    for (let i = ends.length - 1; i >= 0; i--) { const max = PADT + PLOT - 2 - 12 * (ends.length - 1 - i); if (ends[i].y > max) ends[i].y = max; }
-    ends.forEach(e => { svg += '<text class="endlab s' + (e.si + 1) + '" x="' + e.x.toFixed(1) + '" y="' + (e.y + 4).toFixed(1) + '">' + _esc(e.name) + ' ' + fmt(e.v) + '</text>'; });
-    wks.forEach((w, i) => {
-      const parts = series.map(s => (s.v[i] == null ? null : s.e.n + ' ' + fmt(s.v[i]))).filter(Boolean);
-      svg += '<rect class="hit" x="' + (PADL + i * BAND) + '" y="' + PADT + '" width="' + BAND + '" height="' + PLOT + '">' +
-        '<title>' + _esc('Week ' + w + (parts.length ? ' · ' + parts.join(' · ') : ' · no games')) + '</title></rect>';
-    });
-    svg += '</svg></div>';
+    const series = shown.map(e => ({ e: e, n: e.n, v: wks.map(w => (e.w[w] ? _roomVal(e.w[w], met.k) : null)) }));
+    const svg = _lineSvg(host, wks.map(w => ({ l: String(w), t: 'Week ' + w })), series, fmt, met.pct, met.l + ' by week for the ' + tm + ' ' + roomName);
+    if (!svg) { host.innerHTML = head + '<div class="rs-empty">No ' + _esc(met.l) + ' for this room yet.</div>'; return; }
     // legend: latest value + last 3 games vs the 3 before (trend needs 4+ played weeks)
     const legend = '<div class="rs-co-legend">' + series.map((s, si) => {
       const played = s.v.filter(v => v != null);
@@ -64317,6 +64386,7 @@ Rules:
       if (csvBtn) csvBtn.disabled = true;
       _roomChart();
       _scatter();
+      _weeksChart();
       wrap.innerHTML = '<div class="rs-empty">No advanced stats for ' + _esc(_yrLabel()) + (_scope() ? ' ' + _esc(_scope()) : '') + '.</div>';
       if (cnt) cnt.textContent = '';
       if (foot) foot.textContent = '';
@@ -64435,6 +64505,7 @@ Rules:
     if (csvBtn) csvBtn.disabled = !rows.length;
     _roomChart();
     _scatter();
+    _weeksChart();
 
     const one = _yrs.length === 1, thru = one ? (_seasonFile() || {}).thru : 0;
     const scope = _scope(), cur = _yrs.indexOf(YEARS[0]) >= 0 && (_seasonFile(YEARS[0]) || {}).thru < 17;
@@ -64600,6 +64671,23 @@ Rules:
       });
       let _rsz = null;
       window.addEventListener('resize', () => { if (room.hidden) return; clearTimeout(_rsz); _rsz = setTimeout(_roomChart, 150); });
+    }
+    const wkc = _el('rsAdvWeeks');
+    if (wkc) {
+      wkc.addEventListener('click', e => {
+        if (!e.target.closest('#rsWkHide')) return;
+        _wkOff = !_wkOff;
+        try { localStorage.setItem('rsWkOff', _wkOff ? '1' : '0'); } catch (err) { /* private mode */ }
+        _weeksChart();
+      });
+      wkc.addEventListener('change', e => {
+        if (!e.target.closest('#rsWkMetric')) return;
+        _wkMet = e.target.value;
+        try { localStorage.setItem('rsWkMetric', _wkMet); } catch (err) { /* private mode */ }
+        _weeksChart();
+      });
+      let _wsz = null;
+      window.addEventListener('resize', () => { if (wkc.hidden) return; clearTimeout(_wsz); _wsz = setTimeout(_weeksChart, 150); });
     }
     const asc = a => a.map(Number).sort((x, y) => x - y);
     _yrPick = _multi('rsAdvYr', {

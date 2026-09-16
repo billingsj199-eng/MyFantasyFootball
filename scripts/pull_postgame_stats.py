@@ -51,6 +51,7 @@ WS_JS = os.path.join(ROOT, 'data', 'weekly_stats_active.js')
 # whenever a defense faces an untracked player (PIT read 0.0 QB allowed in
 # W1 because Cooper Rush isn't on the board).
 FPA_JS = os.path.join(ROOT, 'data', 'fpa_2026.js')
+FPA_JSON = os.path.join(ROOT, 'data', 'fpa_2026.json')   # same object, fetched by the Sleeper/ESPN/Yahoo helpers
 FPA_POS = ('QB', 'RB', 'WR', 'TE')
 # 2026-09-15: the rankings WEEKLY board's OPP PPG column reads this table too,
 # so every defense-week also carries PPR / STD variants of the four skill
@@ -394,8 +395,12 @@ def write_fpa(fpa_weeks):
            'window.FPA_2026 = ' + json.dumps(obj, separators=(',', ':')) + ';\n')
     with open(FPA_JS, 'w', encoding='utf-8') as f:
         f.write(out)
+    # Plain-JSON twin for the browser extensions (their site fetch proxies
+    # parse JSON only). Tracked with `git add -f` — /data/*.json is excluded.
+    with open(FPA_JSON, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(obj, separators=(',', ':')))
     n = sum(len(v) for v in weeks.values())
-    log('wrote %s (%d weeks, %d defense-weeks)' % (FPA_JS, len(weeks), n))
+    log('wrote %s + %s (%d weeks, %d defense-weeks)' % (FPA_JS, FPA_JSON, len(weeks), n))
 
 
 if __name__ == '__main__':

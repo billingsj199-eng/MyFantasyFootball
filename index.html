@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-16-scatter3" as="script">
+<link rel="preload" href="app.js?v=2026-09-16-scatter4" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2631,7 +2631,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter3">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter4">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -2640,17 +2640,17 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="rs-subtitle">Advanced stats by position (PFF Premium charting + nflverse play-by-play, 2019-2026), historical preseason ADP &amp; expert ranks vs. actual finishes, contract history, and career team data. ADP archive: MFL 1999-2007 (via Wayback; top 32 for 1999-2005, top 100 for 2006, top 200 for 2007), FFC 2008-2025 (12-team; half-PPR &rsaquo; PPR &rsaquo; standard by year), ESPN 2018 &amp; 2020-2024. Points are half-PPR from the site database.</div>
 </div>
 
-<!-- One view at a time: 2026 = this season's advanced stats, Coach = profiles, Past seasons = 2019-2025 stats + ADP history -->
+<!-- One view at a time: Players = advanced stats for any seasons / weeks / teams (multi-pick, 2019-2026)
+     + player lookup + season explorer; Coach = playcalling profiles -->
 <div class="rs-adv-tabs rs-top-tabs" id="rsTopTabs" role="tablist" aria-label="Research view">
-<button type="button" class="rs-adv-tab active" data-view="cur" role="tab" aria-selected="true">2026</button>
+<button type="button" class="rs-adv-tab active" data-view="players" role="tab" aria-selected="true">PLAYERS</button>
 <button type="button" class="rs-adv-tab" data-view="coach" role="tab" aria-selected="false">COACH</button>
-<button type="button" class="rs-adv-tab" data-view="past" role="tab" aria-selected="false">PAST SEASONS</button>
 </div>
 
 <!-- Advanced stats -->
-<div class="rs-section" id="rsAdvSection" data-rsview="cur past">
+<div class="rs-section" id="rsAdvSection" data-rsview="players">
 <div class="rs-section-title">Advanced Stats</div>
-<div class="rs-help">PFF Premium charting + nflverse play-by-play, regular season only. Pick a position, click any column header to sort, hover a header for its definition. Shading = percentile rank among the rows shown (green = better). Click a player to open their card.</div>
+<div class="rs-help">PFF Premium charting + nflverse play-by-play, regular season only. Pick a position, click any column header to sort, hover a header for its definition. Season, Weeks and Team each take several picks: the seasons and weeks you tick combine into one sample. Shading = percentile rank among the rows shown (green = better). Click a player to open their card.</div>
 <div class="rs-adv-tabs" id="rsAdvTabs" role="tablist" aria-label="Position">
 <button type="button" class="rs-adv-tab active" data-pos="QB" role="tab" aria-selected="true">QB</button>
 <button type="button" class="rs-adv-tab" data-pos="RB" role="tab" aria-selected="false">RB</button>
@@ -2659,10 +2659,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" class="rs-adv-tab" data-pos="TM" role="tab" aria-selected="false">TEAM</button>
 </div>
 <div class="rs-controls">
-<label>Season <select id="rsAdvYr" class="rs-select"></select></label>
-<label title="Full season, one week, the last 3 or 5 weeks, or a custom range">Weeks <select id="rsAdvWk" class="rs-select"><option value="">Season</option></select></label>
-<span class="rs-adv-range" id="rsAdvRange" hidden><label>From <select id="rsAdvWkFrom" class="rs-select"></select></label><label>To <select id="rsAdvWkTo" class="rs-select"></select></label></span>
-<label title="Pick a team to see every player it used at this position (the minimum filter drops to 0)">Team <select id="rsAdvTm" class="rs-select"><option value="">All</option></select></label>
+<!-- multi-pick filters (Jack 2026-09-16): rendered by _multi() in app.js; several seasons / weeks combine into one sample -->
+<span class="rs-ctl" title="Tick one or more seasons; several combine into one sample">Season <span class="rs-multi" id="rsAdvYr"></span></span>
+<span class="rs-ctl" title="Season = full season files. Tick any weeks (or Last 3 / Last 5) to rebuild the sample from those weeks">Weeks <span class="rs-multi" id="rsAdvWk"></span></span>
+<span class="rs-ctl" title="Pick one team to see its whole room side by side (the minimum filter drops to 0), or several teams">Team <span class="rs-multi" id="rsAdvTm"></span></span>
 <label><span id="rsAdvMinLbl">Min dropbacks</span> <input type="number" id="rsAdvMin" class="rs-num" min="0" step="5"></label>
 <input type="text" id="rsAdvQ" class="rs-search rs-adv-q" placeholder="Filter players&hellip;" autocomplete="off" spellcheck="false" aria-label="Filter players">
 <div class="rs-adv-mode" id="rsAdvMode" role="group" aria-label="Counting stats"><button type="button" data-mode="pg" class="on" aria-pressed="true">Per game</button><button type="button" data-mode="tot" aria-pressed="false">Totals</button></div>
@@ -2709,7 +2709,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Player lookup -->
-<div class="rs-section" data-rsview="past">
+<div class="rs-section" data-rsview="players">
 <div class="rs-section-title">Player Lookup</div>
 <div class="rs-search-row">
 <input type="text" id="rsSearch" class="rs-search" placeholder="Search any player (active or retired)..." autocomplete="off" spellcheck="false" aria-label="Search players">
@@ -2719,7 +2719,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- Explorer -->
-<div class="rs-section" data-rsview="past">
+<div class="rs-section" data-rsview="players">
 <div class="rs-section-title">Season Explorer</div>
 <div class="rs-help">Every player-season with a recorded preseason ADP, joined to what they actually did. Filter, then click any column header to sort. Click a row to open that player above.</div>
 <div class="rs-controls">
@@ -5839,7 +5839,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-16-scatter3"></script>
+<script defer src="app.js?v=2026-09-16-scatter4"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -8645,8 +8645,11 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // positions (K included) drop to the projection order; every save made
     // after the cutoff carries Jack's real intent and is left alone.
     // Self-expiring: the cutoff is fixed, and week 3+ saves never match.
-    if (ver === 'jacks' && obj._week === 2 && Array.isArray(obj._ownedPos)) {
-      const at = Date.parse(window._jacksUpdatedAt || '');
+    // Same for Jack's own MY RANKINGS doc (admin session only — never other
+    // users' week-2 edits).
+    const _resetVer = ver === 'jacks' || (ver === 'mine' && typeof window._weeklyIsAdmin === 'function' && window._weeklyIsAdmin());
+    if (_resetVer && obj._week === 2 && Array.isArray(obj._ownedPos)) {
+      const at = Date.parse((ver === 'jacks' ? window._jacksUpdatedAt : window._mineUpdatedAt) || '');
       if (isFinite(at) && at < Date.parse('2026-09-16T16:00:00Z')) {
         obj = Object.assign({}, obj, { _ownedPos: obj._ownedPos.filter(p => p === 'DST') });
         window._weeklySaved[ver] = obj;
@@ -8689,7 +8692,13 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // 'jacks' before 'mine', so Jack's weekly is already up to date here.
     if (ver === 'mine' && typeof window._mineWeeklyVirgin === 'function' && window._mineWeeklyVirgin(wk)) {
       const _useJacksWeekly = !!(versionBoards.jacks.weekly && versionBoards.jacks.weekly.length);
-      const src = _useJacksWeekly ? versionBoards.jacks.weekly : versionBoards.jacks.redraft;
+      // Projection-default regime (week 2+, current/future): a virgin MY
+      // RANKINGS week starts strictly by PPR projection too (Jack 2026-09-16,
+      // "do this for my rankings not just jacks") — the first save takes
+      // ownership exactly like Jack's board. Earlier weeks mirror Jack's.
+      const _projVirgin = (typeof window._weeklyProjDefaultFor === 'function') && window._weeklyProjDefaultFor(wk);
+      const src = _projVirgin ? window._weeklyProjOrder('mine')
+        : (_useJacksWeekly ? versionBoards.jacks.weekly : versionBoards.jacks.redraft);
       versionBoards.mine.weekly = src.slice();
       // Tiers come from whichever jacks board the order came from, so
       // afterRank boundaries line up with the mirrored order.
@@ -29776,6 +29785,7 @@ window.fmtHeight = fmtHeight;
       const doc = await db.collection('rankings').doc(currentUser.uid).get();
       if (doc.exists && doc.data().data) {
         const obj = JSON.parse(doc.data().data);
+        window._mineUpdatedAt = doc.data().updatedAt || null;
         // Custom-format flags first — they decide which saved orders below are
         // the user's own work vs. mirrored Jack's copies to be re-seeded fresh.
         if (typeof window._mineMetaLoad === 'function') window._mineMetaLoad(obj.mineMeta, !!obj.mine);
@@ -63147,7 +63157,7 @@ Rules:
   }
   window._renderResearch = function _renderResearch() {
     if (!document.getElementById('pageResearch')) return;
-    // view tabs first (they pin the Advanced Stats season), then the sections
+    // view tabs first (they show / hide the sections), then the sections
     if (typeof window._rsApplyView === 'function') window._rsApplyView();
     // Advanced Stats has its own per-season data and doesn't wait on the retired DB
     if (typeof window._renderAdvStats === 'function') window._renderAdvStats();
@@ -63414,11 +63424,13 @@ Rules:
       depa: 'dpl', ddbepa: 'dpa', druepa: 'drua', dsr: 'dpl', dxp: 'dpl', dskp: 'dpa', dprs: 'dpdbt', dblz: 'dpdbt',
       dman: 'dmzr', dtdc: 'dtdn', drztd: 'drzt' }
   };
-  function _aggregate(yr, wl) {
-    const A = window.ADV_STATS || {};
-    const sets = wl.map(w => A[yr + '-w' + w]).filter(Boolean);
+  // sets = season and / or week datasets in time order (the last one names a player's team);
+  // whole seasons combine the same way because the season files carry the same hidden fields
+  function _aggregate(sets) {
+    sets = (sets || []).filter(Boolean);
     if (!sets.length) return null;
-    const out = { yr: yr, thru: wl[wl.length - 1], span: [wl[0], wl[wl.length - 1]], teams: {} };
+    const last = sets[sets.length - 1];
+    const out = { yr: last.yr, thru: last.thru, teams: {} };
     sets.forEach(s => Object.keys(s.teams || {}).forEach(tm => {
       const t = out.teams[tm] = out.teams[tm] || [0, 0, 0, 0, 0];
       s.teams[tm].forEach((v, i) => { t[i] += v || 0; });
@@ -63475,11 +63487,12 @@ Rules:
     return out;
   }
 
-  let _pos = 'QB', _yr = YEARS[0], _sortK = 'fpt', _sortAsc = false;
-  // Weeks filter: '' = season, 'N' = one week, 'L3' / 'L5' = last 3 / 5 weeks, 'R' = custom From-To
-  let _wsel = '', _rFrom = 0, _rTo = 0, _loadSeq = 0;
-  // Research view: 'cur' pins the season to YEARS[0]; 'past' offers the rest (last pick remembered)
-  let _advView = 'cur', _pastYr = YEARS[1];
+  let _pos = 'QB', _sortK = 'fpt', _sortAsc = false;
+  // Multi-pick filters (Jack 2026-09-16 "select multiple so we can see samples of multiple weeks"):
+  // seasons (always at least one), weeks ([] = the full season files), teams ([] = all). Every
+  // season and week ticked combines into ONE sample (_aggregate: counts add, rates re-weight).
+  let _yrs = [YEARS[0]], _wks = [], _tms = [], _loadSeq = 0;
+  let _yrPick = null, _wkPick = null, _tmPick = null;   // the three _multi() controls
 
   // --- team room chart (Jack 2026-09-16: "who's trending up/down or just compare roles") ------
   // Team view + RB / WR / TE tab -> one line per player across every week of the season for a
@@ -63519,10 +63532,11 @@ Rules:
   function _roomChart() {
     const host = _el('rsAdvRoom');
     if (!host) return;
-    const tm = (_el('rsAdvTm') || {}).value, poss = _roomPositions(), sf = _seasonFile();
+    // one team on one season: several seasons or teams have no single room to chart
+    const tm = _tms.length === 1 && _yrs.length === 1 ? _tms[0] : '', poss = _roomPositions(), sf = _seasonFile();
     if (!tm || !poss || !sf || !(sf.wks || []).length) { host.hidden = true; host.innerHTML = ''; return; }
     host.hidden = false;
-    const wks = sf.wks, yr = _yr;
+    const wks = sf.wks, yr = _yrs[0];
     const missing = wks.filter(w => !(window.ADV_STATS || {})[yr + '-w' + w]);
     if (missing.length) {
       host.innerHTML = '<div class="rs-empty">Loading ' + yr + ' weeks for ' + _esc(tm) + '…</div>';
@@ -63915,17 +63929,17 @@ Rules:
       });
     }
     // title + caption + watermark
-    const scope = _scope(), thru = (_season() || {}).thru;
-    const when = scope ? scope : (thru && thru < 17 ? 'thru Week ' + thru : 'season');
+    const scope = _scope(), thru = _yrs.length === 1 ? (_seasonFile() || {}).thru : 0;   // "thru Week N" only reads for one season
+    const when = scope ? scope : (thru && thru < 17 ? 'thru Week ' + thru : _yrs.length > 1 ? 'seasons' : 'season');
     ctx.fillStyle = th.text;
     ctx.font = TITLE + 'px ' + BEB;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     try { ctx.letterSpacing = '1px'; } catch (e) { /* older canvas */ }
-    ctx.fillText((_yr + ' ' + (_pos === 'TM' ? 'TEAMS' : _pos) + ' · ' + yl + ' vs ' + xl).toUpperCase(), PADL, 26 * F);
+    ctx.fillText((_yrLabel() + ' ' + (_pos === 'TM' ? 'TEAMS' : _pos) + ' · ' + yl + ' vs ' + xl).toUpperCase(), PADL, 26 * F);
     try { ctx.letterSpacing = '0px'; } catch (e) { /* older canvas */ }
     ctx.fillStyle = th.text3;
     ctx.font = SUB + 'px ' + SANS;
-    const tm = (_el('rsAdvTm') || {}).value, minV = +((_el('rsAdvMin') || {}).value || 0);
+    const tm = _tms.join(' / '), minV = +((_el('rsAdvMin') || {}).value || 0);
     ctx.fillText(when + (tm ? ' · ' + tm : '') + ' · ' + n + (_pos === 'TM' ? ' teams' : ' players') +
       (minV ? ' · ' + MIN[_pos][1].toLowerCase().replace(/^min /, 'min ') + ' ' + minV : '') +
       (r != null ? ' · r = ' + r.toFixed(2) : '') + ' · dashed = averages · solid = trend', PADL, 44 * F);
@@ -63985,7 +63999,7 @@ Rules:
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const out = _scDraw(ctx, w, h, D, _scTheme(host), _scLab);
       _scPts = out.hits.map(hh => Object.assign({ p: D.pts[hh.i] }, hh));
-      canvas.setAttribute('aria-label', _yr + ' ' + _pos + ' ' + _scLabel(D.cy, pg) + ' vs ' + _scLabel(D.cx, pg));
+      canvas.setAttribute('aria-label', _yrLabel() + ' ' + _pos + ' ' + _scLabel(D.cy, pg) + ' vs ' + _scLabel(D.cx, pg));
       cap.textContent = D.pts.length + (_pos === 'TM' ? ' teams' : ' players') + ' from the table below (its filters apply)' +
         (out.r != null ? ' · r = ' + out.r.toFixed(2) : '') + ' · dashed lines = averages, solid = least-squares trend' +
         ((D.cx.k === 'fpt' || D.cx.k === 'xfpt') && (D.cy.k === 'fpt' || D.cy.k === 'xfpt') && D.cx.k !== D.cy.k ? ', dotted = scored exactly what opportunity implies' : '') +
@@ -64013,7 +64027,7 @@ Rules:
       ctx.setTransform(S, 0, 0, S, 0, 0);
       _scDraw(ctx, W, H, D, _scTheme(host), _scLab);
       const clean = s => String(s).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-      const name = 'MFF-Scatter-' + _pos + '-' + _yr + (_scope() ? '-W' + _scope().replace(/^Weeks? /, '') : '') + '-' +
+      const name = 'MFF-Scatter-' + _pos + '-' + _yrLabel().replace(/,\s*/g, '+') + (_scope() ? '-W' + _scope().replace(/^Weeks? /, '').replace(/,\s*/g, '_') : '') + '-' +
         clean(_scLabel(D.cy, D.pg)) + '-vs-' + clean(_scLabel(D.cx, D.pg)) + '.png';
       const done = () => { if (btn) { btn.disabled = false; btn.textContent = 'Download PNG'; } };
       try {
@@ -64132,31 +64146,55 @@ Rules:
 
   function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
   function _norm(s) { return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
-  function _seasonFile() { return (window.ADV_STATS || {})[_yr] || null; }
-  function _weekList() {
-    if (!_wsel) return null;
-    const wks = (_seasonFile() || {}).wks || [];
-    if (_wsel === 'L3' || _wsel === 'L5') return wks.slice(-(+_wsel.slice(1)));
-    if (_wsel === 'R') return wks.filter(w => w >= Math.min(_rFrom, _rTo) && w <= Math.max(_rFrom, _rTo));
-    return [+_wsel];
+  function _yrsAsc() { return _yrs.slice().sort((a, b) => a - b); }
+  // sorted numbers as "1-3", "1, 3, 5-7" (also seasons: "2024-2026", "2024, 2026")
+  function _spanLabel(nums) {
+    const parts = [];
+    for (let i = 0; i < nums.length;) {
+      let j = i;
+      while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+      parts.push(j > i + 1 ? nums[i] + '-' + nums[j] : j === i + 1 ? nums[i] + ', ' + nums[j] : String(nums[i]));
+      i = j + 1;
+    }
+    return parts.join(', ');
   }
-  // the dataset on screen: season file, one week's file, or a range rebuilt from week files
-  function _dataKey() {
-    const wl = _weekList();
-    if (!wl || !wl.length) return String(_yr);
-    return wl.length === 1 ? _yr + '-w' + wl[0] : _yr + '-r' + wl[0] + '-' + wl[wl.length - 1];
+  function _yrLabel() { return _spanLabel(_yrsAsc()); }
+  function _seasonFile(yr) { return (window.ADV_STATS || {})[yr == null ? _yrs[0] : yr] || null; }
+  // every week any picked season has (the Weeks picker's options)
+  function _allWeeks() {
+    const s = new Set();
+    _yrs.forEach(y => ((_seasonFile(y) || {}).wks || []).forEach(w => s.add(w)));
+    return Array.from(s).sort((a, b) => a - b);
   }
+  // the picked weeks that season actually has (sorted); null = full season
+  function _weekList(yr) {
+    if (!_wks.length) return null;
+    const wks = (_seasonFile(yr) || {}).wks || [];
+    return _wks.filter(w => wks.indexOf(w) >= 0).sort((a, b) => a - b);
+  }
+  // one season's dataset key: its season file, one week's file, or a set of weeks rebuilt
+  // from week files (null when none of the picked weeks exist in that season)
+  function _yearKey(yr) {
+    const wl = _weekList(yr);
+    if (!wl) return String(yr);
+    return wl.length ? yr + '-w' + wl.join(',') : null;
+  }
+  // the dataset on screen; several seasons join their keys with '+'
+  function _dataKey() { return _yrsAsc().map(_yearKey).filter(Boolean).join('+'); }
   function _scope() {
-    const wl = _weekList();
-    if (!wl || !wl.length) return '';
-    return wl.length === 1 ? 'Week ' + wl[0] : 'Weeks ' + wl[0] + '-' + wl[wl.length - 1];
+    if (!_wks.length) return '';
+    const wl = _wks.slice().sort((a, b) => a - b);
+    return (wl.length === 1 ? 'Week ' : 'Weeks ') + _spanLabel(wl);
   }
-  function _season() { return (window.ADV_STATS || {})[_dataKey()] || null; }
+  function _season() { const k = _dataKey(); return k ? (window.ADV_STATS || {})[k] || null : null; }
+  // week-samples on screen (the min filter scales its per-week floor by this)
   function _thru() {
-    const wl = _weekList();
-    if (wl && wl.length) return wl.length;
-    const s = _season();
-    return s && s.thru ? Math.min(s.thru, 17) : 17;
+    let n = 0;
+    _yrs.forEach(y => {
+      const wl = _weekList(y), s = _seasonFile(y);
+      n += wl ? wl.length : s && s.thru ? Math.min(s.thru, 17) : 17;
+    });
+    return n || 1;
   }
   function _el(id) { return document.getElementById(id); }
 
@@ -64180,8 +64218,8 @@ Rules:
   // league-wide views get the per-week volume floor.
   function _resetMin() {
     const m = MIN[_pos];
-    const inp = _el('rsAdvMin'), lbl = _el('rsAdvMinLbl'), tm = _el('rsAdvTm');
-    if (inp) inp.value = tm && tm.value ? 0 : Math.round(m[2] * _thru());
+    const inp = _el('rsAdvMin'), lbl = _el('rsAdvMinLbl');
+    if (inp) inp.value = _tms.length ? 0 : Math.round(m[2] * _thru());
     if (lbl) lbl.textContent = m[1];
   }
 
@@ -64215,21 +64253,19 @@ Rules:
       if (csvBtn) csvBtn.disabled = true;
       _roomChart();
       _scatter();
-      wrap.innerHTML = '<div class="rs-empty">No advanced stats file for ' + _yr + '.</div>';
+      wrap.innerHTML = '<div class="rs-empty">No advanced stats for ' + _esc(_yrLabel()) + (_scope() ? ' ' + _esc(_scope()) : '') + '.</div>';
       if (cnt) cnt.textContent = '';
       if (foot) foot.textContent = '';
       return;
     }
-    const tmSel = _el('rsAdvTm');
     const teams = Array.from(new Set(all.map(r => r.tm).filter(Boolean))).sort();
-    const curTm = tmSel.value;
-    tmSel.innerHTML = '<option value="">All</option>' + teams.map(t => '<option>' + _esc(t) + '</option>').join('');
-    tmSel.value = teams.indexOf(curTm) >= 0 ? curTm : '';
+    if (_tmPick) { _tmPick.setOptions(teams.map(t => ({ v: t, l: t }))); _tms = _tmPick.get(); }
+    const tm1 = _tms.length === 1 ? _tms[0] : '';   // one team = "room" view (shares of its totals)
 
     const minKey = MIN[_pos][0];
     const min = +(_el('rsAdvMin').value || 0);
     const q = _norm(_el('rsAdvQ').value);
-    const rows = all.filter(r => (r[minKey] || 0) >= min && (!tmSel.value || r.tm === tmSel.value) && (!q || _norm(r.n).indexOf(q) >= 0));
+    const rows = all.filter(r => (r[minKey] || 0) >= min && (!_tms.length || _tms.indexOf(r.tm) >= 0) && (!q || _norm(r.n).indexOf(q) >= 0));
     const hid = _hidden[_pos] || {};
     const cols = COLS[_pos].filter(col => !hid[col.g]);
     // counting stats are stored as season totals; Per game divides by games played
@@ -64238,7 +64274,7 @@ Rules:
     // Team view: shares become share of that team's FULL-SEASON totals (volume while on
     // that team), so a room adds up. League view keeps "share over games played".
     const season = _season() || {};
-    const teamTot = _pos !== 'TM' && tmSel.value && season.teams ? season.teams[tmSel.value] : null;  // [tgt, car, ay, i10, games]
+    const teamTot = _pos !== 'TM' && tm1 && season.teams ? season.teams[tm1] : null;  // [tgt, car, ay, i10, games]
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
     const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3) };
     const calcs = {};   // computed columns (Usage) read the row's own per-game-played shares
@@ -64296,7 +64332,7 @@ Rules:
     cols.forEach((col, i) => {
       const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)' };
       const tip = teamTot && TEAM_TIP[col.k]
-        ? 'Share of ' + tmSel.value + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tmSel.value + ')'
+        ? 'Share of ' + tm1 + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tm1 + ')'
         : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
       html += '<th data-k="' + col.k + '" title="' + _esc(tip) + '" class="' + (groupStart.has(i) ? 'rs-adv-gs' : '') + sortCls(col.k) + '">' +
         _esc(pg && col.cnt ? col.lg : col.l) + '</th>';
@@ -64323,74 +64359,128 @@ Rules:
         if (!pg) return sum.toFixed(col.d);
         return teamTot[4] ? (sum / teamTot[4]).toFixed(col.dg) : '';
       });
-      html += '<tr class="rs-adv-total"><td class="rs-adv-nm">' + _esc(tmSel.value) + ' total</td><td class="rs-adv-tm"></td>' +
+      html += '<tr class="rs-adv-total"><td class="rs-adv-nm">' + _esc(tm1) + ' total</td><td class="rs-adv-tm"></td>' +
         total.map((x, i) => '<td' + (groupStart.has(i) ? ' class="rs-adv-gs"' : '') + '>' + x + '</td>').join('') + '</tr>';
     }
     html += '</tbody></table>';
     if (!rows.length) html = '<div class="rs-empty">No players match these filters.</div>';
     wrap.innerHTML = html;
-    _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yr, scope: _scope(), tm: tmSel.value, total: total };
+    _last = { rows: rows, cols: cols, val: val, pg: pg, pos: _pos, yr: _yrLabel().replace(/,\s*/g, '+'), scope: _scope(), tm: tm1, total: total };
     if (csvBtn) csvBtn.disabled = !rows.length;
     _roomChart();
     _scatter();
 
-    const thru = (_season() || {}).thru;
-    const scope = _scope();
-    if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yr + (scope ? ' ' + scope : thru && thru < 17 ? ' thru Week ' + thru : '') + (_pos === 'TM' ? '' : ' · ' + FMT_NAME[_fmt]);
+    const one = _yrs.length === 1, thru = one ? (_seasonFile() || {}).thru : 0;
+    const scope = _scope(), cur = _yrs.indexOf(YEARS[0]) >= 0 && (_seasonFile(YEARS[0]) || {}).thru < 17;
+    const combined = _yrs.length > 1 || _wks.length > 1;
+    if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yrLabel() + (scope ? ' ' + scope : thru && thru < 17 ? ' thru Week ' + thru : '') + (_pos === 'TM' ? '' : ' · ' + FMT_NAME[_fmt]);
     if (foot) foot.textContent = NOTES[_pos] + (teamTot
-      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tmSel.value + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tmSel.value + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
-      : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick a team to see its season split. ') +
-      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!scope && thru && thru < 17 ? ' ' + _yr + ' updates daily as PFF posts each week.' : '') +
-      (scope && _yr < 2026 && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
-      (/^Weeks /.test(scope) ? ' Week ranges are rebuilt from the week files: counting stats add up and every rate is re-weighted by its own denominator.' : '');
+      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tm1 + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tm1 + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
+      : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick one team to see its season split. ') +
+      'Sources: PFF Premium, nflverse play-by-play + snap counts.' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
+      (scope && _yrs.some(y => y < 2026) && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
+      (combined ? ' The seasons and weeks you ticked are combined into one sample: counting stats add up and every rate is re-weighted by its own denominator; a player\'s team is his latest.' : '');
   }
 
-  // week options come from the season file's `wks`
+  // week options = every week any picked season lists in its `wks`
   function _fillWeeks() {
-    const sel = _el('rsAdvWk'), from = _el('rsAdvWkFrom'), to = _el('rsAdvWkTo'), box = _el('rsAdvRange');
-    if (!sel) return;
-    const wks = (_seasonFile() || {}).wks || [];
-    sel.innerHTML = '<option value="">Season</option>' +
-      (wks.length > 1 ? '<option value="L3">Last 3 weeks</option><option value="L5">Last 5 weeks</option><option value="R">Custom range</option>' : '') +
-      wks.map(w => '<option value="' + w + '">Week ' + w + '</option>').join('');
-    const opts = wks.map(w => '<option value="' + w + '">' + w + '</option>').join('');
-    if (from) from.innerHTML = opts;
-    if (to) to.innerHTML = opts;
-    if (_wsel && !Array.from(sel.options).some(o => o.value === _wsel)) _wsel = '';
-    sel.value = _wsel;
-    if (_wsel === 'R' && wks.length) {
-      if (wks.indexOf(_rFrom) < 0) _rFrom = wks[Math.max(0, wks.length - 3)];
-      if (wks.indexOf(_rTo) < 0) _rTo = wks[wks.length - 1];
-      if (from) from.value = String(_rFrom);
-      if (to) to.value = String(_rTo);
-    }
-    if (box) box.hidden = _wsel !== 'R';
+    const wks = _allWeeks();
+    _wks = _wks.filter(w => wks.indexOf(w) >= 0);
+    if (_wkPick) _wkPick.setOptions(wks.map(w => ({ v: w, l: 'Week ' + w })), _wks);
   }
 
-  // season file first (it lists the weeks), then the week file(s); a multi-week range is
-  // aggregated once and cached under its key
+  // season files first (they list the weeks), then every week file the picks need; each
+  // season's week set is aggregated once and cached under its key, and several seasons are
+  // aggregated once more under the '+'-joined key
   function _load() {
     const seq = ++_loadSeq;
     const wrap = _el('rsAdvWrap');
-    const yr = _yr;
+    const yrs = _yrsAsc();
     const ens = typeof window._ensureAdvStats === 'function' ? window._ensureAdvStats : function() { return Promise.resolve(null); };
-    if (wrap && !_seasonFile()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + ' advanced stats&hellip;</div>';
-    ens(yr).then(function() {
+    if (wrap && !yrs.every(y => _seasonFile(y))) wrap.innerHTML = '<div class="rs-empty">Loading ' + _esc(_yrLabel()) + ' advanced stats&hellip;</div>';
+    Promise.all(yrs.map(y => ens(y))).then(function() {
       if (seq !== _loadSeq) return null;
       _fillWeeks();
-      const wl = _weekList();
-      if (!wl || !wl.length) return null;
-      if (wrap && !_season()) wrap.innerHTML = '<div class="rs-empty">Loading ' + yr + ' ' + _scope() + '&hellip;</div>';
-      return Promise.all(wl.map(w => ens(yr, w))).then(function() {
+      const need = [];
+      yrs.forEach(y => { const wl = _weekList(y); if (wl) wl.forEach(w => need.push([y, w])); });
+      if (!need.length && yrs.length < 2) return null;
+      if (wrap && !_season()) wrap.innerHTML = '<div class="rs-empty">Loading ' + _esc(_yrLabel()) + ' ' + _esc(_scope() || 'seasons') + '&hellip;</div>';
+      return Promise.all(need.map(p => ens(p[0], p[1]))).then(function() {
+        if (seq !== _loadSeq) return;
         const A = window.ADV_STATS = window.ADV_STATS || {};
-        const key = _dataKey();
-        if (wl.length > 1 && !A[key]) A[key] = _aggregate(yr, wl);
+        const keys = [];
+        yrs.forEach(y => {
+          const k = _yearKey(y), wl = _weekList(y);
+          if (!k) return;
+          if (wl && wl.length > 1 && !A[k]) A[k] = _aggregate(wl.map(w => A[y + '-w' + w]));
+          if (A[k]) keys.push(k);
+        });
+        const dk = keys.join('+');
+        if (keys.length > 1 && !A[dk]) A[dk] = _aggregate(keys.map(k => A[k]));
       });
     }).then(function() {
       if (seq !== _loadSeq) return;
       _resetMin();
       _render();
     });
+  }
+
+  // Multi-pick control: a select-looking button that opens a checklist with quick picks.
+  // cfg.summary(sel) -> button text, cfg.onChange(sel) after a 300 ms settle (ticking several
+  // boxes loads once), cfg.quick = [[label, (sel, allValues) => newSel]], cfg.keep = min picks.
+  function _multi(id, cfg) {
+    const host = _el(id);
+    if (!host) return { setOptions: function() {}, get: function() { return []; } };
+    host.innerHTML = '<button type="button" class="rs-multi-btn" aria-haspopup="true" aria-expanded="false"><span class="rs-multi-txt"></span><span class="rs-multi-caret" aria-hidden="true">&#9662;</span></button><div class="rs-multi-pop" hidden></div>';
+    const btn = host.querySelector('.rs-multi-btn'), txt = host.querySelector('.rs-multi-txt'), pop = host.querySelector('.rs-multi-pop');
+    let opts = [], sel = [], timer = null, drawn = '', pending = null;   // pending = a pick not yet reported
+    const same = (a, b) => String(a) === String(b);
+    const pick = (list, vals) => list.filter(o => vals.some(v => same(v, o.v))).map(o => o.v);   // option order + types
+    function label() { txt.textContent = cfg.summary(sel.slice()); }
+    function draw() {
+      const key = opts.map(o => o.v).join('|') + '#' + sel.join('|');
+      if (key === drawn) return;
+      drawn = key;
+      pop.innerHTML = (cfg.quick && cfg.quick.length ? '<div class="rs-multi-quick">' + cfg.quick.map((q, i) => '<button type="button" data-q="' + i + '">' + _esc(q[0]) + '</button>').join('') + '</div>' : '') +
+        '<div class="rs-multi-list' + (opts.length > 12 ? ' cols3' : opts.length > 4 ? ' cols2' : '') + '">' + opts.map(o => '<label class="rs-multi-opt"><input type="checkbox" value="' + _esc(o.v) + '"' + (sel.some(v => same(v, o.v)) ? ' checked' : '') + '> ' + _esc(o.l) + '</label>').join('') + '</div>';
+    }
+    function apply(next) {
+      sel = pending = pick(opts, next);
+      label(); draw();
+      clearTimeout(timer);
+      timer = setTimeout(() => { const p = pending; pending = null; cfg.onChange(p.slice()); }, 300);
+    }
+    function close() { if (pop.hidden) return; pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+    btn.addEventListener('click', () => {
+      if (!pop.hidden) { close(); return; }
+      document.querySelectorAll('.rs-multi-btn[aria-expanded="true"]').forEach(b => { if (b !== btn) b.click(); });
+      pop.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      // hang from the right edge when the list would run off a narrow screen
+      pop.style.left = ''; pop.style.right = '';
+      if (pop.getBoundingClientRect().right > window.innerWidth - 8) { pop.style.left = 'auto'; pop.style.right = '0'; }
+    });
+    pop.addEventListener('change', e => {
+      const cb = e.target.closest('input[type=checkbox]');
+      if (!cb) return;
+      const next = sel.filter(v => !same(v, cb.value));
+      if (cb.checked) next.push(cb.value);
+      if (next.length < (cfg.keep || 0)) { cb.checked = true; return; }   // never fewer than cfg.keep
+      apply(next);
+    });
+    pop.addEventListener('click', e => {
+      const q = e.target.closest('button[data-q]');
+      if (q) apply(cfg.quick[+q.dataset.q][1](sel.slice(), opts.map(o => o.v)));
+    });
+    document.addEventListener('click', e => { if (!host.contains(e.target)) close(); });
+    host.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); btn.focus(); } });
+    return {
+      // new option list; keeps the picks that still exist (fires no change). A pick still
+      // settling wins over the caller's (stale) picks - e.g. a season change refills the
+      // weeks while the user's "Season" click is 300 ms from being reported.
+      setOptions: function(list, picks) { opts = list; sel = pick(opts, pending || picks || sel); if (pending) pending = sel; label(); draw(); },
+      get: function() { return sel.slice(); }
+    };
   }
 
   // CSV of exactly what the table shows: filtered + sorted rows, visible column
@@ -64411,7 +64501,7 @@ Rules:
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'MFF-Advanced-Stats-' + L.pos + '-' + L.yr + (L.scope ? '-W' + L.scope.replace(/^Weeks? /, '') : '') + (L.tm ? '-' + L.tm : '') + '-' + (L.pg ? 'PerGame' : 'Totals') + '.csv';
+    a.download = 'MFF-Advanced-Stats-' + L.pos + '-' + L.yr + (L.scope ? '-W' + L.scope.replace(/^Weeks? /, '').replace(/,\s*/g, '_') : '') + (L.tm ? '-' + L.tm : '') + '-' + (L.pg ? 'PerGame' : 'Totals') + '.csv';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -64419,24 +64509,9 @@ Rules:
     if (typeof toast === 'function') toast('Exported ' + L.rows.length + ' ' + L.pos + 's to CSV');
   }
 
-  function _fillYears() {
-    const yrSel = _el('rsAdvYr');
-    if (!yrSel) return;
-    const years = _advView === 'cur' ? [YEARS[0]] : YEARS.slice(1);
-    yrSel.innerHTML = years.map(y => '<option value="' + y + '">' + y + '</option>').join('');
-    yrSel.value = String(_yr);
-    const lbl = yrSel.closest('label');
-    if (lbl) lbl.hidden = _advView === 'cur';   // one season: nothing to pick
-  }
-  // called by the Research view tabs (2026 / Past seasons)
-  window._advSetView = function _advSetView(view) {
-    if (view !== 'cur' && view !== 'past') return;
-    _advView = view;
-    _yr = view === 'cur' ? YEARS[0] : _pastYr;
-    _wsel = ''; _rFrom = _rTo = 0;
-    _fillYears();
-    if (_started) _load();
-  };
+  // the Research view tabs call this when the Players view comes back (a room chart drawn
+  // while the section was hidden measured a 0-wide panel)
+  window._advRedraw = function _advRedraw() { if (_started) _roomChart(); };
 
   function _wire() {
     if (_wired) return;
@@ -64460,15 +64535,24 @@ Rules:
       let _rsz = null;
       window.addEventListener('resize', () => { if (room.hidden) return; clearTimeout(_rsz); _rsz = setTimeout(_roomChart, 150); });
     }
-    const yrSel = _el('rsAdvYr');
-    _fillYears();
-    yrSel.addEventListener('change', () => { _yr = +yrSel.value; if (_advView === 'past') _pastYr = _yr; _wsel = ''; _load(); });
-    _el('rsAdvWk').addEventListener('change', e => { _wsel = e.target.value; _rFrom = _rTo = 0; _load(); });
-    ['rsAdvWkFrom', 'rsAdvWkTo'].forEach(id => _el(id).addEventListener('change', () => {
-      _rFrom = +_el('rsAdvWkFrom').value;
-      _rTo = +_el('rsAdvWkTo').value;
-      _load();
-    }));
+    const asc = a => a.map(Number).sort((x, y) => x - y);
+    _yrPick = _multi('rsAdvYr', {
+      keep: 1,
+      summary: sel => _spanLabel(asc(sel)),
+      quick: [['Latest', () => [YEARS[0]]], ['All', (s, all) => all.slice()]],
+      onChange: sel => { _yrs = sel.map(Number); _load(); }
+    });
+    _yrPick.setOptions(YEARS.map(y => ({ v: y, l: String(y) })), _yrs);
+    _wkPick = _multi('rsAdvWk', {
+      summary: sel => (sel.length ? (sel.length === 1 ? 'Week ' : 'Wks ') + _spanLabel(asc(sel)) : 'Season'),
+      quick: [['Season', () => []], ['Last 3', (s, all) => all.slice(-3)], ['Last 5', (s, all) => all.slice(-5)], ['All', (s, all) => all.slice()]],
+      onChange: sel => { _wks = sel.map(Number); _load(); }
+    });
+    _tmPick = _multi('rsAdvTm', {
+      summary: sel => (!sel.length ? 'All' : sel.length <= 3 ? sel.join(', ') : sel.length + ' teams'),
+      quick: [['All', () => []]],
+      onChange: sel => { _tms = sel.slice(); _resetMin(); _render(); }
+    });
     const fmtEl = _el('rsAdvFmt');
     const syncFmt = () => fmtEl && fmtEl.querySelectorAll('button[data-fmt]').forEach(b => {
       const on = b.dataset.fmt === _fmt;
@@ -64522,7 +64606,6 @@ Rules:
       _renderGroups();
       _render();
     });
-    _el('rsAdvTm').addEventListener('change', () => { _resetMin(); _render(); });
     _el('rsAdvHeat').addEventListener('change', _render);
     ['rsAdvMin', 'rsAdvQ'].forEach(id => _el(id).addEventListener('input', _render));
     _el('rsAdvWrap').addEventListener('click', e => {
@@ -65081,14 +65164,18 @@ Rules:
   };
 })();
 
-// === RESEARCH: top-level views (2026 / Coach / Past seasons) ===
-// One view at a time (Jack 2026-09-16). Sections carry data-rsview="cur|coach|past" (space-
-// separated when shared); Advanced Stats serves both 2026 and Past seasons and gets its season
-// picker retargeted through window._advSetView. Last view sticks in localStorage.
+// === RESEARCH: top-level views (Players / Coach) ===
+// One view at a time (Jack 2026-09-16). Sections carry data-rsview="players|coach". Players =
+// Advanced Stats (any seasons / weeks / teams via its multi-pick filters) + Player Lookup +
+// Season Explorer; the old 2026 / Past seasons split is gone. Last view sticks in localStorage.
 (function _researchViewsModule() {
-  const VIEWS = ['cur', 'coach', 'past'];
-  let _view = 'cur', _wired = false;
-  try { const v = localStorage.getItem('rsView'); if (VIEWS.indexOf(v) >= 0) _view = v; } catch (e) { /* storage blocked */ }
+  const VIEWS = ['players', 'coach'];
+  let _view = 'players', _wired = false;
+  try {
+    let v = localStorage.getItem('rsView');
+    if (v === 'cur' || v === 'past') v = 'players';   // pre-multi-pick values
+    if (VIEWS.indexOf(v) >= 0) _view = v;
+  } catch (e) { /* storage blocked */ }
   function apply() {
     document.querySelectorAll('#pageResearch [data-rsview]').forEach(el => {
       el.hidden = el.dataset.rsview.split(' ').indexOf(_view) < 0;
@@ -65098,7 +65185,7 @@ Rules:
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    if (_view !== 'coach' && typeof window._advSetView === 'function') window._advSetView(_view);
+    if (_view === 'players' && typeof window._advRedraw === 'function') window._advRedraw();
     if (_view === 'coach' && typeof window._coachRedraw === 'function') window._coachRedraw();
   }
   window._rsApplyView = function _rsApplyView() {

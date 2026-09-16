@@ -63116,6 +63116,56 @@ Rules:
     });
   }
 
+  // ---- Explorer scatter (Jack 2026-09-16: "add a scatter to the players lookup too") ----
+  // The Season Explorer's rows (the same filters, the first 400 the table shows) on any two of
+  // ADP / positional ADP / ESPN ADP / finish / +/- / points / PPG / games / year / draft round.
+  // Default = positional ADP vs finish with a "finished at ADP" line: below it beat the ADP.
+  // Shares the _rsScatter drawer with Advanced Stats, Coach and Movers.
+  let _exLast = null, _scX = null;
+  const EX_COLS = [
+    { k: 'pAdp', l: 'Pos ADP', d: 0, lo: true }, { k: 'f', l: 'Overall ADP', d: 0, lo: true }, { k: 'e', l: 'ESPN ADP', d: 0, lo: true },
+    { k: 'fin', l: 'Finish', d: 0, lo: true }, { k: 'val', l: '+/- (Pos ADP minus finish)', d: 0 },
+    { k: 'fpts', l: 'FPTS (half-PPR)', d: 1 }, { k: 'ppg', l: 'PPG', d: 1 }, { k: 'gp', l: 'GP', d: 0 },
+    { k: 'yr', l: 'Year', d: 0 }, { k: 'round', l: 'NFL draft round (0 = undrafted)', d: 0, lo: true }
+  ];
+  function _exFilters() {
+    const g = id => (document.getElementById(id) || {});
+    const yFrom = +(g('rsYrFrom').value || _yrMin), yTo = +(g('rsYrTo').value || _yrMax);
+    const round = g('rsRound').value || '', rookie = !!g('rsRookie').checked, minGp = +(g('rsMinGp').value || 0);
+    const RL = { '1': 'round 1', '2': 'round 2', '3': 'round 3', d2: 'day 2', d3: 'day 3', udfa: 'undrafted' };
+    return { pos: g('rsPos').value || '', yFrom: yFrom, yTo: yTo, round: RL[round] || '', rookie: rookie, minGp: minGp };
+  }
+  function _exScatter() {
+    return _rsScatter({
+      pfx: 'rsExSc', host: 'rsExScatter', btn: 'rsExPlot', store: 'rsExScatter',
+      group: () => 'ex',
+      cols: () => EX_COLS,
+      defaults: () => ['pAdp', 'fin'],
+      data: () => (_exLast && _exLast.rows.length ? { rows: _exLast.rows, pg: false, val: (r, col) => r[col.k] } : null),
+      label: col => col.l,
+      dec: col => col.d,
+      short: r => {
+        const parts = String(r.name || '').split(' ');
+        return (parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : r.name) + " '" + String(r.yr).slice(-2);
+      },
+      tm: r => r.tm || '',
+      tipHead: r => '<strong>' + _esc(r.name) + '</strong> <span class="rs-fmt">' + _esc(r.pos) + ' · ' + r.yr + (r.tm ? ' · ' + _esc(r.tm) : '') + '</span>',
+      canOpen: () => true,
+      open: r => { _selectPlayer(r.name); const el = document.getElementById('rsPlayerPanel'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
+      openNote: () => ', click to open the player above',
+      same: (cx, cy) => ((cx.k === 'pAdp' && cy.k === 'fin') || (cx.k === 'fin' && cy.k === 'pAdp') ? 'finished at ADP' : null),
+      sameNote: 'dotted = finished exactly at positional ADP (with Finish on Y, below it beat the ADP)',
+      noun: () => 'player-seasons',
+      title: () => {
+        const F = _exFilters();
+        const bits = [F.round, F.rookie ? 'rookie seasons' : '', F.minGp ? 'min ' + F.minGp + ' GP' : ''].filter(Boolean);
+        return { main: (F.yFrom === F.yTo ? F.yFrom : F.yFrom + '-' + F.yTo) + ' ' + (F.pos === 'DEF' ? 'DST' : F.pos || 'all positions') + ' seasons',
+          sub: (bits.length ? bits.join(' · ') + ' · ' : '') + 'preseason ADP vs the season that followed' + (_exLast && _exLast.total > _exLast.rows.length ? ' · first ' + _exLast.rows.length + ' of ' + _exLast.total + ' as the table' : '') };
+      },
+      file: () => { const F = _exFilters(); return 'MFF-Scatter-Seasons-' + F.yFrom + '-' + F.yTo + (F.pos ? '-' + F.pos : '') + (F.rookie ? '-rookies' : ''); }
+    });
+  }
+
   // ---- Explorer ----
   const _COLS = [
     { k: 'name', label: 'Player', num: false },
@@ -63170,6 +63220,7 @@ Rules:
     });
     const total = rows.length;
     rows = rows.slice(0, 400);
+    _exLast = { rows: rows, total: total };
     const cnt = document.getElementById('rsCount');
     if (cnt) cnt.textContent = total + ' seasons' + (total > 400 ? ' (showing 400)' : '');
     let html = '<table class="rs-table rs-explorer"><thead><tr>' + _COLS.map(c =>
@@ -63184,6 +63235,7 @@ Rules:
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
+    if (_scX) _scX.render();
     if (!wrap._rsWired) {
       wrap._rsWired = true;
       wrap.addEventListener('click', e => {
@@ -63209,6 +63261,7 @@ Rules:
     _build();
     _wireSearch();
     _wireControls();
+    if (!_scX && typeof _rsScatter === 'function') { _scX = _exScatter(); _scX.wire(); }
     _renderExplorer();
   }
   window._renderResearch = function _renderResearch() {

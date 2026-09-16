@@ -8645,8 +8645,11 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // positions (K included) drop to the projection order; every save made
     // after the cutoff carries Jack's real intent and is left alone.
     // Self-expiring: the cutoff is fixed, and week 3+ saves never match.
-    if (ver === 'jacks' && obj._week === 2 && Array.isArray(obj._ownedPos)) {
-      const at = Date.parse(window._jacksUpdatedAt || '');
+    // Same for Jack's own MY RANKINGS doc (admin session only — never other
+    // users' week-2 edits).
+    const _resetVer = ver === 'jacks' || (ver === 'mine' && typeof window._weeklyIsAdmin === 'function' && window._weeklyIsAdmin());
+    if (_resetVer && obj._week === 2 && Array.isArray(obj._ownedPos)) {
+      const at = Date.parse((ver === 'jacks' ? window._jacksUpdatedAt : window._mineUpdatedAt) || '');
       if (isFinite(at) && at < Date.parse('2026-09-16T16:00:00Z')) {
         obj = Object.assign({}, obj, { _ownedPos: obj._ownedPos.filter(p => p === 'DST') });
         window._weeklySaved[ver] = obj;
@@ -8689,7 +8692,13 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // 'jacks' before 'mine', so Jack's weekly is already up to date here.
     if (ver === 'mine' && typeof window._mineWeeklyVirgin === 'function' && window._mineWeeklyVirgin(wk)) {
       const _useJacksWeekly = !!(versionBoards.jacks.weekly && versionBoards.jacks.weekly.length);
-      const src = _useJacksWeekly ? versionBoards.jacks.weekly : versionBoards.jacks.redraft;
+      // Projection-default regime (week 2+, current/future): a virgin MY
+      // RANKINGS week starts strictly by PPR projection too (Jack 2026-09-16,
+      // "do this for my rankings not just jacks") — the first save takes
+      // ownership exactly like Jack's board. Earlier weeks mirror Jack's.
+      const _projVirgin = (typeof window._weeklyProjDefaultFor === 'function') && window._weeklyProjDefaultFor(wk);
+      const src = _projVirgin ? window._weeklyProjOrder('mine')
+        : (_useJacksWeekly ? versionBoards.jacks.weekly : versionBoards.jacks.redraft);
       versionBoards.mine.weekly = src.slice();
       // Tiers come from whichever jacks board the order came from, so
       // afterRank boundaries line up with the mirrored order.
@@ -29776,6 +29785,7 @@ window.fmtHeight = fmtHeight;
       const doc = await db.collection('rankings').doc(currentUser.uid).get();
       if (doc.exists && doc.data().data) {
         const obj = JSON.parse(doc.data().data);
+        window._mineUpdatedAt = doc.data().updatedAt || null;
         // Custom-format flags first — they decide which saved orders below are
         // the user's own work vs. mirrored Jack's copies to be re-seeded fresh.
         if (typeof window._mineMetaLoad === 'function') window._mineMetaLoad(obj.mineMeta, !!obj.mine);

@@ -52,7 +52,23 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-$changed = git status --porcelain -- data/weekly_stats_active.js data/fpa_2026.js data/fpa_2026.json
+# Accuracy tracker (admin page /accuracy/): archive today's weekly_projections.json
+# version + regrade every week against the fresh rows. Best-effort - a failure
+# here never blocks the stats publish. Skipped if another session has accuracy/
+# edits in flight.
+$accBuilt = $false
+$accDirty = git status --porcelain -- accuracy/
+if ($accDirty) {
+    Write-Log "accuracy: SKIP build (uncommitted accuracy/ changes present)"
+} elseif (Test-Path 'scripts\build_accuracy.py') {
+    $accOut = & $Python 'scripts\build_accuracy.py' 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { Write-Log "accuracy build FAILED (exit $LASTEXITCODE): $accOut" }
+    else { $accBuilt = $true; Write-Log ('accuracy: ' + (($accOut -split "`n" | Where-Object { $_ -match '^(week|season_|locks:)' }) -join ' | ')) }
+}
+
+$changedPaths = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json')
+if ($accBuilt) { $changedPaths += 'accuracy/data' }
+$changed = git status --porcelain -- @changedPaths
 if (-not $changed) {
     Write-Log 'no new final-game rows - nothing to commit'
 } else {
@@ -64,7 +80,8 @@ if (-not $changed) {
     $html = $html -replace 'fpa_2026\.js\?v=[0-9A-Za-z.-]+', ('fpa_2026.js?v=' + $stamp)
     [System.IO.File]::WriteAllText($idxPath, $html)
     git add data/weekly_stats_active.js data/fpa_2026.js data/fpa_2026.json index.html
-    git commit -m ('Auto postgame stats {0} (weekly_stats_active 2026 rows + fpa_2026 + ?v= bump)' -f $stamp)
+    if ($accBuilt) { git add accuracy/data }
+    git commit -m ('Auto postgame stats {0} (weekly_stats_active 2026 rows + fpa_2026 + accuracy regrade + ?v= bump)' -f $stamp)
     git pull --rebase --autostash origin main
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'postgame stats committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

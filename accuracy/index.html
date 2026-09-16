@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MFF Accuracy Tracker</title>
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  :root {
+    --bg: #0d0d0d; --surface: #1a1a19; --surface2: #222221; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --accent: #3987e5; --good: #0ca30c; --bad: #e66767; --warn: #fab219;
+    --jack: #3987e5; --fpecr: #d95926; --sim: #199e70; --cons: #c98500; --sl: #d55181; --espn: #2fa52f; --cbs: #9085e9; --fp: #e66767;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  a { color: var(--accent); }
+  header { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--grid); background: var(--surface); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .02em; }
+  header h1 span { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  header .spacer { flex: 1; }
+  header .who { color: var(--ink2); font-size: 12px; }
+  button, select, input { font: inherit; color: var(--ink); background: var(--surface2); border: 1px solid var(--axis); border-radius: 6px; padding: 5px 9px; }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  nav.tabs { display: flex; gap: 4px; padding: 10px 16px 0; border-bottom: 1px solid var(--grid); background: var(--bg); position: sticky; top: 49px; z-index: 4; }
+  nav.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--ink2); padding: 8px 12px; }
+  nav.tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+  main { padding: 14px 16px 60px; max-width: 1400px; margin: 0 auto; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 4px 0 14px; }
+  .controls label { color: var(--muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+  .card { background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+  .card h2 { font-size: 14px; margin: 0 0 8px; color: var(--ink2); text-transform: uppercase; letter-spacing: .06em; }
+  .card p.note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--surface); }
+  th.l, td.l { text-align: left; }
+  th.sorted { color: var(--ink); }
+  tr.me td { background: rgba(57,135,229,.10); }
+  td.best { color: var(--good); font-weight: 600; }
+  td.worst { color: var(--bad); }
+  td.dim { color: var(--muted); }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .tablewrap { overflow: auto; max-height: 70vh; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; background: var(--surface2); color: var(--ink2); margin-left: 6px; }
+  .err-hi { background: rgba(230,103,103,.18); }
+  .err-lo { background: rgba(57,135,229,.18); }
+  #gate { padding: 60px 16px; text-align: center; color: var(--ink2); }
+  #gate .box { display: inline-block; background: var(--surface); border: 1px solid var(--grid); border-radius: 12px; padding: 28px 34px; }
+  #gate h2 { margin: 0 0 10px; }
+  .chartwrap { position: relative; }
+  canvas { width: 100%; height: 320px; display: block; }
+  .tip { position: absolute; pointer-events: none; background: #000; border: 1px solid var(--axis); border-radius: 6px; padding: 6px 9px; font-size: 12px; color: var(--ink); display: none; z-index: 3; white-space: nowrap; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0 0; font-size: 12px; color: var(--ink2); }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .status { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .muted { color: var(--muted); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .kpi { background: var(--surface2); border-radius: 8px; padding: 10px 12px; }
+  .kpi .v { font-size: 22px; font-weight: 600; }
+  .kpi .l { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .kpi .s { color: var(--ink2); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>MFF ACCURACY <span>Jack vs the sites, graded on full-PPR results</span></h1>
+  <div class="spacer"></div>
+  <span class="who" id="who"></span>
+  <button id="btnSignIn" class="primary" style="display:none">Sign in with Google</button>
+  <button id="btnSignOut" style="display:none">Sign out</button>
+</header>
+
+<div id="gate"><div class="box"><h2>Admin only</h2><div id="gateMsg">Checking sign-in…</div></div></div>
+
+<div id="app" style="display:none">
+  <nav class="tabs">
+    <button data-tab="season" class="on">SEASON</button>
+    <button data-tab="weekly">WEEKLY</button>
+    <button data-tab="trend">TREND</button>
+    <button data-tab="player">PLAYER</button>
+    <span class="status" id="status"></span>
+  </nav>
+  <main>
+    <section id="tab-season"></section>
+    <section id="tab-weekly" style="display:none"></section>
+    <section id="tab-trend" style="display:none"></section>
+    <section id="tab-player" style="display:none"></section>
+  </main>
+</div>
+
+<script>
+(function(){
+  var V = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  window._ACC_FB_CFG = {
+    apiKey: "AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY",
+    authDomain: "jackb933-website.firebaseapp.com",
+    projectId: "jackb933-website",
+    storageBucket: "jackb933-website.firebasestorage.app",
+    messagingSenderId: "732824763527",
+    appId: "1:732824763527:web:2a4b344d01ee89cf668c22"
+  };
+  function load(src){ return new Promise(function(res, rej){ var s = document.createElement('script'); s.src = src; s.crossOrigin = 'anonymous'; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+  window._ACC_FB_READY = load(V + 'firebase-app-compat.js')
+    .then(function(){ return load(V + 'firebase-auth-compat.js'); })
+    .then(function(){ return load(V + 'firebase-firestore-compat.js'); })
+    .then(function(){ if (!(firebase.apps && firebase.apps.length)) firebase.initializeApp(window._ACC_FB_CFG); return true; })
+    .catch(function(e){ console.warn('[acc] firebase load failed', e); return false; });
+})();
+</script>
+<script src="acc.js?v=2026-09-16a"></script>
+</body>
+</html>

@@ -199,7 +199,7 @@
 .rs-scatter .rs-co-head { gap: 10px 14px; align-items: center; }
 .rs-scatter .rs-co-close { margin-left: 0; }
 .rs-scatter .rs-room-pick[hidden] { display: none; }
-.rs-scatter .rs-co-close#rsScHide { margin-left: auto; }
+.rs-scatter .rs-sc-hide { margin-left: auto; }
 .rs-scatter .rs-sc-dl { color: var(--accent); border-color: rgba(245,158,11,.5); }
 .rs-scatter .rs-sc-dl:disabled { opacity: .5; cursor: default; }
 .rs-sc-wrap { position: relative; margin-top: 10px; }
@@ -231,5 +231,5 @@
   .rs-adv-q { width: 100%; }
   .rs-adv .rs-adv-nm { max-width: 118px; }
   #rsCoVs { max-width: calc(100vw - 150px); }
-  .rs-scatter .rs-co-close#rsScHide { margin-left: 0; }
+  .rs-scatter .rs-sc-hide { margin-left: 0; }
 }

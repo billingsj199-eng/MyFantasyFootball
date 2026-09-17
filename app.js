@@ -4124,18 +4124,18 @@ function _tcvFmtStat(v, color) {
   return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
 }
 
-// Vertical-card name: as big as fits the 106px card (22px down to 11px), so
+// Vertical-card name: as big as fits the 118px card (27px down to 12px), so
 // short names read large and only the long ones shrink.
 function _tcvCardNameFit(text) {
   text = (text || '').toString();
   if (!_tcvMeasureCtx) { try { _tcvMeasureCtx = document.createElement('canvas').getContext('2d'); } catch(_) {} }
   const ctx = _tcvMeasureCtx;
   if (!ctx) return 17;
-  for (let px = 22; px > 11; px--) {
+  for (let px = 27; px > 12; px--) {
     ctx.font = px + 'px "Bebas Neue",Impact,"Arial Narrow",sans-serif';
-    if (ctx.measureText(text).width + 0.5 * text.length + 2 <= 100) return px;
+    if (ctx.measureText(text).width + 0.5 * text.length + 2 <= 112) return px;
   }
-  return 11;
+  return 12;
 }
 
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {

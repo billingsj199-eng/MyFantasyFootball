@@ -4124,15 +4124,33 @@ function _tcvFmtStat(v, color) {
   return color ? '<span style="color:' + color + '">' + v + '</span>' : String(v);
 }
 
+// Vertical-card name: as big as fits the 106px card (22px down to 11px), so
+// short names read large and only the long ones shrink.
+function _tcvCardNameFit(text) {
+  text = (text || '').toString();
+  if (!_tcvMeasureCtx) { try { _tcvMeasureCtx = document.createElement('canvas').getContext('2d'); } catch(_) {} }
+  const ctx = _tcvMeasureCtx;
+  if (!ctx) return 17;
+  for (let px = 22; px > 11; px--) {
+    ctx.font = px + 'px "Bebas Neue",Impact,"Arial Narrow",sans-serif';
+    if (ctx.measureText(text).width + 0.5 * text.length + 2 <= 100) return px;
+  }
+  return 11;
+}
+
 function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
   const card = document.createElement('div');
   card.className = 'tcv-card' + ((typeof currentMode !== 'undefined' && currentMode === 'weekly') ? ' tcv-card-wk' : '');
   card.setAttribute('data-cidx', (d.idx != null ? d.idx : (typeof D !== 'undefined' ? D.indexOf(d) : -1)));
   card._tcvPlayer = d;          // EDIT RANKS (type-a-rank) reads these on both card layouts
   card._tcvRank = displayRank;
-  // Outline the card in its NFL team's colors
+  // Whole card in its NFL team's colors (Jack 2026-09-17): team-primary fill
+  // darkening toward the name, the team logo as a big watermark behind the
+  // player (so no separate logo badge), ringed in the secondary color.
   {
-    const teamRgb = _tcvHexToRgb(_tcvTeamOutline(d.t));
+    const _tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+    card.style.background = 'linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.18) 52%,rgba(0,0,0,.66) 100%),' + _tc.p;
+    const teamRgb = _tcvHexToRgb(_tcvLum(_tc.s) < 0.16 ? _tcvTeamOutline(d.t) : _tc.s);
     const baseShadow = '0 0 0 1.5px rgba(' + teamRgb + ',.9), 0 2px 7px rgba(' + teamRgb + ',.3)';
     const hoverShadow = '0 0 0 2px rgba(' + teamRgb + ',1), 0 4px 14px rgba(' + teamRgb + ',.55)';
     card.style.boxShadow = baseShadow;
@@ -4148,7 +4166,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
 
   const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
   const logoHtml = logoId
-    ? '<div class="tcv-card-team"><img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy"/></div>'
+    ? '<img class="tcv-card-bg-logo" src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>'
     : '';
 
   // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA").
@@ -4174,11 +4192,10 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
     '<div class="tcv-card-stats" title="' + _statsTitle + '">' +
       _statsHtml +
     '</div>' +
-    headshotHtml +
-    logoHtml +
+    '<div class="tcv-card-photo">' + logoHtml + headshotHtml + '</div>' +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
     _tcvOppChipHtml(d) +
-    '<div class="tcv-card-name" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
+    '<div class="tcv-card-name" style="font-size:' + _tcvCardNameFit(lastName) + 'px" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
       // Mystery silhouette: the player's REAL headshot blacked out to a ghost
       // cut-out (ESPN headshots are transparent PNGs); generic bust if none.

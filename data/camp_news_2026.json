@@ -1,6 +1,76 @@
 {
-  "updated": "2026-09-19T02:08:18Z",
+  "updated": "2026-09-19T16:10:13Z",
   "items": [
+    {
+      "player": "Michael Pittman Jr.",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-09-18",
+      "headline": "Foot injury (3 straight DNPs) leaves him questionable for Sunday vs. Patriots",
+      "take": "Real chance he sits -- confirm inactives before starting him in Week 2.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-18/michael-pittman-foot-questionable-after-3-dnps",
+      "tag": "injury"
+    },
+    {
+      "player": "Chris Olave",
+      "team": "NO",
+      "pos": "WR",
+      "date": "2026-09-18",
+      "headline": "Hamstring scare (precautionary) has him officially questionable vs. Ravens",
+      "take": "Trending toward playing, but double-check pregame inactives before locking him in.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-18/chris-olave-officially-questionable-for-week-2",
+      "tag": "injury"
+    },
+    {
+      "player": "Joe Burrow",
+      "team": "CIN",
+      "pos": "QB",
+      "date": "2026-09-18",
+      "headline": "Full practice Friday; officially questionable (back) but expected to start vs. Texans",
+      "take": "Treat him as a full-strength starter -- both Burrow and Zac Taylor signal he's playing.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-18/burrow-back-officially-questionable-will-play",
+      "tag": "injury"
+    },
+    {
+      "player": "RJ Harvey",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-18",
+      "headline": "Hamstring, limited practice 2 straight days, questionable vs. Jaguars",
+      "take": "If he sits, J.K. Dobbins gets a real bump in touches and PPR floor.",
+      "url": "https://www.cbssports.com/fantasy/football/news/broncos-rj-harvey-listed-as-questionable-for-week-2/",
+      "tag": "injury"
+    },
+    {
+      "player": "J.K. Dobbins",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-18",
+      "headline": "Would see an expanded early-down role if RJ Harvey (hamstring) sits Sunday",
+      "take": "Priority Broncos handcuff this week -- his floor rises sharply if Harvey's out.",
+      "url": "https://www.cbssports.com/fantasy/football/news/broncos-rj-harvey-listed-as-questionable-for-week-2/",
+      "tag": "role"
+    },
+    {
+      "player": "Jaylen Warren",
+      "team": "PIT",
+      "pos": "RB",
+      "date": "2026-09-19",
+      "headline": "Out-touched Dowdle 16-10 with 6 targets in Week 1; tabbed the slight fantasy favorite for Week 2",
+      "take": "Better PPR floor than Dowdle in a plus matchup vs. a Patriots run D that struggled in Week 1.",
+      "url": "https://www.si.com/onsi/fantasy/start-em-sit-em/depth-chart-battle-running-back-steelers-jaylen-warren-rico-dowdle",
+      "tag": "riser"
+    },
+    {
+      "player": "Rico Dowdle",
+      "team": "PIT",
+      "pos": "RB",
+      "date": "2026-09-19",
+      "headline": "Led Week 1 snaps (57.8%) but managed just 4.1 PPR points; Warren now favored for Week 2 touches",
+      "take": "Best treated as a flex/matchup play rather than a locked-in lead back going forward.",
+      "url": "https://dknetwork.draftkings.com/2026/09/19/rico-dowdle-fantasy-football-start-or-sit-advice-for-week-2/",
+      "tag": "faller"
+    },
     {
       "player": "Kyler Murray",
       "team": "MIN",
@@ -2652,16 +2722,6 @@
       "tag": "riser"
     },
     {
-      "player": "Eli Stowers",
-      "team": "PHI",
-      "pos": "TE",
-      "date": "2026-08-28",
-      "headline": "Rookie TE Stowers struggling in camp, now dealing with a hamstring injury",
-      "take": "Poor camp as both receiver and blocker plus a new injury clouds his rookie outlook \u2014 could open on IR.",
-      "url": "https://www.inquirer.com/eagles/2026-roster-prediction-53-man-cuts-depth-chart-20260828.html",
-      "tag": "faller"
-    },
-    {
       "player": "KC Concepcion",
       "team": "CLE",
       "pos": "WR",
@@ -2730,66 +2790,6 @@
       "take": "Slots in as New England's RB3 behind Rhamondre Stevenson and TreVeyon Henderson, speculative add only.",
       "url": "https://nesn.com/new-england-patriots/news/patriots-acquire-running-back-trade-cardinals/ca4d5e69d08cc16ce1869c93",
       "tag": "transaction"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-08-28",
-      "headline": "Went 7-of-8 for 95 yards (116.1 rating) in finale win over Miami but lost fumbles on back-to-back series",
-      "take": "Efficient through the air, but the same ball-security issue that's dogged him all camp -- Stefanski still hasn't named a Week 1 starter",
-      "url": "https://wsvn.com/sports/miami-dolphins/tua-tagovailoa-leads-td-drive-and-loses-fumble-in-falcons-17-12-preseason-win-over-dolphins/",
-      "tag": "faller"
-    },
-    {
-      "player": "Kenneth Walker III",
-      "team": "KC",
-      "pos": "RB",
-      "date": "2026-08-28",
-      "headline": "Missed a second straight Chiefs practice with ankle swelling Andy Reid attributes to a shoe issue",
-      "take": "Correcting our prior team tag -- he signed with Kansas City in free agency (not on Seattle); Reid downplays severity but recheck before Week 1",
-      "url": "https://atozsports.com/nfl/kansas-city-chiefs-news/chiefs-andy-reid-latest-injury-update-kenneth-walker-foot-ankle-swelling/",
-      "tag": "injury"
-    },
-    {
-      "player": "Charlie Kolar",
-      "team": "LAC",
-      "pos": "TE",
-      "date": "2026-08-28",
-      "headline": "Justin Herbert says he's excited to get Kolar the ball; listed as co-starter with Njoku and rookie Gadsden",
-      "take": "Real breakout buzz on a 3-year/$24.3M deal, but a three-TE rotation caps his target share -- deep-league TE2 with spike-week upside",
-      "url": "https://www.rotoballer.com/player-news/justin-herbert-excited-to-get-charlie-kolar-the-ball-in-2026/1900871",
-      "tag": "riser"
-    },
-    {
-      "player": "Luke McCaffrey",
-      "team": "WAS",
-      "pos": "WR",
-      "date": "2026-08-28",
-      "headline": "Firmly on Washington's roster bubble with a deeper WR room (Diggs, Antonio Williams, Jaylin Lane) after a 41-3 finale loss to Baltimore",
-      "take": "Even if he makes the 53, expect a fringe role -- not worth a late-round dynasty stash right now",
-      "url": "https://www.hogshaven.com/washington-commanders-analysis/436078/commanders-baltimore-ravens-takeaways-preseason-luke-mccaffrey-roster-cuts",
-      "tag": "faller"
-    },
-    {
-      "player": "Michael Penix Jr.",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-08-28",
-      "headline": "Won't play Friday's finale at Miami; Stefanski cites knee caution after only 3 padded 11-on-11 practices",
-      "take": "No Week 1 starter named yet -- Penix's practice-only track record keeps the QB1 battle unsettled",
-      "url": "https://www.atlantafalcons.com/news/falcons-camp-report-michael-penix-jr-won-t-play-friday-but-remains-confident-he-ll-be-ready-for-week-1",
-      "tag": "injury"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-08-28",
-      "headline": "Started Friday's preseason finale at former team Miami in what's framed as a 'final audition'",
-      "take": "Last real evidence before a Week 1 starter is named -- still don't lock in either Falcon QB's outlook",
-      "url": "https://bloggingdirty.com/tua-tagovailoa-s-final-audition-in-falcons-qb-battle-comes-with-added-pressure-01m0wv0y8gwm",
-      "tag": "faller"
     }
   ]
 }

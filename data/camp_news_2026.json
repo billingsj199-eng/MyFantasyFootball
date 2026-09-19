@@ -1,6 +1,116 @@
 {
-  "updated": "2026-09-18T16:10:20Z",
+  "updated": "2026-09-19T02:08:18Z",
   "items": [
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-09-18",
+      "headline": "Did not clear concussion protocol; ruled out Sunday at Chicago, Wentz starts",
+      "take": "Expected back Week 3 at Tampa Bay; Wentz is only a two-week streamer bridge.",
+      "url": "https://atozsports.com/nfl/minnesota-vikings-news/vikings-final-injury-report-kyler-murrays-status-revealed-ahead-of-week-2-matchup-vs-bears/",
+      "tag": "injury"
+    },
+    {
+      "player": "Michael Penix Jr.",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-18",
+      "headline": "Ruled out again (knee); Cooper Rush starts a 2nd straight week vs. Carolina",
+      "take": "Falcons offense stays under Rush until Penix is cleared from ACL recovery.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-18/penix-ruled-out-cooper-rush-to-start-vs-car",
+      "tag": "injury"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-18",
+      "headline": "Doubtful for Sunday vs. Panthers with an oblique injury",
+      "take": "Joins Penix on the sideline; Cooper Rush confirmed as Atlanta's starter.",
+      "url": "https://www.cbssports.com/fantasy/football/news/falcons-tua-tagovailoa-doubtful-for-sunday/",
+      "tag": "injury"
+    },
+    {
+      "player": "Nico Collins",
+      "team": "HOU",
+      "pos": "WR",
+      "date": "2026-09-18",
+      "headline": "Ruled out for Week 2 vs. Bengals with a Grade 1 hamstring strain",
+      "take": "Not believed serious but Week 3 also uncertain -- expect a target-share bump for Houston's other pass catchers.",
+      "url": "https://www.cbssports.com/nfl/news/nico-collins-hamstring-injury-status-unclear-for-week-2-per-report/",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-18",
+      "headline": "Added to injury report with a hip issue, DNP Friday ahead of MNF vs. Giants",
+      "take": "Real risk to his Monday-night workload/availability -- track closely through the weekend.",
+      "url": "https://www.turfshowtimes.com/los-angeles-rams-injuries/149210/puka-nacua-misses-rams-practice-on-friday",
+      "tag": "injury"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-18",
+      "headline": "Limited again Friday, trending toward doubtful for Sunday vs. Saints",
+      "take": "Hopkins/Bateman positioned for extra volume if Flowers sits.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-18/zay-flowers-hamstring-is-doubtful-for-week-2",
+      "tag": "injury"
+    },
+    {
+      "player": "Ladd McConkey",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-09-18",
+      "headline": "Back at practice Friday after two DNPs, now questionable vs. Raiders",
+      "take": "Trending toward playing Sunday -- confirm status before kickoff.",
+      "url": "https://www.chargers.com/news/raiders-injury-report-ladd-mcconkey-fantasy",
+      "tag": "injury"
+    },
+    {
+      "player": "Brock Bowers",
+      "team": "LV",
+      "pos": "TE",
+      "date": "2026-09-18",
+      "headline": "Returned to limited practice Friday but doubtful for MNF vs. Chargers",
+      "take": "Still a bench/stream-Mayer situation; coach optimistic for Week 3 vs. Saints.",
+      "url": "https://www.nfl.com/news/raiders-brock-bowers-returns-to-practice-but-doubtful-for-week-2-vs-chargers",
+      "tag": "injury"
+    },
+    {
+      "player": "Chig Okonkwo",
+      "team": "WAS",
+      "pos": "TE",
+      "date": "2026-09-18",
+      "headline": "Ruled out vs. Cowboys (hamstring) after no practice all week",
+      "take": "Ben Sinnott and John Bates get the extra TE snaps, neither is a startable option.",
+      "url": "https://www.fantasypros.com/nfl/news/608848/chig-okonkwo-hamstring-ruled-out-week-2.php",
+      "tag": "injury"
+    },
+    {
+      "player": "Antonio Williams",
+      "team": "WAS",
+      "pos": "WR",
+      "date": "2026-09-18",
+      "headline": "Named NFL's Week 1 Rookie of the Week after a perfect 4-for-4, 64 yards, 1 TD debut",
+      "take": "Led all rookies in EPA/target; route share still limited but a name trending up, especially with Okonkwo out.",
+      "url": "https://www.si.com/nfl/commanders/onsi/antonio-williams-wins-nfl-rookie-of-the-week-commanders-week-1",
+      "tag": "riser"
+    },
+    {
+      "player": "Jadarian Price",
+      "team": "SEA",
+      "pos": "RB",
+      "date": "2026-09-18",
+      "headline": "Seahawks plan to feed him more work after an efficient 5.2 YPC Week 1 debut",
+      "take": "Clear early-down lead back over Holani -- an RB2/FLEX riser for Week 2.",
+      "url": "https://sports.yahoo.com/articles/seahawks-plan-let-rookie-rb-210519058.html",
+      "tag": "riser"
+    },
     {
       "player": "DJ Moore",
       "team": "BUF",

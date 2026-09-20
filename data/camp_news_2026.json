@@ -1,6 +1,36 @@
 {
-  "updated": "2026-09-20T02:08:34Z",
+  "updated": "2026-09-20T16:15:00Z",
   "items": [
+    {
+      "player": "R.J. Harvey",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Reported \"unlikely to play\" vs. Jaguars despite only a questionable tag",
+      "take": "Lean J.K. Dobbins for the bulk of Denver's early-down work in the home opener until inactives confirm it.",
+      "url": "https://x.com/AdamSchefter/status/2101614717185757533",
+      "tag": "injury"
+    },
+    {
+      "player": "J.K. Dobbins",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Projects for the lead early-down role with R.J. Harvey reportedly unlikely to play",
+      "take": "Firms up as the top Broncos backfield play for Week 2 pending the final inactive list.",
+      "url": "https://x.com/AdamSchefter/status/2101614717185757533",
+      "tag": "role"
+    },
+    {
+      "player": "Chris Olave",
+      "team": "NO",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Expected to play vs. Ravens after Thursday's precautionary hamstring scare",
+      "take": "Clears the questionable tag -- start him as a normal-workload WR2 in Shough's high-volume passing game.",
+      "url": "https://www.cbssports.com/fantasy/football/news/saints-chris-olave-expected-to-play-sunday-638079/",
+      "tag": "injury"
+    },
     {
       "player": "Michael Pittman Jr.",
       "team": "PIT",
@@ -2712,56 +2742,6 @@
       "tag": "transaction"
     },
     {
-      "player": "Tutu Atwell",
-      "team": "LAR",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Dolphins trade WR Tutu Atwell back to Rams for RB Jarquez Hunter",
-      "take": "Miami's WR room thins further; watch remaining Dolphins WRs for a target bump.",
-      "url": "https://www.espn.com/nfl/story/_/id/49744695/dolphins-trade-tutu-atwell-rams-jarquez-hunter",
-      "tag": "transaction"
-    },
-    {
-      "player": "Jarquez Hunter",
-      "team": "MIA",
-      "pos": "RB",
-      "date": "2026-08-29",
-      "headline": "Dolphins acquire RB Jarquez Hunter from Rams in Atwell trade",
-      "take": "Buried behind Miami's starter with zero 2025 offensive snaps \u2014 deep bench flier only.",
-      "url": "https://www.espn.com/nfl/story/_/id/49744695/dolphins-trade-tutu-atwell-rams-jarquez-hunter",
-      "tag": "transaction"
-    },
-    {
-      "player": "Isaiah Hodgins",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Giants release WR Isaiah Hodgins in cutdown moves",
-      "take": "Thins Giants WR room below Nabers/Slayton/Mooney/Beckham/Fields \u2014 no fantasy impact.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-08-29/isaiah-hodgins-amongst-giants-roster-cutdowns",
-      "tag": "transaction"
-    },
-    {
-      "player": "Noah Brown",
-      "team": "LV",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Raiders release WR Noah Brown after just over a week",
-      "take": "Brief Vegas stint ends; watch for him to land as a depth WR add elsewhere.",
-      "url": "https://bleacherreport.com/articles/25493457-taylor-rapp-cedric-tillman-jr-and-early-nfl-cuts-who-should-be-teams-radar-ahead-deadline",
-      "tag": "transaction"
-    },
-    {
-      "player": "Malik Nabers",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Nabers leaves practice early, won't commit to a Week 1 return",
-      "take": "Red-flag setback in his ACL recovery \u2014 treat him as a game-time question for the opener.",
-      "url": "https://bleacherreport.com/articles/25481686-malik-nabers-injury-status-updated-giants-john-harbaugh-ahead-2026-nfl-season",
-      "tag": "faller"
-    },
-    {
       "player": "Odell Beckham Jr.",
       "team": "NYG",
       "pos": "WR",
@@ -2770,106 +2750,6 @@
       "take": "Officially makes the team \u2014 now a legitimate deep-league WR5/6 flier, not just speculative.",
       "url": "https://gmenhq.com/new-york-giants-2026-53-man-roster-cut-tracker-2026-live-updates",
       "tag": "role"
-    },
-    {
-      "player": "Aaron Jones",
-      "team": "MIN",
-      "pos": "RB",
-      "date": "2026-08-29",
-      "headline": "Jones and Mason both listed as Vikings co-starters at RB",
-      "take": "Jones is 'RB1' on paper but Mason out-snapped him last year \u2014 real committee risk in redraft.",
-      "url": "https://www.si.com/onsi/fantasy/rankings/depth-chart-debate-running-back-vikings-jordan-mason-aaron-jones",
-      "tag": "role"
-    },
-    {
-      "player": "Jordan Mason",
-      "team": "MIN",
-      "pos": "RB",
-      "date": "2026-08-29",
-      "headline": "Mason projected to keep the larger snap share despite Jones' 'RB1' billing",
-      "take": "Better bet for early-down volume in a crowded Vikings backfield committee.",
-      "url": "https://www.si.com/onsi/fantasy/rankings/depth-chart-debate-running-back-vikings-jordan-mason-aaron-jones",
-      "tag": "role"
-    },
-    {
-      "player": "Bhayshul Tuten",
-      "team": "JAX",
-      "pos": "RB",
-      "date": "2026-08-29",
-      "headline": "Tuten getting 1st-team reps after Jaguars traded Etienne to Saints",
-      "take": "Coen praising his contact balance and 4.28 speed \u2014 2026 breakout sleeper in a Rodriguez Jr. committee.",
-      "url": "https://www.espn.com/nfl/story/_/id/49725895/what-expect-jaguars-running-backs-bhayshul-tuten-chris-rodriguez-jr-2026",
-      "tag": "riser"
-    },
-    {
-      "player": "KC Concepcion",
-      "team": "CLE",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Rookie Concepcion reported atop Browns' WR pecking order in camp",
-      "take": "Early ADP (~pick 125) may undervalue his role \u2014 dynasty rookie-draft riser to watch.",
-      "url": "https://sports.yahoo.com/fantasy/article/cyrus-allen-leads-2026-nfl-rookies-already-generating-fantasy-football-buzz-in-training-camps-145843770.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Caleb Douglas",
-      "team": "MIA",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Douglas' path opens further after Dolphins trade away Tutu Atwell",
-      "take": "Already on Miami's initial depth chart as a starter; Atwell trade removes a target competitor.",
-      "url": "https://www.espn.com/nfl/story/_/id/49744695/dolphins-trade-tutu-atwell-rams-jarquez-hunter",
-      "tag": "riser"
-    },
-    {
-      "player": "Odell Beckham Jr.",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Harbaugh: OBJ \"has done enough to make an NFL roster\"",
-      "take": "Positive signal he survives Sunday's cuts as a deep-league WR5/6 flier, still not startable.",
-      "url": "https://ca.sports.yahoo.com/news/john-harbaugh-on-odell-beckham-jr-he-has-done-enough-to-make-an-nfl-roster-143328914.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Kaleb Johnson",
-      "team": "PIT",
-      "pos": "RB",
-      "date": "2026-08-29",
-      "headline": "Kaleb Johnson's roster spot still unresolved entering deadline",
-      "take": "Beat reporting says he's increasingly likely to be waived; recheck Sunday, a release would clear the field for Jaylen Warren.",
-      "url": "https://sports.yahoo.com/articles/kaleb-johnson-admits-uncertain-roster-200000894.html",
-      "tag": "faller"
-    },
-    {
-      "player": "Mecole Hardman Jr.",
-      "team": "BUF",
-      "pos": "WR",
-      "date": "2026-08-29",
-      "headline": "Bills release veteran WR/returner Mecole Hardman Jr.",
-      "take": "Off the board for Buffalo fantasy relevance entirely; Ray Davis takes over punt-return work.",
-      "url": "https://www.fingerlakes1.com/2026/08/29/bills-release-mecole-hardman-mitch-wishnowsky-tommy-doman-wins-punting-job/",
-      "tag": "transaction"
-    },
-    {
-      "player": "Quinn Ewers",
-      "team": "JAX",
-      "pos": "QB",
-      "date": "2026-08-29",
-      "headline": "Dolphins trade backup QB Quinn Ewers to Jaguars",
-      "take": "Buried behind Trevor Lawrence on Jacksonville's depth chart; drop as a deep dynasty QB stash.",
-      "url": "https://sports.yahoo.com/articles/quinn-ewers-trade-details-jaguars-220453600.html",
-      "tag": "transaction"
-    },
-    {
-      "player": "Corey Kiner",
-      "team": "NE",
-      "pos": "RB",
-      "date": "2026-08-29",
-      "headline": "Patriots acquire RB Corey Kiner from Cardinals",
-      "take": "Slots in as New England's RB3 behind Rhamondre Stevenson and TreVeyon Henderson, speculative add only.",
-      "url": "https://nesn.com/new-england-patriots/news/patriots-acquire-running-back-trade-cardinals/ca4d5e69d08cc16ce1869c93",
-      "tag": "transaction"
     }
   ]
 }

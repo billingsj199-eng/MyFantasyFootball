@@ -1,6 +1,86 @@
 {
-  "updated": "2026-09-19T16:10:13Z",
+  "updated": "2026-09-20T02:08:34Z",
   "items": [
+    {
+      "player": "Michael Pittman Jr.",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-09-19",
+      "headline": "Downgraded from questionable to OUT vs. Patriots with foot injury",
+      "take": "Off the board for Week 2 -- Germie Bernard is the direct role beneficiary.",
+      "url": "https://www.behindthesteelcurtain.com/pittsburgh-steelers-injuries/174912/michael-pittman-jr-out-vs-patriots",
+      "tag": "injury"
+    },
+    {
+      "player": "Germie Bernard",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-09-19",
+      "headline": "Rookie set for expanded WR3/slot role Sunday with Pittman Jr. ruled out",
+      "take": "Priority streaming/waiver add vs. a Patriots defense that struggled in Week 1.",
+      "url": "https://www.cbssports.com/fantasy/football/news/steelers-germie-bernard-set-for-larger-role-sunday/",
+      "tag": "riser"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-19",
+      "headline": "Downgraded from doubtful to OUT vs. Saints with hamstring injury",
+      "take": "Rashod Bateman becomes Baltimore's clear top passing-game target Sunday.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-19/zay-flowers-hamstring-downgraded-to-out-vs-no",
+      "tag": "injury"
+    },
+    {
+      "player": "Rashod Bateman",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-19",
+      "headline": "Set to lead Ravens' passing-game targets with Zay Flowers ruled out",
+      "take": "Clear volume riser -- startable WR3/flex vs. New Orleans.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-19/zay-flowers-hamstring-downgraded-to-out-vs-no",
+      "tag": "riser"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-19",
+      "headline": "DNP for 2nd straight day (groin soreness, listed as hip), questionable for MNF vs. Giants",
+      "take": "McVay says it's unrelated to his August core-muscle issue -- trending toward a game-time call, have a hedge ready.",
+      "url": "https://www.nfl.com/news/rams-wr-puka-nacua-hip-to-miss-another-practice-questionable-to-play-monday-vs-giants",
+      "tag": "injury"
+    },
+    {
+      "player": "Brock Bowers",
+      "team": "LV",
+      "pos": "TE",
+      "date": "2026-09-19",
+      "headline": "Strong Saturday practice -- Pete Carroll says he's \"ready to go\" for MNF vs. Chargers",
+      "take": "Trending toward playing after Thursday's DNP -- worth starting with a pregame status check.",
+      "url": "https://www.raiders.com/video/pete-carroll-brock-bowers-status-nfl-week-2-chargers-monday-night",
+      "tag": "riser"
+    },
+    {
+      "player": "Joe Burrow",
+      "team": "CIN",
+      "pos": "QB",
+      "date": "2026-09-19",
+      "headline": "Full practice Friday confirmed -- Taylor says it'd be \"a major surprise\" if he sits vs. Texans",
+      "take": "No real downgrade -- start as a normal-workload QB1.",
+      "url": "https://sports.yahoo.com/articles/bengals-announce-final-joe-burrow-233951128.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Omar Cooper Jr.",
+      "team": "NYJ",
+      "pos": "WR",
+      "date": "2026-09-19",
+      "headline": "Officially placed on IR with ankle sprain, out a minimum of 4 games",
+      "take": "Confirms Isaiah Williams keeps the extra Jets WR snaps into mid-October.",
+      "url": "https://www.nfl.com/news/nfl-news-roundup-latest-league-updates-from-saturday-sept-19",
+      "tag": "injury"
+    },
     {
       "player": "Michael Pittman Jr.",
       "team": "PIT",

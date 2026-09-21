@@ -1,0 +1,284 @@
+{
+ "files": [
+  "live_track_2026_w2_IND_KC.csv"
+ ],
+ "bins": {
+  "Q1": {
+   "fit": 4.784,
+   "fitx": 4.774,
+   "v1": 5.309,
+   "naive": 5.295,
+   "n": 858
+  },
+  "Q2": {
+   "fit": 3.84,
+   "fitx": 3.824,
+   "v1": 4.119,
+   "naive": 4.164,
+   "n": 1352
+  },
+  "Q3": {
+   "fit": 2.413,
+   "fitx": 2.404,
+   "v1": 2.565,
+   "naive": 2.694,
+   "n": 1222
+  },
+  "Q4": {
+   "fit": 1.227,
+   "fitx": 1.225,
+   "v1": 1.247,
+   "naive": 1.271,
+   "n": 2002
+  }
+ },
+ "players": {
+  "Patrick Mahomes": {
+   "pos": "QB",
+   "proj": 18.5,
+   "final": 28.98,
+   "fit": 5.44,
+   "fitx": 5.44,
+   "v1": 5.79,
+   "naive": 6.05
+  },
+  "Jonathan Taylor": {
+   "pos": "RB",
+   "proj": 18.5,
+   "final": 29.2,
+   "fit": 6.78,
+   "fitx": 6.78,
+   "v1": 6.64,
+   "naive": 6.73
+  },
+  "Daniel Jones": {
+   "pos": "QB",
+   "proj": 16.7,
+   "final": 12.4,
+   "fit": 2.65,
+   "fitx": 2.65,
+   "v1": 2.69,
+   "naive": 2.69
+  },
+  "Rashee Rice": {
+   "pos": "WR",
+   "proj": 13.6,
+   "final": 12.3,
+   "fit": 1.49,
+   "fitx": 1.49,
+   "v1": 1.45,
+   "naive": 1.36
+  },
+  "Tyler Warren": {
+   "pos": "TE",
+   "proj": 11.8,
+   "final": 14.4,
+   "fit": 1.88,
+   "fitx": 1.88,
+   "v1": 2.01,
+   "naive": 1.64
+  },
+  "Travis Kelce": {
+   "pos": "TE",
+   "proj": 11.0,
+   "final": 25.1,
+   "fit": 6.24,
+   "fitx": 6.24,
+   "v1": 6.03,
+   "naive": 6.52
+  },
+  "Josh Downs": {
+   "pos": "WR",
+   "proj": 10.9,
+   "final": 14.2,
+   "fit": 1.68,
+   "fitx": 1.68,
+   "v1": 1.6,
+   "naive": 1.69
+  },
+  "Xavier Worthy": {
+   "pos": "WR",
+   "proj": 10.1,
+   "final": 13.5,
+   "fit": 2.52,
+   "fitx": 2.52,
+   "v1": 2.68,
+   "naive": 2.41
+  },
+  "Alec Pierce": {
+   "pos": "WR",
+   "proj": 9.8,
+   "final": 2.1,
+   "fit": 3.86,
+   "fitx": 3.86,
+   "v1": 3.82,
+   "naive": 3.99
+  },
+  "Harrison Butker": {
+   "pos": "K",
+   "proj": 8.5,
+   "final": 16.0,
+   "fit": 6.09,
+   "fitx": 6.09,
+   "v1": 6.09,
+   "naive": 6.2
+  },
+  "Keenan Allen": {
+   "pos": "WR",
+   "proj": 8.5,
+   "final": 1.5,
+   "fit": 2.2,
+   "fitx": 2.2,
+   "v1": 2.16,
+   "naive": 2.44
+  },
+  "Spencer Shrader": {
+   "pos": "K",
+   "proj": 7.3,
+   "final": 14.0,
+   "fit": 2.61,
+   "fitx": 2.61,
+   "v1": 2.61,
+   "naive": 2.75
+  },
+  "Kansas City Chiefs D/ST": {
+   "pos": "DST",
+   "proj": 7.3,
+   "final": 1.0,
+   "fit": 3.03,
+   "fitx": 3.03,
+   "v1": 5.96,
+   "naive": 5.84
+  },
+  "Emmett Johnson": {
+   "pos": "RB",
+   "proj": 4.9,
+   "final": 5.5,
+   "fit": 1.45,
+   "fitx": 1.45,
+   "v1": 1.37,
+   "naive": 1.26
+  },
+  "Indianapolis Colts D/ST": {
+   "pos": "DST",
+   "proj": 4.6,
+   "final": 1.0,
+   "fit": 1.6,
+   "fitx": 1.6,
+   "v1": 3.61,
+   "naive": 3.56
+  },
+  "Tyquan Thornton": {
+   "pos": "WR",
+   "proj": 4.5,
+   "final": 12.6,
+   "fit": 5.72,
+   "fitx": 5.72,
+   "v1": 5.69,
+   "naive": 5.72
+  },
+  "Noah Gray": {
+   "pos": "TE",
+   "proj": 3.8,
+   "final": 0.0,
+   "fit": 1.45,
+   "fitx": 1.45,
+   "v1": 1.43,
+   "naive": 1.56
+  },
+  "Brashard Smith": {
+   "pos": "RB",
+   "proj": 3.3,
+   "final": 0.0,
+   "fit": 1.16,
+   "fitx": 1.16,
+   "v1": 1.24,
+   "naive": 1.36
+  },
+  "Cyrus Allen": {
+   "pos": "WR",
+   "proj": 2.7,
+   "final": 0.0,
+   "fit": 1.03,
+   "fitx": 1.03,
+   "v1": 1.01,
+   "naive": 1.11
+  },
+  "Mo Alie-Cox": {
+   "pos": "TE",
+   "proj": 1.7,
+   "final": 0.0,
+   "fit": 0.65,
+   "fitx": 0.65,
+   "v1": 0.64,
+   "naive": 0.7
+  },
+  "Seth McGowan": {
+   "pos": "RB",
+   "proj": 1.4,
+   "final": 0.0,
+   "fit": 0.49,
+   "fitx": 0.49,
+   "v1": 0.53,
+   "naive": 0.58
+  },
+  "Laquon Treadwell": {
+   "pos": "WR",
+   "proj": 1.0,
+   "final": 9.1,
+   "fit": 5.68,
+   "fitx": 5.68,
+   "v1": 5.65,
+   "naive": 5.78
+  },
+  "Jalen Royals": {
+   "pos": "WR",
+   "proj": 0.9,
+   "final": 8.6,
+   "fit": 4.05,
+   "fitx": 4.05,
+   "v1": 4.06,
+   "naive": 3.96
+  },
+  "DJ Giddens": {
+   "pos": "RB",
+   "proj": 0.7,
+   "final": 0.0,
+   "fit": 0.25,
+   "fitx": 0.25,
+   "v1": 0.26,
+   "naive": 0.29
+  },
+  "Justin Fields": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.19,
+   "fitx": 0.09,
+   "v1": 0.19,
+   "naive": 0.21
+  },
+  "Riley Leonard": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.19,
+   "fitx": 0.07,
+   "v1": 0.19,
+   "naive": 0.21
+  }
+ },
+ "all": {
+  "fit": 2.706,
+  "fitx": 2.697,
+  "v1": 2.899,
+  "naive": 2.946,
+  "n": 5434
+ },
+ "wins": {
+  "fit": 9,
+  "fitx": 2,
+  "v1": 10,
+  "naive": 5
+ }
+}

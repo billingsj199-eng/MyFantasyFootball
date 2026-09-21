@@ -1,6 +1,216 @@
 {
-  "updated": "2026-09-20T16:15:00Z",
+  "updated": "2026-09-21T02:13:50Z",
   "items": [
+    {
+      "player": "J.K. Dobbins",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Exits Week 2 win over Jaguars with hamstring injury after 10 carries",
+      "take": "Payton called it \"little\" but gave no timetable \u2014 Broncos now down to rookie Jonah Coleman and Tyler Badie at RB.",
+      "url": "https://www.cbssports.com/fantasy/football/news/broncos-j-k-dobbins-suffers-hamstring-injury/",
+      "tag": "injury"
+    },
+    {
+      "player": "Jonah Coleman",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Rookie scores go-ahead TD as Broncos rally past Jaguars with Harvey, Dobbins both out",
+      "take": "Instant top waiver priority league-wide \u2014 clear path to lead work if Dobbins' hamstring lingers.",
+      "url": "https://www.jaguars.com/news/game-report-2026-week-2-broncos-20-jaguars-13",
+      "tag": "riser"
+    },
+    {
+      "player": "Caleb Williams",
+      "team": "CHI",
+      "pos": "QB",
+      "date": "2026-09-20",
+      "headline": "Exits loss to Vikings with non-contact hamstring injury, ruled out",
+      "take": "Imaging Monday with severity unclear; Tyson Bagent would start if Williams misses time \u2014 downgrade Chicago's passing game pieces until there's clarity.",
+      "url": "https://www.nfl.com/news/bears-qb-caleb-williams-injury-vikings",
+      "tag": "injury"
+    },
+    {
+      "player": "Jayden Reed",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Carted off with neck injury on Packers' 2nd play vs. Jets, hospitalized overnight",
+      "take": "Scary scene with no timetable yet \u2014 shift shares to Christian Watson, Dontayvion Wicks and Matthew Golden until his status is clearer.",
+      "url": "https://www.yardbarker.com/nfl/articles/packers_provide_injury_update_after_jayden_reed_exits_on_stretcher_in_week_2_vs_jets/s1_13132_44327704",
+      "tag": "injury"
+    },
+    {
+      "player": "Brock Bowers",
+      "team": "LV",
+      "pos": "TE",
+      "date": "2026-09-20",
+      "headline": "Expected to miss MNF vs. Chargers, but targeted to return in Week 3 per Rapoport",
+      "take": "Downgrade him hard for Monday night; Michael Mayer is the streaming TE play in Vegas' offense.",
+      "url": "https://www.thebiglead.com/puka-nacua-brock-bowers-nfl-week-2-injury-updates-fantasy-football/",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "\"Trending in the wrong direction\" for Monday night vs. Giants per Schefter",
+      "take": "Lean toward him sitting \u2014 have Adams/Atwell ready as the hedge for MNF lineups.",
+      "url": "https://www.rotoballer.com/player-news/puka-nacua-trending-in-the-wrong-direction-for-monday-night/1945744",
+      "tag": "injury"
+    },
+    {
+      "player": "Rico Dowdle",
+      "team": "PIT",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Exits Week 2 loss to Patriots with a toe injury",
+      "take": "Opens the door fully for Jaylen Warren as Pittsburgh's clear lead back going forward.",
+      "url": "https://www.rotowire.com/football/headlines/jaylen-warren-news-posts-77-yards-as-dowdle-toe-exits-638264",
+      "tag": "injury"
+    },
+    {
+      "player": "Jaylen Warren",
+      "team": "PIT",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Posts 77 scrimmage yards as Dowdle (toe) exits early vs. Patriots",
+      "take": "Cements himself as Pittsburgh's unambiguous lead RB entering Week 3.",
+      "url": "https://www.rotowire.com/football/headlines/jaylen-warren-news-posts-77-yards-as-dowdle-toe-exits-638264",
+      "tag": "role"
+    },
+    {
+      "player": "Marvin Mims Jr.",
+      "team": "DEN",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Ruled out vs. Jaguars with a foot injury aggravated from the preseason",
+      "take": "Opened up extra volume for Jaylen Waddle, who torched Jacksonville for 138 yards.",
+      "url": "https://www.espn.com/nfl/story/_/id/49975308/broncos-rule-wr-marvin-mims-jr-foot-sunday",
+      "tag": "injury"
+    },
+    {
+      "player": "Jaylen Waddle",
+      "team": "DEN",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Goes off for 138 yards as Broncos rally past Jaguars",
+      "take": "Locked in as Denver's clear WR1 with Marvin Mims Jr. sidelined.",
+      "url": "https://www.cbssports.com/nfl/news/broncos-rally-past-jaguars-20-13-behind-jaylen-waddles-138-yards/",
+      "tag": "riser"
+    },
+    {
+      "player": "R.J. Harvey",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Officially inactive vs. Jaguars, as expected, with hamstring injury",
+      "take": "Confirms the morning report \u2014 moot now that Dobbins is hurt too; Coleman is the priority add.",
+      "url": "https://www.denvergazette.com/2026/09/20/broncos-rb-r-j-harvey-inactive-vs-jaguars/",
+      "tag": "injury"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Confirmed inactive vs. Saints with hamstring injury, as expected",
+      "take": "Bateman fully absorbed the target share in his absence \u2014 see his line below.",
+      "url": "https://www.nbcsports.com/fantasy/football/news/2026-nfl-week-2-injury-report-a-j-brown-to-ir-updates-on-ladd-mcconkey-zay-flowers",
+      "tag": "injury"
+    },
+    {
+      "player": "Rashod Bateman",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Goes for 7/88/1 (9 targets) as clear No. 1 target with Zay Flowers out",
+      "take": "Locked into weekly WR2/3 fantasy value as long as Flowers is sidelined.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-20/bateman-solid-sans-flowers-goes-for-7-88-1",
+      "tag": "riser"
+    },
+    {
+      "player": "Michael Pittman Jr.",
+      "team": "PIT",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Confirmed inactive vs. Patriots with foot injury, as expected",
+      "take": "No new fantasy angle \u2014 monitor Week 3 practice reports for a return.",
+      "url": "https://www.cbssports.com/nfl/news/nfl-week-2-injury-report-joe-burrow/",
+      "tag": "injury"
+    },
+    {
+      "player": "Jadarian Price",
+      "team": "SEA",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Exits Week 2 vs. Cardinals with chest injury; X-rays negative",
+      "take": "Was rolling with 13 carries for 52 yards plus a catch before exiting \u2014 monitor early-week testing for Week 3 workload.",
+      "url": "https://www.cbssports.com/fantasy/football/news/seahawks-jadarian-price-exits-game-with-chest-injury/",
+      "tag": "injury"
+    },
+    {
+      "player": "Chris Olave",
+      "team": "NO",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Plays through hamstring scare, goes for 8/86/1 in win over Ravens",
+      "take": "No lingering concern from the Thursday scare \u2014 confirmed as a full-workload weekly starter.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-20/chris-olave-goes-for-8-86-1-in-win-over-ravens",
+      "tag": "riser"
+    },
+    {
+      "player": "Joe Burrow",
+      "team": "CIN",
+      "pos": "QB",
+      "date": "2026-09-20",
+      "headline": "Full go as expected, throws for 207 yards, 2 TD in 20-6 win over Texans",
+      "take": "No lingering back issue evident \u2014 locked in as a weekly starter after a clean return.",
+      "url": "https://www.bengals.com/news/bengals-texans-recap-postgame-notes-quotes-stats-week-2-2026",
+      "tag": "riser"
+    },
+    {
+      "player": "Ja'Marr Chase",
+      "team": "CIN",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Catches 7 of 8 targets for 75 yards and 2 TDs in win over Texans",
+      "take": "Elite weekly floor/ceiling confirmed now that Burrow is fully healthy.",
+      "url": "https://www.bengals.com/news/bengals-texans-recap-postgame-notes-quotes-stats-week-2-2026",
+      "tag": "riser"
+    },
+    {
+      "player": "Kaleb Johnson",
+      "team": "GB",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Takes over in OT after Marshawn Lloyd's fumble, leads Packers backs in Week 2 rushing",
+      "take": "Speculative stash \u2014 trending toward a bigger complementary role behind Lloyd after a clean OT look.",
+      "url": "https://www.packers.com/news/in-game-updates-week-2-jets-2026",
+      "tag": "role"
+    },
+    {
+      "player": "Darius Cooper",
+      "team": "PHI",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Catches first career TD \u2014 the game-winner with 9 seconds left at Titans",
+      "take": "Deep stash in dynasty/best-ball as a big-play threat behind Philly's top WRs.",
+      "url": "https://www.philadelphiaeagles.com/news/eagles-at-titans-game-recap-september-20-2026-nfl-week-2-regular-season",
+      "tag": "riser"
+    },
+    {
+      "player": "Parker Washington",
+      "team": "JAX",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Leads Jags pass-catchers again: 8 catches (12 targets) for 98 yards in loss to Denver",
+      "take": "Two straight 90+ yard, 8+ target games to open the season \u2014 locked in as a fantasy starter.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-20/washington-again-leads-jags-pass-catchers",
+      "tag": "riser"
+    },
     {
       "player": "R.J. Harvey",
       "team": "DEN",

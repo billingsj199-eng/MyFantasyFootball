@@ -1,6 +1,136 @@
 {
-  "updated": "2026-09-21T02:13:50Z",
+  "updated": "2026-09-21T16:11:17Z",
   "items": [
+    {
+      "player": "Jayden Daniels",
+      "team": "WAS",
+      "pos": "QB",
+      "date": "2026-09-20",
+      "headline": "Dislocates the same left elbow again in loss to Cowboys; X-rays show no fracture",
+      "take": "Out for the foreseeable future -- Marcus Mariota takes over under center, fade Washington's passing game until Daniels returns.",
+      "url": "https://www.espn.com/nfl/story/_/id/49993422/commanders-qb-jayden-daniels-suffers-elbow-injury-cowboys",
+      "tag": "injury"
+    },
+    {
+      "player": "Marcus Mariota",
+      "team": "WAS",
+      "pos": "QB",
+      "date": "2026-09-20",
+      "headline": "Takes over at QB for Washington after Jayden Daniels' elbow injury",
+      "take": "Streamable in deep/superflex leagues while Daniels is out -- monitor early practice reports for a Week 3 workload gauge.",
+      "url": "https://www.washingtonpost.com/sports/2026/09/21/jayden-daniels-is-injured-again-where-do-commanders-go-here/",
+      "tag": "role"
+    },
+    {
+      "player": "Caleb Williams",
+      "team": "CHI",
+      "pos": "QB",
+      "date": "2026-09-21",
+      "headline": "MRI set for Monday; initial hope is a Grade 1 hamstring strain",
+      "take": "Even a best-case Grade 1 could threaten next Monday's game vs. Philadelphia -- roster Tyson Bagent in deeper/2-QB leagues until there's clarity.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/initial-hope-is-that-caleb-williams-has-a-grade-1-hamstring-strain",
+      "tag": "injury"
+    },
+    {
+      "player": "J.K. Dobbins",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-21",
+      "headline": "Payton downplays hamstring as \"a little\"; optimism building for a Week 3 return vs. Rams",
+      "take": "Better news than Sunday's uncertainty, but confirm practice participation before trusting him over Jonah Coleman in Week 3 lineups.",
+      "url": "https://heavy.com/sports/nfl/denver-broncos/jk-dobbins-hamstring-injury-news/",
+      "tag": "injury"
+    },
+    {
+      "player": "Jayden Reed",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-09-21",
+      "headline": "Has \"movement in all extremities\" and posts encouraging update from the hospital",
+      "take": "Real reason for optimism after Sunday's scare, but still no return timetable -- keep riding Watson/Wicks/Golden until Reed is cleared.",
+      "url": "https://www.wsaw.com/2026/09/21/packers-jayden-reed-has-movement-extremities-after-neck-injury-being-hospitalized-overnight/",
+      "tag": "injury"
+    },
+    {
+      "player": "Tua Tagovailoa",
+      "team": "MIA",
+      "pos": "QB",
+      "date": "2026-09-21",
+      "headline": "Fractured ribs, officially ruled out for Week 3 vs. Raiders",
+      "take": "Jacoby Brissett takes over under center -- fade Miami's passing-game pieces for at least one more week.",
+      "url": "https://www.nfl.com/news/dolphins-qb-tua-tagovailoa-fractured-ribs-ruled-out-for-week-3-raiders",
+      "tag": "injury"
+    },
+    {
+      "player": "Sam Darnold",
+      "team": "SEA",
+      "pos": "QB",
+      "date": "2026-09-21",
+      "headline": "Recovering \"faster than anyone anticipated\" from glute injury per Rapoport; Week 3 a stretch, Week 4 more likely",
+      "take": "Trending better than the original 4-6 week outlook -- still bench him for Week 3 with Drew Lock/Jalen Milroe holding the job.",
+      "url": "https://bleacherreport.com/articles/25499776-sam-darnold-injury-timeline-updated-new-rumors-amid-unique-issue-seahawks-qb",
+      "tag": "injury"
+    },
+    {
+      "player": "Kyler Murray",
+      "team": "MIN",
+      "pos": "QB",
+      "date": "2026-09-21",
+      "headline": "Expected to clear concussion protocol early this week, on track for a Week 3 return",
+      "take": "Trending back as Minnesota's starter after Wentz's solid relief stint -- Murray reclaims the job the moment he's cleared.",
+      "url": "https://www.profootballnetwork.com/what-happened-kyler-murray-latest-update-vikings-injury-week-2-2026/",
+      "tag": "injury"
+    },
+    {
+      "player": "Saquon Barkley",
+      "team": "PHI",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Exits with a stinger on Philadelphia's first snap, returns in the second half vs. Titans",
+      "take": "Played through it and finished the win -- no real fantasy concern unless Monday's evaluation turns up something worse.",
+      "url": "https://www.bleedinggreennation.com/news/183477/saquon-barkley-leaves-eagles-titans-week-2-game-injury-stinger",
+      "tag": "injury"
+    },
+    {
+      "player": "Dallas Goedert",
+      "team": "PHI",
+      "pos": "TE",
+      "date": "2026-09-20",
+      "headline": "Knee injury knocks him out of the second half vs. Titans, questionable to return",
+      "take": "Johnny Mundt filled in behind him -- check Wednesday's practice report before trusting Goedert in Week 3 lineups.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-20/dallas-goedert-questionable-with-right-knee-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Jonathon Brooks",
+      "team": "CAR",
+      "pos": "RB",
+      "date": "2026-09-20",
+      "headline": "Re-aggravates groin injury in blowout win over Falcons, day-to-day",
+      "take": "Same injury that cost him camp time -- monitor Wednesday's practice before trusting him in Week 3 lineups.",
+      "url": "https://www.cbssports.com/fantasy/football/news/panthers-jonathon-brooks-heads-to-locker-room-with-groin-injury/",
+      "tag": "injury"
+    },
+    {
+      "player": "David Njoku",
+      "team": "LAC",
+      "pos": "TE",
+      "date": "2026-09-20",
+      "headline": "Carted off with a knee injury in the second quarter vs. Raiders, ruled out",
+      "take": "Unable to bear weight on the leg -- a concerning scene that puts his Week 3 status squarely in doubt.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-20/njoku-knee-carted-off-the-field-vs-las-vegas",
+      "tag": "injury"
+    },
+    {
+      "player": "Alec Pierce",
+      "team": "IND",
+      "pos": "WR",
+      "date": "2026-09-20",
+      "headline": "Carted off with a left heel/ankle injury on SNF vs. Chiefs; initial X-rays negative",
+      "take": "Same ankle he had offseason surgery on -- a real risk to his Week 3 workload pending Monday's further imaging.",
+      "url": "https://fox59.com/sports/colts-lose-alec-pierce-with-injury-to-left-heel/",
+      "tag": "injury"
+    },
     {
       "player": "J.K. Dobbins",
       "team": "DEN",
@@ -2820,146 +2950,6 @@
       "take": "Lands in a thin Miami TE room (Dulcich, Kacmarek, Sims) \u2014 deep dynasty stash only",
       "url": "https://sports.yahoo.com/articles/dolphins-claim-broncos-5th-round-175353629.html",
       "tag": "transaction"
-    },
-    {
-      "player": "Josh Jacobs",
-      "team": "GB",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Officially placed on Commissioner's Exempt List after battery/property-damage charges",
-      "take": "Can't practice or play while exempt; Week 1 availability in serious doubt, elevating MarShawn Lloyd.",
-      "url": "https://www.espn.com/nfl/story/_/id/49774523/packers-rb-josh-jacobs-placed-commission-exempt-list",
-      "tag": "transaction"
-    },
-    {
-      "player": "MarShawn Lloyd",
-      "team": "GB",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Set to be Packers' starting RB with Jacobs on the Commissioner's Exempt List",
-      "take": "Priority Week 1 add/start in Green Bay's backfield while Jacobs' status is in limbo.",
-      "url": "https://sports.yahoo.com/articles/packers-josh-jacobs-gets-bad-190843348.html",
-      "tag": "riser"
-    },
-    {
-      "player": "James Conner",
-      "team": "ARI",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Officially placed on IR (foot) with designation to return; out at least 4 games",
-      "take": "Earliest return is Week 5 vs. Detroit -- Jeremiyah Love and Tyler Allgeier now lead Arizona's Week 1 backfield.",
-      "url": "https://sports.yahoo.com/articles/cardinals-place-james-conner-ir-223015341.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Jeremy McNichols",
-      "team": "WAS",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Placed on IR (quad) with designation to return; out at least 4 games",
-      "take": "Thins an already crowded Washington RB room further behind Ekeler, Croskey-Merritt and Rodriguez.",
-      "url": "https://www.si.com/nfl/commanders/onsi/commanders-trey-amos-jeremy-mcnichols-injured-reserve-designated-to-return",
-      "tag": "injury"
-    },
-    {
-      "player": "Jaydon Blue",
-      "team": "DAL",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Cowboys waive RB Jaydon Blue at the 53-man cutdown",
-      "take": "Out of the Dallas RB mix for Week 1; only Javonte Williams and Malik Davis remain on the roster",
-      "url": "https://www.espn.com/nfl/story/_/id/49775363/dallas-cowboys-waive-running-back-jaydon-blue",
-      "tag": "transaction"
-    },
-    {
-      "player": "Phil Mafah",
-      "team": "DAL",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Cowboys waive RB Phil Mafah despite leading team in preseason finale carries",
-      "take": "Cut anyway, leaving Dallas with just two RBs on the 53-man roster",
-      "url": "https://heavy.com/sports/nfl/dallas-cowboys/cowboys-waive-phil-mafah-before-deadline/",
-      "tag": "transaction"
-    },
-    {
-      "player": "Israel Abanikanda",
-      "team": "DAL",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Cowboys also waive RB Israel Abanikanda, down to 2 RBs on roster",
-      "take": "Confirms Dallas is thin at RB entering the season \u2014 Malik Davis is the clear backup",
-      "url": "https://dallassportsjournal.com/dallas-cowboys-waive-israel-abanikanda-running-back-cuts/",
-      "tag": "transaction"
-    },
-    {
-      "player": "Malik Davis",
-      "team": "DAL",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Malik Davis is now Dallas' clear backup RB after Blue, Mafah, Abanikanda all waived",
-      "take": "Surprise ascension to the No. 2 RB job behind Javonte Williams \u2014 a real stash in deeper leagues",
-      "url": "https://dallassportsjournal.com/dallas-cowboys-waive-israel-abanikanda-running-back-cuts/",
-      "tag": "riser"
-    },
-    {
-      "player": "Brian Robinson Jr.",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Commanders trade Brian Robinson Jr. to the 49ers for a 2026 sixth-round pick",
-      "take": "Becomes CMC's early-down/goal-line complement in San Francisco",
-      "url": "https://www.nfl.com/news/brian-robinson-trade-commanders-49ers",
-      "tag": "transaction"
-    },
-    {
-      "player": "Isaac Guerendo",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Guerendo devalued as a McCaffrey handcuff after 49ers trade for Brian Robinson Jr.",
-      "take": "No longer the primary CMC injury-replacement play \u2014 largely undraftable in redraft now",
-      "url": "https://www.cbssports.com/fantasy/football/news/fantasy-football-fallout-commanders-trade-brian-robinson-jr-to-the-49ers-heres-what-to-know-before-drafts/",
-      "tag": "faller"
-    },
-    {
-      "player": "Austin Ekeler",
-      "team": "WAS",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Ekeler tops Commanders' RB depth chart after Brian Robinson Jr. trade",
-      "take": "Ahead of McNichols, Rodriguez, and rookie Croskey-Merritt, but touches likely to be shared in a committee",
-      "url": "https://www.nfl.com/news/brian-robinson-trade-commanders-49ers",
-      "tag": "role"
-    },
-    {
-      "player": "Will Levis",
-      "team": "TEN",
-      "pos": "QB",
-      "date": "2026-08-30",
-      "headline": "Titans waive former starting QB Will Levis",
-      "take": "No fantasy relevance in Tennessee now; watch for a landing spot as a backup/competition arm elsewhere",
-      "url": "https://www.espn.com/nfl/story/_/id/49774800/titans-waive-former-starting-qb-levis",
-      "tag": "transaction"
-    },
-    {
-      "player": "Kaleb Johnson",
-      "team": "GB",
-      "pos": "RB",
-      "date": "2026-08-30",
-      "headline": "Kaleb Johnson traded from Steelers to Packers, not cut as had been rumored",
-      "take": "Buried on Green Bay's depth chart for now, but a speculative deep-dynasty add given the change of scenery",
-      "url": "https://www.si.com/nfl/steelers/onsi/pittsburgh-steelers-trade-kaleb-johnson-packers",
-      "tag": "transaction"
-    },
-    {
-      "player": "Odell Beckham Jr.",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-08-30",
-      "headline": "OBJ confirmed on Giants' initial 53-man roster",
-      "take": "Officially makes the team \u2014 now a legitimate deep-league WR5/6 flier, not just speculative.",
-      "url": "https://gmenhq.com/new-york-giants-2026-53-man-roster-cut-tracker-2026-live-updates",
-      "tag": "role"
     }
   ]
 }

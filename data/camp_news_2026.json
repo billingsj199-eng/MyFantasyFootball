@@ -1,6 +1,66 @@
 {
-  "updated": "2026-09-21T16:11:17Z",
+  "updated": "2026-09-22T02:12:00Z",
   "items": [
+    {
+      "player": "Jaxson Dart",
+      "team": "NYG",
+      "pos": "QB",
+      "date": "2026-09-21",
+      "headline": "Exits MNF vs. Rams with knee injury after hit from Stewart, Young",
+      "take": "MRI Tuesday will set the tone -- best case is an MCL sprain, worst case multi-ligament tear; don't trust any Giants passing piece for Week 3 until results are in.",
+      "url": "https://www.espn.com/nfl/story/_/id/50001578/giants-qb-jaxson-dart-exits-mnf-game-vs-rams-knee-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Malik Nabers",
+      "team": "NYG",
+      "pos": "WR",
+      "date": "2026-09-21",
+      "headline": "Exits MNF vs. Rams with shoulder injury, returns to finish drive",
+      "take": "Escaped the scarier outcome after Dart's injury scare on the same drive -- treat as a normal, if banged-up, starter.",
+      "url": "https://sports.yahoo.com/nfl/breaking-news/article/giants-wr-malik-nabers-returns-to-game-vs-rams-with-shoulder-injury-010137004.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-21",
+      "headline": "Officially inactive for MNF vs. Giants with hip/groin soreness",
+      "take": "Davante Adams remains locked in as the clear top target with Nacua sidelined for a second straight game.",
+      "url": "https://www.espn.com/nfl/story/_/id/50001094/rams-wr-puka-nacua-hip-inactive-mnf-vs-giants",
+      "tag": "injury"
+    },
+    {
+      "player": "Dallas Goedert",
+      "team": "PHI",
+      "pos": "TE",
+      "date": "2026-09-21",
+      "headline": "MRI confirms MCL sprain; Eagles re-signing Zach Ertz as replacement",
+      "take": "Expect a multi-week absence (IR would mean 4+ games) -- drop him in shallower leagues and stream Ertz/Calcaterra.",
+      "url": "https://www.espn.com/nfl/story/_/id/50000641/sources-eagles-te-dallas-goedert-mcl-sprain",
+      "tag": "injury"
+    },
+    {
+      "player": "David Njoku",
+      "team": "LAC",
+      "pos": "TE",
+      "date": "2026-09-21",
+      "headline": "Placed on IR with fibula injury; earliest return is Week 8 vs. Rams",
+      "take": "A real multi-week drop, not a week-to-week watch -- Chargers' TE room (Charlie Kolar also on IR) is now barren.",
+      "url": "https://www.espn.com/nfl/story/_/id/50000682/chargers-placing-tes-david-njoku-charlie-kolar-ir",
+      "tag": "injury"
+    },
+    {
+      "player": "Caleb Williams",
+      "team": "CHI",
+      "pos": "QB",
+      "date": "2026-09-21",
+      "headline": "MRI confirms Grade 1 hamstring strain; Ben Johnson calls him week-to-week",
+      "take": "Best realistic outcome after Sunday's scare, but keep Tyson Bagent rostered as insurance for Week 3.",
+      "url": "https://abc7chicago.com/post/caleb-williams-injury-update-chicago-bears-qb-have-mri-evaluate-hamstring-suffered-game-minnesota-vikings/19854385/",
+      "tag": "injury"
+    },
     {
       "player": "Jayden Daniels",
       "team": "WAS",

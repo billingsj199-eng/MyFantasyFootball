@@ -9,10 +9,32 @@
 #               ppr-superflex-cheatsheets.php  -> FantasyPros_2026_DraftSF.csv
 #               dynasty-overall.php            -> FantasyPros_2026_Dynasty1QB.csv
 #               dynasty-superflex.php          -> FantasyPros_2026_DynastySF.csv
+#             IN-SEASON (2026-09-22): Draft1QB reads ros-ppr-overall.php —
+#             FP's rest-of-season expert consensus — instead of the draft
+#             cheatsheet, which stops meaning anything once games are played.
+#             FP has NO superflex ROS overall page (ros-ppr-superflex
+#             redirects to ros-ppr-overall), so DraftSF stays the cheatsheet.
 #   Phase B — ESPN staff draft rank (draftRanksByRankType.PPR) from the
 #             public fantasy kona_player_info API -> ESPN1QB.csv
+#             IN-SEASON (2026-09-22): the API's draft ranks freeze at kickoff
+#             and ESPN publishes no ROS ranks via API — only Eric Karabell's
+#             "updated rest-of-season rankings" story (per-position tables +
+#             an "Overall top 100" table). We parse that Overall top 100;
+#             the story URL is discovered from ESPN's now.core news feed
+#             with ESPN_ROS_URL as the fallback. ESPN column = 100 deep
+#             in-season (players past 100 show "—", like CBS past 200).
 #   Phase C — CBS expert-consensus rank from the public PPR top200
 #             rankings page -> CBS1QB.csv
+#             IN-SEASON (2026-09-22): /ppr/top200/ silently becomes CBS's
+#             WEEKLY list once the season starts (150 rows, this week's
+#             matchups) — that leaked into cbsAdp from ~09-07. CBS has no
+#             rest-of-season list at all (nav = Weekly | Preseason only);
+#             the closest thing is /ppr/top200/yearly/ ("Preseason" tab,
+#             200 rows) which CBS still edits in-season (updated 09-13
+#             after Week 1). We read yearly first, plain top200 as fallback.
+#             CBS also replaced the player-wrapper markup with a
+#             FantasyRankingsTable <table> in Sept 2026 (old parser found
+#             nothing 09-16 → 09-22); both layouts are parsed now.
 #   Phase D — Yahoo O-Rank (editorial overall rank, sort=OR) from the public
 #             pub-api-ro fantasy API (keyless) -> Yahoo1QB.csv
 #   Phase E — KeepTradeCut dynasty values from the playersArray JSON embedded
@@ -101,10 +123,30 @@ FP_PAGES = {
     'FantasyPros_2026_DynastySF.csv':  'https://www.fantasypros.com/nfl/rankings/dynasty-superflex.php',
 }
 FP_MIN_ROWS = 300
+# In-season swap for the redraft 1QB column: FantasyPros' rest-of-season
+# overall consensus (same ecrData JSON shape; 396 rows on 2026-09-22, K/DST
+# included at their verbatim overall slots, shrinks as the season runs).
+FP_ROS_PAGES = {
+    'FantasyPros_2026_Draft1QB.csv': 'https://www.fantasypros.com/nfl/rankings/ros-ppr-overall.php',
+}
+FP_ROS_MIN_ROWS = 200
+
+# Sleeper league state — the same in-season switch pull_weekly_projections.py
+# uses (season_type == 'regular' during the regular season).
+STATE_URL = 'https://api.sleeper.app/v1/state/nfl'
 
 ESPN_URL = ('https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/'
             '2026/segments/0/leaguedefaults/3')
 ESPN_MIN_ROWS = 150
+# In-season ESPN source: Karabell's rest-of-season rankings story (updated in
+# place through the season; verified 2026-09-22, dateModified 09-16). The
+# now.core news feed is scanned for a newer rest-season story id first so a
+# fresh article (new id) is picked up without an edit here.
+ESPN_ROS_URL = ('https://www.espn.com/fantasy/football/story/_/id/49949224/'
+                'fantasy-football-2026-updated-rest-season-rankings')
+ESPN_ROS_FEED = 'https://now.core.api.espn.com/v1/sports/football/nfl/news?limit=50'
+ESPN_ROS_MIN_ROWS = 80
+ESPN_ROS_STALE_DAYS = 21
 ESPN_POS = {1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE', 5: 'K', 16: 'DST'}
 ESPN_TEAMS = {
     1: 'ATL', 2: 'BUF', 3: 'CHI', 4: 'CIN', 5: 'CLE', 6: 'DAL', 7: 'DEN',
@@ -135,6 +177,10 @@ TEAM_FULL = {
 # /nfl/players/<id>/<slug>/ URL slug (norm_name in inject_rankings.py treats
 # hyphens as spaces, so slug-derived names still match d.js).
 CBS_URL = 'https://www.cbssports.com/fantasy/football/rankings/ppr/top200/'
+# 2026-09-22: in-season the plain top200 URL serves CBS's WEEKLY list; the
+# season-long list lives under /yearly/ (CBS labels it "Preseason" but keeps
+# editing it — 200 rows, updated 09-13). Try yearly first, plain as fallback.
+CBS_URL_YEARLY = 'https://www.cbssports.com/fantasy/football/rankings/ppr/top200/yearly/'
 CBS_MIN_ROWS = 100
 
 # Yahoo public fantasy API (no auth/cookies/crumb needed). 470 = 2026 NFL
@@ -201,9 +247,36 @@ def write_csv(fname, header_line, rows):
 # Phase A — FantasyPros consensus rankings (ecrData inline JSON)
 # ---------------------------------------------------------------------------
 
+_IN_SEASON = None
+
+
+def nfl_in_season():
+    """True during the NFL regular season (Sleeper state season_type ==
+    'regular'). Cached per run. If Sleeper is unreachable, fall back to the
+    calendar: September through January counts as in-season."""
+    global _IN_SEASON
+    if _IN_SEASON is None:
+        try:
+            st = requests.get(STATE_URL, headers=HEADERS, timeout=20).json()
+            _IN_SEASON = (st.get('season_type') == 'regular'
+                          and int(st.get('week') or 0) >= 1)
+            print(f'  NFL state: {st.get("season_type")} week {st.get("week")} '
+                  f'-> {"IN-SEASON (rest-of-season sources)" if _IN_SEASON else "offseason (draft sources)"}')
+        except Exception as e:
+            month = datetime.date.today().month
+            _IN_SEASON = month >= 9 or month == 1
+            print(f'  !! Sleeper state unavailable ({e}) — calendar says '
+                  f'{"in-season" if _IN_SEASON else "offseason"}')
+    return _IN_SEASON
+
+
 def pull_fantasypros():
     ok = 0
+    in_season = nfl_in_season()
     for fname, url in FP_PAGES.items():
+        min_rows = FP_MIN_ROWS
+        if in_season and fname in FP_ROS_PAGES:
+            url, min_rows = FP_ROS_PAGES[fname], FP_ROS_MIN_ROWS
         try:
             r = requests.get(url, headers=HEADERS, timeout=30)
             r.raise_for_status()
@@ -211,7 +284,8 @@ def pull_fantasypros():
             if not m:
                 print(f'  !! {fname}: no ecrData on {url} — kept old file')
                 continue
-            players = json.loads(m.group(1)).get('players', [])
+            ecr = json.loads(m.group(1))
+            players = ecr.get('players', [])
             rows = []
             for p in players:
                 name = (p.get('player_name') or '').strip()
@@ -222,10 +296,13 @@ def pull_fantasypros():
                              p.get('player_team_id') or '',
                              p.get('pos_rank') or p.get('player_position_id') or ''])
             rows.sort(key=lambda x: x[0])
-            if len(rows) < FP_MIN_ROWS:
-                print(f'  !! {fname}: only {len(rows)} rows (<{FP_MIN_ROWS}) — kept old file')
+            if len(rows) < min_rows:
+                print(f'  !! {fname}: only {len(rows)} rows (<{min_rows}) — kept old file')
                 continue
+            label = ecr.get('type') or ecr.get('ranking_type_name') or ''
             write_csv(fname, '"RK","PLAYER NAME","TEAM","POS"', rows)
+            if label:
+                print(f'     ({label}, updated {ecr.get("last_updated") or "?"})')
             ok += 1
         except Exception as e:
             print(f'  !! {fname}: {e} — kept old file')
@@ -287,6 +364,103 @@ def pull_espn():
         return 0
 
 
+# --- In-season: ESPN rest-of-season story, "Overall top 100" table ---------
+
+_TAG_RE = re.compile(r'<[^>]+>')
+
+
+def _espn_ros_candidates():
+    """Story URLs to try, newest feed hit first, ESPN_ROS_URL last."""
+    urls = []
+    try:
+        r = requests.get(ESPN_ROS_FEED, headers=HEADERS, timeout=30)
+        r.raise_for_status()
+        for m in re.finditer(r'https?://www\.espn\.com/fantasy/football/story/_/id/\d+/'
+                             r'[^"\s\\]*rest-(?:of-)?season[^"\s\\]*', r.text):
+            u = m.group(0)
+            if u not in urls:
+                urls.append(u)
+        if urls:
+            print(f'  feed: {len(urls)} rest-of-season story link(s)')
+    except Exception as e:
+        print(f'  feed unavailable ({e}) — using ESPN_ROS_URL')
+    if ESPN_ROS_URL not in urls:
+        urls.append(ESPN_ROS_URL)
+    return urls
+
+
+def parse_espn_ros_overall(html):
+    """(entries, dateModified) from the Overall top 100 table of a Karabell
+    ROS story. entries = [(rank, name, team, pos)], skill + D/ST."""
+    hi = re.search(r'Overall top \d+', html, re.I)
+    if not hi:
+        return [], None
+    after = html[hi.end():]
+    ti = after.find('<table')
+    te = after.find('</table>', ti)
+    if ti < 0 or te < 0:
+        return [], None
+    table = after[ti:te]
+    entries = []
+    for row in table.split('<tr')[1:]:
+        cells = [_TAG_RE.sub('', c).replace('&nbsp;', ' ').replace('&amp;', '&').strip()
+                 for c in re.findall(r'<td[^>]*>([\s\S]*?)</td>', row)]
+        if len(cells) < 6:
+            continue
+        # Rank | trend (UP/DOWN/blank) | Player | Team | Bye | Pos. Rank | Next 3
+        if not cells[0].isdigit():
+            continue
+        rank = int(cells[0])
+        link = re.search(r'nfl/player/_/id/-?\d+/[^"]*"[^>]*>([^<]+)<', row)
+        name = (link.group(1) if link else cells[2]).strip()
+        team = cells[3].strip().upper()
+        pos = re.sub(r'\d+$', '', cells[5].strip()).upper()
+        if pos in ('D/ST', 'DST', 'DEF'):
+            if team not in TEAM_FULL:
+                continue
+            name, pos = TEAM_FULL[team] + ' D/ST', 'DST'
+        elif pos not in VALID_POS and pos != 'K':
+            continue
+        if not name:
+            continue
+        entries.append((rank, name, team, pos))
+    entries.sort(key=lambda x: x[0])
+    dm = re.search(r'"date(?:Modified|Published)":"([^"]+)"', html)
+    return entries, (dm.group(1) if dm else None)
+
+
+def pull_espn_ros():
+    for url in _espn_ros_candidates():
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=30)
+            r.raise_for_status()
+            entries, stamp = parse_espn_ros_overall(r.text)
+            if len(entries) < ESPN_ROS_MIN_ROWS:
+                print(f'  !! {url}: only {len(entries)} Overall rows (<{ESPN_ROS_MIN_ROWS}) — next candidate')
+                continue
+            if stamp:
+                try:
+                    age = (datetime.datetime.now(datetime.timezone.utc)
+                           - datetime.datetime.fromisoformat(stamp.replace('Z', '+00:00'))).days
+                    if age > ESPN_ROS_STALE_DAYS:
+                        print(f'  !! ESPN ROS story last modified {stamp} ({age}d ago) — using it anyway')
+                    else:
+                        print(f'  ESPN ROS story modified {stamp}')
+                except ValueError:
+                    pass
+            rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
+                    for i, (_, name, team, pos) in enumerate(entries)]
+            write_csv('ESPN1QB.csv',
+                      '"Player Name", "Player Team", "Player Position", ESPN: Redraft 1 PPR ADP, "Market Index 1",',
+                      rows)
+            print(f'     (rest-of-season Overall top {len(entries)} from {url})')
+            return 1
+        except Exception as e:
+            print(f'  !! {url}: {e} — next candidate')
+    print('  !! ESPN1QB.csv: no usable rest-of-season story — kept old file')
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Phase C — CBS expert-consensus rank (public PPR top200 rankings page)
 # NOTE: the top200 list is skill-only (verified 2026-08-06 — zero K/DST rows),
@@ -294,17 +468,31 @@ def pull_espn():
 # publish POSITIONAL ranks, which don't fit the overall-rank column scale.
 # ---------------------------------------------------------------------------
 
-def pull_cbs():
-    try:
-        r = requests.get(CBS_URL, headers=HEADERS, timeout=30)
-        r.raise_for_status()
+def parse_cbs_rankings(html):
+    """[(rank, name, '', pos)] from either CBS layout:
+    - Sept-2026 FantasyRankingsTable rows (rank td, /nfl/players/<id>/<slug>/
+      link, pos td like "RB1"), or
+    - the older player-wrapper / player-row divs (first wrapper = consensus)."""
+    entries = []
+    rows = html.split('<tr class="FightTable-row FantasyRankingsTable-row">')
+    if len(rows) > 1:
+        for chunk in rows[1:]:
+            rk = re.search(r'FantasyRankingsTable-td--rank[^>]*>\s*(\d+)\s*<', chunk)
+            slug = re.search(r'/nfl/players/\d+/([a-z0-9-]+)/', chunk)
+            pm = re.search(r'FantasyRankingsTable-td--pos[^>]*>\s*([A-Z/]+?)\d*\s*<', chunk)
+            if not rk or not slug or not pm:
+                continue
+            pos = pm.group(1)
+            if pos not in VALID_POS:
+                continue
+            name = ' '.join(w.capitalize() for w in slug.group(1).split('-'))
+            entries.append((int(rk.group(1)), name, '', pos))
+    else:
         # The page carries several 200-row lists (consensus + one per expert).
         # The first player-wrapper is the consensus "RK" list — parse only it.
-        wrappers = r.text.split('<div class="player-wrapper">')
+        wrappers = html.split('<div class="player-wrapper">')
         if len(wrappers) < 2:
-            print('  !! CBS1QB.csv: no player-wrapper found — kept old file')
-            return 0
-        entries = []
+            return []
         for chunk in wrappers[1].split('<div class="player-row')[1:]:
             rk = re.search(r'<div class="rank">(\d+)</div>', chunk)
             slug = re.search(r'/nfl/players/\d+/([a-z0-9-]+)/', chunk)
@@ -316,9 +504,28 @@ def pull_cbs():
                 continue
             name = ' '.join(w.capitalize() for w in slug.group(1).split('-'))
             entries.append((int(rk.group(1)), name, '', pos))
-        entries.sort(key=lambda x: x[0])
+    entries.sort(key=lambda x: x[0])
+    return entries
+
+
+def pull_cbs():
+    try:
+        entries = []
+        for url in (CBS_URL_YEARLY, CBS_URL):
+            r = requests.get(url, headers=HEADERS, timeout=30)
+            if r.status_code == 404:
+                print(f'  {url}: 404 — trying next')
+                continue
+            r.raise_for_status()
+            entries = parse_cbs_rankings(r.text)
+            if len(entries) >= CBS_MIN_ROWS:
+                upd = re.search(r'Updated [^<]{1,30}', r.text)
+                print(f'     ({len(entries)} rows from {url}'
+                      f'{", " + upd.group(0).strip() if upd else ""})')
+                break
+            print(f'  !! {url}: only {len(entries)} rows (<{CBS_MIN_ROWS}) — trying next')
         if len(entries) < CBS_MIN_ROWS:
-            print(f'  !! CBS1QB.csv: only {len(entries)} rows (<{CBS_MIN_ROWS}) — kept old file')
+            print('  !! CBS1QB.csv: no usable list — kept old file')
             return 0
         rows = [[name, team, pos, overall_to_round_pick(i + 1), '0']
                 for i, (_, name, team, pos) in enumerate(entries)]
@@ -795,7 +1002,7 @@ def main():
     print('\nPhase A — FantasyPros consensus rankings:')
     n_fp = pull_fantasypros()
     print('\nPhase B — ESPN staff rank:')
-    n_espn = pull_espn()
+    n_espn = pull_espn_ros() if nfl_in_season() else pull_espn()
     print('\nPhase C — CBS consensus rank:')
     n_cbs = pull_cbs()
     print('\nPhase D — Yahoo O-Rank:')

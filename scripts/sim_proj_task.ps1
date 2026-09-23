@@ -118,10 +118,10 @@ $changed = git status --porcelain -- @Files
 if (-not $changed) {
     Write-Log 'projections unchanged - nothing to commit'
 } else {
-    # Bump ?v= tags for the data files this run changed (hour-stamped:
+    # Bump ?v= tags for the data files this run changed (minute-stamped:
     # game-day runs commit several times per day). Read the CURRENT html
     # from disk - never assume.
-    $stamp = Get-Date -Format 'yyyy-MM-dd-HH'
+    $stamp = Get-Date -Format 'yyyy-MM-dd-HHmm'   # minute-stamped: two runs in one hour must still bust the cache
     $idx = Join-Path $Repo 'index.html'
     $html = [System.IO.File]::ReadAllText($idx)
     $html2 = $html

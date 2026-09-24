@@ -2741,9 +2741,64 @@ function _projStatLine(d) {
   };
 }
 
+// PASS-TD / INT JUICE (2026-09-24). Weekly boards carry the over/under american
+// prices beside the line (ptd → ptdo/ptdu, int → into/intu; PrizePicks has
+// none). Nearly every QB is 1.5 TD / 0.5 INT, so the line alone says little —
+// the price does. Each book's line + no-vig over probability is turned into an
+// expected count by solving a Poisson mean: 1.5 at even juice ≈ 1.68 TD,
+// -150 over ≈ 1.8, +157 over ≈ 1.3. It also reconciles books posting different
+// lines (0.5 at -265 vs 1.5 at +205 both land near 1.1). Unpriced books are
+// taken at even juice, and only count when no book posts prices.
+const _PROP_PRICE_KEYS = { ptd: ['ptdo', 'ptdu'], int: ['into', 'intu'] };
+const _PROP_PRICE_SET = { ptdo: 1, ptdu: 1, into: 1, intu: 1 };
+function _amProb(o) { return o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100); }
+function _probAm(p) { return Math.round(p >= 0.5 ? -(p * 100) / (1 - p) : ((1 - p) * 100) / p); }
+// P(X > line) for X ~ Poisson(lam); a whole-number line pushes, so it's
+// conditioned on no push.
+function _poisOver(lam, line) {
+  const L = Math.floor(line);
+  let term = Math.exp(-lam), cdf = term;
+  for (let i = 1; i <= L; i++) { term *= lam / i; cdf += term; }
+  return line === L ? (1 - cdf) / Math.max(1e-9, 1 - term) : 1 - cdf;
+}
+function _poisMeanFor(line, pOver) {
+  const p = Math.min(0.98, Math.max(0.02, pOver));
+  let lo = 1e-3, hi = 15;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    if (_poisOver(mid, line) < p) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+// One book's lines → { exp, p, priced } for stat 'ptd' | 'int', or null.
+function _propExpFor(lines, stat) {
+  const line = lines && lines[stat];
+  if (typeof line !== 'number') return null;
+  const k = _PROP_PRICE_KEYS[stat];
+  const o = lines[k[0]], u = lines[k[1]];
+  const priced = typeof o === 'number' && typeof u === 'number';
+  const p = priced ? _amProb(o) / (_amProb(o) + _amProb(u)) : 0.5;
+  return { exp: _poisMeanFor(line, p), p, priced };
+}
+// Across a player's weekly books ({DK:{…}, UD:{…}, asOf}) → { exp, n, priced } or null.
+function _propExpAcross(rec, stat) {
+  const all = [];
+  Object.keys(rec || {}).forEach(b => {
+    if (b === 'asOf' || !rec[b] || typeof rec[b] !== 'object') return;
+    const e = _propExpFor(rec[b], stat);
+    if (e) all.push(e);
+  });
+  if (!all.length) return null;
+  const pr = all.filter(e => e.priced);
+  const use = pr.length ? pr : all;
+  return { exp: use.reduce((a, e) => a + e.exp, 0) / use.length, n: use.length, priced: pr.length > 0 };
+}
+
 // WEEKLY prop lines for the active week (BETTING_2026.weeklyProps, pulled by
 // scripts/pull_betting_lines.py --weekly-props). Averages each posted stat
-// across every posted book (DK / FD / MGM / UD / PP). Returns { stats, books, asOf } or null.
+// across every posted book (DK / FD / MGM / UD / PP). Pass-TD / INT also get
+// ptdx / intx = juice-adjusted expected counts (see _propExpAcross).
+// Returns { stats, books, asOf } or null.
 function _weeklyPropLinesFor(name) {
   if (!window.BETTING_2026 || !window.BETTING_2026.weeklyProps) return null;
   const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
@@ -2770,15 +2825,18 @@ function _weeklyPropLinesFor(name) {
   const avg = {};
   Object.keys(stats).forEach(st => {
     const vals = stats[st];
-    if (st === 'atd') {
+    if (st === 'atd' || _PROP_PRICE_SET[st]) {
       // American odds can't be averaged directly (undefined between ±100):
       // average implied probabilities across books, convert back.
-      const ps = vals.map(o => o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100));
-      const p = ps.reduce((a, b) => a + b, 0) / ps.length;
-      avg.atd = Math.round(p >= 0.5 ? -(p * 100) / (1 - p) : ((1 - p) * 100) / p);
+      const ps = vals.map(_amProb);
+      avg[st] = _probAm(ps.reduce((a, b) => a + b, 0) / ps.length);
       return;
     }
     avg[st] = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100;
+  });
+  ['ptd', 'int'].forEach(st => {
+    const e = _propExpAcross(rec, st);
+    if (e) { avg[st + 'x'] = Math.round(e.exp * 100) / 100; avg[st + 'xPriced'] = e.priced; }
   });
   return { stats: avg, books, asOf: rec.asOf || null };
 }
@@ -2876,7 +2934,7 @@ function _linesStatLine(d) {
     if (!hasYds && !hasTd && atd == null) return null;
     const parts = [];
     if (py) parts.push('Pass ' + py + ' yds');
-    if (s.ptd != null) parts.push('Pass TD ' + s.ptd);
+    if (s.ptd != null) parts.push('Pass TD ' + s.ptd + (s.ptdx != null ? ' (' + s.ptdx.toFixed(2) + ' exp w/ juice)' : ''));
     if (ry) parts.push('Rush ' + ry + ' yds');
     if (rcy) parts.push('Rec ' + rcy + ' yds');
     if (s.rec != null) parts.push(s.rec + ' rec');
@@ -2934,8 +2992,8 @@ function _bookPpgCellHtml(d) {
 }
 
 // WEEKLY BOOK PPG: the active week's prop board (UD / PP / DK odds) scored in
-// the current format. Yardage + receptions + passing-TD lines score verbatim;
-// rush/rec TDs use the anytime-TD odds' implied probability × 6 (the 0.5 line
+// the current format. Yardage + receptions lines score verbatim; pass TD / INT
+// score their juice-adjusted expected counts (ptdx / intx); rush/rec TDs use the anytime-TD odds' implied probability × 6 (the 0.5 line
 // is flat for everyone — the juice is the signal), falling back to the 0.5
 // line itself when no odds are posted. Needs a yardage line to show at all
 // (a receptions-only board would render a misleadingly tiny PPG).
@@ -2950,8 +3008,10 @@ function _weeklyBookPpgFor(d) {
   let fp = py / 25 + ry / 10 + rcy / 10;
   const parts = [];
   if (py) parts.push('Pass ' + py + ' yds');
-  if (s.ptd != null) { fp += s.ptd * 4; parts.push(s.ptd + ' pass TD'); }
-  if (s.int != null) { fp += s.int * -2; parts.push(s.int + ' INT'); }
+  // pass TD / INT: juice-adjusted expected count, not the flat 1.5 / 0.5 line
+  const xLbl = (st, lbl) => s[st] + ' ' + lbl + ' → ' + s[st + 'x'].toFixed(2) + ' exp' + (s[st + 'xPriced'] ? ' (juice)' : ' (even juice)');
+  if (s.ptdx != null) { fp += s.ptdx * 4; parts.push(xLbl('ptd', 'pass TD')); }
+  if (s.intx != null) { fp += s.intx * -2; parts.push(xLbl('int', 'INT')); }
   if (ry) parts.push('Rush ' + ry + ' yds');
   if (rcy) parts.push('Rec ' + rcy + ' yds');
   if (s.rec != null) { fp += s.rec * recMult; parts.push(s.rec + ' rec'); }
@@ -12491,7 +12551,8 @@ function _loadLinesHistory() {
 }
 // Fantasy-positive direction: yards/TD lines UP is good, anytime-TD odds and
 // INT lines DOWN is good.
-const _LM_NEG_GOOD = { atd: true, int: true };
+// Over prices: a more negative pass-TD over price is good, INT over is the reverse.
+const _LM_NEG_GOOD = { atd: true, int: true, ptdo: true, intu: true };
 function _lmFmtDate(stamp) {
   const d = new Date(stamp);
   if (isNaN(d)) return '';
@@ -12499,7 +12560,7 @@ function _lmFmtDate(stamp) {
 }
 function _lmFmtVal(k, v) {
   if (typeof v !== 'number') return '—';
-  if (k === 'atd') return (v > 0 ? '+' : '') + Math.round(v);
+  if (k === 'atd' || _PROP_PRICE_SET[k]) return (v > 0 ? '+' : '') + Math.round(v);
   return (Math.round(v * 10) / 10).toString();
 }
 // History points for one (scope, name, book, stat); scope = week number or 'season'.
@@ -12635,11 +12696,36 @@ function _buildWeeklyLinesSection(d) {
       html += '<td style="font-weight:700;color:var(--accent)">' + fmtFn(avg) + '</td>';
     }
     html += '</tr>';
+    // Pass TD / INT: the line is 1.5 / 0.5 for nearly everyone — show each
+    // book's over price and what line + juice imply (_propExpFor).
+    const pk = _PROP_PRICE_KEYS[k];
+    if (pk && books.some(b => typeof rec[b][pk[0]] === 'number' && typeof rec[b][pk[1]] === 'number')) {
+      const sub = (lbl, tip) => '<tr><td style="text-align:left;font-size:.62rem;color:var(--text2);padding-left:10px;cursor:help" title="' + tip + '">↳ ' + lbl + '</td>';
+      html += sub('Over odds', 'Price on the over (' + label + ' line above). More negative = books expect more.');
+      const ov = [];
+      books.forEach(b => {
+        const o = rec[b][pk[0]], u = rec[b][pk[1]];
+        const has = typeof o === 'number' && typeof u === 'number';
+        if (has) ov.push(o);
+        html += '<td style="font-size:.7rem"' + (has ? ' title="under ' + fmtOdds(u) + '"' : '') + '>' + (has ? _lmCell(wk, d.n, b, pk[0], o, fmtOdds) : '—') + '</td>';
+      });
+      if (books.length > 1) html += '<td style="font-size:.7rem;font-weight:700;color:var(--accent)">' + fmtOdds(_probAm(ov.reduce((a, o) => a + _amProb(o), 0) / ov.length)) + '</td>';
+      html += '</tr>';
+      const fmt2 = v => (typeof v === 'number') ? v.toFixed(2) : '—';
+      html += sub('Expected', 'Line + no-vig over probability solved as a Poisson mean — e.g. 1.5 at even juice ≈ 1.68, -150 over ≈ 1.8. This is what BOOKS PPG scores.');
+      books.forEach(b => {
+        const e = _propExpFor(rec[b], k);
+        html += '<td style="font-size:.7rem">' + (e && e.priced ? fmt2(e.exp) : '—') + '</td>';
+      });
+      const ex = _propExpAcross(rec, k);
+      if (books.length > 1) html += '<td style="font-size:.7rem;font-weight:700;color:var(--accent)">' + fmt2(ex && ex.exp) + '</td>';
+      html += '</tr>';
+    }
   });
   html += '</tbody></table>';
   html += _lmMovesHtml(wk, d.n, books, Object.fromEntries(ROWS.map(r => [r[0], r[1]])));
   html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">'
-    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. ▲▼ = moved since first posted (hover for open → now).'
+    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. Pass TD / INT Expected = line + juice as an average count. ▲▼ = moved since first posted (hover for open → now).'
     + (rec.asOf ? ' As of ' + rec.asOf + '.' : '') + '</div>';
   html += '</div>';
   return html;
@@ -64083,6 +64169,8 @@ function _rsScatter(cfg) {
     const avg = {};
     Object.keys(stats).forEach(st => { avg[st] = stats[st].reduce((a, b) => a + b, 0) / stats[st].length; });
     if (ps.length) avg.tdp = ps.reduce((a, b) => a + b, 0) / ps.length;
+    // pass TD / INT scored as juice-adjusted expected counts (see _propExpAcross)
+    ['ptd', 'int'].forEach(st => { const e = _propExpAcross(rec, st); if (e) avg[st] = e.exp; });
     return avg;
   }
   function _wkBook(r, pos) {

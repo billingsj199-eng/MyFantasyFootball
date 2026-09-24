@@ -394,7 +394,35 @@ def pull_season_props():
 
 
 BOOK_ORDER = ('DK', 'FD', 'MGM', 'UD', 'PP')
-STAT_ORDER = ['py', 'ptd', 'int', 'ry', 'rtd', 'ra', 'rec', 'rcy', 'rctd', 'rrtd', 'fgm', 'kpts', 'atd']
+STAT_ORDER = ['py', 'ptd', 'ptdo', 'ptdu', 'int', 'into', 'intu', 'ry', 'rtd', 'ra', 'rec', 'rcy',
+              'rctd', 'rrtd', 'fgm', 'kpts', 'atd']
+
+# WEEKLY pass-TD / INT juice (added 2026-09-24). Nearly every QB's pass-TD
+# line is 1.5 and every INT line 0.5, so the number alone can't separate
+# them — the over/under american prices can (-150 over 1.5 = ~60% for 2+,
+# +157 = ~39%). Stored beside the line as <stat>o / <stat>u; the site turns
+# line + no-vig over probability into an expected count (Poisson).
+# PrizePicks posts no prices (standard squares) so it never carries them.
+PRICE_KEYS = {'ptd': ('ptdo', 'ptdu'), 'int': ('into', 'intu')}
+
+
+def _american(v):
+    """'+157' / '-120' / '−105' / 110 -> int, else None."""
+    try:
+        return int(float(str(v).replace('+', '').replace('−', '-')))
+    except (TypeError, ValueError):
+        return None
+
+
+def _set_prices(stats, stat, over, under):
+    """Store over/under prices for a PRICE_KEYS stat — both sides or neither
+    (one side alone can't be devigged)."""
+    keys = PRICE_KEYS.get(stat)
+    over, under = _american(over), _american(under)
+    if not keys or over is None or under is None:
+        return 0
+    stats[keys[0]], stats[keys[1]] = over, under
+    return 1
 
 
 def parse_props_entry(raw):
@@ -779,6 +807,9 @@ def pull_ud_weekly(week_by_matchup):
             continue
         wkd.setdefault(name, {})[stat] = val
         n += 1
+        if stat in PRICE_KEYS:
+            side = {o.get('choice'): o.get('american_price') for o in line.get('options') or []}
+            _set_prices(wkd[name], stat, side.get('higher'), side.get('lower'))
         # UD hides per-side prices behind selection — the API exposes them on
         # every line. For the rush+rec TD 0.5, the HIGHER side's american
         # price ≈ anytime-TD odds (Jack: "they have different odds for the TD
@@ -931,6 +962,12 @@ def pull_dk_weekly_stats(week_by_matchup):
                 continue
             events = _dk_event_weeks(body, week_by_matchup)
             markets = {m['id']: m for m in body.get('markets', [])}
+            # Under prices by market (same points as the Over) for the juice
+            unders = {}
+            if stat in PRICE_KEYS:
+                for sel in body.get('selections', []):
+                    if (sel.get('outcomeType') or '').lower() == 'under':
+                        unders[sel.get('marketId')] = sel
             added = 0
             for sel in body.get('selections', []):
                 if (sel.get('outcomeType') or '').lower() != 'over':
@@ -952,6 +989,11 @@ def pull_dk_weekly_stats(week_by_matchup):
                     continue
                 wkd.setdefault(player, {})[stat] = float(line)
                 added += 1
+                u = unders.get(sel.get('marketId'))
+                if u and u.get('points') == line:
+                    _set_prices(wkd[player], stat,
+                                sel.get('oddsAmerican') or (sel.get('displayOdds') or {}).get('american'),
+                                u.get('oddsAmerican') or (u.get('displayOdds') or {}).get('american'))
             total += added
             print(f"  DK weekly {s.get('name')}: {added} lines")
             time.sleep(1.0)
@@ -1375,11 +1417,16 @@ def pull_fd_weekly(week_by_matchup):
                     continue   # _ALT_ ladders, milestones, specials
                 stat = FD_WEEKLY_TYPES[t.group(1)]
                 player = (m.get('marketName') or '').split(' - ')[0].strip()
-                for r in m.get('runners', []):
+                runners = m.get('runners', [])
+                for r in runners:
                     if (r.get('runnerName') or '').endswith(' Over') and r.get('handicap') is not None:
                         if player and stat not in wkd.get(player, {}):
                             wkd.setdefault(player, {})[stat] = float(r['handicap'])
                             n += 1
+                            u = next((x for x in runners if (x.get('runnerName') or '').endswith(' Under')
+                                      and x.get('handicap') == r['handicap']), None)
+                            if u:
+                                _set_prices(wkd[player], stat, _fd_american(r), _fd_american(u))
                         break
             time.sleep(0.4)
     print(f'  FanDuel weekly: {n} lines, weeks {sorted(out)}, '
@@ -1516,6 +1563,16 @@ def _mgm_over_line(opts):
     return over if (over is not None and under is not None) else None
 
 
+def _mgm_ou_prices(opts, line):
+    """(over, under) american prices for the 'Over/Under <line>' options."""
+    px = {}
+    for o in opts or []:
+        mm = re.match(r'^(Over|Under) (\d+(?:\.\d+)?)$', _mgm_name(o))
+        if mm and float(mm.group(2)) == line:
+            px[mm.group(1)] = (o.get('price') or {}).get('americanOdds')
+    return px.get('Over'), px.get('Under')
+
+
 def pull_mgm_season():
     """{player: {stat: line}} from BetMGM's 'Regular season stats' fixture."""
     fx = [f for f in _mgm_fixtures() if 'regular season stats' in _mgm_name(f).lower()]
@@ -1600,6 +1657,8 @@ def pull_mgm_weekly(week_by_matchup):
             if stat not in wkd.get(player, {}):
                 wkd.setdefault(player, {})[stat] = line
                 n += 1
+                if stat in PRICE_KEYS:
+                    _set_prices(wkd[player], stat, *_mgm_ou_prices(g.get('options'), line))
         time.sleep(0.5)
     print(f'  BetMGM weekly: {n} lines, weeks {sorted(out)}, '
           f'{sum(len(v) for v in out.values())} player-weeks ({games} games)')

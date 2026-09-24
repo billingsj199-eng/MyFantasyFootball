@@ -6563,6 +6563,12 @@ function attachTierListeners() {
     }
     const nameLink = e.target.closest('.player-name-link');
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
+    // WEEKLY OPP / OPP PPG cell → that defense's 2026 games vs this position.
+    const oppTd = currentMode === 'weekly' && e.target.closest('td.opp-cell, td.oppppg-cell');
+    if (oppTd && typeof window._wkOppGamesShow === 'function') {
+      const orow = oppTd.closest('tr[data-idx]');
+      if (orow && D[+orow.dataset.idx]) { e.stopPropagation(); window._wkOppGamesShow(D[+orow.dataset.idx], oppTd); return; }
+    }
     // Cut line controls (all formats). data-cut-pos marks a position-group
     // line (WEEKLY QB/K/DST, REDRAFT K/DST — position-rank based); without
     // it, the overall cut.
@@ -7795,6 +7801,125 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const m = T && T.pos[pos];
     const r = m && m[opp];
     return r ? Object.assign({ opp }, r) : null;
+  };
+
+  // OPP GAMES POPOVER (2026-09-24) — click a WEEKLY row's OPP / OPP PPG cell
+  // to see that defense's 2026 games against the row's position, in week
+  // order: offense faced, points allowed (FPA_2026, board scoring) and the
+  // players who scored them (WEEKLY_STATS_ACTIVE 2026 rows, lazy bundle).
+  // K / D/ST show the FPA totals only (no per-player rows for those).
+  let _wkOppPlayerIdx = null;
+  function _wkOppPlayersByGame() {
+    const WS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : window.WEEKLY_STATS_ACTIVE;
+    if (!WS) return null;
+    if (_wkOppPlayerIdx && _wkOppPlayerIdx.src === WS) return _wkOppPlayerIdx.idx;
+    const idx = {};   // "wk|DEF|POS" → [{n, tm, g}]
+    Object.keys(WS).forEach(n => {
+      const p = WS[n];
+      const rows = p && p.seasons && p.seasons['2026'];
+      if (!rows || !p.pos) return;
+      rows.forEach(g => {
+        if (!g || !g.opp) return;
+        let o = String(g.opp).toUpperCase();
+        o = _WK_OPP_ABBR[o] || o;
+        const k = g.wk + '|' + o + '|' + p.pos;
+        (idx[k] || (idx[k] = [])).push({ n, tm: g.tm, g });
+      });
+    });
+    _wkOppPlayerIdx = { src: WS, idx };
+    return idx;
+  }
+  function _wkOppStatLine(pos, g) {
+    const parts = [];
+    if (pos === 'QB' && (g.pa || g.py)) parts.push((g.pc != null && g.pa != null ? g.pc + '/' + g.pa + ' ' : '') + (g.py || 0) + ' yd' + (g.ptd ? ' ' + g.ptd + ' TD' : '') + (g.int ? ' ' + g.int + ' INT' : ''));
+    if (g.ra) parts.push(g.ra + '-' + (g.ry || 0) + ' rush' + (g.rtd ? ' ' + g.rtd + ' TD' : ''));
+    if (g.rec || g.tgt) parts.push((g.rec || 0) + '/' + (g.tgt || 0) + '-' + (g.rcy || 0) + ' rec' + (g.rctd ? ' ' + g.rctd + ' TD' : ''));
+    if (g.fl) parts.push(g.fl + ' FL');
+    return parts.join(' · ');
+  }
+  window._wkOppGamesShow = function(d, anchorEl) {
+    if (!d || !anchorEl || typeof window._weeklyOppFor !== 'function') return;
+    let opp = window._weeklyOppFor(d.t);
+    if (!opp || opp === 'BYE') return;
+    opp = String(opp).replace(/^@/, '').toUpperCase();
+    opp = _WK_OPP_ABBR[opp] || opp;
+    const pos = d.s;
+    let pop = document.getElementById('oppGamesPopover');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'oppGamesPopover';
+      pop.className = 'inj-popover oppg-popover';
+      document.body.appendChild(pop);
+      document.addEventListener('click', e => {
+        if (pop.style.display === 'block' && !pop.contains(e.target) && !e.target.closest('.opp-cell,.oppppg-cell')) pop.style.display = 'none';
+      });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') pop.style.display = 'none'; });
+      window.addEventListener('scroll', e => { if (!pop.contains(e.target)) pop.style.display = 'none'; }, true);
+    }
+    const key = opp + '|' + pos;
+    if (pop.style.display === 'block' && pop._forKey === key && pop._anchor === anchorEl) { pop.style.display = 'none'; return; }
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
+    const suf = fmt === 'ppr' ? '_ppr' : fmt === 'std' ? '_std' : '';
+    const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;   // WEEKLY_STATS_ACTIVE fpts = half-PPR
+    const posLbl = pos === 'DST' ? 'D/STs' : pos + 's';
+    const FP = window.FPA_2026;
+    const weeks = (FP && FP.weeks) ? Object.keys(FP.weeks).map(Number).sort((a, b) => a - b) : [];
+    const P = (pos === 'K' || pos === 'DST') ? null : _wkOppPlayersByGame();
+    const needPlayers = !P && pos !== 'K' && pos !== 'DST';
+    let rowsHtml = '';
+    weeks.forEach(wk => {
+      const rec = FP.weeks[wk] && FP.weeks[wk][opp];
+      if (!rec) return;
+      const k = (pos === 'K' || pos === 'DST') ? pos : (typeof rec[pos + suf] === 'number' ? pos + suf : pos);
+      const v = rec[k];
+      if (typeof v !== 'number') return;
+      let off = rec.opp ? String(rec.opp).toUpperCase() : '—';
+      off = _WK_OPP_ABBR[off] || off;
+      let plHtml = '';
+      if (P) {
+        const list = (P[wk + '|' + opp + '|' + pos] || [])
+          .map(x => ({ n: x.n, g: x.g, pts: Math.round(((x.g.fpts || 0) + (x.g.rec || 0) * recAdj) * 10) / 10 }))
+          .filter(x => x.pts !== 0 || x.g.ra || x.g.tgt || x.g.pa)
+          .sort((a, b) => b.pts - a.pts);
+        plHtml = list.length ? list.map(x =>
+          '<div class="oppg-pl"><span class="oppg-pn">' + esc(x.n) + '</span><span class="oppg-pp">' + x.pts.toFixed(1) + '</span>' +
+          '<span class="oppg-ps">' + esc(_wkOppStatLine(pos, x.g)) + '</span></div>').join('')
+          : '<div class="oppg-pl oppg-none">No player lines</div>';
+      }
+      rowsHtml += '<div class="oppg-wk"><div class="oppg-wkhead"><span class="oppg-wkn">WK ' + wk + '</span>' +
+        '<span class="oppg-vs">vs ' + esc(off) + '</span><span class="oppg-tot">' + v.toFixed(1) + ' pts</span></div>' + plHtml + '</div>';
+    });
+    const r = window._weeklyOppPpgFor(d.t, pos);
+    const m = (typeof window._weeklyOppMatchup === 'function') ? window._weeklyOppMatchup(d.t, pos) : null;
+    let sub = '';
+    if (r) sub = 'Allows ' + r.v.toFixed(1) + '/gm · #' + r.rank + ' of ' + r.n + (typeof r.adjRank === 'number' ? ' (#' + r.adjRank + ' sched-adj)' : '') + ' · 1 = allows most';
+    const diffCls = m && m.diff ? ' opp-' + m.diff : '';
+    pop.innerHTML =
+      '<div class="injp-head"><span class="injp-name oppg-title' + diffCls + '">' + esc(opp) + ' vs ' + esc(posLbl) + '</span>' +
+      '<span class="injp-status">2026 · ' + (fmt === 'ppr' ? 'PPR' : fmt === 'std' ? 'STD' : 'HALF') + '</span></div>' +
+      (sub ? '<div class="oppg-sub">' + esc(sub) + '</div>' : '') +
+      (rowsHtml || '<div class="oppg-none">No final 2026 games yet.</div>') +
+      (needPlayers ? '<div class="injp-foot">Loading player lines…</div>' : '') +
+      '<div class="injp-foot">Final games only · ' + (pos === 'K' || pos === 'DST' ? 'points scored by the opposing ' + (pos === 'K' ? 'kicker' : 'D/ST') : 'team total = every ' + pos + ' who played; names = players on our board') + '</div>';
+    pop._forKey = key;
+    pop._anchor = anchorEl;
+    pop.style.display = 'block';
+    const b = anchorEl.getBoundingClientRect();
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    const left = Math.min(Math.max(8, b.left + window.scrollX + b.width / 2 - pw / 2), window.scrollX + vw - pw - 8);
+    let top = b.bottom + window.scrollY + 6;
+    if (b.bottom + 6 + ph > vh && b.top - 6 - ph > 0) top = b.top + window.scrollY - 6 - ph;   // flip above near the bottom edge
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    if (needPlayers && typeof window._loadWeeklyData === 'function') {
+      document.addEventListener('mff:weeklydata', function _oppgRepaint() {
+        document.removeEventListener('mff:weeklydata', _oppgRepaint);
+        if (pop.style.display === 'block' && pop._forKey === key && document.body.contains(anchorEl)) { pop.style.display = 'none'; window._wkOppGamesShow(d, anchorEl); }
+      });
+      try { window._loadWeeklyData(); } catch (_) {}
+    }
   };
 
   // PLAYER PROP PROJECTION — converts a player's SEASON-LONG sportsbook prop

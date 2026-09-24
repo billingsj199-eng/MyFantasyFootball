@@ -22,9 +22,12 @@ Adjacent same-team ranges are folded back together.
 
 Edits the file line by line (the builder's parse/emit drops the double-quoted
 apostrophe keys like "Ja'Marr Chase"), so untouched lines stay byte-identical.
-Dry run by default; --write rewrites the file. Safe to re-run any time.
+Dry run by default; --write rewrites the file (and bumps its index.html ?v=).
+Safe to re-run any time. Runs daily inside scripts/daily_consensus_adp.ps1,
+right after the roster sync rewrites d.js.
 """
 
+import datetime
 import re
 import sys
 from pathlib import Path
@@ -145,6 +148,19 @@ def main():
             body.append(fmt_line(name, rs, comma))
     OUT_FILE.write_text('\n'.join(head + body + tail), encoding='utf-8')
     print(f'Wrote {OUT_FILE}')
+    bump_version()
+
+
+def bump_version():
+    """Point the index.html script tag at a fresh ?v= so sw.js/browsers
+    fetch the new file (timestamped — same-day re-runs never collide)."""
+    index = OUT_FILE.parent.parent / 'index.html'
+    src = index.read_text(encoding='utf-8')
+    stamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M')
+    new, n = re.subn(r'(data/active_team_history\.js\?v=)[^"\']+', r'\g<1>' + stamp, src)
+    if n:
+        index.write_text(new, encoding='utf-8')
+        print(f'  index.html: active_team_history.js ?v={stamp}')
 
 
 if __name__ == '__main__':

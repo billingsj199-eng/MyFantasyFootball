@@ -1,6 +1,76 @@
 {
-  "updated": "2026-09-24T02:16:32Z",
+  "updated": "2026-09-24T16:21:48Z",
   "items": [
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "DNP again Thursday (hamstring); Ravens still call it a \"good shot\" to play Sunday at Dallas",
+      "take": "Game-time call for Week 3 -- have Rashod Bateman/DeAndre Hopkins ready as the hedge",
+      "url": "https://www.baltimoreravens.com/news/zay-flowers-injury-report-not-practicing-ravens-cowboys-rio",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "Has missed every practice this week (hip/groin); McVay \"not sure\" he plays Sunday vs. Denver",
+      "take": "Davante Adams remains the safer WR1 bet in the Rams' offense until Nacua is confirmed active",
+      "url": "https://www.espn.com/nfl/story/_/id/50006299/rams-mcvay-unsure-nacua-status-week-3-vs-broncos",
+      "tag": "injury"
+    },
+    {
+      "player": "Aaron Jones",
+      "team": "MIN",
+      "pos": "RB",
+      "date": "2026-09-24",
+      "headline": "Upgraded to limited practice Thursday after sitting out Wednesday with a knee injury",
+      "take": "Real step toward playing Sunday vs. Tampa Bay -- confirm Friday's tag before trusting him over Dallas/Ford/Patterson",
+      "url": "https://www.si.com/nfl/vikings/onsi/news/aaron-jones-among-4-players-upgraded-vikings-thursday-injury-report",
+      "tag": "injury"
+    },
+    {
+      "player": "J.K. Dobbins",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-24",
+      "headline": "Broncos call hamstring \"good,\" on track to practice ahead of Sunday vs. Rams",
+      "take": "Trending toward the clear lead-RB role over Jonah Coleman (ankle) and RJ Harvey (hamstring)",
+      "url": "https://www.cbssports.com/fantasy/football/news/broncos-j-k-dobbins-on-track-to-practice-in-week-3/",
+      "tag": "injury"
+    },
+    {
+      "player": "Keon Coleman",
+      "team": "BUF",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "Did not practice Wednesday with an ankle injury",
+      "take": "Watch Friday's report before starting him vs. the Chargers",
+      "url": "https://www.rotowire.com/football/headlines/keon-coleman-injury-dnp-on-wednesday-638871",
+      "tag": "injury"
+    },
+    {
+      "player": "DJ Moore",
+      "team": "BUF",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "Limited in Wednesday's practice (AC joint/shoulder), said he felt \"great\" afterward",
+      "take": "Trending toward playing Sunday vs. the Chargers",
+      "url": "https://sports.yahoo.com/articles/bills-wr-dj-moore-gives-004253055.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Marvin Harrison Jr.",
+      "team": "ARI",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "ESPN names Raiders, Packers and Giants as teams watching a potential trade ahead of the Nov. 10 deadline",
+      "take": "Still bench him in all formats -- a trade wouldn't change his outlook mid-season, but it's a real dynasty watch item now",
+      "url": "https://www.si.com/nfl/cardinals/onsi/marvin-harrison-jr-trade-rumors-are-suddenly-getting-real",
+      "tag": "faller"
+    },
     {
       "player": "Jonathon Brooks",
       "team": "CAR",
@@ -3089,106 +3159,6 @@
       "headline": "Rookie guard placed on IR with torn MCL, season over",
       "take": "Clears Isaiah Adams into the starting RG job - modest positive for Cardinals run-blocking",
       "url": "https://www.espn.com/nfl/story/_/id/49613585/cardinals-ol-bisontis-season-doubt-torn-mcl",
-      "tag": "transaction"
-    },
-    {
-      "player": "Kyle Monangai",
-      "team": "CHI",
-      "pos": "RB",
-      "date": "2026-09-02",
-      "headline": "Still not practicing with hyperextended knee; Week 1 status in 'serious doubt'",
-      "take": "Outlook has worsened since the initial positive read -- fade him for Week 1 and watch Roschon Johnson for early-season touches behind D'Andre Swift.",
-      "url": "https://sports.yahoo.com/articles/kyle-monangai-week-1-status-205533985.html",
-      "tag": "faller"
-    },
-    {
-      "player": "George Kittle",
-      "team": "SF",
-      "pos": "TE",
-      "date": "2026-09-02",
-      "headline": "Flying to Australia with team, no setbacks, 'still got a shot' to play Week 1 vs. Rams",
-      "take": "More encouraging than yesterday's GM-voiced concern -- trending back toward a Week 1 TE1 look, though still recovering from a torn Achilles.",
-      "url": "https://www.cbssports.com/nfl/news/george-kittle-nick-bosa-49ers-rams-australia/",
-      "tag": "riser"
-    },
-    {
-      "player": "Emeka Egbuka",
-      "team": "TB",
-      "pos": "WR",
-      "date": "2026-09-02",
-      "headline": "Toe sprain diagnosed as 'stable,' not expected to threaten season-opener status",
-      "take": "Removes the worst-case fear from Tuesday's absence -- safe to keep him as Tampa Bay's clear WR1 on draft day.",
-      "url": "https://www.bucsnation.com/tampa-bay-buccaneers-injuries/68151/egbuka-toe-injury-deemed-stable",
-      "tag": "riser"
-    },
-    {
-      "player": "Zay Flowers",
-      "team": "BAL",
-      "pos": "WR",
-      "date": "2026-09-02",
-      "headline": "Expected back at full practice next week, on track to play Week 1 vs. Colts",
-      "take": "Quad issue looks like load management rather than a real injury concern -- stay confident starting him in Week 1.",
-      "url": "https://sports.yahoo.com/articles/ravens-news-zay-flowers-gets-131503274.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Ashton Jeanty",
-      "team": "LV",
-      "pos": "RB",
-      "date": "2026-09-02",
-      "headline": "Remained out of Wednesday practice with ankle injury despite GM/HC optimism",
-      "take": "Tempers this morning's optimistic framing -- still trending toward Week 1 vs. MIA, but each missed day raises Mike Washington Jr.'s handcuff value.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-02/no-practice-for-jeanty-ankle-wednesday",
-      "tag": "injury"
-    },
-    {
-      "player": "Isiah Pacheco",
-      "team": "DET",
-      "pos": "RB",
-      "date": "2026-09-02",
-      "headline": "Placed on IR with MCL sprain plus back injury, out at least 4 games",
-      "take": "Misses Week 1 vs. Saints; possibly out into Week 7 with the bye \u2014 watch Lions backfield committee for waiver value",
-      "url": "https://www.espn.com/nfl/story/_/id/49796729/detroit-lions-place-rb-isiah-pacheco-injured-reserve",
-      "tag": "injury"
-    },
-    {
-      "player": "Ashton Jeanty",
-      "team": "LV",
-      "pos": "RB",
-      "date": "2026-09-02",
-      "headline": "Working with trainers; GM and HC voice optimism for Week 1 return",
-      "take": "Trending toward availability for Sept 13 opener vs. MIA after weeks of vague updates",
-      "url": "https://clutchpoints.com/nfl/las-vegas-raiders/raiders-news-ashton-jeanty-practice-sighting-hope-week-1-injury-return",
-      "tag": "injury"
-    },
-    {
-      "player": "TreVeyon Henderson",
-      "team": "NE",
-      "pos": "RB",
-      "date": "2026-09-02",
-      "headline": "DNP Tuesday with ankle tweak, but source says he avoided serious injury",
-      "take": "Expected 'good to go' for Week 1 opener at Seattle \u2014 scare, not a setback",
-      "url": "https://www.yardbarker.com/nfl/articles/treveyon_henderson_injury_update_patriots_get_encouraging_week_1_news/s1_17702_44234732",
-      "tag": "injury"
-    },
-    {
-      "player": "Brian Thomas Jr.",
-      "team": "JAX",
-      "pos": "WR",
-      "date": "2026-09-02",
-      "headline": "Full participant at Tuesday practice, shoulder scare a non-issue",
-      "take": "Fully cleared for Week 1 as Jacksonville's presumptive WR1",
-      "url": "https://sports.yahoo.com/articles/jaguars-wr-brian-thomas-jr-143306919.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Dameon Pierce",
-      "team": "PHI",
-      "pos": "RB",
-      "date": "2026-09-02",
-      "headline": "Signs to Eagles practice squad",
-      "take": "Deep-league stash only, no clear path to touches behind Philadelphia's backfield",
-      "url": "https://www.profootballrumors.com/2026/09/nfl-practice-squad-updates-9-1-26",
       "tag": "transaction"
     }
   ]

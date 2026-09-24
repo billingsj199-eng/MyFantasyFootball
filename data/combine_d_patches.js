@@ -903,7 +903,11 @@ if (typeof COMBINE_DATA !== 'undefined') {
       // Only overwrite d.t if we got a real full name. If lookup misses
       // (unusual abbreviation), keep d.t as-is rather than corrupting it
       // with the raw abbreviation.
-      if (fullTeam && fullTeam !== d.t) d.t = fullTeam;
+      // FILL ONLY (2026-09-24): d.js teams now come from the daily roster
+      // refresh, so a set d.t is current — overwriting it reverted 2025
+      // draftees who have moved since (Kaleb Johnson GB -> PIT, Jaydon Blue,
+      // Jarquez Hunter, Quinn Ewers, Phil Mafah; Devin Neal FA -> NO).
+      if (fullTeam && !d.t) d.t = fullTeam;
     }
   });
 

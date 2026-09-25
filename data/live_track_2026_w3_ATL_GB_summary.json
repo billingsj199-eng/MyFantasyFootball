@@ -1,0 +1,275 @@
+{
+ "files": [
+  "live_track_2026_w3_ATL_GB.csv"
+ ],
+ "bins": {
+  "Q1": {
+   "fit": 4.538,
+   "fitx": 4.532,
+   "v1": 5.209,
+   "naive": 5.186,
+   "n": 1050
+  },
+  "Q2": {
+   "fit": 3.763,
+   "fitx": 3.788,
+   "v1": 4.076,
+   "naive": 4.131,
+   "n": 1200
+  },
+  "Q3": {
+   "fit": 2.589,
+   "fitx": 2.574,
+   "v1": 2.875,
+   "naive": 2.967,
+   "n": 1200
+  },
+  "Q4": {
+   "fit": 1.21,
+   "fitx": 1.202,
+   "v1": 1.305,
+   "naive": 1.33,
+   "n": 1075
+  }
+ },
+ "players": {
+  "Bijan Robinson": {
+   "pos": "RB",
+   "proj": 20.4,
+   "final": 35.3,
+   "fit": 5.37,
+   "fitx": 5.37,
+   "v1": 5.33,
+   "naive": 6.14
+  },
+  "Jordan Love": {
+   "pos": "QB",
+   "proj": 17.1,
+   "final": 19.48,
+   "fit": 1.65,
+   "fitx": 1.89,
+   "v1": 2.45,
+   "naive": 2.33
+  },
+  "Christian Watson": {
+   "pos": "WR",
+   "proj": 14.8,
+   "final": 22.6,
+   "fit": 5.1,
+   "fitx": 5.1,
+   "v1": 5.49,
+   "naive": 5.7
+  },
+  "Matthew Golden": {
+   "pos": "WR",
+   "proj": 14.8,
+   "final": 21.0,
+   "fit": 4.99,
+   "fitx": 4.99,
+   "v1": 5.47,
+   "naive": 5.52
+  },
+  "Drake London": {
+   "pos": "WR",
+   "proj": 14.7,
+   "final": 28.4,
+   "fit": 11.66,
+   "fitx": 11.66,
+   "v1": 11.07,
+   "naive": 11.08
+  },
+  "Michael Penix": {
+   "pos": "QB",
+   "proj": 12.1,
+   "final": 15.04,
+   "fit": 3.92,
+   "fitx": 3.92,
+   "v1": 3.52,
+   "naive": 3.4
+  },
+  "Tucker Kraft": {
+   "pos": "TE",
+   "proj": 11.6,
+   "final": 6.6,
+   "fit": 4.52,
+   "fitx": 4.52,
+   "v1": 4.1,
+   "naive": 4.11
+  },
+  "MarShawn Lloyd": {
+   "pos": "RB",
+   "proj": 9.1,
+   "final": 3.8,
+   "fit": 3.77,
+   "fitx": 3.66,
+   "v1": 3.8,
+   "naive": 3.85
+  },
+  "Trey Smack": {
+   "pos": "K",
+   "proj": 8.5,
+   "final": 1.0,
+   "fit": 3.36,
+   "fitx": 3.36,
+   "v1": 3.36,
+   "naive": 3.65
+  },
+  "Kyle Pitts": {
+   "pos": "TE",
+   "proj": 8.3,
+   "final": 1.5,
+   "fit": 3.4,
+   "fitx": 3.4,
+   "v1": 3.71,
+   "naive": 3.91
+  },
+  "Green Bay Packers D/ST": {
+   "pos": "DST",
+   "proj": 7.7,
+   "final": -2.0,
+   "fit": 6.25,
+   "fitx": 6.25,
+   "v1": 10.9,
+   "naive": 10.71
+  },
+  "Nick Folk": {
+   "pos": "K",
+   "proj": 7.2,
+   "final": 10.0,
+   "fit": 1.81,
+   "fitx": 1.81,
+   "v1": 1.81,
+   "naive": 1.84
+  },
+  "Chris Brooks": {
+   "pos": "RB",
+   "proj": 6.4,
+   "final": 1.4,
+   "fit": 1.73,
+   "fitx": 1.73,
+   "v1": 1.87,
+   "naive": 2.07
+  },
+  "Atlanta Falcons D/ST": {
+   "pos": "DST",
+   "proj": 5.8,
+   "final": 6.0,
+   "fit": 1.03,
+   "fitx": 1.03,
+   "v1": 3.45,
+   "naive": 3.2
+  },
+  "Jahan Dotson": {
+   "pos": "WR",
+   "proj": 5.1,
+   "final": 2.1,
+   "fit": 1.73,
+   "fitx": 1.73,
+   "v1": 1.94,
+   "naive": 2.01
+  },
+  "Brian Robinson": {
+   "pos": "RB",
+   "proj": 5.1,
+   "final": 11.0,
+   "fit": 4.23,
+   "fitx": 4.23,
+   "v1": 4.16,
+   "naive": 4.11
+  },
+  "Kaleb Johnson": {
+   "pos": "RB",
+   "proj": 4.5,
+   "final": 2.6,
+   "fit": 0.52,
+   "fitx": 0.52,
+   "v1": 0.56,
+   "naive": 0.62
+  },
+  "Jonnu Smith": {
+   "pos": "TE",
+   "proj": 3.3,
+   "final": 3.6,
+   "fit": 1.11,
+   "fitx": 1.11,
+   "v1": 1.24,
+   "naive": 1.15
+  },
+  "Zachariah Branch": {
+   "pos": "WR",
+   "proj": 3.2,
+   "final": 1.7,
+   "fit": 1.02,
+   "fitx": 1.02,
+   "v1": 1.16,
+   "naive": 1.17
+  },
+  "Olamide Zaccheaus": {
+   "pos": "WR",
+   "proj": 2.9,
+   "final": 2.9,
+   "fit": 0.74,
+   "fitx": 0.74,
+   "v1": 0.9,
+   "naive": 0.8
+  },
+  "Austin Hooper": {
+   "pos": "TE",
+   "proj": 2.3,
+   "final": 9.1,
+   "fit": 3.75,
+   "fitx": 3.75,
+   "v1": 3.94,
+   "naive": 3.6
+  },
+  "Bo Melton": {
+   "pos": "WR",
+   "proj": 1.2,
+   "final": 0.0,
+   "fit": 0.61,
+   "fitx": 0.61,
+   "v1": 0.55,
+   "naive": 0.6
+  },
+  "Skyy Moore": {
+   "pos": "WR",
+   "proj": 0.7,
+   "final": 6.1,
+   "fit": 2.8,
+   "fitx": 2.8,
+   "v1": 2.75,
+   "naive": 2.92
+  },
+  "Josh Whyle": {
+   "pos": "TE",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.3,
+   "fitx": 0.3,
+   "v1": 0.28,
+   "naive": 0.3
+  },
+  "Tyrod Taylor": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.26,
+   "fitx": 0.11,
+   "v1": 0.23,
+   "naive": 0.25
+  }
+ },
+ "all": {
+  "fit": 3.025,
+  "fitx": 3.025,
+  "v1": 3.362,
+  "naive": 3.402,
+  "n": 4525
+ },
+ "wins": {
+  "fit": 14,
+  "fitx": 2,
+  "v1": 6,
+  "naive": 3
+ }
+}

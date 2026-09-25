@@ -1,6 +1,96 @@
 {
-  "updated": "2026-09-25T02:17:06Z",
+  "updated": "2026-09-25T16:18:16Z",
   "items": [
+    {
+      "player": "Jaxson Dart",
+      "team": "NYG",
+      "pos": "QB",
+      "date": "2026-09-25",
+      "headline": "Officially out for rest of regular season; surgery for MCL/PCL/meniscus damage",
+      "take": "Season is over \u2014 bench in all formats; Jameis Winston is the full-time starter",
+      "url": "https://www.giants.com/news/jaxson-dart-to-miss-rest-of-regular-season-jameis-winston-to-start-quarterback-injury-john-harbaugh",
+      "tag": "injury"
+    },
+    {
+      "player": "Jameis Winston",
+      "team": "NYG",
+      "pos": "QB",
+      "date": "2026-09-25",
+      "headline": "Confirmed as Giants' full-time starter for rest of season after Dart injury",
+      "take": "Locked in as QB1 for 15 games \u2014 streamable in deeper leagues",
+      "url": "https://www.giants.com/news/jaxson-dart-to-miss-rest-of-regular-season-jameis-winston-to-start-quarterback-injury-john-harbaugh",
+      "tag": "role"
+    },
+    {
+      "player": "Caleb Williams",
+      "team": "CHI",
+      "pos": "QB",
+      "date": "2026-09-25",
+      "headline": "Ruled out for Week 3 vs. Eagles; Case Keenum (not Bagent) gets the start",
+      "take": "Downgrade all Bears pass-catchers for Monday night with Keenum under center",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-24/rap-caleb-williams-hamstring-likely-sits-week-3",
+      "tag": "injury"
+    },
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "pos": "TE",
+      "date": "2026-09-25",
+      "headline": "Downgraded to doubtful for Sunday's game vs. the Rams (hamstring)",
+      "take": "Plan to bench him \u2014 watch the final Friday report for confirmation",
+      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/injury-report-george-kittle-los-angeles-rams/1784332/",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-25",
+      "headline": "No practice all week; McVay 'not sure' of status but 'hopeful' he plays Sunday",
+      "take": "Treat as a game-time coin flip vs. Denver; have a backup plan ready",
+      "url": "https://sports.yahoo.com/articles/puka-nacua-injury-status-broncos-172827012.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-25",
+      "headline": "Not ruled out for Brazil game, but has missed every practice this week",
+      "take": "Trending toward a 2nd straight absence \u2014 Hopkins/Bateman gain added target share if he sits",
+      "url": "https://sports.yahoo.com/articles/zay-flowers-status-brazil-doubt-173038025.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Travis Etienne Jr.",
+      "team": "NO",
+      "pos": "RB",
+      "date": "2026-09-24",
+      "headline": "Limited in Wednesday's practice with a hamstring injury",
+      "take": "~75% to play per models, but low-end RB2 even active in a shared Saints backfield",
+      "url": "https://fantasyfootballcalculator.com/players/travis-etienne-jr./injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Michael Penix Jr.",
+      "team": "ATL",
+      "pos": "QB",
+      "date": "2026-09-24",
+      "headline": "Season debut: 18/25 for 256 yards, 1 TD, 1 INT in 35-14 win over Green Bay",
+      "take": "Looks like a streamable low-end QB1 going forward off his first game back from ACL tear",
+      "url": "https://bleacherreport.com/articles/25502836-falcons-beat-packers-box-score-stats-highlights-bijan-penix-london-jordan-love-top-players",
+      "tag": "riser"
+    },
+    {
+      "player": "Bijan Robinson",
+      "team": "ATL",
+      "pos": "RB",
+      "date": "2026-09-24",
+      "headline": "194 rushing yards and 2 TDs in TNF blowout win over Green Bay",
+      "take": "Reasserted himself as a true weekly RB1",
+      "url": "https://www.cbssports.com/nfl/news/bijan-robinson-falcons-rout-packers-in-michael-penix-jr-s-return/",
+      "tag": "riser"
+    },
     {
       "player": "Puka Nacua",
       "team": "LAR",
@@ -3070,166 +3160,6 @@
       "take": "Real yellow flag for Week 1 vs. Miami \u2014 team confidence hasn't yet been backed up by practice reps.",
       "url": "https://sports.yahoo.com/articles/everything-points-ashton-jeanty-playing-130000026.html",
       "tag": "faller"
-    },
-    {
-      "player": "Christian Kirk",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "Placed on IR with calf strain, out at least 4 games",
-      "take": "Off Week 1-4 boards; opens up incremental target share for SF's other receivers.",
-      "url": "https://www.fantasypros.com/nfl/news/605085/christian-kirk-calf-placed-on-ir.php",
-      "tag": "injury"
-    },
-    {
-      "player": "Ja'Marr Chase",
-      "team": "CIN",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "DNP Wednesday with knee issue, down from Tuesday's \"limited\"",
-      "take": "Mild concern short-term; still the presumed Week 1 starter barring a setback.",
-      "url": "https://www.yardbarker.com/nfl/articles/bengals_wrs_jamarr_chase_knee_tee_higgins_heel_limited_this_week/s1_17049_44247903",
-      "tag": "injury"
-    },
-    {
-      "player": "Tee Higgins",
-      "team": "CIN",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "Sat out Wednesday's practice with a heel contusion",
-      "take": "Same profile as Chase \u2014 expected Week 1, confirm before locking lineups.",
-      "url": "https://www.cbssports.com/fantasy/football/news/bengals-tee-higgins-wont-take-practice-reps-wednesday/",
-      "tag": "injury"
-    },
-    {
-      "player": "Michael Wilson",
-      "team": "ARI",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "Signs 3-year, $75M contract extension with Cardinals",
-      "take": "Locks in as a long-term piece of Arizona's passing game \u2014 steady WR3/4 value.",
-      "url": "https://www.azcardinals.com/news/wide-receiver-michael-wilson-signs-three-year-contract-extension-with-cardinals",
-      "tag": "transaction"
-    },
-    {
-      "player": "Malik Nabers",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "Feeling \"real good\" but still won't commit to playing Week 1",
-      "take": "Trending toward Week 1 vs. Dallas but treat as likely-to-play, not a lock yet.",
-      "url": "https://www.espn.com/nfl/story/_/id/49787690/giants-wr-nabers-feeling-good-mum-playing-week-1",
-      "tag": "riser"
-    },
-    {
-      "player": "Darren Waller",
-      "team": "CAR",
-      "pos": "TE",
-      "date": "2026-09-03",
-      "headline": "Gets first-team-offense reps Wednesday, HC Canales encouraged",
-      "take": "Trending toward a real Week 1 role as Carolina's starting TE.",
-      "url": "https://www.panthers.com/news/four-takeaways-from-wednesday-including-aj-dillon-finding-his-role-and-more",
-      "tag": "role"
-    },
-    {
-      "player": "J.K. Dobbins",
-      "team": "DEN",
-      "pos": "RB",
-      "date": "2026-09-03",
-      "headline": "HC Sean Payton: \"moving well,\" on track for Week 1 vs. Chiefs",
-      "take": "Soft-tissue scare appears resolved \u2014 trending toward real Week 1 work in a crowded backfield.",
-      "url": "https://x.com/christomasson/status/2095208098889900315",
-      "tag": "injury"
-    },
-    {
-      "player": "Kyle Monangai",
-      "team": "CHI",
-      "pos": "RB",
-      "date": "2026-09-03",
-      "headline": "MRI confirms hyperextended knee; officially week-to-week, out multiple weeks",
-      "take": "Off Week 1 boards - Roschon Johnson steps up as early-down complement to Swift",
-      "url": "https://www.espn.com/nfl/story/_/id/49643703/bears-rb-kyle-monangai-knee-expected-miss-multiple-weeks-source-says",
-      "tag": "faller"
-    },
-    {
-      "player": "Mike Evans",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "Returned to practice Wednesday after missing most of camp with quad/groin issue",
-      "take": "Trending toward a Week 1 role in the rebuilt 49ers receiver corps",
-      "url": "https://sports.yahoo.com/articles/san-franciso-49ers-major-mike-220427326.html",
-      "tag": "riser"
-    },
-    {
-      "player": "TreVeyon Henderson",
-      "team": "NE",
-      "pos": "RB",
-      "date": "2026-09-03",
-      "headline": "Confirmed \"good to go\" for Sept. 9 opener at Seattle after ankle scare",
-      "take": "Opens in a committee with Rhamondre Stevenson - flex floor, not a workhorse yet",
-      "url": "https://www.yardbarker.com/nfl/articles/treveyon_henderson_injury_update_patriots_get_encouraging_week_1_news/s1_17702_44234732",
-      "tag": "riser"
-    },
-    {
-      "player": "Jeremiyah Love",
-      "team": "ARI",
-      "pos": "RB",
-      "date": "2026-09-03",
-      "headline": "NFL Network's Garafolo pegs him \"50-50\" for Week 1 on high ankle sprain",
-      "take": "Treat as a coin-flip start vs. the Chargers rather than a locked-in Week 1 play",
-      "url": "https://sports.yahoo.com/articles/cardinals-50-50-jeremiyah-love-132337459.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Emeka Egbuka",
-      "team": "TB",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "Bowles softens toe outlook to \"day-to-day, week-to-week\" after Tuesday's \"stable\" read",
-      "take": "Mild downgrade in confidence - not fully cleared yet despite no visible limp",
-      "url": "https://www.rotowire.com/football/headlines/emeka-egbuka-injury-remains-sidelined-by-toe-issue-634768",
-      "tag": "faller"
-    },
-    {
-      "player": "Rashee Rice",
-      "team": "KC",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "First 11-on-11 team drill reps of camp, took contact and popped right up",
-      "take": "Real progress off the offseason knee procedure - trending toward full Week 1 workload",
-      "url": "https://sports.yahoo.com/articles/rashee-rice-xavier-worthy-move-213006416.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Xavier Worthy",
-      "team": "KC",
-      "pos": "WR",
-      "date": "2026-09-03",
-      "headline": "Chiefs characterize shoulder injury as a sprain, not serious",
-      "take": "Expected to be fine for Week 1 - no meaningful downgrade",
-      "url": "https://www.newsweek.com/kansas-city-chiefs-get-concerning-injury-news-amid-xavier-worthy-update-10761117",
-      "tag": "injury"
-    },
-    {
-      "player": "Isiah Pacheco",
-      "team": "DET",
-      "pos": "RB",
-      "date": "2026-09-03",
-      "headline": "IR stint clarified as back injury, not the previously reported knee issue",
-      "take": "No change to fantasy math - Jahmyr Gibbs remains the clear early-season workhorse",
-      "url": "https://www.detroitnews.com/story/sports/nfl/lions/2026/09/02/lions-hope-isiah-pacheco-can-return-this-season-after-ir-stint/91579698007/",
-      "tag": "injury"
-    },
-    {
-      "player": "Chase Bisontis",
-      "team": "ARI",
-      "pos": "OL",
-      "date": "2026-09-03",
-      "headline": "Rookie guard placed on IR with torn MCL, season over",
-      "take": "Clears Isaiah Adams into the starting RG job - modest positive for Cardinals run-blocking",
-      "url": "https://www.espn.com/nfl/story/_/id/49613585/cardinals-ol-bisontis-season-doubt-torn-mcl",
-      "tag": "transaction"
     }
   ]
 }

@@ -1,6 +1,76 @@
 {
-  "updated": "2026-09-24T16:21:48Z",
+  "updated": "2026-09-25T02:17:06Z",
   "items": [
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "McVay: Nacua \"not making great progress\" with hip/groin, likens it to a \"pre-hernia\" strain",
+      "take": "Trending toward missing a 2nd straight game -- Davante Adams remains the clear WR1 bet",
+      "url": "https://sports.yahoo.com/articles/not-making-great-progress-puka-203536285.html",
+      "tag": "faller"
+    },
+    {
+      "player": "George Kittle",
+      "team": "SF",
+      "pos": "TE",
+      "date": "2026-09-24",
+      "headline": "Did not practice Thursday with a hamstring injury",
+      "take": "Real doubt for Sunday vs. the Rams -- watch Friday's report before starting him",
+      "url": "https://www.nfl.com/news/george-kittle-sits-out-practice-hamstring-issue-49ers-another-injury-to-star-player",
+      "tag": "injury"
+    },
+    {
+      "player": "Mike Evans",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "Rapoport: hip injury gives him \"a good chance\" to practice and play Sunday vs. Arizona",
+      "take": "Keep him in Week 3 lineups as San Francisco's outlook on him brightens",
+      "url": "https://sports.yahoo.com/articles/49ers-news-mike-evans-track-163412804.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Brandin Cooks",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "Signed to 49ers practice squad amid injuries to Evans, Pearsall, Stribling and D. Robinson",
+      "take": "Not roster-worthy yet, but a name to watch if San Francisco's WR injuries pile up further",
+      "url": "https://www.espn.com/nfl/story/_/id/50008765/niners-signing-veteran-receiver-cooks-practice-squad",
+      "tag": "transaction"
+    },
+    {
+      "player": "Nico Collins",
+      "team": "HOU",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "Confirmed Grade 1 hamstring strain; not expected to play Week 3 vs. the Colts",
+      "take": "2nd straight missed game -- keep starting Dalton Schultz and Houston's other pass-catchers",
+      "url": "https://bleacherreport.com/articles/25500826-nico-collins-injury-update-latest-rumors-texans-wrs-timeline-return-hamstring-issue",
+      "tag": "injury"
+    },
+    {
+      "player": "Ladd McConkey",
+      "team": "LAC",
+      "pos": "WR",
+      "date": "2026-09-24",
+      "headline": "Full participant in Thursday's practice (rib), continuing a positive trend since Week 1",
+      "take": "Trending toward a normal workload Sunday vs. the Bills",
+      "url": "https://www.chargers.com/news/bills-injury-report-week-3-ladd-mcconkey-fantasy",
+      "tag": "riser"
+    },
+    {
+      "player": "J.K. Dobbins",
+      "team": "DEN",
+      "pos": "RB",
+      "date": "2026-09-24",
+      "headline": "Full participant in Thursday's practice, upgraded from Wednesday's limited session",
+      "take": "Further cements him as Denver's clear lead RB Sunday over Coleman and Harvey",
+      "url": "https://www.nbcsports.com/fantasy/football/news/2026-nfl-week-3-injury-report-jaxson-dart-mcl-chargers-down-two-tes-more-49ers-injuries",
+      "tag": "riser"
+    },
     {
       "player": "Zay Flowers",
       "team": "BAL",

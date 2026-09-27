@@ -4149,8 +4149,9 @@ function _tcvSeasonPpg(d) {
 // BOOK PROJ toggle (Jack 2026-09-27): swaps the PROJ slot from our number to
 // the sportsbooks' — weekly = the active week's prop board scored in the
 // current format (_weeklyBookPpgFor), season boards = blended season props
-// / 17 (_bookPpgFor). No posted lines (incl. every K / DST) = blank, never a
-// silent fallback to our projection.
+// / 17 (_bookPpgFor). No posted lines (incl. every K / DST) = falls back to
+// OUR projection, and that card's slot keeps the PROJ label (not BOOK) so the
+// source of each number stays readable on screen and in the PNG.
 function _tcvBookPref() {
   try { return localStorage.getItem('tcv_book_proj') === '1'; } catch(_) { return false; }
 }
@@ -4166,8 +4167,9 @@ function _tcvBookProjVal(d) {
   } catch(_) { return null; }
 }
 function _tcvCardStats(d) {
-  const _book = _tcvBookPref();
-  const projVal = _book ? _tcvBookProjVal(d)
+  const _bookVal = _tcvBookPref() ? _tcvBookProjVal(d) : null;
+  const _book = _bookVal != null;
+  const projVal = _book ? _bookVal
     : (typeof _displayProjPpg === 'function') ? _displayProjPpg(d)
     : ((typeof adjProjPpg === 'function') ? adjProjPpg(d) : null);
   const projColor = (projVal != null && typeof posFptsColor === 'function') ? posFptsColor(projVal, d.s) : null;
@@ -5589,7 +5591,7 @@ function _renderTierCardView(data, container) {
     (_tcvCutCount ? '<button class="tcv-reveal-btn' + (_tcvHideCutPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCut" title="Hide / show the ' + _tcvCutCount + ' below-the-cut-line player' + (_tcvCutCount === 1 ? '' : 's') + ' (the red ✂ row). Hidden = gone from the view entirely, no silhouettes — what viewers see.">✂ ' + (_tcvHideCutPref() ? 'SHOW CUT' : 'HIDE CUT') + '</button>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
     '<button class="tcv-reveal-btn' + (_tcvRows ? ' tcv-primary' : '') + '" data-tcvaction="toggleRows" title="Horizontal graphic cards — headshot, name, PROJ / season PPG / team total, matchup and team logo on a team-color band, one player per line (tier-list video look)">▤ ROW CARDS</button>' +
-    '<button class="tcv-reveal-btn' + (_tcvBookPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleBook" title="Switch the PROJ number on every card between OUR projection and the SPORTSBOOK projection (posted prop lines scored in the current format). Players with no posted lines show —.">$ ' + (_tcvBookPref() ? 'BOOK PROJ' : 'OUR PROJ') + '</button>' +
+    '<button class="tcv-reveal-btn' + (_tcvBookPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleBook" title="Switch the PROJ number on every card between OUR projection and the SPORTSBOOK projection (posted prop lines scored in the current format). Players with no posted lines keep our projection, labelled PROJ instead of BOOK.">$ ' + (_tcvBookPref() ? 'BOOK PROJ' : 'OUR PROJ') + '</button>' +
     '<button class="tcv-reveal-btn' + (_tcvMoveOn ? ' tcv-primary' : '') + '" data-tcvaction="toggleMove" title="Rank movement: each card shows RANK THEN › RANK NOW — the second number green if the player rose, red if he fell. Compares against the weekly anchor (up to 7 days back)' + (_tcvIsAdminViewer() ? ', or pick any date to compare against the board saved that day' : '') + '.">↕ MOVEMENT</button>' +
     (_tcvMoveOn ? (_tcvIsAdminViewer()
       ? '<span class="tcv-move-ctl" title="Compare against the board as it was saved on or before this date (newest rankings backup that day)"><span class="tcv-zoom-lbl">VS</span>' +
@@ -5621,7 +5623,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:#ef4444">CUT LINE:</b> hover a card → <b style="color:#ef4444">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (

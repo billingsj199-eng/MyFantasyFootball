@@ -24,6 +24,11 @@
 #                                     from the adv stats week files -> data/usage_trend.js (_USAGE_TREND_V bump)
 #   6. scripts/build_coach_profiles.py  Research page Coach Profiles, current season only (FTN charting
 #                                     re-downloaded) -> data/coach_profiles.js (_COACH_V bump)
+#   7. scripts/build_contracts.py    Research page Player Lookup contracts (nflverse / OverTheCap),
+#                                     WEEKLY: runs when the last successful build is 7+ days old
+#                                     (stamp: E:\MyFantasyFootball\pbp_cache\contracts_last_build.txt,
+#                                     so a missed day catches up the next morning)
+#                                     -> data/contracts_history.js (its ?v= bumps only when it changed)
 # Schedule: daily 06:15 (WakeToRun). PFF has Sunday's routes by Monday morning, MNF by
 # Tuesday, TNF by Friday. Commits + pushes ONLY when either data file changed, bumping
 # both ?v= in index.html (read fresh from disk - other jobs bump ?v= concurrently).
@@ -44,7 +49,7 @@ Set-Location $Repo
 Write-Log '=== route pct start ==='
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
-$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'data/usage_trend.js', 'data/coach_profiles.js', 'index.html')
+$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'data/usage_trend.js', 'data/coach_profiles.js', 'data/contracts_history.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -83,7 +88,16 @@ $out = & $Python 'scripts\build_coach_profiles.py' '--years' '2026' 2>&1 | Out-S
 Write-Log ('coach profiles: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "COACH PROFILES BUILD FAILED (exit $LASTEXITCODE) - coach file left as is" }
 
-$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js
+$ContractsStamp = 'E:\MyFantasyFootball\pbp_cache\contracts_last_build.txt'
+$contractsDue = (-not (Test-Path $ContractsStamp)) -or (((Get-Date) - (Get-Item $ContractsStamp).LastWriteTime).TotalDays -ge 6.5)
+if ($contractsDue) {
+    $out = & $Python 'scripts\build_contracts.py' 2>&1 | Out-String
+    Write-Log ('contracts (weekly): ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
+    if ($LASTEXITCODE -eq 0) { Set-Content -Path $ContractsStamp -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -Encoding utf8 }
+    else { Write-Log "CONTRACTS BUILD FAILED (exit $LASTEXITCODE) - contracts file left as is, retry tomorrow" }
+}
+
+$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js
 if (-not $changed) {
     Write-Log 'no snap / route changes - nothing to commit'
 } else {
@@ -96,8 +110,11 @@ if (-not $changed) {
     $html = $html -replace "_ADV_STATS_V = '[0-9A-Za-z.-]+'", ("_ADV_STATS_V = '" + $stamp + "'")
     $html = $html -replace "_COACH_V = '[0-9A-Za-z.-]+'", ("_COACH_V = '" + $stamp + "'")
     $html = $html -replace "_USAGE_TREND_V = '[0-9A-Za-z.-]+'", ("_USAGE_TREND_V = '" + $stamp + "'")
+    if (git status --porcelain -- data/contracts_history.js) {
+        $html = $html -replace 'contracts_history\.js\?v=[0-9A-Za-z.-]+', ('contracts_history.js?v=' + $stamp)
+    }
     [System.IO.File]::WriteAllText($idxPath, $html)
-    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js index.html
+    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js index.html
     git commit -m ('Auto snap share + route participation + player roles + adv stats + usage trend + coach profiles {0} (?v= bump)' -f $stamp)
     git pull --rebase --autostash origin main
     git push origin main

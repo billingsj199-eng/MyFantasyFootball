@@ -1,6 +1,8 @@
 """Build data/contracts_history.js from the nflverse/OverTheCap contracts dataset.
 
-Source: https://github.com/nflverse/nflverse-data/releases/download/contracts/historical_contracts.csv.gz
+Source: https://github.com/nflverse/nflverse-data/releases/download/contracts/historical_contracts.parquet
+(the .csv.gz asset in the same release has been frozen since 2022-05 - do not use it; the
+parquet is refreshed by nflverse daily and carries money in MILLIONS, converted to dollars here).
 Filter: QB/RB/WR/TE/FB/K. Names canonicalized to ALL_PLAYERS_DB where possible.
 
 Output (window.CONTRACTS_DB):
@@ -8,14 +10,16 @@ Output (window.CONTRACTS_DB):
   t=team, y=year signed, n=contract years, v=total value, a=APY, g=guaranteed, p=APY % of cap
 Sorted newest-first per player.
 
-Usage: python scripts/build_contracts.py
+Usage: python scripts/build_contracts.py   (weekly via scripts/route_pct_daily.ps1 step 7)
 """
-import csv, gzip, io, json, os, re, sys
+import io, json, math, os, re, sys
 import requests
+import pyarrow.parquet as pq
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-URL = "https://github.com/nflverse/nflverse-data/releases/download/contracts/historical_contracts.csv.gz"
+URL = "https://github.com/nflverse/nflverse-data/releases/download/contracts/historical_contracts.parquet"
+COLS = ["player", "position", "team", "year_signed", "years", "value", "apy", "guaranteed", "apy_cap_pct"]
 POS = {"QB", "RB", "WR", "TE", "FB", "K"}
 TEAM = {
     "Cardinals": "ARI", "Falcons": "ATL", "Ravens": "BAL", "Bills": "BUF",
@@ -41,9 +45,12 @@ def load_js_obj(path):
     return json.loads(txt)
 
 
-def num(s, cast=int):
+def num(s, cast=int, mult=1):
     try:
-        return cast(float(s))
+        v = float(s) * mult
+        if math.isnan(v) or math.isinf(v):
+            return None
+        return cast(round(v)) if cast is int else cast(v)
     except (TypeError, ValueError):
         return None
 
@@ -56,22 +63,23 @@ def main():
 
     raw = requests.get(URL, timeout=120)
     raw.raise_for_status()
-    f = io.TextIOWrapper(gzip.GzipFile(fileobj=io.BytesIO(raw.content)), encoding="utf-8")
+    rows = pq.read_table(io.BytesIO(raw.content), columns=COLS).to_pylist()
     out = {}
     kept = 0
-    for row in csv.DictReader(f):
-        if row["position"] not in POS:
+    for row in rows:
+        if row["position"] not in POS or not row["player"]:
             continue
         y = num(row["year_signed"])
         if not y:
             continue
+        row["team"] = row["team"] or ""
         name = canon.get(norm(row["player"]), row["player"])
         c = {"t": TEAM.get(row["team"], row["team"]), "y": y}
         n = num(row["years"])
         if n:
             c["n"] = n
         for src, key in (("value", "v"), ("apy", "a"), ("guaranteed", "g")):
-            v = num(row[src])
+            v = num(row[src], mult=1e6)
             if v is not None:
                 c[key] = v
         p = num(row["apy_cap_pct"], float)
@@ -87,7 +95,16 @@ def main():
           "// t=team y=signed n=years v=value a=APY g=guaranteed p=APY % of cap at signing\n"
           "window.CONTRACTS_DB=" + body + ";\n")
     dest = os.path.join(ROOT, "data", "contracts_history.js")
-    open(dest, "w", encoding="utf-8").write(js)
+    # Unattended weekly runs: never publish a truncated upstream file over a good one.
+    if os.path.exists(dest):
+        old = open(dest, encoding="utf-8").read()
+        mark = "window.CONTRACTS_DB="
+        if mark in old:
+            prev = len(json.loads(old[old.index(mark) + len(mark):].strip().rstrip(";")))
+            if len(out) < prev * 0.9:
+                print(f"ABORT: {len(out)} players vs {prev} on disk - upstream file looks truncated, nothing written")
+                sys.exit(3)
+    open(dest, "w", encoding="utf-8", newline="\n").write(js)
     print(f"Wrote {dest}: {len(out)} players, {kept} contracts, {len(js)//1024} KB")
 
 

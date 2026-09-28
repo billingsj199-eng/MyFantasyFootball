@@ -11108,6 +11108,80 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   return (_is26 ? _seasonSimStripHtml(d) : '') + _schedNote + chart + '<div class="career-table-wrap"><table class="career-table"><thead>' + hdr + '</thead><tbody>' + rows + '</tbody></table></div>';
 }
 
+// Season-to-date 2026 row for the Career table (QB/RB/WR/TE): summed from the
+// player's 2026 WEEKLY_STATS rows, stored half PPR like every d.career row.
+// Built at render time only — never written into d.career, which feeds the
+// rankings / comps / trivia math as completed seasons. K/DST get their 2026
+// row from KICKER_HISTORY / DST_HISTORY instead. Null until the lazy weekly
+// bundle lands or when the player has no 2026 game.
+function _career2026Row(d) {
+  if (!d || d.s === 'K' || d.s === 'DST' || d._retired || d._isDevy) return null;
+  if (typeof WEEKLY_STATS === 'undefined' || !WEEKLY_STATS) return null;
+  const wd = WEEKLY_STATS[d.n];
+  // Pure placeholder rows (no team/opp, no touches, 0 pts) are not games played.
+  const wks = ((wd && wd.seasons && wd.seasons['2026']) || []).filter(w =>
+    !!(w.opp || w.tm) || (w.fpts || 0) !== 0 || ((w.pa || 0) + (w.ra || 0) + (w.rec || 0) + (w.tgt || 0)) > 0);
+  if (!wks.length) return null;
+  const t = { fpts: 0, py: 0, ptd: 0, int: 0, ra: 0, ry: 0, rtd: 0, rec: 0, rcy: 0, rctd: 0, fl: 0 };
+  for (const w of wks) for (const k in t) t[k] += (w[k] || 0);
+  const fpts = Math.round(t.fpts * 10) / 10;
+  let tm = '';
+  for (const w of wks) if (w.tm && w.tm.trim()) tm = w.tm.trim();
+  return {
+    yr: 2026, tm: tm || teamAbbr(d.t), gp: wks.length, fpts, ppg: Math.round(fpts / wks.length * 10) / 10,
+    py: t.py, ptd: t.ptd, int: t.int, ra: t.ra, ry: t.ry, rtd: t.rtd,
+    rc: t.rec, rcy: t.rcy, rctd: t.rctd, fl: t.fl, yrr: null, _toDate: true
+  };
+}
+
+// Positional rank for the 2026 season to date, across every player with 2026
+// rows in WEEKLY_STATS (ALL_PLAYERS_DB has no current-season rows, so
+// _seasonPosRank can't rank it). PPG mode needs half the games played so far
+// (max 8) to qualify, so a one-game cameo can't top the board.
+let _season26RankCache = {};
+document.addEventListener('mff:weeklydata', () => { _season26RankCache = {}; });
+function _seasonPosRank2026(pos, value, fmt, rankBy) {
+  if (typeof WEEKLY_STATS === 'undefined' || !pos || value == null) return null;
+  const by = rankBy === 'ppg' ? 'ppg' : 'tot';
+  const key = pos + '|' + fmt + '|' + by;
+  let list = _season26RankCache[key];
+  if (!list) {
+    const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
+    const pool = [];
+    let maxGp = 0;
+    for (const pn in WEEKLY_STATS) {
+      const pd = WEEKLY_STATS[pn];
+      if (!pd || pd.pos !== pos || !pd.seasons || !pd.seasons['2026']) continue;
+      let gp = 0, sum = 0;
+      for (const w of pd.seasons['2026']) {
+        if (!(w.opp || w.tm) && !(w.fpts || 0) && !((w.pa || 0) + (w.ra || 0) + (w.rec || 0) + (w.tgt || 0))) continue;
+        gp++;
+        sum += (w.fpts || 0) + (w.rec || 0) * recAdj;
+      }
+      if (!gp) continue;
+      if (gp > maxGp) maxGp = gp;
+      pool.push({ gp, sum });
+    }
+    const minGp = Math.min(8, Math.ceil(maxGp / 2));
+    list = { minGp, v: pool.filter(p => by === 'tot' || p.gp >= minGp).map(p => by === 'ppg' ? p.sum / p.gp : p.sum).sort((a, b) => b - a) };
+    _season26RankCache[key] = list;
+  }
+  const minPool = (pos === 'RB' || pos === 'WR') ? 20 : 12;
+  if (list.v.length < minPool) return null;
+  // The player's own value is in the list — equal values don't count as "ahead"
+  let ahead = 0;
+  for (const f of list.v) {
+    if (f <= value + 0.05) break;
+    ahead++;
+  }
+  return ahead + 1;
+}
+function _season26MinGp(pos, fmt) {
+  _seasonPosRank2026(pos, 0, fmt, 'ppg');
+  const c = _season26RankCache[pos + '|' + fmt + '|ppg'];
+  return c ? c.minGp : 8;
+}
+
 function buildCareerTable(d, scoringFormat, statMode, withChart) {
   // Kickers: d.career rows are PPG-only placeholders — swap in the full
   // KICKER_HISTORY seasons (nflverse 1999+) when loaded. Each row carries
@@ -11121,11 +11195,14 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
   // fantasy points (see _mtGetPlayerPpg).
   const _dhRows = (d.s === 'DST' && typeof DST_HISTORY !== 'undefined')
     ? (DST_HISTORY[teamAbbr(d.t)] || null) : null;
-  const c = (_khRows && _khRows.length)
+  let c = (_khRows && _khRows.length)
     ? _khRows.map(y => ({ yr: y.yr, tm: y.tm, gp: y.gp, fpts: y.fpts, ppg: y.ppg, rc: 0, _k: y }))
     : (_dhRows && _dhRows.length)
       ? _dhRows.map(y => ({ yr: y.yr, tm: y.tm, gp: y.gp, fpts: y.fpts, ppg: y.ppg, rc: 0, _d: y }))
       : d.career;
+  // Current season to date goes last (rookies: it is the whole table).
+  const _r26 = _career2026Row(d);
+  if (_r26 && !(c || []).some(y => y.yr >= 2026)) c = (c || []).concat([_r26]);
   if (!c || !c.length) return '';
 
   // Helper: get actual team for a player-year using universal lookup
@@ -11167,7 +11244,9 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     filled.push(adjusted[i]);
   }
 
-  const bestPPG = Math.max(...filled.filter(y => !y._gap).map(y => y.ppg));
+  // A few-game current season doesn't get the best-year highlight.
+  const _done = filled.filter(y => !y._gap && !y._toDate);
+  const bestPPG = Math.max(...(_done.length ? _done : filled.filter(y => !y._gap)).map(y => y.ppg));
 
   const _avg = (v, gp) => gp > 0 ? ((v || 0) / gp).toFixed(1) : '—';
   const _cmpPct = y => (y._ex.pc != null && y._ex.pa > 0) ? (y._ex.pc / y._ex.pa * 100).toFixed(1) : '—';
@@ -11350,7 +11429,9 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     const tm = isGap ? getCareerTeamAbbr(d.n, y.yr, curAbbr) : (_getWeeklyTeam(d.n, y.yr) || y.tm || getCareerTeamAbbr(d.n, y.yr, curAbbr));
     const dimStyle = isGap ? ' style="color:var(--text2);opacity:.45"' : '';
     let row = '<tr' + dimStyle + '>';
-    row += '<td' + isBest + '>' + y.yr + '</td>';
+    row += y._toDate
+      ? '<td title="Season to date — ' + y.gp + ' game' + (y.gp > 1 ? 's' : '') + ' played">' + y.yr + '</td>'
+      : '<td' + isBest + '>' + y.yr + '</td>';
     row += '<td style="color:var(--text2)">' + tm + '</td>';
     const ageInSeason = d.age != null ? d.age - (2026 - y.yr) : (d.birthYear != null ? y.yr - d.birthYear : '—');
     row += '<td style="color:var(--text2)">' + ageInSeason + '</td>';
@@ -11369,10 +11450,12 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       if (mode === 'tot') row += '<td class="fpts-cell">' + y.fpts + '</td>';
       // TOT mode ranks the season by total points; AVG mode by PPG (8+ games).
       // Kicker seasons carry their real season-end finish from KICKER_HISTORY.
-      const _rkVal = mode === 'tot' ? y.fpts : (y.gp >= 8 ? y.ppg : null);
+      const _rkVal = mode === 'tot' ? y.fpts
+        : (y.gp >= (y._toDate ? _season26MinGp(d.s, fmt) : 8) ? y.ppg : null);
       const _histFin = (y._k && y._k.fin != null) ? y._k.fin
         : (y._d && y._d.fin != null) ? y._d.fin : null;
       const _seasonRk = _histFin != null ? _histFin
+        : y._toDate ? _seasonPosRank2026(d.s, _rkVal, fmt, mode === 'tot' ? 'tot' : 'ppg')
         : _seasonPosRank(d.s, y.yr, d.n, _rkVal, fmt, mode === 'tot' ? 'tot' : 'ppg');
       row += '<td' + _posRankStyle(_seasonRk, d.s) + '>' + (_seasonRk != null ? _seasonRk : '—') + '</td>';
       const _snp = _snapSeason(d.n, y.yr);
@@ -11395,7 +11478,7 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       value: y._gap ? 0 : (mode === 'tot' ? y.fpts : y.ppg),
       color: y._gap ? null : posFptsColor(y.ppg, d.s),
       dim: !!y._gap,
-      title: y._gap ? (y.yr + ': did not play') : (y.yr + ': ' + y.ppg + ' PPG · ' + y.fpts + ' pts (' + y.gp + ' gp)')
+      title: y._gap ? (y.yr + ': did not play') : (y.yr + ': ' + y.ppg + ' PPG · ' + y.fpts + ' pts (' + y.gp + ' gp' + (y._toDate ? ', to date' : '') + ')')
     })), mode === 'tot' ? 'Points by season' : 'PPG by season');
   }
 
@@ -11404,9 +11487,11 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
 
 // Career Stats section — lives in the CAREER card tab (inline on K/DST cards,
 // which have no tab bar). Scoring toggle + AVG/TOT stat-mode toggle.
-function _careerSectionHtml(d) {
-  if ((!d.career || !d.career.length) && !_kdstHasHistory(d)) return '';
-  const bestSeasonsNote = d._retired && d._debut && d._last && d.career.length < (d._last - d._debut + 1) * 0.5
+// force = render the (possibly empty) shell anyway: a rookie's card can open
+// before the lazy weekly bundle lands, and the 2026 row fills in on repaint.
+function _careerSectionHtml(d, force) {
+  if ((!d.career || !d.career.length) && !_kdstHasHistory(d) && !_career2026Row(d) && !force) return '';
+  const bestSeasonsNote = d._retired && d._debut && d._last && d.career && d.career.length < (d._last - d._debut + 1) * 0.5
     ? ' <span style="font-size:.55rem;color:var(--text2);font-family:inherit;letter-spacing:0;font-weight:400">· Best Seasons Only</span>' : '';
   return `<div class="card-section">
     <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
@@ -14127,7 +14212,11 @@ function openPlayerCard(d, ctxMode) {
   // CAREER needs season-summary rows; LOGS only needs a season to show (weekly
   // rows or the current schedule) — rookies get game logs from Week 1 without
   // waiting for a career row (Jack 2026-09-14).
-  const _showCareer = !d._isDevy && !_is2026 && !!(d.career && d.career.length > 0);
+  const _hasCareerRows = !!(d.career && d.career.length > 0);
+  // No career row yet (rookies): the CAREER tab rides the 2026 season-to-date
+  // row, hidden until the player has a 2026 game on file.
+  const _showCareer = !d._isDevy && !_is2026 && (_hasCareerRows
+    || (!d._retired && !!d.t && d.s !== 'K' && d.s !== 'DST'));
   const _showLogs = !d._isDevy && !_is2026 && (_showCareer || (!d._retired && !!d.t && _logSeasons(d).length > 0));
 
   // JM Score badge for player card — never for retired players (the prospect
@@ -14182,7 +14271,7 @@ function openPlayerCard(d, ctxMode) {
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         ${_showLogs ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>` : ''}
-        ${_showCareer ? `<button class="card-view-btn" data-cardview="career">CAREER</button>` : ''}
+        ${_showCareer ? `<button class="card-view-btn" data-cardview="career" id="cardCareerTabBtn"${(_hasCareerRows || _career2026Row(d)) ? '' : ' style="display:none"'}>CAREER</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
@@ -14735,7 +14824,7 @@ function openPlayerCard(d, ctxMode) {
       </div>
       ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
       <div class="card-prospect-view" id="cardCareerView" style="display:none">
-      ${_careerSectionHtml(d)}
+      ${_careerSectionHtml(d, true)}
       </div>` : ''}
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
       <div class="card-prospect-view" id="cardLogsView" style="display:none">
@@ -14961,10 +15050,14 @@ function openPlayerCard(d, ctxMode) {
       document.removeEventListener('mff:retireddata', _clRetiredRepaint);
       if (document.getElementById('careerLogContent') === clContent) _clRefresh();
     });
-    // SNP% (snap_counts.js) ships with the lazy weekly bundle — repaint then too
+    // SNP% (snap_counts.js) and the 2026 season-to-date row ship with the lazy
+    // weekly bundle — repaint then too, and reveal a rookie's CAREER tab.
     document.addEventListener('mff:weeklydata', function _clSnapRepaint() {
       document.removeEventListener('mff:weeklydata', _clSnapRepaint);
-      if (document.getElementById('careerLogContent') === clContent) _clRefresh();
+      if (document.getElementById('careerLogContent') !== clContent) return;
+      _clRefresh();
+      const clTabBtn = document.getElementById('cardCareerTabBtn');
+      if (clTabBtn && clContent.innerHTML.trim()) clTabBtn.style.display = '';
     });
   }
   // L4 PPG also comes from the lazy weekly bundle — a card opened before it

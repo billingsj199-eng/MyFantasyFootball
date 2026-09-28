@@ -1,5 +1,7 @@
-# Weekly K/DST data refresh (Task Scheduler: "MFF KDST Weekly Refresh",
-# Tuesdays 7:00 AM — after MNF stats land on nflverse, before the 9am job).
+# K/DST data refresh (Task Scheduler: "MFF KDST Weekly Refresh" - the task
+# and file keep their old names, but the trigger is DAILY 7:45 AM since
+# 2026-09-28 so K/DST rows no longer trail skill players from Sunday until
+# Tuesday; before the 8am / 9am jobs).
 #
 # Runs scripts/refresh_kdst_data.py, which re-pulls kicker_history /
 # kicker_weekly / dst_history+dst_weekly / kicker_splits off nflverse+ESPN

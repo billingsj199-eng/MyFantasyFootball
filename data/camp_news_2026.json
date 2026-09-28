@@ -1,6 +1,96 @@
 {
-  "updated": "2026-09-27T16:16:27Z",
+  "updated": "2026-09-28T02:20:29Z",
   "items": [
+    {
+      "player": "De'Von Achane",
+      "team": "MIA",
+      "pos": "RB",
+      "date": "2026-09-27",
+      "headline": "Exits with knee injury; coach Hafley says outlook \"does not sound very optimistic\"",
+      "take": "MRI Monday will clarify severity -- treat as a likely multi-week absence and grab handcuffs now.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/dolphins-not-optimistic-about-devon-achanes-knee-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Justin Jefferson",
+      "team": "MIN",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Ruled out vs. Buccaneers with a left ankle injury after just two catches",
+      "take": "Biggest name hurt in Week 3; Jordan Addison is the clear early-down alpha if Jefferson misses time.",
+      "url": "https://www.espn.com/nfl/story/_/id/50046851/vikings-rule-justin-jefferson-ankle-injury",
+      "tag": "injury"
+    },
+    {
+      "player": "Jalen McMillan",
+      "team": "TB",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Re-aggravates same left knee that cost him camp time, ruled out early vs. Vikings",
+      "take": "Second knee scare in a month -- downgrade his weekly floor even once he's back.",
+      "url": "https://www.espn.com/nfl/story/_/id/50045951/buccaneers-wr-jalen-mcmillan-suffers-knee-injury-vs-vikings",
+      "tag": "injury"
+    },
+    {
+      "player": "Baker Mayfield",
+      "team": "TB",
+      "pos": "QB",
+      "date": "2026-09-27",
+      "headline": "Dislocates right (throwing) thumb late vs. Vikings; X-rays negative, MRI Monday",
+      "take": "UDFA Jalon Daniels in line to start vs. GB if Mayfield sits -- fade Bucs pass-catchers until clarity.",
+      "url": "https://www.espn.com/nfl/story/_/id/50047972/bucs-qb-baker-mayfield-dislocated-thumb-undergo-mri",
+      "tag": "injury"
+    },
+    {
+      "player": "Jack Bech",
+      "team": "LV",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Fractures forearm vs. Saints, expected to land on IR for at least 4 weeks",
+      "take": "Modest target-share bump for Tre Tucker and Jakobi Meyers behind Brock Bowers.",
+      "url": "https://www.rotoballer.com/player-news/jack-bech-reportedly-headed-to-ir-after-suffering-broken-forearm/1952319",
+      "tag": "injury"
+    },
+    {
+      "player": "Brock Bowers",
+      "team": "LV",
+      "pos": "TE",
+      "date": "2026-09-27",
+      "headline": "Dominant season debut: 10-13-116 and the game-winning TD in 35-27 win over Saints",
+      "take": "Immediately back to elite must-start TE1 territory now that he's healthy.",
+      "url": "https://www.rotowire.com/football/headlines/brock-bowers-news-makes-immediate-impact-in-season-debut-639581",
+      "tag": "riser"
+    },
+    {
+      "player": "Zay Flowers",
+      "team": "BAL",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Plays through hamstring injury, catches clutch 27-yard pass to set up walk-off win over Cowboys",
+      "take": "Usage in the biggest moment of the game is a strong signal he's trending back to full-time work.",
+      "url": "https://www.nbclosangeles.com/news/sports/nfl/ravens-cowboys-walk-off-field-goal-brazil/3947964/",
+      "tag": "riser"
+    },
+    {
+      "player": "DJ Moore",
+      "team": "BUF",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Active and plays vs. Chargers despite shoulder game-time decision",
+      "take": "Clears for lineups; check Monday snap counts for any in-game management.",
+      "url": "https://sports.yahoo.com/articles/buffalo-bills-dj-moore-keon-163213599.html",
+      "tag": "role"
+    },
+    {
+      "player": "Keon Coleman",
+      "team": "BUF",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Active and plays vs. Chargers despite ankle game-time decision",
+      "take": "Riskier of the two Bills WR situations, but clears for lineups.",
+      "url": "https://sports.yahoo.com/articles/buffalo-bills-dj-moore-keon-163213599.html",
+      "tag": "role"
+    },
     {
       "player": "Zay Flowers",
       "team": "BAL",

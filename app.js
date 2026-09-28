@@ -947,7 +947,8 @@ window._verBoardFor = function(src, mode) {
 };
 
 // === CONSENSUS RANKING ENGINE ===
-// Averages ranks from: Jack's + market ADP + Sleeper + FantasyPros (all modes) + Underdog (redraft) + KTC (dynasty)
+// Redraft / best ball: FantasyPros only (see _fpOnly below). Superflex + dynasty
+// average ranks from: Jack's + market ADP + Sleeper + FantasyPros + KTC (dynasty)
 function _computeConsensusBoard(mode, gf) {
   // gf(i, field) = source-field getter (default: live D). RANKINGS MOVERS passes
   // a dated snapshot of the same inputs (data/cons_rank_history.json) to rebuild
@@ -1072,8 +1073,21 @@ function _computeConsensusBoard(mode, gf) {
     }
   }
 
+  // REDRAFT / BEST BALL consensus = FantasyPros only (Jack 2026-09-28): the
+  // board IS FantasyPros' expert consensus — in season that is their
+  // rest-of-season list (fpR, refreshed by the 9am job), preseason their draft
+  // cheatsheet. Players FantasyPros does not rank follow in the old blend's
+  // order so the deep tail stays sensible. Superflex and dynasty keep the
+  // blend: FantasyPros publishes no rest-of-season list for them.
+  const _fpOnly = mode === 'redraft' || mode === 'bestball';
   // Players with zero sources: sort by their index (stable) at the end
   scored.sort((a, b) => {
+    if (_fpOnly) {
+      const fa = fRank[a.idx], fb = fRank[b.idx];
+      if (fa != null && fb != null) return fa - fb;
+      if (fa != null) return -1;
+      if (fb != null) return 1;
+    }
     if (a.sources === 0 && b.sources !== 0) return 1;
     if (b.sources === 0 && a.sources !== 0) return -1;
     return a.avg - b.avg;
@@ -1094,6 +1108,8 @@ function _computeConsensusBoard(mode, gf) {
   // rank is the fallback when no site ranks a player.
   const _kdstSiteAvg = i => {
     const p = D[i], vals = [];
+    // Redraft: FantasyPros' own K / D/ST slot when it ranks the player.
+    if (mode === 'redraft' && p.fpR != null) return p.fpR;
     if (p.fpR != null) vals.push(p.fpR);
     if (p.espnAdp != null) vals.push(p.espnAdp);
     if (p.yahooAdp != null) vals.push(p.yahooAdp);
@@ -2150,6 +2166,20 @@ function _consCellInfo(d) {
       : diff < 0 ? ' — ' + (-diff) + ' spot' + (diff === -1 ? '' : 's') + ' lower here than ' + lbl : ' — even');
   return { r, cls, tip };
 }
+// REDRAFT Team Total cell: rest-of-season average implied total, same color
+// bands as the weekly column (inverted for D/ST, which reads the opponents).
+function _rosTtCellHtml(d) {
+  if (!d || d._retired || !d.t) return '—';
+  const dst = d.s === 'DST';
+  const r = window._rosTeamTotalFor(d.t, dst);
+  if (!r) return '—';
+  const t = r.v;
+  const c = dst
+    ? (t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444')
+    : (t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444');
+  const tip = (dst ? 'Opponents\' average implied total' : 'Average implied team total') + ', weeks ' + r.from + '-18 (' + r.n + ' game' + (r.n === 1 ? '' : 's') + ')' + (dst ? ' — lower is better for D/ST' : '');
+  return '<span style="color:' + c + ';font-weight:700;cursor:help" title="' + tip + '">' + t.toFixed(1) + '</span>';
+}
 // Header text for the column follows the tab (CONS on Jack's/My, JACK'S on
 // Consensus). Cheap DOM write, called from render().
 function _syncConsColHeader() {
@@ -2160,11 +2190,15 @@ function _syncConsColHeader() {
   const isC = currentVersion === 'consensus';
   const want = isC ? "Jack's" : 'Cons';
   const locked = isC && _consColLocked();
-  if (lab.textContent !== want || (lab.getAttribute('data-gloss') === _CONS_LOCK_TIP) !== locked) {
+  const _fpOnly = currentMode === 'redraft' || currentMode === 'bestball';
+  const gloss = locked ? _CONS_LOCK_TIP : isC
+    ? "Jack's rank — where this player sits on Jack's board for this format. Green = the consensus is higher on him than Jack, red = lower."
+    : _fpOnly
+      ? 'Consensus rank — where this player sits on the CONSENSUS board: FantasyPros\' expert consensus (rest-of-season rankings in season, refreshed daily). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.'
+      : 'Consensus rank — where this player sits on the CONSENSUS board for this format (Jack\'s + market ADP + Sleeper + FantasyPros + KTC blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.';
+  if (lab.textContent !== want || lab.getAttribute('data-gloss') !== gloss) {
     lab.textContent = want;
-    lab.setAttribute('data-gloss', locked ? _CONS_LOCK_TIP : isC
-      ? "Jack's rank — where this player sits on Jack's board for this format. Green = the consensus is higher on him than Jack, red = lower."
-      : 'Consensus rank — where this player sits on the CONSENSUS board for this format (Jack\'s + market ADP + Sleeper + FantasyPros + Underdog/ESPN/CBS/Yahoo blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.');
+    lab.setAttribute('data-gloss', gloss);
   }
 }
 
@@ -3909,6 +3943,11 @@ function getFiltered(applyTopN) {
         }
         case 'teamTotal': {
           const _tt = d => {
+            // Season boards: rest-of-season average (see _rosTeamTotalFor)
+            if (currentMode !== 'weekly') {
+              const r = (typeof window._rosTeamTotalFor === 'function') ? window._rosTeamTotalFor(d.t, d.s === 'DST') : null;
+              return r ? r.v : -Infinity;
+            }
             const fn = (d.s === 'DST') ? window._weeklyOppTeamTotalFor : window._weeklyTeamTotalFor;
             const v = (typeof fn === 'function') ? fn(d.t) : null;
             return v == null ? -Infinity : v;
@@ -6072,6 +6111,20 @@ function render() {
   const _statMode = _effStatMode();
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
+  // REDRAFT (rest-of-season board): Team Total column = rest-of-season average
+  // implied team total, FANTASY stats view only (CSS keys off this class).
+  const _rosTtCol = currentMode === 'redraft' && _statMode === 'fantasy'
+    && typeof window._rosTeamTotalFor === 'function' && typeof window._weeklyScheduleWeek === 'function'
+    && window._weeklyScheduleWeek() != null;
+  document.body.classList.toggle('ros-tt-col', _rosTtCol);
+  (function() {
+    const lab = document.querySelector('#teamTotalHeader [data-gloss]');
+    if (!lab) return;
+    const g = _rosTtCol
+      ? 'Rest-of-season team total — the average Vegas implied points for this team over its remaining games (DK total and spread, current week through week 18). Higher = better scoring environment. D/ST rows show the average implied total of the opponents they face (lower is better). Hover a value for the number of games.'
+      : 'Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.';
+    if (lab.getAttribute('data-gloss') !== g) lab.setAttribute('data-gloss', g);
+  })();
   _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy');
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
@@ -6376,7 +6429,7 @@ function render() {
         // own team's implied total (higher = better environment).
         if(d.s==='DST') { if(typeof window._weeklyOppTeamTotalFor !== 'function') return '—'; const t = window._weeklyOppTeamTotalFor(d.t); if(t == null) return '—'; const c = t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700;cursor:help" title="Opponent implied total — lower is better for D/ST">'+t+'</span>'; }
         if(typeof window._weeklyTeamTotalFor !== 'function') return '—'; const t = window._weeklyTeamTotalFor(d.t); if(t == null) return '—'; const c = t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444'; return '<span style="color:'+c+';font-weight:700">'+t+'</span>'; })()}</td>
-      ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
+      ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">' + (_rosTtCol ? _rosTtCellHtml(d) : '—') + '</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
       ${_wkSplit.post}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
@@ -7747,6 +7800,39 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       ? (game.total + game.spread) / 2
       : (game.total - game.spread) / 2;
     return Math.round(t * 10) / 10;
+  };
+
+  // REST-OF-SEASON TEAM TOTAL (Jack 2026-09-28) — the REDRAFT board's Team
+  // Total column: mean implied team total (same DK total + spread math as
+  // the weekly column) over the team's remaining games, from the current
+  // schedule week through week 18. opp = true returns the OPPONENTS' mean
+  // implied total instead (the D/ST read — lower is better).
+  // Returns {v, n, from} or null.
+  let _rosTtCache = null;
+  window._rosTeamTotalFor = function(team, opp) {
+    if (!team || typeof window.getNflScheduleForTeam !== 'function') return null;
+    const GT = window.BETTING_2026 && window.BETTING_2026.gameTotals;
+    if (!GT) return null;
+    const from = (typeof window._weeklyScheduleWeek === 'function' ? window._weeklyScheduleWeek() : null);
+    if (from == null) return null;   // season over
+    if (!_rosTtCache || _rosTtCache.src !== GT || _rosTtCache.from !== from) _rosTtCache = { src: GT, from, m: {} };
+    const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[team]) ? TEAM_ABBR_MAP[team] : team;
+    const key = abbr + (opp ? '|o' : '');
+    if (key in _rosTtCache.m) return _rosTtCache.m[key];
+    const sched = window.getNflScheduleForTeam(abbr);
+    let sum = 0, n = 0;
+    if (sched) {
+      for (let wk = from; wk <= 18; wk++) {
+        const e = sched[wk];
+        if (!e || e.bye || !e.opp) continue;
+        const g = GT['W' + wk + '_' + (e.home ? e.opp : abbr) + '_' + (e.home ? abbr : e.opp)];
+        if (!g || typeof g.total !== 'number' || typeof g.spread !== 'number') continue;
+        const own = e.home ? (g.total - g.spread) / 2 : (g.total + g.spread) / 2;
+        sum += opp ? g.total - own : own;
+        n++;
+      }
+    }
+    return (_rosTtCache.m[key] = n ? { v: Math.round(sum / n * 10) / 10, n, from } : null);
   };
 
   // OPP PPG (2026-09-15) — fantasy points the opponent ALLOWS per game to

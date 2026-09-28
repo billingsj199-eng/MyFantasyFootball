@@ -8944,8 +8944,12 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       versionBoards.mine.weekly = src.slice();
       // Tiers come from whichever jacks board the order came from, so
       // afterRank boundaries line up with the mirrored order.
-      versionTiers.mine.weekly = _clonePosTiers(_useJacksWeekly ? versionTiers.jacks.weekly : versionTiers.jacks.redraft);
-      versionTierCounters.mine.weekly = _clonePosTierCtrs(_useJacksWeekly ? versionTierCounters.jacks.weekly : versionTierCounters.jacks.redraft);
+      // Projection-ordered virgin week: no tiers — Jack's tier lines are cut
+      // for HIS order and would land on the wrong players here.
+      versionTiers.mine.weekly = _projVirgin ? _mkPosTiers()
+        : _clonePosTiers(_useJacksWeekly ? versionTiers.jacks.weekly : versionTiers.jacks.redraft);
+      versionTierCounters.mine.weekly = _projVirgin ? _mkPosTierCtrs()
+        : _clonePosTierCtrs(_useJacksWeekly ? versionTierCounters.jacks.weekly : versionTierCounters.jacks.redraft);
       window._weeklyBaseline.mine = versionBoards.mine.weekly.slice();
       if (currentMode === 'weekly' && currentVersion === 'mine') {
         syncMode(); renumber();
@@ -8978,6 +8982,14 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       versionBoards[ver].weekly = window._weeklyMergeUnowned(base, freshSrc(), ownedPos || {});
     } else if (!(saved && saved._week === wk)) {
       versionBoards[ver].weekly = freshSrc();
+      // A new week starts with NO tiers (Jack 2026-09-28): the tier lines
+      // still in memory belong to the last saved week's order and mean
+      // nothing over this week's projection order. The first tier / order
+      // edit takes the week (session stash), so this never runs again for it.
+      if (projDefault) {
+        versionTiers[ver].weekly = _mkPosTiers();
+        versionTierCounters[ver].weekly = _mkPosTierCtrs();
+      }
     }
     // FLEX interleave derives from positional order + weekly PROJ PPG.
     window._weeklyAutoFlex(ver);

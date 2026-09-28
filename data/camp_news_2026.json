@@ -1,6 +1,126 @@
 {
-  "updated": "2026-09-28T02:20:29Z",
+  "updated": "2026-09-28T16:17:50Z",
   "items": [
+    {
+      "player": "De'Von Achane",
+      "team": "MIA",
+      "pos": "RB",
+      "date": "2026-09-28",
+      "headline": "Confirmed torn ACL in right knee; out for the rest of the 2026 season",
+      "take": "Season is over -- Ollie Gordon II is now the clear early-down back in Miami's backfield.",
+      "url": "https://www.rotowire.com/football/headlines/devon-achane-injury-sustains-season-ending-acl-tear-639669",
+      "tag": "injury"
+    },
+    {
+      "player": "Jaxson Dart",
+      "team": "NYG",
+      "pos": "QB",
+      "date": "2026-09-28",
+      "headline": "Torn meniscus and MCL (ACL intact) requires surgery; out for rest of regular season",
+      "take": "Jameis Winston takes over as Giants starter -- a real dynasty stock hit for Dart, though the intact ACL is a silver lining for 2027.",
+      "url": "https://www.espn.com/nfl/story/_/id/50013861/giants-qb-dart-knee-surgery-miss-rest-regular-season",
+      "tag": "injury"
+    },
+    {
+      "player": "J.J. McCarthy",
+      "team": "NYG",
+      "pos": "QB",
+      "date": "2026-09-28",
+      "headline": "Traded from Vikings to Giants for a 2027 fifth-round pick",
+      "take": "Lands as QB depth behind Jameis Winston -- not a near-term fantasy factor, but worth a dynasty watch if Winston falters.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-28/vikings-trade-j-j-mccarthy-to-qb-needy-giants",
+      "tag": "transaction"
+    },
+    {
+      "player": "Jameis Winston",
+      "team": "NYG",
+      "pos": "QB",
+      "date": "2026-09-28",
+      "headline": "Takes over as Giants' starting QB after Dart's season-ending knee surgery",
+      "take": "Streamable in QB-needy leagues; also a volume floor to watch for Cam Skattebo and Malik Nabers.",
+      "url": "https://bleacherreport.com/articles/25503128-new-giants-trade-rumors-and-jj-mccarthy-link-leak-jameis-winston-replaces-injured-jaxson-dart",
+      "tag": "role"
+    },
+    {
+      "player": "Breece Hall",
+      "team": "NYJ",
+      "pos": "RB",
+      "date": "2026-09-27",
+      "headline": "Ruled out vs. Lions with a thigh injury; MRI likely, status update expected Wednesday",
+      "take": "Treat as questionable for Week 4 at Chicago -- Braelon Allen is the direct handcuff/streaming option.",
+      "url": "https://www.cbssports.com/fantasy/football/news/jets-breece-hall-status-to-be-updated-wednesday/",
+      "tag": "injury"
+    },
+    {
+      "player": "Saquon Barkley",
+      "team": "PHI",
+      "pos": "RB",
+      "date": "2026-09-27",
+      "headline": "Suffered a stinger vs. Titans, returned after halftime, getting an MRI",
+      "take": "Played through it and finished the game -- trending toward suiting up tonight vs. Bears, but check pregame inactives.",
+      "url": "https://www.cbssports.com/fantasy/football/news/eagles-saquon-barkley-another-frustrating-day-sunday/",
+      "tag": "injury"
+    },
+    {
+      "player": "Justin Jefferson",
+      "team": "MIN",
+      "pos": "WR",
+      "date": "2026-09-28",
+      "headline": "Kevin O'Connell says Jefferson 'got close' to returning Sunday; ankle to be re-evaluated Monday",
+      "take": "Hopeful signs point to a lower-ankle sprain rather than something more severe, but wait for Monday's exam before trusting him in Week 4 lineups.",
+      "url": "https://sports.yahoo.com/articles/kevin-oconnell-justin-jefferson-got-002107662.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Caleb Williams",
+      "team": "CHI",
+      "pos": "QB",
+      "date": "2026-09-28",
+      "headline": "Ruled out for tonight's game vs. Eagles; Grade 2 hamstring strain, 3-4 week timeline",
+      "take": "Tyson Bagent gets the start -- DJ Moore and Rome Odunze become lower-confidence plays until Williams returns.",
+      "url": "https://www.espn.com/nfl/story/_/id/50036929/sources-caleb-williams-injury-considered-3-4-week-line",
+      "tag": "injury"
+    },
+    {
+      "player": "Jayden Daniels",
+      "team": "WAS",
+      "pos": "QB",
+      "date": "2026-09-28",
+      "headline": "Ruled out Week 3 with a dislocated elbow; 'unlikely' for Week 4 per Rapoport",
+      "take": "Commanders' passing volume stays capped -- Terry McLaurin and the RB committee are lower-confidence starts until he's back.",
+      "url": "https://www.rotoballer.com/is-jayden-daniels-out-for-the-season-injury-update-and-fantasy-football-outlook-week-3/1948303",
+      "tag": "injury"
+    },
+    {
+      "player": "Cam Skattebo",
+      "team": "NYG",
+      "pos": "RB",
+      "date": "2026-09-27",
+      "headline": "20 carries for 60 yards plus 3 catches for 40 yards in Week 3 win over Titans",
+      "take": "Remains the clear lead back and stays in the RB2 mix for Week 4 vs. Cardinals even as the Giants' QB room shakes out behind him.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-27/cam-skattebo-totals-100-yards-in-week-3-win",
+      "tag": "role"
+    },
+    {
+      "player": "Kenyon Sadiq",
+      "team": "NYJ",
+      "pos": "TE",
+      "date": "2026-09-27",
+      "headline": "Breakout game: 7 catches, 105 yards, 1 TD on 8 targets vs. Lions",
+      "take": "With Adonai Mitchell and Mason Taylor banged up, Sadiq is trending toward real streaming-TE relevance -- add where available.",
+      "url": "https://www.nbcsports.com/fantasy/football/news/week-3-stock-up-stock-down-sadiq-seizes-big-role-with-jets",
+      "tag": "riser"
+    },
+    {
+      "player": "Ollie Gordon II",
+      "team": "MIA",
+      "pos": "RB",
+      "date": "2026-09-27",
+      "headline": "17 carries for 41 yards and a TD plus 3 catches filling in for injured Achane",
+      "take": "Immediate top waiver priority as Miami's presumptive lead back for as long as Achane (torn ACL) is out.",
+      "url": "https://heavy.com/sports/nfl/miami-dolphins/ollie-gordon-returns-field-cramp/",
+      "tag": "riser"
+    },
     {
       "player": "De'Von Achane",
       "team": "MIA",
@@ -3262,16 +3382,6 @@
       "tag": "faller"
     },
     {
-      "player": "Zach Charbonnet",
-      "team": "SEA",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "Officially on Reserve/PUP, out at least the first 4 games",
-      "take": "Cements Jadarian Price as Seattle's clear starting RB to open the season.",
-      "url": "https://www.espn.com/nfl/story/_/id/49778534/seahawks-zach-charbonnet-remains-pup-list-miss-least-first-four-games",
-      "tag": "injury"
-    },
-    {
       "player": "George Kittle",
       "team": "SF",
       "pos": "TE",
@@ -3290,156 +3400,6 @@
       "take": "Still not full-go, but coach-speak points toward optimism — monitor Tuesday/Wednesday reports.",
       "url": "https://sports.yahoo.com/articles/ashton-jeanty-injury-raiders-practice-152408912.html",
       "tag": "injury"
-    },
-    {
-      "player": "Christian Kirk",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-09-06",
-      "headline": "Opens the season on IR with a calf injury that's more serious than first believed",
-      "take": "Out at least 4 games -- deepens San Francisco's WR hit alongside Pearsall's season-ending injury",
-      "url": "https://sports.yahoo.com/articles/san-francisco-49ers-announce-major-014425844.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Deebo Samuel",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-09-06",
-      "headline": "Steps into a clear starting role after Pearsall's season-ending injury and Kirk's IR stint",
-      "take": "Immediate riser -- expect a bump in target share and snaps behind Mike Evans in Week 1",
-      "url": "https://www.espn.com/nfl/story/_/id/49493047/sources-deebo-samuel-returning-49ers-1-year-deal",
-      "tag": "riser"
-    },
-    {
-      "player": "Jadarian Price",
-      "team": "SEA",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "Teammate Julian Love compares his burst to a \"prime Dalvin Cook\"",
-      "take": "Presumptive lead back replacing Kenneth Walker III, though Seattle plans a multi-back rotation",
-      "url": "https://sports.yahoo.com/articles/seahawks-news-jadarian-prices-prime-134847480.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Jonah Coleman",
-      "team": "DEN",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "ESPN's Dan Graziano says belief in Denver is he overtakes RJ Harvey on the depth chart",
-      "take": "Next in line for lead work if J.K. Dobbins misses time -- a real stash given Dobbins' injury history",
-      "url": "https://www.rotoballer.com/player-news/jonah-coleman-trending-toward-bigger-role-in-denver/1921887",
-      "tag": "riser"
-    },
-    {
-      "player": "Quinshon Judkins",
-      "team": "CLE",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "RB coach Duce Staley says \"the sky is the limit\" and he can play all three downs",
-      "take": "Strengthens his case as Cleveland's clear lead back over Jerome Ford entering Week 1",
-      "url": "https://247sports.com/nfl/cleveland-browns/longformarticle/why-cleveland-browns-running-backs-coach-duce-staley-says-the-skys-the-limit-for-quinshon-judkins-288852820/",
-      "tag": "role"
-    },
-    {
-      "player": "Dontayvion Wicks",
-      "team": "PHI",
-      "pos": "WR",
-      "date": "2026-09-06",
-      "headline": "Emerging as Jalen Hurts' No. 2 target in camp after trade from Green Bay",
-      "take": "Speculative add as a potential WR2 behind A.J. Brown/DeVonta Smith if the role holds",
-      "url": "https://www.nbcphiladelphia.com/news/local/eagles-notebook-jalen-hurts-sees-some-rage-in-dontayvion-wicks/4444412/",
-      "tag": "riser"
-    },
-    {
-      "player": "Tory Horton",
-      "team": "SEA",
-      "pos": "WR",
-      "date": "2026-09-06",
-      "headline": "Limited in Sunday's practice with a hamstring issue ahead of the opener",
-      "take": "Not termed a significant injury by HC Macdonald, but confirm his Week 1 status before trusting him",
-      "url": "https://sports.yahoo.com/articles/seahawks-wr-tory-horton-going-150027726.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Puka Nacua",
-      "team": "LAR",
-      "pos": "WR",
-      "date": "2026-09-06",
-      "headline": "NFL has not suspended or placed Nacua on leave over conduct review; back at full practice Sunday",
-      "take": "Clear to start him for the Sept. 10 opener vs. SF — the discipline risk that clouded him all week didn't materialize for Week 1.",
-      "url": "https://www.cbssports.com/nfl/news/puka-nacua-suspension-watch-will-nfl-discipline-rams-star/",
-      "tag": "other"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-09-06",
-      "headline": "Falcons set Wednesday deadline for QB1 decision vs. Michael Penix Jr.; announcement could come as early as Monday",
-      "take": "A resolution is finally close — Tua remains the more startable name if Penix isn't tabbed, but confirm Monday before locking lineups.",
-      "url": "https://sports.yahoo.com/articles/falcons-set-wednesday-deadline-michael-100000835.html",
-      "tag": "role"
-    },
-    {
-      "player": "Michael Penix Jr.",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-09-06",
-      "headline": "Falcons set Wednesday deadline for QB1 decision vs. Tua Tagovailoa; announcement could come as early as Monday",
-      "take": "Still finishing his ACL recovery ramp-up — a real shot at the job, but treat as unstartable until named.",
-      "url": "https://www.profootballrumors.com/2026/09/falcons-undecided-on-starting-qb",
-      "tag": "role"
-    },
-    {
-      "player": "Cam Skattebo",
-      "team": "NYG",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "Now sits unchallenged atop Giants' unofficial RB depth chart after Tracy's back-to-back mistakes",
-      "take": "Trending toward a true bell-cow role in New York — a buy in redraft leagues if his price hasn't caught up.",
-      "url": "https://www.profootballnetwork.com/giants-rb-depth-chart-tyrone-tracy-jr-cam-skattebo/",
-      "tag": "role"
-    },
-    {
-      "player": "Tyrone Tracy",
-      "team": "NYG",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "Slides to RB2 mix with Najee Harris and Devin Singletary as Skattebo takes over the Giants' backfield",
-      "take": "Lost his co-starter standing outright — treat as a timeshare/handcuff piece rather than a lead back for now.",
-      "url": "https://www.cbssports.com/fantasy/football/news/giants-cam-skattebo-listed-as-co-starter-with-tracy/",
-      "tag": "faller"
-    },
-    {
-      "player": "Jonathon Brooks",
-      "team": "CAR",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "Panthers plan series-based Week 1 committee with Chuba Hubbard, with Brooks getting extra passing-down work",
-      "take": "Real standalone value as a pass-catcher even with Hubbard atop the depth chart — a strong 18-months-post-ACL comeback story.",
-      "url": "https://sports.yahoo.com/articles/panthers-reveal-rb-plan-jonathan-163419638.html",
-      "tag": "role"
-    },
-    {
-      "player": "TreVeyon Henderson",
-      "team": "NE",
-      "pos": "RB",
-      "date": "2026-09-06",
-      "headline": "Still hasn't practiced since Aug. 24 ankle injury, but Boston Globe reports he should be \"good to go\" for Wednesday's opener",
-      "take": "Trending toward a Week 1 game-time decision — keep Rhamondre Stevenson ready as a pivot until Henderson actually returns to practice.",
-      "url": "https://www.complex.com/bets/a/matt-burke/treveyon-injury-update",
-      "tag": "injury"
-    },
-    {
-      "player": "Cyrus Allen",
-      "team": "KC",
-      "pos": "WR",
-      "date": "2026-09-06",
-      "headline": "Reportedly most-targeted player in Chiefs minicamp reps, climbs past Remigio/Royals into WR4 role",
-      "take": "PPR ADP has surged from off-the-board in July into the low 220s — a legitimate late-round dart throw on Mahomes chemistry.",
-      "url": "https://sports.yahoo.com/fantasy/article/cyrus-allen-leads-2026-nfl-rookies-already-generating-fantasy-football-buzz-in-training-camps-145843770.html",
-      "tag": "riser"
     }
   ]
 }

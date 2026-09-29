@@ -185,7 +185,7 @@ const ACTIVE_TEAM_HISTORY = {
     'Isaiah Williams': [{t:'Cincinnati Bengals',y1:2024,y2:2024},{t:'New York Jets',y1:2025,y2:2099}],
     'Isiah Pacheco': [{t:'Kansas City Chiefs',y1:2022,y2:2025},{t:'Detroit Lions',y1:2026,y2:2099}],
     'J. Michael Sturdivant': [{t:'Green Bay Packers',y1:2026,y2:2099}],
-    'J.J. McCarthy': [{t:'Minnesota Vikings',y1:2024,y2:2099}],
+    'J.J. McCarthy': [{t:'Minnesota Vikings',y1:2024,y2:2025},{t:'New York Giants',y1:2026,y2:2099}],
     'J.K. Dobbins': [{t:'Baltimore Ravens',y1:2020,y2:2023},{t:'Los Angeles Chargers',y1:2024,y2:2024},{t:'Denver Broncos',y1:2025,y2:2099}],
     "J'Mari Taylor": [{t:'Jacksonville Jaguars',y1:2026,y2:2099}],
     "Ja'Kobi Lane": [{t:'Baltimore Ravens',y1:2026,y2:2099}],

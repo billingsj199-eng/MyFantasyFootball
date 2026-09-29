@@ -1,6 +1,46 @@
 {
-  "updated": "2026-09-28T16:17:50Z",
+  "updated": "2026-09-29T02:17:58Z",
   "items": [
+    {
+      "player": "Josh Oliver",
+      "team": "MIN",
+      "pos": "TE",
+      "date": "2026-09-28",
+      "headline": "MRI confirms torn biceps; likely done for the season, surgery expected",
+      "take": "Vikings lose their top receiving TE (over half the offensive snaps) -- look to the waiver wire for MIN's next man up at TE.",
+      "url": "https://www.rotowire.com/football/headlines/josh-oliver-injury-likely-done-for-season-639682",
+      "tag": "injury"
+    },
+    {
+      "player": "Justin Jefferson",
+      "team": "MIN",
+      "pos": "WR",
+      "date": "2026-09-28",
+      "headline": "MRI shows clean ankle sprain, no long-term damage; could play Week 4",
+      "take": "Best-case outcome -- treat him as a game-time-decision-turned-likely-starter for Week 4 vs. Miami rather than a bench candidate.",
+      "url": "https://www.rotowire.com/football/headlines/justin-jefferson-injury-imaging-on-ankle-returns-clean-639690",
+      "tag": "injury"
+    },
+    {
+      "player": "Saquon Barkley",
+      "team": "PHI",
+      "pos": "RB",
+      "date": "2026-09-28",
+      "headline": "Good MRI results on neck stinger; active and playing Monday night vs. Bears",
+      "take": "Full go for MNF -- no need to plan around a Barkley absence in Week 4 either barring a setback tonight.",
+      "url": "https://x.com/RapSheet/status/2103209288676381100",
+      "tag": "injury"
+    },
+    {
+      "player": "Baker Mayfield",
+      "team": "TB",
+      "pos": "QB",
+      "date": "2026-09-28",
+      "headline": "MRI shows no ligament/tendon damage on dislocated thumb, but out at least 3 weeks",
+      "take": "No surgery needed, but Bucs pass-catchers (Evans, Godwin, Egbuka) face a multi-week downgrade with a backup at QB.",
+      "url": "https://www.espn.com/nfl/story/_/id/50052996/buccaneers-mayfield-thumb-least-three-weeks-bowles-says",
+      "tag": "injury"
+    },
     {
       "player": "De'Von Achane",
       "team": "MIA",

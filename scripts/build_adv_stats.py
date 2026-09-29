@@ -49,7 +49,7 @@ import requests
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
-from pull_snap_counts import URL as SNAP_URL, norm_variants, load_d_names  # noqa: E402
+from pull_snap_counts import URL as SNAP_URL, norm_variants, load_d_names, onfield_maps, onfield_slots  # noqa: E402
 
 CACHE = r'E:\MyFantasyFootball\pbp_cache'
 PFF = os.path.join(CACHE, 'pff')
@@ -146,7 +146,7 @@ RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'att', 'tgt', 'tch', 'scy', 'tds',
         'rts', 'tprr', 'yprr', 'recg', 'pbg',
         'xt', 'xc', 'xi',
         'tsn', 'ttc', 'tmt', 'tmd', 'tmi', 'rsy', 'pcar', 'gz', 'rpl',
-        'xfpt', 'xrec'] + SIT_F + FTN_F
+        'xfpt', 'xrec'] + SIT_F + FTN_F + ['inj']
 # SIT_F (defined below the tables) = situational usage: displayed shares + hidden counts
 # xrec = expected receptions (hidden) so the page can re-score xFP as PPR / STD; actual
 # receptions come from tch - att (RB) or the hidden rec field (WR/TE)
@@ -159,7 +159,7 @@ REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
          'myprr', 'zyprr', 'mtprr', 'ztprr', 'slyprr', 'scr', 'deep', 'dyd', 'dctch', 'blos',
          'xt', 'xa',
          'tsn', 'tmd', 'tmt', 'tma', 'al', 'ppl', 'rec', 'dr', 'ct', 'pry', 'pay', 'mr', 'zr', 'slr', 'cbt', 'dbt', 'dy', 'dtg',
-         'xfpt', 'xrec'] + SIT_F + FTN_F
+         'xfpt', 'xrec'] + SIT_F + FTN_F + ['inj']
 # TEAM table: one row per team (n = team name, tm = code). Offense, tendency and defense from
 # nflverse pbp; protection / pressure / man coverage from PFF (defense = what opponents saw).
 TM_F = ['n', 'on', 'tm', 'g',
@@ -325,6 +325,8 @@ def agg_receiving(yr, only=None):
         if rt is None:
             rt = fnum(row.get('routes')) or 0.0
         a.s['routes'] += rt
+        # Route% numerator = the player card's RT% count (pull_route_pct.py): pass-route snaps
+        a.s['psn'] += fnum(row.get('routes')) or 0.0
         a.wk_routes[wk] = a.wk_routes.get(wk, 0.0) + rt
         line = a.wk_rec.setdefault(wk, [0.0, 0.0, 0.0, 0.0])
         for i, v in enumerate((rt, row.get('targets'), row.get('receptions'), row.get('yards'))):
@@ -398,9 +400,17 @@ def load_onfield(yr):
     p = os.path.join(CACHE, f'pbp_participation_{yr}.parquet')
     if not os.path.exists(p):
         return None
-    df = pd.read_parquet(p, columns=['nflverse_game_id', 'play_id', 'offense_players'])
+    import pyarrow.parquet as pq
+    names = 'offense_names' in pq.ParquetFile(p).schema.names
+    df = pd.read_parquet(p, columns=['nflverse_game_id', 'play_id', 'offense_players'] + (['offense_names'] if names else []))
     df = df[df.offense_players.notna() & (df.offense_players != '')].copy()
     df['play_id'] = df.play_id.astype('int64')
+    if names:
+        # same id / name repair as the card's RT% (pull_snap_counts.onfield_slots)
+        gsis_name, name_gsis = onfield_maps(os.path.join(CACHE, 'players.csv'))
+        df['offense_players'] = [';'.join(i for i, _ in onfield_slots(a, b, gsis_name, name_gsis) if i)
+                                 for a, b in zip(df.offense_players, df.offense_names)]
+        df = df.drop(columns=['offense_names'])
     return df
 
 
@@ -464,6 +474,37 @@ def _lut(vals, bins, table):
     idx = np.searchsorted(np.asarray(bins, float), np.asarray(vals, float), side='left')
     return np.asarray(table, float)[np.minimum(idx, len(table) - 1)]
 PBP_COLS = ['season_type', 'week', 'posteam'] + PBP_ID + PBP_STR + PBP_FLAG + PBP_NUM
+
+
+_HURT = {}
+_HURT_RX = re.compile(r"([A-Z]{2,3})-\d+-([A-Z][A-Za-z.'\- ]+?) was injured during the play")
+
+
+def injured_weeks(yr):
+    """{gsis: {weeks}} = REG-season games where the play-by-play says the player "was injured
+    during the play". The description names him as TEAM-number-F.Lastname; the id comes from
+    the same season's passer / rusher / receiver columns, so only ball handlers resolve."""
+    if yr in _HURT:
+        return _HURT[yr]
+    out = _HURT[yr] = collections.defaultdict(set)
+    p = os.path.join(CACHE, f'play_by_play_{yr}.csv.gz')
+    if not os.path.exists(p):
+        return out
+    cols = ['week', 'season_type', 'posteam', 'desc']
+    roles = ['receiver', 'rusher', 'passer']
+    df = pd.read_csv(p, usecols=cols + [r + s_ for r in roles for s_ in ('_player_id', '_player_name')], low_memory=False)
+    df = df[df.season_type == 'REG']
+    who = {}
+    for r in roles:
+        d = df[df[r + '_player_id'].notna() & df.posteam.notna()]
+        who.update({(tm, nm): pid for tm, nm, pid in zip(d.posteam, d[r + '_player_name'], d[r + '_player_id'])})
+    d = df[df.desc.fillna('').str.contains('was injured during the play', regex=False)]
+    for wk, desc in zip(d.week, d.desc):
+        for tm, nm in _HURT_RX.findall(desc):
+            pid = who.get((tm, nm))
+            if pid:
+                out[pid].add(int(wk))
+    return out
 
 
 def load_pbp(yr):
@@ -634,7 +675,21 @@ def pbp_agg(df, part=None, ftn=None):
     # team dropbacks = pull_route_pct.dropbacks(): pass flag incl. penalty-nullified
     # pass plays, 2-pt tries kept, spikes out (the RT% denominator)
     db = df[((df.qb_dropback == 1) | (df['pass'] == 1)) & (df.qb_spike != 1) & df.posteam.notna()]
-    put_team(db.groupby(['posteam', 'week']).size(), 'db')
+    # Route% = the card's RT% (pull_route_pct.from_participation): dropbacks the player was on
+    # the field for / team dropbacks the participation file covers. Charted PFF routes leave out
+    # penalty-nullified plays that this denominator keeps, so routes / db read ~5 pts low.
+    m = None
+    if part is not None and len(part):
+        dbp = db[db.play_id.notna()].copy()
+        dbp['play_id'] = dbp.play_id.astype('int64')
+        m = dbp.merge(part, left_on=['game_id', 'play_id'], right_on=['nflverse_game_id', 'play_id'], how='inner')
+    if m is not None and len(m):
+        put_team(m.groupby(['posteam', 'week']).size(), 'db')
+        ex = m[['offense_players']].assign(pid=m.offense_players.str.split(';')).explode('pid')
+        ex = ex[ex.pid.notna() & (ex.pid != '')]
+        put(ex.groupby('pid').size(), 'psn')
+    else:
+        put_team(db.groupby(['posteam', 'week']).size(), 'db')
     return P, T, PT
 
 
@@ -869,6 +924,19 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
     P, T, PT = pbp_agg(pbp, part, ftn) if pbp is not None and len(pbp) else ({}, {}, {})
     empty = collections.defaultdict(float)
     stats = collections.Counter()
+    hurt = injured_weeks(yr)
+
+    def inj_games(c):
+        # hidden `inj`: games in this table he was hurt on a play (the Movers view skips them)
+        return sum(1 for w in hurt.get(c['gsis'], ()) if sel is None or w in sel)
+    psn_part = any(v.get('psn') for v in P.values())   # participation covers these weeks
+
+    def pass_snaps(p, cw, rts):
+        """Route% numerator: on-field dropbacks (participation) or PFF pass-route snaps (current
+        season) - the same count as the card's RT%. Charted routes only when neither has him."""
+        if psn_part:
+            return p.get('psn', 0.0) if p else rts
+        return cw.s.get('psn', 0.0) if cw else rts
 
     def pos_of(pid):
         c = collections.Counter()
@@ -923,7 +991,8 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
         site = next((dlookup[v] for v in norm_variants(disp) if v in dlookup), None)
         return {'n': site or disp, 'on': 1 if site else 0, 'tm': tm, 'g': games, 'snp': snp,
                 'p': p, 'tt': tt, 'fpt': rnd(half_ppr(p)) if ids.get('gsis') else None,
-                'x': PT.get((ids['gsis'], tm), {}) if ids.get('gsis') else {}, 'tsn': tsn}
+                'x': PT.get((ids['gsis'], tm), {}) if ids.get('gsis') else {}, 'tsn': tsn,
+                'gsis': ids.get('gsis')}
 
     # Week tables keep every player-week (floor 0), including season players (`forced`, filled
     # by the season build via `collect`) who only took snaps that week, so a range rebuilt on
@@ -1009,7 +1078,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 c['n'], c['on'], c['tm'], c['g'], c['snp'], c['fpt'], int(att), int(tgt),
                 int(att + recs), int(round(yds + (ryd or 0))), int(p['rutd'] + p['rectd']),
                 div(p['car'], c['tt']('car'), 100), div(p['tgt'], c['tt']('tgt'), 100),
-                div(min(rts, c['tt']('db')) if c['tt']('db') else rts, c['tt']('db'), 100),
+                div(min(pass_snaps(p, cw, rts), c['tt']('db')), c['tt']('db'), 100) if c['tt']('db') else None,
                 int(p['i5']), div(p['i10'], c['tt']('i10'), 100), int(p['rec'] + p['i10']),
                 div(yds, att, 1, 2), div(ru['yards_after_contact'], att, 1, 2), div(mtf, att, 1, 2),
                 rnd(elu), div(ru['breakaway_yards'], yds, 100), div(ru['explosive'], att, 100),
@@ -1021,7 +1090,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(round(yds)), int(p['car']), int(ru['gap_attempts'] + ru['zone_attempts']), int(ru['run_plays']),
                 rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
                 rnd(p['xrec'], 2) if c['fpt'] is not None else None,
-            ] + sit_values(c, p) + ftn_values(c, p))
+            ] + sit_values(c, p) + ftn_values(c, p) + [inj_games(c)])
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
         elif pos in ('WR', 'TE'):
@@ -1070,7 +1139,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
             rows[pos].append([
                 c['n'], c['on'], c['tm'], c['g'], c['snp'], c['fpt'], int(rts), int(tgt),
                 int(round(yds)), int(tds),
-                div(min(rts, tt_db), tt_db, 100) if tt_db else None,
+                div(min(pass_snaps(p, cw, rts), tt_db), tt_db, 100) if tt_db else None,
                 rnd(tsh * 100) if tsh is not None else None, rnd(ays * 100) if ays is not None else None,
                 rnd(1.5 * tsh + 0.7 * ays, 2) if tsh is not None and ays is not None else None,
                 div(tgt, rts, 1, 2), int(p['rz']), int(p['ez']),
@@ -1096,7 +1165,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(k['base_targets']), int(d['base_targets']), int(round(dy)), int(d['deep_targets']),
                 rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
                 rnd(p['xrec'], 2) if c['fpt'] is not None else None,
-            ] + sit_values(c, p) + ftn_values(c, p))
+            ] + sit_values(c, p) + ftn_values(c, p) + [inj_games(c)])
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
 

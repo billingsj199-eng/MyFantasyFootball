@@ -64347,7 +64347,7 @@ function _rsScatter(cfg) {
     USE_COL,
     c('car', 'Carry%', 'Usage', 1, 'Share of team carries in games played (designed runs; scrambles and kneels out)'),
     c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
-    c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played'),
+    c('rtp', 'Route%', 'Usage', 1, 'Pass plays on the field / team dropbacks in games played (the card RT%)'),
     n('i5', 'Inside 5', 'I5/G', 'Usage', 0, 2, 'Carries inside the opponent 5'),
     c('i10s', 'I10 Car%', 'Usage', 1, 'Share of team carries inside the opponent 10'),
     n('hvt', 'HVT', 'HVT/G', 'Usage', 0, 1, 'High-value touches: receptions + carries inside the 10'),
@@ -64378,7 +64378,7 @@ function _rsScatter(cfg) {
     n('yds', 'Yds', 'Yd/G', VOL, 0, 1, 'Receiving yards'),
     n('tds', 'TD', 'TD/G', VOL, 0, 2, 'Receiving touchdowns'),
     USE_COL,
-    c('rtp', 'Route%', 'Usage', 1, 'Routes run / team dropbacks in games played (RT%)'),
+    c('rtp', 'Route%', 'Usage', 1, 'Pass plays on the field / team dropbacks in games played (the card RT%)'),
     c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
     c('ays', 'AY%', 'Usage', 1, 'Share of team air yards in games played (nflverse)'),
     c('wopr', 'WOPR', 'Usage', 2, 'Weighted opportunity: 1.5 × target share + 0.7 × air-yards share'),
@@ -65649,6 +65649,28 @@ function _rsScatter(cfg) {
   const MV_FLOOR = { RB: 3, WR: 6, TE: 6 };
   let _mvYr = YEARS[0], _mvAuto = true, _mvWk = null, _mvMet = 'use', _mvWin = 1, _mvTm = '', _mvPos = '', _mvAll = false;
   let _mvWired = false, _mvStarted = false, _mvSeq = 0, _mvNote = '', _mvTeams = '';
+  // Jack 2026-09-29: "remove injured players from both up and down ... its not real
+  // improvments" - a game the player left hurt is dropped from both windows (default on)
+  let _mvInj = true, _mvHurt = 0;
+  try { if (localStorage.getItem('rsMvInj') === '0') _mvInj = false; } catch (e) { /* storage blocked */ }
+  function _mvOutNow(n) {
+    const s = (window.INJURY_UPDATES && window.INJURY_UPDATES.players && window.INJURY_UPDATES.players[n]) || '';
+    const p = window.PRACTICE_2026 && window.PRACTICE_2026.players && window.PRACTICE_2026.players[n];
+    return /\b(IR|Out|Doubtful|PUP)\b/i.test(s) || !!(p && /Out|Doubtful/i.test(p.gs || ''));
+  }
+  // An injury game = snaps under 75% of his best other game AND a sign he was hurt: the
+  // play-by-play says so (week file `inj`), he missed the next week, or (latest week of the
+  // current season) the injury report has him Out / Doubtful / IR now.
+  function _mvMarkHurt(e, latest) {
+    e.g.forEach((x, i) => {
+      const others = e.g.filter(y => y !== x && y.snp != null).map(y => y.snp);
+      const top = others.length ? Math.max.apply(null, others) : null;
+      const drop = x.snp != null && top != null && x.snp < 0.75 * top;
+      const nxt = e.g[i + 1];
+      const missed = x.w < _mvWk && (!nxt || nxt.w > x.w + 1);
+      x.hurt = x.inj ? (top == null || drop) : drop && (missed || (x.w === latest && _mvOutNow(e.n)));
+    });
+  }
   try {
     const m = localStorage.getItem('rsMvMetric');
     if (MV_METRICS.some(x => x.k === m)) _mvMet = m;
@@ -65720,22 +65742,33 @@ function _rsScatter(cfg) {
       const e = by.get(key);
       e.tm = o.tm;
       e.on = e.on || !!o.on;
-      e.g.push({ w: w, v: _roomVal(o, met.k), vol: p === 'RB' ? (o.att || 0) + (o.tgt || 0) : (o.rts || 0) });
+      e.g.push({ w: w, v: _roomVal(o, met.k), vol: p === 'RB' ? (o.att || 0) + (o.tgt || 0) : (o.rts || 0), snp: o.snp, inj: o.inj || 0 });
     })));
+    const latest = _mvYr === YEARS[0] ? Math.max.apply(null, (sf.wks || []).concat(0)) : -1;
+    _mvHurt = 0;
     const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
     const fmt = v => (v == null ? '–' : Number(v).toFixed(met.d) + (met.pct ? '%' : ''));
     const out = [];
     by.forEach(e => {
       // last window = the anchor week (win 1) or 2+ of the 3 weeks ending there (win 3);
       // prior = the 3 games played before that window
-      const lastW = e.g.filter(x => x.w > _mvWk - _mvWin);
-      if (!lastW.length || (_mvWin === 1 ? lastW[0].w !== _mvWk : lastW.length < 2)) return;
-      const prior = e.g.filter(x => x.w <= _mvWk - _mvWin).slice(-3);
-      if (!prior.length) return;
-      const lv = lastW.map(x => x.v).filter(v => v != null), pv = prior.map(x => x.v).filter(v => v != null);
-      if (!lv.length || !pv.length) return;
-      if (mean(lastW.map(x => x.vol)) < MV_FLOOR[e.pos] && mean(prior.map(x => x.vol)) < MV_FLOOR[e.pos]) return;
-      const all = e.g.map(x => x.v).filter(v => v != null);
+      if (_mvInj) _mvMarkHurt(e, latest);
+      const win = ok => {
+        const lastW = e.g.filter(x => x.w > _mvWk - _mvWin && ok(x));
+        const prior = e.g.filter(x => x.w <= _mvWk - _mvWin && ok(x)).slice(-3);
+        if (!lastW.length || (_mvWin === 1 ? lastW[0].w !== _mvWk : lastW.length < 2) || !prior.length) return null;
+        const lv = lastW.map(x => x.v).filter(v => v != null), pv = prior.map(x => x.v).filter(v => v != null);
+        if (!lv.length || !pv.length) return null;
+        if (mean(lastW.map(x => x.vol)) < MV_FLOOR[e.pos] && mean(prior.map(x => x.vol)) < MV_FLOOR[e.pos]) return null;
+        return { lastW: lastW, prior: prior, lv: lv, pv: pv };
+      };
+      const q = win(x => !(_mvInj && x.hurt));
+      if (!q) {
+        if (_mvInj && win(() => true)) _mvHurt++;
+        return;
+      }
+      const lastW = q.lastW, prior = q.prior, lv = q.lv, pv = q.pv;
+      const all = e.g.filter(x => !(_mvInj && x.hurt)).map(x => x.v).filter(v => v != null);
       const last = mean(lv), prev = mean(pv);
       out.push({ n: e.n, pos: e.pos, tm: e.tm, on: e.on, last: last, prev: prev, np: prior.length, d: last - prev, season: mean(all), games: e.g.length,
         trail: prior.map(x => 'W' + x.w + ' ' + fmt(x.v)).join(' · ') + ' | ' + lastW.map(x => 'W' + x.w + ' ' + fmt(x.v)).join(' · ') });
@@ -65810,6 +65843,7 @@ function _rsScatter(cfg) {
       'Each row compares ' + met.l.toLowerCase() + ' in the ' + (_mvWin === 1 ? 'last game played' : 'last 3 games played (2 or more of the 3 weeks ending at the week picked)') +
       ' with the player\'s average over the 3 games played before that, from the same week files as the Advanced Stats table (shares are of that week\'s team volume). ' +
       'Players need an average of 3 opportunities (RB) or 6 routes (WR, TE) per game in one of the two windows. Δ is descriptive, not a forecast: in 2019-2025 testing, players who had risen scored less over the next 3 games than others at the same recent usage, and players who had fallen scored more. ' +
+      (_mvInj ? 'Injury games are left out of both windows (snaps under 75% of his best other game, plus the play-by-play marking him hurt, a missed next week, or an Out / Doubtful / IR tag now)' + (_mvHurt ? '; ' + _mvHurt + ' player' + (_mvHurt === 1 ? '' : 's') + ' dropped for it' : '') + '. ' : '') +
       'Hover Δ for the by-game trail; click a player to open the card.' +
       (wkOn ? ' Week ' + wk + ' columns: Proj = the site\'s Sim Lab projection (' + FMT_NAME[_fmt] + ', the Advanced Stats scoring toggle), Book = DK / FD / MGM / UD / PP props scored as fantasy points, Site-Book = the gap, team total and spread = DK lines.' : '');
   }
@@ -65867,6 +65901,15 @@ function _rsScatter(cfg) {
       _mvRender();
     });
     _el('rsMvTm').addEventListener('change', e => { _mvTm = e.target.value; _mvRender(); });
+    const inj = _el('rsMvInj');
+    if (inj) {
+      inj.checked = _mvInj;
+      inj.addEventListener('change', () => {
+        _mvInj = inj.checked;
+        try { localStorage.setItem('rsMvInj', _mvInj ? '1' : '0'); } catch (err) { /* private mode */ }
+        _mvRender();
+      });
+    }
     _el('rsMvPos').addEventListener('click', e => {
       const b = e.target.closest('.rs-adv-chip');
       if (!b) return;

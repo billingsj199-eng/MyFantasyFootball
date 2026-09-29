@@ -40,7 +40,7 @@ import requests
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
-from pull_snap_counts import norm_variants, load_d_names  # noqa: E402
+from pull_snap_counts import norm_variants, load_d_names, onfield_maps, onfield_slots  # noqa: E402
 
 OUT = os.path.join(ROOT, 'data', 'route_pct.js')
 CACHE = r'E:\MyFantasyFootball\pbp_cache'
@@ -80,7 +80,7 @@ def load_d_pos():
     return {p['n']: p['s'] for p in D if p.get('s') in POS}
 
 
-def dropbacks(yr):
+def dropbacks(yr, scrimmage=False):
     """REG-season dropback plays: DataFrame[game_id, play_id, week, posteam]
 
     A dropback = qb_dropback OR the nflverse `pass` flag, minus spikes. `pass`
@@ -94,11 +94,15 @@ def dropbacks(yr):
     p = os.path.join(CACHE, f'play_by_play_{yr}.csv.gz')
     if not fetch(PBP_URL.format(yr=yr), p, 100000):
         return None
-    df = pd.read_csv(p, usecols=['game_id', 'play_id', 'week', 'season_type', 'posteam', 'qb_dropback', 'pass', 'qb_spike'], low_memory=False)
+    df = pd.read_csv(p, usecols=['game_id', 'play_id', 'week', 'season_type', 'posteam', 'qb_dropback', 'pass', 'rush', 'qb_spike'], low_memory=False)
     is_db = ((df.qb_dropback.fillna(0) == 1) | (df['pass'].fillna(0) == 1)) & (df.qb_spike.fillna(0) != 1)
-    df = df[(df.season_type == 'REG') & is_db & df.posteam.notna()]
+    df = df.assign(is_db=is_db)
+    # scrimmage=True keeps run plays too (is_db False): a game the player only took run
+    # snaps in is a 0% week, as on the Research page, not a missing one
+    keep = (is_db | (df.rush.fillna(0) == 1)) if scrimmage else is_db
+    df = df[(df.season_type == 'REG') & keep & df.posteam.notna()].copy()
     df['posteam'] = df.posteam.map(lambda t: TEAM_FIX.get(t, t))
-    return df[['game_id', 'play_id', 'week', 'posteam']]
+    return df[['game_id', 'play_id', 'week', 'posteam'] + (['is_db'] if scrimmage else [])]
 
 
 _GSIS = None
@@ -119,39 +123,31 @@ def from_participation(yr, lookup):
     part_p = os.path.join(CACHE, f'pbp_participation_{yr}.parquet')
     if not fetch(PART_URL.format(yr=yr), part_p):
         return None
-    pbp = dropbacks(yr)
+    pbp = dropbacks(yr, scrimmage=True)
     if pbp is None:
         return None
     import pyarrow.parquet as pq
     cols = pq.ParquetFile(part_p).schema.names
-    # 2023+ files carry offense_names; the 2016-2022 (NGS-era) files only carry
-    # offense_players = GSIS ids -> map through nflverse players.csv.
-    if 'offense_names' in cols:
-        part = pd.read_parquet(part_p, columns=['nflverse_game_id', 'play_id', 'offense_names'])
-    else:
-        gsis = gsis_names()
-        part = pd.read_parquet(part_p, columns=['nflverse_game_id', 'play_id', 'offense_players'])
-        part['offense_names'] = part.offense_players.map(
-            lambda v: ';'.join(gsis.get(i, '') for i in str(v).split(';')) if isinstance(v, str) else None)
+    # offense_players = GSIS ids (every season); 2023+ files also carry offense_names.
+    # onfield_slots (shared with build_adv_stats.py) turns both into players.csv names.
+    gsis_names()
+    gsis_name, name_gsis = onfield_maps(os.path.join(CACHE, 'players.csv'))
+    part = pd.read_parquet(part_p, columns=['nflverse_game_id', 'play_id', 'offense_players']
+                           + (['offense_names'] if 'offense_names' in cols else []))
+    if 'offense_names' not in cols:
+        part['offense_names'] = None
     m = part.merge(pbp, left_on=['nflverse_game_id', 'play_id'], right_on=['game_id', 'play_id'], how='inner')
-    m = m[m.offense_names.notna() & (m.offense_names != '')]
+    m = m[m.offense_players.notna() & (m.offense_players != '')]
     team_db, cnt = {}, {}
     for r in m.itertuples(index=False):
         k = (r.posteam, int(r.week))
-        team_db[k] = team_db.get(k, 0) + 1
-        for nm in str(r.offense_names).split(';'):
-            nm = nm.strip()
-            if not nm:
-                continue
-            dn = None
-            for v in norm_variants(nm):
-                dn = lookup.get(v)
-                if dn:
-                    break
+        team_db[k] = team_db.get(k, 0) + (1 if r.is_db else 0)
+        for _, nms in onfield_slots(r.offense_players, r.offense_names, gsis_name, name_gsis):
+            dn = next((lookup[v] for nm in nms for v in norm_variants(nm) if v in lookup), None)
             if not dn:
                 continue
             kk = (dn, r.posteam, int(r.week))
-            cnt[kk] = cnt.get(kk, 0) + 1
+            cnt[kk] = cnt.get(kk, 0) + (1 if r.is_db else 0)
     out = {}
     for (dn, tm, wk), c in cnt.items():
         db = team_db.get((tm, wk), 0)

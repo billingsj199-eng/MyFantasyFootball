@@ -51,6 +51,45 @@ def norm_variants(name):
     return {x.lower() for x in v}
 
 
+def _surname(name):
+    n = re.sub(r"\s+(Jr\.?|Sr\.?|II|III|IV|V)$", '', name or '', flags=re.I)
+    n = re.sub(r"[.'’`]", '', n).strip().lower()
+    return n.split(' ')[-1] if n else ''
+
+
+def onfield_maps(players_csv):
+    """(gsis -> display_name, lowercase display_name -> gsis) from nflverse players.csv;
+    a name shared by several players goes to the most recent one."""
+    df = pd.read_csv(players_csv, usecols=['gsis_id', 'display_name', 'last_season'], low_memory=False)
+    df = df[df.gsis_id.notna() & df.display_name.notna()].sort_values('last_season', na_position='first')
+    return dict(zip(df.gsis_id, df.display_name)), dict(zip(df.display_name.str.lower(), df.gsis_id))
+
+
+def onfield_slots(ids, names, gsis_name, name_gsis):
+    """[(gsis, [names to try])] for one nflverse participation row - the ONE matcher behind the
+    card's RT% (pull_route_pct.py) and the Research Route% (build_adv_stats.py).
+
+    The file has two faults (2026-09-29 audit): offense_names carries legal names some weeks
+    ("Nathaniel Dell" 2023 W1-11, id right) and offense_players carries another player's id
+    some weeks (Khalil Shakir 2025 W12 = Brandin Cooks's id, name right). Same surname ->
+    the id stands and the name comes from players.csv; different surname -> the name wins."""
+    ids = [x.strip() for x in str(ids).split(';')] if isinstance(ids, str) else []
+    nms = [x.strip() for x in str(names).split(';')] if isinstance(names, str) else []
+    if len(nms) != len(ids):
+        nms = [''] * len(ids) if ids else nms
+        ids = ids or [''] * len(nms)
+    out = []
+    for i, nm in zip(ids, nms):
+        disp = gsis_name.get(i, '')
+        if nm and (not disp or _surname(nm) != _surname(disp)):
+            i, disp = name_gsis.get(nm.lower(), ''), nm
+        if i or disp:
+            # both spellings: d.js may follow either ("Kenneth Gainwell" in the file,
+            # "Kenny Gainwell" in players.csv)
+            out.append((i, [x for x in dict.fromkeys((nm, disp)) if x]))
+    return out
+
+
 def load_d_names():
     src = open(os.path.join(ROOT, 'data', 'd.js'), encoding='utf-8').read()
     names = set(re.findall(r'[,{]"n":"([^"]+)"', src))

@@ -1,0 +1,261 @@
+{
+ "files": [
+  "live_track_2026_w3_CHI_PHI.csv"
+ ],
+ "bins": {
+  "Q2": {
+   "fit": 2.649,
+   "fitx": 2.649,
+   "v1": 3.205,
+   "naive": 3.141,
+   "n": 480
+  },
+  "Q3": {
+   "fit": 2.56,
+   "fitx": 2.545,
+   "v1": 2.55,
+   "naive": 2.615,
+   "n": 1416
+  },
+  "Q4": {
+   "fit": 0.996,
+   "fitx": 0.986,
+   "v1": 0.885,
+   "naive": 0.872,
+   "n": 840
+  }
+ },
+ "players": {
+  "Jalen Hurts": {
+   "pos": "QB",
+   "proj": 20.2,
+   "final": 13.62,
+   "fit": 4.42,
+   "fitx": 4.42,
+   "v1": 3.2,
+   "naive": 3.19
+  },
+  "DeVonta Smith": {
+   "pos": "WR",
+   "proj": 16.0,
+   "final": 12.5,
+   "fit": 4.44,
+   "fitx": 4.44,
+   "v1": 3.68,
+   "naive": 3.56
+  },
+  "D'Andre Swift": {
+   "pos": "RB",
+   "proj": 14.3,
+   "final": 10.8,
+   "fit": 1.25,
+   "fitx": 1.25,
+   "v1": 1.22,
+   "naive": 1.25
+  },
+  "Saquon Barkley": {
+   "pos": "RB",
+   "proj": 14.2,
+   "final": 9.0,
+   "fit": 4.43,
+   "fitx": 4.43,
+   "v1": 4.28,
+   "naive": 4.28
+  },
+  "Luther Burden": {
+   "pos": "WR",
+   "proj": 10.6,
+   "final": 19.8,
+   "fit": 2.68,
+   "fitx": 2.68,
+   "v1": 3.63,
+   "naive": 2.58
+  },
+  "Kyle Monangai": {
+   "pos": "RB",
+   "proj": 10.1,
+   "final": 3.1,
+   "fit": 0.63,
+   "fitx": 0.63,
+   "v1": 0.84,
+   "naive": 1.25
+  },
+  "Colston Loveland": {
+   "pos": "TE",
+   "proj": 9.7,
+   "final": 7.1,
+   "fit": 0.96,
+   "fitx": 0.96,
+   "v1": 1.44,
+   "naive": 1.54
+  },
+  "Dontayvion Wicks": {
+   "pos": "WR",
+   "proj": 9.7,
+   "final": 5.2,
+   "fit": 1.48,
+   "fitx": 1.48,
+   "v1": 1.03,
+   "naive": 1.15
+  },
+  "Rome Odunze": {
+   "pos": "WR",
+   "proj": 9.2,
+   "final": 7.4,
+   "fit": 1.33,
+   "fitx": 1.33,
+   "v1": 1.84,
+   "naive": 1.79
+  },
+  "Makai Lemon": {
+   "pos": "WR",
+   "proj": 7.6,
+   "final": 5.9,
+   "fit": 0.81,
+   "fitx": 0.81,
+   "v1": 0.64,
+   "naive": 0.67
+  },
+  "Philadelphia Eagles D/ST": {
+   "pos": "DST",
+   "proj": 7.5,
+   "final": 1.0,
+   "fit": 1.83,
+   "fitx": 1.83,
+   "v1": 3.97,
+   "naive": 4.04
+  },
+  "Jake Elliott": {
+   "pos": "K",
+   "proj": 7.4,
+   "final": 1.0,
+   "fit": 2.06,
+   "fitx": 2.06,
+   "v1": 2.06,
+   "naive": 2.37
+  },
+  "Cairo Santos": {
+   "pos": "K",
+   "proj": 7.4,
+   "final": 10.0,
+   "fit": 1.83,
+   "fitx": 1.83,
+   "v1": 1.83,
+   "naive": 1.69
+  },
+  "Kalif Raymond": {
+   "pos": "WR",
+   "proj": 6.6,
+   "final": 21.0,
+   "fit": 7.49,
+   "fitx": 7.49,
+   "v1": 7.52,
+   "naive": 7.22
+  },
+  "Chicago Bears D/ST": {
+   "pos": "DST",
+   "proj": 6.0,
+   "final": 13.0,
+   "fit": 2.27,
+   "fitx": 2.27,
+   "v1": 1.69,
+   "naive": 1.67
+  },
+  "Tank Bigsby": {
+   "pos": "RB",
+   "proj": 3.7,
+   "final": -0.5,
+   "fit": 1.01,
+   "fitx": 0.94,
+   "v1": 1.05,
+   "naive": 1.27
+  },
+  "Cole Kmet": {
+   "pos": "TE",
+   "proj": 3.5,
+   "final": 0.0,
+   "fit": 0.87,
+   "fitx": 0.87,
+   "v1": 1.03,
+   "naive": 1.2
+  },
+  "Will Shipley": {
+   "pos": "RB",
+   "proj": 2.3,
+   "final": 2.1,
+   "fit": 0.88,
+   "fitx": 0.88,
+   "v1": 0.83,
+   "naive": 0.75
+  },
+  "Darius Cooper": {
+   "pos": "WR",
+   "proj": 1.4,
+   "final": 0.0,
+   "fit": 0.51,
+   "fitx": 0.51,
+   "v1": 0.41,
+   "naive": 0.48
+  },
+  "Zavion Thomas": {
+   "pos": "WR",
+   "proj": 1.2,
+   "final": 1.1,
+   "fit": 0.36,
+   "fitx": 0.36,
+   "v1": 0.45,
+   "naive": 0.41
+  },
+  "Tyson Bagent": {
+   "pos": "QB",
+   "proj": 0.9,
+   "final": 0.0,
+   "fit": 0.2,
+   "fitx": 0.1,
+   "v1": 0.26,
+   "naive": 0.31
+  },
+  "Britain Covey": {
+   "pos": "QB",
+   "proj": 0.81,
+   "final": 24.48,
+   "fit": 8.05,
+   "fitx": 8.05,
+   "v1": 8.21,
+   "naive": 9.05,
+   "role": "backup",
+   "f_in": 0.0
+  },
+  "Sam Roush": {
+   "pos": "TE",
+   "proj": 0.7,
+   "final": 2.6,
+   "fit": 0.33,
+   "fitx": 0.33,
+   "v1": 0.43,
+   "naive": 0.24
+  },
+  "Tanner McKee": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.18,
+   "fitx": 0.09,
+   "v1": 0.15,
+   "naive": 0.17
+  }
+ },
+ "all": {
+  "fit": 2.095,
+  "fitx": 2.085,
+  "v1": 2.154,
+  "naive": 2.172,
+  "n": 2736
+ },
+ "wins": {
+  "fit": 8,
+  "fitx": 3,
+  "v1": 5,
+  "naive": 8
+ }
+}

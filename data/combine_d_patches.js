@@ -274,6 +274,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Luke Hasz'] && !COMBINE_DATA['Luke Hasz'].forty && !COMBINE_DATA['Luke Hasz'].ras && !COMBINE_DATA['Luke Hasz'].fortyProj) { COMBINE_DATA['Luke Hasz'].fortyProj = 4.68; COMBINE_DATA['Luke Hasz'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   // === END NFLDRAFTBUZZ UPDATE ===
   if (!COMBINE_DATA['Keelon Russell']) COMBINE_DATA['Keelon Russell'] = { school: 'Alabama', pos: 'QB', devy: true, eligYr: 2028 };
+  if (!COMBINE_DATA['Kamario Taylor']) COMBINE_DATA['Kamario Taylor'] = { school: 'Mississippi St.', pos: 'QB', devy: true, eligYr: 2028 }; // 2026-09-30 (Jack): KTC devy #100, MSST true freshman 2025
 
   // === DEVY DRAFT YEAR CLEANUP ===
   // 2026-09-30: 21 stubs still said eligYr 2026 although every one of them is on a 2026 college roster (CFBD) -> 2027.
@@ -301,6 +302,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
     cb=COMBINE_DATA['LaNorris Sellers']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Ahmad Hardy']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Dallas Wilson']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
+    cb=COMBINE_DATA['Kamario Taylor']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA['Jayce Brown']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Dakorien Moore']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA["Trey'Dez Green"]; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}

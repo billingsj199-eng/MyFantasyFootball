@@ -2182,7 +2182,7 @@ function _ktcDevyRankIndex(map) {
     Object.keys(COMBINE_DATA).forEach(n => { const cb = COMBINE_DATA[n]; if (cb && cb.devy && cb.pos) posOf[_normalizeNameForLookup(n)] = cb.pos; });
   }
   const rows = [];
-  for (const k in map) if (map[k] != null) rows.push({ n: k, v: map[k] });
+  for (const k in map) if (map[k] != null && map[k] > 0) rows.push({ n: k, v: map[k] }); // 0 / -1 = listed but not yet valued in this format
   rows.sort((a, b) => b.v - a.v);
   const cnt = {};
   idx = {};
@@ -6376,7 +6376,7 @@ function render() {
         <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
-        <td class="adp-cell" data-lbl="KTC">${(() => { const k = _ktcRankInfo(d.n); return (k && k.devy) ? '<span style="cursor:help" title="' + ('KTC devy #' + k.ovr + (k.posRank != null ? ' · ' + k.pos + k.posRank : '') + ' · value ' + k.val.toLocaleString() + ' (' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ')').replace(/"/g, '&quot;') + '">' + k.ovr + '</span>' : '<span style="color:var(--text2)" title="Not on KTC\'s devy list">—</span>'; })()}</td>
+        <td class="adp-cell" data-lbl="KTC">${(() => { const k = _ktcRankInfo(d.n); return (k && k.devy) ? '<span style="cursor:help" title="' + ('KTC devy #' + k.ovr + (k.posRank != null ? ' · ' + k.pos + k.posRank : '') + ' · value ' + k.val.toLocaleString() + ' (' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ')').replace(/"/g, '&quot;') + '">' + k.ovr + '</span>' : '<span style="color:var(--text2);cursor:help" title="' + (_ktcGet(_ktcDevyMapFor(currentMode), d.n) != null ? 'On KTC\'s devy list but not yet valued in ' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') : 'Not on KTC\'s devy list') + '">—</span>'; })()}</td>
         <td class="pts-cell ppg-proj-cell">—</td>
         <td class="simboom-cell weekly-only-cell" style="display:none">—</td>
         <td class="simbust-cell weekly-only-cell" style="display:none">—</td>

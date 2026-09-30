@@ -39096,28 +39096,35 @@ window.fmtHeight = fmtHeight;
           const zF = (_d.forty.mean - _fortyIn) / _d.forty.stdev;
           const zW = (_wt && _d.wt) ? (_wt - _d.wt.mean) / _d.wt.stdev : 0;
           const zH = (_htIn && _d.ht) ? (_htIn - _d.ht.mean) / _d.ht.stdev : 0;
-          // Position-specific z-score blend weights — DATA-DRIVEN (Apr 24 2026)
-          // Weights = average of two regressions against ALL_PLAYERS_DB historical
-          // sample (n=257-496 per position):
-          //   (a) best-3-season PPG (peak dynasty value)
-          //   (b) career total fpts (longevity)
-          //
-          // Per-position findings:
-          //   RB: forty dominant (78/20/2 avg) — speed → production, wt secondary
-          //   WR: weight dominant (25/75/0 avg) — bigger WRs outperform, forty ~noise
-          //   TE: forty dominant (63/23/14 avg) — stable across both metrics
-          //
-          // QB explicitly excluded from fallback above — combine metrics don't
-          // predict QB career fpts (all correlations ~0.02 = noise).
-          //
-          // Raw-data output — no smoothing. Will re-learn as sample grows.
-          let wF, wW, wH;
-          if (pos === 'WR') { wF=0.25; wW=0.75; wH=0.00; }
-          else if (pos === 'TE') { wF=0.63; wW=0.23; wH=0.14; }
-          else { wF=0.78; wW=0.20; wH=0.02; } // RB (QB handled above)
-          const zBlend = zF*wF + zW*wW + zH*wH;
-          const pct = _ncdf(zBlend);
-          ras = Math.max(0, Math.min(10, Math.round(pct * 10 * 100) / 100));
+          // ═══ RAS SYNTHESIS v2 (Sep 30 2026) — fitted to REAL RAS ═══
+          // The Apr 2026 blend weighted forty/weight/height by their correlation with NFL
+          // production (WR = 75% weight), which is not what RAS measures: it gave a 4.37 /
+          // 6-0 / 184 WR a 3.1 and under-rated light receivers by 4.3 RAS on average
+          // (bias vs real RAS, n=335 WRs with combine RAS). Replaced by a per-position OLS
+          // fit of actual RAS on forty / height / weight z-scores over every COMBINE_DATA
+          // player who has all four (QB 88, RB 210, WR 335, TE 134):
+          //   RMSE 1.3-1.7, R² .42-.71, light/heavy bias within ±0.2 for all positions.
+          // Means/stdevs are the fitting sample's (baked so the fit stays consistent as
+          // COMBINE_DATA grows). QB is exempt above (no synthesis for QBs by design).
+          const _RAS_FIT = {
+            QB: { mf: 4.7945, sf: 0.1608, mh: 75.034, sh: 1.689, mw: 222.60, sw: 10.04, b: [6.895, 2.021, 0.147, 0.445] },
+            RB: { mf: 4.5238, sf: 0.1058, mh: 70.519, sh: 1.654, mw: 213.20, sw: 13.25, b: [7.000, 1.663, 0.411, 0.821] },
+            WR: { mf: 4.4671, sf: 0.0954, mh: 72.543, sh: 2.326, mw: 199.22, sw: 15.39, b: [7.452, 1.272, 0.659, 0.353] },
+            TE: { mf: 4.6940, sf: 0.1211, mh: 76.522, sh: 1.413, mw: 250.12, sw: 9.15, b: [7.555, 1.634, 0.426, 0.525] }
+          };
+          const _fit = _RAS_FIT[pos];
+          let rasFit;
+          if (_fit) {
+            const fz = (_fit.mf - _fortyIn) / _fit.sf;                       // faster -> higher
+            const hz = _htIn ? (_htIn - _fit.mh) / _fit.sh : 0;              // missing -> average
+            const wz = _wt ? (_wt - _fit.mw) / _fit.sw : 0;
+            rasFit = _fit.b[0] + _fit.b[1] * fz + _fit.b[2] * hz + _fit.b[3] * wz;
+          } else {
+            // no fit for this position: fall back to the forty percentile alone
+            rasFit = _ncdf(zF) * 10;
+          }
+          void zW; void zH;
+          ras = Math.max(0, Math.min(10, Math.round(rasFit * 100) / 100));
         }
       }
 

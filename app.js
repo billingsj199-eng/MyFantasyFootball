@@ -14699,12 +14699,17 @@ function openPlayerCard(d, ctxMode) {
         const _drill = (label, val, unit, grade) => `<div class="combine-stat"><div class="cb-val ${grade[0]}">${val}${unit}</div><div class="cb-lbl">${label}</div><div class="cb-lbl" style="font-weight:700;margin-top:1px"><span class="${grade[0]}">${grade[1]}</span></div></div>`;
         // RAS color: 9+ elite, 7+ good, 5+ avg, below 5 poor
         const _rasGrade = (v) => { if (v==null) return ['','']; return v>=9?['cb-elite','Elite']:v>=7?['cb-good','Good']:v>=5?['cb-avg','Avg']:['cb-below','Below']; };
-        const rasG = _rasGrade(cb.ras);
-        return `${cb.ras != null ? `<div class="card-section" style="text-align:center;padding-bottom:4px">
-        <div class="card-section-title">RAS <span style="font-size:.55rem;color:var(--text2);font-weight:400">· Relative Athletic Score</span></div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1" class="${rasG[0]}">${cb.ras.toFixed(2)}</div>
-        <div style="font-size:.5rem;font-weight:700;margin-top:2px" class="${rasG[0]}">${rasG[1]}</div>
-        <div style="font-size:.42rem;color:var(--text2);margin-top:2px">Scale: 0–10 · Based on ${pos} combine metrics</div>
+        // No official RAS: show the model's synthesized RAS when it came from a PROJECTED forty
+        // (fortyProj — projected testing for next-class prospects), clearly labeled.
+        const _pmRas = (cb.ras == null && cb.fortyProj && window._pmBuiltData) ? (window._pmBuiltData().find(p => p.name === d.n) || {}) : {};
+        const _rasShown = cb.ras != null ? cb.ras : (_pmRas.rasProjected && _pmRas.ras != null ? _pmRas.ras : null);
+        const _rasIsProj = cb.ras == null && _rasShown != null;
+        const rasG = _rasGrade(_rasShown);
+        return `${_rasShown != null ? `<div class="card-section" style="text-align:center;padding-bottom:4px">
+        <div class="card-section-title">RAS <span style="font-size:.55rem;color:var(--text2);font-weight:400">· ${_rasIsProj ? 'Projected' : 'Relative Athletic Score'}</span></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1" class="${rasG[0]}">${_rasShown.toFixed(2)}</div>
+        <div style="font-size:.5rem;font-weight:700;margin-top:2px" class="${rasG[0]}">${rasG[1]}${_rasIsProj ? ' · PROJ' : ''}</div>
+        <div style="font-size:.42rem;color:var(--text2);margin-top:2px">${_rasIsProj ? `Estimated from a projected ${cb.fortyProj} forty + size (${cb.fortyProjSrc || 'pre-draft projection'}) · replaced by official testing` : `Scale: 0–10 · Based on ${pos} combine metrics`}</div>
       </div>` : ''}
       ${(() => {
         // PFF Film Grade section
@@ -38783,7 +38788,13 @@ window.fmtHeight = fmtHeight;
       // forty/wt/ht have ~0.02 correlation with QB career fpts (pure noise).
       // Synthesizing a RAS from those inputs just creates false signal. Only
       // official RAS is used for QBs; otherwise ras stays null (0 contribution).
-      if (ras == null && _cbAny && _cbAny.forty && pos !== 'QB') {
+      // Projected testing (fortyProj from Site Rankings/projected_testing_<yr>.csv via
+      // scripts/apply_projected_testing.py) fills the forty when no official forty exists,
+      // so devy / next-class prospects get a synthesized RAS instead of a blank. Flagged
+      // rasProjected for the card. Official forty/RAS always win once they exist.
+      const _fortyIn = _cbAny ? (_cbAny.forty || _cbAny.fortyProj || null) : null;
+      const rasProjected = !!(ras == null && _cbAny && !_cbAny.forty && _cbAny.fortyProj && pos !== 'QB');
+      if (ras == null && _cbAny && _fortyIn && pos !== 'QB') {
         // Lazy-init pos-specific distribution (computed once from full COMBINE_DATA)
         if (typeof window._RAS_DIST === 'undefined') {
           const _dist = { QB:{forty:[],wt:[],ht:[]}, RB:{forty:[],wt:[],ht:[]},
@@ -38843,7 +38854,7 @@ window.fmtHeight = fmtHeight;
             if (hp.length === 2) { const f=parseInt(hp[0]), i=parseInt(hp[1]); if (!isNaN(f)&&!isNaN(i)) _htIn = f*12+i; }
           }
           // Forty z-score: faster (lower) → higher z
-          const zF = (_d.forty.mean - _cbAny.forty) / _d.forty.stdev;
+          const zF = (_d.forty.mean - _fortyIn) / _d.forty.stdev;
           const zW = (_wt && _d.wt) ? (_wt - _d.wt.mean) / _d.wt.stdev : 0;
           const zH = (_htIn && _d.ht) ? (_htIn - _d.ht.mean) / _d.ht.stdev : 0;
           // Position-specific z-score blend weights — DATA-DRIVEN (Apr 24 2026)
@@ -39382,7 +39393,7 @@ window.fmtHeight = fmtHeight;
       const isCollege = _isDevy || (!_inD && !_inCB && cs && cs.length > 0 && _lastCollegeYr >= 2024);
 
       const prospectRecord = {
-        name, pos, draftYr, age, lastCollege, lastConf, ras, gp: totalGp || null,
+        name, pos, draftYr, age, lastCollege, lastConf, ras, rasProjected, gp: totalGp || null,
         dr, breakoutAge, breakoutPpg, boThresh, tm: tmScore, preBreakoutTm, ht: htInches, wt: wt,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd, totRa,

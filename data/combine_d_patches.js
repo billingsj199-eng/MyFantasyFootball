@@ -187,91 +187,91 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Sam Leavitt']) { COMBINE_DATA['Sam Leavitt'].ht='6-2'; COMBINE_DATA['Sam Leavitt'].wt=205; }
   if (COMBINE_DATA['T.J. Moore']) { COMBINE_DATA['T.J. Moore'].ht='6-3'; COMBINE_DATA['T.J. Moore'].wt=200; }
   if (COMBINE_DATA["Trey'Dez Green"]) { COMBINE_DATA["Trey'Dez Green"].ht='6-7'; COMBINE_DATA["Trey'Dez Green"].wt=240; }
-  // --- Projected draft capital (NFLDraftBuzz projections → overall pick estimates) ---
-  if (COMBINE_DATA['Jeremiah Smith']) COMBINE_DATA['Jeremiah Smith'].draft = 3;
-  if (COMBINE_DATA['Julian Sayin']) COMBINE_DATA['Julian Sayin'].draft = 3;
-  if (COMBINE_DATA['Dante Moore']) COMBINE_DATA['Dante Moore'].draft = 3;
-  if (COMBINE_DATA['Arch Manning']) COMBINE_DATA['Arch Manning'].draft = 7;
-  if (COMBINE_DATA['Nate Frazier']) COMBINE_DATA['Nate Frazier'].draft = 7;
-  if (COMBINE_DATA['Bryant Wesco Jr.']) COMBINE_DATA['Bryant Wesco Jr.'].draft = 16;
-  if (COMBINE_DATA['Cam Coleman']) COMBINE_DATA['Cam Coleman'].draft = 16;
-  if (COMBINE_DATA['Ryan Williams']) COMBINE_DATA['Ryan Williams'].draft = 16;
-  if (COMBINE_DATA['T.J. Moore']) COMBINE_DATA['T.J. Moore'].draft = 16;
-  if (COMBINE_DATA['Mario Craver']) COMBINE_DATA['Mario Craver'].draft = 28;
-  if (COMBINE_DATA['Ryan Wingo']) COMBINE_DATA['Ryan Wingo'].draft = 36;
-  if (COMBINE_DATA['Mike Matthews']) COMBINE_DATA['Mike Matthews'].draft = 36;
-  if (COMBINE_DATA['Kewan Lacy']) COMBINE_DATA['Kewan Lacy'].draft = 48;
-  if (COMBINE_DATA['Isaac Brown']) COMBINE_DATA['Isaac Brown'].draft = 58;
-  if (COMBINE_DATA['Braylon Staley']) COMBINE_DATA['Braylon Staley'].draft = 58;
-  if (COMBINE_DATA['LaNorris Sellers']) COMBINE_DATA['LaNorris Sellers'].draft = 58;
-  if (COMBINE_DATA['Ian Strong']) COMBINE_DATA['Ian Strong'].draft = 80;
-  if (COMBINE_DATA['Jadan Baugh']) COMBINE_DATA['Jadan Baugh'].draft = 80;
-  if (COMBINE_DATA['John Mateer']) COMBINE_DATA['John Mateer'].draft = 80;
-  if (COMBINE_DATA['Jordan Marshall']) COMBINE_DATA['Jordan Marshall'].draft = 80;
-  if (COMBINE_DATA['Nick Marsh']) COMBINE_DATA['Nick Marsh'].draft = 80;
-  if (COMBINE_DATA['Sam Leavitt']) COMBINE_DATA['Sam Leavitt'].draft = 80;
-  if (COMBINE_DATA["Trey'Dez Green"]) COMBINE_DATA["Trey'Dez Green"].draft = 80;
-  if (COMBINE_DATA['Eugene Wilson III']) COMBINE_DATA['Eugene Wilson III'].draft = 112;
-  if (COMBINE_DATA['Justice Haynes']) COMBINE_DATA['Justice Haynes'].draft = 112;
-  if (COMBINE_DATA['Nyck Harbor']) COMBINE_DATA['Nyck Harbor'].draft = 112;
-  if (COMBINE_DATA['DJ Lagway']) COMBINE_DATA['DJ Lagway'].draft = 144;
-  if (COMBINE_DATA['Dylan Raiola']) COMBINE_DATA['Dylan Raiola'].draft = 144;
-  if (COMBINE_DATA['Luke Reynolds']) COMBINE_DATA['Luke Reynolds'].draft = 144;
-  if (COMBINE_DATA['Nic Anderson']) COMBINE_DATA['Nic Anderson'].draft = 144;
-  if (COMBINE_DATA['Nico Iamaleava']) COMBINE_DATA['Nico Iamaleava'].draft = 144;
-  if (COMBINE_DATA['Brandon Inniss']) COMBINE_DATA['Brandon Inniss'].draft = 176;
-  if (COMBINE_DATA['Corey Kiner']) COMBINE_DATA['Corey Kiner'].draft = 208;
-  if (COMBINE_DATA['Dane Key']) COMBINE_DATA['Dane Key'].draft = 208;
-  if (COMBINE_DATA['Johntay Cook II']) COMBINE_DATA['Johntay Cook II'].draft = 208;
-  if (COMBINE_DATA['Barion Brown']) COMBINE_DATA['Barion Brown'].draft = 'U';
+  // --- Projected draft capital (NFLDraftBuzz, Apr 2026) -> draftProj ONLY when nothing newer exists (2026-09-30: was writing .draft, overriding the weekly consensus draftProj) ---
+  if (COMBINE_DATA['Jeremiah Smith'] && COMBINE_DATA['Jeremiah Smith'].draft == null && COMBINE_DATA['Jeremiah Smith'].draftProj == null) COMBINE_DATA['Jeremiah Smith'].draftProj = 3;
+  if (COMBINE_DATA['Julian Sayin'] && COMBINE_DATA['Julian Sayin'].draft == null && COMBINE_DATA['Julian Sayin'].draftProj == null) COMBINE_DATA['Julian Sayin'].draftProj = 3;
+  if (COMBINE_DATA['Dante Moore'] && COMBINE_DATA['Dante Moore'].draft == null && COMBINE_DATA['Dante Moore'].draftProj == null) COMBINE_DATA['Dante Moore'].draftProj = 3;
+  if (COMBINE_DATA['Arch Manning'] && COMBINE_DATA['Arch Manning'].draft == null && COMBINE_DATA['Arch Manning'].draftProj == null) COMBINE_DATA['Arch Manning'].draftProj = 7;
+  if (COMBINE_DATA['Nate Frazier'] && COMBINE_DATA['Nate Frazier'].draft == null && COMBINE_DATA['Nate Frazier'].draftProj == null) COMBINE_DATA['Nate Frazier'].draftProj = 7;
+  if (COMBINE_DATA['Bryant Wesco Jr.'] && COMBINE_DATA['Bryant Wesco Jr.'].draft == null && COMBINE_DATA['Bryant Wesco Jr.'].draftProj == null) COMBINE_DATA['Bryant Wesco Jr.'].draftProj = 16;
+  if (COMBINE_DATA['Cam Coleman'] && COMBINE_DATA['Cam Coleman'].draft == null && COMBINE_DATA['Cam Coleman'].draftProj == null) COMBINE_DATA['Cam Coleman'].draftProj = 16;
+  if (COMBINE_DATA['Ryan Williams'] && COMBINE_DATA['Ryan Williams'].draft == null && COMBINE_DATA['Ryan Williams'].draftProj == null) COMBINE_DATA['Ryan Williams'].draftProj = 16;
+  if (COMBINE_DATA['T.J. Moore'] && COMBINE_DATA['T.J. Moore'].draft == null && COMBINE_DATA['T.J. Moore'].draftProj == null) COMBINE_DATA['T.J. Moore'].draftProj = 16;
+  if (COMBINE_DATA['Mario Craver'] && COMBINE_DATA['Mario Craver'].draft == null && COMBINE_DATA['Mario Craver'].draftProj == null) COMBINE_DATA['Mario Craver'].draftProj = 28;
+  if (COMBINE_DATA['Ryan Wingo'] && COMBINE_DATA['Ryan Wingo'].draft == null && COMBINE_DATA['Ryan Wingo'].draftProj == null) COMBINE_DATA['Ryan Wingo'].draftProj = 36;
+  if (COMBINE_DATA['Mike Matthews'] && COMBINE_DATA['Mike Matthews'].draft == null && COMBINE_DATA['Mike Matthews'].draftProj == null) COMBINE_DATA['Mike Matthews'].draftProj = 36;
+  if (COMBINE_DATA['Kewan Lacy'] && COMBINE_DATA['Kewan Lacy'].draft == null && COMBINE_DATA['Kewan Lacy'].draftProj == null) COMBINE_DATA['Kewan Lacy'].draftProj = 48;
+  if (COMBINE_DATA['Isaac Brown'] && COMBINE_DATA['Isaac Brown'].draft == null && COMBINE_DATA['Isaac Brown'].draftProj == null) COMBINE_DATA['Isaac Brown'].draftProj = 58;
+  if (COMBINE_DATA['Braylon Staley'] && COMBINE_DATA['Braylon Staley'].draft == null && COMBINE_DATA['Braylon Staley'].draftProj == null) COMBINE_DATA['Braylon Staley'].draftProj = 58;
+  if (COMBINE_DATA['LaNorris Sellers'] && COMBINE_DATA['LaNorris Sellers'].draft == null && COMBINE_DATA['LaNorris Sellers'].draftProj == null) COMBINE_DATA['LaNorris Sellers'].draftProj = 58;
+  if (COMBINE_DATA['Ian Strong'] && COMBINE_DATA['Ian Strong'].draft == null && COMBINE_DATA['Ian Strong'].draftProj == null) COMBINE_DATA['Ian Strong'].draftProj = 80;
+  if (COMBINE_DATA['Jadan Baugh'] && COMBINE_DATA['Jadan Baugh'].draft == null && COMBINE_DATA['Jadan Baugh'].draftProj == null) COMBINE_DATA['Jadan Baugh'].draftProj = 80;
+  if (COMBINE_DATA['John Mateer'] && COMBINE_DATA['John Mateer'].draft == null && COMBINE_DATA['John Mateer'].draftProj == null) COMBINE_DATA['John Mateer'].draftProj = 80;
+  if (COMBINE_DATA['Jordan Marshall'] && COMBINE_DATA['Jordan Marshall'].draft == null && COMBINE_DATA['Jordan Marshall'].draftProj == null) COMBINE_DATA['Jordan Marshall'].draftProj = 80;
+  if (COMBINE_DATA['Nick Marsh'] && COMBINE_DATA['Nick Marsh'].draft == null && COMBINE_DATA['Nick Marsh'].draftProj == null) COMBINE_DATA['Nick Marsh'].draftProj = 80;
+  if (COMBINE_DATA['Sam Leavitt'] && COMBINE_DATA['Sam Leavitt'].draft == null && COMBINE_DATA['Sam Leavitt'].draftProj == null) COMBINE_DATA['Sam Leavitt'].draftProj = 80;
+  if (COMBINE_DATA["Trey'Dez Green"] && COMBINE_DATA["Trey'Dez Green"].draft == null && COMBINE_DATA["Trey'Dez Green"].draftProj == null) COMBINE_DATA["Trey'Dez Green"].draftProj = 80;
+  if (COMBINE_DATA['Eugene Wilson III'] && COMBINE_DATA['Eugene Wilson III'].draft == null && COMBINE_DATA['Eugene Wilson III'].draftProj == null) COMBINE_DATA['Eugene Wilson III'].draftProj = 112;
+  if (COMBINE_DATA['Justice Haynes'] && COMBINE_DATA['Justice Haynes'].draft == null && COMBINE_DATA['Justice Haynes'].draftProj == null) COMBINE_DATA['Justice Haynes'].draftProj = 112;
+  if (COMBINE_DATA['Nyck Harbor'] && COMBINE_DATA['Nyck Harbor'].draft == null && COMBINE_DATA['Nyck Harbor'].draftProj == null) COMBINE_DATA['Nyck Harbor'].draftProj = 112;
+  if (COMBINE_DATA['DJ Lagway'] && COMBINE_DATA['DJ Lagway'].draft == null && COMBINE_DATA['DJ Lagway'].draftProj == null) COMBINE_DATA['DJ Lagway'].draftProj = 144;
+  if (COMBINE_DATA['Dylan Raiola'] && COMBINE_DATA['Dylan Raiola'].draft == null && COMBINE_DATA['Dylan Raiola'].draftProj == null) COMBINE_DATA['Dylan Raiola'].draftProj = 144;
+  if (COMBINE_DATA['Luke Reynolds'] && COMBINE_DATA['Luke Reynolds'].draft == null && COMBINE_DATA['Luke Reynolds'].draftProj == null) COMBINE_DATA['Luke Reynolds'].draftProj = 144;
+  if (COMBINE_DATA['Nic Anderson'] && COMBINE_DATA['Nic Anderson'].draft == null && COMBINE_DATA['Nic Anderson'].draftProj == null) COMBINE_DATA['Nic Anderson'].draftProj = 144;
+  if (COMBINE_DATA['Nico Iamaleava'] && COMBINE_DATA['Nico Iamaleava'].draft == null && COMBINE_DATA['Nico Iamaleava'].draftProj == null) COMBINE_DATA['Nico Iamaleava'].draftProj = 144;
+  if (COMBINE_DATA['Brandon Inniss'] && COMBINE_DATA['Brandon Inniss'].draft == null && COMBINE_DATA['Brandon Inniss'].draftProj == null) COMBINE_DATA['Brandon Inniss'].draftProj = 176;
+  if (COMBINE_DATA['Corey Kiner'] && COMBINE_DATA['Corey Kiner'].draft == null && COMBINE_DATA['Corey Kiner'].draftProj == null) COMBINE_DATA['Corey Kiner'].draftProj = 208;
+  if (COMBINE_DATA['Dane Key'] && COMBINE_DATA['Dane Key'].draft == null && COMBINE_DATA['Dane Key'].draftProj == null) COMBINE_DATA['Dane Key'].draftProj = 208;
+  if (COMBINE_DATA['Johntay Cook II'] && COMBINE_DATA['Johntay Cook II'].draft == null && COMBINE_DATA['Johntay Cook II'].draftProj == null) COMBINE_DATA['Johntay Cook II'].draftProj = 208;
+  if (COMBINE_DATA['Barion Brown'] && COMBINE_DATA['Barion Brown'].draft == null && COMBINE_DATA['Barion Brown'].draftProj == null) COMBINE_DATA['Barion Brown'].draftProj = 'U';
   // Moliki Matavao — in NFL, no draft projection needed
-  // --- Projected forty times (NFLDraftBuzz, 44 players) ---
+  // --- Projected forty times (NFLDraftBuzz, Apr 2026) -> fortyProj (2026-09-30: was writing .forty as if official; the model synthesizes a PROJECTED RAS from fortyProj) ---
   // These set baseline values. Admin edits via bio editor persist to Firestore
   // and will override these on page load (prospect_bio collection loads after this).
-  if (COMBINE_DATA['Jeremiah Smith']) COMBINE_DATA['Jeremiah Smith'].forty = 4.32;
-  if (COMBINE_DATA['Cam Coleman']) COMBINE_DATA['Cam Coleman'].forty = 4.42;
-  if (COMBINE_DATA['Ryan Williams']) COMBINE_DATA['Ryan Williams'].forty = 4.28;
-  if (COMBINE_DATA['Ryan Wingo']) COMBINE_DATA['Ryan Wingo'].forty = 4.36;
-  if (COMBINE_DATA['Bryant Wesco Jr.']) COMBINE_DATA['Bryant Wesco Jr.'].forty = 4.40;
-  if (COMBINE_DATA['Nick Marsh']) COMBINE_DATA['Nick Marsh'].forty = 4.38;
-  if (COMBINE_DATA['Brandon Inniss']) COMBINE_DATA['Brandon Inniss'].forty = 4.38;
-  if (COMBINE_DATA['Eugene Wilson III']) COMBINE_DATA['Eugene Wilson III'].forty = 4.43;
-  if (COMBINE_DATA['Nyck Harbor']) COMBINE_DATA['Nyck Harbor'].forty = 4.24;
-  if (COMBINE_DATA['T.J. Moore']) COMBINE_DATA['T.J. Moore'].forty = 4.42;
-  if (COMBINE_DATA['Eric Singleton Jr.']) COMBINE_DATA['Eric Singleton Jr.'].forty = 4.34;
-  if (COMBINE_DATA['Nic Anderson']) COMBINE_DATA['Nic Anderson'].forty = 4.52;
-  if (COMBINE_DATA['Barion Brown']) COMBINE_DATA['Barion Brown'].forty = 4.40;
-  if (COMBINE_DATA['Dane Key']) COMBINE_DATA['Dane Key'].forty = 4.60;
-  if (COMBINE_DATA['Mario Craver']) COMBINE_DATA['Mario Craver'].forty = 4.25;
-  if (COMBINE_DATA['Braylon Staley']) COMBINE_DATA['Braylon Staley'].forty = 4.34;
-  if (COMBINE_DATA['Mike Matthews']) COMBINE_DATA['Mike Matthews'].forty = 4.41;
-  if (COMBINE_DATA['Ian Strong']) COMBINE_DATA['Ian Strong'].forty = 4.60;
-  if (COMBINE_DATA['Johntay Cook II']) COMBINE_DATA['Johntay Cook II'].forty = 4.40;
-  if (COMBINE_DATA['Julian Sayin']) COMBINE_DATA['Julian Sayin'].forty = 4.70;
-  if (COMBINE_DATA['Dante Moore']) COMBINE_DATA['Dante Moore'].forty = 4.90;
-  if (COMBINE_DATA['Arch Manning']) COMBINE_DATA['Arch Manning'].forty = 4.62;
-  if (COMBINE_DATA['Nico Iamaleava']) COMBINE_DATA['Nico Iamaleava'].forty = 4.75;
-  if (COMBINE_DATA['LaNorris Sellers']) COMBINE_DATA['LaNorris Sellers'].forty = 4.55;
-  if (COMBINE_DATA['John Mateer']) COMBINE_DATA['John Mateer'].forty = 4.65;
-  if (COMBINE_DATA['Sam Leavitt']) COMBINE_DATA['Sam Leavitt'].forty = 4.65;
-  if (COMBINE_DATA['DJ Lagway']) COMBINE_DATA['DJ Lagway'].forty = 4.65;
-  if (COMBINE_DATA['Dylan Raiola']) COMBINE_DATA['Dylan Raiola'].forty = 4.80;
-  if (COMBINE_DATA['Josh Hoover']) COMBINE_DATA['Josh Hoover'].forty = 4.90;
-  if (COMBINE_DATA['Darian Mensah']) COMBINE_DATA['Darian Mensah'].forty = 4.75;
-  if (COMBINE_DATA['CJ Carr']) COMBINE_DATA['CJ Carr'].forty = 4.70;
-  if (COMBINE_DATA['Nate Frazier']) COMBINE_DATA['Nate Frazier'].forty = 4.35;
-  if (COMBINE_DATA['Justice Haynes']) COMBINE_DATA['Justice Haynes'].forty = 4.49;
-  if (COMBINE_DATA['Isaac Brown']) COMBINE_DATA['Isaac Brown'].forty = 4.48;
-  if (COMBINE_DATA['Kewan Lacy']) COMBINE_DATA['Kewan Lacy'].forty = 4.48;
-  if (COMBINE_DATA['Jordan Marshall']) COMBINE_DATA['Jordan Marshall'].forty = 4.42;
-  if (COMBINE_DATA['Jadan Baugh']) COMBINE_DATA['Jadan Baugh'].forty = 4.46;
-  if (COMBINE_DATA['Quinten Joyner']) COMBINE_DATA['Quinten Joyner'].forty = 4.47;
-  if (COMBINE_DATA['Corey Kiner']) COMBINE_DATA['Corey Kiner'].forty = 4.57;
-  if (COMBINE_DATA['Raleek Brown']) COMBINE_DATA['Raleek Brown'].forty = 4.32;
-  if (COMBINE_DATA['LJ Martin']) COMBINE_DATA['LJ Martin'].forty = 4.46;
-  if (COMBINE_DATA["Trey'Dez Green"]) COMBINE_DATA["Trey'Dez Green"].forty = 4.65;
-  if (COMBINE_DATA['Luke Reynolds']) COMBINE_DATA['Luke Reynolds'].forty = 4.50;
-  if (COMBINE_DATA['Luke Hasz']) COMBINE_DATA['Luke Hasz'].forty = 4.68;
+  if (COMBINE_DATA['Jeremiah Smith'] && !COMBINE_DATA['Jeremiah Smith'].forty && !COMBINE_DATA['Jeremiah Smith'].ras && !COMBINE_DATA['Jeremiah Smith'].fortyProj) { COMBINE_DATA['Jeremiah Smith'].fortyProj = 4.32; COMBINE_DATA['Jeremiah Smith'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Cam Coleman'] && !COMBINE_DATA['Cam Coleman'].forty && !COMBINE_DATA['Cam Coleman'].ras && !COMBINE_DATA['Cam Coleman'].fortyProj) { COMBINE_DATA['Cam Coleman'].fortyProj = 4.42; COMBINE_DATA['Cam Coleman'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Ryan Williams'] && !COMBINE_DATA['Ryan Williams'].forty && !COMBINE_DATA['Ryan Williams'].ras && !COMBINE_DATA['Ryan Williams'].fortyProj) { COMBINE_DATA['Ryan Williams'].fortyProj = 4.28; COMBINE_DATA['Ryan Williams'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Ryan Wingo'] && !COMBINE_DATA['Ryan Wingo'].forty && !COMBINE_DATA['Ryan Wingo'].ras && !COMBINE_DATA['Ryan Wingo'].fortyProj) { COMBINE_DATA['Ryan Wingo'].fortyProj = 4.36; COMBINE_DATA['Ryan Wingo'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Bryant Wesco Jr.'] && !COMBINE_DATA['Bryant Wesco Jr.'].forty && !COMBINE_DATA['Bryant Wesco Jr.'].ras && !COMBINE_DATA['Bryant Wesco Jr.'].fortyProj) { COMBINE_DATA['Bryant Wesco Jr.'].fortyProj = 4.40; COMBINE_DATA['Bryant Wesco Jr.'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Nick Marsh'] && !COMBINE_DATA['Nick Marsh'].forty && !COMBINE_DATA['Nick Marsh'].ras && !COMBINE_DATA['Nick Marsh'].fortyProj) { COMBINE_DATA['Nick Marsh'].fortyProj = 4.38; COMBINE_DATA['Nick Marsh'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Brandon Inniss'] && !COMBINE_DATA['Brandon Inniss'].forty && !COMBINE_DATA['Brandon Inniss'].ras && !COMBINE_DATA['Brandon Inniss'].fortyProj) { COMBINE_DATA['Brandon Inniss'].fortyProj = 4.38; COMBINE_DATA['Brandon Inniss'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Eugene Wilson III'] && !COMBINE_DATA['Eugene Wilson III'].forty && !COMBINE_DATA['Eugene Wilson III'].ras && !COMBINE_DATA['Eugene Wilson III'].fortyProj) { COMBINE_DATA['Eugene Wilson III'].fortyProj = 4.43; COMBINE_DATA['Eugene Wilson III'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Nyck Harbor'] && !COMBINE_DATA['Nyck Harbor'].forty && !COMBINE_DATA['Nyck Harbor'].ras && !COMBINE_DATA['Nyck Harbor'].fortyProj) { COMBINE_DATA['Nyck Harbor'].fortyProj = 4.24; COMBINE_DATA['Nyck Harbor'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['T.J. Moore'] && !COMBINE_DATA['T.J. Moore'].forty && !COMBINE_DATA['T.J. Moore'].ras && !COMBINE_DATA['T.J. Moore'].fortyProj) { COMBINE_DATA['T.J. Moore'].fortyProj = 4.42; COMBINE_DATA['T.J. Moore'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Eric Singleton Jr.'] && !COMBINE_DATA['Eric Singleton Jr.'].forty && !COMBINE_DATA['Eric Singleton Jr.'].ras && !COMBINE_DATA['Eric Singleton Jr.'].fortyProj) { COMBINE_DATA['Eric Singleton Jr.'].fortyProj = 4.34; COMBINE_DATA['Eric Singleton Jr.'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Nic Anderson'] && !COMBINE_DATA['Nic Anderson'].forty && !COMBINE_DATA['Nic Anderson'].ras && !COMBINE_DATA['Nic Anderson'].fortyProj) { COMBINE_DATA['Nic Anderson'].fortyProj = 4.52; COMBINE_DATA['Nic Anderson'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Barion Brown'] && !COMBINE_DATA['Barion Brown'].forty && !COMBINE_DATA['Barion Brown'].ras && !COMBINE_DATA['Barion Brown'].fortyProj) { COMBINE_DATA['Barion Brown'].fortyProj = 4.40; COMBINE_DATA['Barion Brown'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Dane Key'] && !COMBINE_DATA['Dane Key'].forty && !COMBINE_DATA['Dane Key'].ras && !COMBINE_DATA['Dane Key'].fortyProj) { COMBINE_DATA['Dane Key'].fortyProj = 4.60; COMBINE_DATA['Dane Key'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Mario Craver'] && !COMBINE_DATA['Mario Craver'].forty && !COMBINE_DATA['Mario Craver'].ras && !COMBINE_DATA['Mario Craver'].fortyProj) { COMBINE_DATA['Mario Craver'].fortyProj = 4.25; COMBINE_DATA['Mario Craver'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Braylon Staley'] && !COMBINE_DATA['Braylon Staley'].forty && !COMBINE_DATA['Braylon Staley'].ras && !COMBINE_DATA['Braylon Staley'].fortyProj) { COMBINE_DATA['Braylon Staley'].fortyProj = 4.34; COMBINE_DATA['Braylon Staley'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Mike Matthews'] && !COMBINE_DATA['Mike Matthews'].forty && !COMBINE_DATA['Mike Matthews'].ras && !COMBINE_DATA['Mike Matthews'].fortyProj) { COMBINE_DATA['Mike Matthews'].fortyProj = 4.41; COMBINE_DATA['Mike Matthews'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Ian Strong'] && !COMBINE_DATA['Ian Strong'].forty && !COMBINE_DATA['Ian Strong'].ras && !COMBINE_DATA['Ian Strong'].fortyProj) { COMBINE_DATA['Ian Strong'].fortyProj = 4.60; COMBINE_DATA['Ian Strong'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Johntay Cook II'] && !COMBINE_DATA['Johntay Cook II'].forty && !COMBINE_DATA['Johntay Cook II'].ras && !COMBINE_DATA['Johntay Cook II'].fortyProj) { COMBINE_DATA['Johntay Cook II'].fortyProj = 4.40; COMBINE_DATA['Johntay Cook II'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Julian Sayin'] && !COMBINE_DATA['Julian Sayin'].forty && !COMBINE_DATA['Julian Sayin'].ras && !COMBINE_DATA['Julian Sayin'].fortyProj) { COMBINE_DATA['Julian Sayin'].fortyProj = 4.70; COMBINE_DATA['Julian Sayin'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Dante Moore'] && !COMBINE_DATA['Dante Moore'].forty && !COMBINE_DATA['Dante Moore'].ras && !COMBINE_DATA['Dante Moore'].fortyProj) { COMBINE_DATA['Dante Moore'].fortyProj = 4.90; COMBINE_DATA['Dante Moore'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Arch Manning'] && !COMBINE_DATA['Arch Manning'].forty && !COMBINE_DATA['Arch Manning'].ras && !COMBINE_DATA['Arch Manning'].fortyProj) { COMBINE_DATA['Arch Manning'].fortyProj = 4.62; COMBINE_DATA['Arch Manning'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Nico Iamaleava'] && !COMBINE_DATA['Nico Iamaleava'].forty && !COMBINE_DATA['Nico Iamaleava'].ras && !COMBINE_DATA['Nico Iamaleava'].fortyProj) { COMBINE_DATA['Nico Iamaleava'].fortyProj = 4.75; COMBINE_DATA['Nico Iamaleava'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['LaNorris Sellers'] && !COMBINE_DATA['LaNorris Sellers'].forty && !COMBINE_DATA['LaNorris Sellers'].ras && !COMBINE_DATA['LaNorris Sellers'].fortyProj) { COMBINE_DATA['LaNorris Sellers'].fortyProj = 4.55; COMBINE_DATA['LaNorris Sellers'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['John Mateer'] && !COMBINE_DATA['John Mateer'].forty && !COMBINE_DATA['John Mateer'].ras && !COMBINE_DATA['John Mateer'].fortyProj) { COMBINE_DATA['John Mateer'].fortyProj = 4.65; COMBINE_DATA['John Mateer'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Sam Leavitt'] && !COMBINE_DATA['Sam Leavitt'].forty && !COMBINE_DATA['Sam Leavitt'].ras && !COMBINE_DATA['Sam Leavitt'].fortyProj) { COMBINE_DATA['Sam Leavitt'].fortyProj = 4.65; COMBINE_DATA['Sam Leavitt'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['DJ Lagway'] && !COMBINE_DATA['DJ Lagway'].forty && !COMBINE_DATA['DJ Lagway'].ras && !COMBINE_DATA['DJ Lagway'].fortyProj) { COMBINE_DATA['DJ Lagway'].fortyProj = 4.65; COMBINE_DATA['DJ Lagway'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Dylan Raiola'] && !COMBINE_DATA['Dylan Raiola'].forty && !COMBINE_DATA['Dylan Raiola'].ras && !COMBINE_DATA['Dylan Raiola'].fortyProj) { COMBINE_DATA['Dylan Raiola'].fortyProj = 4.80; COMBINE_DATA['Dylan Raiola'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Josh Hoover'] && !COMBINE_DATA['Josh Hoover'].forty && !COMBINE_DATA['Josh Hoover'].ras && !COMBINE_DATA['Josh Hoover'].fortyProj) { COMBINE_DATA['Josh Hoover'].fortyProj = 4.90; COMBINE_DATA['Josh Hoover'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Darian Mensah'] && !COMBINE_DATA['Darian Mensah'].forty && !COMBINE_DATA['Darian Mensah'].ras && !COMBINE_DATA['Darian Mensah'].fortyProj) { COMBINE_DATA['Darian Mensah'].fortyProj = 4.75; COMBINE_DATA['Darian Mensah'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['CJ Carr'] && !COMBINE_DATA['CJ Carr'].forty && !COMBINE_DATA['CJ Carr'].ras && !COMBINE_DATA['CJ Carr'].fortyProj) { COMBINE_DATA['CJ Carr'].fortyProj = 4.70; COMBINE_DATA['CJ Carr'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Nate Frazier'] && !COMBINE_DATA['Nate Frazier'].forty && !COMBINE_DATA['Nate Frazier'].ras && !COMBINE_DATA['Nate Frazier'].fortyProj) { COMBINE_DATA['Nate Frazier'].fortyProj = 4.35; COMBINE_DATA['Nate Frazier'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Justice Haynes'] && !COMBINE_DATA['Justice Haynes'].forty && !COMBINE_DATA['Justice Haynes'].ras && !COMBINE_DATA['Justice Haynes'].fortyProj) { COMBINE_DATA['Justice Haynes'].fortyProj = 4.49; COMBINE_DATA['Justice Haynes'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Isaac Brown'] && !COMBINE_DATA['Isaac Brown'].forty && !COMBINE_DATA['Isaac Brown'].ras && !COMBINE_DATA['Isaac Brown'].fortyProj) { COMBINE_DATA['Isaac Brown'].fortyProj = 4.48; COMBINE_DATA['Isaac Brown'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Kewan Lacy'] && !COMBINE_DATA['Kewan Lacy'].forty && !COMBINE_DATA['Kewan Lacy'].ras && !COMBINE_DATA['Kewan Lacy'].fortyProj) { COMBINE_DATA['Kewan Lacy'].fortyProj = 4.48; COMBINE_DATA['Kewan Lacy'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Jordan Marshall'] && !COMBINE_DATA['Jordan Marshall'].forty && !COMBINE_DATA['Jordan Marshall'].ras && !COMBINE_DATA['Jordan Marshall'].fortyProj) { COMBINE_DATA['Jordan Marshall'].fortyProj = 4.42; COMBINE_DATA['Jordan Marshall'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Jadan Baugh'] && !COMBINE_DATA['Jadan Baugh'].forty && !COMBINE_DATA['Jadan Baugh'].ras && !COMBINE_DATA['Jadan Baugh'].fortyProj) { COMBINE_DATA['Jadan Baugh'].fortyProj = 4.46; COMBINE_DATA['Jadan Baugh'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Quinten Joyner'] && !COMBINE_DATA['Quinten Joyner'].forty && !COMBINE_DATA['Quinten Joyner'].ras && !COMBINE_DATA['Quinten Joyner'].fortyProj) { COMBINE_DATA['Quinten Joyner'].fortyProj = 4.47; COMBINE_DATA['Quinten Joyner'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Corey Kiner'] && !COMBINE_DATA['Corey Kiner'].forty && !COMBINE_DATA['Corey Kiner'].ras && !COMBINE_DATA['Corey Kiner'].fortyProj) { COMBINE_DATA['Corey Kiner'].fortyProj = 4.57; COMBINE_DATA['Corey Kiner'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Raleek Brown'] && !COMBINE_DATA['Raleek Brown'].forty && !COMBINE_DATA['Raleek Brown'].ras && !COMBINE_DATA['Raleek Brown'].fortyProj) { COMBINE_DATA['Raleek Brown'].fortyProj = 4.32; COMBINE_DATA['Raleek Brown'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['LJ Martin'] && !COMBINE_DATA['LJ Martin'].forty && !COMBINE_DATA['LJ Martin'].ras && !COMBINE_DATA['LJ Martin'].fortyProj) { COMBINE_DATA['LJ Martin'].fortyProj = 4.46; COMBINE_DATA['LJ Martin'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA["Trey'Dez Green"] && !COMBINE_DATA["Trey'Dez Green"].forty && !COMBINE_DATA["Trey'Dez Green"].ras && !COMBINE_DATA["Trey'Dez Green"].fortyProj) { COMBINE_DATA["Trey'Dez Green"].fortyProj = 4.65; COMBINE_DATA["Trey'Dez Green"].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Luke Reynolds'] && !COMBINE_DATA['Luke Reynolds'].forty && !COMBINE_DATA['Luke Reynolds'].ras && !COMBINE_DATA['Luke Reynolds'].fortyProj) { COMBINE_DATA['Luke Reynolds'].fortyProj = 4.50; COMBINE_DATA['Luke Reynolds'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  if (COMBINE_DATA['Luke Hasz'] && !COMBINE_DATA['Luke Hasz'].forty && !COMBINE_DATA['Luke Hasz'].ras && !COMBINE_DATA['Luke Hasz'].fortyProj) { COMBINE_DATA['Luke Hasz'].fortyProj = 4.68; COMBINE_DATA['Luke Hasz'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   // === END NFLDRAFTBUZZ UPDATE ===
   if (!COMBINE_DATA['Keelon Russell']) COMBINE_DATA['Keelon Russell'] = { school: 'Alabama', pos: 'QB', devy: true, eligYr: 2028 };
 

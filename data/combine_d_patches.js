@@ -57,7 +57,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Malachi Toney']) COMBINE_DATA['Malachi Toney'] = { school: 'Miami (FL)', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Cam Coleman']) COMBINE_DATA['Cam Coleman'] = { school: 'Texas', pos: 'WR', devy: true, eligYr: 2027 };
   // Ryan Williams — Alabama WR devy. Force overwrite old Virginia Tech RB (2011) from combine_data.js.
-  COMBINE_DATA['Ryan Williams'] = { school: 'Alabama', pos: 'WR', devy: true, eligYr: 2027 };
+  // 2026-09-30: "Ryan Williams" (Alabama WR) now plays as Ryan Coleman-Williams (same ESPN id 5141711) - retired stub: COMBINE_DATA['Ryan Williams'] = { school: 'Alabama', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Bryant Wesco Jr.']) COMBINE_DATA['Bryant Wesco Jr.'] = { school: 'Clemson', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Bo Jackson']) COMBINE_DATA['Bo Jackson'] = { school: 'Ohio St.', pos: 'RB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Kewan Lacy']) COMBINE_DATA['Kewan Lacy'] = { school: 'Mississippi', pos: 'RB', devy: true, eligYr: 2027 };
@@ -182,7 +182,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Nick Marsh']) { COMBINE_DATA['Nick Marsh'].ht='6-3'; COMBINE_DATA['Nick Marsh'].wt=203; }
   if (COMBINE_DATA['Nico Iamaleava']) { COMBINE_DATA['Nico Iamaleava'].ht='6-6'; COMBINE_DATA['Nico Iamaleava'].wt=215; }
   if (COMBINE_DATA['Nyck Harbor']) { COMBINE_DATA['Nyck Harbor'].ht='6-5'; COMBINE_DATA['Nyck Harbor'].wt=235; }
-  if (COMBINE_DATA['Ryan Williams']) { COMBINE_DATA['Ryan Williams'].ht='6-0'; COMBINE_DATA['Ryan Williams'].wt=175; }
+  // 2026-09-30 retired (Ryan Coleman-Williams): if (COMBINE_DATA['Ryan Williams']) { COMBINE_DATA['Ryan Williams'].ht='6-0'; COMBINE_DATA['Ryan Will
   if (COMBINE_DATA['Ryan Wingo']) { COMBINE_DATA['Ryan Wingo'].ht='6-2'; COMBINE_DATA['Ryan Wingo'].wt=214; }
   if (COMBINE_DATA['Sam Leavitt']) { COMBINE_DATA['Sam Leavitt'].ht='6-2'; COMBINE_DATA['Sam Leavitt'].wt=205; }
   if (COMBINE_DATA['T.J. Moore']) { COMBINE_DATA['T.J. Moore'].ht='6-3'; COMBINE_DATA['T.J. Moore'].wt=200; }
@@ -195,7 +195,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Nate Frazier'] && COMBINE_DATA['Nate Frazier'].draft == null && COMBINE_DATA['Nate Frazier'].draftProj == null) COMBINE_DATA['Nate Frazier'].draftProj = 7;
   if (COMBINE_DATA['Bryant Wesco Jr.'] && COMBINE_DATA['Bryant Wesco Jr.'].draft == null && COMBINE_DATA['Bryant Wesco Jr.'].draftProj == null) COMBINE_DATA['Bryant Wesco Jr.'].draftProj = 16;
   if (COMBINE_DATA['Cam Coleman'] && COMBINE_DATA['Cam Coleman'].draft == null && COMBINE_DATA['Cam Coleman'].draftProj == null) COMBINE_DATA['Cam Coleman'].draftProj = 16;
-  if (COMBINE_DATA['Ryan Williams'] && COMBINE_DATA['Ryan Williams'].draft == null && COMBINE_DATA['Ryan Williams'].draftProj == null) COMBINE_DATA['Ryan Williams'].draftProj = 16;
+  // 2026-09-30: "Ryan Williams" (Alabama WR) now plays as Ryan Coleman-Williams (same ESPN id 5141711) - retired stub: if (COMBINE_DATA['Ryan Williams'] && COMBINE_DATA['Ryan Williams'].draft == null && COMBINE_DATA['Ryan Williams'].draftP
   if (COMBINE_DATA['T.J. Moore'] && COMBINE_DATA['T.J. Moore'].draft == null && COMBINE_DATA['T.J. Moore'].draftProj == null) COMBINE_DATA['T.J. Moore'].draftProj = 16;
   if (COMBINE_DATA['Mario Craver'] && COMBINE_DATA['Mario Craver'].draft == null && COMBINE_DATA['Mario Craver'].draftProj == null) COMBINE_DATA['Mario Craver'].draftProj = 28;
   if (COMBINE_DATA['Ryan Wingo'] && COMBINE_DATA['Ryan Wingo'].draft == null && COMBINE_DATA['Ryan Wingo'].draftProj == null) COMBINE_DATA['Ryan Wingo'].draftProj = 36;
@@ -230,7 +230,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   // and will override these on page load (prospect_bio collection loads after this).
   if (COMBINE_DATA['Jeremiah Smith'] && !COMBINE_DATA['Jeremiah Smith'].forty && !COMBINE_DATA['Jeremiah Smith'].ras && !COMBINE_DATA['Jeremiah Smith'].fortyProj) { COMBINE_DATA['Jeremiah Smith'].fortyProj = 4.32; COMBINE_DATA['Jeremiah Smith'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   if (COMBINE_DATA['Cam Coleman'] && !COMBINE_DATA['Cam Coleman'].forty && !COMBINE_DATA['Cam Coleman'].ras && !COMBINE_DATA['Cam Coleman'].fortyProj) { COMBINE_DATA['Cam Coleman'].fortyProj = 4.42; COMBINE_DATA['Cam Coleman'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
-  if (COMBINE_DATA['Ryan Williams'] && !COMBINE_DATA['Ryan Williams'].forty && !COMBINE_DATA['Ryan Williams'].ras && !COMBINE_DATA['Ryan Williams'].fortyProj) { COMBINE_DATA['Ryan Williams'].fortyProj = 4.28; COMBINE_DATA['Ryan Williams'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  // 2026-09-30: "Ryan Williams" (Alabama WR) now plays as Ryan Coleman-Williams (same ESPN id 5141711) - retired stub: if (COMBINE_DATA['Ryan Williams'] && !COMBINE_DATA['Ryan Williams'].forty && !COMBINE_DATA['Ryan Williams'].ras && !COMB
   if (COMBINE_DATA['Ryan Wingo'] && !COMBINE_DATA['Ryan Wingo'].forty && !COMBINE_DATA['Ryan Wingo'].ras && !COMBINE_DATA['Ryan Wingo'].fortyProj) { COMBINE_DATA['Ryan Wingo'].fortyProj = 4.36; COMBINE_DATA['Ryan Wingo'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   if (COMBINE_DATA['Bryant Wesco Jr.'] && !COMBINE_DATA['Bryant Wesco Jr.'].forty && !COMBINE_DATA['Bryant Wesco Jr.'].ras && !COMBINE_DATA['Bryant Wesco Jr.'].fortyProj) { COMBINE_DATA['Bryant Wesco Jr.'].fortyProj = 4.40; COMBINE_DATA['Bryant Wesco Jr.'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   if (COMBINE_DATA['Nick Marsh'] && !COMBINE_DATA['Nick Marsh'].forty && !COMBINE_DATA['Nick Marsh'].ras && !COMBINE_DATA['Nick Marsh'].fortyProj) { COMBINE_DATA['Nick Marsh'].fortyProj = 4.38; COMBINE_DATA['Nick Marsh'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
@@ -284,7 +284,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
     cb=COMBINE_DATA['Jeremiah Smith']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Malachi Toney']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA['Cam Coleman']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Ryan Williams']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
+  // 2026-09-30: "Ryan Williams" (Alabama WR) now plays as Ryan Coleman-Williams (same ESPN id 5141711) - retired stub: cb=COMBINE_DATA['Ryan Williams']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Bryant Wesco Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Bo Jackson']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;cb.pos='RB';cb.school='Ohio St.';delete cb.pb;delete cb.dt;delete cb.draft;} // devy Bo Jackson (Ohio St. RB, 2028) overwrites the 1986 Auburn legend's stub - same precedent as Ryan Williams
     cb=COMBINE_DATA['Kewan Lacy']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
@@ -537,7 +537,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Ousmane Kromah']) { COMBINE_DATA['Ousmane Kromah'].ht='6-1'; COMBINE_DATA['Ousmane Kromah'].wt=214; }
   // Quinten Joyner — no DraftBuzz measurables available
   if (COMBINE_DATA['Quinton Martin Jr.']) { COMBINE_DATA['Quinton Martin Jr.'].ht='6-1'; COMBINE_DATA['Quinton Martin Jr.'].wt=206; }
-  if (COMBINE_DATA['Ryan Williams']) { COMBINE_DATA['Ryan Williams'].ht='6-0'; COMBINE_DATA['Ryan Williams'].wt=178; }
+  // 2026-09-30 retired (Ryan Coleman-Williams): if (COMBINE_DATA['Ryan Williams']) { COMBINE_DATA['Ryan Williams'].ht='6-0'; COMBINE_DATA['Ryan Will
   if (COMBINE_DATA['T.J. Moore']) { COMBINE_DATA['T.J. Moore'].ht='6-3'; COMBINE_DATA['T.J. Moore'].wt=200; }
   if (COMBINE_DATA['Terrance Carter Jr.']) { COMBINE_DATA['Terrance Carter Jr.'].ht='6-2'; COMBINE_DATA['Terrance Carter Jr.'].wt=245; }
   if (COMBINE_DATA["Trey'Dez Green"]) { COMBINE_DATA["Trey'Dez Green"].ht='6-7'; COMBINE_DATA["Trey'Dez Green"].wt=240; }

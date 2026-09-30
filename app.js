@@ -1757,6 +1757,33 @@ function updatePosLockVis() {
   btn.style.display = show ? '' : 'none';
 }
 
+// === DEVY board order: one list shared by both dynasty formats ===
+// 2026-09-30 (Jack): the devy order is a rookie-style pool — QB premium only
+// shifts where QBs land overall, so Dynasty 1QB and Dynasty SF share one saved
+// order per rankings version (localStorage `devy_board_<ver>_dynasty`). Always
+// shared, independent of the SYNC toggle. Other formats keep their own key.
+function _devyBoardKey(ver, mode) {
+  const m = (mode === 'dynastysf') ? 'dynasty' : mode;
+  return 'devy_board_' + ver + '_' + m;
+}
+// Read the saved order, falling back to a legacy per-format Dynasty SF key
+// (saved before the two formats shared a list) so nothing already ranked is lost.
+function _devyBoardLoad(ver, mode) {
+  const keys = [_devyBoardKey(ver, mode)];
+  if (mode === 'dynasty' || mode === 'dynastysf') keys.push('devy_board_' + ver + '_dynastysf');
+  for (const k of keys) {
+    try {
+      const v = JSON.parse(localStorage.getItem(k));
+      if (Array.isArray(v) && v.length) return v;
+    } catch(e) {}
+  }
+  return null;
+}
+function _devyBoardSave(ver, mode, names) {
+  try { localStorage.setItem(_devyBoardKey(ver, mode), JSON.stringify(names)); } catch(e) {}
+}
+window._devyBoardKey = _devyBoardKey;
+
 // === Position Sync: keep within-position order identical across 1QB ↔ SF pairs ===
 // Pairs: redraft ↔ superflex, dynasty ↔ dynastysf (see POS_SYNC_GROUPS).
 // Per-browser preference. Admins default ON when they have never set it
@@ -3769,10 +3796,8 @@ function getFiltered(applyTopN) {
         myRank: 0, adp: null, p: null, career: null, s25: null
       };
     });
-    // Load saved order or default to KTC sort
-    const devyKey = 'devy_board_' + currentVersion + '_' + currentMode;
-    let savedOrder = null;
-    try { savedOrder = JSON.parse(localStorage.getItem(devyKey)); } catch(e) {}
+    // Load saved order (shared by both dynasty formats) or default to KTC sort
+    const savedOrder = _devyBoardLoad(currentVersion, currentMode);
     let devyPlayers;
     if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
       devyPlayers = [];
@@ -6988,9 +7013,8 @@ function attachTierListeners() {
         const list = window._devyList;
         const item = list.splice(fromIdx, 1)[0];
         list.splice(targetPos, 0, item);
-        // Save order to localStorage
-        const devyKey = 'devy_board_' + currentVersion + '_' + currentMode;
-        try { localStorage.setItem(devyKey, JSON.stringify(list.map(p => p.n))); } catch(e2) {}
+        // Save order to localStorage (one list for both dynasty formats)
+        _devyBoardSave(currentVersion, currentMode, list.map(p => p.n));
         render();
       }
     }
@@ -25798,9 +25822,7 @@ window.fmtHeight = fmtHeight;
           if (!cb.devy) return;
           map[name] = { n: name, s: cb.pos || '??', t: cb.school || '—', _ktc: ktcMap[name] || 0, _isDevy: true };
         });
-        const devyKey = 'devy_board_' + useSrc + '_' + useFmt;
-        let saved = null;
-        try { saved = JSON.parse(localStorage.getItem(devyKey)); } catch(e) {}
+        const saved = _devyBoardLoad(useSrc, useFmt);
         let list;
         if (saved && Array.isArray(saved) && saved.length) {
           list = [];

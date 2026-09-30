@@ -337,6 +337,13 @@ function validateImportData(obj) {
 // combiner preserve each asset's own ratio; the browser handles the resize +
 // circle-crop locally. Cost: ~30 KB vs ~6 KB per headshot, but every image
 // is already cached by the service worker / runtime cache after first load.
+// Team logo for a row/card: devy prospects (synthetic DEVY-board objects) carry a college
+// logo URL (_devyLogo, from data/devy_headshots.js COLLEGE_TEAM_IDS); everyone else uses the
+// NFL logo id from TEAM_LOGO_IDS. Returns '' when neither exists.
+window._logoSrc = function(d, logoId) {
+  if (d && d._isDevy && d._devyLogo) return d._devyLogo;
+  return logoId ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png' : '';
+};
 window._fixHeadshotUrl = function(url) {
   if (!url || typeof url !== 'string') return url;
   // Only rewrite ESPN combiner URLs that force a fixed w×h box.
@@ -3763,9 +3770,15 @@ function getFiltered(applyTopN) {
       const cb = COMBINE_DATA[name];
       if (!cb.devy) return;
       const ktcVal = ktcMap[name] || 0;
+      // Headshot + college logo (data/devy_headshots.js, weekly pull_devy_headshots.py): ESPN
+      // college-football athlete id -> same combiner URL shape as NFL _slImg; team id -> ncaa logo.
+      const _hs = (typeof window.DEVY_HEADSHOTS !== 'undefined') ? window.DEVY_HEADSHOTS[name] : null;
+      const _tid = (typeof window.COLLEGE_TEAM_IDS !== 'undefined') ? window.COLLEGE_TEAM_IDS[cb.school] : null;
       devyMap[name] = {
         n: name, s: cb.pos || '??', t: cb.school || '—',
         _isDevy: true, _devyEligYr: cb.eligYr || '—', _devyKtc: ktcVal,
+        _slImg: _hs && _hs.id ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/college-football/players/full/' + _hs.id + '.png&w=350&h=254' : null,
+        _devyLogo: _tid ? 'https://a.espncdn.com/i/teamlogos/ncaa/500/' + _tid + '.png' : null,
         myRank: 0, adp: null, p: null, career: null, s25: null
       };
     });
@@ -4334,8 +4347,8 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
     : '<div class="tcv-card-img-fallback">?</div>';
 
   const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
-  const logoHtml = logoId
-    ? '<img class="tcv-card-bg-logo" src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>'
+  const logoHtml = (logoId || d._devyLogo)
+    ? '<img class="tcv-card-bg-logo" src="' + window._logoSrc(d, logoId) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>'
     : '';
 
   // Last name only (e.g., "Ja'Marr Chase" -> "CHASE", "Smith-Njigba" stays "SMITH-NJIGBA").
@@ -4732,8 +4745,8 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
       : '<div class="tcv-row-opp' + (opp.diff ? ' tcv-opp-' + opp.diff : '') + '" title="' + _tcvOppTitle(opp) + '"><span class="tcv-opp-pre">' + (opp.away ? '@' : 'vs') + '</span>' +
         (opp.logoUrl ? '<img src="' + opp.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '<span style="font-family:\'Bebas Neue\',Impact,sans-serif;font-size:13px">' + safe(opp.abbr) + '</span>') + '</div>';
   }
-  const miniLogoHtml = logoId
-    ? '<img class="tcv-row-team-mini" src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" title="' + safe(d.t) + '"/>'
+  const miniLogoHtml = (logoId || d._devyLogo)
+    ? '<img class="tcv-row-team-mini" src="' + window._logoSrc(d, logoId) + '" alt="" loading="lazy" title="' + safe(d.t) + '"/>'
     : '';
 
   card.innerHTML =
@@ -5257,7 +5270,7 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
   const [head, logo, oppLogo] = await Promise.all([
     _tcvLoadImg(d._slImg ? _tcvHiResHeadshot(d._slImg) : null),
-    _tcvLoadImg(logoId ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png' : null),
+    _tcvLoadImg((logoId || d._devyLogo) ? window._logoSrc(d, logoId) : null),
     _tcvLoadImg(opp && !opp.bye ? opp.logoUrl : null)
   ]);
 
@@ -6202,7 +6215,7 @@ function render() {
       html += `<tr style="border-bottom:1px solid rgba(30,42,66,.4)" data-devy-idx="${d._devyIdx}" data-devy-name="${d.n.replace(/"/g,'&quot;')}">
         <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + d.n.replace(/"/g,'&quot;') + '. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div>' : ''}</td>
         <td class="myrank-cell"><span class="myrank-num">${d.myRank}</span></td>
-        <td><div class="player-cell"><span class="player-name">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div></td>
+        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
         <td class="adp-cell" data-lbl="KTC">${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
@@ -24865,7 +24878,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
     const img = (d._slImg && !isDst)
       ? '<img src="' + esc(window._fixHeadshotUrl(d._slImg)) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
-      : (logoId ? '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png" alt="" loading="lazy" style="object-fit:contain!important;padding:8px;background:var(--elev-1)">' : '');
+      : ((logoId || d._devyLogo) ? '<img src="' + window._logoSrc(d, logoId) + '" alt="" loading="lazy" style="object-fit:contain!important;padding:8px;background:var(--elev-1)">' : '');
     const box = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
     const bestCls = k => k ? 'sst-best' : '';
 
@@ -25838,7 +25851,8 @@ window.fmtHeight = fmtHeight;
       if (player._isDevy) {
         if (typeof _COLLEGE_LOGO_IDS === 'undefined') return '';
         const t = player.t || '';
-        const id = _COLLEGE_LOGO_IDS[t] || _COLLEGE_LOGO_IDS[t.toUpperCase()];
+        const id = _COLLEGE_LOGO_IDS[t] || _COLLEGE_LOGO_IDS[t.toUpperCase()]
+          || (typeof window.COLLEGE_TEAM_IDS !== 'undefined' ? window.COLLEGE_TEAM_IDS[t] : null);
         return id ? ('https://a.espncdn.com/i/teamlogos/ncaa/500/' + id + '.png') : '';
       }
       if (typeof TEAM_LOGO_IDS === 'undefined') return '';

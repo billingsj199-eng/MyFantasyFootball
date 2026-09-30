@@ -166,16 +166,20 @@ def load_combine():
     cb = json.loads(txt.split("=", 1)[1].strip().rstrip(";"))
     try:
         with open(PATCH_JS, encoding="utf-8") as f:
-            ptxt = f.read()
+            # drop // comment lines so retired stubs kept as comments are not parsed as live code
+            ptxt = "\n".join(l for l in f.read().split("\n") if not l.strip().startswith("//"))
     except OSError:
         return cb
     added = 0
     stale = []
     for m in re.finditer(r"""COMBINE_DATA\[(['"])((?:\\.|(?!\1)[^\\])+?)\1\]\s*=\s*\{([^}]*devy:\s*true[^}]*)\}""", ptxt):
         name, body = m.group(2).replace("\\'", "'"), m.group(3)
-        if name in cb:
+        # unguarded `COMBINE_DATA['X'] = {...}` (no `if (!COMBINE_DATA['X'])` in front) OVERWRITES the
+        # on-disk entry at runtime (Ryan Williams: Alabama WR devy replaces the 2011 Virginia Tech RB)
+        guarded = ptxt[max(0, m.start() - 60):m.start()].rstrip().endswith(")") and "if (!COMBINE_DATA[" in ptxt[max(0, m.start() - 80):m.start()]
+        if name in cb and guarded:
             continue
-        ent = {"devy": True, "_patch": True}
+        ent = {"devy": True, "_patch": True} if name not in cb else dict(cb[name], devy=True)
         for k in ("school", "pos"):
             mm = re.search(r"""\b%s:\s*(['"])(.+?)\1""" % k, body)
             if mm:
@@ -189,6 +193,30 @@ def load_combine():
             stale.append(name)
         cb[name] = ent
         added += 1
+    # DEVY DRAFT YEAR CLEANUP block: `cb=COMBINE_DATA['X']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;...}`
+    # forces devy/eligYr (and sometimes pos/school) onto entries that exist on disk without the flag
+    # (Ryan Williams, Bo Jackson) - apply the same so the universe equals the runtime DEVY board.
+    forced = 0
+    for m in re.finditer(r"""cb=COMBINE_DATA\[(['"])(.+?)\1\];\s*if\(cb\)\{([^}]*)\}""", ptxt):
+        name, body = m.group(2).replace("\'", "'"), m.group(3)
+        e = cb.get(name)
+        if e is None or "cb.devy=true" not in body:
+            continue
+        if not e.get("devy"):
+            forced += 1
+        e["devy"] = True
+        mm = re.search(r"cb\.eligYr=(\d{4})", body)
+        if mm:
+            e["eligYr"] = int(mm.group(1))
+        mm = re.search(r"cb\.yr=(\d{4})", body)
+        if mm:
+            e["yr"] = int(mm.group(1))
+        for k in ("pos", "school"):
+            mm = re.search(r"""cb\.%s='([^']+)'""" % k, body)
+            if mm:
+                e[k] = mm.group(1)
+    if forced:
+        log("combine_d_patches.js: devy flag forced onto %d on-disk entries by the cleanup block" % forced)
     if added:
         log("combine_d_patches.js: +%d runtime devy entries (%d with eligYr<=%d, check combine_d_patches.js: %s)" % (added, len(stale), _CUR_SEASON, ", ".join(sorted(stale))))
     return cb

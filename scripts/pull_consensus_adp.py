@@ -41,6 +41,9 @@
 #             in keeptradecut.com/dynasty-rankings -> spliced straight into
 #             data/_bundle_lookups.js + data/ktc_rankings.js (KTC_1QB/KTC_SF),
 #             replacing the manual League-Analyzer-XLSX + build_ktc.py flow.
+#   Phase E2 — KeepTradeCut DEVY values (keeptradecut.com/devy-rankings, same
+#             template) -> KTC_DEVY_1QB / KTC_DEVY_SF in the same two files;
+#             drives the rankings DEVY board's KTC column + default order.
 #   Phase F — Underdog ADP (BBM + Superflex) from the shared/ud_adp_latest
 #             Firestore mirror doc (public read; written by Jack's site
 #             session whenever the Draft Helper extension applies its daily
@@ -216,6 +219,13 @@ KTC_URL = 'https://keeptradecut.com/dynasty-rankings'
 KTC_MIN_ROWS = 400
 KTC_BUNDLE = os.path.join(ROOT, 'data', '_bundle_lookups.js')
 KTC_ORPHAN = os.path.join(ROOT, 'data', 'ktc_rankings.js')
+# KTC devy (college) values — same page template as the dynasty list, ~100
+# players. Keyed by KTC's display name; the app resolves them against the
+# devy pool through its normalized lookup (_ktcGet), so "CJ Baxter" still
+# finds "CJ Baxter Jr.". KTC_DEVY_ALIASES covers what normalization can't.
+KTC_DEVY_URL = 'https://keeptradecut.com/devy-rankings'
+KTC_DEVY_MIN_ROWS = 60
+KTC_DEVY_ALIASES = {}
 # KTC display name -> d.js canonical name, for cases inject_rankings.py's
 # norm_name/OVERRIDES can't bridge (kept from scripts/refresh_ktc.py).
 KTC_ALIASES = {
@@ -705,12 +715,34 @@ def _ktc_js_literal(varname, m):
     return f'var {varname}={{{body}}};'
 
 
-def _ktc_splice(path, varname, literal):
+def _ktc_splice(path, varname, literal, insert_after=None):
+    """Replace `var <varname>={...};` in place. When the var doesn't exist yet
+    and insert_after names another var, the literal goes on the line after
+    that var's definition (first-time seed of a new map)."""
     src = open(path, encoding='utf-8').read()
     pat = re.compile(r'var ' + varname + r'=\{.*?\};', re.S)
     if not pat.search(src):
-        raise RuntimeError(f'{varname} definition not found in {path}')
+        if not insert_after:
+            raise RuntimeError(f'{varname} definition not found in {path}')
+        anchor = re.compile(r'var ' + insert_after + r'=\{.*?\};', re.S)
+        m = anchor.search(src)
+        if not m:
+            raise RuntimeError(f'neither {varname} nor {insert_after} found in {path}')
+        src = src[:m.end()] + '\n' + literal + src[m.end():]
+        open(path, 'w', encoding='utf-8').write(src)
+        return
     open(path, 'w', encoding='utf-8').write(pat.sub(lambda _: literal, src, count=1))
+
+
+def _ktc_fetch_players(url):
+    """The #ktc-players JSON array embedded in a KTC rankings page (dynasty
+    and devy share the template), or None when the template changed."""
+    r = requests.get(url, headers={**HEADERS, 'Accept': 'text/html,application/xhtml+xml'}, timeout=30)
+    r.raise_for_status()
+    m = re.search(r'<script[^>]*id="ktc-players"[^>]*>(\[.*?\])\s*</script>', r.text, re.DOTALL)
+    if not m:
+        m = re.search(r'var\s+playersArray\s*=\s*(\[.*?\])\s*;', r.text, re.DOTALL)
+    return json.loads(m.group(1)) if m else None
 
 
 def pull_ktc():
@@ -786,6 +818,80 @@ def pull_ktc():
         return changed
     except Exception as e:
         print(f'  !! KTC: {e} — kept old maps')
+        return False
+
+
+def _devy_pool_keys():
+    """Normalized names of the site's devy pool (combine_d_patches.js flags
+    them; combine_data.js may carry devy:true too) — coverage logging only."""
+    def norm(n):
+        s = (n or '').lower().strip()
+        for suf in (' jr.', ' jr', ' sr.', ' sr', ' iii', ' ii', ' iv'):
+            if s.endswith(suf):
+                s = s[:-len(suf)].strip()
+        s = s.replace("'", '').replace('.', '').replace('-', ' ')
+        return re.sub(r'\s+', ' ', s).strip()
+    names = set()
+    try:
+        src = open(os.path.join(ROOT, 'data', 'combine_d_patches.js'), encoding='utf-8').read()
+        for line in src.split('\n'):
+            s = line.strip()
+            if s.startswith('//'):
+                continue
+            for m in re.finditer(r"COMBINE_DATA\['([^']+)'\]; if\(cb\)\{cb\.devy=true", s):
+                names.add(m.group(1))
+            for m in re.finditer(r"COMBINE_DATA\['([^']+)'\] = \{[^}]*devy: true", s):
+                names.add(m.group(1))
+        src = open(os.path.join(ROOT, 'data', 'combine_data.js'), encoding='utf-8').read()
+        for m in re.finditer(r'"([^"]+)":\{[^{}]*"devy":true', src):
+            names.add(m.group(1))
+    except Exception:
+        pass
+    return {norm(n) for n in names}, norm
+
+
+def pull_ktc_devy():
+    """KTC devy (college) values -> KTC_DEVY_1QB / KTC_DEVY_SF in the same two
+    files as the dynasty maps. Returns True if the bundle changed."""
+    try:
+        arr = _ktc_fetch_players(KTC_DEVY_URL)
+        if arr is None:
+            print('  !! KTC devy: #ktc-players JSON not found — template changed? Kept old maps.')
+            return False
+        if len(arr) < KTC_DEVY_MIN_ROWS:
+            print(f'  !! KTC devy: only {len(arr)} players (<{KTC_DEVY_MIN_ROWS}) — kept old maps')
+            return False
+        one_qb, sf = {}, {}
+        for p in arr:
+            name = p.get('playerName') or ''
+            if not name:
+                continue
+            key = KTC_DEVY_ALIASES.get(name, name)
+            oqb = (p.get('oneQBValues') or {}).get('value')
+            sfv = (p.get('superflexValues') or {}).get('value')
+            if oqb is not None and key not in one_qb:
+                one_qb[key] = oqb
+            if sfv is not None and key not in sf:
+                sf[key] = sfv
+        one_qb = dict(sorted(one_qb.items(), key=lambda kv: -kv[1]))
+        sf = dict(sorted(sf.items(), key=lambda kv: -kv[1]))
+        pool, norm = _devy_pool_keys()
+        missing = [n for n in one_qb if pool and norm(n) not in pool]
+        print(f'  KTC_DEVY_1QB: {len(one_qb)} entries, KTC_DEVY_SF: {len(sf)}'
+              + (f' (devy pool covers {len(one_qb) - len(missing)}; not in pool: {", ".join(missing)})' if pool else ''))
+
+        before = open(KTC_BUNDLE, 'rb').read()
+        lit1 = _ktc_js_literal('KTC_DEVY_1QB', one_qb)
+        litsf = _ktc_js_literal('KTC_DEVY_SF', sf)
+        for path in (KTC_BUNDLE, KTC_ORPHAN):
+            _ktc_splice(path, 'KTC_DEVY_1QB', lit1, insert_after='KTC_SF')
+            _ktc_splice(path, 'KTC_DEVY_SF', litsf, insert_after='KTC_DEVY_1QB')
+        changed = open(KTC_BUNDLE, 'rb').read() != before
+        print(f'  spliced KTC devy maps into _bundle_lookups.js + ktc_rankings.js'
+              f' ({"changed" if changed else "no change"})')
+        return changed
+    except Exception as e:
+        print(f'  !! KTC devy: {e} — kept old maps')
         return False
 
 
@@ -1011,7 +1117,9 @@ def main():
     n_sl = pull_sleeper()
     print('\nPhase E — KeepTradeCut dynasty values:')
     ktc_changed = pull_ktc()
-    if ktc_changed:
+    print('\nPhase E2 — KeepTradeCut devy values:')
+    ktc_devy_changed = pull_ktc_devy()
+    if ktc_changed or ktc_devy_changed:
         bump_version(r'data/_bundle_lookups\.js')
     print('\nPhase F — Underdog ADP (extension mirror):')
     n_ud = pull_underdog_mirror()
@@ -1051,6 +1159,7 @@ def main():
     print(f'\nCSV sources refreshed: {total}/13 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, Sleeper {n_sl}/4, UD {n_ud}/2) '
           f'+ KTC {"updated" if ktc_changed else "unchanged/skipped"}'
+          f' + KTC devy {"updated" if ktc_devy_changed else "unchanged/skipped"}'
           f' + Clay {"updated" if clay_changed else "unchanged/skipped"}'
           f' + rosters {"updated" if roster_changed else "unchanged/skipped"}'
           f' + DK {"updated" if dk_changed else "unchanged/skipped"}'

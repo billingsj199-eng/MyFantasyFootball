@@ -2166,11 +2166,45 @@ function _ktcRankIndex(map) {
   _ktcRankCache.set(map, idx);
   return idx;
 }
+// KTC DEVY (college) maps — pulled daily from keeptradecut.com/devy-rankings
+// into data/ktc_rankings.js alongside the dynasty maps (Phase E2).
+function _ktcDevyMapFor(mode) {
+  const m = mode || currentMode;
+  return m === 'dynastysf' ? (typeof KTC_DEVY_SF !== 'undefined' ? KTC_DEVY_SF : {}) : (typeof KTC_DEVY_1QB !== 'undefined' ? KTC_DEVY_1QB : {});
+}
+// Position for a KTC devy name comes from the devy pool (COMBINE_DATA), not D.
+function _ktcDevyRankIndex(map) {
+  if (!map) return null;
+  let idx = _ktcRankCache.get(map);
+  if (idx) return idx;
+  const posOf = {};
+  if (typeof COMBINE_DATA !== 'undefined') {
+    Object.keys(COMBINE_DATA).forEach(n => { const cb = COMBINE_DATA[n]; if (cb && cb.devy && cb.pos) posOf[_normalizeNameForLookup(n)] = cb.pos; });
+  }
+  const rows = [];
+  for (const k in map) if (map[k] != null) rows.push({ n: k, v: map[k] });
+  rows.sort((a, b) => b.v - a.v);
+  const cnt = {};
+  idx = {};
+  rows.forEach((r, i) => {
+    const key = _normalizeNameForLookup(r.n);
+    const pos = posOf[key] || null;
+    const pr = pos ? (cnt[pos] = (cnt[pos] || 0) + 1) : null;
+    idx[key] = { val: r.v, ovr: i + 1, pos, posRank: pr, devy: true };
+  });
+  _ktcRankCache.set(map, idx);
+  return idx;
+}
 // { val, ovr, pos, posRank } for a player, or null when KTC doesn't list him.
+// Falls back to the DEVY list ({..., devy:true}, rank among devy players)
+// for college prospects, who never appear on the dynasty page.
 function _ktcRankInfo(name, mode) {
   if (!name) return null;
+  const key = _normalizeNameForLookup(name);
   const idx = _ktcRankIndex(_ktcMapFor(mode));
-  return (idx && idx[_normalizeNameForLookup(name)]) || null;
+  if (idx && idx[key]) return idx[key];
+  const didx = _ktcDevyRankIndex(_ktcDevyMapFor(mode));
+  return (didx && didx[key]) || null;
 }
 // True when the rankings table is showing ONE position, so a KTC rank should
 // be the position rank (KTC's RB4) rather than the overall one.
@@ -3887,12 +3921,15 @@ function getFiltered(applyTopN) {
   // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
   if (filter === 'DEVY') {
     if (typeof COMBINE_DATA === 'undefined') return [];
-    const ktcMap = currentMode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
+    // KTC DEVY values (keeptradecut.com/devy-rankings, pulled daily 9am —
+    // KTC_DEVY_1QB / KTC_DEVY_SF in data/ktc_rankings.js). Name lookup is
+    // normalized (_ktcGet) so KTC's "CJ Baxter" finds our "CJ Baxter Jr.".
+    const ktcMap = _ktcDevyMapFor(currentMode);
     const devyMap = {};
     Object.keys(COMBINE_DATA).forEach(name => {
       const cb = COMBINE_DATA[name];
       if (!cb.devy) return;
-      const ktcVal = ktcMap[name] || 0;
+      const ktcVal = _ktcGet(ktcMap, name) || 0;
       // Headshot + college logo (data/devy_headshots.js, weekly pull_devy_headshots.py): ESPN
       // college-football athlete id -> same combiner URL shape as NFL _slImg; team id -> ncaa logo.
       const _hs = (typeof window.DEVY_HEADSHOTS !== 'undefined') ? window.DEVY_HEADSHOTS[name] : null;
@@ -6339,7 +6376,7 @@ function render() {
         <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
-        <td class="adp-cell" data-lbl="KTC">${d._devyKtc > 0 ? d._devyKtc.toLocaleString() : '—'}</td>
+        <td class="adp-cell" data-lbl="KTC">${(() => { const k = _ktcRankInfo(d.n); return (k && k.devy) ? '<span style="cursor:help" title="' + ('KTC devy #' + k.ovr + (k.posRank != null ? ' · ' + k.pos + k.posRank : '') + ' · value ' + k.val.toLocaleString() + ' (' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ')').replace(/"/g, '&quot;') + '">' + k.ovr + '</span>' : '<span style="color:var(--text2)" title="Not on KTC\'s devy list">—</span>'; })()}</td>
         <td class="pts-cell ppg-proj-cell">—</td>
         <td class="simboom-cell weekly-only-cell" style="display:none">—</td>
         <td class="simbust-cell weekly-only-cell" style="display:none">—</td>
@@ -25929,14 +25966,12 @@ window.fmtHeight = fmtHeight;
         if (typeof COMBINE_DATA === 'undefined') return [];
         const useFmt = format || (typeof currentMode !== 'undefined' ? currentMode : 'dynasty');
         const useSrc = source || (typeof currentVersion !== 'undefined' ? currentVersion : 'mine');
-        const ktcMap = (useFmt === 'dynastysf')
-          ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {})
-          : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
+        const ktcMap = _ktcDevyMapFor(useFmt); // KTC devy values, see getFiltered's DEVY branch
         const map = {};
         Object.keys(COMBINE_DATA).forEach(name => {
           const cb = COMBINE_DATA[name];
           if (!cb.devy) return;
-          map[name] = { n: name, s: cb.pos || '??', t: cb.school || '—', _ktc: ktcMap[name] || 0, _isDevy: true };
+          map[name] = { n: name, s: cb.pos || '??', t: cb.school || '—', _ktc: _ktcGet(ktcMap, name) || 0, _isDevy: true };
         });
         const saved = _devyBoardLoad(useSrc, useFmt);
         let list;

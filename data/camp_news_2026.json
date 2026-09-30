@@ -1,6 +1,86 @@
 {
-  "updated": "2026-09-29T16:18:24Z",
+  "updated": "2026-09-30T02:17:55Z",
   "items": [
+    {
+      "player": "Jalon Daniels",
+      "team": "TB",
+      "pos": "QB",
+      "date": "2026-09-29",
+      "headline": "Officially named Bucs' starting QB for Week 4 vs. Packers with Mayfield out",
+      "take": "Undrafted rookie makes his first NFL start; streaming risk is high behind a suddenly banged-up Tampa Bay offense.",
+      "url": "https://www.espn.com/nfl/story/_/id/50052996/buccaneers-mayfield-thumb-least-three-weeks-bowles-says",
+      "tag": "role"
+    },
+    {
+      "player": "Nico Collins",
+      "team": "HOU",
+      "pos": "WR",
+      "date": "2026-09-29",
+      "headline": "Schefter: Collins (hamstring) has a 'decent chance' to play Week 4 vs. Cowboys",
+      "take": "Check Wednesday's practice designation before trusting him; his return also caps Xavier Hutchinson's waiver value.",
+      "url": "https://www.cbssports.com/fantasy/football/news/texans-nico-collins-may-return-in-week-4/",
+      "tag": "injury"
+    },
+    {
+      "player": "Michael Wilson",
+      "team": "ARI",
+      "pos": "WR",
+      "date": "2026-09-29",
+      "headline": "17 targets, 11 catches, 89 yards, 1 TD in Week 3 -- clear No. 1 WR over Marvin Harrison Jr.",
+      "take": "31 targets through three games gives him a strong PPR floor as a startable WR2/3.",
+      "url": "https://www.si.com/onsi/fantasy/nfl/fantasy-football-stock-watch-risers-and-fallers-with-michael-wilson-flying-up-and-david-montgomery-heading-down",
+      "tag": "riser"
+    },
+    {
+      "player": "David Montgomery",
+      "team": "HOU",
+      "pos": "RB",
+      "date": "2026-09-29",
+      "headline": "Lost goal-line and short-yardage work to Woody Marks in Week 3",
+      "take": "Backfield split is trending toward a near-even share; Montgomery becomes touchdown-dependent for fantasy value.",
+      "url": "https://www.si.com/onsi/fantasy/nfl/fantasy-football-stock-watch-risers-and-fallers-with-michael-wilson-flying-up-and-david-montgomery-heading-down",
+      "tag": "faller"
+    },
+    {
+      "player": "Bhayshul Tuten",
+      "team": "JAX",
+      "pos": "RB",
+      "date": "2026-09-29",
+      "headline": "Coach Liam Coen confirms a 'shared workload' with Chris Rodriguez Jr., no clear-cut lead back",
+      "take": "Volume flashes are real but the committee usage caps his ceiling as a must-start.",
+      "url": "https://sports.yahoo.com/articles/jaguars-list-bhayshul-tuten-chris-181604381.html",
+      "tag": "role"
+    },
+    {
+      "player": "Xavier Hutchinson",
+      "team": "HOU",
+      "pos": "WR",
+      "date": "2026-09-29",
+      "headline": "Short-term waiver riser at WR with Nico Collins sidelined",
+      "take": "Streamable Week 4 flex, but value evaporates the moment Collins is back on the field.",
+      "url": "https://www.rotoballer.com/player-news/xavier-hutchinson-has-short-term-waiver-appeal/1953894",
+      "tag": "riser"
+    },
+    {
+      "player": "Matthew Golden",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-09-29",
+      "headline": "Golden and Christian Watson are Green Bay's top pass-catching options with Jayden Reed still out",
+      "take": "Reed's timeline remains unresolved; Golden gets a real shot at weekly volume as a low-end streamer.",
+      "url": "https://www.cbssports.com/fantasy/football/news/packers-jayden-reed-competing-with-golden-for-wr2-spot/",
+      "tag": "role"
+    },
+    {
+      "player": "Jason Sanders",
+      "team": "NYJ",
+      "pos": "K",
+      "date": "2026-09-29",
+      "headline": "Signed to Jets' 53-man roster after three straight practice-squad elevations; Blake Grupe waived",
+      "take": "5-of-6 on field goals and team-leading 20 points -- now a safe streaming kicker option.",
+      "url": "https://sports.yahoo.com/articles/jets-sign-k-jason-sanders-211347563.html",
+      "tag": "transaction"
+    },
     {
       "player": "Travis Etienne Jr.",
       "team": "NO",

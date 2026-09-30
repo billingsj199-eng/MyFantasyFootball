@@ -2177,7 +2177,9 @@ function _rosTtCellHtml(d) {
   const c = dst
     ? (t <= 19 ? '#22c55e' : t <= 21.5 ? '#4ade80' : t <= 24.5 ? '#facc15' : t <= 27 ? '#f59e0b' : '#ef4444')
     : (t >= 27 ? '#22c55e' : t >= 24.5 ? '#4ade80' : t >= 21.5 ? '#facc15' : t >= 19 ? '#f59e0b' : '#ef4444');
-  const tip = (dst ? 'Opponents\' average implied total' : 'Average implied team total') + ', weeks ' + r.from + '-18 (' + r.n + ' game' + (r.n === 1 ? '' : 's') + ')' + (dst ? ' — lower is better for D/ST' : '');
+  const _ft = window.FUTURE_TOTALS_2026, _fa = (!dst && _ft && _ft.applied && _ft.shift) ? _ft.shift[(typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) ? TEAM_ABBR_MAP[d.t] : d.t] : null;
+  const tip = (dst ? 'Opponents\' average implied total' : 'Average implied team total') + ', weeks ' + r.from + '-18 (' + r.n + ' game' + (r.n === 1 ? '' : 's') + ')' + (dst ? ' — lower is better for D/ST' : '')
+    + (_fa ? ' · future weeks re-rated from this season\'s lines: offense ' + (_fa[0] >= 0 ? '+' : '') + _fa[0].toFixed(1) + ' a game vs the preseason line' : '');
   return '<span style="color:' + c + ';font-weight:700;cursor:help" title="' + tip + '">' + t.toFixed(1) + '</span>';
 }
 // Header text for the column follows the tab (CONS on Jack's/My, JACK'S on
@@ -6121,7 +6123,7 @@ function render() {
     const lab = document.querySelector('#teamTotalHeader [data-gloss]');
     if (!lab) return;
     const g = _rosTtCol
-      ? 'Rest-of-season team total — the average Vegas implied points for this team over its remaining games (DK total and spread, current week through week 18). Higher = better scoring environment. D/ST rows show the average implied total of the opponents they face (lower is better). Hover a value for the number of games.'
+      ? 'Rest-of-season team total — the average implied points for this team over its remaining games, current week through week 18. This week uses the live DK total and spread; later weeks start from the DK look-ahead line and are re-rated from how the books have actually lined each team this season, with the quarterback who is expected to play. Higher = better scoring environment. D/ST rows show the average implied total of the opponents they face (lower is better). Hover a value for the number of games.'
       : 'Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.';
     if (lab.getAttribute('data-gloss') !== g) lab.setAttribute('data-gloss', g);
   })();
@@ -7864,6 +7866,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     games.forEach(g => { facedE[g.d] = (facedE[g.d] || 0) + oE[g.o] / dN[g.d]; });
     return { mu, dE, oE, facedE };
   }
+  window._wkSchedAdjust = _wkSchedAdjust;   // shared with the SOS builder (_mtObservedFpa)
   let _wkOppPpgCache = null;
   function _wkOppPpgTable() {
     const FP = window.FPA_2026;
@@ -50520,6 +50523,14 @@ Rules:
     const FP = window.FPA_2026;
     const acc = {};
     _MT_FPA_POS.forEach(p => { acc[p] = {}; });
+    // SCHEDULE-ADJUSTED (Jack 2026-09-30: "adjust for SOS"): a defense that gave up
+    // 30 to the Bills is not as soft as one that gave up 30 to the Panthers. Same
+    // additive fit the weekly OPP color uses (_wkSchedAdjust: points = league avg +
+    // defense effect + offense effect, each shrunk by a one-game prior) - the SOS
+    // rank reads the DEFENSE effect instead of raw points allowed. Needs the
+    // offense on every row, so only the FPA_2026 path (not the board-only fallback).
+    const games = {};
+    _MT_FPA_POS.forEach(p => { games[p] = []; });
     let maxWk = 0;
     if (FP && FP.weeks && Object.keys(FP.weeks).length) {
       Object.keys(FP.weeks).forEach(wk => {
@@ -50531,6 +50542,8 @@ Rules:
             const slot = acc[pos][team] || (acc[pos][team] = { pts: 0, wks: new Set() });
             slot.pts += v;
             slot.wks.add(w);
+            const off = teams[team].opp ? String(teams[team].opp).toUpperCase() : null;
+            if (off) games[pos].push({ d: team, o: off, v });
           });
           if (w > maxWk) maxWk = w;
         });
@@ -50567,6 +50580,11 @@ Rules:
         const s = acc[pos][team];
         if (s.wks.size >= 1) perGame[team] = s.pts / s.wks.size;
       });
+      // swap raw points allowed for the schedule-adjusted number when every row carried its offense
+      const S = (typeof window._wkSchedAdjust === 'function' && games[pos].length && window.MFF_SOS_RAW_FPA !== true)
+        ? window._wkSchedAdjust(games[pos]) : null;
+      if (S) Object.keys(perGame).forEach(team => { if (typeof S.dE[team] === 'number') perGame[team] = S.mu + S.dE[team]; });
+      if (S) _mtFpaCache.adjusted = true;
       const vals = Object.values(perGame);
       if (vals.length < 24) return; // need most of the league before z-scoring
       const mu = vals.reduce((a, b) => a + b, 0) / vals.length;
@@ -50583,7 +50601,7 @@ Rules:
         if (n) z.OVERALL[team] = s / n;
       });
     }
-    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share, z };
+    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share, z, adjusted: !!_mtFpaCache.adjusted };
     return _mtFpaCache;
   }
   window._mtObservedFpa = _mtObservedFpa; // console inspection / testing

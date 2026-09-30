@@ -1757,11 +1757,11 @@ function updatePosLockVis() {
   btn.style.display = show ? '' : 'none';
 }
 
-// === Position Sync: keep within-position order identical across formats ===
-// Group: redraft ↔ superflex ↔ dynasty ↔ dynastysf (see POS_SYNC_GROUP).
+// === Position Sync: keep within-position order identical across 1QB ↔ SF pairs ===
+// Pairs: redraft ↔ superflex, dynasty ↔ dynastysf (see POS_SYNC_GROUPS).
 // Per-browser preference. Admins default ON when they have never set it
-// (_posSyncAdminDefault, run from the auth listener) — Jack edits Redraft and
-// expects the other three boards to follow without flipping a switch.
+// (_posSyncAdminDefault, run from the auth listener) — Jack edits the 1QB
+// boards and expects the SF boards to follow without flipping a switch.
 window._posSyncEnabled = false;
 try { window._posSyncEnabled = localStorage.getItem('_posSyncEnabled') === '1'; } catch(e) {}
 window._posSyncAdminDefault = function() {
@@ -1787,10 +1787,10 @@ window._togglePosSync = function() {
   if (el) el.classList.toggle('on', window._posSyncEnabled);
   try { localStorage.setItem('_posSyncEnabled', window._posSyncEnabled ? '1' : '0'); } catch(e) {}
   if (window._posSyncEnabled) {
-    // Do an immediate sync from the current mode to every other synced format
+    // Do an immediate sync from the current mode to its pair
     _syncPairedMode();
     saveLocal();
-    toast('Position sync ON — Redraft, Superflex, Dynasty 1QB and Dynasty SF now share positional order');
+    toast('Position sync ON — Redraft ↔ Superflex and Dynasty 1QB ↔ Dynasty SF share positional order');
   } else {
     toast('Position sync OFF');
   }
@@ -1800,20 +1800,24 @@ window._showSyncHelp = function() {
   // Tooltip shows on hover/tap via CSS; this is a no-op fallback
 };
 
-// Position-sync group. Every mode in the group shares within-position
-// rankings (RB1, RB2, etc.) and position-specific tiers, while keeping its
-// own overall interleaving (QBs rank higher in SF, youth/rookies in dynasty).
-// 2026-09-30 (Jack): one 4-way group — Redraft, Superflex, Dynasty 1QB and
-// Dynasty SF — instead of two 2-way pairs. Jack maintains Redraft, so an edit
-// there must reach every other format; an edit in any other format pushes
-// back the same way. Redraft is the canonical source when a mode is ENTERED
-// (see the format-switch handler).
+// Position-sync groups. Modes within a group share within-position rankings
+// (RB1, RB2, etc.) and position-specific tiers, while keeping their own
+// overall interleaving (QBs rank higher in SF). Two 2-way pairs:
+//   Redraft ↔ Superflex        (same one-season timeline)
+//   Dynasty 1QB ↔ Dynasty SF   (same long-term timeline)
+// 2026-09-30 (Jack): the pairs stay SEPARATE — redraft and dynasty are
+// different timelines and must never bleed into each other. Within a pair the
+// 1QB board is canonical when a mode is ENTERED (see the format-switch
+// handler); live edits push both ways.
 // 2026-08-18: Best Ball retired from the UI, so it left the mesh — an
 // unreachable mode must not keep pulling live edits out of Redraft.
-const POS_SYNC_GROUP = ['redraft', 'superflex', 'dynasty', 'dynastysf'];
+const POS_SYNC_GROUPS = [['redraft', 'superflex'], ['dynasty', 'dynastysf']];
+// The board a mode re-pulls from on entry: the 1QB board of its pair
+// (Jack maintains those). The 1QB boards themselves pull from nothing.
+const POS_SYNC_CANON = { superflex: 'redraft', dynastysf: 'dynasty' };
 function _syncPartners(mode) {
-  if (POS_SYNC_GROUP.indexOf(mode) < 0) return [];
-  return POS_SYNC_GROUP.filter(m => m !== mode);
+  const g = POS_SYNC_GROUPS.find(grp => grp.indexOf(mode) >= 0);
+  return g ? g.filter(m => m !== mode) : [];
 }
 window._syncPartners = _syncPartners;
 
@@ -9347,16 +9351,17 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
       window._weeklyReconcileBoard('jacks');
       window._weeklyReconcileBoard('mine');
     }
-    // If sync is on, pull the entering mode's positional order from Redraft,
-    // the canonical board (Jack maintains Redraft; the 9am injectors and
-    // cloud restores land there first). Live edits in any synced format
-    // already push to every other one (_syncPairedMode), so this only
-    // catches drift from a board that changed while sync was off or from a
-    // save that carried an older partner board. Redraft itself pulls from
-    // nothing — a stale Superflex must never overwrite fresh Redraft work.
-    if (window._posSyncEnabled && currentMode !== 'redraft' && _syncPartners(currentMode).indexOf('redraft') >= 0) {
+    // If sync is on, pull the entering mode's positional order from its
+    // pair's canonical (1QB) board: superflex ← redraft, dynastysf ← dynasty.
+    // Jack maintains the 1QB boards; the 9am injectors and cloud restores
+    // land there first. Live edits already push both ways (_syncPairedMode),
+    // so this only catches drift from a board that changed while sync was
+    // off or from a save that carried an older partner board. The 1QB boards
+    // pull from nothing — a stale SF board must never overwrite fresh work.
+    const _canonSrc = window._posSyncEnabled ? POS_SYNC_CANON[currentMode] : null;
+    if (_canonSrc) {
       const target = currentMode;
-      currentMode = 'redraft';
+      currentMode = _canonSrc;
       syncMode();
       _syncOneDirection(currentMode, target);
       currentMode = target;

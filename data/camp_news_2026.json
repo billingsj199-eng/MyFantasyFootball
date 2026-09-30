@@ -1,6 +1,56 @@
 {
-  "updated": "2026-09-30T02:17:55Z",
+  "updated": "2026-09-30T16:17:14Z",
   "items": [
+    {
+      "player": "Jayden Daniels",
+      "team": "WAS",
+      "pos": "QB",
+      "date": "2026-09-30",
+      "headline": "Returns to practice (limited) in London; Quinn says there's 'a chance' he plays Week 4 vs. Colts",
+      "take": "Real but unconfirmed uptick from dislocated elbow -- treat as a game-time-decision-in-waiting, not a lock.",
+      "url": "https://www.cbssports.com/fantasy/football/news/commanders-jayden-daniels-limited-in-return-to-practice/",
+      "tag": "injury"
+    },
+    {
+      "player": "Rachaad White",
+      "team": "WAS",
+      "pos": "RB",
+      "date": "2026-09-30",
+      "headline": "Sits out Wednesday practice (shoulder), questionable for Week 4 vs. Colts in London",
+      "take": "Jacory Croskey-Merritt's early-down/goal-line workload grows if White can't suit up Sunday.",
+      "url": "https://www.rotowire.com/football/headlines/rachaad-white-injury-sitting-out-practice-wednesday-639958",
+      "tag": "injury"
+    },
+    {
+      "player": "Jalen McMillan",
+      "team": "TB",
+      "pos": "WR",
+      "date": "2026-09-30",
+      "headline": "Officially placed on IR with a PCL sprain, expected out 6-8 weeks",
+      "take": "Ends any near-term bounce-back hope -- Egbuka and Godwin absorb his target share for at least a month and a half.",
+      "url": "https://www.kmmo.com/2026/09/30/tampa-bay-buccaneers-wr-jalen-mcmillan-expected-to-miss-6-8-weeks-with-knee-injury/",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-30",
+      "headline": "Schefter: Rams 'targeting' Week 4 return, but McVay calls it 'to be determined,' surgery still possible",
+      "take": "Mixed signals push his floor back down -- keep Davante Adams as the safer LAR WR1 start until Nacua is confirmed active.",
+      "url": "https://www.espn.com/nfl/story/_/id/50028567/rams-targeting-week-4-return-wr-puka-nacua",
+      "tag": "faller"
+    },
+    {
+      "player": "Mike Evans",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-09-30",
+      "headline": "Shanahan sounds optimistic Evans (ribs) returns to practice later this week for Week 4 vs. Denver",
+      "take": "Lean toward rostering him for Sunday, but confirm Thursday/Friday practice tag before locking him into lineups.",
+      "url": "https://sports.yahoo.com/articles/nfl-insider-questions-whether-49ers-123252188.html",
+      "tag": "injury"
+    },
     {
       "player": "Jalon Daniels",
       "team": "TB",
@@ -3350,136 +3400,6 @@
       "take": "Says he feels \"wonderful\" -- trust him as a top-5 TE Thursday night barring a pregame change.",
       "url": "https://www.cbssports.com/nfl/news/george-kittle-injury-update-49ers-te-feels-wonderful-ready-to-play-week-1-vs-steelers-despite-groin-issue/",
       "tag": "riser"
-    },
-    {
-      "player": "TreVeyon Henderson",
-      "team": "NE",
-      "pos": "RB",
-      "date": "2026-09-08",
-      "headline": "Officially ruled OUT for Wednesday's opener vs. Seattle after DNP all week",
-      "take": "Rhamondre Stevenson is the confirmed Week 1 lead back with Henderson sidelined.",
-      "url": "https://ca.sports.yahoo.com/news/treveyon-henderson-ruled-week-1-210528592.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Malik Nabers",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-09-08",
-      "headline": "ESPN's Graziano: Nabers \"sounds like\" he'll be good to go Sunday night; Giants release Darius Slayton",
-      "take": "Slayton's release plus the insider report both point toward a confident Week 1 start vs. Dallas.",
-      "url": "https://sports.yahoo.com/articles/malik-nabers-injury-giants-release-200419633.html",
-      "tag": "riser"
-    },
-    {
-      "player": "Rome Odunze",
-      "team": "CHI",
-      "pos": "WR",
-      "date": "2026-09-08",
-      "headline": "Ben Johnson: leg issue is \"something different,\" not last year's foot injury; hopeful for Sunday vs. Panthers",
-      "take": "More clarity but still unresolved -- don't lock him in until Chicago's first injury report.",
-      "url": "https://sports.yahoo.com/articles/latest-injury-bears-wr-rome-170802488.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Ashton Jeanty",
-      "team": "LV",
-      "pos": "RB",
-      "date": "2026-09-08",
-      "headline": "Raiders' first Week 1 depth chart lists him as RB1 despite still not practicing",
-      "take": "Encouraging placement for Sept. 13 vs. Miami, though reps haven't caught up to the confidence yet.",
-      "url": "https://heavy.com/sports/nfl/las-vegas-raiders/ashton-jeanty-depth-chart-dolphins/",
-      "tag": "riser"
-    },
-    {
-      "player": "Fernando Mendoza",
-      "team": "LV",
-      "pos": "QB",
-      "date": "2026-09-08",
-      "headline": "Confirmed as Raiders' QB2 behind Kirk Cousins on first Week 1 depth chart",
-      "take": "No Week 1 fantasy value, but a dynasty stash if Cousins misses time.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/raiders-depth-chart-lists-fernando-mendoza-as-qb2",
-      "tag": "role"
-    },
-    {
-      "player": "Pat Bryant",
-      "team": "DEN",
-      "pos": "WR",
-      "date": "2026-09-08",
-      "headline": "Broncos' first Week 1 depth chart lists him at WR4 behind Sutton, Waddle, and Mims",
-      "take": "Camp buzz didn't translate to a Week 1 role -- bench-stash only in redraft for now.",
-      "url": "https://www.cbssports.com/fantasy/football/news/broncos-courtland-sutton-atop-depth-chart-again-in-2026/",
-      "tag": "faller"
-    },
-    {
-      "player": "Tory Horton",
-      "team": "SEA",
-      "pos": "WR",
-      "date": "2026-09-08",
-      "headline": "Officially listed questionable (hamstring) on Seahawks' first Week 1 injury report",
-      "take": "Confirm pregame before trusting him in deep-league/best-ball flex spots vs. New England.",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/nick-emmanwori-questionable-ty-okada-out-for-wednesdays-season-opener",
-      "tag": "injury"
-    },
-    {
-      "player": "Christian McCaffrey",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-09-08",
-      "headline": "Practices fully Tuesday in Melbourne after sitting out Monday's team drills",
-      "take": "No setback -- workload management, not an injury concern; on track for Friday's opener vs. the Rams.",
-      "url": "https://www.49erswebzone.com/articles/203065-49ers-strong-practice-participation-numbers/",
-      "tag": "riser"
-    },
-    {
-      "player": "TreVeyon Henderson",
-      "team": "NE",
-      "pos": "RB",
-      "date": "2026-09-08",
-      "headline": "DNP again Tuesday; beat writers now call Week 1 \"extremely unlikely\"",
-      "take": "Rhamondre Stevenson trending toward a workhorse role Wednesday at Seattle if Henderson sits as expected.",
-      "url": "https://nesn.com/new-england-patriots/news/patriots-latest-practice-absence-raises-week-1-question/3b37a3b985c2537212537290",
-      "tag": "faller"
-    },
-    {
-      "player": "Malik Nabers",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-09-08",
-      "headline": "Works in most team reps Tuesday; Harbaugh confirms he was out there start to finish",
-      "take": "Trending back toward active status vs. Dallas after Monday's more cautious comments -- bump him back up.",
-      "url": "https://www.cbssports.com/nfl/news/malik-nabers-injury-update-giants-star-wr-returns-to-practice-after-two-week-absence",
-      "tag": "riser"
-    },
-    {
-      "player": "Malachi Fields",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-09-08",
-      "headline": "Rookie 3rd-rounder penciled in as Giants' Week 1 WR2 over Mooney/Beckham/Austin",
-      "take": "6'4\" red-zone threat carving out real snaps as a rookie -- streamable in deeper leagues, priority stash in dynasty.",
-      "url": "https://www.cbssports.com/fantasy/football/news/giants-malachi-fields-making-case-for-wr2-role/",
-      "tag": "riser"
-    },
-    {
-      "player": "Carnell Tate",
-      "team": "TEN",
-      "pos": "WR",
-      "date": "2026-09-08",
-      "headline": "Rookie WR closes camp on a high note, holds the inside track on Titans' WR1 job",
-      "take": "Beat out Wan'Dale Robinson/Calvin Ridley for the top target share entering Week 1 -- rookie WR3/4 upside with Cam Ward.",
-      "url": "https://www.espn.com/nfl/story/_/id/49732615/tennessee-titans-high-rookie-wr-carnell-tate",
-      "tag": "riser"
-    },
-    {
-      "player": "Kenneth Gainwell",
-      "team": "TB",
-      "pos": "RB",
-      "date": "2026-09-08",
-      "headline": "Baker Mayfield raves about Gainwell's camp performance; carving out passing-down role",
-      "take": "1B to Bucky Irving's 1A -- pass-catching-down flex/PPR value even in a backup role.",
-      "url": "https://www.buccaneers.com/news/baker-mayfield-discusses-kenneth-gainwell-overwhelming-talent-ted-hurst-iii-growth-more-bucs-bliz",
-      "tag": "role"
     }
   ]
 }

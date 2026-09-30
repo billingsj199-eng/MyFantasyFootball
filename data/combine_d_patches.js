@@ -62,47 +62,47 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Bo Jackson']) COMBINE_DATA['Bo Jackson'] = { school: 'Ohio St.', pos: 'RB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Kewan Lacy']) COMBINE_DATA['Kewan Lacy'] = { school: 'Mississippi', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Justice Haynes']) COMBINE_DATA['Justice Haynes'] = { school: 'Georgia Tech', pos: 'RB', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['Hollywood Smothers']) COMBINE_DATA['Hollywood Smothers'] = { school: 'Texas', pos: 'RB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Hollywood Smothers']) COMBINE_DATA['Hollywood Smothers'] = { school: 'Texas', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Dante Moore']) COMBINE_DATA['Dante Moore'] = { school: 'Oregon', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Arch Manning']) COMBINE_DATA['Arch Manning'] = { school: 'Texas', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Isaac Brown']) COMBINE_DATA['Isaac Brown'] = { school: 'Louisville', pos: 'RB', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['Mark Fletcher Jr.']) COMBINE_DATA['Mark Fletcher Jr.'] = { school: 'Miami (FL)', pos: 'RB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Mark Fletcher Jr.']) COMBINE_DATA['Mark Fletcher Jr.'] = { school: 'Miami (FL)', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Jordon Davison']) COMBINE_DATA['Jordon Davison'] = { school: 'Oregon', pos: 'RB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Ryan Wingo']) COMBINE_DATA['Ryan Wingo'] = { school: 'Texas', pos: 'WR', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['LJ Martin']) COMBINE_DATA['LJ Martin'] = { school: 'BYU', pos: 'RB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['LJ Martin']) COMBINE_DATA['LJ Martin'] = { school: 'BYU', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Eugene Wilson III']) COMBINE_DATA['Eugene Wilson III'] = { school: 'LSU', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['LaNorris Sellers']) COMBINE_DATA['LaNorris Sellers'] = { school: 'South Carolina', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Ahmad Hardy']) COMBINE_DATA['Ahmad Hardy'] = { school: 'Missouri', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Dallas Wilson']) COMBINE_DATA['Dallas Wilson'] = { school: 'Florida', pos: 'WR', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Jayce Brown']) COMBINE_DATA['Jayce Brown'] = { school: 'LSU', pos: 'WR', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Jayce Brown']) COMBINE_DATA['Jayce Brown'] = { school: 'LSU', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Dakorien Moore']) COMBINE_DATA['Dakorien Moore'] = { school: 'Oregon', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA["Trey'Dez Green"]) COMBINE_DATA["Trey'Dez Green"] = { school: 'LSU', pos: 'TE', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Nick Marsh']) COMBINE_DATA['Nick Marsh'] = { school: 'Indiana', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Dierre Hill Jr.']) COMBINE_DATA['Dierre Hill Jr.'] = { school: 'Oregon', pos: 'RB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Nyck Harbor']) COMBINE_DATA['Nyck Harbor'] = { school: 'South Carolina', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Caleb Hawkins']) COMBINE_DATA['Caleb Hawkins'] = { school: 'Oklahoma St.', pos: 'RB', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Brendan Sorsby']) COMBINE_DATA['Brendan Sorsby'] = { school: 'Texas Tech', pos: 'QB', devy: true, eligYr: 2026 };
-  if (!COMBINE_DATA['Terrance Carter Jr.']) COMBINE_DATA['Terrance Carter Jr.'] = { school: 'Texas Tech', pos: 'TE', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Brendan Sorsby']) COMBINE_DATA['Brendan Sorsby'] = { school: 'Texas Tech', pos: 'QB', devy: true, eligYr: 2027 };
+  if (!COMBINE_DATA['Terrance Carter Jr.']) COMBINE_DATA['Terrance Carter Jr.'] = { school: 'Texas Tech', pos: 'TE', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['CJ Baxter Jr.']) COMBINE_DATA['CJ Baxter Jr.'] = { school: 'Kentucky', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Julian Sayin']) COMBINE_DATA['Julian Sayin'] = { school: 'Ohio St.', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Jaron-Keawe Sagapolutele']) COMBINE_DATA['Jaron-Keawe Sagapolutele'] = { school: 'California', pos: 'QB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Sam Leavitt']) COMBINE_DATA['Sam Leavitt'] = { school: 'LSU', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Harlem Berry']) COMBINE_DATA['Harlem Berry'] = { school: 'LSU', pos: 'RB', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Isaiah Sategna III']) COMBINE_DATA['Isaiah Sategna III'] = { school: 'Oklahoma', pos: 'WR', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Isaiah Sategna III']) COMBINE_DATA['Isaiah Sategna III'] = { school: 'Oklahoma', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Dylan Raiola']) COMBINE_DATA['Dylan Raiola'] = { school: 'Oregon', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Nate Sheppard']) COMBINE_DATA['Nate Sheppard'] = { school: 'Duke', pos: 'RB', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Luke Hasz']) COMBINE_DATA['Luke Hasz'] = { school: 'Mississippi', pos: 'TE', devy: true, eligYr: 2026 };
-  if (!COMBINE_DATA['Raleek Brown']) COMBINE_DATA['Raleek Brown'] = { school: 'Texas', pos: 'RB', devy: true, eligYr: 2026 };
-  if (!COMBINE_DATA['Marcel Reed']) COMBINE_DATA['Marcel Reed'] = { school: 'Texas A&M', pos: 'QB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Luke Hasz']) COMBINE_DATA['Luke Hasz'] = { school: 'Mississippi', pos: 'TE', devy: true, eligYr: 2027 };
+  if (!COMBINE_DATA['Raleek Brown']) COMBINE_DATA['Raleek Brown'] = { school: 'Texas', pos: 'RB', devy: true, eligYr: 2027 };
+  if (!COMBINE_DATA['Marcel Reed']) COMBINE_DATA['Marcel Reed'] = { school: 'Texas A&M', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Kaliq Lockett']) COMBINE_DATA['Kaliq Lockett'] = { school: 'Texas', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['AK Dear']) COMBINE_DATA['AK Dear'] = { school: 'Alabama', pos: 'RB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Tavien St. Clair']) COMBINE_DATA['Tavien St. Clair'] = { school: 'Ohio St.', pos: 'QB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['T.J. Moore']) COMBINE_DATA['T.J. Moore'] = { school: 'Clemson', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Gideon Davidson']) COMBINE_DATA['Gideon Davidson'] = { school: 'Clemson', pos: 'RB', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Cam Cook']) COMBINE_DATA['Cam Cook'] = { school: 'West Virginia', pos: 'RB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Cam Cook']) COMBINE_DATA['Cam Cook'] = { school: 'West Virginia', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Bear Bachmeier']) COMBINE_DATA['Bear Bachmeier'] = { school: 'BYU', pos: 'QB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Quincy Porter']) COMBINE_DATA['Quincy Porter'] = { school: 'Notre Dame', pos: 'WR', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Josh Hoover']) COMBINE_DATA['Josh Hoover'] = { school: 'Indiana', pos: 'QB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Josh Hoover']) COMBINE_DATA['Josh Hoover'] = { school: 'Indiana', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Joshua Moore']) COMBINE_DATA['Joshua Moore'] = { school: 'Miami (FL)', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Julian Lewis']) COMBINE_DATA['Julian Lewis'] = { school: 'Colorado', pos: 'QB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Luke Reynolds']) COMBINE_DATA['Luke Reynolds'] = { school: 'Virginia Tech', pos: 'TE', devy: true, eligYr: 2027 };
@@ -110,20 +110,20 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Brandon Inniss']) COMBINE_DATA['Brandon Inniss'] = { school: 'Ohio St.', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Jadan Baugh']) COMBINE_DATA['Jadan Baugh'] = { school: 'Florida', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Cam Edwards']) COMBINE_DATA['Cam Edwards'] = { school: 'Western Illinois', pos: 'WR', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['Isaiah Horton']) COMBINE_DATA['Isaiah Horton'] = { school: 'Texas A&M', pos: 'WR', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Isaiah Horton']) COMBINE_DATA['Isaiah Horton'] = { school: 'Texas A&M', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['DJ Lagway']) COMBINE_DATA['DJ Lagway'] = { school: 'Baylor', pos: 'QB', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['Eric Singleton Jr.']) COMBINE_DATA['Eric Singleton Jr.'] = { school: 'Auburn', pos: 'WR', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Eric Singleton Jr.']) COMBINE_DATA['Eric Singleton Jr.'] = { school: 'Auburn', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Caden Durham']) COMBINE_DATA['Caden Durham'] = { school: 'LSU', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Kaelan Chudzinski']) COMBINE_DATA['Kaelan Chudzinski'] = { school: 'Boston College', pos: 'TE', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Darian Mensah']) COMBINE_DATA['Darian Mensah'] = { school: 'Miami (FL)', pos: 'QB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Darian Mensah']) COMBINE_DATA['Darian Mensah'] = { school: 'Miami (FL)', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Husan Longstreet']) COMBINE_DATA['Husan Longstreet'] = { school: 'LSU', pos: 'QB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Deuce Knight']) COMBINE_DATA['Deuce Knight'] = { school: 'Mississippi', pos: 'QB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Caleb Cunningham']) COMBINE_DATA['Caleb Cunningham'] = { school: 'Mississippi', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['John Mateer']) COMBINE_DATA['John Mateer'] = { school: 'Oklahoma', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['CJ Carr']) COMBINE_DATA['CJ Carr'] = { school: 'Notre Dame', pos: 'QB', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Byrum Brown']) COMBINE_DATA['Byrum Brown'] = { school: 'Auburn', pos: 'QB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Byrum Brown']) COMBINE_DATA['Byrum Brown'] = { school: 'Auburn', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Jordan Marshall']) COMBINE_DATA['Jordan Marshall'] = { school: 'Michigan', pos: 'RB', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['Danny Scudero']) COMBINE_DATA['Danny Scudero'] = { school: 'Colorado', pos: 'WR', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Danny Scudero']) COMBINE_DATA['Danny Scudero'] = { school: 'Colorado', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Talyn Taylor']) COMBINE_DATA['Talyn Taylor'] = { school: 'Georgia', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Nico Iamaleava']) COMBINE_DATA['Nico Iamaleava'] = { school: 'UCLA', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Quinton Martin Jr.']) COMBINE_DATA['Quinton Martin Jr.'] = { school: 'Penn St.', pos: 'RB', devy: true, eligYr: 2027 };
@@ -132,12 +132,12 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Nic Anderson']) COMBINE_DATA['Nic Anderson'] = { school: 'Kentucky', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Naeem Burroughs']) COMBINE_DATA['Naeem Burroughs'] = { school: 'Clemson', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Bryce Underwood']) COMBINE_DATA['Bryce Underwood'] = { school: 'Michigan', pos: 'QB', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Jayden Maiava']) COMBINE_DATA['Jayden Maiava'] = { school: 'USC', pos: 'QB', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Jayden Maiava']) COMBINE_DATA['Jayden Maiava'] = { school: 'USC', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Andrew Marsh']) COMBINE_DATA['Andrew Marsh'] = { school: 'Michigan', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Elyiss Williams']) COMBINE_DATA['Elyiss Williams'] = { school: 'Georgia', pos: 'TE', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Dilin Jones']) COMBINE_DATA['Dilin Jones'] = { school: 'LSU', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Ousmane Kromah']) COMBINE_DATA['Ousmane Kromah'] = { school: 'Florida St.', pos: 'RB', devy: true, eligYr: 2028 };
-  if (!COMBINE_DATA['Kenny Johnson']) COMBINE_DATA['Kenny Johnson'] = { school: 'Texas Tech', pos: 'WR', devy: true, eligYr: 2026 };
+  if (!COMBINE_DATA['Kenny Johnson']) COMBINE_DATA['Kenny Johnson'] = { school: 'Texas Tech', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Taylor Tatum']) COMBINE_DATA['Taylor Tatum'] = { school: 'Oklahoma', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Jerrick Gibson']) COMBINE_DATA['Jerrick Gibson'] = { school: 'Purdue', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Micah Hudson']) COMBINE_DATA['Micah Hudson'] = { school: 'Texas Tech', pos: 'WR', devy: true, eligYr: 2027 };
@@ -276,6 +276,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Keelon Russell']) COMBINE_DATA['Keelon Russell'] = { school: 'Alabama', pos: 'QB', devy: true, eligYr: 2028 };
 
   // === DEVY DRAFT YEAR CLEANUP ===
+  // 2026-09-30: 21 stubs still said eligYr 2026 although every one of them is on a 2026 college roster (CFBD) -> 2027.
   // combine_data.js may have stale data for devy players (missing devy flag, wrong yr).
   // Force devy:true, eligYr, and yr on ALL known devy players regardless of combine_data.js values.
   (function() {
@@ -285,53 +286,53 @@ if (typeof COMBINE_DATA !== 'undefined') {
     cb=COMBINE_DATA['Cam Coleman']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Ryan Williams']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Bryant Wesco Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Bo Jackson']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
+    cb=COMBINE_DATA['Bo Jackson']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;cb.pos='RB';cb.school='Ohio St.';delete cb.pb;delete cb.dt;delete cb.draft;} // devy Bo Jackson (Ohio St. RB, 2028) overwrites the 1986 Auburn legend's stub - same precedent as Ryan Williams
     cb=COMBINE_DATA['Kewan Lacy']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Justice Haynes']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Hollywood Smothers']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Hollywood Smothers']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Dante Moore']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Arch Manning']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Isaac Brown']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Mark Fletcher Jr.']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Mark Fletcher Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Jordon Davison']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA['Ryan Wingo']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['LJ Martin']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['LJ Martin']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Eugene Wilson III']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['LaNorris Sellers']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Ahmad Hardy']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Dallas Wilson']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
-    cb=COMBINE_DATA['Jayce Brown']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Jayce Brown']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Dakorien Moore']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA["Trey'Dez Green"]; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Nick Marsh']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Brandon Inniss']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Brendan Sorsby']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
-    cb=COMBINE_DATA['Terrance Carter Jr.']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Brendan Sorsby']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
+    cb=COMBINE_DATA['Terrance Carter Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Micah Hudson']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Quinten Joyner']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Jerrick Gibson']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Bryce Underwood']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
-    cb=COMBINE_DATA['Isaiah Sategna III']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Isaiah Sategna III']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Caden Durham']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Nate Frazier']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Luke Hasz']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
-    cb=COMBINE_DATA['Raleek Brown']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
-    cb=COMBINE_DATA['Marcel Reed']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Luke Hasz']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
+    cb=COMBINE_DATA['Raleek Brown']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
+    cb=COMBINE_DATA['Marcel Reed']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Julian Sayin']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Dylan Raiola']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Cam Cook']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Cam Cook']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Nico Iamaleava']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Josh Hoover']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
-    cb=COMBINE_DATA['Byrum Brown']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Josh Hoover']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
+    cb=COMBINE_DATA['Byrum Brown']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['DJ Lagway']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
-    cb=COMBINE_DATA['John Mateer']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['John Mateer']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['CJ Bailey']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Demond Williams Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['Isaiah Horton']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Isaiah Horton']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Caleb Cunningham']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
-    cb=COMBINE_DATA['Eric Singleton Jr.']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Eric Singleton Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Deuce Knight']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
-    cb=COMBINE_DATA['Darian Mensah']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Darian Mensah']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['CJ Carr']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA['Julian Lewis']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA['Tavien St. Clair']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
@@ -350,8 +351,8 @@ if (typeof COMBINE_DATA !== 'undefined') {
     cb=COMBINE_DATA['Caleb Hawkins']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Ousmane Kromah']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Gideon Davidson']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
-    cb=COMBINE_DATA['Sam Leavitt']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
-    cb=COMBINE_DATA['Jayden Maiava']; if(cb){cb.devy=true;cb.eligYr=2026;cb.yr=2026;}
+    cb=COMBINE_DATA['Sam Leavitt']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
+    cb=COMBINE_DATA['Jayden Maiava']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Braylon Staley']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Ian Strong']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Johntay Cook II']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}

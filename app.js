@@ -3715,7 +3715,24 @@ window._watchToggleName = function (name) {
 };
 _watchBadge();
 
+// DEVY class sub-filter (2026-09-30): ALL / 2027 / 2028 by COMBINE_DATA eligYr. Pills live next to the
+// DEVY position button and only show while the DEVY filter is active.
+window._devyClass = (function () { try { return localStorage.getItem('devy_class') || 'ALL'; } catch (e) { return 'ALL'; } })();
+window._setDevyClass = function (c) {
+  window._devyClass = String(c || 'ALL');
+  try { localStorage.setItem('devy_class', window._devyClass); } catch (e) {}
+  document.querySelectorAll('.devy-class-btn').forEach(b => b.classList.toggle('active', b.dataset.devyClass === window._devyClass));
+  render();
+};
+function _syncDevyClassBtns() {
+  const wrap = document.getElementById('devyClassBtns');
+  if (!wrap) return;
+  wrap.style.display = (filter === 'DEVY') ? 'inline-flex' : 'none';
+  wrap.querySelectorAll('.devy-class-btn').forEach(b => b.classList.toggle('active', b.dataset.devyClass === window._devyClass));
+}
+
 function getFiltered(applyTopN) {
+  _syncDevyClassBtns();
   // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
   if (filter === 'DEVY') {
     if (typeof COMBINE_DATA === 'undefined') return [];
@@ -3755,6 +3772,11 @@ function getFiltered(applyTopN) {
     devyPlayers.forEach((p, i) => { p.myRank = i + 1; p._devyIdx = i; p._pmJm = _devyPmMap[p.n] != null ? _devyPmMap[p.n] : null; });
     // Store on window for drag handler access
     window._devyList = devyPlayers;
+    // Class sub-filter (2027 / 2028): keep the overall devy rank numbers, just hide the other classes
+    if (window._devyClass && window._devyClass !== 'ALL') {
+      const _cls = parseInt(window._devyClass, 10);
+      devyPlayers = devyPlayers.filter(p => parseInt(p._devyEligYr, 10) === _cls);
+    }
     if (query) {
       const q = query.toLowerCase();
       return devyPlayers.filter(p => p.n.toLowerCase().includes(q) || p.t.toLowerCase().includes(q));

@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-30-exp" as="script">
+<link rel="preload" href="app.js?v=2026-09-30-devyclass" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1458,7 +1458,7 @@ CLEAR ALL
 <button class="pos-btn" data-pos="TE">TE</button>
 <button class="pos-btn" data-pos="FLEX" id="flexPosBtn" style="display:none" title="RB + WR + TE combined">FLEX</button>
 <button class="pos-btn" data-pos="ROOKIE">ROOKIES</button>
-<button class="pos-btn" data-pos="DEVY" id="devyPosBtn" style="display:none">DEVY</button>
+<button class="pos-btn" data-pos="DEVY" id="devyPosBtn" style="display:none">DEVY</button><span id="devyClassBtns" style="display:none;gap:4px;margin-left:2px" title="Devy class - draft-eligible year"><button class="pos-btn devy-class-btn active" data-devy-class="ALL" onclick="window._setDevyClass('ALL')">ALL</button><button class="pos-btn devy-class-btn" data-devy-class="2027" onclick="window._setDevyClass('2027')">2027</button><button class="pos-btn devy-class-btn" data-devy-class="2028" onclick="window._setDevyClass('2028')">2028</button></span>
 <button class="pos-btn" data-pos="K">K</button>
 <button class="pos-btn" data-pos="DST">D/ST</button>
 <button class="pos-btn watch-filter-btn" id="watchFilterBtn" onclick="window._toggleWatchOnly()" title="Show only your watchlist — click the ☆ on any row to add a player">★<span id="watchFilterCount" style="margin-left:3px"></span></button>
@@ -4588,7 +4588,7 @@ window.clayLookup = clayLookup;
 <!-- COMBINE_DATA + D[] patch block extracted to data/combine_d_patches.js (2026-07-20) so the
      data scripts above can be defer'd — it was the only parse-time reader. defer keeps it
      executing after combine_data.js/d.js and before app.js (document order). -->
-<script src="data/combine_d_patches.js?v=2026-09-30b" defer></script>
+<script src="data/combine_d_patches.js?v=2026-09-30c" defer></script>
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
@@ -5932,7 +5932,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-30-exp"></script>
+<script defer src="app.js?v=2026-09-30-devyclass"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

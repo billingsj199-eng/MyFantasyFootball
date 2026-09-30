@@ -1371,6 +1371,36 @@
   // the team's projected starting QB (highest Clay season projection on the roster) is unavailable this week (injury / IR / Out), per the
   // same availability test the depth chart uses. A planned start window (qbWindow) is NOT an outage - Clay's receivers already price it.
   var _pqCache = {};
+  // QB STARTER FLOOR (backtest_qb_shrink_cartrend.py, 2026-09-30; Jack: "go build the qb shrink"). Quarterbacks projected
+  // BELOW the league's starting-QB mean scored well over it 2019-25 (projection 5-12 half-PPR: 1.39x; the top tier was
+  // fair at 1.00), so a two-sided shrink lost at the top. One-sided: pred = mu + k x (base - mu) for bases under mu,
+  // k = 0.70 in all seven held-out folds: QB MSE -2.33% (7/7 seasons), MAE -1.11%, low tier 1.39 -> 1.15, top tier
+  // untouched; ranks unchanged (monotonic). mu = mean per-game level of the pool's top-32 QBs by season points.
+  // Applied to the model side only (Clay stack + JS base), and NOT to a backup who is already inheriting the
+  // starter's role (that boost covers the same gap). Kill: window.SIM_QB_FLOOR = false.
+  var QB_FLOOR = { k: 0.70, topN: 32, min: 5 };
+  var _qbMuCache = {};
+  function qbFloorMu(sc, perGameDivOf) {
+    var key = [sc.rec, sc.pass_td, sc.pass_yd, sc.rush_yd, sc.rush_td].join(',');
+    var c = _qbMuCache[key];
+    if (c && c.src === _poolByNorm) return c.mu;
+    var lv = [], seen = [];
+    if (_poolByNorm) Object.keys(_poolByNorm).forEach(function (k) {
+      var q = _poolByNorm[k]; if (!q || q.pos !== 'QB' || q.isDST || seen.indexOf(q) >= 0) return;
+      seen.push(q); lv.push(seasonPoints(q, sc) / (q.qbWindow ? (q.qbWindow.games || 17) : 17));
+    });
+    lv.sort(function (a, b) { return b - a; });
+    var top = lv.slice(0, QB_FLOOR.topN), mu = top.length ? top.reduce(function (s, v) { return s + v; }, 0) / top.length : 0;
+    _qbMuCache[key] = { src: _poolByNorm, mu: mu };
+    return mu;
+  }
+  function qbFloor(base, sc) {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_QB_FLOOR === false) return base;
+    var mu = qbFloorMu(sc);
+    if (!(mu > 0) || !(base >= QB_FLOOR.min) || base >= mu) return base;
+    return mu + QB_FLOOR.k * (base - mu);
+  }
   function teamPrimaryQbOut(tm, wk) {
     if (!tm || !_poolByNorm) return false;
     var c = _pqCache[tm];
@@ -2052,11 +2082,45 @@
       var gi = (sched.gameWeeks[p.tm] || []).indexOf(wk) + 1;
       return gi > 0 && gi >= p.qbWindow.s && gi <= p.qbWindow.e;
     };
+    // AVAILABILITY CURVE (backtest_avail_curve.py, 2026-09-30; Jack: "do injuries (how long out for) an issue?").
+    // A player tagged Out was projected back at full strength the very next week and an IR player right after
+    // his four games. 1,668 absence states 2019-25 (starters): after one missed game 65% miss the next too,
+    // after two 72%, three 77%, four 77%, six 87%. Chain P(plays j games from now) = 1 - CONT[k] x ... x
+    // CONT[k+j-1] (k = games missed so far); LOYO Brier .231 vs .578 for the engine's assumption, expected
+    // games over the next four 1.94 vs actual 1.84 (engine 4.00). Applied to the weeks AFTER a designation's
+    // own window for Out / NFL-Out / IR / NA (not overrides - Jack sets those - and not unconfirmed or
+    // Doubtful docks), out to AVAIL_H more weeks; the vacated share flows to teammates in those weeks like
+    // any other dock. The current week never changes. Kill: window.SIM_AVAIL_CURVE = false.
+    var AVAIL_CONT = { 1: 0.65, 2: 0.72, 3: 0.77, 4: 0.77, 5: 0.75, 6: 0.87, 7: 0.86, 8: 0.89 }, AVAIL_H = 8;
+    _inj.avail = {};
+    if (wnd.SIM_AVAIL_CURVE !== false) {
+      var gwOf = function (tm) { return (sched && sched.gameWeeks && sched.gameWeeks[tm]) || []; };
+      list.forEach(function (p) {
+        var m = map[p.norm];
+        if (!m || m.mult !== 0 || ['out', 'nfl-out', 'ir', 'na'].indexOf(m.src) < 0) return;
+        var rec = jsData().players ? jsData().players[p.norm] : null, wks = rec && rec.wks ? rec.wks : [];
+        var gw = gwOf(p.tm), k = 0, seenPlay = false;
+        for (var gi = gw.length - 1; gi >= 0; gi--) {   // games missed in a row before the current week (a bye is not a game)
+          var w0 = gw[gi]; if (w0 >= currentWeek) continue;
+          if (wks.indexOf(w0) >= 0) { seenPlay = true; break; }
+          k++;
+        }
+        if (!seenPlay && k > 0) k = Math.min(k, 3);   // never played this season: a camp injury, not an in-season streak
+        for (var w1 = m.from; w1 <= m.to; w1++) if (gw.indexOf(w1) >= 0) k++;   // his designation's own zeroed games
+        var surv = 1, curve = {}, ahead = 0;
+        for (var w2 = m.to + 1; w2 <= WEEKS && ahead < AVAIL_H; w2++) {
+          if (gw.indexOf(w2) < 0) continue;
+          surv *= AVAIL_CONT[Math.min(8, Math.max(1, k + ahead))]; ahead++;
+          curve[w2] = +(1 - surv).toFixed(3);
+        }
+        if (ahead) { m.curve = curve; m.missed = k; }
+      });
+    }
     var weeks = {};
-    Object.keys(map).forEach(function (n) { for (var w = map[n].from; w <= map[n].to; w++) weeks[w] = 1; });
+    Object.keys(map).forEach(function (n) { for (var w = map[n].from; w <= map[n].to; w++) weeks[w] = 1; if (map[n].curve) Object.keys(map[n].curve).forEach(function (cw) { weeks[cw] = 1; }); });
     Object.keys(weeks).forEach(function (wkS) {
       var wk = +wkS, lost = {}, healthyW = {}, nextQb = {};
-      var multOf = function (p) { var m = map[p.norm]; return (m && wk >= m.from && wk <= m.to) ? m.mult : 1; };
+      var multOf = function (p) { var m = map[p.norm]; if (!m) return 1; if (wk >= m.from && wk <= m.to) return m.mult; return (m.curve && m.curve[wk] != null) ? m.curve[wk] : 1; };
       list.forEach(function (p) {
         if (p.isDST || !INJ_SHARE[p.pos]) return;
         if (!inWindow(p, wk)) return; // not projected this week — nothing to vacate or absorb
@@ -2149,8 +2213,42 @@
         if (mp && mp.play != null && mult < 1 && wk >= mp.from && wk <= mp.to) (_inj.play[p.norm] = _inj.play[p.norm] || {})[wk] = mp.play;
       });
     });
-    list.forEach(function (p) { var m = map[p.norm]; if (m) _inj.zeros.push({ name: p.name, tm: p.tm, pos: p.pos, from: m.from, to: m.to, mult: m.mult, play: m.play, cond: m.cond, src: m.src }); });
+    list.forEach(function (p) { var m = map[p.norm]; if (m) _inj.zeros.push({ name: p.name, tm: p.tm, pos: p.pos, from: m.from, to: m.to, mult: m.mult, play: m.play, cond: m.cond, src: m.src, curve: m.curve || null, missed: m.missed }); });
+    list.forEach(function (p) { var m = map[p.norm]; if (m && m.curve) { _inj.avail[p.norm] = m.curve; var pl = _inj.play[p.norm] = _inj.play[p.norm] || {}; Object.keys(m.curve).forEach(function (cw) { pl[cw] = m.curve[cw]; }); } });   // curve weeks: the whole dock is availability (the prop anchor undoes only `play`)
     return _inj;
+  }
+  // availability-curve weight for a week (P plays), 1 when the curve does not apply - the site's PPG export
+  // divides those weeks' means by it so a rest-of-season PPG stays a per-game rate.
+  function injAvail(p, wk) {
+    if (!_inj || !_inj.avail) return 1;
+    var a = _inj.avail[p.norm];
+    return a && a[wk] != null ? a[wk] : 1;
+  }
+  // RETURN RAMP (backtest_return_ramp.py, 2026-09-30; the 09-15 first-game-back dock finally wired). Game 1
+  // back after 2-3 missed team games scored .90 of projection, after 4+ missed .835 / .95 / .98 over the first
+  // three games back (QB .77 / WR .73 in game 1); after one missed game only QBs dip (.90; RB 1.08, WR 1.01).
+  // TE showed nothing (1.00). Shipped: missed 1 -> QB x0.95; missed 2-3 -> x0.90; missed 4+ -> x0.85 / x0.92 /
+  // x0.96 (QB/RB/WR): MSE on the ramp rows -2.8% (7/7 seasons), QB -3.9%, RB -2.2%, WR -2.6%. Missed games
+  // are team games with no 2026 game row (sim_2026 players[norm].wks); weeks from the current one on count as
+  // played when the injury layer does not zero them, so a player out now takes the ramp on his projected
+  // return. Kill: window.SIM_RETURN_RAMP = false.
+  var RETURN_RAMP = { '1': { QB: [0.95] }, '2-3': { QB: [0.90], RB: [0.90], WR: [0.90] }, '4+': { QB: [0.85, 0.92, 0.96], RB: [0.85, 0.92, 0.96], WR: [0.85, 0.92, 0.96] } };
+  function returnDock(p, wk, schedule) {
+    if (p.isDST || !RETURN_RAMP['4+'][p.pos]) return 1;
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_RETURN_RAMP === false || !_inj || !(_inj.week >= 2)) return 1;
+    var rec = jsData().players ? jsData().players[p.norm] : null, wks = rec && rec.wks ? rec.wks : null;
+    if (!wks || !wks.length) return 1;                       // no game yet this season: a camp injury / debut, not a return
+    if (seasonPoints(p, PRESETS.half) / 17 < 5) return 1;   // backups drift in and out of the box score; the ramp was measured on starters
+    var gw = (schedule && schedule.gameWeeks && schedule.gameWeeks[p.tm]) || [];
+    var playedW = function (w) { return w < _inj.week ? wks.indexOf(w) >= 0 : injAdj(p, w) > 0; };
+    var back = 0, k = 0, gi = gw.length - 1;
+    while (gi >= 0 && gw[gi] >= wk) gi--;
+    while (gi >= 0 && playedW(gw[gi])) { back++; gi--; }
+    while (gi >= 0 && !playedW(gw[gi])) { k++; gi--; }
+    if (!k || gi < 0) return 1;                               // no absence, or nothing played before it
+    var ramp = RETURN_RAMP[k === 1 ? '1' : k <= 3 ? '2-3' : '4+'][p.pos];
+    return (ramp && back < ramp.length) ? ramp[back] : 1;
   }
   function injAdj(p, wk) {
     if (!_inj) return 1;
@@ -2210,8 +2308,8 @@
     var perGameDiv = p.qbWindow ? p.qbWindow.games : clayDiv(p);
     var dAdj = (defenseAdj()[slot.opp] || {})[p.pos] || 1;
     var mCbS = cbShadowMult(slot.opp, p.pos, p), mCb1 = cb1OutBoost(slot.opp, p.pos, p), mOl = olOutDock(p.tm, p.pos),
-      mPr = pressureMult(slot.opp, p.pos), mWx = weatherMult(p, wk, slot);
-    var cbM = mCbS * mCb1 * mOl * mPr * mWx;
+      mPr = pressureMult(slot.opp, p.pos), mWx = weatherMult(p, wk, slot), mRet = returnDock(p, wk, schedule);
+    var cbM = mCbS * mCb1 * mOl * mPr * mWx * mRet;
     var mSnap = snapMult(p, wk), mRoute = routeMult(p, wk);
     var sM = mSnap * mRoute;
     var rampF = 1;
@@ -2229,7 +2327,9 @@
     // it was sized on and add them to the base; the chain then carries no availability factor for him.
     var qbInh = 0, iAc = iA;
     if (p.pos === 'QB' && iA > 1) { qbInh = (iA - 1) * seasonPoints(p, sc) / (p.qbWindow ? (p.qbWindow.games || 17) : 17); iAc = 1; }
-    mean = (clayPg + qbInh) * (factor / iA * iAc) * rookieLevel(p);
+    var mQbf = 1;
+    if (p.pos === 'QB' && !(qbInh > 0) && !(iA > 1) && clayPg > 0) { var cf = qbFloor(clayPg, sc); mQbf = cf / clayPg; }
+    mean = (clayPg * mQbf + qbInh) * (factor / iA * iAc) * rookieLevel(p);
     // JS Weekly (in-season model): Clay prior shrunk toward 2026 actuals,
     // actual FPA-by-position opponent adj replacing Clay unit grades as the
     // sample grows. Preseason (no 2026 data) both terms collapse to Clay's,
@@ -2237,6 +2337,8 @@
     var lvU = liveUsage(p, wk, sc);   // WR / TE: the level of his role (targets, routes, snaps) as part of the evidence
     var jsBaseNoU = jsBasePg(p, sc, clayPg), jsBase0 = lvU ? jsBasePg(p, sc, clayPg, null, lvU) : jsBaseNoU, mRook = rookieLevel(p);
     var jsPg = jsBase0 * mRook;
+    var jsPgPre = jsPg;
+    if (p.pos === 'QB' && !(qbInh > 0) && !(iA > 1)) { jsPg = qbFloor(jsPg, sc); mQbf = jsPgPre > 0 ? jsPg / jsPgPre : 1; }
     var jsPgRook = jsPg;
     var rbU = rbUsagePg(p, wk);
     if (rbU) {
@@ -2552,10 +2654,10 @@
       rmMean = (espnPts != null && espnPts > 0.5 && ncMean > 0) ? NC_SHADOW.rankMixW * ncMean + (1 - NC_SHADOW.rankMixW) * espnPts : ncMean;
       rmFinal = (propSrc === 'line' && propMean != null && propWUsed != null) ? Math.max(0, propMean + (1 - propWUsed) * (rmMean - baseM)) : rmMean;   // same market, our base swapped in
     }
-    return { mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse,
+    return { mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse, ret: mRet, qbf: mQbf,
       // WHY (2026-09-16, NOTES per-player why notes): every factor of the JS model in engine order - app.js ntWhy turns it into a points waterfall
       why: { clayPg: clayPg, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: qbInh > 0 ? jsPgOwn : jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied,
-             opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, snap: mSnap, route: mRoute, ramp: rampF, iA: (qbInh > 0 && jsPgOwn > 0) ? jsPg / jsPgOwn : iA,
+             opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, ret: mRet, avail: injAvail(p, wk), qbFloor: mQbf, snap: mSnap, route: mRoute, ramp: rampF, iA: (qbInh > 0 && jsPgOwn > 0) ? jsPg / jsPgOwn : iA,
              luck: luckAdj, jsMean: jsMean, perGameDiv: perGameDiv, peck: mPeck, peckRank: peckR.rank } };
   }
 
@@ -2707,6 +2809,8 @@
         lcCorr: p._wk.lcCorr != null ? p._wk.lcCorr : null,   // learned-correction shadow (half-PPR points)
         useLam: p._wk.use ? p._wk.use.lam : null, usePg: p._wk.use ? p._wk.use.xfpPg : null, jsNoUse: p._wk.jsNoUse != null ? p._wk.jsNoUse : null,   // live usage evidence (usage_scorecard.py)
         peck: p._wk.peck != null ? p._wk.peck : 1, peckRank: p._wk.peckRank != null ? p._wk.peckRank : null,   // pecking-order dock (peck_scorecard.py)
+        ret: p._wk.ret != null ? p._wk.ret : 1,   // return ramp (return_scorecard.py)
+        qbf: p._wk.qbf != null ? p._wk.qbf : 1,   // QB starter floor (return_scorecard.py)
         propSrc: p._wk.propSrc || null,
         mult: p._wk.mult, slot: p._wk.slot, comps: p._wk.comps, compsU: p._wk.compsU,
         p10: pct(arr, 0.10), p25: pct(arr, 0.25), p50: pct(arr, 0.50),
@@ -3539,7 +3643,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, lgbExplain: lgbExplain, learnedShadowExplain: learnedShadowExplain, ctxNote: ctxNote,
+    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injAvail: injAvail, returnDock: returnDock, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, lgbExplain: lgbExplain, learnedShadowExplain: learnedShadowExplain, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult, ncCacheReset: ncCacheReset,

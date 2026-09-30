@@ -1,0 +1,40 @@
+=== A. level shrink toward the week's positional mean, pred = mu + k (live - mu), k LOYO by MSE ===
+  QB shrink (held-out k picks [0.79, 0.79, 0.79, 0.79, 0.79, 0.79, 0.79]) n= 2531  MSE  -1.73% (6/7)  MAE  -0.82%  bias -0.79 -> -0.79
+      low tier  n= 248  actual/projected 1.387 -> 1.208
+      mid       n=1405  actual/projected 1.050 -> 1.031
+      top tier  n= 878  actual/projected 0.999 -> 1.042
+  RB shrink (held-out k picks [0.94, 0.94, 0.94, 0.94, 0.97, 0.91, 0.94]) n= 3651  MSE  -0.01% (4/7)  MAE  +0.27%  bias -0.24 -> -0.23
+      low tier  n=2177  actual/projected 1.059 -> 1.038
+      mid       n=1257  actual/projected 0.995 -> 1.008
+      top tier  n= 217  actual/projected 0.976 -> 1.002
+  WR shrink (held-out k picks [1.0, 0.97, 0.97, 1.0, 0.97, 0.97, 1.0]) n= 5692  MSE  +0.04% (0/7)  MAE  +0.07%  bias -0.21 -> -0.21
+      low tier  n=4457  actual/projected 1.033 -> 1.030
+      mid       n=1197  actual/projected 0.998 -> 1.003
+  TE shrink (held-out k picks [0.91, 0.88, 0.94, 0.94, 0.94, 0.94, 0.94]) n= 1998  MSE  -0.01% (6/7)  MAE  +0.11%  bias -0.43 -> -0.43
+      low tier  n=1861  actual/projected 1.069 -> 1.065
+      mid       n= 137  actual/projected 0.952 -> 0.982
+  QB, split by games played (actual/projected of the top tier, live): g 1-3: 1.037  g 4-8: 1.007  g 9-17: 0.978
+
+=== A2. QB: where does the shrink gain come from, and does a one-sided version (raise the floor, leave the top) keep it? ===
+  two-sided k picks [0.7, 0.7, 0.76, 0.7, 0.7, 0.7, 0.82] n= 2531  MSE  -1.41% (6/7)  MAE  -0.74%  bias -0.79 -> -0.79
+      low  n= 248  MSE -14.92%  actual/projected 1.387 -> 1.170
+      mid  n=1405  MSE  -0.56%  actual/projected 1.050 -> 1.025
+      top  n= 878  MSE  +1.58%  actual/projected 0.999 -> 1.055
+  floor only (below the mean) k picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7] n= 2531  MSE  -2.33% (7/7)  MAE  -1.11%  bias -0.79 -> -0.33
+      low  n= 248  MSE -17.39%  actual/projected 1.387 -> 1.145
+      mid  n=1405  MSE  -0.60%  actual/projected 1.050 -> 1.019
+      top  n= 878  MSE  +0.00%  actual/projected 0.999 -> 0.999
+  cap only (above the mean) k picks [0.94, 0.88, 0.94, 0.88, 0.94, 0.88, 1.0] n= 2531  MSE  +0.21% (1/7)  MAE  +0.05%  bias -0.79 -> -0.90
+      low  n= 248  MSE  +0.00%  actual/projected 1.387 -> 1.387
+      mid  n=1405  MSE  +0.03%  actual/projected 1.050 -> 1.051
+      top  n= 878  MSE  +0.49%  actual/projected 0.999 -> 1.014
+  low-tier QB rows by games played entering the week (actual/live): g=1: 1.56 (n=27)  g=2: 1.49 (n=28)  g=3: 1.39 (n=33)  g=4: 1.25 (n=33)  g=5: 1.57 (n=27)  g6+: 1.32 (n=100)
+  low-tier by prior (Clay per game): clay 0-6: 1.56 (n=88)  clay 6-10: 1.47 (n=78)  clay 10-14: 1.21 (n=64)  clay 14-30: 1.09 (n=18)
+
+=== B. RB carry-share trend on top of the live stack incl. snap trend: mult = clamp(1 + e x car_trend, .8, 1.25), e LOYO ===
+  all RB rows (held-out e picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) n= 3280  MSE  +0.00% (0/7)  MAE  +0.00%  bias -0.13 -> -0.13
+     share falling 5+ pts (actual/live 1.007)  n=  599  MSE  +0.00% (0/7)  MAE  +0.00%  bias -0.07 -> -0.07
+     steady (actual/live 1.025)                n= 1895  MSE  +0.00% (0/7)  MAE  +0.00%  bias -0.28 -> -0.28
+     share rising 5+ pts (actual/live 0.985)   n=  786  MSE  +0.00% (0/7)  MAE  +0.00%  bias +0.19 -> +0.19
+  pooled e sweep on all RB rows: e=0.0: +0.00%  e=0.25: +0.32%  e=0.5: +0.90%  e=0.75: +1.69%  e=1.0: +2.55%  e=1.25: +3.42%
+  residual (actual - live incl. snap trend) vs car_trend: r -0.007; vs snap trend: r +0.001

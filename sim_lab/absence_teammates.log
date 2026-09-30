@@ -1,0 +1,49 @@
+=== starters out -> the rest of the offense, 2019-25 (13491 player-weeks projected 5+; 1226 team-weeks with an absent starter) ===
+  baseline - nobody missing:
+   QB                                                 n= 1833  actual/projected 1.036  (t  +3.4)  seasons under 1.0: 2/7
+   RB                                                 n= 2411  actual/projected 1.025  (t  +1.9)  seasons under 1.0: 2/7
+   WR                                                 n= 3810  actual/projected 0.998  (t  -0.2)  seasons under 1.0: 3/7
+   TE                                                 n= 1294  actual/projected 1.019  (t  +1.0)  seasons under 1.0: 2/7
+
+  a starting QB is out:
+   QB teammates  <- same position: the vacancy bump   n=   40 (too few)
+   RB teammates                                       n=  410  actual/projected 1.098  (t  +2.7)  seasons under 1.0: 1/7
+   WR teammates                                       n=  597  actual/projected 0.996  (t  -0.1)  seasons under 1.0: 5/7
+   TE teammates                                       n=  187  actual/projected 1.067  (t  +1.1)  seasons under 1.0: 5/7
+   other positions, his FIRST missed game             n=  371  actual/projected 1.012  (t  +0.3)  seasons under 1.0: 4/7
+   other positions, later missed games                n=  823  actual/projected 1.055  (t  +2.2)  seasons under 1.0: 2/7
+
+  a starting RB is out:
+   QB teammates                                       n=  272  actual/projected 1.042  (t  +1.4)  seasons under 1.0: 3/7
+   RB teammates  <- same position: the vacancy bump   n=  208  actual/projected 1.258  (t  +4.8)  seasons under 1.0: 0/6
+   WR teammates                                       n=  612  actual/projected 1.037  (t  +1.3)  seasons under 1.0: 1/7
+   TE teammates                                       n=  236  actual/projected 1.075  (t  +1.4)  seasons under 1.0: 2/7
+   other positions, his FIRST missed game             n=  419  actual/projected 1.045  (t  +1.3)  seasons under 1.0: 5/7
+   other positions, later missed games                n=  701  actual/projected 1.044  (t  +1.8)  seasons under 1.0: 2/7
+
+  a starting WR is out:
+   QB teammates                                       n=  388  actual/projected 1.014  (t  +0.6)  seasons under 1.0: 2/7
+   RB teammates                                       n=  568  actual/projected 1.061  (t  +2.1)  seasons under 1.0: 2/7
+   WR teammates  <- same position: the vacancy bump   n=  612  actual/projected 1.083  (t  +2.8)  seasons under 1.0: 0/7
+   TE teammates                                       n=  333  actual/projected 1.147  (t  +3.4)  seasons under 1.0: 1/7
+   other positions, his FIRST missed game             n=  462  actual/projected 1.029  (t  +1.0)  seasons under 1.0: 1/7
+   other positions, later missed games                n=  827  actual/projected 1.071  (t  +3.4)  seasons under 1.0: 1/7
+
+  a starting TE is out:
+   QB teammates                                       n=   91  actual/projected 1.100  (t  +1.9)  seasons under 1.0: 1/5
+   RB teammates                                       n=  145  actual/projected 1.070  (t  +1.3)  seasons under 1.0: 3/7
+   WR teammates                                       n=  189  actual/projected 1.103  (t  +1.8)  seasons under 1.0: 1/7
+   TE teammates  <- same position: the vacancy bump   n=   10 (too few)
+   other positions, his FIRST missed game             n=  146  actual/projected 1.055  (t  +1.1)  seasons under 1.0: 1/7
+   other positions, later missed games                n=  279  actual/projected 1.110  (t  +2.7)  seasons under 1.0: 1/7
+
+  how many starters are missing (players at OTHER positions than the absentees):
+   1 starter out                                      n= 2785  actual/projected 1.051  (t  +4.2)  seasons under 1.0: 1/7
+   2 starters out                                     n=  435  actual/projected 1.045  (t  +1.4)  seasons under 1.0: 1/7
+   3+ starters out                                    n=   53 (too few)
+
+  elite absentee (guide 14+ a game; QB 18+) vs ordinary starter, other positions:
+   elite out                                          n=  677  actual/projected 0.982  (t  -0.7)  seasons under 1.0: 4/7
+   ordinary starter out                               n= 2661  actual/projected 1.063  (t  +5.1)  seasons under 1.0: 0/7
+
+  baseline ratios for reference: QB 1.036, RB 1.025, WR 0.998, TE 1.019

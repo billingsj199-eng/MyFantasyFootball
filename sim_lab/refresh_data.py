@@ -470,9 +470,20 @@ try:
                 df = _pdcb.read_parquet(pq, columns=["week", "game_type", "player",
                                                      "position", "team", "defense_pct"])
                 return df[(df.game_type == "REG") & (df.position == "CB") & (df.defense_pct >= 0.6)]
-            def is_out(s):
-                return (s.get("status") != "Active" or
-                        (s.get("injury_status") or "").startswith(("Out", "Doubtful")))
+            # OL / CB availability (2026-09-30, Jack: "consistently update injury reports on offensive line and
+            # defensive matchups"): Sleeper's status OR the current week's NFL practice report (Out / Doubtful),
+            # keyed by normalized name - Sleeper's OL / CB tags lag the Wednesday-Friday reports.
+            _prac_now = {}
+            try:
+                _prj = json.load(open(os.path.join(REPO, "data", "practice_2026.json"), encoding="utf-8"))
+                _prac_now = {_cbnorm(n_): (v_.get("gs") or "") for n_, v_ in (_prj.get("players") or {}).items()}
+            except Exception:  # noqa: BLE001
+                pass
+            def is_out(s, name=None):
+                if s.get("status") != "Active" or (s.get("injury_status") or "").startswith(("Out", "Doubtful")):
+                    return True
+                gs = _prac_now.get(_cbnorm(name or s.get("full_name") or ""), "")
+                return gs.lower() in ("out", "doubtful")
             use26 = False
             if os.path.exists(pq26):
                 df26 = cb_rows(pq26)
@@ -489,7 +500,7 @@ try:
                         if s is None:
                             print(f"WARN CB1 {nm} ({tm}): no Sleeper match — no boost")
                             continue
-                        cb1_map[tm] = {"name": nm, "out": is_out(s), "src": "2026"}
+                        cb1_map[tm] = {"name": nm, "out": is_out(s, nm), "src": "2026"}
             if not use26:
                 # 2025 profiles (games summed ACROSS team stints — trades) ->
                 # each player's CURRENT Sleeper team
@@ -504,7 +515,7 @@ try:
                         continue
                     key = (len(rows), float(rows.defense_pct.mean()))
                     if cur not in best or key > best[cur][0]:
-                        best[cur] = (key, {"name": nm, "out": is_out(s), "src": "2025"})
+                        best[cur] = (key, {"name": nm, "out": is_out(s, nm), "src": "2025"})
                 cb1_map = {tm: v[1] for tm, v in best.items()}
         except Exception as e3:
             print(f"WARN CB1 map skipped ({e3}) — boost layer inert")
@@ -522,7 +533,7 @@ try:
         try:
             sl_ol_exact, sl_ol_short = {}, {}
             for rec in allp.values():
-                if not isinstance(rec, dict) or rec.get("position") not in ("OL", "T", "G", "C", "OT"):
+                if not isinstance(rec, dict) or rec.get("position") not in ("OL", "T", "G", "C", "OT", "OG"):
                     continue
                 nmn = _cbnorm(rec.get("full_name") or "")
                 if not nmn:
@@ -543,7 +554,7 @@ try:
             def ol_rows(pq):
                 df = _pdcb.read_parquet(pq, columns=["week", "game_type", "player",
                                                      "position", "team", "offense_pct"])
-                return df[(df.game_type == "REG") & (df.position.isin(["C", "G", "T"]))
+                return df[(df.game_type == "REG") & (df.position.isin(["C", "G", "T", "OL"]))   # nflverse labels most linemen plain 'OL' (11 teams had no starting five without it, 2026-09-30)
                           & (df.offense_pct >= 0.6)]
             fives = {}
             use26_ol = False
@@ -558,7 +569,8 @@ try:
                         lst.sort(reverse=True)
                         if len(lst) >= 5:
                             fives[tm] = [nm for _, _, nm in lst[:5]]
-            if not use26_ol:
+            if not use26_ol or len(fives) < 32:
+                # 2025 profiles fill every team the 2026 snap file cannot (8 teams short on 2026-09-30)
                 by_cur = {}
                 for nm, rows in ol_rows(os.path.join(cache_dir, "snap_counts_2025.parquet")).groupby("player"):
                     if len(rows) < 6:
@@ -570,19 +582,25 @@ try:
                     by_cur.setdefault(cur, []).append((len(rows), float(rows.offense_pct.mean()), nm))
                 for tm, lst in by_cur.items():
                     lst.sort(reverse=True)
-                    if len(lst) >= 5:
+                    if len(lst) >= 5 and tm not in fives:
                         fives[tm] = [nm for _, _, nm in lst[:5]]
+            ol_unmatched = []
             for tm, names in fives.items():
-                out_n, known = 0, True
+                out_n = 0
                 for nm in names:
                     s = sleeper_ol(nm)
                     if s is None:
-                        known = False
-                        break
-                    if is_out(s):
+                        # no Sleeper row (name spelling): the NFL report can still rule him out; otherwise assume available
+                        ol_unmatched.append(f"{tm} {nm}")
+                        if _prac_now.get(_cbnorm(nm), "").lower() in ("out", "doubtful"):
+                            out_n += 1
+                        continue
+                    if is_out(s, nm):
                         out_n += 1
-                if known:
-                    ol_map[tm] = out_n
+                ol_map[tm] = out_n
+            print(f"OL availability: {len(ol_map)} teams ({sum(1 for v in ol_map.values() if v)} with a starter out: "
+                  + ", ".join(f"{k} {v}" for k, v in sorted(ol_map.items()) if v) + ")"
+                  + (f"; unmatched linemen assumed available: {', '.join(ol_unmatched)}" if ol_unmatched else ""))
         except Exception as e4:
             print(f"WARN OL map skipped ({e4}) — OL dock inert")
         f.write("// OL-out dock: count of each team's starting-five OL currently unavailable\n")

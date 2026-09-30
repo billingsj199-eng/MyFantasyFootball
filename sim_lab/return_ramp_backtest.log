@@ -1,0 +1,21 @@
+=== return ramp on 17657 player-weeks 2019-25 (flagged rows: 1048) ===
+  actual / projected on the flagged rows (no ramp):
+    missed 1  , game 1 back: n= 419  0.985   | QB 0.90 (n=61)  RB 1.08 (n=108)  WR 1.01 (n=178)  TE 0.90 (n=72)
+    missed 2-3, game 1 back: n= 283  0.901   | QB 0.90 (n=46)  RB 0.78 (n=89)  WR 0.94 (n=108)  TE 1.15 (n=40)
+    missed 4+ , game 1 back: n= 142  0.835   | QB 0.77 (n=23)  RB 0.97 (n=42)  WR 0.73 (n=50)  TE 0.94 (n=27)
+    missed 4+ , game 2 back: n= 111  0.952   | RB 0.87 (n=32)  WR 0.88 (n=45)  TE 1.07 (n=20)
+    missed 4+ , game 3 back: n=  93  0.981   | RB 0.83 (n=26)  WR 1.04 (n=39)  TE 1.07 (n=18)
+
+  shipped ramp (QB/RB/WR, TE untouched): flagged rows 871
+    MSE on flagged rows -2.84% (7/7 seasons)   MAE -2.74%   all rows MSE -0.131%
+    QB: n= 154  MSE -3.89% (6/7)
+    RB: n= 297  MSE -2.23% (6/7)
+    WR: n= 420  MSE -2.55% (5/7)
+    TE (no dock): actual/projected 0.997 on 177 rows
+
+  LOYO-picked multiplier per cell (reference; grid 1.0 .. 0.75):
+    missed 1  , game 1 back: picks [0.95, 0.95, 1.0, 1.0, 0.95, 1.0, 0.95]  shipped x0.95
+    missed 2-3, game 1 back: picks [0.85, 0.85, 0.85, 0.9, 0.9, 0.8, 0.9]  shipped x0.92
+    missed 4+ , game 1 back: picks [0.8, 0.8, 0.85, 0.8, 0.8, 0.8, 0.8]  shipped x0.85
+    missed 4+ , game 2 back: picks [0.9, 0.9, 0.9, 0.85, 0.9, 0.9, 0.9]  shipped x0.92
+    missed 4+ , game 3 back: picks [0.95, 0.95, 0.95, 1.0, 0.9, 0.95, 1.0]  shipped x0.96

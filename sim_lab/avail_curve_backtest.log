@@ -1,0 +1,26 @@
+=== availability curve, 2019-25: 1668 absence states (starter, missed k games so far) ===
+  P(misses the next game | missed k so far), all seasons: k=1: 0.65  k=2: 0.72  k=3: 0.77  k=4: 0.77  k=5: 0.75  k=6: 0.87  k=7: 0.86  k=8: 0.89
+  by position (k=1 / k=2 / k=3):
+    QB: 0.70 / 0.74 / 0.80
+    RB: 0.68 / 0.68 / 0.69
+    WR: 0.60 / 0.71 / 0.76
+    TE: 0.63 / 0.81 / 0.82
+
+  Brier score on 'plays this game' over the next four games (lower = better): engine 0.578  curve 0.231  (-60%)
+  games played over the next four (states with four games left, n=1048): actual 1.84  engine 4.00 (MAE 2.16)  curve 1.94 (MAE 1.42)
+  calibration of the curve (predicted P(plays) -> share who did):
+    0.1: 0.13  (n=159)
+    0.2: 0.24  (n=519)
+    0.3: 0.31  (n=917)
+    0.4: 0.39  (n=783)
+    0.5: 0.46  (n=921)
+    0.6: 0.53  (n=952)
+    0.7: 0.59  (n=718)
+
+  by missed-so-far, next game only: actual play rate vs engine vs curve (LOYO)
+    missed 1: n= 510  actually played next 0.35   engine assumes 1.00   curve 0.35
+    missed 2: n= 307  actually played next 0.28   engine assumes 1.00   curve 0.28
+    missed 3: n= 206  actually played next 0.23   engine assumes 1.00   curve 0.23
+    missed 4: n= 143  actually played next 0.22   engine assumes 1.00   curve 0.23
+    missed 5: n=  97  actually played next 0.25   engine assumes 1.00   curve 0.25
+    missed 6: n=  66  actually played next 0.12   engine assumes 1.00   curve 0.13

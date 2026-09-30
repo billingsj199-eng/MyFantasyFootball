@@ -236,7 +236,10 @@ function kickoffMs(kicks, wk, tm) {
       // weeks 5-18, not the games already played. Preseason = all weeks.
       if (wk >= currentWeek) {
         const ag = seasonAgg[key] || (seasonAgg[key] = { h: 0, p: 0, s: 0, n: 0 });
-        ag.h += r.mH; ag.p += r.mP; ag.s += r.mS; ag.n++;
+        // availability-curve weeks (a player probably still out): the mean is already scaled by P(plays), so
+        // count the week as P(plays) of a game - the PPG stays a per-game rate, the season total keeps the risk
+        const av = r.p.isDST ? 1 : E.injAvail(r.p, wk);
+        ag.h += r.mH; ag.p += r.mP; ag.s += r.mS; ag.n += av;
       }
       if (r.adj <= 0) { rows[key] = [0, 0, 0, null, null]; return; }
       const a = draws[i].sort();
@@ -326,6 +329,8 @@ function kickoffMs(kicks, wk, tm) {
           luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live)
           useLam: r.useLam != null ? +r.useLam.toFixed(2) : undefined, usePg: r.usePg != null ? +r.usePg.toFixed(2) : undefined, jsNoUse: r.jsNoUse != null ? +r.jsNoUse.toFixed(2) : undefined,   // live usage evidence inside jsMean at lock (usage_scorecard.py)
           peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined,   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
+          ret: r.ret != null && r.ret !== 1 ? +r.ret.toFixed(3) : undefined,   // return ramp inside the number at lock (return_scorecard.py)
+          qbf: r.qbf != null && r.qbf !== 1 ? +r.qbf.toFixed(3) : undefined,   // QB starter floor inside the number at lock (return_scorecard.py)
           ncMean: r.ncProj != null ? +r.ncProj.toFixed(2) : null, ncSrc: r.ncSrc || null,   // SHADOW: Clay-free base (own 3-yr PPG prior)
           lcCorr: r.lcCorr != null ? +r.lcCorr.toFixed(2) : null, lcMean: r.lcCorr != null ? +Math.max(0, r.mean + r.lcCorr).toFixed(2) : null,   // SHADOW: learned correction on the hand stack (build_learned_shadow.py)
           rep: (function () { var nf = E.newsFlags(r.player); return nf ? nf.riser - nf.faller : 0; })(),   // SHADOW: beat-report riser minus faller, last 10 days

@@ -74,7 +74,7 @@
 <link rel="preload" href="data/combine_data.js?v=2026-09-30db2" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-09-30" as="script">
-<link rel="preload" href="data/d.js?v=2026-09-30" as="script">
+<link rel="preload" href="data/d.js?v=2026-09-30rb2" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-09-28-rostt">
 
@@ -4449,7 +4449,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-09-30" defer></script>
-<script src="data/d.js?v=2026-09-30" defer></script>
+<script src="data/d.js?v=2026-09-30rb2" defer></script>
 <script src="data/injury_updates.js?v=2026-09-30-11" defer></script>
 <script src="data/weekly_projections.js?v=2026-09-30" defer></script>
 <script src="data/weather_2026.js?v=2026-09-30-11" defer></script>
@@ -4521,7 +4521,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
 <script src="data/betting_lines_2026.js?v=2026-09-30d" defer></script>
 <script src="data/future_totals_2026.js?v=2026-09-30-1142" defer></script>
-<script src="data/headshot_espn_ids.js?v=2026-09-16-lock2" defer></script>
+<script src="data/headshot_espn_ids.js?v=2026-09-30rb2" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
@@ -5836,7 +5836,7 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-09-30-1323',
+    'data/weekly_stats_active.js?v=2026-09-30-rb2',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
     'data/fpa_2026.js?v=2026-09-30-1323',

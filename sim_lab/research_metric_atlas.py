@@ -171,6 +171,7 @@ def main():
     T["team"] = T.team.replace({"LA": "LAR", "WSH": "WAS", "JAC": "JAX", "OAK": "LV", "SD": "LAC"})
     M = M.merge(T, left_on=["year", "team_k", "wk"], right_on=["year", "team", "wk"], how="left", suffixes=("", "_t"))
     M = M.merge(PR.drop(columns=["player_id"]).dropna(subset=["pid"]).drop_duplicates(["year", "pid", "wk"]), on=["year", "pid", "wk"], how="left").merge(PU.drop(columns=["player_id"]).dropna(subset=["pid"]).drop_duplicates(["year", "pid", "wk"]), on=["year", "pid", "wk"], how="left")
+    M.to_parquet(os.path.join(HERE, "data", "metric_atlas_rows.parquet"))   # the assembled table, reused by backtest_ros_quality_volume.py
     base = M[(M.live >= 5) & (M.g >= 2)]
     ctx_feats = ["xfp_pg", "pts_over_xfp", "snap_std", "snap_l1", "snap_trend", "tgt_sh", "car_sh", "rz_tgt_sh", "rz_car_sh", "gl_car_sh", "ay_sh", "wopr", "tgt_trend", "car_trend", "db_sh", "att_pg",
                  "ppg", "ppg_py", "xfp_pg_py", "tgt_sh_py", "car_sh_py", "ppg_over_clay", "age", "exp", "draft_pick", "jm", "implied", "spread", "game_total", "ol_pb_now", "ol_rb_now", "ol_out_n", "opp_man_std", "yprr_man", "yprr_zone", "proe_std", "plays_pg_std"]

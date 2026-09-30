@@ -1397,6 +1397,50 @@
     _qbMuCache[key] = { src: _poolByNorm, mu: mu };
     return mu;
   }
+  // REST-OF-SEASON VOLUME TILT (backtest_ros_quality_volume.py, 2026-09-30; the metric atlas). Standing at any week,
+  // the per-game live number extrapolates raw volume over the horizon: QBs with the most pass attempts scored .963 of
+  // it the rest of the way (fewest 1.143), TEs on pass-heavy teams .945 (run-heavy 1.186). LOYO on rest-of-season MSE:
+  // QB attempt tilt e .06 -> -4.7% (6/7) on top of the floor; TE team neutral pass-rate tilt e .08 -> -4.0% (5/7).
+  // Applied to weeks AFTER the current one only (the current week keeps its own graded number), ramping in over two
+  // weeks ahead: mult = 1 - e x z, z = the player's attempts per game (QB) / his team's season-to-date neutral pass
+  // rate (TE) standardized across the league, clipped to +-2. Model side (Clay stack + JS base). Kill:
+  // window.SIM_ROS_TILT = false.
+  var ROS_TILT = { QB: 0.06, TE: 0.08, minGames: 2, clip: 2 };
+  var _rosZ = null;
+  function rosTiltZ() {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (_rosZ && _rosZ.src === _poolByNorm) return _rosZ;
+    var out = { src: _poolByNorm, qb: {}, team: {} };
+    var X = wnd && wnd.SIM_XFP_2026, vals = [], seen = [];
+    if (X && _poolByNorm) Object.keys(_poolByNorm).forEach(function (k) {
+      var q = _poolByNorm[k]; if (!q || q.pos !== 'QB' || seen.indexOf(q) >= 0) return; seen.push(q);
+      var xr = X[q.norm]; if (!xr || !xr.w) return;
+      var wk = Object.keys(xr.w).filter(function (w) { return xr.w[w] && xr.w[w][0] >= 10; });
+      if (wk.length < ROS_TILT.minGames) return;
+      var att = wk.reduce(function (s, w) { return s + xr.w[w][0]; }, 0) / wk.length;
+      vals.push([q.norm, att]);
+    });
+    var z = function (arr) {
+      if (arr.length < 8) return {};
+      var m = arr.reduce(function (s, a) { return s + a[1]; }, 0) / arr.length, sd = Math.sqrt(arr.reduce(function (s, a) { return s + (a[1] - m) * (a[1] - m); }, 0) / arr.length) || 1, o = {};
+      arr.forEach(function (a) { o[a[0]] = Math.max(-ROS_TILT.clip, Math.min(ROS_TILT.clip, (a[1] - m) / sd)); });
+      return o;
+    };
+    out.qb = z(vals);
+    var P = wnd && wnd.SIM_PACE_2026 && wnd.SIM_PACE_2026.teams, tv = [];
+    if (P) Object.keys(P).forEach(function (tm) { var c = P[tm] && P[tm].cur; if (c && c.games >= ROS_TILT.minGames && typeof c.npr === 'number') tv.push([normTeam(tm), c.npr]); });
+    out.team = z(tv);
+    _rosZ = out; return out;
+  }
+  function rosTilt(p, wk) {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_ROS_TILT === false || !_inj || !(_inj.week >= 1) || wk <= _inj.week) return 1;
+    var e = ROS_TILT[p.pos]; if (!e || p.isDST) return 1;
+    var Z = rosTiltZ(), z = p.pos === 'QB' ? Z.qb[p.norm] : Z.team[p.tm];
+    if (typeof z !== 'number') return 1;
+    var ramp = Math.min(1, (wk - _inj.week) / 2);   // one week ahead = half, two or more = full
+    return 1 - e * ramp * z;
+  }
   function qbFloor(base, sc) {
     var wnd = typeof window !== 'undefined' ? window : null;
     if (!wnd || wnd.SIM_QB_FLOOR === false) return base;
@@ -2332,6 +2376,7 @@
     if (p.pos === 'QB' && iA > 1) { qbInh = (iA - 1) * seasonPoints(p, sc) / (p.qbWindow ? (p.qbWindow.games || 17) : 17); iAc = 1; }
     var mQbf = 1;
     if (p.pos === 'QB' && !(qbInh > 0) && !(iA > 1) && clayPg > 0) { var cf = qbFloor(clayPg, sc); mQbf = cf / clayPg; }
+    var mRos = rosTilt(p, wk); mQbf *= mRos;   // rest-of-season volume tilt rides the same model-side multiplier (weeks ahead only)
     mean = (clayPg * mQbf + qbInh) * (factor / iA * iAc) * rookieLevel(p);
     // JS Weekly (in-season model): Clay prior shrunk toward 2026 actuals,
     // actual FPA-by-position opponent adj replacing Clay unit grades as the
@@ -2342,6 +2387,7 @@
     var jsPg = jsBase0 * mRook;
     var jsPgPre = jsPg;
     if (p.pos === 'QB' && !(qbInh > 0) && !(iA > 1)) { jsPg = qbFloor(jsPg, sc); mQbf = jsPgPre > 0 ? jsPg / jsPgPre : 1; }
+    if (mRos !== 1) { jsPg *= mRos; mQbf *= mRos; }
     var jsPgRook = jsPg;
     var rbU = rbUsagePg(p, wk);
     if (rbU) {
@@ -2660,7 +2706,7 @@
     return { mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse, ret: mRet, qbf: mQbf,
       // WHY (2026-09-16, NOTES per-player why notes): every factor of the JS model in engine order - app.js ntWhy turns it into a points waterfall
       why: { clayPg: clayPg, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: qbInh > 0 ? jsPgOwn : jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied,
-             opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, ret: mRet, avail: injAvail(p, wk), qbFloor: mQbf, snap: mSnap, route: mRoute, ramp: rampF, iA: (qbInh > 0 && jsPgOwn > 0) ? jsPg / jsPgOwn : iA,
+             opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, ret: mRet, avail: injAvail(p, wk), qbFloor: mQbf, rosTilt: mRos, snap: mSnap, route: mRoute, ramp: rampF, iA: (qbInh > 0 && jsPgOwn > 0) ? jsPg / jsPgOwn : iA,
              luck: luckAdj, jsMean: jsMean, perGameDiv: perGameDiv, peck: mPeck, peckRank: peckR.rank } };
   }
 

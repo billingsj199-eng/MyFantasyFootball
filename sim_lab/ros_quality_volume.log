@@ -1,0 +1,78 @@
+=== rest-of-season tests: 9567 checkpoints (live >= 5, 2+ games played, 3+ later games); prior-season PFF on 5848 ===
+  QB: rest-of-season / live = 1.038  (top third by live 0.970, bottom third 1.180)
+  RB: rest-of-season / live = 1.017  (top third by live 0.963, bottom third 1.112)
+  WR: rest-of-season / live = 1.003  (top third by live 0.974, bottom third 1.006)
+  TE: rest-of-season / live = 1.061  (top third by live 1.005, bottom third 1.132)
+
+--- QB, rest of season ---
+  QB level shrink (two-sided)           picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]  ROS MSE -11.02% (6/7)  level-weighted  -8.82% (6/7)
+  QB level floor (below mean only)      picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]  ROS MSE  -9.28% (7/7)  level-weighted  -5.64% (7/7)
+  QB level cap (above mean only)        picks [0.8, 0.75, 0.8, 0.75, 0.8, 0.7, 0.85]  ROS MSE  -0.88% (6/7)  level-weighted  -1.89% (6/7)
+  QB dropback tilt                      picks [0.08, 0.06, 0.08, 0.06, 0.06, 0.06, 0.08]  ROS MSE  -4.87% (6/7)  level-weighted  -3.97% (5/7)
+  QB pass-attempt tilt                  picks [0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.08]  ROS MSE  -4.65% (6/7)  level-weighted  -4.04% (6/7)
+  QB floor k.70 + dropback tilt         picks [0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.08]  ROS MSE -13.60% (7/7)  level-weighted  -9.40% (6/7)
+      few dropbacks   n= 491  ROS/live 1.143
+      average         n= 701  ROS/live 1.033
+      many dropbacks  n= 534  ROS/live 0.963
+
+--- TE, rest of season ---
+  TE team pass-rate tilt                picks [0.08, 0.1, 0.08, 0.08, 0.08, 0.08, 0.1]  ROS MSE  -4.03% (5/7)  level-weighted  -4.29% (5/7)
+  TE level shrink (two-sided)           picks [0.8, 0.8, 0.85, 0.9, 0.9, 0.85, 0.9]  ROS MSE  +0.05% (4/7)  level-weighted  +0.10% (5/7)
+  TE level floor                        picks [0.7, 0.7, 0.7, 0.7, 0.75, 0.85, 0.8]  ROS MSE  -0.43% (3/7)  level-weighted  -0.26% (3/7)
+      run-heavy team  n= 436  ROS/live 1.186
+      average         n= 501  ROS/live 1.061
+      pass-heavy team n= 441  ROS/live 0.945
+
+--- WR / TE quality tilt on the rest-of-season number ---
+  WR py_yprr (n=3047)                   picks [0.02, 0.04, 0.04, 0.04, 0.04, 0.02]  ROS MSE  -0.61% (4/6)  level-weighted  +0.08% (3/6)
+        py_yprr low  n= 927  ROS/live 0.911
+        py_yprr mid  n=1346  ROS/live 1.012
+        py_yprr high n= 774  ROS/live 1.032
+  WR py_grades_offense (n=3047)         picks [0.02, 0.04, 0.04, 0.04, 0.04, 0.02]  ROS MSE  -0.74% (4/6)  level-weighted  +0.03% (4/6)
+        py_grades_offense low  n= 975  ROS/live 0.928
+        py_grades_offense mid  n=1105  ROS/live 0.977
+        py_grades_offense high n= 967  ROS/live 1.052
+  WR py_grades_pass_route (n=3047)      picks [0.02, 0.04, 0.04, 0.04, 0.04, 0.02]  ROS MSE  -0.78% (4/6)  level-weighted  +0.00% (4/6)
+        py_grades_pass_route low  n=1002  ROS/live 0.920
+        py_grades_pass_route mid  n=1123  ROS/live 1.000
+        py_grades_pass_route high n= 922  ROS/live 1.040
+  WR pff_yprr (n=3957)                  picks [0.02, 0.0, 0.0, 0.02, 0.0, 0.02, 0.0]  ROS MSE  +0.29% (0/7)  level-weighted  +0.45% (0/7)
+        pff_yprr low  n=1234  ROS/live 0.976
+        pff_yprr mid  n=1776  ROS/live 1.017
+        pff_yprr high n= 947  ROS/live 1.007
+  WR pff_grades_offense (n=3957)        picks [0.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.0]  ROS MSE  +0.26% (0/7)  level-weighted  +0.45% (0/7)
+        pff_grades_offense low  n=1255  ROS/live 0.973
+        pff_grades_offense mid  n=1533  ROS/live 1.025
+        pff_grades_offense high n=1169  ROS/live 1.001
+  WR yprr_man (n=3314)                  picks [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]  ROS MSE  -0.52% (4/7)  level-weighted  -0.16% (4/7)
+        yprr_man low  n=1152  ROS/live 0.933
+        yprr_man mid  n=1259  ROS/live 1.009
+        yprr_man high n= 903  ROS/live 1.020
+  TE py_yprr (n=1138)                   picks [0.0, 0.02, 0.02, 0.04, 0.0, 0.0]  ROS MSE  +1.94% (0/6)  level-weighted  +3.42% (0/6)
+        py_yprr low  n= 363  ROS/live 1.062
+        py_yprr mid  n= 460  ROS/live 1.036
+        py_yprr high n= 315  ROS/live 1.104
+  TE py_grades_offense (n=1138)         picks [0.0, 0.0, 0.0, 0.02, 0.0, 0.0]  ROS MSE  +0.71% (0/6)  level-weighted  +1.29% (0/6)
+        py_grades_offense low  n= 344  ROS/live 1.081
+        py_grades_offense mid  n= 450  ROS/live 1.021
+        py_grades_offense high n= 344  ROS/live 1.102
+  TE py_grades_pass_route (n=1138)      picks [0.0, 0.0, 0.02, 0.02, 0.0, 0.0]  ROS MSE  +0.96% (0/6)  level-weighted  +1.73% (0/6)
+        py_grades_pass_route low  n= 392  ROS/live 1.105
+        py_grades_pass_route mid  n= 405  ROS/live 1.022
+        py_grades_pass_route high n= 341  ROS/live 1.076
+  TE pff_yprr (n=1375)                  picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  ROS MSE  +0.00% (0/7)  level-weighted  +0.00% (0/7)
+        pff_yprr low  n= 434  ROS/live 1.027
+        pff_yprr mid  n= 555  ROS/live 1.112
+        pff_yprr high n= 386  ROS/live 1.027
+  TE pff_grades_offense (n=1375)        picks [0.02, 0.02, 0.02, 0.06, 0.04, 0.02, 0.02]  ROS MSE  +1.38% (5/7)  level-weighted  +2.95% (5/7)
+        pff_grades_offense low  n= 429  ROS/live 0.970
+        pff_grades_offense mid  n= 539  ROS/live 1.112
+        pff_grades_offense high n= 407  ROS/live 1.073
+  TE yprr_man (n=1246)                  picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  ROS MSE  +0.00% (0/7)  level-weighted  +0.00% (0/7)
+        yprr_man low  n= 461  ROS/live 1.066
+        yprr_man mid  n= 439  ROS/live 1.079
+        yprr_man high n= 346  ROS/live 1.002
+
+--- same quality tilt graded on the NEXT game instead of the rest of season (sanity) ---
+  WR prior-season YPRR tilt, next game  picks [0.02, 0.02, 0.02, 0.02, 0.04, 0.02]  ROS MSE  -0.07% (5/6)  level-weighted  -0.12% (4/6)
+  TE prior-season YPRR tilt, next game  picks [0.04, 0.04, 0.02, 0.04, 0.02, 0.02]  ROS MSE  -0.07% (4/6)  level-weighted  +0.10% (3/6)

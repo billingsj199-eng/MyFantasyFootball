@@ -673,7 +673,10 @@
   var OL_OUT_DOCK = { rb1: 0.98, rb2: 0.95, other2: 0.97 };
   var _olOut = null;
   function olOutDock(tm, pos) {
-    if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return 1;
+    // TE removed 2026-09-30 (backtest_te_ol_dock.py, 'OL' label fixed): TEs with 2+ linemen out ran 1.00 week-controlled
+    // on the snap harness and 1.10-1.19 on the pre-kickoff Out/Doubtful harness (checkdowns); a dock had no support.
+    // QB (.98 / .99) is marginal too; RB (.90 / .91) and WR (.96) keep theirs.
+    if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR') return 1;
     var wnd = typeof window !== 'undefined' ? window : null;
     if (!wnd || wnd.SIM_OL_DOCK === false) return 1;
     if (!_olOut) {

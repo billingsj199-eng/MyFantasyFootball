@@ -1,0 +1,41 @@
+=== H1: starting-five availability from snaps ('OL' label included): 3564 team-weeks resolved ===
+
+  TE (2278 own-team player-weeks, base >= 4):
+    0 missing   n=  914  actual/base 1.069  week-controlled vs nobody missing 1.000  seasons above 1.0: 0/7
+    1 missing   n=  935  actual/base 1.061  week-controlled vs nobody missing 0.992  seasons above 1.0: 3/7
+    2+ missing  n=  429  actual/base 1.070  week-controlled vs nobody missing 1.001  seasons above 1.0: 4/7
+    LOYO dock on 1 missing rows: picks [1.03, 1.03, 1.06, 1.03, 1.03, 1.03, 1.03]  MSE -0.09% (6/7)   live engine: x0.97 at 2+
+    LOYO dock on 2+ missing rows: picks [1.06, 1.1, 1.06, 1.06, 1.03, 1.06, 1.06]  MSE +0.12% (4/7)   live engine: x0.97 at 2+
+
+  QB (2446 own-team player-weeks, base >= 4):
+    0 missing   n=  968  actual/base 1.051  week-controlled vs nobody missing 1.000  seasons above 1.0: 0/7
+    1 missing   n= 1024  actual/base 1.068  week-controlled vs nobody missing 1.016  seasons above 1.0: 4/7
+    2+ missing  n=  454  actual/base 1.031  week-controlled vs nobody missing 0.980  seasons above 1.0: 3/7
+    LOYO dock on 1 missing rows: picks [1.06, 1.03, 1.06, 1.06, 1.03, 1.03, 1.03]  MSE -0.28% (4/7)   live engine: x0.97 at 2+
+    LOYO dock on 2+ missing rows: picks [1.03, 1.0, 1.03, 1.0, 1.03, 1.03, 1.03]  MSE +0.25% (1/7)   live engine: x0.97 at 2+
+
+  RB (3714 own-team player-weeks, base >= 4):
+    0 missing   n= 1480  actual/base 1.109  week-controlled vs nobody missing 1.000  seasons above 1.0: 0/7
+    1 missing   n= 1553  actual/base 1.050  week-controlled vs nobody missing 0.950  seasons above 1.0: 2/7
+    2+ missing  n=  681  actual/base 0.989  week-controlled vs nobody missing 0.898  seasons above 1.0: 2/7
+    LOYO dock on 1 missing rows: picks [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.03]  MSE -0.27% (5/7)   live engine: x0.98 / x0.95
+    LOYO dock on 2+ missing rows: picks [0.97, 0.97, 0.94, 1.0, 0.94, 0.97, 0.97]  MSE +0.68% (4/7)   live engine: x0.98 / x0.95
+
+  WR (5937 own-team player-weeks, base >= 4):
+    0 missing   n= 2356  actual/base 1.037  week-controlled vs nobody missing 1.000  seasons above 1.0: 0/7
+    1 missing   n= 2475  actual/base 1.032  week-controlled vs nobody missing 0.993  seasons above 1.0: 4/7
+    2+ missing  n= 1106  actual/base 0.997  week-controlled vs nobody missing 0.956  seasons above 1.0: 2/7
+    LOYO dock on 1 missing rows: picks [1.03, 1.03, 1.03, 1.03, 1.03, 1.0, 1.03]  MSE +0.09% (3/7)   live engine: x0.97 at 2+
+    LOYO dock on 2+ missing rows: picks [0.97, 0.97, 1.0, 0.97, 0.97, 0.97, 1.0]  MSE +0.27% (1/7)   live engine: x0.97 at 2+
+
+=== H2: ctx_features ol_out_n (Out / Doubtful starters, known pre-kickoff) vs the rebuilt live stack ===
+  TE: 0 out: 1.045 (n=1915)   1 out: 1.105 (n=417)   2+ out: 1.192 (n=31)
+     LOYO on 1 out rows: picks [1.1, 1.06, 1.06, 1.1, 1.06, 1.06, 1.1]  MSE -0.63% (4/7)
+  QB: 0 out: 1.047 (n=2000)   1 out: 1.047 (n=430)   2+ out: 0.991 (n=43)
+     LOYO on 1 out rows: picks [1.0, 1.03, 1.03, 1.03, 1.03, 1.03, 1.03]  MSE +0.09% (4/7)
+  RB: 0 out: 1.030 (n=3150)   1 out: 1.001 (n=687)   2+ out: 0.908 (n=63)
+     LOYO on 1 out rows: picks [0.97, 0.97, 1.0, 0.97, 0.97, 1.0, 1.0]  MSE +0.43% (0/7)
+     LOYO on 2+ out rows: picks [0.91, 0.88, 0.88, 0.88, 0.88, 0.91, 0.88]  MSE -3.68% (5/7)
+  WR: 0 out: 1.030 (n=4929)   1 out: 0.993 (n=1165)   2+ out: 0.935 (n=100)
+     LOYO on 1 out rows: picks [0.97, 0.97, 1.0, 1.0, 0.97, 0.97, 1.0]  MSE +0.41% (0/7)
+     LOYO on 2+ out rows: picks [0.97, 0.97, 0.94, 0.97, 0.97, 1.0, 0.97]  MSE +0.41% (3/7)

@@ -138,7 +138,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Dilin Jones']) COMBINE_DATA['Dilin Jones'] = { school: 'LSU', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Ousmane Kromah']) COMBINE_DATA['Ousmane Kromah'] = { school: 'Florida St.', pos: 'RB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Kenny Johnson']) COMBINE_DATA['Kenny Johnson'] = { school: 'Texas Tech', pos: 'WR', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['Taylor Tatum']) COMBINE_DATA['Taylor Tatum'] = { school: 'Oklahoma', pos: 'RB', devy: true, eligYr: 2027 };
+  if (!COMBINE_DATA['Taylor Tatum']) COMBINE_DATA['Taylor Tatum'] = { school: 'Michigan', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Jerrick Gibson']) COMBINE_DATA['Jerrick Gibson'] = { school: 'Purdue', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Micah Hudson']) COMBINE_DATA['Micah Hudson'] = { school: 'Texas Tech', pos: 'WR', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Demond Williams Jr.']) COMBINE_DATA['Demond Williams Jr.'] = { school: 'Washington', pos: 'QB', devy: true, eligYr: 2027 };
@@ -152,7 +152,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Barion Brown']) COMBINE_DATA['Barion Brown'] = { school: 'Kentucky', pos: 'WR', devy: true, eligYr: 2027, ht: '5-11', wt: 177 };
   if (!COMBINE_DATA['Braylon Staley']) COMBINE_DATA['Braylon Staley'] = { school: 'Tennessee', pos: 'WR', devy: true, eligYr: 2027, ht: '6-0', wt: 190 };
   if (!COMBINE_DATA['Corey Kiner']) COMBINE_DATA['Corey Kiner'] = { school: 'LSU', pos: 'RB', devy: true, eligYr: 2027, ht: '5-9', wt: 209 };
-  if (!COMBINE_DATA['Dane Key']) COMBINE_DATA['Dane Key'] = { school: 'Kentucky', pos: 'WR', devy: true, eligYr: 2027, ht: '6-2', wt: 203 };
+  // 2026-09-30 retired: Dane Key signed with DEN as a 2026 UDFA (Sleeper) - if (!COMBINE_DATA['Dane Key']) COMBINE_DATA['Dane Key'] = { school: 'Kentucky', pos: 'WR', devy: true, eligYr:
   if (!COMBINE_DATA['Ian Strong']) COMBINE_DATA['Ian Strong'] = { school: 'California', pos: 'WR', devy: true, eligYr: 2027, ht: '6-3', wt: 211 };
   if (!COMBINE_DATA['Johntay Cook II']) COMBINE_DATA['Johntay Cook II'] = { school: 'Mississippi', pos: 'WR', devy: true, eligYr: 2027, ht: '6-0', wt: 198 };
   if (!COMBINE_DATA['Mario Craver']) COMBINE_DATA['Mario Craver'] = { school: 'Mississippi St.', pos: 'WR', devy: true, eligYr: 2027, ht: '5-9', wt: 165 };
@@ -221,7 +221,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Nico Iamaleava'] && COMBINE_DATA['Nico Iamaleava'].draft == null && COMBINE_DATA['Nico Iamaleava'].draftProj == null) COMBINE_DATA['Nico Iamaleava'].draftProj = 144;
   if (COMBINE_DATA['Brandon Inniss'] && COMBINE_DATA['Brandon Inniss'].draft == null && COMBINE_DATA['Brandon Inniss'].draftProj == null) COMBINE_DATA['Brandon Inniss'].draftProj = 176;
   if (COMBINE_DATA['Corey Kiner'] && COMBINE_DATA['Corey Kiner'].draft == null && COMBINE_DATA['Corey Kiner'].draftProj == null) COMBINE_DATA['Corey Kiner'].draftProj = 208;
-  if (COMBINE_DATA['Dane Key'] && COMBINE_DATA['Dane Key'].draft == null && COMBINE_DATA['Dane Key'].draftProj == null) COMBINE_DATA['Dane Key'].draftProj = 208;
+  // 2026-09-30 retired: Dane Key signed with DEN as a 2026 UDFA (Sleeper) - if (COMBINE_DATA['Dane Key'] && COMBINE_DATA['Dane Key'].draft == null && COMBINE_DATA['Dane Key'].draftProj =
   if (COMBINE_DATA['Johntay Cook II'] && COMBINE_DATA['Johntay Cook II'].draft == null && COMBINE_DATA['Johntay Cook II'].draftProj == null) COMBINE_DATA['Johntay Cook II'].draftProj = 208;
   if (COMBINE_DATA['Barion Brown'] && COMBINE_DATA['Barion Brown'].draft == null && COMBINE_DATA['Barion Brown'].draftProj == null) COMBINE_DATA['Barion Brown'].draftProj = 'U';
   // Moliki Matavao — in NFL, no draft projection needed
@@ -241,7 +241,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (COMBINE_DATA['Eric Singleton Jr.'] && !COMBINE_DATA['Eric Singleton Jr.'].forty && !COMBINE_DATA['Eric Singleton Jr.'].ras && !COMBINE_DATA['Eric Singleton Jr.'].fortyProj) { COMBINE_DATA['Eric Singleton Jr.'].fortyProj = 4.34; COMBINE_DATA['Eric Singleton Jr.'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   if (COMBINE_DATA['Nic Anderson'] && !COMBINE_DATA['Nic Anderson'].forty && !COMBINE_DATA['Nic Anderson'].ras && !COMBINE_DATA['Nic Anderson'].fortyProj) { COMBINE_DATA['Nic Anderson'].fortyProj = 4.52; COMBINE_DATA['Nic Anderson'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   if (COMBINE_DATA['Barion Brown'] && !COMBINE_DATA['Barion Brown'].forty && !COMBINE_DATA['Barion Brown'].ras && !COMBINE_DATA['Barion Brown'].fortyProj) { COMBINE_DATA['Barion Brown'].fortyProj = 4.40; COMBINE_DATA['Barion Brown'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
-  if (COMBINE_DATA['Dane Key'] && !COMBINE_DATA['Dane Key'].forty && !COMBINE_DATA['Dane Key'].ras && !COMBINE_DATA['Dane Key'].fortyProj) { COMBINE_DATA['Dane Key'].fortyProj = 4.60; COMBINE_DATA['Dane Key'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
+  // 2026-09-30 retired: Dane Key signed with DEN as a 2026 UDFA (Sleeper) - if (COMBINE_DATA['Dane Key'] && !COMBINE_DATA['Dane Key'].forty && !COMBINE_DATA['Dane Key'].ras && !COMBINE_D
   if (COMBINE_DATA['Mario Craver'] && !COMBINE_DATA['Mario Craver'].forty && !COMBINE_DATA['Mario Craver'].ras && !COMBINE_DATA['Mario Craver'].fortyProj) { COMBINE_DATA['Mario Craver'].fortyProj = 4.25; COMBINE_DATA['Mario Craver'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   if (COMBINE_DATA['Braylon Staley'] && !COMBINE_DATA['Braylon Staley'].forty && !COMBINE_DATA['Braylon Staley'].ras && !COMBINE_DATA['Braylon Staley'].fortyProj) { COMBINE_DATA['Braylon Staley'].fortyProj = 4.34; COMBINE_DATA['Braylon Staley'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }
   if (COMBINE_DATA['Mike Matthews'] && !COMBINE_DATA['Mike Matthews'].forty && !COMBINE_DATA['Mike Matthews'].ras && !COMBINE_DATA['Mike Matthews'].fortyProj) { COMBINE_DATA['Mike Matthews'].fortyProj = 4.41; COMBINE_DATA['Mike Matthews'].fortyProjSrc = 'NFL Draft Buzz (Apr 2026)'; }

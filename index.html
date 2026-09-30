@@ -4588,7 +4588,7 @@ window.clayLookup = clayLookup;
 <!-- COMBINE_DATA + D[] patch block extracted to data/combine_d_patches.js (2026-07-20) so the
      data scripts above can be defer'd — it was the only parse-time reader. defer keeps it
      executing after combine_data.js/d.js and before app.js (document order). -->
-<script src="data/combine_d_patches.js?v=2026-09-24-teamfill" defer></script>
+<script src="data/combine_d_patches.js?v=2026-09-30" defer></script>
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
@@ -5483,7 +5483,7 @@ window._ensureCollegeStatsData = (function() {
     const devy = _loadScript('data/college_weekly_devy.js?v=2026-05-13');
     // In-season devy/future-class rows (weekly auto-refresh, scripts/refresh_devy_stats.py):
     // defines window._csPatchDevy (applied last, below) + this season's COLLEGE_WEEKLY game logs.
-    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-09-30dv2');
+    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-09-30dv3');
     // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
     // populate the same COLLEGE_WEEKLY object and have no order dependency;

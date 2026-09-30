@@ -132,7 +132,8 @@ def bump_tag(html, fname):
         log("  WARN: no ?v= tag for", fname)
         return html
     cur = m.group(2)
-    new = today if not cur.startswith(today) else today + "db2"
+    m2 = re.match(r"%sdb(\d+)$" % re.escape(today), cur)
+    new = today if not cur.startswith(today) else today + "db%d" % ((int(m2.group(1)) + 1) if m2 else 2)
     if cur == new:
         return html
     log("  bump %s ?v= %s -> %s" % (fname, cur, new))
@@ -173,6 +174,14 @@ def main():
     head, body = raw.split("=", 1)
     cb = json.loads(body.strip().rstrip(";"))
     by_norm = {norm(n): n for n in cb}
+    # runtime devy stubs from data/combine_d_patches.js count as "on the site"
+    try:
+        with open("data/combine_d_patches.js", encoding="utf-8") as f:
+            for m in re.finditer(r"""COMBINE_DATA\[(['"])((?:\\.|(?!\1)[^\\])+?)\1\]\s*=\s*\{[^}]*devy:\s*true""", f.read()):
+                nm = m.group(2).replace("\\'", "'")
+                by_norm.setdefault(norm(nm), nm)
+    except OSError:
+        pass
 
     def site_name(n):
         return n if n in cb else by_norm.get(norm(n))

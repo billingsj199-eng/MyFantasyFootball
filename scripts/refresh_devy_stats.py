@@ -153,10 +153,45 @@ def current_season(today):
     return today.year if today.month >= 8 else today.year - 1
 
 
+PATCH_JS = "data/combine_d_patches.js"
+_CUR_SEASON = 0  # set in main() before load_combine()
+
+
 def load_combine():
+    """COMBINE_DATA on disk + the devy stubs data/combine_d_patches.js adds at
+    runtime (`if (!COMBINE_DATA[n]) COMBINE_DATA[n] = { school, pos, devy: true, eligYr }`)
+    so the universe matches the site's DEVY board, not just the JSON file."""
     with open(COMBINE_JS, encoding="utf-8") as f:
         txt = f.read()
-    return json.loads(txt.split("=", 1)[1].strip().rstrip(";"))
+    cb = json.loads(txt.split("=", 1)[1].strip().rstrip(";"))
+    try:
+        with open(PATCH_JS, encoding="utf-8") as f:
+            ptxt = f.read()
+    except OSError:
+        return cb
+    added = 0
+    stale = []
+    for m in re.finditer(r"""COMBINE_DATA\[(['"])((?:\\.|(?!\1)[^\\])+?)\1\]\s*=\s*\{([^}]*devy:\s*true[^}]*)\}""", ptxt):
+        name, body = m.group(2).replace("\\'", "'"), m.group(3)
+        if name in cb:
+            continue
+        ent = {"devy": True, "_patch": True}
+        for k in ("school", "pos"):
+            mm = re.search(r"""\b%s:\s*(['"])(.+?)\1""" % k, body)
+            if mm:
+                ent[k] = mm.group(2)
+        mm = re.search(r"\beligYr:\s*(\d{4})", body)
+        if mm:
+            ent["eligYr"] = int(mm.group(1)); ent["yr"] = int(mm.group(1))
+        # eligYr <= current season usually means the stub is stale (player returned to
+        # school or was drafted); keep it - the roster lookup decides - but flag it.
+        if ent.get("eligYr") and ent["eligYr"] <= _CUR_SEASON:
+            stale.append(name)
+        cb[name] = ent
+        added += 1
+    if added:
+        log("combine_d_patches.js: +%d runtime devy entries (%d with eligYr<=%d, check combine_d_patches.js: %s)" % (added, len(stale), _CUR_SEASON, ", ".join(sorted(stale))))
+    return cb
 
 
 def ondisk_years(name):
@@ -189,7 +224,8 @@ def bump_tag(html, fname):
         log("  WARN: no ?v= tag found for", fname)
         return html
     cur = m.group(2)
-    new = today if not cur.startswith(today) else today + "dv2"
+    m2 = re.match(r"%sdv(\d+)$" % re.escape(today), cur)
+    new = today if not cur.startswith(today) else today + "dv%d" % ((int(m2.group(1)) + 1) if m2 else 2)
     if cur == new:
         return html
     log("  bump %s ?v= %s -> %s" % (fname, cur, new))
@@ -560,6 +596,8 @@ def main():
     season = args.season or current_season(today)
     log("=== devy stats refresh: season %d, %s ===" % (season, today))
 
+    global _CUR_SEASON
+    _CUR_SEASON = season
     combine = load_combine()
     with open(COLLEGE_JS, encoding="utf-8") as f:
         _COLLEGE_TXT = f.read()

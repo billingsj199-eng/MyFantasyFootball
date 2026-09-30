@@ -1,0 +1,12 @@
+const fs = require('fs'), path = require('path'), vm = require('vm'); global.window = global; const dir = path.join(__dirname, '..');
+const src = fs.readFileSync(path.join(dir, 'export_site_proj.js'), 'utf8');
+const files = src.match(/\[\s*((?:'data\/[^']+',\s*)+'overrides\.js',\s*'engine\.js')\s*\]/)[1].match(/'([^']+)'/g).map(s => s.slice(1, -1));
+files.forEach(f => vm.runInThisContext(fs.readFileSync(path.join(dir, f), 'utf8'), { filename: f }));
+const E = global.SimEngine, WK = +(process.argv[2] || 2), sc = E.PRESETS.half, schedule = E.buildSchedule(), players = E.buildPlayers(schedule); E.applyInSeasonInjuries(players, WK, { active: true });
+const pool = players.list.filter(p => ['QB', 'RB', 'WR', 'TE'].includes(p.pos) && p.adp != null && p.adp <= 150);
+const run = on => { global.SIM_NC_VEGEV = on; const o = {}; pool.forEach(p => { const w = E.weeklyProjection(p, WK, sc, schedule); if (w) o[p.name] = { nc: w.ncMean, live: w.propMean != null ? w.propMean : (w.jsMean != null ? w.jsMean : w.mean), src: w.ncSrc || (w.why && w.why.ncSrc) }; }); return o; };
+const off = run(false), on = run(true); let moved = 0, liveMoved = 0; const rows = [];
+Object.keys(on).forEach(k => { const d = on[k].nc - off[k].nc; if (Math.abs(on[k].live - off[k].live) > 1e-9) liveMoved++; if (Math.abs(d) > 1e-9) moved++; rows.push([k, off[k].nc, on[k].nc, d]); });
+rows.sort((a, b) => Math.abs(b[3]) - Math.abs(a[3]));
+console.log('top-150 players', rows.length, '| shadow moved', moved, '| LIVE number moved', liveMoved, '| mean abs move', (rows.reduce((s, r) => s + Math.abs(r[3]), 0) / rows.length).toFixed(3));
+rows.slice(0, 14).forEach(r => console.log('  ' + r[0].padEnd(24) + r[1].toFixed(2).padStart(7) + ' -> ' + r[2].toFixed(2).padStart(6) + '  (' + (r[3] >= 0 ? '+' : '') + r[3].toFixed(2) + ')'));

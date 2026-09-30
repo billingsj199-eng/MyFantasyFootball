@@ -1,0 +1,24 @@
+=== Clay-free pool definition ===
+  2019: universe 322 players, starter weeks 1428, rosterable 2828 | Clay 284 / all 495 | ADP 175 chart 332 hist 236 rookies 44 | candidate 442 | top missed starters: darius slayton WR 10wk*, raheem mostert RB 8wk*, taysom hill TE 5wk, nyheim miller hines RB 4wk, ricky seals jones TE 3wk*
+  2020: universe 343 players, starter weeks 1423, rosterable 2819 | Clay 283 / all 500 | ADP 193 chart 339 hist 233 rookies 48 | candidate 446 | top missed starters: myles gaskin RB 7wk*, dalton schultz TE 6wk*, wayne gallman RB 6wk*, travis fulgham WR 4wk, tyron johnson WR 4wk
+  2021: universe 348 players, starter weeks 1506, rosterable 2994 | Clay 299 / all 489 | ADP 194 chart 347 hist 257 rookies 44 | candidate 454 | top missed starters: elijah mitchell RB 8wk*, kenneth gainwell RB 5wk*, mack hollins WR 5wk*, khalil herbert RB 4wk*, jauan jennings WR 3wk*
+  2022: universe 356 players, starter weeks 1507, rosterable 2990 | Clay 293 / all 495 | ADP 171 chart 340 hist 257 rookies 46 | candidate 454 | top missed starters: jordan akins TE 5wk, rashid shaheed WR 5wk, isaiah hodgins WR 4wk, tommy tremble TE 3wk*, trenton irwin WR 3wk
+  2023: universe 364 players, starter weeks 1502, rosterable 2995 | Clay 316 / all 485 | ADP 188 chart 343 hist 271 rookies 42 | candidate 455 | top missed starters: keaton mitchell RB 4wk, emari demercado RB 4wk*, justice hill RB 3wk*, jordan mason RB 2wk*, colby parkinson TE 2wk*
+  2024: universe 390 players, starter weeks 1513, rosterable 3013 | Clay 296 / all 486 | ADP 180 chart 354 hist 274 rookies 45 | candidate 448 | top missed starters: emanuel wilson RB 4wk*, devaughn vele WR 4wk*, jalen coker WR 3wk, sean tucker RB 2wk*, sterling shepard WR 2wk
+  2025: universe 356 players, starter weeks 1512, rosterable 3024 | Clay 272 / all 459 | ADP 207 chart 378 hist 284 rookies 45 | candidate 452 | top missed starters: colby parkinson TE 6wk*, ryan flournoy WR 6wk, kimani vidal RB 5wk, jake tonges TE 4wk, malik davis RB 3wk
+
+=== Averages 2019-25 (recall of relevant player-weeks; DYN = with in-season adds after a 10-pt game) ===
+  rule                                size  starter  st wk1  st DYN  roster  ro DYN   pts%
+  CLAY (>= 40 pts)                     292    89.9%   95.2%   94.9%   83.9%   90.5%  89.0%
+  CLAY all                             487    96.2%   97.8%   98.2%   94.8%   97.1%  96.2%
+  ADP                                  187    76.3%   82.1%   90.2%   65.2%   83.1%  74.5%
+  CHART string <= 2                    348    88.2%   93.2%   95.4%   84.0%   91.9%  88.6%
+  HIST                                 259    78.9%   84.7%   92.5%   72.0%   87.2%  78.5%
+  ROOKIE rd 1-4                         45     9.9%    7.0%   80.6%   10.2%   73.8%   9.7%
+  ADP + CHART                          370    93.1%   96.4%   96.5%   88.9%   93.4%  92.9%
+  ADP + CHART + HIST                   437    95.5%   98.1%   97.5%   92.6%   95.3%  95.4%
+  ADP + CHART + HIST + ROOKIE          450    96.4%   98.5%   97.9%   93.7%   95.8%  96.3%
+  ADP + HIST + ROOKIE (no chart)       331    90.6%   94.2%   95.2%   84.4%   90.8%  89.9%
+
+Candidate pool (ADP + week-1 chart string <= 2 + own history + rookies rd 1-4): 450 players a season, captures 96.4% of starter weeks (97.9% with in-season adds) vs Clay's pool 292 players / 89.9% (94.9%).
+wrote data/pool_definition_backtest.js (1s)

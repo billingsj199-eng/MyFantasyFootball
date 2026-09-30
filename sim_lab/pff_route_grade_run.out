@@ -1,0 +1,98 @@
+=== Prior-year PFF route grade on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | rows with a prior-year route grade and a history prior: WR 5814, TE 2952, RB 3117
+  curve E[PPG | grade] (all seasons): {"WR": [-11.9816, 0.288], "TE": [-5.6475, 0.1719], "RB": [8.8518, 0.0312]}
+
+=== Reads: actual / shadow prior (x shrink) by route-grade tercile, weeks 1-8, vets ===
+  WR low                n=  910 act/prior 1.033 act/shadow 1.018 shadow vs shipped  -2.31%  (grade cut 68.8 / 76.5)
+  WR mid                n=  917 act/prior 1.018 act/shadow 1.010 shadow vs shipped  -0.27%  (grade cut 68.8 / 76.5)
+  WR high               n=  888 act/prior 1.114 act/shadow 1.060 shadow vs shipped  -0.53%  (grade cut 68.8 / 76.5)
+  WR high & age <= 25   n=  327 act/prior 1.069 act/shadow 1.040 shadow vs shipped  -0.52%  (grade cut 68.8 / 76.5)
+  TE low                n=  457 act/prior 0.953 act/shadow 0.972 shadow vs shipped  +2.82%  (grade cut 63.2 / 72.2)
+  TE mid                n=  484 act/prior 1.026 act/shadow 1.028 shadow vs shipped  -2.52%  (grade cut 63.2 / 72.2)
+  TE high               n=  466 act/prior 1.057 act/shadow 1.040 shadow vs shipped  -1.27%  (grade cut 63.2 / 72.2)
+  TE high & age <= 25   n=  100 act/prior 0.990 act/shadow 1.001 shadow vs shipped  -3.52%  (grade cut 63.2 / 72.2)
+  RB low                n=  482 act/prior 1.108 act/shadow 1.064 shadow vs shipped  -0.79%  (grade cut 58.3 / 68.0)
+  RB mid                n=  502 act/prior 1.121 act/shadow 1.073 shadow vs shipped  +0.05%  (grade cut 58.3 / 68.0)
+  RB high               n=  480 act/prior 1.079 act/shadow 1.039 shadow vs shipped  +0.68%  (grade cut 58.3 / 68.0)
+  RB high & age <= 25   n=  153 act/prior 1.030 act/shadow 1.035 shadow vs shipped  +2.21%  (grade cut 58.3 / 68.0)
+
+=== Sweeps (LOYO vs shadow v2.6) ===
+  WR top-tercile grade x m (n=1916)
+    grid pooled MSE: 1.0:59.396  1.05:59.165  1.1:59.131  1.15:59.293  1.2:59.651
+    LOYO 58.4301 vs shadow 58.4102 (+0.03%), seasons better than shadow 3/6, picks [1.05, 1.1, 1.05, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped -0.53% -> -0.50%
+    WR bottom-tercile grade x m (n=1932)
+    grid pooled MSE: 1.0:28.221  0.95:28.182  0.9:28.183  0.85:28.225  0.8:28.306
+    LOYO 28.9481 vs shadow 28.8625 (+0.30%), seasons better than shadow 3/6, picks [0.9, 0.95, 0.95, 1.0, 0.9, 0.95], pooled best 0.95 | shadow vs shipped -1.50% -> -1.20%
+    WR CURVE blend weight w (n=5814)
+    grid pooled MSE: 0.0:42.109  0.15:42.103  0.3:42.167  0.5:42.364  0.75:42.789
+    LOYO 41.8841 vs shadow 41.8774 (+0.02%), seasons better than shadow 2/6, picks [0.15, 0.15, 0.15, 0.15, 0.15, 0.0], pooled best 0.15 | shadow vs shipped -0.74% -> -0.73%
+    WR CURVE blend, weeks 1-4 only (n=1442)
+    grid pooled MSE: 0.0:43.652  0.15:43.682  0.3:43.847  0.5:44.279  0.75:45.159
+    LOYO 43.3953 vs shadow 43.3416 (+0.12%), seasons better than shadow 0/6, picks [0.15, 0.0, 0.15, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -1.40% -> -1.27%
+    WR top-tercile & age <= 25 x m (n=713)
+    grid pooled MSE: 1.0:56.057  1.05:55.786  1.1:55.702  1.15:55.804  1.2:56.093
+    LOYO 56.9438 vs shadow 56.9912 (-0.08%), seasons better than shadow 4/6, picks [1.05, 1.1, 1.1, 1.15, 1.1, 1.1], pooled best 1.1 | shadow vs shipped -0.58% -> -0.67%
+    WR grade ABOVE what the prior implies x m (n=1936)
+    grid pooled MSE: 1.0:42.287  1.05:42.125  1.1:42.080  1.15:42.153
+    LOYO 42.0162 vs shadow 42.1985 (-0.43%), seasons better than shadow 5/6, picks [1.1, 1.1, 1.1, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped -0.26% -> -0.69%
+    WR grade BELOW what the prior implies x m (n=1933)
+    grid pooled MSE: 1.0:39.998  0.95:39.988  0.9:40.077  0.85:40.266
+    LOYO 40.0593 vs shadow 39.9875 (+0.18%), seasons better than shadow 0/6, picks [0.95, 0.95, 1.0, 1.0, 0.95, 1.0], pooled best 0.95 | shadow vs shipped -1.27% -> -1.10%
+  TE top-tercile grade x m (n=973)
+    grid pooled MSE: 1.0:34.848  1.05:34.762  1.1:34.771  1.15:34.872  1.2:35.068
+    LOYO 34.6396 vs shadow 34.6699 (-0.09%), seasons better than shadow 4/6, picks [1.05, 1.05, 1.1, 1.1, 1.1, 1.05], pooled best 1.05 | shadow vs shipped +0.08% -> -0.01%
+    TE bottom-tercile grade x m (n=973)
+    grid pooled MSE: 1.0:18.225  0.95:18.219  0.9:18.237  0.85:18.280  0.8:18.348
+    LOYO 18.2842 vs shadow 18.2209 (+0.35%), seasons better than shadow 0/6, picks [0.9, 1.0, 1.0, 1.0, 0.95, 0.95], pooled best 0.95 | shadow vs shipped +0.02% -> +0.37%
+    TE CURVE blend weight w (n=2952)
+    grid pooled MSE: 0.0:26.083  0.15:26.121  0.3:26.201  0.5:26.374  0.75:26.694
+    LOYO 25.9688 vs shadow 25.9688 (+0.00%), seasons better than shadow 0/6, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.47% -> -0.47%
+    TE CURVE blend, weeks 1-4 only (n=759)
+    grid pooled MSE: 0.0:23.571  0.15:23.533  0.3:23.573  0.5:23.749  0.75:24.166
+    LOYO 23.2752 vs shadow 23.3166 (-0.18%), seasons better than shadow 4/6, picks [0.15, 0.15, 0.15, 0.15, 0.15, 0.15], pooled best 0.15 | shadow vs shipped +0.17% -> -0.01%
+    TE top-tercile & age <= 25 x m (n=208)
+    grid pooled MSE: 1.0:31.788  1.05:31.784  1.1:31.873  1.15:32.054  1.2:32.329
+    LOYO 30.0732 vs shadow 29.9566 (+0.39%), seasons better than shadow 0/6, picks [1.05, 1.0, 1.05, 1.05, 1.05, 1.0], pooled best 1.05 | shadow vs shipped -0.84% -> -0.45%
+    TE grade ABOVE what the prior implies x m (n=983)
+    grid pooled MSE: 1.0:27.307  1.05:27.218  1.1:27.188  1.15:27.216
+    LOYO 27.6721 vs shadow 27.7162 (-0.16%), seasons better than shadow 4/6, picks [1.1, 1.15, 1.15, 1.1, 1.05, 1.1], pooled best 1.1 | shadow vs shipped -0.01% -> -0.17%
+    TE grade BELOW what the prior implies x m (n=973)
+    grid pooled MSE: 1.0:22.913  0.95:22.937  0.9:23.005  0.85:23.118
+    LOYO 23.1860 vs shadow 23.1860 (+0.00%), seasons better than shadow 0/6, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -0.19% -> -0.19%
+  RB top-tercile grade x m (n=1035)
+    grid pooled MSE: 1.0:52.280  1.05:52.229  1.1:52.318  1.15:52.546  1.2:52.914
+    LOYO 52.4982 vs shadow 52.4072 (+0.17%), seasons better than shadow 0/6, picks [1.0, 1.05, 1.05, 1.05, 1.05, 1.0], pooled best 1.05 | shadow vs shipped -0.02% -> +0.16%
+    RB bottom-tercile grade x m (n=1033)
+    grid pooled MSE: 1.0:43.868  0.95:44.050  0.9:44.332  0.85:44.714  0.8:45.196
+    LOYO 43.3031 vs shadow 43.3031 (+0.00%), seasons better than shadow 0/6, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -1.29% -> -1.29%
+    RB CURVE blend weight w (n=3117)
+    grid pooled MSE: 0.0:50.425  0.15:50.531  0.3:50.818  0.5:51.480  0.75:52.757
+    LOYO 49.9043 vs shadow 49.9043 (-0.00%), seasons better than shadow 0/6, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.52% -> -0.52%
+    RB CURVE blend, weeks 1-4 only (n=801)
+    grid pooled MSE: 0.0:52.009  0.15:52.281  0.3:52.943  0.5:54.432  0.75:57.265
+    LOYO 50.8653 vs shadow 50.8653 (+0.00%), seasons better than shadow 0/6, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.18% -> -0.18%
+    RB top-tercile & age <= 25 x m (n=323)
+    grid pooled MSE: 1.0:59.637  1.05:59.315  1.1:59.122  1.15:59.057  1.2:59.121
+    LOYO 56.4064 vs shadow 56.6372 (-0.41%), seasons better than shadow 4/5, picks [1.15, 1.15, 1.1, 1.2, 1.15], pooled best 1.15 | shadow vs shipped +0.17% -> -0.24%
+    RB grade ABOVE what the prior implies x m (n=1037)
+    grid pooled MSE: 1.0:47.768  1.05:47.759  1.1:47.869  1.15:48.100
+    LOYO 48.9361 vs shadow 48.8657 (+0.14%), seasons better than shadow 0/6, picks [1.0, 1.05, 1.05, 1.05, 1.05, 1.0], pooled best 1.05 | shadow vs shipped -0.14% -> +0.00%
+    RB grade BELOW what the prior implies x m (n=1038)
+    grid pooled MSE: 1.0:47.384  0.95:47.541  0.9:47.816  0.85:48.209
+    LOYO 46.9953 vs shadow 46.9953 (+0.00%), seasons better than shadow 0/6, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -1.18% -> -1.18%
+
+=== Candidate from PASS pieces: WR grade ABOVE what the prior implies x m = 1.1 ===
+  ALL rows: vs shipped -1.28% (7/7) | vs shadow v2.6 -0.04% (5/7) | affected rows n=1936 -0.43% (5/7)
+  FORWARD (2021-25): all rows -0.03% vs shadow (4/5) | affected rows -0.26% (4/5)
+  engine constants (WR residual = grade - (c0 + c1 x prior half-PPR); boost above cut): {"WR": {"c0": 56.095, "c1": 1.9876, "cut": 2.649, "mult": 1.1}}
+
+Prior-year PFF route grade on the shadow: WR grade ABOVE what the prior implies x m -0.43% (5/6, PASS); TE CURVE blend, weeks 1-4 only -0.18% (4/6, lean); TE grade ABOVE what the prior implies x m -0.16% (4/6, lean); RB top-tercile & age <= 25 x m -0.41% (4/5, lean). Candidate: affected rows -0.43% vs v2.6 (5/7), forward -0.26% (4/5).
+wrote data/pff_route_grade_backtest.js (23s)

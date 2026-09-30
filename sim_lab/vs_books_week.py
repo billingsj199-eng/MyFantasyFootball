@@ -54,7 +54,9 @@ def binom_p(k, n):
     return float(2 * (1 - 0.5 * (1 + math.erf(max(0, z) / math.sqrt(2)))))
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--week", type=int, required=True); a = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument("--week", type=int, required=True)
+    ap.add_argument("--usage", action="store_true", help="grade the usage-updated stat lines (compsU, engine COMP_USAGE 2026-09-20) instead of the static preseason comps")
+    a = ap.parse_args()
     snap = json.load(open(os.path.join(HERE, "data", "snapshots", f"simlab_snapshot_w{a.week}.json"), encoding="utf-8"))
     act = load_rows(a.week)
     calls = []      # stat prop calls
@@ -66,7 +68,7 @@ def main():
         w = act.get(norm(p["name"]))
         if not w:
             continue
-        comps = p.get("comps") or {}
+        comps = (p.get("compsU") if a.usage and p.get("compsU") else p.get("comps")) or {}
         for lk, sk in STAT_KEYS.items():
             line, nb = consensus(p["lines"], lk)
             mc = comps.get(lk)

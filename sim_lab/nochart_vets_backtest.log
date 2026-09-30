@@ -1,0 +1,55 @@
+=== Veterans without a chart ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.3 vs shipped -1.08% (7/7) | veterans without a chart: 1180 (7.2% of vets)
+
+=== Causes (actual / shadow prior, actual / shipped) ===
+  listed on ANOTHER team this week                 n=  464 act/prior 0.829 act/shipped 0.929 shadow vs shipped 2.62
+  same team, listed 1-3 weeks ago, not this week   n=  177 act/prior 0.895 act/shipped 0.937 shadow vs shipped 4.19
+  on no chart in the last 3 weeks                  n=  539 act/prior 0.955 act/shipped 1.08 shadow vs shipped 2.34
+  week 1 (no earlier chart possible)               n=   30 act/prior 0.866 act/shipped 1.019 shadow vs shipped -9.32
+  by position (truly unlisted): RB n338 act/prior 0.99 WR n116 act/prior 0.90 TE n77 act/prior 0.92
+  by week band (truly unlisted): wk1 n30 wk2-4 n78 wk5-8 n118 wk9-12 n120 wk13+ n193
+  carried rows by last string: str1 n128 act/prior 0.89 str2 n39 act/prior 0.91
+
+=== Layers (LOYO vs shadow v2.3) ===
+  CARRY last string (1-3 wks)      all rows +0.01% vs shadow (2/7) | affected rows n=177 +1.34%
+  ANYTEAM string                   all rows -0.05% vs shadow (4/7) | affected rows n=464 -2.43%
+  CARRY + ANYTEAM                  all rows -0.03% vs shadow (4/7) | affected rows n=641 -1.20%
+  UNLISTED dock, vets on no chart in 3 wks (after CARRY+ANYTEAM) (n=539)
+    grid pooled MSE: 1.0:44.490  0.9:44.324  0.8:44.535  0.7:45.124  0.6:46.090  0.5:47.433
+    LOYO 39.1283 vs shadow 39.5191 (-0.99%), seasons better than shadow 5/7, picks [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9], pooled best 0.9 | shadow vs shipped +2.34% -> +1.32%
+    UNLISTED dock RB (n=338)
+    grid pooled MSE: 1.0:49.499  0.9:49.520  0.8:49.894  0.7:50.621  0.6:51.700  0.5:53.132
+    LOYO 45.7006 vs shadow 45.5314 (+0.37%), seasons better than shadow 0/7, picks [0.9, 1.0, 0.9, 1.0, 1.0, 1.0, 0.9], pooled best 1.0 | shadow vs shipped +1.18% -> +1.56%
+    UNLISTED dock WR (n=116)
+    grid pooled MSE: 1.0:33.446  0.9:33.251  0.8:33.528  0.7:34.278  0.6:35.501  0.5:37.195
+    LOYO 32.6798 vs shadow 32.8988 (-0.67%), seasons better than shadow 3/7, picks [1.0, 0.9, 1.0, 0.9, 0.9, 0.9, 0.8], pooled best 0.9 | shadow vs shipped +4.49% -> +3.80%
+    UNLISTED dock TE (n=77)
+    grid pooled MSE: 1.0:20.065  0.9:19.902  0.8:19.931  0.7:20.152  0.6:20.566  0.5:21.171
+    LOYO 23.1862 vs shadow 22.8007 (+1.69%), seasons better than shadow 2/5, picks [0.9, 0.7, 0.9, 1.0, 0.8], pooled best 0.9 | shadow vs shipped +1.40% -> +3.11%
+    UNLISTED dock, weeks 2+ only (n=509)
+    grid pooled MSE: 1.0:44.704  0.9:44.608  0.8:44.862  0.7:45.464  0.6:46.416  0.5:47.717
+    LOYO 39.6074 vs shadow 39.6578 (-0.13%), seasons better than shadow 4/7, picks [0.9, 0.9, 0.9, 1.0, 0.9, 1.0, 0.9], pooled best 0.9 | shadow vs shipped +3.07% -> +2.94%
+
+=== Candidate v2.4: ANYTEAM string only (CARRY hurts; unlisted dock fails by position and forward) ===
+  ALL rows: vs shipped -1.13% (7/7) | vs shadow v2.3 -0.05% (4/7)
+  no-chart vets (all causes)   n= 1180 shadow  +2.74% ->  +1.88% vs shipped
+  listed elsewhere             n=  464 shadow  +2.62% ->  +0.13% vs shipped
+  carried                      n=  177 shadow  +4.19% ->  +4.19% vs shipped
+  truly unlisted               n=  539 shadow  +2.34% ->  +2.34% vs shipped
+  wk1     shadow  +0.75% ->  +0.53% vs shipped
+  wk2-4   shadow  -1.54% ->  -1.59% vs shipped
+  wk5-8   shadow  -1.19% ->  -1.21% vs shipped
+  wk9-12  shadow  -0.95% ->  -0.98% vs shipped
+  wk13+   shadow  -1.15% ->  -1.19% vs shipped
+  FORWARD unlisted dock (2021-25, picked on earlier seasons): -0.02% vs CARRY+ANYTEAM shadow (3/5)
+
+No-chart vets: 464 listed on another team (our team inference), 177 listed 1-3 weeks earlier, 539 on no chart. CARRY + ANYTEAM -1.20% on affected rows; unlisted dock -0.99% (5/7, PASS). Unlisted dock fails RB 0/7 and forward -> not shipped. Candidate v2.4 = current-team chart lookup only: -0.05% vs v2.3 (4/7), -1.13% vs shipped.
+wrote data/nochart_vets_backtest.js (20s)

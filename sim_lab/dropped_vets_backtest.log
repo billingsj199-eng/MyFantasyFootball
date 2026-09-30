@@ -1,0 +1,54 @@
+=== Dropped-off-the-chart veterans ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | live injury docks applied to both sides (designated rows: 961) | shadow v2.4 vs shipped -1.12% (7/7) | dropped vets: 177
+
+=== Dropped rows by designation vs listed veterans with the same designation (actual / shadow prior, after live docks) ===
+  none      dropped n= 150 act/prior 0.95   | listed n=14835 act/prior 1.057
+  Q-FP      dropped n=   8 act/prior 0.766   | listed n=  161 act/prior 0.958
+  Q-LP      dropped n=  18 act/prior 0.598   | listed n=  483 act/prior 0.995
+  Q-DNP     dropped n=   1 act/prior 1.011   | listed n=   95 act/prior 1.096
+  Doubtful  dropped n=   0 act/prior None   | listed n=    3 act/prior 1.008
+  Out       dropped n=   0 act/prior None   | listed n=    0 act/prior None
+  dropped rows by position: QB n20 0.88 RB n45 0.80 WR n74 0.91 TE n38 1.08
+  dropped rows by last string: str1 n128 0.89 str2 n39 0.91 str3 n10 0.91
+  designated share: dropped 15% vs listed vets 5%
+
+=== Layers: prior x m on dropped rows, LOYO vs shadow v2.4 (+ live docks) ===
+  dropped, all (n=177)
+    grid pooled MSE: 1.0:47.230  0.9:46.304  0.8:45.850  0.7:45.868  0.6:46.358  0.5:47.320
+    LOYO 41.5329 vs shadow 41.7149 (-0.44%), seasons better than shadow 3/6, picks [0.7, 0.7, 0.7, 0.8, 0.9, 0.7], pooled best 0.8 | shadow vs shipped +4.17% -> +3.71%
+  dropped, NO designation (n=150)
+    grid pooled MSE: 1.0:43.881  0.9:43.449  0.8:43.446  0.7:43.872  0.6:44.728  0.5:46.013
+    LOYO 40.2151 vs shadow 38.9630 (+3.21%), seasons better than shadow 3/6, picks [0.9, 0.8, 0.8, 0.9, 1.0, 0.7], pooled best 0.8 | shadow vs shipped +3.54% -> +6.87%
+  dropped, WITH a designation (on top of the live dock) (n=27)
+    grid pooled MSE: 1.0:62.417  0.9:57.993  0.8:54.232  0.7:51.134  0.6:48.699  0.5:46.926
+    LOYO 40.9915 vs shadow 57.0031 (-28.09%), seasons better than shadow 4/6, picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5], pooled best 0.5 | shadow vs shipped +6.61% -> -23.34%
+    dropped RB (n=45)
+    grid pooled MSE: 1.0:37.962  0.9:36.969  0.8:36.236  0.7:35.763  0.6:35.549  0.5:35.595
+    LOYO 37.1796 vs shadow 39.1215 (-4.96%), seasons better than shadow 4/5, picks [0.6, 0.5, 0.7, 0.6, 0.5], pooled best 0.6 | shadow vs shipped +4.20% -> -0.98%
+    dropped WR (n=74)
+    grid pooled MSE: 1.0:40.387  0.9:39.009  0.8:37.976  0.7:37.289  0.6:36.948  0.5:36.952
+    LOYO 39.6727 vs shadow 39.2756 (+1.01%), seasons better than shadow 3/6, picks [0.7, 0.5, 0.6, 0.5, 0.7, 0.5], pooled best 0.6 | shadow vs shipped -0.70% -> +0.30%
+    listed vets Q-FP extra multiplier (check) (n=161)
+    grid pooled MSE: 1.0:38.436  0.9:38.265  0.8:38.725  0.7:39.816  1.1:39.239
+    LOYO 38.4791 vs shadow 37.9213 (+1.47%), seasons better than shadow 4/7, picks [0.8, 1.0, 0.9, 0.9, 0.9, 1.0, 0.9], pooled best 0.9 | shadow vs shipped +0.61% -> +2.09%
+    listed vets Q-LP extra multiplier (check) (n=483)
+    grid pooled MSE: 1.0:43.398  0.9:43.043  0.8:43.175  0.7:43.795  1.1:44.242
+    LOYO 42.8568 vs shadow 43.0801 (-0.52%), seasons better than shadow 4/7, picks [0.8, 0.9, 0.9, 0.9, 0.9, 0.8, 0.8], pooled best 0.9 | shadow vs shipped -1.75% -> -2.26%
+    listed vets Q-DNP extra multiplier (check) (n=95)
+    grid pooled MSE: 1.0:30.385  0.9:30.875  0.8:31.684  0.7:32.815  1.1:30.216
+    LOYO 28.2544 vs shadow 27.4319 (+3.00%), seasons better than shadow 2/7, picks [1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 0.9], pooled best 1.1 | shadow vs shipped -7.57% -> -4.80%
+
+=== Candidate: dropped (all dropped) x0.8 ===
+  ALL rows: vs shipped -1.14% (7/7) | vs shadow v2.4 -0.03% (3/7) | dropped rows: shadow +4.17% -> +1.29% vs shipped
+  FORWARD (2021-25, m picked on earlier seasons): -0.02% vs shadow (3/5) | dropped rows -2.38%
+
+Dropped vets n=177, 15% carry an injury designation the live layer already docks. Dock on dropped rows: all -0.44% vs shadow (3/6, FAIL); no designation +3.21% (3/6, FAIL). Candidate -0.03% vs v2.4 (3/7), forward -0.02% (3/5).
+wrote data/dropped_vets_backtest.js (21s)

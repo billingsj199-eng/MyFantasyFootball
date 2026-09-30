@@ -24,9 +24,13 @@ const LAB = path.join(ROOT, 'sim_lab');
 const OUT_DIR = path.join(LAB, 'notes');
 const ARGS = process.argv.slice(2);
 function argOf(flag, dflt) { const i = ARGS.indexOf(flag); return i >= 0 && ARGS[i + 1] ? ARGS[i + 1] : dflt; }
-const WEEK = argOf('--week', null);
 const SCORING = argOf('--scoring', 'half');
 const REPO = argOf('--repo', null);   // when set: also write <repo>/data/matchup_edges_2026.js (main site Start/Sit MATCHUP EDGES)
+// No --week + a repo: use the week the projection export just wrote (sim_proj_2026.json currentWeek). The NOTES tab's own
+// default races the injury layer and falls back to "last zones week + 1", which became week 3 once Thursday's W2 game
+// landed in the zones file (2026-09-18) - the card WHY / MATCHUP EDGES then no longer matched the site's live week.
+let WEEK = argOf('--week', null);
+if (!WEEK && REPO) { try { const cw = JSON.parse(fs.readFileSync(path.join(REPO, 'data', 'sim_proj_2026.json'), 'utf8')).currentWeek; if (cw > 0) WEEK = String(cw); } catch (_) {} }
 
 const MIME = { '.html': 'text/html', '.js': 'application/javascript', '.json': 'application/json', '.css': 'text/css', '.txt': 'text/plain' };
 function serve() {
@@ -42,11 +46,38 @@ function serve() {
   });
 }
 
+// BROWSER LAUNCH (2026-09-30): every Task Scheduler run since the feature shipped failed with "Executable doesn't
+// exist at ...ms-playwright" while the same command worked from an interactive session, so the Start/Sit MATCHUP
+// EDGES board only moved when someone ran the export by hand. Try the bundled headless shell, then the bundled full
+// Chromium, then the installed Edge / Chrome; whatever failed is written in full (with the environment it ran in) to
+// notes/export_notes_launch.log, because the scheduler log keeps only the first wrapped line of an error.
+async function launchBrowser(chromium) {
+  const tries = [['bundled headless shell', {}], ['bundled chromium', { channel: 'chromium' }], ['installed Edge', { channel: 'msedge' }], ['installed Chrome', { channel: 'chrome' }]];
+  const errs = [];
+  const diag = (label) => {
+    try {
+      fs.mkdirSync(OUT_DIR, { recursive: true });
+      fs.writeFileSync(path.join(OUT_DIR, 'export_notes_launch.log'), new Date().toISOString() + ' launched with: ' + label + '\n' + errs.join('\n---\n') + '\n--- environment ---\n'
+        + ['LOCALAPPDATA', 'USERPROFILE', 'USERNAME', 'PLAYWRIGHT_BROWSERS_PATH', 'SESSIONNAME', 'TEMP'].map(k => k + '=' + (process.env[k] || '')).join('\n')
+        + '\ncwd=' + process.cwd() + '\narch=' + process.arch + ' node=' + process.version + '\n');
+    } catch (_) {}
+  };
+  for (const [label, opt] of tries) {
+    try {
+      const b = await chromium.launch(Object.assign({ headless: true }, opt));
+      if (errs.length) { console.log('browser: ' + label + ' (fallback; first choice failed - see notes/export_notes_launch.log)'); diag(label); }
+      return b;
+    } catch (e) { errs.push(label + ': ' + String(e && e.message || e)); }
+  }
+  diag('NOTHING');
+  throw new Error('no browser could be launched | ' + errs.map(s => s.split('\n')[0]).join(' | '));
+}
+
 (async () => {
   const { chromium } = require(path.join(ROOT, 'MyFantasyFootball Files', 'tests', 'node_modules', 'playwright'));
   const srv = await serve();
   const port = srv.address().port;
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowser(chromium);
   try {
     const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
     const errors = [];

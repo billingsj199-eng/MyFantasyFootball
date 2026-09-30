@@ -1,0 +1,81 @@
+=== Us vs ESPN's weekly projections, 2019-25, same player-weeks, half-PPR ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  harness player-weeks 19064 | ESPN row found 18979 (99.6%) | ESPN projected ~0 for a player who played 403 | graded 18576 (top 150: 10942)
+  by season graded: 2019:1932 2020:2056 2021:2541 2022:2659 2023:3003 2024:3355 2025:3030
+  sanity: ESPN half-PPR rescored vs its own PPR total (should sit a bit below): mean 9.97 vs 11.31
+
+=== Typical miss (RMSE, half-PPR points); in brackets: error vs ESPN (negative = better than ESPN), seasons better than ESPN ===
+  ALL graded rows        n=18576 | ESPN  6.43 | Clay blend today  6.54 (+3.46%, 0/7) | shadow v2.21 (Clay-free)  6.47 (+1.20%, 1/7) | 70/30 blend  6.46 (+1.05%, 2/7)
+  TOP 150                n=10942 | ESPN  7.11 | Clay blend today  7.21 (+2.89%, 0/7) | shadow v2.21 (Clay-free)  7.14 (+1.08%, 2/7) | 70/30 blend  7.14 (+0.92%, 2/7)
+ -- by ADP band
+  ADP 1-30               n= 2551 | ESPN  8.25 | Clay blend today  8.37 (+2.95%, 0/7) | shadow v2.21 (Clay-free)  8.25 (+0.03%, 2/7) | 70/30 blend  8.25 (-0.06%, 2/7)
+  ADP 31-60              n= 2467 | ESPN  7.34 | Clay blend today  7.38 (+1.22%, 3/7) | shadow v2.21 (Clay-free)  7.35 (+0.49%, 3/7) | 70/30 blend  7.34 (-0.03%, 3/7)
+  ADP 61-100             n= 2790 | ESPN  6.60 | Clay blend today  6.71 (+3.43%, 1/7) | shadow v2.21 (Clay-free)  6.66 (+1.79%, 1/7) | 70/30 blend  6.65 (+1.69%, 2/7)
+  ADP 101-150            n= 3134 | ESPN  6.30 | Clay blend today  6.43 (+4.05%, 3/7) | shadow v2.21 (Clay-free)  6.38 (+2.49%, 4/7) | 70/30 blend  6.38 (+2.54%, 4/7)
+  ADP 151+ / undrafted   n= 7634 | ESPN  5.31 | Clay blend today  5.43 (+4.94%, 0/7) | shadow v2.21 (Clay-free)  5.35 (+1.50%, 2/7) | 70/30 blend  5.34 (+1.40%, 2/7)
+ -- by position (top 150)
+  QB                     n= 1749 | ESPN  7.71 | Clay blend today  7.77 (+1.45%, 1/7) | shadow v2.21 (Clay-free)  7.75 (+0.94%, 2/7) | 70/30 blend  7.74 (+0.64%, 3/7)
+  RB                     n= 3491 | ESPN  7.20 | Clay blend today  7.36 (+4.62%, 0/7) | shadow v2.21 (Clay-free)  7.26 (+1.68%, 2/7) | 70/30 blend  7.26 (+1.75%, 2/7)
+  WR                     n= 4396 | ESPN  7.07 | Clay blend today  7.16 (+2.56%, 0/7) | shadow v2.21 (Clay-free)  7.10 (+0.78%, 2/7) | 70/30 blend  7.09 (+0.54%, 3/7)
+  TE                     n= 1306 | ESPN  6.04 | Clay blend today  6.07 (+0.97%, 3/7) | shadow v2.21 (Clay-free)  6.06 (+0.49%, 3/7) | 70/30 blend  6.05 (+0.13%, 3/7)
+ -- by part of the season (top 150)
+  week 1                 n=  627 | ESPN  6.70 | Clay blend today  6.85 (+4.69%, 0/6) | shadow v2.21 (Clay-free)  6.82 (+3.68%, 3/6) | 70/30 blend  6.79 (+2.89%, 3/6)
+  weeks 2-4              n= 2075 | ESPN  7.15 | Clay blend today  7.27 (+3.19%, 2/7) | shadow v2.21 (Clay-free)  7.14 (-0.28%, 4/7) | 70/30 blend  7.14 (-0.45%, 4/7)
+  weeks 5-9              n= 2984 | ESPN  7.13 | Clay blend today  7.19 (+1.55%, 1/7) | shadow v2.21 (Clay-free)  7.14 (+0.19%, 3/7) | 70/30 blend  7.13 (-0.09%, 3/7)
+  weeks 10-14            n= 2990 | ESPN  7.03 | Clay blend today  7.10 (+2.19%, 1/7) | shadow v2.21 (Clay-free)  7.06 (+0.86%, 3/7) | 70/30 blend  7.05 (+0.74%, 3/7)
+  weeks 15-18            n= 2266 | ESPN  7.24 | Clay blend today  7.41 (+4.77%, 0/7) | shadow v2.21 (Clay-free)  7.35 (+3.10%, 2/7) | 70/30 blend  7.36 (+3.18%, 2/7)
+ -- by season (top 150)
+  2019                   n= 1138 | ESPN  7.44 | Clay blend today  7.50 (+1.58%, 0/1) | shadow v2.21 (Clay-free)  7.47 (+0.85%, 0/1) | 70/30 blend  7.45 (+0.14%, 0/1)
+  2020                   n= 1180 | ESPN  7.45 | Clay blend today  7.51 (+1.75%, 0/1) | shadow v2.21 (Clay-free)  7.50 (+1.56%, 0/1) | 70/30 blend  7.48 (+0.79%, 0/1)
+  2021                   n= 1471 | ESPN  7.26 | Clay blend today  7.35 (+2.49%, 0/1) | shadow v2.21 (Clay-free)  7.25 (-0.39%, 1/1) | 70/30 blend  7.25 (-0.24%, 1/1)
+  2022                   n= 1582 | ESPN  7.05 | Clay blend today  7.12 (+1.99%, 0/1) | shadow v2.21 (Clay-free)  7.04 (-0.24%, 1/1) | 70/30 blend  7.04 (-0.27%, 1/1)
+  2023                   n= 1754 | ESPN  6.89 | Clay blend today  7.07 (+5.20%, 0/1) | shadow v2.21 (Clay-free)  7.01 (+3.29%, 0/1) | 70/30 blend  7.00 (+3.21%, 0/1)
+  2024                   n= 1914 | ESPN  6.93 | Clay blend today  7.04 (+3.39%, 0/1) | shadow v2.21 (Clay-free)  6.97 (+1.25%, 0/1) | 70/30 blend  6.97 (+1.32%, 0/1)
+  2025                   n= 1903 | ESPN  6.98 | Clay blend today  7.09 (+3.10%, 0/1) | shadow v2.21 (Clay-free)  7.02 (+1.10%, 0/1) | 70/30 blend  7.02 (+1.07%, 0/1)
+
+=== Weekly ranking inside each position (top 150, ESPN-graded rows): mean Spearman and pairs ordered correctly ===
+  ESPN                       rank rho 0.3777 | pairs right 64.54% | by season 2019:0.399 2020:0.423 2021:0.385 2022:0.371 2023:0.353 2024:0.353 2025:0.364
+  Clay blend today           rank rho 0.3655 | pairs right 63.70% | by season 2019:0.398 2020:0.399 2021:0.375 2022:0.382 2023:0.345 2024:0.332 2025:0.334
+  shadow v2.21 (Clay-free)   rank rho 0.3776 | pairs right 64.22% | by season 2019:0.405 2020:0.415 2021:0.392 2022:0.399 2023:0.354 2024:0.342 2025:0.341
+  70/30 blend                rank rho 0.3782 | pairs right 64.22% | by season 2019:0.412 2020:0.418 2021:0.390 2022:0.396 2023:0.354 2024:0.343 2025:0.340
+
+=== Start/sit pairs where we and ESPN order two same-position players differently: who was right ===
+  Clay blend today           top 150    we were right 46.89% of 20,094 disagreements | seasons above 50%: 1/7
+  Clay blend today           ADP 1-60   we were right 47.97% of  5,827 disagreements | seasons above 50%: 1/7
+  Clay blend today           ADP 61-150 we were right 45.00% of  7,469 disagreements | seasons above 50%: 2/7
+  shadow v2.21 (Clay-free)   top 150    we were right 48.90% of 21,442 disagreements | seasons above 50%: 3/7
+  shadow v2.21 (Clay-free)   ADP 1-60   we were right 49.92% of  6,026 disagreements | seasons above 50%: 4/7
+  shadow v2.21 (Clay-free)   ADP 61-150 we were right 46.84% of  8,317 disagreements | seasons above 50%: 2/7
+  70/30 blend                top 150    we were right 48.86% of 20,636 disagreements | seasons above 50%: 3/7
+  70/30 blend                ADP 1-60   we were right 50.10% of  5,980 disagreements | seasons above 50%: 4/7
+  70/30 blend                ADP 61-150 we were right 46.61% of  7,843 disagreements | seasons above 50%: 3/7
+
+=== Level: average projection vs actual (top 150, graded rows) ===
+  ADP 1-30   actual 15.14 | ESPN 15.28 (+0.9%) | Clay blend today 15.85 (+4.7%) | shadow v2.21 (Clay-free) 15.25 (+0.7%) | 70/30 blend 15.39 (+1.7%)
+  ADP 31-60  actual 12.92 | ESPN 12.91 (-0.1%) | Clay blend today 13.15 (+1.8%) | shadow v2.21 (Clay-free) 12.63 (-2.2%) | 70/30 blend 12.75 (-1.3%)
+  ADP 61-150 actual 10.46 | ESPN 10.57 (+1.1%) | Clay blend today 10.54 (+0.8%) | shadow v2.21 (Clay-free) 10.50 (+0.4%) | 70/30 blend 10.51 (+0.5%)
+
+=== Does ESPN know something we do not? blends with ESPN (top 150; error vs ESPN alone, seasons better) ===
+  70/30 blend alone           +0.92% (2/7) | typical miss 7.139
+  0.75 ours + 0.25 ESPN       -0.38% (6/7) | typical miss 7.093
+  0.5 ours + 0.5 ESPN         -0.97% (6/7) | typical miss 7.072
+  0.25 ours + 0.75 ESPN       -0.84% (7/7) | typical miss 7.076
+  0.5 Clay today + 0.5 ESPN   -0.14% (5/7) | typical miss 7.101
+
+Top 150, 10942 player-weeks 2019-25, typical miss: ESPN 7.11, Clay blend today 7.21 (+2.9% error vs ESPN, 0/7 seasons), shadow 7.14 (+1.1%, 2/7), 70/30 blend 7.14 (+0.9%, 2/7).
+wrote data/vs_espn.js (40s)

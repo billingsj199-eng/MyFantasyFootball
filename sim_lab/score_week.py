@@ -28,10 +28,15 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = r"E:\MyFantasyFootball\MyFantasyFootball Files"
 
+# Clay nickname -> the Sleeper / nflverse spelling the actuals + consensus use
+# (mirrors engine.js CLAY_NORM_ALIAS; before 2026-09-23 these three were never graded).
+CLAY_NORM_ALIAS = {"ken walker": "kenneth walker", "cameron ward": "cam ward", "chigoziem okonkwo": "chig okonkwo"}
+
 def norm(s):
     s = s.lower().replace(".", "").replace("'", "").replace("-", " ")
     s = re.sub(r"\b(jr|sr|ii|iii|iv|v)\b", "", s)
-    return re.sub(r"\s+", " ", s).strip()
+    s = re.sub(r"\s+", " ", s).strip()
+    return CLAY_NORM_ALIAS.get(s, s)
 
 def load_actuals(week):
     raw = open(os.path.join(REPO, "data", "weekly_stats_active.js"), encoding="utf-8").read()
@@ -84,13 +89,19 @@ def main():
         c = cons.get(k) or {}
         rows.append({"name": p["name"], "pos": p["pos"], "tm": p["tm"], "opp": p["opp"], "act": act[k],
                      "mean": p["mean"], "js": p.get("jsMean"), "clay": p.get("clayMean"), "prop": p.get("propMean"),
-                     "nc": p.get("ncMean"), "ncSrc": p.get("ncSrc"), "lc": p.get("lcMean"), "rep": p.get("rep"), "asc": p.get("asc"),
+                     "nc": p.get("ncMean"), "ncSrc": p.get("ncSrc"), "mix": p.get("rmMean"), "mixb": p.get("rmFinal"), "espnLock": p.get("espn"), "lc": p.get("lcMean"), "rep": p.get("rep"), "asc": p.get("asc"),
                      "p10": p.get("p10"), "p90": p.get("p90"), "propSrc": p.get("propSrc"),
                      "cons": c.get("h"), "espn": (c.get("e") or [None])[0], "cbs": (c.get("c") or [None])[0],
                      "fp": (c.get("f") or [None])[0]})
     print(f"scored: {len(rows)} played (shipped mean >= {a.min_proj}) | DNP/unmatched: {len(dnp)}")
     ncfb = sum(1 for r in rows if r.get("ncSrc") == "clay-fallback")
-    print(f"  No-Clay shadow: {len(rows) - ncfb} rows on the player's own 3-yr prior, {ncfb} still on the Clay fallback (no history)")
+    _srcmix = {}
+    for r in rows:
+        if r.get("ncSrc"):
+            _base = str(r["ncSrc"]).split("+")[0]
+            _srcmix[_base] = _srcmix.get(_base, 0) + 1
+    print(f"  No-Clay shadow: {len(rows) - ncfb} rows on a Clay-free prior, {ncfb} on the Clay fallback | prior sources: "
+          + ", ".join(f"{k} {v}" for k, v in sorted(_srcmix.items(), key=lambda kv: -kv[1])))
     # centered learned shadow: remove the average correction per position this week, keeping only the player-level signal
     _lcd = {}
     for r in rows:
@@ -116,7 +127,7 @@ def main():
         else:
             print(f"  shadow {lab}: n={len(sub)} (too few to read)")
 
-    models = [("mean", "SHIPPED mean"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("lc", "Learned shadow"), ("lcc", "Learned centered"), ("clay", "Clay stack"), ("prop", "prop-anchored"),
+    models = [("mean", "SHIPPED mean"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("mix", "Rank mix"), ("mixb", "Rank mix+books"), ("lc", "Learned shadow"), ("lcc", "Learned centered"), ("clay", "Clay stack"), ("prop", "prop-anchored"),
               ("cons", "site consensus"), ("espn", "ESPN"), ("cbs", "CBS"), ("fp", "FantasyPros")]
     print("\n=== ALL positions (same rows for every model where available) ===")
     print(f"  {'model':16s} {'n':>4s} {'MAE':>6s} {'bias':>6s} {'RMSE':>6s}")
@@ -141,7 +152,7 @@ def main():
 
     # head-to-head vs consensus (row-level |err|)
     print("\n=== head-to-head, row-level |error| (wins-losses-ties, tie = within 0.1) ===")
-    for key, lab in (("mean", "SHIPPED"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("lc", "Learned shadow"), ("clay", "Clay stack")):
+    for key, lab in (("mean", "SHIPPED"), ("js", "JS Weekly"), ("nc", "No-Clay shadow"), ("mix", "Rank mix"), ("mixb", "Rank mix+books"), ("lc", "Learned shadow"), ("clay", "Clay stack")):
         for okey, olab in (("cons", "consensus"), ("espn", "ESPN")):
             w = l = t = 0
             for r in rows:

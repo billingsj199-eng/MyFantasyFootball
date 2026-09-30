@@ -62,9 +62,10 @@ global.window = global;
   'data/mike_clay_projections.js',
   'data/player_weekly_sigma.js',
   'data/betting_lines_2026.js',
+  'data/sim_future_totals.js',
   'data/clay_team_grades_2026.js',
   'data/sleeper_players.js',
-  'data/sleeper_meta.js',
+  'data/sleeper_meta.js', 'data/ridge_prior.js', 'data/jm_scores.js',
   'data/sim_snaps.js',
   'data/sim_routes.js',
   'data/sim_weather.js',
@@ -323,11 +324,13 @@ function kickoffMs(kicks, wk, tm) {
           propMean: r.propProj != null ? +r.propProj.toFixed(2) : null,
           propSrc: r.propSrc || null,
           luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live)
+          useLam: r.useLam != null ? +r.useLam.toFixed(2) : undefined, usePg: r.usePg != null ? +r.usePg.toFixed(2) : undefined, jsNoUse: r.jsNoUse != null ? +r.jsNoUse.toFixed(2) : undefined,   // live usage evidence inside jsMean at lock (usage_scorecard.py)
+          peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined,   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
           ncMean: r.ncProj != null ? +r.ncProj.toFixed(2) : null, ncSrc: r.ncSrc || null,   // SHADOW: Clay-free base (own 3-yr PPG prior)
           lcCorr: r.lcCorr != null ? +r.lcCorr.toFixed(2) : null, lcMean: r.lcCorr != null ? +Math.max(0, r.mean + r.lcCorr).toFixed(2) : null,   // SHADOW: learned correction on the hand stack (build_learned_shadow.py)
           rep: (function () { var nf = E.newsFlags(r.player); return nf ? nf.riser - nf.faller : 0; })(),   // SHADOW: beat-report riser minus faller, last 10 days
           asc: E.ascendingFlag(r.player, currentWeek) ? 1 : 0,   // SHADOW: young + snaps/routes trending up
-          comps: r.comps, lines: propByNorm[r.player.norm] || null,
+          comps: r.comps, compsU: r.compsU || null, lines: propByNorm[r.player.norm] || null,
           // tuner values LIVE at lock (tune_weekly.py divides them back out so
           // next week's evidence is measured against the raw prior)
           tun: global.SIM_TUNING ? {

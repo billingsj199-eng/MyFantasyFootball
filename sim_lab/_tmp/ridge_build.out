@@ -1,0 +1,15 @@
+﻿  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  BASIC (with mover)   LOYO games-weighted MSE 8.157 vs Clay 9.071 (-10.07%)
+  LIVE (no mover)      LOYO games-weighted MSE 8.143 vs Clay 9.071 (-10.23%)
+  QB: n 202 in-sample MSE 9.235 | missing-indicator cols ['h3', 'oppcal', 'yr2_late'] | mean pred 17.31 vs actual 17.52
+  RB: n 352 in-sample MSE 9.600 | missing-indicator cols ['h3', 'oppcal', 'yr2_late'] | mean pred 9.80 vs actual 9.94
+  WR: n 573 in-sample MSE 6.368 | missing-indicator cols ['h3', 'oppcal', 'yr2_late'] | mean pred 8.32 vs actual 8.59
+  TE: n 277 in-sample MSE 4.424 | missing-indicator cols ['h3', 'oppcal', 'yr2_late'] | mean pred 6.17 vs actual 6.28
+wrote data/ridge_prior.js

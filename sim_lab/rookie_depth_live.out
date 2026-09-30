@@ -1,0 +1,58 @@
+=== Live depth-chart slot for rookies ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  rookie rows with a pre-game chart: QB 305/305, RB 802/869, WR 1121/1169, TE 376/378 | all rows 93%
+
+=== Rookie weeks 1-4 by depth string (n=645): actual / PICK prior, actual / Clay ===
+  QB    1st: n= 44 act/PICK 0.96 act/Clay 1.13 act 15.3 |  2nd: n= 21 act/PICK 0.63 act/Clay 0.93 act  8.8 |  3rd+: n=  1 |  no chart: n=  0 |
+  RB    1st: n= 33 act/PICK 1.39 act/Clay 1.25 act 14.1 |  2nd: n= 79 act/PICK 0.82 act/Clay 0.97 act  6.6 |  3rd+: n= 82 act/PICK 0.75 act/Clay 0.99 act  5.0 |  no chart: n= 16 act/PICK 0.63 act/Clay 0.94 act  4.8 |
+  WR    1st: n= 96 act/PICK 1.18 act/Clay 1.23 act  9.1 |  2nd: n=145 act/PICK 0.87 act/Clay 1.00 act  5.9 |  3rd+: n= 30 act/PICK 1.09 act/Clay 1.43 act  7.7 |  no chart: n= 11 |
+  TE    1st: n= 23 act/PICK 0.99 act/Clay 1.00 act  6.5 |  2nd: n= 51 act/PICK 0.71 act/Clay 1.00 act  4.1 |  3rd+: n= 12 |  no chart: n=  1 |
+  ALL   1st: n=196 act/PICK 1.12 act/Clay 1.18 act 11.0 |  2nd: n=296 act/PICK 0.80 act/Clay 0.99 act  5.9 |  3rd+: n=125 act/PICK 0.86 act/Clay 1.15 act  5.7 |  no chart: n= 28 act/PICK 0.82 act/Clay 1.10 act  6.2 |
+
+=== Prior alone vs actual, rookie rows weeks 1-4 (LOYO) ===
+  model          MSE  vs Clay  vs PICK  QB      RB      WR      TE    | charted rows | 2nd/3rd string rows
+  CLAY         39.64   +0.00%   -3.29%    -3.46   -5.27   -1.12   -6.10  | -2.69 (n617) | -3.26 (n421)
+  PICK         40.99   +3.40%   +0.00%    +0.00   +0.00   +0.00   +0.00  | 0.0 (n617) | 0.0 (n421)
+  PICK+STR     39.12   -1.32%   -4.56%    +0.26  -11.84   -1.59   +3.14  | -4.36 (n617) | -2.44 (n421)
+  PICKxSTR     40.05   +1.02%   -2.30%    -4.50   -2.67   -1.80   +2.56  | -2.37 (n617) | -4.16 (n421)
+
+=== Inside the Clay-free shadow v2.1 (vets ADP .75 / 2nd-year .5, shrink .8, per-position P), ALL rows vs shipped ===
+  fallback   vs shipped  yrs   vs v2.1  yrs | rookie rows | wk1 | wk2-4
+  CLAY           -0.74% 5/7    -0.08% 4/7 | -3.11% | +0.91% | -1.30%
+  PICK           -0.66% 5/7    +0.00% 0/7 | -2.52% | +2.30% | -0.90%
+  PICK+STR       -0.76% 5/7    -0.10% 6/7 | -3.28% | +1.52% | -1.35%
+  PICKxSTR       -0.77% 5/7    -0.12% 4/7 | -3.35% | +1.45% | -1.18%
+  FORWARD PICK+STR (2021-25): vs shipped -0.89% (4/5) | vs v2.1 -0.03% (4/5) | rookie rows vs v2.1 -0.21%
+  FORWARD PICKxSTR (2021-25): vs shipped -0.88% (4/5) | vs v2.1 -0.02% (2/5) | rookie rows vs v2.1 -0.18%
+
+=== Veterans (weeks 1-8): actual / shadow v2.1 prior by pre-game depth string ===
+  QB    1st: n=1152 act/prior 1.03 act/shipped 1.07 |
+  RB    1st: n= 987 act/prior 1.16 act/shipped 1.09 |  2nd: n= 566 act/prior 0.86 act/shipped 1.05 |  3rd+: n=  78 act/prior 0.66 act/shipped 1.18 |
+  WR    1st: n=2326 act/prior 1.07 act/shipped 1.05 |  2nd: n= 529 act/prior 0.84 act/shipped 1.11 |
+  TE    1st: n=1136 act/prior 1.03 act/shipped 1.04 |  2nd: n= 338 act/prior 0.88 act/shipped 1.05 |  3rd+: n=  46 act/prior 0.93 act/shipped 1.06 |
+  demoted-vet multiplier on the v2.1 shadow (string >= 2) (n=3275)
+    grid pooled MSE: 1.0:28.139  0.9:27.478  0.8:27.690  0.7:28.775  0.6:30.733  1.1:29.672
+    current 1.0 +4.26% vs shipped | LOYO best 27.6326 (+2.01%), years better than shipped 1/7, picks [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9], pooled best 0.9
+    demoted QB (n=82)
+    grid pooled MSE: 1.0:99.989  0.9:84.434  0.8:73.183  0.7:66.235  0.6:63.590  1.1:119.847
+    current 1.0 +33.82% vs shipped | LOYO best 82.7631 (+14.66%), years better than shipped 4/7, picks [0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7], pooled best 0.6
+    demoted RB (n=1313)
+    grid pooled MSE: 1.0:33.557  0.9:33.206  0.8:33.999  0.7:35.939  0.6:39.023  1.1:35.055
+    current 1.0 +1.57% vs shipped | LOYO best 32.7742 (+0.72%), years better than shipped 1/7, picks [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9], pooled best 0.9
+    demoted WR (n=1099)
+    grid pooled MSE: 1.0:23.940  0.9:23.135  0.8:23.000  0.7:23.534  0.6:24.738  1.1:25.415
+    current 1.0 +4.00% vs shipped | LOYO best 24.1011 (+1.49%), years better than shipped 1/7, picks [0.9, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8], pooled best 0.8
+    demoted TE (n=781)
+    grid pooled MSE: 1.0:17.508  0.9:17.417  0.8:17.775  0.7:18.583  0.6:19.839  1.1:18.048
+    current 1.0 +0.43% vs shipped | LOYO best 17.9153 (+0.11%), years better than shipped 5/7, picks [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9], pooled best 0.9
+  PICK+STR coefficients (all seasons; a, b ln(pick), string2, string3+, no chart): {"QB": [17.3418, -1.1508, -4.4944, 6.4464, 0.0], "RB": [18.1294, -1.1986, -5.7632, -6.8114, -8.5374], "WR": [13.971, -1.5426, -1.995, -0.7776, -0.8569], "TE": [11.1729, -0.7451, -3.7525, -3.0248, 0.4427]}
+
+Depth string on top of the draft pick, rookie weeks 1-4: PICK+STR -4.56% vs PICK (-1.32% vs Clay); inside the shadow -0.10% vs v2.1 (6/7), forward -0.03%.
+wrote data/rookie_depth_live.js (19s)

@@ -1,0 +1,27 @@
+W1: 248 lined skill players with actuals (lock preset half)
+W2: 242 lined skill players with actuals (lock preset half)
+W3: 235 lined skill players with actuals (lock preset half)
+
+725 rows, 477 with a shadow mean | actual = weekly_stats_active fpts (half-PPR, same as the lock preset; verified on W1)
+
+=== Anchor weight sweep, Clay-side base (jsMean) ===
+  all lined rows             n= 725 MSE plain/weighted by w -> 0.0:38.15/53.67  0.1:37.86/53.49  0.2:37.62/53.37  0.3:37.44/53.30  0.4:37.31/53.29  0.5:37.24/53.34  0.6:37.23/53.45  0.7:37.27/53.62  0.8:37.37/53.85  0.9:37.53/54.13  1.0:37.74/54.48   | best weighted w = 0.4
+  QB                         n=  91 MSE plain/weighted by w -> 0.0:68.20/71.13  0.1:67.37/70.55  0.2:66.68/70.10  0.3:66.13/69.80  0.4:65.73/69.63  0.5:65.46/69.60  0.6:65.34/69.71  0.7:65.36/69.95  0.8:65.51/70.33  0.9:65.81/70.85  1.0:66.25/71.51   | best weighted w = 0.5
+  RB                         n= 180 MSE plain/weighted by w -> 0.0:33.27/50.99  0.1:33.13/50.82  0.2:33.03/50.70  0.3:32.98/50.61  0.4:32.97/50.57  0.5:33.01/50.57  0.6:33.09/50.61  0.7:33.22/50.69  0.8:33.39/50.81  0.9:33.61/50.98  1.0:33.87/51.18   | best weighted w = 0.5
+  WR                         n= 302 MSE plain/weighted by w -> 0.0:36.73/57.63  0.1:36.34/57.32  0.2:35.99/57.07  0.3:35.69/56.87  0.4:35.44/56.72  0.5:35.23/56.62  0.6:35.07/56.57  0.7:34.95/56.57  0.8:34.88/56.62  0.9:34.85/56.72  1.0:34.87/56.87   | best weighted w = 0.6
+  TE                         n= 152 MSE plain/weighted by w -> 0.0:28.77/40.81  0.1:28.81/41.03  0.2:28.89/41.31  0.3:29.01/41.65  0.4:29.16/42.04  0.5:29.36/42.48  0.6:29.60/42.99  0.7:29.87/43.55  0.8:30.19/44.16  0.9:30.55/44.83  1.0:30.94/45.56   | best weighted w = 0.0
+  week 1                     n= 248 MSE plain/weighted by w -> 0.0:42.03/58.62  0.1:41.59/58.30  0.2:41.22/58.06  0.3:40.92/57.89  0.4:40.68/57.79  0.5:40.52/57.76  0.6:40.42/57.81  0.7:40.39/57.92  0.8:40.44/58.11  0.9:40.55/58.37  1.0:40.73/58.70   | best weighted w = 0.5
+  week 2                     n= 242 MSE plain/weighted by w -> 0.0:35.75/55.48  0.1:35.75/55.59  0.2:35.80/55.77  0.3:35.91/56.01  0.4:36.08/56.31  0.5:36.31/56.67  0.6:36.59/57.09  0.7:36.93/57.57  0.8:37.33/58.12  0.9:37.79/58.73  1.0:38.30/59.40   | best weighted w = 0.0
+  week 3                     n= 235 MSE plain/weighted by w -> 0.0:36.53/46.56  0.1:36.09/46.20  0.2:35.69/45.89  0.3:35.33/45.62  0.4:35.02/45.40  0.5:34.75/45.21  0.6:34.51/45.07  0.7:34.32/44.97  0.8:34.18/44.91  0.9:34.07/44.89  1.0:34.01/44.92   | best weighted w = 0.9
+  shipped 0.7: MSE 37.27 | market alone 37.74 | model alone 38.15 | bias act/proj shipped 0.967, market 0.939, model 1.041
+
+=== Same sweep with the Clay-free SHADOW underneath (rows that carry ncMean) ===
+  shadow base                n= 477 MSE plain/weighted by w -> 0.0:35.49/52.11  0.1:35.26/51.75  0.2:35.10/51.48  0.3:35.00/51.29  0.4:34.97/51.18  0.5:35.01/51.15  0.6:35.11/51.21  0.7:35.28/51.35  0.8:35.51/51.57  0.9:35.82/51.88  1.0:36.18/52.27   | best weighted w = 0.5
+  Clay base, same rows       n= 477 MSE plain/weighted by w -> 0.0:36.13/51.09  0.1:35.91/50.97  0.2:35.75/50.91  0.3:35.63/50.90  0.4:35.56/50.94  0.5:35.54/51.03  0.6:35.57/51.17  0.7:35.65/51.37  0.8:35.78/51.62  0.9:35.96/51.92  1.0:36.18/52.27   | best weighted w = 0.3
+  w=0.0: anchored shadow vs anchored Clay +2.01% weighted, -1.77% plain
+  w=0.5: anchored shadow vs anchored Clay +0.25% weighted, -1.50% plain
+  w=0.7: anchored shadow vs anchored Clay -0.04% weighted, -1.04% plain
+  w=1.0: anchored shadow vs anchored Clay +0.00% weighted, +0.00% plain
+
+725 lined player-weeks over 3 scored week(s): best weighted anchor weight on the Clay-side base = 0.4 (shipped 0.7). Shadow sweep included.
+wrote data/anchor_sweep.js

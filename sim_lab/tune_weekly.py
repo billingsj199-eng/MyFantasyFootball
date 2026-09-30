@@ -7,7 +7,8 @@ its preseason prior with a 4-week-equivalent weight — one week moves a knob
 ~1/5 of the way to what that week says; five agreeing weeks move it most of
 the way; one wild week barely registers.
 
-  propW[pos]        market-anchor weight per position (engine PROP_W = .70)
+  propW[pos]        market-anchor weight per position (engine PROP_W = .70; prior per
+                    position = PRIOR_W_POS, RB/TE .20 since 2026-09-29, floor W_FLOOR)
                     evidence = MAE-minimising w on the lock rows; market is
                     reconstructed from the stored means with the weight that
                     was LIVE at lock: market = (propMean − (1−w)·jsMean) / w
@@ -42,6 +43,12 @@ from score_week import HERE, norm
 from diagnose_week import load_rows, load_k, load_dst
 
 PRIOR_W = 0.70
+# Jack 2026-09-29 ("drop the market anchor weight for rb and te"): W1-3 the MAE-best weight was 0
+# for RB and TE every week while the slow steps had only reached ~.41 -> their prior drops to .20.
+# QB/WR keep .70 (QB best ~.80). W_FLOOR keeps a sliver of market in the shipped mean so lock rows
+# still carry propMean and the market stays reconstructable (w = 0 would end the evidence).
+PRIOR_W_POS = {"RB": 0.20, "TE": 0.20}
+W_FLOOR = 0.10
 PRIOR_WEEKS = 4          # shrinkage: prior worth this many weeks of evidence
 POS = ("QB", "RB", "WR", "TE")
 TD_STATS = {"QB": ("ptd", "rtd"), "RB": ("rtd", "rctd"), "WR": ("rctd",), "TE": ("rctd",)}
@@ -105,15 +112,16 @@ def main():
         an = [r for r in rs if r["src"] == "line" and isinstance(r["prop"], (int, float)) and isinstance(r["js"], (int, float))
               and abs(r["prop"] - r["js"]) > 0.05 and 0 < r["w"] <= 1]
         ev["nAnchored"] = len(an)
-        w_new = PRIOR_W
+        prior_w = PRIOR_W_POS.get(pos, PRIOR_W)
+        w_new = prior_w
         if len(an) >= 20:
             base = np.array([r["js"] for r in an]); prop = np.array([r["prop"] for r in an]); act = np.array([r["act"] for r in an])
             wl = np.array([r["w"] for r in an])
             market = (prop - (1 - wl) * base) / wl
             maes = [float(np.mean(np.abs((1 - w) * base + w * market - act))) for w in W_GRID]
             w_best = float(W_GRID[int(np.argmin(maes))])
-            w_new = shrink(PRIOR_W, w_best, len(an), n0)
-            ev.update({"wBest": w_best, "maeAtPrior": round(maes[int(np.argmin(np.abs(W_GRID - PRIOR_W)))], 3), "maeAtBest": round(min(maes), 3)})
+            w_new = max(W_FLOOR, shrink(prior_w, w_best, len(an), n0))
+            ev.update({"wBest": w_best, "maeAtPrior": round(maes[int(np.argmin(np.abs(W_GRID - prior_w)))], 3), "maeAtBest": round(min(maes), 3)})
         tuning["propW"][pos] = round(w_new, 3)
         # --- sigma (evidence relative to the width that was live)
         band = [r for r in rs if isinstance(r["p10"], (int, float)) and isinstance(r["p90"], (int, float))]
@@ -139,7 +147,7 @@ def main():
             ev[f"td_{st}"] = {"proj": round(proj, 1), "act": round(actual, 1), "ratio": round(actual / proj, 3)}
         tuning["evidence"][pos] = ev
         tds = " ".join(f"{k} x{v:.3f}" for k, v in tuning["tdMult"][pos].items())
-        print(f"  {pos}: n={len(rs):3d} anchored={len(an):3d}  propW {PRIOR_W:.2f} -> {w_new:.3f} (best {ev.get('wBest','-')})"
+        print(f"  {pos}: n={len(rs):3d} anchored={len(an):3d}  propW {prior_w:.2f} -> {w_new:.3f} (best {ev.get('wBest','-')})"
               f"  sigma x{m_new:.3f} (inside {ev.get('bandInside','-')})  TD {tds}")
     # --- kickers: level + sigma
     kev = {"n": len(krows)}

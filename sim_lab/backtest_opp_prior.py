@@ -304,7 +304,7 @@ def main():
     for r in rows:
         pr = preds.get(id(r))
         if pr and r["Y"] in TEST:
-            dump[f"{r['Y']}|{r['pid']}"] = {"seg": r["seg"], "pos": r["pos"], **{m: (round(pr[m], 4) if pr.get(m) is not None else None) for m in ("CLAY", "CLAYCAL", "OPPCAL", "CLAY+OPP", "SHADOWCAL")}}
+            dump[f"{r['Y']}|{r['pid']}"] = {"seg": r["seg"], "pos": r["pos"], **{m: (round(pr[m], 4) if pr.get(m) is not None else None) for m in ("CLAY", "CLAYCAL", "OPPCAL", "CLAY+OPP", "SHADOWCAL", "OPP", "HIST", "HISTREG")}}   # + raw OPP / HIST / HISTREG (2026-09-17, decayed-history refit)
     with open(os.path.join(HERE, "opp_prior_preds.json"), "w", encoding="utf-8") as fh:
         json.dump(dump, fh)
     P(f"  wrote opp_prior_preds.json: {len(dump)} player-seasons")

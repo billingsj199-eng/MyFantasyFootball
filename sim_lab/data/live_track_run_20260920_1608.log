@@ -1,0 +1,799 @@
+games: GB@NYJ, CLE@TB, CIN@HOU, JAX@DEN, LV@LAC, WAS@DAL, SEA@ARI, MIA@SF
+tracking 194 players on ['ARI', 'CIN', 'CLE', 'DAL', 'DEN', 'GB', 'HOU', 'JAX', 'LAC', 'LV', 'MIA', 'NYJ', 'SEA', 'SF', 'TB', 'WAS'], season 2026 week 2, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  ARI: pre PRE f=0.00 score 0.0-0.0
+  CIN: in Q4 2:00 f=0.97 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: pre PRE f=0.00 score 0.0-0.0
+  DEN: in Q1 13:36 f=0.02 score 0.0-0.0
+  GB: in Q4 2:48 f=0.95 score 17.0-17.0
+  HOU: in Q4 2:00 f=0.97 score 6.0-20.0
+  JAX: in Q1 13:36 f=0.02 score 0.0-0.0
+  LAC: in Q1 13:16 f=0.03 score 0.0-0.0
+  LV: in Q1 13:16 f=0.03 score 0.0-0.0
+  MIA: pre PRE f=0.00 score 0.0-0.0
+  NYJ: in Q4 2:48 f=0.95 score 17.0-17.0
+  SEA: pre PRE f=0.00 score 0.0-0.0
+  SF: pre PRE f=0.00 score 0.0-0.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: pre PRE f=0.00 score 0.0-0.0
+    Christian McCaffrey   RB   proj  22.2  scored   0.0  live fit  22.2 | +exit  22.2 | v1  22.2 | naive  22.2
+    Jayden Daniels        QB   proj  20.9  scored   0.0  live fit  20.9 | +exit  20.9 | v1  20.9 | naive  20.9
+    Jaxon Smith-Njigba    WR   proj  19.7  scored   0.0  live fit  19.7 | +exit  19.7 | v1  19.7 | naive  19.7
+    Brock Purdy           QB   proj  19.1  scored   0.0  live fit  19.1 | +exit  19.1 | v1  19.1 | naive  19.1
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  27.0 | +exit  27.0 | v1  27.2 | naive  27.1
+    Ashton Jeanty         RB   proj  18.9  scored   0.0  live fit  17.3 | +exit  17.3 | v1  18.4 | naive  18.4
+    Dak Prescott          QB   proj  18.9  scored   0.0  live fit  18.9 | +exit  18.9 | v1  18.9 | naive  18.9
+    Javonte Williams      RB   proj  18.7  scored   0.0  live fit  18.7 | +exit  18.7 | v1  18.7 | naive  18.7
+    Justin Herbert        QB   proj  18.4  scored   0.6  live fit  18.5 | +exit  18.5 | v1  18.5 | naive  18.5
+    Trevor Lawrence       QB   proj  18.1  scored   0.0  live fit  17.5 | +exit  17.5 | v1  17.7 | naive  17.7
+    Bo Nix                QB   proj  18.1  scored   0.0  live fit  17.5 | +exit  17.5 | v1  17.7 | naive  17.7
+    Jordan Love           QB   proj  18.0  scored  12.5  live fit  13.5 | +exit  13.5 | v1  13.3 | naive  13.3
+  ARI: pre PRE f=0.00 score 0.0-0.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: pre PRE f=0.00 score 0.0-0.0
+  DEN: in Q1 10:10 f=0.08 score 0.0-0.0
+  GB: in Q4 0:21 f=0.99 score 17.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q1 10:10 f=0.08 score 0.0-0.0
+  LAC: in Q1 8:57 f=0.10 score 0.0-0.0
+  LV: in Q1 8:57 f=0.10 score 0.0-0.0
+  MIA: pre PRE f=0.00 score 0.0-0.0
+  NYJ: in Q4 0:21 f=0.99 score 17.0-17.0
+  SEA: pre PRE f=0.00 score 0.0-0.0
+  SF: pre PRE f=0.00 score 0.0-0.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: pre PRE f=0.00 score 0.0-0.0
+    Christian McCaffrey   RB   proj  22.2  scored   0.0  live fit  22.2 | +exit  22.2 | v1  22.2 | naive  22.2
+    Jayden Daniels        QB   proj  20.9  scored   0.0  live fit  20.9 | +exit  20.9 | v1  20.9 | naive  20.9
+    Jaxon Smith-Njigba    WR   proj  19.7  scored   0.0  live fit  19.7 | +exit  19.7 | v1  19.7 | naive  19.7
+    Brock Purdy           QB   proj  19.1  scored   0.0  live fit  19.1 | +exit  19.1 | v1  19.1 | naive  19.1
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   1.7  live fit  18.2 | +exit  18.2 | v1  18.7 | naive  18.7
+    Dak Prescott          QB   proj  18.9  scored   0.0  live fit  18.9 | +exit  18.9 | v1  18.9 | naive  18.9
+    Javonte Williams      RB   proj  18.7  scored   0.0  live fit  18.7 | +exit  18.7 | v1  18.7 | naive  18.7
+    Justin Herbert        QB   proj  18.4  scored   0.6  live fit  17.2 | +exit  17.2 | v1  17.2 | naive  17.2
+    Trevor Lawrence       QB   proj  18.1  scored   0.2  live fit  16.8 | +exit  16.8 | v1  16.8 | naive  16.8
+    Bo Nix                QB   proj  18.1  scored   0.0  live fit  16.5 | +exit  16.5 | v1  16.6 | naive  16.6
+    Jordan Love           QB   proj  18.0  scored  12.7  live fit  12.9 | +exit  12.9 | v1  12.8 | naive  12.9
+  ARI: in Q1 13:27 f=0.03 score 0.0-0.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q1 13:22 f=0.03 score 0.0-0.0
+  DEN: in Q1 4:24 f=0.18 score 0.0-0.0
+  GB: in OT 8:24 f=0.97 score 17.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q1 4:24 f=0.18 score 0.0-0.0
+  LAC: in Q1 4:55 f=0.17 score 0.0-0.0
+  LV: in Q1 4:55 f=0.17 score 0.0-0.0
+  MIA: in Q1 14:08 f=0.01 score 0.0-0.0
+  NYJ: in OT 8:24 f=0.97 score 17.0-17.0
+  SEA: in Q1 13:27 f=0.03 score 0.0-0.0
+  SF: in Q1 14:08 f=0.01 score 0.0-0.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q1 13:22 f=0.03 score 0.0-0.0
+    Christian McCaffrey   RB   proj  22.2  scored   0.0  live fit  20.6 | +exit  20.6 | v1  21.9 | naive  21.9
+    Jayden Daniels        QB   proj  20.9  scored   0.0  live fit  20.2 | +exit  20.2 | v1  20.3 | naive  20.3
+    Jaxon Smith-Njigba    WR   proj  19.7  scored   0.0  live fit  18.4 | +exit  18.4 | v1  19.2 | naive  19.2
+    Brock Purdy           QB   proj  19.1  scored   0.0  live fit  18.7 | +exit  18.7 | v1  18.8 | naive  18.8
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   2.5  live fit  17.7 | +exit  17.7 | v1  18.1 | naive  18.2
+    Dak Prescott          QB   proj  18.9  scored   0.5  live fit  18.8 | +exit  18.8 | v1  18.9 | naive  18.9
+    Javonte Williams      RB   proj  18.7  scored   1.8  live fit  19.5 | +exit  19.5 | v1  20.0 | naive  20.0
+    Justin Herbert        QB   proj  18.4  scored   1.4  live fit  16.8 | +exit  16.8 | v1  16.3 | naive  16.7
+    Trevor Lawrence       QB   proj  18.1  scored   0.9  live fit  15.7 | +exit  15.7 | v1  15.3 | naive  15.8
+    Bo Nix                QB   proj  18.1  scored   0.4  live fit  15.2 | +exit  15.2 | v1  14.7 | naive  15.3
+    Jordan Love           QB   proj  18.0  scored  12.7  live fit  13.3 | +exit  13.3 | v1  13.2 | naive  13.2
+  ARI: in Q1 7:43 f=0.12 score 0.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q1 8:05 f=0.12 score 7.0-0.0
+  DEN: in Q1 2:05 f=0.22 score 0.0-0.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q1 2:05 f=0.22 score 0.0-0.0
+  LAC: in Q1 0:35 f=0.24 score 0.0-0.0
+  LV: in Q1 0:35 f=0.24 score 0.0-0.0
+  MIA: in Q1 6:12 f=0.15 score 0.0-0.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q1 7:43 f=0.12 score 7.0-0.0
+  SF: in Q1 6:12 f=0.15 score 0.0-0.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q1 8:05 f=0.12 score 0.0-7.0
+    Christian McCaffrey   RB   proj  22.2  scored   2.6  live fit  20.9 | +exit  20.9 | v1  21.5 | naive  21.5
+    Jayden Daniels        QB   proj  20.9  scored   0.3  live fit  21.0 | +exit  21.0 | v1  18.8 | naive  18.8
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  15.2  live fit  32.3 | +exit  32.3 | v1  32.5 | naive  32.5
+    Brock Purdy           QB   proj  19.1  scored   1.3  live fit  17.7 | +exit  17.7 | v1  17.6 | naive  17.6
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   2.8  live fit  16.5 | +exit  16.5 | v1  16.8 | naive  17.2
+    Dak Prescott          QB   proj  18.9  scored   7.2  live fit  23.4 | +exit  23.4 | v1  23.9 | naive  23.9
+    Javonte Williams      RB   proj  18.7  scored   2.0  live fit  17.4 | +exit  17.4 | v1  18.5 | naive  18.5
+    Justin Herbert        QB   proj  18.4  scored   0.4  live fit  14.0 | +exit  14.0 | v1  13.6 | naive  14.3
+    Trevor Lawrence       QB   proj  18.1  scored   0.9  live fit  14.9 | +exit  14.9 | v1  14.5 | naive  15.1
+    Bo Nix                QB   proj  18.1  scored   1.0  live fit  15.1 | +exit  15.1 | v1  14.6 | naive  15.2
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q1 2:56 f=0.20 score 0.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q1 5:01 f=0.17 score 10.0-0.0
+  DEN: in Q2 12:13 f=0.30 score 0.0-7.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q2 12:13 f=0.30 score 7.0-0.0
+  LAC: in Q2 14:33 f=0.26 score 0.0-0.0
+  LV: in Q2 14:33 f=0.26 score 0.0-0.0
+  MIA: in Q1 1:29 f=0.23 score 0.0-7.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q1 2:56 f=0.20 score 7.0-0.0
+  SF: in Q1 1:29 f=0.23 score 7.0-0.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q1 5:01 f=0.17 score 0.0-10.0
+    Christian McCaffrey   RB   proj  22.2  scored  11.3  live fit  29.1 | +exit  29.1 | v1  29.7 | naive  28.5
+    Jayden Daniels        QB   proj  20.9  scored   0.3  live fit  20.7 | +exit  20.7 | v1  17.1 | naive  17.7
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  15.2  live fit  30.7 | +exit  30.7 | v1  33.2 | naive  30.9
+    Brock Purdy           QB   proj  19.1  scored   1.9  live fit  14.9 | +exit  14.9 | v1  16.3 | naive  16.7
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   2.7  live fit  16.0 | +exit  16.0 | v1  16.3 | naive  16.7
+    Dak Prescott          QB   proj  18.9  scored   9.1  live fit  24.0 | +exit  24.0 | v1  26.1 | naive  24.9
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  16.6 | +exit  16.6 | v1  18.0 | naive  18.1
+    Justin Herbert        QB   proj  18.4  scored   0.4  live fit  13.6 | +exit  13.6 | v1  13.2 | naive  14.0
+    Trevor Lawrence       QB   proj  18.1  scored   3.5  live fit  14.8 | +exit  14.8 | v1  15.9 | naive  16.2
+    Bo Nix                QB   proj  18.1  scored   1.0  live fit  15.1 | +exit  15.1 | v1  12.9 | naive  13.7
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q2 14:57 f=0.25 score 6.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q2 15:00 f=0.25 score 10.0-0.0
+  DEN: in Q2 10:04 f=0.33 score 0.0-7.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q2 10:04 f=0.33 score 7.0-0.0
+  LAC: in Q2 11:09 f=0.31 score 0.0-7.0
+  LV: in Q2 11:09 f=0.31 score 7.0-0.0
+  MIA: in Q2 11:09 f=0.31 score 0.0-7.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q2 14:57 f=0.25 score 7.0-6.0
+  SF: in Q2 11:09 f=0.31 score 7.0-0.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q2 15:00 f=0.25 score 0.0-10.0
+    Christian McCaffrey   RB   proj  22.2  scored  11.3  live fit  26.9 | +exit  26.9 | v1  27.3 | naive  26.5
+    Jayden Daniels        QB   proj  20.9  scored   4.6  live fit  23.8 | +exit  23.8 | v1  20.1 | naive  20.2
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  15.2  live fit  31.0 | +exit  31.0 | v1  31.9 | naive  30.0
+    Brock Purdy           QB   proj  19.1  scored   1.9  live fit  13.1 | +exit  13.1 | v1  14.3 | naive  15.0
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   2.7  live fit  14.3 | +exit  14.3 | v1  15.1 | naive  15.7
+    Dak Prescott          QB   proj  18.9  scored   9.1  live fit  22.5 | +exit  22.5 | v1  24.1 | naive  23.3
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  14.9 | +exit  14.9 | v1  16.1 | naive  16.5
+    Justin Herbert        QB   proj  18.4  scored   0.4  live fit  14.2 | +exit  14.2 | v1  12.1 | naive  13.0
+    Trevor Lawrence       QB   proj  18.1  scored   3.5  live fit  14.1 | +exit  14.1 | v1  15.1 | naive  15.6
+    Bo Nix                QB   proj  18.1  scored   3.4  live fit  17.4 | +exit  17.4 | v1  15.1 | naive  15.5
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q2 12:10 f=0.30 score 7.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q2 13:14 f=0.28 score 10.0-3.0
+  DEN: in Q2 5:18 f=0.41 score 3.0-7.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q2 5:18 f=0.41 score 7.0-3.0
+  LAC: in Q2 5:26 f=0.41 score 7.0-7.0
+  LV: in Q2 5:26 f=0.41 score 7.0-7.0
+  MIA: in Q2 7:47 f=0.37 score 3.0-7.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q2 12:10 f=0.30 score 7.0-7.0
+  SF: in Q2 7:47 f=0.37 score 7.0-3.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q2 13:14 f=0.28 score 3.0-10.0
+    Christian McCaffrey   RB   proj  22.2  scored  11.7  live fit  26.2 | +exit  26.2 | v1  26.2 | naive  25.7
+    Jayden Daniels        QB   proj  20.9  scored   5.1  live fit  22.9 | +exit  22.9 | v1  20.0 | naive  20.2
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  15.2  live fit  30.2 | +exit  30.2 | v1  30.7 | naive  29.0
+    Brock Purdy           QB   proj  19.1  scored   3.2  live fit  14.4 | +exit  14.4 | v1  14.6 | naive  15.2
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   2.7  live fit  12.9 | +exit  12.9 | v1  13.1 | naive  13.9
+    Dak Prescott          QB   proj  18.9  scored   9.1  live fit  22.8 | +exit  22.8 | v1  23.4 | naive  22.8
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  14.6 | +exit  14.6 | v1  15.5 | naive  16.0
+    Justin Herbert        QB   proj  18.4  scored   1.8  live fit  12.4 | +exit  12.4 | v1  11.9 | naive  12.7
+    Trevor Lawrence       QB   proj  18.1  scored   3.5  live fit  13.2 | +exit  13.2 | v1  13.5 | naive  14.1
+    Bo Nix                QB   proj  18.1  scored   3.3  live fit  14.8 | +exit  14.8 | v1  13.4 | naive  14.0
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q2 7:08 f=0.38 score 7.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q2 9:12 f=0.35 score 17.0-3.0
+  DEN: in Q2 2:00 f=0.47 score 3.0-7.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q2 2:00 f=0.47 score 7.0-3.0
+  LAC: in Q2 1:34 f=0.47 score 7.0-7.0
+  LV: in Q2 1:34 f=0.47 score 7.0-7.0
+  MIA: in Q2 5:24 f=0.41 score 3.0-14.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q2 7:08 f=0.38 score 7.0-7.0
+  SF: in Q2 5:24 f=0.41 score 14.0-3.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q2 9:12 f=0.35 score 3.0-17.0
+    Christian McCaffrey   RB   proj  22.2  scored  11.9  live fit  24.9 | +exit  24.9 | v1  25.4 | naive  25.0
+    Jayden Daniels        QB   proj  20.9  scored   5.1  live fit  23.0 | +exit  23.0 | v1  18.4 | naive  18.8
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  15.2  live fit  28.5 | +exit  28.5 | v1  28.6 | naive  27.4
+    Brock Purdy           QB   proj  19.1  scored  12.0  live fit  22.4 | +exit  22.4 | v1  23.9 | naive  23.3
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   3.5  live fit  12.2 | +exit  12.2 | v1  12.7 | naive  13.4
+    Dak Prescott          QB   proj  18.9  scored  15.1  live fit  26.9 | +exit  26.9 | v1  28.8 | naive  27.4
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  12.8 | +exit  12.8 | v1  14.1 | naive  14.7
+    Justin Herbert        QB   proj  18.4  scored   1.8  live fit  10.5 | +exit  10.5 | v1  10.6 | naive  11.5
+    Trevor Lawrence       QB   proj  18.1  scored   3.5  live fit  11.7 | +exit  11.2 | v1  12.4 | naive  13.1  exit x0.94 (stale 0.17)
+    Bo Nix                QB   proj  18.1  scored   5.4  live fit  15.4 | +exit  15.4 | v1  14.6 | naive  15.0
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q2 3:12 f=0.45 score 7.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q2 6:37 f=0.39 score 17.0-10.0
+  DEN: in HALF f=0.50 score 3.0-10.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in HALF f=0.50 score 10.0-3.0
+  LAC: in Q2 0:04 f=0.50 score 7.0-10.0
+  LV: in Q2 0:04 f=0.50 score 10.0-7.0
+  MIA: in Q2 1:08 f=0.48 score 3.0-14.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q2 3:12 f=0.45 score 7.0-7.0
+  SF: in Q2 1:08 f=0.48 score 14.0-3.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q2 6:37 f=0.39 score 10.0-17.0
+    Christian McCaffrey   RB   proj  22.2  scored  12.0  live fit  22.8 | +exit  22.8 | v1  23.7 | naive  23.5
+    Jayden Daniels        QB   proj  20.9  scored  11.3  live fit  27.5 | +exit  27.5 | v1  24.5 | naive  24.0
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  19.0  live fit  30.7 | +exit  30.7 | v1  31.3 | naive  29.9
+    Brock Purdy           QB   proj  19.1  scored  12.0  live fit  20.1 | +exit  20.1 | v1  22.2 | naive  21.9
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   3.7  live fit  11.8 | +exit  11.8 | v1  12.4 | naive  13.2
+    Dak Prescott          QB   proj  18.9  scored  15.1  live fit  27.6 | +exit  27.6 | v1  27.8 | naive  26.6
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  12.6 | +exit  12.0 | v1  13.2 | naive  13.9  exit x0.95 (stale 0.24)
+    Justin Herbert        QB   proj  18.4  scored   2.4  live fit  11.0 | +exit  11.0 | v1  10.7 | naive  11.6
+    Trevor Lawrence       QB   proj  18.1  scored   5.8  live fit  13.0 | +exit  13.0 | v1  14.5 | naive  14.9
+    Bo Nix                QB   proj  18.1  scored   5.4  live fit  15.0 | +exit  15.0 | v1  14.0 | naive  14.4
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q2 1:07 f=0.48 score 7.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q2 2:51 f=0.45 score 17.0-10.0
+  DEN: in Q3 15:00 f=0.50 score 3.0-10.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q3 15:00 f=0.50 score 10.0-3.0
+  LAC: in HALF f=0.50 score 7.0-10.0
+  LV: in HALF f=0.50 score 10.0-7.0
+  MIA: in HALF f=0.50 score 6.0-14.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q2 1:07 f=0.48 score 7.0-7.0
+  SF: in HALF f=0.50 score 14.0-6.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q2 2:51 f=0.45 score 10.0-17.0
+    Christian McCaffrey   RB   proj  22.2  scored  12.0  live fit  22.4 | +exit  22.4 | v1  23.2 | naive  23.1
+    Jayden Daniels        QB   proj  20.9  scored  12.6  live fit  26.5 | +exit  26.5 | v1  24.5 | naive  24.1
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  18.9  live fit  29.5 | +exit  29.5 | v1  30.3 | naive  29.1
+    Brock Purdy           QB   proj  19.1  scored  11.9  live fit  20.1 | +exit  20.1 | v1  21.8 | naive  21.5
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   3.6  live fit  11.6 | +exit  11.6 | v1  12.3 | naive  13.1
+    Dak Prescott          QB   proj  18.9  scored  15.3  live fit  25.6 | +exit  25.6 | v1  26.6 | naive  25.6
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  11.1 | +exit   9.8 | v1  11.9 | naive  12.7  exit x0.85 (stale 0.30)
+    Justin Herbert        QB   proj  18.4  scored   2.4  live fit  10.9 | +exit  10.9 | v1  10.7 | naive  11.6
+    Trevor Lawrence       QB   proj  18.1  scored   5.8  live fit  13.0 | +exit  13.0 | v1  14.5 | naive  14.9
+    Bo Nix                QB   proj  18.1  scored   5.3  live fit  14.9 | +exit  14.9 | v1  13.9 | naive  14.4
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+tick failed: HTTPSConnectionPool(host='site.api.espn.com', port=443): Read timed out. (read timeout=20)
+  ARI: in Q2 0:11 f=0.50 score 7.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in Q2 0:08 f=0.50 score 17.0-10.0
+  DEN: in Q3 9:02 f=0.60 score 3.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q3 9:02 f=0.60 score 13.0-3.0
+  LAC: in Q3 12:43 f=0.54 score 7.0-10.0
+  LV: in Q3 12:43 f=0.54 score 10.0-7.0
+  MIA: in Q3 13:12 f=0.53 score 6.0-14.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q2 0:11 f=0.50 score 7.0-7.0
+  SF: in Q3 13:12 f=0.53 score 14.0-6.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in Q2 0:08 f=0.50 score 10.0-17.0
+    Christian McCaffrey   RB   proj  22.2  scored  14.3  live fit  24.4 | +exit  24.4 | v1  25.0 | naive  24.7
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  27.1 | +exit  27.1 | v1  25.8 | naive  25.2
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  18.9  live fit  29.0 | +exit  29.0 | v1  30.0 | naive  28.8
+    Brock Purdy           QB   proj  19.1  scored  18.3  live fit  26.9 | +exit  26.9 | v1  28.3 | naive  27.3
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   4.7  live fit  12.2 | +exit  12.2 | v1  12.8 | naive  13.4
+    Dak Prescott          QB   proj  18.9  scored  15.3  live fit  24.2 | +exit  24.2 | v1  25.5 | naive  24.8
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  10.1 | +exit   8.5 | v1  11.0 | naive  11.9  exit x0.78 (stale 0.34)
+    Justin Herbert        QB   proj  18.4  scored   2.4  live fit  10.3 | +exit  10.3 | v1  10.0 | naive  10.9
+    Trevor Lawrence       QB   proj  18.1  scored   7.0  live fit  12.2 | +exit  12.2 | v1  13.8 | naive  14.2
+    Bo Nix                QB   proj  18.1  scored   5.3  live fit  13.8 | +exit  13.8 | v1  12.0 | naive  12.6
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in HALF f=0.50 score 7.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in HALF f=0.50 score 17.0-10.0
+  DEN: in Q3 4:58 f=0.67 score 6.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q3 4:58 f=0.67 score 13.0-6.0
+  LAC: in Q3 7:41 f=0.62 score 14.0-10.0
+  LV: in Q3 7:41 f=0.62 score 10.0-14.0
+  MIA: in Q3 10:49 f=0.57 score 6.0-21.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in HALF f=0.50 score 7.0-7.0
+  SF: in Q3 10:49 f=0.57 score 21.0-6.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in HALF f=0.50 score 10.0-17.0
+    Christian McCaffrey   RB   proj  22.2  scored  14.5  live fit  23.3 | +exit  23.3 | v1  24.2 | naive  24.1
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  27.1 | +exit  27.1 | v1  25.7 | naive  25.2
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  20.8  live fit  31.0 | +exit  31.0 | v1  32.0 | naive  30.6
+    Brock Purdy           QB   proj  19.1  scored  18.3  live fit  24.9 | +exit  24.9 | v1  27.3 | naive  26.5
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   6.2  live fit  12.6 | +exit  12.6 | v1  12.8 | naive  13.3
+    Dak Prescott          QB   proj  18.9  scored  15.3  live fit  24.1 | +exit  24.1 | v1  25.5 | naive  24.8
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  10.1 | +exit   8.4 | v1  11.0 | naive  11.8  exit x0.78 (stale 0.35)
+    Justin Herbert        QB   proj  18.4  scored   9.0  live fit  15.3 | +exit  15.3 | v1  15.7 | naive  16.0
+    Trevor Lawrence       QB   proj  18.1  scored   7.0  live fit  11.7 | +exit  11.7 | v1  12.6 | naive  13.0
+    Bo Nix                QB   proj  18.1  scored   6.4  live fit  13.3 | +exit  13.3 | v1  11.9 | naive  12.4
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q3 13:16 f=0.53 score 7.0-7.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: in Q4 2:00 f=0.97 score 23.0-19.0
+  DAL: in HALF f=0.50 score 17.0-10.0
+  DEN: in Q4 15:00 f=0.75 score 6.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q4 15:00 f=0.75 score 13.0-6.0
+  LAC: in Q3 2:24 f=0.71 score 14.0-17.0
+  LV: in Q3 2:24 f=0.71 score 17.0-14.0
+  MIA: in Q3 5:40 f=0.66 score 6.0-28.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q3 13:16 f=0.53 score 7.0-7.0
+  SF: in Q3 5:40 f=0.66 score 28.0-6.0
+  TB: in Q4 2:00 f=0.97 score 19.0-23.0
+  WAS: in HALF f=0.50 score 10.0-17.0
+    Christian McCaffrey   RB   proj  22.2  scored  14.7  live fit  21.2 | +exit  21.2 | v1  22.4 | naive  22.4
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  27.1 | +exit  27.1 | v1  25.7 | naive  25.2
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  28.5  live fit  38.7 | +exit  38.7 | v1  39.9 | naive  37.8
+    Brock Purdy           QB   proj  19.1  scored  25.0  live fit  29.6 | +exit  29.6 | v1  32.6 | naive  31.6
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   7.5  live fit  12.2 | +exit  12.2 | v1  12.6 | naive  13.0
+    Dak Prescott          QB   proj  18.9  scored  15.3  live fit  24.1 | +exit  24.1 | v1  25.5 | naive  24.8
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit  10.1 | +exit   8.4 | v1  11.0 | naive  11.8  exit x0.78 (stale 0.35)
+    Justin Herbert        QB   proj  18.4  scored   9.3  live fit  15.2 | +exit  15.2 | v1  14.4 | naive  14.7
+    Trevor Lawrence       QB   proj  18.1  scored   6.0  live fit   9.4 | +exit   9.4 | v1  10.1 | naive  10.6
+    Bo Nix                QB   proj  18.1  scored   7.9  live fit  13.3 | +exit  13.3 | v1  12.1 | naive  12.4
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q3 10:56 f=0.57 score 7.0-14.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q3 12:50 f=0.54 score 17.0-13.0
+  DEN: in Q4 11:10 f=0.81 score 13.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q4 11:10 f=0.81 score 13.0-13.0
+  LAC: in Q4 14:21 f=0.76 score 14.0-17.0
+  LV: in Q4 14:21 f=0.76 score 17.0-14.0
+  MIA: in Q3 3:10 f=0.70 score 6.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q3 10:56 f=0.57 score 14.0-7.0
+  SF: in Q3 3:10 f=0.70 score 35.0-6.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q3 12:50 f=0.54 score 13.0-17.0
+    Christian McCaffrey   RB   proj  22.2  scored  20.8  live fit  26.7 | +exit  26.7 | v1  27.9 | naive  27.5
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  25.8 | +exit  25.8 | v1  24.9 | naive  24.4
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  28.5  live fit  36.9 | +exit  36.9 | v1  38.9 | naive  37.0
+    Brock Purdy           QB   proj  19.1  scored  26.1  live fit  29.0 | +exit  29.0 | v1  32.8 | naive  31.9
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   9.1  live fit  13.1 | +exit  13.1 | v1  13.3 | naive  13.6
+    Dak Prescott          QB   proj  18.9  scored  15.3  live fit  24.1 | +exit  24.1 | v1  24.7 | naive  24.1
+    Javonte Williams      RB   proj  18.7  scored   2.5  live fit   9.5 | +exit   7.6 | v1  10.3 | naive  11.2  exit x0.73 (stale 0.38)
+    Justin Herbert        QB   proj  18.4  scored   9.3  live fit  14.2 | +exit  14.2 | v1  13.4 | naive  13.7
+    Trevor Lawrence       QB   proj  18.1  scored   6.0  live fit   9.3 | +exit   9.3 | v1   9.0 | naive   9.4
+    Bo Nix                QB   proj  18.1  scored  13.1  live fit  16.9 | +exit  16.9 | v1  16.4 | naive  16.5
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q3 5:26 f=0.66 score 7.0-17.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q3 7:15 f=0.63 score 20.0-13.0
+  DEN: in Q4 7:30 f=0.88 score 13.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q4 7:30 f=0.88 score 13.0-13.0
+  LAC: in Q4 10:22 f=0.83 score 14.0-17.0
+  LV: in Q4 10:22 f=0.83 score 17.0-14.0
+  MIA: in Q3 1:25 f=0.73 score 6.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q3 5:26 f=0.66 score 17.0-7.0
+  SF: in Q3 1:25 f=0.73 score 35.0-6.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q3 7:15 f=0.63 score 13.0-20.0
+    Christian McCaffrey   RB   proj  22.2  scored  20.8  live fit  26.0 | +exit  26.0 | v1  27.2 | naive  26.9
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  24.4 | +exit  24.4 | v1  22.6 | naive  22.5
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  30.4  live fit  36.8 | +exit  36.8 | v1  38.6 | naive  37.1
+    Brock Purdy           QB   proj  19.1  scored  26.1  live fit  28.5 | +exit  28.5 | v1  32.1 | naive  31.3
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   8.7  live fit  11.5 | +exit  11.5 | v1  11.7 | naive  12.0
+    Dak Prescott          QB   proj  18.9  scored  16.7  live fit  23.4 | +exit  23.4 | v1  24.1 | naive  23.7
+    Javonte Williams      RB   proj  18.7  scored   4.7  live fit  10.3 | +exit  10.3 | v1  11.0 | naive  11.6
+    Justin Herbert        QB   proj  18.4  scored   9.8  live fit  13.5 | +exit  13.5 | v1  12.7 | naive  13.0
+    Trevor Lawrence       QB   proj  18.1  scored   7.2  live fit   9.5 | +exit   9.5 | v1   9.2 | naive   9.4
+    Bo Nix                QB   proj  18.1  scored  14.3  live fit  17.0 | +exit  17.0 | v1  16.5 | naive  16.5
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q3 0:00 f=0.75 score 7.0-17.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q3 4:22 f=0.68 score 27.0-13.0
+  DEN: in Q4 4:56 f=0.92 score 20.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q4 4:56 f=0.92 score 13.0-20.0
+  LAC: in Q4 5:37 f=0.91 score 14.0-17.0
+  LV: in Q4 5:37 f=0.91 score 17.0-14.0
+  MIA: in Q4 11:29 f=0.81 score 6.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q3 0:00 f=0.75 score 17.0-7.0
+  SF: in Q4 11:29 f=0.81 score 35.0-6.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q3 4:22 f=0.68 score 13.0-27.0
+    Christian McCaffrey   RB   proj  22.2  scored  22.6  live fit  26.1 | +exit  26.1 | v1  27.1 | naive  26.9
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  24.6 | +exit  23.6 | v1  21.5 | naive  21.5  exit x0.90 (stale 0.18)
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  32.9  live fit  37.7 | +exit  37.7 | v1  39.0 | naive  37.8
+    Brock Purdy           QB   proj  19.1  scored  28.5  live fit  30.0 | +exit  30.0 | v1  32.8 | naive  32.1
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   9.2  live fit  10.8 | +exit  10.8 | v1  10.8 | naive  11.0
+    Dak Prescott          QB   proj  18.9  scored  21.2  live fit  26.3 | +exit  26.3 | v1  28.0 | naive  27.3
+    Javonte Williams      RB   proj  18.7  scored   4.7  live fit   9.3 | +exit   9.3 | v1  10.1 | naive  10.7
+    Justin Herbert        QB   proj  18.4  scored  10.4  live fit  12.6 | +exit  12.6 | v1  12.0 | naive  12.1
+    Trevor Lawrence       QB   proj  18.1  scored   7.2  live fit   9.2 | +exit   9.2 | v1   8.4 | naive   8.7
+    Bo Nix                QB   proj  18.1  scored  14.3  live fit  15.6 | +exit  15.6 | v1  15.7 | naive  15.8
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q4 12:40 f=0.79 score 7.0-24.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q3 0:36 f=0.74 score 27.0-13.0
+  DEN: in Q4 3:19 f=0.94 score 20.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: in Q4 3:19 f=0.94 score 13.0-20.0
+  LAC: in Q4 3:03 f=0.95 score 14.0-17.0
+  LV: in Q4 3:03 f=0.95 score 17.0-14.0
+  MIA: in Q4 7:53 f=0.87 score 6.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q4 12:40 f=0.79 score 24.0-7.0
+  SF: in Q4 7:53 f=0.87 score 35.0-6.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q3 0:36 f=0.74 score 13.0-27.0
+    Christian McCaffrey   RB   proj  22.2  scored  22.6  live fit  25.0 | +exit  25.0 | v1  25.6 | naive  25.5
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  22.9 | +exit  20.6 | v1  20.1 | naive  20.2  exit x0.71 (stale 0.25)
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  41.1  live fit  44.8 | +exit  44.8 | v1  46.6 | naive  45.3
+    Brock Purdy           QB   proj  19.1  scored  28.5  live fit  29.2 | +exit  29.2 | v1  31.4 | naive  31.0
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored   9.5  live fit  10.3 | +exit  10.3 | v1  10.3 | naive  10.5
+    Dak Prescott          QB   proj  18.9  scored  22.0  live fit  26.0 | +exit  26.0 | v1  27.4 | naive  26.9
+    Javonte Williams      RB   proj  18.7  scored   4.7  live fit   8.3 | +exit   8.3 | v1   9.0 | naive   9.6
+    Justin Herbert        QB   proj  18.4  scored  10.7  live fit  11.9 | +exit  11.9 | v1  11.6 | naive  11.7
+    Trevor Lawrence       QB   proj  18.1  scored   7.2  live fit   8.6 | +exit   8.6 | v1   8.0 | naive   8.2
+    Bo Nix                QB   proj  18.1  scored  15.4  live fit  16.4 | +exit  16.4 | v1  16.4 | naive  16.4
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: in Q4 7:50 f=0.87 score 7.0-24.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q4 13:14 f=0.78 score 30.0-13.0
+  DEN: post FINAL f=1.00 score 20.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: post FINAL f=1.00 score 13.0-20.0
+  LAC: in Q4 2:00 f=0.97 score 14.0-24.0
+  LV: in Q4 2:00 f=0.97 score 24.0-14.0
+  MIA: in Q4 4:59 f=0.92 score 6.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q4 7:50 f=0.87 score 24.0-7.0
+  SF: in Q4 4:59 f=0.92 score 35.0-6.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q4 13:14 f=0.78 score 13.0-30.0
+    Christian McCaffrey   RB   proj  22.2  scored  22.6  live fit  24.1 | +exit  24.1 | v1  24.5 | naive  24.4
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  22.2 | +exit  17.0 | v1  19.3 | naive  19.4  exit x0.30 (stale 0.28)
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  42.5  live fit  45.0 | +exit  45.0 | v1  45.9 | naive  45.1
+    Brock Purdy           QB   proj  19.1  scored  28.5  live fit  28.9 | +exit  28.9 | v1  30.3 | naive  30.1
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored  10.3  live fit  10.8 | +exit  10.8 | v1  10.9 | naive  10.9
+    Dak Prescott          QB   proj  18.9  scored  22.2  live fit  25.2 | +exit  25.2 | v1  26.8 | naive  26.4
+    Javonte Williams      RB   proj  18.7  scored   6.3  live fit   9.3 | +exit   9.3 | v1  10.0 | naive  10.4
+    Justin Herbert        QB   proj  18.4  scored   9.9  live fit  10.8 | +exit  10.8 | v1  10.4 | naive  10.5
+    Trevor Lawrence       QB   proj  18.1  scored   7.2  live fit   7.2 | +exit   7.2 | v1   7.2 | naive   7.2
+    Bo Nix                QB   proj  18.1  scored  15.1  live fit  15.1 | +exit  15.1 | v1  15.1 | naive  15.1
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+tick failed: HTTPSConnectionPool(host='site.api.espn.com', port=443): Max retries exceeded with url: /apis/site/v2/sports/football/nfl/scoreboard?t=1789945681 (Caused by SSLError(SSLError(1, '[SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1032)')))
+  ARI: in Q4 2:00 f=0.97 score 7.0-24.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q4 8:58 f=0.85 score 30.0-20.0
+  DEN: post FINAL f=1.00 score 20.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: post FINAL f=1.00 score 13.0-20.0
+  LAC: post FINAL f=1.00 score 14.0-26.0
+  LV: post FINAL f=1.00 score 26.0-14.0
+  MIA: post FINAL f=1.00 score 13.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: in Q4 2:00 f=0.97 score 24.0-7.0
+  SF: post FINAL f=1.00 score 35.0-13.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q4 8:58 f=0.85 score 20.0-30.0
+    Christian McCaffrey   RB   proj  22.2  scored  22.6  live fit  22.6 | +exit  22.6 | v1  22.6 | naive  22.6
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  19.6 | +exit  16.2 | v1  17.8 | naive  17.9  exit x0.30 (stale 0.36)
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  42.5  live fit  43.1 | +exit  43.1 | v1  43.4 | naive  43.2
+    Brock Purdy           QB   proj  19.1  scored  28.5  live fit  28.5 | +exit  28.5 | v1  28.5 | naive  28.5
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored  10.3  live fit  10.3 | +exit  10.3 | v1  10.3 | naive  10.3
+    Dak Prescott          QB   proj  18.9  scored  22.5  live fit  25.3 | +exit  25.3 | v1  25.6 | naive  25.4
+    Javonte Williams      RB   proj  18.7  scored   6.5  live fit   8.6 | +exit   8.6 | v1   8.9 | naive   9.3
+    Justin Herbert        QB   proj  18.4  scored   9.9  live fit   9.9 | +exit   9.9 | v1   9.9 | naive   9.9
+    Trevor Lawrence       QB   proj  18.1  scored   7.2  live fit   7.2 | +exit   7.2 | v1   7.2 | naive   7.2
+    Bo Nix                QB   proj  18.1  scored  15.1  live fit  15.1 | +exit  15.1 | v1  15.1 | naive  15.1
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: post FINAL f=1.00 score 7.0-31.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q4 3:07 f=0.95 score 37.0-20.0
+  DEN: post FINAL f=1.00 score 20.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: post FINAL f=1.00 score 13.0-20.0
+  LAC: post FINAL f=1.00 score 14.0-26.0
+  LV: post FINAL f=1.00 score 26.0-14.0
+  MIA: post FINAL f=1.00 score 13.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: post FINAL f=1.00 score 31.0-7.0
+  SF: post FINAL f=1.00 score 35.0-13.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q4 3:07 f=0.95 score 20.0-37.0
+    Christian McCaffrey   RB   proj  22.2  scored  22.6  live fit  22.6 | +exit  22.6 | v1  22.6 | naive  22.6
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  16.9 | +exit  15.4 | v1  15.8 | naive  15.8  exit x0.30 (stale 0.45)
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  42.5  live fit  42.5 | +exit  42.5 | v1  42.5 | naive  42.5
+    Brock Purdy           QB   proj  19.1  scored  28.5  live fit  28.5 | +exit  28.5 | v1  28.5 | naive  28.5
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored  10.3  live fit  10.3 | +exit  10.3 | v1  10.3 | naive  10.3
+    Dak Prescott          QB   proj  18.9  scored  29.8  live fit  30.5 | +exit  30.5 | v1  30.9 | naive  30.7
+    Javonte Williams      RB   proj  18.7  scored   7.9  live fit   8.6 | +exit   8.6 | v1   8.7 | naive   8.9
+    Justin Herbert        QB   proj  18.4  scored   9.9  live fit   9.9 | +exit   9.9 | v1   9.9 | naive   9.9
+    Trevor Lawrence       QB   proj  18.1  scored   7.2  live fit   7.2 | +exit   7.2 | v1   7.2 | naive   7.2
+    Bo Nix                QB   proj  18.1  scored  15.1  live fit  15.1 | +exit  15.1 | v1  15.1 | naive  15.1
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+  ARI: post FINAL f=1.00 score 7.0-31.0
+  CIN: post FINAL f=1.00 score 20.0-6.0
+  CLE: post FINAL f=1.00 score 23.0-19.0
+  DAL: in Q4 0:37 f=0.99 score 37.0-20.0
+  DEN: post FINAL f=1.00 score 20.0-13.0
+  GB: post FINAL f=1.00 score 20.0-17.0
+  HOU: post FINAL f=1.00 score 6.0-20.0
+  JAX: post FINAL f=1.00 score 13.0-20.0
+  LAC: post FINAL f=1.00 score 14.0-26.0
+  LV: post FINAL f=1.00 score 26.0-14.0
+  MIA: post FINAL f=1.00 score 13.0-35.0
+  NYJ: post FINAL f=1.00 score 17.0-20.0
+  SEA: post FINAL f=1.00 score 31.0-7.0
+  SF: post FINAL f=1.00 score 35.0-13.0
+  TB: post FINAL f=1.00 score 19.0-23.0
+  WAS: in Q4 0:37 f=0.99 score 20.0-37.0
+    Christian McCaffrey   RB   proj  22.2  scored  22.6  live fit  22.6 | +exit  22.6 | v1  22.6 | naive  22.6
+    Jayden Daniels        QB   proj  20.9  scored  14.7  live fit  15.2 | +exit  14.9 | v1  14.9 | naive  14.9  exit x0.30 (stale 0.49)
+    Jaxon Smith-Njigba    WR   proj  19.7  scored  42.5  live fit  42.5 | +exit  42.5 | v1  42.5 | naive  42.5
+    Brock Purdy           QB   proj  19.1  scored  28.5  live fit  28.5 | +exit  28.5 | v1  28.5 | naive  28.5
+    Ja'Marr Chase         WR   proj  19.0  scored  26.5  live fit  26.5 | +exit  26.5 | v1  26.5 | naive  26.5
+    Ashton Jeanty         RB   proj  18.9  scored  10.3  live fit  10.3 | +exit  10.3 | v1  10.3 | naive  10.3
+    Dak Prescott          QB   proj  18.9  scored  29.8  live fit  29.9 | +exit  29.9 | v1  30.0 | naive  29.9
+    Javonte Williams      RB   proj  18.7  scored   8.0  live fit   8.1 | +exit   8.1 | v1   8.2 | naive   8.2
+    Justin Herbert        QB   proj  18.4  scored   9.9  live fit   9.9 | +exit   9.9 | v1   9.9 | naive   9.9
+    Trevor Lawrence       QB   proj  18.1  scored   7.2  live fit   7.2 | +exit   7.2 | v1   7.2 | naive   7.2
+    Bo Nix                QB   proj  18.1  scored  15.1  live fit  15.1 | +exit  15.1 | v1  15.1 | naive  15.1
+    Jordan Love           QB   proj  18.0  scored  13.8  live fit  13.8 | +exit  13.8 | v1  13.8 | naive  13.8
+all tracked games FINAL
+
+=== LIVE GRADE live_track_2026_w2_8games_20260920_1608.csv: 25209 snapshots, 194 players ===
+|live - final|   fitted | fit+exit | v1 | naive   (n)
+  Q1   3.89 | 3.89 | 4.40 | 4.36   (3754)
+  Q2   3.19 | 3.18 | 3.40 | 3.45   (6031)
+  Q3   2.54 | 2.53 | 2.66 | 2.71   (6178)
+  Q4   0.89 | 0.88 | 0.88 | 0.89   (9246)
+  ALL  2.293 | 2.282 | 2.442 | 2.466   (25209)
+
+per player (mean |live - final| over the game):  proj -> final   fitted | fit+exit | v1 | naive
+  Christian McCaffrey   RB    22.2 ->  22.6   2.40 | 2.40 | 2.74 | 2.43
+  Jayden Daniels        QB    20.9 ->  14.7   8.52 | 7.84 | 6.23 | 6.16
+  Jaxon Smith-Njigba    WR    19.7 ->  42.5   8.90 | 8.90 | 8.20 | 9.13
+  Brock Purdy           QB    19.1 ->  28.5   6.02 | 6.04 | 6.22 | 6.03
+  Ja'Marr Chase         WR    19.0 ->  26.5   0.33 | 0.33 | 0.44 | 0.39
+  Ashton Jeanty         RB    18.9 ->  10.3   2.84 | 2.84 | 3.23 | 3.62
+  Dak Prescott          QB    18.9 ->  29.8   4.83 | 4.83 | 3.80 | 4.43
+  Javonte Williams      RB    18.7 ->   8.0   3.61 | 3.21 | 4.42 | 4.94
+  Justin Herbert        QB    18.4 ->   9.9   3.61 | 3.61 | 3.14 | 3.60
+  Trevor Lawrence       QB    18.1 ->   7.2   5.32 | 5.31 | 5.64 | 5.99
+  Bo Nix                QB    18.1 ->  15.1   0.95 | 0.95 | 1.53 | 1.24
+  Jordan Love           QB    18.0 ->  13.8   0.70 | 0.70 | 0.79 | 0.76
+  CeeDee Lamb           WR    17.8 ->  35.3   5.93 | 5.93 | 4.74 | 5.62
+  Baker Mayfield        QB    17.5 ->  13.2   0.26 | 0.26 | 0.01 | 0.04
+  C.J. Stroud           QB    16.9 ->  17.0   0.62 | 0.62 | 0.83 | 0.83
+  Drew Lock             QB    16.6 ->  21.4   1.47 | 1.57 | 1.66 | 1.76
+  Chase Brown           RB    16.1 ->  11.2   0.17 | 0.17 | 0.21 | 0.23
+  Breece Hall           RB    16.1 ->  14.2   0.39 | 0.39 | 0.36 | 0.37
+  Trey McBride          TE    16.1 ->  18.1   5.00 | 5.00 | 4.69 | 4.02
+  De'Von Achane         RB    16.0 ->  12.3   5.27 | 5.27 | 4.84 | 4.68
+  Jacoby Brissett       QB    16.0 ->   7.5   7.37 | 7.37 | 6.38 | 6.46
+  Omarion Hampton       RB    15.8 ->  17.5   4.69 | 4.69 | 4.51 | 4.05
+  Geno Smith            QB    15.8 ->  15.6   0.31 | 0.31 | 0.25 | 0.25
+  Garrett Wilson        WR    15.7 ->  16.7   0.48 | 0.48 | 0.40 | 0.39
+  Malik Willis          QB    15.0 ->  12.5   1.32 | 1.33 | 2.54 | 2.27
+  Joe Burrow            QB    14.8 ->  16.2   0.32 | 0.32 | 0.42 | 0.41
+  David Montgomery      RB    14.7 ->   4.4   0.30 | 0.30 | 0.25 | 0.30
+  Bucky Irving          RB    14.6 ->  13.0   0.37 | 0.37 | 0.41 | 0.40
+  George Pickens        WR    14.6 ->  10.0   2.77 | 2.77 | 3.83 | 3.87
+  Kirk Cousins          QB    14.3 ->  21.2   4.84 | 4.84 | 4.92 | 4.98
+  Christian Watson      WR    14.2 ->  14.1   0.58 | 0.58 | 0.56 | 0.55
+  Parker Washington     WR    14.1 ->  16.8   2.59 | 2.59 | 2.80 | 2.53
+  Emeka Egbuka          WR    13.9 ->  10.3   0.60 | 0.60 | 0.43 | 0.45
+  Brock Bowers          TE    13.8 ->   0.0   5.83 | 5.83 | 5.86 | 6.43
+  Matthew Golden        WR    13.4 ->   9.8   1.84 | 1.84 | 1.91 | 1.88
+  Jeremiyah Love        RB    13.3 ->   7.5   4.65 | 4.64 | 4.65 | 4.67
+  Quinshon Judkins      RB    12.9 ->   9.8   0.40 | 0.40 | 0.40 | 0.42
+  Mike Evans            WR    12.6 ->   8.4   1.47 | 1.47 | 1.71 | 1.74
+  Tee Higgins           WR    12.5 ->  14.5   0.20 | 0.20 | 0.27 | 0.26
+  Quentin Johnston      WR    12.4 ->   2.4   5.06 | 5.06 | 4.84 | 5.19
+  Jadarian Price        RB    12.4 ->   5.0   1.82 | 1.81 | 2.29 | 2.76
+  Jaylen Waddle         WR    12.3 ->  21.8   5.52 | 5.52 | 5.73 | 5.93
+  Deshaun Watson        QB    12.3 ->  19.7   0.65 | 0.65 | 0.56 | 0.50
+  Terry McLaurin        WR    12.2 ->   7.0   4.18 | 4.18 | 3.32 | 3.46
+  Bhayshul Tuten        RB    11.9 ->  14.2   2.19 | 2.19 | 2.12 | 1.83
+  Tucker Kraft          TE    11.7 ->   3.5   0.31 | 0.31 | 0.23 | 0.28
+  Stefon Diggs          WR    11.6 ->  21.7   6.97 | 6.97 | 7.55 | 7.61
+  J.K. Dobbins          RB    11.5 ->   3.6   4.42 | 4.42 | 4.50 | 4.70
+  Deebo Samuel          WR    11.5 ->   6.5   1.23 | 1.23 | 1.70 | 1.95
+  Michael Mayer         TE    11.3 ->   5.3   3.13 | 3.13 | 3.23 | 3.41
+  George Kittle         TE    11.2 ->  18.0   6.31 | 6.31 | 6.12 | 5.70
+  MarShawn Lloyd        RB    11.1 ->   8.6   2.29 | 2.29 | 2.27 | 2.27
+  Dalton Schultz        TE    11.0 ->  26.0   2.65 | 2.65 | 2.69 | 2.69
+  Courtland Sutton      WR    10.7 ->   5.5   1.95 | 1.95 | 1.66 | 1.92
+  Jacory Croskey-MerrittRB    10.7 ->   5.8   2.98 | 2.98 | 2.89 | 3.04
+  Jayden Reed           WR    10.6 ->   1.4   0.26 | 0.26 | 0.20 | 0.26
+  KC Concepcion         WR    10.6 ->   8.2   0.36 | 0.36 | 0.33 | 0.34
+  Michael Wilson        WR    10.5 ->   3.8   4.38 | 4.38 | 4.00 | 4.19
+  Tre Tucker            WR    10.2 ->  22.9   4.89 | 4.89 | 5.15 | 4.57
+  Ladd McConkey         WR    10.1 ->   6.5   1.12 | 1.12 | 1.12 | 1.24
+  Harold Fannin         TE     9.8 ->  10.4   0.36 | 0.36 | 0.32 | 0.32
+  Chris Godwin          WR     9.8 ->   8.8   0.44 | 0.44 | 0.31 | 0.32
+  Jakobi Meyers         WR     9.7 ->   3.8   1.85 | 1.85 | 1.82 | 2.00
+  Marvin Harrison Jr.   WR     9.6 ->   0.0   4.77 | 4.77 | 4.34 | 4.76
+  Brenton Strange       TE     9.5 ->   3.7   2.90 | 2.90 | 3.08 | 3.26
+  Kayshon Boutte        WR     9.5 ->   6.7   0.33 | 0.33 | 0.18 | 0.20
+  Cameron Dicker        K      9.5 ->   1.0   3.11 | 3.11 | 3.11 | 3.53
+  Brandon Aubrey        K      9.3 ->  16.0   4.35 | 4.35 | 4.35 | 4.45
+  San Francisco 49ers D/STDST    9.3 ->   9.0   1.81 | 1.81 | 6.53 | 5.93
+  Kenneth Gainwell      RB     9.1 ->   4.5   0.28 | 0.28 | 0.26 | 0.29
+  Tre' Harris           WR     9.1 ->   6.3   1.55 | 1.55 | 1.56 | 1.45
+  Chase McLaughlin      K      9.1 ->  16.0   0.35 | 0.35 | 0.35 | 0.29
+  Jake Ferguson         TE     9.1 ->  20.3   7.03 | 7.03 | 6.64 | 6.62
+  Jaylin Noel           WR     8.9 ->   5.4   0.31 | 0.31 | 0.17 | 0.19
+  Tampa Bay Buccaneers D/STDST    8.9 ->   2.0   0.09 | 0.09 | 0.23 | 0.29
+  Brian Thomas Jr.      WR     8.8 ->   7.0   1.67 | 1.67 | 1.92 | 1.85
+  Adonai Mitchell       WR     8.8 ->  12.3   0.29 | 0.29 | 0.23 | 0.21
+  Pat Bryant            WR     8.8 ->   1.6   3.10 | 3.10 | 2.82 | 3.15
+  Caleb Douglas         WR     8.7 ->   3.9   2.14 | 2.14 | 1.35 | 1.61
+  Wil Lutz              K      8.6 ->   9.0   1.51 | 1.51 | 1.51 | 1.37
+  Denzel Boston         WR     8.5 ->  20.5   0.42 | 0.42 | 0.38 | 0.27
+  Trey Smack            K      8.5 ->   8.0   2.81 | 2.81 | 2.81 | 2.80
+  Ka'imi Fairbairn      K      8.5 ->   6.0   0.16 | 0.16 | 0.16 | 0.17
+  Jason Myers           K      8.5 ->   7.0   1.11 | 1.11 | 1.11 | 0.98
+  Rachaad White         RB     8.4 ->  14.3   2.33 | 2.33 | 2.47 | 2.71
+  Woody Marks           RB     8.3 ->   8.5   0.22 | 0.22 | 0.17 | 0.17
+  Xavier Hutchinson     WR     8.3 ->   6.7   0.30 | 0.30 | 0.17 | 0.17
+  Cam Little            K      8.2 ->   7.0   1.62 | 1.62 | 1.62 | 1.47
+  Jalen Nailor          WR     8.0 ->   1.9   2.05 | 2.05 | 2.07 | 2.37
+  Evan Engram           TE     8.0 ->   2.7   1.79 | 1.79 | 1.69 | 1.85
+  Los Angeles Chargers D/STDST    8.0 ->   5.0   2.62 | 2.62 | 7.92 | 7.31
+  Chris Brooks          RB     7.9 ->   3.6   2.21 | 2.21 | 2.21 | 2.17
+  Malik Washington      WR     7.9 ->   8.7   2.42 | 2.42 | 1.81 | 1.62
+  Tyler Allgeier        RB     7.8 ->   3.9   1.64 | 1.64 | 1.72 | 1.91
+  Ryan Flournoy         WR     7.8 ->   7.3   1.14 | 1.14 | 1.28 | 1.15
+  Seattle Seahawks D/ST DST    7.8 ->   8.0   1.40 | 1.40 | 3.12 | 2.83
+  Mike Gesicki          TE     7.7 ->   0.0   0.08 | 0.08 | 0.12 | 0.16
+  Kenyon Sadiq          TE     7.6 ->   3.7   1.54 | 1.54 | 1.55 | 1.53
+  Rashid Shaheed        WR     7.6 ->   6.9   1.45 | 1.45 | 1.59 | 1.45
+  Jerry Jeudy           WR     7.5 ->   0.0   0.20 | 0.20 | 0.18 | 0.24
+  David Njoku           TE     7.5 ->   1.9   3.49 | 3.49 | 3.37 | 3.49
+  Drew Stevens          K      7.5 ->   8.0   1.16 | 1.16 | 1.16 | 1.05
+  Cade Otton            TE     7.4 ->   8.8   0.35 | 0.35 | 0.25 | 0.24
+  Evan McPherson        K      7.4 ->  12.0   0.18 | 0.18 | 0.18 | 0.15
+  A.J. Barner           TE     7.4 ->   7.9   3.19 | 3.19 | 2.93 | 2.73
+  Green Bay Packers D/STDST    7.1 ->   5.0   1.33 | 1.33 | 1.32 | 1.30
+  George Holani         RB     7.1 ->   2.5   1.06 | 1.06 | 1.27 | 1.54
+  Houston Texans D/ST   DST    6.8 ->   6.0   0.00 | 0.00 | 0.14 | 0.14
+  Denver Broncos D/ST   DST    6.7 ->   8.0   1.31 | 1.31 | 3.12 | 2.72
+  Cooper Kupp           WR     6.5 ->   4.0   1.27 | 1.27 | 1.53 | 1.61
+  Greg Dulcich          TE     6.5 ->   3.7   0.99 | 0.99 | 0.79 | 0.75
+  Keaton Mitchell       RB     6.3 ->   4.9   0.55 | 0.56 | 0.59 | 0.62
+  Antonio Williams      WR     6.3 ->   5.4   1.58 | 1.58 | 1.92 | 1.66
+  Kendrick Bourne       WR     6.3 ->   3.1   0.99 | 0.99 | 0.81 | 0.86
+  Arizona Cardinals D/STDST    6.3 ->   4.0   1.77 | 1.77 | 5.49 | 5.15
+  RJ Harvey             RB     6.2 ->   0.0   2.55 | 2.55 | 2.66 | 2.91
+  Samaje Perine         RB     6.2 ->   3.2   0.10 | 0.10 | 0.11 | 0.13
+  Matt Gay              K      6.2 ->   8.0   1.84 | 1.84 | 1.84 | 1.68
+  Chad Ryland           K      6.2 ->   1.0   2.69 | 2.69 | 2.69 | 2.88
+  Jalen McMillan        WR     6.1 ->   0.0   0.22 | 0.22 | 0.15 | 0.19
+  Riley Patterson       K      6.1 ->   6.0   1.18 | 1.18 | 1.18 | 1.05
+  Dallas Cowboys D/ST   DST    6.1 ->   5.0   1.37 | 1.37 | 4.71 | 4.33
+  Andre Szmyt           K      6.0 ->  13.0   0.25 | 0.25 | 0.25 | 0.19
+  Jack Bech             WR     5.9 ->   4.5   1.59 | 1.59 | 1.70 | 1.64
+  Demarcus Robinson     WR     5.9 ->   6.4   1.25 | 1.25 | 1.77 | 1.57
+  Mason Taylor          TE     5.6 ->   0.0   0.14 | 0.14 | 0.10 | 0.14
+  Jacksonville Jaguars D/STDST    5.6 ->   3.0   3.89 | 3.89 | 8.08 | 7.50
+  New York Jets D/ST    DST    5.6 ->  10.0   0.48 | 0.48 | 0.50 | 0.50
+  Chris Bell            WR     5.6 ->   0.0   2.94 | 2.94 | 2.35 | 2.60
+  Cincinnati Bengals D/STDST    5.5 ->  11.0   1.63 | 1.63 | 1.55 | 1.57
+  Braelon Allen         RB     5.4 ->   8.5   0.17 | 0.17 | 0.15 | 0.13
+  Cleveland Browns D/ST DST    5.2 ->   7.0   0.05 | 0.05 | 0.18 | 0.16
+  Las Vegas Raiders D/STDST    5.2 ->  16.0   7.95 | 7.95 | 4.96 | 4.74
+  Oronde Gadsden II     TE     4.8 ->   9.8   4.10 | 4.10 | 4.17 | 4.06
+  Chris Rodriguez Jr.   RB     4.8 ->   1.3   1.92 | 1.91 | 2.02 | 2.11
+  Eddy Pineiro          K      4.8 ->   5.0   0.64 | 0.64 | 0.64 | 0.59
+  Travis Hunter         WR     4.7 ->   0.0   1.96 | 1.96 | 2.02 | 2.21
+  Andrei Iosivas        WR     4.5 ->   1.7   0.06 | 0.06 | 0.08 | 0.09
+  Kaelon Black          RB     4.1 ->   2.5   0.51 | 0.59 | 0.44 | 0.43
+  Washington Commanders D/STDST    4.1 ->  -2.0   4.26 | 4.26 | 6.40 | 6.33
+  Jonnu Smith           TE     4.0 ->   0.0   0.10 | 0.10 | 0.07 | 0.10
+  Jalen Tolbert         WR     4.0 ->   0.0   2.10 | 2.10 | 1.68 | 1.86
+  KaVontae Turpin       WR     4.0 ->   0.1   1.49 | 1.49 | 1.73 | 1.91
+  Tory Horton           WR     3.8 ->   0.0   1.60 | 1.60 | 1.72 | 1.88
+  Joe Flacco            QB     3.7 ->   0.0   0.02 | 0.02 | 0.06 | 0.08
+  Drew Sample           TE     3.5 ->   0.0   0.04 | 0.04 | 0.06 | 0.08
+  Mike Washington Jr.   RB     3.4 ->   0.7   0.98 | 0.96 | 1.07 | 1.18
+  Isaiah Williams       WR     3.4 ->  10.8   0.15 | 0.15 | 0.13 | 0.08
+  Miami Dolphins D/ST   DST    3.4 ->  -4.0   4.33 | 4.33 | 6.24 | 6.25
+  Ted Hurst             WR     3.3 ->   4.7   1.39 | 1.39 | 1.42 | 1.42
+  Jonah Coleman         RB     3.2 ->  14.8   8.38 | 8.42 | 8.47 | 8.67
+  Ben Sinnott           TE     3.2 ->   1.6   1.74 | 1.74 | 1.52 | 1.50
+  Dyami Brown           WR     3.2 ->   4.1   1.01 | 1.01 | 1.19 | 1.15
+  Elijah Arroyo         TE     3.1 ->   2.7   0.77 | 0.77 | 0.81 | 0.71
+  Troy Franklin         WR     2.8 ->   3.7   1.22 | 1.22 | 1.23 | 1.10
+  Treylon Burks         WR     2.6 ->   0.0   1.38 | 1.38 | 1.17 | 1.28
+  Elijah Higgins        TE     2.6 ->   1.0   0.73 | 0.73 | 0.62 | 0.70
+  Emari Demercado       RB     2.5 ->   0.8   0.82 | 0.82 | 0.94 | 0.99
+  Sean Tucker           RB     2.4 ->   0.0   0.06 | 0.06 | 0.06 | 0.08
+  Isaiah Davis          RB     2.4 ->   0.0   0.04 | 0.04 | 0.04 | 0.06
+  Charlie Kolar         TE     2.3 ->   5.1   1.69 | 1.69 | 1.66 | 1.65
+  Erick All             TE     2.2 ->   2.5   0.04 | 0.04 | 0.05 | 0.04
+  LeQuint Allen         RB     2.1 ->   0.0   0.83 | 0.83 | 0.90 | 0.99
+  Jordan James          RB     2.1 ->   1.5   0.74 | 0.74 | 0.65 | 0.58
+  Malik Benson          WR     2.0 ->   0.0   0.84 | 0.84 | 0.85 | 0.93
+  Kimani Vidal          RB     1.9 ->   0.0   0.77 | 0.77 | 0.81 | 0.88
+  Kaleb Johnson         RB     1.9 ->   3.2   3.13 | 3.13 | 3.13 | 3.11
+  Jaylen Wright         RB     1.9 ->   1.1   0.71 | 0.65 | 0.67 | 0.67
+  Luke Schoonmaker      TE     1.9 ->   0.0   0.74 | 0.74 | 0.85 | 0.94
+  Kevin Coleman Jr.     WR     1.9 ->   0.0   1.00 | 1.00 | 0.80 | 0.88
+  Isaiah Bond           WR     1.6 ->   2.0   0.06 | 0.06 | 0.06 | 0.05
+  Jaylin Lane           WR     1.6 ->   0.0   0.85 | 0.85 | 0.72 | 0.79
+  Carson Beck           QB     1.6 ->   0.0   0.80 | 0.41 | 0.72 | 0.79
+  Tez Johnson           WR     1.5 ->   5.9   0.11 | 0.11 | 0.09 | 0.05
+  Nate Boerkircher      TE     1.4 ->   0.0   0.58 | 0.58 | 0.60 | 0.66
+  Emanuel Wilson        RB     1.4 ->   9.2   5.84 | 5.84 | 5.83 | 5.93
+  Ollie Gordon          RB     1.4 ->   0.7   0.22 | 0.22 | 0.24 | 0.25
+  Will Kacmarek         TE     1.3 ->   1.4   0.54 | 0.54 | 0.57 | 0.52
+  Brenen Thompson       WR     1.1 ->   2.3   0.67 | 0.67 | 0.71 | 0.53
+  Kaytron Allen         RB     1.1 ->   2.4   1.83 | 1.83 | 1.83 | 1.78
+  Luke McCaffrey        WR     1.1 ->   0.0   0.58 | 0.58 | 0.49 | 0.54
+  Colbie Young          WR     1.0 ->   1.7   0.02 | 0.02 | 0.02 | 0.02
+  Tahj Brooks           RB     0.9 ->   0.0   0.01 | 0.01 | 0.01 | 0.02
+  Josh Cameron          WR     0.9 ->   0.0   0.37 | 0.37 | 0.39 | 0.42
+  Malachi Corley        WR     0.6 ->   0.0   0.02 | 0.02 | 0.02 | 0.02
+  Marlin Klein          TE     0.6 ->   0.0   0.02 | 0.02 | 0.01 | 0.01
+  Jalon Daniels         QB     0.6 ->   0.0   0.02 | 0.02 | 0.02 | 0.02
+  Mac Jones             QB     0.6 ->  -0.2   0.39 | 0.31 | 0.45 | 0.48
+  Marcus Mariota        QB     0.6 ->   8.7   6.79 | 6.91 | 6.83 | 6.82
+  Trey Lance            QB     0.5 ->   0.0   0.22 | 0.14 | 0.21 | 0.23
+  Quinn Ewers           QB     0.5 ->   0.0   0.20 | 0.12 | 0.21 | 0.23
+  Davis Mills           QB     0.4 ->   0.0   0.01 | 0.01 | 0.01 | 0.01
+  Cade Klubnik          QB     0.4 ->   0.0   0.01 | 0.01 | 0.01 | 0.01
+  Gardner Minshew       QB     0.4 ->   0.0   0.20 | 0.10 | 0.18 | 0.20
+closest model per player: fitted 78  fit+exit 15  v1 49  naive 52
+wrote E:\MyFantasyFootball\sim_lab\data\live_track_2026_w2_8games_20260920_1608_summary.json

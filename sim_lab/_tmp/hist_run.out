@@ -1,0 +1,53 @@
+﻿=== Do we need a 3-year history? history windows as predictors of the coming season's PPG (veterans) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  veteran player-seasons with 8+ prior games: 1168 of 1404 (top 150: 689)
+  graded on the 1137 veteran seasons where EVERY window is defined (same rows for all)
+
+=== All veterans (games-weighted) | TOP 150 importance-weighted: MSE vs the CURRENT blend (seasons better), raw correlation with the season ===
+  window                                                   all vets   corr |       top 150 weighted   corr
+  last season only                              +5.45% (2/7) mse  9.99  0.792 |    +9.05% (2/7) mse 12.03  0.712
+  2 seasons (.65/.35)                           -0.12% (5/7) mse  9.46  0.812 |    +1.56% (4/7) mse 11.21  0.739
+  3 seasons (.5/.3/.2) = today's h3             -0.91% (6/7) mse  9.39  0.818 |    +0.64% (4/7) mse 11.11  0.744
+  3 seasons equal                               +1.81% (2/7) mse  9.64  0.813 |    +4.11% (3/7) mse 11.49  0.734
+  last 4 games                                 +27.11% (0/7) mse 12.04  0.715 |   +34.93% (0/7) mse 14.89  0.609
+  last 8 games                                 +10.91% (0/7) mse 10.50  0.777 |   +12.55% (1/7) mse 12.42  0.686
+  last 12 games                                 +3.78% (0/7) mse  9.83  0.798 |    +6.82% (1/7) mse 11.79  0.713
+  last 16 games                                 +2.35% (2/7) mse  9.69  0.805 |    +5.20% (1/7) mse 11.61  0.722
+  last 24 games                                 +0.04% (4/7) mse  9.47  0.814 |    +1.24% (5/7) mse 11.17  0.738
+  last 32 games                                 +0.46% (3/7) mse  9.51  0.816 |    +1.41% (5/7) mse 11.19  0.740
+  decayed games, half-life 6                    -0.40% (5/7) mse  9.43  0.813 |    -0.04% (5/7) mse 11.03  0.738
+  decayed games, half-life 10                   -2.74% (6/7) mse  9.21  0.822 |    -3.17% (6/7) mse 10.68  0.751
+  decayed games, half-life 16                   -2.31% (6/7) mse  9.25  0.823 |    -2.80% (6/7) mse 10.73  0.752
+  decayed games, half-life 24                   -1.07% (4/7) mse  9.37  0.821 |    -1.21% (5/7) mse 10.90  0.749
+  CURRENT: .5 x 3 seasons + .5 x last 8         +0.00% (0/7) mse  9.47  0.813 |    +0.00% (0/7) mse 11.03  0.738
+  .5 x 3 seasons + .5 x last 16                 -1.15% (5/7) mse  9.36  0.817 |    +0.63% (5/7) mse 11.10  0.741
+  .5 x 3 seasons + .5 x decayed hl 16           -1.99% (6/7) mse  9.28  0.822 |    -1.48% (6/7) mse 10.87  0.749
+
+=== By ADP band (games-weighted MSE vs the CURRENT blend) ===
+  ADP 1-30     last season only +14.0% (1/7) | 3 seasons (.5/.3/.2) -0.2% (3/7) | last 8 games +20.1% (1/7) | last 16 games +8.2% (2/7) | last 24 games -0.3% (3/7) | decayed games, half-life -6.0% (5/7) | .5 x 3 seasons + .5 x la +0.5% (4/7)
+  ADP 31-60    last season only +3.8% (3/7) | 3 seasons (.5/.3/.2) +4.2% (4/7) | last 8 games +11.0% (1/7) | last 16 games +0.2% (3/7) | last 24 games +4.6% (2/7) | decayed games, half-life +0.8% (5/7) | .5 x 3 seasons + .5 x la -0.7% (4/7)
+  ADP 61-100   last season only +10.7% (1/7) | 3 seasons (.5/.3/.2) -1.2% (3/7) | last 8 games +6.7% (1/7) | last 16 games +8.2% (3/7) | last 24 games -1.1% (4/7) | decayed games, half-life -1.0% (4/7) | .5 x 3 seasons + .5 x la +2.6% (4/7)
+  ADP 101-150  last season only -4.0% (5/7) | 3 seasons (.5/.3/.2) -2.7% (3/7) | last 8 games +5.7% (1/7) | last 16 games -2.9% (5/7) | last 24 games -0.4% (3/7) | decayed games, half-life -1.8% (4/7) | .5 x 3 seasons + .5 x la -3.4% (6/7)
+
+=== By position, top 150 importance-weighted: best window vs CURRENT ===
+  QB: best decayed games, half-life 10 -1.66% | 2nd decayed games, half-life 16 -1.07% | 3 seasons alone +0.65% | last 8 alone +6.65% | last season alone +3.59%
+  RB: best decayed games, half-life 10 -0.13% | 2nd decayed games, half-life 6 -0.04% | 3 seasons alone +10.00% | last 8 alone +7.31% | last season alone +19.34%
+  WR: best 3 seasons (.5/.3/.2) = today's h3 -9.87% | 2nd .5 x 3 seasons + .5 x decayed hl 16 -9.84% | 3 seasons alone -9.87% | last 8 alone +20.05% | last season alone +2.30%
+  TE: best decayed games, half-life 10 -2.45% | 2nd decayed games, half-life 6 -1.98% | 3 seasons alone +8.02% | last 8 alone +13.66% | last season alone +2.55%
+
+=== When the last 8 games disagree with the 3-season level (top 150 veterans): which one did the next season follow? ===
+  last 8 FAR BELOW 3-season (gap <= -3)    n= 46 | 3-season 15.21 | last 8 11.16 | NEXT SEASON actual 14.60 | weight on last 8 that fits best 0.18
+  last 8 below (-3 to -1)                  n=117 | 3-season 12.83 | last 8 10.99 | NEXT SEASON actual 12.81 | weight on last 8 that fits best 0.07
+  about equal                              n=231 | 3-season 11.59 | last 8 11.64 | NEXT SEASON actual 11.42 | weight on last 8 that fits best 0.29
+  last 8 above (+1 to +3)                  n=174 | 3-season 12.09 | last 8 13.93 | NEXT SEASON actual 12.30 | weight on last 8 that fits best 0.07
+  last 8 FAR ABOVE (gap >= +3)             n=103 | 3-season 12.32 | last 8 16.97 | NEXT SEASON actual 13.54 | weight on last 8 that fits best 0.30
+
+Top 150 weighted, vs the current blend (.5 x 3 seasons + .5 x last 8): best window = decayed games, half-life 10 -3.17% (6/7). last season only +9.1%; 3 seasons (.5/.3/.2) +0.6%; last 8 games +12.6%; last 16 games +5.2%; last 32 games +1.4%.
+wrote data/history_window.js (23s)

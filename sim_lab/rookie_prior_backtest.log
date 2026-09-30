@@ -1,0 +1,90 @@
+=== Market-informed rookie prior ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks; rookies 2721 rows / 200 rookie-seasons | rookie rows with FFC ADP 1823 (67%), with JM 2682 (99%) | all rows with ADP 69%
+
+=== Prior alone vs actual, rookie rows weeks 1-4 (n=645; LOYO fits) ===
+  model              MSE  vs Clay  QB      RB      WR      TE     | ADP-listed rows | unlisted rows
+  CLAY             39.64   +0.00%    +0.00   +0.00   +0.00   +0.00   | +0.00% (n451) | +0.00% (n194)
+  PICK             40.99   +3.40%    +3.59   +5.57   +1.13   +6.49   | +1.99% (n451) | +6.69% (n194)
+  ADP              42.84   +8.06%   +18.65   +3.54   +2.02  +45.99   | +7.80% (n451) | +8.69% (n194)
+  PICK+ADP         42.43   +7.03%   +10.15   +5.40   -0.04  +57.19   | +6.71% (n451) | +7.78% (n194)
+  PICK+ADP+JM      42.44   +7.04%    +4.68   +7.63   +1.64  +48.53   | +7.01% (n451) | +7.12% (n194)
+  ADP+JM           41.99   +5.91%    +3.19   +5.88   +0.79  +49.95   | +5.98% (n451) | +5.75% (n194)
+  CURVE|PICK       41.89   +5.67%    +6.62   +8.10   +3.15   +6.82   | +5.23% (n451) | +6.69% (n194)
+  CURVE.5+PICK.5   41.09   +3.65%    +4.43   +5.56   +1.47   +5.87   | +2.35% (n451) | +6.69% (n194)
+
+  actual / prior by ADP bucket (PICK+ADP), rookie weeks 1-4:
+    ADP 1-60     n=  60  actual/prior 0.914  actual/Clay 0.952  mean actual 11.27
+    ADP 61-120   n= 150  actual/prior 0.930  actual/Clay 1.051  mean actual 8.76
+    ADP 121-180  n= 241  actual/prior 0.940  actual/Clay 1.065  mean actual 6.79
+    unlisted     n= 194  actual/prior 0.911  actual/Clay 1.320  mean actual 6.10
+
+=== Inside the Clay-free shadow (shrink .8, per-position P): fallback swapped, ALL rows vs shipped ===
+  fallback       vs shipped  yrs  vs v2 (PICK)  yrs | rookie rows | wk1 | wk2-4
+  CLAY               -0.20% 3/7        -0.08% 4/7 | -3.11% | +3.95% | +0.09%
+  PICK               -0.12% 2/7        +0.00% 0/7 | -2.52% | +5.34% | +0.49%
+  ADP                -0.04% 2/7        +0.07% 2/7 | -2.00% | +5.40% | +0.88%
+  PICK+ADP           -0.07% 3/7        +0.04% 4/7 | -2.20% | +5.54% | +0.67%
+  PICK+ADP+JM        -0.07% 2/7        +0.05% 3/7 | -2.17% | +5.54% | +0.66%
+  ADP+JM             -0.09% 2/7        +0.03% 3/7 | -2.32% | +5.37% | +0.61%
+  CURVE|PICK         -0.04% 2/7        +0.07% 2/7 | -1.98% | +5.85% | +0.62%
+  CURVE.5+PICK.5     -0.09% 2/7        +0.02% 2/7 | -2.35% | +5.53% | +0.51%
+  FORWARD PICK (2021-25, fits from earlier seasons): vs shipped -0.37% (2/5) | vs v2 +0.03% (1/5)
+  coefficients (PICK, all seasons, order: 1, pick [+ 'no' indicators]): {"QB": [17.0149, -1.3907], "RB": [18.974, -2.582], "WR": [13.8843, -1.7983], "TE": [10.4783, -1.2575]}
+
+=== Veterans: ADP-implied PPG (curve fit on everyone) blended into the Clay-free history prior, LOYO vs shipped ===
+  ADP weight, all listed vets (n=11341)
+    grid pooled MSE: 0.0:51.277  0.25:51.017  0.5:50.876  0.75:50.855  1.0:50.953
+    current 0.0 +0.20% vs shipped | LOYO best 50.3119 (-0.51%), years better than shipped 5/7, picks [0.75, 0.5, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75
+  ADP weight, team-changers (n=1594)
+    grid pooled MSE: 0.0:41.668  0.25:41.300  0.5:41.040  0.75:40.889  1.0:40.848
+    current 0.0 +0.81% vs shipped | LOYO best 42.3023 (-0.86%), years better than shipped 6/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0
+  ADP weight, 2nd year (n=2070)
+    grid pooled MSE: 0.0:48.143  0.25:47.905  0.5:47.800  0.75:47.829  1.0:47.991
+    current 0.0 +1.03% vs shipped | LOYO best 47.6732 (+0.41%), years better than shipped 3/7, picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.75], pooled best 0.5
+  ADP weight, vets, same team, 3+ yrs (n=7686)
+    grid pooled MSE: 0.0:53.789  0.25:53.540  0.5:53.413  0.75:53.409  1.0:53.527
+    current 0.0 -0.10% vs shipped | LOYO best 52.6691 (-0.68%), years better than shipped 6/7, picks [0.75, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75], pooled best 0.75
+    ADP weight, QB vets (n=2014)
+    grid pooled MSE: 0.0:58.678  0.25:58.261  0.5:58.057  0.75:58.065  1.0:58.286
+    current 0.0 -0.88% vs shipped | LOYO best 58.1822 (-1.58%), years better than shipped 7/7, picks [0.75, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75], pooled best 0.5
+    ADP weight, RB vets (n=3266)
+    grid pooled MSE: 0.0:55.237  0.25:54.957  0.5:54.806  0.75:54.783  1.0:54.887
+    current 0.0 +0.90% vs shipped | LOYO best 53.3233 (+0.12%), years better than shipped 2/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75
+    ADP weight, WR vets (n=4440)
+    grid pooled MSE: 0.0:51.567  0.25:51.332  0.5:51.197  0.75:51.161  1.0:51.224
+    current 0.0 +0.04% vs shipped | LOYO best 50.3603 (-0.68%), years better than shipped 5/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75
+    ADP weight, TE vets (n=1621)
+    grid pooled MSE: 0.0:34.685  0.25:34.569  0.5:34.507  0.75:34.497  1.0:34.540
+    current 0.0 +0.93% vs shipped | LOYO best 34.3282 (+0.44%), years better than shipped 3/7, picks [0.5, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75
+
+=== v2.1 candidate: vets ADP weight 0.75, 2nd-year 0.5, rookies PICK ===
+  vs shipped -0.66% (5/7) | vs shadow v2 -0.54% (7/7)
+  by position: QB -3.78%  RB +0.32%  WR +0.03%  TE +0.14%
+  wk1     v2  +5.34% -> v2.1  +2.30%
+  wk2-4   v2  +0.49% -> v2.1  -0.90%
+  wk5-8   v2  -0.17% -> v2.1  -0.78%
+  wk9-12  v2  -0.43% -> v2.1  -0.44%
+  wk13+   v2  -1.24% -> v2.1  -1.10%
+  vet, same team           n=13528  v2  +0.06% -> v2.1  -0.50%
+  vet, changed team        n= 2765  v2  +1.46% -> v2.1  +0.42%
+  rookie                   n= 2721  v2  -2.52% -> v2.1  -2.52%
+  2nd year                 n= 2952  v2  +0.94% -> v2.1  +0.38%
+  vets WITHOUT an ADP      n= 4952  v2  +0.54% -> v2.1  +0.54%
+  FORWARD (2021-25, curve from earlier seasons): vs shipped -0.80% (4/5) | vs v2 -0.39% (4/5)
+    wk1      +1.12%
+    wk2-4    -1.01%
+    wk5-8    -1.56%
+    wk9-12   -0.20%
+    wk13+    -0.88%
+  ADP curve coefficients (all seasons, half-PPR, a + b ln(adp)): {"QB": [35.434, -3.8335], "RB": [22.8287, -3.151], "WR": [22.719, -3.0549], "TE": [19.9698, -2.6563]}
+
+Rookie prior alone (weeks 1-4): PICK +3.4%, ADP +8.1%, PICK+ADP +7.0%, PICK+ADP+JM +7.0%, ADP+JM +5.9%, CURVE|PICK +5.7%, CURVE.5+PICK.5 +3.6% vs Clay. Veterans: ADP-market prior blended .75 (2nd-year .5) -> v2.1 -0.66% vs shipped (5/7), forward -0.80%, vs v2 -0.54%.
+wrote data/rookie_prior_backtest.js (20s)

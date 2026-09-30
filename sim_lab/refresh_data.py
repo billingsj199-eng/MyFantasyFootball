@@ -83,7 +83,26 @@ try:
         f.write("window.SIM_SNAPS_2026 = ")
         json.dump(season, f, separators=(",", ":"))
         f.write(";\n")
-    print(f"wrapped sim_snaps.js  ({len(season)} players with 2026 snaps)")
+        # LAST season's late snap share (mean offensive snap % over the player's last 4 games with snaps, 0-1), keyed by
+        # the engine's norm name: the Clay-free shadow's 2nd-year role-growth boost (backtest_second_year.py, 2026-09-16 -
+        # a 2nd-year player under 40% late in his rookie year outscores the history prior 1.18x -> prior x1.2).
+        import re as _rsn
+        def _snorm(n):
+            n = n.lower().replace(".", "").replace("'", "").replace("-", " ")
+            n = _rsn.sub(r"\b(jr|sr|ii|iii|iv|v)\b", "", n)
+            return _rsn.sub(r"\s+", " ", n).strip()
+        prior = {}
+        for name, yrs in full.items():
+            blk = yrs.get("2025")
+            wks = blk.get("w") if isinstance(blk, dict) else None
+            if not wks: continue
+            pts = [float(v) for k, v in sorted(wks.items(), key=lambda kv: int(kv[0])) if isinstance(v, (int, float)) and v > 0]
+            if len(pts) >= 4: prior[_snorm(name)] = round(sum(pts[-4:]) / 4 / 100.0, 3)
+        f.write("// last season's late snap share by norm name (0-1): 2nd-year role-growth boost in the Clay-free shadow\n")
+        f.write("window.SIM_SNAPS_PRIOR = ")
+        json.dump(prior, f, separators=(",", ":"))
+        f.write(";\n")
+    print(f"wrapped sim_snaps.js  ({len(season)} players with 2026 snaps, {len(prior)} with a 2025 late snap share)")
 except Exception as e:
     print(f"WARN sim_snaps.js skipped ({e})")
 
@@ -136,6 +155,7 @@ try:
         allrows.sort()
         l8 = allrows[-8:]
         players26[_norm(name)] = {"g": g, "ppg": round(sum(w["fpts"] for w in rows) / g, 2), "pg": pg, "wks": wks_played,
+                                  "wf": {str(int(w["wk"])): round(float(w["fpts"]), 2) for w in rows if str(w.get("wk", "")).isdigit()},   # per-week points: Vegas-adjusted evidence (shadow v2.24)
                                   "l8": round(sum(x[2] for x in l8) / len(l8), 2) if l8 else None, "l8g": len(l8)}
         for w in rows:
             opp = _ALIAS.get(w.get("opp") or "", w.get("opp") or "")
@@ -209,11 +229,30 @@ try:
                                  headers={"User-Agent": "simlab-refresh"})
     with urllib.request.urlopen(req, timeout=60) as r:
         allp = json.load(r)
+    # Draft pick (site data/combine_data.js "draft" = overall pick, "yr" = draft year) for the Clay-free
+    # shadow's rookie fallback (backtest_noclay_weekly.py: ppg ~ a + b log(pick)). dp/dy on the sid record.
+    draft_by_norm = {}
+    import re as _rdp
+    def _dnorm(n):
+        n = n.lower().replace(".", "").replace("'", "").replace("-", " ")
+        n = _rdp.sub(r"\b(jr|sr|ii|iii|iv|v)\b", "", n)
+        return _rdp.sub(r"\s+", " ", n).strip()
+    try:
+        _craw = open(os.path.join(REPO, "data", "combine_data.js"), encoding="utf-8").read()
+        for _m in _rdp.finditer(r'"([^"]+)":\{([^{}]*)\}', _craw):
+            _yr = _rdp.search(r'"yr":(\d{4})', _m.group(2)); _pk = _rdp.search(r'"draft":(\d+)', _m.group(2))
+            if _yr and _pk:
+                draft_by_norm[_dnorm(_m.group(1))] = (int(_yr.group(1)), int(_pk.group(1)))
+    except Exception as _e:
+        print(f"WARN combine_data draft picks skipped ({_e})")
     meta = {}
     for sid, rec in allp.items():
         if sid in sids and isinstance(rec, dict):
             meta[sid] = {"exp": rec.get("years_exp"), "inj": rec.get("injury_status") or "",
                          "st": rec.get("status") or ""}
+            _d = draft_by_norm.get(_dnorm((rec.get("first_name") or "") + " " + (rec.get("last_name") or "")))
+            if _d:
+                meta[sid]["dy"] = _d[0]; meta[sid]["dp"] = _d[1]
     # Elite shadow-CB status (backtest_cb_shadow.py): resolve each name in
     # overrides.js ELITE_CBS_2026 to current team + injury/roster status from
     # the same dump. Engine docks opposing WRs x0.96 while the CB is available.
@@ -261,6 +300,20 @@ try:
         f.write("// Sleeper's own current-week projection per player (half-PPR; absent = Sleeper has him at 0)\n")
         f.write("window.SIM_SLEEPER_WEEKLY = ")
         json.dump(sw, f, separators=(",", ":"))
+        f.write(";\n")
+        # ESPN current-week projection per player [half, ppr, std] (repo weekly_projections.json key e), for the RANK MIX
+        # (engine rmMean = 50% Clay-free shadow + 50% ESPN; backtest_best_rankings.py 2026-09-17: rank rho .388 vs .378 each alone, 6/7 seasons).
+        ew = {"week": None, "p": {}}
+        try:
+            ew["week"] = wp.get("week")
+            for nm, rec in (wp.get("players") or {}).items():
+                e_ = rec.get("e") if isinstance(rec, dict) else None
+                if isinstance(e_, list) and len(e_) == 3 and all(isinstance(v, (int, float)) for v in e_): ew["p"][_cbnorm(nm)] = e_
+        except Exception as e:  # noqa: BLE001
+            print(f"WARN ESPN weekly unreadable ({e}) - SIM_ESPN_WEEKLY empty")
+        f.write("// ESPN current-week projection per player [half-PPR, PPR, standard]\n")
+        f.write("window.SIM_ESPN_WEEKLY = ")
+        json.dump(ew, f, separators=(",", ":"))
         f.write(";\n")
         # DEFENSE AVAILABILITY intel (2026-09-15; backtest_def_avail.py grades whether it moves projections).
         defav = {"prWeek": None, "teams": {}}
@@ -536,6 +589,25 @@ try:
         f.write("window.SIM_OL_2026 = ")
         json.dump(ol_map, f, separators=(",", ":"))
         f.write(";\n")
+        # LAST season's PFF route grade for WRs (>= 50 routes), by norm name: the Clay-free shadow's v2.7 route-grade
+        # residual boost (backtest_pff_route_grade.py, 2026-09-16). Source: pbp_cache/pff/pff_receiving_<last season>.csv.
+        route_prior = {}
+        try:
+            import csv as _csvg
+            _gf = os.path.join(cache_dir, "pff", "pff_receiving_2025.csv")
+            with open(_gf, encoding="utf-8") as fh:
+                for row in _csvg.DictReader(fh):
+                    try:
+                        if row.get("position") == "WR" and float(row.get("routes") or 0) >= 50 and row.get("grades_pass_route"):
+                            route_prior[_cbnorm(row["player"])] = round(float(row["grades_pass_route"]), 1)
+                    except ValueError:
+                        continue
+        except Exception as _e:
+            print(f"WARN SIM_PFF_ROUTE_PRIOR skipped ({_e})")
+        f.write("// last season's PFF route grade for WRs (>= 50 routes), by norm name: shadow v2.7 route-grade residual\n")
+        f.write("window.SIM_PFF_ROUTE_PRIOR = ")
+        json.dump(route_prior, f, separators=(",", ":"))
+        f.write(";\n")
     rookies = sum(1 for m in meta.values() if m["exp"] == 0)
     print(f"wrapped sleeper_meta.js  ({len(meta)} players, {rookies} true rookies, {len(cb_status)} elite CBs)")
 except Exception as e:
@@ -638,6 +710,14 @@ except Exception as e:
     if not os.path.exists(os.path.join(OUT, "sim_weather.js")):
         with open(os.path.join(OUT, "sim_weather.js"), "w", encoding="utf-8") as f:
             f.write("window.SIM_WEATHER_2026 = {};\n")
+
+# Future game totals re-rated from this season's lines (build_future_totals.py, 2026-09-29): runs on the
+# betting file copied above, non-fatal - a failure leaves yesterday's file (or none = the book's lines as posted).
+try:
+    import build_future_totals as _bft
+    _bft.build()
+except Exception as e:
+    print(f"WARN sim_future_totals.js skipped ({e}) - future weeks keep the book's posted lines")
 
 # Cache-bust every script tag in index.html (?v=epoch) so browsers always
 # pick up new builds — same pattern as the main site.

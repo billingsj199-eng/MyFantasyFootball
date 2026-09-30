@@ -1,0 +1,85 @@
+=== Risers in the top 60-150: growth terms, linear ADP at the top, split fits, top-150-only fit ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  player-seasons by tier: top 60 353, ADP 61-100 201, ADP 101-150 230, top 150 784, ADP-weighted all 1404
+
+=== top 60 (LOYO) ===
+  top 60: base (live ridge)                    n= 353 MSE  9.505 | vs base ridge  +0.00% (0/7) | vs Clay  +6.20% (2/7)  [base vs Clay +6.20%]
+  top 60: +growth                              n= 353 MSE  9.814 | vs base ridge  +3.25% (0/7) | vs Clay  +9.65% (2/7)  [base vs Clay +6.20%]
+  top 60: +linear ADP top-60                   n= 353 MSE  9.581 | vs base ridge  +0.81% (4/7) | vs Clay  +7.05% (1/7)  [base vs Clay +6.20%]
+  top 60: +growth +linear ADP                  n= 353 MSE  9.919 | vs base ridge  +4.36% (2/7) | vs Clay +10.83% (1/7)  [base vs Clay +6.20%]
+  top 60: split young / vet                    n= 353 MSE 10.040 | vs base ridge  +5.63% (2/7) | vs Clay +12.18% (1/7)  [base vs Clay +6.20%]
+  top 60: fit on ADP <= 150 only               n= 353 MSE  9.682 | vs base ridge  +1.86% (4/7) | vs Clay  +8.18% (2/7)  [base vs Clay +6.20%]
+  top 60: 0.5 base + 0.5 Clay (info)           n= 353 MSE  8.850 | vs base ridge  -6.89% (6/7) | vs Clay  -1.12% (3/7)  [base vs Clay +6.20%]
+
+=== ADP 61-100 (LOYO) ===
+  ADP 61-100: base (live ridge)                n= 201 MSE  9.292 | vs base ridge  +0.00% (0/7) | vs Clay  -0.99% (4/7)  [base vs Clay -0.99%]
+  ADP 61-100: +growth                          n= 201 MSE  9.517 | vs base ridge  +2.42% (2/7) | vs Clay  +1.41% (4/7)  [base vs Clay -0.99%]
+  ADP 61-100: +linear ADP top-60               n= 201 MSE  9.601 | vs base ridge  +3.32% (3/7) | vs Clay  +2.30% (3/7)  [base vs Clay -0.99%]
+  ADP 61-100: +growth +linear ADP              n= 201 MSE  9.883 | vs base ridge  +6.36% (1/7) | vs Clay  +5.31% (2/7)  [base vs Clay -0.99%]
+  ADP 61-100: split young / vet                n= 201 MSE  9.570 | vs base ridge  +2.99% (4/7) | vs Clay  +1.97% (5/7)  [base vs Clay -0.99%]
+  ADP 61-100: fit on ADP <= 150 only           n= 201 MSE  9.398 | vs base ridge  +1.13% (3/7) | vs Clay  +0.13% (4/7)  [base vs Clay -0.99%]
+  ADP 61-100: 0.5 base + 0.5 Clay (info)       n= 201 MSE  8.740 | vs base ridge  -5.94% (6/7) | vs Clay  -6.87% (6/7)  [base vs Clay -0.99%]
+
+=== ADP 101-150 (LOYO) ===
+  ADP 101-150: base (live ridge)               n= 230 MSE  9.144 | vs base ridge  +0.00% (0/7) | vs Clay  -4.03% (4/7)  [base vs Clay -4.03%]
+  ADP 101-150: +growth                         n= 230 MSE  9.011 | vs base ridge  -1.45% (6/7) | vs Clay  -5.42% (4/7)  [base vs Clay -4.03%]
+  ADP 101-150: +linear ADP top-60              n= 230 MSE  9.166 | vs base ridge  +0.24% (3/7) | vs Clay  -3.80% (4/7)  [base vs Clay -4.03%]
+  ADP 101-150: +growth +linear ADP             n= 230 MSE  8.996 | vs base ridge  -1.62% (5/7) | vs Clay  -5.58% (4/7)  [base vs Clay -4.03%]
+  ADP 101-150: split young / vet               n= 230 MSE  8.790 | vs base ridge  -3.88% (4/7) | vs Clay  -7.75% (4/7)  [base vs Clay -4.03%]
+  ADP 101-150: fit on ADP <= 150 only          n= 230 MSE  9.460 | vs base ridge  +3.45% (3/7) | vs Clay  -0.72% (4/7)  [base vs Clay -4.03%]
+  ADP 101-150: 0.5 base + 0.5 Clay (info)      n= 230 MSE  8.544 | vs base ridge  -6.57% (5/7) | vs Clay -10.33% (5/7)  [base vs Clay -4.03%]
+
+=== top 150 (LOYO) ===
+  top 150: base (live ridge)                   n= 784 MSE  9.347 | vs base ridge  +0.00% (0/7) | vs Clay  +1.30% (3/7)  [base vs Clay +1.30%]
+  top 150: +growth                             n= 784 MSE  9.507 | vs base ridge  +1.72% (0/7) | vs Clay  +3.04% (3/7)  [base vs Clay +1.30%]
+  top 150: +linear ADP top-60                  n= 784 MSE  9.467 | vs base ridge  +1.28% (3/7) | vs Clay  +2.60% (2/7)  [base vs Clay +1.30%]
+  top 150: +growth +linear ADP                 n= 784 MSE  9.645 | vs base ridge  +3.19% (1/7) | vs Clay  +4.53% (2/7)  [base vs Clay +1.30%]
+  top 150: split young / vet                   n= 784 MSE  9.561 | vs base ridge  +2.29% (2/7) | vs Clay  +3.62% (3/7)  [base vs Clay +1.30%]
+  top 150: fit on ADP <= 150 only              n= 784 MSE  9.545 | vs base ridge  +2.12% (4/7) | vs Clay  +3.45% (3/7)  [base vs Clay +1.30%]
+  top 150: 0.5 base + 0.5 Clay (info)          n= 784 MSE  8.734 | vs base ridge  -6.56% (7/7) | vs Clay  -5.35% (5/7)  [base vs Clay +1.30%]
+
+=== ADP-weighted all (LOYO) ===
+  ADP-weighted all: base (live ridge)          n=1404 MSE  9.466 | vs base ridge  +0.00% (0/7) | vs Clay  -3.69% (4/7)  [base vs Clay -3.69%]
+  ADP-weighted all: +growth                    n=1404 MSE  9.649 | vs base ridge  +1.93% (0/7) | vs Clay  -1.84% (3/7)  [base vs Clay -3.69%]
+  ADP-weighted all: +linear ADP top-60         n=1404 MSE  9.433 | vs base ridge  -0.35% (4/7) | vs Clay  -4.03% (5/7)  [base vs Clay -3.69%]
+  ADP-weighted all: +growth +linear ADP        n=1404 MSE  9.648 | vs base ridge  +1.92% (1/7) | vs Clay  -1.84% (4/7)  [base vs Clay -3.69%]
+  ADP-weighted all: split young / vet          n=1404 MSE  9.875 | vs base ridge  +4.31% (2/7) | vs Clay  +0.46% (3/7)  [base vs Clay -3.69%]
+  ADP-weighted all: fit on ADP <= 150 only     n=1404 MSE 10.281 | vs base ridge  +8.61% (0/7) | vs Clay  +4.60% (3/7)  [base vs Clay -3.69%]
+  ADP-weighted all: 0.5 base + 0.5 Clay (info) n=1404 MSE  9.018 | vs base ridge  -4.73% (6/7) | vs Clay  -8.25% (7/7)  [base vs Clay -3.69%]
+
+=== Forward 2021-25 (fit on earlier seasons only), top 150 and ADP-weighted ===
+  forward top 60: base (live ridge)            n= 275 MSE 10.147 | vs base ridge  +0.00% (0/5) | vs Clay +13.54% (1/5)  [base vs Clay +13.54%]
+  forward ADP 61-100: base (live ridge)        n= 160 MSE  9.081 | vs base ridge  +0.00% (0/5) | vs Clay  +5.65% (2/5)  [base vs Clay +5.65%]
+  forward top 150: base (live ridge)           n= 617 MSE  9.872 | vs base ridge  +0.00% (0/5) | vs Clay  +6.10% (2/5)  [base vs Clay +6.10%]
+  forward ADP-weighted all: base (live ridge)  n=1096 MSE 10.306 | vs base ridge  +0.00% (0/5) | vs Clay  +5.55% (1/5)  [base vs Clay +5.55%]
+  forward top 60: +growth                      n= 275 MSE 10.558 | vs base ridge  +4.05% (1/5) | vs Clay +18.14% (0/5)  [base vs Clay +13.54%]
+  forward ADP 61-100: +growth                  n= 160 MSE  9.087 | vs base ridge  +0.06% (3/5) | vs Clay  +5.71% (2/5)  [base vs Clay +5.65%]
+  forward top 150: +growth                     n= 617 MSE 10.105 | vs base ridge  +2.36% (0/5) | vs Clay  +8.60% (1/5)  [base vs Clay +6.10%]
+  forward ADP-weighted all: +growth            n=1096 MSE 10.646 | vs base ridge  +3.30% (0/5) | vs Clay  +9.03% (1/5)  [base vs Clay +5.55%]
+  forward top 60: +linear ADP top-60           n= 275 MSE 10.657 | vs base ridge  +5.03% (2/5) | vs Clay +19.26% (0/5)  [base vs Clay +13.54%]
+  forward ADP 61-100: +linear ADP top-60       n= 160 MSE  9.705 | vs base ridge  +6.86% (1/5) | vs Clay +12.90% (1/5)  [base vs Clay +5.65%]
+  forward top 150: +linear ADP top-60          n= 617 MSE 10.296 | vs base ridge  +4.29% (1/5) | vs Clay +10.65% (1/5)  [base vs Clay +6.10%]
+  forward ADP-weighted all: +linear ADP top-60 n=1096 MSE 10.327 | vs base ridge  +0.21% (2/5) | vs Clay  +5.77% (1/5)  [base vs Clay +5.55%]
+  forward top 60: +growth +linear ADP          n= 275 MSE 11.148 | vs base ridge  +9.87% (0/5) | vs Clay +24.75% (0/5)  [base vs Clay +13.54%]
+  forward ADP 61-100: +growth +linear ADP      n= 160 MSE  9.695 | vs base ridge  +6.76% (1/5) | vs Clay +12.79% (1/5)  [base vs Clay +5.65%]
+  forward top 150: +growth +linear ADP         n= 617 MSE 10.540 | vs base ridge  +6.76% (0/5) | vs Clay +13.28% (0/5)  [base vs Clay +6.10%]
+  forward ADP-weighted all: +growth +linear ADP n=1096 MSE 10.606 | vs base ridge  +2.91% (1/5) | vs Clay  +8.62% (1/5)  [base vs Clay +5.55%]
+
+=== The rows where Clay sat 2+ above the base ridge inside the top 60 (n=24) ===
+  base (live ridge)            mean pred 13.00 (act 15.22, Clay 15.55) MSE  15.56 vs Clay   9.67
+  +growth                      mean pred 13.06 (act 15.22, Clay 15.55) MSE  15.86 vs Clay   9.67
+  +linear ADP top-60           mean pred 13.23 (act 15.22, Clay 15.55) MSE  15.34 vs Clay   9.67
+  +growth +linear ADP          mean pred 13.32 (act 15.22, Clay 15.55) MSE  15.88 vs Clay   9.67
+  split young / vet            mean pred 13.07 (act 15.22, Clay 15.55) MSE  15.65 vs Clay   9.67
+  fit on ADP <= 150 only       mean pred 13.06 (act 15.22, Clay 15.55) MSE  16.45 vs Clay   9.67
+  0.5 base + 0.5 Clay (info)   mean pred 14.28 (act 15.22, Clay 15.55) MSE  10.90 vs Clay   9.67
+
+ADP-weighted (all rows): best Clay-free = +linear ADP top-60 -0.35% vs the live ridge (4/7), -4.03% vs Clay. forward top 60: base (live ridge) +0.0% vs base / +13.5% vs Clay; forward ADP 61-100: base (live ridge) +0.0% vs base / +5.7% vs Clay; forward top 60: +growth +4.0% vs base / +18.1% vs Clay; forward ADP 61-100: +growth +0.1% vs base / +5.7% vs Clay; forward top 60: +linear ADP top-60 +5.0% vs base / +19.3% vs Clay; forward ADP 61-100: +linear ADP top-60 +6.9% vs base / +12.9% vs Clay; forward top 60: +growth +linear ADP +9.9% vs base / +24.8% vs Clay; forward ADP 61-100: +growth +linear ADP +6.8% vs base / +12.8% vs Clay
+wrote data/risers_backtest.js (24s)

@@ -1,0 +1,76 @@
+﻿=== Early-season prior: delay / early boost / taper on the prior strength, per position ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+
+=== Diagnostic (top 150, weighted MSE): the current shadow vs its frozen prior and vs the Clay blend, by games played ===
+  1 game     n=  784 | shadow vs frozen prior  +1.07% | shadow vs Clay blend  -3.19%
+  2 games    n=  784 | shadow vs frozen prior  -1.28% | shadow vs Clay blend  -2.11%
+  3 games    n=  783 | shadow vs frozen prior  -2.15% | shadow vs Clay blend  -3.21%
+  4-5 games  n= 1542 | shadow vs frozen prior  -2.08% | shadow vs Clay blend  -1.09%
+  6+ games   n= 6405 | shadow vs frozen prior  -3.77% | shadow vs Clay blend  -1.57%
+    QB games 1-3: shadow vs frozen -2.10% | rank rho shadow 0.3807 vs frozen 0.3818
+    RB games 1-3: shadow vs frozen -1.68% | rank rho shadow 0.5171 vs frozen 0.5083
+    WR games 1-3: shadow vs frozen +0.46% | rank rho shadow 0.3405 vs frozen 0.3406
+    TE games 1-3: shadow vs frozen +0.39% | rank rho shadow 0.1670 vs frozen 0.1320
+
+=== LOYO selection per position (chosen on weighted top-150 MSE); picks by held-out season ===
+  QB: boost@g<=1 3, delay 1, boost@g<=1 1.5, boost@g<=1 2, delay 0, delay 0, delay 0
+  RB: delay 1, boost@g<=1 5, delay 0.5, delay 0.5, delay 0.5, delay 1, delay 1
+  WR: boost@g<=2 5, delay 1, delay 1, delay 1, taper 4, delay 1.5, boost@g<=3 5
+  TE: delay 3, delay 3, delay 1, delay 3, taper 4, delay 3, delay 3
+
+=== LOYO: selected early-prior vs the current shadow; cell = weighted MSE change (seasons better) | rank rho change | pairs pts | vs Clay ===
+  QB  1 game: +1.40% (0/7) rho -0.0103 pairs -0.21 | Clay +3.08% (was +1.66%)  ||  2 games: +1.37% (0/7) rho -0.0082 pairs -0.12 | Clay +7.03% (was +5.58%)  ||  3 games: +0.42% (0/7) rho +0.0025 pairs +0.12 | Clay -1.54% (was -1.95%)  ||  4-5 games: +0.01% (0/7) rho +0.0000 pairs +0.00 | Clay -0.54% (was -0.55%)  ||  6+ games: +0.00% (0/7) rho +0.0017 pairs +0.05 | Clay -2.09% (was -2.09%)  ||  games 1-3: +1.09% (0/7) rho -0.0061 pairs -0.11 | Clay +2.76% (was +1.66%)  ||  ALL (incl week 1): +0.21% (0/7) rho +0.0000 pairs +0.00 | Clay -0.73% (was -0.93%)
+  RB  1 game: +0.15% (4/7) rho -0.0017 pairs -0.08 | Clay -6.02% (was -6.17%)  ||  2 games: +0.27% (3/7) rho -0.0031 pairs -0.23 | Clay -0.66% (was -0.92%)  ||  3 games: +0.54% (1/7) rho -0.0039 pairs -0.25 | Clay -2.19% (was -2.72%)  ||  4-5 games: +0.13% (2/7) rho +0.0015 pairs +0.00 | Clay -0.97% (was -1.10%)  ||  6+ games: -0.02% (5/7) rho +0.0003 pairs +0.00 | Clay -1.95% (was -1.93%)  ||  games 1-3: +0.32% (4/7) rho -0.0026 pairs -0.15 | Clay -3.07% (was -3.38%)  ||  ALL (incl week 1): +0.08% (3/7) rho -0.0001 pairs -0.04 | Clay -2.38% (was -2.45%)
+  WR  1 game: -2.10% (7/7) rho +0.0167 pairs +0.85 | Clay -6.07% (was -4.06%)  ||  2 games: -0.26% (3/7) rho +0.0145 pairs +0.29 | Clay -4.61% (was -4.36%)  ||  3 games: +1.18% (3/7) rho +0.0011 pairs -0.55 | Clay -2.14% (was -3.28%)  ||  4-5 games: +0.28% (1/7) rho +0.0090 pairs -0.08 | Clay -1.62% (was -1.90%)  ||  6+ games: +0.01% (2/7) rho -0.0002 pairs +0.02 | Clay -1.17% (was -1.18%)  ||  games 1-3: -0.39% (5/7) rho +0.0016 pairs +0.28 | Clay -4.27% (was -3.89%)  ||  ALL (incl week 1): -0.03% (4/7) rho +0.0007 pairs +0.03 | Clay -1.82% (was -1.79%)
+  TE  1 game: +0.50% (2/7) rho +0.0037 pairs -0.66 | Clay +5.84% (was +5.32%)  ||  2 games: -0.58% (3/7) rho +0.0080 pairs +0.96 | Clay -10.36% (was -9.84%)  ||  3 games: +2.02% (3/7) rho -0.0517 pairs -2.58 | Clay -6.35% (was -8.21%)  ||  4-5 games: -0.05% (4/7) rho +0.0046 pairs +2.12 | Clay +1.55% (was +1.60%)  ||  6+ games: +0.03% (4/7) rho -0.0067 pairs -0.44 | Clay -0.69% (was -0.72%)  ||  games 1-3: +0.61% (2/7) rho -0.0384 pairs -1.20 | Clay -2.66% (was -3.25%)  ||  ALL (incl week 1): +0.13% (3/7) rho -0.0117 pairs -0.33 | Clay -0.89% (was -1.01%)
+  ALL 1 game: -0.46% (4/7) rho +0.0021 pairs -0.02 | Clay -3.64% (was -3.19%)  ||  2 games: +0.16% (4/7) rho +0.0028 pairs +0.23 | Clay -1.95% (was -2.11%)  ||  3 games: +0.88% (3/7) rho -0.0130 pairs -0.82 | Clay -2.36% (was -3.21%)  ||  4-5 games: +0.16% (2/7) rho +0.0038 pairs +0.51 | Clay -0.93% (was -1.09%)  ||  6+ games: +0.00% (3/7) rho -0.0012 pairs -0.09 | Clay -1.57% (was -1.57%)  ||  games 1-3: +0.18% (3/7) rho -0.0114 pairs -0.30 | Clay -2.69% (was -2.86%)  ||  ALL (incl week 1): +0.06% (3/7) rho -0.0028 pairs -0.08 | Clay -1.77% (was -1.83%)
+
+=== Every candidate at FIXED settings, games 1-3, top 150 (weighted MSE vs current | seasons better) by position ===
+  delay 0.5          QB +0.30% (3/7), games 4+ -0.05% | RB -0.17% (4/7), games 4+ -0.06% | WR -0.53% (7/7), games 4+ -0.01% | TE -0.34% (2/7), games 4+ -0.08%
+  delay 1            QB +0.83% (3/7), games 4+ -0.09% | RB -0.09% (4/7), games 4+ -0.11% | WR -0.92% (7/7), games 4+ -0.00% | TE -0.42% (2/7), games 4+ -0.14%
+  delay 1.5          QB +1.31% (2/7), games 4+ -0.11% | RB +0.24% (3/7), games 4+ -0.14% | WR -0.90% (5/7), games 4+ +0.01% | TE -0.59% (3/7), games 4+ -0.20%
+  delay 2            QB +1.94% (1/7), games 4+ -0.12% | RB +0.81% (3/7), games 4+ -0.16% | WR -0.79% (4/7), games 4+ +0.04% | TE -0.59% (3/7), games 4+ -0.25%
+  delay 3            QB +2.15% (1/7), games 4+ -0.08% | RB +1.71% (2/7), games 4+ -0.07% | WR -0.46% (4/7), games 4+ +0.16% | TE -0.39% (2/7), games 4+ -0.28%
+  boost g<=1 1.5     QB +0.01% (3/7), games 4+ +0.00% | RB -0.17% (4/7), games 4+ +0.00% | WR -0.29% (7/7), games 4+ +0.00% | TE -0.00% (3/7), games 4+ +0.00%
+  boost g<=2 1.5     QB +0.47% (3/7), games 4+ +0.00% | RB -0.12% (4/7), games 4+ +0.00% | WR -0.42% (6/7), games 4+ +0.00% | TE -0.33% (3/7), games 4+ +0.00%
+  boost g<=3 1.5     QB +0.36% (1/7), games 4+ +0.00% | RB +0.00% (3/7), games 4+ +0.00% | WR -0.41% (5/7), games 4+ +0.00% | TE -0.53% (4/7), games 4+ +0.00%
+  boost g<=1 2       QB +0.04% (3/7), games 4+ +0.00% | RB -0.24% (4/7), games 4+ +0.00% | WR -0.42% (7/7), games 4+ +0.00% | TE +0.02% (3/7), games 4+ +0.00%
+  boost g<=2 2       QB +0.77% (3/7), games 4+ +0.00% | RB -0.12% (4/7), games 4+ +0.00% | WR -0.59% (6/7), games 4+ +0.00% | TE -0.43% (3/7), games 4+ +0.00%
+  boost g<=3 2       QB +0.65% (1/7), games 4+ +0.00% | RB +0.14% (3/7), games 4+ +0.00% | WR -0.54% (5/7), games 4+ +0.00% | TE -0.68% (3/7), games 4+ +0.00%
+  boost g<=1 3       QB +0.08% (3/7), games 4+ +0.00% | RB -0.29% (4/7), games 4+ +0.00% | WR -0.54% (7/7), games 4+ +0.00% | TE +0.07% (3/7), games 4+ +0.00%
+  boost g<=2 3       QB +1.13% (2/7), games 4+ +0.00% | RB -0.06% (4/7), games 4+ +0.00% | WR -0.74% (6/7), games 4+ +0.00% | TE -0.47% (3/7), games 4+ +0.00%
+  boost g<=3 3       QB +1.03% (1/7), games 4+ +0.00% | RB +0.43% (3/7), games 4+ +0.00% | WR -0.61% (4/7), games 4+ +0.00% | TE -0.73% (2/7), games 4+ +0.00%
+  boost g<=1 5       QB +0.12% (3/7), games 4+ +0.00% | RB -0.31% (4/7), games 4+ +0.00% | WR -0.63% (7/7), games 4+ +0.00% | TE +0.12% (2/7), games 4+ +0.00%
+  boost g<=2 5       QB +1.46% (2/7), games 4+ +0.00% | RB +0.04% (4/7), games 4+ +0.00% | WR -0.83% (6/7), games 4+ +0.00% | TE -0.46% (3/7), games 4+ +0.00%
+  boost g<=3 5       QB +1.42% (1/7), games 4+ +0.00% | RB +0.80% (3/7), games 4+ +0.00% | WR -0.60% (4/7), games 4+ +0.00% | TE -0.67% (2/7), games 4+ +0.00%
+  taper 0.5          QB +0.23% (3/7), games 4+ -0.01% | RB -0.13% (4/7), games 4+ -0.01% | WR -0.38% (7/7), games 4+ -0.01% | TE -0.29% (4/7), games 4+ -0.03%
+  taper 1            QB +0.42% (2/7), games 4+ -0.01% | RB -0.13% (4/7), games 4+ -0.02% | WR -0.56% (7/7), games 4+ -0.02% | TE -0.44% (3/7), games 4+ -0.06%
+  taper 2            QB +0.71% (2/7), games 4+ -0.02% | RB -0.04% (4/7), games 4+ -0.03% | WR -0.71% (6/7), games 4+ -0.03% | TE -0.59% (3/7), games 4+ -0.10%
+  taper 4            QB +1.06% (1/7), games 4+ -0.03% | RB +0.19% (3/7), games 4+ -0.05% | WR -0.78% (5/7), games 4+ -0.04% | TE -0.67% (3/7), games 4+ -0.17%
+
+  forward picks: QB: delay 0, delay 0, delay 0, delay 0, delay 0 | RB: delay 0, boost@g<=1 3, boost@g<=1 5, delay 1, boost@g<=1 5 | WR: boost@g<=3 5, boost@g<=3 5, delay 3, boost@g<=3 5, boost@g<=3 5 | TE: taper 4, boost@g<=3 5, boost@g<=3 5, delay 2, taper 4
+
+=== FORWARD 2021-25: selected early-prior vs the current shadow; cell = weighted MSE change (seasons better) | rank rho change | pairs pts | vs Clay ===
+  QB  1 game: +0.00% (0/5) rho +0.0000 pairs +0.00 | Clay -0.25% (was -0.25%)  ||  2 games: +0.00% (0/5) rho +0.0000 pairs +0.00 | Clay +1.60% (was +1.60%)  ||  3 games: +0.00% (0/5) rho +0.0000 pairs +0.00 | Clay -1.65% (was -1.65%)  ||  4-5 games: +0.00% (0/5) rho +0.0000 pairs +0.00 | Clay -1.66% (was -1.66%)  ||  6+ games: +0.00% (0/5) rho +0.0000 pairs +0.00 | Clay -2.22% (was -2.22%)  ||  games 1-3: +0.00% (0/5) rho +0.0000 pairs +0.00 | Clay -0.19% (was -0.19%)  ||  ALL (incl week 1): +0.00% (0/5) rho +0.0000 pairs +0.00 | Clay -1.64% (was -1.64%)
+  RB  1 game: -0.23% (2/5) rho -0.0159 pairs -0.36 | Clay -6.74% (was -6.53%)  ||  2 games: +0.42% (0/5) rho -0.0009 pairs -0.11 | Clay +2.88% (was +2.45%)  ||  3 games: +0.51% (0/5) rho -0.0013 pairs -0.12 | Clay -0.96% (was -1.46%)  ||  4-5 games: -0.06% (1/5) rho +0.0022 pairs +0.22 | Clay -2.01% (was -1.95%)  ||  6+ games: -0.00% (1/5) rho +0.0006 pairs -0.00 | Clay -2.39% (was -2.39%)  ||  games 1-3: +0.23% (2/5) rho -0.0056 pairs -0.14 | Clay -1.85% (was -2.07%)  ||  ALL (incl week 1): +0.04% (2/5) rho -0.0009 pairs -0.02 | Clay -2.57% (was -2.61%)
+  WR  1 game: -2.11% (5/5) rho +0.0307 pairs +1.20 | Clay -5.77% (was -3.74%)  ||  2 games: -0.14% (2/5) rho -0.0026 pairs +0.03 | Clay -5.12% (was -4.98%)  ||  3 games: +2.04% (1/5) rho +0.0039 pairs -0.24 | Clay +0.15% (was -1.85%)  ||  4-5 games: +0.34% (0/5) rho -0.0022 pairs -0.25 | Clay -2.16% (was -2.49%)  ||  6+ games: +0.03% (0/5) rho +0.0004 pairs +0.09 | Clay -0.80% (was -0.83%)  ||  games 1-3: -0.21% (2/5) rho -0.0134 pairs +0.34 | Clay -3.73% (was -3.53%)  ||  ALL (incl week 1): +0.02% (2/5) rho -0.0003 pairs +0.04 | Clay -1.75% (was -1.77%)
+  TE  1 game: +2.55% (1/5) rho -0.0018 pairs -1.10 | Clay +0.88% (was -1.62%)  ||  2 games: -0.07% (2/5) rho +0.0708 pairs +3.66 | Clay -6.44% (was -6.38%)  ||  3 games: +0.39% (2/5) rho -0.1298 pairs -5.08 | Clay -4.92% (was -5.29%)  ||  4-5 games: -0.28% (2/5) rho +0.0031 pairs +1.08 | Clay +3.37% (was +3.66%)  ||  6+ games: -0.07% (2/5) rho -0.0014 pairs -0.04 | Clay -2.14% (was -2.07%)  ||  games 1-3: +0.91% (2/5) rho -0.0292 pairs -1.33 | Clay -3.69% (was -4.56%)  ||  ALL (incl week 1): +0.05% (2/5) rho -0.0061 pairs -0.27 | Clay -1.57% (was -1.62%)
+  ALL 1 game: -0.83% (3/5) rho +0.0032 pairs -0.07 | Clay -4.93% (was -4.14%)  ||  2 games: +0.11% (3/5) rho +0.0168 pairs +0.89 | Clay -1.24% (was -1.35%)  ||  3 games: +1.02% (2/5) rho -0.0318 pairs -1.36 | Clay -0.91% (was -1.92%)  ||  4-5 games: +0.09% (3/5) rho +0.0008 pairs +0.26 | Clay -1.43% (was -1.51%)  ||  6+ games: +0.00% (2/5) rho -0.0001 pairs +0.01 | Clay -1.71% (was -1.72%)  ||  games 1-3: +0.06% (3/5) rho -0.0121 pairs -0.28 | Clay -2.50% (was -2.56%)  ||  ALL (incl week 1): +0.03% (2/5) rho -0.0018 pairs -0.06 | Clay -2.01% (was -2.03%)
+
+Early-season prior, top 150: games 1-3 +0.18% MSE (3/7), rank -0.0114; all weeks +0.06% (3/7), rank -0.0028. Forward: games 1-3 +0.06% (3/5), rank -0.0121; all weeks +0.03% (2/5).
+wrote data/early_prior.js (40s)

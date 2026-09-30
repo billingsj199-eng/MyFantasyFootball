@@ -1,0 +1,53 @@
+=== Vacated role on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | joined to the rebuilt live layers: 17556 rows, vacated-role boost on 5926 (mean x1.100, max x2.68), QB inheritance on 11
+
+=== Reads: actual / shadow on boosted rows (shadow WITHOUT the layer) ===
+  all boosted        n= 5926 act/shadow 1.057 act/shipped 1.096 shadow vs shipped -1.46% | mean pool_mult 1.100
+  boost 1.00-1.05    n= 3133 act/shadow 1.002 act/shipped 1.023 shadow vs shipped -1.52% | mean pool_mult 1.016
+  boost 1.05-1.15    n= 1561 act/shadow 1.068 act/shipped 1.108 shadow vs shipped +0.47% | mean pool_mult 1.094
+  boost 1.15-1.4     n=  976 act/shadow 1.184 act/shipped 1.289 shadow vs shipped -3.10% | mean pool_mult 1.242
+  boost > 1.4        n=  256 act/shadow 1.410 act/shipped 1.582 shadow vs shipped -6.42% | mean pool_mult 1.627
+  boosted RB         n= 1178 act/shadow 1.132 act/shipped 1.188 | mean pool_mult 1.183
+  boosted WR         n= 3381 act/shadow 1.026 act/shipped 1.061 | mean pool_mult 1.088
+  boosted TE         n= 1367 act/shadow 1.057 act/shipped 1.085 | mean pool_mult 1.059
+
+=== Sweeps: shadow x pool_mult^k, LOYO vs shadow (k = 1 is the live strength) ===
+  vacated-role boost ^k, all boosted rows (n=5926)
+    grid pooled MSE: 0.0:40.586  0.5:40.153  0.75:40.144  1.0:40.330  1.25:40.773  1.5:41.556  2.0:44.632
+    LOYO 40.1445 vs shadow 40.5790 (-1.07%), seasons better than shadow 6/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 0.5, 0.5], pooled best 0.75 | shadow vs shipped -1.46% -> -2.52%
+    ^k, RB (n=1178)
+    grid pooled MSE: 0.0:56.216  0.5:54.439  0.75:54.116  1.0:54.346  1.25:55.320  1.5:57.302  2.0:65.917
+    LOYO 53.9664 vs shadow 56.1929 (-3.96%), seasons better than shadow 5/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75 | shadow vs shipped -2.05% -> -5.93%
+    ^k, WR (n=3381)
+    grid pooled MSE: 0.0:40.620  0.5:40.491  0.75:40.569  1.0:40.774  1.25:41.139  1.5:41.708  2.0:43.703
+    LOYO 40.1919 vs shadow 40.3487 (-0.39%), seasons better than shadow 3/7, picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], pooled best 0.5 | shadow vs shipped -1.33% -> -1.71%
+    ^k, TE (n=1367)
+    grid pooled MSE: 0.0:27.568  0.5:27.478  0.75:27.490  1.0:27.556  1.25:27.689  1.5:27.910  2.0:28.737
+    LOYO 27.6406 vs shadow 27.6934 (-0.19%), seasons better than shadow 4/7, picks [0.75, 0.5, 0.75, 0.5, 0.5, 0.5, 0.5], pooled best 0.5 | shadow vs shipped -0.91% -> -1.10%
+    ^k, boost <= 1.05 (n=3133)
+    grid pooled MSE: 0.0:39.014  0.5:39.039  0.75:39.058  1.0:39.082  1.25:39.110  1.5:39.143  2.0:39.224
+    LOYO 38.8728 vs shadow 38.8728 (+0.00%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -1.52% -> -1.52%
+    ^k, boost 1.05-1.15 (n=1561)
+    grid pooled MSE: 0.0:43.322  0.5:42.993  0.75:42.956  1.0:43.013  1.25:43.171  1.5:43.439  2.0:44.335
+    LOYO 42.8213 vs shadow 43.1433 (-0.75%), seasons better than shadow 4/7, picks [0.75, 0.75, 0.5, 0.75, 0.75, 0.5, 0.75], pooled best 0.75 | shadow vs shipped +0.47% -> -0.28%
+    ^k, boost > 1.15 (n=1232)
+    grid pooled MSE: 0.0:40.552  0.5:38.889  0.75:38.882  1.0:39.686  1.25:41.583  1.5:44.956  2.0:58.435
+    LOYO 39.9195 vs shadow 41.6689 (-4.20%), seasons better than shadow 6/7, picks [0.75, 0.75, 0.75, 0.75, 0.5, 0.5, 0.5], pooled best 0.75 | shadow vs shipped -3.76% -> -7.80%
+    backup-QB inheritance ^k (n small) (n=11)
+    grid pooled MSE: 0.0:18.524  0.5:59.192  1.0:286.135  1.5:1071.028
+    LOYO 24.9483 vs shadow 24.9483 (-0.00%), seasons better than shadow 0/3, picks [0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -15.34% -> -15.34%
+
+=== Candidate: pool_mult^0.75 ===
+  ALL rows: vs shipped -1.62% (7/7) | vs shadow -0.38% (6/7) | boosted rows n=5926 -1.28% (6/7)
+  FORWARD (2021-25, k picked on earlier seasons): all rows -0.44% (5/5) | boosted rows -1.46% (5/5)
+
+Vacated-role boost on the shadow: k best 0.75 (-1.07% on boosted rows vs shadow without it, 6/7, PASS); ^k, RB k 0.75 -3.96% (5/7); ^k, WR k 0.5 -0.39% (3/7); ^k, TE k 0.5 -0.19% (4/7); ^k, boost <= 1.05 k 0.0 +0.00% (0/7); ^k, boost 1.05-1.15 k 0.75 -0.75% (4/7); ^k, boost > 1.15 k 0.75 -4.20% (6/7); backup-QB inheritance ^k (n small) k 0.0 -0.00% (0/3). Forward boosted rows -1.46% (5/5).
+wrote data/vacated_shadow_backtest.js (24s)

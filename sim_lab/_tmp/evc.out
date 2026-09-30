@@ -1,0 +1,81 @@
+=== Cleaning the in-season evidence: opponent-adjusted, partial games, teammate context ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  sanity: Vegas x FPA from the context file vs the harness matchup multiplier: corr 1.0000, mean abs diff 0.0000
+  sanity: manual blend == NW.blend: max abs diff 0.000000
+  past games scanned 127,728 | partial at 0.50: 3,661 (2.9%) | at 0.65: 7,383 (5.8%) | games in a different teammate context from the week being projected: 28,546 (22.3%)
+
+=== Top 150, importance-weighted error vs the current shadow (seasons better of 7) and change in weekly rank rho; final week dropped ===
+  A opp-adjusted k=0.5                     ALL weeks 2+ (no final): -0.18% (6/7) rho +0.0020 | weeks 2-4: +0.00% (4/7) rho +0.0007 | weeks 5-9: -0.20% (5/7) rho +0.0019 | 10 to playoffs: -0.26% (6/7) rho +0.0044 | PLAYOFFS: -0.24% (5/7) rho -0.0005 | ADP 1-60: -0.20% (6/7) rho -0.0000 | ADP 61-150: -0.14% (6/7) rho +0.0016
+  A opp-adjusted k=1                       ALL weeks 2+ (no final): -0.30% (6/7) rho +0.0022 | weeks 2-4: +0.02% (3/7) rho +0.0011 | weeks 5-9: -0.36% (5/7) rho +0.0003 | 10 to playoffs: -0.42% (5/7) rho +0.0062 | PLAYOFFS: -0.38% (4/7) rho +0.0005 | ADP 1-60: -0.32% (6/7) rho -0.0012 | ADP 61-150: -0.24% (4/7) rho +0.0014
+  A FPA-only k=1                           ALL weeks 2+ (no final): -0.00% (3/7) rho +0.0006 | weeks 2-4: +0.01% (1/7) rho +0.0006 | weeks 5-9: -0.03% (4/7) rho +0.0001 | 10 to playoffs: +0.03% (2/7) rho +0.0018 | PLAYOFFS: -0.01% (4/7) rho -0.0006 | ADP 1-60: +0.01% (4/7) rho +0.0003 | ADP 61-150: -0.02% (4/7) rho +0.0006
+  A Vegas-only k=1                         ALL weeks 2+ (no final): -0.30% (6/7) rho +0.0026 | weeks 2-4: +0.01% (3/7) rho +0.0016 | weeks 5-9: -0.33% (5/7) rho +0.0011 | 10 to playoffs: -0.45% (6/7) rho +0.0066 | PLAYOFFS: -0.37% (5/7) rho -0.0002 | ADP 1-60: -0.33% (6/7) rho +0.0001 | ADP 61-150: -0.22% (4/7) rho +0.0008
+  B drop partial < 0.50                    ALL weeks 2+ (no final): +0.19% (2/7) rho -0.0014 | weeks 2-4: +0.01% (3/7) rho -0.0004 | weeks 5-9: +0.10% (1/7) rho -0.0013 | 10 to playoffs: +0.38% (2/7) rho -0.0019 | PLAYOFFS: +0.23% (1/7) rho -0.0017 | ADP 1-60: +0.16% (3/7) rho -0.0013 | ADP 61-150: +0.26% (3/7) rho -0.0038
+  B drop partial < 0.65                    ALL weeks 2+ (no final): +0.21% (2/7) rho -0.0005 | weeks 2-4: -0.11% (4/7) rho -0.0000 | weeks 5-9: +0.09% (2/7) rho +0.0014 | 10 to playoffs: +0.39% (2/7) rho -0.0014 | PLAYOFFS: +0.47% (1/7) rho -0.0029 | ADP 1-60: +0.12% (4/7) rho +0.0016 | ADP 61-150: +0.47% (2/7) rho -0.0061
+  B rescale partial < 0.65                 ALL weeks 2+ (no final): +0.06% (3/7) rho -0.0011 | weeks 2-4: -0.01% (5/7) rho +0.0003 | weeks 5-9: +0.03% (3/7) rho -0.0020 | 10 to playoffs: +0.14% (3/7) rho -0.0000 | PLAYOFFS: +0.07% (4/7) rho -0.0026 | ADP 1-60: +0.00% (4/7) rho +0.0010 | ADP 61-150: +0.23% (1/7) rho -0.0023
+  B drop partial < 0.50 (RB/WR/TE only)    ALL weeks 2+ (no final): +0.17% (2/7) rho -0.0009 | weeks 2-4: +0.01% (3/7) rho -0.0004 | weeks 5-9: +0.09% (0/7) rho -0.0013 | 10 to playoffs: +0.34% (2/7) rho -0.0006 | PLAYOFFS: +0.21% (1/7) rho -0.0015 | ADP 1-60: +0.15% (3/7) rho -0.0013 | ADP 61-150: +0.22% (4/7) rho -0.0025
+  C context w=0.5                          ALL weeks 2+ (no final): -0.02% (3/7) rho -0.0008 | weeks 2-4: +0.04% (4/7) rho +0.0002 | weeks 5-9: -0.10% (5/7) rho +0.0017 | 10 to playoffs: +0.07% (4/7) rho -0.0016 | PLAYOFFS: -0.11% (3/7) rho -0.0048 | ADP 1-60: -0.06% (4/7) rho +0.0013 | ADP 61-150: +0.08% (2/7) rho -0.0020
+  C context w=0.25                         ALL weeks 2+ (no final): +0.03% (2/7) rho -0.0018 | weeks 2-4: +0.10% (3/7) rho +0.0024 | weeks 5-9: -0.12% (5/7) rho +0.0003 | 10 to playoffs: +0.20% (4/7) rho -0.0034 | PLAYOFFS: -0.08% (3/7) rho -0.0069 | ADP 1-60: -0.04% (3/7) rho +0.0023 | ADP 61-150: +0.21% (1/7) rho -0.0046
+  C context w=0                            ALL weeks 2+ (no final): +0.10% (3/7) rho -0.0035 | weeks 2-4: +0.03% (5/7) rho +0.0038 | weeks 5-9: -0.15% (5/7) rho -0.0001 | 10 to playoffs: +0.63% (2/7) rho -0.0073 | PLAYOFFS: -0.21% (3/7) rho -0.0107 | ADP 1-60: +0.05% (3/7) rho -0.0031 | ADP 61-150: +0.25% (2/7) rho -0.0060
+  C star-only w=0.5                        ALL weeks 2+ (no final): +0.00% (3/7) rho -0.0009 | weeks 2-4: -0.01% (2/7) rho +0.0001 | weeks 5-9: -0.06% (5/7) rho +0.0005 | 10 to playoffs: +0.10% (1/7) rho -0.0022 | PLAYOFFS: -0.03% (3/7) rho -0.0022 | ADP 1-60: -0.01% (4/7) rho +0.0008 | ADP 61-150: +0.03% (3/7) rho -0.0012
+  C QB-only w=0.5                          ALL weeks 2+ (no final): -0.03% (3/7) rho -0.0003 | weeks 2-4: +0.04% (4/7) rho +0.0000 | weeks 5-9: -0.06% (3/7) rho +0.0022 | 10 to playoffs: -0.02% (4/7) rho -0.0004 | PLAYOFFS: -0.10% (4/7) rho -0.0047 | ADP 1-60: -0.06% (3/7) rho +0.0026 | ADP 61-150: +0.04% (2/7) rho -0.0003
+  A k=0.5 + B drop 0.50                    ALL weeks 2+ (no final): -0.00% (4/7) rho +0.0008 | weeks 2-4: +0.01% (3/7) rho +0.0005 | weeks 5-9: -0.11% (4/7) rho +0.0003 | 10 to playoffs: +0.11% (4/7) rho +0.0025 | PLAYOFFS: -0.03% (3/7) rho -0.0007 | ADP 1-60: -0.04% (4/7) rho +0.0000 | ADP 61-150: +0.10% (3/7) rho -0.0026
+  A k=0.5 + B drop 0.50 + C w=0.5          ALL weeks 2+ (no final): -0.02% (4/7) rho +0.0012 | weeks 2-4: +0.06% (3/7) rho +0.0016 | weeks 5-9: -0.17% (3/7) rho +0.0032 | 10 to playoffs: +0.16% (3/7) rho +0.0013 | PLAYOFFS: -0.11% (4/7) rho -0.0031 | ADP 1-60: -0.09% (4/7) rho +0.0006 | ADP 61-150: +0.19% (3/7) rho -0.0030
+  A Vegas-only k=1.5                       ALL weeks 2+ (no final): -0.36% (6/7) rho +0.0027 | weeks 2-4: +0.02% (3/7) rho +0.0004 | weeks 5-9: -0.43% (5/7) rho +0.0006 | 10 to playoffs: -0.53% (6/7) rho +0.0074 | PLAYOFFS: -0.40% (3/7) rho +0.0015 | ADP 1-60: -0.39% (6/7) rho +0.0000 | ADP 61-150: -0.28% (4/7) rho -0.0000
+  A Vegas-only k=2                         ALL weeks 2+ (no final): -0.36% (6/7) rho +0.0027 | weeks 2-4: +0.04% (3/7) rho +0.0002 | weeks 5-9: -0.49% (5/7) rho +0.0015 | 10 to playoffs: -0.53% (5/7) rho +0.0078 | PLAYOFFS: -0.34% (2/7) rho -0.0006 | ADP 1-60: -0.39% (5/7) rho -0.0020 | ADP 61-150: -0.30% (4/7) rho +0.0002
+  A Vegas-only k=3                         ALL weeks 2+ (no final): -0.22% (4/7) rho +0.0013 | weeks 2-4: +0.09% (3/7) rho -0.0008 | weeks 5-9: -0.51% (5/7) rho +0.0014 | 10 to playoffs: -0.31% (4/7) rho +0.0052 | PLAYOFFS: +0.01% (2/7) rho -0.0026 | ADP 1-60: -0.22% (4/7) rho -0.0046 | ADP 61-150: -0.23% (4/7) rho -0.0013
+  A Vegas-only k=1, 4+ games only          ALL weeks 2+ (no final): -0.30% (6/7) rho +0.0021 | weeks 2-4: +0.00% (0/7) rho +0.0000 | weeks 5-9: -0.33% (5/7) rho +0.0005 | 10 to playoffs: -0.43% (6/7) rho +0.0066 | PLAYOFFS: -0.37% (5/7) rho -0.0002 | ADP 1-60: -0.32% (6/7) rho +0.0006 | ADP 61-150: -0.22% (4/7) rho -0.0001
+=== Vegas-adjusted evidence by position (top 150 weighted, weeks 2+, final week dropped) ===
+  A Vegas-only k=1         QB -0.69% (6/7) rho +0.0045 | RB -0.43% (6/7) rho -0.0014 | WR -0.04% (5/7) rho +0.0006 | TE -0.20% (4/7) rho +0.0070
+  A Vegas-only k=2         QB -1.07% (5/7) rho +0.0043 | RB -0.45% (5/7) rho -0.0027 | WR -0.02% (5/7) rho +0.0016 | TE -0.20% (4/7) rho +0.0080
+
+=== On the rows each fix actually moves (projection changes by 0.3+ points), top 150: error vs the shadow on those rows, mean move, were we too high or too low before ===
+  A opp-adjusted k=0.5                     touched   360 ( 3.7%) | -2.18% (5/7) | moved UP n=47: actual 11.73 old 11.87 new 12.23 | moved DOWN n=313: actual 16.86 old 19.05 new 18.64
+  A opp-adjusted k=1                       touched  1413 (14.5%) | -1.36% (5/7) | moved UP n=318: actual 12.21 old 11.42 new 11.89 | moved DOWN n=1095: actual 16.55 old 17.67 new 17.14
+  A FPA-only k=1                           touched 4 rows - too few
+  A Vegas-only k=1                         touched  1369 (14.0%) | -1.36% (6/7) | moved UP n=310: actual 12.14 old 11.42 new 11.88 | moved DOWN n=1059: actual 16.68 old 17.72 new 17.19
+  B drop partial < 0.50                    touched   871 ( 8.9%) | +2.69% (2/7) | moved UP n=831: actual 11.00 old 11.16 new 11.93 | moved DOWN n=40: actual  9.76 old 10.25 new  9.71
+  B drop partial < 0.65                    touched  1523 (15.6%) | +1.66% (2/7) | moved UP n=1415: actual 10.78 old 10.87 new 11.64 | moved DOWN n=108: actual 11.10 old 11.05 new 10.44
+  B rescale partial < 0.65                 touched   672 ( 6.9%) | +1.36% (3/7) | moved UP n=672: actual 11.31 old 11.76 new 12.32 | moved DOWN n=0: actual   nan old   nan new   nan
+  B drop partial < 0.50 (RB/WR/TE only)    touched   812 ( 8.3%) | +2.63% (2/7) | moved UP n=772: actual 10.48 old 10.66 new 11.43 | moved DOWN n=40: actual  9.76 old 10.25 new  9.71
+  C context w=0.5                          touched   941 ( 9.6%) | -0.49% (5/7) | moved UP n=489: actual 10.38 old  9.48 new  9.97 | moved DOWN n=452: actual 12.06 old 12.12 new 11.55
+  C context w=0.25                         touched  1504 (15.4%) | +0.16% (2/7) | moved UP n=818: actual 10.17 old  9.71 new 10.38 | moved DOWN n=686: actual 11.61 old 11.60 new 10.84
+  C context w=0                            touched  1580 (16.2%) | +0.64% (3/7) | moved UP n=870: actual 10.30 old  9.86 new 10.69 | moved DOWN n=710: actual 11.28 old 11.34 new 10.40
+  C star-only w=0.5                        touched   384 ( 3.9%) | -0.18% (4/7) | moved UP n=172: actual 11.64 old  9.84 new 10.35 | moved DOWN n=212: actual 12.70 old 12.38 new 11.79
+  C QB-only w=0.5                          touched   662 ( 6.8%) | -0.62% (3/7) | moved UP n=366: actual  9.81 old  9.43 new  9.91 | moved DOWN n=296: actual 11.23 old 11.49 new 10.97
+  A k=0.5 + B drop 0.50                    touched  1187 (12.2%) | +0.43% (3/7) | moved UP n=856: actual 10.99 old 11.14 new 11.89 | moved DOWN n=331: actual 16.27 old 18.07 new 17.64
+  A k=0.5 + B drop 0.50 + C w=0.5          touched  1887 (19.3%) | +0.03% (3/7) | moved UP n=1202: actual 10.71 old 10.48 new 11.17 | moved DOWN n=685: actual 14.18 old 14.97 new 14.44
+  A Vegas-only k=1.5                       touched  2201 (22.6%) | -1.22% (6/7) | moved UP n=583: actual 11.73 old 11.19 new 11.75 | moved DOWN n=1618: actual 16.00 old 16.77 new 16.14
+  A Vegas-only k=2                         touched  2862 (29.3%) | -0.96% (6/7) | moved UP n=850: actual 11.55 old 11.11 new 11.75 | moved DOWN n=2012: actual 15.72 old 16.28 new 15.55
+  A Vegas-only k=3                         touched  3899 (40.0%) | -0.51% (4/7) | moved UP n=1265: actual 11.57 old 10.99 new 11.79 | moved DOWN n=2634: actual 15.17 old 15.59 new 14.70
+  A Vegas-only k=1, 4+ games only          touched  1339 (13.7%) | -1.40% (6/7) | moved UP n=306: actual 12.15 old 11.44 new 11.90 | moved DOWN n=1033: actual 16.67 old 17.71 new 17.18
+
+=== Teammate context, split by THIS week's situation (top 150) ===
+  C context w=0.5        this week NORMAL (pure evidence cleaning)  rows  7914 | +0.00% (4/7) | touched  339: -0.82% | actual 11.43 old 11.31 new 11.21
+  C context w=0.5        this week a star / QB is OUT               rows  1844 | -0.15% (5/7) | touched  602: -0.30% | actual 11.05 old 10.43 new 10.46
+  C context w=0          this week NORMAL (pure evidence cleaning)  rows  7914 | +0.08% (2/7) | touched  748: +0.71% | actual 10.79 old 11.02 new 10.90
+  C context w=0          this week a star / QB is OUT               rows  1844 | +0.21% (3/7) | touched  832: +0.58% | actual 10.69 old 10.09 new 10.26
+  C star-only w=0.5      this week NORMAL (pure evidence cleaning)  rows  7914 | -0.01% (4/7) | touched  122: -1.48% | actual 12.24 old 12.00 new 11.57
+  C star-only w=0.5      this week a star / QB is OUT               rows  1844 | +0.08% (3/7) | touched  262: +0.52% | actual 12.22 old 10.89 new 10.94
+  C QB-only w=0.5        this week NORMAL (pure evidence cleaning)  rows  7914 | +0.01% (2/7) | touched  231: -0.37% | actual 11.13 old 10.88 new 10.97
+  C QB-only w=0.5        this week a star / QB is OUT               rows  1844 | -0.22% (4/7) | touched  431: -0.75% | actual 10.08 old 10.06 new 10.08
+=== Same fix on the LIVE Clay blend (Clay per-game prior, P = 5, points evidence): error vs today's Clay blend ===
+  A Vegas-only k=1         ALL weeks 2+ (no final): -0.72% (6/7) rho +0.0037 | weeks 2-4: -0.29% (6/7) rho +0.0026 | weeks 5-9: -0.77% (5/7) rho +0.0042 | 10 to playoffs: -0.97% (7/7) rho +0.0054 | PLAYOFFS: -0.76% (5/7) rho +0.0012 | ADP 1-60: -0.89% (7/7) rho +0.0002 | ADP 61-150: -0.26% (6/7) rho +0.0021
+  A Vegas-only k=1.5       ALL weeks 2+ (no final): -0.90% (6/7) rho +0.0042 | weeks 2-4: -0.38% (6/7) rho +0.0021 | weeks 5-9: -1.01% (5/7) rho +0.0075 | 10 to playoffs: -1.19% (7/7) rho +0.0037 | PLAYOFFS: -0.87% (5/7) rho +0.0014 | ADP 1-60: -1.11% (6/7) rho -0.0030 | ADP 61-150: -0.29% (5/7) rho +0.0006
+
+Evidence cleaning, top 150 weighted, weeks 2+ with the final week dropped: best = A Vegas-only k=1.5 -0.36% vs the current shadow (6/7), rank rho +0.0027; playoffs -0.40% (3/7).
+wrote data/evidence_clean.js (62s)

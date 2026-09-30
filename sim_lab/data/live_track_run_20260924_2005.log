@@ -1,0 +1,303 @@
+games: ATL@GB
+tracking 22 players on ['ATL', 'GB'], season 2026 week 3, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  ATL: pre PRE f=0.00 score 0.0-0.0
+  GB: pre PRE f=0.00 score 0.0-0.0
+    Bijan Robinson        RB   proj  20.3  scored   0.0  live fit  20.3 | +exit  20.3 | v1  20.3 | naive  20.3
+    Jordan Love           QB   proj  17.2  scored   0.0  live fit  17.2 | +exit  17.2 | v1  17.2 | naive  17.2
+    Christian Watson      WR   proj  14.8  scored   0.0  live fit  14.8 | +exit  14.8 | v1  14.8 | naive  14.8
+    Matthew Golden        WR   proj  14.8  scored   0.0  live fit  14.8 | +exit  14.8 | v1  14.8 | naive  14.8
+    Drake London          WR   proj  14.7  scored   0.0  live fit  14.7 | +exit  14.7 | v1  14.7 | naive  14.7
+    Michael Penix Jr.     QB   proj  12.1  scored   0.0  live fit  12.1 | +exit  12.1 | v1  12.1 | naive  12.1
+    Tucker Kraft          TE   proj  11.6  scored   0.0  live fit  11.6 | +exit  11.6 | v1  11.6 | naive  11.6
+    MarShawn Lloyd        RB   proj   9.1  scored   0.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   9.1
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   8.5 | +exit   8.5 | v1   8.5 | naive   8.5
+    Kyle Pitts            TE   proj   8.2  scored   0.0  live fit   8.2 | +exit   8.2 | v1   8.2 | naive   8.2
+    Green Bay Packers D/STDST  proj   7.7  scored   0.0  live fit   7.7 | +exit   7.7 | v1   7.7 | naive   7.7
+    Nick Folk             K    proj   7.2  scored   0.0  live fit   7.2 | +exit   7.2 | v1   7.2 | naive   7.2
+  ATL: in Q1 12:48 f=0.04 score 0.0-0.0
+  GB: in Q1 12:48 f=0.04 score 0.0-0.0
+    Bijan Robinson        RB   proj  20.3  scored   3.1  live fit  22.5 | +exit  22.5 | v1  22.7 | naive  22.7
+    Jordan Love           QB   proj  17.2  scored   0.3  live fit  16.8 | +exit  16.8 | v1  16.9 | naive  16.9
+    Christian Watson      WR   proj  14.8  scored   0.0  live fit  13.7 | +exit  13.7 | v1  14.3 | naive  14.3
+    Matthew Golden        WR   proj  14.8  scored   0.0  live fit  13.7 | +exit  13.7 | v1  14.3 | naive  14.3
+    Drake London          WR   proj  14.7  scored   0.0  live fit  13.6 | +exit  13.6 | v1  14.2 | naive  14.2
+    Michael Penix Jr.     QB   proj  12.1  scored  -0.3  live fit  11.2 | +exit  11.2 | v1  11.3 | naive  11.3
+    Tucker Kraft          TE   proj  11.6  scored   1.7  live fit  12.7 | +exit  12.7 | v1  12.9 | naive  12.9
+    MarShawn Lloyd        RB   proj   9.1  scored   0.0  live fit   8.2 | +exit   8.2 | v1   8.8 | naive   8.8
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   8.2 | +exit   8.2 | v1   8.2 | naive   8.2
+    Kyle Pitts            TE   proj   8.2  scored   0.0  live fit   7.6 | +exit   7.6 | v1   7.9 | naive   7.9
+    Green Bay Packers D/STDST  proj   7.7  scored  12.0  live fit   7.7 | +exit   7.7 | v1  19.4 | naive  19.4
+    Nick Folk             K    proj   7.2  scored   0.0  live fit   6.9 | +exit   6.9 | v1   6.9 | naive   6.9
+  ATL: in Q1 10:06 f=0.08 score 0.0-0.0
+  GB: in Q1 10:06 f=0.08 score 0.0-0.0
+    Bijan Robinson        RB   proj  20.3  scored   4.0  live fit  22.7 | +exit  22.7 | v1  22.6 | naive  22.6
+    Jordan Love           QB   proj  17.2  scored   0.2  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Christian Watson      WR   proj  14.8  scored   0.0  live fit  13.0 | +exit  13.0 | v1  13.6 | naive  13.6
+    Matthew Golden        WR   proj  14.8  scored   0.0  live fit  13.0 | +exit  13.0 | v1  13.6 | naive  13.6
+    Drake London          WR   proj  14.7  scored   0.0  live fit  12.9 | +exit  12.9 | v1  13.5 | naive  13.5
+    Michael Penix Jr.     QB   proj  12.1  scored  -0.3  live fit  10.6 | +exit  10.6 | v1  10.8 | naive  10.8
+    Tucker Kraft          TE   proj  11.6  scored   1.6  live fit  12.1 | +exit  12.1 | v1  12.2 | naive  12.2
+    MarShawn Lloyd        RB   proj   9.1  scored   0.0  live fit   7.9 | +exit   7.9 | v1   8.4 | naive   8.4
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   7.8 | +exit   7.8 | v1   7.8 | naive   7.8
+    Kyle Pitts            TE   proj   8.2  scored   0.0  live fit   7.2 | +exit   7.2 | v1   7.5 | naive   7.5
+    Green Bay Packers D/STDST  proj   7.7  scored  12.0  live fit   7.9 | +exit   7.9 | v1  19.1 | naive  19.1
+    Nick Folk             K    proj   7.2  scored   0.0  live fit   6.6 | +exit   6.6 | v1   6.6 | naive   6.6
+  ATL: in Q1 5:13 f=0.16 score 0.0-7.0
+  GB: in Q1 5:13 f=0.16 score 7.0-0.0
+    Bijan Robinson        RB   proj  20.3  scored   4.0  live fit  21.6 | +exit  21.6 | v1  21.1 | naive  21.0
+    Jordan Love           QB   proj  17.2  scored   7.3  live fit  21.4 | +exit  21.4 | v1  22.6 | naive  21.7
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  19.1 | +exit  19.1 | v1  20.8 | naive  19.8
+    Matthew Golden        WR   proj  14.8  scored   5.5  live fit  16.9 | +exit  16.9 | v1  18.5 | naive  17.9
+    Drake London          WR   proj  14.7  scored   0.0  live fit  13.1 | +exit  13.1 | v1  11.8 | naive  12.3
+    Michael Penix Jr.     QB   proj  12.1  scored  -0.3  live fit  10.8 | +exit  10.8 | v1   9.3 | naive   9.8
+    Tucker Kraft          TE   proj  11.6  scored   3.4  live fit  12.2 | +exit  12.2 | v1  13.4 | naive  13.1
+    MarShawn Lloyd        RB   proj   9.1  scored   2.7  live fit  10.2 | +exit  10.2 | v1  10.6 | naive  10.3
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   8.0 | +exit   8.0 | v1   8.0 | naive   8.1
+    Kyle Pitts            TE   proj   8.2  scored   0.0  live fit   7.3 | +exit   7.3 | v1   6.6 | naive   6.9
+    Green Bay Packers D/STDST  proj   7.7  scored  12.0  live fit   9.2 | +exit   9.2 | v1  20.7 | naive  18.4
+    Nick Folk             K    proj   7.2  scored   0.0  live fit   5.8 | +exit   5.8 | v1   5.8 | naive   6.0
+  ATL: in Q1 1:32 f=0.22 score 0.0-7.0
+  GB: in Q1 1:32 f=0.22 score 7.0-0.0
+    Bijan Robinson        RB   proj  20.3  scored  16.0  live fit  35.3 | +exit  35.3 | v1  34.0 | naive  31.7
+    Jordan Love           QB   proj  17.2  scored   7.3  live fit  20.3 | +exit  20.3 | v1  21.3 | naive  20.6
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  18.2 | +exit  18.2 | v1  19.7 | naive  18.9
+    Matthew Golden        WR   proj  14.8  scored   5.5  live fit  16.1 | +exit  16.1 | v1  17.4 | naive  17.0
+    Drake London          WR   proj  14.7  scored   0.0  live fit  12.1 | +exit  12.1 | v1  10.8 | naive  11.4
+    Michael Penix Jr.     QB   proj  12.1  scored  -0.1  live fit  10.2 | +exit  10.2 | v1   8.7 | naive   9.3
+    Tucker Kraft          TE   proj  11.6  scored   3.4  live fit  11.6 | +exit  11.6 | v1  12.6 | naive  12.4
+    MarShawn Lloyd        RB   proj   9.1  scored   2.7  live fit   9.5 | +exit   9.5 | v1   9.9 | naive   9.8
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   7.4 | +exit   7.4 | v1   7.4 | naive   7.6
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   8.4 | +exit   8.4 | v1   7.8 | naive   7.9
+    Green Bay Packers D/STDST  proj   7.7  scored   9.0  live fit   7.7 | +exit   7.7 | v1  16.4 | naive  15.0
+    Nick Folk             K    proj   7.2  scored   0.0  live fit   5.3 | +exit   5.3 | v1   5.3 | naive   5.6
+  ATL: in Q2 14:48 f=0.25 score 7.0-7.0
+  GB: in Q2 14:48 f=0.25 score 7.0-7.0
+    Bijan Robinson        RB   proj  20.3  scored  16.0  live fit  33.8 | +exit  33.8 | v1  33.2 | naive  31.2
+    Jordan Love           QB   proj  17.2  scored   7.5  live fit  21.8 | +exit  21.8 | v1  20.9 | naive  20.4
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  18.9 | +exit  18.9 | v1  19.1 | naive  18.4
+    Matthew Golden        WR   proj  14.8  scored   5.5  live fit  16.8 | +exit  16.8 | v1  16.9 | naive  16.6
+    Drake London          WR   proj  14.7  scored   0.0  live fit  10.6 | +exit  10.6 | v1  10.3 | naive  11.0
+    Michael Penix Jr.     QB   proj  12.1  scored  -0.1  live fit   8.6 | +exit   8.6 | v1   8.3 | naive   8.9
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  14.2 | +exit  14.2 | v1  14.4 | naive  14.0
+    MarShawn Lloyd        RB   proj   9.1  scored   3.4  live fit  10.4 | +exit  10.4 | v1  10.4 | naive  10.2
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   7.1 | +exit   7.1 | v1   7.1 | naive   7.3
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   7.6 | +exit   7.6 | v1   7.5 | naive   7.6
+    Green Bay Packers D/STDST  proj   7.7  scored   6.0  live fit   6.0 | +exit   6.0 | v1  12.5 | naive  11.8
+    Nick Folk             K    proj   7.2  scored   1.0  live fit   6.2 | +exit   6.2 | v1   6.2 | naive   6.4
+  ATL: in Q2 9:51 f=0.34 score 7.0-7.0
+  GB: in Q2 9:51 f=0.34 score 7.0-7.0
+    Bijan Robinson        RB   proj  20.3  scored  16.4  live fit  32.1 | +exit  32.1 | v1  31.5 | naive  29.9
+    Jordan Love           QB   proj  17.2  scored   7.5  live fit  20.2 | +exit  20.2 | v1  19.2 | naive  18.9
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  17.7 | +exit  17.7 | v1  17.6 | naive  17.2
+    Matthew Golden        WR   proj  14.8  scored   5.5  live fit  15.6 | +exit  15.6 | v1  15.4 | naive  15.3
+    Drake London          WR   proj  14.7  scored   1.4  live fit  11.0 | +exit  11.0 | v1  10.6 | naive  11.2
+    Michael Penix Jr.     QB   proj  12.1  scored   0.8  live fit   8.6 | +exit   8.6 | v1   8.2 | naive   8.8
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  13.3 | +exit  13.3 | v1  13.2 | naive  13.0
+    MarShawn Lloyd        RB   proj   9.1  scored   3.4  live fit   9.5 | +exit   9.5 | v1   9.5 | naive   9.4
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   6.3 | +exit   6.3 | v1   6.3 | naive   6.7
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   6.9 | +exit   6.9 | v1   6.7 | naive   7.0
+    Green Bay Packers D/STDST  proj   7.7  scored   6.0  live fit   6.0 | +exit   6.0 | v1  11.7 | naive  11.1
+    Nick Folk             K    proj   7.2  scored   1.0  live fit   5.5 | +exit   5.5 | v1   5.5 | naive   5.8
+  ATL: in Q2 4:48 f=0.42 score 10.0-7.0
+  GB: in Q2 4:48 f=0.42 score 7.0-10.0
+    Bijan Robinson        RB   proj  20.3  scored  18.2  live fit  31.8 | +exit  31.8 | v1  31.4 | naive  30.0
+    Jordan Love           QB   proj  17.2  scored   7.5  live fit  18.8 | +exit  17.8 | v1  17.5 | naive  17.5  exit x0.91 (stale 0.18)
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  16.6 | +exit  16.6 | v1  16.2 | naive  16.0
+    Matthew Golden        WR   proj  14.8  scored   5.5  live fit  14.6 | +exit  14.6 | v1  14.0 | naive  14.1
+    Drake London          WR   proj  14.7  scored   4.8  live fit  12.9 | +exit  12.9 | v1  13.1 | naive  13.3
+    Michael Penix Jr.     QB   proj  12.1  scored   1.7  live fit   8.1 | +exit   8.1 | v1   8.2 | naive   8.7
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  12.5 | +exit  12.5 | v1  12.1 | naive  12.0
+    MarShawn Lloyd        RB   proj   9.1  scored   3.4  live fit   8.7 | +exit   8.7 | v1   8.6 | naive   8.7
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   5.6 | +exit   5.6 | v1   5.6 | naive   5.9
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   5.9 | +exit   5.9 | v1   6.0 | naive   6.3
+    Green Bay Packers D/STDST  proj   7.7  scored   6.0  live fit   6.0 | +exit   6.0 | v1  10.9 | naive  10.5
+    Nick Folk             K    proj   7.2  scored   5.0  live fit   9.5 | +exit   9.5 | v1   9.5 | naive   9.2
+  ATL: in Q2 2:00 f=0.47 score 10.0-7.0
+  GB: in Q2 2:00 f=0.47 score 7.0-10.0
+    Bijan Robinson        RB   proj  20.3  scored  18.5  live fit  30.6 | +exit  30.6 | v1  30.5 | naive  29.3
+    Jordan Love           QB   proj  17.2  scored   7.5  live fit  17.3 | +exit  15.0 | v1  16.6 | naive  16.7  exit x0.77 (stale 0.23)
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  15.5 | +exit  15.5 | v1  15.4 | naive  15.3
+    Matthew Golden        WR   proj  14.8  scored   5.5  live fit  13.4 | +exit  13.4 | v1  13.2 | naive  13.4
+    Drake London          WR   proj  14.7  scored   7.8  live fit  15.1 | +exit  15.1 | v1  15.8 | naive  15.6
+    Michael Penix Jr.     QB   proj  12.1  scored   2.7  live fit   8.4 | +exit   8.4 | v1   8.8 | naive   9.2
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  11.6 | +exit  11.6 | v1  11.5 | naive  11.5
+    MarShawn Lloyd        RB   proj   9.1  scored   3.4  live fit   8.1 | +exit   7.9 | v1   8.1 | naive   8.2  exit x0.96 (stale 0.23)
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   4.0 | +exit   4.0 | v1   4.0 | naive   4.5
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   5.3 | +exit   5.3 | v1   5.6 | naive   5.9
+    Green Bay Packers D/STDST  proj   7.7  scored   6.0  live fit   6.1 | +exit   6.1 | v1  10.4 | naive  10.1
+    Nick Folk             K    proj   7.2  scored   5.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   8.8
+  ATL: in Q2 0:50 f=0.49 score 17.0-7.0
+  GB: in Q2 0:50 f=0.49 score 7.0-17.0
+    Bijan Robinson        RB   proj  20.3  scored  19.8  live fit  31.1 | +exit  31.1 | v1  31.5 | naive  30.2
+    Jordan Love           QB   proj  17.2  scored   7.5  live fit  17.9 | +exit  14.9 | v1  16.2 | naive  16.4  exit x0.71 (stale 0.25)
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  15.9 | +exit  15.9 | v1  15.0 | naive  15.0
+    Matthew Golden        WR   proj  14.8  scored   5.5  live fit  13.8 | +exit  13.8 | v1  12.9 | naive  13.1
+    Drake London          WR   proj  14.7  scored  10.4  live fit  16.7 | +exit  16.7 | v1  18.4 | naive  17.9
+    Michael Penix Jr.     QB   proj  12.1  scored   7.6  live fit  12.8 | +exit  12.8 | v1  14.0 | naive  13.8
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  11.9 | +exit  11.9 | v1  11.2 | naive  11.3
+    MarShawn Lloyd        RB   proj   9.1  scored   3.4  live fit   8.0 | +exit   7.7 | v1   7.9 | naive   8.1  exit x0.93 (stale 0.25)
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   3.8 | +exit   3.8 | v1   3.8 | naive   4.4
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   4.7 | +exit   4.7 | v1   5.4 | naive   5.7
+    Green Bay Packers D/STDST  proj   7.7  scored   3.0  live fit   3.4 | +exit   3.4 | v1   6.9 | naive   7.0
+    Nick Folk             K    proj   7.2  scored   6.0  live fit  10.0 | +exit  10.0 | v1  10.0 | naive   9.7
+  ATL: in HALF f=0.50 score 17.0-7.0
+  GB: in HALF f=0.50 score 7.0-17.0
+    Bijan Robinson        RB   proj  20.3  scored  19.8  live fit  30.7 | +exit  30.7 | v1  31.2 | naive  29.9
+    Jordan Love           QB   proj  17.2  scored   7.8  live fit  17.9 | +exit  17.9 | v1  16.3 | naive  16.4
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  15.5 | +exit  15.5 | v1  14.8 | naive  14.8
+    Matthew Golden        WR   proj  14.8  scored   7.3  live fit  15.4 | +exit  15.4 | v1  14.7 | naive  14.7
+    Drake London          WR   proj  14.7  scored  10.4  live fit  16.4 | +exit  16.4 | v1  18.1 | naive  17.8
+    Michael Penix Jr.     QB   proj  12.1  scored   7.6  live fit  12.5 | +exit  12.5 | v1  13.8 | naive  13.6
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  11.6 | +exit  11.6 | v1  11.0 | naive  11.1
+    MarShawn Lloyd        RB   proj   9.1  scored   3.4  live fit   7.8 | +exit   7.4 | v1   7.8 | naive   8.0  exit x0.91 (stale 0.26)
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   3.7 | +exit   3.7 | v1   3.7 | naive   4.2
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   4.5 | +exit   4.5 | v1   5.3 | naive   5.6
+    Green Bay Packers D/STDST  proj   7.7  scored   3.0  live fit   3.3 | +exit   3.3 | v1   6.7 | naive   6.8
+    Nick Folk             K    proj   7.2  scored   6.0  live fit   9.9 | +exit   9.9 | v1   9.9 | naive   9.6
+  ATL: in Q3 14:17 f=0.51 score 17.0-7.0
+  GB: in Q3 14:17 f=0.51 score 7.0-17.0
+    Bijan Robinson        RB   proj  20.3  scored  19.8  live fit  30.4 | +exit  30.4 | v1  30.9 | naive  29.7
+    Jordan Love           QB   proj  17.2  scored   8.1  live fit  18.0 | +exit  18.0 | v1  16.4 | naive  16.5
+    Christian Watson      WR   proj  14.8  scored   7.4  live fit  15.4 | +exit  15.4 | v1  14.6 | naive  14.6
+    Matthew Golden        WR   proj  14.8  scored   7.3  live fit  15.3 | +exit  15.3 | v1  14.5 | naive  14.5
+    Drake London          WR   proj  14.7  scored  10.4  live fit  16.3 | +exit  16.3 | v1  17.9 | naive  17.6
+    Michael Penix Jr.     QB   proj  12.1  scored   7.6  live fit  12.4 | +exit  12.4 | v1  13.6 | naive  13.5
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  11.5 | +exit  11.5 | v1  10.9 | naive  11.0
+    MarShawn Lloyd        RB   proj   9.1  scored   3.4  live fit   7.7 | +exit   7.2 | v1   7.7 | naive   7.8  exit x0.89 (stale 0.27)
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   3.6 | +exit   3.6 | v1   3.6 | naive   4.2
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   4.4 | +exit   4.4 | v1   5.2 | naive   5.5
+    Green Bay Packers D/STDST  proj   7.7  scored   3.0  live fit   3.3 | +exit   3.3 | v1   6.6 | naive   6.8
+    Nick Folk             K    proj   7.2  scored   6.0  live fit   9.8 | +exit   9.8 | v1   9.8 | naive   9.5
+  ATL: in Q3 9:56 f=0.58 score 17.0-7.0
+  GB: in Q3 9:56 f=0.58 score 7.0-17.0
+    Bijan Robinson        RB   proj  20.3  scored  19.8  live fit  28.6 | +exit  28.6 | v1  29.1 | naive  28.2
+    Jordan Love           QB   proj  17.2  scored  10.2  live fit  19.1 | +exit  19.1 | v1  17.3 | naive  17.3
+    Christian Watson      WR   proj  14.8  scored  12.1  live fit  19.4 | +exit  19.4 | v1  18.6 | naive  18.2
+    Matthew Golden        WR   proj  14.8  scored   9.5  live fit  16.6 | +exit  16.6 | v1  15.7 | naive  15.7
+    Drake London          WR   proj  14.7  scored  10.4  live fit  15.4 | +exit  15.4 | v1  16.7 | naive  16.5
+    Michael Penix Jr.     QB   proj  12.1  scored   7.6  live fit  11.6 | +exit  11.6 | v1  12.6 | naive  12.6
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  10.7 | +exit  10.7 | v1  10.0 | naive  10.1
+    MarShawn Lloyd        RB   proj   9.1  scored   3.8  live fit   7.4 | +exit   7.4 | v1   7.4 | naive   7.6
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   3.0 | +exit   3.0 | v1   3.0 | naive   3.5
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   4.0 | +exit   4.0 | v1   4.6 | naive   4.9
+    Green Bay Packers D/STDST  proj   7.7  scored   3.0  live fit   3.2 | +exit   3.2 | v1   6.0 | naive   6.2
+    Nick Folk             K    proj   7.2  scored   6.0  live fit   9.2 | +exit   9.2 | v1   9.2 | naive   9.0
+  ATL: in Q3 3:38 f=0.69 score 24.0-7.0
+  GB: in Q3 3:38 f=0.69 score 7.0-24.0
+    Bijan Robinson        RB   proj  20.3  scored  25.7  live fit  32.4 | +exit  32.4 | v1  32.9 | naive  32.0
+    Jordan Love           QB   proj  17.2  scored  10.2  live fit  18.2 | +exit  18.2 | v1  15.4 | naive  15.5
+    Christian Watson      WR   proj  14.8  scored  12.1  live fit  18.6 | +exit  18.6 | v1  16.8 | naive  16.7
+    Matthew Golden        WR   proj  14.8  scored   9.5  live fit  15.8 | +exit  15.8 | v1  14.0 | naive  14.1
+    Drake London          WR   proj  14.7  scored  13.0  live fit  16.1 | +exit  16.1 | v1  17.8 | naive  17.6
+    Michael Penix Jr.     QB   proj  12.1  scored   8.3  live fit  10.6 | +exit  10.6 | v1  12.0 | naive  12.0
+    Tucker Kraft          TE   proj  11.6  scored   5.3  live fit  10.2 | +exit  10.2 | v1   8.7 | naive   8.9
+    MarShawn Lloyd        RB   proj   9.1  scored   3.8  live fit   6.6 | +exit   6.6 | v1   6.4 | naive   6.6
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   2.2 | +exit   2.2 | v1   2.2 | naive   2.6
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   2.9 | +exit   2.9 | v1   3.7 | naive   4.0
+    Green Bay Packers D/STDST  proj   7.7  scored   2.0  live fit   2.1 | +exit   2.1 | v1   4.1 | naive   4.4
+    Nick Folk             K    proj   7.2  scored   7.0  live fit   9.4 | +exit   9.4 | v1   9.4 | naive   9.2
+  ATL: in Q3 0:55 f=0.73 score 24.0-7.0
+  GB: in Q3 0:55 f=0.73 score 7.0-24.0
+    Bijan Robinson        RB   proj  20.3  scored  25.7  live fit  31.3 | +exit  31.3 | v1  31.8 | naive  31.1
+    Jordan Love           QB   proj  17.2  scored  10.9  live fit  18.1 | +exit  18.1 | v1  15.4 | naive  15.5
+    Christian Watson      WR   proj  14.8  scored  12.1  live fit  17.8 | +exit  17.8 | v1  16.1 | naive  16.0
+    Matthew Golden        WR   proj  14.8  scored   9.5  live fit  15.1 | +exit  15.1 | v1  13.3 | naive  13.4
+    Drake London          WR   proj  14.7  scored  13.0  live fit  15.6 | +exit  15.6 | v1  17.1 | naive  16.9
+    Michael Penix Jr.     QB   proj  12.1  scored   8.3  live fit  10.1 | +exit  10.1 | v1  11.4 | naive  11.5
+    Tucker Kraft          TE   proj  11.6  scored   5.8  live fit  10.1 | +exit  10.1 | v1   8.7 | naive   8.9
+    MarShawn Lloyd        RB   proj   9.1  scored   3.8  live fit   6.2 | +exit   6.2 | v1   6.0 | naive   6.2
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   1.8 | +exit   1.8 | v1   1.8 | naive   2.2
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   2.6 | +exit   2.6 | v1   3.4 | naive   3.7
+    Green Bay Packers D/STDST  proj   7.7  scored   2.0  live fit   2.1 | +exit   2.1 | v1   3.8 | naive   4.0
+    Nick Folk             K    proj   7.2  scored   7.0  live fit   9.0 | +exit   9.0 | v1   9.0 | naive   8.9
+  ATL: in Q4 10:57 f=0.82 score 27.0-7.0
+  GB: in Q4 10:57 f=0.82 score 7.0-27.0
+    Bijan Robinson        RB   proj  20.3  scored  26.8  live fit  30.5 | +exit  30.5 | v1  31.0 | naive  30.5
+    Jordan Love           QB   proj  17.2  scored  10.9  live fit  16.5 | +exit  16.5 | v1  13.9 | naive  14.1
+    Christian Watson      WR   proj  14.8  scored  12.1  live fit  16.6 | +exit  16.6 | v1  14.8 | naive  14.8
+    Matthew Golden        WR   proj  14.8  scored   9.5  live fit  13.9 | +exit  13.9 | v1  12.1 | naive  12.2
+    Drake London          WR   proj  14.7  scored  23.3  live fit  25.2 | +exit  25.2 | v1  26.5 | naive  26.0
+    Michael Penix Jr.     QB   proj  12.1  scored  11.6  live fit  12.7 | +exit  12.7 | v1  13.9 | naive  13.8
+    Tucker Kraft          TE   proj  11.6  scored   5.8  live fit   9.2 | +exit   9.2 | v1   7.8 | naive   7.9
+    MarShawn Lloyd        RB   proj   9.1  scored   3.8  live fit   5.5 | +exit   5.4 | v1   5.3 | naive   5.5  exit x0.94 (stale 0.24)
+    Trey Smack            K    proj   8.5  scored   0.0  live fit   1.2 | +exit   1.2 | v1   1.2 | naive   1.6
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   2.1 | +exit   2.1 | v1   2.8 | naive   3.0
+    Green Bay Packers D/STDST  proj   7.7  scored   2.0  live fit   2.0 | +exit   2.0 | v1   3.2 | naive   3.4
+    Nick Folk             K    proj   7.2  scored  10.0  live fit  11.5 | +exit  11.5 | v1  11.5 | naive  11.3
+  ATL: in Q4 8:18 f=0.86 score 27.0-14.0
+  GB: in Q4 8:18 f=0.86 score 14.0-27.0
+    Bijan Robinson        RB   proj  20.3  scored  26.8  live fit  29.8 | +exit  29.8 | v1  29.9 | naive  29.6
+    Jordan Love           QB   proj  17.2  scored  18.0  live fit  22.4 | +exit  22.4 | v1  20.5 | naive  20.4
+    Christian Watson      WR   proj  14.8  scored  18.7  live fit  22.2 | +exit  22.2 | v1  20.9 | naive  20.8
+    Matthew Golden        WR   proj  14.8  scored  18.0  live fit  21.5 | +exit  21.5 | v1  20.2 | naive  20.1
+    Drake London          WR   proj  14.7  scored  23.4  live fit  25.3 | +exit  25.3 | v1  25.8 | naive  25.4
+    Michael Penix Jr.     QB   proj  12.1  scored  11.6  live fit  12.9 | +exit  12.9 | v1  13.4 | naive  13.3
+    Tucker Kraft          TE   proj  11.6  scored   7.1  live fit   9.6 | +exit   9.6 | v1   8.6 | naive   8.7
+    MarShawn Lloyd        RB   proj   9.1  scored   3.8  live fit   5.1 | +exit   4.9 | v1   4.9 | naive   5.1  exit x0.87 (stale 0.29)
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   2.0 | +exit   2.0 | v1   2.0 | naive   2.2
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   2.2 | +exit   2.2 | v1   2.4 | naive   2.6
+    Green Bay Packers D/STDST  proj   7.7  scored   2.0  live fit   2.1 | +exit   2.1 | v1   2.9 | naive   3.1
+    Nick Folk             K    proj   7.2  scored  10.0  live fit  11.1 | +exit  11.1 | v1  11.1 | naive  11.0
+  ATL: in Q4 3:33 f=0.94 score 33.0-14.0
+  GB: in Q4 3:33 f=0.94 score 14.0-33.0
+    Bijan Robinson        RB   proj  20.3  scored  35.3  live fit  36.7 | +exit  36.7 | v1  36.7 | naive  36.5
+    Jordan Love           QB   proj  17.2  scored  18.0  live fit  20.2 | +exit  20.2 | v1  19.0 | naive  19.0
+    Christian Watson      WR   proj  14.8  scored  18.6  live fit  20.4 | +exit  20.4 | v1  19.5 | naive  19.5
+    Matthew Golden        WR   proj  14.8  scored  18.0  live fit  19.8 | +exit  19.8 | v1  18.9 | naive  18.9
+    Drake London          WR   proj  14.7  scored  28.4  live fit  29.1 | +exit  29.1 | v1  29.5 | naive  29.3
+    Michael Penix Jr.     QB   proj  12.1  scored  13.2  live fit  13.6 | +exit  13.6 | v1  14.0 | naive  14.0
+    Tucker Kraft          TE   proj  11.6  scored   6.6  live fit   7.9 | +exit   7.9 | v1   7.2 | naive   7.3
+    MarShawn Lloyd        RB   proj   9.1  scored   3.8  live fit   4.4 | +exit   4.2 | v1   4.3 | naive   4.3  exit x0.75 (stale 0.37)
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   1.4 | +exit   1.4 | v1   1.4 | naive   1.5
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   1.7 | +exit   1.7 | v1   1.9 | naive   2.0
+    Green Bay Packers D/STDST  proj   7.7  scored   1.0  live fit   1.0 | +exit   1.0 | v1   1.4 | naive   1.5
+    Nick Folk             K    proj   7.2  scored  10.0  live fit  10.5 | +exit  10.5 | v1  10.5 | naive  10.4
+  ATL: in Q4 1:55 f=0.97 score 35.0-14.0
+  GB: in Q4 1:55 f=0.97 score 14.0-35.0
+    Bijan Robinson        RB   proj  20.3  scored  35.3  live fit  36.0 | +exit  36.0 | v1  36.1 | naive  36.0
+    Jordan Love           QB   proj  17.2  scored  19.7  live fit  21.0 | +exit  21.0 | v1  20.2 | naive  20.2
+    Christian Watson      WR   proj  14.8  scored  22.6  live fit  23.6 | +exit  23.6 | v1  23.1 | naive  23.1
+    Matthew Golden        WR   proj  14.8  scored  18.0  live fit  19.0 | +exit  19.0 | v1  18.5 | naive  18.5
+    Drake London          WR   proj  14.7  scored  28.4  live fit  28.8 | +exit  28.8 | v1  29.0 | naive  28.9
+    Michael Penix Jr.     QB   proj  12.1  scored  15.2  live fit  15.4 | +exit  15.4 | v1  15.7 | naive  15.6
+    Tucker Kraft          TE   proj  11.6  scored   6.6  live fit   7.3 | +exit   7.3 | v1   6.9 | naive   7.0
+    MarShawn Lloyd        RB   proj   9.1  scored   3.8  live fit   4.1 | +exit   4.0 | v1   4.0 | naive   4.1  exit x0.71 (stale 0.39)
+    Trey Smack            K    proj   8.5  scored   1.0  live fit   1.2 | +exit   1.2 | v1   1.2 | naive   1.3
+    Kyle Pitts            TE   proj   8.2  scored   1.5  live fit   1.6 | +exit   1.6 | v1   1.7 | naive   1.8
+    Green Bay Packers D/STDST  proj   7.7  scored  -2.0  live fit  -2.0 | +exit  -2.0 | v1  -1.8 | naive  -1.8
+    Nick Folk             K    proj   7.2  scored  10.0  live fit  10.2 | +exit  10.2 | v1  10.2 | naive  10.2
+all tracked games FINAL
+
+=== LIVE GRADE live_track_2026_w3_ATL_GB.csv: 3938 snapshots, 22 players ===
+|live - final|   fitted | fit+exit | v1 | naive   (n)
+  Q1   5.06 | 5.06 | 5.82 | 5.79   (902)
+  Q2   4.20 | 4.24 | 4.56 | 4.62   (1056)
+  Q3   2.88 | 2.87 | 3.21 | 3.31   (1056)
+  Q4   1.35 | 1.35 | 1.46 | 1.49   (924)
+  ALL  3.374 | 3.380 | 3.762 | 3.803   (3938)
+
+per player (mean |live - final| over the game):  proj -> final   fitted | fit+exit | v1 | naive
+  Bijan Robinson        RB    20.3 ->  35.3   5.37 | 5.37 | 5.33 | 6.15
+  Jordan Love           QB    17.2 ->  19.5   1.63 | 1.87 | 2.42 | 2.30
+  Christian Watson      WR    14.8 ->  22.6   5.12 | 5.12 | 5.52 | 5.72
+  Matthew Golden        WR    14.8 ->  21.0   4.97 | 4.97 | 5.45 | 5.50
+  Drake London          WR    14.7 ->  28.4   11.71 | 11.71 | 11.12 | 11.12
+  Michael Penix Jr.     QB    12.1 ->  15.0   3.94 | 3.94 | 3.55 | 3.42
+  Tucker Kraft          TE    11.6 ->   6.6   4.52 | 4.52 | 4.10 | 4.10
+  MarShawn Lloyd        RB     9.1 ->   3.8   3.78 | 3.68 | 3.80 | 3.86
+  Trey Smack            K      8.5 ->   1.0   3.34 | 3.34 | 3.34 | 3.64
+  Kyle Pitts            TE     8.2 ->   1.5   3.34 | 3.34 | 3.65 | 3.85
+  Green Bay Packers D/STDST    7.7 ->  -2.0   6.24 | 6.24 | 10.88 | 10.69
+  Nick Folk             K      7.2 ->  10.0   1.80 | 1.80 | 1.80 | 1.83
+  Chris Brooks          RB     6.3 ->   1.4   1.68 | 1.68 | 1.82 | 2.01
+  Atlanta Falcons D/ST  DST    5.8 ->   6.0   1.04 | 1.04 | 3.45 | 3.20
+  Brian Robinson Jr.    RB     5.2 ->  11.0   4.20 | 4.20 | 4.13 | 4.07
+  Jahan Dotson          WR     4.9 ->   2.1   1.65 | 1.65 | 1.85 | 1.91
+  Kaleb Johnson         RB     4.7 ->   2.6   0.56 | 0.56 | 0.61 | 0.70
+  Jonnu Smith           TE     3.4 ->   3.6   1.06 | 1.06 | 1.19 | 1.10
+  Zachariah Branch      WR     3.2 ->   1.7   1.02 | 1.02 | 1.16 | 1.17
+  Olamide Zaccheaus     WR     3.0 ->   2.9   0.73 | 0.73 | 0.90 | 0.80
+  Austin Hooper         TE     2.3 ->   9.1   3.75 | 3.75 | 3.94 | 3.60
+  Skyy Moore            WR     0.7 ->   6.1   2.79 | 2.79 | 2.74 | 2.91
+closest model per player: fitted 13  fit+exit 2  v1 3  naive 4
+wrote E:\MyFantasyFootball\sim_lab\data\live_track_2026_w3_ATL_GB_summary.json

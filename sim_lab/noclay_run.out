@@ -1,0 +1,111 @@
+=== Clay-free weekly ladder: rebuilding the shadow prior walk-forward 2019-25 ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks in 19s | shipped MSE 42.8700
+
+=== Rookie fallback model (all seasons, for reference): ppg = a + b log(pick) + c min(n_ahead,3) ===
+  QB: a  16.28  b  -0.69 (per log pick)  c   0.71 (per vet ahead)  | pick 10 & 0 ahead -> 14.68, pick 100 & 2 ahead -> 14.52
+  RB: a  19.90  b  -2.57 (per log pick)  c  -0.41 (per vet ahead)  | pick 10 & 0 ahead -> 13.99, pick 100 & 2 ahead ->  7.26
+  WR: a  13.66  b  -1.53 (per log pick)  c  -0.38 (per vet ahead)  | pick 10 & 0 ahead -> 10.15, pick 100 & 2 ahead ->  5.88
+  TE: a  11.22  b  -1.37 (per log pick)  c  -0.05 (per vet ahead)  | pick 10 & 0 ahead ->  8.07, pick 100 & 2 ahead ->  4.83
+  rookie rows weeks 1-4 (n=645), MSE of the PRIOR alone vs actual: Clay 39.64 | draft-round mean 43.89 | log-pick 41.87 | log-pick + depth 42.24 | rookie OPP where it exists 43.04
+
+=== Variants (P=5 blend x layers), MSE vs shipped ===
+  variant                                                            MSE  vs ship  yrs   QB      RB      WR      TE
+  SHIPPED (Clay prior)                                            42.870   +0.00% 0/7    +0.00   +0.00   +0.00   +0.00
+  H3 only, Clay fallback                                          43.326   +1.06% 1/7    +2.47   +0.99   +0.33   +1.24
+  MIX .5 H3 + .5 L8, Clay fallback                                43.706   +1.95% 0/7    +1.93   +1.78   +2.00   +2.22
+  MIX + age curve, Clay fallback                                  43.256   +0.90% 1/7    -1.11   +1.05   +1.70   +1.38
+  MIX + age + OPP (replace), Clay fallback  [= live shadow]       43.024   +0.36% 1/7    -1.11   +0.81   +0.72   +0.66
+  MIX + age + OPP (half), Clay fallback                           43.040   +0.40% 2/7    -1.11   +0.67   +0.86   +0.82
+  CLAY-FREE: MIX + age + OPP, POS-mean fallback                   43.229   +0.84% 1/7    -1.59   +2.15   +1.15   +0.90
+  CLAY-FREE: MIX + age + OPP, draft-round fallback                43.064   +0.45% 1/7    -1.65   +1.34   +0.82   +0.78
+  CLAY-FREE: MIX + age + OPP, rookie-OPP fallback                 43.035   +0.38% 1/7    -1.65   +1.15   +0.82   +0.65
+  CLAY-FREE: MIX + age + OPP, rookie log-pick fallback            43.021   +0.35% 2/7    -1.96   +1.17   +0.86   +0.75
+  CLAY-FREE: MIX + age + OPP, rookie log-pick + depth fallback    43.031   +0.38% 2/7    -1.92   +1.19   +0.87   +0.78
+
+=== Rows with no Clay-free prior (fallback) by week band ===
+  wk1     n= 1245  fallback  13.3%  (rookies 154, others 12)
+  wk2-4   n= 3589  fallback  14.5%  (rookies 491, others 28)
+  wk5-8   n= 4188  fallback   3.0%  (rookies 118, others 8)
+  wk9-12  n= 4063  fallback   0.7%  (rookies 27, others 2)
+  wk13+   n= 5979  fallback   0.2%  (rookies 9, others 0)
+
+=== By week band: MSE change vs shipped (live shadow | fully Clay-free) ===
+  wk1     n= 1245  live  +3.72% | free  +5.99%   free by pos QB 5.88 RB 10.87 WR 2.27 TE 9.63
+  wk2-4   n= 3589  live  +0.72% | free  +1.26%   free by pos QB -0.82 RB 2.47 WR 1.17 TE 2.15
+  wk5-8   n= 4188  live  +0.66% | free  +0.11%   free by pos QB -4.33 RB 0.81 WR 2.53 TE -0.9
+  wk9-12  n= 4063  live  +0.25% | free  +0.33%   free by pos QB -3.35 RB 1.48 WR 1.32 TE 0.7
+  wk13+   n= 5979  live  -0.61% | free  -0.75%   free by pos QB -0.61 RB -0.66 WR -1.08 TE -0.05
+
+=== By segment: MSE change vs shipped (live shadow | fully Clay-free) ===
+  vet, same team           n=13528 actual/shipped 1.034  live  +0.47%  free  +0.47%
+  vet, changed team        n= 2765 actual/shipped 1.025  live  +1.07%  free  +1.07%
+  rookie                   n= 2721 actual/shipped 1.165  live  -0.84%  free  -0.26%
+  no history, not rookie   n=   50 actual/shipped 1.117  live  +0.00%  free  +4.16%
+  2nd year                 n= 2952 actual/shipped 1.066  live  +1.56%  free  +1.56%
+
+=== Sweeps (LOYO, graded vs shipped) on the Clay-free version (draft-round fallback) ===
+  prior strength P for the Clay-free prior (n=19064)
+    grid pooled MSE: 5:43.379  2:44.159  3:43.710  4:43.489  6:43.330  8:43.325  12:43.451
+    current 5 +0.45% vs shipped | LOYO best 43.0518 (+0.42%), years better than shipped 2/7, picks [8, 8, 6, 6, 8, 8, 6], pooled best 8
+    P, QB only (n=2759)
+    grid pooled MSE: 5:60.117  2:61.533  3:60.785  4:60.368  6:59.958  8:59.795  12:59.726
+    current 5 -1.65% vs shipped | LOYO best 59.6325 (-2.18%), years better than shipped 7/7, picks [12, 12, 8, 12, 12, 12, 12], pooled best 12
+    P, RB only (n=4844)
+    grid pooled MSE: 5:48.924  2:49.463  3:49.092  4:48.954  6:48.952  8:49.084  12:49.433
+    current 5 +1.34% vs shipped | LOYO best 48.2848 (+1.34%), years better than shipped 0/7, picks [5, 5, 5, 5, 5, 5, 5], pooled best 5
+    P, WR only (n=7775)
+    grid pooled MSE: 5:42.205  2:43.064  3:42.582  4:42.335  6:42.138  8:42.103  12:42.185
+    current 5 +0.82% vs shipped | LOYO best 41.7066 (+0.61%), years better than shipped 2/7, picks [8, 8, 8, 8, 8, 8, 8], pooled best 8
+    P, TE only (n=3686)
+    grid pooled MSE: 5:26.267  2:26.707  3:26.454  4:26.329  6:26.240  8:26.240  12:26.317
+    current 5 +0.78% vs shipped | LOYO best 26.2394 (+0.76%), years better than shipped 3/7, picks [8, 8, 6, 6, 6, 6, 6], pooled best 8
+  L8 weight in the prior (0 = H3 only, 1 = L8 only) (n=19064)
+    grid pooled MSE: 0.5:43.379  0.0:43.377  0.25:43.366  0.75:43.438  1.0:43.575
+    current 0.5 +0.45% vs shipped | LOYO best 43.0896 (+0.51%), years better than shipped 1/7, picks [0.25, 0.25, 0.25, 0.5, 0.0, 0.25, 0.25], pooled best 0.25
+  shrink the prior toward the position mean (k) (n=19064)
+    grid pooled MSE: 1.0:43.379  0.9:43.309  0.8:43.302  0.7:43.357  0.6:43.475
+    current 1.0 +0.45% vs shipped | LOYO best 42.9784 (+0.25%), years better than shipped 2/7, picks [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8], pooled best 0.8
+  team-changer prior multiplier (n=19064)
+    grid pooled MSE: 1.0:43.379  0.95:43.370  0.9:43.377  0.85:43.401  0.8:43.441  1.05:43.405
+    current 1.0 +0.45% vs shipped | LOYO best 43.0657 (+0.46%), years better than shipped 1/7, picks [0.95, 0.95, 0.95, 0.95, 0.95, 0.9, 0.95], pooled best 0.95
+  rookie fallback level multiplier (n=19064)
+    grid pooled MSE: 1.0:43.379  0.8:43.423  0.9:43.364  1.1:43.469  1.2:43.634  1.3:43.872
+    current 1.0 +0.45% vs shipped | LOYO best 43.0430 (+0.40%), years better than shipped 2/7, picks [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9], pooled best 0.9
+
+=== Where the remaining gap sits at the LOYO-best P (Clay-free, by band) ===
+  wk1      +5.99%
+  wk2-4    +1.35%
+  wk5-8    -0.12%
+  wk9-12   +0.37%
+  wk13+    -0.97%
+
+=== COMBINED Clay-free candidate (rookie log-pick + depth fallback, shrink k=0.8, P {'QB': 12, 'RB': 5, 'WR': 8, 'TE': 8}) ===
+  vs shipped -0.03% (2/7 seasons better) | vs the live shadow -0.39% (5/7)
+  by position: QB -2.93%  RB +1.03%  WR +0.57%  TE +0.48%
+  wk1      +5.86%   QB 3.11 RB 11.32 WR 3.44 TE 8.48
+  wk2-4    +0.71%   QB -1.39 RB 1.9 WR 0.65 TE 1.58
+  wk5-8    -0.14%   QB -6.0 RB 1.58 WR 2.42 TE -1.3
+  wk9-12   -0.37%   QB -4.96 RB 0.88 WR 0.96 TE 0.24
+  wk13+    -1.27%   QB -1.49 RB -1.44 WR -1.45 TE 0.1
+  vet, same team            +0.06%
+  vet, changed team         +1.46%
+  rookie                    -1.92%
+  no history, not rookie    +3.97%
+  2nd year                  +0.94%
+  FORWARD (2021-25, constants from earlier seasons only): vs shipped -0.17% (2/5) | vs live shadow -0.28% (4/5)
+    wk1      +5.18%
+    wk2-4    +0.96%
+    wk5-8    -0.70%
+    wk9-12   -0.32%
+    wk13+    -1.25%
+
+Live shadow (Clay fallback) +0.36% vs shipped; fully Clay-free +0.45%; combined candidate (rookie pick + depth fallback, shrink 0.8, per-position P) -0.03% (2/7), forward -0.17% (2/5).
+wrote data/noclay_weekly_backtest.js (47s)

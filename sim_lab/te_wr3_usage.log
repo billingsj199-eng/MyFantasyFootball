@@ -1,0 +1,87 @@
+weeks in 2026 file: 3
+
+=== TARGET share, weeks 1-3 of each season (league-wide) ===
+  season        WR1     WR2     WR3    WR4+      TE      RB    all WR
+  2019         24.9    17.0    10.9     7.6    19.8    19.8      60.3
+  2020         22.4    15.9    10.6     8.6    21.6    20.6      57.6
+  2021         24.4    17.7    10.9     7.0    19.8    20.0      60.1
+  2022         25.8    17.1    10.5     7.0    20.1    19.6      60.3
+  2023         26.3    17.6    10.6     7.1    19.9    18.4      61.6
+  2024         25.4    16.7    11.0     7.6    20.0    19.0      60.8
+  2025         25.5    17.3    10.3     6.0    21.9    18.2      59.2
+  2026         24.7    17.4     9.7     6.8    23.3    17.9      58.6   <- this season
+  2019-25      25.0    17.0    10.7     7.3    20.5    19.4      60.0   avg
+  range    22.4-26.315.9-17.710.3-11.0 6.0-8.6 19.8-21.918.2-20.6
+  2026 z       -0.2    +0.5    -3.9    -0.6    +3.2    -1.7      -1.1   (standard deviations from the 7-season norm)
+
+=== half-PPR receiving POINTS share, weeks 1-3 of each season (league-wide) ===
+  season        WR1     WR2     WR3    WR4+      TE      RB    all WR
+  2019         27.8    18.3    11.4     6.4    20.2    15.8      63.9
+  2020         22.7    17.0    11.5     8.9    22.2    17.5      60.1
+  2021         24.7    19.6    11.5     7.4    19.9    16.9      63.2
+  2022         27.2    18.9    10.9     7.3    19.8    15.8      64.4
+  2023         29.8    18.3    11.3     6.7    19.0    14.9      66.1
+  2024         28.9    20.3     9.4     6.2    18.0    16.8      64.9
+  2025         26.2    19.6     8.9     7.4    22.3    15.3      62.1
+  2026         26.5    16.6    10.2     6.7    25.4    14.6      59.9   <- this season
+  2019-25      26.7    18.9    10.7     7.2    20.2    16.1      63.5   avg
+  range    22.7-29.817.0-20.3 8.9-11.5 6.2-8.9 18.0-22.314.9-17.5
+  2026 z       -0.1    -2.0    -0.5    -0.6    +3.3    -1.6      -1.8   (standard deviations from the 7-season norm)
+
+=== receiving TD share, weeks 1-3 of each season (league-wide) ===
+  season        WR1     WR2     WR3    WR4+      TE      RB    all WR
+  2019         32.7    18.2    11.9     5.7    21.4     9.4      68.6
+  2020         20.9    14.5    11.0     8.7    29.1    15.1      55.2
+  2021         22.6    25.8    12.6     6.3    20.8    11.9      67.3
+  2022         29.2    20.1    11.1     6.2    21.5    11.8      66.7
+  2023         30.5    19.5    11.7     7.0    19.5    11.7      68.8
+  2024         36.4    28.0     6.8     4.2    11.0    11.9      75.4
+  2025         23.2    27.5     4.9     9.9    23.2    11.3      65.5
+  2026         26.6    13.9     8.2     7.6    32.3    11.4      56.3   <- this season
+  2019-25      27.9    22.0    10.0     6.9    20.9    11.9      66.8   avg
+  range    20.9-36.414.5-28.0 4.9-12.6 4.2-9.9 11.0-29.1 9.4-15.1
+  2026 z       -0.2    -1.6    -0.6    +0.4    +2.1    -0.3      -1.7   (standard deviations from the 7-season norm)
+
+=== receiving YARDS share, weeks 1-3 of each season (league-wide) ===
+  season        WR1     WR2     WR3    WR4+      TE      RB    all WR
+  2019         27.3    19.5    11.8     6.5    19.4    15.5      65.1
+  2020         24.2    18.4    12.3     9.3    19.8    16.1      64.1
+  2021         26.1    18.6    11.9     7.9    19.4    16.1      64.5
+  2022         27.5    19.7    11.4     8.2    19.0    14.2      66.7
+  2023         31.2    19.0    11.9     6.8    18.0    13.2      68.8
+  2024         28.6    19.9    10.0     6.7    19.1    15.7      65.2
+  2025         28.5    18.4    10.2     7.1    21.3    14.1      64.2
+  2026         27.8    18.2    11.4     6.8    22.6    13.2      64.1   <- this season
+  2019-25      27.6    19.1    11.3     7.5    19.4    15.0      65.5   avg
+  range    24.2-31.218.4-19.910.0-12.3 6.5-9.3 18.0-21.313.2-16.1
+  2026 z       +0.1    -1.4    +0.1    -0.7    +3.2    -1.6      -0.8   (standard deviations from the 7-season norm)
+
+=== does a weeks 1-3 league shift LAST? share in weeks 1-3 vs weeks 4+ of the same season (targets / points) ===
+  TE    tgt  early-vs-late corr across seasons +0.54   2019: 19.8->21.3  2020: 21.6->21.3  2021: 19.8->21.4  2022: 20.1->21.3  2023: 19.9->21.7  2024: 20.0->22.9  2025: 21.9->24.3
+  TE    fp   early-vs-late corr across seasons +0.32   2019: 20.2->22.4  2020: 22.2->21.9  2021: 19.9->22.2  2022: 19.8->22.6  2023: 19.0->22.5  2024: 18.0->23.2  2025: 22.3->25.8
+  WR3   tgt  early-vs-late corr across seasons +0.41   2019: 10.9->10.1  2020: 10.6->10.7  2021: 10.9->9.6  2022: 10.5->10.1  2023: 10.6->9.6  2024: 11.0->10.1  2025: 10.3->8.7
+  WR3   fp   early-vs-late corr across seasons +0.26   2019: 11.4->9.6  2020: 11.5->10.8  2021: 11.5->9.6  2022: 10.9->9.9  2023: 11.3->9.1  2024: 9.4->10.1  2025: 8.9->9.1
+  WR4+  tgt  early-vs-late corr across seasons -0.37   2019: 7.6->10.3  2020: 8.6->10.9  2021: 7.0->12.3  2022: 7.0->10.4  2023: 7.1->10.9  2024: 7.6->11.0  2025: 6.0->11.6
+  WR4+  fp   early-vs-late corr across seasons +0.47   2019: 6.4->9.4  2020: 8.9->10.5  2021: 7.4->11.8  2022: 7.3->9.7  2023: 6.7->10.4  2024: 6.2->9.6  2025: 7.4->10.7
+  RB    tgt  early-vs-late corr across seasons +0.47   2019: 19.8->20.9  2020: 20.6->18.8  2021: 20.0->19.3  2022: 19.6->19.4  2023: 18.4->18.9  2024: 19.0->17.1  2025: 18.2->17.9
+  RB    fp   early-vs-late corr across seasons -0.31   2019: 15.8->18.1  2020: 17.5->15.1  2021: 16.9->16.7  2022: 15.8->16.5  2023: 14.9->15.9  2024: 16.8->14.4  2025: 15.3->15.5
+
+=== receiving TDs per team-game, weeks 1-3 ===
+  2019: total rec TDs 159  TE 34  WR3+4 28  targets 3295
+  2020: total rec TDs 172  TE 50  WR3+4 34  targets 3279
+  2021: total rec TDs 159  TE 33  WR3+4 30  targets 3250
+  2022: total rec TDs 144  TE 31  WR3+4 25  targets 3265
+  2023: total rec TDs 128  TE 25  WR3+4 24  targets 3207
+  2024: total rec TDs 118  TE 13  WR3+4 13  targets 2860
+  2025: total rec TDs 142  TE 33  WR3+4 21  targets 3015
+  2026: total rec TDs 158  TE 51  WR3+4 25  targets 2957
+
+=== snap share (offense %), weeks 1-3: average across teams of the 3rd WR / top TE / 2nd TE by snaps ===
+  2019: WR1  95.9  WR2  82.6  WR3  62.9  WR4  28.5 | TE1  74.6  TE2  43.1 | TEs on field per play 1.35  WRs per play 2.87
+  2020: WR1  93.0  WR2  75.0  WR3  59.4  WR4  33.6 | TE1  79.6  TE2  46.0 | TEs on field per play 1.44  WRs per play 2.84
+  2021: WR1  95.4  WR2  82.3  WR3  59.8  WR4  28.0 | TE1  80.6  TE2  45.9 | TEs on field per play 1.49  WRs per play 2.85
+  2022: WR1  94.5  WR2  83.9  WR3  60.8  WR4  25.8 | TE1  78.1  TE2  44.6 | TEs on field per play 1.46  WRs per play 2.84
+  2023: WR1  95.2  WR2  81.8  WR3  62.4  WR4  30.1 | TE1  81.1  TE2  44.5 | TEs on field per play 1.47  WRs per play 2.88
+  2024: WR1  95.3  WR2  84.2  WR3  63.3  WR4  31.9 | TE1  77.9  TE2  48.7 | TEs on field per play 1.49  WRs per play 2.93
+  2025: WR1  96.8  WR2  83.0  WR3  61.5  WR4  28.5 | TE1  82.4  TE2  46.1 | TEs on field per play 1.52  WRs per play 2.88
+  2026: WR1  93.6  WR2  79.7  WR3  61.4  WR4  28.4 | TE1  81.5  TE2  51.0 | TEs on field per play 1.67  WRs per play 2.83

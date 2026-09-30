@@ -1,0 +1,46 @@
+﻿=== In-season usage model: volume as the evidence, graded by games played ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  19064 player-weeks | usage rows joined 17556 | with games played + xFP 17556 | PFF route history on 15121
+
+=== LOYO learning curve by games played: importance-weighted top 150; cell = vs shadow (seasons won) | vs Clay ===
+  shadow (ppg evidence)      1 game: +0.00% (0/7) | -1.33% (4/7)  ||  2 games: +0.00% (0/7) | -1.78% (5/7)  ||  3 games: +0.00% (0/7) | -2.47% (6/7)  ||  4-5 games: +0.00% (0/7) | -0.47% (5/7)  ||  6-8 games: +0.00% (0/7) | -1.96% (7/7)  ||  9+ games: +0.00% (0/7) | -0.82% (5/7)  ||  ALL games 1+: +0.00% (0/7) | -1.24% (6/7)  ||  ALL incl week 1: +0.00% (0/7) | -1.31% (6/7)
+  E1 xFP/g replaces ppg      1 game: -1.32% (5/7) | -2.63% (5/7)  ||  2 games: +3.57% (1/7) | +1.73% (4/7)  ||  3 games: +0.89% (1/7) | -1.60% (5/7)  ||  4-5 games: +4.98% (1/7) | +4.49% (1/7)  ||  6-8 games: +9.13% (1/7) | +6.98% (1/7)  ||  9+ games: +18.19% (0/7) | +17.21% (0/7)  ||  ALL games 1+: +10.57% (0/7) | +9.20% (0/7)  ||  ALL incl week 1: +9.91% (0/7) | +8.47% (0/7)
+  E2 lam(g) xFP + ppg        1 game: -1.68% (5/7) | -2.99% (5/7)  ||  2 games: -0.26% (5/7) | -2.03% (5/7)  ||  3 games: +0.15% (3/7) | -2.32% (5/7)  ||  4-5 games: -0.35% (5/7) | -0.82% (6/7)  ||  6-8 games: -0.39% (5/7) | -2.34% (7/7)  ||  9+ games: -0.07% (3/7) | -0.89% (4/7)  ||  ALL games 1+: -0.30% (6/7) | -1.53% (6/7)  ||  ALL incl week 1: -0.28% (6/7) | -1.59% (6/7)
+  E3 E2 + recency tilt       1 game: -1.68% (5/7) | -2.99% (5/7)  ||  2 games: -0.26% (5/7) | -2.03% (5/7)  ||  3 games: +0.14% (3/7) | -2.34% (5/7)  ||  4-5 games: -0.12% (4/7) | -0.59% (5/7)  ||  6-8 games: -0.10% (4/7) | -2.06% (6/7)  ||  9+ games: +0.01% (4/7) | -0.81% (4/7)  ||  ALL games 1+: -0.18% (6/7) | -1.41% (6/7)  ||  ALL incl week 1: -0.16% (6/7) | -1.47% (6/7)
+  E4 learned usage model     1 game: +3.91% (3/7) | +2.53% (3/7)  ||  2 games: +6.40% (2/7) | +4.51% (3/7)  ||  3 games: +2.49% (3/7) | -0.04% (5/7)  ||  4-5 games: +3.61% (0/7) | +3.12% (0/7)  ||  6-8 games: +3.19% (2/7) | +1.16% (2/7)  ||  9+ games: +1.75% (3/7) | +0.91% (4/7)  ||  ALL games 1+: +2.86% (2/7) | +1.59% (3/7)  ||  ALL incl week 1: +2.68% (2/7) | +1.34% (3/7)
+  E5 0.5 E4 + 0.5 shadow     1 game: -0.06% (3/7) | -1.39% (3/7)  ||  2 games: +0.97% (5/7) | -0.83% (5/7)  ||  3 games: -0.55% (5/7) | -3.01% (5/7)  ||  4-5 games: +0.55% (3/7) | +0.08% (3/7)  ||  6-8 games: +0.30% (2/7) | -1.67% (4/7)  ||  9+ games: -0.15% (4/7) | -0.97% (6/7)  ||  ALL games 1+: +0.10% (3/7) | -1.13% (5/7)  ||  ALL incl week 1: +0.10% (3/7) | -1.22% (5/7)
+
+=== By position, games 1+ (top 150 weighted): vs shadow | vs Clay ===
+  QB: shadow +0.00% (0/7) | -1.15%  ||  E1 +61.54% (0/7) | +59.68%  ||  E2 +0.19% (4/7) | -0.96%  ||  E3 +0.19% (4/7) | -0.96%  ||  E4 +5.25% (0/7) | +4.04%  ||  E5 +1.24% (3/7) | +0.07%
+  RB: shadow +0.00% (0/7) | -1.45%  ||  E1 +1.40% (2/7) | -0.07%  ||  E2 -0.35% (4/7) | -1.80%  ||  E3 -0.13% (3/7) | -1.58%  ||  E4 +4.17% (2/7) | +2.66%  ||  E5 +0.46% (3/7) | -1.00%
+  WR: shadow +0.00% (0/7) | -1.15%  ||  E1 +0.33% (3/7) | -0.83%  ||  E2 -0.52% (5/7) | -1.67%  ||  E3 -0.45% (4/7) | -1.60%  ||  E4 +0.75% (2/7) | -0.41%  ||  E5 -0.55% (6/7) | -1.70%
+  TE: shadow +0.00% (0/7) | -0.84%  ||  E1 +0.38% (3/7) | -0.46%  ||  E2 +0.03% (3/7) | -0.81%  ||  E3 +0.23% (2/7) | -0.62%  ||  E4 +2.58% (3/7) | +1.72%  ||  E5 -0.56% (3/7) | -1.39%
+
+  lam picks (weight on xFP/g, by position x games bucket, per held-out season): QB 1 game [0.0, 0.25, 0.0, 0.25, 0.0, 0.0, 0.0]; QB 2 games [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; QB 3 games [0.25, 0.5, 0.5, 0.25, 0.25, 0.25, 0.25]; QB 4-5 games [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; QB 6-8 games [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; QB 9+ games [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; RB 1 game [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]; RB 2 games [0.0, 0.25, 0.0, 0.0, 0.25, 0.25, 0.25]; RB 3 games [0.5, 0.0, 0.5, 0.5, 0.75, 0.75, 0.25]; RB 4-5 games [0.75, 0.25, 0.5, 0.75, 0.5, 0.5, 0.5]; RB 6-8 games [0.5, 0.5, 0.25, 0.25, 0.5, 0.5, 0.25]; RB 9+ games [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]; WR 1 game [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]; WR 2 games [1.0, 1.0, 1.0, 0.75, 1.0, 0.75, 1.0]; WR 3 games [0.5, 1.0, 1.0, 0.75, 0.75, 1.0, 1.0]; WR 4-5 games [0.75, 0.75, 0.5, 0.5, 0.75, 0.5, 0.5]; WR 6-8 games [0.5, 0.5, 0.5, 0.75, 0.75, 0.5, 0.75]; WR 9+ games [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.5]; TE 1 game [0.75, 0.75, 1.0, 0.5, 0.5, 0.5, 0.25]; TE 2 games [0.75, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5]; TE 3 games [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]; TE 4-5 games [0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.25]; TE 6-8 games [0.75, 0.75, 0.25, 0.5, 0.5, 0.75, 0.75]; TE 9+ games [0.25, 0.5, 0.25, 0.0, 0.0, 0.25, 0.0]
+  learned model, strongest standardized coefficients (last fold): QB 1 game: prior +1.38, ppg +0.76, gl_car_sh -0.72, car_sh +0.65, car_sh_l3 +0.65, db_sh +0.60 | QB 2 games: prior +1.73, ppg +1.58, rz_tgt_sh -0.62, xfp_pg +0.40, snap_std +0.32, att_pg +0.32 | QB 3 games: snap_l1 +1.31, prior +1.30, ay_sh -0.92, gl_car_sh +0.72, ppg +0.69, rz_car_sh -0.54 | QB 4-5 games: prior +1.58, rz_car_sh +1.31, ppg +1.15, att_pg -0.96, db_sh +0.78, snap_std +0.66 | QB 6-8 games: xfp_pg +1.41, ppg +1.13, prior +1.06, db_sh +1.00, att_pg -0.75, snap_trend +0.73 | QB 9+ games: ppg +1.83, rz_car_sh +1.07, gl_car_sh -0.97, att_pg -0.92, prior +0.73, db_sh +0.51 | RB 1 game: prior +2.80, rt_std -0.78, rt_l3 -0.78, gl_car_sh +0.61, ay_sh -0.46, snap_l1 +0.35 | RB 2 games: rz_tgt_sh +2.07, snap_std +1.54, pts_over_xfp +0.82, prior +0.81, gl_car_sh +0.80, ay_sh +0.72 | RB 3 games: car_sh_l3 +1.49, car_sh +1.47, rz_car_sh +1.23, snap_l1 +0.99, gl_car_sh -0.96, pts_over_xfp +0.78 | RB 4-5 games: prior +2.76, snap_std -1.41, snap_l1 +1.32, xfp_pg +0.93, ppg +0.86, gl_car_sh -0.83 | RB 6-8 games: pts_over_xfp +1.13, prior +0.98, snap_std +0.57, gl_car_sh +0.56, ay_sh -0.53, ppg +0.41 | RB 9+ games: pts_over_xfp +1.39, prior +1.25, snap_trend +1.21, car_sh +1.11, snap_l1 +0.91, db_sh -0.81
+
+=== FORWARD 2021-25 (priors, lam and models from earlier seasons only): importance-weighted top 150; cell = vs shadow (seasons won) | vs Clay ===
+  shadow (ppg evidence)      1 game: +0.00% (0/5) | -2.83% (3/5)  ||  2 games: +0.00% (0/5) | -0.87% (3/5)  ||  3 games: +0.00% (0/5) | -1.71% (4/5)  ||  4-5 games: +0.00% (0/5) | -0.53% (4/5)  ||  6-8 games: +0.00% (0/5) | -1.72% (4/5)  ||  9+ games: +0.00% (0/5) | -1.01% (4/5)  ||  ALL games 1+: +0.00% (0/5) | -1.28% (5/5)  ||  ALL incl week 1: +0.00% (0/5) | -1.48% (5/5)
+  E1 xFP/g replaces ppg      1 game: -1.44% (4/5) | -4.23% (4/5)  ||  2 games: +2.00% (1/5) | +1.11% (2/5)  ||  3 games: +1.63% (0/5) | -0.10% (3/5)  ||  4-5 games: +3.92% (1/5) | +3.36% (1/5)  ||  6-8 games: +6.13% (1/5) | +4.30% (1/5)  ||  9+ games: +17.13% (0/5) | +15.94% (0/5)  ||  ALL games 1+: +9.41% (0/5) | +8.01% (0/5)  ||  ALL incl week 1: +8.84% (0/5) | +7.24% (0/5)
+  E2 lam(g) xFP + ppg        1 game: -0.67% (3/5) | -3.48% (3/5)  ||  2 games: -0.37% (4/5) | -1.24% (3/5)  ||  3 games: +0.75% (1/5) | -0.97% (4/5)  ||  4-5 games: -0.44% (3/5) | -0.97% (5/5)  ||  6-8 games: -0.51% (4/5) | -2.21% (5/5)  ||  9+ games: -0.12% (3/5) | -1.13% (4/5)  ||  ALL games 1+: -0.24% (3/5) | -1.52% (5/5)  ||  ALL incl week 1: -0.23% (3/5) | -1.70% (5/5)
+  E3 E2 + recency tilt       1 game: -0.67% (3/5) | -3.48% (3/5)  ||  2 games: -0.37% (4/5) | -1.24% (3/5)  ||  3 games: +0.74% (1/5) | -0.98% (4/5)  ||  4-5 games: -0.46% (3/5) | -0.99% (5/5)  ||  6-8 games: -0.51% (4/5) | -2.21% (5/5)  ||  9+ games: +0.40% (2/5) | -0.62% (4/5)  ||  ALL games 1+: -0.03% (3/5) | -1.30% (5/5)  ||  ALL incl week 1: -0.02% (3/5) | -1.50% (5/5)
+  E4 learned usage model     1 game: +6.93% (1/5) | +3.90% (2/5)  ||  2 games: +10.21% (1/5) | +9.25% (2/5)  ||  3 games: +5.24% (1/5) | +3.45% (2/5)  ||  4-5 games: +6.23% (0/5) | +5.66% (0/5)  ||  6-8 games: +5.03% (1/5) | +3.22% (2/5)  ||  9+ games: +3.48% (1/5) | +2.43% (1/5)  ||  ALL games 1+: +5.03% (0/5) | +3.69% (1/5)  ||  ALL incl week 1: +4.73% (0/5) | +3.18% (1/5)
+  E5 0.5 E4 + 0.5 shadow     1 game: +1.26% (1/5) | -1.61% (2/5)  ||  2 games: +2.20% (3/5) | +1.30% (3/5)  ||  3 games: +0.56% (3/5) | -1.16% (2/5)  ||  4-5 games: +1.19% (1/5) | +0.65% (3/5)  ||  6-8 games: +0.65% (2/5) | -1.08% (2/5)  ||  9+ games: +0.20% (2/5) | -0.82% (4/5)  ||  ALL games 1+: +0.67% (2/5) | -0.61% (3/5)  ||  ALL incl week 1: +0.63% (2/5) | -0.85% (4/5)
+
+Top 150, games 1+: best = E2 lam(g) xFP + ppg -0.30% vs the shadow (6/7), -1.53% vs Clay (6/7); forward -0.24% (3/5), -1.52% vs Clay.
+wrote data/inseason_usage.js (39s)

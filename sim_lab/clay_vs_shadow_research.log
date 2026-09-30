@@ -1,0 +1,163 @@
+=== Where Clay wins vs the Clay-free shadow, by player type (2019-25, half-PPR) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  19064 player-weeks | harness shadow (v2.11 form) vs shipped Clay blend: -1.62% MSE, shadow better in 7/7 seasons
+  Read: negative % = shadow better; 'CLAY' tag = Clay better by > 0.5% and in most seasons; 'SHADOW' = the reverse.
+
+--- Position ---
+  QB                                 n= 2759 act 17.42 | shadow vs Clay  -4.02% (7/7) | bias act/proj Clay 1.047 shadow 0.982  SHADOW
+  RB                                 n= 4844 act  9.94 | shadow vs Clay  -1.90% (5/7) | bias act/proj Clay 1.067 shadow 1.008  SHADOW
+  WR                                 n= 7775 act  8.59 | shadow vs Clay  -0.55% (5/7) | bias act/proj Clay 1.029 shadow 0.987  SHADOW
+  TE                                 n= 3686 act  6.28 | shadow vs Clay  -0.33% (4/7) | bias act/proj Clay 1.063 shadow 1.022  even
+
+--- Experience ---
+  rookie                             n= 2721 act  8.39 | shadow vs Clay  -5.42% (6/7) | bias act/proj Clay 1.165 shadow 1.010  SHADOW
+  2nd year                           n= 2983 act  9.51 | shadow vs Clay  -0.29% (4/7) | bias act/proj Clay 1.065 shadow 1.022  even
+  years 3-5                          n= 7117 act  9.93 | shadow vs Clay  -1.14% (6/7) | bias act/proj Clay 1.029 shadow 0.996  SHADOW
+  years 6-9                          n= 5098 act 10.01 | shadow vs Clay  -0.99% (5/7) | bias act/proj Clay 1.023 shadow 0.981  SHADOW
+  year 10+                           n= 1036 act 12.15 | shadow vs Clay  -2.27% (5/7) | bias act/proj Clay 1.020 shadow 0.968  SHADOW
+
+--- Age ---
+  <= 24                              n= 5584 act  9.42 | shadow vs Clay  -2.23% (6/7) | bias act/proj Clay 1.090 shadow 1.016  SHADOW
+  25-27                              n= 7365 act  9.79 | shadow vs Clay  -1.22% (4/7) | bias act/proj Clay 1.036 shadow 0.993  SHADOW
+  28-30                              n= 4340 act  9.55 | shadow vs Clay  -1.46% (6/7) | bias act/proj Clay 1.031 shadow 0.988  SHADOW
+  31+                                n= 1666 act 11.59 | shadow vs Clay  -1.79% (7/7) | bias act/proj Clay 1.012 shadow 0.967  SHADOW
+
+--- Preseason ADP ---
+  ADP 1-24                           n= 2094 act 15.38 | shadow vs Clay  -0.81% (5/7) | bias act/proj Clay 0.994 shadow 0.997  SHADOW
+  ADP 25-60                          n= 2975 act 13.09 | shadow vs Clay  -0.85% (5/7) | bias act/proj Clay 1.023 shadow 1.028  SHADOW
+  ADP 61-120                         n= 4238 act 10.70 | shadow vs Clay  -0.53% (4/7) | bias act/proj Clay 1.025 shadow 1.004  SHADOW
+  ADP 121-180                        n= 3877 act  8.98 | shadow vs Clay  -3.23% (6/7) | bias act/proj Clay 1.080 shadow 0.992  SHADOW
+  undrafted / no ADP                 n= 5880 act  5.91 | shadow vs Clay  -2.84% (6/7) | bias act/proj Clay 1.132 shadow 0.952  SHADOW
+
+--- Depth-chart string ---
+  string 1                           n=13320 act 11.38 | shadow vs Clay  -2.00% (7/7) | bias act/proj Clay 1.040 shadow 1.000  SHADOW
+  string 2                           n= 4215 act  5.80 | shadow vs Clay  -0.42% (4/7) | bias act/proj Clay 1.080 shadow 0.984  even
+  string 3+                          n=  689 act  4.98 | shadow vs Clay  -3.64% (4/7) | bias act/proj Clay 1.123 shadow 0.979  SHADOW
+  no chart                           n=  840 act  7.99 | shadow vs Clay  +2.65% (3/7) | bias act/proj Clay 1.056 shadow 0.932  CLAY
+
+--- Clay's season PPG (pos quartile) ---
+  Clay Q1 (low)                      n= 4822 act  6.32 | shadow vs Clay  -5.00% (6/7) | bias act/proj Clay 1.219 shadow 0.953  SHADOW
+  Clay Q2 (mid)                      n= 4738 act  8.03 | shadow vs Clay  -1.70% (7/7) | bias act/proj Clay 1.045 shadow 0.968  SHADOW
+  Clay Q3 (mid)                      n= 4785 act 10.71 | shadow vs Clay  -0.42% (4/7) | bias act/proj Clay 1.027 shadow 1.019  even
+  Clay Q4 (high)                     n= 4719 act 14.06 | shadow vs Clay  -0.68% (6/7) | bias act/proj Clay 0.999 shadow 1.014  SHADOW
+
+--- Own history PPG (pos quartile) ---
+  history Q1                         n= 4556 act  5.86 | shadow vs Clay  -3.39% (6/7) | bias act/proj Clay 1.127 shadow 0.989  SHADOW
+  history Q2                         n= 4553 act  8.13 | shadow vs Clay  -1.54% (5/7) | bias act/proj Clay 1.058 shadow 0.963  SHADOW
+  history Q3                         n= 4552 act 11.34 | shadow vs Clay  -1.30% (5/7) | bias act/proj Clay 1.067 shadow 1.036  SHADOW
+  history Q4                         n= 4554 act 14.19 | shadow vs Clay  -0.62% (5/7) | bias act/proj Clay 0.991 shadow 0.990  SHADOW
+  no history (rookie / thin)         n=  849 act  7.29 | shadow vs Clay  -5.65% (5/7) | bias act/proj Clay 1.128 shadow 0.945  SHADOW
+
+--- Clay vs own history (season PPG ratio) ---
+  Clay bearish < 0.8x                n= 5220 act  9.26 | shadow vs Clay  -2.96% (6/7) | bias act/proj Clay 1.095 shadow 0.959  SHADOW
+  Clay 0.8-0.95x                     n= 5076 act 11.98 | shadow vs Clay  -1.26% (6/7) | bias act/proj Clay 1.015 shadow 0.994  SHADOW
+  Clay ~ history 0.95-1.05x          n= 2959 act 11.10 | shadow vs Clay  -0.50% (4/7) | bias act/proj Clay 1.041 shadow 1.024  even
+  Clay 1.05-1.25x                    n= 2765 act  9.04 | shadow vs Clay  -0.80% (5/7) | bias act/proj Clay 1.041 shadow 1.025  SHADOW
+  Clay bullish > 1.25x               n= 2195 act  5.90 | shadow vs Clay  -0.00% (4/7) | bias act/proj Clay 1.024 shadow 1.040  even
+
+--- Games into the season ---
+  week 1 (no data)                   n= 1407 act  8.81 | shadow vs Clay  +0.33% (2/7) | bias act/proj Clay 1.035 shadow 0.970  even
+  games 1-3                          n= 4218 act  9.45 | shadow vs Clay  -2.70% (7/7) | bias act/proj Clay 1.084 shadow 1.012  SHADOW
+  games 4-8                          n= 6640 act  9.56 | shadow vs Clay  -1.15% (5/7) | bias act/proj Clay 1.045 shadow 0.991  SHADOW
+  games 9+                           n= 6799 act 10.35 | shadow vs Clay  -1.72% (6/7) | bias act/proj Clay 1.032 shadow 0.994  SHADOW
+
+--- Season-to-date vs Clay (after 3+ games) ---
+  cold < 0.7x Clay                   n= 2178 act  5.51 | shadow vs Clay  -1.00% (5/7) | bias act/proj Clay 1.079 shadow 1.017  SHADOW
+  0.7-0.9x                           n= 2340 act  8.90 | shadow vs Clay  -0.86% (5/7) | bias act/proj Clay 1.068 shadow 1.024  SHADOW
+  on track 0.9-1.1x                  n= 3022 act 11.14 | shadow vs Clay  -0.63% (4/7) | bias act/proj Clay 1.053 shadow 1.022  SHADOW
+  1.1-1.3x                           n= 2599 act 12.13 | shadow vs Clay  -1.79% (6/7) | bias act/proj Clay 1.003 shadow 0.989  SHADOW
+  hot > 1.3x Clay                    n= 4706 act 10.44 | shadow vs Clay  -2.70% (6/7) | bias act/proj Clay 1.038 shadow 0.960  SHADOW
+
+--- This week's disagreement (shadow / Clay blend) ---
+  shadow < 0.8x                      n=  355 act  5.17 | shadow vs Clay  +0.35% (4/7) | bias act/proj Clay 0.842 shadow 1.199  even
+  0.8-0.95x                          n= 2586 act 10.07 | shadow vs Clay  -0.74% (6/7) | bias act/proj Clay 0.953 shadow 1.042  SHADOW
+  agree 0.95-1.05x                   n= 7550 act 11.63 | shadow vs Clay  -0.06% (5/7) | bias act/proj Clay 1.006 shadow 1.008  even
+  1.05-1.25x                         n= 5710 act  9.11 | shadow vs Clay  -2.59% (7/7) | bias act/proj Clay 1.102 shadow 0.988  SHADOW
+  shadow > 1.25x                     n= 2863 act  6.44 | shadow vs Clay  -6.44% (6/7) | bias act/proj Clay 1.338 shadow 0.889  SHADOW
+
+--- Situation ---
+  changed team                       n= 2765 act  8.07 | shadow vs Clay  -0.87% (5/7) | bias act/proj Clay 1.025 shadow 0.963  SHADOW
+  same team vet                      n=13578 act 10.38 | shadow vs Clay  -1.03% (5/7) | bias act/proj Clay 1.034 shadow 0.998  SHADOW
+  rookie R1-2                        n= 1625 act  9.65 | shadow vs Clay  -5.02% (6/7) | bias act/proj Clay 1.118 shadow 1.008  SHADOW
+  rookie R3+ / UDFA                  n= 1096 act  6.52 | shadow vs Clay  -6.20% (5/7) | bias act/proj Clay 1.285 shadow 1.015  SHADOW
+  vacated-role week                  n= 5926 act  8.42 | shadow vs Clay  -2.72% (7/7) | bias act/proj Clay 1.096 shadow 0.996  SHADOW
+  2nd-yr low-snap                    n=  621 act  6.40 | shadow vs Clay  -1.42% (3/7) | bias act/proj Clay 1.186 shadow 1.067  even
+  opportunity prior used             n=10930 act  9.72 | shadow vs Clay  -0.74% (5/7) | bias act/proj Clay 1.029 shadow 1.003  SHADOW
+
+--- Vegas / FPA layer ---
+  layers < 0.9                       n=  942 act  8.01 | shadow vs Clay  -2.93% (5/7) | bias act/proj Clay 1.143 shadow 1.056  SHADOW
+  0.9-1.1                            n=16786 act  9.72 | shadow vs Clay  -1.52% (6/7) | bias act/proj Clay 1.047 shadow 0.995  SHADOW
+  layers > 1.1                       n= 1336 act 11.52 | shadow vs Clay  -1.95% (6/7) | bias act/proj Clay 1.014 shadow 0.974  SHADOW
+
+=== By position: Clay vs own history, and season-to-date vs Clay ===
+QB   Clay bearish < 0.9x hist           n= 1222 act 18.09 | shadow vs Clay  -5.80% (7/7) | bias act/proj Clay 1.055 shadow 0.973  SHADOW
+QB   Clay ~ hist 0.9-1.1x               n= 1160 act 17.44 | shadow vs Clay  +0.17% (3/7) | bias act/proj Clay 1.015 shadow 0.981  even
+QB   Clay bullish > 1.1x hist           n=  271 act 15.64 | shadow vs Clay  -2.35% (3/6) | bias act/proj Clay 1.100 shadow 1.046  even
+QB   no history                         n=  106 act 13.83 | shadow vs Clay -23.10% (2/2) | bias act/proj Clay 1.274 shadow 0.956  SHADOW
+QB   cold < 0.8x Clay (3+ g)            n=  135 act 14.65 | shadow vs Clay  -0.84% (4/5) | bias act/proj Clay 1.178 shadow 1.029  SHADOW
+QB   on track (3+ g)                    n= 1142 act 17.49 | shadow vs Clay  -1.80% (6/7) | bias act/proj Clay 1.019 shadow 0.983  SHADOW
+QB   hot > 1.2x Clay (3+ g)             n=  867 act 17.99 | shadow vs Clay  -6.20% (6/7) | bias act/proj Clay 1.023 shadow 0.967  SHADOW
+QB   string 1                           n= 2603 act 17.81 | shadow vs Clay  -5.31% (7/7) | bias act/proj Clay 1.047 shadow 0.992  SHADOW
+QB   string 2+                          n=  128 act  9.99 | shadow vs Clay +12.77% (1/3) | bias act/proj Clay 1.109 shadow 0.744  CLAY
+QB   ADP top-60                         n=  558 act 20.83 | shadow vs Clay  -1.43% (6/7) | bias act/proj Clay 0.974 shadow 0.969  SHADOW
+QB   ADP 61-180                         n= 1630 act 17.43 | shadow vs Clay  -2.78% (7/7) | bias act/proj Clay 1.044 shadow 1.000  SHADOW
+QB   no ADP                             n=  571 act 14.03 | shadow vs Clay  -9.70% (5/7) | bias act/proj Clay 1.187 shadow 0.941  SHADOW
+RB   Clay bearish < 0.9x hist           n= 2328 act 10.59 | shadow vs Clay  -1.49% (4/7) | bias act/proj Clay 1.082 shadow 0.982  SHADOW
+RB   Clay ~ hist 0.9-1.1x               n= 1268 act 11.33 | shadow vs Clay  -2.32% (6/7) | bias act/proj Clay 1.053 shadow 1.042  SHADOW
+RB   Clay bullish > 1.1x hist           n=  969 act  7.52 | shadow vs Clay  -1.93% (6/7) | bias act/proj Clay 1.044 shadow 1.058  SHADOW
+RB   no history                         n=  279 act  6.56 | shadow vs Clay  -3.54% (4/7) | bias act/proj Clay 1.066 shadow 0.923  SHADOW
+RB   cold < 0.8x Clay (3+ g)            n=  848 act  6.86 | shadow vs Clay  -4.08% (6/7) | bias act/proj Clay 1.092 shadow 1.081  SHADOW
+RB   on track (3+ g)                    n= 1321 act 11.01 | shadow vs Clay  -1.90% (5/7) | bias act/proj Clay 1.067 shadow 1.038  SHADOW
+RB   hot > 1.2x Clay (3+ g)             n= 1621 act 11.22 | shadow vs Clay  -1.43% (4/7) | bias act/proj Clay 1.063 shadow 0.967  SHADOW
+RB   string 1                           n= 2366 act 13.02 | shadow vs Clay  -1.77% (6/7) | bias act/proj Clay 1.050 shadow 1.016  SHADOW
+RB   string 2+                          n= 2025 act  6.70 | shadow vs Clay  -3.56% (5/7) | bias act/proj Clay 1.098 shadow 1.006  SHADOW
+RB   ADP top-60                         n= 1871 act 14.11 | shadow vs Clay  -0.54% (5/7) | bias act/proj Clay 1.029 shadow 1.024  SHADOW
+RB   ADP 61-180                         n= 2155 act  7.99 | shadow vs Clay  -3.02% (5/7) | bias act/proj Clay 1.088 shadow 0.994  SHADOW
+RB   no ADP                             n=  818 act  5.53 | shadow vs Clay  -4.66% (4/7) | bias act/proj Clay 1.239 shadow 0.969  SHADOW
+WR   Clay bearish < 0.9x hist           n= 3398 act  9.15 | shadow vs Clay  -1.44% (6/7) | bias act/proj Clay 1.035 shadow 0.963  SHADOW
+WR   Clay ~ hist 0.9-1.1x               n= 2177 act  9.66 | shadow vs Clay  -0.27% (3/7) | bias act/proj Clay 1.025 shadow 1.013  even
+WR   Clay bullish > 1.1x hist           n= 1848 act  6.63 | shadow vs Clay  +0.33% (3/7) | bias act/proj Clay 1.007 shadow 1.010  even
+WR   no history                         n=  352 act  6.76 | shadow vs Clay  +4.16% (3/7) | bias act/proj Clay 1.104 shadow 0.969  CLAY
+WR   cold < 0.8x Clay (3+ g)            n= 1397 act  6.02 | shadow vs Clay  +0.60% (5/7) | bias act/proj Clay 1.031 shadow 0.968  even
+WR   on track (3+ g)                    n= 2289 act  9.25 | shadow vs Clay  -0.22% (5/7) | bias act/proj Clay 1.019 shadow 0.996  even
+WR   hot > 1.2x Clay (3+ g)             n= 2370 act  9.62 | shadow vs Clay  -1.09% (5/7) | bias act/proj Clay 1.008 shadow 0.960  SHADOW
+WR   string 1                           n= 5830 act  9.67 | shadow vs Clay  -0.62% (5/7) | bias act/proj Clay 1.025 shadow 0.990  SHADOW
+WR   string 2+                          n= 1703 act  4.99 | shadow vs Clay  +0.22% (4/7) | bias act/proj Clay 1.054 shadow 0.986  even
+WR   ADP top-60                         n= 2214 act 12.81 | shadow vs Clay  -1.05% (6/7) | bias act/proj Clay 1.006 shadow 1.015  SHADOW
+WR   ADP 61-180                         n= 2994 act  8.25 | shadow vs Clay  -0.58% (5/7) | bias act/proj Clay 1.029 shadow 0.992  SHADOW
+WR   no ADP                             n= 2567 act  5.33 | shadow vs Clay  +0.54% (3/7) | bias act/proj Clay 1.079 shadow 0.927  CLAY
+TE   Clay bearish < 0.9x hist           n= 1621 act  6.73 | shadow vs Clay  -1.48% (4/7) | bias act/proj Clay 1.077 shadow 0.996  SHADOW
+TE   Clay ~ hist 0.9-1.1x               n= 1028 act  6.96 | shadow vs Clay  +0.28% (4/7) | bias act/proj Clay 1.063 shadow 1.060  even
+TE   Clay bullish > 1.1x hist           n=  925 act  4.95 | shadow vs Clay  +1.45% (2/7) | bias act/proj Clay 1.026 shadow 1.044  CLAY
+TE   no history                         n=  112 act  4.59 | shadow vs Clay  +0.49% (1/2) | bias act/proj Clay 1.105 shadow 0.891  even
+TE   cold < 0.8x Clay (3+ g)            n=  782 act  4.85 | shadow vs Clay  +0.58% (2/7) | bias act/proj Clay 1.151 shadow 1.081  CLAY
+TE   on track (3+ g)                    n=  996 act  7.14 | shadow vs Clay  -0.92% (5/7) | bias act/proj Clay 1.089 shadow 1.075  SHADOW
+TE   hot > 1.2x Clay (3+ g)             n= 1077 act  7.22 | shadow vs Clay  -2.08% (5/7) | bias act/proj Clay 1.051 shadow 1.008  SHADOW
+TE   string 1                           n= 2521 act  7.13 | shadow vs Clay  -0.54% (4/7) | bias act/proj Clay 1.053 shadow 1.028  SHADOW
+TE   string 2+                          n= 1048 act  4.32 | shadow vs Clay  -0.48% (5/7) | bias act/proj Clay 1.103 shadow 1.004  even
+TE   ADP top-60                         n=  426 act 11.18 | shadow vs Clay  +0.05% (4/7) | bias act/proj Clay 1.018 shadow 1.068  even
+TE   ADP 61-180                         n= 1336 act  7.36 | shadow vs Clay  -0.09% (4/7) | bias act/proj Clay 1.040 shadow 1.022  even
+TE   no ADP                             n= 1924 act  4.45 | shadow vs Clay  -0.83% (3/7) | bias act/proj Clay 1.119 shadow 0.998  even
+
+=== Strongest repeatable CLAY edges (n >= 300, Clay wins most seasons) ===
+  Depth-chart string / no chart: n 840, Clay better by +2.65% MSE, shadow wins 3/7 seasons
+  Games into the season / week 1 (no data): n 1407, Clay better by +0.33% MSE, shadow wins 2/7 seasons
+=== Strongest repeatable SHADOW edges ===
+  This week's disagreement (shadow / Clay blend) / shadow > 1.25x: n 2863, shadow better by -6.44% MSE, wins 6/7 seasons
+  Situation / rookie R3+ / UDFA: n 1096, shadow better by -6.20% MSE, wins 5/7 seasons
+  Own history PPG (pos quartile) / no history (rookie / thin): n 849, shadow better by -5.65% MSE, wins 5/7 seasons
+  Experience / rookie: n 2721, shadow better by -5.42% MSE, wins 6/7 seasons
+  Situation / rookie R1-2: n 1625, shadow better by -5.02% MSE, wins 6/7 seasons
+  Clay's season PPG (pos quartile) / Clay Q1 (low): n 4822, shadow better by -5.00% MSE, wins 6/7 seasons
+  Position / QB: n 2759, shadow better by -4.02% MSE, wins 7/7 seasons
+  Depth-chart string / string 3+: n 689, shadow better by -3.64% MSE, wins 4/7 seasons
+
+Harness shadow vs Clay blend -1.62% (7/7). Clay's repeatable edges: no chart +2.6% (n840, shadow 3/7); week 1 (no data) +0.3% (n1407, shadow 2/7). Shadow's: shadow > 1.25x -6.4% (n2863, 6/7); rookie R3+ / UDFA -6.2% (n1096, 5/7); no history (rookie / thin) -5.7% (n849, 5/7); rookie -5.4% (n2721, 6/7); rookie R1-2 -5.0% (n1625, 6/7).
+wrote data/clay_vs_shadow_research.js (22s)

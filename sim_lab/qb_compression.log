@@ -1,0 +1,74 @@
+=== QB compression in the shadow: ADP-curve weight, shrink k, ridge mix, prior strength (QBs only) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2759 QB player-weeks, 2014 re-tunable (vet, ADP + history) | rebuilt current shadow vs harness+ridge form: QB rows only differ by construction
+
+=== Diagnostics: slope of actual on prediction (1.0 = right spread; > 1 = compressed) and level by ADP tier, QB rows ===
+  elite ADP <= 60    n= 558 | actual 20.83 | shadow 21.76 | Clay blend 22.02
+  ADP 61-100         n= 530 | actual 19.48 | shadow 19.39 | Clay blend 19.42
+  ADP 101-150        n= 684 | actual 16.65 | shadow 16.98 | Clay blend 16.67
+  ADP 151+ / none    n= 987 | actual 14.91 | shadow 15.18 | Clay blend 14.56
+  slope act~shadow on top-150 QBs: 0.91 | sd of prediction 2.79 (actual player-mean sd is what matters: see tiers)
+  slope act~Clay blend on top-150 QBs: 0.76 | sd of prediction 3.49 (actual player-mean sd is what matters: see tiers)
+
+=== One-at-a-time sweeps (QB rows; cell = vs current shadow (seasons) | vs Clay (seasons)) ===
+  ADP-curve weight w=0.75            all QB: +0.00% (0/7) | Clay -1.09% (4/7)  ||  QB top 150 (weighted): +0.00% (0/7) | Clay -0.28% (3/7)  ||  elite QB, ADP <= 60: +0.00% (0/7) | Clay -0.71% (4/7)  ||  QB ADP 61-150: +0.00% (0/7) | Clay +0.06% (4/7)
+  ADP-curve weight w=0.5             all QB: -0.09% (3/7) | Clay -1.17% (4/7)  ||  QB top 150 (weighted): -0.24% (3/7) | Clay -0.52% (4/7)  ||  elite QB, ADP <= 60: -0.48% (4/7) | Clay -1.20% (4/7)  ||  QB ADP 61-150: -0.04% (4/7) | Clay +0.02% (4/7)
+  ADP-curve weight w=0.25            all QB: -0.14% (4/7) | Clay -1.23% (3/7)  ||  QB top 150 (weighted): -0.42% (3/7) | Clay -0.70% (4/7)  ||  elite QB, ADP <= 60: -0.90% (3/7) | Clay -1.61% (4/7)  ||  QB ADP 61-150: -0.03% (4/7) | Clay +0.03% (4/7)
+  ADP-curve weight w=0.0             all QB: -0.13% (4/7) | Clay -1.22% (3/7)  ||  QB top 150 (weighted): -0.48% (3/7) | Clay -0.77% (3/7)  ||  elite QB, ADP <= 60: -1.11% (3/7) | Clay -1.82% (4/7)  ||  QB ADP 61-150: +0.02% (3/7) | Clay +0.08% (4/7)
+  QB-rank curve, w=0.75              all QB: -0.12% (5/7) | Clay -1.21% (4/7)  ||  QB top 150 (weighted): -0.12% (3/7) | Clay -0.40% (3/7)  ||  elite QB, ADP <= 60: +0.06% (3/7) | Clay -0.65% (4/7)  ||  QB ADP 61-150: -0.26% (5/7) | Clay -0.20% (4/7)
+  QB-rank curve, w=0.5               all QB: -0.19% (5/7) | Clay -1.28% (4/7)  ||  QB top 150 (weighted): -0.35% (4/7) | Clay -0.63% (4/7)  ||  elite QB, ADP <= 60: -0.52% (3/7) | Clay -1.23% (5/7)  ||  QB ADP 61-150: -0.21% (5/7) | Clay -0.15% (4/7)
+  QB-rank curve, w=0.25              all QB: -0.20% (4/7) | Clay -1.29% (3/7)  ||  QB top 150 (weighted): -0.48% (4/7) | Clay -0.77% (4/7)  ||  elite QB, ADP <= 60: -0.95% (4/7) | Clay -1.66% (4/7)  ||  QB ADP 61-150: -0.11% (4/7) | Clay -0.05% (4/7)
+  shrink k=0.8                       all QB: +0.00% (0/7) | Clay -1.09% (4/7)  ||  QB top 150 (weighted): +0.00% (0/7) | Clay -0.28% (3/7)  ||  elite QB, ADP <= 60: +0.00% (0/7) | Clay -0.71% (4/7)  ||  QB ADP 61-150: +0.00% (0/7) | Clay +0.06% (4/7)
+  shrink k=0.9                       all QB: +0.07% (2/7) | Clay -1.02% (4/7)  ||  QB top 150 (weighted): +0.18% (1/7) | Clay -0.11% (3/7)  ||  elite QB, ADP <= 60: +0.41% (2/7) | Clay -0.31% (4/7)  ||  QB ADP 61-150: -0.01% (3/7) | Clay +0.05% (4/7)
+  shrink k=1.0                       all QB: +0.16% (2/7) | Clay -0.93% (4/7)  ||  QB top 150 (weighted): +0.38% (1/7) | Clay +0.09% (3/7)  ||  elite QB, ADP <= 60: +0.88% (2/7) | Clay +0.16% (3/7)  ||  QB ADP 61-150: -0.02% (3/7) | Clay +0.04% (4/7)
+  shrink k=1.1                       all QB: +0.27% (1/7) | Clay -0.82% (3/7)  ||  QB top 150 (weighted): +0.61% (1/7) | Clay +0.33% (2/7)  ||  elite QB, ADP <= 60: +1.42% (2/7) | Clay +0.69% (2/7)  ||  QB ADP 61-150: -0.02% (3/7) | Clay +0.04% (4/7)
+  ridge mix a=0.5                    all QB: +0.00% (0/7) | Clay -1.09% (4/7)  ||  QB top 150 (weighted): +0.00% (0/7) | Clay -0.28% (3/7)  ||  elite QB, ADP <= 60: +0.00% (0/7) | Clay -0.71% (4/7)  ||  QB ADP 61-150: +0.00% (0/7) | Clay +0.06% (4/7)
+  ridge mix a=0.25                   all QB: -0.07% (3/7) | Clay -1.16% (4/7)  ||  QB top 150 (weighted): -0.38% (6/7) | Clay -0.67% (4/7)  ||  elite QB, ADP <= 60: -0.59% (5/7) | Clay -1.30% (5/7)  ||  QB ADP 61-150: -0.22% (5/7) | Clay -0.16% (5/7)
+  ridge mix a=0.0                    all QB: +0.06% (3/7) | Clay -1.03% (3/7)  ||  QB top 150 (weighted): -0.65% (6/7) | Clay -0.93% (4/7)  ||  elite QB, ADP <= 60: -1.09% (5/7) | Clay -1.80% (4/7)  ||  QB ADP 61-150: -0.30% (4/7) | Clay -0.24% (5/7)
+  prior strength P x 1.0 (12 -> 12)  all QB: +0.00% (0/7) | Clay -1.09% (4/7)  ||  QB top 150 (weighted): +0.00% (0/7) | Clay -0.28% (3/7)  ||  elite QB, ADP <= 60: +0.00% (0/7) | Clay -0.71% (4/7)  ||  QB ADP 61-150: +0.00% (0/7) | Clay +0.06% (4/7)
+  prior strength P x 0.75 (12 -> 9)  all QB: +0.05% (3/7) | Clay -1.04% (4/7)  ||  QB top 150 (weighted): +0.12% (3/7) | Clay -0.16% (3/7)  ||  elite QB, ADP <= 60: +0.26% (1/7) | Clay -0.45% (4/7)  ||  QB ADP 61-150: +0.01% (2/7) | Clay +0.07% (4/7)
+  prior strength P x 0.5 (12 -> 6)   all QB: +0.42% (3/7) | Clay -0.67% (2/7)  ||  QB top 150 (weighted): +0.63% (1/7) | Clay +0.34% (2/7)  ||  elite QB, ADP <= 60: +0.98% (1/7) | Clay +0.26% (2/7)  ||  QB ADP 61-150: +0.35% (2/7) | Clay +0.41% (2/7)
+  prior strength P x 1.5 (12 -> 18)  all QB: +0.17% (2/7) | Clay -0.92% (3/7)  ||  QB top 150 (weighted): +0.10% (2/7) | Clay -0.18% (3/7)  ||  elite QB, ADP <= 60: -0.08% (3/7) | Clay -0.79% (4/7)  ||  QB ADP 61-150: +0.25% (3/7) | Clay +0.31% (5/7)
+
+=== LOYO-selected combination (grid w x k x a x P, chosen on the other six seasons, top-150 QB weighted MSE) ===
+  picks by held-out season (w, k, a, Pmult): [(0.5, 0.8, 0.0, 1.0), (0.5, 0.8, 0.0, 1.0), (0.5, 0.8, 0.0, 1.0), (0.5, 0.8, 0.0, 1.0), (0.75, 0.8, 0.0, 1.0), (0.5, 0.8, 0.0, 1.0), (0.75, 0.8, 0.0, 1.0)] | pooled best (0.5, 0.8, 0.0, 1.0)
+  LOYO-selected combo                all QB: +0.21% (2/7) | Clay -0.88% (3/7)  ||  QB top 150 (weighted): -0.40% (3/7) | Clay -0.68% (4/7)  ||  elite QB, ADP <= 60: -0.57% (4/7) | Clay -1.28% (4/7)  ||  QB ADP 61-150: -0.27% (4/7) | Clay -0.20% (5/7)
+  pooled best (0.5, 0.8, 0.0, 1.0)   all QB: +0.07% (2/7) | Clay -1.02% (3/7)  ||  QB top 150 (weighted): -0.82% (3/7) | Clay -1.10% (4/7)  ||  elite QB, ADP <= 60: -1.47% (4/7) | Clay -2.17% (4/7)  ||  QB ADP 61-150: -0.30% (4/7) | Clay -0.24% (5/7)
+
+=== Forward 2021-25 (ridge fit and constants chosen on earlier seasons only) ===
+  forward picks: [(0.75, 0.8, 0.5, 0.75), (0.75, 0.9, 0.25, 1.0), (0.75, 0.9, 0.0, 1.0), (0.5, 0.8, 0.0, 1.0), (0.75, 0.8, 0.0, 1.0)]
+  forward selected combo             all QB: -0.17% (3/5) | Clay -1.04% (2/5)  ||  QB top 150 (weighted): -0.76% (4/5) | Clay -0.99% (4/5)  ||  elite QB, ADP <= 60: -0.90% (4/5) | Clay -1.01% (4/5)  ||  QB ADP 61-150: -0.63% (4/5) | Clay -0.97% (5/5)
+  forward pooled best (0.5, 0.8, 0.0, 1.0) all QB: -0.60% (3/5) | Clay -1.47% (2/5)  ||  QB top 150 (weighted): -1.71% (5/5) | Clay -1.94% (4/5)  ||  elite QB, ADP <= 60: -2.33% (4/5) | Clay -2.44% (3/5)  ||  QB ADP 61-150: -1.14% (4/5) | Clay -1.48% (5/5)
+  forward ridge a=0 only             all QB: -0.54% (4/5) | Clay -1.41% (2/5)  ||  QB top 150 (weighted): -1.41% (5/5) | Clay -1.64% (4/5)  ||  elite QB, ADP <= 60: -1.76% (4/5) | Clay -1.87% (3/5)  ||  QB ADP 61-150: -1.09% (4/5) | Clay -1.43% (5/5)
+  forward ridge a=0.25 only          all QB: -0.49% (5/5) | Clay -1.35% (2/5)  ||  QB top 150 (weighted): -0.88% (5/5) | Clay -1.12% (4/5)  ||  elite QB, ADP <= 60: -1.04% (4/5) | Clay -1.15% (3/5)  ||  QB ADP 61-150: -0.74% (5/5) | Clay -1.08% (5/5)
+  forward ADP w=0.5 only             all QB: -0.17% (4/5) | Clay -1.04% (2/5)  ||  QB top 150 (weighted): -0.42% (3/5) | Clay -0.65% (3/5)  ||  elite QB, ADP <= 60: -0.77% (3/5) | Clay -0.88% (3/5)  ||  QB ADP 61-150: -0.09% (3/5) | Clay -0.44% (4/5)
+  forward a=0 + w=0.5                all QB: -0.60% (3/5) | Clay -1.47% (2/5)  ||  QB top 150 (weighted): -1.71% (5/5) | Clay -1.94% (4/5)  ||  elite QB, ADP <= 60: -2.33% (4/5) | Clay -2.44% (3/5)  ||  QB ADP 61-150: -1.14% (4/5) | Clay -1.48% (5/5)
+  forward a=0.25 + w=0.5             all QB: -0.64% (5/5) | Clay -1.51% (2/5)  ||  QB top 150 (weighted): -1.31% (5/5) | Clay -1.54% (4/5)  ||  elite QB, ADP <= 60: -1.83% (4/5) | Clay -1.94% (3/5)  ||  QB ADP 61-150: -0.83% (5/5) | Clay -1.17% (5/5)
+=== Per-season, top-150 QBs weighted, vs the current shadow (LOYO ridge): a=0 only | a=0 + w=0.5 ===
+  2019: a=0 only -0.46% | a=0 + w=.5 -0.79% | a=.25 + w=.5 -0.58%  (n=218)
+  2020: a=0 only +0.58% | a=0 + w=.5 +1.53% | a=.25 + w=.5 +0.92%  (n=198)
+  2021: a=0 only -0.04% | a=0 + w=.5 +0.14% | a=.25 + w=.5 +0.01%  (n=244)
+  2022: a=0 only -0.37% | a=0 + w=.5 +0.29% | a=.25 + w=.5 +0.19%  (n=240)
+  2023: a=0 only -1.33% | a=0 + w=.5 -2.91% | a=.25 + w=.5 -2.19%  (n=248)
+  2024: a=0 only -0.44% | a=0 + w=.5 +0.01% | a=.25 + w=.5 -0.06%  (n=310)
+  2025: a=0 only -1.84% | a=0 + w=.5 -2.88% | a=.25 + w=.5 -1.93%  (n=314)
+  a=0.25 + w=0.5 (LOYO ridge)        all QB: -0.13% (4/7) | Clay -1.22% (3/7)  ||  QB top 150 (weighted): -0.63% (4/7) | Clay -0.91% (4/7)  ||  elite QB, ADP <= 60: -1.09% (5/7) | Clay -1.80% (4/7)  ||  QB ADP 61-150: -0.25% (4/7) | Clay -0.19% (5/7)
+  a=0 only (LOYO ridge)              all QB: +0.06% (3/7) | Clay -1.03% (3/7)  ||  QB top 150 (weighted): -0.65% (6/7) | Clay -0.93% (4/7)  ||  elite QB, ADP <= 60: -1.09% (5/7) | Clay -1.80% (4/7)  ||  QB ADP 61-150: -0.30% (4/7) | Clay -0.24% (5/7)
+
+Top-150 QBs (weighted): LOYO-selected combo -0.40% vs the current shadow (3/7), -0.68% vs Clay (4/7); pooled best (w 0.5, k 0.8, ridge 0.0, P x 1.0) -0.82% / -1.10% vs Clay. Forward: selected -0.76% (4/5), pooled -1.71% (5/5), vs Clay -1.94%.
+wrote data/qb_compression.js (37s)

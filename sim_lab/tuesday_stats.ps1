@@ -39,6 +39,12 @@ $out = & python 'E:\MyFantasyFootball\sim_lab\weekly_scorecard.py' 2>&1 | Out-St
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "SCORECARD FAILED (exit $LASTEXITCODE) - continuing" }
 
+# Book-anchor weight sweep (added 2026-09-17): re-fits the 70% market weight over every scored lock, for the Clay
+# base and (from the W2 lock on) the Clay-free shadow -> data\anchor_sweep.js + anchor_sweep.log. Non-fatal.
+$out = & python 'E:\MyFantasyFootball\sim_lab\anchor_sweep.py' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "ANCHOR SWEEP FAILED (exit $LASTEXITCODE) - continuing" }
+
 # Snap counts (nflverse) -> data/snap_counts.js. Feeds the player card's
 # SNP%/TS% columns AND Sim Lab's in-season snap-trend layer (refresh_data.py
 # trims it to sim_snaps.js — the layer self-activates once 2026 weeks land).

@@ -1,0 +1,29 @@
+audited 144 top-150 players, week 2
+
+1) RECONSTRUCTION: shadow = blended rate x chain + scaled TD luck, then tagged steps. Players off by more than 0.5% with NO tag explaining it: 0
+
+2) prior far from BOTH Clay and the blended live base (|prior / clayPg - 1| > 45%) - possible bad input: 3
+   Chris Rodriguez        RB adp 125 prior 6.5 vs Clay 4.2 | hist+l8+reg+age+opp+adp+dock2+shr+ridge+xfp100+vegEv
+   Jauan Jennings         WR adp 150 prior 7.8 vs Clay 5.4 | hist+l8+reg+age+opp+adp+shr+ridge+xfp100+earlyP+vacx
+   Omar Cooper Jr.        WR adp 130 prior 7.8 vs Clay 4.2 | rookie-pick+str1+shr+ridge+xfp100+vegEv+earlyP
+
+3) still on the CLAY FALLBACK inside the top 150 (the shadow is not Clay-free for these): 0
+
+4) scoring scale far from 1 on the half-PPR sheet (should be exactly 1): 0
+
+5) availability above 1 inside the shadow chain (live role boost leaking in; should be capped at 1 when redistribution is on): 0
+
+6) usage evidence missing for an RB / WR who has played (falls back to points; luck scale differs): 1
+   Jonah Coleman          RB shadow 5.1 | rookie-pick+str3+shr+ridge+ramp2+vacx
+
+7) usage xFP/g wildly off the points/g it replaces (> 2.5x or < 0.3x, both > 4) - check the xFP feed / name match: 2
+   Rashee Rice            WR xFP/g 2.3 vs points/g 8.9 (g 1)
+   DK Metcalf             WR xFP/g 15.1 vs points/g 6.0 (g 1)
+
+8) ESPN number present but the mix did not use it, or mix outside its two inputs: 0
+
+9) Questionable / docked players (availability < 1) - by design, listed so they are not mistaken for bugs: 4
+   Zay Flowers            WR Questionable|Active  availability 0.75 shadow 8.6
+   RJ Harvey              RB Questionable|Active  availability 0.75 shadow 6.5
+   Ladd McConkey          WR Questionable|Active  availability 0.75 shadow 8.5
+   Omar Cooper Jr.        WR Questionable|Active  availability 0.75 shadow 5.4

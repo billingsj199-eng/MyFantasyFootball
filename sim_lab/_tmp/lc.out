@@ -1,0 +1,63 @@
+﻿=== The combined live candidate: five pending fixes stacked on today's live pre-book number ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  Vegas-adjusted evidence: rows moved 17,562 of 17,657; mean abs change 0.306 pts/g
+
+=== LADDER, top 150, all weeks except the final week (10,542 player-weeks): importance-weighted error vs TODAY (seasons better of 7) | step gain | rank rho | pairs right ===
+  0 TODAY (live pre-book)                     +0.00% (0/7) | step    -  | rho 0.3697 | pairs 63.83% | typical miss 7.197
+  1 + Vegas-adjusted evidence                 -0.67% (6/7) | step -0.67 | rho 0.3732 | pairs 63.88% | typical miss 7.178
+  2 + tiered Clay prior (ADP <= 60)           -1.27% (7/7) | step -0.60 | rho 0.3764 | pairs 63.98% | typical miss 7.159
+  3 + backup-QB WR dock                       -1.59% (7/7) | step -0.32 | rho 0.3769 | pairs 64.02% | typical miss 7.155
+  4 + usage / WR one-game / QB total          -1.62% (7/7) | step -0.03 | rho 0.3781 | pairs 64.02% | typical miss 7.158
+  5 LIVE CANDIDATE: 70/30 shadow + step 4     -2.45% (7/7) | step -0.83 | rho 0.3857 | pairs 64.39% | typical miss 7.120
+  6 LIVE CANDIDATE + ESPN (50/50)             -3.34% (7/7) | step -0.89 | rho 0.3891 | pairs 64.88% | typical miss 7.067
+  shadow v2.24 alone                          -2.28% (6/7) | step    -  | rho 0.3837 | pairs 64.36% | typical miss 7.127
+  rank mix: 50/50 shadow + ESPN               -3.34% (7/7) | step    -  | rho 0.3890 | pairs 64.90% | typical miss 7.067
+  ESPN alone (where it has a row)             -2.20% (7/7) | step    -  | rho 0.3803 | pairs 64.63% | typical miss 7.107
+
+=== By cut (top 150, final week dropped): error vs TODAY (seasons better) and rank rho change ===
+  week 1             5 LIVE CANDIDATE -2.09% (5/7) rho +0.0090 | 6 LIVE CANDIDATE + ESPN (50/ -3.84% (5/7) rho +0.0355 | shadow v2.24 alone -1.67% (5/7) rho -0.0075 | rank mix -3.96% (5/7) rho +0.0278
+  weeks 2-4          5 LIVE CANDIDATE -3.90% (7/7) rho +0.0246 | 6 LIVE CANDIDATE + ESPN (50/ -4.46% (6/7) rho +0.0306 | shadow v2.24 alone -3.48% (6/7) rho +0.0256 | rank mix -4.42% (6/7) rho +0.0312
+  weeks 5-9          5 LIVE CANDIDATE -2.29% (7/7) rho +0.0182 | 6 LIVE CANDIDATE + ESPN (50/ -2.86% (7/7) rho +0.0203 | shadow v2.24 alone -1.99% (6/7) rho +0.0184 | rank mix -2.79% (6/7) rho +0.0205
+  10 to playoffs     5 LIVE CANDIDATE -2.64% (7/7) rho +0.0182 | 6 LIVE CANDIDATE + ESPN (50/ -3.30% (7/7) rho +0.0155 | shadow v2.24 alone -2.78% (7/7) rho +0.0157 | rank mix -3.40% (7/7) rho +0.0136
+  FANTASY PLAYOFFS   5 LIVE CANDIDATE -0.99% (4/7) rho +0.0028 | 6 LIVE CANDIDATE + ESPN (50/ -2.75% (6/7) rho +0.0070 | shadow v2.24 alone -0.93% (4/7) rho -0.0005 | rank mix -2.72% (6/7) rho +0.0111
+  ADP 1-30           5 LIVE CANDIDATE -3.38% (7/7) rho +0.0266 | 6 LIVE CANDIDATE + ESPN (50/ -3.71% (7/7) rho +0.0230 | shadow v2.24 alone -3.33% (6/7) rho +0.0243 | rank mix -3.74% (7/7) rho +0.0214
+  ADP 31-60          5 LIVE CANDIDATE -1.29% (6/7) rho +0.0154 | 6 LIVE CANDIDATE + ESPN (50/ -2.17% (6/7) rho +0.0332 | shadow v2.24 alone -0.73% (5/7) rho +0.0163 | rank mix -1.99% (6/7) rho +0.0322
+  ADP 61-100         5 LIVE CANDIDATE -1.73% (5/7) rho +0.0369 | 6 LIVE CANDIDATE + ESPN (50/ -3.36% (6/7) rho +0.0733 | shadow v2.24 alone -1.57% (5/7) rho +0.0369 | rank mix -3.42% (6/7) rho +0.0765
+  ADP 101-150        5 LIVE CANDIDATE -1.36% (6/7) rho +0.0140 | 6 LIVE CANDIDATE + ESPN (50/ -3.87% (6/7) rho +0.0617 | shadow v2.24 alone -1.37% (6/7) rho +0.0049 | rank mix -3.95% (6/7) rho +0.0661
+  QB                 5 LIVE CANDIDATE -1.36% (4/7) rho +0.0178 | 6 LIVE CANDIDATE + ESPN (50/ -2.38% (6/7) rho +0.0102 | shadow v2.24 alone -1.00% (4/7) rho +0.0148 | rank mix -2.28% (6/7) rho +0.0114
+  RB                 5 LIVE CANDIDATE -2.74% (7/7) rho +0.0146 | 6 LIVE CANDIDATE + ESPN (50/ -3.84% (7/7) rho +0.0253 | shadow v2.24 alone -2.77% (7/7) rho +0.0137 | rank mix -3.96% (7/7) rho +0.0239
+  WR                 5 LIVE CANDIDATE -2.82% (7/7) rho +0.0180 | 6 LIVE CANDIDATE + ESPN (50/ -3.45% (7/7) rho +0.0302 | shadow v2.24 alone -2.60% (7/7) rho +0.0168 | rank mix -3.40% (7/7) rho +0.0309
+  TE                 5 LIVE CANDIDATE -1.54% (4/7) rho +0.0137 | 6 LIVE CANDIDATE + ESPN (50/ -2.53% (6/7) rho +0.0115 | shadow v2.24 alone -1.13% (4/7) rho +0.0105 | rank mix -2.41% (5/7) rho +0.0104
+
+=== vs ESPN on ESPN-graded rows (top 150, final week dropped): typical miss, error vs ESPN (seasons better than ESPN), rank rho ===
+  ALL                n=10403 | ESPN 7.11 (+0.00%, 0/7) rho 0.3794 | 0 TODAY (live pre-book) 7.20 (+2.59%, 0/7) rho 0.3687 | 5 LIVE CANDIDATE 7.12 (+0.46%, 3/7) rho 0.3850 | 6 LIVE CANDIDATE + ESPN (5 7.07 (-1.04%, 7/7) rho 0.3884 | shadow v2.24 alone 7.13 (+0.65%, 3/7) rho 0.3832 | rank mix 7.07 (-1.03%, 7/7) rho 0.3886
+  FANTASY PLAYOFFS   n= 1869 | ESPN 7.27 (+0.00%, 0/7) rho 0.4086 | 0 TODAY (live pre-book) 7.39 (+3.34%, 1/7) rho 0.4076 | 5 LIVE CANDIDATE 7.36 (+2.29%, 1/7) rho 0.4102 | 6 LIVE CANDIDATE + ESPN (5 7.27 (-0.02%, 3/7) rho 0.4146 | shadow v2.24 alone 7.36 (+2.31%, 1/7) rho 0.4068 | rank mix 7.27 (-0.01%, 3/7) rho 0.4187
+  ADP 1-60           n= 4779 | ESPN 7.83 (+0.00%, 0/7) rho 0.2501 | 0 TODAY (live pre-book) 7.91 (+2.06%, 0/7) rho 0.2377 | 5 LIVE CANDIDATE 7.81 (-0.36%, 4/7) rho 0.2625 | 6 LIVE CANDIDATE + ESPN (5 7.78 (-1.08%, 7/7) rho 0.2653 | shadow v2.24 alone 7.83 (-0.04%, 4/7) rho 0.2619 | rank mix 7.79 (-0.98%, 7/7) rho 0.2669
+
+=== ROBUSTNESS: the same ladder with the shadow's learned season prior fitted on EARLIER seasons only, graded 2021-25 ===
+  0 TODAY (live pre-book)                     +0.00% (0/5) | rho 0.3603 | pairs 63.82%
+  1 + Vegas-adjusted evidence                 -0.72% (4/5) | rho 0.3634 | pairs 63.86%
+  2 + tiered Clay prior (ADP <= 60)           -1.22% (5/5) | rho 0.3643 | pairs 63.92%
+  3 + backup-QB WR dock                       -1.60% (5/5) | rho 0.3645 | pairs 63.94%
+  4 + usage / WR one-game / QB total          -1.58% (5/5) | rho 0.3653 | pairs 63.92%
+  5 LIVE CANDIDATE: 70/30 shadow + step 4     -2.65% (5/5) | rho 0.3723 | pairs 64.22%
+  6 LIVE CANDIDATE + ESPN (50/50)             -3.53% (5/5) | rho 0.3819 | pairs 64.91%
+  shadow v2.24 alone                          -2.60% (5/5) | rho 0.3719 | pairs 64.24%
+
+Top 150, final week dropped, vs today's live pre-book number: LIVE CANDIDATE -2.45% (7/7), rank rho 0.370 -> 0.386, pairs 63.83% -> 64.39%; with ESPN mixed in -3.34% (7/7), rho 0.389, pairs 64.88%.
+wrote data/live_candidate.js (44s)

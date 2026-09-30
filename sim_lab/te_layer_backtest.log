@@ -1,0 +1,89 @@
+=== Tight ends on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | TE rows 3686: -0.20% vs shipped
+  routes 2018: 132 TE-seasons
+  routes 2019: 129 TE-seasons
+  routes 2020: 140 TE-seasons
+  routes 2021: 144 TE-seasons
+  routes 2022: 136 TE-seasons
+  routes 2023: 134 TE-seasons
+  routes 2024: 134 TE-seasons
+  TE rows with last-season route participation: 3288 (terciles at 0.47 / 0.70)
+
+=== TE reads (actual / shadow, actual / shipped, shadow vs shipped) ===
+  TE, all                                  n= 3686 act/shadow 1.035 act/shipped 1.063 shadow vs shipped  -0.20%
+    wk1                                    n=  245 act/shadow 0.895 act/shipped 0.920 shadow vs shipped  +5.19%
+    wk2-4                                  n=  700 act/shadow 0.982 act/shipped 1.024 shadow vs shipped  -0.17%
+    wk5-8                                  n=  826 act/shadow 1.092 act/shipped 1.124 shadow vs shipped  -1.96%
+    wk9-12                                 n=  777 act/shadow 1.037 act/shipped 1.058 shadow vs shipped  +0.00%
+    wk13+                                  n= 1138 act/shadow 1.054 act/shipped 1.076 shadow vs shipped  +0.11%
+    vets same team                         n= 2719 act/shadow 1.038 act/shipped 1.051 shadow vs shipped  +0.34%
+    vets changed team                      n=  589 act/shadow 0.991 act/shipped 1.033 shadow vs shipped  -2.22%
+    2nd-year                               n=  461 act/shadow 1.111 act/shipped 1.140 shadow vs shipped  +1.40%
+    rookies                                n=  378 act/shadow 1.069 act/shipped 1.215 shadow vs shipped  -1.96%
+    vets 1st string                        n= 2370 act/shadow 1.037 act/shipped 1.045 shadow vs shipped  -0.05%
+    vets 2nd string                        n=  729 act/shadow 1.019 act/shipped 1.053 shadow vs shipped  -0.67%
+    vets 3rd+                              n=   94 act/shadow 0.967 act/shipped 1.127 shadow vs shipped  -0.30%
+    vets age <= 25                         n=  832 act/shadow 1.084 act/shipped 1.098 shadow vs shipped  +0.70%
+    vets age 26-29                         n= 1716 act/shadow 1.019 act/shipped 1.049 shadow vs shipped  -0.11%
+    vets age 30+                           n=  760 act/shadow 1.004 act/shipped 0.998 shadow vs shipped  -0.56%
+    vets ADP 1-60                          n=  409 act/shadow 1.079 act/shipped 1.019 shadow vs shipped  +0.40%
+    vets ADP 61-120                        n=  593 act/shadow 1.025 act/shipped 1.020 shadow vs shipped  -0.36%
+    vets ADP 121-180                       n=  619 act/shadow 1.017 act/shipped 1.029 shadow vs shipped  +0.80%
+    vets no ADP                            n= 1687 act/shadow 1.016 act/shipped 1.098 shadow vs shipped  -0.48%
+    vets route rate low (< 0.47)           n= 1083 act/shadow 0.986 act/shipped 1.036 shadow vs shipped  -0.18%
+    vets route rate mid                    n= 1112 act/shadow 1.014 act/shipped 1.042 shadow vs shipped  -0.62%
+    vets route rate high (> 0.70)          n= 1093 act/shadow 1.074 act/shipped 1.063 shadow vs shipped  +0.45%
+    vets high routes & prior < 6 half-PPR  n=  175 act/shadow 1.083 act/shipped 1.189 shadow vs shipped  +0.03%
+    vets low routes & prior >= 6           n=  236 act/shadow 1.014 act/shipped 1.022 shadow vs shipped  -0.92%
+
+=== TE sweeps (LOYO vs shadow v2.6) ===
+  LEVEL TE x m (all weeks) (n=3686)
+    grid pooled MSE: 1.0:26.007  0.95:26.081  0.9:26.210  1.05:25.985  1.1:26.018
+    LOYO 25.9667 vs shadow 25.9903 (-0.09%), seasons better than shadow 3/7, picks [1.05, 1.05, 1.05, 1.05, 1.05, 1.05, 1.05], pooled best 1.05 | shadow vs shipped -0.20% -> -0.29%
+    LEVEL TE week 1 x m (n=245)
+    grid pooled MSE: 1.0:22.149  0.95:21.889  0.9:21.828  0.85:21.964  1.05:22.608
+    LOYO 21.4502 vs shadow 21.4293 (+0.10%), seasons better than shadow 4/7, picks [0.9, 0.9, 0.85, 0.9, 0.95, 0.95, 0.9], pooled best 0.9 | shadow vs shipped +5.19% -> +5.29%
+  P prior strength, TE (n=3686)
+    grid pooled MSE: 8:26.007  5:26.061  6:26.024  10:26.027  12:26.062  16:26.145
+    LOYO 26.0059 vs shadow 25.9903 (+0.06%), seasons better than shadow 0/7, picks [10, 8, 8, 8, 8, 8, 8], pooled best 8 | shadow vs shipped -0.20% -> -0.14%
+  SHRINK k, TE (n=3686)
+    grid pooled MSE: 0.8:26.007  0.7:26.067  0.6:26.187  0.9:26.006  1.0:26.065
+    LOYO 26.0114 vs shadow 25.9903 (+0.08%), seasons better than shadow 0/7, picks [0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.8], pooled best 0.9 | shadow vs shipped -0.20% -> -0.12%
+  ADP weight, TE vets (n=1621)
+    grid pooled MSE: 0.75:34.455  0.5:34.461  0.9:34.473  1.0:34.495  0.25:34.512
+    LOYO 34.2846 vs shadow 34.2699 (+0.04%), seasons better than shadow 0/7, picks [0.75, 0.75, 0.75, 0.5, 0.75, 0.75, 0.5], pooled best 0.75 | shadow vs shipped +0.27% -> +0.32%
+  AGE curve on (1) / off (0), TE (n=3308)
+    grid pooled MSE: 1.0:26.158  0.0:26.174
+    LOYO 26.0324 vs shadow 26.0324 (+0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped +0.01% -> +0.01%
+  2nd-string dock, TE (re-check) (n=729)
+    grid pooled MSE: 0.8:16.411  0.9:16.491  0.7:16.452  0.6:16.614  1.0:16.691
+    LOYO 17.0490 vs shadow 17.0083 (+0.24%), seasons better than shadow 0/7, picks [0.7, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8], pooled best 0.8 | shadow vs shipped -0.67% -> -0.43%
+  3rd+ dock, TE (n=94)
+    grid pooled MSE: 1.0:18.390  0.9:18.571  0.8:18.879  0.7:19.313
+    LOYO 19.8163 vs shadow 19.8163 (+0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -0.30% -> -0.30%
+  ROUTES: low-route TE x m (n=1083)
+    grid pooled MSE: 1.0:18.799  0.9:18.790  0.8:18.899  1.1:18.927  1.2:19.172
+    LOYO 18.9411 vs shadow 18.8787 (+0.33%), seasons better than shadow 0/7, picks [0.9, 1.0, 0.9, 1.0, 0.9, 0.9, 0.9], pooled best 0.9 | shadow vs shipped -0.18% -> +0.15%
+  ROUTES: high-route TE x m (n=1093)
+    grid pooled MSE: 1.0:37.656  1.1:37.381  1.2:37.473  0.9:38.297  0.8:39.304
+    LOYO 37.5244 vs shadow 37.7403 (-0.57%), seasons better than shadow 3/7, picks [1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped +0.45% -> -0.13%
+    high routes & prior < 6 x m (n=175)
+    grid pooled MSE: 1.0:25.073  1.1:25.184  1.2:25.478  1.3:25.953  0.9:25.145
+    LOYO 26.2385 vs shadow 25.8632 (+1.45%), seasons better than shadow 0/7, picks [1.1, 1.0, 1.0, 0.9, 1.0, 1.0, 0.9], pooled best 1.0 | shadow vs shipped +0.03% -> +1.49%
+  2nd-year TE x m (n=461)
+    grid pooled MSE: 1.0:23.590  1.1:23.524  1.2:23.611  0.9:23.809
+    LOYO 24.9034 vs shadow 24.6901 (+0.86%), seasons better than shadow 2/7, picks [1.1, 1.0, 1.1, 1.1, 1.1, 1.2, 1.0], pooled best 1.1 | shadow vs shipped +1.40% -> +2.27%
+
+=== Candidate from passing pieces: NONE ===
+  ALL rows: vs shipped -1.24% (7/7) | vs shadow v2.6 +0.00% (0/7) | TE rows +0.00% vs shadow (0/7), vs shipped -0.20% (was -0.20%)
+
+TE rows (n 3686) shadow -0.20% vs shipped. LEVEL TE x m (all weeks) -0.09% (3/7, FAIL); LEVEL TE week 1 x m +0.10% (4/7, FAIL); P prior strength, TE +0.06% (0/7, FAIL); SHRINK k, TE +0.08% (0/7, FAIL); ADP weight, TE vets +0.04% (0/7, FAIL); AGE curve on (1) / off (0), TE +0.00% (0/7, FAIL); 2nd-string dock, TE (re-check) +0.24% (0/7, FAIL); 3rd+ dock, TE +0.00% (0/7, FAIL); ROUTES: low-route TE x m +0.33% (0/7, FAIL); ROUTES: high-route TE x m -0.57% (3/7, FAIL); high routes & prior < 6 x m +1.45% (0/7, FAIL); 2nd-year TE x m +0.86% (2/7, FAIL). Candidate: TE rows +0.00% vs v2.6 (0/7).
+wrote data/te_layer_backtest.js (33s)

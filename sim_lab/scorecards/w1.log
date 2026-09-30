@@ -1,45 +1,46 @@
 ##### score_week.py --week 1
 W1 lock: 368 players, 16 games, preset half, sims 2000
-actuals: 330 game rows | consensus file: yes (2026-09-14T13:00:39.005104+00:00)
-scored: 182 played (shipped mean >= 5.0) | DNP/unmatched: 5
-  No-Clay shadow: 182 rows on the player's own 3-yr prior, 0 still on the Clay fallback (no history)
+actuals: 332 game rows | consensus file: yes (2026-09-14T13:00:39.005104+00:00)
+scored: 186 played (shipped mean >= 5.0) | DNP/unmatched: 1
+  No-Clay shadow: 186 rows on a Clay-free prior, 0 on the Clay fallback | prior sources: 
+  Learned shadow: no lcMean on this lock (locked before 2026-09-16)
   shadow REPORTS riser (rep>0): n=0 (too few to read)
   shadow REPORTS faller (rep<0): n=0 (too few to read)
   shadow ASCENDING flag: n=0 (too few to read)
 
 === ALL positions (same rows for every model where available) ===
   model               n    MAE   bias   RMSE
-  SHIPPED mean      182   5.66  +0.43   7.08
-  JS Weekly         182   5.59  -0.45   7.19
-  Clay stack        182   5.65  -0.46   7.25
+  SHIPPED mean      186   5.67  +0.37   7.13
+  JS Weekly         186   5.61  -0.50   7.23
+  Clay stack        186   5.66  -0.51   7.29
   prop-anchored     182   5.63  +0.33   7.06
-  site consensus    181   5.68  -0.02   7.18
-  ESPN              181   5.64  -0.32   7.21
-  CBS               179   5.87  +0.32   7.29
-  FantasyPros       181   5.68  -0.07   7.19
+  site consensus    184   5.74  -0.08   7.29
+  ESPN              184   5.67  -0.39   7.30
+  CBS               183   5.93  +0.28   7.38
+  FantasyPros       184   5.72  -0.14   7.28
 
 === by position (MAE) ===
-  pos    n    mean     js     nc   clay   prop   cons   espn    cbs     fp
-  QB    30    6.64   7.06      -   7.13   6.65   7.00   6.76   6.80   6.85 
-  RB    47    5.52   5.49      -   5.53   5.55   5.52   5.78   5.55   5.69 
-  WR    76    5.50   5.28      -   5.31   5.45   5.39   5.32   5.91   5.38 
-  TE    29    5.25   5.05      -   5.19   5.18   5.33   5.06   5.33   5.23 
+  pos    n    mean     js     nc    mix   mixb     lc    lcc   clay   prop   cons   espn    cbs     fp
+  QB    32    6.37   6.76      -      -      -      -      -   6.82   6.65   6.83   6.49   6.74   6.63 
+  RB    48    5.77   5.74      -      -      -      -      -   5.78   5.55   5.84   6.07   5.85   5.97 
+  WR    76    5.50   5.28      -      -      -      -      -   5.31   5.45   5.39   5.32   5.91   5.38 
+  TE    30    5.18   4.98      -      -      -      -      -   5.11   5.18   5.33   5.06   5.25   5.23 
 
 === head-to-head, row-level |error| (wins-losses-ties, tie = within 0.1) ===
-  SHIPPED    vs consensus : 88-80-13  (52% of decided)
-  SHIPPED    vs ESPN      : 85-82-14  (51% of decided)
-  JS Weekly  vs consensus : 95-77-9  (55% of decided)
-  JS Weekly  vs ESPN      : 89-75-17  (54% of decided)
-  Clay stack vs consensus : 91-81-9  (53% of decided)
-  Clay stack vs ESPN      : 86-80-15  (52% of decided)
+  SHIPPED    vs consensus : 90-81-13  (53% of decided)
+  SHIPPED    vs ESPN      : 87-83-14  (51% of decided)
+  JS Weekly  vs consensus : 97-78-9  (55% of decided)
+  JS Weekly  vs ESPN      : 91-76-17  (54% of decided)
+  Clay stack vs consensus : 93-82-9  (53% of decided)
+  Clay stack vs ESPN      : 88-81-15  (52% of decided)
 
 === p10-p90 band (target 80% inside / 10% / 10%) ===
-  n=182 inside 79.1%  below p10 10.4%  above p90 10.4%
-    QB: n=30 inside 77% below 13% above 10%
-    RB: n=47 inside 87% below 2% above 11%
+  n=186 inside 79.0%  below p10 10.2%  above p90 10.8%
+    QB: n=32 inside 78% below 12% above 9%
+    RB: n=48 inside 85% below 2% above 12%
     WR: n=76 inside 79% below 14% above 7%
-    TE: n=29 inside 69% below 10% above 21%
-  prop anchor source mix: {'line': 182}
+    TE: n=30 inside 70% below 10% above 20%
+  prop anchor source mix: {'line': 182, None: 4}
 
 === biggest misses, shipped mean (top 12) ===
   Jalen Coker            WR CAR vs CHI  proj   8.9  act  29.8  (-20.9)  js  6.59 clay  6.59 cons   9.8
@@ -48,27 +49,27 @@ scored: 182 played (shipped mean >= 5.0) | DNP/unmatched: 5
   Derrick Henry          RB BAL vs IND  proj  16.4  act  34.8  (-18.4)  js  16.9 clay  16.9 cons  14.7
   Caleb Williams         QB CHI vs CAR  proj  19.0  act  37.3  (-18.3)  js 17.53 clay 17.53 cons  18.1
   Kyler Murray           QB MIN vs GB   proj  18.8  act   0.6  (+18.2)  js 17.33 clay 17.33 cons  17.6
+  Ken Walker III         RB KC  vs DEN  proj  15.1  act  32.6  (-17.5)  js 14.87 clay 14.87 cons  12.3
   Ja'Marr Chase          WR CIN vs TB   proj  18.9  act   2.2  (+16.7)  js 17.03 clay 17.03 cons  17.0
   Sam Darnold            QB SEA vs NE   proj  16.8  act   0.5  (+16.3)  js 13.65 clay 13.65 cons  17.1
   David Montgomery       RB HOU vs BUF  proj  11.8  act  27.4  (-15.6)  js 10.37 clay 10.37 cons  14.2
   Bryce Young            QB CAR vs CHI  proj  17.3  act  32.4  (-15.1)  js 13.27 clay 13.27 cons  17.1
   Isaiah Likely          TE NYG vs DAL  proj   9.3  act  23.8  (-14.5)  js 10.16 clay  7.33 cons   9.1
-  Josh Allen             QB BUF vs HOU  proj  21.6  act  35.7  (-14.1)  js 20.64 clay 20.64 cons  18.3
 
-=== locked but no game row (5) ===
-  Ken Walker III (RB 15.1), Cameron Ward (QB 12.8), Cooper Rush (QB 11.4), Josh Jacobs (RB 9.0), Chigoziem Okonkwo (TE 5.6)
+=== locked but no game row (1) ===
+  Josh Jacobs (RB 9.0)
 
 
 ##### diagnose_week.py --week 1
-W1: 182 skill rows scored (mean >= 5.0)
+W1: 186 skill rows scored (mean >= 5.0)
 
 === 1. bias (proj − act) and MAE by position ===
   pos   n         SHIPPED              JS            Clay            prop       consensus            ESPN
-  QB   30    +0.32 /  6.64  -1.60 /  7.06  -1.65 /  7.13  +0.21 /  6.65  -0.37 /  7.00  -1.39 /  6.76
-  RB   47    -0.44 /  5.52  -0.86 /  5.49  -0.90 /  5.53  -0.44 /  5.55  -0.95 /  5.52  -0.77 /  5.78
+  QB   32    +0.45 /  6.37  -1.36 /  6.76  -1.40 /  6.82  +0.21 /  6.65  -0.07 /  6.83  -1.16 /  6.49
+  RB   48    -0.79 /  5.77  -1.21 /  5.74  -1.25 /  5.78  -0.44 /  5.55  -1.36 /  5.84  -1.17 /  6.07
   WR   76    +1.21 /  5.50  +0.45 /  5.28  +0.48 /  5.31  +1.06 /  5.45  +0.93 /  5.39  +0.63 /  5.32
-  TE   29    -0.08 /  5.25  -0.93 /  5.05  -0.99 /  5.19  -0.25 /  5.18  -0.68 /  5.33  -0.97 /  5.06
-  ALL 182    +0.43 /  5.66  -0.45 /  5.59  -0.46 /  5.65  +0.33 /  5.63  -0.02 /  5.68  -0.32 /  5.64
+  TE   30    +0.02 /  5.18  -0.81 /  4.98  -0.87 /  5.11  -0.25 /  5.18  -0.68 /  5.33  -0.97 /  5.06
+  ALL 186    +0.37 /  5.67  -0.50 /  5.61  -0.51 /  5.66  +0.33 /  5.63  -0.08 /  5.74  -0.39 /  5.67
 
 === 2. K + DST (fitted Vegas models, first live grade) ===
   K   n=31  SHIPPED bias -0.28 MAE  3.36 | model bias -0.82 MAE  3.39 | prop bias -0.30 MAE  3.35 | consensus bias -1.84 MAE  3.34 | band inside 84%
@@ -88,36 +89,36 @@ W1: 182 skill rows scored (mean >= 5.0)
 
 === 4. JS × consensus blend (MAE) ===
   w(cons): 0.0  0.2  0.5  0.8  1.0   | shipped
-  MAE:     5.59  5.58  5.61  5.64  5.68   | 5.64
+  MAE:     5.62  5.62  5.65  5.69  5.74   | 5.67
 
 === 5. tier buckets by shipped mean: bias / MAE / act÷proj ===
-  [ 5, 9) n= 71  bias +0.64  MAE  4.48  act/proj 0.910
-  [ 9,13) n= 54  bias +1.20  MAE  5.49  act/proj 0.888
-  [13,17) n= 30  bias -1.05  MAE  6.43  act/proj 1.070
+  [ 5, 9) n= 72  bias +0.67  MAE  4.46  act/proj 0.905
+  [ 9,13) n= 56  bias +1.25  MAE  5.38  act/proj 0.884
+  [13,17) n= 31  bias -1.58  MAE  6.79  act/proj 1.105
   [17,99) n= 27  bias +0.01  MAE  8.23  act/proj 0.999
 
 === 6. team implied-total terciles: act÷proj (Vegas elasticity check) ===
-  low  implied (n= 47, avg 18.9): act/proj 0.803  bias +2.00
-  mid  implied (n= 67, avg 22.4): act/proj 1.114  bias -1.28
+  low  implied (n= 50, avg 18.9): act/proj 0.799  bias +2.04
+  mid  implied (n= 68, avg 22.4): act/proj 1.134  bias -1.52
   high implied (n= 68, avg 25.7): act/proj 0.914  bias +1.04
 
 === 7. rank accuracy per position: Spearman | top-12 overlap (of 12) ===
   pos          SHIPPED              JS            Clay            prop       consensus            ESPN
-  QB      +0.31 |  7/12     +0.23 |  6/12     +0.19 |  6/12     +0.33 |  7/12     +0.23 |  7/12     +0.26 |  5/12   
-  RB      +0.70 |  6/12     +0.69 |  6/12     +0.69 |  6/12     +0.69 |  6/12     +0.67 |  5/12     +0.63 |  7/12   
+  QB      +0.37 |  7/12     +0.29 |  6/12     +0.26 |  6/12     +0.33 |  7/12     +0.26 |  7/12     +0.32 |  5/12   
+  RB      +0.71 |  6/12     +0.69 |  6/12     +0.69 |  6/12     +0.69 |  6/12     +0.66 |  5/12     +0.63 |  7/12   
   WR      +0.40 |  6/12     +0.36 |  5/12     +0.35 |  4/12     +0.41 |  5/12     +0.39 |  5/12     +0.37 |  5/12   
-  TE      +0.26 |  7/12     +0.19 |  5/12     +0.08 |  4/12     +0.24 |  6/12     +0.12 |  5/12     +0.16 |  5/12   
+  TE      +0.28 |  7/12     +0.20 |  5/12     +0.10 |  4/12     +0.24 |  6/12     +0.12 |  5/12     +0.16 |  5/12   
 
 === 8. stat-component bias: projected comps vs actual stat line (per game, played rows) ===
-  QB: py 225.5→220.3 (-2%) | ptd 1.4→1.6 (+14%) | ry 18.8→19.7 (+5%) | rtd 0.2→0.3 (+66%)
-  RB: ry 53.7→53.7 (+0%) | rtd 0.4→0.5 (+38%) | rec 2.3→2.4 (+5%) | rcy 17.4→16.8 (-3%) | rctd 0.1→0.1 (+38%)
+  QB: py 223.8→215.4 (-4%) | ptd 1.4→1.5 (+14%) | ry 18.5→19.8 (+7%) | rtd 0.2→0.3 (+63%)
+  RB: ry 54.1→56.2 (+4%) | rtd 0.4→0.5 (+39%) | rec 2.3→2.4 (+5%) | rcy 17.5→16.9 (-4%) | rctd 0.1→0.2 (+56%)
   WR: ry 1.9→1.0 (-49%) | rec 3.9→3.6 (-7%) | rcy 50.8→48.6 (-4%) | rctd 0.3→0.3 (+0%)
-  TE: rec 3.7→3.4 (-8%) | rcy 37.6→38.9 (+3%) | rctd 0.2→0.4 (+74%)
+  TE: rec 3.7→3.3 (-9%) | rcy 37.4→38.2 (+2%) | rctd 0.2→0.4 (+71%)
 
 === 9. band calibration by tier (inside / below p10 / above p90) ===
-  [ 5, 9) n= 71  inside   75%  below   14%  above   11%   avg (p90−p10)/mean 1.93
-  [ 9,13) n= 54  inside   85%  below    7%  above    7%   avg (p90−p10)/mean 1.76
-  [13,17) n= 30  inside   83%  below    3%  above   13%   avg (p90−p10)/mean 1.45
+  [ 5, 9) n= 72  inside   75%  below   14%  above   11%   avg (p90−p10)/mean 1.92
+  [ 9,13) n= 56  inside   86%  below    7%  above    7%   avg (p90−p10)/mean 1.74
+  [13,17) n= 31  inside   81%  below    3%  above   16%   avg (p90−p10)/mean 1.45
   [17,99) n= 27  inside   74%  below   15%  above   11%   avg (p90−p10)/mean 1.12
 
 

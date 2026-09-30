@@ -246,11 +246,16 @@ def validate():
 
 ROUTES_OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "sim_routes.js")
 
-def norm_name(n):
+# pbp / PFF name -> the pool's name (audit_shadow.js 2026-09-17: 'kenny gainwell' orphaned Kenneth Gainwell's xFP + RB TD-luck rows)
+PLAYER_ALIAS = {"kenny gainwell": "kenneth gainwell"}
+def _norm_name_raw(n):
     import re as _re
     n = n.lower().replace(".", "").replace("'", "").replace("-", " ")
     n = _re.sub(r"\b(jr|sr|ii|iii|iv|v)\b", "", n)
     return _re.sub(r"\s+", " ", n).strip()
+def norm_name(n):
+    k = _norm_name_raw(n)
+    return PLAYER_ALIAS.get(k, k)
 
 # ---------------------------------------------------------------------------
 # RB TD LUCK (backtest_rb_role.py, 2026-09-14): per RB season-to-date expected

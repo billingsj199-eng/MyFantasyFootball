@@ -1,0 +1,6 @@
+import io
+p = "_tmp/patch_evc_panel.py"; s = io.open(p, encoding="utf-8").read()
+s = s.replace("  audit_shadow.js: 0 of 144 unexplained.\n", "  audit_shadow.js: 0 of 144 unexplained.\n- SAME FIX ON THE LIVE CLAY BLEND (not applied - Jack's call): -0.72% vs today's Clay blend (6/7), rho +.0037, ADP 1-60\n  -0.89% (7/7), weeks 2-4 -0.29% (6/7), 10-to-playoffs -0.97% (7/7), playoffs -0.76% (5/7); k=1.5 -0.90% (6/7).\n")
+s = s.replace("**How to apply:** the same fix applies to the LIVE Clay blend evidence (not ported; Jack's call).", "**How to apply:** the same fix on the LIVE Clay blend = -0.72% (6/7), ADP 1-60 -0.89% (7/7), weeks 10-to-playoffs -0.97% (7/7) - NOT ported, awaiting Jack's go ('port the Vegas-adjusted evidence to live').")
+s = s.replace("Live projections unchanged; kill window.SIM_NC_VEGEV = false.</p>';", "Live projections unchanged; kill window.SIM_NC_VEGEV = false.' + (EVC.live ? ' <b>Same fix on the LIVE Clay blend (not applied, Jack\u2019s call):</b> ' + EVC.live.filter(function (r) { return r.variant === 'A Vegas-only k=1'; }).map(function (r) { return esc(r.cut) + ' ' + (r.d >= 0 ? '+' : '') + r.d.toFixed(2) + '% (' + r.wins + '/7)'; }).join(' \u00b7 ') + '.' : '') + '</p>';")
+io.open(p, "w", encoding="utf-8", newline="\n").write(s); print("docs patched")

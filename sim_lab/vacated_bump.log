@@ -1,0 +1,103 @@
+=== Vacated volume x depth chart at the start of the season: a bump for the season prior ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  vacated features on 1202 of 1404 rows | mean vac (RB/WR/TE) 0.336 | leader-left 287 | promo 580 | string-1 rows 937
+
+=== the 24 top-60 rows where Clay sat 2+ above the ridge: is there a vacated / depth signal? ===
+  2019 Aaron Jones            RB GB adp   27 | string 1 | vac 0.00 leader-left 0 prev-rank 1 promo 0 | act  18.1 Clay  15.1 shadow  12.3
+  2019 David Montgomery       RB CHI adp   30 | string 3 | vac 0.78 leader-left 1 prev-rank - promo 0 | act   9.9 Clay  12.7 shadow   8.6
+  2019 Derrick Henry          RB TEN adp   40 | string 1 | vac 0.08 leader-left 0 prev-rank 1 promo 0 | act  19.0 Clay  14.8 shadow  11.5
+  2019 Joe Mixon              RB CIN adp   18 | string - | vac 0.12 leader-left 0 prev-rank 1 promo 0 | act  13.0 Clay  15.9 shadow  13.3
+  2020 Nick Chubb             RB CLE adp   12 | string 1 | vac 0.00 leader-left 0 prev-rank 1 promo 0 | act  16.6 Clay  16.4 shadow  13.8
+  2020 Travis Kelce           TE KC adp   20 | string 1 | vac 0.04 leader-left 0 prev-rank 1 promo 0 | act  17.4 Clay  14.6 shadow  11.3
+  2021 Adam Thielen           WR MIN adp   53 | string 1 | vac 0.21 leader-left 0 prev-rank 2 promo 1 | act  12.8 Clay  12.6 shadow  10.4
+  2021 Dak Prescott           QB DAL adp   59 | string 1 | vac 0.00 leader-left 0 prev-rank - promo 1 | act  20.6 Clay  21.5 shadow  19.2
+  2021 James Robinson         RB JAX adp   30 | string 1 | vac 0.13 leader-left 0 prev-rank 1 promo 0 | act  10.2 Clay  14.3 shadow  12.5
+  2021 Josh Allen             QB BUF adp   35 | string 1 | vac 0.00 leader-left 0 prev-rank - promo 1 | act  24.6 Clay  23.6 shadow  20.5
+  2021 Mike Davis             RB ATL adp   41 | string 1 | vac 1.14 leader-left 1 prev-rank - promo 1 | act   5.5 Clay  12.2 shadow  10.4
+  2021 Miles Sanders          RB PHI adp   38 | string 1 | vac 0.20 leader-left 0 prev-rank 1 promo 0 | act   8.7 Clay  14.5 shadow  11.9
+  2021 Stefon Diggs           WR BUF adp   16 | string 1 | vac 0.21 leader-left 0 prev-rank 1 promo 0 | act  13.8 Clay  15.5 shadow  13.1
+  2021 T.J. Hockenson         TE DET adp   54 | string 1 | vac 0.12 leader-left 0 prev-rank 1 promo 0 | act   9.6 Clay  10.0 shadow   8.2
+  2022 Jalen Hurts            QB PHI adp   58 | string 1 | vac 0.00 leader-left 0 prev-rank - promo 1 | act  25.6 Clay  21.3 shadow  19.0
+  2022 Travis Etienne         RB JAX adp   34 | string 2 | vac 1.10 leader-left 0 prev-rank - promo 0 | act  11.0 Clay  11.9 shadow   9.0
+  2023 Derrick Henry          RB TEN adp   13 | string 1 | vac 0.35 leader-left 0 prev-rank 1 promo 0 | act  13.7 Clay  17.2 shadow  14.6
+  2023 Jahmyr Gibbs           RB DET adp   36 | string 2 | vac 0.99 leader-left 1 prev-rank - promo 0 | act  14.4 Clay  13.8 shadow   9.5
+  2023 Mark Andrews           TE BAL adp   32 | string 3 | vac 0.08 leader-left 0 prev-rank 1 promo 0 | act  11.3 Clay  11.3 shadow   8.9
+  2023 Travis Etienne         RB JAX adp   28 | string 1 | vac 0.55 leader-left 0 prev-rank 1 promo 0 | act  14.9 Clay  13.9 shadow  11.6
+  2024 Alvin Kamara           RB NO adp   47 | string 1 | vac 0.17 leader-left 0 prev-rank 1 promo 0 | act  16.5 Clay  14.1 shadow  11.3
+  2024 Bijan Robinson         RB ATL adp    2 | string 1 | vac 0.16 leader-left 0 prev-rank 1 promo 0 | act  18.3 Clay  18.6 shadow  15.2
+  2024 Jahmyr Gibbs           RB DET adp    9 | string 2 | vac 0.20 leader-left 0 prev-rank 2 promo 0 | act  19.8 Clay  15.2 shadow  12.0
+  2025 Jayden Daniels         QB WAS adp   27 | string 1 | vac 0.00 leader-left 0 prev-rank - promo 1 | act  16.7 Clay  21.9 shadow  20.2
+  riser rows: mean vac 0.298 vs all top-60 non-QB 0.319 | promo share 0.25 vs 0.35 | leader-left 0.12 vs 0.10
+
+=== A. ridge LIVE + vacated features (LOYO), by tier ===
+  top 60: shadow prior with ridge+vacated        n= 353 | vs shadow prior  +1.27% (3/7) | vs Clay +10.95% (2/7)  [shadow vs Clay +9.56%]
+  ADP 61-100: shadow prior with ridge+vacated    n= 201 | vs shadow prior  +0.30% (2/7) | vs Clay  -0.37% (4/7)  [shadow vs Clay -0.67%]
+  ADP 101-150: shadow prior with ridge+vacated   n= 230 | vs shadow prior  -0.43% (4/7) | vs Clay  -5.83% (3/7)  [shadow vs Clay -5.43%]
+  top 150: shadow prior with ridge+vacated       n= 784 | vs shadow prior  +0.56% (2/7) | vs Clay  +3.03% (3/7)  [shadow vs Clay +2.46%]
+  ALL: shadow prior with ridge+vacated           n=1404 | vs shadow prior  +0.52% (2/7) | vs Clay  -7.74% (3/7)  [shadow vs Clay -8.22%]
+  top 150 QB: ridge+vacated                      n= 125 | vs shadow prior  +0.00% (3/7) | vs Clay +19.17% (1/7)  [shadow vs Clay +19.17%]
+  top 150 RB: ridge+vacated                      n= 253 | vs shadow prior  +0.74% (2/7) | vs Clay  -0.99% (2/7)  [shadow vs Clay -1.71%]
+  top 150 WR: ridge+vacated                      n= 311 | vs shadow prior  +0.36% (2/7) | vs Clay  -1.41% (3/7)  [shadow vs Clay -1.76%]
+  top 150 TE: ridge+vacated                      n=  95 | vs shadow prior  +1.96% (1/6) | vs Clay +11.86% (4/6)  [shadow vs Clay +9.71%]
+
+=== B. bump rules on the v2.15 shadow prior (k per position, LOYO on top-150 rows) ===
+  -- prior x (1 + k x string-1 x vacated share): k picks QB [0] RB [0] WR [0, 0.25] TE [0, 0.25]
+  top 60: (1 + k x string-1 x vacated share)     n= 353 | vs shadow prior  +1.24% (0/7) | vs Clay +10.91% (2/7)  [shadow vs Clay +9.56%]
+  ADP 61-100: (1 + k x string-1 x vacated share) n= 201 | vs shadow prior  +1.09% (1/7) | vs Clay  +0.41% (4/7)  [shadow vs Clay -0.67%]
+  ADP 101-150: (1 + k x string-1 x vacated share) n= 230 | vs shadow prior  +2.87% (0/7) | vs Clay  -2.72% (3/7)  [shadow vs Clay -5.43%]
+  top 150: (1 + k x string-1 x vacated share)    n= 784 | vs shadow prior  +1.65% (0/7) | vs Clay  +4.14% (3/7)  [shadow vs Clay +2.46%]
+  ALL: (1 + k x string-1 x vacated share)        n=1404 | vs shadow prior  +1.30% (0/7) | vs Clay  -7.03% (3/7)  [shadow vs Clay -8.22%]
+  top 150 QB: str1_vac bump                      n= 125 | vs shadow prior  +0.00% (0/7) | vs Clay +19.17% (1/7)  [shadow vs Clay +19.17%]
+  top 150 RB: str1_vac bump                      n= 253 | vs shadow prior  +0.00% (0/7) | vs Clay  -1.71% (2/7)  [shadow vs Clay -1.71%]
+  top 150 WR: str1_vac bump                      n= 311 | vs shadow prior  +4.38% (0/7) | vs Clay  +2.54% (3/7)  [shadow vs Clay -1.76%]
+  top 150 TE: str1_vac bump                      n=  95 | vs shadow prior  +1.90% (0/6) | vs Clay +11.79% (4/6)  [shadow vs Clay +9.71%]
+     riser rows mean pred 12.82 (shadow 12.82, act 15.22, Clay 15.55)
+  -- prior x (1 + k x promotion flag): k picks QB [0] RB [0, 0.05] WR [0, 0.05] TE [0, 0.05]
+  top 60: (1 + k x promotion flag)               n= 353 | vs shadow prior  +1.28% (1/7) | vs Clay +10.96% (2/7)  [shadow vs Clay +9.56%]
+  ADP 61-100: (1 + k x promotion flag)           n= 201 | vs shadow prior  +0.37% (4/7) | vs Clay  -0.31% (4/7)  [shadow vs Clay -0.67%]
+  ADP 101-150: (1 + k x promotion flag)          n= 230 | vs shadow prior  +1.29% (1/7) | vs Clay  -4.20% (3/7)  [shadow vs Clay -5.43%]
+  top 150: (1 + k x promotion flag)              n= 784 | vs shadow prior  +1.05% (1/7) | vs Clay  +3.54% (3/7)  [shadow vs Clay +2.46%]
+  ALL: (1 + k x promotion flag)                  n=1404 | vs shadow prior  +0.84% (2/7) | vs Clay  -7.44% (3/7)  [shadow vs Clay -8.22%]
+  top 150 QB: promo bump                         n= 125 | vs shadow prior  +0.00% (0/7) | vs Clay +19.17% (1/7)  [shadow vs Clay +19.17%]
+  top 150 RB: promo bump                         n= 253 | vs shadow prior  +0.85% (0/7) | vs Clay  -0.87% (2/7)  [shadow vs Clay -1.71%]
+  top 150 WR: promo bump                         n= 311 | vs shadow prior  +1.89% (1/7) | vs Clay  +0.09% (3/7)  [shadow vs Clay -1.76%]
+  top 150 TE: promo bump                         n=  95 | vs shadow prior  +0.97% (0/6) | vs Clay +10.77% (4/6)  [shadow vs Clay +9.71%]
+     riser rows mean pred 12.84 (shadow 12.82, act 15.22, Clay 15.55)
+  -- prior x (1 + k x vacated share), any string: k picks QB [0] RB [0] WR [0, 0.25] TE [0, 0.25]
+  top 60: (1 + k x vacated share), any string    n= 353 | vs shadow prior  +1.24% (0/7) | vs Clay +10.91% (2/7)  [shadow vs Clay +9.56%]
+  ADP 61-100: (1 + k x vacated share), any string n= 201 | vs shadow prior  +1.11% (1/7) | vs Clay  +0.43% (4/7)  [shadow vs Clay -0.67%]
+  ADP 101-150: (1 + k x vacated share), any string n= 230 | vs shadow prior  +2.86% (0/7) | vs Clay  -2.73% (3/7)  [shadow vs Clay -5.43%]
+  top 150: (1 + k x vacated share), any string   n= 784 | vs shadow prior  +1.65% (0/7) | vs Clay  +4.14% (3/7)  [shadow vs Clay +2.46%]
+  ALL: (1 + k x vacated share), any string       n=1404 | vs shadow prior  +1.39% (0/7) | vs Clay  -6.95% (3/7)  [shadow vs Clay -8.22%]
+  top 150 QB: vac bump                           n= 125 | vs shadow prior  +0.00% (0/7) | vs Clay +19.17% (1/7)  [shadow vs Clay +19.17%]
+  top 150 RB: vac bump                           n= 253 | vs shadow prior  +0.00% (0/7) | vs Clay  -1.71% (2/7)  [shadow vs Clay -1.71%]
+  top 150 WR: vac bump                           n= 311 | vs shadow prior  +4.39% (0/7) | vs Clay  +2.56% (3/7)  [shadow vs Clay -1.76%]
+  top 150 TE: vac bump                           n=  95 | vs shadow prior  +1.86% (0/6) | vs Clay +11.75% (4/6)  [shadow vs Clay +9.71%]
+     riser rows mean pred 12.82 (shadow 12.82, act 15.22, Clay 15.55)
+
+=== Forward 2021-25 (fit on earlier seasons only) ===
+  forward top 60: ridge+vacated                  n= 275 | vs shadow prior  +1.39% (2/5) | vs Clay  +5.57% (3/5)  [shadow vs Clay +4.12%]
+  forward ADP 61-100: ridge+vacated              n= 160 | vs shadow prior  +3.98% (1/5) | vs Clay  +1.71% (2/5)  [shadow vs Clay -2.18%]
+  forward ADP 101-150: ridge+vacated             n= 182 | vs shadow prior  -0.84% (4/5) | vs Clay  -9.31% (4/5)  [shadow vs Clay -8.54%]
+  forward top 150: ridge+vacated                 n= 617 | vs shadow prior  +1.32% (2/5) | vs Clay  -0.21% (3/5)  [shadow vs Clay -1.52%]
+  forward ALL: ridge+vacated                     n=1096 | vs shadow prior  +0.96% (1/5) | vs Clay  -9.70% (3/5)  [shadow vs Clay -10.55%]
+  forward top 60: string-1 x vacated bump        n= 275 | vs shadow prior +11.86% (1/5) | vs Clay +16.46% (2/5)  [shadow vs Clay +4.12%]
+  forward ADP 61-100: string-1 x vacated bump    n= 160 | vs shadow prior  -2.18% (2/5) | vs Clay  -4.32% (3/5)  [shadow vs Clay -2.18%]
+  forward ADP 101-150: string-1 x vacated bump   n= 182 | vs shadow prior  +2.33% (1/5) | vs Clay  -6.41% (3/5)  [shadow vs Clay -8.54%]
+  forward top 150: string-1 x vacated bump       n= 617 | vs shadow prior  +5.67% (0/5) | vs Clay  +4.07% (2/5)  [shadow vs Clay -1.52%]
+  forward ALL: string-1 x vacated bump           n=1096 | vs shadow prior  +4.93% (0/5) | vs Clay  -6.14% (3/5)  [shadow vs Clay -10.55%]
+  forward top 60: promotion bump                 n= 275 | vs shadow prior  +2.57% (1/5) | vs Clay  +6.79% (2/5)  [shadow vs Clay +4.12%]
+  forward ADP 61-100: promotion bump             n= 160 | vs shadow prior  +2.07% (2/5) | vs Clay  -0.16% (3/5)  [shadow vs Clay -2.18%]
+  forward ADP 101-150: promotion bump            n= 182 | vs shadow prior  +7.64% (1/5) | vs Clay  -1.56% (3/5)  [shadow vs Clay -8.54%]
+  forward top 150: promotion bump                n= 617 | vs shadow prior  +3.99% (0/5) | vs Clay  +2.42% (3/5)  [shadow vs Clay -1.52%]
+  forward ALL: promotion bump                    n=1096 | vs shadow prior  +4.31% (0/5) | vs Clay  -6.70% (3/5)  [shadow vs Clay -10.55%]
+
+Top 150 LOYO: (1 + k x string-1 x vacated share) +1.65% vs shadow (0/7); (1 + k x promotion flag) +1.05% vs shadow (1/7); (1 + k x vacated share), any string +1.65% vs shadow (0/7). Forward top 150: ridge+vacated +1.32% (2/5); string-1 x vacated bump +5.67% (0/5); promotion bump +3.99% (0/5).
+wrote data/vacated_bump.js (39s)

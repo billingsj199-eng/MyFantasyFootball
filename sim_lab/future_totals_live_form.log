@@ -1,0 +1,107 @@
+=== live form of the future-totals re-rate on 2019-25 (team x quarterback shifts, weather taken out) ===
+
+  ALL future games, every checkpoint  (n=16590 team-games)
+    no shift (preseason view)          miss vs closing line 2.714
+    shift, no quarterback context      miss vs closing line 2.327  -14.3% (7/7 seasons) | points-scored MSE -3.35%
+    separate per quarterback           miss vs closing line 2.352  -13.4% (7/7 seasons) | points-scored MSE -3.57% | vs no-context shift +1.0% (1/7), points MSE -0.22%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 2.266  -16.5% (7/7 seasons) | points-scored MSE -4.44% | vs no-context shift -2.6% (6/7), points MSE -1.13%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 2.258  -16.8% (7/7 seasons) | points-scored MSE -4.39% | vs no-context shift -3.0% (7/7), points MSE -1.07%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 2.261  -16.7% (7/7 seasons) | points-scored MSE -4.23% | vs no-context shift -2.8% (7/7), points MSE -0.91%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 2.276  -16.1% (7/7 seasons) | points-scored MSE -3.99% | vs no-context shift -2.2% (7/7), points MSE -0.66%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 2.296  -15.4% (7/7 seasons) | points-scored MSE -3.76% | vs no-context shift -1.3% (7/7), points MSE -0.42%
+
+  standing after week 2  (n=3294 team-games)
+    no shift (preseason view)          miss vs closing line 2.577
+    shift, no quarterback context      miss vs closing line 2.438  -5.4% (7/7 seasons) | points-scored MSE -1.60%
+    separate per quarterback           miss vs closing line 2.438  -5.4% (7/7 seasons) | points-scored MSE -1.69% | vs no-context shift +0.0% (4/7), points MSE -0.09%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 2.425  -5.9% (7/7 seasons) | points-scored MSE -1.84% | vs no-context shift -0.5% (4/7), points MSE -0.24%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 2.407  -6.6% (7/7 seasons) | points-scored MSE -1.92% | vs no-context shift -1.3% (4/7), points MSE -0.32%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 2.402  -6.8% (7/7 seasons) | points-scored MSE -1.93% | vs no-context shift -1.5% (6/7), points MSE -0.33%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 2.409  -6.5% (7/7 seasons) | points-scored MSE -1.85% | vs no-context shift -1.2% (6/7), points MSE -0.25%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 2.420  -6.1% (7/7 seasons) | points-scored MSE -1.76% | vs no-context shift -0.7% (6/7), points MSE -0.16%
+
+  standing after week 4  (n=2850 team-games)
+    no shift (preseason view)          miss vs closing line 2.660
+    shift, no quarterback context      miss vs closing line 2.345  -11.9% (7/7 seasons) | points-scored MSE -2.74%
+    separate per quarterback           miss vs closing line 2.363  -11.2% (7/7 seasons) | points-scored MSE -3.09% | vs no-context shift +0.8% (2/7), points MSE -0.37%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 2.296  -13.7% (7/7 seasons) | points-scored MSE -3.85% | vs no-context shift -2.1% (5/7), points MSE -1.14%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 2.288  -14.0% (7/7 seasons) | points-scored MSE -3.78% | vs no-context shift -2.4% (7/7), points MSE -1.07%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 2.289  -14.0% (7/7 seasons) | points-scored MSE -3.61% | vs no-context shift -2.4% (7/7), points MSE -0.89%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 2.301  -13.5% (7/7 seasons) | points-scored MSE -3.35% | vs no-context shift -1.9% (7/7), points MSE -0.63%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 2.319  -12.8% (7/7 seasons) | points-scored MSE -3.11% | vs no-context shift -1.1% (7/7), points MSE -0.38%
+
+  standing after week 8  (n=2040 team-games)
+    no shift (preseason view)          miss vs closing line 2.818
+    shift, no quarterback context      miss vs closing line 2.246  -20.3% (7/7 seasons) | points-scored MSE -4.21%
+    separate per quarterback           miss vs closing line 2.295  -18.6% (7/7 seasons) | points-scored MSE -4.36% | vs no-context shift +2.2% (3/7), points MSE -0.16%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 2.186  -22.4% (7/7 seasons) | points-scored MSE -5.37% | vs no-context shift -2.6% (4/7), points MSE -1.20%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 2.178  -22.7% (7/7 seasons) | points-scored MSE -5.34% | vs no-context shift -3.0% (6/7), points MSE -1.18%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 2.178  -22.7% (7/7 seasons) | points-scored MSE -5.21% | vs no-context shift -3.0% (7/7), points MSE -1.05%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 2.192  -22.2% (7/7 seasons) | points-scored MSE -4.98% | vs no-context shift -2.4% (7/7), points MSE -0.80%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 2.210  -21.6% (7/7 seasons) | points-scored MSE -4.73% | vs no-context shift -1.6% (7/7), points MSE -0.54%
+
+  standing after week 12  (n=1242 team-games)
+    no shift (preseason view)          miss vs closing line 2.965
+    shift, no quarterback context      miss vs closing line 2.193  -26.0% (7/7 seasons) | points-scored MSE -6.49%
+    separate per quarterback           miss vs closing line 2.252  -24.0% (7/7 seasons) | points-scored MSE -6.40% | vs no-context shift +2.7% (2/7), points MSE +0.09%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 2.096  -29.3% (7/7 seasons) | points-scored MSE -7.88% | vs no-context shift -4.4% (6/7), points MSE -1.49%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 2.091  -29.5% (7/7 seasons) | points-scored MSE -7.79% | vs no-context shift -4.7% (6/7), points MSE -1.39%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 2.099  -29.2% (7/7 seasons) | points-scored MSE -7.62% | vs no-context shift -4.3% (6/7), points MSE -1.21%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 2.120  -28.5% (7/7 seasons) | points-scored MSE -7.37% | vs no-context shift -3.4% (7/7), points MSE -0.95%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 2.146  -27.6% (7/7 seasons) | points-scored MSE -7.08% | vs no-context shift -2.1% (6/7), points MSE -0.64%
+
+  quarterback case: opening starter back after other QBs played  (n=1582 team-games)
+    no shift (preseason view)          miss vs closing line 2.437
+    shift, no quarterback context      miss vs closing line 2.000  -17.9% (6/7 seasons) | points-scored MSE -0.43%
+    separate per quarterback           miss vs closing line 1.987  -18.5% (7/7 seasons) | points-scored MSE -3.21% | vs no-context shift -0.7% (4/7), points MSE -2.80%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 1.850  -24.1% (7/7 seasons) | points-scored MSE -2.79% | vs no-context shift -7.5% (6/7), points MSE -2.37%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 1.856  -23.8% (7/7 seasons) | points-scored MSE -2.64% | vs no-context shift -7.2% (6/7), points MSE -2.22%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 1.874  -23.1% (7/7 seasons) | points-scored MSE -2.31% | vs no-context shift -6.3% (6/7), points MSE -1.89%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 1.902  -22.0% (7/7 seasons) | points-scored MSE -1.86% | vs no-context shift -4.9% (6/7), points MSE -1.43%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 1.935  -20.6% (7/7 seasons) | points-scored MSE -1.39% | vs no-context shift -3.3% (6/7), points MSE -0.96%
+
+  quarterback case: backup / new QB, already has lines  (n=1386 team-games)
+    no shift (preseason view)          miss vs closing line 2.893
+    shift, no quarterback context      miss vs closing line 2.191  -24.3% (7/7 seasons) | points-scored MSE -4.79%
+    separate per quarterback           miss vs closing line 2.241  -22.5% (7/7 seasons) | points-scored MSE -4.68% | vs no-context shift +2.3% (2/7), points MSE +0.11%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 1.924  -33.5% (7/7 seasons) | points-scored MSE -6.65% | vs no-context shift -12.2% (6/7), points MSE -1.95%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 1.935  -33.1% (7/7 seasons) | points-scored MSE -6.40% | vs no-context shift -11.7% (6/7), points MSE -1.69%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 1.975  -31.7% (7/7 seasons) | points-scored MSE -6.03% | vs no-context shift -9.8% (6/7), points MSE -1.30%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 2.043  -29.4% (7/7 seasons) | points-scored MSE -5.60% | vs no-context shift -6.8% (6/7), points MSE -0.85%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 2.110  -27.1% (7/7 seasons) | points-scored MSE -5.21% | vs no-context shift -3.7% (6/7), points MSE -0.44%
+
+  quarterback case: backup / new QB, no lines yet  (n=3069 team-games)
+    no shift (preseason view)          miss vs closing line 3.833
+    shift, no quarterback context      miss vs closing line 3.599  -6.1% (6/7 seasons) | points-scored MSE -1.95%
+    separate per quarterback           miss vs closing line 3.739  -2.5% (5/7 seasons) | points-scored MSE -1.17% | vs no-context shift +3.9% (1/7), points MSE +0.79%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 3.721  -2.9% (7/7 seasons) | points-scored MSE -1.26% | vs no-context shift +3.4% (1/7), points MSE +0.70%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 3.693  -3.7% (6/7 seasons) | points-scored MSE -1.44% | vs no-context shift +2.6% (1/7), points MSE +0.53%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 3.671  -4.2% (6/7 seasons) | points-scored MSE -1.54% | vs no-context shift +2.0% (1/7), points MSE +0.42%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 3.658  -4.6% (6/7 seasons) | points-scored MSE -1.57% | vs no-context shift +1.6% (1/7), points MSE +0.39%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 3.651  -4.7% (6/7 seasons) | points-scored MSE -1.56% | vs no-context shift +1.4% (1/7), points MSE +0.40%
+
+  quarterback case: opening starter all along  (n=10553 team-games)
+    no shift (preseason view)          miss vs closing line 2.407
+    shift, no quarterback context      miss vs closing line 2.024  -15.9% (7/7 seasons) | points-scored MSE -4.07%
+    separate per quarterback           miss vs closing line 2.017  -16.2% (7/7 seasons) | points-scored MSE -4.20% | vs no-context shift -0.3% (4/7), points MSE -0.13%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 1.950  -19.0% (7/7 seasons) | points-scored MSE -5.38% | vs no-context shift -3.7% (6/7), points MSE -1.36%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 1.943  -19.3% (7/7 seasons) | points-scored MSE -5.29% | vs no-context shift -4.0% (6/7), points MSE -1.28%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 1.946  -19.1% (7/7 seasons) | points-scored MSE -5.12% | vs no-context shift -3.8% (7/7), points MSE -1.09%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 1.962  -18.5% (7/7 seasons) | points-scored MSE -4.86% | vs no-context shift -3.1% (7/7), points MSE -0.82%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 1.980  -17.7% (7/7 seasons) | points-scored MSE -4.61% | vs no-context shift -2.2% (7/7), points MSE -0.57%
+
+  standing after week 4: opening starter back after other QBs played (the Bears case)  (n=194 team-games)
+    no shift (preseason view)          miss vs closing line 2.351
+    shift, no quarterback context      miss vs closing line 2.229  -5.2% (4/7 seasons) | points-scored MSE +2.39%
+    separate per quarterback           miss vs closing line 2.129  -9.5% (6/7 seasons) | points-scored MSE -2.25% | vs no-context shift -4.5% (4/7), points MSE -4.53%
+    TEAM + quarterback deviation, lam 0.25 miss vs closing line 1.954  -16.9% (7/7 seasons) | points-scored MSE -1.53% | vs no-context shift -12.3% (6/7), points MSE -3.83%
+    TEAM + quarterback deviation, lam 0.5 miss vs closing line 1.986  -15.5% (7/7 seasons) | points-scored MSE -1.21% | vs no-context shift -10.9% (6/7), points MSE -3.52%
+    TEAM + quarterback deviation, lam 1.0 miss vs closing line 2.027  -13.8% (6/7 seasons) | points-scored MSE -0.56% | vs no-context shift -9.1% (6/7), points MSE -2.88%
+    TEAM + quarterback deviation, lam 2.0 miss vs closing line 2.081  -11.5% (6/7 seasons) | points-scored MSE +0.26% | vs no-context shift -6.6% (6/7), points MSE -2.08%
+    TEAM + quarterback deviation, lam 4.0 miss vs closing line 2.141  -8.9% (5/7 seasons) | points-scored MSE +1.00% | vs no-context shift -3.9% (6/7), points MSE -1.36%
+
+  by how far ahead the game is (live form vs no shift):
+    next week        n= 1452  2.28 -> 1.69 (-25.9%)   no-context shift 1.67
+    2-4 weeks ahead  n= 4302  2.45 -> 1.98 (-19.2%)   no-context shift 1.95
+    5-8 weeks ahead  n= 5282  2.74 -> 2.36 (-13.8%)   no-context shift 2.32
+    9+ weeks ahead   n= 5554  3.01 -> 2.80 (-6.8%)   no-context shift 2.80

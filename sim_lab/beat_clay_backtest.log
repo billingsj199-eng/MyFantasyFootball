@@ -1,0 +1,96 @@
+=== Beat Clay where he still wins: week 1, no chart, WR no-history, TE market-vs-history ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  19064 player-weeks | shadow vs shipped -1.62% (7/7)
+  week 1                             n= 1407 act  8.81 | shadow vs Clay  +0.33% (2/7) | bias act/proj Clay 1.035 shadow 0.970  even
+  week 1 with an ADP                 n=  937 act 10.54 | shadow vs Clay  +1.15% (1/7) | bias act/proj Clay 1.000 shadow 0.984  CLAY
+  no-chart vets                      n=  731 act  7.97 | shadow vs Clay  +2.58% (3/7) | bias act/proj Clay 1.038 shadow 0.923  CLAY
+  WR no history                      n=  352 act  6.76 | shadow vs Clay  +4.16% (3/7) | bias act/proj Clay 1.104 shadow 0.969  CLAY
+  TE market > 1.2x history           n=  330 act  5.76 | shadow vs Clay  +1.91% (3/7) | bias act/proj Clay 0.991 shadow 0.945  CLAY
+
+=== A. Week 1: shadow -> (1-a) shadow + a x ADP curve x layers (a = 0 is the current shadow) ===
+  week 1 market lean a, all positions (n=937)
+    grid pooled MSE: 0.0:44.541  0.15:44.441  0.3:44.446  0.5:44.617  0.7:44.975  1.0:45.863
+    LOYO 43.4725 vs shadow 43.2301 (+0.56%), seasons better than shadow 2/7, picks [0.15, 0.0, 0.3, 0.15, 0.3, 0.3, 0.3], pooled best 0.15 | shadow vs shipped +1.15% -> +1.72%
+    week 1 market lean, QB (n=155)
+    grid pooled MSE: 0.0:56.422  0.15:56.550  0.3:56.744  0.5:57.106  0.7:57.587  1.0:58.529
+    LOYO 56.8641 vs shadow 56.4681 (+0.70%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0], pooled best 0.0 | shadow vs shipped +3.26% -> +3.99%
+    week 1 market lean, RB (n=289)
+    grid pooled MSE: 0.0:42.723  0.15:42.626  0.3:42.715  0.5:43.126  0.7:43.869  1.0:45.608
+    LOYO 39.8089 vs shadow 39.3952 (+1.05%), seasons better than shadow 1/7, picks [0.3, 0.0, 0.3, 0.15, 0.15, 0.15, 0.15], pooled best 0.15 | shadow vs shipped -1.03% -> +0.01%
+    week 1 market lean, WR (n=366)
+    grid pooled MSE: 0.0:45.715  0.15:45.508  0.3:45.388  0.5:45.363  0.7:45.492  1.0:45.974
+    LOYO 45.7147 vs shadow 45.2537 (+1.02%), seasons better than shadow 5/7, picks [0.5, 0.3, 0.5, 0.15, 0.5, 0.5, 0.7], pooled best 0.5 | shadow vs shipped +0.55% -> +1.58%
+    week 1 market lean, TE (n=127)
+    grid pooled MSE: 0.0:31.865  0.15:31.689  0.3:31.549  0.5:31.419  0.7:31.352  1.0:31.371
+    LOYO 30.0981 vs shadow 29.9681 (+0.43%), seasons better than shadow 4/7, picks [0.5, 0.7, 0.5, 1.0, 1.0, 1.0, 0.7], pooled best 0.7 | shadow vs shipped +5.88% -> +6.33%
+    week 1 market lean, veterans only (n=809)
+    grid pooled MSE: 0.0:47.167  0.15:47.018  0.3:46.930  0.5:46.911  0.7:47.002  1.0:47.346
+    LOYO 46.0701 vs shadow 45.7767 (+0.64%), seasons better than shadow 4/7, picks [0.3, 0.3, 0.3, 0.3, 0.5, 0.7, 0.5], pooled best 0.5 | shadow vs shipped +1.30% -> +1.95%
+    week 1 market lean, rookies only (n=128)
+    grid pooled MSE: 0.0:27.794  0.15:27.939  0.3:28.469  0.5:29.772  0.7:31.759  1.0:36.020
+    LOYO 27.5805 vs shadow 27.1346 (+1.64%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.15, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.45% -> +1.18%
+    FORWARD week 1 market lean: rows n=736 +1.47% vs shadow (1/5)
+
+=== B. Week 1: shrink toward the position mean, shadow -> mean + s x (shadow - mean) ===
+  week 1 shrink s, all positions (n=1407)
+    grid pooled MSE: 1.0:38.646  0.95:38.735  0.9:38.874  0.85:39.063  0.8:39.302  0.7:39.932
+    LOYO 37.6671 vs shadow 37.6671 (-0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped +0.33% -> +0.33%
+    week 1 shrink, QB (n=205)
+    grid pooled MSE: 1.0:58.809  0.95:58.860  0.9:58.943  0.85:59.058  0.8:59.204  0.7:59.593
+    LOYO 59.0264 vs shadow 58.6480 (+0.65%), seasons better than shadow 0/7, picks [0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9], pooled best 1.0 | shadow vs shipped -2.82% -> -2.19%
+    week 1 shrink, RB (n=352)
+    grid pooled MSE: 1.0:39.641  0.95:39.814  0.9:40.068  0.85:40.402  0.8:40.818  0.7:41.892
+    LOYO 37.0230 vs shadow 37.0230 (+0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -0.05% -> -0.05%
+    week 1 shrink, WR (n=573)
+    grid pooled MSE: 1.0:39.366  0.95:39.462  0.9:39.608  0.85:39.805  0.8:40.053  0.7:40.701
+    LOYO 38.8146 vs shadow 38.8146 (+0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped +1.10% -> +1.10%
+    week 1 shrink, TE (n=277)
+    grid pooled MSE: 1.0:21.487  0.95:21.482  0.9:21.501  0.85:21.545  0.8:21.614  0.7:21.825
+    LOYO 20.6644 vs shadow 20.5842 (+0.39%), seasons better than shadow 0/7, picks [0.95, 1.0, 0.9, 0.95, 1.0, 1.0, 0.95], pooled best 0.95 | shadow vs shipped +5.31% -> +5.72%
+    FORWARD week 1 shrink: rows n=1099 +0.00% vs shadow (0/5)
+
+=== C. No-chart veterans: multiplier (they carry no string dock) ===
+  no-chart vets x m, all positions (n=731)
+    grid pooled MSE: 1.0:43.913  0.95:43.703  0.9:43.930  0.85:44.594  0.8:45.697  0.7:49.215
+    LOYO 39.3003 vs shadow 39.7182 (-1.05%), seasons better than shadow 4/7, picks [0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.9], pooled best 0.95 | shadow vs shipped +2.58% -> +1.50%
+    no-chart vets x m, RB (n=394)
+    grid pooled MSE: 1.0:48.619  0.95:48.722  0.9:49.275  0.85:50.278  0.8:51.729  0.7:55.981
+    LOYO 44.4292 vs shadow 44.2700 (+0.36%), seasons better than shadow 0/7, picks [0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 0.95], pooled best 1.0 | shadow vs shipped +1.36% -> +1.72%
+    no-chart vets x m, WR (n=194)
+    grid pooled MSE: 1.0:34.274  0.95:33.350  0.9:32.815  0.85:32.667  0.8:32.907  0.7:34.550
+    LOYO 34.1450 vs shadow 34.7605 (-1.77%), seasons better than shadow 4/7, picks [0.9, 0.85, 0.85, 0.85, 0.85, 0.8, 0.85], pooled best 0.85 | shadow vs shipped +1.09% -> -0.70%
+    no-chart vets x m, TE (n=115)
+    grid pooled MSE: 1.0:38.895  0.95:39.979  0.9:41.312  0.85:42.894  0.8:44.725  0.7:49.134
+    LOYO 27.4416 vs shadow 27.2657 (+0.65%), seasons better than shadow 0/6, picks [0.95, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped +6.07% -> +6.76%
+    no-chart vets x m, 4+ games in (data should have fixed it) (n=503)
+    grid pooled MSE: 1.0:43.779  0.95:44.058  0.9:44.788  0.85:45.969  0.8:47.599  0.7:52.211
+    LOYO 40.5936 vs shadow 40.5936 (-0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -0.40% -> -0.40%
+    no-chart vets x m, first 4 games (n=228)
+    grid pooled MSE: 1.0:42.332  0.95:40.980  0.9:40.043  0.85:39.521  0.8:39.414  0.7:40.445
+    LOYO 34.3800 vs shadow 37.7869 (-9.02%), seasons better than shadow 5/7, picks [0.8, 0.8, 0.8, 0.85, 0.8, 0.85, 0.8], pooled best 0.8 | shadow vs shipped +10.40% -> +0.44%
+    FORWARD no-chart vets x m: rows n=583 -1.04% vs shadow (3/5)
+
+=== D. WRs with no history: multiplier ===
+  WR no-history x m (n=352)
+    grid pooled MSE: 1.0:35.774  0.95:35.700  0.9:35.893  0.85:36.353  0.8:37.081  0.7:39.338
+    LOYO 35.9769 vs shadow 35.9141 (+0.17%), seasons better than shadow 2/7, picks [0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 1.0], pooled best 0.95 | shadow vs shipped +4.16% -> +4.34%
+    WR no-history x m, non-rookies (n=16)
+    grid pooled MSE: 1.0:40.308  0.95:35.926  0.9:31.875  0.85:28.156  0.8:24.768  0.7:18.987
+    LOYO 19.2081 vs shadow 36.4298 (-47.27%), seasons better than shadow 4/4, picks [0.7, 0.7, 0.7, 0.7], pooled best 0.7 | shadow vs shipped +102.05% -> +6.53%
+    FORWARD WR no-history x m: rows n=267 +0.00% vs shadow (0/5)
+
+=== E. TEs the market rates > 1.2x their history: lean toward the ADP curve (a = 0 current) ===
+  TE market > 1.2x history, lean a (n=330)
+    grid pooled MSE: 0.0:21.956  0.15:22.209  0.3:22.580  0.5:23.259  0.7:24.148  1.0:25.876
+    LOYO 21.7136 vs shadow 21.7136 (-0.00%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped +1.91% -> +1.91%
+    FORWARD TE market lean: rows n=237 +0.00% vs shadow (0/5)
+
+PASS: no-chart vets x m, first 4 games best 0.8 -9.02% (5/7) | forward: week 1 market lean +1.47% (1/5); week 1 shrink +0.00% (0/5); no-chart vets x m -1.04% (3/5); WR no-history x m +0.00% (0/5); TE market lean +0.00% (0/5)
+wrote data/beat_clay_backtest.js (23s)

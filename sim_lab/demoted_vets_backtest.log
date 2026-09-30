@@ -1,0 +1,105 @@
+=== Demoted / promoted veterans on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.2 vs shipped -0.80% (5/7) | veterans with history + chart: 15113
+  string levels (all seasons, half-PPR, vets weeks <= 8): {"QB": {"1": 18.112}, "RB": {"1": 13.583, "2": 6.506, "3": 4.687}, "WR": {"1": 10.098, "2": 4.831}, "TE": {"1": 6.864, "2": 4.134, "3": 4.317}}
+
+=== Reads: actual / shadow prior (x shrink) by position x string, veterans, all weeks ===
+  QB    1st: n=2290 act/prior 1.02 act/shipped 1.04 (chart disagrees >3: n=284 act/prior 1.03) |  2nd: n=  73 act/prior 0.57 act/shipped 0.96 (chart disagrees >3: n=0 act/prior nan) |
+  RB    1st: n=2135 act/prior 1.12 act/shipped 1.04 (chart disagrees >3: n=1035 act/prior 1.15) |  2nd: n=1145 act/prior 0.90 act/shipped 1.07 (chart disagrees >3: n=133 act/prior 1.08) |  3rd+: n= 168 act/prior 0.58 act/shipped 1.04 (chart disagrees >3: n=42 act/prior 0.53) |
+  WR    1st: n=5057 act/prior 1.05 act/shipped 1.02 (chart disagrees >3: n=1242 act/prior 1.03) |  2nd: n=1038 act/prior 0.81 act/shipped 1.05 (chart disagrees >3: n=136 act/prior 0.73) |  3rd+: n=  61 act/prior 0.54 act/shipped 0.73 (chart disagrees >3: n=0 act/prior nan) |
+  TE    1st: n=2356 act/prior 1.07 act/shipped 1.05 (chart disagrees >3: n=388 act/prior 1.10) |  2nd: n= 691 act/prior 0.90 act/shipped 1.06 (chart disagrees >3: n=17 act/prior 0.52) |  3rd+: n=  90 act/prior 0.96 act/shipped 1.14 (chart disagrees >3: n=9 act/prior 1.02) |
+
+=== DOCK: prior x m on demoted veterans (string >= 2), LOYO vs shadow ===
+  dock, all demoted vets (n=3132)
+    grid pooled MSE: 1.0:26.660  0.9:26.290  0.8:26.095  0.7:26.076  0.6:26.233  0.5:26.566
+    LOYO 26.1672 vs shadow 26.6265 (-1.72%), seasons better than shadow 6/7, picks [0.8, 0.7, 0.8, 0.7, 0.7, 0.7, 0.7], pooled best 0.7 | shadow vs shipped +1.95% -> +0.19%
+    dock, demoted RB (n=1313)
+    grid pooled MSE: 1.0:33.557  0.9:33.152  0.8:32.959  0.7:32.981  0.6:33.216  0.5:33.664
+    LOYO 32.6350 vs shadow 33.0495 (-1.25%), seasons better than shadow 5/7, picks [0.8, 0.7, 0.8, 0.7, 0.8, 0.7, 0.8], pooled best 0.8 | shadow vs shipped +1.57% -> +0.30%
+    dock, demoted WR (n=1038)
+    grid pooled MSE: 1.0:24.167  0.9:23.640  0.8:23.289  0.7:23.113  0.6:23.112  0.5:23.287
+    LOYO 24.1714 vs shadow 25.0132 (-3.37%), seasons better than shadow 6/7, picks [0.7, 0.6, 0.7, 0.6, 0.6, 0.6, 0.7], pooled best 0.6 | shadow vs shipped +3.45% -> -0.03%
+    dock, demoted TE (n=781)
+    grid pooled MSE: 1.0:17.508  0.9:17.377  0.8:17.364  0.7:17.469  0.6:17.691  0.5:18.031
+    LOYO 17.9252 vs shadow 17.9725 (-0.26%), seasons better than shadow 5/7, picks [0.8, 0.9, 0.8, 0.9, 0.8, 0.8, 0.9], pooled best 0.8 | shadow vs shipped +0.43% -> +0.16%
+
+=== LEVEL: prior' = (1-w) prior + w L(pos, string), LOYO vs shadow ===
+  level, demoted (string >= 2) (n=3132)
+    grid pooled MSE: 0.0:26.660  0.25:26.453  0.5:26.385  0.75:26.457  1.0:26.668
+    LOYO 26.3781 vs shadow 26.6265 (-0.93%), seasons better than shadow 7/7, picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], pooled best 0.5 | shadow vs shipped +1.95% -> +1.00%
+    level, demoted RB (n=1313)
+    grid pooled MSE: 0.0:33.557  0.25:33.352  0.5:33.290  0.75:33.370  1.0:33.593
+    LOYO 32.8183 vs shadow 33.0495 (-0.70%), seasons better than shadow 6/7, picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], pooled best 0.5 | shadow vs shipped +1.57% -> +0.86%
+    level, demoted WR (n=1038)
+    grid pooled MSE: 0.0:24.167  0.25:23.837  0.5:23.659  0.75:23.634  1.0:23.760
+    LOYO 24.5881 vs shadow 25.0132 (-1.70%), seasons better than shadow 6/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.5], pooled best 0.75 | shadow vs shipped +3.45% -> +1.70%
+    level, demoted TE (n=781)
+    grid pooled MSE: 0.0:17.508  0.25:17.440  0.5:17.487  0.75:17.649  1.0:17.926
+    LOYO 17.9083 vs shadow 17.9725 (-0.36%), seasons better than shadow 3/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25], pooled best 0.25 | shadow vs shipped +0.43% -> +0.07%
+  level, promoted (string 1) (n=11838)
+    grid pooled MSE: 0.0:48.216  0.25:48.302  0.5:48.686  0.75:49.367  1.0:50.347
+    LOYO 47.5426 vs shadow 47.5426 (+0.00%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -1.32% -> -1.32%
+    level, string-1 QB (n=2290)
+    grid pooled MSE: 0.0:56.802  0.25:56.694  0.5:56.844  0.75:57.251  1.0:57.915
+    LOYO 56.3660 vs shadow 56.4796 (-0.20%), seasons better than shadow 5/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25], pooled best 0.25 | shadow vs shipped -3.89% -> -4.09%
+    level, string-1 RB (n=2135)
+    grid pooled MSE: 0.0:62.433  0.25:62.272  0.5:62.457  0.75:62.987  1.0:63.864
+    LOYO 59.8810 vs shadow 60.1247 (-0.41%), seasons better than shadow 5/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25], pooled best 0.25 | shadow vs shipped -0.27% -> -0.67%
+    level, string-1 WR (n=5057)
+    grid pooled MSE: 0.0:47.601  0.25:47.841  0.5:48.420  0.75:49.340  1.0:50.600
+    LOYO 46.7806 vs shadow 46.7806 (+0.00%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.83% -> -0.83%
+    level, string-1 TE (n=2356)
+    grid pooled MSE: 0.0:29.227  0.25:29.428  0.5:29.835  0.75:30.447  1.0:31.266
+    LOYO 29.0898 vs shadow 29.0898 (-0.00%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped +0.05% -> +0.05%
+
+=== LEVEL-GAP: only where the chart disagrees with the history by > 3 half-PPR ===
+  level-gap, demoted (n=337)
+    grid pooled MSE: 0.0:36.515  0.25:35.668  0.5:35.376  0.75:35.637  1.0:36.451
+    LOYO 37.6965 vs shadow 38.4308 (-1.91%), seasons better than shadow 5/7, picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.75, 0.5], pooled best 0.5 | shadow vs shipped +4.16% -> +2.17%
+  level-gap, promoted (n=2949)
+    grid pooled MSE: 0.0:45.991  0.25:45.872  0.5:46.624  0.75:48.248  1.0:50.744
+    LOYO 45.8606 vs shadow 45.8574 (+0.01%), seasons better than shadow 2/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.0], pooled best 0.25 | shadow vs shipped -1.79% -> -1.78%
+
+=== DOCK by string: prior x m, string 2 and string 3+ separately, LOYO vs shadow ===
+    dock RB 2nd (n=1145)
+    grid pooled MSE: 1.0:35.315  0.9:35.007  0.8:34.916  0.7:35.042  0.6:35.386  0.5:35.946  0.4:36.724
+    LOYO 34.3715 vs shadow 34.6320 (-0.75%), seasons better than shadow 5/7, picks [0.9, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8], pooled best 0.8 | shadow vs shipped +0.53% -> -0.23%
+    dock RB 3rd+ (n=168)
+    grid pooled MSE: 1.0:21.471  0.9:20.227  0.8:19.176  0.7:18.321  0.6:17.660  0.5:17.194  0.4:16.922
+    LOYO 18.6527 vs shadow 22.2642 (-16.22%), seasons better than shadow 6/7, picks [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4], pooled best 0.4 | shadow vs shipped +14.10% -> -4.41%
+    dock WR 2nd (n=1038)
+    grid pooled MSE: 1.0:24.167  0.9:23.640  0.8:23.289  0.7:23.113  0.6:23.112  0.5:23.287  0.4:23.637
+    LOYO 24.1714 vs shadow 25.0132 (-3.37%), seasons better than shadow 6/7, picks [0.7, 0.6, 0.7, 0.6, 0.6, 0.6, 0.7], pooled best 0.6 | shadow vs shipped +3.45% -> -0.03%
+    dock WR 3rd+ (n=61)
+    grid pooled MSE: 1.0:23.590  0.9:22.331  0.8:21.402  0.7:20.804  0.6:20.536  0.5:20.599  0.4:20.992
+    LOYO 16.7403 vs shadow 19.3258 (-13.38%), seasons better than shadow 6/7, picks [0.6, 0.6, 0.6, 0.6, 0.6, 0.4, 0.5], pooled best 0.6 | shadow vs shipped +17.68% -> +1.94%
+    dock TE 2nd (n=691)
+    grid pooled MSE: 1.0:16.904  0.9:16.725  0.8:16.662  0.7:16.716  0.6:16.886  0.5:17.173  0.4:17.576
+    LOYO 17.4947 vs shadow 17.6994 (-1.16%), seasons better than shadow 5/7, picks [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8], pooled best 0.8 | shadow vs shipped +0.94% -> -0.22%
+    dock TE 3rd+ (n=90)
+    grid pooled MSE: 1.0:20.279  0.9:20.593  0.8:21.030  0.7:21.589  0.6:22.271  0.5:23.076  0.4:24.004
+    LOYO 20.0699 vs shadow 20.0699 (+0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -2.93% -> -2.93%
+
+=== Candidate v2.3: demoted-vet docks {"RB": {"2": 0.8, "3": 0.4}, "WR": {"2": 0.6, "3": 0.6}, "TE": {"2": 0.8, "3": 1.0}} ===
+  ALL rows: vs shipped -1.08% (7/7) | vs shadow v2.2 -0.28% (7/7)
+  by position (vs shipped | vs shadow): QB -3.78% | +0.00%  RB -0.52% | -0.43%  WR -0.40% | -0.36%  TE -0.00% | -0.15%
+  wk1     shadow  +1.63% ->  +0.75% vs shipped
+  wk2-4   shadow  -1.35% ->  -1.54% vs shipped
+  wk5-8   shadow  -0.84% ->  -1.19% vs shipped
+  wk9-12  shadow  -0.44% ->  -0.95% vs shipped
+  wk13+   shadow  -1.11% ->  -1.15% vs shipped
+  demoted vets               n= 3132 shadow  +1.95% ->  -0.64% vs shipped
+  string-1 vets              n=11838 shadow  -1.32% ->  -1.32% vs shipped
+  vets without a chart       n= 1180 shadow  +2.74% ->  +2.74% vs shipped
+  rookies                    n= 2721 shadow  -3.56% ->  -3.56% vs shipped
+  FORWARD (2021-25, docks picked on earlier seasons): vs shipped -1.13% (5/5) | vs shadow -0.15% (5/5) | demoted rows vs shadow -1.45%
+
+Demoted vets (string >= 2): flat dock -1.73% vs shadow (6/7), level blend weaker, promotion side nothing. Candidate v2.3 (per-position, per-string docks): -0.28% vs shadow v2.2 (7/7), -1.08% vs shipped, forward -0.15% vs shadow (5/5), demoted rows forward -1.45%.
+wrote data/demoted_vets_backtest.js (24s)

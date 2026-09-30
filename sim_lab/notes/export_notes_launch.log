@@ -1,0 +1,29 @@
+2026-09-30T15:42:40.075Z launched with: installed Edge
+bundled headless shell: browserType.launch: Executable doesn't exist at C:\Users\billi\AppData\Local\ms-playwright\chromium_headless_shell-1234\chrome-headless-shell-win64\chrome-headless-shell.exe
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+---
+bundled chromium: browserType.launch: Executable doesn't exist at C:\Users\billi\AppData\Local\ms-playwright\chromium-1234\chrome-win64\chrome.exe
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+--- environment ---
+LOCALAPPDATA=C:\Users\billi\AppData\Local
+USERPROFILE=C:\Users\billi
+USERNAME=billi
+PLAYWRIGHT_BROWSERS_PATH=
+SESSIONNAME=
+TEMP=C:\Users\billi\AppData\Local\Temp
+cwd=E:\MyFantasyFootball\MyFantasyFootball Files
+arch=x64 node=v24.15.0

@@ -1,0 +1,52 @@
+=== WR route-grade curve blend on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | rows with a prior-year route grade and a history prior: WR 5814, TE 2952, RB 3117
+  curve E[PPG | grade] (all seasons): {"WR": [-11.9816, 0.288], "TE": [-5.6475, 0.1719], "RB": [8.8518, 0.0312]}
+
+=== Reads: actual / shadow prior (x shrink) by route-grade tercile, weeks 1-8, vets ===
+  WR low                n=  910 act/prior 1.033 act/shadow 1.018 shadow vs shipped  -2.31%  (grade cut 68.8 / 76.5)
+  WR mid                n=  917 act/prior 1.018 act/shadow 1.010 shadow vs shipped  -0.27%  (grade cut 68.8 / 76.5)
+  WR high               n=  888 act/prior 1.114 act/shadow 1.060 shadow vs shipped  -0.53%  (grade cut 68.8 / 76.5)
+  WR high & age <= 25   n=  327 act/prior 1.069 act/shadow 1.040 shadow vs shipped  -0.52%  (grade cut 68.8 / 76.5)
+  TE low                n=  457 act/prior 0.953 act/shadow 0.972 shadow vs shipped  +2.82%  (grade cut 63.2 / 72.2)
+  TE mid                n=  484 act/prior 1.026 act/shadow 1.028 shadow vs shipped  -2.52%  (grade cut 63.2 / 72.2)
+  TE high               n=  466 act/prior 1.057 act/shadow 1.040 shadow vs shipped  -1.27%  (grade cut 63.2 / 72.2)
+  TE high & age <= 25   n=  100 act/prior 0.990 act/shadow 1.001 shadow vs shipped  -3.52%  (grade cut 63.2 / 72.2)
+  RB low                n=  482 act/prior 1.108 act/shadow 1.064 shadow vs shipped  -0.79%  (grade cut 58.3 / 68.0)
+  RB mid                n=  502 act/prior 1.121 act/shadow 1.073 shadow vs shipped  +0.05%  (grade cut 58.3 / 68.0)
+  RB high               n=  480 act/prior 1.079 act/shadow 1.039 shadow vs shipped  +0.68%  (grade cut 58.3 / 68.0)
+  RB high & age <= 25   n=  153 act/prior 1.030 act/shadow 1.035 shadow vs shipped  +2.21%  (grade cut 58.3 / 68.0)
+
+=== WR curve-blend sweeps (LOYO vs shadow v2.6) ===
+  WR curve blend w, all rows (n=5814)
+    grid pooled MSE: 0.0:42.109  0.05:42.099  0.1:42.097  0.15:42.103  0.2:42.116  0.3:42.167  0.5:42.364
+    LOYO 41.8679 vs shadow 41.8774 (-0.02%), seasons better than shadow 4/6, picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.05], pooled best 0.1 | shadow vs shipped -0.74% -> -0.77%
+    WR curve blend w, high-residual rows only (n=1936)
+    grid pooled MSE: 0.0:42.287  0.05:42.267  0.1:42.261  0.15:42.270  0.2:42.293  0.3:42.382  0.5:42.730
+    LOYO 42.1717 vs shadow 42.1985 (-0.06%), seasons better than shadow 4/6, picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1], pooled best 0.1 | shadow vs shipped -0.26% -> -0.32%
+    WR curve blend w, age <= 25 only (n=2217)
+    grid pooled MSE: 0.0:42.550  0.05:42.545  0.1:42.547  0.15:42.555  0.2:42.570  0.3:42.619  0.5:42.793
+    LOYO 42.5530 vs shadow 42.5516 (+0.00%), seasons better than shadow 3/6, picks [0.05, 0.05, 0.05, 0.05, 0.1, 0.1], pooled best 0.05 | shadow vs shipped -1.42% -> -1.42%
+    WR curve blend w, weeks 1-4 only (n=1442)
+    grid pooled MSE: 0.0:43.652  0.05:43.647  0.1:43.657  0.15:43.682  0.2:43.722  0.3:43.847  0.5:44.279
+    LOYO 43.3735 vs shadow 43.3416 (+0.07%), seasons better than shadow 1/6, picks [0.1, 0.05, 0.1, 0.05, 0.0, 0.0], pooled best 0.05 | shadow vs shipped -1.40% -> -1.32%
+    WR grade curve REPLACING part of the market weight (wg out of .75) (n=5814)
+    grid pooled MSE: 0.0:42.109  0.05:42.105  0.1:42.106  0.15:42.112  0.2:42.124  0.3:42.163  0.5:42.306
+    LOYO 41.8910 vs shadow 41.8774 (+0.03%), seasons better than shadow 3/6, picks [0.15, 0.05, 0.1, 0.05, 0.05, 0.0], pooled best 0.05 | shadow vs shipped -0.74% -> -0.71%
+    WR curve of grade + routes volume, blend w (n=5814)
+    grid pooled MSE: 0.0:42.109  0.05:42.092  0.1:42.081  0.15:42.076  0.2:42.077  0.3:42.096  0.5:42.204
+    LOYO 41.8442 vs shadow 41.8774 (-0.08%), seasons better than shadow 4/6, picks [0.2, 0.2, 0.15, 0.15, 0.15, 0.15], pooled best 0.15 | shadow vs shipped -0.74% -> -0.82%
+
+=== Candidate: WR curve of grade + routes volume, blend w = 0.15 (FAIL) ===
+  ALL rows: vs shipped -1.27% (7/7) | vs shadow v2.6 -0.03% (4/7) | WR rows -0.07% (4/7) | affected rows n=5814 -0.09% (4/7)
+  FORWARD (2021-25): all rows -0.03% (3/5) | WR rows -0.08% (3/5) | affected rows -0.10% (3/5)
+
+WR route-grade curve blend on the shadow: WR curve blend w, all rows -0.02% (4/6, FAIL); WR curve blend w, high-residual rows only -0.06% (4/6, FAIL); WR curve blend w, age <= 25 only +0.00% (3/6, FAIL); WR curve blend w, weeks 1-4 only +0.07% (1/6, FAIL); WR grade curve REPLACING part of the market weight (wg out of .75) +0.03% (3/6, FAIL); WR curve of grade + routes volume, blend w -0.08% (4/6, FAIL). Candidate WR curve of grade + routes volume, blend w = 0.15: affected rows -0.09% (4/7), forward -0.10% (3/5).
+wrote data/wr_curve_backtest.js (23s)

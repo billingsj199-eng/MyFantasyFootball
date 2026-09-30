@@ -1,0 +1,129 @@
+=== Week 1 on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.4 vs shipped -1.13% (7/7) | week 1 rows 1245: +0.53% | weeks 2-4 -1.59%
+
+=== Week 1 reads: actual / shadow, actual / shipped, shadow vs shipped MSE ===
+  week 1, all                        n= 1245 act/shadow 0.976 act/shipped 1.037 shadow vs shipped  +0.53%
+    week 1 QB                        n=  189 act/shadow 1.002 act/shipped 1.123 shadow vs shipped  -0.74%
+    week 1 RB                        n=  314 act/shadow 0.973 act/shipped 1.025 shadow vs shipped  +1.09%
+    week 1 WR                        n=  497 act/shadow 0.991 act/shipped 1.023 shadow vs shipped  -0.31%
+    week 1 TE                        n=  245 act/shadow 0.884 act/shipped 0.920 shadow vs shipped  +5.39%
+    week 1 vets, same team           n=  894 act/shadow 1.003 act/shipped 1.042 shadow vs shipped  -1.51%
+    week 1 vets, changed team        n=  185 act/shadow 0.960 act/shipped 1.051 shadow vs shipped  +3.19%
+    week 1 2nd-year                  n=  189 act/shadow 0.998 act/shipped 1.013 shadow vs shipped  +2.88%
+    week 1 rookies                   n=  154 act/shadow 0.841 act/shipped 0.973 shadow vs shipped  +9.26%
+    week 1 vets ADP 1-36             n=  204 act/shadow 1.031 act/shipped 1.021 shadow vs shipped  -2.04%
+    week 1 vets ADP 37-84            n=  224 act/shadow 1.025 act/shipped 1.014 shadow vs shipped  +3.71%
+    week 1 vets ADP 85-132           n=  182 act/shadow 0.957 act/shipped 0.982 shadow vs shipped  +4.40%
+    week 1 vets ADP 133-180          n=  146 act/shadow 0.951 act/shipped 1.057 shadow vs shipped  -3.28%
+    week 1 vets, no ADP              n=  323 act/shadow 0.978 act/shipped 1.192 shadow vs shipped  -7.74%
+    week 1 vets 1st string           n=  825 act/shadow 1.007 act/shipped 1.047 shadow vs shipped  -2.10%
+    week 1 vets 2nd string           n=  209 act/shadow 0.906 act/shipped 0.966 shadow vs shipped +11.54%
+  weeks 2-4, all                     n= 3589 act/shadow 1.029 act/shipped 1.083 shadow vs shipped  -1.59%
+    weeks 2-4 QB                     n=  545 act/shadow 0.998 act/shipped 1.090 shadow vs shipped  -5.05%
+    weeks 2-4 RB                     n=  912 act/shadow 1.057 act/shipped 1.104 shadow vs shipped  -1.12%
+    weeks 2-4 WR                     n= 1432 act/shadow 1.051 act/shipped 1.082 shadow vs shipped  -0.73%
+    weeks 2-4 TE                     n=  700 act/shadow 0.980 act/shipped 1.024 shadow vs shipped  +0.38%
+    weeks 2-4 vets, changed team     n=  544 act/shadow 1.010 act/shipped 1.082 shadow vs shipped  -0.95%
+    weeks 2-4 rookies                n=  491 act/shadow 0.962 act/shipped 1.131 shadow vs shipped  -1.84%
+
+=== Sweeps on week 1 (LOYO vs shadow v2.4) ===
+  week 1 LEVEL x m (n=1245)
+    grid pooled MSE: 1.0:40.278  0.95:40.548  0.9:41.380  1.05:40.568  1.1:41.420
+    LOYO 39.3003 vs shadow 39.3003 (+0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped +0.53% -> +0.53%
+    week 1 level QB (n=189)
+    grid pooled MSE: 1.0:56.789  0.95:57.745  0.9:60.247  1.05:57.377  1.1:59.510
+    LOYO 58.0293 vs shadow 56.8791 (+2.02%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.05, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -0.74% -> +1.27%
+    week 1 level RB (n=314)
+    grid pooled MSE: 1.0:41.939  0.95:42.116  0.9:42.803  1.05:42.272  1.1:43.115
+    LOYO 39.6204 vs shadow 39.3798 (+0.61%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 0.95, 1.0], pooled best 1.0 | shadow vs shipped +1.09% -> +1.71%
+    week 1 level WR (n=497)
+    grid pooled MSE: 1.0:41.990  0.95:42.300  0.9:43.007  1.05:42.078  1.1:42.562
+    LOYO 41.8244 vs shadow 41.3554 (+1.13%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.05, 1.05], pooled best 1.0 | shadow vs shipped -0.31% -> +0.82%
+    week 1 level TE (n=245)
+    grid pooled MSE: 1.0:22.159  0.95:21.861  0.9:21.765  1.05:22.660  1.1:23.363
+    LOYO 21.2900 vs shadow 21.4689 (-0.83%), seasons better than shadow 5/7, picks [0.9, 0.9, 0.9, 0.9, 0.95, 0.95, 0.9], pooled best 0.9 | shadow vs shipped +5.39% -> +4.51%
+  week 1 SHRINK k (n=1245)
+    grid pooled MSE: 0.8:40.278  0.7:40.588  0.6:41.167  0.5:42.014  0.9:40.236  1.0:40.463
+    LOYO 39.3622 vs shadow 39.3003 (+0.16%), seasons better than shadow 2/7, picks [0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 0.9], pooled best 0.9 | shadow vs shipped +0.53% -> +0.69%
+  week 1 vets ADP weight (n=756)
+    grid pooled MSE: 0.75:48.045  0.5:48.498  0.9:47.892  1.0:47.838
+    LOYO 46.6826 vs shadow 46.7272 (-0.10%), seasons better than shadow 3/7, picks [1.0, 1.0, 1.0, 0.9, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped +0.80% -> +0.71%
+  week 1 2nd-year ADP weight (n=135)
+    grid pooled MSE: 0.5:39.392  0.25:39.644  0.75:39.461  1.0:39.849
+    LOYO 39.6742 vs shadow 39.1114 (+1.44%), seasons better than shadow 0/7, picks [0.5, 0.5, 0.5, 0.5, 0.75, 0.75, 0.5], pooled best 0.5 | shadow vs shipped -1.87% -> -0.46%
+  week 1 ROOKIE x m (n=154)
+    grid pooled MSE: 1.0:32.532  0.9:31.491  0.8:31.348  1.1:34.472  1.2:37.311
+    LOYO 32.7325 vs shadow 33.3491 (-1.85%), seasons better than shadow 4/7, picks [0.8, 0.8, 0.9, 0.9, 0.8, 0.8, 0.9], pooled best 0.8 | shadow vs shipped +9.26% -> +7.24%
+
+=== Same knobs on weeks 2-4 (contrast) ===
+  weeks 2-4 LEVEL x m (n=3589)
+    grid pooled MSE: 1.0:44.009  0.95:44.460  0.9:45.288  1.05:43.936  1.1:44.242
+    LOYO 43.7164 vs shadow 43.5934 (+0.28%), seasons better than shadow 1/7, picks [1.05, 1.0, 1.05, 1.05, 1.05, 1.05, 1.05], pooled best 1.05 | shadow vs shipped -1.59% -> -1.31%
+  weeks 2-4 SHRINK k (n=3589)
+    grid pooled MSE: 0.8:44.009  0.7:44.135  0.6:44.434  0.5:44.906  0.9:44.056  1.0:44.275
+    LOYO 43.5934 vs shadow 43.5934 (+0.00%), seasons better than shadow 0/7, picks [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8], pooled best 0.8 | shadow vs shipped -1.59% -> -1.59%
+  weeks 2-4 vets ADP weight (n=2123)
+    grid pooled MSE: 0.75:51.769  0.5:51.969  0.9:51.724  1.0:51.725
+    LOYO 50.9091 vs shadow 50.8239 (+0.17%), seasons better than shadow 3/7, picks [0.9, 0.75, 0.9, 1.0, 1.0, 1.0, 1.0], pooled best 0.9 | shadow vs shipped -0.97% -> -0.81%
+  weeks 2-4 ROOKIE x m (n=491)
+    grid pooled MSE: 1.0:38.672  0.9:38.601  0.8:39.164  1.1:39.378  1.2:40.719
+    LOYO 40.2211 vs shadow 39.8302 (+0.98%), seasons better than shadow 1/7, picks [0.9, 0.9, 1.0, 0.9, 0.9, 0.9, 1.0], pooled best 0.9 | shadow vs shipped -1.84% -> -0.88%
+
+=== Week 1 rookies by string ===
+    week 1 rookies 1st string        n=   46 act/shadow 0.981 act/shipped 1.105 shadow vs shipped  +0.82%
+    week 1 rookies 2nd string        n=   69 act/shadow 0.738 act/shipped 0.834 shadow vs shipped +24.57%
+    week 1 rookies 3rd+ / unlisted   n=   39 act/shadow 0.770 act/shipped 0.985 shadow vs shipped  +0.19%
+  week 1 ROOKIE x m, 1st-string rookies only (n=46)
+    grid pooled MSE: 1.0:40.969  0.9:42.800  0.8:46.303  0.7:51.478  1.1:40.809
+    LOYO 39.1176 vs shadow 35.3324 (+10.71%), seasons better than shadow 0/7, picks [0.9, 1.1, 1.0, 1.1, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped +0.82% -> +11.62%
+  week 1 ROOKIE x m, buried rookies only (n=108)
+    grid pooled MSE: 1.0:30.670  0.9:28.819  0.8:27.550  0.7:26.864  1.1:33.105
+    LOYO 28.5663 vs shadow 32.5044 (-12.12%), seasons better than shadow 6/7, picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7], pooled best 0.7 | shadow vs shipped +13.67% -> -0.11%
+
+=== Combined week-1 pieces (TE level + rookie level), LOYO + forward ===
+  TE x0.9 + rookies(all rookies) x1.0: all rows -0.01% vs shadow (5/7) | week 1 -0.24% (5/7), vs shipped +0.29% | FORWARD week 1 -0.15% (2/5)
+  TE x1.0 + rookies(all rookies) x0.8: all rows -0.02% vs shadow (4/7) | week 1 -0.36% (4/7), vs shipped +0.17% | FORWARD week 1 -0.49% (4/5)
+  TE x0.9 + rookies(all rookies) x0.8: all rows -0.03% vs shadow (5/7) | week 1 -0.55% (5/7), vs shipped -0.02% | FORWARD week 1 -0.63% (4/5)
+  TE x0.9 + rookies(1st-string rookies) x1.0: all rows -0.01% vs shadow (5/7) | week 1 -0.24% (5/7), vs shipped +0.29% | FORWARD week 1 -0.15% (2/5)
+  TE x1.0 + rookies(1st-string rookies) x0.8: all rows +0.03% vs shadow (3/7) | week 1 +0.47% (3/7), vs shipped +1.01% | FORWARD week 1 +0.00% (0/5)
+  TE x0.9 + rookies(1st-string rookies) x0.8: all rows +0.02% vs shadow (4/7) | week 1 +0.25% (4/7), vs shipped +0.79% | FORWARD week 1 -0.15% (2/5)
+
+=== Buried rookies (string >= 2 or unlisted) x m by week, LOYO vs shadow ===
+    buried rookies wk1 (n=108)
+    grid pooled MSE: 1.0:30.670  0.9:28.327  0.8:27.026  0.7:26.768  0.6:27.553  1.1:34.057
+    LOYO 29.0809 vs shadow 32.5044 (-10.53%), seasons better than shadow 5/7, picks [0.7, 0.7, 0.8, 0.7, 0.7, 0.7, 0.7], pooled best 0.7 | shadow vs shipped +13.67% -> +1.69%
+    buried rookies wk2 (n=122)
+    grid pooled MSE: 1.0:30.570  0.9:29.153  0.8:28.757  0.7:29.382  0.6:31.029  1.1:33.009
+    LOYO 29.9588 vs shadow 30.4257 (-1.53%), seasons better than shadow 4/7, picks [0.8, 0.8, 0.9, 0.8, 0.8, 0.9, 0.9], pooled best 0.8 | shadow vs shipped +14.00% -> +12.25%
+    buried rookies wk3 (n=112)
+    grid pooled MSE: 1.0:52.505  0.9:51.842  0.8:52.280  0.7:53.820  0.6:56.460  1.1:54.268
+    LOYO 56.7658 vs shadow 54.8545 (+3.48%), seasons better than shadow 1/7, picks [0.8, 0.8, 1.0, 0.9, 0.9, 0.9, 1.0], pooled best 0.9 | shadow vs shipped -5.86% -> -2.58%
+    buried rookies wk4 (n=107)
+    grid pooled MSE: 1.0:30.502  0.9:31.229  0.8:32.976  0.7:35.745  0.6:39.536  1.1:30.798
+    LOYO 32.1352 vs shadow 31.7865 (+1.10%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.1], pooled best 1.0 | shadow vs shipped +3.28% -> +4.42%
+    buried rookies wk5-8 (n=353)
+    grid pooled MSE: 1.0:30.541  0.9:31.210  0.8:32.821  0.7:35.375  0.6:38.871  1.1:30.815
+    LOYO 30.2287 vs shadow 30.2287 (+0.00%), seasons better than shadow 0/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -3.99% -> -3.99%
+    buried rookies wk9+ (n=740)
+    grid pooled MSE: 1.0:35.288  0.9:36.502  0.8:38.774  0.7:42.105  0.6:46.494  1.1:35.132
+    LOYO 34.7759 vs shadow 34.5991 (+0.51%), seasons better than shadow 4/7, picks [1.1, 1.0, 1.1, 1.1, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped -1.38% -> -0.88%
+  1st-string rookies for contrast: wk1 n46 act/shadow 0.981 | wk2-4 n150 act/shadow 1.049 | wk5-8 n249 act/shadow 1.037
+
+=== Candidate: buried-rookie ramp {"wk1": 0.7, "wk2": 0.8, "wk3": 1.0, "wk4": 1.0, "wk5-8": 1.0, "wk9+": 1.0} ===
+  ALL rows: vs shipped -1.21% (7/7) | vs shadow v2.4 -0.08% (5/7) | week 1 -0.38% vs shipped (was +0.53%) | buried rookies wks 1-4 -3.94% vs shadow
+  FORWARD (2021-25, multipliers picked on earlier seasons): all rows -0.08% (4/5) | buried rookies wks 1-4 -4.09% (4/5) | week-1 rows -1.05% (4/5)
+
+=== Candidate week-1 knobs: level 1.0, shrink k 0.8, vets ADP 0.75, 2nd-year ADP 0.5, rookie x0.8 ===
+  ALL rows: vs shipped -1.15% (7/7) | vs shadow v2.4 -0.02% (4/7) | week 1: shadow +0.53% -> +0.13% vs shipped
+  FORWARD (2021-25, knobs picked on earlier seasons): -0.02% vs shadow (4/5) | week-1 rows -0.41% (4/5)
+
+Week 1 (n 1245): shadow +0.53% vs shipped; the gap is BURIED rookies (2nd string act/shadow .74) and TEs. Chart-defined buried-rookie ramp {"wk1": 0.7, "wk2": 0.8, "wk3": 1.0, "wk4": 1.0, "wk5-8": 1.0, "wk9+": 1.0}: -0.08% vs v2.4 (5/7), buried rookies wks 1-4 -3.94%, forward -4.09% (4/5). Other knobs: week 1 LEVEL x m +0.00% (0/7, FAIL); week 1 SHRINK k +0.16% (2/7, FAIL); week 1 vets ADP weight -0.10% (3/7, FAIL); week 1 2nd-year ADP weight +1.44% (0/7, FAIL); week 1 ROOKIE x m -1.85% (4/7, lean); week 1 ROOKIE x m, 1st-string rookies only +10.71% (0/7, FAIL); week 1 ROOKIE x m, buried rookies only -12.12% (6/7, PASS). Candidate -0.02% vs v2.4 (4/7), week 1 -> +0.13% vs shipped, forward week-1 rows -0.41% (4/5).
+wrote data/week1_backtest.js (22s)

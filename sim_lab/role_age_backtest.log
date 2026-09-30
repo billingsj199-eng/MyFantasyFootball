@@ -1,0 +1,141 @@
+  2019: rows so far 1946
+  2020: rows so far 4039
+  2021: rows so far 6624
+  2022: rows so far 9329
+  2023: rows so far 12576
+  2024: rows so far 15995
+  2025: rows so far 19064
+
+rows: 14494 player-weeks 2019-25, projection >= 5.0 half-PPR, played; age/experience known on 100%; limited/exit weeks 13.7% (snap data on 100%)
+
+=== A. all weeks ===
+  ALL                                      n=14494  actual/projected 1.030  healthy-only 1.076  bias -0.33 pts (t  -5.7)  seasons under projection 1/7  range 1.00-1.07
+  RB lead                                  n= 2855  actual/projected 1.062  healthy-only 1.131  bias -0.74 pts (t  -5.2)  seasons under projection 0/7  range 1.01-1.12
+  RB 2nd                                   n=  913  actual/projected 0.953  healthy-only 1.171  bias +0.35 pts (t  +1.9)  seasons under projection 6/7  range 0.90-1.06
+  RB 3rd+                                  n=    6  (too few)
+  WR lead                                  n= 3337  actual/projected 1.014  healthy-only 1.038  bias -0.16 pts (t  -1.3)  seasons under projection 3/7  range 0.94-1.07
+  WR 2nd                                   n= 1979  actual/projected 1.026  healthy-only 1.079  bias -0.22 pts (t  -1.5)  seasons under projection 4/7  range 0.98-1.11
+  WR 3rd+                                  n=  596  actual/projected 0.888  healthy-only 0.983  bias +0.75 pts (t  +3.6)  seasons under projection 7/7  range 0.66-0.93
+  TE lead                                  n= 2008  actual/projected 1.037  healthy-only 1.072  bias -0.29 pts (t  -2.2)  seasons under projection 2/7  range 0.97-1.12
+  TE 2nd                                   n=   86  actual/projected 0.988  healthy-only 1.109  bias +0.07 pts (t  +0.1)  seasons under projection 3/5  range 0.74-1.18
+  TE 3rd+                                  n=    0  (too few)
+  QB young (<= 25)                         n= 1288  actual/projected 1.049  healthy-only 1.084  bias -0.82 pts (t  -3.7)  seasons under projection 1/7  range 0.99-1.09
+  QB prime                                 n=  885  actual/projected 1.034  healthy-only 1.055  bias -0.58 pts (t  -2.2)  seasons under projection 2/7  range 0.92-1.12
+  QB veteran (9th season +)                n=  541  actual/projected 1.039  healthy-only 1.056  bias -0.65 pts (t  -2.1)  seasons under projection 0/7  range 1.00-1.07
+  RB young (<= 23)                         n= 1147  actual/projected 1.084  healthy-only 1.190  bias -0.89 pts (t  -4.1)  seasons under projection 0/7  range 1.03-1.14
+  RB prime                                 n= 2437  actual/projected 1.030  healthy-only 1.116  bias -0.33 pts (t  -2.3)  seasons under projection 2/7  range 0.98-1.07
+  RB veteran (9th season +)                n=  138  actual/projected 0.980  healthy-only 1.066  bias +0.25 pts (t  +0.4)  seasons under projection 2/4  range 0.88-1.15
+  WR young (<= 23)                         n= 1981  actual/projected 1.040  healthy-only 1.085  bias -0.36 pts (t  -2.4)  seasons under projection 1/7  range 0.93-1.10
+  WR prime                                 n= 3404  actual/projected 0.995  healthy-only 1.030  bias +0.05 pts (t  +0.4)  seasons under projection 4/7  range 0.94-1.05
+  WR veteran (9th season +)                n=  520  actual/projected 0.999  healthy-only 1.028  bias +0.01 pts (t  +0.0)  seasons under projection 3/7  range 0.61-1.12
+  TE young (<= 24)                         n=  658  actual/projected 1.073  healthy-only 1.113  bias -0.56 pts (t  -2.5)  seasons under projection 1/7  range 0.99-1.13
+  TE prime                                 n= 1222  actual/projected 1.029  healthy-only 1.069  bias -0.22 pts (t  -1.4)  seasons under projection 1/7  range 0.94-1.13
+  TE veteran (9th season +)                n=  214  actual/projected 0.968  healthy-only 0.994  bias +0.30 pts (t  +0.7)  seasons under projection 4/6  range 0.70-1.18
+  RB lead + young                          n=  892  actual/projected 1.106  healthy-only 1.179  bias -1.23 pts (t  -4.8)  seasons under projection 0/7  range 1.04-1.19
+  RB lead + not young                      n= 1952  actual/projected 1.042  healthy-only 1.111  bias -0.52 pts (t  -3.0)  seasons under projection 2/7  range 0.99-1.09
+  RB 2nd/3rd + young                       n=  255  actual/projected 0.955  healthy-only 1.310  bias +0.31 pts (t  +0.9)  seasons under projection 5/6  range 0.83-1.02
+  RB 2nd/3rd + not young                   n=  623  actual/projected 0.948  healthy-only 1.124  bias +0.40 pts (t  +1.8)  seasons under projection 5/7  range 0.87-1.04
+  WR lead + young                          n= 1042  actual/projected 1.051  healthy-only 1.073  bias -0.52 pts (t  -2.4)  seasons under projection 1/7  range 0.91-1.10
+  WR lead + not young                      n= 2294  actual/projected 0.999  healthy-only 1.024  bias +0.01 pts (t  +0.1)  seasons under projection 3/7  range 0.92-1.06
+  WR 2nd/3rd + young                       n=  939  actual/projected 1.024  healthy-only 1.102  bias -0.19 pts (t  -0.9)  seasons under projection 3/7  range 0.94-1.10
+  WR 2nd/3rd + not young                   n= 1630  actual/projected 0.988  healthy-only 1.043  bias +0.10 pts (t  +0.6)  seasons under projection 5/7  range 0.94-1.04
+
+=== A. WEEKS 1-3 only (the live window) ===
+  ALL                                      n= 2737  actual/projected 1.045  healthy-only 1.084  bias -0.49 pts (t  -3.8)  seasons under projection 1/7  range 0.95-1.17
+  RB lead                                  n=  534  actual/projected 1.053  healthy-only 1.108  bias -0.62 pts (t  -1.9)  seasons under projection 3/7  range 0.88-1.23
+  RB 2nd                                   n=  174  actual/projected 0.943  healthy-only 1.103  bias +0.42 pts (t  +1.0)  seasons under projection 4/7  range 0.52-1.14
+  RB 3rd+                                  n=    0  (too few)
+  WR lead                                  n=  615  actual/projected 1.053  healthy-only 1.078  bias -0.58 pts (t  -2.0)  seasons under projection 3/7  range 0.89-1.20
+  WR 2nd                                   n=  381  actual/projected 1.044  healthy-only 1.108  bias -0.36 pts (t  -1.0)  seasons under projection 2/7  range 0.94-1.19
+  WR 3rd+                                  n=   98  actual/projected 0.901  healthy-only 0.950  bias +0.68 pts (t  +1.4)  seasons under projection 4/5  range 0.78-1.04
+  TE lead                                  n=  379  actual/projected 0.945  healthy-only 0.975  bias +0.42 pts (t  +1.5)  seasons under projection 5/7  range 0.77-1.10
+  TE 2nd                                   n=   17  (too few)
+  TE 3rd+                                  n=    0  (too few)
+  QB young (<= 25)                         n=  244  actual/projected 1.086  healthy-only 1.105  bias -1.39 pts (t  -3.0)  seasons under projection 1/7  range 0.97-1.21
+  QB prime                                 n=  183  actual/projected 1.110  healthy-only 1.116  bias -1.81 pts (t  -3.3)  seasons under projection 1/7  range 0.97-1.25
+  QB veteran (9th season +)                n=  112  actual/projected 1.098  healthy-only 1.100  bias -1.53 pts (t  -2.3)  seasons under projection 1/7  range 0.94-1.30
+  RB young (<= 23)                         n=  215  actual/projected 0.978  healthy-only 1.100  bias +0.23 pts (t  +0.5)  seasons under projection 4/7  range 0.79-1.17
+  RB prime                                 n=  460  actual/projected 1.060  healthy-only 1.113  bias -0.65 pts (t  -1.9)  seasons under projection 3/7  range 0.97-1.23
+  RB veteran (9th season +)                n=   29  (too few)
+  WR young (<= 23)                         n=  365  actual/projected 1.028  healthy-only 1.088  bias -0.25 pts (t  -0.7)  seasons under projection 3/7  range 0.94-1.19
+  WR prime                                 n=  628  actual/projected 1.048  healthy-only 1.082  bias -0.48 pts (t  -1.7)  seasons under projection 1/7  range 0.91-1.19
+  WR veteran (9th season +)                n=   98  actual/projected 1.049  healthy-only 1.057  bias -0.51 pts (t  -0.7)  seasons under projection 3/5  range 0.87-1.40
+  TE young (<= 24)                         n=  120  actual/projected 0.973  healthy-only 1.016  bias +0.20 pts (t  +0.4)  seasons under projection 3/7  range 0.71-1.23
+  TE prime                                 n=  235  actual/projected 0.931  healthy-only 0.967  bias +0.51 pts (t  +1.5)  seasons under projection 5/7  range 0.81-1.07
+  TE veteran (9th season +)                n=   41  (too few)
+  RB lead + young                          n=  159  actual/projected 1.023  healthy-only 1.099  bias -0.26 pts (t  -0.5)  seasons under projection 3/7  range 0.83-1.23
+  RB lead + not young                      n=  375  actual/projected 1.066  healthy-only 1.111  bias -0.77 pts (t  -1.9)  seasons under projection 3/7  range 0.89-1.23
+  RB 2nd/3rd + young                       n=   56  (too few)
+  RB 2nd/3rd + not young                   n=  114  actual/projected 1.029  healthy-only 1.123  bias -0.23 pts (t  -0.4)  seasons under projection 4/7  range 0.55-1.45
+  WR lead + young                          n=  198  actual/projected 1.030  healthy-only 1.065  bias -0.29 pts (t  -0.6)  seasons under projection 4/7  range 0.88-1.16
+  WR lead + not young                      n=  417  actual/projected 1.063  healthy-only 1.083  bias -0.71 pts (t  -2.0)  seasons under projection 2/7  range 0.87-1.26
+  WR 2nd/3rd + young                       n=  167  actual/projected 1.026  healthy-only 1.129  bias -0.20 pts (t  -0.4)  seasons under projection 5/7  range 0.88-1.27
+  WR 2nd/3rd + not young                   n=  309  actual/projected 1.021  healthy-only 1.069  bias -0.18 pts (t  -0.5)  seasons under projection 3/7  range 0.96-1.14
+
+=== B. is it ROLE or just low projections? actual/projected inside projection tiers (RB/WR/TE, all weeks) ===
+  proj [ 5, 8)  lead 1.126 (n=2288) | 2nd 0.976 (n=1643) | 3rd+ 0.891 (n=498) | young 1.100 (n=1601) | prime 1.022 (n=2488) | vet 0.960 (n=289)
+  proj [ 8,11)  lead 1.095 (n=2406) | 2nd 1.033 (n=925) | 3rd+ 0.862 (n=104) | young 1.092 (n=1221) | prime 1.064 (n=1963) | vet 1.032 (n=243)
+  proj [11,15)  lead 1.008 (n=2394) | 2nd 1.023 (n=383) | 3rd+ - (n=0) | young 1.002 (n=717) | prime 1.007 (n=1832) | vet 1.053 (n=228)
+  proj [15,99)  lead 0.945 (n=1112) | 2nd - (n=27) | 3rd+ - (n=0) | young 0.999 (n=247) | prime 0.938 (n=780) | vet 0.866 (n=112)
+
+=== C. traits tested together, controlling for projection level (all weeks; points we were too HIGH) ===
+  baseline (lead, prime, proj 11-15): -0.28
+  2nd/3rd option         +0.92 pts (t  +6.2)   seasons same sign 6/7   per season -0.3 +0.4 +0.9 +1.2 +1.7 +1.2 +0.6
+  young                  -0.45 pts (t  -3.5)   seasons same sign 7/7   per season -1.0 -0.3 -0.4 -0.5 -0.2 -0.3 -0.7
+  veteran 9th season+    -0.13 pts (t  -0.6)   seasons same sign 3/7   per season +0.0 -1.0 +0.1 -0.4 +0.1 +0.2 -0.3
+  proj 5-8               -0.35 pts (t  -2.1)   seasons same sign 5/7   per season +0.6 +0.5 -0.5 -0.3 -0.8 -0.4 -1.0
+  proj 8-11              -0.64 pts (t  -3.8)   seasons same sign 7/7   per season -0.9 -0.2 -0.1 -0.5 -1.5 -0.4 -0.7
+  proj 15+               +0.75 pts (t  +4.3)   seasons same sign 7/7   per season +0.5 +0.7 +0.9 +1.3 +0.9 +0.1 +0.7
+
+=== C. traits tested together, controlling for projection level (healthy weeks only; points we were too HIGH) ===
+  baseline (lead, prime, proj 11-15): -0.82
+  2nd/3rd option         +0.71 pts (t  +4.3)   seasons same sign 5/7   per season -0.2 -0.1 +0.5 +1.2 +1.7 +0.9 +0.3
+  young                  -0.54 pts (t  -3.9)   seasons same sign 7/7   per season -1.1 -0.2 -0.4 -0.8 -0.0 -0.6 -0.9
+  veteran 9th season+    -0.02 pts (t  -0.1)   seasons same sign 3/7   per season +0.2 -0.9 +0.3 -0.4 +0.4 +0.4 -0.4
+  proj 5-8               -0.36 pts (t  -2.0)   seasons same sign 5/7   per season +0.5 +0.5 -0.4 -0.1 -0.8 -0.5 -1.2
+  proj 8-11              -0.54 pts (t  -3.0)   seasons same sign 6/7   per season -0.7 -0.1 +0.0 -0.4 -1.3 -0.4 -0.7
+  proj 15+               +0.99 pts (t  +5.4)   seasons same sign 7/7   per season +0.6 +0.9 +1.0 +1.8 +1.2 +0.3 +0.8
+
+=== C. traits tested together, controlling for projection level (weeks 1-3 only; points we were too HIGH) ===
+  baseline (lead, prime, proj 11-15): -0.94
+  2nd/3rd option         +0.66 pts (t  +2.0)   seasons same sign 6/7   per season +0.6 +0.6 -0.4 +0.4 +1.4 +1.2 +0.5
+  young                  +0.13 pts (t  +0.5)   seasons same sign 5/7   per season -0.2 +0.5 +0.6 +0.1 -1.0 +0.9 +0.5
+  veteran 9th season+    -0.16 pts (t  -0.4)   seasons same sign 4/7   per season +2.2 -0.5 -1.4 +0.5 -2.6 +1.7 -0.1
+  proj 5-8               +0.41 pts (t  +1.1)   seasons same sign 5/7   per season -0.2 +1.5 +0.3 +0.4 +0.8 +0.4 -0.9
+  proj 8-11              +0.01 pts (t  +0.0)   seasons same sign 4/7   per season -1.0 +1.2 +0.3 -0.6 +0.1 +1.2 -1.4
+  proj 15+               +0.66 pts (t  +1.6)   seasons same sign 6/7   per season +0.0 -0.8 +0.1 +0.4 +1.7 +1.3 +0.3
+
+=== D. held-out multipliers (all weeks) ===
+  RB 2nd                             flagged n=  872  pooled best x0.94  held-out picks 0.94 0.94 0.94 0.94 0.94 0.96 0.94  MSE on flagged rows -0.52%  seasons better 6/7
+  RB 3rd+                            flagged n=    6  (too few)
+  RB lead, not young                 flagged n= 1952  pooled best x1.02  held-out picks 1.02 1.02 1.02 1.02 1.00 1.02 1.02  MSE on flagged rows +0.00%  seasons better 2/7
+  WR 2nd                             flagged n= 1973  pooled best x1.04  held-out picks 1.02 1.02 1.04 1.04 1.04 1.02 1.04  MSE on flagged rows +0.01%  seasons better 3/7
+  WR 3rd+                            flagged n=  596  pooled best x0.88  held-out picks 0.88 0.88 0.88 0.88 0.88 0.88 0.88  MSE on flagged rows -2.32%  seasons better 7/7
+  WR lead, not young                 flagged n= 2294  pooled best x0.98  held-out picks 1.00 0.98 0.98 0.98 0.98 0.98 1.00  MSE on flagged rows +0.12%  seasons better 1/7
+  TE 2nd                             flagged n=   86  (too few)
+  TE 3rd+                            flagged n=    0  (too few)
+  TE lead, not young                 flagged n= 1381  pooled best x1.00  held-out picks 1.02 1.00 1.02 1.02 1.00 1.00 1.00  MSE on flagged rows +0.13%  seasons better 0/7
+  QB young                           flagged n= 1288  pooled best x1.02  held-out picks 1.02 1.02 1.04 1.02 1.04 1.02 1.02  MSE on flagged rows -0.09%  seasons better 5/7
+  QB veteran                         flagged n=  541  pooled best x1.02  held-out picks 1.02 1.02 1.02 1.02 1.02 1.02 1.02  MSE on flagged rows -0.30%  seasons better 3/7
+  RB young                           flagged n= 1147  pooled best x1.06  held-out picks 1.08 1.06 1.06 1.08 1.06 1.06 1.08  MSE on flagged rows -0.81%  seasons better 4/7
+  RB veteran                         flagged n=  138  (too few)
+  WR young                           flagged n= 1981  pooled best x1.02  held-out picks 1.02 1.02 1.02 1.02 1.02 1.02 1.04  MSE on flagged rows +0.00%  seasons better 6/7
+  WR veteran                         flagged n=  520  pooled best x0.98  held-out picks 1.00 0.98 1.00 0.98 0.98 0.98 1.00  MSE on flagged rows +0.19%  seasons better 0/7
+  TE young                           flagged n=  658  pooled best x1.04  held-out picks 1.06 1.06 1.06 1.06 1.04 1.04 1.04  MSE on flagged rows -0.25%  seasons better 3/7
+  TE veteran                         flagged n=  214  pooled best x0.94  held-out picks 0.94 0.94 0.96 0.92 0.96 0.92 0.92  MSE on flagged rows -0.05%  seasons better 3/7
+  -- control: multiplier by projection tier only --
+  tier [5,8)                         flagged n= 4444  pooled best x1.06  held-out picks 1.06 1.06 1.06 1.06 1.06 1.04 1.06  MSE on flagged rows -0.37%  seasons better 6/7
+  tier [8,11)                        flagged n= 3557  pooled best x1.08  held-out picks 1.08 1.08 1.10 1.08 1.08 1.08 1.10  MSE on flagged rows -1.28%  seasons better 5/7
+  tier [11,15)                       flagged n= 3480  pooled best x1.02  held-out picks 1.02 1.02 1.02 1.02 1.02 1.02 1.04  MSE on flagged rows -0.06%  seasons better 4/7
+  tier [15,99)                       flagged n= 2954  pooled best x0.98  held-out picks 0.98 0.98 0.98 0.98 0.98 0.98 0.98  MSE on flagged rows -0.20%  seasons better 5/7
+
+=== E. stacked, every multiplier chosen without the graded season (all weeks) ===
+  control: projection tier only            MSE -0.45% (6/7)  MAE +0.76% (0/7)  bias -0.33 -> -0.03  weekly rank corr 0.3774 -> 0.3773
+  pecking order only                       MSE -0.04% (4/7)  MAE -0.08% (5/7)  bias -0.33 -> -0.35  weekly rank corr 0.3774 -> 0.3787
+  age only                                 MSE -0.06% (4/7)  MAE +0.23% (2/7)  bias -0.33 -> -0.19  weekly rank corr 0.3774 -> 0.3770
+  pecking order + age                      MSE -0.15% (4/7)  MAE +0.09% (2/7)  bias -0.33 -> -0.21  weekly rank corr 0.3774 -> 0.3783
+     QB: pecking order + age               MSE -0.10% (6/7)  MAE -0.01% (5/7)  bias -0.71 -> -0.43  weekly rank corr 0.3372 -> 0.3330
+     RB: pecking order + age               MSE -0.38% (4/7)  MAE +0.39% (3/7)  bias -0.48 -> -0.25  weekly rank corr 0.4668 -> 0.4712
+     WR: pecking order + age               MSE -0.04% (3/7)  MAE -0.10% (5/7)  bias -0.09 -> -0.09  weekly rank corr 0.3951 -> 0.3956
+     TE: pecking order + age               MSE -0.03% (2/7)  MAE +0.23% (2/7)  bias -0.28 -> -0.18  weekly rank corr 0.3106 -> 0.3132
+     weeks 1-4 only: pecking order + age   MSE -0.04% (5/7)  MAE +0.23% (3/7)  bias -0.52 -> -0.39  weekly rank corr 0.3784 -> 0.3777

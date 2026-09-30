@@ -1,0 +1,256 @@
+player-seasons: 976 (3 games in, forward projection >= 5 half-PPR, >= 4 later games)
+'<<<' = |t| >= 2.5 and at least 6 of 7 seasons on the same side.
+
+=== 0. baseline by position (survivors run a little over by construction) ===
+  QB                                             n= 187  rest-of-season / projected 1.080  (+1.28 pts/g, t  +4.5)  seasons above 6/7  avg proj 16.0  hit 120%+  31%  under 80%  11%  <<<
+  RB                                             n= 251  rest-of-season / projected 1.071  (+0.75 pts/g, t  +3.3)  seasons above 6/7  avg proj 10.6  hit 120%+  33%  under 80%  23%  <<<
+  WR                                             n= 410  rest-of-season / projected 1.008  (+0.08 pts/g, t  +0.6)  seasons above 4/7  avg proj  9.5  hit 120%+  24%  under 80%  26%
+  TE                                             n= 128  rest-of-season / projected 1.086  (+0.68 pts/g, t  +2.9)  seasons above 5/7  avg proj  7.8  hit 120%+  37%  under 80%  20%
+
+=== 1. how he started vs the preseason number ===
+  RB cold start (<60% of Clay)                   n=  32  (too few)
+  RB cool (60-85%)                               n=  53  rest-of-season / projected 1.113  (+1.14 pts/g, t  +2.2)  seasons above 4/6  avg proj 10.1  hit 120%+  38%  under 80%  21%
+  RB on pace (85-115%)                           n=  63  rest-of-season / projected 1.072  (+0.82 pts/g, t  +1.8)  seasons above 5/6  avg proj 11.3  hit 120%+  37%  under 80%  21%
+  RB warm (115-150%)                             n=  49  rest-of-season / projected 1.039  (+0.47 pts/g, t  +0.9)  seasons above 3/6  avg proj 12.0  hit 120%+  31%  under 80%  24%
+  RB hot start (150%+)                           n=  54  rest-of-season / projected 1.042  (+0.46 pts/g, t  +1.0)  seasons above 3/5  avg proj 10.8  hit 120%+  22%  under 80%  22%
+  WR cold start (<60% of Clay)                   n=  51  rest-of-season / projected 1.039  (+0.28 pts/g, t  +0.7)  seasons above 3/5  avg proj  7.2  hit 120%+  25%  under 80%  27%
+  WR cool (60-85%)                               n=  74  rest-of-season / projected 1.038  (+0.33 pts/g, t  +1.2)  seasons above 4/6  avg proj  8.8  hit 120%+  26%  under 80%  24%
+  WR on pace (85-115%)                           n=  97  rest-of-season / projected 1.009  (+0.09 pts/g, t  +0.3)  seasons above 3/7  avg proj 10.1  hit 120%+  26%  under 80%  28%
+  WR warm (115-150%)                             n=  89  rest-of-season / projected 1.020  (+0.21 pts/g, t  +0.7)  seasons above 5/7  avg proj 10.9  hit 120%+  22%  under 80%  18%
+  WR hot start (150%+)                           n=  99  rest-of-season / projected 0.965  (-0.34 pts/g, t  -1.2)  seasons above 3/7  avg proj  9.6  hit 120%+  22%  under 80%  31%
+  TE cold start (<60% of Clay)                   n=  18  (too few)
+  TE cool (60-85%)                               n=  24  (too few)
+  TE on pace (85-115%)                           n=  36  (too few)
+  TE warm (115-150%)                             n=  22  (too few)
+  TE hot start (150%+)                           n=  28  (too few)
+  QB cold start (<60% of Clay)                   n=   4  (too few)
+  QB cool (60-85%)                               n=  31  (too few)
+  QB on pace (85-115%)                           n=  68  rest-of-season / projected 1.082  (+1.35 pts/g, t  +2.8)  seasons above 7/7  avg proj 16.5  hit 120%+  29%  under 80%   9%  <<<
+  QB warm (115-150%)                             n=  48  rest-of-season / projected 0.986  (-0.25 pts/g, t  -0.4)  seasons above 2/6  avg proj 18.2  hit 120%+  17%  under 80%  19%
+  QB hot start (150%+)                           n=  36  (too few)
+
+=== 1b. start x preseason tier: ELITE preseason (Clay 13+ /g) ===
+  RB cold start (<60% of Clay)                   n=   4  (too few)
+  RB cool (60-85%)                               n=  16  (too few)
+  RB on pace (85-115%)                           n=  23  (too few)
+  RB warm (115-150%)                             n=  15  (too few)
+  RB hot start (150%+)                           n=   4  (too few)
+  WR cold start (<60% of Clay)                   n=   1  (too few)
+  WR cool (60-85%)                               n=   9  (too few)
+  WR on pace (85-115%)                           n=  14  (too few)
+  WR warm (115-150%)                             n=   8  (too few)
+  WR hot start (150%+)                           n=   2  (too few)
+  TE cold start (<60% of Clay)                   n=   0  (too few)
+  TE cool (60-85%)                               n=   0  (too few)
+  TE on pace (85-115%)                           n=   3  (too few)
+  TE warm (115-150%)                             n=   1  (too few)
+  TE hot start (150%+)                           n=   0  (too few)
+
+=== 1b. start x preseason tier: MID preseason (Clay 8-13) ===
+  RB cold start (<60% of Clay)                   n=  16  (too few)
+  RB cool (60-85%)                               n=  25  (too few)
+  RB on pace (85-115%)                           n=  28  (too few)
+  RB warm (115-150%)                             n=  21  (too few)
+  RB hot start (150%+)                           n=  20  (too few)
+  WR cold start (<60% of Clay)                   n=  29  (too few)
+  WR cool (60-85%)                               n=  41  rest-of-season / projected 1.077  (+0.71 pts/g, t  +1.9)  seasons above 4/5  avg proj  9.3  hit 120%+  29%  under 80%  15%
+  WR on pace (85-115%)                           n=  61  rest-of-season / projected 1.032  (+0.33 pts/g, t  +0.9)  seasons above 4/6  avg proj 10.4  hit 120%+  26%  under 80%  20%
+  WR warm (115-150%)                             n=  57  rest-of-season / projected 1.028  (+0.32 pts/g, t  +0.8)  seasons above 5/6  avg proj 11.6  hit 120%+  19%  under 80%  18%
+  WR hot start (150%+)                           n=  37  (too few)
+  TE cold start (<60% of Clay)                   n=   8  (too few)
+  TE cool (60-85%)                               n=  13  (too few)
+  TE on pace (85-115%)                           n=  10  (too few)
+  TE warm (115-150%)                             n=   6  (too few)
+  TE hot start (150%+)                           n=   4  (too few)
+
+=== 1b. start x preseason tier: LATE preseason (Clay under 8) ===
+  RB cold start (<60% of Clay)                   n=  12  (too few)
+  RB cool (60-85%)                               n=  12  (too few)
+  RB on pace (85-115%)                           n=  12  (too few)
+  RB warm (115-150%)                             n=  13  (too few)
+  RB hot start (150%+)                           n=  30  (too few)
+  WR cold start (<60% of Clay)                   n=  21  (too few)
+  WR cool (60-85%)                               n=  24  (too few)
+  WR on pace (85-115%)                           n=  22  (too few)
+  WR warm (115-150%)                             n=  24  (too few)
+  WR hot start (150%+)                           n=  60  rest-of-season / projected 0.999  (-0.01 pts/g, t  -0.0)  seasons above 2/6  avg proj  7.4  hit 120%+  28%  under 80%  37%
+  TE cold start (<60% of Clay)                   n=  10  (too few)
+  TE cool (60-85%)                               n=  11  (too few)
+  TE on pace (85-115%)                           n=  23  (too few)
+  TE warm (115-150%)                             n=  15  (too few)
+  TE hot start (150%+)                           n=  24  (too few)
+
+=== 1c. start, YOUNG players only ===
+  RB cold start (<60% of Clay)                   n=  10  (too few)
+  RB cool (60-85%)                               n=  17  (too few)
+  RB on pace (85-115%)                           n=  19  (too few)
+  RB warm (115-150%)                             n=  14  (too few)
+  RB hot start (150%+)                           n=  16  (too few)
+  WR cold start (<60% of Clay)                   n=  21  (too few)
+  WR cool (60-85%)                               n=  24  (too few)
+  WR on pace (85-115%)                           n=  23  (too few)
+  WR warm (115-150%)                             n=  33  (too few)
+  WR hot start (150%+)                           n=  36  (too few)
+  TE cold start (<60% of Clay)                   n=   4  (too few)
+  TE cool (60-85%)                               n=  12  (too few)
+  TE on pace (85-115%)                           n=   6  (too few)
+  TE warm (115-150%)                             n=   6  (too few)
+  TE hot start (150%+)                           n=  10  (too few)
+
+=== 1d. start, ROOKIES only ===
+  RB cold start (<60% of Clay)                   n=   8  (too few)
+  RB cool (60-85%)                               n=   7  (too few)
+  RB on pace (85-115%)                           n=   6  (too few)
+  RB warm (115-150%)                             n=   5  (too few)
+  RB hot start (150%+)                           n=   8  (too few)
+  WR cold start (<60% of Clay)                   n=   8  (too few)
+  WR cool (60-85%)                               n=   9  (too few)
+  WR on pace (85-115%)                           n=   8  (too few)
+  WR warm (115-150%)                             n=  12  (too few)
+  WR hot start (150%+)                           n=  21  (too few)
+  TE cold start (<60% of Clay)                   n=   1  (too few)
+  TE cool (60-85%)                               n=   2  (too few)
+  TE on pace (85-115%)                           n=   1  (too few)
+  TE warm (115-150%)                             n=   2  (too few)
+  TE hot start (150%+)                           n=   1  (too few)
+  QB cold start (<60% of Clay)                   n=   2  (too few)
+  QB cool (60-85%)                               n=   4  (too few)
+  QB on pace (85-115%)                           n=   4  (too few)
+  QB warm (115-150%)                             n=   3  (too few)
+  QB hot start (150%+)                           n=   8  (too few)
+
+=== 1e. start, 2nd-year players only ===
+  RB cold start (<60% of Clay)                   n=   4  (too few)
+  RB cool (60-85%)                               n=   8  (too few)
+  RB on pace (85-115%)                           n=  11  (too few)
+  RB warm (115-150%)                             n=   6  (too few)
+  RB hot start (150%+)                           n=  10  (too few)
+  WR cold start (<60% of Clay)                   n=  14  (too few)
+  WR cool (60-85%)                               n=  11  (too few)
+  WR on pace (85-115%)                           n=  11  (too few)
+  WR warm (115-150%)                             n=  18  (too few)
+  WR hot start (150%+)                           n=  13  (too few)
+  TE cold start (<60% of Clay)                   n=   1  (too few)
+  TE cool (60-85%)                               n=   4  (too few)
+  TE on pace (85-115%)                           n=   0  (too few)
+  TE warm (115-150%)                             n=   3  (too few)
+  TE hot start (150%+)                           n=   3  (too few)
+  QB cold start (<60% of Clay)                   n=   1  (too few)
+  QB cool (60-85%)                               n=   8  (too few)
+  QB on pace (85-115%)                           n=  11  (too few)
+  QB warm (115-150%)                             n=   7  (too few)
+  QB hot start (150%+)                           n=   3  (too few)
+
+=== 1f. start, veterans (9th season +) only ===
+  RB cold start (<60% of Clay)                   n=   2  (too few)
+  RB cool (60-85%)                               n=   3  (too few)
+  RB on pace (85-115%)                           n=   2  (too few)
+  RB warm (115-150%)                             n=   2  (too few)
+  RB hot start (150%+)                           n=   1  (too few)
+  WR cold start (<60% of Clay)                   n=   3  (too few)
+  WR cool (60-85%)                               n=  14  (too few)
+  WR on pace (85-115%)                           n=   7  (too few)
+  WR warm (115-150%)                             n=   7  (too few)
+  WR hot start (150%+)                           n=   6  (too few)
+  TE cold start (<60% of Clay)                   n=   2  (too few)
+  TE cool (60-85%)                               n=   3  (too few)
+  TE on pace (85-115%)                           n=   4  (too few)
+  TE warm (115-150%)                             n=   4  (too few)
+  TE hot start (150%+)                           n=   1  (too few)
+  QB cold start (<60% of Clay)                   n=   0  (too few)
+  QB cool (60-85%)                               n=   6  (too few)
+  QB on pace (85-115%)                           n=  14  (too few)
+  QB warm (115-150%)                             n=  11  (too few)
+  QB hot start (150%+)                           n=   5  (too few)
+
+=== 2. expected points from his usage vs what he actually scored (first 3 games) ===
+  RB usage says 3+ MORE than his points          n=  49  rest-of-season / projected 1.055  (+0.58 pts/g, t  +1.1)  seasons above 5/7  avg proj 10.5  hit 120%+  35%  under 80%  27%
+  RB usage 1-3 more                              n=  53  rest-of-season / projected 1.105  (+1.00 pts/g, t  +1.9)  seasons above 2/4  avg proj  9.5  hit 120%+  40%  under 80%  23%
+  RB in line                                     n=  64  rest-of-season / projected 1.126  (+1.24 pts/g, t  +2.5)  seasons above 6/6  avg proj  9.8  hit 120%+  39%  under 80%  20%
+  RB points 1-3 above usage                      n=  38  (too few)
+  RB points 3+ ABOVE his usage                   n=  47  rest-of-season / projected 1.002  (+0.02 pts/g, t  +0.1)  seasons above 3/6  avg proj 12.5  hit 120%+  19%  under 80%  23%
+  WR usage says 3+ MORE than his points          n=  44  rest-of-season / projected 1.082  (+0.71 pts/g, t  +1.6)  seasons above 5/6  avg proj  8.6  hit 120%+  43%  under 80%  27%
+  WR usage 1-3 more                              n=  72  rest-of-season / projected 1.010  (+0.09 pts/g, t  +0.3)  seasons above 4/7  avg proj  8.4  hit 120%+  24%  under 80%  28%
+  WR in line                                     n= 108  rest-of-season / projected 1.062  (+0.54 pts/g, t  +2.0)  seasons above 4/7  avg proj  8.6  hit 120%+  29%  under 80%  23%
+  WR points 1-3 above usage                      n=  94  rest-of-season / projected 1.004  (+0.04 pts/g, t  +0.1)  seasons above 3/7  avg proj 10.2  hit 120%+  20%  under 80%  24%
+  WR points 3+ ABOVE his usage                   n=  92  rest-of-season / projected 0.936  (-0.73 pts/g, t  -2.4)  seasons above 2/7  avg proj 11.3  hit 120%+  14%  under 80%  28%
+  TE usage says 3+ MORE than his points          n=   6  (too few)
+  TE usage 1-3 more                              n=  31  (too few)
+  TE in line                                     n=  47  rest-of-season / projected 1.121  (+0.88 pts/g, t  +2.7)  seasons above 4/5  avg proj  7.2  hit 120%+  40%  under 80%  13%  <<<
+  TE points 1-3 above usage                      n=  23  (too few)
+  TE points 3+ ABOVE his usage                   n=  21  (too few)
+
+=== 3. how much of the start was touchdowns ===
+  RB no TDs in the first 3                       n=  67  rest-of-season / projected 1.205  (+1.64 pts/g, t  +3.5)  seasons above 5/5  avg proj  8.0  hit 120%+  43%  under 80%  28%  <<<
+  RB TDs under 25% of points                     n=  69  rest-of-season / projected 1.067  (+0.80 pts/g, t  +1.8)  seasons above 5/7  avg proj 11.8  hit 120%+  36%  under 80%  17%
+  RB 25-40%                                      n=  78  rest-of-season / projected 1.024  (+0.29 pts/g, t  +0.8)  seasons above 6/7  avg proj 11.9  hit 120%+  26%  under 80%  19%
+  RB TDs 40%+ of points                          n=  36  (too few)
+  WR no TDs in the first 3                       n= 110  rest-of-season / projected 1.065  (+0.52 pts/g, t  +2.0)  seasons above 5/7  avg proj  8.0  hit 120%+  34%  under 80%  26%
+  WR TDs under 25% of points                     n= 121  rest-of-season / projected 1.020  (+0.21 pts/g, t  +0.8)  seasons above 5/7  avg proj 10.6  hit 120%+  23%  under 80%  21%
+  WR 25-40%                                      n= 129  rest-of-season / projected 1.007  (+0.07 pts/g, t  +0.3)  seasons above 3/7  avg proj 10.1  hit 120%+  22%  under 80%  23%
+  WR TDs 40%+ of points                          n=  50  rest-of-season / projected 0.868  (-1.19 pts/g, t  -2.9)  seasons above 2/6  avg proj  9.0  hit 120%+  12%  under 80%  44%
+  TE no TDs in the first 3                       n=  57  rest-of-season / projected 1.249  (+1.74 pts/g, t  +5.7)  seasons above 6/6  avg proj  7.0  hit 120%+  56%  under 80%   9%  <<<
+  TE TDs under 25% of points                     n=  21  (too few)
+  TE 25-40%                                      n=  30  (too few)
+  TE TDs 40%+ of points                          n=  20  (too few)
+
+=== 4. snap share direction ===
+  RB snaps falling 8+ pts (last game vs avg)     n=  41  rest-of-season / projected 1.024  (+0.25 pts/g, t  +0.5)  seasons above 3/4  avg proj 10.3  hit 120%+  27%  under 80%  27%
+  RB steady                                      n= 147  rest-of-season / projected 1.091  (+0.98 pts/g, t  +3.4)  seasons above 6/7  avg proj 10.7  hit 120%+  34%  under 80%  19%  <<<
+  RB snaps rising 8+ pts                         n=  57  rest-of-season / projected 1.062  (+0.67 pts/g, t  +1.3)  seasons above 4/7  avg proj 10.9  hit 120%+  32%  under 80%  26%
+  WR snaps falling 8+ pts (last game vs avg)     n=  57  rest-of-season / projected 1.028  (+0.25 pts/g, t  +0.7)  seasons above 2/6  avg proj  9.1  hit 120%+  28%  under 80%  25%
+  WR steady                                      n= 267  rest-of-season / projected 1.006  (+0.06 pts/g, t  +0.3)  seasons above 4/7  avg proj  9.9  hit 120%+  24%  under 80%  25%
+  WR snaps rising 8+ pts                         n=  72  rest-of-season / projected 1.027  (+0.24 pts/g, t  +0.6)  seasons above 5/7  avg proj  8.8  hit 120%+  22%  under 80%  29%
+  TE snaps falling 8+ pts (last game vs avg)     n=  22  (too few)
+  TE steady                                      n=  85  rest-of-season / projected 1.093  (+0.73 pts/g, t  +2.5)  seasons above 5/7  avg proj  7.8  hit 120%+  36%  under 80%  20%
+  TE snaps rising 8+ pts                         n=  20  (too few)
+
+=== 4b. snap share level ===
+  RB under 50% snaps                             n=  98  rest-of-season / projected 1.132  (+1.03 pts/g, t  +2.7)  seasons above 7/7  avg proj  7.8  hit 120%+  41%  under 80%  30%  <<<
+  RB 50-70%                                      n=  94  rest-of-season / projected 1.062  (+0.73 pts/g, t  +2.1)  seasons above 4/7  avg proj 11.8  hit 120%+  27%  under 80%  14%
+  RB 70-85%                                      n=  44  rest-of-season / projected 1.019  (+0.26 pts/g, t  +0.5)  seasons above 3/4  avg proj 13.9  hit 120%+  27%  under 80%  25%
+  RB 85%+                                        n=   9  (too few)
+  WR under 50% snaps                             n=  29  (too few)
+  WR 50-70%                                      n=  95  rest-of-season / projected 1.017  (+0.14 pts/g, t  +0.5)  seasons above 4/7  avg proj  7.9  hit 120%+  29%  under 80%  31%
+  WR 70-85%                                      n= 127  rest-of-season / projected 1.038  (+0.36 pts/g, t  +1.5)  seasons above 5/7  avg proj  9.5  hit 120%+  24%  under 80%  23%
+  WR 85%+                                        n= 145  rest-of-season / projected 0.988  (-0.13 pts/g, t  -0.5)  seasons above 3/7  avg proj 11.4  hit 120%+  21%  under 80%  23%
+  TE under 50% snaps                             n=  10  (too few)
+  TE 50-70%                                      n=  36  (too few)
+  TE 70-85%                                      n=  49  rest-of-season / projected 1.111  (+0.90 pts/g, t  +2.4)  seasons above 5/7  avg proj  8.1  hit 120%+  37%  under 80%  18%
+  TE 85%+                                        n=  32  (too few)
+
+=== 5. target share vs last season (players with 6+ games last year) ===
+  WR share DOWN 5+ pts vs last year              n=  56  rest-of-season / projected 1.059  (+0.54 pts/g, t  +1.4)  seasons above 3/6  avg proj  9.2  hit 120%+  25%  under 80%  25%
+  WR about the same                              n= 187  rest-of-season / projected 0.992  (-0.08 pts/g, t  -0.4)  seasons above 4/7  avg proj 10.0  hit 120%+  21%  under 80%  28%
+  WR share UP 5+ pts vs last year                n=  85  rest-of-season / projected 0.998  (-0.02 pts/g, t  -0.1)  seasons above 2/7  avg proj 10.5  hit 120%+  24%  under 80%  24%
+  TE share DOWN 5+ pts vs last year              n=  24  (too few)
+  TE about the same                              n=  73  rest-of-season / projected 1.073  (+0.59 pts/g, t  +1.9)  seasons above 5/7  avg proj  8.1  hit 120%+  37%  under 80%  23%
+  TE share UP 5+ pts vs last year                n=  19  (too few)
+  RB share DOWN 5+ pts vs last year              n=  22  (too few)
+  RB about the same                              n= 141  rest-of-season / projected 1.042  (+0.46 pts/g, t  +1.6)  seasons above 6/7  avg proj 10.9  hit 120%+  29%  under 80%  26%
+  RB share UP 5+ pts vs last year                n=  33  (too few)
+
+=== 5b. carry share vs last season (RB, 6+ games last year) ===
+  RB share DOWN 5+ pts vs last year              n=  66  rest-of-season / projected 1.028  (+0.28 pts/g, t  +0.7)  seasons above 5/7  avg proj 10.2  hit 120%+  26%  under 80%  29%
+  RB about the same                              n=  46  rest-of-season / projected 1.099  (+1.07 pts/g, t  +2.1)  seasons above 5/5  avg proj 10.8  hit 120%+  41%  under 80%  20%
+  RB share UP 5+ pts vs last year                n=  84  rest-of-season / projected 1.034  (+0.41 pts/g, t  +1.0)  seasons above 5/7  avg proj 12.0  hit 120%+  24%  under 80%  21%
+
+=== 6. changed teams / new play-caller ===
+  RB changed teams                               n=  38  (too few)
+  RB new play-caller                             n= 107  rest-of-season / projected 1.091  (+0.93 pts/g, t  +2.9)  seasons above 6/7  avg proj 10.2  hit 120%+  31%  under 80%  22%  <<<
+  WR changed teams                               n=  53  rest-of-season / projected 0.997  (-0.03 pts/g, t  -0.1)  seasons above 3/5  avg proj  9.2  hit 120%+  23%  under 80%  30%
+  WR new play-caller                             n= 173  rest-of-season / projected 1.001  (+0.01 pts/g, t  +0.1)  seasons above 2/7  avg proj  9.4  hit 120%+  27%  under 80%  31%
+  TE changed teams                               n=  14  (too few)
+  TE new play-caller                             n=  48  rest-of-season / projected 1.079  (+0.59 pts/g, t  +1.8)  seasons above 5/7  avg proj  7.5  hit 120%+  35%  under 80%  17%
+  QB changed teams                               n=  25  (too few)
+  QB new play-caller                             n=  84  rest-of-season / projected 1.114  (+1.75 pts/g, t  +4.2)  seasons above 6/7  avg proj 15.3  hit 120%+  36%  under 80%  10%  <<<
+
+=== 7. consistency of the start: did all three games point the same way? ===
+  RB all 3 games ABOVE the preseason number      n=  41  rest-of-season / projected 1.049  (+0.58 pts/g, t  +1.0)  seasons above 2/4  avg proj 11.9  hit 120%+  24%  under 80%  22%
+  RB all 3 games BELOW the preseason number      n=  42  rest-of-season / projected 1.119  (+1.06 pts/g, t  +1.9)  seasons above 3/4  avg proj  8.9  hit 120%+  36%  under 80%  24%
+  WR all 3 games ABOVE the preseason number      n=  64  rest-of-season / projected 0.979  (-0.23 pts/g, t  -0.7)  seasons above 4/7  avg proj 10.9  hit 120%+  17%  under 80%  22%
+  WR all 3 games BELOW the preseason number      n=  59  rest-of-season / projected 1.040  (+0.33 pts/g, t  +1.0)  seasons above 4/6  avg proj  8.1  hit 120%+  29%  under 80%  24%
+  TE all 3 games ABOVE the preseason number      n=  14  (too few)
+  TE all 3 games BELOW the preseason number      n=  20  (too few)
+  QB all 3 games ABOVE the preseason number      n=  47  rest-of-season / projected 1.043  (+0.71 pts/g, t  +1.1)  seasons above 5/6  avg proj 16.6  hit 120%+  32%  under 80%  13%
+  QB all 3 games BELOW the preseason number      n=  16  (too few)

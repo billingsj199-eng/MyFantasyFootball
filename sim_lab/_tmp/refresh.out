@@ -1,0 +1,16 @@
+copied mike_clay_projections.js  (36 KB)
+copied player_weekly_sigma.js  (56 KB)
+copied betting_lines_2026.js  (218 KB)
+copied clay_team_grades_2026.js  (4 KB)
+copied yahoo_normalize.js  (13 KB)
+wrapped sim_practice.js  (194 entries, 2026-09-17T14:03)
+wrapped sim_depth.js  (32 entries, 2026-09-17T14:03)
+wrapped sim_news.js  (269 entries, 2026-09-17T02:09)
+wrapped sleeper_players.js  (587 players, exported 2026-09-17 10:04:11)
+wrapped sim_snaps.js  (305 players with 2026 snaps, 334 with a 2025 late snap share)
+wrapped sim_2026.js  (439 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
+defense availability: 32 teams, 416 regular defenders, 60 with a status
+wrapped sleeper_meta.js  (579 players, 127 true rookies, 6 elite CBs)
+wrapped sim_weather.js  (25 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-17T14:04))
+cache-busted index.html scripts (?v=1789672264)
+stamped 2026-09-17 15:11

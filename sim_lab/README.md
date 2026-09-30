@@ -2261,3 +2261,1810 @@ headless export (export_notes.js -> notes/notes_latest.txt). Intel only.
   150 carries). Without it 1-game man rates (PIT 0%, NO 3%) swamped the board.
 - Top 15 best / toughest per week; each row shows edge, priced, intel, and
   the reasons with the 2026 value, prior and league.
+
+## Clay-free weekly ladder + shadow v2 (backtest_noclay_weekly.py) - 2026-09-16
+
+Jack: "continue to tweak our sim labs to improve them and eventually remove
+Clay's projections." The live Clay-free shadow (ncMean) only gets one scorecard
+row a week, so this is the historical version: the shadow prior rebuilt
+walk-forward on every Clay-pool player-week 2019-25 (19,064 rows, week 1
+included) inside the same P=5 blend x Vegas x FPA, graded vs the shipped Clay
+blend. Log noclay_weekly_backtest.log; data/noclay_weekly_backtest.js on ZONES.
+
+- The gap is small and early: v1 shadow (own 3-yr PPG + last-8 prior, age
+  curve, opportunity prior, Clay where no history) +0.36% MSE vs shipped;
+  fully Clay-free (draft-round rookie mean, position mean) +0.45%. By week:
+  wk1 +6.0%, wk2-4 +1.3%, wk5-8 +0.1%, wk9-12 +0.3%, wk13+ -0.75%. QB is
+  BETTER without Clay in 7/7 seasons (-1.65%, -2.2% at P=12).
+- Rows with no Clay-free prior: 13-15% in weeks 1-4 (rookies), 3% by weeks
+  5-8, ~0 after - the last-8-games prior picks a rookie up after 4 games.
+- Knobs (LOYO vs shipped): shrink the prior toward the position mean k=.8
+  (picked 7/7, +0.45 -> +0.25%); prior strength per position QB 12 / WR 8 /
+  TE 8 / RB 5 (QB 7/7); L8 weight .25 vs .5 = noise; team-changer x.95 =
+  noise; rookie fallback: log(pick) 41.9 beats draft-round mean 43.9 (MSE of
+  the prior alone, weeks 1-4) but Clay 39.6 still knows rookies best; the
+  historical depth proxy (returning teammates with a share) added nothing.
+- COMBINED (rookie log-pick fallback, shrink .8, per-position P): -0.03% vs
+  shipped (2/7), FORWARD 2021-25 with constants from earlier seasons only
+  -0.17%; vs the v1 shadow -0.39% (5/7), forward -0.28% (4/5). By position QB
+  -2.9 / RB +1.0 / WR +0.6 / TE +0.5. What is left: wk1 +5.9%, wk2-4 +0.7%,
+  team-changers +1.5%, 2nd-year +0.9% - Clay still reads rookies and movers
+  before they play.
+- SHADOW v2 WIRED (engine NC_SHADOW; Clay stays live per Jack 09-15):
+  jsBasePg grew an optional prior-strength arg; ncMean now uses the rookie
+  a + b ln(pick) fallback (draft pick baked into sleeper_meta.js dp/dy from
+  the site's combine_data.js by refresh_data.py; undrafted = pick 262),
+  position mean for anyone else without history, shrink k=.8 in half-PPR
+  units, P per position; ncSrc gains rookie-pick / rookie-udfa / pos-mean and
+  '+shr'. RELEVANCE GATE consensus ADP <= 200: the backtest population is
+  Clay's >= 40-pt pool; the live pool's deep backups (Clay 0.5 PPG) were lifted
+  to starter numbers by the position mean (UDFA QB3 -> 12.8), so ungated
+  players keep the v1 prior unshrunk. verify_noclay_shadow.js: live
+  mean/js/prop moved on 0 of 493 rows, v2 - v1 avg +0.04 on 429 rows, gated
+  Clay-fallback rows 0. Kill: window.SIM_NC_V2 = false. score_week.py prints
+  the prior-source mix. First live read = W2 scorecard (Tue 09-22).
+
+## Market-informed prior: rookies REJECTED, veterans SHIPPED as shadow v2.1 (backtest_rookie_prior.py) - 2026-09-16
+
+Jack: "build the market-informed rookie prior next." Preseason ADP (FFC
+12-team 2019-25, half-PPR first then PPR/standard to fill holes ->
+data/ffc_adp_hist.json, ~200-250 players a year) + the JM prospect score
+(repo jm_scores.json, hindsight-tuned) as Clay-free rookie priors, per
+position, fit on the other seasons. Log rookie_prior_backtest.log;
+data/rookie_prior_backtest.js on ZONES.
+
+- ROOKIES: every market model loses to the draft pick alone. Prior-alone MSE
+  on rookie weeks 1-4 vs Clay: PICK +3.4%, ADP +8.1%, PICK+ADP +7.0%,
+  +JM +7.0%, ADP curve (fit on everyone) +5.7%, half curve / half pick +3.6%.
+  Rookie TEs blow up on ADP (+46-57%); a third of pool rookies are unlisted
+  (actual/Clay 1.32 there - Clay under-projects them too). Inside the shadow
+  the fallback barely matters (all within 0.1%). Rookies keep a + b ln(pick).
+- VETERANS: E[PPG | ADP, pos] fit on every listed player (a + b ln(adp): QB
+  35.4-3.83, RB 22.8-3.15, WR 22.7-3.05, TE 20.0-2.66 half-PPR) blended into
+  the history prior. LOYO vs shipped: all listed vets w .75 -0.51% (5/7),
+  team-changers w 1.0 -0.86% (6/7), same-team 3+ yr vets -0.68% (6/7), QB
+  -1.58% (7/7), WR -0.68% (5/7); RB/TE/2nd-year improve but stay above Clay.
+- SHADOW v2.1 = v2 + vets ADP weight .75 (2nd-year .5), rookies by pick:
+  -0.66% vs shipped (5/7), vs v2 -0.54% (7/7), FORWARD 2021-25 -0.80% (4/5).
+  By week: wk1 +5.3 -> +2.3%, wk2-4 +0.5 -> -0.9%, wk5-8 -0.8%, wk13+ -1.1%.
+  Team-changers +1.5 -> +0.4%, 2nd-year +0.9 -> +0.4%. The Clay-free shadow
+  now beats the shipped Clay blend historically; the live ledger (W2 on)
+  decides whether that transfers through the prop anchor.
+- Engine: NC_SHADOW.adpCurve / adpW / adpWYr2 / adpMax 181 (FFC listing
+  range; live consensus ADP `a` beyond it = unlisted, no market term); applies
+  after age + opportunity and before the shrink, only to non-rookies with a
+  history prior (hist/l8); ncSrc '+adp'. Kill: window.SIM_NC_ADP = false.
+  Caveat: the curve was fit on FFC ADP; the live number is the site's
+  consensus ADP - same 1-180 scale, different drafters.
+
+## Live depth-chart slot for rookies -> shadow v2.2 (backtest_rookie_depth_live.py) - 2026-09-16
+
+Jack: "build the live depth-chart slot for rookies next." The ladder's
+historical proxy (returning teammates with a share) had added nothing; the
+REAL charts do. nflverse weekly depth charts 2019-25 (pbp_cache/
+depth_charts_Y.parquet; 2019-24 NFL.com format depth_team = string, 2025 ESPN
+format with a global pos_rank interleaved across slots -> string = ceil(rank /
+slots), WR 3 slots) = the same ESPN charts sim_depth.js carries live. Rookie
+rows charted 93-100%. Log rookie_depth_live.log; data/rookie_depth_live.js.
+
+- Rookie weeks 1-4, actual / pick prior by string: RB starter 1.39 (n33) /
+  2nd .82 / 3rd+ .75; WR 1.18 / .87 / 1.09; QB .96 / .63; TE .99 / .71.
+- PICK+STR (a + b ln(pick) + c [2nd] + d [3rd+], per position, LOYO):
+  prior-alone MSE -4.56% vs PICK and -1.32% vs CLAY - the first Clay-free
+  rookie prior that beats Clay before the rookie plays. RB -11.8% vs pick,
+  WR -1.6%, QB flat, TE +3.1% (n small). Multiplicative version -2.3%.
+- Inside the shadow v2.1: -0.10% vs v2.1 (6/7), forward -0.03% (4/5), rookie
+  rows -0.21% forward; -0.76% vs shipped overall (5/7), forward -0.89%.
+- VETERANS by string (weeks 1-8): 2nd-string RB/WR/TE run .84-.88 of the
+  shadow prior, but a demoted-vet dock is 1/7 vs shipped (Clay already reads
+  demotions; the shadow prior is +4% worse on those rows) - intel, not a layer.
+- Engine v2.2: NC_SHADOW.rookieStr (RB/WR) + depthString(p) from
+  SIM_DEPTH_2026 (index / slots + 1; unlisted = deep); ncSrc 'rookie-pick+str1'
+  / '+str2' / '+str3' / '+strx' (unlisted). QB/TE stay pick-only.
+  Kill: window.SIM_NC_DEPTH = false.
+
+## Demoted veterans -> shadow v2.3 (backtest_demoted_vets.py) - 2026-09-16
+
+Jack: "build the demoted veteran layer next." The earlier flat dock had
+been graded against Clay; graded against the shadow it changes (v2.2: own
+history + ADP market prior, rookie pick + string, shrink .8, per-position
+P) on 15,113 veteran player-weeks with a pre-game chart string:
+- Reads (actual / shadow prior): RB 1st 1.12 / 2nd .90 / 3rd+ .58; WR 1.05 /
+  .81 / .54; TE 1.07 / .90 / .96; QB 2nd .57 (n73).
+- DOCK prior x m on string >= 2: -1.73% vs shadow (6/7); by string RB 2nd
+  .8 (-0.75%, 5/7) / 3rd+ .4 (-16%, 6/7, n168), WR 2nd .6 (-3.4%, 6/7) /
+  3rd+ .6 (-13%, 6/7, n61), TE 2nd .8 (-1.2%, 5/7) / 3rd+ nothing.
+- LEVEL blend toward the string mean: weaker (-0.93%). PROMOTION (string 1
+  with a low prior): nothing (w=0 every fold; QB/RB .25 = noise).
+- Candidate v2.3 = per-position, per-string docks: -0.28% vs shadow v2.2
+  (7/7), -1.08% vs shipped (7/7); FORWARD (docks re-picked on earlier
+  seasons) -0.15% vs shadow (5/5), demoted rows -1.45%. Demoted vets go from
+  +1.95% to -0.64% vs shipped; week 1 +1.6 -> +0.8%.
+- Engine: NC_SHADOW.vetDock {RB 2:.8 3:.4, WR 2:.6 3:.6, TE 2:.8} on the
+  prior after the ADP blend, before the shrink, non-rookies with a history
+  prior and depthString >= 2 (unlisted = no dock); ncSrc '+dock2' /
+  '+dock3'. Kill: window.SIM_NC_VETDOCK = false.
+- Shadow ladder to date (all vs shipped Clay blend, 2019-25): v1 +0.36% ->
+  v2 -0.03% -> v2.1 -0.66% -> v2.2 -0.76% -> v2.3 -1.08% (7/7). Still
+  shadow-only per Jack 09-15; the weekly scorecard from W2 decides.
+
+## Veterans without a chart -> shadow v2.4 = current-team lookup (backtest_nochart_vets.py) - 2026-09-16
+
+Jack: "build the vets without a chart layer next." 1,180 veteran
+player-weeks (7% of vets) had a history prior but no pre-game string and ran
++2.7% vs shipped. By cause: 464 were listed on ANOTHER team's chart that week
+(the harness infers a player's season team from his opponent sequence, so
+mid-season movers land on the wrong team - a harness artifact; live, the
+engine has Clay's team and Sleeper's sTm), 177 were on the same team's chart
+1-3 weeks earlier but not this week (act/prior .90 - dropped = hurt/limited;
+carrying the old string HURTS, +1.3% on those rows), 539 were on no chart in
+the last 3 weeks (act/prior .96; RB .99, WR .90, TE .92).
+- ANYTEAM (read the string wherever he is listed): -2.4% on the 464 rows,
+  -0.05% overall (4/7). UNLISTED dock x.9: pooled -1.0% (5/7) but RB 0/7,
+  TE worse, forward -0.02% (3/5) -> NOT shipped. CARRY -> NOT shipped.
+- Engine: p.tmNow = Sleeper's current team; depthString() looks up Clay's
+  team, then tmNow, then any team's chart (0 mismatches today; matters
+  after in-season trades). No dock for the truly unlisted.
+- Shadow ladder vs shipped Clay blend: v2.3 -1.08% (7/7); the remaining
+  no-chart rows are +1.3% (n539) and the "dropped this week" rows +5.6%
+  (n177) - the latter is the injury/limited case the live availability layer
+  already handles on the Clay side.
+
+## Dropped-off-the-chart veterans (backtest_dropped_vets.py) - REJECTED 2026-09-16
+
+Jack: "build the dropped-off-the-chart vets layer next." The 177 veteran
+player-weeks listed on their team's chart 1-3 weeks earlier but not this
+week (nochart study: act/prior .90, shadow +4.2% vs shipped there). Official
+injury reports (pbp_cache/injuries_Y.parquet) joined; the LIVE injury docks
+(Doubtful x.5, Q+DNP x.75) applied to shipped AND shadow in the harness so
+the layer is graded on what the drop adds beyond the designation.
+- 15% of dropped rows carry a designation (vs 5% of listed vets); those 27
+  score .60-.77 of the docked prior (Q-LP dropped .60, n18) but n is tiny.
+  The 150 UNDESIGNATED dropped rows score .95 - nearly nothing to dock.
+- Dock all dropped x.8: -0.44% vs shadow (3/6) FAIL; undesignated x.8:
+  +3.2% FAIL; RB only x.6: -5.0% (4/5, n45) - too thin; WR +1.0% FAIL.
+  Candidate forward -0.02% (3/5). NOTHING SHIPS.
+- Side check, listed vets with a designation on the shadow: Q-LP extra x.9
+  lean (-0.5%, 4/7), Q-DNP x1.1 noise (2/7), Q-FP x.9 fail -> the live docks
+  are roughly calibrated for the shadow too; intel only.
+- Reading: the drop mostly IS the injury designation the availability layer
+  already prices; the residual is small-n noise. Don't re-pitch.
+
+## Week 1 -> shadow v2.5 = chart-defined buried-rookie ramp (backtest_week1.py) - 2026-09-16
+
+Jack: "build the week 1 layer next." Shadow v2.4 was +0.53% vs shipped in
+week 1 (n 1,245), the only pure-prior week. Reads: TE act/shadow .88 (every
+model runs hot on TEs in week 1, shipped .92), rookies .84, movers .96,
+2nd-string vets .91, vets ADP 37-132 +3.7-4.4%; QB/WR/same-team vets fine.
+- Global knobs all FAIL: week-1 level (0/7), shrink k (2/7), vets ADP
+  weight (3/7), 2nd-year ADP weight (0/7). Rookie x.8 lean (4/7).
+- The rookie gap is BURIED rookies only: 2nd-string rookies week 1
+  act/shadow .74 (+24.6% vs shipped), 1st-string .98 (a level there FAILS
+  0/7). The live engine ramps buried rookies 55/70/85/95% (RAMP.buried, keyed
+  on Clay's projection vs the team leader) - the harness has no ramp, and
+  the shadow needs a Clay-free definition anyway: string >= 2 or unlisted.
+- Chart-defined ramp by week (LOYO vs shadow): wk1 x.7 -10.5% (5/7 PASS),
+  wk2 x.8 -1.5% (4/7 lean), wk3 +3.5% FAIL, wk4-8 nothing, wk9+ x1.1 (+0.5%,
+  no). Candidate {wk1 .7, wk2 .8}: -0.08% vs v2.4 (5/7), -1.21% vs shipped
+  (7/7), week 1 +0.53 -> -0.38% vs shipped, buried rookies wks 1-4 -3.9%;
+  FORWARD all rows -0.08% (4/5), buried -4.1% (4/5), week-1 rows -1.05% (4/5).
+- TE week-1 x.9: -0.83% on TE rows (5/7) but forward 2/5 alone -> NOT shipped.
+- Engine: NC_SHADOW.rookieRamp [.7, .8] by gameIdx for rookies with
+  depthString >= 2 or null; inside the shadow ncChain = jsChain / rampF x
+  ncRamp (the live Clay-defined ramp is removed from the shadow so no rookie
+  is ramped twice); ncSrc '+ramp1' / '+ramp2'. Kill: window.SIM_NC_RAMP =
+  false. Ladder vs shipped: v2.4 -1.13% -> v2.5 -1.21% (7/7).
+
+## Second-year role growth -> shadow v2.6 (backtest_second_year.py) - 2026-09-16
+
+Jack: "build the second-year role growth layer next." 2nd-year rows (exp 1,
+n 2,952) sat +0.11% vs shipped on v2.5 (the ADP prior had already closed
+most of the +0.9% gap). Signals, each LOYO vs shadow v2.5 on the 2nd-year rows:
+- LEVEL x m: FAIL (+0.03%, 4/7). RECENCY (rookie-season last-8 weight .75):
+  -0.04% (5/7) FAIL on size. 2nd-year ADP weight .75: -0.07% FAIL.
+- PROMOTION by chart (last season's modal string weeks 10+ from nflverse
+  2018-24 vs this week's): promoted act/shadow 1.06, steady 1.03, still
+  buried 1.10, demoted 1.05 - the market prior already prices the
+  promotion; multipliers FAIL (0-4/7).
+- SNAPS (rookie-season snap counts 2018-24 via players.csv pfr_id):
+  LATE SNAP SHARE < 40% (last 4 games) act/shadow 1.18 -> x1.2: -1.36%
+  (6/7 PASS), forward its rows -1.31% (4/5), 2nd-year rows -0.20% (4/5).
+  Rising trend tercile x1.1: -0.68% (4/7 lean) but forward 2/5 -> NOT
+  shipped. Falling trend / high snaps: FAIL.
+- Engine v2.6: NC_SHADOW.yr2LowSnap {max .40, mult 1.2} on the prior for
+  p.exp === 1 with a history prior; data = SIM_SNAPS_PRIOR in sim_snaps.js
+  (refresh_data.py: last season's mean offensive snap % over the player's
+  last 4 games with snaps, from the site's snap_counts.js); ncSrc '+yr2lo'.
+  Kill: window.SIM_NC_YR2 = false.
+- Reading: the part-time rookie whose role grows is the one case the
+  history prior structurally misses; everything else about 2nd-year players
+  is already in the market curve.
+
+## Tight ends (backtest_te_layer.py) - NOTHING TO SHIP 2026-09-16
+
+Jack: "build the tight end layer next." TE rows (n 3,686) are -0.20% vs
+shipped on shadow v2.6 - already below Clay. Reads: week 1 act/shadow .90
+(shipped .92 - everyone runs hot on TEs in week 1), weeks 5-8 1.09 (-2.0%
+vs shipped), 2nd-year 1.11, high route-participation tercile (> .70 of
+the team's pass plays last season, nflverse participation 2018-24) 1.07 vs
+low .99, movers -2.2%.
+- Every TE-only knob FAILS LOYO vs the shadow: level (3/7), week-1 level
+  (4/7, +0.10%), P (0/7, 8 stays), shrink k (0/7), ADP weight (0/7), age
+  curve on/off (identical), 2nd-string dock re-check (.8 stays), 3rd+ dock
+  (none), low-route dock (0/7), high-route boost x1.1 (-0.57% but 3/7),
+  high routes & low prior (0/7), 2nd-year TE (2/7).
+- Verdict: no TE layer. The position's residual is week 1 (a league-wide
+  TE week-1 effect Clay shares) and noise. Don't re-pitch route
+  participation as a TE prior; the in-season route TREND layer (live) is
+  where TE information lives.
+
+## Clay-free POOL definition (backtest_pool_definition.py + build_noclay_pool.py) - 2026-09-16
+
+Jack: "build the Clay-free pool definition next." Today the engine projects
+exactly Clay's sheet (493 rows; 436 QB/RB/WR/TE). Without Clay, who gets a
+projection? Rules from Clay-free sources scored 2019-25 on recall of
+fantasy-relevant player-weeks in the FULL weekly DB (STARTER = weekly top
+QB12/RB24/WR36/TE12; ROSTERABLE = top 24/48/72/24), preseason and DYN (anyone
+with a 10-pt game joins from the next week):
+  rule                        size  starter  wk1   DYN   roster  pts%
+  CLAY (>= 40 pts, harness)    292   89.9   95.2  94.9   83.9   89.0
+  CLAY all                     487   96.2   97.8  98.2   94.8   96.2
+  ADP (FFC)                    187   76.3   82.1  90.2   65.2   74.5
+  CHART wk1 string <= 2        348   88.2   93.2  95.4   84.0   88.6
+  HIST (>= 8 g, >= 4 PPG)      259   78.9   84.7  92.5   72.0   78.5
+  ROOKIE rd 1-4                 45    9.9    7.0  80.6   10.2    9.7
+  ADP + CHART + HIST + ROOKIE  450   96.4   98.5  97.9   93.7   96.3
+- The union rule matches Clay's FULL sheet (96.4 vs 96.2% of starter weeks,
+  98.5 vs 97.8% in week 1) at the same size; the depth chart is the
+  workhorse (88% alone), ADP + chart 93%, history and rookies close the rest.
+  Misses are TE3s / handcuffs who emerge mid-season (Slayton 2019, Mostert,
+  Keaton Mitchell, Kimani Vidal) - the in-season add rule picks them up.
+- build_noclay_pool.py applies it live (site consensus ADP <= 250, ESPN chart
+  string <= 2, player_weekly_sigma history, sleeper_meta draft pick <= 135,
+  MUST have a team) -> data/noclay_pool_2026.js (SIM_NOCLAY_POOL): 495
+  members vs Clay 436 - both 397, pool-only 98 (Anthony Richardson, Aiyuk,
+  Kirk, Dalton, Wentz: players Clay's print skipped), Clay-only 39 (all deep:
+  top Clay pts = Kyle Williams WR 51, then fullbacks / TE3s). Alias-aware
+  diff (Ken Walker III / Cameron Ward / Chig Okonkwo). Each member carries
+  a per-game stat MIX from his last two seasons (358) or the position mean
+  (137) - the comps a Clay-free engine needs to turn a half-PPR prior into
+  a stat line. Data files are read through node (dump_js_var.js) since the
+  Clay file is a JS object literal.
+- NOT wired: the engine still builds players from Clay's sheet. Switching the
+  pool = new buildPlayers source (members + mix -> comps, priors from the
+  shadow's own pieces, K/DST synthesized) - the 2027 offseason job.
+
+## What correlates with scoring: season-long vs weekly, by position (research_corr_horizons.py) - 2026-09-16
+
+Jack: "find the biggest correlation for season long and weekly points
+scoring, how it's different between the two and the same - by position."
+ctx_features.parquet (17,657 player-weeks 2019-25, 91 pre-kickoff vars) +
+FFC ADP + depth strings + last-game / last-3 from the weekly DB. SEASON =
+player-season PPG vs preseason-known features (n 1,390); WEEKLY = weekly
+points vs everything known pre-kickoff (weeks 2+). Pearson r (Spearman too).
+data/corr_horizons.js on ZONES.
+- SEASON, every position: prior production dominates - prior-year PPG /
+  xFP per game / target (WR/TE) or carry (RB) share r .62-.73, ADP -.49 to
+  -.68, week-1 depth string -.29 to -.54 (RB strongest), JM score .28-.51
+  (RB strongest), draft pick -.46 RB / -.28 WR / ~0 QB-TE, team change
+  -.43 QB / -.23 TE / -.15 WR. Age and experience ~0 everywhere (the age
+  curve is a residual, not a headline). Clay's number = the best single
+  preseason correlate (.58 QB, .73 RB/WR/TE) = the same info bundled.
+- WEEKLY: every correlation roughly HALVES (weekly points are ~half noise):
+  the same preseason features fall to r .2-.4. What rises to the top is
+  season-to-date usage: RB carry share (last 3) .46, snap share .46, xFP/g
+  .46, red-zone carries .41, this week's string -.37; WR/TE target share
+  .43, WOPR .41-.42, air-yards share .37, snap share .35; QB the ONLY
+  position where a game-level input leads: team implied total .33 (>
+  season-to-date PPG .31), game total .24, spread .22 - QB scoring is the
+  game environment; RB/WR/TE weekly is the player's role.
+- SAME at both horizons: the ordering of the preseason features is
+  preserved (prior PPG > shares/xFP > ADP > string > JM > pick), just at half
+  the size weekly. Last game alone (.24-.38) < last 3 (.30-.46) <
+  season-to-date PPG (.31-.48): more games beat recency for the level.
+- DIFFERENT: season = who the player is (production, market, draft slot);
+  weekly = what his role is right now (shares, snaps, string) plus, for
+  QBs, the Vegas environment. Matchup / weather / injury tags are all
+  |r| < .1 weekly - real but small, which is why they live as multipliers
+  on a strong base rather than as base inputs.
+
+## QB implied-total layer (backtest_qb_vegas.py) - NO CHANGE 2026-09-16
+
+Jack: "build the QB implied total layer next." The implied total is the top
+weekly QB correlate (r .33), and the live Vegas layer (e QB .25) was tuned
+on the Clay base, so the shadow (history + market) might want more. QB rows
+already sit -4.0% vs shipped on shadow v2.6.
+- Reads: QB actual/shadow .92 at implied < 19, .97 at 19-22, ~1.0 above -
+  the shadow runs hot on bad offenses, but raising e trades that against
+  the high side.
+- Elasticity sweep on QB rows LOYO vs the shadow: pooled best .4 but
+  +0.24% and 0/7 (FAIL); weeks 2-4 want .5 (-0.52%, 5/7) yet the candidate
+  is +0.39% FORWARD (1/5); weeks 5+ and week 1 keep .25 (0/7 for change).
+  Spread term: 0 every fold. QB P: 12 stays (16 at e .4 = lean, not used).
+  Controls: RB .4 lean (-0.08%), WR/TE .25 stay. Reference on the shipped
+  Clay blend: .25 stays (0/7).
+- Verdict: the game environment is already in the shadow at the right
+  strength; the strong weekly correlation is captured by the existing
+  multiplier. NO CHANGE. Don't re-pitch QB Vegas elasticity.
+
+## RB elasticity layer (backtest_rb_vegas.py) - FLAT, NO CHANGE 2026-09-16
+
+Jack: "build the RB elasticity layer next." The QB study's control run had
+RB leaning to .4 from the live .5 (-0.08%). Full test on RB rows (n 4,844)
+LOYO vs shadow v2.6: pooled best .35, -0.03% (4/7) FAIL; by band week 1 /
+2-4 want MORE (.4-.6, 0-2/7), weeks 5-8 want .3 (4/7), 9+ .35 (3/7) - a
+flat surface, not a signal; 1st-string .35 (-0.04%), 2nd-string+ .4
+(+0.13%); spread term (game script) 0 in every fold at e .5 and .4;
+reference on the shipped Clay blend .4 (+0.01%, flat). Candidate e .35:
+RB rows -0.07% (4/7), FORWARD -0.02% (3/5). NO CHANGE - .5 stays.
+Reads for the record: RB actual/shadow 1.09 at implied < 19 and 1.09 as a
+7+ underdog (the shadow is cautious on bad-offense RBs, Clay more so at
+1.13 / 1.12), 1.00 for a 1st-string RB favored by 7+.
+
+## Advanced stats / route share / alignment correlations (research_corr_advanced.py) - 2026-09-16
+
+Jack: "did we find the highest correlation in advanced stats by position or
+route share or alignments in certain offenses?" Not in the first study -
+added here on the same 2019-25 rows: PFF season files (route rate, YPRR,
+TPRR, aDOT, route/offense/run grades, slot/wide/inline rates, YAC, drops,
+contested; RB YCO, elusive, breakaway, gap share) matched pff_id -> gsis;
+route share from participation (season-to-date + last 3, routes/game,
+TPRR/YPRR to date); team pass plays / 11 / 12 personnel / shotgun (prior yr
++ to date); alignment x offense interactions. data/corr_advanced.js.
+- NOTHING advanced beats the basics at either horizon, any position.
+  SEASON: prior-yr PPG .49/.67/.70/.73 (QB/RB/WR/TE); best advanced = WR
+  targets volume .66 ~ PFF route grade .65 ~ offense grade .64, YPRR .57,
+  TPRR .55; TE targets .65, YPRR .58, route grade .57; RB routes volume
+  .36, offense grade .35 (RB rushing efficiency - YCO .19, elusive .18,
+  breakaway .18 - is weak: volume, not efficiency); QB elusive rating .35 /
+  run grade .26 = mobile QBs score more.
+- ALIGNMENT: weak alone. TE inline -.24 / slot +.23 / aDOT +.22; WR slot
+  -.10, wide +.11. Team offense context ~0 for skill players (pass plays/g
+  .06, 11-personnel -.02, shotgun -.05; TE 11-rate -.14). Interactions:
+  route share x pass plays = routes/game (same r); route share x PROE weak;
+  slot x 11-personnel and inline x 12-personnel < .1 (not in the top lists).
+- WEEKLY: route share to date .31 WR / .35 TE / .38 RB (last 3 the same)
+  trails target share (.43) and season PPG (.42-.48); TPRR/YPRR to date
+  .30-.32; prior-yr PFF route grade .38 WR / .31 TE = nearly target share
+  before the season's own data exists (the one place a grade earns its
+  keep - consistent with the PFF audit's "season-level talent = priced in").
+  QB "route share" = starter flag (.21), not a signal.
+- Read: production (targets, PPG) > opportunity (routes, shares) >
+  efficiency grades > alignment > team scheme. Alignment matters only
+  through the shipped slot-shield (CB dock graduation), not as a prior.
+
+## Prior-year PFF route grade -> shadow v2.7 (backtest_pff_route_grade.py) - 2026-09-16
+
+Jack: "build the prior-year PFF route grade layer next." The grade is r .38
+with weekly WR points (research_corr_advanced.py) and the shadow prior has
+no talent read (the 09-01 PFF audit rejected grades on the CLAY base). Tests
+on WR / TE / RB rows with a history prior and a prior-season grade (>= 50
+routes; PFF id -> gsis), LOYO vs shadow v2.6:
+- Reads (actual / shadow prior, weeks 1-8): WR top tercile 1.11, mid 1.02,
+  low 1.03; TE 1.06 / 1.03 / .95; RB flat by grade (volume, not grade).
+- Tercile multipliers FAIL for WR/TE/RB (0-4/6); curve blend E[PPG | grade]
+  FAIL (w 0-.15, 0-2/6); weeks-1-4-only curve: TE lean (-0.18%, 4/6); young
+  top-tercile: WR lean (-0.08%), RB lean (-0.41%, 4/5, n323), TE fail.
+- PASS: WR grade ABOVE what the prior implies (residual of grade on the
+  shadow prior, top tercile) x1.1: -0.43% vs shadow (5/6), forward affected
+  rows -0.26% (4/5), all rows -0.04%. "Graded better than he has produced"
+  is the talent read the history prior lacks; TE version lean (-0.16%),
+  RB nothing. Bottom-residual docks fail everywhere.
+- Engine v2.7: NC_SHADOW.wrGrade {c0 56.095, c1 1.9876 (grade ~ prior
+  half-PPR), cut 2.649, mult 1.1}, applied after the 2nd-year boost and
+  before the shrink for non-rookie WRs with a history prior; data =
+  SIM_PFF_ROUTE_PRIOR in sleeper_meta.js (refresh_data.py bakes last
+  season's WR grades from pbp_cache/pff/pff_receiving_2025.csv by norm
+  name); ncSrc '+grade'. Kill: window.SIM_NC_GRADE = false. Marginal by
+  design - the smallest piece in the ladder; watch it on the scorecards.
+
+## TE route grade layer (backtest_te_route_grade.py) - REJECTED 2026-09-16
+
+Jack: "build the TE route grade layer next." The WR study's TE pieces were
+lean; tested on their own (TE rows with a prior-season grade >= 50 routes
+and a history prior), LOYO vs shadow v2.6:
+- Residual top tercile x1.1: -0.16% (4/6) lean -> candidate on affected
+  rows -0.48% (4/7) but FORWARD +0.31% (3/5) - reverses. Residual top HALF
+  x1.1: -0.44% (4/6) lean. Bottom tercile: 0 every fold. Raw-grade top
+  tercile x1.05: -0.09% (4/6) fail. Early-weeks residual: +0.44% (0/6).
+  Curve blend: 0 (all weeks), -0.08% (4/6) weeks 1-4. Combo (residual x1.1
+  + early curve .15): -0.19% (4/6) lean.
+- Verdict: no TE grade layer. TE residual constants for the record: c0
+  51.67, c1 2.84 (grade ~ prior half-PPR), cut 2.87 / half -0.36.
+- Reading: TE scoring is targets and role (the in-season route TREND
+  layer), not the grade; the WR residual (v2.7) stays the only grade piece.
+
+## WR route-grade curve blend (backtest_wr_curve.py) - REJECTED 2026-09-16
+
+Jack: "build the WR curve blend layer next." G = E[PPG | prior-yr route
+grade] blended into the WR shadow prior, every form, LOYO vs shadow v2.6:
+all rows w .1 -0.02% (4/6); high-residual rows w .1 -0.06% (4/6); age <= 25
+w .05 0.00% (3/6); weeks 1-4 only +0.07% (1/6); replacing part of the .75
+market weight +0.03% (3/6); curve of grade + routes volume w .15 -0.08%
+(4/6) -> candidate affected rows -0.09% (4/7), FORWARD -0.10% (3/5). All
+FAIL. The grade's information about WRs is the residual (v2.7); a level
+curve on top adds nothing - the market prior and history already carry the
+level. Grade layers are DONE: WR residual shipped, TE and WR-curve rejected.
+
+## Prior-year routes volume (backtest_routes_volume.py) - REJECTED 2026-09-16
+
+Jack: "build the routes volume layer next." Last season's PFF routes (>= 50)
+as a shadow-prior ingredient, same forms as the grade study, LOYO vs v2.6:
+- Reads (actual / shadow prior, weeks 1-8): WR low 1.02 / mid 1.06 / high
+  1.09; TE .96 / .99 / 1.08; RB 1.10 / 1.15 / 1.06 - the high-route tercile
+  runs a little hot vs the prior, but every multiplier form fails.
+- Tercile levels: WR top +0.19% (4/6) FAIL, bottom 0/6; TE top +0.17%
+  (2/6), bottom x.9 -0.11% (4/6) lean; RB 0/6. Curve E[PPG | routes]: w = 0
+  in every fold, all three positions, all weeks and weeks 1-4. Young top
+  tercile: WR x1.1 -0.31% (4/6) lean, TE/RB worse. Residual (routes above /
+  below what the prior implies): WR above +0.02% (3/6), below +0.37% (0/6);
+  TE/RB nothing. NO PASS.
+- Reading: routes volume is opportunity, and the prior (history + market +
+  depth string) already carries it; the residual that worked for the WR
+  GRADE (skill beyond production) does not exist for routes. Routes stay
+  where they live: the in-season TE route TREND layer and the RT% intel.
+  Opportunity-volume priors are DONE (routes, snaps as level, chart string
+  shipped where it passed).
+
+## Low-route tight ends (backtest_te_lowroute.py) - REJECTED 2026-09-16
+
+Jack: "build the low-route tight end layer next." The routes-volume study's
+TE bottom-tercile dock (x.9, -0.11%, 4/6 lean) given every form, LOYO vs v2.6:
+- Reads (actual / shadow prior): low routes .97, low route RATE 1.05 (!),
+  low routes & low rate 1.04, low routes & low grade .96, low routes weeks
+  1-4 .95, low routes & 2nd string+ .92 (already docked by string).
+- Forms: low routes x.9 -0.11% (4/6) lean -> candidate affected rows -0.34%
+  (4/7), FORWARD +0.19% (2/5) - reverses. Low route RATE: 1.0 every fold
+  (the blocking-TE read carries nothing; low-rate TEs run HOT vs the
+  prior). Routes & rate: 0/6. Routes & low grade x.85: +0.25% (3/6).
+  Weeks 1-4 only x.85: -0.51% (4/6) lean. 1st string: 1/6. 2nd string+ on
+  top of the string dock x.8: -0.41% but 3/6. Route-rate curve: w 0.
+- Verdict: no low-route TE layer. The string dock (v2.3) already prices the
+  backup TE; route volume / rate adds nothing preseason. TE priors are
+  DONE (level, grade, routes, rate, string all tested).
+
+## Young high-route WRs (backtest_wr_young_routes.py) - NOT SHIPPED 2026-09-16
+
+Jack: "build the WR young high-route layer next." The routes-volume study's
+"top-tercile routes & age <= 25 x1.1" lean (-0.31%, 4/6), every form, LOYO
+vs shadow v2.6 (which already carries the age curve for young WRs):
+- Reads (actual / shadow prior): high routes all ages 1.06; & age <= 25
+  1.13; & 2nd year 1.21 (n155); & 4th+ yr & <= 25 1.19 (n149); & young &
+  low prior 1.15; & young & high grade 1.13; high route RATE & young 1.04.
+- Forms: high routes & <= 25 x1.1 -0.31% (4/6) lean; high route RATE &
+  young: 1.0 every fold; breakout (young, low prior) x1.15 -0.05% (3/6);
+  young & HIGH GRADE x1.1 -0.42% (5/6) PASS -> affected rows -0.66% (5/7)
+  but FORWARD -0.23% (3/5); 2nd year x1.2 -1.50% (4/6) lean (n155); 3rd
+  year +0.52%; weeks 1-4 only +1.55% (worse); all ages (control) +0.19%.
+- Verdict: NOT SHIPPED. The only passing form is young receivers with high
+  routes AND a high grade - largely the population the v2.7 grade residual
+  already boosts (double-count risk), and it misses the forward bar (3/5).
+  The route volume itself is not the signal (route rate = nothing); the
+  grade is. Young-WR priors are DONE (age curve + grade residual shipped).
+
+## 2nd-year high-route WRs (backtest_wr_yr2_routes.py) - REJECTED 2026-09-16
+
+Jack: "build the 2nd-year high-route WR layer next." The young-WR study's
+"high routes & 2nd year x1.2" lean (-1.50%, 4/6) was 155 rows. Every
+threshold form, LOYO vs shadow v2.6:
+- Reads (actual / shadow prior): top tercile 1.21 (n155), above median
+  1.14 (n379), >= 300 routes 1.08 (n693), >= 400 1.10 (n479), route rate
+  top tercile 1.01 (n431), ALL 2nd-year WRs with a grade 1.07 (n1084).
+- Forms: top tercile x1.2 -1.08% (4/6) lean; above median +0.15%, >= 300
+  +0.38%, >= 400 +0.30% (all FAIL - the wider the threshold, the worse);
+  route rate: 1.0 every fold; top tercile & high grade +1.18% (0/5); top
+  tercile & NOT high grade x1.3 -2.86% (5/5) "PASS" on n 77 but FORWARD
+  -0.74% (2/5); 2nd+3rd year -0.17% (4/6); all 2nd-year control +0.18%;
+  bottom tercile x.9 -0.20% (4/6) lean.
+- Verdict: REJECTED. The lean was a small-sample artifact (the top tercile
+  of 2nd-year WRs is ~25 player-seasons); the signal vanishes at any wider
+  cut and the route rate carries nothing. 2nd-year WR priors: the v2.6
+  low-snap boost (opposite population) stays; nothing for full-timers.
+
+## 2nd-year low-route WRs (backtest_wr_yr2_lowroutes.py) - REJECTED, v2.6 boost confirmed 2026-09-16
+
+Jack: "build the 2nd-year bottom-tercile routes layer next." The 2nd-year
+high-route study's "bottom tercile x.9" lean (-0.20%, 4/6, n 533) split by
+the v2.6 part-timer boost (x1.2 for < 40% late snaps): 151 of the 533 rows
+carry the boost, 382 do not; every boosted 2nd-year WR is in the bottom
+tercile (the two definitions overlap one way). LOYO vs shadow v2.6:
+- Boosted rows x m: +1.39% (1/5) - any dock on top of the x1.2 hurts, and
+  the boost re-check picks .85 pooled but 1/5 -> KEEP x1.2 (the read:
+  boosted rows act/prior 1.10, act/shadow 1.01 = the boost is calibrated).
+- Not-boosted bottom tercile x.9: -0.01% (2/6) - nothing. Route RATE bottom
+  tercile: -0.07% (2/6, and it wants a BOOST 1.1). Routes < 150: +0.92%,
+  < 250: +0.82% (worse). Bottom tercile & low grade: -0.19% (3/6, wants
+  1.1); & high grade x.8: -1.30% on n 68 (2/3). 2nd+3rd yr: +0.18% (0/6).
+  Candidate (whole bottom tercile x.9): -0.25% (4/7), FORWARD -0.09% (3/5).
+- Verdict: REJECTED. The lean was the two populations mixed; the v2.6
+  low-snap boost is the right piece and stays. 2nd-year WR route work is
+  DONE (high routes rejected, low routes rejected, boost confirmed).
+
+## Bottom-tercile low-grade WR boost (backtest_wr_lowgrade_boost.py) - REJECTED, with a PLACEBO 2026-09-16
+
+Jack: "build the bottom-tercile low-grade WR boost layer next." The
+2nd-year low-route study's sub-subgroup (2nd year & bottom-tercile routes
+& low grade, n 304, "wants 1.1", 3/6). LOYO vs shadow v2.6:
+- Target x1.15: +0.43% (3/6) FAIL. Generalisation: same group 3rd+ year
+  1.0 every fold (0/6); all WRs 1.0 (0/6). Split by the v2.6 boost: not
+  boosted +0.40% (0/6), boosted x1.3 -0.90% (2/4). Low grade any routes
+  +0.38% (1/6). Neighbour (mid grade) 1.0. Candidate forward -0.11% (1/5).
+- PLACEBO: 20 random 2nd-year WR groups of n 304 through the same LOYO
+  multiplier procedure: mean +0.29%, best -1.41%, 30% reach <= -0.3%, 35%
+  get >= 4 seasons better, 0% get >= 5. => a "lean" (4/6, -0.2 to -0.5%) on
+  a few hundred rows is what NOISE produces; the >= 5-season bar plus the
+  forward check is the real gate. This is why the recent chain of leans
+  (young high-route, 2nd-year high/low routes, low-route TE) all failed.
+- Verdict: REJECTED. Subgroup-of-subgroup layers are DONE; the shadow's
+  remaining pieces must come from the live scorecards, not from slicing
+  the same 19k rows further.
+
+## W2 outlier read -> shadow v2.8 = backup-QB rule + docks for everyone (outliers_week.js) - 2026-09-16
+
+Jack: "which players are the biggest outliers for week 2 clay vs no clay".
+outliers_week.js N runs the engine headlessly and lists |ncMean - mean|
+both ways (data/outliers_w{N}.json + data/outliers_week.js -> ZONES panel).
+- FIRST RUN EXPOSED A DEFECT: the whole "shadow higher" list was backup QBs
+  (Mariota 14.5, Winston 14.1, Mac Jones 13.2, McCarthy 15.0 ... vs live
+  0.5): their history is their starting days and the shadow never asked
+  whether they start. All were OUTSIDE the ADP gate (ADP > 200 -> v1 path:
+  raw history, no docks). The harness cannot see this - backups who did not
+  play are never graded; the live scorecard filters on the SHIPPED mean so
+  they never showed up there either. Same defect for a no-history deep RB
+  (Jordan James 11.5 = position mean, no string dock on pos-mean rows).
+- FIX (v2.8, Clay-free): (1) backup QB rule - a QB at chart string 2+ or
+  unlisted on a charted team gets a backup-level prior (NC_SHADOW.qbBackupPpg
+  1.0 half-PPR) unless the injury layer says he inherits (iA > 1); ncSrc
+  '+qb2' / '+qbx'; kill SIM_NC_QB2 = false. (2) the string docks (vetDock)
+  now apply to every non-rookie with a Clay-free prior - gated or not, and
+  pos-mean rows - not only hist/l8 rows inside the ADP gate. QB mean |diff|
+  vs live 4.04 -> 1.55; live mean untouched (verify 0 of 493 rows).
+- AFTER THE FIX, the real W2 disagreements: shadow HIGHER on QBs it rates
+  (Brissett +4.4, Caleb Williams +3.4, Bryce Young +3.1, Watson +3.0 - QB
+  is the shadow's best position, -4% vs Clay historically), a rookie the
+  chart lists as a starter (Omar Cooper Jr. +4.9), and ungated vets with
+  raw history (Hollins +4.8, Hollywood Brown +3.6). Shadow LOWER on TUA
+  (-10.0: the ESPN chart lists Penix first, so the shadow calls Tua the
+  backup; the live Clay window says Tua starts weeks 1-8 - a disagreement
+  for Jack / QB_ROOM_OVERRIDES, not a bug), age-curve RBs (McCaffrey -3.7,
+  Cook -2.9, Barkley -2.6), young stars the market/history read lower
+  (Hampton -2.9, Warren -2.5, Kittle -2.5), and string-docked backups
+  (Brooks, Dowdle, White). Per position mean |diff|: QB 1.55, RB 1.63, WR
+  1.09, TE 1.27.
+
+## Depth chart x availability rule (Jack 2026-09-16) -> engine effectiveString - shadow v2.8b
+
+Jack: "for depth chart situations like Tua or anyone else we can ignore it
+for weekly until a player is healthy, or if a player is injured we follow
+the depth chart until something is changed - if a player is on IR or PUP or
+listed as out we keep them out until we get a report they are playing, and
+vice versa." Tua (ATL) was the case: ESPN lists Penix QB1, but Penix is
+Questionable and has not played; the shadow's backup-QB rule had capped
+Tua at 4.2 (live 14.2).
+- engine.js chartAvailable(name, wk): a chart player is unavailable while
+  the injury layer zeroes him (Out / IR / PUP / suspended: injAdj 0) OR he
+  carries a designation (Questionable / Doubtful / Out tag, or a non-Active
+  Sleeper status) AND has no 2026 game yet. Once he plays (jsData g > 0) or
+  the tag clears he is available again ("vice versa"). effectiveString(p,
+  wk) = the player's string among AVAILABLE chart players (WR 3 slots);
+  _poolByNorm (set in buildPlayers) supplies the injFlag by name.
+- Every shadow chart read now uses effectiveString: backup-QB rule, string
+  docks, rookie string, buried-rookie ramp. depthString (raw chart) stays
+  for the pool builder. Result: Tua 14.5 (shadow) vs 14.2 (live); Mariota
+  1.0, Flacco 0.8 (backups); QB mean |diff| vs live 1.55 -> 1.25; live mean
+  untouched (verify 0 of 493). Players marked Out are already zeroed by the
+  live injury layer on both sides.
+
+## Shadow IR / PUP / OUT layer -> v2.9 (engine shadowOut) - 2026-09-16
+
+Jack: "build the IR PUP OUT layer for the shadow next" (his rule: keep IR /
+PUP / Out players out until a report says they are playing, and vice
+versa). The live injury layer already zeroes them for BOTH numbers, but
+only for the 4-week IR minimum (then the projection returns) and it hands
+a returning player his full number the moment the zero lifts.
+- engine shadowOut(p, wk): Sleeper injury_status IR / PUP / NFI / Out /
+  Sus / DNR / COV, or a non-Active roster status -> shadow ncMean = 0 for
+  as long as the status persists (the daily Sleeper pull is the report);
+  released the day the status changes. IN_SEASON_OUT_OVERRIDES wins (out
+  inside its window, playing outside). NA (exempt list) follows the live
+  layer's read (zero only when Sleeper's own weekly projection is 0).
+  ncSrc '+out:<tag>'. chartAvailable also uses it, so an IR player beyond
+  the live 4-week window no longer holds a chart slot. Kill: SIM_NC_OUT.
+- W2: 8 skill players held at zero (6 IR incl. A.J. Brown, Jacobs NA,
+  Darnold override) - all already zero live; the two layers diverge from
+  week 5 on, when the live 4-week IR cap expires but the status has not
+  changed. Live mean untouched (verify 0 of 493).
+- Not covered on purpose: Questionable / Doubtful game-week tags (live
+  docks apply to both), and "reported playing" beyond the status change -
+  QB_ROOM_OVERRIDES / IN_SEASON_OUT_OVERRIDES remain the manual levers.
+
+## Questionable / Doubtful on the shadow -> v2.10 returning-player dock (backtest_qd_shadow.py) - 2026-09-16
+
+Jack: "build the questionable doubtful layer for the shadow next." Each
+game-week designation (official reports 2019-25) graded on the shadow with
+the live docks (Doubtful x.5, Q+DNP x.75, Q+LP/FP x1) already applied, so
+every sweep is the EXTRA multiplier the shadow wants:
+- Reads (actual / shadow): Q-FP .91, Q-LP .91, Q-DNP 1.10 (the live x.75
+  already overshoots on the shadow), Doubtful n 3. Split by last week:
+  Questionable & PLAYED last week ~.94-1.00; Questionable & MISSED last
+  week .80 (FP) / .84 (LP) - the returning player is the whole effect.
+- Sweeps: Q-DNP x m FAIL (+0.77%, wants 1.1 = noise); Q-FP x m FAIL
+  (+0.12%); Q-LP x.9 -2.95% (5/7) PASS but forward 3/5; by position only
+  WR passes (x.9 / x.85) and forward 3/5, 1/5.
+- SHIPPED: Questionable (any practice status) & missed last week x.85:
+  -8.12% vs shadow (5/7), affected rows -8.88% (6/7), FORWARD its rows
+  -10.06% (5/5), all rows -0.15% (5/5). By position RB -3.4% (4/7), WR
+  -10.8% (5/7), TE +3.9% (2/7, n 62) - shipped position-agnostic (the pooled
+  and forward tests are what passed). Starter-only x.9 -3.3% (5/7).
+- Engine v2.10: NC_SHADOW.qRet {mult .85}: p.injFlag Questionable, wk >= 2,
+  and the 2026 record shows no game in wk-1 (sim_2026 players[norm].wks; no
+  2026 record = missed) -> ncMean x.85 on top of the live dock; ncSrc
+  '+qret'. Bye weeks count as "missed" exactly as in the harness. Kill:
+  window.SIM_NC_QRET = false. Doubtful: untestable (n 3) - live x.5 stays.
+- Reading: the history prior does not know a player is coming back from an
+  injury; the live Clay number runs hot there too (.86) but less. This is
+  the shadow's version of Jack's "keep them out until a report says they
+  are playing": a returning Questionable player is priced at 85%.
+
+## Doubtful on the shadow (2026-09-16) - ALREADY PRICED, nothing to build
+
+Jack: "build the doubtful layer for the shadow next." The harness cannot
+grade Doubtful the usual way (3 played rows in 7 seasons), so the number
+was measured as an expected value from the official reports x the weekly
+DB, pool players 2019-25 (scratch _doubtful.py, printed in this session):
+  class      n     P(play)  pts when played / season PPG   EV multiplier
+  Q-FP       309   .786     .959                            .754
+  Q-LP      1100   .670     .906                            .607
+  Q-DNP      257   .490     .814                            .399
+  Doubtful   200   .015     .683 (n 3)                      .010
+  Out       1183   .001     -                               .001
+- The live engine's BANGED-UP docks (engine BANGED, backtest_banged_up.py
+  09-15) already carry exactly this: D play .005-.02 x cond 1.0 (EV ~.01),
+  Q-DNP .42-.52 x .88, Q-LP .54-.77 x .94, Q-FP .82-.90 x .95 - and the
+  shadow inherits them through iA in the shared chain. A Doubtful player is
+  ~1% of his number on BOTH sides. NOTHING TO BUILD.
+- Harness note for the record: backtest_dropped_vets / backtest_qd_shadow
+  applied LIVE_DOCK {D .5, Q-DNP .75, Q-LP 1, Q-FP 1} (the putDock defaults)
+  rather than the banged EV values; on PLAYED rows the difference is the
+  P(play) factor, which the scorecard (played rows only) does not grade.
+  The v2.10 returning-Questionable x.85 was measured conditional on playing
+  vs the class average (.84 vs ~.94) - on live it stacks on the banged EV
+  dock, i.e. it is the conditional correction, slightly strong (.85 vs the
+  .89 ratio); watch it on the scorecards.
+
+## Out on the shadow (2026-09-16) - ALREADY COMPLETE, nothing to build
+
+Jack: "build the out layer for the shadow next." Measured P(play | Out) =
+0.1% (1 of 1,183 pool designations 2019-25). Both halves of an Out are
+already on the shadow: (1) the player -> 0: the live injury layer zeroes a
+game-week Out (NFL report or Sleeper tag) for both numbers via iA, and
+shadowOut (v2.9) holds IR / PUP / Out / non-Active at 0 for as long as the
+status persists; (2) the vacated role -> teammates: applyInSeasonInjuries
+redistributes the zeroed player's share to the healthy group by depth
+rank (iA > 1), and the shadow chain carries the same iA on its own base.
+Verified W2 headless: 8 zeroed rows are 0 on both sides (and stay 0 with
+SIM_NC_OUT off - the live iA alone covers the current week); 48 teammates
+carry iA > 1 on both (Drew Lock iA 26.7 -> live 12.8 / shadow 12.7 - the
+backup-QB rule skips its cap when iA > 1, as designed). The availability
+family on the shadow is closed: IR / PUP hold, backup-QB rule, chart
+availability, returning-Questionable dock, Doubtful (EV .01) and Out (0).
+
+## Vacated role on the shadow -> v2.11 boost^0.75 (backtest_vacated_shadow.py) - 2026-09-16
+
+Jack: "build the vacated role layer for the shadow next." Live, a zeroed
+player's share is redistributed to healthy teammates by depth rank
+(applyInSeasonInjuries -> iA > 1) and the shadow inherited that multiplier
+at full strength - a ratio computed on the Clay base. Graded on the shadow
+with build_live_layers.py's share-rebuilt pool_mult (Clay-free by
+construction; 5,926 boosted player-weeks of 17,556 joined):
+- Reads (actual / shadow WITHOUT the layer): boosted rows 1.06; by size
+  x1.00-1.05 1.00 (nothing to add), x1.05-1.15 1.07, x1.15-1.4 1.18, > x1.4
+  1.41; RB 1.13, WR 1.03, TE 1.06. The layer is real and biggest where the
+  vacancy is biggest.
+- Strength sweep shadow x boost^k, LOYO vs shadow: k .75 best, -1.07%
+  (6/7) PASS (k 1 = live strength is over-strong on the shadow base); RB k
+  .75 -3.96% (5/7); WR k .5 -0.39% (3/7); TE k .5 -0.19% (4/7); boosts <=
+  x1.05 k 0 (nothing); x1.05-1.15 -0.75%; > x1.15 -4.20% (6/7). Backup-QB
+  inheritance: 11 rows, untestable. Candidate boost^.75: boosted rows
+  -1.28% (6/7), all rows -0.38% (6/7), -1.62% vs shipped (7/7); FORWARD
+  boosted -1.46% (5/5), all rows -0.44% (5/5).
+- Engine v2.11: NC_SHADOW.vacatedK {QB 1, RB/WR/TE .75}: when iA > 1 the
+  shadow chain is scaled by iA^(k-1) (docks iA <= 1 untouched); ncSrc
+  '+vac'. Kill: window.SIM_NC_VAC = false. Known approximation: the live
+  iA is (vacated live points x weight) / live base, applied to the shadow
+  base - an exact shadow-unit redistribution would need a team pass over
+  shadow numbers; the softened exponent absorbs most of the difference.
+- Ladder vs shipped (2019-25): v2.7 -1.28% -> v2.11 ~ -1.62% (7/7).
+
+## Exact shadow-unit redistribution -> v2.12 (engine weeklyProjection) - 2026-09-16
+
+Jack: "build the exact shadow-unit redistribution layer next." v2.11 applied
+the LIVE teammate boost (a ratio of Clay-base points) to the shadow base,
+softened to ^.75. v2.12 computes the vacated role in the shadow's own units:
+- ncFull = the player's shadow number as if healthy (chain without the
+  availability factor); ncOwn = ncFull x availability (live docks, zero,
+  shadowOut). Per team|position group and week: lost = sum over out /
+  docked teammates of ncFull x (1 - availability). QB: 85% of lost to the
+  next available QB on the chart (best effective string, tie = higher own;
+  no cap - the next man up inherits outright). RB/WR/TE: 60% of lost spread
+  over healthy teammates by ncOwn x depth weight (1.6 / 1.0 / .5 by
+  effective string, unlisted .25), x strength .75 (vacatedK), gain capped
+  at the player's own number (the live share path caps f at 2). Mirrors
+  INJ_SHARE and DEPTH_W; the live opportunity-POOL cross-position flow (a
+  WR's targets to TEs / RBs) is NOT mirrored - same-position groups only.
+- Mechanics: teammates come from a per-(week, scoring) cache (_ncCache,
+  key = week + scoring weights) filled by a guarded pass over the pool
+  (_ncPass prevents nesting); cache reset in applyInSeasonInjuries and via
+  E.ncCacheReset(). Cost: the exact pass ~4x the legacy shadow arithmetic
+  (90 vs 21 ms for 429 players) - negligible next to the Monte Carlo. ncSrc
+  '+vacx'. Kill: window.SIM_NC_EXACT = false (falls back to v2.11 ^k).
+- W2 check: 35 absorbers; exact vs v2.11 mean |diff| ~0.05 pts on all rows
+  (the softened ratio was a good approximation for RB/WR/TE); the material
+  difference is the QB next-man-up, priced from the OUT QB's shadow number
+  instead of the backup's tiny live base; live mean untouched (0 of 493).
+
+## Cross-position target flow on the shadow -> v2.13 (engine weeklyProjection) - 2026-09-16
+
+Jack: "build the cross-position target flow layer next." v2.12 redistributed
+a lost shadow number inside the same team|position group only. v2.13 mirrors
+the live opportunity POOL rules, in shadow units:
+- The guarded pass now covers ALL of a team's pass catchers (RB/WR/TE) for a
+  skill player (QB room unchanged: 85% to the next available QB, no cap).
+- rf = the player's receiving fraction of production from his Clay stat mix
+  (rec + rec yds + rec TD vs rush yds + rush TD; a shape only; default RB .35,
+  WR/TE 1). An absent player Z loses lostRec = ncFull x rf x (1 - avail) and
+  lostRush = ncFull x (1 - rf) x (1 - avail).
+- Rule = POOL[Z.pos][lead | sec], lead = Z had the team's top receiving level
+  (ncFull x rf) among its pass catchers. Healthy same-position teammates are
+  ranked by effective string (tie = higher own) and the i-th gets
+  tgtSame[i] x lostRec x POOL_EFF_T (.92) + carSame[i] x lostRush (RB only).
+  If tgtOther > 0, the other NON-RB pass catchers split tgtOther x lostRec in
+  proportion to their own receiving level (ncOwn x rf) - a WR's targets reach
+  the TEs and the other WRs, a TE's reach the WRs, an RB's reach WR/TE; RBs
+  never receive cross-position targets (same as live). Sum over every absent
+  Z, x vacatedK .75 (the strength fit on the live pool_mult in
+  backtest_vacated_shadow.py, i.e. this POOL form), gain <= own. ncSrc '+vacx'.
+- Kill: window.SIM_NC_EXACT = false still falls back to the v2.11 ratio.
+- W2 check: 49 absorbers (35 in v2.12). New reach: A.J. Brown (out:ir) now
+  lifts Hunter Henry / the NE WRs by the WR.lead rule (Doubs 8.0, Hollins
+  6.8, Henry 6.7); GB's absent WR/TE reach Lloyd (8.4 - was 9.5 under the 60%
+  form; the RB.sec carSame .28 is what live gives an RB1), CLE's Sampson (IR)
+  reaches Judkins 9.4 and Fannin 7.2; Lock 13.4 unchanged. Live mean
+  untouched (0 of 493), clay-fallback inside the ADP gate 0.
+
+## Where Clay beats the Clay-free shadow, by player type (research_clay_vs_shadow.py) - 2026-09-16
+
+Jack: "is there any correlation in which type of players clay is more successful
+in a large sample vs the non clay shadow." Same 2019-25 harness as the ladder
+(19,064 Clay-pool player-weeks, half-PPR, Vegas x FPA on both sides); shipped =
+P=5 blend of Clay's season PPG with season-to-date, shadow = the v2.11 harness
+form. Per cut: n, shadow MSE vs Clay (negative = shadow better), seasons the
+shadow wins of 7, bias act/proj each side. Log clay_vs_shadow_research.log,
+data/clay_vs_shadow_research.js (SIM_CLAYSEG), ZONES panel.
+- Overall shadow -1.62% (7/7). Clay's ONLY repeatable edges: players with no
+  depth-chart entry (n840, +2.65%, shadow 3/7) and week 1 before any data
+  (n1407, +0.33%, shadow 2/7) - his preseason information edge lives in the
+  first week and in the players the chart does not describe. By position:
+  QB string 2+ (n128, +12.8%: backups, small n), WRs with no history (n352,
+  +4.2%), WRs with no ADP (+0.5%), TEs Clay is bullish on vs history (n925,
+  +1.5%) and cold TEs after 3+ games (+0.6%).
+- The shadow's edges are the bottom of the pool and the young: rookies -5.4%
+  (6/7; R3+/UDFA -6.2%, R1-2 -5.0%), Clay's lowest PPG quartile -5.0%, no
+  history -5.7%, QBs -4.0% (7/7), vacated-role weeks -2.7% (7/7), games 1-3
+  -2.7% (7/7), and every row where the shadow sits > 1.25x the Clay blend
+  (n2863, -6.4%, 6/7) - when the two disagree upward the shadow is right.
+- Caveat: Clay's harness PPG = season points / 17 games, so his blend runs
+  low on players who miss games (act/proj 1.13-1.22 on the bottom quartiles,
+  1.00 on the top); part of the shadow's bottom-of-pool edge is that
+  denominator, not information. On the top half (ADP 1-60, Clay Q3-Q4, string
+  1 vets) the two are within ~1% and Clay's bias is ~1.00.
+- No player TYPE where Clay wins by a repeatable margin on a big cut. The
+  useful residual signal is week 1 / no-chart, i.e. preseason role knowledge,
+  which is exactly what the shadow's ADP prior + depth string approximate.
+
+## Beat Clay where he still wins -> v2.14 no-chart veteran dock (backtest_beat_clay.py) - 2026-09-16
+
+Jack: "do we have any way to improve ours to beat clay?" The shadow already
+beats the Clay blend overall (-1.62%, 7/7); the segmentation left Clay four
+cuts. Five Clay-free fixes, LOYO vs the shadow itself, then forward:
+- A. week 1 lean on the ADP curve: FAIL (+0.56%, 2/7; forward +1.47% 1/5).
+  Rookies hate it (0/7), veterans 4/7 at a=.5 but not at the bar. B. week 1
+  shrink to the position mean: picks 1.0 everywhere (nothing). Clay's week-1
+  edge is real preseason role knowledge, not something the market or a shrink
+  can buy.
+- C. no-chart veterans x m: all rows -1.05% (4/7, lean); split by season
+  stage: 4+ games in x1.0 (the data has fixed it), FIRST 4 GAMES x0.8 -9.02%
+  (5/7) PASS, n228; forward on that exact subset -14.6% (4/5, picks .9 .85
+  .8 .8 .8); placebo 0 of 300 random n228 groups of <4-game vets reach -9%
+  and 5/7 (median +0.00%, 5th pct -0.48%). RB 119 rows act/shadow .80, WR 64
+  rows .72, TE 38 rows .78 - the shadow over-projects a vet the chart has not
+  placed by ~25% until his games say otherwise (late signings, camp bodies,
+  returning vets). Late joiners (g<4 after week 4) are the worst (.70).
+- D. WRs with no history x m: +0.17% (nothing; the 16 non-rookie rows are the
+  whole effect). E. TEs the market rates > 1.2x history, lean to market: 0.0
+  picked everywhere (nothing).
+- Engine (shadow only): after the blend, ncBaseW x NC_SHADOW.noChart.mult
+  (.8) when !rookie, RB/WR/TE (vetDock positions), depthString(p) == null on
+  any team, and games played this season (jsData wks < wk) < noChart.games
+  (4). ncSrc '+nochart'. Kill: window.SIM_NC_NOCHART = false. W2: 3 rows
+  (Gainwell TB 6.1, Marquise Brown PHI 4.2, Palmer BUF 3.6); live untouched
+  (0 of 493). Data data/beat_clay_backtest.js (SIM_BEATCLAY_BT), ZONES panel.
+- Remaining Clay edge after this: week 1 only (n1407, +0.33%, shadow 2/7) -
+  ~0.3% on 7% of the rows. There is no Clay-free lever left for it short of
+  a preseason role model; a week-1-only Clay blend would keep it if wanted.
+
+## Season-long harness: Clay's sheet vs Clay-free preseason priors (backtest_season_long.py) - 2026-09-16
+
+Jack: "lets build the season long first and try to beat out clay with all the
+data we have including the advanced data." New harness, one row per
+player-season 2019-25 on Clay's pool (1,404: QB 202, RB 352, WR 573, TE 277),
+target = actual full-season half-PPR PPG over games played (4+), Clay = season
+pts / his projected games (the fair per-game number; the /17 form the weekly
+harness uses is +16.8% worse and biased 1.12). Games-weighted MSE, seasons
+won of 7, Spearman inside season x position, top-24 (TE 12) hit rate. All
+candidates walk-forward; learned fits per position leave-one-year-out with
+median-impute + missing indicators, then FORWARD 2021-25 on earlier seasons.
+- Hand priors all LOSE to Clay season-long: history+age +10.1%, the weekly
+  shadow's preseason prior +4.8% (2/7), the ADP curve alone +32.7%, shadow x
+  market +6.2%. Clay's preseason edge is real at the season horizon.
+- ridge basic (log ADP + no-ADP flag, history, h3, l8, age, exp, rookie, log
+  pick, week-1 string dummies, team change, opportunity prior, 2nd-yr late snap
+  share; alpha 10): -10.1% vs Clay LOYO (4/7), rho .719 vs .697, bias 1.000.
+  FORWARD -5.2% (3/5): WR -14.4% (5/5), TE -2.3% (3/5), RB -0.4%, QB +3.5%;
+  veterans -5.0% (4/5), rookies -30.9% (5/5; Clay's rookie MSE 11.7 vs 8.1),
+  no-ADP players -25.0% (4/5); top-60 ADP +16.2% (Clay still owns the stars).
+- Every richer set overfits 1,400 rows: +ctx (prior-yr shares, xFP, team pass
+  rate, coach tendencies, JM, OL grades) -2.1% LOYO but +8.1% forward; +PFF
+  advanced (route rate, YPRR, TPRR, aDOT, grades, alignment, YAC, drops, RB
+  YPA/YCO/elusive/breakaway/gap share) +4.5% LOYO, +26.3% forward; boosted
+  +1.0% / +4.4%. The advanced data does not add season-long signal beyond
+  ADP + history + string; it adds variance.
+- Ensembles (information only, still Clay): 0.5 ridge basic + 0.5 Clay
+  -13.0% forward (5/5), rho .704 - the two disagree usefully.
+- Strongest standardized coefficients: QB hist +3.0; RB hist +3.7, xFP/g
+  -2.0 (xFP over-states RB level), ADP -1.1; WR hist +4.6, slot +2.6 / wide
+  +2.6 (alignment volume), l8 -2.3; TE xFP/g -1.5, h3 +1.4.
+- Nothing applied. Next: put ridge basic in as the shadow's preseason prior
+  and grade it on the WEEKLY harness (a better season prior should carry the
+  first 4-6 weeks); keep Clay for top-60 ADP if the weekly test says so.
+  Data data/season_long_backtest.js (SIM_SEASON_BT), ZONES panel;
+  season_long_table.parquet has the feature table.
+- Ops note: C: filled to 0 bytes mid-run (Bash stdout + sed temp live on C:);
+  run with TMP/TEMP pointed at sim_lab/_tmp on E: and output to a file.
+
+## Learned season prior in the weekly shadow, week 1 included -> v2.15 (backtest_learned_prior_weekly.py, build_ridge_prior.py) - 2026-09-16
+
+Jack: "lets continue on sims testing on past seasons and even week 1." The
+season-long ridge (ADP, history, age, rookie pick, week-1 string, opportunity
+prior, 2nd-year snap share) dropped into the weekly harness in place of the
+shadow's hand-built preseason prior; same blend / layers / ramp / vacated
+boost on top. Graded vs the shadow and vs the Clay blend by season stage.
+- Full replacement, LOYO: all weeks -0.41% vs shadow (5/7), -2.02% vs Clay;
+  week 1 -2.27% vs shadow (6/7) and -1.95% vs Clay (4/7) - the first time the
+  shadow beats Clay at week 1; games 1-3 -2.33% (5/7); games 4-8 / 9+ flat
+  (+0.25 / +0.43: once the season data is in, the prior stops mattering).
+  By position all weeks: WR -1.15% (5/7), RB -0.50% (5/7), QB +0.76, TE +0.27.
+- Mix sweep a x ridge + (1-a) x hand prior: pooled best .75, LOYO -0.57%
+  (6/7) PASS; week 1 wants .75 (-2.70%, 6/7), games 1-3 .75, games 4-8 .5,
+  games 9+ .25, QB .25, RB .75, WR .75, TE .5. Prior strength P x k: 1.0
+  (RB/WR lean 1.5, QB/TE .75) - left at the v2 strengths.
+- FORWARD (ridge fit on earlier seasons only, 2021-25; 46-170 training rows
+  per position in the early years): full replacement FAILS (+0.45% all, week
+  1 +1.43%, 2021 +5.1% at week 1 - the 2-season fit is noise); the 0.5 mix
+  PASSES: all weeks -0.48% (4/5), week 1 -1.35% (5/5) / -1.94% vs Clay (4/5),
+  games 1-3 -1.74% (5/5), games 4+ -0.04%; 0.25 mix -0.42% (5/5). Shipped
+  at 0.5: the hand prior halves the damage while the fit is small, and the
+  LOYO gain at .5 is within 0.01 of .75.
+- Engine (shadow only): data/ridge_prior.js (SIM_RIDGE_PRIOR: per-position
+  medians, missing-indicator columns, mu/sd, coefficients, intercept; fit on
+  all 2019-25, games-weighted, alpha 10, `mover` dropped - no live field,
+  LOYO -10.23% vs Clay without it vs -10.07% with). engine ridgePrior(p, wk,
+  oppHalf) rebuilds the vector live (consensus ADP > 181 or missing -> 181 +
+  flag; hist = 0.5 h3 + 0.5 l8 half-PPR raw; rookie pick else 262; raw chart
+  string 1/2/3+/none; opportunity blend when it applied; SIM_SNAPS_PRIOR for
+  exp 1). After the '+shr' shrink: ncPrior = ridgeW (.5) x ridge + .5 x hand
+  prior (half-PPR, x scale); the backup-QB cap is re-applied. Tag '+ridge';
+  kill window.SIM_NC_RIDGE = false. export_site_proj.js loads the file.
+- W2 headless: +ridge on 185 of 429 shadow rows (the ADP-gated Clay-free
+  ones); mean |move| QB .36 RB .46 WR .43 TE .26, max 1.2 (Love -1.2,
+  Tracy +1.1, Kittle +1.1); live mean untouched (0 of 493). Data
+  data/learned_prior_weekly.js (SIM_LPRIOR_BT), ZONES panel.
+
+## Clay games divisor -> LIVE (engine clayDiv) - 2026-09-16
+
+Jack: "is there anything that stands out ... lets do it if it actually
+improves the numbers." The weekly mean divided Clay's season points by 17 for
+everyone; his sheet projects games (gm) per player, and the season sim already
+used gm/17 as the games-played probability (re-inflating the /17 mean by
+17/gm). Weekly, a player Clay expected to miss time projected low on every
+week he did play, and the injury layer docked the absence again.
+- Harness 2019-25 (Clay pts/gm instead of pts/W in the shipped blend): 78% of
+  player-weeks sat on a season with gm < full; ALL rows -0.74% MSE (6/7),
+  affected rows -0.95% (6/7), QB -3.8% (6/7), RB -0.45% (6/7), WR/TE flat;
+  gm 11-14 -1.1% (6/7), gm <= 10 -19% (5/6); first 4 games -1.7%; Clay bias
+  act/proj 1.047 -> 0.998 (the low bias every comparison this session showed).
+- Engine: clayDiv(p) = clayGames when 4 <= gm < 17 else 17; used by
+  weeklyProjection's perGameDiv (explicit qbWindow games still win), the
+  market-observation window and the RB snap-usage level. Season sim keeps
+  pPlay = gm/17 but inf = 1 (the mean is already per game); the reported
+  seasonProj = sum of weekly means x pPlay so it equals Clay's season again.
+  Kill: window.SIM_CLAY_GM = false.
+- Live impact 2026 is small because most gm < 17 players carry an explicit
+  window (Charbonnet, Tyson, Pacheco, Kamara, Penix, Bowers, Henderson) which
+  already divided by the window's games: only Josh Jacobs (gm 11: W9 9.1 ->
+  14.0 when back), Kaleb Johnson and Emanuel Wilson (gm 6) and Minshew move.
+  Season sim for Jacobs unchanged (mean 156 / p50 167 / p90 246 before and
+  after; seasonProj 162 both). Shadow untouched (scale uses the same divisor).
+- Regrade of the shadow vs the CORRECTED (per-game) Clay blend, 2019-25:
+  v2.11 form -1.62% (7/7) -> -0.89% (4/7); v2.15 (ridge 50%) -2.27% (7/7) ->
+  -1.55% (7/7). By stage vs corrected Clay, v2.15: week 1 -3.60% (6/7), games
+  1-3 -2.54% (7/7), 4-8 -0.54% (5/7), 9+ -1.50% (7/7). By position: QB -0.94%
+  (3/7, the one soft spot - the per-game fix was worth 3% to Clay's QBs), RB
+  -2.25% (5/7), WR -1.58% (7/7), TE -0.79% (5/7). The divisor fix took ~0.7%
+  off the shadow's margin; the ridge prior put ~0.65% back. The harness
+  "shipped" reference still uses /W - compare against per-game from here on.
+
+## Risers in the top 60-150 (backtest_risers.py) - NOTHING SHIPS; ADP-tier regrade - 2026-09-16
+
+Jack: "why are the top 60 adp so much better for clay?" then "is it because
+players fall off or ascending players ... that clay dominates", and the rule
+"focus on top 150 but most importantly top 60 to top 100; the higher adp
+players are more important to hit on" (memory feedback_projection_focus_top150).
+- Inside the top 60 the ridge and Clay are level when they agree (318 rows
+  within 2 pts: ridge MSE 8.92 vs Clay 9.04). Clay's whole edge is the 24
+  player-seasons he projected 2+ pts ABOVE the ridge: actual 15.2, Clay 15.6,
+  ridge 13.0 - Gibbs 2023/24, Bijan 2024, Henry 2019, Kelce 2020, Andrews
+  2023, Allen 2021, Chubb 2020. Ascending 2nd/3rd-year players whose role
+  grew; NOT decliners (McCaffrey 2021, Stroud 2024 - both missed by both).
+  Why ours misses: history is the dominant coefficient (anchors to last
+  year) and ADP enters as a log (pick 36 -> 9 barely moves it); slope of
+  actual on prediction inside the top 60 is .84 (ridge) vs .91 (Clay), QB
+  .46 vs 1.10, TE .59 vs .80 - compressed exactly where the stars separate.
+- Fixes tried (LOYO + forward, by tier): +growth (exp-2/3 flags, hist x
+  young, age<=25 x hist, ADP x young), +linear ADP inside the top 60, both,
+  split young/vet fits, fit on ADP<=150 only. NONE moves the 24 rows (mean
+  prediction 13.0-13.3) and every one loses forward in the top 60 (+4 to
+  +10% vs the base ridge) and the 61-100 band. The base ridge forward: top
+  60 +13.5% vs Clay, 61-100 +5.7%, top 150 +6.1%. Only 0.5 ridge + 0.5 Clay
+  beats Clay at the top (top 60 -1.1%, 61-100 -6.9%, top 150 -5.4%, 5/7).
+  SEASON-LONG the top 150 is Clay's; the Clay-free edge is below 150.
+- WEEKLY regrade by ADP tier (v2.15 shadow vs the corrected per-game Clay
+  blend): top 60 -1.05% (6/7; wk1 -1.7, g1-3 -0.9, g4+ -1.0), 61-100 -1.38%
+  (5/7; wk1 -3.2), 101-150 -1.24% (4/7), top 150 -1.17% (5/7), 151+ -2.47%.
+  Top-150 by position: RB -2.13% (5/7), WR -0.94% (6/7), TE -0.52%, QB
+  -0.23% (3/7). A 50/50 weekly ensemble of the two: top 150 -1.10% (7/7).
+  Weekly, the shadow beats Clay in the tiers Jack cares about; the QB top-150
+  row is the one to work on. Data data/risers_backtest.js (SIM_RISERS_BT).
+
+## Vacated volume x depth chart at the start of the season (backtest_vacated_bump.py) - REJECTED - 2026-09-16
+
+Jack: "can we try to add a vacated volume / depth chart check at the beginning
+of seasons to try and give players a bump." Per player-season 2019-25 (pbp via
+backtest_opp_prior.load_season): team vacated carry share (RB) / target share
+(WR/TE) from players who left; leader-left flag; the player's Y-1 share rank
+on the team; week-1 depth string. Tried as ridge features (LIVE + 5) and as
+bump rules on the v2.15 shadow prior - x(1 + k string-1 x vacated), x(1 + k
+promotion), x(1 + k vacated) - k per position LOYO on top-150 rows; forward.
+- Every version loses in the top 150: ridge+vacated +0.56% LOYO / +1.32% fwd
+  vs the shadow prior; string-1 x vacated bump +1.65% / +5.67%; promotion
+  +1.05% / +3.99%. LOYO k picks are 0 for QB/RB and 0-0.25 for WR/TE.
+- Why: the 24 top-60 riser rows Clay got right carry LESS vacated volume than
+  the average top-60 player (0.30 vs 0.32), fewer promotions (25% vs 35%),
+  same leader-left rate. Aaron Jones 2019 (vac 0), Chubb 2020 (0), Kelce
+  2020 (.04), Henry 2019 (.08), Bijan 2024 (.16), Kamara 2024 (.17) rose on
+  stable rosters by coaching decision; Gibbs 2024 was string 2 with 0.20
+  vacated. The big vacated cases busted (Mike Davis 2021 vac 1.14 -> 5.5
+  PPG; Montgomery 2019 .78 -> 9.9). Departures are not the riser signal, and
+  the opportunity prior (oppcal) already carried the allocated vacated share.
+- Nothing shipped. Data data/vacated_bump.js (SIM_VACBUMP_BT), ZONES panel.
+
+## Top-150, importance-weighted (backtest_top150_weighted.py) - NOTHING SHIPS; weekly regrade under the weights - 2026-09-16
+
+Jack: "lets focus on the top 150 and heavily weight the higher scoring players
+since they are more important" (memory feedback_projection_focus_top150).
+Weights = games x LEVEL^p, LEVEL = ADP-curve implied PPG, position-relative
+(never the actual). The ridge is refit with the weights (p = 1, 2, 3; and
+top-150 rows only x LEVEL^2), the mix a in {.5, .75, 1} re-chosen, and every
+cell graded with the same importance-weighted MSE vs Clay's season sheet.
+- Weighting the FIT changes almost nothing. At the shipped 50/50 mix the
+  weighted fits sit within 0.2% of the plain fit LOYO and forward. Best LOYO
+  = LEVEL^1, ridge 75%: -1.2% vs v2.15 in the top 150 (3/7) but +3.3% worse
+  forward; ridge 100% / top-150-only fits blow up forward (+11 to +18%).
+- Season-long under the weights: Clay wins the top 150 (+4.0% LOYO, +1.7%
+  forward for the shadow prior); top 60 +6.4% / +4.6%; 61-100 +0.7% / -2.0%;
+  101-150 -2.7% / -6.2%. The 50/50 shadow + Clay ensemble beats Clay -3.0% /
+  -3.9% (5/7, 4/5). Season-long, top 150 = Clay's; ours only as a partner.
+- WEEKLY under the same weights (v2.15 shadow vs the corrected per-game Clay
+  blend): top 60 -1.17% (5/7), 61-100 -1.10% (5/7), 101-150 -0.94% (5/7),
+  top 150 -1.13% (6/7); by stage top 150 wk1 -2.1, g1-3 -1.8, g4-8 -1.0,
+  g9+ -0.7; RB -1.54% (6/7), WR -1.09% (6/7), TE -1.06% (4/7), QB -0.35%
+  (3/7). The weekly edge survives the weighting in every tier.
+- Data data/top150_weighted.js (SIM_T150_BT), ZONES panel.
+
+## Preseason depth charts + the prospect model (JM) in the season prior -> v2.16 (JM only) - 2026-09-16
+
+Jack: "maybe can we try finding depth charts from before the seasons and
+maybe use our prospect model?" (top-150, high-scorer-weighted grading).
+- PRESEASON CHARTS: not in the cache for 2019-24. nflverse depth_charts
+  2018-24 carry REG/POST weeks only (game_type REG/WC/DIV/CON/SB); only the
+  2025 file has ESPN daily charts from Aug 3. The week-1 chart (already the
+  harness string) adds nothing season-long (with vs without the string
+  dummies: top 150 +0.3% LOYO / +0.7% fwd). Getting August charts for
+  2019-24 means scraping Wayback ESPN/Ourlads - not attempted.
+- JM PROSPECT SCORE (data/jm_scores.json off the site, 1,372 players; 98%
+  coverage exp <= 2, 51% exp 4+; missing -> median + indicator): as a plain
+  ridge feature, importance-weighted top 150 vs the v2.15 prior: LOYO
+  -1.22% (6/7), young top 150 -2.07% (6/7), 101-150 -3.64% (7/7), top 60
+  -1.09% (5/7); FORWARD top 150 -0.93% (4/5), young -1.92% (4/5), 61-100
+  +0.34% (2/5). Interactions (jm x young / rookie / yr2-3 / ADP) add
+  nothing over plain jm. Hindsight check (JM weights are hand-tuned with
+  knowledge of 2019-24 outcomes): the gain holds in the least-hindsight
+  seasons (fwd 2024 -1.35% / young -2.02%, 2025 -2.00% / -4.55%) and the
+  residual correlation by draft class is flat (.23-.26 for 2018-20, .15-.24
+  for 2023-24, ~0 for 2021-22), so it is not a hindsight artifact. Weekly
+  effect via the 50% season prior: neutral (top 150 -0.07% LOYO 7/7, fwd
+  +0.01%; week 1 -0.6 / -0.7%).
+- Shipped shadow-only as v2.16: build_ridge_prior.py LIVE + ["jm"]
+  (LOYO -11.36% vs Clay pooled, was -10.23%); data/jm_scores.js (SIM_JM by
+  norm name, from repo data/jm_scores.json - regenerate when
+  pull_jm_scores.py runs); engine ridgePrior reads window.SIM_JM[p.norm];
+  export_site_proj.js loads it. W2 headless: 171 of 186 ridge rows have a
+  JM score, mean |move| 0.26, max 1.1 (CMC / Gibbs / Barkley / Bijan / Jeanty
+  up ~1.0; Purdy -1.0, Shough -0.75); live untouched (0 of 494).
+
+## Week-1 usage as a preseason-chart stand-in (backtest_week1_usage.py) - NOTHING SHIPS - 2026-09-16
+
+Jack: "lets try it - we can also use route data for week one just to back
+test, and next season i can set up the depth charts." The ESPN chart cannot
+order receivers (every starter is depth 1 at his slot; 289 of 311 top-150 WR
+seasons are string 1) and no August charts exist for 2019-24, so week-1 usage
+stands in for a good preseason chart: PFF weekly receiving summary w1 (route
+participation, routes / team top route runner, team route rank at WR+TE,
+matched 994 of 1,202 non-QB rows) + nflverse snap_counts w1 (snap share, team
+rank at the position, 1,291 of 1,404). Target = PPG over the games AFTER the
+first game. Importance-weighted, vs the v2.16 prior (LIVE + jm) and Clay.
+- Routes: top-150 WR -1.7% LOYO (5/7), forward -0.3%; 61-100 -1.1% / -1.7%;
+  101-150 -1.8% / -1.6%; top 60 +0.2% / +0.8%; RB +1.0% / +0.6%; top 150 as
+  a whole -0.27% LOYO (5/7) but +0.03% forward (3/5). Snaps similar; both
+  together worse (+0.2% / +0.8% top 150). Ridge-heavier mixes fail.
+- The 47 top-60 rows Clay projected 2+ above the prior do not move (13.32 ->
+  13.27; actual 15.0, Clay 16.0): Aaron Jones 2019 (61% snaps, 40% of the
+  top route share), Henry 2019 (61%), Kamara 2020 (66%), Kelce 2019 had
+  ordinary week-1 usage - the role grew over the season. A perfect preseason
+  chart would not have caught the risers; Clay's edge there is a volume
+  call, not a depth-chart read.
+- For next season's depth-chart setup: expect value at WR ordering and in
+  the 61-150 band (~1-2%), not in the top 60. Data data/week1_usage.js
+  (SIM_W1USAGE_BT), ZONES panel.
+
+## Book-anchor weight sweep (anchor_sweep.py) - tool + first read; chained into Tuesday - 2026-09-17
+
+The shipped mean is 70% market / 30% model (engine PROP_W). That weight was a
+prior: no prop history exists before 2026, and the anchor has never been tested
+with the Clay-free shadow underneath - which is why every shadow-vs-live table
+on the board reads red (live = Clay + books, shadow = no books). anchor_sweep.py
+runs over every scored lock (data/snapshots/simlab_snapshot_wN.json) against the
+actuals (repo weekly_stats_active fpts = half-PPR, same as the lock preset):
+market mean backed out of the lock (propMean = .7 market + .3 jsMean, rows with
+propSrc 'line'), then w x market + (1-w) x BASE for w = 0..1, BASE = jsMean
+(Clay side) and ncMean (shadow), plain and importance-weighted MSE, by
+position and by week; anchored-shadow vs anchored-Clay head-to-head.
+- W1 only so far (248 lined skill players; the W1 lock predates ncMean, so no
+  shadow rows): plain MSE is minimised at w = 0.7 exactly (40.39; market alone
+  40.73, model alone 42.03 -> the anchor is worth 3.9% over the model);
+  importance-weighted best w = 0.5 but flat (57.63 vs 57.79 at .7). By
+  position: QB .7-.8, RB 1.0, WR .8-.9 plain / .2 weighted, TE 0.0 (the model
+  alone beat the market for tight ends). Bias act/proj: shipped .979, market
+  .948 (books ran 5% hot in W1), model 1.061. One week - nothing changes.
+- Chained into tuesday_stats.ps1 right after the scorecard (non-fatal), so it
+  re-fits every Tuesday; the W2 lock is the first that stores ncMean, so the
+  shadow sweep and the head-to-head start next Tuesday. README's original
+  rule stands: revisit PROP_W after ~4 scored weeks. Data
+  data/anchor_sweep.js (SIM_ANCHOR_SWEEP), ZONES panel.
+
+## QB compression in the shadow -> v2.17: no ridge half for QBs (backtest_qb_compression.py) - 2026-09-17
+
+Jack: "lets fix the QB compression in the shadow" (W2 read: shadow ~2 pts over
+Clay on Mayfield / Stroud / Goff / Dak / Kyler, 2.6 under on Josh Allen). A vet
+QB's prior passes through a 75% log-ADP market curve, the 0.8 shrink, the 50%
+ridge half and P = 12; each swept for QBs only on the weekly harness (2,014
+re-tunable vet-QB weeks of 2,759), graded on the weighted top-150 QBs vs the
+current shadow and the corrected Clay blend, LOYO + forward.
+- Weekly the shadow is NOT compressed at QB: slope of actual on prediction
+  .91 (Clay .76, over-dispersed); level by tier actual/shadow/Clay: elite
+  20.8 / 21.8 / 22.0, 61-100 19.5 / 19.4 / 19.4, 101-150 16.7 / 17.0 / 16.7.
+  Un-shrinking makes it worse at every step (k .9 +0.18%, 1.0 +0.38%, 1.1
+  +0.61%); weaker P worse (P 9 +0.12%, P 6 +0.63%); P 18 flat. The
+  "compression" seen season-long is the ridge, not the shrink.
+- The ridge half hurts QBs: a = 0 -> top-150 QB weighted -0.65% LOYO (6/7;
+  only 2020 worse, +0.58%), forward -1.41% (5/5); elite QBs -1.09% (5/7) /
+  -1.76% (4/5); 61-150 -0.30% / -1.09%. vs Clay the QB margin goes -0.28% ->
+  -0.93% LOYO and -1.64% forward (4/5). a = .25 is half the gain.
+- ADP-curve weight .75 -> .5: more pooled gain with a = 0 (-0.82% LOYO, -1.71%
+  fwd 5/5) but it swings by season (2020 +1.5%, 2022 +0.3%, 2023 / 2025
+  -2.9%; LOYO 3/7) - NOT applied. QB-rank market curve: no better than ADP.
+- Engine (shadow only): NC_SHADOW.ridgeW is now per position { QB: 0, RB .5,
+  WR .5, TE .5 }; no '+ridge' tag on QBs. W2 headless: live untouched (0 of
+  494); top-150 QB mean |shadow - Clay| 1.07 -> 0.89; Dak +1.6 -> +1.3,
+  Allen still -2.9 (that gap is the ADP-curve weight, left alone). Data
+  data/qb_compression.js (SIM_QBCOMP_BT), ZONES panel.
+
+## Oracle volume test: is projectable volume the main issue? (2026-09-17, _tmp/oracle_volume.py)
+
+Jack: "so our main issue with the algo is that we dont have the correct
+projectable volume for the top players?" RB/WR/TE with pbp volume both years
+(565 top-150 rows), importance-weighted MSE. "True volume" = the season's ACTUAL
+targets and carries per game x league-average efficiency (LOYO fit), nothing else.
+- Volume is half of all the error, for everyone: top 150 Clay 9.73, ours 9.83,
+  last year's volume 13.78, half-way to true volume 7.33, TRUE volume 4.81
+  (-50.5% vs Clay); top 60 -46.5%, 61-100 -59.9%, 101-150 -67.5%. Error sd
+  3.0 PPG (ours and Clay's) -> 2.0 once volume is known; the rest is
+  efficiency + touchdowns.
+- Clay does NOT forecast volume changes better than we do: corr(volume
+  change, Clay - ours) = +0.04; the volume change correlates +.58 with our
+  miss and +.57 with his. Top-60 by realised volume move: UP 3+/g (n=31)
+  actual 16.3, Clay 14.5, ours 12.9 (MSE 10.6 vs 18.6); FLAT (n=225) actual
+  13.2, Clay 13.2, ours 12.4 (8.66 vs 8.85); DOWN 3+/g (n=37) actual 10.8,
+  Clay 14.5, ours 13.3 (19.4 vs 13.2). Clay projects the same ~14.5 for the
+  future risers and the future fallers - he is simply higher on top-60
+  players, which is right on risers, wrong on fallers, calibrated on the
+  flat majority. His top-60 "riser edge" is a level effect, not foresight.
+- With v2.16/2.17 (JM, QB ridge 0) ours vs Clay on this subset: top 60 +2.1%,
+  61-100 -0.2%, 101-150 -4.9%, top 150 +1.0% - close to even.
+- The prize: any preseason signal that predicts the volume CHANGE is worth up
+  to half the error, and neither side has one (vacated volume, depth chart,
+  week-1 usage, coach tendencies, growth terms all failed). In-season the
+  volume is observed, which is why the weekly shadow wins.
+
+## In-season usage evidence: the learning curve by games played -> v2.18 (backtest_inseason_usage.py) - 2026-09-17
+
+Jack: "if volume is the issue ... work on the week by week projections and
+actually use the previous weeks information (routes run, snaps, target share
+etc) and see how the model does as the season goes on" / "if we can be elite in
+season that could be very valuable." Walk-forward: week 1 = the preseason prior
+alone; every later week sees only the weeks before it. Usage per player-week
+from ctx_features.parquet (season + last-3 target / carry share, red-zone,
+goal-line and air-yard shares, WOPR, xFP/g, points over xFP, snap share and
+trend) + PFF weekly route rate (season + last 3; 15,121 rows). Importance-
+weighted top 150, vs the v2.17 shadow and the corrected Clay blend, by games
+played, LOYO + forward 2021-25.
+- The current shadow vs Clay by stage (the learning curve): 1 game -1.3%
+  (4/7), 2 games -1.8%, 3 games -2.5% (6/7), 4-5 -0.5%, 6-8 -2.0% (7/7), 9+
+  -0.8%; games 1+ -1.24% (6/7), forward -1.28% (5/5).
+- E1 pure usage (xFP/g replaces points/g): -1.3% after ONE game, then worse
+  every stage: +3.6%, +0.9%, +5.0%, +9.1%, +18.2% at 9+ games (QB +62%).
+  Points carry skill; usage alone is not a projection (matches backtest_xfp).
+- E4 learned usage model (ridge per position x games bucket, 22 features):
+  +2.9% LOYO, +5.0% forward. 50/50 with the shadow: +0.1% / +0.7%. Overfits.
+- E3 recency tilt (last-3 share / season share): no gain over E2.
+- E2 lam per position x bucket: -0.30% (6/7) / fwd -0.24% (3/5) - noisy picks.
+- E6 ONE smooth schedule per position, lam(g) = max(floor, start - slope x
+  (g-1)) on xFP/g inside the evidence: -0.49% LOYO (6/7), -0.45% forward
+  (5/5); by stage LOYO -1.8 / -0.3 / -0.8 / -0.4 / -0.6 / -0.2%; RB -0.54%
+  (6/7), WR -0.72% (6/7), TE -0.08% (3/7), QB 0. Picks: WR (1.0, .08, .25)
+  in 6 of 7 folds; RB (1.0, .3, .25) in 4 of 7; TE scattered. P multiplier
+  .75 never chosen. vs Clay: -1.24% -> -1.72% LOYO, -1.28% -> -1.72% fwd.
+- Engine (shadow only): NC_SHADOW.usageLam { RB [1,.3,.25], WR [1,.08,.25] };
+  shadowUsage(p, wk, sc) reads SIM_XFP_2026 (sim_routes.js, weeks < wk,
+  scored to the sheet) and jsBasePg's new 5th arg blends it into the evidence
+  for the shadow call only; tag '+xfpNN'; kill window.SIM_NC_USAGE = false.
+  W2 headless: live untouched (0 of 494); 95 of 99 top-150 RB/WR carry it,
+  mean |move| .51, max 3.2 (Henry -3.2, Swift -2.6, Monangai -2.1: week-1
+  points outran volume; Dowdle / Metcalf +0.9: volume outran points).
+  Data data/inseason_usage.js (SIM_INSEASON_BT), ZONES panel.
+
+## Does weekly accuracy improve as the season goes on? (2026-09-17, _tmp/curve_abs.py + curve_week.py)
+
+Jack: "did this improve as the season went on in the past seasons for weekly
+specific projections ... in individual weeks". Top 150, importance-weighted,
+2019-25 pooled, by NFL week; shadow v2.18 vs the per-game Clay blend vs the
+SAME preseason prior frozen (never updated in-season).
+- ABSOLUTE accuracy does not improve: typical miss (RMSE) 7.2 in week 1,
+  7.0-8.1 every week after; correlation with actual .54 in week 1, .49-.56
+  after, no trend (weeks 1-4 .526, 5-9 .528, 10-14 .522, 15-18 .512). A single
+  game is mostly irreducible variance (touchdowns, script); late weeks add
+  injuries, rest and role churn.
+- What in-season learning buys is NOT decaying: the frozen prior's r falls
+  .524 -> .513 -> .481 -> .477 across the four blocks while the shadow holds
+  .526 / .528 / .522 / .512. Shadow vs frozen prior (weighted MSE): weeks 1-4
+  0.0%, 5-9 -1.9%, 10-14 -4.5%, 15-18 -4.4% (week 15 -7.2%).
+- vs the Clay blend by week: better in 15 of 18 weeks, level in weeks 5, 12,
+  15 (+0.2 / +0.1 / -0.1%); blocks -2.4% / -1.7% / -1.6% / -1.6%. Biggest
+  margins weeks 2, 4, 6, 13, 17, 18.
+- By position, early (games 1-3) vs late (9+): r QB .36 -> .32, RB .48 -> .46,
+  WR .35 -> .38, TE .25 -> .39; the frozen prior's late r is .27 / .42 / .30 /
+  .29, so updating is worth the most at WR and TE.
+
+## Weekly RANK accuracy by NFL week + start/sit head-to-head (2026-09-17, _tmp/curve_rank.py + curve_disagree.py)
+
+Jack: "what about rank accuracy week by week instead of points" / "its more
+weekly in the long run in a big sample". Top 150, within position, 2019-25.
+- Spearman (frozen prior / Clay blend / shadow v2.18) by block: weeks 1-4
+  .350 / .344 / .355; 5-9 .351 / .358 / .373; 10-14 .349 / .385 / .388; 15-18
+  .318 / .378 / .378; all .343 / .366 / .374. Ranking DOES improve a little to
+  midseason (.355 -> .388) where points accuracy did not; the frozen prior
+  decays. Top-N hit (top 12 QB/TE, 24 RB/WR): .607 / .615 / .619, flat all
+  year. All same-position pairs ordered correctly: 63.3 / 63.8 / 64.2%.
+  By position rho: QB .31, RB .51, WR .35, TE .34 (RB is the rankable one).
+- HEAD TO HEAD where the shadow and Clay order a same-position pair
+  differently (13,496 pairs): shadow right 52.35% (6/7 seasons); startable
+  players only 52.50%. By block: weeks 1-4 53.9% (7/7), 5-9 52.8% (6/7),
+  10-14 50.0% (2/7), 15-18 50.7%. By position: RB 54.6% (6/7), WR 51.7%
+  (6/7), TE 50.9%, QB 49.9%. The ordering edge is early-season and RB/WR;
+  from week 10 the two agree on most pairs and split the rest.
+- Shadow vs its own frozen prior on disagreements: weeks 2-4 49.0% (3/7) -
+  the first in-season updates do NOT improve the order (and 1-game MSE is
+  +1.1% worse than frozen); weeks 5-9 53.2% (7/7), 10-14 55.9%, 15-18 55.1%.
+  Open lever: a stronger prior (or delayed evidence) for the first 1-3 games.
+- NOTE: "close pair" columns in curve_rank.py use each model's own pair set
+  and are not comparable across models; use the disagreement test.
+
+## Are the shadow's losses to Clay patterned or random? (2026-09-17, _tmp/loss_pattern.py + loss_auc.py)
+
+Jack: "is there any correlation to what players it loses to clay or random".
+Top 150, weighted, shadow v2.18 vs the per-game Clay blend, 2019-25.
+- NO player type where Clay wins: all 35 cuts (position x ADP tier,
+  experience, age, depth string, direction of the disagreement, hot / cold
+  form, Clay's projected games, game environment, vacated-role weeks, Clay's
+  own level) have the shadow ahead. Weakest: TE 61-150 -0.14%, QB 61-150
+  -0.24%, running cold -0.51% (4/7), docked by the layers -0.71%, within 1.5
+  pts of Clay -0.69%. Strongest: string 3+ -12.1% (7/7), string 2 -4.6%,
+  RB 61-150 -4.6%, rookies -3.7% (7/7), running hot -3.6%, boosted by layers
+  -3.3% (7/7), age 30+ -2.5%; when the two differ by 1.5+ the shadow wins
+  -7.9% (it is higher) and -6.8% (it is lower).
+- NOT persistent by player: per player-season loss, odd vs even weeks r =
+  -0.23 (684); same player year to year r = -0.06 (459). No "Clay players".
+- Predictability of which model is closer (LOYO logistic): all features AUC
+  .561, but player type alone .527 and the projection gap alone .570. It is
+  mechanical: weekly scores are right-skewed, 54.9% of rows land BELOW both
+  projections (lower one wins, shadow closer 61.4%), 40.6% ABOVE both (higher
+  one wins, shadow closer 39.9%), 4.5% between. The shadow is the lower
+  projection on 61% of rows.
+- Biggest player-seasons each way are the same archetype: Clay better on
+  elite booms (Kamara 2020, Kupp 2021, Jefferson 2025, CMC 2019, Kelce 2020,
+  Henry 2019, Lamb 2023, Lamar 2019); shadow better on elites who fell short
+  (Henry 2025, Tyreek 2021, Chase 2023, Chubb 2021, Elliott 2019, Kamara
+  2019, Jefferson 2022, Barkley 2019). Clay sits higher on stars; he wins the
+  career years and loses the rest. Random with respect to identity.
+
+## Defensive data / advanced analytics on the weekly RANK objective -> v2.19 QB game-total tilt (backtest_matchup_rank.py) - 2026-09-17
+
+Jack: "lets not worry about season long too much as we are in season now and try
+to maximize our in season week specific rankings - do any of the defensive data
+or advanced analytics help our weekly data?" (memory
+feedback_inseason_rank_objective). Objective = mean within-position-week
+Spearman on the top 150 (504 position-weeks a position), pairs ordered correctly
+and points MSE alongside; base = shadow v2.18; LOYO per position then forward.
+- What the SHIPPED layers are worth for ranking (rho none -> all): QB .2685 ->
+  .3070, RB .4864 -> .5047, WR .3389 -> .3475, TE .3249 -> .3352. Vegas implied
+  total carries almost all of it (QB .293, RB .5005, WR .3476, TE .3345 alone);
+  FPA adds at QB / RB (.284 / .491 alone; together .3071 / .5052); the other
+  live layers add nothing to top-150 rank.
+- Re-tuning the shipped strengths for rank: nothing passes. QB Vegas x3-4 is
+  +.013 rho but 4/7 and +8-11% MSE; WR x2 +.0048 (5/7) fails forward; FPA
+  stronger or weaker is worse everywhere.
+- 34 new tilts x exp(c z), z standardized within the week, c per position:
+  PFF opponent coverage / pass-rush / run-defense grades and pass-rush win
+  rate (walk-forward, shrunk to last season; 9,971 of 11,082 rows), opponent
+  man rate x the player's man-zone YPRR gap, own OL pass / run-block grade
+  and injury drop, spread, game total, wind, dome. Only QB GAME TOTAL is
+  credible: c .06 picked in every fold, LOYO +.0163 rho (6/7), pairs +0.48,
+  forward +.0120 (4/5). Two other nominal passes (QB vs opponent run-defense
+  grade +.006; TE vs own pass-block grade +.004 with pairs DOWN) are small,
+  sign-implausible and about what 42 tries produce by chance - not applied.
+- QB fixed-strength sweep (no selection): c .02 +.0065 rho / MSE -0.02%; .03
+  +.0115 (6/7), pairs +0.42 (6/7), MSE +0.17%; .04 +.0121 (6/7), pairs +0.48
+  (7/7), MSE +0.48%; .06 +.0161, MSE +1.54%; .08 +.0147, MSE +3.18%. Opponent
+  implied total alone fails (negative from c .04): it is the full game total.
+- Engine (shadow only): NC_SHADOW.qbTotalC = .03; gameTotalZ(schedule, wk, tm)
+  = the game's implied + oppImplied standardized across the week's games
+  (clamped +-2.5, needs 6+ priced games); ncMean x exp(c z) for QBs, tag
+  '+tot', kill window.SIM_NC_TOTAL = false. W2 headless: live untouched (0 of
+  494); 24 QBs tagged, 18 change shadow rank, max move 1.83 (Allen +1.8 and
+  Goff +1.4 on BUF-DET 54.5; Hurts -0.85 on PHI-TEN 39.5).
+  Data data/matchup_rank.js (SIM_MATCHUP_RANK_BT), ZONES panel.
+
+## Alignment matchups: slot / outside / inline (backtest_alignment_matchup.py) - NOT APPLIED - 2026-09-17
+
+Jack: "so matchups dont really matter like individually example x z or slot".
+Untested until now (shadow corners, player x defense history, depth / side
+zones, man-zone x YPRR had all failed). PFF weekly receiving for EVERY WR / TE
+(slot_rate, wide_rate, inline_rate, routes, rec, yards, TD) charged to the
+defense faced -> each defense's half-PPR points allowed per route by
+alignment, walk-forward (weeks before the game, K = 4 shrink to last season),
+z across defenses each week; player alignment mix walk-forward (routes-
+weighted, last season at .35). Features: mix x opponent alignment z; the
+alignment-SPECIFIC part (minus the opponent's overall z); and slot-heavy WR
+(55%+), outside WR (65%+ wide), inline TE (45%+) against their own alignment.
+Rank objective (mean within-week Spearman, top 150), LOYO + forward; 5,300 of
+5,763 WR/TE rows covered.
+- Persistence, first half vs second half of a season (224 defense-seasons):
+  overall points per route allowed r +.16; alignment-specific part slot +.09,
+  wide +.13, inline +.13. There is almost nothing stable to project.
+- Direction check (actual / projected, soft vs tough alignment z): slot WR
+  1.031 / 0.975 (n 60 / 48); outside WR 1.040 / 1.072 (no signal); inline TE
+  1.124 / 0.913 (n 101 / 101).
+- Rank: mix x z WR -.0039 (0/7), TE -.0016; alignment-specific WR -.0042, TE
+  +.0098 LOYO (5/7) but forward -.0049; slot WR +.0016 (5/7) / fwd +.0017
+  (4/5) - right sign, far under the .004 bar; outside WR +.0015 with a
+  NEGATIVE pick (noise); inline TE +.0044 (5/7), pairs +0.05, MSE -0.51%, fwd
+  +.0027 (3/5) - the only nominal pass of 7, confined to blocking-heavy tight
+  ends who are rarely startable. Not applied; would need a weekly 2026
+  alignment build for ~0 start/sit value.
+- Reading: individual matchups are real on film but at weekly resolution the
+  repeatable part is already in the Vegas total + position FPA; the
+  alignment-specific remainder does not persist long enough to rank on.
+  Data data/alignment_matchup.js (SIM_ALIGN_BT), ZONES panel.
+
+## Backup quarterbacks: do team totals account for it? -> v2.20 WR dock (backtest_qb_out_receivers.py) - 2026-09-17
+
+Jack: "is there any projection change when there are backup qbs or does the team
+totals account for that". The engine had NO teammate adjustment: it relied on
+the Vegas implied total and the book lines. Harness flag qb_out (ctx_features:
+the team's primary QB Out / Doubtful / off the roster that week) marks 1,443 of
+15,002 skill-player weeks 2019-25 (9.6%); 760 in the top 150.
+- Vegas does move: implied team total 23.09 -> 19.08, Vegas mult 1.009 -> .953.
+- It is NOT enough for wide receivers. Top-150 actual / projected with the
+  primary QB out: WR 0.897 (shadow) and 0.902 (Clay blend) vs 1.012 / 0.979
+  with him in; by season .82 .80 .90 1.02 .91 .96 .82 (6 of 7 under 1.0).
+  TE 1.034 and RB 0.999: no effect (checkdowns and the run game hold).
+  WR ADP 1-60 .863, ADP 61-150 .939; first game with the backup .861, later
+  games .922.
+- LOYO dock on QB-out weeks (d per position on weighted MSE): WR picks .15-.20
+  in every fold, weighted MSE -0.53% on ALL top-150 WR rows (6/7), -9.2% on
+  the QB-out rows, rank rho +.0018; TE picks 0 every fold; RB +0.59% worse.
+- Engine (shadow only): NC_SHADOW.qbOutWrDock = .15 (the low LOYO pick);
+  teamPrimaryQbOut(tm, wk) = the roster QB with the highest Clay season
+  projection fails chartAvailable() (a planned qbWindow is not an outage);
+  WR ncMean x .85, tag '+qbout', kill window.SIM_NC_QBOUT = false. W2
+  headless: live untouched (0 of 494); only SEA (Darnold Out, Drew Lock
+  starts): Smith-Njigba 15.3 -> 13.0, Shaheed 7.8 -> 6.6, Horton, Kupp.
+- The LIVE Clay-side mean has the same 10% bias; rows with direct book lines
+  are partly protected by the anchor (WR props price the backup), un-lined
+  rows are not. Candidate for the live mean - Jack's call.
+- Does it help the weekly projections / rankings? (Jack, same day;
+  backtest_qb_out_tiers.py) On the 348 affected top-150 WR weeks the typical
+  miss falls 7.23 -> 6.90 pts. For RANK the effect is small because only ~8%
+  of WR weeks are affected: the 11,259 start/sit pairs with exactly one
+  receiver on a backup QB go 60.55% -> 61.06% correct with the flat .15, and
+  within-week Spearman +.0036 in the 105 weeks that contain one. The flat
+  dock over-docks (mean projection 8.73 vs actual 9.22; top-60 10.35 vs
+  10.51 = right). TIERED .15 for ADP <= 60 / .05 for the rest: pairs 61.25%
+  (5/7 seasons), weighted MSE -9.26% on those weeks (better in 7/7), mean
+  9.20 vs 9.22. Engine updated: NC_SHADOW.qbOutWrDock { star .15, other .05,
+  starAdp 60 }, tags '+qboutS' / '+qbout'. W2: Smith-Njigba 13.0 (-15%),
+  Shaheed / Kupp / Horton -5%.
+
+## Early-season prior -> v2.21: WR prior x5 after one game (backtest_early_prior.py) - 2026-09-17
+
+Jack: "test the early-season prior". Prompt: vs its own FROZEN preseason number
+the shadow's updates ordered pairs correctly 49.0% of the time in weeks 2-4 and
+after one game its weighted MSE was +1.07% worse than not updating (then -1.3%,
+-2.2%, -2.1%, -3.8% at 2 / 3 / 4-5 / 6+ games). Blend = (P prior + g evidence) /
+(P + g), P = QB 12 / RB 5 / WR 8 / TE 8. Families per position on the v2.18
+shadow: delay d (g_eff = max(0, g - d)), early boost (P x m while g <= G0), taper
+(P x (1 + b exp(-(g-1)/1.5))); 22 settings; top 150, importance-weighted MSE +
+the weekly rank objective, by games played, LOYO + forward.
+- By position, games 1-3, current shadow vs frozen prior: QB -2.10%, RB -1.68%
+  (updating HELPS), WR +0.46%, TE +0.39% (it does not).
+- Per-fold selection among the 22 FAILS: games 1-3 +0.18% MSE (3/7), rank
+  -.0114; forward +0.06% (3/5). QB every slowdown is worse (+0.3 to +2.2%); RB
+  flat (-0.3 to +1.7%); TE scattered picks, rank -.038.
+- The stable piece = WR after exactly ONE game. Fixed settings, no selection:
+  boost g<=1 x2 -1.24% (7/7), x3 -1.61% (7/7), x5 -1.87% (7/7, rank +.0122,
+  pairs +0.72), delay 1 (= ignore week 1) -2.22% (7/7); forward x3 -1.76% (5/5),
+  x5 -2.07% (5/5, rank +.0312, pairs +1.20), delay 1 -2.49% (5/5). Monotone:
+  the more a WR's week 1 is ignored the better. Delay 1 also touches games 2-3
+  (2 games -0.54% 4/7, 3 games +0.02%; forward 3 games +0.43% 2/5) so the
+  one-game boost was shipped instead: zero effect from game 2 on.
+- Engine (shadow only): NC_SHADOW.earlyP { WR: { mult 5, games 1 } } multiplies
+  the prior strength passed to jsBasePg when the player's 2026 games = 1; tag
+  '+earlyP'; kill window.SIM_NC_EARLYP = false. W2 headless: live untouched (0
+  of 494); 55 of 56 top-150 WRs tagged, mean |move| .32, max 1.1 - quiet
+  week 1s pulled back up (Chase +1.0, Rice +0.9, London +0.7, Waddle +0.7),
+  big week 1s pulled down (Golden -1.1, Olave -0.7).
+  Data data/early_prior.js (SIM_EARLYPRIOR_BT), ZONES panel.
+
+## Is the blend corrected week by week for BOTH sides? The Clay-side blend is under-tuned (backtest_clay_blend_fix.py) - 2026-09-17 - NOT YET APPLIED (live, Jack's call)
+
+Jack: "have we correct the blend throughout the season week by week for both
+clay and ours". The shadow got per-position prior strength, usage evidence and
+the WR one-game fix today; the LIVE Clay-side blend (jsBasePg, JS_PRIOR_STRENGTH
+= 5 for every position, points-per-game evidence) got none of them. That P = 5
+was fit when the Clay prior was pts / 17 (biased ~5% low, so the blend wanted off
+it fast); with the per-game divisor fix the prior is calibrated and wants MORE
+weight. Top 150, importance-weighted, vs the current Clay blend (per-game prior):
+- LOYO prior strength per position: QB 16 in every fold, RB 8 in every fold,
+  WR 12-16, TE 12-16 (current 5). Alone: ALL -0.82% (7/7); 1 game -2.66% (7/7),
+  2 games -0.76%, 3 -0.93%, 4-5 -1.18%, 6-8 -0.87%, 9+ -0.44%.
+- Usage evidence (same schedule as the shadow: WR 1/.08/.25, RB 1/.3/.25): ALL
+  -0.70% (7/7); 1 game -2.26%, 3 games -1.05%, 6-8 -0.90%.
+- WR one-game prior x5: 1 game -1.95% (6/7); nothing after.
+- ALL THREE: ALL -1.01% (7/7); 1 game -4.07% (6/7), 2 games -0.73%, 3 -1.23%,
+  4-5 -1.33%, 6-8 -1.15%, 9+ -0.44%; by position QB -1.60% (7/7), WR -1.48%
+  (7/7), TE -0.80% (5/7), RB -0.49% (5/7). FORWARD (P chosen on earlier seasons):
+  ALL -0.90% (5/5), 1 game -3.57% (4/5), games 1-3 -1.72% (3/5), 4+ -0.76%
+  (5/5). Rank rho ~flat overall (+.0004), +.009 at 1 game and 4-5 games.
+- Reference: shadow v2.21 vs the current Clay blend -1.88% (6/7), so after the
+  fix the shadow would lead the Clay side by ~0.9% instead of ~1.9%.
+- Live effect would be full on un-lined players and ~30% on book-anchored ones.
+
+## Which base is the most accurate over seven seasons? (backtest_most_accurate_base.py) - 2026-09-17 - DECISION PENDING (live base, Jack)
+
+Jack: "do you think we should add our projections and replace clay blend now?" /
+"if we back tested it through 7 seasons shouldnt we go with the most accurate?"
+Top 150, 2019-25, importance-weighted; error vs the Clay blend as it runs today:
+  A  Clay blend today (P = 5, points evidence)            0.00%         rank rho .3664  pairs 63.78%  miss 7.623
+  B  Clay blend fixed (P per position, usage, WR 1-game)  -1.01% (7/7)  .3668            63.71%        7.585
+  C  B + QB total tilt + backup-QB WR dock                -1.30% (7/7)  .3696 (5/7)      63.80%        7.574
+  D  Shadow v2.21, Clay-free                              -2.09% (6/7)  .3781 (7/7)      64.31%        7.543
+  E  C+D, weight chosen LOYO (.75 .75 .75 .75 .6 .6 .75)  -2.19% (7/7)  .3801 (7/7)      64.29%        7.539
+  F  fixed 50/50 of C and D                               -2.16% (7/7)  .3810 (7/7)      64.30%        7.540
+- The most accurate is the BLEND (E / F), but it and the shadow alone are a
+  statistical tie: F vs D by season -0.43 -1.22 +0.25 +0.09 +0.38 +0.45 -0.36%
+  (3 better, 4 worse). The data wants ~70% shadow / 30% Clay.
+- What the blend buys is QB: C -1.16%, D -0.54%, F -1.19%. RB D -2.45% / F
+  -2.12%; WR D -2.61% / F -2.76%; TE D -1.01% / F -1.38%. By stage (C / D / F):
+  week 1 0.00 / -2.41 / -2.34; games 1-3 -2.62 / -3.60 / -3.79; 4-8 -1.52 /
+  -2.22 / -2.33; 9+ -0.64 / -1.15 / -1.14.
+- Unmeasured: all of the above is BEFORE the 70% book anchor; and the live
+  engine code has never been scored through a week (first lock with ncMean =
+  W2). Replacing the base changes the public site's weekly projections, the
+  locks and the season sims, so it waits for Jack's explicit go.
+
+## Week 2 by season, top players first (backtest_week2_top_players.py) - 2026-09-17
+
+Jack: "how many seasons do we beat the clay blend in week 2? and again we want to
+prioritize the top players" / "can we see results for top 30 too?" vs the Clay
+blend as it runs today; shadow v2.21 / 70-30 blend / fixed Clay blend.
+- WEEK 2 seasons better on error: top 30 5/7 / 6/7 / 6/7; top 60 5/7 / 6/7 / 6/7;
+  top 100 5/7 / 5/7 / 6/7; top 150 weighted 5/7 / 5/7 / 6/7. The shadow's two
+  losing week 2s are 2020 and 2022 in every cut. Pooled week-2 error: top 30
+  -5.3 / -6.4 / -7.0%; top 60 -1.3 / -2.8 / -4.1%; top 100 -1.8 / -3.0 / -3.2%;
+  top 150 weighted -3.4 / -4.4 / -4.4%. In week 2 itself the FIXED CLAY blend is
+  the best for the top players (a stronger prior = more Clay when there is one
+  game of data). Week-2 RANK inside the top 60 is noise-to-negative for us
+  (shadow better in 1/7 seasons); in the top 150 it is 5/7.
+- ALL WEEKS 2-18: top 30 -2.79% (6/7) / -2.90% (7/7) / -2.29% (7/7); top 60
+  -1.99 / -2.24 / -1.85% (all 7/7); top 100 -1.90 / -2.09 / -1.32% (7/7); top 150
+  weighted -2.12 / -2.26 / -1.38% (7/7). Top 30 by stage (shadow / blend / fixed
+  Clay): week 1 -3.3 / -3.0 / 0.0; weeks 2-4 -3.9 / -4.6 / -4.8 (all 7/7); 5-9
+  -2.6 / -2.7 / -2.1; 10-18 -2.5 / -2.3 / -1.4.
+- Top 30 by position, all weeks: WR -4.5% (7/7), RB -1.8% (7/7), TE -2.2% (4/7,
+  n 119), QB -0.5% (n 174). Level: today's Clay blend runs HIGH on the stars (WR
+  14.48 vs actual 13.90; RB 16.02 vs 15.45; TE 14.22 vs 12.82); the shadow is
+  calibrated (13.88 / 15.41 / 13.36). Everyone is high on top-30 QBs (23.7 vs
+  21.8). Top-30 start/sit pairs where we disagree with today's Clay blend: shadow
+  right 54.0% of 937 (6/7 seasons), blend 53.9% (5/7).
+- Reading for the base decision: the 70/30 blend is the only option better in
+  7/7 seasons at top 30, 60, 100 and 150; the fixed Clay side matters most in
+  weeks 2-4, which is now.
+
+## Non-overlapping ADP bands + CORRECTION to the Clay-blend fix (backtest_adp_bands.py, backtest_clay_tier.py) - 2026-09-17
+
+Jack: "instead of top 30, top 60 can we see ranges top 30 31-60 etc". Unweighted
+MSE vs the Clay blend as it runs today; shadow v2.21 / 70-30 blend / fixed Clay.
+- WEEK 2: 1-30 -5.3% (5/7) / -6.4% (6/7) / -7.0% (6/7); 31-60 +4.2% (2/7) / +2.0%
+  (2/7) / -0.2% (2/7); 61-100 -3.0% (5/7) / -3.4% (5/7) / -0.9%; 101-150 0.0 / -0.2
+  / +2.4%; 151+ -6.6% (6/7) / -5.6% (6/7) / +4.8% (0/7).
+- WEEKS 2-4: 1-30 -3.9 / -4.6 / -4.8% (all 7/7); 31-60 -0.2 / -1.2 / -1.3% (5/7);
+  61-100 -4.3 / -4.0 / -0.4%; 101-150 -4.5 (6/7) / -3.6 (7/7) / +1.0%; 151+ -3.4 /
+  -3.7 / +3.0% (1/7).
+- ALL WEEKS 2-18: 1-30 -2.8 (6/7) / -2.9 (7/7) / -2.3 (7/7); 31-60 -0.9 / -1.4 /
+  -1.3% (6/7 each); 61-100 -1.7 (5/7) / -1.7 (4/7) / 0.0 (3/7); 101-150 -1.4 (6/7) /
+  -1.4 (7/7) / +1.1% (2/7); 151+ -2.4 (6/7) / -2.6 (7/7) / +3.1% (1/7).
+- ADP 31-60 is the SOFT band: weakest margin, week 2 worse than today's Clay in
+  5 of 7 seasons, start/sit disagreements 49.8% (coin flip) vs 54.0% in 1-30 and
+  53.5% in 61-100. Level: shadow runs 2% LOW there (WR 11.39 vs 11.85 actual, TE
+  9.82 vs 10.56, RB 11.53 vs 11.77); today's Clay runs +4.7% HIGH on 1-30 and
+  -5.6% LOW on 151+; the 70/30 blend is within 2% in every band.
+- CORRECTION: the "fixed Clay blend" (strong P for every player) only helps ADP
+  <= 60. Unweighted it is +0.17% (3/7) over EVERYONE: 61-100 -0.2%, 101-150 +1.0%
+  (2/7), 151+ +2.7% (1/7). The importance-weighted top-150 score hid it. Right
+  rule = strong P (QB 16 / RB 8 / WR 12 / TE 12) ONLY for ADP <= 60, P = 5 below:
+  1-30 -2.30% (7/7), 31-60 -1.37% (6/7), top 150 -0.92% (7/7), everyone -0.52%
+  (7/7). A smooth fade by ADP is equivalent (-0.96% / -0.55%). On the Clay side
+  the usage evidence + WR 1-game + extras are slightly NEGATIVE below ADP 100
+  (+0.75% at 101-150, +0.45% at 151+).
+- 70/30 blend with the tiered Clay side: 1-30 -2.89% (7/7), 31-60 -1.36% (6/7),
+  61-100 -1.70% (7/7), 101-150 -1.35% (6/7), 151+ -2.78% (7/7), everyone -2.17%
+  (7/7) = better than today in every band, 6+ of 7 seasons in each.
+
+## The ADP 31-60 band (backtest_band3160.py + _diag / _byweek / backtest_blend_schedule.py) - NO Clay-free fix - 2026-09-17
+
+Jack: "lets work on the 31-60 band". 2,492 player-weeks, 175 player-seasons.
+- Diagnosis (week-1 rows vs the players' season rate): our prior -4.8% in 31-60
+  (hand prior -8.1%, ridge -0.6%, ADP curve -2.2%, raw history +4.6%) vs +0.2% in
+  1-30 and -1.5% in 61-100; Clay/gm +2.5% (and +6.8% in 1-30). Log-ADP market
+  curve residual by bucket: 1-12 -1.86 (curve 10.6% high), 13-24 0.0, 25-36
+  -1.01 (QB / TE -3.0), 37-48 +0.99, 49-60 +0.58 (RB +2.2), 61-150 ~ -0.2.
+- Fixes to the hand prior (vets with ADP + history): A flexible piecewise-log
+  curve (residuals shrink to -0.11 / +0.67 / +0.32); B shrink toward the market
+  value instead of the pool position mean; C k .9 / 1.0 for ADP <= 60; A+B; A+C.
+  ALL are within +-0.1% of the current shadow in 31-60 LOYO (best A+C -0.03%,
+  4/7) and WORSE forward (+0.1 to +1.0%); level reaches 12.8 vs actual 12.9 and
+  the error does not move. Week 2 in the band stays +3.6 to +4.2% vs today's
+  Clay blend (1-2 of 7 seasons) under every variant. The level is not the gap.
+- By week (typical miss, points): week 1 Clay 7.07 / ours 7.08; week 2 7.52 /
+  7.68 (RB 7.22 / 7.51); week 3 6.98 / 7.05; weeks 4-6 7.52 / 7.41; weeks 7-18
+  7.41 / 7.37. The weakness is weeks 1-3 = the PRESEASON number: correlation
+  with the player's season rate, Clay vs ours: QB .48 vs -.14 (n 26), TE .47 vs
+  .27 (22), RB .19 vs .15 (47), WR .13 vs .11 (80); RMSE 2.80 / 3.23, 2.32 / 2.61,
+  3.13 / 3.25, 2.57 / 2.64. A 50/50 of the two priors matches or beats Clay's RMSE
+  at RB (3.05) and WR (2.56).
+- Blend weight by games played (shadow / tiered Clay side): flat 70/30 is picked
+  in every held-out season (-2.19% vs today's Clay blend, every season -1.5 to
+  -3.5%); "50 early then 70 / 85" gains -0.3% on top-60 weeks 1-3 and loses
+  elsewhere. Flat 70/30 by band: 1-30 -2.90% (7/7), 31-60 -1.34% (6/7), 61-100
+  -1.81% (6/7), 101-150 -1.43% (7/7), 151+ -2.89% (7/7), top-60 weeks 1-3
+  -2.24% (shadow alone -1.30%).
+- Conclusion: in rounds 3-5 Clay's preseason read (QB / TE ordering above all)
+  is information we do not have Clay-free; our in-season updating overtakes it
+  by week 4. The fix for this band is the blend, not the prior.
+- ESPN historical projections (Jack, same turn): lm-api-reads.fantasy.espn.com
+  kona_player_info with scoringPeriodId returns weekly projections (statSourceId
+  1, appliedTotal + stat lines) for 2019 / 2021 / 2024 - a 7-season comparison vs
+  ESPN is buildable. Data data/band3160.js (SIM_BAND3160_BT), ZONES panel.
+
+## Us vs ESPN's weekly projections, 2019-25 (pull_espn_hist_proj.py + backtest_vs_espn.py) - 2026-09-17
+
+Jack: "is it possible to see how we do historically vs a fantasy site like espn" /
+"build the ESPN comparison". ESPN's fantasy API still serves the projection it
+showed for every past scoring period: lm-api-reads.fantasy.espn.com/apis/v3/games/
+ffl/seasons/<Y>/segments/0/leaguedefaults/3?view=kona_player_info&scoringPeriodId=<W>
+with X-Fantasy-Filter additionalValue ["11<Y><W>", "01<Y><W>"] (projected / actual
+weekly). ~590 QB/RB/WR/TE a week with the projected STAT LINE (ids 3 4 20 24 25 42
+43 53 72), saved to pbp_cache/espn_proj/espn_proj_<Y>.json (125 requests, ~5 min).
+Rescored to our half-PPR (.04 / 4 / -1 INT / .1 / 6 / .5 rec / -2 fumble; fitted
+from weekly_stats_active, median residual .03). 18,979 of 19,064 harness
+player-weeks matched (99.6%); 403 where ESPN projected ~0 for a player who played
+are excluded; 18,576 graded, 10,942 in the top 150.
+- TOP 150 typical miss: ESPN 7.11 | Clay blend today 7.21 (+2.9% error, 0/7
+  seasons better than ESPN) | shadow v2.21 7.14 (+1.1%, 2/7) | 70/30 blend 7.14
+  (+0.9%, 2/7). All rows: 6.43 | 6.54 (+3.5%, 0/7) | 6.47 (+1.2%) | 6.46 (+1.1%).
+- By ADP band (blend vs ESPN): 1-30 -0.06%, 31-60 -0.03% = TIED with ESPN in the
+  top 60; 61-100 +1.7%, 101-150 +2.5%, 151+ +1.4%. By position: QB +0.6%, WR
+  +0.5%, TE +0.1%, RB +1.8%. By part of season: week 1 +2.9%, weeks 2-4 -0.45%
+  (4/7), 5-9 -0.09%, 10-14 +0.7%, 15-18 +3.2%. Seasons: we win 2021 and 2022,
+  lose 2023 by 3.2%.
+- Weekly ranking inside position: ESPN rho .3777 / pairs 64.54%; Clay today .3655
+  / 63.70%; shadow .3776 / 64.22%; blend .3782 / 64.22% = tied on rank. Start/sit
+  pairs where we disagree with ESPN: blend right 48.9% (top 150), 50.1% in ADP
+  1-60, 46.6% in 61-150; Clay blend today 46.9%.
+- Level: ESPN is the best calibrated (+0.9% / -0.1% / +1.1% by band); Clay today
+  +4.7% high on 1-30; shadow +0.7% / -2.2% / +0.4%.
+- FAIRNESS: ESPN's stored number is its final pre-kickoff projection (knows the
+  inactives + injury news - visible in weeks 15-18 and the late rounds); ours =
+  closing Vegas + known absences, NO book lines (the live 70% anchor cannot be
+  backtested). So this is ESPN's finished product vs our base model.
+- ESPN and ours carry DIFFERENT information: 0.5 ours + 0.5 ESPN = -0.97% vs ESPN
+  alone (6/7) and -1.9% vs our blend alone (typical miss 7.07); .75/.25 -0.38%
+  (6/7); .25/.75 -0.84% (7/7); 0.5 Clay today + 0.5 ESPN -0.14% (5/7). ESPN's
+  weekly projection is already pulled live for the CONSENSUS board.
+- Data data/vs_espn.js (SIM_VS_ESPN_BT), ZONES panel.
+
+## With all our info, what are the most accurate weekly RANKINGS? (backtest_best_rankings.py) - 2026-09-17
+
+Jack: "so with all our info what are the most accurate rankings?" Top 150, ESPN-
+graded rows 2019-25, ranking inside each position each week. rho | seasons better
+than ESPN | pairs ordered correctly | top-N hit | points captured by the ranked top N:
+  ESPN alone                          .3777 | -   | 64.54% | .6200 | 80.49%
+  Clay blend as it runs today         .3655 | 1/7 | 63.70% | .6154 | 79.78%
+  our shadow (Clay-free)              .3776 | 4/7 | 64.22% | .6220 | 80.67%
+  our 70/30 blend                     .3782 | 4/7 | 64.22% | .6189 | 80.38%
+  75% ours + 25% ESPN                 .3867 | 5/7 | 64.63% | .6210 | 80.43%
+  50% ours + 50% ESPN                 .3881 | 6/7 | 64.84% | .6211 | 80.69%
+  25% ours + 75% ESPN                 .3838 | 6/7 | 64.74% | .6190 | 80.55%
+  1/3 shadow + 1/3 Clay side + 1/3 ESPN .3880 | 5/7 | 64.68% | .6221 | 80.51%
+  50% SHADOW + 50% ESPN (no Clay)     .3874 | 6/7 | 64.86% | .6235 | 80.83%
+  weight picked each season (.5 x5, .6, .75) .3849 | 5/7
+- The most accurate ranking = an even mix of OUR model and ESPN; it is best at
+  every position (QB .324, RB .512, WR .365, TE .349 vs ESPN .313 / .499 / .356 /
+  .341) and in every part of the season from week 5 on (weeks 15-18 .398 vs ESPN
+  .385 and ours .376); weeks 1-4 it ties ESPN. By band: 1-30 58.30% pairs (ESPN
+  57.81, ours 58.11), 31-60 55.16 (ESPN 55.24, ours 53.62), 61-100 62.80 (ESPN
+  62.95, ours 61.26), 101-150 63.43 (ESPN 63.26, ours 61.61).
+- Once ESPN is in the mix CLAY ADDS NOTHING: shadow + ESPN (.3874, pairs 64.86%,
+  hit .6235, captured 80.83%) equals or beats every mix that contains Clay.
+- Scale: the whole range from worst to best is rho .366 -> .388 and 63.7% ->
+  64.9% of pairs. Weekly ranking is mostly noise; these are real but small edges.
+- Not in this test: the book lines (no history). Live inputs already pulled
+  weekly for the CONSENSUS board: ESPN, Sleeper, FantasyPros, CBS.
+
+
+## RANK MIX: a third graded number = 50% Clay-free shadow + 50% ESPN, books on top (engine rmMean / rmFinal) - 2026-09-17
+
+Jack: "build the rankings mix". backtest_best_rankings.py: the most accurate weekly ranking we can build is an even
+mix of our shadow and ESPN's weekly projection (rho .3874 vs ESPN .3777, shadow .3776, Clay blend today .3655; better
+than ESPN in 6/7 seasons; Clay adds nothing once ESPN is in). Built as a THIRD number beside the live board and the
+shadow; it never feeds the live mean.
+- Feed: refresh_data.py now writes window.SIM_ESPN_WEEKLY = { week, p: { norm: [half, ppr, std] } } into
+  data/sleeper_meta.js from the repo's data/weekly_projections.json key "e" (the same 9am consensus pull that feeds the
+  site's CONSENSUS board); 354 players for W2. Week-gated: used only when its week = the projected week.
+- Engine (weeklyProjection): espnPts = std + sc.rec x (ppr - std) (+ TE premium); rmMean = NC_SHADOW.rankMixW (.5) x
+  ncMean + .5 x espnPts when ESPN > 0.5, else ncMean; rmFinal = propMean + (1 - propW) x (rmMean - baseM) on rows with
+  direct book lines (the same market, our base swapped in for the Clay-side base), else rmMean. Returned as rmMean /
+  rmFinal / espnPts; week-sim rows carry rmProj / rmFinal / espnPts; the lock stores rmMean / rmFinal / espn.
+  Kill: window.SIM_RANKMIX = false.
+- Grading: score_week.py grades "Rank mix" and "Rank mix+books" beside SHIPPED / JS Weekly / No-Clay shadow / ESPN /
+  consensus every Tuesday (first lock with the fields = W2). rankmix_week.js <week> prints the rankings by position
+  beside the live board, the shadow and ESPN, plus the biggest differences.
+- W2 headless: live untouched (0 of 494). 140 top-150 players, 137 with an ESPN number, 129 with direct lines. Mean
+  |mix+books - live board| 0.44 pts (0.39 on lined players, 1.11 un-lined). Largest: Henry 19.0 -> 17.1, Javonte
+  Williams 17.0 -> 15.8, Smith-Njigba 16.2 -> 15.1 (backup QB), McConkey 8.7 -> 10.1, Gainwell 8.8 -> 5.9.
+- CORRECTION (same day): weeklyProjection().mean is the RAW CLAY STACK. The number on the live board is engine
+  effMean = propMean when book lines exist, else jsMean. Earlier W2 tables today labelled w.mean as "live board";
+  those columns were the Clay stack, not the board (Bijan: Clay stack 17.8, board 21.4). The "Clay" (jsMean) and
+  "shadow" (ncMean) columns were right. Every headless script from here on must use propMean ?? jsMean ?? mean.
+
+
+## Shadow v2.22: TD-luck double count fixed (found tracing Jefferson / Flowers W2) - 2026-09-17
+
+Jack: "why is the shadow so low on jefferson and flowers" (shadow 11.2 / 7.5 vs ESPN 15.1 / 12.8). Traced with
+_tmp/trace_shadow.js (an in-memory instrumented copy of engine.js; nothing on disk changes) and the kill switches.
+- FLOWERS (and McConkey): prior 10.73, blended rate 10.69, Vegas 1.05 - but flagged Questionable -> availability
+  iA 0.75. The Clay blend gets the same dock (9.7); ESPN does not dock designations; he has no book lines. Working
+  as designed (banged-up / Questionable docks, memory project_banged_up).
+- JEFFERSON: no flag. Prior chain 10.75 raw history (3-yr 12.55, LAST-8 8.95 - his 2025 collapse) -> 10.35 after
+  regression / age / opportunity -> 14.35 after the ADP market blend -> 13.20 after the shrink -> 13.30 with the
+  ridge; week 1 he scored 27.2 on 16.9 xFP; blended 13.39. Then the shadow subtracted 2.2 points of TD luck.
+- THE BUG: tdLuckAdj() is sized for the LIVE blend = k x TD value x (xTD - TD)/g x g / (5 + g), i.e. it regresses the
+  TD luck that ENTERED through points at the live evidence weight. The shadow's weight on points is (1 - lam) x g /
+  (P + g): with the usage evidence (v2.18, lam 1.0 after one game for RB / WR) and the WR one-game prior (v2.21, P
+  40) that weight is ~0, and since v2 (P = QB 12 / WR 8 / TE 8) it was already smaller than live. The shadow was
+  removing touchdown luck it never added. The backtests of v2.18 / v2.21 contain no luck term, so the live shadow
+  had drifted from the graded form.
+- FIX (shadow only): ncLuckScale = [(1 - lam) g / (P + g)] / [g / (5 + g)], clamped 0-1.5, applied to the luck term
+  in both shadow branches (ncFull and the no-redistribution mean). Kill window.SIM_NC_LUCKFIX = false.
+- W2 headless: live untouched (0 of 494). 133 top-150 shadows change, mean 0.26: Coker 6.1 -> 7.8, Henry 14.2 ->
+  15.6, Watson 9.3 -> 10.7, St. Brown 13.9 -> 15.2, Jefferson 11.2 -> 12.3, Swift 12.3 -> 13.4, Jeanty 12.3 -> 13.3;
+  Golden 7.2 -> 6.3, Shakir 9.7 -> 9.0 (no week-1 TD was being credited back). Mean |shadow - ESPN| 1.27 -> 1.13,
+  average shadow - ESPN -0.49 -> -0.38.
+- What is left on Jefferson (12.3 vs ESPN 15.1, board 14.3): the last-8 half of the history prior (8.95). ESPN and the
+  books price the new quarterback; a history prior cannot. Same blind spot as the preseason risers.
+
+
+## Shadow audit (audit_shadow.js) + history-window test (backtest_history_window.py) -> v2.23 parity fixes - 2026-09-17
+
+Jack: "are there any other bugs like that in the shadow" / "do we really need a 3 year history maybe we do a game
+history or is 3 years the most accurate".
+AUDIT (audit_shadow.js <week>: in-memory instrumented engine, every top-150 player):
+- Reconstruction: shadow = blended rate x chain + scaled TD luck, then tagged steps -> 0 of 144 players off by > 0.5%
+  without a tag explaining it. No Clay fallbacks in the top 150, scoring scale exactly 1, no live role boost (iA > 1)
+  leaking into the shadow chain, rank mix always between its two inputs.
+- Inputs vs the backtest: 3-season history = prior seasons only in both (2023-25, .5 / .3 / .2); last-8 rolls forward
+  through the current season in both. OK.
+- BUG 1 (data): the nightly pbp feed keys "kenny gainwell", the pool "kenneth gainwell" -> his xFP usage row AND his RB
+  TD-luck row (a LIVE layer) never attached. Fixed at the source (pull_pace_tracker.py PLAYER_ALIAS) and in today's
+  sim_routes.js. A scan of every in-season feed found no other mismatch.
+- BUG 2 (parity): the HIST + OPP calibration (backtest_opp_prior.py) was fitted on HISTREG = the 3-season history
+  after the regression curve, NO last-8; the harness uses that fitted value (SHADOWCAL) both as the vets' hand prior
+  and as the ridge's oppcal feature. Live fed it the age-adjusted 50/50 blend of 3-season and last-8. Fixed: opHist =
+  shadowAgeAdjust(h3). Kill window.SIM_NC_OPPHIST = false. Effect is tiny (39 top-150 shadows, mean .05) because the
+  hand prior rises while the ridge, which uses oppcal as a contrast (negative weight given history), falls.
+- By design, not bugs: Questionable -> availability 0.75 (Flowers, McConkey, RJ Harvey, Omar Cooper); single-game
+  volume quirks (Rice 2 targets, Metcalf 10 targets).
+HISTORY WINDOWS (1,137 veteran seasons, every window on the same rows; MSE after LOYO calibration vs the current
+.5 x 3-season + .5 x last-8; all vets | top 150 importance-weighted):
+- last season only +5.5% | +9.1%; 2 seasons -0.1% | +1.6%; 3 seasons (.5/.3/.2) -0.9% | +0.6%; 3 seasons equal +1.8% |
+  +4.1%; last 4 games +27% | +35%; last 8 +10.9% | +12.6%; last 12 +3.8% | +6.8%; last 16 +2.4% | +5.2%; last 24 0.0% |
+  +1.2%; last 32 +0.5% | +1.4%.
+- BEST = exponentially decayed games: half-life 10 -2.74% (6/7) | -3.17% (6/7); half-life 16 -2.31% | -2.80% (6/7);
+  half-life 6 -0.4%; 24 -1.1%. ADP 1-30 -6.0% (5/7). By position (top 150): QB -1.7%, TE -2.5%, RB -0.1%; WR is best
+  on 3 seasons alone (-9.9%, last 8 alone +20%).
+- The Jefferson case: when the last 8 sits 3+ below the 3-season level (n 46) the next season comes in at 14.6 vs
+  15.2 (3-season) / 11.2 (last 8) - best-fit weight on the last 8 = 0.18; far above (n 103): 13.5 vs 12.3 / 17.0,
+  weight 0.30. We use 0.50. Short windows are noise; three years is NOT too long, but a smooth game-decay beats both.
+- In the FINAL shadow the raw history carries little weight (75% ADP market curve, 0.8 shrink, 50% ridge): moving
+  Jefferson's history-blend output +0.6 moved his final prior 0.0. So the decayed window is a real but small lever
+  there; it needs a live game-log feed (refresh_data.py) and a refit of backtest_opp_prior.py - not built.
+
+
+## Decayed-games history inside the full shadow (backtest_decayed_history.py) - 2026-09-17 - NOT APPLIED
+
+Jack: "lets build the decayed history". backtest_opp_prior.py now also dumps raw OPP / HIST / HISTREG (SHADOWCAL
+unchanged on 1982 of 1982). dk = exponentially decayed mean of games before the season (4 prior seasons, 8+ games).
+- HIST + OPP blend refit on dk (926 vets, LOYO): MSE 9.36 (regressed 3-season) -> 8.68 (hl 8) / 8.60 (hl 12 and 16), -8%.
+  The opportunity coefficient collapses to ~0 (RB .10, WR .04, TE .18 at hl 12): dk already carries what the
+  opportunity model knows.
+- In the FULL weekly shadow (v2.22 form; top 150 importance-weighted, LOYO | forward 2021-25):
+  hand prior on dk -0.00% (4/7) | +0.01% (2/5); ridge hist/h3/l8 -> dk +0.12% (0/7) | +0.07%; both +0.12%; ridge ADDS dk
+  +0.01% | +0.04% (0/5). Rank rho .3781 -> .3775 / .3765.
+- Giving history more weight vs the ADP market (vet market weight .75 -> .55): dk -0.10% (5/7) | -0.14% (5/5), ADP 1-30
+  -0.19% (6/7); today's history at .55 gets -0.06% | -0.13% of that on its own; rho flat/slightly lower. Too small to act on.
+- Why: history is a minor input by the time the shadow is finished (75% market curve, 0.8 shrink, 50% ridge that
+  already weighs 3-season and last-8 separately, in-season blend). The -3% stand-alone gain is real but has nowhere to go.
+- Verdict: no live game-log feed, engine unchanged. ZONES panel SIM_DECAYHIST_BT.
+
+
+## Fantasy-playoff weeks, final week dropped (backtest_fantasy_playoffs.py) - 2026-09-17 - grading rule; no model change
+
+Jack: "dont worry about the final week of every season usually fantasy seasons are over but the weeks besides last
+historically are very important as its fantasy playoffs". RULE from now on: drop the final week (17 in 2019-20, 18 from
+2021) from every grade and fit; report a FANTASY PLAYOFFS cut (the three weeks before it).
+- Top 150, ESPN-graded rows, final week out (10,403): ESPN 7.11 rho .379 | Clay blend today +2.59% (0/7) .369 | shadow
+  +0.91% (2/7) .381 | 70/30 blend +0.72% (3/7) .382 | RANK MIX (50 shadow + 50 ESPN) -0.99% (7/7) .389.
+- Playoffs (1,869): ESPN 7.27 rho .409 | Clay +3.34% | shadow +2.64% (2/7) .407 | 70/30 +2.61% | rank mix +0.01% rho .421.
+  The final week itself was our worst stage (shadow +4.4%, Clay +8.8%) - rested starters; it was inflating every gap.
+- Where the playoff loss sits: last 4 games 3+ below the season rate (n 271): shadow +8.2% vs ESPN, projected 13.20 vs
+  actual 12.28 (ESPN 12.48). Hot finishes: shadow BEATS ESPN (-1.9%; ESPN chases them, 14.11 vs 13.36). By position for
+  cold players weeks 10+: QB 19.96 vs 18.52, TE 9.30 vs 7.77, RB 13.36 vs 13.09, WR 11.62 vs 11.15. Team implied 24+ +4.0%.
+- Fixes (top 150 weighted, vs the shadow): in-season decayed PPG hl 3 / 5 / 8 = +0.97 / +0.36 / +0.12% in the playoffs;
+  .4 x last 4 +0.48%; prior x0.5 / x0 / x2 after 10 games all lose; COLD-ONLY recency w .25 = -0.21% playoffs (4/7),
+  -0.10% all (4/7), rho +.001; QB+TE only -0.15% (5/7). Right direction, too small - NOT applied.
+- Takeaway: late-season edge = the ESPN mix (news we do not have: rest, role changes), not another evidence window.
+
+
+## Cleaning the in-season evidence (backtest_evidence_clean.py) -> shadow v2.24 Vegas-adjusted evidence - 2026-09-17
+
+Jack: "lets build the in season evidence test". 127,728 past games scanned; final week dropped; top 150 importance-
+weighted error vs the current shadow (seasons better of 7), change in weekly rank rho. No fitted numbers.
+- A. OPPONENT / ENVIRONMENT-ADJUSTED (each past game / the matchup multiplier the model gave that game ^ k):
+  full matchup k=.5 -0.18% (6/7), k=1 -0.30% (6/7). VEGAS half alone k=1 -0.30% (6/7), rho +.0026, ADP 1-60 -0.33% (6/7),
+  weeks 5-9 -0.33%, 10-to-playoffs -0.45% (6/7), playoffs -0.37% (5/7); QB -0.69% (6/7), RB -0.43% (6/7), TE -0.20%, WR
+  -0.04%. k=1.5 -0.36% (6/7), k=2 -0.36%, k=3 -0.22% (4/7). FPA half alone 0.00% (multiplier too small to matter).
+  On the 14% of rows moved 0.3+: -1.36% (6/7); moved DOWN n=1059: actual 16.68, old 17.72, new 17.19.
+- B. PARTIAL GAMES (snap share < .50 / .65 of his median in his other games; 2.9% / 5.8% of games): drop +0.19% / +0.21%
+  (2/7), rescale +0.06%; on touched rows +2.7% (old 11.16, new 11.93, actual 11.00). The partial game is information.
+- C. TEAMMATE CONTEXT (lead star WR/TE ADP<=60 or RB ADP<=100, primary QB; mismatched games weight w): w=.5 -0.02% (3/7),
+  w=.25 +0.03%, w=0 +0.10%; rank worse. Side note: with the lead star OUT this week the harness shadow is 1.3 low on
+  his position mates (live has the opportunity pool for that; the harness does not).
+- SHIPPED shadow-only v2.24: NC_SHADOW.vegEvK = 1, shadowVegasScale() scales the POINTS part of the evidence by
+  mean(pts / vegasMult(that week)) / mean(pts), clamp .75-1.35; tag '+vegEv'; kill window.SIM_NC_VEGEV = false.
+  Feed: refresh_data.py now writes per-week points wf {week: half-PPR pts} into SIM_2026.players; past weeks' lines
+  stay in BETTING_2026.gameTotals. W2: 38 of 144 top-150 shadows move, max 0.09 (one game; grows with games), LIVE 0.
+  audit_shadow.js: 0 of 144 unexplained.
+- SAME FIX ON THE LIVE CLAY BLEND (not applied - Jack's call): -0.72% vs today's Clay blend (6/7), rho +.0037, ADP 1-60
+  -0.89% (7/7), weeks 2-4 -0.29% (6/7), 10-to-playoffs -0.97% (7/7), playoffs -0.76% (5/7); k=1.5 -0.90% (6/7).
+
+
+## The combined LIVE CANDIDATE (backtest_live_candidate.py) - 2026-09-17 - NOT applied, Jack's decision
+
+Jack: "lets build the combined live candidate". Five pending fixes stacked on today's live pre-book number; top 150
+importance-weighted, final week dropped, 10,542 player-weeks; (seasons better of 7) | forward 2021-25 (ridge on earlier seasons).
+  0 TODAY                                  0.00%          rho .3697 pairs 63.83% miss 7.197
+  1 + Vegas-adjusted evidence             -0.67% (6/7)    .3732                         | fwd -0.72% (4/5)
+  2 + tiered Clay prior ADP<=60           -1.27% (7/7)    .3764                         | -1.22% (5/5)
+  3 + backup-QB WR dock                   -1.59% (7/7)    .3769 64.02%                  | -1.60% (5/5)
+  4 + usage / WR one-game / QB total      -1.62% (7/7)    .3781   (adds nothing - skip) | -1.58%
+  5 LIVE CANDIDATE 70/30 shadow + step 4  -2.45% (7/7)    .3857 64.39% miss 7.120       | -2.65% (5/5)
+  6 + ESPN 50/50                          -3.34% (7/7)    .3891 64.88% miss 7.067       | -3.53% (5/5)
+  shadow v2.24 alone -2.28% (6/7) .3837 | rank mix (shadow + ESPN) -3.34% (7/7) .3890 | ESPN alone -2.20% (7/7) .3803
+- Cuts (candidate | + ESPN): week 1 -2.1% | -3.8% (5/7); weeks 2-4 -3.9% (7/7) | -4.5%; 5-9 -2.3% (7/7) | -2.9%; 10-to-playoffs
+  -2.6% (7/7) | -3.3%; PLAYOFFS -1.0% (4/7) | -2.8% (6/7); ADP 1-30 -3.4% (7/7); 31-60 -1.3% (6/7) | -2.2%; 61-100 -1.7% |
+  -3.4%; 101-150 -1.4% | -3.9%; QB -1.4% (4/7) | -2.4% (6/7); RB -2.7% (7/7); WR -2.8% (7/7); TE -1.5% (4/7) | -2.5% (6/7).
+- vs ESPN (ESPN-graded rows): today +2.59% (0/7); candidate +0.46% (3/7), rho .385 vs ESPN .379; candidate + ESPN -1.04%
+  (7/7); ADP 1-60 candidate -0.36% (4/7), + ESPN -1.08% (7/7); playoffs candidate +2.3% (1/7), + ESPN -0.02%.
+- Once ESPN is in, Clay adds nothing (candidate + ESPN == shadow + ESPN). Step 4 is not worth porting.
+- Porting plan if Jack says go: (a) Clay-side steps 1-3 in jsBasePg / weeklyProjection (kill switches), (b) live mean =
+  0.7 x ncMean + 0.3 x that, (c) optional ESPN 50/50 (rmMean form) before the book anchor.
+
+## Stat-line usage update (compsU) - 2026-09-20
+- Problem: `weeklyProjection().comps` = PRESEASON Clay stat line per game x matchup x availability for all 18 weeks. The
+  fantasy mean learns in season; the stat lines graded against the books (vs_books_week.py, prop lists) never did. W2: the
+  model faded full-time receivers (Coker, Vele, Douglas, Watson) the August line still priced as part-timers.
+- `backtest_comp_usage.py` (log comp_usage.log, data/comp_usage_bt.json): walk-forward 2019-25, per stat
+  post = (P x prior + g x (lam x usage-expected/g + (1-lam) x actual/g)) / (P + g). vs the static line: rush yds -13.8% MSE
+  (7/7; fwd -15.1% 5/5), receptions -10.9% (7/7; fwd -11.2%), rec yds -8.0% (7/7; fwd -8.4%). After ONE game only -1.7 to
+  -2.2% (4-6 of 7); grows every bucket to -11 to -15% by 9+ games. When the two numbers disagree 20%+, the actual lands on
+  the updated side of the static median 64-70%. Best P 2-5, flat; lam .25-.5 (RB rec yds .75). CAVEAT: historical Clay
+  has no yardage lines - the yardage prior is a proxy (Clay ppg x prior-season stat mix), weaker than the real line, so
+  yardage gains are overstated and P biased low; receptions use Clay's real line and still gain 11%.
+- Engine: `COMP_USAGE` {P 5, lam ry .25 / rec .5 / rcy RB .75, WR/TE .25} + `compUsage()`; `compsU` returned beside
+  `comps` (simWeek rows too) and written into the lock snapshots (export_site_proj.js + app.js). `comps`, the prop
+  anchor and every published mean are UNCHANGED (scratch export: 0 of 7,795 weekly rows moved). TDs untouched.
+  Kill: `window.SIM_COMP_USAGE = false`.
+- Grading: `python vs_books_week.py --week N --usage` grades compsU; without the flag = the static comps. Run both every
+  Tuesday; promote compsU into the prop-anchor fill only after it beats static vs the books for ~4 weeks.
+
+## Vacated volume by stat - 2026-09-20 REJECTED
+- Question (Jack: why did Aaron Jones' rush line barely rise with Mason on IR - model 41 vs books 59.5): the pool turns
+  absorbed carries / targets into ONE factor on every stat component. Should carries go to rush yds and targets to rec?
+- `backtest_vacated_mix.py` (vacated_mix.log, data/vacated_mix_bt.json), 1,600 absorber rows / 481 one-absence team-weeks:
+  RB out -> other RBs rush yds: actual 50.7, uniform 49.7 (unbiased), by-stat 52.0; MSE by-stat +0.8% vs uniform (3/7),
+  k LOYO -0.1% (3/7). No boost at all is +6.2% worse (1/7) - the pool earns its keep on rush yds. The 'leak' is real
+  football: RBs who absorb carries also catch more (rec 1.72 -> actual 2.29, uniform said 2.28).
+- Receiving lines of absorbers look over-boosted (k .5 picked 7/7; rcy uniform 44.8 vs actual 41.9, no-boost 41.5) but the
+  pool is filtered on a trailing 3-game baseline, so part of that is regression to the mean. Not applied; re-test with a
+  season-to-date baseline before touching POOL tgt weights.
+- Engine unchanged. Jones is a single case where the books price far more than the typical next-RB gain (+31% in history).

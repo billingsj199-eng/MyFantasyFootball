@@ -1,0 +1,58 @@
+=== PART 1: 2019-25, closing lines; preseason view = PROXY (last season's final nine weeks regressed + week-1 lines) ===
+  proxy quality: future closing lines vs the proxy preseason view, weeks 2+  MAE 2.51 pts   (2026 real preseason lines vs closing, weeks 1-4: see part 2)
+
+  standing after week W, all later games (every tuning number held out by season):
+  after week 2                       n= 3294 | vs the eventual closing line: miss 2.58 -> 2.43 pts (-5.7%, 7/7 seasons) | vs points scored: MAE 7.81 -> 7.71 (-1.26%), MSE -1.85% (6/7)
+  after week 3                       n= 3070 | vs the eventual closing line: miss 2.62 -> 2.34 pts (-10.7%, 6/7 seasons) | vs points scored: MAE 7.84 -> 7.73 (-1.45%), MSE -2.55% (6/7)
+  after week 4                       n= 2850 | vs the eventual closing line: miss 2.66 -> 2.32 pts (-12.8%, 6/7 seasons) | vs points scored: MAE 7.87 -> 7.74 (-1.69%), MSE -2.88% (6/7)
+  after week 6                       n= 2444 | vs the eventual closing line: miss 2.74 -> 2.29 pts (-16.5%, 7/7 seasons) | vs points scored: MAE 7.93 -> 7.74 (-2.33%), MSE -3.80% (7/7)
+  after week 8                       n= 2040 | vs the eventual closing line: miss 2.82 -> 2.17 pts (-23.0%, 7/7 seasons) | vs points scored: MAE 7.94 -> 7.71 (-2.92%), MSE -4.77% (7/7)
+  after week 10                      n= 1650 | vs the eventual closing line: miss 2.89 -> 2.08 pts (-28.0%, 7/7 seasons) | vs points scored: MAE 8.08 -> 7.76 (-3.94%), MSE -6.90% (7/7)
+  after week 12                      n= 1242 | vs the eventual closing line: miss 2.96 -> 2.05 pts (-30.9%, 7/7 seasons) | vs points scored: MAE 8.11 -> 7.75 (-4.39%), MSE -7.67% (7/7)
+
+  by how far ahead the game is:
+  next week                          n= 1452 | vs the eventual closing line: miss 2.28 -> 1.54 pts (-32.3%, 7/7 seasons) | vs points scored: MAE 7.62 -> 7.41 (-2.68%), MSE -4.65% (7/7)
+  2-4 weeks ahead                    n= 4302 | vs the eventual closing line: miss 2.45 -> 1.87 pts (-23.9%, 7/7 seasons) | vs points scored: MAE 7.76 -> 7.58 (-2.35%), MSE -4.36% (7/7)
+  5-8 weeks ahead                    n= 5282 | vs the eventual closing line: miss 2.74 -> 2.28 pts (-16.6%, 7/7 seasons) | vs points scored: MAE 7.86 -> 7.67 (-2.39%), MSE -3.78% (7/7)
+  9+ weeks ahead                     n= 5554 | vs the eventual closing line: miss 3.01 -> 2.79 pts (-7.3%, 7/7 seasons) | vs points scored: MAE 8.14 -> 7.99 (-1.92%), MSE -3.17% (6/7)
+
+  standing after week 4 (where 2026 is now), by how far ahead:
+  next week                          n=  206 | vs the eventual closing line: miss 2.08 -> 1.48 pts (-29.0%, 7/7 seasons) | vs points scored: MAE 7.73 -> 7.67 (-0.83%), MSE -1.75% (4/7)
+  2-4 weeks ahead                    n=  604 | vs the eventual closing line: miss 2.32 -> 1.87 pts (-19.3%, 7/7 seasons) | vs points scored: MAE 7.68 -> 7.56 (-1.45%), MSE -2.99% (5/7)
+  5-8 weeks ahead                    n=  798 | vs the eventual closing line: miss 2.59 -> 2.26 pts (-12.8%, 6/7 seasons) | vs points scored: MAE 7.69 -> 7.58 (-1.48%), MSE -2.30% (6/7)
+  9+ weeks ahead                     n= 1242 | vs the eventual closing line: miss 2.96 -> 2.72 pts (-8.4%, 6/7 seasons) | vs points scored: MAE 8.11 -> 7.94 (-2.06%), MSE -3.34% (5/7)
+
+  ridge strength / recency half-life picked (mode over the 7 held-out fits):
+    after week 2: lambda 0.5, half-life none   (all picks [(0.5, 0), (1, 0), (1, 0), (0.5, 0), (0.5, 0), (0.5, 0), (1, 0)])
+    after week 3: lambda 1, half-life 2   (all picks [(1, 2), (1, 2), (1, 2), (1, 2), (1, 2), (1, 2), (1, 2)])
+    after week 4: lambda 1, half-life 2   (all picks [(1, 2), (1, 2), (1, 2), (0.5, 2), (1, 2), (0.5, 2), (1, 2)])
+    after week 6: lambda 1, half-life 2   (all picks [(0.5, 2), (0.5, 2), (1, 2), (1, 2), (1, 2), (1, 4), (1, 2)])
+    after week 8: lambda 0.5, half-life 2   (all picks [(0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2)])
+    after week 10: lambda 0.5, half-life 2   (all picks [(0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2)])
+    after week 12: lambda 0.5, half-life 2   (all picks [(0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2), (0.5, 2)])
+
+  how much of a team's measured shift shows up in its later closing lines (slope; 1.0 = all of it):
+    after week 2: slope 0.91, corr +0.33
+    after week 4: slope 0.83, corr +0.46
+    after week 8: slope 0.97, corr +0.57
+
+=== PART 2: 2026, real preseason lines (git 2026-08-26) vs this season's closing lines ===
+  games matched: 272; weeks 1-4 team-games 128; preseason line vs closing line, weeks 1-4: avg miss 1.37 pts, largest 5.5
+    week 1: avg |closing - preseason| 0.69   (2019-25 proxy had ~2 pts at this distance)
+    week 2: avg |closing - preseason| 1.12   (2019-25 proxy had ~2 pts at this distance)
+    week 3: avg |closing - preseason| 1.86   (2019-25 proxy had ~2 pts at this distance)
+    week 4: avg |closing - preseason| 1.81   (2019-25 proxy had ~2 pts at this distance)
+
+  walk-forward: shifts from the weeks before, graded on the next weeks' closing lines
+    after week 1, lambda 1: miss vs closing 1.60 -> 1.48 (-7%)   vs points scored MAE 7.78 -> 7.77  (n=96 team-games, 64 played)
+    after week 1, lambda 2: miss vs closing 1.60 -> 1.51 (-6%)   vs points scored MAE 7.78 -> 7.78  (n=96 team-games, 64 played)
+    after week 1, lambda 4: miss vs closing 1.60 -> 1.53 (-4%)   vs points scored MAE 7.78 -> 7.78  (n=96 team-games, 64 played)
+    after week 1, lambda 8: miss vs closing 1.60 -> 1.56 (-3%)   vs points scored MAE 7.78 -> 7.78  (n=96 team-games, 64 played)
+    after week 2, lambda 1: miss vs closing 1.84 -> 1.71 (-7%)   vs points scored MAE 7.53 -> 7.64  (n=64 team-games, 32 played)
+    after week 2, lambda 2: miss vs closing 1.84 -> 1.71 (-7%)   vs points scored MAE 7.53 -> 7.62  (n=64 team-games, 32 played)
+    after week 2, lambda 4: miss vs closing 1.84 -> 1.72 (-6%)   vs points scored MAE 7.53 -> 7.60  (n=64 team-games, 32 played)
+    after week 2, lambda 8: miss vs closing 1.84 -> 1.76 (-4%)   vs points scored MAE 7.53 -> 7.58  (n=64 team-games, 32 played)
+    after week 3, lambda 1: miss vs closing 1.81 -> 1.60 (-12%)   vs points scored MAE nan -> nan  (n=32 team-games, 0 played)
+    after week 3, lambda 2: miss vs closing 1.81 -> 1.61 (-11%)   vs points scored MAE nan -> nan  (n=32 team-games, 0 played)
+    after week 3, lambda 4: miss vs closing 1.81 -> 1.63 (-10%)   vs points scored MAE nan -> nan  (n=32 team-games, 0 played)
+    after week 3, lambda 8: miss vs closing 1.81 -> 1.69 (-7%)   vs points scored MAE nan -> nan  (n=32 team-games, 0 played)

@@ -1,0 +1,75 @@
+=== 2nd-year low-route WRs on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | rows with a prior-year route grade and a history prior: WR 5814, TE 2952, RB 3117
+  curve E[PPG | grade] (all seasons): {"WR": [-11.9816, 0.288], "TE": [-5.6475, 0.1719], "RB": [8.8518, 0.0312]}
+
+=== Reads: actual / shadow prior (x shrink) by route-grade tercile, weeks 1-8, vets ===
+  WR low                n=  910 act/prior 1.033 act/shadow 1.018 shadow vs shipped  -2.31%  (grade cut 68.8 / 76.5)
+  WR mid                n=  917 act/prior 1.018 act/shadow 1.010 shadow vs shipped  -0.27%  (grade cut 68.8 / 76.5)
+  WR high               n=  888 act/prior 1.114 act/shadow 1.060 shadow vs shipped  -0.53%  (grade cut 68.8 / 76.5)
+  WR high & age <= 25   n=  327 act/prior 1.069 act/shadow 1.040 shadow vs shipped  -0.52%  (grade cut 68.8 / 76.5)
+  TE low                n=  457 act/prior 0.953 act/shadow 0.972 shadow vs shipped  +2.82%  (grade cut 63.2 / 72.2)
+  TE mid                n=  484 act/prior 1.026 act/shadow 1.028 shadow vs shipped  -2.52%  (grade cut 63.2 / 72.2)
+  TE high               n=  466 act/prior 1.057 act/shadow 1.040 shadow vs shipped  -1.27%  (grade cut 63.2 / 72.2)
+  TE high & age <= 25   n=  100 act/prior 0.990 act/shadow 1.001 shadow vs shipped  -3.52%  (grade cut 63.2 / 72.2)
+  RB low                n=  482 act/prior 1.108 act/shadow 1.064 shadow vs shipped  -0.79%  (grade cut 58.3 / 68.0)
+  RB mid                n=  502 act/prior 1.121 act/shadow 1.073 shadow vs shipped  +0.05%  (grade cut 58.3 / 68.0)
+  RB high               n=  480 act/prior 1.079 act/shadow 1.039 shadow vs shipped  +0.68%  (grade cut 58.3 / 68.0)
+  RB high & age <= 25   n=  153 act/prior 1.030 act/shadow 1.035 shadow vs shipped  +2.21%  (grade cut 58.3 / 68.0)
+
+=== 2nd-year low-route WR sweeps (LOYO vs shadow v2.6) ===
+  2nd-year WR bottom-tercile routes n=533: 151 carry the v2.6 low-snap boost, 382 do not | boosted WRs not in the bottom tercile: 0
+  read WR 2nd year & routes bottom tercile x m                            n=  533 act/prior 1.014 act/shadow 1.017 shadow vs shipped -2.38%
+  read WR 2nd yr & bottom tercile & v2.6-BOOSTED x m (on top of x1.2)     n=  151 act/prior 1.102 act/shadow 1.014 shadow vs shipped -2.83%
+  read WR 2nd yr & bottom tercile & NOT boosted x m                       n=  382 act/prior 0.987 act/shadow 1.018 shadow vs shipped -2.23%
+  read WR 2nd yr & route RATE bottom tercile x m                          n=  301 act/prior 1.085 act/shadow 1.042 shadow vs shipped -2.73%
+  read WR 2nd yr & routes < 150 x m                                       n=  100 act/prior 0.925 act/shadow 0.958 shadow vs shipped -0.87%
+  read WR 2nd yr & routes < 250 x m                                       n=  235 act/prior 1.066 act/shadow 1.061 shadow vs shipped -0.59%
+  read WR 2nd yr & bottom tercile & low grade x m                         n=  304 act/prior 1.130 act/shadow 1.079 shadow vs shipped -3.00%
+  read WR 2nd yr & bottom tercile & high grade x m                        n=   68 act/prior 0.931 act/shadow 0.952 shadow vs shipped +4.30%
+  read WR 2nd+3rd yr & routes bottom tercile x m                          n=  950 act/prior 1.048 act/shadow 1.019 shadow vs shipped -0.04%
+  read v2.6 low-snap boost re-check: 2nd-yr WRs with the boost x m (1.0 = keep x1.2) n=  151 act/prior 1.102 act/shadow 1.014 shadow vs shipped -2.83%
+  WR 2nd year & routes bottom tercile x m (n=533)
+    grid pooled MSE: 1.0:29.271  0.95:29.210  0.9:29.196  0.85:29.231  0.8:29.314  1.1:29.539
+    LOYO 28.9282 vs shadow 28.9874 (-0.20%), seasons better than shadow 4/6, picks [0.9, 0.95, 0.9, 0.9, 0.9, 0.9], pooled best 0.9 | shadow vs shipped -2.38% -> -2.58%
+    WR 2nd yr & bottom tercile & v2.6-BOOSTED x m (on top of x1.2) (n=151)
+    grid pooled MSE: 1.0:27.577  0.95:27.498  0.9:27.455  0.85:27.447  0.8:27.475  1.1:27.844
+    LOYO 26.8297 vs shadow 26.4619 (+1.39%), seasons better than shadow 1/5, picks [0.8, 0.85, 1.1, 0.8, 0.9], pooled best 0.85 | shadow vs shipped -2.83% -> -1.48%
+    WR 2nd yr & bottom tercile & NOT boosted x m (n=382)
+    grid pooled MSE: 1.0:28.864  0.95:28.760  0.9:28.713  0.85:28.723  0.8:28.790  1.1:29.243
+    LOYO 29.9827 vs shadow 29.9858 (-0.01%), seasons better than shadow 2/6, picks [0.95, 0.9, 0.85, 0.85, 0.85, 0.85], pooled best 0.9 | shadow vs shipped -2.23% -> -2.24%
+    WR 2nd yr & route RATE bottom tercile x m (n=301)
+    grid pooled MSE: 1.0:47.469  0.95:47.820  0.9:48.277  0.85:48.841  0.8:49.510  1.1:47.086
+    LOYO 43.3207 vs shadow 43.3522 (-0.07%), seasons better than shadow 2/6, picks [1.1, 1.0, 1.1, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped -2.73% -> -2.80%
+    WR 2nd yr & routes < 150 x m (n=100)
+    grid pooled MSE: 1.0:21.932  0.95:21.832  0.9:21.757  0.85:21.706  0.8:21.680  1.1:22.207
+    LOYO 21.7283 vs shadow 21.5308 (+0.92%), seasons better than shadow 1/4, picks [0.8, 0.8, 0.8, 1.0], pooled best 0.8 | shadow vs shipped -0.87% -> +0.04%
+    WR 2nd yr & routes < 250 x m (n=235)
+    grid pooled MSE: 1.0:28.646  0.95:28.487  0.9:28.360  0.85:28.265  0.8:28.203  1.1:29.061
+    LOYO 28.4023 vs shadow 28.1708 (+0.82%), seasons better than shadow 2/6, picks [0.8, 0.8, 1.0, 0.8, 0.8, 0.8], pooled best 0.8 | shadow vs shipped -0.59% -> +0.23%
+    WR 2nd yr & bottom tercile & low grade x m (n=304)
+    grid pooled MSE: 1.0:29.656  0.95:29.766  0.9:29.907  0.85:30.081  0.8:30.286  1.1:29.531
+    LOYO 29.7381 vs shadow 29.7942 (-0.19%), seasons better than shadow 3/6, picks [1.1, 1.1, 1.1, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped -3.00% -> -3.19%
+    WR 2nd yr & bottom tercile & high grade x m (n=68)
+    grid pooled MSE: 1.0:31.773  0.95:31.419  0.9:31.136  0.85:30.925  0.8:30.786  1.1:32.695
+    LOYO 35.1770 vs shadow 35.6392 (-1.30%), seasons better than shadow 2/3, picks [0.8, 0.8, 0.9], pooled best 0.8 | shadow vs shipped +4.30% -> +2.95%
+    WR 2nd+3rd yr & routes bottom tercile x m (n=950)
+    grid pooled MSE: 1.0:31.217  0.95:31.221  0.9:31.280  0.85:31.394  0.8:31.563  1.1:31.374
+    LOYO 31.5203 vs shadow 31.4640 (+0.18%), seasons better than shadow 0/6, picks [1.0, 0.95, 1.0, 1.0, 0.95, 0.95], pooled best 1.0 | shadow vs shipped -0.04% -> +0.13%
+    v2.6 low-snap boost re-check: 2nd-yr WRs with the boost x m (1.0 = keep x1.2) (n=151)
+    grid pooled MSE: 1.0:27.577  0.95:27.498  0.9:27.455  0.85:27.447  0.8:27.475  1.1:27.844
+    LOYO 26.8297 vs shadow 26.4619 (+1.39%), seasons better than shadow 1/5, picks [0.8, 0.85, 1.1, 0.8, 0.9], pooled best 0.85 | shadow vs shipped -2.83% -> -1.48%
+
+=== Candidate: WR 2nd year & routes bottom tercile x m = 0.9 (lean) ===
+  ALL rows: vs shipped -1.24% (7/7) | vs shadow v2.6 -0.00% (4/7) | WR rows -0.01% (4/7) | affected rows n=533 -0.25% (4/7)
+  FORWARD (2021-25): all rows -0.00% (3/5) | WR rows -0.00% (3/5) | affected rows -0.09% (3/5)
+
+2nd-year low-route WRs on the shadow: WR 2nd year & routes bottom tercile x m -0.20% (4/6, lean); WR 2nd yr & bottom tercile & v2.6-BOOSTED x m (on top of x1.2) +1.39% (1/5, FAIL); WR 2nd yr & bottom tercile & NOT boosted x m -0.01% (2/6, FAIL); WR 2nd yr & route RATE bottom tercile x m -0.07% (2/6, FAIL); WR 2nd yr & routes < 150 x m +0.92% (1/4, FAIL); WR 2nd yr & routes < 250 x m +0.82% (2/6, FAIL); WR 2nd yr & bottom tercile & low grade x m -0.19% (3/6, FAIL); WR 2nd yr & bottom tercile & high grade x m -1.30% (2/3, FAIL); WR 2nd+3rd yr & routes bottom tercile x m +0.18% (0/6, FAIL); v2.6 low-snap boost re-check: 2nd-yr WRs with the boost x m (1.0 = keep x1.2) +1.39% (1/5, FAIL). Candidate WR 2nd year & routes bottom tercile x m = 0.9: affected rows -0.25% (4/7), forward -0.09% (3/5).
+wrote data/wr_yr2_lowroutes_backtest.js (23s)

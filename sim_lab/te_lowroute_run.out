@@ -1,0 +1,70 @@
+=== Low-route tight ends on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | rows with a prior-year route grade and a history prior: WR 5814, TE 2952, RB 3117
+  curve E[PPG | grade] (all seasons): {"WR": [-11.9816, 0.288], "TE": [-5.6475, 0.1719], "RB": [8.8518, 0.0312]}
+
+=== Reads: actual / shadow prior (x shrink) by route-grade tercile, weeks 1-8, vets ===
+  WR low                n=  910 act/prior 1.033 act/shadow 1.018 shadow vs shipped  -2.31%  (grade cut 68.8 / 76.5)
+  WR mid                n=  917 act/prior 1.018 act/shadow 1.010 shadow vs shipped  -0.27%  (grade cut 68.8 / 76.5)
+  WR high               n=  888 act/prior 1.114 act/shadow 1.060 shadow vs shipped  -0.53%  (grade cut 68.8 / 76.5)
+  WR high & age <= 25   n=  327 act/prior 1.069 act/shadow 1.040 shadow vs shipped  -0.52%  (grade cut 68.8 / 76.5)
+  TE low                n=  457 act/prior 0.953 act/shadow 0.972 shadow vs shipped  +2.82%  (grade cut 63.2 / 72.2)
+  TE mid                n=  484 act/prior 1.026 act/shadow 1.028 shadow vs shipped  -2.52%  (grade cut 63.2 / 72.2)
+  TE high               n=  466 act/prior 1.057 act/shadow 1.040 shadow vs shipped  -1.27%  (grade cut 63.2 / 72.2)
+  TE high & age <= 25   n=  100 act/prior 0.990 act/shadow 1.001 shadow vs shipped  -3.52%  (grade cut 63.2 / 72.2)
+  RB low                n=  482 act/prior 1.108 act/shadow 1.064 shadow vs shipped  -0.79%  (grade cut 58.3 / 68.0)
+  RB mid                n=  502 act/prior 1.121 act/shadow 1.073 shadow vs shipped  +0.05%  (grade cut 58.3 / 68.0)
+  RB high               n=  480 act/prior 1.079 act/shadow 1.039 shadow vs shipped  +0.68%  (grade cut 58.3 / 68.0)
+  RB high & age <= 25   n=  153 act/prior 1.030 act/shadow 1.035 shadow vs shipped  +2.21%  (grade cut 58.3 / 68.0)
+
+=== Low-route TE sweeps (LOYO vs shadow v2.6) ===
+  cuts: routes 276 / 410, route rate 83.7% / 88.7%, grade 63.2 / 72.2
+  read low routes                   n=  952 act/prior 0.966 act/shadow 0.966 shadow vs shipped -0.59%
+  read low route RATE               n=  974 act/prior 1.047 act/shadow 1.017 shadow vs shipped -0.30%
+  read low routes & low rate        n=  608 act/prior 1.042 act/shadow 0.999 shadow vs shipped -1.05%
+  read low routes & low grade       n=  501 act/prior 0.962 act/shadow 0.970 shadow vs shipped -0.84%
+  read low routes, weeks 1-4        n=  240 act/prior 0.947 act/shadow 0.962 shadow vs shipped +0.11%
+  read low route rate, weeks 1-4    n=  247 act/prior 1.058 act/shadow 1.052 shadow vs shipped -1.24%
+  read low routes & 1st string      n=  565 act/prior 1.009 act/shadow 0.985 shadow vs shipped -1.22%
+  read low routes & 2nd string+     n=  347 act/prior 0.917 act/shadow 0.951 shadow vs shipped -1.42%
+  TE low routes (bottom tercile) x m (n=952)
+    grid pooled MSE: 1.0:18.030  0.95:17.995  0.9:17.985  0.85:18.003  0.8:18.047  0.7:18.215
+    LOYO 17.8368 vs shadow 17.8567 (-0.11%), seasons better than shadow 4/6, picks [0.9, 0.9, 0.95, 0.9, 0.9, 0.85], pooled best 0.9 | shadow vs shipped -0.59% -> -0.70%
+    TE low route RATE (bottom tercile) x m (n=974)
+    grid pooled MSE: 1.0:20.364  0.95:20.427  0.9:20.523  0.85:20.651  0.8:20.813  0.7:21.235
+    LOYO 21.7295 vs shadow 21.7295 (+0.00%), seasons better than shadow 0/6, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -0.30% -> -0.30%
+    TE low routes & low rate x m (n=608)
+    grid pooled MSE: 1.0:18.357  0.95:18.370  0.9:18.403  0.85:18.456  0.8:18.529  0.7:18.735
+    LOYO 18.8752 vs shadow 18.8674 (+0.04%), seasons better than shadow 0/6, picks [1.0, 1.0, 1.0, 1.0, 1.0, 0.95], pooled best 1.0 | shadow vs shipped -1.05% -> -1.01%
+    TE low routes & low grade x m (n=501)
+    grid pooled MSE: 1.0:14.232  0.95:14.187  0.9:14.157  0.85:14.142  0.8:14.143  0.7:14.190
+    LOYO 14.6052 vs shadow 14.5683 (+0.25%), seasons better than shadow 3/6, picks [0.8, 0.8, 0.9, 0.9, 0.8, 0.8], pooled best 0.85 | shadow vs shipped -0.84% -> -0.59%
+    TE low routes x m, weeks 1-4 only (n=240)
+    grid pooled MSE: 1.0:18.504  0.95:18.378  0.9:18.305  0.85:18.286  0.8:18.321  0.7:18.550
+    LOYO 18.5246 vs shadow 18.6203 (-0.51%), seasons better than shadow 4/6, picks [0.8, 0.85, 0.85, 0.9, 0.9, 0.8], pooled best 0.85 | shadow vs shipped +0.11% -> -0.41%
+    TE low route rate x m, weeks 1-4 only (n=247)
+    grid pooled MSE: 1.0:19.997  0.95:20.089  0.9:20.244  0.85:20.462  0.8:20.742  0.7:21.489
+    LOYO 23.6570 vs shadow 23.4854 (+0.73%), seasons better than shadow 0/6, picks [0.95, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -1.24% -> -0.52%
+    TE low routes & 1st string x m (n=565)
+    grid pooled MSE: 1.0:20.846  0.95:20.842  0.9:20.871  0.85:20.933  0.8:21.028  0.7:21.316
+    LOYO 20.6525 vs shadow 20.6103 (+0.21%), seasons better than shadow 1/6, picks [0.95, 0.95, 1.0, 1.0, 0.95, 0.9], pooled best 0.95 | shadow vs shipped -1.22% -> -1.02%
+    TE low routes & 2nd string+ x m (on top of the string dock) (n=347)
+    grid pooled MSE: 1.0:14.037  0.95:13.985  0.9:13.948  0.85:13.926  0.8:13.918  0.7:13.945
+    LOYO 13.6183 vs shadow 13.6750 (-0.41%), seasons better than shadow 3/6, picks [0.85, 0.8, 0.9, 0.7, 0.8, 0.8], pooled best 0.8 | shadow vs shipped -1.42% -> -1.83%
+    TE route-rate curve blend w (n=2952)
+    grid pooled MSE: 0.0:26.083  0.1:26.137  0.15:26.176  0.2:26.223  0.3:26.341  0.5:26.673
+    LOYO 25.9688 vs shadow 25.9688 (+0.00%), seasons better than shadow 0/6, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.47% -> -0.47%
+
+=== Candidate: TE low routes (bottom tercile) x m = 0.9 (lean) ===
+  ALL rows: vs shipped -1.25% (7/7) | vs shadow v2.6 -0.01% (4/7) | TE rows -0.06% (4/7) | affected rows n=952 -0.34% (4/7)
+  FORWARD (2021-25): all rows +0.00% (2/5) | TE rows +0.04% (2/5) | affected rows +0.19% (2/5)
+
+Low-route TEs on the shadow: TE low routes (bottom tercile) x m -0.11% (4/6, lean); TE low route RATE (bottom tercile) x m +0.00% (0/6, FAIL); TE low routes & low rate x m +0.04% (0/6, FAIL); TE low routes & low grade x m +0.25% (3/6, FAIL); TE low routes x m, weeks 1-4 only -0.51% (4/6, lean); TE low route rate x m, weeks 1-4 only +0.73% (0/6, FAIL); TE low routes & 1st string x m +0.20% (1/6, FAIL); TE low routes & 2nd string+ x m (on top of the string dock) -0.41% (3/6, FAIL); TE route-rate curve blend w +0.00% (0/6, FAIL). Candidate TE low routes (bottom tercile) x m = 0.9: affected rows -0.34% (4/7), forward +0.19% (2/5).
+wrote data/te_lowroute_backtest.js (22s)

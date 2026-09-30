@@ -1,0 +1,36 @@
+=== Vacated volume by stat: uniform factor (engine today) vs carries -> rush yds, targets -> rec / rec yds ===
+  absorber rows: 1600 over 481 one-absence team-weeks 2019-25
+
+--- ALL absorbers ---
+  ry  n   201  actual  46.49  | none: mean  37.33 MSE  1290.24 ( +5.5% vs uniform, won 1/7)  by-stat: mean  49.15 MSE  1227.76 ( +0.4% vs uniform, won 3/7)  by-stat, k LOYO: mean  44.91 MSE  1216.61 ( -0.5% vs uniform, won 3/7)  | uniform mean  47.32 MSE  1222.77 | k picks [0.75, 0.75, 0.75, 0.5, 0.5, 0.5, 0.75]
+  rec n  1311  actual   3.44  | none: mean   3.34 MSE     5.07 ( -1.1% vs uniform, won 5/7)  by-stat: mean   3.63 MSE     5.08 ( -0.9% vs uniform, won 5/7)  by-stat, k LOYO: mean   3.48 MSE     5.03 ( -1.9% vs uniform, won 7/7)  | uniform mean   3.63 MSE     5.13 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+  rcy n  1264  actual  41.91  | none: mean  41.49 MSE  1156.81 ( -2.8% vs uniform, won 6/7)  by-stat: mean  44.87 MSE  1186.80 ( -0.3% vs uniform, won 5/7)  by-stat, k LOYO: mean  43.18 MSE  1164.75 ( -2.2% vs uniform, won 6/7)  | uniform mean  44.80 MSE  1190.69 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+--- RB out -> other RBs (the Jones / Mason case) ---
+  ry  n   180  actual  50.67  | none: mean  38.77 MSE  1381.40 ( +6.2% vs uniform, won 1/7)  by-stat: mean  51.97 MSE  1311.64 ( +0.8% vs uniform, won 3/7)  by-stat, k LOYO: mean  47.23 MSE  1299.19 ( -0.1% vs uniform, won 3/7)  | uniform mean  49.74 MSE  1300.75 | k picks [0.75, 0.75, 0.75, 0.5, 0.5, 0.5, 0.75]
+  rec n   126  actual   2.85  | none: mean   2.47 MSE     4.94 ( -6.3% vs uniform, won 5/7)  by-stat: mean   3.13 MSE     4.93 ( -6.7% vs uniform, won 5/7)  by-stat, k LOYO: mean   2.80 MSE     4.79 ( -9.3% vs uniform, won 6/7)  | uniform mean   3.25 MSE     5.28 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+  rcy n   100  actual  22.65  | none: mean  23.68 MSE   487.09 (-17.6% vs uniform, won 6/7)  by-stat: mean  29.70 MSE   552.78 ( -6.5% vs uniform, won 5/7)  by-stat, k LOYO: mean  26.69 MSE   506.10 (-14.4% vs uniform, won 7/7)  | uniform mean  30.53 MSE   591.20 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+--- RB out -> next RB only, boost >= x1.10 ---
+  ry  n   171  actual  49.87  | none: mean  38.13 MSE  1344.25 ( +6.7% vs uniform, won 1/7)  by-stat: mean  51.81 MSE  1279.18 ( +1.6% vs uniform, won 3/7)  by-stat, k LOYO: mean  46.38 MSE  1264.39 ( +0.4% vs uniform, won 3/7)  | uniform mean  49.47 MSE  1259.45 | k picks [0.75, 0.75, 0.5, 0.5, 0.5, 0.5, 0.75]
+  rec n   122  actual   2.79  | none: mean   2.44 MSE     4.57 ( -7.2% vs uniform, won 5/7)  by-stat: mean   3.12 MSE     4.60 ( -6.7% vs uniform, won 5/7)  by-stat, k LOYO: mean   2.78 MSE     4.43 (-10.1% vs uniform, won 6/7)  | uniform mean   3.23 MSE     4.93 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+  rcy n    97  actual  21.65  | none: mean  23.28 MSE   371.08 (-22.6% vs uniform, won 6/7)  by-stat: mean  29.41 MSE   445.68 ( -7.0% vs uniform, won 5/7)  by-stat, k LOYO: mean  26.35 MSE   394.17 (-17.7% vs uniform, won 7/7)  | uniform mean  30.25 MSE   479.16 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+--- WR out -> WRs ---
+  rec n   352  actual   3.11  | none: mean   2.75 MSE     4.26 ( +1.2% vs uniform, won 3/7)  by-stat: mean   3.22 MSE     4.20 ( -0.2% vs uniform, won 5/7)  by-stat, k LOYO: mean   3.03 MSE     4.19 ( -0.5% vs uniform, won 4/7)  | uniform mean   3.19 MSE     4.21 | k picks [0.75, 0.5, 0.5, 0.75, 0.5, 0.5, 0.75]
+  rcy n   329  actual  40.59  | none: mean  35.99 MSE  1138.50 ( -2.8% vs uniform, won 4/7)  by-stat: mean  42.19 MSE  1170.77 ( -0.1% vs uniform, won 3/7)  by-stat, k LOYO: mean  39.09 MSE  1141.53 ( -2.6% vs uniform, won 6/7)  | uniform mean  41.90 MSE  1171.70 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+--- TE out -> TEs ---
+
+--- other-position absorbers (WR/TE when an RB or TE is out) ---
+  rec n   805  actual   3.70  | none: mean   3.77 MSE     5.39 ( -1.0% vs uniform, won 5/7)  by-stat: mean   3.90 MSE     5.45 ( -0.0% vs uniform, won 4/7)  by-stat, k LOYO: mean   3.84 MSE     5.41 ( -0.8% vs uniform, won 6/7)  | uniform mean   3.90 MSE     5.45 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+  rcy n   809  actual  45.13  | none: mean  46.58 MSE  1250.77 ( -2.2% vs uniform, won 7/7)  by-stat: mean  48.25 MSE  1277.94 ( -0.0% vs uniform, won 5/7)  by-stat, k LOYO: mean  47.41 MSE  1261.46 ( -1.3% vs uniform, won 7/7)  | uniform mean  48.21 MSE  1278.26 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+--- big boosts only (f >= 1.15) ---
+  ry  n   156  actual  46.04  | none: mean  33.96 MSE  1263.71 ( +8.4% vs uniform, won 1/7)  by-stat: mean  48.08 MSE  1186.05 ( +1.7% vs uniform, won 3/7)  by-stat, k LOYO: mean  44.19 MSE  1165.93 ( +0.0% vs uniform, won 4/7)  | uniform mean  45.49 MSE  1165.76 | k picks [0.75, 0.75, 0.75, 0.5, 0.75, 0.75, 0.75]
+  rec n   352  actual   2.73  | none: mean   2.25 MSE     3.88 ( -1.5% vs uniform, won 4/7)  by-stat: mean   2.93 MSE     3.78 ( -3.9% vs uniform, won 5/7)  by-stat, k LOYO: mean   2.61 MSE     3.70 ( -5.9% vs uniform, won 6/7)  | uniform mean   2.93 MSE     3.93 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.75]
+  rcy n   317  actual  31.33  | none: mean  27.22 MSE   812.70 ( -9.0% vs uniform, won 4/7)  by-stat: mean  35.22 MSE   880.68 ( -1.4% vs uniform, won 4/7)  by-stat, k LOYO: mean  31.22 MSE   823.86 ( -7.8% vs uniform, won 6/7)  | uniform mean  35.12 MSE   893.37 | k picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+  leak check RB-out -> RB rec: trailing 1.72  uniform says 2.28  by-stat says 2.23  ACTUAL 2.29  (n 197)
+
+  leak check RB-out -> RB rcy: trailing 13.81  uniform says 18.04  by-stat says 17.64  ACTUAL 17.61  (n 197)

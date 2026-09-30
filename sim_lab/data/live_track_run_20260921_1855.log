@@ -1,0 +1,162 @@
+games: NYG@LAR
+tracking 27 players on ['LAR', 'NYG'], season 2026 week 2, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  LAR: pre PRE f=0.00 score 0.0-0.0
+  NYG: pre PRE f=0.00 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.0  live fit  20.6 | +exit  20.6 | v1  20.6 | naive  20.6
+    Malik Nabers          WR   proj  16.6  scored   0.0  live fit  16.6 | +exit  16.6 | v1  16.6 | naive  16.6
+    Kyren Williams        RB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Matthew Stafford      QB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Davante Adams         WR   proj  16.0  scored   0.0  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Cam Skattebo          RB   proj  12.7  scored   0.0  live fit  12.7 | +exit  12.7 | v1  12.7 | naive  12.7
+    Isaiah Likely         TE   proj  12.6  scored   0.0  live fit  12.6 | +exit  12.6 | v1  12.6 | naive  12.6
+    Blake Corum           RB   proj  10.5  scored   0.0  live fit  10.5 | +exit  10.5 | v1  10.5 | naive  10.5
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   9.4 | +exit   9.4 | v1   9.4 | naive   9.4
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   9.1
+    Terrance Ferguson     TE   proj   8.9  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.9 | naive   8.9
+    Colby Parkinson       TE   proj   8.1  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.1
+  LAR: pre PRE f=0.00 score 0.0-0.0
+  NYG: pre PRE f=0.00 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.0  live fit  20.6 | +exit  20.6 | v1  20.6 | naive  20.6
+    Malik Nabers          WR   proj  16.6  scored   0.0  live fit  16.6 | +exit  16.6 | v1  16.6 | naive  16.6
+    Kyren Williams        RB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Matthew Stafford      QB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Davante Adams         WR   proj  16.0  scored   0.0  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Cam Skattebo          RB   proj  12.7  scored   0.0  live fit  12.7 | +exit  12.7 | v1  12.7 | naive  12.7
+    Isaiah Likely         TE   proj  12.6  scored   0.0  live fit  12.6 | +exit  12.6 | v1  12.6 | naive  12.6
+    Blake Corum           RB   proj  10.5  scored   0.0  live fit  10.5 | +exit  10.5 | v1  10.5 | naive  10.5
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   9.4 | +exit   9.4 | v1   9.4 | naive   9.4
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   9.1
+    Terrance Ferguson     TE   proj   8.9  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.9 | naive   8.9
+    Colby Parkinson       TE   proj   8.1  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.1
+  LAR: pre PRE f=0.00 score 0.0-0.0
+  NYG: pre PRE f=0.00 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.0  live fit  20.6 | +exit  20.6 | v1  20.6 | naive  20.6
+    Malik Nabers          WR   proj  16.6  scored   0.0  live fit  16.6 | +exit  16.6 | v1  16.6 | naive  16.6
+    Kyren Williams        RB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Matthew Stafford      QB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Davante Adams         WR   proj  16.0  scored   0.0  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Cam Skattebo          RB   proj  12.7  scored   0.0  live fit  12.7 | +exit  12.7 | v1  12.7 | naive  12.7
+    Isaiah Likely         TE   proj  12.6  scored   0.0  live fit  12.6 | +exit  12.6 | v1  12.6 | naive  12.6
+    Blake Corum           RB   proj  10.5  scored   0.0  live fit  10.5 | +exit  10.5 | v1  10.5 | naive  10.5
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   9.4 | +exit   9.4 | v1   9.4 | naive   9.4
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   9.1
+    Terrance Ferguson     TE   proj   8.9  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.9 | naive   8.9
+    Colby Parkinson       TE   proj   8.1  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.1
+  LAR: pre PRE f=0.00 score 0.0-0.0
+  NYG: pre PRE f=0.00 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.0  live fit  20.6 | +exit  20.6 | v1  20.6 | naive  20.6
+    Malik Nabers          WR   proj  16.6  scored   0.0  live fit  16.6 | +exit  16.6 | v1  16.6 | naive  16.6
+    Kyren Williams        RB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Matthew Stafford      QB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Davante Adams         WR   proj  16.0  scored   0.0  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Cam Skattebo          RB   proj  12.7  scored   0.0  live fit  12.7 | +exit  12.7 | v1  12.7 | naive  12.7
+    Isaiah Likely         TE   proj  12.6  scored   0.0  live fit  12.6 | +exit  12.6 | v1  12.6 | naive  12.6
+    Blake Corum           RB   proj  10.5  scored   0.0  live fit  10.5 | +exit  10.5 | v1  10.5 | naive  10.5
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   9.4 | +exit   9.4 | v1   9.4 | naive   9.4
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   9.1
+    Terrance Ferguson     TE   proj   8.9  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.9 | naive   8.9
+    Colby Parkinson       TE   proj   8.1  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.1
+  LAR: pre PRE f=0.00 score 0.0-0.0
+  NYG: pre PRE f=0.00 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.0  live fit  20.6 | +exit  20.6 | v1  20.6 | naive  20.6
+    Malik Nabers          WR   proj  16.6  scored   0.0  live fit  16.6 | +exit  16.6 | v1  16.6 | naive  16.6
+    Kyren Williams        RB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Matthew Stafford      QB   proj  16.3  scored   0.0  live fit  16.3 | +exit  16.3 | v1  16.3 | naive  16.3
+    Davante Adams         WR   proj  16.0  scored   0.0  live fit  16.0 | +exit  16.0 | v1  16.0 | naive  16.0
+    Cam Skattebo          RB   proj  12.7  scored   0.0  live fit  12.7 | +exit  12.7 | v1  12.7 | naive  12.7
+    Isaiah Likely         TE   proj  12.6  scored   0.0  live fit  12.6 | +exit  12.6 | v1  12.6 | naive  12.6
+    Blake Corum           RB   proj  10.5  scored   0.0  live fit  10.5 | +exit  10.5 | v1  10.5 | naive  10.5
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   9.4 | +exit   9.4 | v1   9.4 | naive   9.4
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   9.1
+    Terrance Ferguson     TE   proj   8.9  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.9 | naive   8.9
+    Colby Parkinson       TE   proj   8.1  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.1
+  LAR: in Q1 11:12 f=0.06 score 0.0-0.0
+  NYG: in Q1 11:12 f=0.06 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.8  live fit  20.1 | +exit  20.1 | v1  20.1 | naive  20.1
+    Malik Nabers          WR   proj  16.6  scored   0.0  live fit  14.9 | +exit  14.9 | v1  15.6 | naive  15.6
+    Kyren Williams        RB   proj  16.3  scored   0.3  live fit  14.8 | +exit  14.8 | v1  15.6 | naive  15.6
+    Matthew Stafford      QB   proj  16.3  scored   0.0  live fit  15.1 | +exit  15.1 | v1  15.3 | naive  15.3
+    Davante Adams         WR   proj  16.0  scored   0.0  live fit  14.4 | +exit  14.4 | v1  15.0 | naive  15.0
+    Cam Skattebo          RB   proj  12.7  scored   1.9  live fit  13.7 | +exit  13.7 | v1  13.8 | naive  13.8
+    Isaiah Likely         TE   proj  12.6  scored   1.4  live fit  12.9 | +exit  12.9 | v1  13.2 | naive  13.2
+    Blake Corum           RB   proj  10.5  scored   0.0  live fit   9.2 | +exit   9.2 | v1   9.8 | naive   9.8
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   8.4 | +exit   8.4 | v1   8.8 | naive   8.8
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   8.5 | +exit   8.5 | v1   8.5 | naive   8.5
+    Terrance Ferguson     TE   proj   8.9  scored   0.0  live fit   8.0 | +exit   8.0 | v1   8.3 | naive   8.3
+    Colby Parkinson       TE   proj   8.1  scored   0.0  live fit   7.3 | +exit   7.3 | v1   7.6 | naive   7.6
+  LAR: in Q1 6:37 f=0.14 score 0.0-0.0
+  NYG: in Q1 6:37 f=0.14 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.8  live fit  18.5 | +exit  18.5 | v1  18.5 | naive  18.5
+    Malik Nabers          WR   proj  16.6  scored   1.1  live fit  15.0 | +exit  15.0 | v1  15.4 | naive  15.4
+    Kyren Williams        RB   proj  16.3  scored   1.5  live fit  15.0 | +exit  15.0 | v1  15.5 | naive  15.5
+    Matthew Stafford      QB   proj  16.3  scored   0.1  live fit  13.9 | +exit  13.9 | v1  14.1 | naive  14.1
+    Davante Adams         WR   proj  16.0  scored   0.0  live fit  13.2 | +exit  13.2 | v1  13.8 | naive  13.8
+    Cam Skattebo          RB   proj  12.7  scored   2.7  live fit  13.6 | +exit  13.6 | v1  13.6 | naive  13.6
+    Isaiah Likely         TE   proj  12.6  scored   1.4  live fit  12.0 | +exit  12.0 | v1  12.2 | naive  12.2
+    Blake Corum           RB   proj  10.5  scored   0.0  live fit   8.4 | +exit   8.4 | v1   9.0 | naive   9.0
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   7.8 | +exit   7.8 | v1   8.1 | naive   8.1
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   7.8 | +exit   7.8 | v1   7.8 | naive   7.8
+    Terrance Ferguson     TE   proj   8.9  scored   0.0  live fit   7.3 | +exit   7.3 | v1   7.7 | naive   7.7
+    Colby Parkinson       TE   proj   8.1  scored   0.0  live fit   6.7 | +exit   6.7 | v1   7.0 | naive   7.0
+  LAR: in Q1 0:58 f=0.23 score 0.0-0.0
+  NYG: in Q1 0:58 f=0.23 score 0.0-0.0
+    Jaxson Dart           QB   proj  20.6  scored   0.8  live fit  16.3 | +exit  14.7 | v1  15.8 | naive  16.6  exit x0.89 (stale 0.18)
+    Malik Nabers          WR   proj  16.6  scored   1.1  live fit  13.5 | +exit  13.5 | v1  13.3 | naive  13.8
+    Kyren Williams        RB   proj  16.3  scored   1.5  live fit  13.2 | +exit  13.2 | v1  13.5 | naive  14.0
+    Matthew Stafford      QB   proj  16.3  scored   1.5  live fit  14.0 | +exit  14.0 | v1  13.5 | naive  14.0
+    Davante Adams         WR   proj  16.0  scored   3.0  live fit  15.2 | +exit  15.2 | v1  15.1 | naive  15.3
+    Cam Skattebo          RB   proj  12.7  scored   2.6  live fit  12.1 | +exit  12.1 | v1  12.3 | naive  12.3
+    Isaiah Likely         TE   proj  12.6  scored   1.4  live fit  10.9 | +exit  10.9 | v1  10.8 | naive  11.1
+    Blake Corum           RB   proj  10.5  scored   1.8  live fit   9.6 | +exit   9.6 | v1   9.7 | naive   9.8
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   6.9 | +exit   6.9 | v1   6.8 | naive   7.2
+    Harrison Mevis        K    proj   9.1  scored   0.0  live fit   6.6 | +exit   6.6 | v1   6.6 | naive   7.0
+    Terrance Ferguson     TE   proj   8.9  scored   1.8  live fit   8.6 | +exit   8.6 | v1   8.6 | naive   8.6
+    Colby Parkinson       TE   proj   8.1  scored   1.7  live fit   7.9 | +exit   7.9 | v1   7.9 | naive   7.9
+  LAR: in Q2 14:35 f=0.26 score 7.0-0.0
+  NYG: in Q2 14:35 f=0.26 score 0.0-7.0
+    Jaxson Dart           QB   proj  20.6  scored   0.8  live fit  17.8 | +exit  14.8 | v1  15.3 | naive  16.1  exit x0.82 (stale 0.21)
+    Malik Nabers          WR   proj  16.6  scored   1.1  live fit  14.3 | +exit  14.3 | v1  12.8 | naive  13.4
+    Kyren Williams        RB   proj  16.3  scored   1.5  live fit  12.2 | +exit  12.2 | v1  13.1 | naive  13.6
+    Matthew Stafford      QB   proj  16.3  scored   6.9  live fit  18.8 | +exit  18.8 | v1  19.5 | naive  19.0
+    Davante Adams         WR   proj  16.0  scored  13.0  live fit  24.8 | +exit  24.8 | v1  26.5 | naive  24.9
+    Cam Skattebo          RB   proj  12.7  scored   2.7  live fit  12.3 | +exit  12.3 | v1  12.0 | naive  12.1
+    Isaiah Likely         TE   proj  12.6  scored   1.4  live fit  11.5 | +exit  11.5 | v1  10.4 | naive  10.8
+    Blake Corum           RB   proj  10.5  scored   1.9  live fit   9.1 | +exit   9.1 | v1   9.6 | naive   9.7
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   6.0 | +exit   6.0 | v1   6.5 | naive   7.0
+    Harrison Mevis        K    proj   9.1  scored   1.0  live fit   7.5 | +exit   7.5 | v1   7.5 | naive   7.8
+    Terrance Ferguson     TE   proj   8.9  scored   3.4  live fit   9.5 | +exit   9.5 | v1  10.2 | naive  10.0
+    Colby Parkinson       TE   proj   8.1  scored   1.7  live fit   7.1 | +exit   7.1 | v1   7.7 | naive   7.7
+  LAR: in Q2 11:07 f=0.31 score 14.0-0.0
+  NYG: in Q2 11:07 f=0.31 score 0.0-14.0
+    Jaxson Dart           QB   proj  20.6  scored   0.8  live fit  18.3 | +exit  12.2 | v1  13.9 | naive  14.9  exit x0.65 (stale 0.27)
+    Malik Nabers          WR   proj  16.6  scored   1.1  live fit  14.3 | +exit  14.3 | v1  11.8 | naive  12.5
+    Kyren Williams        RB   proj  16.3  scored   9.9  live fit  21.2 | +exit  21.2 | v1  21.9 | naive  21.1
+    Matthew Stafford      QB   proj  16.3  scored  14.3  live fit  25.5 | +exit  25.5 | v1  27.0 | naive  25.4
+    Davante Adams         WR   proj  16.0  scored  21.8  live fit  32.6 | +exit  32.6 | v1  35.6 | naive  32.8
+    Cam Skattebo          RB   proj  12.7  scored   2.7  live fit  11.8 | +exit  11.8 | v1  11.2 | naive  11.4
+    Isaiah Likely         TE   proj  12.6  scored   1.4  live fit  11.5 | +exit  11.5 | v1   9.6 | naive  10.0
+    Blake Corum           RB   proj  10.5  scored   1.9  live fit   8.1 | +exit   8.1 | v1   8.8 | naive   9.1
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   5.0 | +exit   5.0 | v1   5.9 | naive   6.4
+    Harrison Mevis        K    proj   9.1  scored   2.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.2
+    Terrance Ferguson     TE   proj   8.9  scored   5.0  live fit  10.3 | +exit  10.3 | v1  11.5 | naive  11.1
+    Colby Parkinson       TE   proj   8.1  scored   1.7  live fit   6.2 | +exit   6.2 | v1   7.1 | naive   7.2
+  LAR: in Q2 7:16 f=0.38 score 14.0-0.0
+  NYG: in Q2 7:16 f=0.38 score 0.0-14.0
+    Jaxson Dart           QB   proj  20.6  scored   0.8  live fit  16.7 | +exit   8.1 | v1  12.5 | naive  13.6  exit x0.46 (stale 0.33)
+    Malik Nabers          WR   proj  16.6  scored   1.1  live fit  13.3 | +exit  13.3 | v1  10.6 | naive  11.4
+    Kyren Williams        RB   proj  16.3  scored   9.9  live fit  20.1 | +exit  20.1 | v1  20.6 | naive  20.0
+    Matthew Stafford      QB   proj  16.3  scored  14.3  live fit  24.1 | +exit  24.1 | v1  25.7 | naive  24.4
+    Davante Adams         WR   proj  16.0  scored  21.8  live fit  31.5 | +exit  31.5 | v1  34.2 | naive  31.7
+    Cam Skattebo          RB   proj  12.7  scored   2.7  live fit  10.8 | +exit  10.8 | v1  10.3 | naive  10.6
+    Isaiah Likely         TE   proj  12.6  scored   2.9  live fit  12.4 | +exit  12.4 | v1  10.4 | naive  10.7
+    Blake Corum           RB   proj  10.5  scored   1.9  live fit   7.5 | +exit   7.5 | v1   8.1 | naive   8.4
+    Puka Nacua            WR   proj   9.4  scored   0.0  live fit   4.4 | +exit   4.4 | v1   5.3 | naive   5.8
+    Harrison Mevis        K    proj   9.1  scored   2.0  live fit   7.4 | +exit   7.4 | v1   7.4 | naive   7.7
+    Terrance Ferguson     TE   proj   8.9  scored   5.0  live fit   9.7 | +exit   9.7 | v1  10.8 | naive  10.5
+    Colby Parkinson       TE   proj   8.1  scored   1.7  live fit   5.7 | +exit   5.7 | v1   6.5 | naive   6.7
+  LAR: in Q2 0:31 f=0.49 score 14.0-0.0
+  NYG: in Q2 0:31 f=0.49 score 0.0-14.0
+    Jaxson Dart           QB   proj  20.6  scored   0.8  live fit  12.7 | +exit   5.5 | v1  10.1 | naive  11.3  exit x0.40 (stale 0.44)
+    Malik Nabers          WR   proj  16.6  scored   1.1  live fit  10.4 | +exit  10.4 | v1   8.7 | naive   9.5
+    Kyren Williams        RB   proj  16.3  scored   9.9  live fit  17.7 | +exit  17.7 | v1  18.4 | naive  18.2
+    Matthew Stafford      QB   proj  16.3  scored  13.3  live fit  20.0 | +exit  20.0 | v1  22.2 | naive  21.6^C

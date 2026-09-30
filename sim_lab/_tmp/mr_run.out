@@ -1,0 +1,88 @@
+﻿=== Do defensive data / advanced analytics help the weekly RANKINGS? (top 150, within position-week) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+
+=== 1. What are the shipped matchup layers worth for RANKING? (mean Spearman | pair % | MSE), all seasons ===
+  no layers at all                 QB rho 0.2685 pair 59.79% mse 61.61 | RB rho 0.4864 pair 67.38% mse 53.31 | WR rho 0.3389 pair 62.17% mse 50.93 | TE rho 0.3249 pair 61.33% mse 36.66
+  Vegas implied-total mult only    QB rho 0.2931 pair 60.65% mse 60.61 | RB rho 0.5005 pair 68.00% mse 52.46 | WR rho 0.3476 pair 62.38% mse 50.60 | TE rho 0.3345 pair 61.71% mse 36.41
+  FPA matchup mult only            QB rho 0.2838 pair 60.12% mse 61.25 | RB rho 0.4910 pair 67.43% mse 53.00 | WR rho 0.3385 pair 62.17% mse 50.92 | TE rho 0.3275 pair 61.65% mse 36.67
+  Vegas x FPA                      QB rho 0.3071 pair 60.84% mse 60.37 | RB rho 0.5052 pair 68.12% mse 52.27 | WR rho 0.3477 pair 62.39% mse 50.62 | TE rho 0.3359 pair 61.95% mse 36.43
+  ALL live layers (shipped)        QB rho 0.3070 pair 60.83% mse 60.38 | RB rho 0.5047 pair 68.09% mse 52.27 | WR rho 0.3475 pair 62.36% mse 50.61 | TE rho 0.3352 pair 62.06% mse 36.45
+
+=== 2. Re-tune the shipped multipliers for ranking: extra exponent c on top of 1.0 (c = 0 keeps the shipped strength; +1 doubles it; -1 removes it) ===
+  -- Vegas implied-total multiplier 
+     QB: LOYO rho +0.0131 (base 0.307), pair +0.30 pts, MSE +7.77%, seasons better 4/7, picks [2.0, 3.0] | forward rho +0.0132, pair +0.33, MSE +11.07%, 3/5
+     RB: LOYO rho +0.0000 (base 0.506), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho +0.0000, pair +0.00, MSE +0.00%, 0/5
+     WR: LOYO rho +0.0048 (base 0.347), pair +0.17 pts, MSE +0.16%, seasons better 5/7, picks [1.0] | forward rho -0.0018, pair -0.04, MSE +0.42%, 2/5
+     TE: LOYO rho -0.0169 (base 0.339), pair -0.87 pts, MSE +1.27%, seasons better 0/7, picks [-0.5, 0.0, 1.0, 3.0] | forward rho -0.0284, pair -1.74, MSE +6.22%, 2/5
+  -- FPA matchup multiplier 
+     QB: LOYO rho -0.0092 (base 0.307), pair -0.45 pts, MSE +1.66%, seasons better 2/7, picks [0.0, 0.5, 1.0, 2.0] | forward rho -0.0147, pair -0.67, MSE +3.19%, 2/5
+     RB: LOYO rho -0.0018 (base 0.506), pair -0.06 pts, MSE +0.12%, seasons better 0/7, picks [0.0, 0.5, 1.0] | forward rho -0.0033, pair -0.15, MSE +0.82%, 1/5
+     WR: LOYO rho -0.0002 (base 0.347), pair -0.02 pts, MSE -0.05%, seasons better 3/7, picks [-1.0, -0.5] | forward rho +0.0019, pair +0.01, MSE -0.13%, 3/5
+     TE: LOYO rho -0.0070 (base 0.339), pair -0.25 pts, MSE -0.15%, seasons better 0/7, picks [-1.0, -0.5, 0.0, 0.5] | forward rho -0.0065, pair -0.28, MSE -0.04%, 1/5
+
+=== 3. New tilts x exp(c z): z = standardized within the week, + = more of the thing; c per position LOYO on rank ===
+  PFF opponent defense coverage on top-150 rows: {'cov': 9971, 'rush': 9971, 'run': 9971, 'prwr': 9971} of 11082
+  -- PFF opponent COVERAGE grade (season to date) 
+     QB: LOYO rho -0.0095 (base 0.307), pair -0.46 pts, MSE +1.35%, seasons better 2/7, picks [-0.06, -0.03, 0.0] | forward rho -0.0080, pair -0.36, MSE +1.69%, 2/5
+     WR: LOYO rho -0.0010 (base 0.347), pair -0.03 pts, MSE -0.01%, seasons better 0/7, picks [-0.03, 0.0] | forward rho +0.0005, pair +0.02, MSE -0.04%, 1/5
+     TE: LOYO rho +0.0056 (base 0.339), pair +0.11 pts, MSE -0.04%, seasons better 4/7, picks [-0.03] | forward rho +0.0052, pair +0.01, MSE +0.37%, 2/5
+     RB: LOYO rho +0.0000 (base 0.506), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho +0.0000, pair +0.00, MSE +0.00%, 0/5
+  -- PFF opponent PASS-RUSH grade 
+     QB: LOYO rho -0.0001 (base 0.307), pair -0.06 pts, MSE +0.45%, seasons better 3/7, picks [-0.03, 0.0] | forward rho -0.0042, pair -0.23, MSE +1.32%, 2/5
+     WR: LOYO rho +0.0000 (base 0.347), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho -0.0043, pair -0.12, MSE +0.52%, 0/5
+     TE: LOYO rho +0.0018 (base 0.339), pair +0.03 pts, MSE +0.57%, seasons better 3/7, picks [-0.06, -0.03] | forward rho +0.0078, pair +0.38, MSE +0.31%, 4/5
+  -- PFF opponent pass-rush WIN RATE 
+     QB: LOYO rho -0.0027 (base 0.307), pair -0.07 pts, MSE +0.27%, seasons better 2/7, picks [-0.03, 0.0] | forward rho -0.0055, pair -0.21, MSE +0.45%, 1/5
+     WR: LOYO rho -0.0018 (base 0.347), pair -0.05 pts, MSE +0.06%, seasons better 0/7, picks [-0.03, 0.0] | forward rho +0.0013, pair +0.03, MSE +0.07%, 2/5
+     TE: LOYO rho +0.0065 (base 0.339), pair +0.21 pts, MSE +0.12%, seasons better 5/7, picks [-0.03] | forward rho -0.0044, pair -0.01, MSE +1.18%, 2/5
+  -- PFF opponent RUN-DEFENSE grade 
+     RB: LOYO rho +0.0000 (base 0.506), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho -0.0022, pair -0.05, MSE +0.11%, 1/5
+     QB: LOYO rho +0.0060 (base 0.307), pair +0.17 pts, MSE +0.07%, seasons better 5/7, picks [-0.03] | forward rho +0.0031, pair +0.06, MSE +0.52%, 3/5  <== PASS
+  -- opponent man-coverage rate x player's man-vs-zone YPRR gap 
+     WR: LOYO rho -0.0022 (base 0.347), pair -0.03 pts, MSE +0.19%, seasons better 0/7, picks [0.0, 0.03] | forward rho +0.0000, pair +0.00, MSE +0.00%, 0/5
+     TE: LOYO rho +0.0000 (base 0.339), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho -0.0054, pair -0.37, MSE +0.03%, 0/5
+  -- own OL pass-block grade now 
+     QB: LOYO rho -0.0028 (base 0.307), pair -0.10 pts, MSE +0.54%, seasons better 1/7, picks [-0.03, 0.0] | forward rho -0.0034, pair -0.16, MSE +0.40%, 1/5
+     WR: LOYO rho -0.0028 (base 0.347), pair -0.07 pts, MSE +0.27%, seasons better 0/7, picks [-0.03, 0.0, 0.03] | forward rho -0.0045, pair -0.13, MSE +0.52%, 1/5
+     TE: LOYO rho +0.0042 (base 0.339), pair -0.30 pts, MSE +0.58%, seasons better 5/7, picks [-0.06] | forward rho +0.0075, pair -0.33, MSE +0.55%, 4/5  <== PASS
+  -- own OL run-block grade now 
+     RB: LOYO rho -0.0027 (base 0.506), pair -0.10 pts, MSE +0.21%, seasons better 0/7, picks [0.0, 0.03] | forward rho -0.0029, pair -0.14, MSE +0.19%, 1/5
+  -- own OL pass-block DROP (injuries) 
+     QB: LOYO rho +0.0000 (base 0.307), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho -0.0073, pair -0.41, MSE +1.42%, 1/5
+     WR: LOYO rho -0.0015 (base 0.347), pair -0.05 pts, MSE +0.12%, seasons better 0/7, picks [-0.03, 0.0] | forward rho -0.0039, pair -0.15, MSE +0.34%, 0/5
+  -- spread (+ = favored) 
+     QB: LOYO rho +0.0064 (base 0.307), pair +0.12 pts, MSE +0.41%, seasons better 5/7, picks [-0.03] | forward rho -0.0076, pair -0.11, MSE +0.79%, 2/5
+     RB: LOYO rho +0.0000 (base 0.506), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho +0.0000, pair +0.00, MSE +0.00%, 0/5
+     WR: LOYO rho -0.0002 (base 0.347), pair +0.01 pts, MSE +0.15%, seasons better 1/7, picks [-0.03, 0.0] | forward rho -0.0021, pair -0.06, MSE +0.42%, 2/5
+     TE: LOYO rho -0.0040 (base 0.339), pair -0.20 pts, MSE +0.39%, seasons better 0/7, picks [0.0, 0.03] | forward rho -0.0232, pair -1.09, MSE +2.58%, 0/5
+  -- game total 
+     QB: LOYO rho +0.0163 (base 0.307), pair +0.48 pts, MSE +1.46%, seasons better 6/7, picks [0.06] | forward rho +0.0120, pair +0.46, MSE +1.97%, 4/5  <== PASS
+     RB: LOYO rho +0.0000 (base 0.506), pair +0.00 pts, MSE +0.00%, seasons better 0/7, picks [0.0] | forward rho +0.0000, pair +0.00, MSE +0.00%, 0/5
+     WR: LOYO rho -0.0026 (base 0.347), pair -0.09 pts, MSE +0.24%, seasons better 1/7, picks [0.0, 0.03, 0.06] | forward rho +0.0025, pair +0.07, MSE +0.15%, 3/5
+     TE: LOYO rho -0.0002 (base 0.339), pair +0.01 pts, MSE +0.06%, seasons better 2/7, picks [0.0, 0.03] | forward rho -0.0057, pair -0.28, MSE +1.01%, 2/5
+  -- wind 
+     QB: LOYO rho -0.0048 (base 0.307), pair -0.34 pts, MSE +0.17%, seasons better 0/7, picks [-0.03, 0.0] | forward rho -0.0054, pair -0.23, MSE +0.60%, 0/5
+     WR: LOYO rho +0.0021 (base 0.347), pair +0.08 pts, MSE -0.06%, seasons better 5/7, picks [-0.06, -0.03] | forward rho +0.0038, pair +0.15, MSE +0.11%, 4/5
+     TE: LOYO rho -0.0099 (base 0.339), pair -0.37 pts, MSE -0.03%, seasons better 0/7, picks [0.0, 0.03] | forward rho -0.0047, pair -0.21, MSE -0.03%, 0/5
+  -- dome 
+     QB: LOYO rho -0.0056 (base 0.307), pair -0.20 pts, MSE +0.18%, seasons better 0/7, picks [0.0, 0.03] | forward rho -0.0015, pair -0.12, MSE +0.38%, 0/5
+     WR: LOYO rho +0.0033 (base 0.347), pair +0.11 pts, MSE -0.14%, seasons better 4/7, picks [0.03] | forward rho +0.0040, pair +0.15, MSE +0.01%, 4/5
+     TE: LOYO rho -0.0070 (base 0.339), pair -0.21 pts, MSE +0.22%, seasons better 0/7, picks [0.0, 0.03] | forward rho -0.0272, pair -1.20, MSE +1.45%, 0/5
+
+42 position-level tests on the rank objective (LOYO rho gain >= .004 in 5+ of 7 seasons AND positive forward in 3+ of 5): 3 pass: PFF opponent RUN-DEFENSE grade [QB] rho +0.0060 (5/7), fwd +0.0031; own OL pass-block grade now [TE] rho +0.0042 (5/7), fwd +0.0075; game total [QB] rho +0.0163 (6/7), fwd +0.0120.
+wrote data/matchup_rank.js (72s)

@@ -1,0 +1,59 @@
+=== TE route grade layer on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | rows with a prior-year route grade and a history prior: WR 5814, TE 2952, RB 3117
+  curve E[PPG | grade] (all seasons): {"WR": [-11.9816, 0.288], "TE": [-5.6475, 0.1719], "RB": [8.8518, 0.0312]}
+
+=== Reads: actual / shadow prior (x shrink) by route-grade tercile, weeks 1-8, vets ===
+  WR low                n=  910 act/prior 1.033 act/shadow 1.018 shadow vs shipped  -2.31%  (grade cut 68.8 / 76.5)
+  WR mid                n=  917 act/prior 1.018 act/shadow 1.010 shadow vs shipped  -0.27%  (grade cut 68.8 / 76.5)
+  WR high               n=  888 act/prior 1.114 act/shadow 1.060 shadow vs shipped  -0.53%  (grade cut 68.8 / 76.5)
+  WR high & age <= 25   n=  327 act/prior 1.069 act/shadow 1.040 shadow vs shipped  -0.52%  (grade cut 68.8 / 76.5)
+  TE low                n=  457 act/prior 0.953 act/shadow 0.972 shadow vs shipped  +2.82%  (grade cut 63.2 / 72.2)
+  TE mid                n=  484 act/prior 1.026 act/shadow 1.028 shadow vs shipped  -2.52%  (grade cut 63.2 / 72.2)
+  TE high               n=  466 act/prior 1.057 act/shadow 1.040 shadow vs shipped  -1.27%  (grade cut 63.2 / 72.2)
+  TE high & age <= 25   n=  100 act/prior 0.990 act/shadow 1.001 shadow vs shipped  -3.52%  (grade cut 63.2 / 72.2)
+  RB low                n=  482 act/prior 1.108 act/shadow 1.064 shadow vs shipped  -0.79%  (grade cut 58.3 / 68.0)
+  RB mid                n=  502 act/prior 1.121 act/shadow 1.073 shadow vs shipped  +0.05%  (grade cut 58.3 / 68.0)
+  RB high               n=  480 act/prior 1.079 act/shadow 1.039 shadow vs shipped  +0.68%  (grade cut 58.3 / 68.0)
+  RB high & age <= 25   n=  153 act/prior 1.030 act/shadow 1.035 shadow vs shipped  +2.21%  (grade cut 58.3 / 68.0)
+
+=== TE sweeps (LOYO vs shadow v2.6) ===
+  TE residual top tercile x m (n=983)
+    grid pooled MSE: 1.0:27.307  1.05:27.218  1.1:27.188  1.15:27.216  1.2:27.303  1.25:27.448
+    LOYO 27.6721 vs shadow 27.7162 (-0.16%), seasons better than shadow 4/6, picks [1.1, 1.15, 1.15, 1.1, 1.05, 1.1], pooled best 1.1 | shadow vs shipped -0.01% -> -0.17%
+    TE residual top HALF x m (n=1464)
+    grid pooled MSE: 1.0:27.902  1.05:27.808  1.1:27.774  1.15:27.797  1.2:27.880  1.25:28.021
+    LOYO 27.6575 vs shadow 27.7799 (-0.44%), seasons better than shadow 4/6, picks [1.1, 1.1, 1.1, 1.1, 1.1, 1.1], pooled best 1.1 | shadow vs shipped -0.38% -> -0.82%
+    TE residual bottom tercile x m (n=973)
+    grid pooled MSE: 1.0:22.913  0.95:22.937  0.9:23.005  0.85:23.118
+    LOYO 23.1860 vs shadow 23.1860 (+0.00%), seasons better than shadow 0/6, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -0.19% -> -0.19%
+    TE raw grade top tercile x m (n=973)
+    grid pooled MSE: 1.0:34.848  1.05:34.762  1.1:34.771  1.15:34.872  1.2:35.068  1.25:35.356
+    LOYO 34.6396 vs shadow 34.6699 (-0.09%), seasons better than shadow 4/6, picks [1.05, 1.05, 1.1, 1.1, 1.1, 1.05], pooled best 1.05 | shadow vs shipped +0.08% -> -0.01%
+    TE residual top tercile x m, weeks 1-4 only (n=265)
+    grid pooled MSE: 1.0:27.214  1.05:27.254  1.1:27.399  1.15:27.651  1.2:28.008  1.25:28.472
+    LOYO 28.9648 vs shadow 28.8375 (+0.44%), seasons better than shadow 0/6, picks [1.0, 1.0, 1.05, 1.05, 1.0, 1.0], pooled best 1.0 | shadow vs shipped -1.24% -> -0.81%
+    TE curve blend w (all weeks) (n=2952)
+    grid pooled MSE: 0.0:26.083  0.1:26.104  0.15:26.121  0.2:26.143  0.3:26.201  0.5:26.374
+    LOYO 25.9688 vs shadow 25.9688 (+0.00%), seasons better than shadow 0/6, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.47% -> -0.47%
+    TE curve blend w, weeks 1-4 only (n=759)
+    grid pooled MSE: 0.0:23.571  0.1:23.537  0.15:23.533  0.2:23.538  0.3:23.573  0.5:23.749
+    LOYO 23.2980 vs shadow 23.3166 (-0.08%), seasons better than shadow 4/6, picks [0.15, 0.2, 0.15, 0.15, 0.1, 0.2], pooled best 0.15 | shadow vs shipped +0.17% -> +0.09%
+    TE residual x m + early curve w (combo; codes 0-5 = 1.0/0.0, 1.1/0.0, 1.0/0.15, 1.1/0.15, 1.05/0.15, 1.1/0.1) (n=2952)
+    grid pooled MSE: 0:26.083  1:26.037  2:26.073  3:26.030  4:26.043  5:26.030
+    LOYO 25.9198 vs shadow 25.9688 (-0.19%), seasons better than shadow 4/6, picks [3, 3, 5, 5, 5, 3], pooled best 3 | shadow vs shipped -0.47% -> -0.66%
+
+=== Candidate: TE residual top tercile x m = 1.1 (lean) ===
+  ALL rows: vs shipped -1.26% (7/7) | vs shadow v2.6 -0.02% (4/7) | TE rows -0.14% (4/7) | affected rows n=983 -0.48% (4/7)
+  FORWARD (2021-25): all rows +0.01% (3/5) | TE rows +0.08% (3/5) | affected rows +0.31% (3/5)
+  TE residual constants (for the record): {"TE": {"c0": 51.6657, "c1": 2.8377, "cut": 2.865, "cutHalf": -0.356}}
+
+TE route grade on the shadow: TE residual top tercile x m -0.16% (4/6, lean); TE residual top HALF x m -0.44% (4/6, lean); TE residual bottom tercile x m +0.00% (0/6, FAIL); TE raw grade top tercile x m -0.09% (4/6, FAIL); TE residual top tercile x m, weeks 1-4 only +0.44% (0/6, FAIL); TE curve blend w (all weeks) +0.00% (0/6, FAIL); TE curve blend w, weeks 1-4 only -0.08% (4/6, FAIL); TE residual x m + early curve w (combo; codes 0-5 = 1.0/0.0, 1.1/0.0, 1.0/0.15, 1.1/0.15, 1.05/0.15, 1.1/0.1) -0.19% (4/6, lean). Candidate TE residual top tercile x m: affected rows -0.48% (4/7), forward +0.31% (3/5).
+wrote data/pff_route_grade_backtest.js (23s)

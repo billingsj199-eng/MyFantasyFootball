@@ -1,0 +1,96 @@
+﻿=== Learned season prior inside the weekly shadow (week 1 included) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  19064 player-weeks, ridge prior available on 19038 (100%; the rest = seasons under 4 games, kept on the shadow prior)
+  rebuilt shadow vs harness shadow: max |diff| 0.0000 (must be ~0)
+
+=== Ridge prior replaces the shadow prior: by season stage (LOYO ridge) ===
+  week 1 (no data)                     n= 1407 | vs shadow  -2.27% (6/7) | vs Clay blend  -1.95% (4/7)  [shadow alone +0.33%]
+  games 1-3                            n= 4218 | vs shadow  -2.33% (5/7) | vs Clay blend  -4.96% (7/7)  [shadow alone -2.70%]
+  games 4-8                            n= 6640 | vs shadow  +0.25% (2/7) | vs Clay blend  -0.90% (5/7)  [shadow alone -1.15%]
+  games 9+                             n= 6799 | vs shadow  +0.43% (3/7) | vs Clay blend  -1.30% (7/7)  [shadow alone -1.72%]
+  ALL weeks                            n=19064 | vs shadow  -0.41% (5/7) | vs Clay blend  -2.02% (7/7)  [shadow alone -1.62%]
+
+=== By position, all weeks ===
+  QB                                   n= 2759 | vs shadow  +0.76% (3/7) | vs Clay blend  -3.29% (6/7)  [shadow alone -4.02%]
+  RB                                   n= 4844 | vs shadow  -0.50% (5/7) | vs Clay blend  -2.39% (6/7)  [shadow alone -1.90%]
+  WR                                   n= 7775 | vs shadow  -1.15% (5/7) | vs Clay blend  -1.68% (7/7)  [shadow alone -0.55%]
+  TE                                   n= 3686 | vs shadow  +0.27% (4/7) | vs Clay blend  -0.06% (4/7)  [shadow alone -0.33%]
+  QB week 1                            n=  205 | vs shadow  -0.89% (3/7) | vs Clay blend  -3.69% (4/7)  [shadow alone -2.82%]
+  RB week 1                            n=  352 | vs shadow  -1.81% (4/7) | vs Clay blend  -1.86% (3/7)  [shadow alone -0.05%]
+  WR week 1                            n=  573 | vs shadow  -3.75% (5/7) | vs Clay blend  -2.69% (4/7)  [shadow alone +1.10%]
+  TE week 1                            n=  277 | vs shadow  -0.45% (3/7) | vs Clay blend  +4.84% (2/7)  [shadow alone +5.31%]
+
+=== Sweeps (LOYO vs the shadow; 0 = current shadow prior) ===
+  mix a x ridge + (1-a) x shadow prior, all rows (n=19038)
+    grid pooled MSE: 0.0:42.441  0.25:42.240  0.5:42.139  0.75:42.137  1.0:42.235
+    LOYO 41.8826 vs shadow 42.1241 (-0.57%), seasons better than shadow 6/7, picks [0.5, 0.5, 0.75, 0.5, 0.5, 0.75, 0.75], pooled best 0.75 | shadow vs shipped -1.71% -> -2.27%
+    mix a, week 1 (no data) (n=1404)
+    grid pooled MSE: 0.0:38.424  0.25:37.810  0.5:37.436  0.75:37.303  1.0:37.411
+    LOYO 36.4060 vs shadow 37.4149 (-2.70%), seasons better than shadow 6/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75 | shadow vs shipped +0.64% -> -2.07%
+    mix a, games 1-3 (n=4209)
+    grid pooled MSE: 0.0:42.203  0.25:41.703  0.5:41.371  0.75:41.209  1.0:41.216
+    LOYO 40.8651 vs shadow 41.7275 (-2.07%), seasons better than shadow 5/7, picks [0.75, 0.75, 1.0, 1.0, 0.75, 1.0, 1.0], pooled best 0.75 | shadow vs shipped -3.01% -> -5.01%
+    mix a, games 4-8 (n=6627)
+    grid pooled MSE: 0.0:40.519  0.25:40.425  0.5:40.408  0.75:40.466  1.0:40.600
+    LOYO 40.2241 vs shadow 40.2816 (-0.14%), seasons better than shadow 4/7, picks [0.5, 0.5, 0.25, 0.25, 0.5, 0.5, 0.5], pooled best 0.5 | shadow vs shipped -1.34% -> -1.48%
+    mix a, games 9+ (n=6798)
+    grid pooled MSE: 0.0:45.281  0.25:45.249  0.5:45.266  0.75:45.333  1.0:45.449
+    LOYO 45.1118 vs shadow 45.1384 (-0.06%), seasons better than shadow 4/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25], pooled best 0.25 | shadow vs shipped -1.68% -> -1.73%
+    mix a, QB (n=2733)
+    grid pooled MSE: 0.0:58.433  0.25:58.358  0.5:58.399  0.75:58.556  1.0:58.827
+    LOYO 58.2837 vs shadow 58.2994 (-0.03%), seasons better than shadow 5/7, picks [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.5], pooled best 0.25 | shadow vs shipped -4.50% -> -4.52%
+    mix a, RB (n=4844)
+    grid pooled MSE: 0.0:47.440  0.25:47.225  0.5:47.112  0.75:47.102  1.0:47.194
+    LOYO 46.4521 vs shadow 46.7419 (-0.62%), seasons better than shadow 5/7, picks [0.75, 0.5, 0.75, 0.75, 0.5, 0.75, 0.75], pooled best 0.75 | shadow vs shipped -1.90% -> -2.51%
+    mix a, WR (n=7775)
+    grid pooled MSE: 0.0:41.609  0.25:41.326  0.5:41.149  0.75:41.080  1.0:41.117
+    LOYO 40.7146 vs shadow 41.2269 (-1.24%), seasons better than shadow 6/7, picks [0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75 | shadow vs shipped -0.55% -> -1.78%
+    mix a, TE (n=3686)
+    grid pooled MSE: 0.0:25.985  0.25:25.895  0.5:25.871  0.75:25.915  1.0:26.025
+    LOYO 25.8557 vs shadow 25.9549 (-0.38%), seasons better than shadow 5/7, picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], pooled best 0.5 | shadow vs shipped -0.33% -> -0.71%
+  ridge prior, strength P x k (k=1 = QB12/RB5/WR8/TE8) (n=19038)
+    grid pooled MSE: 1.0:42.235  0.75:42.324  0.5:42.612  1.5:42.261  2.0:42.370
+    LOYO 41.9855 vs shadow 42.1241 (-0.33%), seasons better than shadow 5/7, picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 1.0], pooled best 1.0 | shadow vs shipped -1.71% -> -2.03%
+    P x k, QB (n=2733)
+    grid pooled MSE: 1.0:58.827  0.75:58.795  0.5:58.951  1.5:59.030  2.0:59.247
+    LOYO 58.7969 vs shadow 58.2994 (+0.85%), seasons better than shadow 3/7, picks [0.75, 1.0, 0.75, 0.75, 0.75, 1.0, 0.75], pooled best 0.75 | shadow vs shipped -4.50% -> -3.68%
+    P x k, RB (n=4844)
+    grid pooled MSE: 1.0:47.194  0.75:47.417  0.5:47.919  1.5:47.087  2.0:47.152
+    LOYO 46.4245 vs shadow 46.7419 (-0.68%), seasons better than shadow 4/7, picks [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], pooled best 1.5 | shadow vs shipped -1.90% -> -2.56%
+    P x k, WR (n=7775)
+    grid pooled MSE: 1.0:41.117  0.75:41.220  0.5:41.525  1.5:41.117  2.0:41.200
+    LOYO 40.8453 vs shadow 41.2269 (-0.93%), seasons better than shadow 5/7, picks [1.0, 1.0, 1.5, 1.0, 1.5, 1.5, 1.5], pooled best 1.5 | shadow vs shipped -0.55% -> -1.47%
+    P x k, TE (n=3686)
+    grid pooled MSE: 1.0:26.025  0.75:26.006  0.5:26.084  1.5:26.143  2.0:26.276
+    LOYO 26.0285 vs shadow 25.9549 (+0.28%), seasons better than shadow 4/7, picks [1.0, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75], pooled best 0.75 | shadow vs shipped -0.33% -> -0.05%
+
+=== Week 1 head-to-head (no season data; prior x layers only) ===
+  week 1: shadow prior (current)       n= 1407 | vs shadow  +0.00% (0/7) | vs Clay blend  +0.33% (2/7)  [shadow alone +0.33%]
+  week 1: ridge prior                  n= 1407 | vs shadow  -2.27% (6/7) | vs Clay blend  -1.95% (4/7)  [shadow alone +0.33%]
+  week 1: 0.5 ridge + 0.5 shadow prior n= 1407 | vs shadow  -2.43% (7/7) | vs Clay blend  -2.11% (4/7)  [shadow alone +0.33%]
+  week 1: Clay blend (shipped)         n= 1407 | vs shadow  -0.33% (5/7) | vs Clay blend  +0.00% (0/7)  [shadow alone +0.33%]
+  week 1 QB: ridge prior               n=  205 | vs shadow  -0.89% (3/7) | vs Clay blend  -3.69% (4/7)  [shadow alone -2.82%]
+  week 1 RB: ridge prior               n=  352 | vs shadow  -1.81% (4/7) | vs Clay blend  -1.86% (3/7)  [shadow alone -0.05%]
+  week 1 WR: ridge prior               n=  573 | vs shadow  -3.75% (5/7) | vs Clay blend  -2.69% (4/7)  [shadow alone +1.10%]
+  week 1 TE: ridge prior               n=  277 | vs shadow  -0.45% (3/7) | vs Clay blend  +4.84% (2/7)  [shadow alone +5.31%]
+
+=== Forward 2021-25: ridge fit on earlier seasons only ===
+  forward week 1 (no data)             n= 1099 | vs shadow  +1.43% (1/5) | vs Clay blend  +0.82% (1/5)  [shadow alone -0.60%]
+  forward games 1-3                    n= 3294 | vs shadow  -0.99% (2/5) | vs Clay blend  -3.80% (5/5)  [shadow alone -2.83%]
+  forward games 4-8                    n= 5182 | vs shadow  +0.67% (1/5) | vs Clay blend  -0.90% (3/5)  [shadow alone -1.57%]
+  forward games 9+                     n= 5450 | vs shadow  +0.90% (0/5) | vs Clay blend  -0.98% (4/5)  [shadow alone -1.86%]
+  forward ALL weeks                    n=15025 | vs shadow  +0.45% (1/5) | vs Clay blend  -1.45% (5/5)  [shadow alone -1.90%]
+  forward QB                           n= 2133 | vs shadow  +2.53% (0/5) | vs Clay blend  -1.75% (3/5)  [shadow alone -4.17%]
+  forward RB                           n= 3922 | vs shadow  +0.06% (2/5) | vs Clay blend  -2.50% (5/5)  [shadow alone -2.56%]
+  forward WR                           n= 6129 | vs shadow  -0.55% (2/5) | vs Clay blend  -0.96% (5/5)  [shadow alone -0.42%]
+  forward TE                           n= 2841 | vs shadow  +1.31% (1/5) | vs Clay blend  +0.02% (3/5)  [shadow alone -1.27%]
+
+Ridge season prior in the weekly shadow: all weeks -0.41% vs shadow (5/7), -2.02% vs Clay blend; week 1 -2.27% vs shadow, -1.95% vs Clay (4/7). Mix sweep best a 0.75 (-0.57%, 6/7, PASS). Forward: all weeks +0.45% vs shadow (1/5), week 1 +1.43% / +0.82% vs Clay.
+wrote data/learned_prior_weekly.js (25s)

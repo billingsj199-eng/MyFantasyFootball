@@ -1,0 +1,69 @@
+=== RB elasticity layer on the Clay-free shadow ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 389, 'team': 247}
+  19064 player-weeks | shadow v2.6 vs shipped -1.24% (7/7) | RB rows 4844: -0.76% vs shipped
+
+=== RB reads: actual / shadow (actual / shipped) by game ===
+  implied < 19               n=  904 act/shadow 1.093 act/shipped 1.131 mean pts 8.7
+  19-22                      n= 1302 act/shadow 1.051 act/shipped 1.077 mean pts 9.4
+  22-25                      n= 1357 act/shadow 1.010 act/shipped 1.042 mean pts 10.0
+  25-28                      n=  943 act/shadow 1.035 act/shipped 1.067 mean pts 11.2
+  28+                        n=  338 act/shadow 0.970 act/shipped 1.004 mean pts 11.5
+  favored by 7+              n=  714 act/shadow 1.014 act/shipped 1.048 mean pts 11.4
+  favored 0-7                n= 1785 act/shadow 1.036 act/shipped 1.067 mean pts 10.4
+  underdog 0-7               n= 1863 act/shadow 1.031 act/shipped 1.062 mean pts 9.3
+  underdog 7+                n=  482 act/shadow 1.090 act/shipped 1.124 mean pts 8.8
+  1st string, favored 7+     n=  332 act/shadow 1.001 act/shipped 1.007 mean pts 15.1
+  1st string, underdog 7+    n=  255 act/shadow 1.108 act/shipped 1.126 mean pts 11.2
+  2nd string, favored 7+     n=  255 act/shadow 1.047 act/shipped 1.121 mean pts 8.5
+  2nd string, underdog 7+    n=  151 act/shadow 1.051 act/shipped 1.106 mean pts 5.8
+
+=== Sweeps (LOYO vs shadow v2.6) ===
+  RB Vegas elasticity e (shadow) (n=4844)
+    grid pooled MSE: 0.5:47.911  0.3:47.881  0.35:47.866  0.4:47.867  0.45:47.881  0.6:48.014  0.75:48.275
+    LOYO 47.2710 vs shadow 47.2833 (-0.03%), seasons better than shadow 4/7, picks [0.4, 0.35, 0.35, 0.4, 0.4, 0.35, 0.35], pooled best 0.35 | shadow vs shipped -0.76% -> -0.79%
+    RB e, week 1 (n=314)
+    grid pooled MSE: 0.5:41.657  0.3:41.673  0.35:41.656  0.4:41.647  0.45:41.647  0.6:41.702  0.75:41.837
+    LOYO 39.3181 vs shadow 38.9589 (+0.92%), seasons better than shadow 0/7, picks [0.35, 0.3, 0.6, 0.6, 0.4, 0.3, 0.5], pooled best 0.4 | shadow vs shipped +0.01% -> +0.93%
+    RB e, weeks 2-4 (n=912)
+    grid pooled MSE: 0.5:50.681  0.3:50.891  0.35:50.821  0.4:50.763  0.45:50.716  0.6:50.647  0.75:50.678
+    LOYO 51.0734 vs shadow 50.7615 (+0.61%), seasons better than shadow 2/7, picks [0.75, 0.5, 0.6, 0.75, 0.45, 0.6, 0.75], pooled best 0.6 | shadow vs shipped -1.45% -> -0.85%
+    RB e, weeks 5-8 (n=1043)
+    grid pooled MSE: 0.5:47.490  0.3:47.343  0.35:47.361  0.4:47.391  0.45:47.434  0.6:47.639  0.75:47.958
+    LOYO 46.2454 vs shadow 46.2922 (-0.10%), seasons better than shadow 4/7, picks [0.3, 0.3, 0.35, 0.3, 0.3, 0.3, 0.3], pooled best 0.3 | shadow vs shipped +0.31% -> +0.21%
+    RB e, weeks 9+ (n=2575)
+    grid pooled MSE: 0.5:47.983  0.3:47.916  0.35:47.907  0.4:47.915  0.45:47.941  0.6:48.121  0.75:48.451
+    LOYO 47.4929 vs shadow 47.4679 (+0.05%), seasons better than shadow 3/7, picks [0.4, 0.35, 0.3, 0.35, 0.45, 0.3, 0.35], pooled best 0.35 | shadow vs shipped -0.99% -> -0.94%
+    RB e, 1st-string RBs (n=2366)
+    grid pooled MSE: 0.5:60.410  0.3:60.361  0.35:60.339  0.4:60.340  0.45:60.364  0.6:60.570  0.75:60.967
+    LOYO 58.7281 vs shadow 58.7528 (-0.04%), seasons better than shadow 4/7, picks [0.4, 0.35, 0.4, 0.4, 0.4, 0.35, 0.35], pooled best 0.35 | shadow vs shipped -1.13% -> -1.17%
+    RB e, 2nd-string and deeper RBs (n=2025)
+    grid pooled MSE: 0.5:34.907  0.3:34.906  0.35:34.897  0.4:34.894  0.45:34.897  0.6:34.947  0.75:35.059
+    LOYO 34.4566 vs shadow 34.4131 (+0.13%), seasons better than shadow 4/7, picks [0.45, 0.4, 0.45, 0.35, 0.45, 0.35, 0.35], pooled best 0.4 | shadow vs shipped -1.27% -> -1.15%
+  RB spread term k (per 10 pts; negative = favored RBs up), on top of e .5 (n=4844)
+    grid pooled MSE: 0.0:47.911  -0.05:48.091  -0.1:48.504  -0.15:49.152  0.05:47.965
+    LOYO 47.2833 vs shadow 47.2833 (+0.00%), seasons better than shadow 0/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.76% -> -0.76%
+    RB spread term k at e .4 (n=4844)
+    grid pooled MSE: 0.0:47.867  -0.05:47.951  -0.1:48.265  -0.15:48.810  0.05:48.013
+    LOYO 47.2453 vs shadow 47.2833 (-0.08%), seasons better than shadow 4/7, picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], pooled best 0.0 | shadow vs shipped -0.76% -> -0.84%
+    reference: RB e on the SHIPPED Clay blend (n=4844)
+    grid pooled MSE: 0.5:48.213  0.3:48.194  0.35:48.177  0.4:48.175  0.45:48.187  0.6:48.307  0.75:48.550
+    LOYO 47.6491 vs shadow 47.6462 (+0.01%), seasons better than shadow 5/7, picks [0.45, 0.35, 0.4, 0.4, 0.4, 0.35, 0.35], pooled best 0.4 | shadow vs shipped +0.00% -> +0.01%
+
+=== Candidate: RB e 0.35, spread k 0.0 ===
+  ALL rows: vs shipped -1.26% (7/7) | vs shadow v2.6 -0.02% (4/7) | RB rows -0.07% vs shadow (4/7), vs shipped -0.83% (was -0.76%)
+  RB wk1     shadow  +0.01% ->  -0.06% vs shipped
+  RB wk2-4   shadow  -1.45% ->  -1.14% vs shipped
+  RB wk5-8   shadow  +0.31% ->  +0.16% vs shipped
+  RB wk9-12  shadow  +0.06% ->  -0.28% vs shipped
+  RB wk13+   shadow  -1.67% ->  -1.76% vs shipped
+  FORWARD (2021-25, e / k picked on earlier seasons): all rows -0.01% vs shadow (3/5) | RB rows -0.02% (3/5)
+
+RB rows: shadow -0.76% vs shipped. RB Vegas elasticity on the shadow: best 0.35 (-0.03% vs shadow, 4/7, FAIL); spread term 0.0 (+0.00%, 0/7, FAIL). Candidate RB rows -0.07% vs v2.6 (4/7), forward -0.02% (3/5).
+wrote data/qb_vegas_backtest.js (24s)

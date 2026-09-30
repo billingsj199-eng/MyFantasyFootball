@@ -1,0 +1,78 @@
+=== Fantasy-playoff weeks: final week dropped, weeks before it graded on their own ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  rows 19064 | final-week rows dropped 972 | playoff-week rows 3214 (top 150 with an ESPN row: 1869)
+
+=== 1. By stage, top 150, ESPN-graded rows: typical miss (error vs ESPN, seasons better than ESPN) | weekly rank rho ===
+  ALL non-final weeks    n=10403 | ESPN 7.11 rho 0.379 | Clay blend today 7.20 (+2.59%, 0/7) rho 0.369 | shadow 7.14 (+0.91%, 2/7) rho 0.381 | 70/30 blend 7.13 (+0.72%, 3/7) rho 0.382 | rank mix (shadow + ESPN) 7.07 (-0.99%, 7/7) rho 0.389
+  week 1                 n=  627 | ESPN 6.70 rho 0.431 | Clay blend today 6.85 (+4.69%, 0/6) rho 0.387 | shadow 6.82 (+3.68%, 3/6) rho 0.384 | 70/30 blend 6.79 (+2.89%, 3/6) rho 0.397 | rank mix (shadow + ESPN) 6.72 (+0.63%, 3/6) rho 0.425
+  weeks 2-4              n= 2075 | ESPN 7.15 rho 0.368 | Clay blend today 7.27 (+3.19%, 2/7) rho 0.336 | shadow 7.14 (-0.28%, 4/7) rho 0.361 | 70/30 blend 7.14 (-0.45%, 4/7) rho 0.358 | rank mix (shadow + ESPN) 7.10 (-1.52%, 7/7) rho 0.367
+  weeks 5-9              n= 2984 | ESPN 7.13 rho 0.367 | Clay blend today 7.19 (+1.55%, 1/7) rho 0.356 | shadow 7.14 (+0.19%, 3/7) rho 0.374 | 70/30 blend 7.13 (-0.09%, 3/7) rho 0.373 | rank mix (shadow + ESPN) 7.09 (-1.34%, 7/7) rho 0.376
+  weeks 10 to playoffs   n= 2848 | ESPN 7.02 rho 0.372 | Clay blend today 7.10 (+2.30%, 1/7) rho 0.375 | shadow 7.05 (+0.81%, 4/7) rho 0.384 | 70/30 blend 7.05 (+0.70%, 4/7) rho 0.388 | rank mix (shadow + ESPN) 6.98 (-1.23%, 6/7) rho 0.389
+  FANTASY PLAYOFFS       n= 1869 | ESPN 7.27 rho 0.409 | Clay blend today 7.39 (+3.34%, 1/7) rho 0.408 | shadow 7.37 (+2.64%, 2/7) rho 0.407 | 70/30 blend 7.37 (+2.61%, 2/7) rho 0.406 | rank mix (shadow + ESPN) 7.27 (+0.01%, 3/7) rho 0.421
+  final week (ignored)   n=  539 | ESPN 7.08 rho 0.349 | Clay blend today 7.38 (+8.75%, 1/7) rho 0.312 | shadow 7.23 (+4.41%, 2/7) rho 0.323 | 70/30 blend 7.25 (+4.84%, 2/7) rho 0.323 | rank mix (shadow + ESPN) 7.06 (-0.63%, 4/7) rho 0.364
+
+=== 2. Playoff weeks, top 150: where does the shadow lose to ESPN? (error vs ESPN; mean projection vs actual) ===
+  sanity: my game-log PPG vs the harness PPG corr 1.0000, mean abs diff 0.000
+  all                          n= 1869 | shadow vs ESPN  +2.64% | actual 12.32 | shadow 12.25 | ESPN 12.22 | Clay blend 12.36
+  QB                           n=  286 | shadow vs ESPN  -0.72% | actual 19.49 | shadow 19.36 | ESPN 18.76 | Clay blend 19.33
+  RB                           n=  604 | shadow vs ESPN  +3.53% | actual 12.06 | shadow 11.94 | ESPN 12.16 | Clay blend 11.88
+  WR                           n=  767 | shadow vs ESPN  +3.07% | actual 10.66 | shadow 10.75 | ESPN 10.75 | Clay blend 11.04
+  TE                           n=  212 | shadow vs ESPN  +4.21% | actual  9.38 | shadow  9.03 | ESPN  8.89 | Clay blend  9.14
+  ADP 1-30                     n=  458 | shadow vs ESPN  +1.54% | actual 15.04 | shadow 15.30 | ESPN 15.13 | Clay blend 15.69
+  ADP 31-60                    n=  406 | shadow vs ESPN  +3.59% | actual 13.01 | shadow 12.52 | ESPN 12.64 | Clay blend 12.84
+  ADP 61-100                   n=  481 | shadow vs ESPN  +2.62% | actual 11.63 | shadow 11.48 | ESPN 11.41 | Clay blend 11.58
+  ADP 101-150                  n=  524 | shadow vs ESPN  +3.36% | actual 10.04 | shadow 10.09 | ESPN 10.09 | Clay blend  9.82
+  missed 0-1 games             n= 1296 | shadow vs ESPN  +2.22% | actual 13.00 | shadow 12.89 | ESPN 12.84 | Clay blend 13.05
+  missed 2-4                   n=  419 | shadow vs ESPN  +4.07% | actual 10.82 | shadow 10.83 | ESPN 10.95 | Clay blend 10.83
+  missed 5+                    n=  154 | shadow vs ESPN  +2.85% | actual 10.67 | shadow 10.74 | ESPN 10.49 | Clay blend 10.79
+  last 4 HOT (+3 vs season)    n=  286 | shadow vs ESPN  -1.92% | actual 13.36 | shadow 13.48 | ESPN 14.11 | Clay blend 13.53
+  last 4 near season           n= 1308 | shadow vs ESPN  +2.67% | actual 12.11 | shadow 11.79 | ESPN 11.76 | Clay blend 11.91
+  last 4 COLD (-3)             n=  271 | shadow vs ESPN  +8.24% | actual 12.28 | shadow 13.20 | ESPN 12.48 | Clay blend 13.33
+  Questionable / Doubtful      n=  114 | shadow vs ESPN  -0.93% | actual 10.91 | shadow 12.40 | ESPN 12.39 | Clay blend 12.58
+  team implied < 19            n=  286 | shadow vs ESPN  -0.60% | actual  9.86 | shadow  9.73 | ESPN 10.40 | Clay blend  9.71
+  team implied 24+             n=  799 | shadow vs ESPN  +4.04% | actual 14.03 | shadow 13.99 | ESPN 13.45 | Clay blend 14.20
+
+=== 3. Late-season evidence fixes on the shadow (no fitted parameters): importance-weighted top-150 error vs the shadow (seasons better) | rank rho ===
+  shadow (today)                                       playoffs: +0.00% (0/7) rho 0.4121 | weeks 10+ (no final): +0.00% (0/7) rho 0.3962 | all non-final: +0.00% (0/7) rho 0.3813
+  in-season decayed PPG, half-life 3 (6+ games)        playoffs: +0.97% (3/7) rho 0.4149 | weeks 10+ (no final): +0.48% (0/7) rho 0.3951 | all non-final: +0.23% (0/7) rho 0.3807
+  in-season decayed PPG, half-life 5 (6+ games)        playoffs: +0.36% (3/7) rho 0.4175 | weeks 10+ (no final): +0.09% (3/7) rho 0.3966 | all non-final: +0.04% (3/7) rho 0.3812
+  in-season decayed PPG, half-life 8 (6+ games)        playoffs: +0.12% (3/7) rho 0.4107 | weeks 10+ (no final): -0.03% (4/7) rho 0.3962 | all non-final: -0.02% (4/7) rho 0.3817
+  0.2 x last 4 + 0.8 x season PPG (6+ games)           playoffs: +0.06% (2/7) rho 0.4084 | weeks 10+ (no final): -0.05% (3/7) rho 0.3965 | all non-final: -0.04% (3/7) rho 0.3818
+  0.4 x last 4 + 0.6 x season PPG (6+ games)           playoffs: +0.48% (2/7) rho 0.4161 | weeks 10+ (no final): +0.17% (2/7) rho 0.3950 | all non-final: +0.06% (2/7) rho 0.3802
+  prior weight x0.5 after 10 games                     playoffs: +0.17% (2/7) rho 0.4059 | weeks 10+ (no final): +0.34% (1/7) rho 0.3919 | all non-final: +0.16% (1/7) rho 0.3794
+  prior weight x0.0 after 10 games                     playoffs: +1.43% (2/7) rho 0.4020 | weeks 10+ (no final): +1.83% (0/7) rho 0.3901 | all non-final: +0.84% (0/7) rho 0.3785
+  prior weight x2 after 10 games                       playoffs: +0.39% (2/7) rho 0.4076 | weeks 10+ (no final): +0.08% (3/7) rho 0.3937 | all non-final: +0.04% (3/7) rho 0.3802
+=== 4. ASYMMETRIC recency: only a COLD last 4 moves the evidence (hot streaks untouched). Found in the playoff cut, so weeks 5-9 and 10-to-playoffs are the out-of-cut check ===
+  cold only, weight 0.25                           weeks 5-9: -0.04% (4/7) rho +0.0015 | 10 to playoffs: -0.18% (5/7) rho +0.0018 | playoffs: -0.21% (4/7) rho +0.0004 | all non-final: -0.10% (4/7) rho +0.0010 | playoffs vs ESPN +2.44%
+  cold only, weight 0.5                            weeks 5-9: -0.04% (4/7) rho +0.0002 | 10 to playoffs: -0.21% (3/7) rho -0.0042 | playoffs: -0.15% (4/7) rho +0.0045 | all non-final: -0.10% (3/7) rho -0.0003 | playoffs vs ESPN +2.51%
+  cold only, weight 0.75                           weeks 5-9: -0.02% (4/7) rho -0.0019 | 10 to playoffs: -0.08% (3/7) rho -0.0075 | playoffs: +0.16% (4/7) rho +0.0079 | all non-final: +0.01% (3/7) rho -0.0012 | playoffs vs ESPN +2.84%
+  cold only beyond -2, weight 0.5                  weeks 5-9: -0.03% (4/7) rho +0.0014 | 10 to playoffs: -0.01% (3/7) rho +0.0001 | playoffs: -0.25% (4/7) rho +0.0041 | all non-final: -0.06% (4/7) rho +0.0012 | playoffs vs ESPN +2.41%
+  cold only beyond -3, weight 0.5                  weeks 5-9: -0.01% (4/7) rho +0.0005 | 10 to playoffs: +0.02% (3/7) rho -0.0001 | playoffs: -0.16% (5/7) rho +0.0034 | all non-final: -0.03% (4/7) rho +0.0007 | playoffs vs ESPN +2.48%
+  cold 0.5 AND hot 0.5 (symmetric, for contrast)   weeks 5-9: -0.06% (4/7) rho -0.0019 | 10 to playoffs: +0.07% (3/7) rho -0.0091 | playoffs: +0.82% (2/7) rho +0.0010 | all non-final: +0.16% (2/7) rho -0.0029 | playoffs vs ESPN +3.14%
+  cold only, QB + TE only, weight 0.25             weeks 5-9: -0.05% (4/7) rho +0.0009 | 10 to playoffs: -0.13% (6/7) rho +0.0017 | playoffs: -0.15% (5/7) rho -0.0004 | all non-final: -0.08% (5/7) rho +0.0007 | playoffs vs ESPN +2.54%
+  cold only, QB + TE only, weight 0.5              weeks 5-9: -0.08% (4/7) rho -0.0003 | 10 to playoffs: -0.20% (4/7) rho -0.0032 | playoffs: -0.23% (4/7) rho +0.0040 | all non-final: -0.12% (5/7) rho -0.0003 | playoffs vs ESPN +2.53%
+  cold only, RB + WR only, weight 0.25             weeks 5-9: +0.01% (2/7) rho +0.0005 | 10 to playoffs: -0.06% (6/7) rho +0.0001 | playoffs: -0.05% (4/7) rho +0.0008 | all non-final: -0.02% (3/7) rho +0.0003 | playoffs vs ESPN +2.54%
+  hot only, weight 0.5 (contrast)                  weeks 5-9: -0.02% (3/7) rho -0.0015 | 10 to playoffs: +0.28% (2/7) rho +0.0027 | playoffs: +0.97% (2/7) rho -0.0077 | all non-final: +0.26% (1/7) rho -0.0011 | playoffs vs ESPN +3.27%
+  cold players by position (playoffs + weeks 10+, top 150, last 4 at least 3 below season): actual vs shadow
+    QB: n= 122 actual 18.52 | shadow 19.96 | season PPG 19.68 | last 4 15.17 | snap share last game vs season 95.563 / 96.693
+    RB: n= 197 actual 13.09 | shadow 13.36 | season PPG 13.56 | last 4  9.33 | snap share last game vs season 56.632 / 61.171
+    WR: n= 234 actual 11.15 | shadow 11.62 | season PPG 11.94 | last 4  7.61 | snap share last game vs season 81.820 / 83.893
+    TE: n=  46 actual  7.77 | shadow  9.30 | season PPG  9.34 | last 4  5.37 | snap share last game vs season 68.217 / 72.944
+
+Final week dropped, top 150: shadow vs ESPN +0.91% (2/7), 70/30 blend +0.72%, rank mix -0.99% (7/7). Fantasy playoffs: shadow +2.64% (2/7), Clay blend today +3.34%, rank mix +0.01% (3/7); rank rho shadow 0.407 / ESPN 0.409 / mix 0.421.
+wrote data/fantasy_playoffs.js (44s)

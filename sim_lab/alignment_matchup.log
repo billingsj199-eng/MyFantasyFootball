@@ -1,0 +1,39 @@
+=== Alignment matchups: slot / outside / inline vs what each defense allows to that alignment (rank objective) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  WR/TE top-150 rows 5763 | with alignment mix + opponent alignment z: 5300
+
+=== Diagnostics ===
+  defense points per route allowed, weeks 1-9 vs 10-18, OVERALL: r = +0.162 (224 defense-seasons)
+  defense points per route allowed, weeks 1-9 vs 10-18, slot minus overall (the alignment-specific part): r = +0.089 (224 defense-seasons)
+  defense points per route allowed, weeks 1-9 vs 10-18, wide minus overall (the alignment-specific part): r = +0.128 (224 defense-seasons)
+  defense points per route allowed, weeks 1-9 vs 10-18, inline minus overall (the alignment-specific part): r = +0.129 (224 defense-seasons)
+  slot WR (55%+ slot): opponent SOFT vs his alignment (z >= +.75) n=60 actual/projected 1.031 | opponent TOUGH (z <= -.75) n=48 actual/projected 0.975
+  outside WR (65%+ wide): opponent SOFT vs his alignment (z >= +.75) n=139 actual/projected 1.040 | opponent TOUGH (z <= -.75) n=153 actual/projected 1.072
+  inline TE (45%+ inline): opponent SOFT vs his alignment (z >= +.75) n=101 actual/projected 1.124 | opponent TOUGH (z <= -.75) n=101 actual/projected 0.913
+
+=== Rank test: x exp(c x feature), c per position LOYO on mean within-week Spearman, then forward ===
+  opponent z weighted by HIS alignment mix [WR]: LOYO rho -0.0039 (base 0.347), pairs -0.12, MSE +0.13%, seasons 0/7, picks [-0.03, 0.0, 0.03] | forward rho -0.0025, 0/5
+  opponent z weighted by HIS alignment mix [TE]: LOYO rho -0.0016 (base 0.339), pairs -0.17, MSE +0.05%, seasons 3/7, picks [0.03, 0.08] | forward rho +0.0047, 3/5
+  alignment-SPECIFIC part only (minus the opponent's overall z) [WR]: LOYO rho -0.0042 (base 0.347), pairs -0.14, MSE +0.23%, seasons 1/7, picks [-0.05, -0.03, 0.08] | forward rho -0.0011, 1/5
+  alignment-SPECIFIC part only (minus the opponent's overall z) [TE]: LOYO rho +0.0098 (base 0.339), pairs +0.47, MSE -0.25%, seasons 5/7, picks [0.08] | forward rho -0.0049, 2/5
+  slot-heavy WRs vs the opponent's slot z (specific part) [WR]: LOYO rho +0.0016 (base 0.347), pairs +0.04, MSE -0.01%, seasons 5/7, picks [0.08, 0.12] | forward rho +0.0017, 4/5
+  outside WRs vs the opponent's wide z (specific part) [WR]: LOYO rho +0.0015 (base 0.347), pairs +0.06, MSE -0.04%, seasons 5/7, picks [-0.03] | forward rho +0.0014, 3/5
+  inline TEs vs the opponent's inline z (specific part) [TE]: LOYO rho +0.0044 (base 0.339), pairs +0.05, MSE -0.51%, seasons 5/7, picks [0.08, 0.12] | forward rho +0.0027, 3/5  <== PASS
+
+Alignment matchups on the weekly rank objective: 1 of 7 tests pass. Defense points-per-route allowed persist overall (r +0.16 first half to second half) but the alignment-specific part does not (slot +0.09, wide +0.13, inline +0.13).
+wrote data/alignment_matchup.js (46s)

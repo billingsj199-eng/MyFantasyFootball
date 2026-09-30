@@ -1,0 +1,97 @@
+=== Stat-line usage update: do the prop components learn from in-season usage? ===
+  player-weeks from play-by-play: 41223  (14s)
+  walk-forward rows (Clay pool, >= 1 game played): 22965
+
+##### ry  (positions RB, QB) #####
+  --- LOYO: picks (P games, lam usage share) RB (2, 0.25) ['(2, 0.25)', '(2, 0.25)', '(2, 0.25)', '(2, 0.25)', '(3, 0.25)', '(2, 0.5)', '(2, 0.25)']; QB (3, 0.25) ['(2, 0.25)', '(2, 0.25)', '(3, 0.25)', '(2, 0.5)', '(3, 0.25)', '(3, 0.25)', '(2, 0.25)']
+    ALL                    n   6701  MSE static  1159.81 -> usage   999.58  (-13.81%)  MAE  25.86 ->  23.75 (-8.14%)  seasons won 7/7
+    RB                     n   5532  MSE static  1279.72 -> usage  1104.37  (-13.70%)  MAE  27.47 ->  25.18 (-8.34%)  seasons won 7/7
+    QB                     n   1169  MSE static   592.35 -> usage   503.67  (-14.97%)  MAE  18.23 ->  16.99 (-6.78%)  seasons won 7/7
+    after 1 game           n    555  MSE static   941.16 -> usage   924.79  ( -1.74%)  MAE  23.13 ->  22.59 (-2.36%)  seasons won 4/7
+    after 2 games          n    533  MSE static   921.68 -> usage   830.10  ( -9.94%)  MAE  23.61 ->  22.03 (-6.71%)  seasons won 7/7
+    after 3 games          n    532  MSE static  1106.54 -> usage   942.83  (-14.79%)  MAE  25.56 ->  23.64 (-7.53%)  seasons won 7/7
+    after 4-5              n   1040  MSE static  1148.90 -> usage  1001.12  (-12.86%)  MAE  25.59 ->  23.46 (-8.34%)  seasons won 7/7
+    after 6-8              n   1476  MSE static  1156.92 -> usage   957.64  (-17.23%)  MAE  26.06 ->  23.32 (-10.52%)  seasons won 7/7
+    after 9+               n   2565  MSE static  1273.73 -> usage  1086.26  (-14.72%)  MAE  26.97 ->  24.76 (-8.20%)  seasons won 7/7
+    disagree >=20% (all g) n   3410  updated number closer  60.6%   actual landed on the updated side of the static median  69.0%
+    disagree >=20%, g<=3   n    706  updated number closer  59.3%   actual landed on the updated side of the static median  66.4%
+  --- forward: picks (P games, lam usage share) RB (2, 0.5) ['(2, 0.5)', '(2, 0.5)', '(2, 0.5)', '(2, 0.5)', '(2, 0.25)']; QB (5, 0.0) ['(5, 0.0)', '(5, 0.0)', '(5, 0.0)', '(5, 0.0)', '(2, 0.25)']
+    ALL                    n   4888  MSE static  1169.53 -> usage   993.53  (-15.05%)  MAE  25.96 ->  23.64 (-8.95%)  seasons won 5/5
+    RB                     n   4005  MSE static  1288.26 -> usage  1097.65  (-14.80%)  MAE  27.52 ->  25.03 (-9.04%)  seasons won 5/5
+    QB                     n    883  MSE static   631.01 -> usage   521.29  (-17.39%)  MAE  18.88 ->  17.31 (-8.30%)  seasons won 5/5
+    after 1 game           n    392  MSE static   983.78 -> usage   962.32  ( -2.18%)  MAE  23.45 ->  22.60 (-3.61%)  seasons won 2/5
+    after 2 games          n    382  MSE static   937.33 -> usage   839.42  (-10.45%)  MAE  23.83 ->  22.32 (-6.36%)  seasons won 5/5
+    after 3 games          n    383  MSE static  1101.85 -> usage   928.41  (-15.74%)  MAE  25.47 ->  23.93 (-6.05%)  seasons won 5/5
+    after 4-5              n    751  MSE static  1163.63 -> usage  1003.62  (-13.75%)  MAE  25.64 ->  23.21 (-9.49%)  seasons won 5/5
+    after 6-8              n   1062  MSE static  1155.28 -> usage   943.92  (-18.30%)  MAE  26.03 ->  22.97 (-11.75%)  seasons won 5/5
+    after 9+               n   1918  MSE static  1277.45 -> usage  1067.13  (-16.46%)  MAE  27.08 ->  24.59 (-9.19%)  seasons won 5/5
+    disagree >=20% (all g) n   2395  updated number closer  62.1%   actual landed on the updated side of the static median  69.9%
+    disagree >=20%, g<=3   n    472  updated number closer  59.7%   actual landed on the updated side of the static median  66.9%
+
+##### rec  (positions RB, WR, TE) #####
+  --- LOYO: picks (P games, lam usage share) RB (5, 0.5) ['(5, 0.5)', '(5, 0.5)', '(3, 0.5)', '(5, 0.25)', '(5, 0.5)', '(5, 0.25)', '(3, 0.5)']; WR (3, 0.25) ['(3, 0.25)', '(3, 0.25)', '(3, 0.25)', '(3, 0.25)', '(3, 0.25)', '(3, 0.25)', '(3, 0.25)']; TE (3, 0.5) ['(3, 0.5)', '(3, 0.5)', '(5, 0.25)', '(3, 0.5)', '(5, 0.25)', '(3, 0.5)', '(5, 0.25)']
+    ALL                    n  16081  MSE static     5.10 -> usage     4.54  (-10.90%)  MAE   1.76 ->   1.66 (-5.47%)  seasons won 7/7
+    RB                     n   4053  MSE static     4.25 -> usage     3.79  (-10.85%)  MAE   1.62 ->   1.54 (-5.13%)  seasons won 7/7
+    WR                     n   8612  MSE static     5.62 -> usage     5.00  (-11.00%)  MAE   1.85 ->   1.75 (-5.87%)  seasons won 7/7
+    TE                     n   3416  MSE static     4.79 -> usage     4.28  (-10.68%)  MAE   1.68 ->   1.60 (-4.75%)  seasons won 7/7
+    after 1 game           n   1329  MSE static     4.45 -> usage     4.35  ( -2.17%)  MAE   1.65 ->   1.63 (-1.26%)  seasons won 6/7
+    after 2 games          n   1286  MSE static     5.40 -> usage     5.11  ( -5.35%)  MAE   1.78 ->   1.73 (-3.00%)  seasons won 7/7
+    after 3 games          n   1267  MSE static     5.00 -> usage     4.55  ( -8.82%)  MAE   1.76 ->   1.68 (-4.72%)  seasons won 7/7
+    after 4-5              n   2482  MSE static     4.97 -> usage     4.60  ( -7.54%)  MAE   1.72 ->   1.66 (-3.93%)  seasons won 7/7
+    after 6-8              n   3538  MSE static     4.88 -> usage     4.28  (-12.24%)  MAE   1.73 ->   1.62 (-6.66%)  seasons won 7/7
+    after 9+               n   6179  MSE static     5.37 -> usage     4.59  (-14.58%)  MAE   1.80 ->   1.68 (-6.90%)  seasons won 7/7
+    disagree >=20% (all g) n   6212  updated number closer  59.4%   actual landed on the updated side of the static median  67.9%
+    disagree >=20%, g<=3   n   1034  updated number closer  58.3%   actual landed on the updated side of the static median  66.1%
+  --- forward: picks (P games, lam usage share) RB (5, 0.25) ['(3, 0.25)', '(5, 0.0)', '(5, 0.25)', '(5, 0.25)', '(3, 0.5)']; WR (5, 0.25) ['(5, 0.25)', '(5, 0.0)', '(5, 0.25)', '(5, 0.25)', '(3, 0.25)']; TE (5, 0.25) ['(5, 0.0)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)']
+    ALL                    n  11771  MSE static     5.03 -> usage     4.46  (-11.23%)  MAE   1.75 ->   1.65 (-5.66%)  seasons won 5/5
+    RB                     n   2902  MSE static     3.97 -> usage     3.60  ( -9.19%)  MAE   1.58 ->   1.51 (-4.23%)  seasons won 5/5
+    WR                     n   6366  MSE static     5.52 -> usage     4.87  (-11.71%)  MAE   1.84 ->   1.73 (-6.23%)  seasons won 5/5
+    TE                     n   2503  MSE static     5.01 -> usage     4.42  (-11.74%)  MAE   1.72 ->   1.62 (-5.64%)  seasons won 5/5
+    after 1 game           n    957  MSE static     4.29 -> usage     4.20  ( -2.04%)  MAE   1.62 ->   1.61 (-0.88%)  seasons won 4/5
+    after 2 games          n    919  MSE static     5.53 -> usage     5.25  ( -5.00%)  MAE   1.81 ->   1.76 (-2.84%)  seasons won 5/5
+    after 3 games          n    915  MSE static     4.78 -> usage     4.36  ( -8.85%)  MAE   1.74 ->   1.66 (-4.70%)  seasons won 5/5
+    after 4-5              n   1784  MSE static     4.79 -> usage     4.39  ( -8.33%)  MAE   1.70 ->   1.63 (-4.37%)  seasons won 5/5
+    after 6-8              n   2564  MSE static     4.83 -> usage     4.21  (-12.97%)  MAE   1.73 ->   1.61 (-6.99%)  seasons won 5/5
+    after 9+               n   4632  MSE static     5.32 -> usage     4.55  (-14.59%)  MAE   1.79 ->   1.67 (-7.07%)  seasons won 5/5
+    disagree >=20% (all g) n   4060  updated number closer  60.5%   actual landed on the updated side of the static median  68.3%
+    disagree >=20%, g<=3   n    549  updated number closer  59.2%   actual landed on the updated side of the static median  65.8%
+
+##### rcy  (positions RB, WR, TE) #####
+  --- LOYO: picks (P games, lam usage share) RB (3, 0.75) ['(3, 0.75)', '(3, 0.75)', '(3, 0.75)', '(3, 0.75)', '(3, 0.75)', '(3, 0.75)', '(3, 0.75)']; WR (5, 0.25) ['(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)']; TE (5, 0.25) ['(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.25)', '(5, 0.5)', '(5, 0.25)']
+    ALL                    n  15200  MSE static  1014.24 -> usage   933.10  ( -8.00%)  MAE  24.19 ->  23.18 (-4.18%)  seasons won 7/7
+    RB                     n   2775  MSE static   466.31 -> usage   416.54  (-10.67%)  MAE  16.83 ->  15.75 (-6.42%)  seasons won 7/7
+    WR                     n   9006  MSE static  1276.52 -> usage  1176.26  ( -7.85%)  MAE  27.67 ->  26.59 (-3.90%)  seasons won 7/7
+    TE                     n   3419  MSE static   768.07 -> usage   711.84  ( -7.32%)  MAE  20.98 ->  20.20 (-3.71%)  seasons won 7/7
+    after 1 game           n   1225  MSE static   921.51 -> usage   905.77  ( -1.71%)  MAE  23.30 ->  23.21 (-0.36%)  seasons won 5/7
+    after 2 games          n   1224  MSE static   942.25 -> usage   906.27  ( -3.82%)  MAE  23.28 ->  22.61 (-2.84%)  seasons won 7/7
+    after 3 games          n   1204  MSE static   994.29 -> usage   935.54  ( -5.91%)  MAE  23.97 ->  23.08 (-3.69%)  seasons won 7/7
+    after 4-5              n   2387  MSE static  1010.67 -> usage   954.86  ( -5.52%)  MAE  24.00 ->  23.40 (-2.47%)  seasons won 7/7
+    after 6-8              n   3375  MSE static   974.56 -> usage   886.59  ( -9.03%)  MAE  23.81 ->  22.75 (-4.44%)  seasons won 7/7
+    after 9+               n   5785  MSE static  1077.87 -> usage   962.21  (-10.73%)  MAE  24.92 ->  23.46 (-5.84%)  seasons won 7/7
+    disagree >=20% (all g) n   5542  updated number closer  57.7%   actual landed on the updated side of the static median  66.0%
+    disagree >=20%, g<=3   n    849  updated number closer  56.4%   actual landed on the updated side of the static median  64.2%
+  --- forward: picks (P games, lam usage share) RB (3, 0.75) ['(3, 0.5)', '(3, 0.75)', '(3, 0.75)', '(3, 0.75)', '(3, 0.75)']; WR (5, 0.5) ['(5, 0.5)', '(5, 0.5)', '(5, 0.5)', '(5, 0.25)', '(5, 0.25)']; TE (5, 0.5) ['(8, 0.25)', '(5, 0.5)', '(5, 0.5)', '(5, 0.25)', '(5, 0.25)']
+    ALL                    n  11081  MSE static  1001.86 -> usage   917.58  ( -8.41%)  MAE  24.10 ->  23.01 (-4.53%)  seasons won 5/5
+    RB                     n   1916  MSE static   442.24 -> usage   401.65  ( -9.18%)  MAE  16.53 ->  15.62 (-5.46%)  seasons won 5/5
+    WR                     n   6648  MSE static  1243.95 -> usage  1140.18  ( -8.34%)  MAE  27.36 ->  26.16 (-4.38%)  seasons won 5/5
+    TE                     n   2517  MSE static   788.42 -> usage   722.36  ( -8.38%)  MAE  21.25 ->  20.30 (-4.49%)  seasons won 5/5
+    after 1 game           n    876  MSE static   924.05 -> usage   904.53  ( -2.11%)  MAE  23.14 ->  23.00 (-0.59%)  seasons won 4/5
+    after 2 games          n    873  MSE static   926.71 -> usage   885.29  ( -4.47%)  MAE  23.04 ->  22.29 (-3.25%)  seasons won 5/5
+    after 3 games          n    864  MSE static   976.82 -> usage   905.37  ( -7.31%)  MAE  23.90 ->  22.87 (-4.34%)  seasons won 5/5
+    after 4-5              n   1704  MSE static   986.19 -> usage   924.58  ( -6.25%)  MAE  23.91 ->  23.17 (-3.11%)  seasons won 5/5
+    after 6-8              n   2429  MSE static   972.22 -> usage   878.53  ( -9.64%)  MAE  23.84 ->  22.63 (-5.07%)  seasons won 5/5
+    after 9+               n   4335  MSE static  1060.47 -> usage   948.28  (-10.58%)  MAE  24.76 ->  23.33 (-5.80%)  seasons won 5/5
+    disagree >=20% (all g) n   3796  updated number closer  59.0%   actual landed on the updated side of the static median  66.7%
+    disagree >=20%, g<=3   n    533  updated number closer  56.7%   actual landed on the updated side of the static median  63.6%
+
+##### shippable table (all seasons) + the neighbours, so the pick isn't a knife edge #####
+  ry  RB: best P  2 lam 0.25 -> -13.97% | P1: -13.4%  P2: -14.0%  P3: -13.9%  P5: -13.4%  P8: -12.2%  P12: -10.7%  P20: -8.5%  P40: -5.5% | lam @best P: 0.00:-13.6% 0.25:-14.0% 0.50:-13.8% 0.75:-13.2% 1.00:-12.0%
+  ry  QB: best P  2 lam 0.25 -> -15.70% | P1: -14.9%  P2: -15.7%  P3: -15.7%  P5: -15.1%  P8: -13.9%  P12: -12.3%  P20: -9.7%  P40: -6.4% | lam @best P: 0.00:-14.9% 0.25:-15.7% 0.50:-15.3% 0.75:-13.8% 1.00:-11.2%
+  rec RB: best P  5 lam 0.25 -> -11.10% | P1: -8.5%  P2: -10.4%  P3: -11.0%  P5: -11.1%  P8: -10.4%  P12: -9.4%  P20: -7.6%  P40: -5.0% | lam @best P: 0.00:-11.0% 0.25:-11.1% 0.50:-11.1% 0.75:-11.0% 1.00:-10.8%
+  rec WR: best P  3 lam 0.25 -> -11.00% | P1: -9.1%  P2: -10.5%  P3: -11.0%  P5: -10.9%  P8: -10.2%  P12: -9.1%  P20: -7.3%  P40: -4.8% | lam @best P: 0.00:-10.9% 0.25:-11.0% 0.50:-10.9% 0.75:-10.5% 1.00:-9.9%
+  rec TE: best P  3 lam 0.50 -> -10.89% | P1: -9.1%  P2: -10.5%  P3: -10.9%  P5: -10.8%  P8: -10.2%  P12: -9.1%  P20: -7.4%  P40: -4.9% | lam @best P: 0.00:-10.6% 0.25:-10.8% 0.50:-10.9% 0.75:-10.7% 1.00:-10.4%
+  rcy RB: best P  3 lam 0.75 -> -10.66% | P1: -9.4%  P2: -10.4%  P3: -10.7%  P5: -10.3%  P8: -9.6%  P12: -8.5%  P20: -6.9%  P40: -4.6% | lam @best P: 0.00:-8.2% 0.25:-9.6% 0.50:-10.4% 0.75:-10.7% 1.00:-10.2%
+  rcy WR: best P  5 lam 0.25 -> -7.85% | P1: -6.1%  P2: -7.4%  P3: -7.8%  P5: -7.9%  P8: -7.4%  P12: -6.8%  P20: -5.6%  P40: -3.7% | lam @best P: 0.00:-7.6% 0.25:-7.9% 0.50:-7.8% 0.75:-7.3% 1.00:-6.5%
+  rcy TE: best P  5 lam 0.25 -> -7.39% | P1: -5.3%  P2: -6.7%  P3: -7.2%  P5: -7.4%  P8: -7.1%  P12: -6.5%  P20: -5.3%  P40: -3.6% | lam @best P: 0.00:-7.2% 0.25:-7.4% 0.50:-7.3% 0.75:-7.0% 1.00:-6.3%
+
+done in 18s

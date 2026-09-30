@@ -1,0 +1,113 @@
+=== A. did the historical patterns show up in 2026 week 3? (features from weeks 1-2, week-3 points vs our locked week-3 projection, proj >= 5) ===
+  everyone                                             n=137  week 3 actual/projected 0.95  avg 9.4 vs proj 9.9  beat projection 39%
+  RB baseline                                          n= 42  week 3 actual/projected 0.86  avg 10.0 vs proj 11.6  beat projection 31%
+  RB no TDs in weeks 1-2                               n= 19  week 3 actual/projected 0.65  avg 5.5 vs proj 8.6  beat projection 21%
+  RB TDs 40%+ of his points in weeks 1-2               n=  9  week 3 actual/projected 0.83  avg 11.4 vs proj 13.7  beat projection 33%
+  RB points 3+ ABOVE his usage in weeks 1-2            n=  6  week 3 actual/projected 0.88  avg 12.4 vs proj 14.1  beat projection 33%
+  RB usage 3+ above his points in weeks 1-2            n=  9  week 3 actual/projected 0.53  avg 6.0 vs proj 11.3  beat projection 11%
+  WR baseline                                          n= 66  week 3 actual/projected 1.04  avg 9.9 vs proj 9.5  beat projection 44%
+  WR no TDs in weeks 1-2                               n= 40  week 3 actual/projected 1.08  avg 8.9 vs proj 8.2  beat projection 42%
+  WR TDs 40%+ of his points in weeks 1-2               n=  7  week 3 actual/projected 1.07  avg 12.9 vs proj 12.0  beat projection 57%
+  WR points 3+ ABOVE his usage in weeks 1-2            n= 15  week 3 actual/projected 0.98  avg 11.9 vs proj 12.1  beat projection 47%
+  WR usage 3+ above his points in weeks 1-2            n= 18  week 3 actual/projected 0.97  avg 8.7 vs proj 9.0  beat projection 39%
+  TE baseline                                          n= 29  week 3 actual/projected 0.91  avg 7.4 vs proj 8.2  beat projection 41%
+  TE no TDs in weeks 1-2                               n= 11  week 3 actual/projected 0.82  avg 6.3 vs proj 7.6  beat projection 36%
+  TE TDs 40%+ of his points in weeks 1-2               n= 10  week 3 actual/projected 0.86  avg 6.3 vs proj 7.4  beat projection 50%
+  TE points 3+ ABOVE his usage in weeks 1-2            n=  6  week 3 actual/projected 0.66  avg 5.2 vs proj 7.8  beat projection 50%
+  TE usage 3+ above his points in weeks 1-2            n=  1 (too few)
+
+=== B. REGRESSION type 1: receivers whose start is 40%+ touchdowns (history: rest of season 87% of projection, 44% finish under 80%) ===
+  player                   pos tm   gms  pts/g  usage-exp/g  TDs  TD share  snaps  preseason/g  forward  our wk4
+  Amon-Ra St. Brown        WR  DET    3   21.4        17.0    5      47%     86        15.6     17.8     16.6
+  Stefon Diggs             WR  WAS    3   12.7        10.8    3      47%     58         8.0      9.7      8.7
+
+=== B2. REGRESSION type 2: receivers scoring 3+ a game ABOVE what their usage is worth (history: 94%, 2 of 7 seasons above) ===
+  player                   pos tm   gms  pts/g  usage-exp/g  TDs  TD share  snaps  preseason/g  forward  our wk4
+  Jaxon Smith-Njigba       WR  SEA    3   30.2        20.8    6      40%     81        15.8     21.2     19.2
+  Zay Flowers              WR  BAL    2   18.2         9.4    1      16%     31        11.6     13.5     13.6
+  CeeDee Lamb              WR  DAL    3   20.3        14.3    3      30%     79        14.3     16.5     15.3
+  Deebo Samuel             WR  SF     3   11.8         6.4    2      34%     59         7.4      9.0      9.1
+  Amon-Ra St. Brown        WR  DET    3   21.4        17.0    5      47%     86        15.6     17.8     16.6
+  Jakobi Meyers            WR  JAX    3   10.1         5.9    2      39%     79         8.6      9.2      8.6
+  Christian Watson         WR  GB     3   20.3        16.3    4      39%     82         9.4     13.5     12.3
+  Davante Adams            WR  LAR    3   18.9        14.9    2      21%     67        11.6     14.4     13.5
+  Kalif Raymond            WR  CHI    3   12.3         8.5    1      16%     66         2.3      6.0      5.7
+  Denzel Boston            WR  CLE    3   12.7         9.4    2      32%     91         6.7      9.0      7.9
+  Rashee Rice              WR  KC     3   10.5         7.2    1      19%     80        12.5     11.8     11.4
+  Jalen Coker              WR  CAR    3   14.4        11.2    2      28%     65         6.9      9.7      7.1
+  Drake London             WR  ATL    3   11.8         8.6    0       0%     84        12.8     12.4     13.2
+
+=== B3. same two flags, tight ends and running backs (history: weaker / too few, watch list only) ===
+  player                   pos tm   gms  pts/g  usage-exp/g  TDs  TD share  snaps  preseason/g  forward  our wk4
+  Dallas Goedert           TE  PHI    2   11.3         5.2    2      53%     60         8.3      9.2      0.0
+  Travis Kelce             TE  KC     3   14.0         8.1    2      29%     78         8.2     10.4     10.5
+  Mike Gesicki             TE  CIN    2   13.8         7.9    2      44%     42         4.6      7.2      6.0
+  George Kittle            TE  SF     3   13.8         8.4    3      43%     60         9.1     10.9     11.9
+  Derrick Henry            RB  BAL    3   24.1        18.8    6      50%     58        15.7     18.9     19.1
+  Jahmyr Gibbs             RB  DET    3   29.8        24.5    6      40%     75        19.7     23.5     24.2
+  Bijan Robinson           RB  ATL    3   23.7        19.5    3      25%     67        18.5     20.4     20.4
+  Kenyon Sadiq             TE  NYJ    3   10.9         6.7    2      37%     45         6.8      8.3      7.8
+  Dalton Kincaid           TE  BUF    3   12.4         8.6    1      16%     68         7.4      9.3      9.9
+  Jake Ferguson            TE  DAL    3    9.2         5.7    3      65%     68         7.7      8.3      7.0
+  Kyren Williams           RB  LAR    3   15.8        12.4    2      25%     63        12.7     13.9     13.1
+  Darren Waller            TE  CAR    3    9.4         6.5    2      43%     43         5.4      6.9      7.0
+  Juwan Johnson            TE  NO     3   13.6        11.3    3      44%     66         6.7      9.3      9.2
+  Jonathan Taylor          RB  IND    3   19.7        18.4    4      41%     89        17.1     18.1     19.0
+
+=== C. BOUNCE-BACK type 1: tight ends with no touchdown yet (history: 125% of projection, 6 of 6 seasons, 56% beat it by 20%+) ===
+  player                   pos tm   gms  pts/g  usage-exp/g  TDs  TD share  snaps  preseason/g  forward  our wk4
+  Dalton Schultz           TE  HOU    3   10.0         9.6    0       0%     63         6.1      7.5      8.7
+  Mark Andrews             TE  BAL    3    6.2         7.5    0       0%     65         8.2      7.5      8.7
+  Tucker Kraft             TE  GB     3    5.0         7.0    0       0%     80         8.1      7.0      8.4
+  Colston Loveland         TE  CHI    3    2.0         5.2    0       0%     84         9.8      6.9      7.6
+
+=== C2. BOUNCE-BACK type 2: running backs with no touchdown yet (history: 121%, 5 of 5 seasons) ===
+  player                   pos tm   gms  pts/g  usage-exp/g  TDs  TD share  snaps  preseason/g  forward  our wk4
+  De'Von Achane            RB  MIA    3    7.0        11.1    0       0%     56        15.3     12.2      0.0
+  Saquon Barkley           RB  PHI    3    6.5         9.3    0       0%     53        14.8     11.7     13.6
+  Travis Etienne           RB  NO     3    8.5        12.1    0       0%     50        13.1     11.4      0.0
+  Jaylen Warren            RB  PIT    3   11.9        11.8    0       0%     66        10.1     10.7     13.3
+  Quinshon Judkins         RB  CLE    3    7.4        10.8    0       0%     61        12.4     10.5     11.7
+  Rhamondre Stevenson      RB  NE     3    6.8         9.5    0       0%     58        10.9      9.4     10.0
+  Tony Pollard             RB  TEN    3    7.5        10.2    0       0%     53        10.0      9.1      9.3
+  Rico Dowdle              RB  PIT    2    4.2         7.3    0       0%     42        10.2      8.5      8.3
+  Jadarian Price           RB  SEA    3    4.0         8.1    0       0%     37        10.6      8.1     10.0
+  Jonathon Brooks          RB  CAR    2    4.2         4.6    0       0%     24         9.4      7.9      0.0
+  Blake Corum              RB  LAR    3    5.9         6.4    0       0%     32         8.9      7.7      8.2
+  J.K. Dobbins             RB  DEN    3    4.3         9.8    0       0%     42         9.7      7.7      9.9
+  RJ Harvey                RB  DEN    2    6.9         7.6    0       0%     44         7.3      7.2      7.9
+  Kenneth Gainwell         RB  TB     3    2.4         5.9    0       0%     42         8.9      6.5      6.4
+
+=== C3. BOUNCE-BACK type 3: receivers with no touchdown and usage worth more than their points (history: 107% / 108%) ===
+  player                   pos tm   gms  pts/g  usage-exp/g  TDs  TD share  snaps  preseason/g  forward  our wk4
+  Courtland Sutton         WR  DEN    3    4.1         9.1    0       0%     79        10.0      7.8      8.6
+  Tetairoa McMillan        WR  CAR    3    7.8        12.7    0       0%     86        11.4     10.1     13.3
+  George Pickens           WR  DAL    3    7.7        12.3    0       0%     82        11.7     10.2     11.7
+  KC Concepcion            WR  CLE    3    4.3         8.7    0       0%     74         7.4      6.3      7.5
+  Quentin Johnston         WR  LAC    3    3.4         7.6    0       0%     82         8.1      6.4      7.0
+  Malik Nabers             WR  NYG    3    5.2         9.1    0       0%     68        11.9      9.4     11.9
+  Khalil Shakir            WR  BUF    3    4.5         7.8    0       0%     58         8.0      6.7      8.3
+  Jayden Reed              WR  GB     2    2.2         5.4    0       0%     30         8.3      6.5      0.0
+  Carnell Tate             WR  TEN    3    6.3         9.1    0       0%     84         9.7      8.4      9.2
+  Josh Downs               WR  IND    3    8.5        10.6    0       0%     80         7.2      7.7     10.9
+  Jameson Williams         WR  DET    3    5.9         7.6    0       0%     88        10.4      8.7     10.1
+  Jaylen Waddle            WR  DEN    3    8.0         9.5    0       0%     70        10.3      9.4     10.4
+  Adonai Mitchell          WR  NYJ    2    8.4         9.8    0       0%     76         6.3      6.9      4.9
+  Rome Odunze              WR  CHI    3    6.0         7.0    0       0%     72        10.8      9.0      8.9
+
+=== D. UPSIDE type: running backs under 50% of snaps (history: 113%, 7 of 7 seasons; 41% beat it by 20%+, 30% finish under 80%) ===
+  player                   pos tm   gms  pts/g  usage-exp/g  TDs  TD share  snaps  preseason/g  forward  our wk4
+  Jeremiyah Love           RB  ARI    3   12.5        12.3    2      32%     49        14.3     13.6     14.7
+  Bhayshul Tuten           RB  JAX    3   12.8        11.2    2      31%     49        11.1     11.8     12.3
+  Kyle Monangai            RB  CHI    3    9.8         7.2    1      20%     36         9.5      9.6      9.4
+  TreVeyon Henderson       RB  NE     2    8.5         6.6    1      35%     48         9.9      9.5      9.1
+  Rico Dowdle              RB  PIT    2    4.2         7.3    0       0%     42        10.2      8.5      8.3
+  Rachaad White            RB  WAS    3    8.5         8.2    1      23%     45         8.5      8.5      8.1
+  Jacory Croskey-Merritt   RB  WAS    3    7.4        10.0    1      27%     48         8.9      8.3     10.1
+  Jadarian Price           RB  SEA    3    4.0         8.1    0       0%     37        10.6      8.1     10.0
+  Jonathon Brooks          RB  CAR    2    4.2         4.6    0       0%     24         9.4      7.9      0.0
+  Blake Corum              RB  LAR    3    5.9         6.4    0       0%     32         8.9      7.7      8.2
+  J.K. Dobbins             RB  DEN    3    4.3         9.8    0       0%     42         9.7      7.7      9.9
+  RJ Harvey                RB  DEN    2    6.9         7.6    0       0%     44         7.3      7.2      7.9
+  Woody Marks              RB  HOU    3    6.4         8.0    1      31%     45         7.1      6.8      7.8
+  Kenneth Gainwell         RB  TB     3    2.4         5.9    0       0%     42         8.9      6.5      6.4

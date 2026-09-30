@@ -1,0 +1,482 @@
+{
+ "n": 1600,
+ "cuts": {
+  "ALL absorbers": {
+   "ry": {
+    "none": {
+     "mean": 37.33,
+     "mse_vs_uniform": 5.52
+    },
+    "uniform": {
+     "mean": 47.32,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 49.15,
+     "mse_vs_uniform": 0.41
+    },
+    "by-stat, k LOYO": {
+     "mean": 44.91,
+     "mse_vs_uniform": -0.5
+    },
+    "actual": 46.49,
+    "n": 201,
+    "k": [
+     0.75,
+     0.75,
+     0.75,
+     0.5,
+     0.5,
+     0.5,
+     0.75
+    ]
+   },
+   "rec": {
+    "none": {
+     "mean": 3.34,
+     "mse_vs_uniform": -1.12
+    },
+    "uniform": {
+     "mean": 3.63,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 3.63,
+     "mse_vs_uniform": -0.91
+    },
+    "by-stat, k LOYO": {
+     "mean": 3.48,
+     "mse_vs_uniform": -1.94
+    },
+    "actual": 3.44,
+    "n": 1311,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "rcy": {
+    "none": {
+     "mean": 41.49,
+     "mse_vs_uniform": -2.84
+    },
+    "uniform": {
+     "mean": 44.8,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 44.87,
+     "mse_vs_uniform": -0.33
+    },
+    "by-stat, k LOYO": {
+     "mean": 43.18,
+     "mse_vs_uniform": -2.18
+    },
+    "actual": 41.91,
+    "n": 1264,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "RB out -> other RBs (the Jones / Mason case)": {
+   "ry": {
+    "none": {
+     "mean": 38.77,
+     "mse_vs_uniform": 6.2
+    },
+    "uniform": {
+     "mean": 49.74,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 51.97,
+     "mse_vs_uniform": 0.84
+    },
+    "by-stat, k LOYO": {
+     "mean": 47.23,
+     "mse_vs_uniform": -0.12
+    },
+    "actual": 50.67,
+    "n": 180,
+    "k": [
+     0.75,
+     0.75,
+     0.75,
+     0.5,
+     0.5,
+     0.5,
+     0.75
+    ]
+   },
+   "rec": {
+    "none": {
+     "mean": 2.47,
+     "mse_vs_uniform": -6.33
+    },
+    "uniform": {
+     "mean": 3.25,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 3.13,
+     "mse_vs_uniform": -6.67
+    },
+    "by-stat, k LOYO": {
+     "mean": 2.8,
+     "mse_vs_uniform": -9.31
+    },
+    "actual": 2.85,
+    "n": 126,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "rcy": {
+    "none": {
+     "mean": 23.68,
+     "mse_vs_uniform": -17.61
+    },
+    "uniform": {
+     "mean": 30.53,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 29.7,
+     "mse_vs_uniform": -6.5
+    },
+    "by-stat, k LOYO": {
+     "mean": 26.69,
+     "mse_vs_uniform": -14.39
+    },
+    "actual": 22.65,
+    "n": 100,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "RB out -> next RB only, boost >= x1.10": {
+   "ry": {
+    "none": {
+     "mean": 38.13,
+     "mse_vs_uniform": 6.73
+    },
+    "uniform": {
+     "mean": 49.47,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 51.81,
+     "mse_vs_uniform": 1.57
+    },
+    "by-stat, k LOYO": {
+     "mean": 46.38,
+     "mse_vs_uniform": 0.39
+    },
+    "actual": 49.87,
+    "n": 171,
+    "k": [
+     0.75,
+     0.75,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.75
+    ]
+   },
+   "rec": {
+    "none": {
+     "mean": 2.44,
+     "mse_vs_uniform": -7.24
+    },
+    "uniform": {
+     "mean": 3.23,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 3.12,
+     "mse_vs_uniform": -6.74
+    },
+    "by-stat, k LOYO": {
+     "mean": 2.78,
+     "mse_vs_uniform": -10.08
+    },
+    "actual": 2.79,
+    "n": 122,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "rcy": {
+    "none": {
+     "mean": 23.28,
+     "mse_vs_uniform": -22.56
+    },
+    "uniform": {
+     "mean": 30.25,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 29.41,
+     "mse_vs_uniform": -6.99
+    },
+    "by-stat, k LOYO": {
+     "mean": 26.35,
+     "mse_vs_uniform": -17.74
+    },
+    "actual": 21.65,
+    "n": 97,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "WR out -> WRs": {
+   "rec": {
+    "none": {
+     "mean": 2.75,
+     "mse_vs_uniform": 1.23
+    },
+    "uniform": {
+     "mean": 3.19,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 3.22,
+     "mse_vs_uniform": -0.17
+    },
+    "by-stat, k LOYO": {
+     "mean": 3.03,
+     "mse_vs_uniform": -0.48
+    },
+    "actual": 3.11,
+    "n": 352,
+    "k": [
+     0.75,
+     0.5,
+     0.5,
+     0.75,
+     0.5,
+     0.5,
+     0.75
+    ]
+   },
+   "rcy": {
+    "none": {
+     "mean": 35.99,
+     "mse_vs_uniform": -2.83
+    },
+    "uniform": {
+     "mean": 41.9,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 42.19,
+     "mse_vs_uniform": -0.08
+    },
+    "by-stat, k LOYO": {
+     "mean": 39.09,
+     "mse_vs_uniform": -2.57
+    },
+    "actual": 40.59,
+    "n": 329,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "TE out -> TEs": {},
+  "other-position absorbers (WR/TE when an RB or TE is out)": {
+   "rec": {
+    "none": {
+     "mean": 3.77,
+     "mse_vs_uniform": -1.02
+    },
+    "uniform": {
+     "mean": 3.9,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 3.9,
+     "mse_vs_uniform": -0.03
+    },
+    "by-stat, k LOYO": {
+     "mean": 3.84,
+     "mse_vs_uniform": -0.78
+    },
+    "actual": 3.7,
+    "n": 805,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "rcy": {
+    "none": {
+     "mean": 46.58,
+     "mse_vs_uniform": -2.15
+    },
+    "uniform": {
+     "mean": 48.21,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 48.25,
+     "mse_vs_uniform": -0.02
+    },
+    "by-stat, k LOYO": {
+     "mean": 47.41,
+     "mse_vs_uniform": -1.31
+    },
+    "actual": 45.13,
+    "n": 809,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  },
+  "big boosts only (f >= 1.15)": {
+   "ry": {
+    "none": {
+     "mean": 33.96,
+     "mse_vs_uniform": 8.4
+    },
+    "uniform": {
+     "mean": 45.49,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 48.08,
+     "mse_vs_uniform": 1.74
+    },
+    "by-stat, k LOYO": {
+     "mean": 44.19,
+     "mse_vs_uniform": 0.01
+    },
+    "actual": 46.04,
+    "n": 156,
+    "k": [
+     0.75,
+     0.75,
+     0.75,
+     0.5,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "rec": {
+    "none": {
+     "mean": 2.25,
+     "mse_vs_uniform": -1.5
+    },
+    "uniform": {
+     "mean": 2.93,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 2.93,
+     "mse_vs_uniform": -3.88
+    },
+    "by-stat, k LOYO": {
+     "mean": 2.61,
+     "mse_vs_uniform": -5.87
+    },
+    "actual": 2.73,
+    "n": 352,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.75
+    ]
+   },
+   "rcy": {
+    "none": {
+     "mean": 27.22,
+     "mse_vs_uniform": -9.03
+    },
+    "uniform": {
+     "mean": 35.12,
+     "mse_vs_uniform": 0.0
+    },
+    "by-stat": {
+     "mean": 35.22,
+     "mse_vs_uniform": -1.42
+    },
+    "by-stat, k LOYO": {
+     "mean": 31.22,
+     "mse_vs_uniform": -7.78
+    },
+    "actual": 31.33,
+    "n": 317,
+    "k": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   }
+  }
+ }
+}

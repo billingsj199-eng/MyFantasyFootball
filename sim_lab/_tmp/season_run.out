@@ -1,0 +1,91 @@
+﻿=== Season-long: Clay's sheet vs Clay-free preseason priors, 2019-25 (half-PPR PPG, >= 4 games) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6624
+  2022: samples so far 9329
+  2023: samples so far 12576
+  2024: samples so far 15995
+  2025: samples so far 19064
+  skipped: {'weekly': 385, 'team': 251}
+  1404 player-seasons | QB 202 RB 352 WR 573 TE 277 | Clay fair per-game available on all; features: ADP 937, history 1402, ctx 1180, PFF rec 867, PFF rush 313
+
+=== Hand priors (all walk-forward), pooled ===
+  Clay /17 (weekly-harness form)     n=1404 MSE 10.597 vs Clay  9.071 (+16.82%) wins 0/7 | rho 0.692 vs 0.697 | top-N hit 0.731 vs 0.731 | bias 1.124
+  history + age (shadow piece)       n=1404 MSE  9.984 vs Clay  9.071 (+10.07%) wins 1/7 | rho 0.677 vs 0.697 | top-N hit 0.706 vs 0.731 | bias 1.078
+  shadow preseason prior             n=1404 MSE  9.507 vs Clay  9.071 ( +4.81%) wins 2/7 | rho 0.674 vs 0.697 | top-N hit 0.702 vs 0.731 | bias 1.044
+  market: ADP curve                  n=1404 MSE 12.033 vs Clay  9.071 (+32.65%) wins 0/7 | rho 0.572 vs 0.697 | top-N hit 0.699 vs 0.731 | bias 0.914
+  0.5 shadow + 0.5 market            n=1404 MSE  9.629 vs Clay  9.071 ( +6.16%) wins 2/7 | rho 0.671 vs 0.697 | top-N hit 0.720 vs 0.731 | bias 0.975
+
+=== Learned priors, leave-one-year-out per position (features known before week 1) ===
+  ridge basic (alpha 10)             n=1404 MSE  8.157 vs Clay  9.071 (-10.07%) wins 4/7 | rho 0.719 vs 0.697 | top-N hit 0.744 vs 0.731 | bias 1.000
+  ridge +ctx (alpha 100)             n=1404 MSE  8.881 vs Clay  9.071 ( -2.10%) wins 3/7 | rho 0.687 vs 0.697 | top-N hit 0.734 vs 0.731 | bias 0.997
+  ridge +adv (PFF) (alpha 100)       n=1404 MSE  9.478 vs Clay  9.071 ( +4.49%) wins 2/7 | rho 0.668 vs 0.697 | top-N hit 0.726 vs 0.731 | bias 1.002
+  boosted (all features)             n=1404 MSE  9.164 vs Clay  9.071 ( +1.02%) wins 3/7 | rho 0.673 vs 0.697 | top-N hit 0.739 vs 0.731 | bias 1.010
+  0.5 ridge +adv + 0.5 market        n=1404 MSE  9.278 vs Clay  9.071 ( +2.29%) wins 3/7 | rho 0.685 vs 0.697 | top-N hit 0.732 vs 0.731 | bias 0.956
+  0.5 ridge +adv + 0.5 boosted       n=1404 MSE  8.830 vs Clay  9.071 ( -2.65%) wins 3/7 | rho 0.692 vs 0.697 | top-N hit 0.742 vs 0.731 | bias 1.006
+  0.5 learned + 0.5 Clay (info only) n=1404 MSE  8.228 vs Clay  9.071 ( -9.29%) wins 7/7 | rho 0.714 vs 0.697 | top-N hit 0.737 vs 0.731 | bias 1.009
+
+=== By position: best hand prior, ridge +adv, boosted, ensemble vs Clay ===
+  QB shadow preseason prior          n= 202 MSE 11.768 vs Clay 11.570 ( +1.71%) wins 1/7 | rho 0.545 vs 0.581 | top-N hit 0.693 vs 0.687 | bias 1.014
+  QB market: ADP curve               n= 202 MSE 12.649 vs Clay 11.570 ( +9.32%) wins 2/7 | rho 0.449 vs 0.581 | top-N hit 0.677 vs 0.687 | bias 0.961
+  QB ridge basic                     n= 202 MSE 11.227 vs Clay 11.570 ( -2.97%) wins 2/7 | rho 0.583 vs 0.581 | top-N hit 0.731 vs 0.687 | bias 0.998
+  QB ridge +ctx                      n= 202 MSE 12.672 vs Clay 11.570 ( +9.52%) wins 1/7 | rho 0.519 vs 0.581 | top-N hit 0.674 vs 0.687 | bias 0.996
+  QB ridge +adv (PFF)                n= 202 MSE 13.207 vs Clay 11.570 (+14.15%) wins 1/7 | rho 0.473 vs 0.581 | top-N hit 0.651 vs 0.687 | bias 1.000
+  QB boosted (all features)          n= 202 MSE 12.726 vs Clay 11.570 ( +9.99%) wins 1/7 | rho 0.482 vs 0.581 | top-N hit 0.691 vs 0.687 | bias 1.010
+  QB 0.5 ridge +adv + 0.5 market     n= 202 MSE 11.474 vs Clay 11.570 ( -0.83%) wins 1/7 | rho 0.536 vs 0.581 | top-N hit 0.684 vs 0.687 | bias 0.980
+  QB 0.5 ridge +adv + 0.5 boosted    n= 202 MSE 12.224 vs Clay 11.570 ( +5.65%) wins 1/7 | rho 0.528 vs 0.581 | top-N hit 0.692 vs 0.687 | bias 1.005
+  RB shadow preseason prior          n= 352 MSE 12.524 vs Clay 11.551 ( +8.42%) wins 3/7 | rho 0.724 vs 0.752 | top-N hit 0.774 vs 0.822 | bias 1.079
+  RB market: ADP curve               n= 352 MSE 15.152 vs Clay 11.551 (+31.18%) wins 1/7 | rho 0.593 vs 0.752 | top-N hit 0.725 vs 0.822 | bias 0.935
+  RB ridge basic                     n= 352 MSE 10.703 vs Clay 11.551 ( -7.34%) wins 4/7 | rho 0.777 vs 0.752 | top-N hit 0.799 vs 0.822 | bias 1.002
+  RB ridge +ctx                      n= 352 MSE 11.240 vs Clay 11.551 ( -2.69%) wins 3/7 | rho 0.759 vs 0.752 | top-N hit 0.823 vs 0.822 | bias 0.994
+  RB ridge +adv (PFF)                n= 352 MSE 12.577 vs Clay 11.551 ( +8.88%) wins 1/7 | rho 0.728 vs 0.752 | top-N hit 0.807 vs 0.822 | bias 0.996
+  RB boosted (all features)          n= 352 MSE 11.803 vs Clay 11.551 ( +2.18%) wins 2/7 | rho 0.756 vs 0.752 | top-N hit 0.812 vs 0.822 | bias 1.017
+  RB 0.5 ridge +adv + 0.5 market     n= 352 MSE 12.045 vs Clay 11.551 ( +4.27%) wins 4/7 | rho 0.724 vs 0.752 | top-N hit 0.827 vs 0.822 | bias 0.964
+  RB 0.5 ridge +adv + 0.5 boosted    n= 352 MSE 11.494 vs Clay 11.551 ( -0.50%) wins 3/7 | rho 0.752 vs 0.752 | top-N hit 0.812 vs 0.822 | bias 1.006
+  WR shadow preseason prior          n= 573 MSE  8.770 vs Clay  8.439 ( +3.93%) wins 2/7 | rho 0.736 vs 0.749 | top-N hit 0.732 vs 0.726 | bias 1.037
+  WR market: ADP curve               n= 573 MSE 12.096 vs Clay  8.439 (+43.34%) wins 0/7 | rho 0.574 vs 0.749 | top-N hit 0.726 vs 0.726 | bias 0.883
+  WR ridge basic                     n= 573 MSE  6.883 vs Clay  8.439 (-18.43%) wins 7/7 | rho 0.808 vs 0.749 | top-N hit 0.756 vs 0.726 | bias 0.999
+  WR ridge +ctx                      n= 573 MSE  7.577 vs Clay  8.439 (-10.21%) wins 6/7 | rho 0.791 vs 0.749 | top-N hit 0.738 vs 0.726 | bias 0.998
+  WR ridge +adv (PFF)                n= 573 MSE  7.933 vs Clay  8.439 ( -6.00%) wins 5/7 | rho 0.772 vs 0.749 | top-N hit 0.732 vs 0.726 | bias 1.008
+  WR boosted (all features)          n= 573 MSE  7.987 vs Clay  8.439 ( -5.35%) wins 5/7 | rho 0.770 vs 0.749 | top-N hit 0.726 vs 0.726 | bias 1.005
+  WR 0.5 ridge +adv + 0.5 market     n= 573 MSE  8.492 vs Clay  8.439 ( +0.64%) wins 4/7 | rho 0.773 vs 0.749 | top-N hit 0.738 vs 0.726 | bias 0.941
+  WR 0.5 ridge +adv + 0.5 boosted    n= 573 MSE  7.614 vs Clay  8.439 ( -9.77%) wins 5/7 | rho 0.782 vs 0.749 | top-N hit 0.726 vs 0.726 | bias 1.007
+  TE shadow preseason prior          n= 277 MSE  5.423 vs Clay  5.292 ( +2.48%) wins 5/7 | rho 0.691 vs 0.708 | top-N hit 0.607 vs 0.690 | bias 1.056
+  TE market: ADP curve               n= 277 MSE  7.342 vs Clay  5.292 (+38.74%) wins 1/7 | rho 0.671 vs 0.708 | top-N hit 0.667 vs 0.690 | bias 0.877
+  TE ridge basic                     n= 277 MSE  5.222 vs Clay  5.292 ( -1.32%) wins 3/7 | rho 0.709 vs 0.708 | top-N hit 0.690 vs 0.690 | bias 1.002
+  TE ridge +ctx                      n= 277 MSE  5.719 vs Clay  5.292 ( +8.07%) wins 1/7 | rho 0.681 vs 0.708 | top-N hit 0.702 vs 0.690 | bias 1.004
+  TE ridge +adv (PFF)                n= 277 MSE  5.899 vs Clay  5.292 (+11.48%) wins 3/7 | rho 0.701 vs 0.708 | top-N hit 0.714 vs 0.690 | bias 1.002
+  TE boosted (all features)          n= 277 MSE  5.535 vs Clay  5.292 ( +4.60%) wins 3/7 | rho 0.684 vs 0.708 | top-N hit 0.726 vs 0.690 | bias 1.010
+  TE 0.5 ridge +adv + 0.5 market     n= 277 MSE  5.673 vs Clay  5.292 ( +7.21%) wins 4/7 | rho 0.706 vs 0.708 | top-N hit 0.679 vs 0.690 | bias 0.935
+  TE 0.5 ridge +adv + 0.5 boosted    n= 277 MSE  5.381 vs Clay  5.292 ( +1.68%) wins 3/7 | rho 0.706 vs 0.708 | top-N hit 0.738 vs 0.690 | bias 1.006
+
+=== Segments (ridge +adv vs Clay) ===
+  ridge basic: veterans (exp 2+)     n= 974 MSE  7.945 vs Clay  8.668 ( -8.34%) wins 5/7 | rho 0.744 vs 0.727 | top-N hit 0.785 vs 0.772 | bias 1.000
+  ridge basic: 2nd year              n= 223 MSE  9.985 vs Clay  8.230 (+21.34%) wins 0/7 | rho 0.731 vs 0.724 | top-N hit 0.788 vs 0.770 | bias 1.004
+  ridge basic: rookies               n= 199 MSE  7.047 vs Clay 11.803 (-40.30%) wins 7/7 | rho 0.731 vs 0.415 | top-N hit 0.843 vs 0.624 | bias 0.997
+  ridge basic: top-60 ADP            n= 353 MSE  9.596 vs Clay  8.950 ( +7.21%) wins 2/7 | rho 0.413 vs 0.432 | top-N hit 0.632 vs 0.644 | bias 1.010
+  ridge basic: ADP 61-180            n= 584 MSE  9.006 vs Clay  9.565 ( -5.85%) wins 4/7 | rho 0.461 vs 0.392 | top-N hit 0.652 vs 0.613 | bias 0.991
+  ridge basic: no ADP                n= 467 MSE  5.735 vs Clay  8.490 (-32.45%) wins 6/7 | rho 0.406 vs 0.281 | top-N hit 0.623 vs 0.614 | bias 1.002
+
+=== Forward 2021-25 (fit on earlier seasons only) ===
+  forward ridge basic                n=1096 MSE  8.640 vs Clay  9.117 ( -5.23%) wins 3/5 | rho 0.683 vs 0.681 | top-N hit 0.713 vs 0.709 | bias 0.979
+  forward ridge basic, QB            n= 156 MSE 11.549 vs Clay 11.154 ( +3.54%) wins 1/5 | rho 0.523 vs 0.550 | top-N hit 0.687 vs 0.652 | bias 0.959
+  forward ridge basic, RB            n= 282 MSE 11.809 vs Clay 11.855 ( -0.39%) wins 2/5 | rho 0.737 vs 0.727 | top-N hit 0.765 vs 0.799 | bias 1.013
+  forward ridge basic, WR            n= 447 MSE  7.248 vs Clay  8.464 (-14.37%) wins 5/5 | rho 0.785 vs 0.739 | top-N hit 0.700 vs 0.700 | bias 0.956
+  forward ridge basic, TE            n= 211 MSE  5.114 vs Clay  5.235 ( -2.31%) wins 3/5 | rho 0.685 vs 0.709 | top-N hit 0.700 vs 0.683 | bias 1.018
+  forward ridge basic, veterans (exp 2+) n= 770 MSE  8.336 vs Clay  8.770 ( -4.95%) wins 4/5 | rho 0.715 vs 0.715 | top-N hit 0.743 vs 0.748 | bias 0.983
+  forward ridge basic, rookies       n= 153 MSE  8.061 vs Clay 11.659 (-30.86%) wins 5/5 | rho 0.729 vs 0.415 | top-N hit 0.776 vs 0.624 | bias 0.952
+  forward ridge basic, top-60 ADP    n= 275 MSE 10.380 vs Clay  8.937 (+16.15%) wins 1/5 | rho 0.452 vs 0.467 | top-N hit 0.643 vs 0.670 | bias 0.968
+  forward ridge basic, no ADP        n= 360 MSE  6.159 vs Clay  8.216 (-25.03%) wins 4/5 | rho 0.391 vs 0.291 | top-N hit 0.636 vs 0.615 | bias 1.030
+  forward 0.5 ridge basic + 0.5 Clay (info) n=1096 MSE  7.930 vs Clay  9.117 (-13.01%) wins 5/5 | rho 0.704 vs 0.681 | top-N hit 0.717 vs 0.709 | bias 0.994
+  forward ridge +ctx                 n=1096 MSE  9.851 vs Clay  9.117 ( +8.05%) wins 1/5 | rho 0.654 vs 0.681 | top-N hit 0.679 vs 0.709 | bias 0.958
+  forward ridge +adv (PFF)           n=1096 MSE 11.514 vs Clay  9.117 (+26.29%) wins 0/5 | rho 0.624 vs 0.681 | top-N hit 0.672 vs 0.709 | bias 0.957
+  forward 0.5 ridge +adv + 0.5 market n=1096 MSE  9.703 vs Clay  9.117 ( +6.43%) wins 1/5 | rho 0.652 vs 0.681 | top-N hit 0.705 vs 0.709 | bias 0.931
+  forward boosted (all features)     n=1096 MSE  9.521 vs Clay  9.117 ( +4.43%) wins 3/5 | rho 0.641 vs 0.681 | top-N hit 0.686 vs 0.709 | bias 0.977
+  QB strongest standardized ridge coefficients: hist +2.97, l8 -1.86, h3 -1.17, rookie +1.10, ladp -0.96, lpick +0.88, jm +0.71, xfp_pg_py +0.67, pc_rb1_car -0.58, mover -0.57
+  RB strongest standardized ridge coefficients: hist +3.69, xfp_pg_py -2.00, ladp -1.14, rookie +1.11, l8 -1.02, car_sh_py +0.99, jm +0.94, team_change -0.82, lpick +0.74, mover +0.63
+  WR strongest standardized ridge coefficients: hist +4.57, slot_py +2.60, wide_py +2.57, l8 -2.31, oppcal -1.04, ladp -0.98, g_py +0.74, h3 +0.74, xfp_pg_py -0.60, yprr_py -0.49
+  TE strongest standardized ridge coefficients: xfp_pg_py -1.47, h3 +1.35, oppcal -1.08, tgt_sh_py +0.86, hist +0.75, l8 +0.72, exp -0.65, ladp -0.63, routes_py +0.57, rookie -0.51
+
+Season-long, 1404 player-seasons: Clay games-weighted MSE 9.07. Best Clay-free = ridge basic (alpha 10) -10.1% vs Clay (4/7 seasons), rho 0.719 vs 0.697. forward ridge basic -5.2%; forward ridge basic, QB +3.5%; forward ridge basic, RB -0.4%; forward ridge basic, WR -14.4%; forward ridge basic, TE -2.3%; forward ridge basic, veterans (exp 2+) -5.0%; forward ridge basic, rookies -30.9%; forward ridge basic, top-60 ADP +16.1%; forward ridge basic, no ADP -25.0%; forward 0.5 ridge basic + 0.5 Clay (info) -13.0%; forward ridge +ctx +8.1%; forward ridge +adv (PFF) +26.3%; forward 0.5 ridge +adv + 0.5 market +6.4%; forward boosted (all features) +4.4% (forward).
+wrote data/season_long_backtest.js + season_long_table.parquet (46s)

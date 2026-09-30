@@ -2116,6 +2116,70 @@ function _ktcGet(map, name) {
   return v != null ? v : null;
 }
 
+// === KTC as RANKS (Jack 2026-09-30) ===
+// KTC publishes trade VALUES (9999 = the top asset). On rankings surfaces we
+// show the player's KTC RANK instead — overall (#1, #2, ...) or within his
+// position when the table is filtered to one position — so it reads like
+// every other site column. Draft picks ("2027 Early 1st") are left out of
+// the ranking so KTC #n lines up with a board rank. Values still drive the
+// trade calc / My Teams / mock CPU basis untouched.
+function _ktcMapFor(mode) {
+  const m = mode || currentMode;
+  return m === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
+}
+const _ktcRankCache = new WeakMap();
+let _ktcPosIndex = null, _ktcPosIndexLen = -1;
+function _ktcPosOf(name) {
+  if (typeof D === 'undefined') return null;
+  if (!_ktcPosIndex || _ktcPosIndexLen !== D.length) {
+    _ktcPosIndex = {};
+    D.forEach(p => { if (p && p.n && p.s) _ktcPosIndex[_normalizeNameForLookup(p.n)] = p.s; });
+    _ktcPosIndexLen = D.length;
+  }
+  return _ktcPosIndex[_normalizeNameForLookup(name)] || null;
+}
+function _ktcRankIndex(map) {
+  if (!map) return null;
+  let idx = _ktcRankCache.get(map);
+  if (idx) return idx;
+  const rows = [];
+  for (const k in map) {
+    if (/^\d{4}\s/.test(k)) continue; // draft picks
+    if (map[k] == null) continue;
+    rows.push({ n: k, v: map[k] });
+  }
+  rows.sort((a, b) => b.v - a.v);
+  const cnt = {};
+  idx = {};
+  rows.forEach((r, i) => {
+    const pos = _ktcPosOf(r.n);
+    const pr = pos ? (cnt[pos] = (cnt[pos] || 0) + 1) : null;
+    idx[_normalizeNameForLookup(r.n)] = { val: r.v, ovr: i + 1, pos, posRank: pr };
+  });
+  _ktcRankCache.set(map, idx);
+  return idx;
+}
+// { val, ovr, pos, posRank } for a player, or null when KTC doesn't list him.
+function _ktcRankInfo(name, mode) {
+  if (!name) return null;
+  const idx = _ktcRankIndex(_ktcMapFor(mode));
+  return (idx && idx[_normalizeNameForLookup(name)]) || null;
+}
+// True when the rankings table is showing ONE position, so a KTC rank should
+// be the position rank (KTC's RB4) rather than the overall one.
+function _ktcPosView() {
+  if (typeof filter === 'undefined') return false;
+  if (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE') return true;
+  return filter === 'ROOKIE' && typeof rookiePosFilter !== 'undefined' && rookiePosFilter && rookiePosFilter !== 'ALL';
+}
+// This board's position rank for a player (RB4 -> 4), for KTC pos-rank diffs.
+function _boardPosRankNum(d) {
+  const pr = d && (d.myPosRank || d.r);
+  const n = parseInt(String(pr == null ? '' : pr).replace(/\D/g, ''), 10);
+  return isFinite(n) && n > 0 ? n : null;
+}
+window._ktcRankInfo = _ktcRankInfo;
+
 // Get ADP for a player based on the selected ranking ADP source.
 // K/DST are allowed through since 2026-08-06 — FP/ESPN/Yahoo/Sleeper rank
 // them (injected by inject_rankings.py); sources without K/DST data (UD,
@@ -2123,9 +2187,11 @@ function _ktcGet(map, name) {
 // the d.a=240 placeholder never leaks into the consensus average.
 function rnkAdp(d) {
   if (rnkAdpSrc === 'ktc') {
-    // KTC dynasty values — 1QB map for dynasty mode, SF map for dynastysf mode
-    const map = currentMode === 'dynastysf' ? (typeof KTC_SF !== 'undefined' ? KTC_SF : {}) : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
-    return _ktcGet(map, d.n);
+    // KTC dynasty RANK (1QB map for dynasty, SF map for dynastysf) — overall,
+    // or the position rank when the table is filtered to one position.
+    const k = _ktcRankInfo(d.n);
+    if (!k) return null;
+    return (_ktcPosView() && k.posRank != null) ? k.posRank : k.ovr;
   }
   if (rnkAdpSrc === 'sleeper') return _sleeperRank(d);
   if (rnkAdpSrc === 'consensus') {
@@ -2255,9 +2321,15 @@ function _syncConsColHeader() {
 // Per-source ADP lookup for the ADP comparison STATS view. Ignores rnkAdpSrc —
 // each column is pinned to one platform. Underdog respects the mode split
 // (sfa for superflex, udA otherwise), matching rnkAdp's own handling.
+// Dynasty boards have no ESPN dynasty list, so the ADP comparison view's 3rd
+// column (ESPN elsewhere) shows the KTC RANK there instead — overall, or the
+// position rank on a single-position view (Jack 2026-09-30).
+function _isDynCmp() { return currentMode === 'dynasty' || currentMode === 'dynastysf'; }
+function _adpCmpThirdSrc() { return _isDynCmp() ? 'ktc' : 'espn'; }
 function _adpBySource(d, src) {
   if (src === 'underdog') return currentMode === 'superflex' ? (d.sfa != null ? d.sfa : null) : (d.udA != null ? d.udA : null);
   if (src === 'sleeper') return _sleeperRank(d);
+  if (src === 'ktc') { const k = _ktcRankInfo(d.n); return k ? k.ovr : null; } // overall KTC rank (see _ktcRankInfo)
   if (src === 'espn') return d.espnAdp != null ? d.espnAdp : null;
   if (src === 'cbs') return d.cbsAdp != null ? d.cbsAdp : null;
   if (src === 'yahoo') return d.yahooAdp != null ? d.yahooAdp : null;
@@ -2281,9 +2353,26 @@ function _adpCmpCellHtml(d, src, label) {
   if (d.s === 'K' || d.s === 'DST') {
     return '<span style="cursor:help" title="' + (label + ' overall rank ' + v).replace(/"/g, '&quot;') + '">' + v + '</span>';
   }
+  // KTC on a single-position view: show KTC's position rank (RB4 -> 4) and
+  // grade it against this board's position rank, not the overall one.
+  if (src === 'ktc' && _ktcPosView()) {
+    const k = _ktcRankInfo(d.n), bp = _boardPosRankNum(d);
+    if (k && k.posRank != null && bp != null) {
+      const pd = k.posRank - bp;
+      const pc = pd >= 3 ? '#22c55e' : pd <= -3 ? '#ef4444' : null;
+      const ptt = 'KTC ' + k.pos + k.posRank + ' (overall #' + k.ovr + ', value ' + k.val.toLocaleString() + ') vs this board ' + k.pos + bp
+        + (pd >= 3 ? ' — value: KTC has them ' + pd + ' spots lower at the position' : pd <= -3 ? ' — reach: KTC has them ' + Math.abs(pd) + ' spots higher at the position' : ' — even at the position');
+      const pb = pc ? '<span style="font-size:.55rem"> ' + (pd > 0 ? '▲' : '▼') + Math.abs(pd) + '</span>' : '';
+      return '<span style="' + (pc ? 'color:' + pc + ';font-weight:700;' : '') + 'cursor:help" title="' + ptt.replace(/"/g, '&quot;') + '">' + k.posRank + pb + '</span>';
+    }
+  }
   const diff = Math.round(v - d.myRank);
   const clr = diff >= 3 ? '#22c55e' : diff <= -3 ? '#ef4444' : null;
-  const tt = label + ' ADP ' + v + ' vs rank ' + d.myRank + (diff >= 3
+  const _kv = src === 'ktc' ? _ktcRankInfo(d.n) : null;
+  const tt = (src === 'ktc'
+      ? 'KTC #' + v + (_kv && _kv.posRank != null ? ' (' + _kv.pos + _kv.posRank + ', value ' + _kv.val.toLocaleString() + ')' : '')
+      : label + ' ADP ' + v)
+    + ' vs rank ' + d.myRank + (diff >= 3
     ? ' — value: the market drafts them ' + diff + ' spots later than this rank'
     : diff <= -3
       ? ' — reach: the market drafts them ' + Math.abs(diff) + ' spots earlier than this rank'
@@ -2297,6 +2386,13 @@ function _adpCmpCellHtml(d, src, label) {
 function _adpCmpCellCls(d, src) {
   if (src === 'underdog' && typeof hasPremium === 'function' && !hasPremium()) return '';
   if (d.s === 'K' || d.s === 'DST') return '';  // no value/reach verdict (scale mismatch)
+  if (src === 'ktc' && _ktcPosView()) {
+    // Position view: tint by the position-rank gap, same as the cell text.
+    const k = _ktcRankInfo(d.n), bp = _boardPosRankNum(d);
+    if (!k || k.posRank == null || bp == null) return '';
+    const pd = k.posRank - bp;
+    return pd >= 3 ? ' adp-value' : pd <= -3 ? ' adp-reach' : '';
+  }
   const v = _adpBySource(d, src);
   if (v == null) return '';
   const diff = Math.round(v - d.myRank);
@@ -2309,7 +2405,7 @@ function _adpCmpCellCls(d, src) {
 // ESPN, CBS, Yahoo. Tooltip carries which sources went in. Same ±3 value /
 // reach coloring vs the current rank as the single-platform cells.
 function _adpCmpAvg(d) {
-  const srcs = ['underdog', 'sleeper', 'espn', 'cbs', 'yahoo'];
+  const srcs = ['underdog', 'sleeper', _adpCmpThirdSrc(), 'cbs', 'yahoo'];
   const prem = typeof hasPremium === 'function' ? hasPremium() : false;
   const used = [];
   let sum = 0;
@@ -3974,7 +4070,7 @@ function getFiltered(applyTopN) {
         case 'round': av = a.round; bv = b.round; break;
         case 'pts': if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
         case 'fpts25': if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
-        case 'l4ppg': if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { av = _smAdp(a,'espn'); bv = _smAdp(b,'espn'); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'l4ppg': if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
@@ -6422,7 +6518,7 @@ function render() {
       // (4th column — CBS — rides the repurposed Y/RR cell below).
       _statTd1 = `<td class="pts-cell ppg-proj-cell${_adpCmpCellCls(d, 'underdog')}">${_adpCmpCellHtml(d, 'underdog', 'Underdog')}</td>`;
       _statTds = `<td class="pts-cell ppg25-cell${_adpCmpCellCls(d, 'sleeper')}">${_adpCmpCellHtml(d, 'sleeper', 'Sleeper')}</td>
-      <td class="pts-cell l4ppg-cell${_adpCmpCellCls(d, 'espn')}">${_adpCmpCellHtml(d, 'espn', 'ESPN')}</td>`;
+      <td class="pts-cell l4ppg-cell${_adpCmpCellCls(d, _adpCmpThirdSrc())}">${_isDynCmp() ? _adpCmpCellHtml(d, 'ktc', 'KTC') : _adpCmpCellHtml(d, 'espn', 'ESPN')}</td>`;
     } else {
       const _line = _statMode === 'proj' ? _projStatLine(d) : _linesStatLine(d);
       const _tp = _impliedTeamPpg(d.t);
@@ -7580,7 +7676,11 @@ window._updateRnkStatHeaders = function() {
     const _thLogo = (k, alt) => '<img src="icons/adp_' + k + '.png" alt="' + alt + '" style="width:16px;height:16px;border-radius:4px;vertical-align:middle">';
     _set(c1, null, 'Underdog ADP (Best Ball Mania; Superflex mode uses Underdog SF)' + _cmpGloss, _thLogo('underdog', 'Underdog'), '');
     _set(c2, 'ppg25Header', 'Sleeper ADP' + _cmpGloss, _thLogo('sleeper', 'Sleeper'), '');
-    _set(c3, 'l4ppgHeader', 'ESPN staff rank — the order ESPN\'s own draft list shows, not ADP —' + _cmpGloss, _thLogo('espn', 'ESPN'), '');
+    if (_isDynCmp()) {
+      _set(c3, 'l4ppgHeader', 'KeepTradeCut rank (' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ' dynasty values, refreshed daily at 9am). Shown as a RANK, not the trade value: #1 = KTC\'s top player; on a single-position view it is KTC\'s rank at that position (RB4 shows 4) —' + _cmpGloss, _thLogo('ktc', 'KTC'), '');
+    } else {
+      _set(c3, 'l4ppgHeader', 'ESPN staff rank — the order ESPN\'s own draft list shows, not ADP —' + _cmpGloss, _thLogo('espn', 'ESPN'), '');
+    }
   } else {
     if (currentMode === 'weekly') {
       const _wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
@@ -14619,9 +14719,12 @@ function openPlayerCard(d, ctxMode) {
         // Dynasty contexts swap ESPN/Yahoo (which don't publish dynasty ADPs)
         // for KTC (the dynasty value standard). Uses KTC_SF map for Superflex.
         if (_isDynastyCtx) {
-          const _ktcMap = (_ctxMode === 'dynastysf' && typeof KTC_SF !== 'undefined') ? KTC_SF
-                       : (typeof KTC_1QB !== 'undefined') ? KTC_1QB : {};
-          const _ktcVal = _ktcMap[d.n] != null ? _ktcMap[d.n] : null;
+          // KTC shown as a RANK (#12, with the position rank beneath), value
+          // in the hover — see _ktcRankInfo.
+          const _ktcInfo = _ktcRankInfo(d.n, _ctxMode);
+          const _ktcVal = _ktcInfo ? _ktcInfo.ovr : null;
+          const _ktcTip = _ktcInfo ? ('KTC ' + (_ctxMode === 'dynastysf' ? 'Superflex' : '1QB') + ' rank #' + _ktcInfo.ovr + (_ktcInfo.posRank != null ? ' · ' + _ktcInfo.pos + _ktcInfo.posRank : '') + ' · value ' + _ktcInfo.val.toLocaleString()) : 'Not on KTC\'s dynasty list';
+          const _ktcSub = (_ktcInfo && _ktcInfo.posRank != null) ? '<div style="font-size:.6rem;color:var(--text2);margin-top:2px">' + _ktcInfo.pos + _ktcInfo.posRank + '</div>' : '';
           return `<div class="card-section">
           <div class="card-section-title">ADP Comparison <span style="font-size:.55rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
           <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">
@@ -14634,8 +14737,8 @@ function openPlayerCard(d, ctxMode) {
               <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('sleeper')}${_fmt(_slpAdp)}</div>
             </div>
             <div class="card-rank-box">
-              <div class="lbl">KTC</div>
-              <div class="num${_ktcVal != null ? ' accent' : ''}"${_ktcVal == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('ktc')}${_fmt(_ktcVal)}</div>
+              <div class="lbl" title="${_ktcTip.replace(/"/g, '&quot;')}" style="cursor:help">KTC</div>
+              <div class="num${_ktcVal != null ? ' accent' : ''}"${_ktcVal == null ? ' style="color:var(--text2)"' : ''} title="${_ktcTip.replace(/"/g, '&quot;')}">${_adpLogo('ktc')}${_ktcVal != null ? '#' + _ktcVal : '—'}</div>${_ktcSub}
             </div>
           </div>
         </div>`;

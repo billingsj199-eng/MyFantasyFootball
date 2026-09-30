@@ -123,8 +123,12 @@ def main():
     for name, e in sorted(devy.items()):
         tid = team_ids.get(e["school"])
         c = cache.get(name)
-        if c and not a.force and c.get("tid") == tid and c.get("id"):
+        if c and not a.force and c.get("tid") == tid and c.get("id") and (c.get("ht") or c.get("src") == "cfbd"):
             found[name] = {"id": c["id"], "tid": tid}
+            if c.get("ht"):
+                found[name]["ht"] = c["ht"]
+            if c.get("wt"):
+                found[name]["wt"] = c["wt"]
             continue
         if not tid:
             missing.append((name, e["school"], "no team id"))
@@ -158,7 +162,14 @@ def main():
                 continue
         if hit:
             found[name] = {"id": int(hit["id"]), "tid": tid}
-            cache[name] = {"id": int(hit["id"]), "tid": tid, "espn_name": hit.get("fullName"), "at": today.isoformat()}
+            hm = re.match(r"(\d)'\s*(\d{1,2})", str(hit.get("displayHeight") or ""))
+            wm = re.match(r"(\d{2,3})", str(hit.get("displayWeight") or ""))
+            if hm:
+                found[name]["ht"] = "%s-%s" % (hm.group(1), hm.group(2))
+            if wm:
+                found[name]["wt"] = int(wm.group(1))
+            cache[name] = {"id": int(hit["id"]), "tid": tid, "espn_name": hit.get("fullName"), "at": today.isoformat(),
+                           "ht": found[name].get("ht"), "wt": found[name].get("wt")}
         else:
             missing.append((name, e["school"], "not on ESPN roster"))
     log("headshots: %d found, %d missing" % (len(found), len(missing)))
@@ -169,7 +180,17 @@ def main():
           "// ESPN college-football athlete ids (headshot: a.espncdn.com/i/headshots/college-football/players/full/<id>.png)",
           "// + ESPN team ids per combine_data.js school (logo: a.espncdn.com/i/teamlogos/ncaa/500/<tid>.png).",
           "window.DEVY_HEADSHOTS = " + json.dumps({n: found[n] for n in sorted(found)}, separators=(",", ":"), ensure_ascii=False) + ";",
-          "window.COLLEGE_TEAM_IDS = " + json.dumps(dict(sorted(team_ids.items())), separators=(",", ":"), ensure_ascii=False) + ";", ""]
+          "window.COLLEGE_TEAM_IDS = " + json.dumps(dict(sorted(team_ids.items())), separators=(",", ":"), ensure_ascii=False) + ";",
+          "// ESPN roster height/weight for devy entries that have none (never overwrites)",
+          "(function () {",
+          "  if (typeof COMBINE_DATA === 'undefined') return;",
+          "  Object.keys(window.DEVY_HEADSHOTS).forEach(function (n) {",
+          "    var c = COMBINE_DATA[n], h = window.DEVY_HEADSHOTS[n];",
+          "    if (!c) return;",
+          "    if (!c.ht && h.ht) c.ht = h.ht;",
+          "    if (!c.wt && h.wt) c.wt = h.wt;",
+          "  });",
+          "})();", ""]
     if a.dry_run:
         log("DRY RUN")
         return 0

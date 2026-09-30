@@ -38,7 +38,8 @@ Write-Log '=== weekly devy refresh start ==='
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 $Files = @('data/college_stats_devy.js', 'data/combine_data.js', 'scripts/devy_refresh_cache.json',
            'scripts/devy_audit.json', 'scripts/draft_boards_2027.json', 'data/devy_headshots.js',
-           'scripts/devy_headshots_cache.json', 'data/projected_testing.js', 'scripts/projected_testing_hits.json', 'index.html')
+           'scripts/devy_headshots_cache.json', 'data/projected_testing.js', 'scripts/projected_testing_hits.json',
+           'data/legend_birth_years.js', 'data/_bundle_lookups.js', 'data/_bundle_bbm.js', 'scripts/devy_birthdays_cache.json', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -75,6 +76,11 @@ if ($LASTEXITCODE -ne 0) {
 $out = & $Python 'scripts\pull_devy_headshots.py' 2>&1 | Out-String
 Write-Log ('devy headshots: ' + $out.Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "devy headshots FAILED (exit $LASTEXITCODE) - continuing" }
+
+# 5. Birth dates for devy prospects still missing one (Wikidata; rebuilds data/_bundle_lookups.js)
+$out = & $Python 'scripts\pull_devy_birthdays.py' 2>&1 | Out-String
+Write-Log ('devy birthdays: ' + $out.Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "devy birthdays FAILED (exit $LASTEXITCODE) - continuing" }
 
 $changed = git status --porcelain -- @Files
 if (-not $changed) {

@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-30-exp" as="script">
+<link rel="preload" href="app.js?v=2026-09-30-sync" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1445,8 +1445,8 @@ CLEAR ALL
 <span id="weeklyPublishedChipLabel" style="font-size:.62rem;color:#22c55e;letter-spacing:1px;font-family:'Bebas Neue',sans-serif;font-weight:700">LIVE — WEEK 1</span>
 </div>
 <div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
-<div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced across Redraft / Superflex and across Dynasty 1QB / Dynasty SF. Only the overall interleaving changes per format."></div>
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across these groups:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF). Your within-position order and tiers stay identical across all paired modes.<br><br>Move any player or add/remove a tier in one mode and every paired mode updates instantly. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
+<div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced across Redraft, Superflex, Dynasty 1QB and Dynasty SF. Only the overall interleaving changes per format."></div>
+<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across all four formats:<br><br>• <b>Redraft ↔ Superflex ↔ Dynasty 1QB ↔ Dynasty SF</b><br><br>Only the <em>overall</em> interleaving changes between formats (QBs rank higher in SF, youth higher in dynasty). Your within-position order and tiers stay identical across every synced format.<br><br>Move any player or add/remove a tier in one format and the other three update instantly. Switching into a format re-pulls its positional order from Redraft. Toggle ON to also do an initial sync from your current format right now.</div></span></span>
 </div>
 </div>
 <div class="pos-filters">
@@ -4212,7 +4212,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-section">
 <div class="help-section-icon">📋</div>
 <div class="help-section-title">MY RANKINGS</div>
-<div class="help-section-desc">Your personal custom rankings. <b style="color:var(--accent)">Click a name</b> for the full player card. <b style="color:var(--accent)">Drag rows</b> to reorder. <b style="color:var(--accent)">Hover between rows</b> to add a tier break. <b style="color:var(--accent)">Hit Save</b> to sync to the cloud. Drag and drop players to reorder them, add and remove tiers to organize by position group, export your rankings to a spreadsheet, use the trade calculator powered by your custom values, and mock draft using your personal board.<br><br><b style="color:var(--accent)">Position Sync:</b> Toggle the SYNC switch next to the mode tabs to keep your positional rankings (RB1, RB2, WR1, etc.) and position-specific tiers identical between paired formats — Redraft ↔ Superflex and Dynasty 1QB ↔ Dynasty SF. Only the overall interleaving changes (QBs rank higher in SF). Move a player or add a tier in either mode and the other updates automatically.</div>
+<div class="help-section-desc">Your personal custom rankings. <b style="color:var(--accent)">Click a name</b> for the full player card. <b style="color:var(--accent)">Drag rows</b> to reorder. <b style="color:var(--accent)">Hover between rows</b> to add a tier break. <b style="color:var(--accent)">Hit Save</b> to sync to the cloud. Drag and drop players to reorder them, add and remove tiers to organize by position group, export your rankings to a spreadsheet, use the trade calculator powered by your custom values, and mock draft using your personal board.<br><br><b style="color:var(--accent)">Position Sync:</b> Toggle the SYNC switch next to the mode tabs to keep your positional rankings (RB1, RB2, WR1, etc.) and position-specific tiers identical across Redraft, Superflex, Dynasty 1QB and Dynasty SF. Only the overall interleaving changes (QBs rank higher in SF, youth higher in dynasty). Move a player or add a tier in any one of them and the other three update automatically; Redraft is the source of truth when you switch formats.</div>
 </div>
 
 <div class="help-section">
@@ -5932,7 +5932,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-30-exp"></script>
+<script defer src="app.js?v=2026-09-30-sync"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

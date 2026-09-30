@@ -1757,10 +1757,23 @@ function updatePosLockVis() {
   btn.style.display = show ? '' : 'none';
 }
 
-// === Position Sync: keep within-position order identical across 1QB ↔ SF pairs ===
-// Pairs: redraft ↔ superflex, dynasty ↔ dynastysf
+// === Position Sync: keep within-position order identical across formats ===
+// Group: redraft ↔ superflex ↔ dynasty ↔ dynastysf (see POS_SYNC_GROUP).
+// Per-browser preference. Admins default ON when they have never set it
+// (_posSyncAdminDefault, run from the auth listener) — Jack edits Redraft and
+// expects the other three boards to follow without flipping a switch.
 window._posSyncEnabled = false;
 try { window._posSyncEnabled = localStorage.getItem('_posSyncEnabled') === '1'; } catch(e) {}
+window._posSyncAdminDefault = function() {
+  try {
+    if (localStorage.getItem('_posSyncEnabled') != null) return; // explicit choice wins
+    if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
+    window._posSyncEnabled = true;
+    localStorage.setItem('_posSyncEnabled', '1');
+    const el = document.getElementById('syncToggle');
+    if (el) el.classList.add('on');
+  } catch(e) {}
+};
 
 // Apply the sync toggle UI state on load
 (function() {
@@ -1774,10 +1787,10 @@ window._togglePosSync = function() {
   if (el) el.classList.toggle('on', window._posSyncEnabled);
   try { localStorage.setItem('_posSyncEnabled', window._posSyncEnabled ? '1' : '0'); } catch(e) {}
   if (window._posSyncEnabled) {
-    // Do an immediate sync from current mode to its pair
+    // Do an immediate sync from the current mode to every other synced format
     _syncPairedMode();
     saveLocal();
-    toast('Position sync ON — paired mode updated');
+    toast('Position sync ON — Redraft, Superflex, Dynasty 1QB and Dynasty SF now share positional order');
   } else {
     toast('Position sync OFF');
   }
@@ -1787,64 +1800,67 @@ window._showSyncHelp = function() {
   // Tooltip shows on hover/tap via CSS; this is a no-op fallback
 };
 
-// Position-sync partner groups. Modes within a group share within-position
-// rankings (RB1, RB2, etc.) and position-specific tiers, while keeping their
-// own overall interleaving. Redraft and Superflex form a 2-way pair, as do
-// Dynasty 1QB and Dynasty SF.
+// Position-sync group. Every mode in the group shares within-position
+// rankings (RB1, RB2, etc.) and position-specific tiers, while keeping its
+// own overall interleaving (QBs rank higher in SF, youth/rookies in dynasty).
+// 2026-09-30 (Jack): one 4-way group — Redraft, Superflex, Dynasty 1QB and
+// Dynasty SF — instead of two 2-way pairs. Jack maintains Redraft, so an edit
+// there must reach every other format; an edit in any other format pushes
+// back the same way. Redraft is the canonical source when a mode is ENTERED
+// (see the format-switch handler).
 // 2026-08-18: Best Ball retired from the UI, so it left the mesh — an
 // unreachable mode must not keep pulling live edits out of Redraft.
+const POS_SYNC_GROUP = ['redraft', 'superflex', 'dynasty', 'dynastysf'];
 function _syncPartners(mode) {
-  if (mode === 'redraft')   return ['superflex'];
-  if (mode === 'superflex') return ['redraft'];
-  if (mode === 'dynasty')   return ['dynastysf'];
-  if (mode === 'dynastysf') return ['dynasty'];
-  return [];
+  if (POS_SYNC_GROUP.indexOf(mode) < 0) return [];
+  return POS_SYNC_GROUP.filter(m => m !== mode);
 }
 window._syncPartners = _syncPartners;
 
 // Sync the source mode's positional ordering + position tiers into ONE
 // destination mode. Only this single direction; the caller decides which
 // destinations to push to.
+//
+// The destination keeps its own overall interleaving: every slot keeps its
+// POSITION, and the players of that position are re-dealt into those slots in
+// the source's within-position order. A player the destination has but the
+// source lacks (a board loaded from an older save, a player added to one
+// format only) keeps his previous positional rank instead of being dropped —
+// the old fill loop skipped him and left the trailing slots holding stale
+// (duplicate) indices.
 function _syncOneDirection(srcMode, dstMode) {
   const srcBoard = versionBoards[currentVersion][srcMode];
   const dstBoard = versionBoards[currentVersion][dstMode];
-  if (!srcBoard || !dstBoard) return;
+  if (!srcBoard || !dstBoard || srcMode === dstMode) return;
 
-  // Build position order from source board
-  const posOrder = {};
+  // Source within-position order, restricted to players the destination has.
+  const dstSet = new Set(dstBoard);
+  const srcOrder = {};
   srcBoard.forEach(idx => {
+    if (!D[idx] || !dstSet.has(idx)) return;
     const pos = D[idx].s;
-    if (!posOrder[pos]) posOrder[pos] = [];
-    posOrder[pos].push(idx);
+    (srcOrder[pos] || (srcOrder[pos] = [])).push(idx);
   });
 
-  // Build set of players in dst for each position
-  const dstPosSet = {};
-  dstBoard.forEach(idx => {
-    const pos = D[idx].s;
-    if (!dstPosSet[pos]) dstPosSet[pos] = new Set();
-    dstPosSet[pos].add(idx);
+  // Destination within-position order + the slots each position occupies.
+  const dstOrder = {}, dstSlots = {};
+  dstBoard.forEach((idx, i) => {
+    const pos = D[idx] ? D[idx].s : '?';
+    (dstOrder[pos] || (dstOrder[pos] = [])).push(idx);
+    (dstSlots[pos] || (dstSlots[pos] = [])).push(i);
   });
 
-  // Walk dstBoard and replace each slot with the next player from
-  // that position's source order (preserving overall position interleaving)
-  const posCursors = {};
-  Object.keys(posOrder).forEach(pos => { posCursors[pos] = 0; });
-
-  for (let i = 0; i < dstBoard.length; i++) {
-    const pos = D[dstBoard[i]].s;
-    if (!posOrder[pos]) continue;
-    while (posCursors[pos] < posOrder[pos].length) {
-      const candidate = posOrder[pos][posCursors[pos]];
-      if (dstPosSet[pos] && dstPosSet[pos].has(candidate)) {
-        dstBoard[i] = candidate;
-        dstPosSet[pos].delete(candidate);
-        posCursors[pos]++;
-        break;
-      }
-      posCursors[pos]++;
-    }
-  }
+  Object.keys(dstOrder).forEach(pos => {
+    const merged = (srcOrder[pos] || []).slice();
+    if (!merged.length) return; // position unknown to the source: leave as is
+    const inSrc = new Set(merged);
+    // Re-insert destination-only players at their prior positional rank.
+    dstOrder[pos].forEach((idx, r) => {
+      if (inSrc.has(idx)) return;
+      merged.splice(Math.min(r, merged.length), 0, idx);
+    });
+    dstSlots[pos].forEach((slot, k) => { dstBoard[slot] = merged[k]; });
+  });
 
   // Sync position-specific tiers (QB, RB, WR, TE, K, DST, ROOKIE) — NOT the ALL tier
   // since ALL tiers depend on overall rank which differs between formats
@@ -1853,11 +1869,12 @@ function _syncOneDirection(srcMode, dstMode) {
   const dstTiers = versionTiers[currentVersion][dstMode];
   const srcCtrs = versionTierCounters[currentVersion][srcMode];
   const dstCtrs = versionTierCounters[currentVersion][dstMode];
+  if (!srcTiers || !dstTiers) return;
   syncTierKeys.forEach(pk => {
     // Best Ball doesn't have K/DST players, so don't import K/DST tier buckets.
     if (dstMode === 'bestball' && (pk === 'K' || pk === 'DST')) return;
     dstTiers[pk] = (srcTiers[pk] || []).map(t => ({id: t.id, label: t.label, name: t.name, afterRank: t.afterRank}));
-    dstCtrs[pk] = srcCtrs[pk] || 0;
+    if (dstCtrs && srcCtrs) dstCtrs[pk] = srcCtrs[pk] || 0;
   });
 }
 
@@ -9330,25 +9347,19 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
       window._weeklyReconcileBoard('jacks');
       window._weeklyReconcileBoard('mine');
     }
-    // If sync is on, pull the entering mode's positional order from its
-    // partner. One primary source per mode so the result is deterministic:
-    //   superflex ← redraft (canonical source for superflex)
-    //   redraft   ← superflex (preserves prior behavior)
-    //   dynasty(sf) ← its single pair
-    if (window._posSyncEnabled) {
-      const primarySrc = {
-        redraft: 'superflex',
-        superflex: 'redraft',
-        dynasty: 'dynastysf',
-        dynastysf: 'dynasty'
-      }[currentMode];
-      if (primarySrc) {
-        const target = currentMode;
-        currentMode = primarySrc;
-        syncMode();
-        _syncOneDirection(currentMode, target);
-        currentMode = target;
-      }
+    // If sync is on, pull the entering mode's positional order from Redraft,
+    // the canonical board (Jack maintains Redraft; the 9am injectors and
+    // cloud restores land there first). Live edits in any synced format
+    // already push to every other one (_syncPairedMode), so this only
+    // catches drift from a board that changed while sync was off or from a
+    // save that carried an older partner board. Redraft itself pulls from
+    // nothing — a stale Superflex must never overwrite fresh Redraft work.
+    if (window._posSyncEnabled && currentMode !== 'redraft' && _syncPartners(currentMode).indexOf('redraft') >= 0) {
+      const target = currentMode;
+      currentMode = 'redraft';
+      syncMode();
+      _syncOneDirection(currentMode, target);
+      currentMode = target;
     }
     syncMode();
     renumber();
@@ -30921,6 +30932,10 @@ window.fmtHeight = fmtHeight;
     // Refresh canEdit-dependent UI (Best Ball "Copy from Redraft" button etc.)
     if (typeof window._updateCopyFromRedraftBtn === 'function') {
       try { window._updateCopyFromRedraftBtn(); } catch (_e) {}
+    }
+    // Admins get position sync ON by default (no-op once a preference exists).
+    if (user && typeof window._posSyncAdminDefault === 'function') {
+      try { window._posSyncAdminDefault(); } catch (_e) {}
     }
     // Only re-render if signed-in status actually CHANGED. The initial render already
     // assumed the current (usually signed-out) state; when auth resolves to the SAME

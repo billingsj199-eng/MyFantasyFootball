@@ -30,6 +30,22 @@ COMBINE_JS = "data/combine_data.js"
 INDEX_HTML = "index.html"
 
 
+HITS = "scripts/projected_testing_hits.json"
+
+
+def load_hits():
+    try:
+        with open(HITS, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_hits(h):
+    with open(HITS, "w", encoding="utf-8") as f:
+        json.dump(h, f, indent=1, sort_keys=True)
+
+
 def norm(n):
     n = (n or "").lower().strip()
     n = re.sub(r"\s+(jr\.?|sr\.?|ii|iii|iv|v)$", "", n)
@@ -86,7 +102,13 @@ def main():
             e = cb[key]
             seen.add(key)
             if e.get("forty") or e.get("ras"):
-                # official testing exists: drop any stale projection
+                # official testing exists: drop any stale projection, but LOG projected vs actual so
+                # the projection sources can be graded (scripts/projected_testing_hits.json)
+                if e.get("fortyProj") is not None and e.get("forty"):
+                    hits = load_hits()
+                    hits.setdefault(str(year), {})[key] = {"proj": e["fortyProj"], "actual": e["forty"], "src": e.get("fortyProjSrc"),
+                                                          "err": round(float(e["forty"]) - float(e["fortyProj"]), 3), "logged": today.isoformat()}
+                    save_hits(hits)
                 if e.pop("fortyProj", None) is not None or e.pop("fortyProjSrc", None) is not None:
                     cleared.append(key)
                 e.pop("vertProj", None); e.pop("broadProj", None)
@@ -116,6 +138,11 @@ def main():
     for n, why in skipped:
         print("  skip %-24s %s" % (n, why))
     print("applied %d, skipped %d, cleared %d" % (len(applied), len(skipped), len(cleared)))
+    hits = load_hits()
+    errs = [v["err"] for yr in hits.values() for v in yr.values()]
+    if errs:
+        print("projection accuracy so far: n %d, mean error %+.3f s (actual - projected), MAE %.3f s, within .05 s: %d%%" % (
+            len(errs), sum(errs) / len(errs), sum(abs(x) for x in errs) / len(errs), round(100 * sum(1 for x in errs if abs(x) <= 0.05) / len(errs))))
     if a.dry_run:
         return 0
     before = digest(COMBINE_JS)

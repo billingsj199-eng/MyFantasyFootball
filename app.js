@@ -13352,10 +13352,35 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
   const showTm = teams.length > 1 || (teams.length === 1 && weeks.some(w => !w.tm));
   const withFpts = weeks.map(w => ({...w, fpts: _cfpts(w)}));
   const bestFpts = Math.max(...withFpts.map(w => w.fpts));
+  // PFF per-game columns (devy prospects: data/college_stats_devy.js carries PFF Premium
+  // college grades/analytics per game — scripts/refresh_devy_stats.py). Shown only when
+  // at least one week of this season has a `pff` grade.
+  const hasPff = withFpts.some(w => w.pff != null);
+  // [key, header, decimals] per position — grade first, then the analytics that matter for the position
+  const pffCols = !hasPff ? [] :
+    isQB ? [['pff','PFF',1],['pffP','PASS',1],['btt','BTT',0],['twp','TWP',0],['acc','ACC%',1],['adot','ADOT',1]] :
+    isRB ? [['pff','PFF',1],['pffR','RUN',1],['yco','YCO/A',1],['mtf','MTF',0],['elu','ELU',1],['pffRt','RTE',1]] :
+           [['pff','PFF',1],['pffRt','RTE',1],['rts','RTS',0],['yprr','YPRR',2],['adot','ADOT',1],['cc','CC%',1]];
+  const pffTitles = {pff:'PFF overall offense grade (0-100)',pffP:'PFF passing grade',pffR:'PFF rushing grade',pffRt:'PFF route-running grade',
+    btt:'Big-time throws',twp:'Turnover-worthy plays',acc:'Accuracy % (aimed passes)',adot:'Average depth of target',
+    yco:'Yards after contact per attempt',mtf:'Missed tackles forced',elu:'PFF elusive rating',rts:'Routes run',yprr:'Yards per route run',cc:'Contested catch %'};
+  const gradeCell = v => {
+    if (v == null) return '<td style="color:var(--text2)">—</td>';
+    // same bands as the card's Film Grade box (cb-elite / cb-good / cb-avg / cb-below)
+    const cls = v >= 90 ? 'cb-elite' : v >= 80 ? 'cb-good' : v >= 70 ? 'cb-avg' : 'cb-below';
+    return '<td class="'+cls+'" style="font-weight:700">'+v.toFixed(1)+'</td>';
+  };
+  const pffCell = (w, [k, , dec]) => {
+    const v = w[k];
+    if (v == null) return '<td style="color:var(--text2)">—</td>';
+    if (k === 'pff' || k === 'pffP' || k === 'pffR' || k === 'pffRt') return gradeCell(v);
+    return '<td>' + (dec ? Number(v).toFixed(dec) : v) + '</td>';
+  };
   let hdr = '<tr><th>WK</th><th>TM</th><th>OPP</th><th>FPTS</th>';
   if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>RuYd</th><th>RuTD</th>';
   else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
   else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>RuYd</th><th>RuTD</th>';
+  pffCols.forEach(([k, label]) => { hdr += '<th title="'+(pffTitles[k]||'')+'" style="border-left:'+(k==='pff'?'1px solid var(--border,#333)':'0')+'">'+label+'</th>'; });
   hdr += '</tr>';
   let rows = withFpts.map(w => {
     const isBest = w.fpts === bestFpts && bestFpts > 0 ? ' class="best-yr"' : '';
@@ -13376,6 +13401,7 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
       r += '<td>'+(w.rec||0)+'</td><td>'+(w.rcy||0)+'</td><td style="color:var(--green)">'+(w.rctd||0)+'</td>';
       r += '<td>'+(w.ry||0)+'</td><td>'+(w.rtd||0)+'</td>';
     }
+    pffCols.forEach(c => { r += pffCell(w, c); });
     return r + '</tr>';
   }).join('');
   // Totals
@@ -13387,6 +13413,18 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
   if (isQB) tr += '<td>'+tot.pc+'</td><td>'+tot.pa+'</td><td>'+tot.py+'</td><td style="color:var(--green)">'+tot.ptd+'</td><td style="color:var(--red)">'+tot.int+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
   else if (isRB) tr += '<td>'+tot.ra+'</td><td>'+tot.ry+'</td><td style="color:var(--green)">'+tot.rtd+'</td><td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td>'+tot.rctd+'</td>';
   else tr += '<td>'+tot.rec+'</td><td>'+tot.rcy+'</td><td style="color:var(--green)">'+tot.rctd+'</td><td>'+tot.ry+'</td><td>'+tot.rtd+'</td>';
+  // PFF totals: grades = snap-weighted mean (plain mean without snaps), counts summed, rates averaged
+  pffCols.forEach(([k, , dec]) => {
+    const have = withFpts.filter(w => w[k] != null);
+    if (!have.length) { tr += '<td></td>'; return; }
+    let v;
+    if (k === 'btt' || k === 'twp' || k === 'mtf' || k === 'rts') v = have.reduce((s, w) => s + w[k], 0);
+    else {
+      const wsum = have.reduce((s, w) => s + (w.snp || 1), 0);
+      v = have.reduce((s, w) => s + w[k] * (w.snp || 1), 0) / wsum;
+    }
+    tr += (k === 'pff' || k === 'pffP' || k === 'pffR' || k === 'pffRt') ? gradeCell(v) : '<td>' + (dec ? v.toFixed(dec) : v) + '</td>';
+  });
   rows += tr + '</tr>';
   return '<div class="career-table-wrap"><table class="career-table"><thead>'+hdr+'</thead><tbody>'+rows+'</tbody></table></div>';
 }

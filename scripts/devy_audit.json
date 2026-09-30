@@ -1,0 +1,1130 @@
+{
+ "players": {
+  "Ahmad Hardy": {
+   "cfbd_id": "5197065",
+   "cfbd_team": "Missouri",
+   "combine_school": "Missouri",
+   "draftProj": 62,
+   "eligYr": 2027,
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Missouri"
+   }
+  },
+  "Amare Thomas": {
+   "cfbd_id": "5077060",
+   "cfbd_team": "Houston",
+   "combine_school": "Houston",
+   "draftProj": 101,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 78.9,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Houston"
+   }
+  },
+  "Arch Manning": {
+   "cfbd_id": "4870906",
+   "cfbd_team": "Texas",
+   "combine_school": "Texas",
+   "draftProj": 2,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 80.2,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Texas"
+   }
+  },
+  "Austin Simmons": {
+   "cfbd_id": "5141684",
+   "cfbd_team": "Missouri",
+   "combine_school": "Missouri",
+   "draftProj": 83,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 83.0,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Ole Miss",
+    "2024": "Ole Miss",
+    "2025": "Ole Miss",
+    "2026": "Missouri"
+   }
+  },
+  "Brandon Inniss": {
+   "cfbd_id": "4870835",
+   "cfbd_team": "Ohio State",
+   "combine_school": "Ohio St.",
+   "draftProj": 146,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Ohio State"
+   }
+  },
+  "Brendan Sorsby": {
+   "cfbd_id": null,
+   "cfbd_team": null,
+   "combine_school": "Cincinnati",
+   "draftProj": 101,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 67.2,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 73.2,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 86.3,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Indiana",
+    "2024": "Cincinnati",
+    "2025": "Cincinnati"
+   }
+  },
+  "Bryant Wesco Jr.": {
+   "cfbd_id": "5112674",
+   "cfbd_team": "Clemson",
+   "combine_school": "Clemson",
+   "draftProj": 86,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 60.1,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Clemson"
+   }
+  },
+  "Bryce Underwood": {
+   "cfbd_id": "5141741",
+   "cfbd_team": "Michigan",
+   "combine_school": "Michigan",
+   "draftProj": 8,
+   "eligYr": 2028,
+   "pff": {
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Michigan"
+   }
+  },
+  "CJ Carr": {
+   "cfbd_id": "5079369",
+   "cfbd_team": "Notre Dame",
+   "combine_school": "Notre Dame",
+   "draftProj": 13,
+   "eligYr": 2027,
+   "pff": {
+    "2025": {
+     "pff": 83.5,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Notre Dame",
+    "2025": "Notre Dame",
+    "2026": "Notre Dame"
+   }
+  },
+  "Cam Coleman": {
+   "cfbd_id": "5079376",
+   "cfbd_team": "Texas",
+   "combine_school": "Texas",
+   "draftProj": 9,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 70.5,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Texas"
+   }
+  },
+  "Charlie Becker": {
+   "cfbd_id": "5146735",
+   "cfbd_team": "Indiana",
+   "combine_school": "Indiana",
+   "draftProj": 11,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 89.1,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 85.6,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Indiana",
+    "2025": "Indiana",
+    "2026": "Indiana"
+   }
+  },
+  "Cooper Barkate": {
+   "cfbd_id": "4804878",
+   "cfbd_team": "Miami",
+   "combine_school": "Miami (FL)",
+   "draftProj": 101,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 77.8,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 80.9,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 75.4,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 65.2,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Harvard",
+    "2024": "Harvard",
+    "2025": "Duke",
+    "2026": "Miami"
+   }
+  },
+  "Dakorien Moore": {
+   "cfbd_id": "5141586",
+   "cfbd_team": "Oregon",
+   "combine_school": "Oregon",
+   "draftProj": 40,
+   "eligYr": 2028,
+   "pff": {
+    "2026": {
+     "pff": 65.4,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Oregon"
+   }
+  },
+  "Dallas Wilson": {
+   "cfbd_id": "5141723",
+   "cfbd_team": "Florida",
+   "combine_school": "Florida",
+   "draftProj": 50,
+   "eligYr": 2028,
+   "pff": {
+    "2026": {
+     "pff": 76.0,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Florida"
+   }
+  },
+  "Dante Moore": {
+   "cfbd_id": "4870921",
+   "cfbd_team": "Oregon",
+   "combine_school": "Oregon",
+   "draftProj": 3,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Oregon"
+   }
+  },
+  "Darian Mensah": {
+   "cfbd_id": "5121169",
+   "cfbd_team": "Miami",
+   "combine_school": "Miami (FL)",
+   "draftProj": 7,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 81.4,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 85.0,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 93.9,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Tulane",
+    "2024": "Tulane",
+    "2025": "Duke",
+    "2026": "Miami"
+   }
+  },
+  "Deuce Alexander": {
+   "cfbd_id": "5152158",
+   "cfbd_team": "Ole Miss",
+   "combine_school": "Mississippi",
+   "draftProj": 80,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 68.3,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 71.7,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 78.5,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Wake Forest",
+    "2024": "Wake Forest",
+    "2025": "Ole Miss",
+    "2026": "Ole Miss"
+   }
+  },
+  "Drake Lindsey": {
+   "cfbd_id": "5144959",
+   "cfbd_team": "Minnesota",
+   "combine_school": "Minnesota",
+   "draftProj": 72,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 68.7,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 75.1,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Minnesota",
+    "2025": "Minnesota",
+    "2026": "Minnesota"
+   }
+  },
+  "Drew Mestemaker": {
+   "cfbd_id": "5219834",
+   "cfbd_team": "Oklahoma State",
+   "combine_school": "Oklahoma St.",
+   "draftProj": 24,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 86.1,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 79.9,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "North Texas",
+    "2025": "North Texas",
+    "2026": "Oklahoma State"
+   }
+  },
+  "Duce Robinson": {
+   "cfbd_id": "4870922",
+   "cfbd_team": "Florida State",
+   "combine_school": "Florida St.",
+   "draftProj": 71,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 66.5,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 74.0,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 79.5,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 70.6,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "USC",
+    "2024": "USC",
+    "2025": "Florida State",
+    "2026": "Florida State"
+   }
+  },
+  "Eric Singleton Jr.": {
+   "cfbd_id": "5095360",
+   "cfbd_team": "Florida",
+   "combine_school": "Florida",
+   "draftProj": 127,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Florida"
+   }
+  },
+  "Isaac Brown": {
+   "cfbd_id": "5079349",
+   "cfbd_team": "Louisville",
+   "combine_school": "Louisville",
+   "draftProj": 113,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 51.2,
+     "pffRush": 75.5
+    }
+   },
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Louisville"
+   }
+  },
+  "Jadan Baugh": {
+   "cfbd_id": "5079322",
+   "cfbd_team": "Florida",
+   "combine_school": "Florida",
+   "draftProj": 17,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 47.9,
+     "pffRush": 92.6
+    }
+   },
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Florida"
+   }
+  },
+  "Jamari Johnson": {
+   "cfbd_id": "4922988",
+   "cfbd_team": "Oregon",
+   "combine_school": "Oregon",
+   "draftProj": 19,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 80.6,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 78.1,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "TE",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Louisville",
+    "2024": "Louisville",
+    "2025": "Oregon",
+    "2026": "Oregon"
+   }
+  },
+  "Jayden Maiava": {
+   "cfbd_id": "4685454",
+   "cfbd_team": "USC",
+   "combine_school": "USC",
+   "draftProj": 49,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 90.8,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "USC"
+   }
+  },
+  "Jeremiah Smith": {
+   "cfbd_id": "5079720",
+   "cfbd_team": "Ohio State",
+   "combine_school": "Ohio St.",
+   "draftProj": 1,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 94.2,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Ohio State"
+   }
+  },
+  "Julian Sayin": {
+   "cfbd_id": "5079712",
+   "cfbd_team": "Ohio State",
+   "combine_school": "Ohio St.",
+   "draftProj": 39,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 92.1,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "Ohio State"
+   }
+  },
+  "KJ Duff": {
+   "cfbd_id": "5084771",
+   "cfbd_team": "Rutgers",
+   "combine_school": "Rutgers",
+   "draftProj": 36,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 68.3,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 83.4,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 85.5,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Rutgers",
+    "2025": "Rutgers",
+    "2026": "Rutgers"
+   }
+  },
+  "Kewan Lacy": {
+   "cfbd_id": "5086388",
+   "cfbd_team": "Ole Miss",
+   "combine_school": "Mississippi",
+   "draftProj": 33,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 50.7,
+     "pffRush": 91.6
+    },
+    "2026": {
+     "pff": 52.1,
+     "pffRush": 82.9
+    }
+   },
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Missouri",
+    "2025": "Ole Miss",
+    "2026": "Ole Miss"
+   }
+  },
+  "LaNorris Sellers": {
+   "cfbd_id": "4875127",
+   "cfbd_team": "South Carolina",
+   "combine_school": "South Carolina",
+   "draftProj": 34,
+   "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": 62.0,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2026": "South Carolina"
+   }
+  },
+  "Luke Reynolds": {
+   "cfbd_id": "5138451",
+   "cfbd_team": "Virginia Tech",
+   "combine_school": "Virginia Tech",
+   "draftProj": 67,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 62.8,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 88.2,
+     "pffRush": null
+    }
+   },
+   "pos": "TE",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Penn State",
+    "2025": "Penn State",
+    "2026": "Virginia Tech"
+   }
+  },
+  "Mario Craver": {
+   "cfbd_id": "5079345",
+   "cfbd_team": "Texas A&M",
+   "combine_school": "Texas A&M",
+   "draftProj": 60,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 67.3,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 81.4,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 73.3,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Mississippi State",
+    "2025": "Texas A&M",
+    "2026": "Texas A&M"
+   }
+  },
+  "Mark Fletcher Jr.": {
+   "cfbd_id": "4870736",
+   "cfbd_team": "Miami",
+   "combine_school": "Miami (FL)",
+   "draftProj": 101,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 59.1,
+     "pffRush": 84.9
+    },
+    "2024": {
+     "pff": 34.7,
+     "pffRush": 84.7
+    },
+    "2025": {
+     "pff": 49.6,
+     "pffRush": 92.0
+    },
+    "2026": {
+     "pff": 57.7,
+     "pffRush": 74.9
+    }
+   },
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Miami",
+    "2024": "Miami",
+    "2025": "Miami",
+    "2026": "Miami"
+   }
+  },
+  "Nate Frazier": {
+   "cfbd_id": "5084047",
+   "cfbd_team": "Georgia",
+   "combine_school": "Georgia",
+   "draftProj": 94,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 42.6,
+     "pffRush": 84.2
+    },
+    "2025": {
+     "pff": 60.8,
+     "pffRush": 90.8
+    },
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Georgia",
+    "2025": "Georgia",
+    "2026": "Georgia"
+   }
+  },
+  "Nick Marsh": {
+   "cfbd_id": "5079600",
+   "cfbd_team": "Indiana",
+   "combine_school": "Indiana",
+   "draftProj": 32,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 68.7,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 67.5,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 73.6,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Michigan State",
+    "2025": "Michigan State",
+    "2026": "Indiana"
+   }
+  },
+  "Nyck Harbor": {
+   "cfbd_id": "4870745",
+   "cfbd_team": "South Carolina",
+   "combine_school": "South Carolina",
+   "draftProj": 101,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 54.9,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 64.2,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 67.8,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 56.0,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "South Carolina",
+    "2024": "South Carolina",
+    "2025": "South Carolina",
+    "2026": "South Carolina"
+   }
+  },
+  "Omarion Miller": {
+   "cfbd_id": "4870850",
+   "cfbd_team": "Arizona State",
+   "combine_school": "Arizona St.",
+   "draftProj": 56,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 67.5,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 67.9,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 62.0,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Colorado",
+    "2024": "Colorado",
+    "2025": "Colorado",
+    "2026": "Arizona State"
+   }
+  },
+  "Reed Harris": {
+   "cfbd_id": "5031157",
+   "cfbd_team": "Arizona State",
+   "combine_school": "Arizona St.",
+   "draftProj": 48,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 59.0,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 65.6,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 90.7,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Boston College",
+    "2024": "Boston College",
+    "2025": "Boston College",
+    "2026": "Arizona State"
+   }
+  },
+  "Ryan Coleman-Williams": {
+   "cfbd_id": "5141711",
+   "cfbd_team": "Alabama",
+   "combine_school": "Alabama",
+   "draftProj": 35,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 72.4,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 66.5,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 69.4,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Alabama",
+    "2025": "Alabama",
+    "2026": "Alabama"
+   }
+  },
+  "Ryan Wingo": {
+   "cfbd_id": "5218633",
+   "cfbd_team": "Texas",
+   "combine_school": "Texas",
+   "draftProj": 81,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 64.6,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 70.9,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 69.2,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Texas",
+    "2025": "Texas",
+    "2026": "Texas"
+   }
+  },
+  "Sam Leavitt": {
+   "cfbd_id": "5078810",
+   "cfbd_team": "LSU",
+   "combine_school": "LSU",
+   "draftProj": 65,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 82.2,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 67.4,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 85.6,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Michigan State",
+    "2024": "Arizona State",
+    "2025": "Arizona State",
+    "2026": "LSU"
+   }
+  },
+  "Terrance Carter Jr.": {
+   "cfbd_id": "4867887",
+   "cfbd_team": "Texas Tech",
+   "combine_school": "Texas Tech",
+   "draftProj": 101,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 78.5,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 82.5,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 82.2,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
+   "pos": "TE",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Louisiana",
+    "2024": "Louisiana",
+    "2025": "Texas Tech",
+    "2026": "Texas Tech"
+   }
+  },
+  "Trey'Dez Green": {
+   "cfbd_id": "5079420",
+   "cfbd_team": "LSU",
+   "combine_school": "LSU",
+   "draftProj": 18,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 64.8,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 75.0,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 72.7,
+     "pffRush": null
+    }
+   },
+   "pos": "TE",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "LSU",
+    "2025": "LSU",
+    "2026": "LSU"
+   }
+  },
+  "Trinidad Chambliss": {
+   "cfbd_id": "4911529",
+   "cfbd_team": "Ole Miss",
+   "combine_school": "Mississippi",
+   "draftProj": 8,
+   "eligYr": 2027,
+   "pff": {
+    "2025": {
+     "pff": 83.7,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 85.3,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Ferris State",
+    "2025": "Ole Miss",
+    "2026": "Ole Miss"
+   }
+  },
+  "Wyatt Young": {
+   "cfbd_id": "5148787",
+   "cfbd_team": "Oklahoma State",
+   "combine_school": "Oklahoma St.",
+   "draftProj": 97,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 55.4,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 89.0,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 84.1,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "North Texas",
+    "2025": "North Texas",
+    "2026": "Oklahoma State"
+   }
+  }
+ },
+ "run": "2026-09-30",
+ "season": 2026
+}

@@ -36,6 +36,7 @@ const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] :
 const POSITIONS = (opt('--pos', 'QB,RB,WR,TE')).split(',');
 const PASSES = parseInt(opt('--passes', '2'), 10);
 const LOYO = !args.includes('--no-loyo');
+const EXP = args.includes('--exp');   // experiments grid (deployed weights fixed) instead of weight descent
 const OUT = opt('--out', path.join(ROOT, 'scripts', `jm_optimize_results_${new Date().toISOString().slice(0, 10)}.json`));
 const DELTAS = [0.03, -0.03, 0.015, -0.015];
 const MIN_KEY_W = 0.02;   // only perturb keys carrying real weight
@@ -145,6 +146,7 @@ async function boot() {
         });
       });
       if (window.__jmCfgOnly) return null;
+      window._JM_EXP = cfg.exp || null;
       if (window._jmClearCache) window._jmClearCache();
       return window.__jmCollect(window.buildProspectData());
     };
@@ -255,6 +257,46 @@ async function descent(page, base, tiers, years, label) {
     const rp0 = byPos(rows0, null);
     POSITIONS.forEach(p => { results.baseline[p] = score(rp0[p], tiers[p]); console.log(`  baseline ${p}: n ${results.baseline[p].n} rho ${results.baseline[p].rho.toFixed(3)} pen ${results.baseline[p].pen.toFixed(3)} loss ${results.baseline[p].loss.toFixed(3)}`); });
 
+    if (EXP) {
+      // Grid of flag-gated model experiments, deployed weights fixed. Per position, the config is
+      // chosen on the 7 fit years (loss) and scored on the held-out year; pooled = ship/no-ship.
+      const grid = [{ label: 'baseline', exp: null }];
+      for (const k of [0.05, 0.1, 0.15, 0.2]) grid.push({ label: `tmComp WR k=${k}`, exp: { tmComp: { WR: k } } });
+      for (const k of [0.05, 0.1, 0.15, 0.2]) grid.push({ label: `tmComp RB k=${k}`, exp: { tmComp: { RB: k } } });
+      grid.push({ label: 'rbSos', exp: { rbSos: true } });
+      for (const k of [0.05, 0.1, 0.15]) grid.push({ label: `rbSos + tmComp RB k=${k}`, exp: { rbSos: true, tmComp: { RB: k } } });
+      const rowsBy = {};
+      for (const g of grid) {
+        rowsBy[g.label] = await evalCfg(page, { ...base, exp: g.exp });
+        const rp = byPos(rowsBy[g.label], null);
+        console.log(`  ${g.label.padEnd(26)} ` + POSITIONS.map(p => { const sc = score(rp[p], tiers[p]); return `${p} rho ${sc.rho.toFixed(3)} pen ${sc.pen.toFixed(3)}`; }).join(' | '));
+      }
+      results.experiments = { grid: grid.map(g => g.label), full: {}, loyo: {}, pooled: {} };
+      for (const g of grid) {
+        const rp = byPos(rowsBy[g.label], null);
+        results.experiments.full[g.label] = Object.fromEntries(POSITIONS.map(p => [p, score(rp[p], tiers[p])]));
+      }
+      POSITIONS.forEach(p => {
+        const pooledBase = [], pooledSel = [], picks = {};
+        for (const y of years) {
+          const fit = new Set(years.filter(v => v !== y));
+          let best = null;
+          for (const g of grid) {
+            const sc = score(byPos(rowsBy[g.label], fit)[p], tiers[p]);
+            if (!best || sc.loss < best.loss - 1e-6) best = { label: g.label, loss: sc.loss };
+          }
+          picks[y] = best.label;
+          byPos(rowsBy['baseline'], new Set([y]))[p].filter(r => r.verdict !== 'pending').forEach(r => pooledBase.push(r));
+          byPos(rowsBy[best.label], new Set([y]))[p].filter(r => r.verdict !== 'pending').forEach(r => pooledSel.push(r));
+        }
+        const sb = score(pooledBase, tiers[p]), ss = score(pooledSel, tiers[p]);
+        results.experiments.pooled[p] = { base: sb, selected: ss, picks };
+        console.log(`POOLED out-of-year ${p}: rho ${sb.rho.toFixed(3)} -> ${ss.rho.toFixed(3)}  pen ${sb.pen.toFixed(3)} -> ${ss.pen.toFixed(3)}  picks: ${Object.values(picks).join(' / ')}`);
+      });
+      fs.writeFileSync(OUT, JSON.stringify(results, null, 1));
+      console.log('wrote', OUT, `(${evalCfg.count} evals)`);
+      return;
+    }
     if (LOYO) {
       const pooledBase = {}, pooledTuned = {};
       POSITIONS.forEach(p => { pooledBase[p] = []; pooledTuned[p] = []; });

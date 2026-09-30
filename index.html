@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-30-rasproj" as="script">
+<link rel="preload" href="app.js?v=2026-09-30-exp" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -5483,6 +5483,7 @@ window._ensureCollegeStatsData = (function() {
     const devy = _loadScript('data/college_weekly_devy.js?v=2026-05-13');
     // In-season devy/future-class rows (weekly auto-refresh, scripts/refresh_devy_stats.py):
     // defines window._csPatchDevy (applied last, below) + this season's COLLEGE_WEEKLY game logs.
+    const spz = _loadScript('data/sp_def_z.js?v=2026-09-30');  // SP+ defense z per team-season (RB schedule-adjusted production experiment)
     const devyCs = _loadScript('data/college_stats_devy.js?v=2026-09-30dv3');
     // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
@@ -5491,7 +5492,7 @@ window._ensureCollegeStatsData = (function() {
     const cwk1 = _loadScript('data/college_weekly_1.js?v=2026-06-17');
     const cwk2 = _loadScript('data/college_weekly_2.js?v=2026-06-17');
     const cwk3 = _loadScript('data/college_weekly_3.js?v=2026-06-17');
-    promise = Promise.all([csChain, devy, devyCs, cwk1, cwk2, cwk3]).then(function() {
+    promise = Promise.all([csChain, devy, devyCs, spz, cwk1, cwk2, cwk3]).then(function() {
       try { if (window._csPatch1) window._csPatch1(); } catch (e) { console.warn('[CS patch 1]', e); }
       try { if (window._csPatch2) window._csPatch2(); } catch (e) { console.warn('[CS patch 2]', e); }
       try { if (window._csPatch3) window._csPatch3(); } catch (e) { console.warn('[CS patch 3]', e); }
@@ -5931,7 +5932,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-30-rasproj"></script>
+<script defer src="app.js?v=2026-09-30-exp"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

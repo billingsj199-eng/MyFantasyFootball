@@ -37691,6 +37691,16 @@ window.fmtHeight = fmtHeight;
     // Jadarian Price (pk 32 behind Love pk 3). Day-3 RBs with elite teammates
     // (Ford, Mason, Estime) don't qualify — NFL didn't validate them the same way.
     let tmBonus = 0;
+    // EXPERIMENT: target/carry-competition adjustment (window._JM_EXP.tmComp = {WR: k, RB: k}).
+    // k*(0.6 - share)*100 JM points, clamped +-6. Off unless the flag is set (harness LOYO test).
+    let tmCompAdj = 0;
+    {
+      const _exp = (typeof window !== 'undefined' && window._JM_EXP) ? window._JM_EXP : null;
+      if (_exp && _exp.tmComp && p.tmCompShare != null && (p.pos === 'WR' || p.pos === 'RB')) {
+        const _k = (typeof _exp.tmComp === 'object') ? (_exp.tmComp[p.pos] || 0) : Number(_exp.tmComp) || 0;
+        tmCompAdj = Math.max(-6, Math.min(6, _k * (0.6 - p.tmCompShare) * 100));
+      }
+    }
     if (p.tm != null && p.tm > 0) {
       if (p.pos === 'WR') {
         tmBonus = Math.min(3, Math.max(0, (p.tm - 10) * 0.3));
@@ -38086,7 +38096,7 @@ window.fmtHeight = fmtHeight;
       return v;
     };
 
-    const _preStretch = blended + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
+    const _preStretch = blended + gpAdj + htPenalty + tmBonus + tmCompAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
     const final = Math.max(0, Math.min(100, Math.round(_day3Shrink(_jmStretch(_preStretch)) * 10) / 10));
     // Low confidence if less than 50% of weight has data, or fewer than 5 of 22 components
     // For devy players, lower the threshold since DC/RAS/earlyDec are expected to be missing
@@ -38096,8 +38106,8 @@ window.fmtHeight = fmtHeight;
 
     // Expose raw floor/ceiling (with adjustments + stretch) for blend ratio analysis.
     // Apply same adjustments + stretch as final so floor/ceiling display stays consistent.
-    const _floorPre = floorRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
-    const _ceilPre = ceilRaw + gpAdj + htPenalty + tmBonus + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
+    const _floorPre = floorRaw + gpAdj + htPenalty + tmBonus + tmCompAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
+    const _ceilPre = ceilRaw + gpAdj + htPenalty + tmBonus + tmCompAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
     // Day-3 shrink applied here too so floor/ceiling display stays consistent
     // with the shrunk final (otherwise floor could exceed final for late picks).
     const floorFinal = Math.max(0, Math.min(100, Math.round(_day3Shrink(_jmStretch(_floorPre)) * 10) / 10));
@@ -38489,6 +38499,10 @@ window.fmtHeight = fmtHeight;
       const teammateAgg = {};        // name -> { drVal, pos, years: Set, fptsByYr: {} }
       const seasonScores = [];        // diagnostic: per-season raw bonus
       const posMatches = (tp) => (pos === 'WR' || pos === 'TE') ? ['WR','TE'].includes(tp) : (pos === 'RB' ? tp === 'RB' : false);
+      // EXPERIMENT (2026-09-30, scripts/jm_feature_discovery.py): production share vs drafted
+      // pos-group teammates in the player's best season. Low share = produced beside NFL-caliber
+      // teammates (outperforms JM); high share = little competition (production inflated).
+      let tmCompShare = null, _tcBestOwn = -1;
 
       cs.forEach(s => {
         if (!s.tm || !s.yr) return;
@@ -38497,10 +38511,14 @@ window.fmtHeight = fmtHeight;
         if (!teammates) return;
 
         let seasonScore = 0;
+        const _ownFp = (s.py || 0) * 0.04 + (s.ptd || 0) * 4 - (s.int || 0) + (s.ry || 0) * 0.1 + (s.rtd || 0) * 6
+                     + (s.rec || 0) * 0.5 + (s.rcy || 0) * 0.1 + (s.rctd || 0) * 6 - (s.fl || 0) * 2;
+        let _compFp = 0;
         teammates.forEach(t => {
           if (t.name === name) return;
           if (t.drVal >= 260) return;
           if (!posMatches(t.pos)) return;
+          if (typeof t.fpts === 'number' && t.fpts > 0) _compFp += t.fpts;
           // Aggregate across years
           if (!teammateAgg[t.name]) {
             teammateAgg[t.name] = { drVal: t.drVal, pos: t.pos, years: new Set(), fptsByYr: {} };
@@ -38518,6 +38536,10 @@ window.fmtHeight = fmtHeight;
           yr: s.yr,
           score: Math.max(0, Math.round(seasonScore * 10) / 10)
         });
+        if (_ownFp > _tcBestOwn && _ownFp > 0) {
+          _tcBestOwn = _ownFp;
+          tmCompShare = Math.round(_ownFp / (_ownFp + _compFp) * 1000) / 1000;
+        }
       });
 
       // Aggregate overall: sum each unique teammate's base bonus × sqrt(years).
@@ -38547,11 +38569,12 @@ window.fmtHeight = fmtHeight;
         overall += Math.max(0.05, baseBonus * yearMult);
       });
 
-      if (overall <= 0) return { overall: null, seasons: seasonScores };
+      if (overall <= 0) return { overall: null, seasons: seasonScores, share: tmCompShare };
 
       return {
         overall: Math.max(0, Math.round(overall * 10) / 10),
-        seasons: seasonScores
+        seasons: seasonScores,
+        share: tmCompShare
       };
     }
 
@@ -38919,7 +38942,30 @@ window.fmtHeight = fmtHeight;
           totFpts += fp;
           if (fp > bestFpts) bestFpts = fp;
           if (gp && gp > 0) {
-            const ppg = Math.round((fp / gp) * 10) / 10;
+            let ppg = Math.round((fp / gp) * 10) / 10;
+            // EXPERIMENT: RB opponent-adjusted PPG (window._JM_EXP.rbSos; SP+ defense z per
+            // team-season in data/sp_def_z.js; scripts/jm_sos_analysis.py: RB rho .43 -> .46).
+            // Season factor = sum(game pts x f(z)) / sum(game pts), f(z) = 1/(1 + 0.19 z), so the
+            // scoring formula cancels; unrated (FCS) opponents count as soft (z = +1.5).
+            if (window._JM_EXP && window._JM_EXP.rbSos && pos === 'RB' && weeklyData && weeklyData[s.yr]
+                && typeof window.SP_DEF_Z !== 'undefined' && window.SP_DEF_Z[s.yr]) {
+              const _zmap = window.SP_DEF_Z[s.yr];
+              const _zOf = (opp) => {
+                if (!opp) return 1.5;
+                if (_zmap[opp] != null) return _zmap[opp];
+                const lo = String(opp).toLowerCase();
+                for (const tm in _zmap) { const tl = tm.toLowerCase(); if (tl.startsWith(lo) || lo.startsWith(tl)) return _zmap[tm]; }
+                return 1.5;
+              };
+              let _num = 0, _den = 0;
+              _filterCollegeWeeks(weeklyData[s.yr]).forEach(w => {
+                const gpts = (w.py||0)/25 + (w.ptd||0)*4 - (w.int||0)*2 + (w.ry||0)/10 + (w.rtd||0)*6 + (w.rec||0)*0.5 + (w.rcy||0)/10 + (w.rctd||0)*6 - (w.fl||0)*2;
+                if (gpts <= 0) return;
+                const f = Math.max(0.7, Math.min(1.4, 1 / (1 + 0.19 * _zOf(w.opp))));
+                _num += gpts * f; _den += gpts;
+              });
+              if (_den > 0) ppg = Math.round(ppg * (_num / _den) * 10) / 10;
+            }
             if (ppg > bestPpg) bestPpg = ppg;
             // Track earliest breakout season using graduated threshold
             // Full breakout: ppg >= threshold. Near breakout: ppg >= 75% of threshold.
@@ -39071,6 +39117,7 @@ window.fmtHeight = fmtHeight;
 
       const tmResult = calcTeammate(name, pos, cs);
       const tmScoreRaw = tmResult.overall;
+      const tmCompShare = (tmResult.share != null) ? tmResult.share : null;  // experiment input (see calcTeammate)
       // ═══ TEAMMATE-QUALITY DISPLAY (April 2026) ═══
       // tm now feeds the JM model as a WEIGHTED COMPONENT (see JM_WEIGHTS) rather
       // than as an additive flat bonus. The raw teammate value is normalized to
@@ -39393,7 +39440,7 @@ window.fmtHeight = fmtHeight;
       const isCollege = _isDevy || (!_inD && !_inCB && cs && cs.length > 0 && _lastCollegeYr >= 2024);
 
       const prospectRecord = {
-        name, pos, draftYr, age, lastCollege, lastConf, ras, rasProjected, gp: totalGp || null,
+        name, pos, draftYr, age, lastCollege, lastConf, ras, rasProjected, tmCompShare, gp: totalGp || null,
         dr, breakoutAge, breakoutPpg, boThresh, tm: tmScore, preBreakoutTm, ht: htInches, wt: wt,
         bestPpg, bestFpts, totFpts, fptsPerGame,
         totPy, totRy, totRcy, totRec, totalTd, totRa,

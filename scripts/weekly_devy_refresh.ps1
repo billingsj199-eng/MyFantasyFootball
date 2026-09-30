@@ -38,7 +38,7 @@ Write-Log '=== weekly devy refresh start ==='
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 $Files = @('data/college_stats_devy.js', 'data/combine_data.js', 'scripts/devy_refresh_cache.json',
            'scripts/devy_audit.json', 'scripts/draft_boards_2027.json', 'data/devy_headshots.js',
-           'scripts/devy_headshots_cache.json', 'index.html')
+           'scripts/devy_headshots_cache.json', 'data/projected_testing.js', 'scripts/projected_testing_hits.json', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -56,6 +56,12 @@ $out = & $Python 'scripts\pull_pff_ncaa.py' '--login-wait' '90' 2>&1 | Out-Strin
 Write-Log ('pff ncaa: ' + $out.Trim())
 if ($LASTEXITCODE -eq 2) { Write-Log 'PFF LOGIN NEEDED - college PFF grades stay at last pull until Jack logs in to premium.pff.com in the PFF Chrome profile' }
 elseif ($LASTEXITCODE -ne 0) { Write-Log "pff ncaa FAILED (exit $LASTEXITCODE) - continuing with cached files" }
+
+# 2b. Published projected forties (Stick to the Model board; Jack's DraftBuzz rows in the CSV win)
+$out = & $Python 'scripts\pull_projected_testing.py' 2>&1 | Out-String
+Write-Log ('projected testing pull: ' + $out.Trim())
+$out = & $Python 'scripts\apply_projected_testing.py' 2>&1 | Out-String
+Write-Log ('projected testing apply: ' + $out.Trim())
 
 # 3. CFBD stats + PFF enrichment -> college_stats_devy.js
 $out = & $Python 'scripts\refresh_devy_stats.py' 2>&1 | Out-String

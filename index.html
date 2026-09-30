@@ -5466,6 +5466,9 @@ window._ensureCollegeStatsData = (function() {
       .then(function() { return _loadScript('data/college_stats_manual_patch.js?v=2026-05-13'); })
       .then(function() { return _loadScript('data/college_stats_patch_phase3.js?v=2026-05-13'); });
     const devy = _loadScript('data/college_weekly_devy.js?v=2026-05-13');
+    // In-season devy/future-class rows (weekly auto-refresh, scripts/refresh_devy_stats.py):
+    // defines window._csPatchDevy (applied last, below) + this season's COLLEGE_WEEKLY game logs.
+    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-09-30');
     // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
     // populate the same COLLEGE_WEEKLY object and have no order dependency;
@@ -5473,10 +5476,12 @@ window._ensureCollegeStatsData = (function() {
     const cwk1 = _loadScript('data/college_weekly_1.js?v=2026-06-17');
     const cwk2 = _loadScript('data/college_weekly_2.js?v=2026-06-17');
     const cwk3 = _loadScript('data/college_weekly_3.js?v=2026-06-17');
-    promise = Promise.all([csChain, devy, cwk1, cwk2, cwk3]).then(function() {
+    promise = Promise.all([csChain, devy, devyCs, cwk1, cwk2, cwk3]).then(function() {
       try { if (window._csPatch1) window._csPatch1(); } catch (e) { console.warn('[CS patch 1]', e); }
       try { if (window._csPatch2) window._csPatch2(); } catch (e) { console.warn('[CS patch 2]', e); }
       try { if (window._csPatch3) window._csPatch3(); } catch (e) { console.warn('[CS patch 3]', e); }
+      // Devy in-season rows go LAST: they replace/append the current season row (patches 1-3 never overwrite).
+      try { if (window._csPatchDevy) window._csPatchDevy(); } catch (e) { console.warn('[CS patch devy]', e); }
     });
     return promise;
   };

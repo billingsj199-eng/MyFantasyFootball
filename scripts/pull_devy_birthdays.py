@@ -3,18 +3,21 @@
 The JM model's age and breakout-age components (~15% of the grade) read exact birth
 dates from data/legend_birth_years.js (window.LEGEND_BIRTH_YEARS, "Name":"YYYY-MM-DD")
 plus Firestore prospect_bio `birth` overrides. ESPN and CFBD rosters no longer expose
-dates of birth (checked 2026-09-30), so this tries, per missing player:
+dates of birth (checked 2026-09-30), so this tries, per missing player, in order:
 
   1. Wikidata: entity search (description mentions football) -> P569 date of birth
-  2. (Sports Reference 403s scripts as of 2026-09-30 - fallback disabled; Jack can enter a
-     birth date in the admin bio editor, which lands in Firestore prospect_bio.birth)
+  2. Wikipedia: article search -> infobox {{birth date and age|Y|M|D}} in the wikitext
+  3. On3 database search (on3.com/db/search/?searchText=) -> list entry dateOfBirth,
+     matched on name + position (+ school when several share the name)
+  (Sports Reference 403s scripts as of 2026-09-30 - not used. Jack can also enter a
+   birth date in the admin bio editor, which lands in Firestore prospect_bio.birth.)
 
 Found dates are appended to data/legend_birth_years.js, the lookups bundle is rebuilt
 (scripts/bundle_lookups.py) and data/_bundle_lookups.js ?v= bumped; misses are
 cached in scripts/devy_birthdays_cache.json for 30 days so the weekly job only
 retries occasionally. Devy universe = refresh_devy_stats.load_combine().
 
-    python scripts/pull_devy_birthdays.py [--dry-run] [--retry-misses]
+    python scripts/pull_devy_birthdays.py [--dry-run] [--retry-misses] [--no-bump]
 """
 import argparse
 import datetime
@@ -35,11 +38,30 @@ LBY = "data/legend_birth_years.js"
 CACHE = "scripts/devy_birthdays_cache.json"
 INDEX_HTML = "index.html"
 UA = {"User-Agent": "MyFantasyFootball devy audit (billingsj199@gmail.com)"}
-SR_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36"}
+BROWSER_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36"}
+YEAR_LO, YEAR_HI = 1998, 2010
+
+# On3 lists schools as "Oklahoma State Cowboys"; COMBINE_DATA uses "Oklahoma St." etc.
+_SCHOOL_WORDS = {"st.": "state", "(fl)": "", "miami (fl)": "miami"}
 
 
 def log(*a):
     print(*a, flush=True)
+
+
+def _plausible(iso):
+    return bool(iso) and YEAR_LO <= int(iso[:4]) <= YEAR_HI
+
+
+def _norm_name(s):
+    s = (s or "").lower()
+    s = re.sub(r"\b(jr|sr|ii|iii|iv)\b\.?", "", s)
+    return re.sub(r"[^a-z]", "", s)
+
+
+def _school_key(s):
+    s = (s or "").lower().replace("(fl)", "").replace("st.", "state")
+    return re.sub(r"[^a-z]", "", s)
 
 
 def load_births():
@@ -84,32 +106,74 @@ def wikidata(name, pos):
             t = c.get("mainsnak", {}).get("datavalue", {}).get("value", {})
             if t.get("time") and t.get("precision", 11) >= 11:
                 m = re.match(r"\+(\d{4})-(\d{2})-(\d{2})", t["time"])
-                if m:
-                    y = int(m.group(1))
-                    if 1998 <= y <= 2010:
-                        return "%s-%s-%s" % m.groups(), "wikidata:" + e["id"]
+                if m and _plausible(m.group(1)):
+                    return "%s-%s-%s" % m.groups(), "wikidata:" + e["id"]
     return None
 
 
-def sports_reference(name):
-    slug = re.sub(r"[^a-z0-9]+", "-", re.sub(r"\.", "", name.lower())).strip("-")
-    for i in (1, 2, 3):
-        url = "https://www.sports-reference.com/cfb/players/%s-%d.html" % (slug, i)
+def wikipedia(name, pos):
+    """Article search (name + football) -> wikitext infobox birth date template."""
+    api = "https://en.wikipedia.org/w/api.php"
+    try:
+        s = requests.get(api, params={"action": "query", "list": "search", "srsearch": "%s American football" % name, "srlimit": 5, "format": "json"}, headers=UA, timeout=30).json()
+    except (requests.RequestException, ValueError):
+        return None
+    want = _norm_name(name)
+    for hit in s.get("query", {}).get("search", []):
+        title = hit.get("title", "")
+        if _norm_name(re.sub(r"\s*\(.*?\)\s*$", "", title)) != want:
+            continue
         try:
-            r = requests.get(url, headers=SR_UA, timeout=30)
-        except requests.RequestException:
-            return None
-        time.sleep(3)
-        if r.status_code == 404:
-            break
-        if r.status_code != 200:
-            return None
-        m = re.search(r'data-birth="(\d{4}-\d{2}-\d{2})"', r.text)
-        if m and 1998 <= int(m.group(1)[:4]) <= 2010:
-            # name check: the page's h1 should contain the surname
-            if name.split()[-1].lower().rstrip(".") in r.text.lower():
-                return m.group(1), url
+            j = requests.get(api, params={"action": "query", "prop": "revisions", "rvprop": "content", "rvslots": "main", "titles": title, "format": "json", "formatversion": 2}, headers=UA, timeout=30).json()
+            wt = j["query"]["pages"][0]["revisions"][0]["slots"]["main"]["content"]
+        except (requests.RequestException, ValueError, KeyError, IndexError):
+            continue
+        if "football" not in wt.lower():
+            continue
+        m = re.search(r"\{\{\s*[Bb]irth[ _]date(?:[ _]and[ _]age)?\s*\|\s*(?:mf=\w+\s*\|\s*|df=\w+\s*\|\s*)?(\d{4})\s*\|\s*(\d{1,2})\s*\|\s*(\d{1,2})", wt)
+        if m:
+            iso = "%s-%02d-%02d" % (m.group(1), int(m.group(2)), int(m.group(3)))
+            if _plausible(iso):
+                return iso, "wikipedia:" + title.replace(" ", "_")
     return None
+
+
+def on3(name, pos, school):
+    """on3.com/db/search/?searchText=<name> ships its result list (with dateOfBirth,
+    position, current organization) in __NEXT_DATA__; no bot wall as of 2026-09-30."""
+    try:
+        r = requests.get("https://www.on3.com/db/search/", params={"searchText": name}, headers=BROWSER_UA, timeout=30)
+    except requests.RequestException:
+        return None
+    if r.status_code != 200:
+        return None
+    m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', r.text, re.S)
+    if not m:
+        return None
+    try:
+        lst = json.loads(m.group(1))["props"]["pageProps"]["searchData"]["list"]
+    except (ValueError, KeyError, TypeError):
+        return None
+    want = _norm_name(name)
+    sk = _school_key(school)
+    cands = []
+    for it in lst:
+        if _norm_name(it.get("name")) != want:
+            continue
+        dob = it.get("dateOfBirth") or ""
+        if not _plausible(dob[:10]):
+            continue
+        p = it.get("positionAbbreviation") or ""
+        org = _school_key((it.get("currentOrganization") or {}).get("name"))
+        score = (2 if (sk and sk in org) else 0) + (1 if p == pos else 0)
+        cands.append((score, dob[:10], it.get("slug")))
+    if not cands:
+        return None
+    cands.sort(reverse=True)
+    score, dob, slug = cands[0]
+    if score == 0 and len(cands) > 1:
+        return None  # ambiguous: several same-name people, none at this school/position
+    return dob, "on3:" + str(slug)
 
 
 def main():
@@ -133,9 +197,15 @@ def main():
         c = cache.get(n)
         if c and not a.retry_misses and c.get("miss") and (today - datetime.date.fromisoformat(c["miss"])).days < 30:
             continue
-        hit = wikidata(n, devy[n].get("pos"))
+        pos, school = devy[n].get("pos"), devy[n].get("school")
+        hit = wikidata(n, pos)
         time.sleep(0.5)
-        # sports-reference.com returns 403 to scripts (2026-09-30) - Wikidata only
+        if not hit:
+            hit = wikipedia(n, pos)
+            time.sleep(0.5)
+        if not hit:
+            hit = on3(n, pos, school)
+            time.sleep(0.7)
         if hit:
             found[n] = hit
             cache[n] = {"birth": hit[0], "src": hit[1], "at": today.isoformat()}

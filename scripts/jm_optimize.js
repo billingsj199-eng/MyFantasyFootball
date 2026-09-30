@@ -36,7 +36,8 @@ const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] :
 const POSITIONS = (opt('--pos', 'QB,RB,WR,TE')).split(',');
 const PASSES = parseInt(opt('--passes', '2'), 10);
 const LOYO = !args.includes('--no-loyo');
-const EXP = args.includes('--exp');   // experiments grid (deployed weights fixed) instead of weight descent
+const EXP = args.includes('--exp');
+const NO_REGEN = args.includes('--no-regen');   // drop entries recomputed by regen_backtest_outcomes.py   // experiments grid (deployed weights fixed) instead of weight descent
 const OUT = opt('--out', path.join(ROOT, 'scripts', `jm_optimize_results_${new Date().toISOString().slice(0, 10)}.json`));
 const DELTAS = [0.03, -0.03, 0.015, -0.015];
 const MIN_KEY_W = 0.02;   // only perturb keys carrying real weight
@@ -135,7 +136,8 @@ async function boot() {
   });
   await page.waitForFunction(() => typeof BACKTEST_OUTCOMES !== 'undefined' && typeof COLLEGE_STATS !== 'undefined', null, { timeout: 120000 });
   await new Promise(r => setTimeout(r, 3000));
-  await page.evaluate(() => {
+  await page.evaluate((noRegen) => {
+    window.__jmNoRegen = noRegen;
     window.__jmApply = (cfg) => {
       ['floor', 'ceiling'].forEach(track => {
         const root = track === 'floor' ? window._JM_WEIGHTS : window._JM_CEILING_WEIGHTS;
@@ -159,7 +161,8 @@ async function boot() {
       const out = [];
       Object.keys(BACKTEST_OUTCOMES).forEach(yr => BACKTEST_OUTCOMES[yr].forEach(r => {
         const p = byName[r.n] || byNrm[nrm(r.n)]; if (!p) return;
-        const row = { n: r.n, pos: r.pos, jm: p.jm, verdict: r.verdict, cs: r.curveScore, pick: r.pick, yr: parseInt(yr), ppg: r.avgPpg };
+        if (window.__jmNoRegen && r.regen) return;   // --no-regen: only verdicts from the original outcomes build
+        const row = { n: r.n, pos: r.pos, jm: p.jm, verdict: r.verdict, cs: r.curveScore, pick: r.pick, yr: parseInt(yr), ppg: r.avgPpg, regen: r.regen || null };
         if (withComps) row.comps = p.compScores || null;
         out.push(row);
       }));
@@ -171,7 +174,7 @@ async function boot() {
       ceiling: JSON.parse(JSON.stringify(window._JM_CEILING_WEIGHTS)),
       tiers: Object.fromEntries(Object.keys(window._POS_TIERS).map(p => [p, window._POS_TIERS[p].map(t => ({ label: t.label, min: t.min }))])),
     });
-  });
+  }, NO_REGEN);
   return { page, browser, server };
 }
 

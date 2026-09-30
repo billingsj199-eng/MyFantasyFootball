@@ -8166,9 +8166,37 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     return { ppg: sum / wks.length, gp: wks.length };
   }
 
+  // Is a Sleeper "Out" tag real for THIS week? True only when a week-scoped
+  // source agrees: the official NFL report for the week says Out, Sleeper
+  // has pulled the player's own weekly projection (missing / 0 in a file
+  // for this week), or the Sim Lab export (same check, fresher inputs) has
+  // him at 0. Mirrors sim_lab engine.js applyInSeasonInjuries (Jack
+  // 2026-09-15: never zero anyone before he is actually Out). No
+  // week-scoped source at all = unconfirmed = keep him in order.
+  window._weeklyOutConfirmed = function(d, wk) {
+    if (!d || !d.n) return false;
+    wk = wk || window._weeklyActiveWeek || 1;
+    const PR = window.PRACTICE_2026;
+    if (PR && PR.players && +PR.week === +wk) {
+      const pr = PR.players[d.n];
+      if (pr && /^out$/i.test(pr.gs || '')) return true;
+    }
+    const WP = window.WEEKLY_PROJ;
+    if (WP && WP.players && +WP.week === +wk) {
+      const row = WP.players[d.n];
+      if (!row || !(row.h > 0 || row.p > 0)) return true;
+    }
+    if (typeof _simProjRow === 'function') {
+      const sr = _simProjRow(d, wk);
+      if (sr && sr[0] === 0 && sr[1] === 0) return true;
+    }
+    return false;
+  };
+
   // Weekly PROJ PPG. Priority order:
-  //   1. Ruled-out players (IR/PUP/SUS/Out) -> 0; Doubtful -> half. Skipped in
-  //      the offseason where lingering 2025 tags would wrongly zero players.
+  //   1. Ruled-out players (IR/PUP/SUS, or an Out CONFIRMED for this week by
+  //      _weeklyOutConfirmed) -> 0; Doubtful -> half; unconfirmed Out -> x0.75.
+  //      Skipped in the offseason where lingering 2025 tags would wrongly zero players.
   //   2. DST: season proj (or Clay own-defense-rank baseline) ± the
   //      OPPONENT's implied total — the generic factors don't apply.
   //   3. Posted weekly prop board (UD/PP via _weeklyPropLinesFor): score the
@@ -8197,8 +8225,20 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
     if (!_offseason && d.inj) {
       const t = String(d.inj).toLowerCase();
-      if (/\bir\b|\bpup\b|suspend|\bout\b|out for season|season.?ending/.test(t)) { _tag('out'); return 0; }
-      if (/doubtful/.test(t)) injMult = 0.5;
+      if (/\bir\b|\bpup\b|suspend|out for season|season.?ending/.test(t)) { _tag('out'); return 0; }
+      // Sleeper "Out" lingers from Sunday's inactives (and Monday news) until
+      // the Wednesday report — the Tue 07:00 week seed was zeroing Nacua /
+      // Jefferson / Collins / Evans and sinking them under the 0.3-proj tail.
+      // Jack 2026-09-30: anyone at least Questionable ranks in projection
+      // order; he moves the non-players out himself. So an Out tag only
+      // zeroes when something week-scoped agrees (_weeklyOutConfirmed);
+      // otherwise it is treated like Questionable + DNP (the engine's
+      // 'out-unconfirmed' x0.75 on the fallback paths; sim rows already
+      // price it).
+      if (/\bout\b/.test(t)) {
+        if (window._weeklyOutConfirmed(d, wk)) { _tag('out'); return 0; }
+        injMult = 0.75;
+      } else if (/doubtful/.test(t)) injMult = 0.5;
     }
     // SIM-FIRST (Jack 2026-08-26): the Sim Lab weekly export is THE weekly
     // number wherever it has a row — same value as the PROJ column and the

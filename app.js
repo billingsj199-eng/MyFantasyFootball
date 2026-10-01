@@ -44359,6 +44359,10 @@ window.fmtHeight = fmtHeight;
 
   // Backtest collection: walks BACKTEST_OUTCOMES, joins with current JM scores,
   // assigns tier, marks elite. Returns rows for the current pos filter.
+  // ═══ Oct 1 2026: the Weight Lab backtest is judged on GRADED careers ═══
+  // career = 0-100 grade from data/jm_career_grades.js (best four of the first six NFL seasons,
+  // 40/30/20/10), so a single volume year is not a "hit". Every KPI below responds to the sliders:
+  // the old stud / hit / bust rates were properties of the cohort and never moved.
   function _pmWlCollect(classFilter) {
     if (typeof BACKTEST_OUTCOMES === 'undefined') return [];
     const data = (typeof buildProspectData === 'function') ? buildProspectData() : [];
@@ -44368,8 +44372,9 @@ window.fmtHeight = fmtHeight;
       D.forEach(d => { if (d._pmJm != null && jmByName[d.n] == null) jmByName[d.n] = d._pmJm; });
     }
     const nrm = s => s.toLowerCase().replace(/\b(jr\.?|sr\.?|ii|iii|iv|v)\b/g,'').replace(/[^a-z0-9]/g,'');
-    const jmByNrm = {};
-    Object.keys(jmByName).forEach(n => { jmByNrm[nrm(n)] = jmByName[n]; });
+    const jmByNrm = {}, nameByNrm = {};
+    Object.keys(jmByName).forEach(n => { jmByNrm[nrm(n)] = jmByName[n]; nameByNrm[nrm(n)] = n; });
+    const CG = (typeof window !== 'undefined' && window.JM_CAREER_GRADES) || {};
     const inRange = yr => {
       yr = parseInt(yr);
       if (classFilter === 'all') return yr >= 2020 && yr <= 2023;
@@ -44386,79 +44391,74 @@ window.fmtHeight = fmtHeight;
         if (jm == null) jm = jmByNrm[nrm(r.n)];
         if (jm == null) return;
         const tier = (typeof window._tierForJm === 'function') ? window._tierForJm(jm, r.pos) : null;
-        let elite = false;
-        const elitePpg = _PM_WL_ELITE_PPG[r.pos];
-        if (elitePpg != null && Array.isArray(r.seasons)) {
-          for (const s of r.seasons) {
-            if ((s.gp||0) >= 8 && s.ppg != null && s.ppg >= elitePpg) { elite = true; break; }
-          }
-        }
+        const pmName = jmByName[r.n] != null ? r.n : (nameByNrm[nrm(r.n)] || r.n);
+        const g = CG[pmName + '|' + yr] || CG[r.n + '|' + yr] || null;
         out.push({ name: r.n, pos: r.pos, draftYr: parseInt(yr), verdict: r.verdict, jm,
-                   tierLabel: (tier ? tier.label : 'Long Shot'), elite });
+                   tierLabel: (tier ? tier.label : 'Long Shot'),
+                   career: g ? g[0] : null, eliteYrs: g ? g[1] : 0, starterYrs: g ? g[2] : 0 });
       });
     });
     return out;
   }
 
-  // Calibration: fraction of evaluable adjacent tier pairs that are ordered
-  // correctly (higher tier has Hit+ rate ≥ lower tier). Returns score in [0,1],
-  // along with the count of ordered pairs and any inversion descriptions.
-  // This is the "is the model actually predictive?" sanity check.
+  function _pmWlSpearman(xs, ys) {
+    const n = xs.length; if (n < 3) return null;
+    const rank = a => { const idx = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]); const r = new Array(n); let i = 0;
+      while (i < n) { let j = i; while (j + 1 < n && idx[j + 1][0] === idx[i][0]) j++; const avg = (i + j) / 2 + 1; for (let k = i; k <= j; k++) r[idx[k][1]] = avg; i = j + 1; } return r; };
+    const rx = rank(xs), ry = rank(ys), m = (n + 1) / 2;
+    let num = 0, dx = 0, dy = 0;
+    for (let i = 0; i < n; i++) { num += (rx[i] - m) * (ry[i] - m); dx += (rx[i] - m) ** 2; dy += (ry[i] - m) ** 2; }
+    return dx && dy ? num / Math.sqrt(dx * dy) : null;
+  }
+
+  // Calibration: fraction of adjacent tier pairs that are ordered correctly (the higher tier
+  // has the higher average career grade). Returns score in [0,1] plus any inversions.
   function _pmWlCalibrationScore(tiers) {
     const seq = ['Generational','Top Prospect','Starter','Contributor','Depth','Lottery Ticket','Long Shot'];
-    const rates = seq.map(t => {
+    const vals = seq.map(t => {
       const s = tiers && tiers[t];
-      if (!s || !s.evald) return null;
-      return (s.stud + s.hit) / s.evald;
+      if (!s || !s.n) return null;
+      return s.sum / s.n;
     });
     let ordered = 0, total = 0;
     const inversions = [];
-    for (let i = 0; i < rates.length - 1; i++) {
+    for (let i = 0; i < vals.length - 1; i++) {
       let j = i + 1;
-      while (j < rates.length && rates[j] == null) j++;
-      if (rates[i] == null || j >= rates.length) continue;
+      while (j < vals.length && vals[j] == null) j++;
+      if (vals[i] == null || j >= vals.length) continue;
       total++;
-      if (rates[i] >= rates[j]) ordered++;
-      else inversions.push(seq[i] + ' (' + Math.round(rates[i]*100) + '%) < ' + seq[j] + ' (' + Math.round(rates[j]*100) + '%)');
+      if (vals[i] >= vals[j]) ordered++;
+      else inversions.push(seq[i] + ' (' + Math.round(vals[i]) + ') < ' + seq[j] + ' (' + Math.round(vals[j]) + ')');
     }
     return { score: total > 0 ? ordered / total : null, ordered, total, inversions };
   }
 
-  // Aggregate verdict counts per tier and overall rates
+  // Per-tier career totals plus the weight-sensitive headline numbers
   function _pmWlAggregate(rows) {
     const tiers = {};
-    _PM_WL_TIERS.forEach(t => tiers[t] = { total:0, evald:0, stud:0, hit:0, contributor:0, bust:0, pending:0, elite:0 });
-    let total = 0, evald = 0, stud = 0, hit = 0, bust = 0, elite = 0;
+    _PM_WL_TIERS.forEach(t => tiers[t] = { total: 0, n: 0, sum: 0, eliteYr: 0, empty: 0 });
     rows.forEach(r => {
       const t = tiers[r.tierLabel] || tiers['Long Shot'];
       t.total++;
-      t[r.verdict] = (t[r.verdict] || 0) + 1;
-      if (r.elite) t.elite++;
-      total++;
-      if (r.verdict === 'pending') t.pending++;
-      else {
-        t.evald++;
-        evald++;
-        if (r.verdict === 'stud') stud++;
-        else if (r.verdict === 'hit') hit++;
-        else if (r.verdict === 'bust') bust++;
-        if (r.elite) elite++;
-      }
+      if (r.career != null) { t.n++; t.sum += r.career; if (r.eliteYrs > 0) t.eliteYr++; if (r.career < 10) t.empty++; }
     });
-    const studHit = stud + hit;
+    const g = rows.filter(r => r.career != null);
+    let tn = 0, ts = 0, te = 0;
+    ['Generational','Top Prospect','Starter'].forEach(l => { tn += tiers[l].n; ts += tiers[l].sum; te += tiers[l].empty; });
+    const top10 = g.slice().sort((a, b) => b.jm - a.jm).slice(0, 10);
     return {
-      tiers, total, evald,
-      studRate: evald ? stud / evald : null,
-      hitRate:  evald ? studHit / evald : null,
-      bustRate: evald ? bust / evald : null,
-      eliteRate: evald ? elite / evald : null
+      tiers, total: rows.length, graded: g.length,
+      rho: g.length >= 8 ? _pmWlSpearman(g.map(r => r.jm), g.map(r => r.career)) : null,
+      top10: top10.length ? top10.reduce((a, r) => a + r.career, 0) / top10.length : null,
+      topAvg: tn ? ts / tn : null,
+      topEmpty: tn ? te / tn : null,
+      topN: tn
     };
   }
 
-  // Eagerly compute baseline rates for every (pos × classFilter) combo while
-  // weights are still at the deployed baseline. Called once on first init
-  // before the user edits anything, so subsequent renders can show deltas
-  // against the deployed model regardless of which pos/class is being viewed.
+  // Eagerly compute the baseline for every (pos × classFilter) combo while weights are
+  // still at the deployed baseline, so later renders can show deltas against the deployed
+  // model regardless of which pos/class is being viewed.
   function _pmWlComputeAllBaselineRates() {
     const result = {};
     const savedPos = _pmWl.pos;
@@ -44466,13 +44466,9 @@ window.fmtHeight = fmtHeight;
       result[pos] = {};
       ['all','allyears','fullhistory'].forEach(cf => {
         _pmWl.pos = pos;
-        const rows = _pmWlCollect(cf);
-        const agg  = _pmWlAggregate(rows);
-        result[pos][cf] = {
-          studRate: agg.studRate, hitRate: agg.hitRate,
-          bustRate: agg.bustRate, eliteRate: agg.eliteRate,
-          tiers: JSON.parse(JSON.stringify(agg.tiers))
-        };
+        const agg = _pmWlAggregate(_pmWlCollect(cf));
+        result[pos][cf] = { rho: agg.rho, top10: agg.top10, topAvg: agg.topAvg, topEmpty: agg.topEmpty,
+          tiers: JSON.parse(JSON.stringify(agg.tiers)) };
       });
     });
     _pmWl.pos = savedPos;
@@ -44484,7 +44480,7 @@ window.fmtHeight = fmtHeight;
     const labelEl = document.getElementById('pmWlBtPosLabel');
     if (labelEl) labelEl.textContent = '— ' + _pmWl.pos;
     const classFilter = (document.getElementById('pmWlBtClass') || {}).value || 'all';
-    // First call before any edit: capture baseline rates for every (pos × class)
+    // First call before any edit: capture the baseline for every (pos × class)
     if (!_pmWl.baselineRates && !_pmWl.dirty) {
       _pmWl.baselineRates = _pmWlComputeAllBaselineRates();
     }
@@ -44494,46 +44490,37 @@ window.fmtHeight = fmtHeight;
     // KPI cards
     const kpis = document.getElementById('pmWlKpis');
     if (kpis) {
-      const fmt = r => r == null ? '—' : Math.round(r*100) + '%';
-      const dpp = (cur, b) => {
+      // delta formatters: up = good unless flipped
+      const delta = (cur, b, scale, digits, unit, flip) => {
         if (cur == null || b == null) return { cls: 'zero', str: '—' };
-        const d = (cur - b) * 100;
-        if (Math.abs(d) < 0.5) return { cls: 'zero', str: '±0pp' };
-        return { cls: d > 0 ? 'up' : 'down', str: (d > 0 ? '+' : '') + d.toFixed(1) + 'pp' };
+        const d = (cur - b) * scale;
+        if (Math.abs(d) < Math.pow(10, -digits) / 2) return { cls: 'zero', str: '±0' + unit };
+        const good = flip ? d < 0 : d > 0;
+        return { cls: good ? 'up' : 'down', str: (d > 0 ? '+' : '') + d.toFixed(digits) + unit };
       };
-      // For bust rate, "up" is BAD — flip color
-      const bustColor = (cur, b) => {
-        if (cur == null || b == null) return { cls: 'zero', str: '—' };
-        const d = (cur - b) * 100;
-        if (Math.abs(d) < 0.5) return { cls: 'zero', str: '±0pp' };
-        return { cls: d > 0 ? 'down' : 'up', str: (d > 0 ? '+' : '') + d.toFixed(1) + 'pp' };
-      };
-      const dStud  = dpp(agg.studRate, base ? base.studRate : null);
-      const dHit   = dpp(agg.hitRate,  base ? base.hitRate  : null);
-      const dBust  = bustColor(agg.bustRate, base ? base.bustRate : null);
-      const dElite = dpp(agg.eliteRate, base ? base.eliteRate : null);
-      // Calibration: only metric that's actually weight-sensitive on a fixed cohort.
-      // The four rate KPIs above are determined by which players are evaluated, not
-      // by JM weights — they only redistribute players across tiers. Calibration
-      // score captures whether higher tiers actually contain more hits.
+      const dRho  = delta(agg.rho, base ? base.rho : null, 1, 3, '', false);
+      const dTop10 = delta(agg.top10, base ? base.top10 : null, 1, 1, '', false);
+      const dTopA = delta(agg.topAvg, base ? base.topAvg : null, 1, 1, '', false);
+      const dTopE = delta(agg.topEmpty, base ? base.topEmpty : null, 100, 1, 'pp', true);
       const calCur  = _pmWlCalibrationScore(agg.tiers);
       const calBase = base ? _pmWlCalibrationScore(base.tiers) : null;
       const calCurStr = calCur.score == null ? '—' : Math.round(calCur.score * 100) + '%';
       const calCurSub = calCur.score == null ? 'no data' : calCur.ordered + '/' + calCur.total + ' pairs';
-      const dCal = (calCur.score != null && calBase && calBase.score != null) ? dpp(calCur.score, calBase.score) : { cls: 'zero', str: '—' };
+      const dCal = (calCur.score != null && calBase && calBase.score != null) ? delta(calCur.score, calBase.score, 100, 1, 'pp', false) : { cls: 'zero', str: '—' };
       const calTitle = calCur.inversions && calCur.inversions.length
         ? 'Calibration ' + calCurStr + ' — inversions: ' + calCur.inversions.join('; ')
-        : 'Calibration ' + calCurStr + ' — fraction of adjacent tier pairs where higher tier has Hit+ rate ≥ lower tier. 100% = strictly monotonic. This is the only KPI that responds to weight changes on a fixed cohort.';
-      // Cohort-invariance tooltip for the four rate KPIs
-      const invariantTip = 'Overall ' + _pmWl.pos + ' rate across the cohort. This number is determined by which players are in the cohort, NOT by your JM weights — weight changes redistribute players across tiers but don\'t change the verdict mix. See the per-tier chart and Calibration KPI for weight-sensitive signal.';
+        : 'Calibration ' + calCurStr + ' — share of adjacent tier pairs where the higher tier has the higher average career grade. 100% = strictly ordered.';
+      const num = (v, d) => v == null ? '—' : v.toFixed(d);
+      const kpi = (title, label, val, color, d, sub) =>
+        '<div class="pm-wl-kpi" title="' + title.replace(/"/g, '&quot;') + '"><div class="pm-wl-kpi-label">' + label + '</div><div class="pm-wl-kpi-val" style="color:' + color + '">' + val + '</div><div class="pm-wl-kpi-delta ' + d.cls + '">' + d.str + (sub ? ' · ' + sub : '') + '</div></div>';
       kpis.innerHTML =
-        '<div class="pm-wl-kpi" title="Stud rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Stud</div><div class="pm-wl-kpi-val" style="color:#22c55e">'+fmt(agg.studRate)+'</div><div class="pm-wl-kpi-delta '+dStud.cls+'">'+dStud.str+'</div></div>'
-       +'<div class="pm-wl-kpi" title="Hit+ rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Hit+</div><div class="pm-wl-kpi-val" style="color:#60a5fa">'+fmt(agg.hitRate)+'</div><div class="pm-wl-kpi-delta '+dHit.cls+'">'+dHit.str+'</div></div>'
-       +'<div class="pm-wl-kpi" title="Bust rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Bust</div><div class="pm-wl-kpi-val" style="color:#ef4444">'+fmt(agg.bustRate)+'</div><div class="pm-wl-kpi-delta '+dBust.cls+'">'+dBust.str+'</div></div>'
-       +'<div class="pm-wl-kpi" title="Elite rate: '+invariantTip+'"><div class="pm-wl-kpi-label">Elite</div><div class="pm-wl-kpi-val" style="color:#fbbf24">'+fmt(agg.eliteRate)+'</div><div class="pm-wl-kpi-delta '+dElite.cls+'">'+dElite.str+'</div></div>'
-       +'<div class="pm-wl-kpi" title="'+calTitle.replace(/"/g,'&quot;')+'"><div class="pm-wl-kpi-label">Calibration</div><div class="pm-wl-kpi-val" style="color:'+(calCur.score == null ? '#94a3b8' : calCur.score >= 0.99 ? '#22c55e' : calCur.score >= 0.6 ? '#fbbf24' : '#ef4444')+'">'+calCurStr+'</div><div class="pm-wl-kpi-delta '+dCal.cls+'" title="'+calCurSub+'">'+dCal.str+'</div></div>';
+          kpi('Rank agreement: Spearman correlation between the JM grade and the NFL career grade across this cohort. 1.0 would be a perfect ordering. Career grade = best four of the first six seasons, so elite years and consistency count and one big year does not.', 'Rank agree', num(agg.rho, 3), '#60a5fa', dRho)
+        + kpi('Average career grade of the ten highest JM grades in this cohort.', 'Top 10', num(agg.top10, 0), '#22c55e', dTop10)
+        + kpi('Average career grade of everyone graded Starter or better (' + agg.topN + ' players).', 'Starter+', num(agg.topAvg, 0), '#fbbf24', dTopA)
+        + kpi('Share of players graded Starter or better whose career grade ended under 10. Lower is better.', 'Starter+ empty', agg.topEmpty == null ? '—' : Math.round(agg.topEmpty * 100) + '%', '#ef4444', dTopE)
+        + kpi(calTitle, 'Calibration', calCurStr, (calCur.score == null ? '#94a3b8' : calCur.score >= 0.99 ? '#22c55e' : calCur.score >= 0.6 ? '#fbbf24' : '#ef4444'), dCal, calCurSub);
     }
-    // Tier mini chart: per-tier hit+ rate bar with baseline overlay
+    // Tier mini chart: per-tier average career grade with the deployed baseline as a tick
     const chart = document.getElementById('pmWlTierChart');
     if (chart) {
       let html = '';
@@ -44548,22 +44535,20 @@ window.fmtHeight = fmtHeight;
                 + '<div class="pm-wl-tier-n">n=0</div></div>';
           return;
         }
-        const evald = t.evald;
-        const rate = evald > 0 ? (t.stud + t.hit) / evald : 0;
+        const avg = t.n > 0 ? t.sum / t.n : 0;
         const baseTier = (base && base.tiers && base.tiers[label]) || null;
-        const baseEvald = baseTier ? baseTier.evald : 0;
-        const baseRate = baseEvald > 0 ? (baseTier.stud + baseTier.hit) / baseEvald : null;
-        const barH = Math.max(2, Math.round(rate * 100 * 0.6)); // 60px max
-        const baseY = baseRate != null ? Math.round(baseRate * 100 * 0.6) : null;
+        const baseAvg = (baseTier && baseTier.n > 0) ? baseTier.sum / baseTier.n : null;
+        const barH = Math.max(2, Math.round(avg * 0.6)); // 60px max at a career grade of 100
+        const baseY = baseAvg != null ? Math.round(baseAvg * 0.6) : null;
         const color = _PM_WL_TIER_COLORS[label] || '#60a5fa';
-        html += '<div class="pm-wl-tier-col" title="'+label+': '+Math.round(rate*100)+'% Hit+ ('+t.stud+' stud + '+t.hit+' hit / '+evald+')'+(baseRate!=null?' · base '+Math.round(baseRate*100)+'%':'')+'">'
-              + '<div class="pm-wl-tier-pct">'+Math.round(rate*100)+'%</div>'
+        html += '<div class="pm-wl-tier-col" title="'+label+': average career grade '+Math.round(avg)+' ('+t.n+' players; '+t.eliteYr+' had an elite season, '+t.empty+' ended under 10)'+(baseAvg!=null?' · deployed '+Math.round(baseAvg):'')+'">'
+              + '<div class="pm-wl-tier-pct">'+Math.round(avg)+'</div>'
               + '<div class="pm-wl-tier-bar-wrap">'
               +   '<div class="pm-wl-tier-bar" style="height:'+barH+'px;background:'+color+'cc"></div>'
               +   (baseY != null ? '<div class="pm-wl-tier-baseline" style="bottom:'+baseY+'px"></div>' : '')
               + '</div>'
               + '<div class="pm-wl-tier-label">'+label.replace('Lottery Ticket','Lottery')+'</div>'
-              + '<div class="pm-wl-tier-n">n='+evald+'</div></div>';
+              + '<div class="pm-wl-tier-n">n='+t.n+'</div></div>';
       });
       chart.innerHTML = html;
     }
@@ -44572,9 +44557,9 @@ window.fmtHeight = fmtHeight;
     // Footer text
     const foot = document.getElementById('pmWlBtFoot');
     if (foot) {
-      foot.innerHTML = '<span class="pm-wl-bt-foot-strong">'+agg.evald+' evaluated</span>'
+      foot.innerHTML = '<span class="pm-wl-bt-foot-strong">'+agg.graded+' graded</span>'
         + ' / '+agg.total+' total ('+_pmWl.pos+', '+classFilter+'). '
-        + 'Blue tick = deployed baseline. Hit+ = stud + hit.';
+        + 'Bars = average NFL career grade (0-100) per tier. Blue tick = deployed baseline.';
     }
   }
 

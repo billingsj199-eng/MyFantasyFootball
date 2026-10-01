@@ -58958,6 +58958,39 @@ Rules:
     reader.readAsText(file);
   };
 
+  // Compact opponent rosters for the cloud payload (2026-10-01). The
+  // extension sync's allTeams never reached Firestore, so the live standings
+  // vanished on a reload without the extension and nothing server-side
+  // (scripts/bbm_advance_sim.py — the Tuesday advance-rate Routine) could
+  // see the 12-team pools. field[] = one entry per team: e entryId,
+  // u username, m 1 = my team, p ["Name|POS|TEAM|pick", ...]. ~4 KB/draft.
+  function _udCompactField(d) {
+    const at = d && d.allTeams && typeof d.allTeams === 'object' ? Object.values(d.allTeams) : [];
+    if (at.length < 2) return null;
+    return at.map(t => ({
+      e: String(t.entryId != null ? t.entryId : ''),
+      u: t.username || null,
+      m: t.isMine ? 1 : 0,
+      p: (t.picks || []).filter(p => p && p.name).map(p => [p.name, p.pos || '', p.team || '', p.pick || ''].join('|'))
+    }));
+  }
+  // Firestore caps a document at 1 MiB: drop the OLDEST drafts' fields first
+  // until the payload fits. The drafts themselves are never dropped.
+  function _udTrimFieldPayload(payload) {
+    const LIMIT = 900000;
+    let size = JSON.stringify(payload).length;
+    if (size <= LIMIT) return payload;
+    const withField = payload.drafts.filter(d => d.field)
+      .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+    for (const d of withField) {
+      if (size <= LIMIT) break;
+      size -= JSON.stringify(d.field).length;
+      delete d.field;
+    }
+    console.warn('[Portfolio] cloud payload over 900 KB — dropped the synced field from the oldest drafts to fit');
+    return payload;
+  }
+
   // Save portfolio to Firestore
   function _udSaveToCloud(parsed) {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
@@ -58973,17 +59006,19 @@ Rules:
       roundNumber: d.roundNumber != null ? d.roundNumber : null,
       picks: d.picks.map(p => ({ name: p.name, pos: p.pos, team: p.team, pick: p.pick }))
     }));
+    // Synced 12-team fields ride along (compact; see _udCompactField).
+    Object.values(parsed.drafts).forEach((d, i) => { const f = _udCompactField(d); if (f) draftsArr[i].field = f; });
     // Later-round H2H groups (The Eliminator) — tiny, so they ride along.
     const roundGroups = Object.values(window._udRoundGroups || {}).slice(0, 2000);
 
-    const payload = {
+    const payload = _udTrimFieldPayload({
       drafts: draftsArr,
       roundGroups: roundGroups,
       totalPicks: parsed.totalPicks,
       numDrafts: parsed.numDrafts,
       totalInvestment: parsed.totalInvestment,
       savedAt: new Date().toISOString()
-    };
+    });
 
     db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: payload }, { merge: true })
       .then(() => { console.log('[Portfolio] Saved to cloud'); })
@@ -59009,6 +59044,21 @@ Rules:
                        myEntryId: d.myEntryId != null ? String(d.myEntryId) : null, teamName: d.teamName || null,
                        roundNumber: d.roundNumber != null ? d.roundNumber : null };
       drafts[d.id].picks.sort((a, b) => a.pick - b.pick);
+      // Synced field (2026-10-01) → allTeams, so standings / the Teams tab
+      // work from the cloud copy; a fresh extension sync replaces it.
+      if (Array.isArray(d.field) && d.field.length >= 2) {
+        const at = {};
+        d.field.forEach((t, ti) => {
+          const eid = String(t && t.e != null && t.e !== '' ? t.e : ('f' + ti));
+          const picks = (t && t.p || []).map((str, pi) => {
+            const q = String(str).split('|');
+            return { name: q[0] || '', pos: q[1] || '', team: q[2] || '', pick: parseInt(q[3], 10) || (pi + 1) };
+          }).filter(pk => pk.name);
+          at[eid] = { entryId: eid, isMine: !!(t && t.m), username: (t && t.u) || null, picks: picks, pickCount: picks.length };
+        });
+        drafts[d.id].allTeams = at;
+        drafts[d.id].teamCount = Object.keys(at).length;
+      }
     });
     // Round groups: merge by id (the extension push may already hold newer ones).
     if (Array.isArray(cloud.roundGroups) && cloud.roundGroups.length) {
@@ -59262,19 +59312,24 @@ Rules:
     function buildPayloadFromMemory() {
       const p = window._udPortfolio;
       if (!p || !p.drafts) return null;
-      const draftsArr = Object.values(p.drafts).map(d => ({
-        id: d.id, tournament: d.tournament, fee: d.fee, size: d.size,
-        date: d.date || '', phase: d.phase || 'pre',
-        picks: (d.picks || []).map(pk => ({ name: pk.name, pos: pk.pos, team: pk.team, pick: pk.pick }))
-      })).filter(d => d.id);
+      const draftsArr = Object.values(p.drafts).map(d => {
+        const row = {
+          id: d.id, tournament: d.tournament, fee: d.fee, size: d.size,
+          date: d.date || '', phase: d.phase || 'pre',
+          myEntryId: d.myEntryId != null ? String(d.myEntryId) : null,
+          picks: (d.picks || []).map(pk => ({ name: pk.name, pos: pk.pos, team: pk.team, pick: pk.pick }))
+        };
+        const f = _udCompactField(d); if (f) row.field = f;
+        return row;
+      }).filter(d => d.id);
       if (!draftsArr.length) return null;
-      return {
+      return _udTrimFieldPayload({
         drafts: draftsArr,
         totalPicks: p.totalPicks || draftsArr.reduce((s, d) => s + (d.picks ? d.picks.length : 0), 0),
         numDrafts: draftsArr.length,
         totalInvestment: p.totalInvestment || draftsArr.reduce((s, d) => s + (parseFloat(d.fee) || 0), 0),
         savedAt: new Date().toISOString()
-      };
+      });
     }
 
     const memoryPayload = buildPayloadFromMemory();

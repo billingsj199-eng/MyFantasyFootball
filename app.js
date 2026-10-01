@@ -35672,6 +35672,9 @@ window.fmtHeight = fmtHeight;
           }
         }
       });
+      // Bio edits change inputs (birth, ht/wt, forty, draft) - drop every cached grade so the
+      // next build re-scores instead of reusing a pre-bio entry.
+      if (typeof window._jmClearCache === 'function') window._jmClearCache();
     }).catch(function(e) { _bioLoaded = false; console.warn('[Bio] Load failed, will retry', e); });
   }
 
@@ -37377,7 +37380,10 @@ window.fmtHeight = fmtHeight;
     // Cache key: player name + position + dr (so DC edits bust the cache correctly).
     // Include skipClassBonus so the recursive "base JM" lookup for class-strength doesn't
     // collide with the full JM cached entry.
-    const cacheKey = p.name + '::' + p.pos + '::' + (p.dr == null ? '' : String(p.dr)) + (_skipClassBonus ? '::base' : '');
+    // Sep 30 2026: age is in the key too - the Firestore bio birth date lands AFTER the first
+    // build (rankings DEVY board), and a stale entry kept the old draft-age score (Lacy 23.1 -> 1)
+    // while the table already showed the corrected age.
+    const cacheKey = p.name + '::' + p.pos + '::' + (p.dr == null ? '' : String(p.dr)) + '::' + (p.age == null ? '' : p.age) + (_skipClassBonus ? '::base' : '');
     if (_jmCache[cacheKey]) return _jmCache[cacheKey];
 
     // Devy players use devy weight tables (no DC component) — BUT once a DC is

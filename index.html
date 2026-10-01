@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-01-tiercareer" as="script">
+<link rel="preload" href="app.js?v=2026-10-01-btcareer" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -2572,7 +2572,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="bt-wrapper">
 <div class="bt-header">
 <div class="bt-title">Model Backtest</div>
-<div class="bt-subtitle">How the JM Score has performed against actual NFL outcomes for the 2020-2024 rookie classes. Higher tiers should produce more studs and fewer busts.</div>
+<div class="bt-subtitle">How the JM Score has performed against actual NFL careers for the 2020-2024 rookie classes. Careers are graded 0 to 100 on elite seasons and consistency, so one big year is not a hit. Higher tiers should average higher career grades.</div>
 </div>
 <div class="bt-controls">
 <span class="bt-ctrl-label">Class</span>
@@ -2600,26 +2600,23 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </select>
 <span class="bt-ctrl-label" style="margin-left:8px">Metric</span>
 <select class="bt-select" id="btMetricFilter" aria-label="Metric filter">
-<option value="hit">Hit Rate (Hit + Stud)</option>
-<option value="stud">Stud Rate (top tier only)</option>
-<option value="elite">Elite Rate (rookie-window top-6 PPG)</option>
-<option value="bust">Bust Rate</option>
+<option value="career">Average career grade</option>
+<option value="eliteyr">Had an elite season</option>
+<option value="steady">Two or more starter seasons</option>
+<option value="empty">Empty career (grade under 10)</option>
 </select>
 <span class="bt-method-toggle" id="btMethodToggle">how this is computed</span>
 </div>
 <div class="bt-method-box" id="btMethodBox">
-<b>Outcome window:</b> Best season in years 1-3 (1-4 for QB) of NFL career. Minimum 8 GP per season to qualify.<br>
-<b>Elite:</b> any qualifying season with PPG ≥ <code>15 (RB/WR), 11 (TE), 20 (QB)</code> — a true top-6 rookie-window outcome. Validation lens only; does not feed the JM weights.<br>
-<b>Stud:</b> top-12 PPG at position (top-6 for QB/TE) in any qualifying season.<br>
-<b>Hit:</b> top-24 PPG (top-12 for QB/TE) in any qualifying season.<br>
-<b>Contributor:</b> avg PPG ≥ <code>8 (RB/WR), 12 (QB), 5 (TE)</code> across qualifying seasons.<br>
-<b>Bust:</b> below those thresholds across the full window.<br>
-<b>Pending:</b> window not complete and no Hit/Stud yet (mostly 2024 class).<br>
+<b>Season value (0-100):</b> the player's positional finish in points per game that season, among players with 8+ games, scaled down if he missed time. Roughly: top-5 QB or top-6 RB / WR = 85, top-12 RB / WR = 70-75, top-24 = 45-52.<br>
+<b>Career grade (0-100):</b> his four best seasons inside his first six, weighted 40 / 30 / 20 / 10. One big year and nothing else tops out at 40; two elite years reach 70.<br>
+<b>Elite season:</b> a season worth 85 or more. <b>Starter season:</b> 50 or more. <b>Empty career:</b> grade under 10.<br>
+<b>Provisional:</b> classes with fewer than four NFL seasons played out (2023, 2024) are graded on the seasons so far.<br>
 <b>Eligible universe:</b> all skill-position rookies from <code>HISTORICAL_DRAFT_PICKS</code> 2020-2024 (~80/yr).
 </div>
 <div class="bt-summary" id="btSummary"></div>
 <div class="bt-cal-chart">
-<div class="bt-cal-title">Calibration: <span id="btCalMetricLabel">Hit Rate</span> by JM Tier</div>
+<div class="bt-cal-title">Calibration: <span id="btCalMetricLabel">Average Career Grade</span> by JM Tier</div>
 <div class="bt-cal-grid" id="btCalChart"></div>
 </div>
 <table class="bt-table">
@@ -2627,10 +2624,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <tr>
 <th style="width:140px">Tier</th>
 <th style="text-align:right">N</th>
-<th style="text-align:right" title="Rookie-window top-6 PPG outcome (validation lens)">Elite</th>
-<th style="text-align:right">Stud</th>
-<th style="text-align:right">Hit+</th>
-<th style="text-align:right">Bust</th>
+<th style="text-align:right" title="Average career grade, 0-100">Avg Career</th>
+<th style="text-align:right" title="Share with at least one season worth 85 or more">Elite Season</th>
+<th style="text-align:right" title="Share with two or more starter-level seasons">2+ Starter</th>
+<th style="text-align:right" title="Share with a career grade under 10">Empty</th>
 <th style="text-align:right">Avg PPG</th>
 <th>Calibration</th>
 </tr>
@@ -2642,10 +2639,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="bt-diag-section" id="btDiagSection">
 <div class="bt-diag-header">
 <div class="bt-diag-title">Predictive Power</div>
-<div class="bt-diag-subtitle">Spearman ρ between JM Score and NFL outcome (2017-2024 curveScore) and between JM Rank and actual draft slot (2024-2026). LOYO = leave-one-year-out average.</div>
+<div class="bt-diag-subtitle">Spearman ρ between JM Score and the graded NFL career outcome (2017-2024) and between JM Rank and actual draft slot (2024-2026). LOYO = leave-one-year-out average.</div>
 </div>
 
-<div class="bt-corr-section-title">JM vs. NFL Outcome (curveScore, 2017-2024)</div>
+<div class="bt-corr-section-title">JM vs. NFL Career Grade (2017-2024)</div>
 <div class="bt-corr-grid" id="btCorrOutcomeGrid"></div>
 
 <div class="bt-corr-section-title">JM Rank vs. Draft Slot (Recent Classes)</div>
@@ -5945,7 +5942,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-01-tiercareer"></script>
+<script defer src="app.js?v=2026-10-01-btcareer"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

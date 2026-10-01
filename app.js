@@ -40883,8 +40883,8 @@ window.fmtHeight = fmtHeight;
   }
 
   // === MODEL BACKTEST PAGE ===
-  // Cross-references BACKTEST_OUTCOMES (precomputed Stud/Hit/Bust verdicts for 2020-2024 rookies)
-  // with live JM scores from buildProspectData() to show how the model has performed historically.
+  // Cross-references the backtest players (BACKTEST_OUTCOMES) and their GRADED career outcomes
+  // (data/jm_career_grades.js) with live JM scores from buildProspectData().
   (function() {
     // 7-tier label list (used for grouping/sorting in the backtest UI).
     // Actual thresholds come from POS_TIERS — position-specific.
@@ -40941,6 +40941,7 @@ window.fmtHeight = fmtHeight;
       // Build name → JM lookup from prospect model
       const data = (typeof buildProspectData === 'function') ? buildProspectData() : [];
       const jmByName = {};
+      const _CG = (typeof window !== 'undefined' && window.JM_CAREER_GRADES) || {};
       data.forEach(p => {
         if (p.jm != null && !p.lowConfidence) jmByName[p.name] = p.jm;
       });
@@ -40954,20 +40955,27 @@ window.fmtHeight = fmtHeight;
       function nrm(s) {
         return s.toLowerCase().replace(/\b(jr\.?|sr\.?|ii|iii|iv|v)\b/g, '').replace(/[^a-z0-9]/g, '');
       }
-      const jmByNrm = {};
-      Object.keys(jmByName).forEach(n => { jmByNrm[nrm(n)] = jmByName[n]; });
+      const jmByNrm = {}, nameByNrm = {};
+      Object.keys(jmByName).forEach(n => { jmByNrm[nrm(n)] = jmByName[n]; nameByNrm[nrm(n)] = n; });
       const out = [];
       Object.keys(BACKTEST_OUTCOMES).forEach(yr => {
         BACKTEST_OUTCOMES[yr].forEach(r => {
           let jm = jmByName[r.n];
           if (jm == null) jm = jmByNrm[nrm(r.n)];
           if (jm == null) return; // skip if no JM score
+          // graded career outcome, keyed by the prospect-model name
+          const _pmName = jmByName[r.n] != null ? r.n : (nameByNrm[nrm(r.n)] || r.n);
+          const _g = _CG[_pmName + '|' + yr] || _CG[r.n + '|' + yr] || null;
           out.push({
             ...r,
             draftYr: parseInt(yr),
             jm: jm,
             tier: _btTierFor(jm, r.pos),
             elite: _isRookieElite(r),
+            career: _g ? _g[0] : null,
+            eliteYrs: _g ? _g[1] : 0,
+            starterYrs: _g ? _g[2] : 0,
+            provisional: _g ? !!_g[3] : false,
           });
         });
       });
@@ -40987,48 +40995,69 @@ window.fmtHeight = fmtHeight;
       return r;
     }
 
+    // ═══ Oct 1 2026: the Backtest page is judged on GRADED careers, not stud / hit / bust ═══
+    // Each row carries career (0-100, best four of the first six NFL seasons, 40/30/20/10),
+    // eliteYrs (seasons worth 85+), starterYrs (50+) and provisional (fewer than four seasons
+    // played out) from data/jm_career_grades.js. One big year tops out at 40, so a player who
+    // lucked into volume once no longer counts as a hit.
     function _btTierStats(rows) {
       const stats = {};
       BT_TIERS.forEach(t => {
-        stats[t.label] = { tier: t, total: 0, elite: 0, stud: 0, hit: 0, contributor: 0, bust: 0, pending: 0, players: [], ppgSum: 0, ppgN: 0 };
+        stats[t.label] = { tier: t, total: 0, graded: 0, careerSum: 0, eliteYr: 0, steady: 0, empty: 0, prov: 0,
+          elite: 0, stud: 0, hit: 0, contributor: 0, bust: 0, pending: 0, players: [], ppgSum: 0, ppgN: 0 };
       });
       rows.forEach(r => {
         const s = stats[r.tier.label];
         s.total++;
         s[r.verdict] = (s[r.verdict] || 0) + 1;
         if (r.elite) s.elite++;
+        if (r.career != null) {
+          s.graded++; s.careerSum += r.career;
+          if (r.eliteYrs > 0) s.eliteYr++;
+          if (r.starterYrs >= 2) s.steady++;
+          if (r.career < 10) s.empty++;
+          if (r.provisional) s.prov++;
+        }
         s.players.push(r);
         if (r.avgPpg > 0) { s.ppgSum += r.avgPpg; s.ppgN++; }
       });
       return stats;
     }
 
+    function _btCareerColor(v) { return v >= 70 ? '#22c55e' : v >= 45 ? '#60a5fa' : v >= 20 ? '#fbbf24' : v > 0 ? '#f87171' : 'var(--text3)'; }
+
     function _btSummaryHtml(rows) {
-      const total = rows.length;
-      const stud = rows.filter(r => r.verdict === 'stud').length;
-      const hit  = rows.filter(r => r.verdict === 'hit').length;
-      const bust = rows.filter(r => r.verdict === 'bust').length;
-      const pend = rows.filter(r => r.verdict === 'pending').length;
-      const elite = rows.filter(r => r.elite).length;
-      const evald = total - pend;
-      const sh = stud + hit;
-      function pct(n, d) { return d > 0 ? Math.round(n / d * 100) + '%' : '—'; }
+      const g = rows.filter(r => r.career != null);
+      const n = g.length;
+      const prov = g.filter(r => r.provisional).length;
+      const avg = n ? g.reduce((a, r) => a + r.career, 0) / n : 0;
+      const el = g.filter(r => r.eliteYrs > 0).length;
+      const st = g.filter(r => r.starterYrs >= 2).length;
+      const em = g.filter(r => r.career < 10).length;
+      function pct(x, d) { return d > 0 ? Math.round(x / d * 100) + '%' : '—'; }
       return ''
-        + `<div class="bt-kpi"><div class="bt-kpi-label">Sample</div><div class="bt-kpi-val">${total}</div><div class="bt-kpi-sub">${evald} evaluated · ${pend} pending</div></div>`
-        + `<div class="bt-kpi" title="Rookie-window top-6 PPG finish — validation lens only"><div class="bt-kpi-label">Elite Rate</div><div class="bt-kpi-val" style="color:#fbbf24">${pct(elite, evald)}</div><div class="bt-kpi-sub">${elite} of ${evald}</div></div>`
-        + `<div class="bt-kpi"><div class="bt-kpi-label">Stud Rate</div><div class="bt-kpi-val" style="color:#22c55e">${pct(stud, evald)}</div><div class="bt-kpi-sub">${stud} of ${evald}</div></div>`
-        + `<div class="bt-kpi"><div class="bt-kpi-label">Hit Rate (Hit+)</div><div class="bt-kpi-val" style="color:#60a5fa">${pct(sh, evald)}</div><div class="bt-kpi-sub">${sh} of ${evald}</div></div>`
-        + `<div class="bt-kpi"><div class="bt-kpi-label">Bust Rate</div><div class="bt-kpi-val" style="color:#ef4444">${pct(bust, evald)}</div><div class="bt-kpi-sub">${bust} of ${evald}</div></div>`;
+        + `<div class="bt-kpi"><div class="bt-kpi-label">Sample</div><div class="bt-kpi-val">${rows.length}</div><div class="bt-kpi-sub">${n} graded · ${prov} provisional</div></div>`
+        + `<div class="bt-kpi" title="Career grade 0-100: best four of the first six NFL seasons, weighted 40 / 30 / 20 / 10"><div class="bt-kpi-label">Avg Career Grade</div><div class="bt-kpi-val" style="color:#60a5fa">${n ? avg.toFixed(0) : '—'}</div><div class="bt-kpi-sub">out of 100</div></div>`
+        + `<div class="bt-kpi" title="At least one season worth 85 or more: about a top-5 QB or top-6 RB / WR finish in points per game"><div class="bt-kpi-label">Had an Elite Season</div><div class="bt-kpi-val" style="color:#22c55e">${pct(el, n)}</div><div class="bt-kpi-sub">${el} of ${n}</div></div>`
+        + `<div class="bt-kpi" title="Two or more starter-level seasons (season value 50 or more)"><div class="bt-kpi-label">Two+ Starter Seasons</div><div class="bt-kpi-val" style="color:#fbbf24">${pct(st, n)}</div><div class="bt-kpi-sub">${st} of ${n}</div></div>`
+        + `<div class="bt-kpi" title="Career grade under 10"><div class="bt-kpi-label">Empty Career</div><div class="bt-kpi-val" style="color:#ef4444">${pct(em, n)}</div><div class="bt-kpi-sub">${em} of ${n}</div></div>`;
     }
 
+    // Value 0-1 for the selected metric (career = average career grade / 100).
     function _btRateForMetric(s, metric) {
-      const evald = s.total - (s.pending || 0);
-      if (evald === 0) return null;
-      if (metric === 'stud') return s.stud / evald;
-      if (metric === 'elite') return (s.elite || 0) / evald;
-      if (metric === 'bust') return s.bust / evald;
-      return (s.stud + s.hit) / evald; // 'hit' = hit+stud combined
+      if (!s.graded) return null;
+      if (metric === 'eliteyr') return s.eliteYr / s.graded;
+      if (metric === 'steady') return s.steady / s.graded;
+      if (metric === 'empty') return s.empty / s.graded;
+      return (s.careerSum / s.graded) / 100;
     }
+    const _BT_METRIC = {
+      career:  { label: 'Average Career Grade', color: '#60a5fa', pct: false },
+      eliteyr: { label: 'Had an Elite Season', color: '#22c55e', pct: true },
+      steady:  { label: 'Two or More Starter Seasons', color: '#fbbf24', pct: true },
+      empty:   { label: 'Empty Career (grade under 10)', color: '#ef4444', pct: true }
+    };
+    function _btMetric(metric) { return _BT_METRIC[metric] || _BT_METRIC.career; }
 
     // JM threshold display for a tier label. Thresholds live in POS_TIERS and are
     // position-specific, so with no position filter this shows the cross-position range.
@@ -41047,65 +41076,56 @@ window.fmtHeight = fmtHeight;
     }
 
     function _btTierTableHtml(stats, metric, posSel) {
-      const labels = { stud: 'Stud Rate', hit: 'Hit Rate (Hit+)', elite: 'Elite Rate', bust: 'Bust Rate' };
+      const M = _btMetric(metric);
       const rows = BT_TIERS.map(t => {
         const s = stats[t.label];
         if (s.total === 0) return null;
         const minStr = _btTierMinStr(t.label, posSel);
-        const evald = s.total - s.pending;
-        function pctCell(n) {
-          if (evald === 0) return '—';
-          return Math.round(n / evald * 100) + '%';
-        }
+        function pctCell(n) { return s.graded ? Math.round(n / s.graded * 100) + '%' : '—'; }
         const avgPpg = s.ppgN > 0 ? (s.ppgSum / s.ppgN).toFixed(1) : '—';
+        const avgCar = s.graded ? s.careerSum / s.graded : null;
         const rate = _btRateForMetric(s, metric);
-        const rateColor = metric === 'bust' ? '#ef4444'
-          : metric === 'stud' ? '#22c55e'
-          : metric === 'elite' ? '#fbbf24'
-          : '#60a5fa';
         const barWidth = rate != null ? Math.round(rate * 100) : 0;
-        const barLbl = rate != null ? Math.round(rate * 100) + '%' : '—';
+        const barLbl = rate == null ? '—' : (M.pct ? Math.round(rate * 100) + '%' : String(Math.round(rate * 100)));
         const expanded = _expandedTier === t.label;
         let html = `<tr class="bt-tier-row${expanded ? ' expanded' : ''}" data-bt-tier="${t.label}">`
           + `<td><span class="bt-tier-badge" style="background:${t.color}22;color:${t.color}">${t.label}</span>${minStr ? `<span style="opacity:.5;font-size:.7rem;margin-left:6px">${minStr}</span>` : ''}</td>`
-          + `<td class="bt-pct-cell">${s.total}${s.pending ? ` <span style="opacity:.5">(${s.pending} pend)</span>` : ''}</td>`
-          + `<td class="bt-pct-cell" style="color:#fbbf24" title="Rookie-window top-6 PPG finish">${pctCell(s.elite || 0)}</td>`
-          + `<td class="bt-pct-cell" style="color:#22c55e">${pctCell(s.stud)}</td>`
-          + `<td class="bt-pct-cell" style="color:#60a5fa">${pctCell(s.stud + s.hit)}</td>`
-          + `<td class="bt-pct-cell" style="color:#ef4444">${pctCell(s.bust)}</td>`
+          + `<td class="bt-pct-cell">${s.total}${s.prov ? ` <span style="opacity:.5" title="fewer than four NFL seasons played out">(${s.prov} prov)</span>` : ''}</td>`
+          + `<td class="bt-pct-cell" style="color:${avgCar != null ? _btCareerColor(avgCar) : 'inherit'}">${avgCar != null ? avgCar.toFixed(0) : '—'}</td>`
+          + `<td class="bt-pct-cell" style="color:#22c55e">${pctCell(s.eliteYr)}</td>`
+          + `<td class="bt-pct-cell" style="color:#fbbf24">${pctCell(s.steady)}</td>`
+          + `<td class="bt-pct-cell" style="color:#ef4444">${pctCell(s.empty)}</td>`
           + `<td class="bt-pct-cell">${avgPpg}</td>`
-          + `<td class="bt-bar-cell"><div class="bt-bar-bg"><div class="bt-bar-fill" style="width:${barWidth}%;background:${rateColor}66"></div><div class="bt-bar-label">${barLbl}</div></div></td>`
+          + `<td class="bt-bar-cell"><div class="bt-bar-bg"><div class="bt-bar-fill" style="width:${barWidth}%;background:${M.color}66"></div><div class="bt-bar-label">${barLbl}</div></div></td>`
           + `</tr>`;
         if (expanded) {
-          // Sort by JM desc, then verdict (stud first)
-          const verdictOrder = { stud: 0, hit: 1, contributor: 2, bust: 3, pending: 4 };
-          const sorted = s.players.slice().sort((a, b) => {
-            if (verdictOrder[a.verdict] !== verdictOrder[b.verdict]) return verdictOrder[a.verdict] - verdictOrder[b.verdict];
-            return b.jm - a.jm;
-          });
+          // Best careers first
+          const sorted = s.players.slice().sort((a, b) => ((b.career == null ? -1 : b.career) - (a.career == null ? -1 : a.career)) || (b.jm - a.jm));
           let inner = '<table class="bt-player-tbl"><thead><tr>'
-            + '<th>Player</th><th>Yr</th><th>Pos</th><th>Pick</th><th>JM</th><th>Avg PPG</th><th>Best Rank</th><th>Verdict</th>'
+            + '<th>Player</th><th>Yr</th><th>Pos</th><th>Pick</th><th>JM</th><th>Avg PPG</th><th>Best Rank</th><th>Career Grade</th><th>Seasons</th>'
             + '</tr></thead><tbody>';
           sorted.forEach(p => {
             const bestRank = p.seasons && p.seasons.length
               ? p.seasons.reduce((acc, s) => (s.rank != null && (acc == null || s.rank < acc) ? s.rank : acc), null)
               : null;
             const pickStr = p.pick ? ('#' + p.pick + ' R' + p.round) : '—';
-            const eliteBadge = p.elite ? ' <span style="background:#fbbf2422;color:#fbbf24;font-size:.62rem;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700" title="Elite: rookie-window top-6 PPG finish">ELITE</span>' : '';
+            const car = p.career == null ? '—' : `<span style="color:${_btCareerColor(p.career)};font-weight:700">${p.career.toFixed(0)}</span>${p.provisional ? ' *' : ''}`;
+            const szn = p.career == null ? '—' : `${p.eliteYrs} elite · ${p.starterYrs} starter`;
             inner += `<tr>`
-              + `<td><span class="ep-card-link" data-epcard="${p.n.replace(/"/g,'&quot;')}" style="cursor:pointer">${p.n}</span>${eliteBadge}</td>`
+              + `<td><span class="ep-card-link" data-epcard="${p.n.replace(/"/g,'&quot;')}" style="cursor:pointer">${p.n}</span></td>`
               + `<td>${p.draftYr}</td>`
               + `<td style="opacity:.7">${p.pos}</td>`
               + `<td style="opacity:.7;font-size:.72rem">${pickStr}</td>`
               + `<td><span class="bt-jm-pill">${Math.round(p.jm)}</span></td>`
               + `<td>${p.avgPpg || '—'}</td>`
               + `<td>${bestRank != null ? p.pos + bestRank : '—'}</td>`
-              + `<td class="bt-verdict-${p.verdict}">${p.verdict.toUpperCase()}${p.partial ? ' *' : ''}</td>`
+              + `<td>${car}</td>`
+              + `<td style="opacity:.75;font-size:.72rem">${szn}</td>`
               + `</tr>`;
           });
           inner += '</tbody></table>';
-          if (sorted.some(p => p.partial)) {
-            inner += '<div style="font-size:.7rem;color:var(--text3);margin-top:6px">* window not yet complete</div>';
+          if (sorted.some(p => p.provisional)) {
+            inner += '<div style="font-size:.7rem;color:var(--text3);margin-top:6px">* provisional: fewer than four NFL seasons played out, graded on the seasons so far</div>';
           }
           html += `<tr class="bt-detail-row"><td colspan="8" class="bt-detail-cell"><div class="bt-detail-inner">${inner}</div></td></tr>`;
         }
@@ -41115,25 +41135,22 @@ window.fmtHeight = fmtHeight;
     }
 
     function _btCalChartHtml(stats, metric) {
-      const rateColor = metric === 'bust' ? '#ef4444'
-        : metric === 'stud' ? '#22c55e'
-        : metric === 'elite' ? '#fbbf24'
-        : '#60a5fa';
+      const M = _btMetric(metric);
       // Show tiers in order, only those with data
       const cols = BT_TIERS.map(t => {
         const s = stats[t.label];
         if (s.total === 0) return null;
         const rate = _btRateForMetric(s, metric);
-        const evald = s.total - s.pending;
-        const pct = rate != null ? Math.round(rate * 100) : 0;
-        const heightPct = Math.max(2, pct);
-        return `<div class="bt-cal-col" title="${t.label}: ${pct}% (${evald} evaluated)">`
+        const val = rate != null ? Math.round(rate * 100) : 0;
+        const txt = M.pct ? val + '%' : String(val);
+        const heightPct = Math.max(2, val);
+        return `<div class="bt-cal-col" title="${t.label}: ${txt} (${s.graded} players)">`
           + `<div class="bt-cal-bar-wrap">`
-          + `<div class="bt-cal-bar" style="height:${heightPct}%;background:${rateColor}99">`
-          + `<div class="bt-cal-bar-pct">${pct}%</div>`
+          + `<div class="bt-cal-bar" style="height:${heightPct}%;background:${M.color}99">`
+          + `<div class="bt-cal-bar-pct">${txt}</div>`
           + `</div></div>`
           + `<div class="bt-cal-label">${t.label.replace(' ','\u00A0')}</div>`
-          + `<div class="bt-cal-n">n=${evald}</div>`
+          + `<div class="bt-cal-n">n=${s.graded}</div>`
           + `</div>`;
       }).filter(Boolean);
       return cols.join('');
@@ -41157,11 +41174,7 @@ window.fmtHeight = fmtHeight;
       document.getElementById('btSummary').innerHTML = _btSummaryHtml(filtered);
       wrapper.innerHTML = _btTierTableHtml(stats, metric, posSel);
       document.getElementById('btCalChart').innerHTML = _btCalChartHtml(stats, metric);
-      const metricLbl = metric === 'stud' ? 'Stud Rate'
-        : metric === 'bust' ? 'Bust Rate'
-        : metric === 'elite' ? 'Elite Rate (top-6 PPG rookie window)'
-        : 'Hit Rate (Hit + Stud)';
-      document.getElementById('btCalMetricLabel').textContent = metricLbl;
+      document.getElementById('btCalMetricLabel').textContent = _btMetric(metric).label;
       // Wire row clicks
       wrapper.querySelectorAll('.bt-tier-row').forEach(row => {
         row.addEventListener('click', () => {
@@ -41247,8 +41260,9 @@ window.fmtHeight = fmtHeight;
       const out = [];
       rows.forEach(r => {
         if (r.draftYr < 2017 || r.draftYr > 2024) return;
-        if (r.curveScore == null || r.jm == null) return;
-        out.push({ pos: r.pos, x: r.jm, y: r.curveScore, year: r.draftYr, name: r.n, pick: r.pick, verdict: r.verdict });
+        const _y = r.career != null ? r.career : r.curveScore;   // graded career outcome (curveScore only as a fallback)
+        if (_y == null || r.jm == null) return;
+        out.push({ pos: r.pos, x: r.jm, y: _y, year: r.draftYr, name: r.n, pick: r.pick, verdict: r.verdict });
       });
       return out;
     }

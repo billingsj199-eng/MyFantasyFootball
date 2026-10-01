@@ -1,0 +1,1565 @@
+{
+ "checked": 451,
+ "plan": [
+  [
+   "Alec Pierce",
+   "2000-06-06",
+   "2000-05-02",
+   "on3+wikidata"
+  ],
+  [
+   "Andrei Iosivas",
+   "1999-11-10",
+   "1999-10-15",
+   "on3+wikidata"
+  ],
+  [
+   "Antonio Williams",
+   "2003-03-22",
+   "2004-07-14",
+   "on3+wikidata"
+  ],
+  [
+   "Audric Estime",
+   "2002-09-30",
+   "2003-09-06",
+   "on3"
+  ],
+  [
+   "Ben Sinnott",
+   "2001-10-25",
+   "2002-06-14",
+   "on3+wikidata"
+  ],
+  [
+   "Bhayshul Tuten",
+   "2001-07-18",
+   "2003-02-14",
+   "on3+wikidata"
+  ],
+  [
+   "Bijan Robinson",
+   "2002-02-01",
+   "2002-01-30",
+   "on3+wikidata"
+  ],
+  [
+   "Blake Corum",
+   "2000-09-05",
+   "2000-11-25",
+   "on3+wikidata"
+  ],
+  [
+   "Bo Jackson",
+   "2005-07-22",
+   "2006-08-25",
+   "on3"
+  ],
+  [
+   "Braelon Allen",
+   "2003-01-20",
+   "2004-01-20",
+   "on3"
+  ],
+  [
+   "Brashard Smith",
+   "2003-05-11",
+   "2003-04-11",
+   "on3"
+  ],
+  [
+   "Breece Hall",
+   "2001-06-19",
+   "2001-05-31",
+   "on3+wikidata"
+  ],
+  [
+   "Brenen Thompson",
+   "2004-04-18",
+   "2003-07-25",
+   "on3+wikidata"
+  ],
+  [
+   "Brenton Strange",
+   "2001-01-28",
+   "2000-12-27",
+   "on3+wikidata"
+  ],
+  [
+   "Brock Bowers",
+   "2002-12-20",
+   "2002-12-13",
+   "on3+wikidata"
+  ],
+  [
+   "Brock Purdy",
+   "1999-12-09",
+   "1999-12-27",
+   "on3+wikidata"
+  ],
+  [
+   "Bryce Lance",
+   "2003-06-01",
+   "2002-08-20",
+   "on3"
+  ],
+  [
+   "Bucky Irving",
+   "2002-05-05",
+   "2002-08-19",
+   "on3"
+  ],
+  [
+   "Cade Otton",
+   "1999-03-15",
+   "1999-04-15",
+   "on3+wikidata"
+  ],
+  [
+   "Calvin Austin III",
+   "2000-10-02",
+   "1999-03-24",
+   "on3+wikidata"
+  ],
+  [
+   "Cam Skattebo",
+   "2001-08-27",
+   "2002-02-05",
+   "on3+wikidata"
+  ],
+  [
+   "Carnell Tate",
+   "2004-08-20",
+   "2005-01-19",
+   "on3+wikidata"
+  ],
+  [
+   "Cedric Tillman",
+   "2000-06-16",
+   "2000-04-19",
+   "on3+wikidata"
+  ],
+  [
+   "Charlie Kolar",
+   "1999-06-18",
+   "1999-02-10",
+   "on3+wikidata"
+  ],
+  [
+   "Chase Brown",
+   "2000-12-18",
+   "2000-03-21",
+   "wikidata (on3 2000-11-25)"
+  ],
+  [
+   "Chimere Dike",
+   "2001-05-26",
+   "2001-12-14",
+   "wikidata (on3 2002-12-14)"
+  ],
+  [
+   "Christian Watson",
+   "1999-08-12",
+   "1999-05-12",
+   "on3+wikidata"
+  ],
+  [
+   "Chuba Hubbard",
+   "1999-06-21",
+   "1999-06-11",
+   "on3+wikidata"
+  ],
+  [
+   "Colbie Young",
+   "2001-09-14",
+   "2002-07-24",
+   "on3"
+  ],
+  [
+   "Colby Parkinson",
+   "1998-10-10",
+   "1999-01-08",
+   "on3+wikidata"
+  ],
+  [
+   "Cole Payton",
+   "2002-03-15",
+   "2002-10-26",
+   "on3"
+  ],
+  [
+   "Colston Loveland",
+   "2004-03-04",
+   "2004-04-09",
+   "on3+wikidata"
+  ],
+  [
+   "DJ Giddens",
+   "2002-11-04",
+   "2003-08-26",
+   "on3+wikidata"
+  ],
+  [
+   "Dalton Kincaid",
+   "1999-11-22",
+   "1999-10-18",
+   "on3+wikidata"
+  ],
+  [
+   "Daniel Bellinger",
+   "2000-09-11",
+   "2000-09-22",
+   "on3+wikidata"
+  ],
+  [
+   "Darnell Washington",
+   "2001-09-17",
+   "2001-08-17",
+   "on3"
+  ],
+  [
+   "De'Von Achane",
+   "2001-04-20",
+   "2001-10-13",
+   "on3+wikidata"
+  ],
+  [
+   "Deion Burks",
+   "2002-10-08",
+   "2003-01-08",
+   "on3+wikidata"
+  ],
+  [
+   "Demond Claiborne",
+   "2003-06-07",
+   "2003-10-09",
+   "on3+wikidata"
+  ],
+  [
+   "Denzel Boston",
+   "2003-09-05",
+   "2003-12-06",
+   "on3+wikidata"
+  ],
+  [
+   "Desmond Reid",
+   "2003-10-20",
+   "2004-07-29",
+   "on3+wikidata"
+  ],
+  [
+   "Devin Neal",
+   "2003-05-28",
+   "2003-08-12",
+   "on3+wikidata"
+  ],
+  [
+   "Devontez Walker",
+   "2001-09-29",
+   "2001-06-19",
+   "on3"
+  ],
+  [
+   "Dillon Gabriel",
+   "2001-02-04",
+   "2000-12-28",
+   "on3+wikidata"
+  ],
+  [
+   "Dont'e Thornton",
+   "2002-01-17",
+   "2002-11-30",
+   "on3+wikidata"
+  ],
+  [
+   "Dontayvion Wicks",
+   "2001-06-28",
+   "2001-06-16",
+   "on3"
+  ],
+  [
+   "Drake London",
+   "2001-06-02",
+   "2001-07-24",
+   "on3+wikidata"
+  ],
+  [
+   "Dyami Brown",
+   "1999-08-02",
+   "1999-11-01",
+   "on3+wikidata"
+  ],
+  [
+   "Dylan Sampson",
+   "2004-01-11",
+   "2004-09-14",
+   "on3+wikidata"
+  ],
+  [
+   "Eli Stowers",
+   "2003-06-04",
+   "2003-04-15",
+   "on3"
+  ],
+  [
+   "Elic Ayomanor",
+   "2003-06-14",
+   "2003-06-03",
+   "wikidata (on3 2003-06-15)"
+  ],
+  [
+   "Elijah Arroyo",
+   "2003-07-24",
+   "2003-04-05",
+   "on3+wikidata"
+  ],
+  [
+   "Elijah Higgins",
+   "2000-10-23",
+   "2000-10-27",
+   "on3"
+  ],
+  [
+   "Elijah Sarratt",
+   "2003-12-22",
+   "2003-05-28",
+   "on3"
+  ],
+  [
+   "Emeka Egbuka",
+   "2002-05-18",
+   "2002-10-14",
+   "on3+wikidata"
+  ],
+  [
+   "Emmett Johnson",
+   "2003-12-01",
+   "2003-10-10",
+   "on3"
+  ],
+  [
+   "Eric McAlister",
+   "2003-07-22",
+   "2002-11-22",
+   "on3"
+  ],
+  [
+   "Eric Rivers",
+   "2002-11-01",
+   "2002-09-17",
+   "on3"
+  ],
+  [
+   "Erick All",
+   "2000-06-11",
+   "2000-09-13",
+   "on3"
+  ],
+  [
+   "Garrett Wilson",
+   "2000-01-22",
+   "2000-07-22",
+   "on3+wikidata"
+  ],
+  [
+   "Germie Bernard",
+   "2003-02-10",
+   "2003-12-02",
+   "on3"
+  ],
+  [
+   "Greg Dulcich",
+   "2000-02-12",
+   "2000-03-26",
+   "on3+wikidata"
+  ],
+  [
+   "Gunnar Helm",
+   "2002-08-07",
+   "2002-09-06",
+   "on3+wikidata"
+  ],
+  [
+   "Harold Fannin",
+   "2004-06-15",
+   "2004-07-20",
+   "on3+wikidata"
+  ],
+  [
+   "Hendon Hooker",
+   "1998-01-20",
+   "1998-01-13",
+   "on3"
+  ],
+  [
+   "Isaac Guerendo",
+   "1999-06-25",
+   "2000-06-28",
+   "on3"
+  ],
+  [
+   "Isaac TeSlaa",
+   "2001-06-15",
+   "2002-02-20",
+   "on3+wikidata"
+  ],
+  [
+   "Isaiah Bond",
+   "2003-06-24",
+   "2004-03-15",
+   "on3"
+  ],
+  [
+   "Isaiah Davis",
+   "2001-09-22",
+   "2002-02-21",
+   "on3"
+  ],
+  [
+   "Isaiah Likely",
+   "2000-04-24",
+   "2000-04-18",
+   "on3+wikidata"
+  ],
+  [
+   "J.J. McCarthy",
+   "2002-12-20",
+   "2003-01-20",
+   "on3+wikidata"
+  ],
+  [
+   "Ja'Lynn Polk",
+   "2002-01-17",
+   "2002-04-11",
+   "on3"
+  ],
+  [
+   "Ja'Tavion Sanders",
+   "2003-05-23",
+   "2003-03-27",
+   "on3+wikidata"
+  ],
+  [
+   "Ja'Kobi Lane",
+   "2004-03-19",
+   "2004-08-05",
+   "on3"
+  ],
+  [
+   "Jack Bech",
+   "2002-05-07",
+   "2002-02-18",
+   "on3+wikidata"
+  ],
+  [
+   "Jackson Hawes",
+   "2003-01-07",
+   "2000-12-06",
+   "on3"
+  ],
+  [
+   "Jadarian Price",
+   "2003-08-28",
+   "2003-10-09",
+   "on3+wikidata"
+  ],
+  [
+   "Jahan Dotson",
+   "1999-03-22",
+   "2000-03-22",
+   "on3+wikidata"
+  ],
+  [
+   "Jahmyr Gibbs",
+   "2002-04-09",
+   "2002-03-20",
+   "on3+wikidata"
+  ],
+  [
+   "Jake Ferguson",
+   "2000-04-19",
+   "1999-01-18",
+   "on3+wikidata"
+  ],
+  [
+   "Jalen McMillan",
+   "2001-11-07",
+   "2001-12-07",
+   "on3+wikidata"
+  ],
+  [
+   "Jalen Milroe",
+   "2002-09-05",
+   "2002-12-13",
+   "on3+wikidata"
+  ],
+  [
+   "Jalen Nailor",
+   "1999-09-27",
+   "1999-03-02",
+   "on3+wikidata"
+  ],
+  [
+   "Jalen Royals",
+   "2002-06-27",
+   "2003-02-18",
+   "on3+wikidata"
+  ],
+  [
+   "Jalen Tolbert",
+   "1999-09-02",
+   "1999-02-27",
+   "on3+wikidata"
+  ],
+  [
+   "Jamari Thrash",
+   "2001-06-22",
+   "2000-12-19",
+   "on3+wikidata"
+  ],
+  [
+   "James Cook",
+   "2000-06-25",
+   "1999-09-25",
+   "on3"
+  ],
+  [
+   "Jameson Williams",
+   "2001-03-31",
+   "2001-03-26",
+   "on3+wikidata"
+  ],
+  [
+   "Jarquez Hunter",
+   "2002-08-19",
+   "2002-12-29",
+   "on3+wikidata"
+  ],
+  [
+   "Javonte Williams",
+   "2000-04-08",
+   "2000-04-25",
+   "on3+wikidata"
+  ],
+  [
+   "Jawhar Jordan",
+   "2000-06-25",
+   "1999-08-19",
+   "on3"
+  ],
+  [
+   "Jaxon Smith-Njigba",
+   "2001-04-22",
+   "2002-02-14",
+   "on3+wikidata"
+  ],
+  [
+   "Jaxson Dart",
+   "2003-03-14",
+   "2003-05-13",
+   "on3+wikidata"
+  ],
+  [
+   "Jayden Higgins",
+   "2002-09-14",
+   "2002-12-15",
+   "on3+wikidata"
+  ],
+  [
+   "Jayden Reed",
+   "2000-06-29",
+   "2000-04-28",
+   "on3+wikidata"
+  ],
+  [
+   "Jaydn Ott",
+   "2003-02-16",
+   "2002-12-16",
+   "on3+wikidata"
+  ],
+  [
+   "Jaydon Blue",
+   "2003-10-30",
+   "2004-01-08",
+   "on3+wikidata"
+  ],
+  [
+   "Jaylen Wright",
+   "2002-07-29",
+   "2003-04-01",
+   "on3+wikidata"
+  ],
+  [
+   "Jaylin Lane",
+   "2001-10-04",
+   "2002-05-01",
+   "on3+wikidata"
+  ],
+  [
+   "Jaylin Noel",
+   "2002-11-28",
+   "2002-09-04",
+   "on3+wikidata"
+  ],
+  [
+   "Jeremiyah Love",
+   "2005-02-13",
+   "2005-05-31",
+   "on3+wikidata"
+  ],
+  [
+   "Jerome Ford",
+   "2000-04-17",
+   "1999-09-12",
+   "on3+wikidata"
+  ],
+  [
+   "Joe Milton",
+   "1999-09-20",
+   "2000-03-06",
+   "on3+wikidata"
+  ],
+  [
+   "John Metchie III",
+   "2000-05-18",
+   "2000-07-18",
+   "on3+wikidata"
+  ],
+  [
+   "John Michael Gyllenborg",
+   "2003-05-10",
+   "2002-08-07",
+   "on3"
+  ],
+  [
+   "Jonah Coleman",
+   "2003-08-16",
+   "2003-08-20",
+   "on3"
+  ],
+  [
+   "Jonathon Brooks",
+   "2002-02-04",
+   "2003-07-21",
+   "on3+wikidata"
+  ],
+  [
+   "Jordan Addison",
+   "2001-05-17",
+   "2002-01-27",
+   "on3+wikidata"
+  ],
+  [
+   "Jordan James",
+   "2004-06-12",
+   "2004-07-02",
+   "wikidata (on3 2004-03-29)"
+  ],
+  [
+   "Jordan Whittington",
+   "2001-09-15",
+   "2000-02-19",
+   "wikidata (on3 2000-10-01)"
+  ],
+  [
+   "Jordyn Tyson",
+   "2004-01-25",
+   "2004-08-12",
+   "on3+wikidata"
+  ],
+  [
+   "Josh Downs",
+   "2001-09-30",
+   "2001-08-12",
+   "on3+wikidata"
+  ],
+  [
+   "Josh Palmer",
+   "1999-09-08",
+   "1999-09-22",
+   "on3+wikidata"
+  ],
+  [
+   "KC Concepcion",
+   "2004-08-14",
+   "2004-09-24",
+   "on3"
+  ],
+  [
+   "Kaleb Johnson",
+   "2003-10-24",
+   "2003-08-14",
+   "on3+wikidata"
+  ],
+  [
+   "Kayshon Boutte",
+   "2002-10-09",
+   "2002-05-07",
+   "on3+wikidata"
+  ],
+  [
+   "Kaytron Allen",
+   "2003-03-17",
+   "2003-01-08",
+   "wikidata (on3 2003-01-09)"
+  ],
+  [
+   "Kendre Miller",
+   "2001-04-15",
+   "2002-06-11",
+   "on3"
+  ],
+  [
+   "Kenneth Walker III",
+   "2001-03-27",
+   "2000-10-20",
+   "on3+wikidata"
+  ],
+  [
+   "Kenny McIntosh",
+   "2001-03-15",
+   "2000-03-03",
+   "on3"
+  ],
+  [
+   "Kenyon Sadiq",
+   "2004-09-15",
+   "2005-03-04",
+   "on3"
+  ],
+  [
+   "Keon Coleman",
+   "2002-07-04",
+   "2003-05-17",
+   "on3+wikidata"
+  ],
+  [
+   "Khalil Shakir",
+   "2000-04-02",
+   "2000-02-03",
+   "on3+wikidata"
+  ],
+  [
+   "Kimani Vidal",
+   "2001-11-11",
+   "2001-08-28",
+   "on3+wikidata"
+  ],
+  [
+   "Konata Mumpfield",
+   "2003-01-30",
+   "2002-10-24",
+   "on3+wikidata"
+  ],
+  [
+   "Kyle Monangai",
+   "2001-10-30",
+   "2002-03-15",
+   "wikidata (on3 2002-06-06)"
+  ],
+  [
+   "Kyren Williams",
+   "2000-03-14",
+   "2000-08-26",
+   "on3+wikidata"
+  ],
+  [
+   "Ladd McConkey",
+   "2001-12-12",
+   "2001-11-11",
+   "on3+wikidata"
+  ],
+  [
+   "LeQuint Allen",
+   "2002-08-08",
+   "2004-08-05",
+   "on3+wikidata"
+  ],
+  [
+   "Le'Veon Moss",
+   "2003-12-22",
+   "2002-11-15",
+   "on3"
+  ],
+  [
+   "Luke McCaffrey",
+   "2001-07-20",
+   "2001-04-02",
+   "on3+wikidata"
+  ],
+  [
+   "Luke Musgrave",
+   "2000-03-17",
+   "2000-09-02",
+   "on3+wikidata"
+  ],
+  [
+   "Luke Schoonmaker",
+   "2000-01-28",
+   "1998-09-28",
+   "on3+wikidata"
+  ],
+  [
+   "Makai Lemon",
+   "2004-11-03",
+   "2004-06-02",
+   "on3+wikidata"
+  ],
+  [
+   "Malachi Corley",
+   "2001-12-24",
+   "2002-03-21",
+   "on3+wikidata"
+  ],
+  [
+   "Malachi Fields",
+   "2003-04-05",
+   "2003-08-26",
+   "on3"
+  ],
+  [
+   "Malik Washington",
+   "2001-05-01",
+   "2001-01-04",
+   "on3+wikidata"
+  ],
+  [
+   "MarShawn Lloyd",
+   "2001-09-27",
+   "2001-01-05",
+   "on3+wikidata"
+  ],
+  [
+   "Marvin Harrison Jr.",
+   "2002-08-16",
+   "2002-08-11",
+   "on3+wikidata"
+  ],
+  [
+   "Marvin Mims Jr.",
+   "2002-09-20",
+   "2002-03-19",
+   "on3+wikidata"
+  ],
+  [
+   "Matthew Golden",
+   "2003-10-06",
+   "2003-08-01",
+   "on3+wikidata"
+  ],
+  [
+   "Max Klare",
+   "2003-10-31",
+   "2003-07-08",
+   "on3+wikidata"
+  ],
+  [
+   "Michael Mayer",
+   "2002-07-06",
+   "2001-07-06",
+   "on3"
+  ],
+  [
+   "Michael Trigg",
+   "2002-10-17",
+   "2002-06-27",
+   "on3+wikidata"
+  ],
+  [
+   "Michael Wilson",
+   "2000-08-05",
+   "2000-02-23",
+   "on3"
+  ],
+  [
+   "Mike Washington Jr.",
+   "2003-04-18",
+   "2003-07-03",
+   "on3+wikidata"
+  ],
+  [
+   "Mitchell Evans",
+   "2002-04-22",
+   "2003-03-18",
+   "on3+wikidata"
+  ],
+  [
+   "Nico Collins",
+   "1999-06-16",
+   "1999-03-19",
+   "on3+wikidata"
+  ],
+  [
+   "Noah Gray",
+   "1999-03-19",
+   "1999-04-30",
+   "on3+wikidata"
+  ],
+  [
+   "Ollie Gordon",
+   "2003-09-12",
+   "2004-01-15",
+   "on3+wikidata"
+  ],
+  [
+   "Oronde Gadsden II",
+   "2003-02-07",
+   "2003-06-25",
+   "wikidata (on3 2003-01-25)"
+  ],
+  [
+   "Oscar Delp",
+   "2003-04-06",
+   "2003-08-04",
+   "on3"
+  ],
+  [
+   "Parker Washington",
+   "2002-01-15",
+   "2002-03-21",
+   "on3+wikidata"
+  ],
+  [
+   "Pat Bryant",
+   "2002-06-01",
+   "2002-12-10",
+   "on3+wikidata"
+  ],
+  [
+   "Puka Nacua",
+   "2001-01-21",
+   "2001-05-29",
+   "wikidata (on3 2000-05-29)"
+  ],
+  [
+   "Quentin Johnston",
+   "2001-04-28",
+   "2001-09-06",
+   "on3+wikidata"
+  ],
+  [
+   "Quinn Ewers",
+   "2003-03-09",
+   "2003-03-15",
+   "on3+wikidata"
+  ],
+  [
+   "Quinshon Judkins",
+   "2003-03-24",
+   "2003-10-29",
+   "on3+wikidata"
+  ],
+  [
+   "RJ Harvey",
+   "2001-04-07",
+   "2001-02-04",
+   "on3+wikidata"
+  ],
+  [
+   "Rachaad White",
+   "2000-08-28",
+   "1999-01-12",
+   "on3+wikidata"
+  ],
+  [
+   "Rahsul Faison",
+   "2003-12-11",
+   "2000-02-20",
+   "on3+wikidata"
+  ],
+  [
+   "Rashee Rice",
+   "2000-09-27",
+   "2000-04-22",
+   "on3+wikidata"
+  ],
+  [
+   "Rasheen Ali",
+   "2001-01-16",
+   "2001-02-16",
+   "on3+wikidata"
+  ],
+  [
+   "Rashod Bateman",
+   "1999-11-15",
+   "1999-11-29",
+   "on3+wikidata"
+  ],
+  [
+   "Rhamondre Stevenson",
+   "1998-06-06",
+   "1998-02-23",
+   "on3+wikidata"
+  ],
+  [
+   "Ricky Pearsall",
+   "2000-09-05",
+   "2000-09-09",
+   "wikidata (on3 2003-09-09)"
+  ],
+  [
+   "Roman Hemby",
+   "2003-02-08",
+   "2002-08-16",
+   "on3"
+  ],
+  [
+   "Roman Wilson",
+   "2002-09-05",
+   "2001-06-19",
+   "on3+wikidata"
+  ],
+  [
+   "Romeo Doubs",
+   "2000-05-22",
+   "2000-04-13",
+   "on3+wikidata"
+  ],
+  [
+   "Ryan Flournoy",
+   "2000-11-02",
+   "1999-10-27",
+   "on3"
+  ],
+  [
+   "Sam LaPorta",
+   "2000-10-25",
+   "2001-01-12",
+   "on3+wikidata"
+  ],
+  [
+   "Sam Roush",
+   "2003-07-22",
+   "2003-09-06",
+   "on3"
+  ],
+  [
+   "Savion Williams",
+   "2002-03-28",
+   "2001-11-22",
+   "on3"
+  ],
+  [
+   "Sean Tucker",
+   "2001-11-20",
+   "2001-10-25",
+   "on3+wikidata"
+  ],
+  [
+   "Seth McGowan",
+   "2001-12-13",
+   "2001-10-23",
+   "on3"
+  ],
+  [
+   "Sione Vaki",
+   "2001-06-21",
+   "2001-07-30",
+   "on3+wikidata"
+  ],
+  [
+   "Skyler Bell",
+   "2002-11-15",
+   "2002-07-05",
+   "on3"
+  ],
+  [
+   "Skyy Moore",
+   "2000-07-28",
+   "2000-09-10",
+   "on3+wikidata"
+  ],
+  [
+   "Tahj Brooks",
+   "2002-04-04",
+   "2002-05-13",
+   "on3+wikidata"
+  ],
+  [
+   "Tai Felton",
+   "2002-05-17",
+   "2003-03-15",
+   "on3"
+  ],
+  [
+   "Tank Bigsby",
+   "2001-09-20",
+   "2001-08-30",
+   "on3+wikidata"
+  ],
+  [
+   "Tanner Koziol",
+   "2003-08-29",
+   "2004-01-28",
+   "on3"
+  ],
+  [
+   "Ted Hurst",
+   "2003-08-01",
+   "2004-01-02",
+   "on3"
+  ],
+  [
+   "Terrance Ferguson",
+   "2002-12-26",
+   "2003-02-07",
+   "on3+wikidata"
+  ],
+  [
+   "Tez Johnson",
+   "2002-02-11",
+   "2002-05-18",
+   "on3+wikidata"
+  ],
+  [
+   "Theo Johnson",
+   "2001-06-12",
+   "2001-02-26",
+   "on3+wikidata"
+  ],
+  [
+   "Tommy Tremble",
+   "2000-08-05",
+   "1998-06-02",
+   "wikidata (on3 2000-06-02)"
+  ],
+  [
+   "Tory Horton",
+   "2003-06-07",
+   "2002-11-29",
+   "on3+wikidata"
+  ],
+  [
+   "Tre' Harris",
+   "2001-12-17",
+   "2002-02-28",
+   "on3"
+  ],
+  [
+   "Tre Tucker",
+   "2000-11-03",
+   "2001-03-08",
+   "on3+wikidata"
+  ],
+  [
+   "TreVeyon Henderson",
+   "2003-09-12",
+   "2002-10-22",
+   "on3+wikidata"
+  ],
+  [
+   "Trevor Etienne",
+   "2003-03-06",
+   "2004-07-09",
+   "on3"
+  ],
+  [
+   "Trey Benson",
+   "2001-04-11",
+   "2002-06-23",
+   "on3"
+  ],
+  [
+   "Trey McBride",
+   "2000-09-07",
+   "1999-11-22",
+   "on3+wikidata"
+  ],
+  [
+   "Troy Franklin",
+   "2002-10-01",
+   "2003-02-06",
+   "on3+wikidata"
+  ],
+  [
+   "Tucker Kraft",
+   "2001-02-04",
+   "2000-11-03",
+   "on3"
+  ],
+  [
+   "Tutu Atwell",
+   "2000-09-20",
+   "1999-10-07",
+   "on3+wikidata"
+  ],
+  [
+   "Ty Chandler",
+   "1999-03-11",
+   "1998-05-12",
+   "on3+wikidata"
+  ],
+  [
+   "Tyjae Spears",
+   "2001-12-17",
+   "2001-06-15",
+   "on3+wikidata"
+  ],
+  [
+   "Tyler Allgeier",
+   "1999-08-05",
+   "2000-04-15",
+   "on3+wikidata"
+  ],
+  [
+   "Tyler Shough",
+   "1999-12-12",
+   "1999-09-28",
+   "on3+wikidata"
+  ],
+  [
+   "Tyler Warren",
+   "2002-01-25",
+   "2002-05-24",
+   "on3+wikidata"
+  ],
+  [
+   "Tyquan Thornton",
+   "2000-07-28",
+   "2000-08-07",
+   "on3+wikidata"
+  ],
+  [
+   "Wan'Dale Robinson",
+   "2001-09-17",
+   "2001-01-05",
+   "on3+wikidata"
+  ],
+  [
+   "Will Howard",
+   "2001-11-23",
+   "2001-09-24",
+   "on3+wikidata"
+  ],
+  [
+   "Will Shipley",
+   "2002-07-16",
+   "2002-08-29",
+   "on3+wikidata"
+  ],
+  [
+   "Woody Marks",
+   "2001-06-10",
+   "2000-12-29",
+   "on3+wikidata"
+  ],
+  [
+   "Xavier Hutchinson",
+   "1999-10-21",
+   "2000-06-01",
+   "on3"
+  ],
+  [
+   "Xavier Legette",
+   "2000-11-14",
+   "2001-01-29",
+   "on3+wikidata"
+  ],
+  [
+   "Xavier Worthy",
+   "2002-08-29",
+   "2003-04-27",
+   "on3+wikidata"
+  ],
+  [
+   "Zach Charbonnet",
+   "2001-06-13",
+   "2001-01-08",
+   "on3+wikidata"
+  ],
+  [
+   "Zachariah Branch",
+   "2004-05-16",
+   "2004-03-29",
+   "on3"
+  ],
+  [
+   "Zamir White",
+   "2000-01-19",
+   "1999-09-18",
+   "on3+wikidata"
+  ],
+  [
+   "Zay Flowers",
+   "2000-09-23",
+   "2000-09-11",
+   "on3+wikidata"
+  ],
+  [
+   "Omar Cooper Jr.",
+   "2003-08-12",
+   "2003-12-14",
+   "on3+wikidata"
+  ],
+  [
+   "Chris Brazzell II",
+   "2003-12-18",
+   "2003-09-23",
+   "on3"
+  ],
+  [
+   "Kaelon Black",
+   "2001-05-12",
+   "2001-10-17",
+   "on3"
+  ],
+  [
+   "Kevin Coleman Jr.",
+   "2004-08-10",
+   "2003-09-10",
+   "on3+wikidata"
+  ],
+  [
+   "Jeremiah Smith",
+   "2005-08-10",
+   "2005-11-29",
+   "on3"
+  ],
+  [
+   "Brandon Inniss",
+   "2004-12-20",
+   "2004-10-07",
+   "on3"
+  ],
+  [
+   "Arch Manning",
+   "2005-03-19",
+   "2005-04-27",
+   "on3+wikidata"
+  ],
+  [
+   "Dante Moore",
+   "2004-11-10",
+   "2005-05-24",
+   "on3+wikidata"
+  ],
+  [
+   "Julian Sayin",
+   "2005-02-26",
+   "2005-07-23",
+   "wikidata (on3 2005-07-22)"
+  ],
+  [
+   "Jayden Maiava",
+   "2003-04-03",
+   "2003-04-06",
+   "on3"
+  ],
+  [
+   "Cam Coleman",
+   "2005-11-22",
+   "2006-08-14",
+   "on3+wikidata"
+  ],
+  [
+   "Bryant Wesco Jr.",
+   "2005-12-07",
+   "2005-09-22",
+   "on3+wikidata"
+  ],
+  [
+   "Jadan Baugh",
+   "2005-06-25",
+   "2005-10-11",
+   "on3"
+  ],
+  [
+   "Ahmad Hardy",
+   "2005-03-18",
+   "2005-12-19",
+   "on3+wikidata"
+  ],
+  [
+   "Bryce Underwood",
+   "2006-10-25",
+   "2007-08-19",
+   "on3+wikidata"
+  ],
+  [
+   "CJ Carr",
+   "2005-11-01",
+   "2005-05-26",
+   "on3"
+  ],
+  [
+   "Nick Marsh",
+   "2005-09-17",
+   "2006-10-01",
+   "on3+wikidata"
+  ],
+  [
+   "Sam Leavitt",
+   "2003-12-15",
+   "2004-12-20",
+   "on3"
+  ],
+  [
+   "Nate Frazier",
+   "2004-08-18",
+   "2005-09-26",
+   "on3"
+  ],
+  [
+   "Justice Haynes",
+   "2004-08-30",
+   "2004-10-24",
+   "on3"
+  ],
+  [
+   "Jordon Davison",
+   "2005-06-20",
+   "2006-12-21",
+   "on3"
+  ],
+  [
+   "Dierre Hill Jr.",
+   "2005-08-15",
+   "2006-09-27",
+   "on3"
+  ],
+  [
+   "Harlem Berry",
+   "2006-01-30",
+   "2007-05-24",
+   "on3"
+  ],
+  [
+   "Dylan Raiola",
+   "2005-07-05",
+   "2005-05-09",
+   "on3+wikidata"
+  ],
+  [
+   "Marcel Reed",
+   "2004-11-22",
+   "2004-07-08",
+   "on3"
+  ],
+  [
+   "Kaliq Lockett",
+   "2006-05-15",
+   "2006-12-12",
+   "on3"
+  ],
+  [
+   "Tavien St. Clair",
+   "2005-11-25",
+   "2006-06-03",
+   "on3"
+  ],
+  [
+   "T.J. Moore",
+   "2005-02-14",
+   "2006-04-14",
+   "on3"
+  ],
+  [
+   "Gideon Davidson",
+   "2006-03-08",
+   "2006-05-16",
+   "on3+wikidata"
+  ],
+  [
+   "Bear Bachmeier",
+   "2006-09-21",
+   "2005-12-19",
+   "on3"
+  ],
+  [
+   "Josh Hoover",
+   "2003-11-17",
+   "2003-06-25",
+   "on3"
+  ],
+  [
+   "Julian Lewis",
+   "2006-11-10",
+   "2007-09-21",
+   "on3+wikidata"
+  ],
+  [
+   "DJ Lagway",
+   "2006-01-12",
+   "2005-08-13",
+   "on3"
+  ],
+  [
+   "Deuce Knight",
+   "2006-04-21",
+   "2006-12-02",
+   "on3"
+  ],
+  [
+   "Caleb Cunningham",
+   "2006-06-15",
+   "2005-12-30",
+   "on3+wikidata"
+  ],
+  [
+   "Jordan Marshall",
+   "2004-12-05",
+   "2005-11-02",
+   "on3"
+  ],
+  [
+   "Talyn Taylor",
+   "2006-03-10",
+   "2007-02-19",
+   "on3"
+  ],
+  [
+   "Nico Iamaleava",
+   "2004-11-17",
+   "2004-09-02",
+   "on3+wikidata"
+  ],
+  [
+   "Andrew Marsh",
+   "2006-01-22",
+   "2007-02-02",
+   "on3"
+  ],
+  [
+   "Ousmane Kromah",
+   "2005-09-22",
+   "2005-12-03",
+   "on3"
+  ],
+  [
+   "Taylor Tatum",
+   "2004-11-30",
+   "2006-04-24",
+   "on3"
+  ],
+  [
+   "Jerrick Gibson",
+   "2004-10-12",
+   "2004-10-07",
+   "on3"
+  ],
+  [
+   "Micah Hudson",
+   "2005-08-05",
+   "2005-12-14",
+   "on3"
+  ],
+  [
+   "Demond Williams Jr.",
+   "2005-01-15",
+   "2006-03-20",
+   "on3"
+  ],
+  [
+   "CJ Bailey",
+   "2004-06-30",
+   "2006-05-10",
+   "on3"
+  ],
+  [
+   "Keelon Russell",
+   "2006-12-10",
+   "2007-04-24",
+   "on3+wikidata"
+  ]
+ ]
+}

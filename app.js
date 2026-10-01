@@ -14990,7 +14990,7 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-stat"><span class="card-stat-label">School</span><span class="card-stat-value">${cb.school || d._college || '—'}</span></div>
           <div class="card-stat"><span class="card-stat-label">Height</span><span class="card-stat-value">${cb.ht || fmtHeight(d._height)}</span></div>
           <div class="card-stat"><span class="card-stat-label">Weight</span><span class="card-stat-value">${cb.wt ? cb.wt + ' lbs' : (d._weight ? d._weight + ' lbs' : '—')}</span></div>
-          <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${cb.draft ? '#' + cb.draft + ' Overall' : cb.draftProj ? 'Proj #' + cb.draftProj : (d.dr ? '#' + d.dr + ' Overall' : 'Undrafted')}</span></div>
+          <div class="card-stat"><span class="card-stat-label">Draft Pick</span><span class="card-stat-value">${cb.draft ? '#' + cb.draft + ' Overall' : cb.draftProj ? (cb.draftProj === 'U' ? 'Proj UDFA' : 'Proj #' + cb.draftProj) : (d.dr ? '#' + d.dr + ' Overall' : 'Undrafted')}</span></div>
           <div class="card-stat"><span class="card-stat-label">Draft Team</span><span class="card-stat-value">${cb.dt || '—'}</span></div>
         </div>
       </div>
@@ -43287,7 +43287,7 @@ window.fmtHeight = fmtHeight;
             age: pmP ? pmP.age : (apDb ? apDb.age : null),
             _retired: false, _college: cb.school,
             _isDevy: isDevy,
-            dr: pmP ? pmP.dr : (cb.draft != null ? (cb.draft === 'U' ? 'U' : parseInt(cb.draft) || null) : cb.draftProj != null ? parseInt(cb.draftProj) || null : null),
+            dr: pmP ? pmP.dr : (cb.draft != null ? (cb.draft === 'U' ? 'U' : parseInt(cb.draft) || null) : cb.draftProj != null ? (cb.draftProj === 'U' ? 'U' : parseInt(cb.draftProj) || null) : null),
             r: '—',
             _height: pmP ? (pmP.ht ? String(pmP.ht) : null) : null,
             _weight: pmP ? pmP.wt : (cb.wt || null),

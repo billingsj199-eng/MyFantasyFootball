@@ -1,6 +1,94 @@
 {
-  "updated": "2026-10-01T02:17:50Z",
+  "updated": "2026-10-01T16:18:13Z",
   "items": [
+    {
+      "player": "DeVonta Smith",
+      "team": "PHI",
+      "pos": "WR",
+      "date": "2026-10-01",
+      "headline": "DNP again Thursday (hamstring) ahead of Sunday's game vs. Rams",
+      "take": "Short week, same management pattern as last week when he ramped up Fri/Sat -- watch Friday's tag before trusting him as a confident Week 4 start.",
+      "url": "https://sports.yahoo.com/articles/eagles-injury-report-devonta-smith-232740749.html",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Rachaad White",
+      "team": "WAS",
+      "pos": "RB",
+      "date": "2026-10-01",
+      "headline": "DNP for a 2nd straight day (shoulder) in London, trending toward sitting Week 4",
+      "take": "Two DNPs to open the week make him a real fade risk vs. Colts; Jacory Croskey-Merritt stays the lead back, with newly-signed Austin Ekeler addable change-of-pace option.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-01/rachaad-white-shoulder-not-practicing-thursday",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Austin Ekeler",
+      "team": "WAS",
+      "pos": "RB",
+      "date": "2026-09-30",
+      "headline": "Officially signs with Commanders' active roster; Leo Chenal to IR opens the spot",
+      "take": "Depth add behind Croskey-Merritt for now, but worth a speculative add given Rachaad White's (shoulder) shaky Week 4 outlook.",
+      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/commanders-announce-austin-ekeler-signing-placement-of-leo-chenal-on-ir",
+      "tag": "transaction",
+      "src_type": "team"
+    },
+    {
+      "player": "Mike Evans",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-10-01",
+      "headline": "Misses 2nd straight practice (ribs); GM Lynch says he'll 'make every attempt' to play Sunday",
+      "take": "Trending toward a Friday game-time-decision tag vs. Denver -- have a contingency plan ready in case he sits.",
+      "url": "https://www.prizepicks.com/playbook-article/mike-evans-injury-update-is-49ers-wr-playing-this-week-vs-broncos",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Jeremiyah Love",
+      "team": "ARI",
+      "pos": "RB",
+      "date": "2026-09-27",
+      "headline": "Fully takes over Cardinals backfield in Week 3: 21 carries for 90 yards, 5/5 targets, 1 TD",
+      "take": "Workload now looks like a true bell-cow role heading into Week 4 -- an every-format RB1 start.",
+      "url": "https://sports.yahoo.com/articles/week-4-fantasy-football-rookie-215252279.html",
+      "tag": "riser",
+      "src_type": "report"
+    },
+    {
+      "player": "Chris Bell",
+      "team": "MIA",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Leads Dolphins in receiving in Week 3: 4/7 targets for 67 yards on 71% of snaps",
+      "take": "Snap share and target trend are both pointing up in a Miami passing game now also missing Achane as a check-down option -- a deep-league add.",
+      "url": "https://sports.yahoo.com/articles/week-4-fantasy-football-rookie-215252279.html",
+      "tag": "riser",
+      "src_type": "report"
+    },
+    {
+      "player": "Josh Cameron",
+      "team": "JAX",
+      "pos": "WR",
+      "date": "2026-09-27",
+      "headline": "Snap share climbs to 37% in Week 3, now has 2 TD catches on the season",
+      "take": "Still a complementary piece behind Jacksonville's top options, but the role is clearly trending up -- a dynasty/best-ball stash.",
+      "url": "https://sports.yahoo.com/articles/week-4-fantasy-football-rookie-215252279.html",
+      "tag": "riser",
+      "src_type": "report"
+    },
+    {
+      "player": "Ollie Gordon II",
+      "team": "MIA",
+      "pos": "RB",
+      "date": "2026-10-01",
+      "headline": "Projected for a lead Miami backfield role now that Achane's season-ending ACL tear is confirmed",
+      "take": "No longer just a fill-in -- Gordon is a top Week 4 waiver priority with Miami's backfield now fully open.",
+      "url": "https://sports.yahoo.com/articles/week-4-fantasy-football-rookie-215252279.html",
+      "tag": "riser",
+      "src_type": "report"
+    },
     {
       "player": "Jayden Reed",
       "team": "GB",
@@ -9,7 +97,10 @@
       "headline": "Out for the rest of the 2026 season; will undergo neck surgery",
       "take": "Season-ending neck surgery -- Christian Watson and Matthew Golden absorb his target share in Green Bay's passing game.",
       "url": "https://sports.yahoo.com/articles/packers-jayden-reed-2026-season-172956136.html",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "season"
+      }
     },
     {
       "player": "Puka Nacua",
@@ -49,7 +140,11 @@
       "headline": "Ruled out for Thursday night vs. Browns (toe) -- 2nd straight missed game",
       "take": "Jaylen Warren remains the clear workhorse in Pittsburgh's backfield for Thursday's game and beyond.",
       "url": "https://sports.yahoo.com/articles/steelers-rb-rico-dowdle-miss-192957543.html",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 4
+      }
     },
     {
       "player": "Tylan Wallace",
@@ -59,7 +154,11 @@
       "headline": "Ruled out for Thursday night vs. Steelers (knee), hurt in Week 3 vs. Panthers",
       "take": "Thins Cleveland's WR room further for TNF -- Isaiah Bond and Malachi Corley see an uptick in offensive snaps.",
       "url": "https://www.cbssports.com/fantasy/football/news/browns-tylan-wallace-wont-play-against-pittsburgh/",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 4
+      }
     },
     {
       "player": "Lamar Jackson",
@@ -109,7 +208,13 @@
       "headline": "Officially placed on IR with a PCL sprain, expected out 6-8 weeks",
       "take": "Ends any near-term bounce-back hope -- Egbuka and Godwin absorb his target share for at least a month and a half.",
       "url": "https://www.kmmo.com/2026/09/30/tampa-bay-buccaneers-wr-jalen-mcmillan-expected-to-miss-6-8-weeks-with-knee-injury/",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "weeks",
+        "lo": 6,
+        "hi": 8,
+        "unit": "w"
+      }
     },
     {
       "player": "Puka Nacua",
@@ -219,7 +324,11 @@
       "headline": "Ruled out for Week 4 vs. Falcons after re-aggravating hamstring vs. Raiders",
       "take": "Alvin Kamara, CJ Donaldson and Kendre Miller split the Saints backfield in Etienne's absence -- Kamara is the priority add.",
       "url": "https://www.espn.com/nfl/story/_/id/50054057/saints-rb-travis-etienne-jr-sit-hamstring-injury",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 4
+      }
     },
     {
       "player": "Breece Hall",
@@ -319,7 +428,13 @@
       "headline": "MRI shows no ligament/tendon damage on dislocated thumb, but out at least 3 weeks",
       "take": "No surgery needed, but Bucs pass-catchers (Evans, Godwin, Egbuka) face a multi-week downgrade with a backup at QB.",
       "url": "https://www.espn.com/nfl/story/_/id/50052996/buccaneers-mayfield-thumb-least-three-weeks-bowles-says",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "weeks",
+        "lo": 3,
+        "hi": 5,
+        "unit": "w"
+      }
     },
     {
       "player": "De'Von Achane",
@@ -329,7 +444,10 @@
       "headline": "Confirmed torn ACL in right knee; out for the rest of the 2026 season",
       "take": "Season is over -- Ollie Gordon II is now the clear early-down back in Miami's backfield.",
       "url": "https://www.rotowire.com/football/headlines/devon-achane-injury-sustains-season-ending-acl-tear-639669",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "season"
+      }
     },
     {
       "player": "Jaxson Dart",
@@ -399,7 +517,13 @@
       "headline": "Ruled out for tonight's game vs. Eagles; Grade 2 hamstring strain, 3-4 week timeline",
       "take": "Tyson Bagent gets the start -- DJ Moore and Rome Odunze become lower-confidence plays until Williams returns.",
       "url": "https://www.espn.com/nfl/story/_/id/50036929/sources-caleb-williams-injury-considered-3-4-week-line",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "weeks",
+        "lo": 3,
+        "hi": 4,
+        "unit": "w"
+      }
     },
     {
       "player": "Jayden Daniels",
@@ -729,7 +853,11 @@
       "headline": "Officially placed on IR after wrist surgery; Ravens targeting a Week 6 return",
       "take": "Confirms thin Baltimore WR depth behind Zay Flowers for at least the next month.",
       "url": "https://bleacherreport.com/articles/25500032-jakobi-lane-placed-ir-latest-injury-updates-return-timeline-fantasy-outlook-ravens-wr",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "ret",
+        "wk": 6
+      }
     },
     {
       "player": "RJ Harvey",
@@ -859,7 +987,10 @@
       "headline": "Officially out for rest of regular season; surgery for MCL/PCL/meniscus damage",
       "take": "Season is over \u2014 bench in all formats; Jameis Winston is the full-time starter",
       "url": "https://www.giants.com/news/jaxson-dart-to-miss-rest-of-regular-season-jameis-winston-to-start-quarterback-injury-john-harbaugh",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "season"
+      }
     },
     {
       "player": "Jameis Winston",
@@ -1099,7 +1230,13 @@
       "headline": "Officially placed on IR after aggravating heel injury, out at least 4 weeks",
       "take": "More looks for Josh Downs and Colts' other WRs in the interim",
       "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-23/alec-pierce-heel-lands-on-injured-reserve",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "weeks",
+        "lo": 4,
+        "hi": 6,
+        "unit": "w"
+      }
     },
     {
       "player": "Charlie Kolar",
@@ -1439,7 +1576,11 @@
       "headline": "Placed on IR with fibula injury; earliest return is Week 8 vs. Rams",
       "take": "A real multi-week drop, not a week-to-week watch -- Chargers' TE room (Charlie Kolar also on IR) is now barren.",
       "url": "https://www.espn.com/nfl/story/_/id/50000682/chargers-placing-tes-david-njoku-charlie-kolar-ir",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "ret",
+        "wk": 8
+      }
     },
     {
       "player": "Caleb Williams",
@@ -2259,7 +2400,13 @@
       "headline": "Placed on IR with calf/Achilles injury, out at least 4 games",
       "take": "Drop from lineups now \u2014 Kaelon Black inherits the 49ers backfield",
       "url": "https://www.nfl.com/news/niners-placing-christian-mccaffrey-calf-achilles-on-injured-reserve-rb-to-miss-at-least-four-games",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "weeks",
+        "lo": 4,
+        "hi": 6,
+        "unit": "g"
+      }
     },
     {
       "player": "Jordan Mason",
@@ -2269,7 +2416,13 @@
       "headline": "Placed on IR after surgery for a fractured thumb, out at least 4 weeks",
       "take": "Aaron Jones Sr. becomes Minnesota's clear lead back",
       "url": "https://www.nfl.com/news/vikings-rb-jordan-mason-heads-to-ir-with-fractured-thumb",
-      "tag": "injury"
+      "tag": "injury",
+      "avail": {
+        "k": "weeks",
+        "lo": 4,
+        "hi": 6,
+        "unit": "w"
+      }
     },
     {
       "player": "Kaelon Black",
@@ -3420,66 +3573,6 @@
       "take": "Real role as a big-bodied red-zone threat, but shaky Cleveland QB play caps Week 1 upside \u2014 deep-league stash only",
       "url": "https://www.draftsharks.com/fantasy/points-outlook/denzel-boston/35949",
       "tag": "role"
-    },
-    {
-      "player": "Sam Darnold",
-      "team": "SEA",
-      "pos": "QB",
-      "date": "2026-09-09",
-      "headline": "Left season opener vs. Patriots with hip injury after first-drive sack, ruled out for rest of game",
-      "take": "Drew Lock finishes the opener -- Darnold's Week 2 outlook is now uncertain until further testing.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-09/darnold-headed-to-the-locker-room-after-one-drive",
-      "tag": "injury"
-    },
-    {
-      "player": "Brock Bowers",
-      "team": "LV",
-      "pos": "TE",
-      "date": "2026-09-09",
-      "headline": "Underwent a meniscus trim Tuesday, expected to miss \"a game or two\"",
-      "take": "Bench him for Week 1 and stream Michael Mayer while Bowers targets a Week 3 return vs. New Orleans.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-09/report-bowers-knee-to-miss-a-game-or-two",
-      "tag": "injury"
-    },
-    {
-      "player": "Baker Mayfield",
-      "team": "TB",
-      "pos": "QB",
-      "date": "2026-09-09",
-      "headline": "Signs 3-year, $165M extension with Buccaneers days before opener vs. Bengals",
-      "take": "No role change, but cements his job security as Tampa Bay's long-term starter.",
-      "url": "https://www.espn.com/nfl/story/_/id/49872379/bucs-baker-mayfield-agree-3-year-extension-sources-say",
-      "tag": "transaction"
-    },
-    {
-      "player": "Khalil Shakir",
-      "team": "BUF",
-      "pos": "WR",
-      "date": "2026-09-09",
-      "headline": "Returns to practice on Bills' first Week 1 injury report, optimism for Sunday vs. Texans",
-      "take": "Trending toward playing through his high ankle sprain, though DJ Moore's arrival caps him as a WR4/flex.",
-      "url": "https://www.si.com/nfl/bills/onsi/week-1-injuries-khalil-shakir-and-more-buffalo-bills-injury-updates-wednesday",
-      "tag": "riser"
-    },
-    {
-      "player": "Patrick Mahomes",
-      "team": "KC",
-      "pos": "QB",
-      "date": "2026-09-09",
-      "headline": "Andy Reid officially confirms he'll start Monday night vs. Broncos, ~9 months after ACL/LCL tear",
-      "take": "No lingering setback reported after a full camp with the first-team offense -- start him with confidence as a QB1.",
-      "url": "https://sports.yahoo.com/articles/patrick-mahomes-officially-line-start-175627340.html",
-      "tag": "riser"
-    },
-    {
-      "player": "George Kittle",
-      "team": "SF",
-      "pos": "TE",
-      "date": "2026-09-09",
-      "headline": "Full practice participation despite lingering groin issue; traveled to Melbourne for Thursday's opener vs. Rams",
-      "take": "Says he feels \"wonderful\" -- trust him as a top-5 TE Thursday night barring a pregame change.",
-      "url": "https://www.cbssports.com/nfl/news/george-kittle-injury-update-49ers-te-feels-wonderful-ready-to-play-week-1-vs-steelers-despite-groin-issue/",
-      "tag": "riser"
     }
   ]
 }

@@ -2135,7 +2135,11 @@ window.LEGEND_BIO={
     // Out-of-year vs the v9 weights: Spearman .553 -> .576, top-100 picks .456 -> .502, top-5-per-class hit rate .50 -> .53.
     // CEILING track: draft capital 30% (the profile gets more say).
     // (previous) WR:  { dc: 0.26, breakout: 0.16, prod: 0.12, yprr: 0.12, pff: 0.09, routeGrade: 0.08, ras: 0.04, contested: 0.04, qbCtx: 0.03, slotFit: 0.03, avoidedTackles: 0.03, dominator: 0, yac: 0, adot: 0, tm: 0 },  // sum=1.00
-    WR:  { dc: 0.3, tm: 0.0875, prod: 0.0875, adot: 0.0875, pff: 0.0875, conf: 0.0875, breakout: 0.0875, contested: 0.0875, careerPpg: 0.0875 },  // sum=1.00
+    // v10.1 (Oct 1 2026): production and career PPG count DOUBLE (2 of 10 units each). Accuracy is a wash vs equal
+    // weights (all .597 -> .590, top-100 picks .513 -> .530) but no first-round WR in the backtest graded 90+ with
+    // production as thin as Carnell Tate's; known first-round hits +0.2, busts -0.2. CEILING track.
+    // (equal-weight v10) WR:  { dc: 0.3, tm: 0.0875, prod: 0.0875, adot: 0.0875, pff: 0.0875, conf: 0.0875, breakout: 0.0875, contested: 0.0875, careerPpg: 0.0875 },  // sum=1.00
+    WR:  { dc: 0.3, prod: 0.14, careerPpg: 0.14, tm: 0.07, adot: 0.07, pff: 0.07, conf: 0.07, breakout: 0.07, contested: 0.07 },  // sum=1.00
     // TE v6: added pff (+6, was 0 — recent +0.33 raw), trimmed ras (era effect), trimmed qbCtx and size
     // TE v8.1 ceiling: DC cut 0.28 → 0.23 (5pts freed, same reasoning as floor).
     // Redistribution: avoidedTackles +0.02, breakout +0.01, prod +0.01, pbGrade +0.01.
@@ -2259,7 +2263,11 @@ window.LEGEND_BIO={
     // Out-of-year vs the v9 weights: Spearman .553 -> .576, top-100 picks .456 -> .502, top-5-per-class hit rate .50 -> .53.
     // FLOOR track: draft capital 50%.
     // (previous) WR:  { dc: 0.213, breakout: 0.145, yprr: 0.140, prod: 0.135, routeGrade: 0.077, pff: 0.072, ras: 0.058, age: 0.043, dcAgeComposite: 0.029, contested: 0.029, slotFit: 0.029, avoidedTackles: 0.029, dominator: 0, conf: 0, adot: 0, totalColFpts: 0, colTrajectory: 0, tm: 0 },  // sum=1.00
-    WR:  { dc: 0.5, tm: 0.0625, prod: 0.0625, adot: 0.0625, pff: 0.0625, conf: 0.0625, breakout: 0.0625, contested: 0.0625, careerPpg: 0.0625 },  // sum=1.00
+    // v10.1 (Oct 1 2026): production and career PPG count DOUBLE (2 of 10 units each). Accuracy is a wash vs equal
+    // weights (all .597 -> .590, top-100 picks .513 -> .530) but no first-round WR in the backtest graded 90+ with
+    // production as thin as Carnell Tate's; known first-round hits +0.2, busts -0.2. FLOOR track.
+    // (equal-weight v10) WR:  { dc: 0.5, tm: 0.0625, prod: 0.0625, adot: 0.0625, pff: 0.0625, conf: 0.0625, breakout: 0.0625, contested: 0.0625, careerPpg: 0.0625 },  // sum=1.00
+    WR:  { dc: 0.5, prod: 0.1, careerPpg: 0.1, tm: 0.05, adot: 0.05, pff: 0.05, conf: 0.05, breakout: 0.05, contested: 0.05 },  // sum=1.00
     // TE v8 (Apr 23 2026): added avoidedTackles (5%) + pbGrade (3%) — both new weighted
     // components from PFF career data. Backtest n=83 (avoid) / n=70 (pbGrade):
     //   avoidedPerRec  r = +0.26  (3rd-strongest TE signal)

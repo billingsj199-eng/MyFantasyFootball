@@ -37890,6 +37890,11 @@ window.fmtHeight = fmtHeight;
     WR: { ppg: [13.39, 4.67], td: [0.507, 0.234], forty: [4.484, 0.111], vert: [36.07, 3.02], broad: [123.8, 5.9] },
     TE: { ppg: [8.48, 3.08],  td: [0.345, 0.189], forty: [4.695, 0.120], vert: [33.68, 2.94], broad: [118.9, 5.7] }
   };
+  // Day-3 shrink strength (share of the distance above the prior that a late pick keeps).
+  const _JM_DAY3 = { l5: 0.4, l4: 0.6 };
+  // Early-receiver film flag: points off for a WR taken in the first `maxPick` picks whose PFF
+  // grade score is under `thr` or missing. k = 0 disables it.
+  const _JM_WR_FILM = { k: 0, thr: 60, maxPick: 64 };
   function _jmV10Cdf(z) {   // standard normal CDF (Abramowitz-Stegun 7.1.26), clamped to 0-100
     const zz = Math.max(-4, Math.min(4, z));
     const t = 1 / (1 + 0.3275911 * Math.abs(zz) / Math.SQRT2);
@@ -38789,6 +38794,8 @@ window.fmtHeight = fmtHeight;
     // Capping protects against penalty stacking on legitimate prospects with
     // multiple cosmetic flags.
     const bustAdjApplied = Math.max(-10, bustAdj);
+    const _wf = (typeof window !== 'undefined' && window._JM_EXP && window._JM_EXP.wrFilm) || _JM_WR_FILM;
+    const wrFilmAdj = (p.pos === 'WR' && _wf.k > 0 && !isNaN(_dcPick) && _dcPick <= _wf.maxPick && (pffScore == null || pffScore < _wf.thr)) ? -_wf.k : 0;
 
     // sleeperAdj applied with STRICT GATING — must have ≥2 secondary positive
     // signals among (early breakout, elite RAS, young age, production above pos threshold).
@@ -38858,12 +38865,14 @@ window.fmtHeight = fmtHeight;
     const _day3Shrink = (v) => {
       if (v == null || p.pos === 'QB') return v;
       if (isNaN(_dcPick) || _dcPick > 300) return v;
-      if (_dcPick >= 141 && v > 28) return 28 + 0.4 * (v - 28);   // R5+ : prior 28, λ 0.4
-      if (_dcPick >= 106 && v > 36) return 36 + 0.6 * (v - 36);   // R4  : prior 36, λ 0.6
+      // Shrink strength: shipped defaults, overridable by the harness (window._JM_EXP.day3 = {l5, l4}).
+      const _d3 = (typeof window !== 'undefined' && window._JM_EXP && window._JM_EXP.day3) || _JM_DAY3;
+      if (_dcPick >= 141 && v > 28) return 28 + _d3.l5 * (v - 28);   // R5+ : prior 28
+      if (_dcPick >= 106 && v > 36) return 36 + _d3.l4 * (v - 36);   // R4  : prior 36
       return v;
     };
 
-    const _preStretch = blended + gpAdj + htPenalty + tmBonus + tmCompAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
+    const _preStretch = blended + gpAdj + htPenalty + tmBonus + tmCompAdj + wrFilmAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
     const final = Math.max(0, Math.min(100, Math.round(_day3Shrink(_jmStretch(_preStretch)) * 10) / 10));
     // Low confidence if less than 50% of weight has data, or fewer than 5 of 22 components
     // For devy players, lower the threshold since DC/RAS/earlyDec are expected to be missing
@@ -38873,8 +38882,8 @@ window.fmtHeight = fmtHeight;
 
     // Expose raw floor/ceiling (with adjustments + stretch) for blend ratio analysis.
     // Apply same adjustments + stretch as final so floor/ceiling display stays consistent.
-    const _floorPre = floorRaw + gpAdj + htPenalty + tmBonus + tmCompAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
-    const _ceilPre = ceilRaw + gpAdj + htPenalty + tmBonus + tmCompAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
+    const _floorPre = floorRaw + gpAdj + htPenalty + tmBonus + tmCompAdj + wrFilmAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
+    const _ceilPre = ceilRaw + gpAdj + htPenalty + tmBonus + tmCompAdj + wrFilmAdj + dcRasBonus + dcProdPenalty + bustAdjApplied + sleeperAdjApplied + qbPhenomTripleAdj + g5HighPickWrPenalty + situationGradeBonus + g5RbPenalty + qbLatePickPenalty + qbClassStrengthBonus + teSchoolFactoryBonus;
     // Day-3 shrink applied here too so floor/ceiling display stays consistent
     // with the shrunk final (otherwise floor could exceed final for late picks).
     const floorFinal = Math.max(0, Math.min(100, Math.round(_day3Shrink(_jmStretch(_floorPre)) * 10) / 10));

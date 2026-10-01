@@ -96,6 +96,7 @@ function metrics(rows, tiers) {
           const t = root[pos]; Object.keys(t).forEach(k => delete t[k]); Object.keys(src).forEach(k => { t[k] = src[k]; });
         });
       });
+      window._JM_EXP = (cfg && cfg.exp) || null;   // experiment flags (day3 shrink, wrFilm ...)
       if (window._jmClearCache) window._jmClearCache();
       const data = window.buildProspectData();
       const byName = {}, byNrm = {};

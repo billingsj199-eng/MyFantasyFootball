@@ -11,7 +11,7 @@
  *   pen      tier penalty from jm_optimize.js (monotone hit rates, top-tier busts, late hits lost)
  *   top5     hit rate of the five highest grades per class
  *
- *   node scripts/jm_eval_cfgs.js --cfgs file.json [--out results.json] [--rows] [--port 8915]
+ *   node scripts/jm_eval_cfgs.js --cfgs file.json [--out results.json] [--rows] [--outcomes scripts/jm_outcome_grades.json] [--port 8915]
  *   (--rows also stores every player's grade per configuration, for leave-one-year-out assembly)
  *
  * file.json: { "name": { "floor": { "RB": {dc: .45, ...} }, "ceiling": { "RB": {...} } }, ... }
@@ -24,6 +24,9 @@ const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 && args[i + 1] 
 const PORT = parseInt(opt('--port', '8915'), 10);
 const CFGS = JSON.parse(fs.readFileSync(opt('--cfgs'), 'utf8'));
 const OUT = opt('--out', null);
+// --outcomes scripts/jm_outcome_grades.json : judge against the GRADED career outcome (build_outcome_grades.py)
+// instead of the stored curve score / verdict. Pending players are then included.
+const OUTCOMES = opt('--outcomes', null) ? JSON.parse(fs.readFileSync(opt('--outcomes'), 'utf8')).players : null;
 const POSITIONS = ['QB', 'RB', 'WR', 'TE'];
 const { chromium } = require(path.join(ROOT, 'tests', 'node_modules', 'playwright'));
 
@@ -104,7 +107,7 @@ function metrics(rows, tiers) {
       const out = [];
       Object.keys(BACKTEST_OUTCOMES).forEach(yr => BACKTEST_OUTCOMES[yr].forEach(r => {
         const p = byName[r.n] || byNrm[nrm(r.n)]; if (!p) return;
-        out.push({ n: r.n, pos: r.pos, jm: p.jm, verdict: r.verdict, cs: r.curveScore, pick: r.pick, yr: parseInt(yr), ppg: r.avgPpg });
+        out.push({ n: r.n, pn: p.name, pos: r.pos, jm: p.jm, verdict: r.verdict, cs: r.curveScore, pick: r.pick, yr: parseInt(yr), ppg: r.avgPpg });
       }));
       return out;
     };
@@ -114,6 +117,8 @@ function metrics(rows, tiers) {
   const names = ['live', ...Object.keys(CFGS)];
   for (const name of names) {
     const rows = await page.evaluate(c => window.__run(c), name === 'live' ? null : CFGS[name]);
+    if (OUTCOMES) rows.forEach(r => { const g = OUTCOMES[r.pn + '|' + r.yr]; if (!g || g.grade == null) { r.cs = null; r.verdict = 'pending'; return; }
+      r.cs = g.grade; r.verdict = g.grade >= 70 ? 'stud' : g.grade >= 45 ? 'hit' : g.grade >= 20 ? 'contributor' : 'bust'; });
     results[name] = {};
     POSITIONS.forEach(pos => { results[name][pos] = metrics(rows.filter(r => r.pos === pos), tiers[pos]); });
     if (args.includes('--rows')) results[name]._rows = rows.map(r => [r.n, r.pos, r.yr, r.jm, r.cs, r.verdict, r.pick]);

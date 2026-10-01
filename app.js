@@ -36426,13 +36426,20 @@ window.fmtHeight = fmtHeight;
       //   60→52 (band 52-75, 29% hit — pulls in Hunt/Montgomery types),
       //   Contributor 48→42, Depth 34→30. Gradients strictly monotone:
       //   hit 100/100/29/24/9/0/0, bust 0/0/42/71/81/89/91.
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=4)
-      { min: 75, label: 'Top Prospect',  color: '#34d399' },  // 100% hit (n=10)
-      { min: 52, label: 'Starter',       color: '#60a5fa' },  //  29% hit (n=31)
-      { min: 42, label: 'Contributor',   color: '#a78bfa' },  //  24% hit (n=17)
-      { min: 30, label: 'Depth',         color: '#94a3b8' },  //   9% hit (n=54)
-      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit (n=9)
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=11)
+      // v11 (Oct 1 2026): re-cut for the v10.1 weights against the GRADED career outcome
+      //   (scripts/build_outcome_grades.py: best four of the first six seasons, 0-100; no
+      //   hit/bust labels). Grid search on the 2017-2023 classes, cuts penalised for moving.
+      //   The old Starter band (52-74) averaged a career grade of 33 and hid two different
+      //   groups; Starter 52->62, Contributor 42->46, Depth 30->34, Lottery 26->24.
+      //   Variance in career grade explained by tier .512 -> .567. Comments now read
+      //   avg career grade / share with an elite season / share with 2+ starter seasons.
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // career 83 | elite yr 83% | steady 100% (n=6)
+      { min: 75, label: 'Top Prospect',  color: '#34d399' },  // career 75 | 62% | 88% (n=8)
+      { min: 62, label: 'Starter',       color: '#60a5fa' },  // career 42 | 25% | 31% (n=16)
+      { min: 46, label: 'Contributor',   color: '#a78bfa' },  // career 25 | 13% | 22% (n=23)
+      { min: 34, label: 'Depth',         color: '#94a3b8' },  // career 15 |  5% | 12% (n=41)
+      { min: 24, label: 'Lottery Ticket',color: '#f87171' },  // career  5 |  0% |  6% (n=35)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   // career  5 |  0% |  0% (n=14)
     ],
     WR: [
       // v8.3: Generational ≥90.
@@ -36446,13 +36453,18 @@ window.fmtHeight = fmtHeight;
       //   Waddle/G.Wilson/Davis/Bateman/Jamo/Moore) hits 43% — Starter-grade.
       //   Starter 60→54, Contributor 50→44, Depth 38→32. All gradients strictly
       //   monotone: hr 100/80/33/12/4/0/0, bust 0/20/44/68/91/93/100.
-      { min: 90, label: 'Generational',  color: '#fbbf24' },  // 100% hit (n=4)
-      { min: 87, label: 'Top Prospect',  color: '#34d399' },  //  80% hit (n=5)
-      { min: 54, label: 'Starter',       color: '#60a5fa' },  //  33% hit (n=57)
-      { min: 44, label: 'Contributor',   color: '#a78bfa' },  //  12% hit (n=25)
-      { min: 32, label: 'Depth',         color: '#94a3b8' },  //   4% hit (n=56)
-      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  //   0% hit (n=29)
-      { min: 0,  label: 'Long Shot',     color: '#475569' }   //   0% hit (n=27)
+      // v11 (Oct 1 2026): same graded-outcome grid search as RB. Under the v10.1 weights the
+      //   87-90 band held two players; Top Prospect 87->84 makes it a real tier (Waddle,
+      //   Jameson Williams, Addison, E. Moore...). Everything else was already at its best cut.
+      //   Note: WR grades from 60 to 84 all average about the same career (39), so the
+      //   Starter band is honest about being wide.
+      { min: 90, label: 'Generational',  color: '#fbbf24' },  // career 63 | elite yr 60% | steady 60% (n=10)
+      { min: 84, label: 'Top Prospect',  color: '#34d399' },  // career 48 |  0% | 50% (n=6)
+      { min: 54, label: 'Starter',       color: '#60a5fa' },  // career 31 | 15% | 23% (n=47)
+      { min: 44, label: 'Contributor',   color: '#a78bfa' },  // career 15 | 10% | 14% (n=21)
+      { min: 32, label: 'Depth',         color: '#94a3b8' },  // career  7 |  2% |  5% (n=55)
+      { min: 26, label: 'Lottery Ticket',color: '#f87171' },  // career  1 |  0% |  0% (n=35)
+      { min: 0,  label: 'Long Shot',     color: '#475569' }   // career  1 |  0% |  0% (n=45)
     ],
     TE: [
       // v8.3 (Apr 23 2026): Generational raised 84→90 for universal alignment.

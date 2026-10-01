@@ -53,7 +53,7 @@ if ($rc -ne 0) { Write-Log "regen FAILED (exit $rc)"; exit 1 }
 
 # Graded career outcomes (elite seasons + consistency, no hit / bust labels) -> tier chips on the Prospect page
 Run-Step 'modelling table' $Node @('scripts\jm_extract_table.js', '--out', 'scripts\jm_table.json') | Out-Null
-Run-Step 'career grades' $Python @('scriptsuild_outcome_grades.py', '--table', 'scripts\jm_table.json', '--out', 'scripts\jm_outcome_grades.json', '--js', 'data\jm_career_grades.js', '--bump', '--last-season', "$Season") | Out-Null
+Run-Step 'career grades' $Python @('scripts\build_outcome_grades.py', '--table', 'scripts\jm_table.json', '--out', 'scripts\jm_outcome_grades.json', '--js', 'data\jm_career_grades.js', '--bump', '--last-season', "$Season") | Out-Null
 
 $results = ("scripts\jm_optimize_results_{0}.json" -f (Get-Date -Format 'yyyy-MM-dd'))
 Run-Step 'weight tuner (LOYO)' $Node @('scripts\jm_optimize.js', '--out', $results) | Out-Null

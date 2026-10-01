@@ -66,14 +66,14 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-09-30-devyboard2" as="script">
+<link rel="preload" href="app.js?v=2026-09-30-jmv10" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
 <link rel="preload" href="data/combine_data.js?v=2026-09-30db2" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
-<link rel="preload" href="data/_bundle_lookups.js?v=2026-09-30-bd7" as="script">
+<link rel="preload" href="data/_bundle_lookups.js?v=2026-09-30-bd8" as="script">
 <link rel="preload" href="data/d.js?v=2026-09-30rb2" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-09-28-rostt">
@@ -2394,7 +2394,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="pm-header" style="position:relative">
 <button class="help-btn" id="pmHelpBtn" title="How to read the Prospect Model" style="position:absolute;right:0;top:6px">?</button>
 <div class="pm-title">Prospect Model</div>
-<div class="pm-subtitle">JM Score (<b>Jack's Model</b>, 0-100) predicts NFL fantasy success from draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers (position-specific, monotonic hit-rate gradient):&#10;• QB: 84+ Gen / 66+ Top Prospect / 56+ Starter / 46+ Contributor / 36+ Depth / 28+ Lottery&#10;• RB: 84+ Gen / 74+ Top Prospect / 50+ Starter / 43+ Contributor / 36+ Depth / 30+ Lottery&#10;• WR: 86+ Gen / 80+ Top Prospect / 68+ Starter / 55+ Contributor / 46+ Depth / 38+ Lottery&#10;• TE: 74+ Gen / 56+ Top Prospect / 52+ Starter / 44+ Contributor / 32+ Depth / 28+ Lottery&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
+<div class="pm-subtitle">JM Score (<b>Jack's Model</b>, 0-100) predicts NFL fantasy success from draft capital, college production, receiving &amp; film grades, athletic testing, age &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers (position-specific, monotonic hit-rate gradient):&#10;• QB: 84+ Gen / 66+ Top Prospect / 56+ Starter / 46+ Contributor / 36+ Depth / 28+ Lottery&#10;• RB: 84+ Gen / 74+ Top Prospect / 50+ Starter / 43+ Contributor / 36+ Depth / 30+ Lottery&#10;• WR: 86+ Gen / 80+ Top Prospect / 68+ Starter / 55+ Contributor / 46+ Depth / 38+ Lottery&#10;• TE: 74+ Gen / 56+ Top Prospect / 52+ Starter / 44+ Contributor / 32+ Depth / 28+ Lottery&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
 </div>
 <div class="pm-controls">
 <div class="pm-pos-tabs" id="pmPosTabs">
@@ -4458,7 +4458,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
-<script src="data/_bundle_lookups.js?v=2026-09-30-bd7" defer></script>
+<script src="data/_bundle_lookups.js?v=2026-09-30-bd8" defer></script>
 <script src="data/d.js?v=2026-09-30rb2" defer></script>
 <script src="data/injury_updates.js?v=2026-09-30-20" defer></script>
 <script src="data/weekly_projections.js?v=2026-09-30" defer></script>
@@ -5945,7 +5945,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-09-30-devyboard2"></script>
+<script defer src="app.js?v=2026-09-30-jmv10"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -15333,7 +15333,7 @@ function openPlayerCard(d, ctxMode) {
         const _jmCls = window._jmClass ? window._jmClass(_jmV, _posForTier) : 'pm-jm-avg';
         const _tierName = (window._tierForJm ? window._tierForJm(_jmV, _posForTier).label
           : (_jmV >= 88 ? 'Generational' : _jmV >= 72 ? 'Top Prospect' : _jmV >= 62 ? 'Starter' : _jmV >= 52 ? 'Contributor' : _jmV >= 44 ? 'Depth' : _jmV >= 38 ? 'Lottery Ticket' : 'Long Shot'));
-        const _compLabels = {dc:'Draft Cap',prod:'Production',age:'Draft Age',breakout:'Breakout',ras:'RAS',conf:'Conference',size:'Size',pff:'Film Grade',qbRush:'QB Rush',qbAccuracy:'Accuracy',qbIntRate:'INT Rate',bigTime:'Big Time',turnoverRate:'TO Rate',rbRec:'RB Receiv.',dominator:'Dominator',mktShare:'Mkt Share',yaco:'YACo',forcedMissed:'Forced Miss',elusive:'Elusive',breakaway:'Breakaway',yprr:'YPRR',dropRate:'Drop Rate',contested:'Contested',yac:'YAC',routeGrade:'Route Grade',qbCtx:'QB Context',eff:'Efficiency',teRec:'TE Receiv.',improve:'Improve',earlyDec:'Early Dec',tm:'Teammate'};
+        const _compLabels = {dc:'Draft Cap',prod:'Production',age:'Draft Age',breakout:'Breakout',ras:'RAS',conf:'Conference',size:'Size',pff:'Film Grade',qbRush:'QB Rush',qbAccuracy:'Accuracy',qbIntRate:'INT Rate',bigTime:'Big Time',turnoverRate:'TO Rate',rbRec:'RB Receiv.',dominator:'Dominator',mktShare:'Mkt Share',yaco:'YACo',forcedMissed:'Forced Miss',elusive:'Elusive',breakaway:'Breakaway',yprr:'YPRR',dropRate:'Drop Rate',contested:'Contested',yac:'YAC',routeGrade:'Route Grade',qbCtx:'QB Context',eff:'Efficiency',teRec:'TE Receiv.',improve:'Improve',earlyDec:'Early Dec',tm:'Teammate',careerPpg:'Career PPG',tdRate:'TD Rate',athl:'Testing',totalColFpts:'Career Pts',dcAgeComposite:'DC x Age',colTrajectory:'Trajectory',teFinalRecYpg:'Final Rec YPG',pffRecv:'PFF Recv',adot:'aDOT',slotFit:'Slot Fit',avoidedTackles:'Avoided Tkl',pbGrade:'Pass Block'};
         const _compColor = (v) => v == null ? 'color:var(--text2)' : v >= 80 ? 'color:#34d399' : v >= 60 ? 'color:#60a5fa' : v >= 40 ? 'color:#fb923c' : 'color:#f87171';
         // Get weights for this position to filter relevant components
         const _pos = d.s || 'WR';
@@ -37876,6 +37876,27 @@ window.fmtHeight = fmtHeight;
   window._computeSituationGrade = computeSituationGrade;
 
   const _jmCache = {};
+  // ═══ v10 (Sep 30 2026): three inputs that carry information BEYOND the draft pick ═══
+  // Found with the leave-one-draft-year-out lab (scripts/jm_robust_lab.py) on corrected
+  // birth dates. Partial rank correlation with NFL outcome after removing the pick:
+  //   careerPpg  career fantasy points per game - sustained production   (RB +.37, QB +.31)
+  //   tdRate     career touchdowns per game                               (RB +.28)
+  //   athl       raw testing composite: forty / vertical / broad z-scores (TE +.3; RAS alone +.12)
+  // [mean, sd] by position from the drafted 2017-2025 classes. Each becomes a 0-100 score
+  // (normal CDF of the z-score). A weight of 0 in the weight tables leaves grades untouched.
+  const _JM_V10 = {
+    QB: { ppg: [19.80, 5.45], td: [2.253, 0.635], forty: [4.785, 0.157], vert: [31.84, 2.96], broad: [114.4, 6.5] },
+    RB: { ppg: [14.84, 5.38], td: [0.788, 0.352], forty: [4.515, 0.090], vert: [34.90, 3.23], broad: [121.4, 4.7] },
+    WR: { ppg: [13.39, 4.67], td: [0.507, 0.234], forty: [4.484, 0.111], vert: [36.07, 3.02], broad: [123.8, 5.9] },
+    TE: { ppg: [8.48, 3.08],  td: [0.345, 0.189], forty: [4.695, 0.120], vert: [33.68, 2.94], broad: [118.9, 5.7] }
+  };
+  function _jmV10Cdf(z) {   // standard normal CDF (Abramowitz-Stegun 7.1.26), clamped to 0-100
+    const zz = Math.max(-4, Math.min(4, z));
+    const t = 1 / (1 + 0.3275911 * Math.abs(zz) / Math.SQRT2);
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-zz * zz / 2);
+    return Math.round((zz >= 0 ? 0.5 * (1 + y) : 0.5 * (1 - y)) * 100);
+  }
+
   function calcJM(p, opts) {
     opts = opts || {};
     const _skipClassBonus = opts.skipClassBonus === true;
@@ -38007,6 +38028,25 @@ window.fmtHeight = fmtHeight;
       return Math.min(s, 75);
     }
 
+    // v10 inputs (see _JM_V10 above)
+    const _v10c = _JM_V10[p.pos] || null;
+    const careerPpgScore = (_v10c && p.fptsPerGame != null && isFinite(p.fptsPerGame) && (p.gp == null || p.gp >= 8))
+      ? _jmV10Cdf((p.fptsPerGame - _v10c.ppg[0]) / _v10c.ppg[1]) : null;
+    const tdRateScore = (_v10c && p.tdPg != null && isFinite(p.tdPg) && (p.gp == null || p.gp >= 8))
+      ? _jmV10Cdf((p.tdPg - _v10c.td[0]) / _v10c.td[1]) : null;
+    const athlScore = (() => {
+      if (!_v10c || typeof COMBINE_DATA === 'undefined') return null;
+      const cbA = COMBINE_DATA[p.name]; if (!cbA) return null;
+      const f = parseFloat(cbA.forty) || parseFloat(cbA.fortyProj) || null;   // projected forty counts until real testing lands
+      const v = parseFloat(cbA.vert) || null, b = parseFloat(cbA.broad) || null;
+      const zs = [];
+      if (f && f > 4 && f < 5.6) zs.push((_v10c.forty[0] - f) / _v10c.forty[1]);
+      if (v && v > 20 && v < 50) zs.push((v - _v10c.vert[0]) / _v10c.vert[1]);
+      if (b && b > 90 && b < 150) zs.push((b - _v10c.broad[0]) / _v10c.broad[1]);
+      if (!zs.length || (!f && zs.length < 2)) return null;   // need the forty, or both jumps
+      return _jmV10Cdf(zs.reduce((a, x) => a + x, 0) / zs.length);
+    })();
+
     // Active scoring components only — dead entries removed:
     //   tm (flat bonus only), nflYrr (always null), earlyDec (0 weight in all tables)
     const scores = [
@@ -38048,6 +38088,9 @@ window.fmtHeight = fmtHeight;
       { key: 'totalColFpts', score: totalColFptsScore },
       { key: 'teFinalRecYpg', score: teFinalRecYpgScore },
       { key: 'dcAgeComposite', score: dcAgeCompositeScore },
+      { key: 'careerPpg', score: careerPpgScore },   // v10 (Sep 30 2026)
+      { key: 'tdRate', score: tdRateScore },         // v10
+      { key: 'athl', score: athlScore },             // v10
       // ═══ TEAMMATE-QUALITY (weighted component, April 2026) ═══
       // p.tm carries the RAW production-blended teammate value (no multiplier).
       // Normalize per position to a 0-100 sub-score so it plugs into the same
@@ -44072,7 +44115,9 @@ window.fmtHeight = fmtHeight;
     improvement: 'Y-over-Y Improvement', earlyDeclare: 'Early Declare',
     dominator: 'Dominator', marketShare: 'Market Share', rbRec: 'RB Receiving',
     yaco: 'Yards After Contact', yprr: 'Yards Per Route Run', routeGrade: 'Route Grade',
-    contested: 'Contested Catch', efficiency: 'Efficiency', colTrajectory: 'College Trajectory'
+    contested: 'Contested Catch', efficiency: 'Efficiency', colTrajectory: 'College Trajectory',
+    careerPpg: 'Career PPG', tdRate: 'TD Rate', athl: 'Athletic Testing (forty / jumps)', totalColFpts: 'Career Fantasy Points',
+    pffRecv: 'PFF Receiving Grade', eff: 'Efficiency', adot: 'aDOT', teRec: 'TE Receiving'
   };
   const _PM_WL_TIERS = ['Generational','Top Prospect','Starter','Contributor','Depth','Lottery Ticket','Long Shot'];
   const _PM_WL_TIER_COLORS = {
@@ -44575,7 +44620,7 @@ window.fmtHeight = fmtHeight;
     const meta = document.getElementById('pmWlHeaderMeta');
     if (!meta) return;
     const active = _pmWl.activePreset || _PM_WL_DEPLOYED;
-    const activeName = (active === _PM_WL_DEPLOYED) ? 'Deployed v4' : active;
+    const activeName = (active === _PM_WL_DEPLOYED) ? 'Deployed v10' : active;
     meta.innerHTML = _pmWl.dirty
       ? '<span class="pm-wl-meta-pill">' + activeName + ' (modified)</span>'
       : '<span style="opacity:.6">' + activeName + '</span>';
@@ -44651,7 +44696,7 @@ window.fmtHeight = fmtHeight;
     if (!sel) return;
     const presets = _pmWlPresetsLoad();
     const names = Object.keys(presets).sort();
-    let html = '<option value="' + _PM_WL_DEPLOYED + '">Deployed v4</option>';
+    let html = '<option value="' + _PM_WL_DEPLOYED + '">Deployed v10</option>';
     if (names.length) {
       html += '<optgroup label="Saved">';
       names.forEach(n => {

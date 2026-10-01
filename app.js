@@ -42883,7 +42883,7 @@ window.fmtHeight = fmtHeight;
       return ' <span title="' + p.nflTeam + '" style="display:inline-block;font-size:.5rem;font-weight:700;letter-spacing:.4px;padding:1px 5px;border-radius:3px;background:rgba(96,165,250,.14);color:#60a5fa;vertical-align:middle">' + p.nflTeam + '</span>';
     }
     function _pmRoomChip(p) {
-      // Landing-spot v3 chips: ROOM (crowded), BLOCK (starter returning), VACATE (opportunity)
+      // Landing-spot v3 chip: ROOM (crowded) only - BLOCK / VACATE chips retired Sep 30 2026
       // Only RB and WR show chips (positions where signals were validated).
       // Warning-only — these are short-term landing-context notes and do NOT affect JM.
       if (!p.nflTeam) return '';
@@ -42897,16 +42897,8 @@ window.fmtHeight = fmtHeight;
         const crowd = p.crowdScore != null ? p.crowdScore.toFixed(1) : '0';
         out += mk('CROWDED', 'Crowded ' + p.pos + ' room at ' + p.nflTeam + ' (crowd=' + crowd + ') — prior 3yr draft capital overlaps, FA-adjusted. Context flag only — does not affect JM.', 'rgba(251,146,60,.16)', '#fb923c');
       }
-      // Block
-      if (p.blockFlag) {
-        const title = 'Blocked by ' + (p.blockerName || 'returning starter') + ' (' + p.blockerFpts + ' fpts prior year, still on roster). Context flag only — does not affect JM.';
-        out += mk('BLOCKED', title, 'rgba(239,68,68,.18)', '#ef4444');
-      }
-      // Vacate
-      if (p.vacateFlag) {
-        const title = 'Vacated opportunity: ' + (p.vacatedName || 'prior top performer') + ' (' + p.vacatedFpts + ' fpts) departed. Context flag only — does not affect JM.';
-        out += mk('VACATE', title, 'rgba(34,197,94,.16)', '#22c55e');
-      }
+      // BLOCKED / VACATE chips removed from the prospect table (Jack, Sep 30 2026): landing-spot
+      // context belongs on the rankings surfaces, not the model table. Flags still computed.
       return out;
     }
     function _pmStealReachBadge(p) {

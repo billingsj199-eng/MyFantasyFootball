@@ -7,7 +7,7 @@ Data
   * COLLEGE_WEEKLY game logs (data/college_weekly_1/2/3.js + college_stats_devy.js)
     for the backtest players (2017-2024 classes) -> per-game fantasy points
     (site college scoring: half PPR) and the opponent.
-  * jm_optimize results JSON -> jm, outcome (curveScore), pick per player.
+  * jm_optimize results JSON -> jm, outcome (cs = graded career grade 0-100), pick per player.
 
 Method
   1. Opponent defense z-score within each season (FCS / unrated opponents get

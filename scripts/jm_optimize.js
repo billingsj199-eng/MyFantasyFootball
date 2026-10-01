@@ -5,17 +5,31 @@
  * candidate weight set is scored by the production calcJM (stretch, day-3 shrink, bust /
  * sleeper adjustments, DC curves, class bonus...) — nothing is re-implemented here.
  *
- *   node scripts/jm_optimize.js [--pos QB,RB,WR,TE] [--passes 2] [--no-loyo] [--out file.json]
+ *   node scripts/jm_optimize.js [--pos QB,RB,WR,TE] [--passes 2] [--no-loyo] [--no-provisional] [--out file.json]
  *
  * Per position: coordinate descent over the non-zero JM_WEIGHTS (floor) and
  * JM_CEILING_WEIGHTS keys (delta ±0.03 then ±0.015, others renormalised so the
- * track sums to 1). Objective on BACKTEST_OUTCOMES 2017-2024 (verdict != pending):
+ * track sums to 1). Objective on the backtest players 2017-2024, judged on the GRADED
+ * career outcome (Oct 1 2026 - no stud / hit / bust labels):
  *
- *   loss = (1 - spearman(jm, curveScore))            continuous outcome agreement
- *        + 0.5 * tierPenalty(current POS_TIERS)       May-2026 objective: hit-rate /
- *                                                     PPG / bust monotonicity, top-3-tier
- *                                                     busts, late-pick hits lost to the
- *                                                     bottom two tiers
+ *   outcome = career grade 0-100 from data/jm_career_grades.js (window.JM_CAREER_GRADES,
+ *             built by scripts/build_outcome_grades.py): best four of the first six NFL
+ *             seasons weighted 40/30/20/10, so elite seasons and consistency count and one
+ *             big volume year tops out at 40. Classes with fewer than four seasons are
+ *             provisional; drop them with --no-provisional.
+ *
+ *   loss = (1 - spearman(jm, career grade))          continuous outcome agreement
+ *        + 0.5 * tierPenalty(current POS_TIERS)       tiers out of order by average career
+ *                                                     grade, empty careers (grade < 10) in
+ *                                                     the top three tiers, strong late-pick
+ *                                                     careers (pick 65+, grade 45+) lost to
+ *                                                     the bottom two tiers
+ *
+ * Rows in the results file keep a `verdict` field for the companion scripts
+ * (jm_segment_analysis.py, jm_feature_discovery.py, jm_sos_analysis.py): it is now a BAND of
+ * the career grade (stud 70+, hit 45+, contributor 20+, bust below), never "pending", and
+ * `cs` is the career grade. The stored BACKTEST_OUTCOMES verdict and curve score ride along
+ * as verdictOld / csOld for reference only.
  *
  * Validation: for each draft year Y the descent runs on the other years and the
  * tuned vs deployed weights are compared on Y alone (spearman + tier penalty).
@@ -37,7 +51,8 @@ const POSITIONS = (opt('--pos', 'QB,RB,WR,TE')).split(',');
 const PASSES = parseInt(opt('--passes', '2'), 10);
 const LOYO = !args.includes('--no-loyo');
 const EXP = args.includes('--exp');
-const NO_REGEN = args.includes('--no-regen');   // drop entries recomputed by regen_backtest_outcomes.py   // experiments grid (deployed weights fixed) instead of weight descent
+const NO_REGEN = args.includes('--no-regen');   // legacy flag: outcomes no longer come from the regenerated verdicts, so this is a no-op
+const NO_PROV = args.includes('--no-provisional');   // drop classes with fewer than four NFL seasons played out
 const OUT = opt('--out', path.join(ROOT, 'scripts', `jm_optimize_results_${new Date().toISOString().slice(0, 10)}.json`));
 const DELTAS = [0.03, -0.03, 0.015, -0.015];
 const MIN_KEY_W = 0.02;   // only perturb keys carrying real weight
@@ -58,32 +73,30 @@ function spearman(xs, ys) {
 
 // tiers: [{label,min}] high → low. rows: evaluated rows for one position.
 function tierPenalty(rows, tiers) {
-  const buckets = tiers.map(() => ({ n: 0, hit: 0, bust: 0, ppg: 0, ppgN: 0 }));
+  // Graded version: rows carry cs = career grade (0-100).
+  const buckets = tiers.map(() => ({ n: 0, sum: 0 }));
   const tierIdx = jm => { for (let i = 0; i < tiers.length; i++) if (jm >= tiers[i].min) return i; return tiers.length - 1; };
-  let lateHits = 0, lateHitsLost = 0, top3 = 0, top3Bust = 0;
+  let lateStrong = 0, lateLostN = 0, top3 = 0, top3EmptyN = 0;
   rows.forEach(r => {
     const i = tierIdx(r.jm), b = buckets[i];
-    b.n++; if (r.verdict === 'stud' || r.verdict === 'hit') b.hit++; if (r.verdict === 'bust') b.bust++;
-    if (r.ppg > 0) { b.ppg += r.ppg; b.ppgN++; }
-    if (i < 3) { top3++; if (r.verdict === 'bust') top3Bust++; }
-    if (r.pick >= 65 && (r.verdict === 'stud' || r.verdict === 'hit')) { lateHits++; if (i >= tiers.length - 2) lateHitsLost++; }
+    b.n++; b.sum += r.cs;
+    if (i < 3) { top3++; if (r.cs < 10) top3EmptyN++; }
+    if (r.pick >= 65 && r.cs >= 45) { lateStrong++; if (i >= tiers.length - 2) lateLostN++; }
   });
-  const rate = b => b.n >= 5 ? b.hit / b.n : null;
-  const brate = b => b.n >= 5 ? b.bust / b.n : null;
-  const prate = b => b.ppgN >= 5 ? b.ppg / b.ppgN : null;
-  let inv = 0, pinv = 0, binv = 0, pairs = 0;
+  const avg = b => b.n >= 5 ? b.sum / b.n : null;
+  let inv = 0;
   for (let i = 0; i + 1 < buckets.length; i++) {
-    const hi = buckets[i], lo = buckets[i + 1];
-    if (rate(hi) != null && rate(lo) != null) { pairs++; inv += Math.max(0, rate(lo) - rate(hi)); binv += Math.max(0, brate(hi) - brate(lo)); }
-    if (prate(hi) != null && prate(lo) != null) pinv += Math.max(0, prate(lo) - prate(hi)) / 20;
+    const hi = avg(buckets[i]), lo = avg(buckets[i + 1]);
+    if (hi != null && lo != null) inv += Math.max(0, lo - hi) / 100;   // lower tier out-averaging the tier above it
   }
-  const top3BustRate = top3 ? top3Bust / top3 : 0;
-  const lateLost = lateHits ? lateHitsLost / lateHits : 0;
-  return { pen: inv + pinv + binv + top3BustRate + lateLost, inv, pinv, binv, top3BustRate, lateLost };
+  const top3Empty = top3 ? top3EmptyN / top3 : 0;
+  const lateLost = lateStrong ? lateLostN / lateStrong : 0;
+  // top3BustRate kept as an alias so older readers of the results JSON still find a number
+  return { pen: inv + top3Empty + lateLost, inv, top3Empty, top3BustRate: top3Empty, lateLost };
 }
 
 function score(rows, tiers) {
-  const ev = rows.filter(r => r.verdict !== 'pending' && r.cs != null);
+  const ev = rows.filter(r => r.cs != null);
   if (ev.length < 20) return { loss: 9, n: ev.length, rho: 0, pen: 9 };
   const rho = spearman(ev.map(r => r.jm), ev.map(r => r.cs));
   const tp = tierPenalty(ev, tiers);
@@ -136,8 +149,8 @@ async function boot() {
   });
   await page.waitForFunction(() => typeof BACKTEST_OUTCOMES !== 'undefined' && typeof COLLEGE_STATS !== 'undefined', null, { timeout: 120000 });
   await new Promise(r => setTimeout(r, 3000));
-  await page.evaluate((noRegen) => {
-    window.__jmNoRegen = noRegen;
+  await page.evaluate((noProv) => {
+    window.__jmNoProv = noProv;
     window.__jmApply = (cfg) => {
       ['floor', 'ceiling'].forEach(track => {
         const root = track === 'floor' ? window._JM_WEIGHTS : window._JM_CEILING_WEIGHTS;
@@ -156,13 +169,20 @@ async function boot() {
     // backtest page's _btCollect, which lives in a closure that may not be exposed).
     const nrm = s => String(s || '').toLowerCase().replace(/(jr\.?|sr\.?|ii|iii|iv|v)/g, '').replace(/[^a-z0-9]/g, '');
     window.__jmCollect = (data, withComps) => {
+      const CG = window.JM_CAREER_GRADES;
+      if (!CG) throw new Error('window.JM_CAREER_GRADES missing - run scripts/build_outcome_grades.py --js data/jm_career_grades.js --bump');
       const byName = {}, byNrm = {};
       data.forEach(p => { if (p.jm != null && !p.lowConfidence) { byName[p.name] = p; byNrm[nrm(p.name)] = p; } });
       const out = [];
       Object.keys(BACKTEST_OUTCOMES).forEach(yr => BACKTEST_OUTCOMES[yr].forEach(r => {
         const p = byName[r.n] || byNrm[nrm(r.n)]; if (!p) return;
-        if (window.__jmNoRegen && r.regen) return;   // --no-regen: only verdicts from the original outcomes build
-        const row = { n: r.n, pos: r.pos, jm: p.jm, verdict: r.verdict, cs: r.curveScore, pick: r.pick, yr: parseInt(yr), ppg: r.avgPpg, regen: r.regen || null };
+        // graded career outcome, keyed by the prospect-model name
+        const g = CG[p.name + '|' + yr] || CG[r.n + '|' + yr];
+        if (!g) return;
+        if (window.__jmNoProv && g[3]) return;       // --no-provisional
+        const band = g[0] >= 70 ? 'stud' : g[0] >= 45 ? 'hit' : g[0] >= 20 ? 'contributor' : 'bust';
+        const row = { n: r.n, pos: r.pos, jm: p.jm, verdict: band, cs: g[0], elite: g[1], starter: g[2], prov: !!g[3],
+          pick: r.pick, yr: parseInt(yr), ppg: r.avgPpg, verdictOld: r.verdict, csOld: r.curveScore };
         if (withComps) row.comps = p.compScores || null;
         out.push(row);
       }));
@@ -174,7 +194,7 @@ async function boot() {
       ceiling: JSON.parse(JSON.stringify(window._JM_CEILING_WEIGHTS)),
       tiers: Object.fromEntries(Object.keys(window._POS_TIERS).map(p => [p, window._POS_TIERS[p].map(t => ({ label: t.label, min: t.min }))])),
     });
-  }, NO_REGEN);
+  }, NO_PROV);
   return { page, browser, server };
 }
 
@@ -238,11 +258,11 @@ async function descent(page, base, tiers, years, label) {
     const tiers = state.tiers;
     const base = { floor: state.floor, ceiling: state.ceiling };
     const rows0 = await evalCfg(page, base);
-    // Component-vs-outcome correlation (Spearman of each component score with curveScore), per position.
+    // Component-vs-outcome correlation (Spearman of each component score with the career grade), per position.
     const compRows = await page.evaluate(() => window.__jmBaselineRows());
     const corr = {};
     POSITIONS.forEach(p => {
-      const ev = compRows.filter(r => r.pos === p && r.verdict !== 'pending' && r.cs != null && r.comps);
+      const ev = compRows.filter(r => r.pos === p && r.cs != null && r.comps);
       const keys = new Set(); ev.forEach(r => Object.keys(r.comps).forEach(k => { if (r.comps[k] != null) keys.add(k); }));
       corr[p] = {};
       keys.forEach(k => {
@@ -255,8 +275,9 @@ async function descent(page, base, tiers, years, label) {
       console.log(`  correlation ${p} (n ${ev.length}): ` + ranked.map(([k, v]) => `${k} ${v.rho} [w ${v.floorW}/${v.ceilW}]`).join(', '));
     });
     const years = [...new Set(rows0.map(r => r.yr))].sort();
-    console.log(`backtest rows: ${rows0.length} (years ${years.join(',')}), eval ${evalCfg.ms} ms`);
-    const results = { date: new Date().toISOString(), positions: POSITIONS, years, passes: PASSES, baseline: {}, correlation: corr, rows: compRows, loyo: {}, full: null };
+    console.log(`backtest rows: ${rows0.length} graded careers (years ${years.join(',')}${NO_PROV ? ', provisional classes dropped' : ''}), eval ${evalCfg.ms} ms`);
+    if (NO_REGEN) console.log('  note: --no-regen is a no-op now that outcomes are career grades');
+    const results = { date: new Date().toISOString(), outcome: 'career grade (data/jm_career_grades.js)', noProvisional: NO_PROV, positions: POSITIONS, years, passes: PASSES, baseline: {}, correlation: corr, rows: compRows, loyo: {}, full: null };
     const rp0 = byPos(rows0, null);
     POSITIONS.forEach(p => { results.baseline[p] = score(rp0[p], tiers[p]); console.log(`  baseline ${p}: n ${results.baseline[p].n} rho ${results.baseline[p].rho.toFixed(3)} pen ${results.baseline[p].pen.toFixed(3)} loss ${results.baseline[p].loss.toFixed(3)}`); });
 
@@ -289,8 +310,8 @@ async function descent(page, base, tiers, years, label) {
             if (!best || sc.loss < best.loss - 1e-6) best = { label: g.label, loss: sc.loss };
           }
           picks[y] = best.label;
-          byPos(rowsBy['baseline'], new Set([y]))[p].filter(r => r.verdict !== 'pending').forEach(r => pooledBase.push(r));
-          byPos(rowsBy[best.label], new Set([y]))[p].filter(r => r.verdict !== 'pending').forEach(r => pooledSel.push(r));
+          byPos(rowsBy['baseline'], new Set([y]))[p].filter(r => r.cs != null).forEach(r => pooledBase.push(r));
+          byPos(rowsBy[best.label], new Set([y]))[p].filter(r => r.cs != null).forEach(r => pooledSel.push(r));
         }
         const sb = score(pooledBase, tiers[p]), ss = score(pooledSel, tiers[p]);
         results.experiments.pooled[p] = { base: sb, selected: ss, picks };
@@ -313,8 +334,8 @@ async function descent(page, base, tiers, years, label) {
         POSITIONS.forEach(p => {
           const sb = score(rb[p], tiers[p]), st = score(rt[p], tiers[p]);
           results.loyo[y][p] = { base: sb, tuned: st };
-          rb[p].filter(r => r.verdict !== 'pending').forEach(r => pooledBase[p].push(r));
-          rt[p].filter(r => r.verdict !== 'pending').forEach(r => pooledTuned[p].push(r));
+          rb[p].filter(r => r.cs != null).forEach(r => pooledBase[p].push(r));
+          rt[p].filter(r => r.cs != null).forEach(r => pooledTuned[p].push(r));
         });
         console.log(`  held-out ${y}: ` + POSITIONS.map(p => `${p} rho ${results.loyo[y][p].base.rho.toFixed(3)}→${results.loyo[y][p].tuned.rho.toFixed(3)}`).join(' | '));
       }

@@ -2,7 +2,8 @@
 beyond what the JM model (and draft capital) already price in?
 
 Input : a scripts/jm_optimize_results_*.json from scripts/jm_optimize.js (its `rows`
-        = 2017-2024 backtest players with jm, curveScore outcome, pick, verdict).
+        = 2017-2024 backtest players with jm, cs = graded career outcome 0-100, pick, and
+          verdict = band of that grade: stud 70+, hit 45+, contributor 20+, bust below).
 Joins : data/college_stats.js (+ patch files) season rows -> school + conference
         per college season, so each player gets
           transfer      : played for 2+ schools

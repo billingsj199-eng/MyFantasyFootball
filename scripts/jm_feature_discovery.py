@@ -1,7 +1,7 @@
 """jm_feature_discovery.py - candidate NEW inputs for the JM model, measured on the
 2017-2024 backtest classes. First pass: teammate / situation features.
 
-Input : a jm_optimize results JSON (rows = backtest players with jm, curveScore
+Input : a jm_optimize results JSON (rows = backtest players with jm, cs = graded career grade 0-100 (was curveScore)
         outcome `cs`, pick, draft year).
 Data  : data/college_stats.js (+patches) season rows for every player the site
         knows (thousands of NFL draftees) -> team-season index; data/combine_data.js

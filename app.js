@@ -36531,7 +36531,9 @@ window.fmtHeight = fmtHeight;
     const allHr = window._jmTierHitRates ? window._jmTierHitRates[tier.label] : null;
     const hr = posHr || allHr;
     let txt = 'JM ' + jm.toFixed(1) + ' · ' + tier.label;
-    if (hr) txt += ' · ' + hr.rate + '% hit rate (n=' + hr.total + ', 2017-24)';
+    const cg = (window._jmTierCareerByPos && window._jmTierCareerByPos[tier.label] && window._jmTierCareerByPos[tier.label][pos]) || (window._jmTierCareer && window._jmTierCareer[tier.label]) || null;
+    if (cg) txt += ' · past prospects in this tier averaged a career grade of ' + cg.avg + ' of 100 (n=' + cg.n + ', 2017-24)';
+    else if (hr) txt += ' · ' + hr.rate + '% hit rate (n=' + hr.total + ', 2017-24)';
     return txt;
   }
   window._jmTierTooltip = _jmTierTooltip;
@@ -40805,6 +40807,30 @@ window.fmtHeight = fmtHeight;
     const _dMapHit = {};
     D.forEach(d => { if (d.n) _dMapHit[d.n] = d; });
 
+    // ═══ Oct 1 2026: tiers are described by the GRADED career outcome, not a hit rate ═══
+    // data/jm_career_grades.js (scripts/build_outcome_grades.py): career grade 0-100 = best four of
+    // the first six NFL seasons (40/30/20/10), so one big year is not a "hit". Per tier we keep the
+    // average career grade plus the share with an elite season and with 2+ starter seasons.
+    const _CG = (typeof window !== 'undefined' && window.JM_CAREER_GRADES) || null;
+    const _cgAll = {}, _cgPos = {};
+    _tierLabels.forEach(label => { _cgAll[label] = { n: 0, sum: 0, elite: 0, steady: 0 }; _cgPos[label] = {};
+      ['QB','RB','WR','TE'].forEach(pos => { _cgPos[label][pos] = { n: 0, sum: 0, elite: 0, steady: 0 }; }); });
+    if (_CG) results.forEach(p => {
+      if (p.jm == null || p.lowConfidence || p.draftYr == null || p.isDevy || p.isCollege) return;
+      const g = _CG[p.name + '|' + p.draftYr];
+      if (!g) return;
+      const tierObj = (typeof _tierForJm === 'function') ? _tierForJm(p.jm, p.pos) : null;
+      if (!tierObj || !_cgAll[tierObj.label]) return;
+      [_cgAll[tierObj.label], _cgPos[tierObj.label][p.pos]].forEach(b => { if (!b) return; b.n++; b.sum += g[0]; if (g[1] > 0) b.elite++; if (g[2] >= 2) b.steady++; });
+    });
+    const _cgOut = b => b.n ? { avg: Math.round(b.sum / b.n), n: b.n, elite: Math.round(100 * b.elite / b.n), steady: Math.round(100 * b.steady / b.n) } : null;
+    window._jmTierCareer = {}; window._jmTierCareerByPos = {};
+    _tierLabels.forEach(label => {
+      window._jmTierCareer[label] = _cgAll[label].n >= 3 ? _cgOut(_cgAll[label]) : null;
+      window._jmTierCareerByPos[label] = {};
+      ['QB','RB','WR','TE'].forEach(pos => { window._jmTierCareerByPos[label][pos] = _cgPos[label][pos].n >= 2 ? _cgOut(_cgPos[label][pos]) : null; });
+    });
+
     results.forEach(p => {
       if (p.jm == null || p.lowConfidence || p.draftYr == null) return;
       if (p.draftYr < 2017 || p.draftYr > 2024) return;
@@ -42862,7 +42888,7 @@ window.fmtHeight = fmtHeight;
     const cols = [
       { key: 'name', label: 'PLAYER', sortable: true },
       { key: 'jm', label: '<span data-gloss="JM Score (0-100) — Jack\'s prospect grade combining draft age, breakout age, production, conference, RAS, draft capital, size &amp; teammate quality. Higher = better.">JM</span>', sortable: true },
-      { key: 'tier', label: '<span data-gloss="Position-specific tier (Generational → Lottery) derived from JM. Percent shown is the historical 3-year hit rate for that tier.">TIER</span>', sortable: true },
+      { key: 'tier', label: '<span data-gloss="Position-specific tier (Generational → Lottery) derived from JM. The number is the average NFL career grade (0-100) of past prospects in that tier: best four of the first six seasons, so elite years and consistency count and one big year does not.">TIER</span>', sortable: true },
       { key: 'risk', label: '<span data-gloss="Risk indicator — adjustment applied to JM based on bust/sleeper signals (age extremes, low breakout, athletic outliers).">RISK</span>', sortable: true },
       { key: 'dc', label: '<span data-gloss="Draft Capital — NFL overall pick number. Lower = earlier pick = more team investment. UDFA = undrafted.">DC</span>', sortable: true },
       { key: 'age', label: '<span data-gloss="Age on draft day. Younger declarations historically hit at higher rates.">DRAFT AGE</span>', sortable: true },
@@ -43572,7 +43598,14 @@ window.fmtHeight = fmtHeight;
             const _posHr = window._jmTierHitRatesByPos && window._jmTierHitRatesByPos[tierLabel] ? window._jmTierHitRatesByPos[tierLabel][p.pos] : null;
             const _allHr = window._jmTierHitRates ? window._jmTierHitRates[tierLabel] : null;
             const _hr = _posHr || _allHr;
-            if (_hr) {
+            const _posCg = window._jmTierCareerByPos && window._jmTierCareerByPos[tierLabel] ? window._jmTierCareerByPos[tierLabel][p.pos] : null;
+            const _cg = _posCg || (window._jmTierCareer ? window._jmTierCareer[tierLabel] : null);
+            if (_cg) {
+              // Average NFL career grade of past prospects in this tier (not a hit rate).
+              const _cgLabel = (_posCg ? p.pos + ' ' : '') + tierLabel;
+              hitRateText = ` title="${_cgLabel}: past prospects averaged an NFL career grade of ${_cg.avg} out of 100 (${_cg.n} players, 2017-2024 classes). ${_cg.elite}% had an elite season; ${_cg.steady}% had two or more starter seasons. Career grade = best four of the first six seasons, so one big year is not enough."`;
+              hitRateDisplay = ' <span style=\"opacity:.6;font-size:.6rem\">(' + _cg.avg + ')</span>';
+            } else if (_hr) {
               const _posLabel = _posHr ? p.pos + ' ' : '';
               hitRateText = ` title="${_posLabel}${_hr.rate}% hit rate (${_hr.hits}/${_hr.total} from 2017-2024 classes)"`;
               hitRateDisplay = ' <span style=\"opacity:.6;font-size:.6rem\">(' + _hr.rate + '%)</span>';

@@ -51,6 +51,10 @@ if ($rc -eq 3) { Write-Log 'season not imported yet - rerun after the Tuesday po
 if ($rc -eq 2) { Write-Log 'calibration gate failed - outcomes NOT regenerated; see report'; exit 0 }
 if ($rc -ne 0) { Write-Log "regen FAILED (exit $rc)"; exit 1 }
 
+# Graded career outcomes (elite seasons + consistency, no hit / bust labels) -> tier chips on the Prospect page
+Run-Step 'modelling table' $Node @('scripts\jm_extract_table.js', '--out', 'scripts\jm_table.json') | Out-Null
+Run-Step 'career grades' $Python @('scriptsuild_outcome_grades.py', '--table', 'scripts\jm_table.json', '--out', 'scripts\jm_outcome_grades.json', '--js', 'data\jm_career_grades.js', '--bump', '--last-season', "$Season") | Out-Null
+
 $results = ("scripts\jm_optimize_results_{0}.json" -f (Get-Date -Format 'yyyy-MM-dd'))
 Run-Step 'weight tuner (LOYO)' $Node @('scripts\jm_optimize.js', '--out', $results) | Out-Null
 Run-Step 'experiments grid' $Node @('scripts\jm_optimize.js', '--exp', '--out', ("scripts\jm_experiments_{0}.json" -f (Get-Date -Format 'yyyy-MM-dd'))) | Out-Null
@@ -60,7 +64,7 @@ if (Test-Path $results) {
     Run-Step 'schedule strength' $Python @('scripts\jm_sos_analysis.py', $results) | Out-Null
 }
 
-$commitFiles = @('data/backtest_outcomes.js', 'index.html') + (Get-ChildItem 'scripts' -Filter ("jm_*{0}*.json" -f (Get-Date -Format 'yyyy-MM-dd')) | ForEach-Object { 'scripts/' + $_.Name }) + @(('scripts/jm_january_{0}.txt' -f $Year))
+$commitFiles = @('data/backtest_outcomes.js', 'index.html', 'data/jm_career_grades.js', 'data/_bundle_lookups.js', 'scripts/jm_outcome_grades.json') + (Get-ChildItem 'scripts' -Filter ("jm_*{0}*.json" -f (Get-Date -Format 'yyyy-MM-dd')) | ForEach-Object { 'scripts/' + $_.Name }) + @(('scripts/jm_january_{0}.txt' -f $Year))
 $changed = git status --porcelain -- @commitFiles
 if (-not $changed) {
     Write-Log 'nothing changed - nothing to commit'

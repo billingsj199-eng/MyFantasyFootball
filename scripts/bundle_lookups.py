@@ -49,6 +49,7 @@ BUNDLED_FILES = [
     "ht_ranges.js",
     "ih_type_mults.js",
     "inj_type_multipliers.js",
+    "jm_career_grades.js",
     "jm_ceiling_weights.js",
     "jm_devy_ceiling.js",
     "jm_devy_floor.js",

@@ -82,6 +82,12 @@ $out = & $Python 'scripts\pull_devy_birthdays.py' 2>&1 | Out-String
 Write-Log ('devy birthdays: ' + $out.Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "devy birthdays FAILED (exit $LASTEXITCODE) - continuing" }
 
+# 6. Birth dates for drafted / signed players from NFL data (nflverse players file);
+#    devy players are never touched by this step. Rebuilds data/_bundle_lookups.js on change.
+$out = & $Python 'scripts\sync_nfl_birthdates.py' 2>&1 | Out-String
+Write-Log ('nfl birthdates: ' + ($out.Trim() -split "`n" | Select-Object -Last 3 | Out-String).Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "nfl birthdates FAILED (exit $LASTEXITCODE) - continuing" }
+
 $changed = git status --porcelain -- @Files
 if (-not $changed) {
     Write-Log 'no devy data movement - nothing to commit'

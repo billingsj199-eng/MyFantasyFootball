@@ -1,6 +1,86 @@
 {
-  "updated": "2026-09-30T16:17:14Z",
+  "updated": "2026-10-01T02:17:50Z",
   "items": [
+    {
+      "player": "Jayden Reed",
+      "team": "GB",
+      "pos": "WR",
+      "date": "2026-09-30",
+      "headline": "Out for the rest of the 2026 season; will undergo neck surgery",
+      "take": "Season-ending neck surgery -- Christian Watson and Matthew Golden absorb his target share in Green Bay's passing game.",
+      "url": "https://sports.yahoo.com/articles/packers-jayden-reed-2026-season-172956136.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-09-30",
+      "headline": "McVay now 'expects' him to play Week 4 after limited (not DNP) Wednesday practice",
+      "take": "Confidence upgrade from midday's 'targeting/TBD' language -- trending back toward a locked-in LAR WR1 start Sunday vs. Philadelphia.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-30/mcvay-expects-puka-nacua-groin-to-play-in-week-4",
+      "tag": "riser"
+    },
+    {
+      "player": "Chris Godwin",
+      "team": "TB",
+      "pos": "WR",
+      "date": "2026-09-30",
+      "headline": "DNP Wednesday (ankle) after slow start (10/111/0 through 3 games)",
+      "take": "Another banged-up piece in an already Mayfield-less Bucs passing game -- watch Thursday/Friday tags before trusting him.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-30/chris-godwin-ankle-pops-up-with-a-dnp-on-wed",
+      "tag": "injury"
+    },
+    {
+      "player": "Josh Allen",
+      "team": "BUF",
+      "pos": "QB",
+      "date": "2026-09-30",
+      "headline": "Full practice Wednesday, no brace, after Sunday's hard hit to his knee",
+      "take": "Team signals he's fine and trending to start vs. NE Sunday, though outside doctors are split on severity -- confirm final tag.",
+      "url": "https://www.si.com/nfl/bills/onsi/josh-allen-injury-update-joe-brady-s-level-of-concern-for-hurt-qb-availability-week-4",
+      "tag": "injury"
+    },
+    {
+      "player": "Rico Dowdle",
+      "team": "PIT",
+      "pos": "RB",
+      "date": "2026-09-30",
+      "headline": "Ruled out for Thursday night vs. Browns (toe) -- 2nd straight missed game",
+      "take": "Jaylen Warren remains the clear workhorse in Pittsburgh's backfield for Thursday's game and beyond.",
+      "url": "https://sports.yahoo.com/articles/steelers-rb-rico-dowdle-miss-192957543.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Tylan Wallace",
+      "team": "CLE",
+      "pos": "WR",
+      "date": "2026-09-30",
+      "headline": "Ruled out for Thursday night vs. Steelers (knee), hurt in Week 3 vs. Panthers",
+      "take": "Thins Cleveland's WR room further for TNF -- Isaiah Bond and Malachi Corley see an uptick in offensive snaps.",
+      "url": "https://www.cbssports.com/fantasy/football/news/browns-tylan-wallace-wont-play-against-pittsburgh/",
+      "tag": "injury"
+    },
+    {
+      "player": "Lamar Jackson",
+      "team": "BAL",
+      "pos": "QB",
+      "date": "2026-09-30",
+      "headline": "Limited at Wednesday practice (back); Minter calls it 'something small'",
+      "take": "Not viewed as a Sunday-availability concern vs. Titans, but worth a glance at Thursday/Friday tags.",
+      "url": "https://sports.yahoo.com/articles/lamar-jackson-limited-back-injury-204509780.html",
+      "tag": "injury"
+    },
+    {
+      "player": "Drake Maye",
+      "team": "NE",
+      "pos": "QB",
+      "date": "2026-09-30",
+      "headline": "Added to injury report (throwing shoulder) but was a full practice participant",
+      "take": "No missed practice time, but worth monitoring given 10 INTs over his last 7 games against playoff-caliber defenses.",
+      "url": "https://www.si.com/nfl/super-bowl/patriots-list-drake-maye-wednesday-injury-report-shoulder-ailment",
+      "tag": "injury"
+    },
     {
       "player": "Jayden Daniels",
       "team": "WAS",

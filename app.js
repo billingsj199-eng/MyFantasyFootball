@@ -840,9 +840,11 @@ const versionTierCounters = {
 };
 // DEVY board tiers (2026-09-30): the devy list is one board shared by both
 // dynasty formats, so its tiers live in their own `devy` slot per version
-// (single DEVY bucket) instead of a per-format position bucket — kept out of
-// POS_TIER_KEYS so the format serializers / position sync / mine seeding
-// never touch it. Saved as `<ver>.devy` (see _devySerialize).
+// instead of a per-format position bucket — kept out of POS_TIER_KEYS so the
+// format serializers / position sync / mine seeding never touch it. Buckets:
+// DEVY (whole board, overall devy rank) + one per class view, DEVY_2027 /
+// DEVY_2028 (class rank — like the position views; created on demand by
+// _devyTierKey). Saved as `<ver>.devy` (see _devySerialize).
 ['consensus', 'jacks', 'mine'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
 // MAIN-world content scripts read tier boundaries too (extension jacks-boards
 // bridge, board-gating Phase B) — attach like versionBoards above.
@@ -1195,23 +1197,36 @@ function setTiers(t) { versionTiers[currentVersion][_tierMode()][_tierPK()] = t;
 // the same scale or K/DST collapse into the last tier.
 function _tierRankIsPositional() {
   if (filter === 'QB' || filter === 'RB' || filter === 'WR' || filter === 'TE') return true;
+  if (filter === 'DEVY') return !!(window._devyClass && window._devyClass !== 'ALL'); // class view = class rank
   return currentMode === 'weekly' && filter !== 'ALL' && filter !== 'ROOKIE';
 }
 
 // Map current position filter to tier bucket key
 function _tierPK() {
-  if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE'||filter==='DEVY')) return filter;
+  if (typeof filter !== 'undefined' && filter === 'DEVY') return _devyTierKey();
+  if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE')) return filter;
   // FLEX (RB/WR/TE) shares the ALL tier bucket — tiers are global to the visible list.
   return 'ALL';
 }
 // Which versionTiers slot a bucket lives in: the DEVY bucket sits in the
 // shared `devy` slot (one devy board for Dynasty 1QB + SF), everything else
 // under the active format.
-function _tierMode(pk) { return (pk || _tierPK()) === 'DEVY' ? 'devy' : currentMode; }
+function _isDevyPK(pk) { return typeof pk === 'string' && pk.indexOf('DEVY') === 0; }
+// DEVY bucket for the view on screen: DEVY (all classes) or DEVY_<class> on a
+// class pill. Makes sure the bucket exists for every version before use.
+function _devyTierKey() {
+  const c = window._devyClass;
+  const k = (c && c !== 'ALL') ? 'DEVY_' + c : 'DEVY';
+  ['consensus', 'jacks', 'mine'].forEach(v => {
+    if (!versionTiers[v].devy[k]) { versionTiers[v].devy[k] = []; versionTierCounters[v].devy[k] = 0; }
+  });
+  return k;
+}
+function _tierMode(pk) { return _isDevyPK(pk || _tierPK()) ? 'devy' : currentMode; }
 // Version whose tiers are SHOWN: an un-ranked "My Rankings" devy board
 // mirrors Jack's (order + tiers) until the first edit copies it over
 // (_devyMaterializeMine) — edits always write to currentVersion.
-function _tierVer(pk) { return ((pk || _tierPK()) === 'DEVY' && typeof _devySrcVer === 'function') ? _devySrcVer() : currentVersion; }
+function _tierVer(pk) { return (_isDevyPK(pk || _tierPK()) && typeof _devySrcVer === 'function') ? _devySrcVer() : currentVersion; }
 
 // Check if current user can edit the active version
 function canEdit() {
@@ -1383,7 +1398,7 @@ function addTier(afterRank, label, name, _pk) {
     return null; 
   }
   const pk = _pk || _tierPK();
-  if (pk === 'DEVY' && !_bypassEditCheck) _devyMaterializeMine();
+  if (_isDevyPK(pk) && !_bypassEditCheck) _devyMaterializeMine();
   const arr = versionTiers[currentVersion][_tierMode(pk)][pk];
   const userInitiated = !label; // no label = user clicked "+ ADD TIER"
   if (!label) { const used = arr.map(t => t.label); label = TIER_LABELS.find(l => !used.includes(l)) || ('T' + arr.length); }
@@ -1414,7 +1429,7 @@ function removeTier(id) {
     return;
   }
   const pk = _tierPK();
-  if (pk === 'DEVY') _devyMaterializeMine();
+  if (_isDevyPK(pk)) _devyMaterializeMine();
   versionTiers[currentVersion][_tierMode(pk)][pk] = versionTiers[currentVersion][_tierMode(pk)][pk].filter(t => t.id !== id);
   tiers = versionTiers[currentVersion][_tierMode(pk)][pk];
   // Close the gap the removal left — otherwise deleting A leaves S, B, C.
@@ -1426,7 +1441,7 @@ function removeTier(id) {
 // Rename tier (preserve label/color, only update display name)
 function renameTier(id, newName) {
   if (!canEdit()) return false;
-  if (_tierPK() === 'DEVY') _devyMaterializeMine();
+  if (_isDevyPK(_tierPK())) _devyMaterializeMine();
   const t = tiers.find(x => x.id === id);
   if (!t) return false;
   const trimmed = (newName || '').trim();
@@ -1439,7 +1454,7 @@ function renameTier(id, newName) {
 // neighboring tiers so the order stays consistent.
 function moveTier(id, delta) {
   if (!canEdit()) return false;
-  if (_tierPK() === 'DEVY') _devyMaterializeMine();
+  if (_isDevyPK(_tierPK())) _devyMaterializeMine();
   const sorted = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
   const idx = sorted.findIndex(x => x.id === id);
   if (idx < 0) return false;
@@ -1819,7 +1834,8 @@ window._devyBoardKey = _devyBoardKey;
 // localStorage `devy_board_<ver>_dynasty` stays the working copy of the order —
 // a cloud load overwrites it, same as the in-memory boards.
 function _devyIsCustom(ver) {
-  return !!_devyBoardLoad(ver, 'dynasty') || !!(versionTiers[ver] && versionTiers[ver].devy.DEVY.length);
+  const dv = versionTiers[ver] && versionTiers[ver].devy;
+  return !!_devyBoardLoad(ver, 'dynasty') || !!(dv && Object.keys(dv).some(k => dv[k].length));
 }
 // Version whose devy board is DISPLAYED: "My Rankings" mirrors Jack's until
 // the user's first devy edit (same idea as the mine-follows-Jack's seeding).
@@ -1832,8 +1848,10 @@ function _devyMaterializeMine() {
   if (currentVersion !== 'mine' || _devyIsCustom('mine')) return;
   const cur = (window._devyList || []).map(p => p.n);
   if (cur.length) _devyBoardSave('mine', 'dynasty', cur);
-  versionTiers.mine.devy.DEVY = versionTiers.jacks.devy.DEVY.map(t => Object.assign({}, t));
-  versionTierCounters.mine.devy.DEVY = versionTierCounters.jacks.devy.DEVY;
+  Object.keys(versionTiers.jacks.devy).forEach(k => {
+    versionTiers.mine.devy[k] = versionTiers.jacks.devy[k].map(t => Object.assign({}, t));
+    versionTierCounters.mine.devy[k] = versionTierCounters.jacks.devy[k] || 0;
+  });
   syncMode();
 }
 // Move a devy player to slot `toPos` (0-based, post-removal coordinates like
@@ -1846,12 +1864,20 @@ function _devyMove(fromIdx, toPos) {
   if (!list || fromIdx === toPos || fromIdx < 0 || fromIdx >= list.length) return false;
   toPos = Math.max(0, Math.min(list.length - 1, toPos));
   if (fromIdx === toPos) return false;
-  const tierArr = versionTiers[currentVersion].devy.DEVY;
-  const fromRank = fromIdx + 1, toRank = toPos + 1;
-  if (fromRank > toRank) tierArr.forEach(t => { if (t.afterRank > toRank && t.afterRank <= fromRank) t.afterRank += 1; });
-  else tierArr.forEach(t => { if (t.afterRank > fromRank && t.afterRank <= toRank) t.afterRank -= 1; });
+  const _shift = (tierArr, fromRank, toRank) => {
+    if (!tierArr || !tierArr.length || fromRank === toRank) return;
+    if (fromRank > toRank) tierArr.forEach(t => { if (t.afterRank > toRank && t.afterRank <= fromRank) t.afterRank += 1; });
+    else tierArr.forEach(t => { if (t.afterRank > fromRank && t.afterRank <= toRank) t.afterRank -= 1; });
+  };
+  // Rank of list[idx] within his own class (the class buckets' rank space)
+  const _clsRank = idx => { const y = list[idx]._devyEligYr; let c = 0; for (let i = 0; i <= idx; i++) if (list[i]._devyEligYr === y) c++; return c; };
+  const dv = versionTiers[currentVersion].devy;
+  const clsKey = 'DEVY_' + list[fromIdx]._devyEligYr;
+  const clsFrom = _clsRank(fromIdx);
   const item = list.splice(fromIdx, 1)[0];
   list.splice(toPos, 0, item);
+  _shift(dv.DEVY, fromIdx + 1, toPos + 1);
+  _shift(dv[clsKey], clsFrom, _clsRank(toPos));
   _devyBoardSave(currentVersion, currentMode, list.map(p => p.n));
   saveLocal();
   return true;
@@ -1860,21 +1886,32 @@ function _devyMove(fromIdx, toPos) {
 // (a mirrored "mine" board must stay un-saved so it keeps following Jack's).
 window._devySerialize = function (ver) {
   const order = _devyBoardLoad(ver, 'dynasty');
-  const t = (versionTiers[ver] && versionTiers[ver].devy.DEVY) || [];
-  if (!order && !t.length) return null;
-  return { _order: order || [], _tiers: t.map(x => ({ label: x.label, name: x.name, afterRank: x.afterRank })) };
+  const dv = (versionTiers[ver] && versionTiers[ver].devy) || {};
+  const ser = arr => (arr || []).map(x => ({ label: x.label, name: x.name, afterRank: x.afterRank }));
+  // _clsTiers: the class-view buckets, keyed by class year
+  const cls = {};
+  Object.keys(dv).forEach(k => { if (k !== 'DEVY' && dv[k].length) cls[k.slice(5)] = ser(dv[k]); });
+  if (!order && !(dv.DEVY || []).length && !Object.keys(cls).length) return null;
+  return { _order: order || [], _tiers: ser(dv.DEVY), _clsTiers: cls };
 };
 // Apply a saved `<ver>.devy` payload (cloud load / snapshot / JSON import).
 window._devyApplySaved = function (ver, obj) {
   if (!obj || typeof obj !== 'object' || !versionTiers[ver]) return;
   if (Array.isArray(obj._order) && obj._order.length) _devyBoardSave(ver, 'dynasty', obj._order.filter(n => typeof n === 'string'));
   if (Array.isArray(obj._tiers)) {
-    const arr = obj._tiers.filter(t => t && t.afterRank >= 1)
-      .map((t, i) => ({ id: i + 1, label: t.label, name: t.name, afterRank: t.afterRank }))
-      .sort((a, b) => a.afterRank - b.afterRank);
-    _resequenceTiers(arr);
-    versionTiers[ver].devy.DEVY = arr;
-    versionTierCounters[ver].devy.DEVY = arr.length;
+    // The payload is the whole tier state: class buckets it doesn't carry are cleared.
+    const cls = (obj._clsTiers && typeof obj._clsTiers === 'object') ? obj._clsTiers : {};
+    const src = { DEVY: obj._tiers };
+    Object.keys(versionTiers[ver].devy).forEach(k => { if (k !== 'DEVY') src[k] = []; });
+    Object.keys(cls).forEach(y => { if (/^\d{4}$/.test(y) && Array.isArray(cls[y])) src['DEVY_' + y] = cls[y]; });
+    Object.keys(src).forEach(k => {
+      const arr = src[k].filter(t => t && t.afterRank >= 1)
+        .map((t, i) => ({ id: i + 1, label: t.label, name: t.name, afterRank: t.afterRank }))
+        .sort((a, b) => a.afterRank - b.afterRank);
+      _resequenceTiers(arr);
+      versionTiers[ver].devy[k] = arr;
+      versionTierCounters[ver].devy[k] = arr.length;
+    });
   }
   if (typeof filter !== 'undefined' && filter === 'DEVY') syncMode();
 };
@@ -3998,6 +4035,7 @@ window._setDevyClass = function (c) {
   window._devyClass = String(c || 'ALL');
   try { localStorage.setItem('devy_class', window._devyClass); } catch (e) {}
   document.querySelectorAll('.devy-class-btn').forEach(b => b.classList.toggle('active', b.dataset.devyClass === window._devyClass));
+  syncMode(); // each class view has its own tier bucket
   render();
 };
 function _syncDevyClassBtns() {
@@ -4005,7 +4043,32 @@ function _syncDevyClassBtns() {
   if (!wrap) return;
   wrap.style.display = (filter === 'DEVY') ? 'inline-flex' : 'none';
   wrap.querySelectorAll('.devy-class-btn').forEach(b => b.classList.toggle('active', b.dataset.devyClass === window._devyClass));
+  // Editors: one-click re-sort of the whole devy board by JM score
+  let jb = document.getElementById('devyJmOrderBtn');
+  if (!jb) {
+    jb = document.createElement('button');
+    jb.id = 'devyJmOrderBtn';
+    jb.className = 'pos-btn';
+    jb.textContent = 'JM ORDER';
+    jb.title = 'Re-sort the whole devy board by JM score (highest first) — a starting point to rank from. Replaces the current order; hit SAVE to keep it.';
+    jb.style.marginLeft = '6px';
+    jb.onclick = () => window._devyResetToJm();
+    wrap.appendChild(jb);
+  }
+  jb.style.display = canEdit() ? '' : 'none';
 }
+window._devyResetToJm = function () {
+  if (!canEdit() || !window._devyList || !window._devyList.length) return;
+  const dv = versionTiers[_devySrcVer()].devy;
+  const hasTiers = Object.keys(dv).some(k => dv[k].length);
+  if (!confirm('Re-sort the devy board by JM score?\n\nThis replaces the current order for ' + (currentVersion === 'mine' ? 'My Rankings' : "Jack's") + '.' + (hasTiers ? ' Tier lines stay at the same rank numbers.' : ''))) return;
+  _devyMaterializeMine();
+  const names = window._devyList.slice().sort((a, b) => (b._pmJm != null ? b._pmJm : -1) - (a._pmJm != null ? a._pmJm : -1) || (b._devyKtc - a._devyKtc)).map(p => p.n);
+  _devyBoardSave(currentVersion, 'dynasty', names);
+  saveLocal();
+  render();
+  toast('Devy board sorted by JM score');
+};
 
 // Synthetic player-card entry for a prospect who isn't in D[] (devy / college
 // players): bio from COMBINE_DATA + the prospect-model record, college seasons
@@ -4093,12 +4156,17 @@ function _devyCols(d) {
   const hm = /^(\d)-(\d{1,2})$/.exec(String(cb.ht || ''));
   if (hm) htIn = +hm[1] * 12 + +hm[2]; else if (pm.ht > 0) htIn = pm.ht;
   const wt = cb.wt > 0 ? +cb.wt : (pm.wt > 0 ? +pm.wt : null);
+  // Rank + KTC rank in the scope on screen: within the class on a class
+  // view (2027 / 2028 pill), across the whole devy board otherwise.
   const k = _ktcRankInfo(d.n);
-  const ktc = (k && k.devy) ? k.ovr : null;
+  const cls = d._devyClsRank != null;
+  const rank = cls ? d._devyClsRank : d.myRank;
+  const ktc = cls ? (d._devyKtcCls != null ? d._devyKtcCls : null) : ((k && k.devy) ? k.ovr : null);
   return {
     pick, ppg, gp, yr, age: pm.age != null ? pm.age : null, draftYr: pm.draftYr || cb.eligYr || null,
-    htIn, wt, ras: pm.ras != null ? pm.ras : null, rasProj: !!pm.rasProjected, ktc,
-    diff: ktc != null ? ktc - d.myRank : null
+    htIn, wt, ras: pm.ras != null ? pm.ras : null, rasProj: !!pm.rasProjected, ktc, rank,
+    scope: cls ? d._devyEligYr + ' ' : '',
+    diff: ktc != null ? ktc - rank : null
   };
 }
 // Sort value for a table header key while the DEVY filter is on (null sinks).
@@ -4152,35 +4220,38 @@ function _devyStatCellsHtml(d) {
   }
   let diffH = '<span class="diff-even" title="Not ranked by KTC devy">—</span>';
   if (c.diff != null) {
-    const w = 'Rank #' + d.myRank + ' vs KTC devy #' + c.ktc;
+    const w = (c.scope ? c.scope + 'class rank' : 'Rank') + ' #' + c.rank + ' vs KTC ' + c.scope + 'devy #' + c.ktc;
     diffH = c.diff === 0 ? '<span class="diff-even" title="' + w + ' — even with KTC">—</span>'
       : c.diff > 0 ? '<span class="diff-up" title="' + w + ' — ' + c.diff + ' higher than KTC">▲ ' + c.diff + '</span>'
       : '<span class="diff-down" title="' + w + ' — ' + (-c.diff) + ' lower than KTC">▼ ' + (-c.diff) + '</span>';
   }
-  const jmHtml = (() => { if (d._pmJm == null) return '—'; const jm = Math.round(d._pmJm); const jc = (window._jmTierStyle ? window._jmTierStyle(d._pmJm, d.s).color : '#94a3b8'); const _tt = window._jmTierTooltip ? window._jmTierTooltip(d._pmJm, d.s).replace(/"/g, '&quot;') : ''; return '<span style="color:' + jc + ';font-weight:700;cursor:help" title="' + _tt + '">' + jm + '</span>'; })();
   return '<td class="pts-cell ppg-proj-cell">' + pickHtml + '</td>'
     + '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'
     + '<td class="pts-cell ppg25-cell">' + ppgHtml + '</td>'
     + '<td class="pts-cell l4ppg-cell">' + ageHtml + '</td>'
     + '<td class="pts-cell yrr-cell" style="display:none">—</td>'
-    + '<td class="pts-cell jm-cell" style="display:none">' + jmHtml + '</td>'
     + '<td class="pts-cell landing-cell" style="display:none">—</td>'
     + '<td class="age-cell" style="white-space:nowrap">' + sizeHtml + '</td>'
     + '<td class="psos-cell">' + rasHtml + '</td>'
     + '<td class="diff-cell">' + diffH + '</td>';
+}
+// JM cell — on the devy board it sits right after Class (Jack 2026-09-30:
+// JM is what he ranks from); _syncDevyHeaders moves the JM header to match.
+function _devyJmCellHtml(d) {
+  return '<td class="pts-cell jm-cell" style="display:none">' + (() => { if (d._pmJm == null) return '—'; const jm = Math.round(d._pmJm); const jc = (window._jmTierStyle ? window._jmTierStyle(d._pmJm, d.s).color : '#94a3b8'); const _tt = window._jmTierTooltip ? window._jmTierTooltip(d._pmJm, d.s).replace(/"/g, '&quot;') : ''; return '<span style="color:' + jc + ';font-weight:700;cursor:help" title="' + _tt + '">' + jm + '</span>'; })() + '</td>';
 }
 // Header labels while the DEVY filter is on. Originals are stashed on entry
 // and put back on exit; the three stat-view headers + the CONS header have
 // their own updaters, re-run on exit to restore whatever view is active.
 const _DEVY_HDRS = [
   ['th[data-sort="posRank"]', 'Class', 'Draft class — the first NFL draft the player is eligible for.'],
-  ['#adpHeader', 'KTC', 'KeepTradeCut devy rank (crowd-sourced, refreshed daily) for this format. — = not on KTC\'s devy list or not valued yet.'],
+  ['#adpHeader', 'KTC', 'KeepTradeCut devy rank (crowd-sourced, refreshed daily) for this format — the rank within the class on a 2027 / 2028 view. — = not on KTC\'s devy list or not valued yet.'],
   ['#ppgProjHeader', 'Proj Pick', 'Projected draft capital — the overall pick the consensus boards project today (UDFA = not on the boards). Same number the JM score uses.'],
   ['#ppg25HeaderTh', '', ''],
   ['#l4ppgHeaderTh', 'Draft Age', 'Age on draft day of the player\'s class (same as the Prospect Model). Younger is better; hover a value for today\'s age.'],
   ['#ageHeader', 'Ht · Wt', 'Listed height and weight.'],
   ['#psosHeader', 'RAS', 'Relative Athletic Score (0-10). P = projected from a projected forty + size until official testing exists.'],
-  ['th[data-sort="diff"]', '+/-', 'This board\'s devy rank vs the KTC devy rank. ▲ = ranked higher here than KTC.']
+  ['th[data-sort="diff"]', '+/-', 'This board\'s devy rank vs the KTC devy rank (both within the class on a 2027 / 2028 view). ▲ = ranked higher here than KTC.']
 ];
 function _syncDevyHeaders() {
   const on = filter === 'DEVY';
@@ -4213,6 +4284,14 @@ function _syncDevyHeaders() {
       th._devyOrig = null;
     }
   });
+  // JM column sits right after Class on the devy board (cells: _devyJmCellHtml)
+  const _jmTh = document.getElementById('jmHeader');
+  const _clsTh = document.querySelector('#pageRankings thead th[data-sort="posRank"]');
+  const _landTh = document.getElementById('landingHeader');
+  if (_jmTh && _clsTh && _landTh) {
+    if (on && _clsTh.nextElementSibling !== _jmTh) _clsTh.after(_jmTh);
+    else if (!on && _landTh.previousElementSibling !== _jmTh) _landTh.before(_jmTh);
+  }
   window._devyHdrOn = on;
   if (!on) {
     try { if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders(); } catch (_) {}
@@ -4248,8 +4327,21 @@ function getFiltered(applyTopN) {
         myRank: 0, adp: null, p: null, career: null, s25: null
       };
     });
-    // Load saved order (shared by both dynasty formats) or default to KTC sort.
-    // An un-ranked "My Rankings" devy board mirrors Jack's (_devySrcVer).
+    // Prospect-model records: JM for the default order + the profile columns
+    const _devyPmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
+    const _devyPmMap = {};
+    _devyPmData.forEach(p => { _devyPmMap[p.name] = p; });
+    Object.values(devyMap).forEach(p => {
+      const pm = _devyPmMap[p.n] || null;
+      p._pm = pm;
+      p._pmJm = pm && pm.jm != null ? pm.jm : null;
+    });
+    // Load saved order (shared by both dynasty formats). An un-ranked "My
+    // Rankings" devy board mirrors Jack's (_devySrcVer). No saved order:
+    // Jack's / My Rankings start from JM score (Jack 2026-09-30 — his model is
+    // the starting point he ranks from), Consensus stays the KTC market order.
+    const _byKtc = (a, b) => b._devyKtc - a._devyKtc;
+    const _byJm = (a, b) => (b._pmJm != null ? b._pmJm : -1) - (a._pmJm != null ? a._pmJm : -1) || _byKtc(a, b);
     const savedOrder = _devyBoardLoad(_devySrcVer(), currentMode);
     let devyPlayers;
     if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
@@ -4258,29 +4350,26 @@ function getFiltered(applyTopN) {
       savedOrder.forEach(name => { if (devyMap[name]) { devyPlayers.push(devyMap[name]); delete devyMap[name]; } });
       // Add any new devy players not in saved order (appended at end, sorted by KTC)
       const remaining = Object.values(devyMap);
-      remaining.sort((a, b) => b._devyKtc - a._devyKtc);
+      remaining.sort(_byKtc);
       devyPlayers = devyPlayers.concat(remaining);
     } else {
       devyPlayers = Object.values(devyMap);
-      devyPlayers.sort((a, b) => b._devyKtc - a._devyKtc);
+      devyPlayers.sort(currentVersion === 'consensus' ? _byKtc : _byJm);
     }
     // Assign ranks and attach JM scores from prospect model
-    const _devyPmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
-    const _devyPmMap = {};
-    _devyPmData.forEach(p => { _devyPmMap[p.name] = p; });
-    devyPlayers.forEach((p, i) => {
-      p.myRank = i + 1; p._devyIdx = i;
-      // Prospect-model record: JM + the profile columns (projected pick, draft age, RAS, size)
-      const pm = _devyPmMap[p.n] || null;
-      p._pm = pm;
-      p._pmJm = pm && pm.jm != null ? pm.jm : null;
-    });
+    devyPlayers.forEach((p, i) => { p.myRank = i + 1; p._devyIdx = i; });
     // Store on window for drag handler access
     window._devyList = devyPlayers;
-    // Class sub-filter (2027 / 2028): keep the overall devy rank numbers, just hide the other classes
+    // Class sub-filter (2027 / 2028): works like a position view (Jack
+    // 2026-09-30) — the rank, KTC and +/- columns renumber within the class
+    // (_devyClsRank / _devyKtcCls) and the view has its own tier bucket
+    // (DEVY_<class>). Drags still reorder the one overall devy board, and the
+    // free window stays on the overall rank (myRank).
     if (window._devyClass && window._devyClass !== 'ALL') {
       const _cls = parseInt(window._devyClass, 10);
       devyPlayers = devyPlayers.filter(p => parseInt(p._devyEligYr, 10) === _cls);
+      devyPlayers.forEach((p, i) => { p._devyClsRank = i + 1; });
+      devyPlayers.filter(p => p._devyKtc > 0).sort((a, b) => b._devyKtc - a._devyKtc).forEach((p, i) => { p._devyKtcCls = i + 1; });
     }
     if (query) {
       const q = query.toLowerCase();
@@ -6733,22 +6822,25 @@ function render() {
     // DEVY filter: custom row rendering — a full rankings row (tiers, blur,
     // card link, watch star) with the prospect columns from _devyStatCellsHtml.
     if (d._isDevy) {
-      const _dRank = d.myRank;
+      // Rank space of the view: class rank on a class pill (own tier bucket), overall devy rank otherwise
+      const _dvRank = x => x._devyClsRank != null ? x._devyClsRank : x.myRank;
+      const _dRank = _dvRank(d);
       const _dTier = showTiers ? _tierLabelForRank(_dRank) : '';
-      if (showTiers) html += _tierRowsHtml(i > 0 ? data[i - 1].myRank : 0, _dRank);
+      if (showTiers) html += _tierRowsHtml(i > 0 ? _dvRank(data[i - 1]) : 0, _dRank);
       // Free window = top of the BOARD (rank-based, so the class pills can't
       // slide it); sorted / searched views cap by row count like the regular rows.
-      const _dBlur = shouldBlur && (showTiers ? _dRank > blurCutoff : (i + 1) > blurCutoff);
+      const _dBlur = shouldBlur && (showTiers ? d.myRank > blurCutoff : (i + 1) > blurCutoff);
       if (_dBlur && !_devyWallDone) { _devyWallDone = true; html += _premiumWallHtml(); }
       const _dn = d.n.replace(/"/g, '&quot;');
       const _dw = window._watchSet && window._watchSet.has(d.n);
       html += `<tr class="devy-row${_dBlur ? ' premium-blur' : ''}${_dTier ? ' tierband-' + tierColor(_dTier) : ''}" data-devy-idx="${d._devyIdx}" data-devy-name="${_dn}">
         <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + _dn + '. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div>' : ''}</td>
-        <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_dTier)}" title="Devy rank: ${_dRank}">${_dRank}</span></td>
+        <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_dTier)}" title="${d._devyClsRank != null ? d._devyEligYr + ' class rank: ' + _dRank + ' · overall devy rank: ' + d.myRank : 'Devy rank: ' + _dRank}">${_dRank}</span></td>
         <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-devy-card="${_dn}">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div><span class="watch-star${_dw ? ' on' : ''}" data-watch="${_dn}" role="button" title="${_dw ? 'Remove from' : 'Add to'} watchlist">${_dw ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
-        <td class="adp-cell" data-lbl="KTC">${(() => { const k = _ktcRankInfo(d.n); return (k && k.devy) ? '<span style="cursor:help" title="' + ('KTC devy #' + k.ovr + (k.posRank != null ? ' · ' + k.pos + k.posRank : '') + ' · value ' + k.val.toLocaleString() + ' (' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ')').replace(/"/g, '&quot;') + '">' + k.ovr + '</span>' : '<span style="color:var(--text2);cursor:help" title="' + (_ktcGet(_ktcDevyMapFor(currentMode), d.n) != null ? 'On KTC\'s devy list but not yet valued in ' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') : 'Not on KTC\'s devy list') + '">—</span>'; })()}</td>
+        ${_devyJmCellHtml(d)}
+        <td class="adp-cell" data-lbl="KTC">${(() => { const k = _ktcRankInfo(d.n); return (k && k.devy) ? '<span style="cursor:help" title="' + ('KTC devy #' + k.ovr + (k.posRank != null ? ' · ' + k.pos + k.posRank : '') + ' · value ' + k.val.toLocaleString() + ' (' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ')' + (d._devyKtcCls != null ? ' · #' + d._devyKtcCls + ' in the ' + d._devyEligYr + ' class' : '')).replace(/"/g, '&quot;') + '">' + (d._devyKtcCls != null ? d._devyKtcCls : k.ovr) + '</span>' : '<span style="color:var(--text2);cursor:help" title="' + (_ktcGet(_ktcDevyMapFor(currentMode), d.n) != null ? 'On KTC\'s devy list but not yet valued in ' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') : 'Not on KTC\'s devy list') + '">—</span>'; })()}</td>
         ${_devyStatCellsHtml(d)}
       </tr>`;
       // "Add tier" mini-button between rows (shows on hover via CSS)
@@ -7577,8 +7669,12 @@ function attachTierListeners() {
         e.preventDefault(); drow.classList.remove('kb-grabbed'); _kbSay('Cancelled.');
       } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && drow.classList.contains('kb-grabbed')) {
         e.preventDefault();
+        // Swap with the adjacent VISIBLE row (on a class view that can be
+        // several overall slots away); his slot is the post-removal target.
         const from = +drow.dataset.devyIdx;
-        if (!_devyMove(from, from + (e.key === 'ArrowUp' ? -1 : 1))) return;
+        const vrows = Array.from(tbody.querySelectorAll('tr.devy-row'));
+        const adj = vrows[vrows.indexOf(drow) + (e.key === 'ArrowUp' ? -1 : 1)];
+        if (!adj || adj.classList.contains('premium-blur') || !_devyMove(from, +adj.dataset.devyIdx)) return;
         render();
         // Re-grab after re-render (focus is lost when the row is re-created)
         setTimeout(() => {
@@ -30454,8 +30550,13 @@ window.fmtHeight = fmtHeight;
     if (_dvSrc && Array.isArray(_dvSrc._order)) {
       out.jacks.devy = {
         _order: _dvSrc._order.slice(0, _PUB_CUT_POS),
-        _tiers: (_dvSrc._tiers || []).filter(t => t && t.afterRank >= 1 && t.afterRank <= _PUB_CUT_POS)
+        _tiers: (_dvSrc._tiers || []).filter(t => t && t.afterRank >= 1 && t.afterRank <= _PUB_CUT_POS),
+        _clsTiers: {}
       };
+      Object.keys(_dvSrc._clsTiers || {}).forEach(y => {
+        const kept = (_dvSrc._clsTiers[y] || []).filter(t => t && t.afterRank >= 1 && t.afterRank <= _PUB_CUT_POS);
+        if (kept.length) out.jacks.devy._clsTiers[y] = kept;
+      });
     }
     // Ticker movers off the FULL boards (same 300-rank window + top-8 rule as
     // _renderLiveTicker) so the free home-page ticker keeps working without
@@ -30729,7 +30830,8 @@ window.fmtHeight = fmtHeight;
           const _oldDv = (prev.jacks && prev.jacks.devy) || {}, _newDv = data.jacks.devy || {};
           const _oldDvN = (_oldDv._order || []).length, _newDvN = (_newDv._order || []).length;
           if (_oldDvN > 0 && (_newDvN === 0 || _newDvN / _oldDvN < SHRINK_THRESHOLD)) shrunk.push('devy players: ' + _oldDvN + '→' + _newDvN);
-          if ((_oldDv._tiers || []).length > 0 && !(_newDv._tiers || []).length) shrunk.push('devy tiers: ' + _oldDv._tiers.length + '→0');
+          const _dvTierN = o => (o._tiers || []).length + Object.values(o._clsTiers || {}).reduce((n, a) => n + (a ? a.length : 0), 0);
+          if (_dvTierN(_oldDv) > 0 && !_dvTierN(_newDv)) shrunk.push('devy tiers: ' + _dvTierN(_oldDv) + '→0');
           if (shrunk.length) {
             const msg = 'SAFETY CHECK: this save would shrink your rankings:\n\n' + shrunk.join('\n') + '\n\nThis usually means the page didn\'t fully load. Save anyway?';
             if (!confirm(msg)) {

@@ -838,6 +838,12 @@ const versionTierCounters = {
   jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
+// DEVY board tiers (2026-09-30): the devy list is one board shared by both
+// dynasty formats, so its tiers live in their own `devy` slot per version
+// (single DEVY bucket) instead of a per-format position bucket — kept out of
+// POS_TIER_KEYS so the format serializers / position sync / mine seeding
+// never touch it. Saved as `<ver>.devy` (see _devySerialize).
+['consensus', 'jacks', 'mine'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
 // MAIN-world content scripts read tier boundaries too (extension jacks-boards
 // bridge, board-gating Phase B) — attach like versionBoards above.
 window.versionTiers = versionTiers;
@@ -1166,8 +1172,8 @@ let tierCounter = 0;
 
 function syncMode() {
   board = versionBoards[currentVersion][currentMode];
-  tiers = versionTiers[currentVersion][currentMode][_tierPK()];
-  tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
+  tiers = versionTiers[_tierVer()][_tierMode()][_tierPK()];
+  tierCounter = versionTierCounters[_tierVer()][_tierMode()][_tierPK()];
 }
 
 // Initial consensus build — deferred to a microtask so that downstream `let`
@@ -1177,9 +1183,9 @@ Promise.resolve().then(() => { try { rebuildConsensusBoards(); } catch(e) { cons
 
 // Convenience accessors - always point to the active version + mode
 function getBoard() { return versionBoards[currentVersion][currentMode]; }
-function getTiers() { return versionTiers[currentVersion][currentMode][_tierPK()]; }
+function getTiers() { return versionTiers[_tierVer()][_tierMode()][_tierPK()]; }
 function setBoard(b) { versionBoards[currentVersion][currentMode] = b; }
-function setTiers(t) { versionTiers[currentVersion][currentMode][_tierPK()] = t; }
+function setTiers(t) { versionTiers[currentVersion][_tierMode()][_tierPK()] = t; }
 
 // Whether tier afterRank values for the active filter are POSITION ranks
 // (1..N within the filtered list) rather than overall board ranks. QB/RB/WR/TE
@@ -1194,10 +1200,18 @@ function _tierRankIsPositional() {
 
 // Map current position filter to tier bucket key
 function _tierPK() {
-  if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE')) return filter;
+  if (typeof filter !== 'undefined' && (filter==='QB'||filter==='RB'||filter==='WR'||filter==='TE'||filter==='K'||filter==='DST'||filter==='ROOKIE'||filter==='DEVY')) return filter;
   // FLEX (RB/WR/TE) shares the ALL tier bucket — tiers are global to the visible list.
   return 'ALL';
 }
+// Which versionTiers slot a bucket lives in: the DEVY bucket sits in the
+// shared `devy` slot (one devy board for Dynasty 1QB + SF), everything else
+// under the active format.
+function _tierMode(pk) { return (pk || _tierPK()) === 'DEVY' ? 'devy' : currentMode; }
+// Version whose tiers are SHOWN: an un-ranked "My Rankings" devy board
+// mirrors Jack's (order + tiers) until the first edit copies it over
+// (_devyMaterializeMine) — edits always write to currentVersion.
+function _tierVer(pk) { return ((pk || _tierPK()) === 'DEVY' && typeof _devySrcVer === 'function') ? _devySrcVer() : currentVersion; }
 
 // Check if current user can edit the active version
 function canEdit() {
@@ -1369,11 +1383,12 @@ function addTier(afterRank, label, name, _pk) {
     return null; 
   }
   const pk = _pk || _tierPK();
-  const arr = versionTiers[currentVersion][currentMode][pk];
+  if (pk === 'DEVY' && !_bypassEditCheck) _devyMaterializeMine();
+  const arr = versionTiers[currentVersion][_tierMode(pk)][pk];
   const userInitiated = !label; // no label = user clicked "+ ADD TIER"
   if (!label) { const used = arr.map(t => t.label); label = TIER_LABELS.find(l => !used.includes(l)) || ('T' + arr.length); }
   if (!name) name = label === 'S' ? 'ELITE' : 'TIER ' + label;
-  const id = ++versionTierCounters[currentVersion][currentMode][pk];
+  const id = ++versionTierCounters[currentVersion][_tierMode(pk)][pk];
   arr.push({id, label, name, afterRank});
   arr.sort((a,b) => a.afterRank - b.afterRank);
 
@@ -1383,8 +1398,8 @@ function addTier(afterRank, label, name, _pk) {
   // old B becomes C, old C becomes D, etc.
   if (userInitiated && arr.length > 1) _resequenceTiers(arr);
 
-  tiers = versionTiers[currentVersion][currentMode][_tierPK()];
-  tierCounter = versionTierCounters[currentVersion][currentMode][_tierPK()];
+  tiers = versionTiers[_tierVer()][_tierMode()][_tierPK()];
+  tierCounter = versionTierCounters[_tierVer()][_tierMode()][_tierPK()];
   return id;
 }
 
@@ -1399,8 +1414,9 @@ function removeTier(id) {
     return;
   }
   const pk = _tierPK();
-  versionTiers[currentVersion][currentMode][pk] = versionTiers[currentVersion][currentMode][pk].filter(t => t.id !== id);
-  tiers = versionTiers[currentVersion][currentMode][pk];
+  if (pk === 'DEVY') _devyMaterializeMine();
+  versionTiers[currentVersion][_tierMode(pk)][pk] = versionTiers[currentVersion][_tierMode(pk)][pk].filter(t => t.id !== id);
+  tiers = versionTiers[currentVersion][_tierMode(pk)][pk];
   // Close the gap the removal left — otherwise deleting A leaves S, B, C.
   // Runs before the caller's _syncPairedMode(), so paired formats copy the
   // already-resequenced labels rather than the holed ones.
@@ -1410,6 +1426,7 @@ function removeTier(id) {
 // Rename tier (preserve label/color, only update display name)
 function renameTier(id, newName) {
   if (!canEdit()) return false;
+  if (_tierPK() === 'DEVY') _devyMaterializeMine();
   const t = tiers.find(x => x.id === id);
   if (!t) return false;
   const trimmed = (newName || '').trim();
@@ -1422,6 +1439,7 @@ function renameTier(id, newName) {
 // neighboring tiers so the order stays consistent.
 function moveTier(id, delta) {
   if (!canEdit()) return false;
+  if (_tierPK() === 'DEVY') _devyMaterializeMine();
   const sorted = tiers.slice().sort((a, b) => a.afterRank - b.afterRank);
   const idx = sorted.findIndex(x => x.id === id);
   if (idx < 0) return false;
@@ -1458,6 +1476,8 @@ function saveLocal() {
         // Per-group QB/K/DST position-rank cut lines (only set groups saved)
         _cutPos: _cutPosOf(ver, 'weekly') }
     };
+    const _dv = window._devySerialize(ver);
+    if (_dv) userData[ver].devy = _dv;
   });
 }
 
@@ -1527,6 +1547,7 @@ function loadUserData(obj) {
         if (obj[ver].superflex) loadModeData('superflex', obj[ver].superflex, ver);
         if (obj[ver].dynasty) loadModeData('dynasty', obj[ver].dynasty, ver);
         if (obj[ver].dynastysf) loadModeData('dynastysf', obj[ver].dynastysf, ver);
+        if (obj[ver].devy) window._devyApplySaved(ver, obj[ver].devy);
         // Weekly: stash the saved snapshot; reconcile derives the board from
         // redraft when the active week wasn't the one saved.
         if (typeof window._weeklyStashSaved === 'function') {
@@ -1790,6 +1811,73 @@ function _devyBoardSave(ver, mode, names) {
   try { localStorage.setItem(_devyBoardKey(ver, mode), JSON.stringify(names)); } catch(e) {}
 }
 window._devyBoardKey = _devyBoardKey;
+
+// --- DEVY board as a full rankings board (2026-09-30) ---
+// Order + tiers ride the regular SAVE: serialized as `<ver>.devy` =
+// { _order:[names], _tiers:[{label,name,afterRank}] } in the rankings docs
+// (jacks-official / rankings/{uid}; the free public slice carries the top 12).
+// localStorage `devy_board_<ver>_dynasty` stays the working copy of the order —
+// a cloud load overwrites it, same as the in-memory boards.
+function _devyIsCustom(ver) {
+  return !!_devyBoardLoad(ver, 'dynasty') || !!(versionTiers[ver] && versionTiers[ver].devy.DEVY.length);
+}
+// Version whose devy board is DISPLAYED: "My Rankings" mirrors Jack's until
+// the user's first devy edit (same idea as the mine-follows-Jack's seeding).
+function _devySrcVer() {
+  return (currentVersion === 'mine' && !_devyIsCustom('mine')) ? 'jacks' : currentVersion;
+}
+// First edit on a mirrored "My Rankings" devy board: pin the order on screen
+// and copy Jack's tiers over, so the edit lands on the user's own board.
+function _devyMaterializeMine() {
+  if (currentVersion !== 'mine' || _devyIsCustom('mine')) return;
+  const cur = (window._devyList || []).map(p => p.n);
+  if (cur.length) _devyBoardSave('mine', 'dynasty', cur);
+  versionTiers.mine.devy.DEVY = versionTiers.jacks.devy.DEVY.map(t => Object.assign({}, t));
+  versionTierCounters.mine.devy.DEVY = versionTierCounters.jacks.devy.DEVY;
+  syncMode();
+}
+// Move a devy player to slot `toPos` (0-based, post-removal coordinates like
+// movePlayer). DEVY tier starts shift the same way movePlayer shifts them, so
+// nobody else changes tier and the mover joins the tier he was dropped into.
+function _devyMove(fromIdx, toPos) {
+  if (!canEdit()) return false;
+  _devyMaterializeMine();
+  const list = window._devyList;
+  if (!list || fromIdx === toPos || fromIdx < 0 || fromIdx >= list.length) return false;
+  toPos = Math.max(0, Math.min(list.length - 1, toPos));
+  if (fromIdx === toPos) return false;
+  const tierArr = versionTiers[currentVersion].devy.DEVY;
+  const fromRank = fromIdx + 1, toRank = toPos + 1;
+  if (fromRank > toRank) tierArr.forEach(t => { if (t.afterRank > toRank && t.afterRank <= fromRank) t.afterRank += 1; });
+  else tierArr.forEach(t => { if (t.afterRank > fromRank && t.afterRank <= toRank) t.afterRank -= 1; });
+  const item = list.splice(fromIdx, 1)[0];
+  list.splice(toPos, 0, item);
+  _devyBoardSave(currentVersion, currentMode, list.map(p => p.n));
+  saveLocal();
+  return true;
+}
+// Payload for a version's save — null when that version never ranked devy
+// (a mirrored "mine" board must stay un-saved so it keeps following Jack's).
+window._devySerialize = function (ver) {
+  const order = _devyBoardLoad(ver, 'dynasty');
+  const t = (versionTiers[ver] && versionTiers[ver].devy.DEVY) || [];
+  if (!order && !t.length) return null;
+  return { _order: order || [], _tiers: t.map(x => ({ label: x.label, name: x.name, afterRank: x.afterRank })) };
+};
+// Apply a saved `<ver>.devy` payload (cloud load / snapshot / JSON import).
+window._devyApplySaved = function (ver, obj) {
+  if (!obj || typeof obj !== 'object' || !versionTiers[ver]) return;
+  if (Array.isArray(obj._order) && obj._order.length) _devyBoardSave(ver, 'dynasty', obj._order.filter(n => typeof n === 'string'));
+  if (Array.isArray(obj._tiers)) {
+    const arr = obj._tiers.filter(t => t && t.afterRank >= 1)
+      .map((t, i) => ({ id: i + 1, label: t.label, name: t.name, afterRank: t.afterRank }))
+      .sort((a, b) => a.afterRank - b.afterRank);
+    _resequenceTiers(arr);
+    versionTiers[ver].devy.DEVY = arr;
+    versionTierCounters[ver].devy.DEVY = arr.length;
+  }
+  if (typeof filter !== 'undefined' && filter === 'DEVY') syncMode();
+};
 
 // === Position Sync: keep within-position order identical across 1QB ↔ SF pairs ===
 // Pairs: redraft ↔ superflex, dynasty ↔ dynastysf (see POS_SYNC_GROUPS).
@@ -2342,6 +2430,7 @@ function _rosTtCellHtml(d) {
 function _syncConsColHeader() {
   const th = document.getElementById('adpHeader');
   if (!th) return;
+  if (filter === 'DEVY') return; // DEVY view relabels this column KTC (_syncDevyHeaders)
   const lab = th.querySelector('[data-gloss]');
   if (!lab) return;
   const isC = currentVersion === 'consensus';
@@ -2906,6 +2995,8 @@ function adjProjPpg(d) {
 
 // === STATS view helpers (rankings FANTASY / PROJECTIONS / BETTING LINES toggle) ===
 function _effStatMode() {
+  // DEVY board: college prospects have no sims / lines / ADP — always the base view.
+  if (typeof filter !== 'undefined' && filter === 'DEVY') return 'fantasy';
   return rnkStatMode;
 }
 
@@ -3916,6 +4007,221 @@ function _syncDevyClassBtns() {
   wrap.querySelectorAll('.devy-class-btn').forEach(b => b.classList.toggle('active', b.dataset.devyClass === window._devyClass));
 }
 
+// Synthetic player-card entry for a prospect who isn't in D[] (devy / college
+// players): bio from COMBINE_DATA + the prospect-model record, college seasons
+// as the career rows. Shared by the Prospect Model table and the DEVY board.
+window._prospectCardEntry = function (name) {
+  if (typeof COMBINE_DATA === 'undefined' || !COMBINE_DATA[name]) return null;
+  let d = null;
+  const cb = COMBINE_DATA[name];
+  const _pmAll = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : null;
+  const pmP = _pmAll ? _pmAll.find(p => p.name === name) : null;
+  const isDevy = cb.devy || false;
+  const apDb = (typeof ALL_PLAYERS_DB !== 'undefined') ? ALL_PLAYERS_DB.find(p => p.name === name) : null;
+  d = {
+    n: name, s: cb.pos || (pmP ? pmP.pos : (apDb ? apDb.pos : 'WR')),
+    t: isDevy ? (cb.school || '—') : (apDb && apDb.career && apDb.career.length ? apDb.career[apDb.career.length-1].tm || '—' : cb.school || '—'),
+    age: pmP ? pmP.age : (apDb ? apDb.age : null),
+    _retired: false, _college: cb.school,
+    _isDevy: isDevy,
+    dr: pmP ? pmP.dr : (cb.draft != null ? (cb.draft === 'U' ? 'U' : parseInt(cb.draft) || null) : cb.draftProj != null ? (cb.draftProj === 'U' ? 'U' : parseInt(cb.draftProj) || null) : null),
+    r: '—',
+    _height: pmP ? (pmP.ht ? String(pmP.ht) : null) : null,
+    _weight: pmP ? pmP.wt : (cb.wt || null),
+    p25: null, p24: null, p23: null
+  };
+  // Use ALL_PLAYERS_DB career if available (for NFL players not in D[])
+  if (apDb && apDb.career && apDb.career.length) {
+    d.career = apDb.career;
+  }
+  // Add college weekly stats as career seasons if available
+  if (typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[name]) {
+    d.career = [];
+    Object.keys(COLLEGE_WEEKLY[name]).forEach(yr => {
+      const games = COLLEGE_WEEKLY[name][yr];
+      if (!games || !games.length) return;
+      let totFpts = 0;
+      games.forEach(g => {
+        totFpts += (g.py||0)*0.04 + (g.ptd||0)*4 + (g.ry||0)*0.1 + (g.rtd||0)*6 +
+          (g.rcy||0)*0.1 + (g.rctd||0)*6 + (g.rec||0)*0.5 - (g.int||0)*2 - (g.fl||0)*2;
+      });
+      d.career.push({ yr: parseInt(yr), gp: games.length, fpts: Math.round(totFpts*10)/10, ppg: Math.round(totFpts/games.length*10)/10 });
+    });
+  }
+  // Fallback: use COLLEGE_STATS seasons
+  if ((!d.career || !d.career.length) && typeof COLLEGE_STATS !== 'undefined') {
+    const cs = COLLEGE_STATS[name];
+    if (cs && cs.length) {
+      d.career = cs.map(s => ({
+        yr: s.yr, gp: s.gp || 13, tm: s.tm,
+        fpts: s.fpts || ((s.py||0)*0.04 + (s.ptd||0)*4 + (s.ry||0)*0.1 + (s.rtd||0)*6 + (s.rcy||0)*0.1 + (s.rctd||0)*6 + (s.rec||0)*0.5 - (s.int||0)*2),
+        ppg: s.fpts ? Math.round(s.fpts / (s.gp||13) * 10)/10 : null,
+        py: s.py, ptd: s.ptd, ry: s.ry, rtd: s.rtd, rcy: s.rcy, rctd: s.rctd, rec: s.rec, ra: s.ra
+      })).sort((a, b) => (a.yr || 0) - (b.yr || 0))
+      .filter((s, i, arr) => i === 0 || s.yr !== arr[i-1].yr);
+    }
+  }
+  return d;
+};
+
+// --- DEVY board columns (2026-09-30) ---
+// The devy rows reuse the regular table's columns with prospect-model
+// meanings: Proj Pick · college PPG · Draft Age · JM · Size · RAS · +/- vs KTC.
+// _devyCols(d) is the one place the values come from (cells + header sort).
+// College season in the PPG column: the one in progress (Aug-Dec), else the last one played.
+function _devyPpgSeason() { const t = new Date(); return t.getMonth() >= 7 ? t.getFullYear() : t.getFullYear() - 1; }
+function _devyCols(d) {
+  const cb = (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[d.n]) || {};
+  const pm = d._pm || {};
+  // Projected draft capital — the same number the JM model scores ('U' = projected UDFA)
+  let pick = pm.dr != null ? pm.dr : (cb.draft != null ? cb.draft : cb.draftProj);
+  if (pick != null && pick !== 'U' && pick !== 'u') { pick = parseInt(pick, 10); if (!(pick > 0)) pick = null; }
+  else if (pick != null) pick = 'U';
+  // College PPG, season to date, in the board's scoring format
+  let ppg = null, gp = null;
+  const cs = (typeof COLLEGE_STATS !== 'undefined') ? COLLEGE_STATS[d.n] : null;
+  const yr = _devyPpgSeason();
+  const s = cs && cs.length ? cs.find(x => x.yr === yr) : null;
+  if (s && s.gp > 0) {
+    const rm = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 0 : 0.5;
+    const pts = (s.py || 0) / 25 + (s.ptd || 0) * 4 - (s.int || 0) * 2 + (s.ry || 0) / 10 + (s.rtd || 0) * 6
+      + (s.rec || 0) * rm + (s.rcy || 0) / 10 + (s.rctd || 0) * 6 - (s.fl || 0) * 2;
+    ppg = Math.round(pts / s.gp * 10) / 10; gp = s.gp;
+  }
+  // Size: COMBINE_DATA "6-3" / 223, prospect-model inches as the fallback
+  let htIn = null;
+  const hm = /^(\d)-(\d{1,2})$/.exec(String(cb.ht || ''));
+  if (hm) htIn = +hm[1] * 12 + +hm[2]; else if (pm.ht > 0) htIn = pm.ht;
+  const wt = cb.wt > 0 ? +cb.wt : (pm.wt > 0 ? +pm.wt : null);
+  const k = _ktcRankInfo(d.n);
+  const ktc = (k && k.devy) ? k.ovr : null;
+  return {
+    pick, ppg, gp, yr, age: pm.age != null ? pm.age : null, draftYr: pm.draftYr || cb.eligYr || null,
+    htIn, wt, ras: pm.ras != null ? pm.ras : null, rasProj: !!pm.rasProjected, ktc,
+    diff: ktc != null ? ktc - d.myRank : null
+  };
+}
+// Sort value for a table header key while the DEVY filter is on (null sinks).
+function _devySortVal(d, key) {
+  if (key === 'name') return d.n;
+  if (key === 'pos') return d.s;
+  if (key === 'posRank') return parseInt(d._devyEligYr, 10) || null;
+  if (key === 'jm') return d._pmJm;
+  const c = _devyCols(d);
+  if (key === 'adp') return c.ktc;
+  if (key === 'pts') return c.pick == null ? null : (c.pick === 'U' ? -300 : -c.pick); // best capital on top (header default = desc)
+  if (key === 'fpts25') return c.ppg;
+  if (key === 'l4ppg') return c.age;
+  if (key === 'age') return c.htIn != null ? c.htIn * 1000 + (c.wt || 0) : (c.wt || null);
+  if (key === 'psos') return c.ras;
+  if (key === 'diff') return c.diff;
+  return d.myRank;
+}
+const _devyEsc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+// The seven stat cells of a devy row, in table column order (hidden weekly /
+// yrr / landing placeholders included so the columns line up with the header).
+function _devyStatCellsHtml(d) {
+  const c = _devyCols(d);
+  const tip = t => ' style="cursor:help" title="' + _devyEsc(t) + '"';
+  let pickHtml = '—';
+  if (c.pick === 'U') pickHtml = '<span style="color:var(--text2);cursor:help" title="Projected undrafted — not on the consensus draft boards yet">UDFA</span>';
+  else if (c.pick != null) {
+    const rd = Math.min(7, Math.ceil(c.pick / 32));
+    const col = c.pick <= 32 ? '#22c55e' : c.pick <= 64 ? '#4ade80' : c.pick <= 105 ? '#facc15' : '#f59e0b';
+    pickHtml = '<span style="color:' + col + ';font-weight:700;cursor:help" title="' + _devyEsc('Projected pick #' + c.pick + ' overall (Round ' + rd + ')' + (c.draftYr ? ', ' + c.draftYr + ' draft' : '') + ' — the draft capital the JM score uses') + '">#' + c.pick + '</span>';
+  }
+  const ppgHtml = c.ppg != null
+    ? '<span' + tip(c.yr + ' college season to date · ' + c.gp + ' game' + (c.gp === 1 ? '' : 's')) + '>' + c.ppg.toFixed(1) + '</span>'
+    : '<span' + tip('No ' + c.yr + ' college games on file') + '>—</span>';
+  let ageHtml = '—';
+  if (c.age != null) {
+    const col = c.age <= 21.5 ? '#22c55e' : c.age <= 22.5 ? '' : c.age <= 23.5 ? '#facc15' : '#f97316';
+    const bd = (typeof LEGEND_BIRTH_YEARS !== 'undefined' && typeof LEGEND_BIRTH_YEARS[d.n] === 'string') ? LEGEND_BIRTH_YEARS[d.n] : null;
+    let now = null;
+    if (bd) { const t = Date.parse(bd); if (isFinite(t)) now = Math.floor((Date.now() - t) / 31557600000 * 10) / 10; }
+    ageHtml = '<span style="' + (col ? 'color:' + col + ';font-weight:600;' : '') + 'cursor:help" title="' + _devyEsc('Age at the ' + (c.draftYr || 'projected') + ' NFL Draft' + (now != null ? ' · ' + now.toFixed(1) + ' today (born ' + bd + ')' : '')) + '">' + c.age.toFixed(1) + '</span>';
+  }
+  const htTxt = c.htIn != null ? Math.floor(c.htIn / 12) + '\'' + (c.htIn % 12) + '"' : null;
+  const sizeHtml = (htTxt || c.wt != null)
+    ? (htTxt ? _devyEsc(htTxt) : '—') + '<span style="color:var(--text2)"> · </span>' + (c.wt != null ? c.wt : '—')
+    : '—';
+  let rasHtml = '—';
+  if (c.ras != null) {
+    const col = c.ras >= 9 ? '#22c55e' : c.ras >= 7 ? '#4ade80' : c.ras >= 5 ? '#facc15' : '#f97316';
+    rasHtml = '<span style="color:' + col + ';font-weight:700;cursor:help" title="' + _devyEsc(c.rasProj ? 'Projected RAS — estimated from a projected forty + size; replaced by official testing' : 'Relative Athletic Score (0-10)') + '">' + c.ras.toFixed(2) + (c.rasProj ? '<span style="font-size:.55rem;font-weight:600;opacity:.7"> P</span>' : '') + '</span>';
+  }
+  let diffH = '<span class="diff-even" title="Not ranked by KTC devy">—</span>';
+  if (c.diff != null) {
+    const w = 'Rank #' + d.myRank + ' vs KTC devy #' + c.ktc;
+    diffH = c.diff === 0 ? '<span class="diff-even" title="' + w + ' — even with KTC">—</span>'
+      : c.diff > 0 ? '<span class="diff-up" title="' + w + ' — ' + c.diff + ' higher than KTC">▲ ' + c.diff + '</span>'
+      : '<span class="diff-down" title="' + w + ' — ' + (-c.diff) + ' lower than KTC">▼ ' + (-c.diff) + '</span>';
+  }
+  const jmHtml = (() => { if (d._pmJm == null) return '—'; const jm = Math.round(d._pmJm); const jc = (window._jmTierStyle ? window._jmTierStyle(d._pmJm, d.s).color : '#94a3b8'); const _tt = window._jmTierTooltip ? window._jmTierTooltip(d._pmJm, d.s).replace(/"/g, '&quot;') : ''; return '<span style="color:' + jc + ';font-weight:700;cursor:help" title="' + _tt + '">' + jm + '</span>'; })();
+  return '<td class="pts-cell ppg-proj-cell">' + pickHtml + '</td>'
+    + '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'
+    + '<td class="pts-cell ppg25-cell">' + ppgHtml + '</td>'
+    + '<td class="pts-cell l4ppg-cell">' + ageHtml + '</td>'
+    + '<td class="pts-cell yrr-cell" style="display:none">—</td>'
+    + '<td class="pts-cell jm-cell" style="display:none">' + jmHtml + '</td>'
+    + '<td class="pts-cell landing-cell" style="display:none">—</td>'
+    + '<td class="age-cell" style="white-space:nowrap">' + sizeHtml + '</td>'
+    + '<td class="psos-cell">' + rasHtml + '</td>'
+    + '<td class="diff-cell">' + diffH + '</td>';
+}
+// Header labels while the DEVY filter is on. Originals are stashed on entry
+// and put back on exit; the three stat-view headers + the CONS header have
+// their own updaters, re-run on exit to restore whatever view is active.
+const _DEVY_HDRS = [
+  ['th[data-sort="posRank"]', 'Class', 'Draft class — the first NFL draft the player is eligible for.'],
+  ['#adpHeader', 'KTC', 'KeepTradeCut devy rank (crowd-sourced, refreshed daily) for this format. — = not on KTC\'s devy list or not valued yet.'],
+  ['#ppgProjHeader', 'Proj Pick', 'Projected draft capital — the overall pick the consensus boards project today (UDFA = not on the boards). Same number the JM score uses.'],
+  ['#ppg25HeaderTh', '', ''],
+  ['#l4ppgHeaderTh', 'Draft Age', 'Age on draft day of the player\'s class (same as the Prospect Model). Younger is better; hover a value for today\'s age.'],
+  ['#ageHeader', 'Ht · Wt', 'Listed height and weight.'],
+  ['#psosHeader', 'RAS', 'Relative Athletic Score (0-10). P = projected from a projected forty + size until official testing exists.'],
+  ['th[data-sort="diff"]', '+/-', 'This board\'s devy rank vs the KTC devy rank. ▲ = ranked higher here than KTC.']
+];
+function _syncDevyHeaders() {
+  const on = filter === 'DEVY';
+  if (!on && !window._devyHdrOn) return;
+  const _lbl = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
+  _DEVY_HDRS.forEach(h => {
+    const th = document.querySelector('#pageRankings thead ' + h[0]);
+    if (!th) return;
+    const arrowTxt = (th.querySelector('.arrow') || {}).textContent || '';
+    if (on) {
+      // Stash the original child NODES (not innerHTML) so listeners wired
+      // inside a header — the P-SOS week picker — survive the round trip.
+      if (th._devyOrig == null) { th._devyOrig = Array.from(th.childNodes); th.textContent = ''; }
+      let label = h[1], gloss = h[2];
+      if (h[0] === '#ppg25HeaderTh') {
+        const yr = _devyPpgSeason();
+        label = '\'' + String(yr).slice(2) + ' PPG';
+        gloss = 'College fantasy points per game in the ' + yr + ' season to date (' + (_lbl[rankingScoringFmt] || 'PPR') + ' scoring). Hover a value for games played.';
+      }
+      // Rewrite only when another header updater (stat view, scoring toggle) got there first
+      const sp = th.querySelector('span[data-devy]');
+      if (!sp || sp.textContent !== label || sp.getAttribute('data-gloss') !== gloss) {
+        th.innerHTML = '<span data-devy="1" data-gloss="' + _devyEsc(gloss) + '">' + label + '</span> <span class="arrow">' + arrowTxt + '</span>';
+      }
+    } else if (th._devyOrig != null) {
+      th.textContent = '';
+      th._devyOrig.forEach(n => th.appendChild(n));
+      const a = th.querySelector('.arrow');
+      if (a) a.textContent = arrowTxt;
+      th._devyOrig = null;
+    }
+  });
+  window._devyHdrOn = on;
+  if (!on) {
+    try { if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders(); } catch (_) {}
+    try { _syncConsColHeader(); _syncSeasonPpgHeader(); } catch (_) {}
+    const ageH = document.getElementById('ageHeader');
+    if (ageH && ageH.firstChild) ageH.firstChild.textContent = filter === 'DST' ? 'Opp PPG ' : 'Age ';
+  }
+}
+
 function getFiltered(applyTopN) {
   _syncDevyClassBtns();
   // DEVY filter: build list from COMBINE_DATA devy players, with custom ordering
@@ -3942,8 +4248,9 @@ function getFiltered(applyTopN) {
         myRank: 0, adp: null, p: null, career: null, s25: null
       };
     });
-    // Load saved order (shared by both dynasty formats) or default to KTC sort
-    const savedOrder = _devyBoardLoad(currentVersion, currentMode);
+    // Load saved order (shared by both dynasty formats) or default to KTC sort.
+    // An un-ranked "My Rankings" devy board mirrors Jack's (_devySrcVer).
+    const savedOrder = _devyBoardLoad(_devySrcVer(), currentMode);
     let devyPlayers;
     if (savedOrder && Array.isArray(savedOrder) && savedOrder.length > 0) {
       devyPlayers = [];
@@ -3960,8 +4267,14 @@ function getFiltered(applyTopN) {
     // Assign ranks and attach JM scores from prospect model
     const _devyPmData = (typeof window._pmBuiltData === 'function') ? window._pmBuiltData() : [];
     const _devyPmMap = {};
-    _devyPmData.forEach(p => { if (p.jm != null) _devyPmMap[p.name] = p.jm; });
-    devyPlayers.forEach((p, i) => { p.myRank = i + 1; p._devyIdx = i; p._pmJm = _devyPmMap[p.n] != null ? _devyPmMap[p.n] : null; });
+    _devyPmData.forEach(p => { _devyPmMap[p.name] = p; });
+    devyPlayers.forEach((p, i) => {
+      p.myRank = i + 1; p._devyIdx = i;
+      // Prospect-model record: JM + the profile columns (projected pick, draft age, RAS, size)
+      const pm = _devyPmMap[p.n] || null;
+      p._pm = pm;
+      p._pmJm = pm && pm.jm != null ? pm.jm : null;
+    });
     // Store on window for drag handler access
     window._devyList = devyPlayers;
     // Class sub-filter (2027 / 2028): keep the overall devy rank numbers, just hide the other classes
@@ -3971,7 +4284,19 @@ function getFiltered(applyTopN) {
     }
     if (query) {
       const q = query.toLowerCase();
-      return devyPlayers.filter(p => p.n.toLowerCase().includes(q) || p.t.toLowerCase().includes(q));
+      devyPlayers = devyPlayers.filter(p => p.n.toLowerCase().includes(q) || p.t.toLowerCase().includes(q));
+    }
+    // Header sort — same headers as the regular board, devy meanings
+    // (_devySortVal). Blanks always sink to the bottom.
+    if (sortKey !== 'myrank' || sortDir !== 1) {
+      devyPlayers = devyPlayers.slice().sort((a, b) => {
+        const va = _devySortVal(a, sortKey), vb = _devySortVal(b, sortKey);
+        if (va == null && vb == null) return a.myRank - b.myRank;
+        if (va == null) return 1;
+        if (vb == null) return -1;
+        if (typeof va === 'string' || typeof vb === 'string') return String(va).localeCompare(String(vb)) * sortDir || (a.myRank - b.myRank);
+        return (va - vb) * sortDir || (a.myRank - b.myRank);
+      });
     }
     return devyPlayers;
   }
@@ -4986,6 +5311,8 @@ function _tcvUpdateSelCount(root) {
 // the DOM (render() rebuilds the view after each move).
 window._tcvEdit = window._tcvEdit || { on: false };
 function _tcvCanEditRanks() {
+  // DEVY cards aren't D[] players — reorder those in the table view (card drag moves by D index).
+  if (typeof filter !== 'undefined' && filter === 'DEVY') return false;
   return typeof currentVersion !== 'undefined' && (currentVersion === 'jacks' || currentVersion === 'mine') && typeof canEdit === 'function' && canEdit();
 }
 function _tcvEditBoardLabel() {
@@ -5778,7 +6105,7 @@ function _renderTierCardView(data, container) {
       groups.push(currentGroup);
     }
     // cutRank null = this card can't host the line (a K/DST card in an overall view — those groups run their own line)
-    const cutRank = _tcvCutPos ? (i + 1) : ((_tcvCutGroups.includes(d.s)) ? null : d.myRank);
+    const cutRank = d._isDevy ? null : _tcvCutPos ? (i + 1) : ((_tcvCutGroups.includes(d.s)) ? null : d.myRank); // devy: no cut line (it would cut the dynasty board)
     currentGroup.players.push({ d: d, displayRank: i + 1, tierRank: rankForTier, cutRank: cutRank });
   });
 
@@ -6199,6 +6526,7 @@ window.hasPremium = hasPremium;
 function render() {
   _consRankCache.board = null;   // boards can be reordered in place — rebuild per paint
   try { _syncConsColHeader(); _syncSeasonPpgHeader(); } catch (_) {}
+  try { _syncDevyHeaders(); } catch (_) {}
   // POS LOCK toggle visibility tracks whatever render tracks (version /
   // mode / filter / auth changes all funnel through here).
   updatePosLockVis();
@@ -6362,37 +6690,72 @@ function render() {
   const _isDynBoard = currentMode === 'dynasty' || currentMode === 'dynastysf';
   const showJm = _isAdpCmp || _isDynBoard;
   const showLanding = _isAdpCmp || (_isDynBoard && filter === 'ROOKIE');
+  // Tier banner rows whose start falls between the previous row's rank and this
+  // one — shared by the regular rows and the DEVY rows.
+  const _tierRowsHtml = (prevDisplayRank, displayRank) => {
+    let html = '';
+    tiers.forEach(t => {
+      if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
+        html += `<tr class="tier-row" data-tier-id="${t.id}">
+          <td colspan="17"><div class="tier-inner">
+            <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
+            ${editable ? `<span class="tier-name-static" data-tier-rename="${t.id}" title="Click to rename">${t.name}</span>
+            <div class="tier-controls">
+              <button class="tier-btn" data-tier-move="${t.id}" data-delta="-1" title="Move tier up (boundary earlier)">▲</button>
+              <button class="tier-btn" data-tier-move="${t.id}" data-delta="1" title="Move tier down (boundary later)">▼</button>
+              <button class="tier-btn del" data-tier-del="${t.id}" title="Remove tier">✕</button>
+            </div>` : `<span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${t.name}</span>`}
+          </div></td>
+        </tr>`;
+      }
+    });
+    return html;
+  };
+  // Premium wall row (sign-in / upgrade card) — goes right above the first blurred row.
+  const _premiumWallHtml = () => {
+    let html = '';
+    const _isSignedIn = !!window._authCurrentUser;
+    if (isMine && !_isSignedIn) {
+      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+    } else if (isMine && !isPremium) {
+      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in this filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+    } else if (!_isSignedIn) {
+      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Create a free account, then upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+    } else {
+      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+    }
+    return html;
+  };
   let html = '';
   let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
+  let _devyWallDone = false; // DEVY rows: premium wall emitted once, above the first blurred row
   data.forEach((d, i) => {
-    // DEVY filter: custom row rendering
+    // DEVY filter: custom row rendering — a full rankings row (tiers, blur,
+    // card link, watch star) with the prospect columns from _devyStatCellsHtml.
     if (d._isDevy) {
-      const posColors = { QB: 'var(--qb)', RB: 'var(--rb)', WR: 'var(--wr)', TE: 'var(--te)' };
-      const pc = posColors[d.s] || 'var(--text2)';
-      const editable = canEdit();
-      html += `<tr style="border-bottom:1px solid rgba(30,42,66,.4)" data-devy-idx="${d._devyIdx}" data-devy-name="${d.n.replace(/"/g,'&quot;')}">
-        <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + d.n.replace(/"/g,'&quot;') + '. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div>' : ''}</td>
-        <td class="myrank-cell"><span class="myrank-num">${d.myRank}</span></td>
-        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div></div></td>
+      const _dRank = d.myRank;
+      const _dTier = showTiers ? _tierLabelForRank(_dRank) : '';
+      if (showTiers) html += _tierRowsHtml(i > 0 ? data[i - 1].myRank : 0, _dRank);
+      // Free window = top of the BOARD (rank-based, so the class pills can't
+      // slide it); sorted / searched views cap by row count like the regular rows.
+      const _dBlur = shouldBlur && (showTiers ? _dRank > blurCutoff : (i + 1) > blurCutoff);
+      if (_dBlur && !_devyWallDone) { _devyWallDone = true; html += _premiumWallHtml(); }
+      const _dn = d.n.replace(/"/g, '&quot;');
+      const _dw = window._watchSet && window._watchSet.has(d.n);
+      html += `<tr class="devy-row${_dBlur ? ' premium-blur' : ''}${_dTier ? ' tierband-' + tierColor(_dTier) : ''}" data-devy-idx="${d._devyIdx}" data-devy-name="${_dn}">
+        <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + _dn + '. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div>' : ''}</td>
+        <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_dTier)}" title="Devy rank: ${_dRank}">${_dRank}</span></td>
+        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-devy-card="${_dn}">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div><span class="watch-star${_dw ? ' on' : ''}" data-watch="${_dn}" role="button" title="${_dw ? 'Remove from' : 'Add to'} watchlist">${_dw ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
         <td class="adp-cell" data-lbl="KTC">${(() => { const k = _ktcRankInfo(d.n); return (k && k.devy) ? '<span style="cursor:help" title="' + ('KTC devy #' + k.ovr + (k.posRank != null ? ' · ' + k.pos + k.posRank : '') + ' · value ' + k.val.toLocaleString() + ' (' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ')').replace(/"/g, '&quot;') + '">' + k.ovr + '</span>' : '<span style="color:var(--text2);cursor:help" title="' + (_ktcGet(_ktcDevyMapFor(currentMode), d.n) != null ? 'On KTC\'s devy list but not yet valued in ' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') : 'Not on KTC\'s devy list') + '">—</span>'; })()}</td>
-        <td class="pts-cell ppg-proj-cell">—</td>
-        <td class="simboom-cell weekly-only-cell" style="display:none">—</td>
-        <td class="simbust-cell weekly-only-cell" style="display:none">—</td>
-        <td class="opp-cell weekly-only-cell" style="display:none">—</td>
-        <td class="spread-cell weekly-only-cell" style="display:none">—</td>
-        <td class="teamtotal-cell weekly-only-cell" style="display:none">—</td>
-        <td class="oppppg-cell weekly-only-cell" style="display:none">—</td>
-        <td class="pts-cell ppg25-cell">—</td>
-        <td class="pts-cell l4ppg-cell">—</td>
-        <td class="pts-cell yrr-cell" style="display:none">—</td>
-        <td class="pts-cell jm-cell" style="display:none">${(()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');const _tt=window._jmTierTooltip?window._jmTierTooltip(d._pmJm,d.s).replace(/"/g,'&quot;'):'';return '<span style="color:'+jc+';font-weight:700;cursor:help" title="'+_tt+'">'+jm+'</span>';})()}</td>
-        <td class="pts-cell landing-cell" style="display:none">—</td>
-        <td class="age-cell">—</td>
-        <td class="psos-cell">—</td>
-        <td class="diff-cell">—</td>
+        ${_devyStatCellsHtml(d)}
       </tr>`;
+      // "Add tier" mini-button between rows (shows on hover via CSS)
+      if (editable && showTiers && !_dBlur && !tierMap[_dRank]) {
+        html += `<tr class="add-tier-row" data-after-rank="${_dRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${_dRank}">+ ADD TIER</button></td></tr>`;
+      }
+      if (_chunkLen === 0 && i >= 119) _chunkLen = html.length;
       return;
     }
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
@@ -6441,24 +6804,7 @@ function render() {
       }
     }
     // Insert tier row before this player if a tier sits between previous rank and this rank
-    if (showTiers) {
-      const prevDisplayRank = i > 0 ? (useFilteredRank ? i : data[i-1].myRank) : 0;
-      tiers.forEach(t => {
-        if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
-          html += `<tr class="tier-row" data-tier-id="${t.id}">
-            <td colspan="17"><div class="tier-inner">
-              <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
-              ${editable ? `<span class="tier-name-static" data-tier-rename="${t.id}" title="Click to rename">${t.name}</span>
-              <div class="tier-controls">
-                <button class="tier-btn" data-tier-move="${t.id}" data-delta="-1" title="Move tier up (boundary earlier)">▲</button>
-                <button class="tier-btn" data-tier-move="${t.id}" data-delta="1" title="Move tier down (boundary later)">▼</button>
-                <button class="tier-btn del" data-tier-del="${t.id}" title="Remove tier">✕</button>
-              </div>` : `<span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)">${t.name}</span>`}
-            </div></td>
-          </tr>`;
-        }
-      });
-    }
+    if (showTiers) html += _tierRowsHtml(i > 0 ? (useFilteredRank ? i : data[i-1].myRank) : 0, displayRank);
 
     const _cc = _consCellInfo(d);
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (_cc.r != null && d.s !== 'K' && d.s !== 'DST' && Math.abs(_cc.r - d.myRank) >= 1);
@@ -6613,18 +6959,7 @@ function render() {
     const _displayTierLabel = _tierLabelForRank(displayRank);
 
     // Insert premium wall row right at the cutoff, above blurred rows
-    if (shouldBlur && i === blurCutoff && data.length > blurCutoff) {
-      const _isSignedIn = !!window._authCurrentUser;
-      if (isMine && !_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
-      } else if (isMine && !isPremium) {
-        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in this filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
-      } else if (!_isSignedIn) {
-        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Create a free account, then upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
-      } else {
-        html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
-      }
-    }
+    if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
     const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
@@ -6862,6 +7197,13 @@ function attachTierListeners() {
       if (prow && D[+prow.dataset.idx]) { e.stopPropagation(); e.preventDefault(); _injShowDetail(D[+prow.dataset.idx], injPill); return; }
     }
     const nameLink = e.target.closest('.player-name-link');
+    if (nameLink && nameLink.dataset.devyCard) {
+      // DEVY row: college prospect, not in D[] — synthetic card entry
+      e.stopPropagation();
+      const dv = window._prospectCardEntry(nameLink.dataset.devyCard);
+      if (dv) openPlayerCard(dv);
+      return;
+    }
     if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
     // WEEKLY OPP / OPP PPG cell → that defense's 2026 games vs this position.
     const oppTd = currentMode === 'weekly' && e.target.closest('td.opp-cell, td.oppppg-cell');
@@ -7155,13 +7497,15 @@ function attachTierListeners() {
       if (!dropAbove && fromIdx < toIdx) { /* stays */ }
       else if (!dropAbove) targetPos = toIdx + 1;
       else if (dropAbove && fromIdx < toIdx) targetPos = toIdx - 1;
-      if (window._devyList && fromIdx !== targetPos) {
-        const list = window._devyList;
-        const item = list.splice(fromIdx, 1)[0];
-        list.splice(targetPos, 0, item);
-        // Save order to localStorage (one list for both dynasty formats)
-        _devyBoardSave(currentVersion, currentMode, list.map(p => p.n));
+      // One list for both dynasty formats; tiers shift with the move (_devyMove)
+      const _dvName = _devyDragName;
+      if (_devyMove(fromIdx, targetPos)) {
         render();
+        const droppedRow = Array.prototype.find.call(tbody.querySelectorAll('tr[data-devy-name]'), r => r.dataset.devyName === _dvName);
+        if (droppedRow) {
+          droppedRow.classList.add('just-dropped');
+          droppedRow.addEventListener('animationend', () => droppedRow.classList.remove('just-dropped'), {once:true});
+        }
       }
     }
     // Normal drag-and-drop
@@ -7219,7 +7563,36 @@ function attachTierListeners() {
     const handle = e.target.closest && e.target.closest('.drag-handle');
     if (!handle) return;
     const row = handle.closest('tr[data-idx]');
-    if (!row) return; // devy uses data-devy-idx, skip for now
+    if (!row) {
+      // DEVY rows (data-devy-idx): same Space / arrows / Esc flow on the devy list
+      const drow = handle.closest('tr[data-devy-idx]');
+      if (!drow || drow.classList.contains('premium-blur')) return;
+      const dname = drow.dataset.devyName;
+      const _dRow = () => Array.prototype.find.call(tbody.querySelectorAll('tr[data-devy-name]'), r => r.dataset.devyName === dname);
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        const grabbed = drow.classList.toggle('kb-grabbed');
+        _kbSay((grabbed ? 'Grabbed ' : 'Dropped ') + dname + ' at rank ' + (+drow.dataset.devyIdx + 1) + (grabbed ? '. Use arrow keys to move, Space to drop.' : '.'));
+      } else if (e.key === 'Escape' && drow.classList.contains('kb-grabbed')) {
+        e.preventDefault(); drow.classList.remove('kb-grabbed'); _kbSay('Cancelled.');
+      } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && drow.classList.contains('kb-grabbed')) {
+        e.preventDefault();
+        const from = +drow.dataset.devyIdx;
+        if (!_devyMove(from, from + (e.key === 'ArrowUp' ? -1 : 1))) return;
+        render();
+        // Re-grab after re-render (focus is lost when the row is re-created)
+        setTimeout(() => {
+          const r = _dRow();
+          if (!r) return;
+          r.classList.add('kb-grabbed');
+          const h = r.querySelector('.drag-handle');
+          if (h) h.focus();
+          r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          _kbSay('Moved to rank ' + (+r.dataset.devyIdx + 1) + '.');
+        }, 0);
+      }
+      return;
+    }
     const idx = +row.dataset.idx;
     // Block if not editable / blurred (mirrors pointerdown logic)
     if (row.classList.contains('premium-blur')) return;
@@ -29997,6 +30370,9 @@ window.fmtHeight = fmtHeight;
             _cut: _cutOf('weekly'), _cutPos: _cutPosOf('weekly') }
         }
       };
+      // Devy board (order + tiers) — only once the user has ranked it themselves
+      const _mineDevy = window._devySerialize('mine');
+      if (_mineDevy) data.mine.devy = _mineDevy;
       // Per-format custom flags: virgin formats keep mirroring Jack's latest on
       // future loads even though their (mirrored) order is serialized above.
       // Only written when the doc read succeeded — after a failed load, writing
@@ -30050,7 +30426,9 @@ window.fmtHeight = fmtHeight;
   //   3 (2026-09-16): + weekly _ownedPos — without it the free slice was a
   //     "legacy" weekly save that froze every position, so free viewers never
   //     got the projection-ordered default for positions Jack hasn't ranked.
-  const _PUB_SCHEMA = 3;
+  //   4 (2026-09-30): + devy (top-12 devy order + tiers) — the devy board
+  //     became a saved, published board.
+  const _PUB_SCHEMA = 4;
   function _buildJacksPublicPayload(fullData) {
     const out = { jacks: {}, _pubSchema: _PUB_SCHEMA };
     ['redraft','bestball','superflex','dynasty','dynastysf','weekly'].forEach(m => {
@@ -30071,6 +30449,14 @@ window.fmtHeight = fmtHeight;
       if (src._cutPos && typeof src._cutPos === 'object' && Object.keys(src._cutPos).length) slice._cutPos = src._cutPos;
       out.jacks[m] = slice;
     });
+    // Devy board: free window = top 12 (positional cut), tiers inside it.
+    const _dvSrc = fullData.jacks && fullData.jacks.devy;
+    if (_dvSrc && Array.isArray(_dvSrc._order)) {
+      out.jacks.devy = {
+        _order: _dvSrc._order.slice(0, _PUB_CUT_POS),
+        _tiers: (_dvSrc._tiers || []).filter(t => t && t.afterRank >= 1 && t.afterRank <= _PUB_CUT_POS)
+      };
+    }
     // Ticker movers off the FULL boards (same 300-rank window + top-8 rule as
     // _renderLiveTicker) so the free home-page ticker keeps working without
     // the previous full order ever reaching the public doc.
@@ -30313,6 +30699,9 @@ window.fmtHeight = fmtHeight;
         },
         _prev: prevSnapshot
       };
+      // Devy board (order + tiers): one list shared by Dynasty 1QB + SF
+      const _jacksDevy = window._devySerialize('jacks');
+      if (_jacksDevy) data.jacks.devy = _jacksDevy;
 
       // ── PRE-SAVE SAFETY CHECK ───────────────────────────────────────────
       // Compare what we're about to write against what's already in
@@ -30335,6 +30724,12 @@ window.fmtHeight = fmtHeight;
             if (oldLen > 0 && (newLen === 0 || newLen / oldLen < SHRINK_THRESHOLD)) shrunk.push(m + ' players: ' + oldLen + '→' + newLen);
             if (oldTiers > 0 && newTiers === 0) shrunk.push(m + ' tiers: ' + oldTiers + '→0');
           });
+          // Devy board: the order lives in this browser's localStorage between
+          // saves, so a cleared / never-loaded browser would publish nothing.
+          const _oldDv = (prev.jacks && prev.jacks.devy) || {}, _newDv = data.jacks.devy || {};
+          const _oldDvN = (_oldDv._order || []).length, _newDvN = (_newDv._order || []).length;
+          if (_oldDvN > 0 && (_newDvN === 0 || _newDvN / _oldDvN < SHRINK_THRESHOLD)) shrunk.push('devy players: ' + _oldDvN + '→' + _newDvN);
+          if ((_oldDv._tiers || []).length > 0 && !(_newDv._tiers || []).length) shrunk.push('devy tiers: ' + _oldDv._tiers.length + '→0');
           if (shrunk.length) {
             const msg = 'SAFETY CHECK: this save would shrink your rankings:\n\n' + shrunk.join('\n') + '\n\nThis usually means the page didn\'t fully load. Save anyway?';
             if (!confirm(msg)) {
@@ -30555,6 +30950,7 @@ window.fmtHeight = fmtHeight;
           if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
+          if (obj.jacks.devy) window._devyApplySaved('jacks', obj.jacks.devy);
           _bypassEditCheck = false;
           // Weekly follows redraft unless this week was saved (see _weeklyReconcileBoard)
           if (typeof window._weeklyStashSaved === 'function') {
@@ -30603,6 +30999,7 @@ window.fmtHeight = fmtHeight;
           if (obj.mine.superflex && _isCust('superflex')) loadModeData('superflex', obj.mine.superflex, 'mine');
           if (obj.mine.dynasty && _isCust('dynasty')) loadModeData('dynasty', obj.mine.dynasty, 'mine');
           if (obj.mine.dynastysf && _isCust('dynastysf')) loadModeData('dynastysf', obj.mine.dynastysf, 'mine');
+          if (obj.mine.devy) window._devyApplySaved('mine', obj.mine.devy);
           _bypassEditCheck = false;
           if (typeof window._weeklyStashSaved === 'function') {
             // Only stash the weekly snapshot if the week it belongs to was
@@ -30725,6 +31122,7 @@ window.fmtHeight = fmtHeight;
           if (obj.jacks.superflex) loadModeData('superflex', obj.jacks.superflex, 'jacks');
           if (obj.jacks.dynasty) loadModeData('dynasty', obj.jacks.dynasty, 'jacks');
           if (obj.jacks.dynastysf) loadModeData('dynastysf', obj.jacks.dynastysf, 'jacks');
+          if (obj.jacks.devy) window._devyApplySaved('jacks', obj.jacks.devy);
           _bypassEditCheck = false;
           // Weekly tracks the fresh redraft order unless this week was saved
           if (typeof window._weeklyStashSaved === 'function') {
@@ -30898,7 +31296,9 @@ window.fmtHeight = fmtHeight;
   saveLocal = function() {
     // Every edit path funnels through saveLocal — an edit on a "mine" board
     // makes that format custom, so jacks-snapshot reseeding stops touching it.
-    if (currentVersion === 'mine' && typeof window._mineMarkTouched === 'function') {
+    // (Devy edits are their own board — they must not stop the dynasty
+    // format itself from mirroring Jack's.)
+    if (currentVersion === 'mine' && filter !== 'DEVY' && typeof window._mineMarkTouched === 'function') {
       window._mineMarkTouched(currentMode);
     }
     _origSaveLocal();
@@ -43282,55 +43682,7 @@ window.fmtHeight = fmtHeight;
           if (!d && _PROSPECT_ALIASES[name]) d = D.find(p => p.n === _PROSPECT_ALIASES[name]);
         }
         // For devy/college players OR NFL players not in D array, build a synthetic entry
-        if (!d && typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name]) {
-          const cb = COMBINE_DATA[name];
-          const pmP = pmBuiltData ? pmBuiltData.find(p => p.name === name) : null;
-          const isDevy = cb.devy || false;
-          const apDb = (typeof ALL_PLAYERS_DB !== 'undefined') ? ALL_PLAYERS_DB.find(p => p.name === name) : null;
-          d = {
-            n: name, s: cb.pos || (pmP ? pmP.pos : (apDb ? apDb.pos : 'WR')),
-            t: isDevy ? (cb.school || '—') : (apDb && apDb.career && apDb.career.length ? apDb.career[apDb.career.length-1].tm || '—' : cb.school || '—'),
-            age: pmP ? pmP.age : (apDb ? apDb.age : null),
-            _retired: false, _college: cb.school,
-            _isDevy: isDevy,
-            dr: pmP ? pmP.dr : (cb.draft != null ? (cb.draft === 'U' ? 'U' : parseInt(cb.draft) || null) : cb.draftProj != null ? (cb.draftProj === 'U' ? 'U' : parseInt(cb.draftProj) || null) : null),
-            r: '—',
-            _height: pmP ? (pmP.ht ? String(pmP.ht) : null) : null,
-            _weight: pmP ? pmP.wt : (cb.wt || null),
-            p25: null, p24: null, p23: null
-          };
-          // Use ALL_PLAYERS_DB career if available (for NFL players not in D[])
-          if (apDb && apDb.career && apDb.career.length) {
-            d.career = apDb.career;
-          }
-          // Add college weekly stats as career seasons if available
-          if (typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[name]) {
-            d.career = [];
-            Object.keys(COLLEGE_WEEKLY[name]).forEach(yr => {
-              const games = COLLEGE_WEEKLY[name][yr];
-              if (!games || !games.length) return;
-              let totFpts = 0;
-              games.forEach(g => {
-                totFpts += (g.py||0)*0.04 + (g.ptd||0)*4 + (g.ry||0)*0.1 + (g.rtd||0)*6 +
-                  (g.rcy||0)*0.1 + (g.rctd||0)*6 + (g.rec||0)*0.5 - (g.int||0)*2 - (g.fl||0)*2;
-              });
-              d.career.push({ yr: parseInt(yr), gp: games.length, fpts: Math.round(totFpts*10)/10, ppg: Math.round(totFpts/games.length*10)/10 });
-            });
-          }
-          // Fallback: use COLLEGE_STATS seasons
-          if ((!d.career || !d.career.length) && typeof COLLEGE_STATS !== 'undefined') {
-            const cs = COLLEGE_STATS[name];
-            if (cs && cs.length) {
-              d.career = cs.map(s => ({
-                yr: s.yr, gp: s.gp || 13, tm: s.tm,
-                fpts: s.fpts || ((s.py||0)*0.04 + (s.ptd||0)*4 + (s.ry||0)*0.1 + (s.rtd||0)*6 + (s.rcy||0)*0.1 + (s.rctd||0)*6 + (s.rec||0)*0.5 - (s.int||0)*2),
-                ppg: s.fpts ? Math.round(s.fpts / (s.gp||13) * 10)/10 : null,
-                py: s.py, ptd: s.ptd, ry: s.ry, rtd: s.rtd, rcy: s.rcy, rctd: s.rctd, rec: s.rec, ra: s.ra
-              })).sort((a, b) => (a.yr || 0) - (b.yr || 0))
-              .filter((s, i, arr) => i === 0 || s.yr !== arr[i-1].yr);
-            }
-          }
-        }
+        if (!d) d = window._prospectCardEntry(name);
         if (d && typeof openPlayerCard === 'function') {
           openPlayerCard(d);
         }

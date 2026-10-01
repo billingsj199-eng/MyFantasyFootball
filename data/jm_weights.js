@@ -31,7 +31,12 @@
     //   objective on 2017-2024 backtest (n=73 QB). Score 0.5213 → 0.4730 (-9.3%).
     //   Single accepted move: dc 0.27 → 0.30, others rescaled proportionally.
     //   Starter tier: hr 73%→82%, bust 9%→0%, PPG 15.7→16.7.
-    QB:  { dc: 0.300, breakout: 0.134, prod: 0.125, pff: 0.077, ras: 0.077, qbRush: 0.067, age: 0.067, bigTime: 0.058, qbAccuracy: 0.038, turnoverRate: 0.029, totalColFpts: 0.029, conf: 0, colTrajectory: 0, size: 0 },  // sum=1.00
+    // v10.2 (Oct 1 2026): QB rushing weight DOUBLED (others scaled down). From the bust / late-hit study:
+    //   first-50 QB busts averaged 3.8 college rushing points a game against 6.9 for the successes (AUC .23),
+    //   RAS 7.0 vs 9.05. Chosen in all eight leave-one-year-out folds; vs graded career outcome, top-100
+    //   picks .664 -> .703, all QBs .731 -> .738. FLOOR track.
+    // (previous) QB:  { dc: 0.300, breakout: 0.134, prod: 0.125, pff: 0.077, ras: 0.077, qbRush: 0.067, age: 0.067, bigTime: 0.058, qbAccuracy: 0.038, turnoverRate: 0.029, totalColFpts: 0.029, conf: 0, colTrajectory: 0, size: 0 },  // sum=1.00
+    QB:  { dc: 0.2809, breakout: 0.12547, qbRush: 0.12547, prod: 0.11704, pff: 0.0721, ras: 0.0721, age: 0.06273, bigTime: 0.05431, qbAccuracy: 0.03558, turnoverRate: 0.02715, totalColFpts: 0.02715 },  // sum=1.00
     // RB v6 (Apr 2026): regression-driven cleanup — dominator dead (raw 0.09, ridge -2.0), totalColFpts redundant, colTrajectory zero
     // Redistributed to rbRec (raw 0.29, ridge +6.8), breakout (raw 0.39, ridge +6.9), pffRecv (raw 0.26, ridge +5.3)
     // RB v8 (Apr 24 2026): further data-driven tuning from PFF metric correlations.

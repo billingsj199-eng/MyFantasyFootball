@@ -11,7 +11,12 @@
     // input but correlates with NFL outcomes at only r=0.185 (9th-strongest signal).
     // Weight shifted to pff (r=0.234, raised 0.05→0.08) and prod (raised 0.08→0.09).
     // age added (r=0.365, was 0 on ceiling) to reward young studs at the top end.
-    QB:  { dc: 0.27, ras: 0.13, qbRush: 0.13, breakout: 0.13, prod: 0.09, qbAccuracy: 0.06, bigTime: 0.07, pff: 0.08, age: 0.02, turnoverRate: 0.02 },  // sum=1.00
+    // v10.2 (Oct 1 2026): QB rushing weight DOUBLED (others scaled down). From the bust / late-hit study:
+    //   first-50 QB busts averaged 3.8 college rushing points a game against 6.9 for the successes (AUC .23),
+    //   RAS 7.0 vs 9.05. Chosen in all eight leave-one-year-out folds; vs graded career outcome, top-100
+    //   picks .664 -> .703, all QBs .731 -> .738. CEILING track.
+    // (previous) QB:  { dc: 0.27, ras: 0.13, qbRush: 0.13, breakout: 0.13, prod: 0.09, qbAccuracy: 0.06, bigTime: 0.07, pff: 0.08, age: 0.02, turnoverRate: 0.02 },  // sum=1.00
+    QB:  { dc: 0.23894, qbRush: 0.23009, ras: 0.11504, breakout: 0.11504, prod: 0.07965, pff: 0.0708, bigTime: 0.06195, qbAccuracy: 0.0531, age: 0.0177, turnoverRate: 0.0177 },  // sum=1.00
     // RB v6: dropped dominator (dead, ridge -2.0), redistributed to rbRec (+2) and pffRecv (+2, was 0)
     // RB v7 ceiling (Apr 24 2026): pff (rush grade) ADDED at 0.05 — was missing
     //   from ceiling entirely despite r=0.21/0.27 signal. pffRecv doubled 0.02→0.04.

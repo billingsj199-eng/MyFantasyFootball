@@ -71,7 +71,7 @@
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
-<link rel="preload" href="data/combine_data.js?v=2026-09-30pt5" as="script">
+<link rel="preload" href="data/combine_data.js?v=2026-09-30db2" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-09-30-bd2" as="script">
 <link rel="preload" href="data/d.js?v=2026-09-30rb2" as="script">
@@ -4492,7 +4492,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      players are filtered out of it). _enrichFromAllPlayers + _applyRetiredBioTeam re-run on
      the 'mff:retireddata' event the loader dispatches. -->
 
-<script src="data/combine_data.js?v=2026-09-30pt5" defer></script>
+<script src="data/combine_data.js?v=2026-09-30db2" defer></script>
 <!-- historical_draft_picks.js (~92 KB) LAZY since 2026-08-04 via window._ensureDraftPicksData()
      — HISTORICAL_DRAFT_PICKS is consumed only inside the prospect-model build
      (buildProspectData nflTeam fallback + _pmComputeRoomAdj) and admin console studies,
@@ -4592,7 +4592,8 @@ window.clayLookup = clayLookup;
      executing after combine_data.js/d.js and before app.js (document order). -->
 <script src="data/combine_d_patches.js?v=2026-09-30f" defer></script>
 <script src="data/devy_headshots.js?v=2026-09-30hs4" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
-<script src="data/projected_testing.js?v=2026-09-30pj3" defer></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
+<script src="data/projected_testing.js?v=2026-09-30pj3" defer></script>
+<script defer src="data/draft_proj.js?v=2026-09-30"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
@@ -5488,7 +5489,7 @@ window._ensureCollegeStatsData = (function() {
     // In-season devy/future-class rows (weekly auto-refresh, scripts/refresh_devy_stats.py):
     // defines window._csPatchDevy (applied last, below) + this season's COLLEGE_WEEKLY game logs.
     const spz = _loadScript('data/sp_def_z.js?v=2026-09-30');  // SP+ defense z per team-season (RB schedule-adjusted production experiment)
-    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-09-30dv3');
+    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-09-30dv4');
     // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
     // populate the same COLLEGE_WEEKLY object and have no order dependency;

@@ -15,7 +15,16 @@ for the audit) and patches data/combine_data.js:
     (yr == <draft year>): consensus rank when inside the consensus top 100,
     otherwise max(101, PFF rank) - i.e. "outside the first ~3 rounds".
     Entries with a real `draft` pick are never touched.
-  * --add: any skill player in the consensus top 100 or PFF top 100 who is
+  * Universe = the RUNTIME devy board (combine_data.js + the stubs/overrides in
+   data/combine_d_patches.js, via refresh_devy_stats.load_combine()). Stub entries
+   get their draftProj through data/draft_proj.js (self-applying, loaded after the
+   patches); combine_data.js entries are edited in place.
+ * Third source: Site Rankings/projected_dc_<year>.csv (name,rank,...) - NFL Draft
+   Buzz average overall rank, read by hand through Jack's Chrome (the site's bot
+   check blocks scripts) -> max(101, rank) when consensus and PFF have nothing.
+ * CLEAR: a class player on no source loses his draftProj (stale April projections
+   go away), and eligYr > draft year (2028+) is always cleared - too far out.
+ * --add: any skill player in the consensus top 100 or PFF top 100 who is
     not in COMBINE_DATA gets a devy entry {yr, devy:true, eligYr, school,
     pos, ht, wt, draftProj} (school/ht/wt from PFF). The weekly devy stats
     refresh then backfills their college seasons.
@@ -43,6 +52,8 @@ os.chdir(ROOT)
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 COMBINE_JS = "data/combine_data.js"
+DRAFT_PROJ_JS = "data/draft_proj.js"
+MANUAL_DC = "Site Rankings/projected_dc_%d.csv"
 INDEX_HTML = "index.html"
 SKILL = {"QB", "RB", "HB", "WR", "TE"}
 PFF_API = "https://www.pff.com/api/college/big_board?season=%d&version=2"
@@ -173,15 +184,25 @@ def main():
         raw = f.read()
     head, body = raw.split("=", 1)
     cb = json.loads(body.strip().rstrip(";"))
+    # Runtime devy board: combine_data.js + the stubs/overrides in combine_d_patches.js.
+    import refresh_devy_stats as rds
+    rds._CUR_SEASON = today.year if today.month >= 8 else today.year - 1
+    rt = rds.load_combine()
     by_norm = {norm(n): n for n in cb}
-    # runtime devy stubs from data/combine_d_patches.js count as "on the site"
-    try:
-        with open("data/combine_d_patches.js", encoding="utf-8") as f:
-            for m in re.finditer(r"""COMBINE_DATA\[(['"])((?:\\.|(?!\1)[^\\])+?)\1\]\s*=\s*\{[^}]*devy:\s*true""", f.read()):
-                nm = m.group(2).replace("\\'", "'")
-                by_norm.setdefault(norm(nm), nm)
-    except OSError:
-        pass
+    for n in rt:
+        by_norm.setdefault(norm(n), n)
+    # Manual third source (NFL Draft Buzz avg overall rank, by hand through Jack's Chrome)
+    manual = {}
+    mpath = MANUAL_DC % year
+    if os.path.exists(mpath):
+        import csv
+        with open(mpath, encoding="utf-8", newline="") as f:
+            for row in csv.DictReader(f):
+                try:
+                    manual[row["name"].strip()] = float(row["rank"])
+                except (KeyError, ValueError):
+                    continue
+        log("manual DC rows (%s): %d" % (mpath, len(manual)))
 
     def site_name(n):
         return n if n in cb else by_norm.get(norm(n))
@@ -203,18 +224,43 @@ def main():
             return max(101, p)
         return None
 
-    # 1) draftProj for the class already on the site
-    for name, e in cb.items():
-        if e.get("yr") != year or e.get("pos") not in SKILL or e.get("draft") is not None:
-            continue
+    def proj_site(name):
+        """consensus -> PFF -> manual (Draft Buzz) -> None, for one site name."""
         src = next((n for n in list(cons) + list(pff) if site_name(n) == name), None)
-        new = proj_for(src) if src else None
-        if new is None:
+        v = proj_for(src) if src else None
+        if v is None and name in manual:
+            v = min(262, max(101, int(round(manual[name]))))   # Draft Buzz ranks run past 600; 262 = last pick
+        return v
+
+    # 1) draftProj for the whole runtime class (combine_data.js entries edited in
+    #    place, stub entries through data/draft_proj.js). No source -> CLEAR.
+    #    eligYr beyond the draft year (2028+) -> CLEAR (too far out).
+    proj_map = {}      # site name -> rank or None (None = remove draftProj)
+    cleared = []
+    for name, e in rt.items():
+        if not e.get("devy") or e.get("pos") not in SKILL or e.get("draft") is not None:
+            continue
+        elig = e.get("eligYr") or e.get("yr")
+        if elig == year:
+            new = proj_site(name)
+        elif elig and elig > year:
+            new = None
+        else:
             continue
         old = e.get("draftProj")
-        if old != new:
-            e["draftProj"] = new
+        proj_map[name] = new
+        if old == new:
+            continue
+        if new is None:
+            cleared.append((name, old))
+        else:
             changes.append((name, old, new))
+        if name in cb:
+            if new is None:
+                cb[name].pop("draftProj", None)
+                cb[name].pop("draftProjSrc", None)
+            else:
+                cb[name]["draftProj"] = new
     # 2) new names
     if a.add:
         for n in sorted(set(cons) | set(pff), key=lambda x: proj_for(x) or 999):
@@ -237,14 +283,36 @@ def main():
 
     for name, old, new in changes:
         log("  draftProj %-24s %s -> %s" % (name, old, new))
+    for name, old in cleared:
+        log("  CLEAR     %-24s %s -> (none)" % (name, old))
     for n, ent in added:
         log("  ADD %-24s %s" % (n, json.dumps(ent)))
-    log("draftProj changes: %d, added: %d" % (len(changes), len(added)))
+    n_src = sum(1 for v in proj_map.values() if v is not None)
+    log("draftProj changes: %d, cleared: %d, added: %d | class %d: %d of %d with a projected pick" % (
+        len(changes), len(cleared), len(added), year, n_src, sum(1 for n, e in rt.items() if e.get("devy") and (e.get("eligYr") or e.get("yr")) == year and e.get("pos") in SKILL)))
     if a.dry_run:
         return 0
+    # data/draft_proj.js - self-applying map for the runtime board (covers the stubs).
+    # Loaded after combine_d_patches.js; never touches a real `draft`.
+    dp_lines = ["// GENERATED by scripts/pull_draft_boards.py - projected draft capital for the runtime devy board",
+                "// sources: NFL Mock Draft Database consensus (top 100) -> PFF big board (101+) -> NFL Draft Buzz avg overall rank (101+)",
+                "// null = no source this week (draftProj removed). Generated %s for the %d class." % (today.isoformat(), year),
+                "window.DRAFT_PROJ = " + json.dumps(dict(sorted(proj_map.items())), ensure_ascii=False, separators=(",", ":")) + ";",
+                "(function () {",
+                "  if (typeof COMBINE_DATA === 'undefined') return;",
+                "  Object.keys(window.DRAFT_PROJ).forEach(function (n) {",
+                "    var c = COMBINE_DATA[n], v = window.DRAFT_PROJ[n];",
+                "    if (!c || c.draft != null) return;",
+                "    if (v == null) { delete c.draftProj; delete c.draftProjSrc; } else { c.draftProj = v; }",
+                "  });",
+                "})();", ""]
+    dp_before = digest(DRAFT_PROJ_JS) if os.path.exists(DRAFT_PROJ_JS) else None
+    with open(DRAFT_PROJ_JS, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(dp_lines))
+    dp_changed = digest(DRAFT_PROJ_JS) != dp_before
     with open("scripts/draft_boards_%d.json" % year, "w", encoding="utf-8") as f:
         json.dump(snapshot, f, indent=1, sort_keys=True)
-    if not changes and not added:
+    if not changes and not cleared and not added and not dp_changed:
         return 0
 
     # Surgical rewrite: keep the single-line JSON style of combine_data.js.
@@ -252,11 +320,24 @@ def main():
     out = head + "= " + json.dumps(cb, ensure_ascii=False, separators=(",", ":")) + ";"
     with open(COMBINE_JS, "w", encoding="utf-8", newline="") as f:
         f.write(out)
-    if digest(COMBINE_JS) == before or a.no_bump:
+    cd_changed = digest(COMBINE_JS) != before
+    if a.no_bump or not (cd_changed or dp_changed):
         return 0
     with open(INDEX_HTML, encoding="utf-8", newline="") as f:
         html = f.read()
-    new_html = bump_tag(html, "combine_data.js")
+    new_html = html
+    if cd_changed:
+        new_html = bump_tag(new_html, "combine_data.js")
+    if dp_changed:
+        if "draft_proj.js?v=" not in new_html:
+            # first run: add the tag right after projected_testing.js (after the patches)
+            m = re.search(r"<script[^>]*data/projected_testing\.js\?v=[^>]*></script>", new_html)
+            assert m, "projected_testing.js tag not found in index.html"
+            nl = "\r\n" if "\r\n" in new_html else "\n"
+            new_html = new_html[:m.end()] + nl + '<script defer src="data/draft_proj.js?v=%s"></script>' % today.isoformat() + new_html[m.end():]
+            log("  added draft_proj.js tag to index.html")
+        else:
+            new_html = bump_tag(new_html, "draft_proj.js")
     if new_html != html:
         with open(INDEX_HTML, "w", encoding="utf-8", newline="") as f:
             f.write(new_html)

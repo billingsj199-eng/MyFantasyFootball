@@ -120,7 +120,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   if (!COMBINE_DATA['Deuce Knight']) COMBINE_DATA['Deuce Knight'] = { school: 'Mississippi', pos: 'QB', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['Caleb Cunningham']) COMBINE_DATA['Caleb Cunningham'] = { school: 'Mississippi', pos: 'WR', devy: true, eligYr: 2028 };
   if (!COMBINE_DATA['John Mateer']) COMBINE_DATA['John Mateer'] = { school: 'Oklahoma', pos: 'QB', devy: true, eligYr: 2027 };
-  if (!COMBINE_DATA['CJ Carr']) COMBINE_DATA['CJ Carr'] = { school: 'Notre Dame', pos: 'QB', devy: true, eligYr: 2028 };
+  if (!COMBINE_DATA['CJ Carr']) COMBINE_DATA['CJ Carr'] = { school: 'Notre Dame', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Byrum Brown']) COMBINE_DATA['Byrum Brown'] = { school: 'Auburn', pos: 'QB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Jordan Marshall']) COMBINE_DATA['Jordan Marshall'] = { school: 'Michigan', pos: 'RB', devy: true, eligYr: 2027 };
   if (!COMBINE_DATA['Danny Scudero']) COMBINE_DATA['Danny Scudero'] = { school: 'Colorado', pos: 'WR', devy: true, eligYr: 2027 };
@@ -326,7 +326,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
     cb=COMBINE_DATA['Nico Iamaleava']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Josh Hoover']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Byrum Brown']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['DJ Lagway']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
+    cb=COMBINE_DATA['DJ Lagway']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;} // 2024 HS class, on the 2027 consensus board (fixed 2026-09-30)
     cb=COMBINE_DATA['John Mateer']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['CJ Bailey']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Demond Williams Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
@@ -335,7 +335,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
     cb=COMBINE_DATA['Eric Singleton Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Deuce Knight']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA['Darian Mensah']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
-    cb=COMBINE_DATA['CJ Carr']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
+    cb=COMBINE_DATA['CJ Carr']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;} // 2024 HS class, on the 2027 consensus board (fixed 2026-09-30)
     cb=COMBINE_DATA['Julian Lewis']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}
     cb=COMBINE_DATA['Tavien St. Clair']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Keelon Russell']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;}

@@ -42365,7 +42365,7 @@ window.fmtHeight = fmtHeight;
     // Group by draft year
     const byYear = {};
     data.forEach(p => {
-      if (p.draftYr == null || p.jm == null || p.isCollege) return;
+      if (p.draftYr == null || p.jm == null || (p.isCollege && !(p.isDevy && p.draftYr >= 2027))) return;   // devy classes 2027+ graded too (Sep 30 2026)
       if (!byYear[p.draftYr]) byYear[p.draftYr] = [];
       byYear[p.draftYr].push(p);
     });
@@ -42424,7 +42424,8 @@ window.fmtHeight = fmtHeight;
         };
       });
 
-      rawResults[yr] = { positions: posGrades, playerCount: players.length };
+      // devy: a projected (undrafted) class - graded against the drafted classes but kept OUT of the reference scale
+      rawResults[yr] = { positions: posGrades, playerCount: players.length, devy: players.every(p => p.isDevy) };
     });
 
     // Step 2: Percentile-rank each position group against 2010+ classes only
@@ -42440,7 +42441,7 @@ window.fmtHeight = fmtHeight;
     positions.forEach(pos => {
       refGrades[pos] = [];
       Object.keys(rawResults).forEach(yr => {
-        if (parseInt(yr) < MIN_YEAR) return;
+        if (parseInt(yr) < MIN_YEAR || rawResults[yr].devy) return;
         if (rawResults[yr].positions[pos] && rawResults[yr].playerCount >= 8) {
           refGrades[pos].push({ yr: parseInt(yr), raw: rawResults[yr].positions[pos].rawGrade });
         }
@@ -42452,7 +42453,7 @@ window.fmtHeight = fmtHeight;
     const posWeights = { QB: 0.19, RB: 0.28, WR: 0.39, TE: 0.14 };
     const refOverall = [];
     Object.keys(rawResults).forEach(yr => {
-      if (parseInt(yr) < MIN_YEAR || rawResults[yr].playerCount < 8) return;
+      if (parseInt(yr) < MIN_YEAR || rawResults[yr].playerCount < 8 || rawResults[yr].devy) return;
       let oW = 0, oS = 0;
       positions.forEach(pos => {
         if (rawResults[yr].positions[pos]) {
@@ -42567,7 +42568,9 @@ window.fmtHeight = fmtHeight;
       return;
     }
 
-    const allNonCollege = pmBuiltData.filter(p => !p.isCollege);
+    // Drafted classes plus the projected 2027/2028 devy classes (devy only - the
+    // 2026 stay-in-school leftovers keep their old class and stay out of the bar).
+    const allNonCollege = pmBuiltData.filter(p => !p.isCollege || (p.isDevy && p.draftYr >= 2027));
     const grades = computeClassGrades(allNonCollege, pmPos);
     const years = Object.keys(grades).map(Number).sort((a, b) => b - a);
 
@@ -42607,7 +42610,7 @@ window.fmtHeight = fmtHeight;
         const label = jmGradeLabel(gradeVal);
         const rank = i + 1;
         html += `<div class="pm-class-chip" data-classyr="${c.yr}" title="${label} — ${usePos ? c.positions[usePos].count + ' ' + usePos + 's' : c.playerCount + ' players'}">`;
-        html += `<span class="pm-class-chip-yr">${c.yr}</span>`;
+        html += `<span class="pm-class-chip-yr">${c.yr}${c.yr >= 2027 ? ' <span style="font-size:.55rem;opacity:.7;letter-spacing:.04em">DEVY</span>' : ''}</span>`;
         html += `<span class="pm-class-chip-grade" style="color:${color};background:${bg};padding:2px 8px;border-radius:5px">${gradeVal.toFixed(1)}</span>`;
         html += '</div>';
       });
@@ -42715,6 +42718,13 @@ window.fmtHeight = fmtHeight;
     // siloed into COLLEGE-only. Without this, a devy-flagged 2026 declarant (e.g. Omar
     // Cooper Jr.) gets excluded from the WR 2026 view because isCollege=true.
     // 2027+ devy players are kept out of the ALL and position tabs — they only show in COLLEGE.
+    // Devy classes (Sep 30 2026): picking "2027 (Devy)" / "2028 (Devy)" in the class
+    // dropdown shows that projected class on the ALL and position tabs, graded by the
+    // same JM path (draft age = age at the PROJECTED draft; DC = consensus draftProj).
+    function _isDevyClassPick(p) {
+      const yr = parseInt(pmDraftClass);
+      return !!(p.isDevy && yr >= 2027 && p.draftYr === yr);
+    }
     function _isUpcomingDevy(p) {
       // Devy / in-college players are excluded entirely from ALL and position tabs.
       // Reasoning: 2027+ classes haven't declared. And after the 2026 draft passed,
@@ -42728,9 +42738,9 @@ window.fmtHeight = fmtHeight;
       // Show only college-only players (not yet drafted/in NFL)
       data = pmBuiltData.filter(p => p.isCollege);
     } else if (pmPos === 'ALL') {
-      data = pmBuiltData.filter(p => !p.isCollege || _isUpcomingDevy(p));
+      data = pmBuiltData.filter(p => !p.isCollege || _isUpcomingDevy(p) || _isDevyClassPick(p));
     } else {
-      data = pmBuiltData.filter(p => p.pos === pmPos && (!p.isCollege || _isUpcomingDevy(p)));
+      data = pmBuiltData.filter(p => p.pos === pmPos && (!p.isCollege || _isUpcomingDevy(p) || _isDevyClassPick(p)));
     }
 
     // Draft class filter (skip for COLLEGE tab — they don't have draft classes)

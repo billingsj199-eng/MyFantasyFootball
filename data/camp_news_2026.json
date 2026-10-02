@@ -1,6 +1,211 @@
 {
-  "updated": "2026-10-02T02:16:54Z",
+  "updated": "2026-10-02T16:20:45Z",
   "items": [
+    {
+      "player": "Jayden Daniels",
+      "team": "WAS",
+      "pos": "QB",
+      "date": "2026-10-02",
+      "headline": "Officially ruled out for 2nd straight week (elbow); Marcus Mariota starts vs. Colts in London",
+      "take": "No surprise given the brace and limited practices -- Mariota's passing volume caps the Commanders' pass-catchers again this week.",
+      "url": "https://www.nfl.com/news/jayden-daniels-left-elbow-out-london-game-qb-marcus-mariota-start-colts",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 4
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Breece Hall",
+      "team": "NYJ",
+      "pos": "RB",
+      "date": "2026-10-02",
+      "headline": "Officially ruled out vs. Bears (quad); Glenn keeps him week-to-week",
+      "take": "Upgrade from Thursday's vague 'week-to-week' tag to a confirmed absence -- Braelon Allen is the top Week 4 RB play for the Jets.",
+      "url": "https://www.espn.com/nfl/story/_/id/50085069/jets-rule-rb-hall-wr-mitchell-te-taylor-lg-parham-vs-bears",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 4
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Mason Taylor",
+      "team": "NYJ",
+      "pos": "TE",
+      "date": "2026-10-02",
+      "headline": "Officially ruled out vs. Bears (thumb)",
+      "take": "Kenyon Sadiq stays locked in as the top receiving TE option with Taylor sidelined again.",
+      "url": "https://www.espn.com/nfl/story/_/id/50085069/jets-rule-rb-hall-wr-mitchell-te-taylor-lg-parham-vs-bears",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 4
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Adonai Mitchell",
+      "team": "NYJ",
+      "pos": "WR",
+      "date": "2026-10-02",
+      "headline": "Officially ruled out vs. Bears for a 2nd straight game (finger)",
+      "take": "Garrett Wilson's target share stays inflated with Mitchell out again -- no clear waiver beneficiary at WR behind him.",
+      "url": "https://www.espn.com/nfl/story/_/id/50085069/jets-rule-rb-hall-wr-mitchell-te-taylor-lg-parham-vs-bears",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 4
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "DeVonta Smith",
+      "team": "PHI",
+      "pos": "WR",
+      "date": "2026-10-02",
+      "headline": "'Not much optimism' he plays Sunday vs. Rams per ESPN's McManus and NFL Media's Garafolo",
+      "take": "Trending toward a 2nd straight missed game -- DeVonta Smith is a bench/drop candidate until he's confirmed active; Jahan Dotson and A.J. Brown (PHI) see a target bump if he sits.",
+      "url": "https://www.saturdaydownsouth.com/news/nfl/devonta-smiths-status-for-week-4-against-rams-revealed-per-nfl-insiders/",
+      "tag": "injury",
+      "avail": {
+        "k": "doubt",
+        "wk": 4
+      },
+      "src_type": "insider"
+    },
+    {
+      "player": "Hollywood Brown",
+      "team": "PHI",
+      "pos": "WR",
+      "date": "2026-10-02",
+      "headline": "DNP again Friday (ankle) ahead of Sunday's game vs. Rams",
+      "take": "Eagles could be without both outside receivers (Smith and Brown) Sunday -- a real downgrade for Philly's passing-game floor.",
+      "url": "https://www.cbssports.com/fantasy/football/news/eagles-hollywood-brown-dnp-friday/",
+      "tag": "injury",
+      "src_type": "report"
+    },
+    {
+      "player": "D'Andre Swift",
+      "team": "CHI",
+      "pos": "RB",
+      "date": "2026-10-02",
+      "headline": "New knee issue lands him on the injury report Thursday, DNP, after a full Wednesday practice",
+      "take": "Sudden late-week addition ahead of Sunday vs. Jets -- treat as a real risk until Friday's practice report and game designation land.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-01/dandre-swift-knee-out-of-practice-thursday",
+      "tag": "injury",
+      "src_type": "report"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-10-02",
+      "headline": "Full practice Thursday; McVay expects him to play Sunday vs. Eagles",
+      "take": "Clears the last real hurdle after two missed games -- back in lineups as LAR's WR1 alongside Davante Adams, barring a Friday setback.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-30/mcvay-expects-puka-nacua-groin-to-play-in-week-4",
+      "tag": "injury",
+      "avail": {
+        "k": "play",
+        "wk": 4
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Nico Collins",
+      "team": "HOU",
+      "pos": "WR",
+      "date": "2026-10-02",
+      "headline": "Listed probable for Sunday vs. Cowboys after a 3rd straight limited practice",
+      "take": "Trending to play and reclaim the WR1 role -- Xavier Hutchinson's streaming value evaporates once Collins is confirmed active.",
+      "url": "https://www.lineups.com/articles/nfl-week-4-injury-report-devonta-smith-doubtful-for-eagles-nico-collins-probable-for-texans/",
+      "tag": "injury",
+      "avail": {
+        "k": "play",
+        "wk": 4
+      },
+      "src_type": "report"
+    },
+    {
+      "player": "Chig Okonkwo",
+      "team": "WAS",
+      "pos": "TE",
+      "date": "2026-10-02",
+      "headline": "Dan Quinn confirms he will play Sunday vs. Colts despite a 2nd straight limited practice",
+      "take": "Back in streaming-TE mix for London -- hamstring no longer a Week 4 availability concern.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-02/chig-okonkwo-hamstring-will-play-vs-colts",
+      "tag": "injury",
+      "avail": {
+        "k": "play",
+        "wk": 4
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Rachaad White",
+      "team": "WAS",
+      "pos": "RB",
+      "date": "2026-10-02",
+      "headline": "DNP all week (shoulder); Dan Quinn won't confirm but sounds unlikely to play vs. Colts",
+      "take": "Newly signed Austin Ekeler profiles as the early-down fill-in alongside Jacory Croskey-Merritt if White sits in London.",
+      "url": "https://www.rotowire.com/football/headlines/rachaad-white-injury-sits-out-another-practice-640277",
+      "tag": "injury",
+      "avail": {
+        "k": "doubt",
+        "wk": 4
+      },
+      "src_type": "report"
+    },
+    {
+      "player": "Mike Evans",
+      "team": "SF",
+      "pos": "WR",
+      "date": "2026-10-02",
+      "headline": "Misses a 2nd straight practice (ribs); GM John Lynch says he'll 'make every attempt' to play Sunday vs. Denver",
+      "take": "No practice all week is a real red flag despite the front office's optimistic tone -- confirm Friday's tag before trusting him in lineups.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-01/mike-evans-ribs-misses-second-week-4-practice",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Josh Allen",
+      "team": "BUF",
+      "pos": "QB",
+      "date": "2026-10-02",
+      "headline": "Not on the injury report at all; cleared to start vs. Patriots after last week's knee hit",
+      "take": "Full go with no game-status tag -- treat him as a normal-workload Week 4 QB1 despite doctors publicly disagreeing on the knee.",
+      "url": "https://www.buffalorumblings.com/buffalo-bills-injuries/141728/bills-vs-patriots-week-4-injury-report-josh-allen-clear",
+      "tag": "injury",
+      "avail": {
+        "k": "play",
+        "wk": 4
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Keenan Allen",
+      "team": "IND",
+      "pos": "WR",
+      "date": "2026-10-02",
+      "headline": "Reportedly facing a minimum 3-game NFL suspension after an Aug. 30 DUI arrest (.224 BAC)",
+      "take": "Still eligible to play now -- the league is expected to wait out his legal case (next court date Oct. 26) before serving any ban, so no immediate lineup impact, but monitor for a suspension date.",
+      "url": "https://www.cbssports.com/nfl/news/colts-wr-keenan-allen-nfl-suspension/",
+      "tag": "other",
+      "src_type": "insider"
+    },
+    {
+      "player": "Alvin Kamara",
+      "team": "NO",
+      "pos": "RB",
+      "date": "2026-10-02",
+      "headline": "Played 46.7% of Week 3 snaps (10 touches) with Etienne out; Kendre Miller took the rest (31.1%, 6 touches)",
+      "take": "Coach Kellen Moore expects a Kamara/Miller split for Monday vs. Falcons -- Kamara projects as the better PPR floor play with the passing-down role.",
+      "url": "https://www.dimers.com/nfl/news/alvin-kamaras-last-stand-travis-etiennes-hamstring-injury-opens-up-saints-backfield",
+      "tag": "role",
+      "src_type": "report"
+    },
     {
       "player": "Breece Hall",
       "team": "NYJ",
@@ -3425,36 +3630,6 @@
       "tag": "riser"
     },
     {
-      "player": "Kaelon Black",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-09-10",
-      "headline": "Rookie 3rd-rounder out-carries Christian McCaffrey 14-10 (65 yds) in Thursday's win over the Rams",
-      "take": "Unexpected early-down work cuts into McCaffrey's bell-cow workload -- worth a speculative add and a real watch item for Week 2",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-10/kaelon-black-rushes-for-68-yards-in-debut-against-rams",
-      "tag": "riser"
-    },
-    {
-      "player": "Christian McCaffrey",
-      "team": "SF",
-      "pos": "RB",
-      "date": "2026-09-10",
-      "headline": "Held to 10 carries (68 total yds from scrimmage) as rookie Kaelon Black out-touched him in the opener",
-      "take": "Still involved (5 catches) but no longer a clear workhorse -- monitor the carry split before treating him as a lock RB1 again",
-      "url": "https://ca.sports.yahoo.com/news/meet-kaelon-black-49ers-rb-020359620.html",
-      "tag": "faller"
-    },
-    {
-      "player": "De'Zhaun Stribling",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "Shanahan: Achilles is intact on the injured ankle; MRI still pending to gauge severity",
-      "take": "Rules out the worst-case outcome from Thursday's cart-off, but no return timeline until MRI results are back",
-      "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/dezhaun-stribling-injury-update/1962524/",
-      "tag": "injury"
-    },
-    {
       "player": "Josh Jacobs",
       "team": "GB",
       "pos": "RB",
@@ -3473,176 +3648,6 @@
       "take": "No more hedging needed -- treat him as a normal-workload Week 1 RB1 at Tennessee",
       "url": "https://www.espn.com/nfl/story/_/id/49895714/jets-breece-hall-says-ready-face-titans-opener",
       "tag": "riser"
-    },
-    {
-      "player": "A.J. Brown",
-      "team": "NE",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "MRI confirms high-ankle sprain; Patriots WR expected out at least 4 weeks",
-      "take": "Downgrade from Thursday's earlier 2-6 week guess to a firmer 4+ week absence -- bench him and treat NE's passing game as a committee short-term",
-      "url": "https://www.espn.com/nfl/story/_/id/49897884/sources-patriots-aj-brown-likely-least-4-weeks",
-      "tag": "injury"
-    },
-    {
-      "player": "Sam Darnold",
-      "team": "SEA",
-      "pos": "QB",
-      "date": "2026-09-10",
-      "headline": "Hip diagnosed as muscle strain, not joint damage; HC says Seahawks 'dodged a bullet'",
-      "take": "Expected to miss Week 2 at Arizona but Rapoport says return could be sooner than first feared -- Drew Lock is a short streamer, not a season-long starter",
-      "url": "https://www.nfl.com/news/sam-darnold-hip-injury-miss-seahawks-week-2-game-cardinals",
-      "tag": "injury"
-    },
-    {
-      "player": "Josh Jacobs",
-      "team": "GB",
-      "pos": "RB",
-      "date": "2026-09-10",
-      "headline": "Pleads no contest to misdemeanor battery/property-damage charges from May incident",
-      "take": "NFL is now expected to lift him off the exempt list and hand down a suspension -- treat as a hold with unknown missed-games number until the league rules",
-      "url": "https://www.espn.com/nfl/story/_/id/49893018/packers-rb-josh-jacobs-pleads-no-contest-misdemeanor-charges",
-      "tag": "other"
-    },
-    {
-      "player": "Tua Tagovailoa",
-      "team": "ATL",
-      "pos": "QB",
-      "date": "2026-09-10",
-      "headline": "Grabbed his back with an oblique injury at Thursday practice, listed limited; Cooper Rush took 1st-team reps",
-      "take": "Newly-named Week 1 starter over Michael Penix Jr. now carries a real injury question ahead of Sunday at Pittsburgh -- check Friday's report before trusting Falcons pass-catchers",
-      "url": "https://www.espn.com/nfl/story/_/id/49895564/falcons-qb-tua-tagovailoa-suffers-oblique-injury-practice",
-      "tag": "injury"
-    },
-    {
-      "player": "De'Zhaun Stribling",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "Carted off with a left ankle injury in Thursday's opener at the Rams, re-aggravated it on a second attempt to return",
-      "take": "Rookie 2nd-rounder had been drawing 'best 49ers WR in camp' buzz -- injury clouds his Week 1 usage and early-season stock",
-      "url": "https://sports.yahoo.com/nfl/article/49ers-dezhaun-stribling-ruled-out-vs-rams-with-left-ankle-injury-014204879.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Jonathon Brooks",
-      "team": "CAR",
-      "pos": "RB",
-      "date": "2026-09-10",
-      "headline": "Limited at Wednesday's practice with groin soreness, but HC Dave Canales 'very confident' he plays Sunday vs. Bears",
-      "take": "Would be his first game action since Week 14 of the 2024 season (ACL) -- trending toward a role but treat as touch-capped in a long-awaited debut",
-      "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/rb-jonathon-brooks-limited-in-wednesdays-panthers-practice",
-      "tag": "injury"
-    },
-    {
-      "player": "Malik Nabers",
-      "team": "NYG",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "Logs a second straight full practice; HC John Harbaugh: 'I think he's ready to go' for Sunday night vs. Cowboys",
-      "take": "Trending firmly toward a Week 1 return from his ACL tear, though still unconfirmed -- have a Plan B ready until he's active on Sunday's final report",
-      "url": "https://www.si.com/nfl/giants/onsi/giants-malik-nabers-injury-update-week-1-cowboys-01m23m9wyyb7",
-      "tag": "riser"
-    },
-    {
-      "player": "Dontayvion Wicks",
-      "team": "GB",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "Ruled doubtful for Saturday vs. Vikings with a concussion after not practicing all week",
-      "take": "Likely out -- bumps Romeo Doubs and Matthew Golden up the Packers' Week 1 WR pecking order",
-      "url": "https://www.packers.com/news/packers-vikings-injury-report-sept-10-2026",
-      "tag": "injury"
-    },
-    {
-      "player": "Puka Nacua",
-      "team": "LAR",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "Active and playing through a psoas injury in Thursday's opener at the 49ers in Melbourne",
-      "take": "McVay cleared him to play and no setback was reported through the game -- treat as a full-workload WR1 while monitoring the next injury report",
-      "url": "https://www.profootballrumors.com/2026/09/rams-expect-wr-puka-nacua-to-play-week-1",
-      "tag": "riser"
-    },
-    {
-      "player": "A.J. Brown",
-      "team": "NE",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "High-ankle sprain confirmed after Wed. opener; X-rays negative, MRI set for Thursday",
-      "take": "Likely multi-week (2-6 wks); Patriots' next game isn't until 9/20 vs. PIT, buying recovery time \u2014 expect a IR/bench stint",
-      "url": "https://x.com/RapSheet/status/2098046243377209515",
-      "tag": "injury"
-    },
-    {
-      "player": "Sam Darnold",
-      "team": "SEA",
-      "pos": "QB",
-      "date": "2026-09-10",
-      "headline": "Fracture ruled out on hip injury from Wed. opener, but more tests needed and no return timetable",
-      "take": "Drew Lock is the presumptive fill-in until Darnold's hip is fully evaluated; downgrade Seattle's passing attack near-term",
-      "url": "https://www.nbcnews.com/sports/nfl/seahawks-quarterback-sam-darnold-injury-patriots-nfl-rcna596939",
-      "tag": "injury"
-    },
-    {
-      "player": "Jaxon Smith-Njigba",
-      "team": "SEA",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "8/11 targets for 122 yards and a 45-yard TD in Week 1 win over Patriots, even with Drew Lock at QB",
-      "take": "Elite target share held up through a QB change mid-game \u2014 a true WR1 regardless of who's throwing him the ball",
-      "url": "https://www.cbssports.com/fantasy/football/news/seahawks-jaxon-smith-njigba-stays-hot-with-100-yards-plus-td/",
-      "tag": "riser"
-    },
-    {
-      "player": "Eli Stowers",
-      "team": "PHI",
-      "pos": "TE",
-      "date": "2026-09-10",
-      "headline": "Limited at Wednesday's practice on hamstring, but buried as Eagles' TE4 behind Goedert/Mundt/Jenkins",
-      "take": "Even if active Week 1 vs. WAS, an unclear role keeps him off fantasy radars for now",
-      "url": "https://www.bleedinggreennation.com/news/182210/eagles-injury-report-jonathan-greenard-and-eli-stowers-limited",
-      "tag": "injury"
-    },
-    {
-      "player": "Ja'Marr Chase",
-      "team": "CIN",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "Limited in practice on hyperextended knee, but Bengals expect him (and Tee Higgins) active for Sept. 13 opener",
-      "take": "Trending toward a full Week 1 workload \u2014 safe to start as a top overall WR1",
-      "url": "https://sports.yahoo.com/articles/ja-marr-chase-injury-latest-154019591.html",
-      "tag": "injury"
-    },
-    {
-      "player": "Ashton Jeanty",
-      "team": "LV",
-      "pos": "RB",
-      "date": "2026-09-10",
-      "headline": "HC Kubiak gives a confident \"yes\" on Jeanty playing Week 1 vs. MIA; ankle sprain graded as low, not high",
-      "take": "Trending in the right direction for Sunday despite still not fully practicing \u2014 check Friday's report before locking him in as RB1",
-      "url": "https://bleacherreport.com/articles/25495665-ashton-jeantys-injury-status-revealed-raiders-hc-ahead-week-1-vs-dolphins",
-      "tag": "injury"
-    },
-    {
-      "player": "Jeremiyah Love",
-      "team": "ARI",
-      "pos": "RB",
-      "date": "2026-09-10",
-      "headline": "Now \"tracking toward playing\" Sunday vs. Chargers after high-ankle sprain, upgraded from last week's 50-50 call",
-      "take": "Trending up, but temper expectations to a high-end RB2 rather than a locked-in RB1 workload in Week 1",
-      "url": "https://www.espn.com/nfl/story/_/id/49873881/week-1-buzz-fantasy-predictions-graziano-fowler-2026",
-      "tag": "injury"
-    },
-    {
-      "player": "Denzel Boston",
-      "team": "CLE",
-      "pos": "WR",
-      "date": "2026-09-10",
-      "headline": "Rookie has cemented himself as Browns' X-receiver and top red-zone/jump-ball target in camp",
-      "take": "Real role as a big-bodied red-zone threat, but shaky Cleveland QB play caps Week 1 upside \u2014 deep-league stash only",
-      "url": "https://www.draftsharks.com/fantasy/points-outlook/denzel-boston/35949",
-      "tag": "role"
     }
   ]
 }

@@ -1,6 +1,76 @@
 {
-  "updated": "2026-10-01T16:18:13Z",
+  "updated": "2026-10-02T02:16:54Z",
   "items": [
+    {
+      "player": "Breece Hall",
+      "team": "NYJ",
+      "pos": "RB",
+      "date": "2026-10-01",
+      "headline": "DNP again Thursday (quad); Glenn calls him week-to-week ahead of Bears",
+      "take": "Braelon Allen is the clear top RB play in Week 4 if Hall sits Sunday.",
+      "url": "https://www.newyorkjets.com/news/jets-injury-report-week-4-vs-bears-thursday-10-01-2026",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Mason Taylor",
+      "team": "NYJ",
+      "pos": "TE",
+      "date": "2026-10-01",
+      "headline": "DNP again Thursday (thumb); Glenn lists him week-to-week for Bears game",
+      "take": "Kenyon Sadiq remains the Jets' top receiving-TE option in Week 4.",
+      "url": "https://www.newyorkjets.com/news/jets-injury-report-week-4-vs-bears-thursday-10-01-2026",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Adonai Mitchell",
+      "team": "NYJ",
+      "pos": "WR",
+      "date": "2026-10-01",
+      "headline": "Added back to injury report Thursday (finger); week-to-week per Glenn",
+      "take": "Clouds his Week 4 outlook behind Garrett Wilson in the Jets' passing game.",
+      "url": "https://www.newyorkjets.com/news/jets-injury-report-week-4-vs-bears-thursday-10-01-2026",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Chig Okonkwo",
+      "team": "WAS",
+      "pos": "TE",
+      "date": "2026-10-01",
+      "headline": "Limited for a 2nd straight day Thursday (hamstring) in London",
+      "take": "Needs a Friday upgrade to play Sunday vs. Colts -- hold him until the final tag.",
+      "url": "https://www.hogshaven.com/washington-commanders-injuries/445274/commanders-vs-colts-thursday-injury-report-chig-okonkwo-frankie-luvu-rachaad-white",
+      "tag": "injury",
+      "src_type": "team"
+    },
+    {
+      "player": "Jadarian Price",
+      "team": "SEA",
+      "pos": "RB",
+      "date": "2026-10-01",
+      "headline": "Stuck in a 3-way Seattle committee, under 8 PPR points in 3 straight games",
+      "take": "Fading flex value even before Zach Charbonnet re-enters the backfield mix.",
+      "url": "https://www.fantasylife.com/articles/fantasy/nfl-snap-counts-report-for-week-4-fantasy-football",
+      "tag": "faller",
+      "src_type": "report"
+    },
+    {
+      "player": "Zach Charbonnet",
+      "team": "SEA",
+      "pos": "RB",
+      "date": "2026-10-01",
+      "headline": "Designated to return to practice, opens 21-day window, but out for Week 4",
+      "take": "Earliest eligible Week 5 vs. SF, but a full ramp-up suggests Week 6-7 before real work.",
+      "url": "https://heavy.com/sports/nfl/seattle-seahawks/zach-charbonnet-injury-update-practice/",
+      "tag": "injury",
+      "avail": {
+        "k": "ret",
+        "wk": 5
+      },
+      "src_type": "report"
+    },
     {
       "player": "DeVonta Smith",
       "team": "PHI",

@@ -1312,6 +1312,7 @@ function _irHiddenAbove(pos) {
 // Renumber all myRank values from the board order
 function renumber() {
   window._wkPosRankCache = null; // weekly +/- position-rank maps (see _posRankMapFor)
+  window._consRankGen = (window._consRankGen || 0) + 1; // CONS column rank maps (see _consRankFor)
   const posCounts = {QB: 0, RB: 0, WR: 0, TE: 0, K: 0, DST: 0};
   // Out-for-season players keep their board slot but are skipped in the
   // numbering (season formats only), so the visible table stays contiguous
@@ -2416,35 +2417,64 @@ function _consRankFor(d) {
   const src = _consColSrc();
   const board = versionBoards[src] && versionBoards[src][currentMode];
   if (!Array.isArray(board) || !board.length) return null;
-  if (_consRankCache.board !== board) {
+  if (_consRankCache.board !== board || _consRankCache.gen !== window._consRankGen) {
     const ovr = {}, pos = {}, cnt = {};
-    board.forEach((idx, r) => {
-      ovr[idx] = r + 1;
+    // Position ranks park out-for-season players after everyone else, the
+    // same way renumber() numbers the visible board — otherwise the reference
+    // QB4 and this board's QB4 would be counted on different scales.
+    const _irHide = window._irHiddenHere(currentMode), _parked = [];
+    const _numPos = idx => {
       const p = D[idx];
       if (!p) return;
       cnt[p.s] = (cnt[p.s] || 0) + 1;
       pos[idx] = cnt[p.s];
+    };
+    board.forEach((idx, r) => {
+      ovr[idx] = r + 1;
+      if (_irHide && D[idx] && window._irIsOut(D[idx].n)) { _parked.push(idx); return; }
+      _numPos(idx);
     });
-    _consRankCache = { board, ovr, pos };
+    _parked.forEach(_numPos);
+    _consRankCache = { board, ovr, pos, gen: window._consRankGen };
   }
   const r = (d.s === 'K' || d.s === 'DST') ? _consRankCache.pos[d.idx] : _consRankCache.ovr[d.idx];
   return r == null ? null : r;
+}
+// The pair every consumer of the column compares (cell tint, +/-, sorts,
+// Moved chip): { ref, mine, pos }. On a single-position view (QB/RB/WR/TE
+// filter, or ROOKIES narrowed to one position) that is the POSITION rank on
+// both boards — consensus QB1 vs this board's QB1 — instead of the overall
+// slots (Jack 2026-10-02). K/DST are always position ranks with no verdict
+// (mine: null). null when the reference board doesn't list the player.
+function _consCmp(d) {
+  const ovr = _consRankFor(d);
+  if (ovr == null) return null;
+  if (d.s === 'K' || d.s === 'DST') return { ref: ovr, mine: null, pos: true };
+  if (_ktcPosView()) {
+    const ref = _consRankCache.pos[d.idx], mine = _boardPosRankNum(d);
+    if (ref != null && mine != null) return { ref, mine, pos: true };
+  }
+  return { ref: ovr, mine: d.myRank, pos: false };
 }
 // Cell payload for the column: rank + value/reach tint (same ±3 thresholds
 // and classes the ADP column used — green = this board is higher on him
 // than the reference board, red = lower) + hover text.
 function _consCellInfo(d) {
-  const r = _consRankFor(d);
+  const c = _consCmp(d);
   const lbl = _consColLabel();
-  if (r == null && _consColLocked()) return { r: null, cls: '', tip: _CONS_LOCK_TIP, locked: true };
-  if (r == null) return { r: null, cls: '', tip: 'No ' + lbl + ' rank for this player' };
-  if (d.s === 'K' || d.s === 'DST') return { r, cls: '', tip: lbl + ' ' + (d.s === 'DST' ? 'D/ST' : 'K') + r + ' (position rank)' };
-  const diff = r - d.myRank;
+  if (!c && _consColLocked()) return { r: null, cls: '', tip: _CONS_LOCK_TIP, locked: true };
+  if (!c) return { r: null, cls: '', tip: 'No ' + lbl + ' rank for this player' };
+  const r = c.ref;
+  if (c.mine == null) return { r, cls: '', tip: lbl + ' ' + (d.s === 'DST' ? 'D/ST' : 'K') + r + ' (position rank)' };
+  const diff = r - c.mine;
   const cls = diff >= 3 ? ' adp-value' : diff <= -3 ? ' adp-reach' : '';
-  const tip = lbl + ' #' + r + ' vs this board #' + d.myRank
+  // Position view: the cell reads QB1, matching the POS RANK column beside it.
+  const pre = c.pos ? d.s : '#';
+  const tip = lbl + ' ' + pre + r + ' vs this board ' + pre + c.mine
+    + (c.pos ? ' (overall: ' + lbl + ' #' + _consRankFor(d) + ', this board #' + d.myRank + ')' : '')
     + (diff > 0 ? ' — ' + diff + ' spot' + (diff === 1 ? '' : 's') + ' higher here than ' + lbl
       : diff < 0 ? ' — ' + (-diff) + ' spot' + (diff === -1 ? '' : 's') + ' lower here than ' + lbl : ' — even');
-  return { r, cls, tip };
+  return { r, cls, tip, txt: c.pos ? d.s + r : null };
 }
 // REDRAFT Team Total cell: rest-of-season average implied total, same color
 // bands as the weekly column (inverted for D/ST, which reads the opponents).
@@ -2474,11 +2504,12 @@ function _syncConsColHeader() {
   const want = isC ? "Jack's" : 'Cons';
   const locked = isC && _consColLocked();
   const _fpOnly = currentMode === 'redraft' || currentMode === 'bestball';
-  const gloss = locked ? _CONS_LOCK_TIP : isC
+  let gloss = locked ? _CONS_LOCK_TIP : isC
     ? "Jack's rank — where this player sits on Jack's board for this format. Green = the consensus is higher on him than Jack, red = lower."
     : _fpOnly
       ? 'Consensus rank — where this player sits on the CONSENSUS board: FantasyPros\' expert consensus (rest-of-season rankings in season, refreshed daily). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.'
       : 'Consensus rank — where this player sits on the CONSENSUS board for this format (Jack\'s + market ADP + Sleeper + FantasyPros + KTC blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.';
+  if (!locked && _ktcPosView()) gloss += ' On a single-position view this column and +/- compare POSITION ranks (QB1 vs QB1), not overall slots.';
   if (lab.textContent !== want || lab.getAttribute('data-gloss') !== gloss) {
     lab.textContent = want;
     lab.setAttribute('data-gloss', gloss);
@@ -4530,7 +4561,7 @@ function getFiltered(applyTopN) {
         case 'name': return sortDir * a.n.localeCompare(b.n);
         case 'pos': return sortDir * a.s.localeCompare(b.s);
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
-        case 'adp': av = _consRankFor(a) ?? 999; bv = _consRankFor(b) ?? 999; break;
+        case 'adp': { const ca = _consCmp(a), cb = _consCmp(b); av = ca ? ca.ref : 999; bv = cb ? cb.ref : 999; break; }
         case 'round': av = a.round; bv = b.round; break;
         case 'pts': if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
         case 'fpts25': if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
@@ -4552,7 +4583,7 @@ function getFiltered(applyTopN) {
         }
         case 'diff':
           if (currentMode === 'weekly') { const wa = _weeklyDiff(a), wb = _weeklyDiff(b); av = wa ? wa.diff : 0; bv = wb ? wb.diff : 0; break; }
-          av = (a.s==='K'||a.s==='DST') ? 0 : (_consRankFor(a)??a.myRank) - a.myRank; bv = (b.s==='K'||b.s==='DST') ? 0 : (_consRankFor(b)??b.myRank) - b.myRank; break;
+          { const ca = _consCmp(a), cb = _consCmp(b); av = (ca && ca.mine != null) ? ca.ref - ca.mine : 0; bv = (cb && cb.mine != null) ? cb.ref - cb.mine : 0; } break;
         // Weekly-only columns (Opp / Spread / Team Total). These read the same
         // values the cells render — note Team Total shows the OPPONENT's
         // implied total on D/ST rows, so the sort has to branch the same way
@@ -4695,8 +4726,13 @@ function diffHtml(d) {
     // slots for them are a scale mismatch by design), keep it in the tip.
     return `<span class="diff-even" title="${_cl} ${d.s === 'DST' ? 'D/ST' : 'K'}${_cr}${_verSuffix}">—</span>`;
   }
-  const diff = _cr - d.myRank;
-  const _tt = `This board #${d.myRank} vs ${_cl} #${_cr}${_verSuffix}`;
+  // Single-position view: the delta is in POSITION ranks (see _consCmp).
+  const _cmp = _consCmp(d);
+  const _pv = !!(_cmp && _cmp.pos);
+  const diff = _pv ? _cmp.ref - _cmp.mine : _cr - d.myRank;
+  const _tt = _pv
+    ? `This board ${d.s}${_cmp.mine} vs ${_cl} ${d.s}${_cmp.ref} (overall #${d.myRank} vs #${_cr})${_verSuffix}`
+    : `This board #${d.myRank} vs ${_cl} #${_cr}${_verSuffix}`;
   if (diff === 0) return `<span class="diff-even" title="${_tt} — even with ${_cl}">—</span>`;
   if (diff > 0) return `<span class="diff-up" title="${_tt} — ranked ${diff} spot${diff === 1 ? '' : 's'} higher than ${_cl}">▲ ${diff}</span>`;
   return `<span class="diff-down" title="${_tt} — ranked ${-diff} spot${diff === -1 ? '' : 's'} lower than ${_cl}">▼ ${-diff}</span>`;
@@ -6899,7 +6935,8 @@ function render() {
     if (showTiers) html += _tierRowsHtml(i > 0 ? (useFilteredRank ? i : data[i-1].myRank) : 0, displayRank);
 
     const _cc = _consCellInfo(d);
-    const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (_cc.r != null && d.s !== 'K' && d.s !== 'DST' && Math.abs(_cc.r - d.myRank) >= 1);
+    const _ccCmp = _consCmp(d);
+    const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (!!_ccCmp && _ccCmp.mine != null && _ccCmp.ref !== _ccCmp.mine);
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
     // Hoist per-row computations called 2-4× inside the row template. Saves
@@ -7060,7 +7097,7 @@ function render() {
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
-      <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? _cc.r : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
+      <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? (_cc.txt || _cc.r) : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
       ${_statTd1}${_wkSplit.pre}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
       ${_wkSimBoomBustCell(d, 'bust')}
@@ -7212,7 +7249,7 @@ function updateStats(data) {
   const tes = data.filter(d=>d.s==='TE').length;
   const moved = currentMode === 'weekly'
     ? D.filter(d => { const w = _weeklyDiff(d); return !!w && Math.abs(w.diff) >= 1; }).length
-    : data.filter(d => { if (d.s === 'K' || d.s === 'DST') return false; const r = _consRankFor(d); return r != null && Math.abs(r - d.myRank) >= 1; }).length;  // rows on this view that sit off the consensus slot
+    : data.filter(d => { const c = _consCmp(d); return !!c && c.mine != null && c.ref !== c.mine; }).length;  // rows on this view that sit off the consensus slot (position slot on a single-position view)
   const rookies = data.filter(d => {
     if (d.career && d.career.length) return false;
     const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;

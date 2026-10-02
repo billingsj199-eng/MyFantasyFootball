@@ -1,0 +1,257 @@
+{
+ "files": [
+  "live_track_2026_w4_CLE_PIT.csv"
+ ],
+ "bins": {
+  "Q1": {
+   "fit": 3.722,
+   "fitx": 3.726,
+   "v1": 4.248,
+   "naive": 4.198,
+   "n": 805
+  },
+  "Q2": {
+   "fit": 3.164,
+   "fitx": 3.155,
+   "v1": 3.366,
+   "naive": 3.295,
+   "n": 1403
+  },
+  "Q3": {
+   "fit": 2.851,
+   "fitx": 2.847,
+   "v1": 3.143,
+   "naive": 3.028,
+   "n": 1127
+  },
+  "Q4": {
+   "fit": 1.673,
+   "fitx": 1.671,
+   "v1": 1.688,
+   "naive": 1.691,
+   "n": 1403
+  }
+ },
+ "players": {
+  "Aaron Rodgers": {
+   "pos": "QB",
+   "proj": 15.4,
+   "final": 23.96,
+   "fit": 6.6,
+   "fitx": 6.62,
+   "v1": 7.57,
+   "naive": 7.62
+  },
+  "Deshaun Watson": {
+   "pos": "QB",
+   "proj": 14.0,
+   "final": 13.92,
+   "fit": 1.67,
+   "fitx": 1.7,
+   "v1": 2.09,
+   "naive": 1.89
+  },
+  "Jaylen Warren": {
+   "pos": "RB",
+   "proj": 13.6,
+   "final": 15.6,
+   "fit": 1.49,
+   "fitx": 1.49,
+   "v1": 1.26,
+   "naive": 1.05
+  },
+  "Quinshon Judkins": {
+   "pos": "RB",
+   "proj": 11.8,
+   "final": 21.6,
+   "fit": 3.76,
+   "fitx": 3.76,
+   "v1": 3.66,
+   "naive": 3.98
+  },
+  "DK Metcalf": {
+   "pos": "WR",
+   "proj": 11.2,
+   "final": 16.5,
+   "fit": 4.96,
+   "fitx": 4.96,
+   "v1": 5.33,
+   "naive": 5.29
+  },
+  "Harold Fannin": {
+   "pos": "TE",
+   "proj": 10.6,
+   "final": 11.7,
+   "fit": 1.98,
+   "fitx": 1.98,
+   "v1": 2.36,
+   "naive": 2.13
+  },
+  "KC Concepcion": {
+   "pos": "WR",
+   "proj": 9.9,
+   "final": 11.4,
+   "fit": 1.5,
+   "fitx": 1.5,
+   "v1": 1.95,
+   "naive": 1.76
+  },
+  "Michael Pittman": {
+   "pos": "WR",
+   "proj": 9.7,
+   "final": 3.5,
+   "fit": 3.96,
+   "fitx": 3.96,
+   "v1": 3.62,
+   "naive": 3.75
+  },
+  "Denzel Boston": {
+   "pos": "WR",
+   "proj": 9.4,
+   "final": 12.9,
+   "fit": 1.75,
+   "fitx": 1.75,
+   "v1": 2.22,
+   "naive": 1.92
+  },
+  "Rico Dowdle": {
+   "pos": "RB",
+   "proj": 8.4,
+   "final": 0.0,
+   "fit": 3.35,
+   "fitx": 3.35,
+   "v1": 3.48,
+   "naive": 3.82
+  },
+  "Pittsburgh Steelers D/ST": {
+   "pos": "DST",
+   "proj": 8.1,
+   "final": 8.0,
+   "fit": 3.63,
+   "fitx": 3.63,
+   "v1": 4.12,
+   "naive": 3.72
+  },
+  "Chris Boswell": {
+   "pos": "K",
+   "proj": 8.1,
+   "final": 3.0,
+   "fit": 2.32,
+   "fitx": 2.32,
+   "v1": 2.32,
+   "naive": 2.52
+  },
+  "Pat Freiermuth": {
+   "pos": "TE",
+   "proj": 7.8,
+   "final": 10.7,
+   "fit": 4.03,
+   "fitx": 4.03,
+   "v1": 4.3,
+   "naive": 4.18
+  },
+  "Cleveland Browns D/ST": {
+   "pos": "DST",
+   "proj": 7.0,
+   "final": 9.0,
+   "fit": 1.47,
+   "fitx": 1.47,
+   "v1": 3.08,
+   "naive": 2.66
+  },
+  "Andre Szmyt": {
+   "pos": "K",
+   "proj": 6.9,
+   "final": 12.0,
+   "fit": 6.02,
+   "fitx": 6.02,
+   "v1": 6.02,
+   "naive": 5.91
+  },
+  "Roman Wilson": {
+   "pos": "WR",
+   "proj": 5.7,
+   "final": 16.4,
+   "fit": 3.0,
+   "fitx": 3.0,
+   "v1": 2.93,
+   "naive": 3.08
+  },
+  "Darnell Washington": {
+   "pos": "TE",
+   "proj": 4.9,
+   "final": 11.7,
+   "fit": 5.15,
+   "fitx": 5.15,
+   "v1": 5.24,
+   "naive": 5.23
+  },
+  "Jerry Jeudy": {
+   "pos": "WR",
+   "proj": 4.8,
+   "final": 6.6,
+   "fit": 3.82,
+   "fitx": 3.82,
+   "v1": 3.69,
+   "naive": 3.52
+  },
+  "Germie Bernard": {
+   "pos": "WR",
+   "proj": 4.5,
+   "final": 3.1,
+   "fit": 0.92,
+   "fitx": 0.92,
+   "v1": 1.17,
+   "naive": 1.04
+  },
+  "Isaiah Bond": {
+   "pos": "WR",
+   "proj": 1.6,
+   "final": 1.2,
+   "fit": 0.7,
+   "fitx": 0.7,
+   "v1": 0.76,
+   "naive": 0.72
+  },
+  "Jimmy Horn": {
+   "pos": "WR",
+   "proj": 1.5,
+   "final": 0.0,
+   "fit": 0.58,
+   "fitx": 0.58,
+   "v1": 0.62,
+   "naive": 0.68
+  },
+  "Malachi Corley": {
+   "pos": "WR",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.19,
+   "fitx": 0.19,
+   "v1": 0.21,
+   "naive": 0.23
+  },
+  "Drew Allar": {
+   "pos": "QB",
+   "proj": 0.5,
+   "final": 0.0,
+   "fit": 0.23,
+   "fitx": 0.1,
+   "v1": 0.21,
+   "naive": 0.23
+  }
+ },
+ "all": {
+  "fit": 2.743,
+  "fitx": 2.739,
+  "v1": 2.966,
+  "naive": 2.91,
+  "n": 4738
+ },
+ "wins": {
+  "fit": 16,
+  "fitx": 1,
+  "v1": 3,
+  "naive": 3
+ }
+}

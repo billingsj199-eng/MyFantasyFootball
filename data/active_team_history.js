@@ -481,7 +481,7 @@ const ACTIVE_TEAM_HISTORY = {
     'Woody Marks': [{t:'Houston Texans',y1:2025,y2:2099}],
     'Xavier Hutchinson': [{t:'Houston Texans',y1:2023,y2:2099}],
     'Xavier Legette': [{t:'Carolina Panthers',y1:2024,y2:2099}],
-    'Xavier Smith': [{t:'Los Angeles Rams',y1:2023,y2:2099}],
+    'Xavier Smith': [{t:'Los Angeles Rams',y1:2023,y2:2025}],
     'Xavier Worthy': [{t:'Kansas City Chiefs',y1:2024,y2:2099}],
     'Zach Charbonnet': [{t:'Seattle Seahawks',y1:2023,y2:2099}],
     'Zach Ertz': [{t:'Arizona Cardinals',y1:2021,y2:2022},{t:'Detroit Lions',y1:2023,y2:2023},{t:'Washington Commanders',y1:2024,y2:2025},{t:'Philadelphia Eagles',y1:2026,y2:2099}],

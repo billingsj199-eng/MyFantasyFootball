@@ -9,8 +9,8 @@
 #        missing from the site (devy entry). Exit 3 = consensus board down,
 #        nothing changed.
 #   2. scripts/pull_pff_ncaa.py              PFF Premium COLLEGE weekly facets
-#        (passing/rushing/receiving/offense) via the PFF Chrome profile ->
-#        pbp_cache/pff/ncaa (git-ignored cache). Exit 2 = login needed; the
+#        (passing/rushing/receiving/offense) from the official PFF Developer API ->
+#        pbp_cache/pff/ncaa (git-ignored cache). Exit 2 = no key / key refused; the
 #        refresh below then keeps the previous PFF fields.
 #   3. scripts/refresh_devy_stats.py         CFBD box scores (current season +
 #        prior-season backfill for new adds) + PFF per-game / season grades ->
@@ -52,10 +52,10 @@ Write-Log ('draft boards: ' + $out.Trim())
 if ($LASTEXITCODE -eq 3) { Write-Log 'consensus board unavailable - draftProj unchanged this week' }
 elseif ($LASTEXITCODE -ne 0) { Write-Log "draft boards FAILED (exit $LASTEXITCODE) - continuing" }
 
-# 2. PFF college weekly facets (needs the signed-in PFF Chrome profile)
-$out = & $Python 'scripts\pull_pff_ncaa.py' '--login-wait' '90' 2>&1 | Out-String
+# 2. PFF college weekly facets (needs the PFF Pro API key in pbp_cache/pff/api_key.txt)
+$out = & $Python 'scripts\pull_pff_ncaa.py' 2>&1 | Out-String
 Write-Log ('pff ncaa: ' + $out.Trim())
-if ($LASTEXITCODE -eq 2) { Write-Log 'PFF LOGIN NEEDED - college PFF grades stay at last pull until Jack logs in to premium.pff.com in the PFF Chrome profile' }
+if ($LASTEXITCODE -eq 2) { Write-Log 'PFF API KEY MISSING OR REFUSED - college PFF grades stay at last pull until the key in pbp_cache/pff/api_key.txt works' }
 elseif ($LASTEXITCODE -ne 0) { Write-Log "pff ncaa FAILED (exit $LASTEXITCODE) - continuing with cached files" }
 
 # 2b. Published projected forties (Stick to the Model board; Jack's DraftBuzz rows in the CSV win)

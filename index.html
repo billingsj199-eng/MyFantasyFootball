@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-05-oppgrade-ud" as="script">
+<link rel="preload" href="app.js?v=2026-10-05-vor7" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1364,6 +1364,9 @@ CLEAR ALL
      the first stat cell with VOR beside it; the phone card has only that one
      stat cell, so it swaps to the VOR there. */
   #pageRankings tbody .vor-m{display:none}
+  /* VOR views drop AGE (Jack 2026-10-05) — beats the COLS toggle's inline style. */
+  body.rnk-vor #pageRankings #ageHeader,
+  body.rnk-vor #pageRankings .age-cell{display:none!important}
   @media (max-width:600px){
     body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-ppg{display:none}
     body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-m{display:inline}
@@ -1652,6 +1655,8 @@ body.vor-bar-on .vor-bar{display:flex}
 .vor-num{display:inline-flex;align-items:center;gap:4px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2);white-space:nowrap}
 .vor-num input{width:38px;padding:2px 3px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;text-align:center}
 .vor-bar-x{font-size:.66rem;font-weight:600;color:var(--accent);white-space:nowrap}
+.vor-po{display:inline-flex;align-items:center;gap:4px;padding-left:8px;border-left:1px solid var(--border)}
+.vor-dash{color:var(--text2);font-size:.7rem}
 .vor-bar .vor-waiver-btn{padding:.25rem .75rem;font-size:.65rem}
 .vor-bar .vor-waiver-btn.on{background:rgba(34,197,94,.16);border-color:#22c55e;color:#22c55e}
 .vor-reset{margin-left:auto;padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.58rem;letter-spacing:.6px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
@@ -6012,7 +6017,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-05-oppgrade-ud"></script>
+<script defer src="app.js?v=2026-10-05-vor7"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

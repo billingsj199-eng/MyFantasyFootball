@@ -3653,6 +3653,7 @@ function _viewPresetDefaultName(s) {
   if (s.pos && s.pos !== 'ALL') parts.push(s.pos);
   if (s.topN) parts.push('Top ' + s.topN);
   if (Array.isArray(s.teams) && s.teams.length) parts.push(s.teams.length <= 3 ? s.teams.map(_tfAbbr).join('+') : s.teams.length + ' teams');
+  if (s.inj) parts.push('Injured');
   return parts.join(' · ');
 }
 window._saveViewPreset = function () {
@@ -3662,7 +3663,8 @@ window._saveViewPreset = function () {
     stats: (typeof rnkStatMode !== 'undefined' ? rnkStatMode : 'fantasy'),
     adp: (typeof rnkAdpSrc !== 'undefined' ? rnkAdpSrc : 'consensus'),
     topN: (typeof rankTopN !== 'undefined' && rankTopN != null) ? rankTopN : null,
-    teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : []
+    teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : [],
+    inj: !!window._injOnly
   };
   const list = _viewPresetsLoad();
   if (list.length >= 8) { if (typeof toast === 'function') toast('Preset limit reached (8) — remove one first'); return; }
@@ -3696,6 +3698,7 @@ window._applyViewPreset = function (i) {
   }
   // Teams: presets saved before this field existed carry none → clears the pill.
   if (typeof window._setTeamFilter === 'function') window._setTeamFilter(Array.isArray(s.teams) ? s.teams : [], true);
+  if (typeof window._toggleInjOnly === 'function') window._toggleInjOnly(!!s.inj);
   _renderViewPresets(i);
 };
 window._deleteViewPreset = function (i) {
@@ -3990,6 +3993,517 @@ window._toggleTeamFilterPop = function (force) {
     render();
   });
 })();
+
+// ── INJURIES filter (rankings, Jack 2026-10-05: "an injuries filter in rankings
+// that shows all the injured players ... in order of rank") ────────────────────
+// INJURIES pill beside TEAMS: only players carrying an injury designation, still
+// in board order. While it is on, the table gains three columns in front of Cons
+// — INJURY (body part, designation, practice log), EST. RETURN (a week or a
+// range, counted forward from now) and TIMELINE (what has been reported + what
+// is typical for the injury) — and drops L4 / Age / P-SOS / +/-.
+// The return estimate comes from, in order:
+//   1. the Sim Lab injury layer (SIM_PROJ_2026.inj — the same out-windows and
+//      availability curve that are inside the projections),
+//   2. a structured timeline on the news feed (camp_news `avail`) when the
+//      layer has no forward read or the item is newer than the export,
+//   3. the designation alone.
+// TIMELINE's "typical" line is read off the Sim Lab research tables shipped in
+// the same export (SIM_PROJ_2026.injRes: P(misses the next game | missed k) by
+// position + injury group, and Questionable play odds by practice level).
+// ANDs with position / ★ / TEAMS / search, applied after the TOP-N cap like
+// TEAMS. Session-only, saved into view presets (s.inj).
+window._injOnly = false;
+const _IV_STATUS = { Q: 'Questionable', D: 'Doubtful', O: 'Out', IR: 'IR', PUP: 'PUP', SUS: 'Suspended' };
+const _IV_STATUS_COLOR = { Q: '#f59e0b', D: '#f97316', O: '#ef4444', IR: '#ef4444', PUP: '#ef4444', SUS: '#a78bfa' };
+const _IV_SEV = { Q: 1, D: 2, O: 3, SUS: 4, PUP: 5, IR: 6 };
+// Body part -> injury group. First match wins (Achilles before calf, ACL before knee).
+const _IV_GROUPS = [
+  ['none', /coach|personal|not injury|\brest|suspen/],
+  ['achilles', /achilles/], ['acl', /\bacl\b/], ['knee', /knee|\bmcl\b|\bpcl\b|\blcl\b|menisc|patell/],
+  ['hamstring', /hamstring/], ['calf', /calf/], ['groin', /groin|adductor/], ['quad', /quad|thigh/],
+  ['foot', /foot|lisfranc|heel|plantar/], ['toe', /toe/], ['ankle', /ankle/],
+  ['concussion', /concussion|head/], ['neck', /neck|stinger/], ['back', /back|spine|lumbar/],
+  ['shoulder', /shoulder|labrum|rotator/], ['collarbone', /collarbone|clavicle/], ['hip', /hip|glute/],
+  ['core', /abdom|oblique|core|hernia/], ['chest', /chest|pectoral|\bpec\b/], ['ribs', /\brib/],
+  ['arm', /elbow|biceps|triceps|forearm|\barm\b/], ['hand', /hand|wrist|finger|thumb/],
+  ['leg', /fibula|tibia|shin|\bleg\b/], ['illness', /illness|sick|\bflu\b/]
+];
+function _ivGroup(body) {
+  const b = String(body || '').toLowerCase();
+  if (!b) return '';
+  for (let i = 0; i < _IV_GROUPS.length; i++) if (_IV_GROUPS[i][1].test(b)) return _IV_GROUPS[i][0];
+  return '';
+}
+// "a hamstring injury" / "an ankle injury" / "a concussion"
+function _ivInjPhrase(g) {
+  const art = /^[aeiou]/.test(g) ? 'an ' : 'a ';
+  return art + g + (g === 'concussion' || g === 'illness' ? '' : ' injury');
+}
+function _ivCap(s) { s = String(s || ''); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function _ivEsc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// NFL week a timestamp falls in (weeks roll two days before the opening kickoff).
+function _ivWeekOfMs(ms) {
+  let kicks = null;
+  try { kicks = _SEASON_KICKS_2026; } catch (e) { return null; }   // TDZ before the const runs
+  if (!Array.isArray(kicks) || !kicks.length || !isFinite(ms)) return null;
+  let w = kicks[0].wk;
+  for (let i = 0; i < kicks.length; i++) { if (ms >= kicks[i].kick - 2 * 86400000) w = kicks[i].wk; else break; }
+  return w;
+}
+// His team's game weeks from `from` on (bye skipped).
+function _ivGameWeeks(d, from) {
+  const out = [];
+  for (let w = Math.max(1, from || 1); w <= 18; w++) if (w !== d.bye) out.push(w);
+  return out;
+}
+function _ivEngineRow(d) {
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !SP.inj) return null;
+  let r = SP.inj[d.n];
+  if (!r) {
+    let idx = window._ivEngIdx;
+    if (!idx || idx._src !== SP.inj) {
+      idx = { _src: SP.inj, m: {} };
+      Object.keys(SP.inj).forEach(k => { idx.m[_campNewsNorm(k)] = SP.inj[k]; });
+      window._ivEngIdx = idx;
+    }
+    r = idx.m[_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+let _ivCache = null;
+// Newest structured timeline on the news feed for this player (season / "N-M
+// weeks" / "out until week N"). The team's or an insider's read beats an
+// analyst's; a newer "expected to play" item cancels it.
+function _ivNewsTimeline(d) {
+  const arr = window._campNewsIdx && window._campNewsIdx[_campNewsNorm(d.n)];
+  if (!arr || !arr.length) return null;
+  const cut = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
+  let best = null, lastPlay = '';
+  arr.forEach(it => {
+    const a = it && it.avail;
+    if (!a || !it.date || it.date < cut) return;
+    if (a.k === 'play') { if (it.date > lastPlay) lastPlay = it.date; return; }
+    if (a.k !== 'season' && a.k !== 'weeks' && a.k !== 'ret') return;
+    const rank = it.src_type === 'expert' ? 0 : 1;
+    if (!best || rank > best.rank || (rank === best.rank && it.date > best.it.date)) best = { it: it, rank: rank };
+  });
+  if (!best || lastPlay > best.it.date) return null;
+  const it = best.it, a = it.avail, dms = Date.parse(it.date + 'T16:00:00Z');
+  const o = { src: 'newsfeed', date: it.date, note: it.date + ' ' + it.headline };
+  if (a.k === 'season') { o.season = true; o.rep = 'season-ending'; o.repM = 'season'; return o; }
+  if (a.k === 'ret') {
+    if (!(a.wk >= 1 && a.wk <= 18)) return null;
+    o.lo = +a.wk; o.hi = Math.min(18, +a.wk + 1);
+    o.rep = 'out until Wk ' + a.wk; o.repM = 'til Wk ' + a.wk;
+  } else {
+    const lo = +a.lo, hi = a.hi != null ? +a.hi : lo + 2;
+    if (!(lo >= 0) || !(hi >= lo)) return null;
+    const u = a.unit === 'g' ? ['game', 'gm'] : ['week', 'wk'];
+    const span = a.hi == null ? lo + '+' : hi > lo ? lo + '–' + hi : String(lo);
+    o.rep = span + ' ' + u[0] + (span === '1' ? '' : 's'); o.repM = span + ' ' + u[1] + (span === '1' ? '' : 's');
+    if (a.unit === 'g') {
+      // "N games": counted in his team's own games after the report
+      const gw = _ivGameWeeks(d, _ivWeekOfMs(dms + 2 * 86400000) || 1);
+      o.lo = gw[lo] != null ? gw[lo] : 19; o.hi = gw[hi] != null ? gw[hi] : 19;
+    } else {
+      // "N weeks": the first game on or after report date + N weeks (three days of slack, as the Sim Lab reads it)
+      o.lo = _ivWeekOfMs(dms + (7 * lo - 3) * 86400000); o.hi = _ivWeekOfMs(dms + (7 * hi - 3) * 86400000);
+      if (o.lo == null || o.hi == null) return null;
+    }
+  }
+  if (o.lo === d.bye) o.lo++;
+  if (o.hi === d.bye) o.hi++;
+  if (o.lo > 18) { o.season = true; delete o.lo; delete o.hi; }
+  else if (o.hi > 18) { o.hi = null; o.open = true; }
+  return o;
+}
+function _ivLgt(p) { p = Math.min(0.995, Math.max(0.005, p)); return Math.log(p / (1 - p)); }
+function _ivSgm(z) { return 1 / (1 + Math.exp(-z)); }
+const _IV_CAP = 10;
+// Games missed in a row so far (this week's too once it has kicked off without him).
+function _ivK0(raw, cw) {
+  return raw ? (raw.pm || 0) + (raw.kd && !raw.pd && raw.m === 0 && raw.f <= cw && raw.t >= cw ? 1 : 0) : 0;
+}
+// cum[a] = P(he misses at most `a` more games), a = 0 .. _IV_CAP, from the research
+// tables (SIM_PROJ_2026.injRes): the chain of P(misses the next game | missed k)
+// for his position, shifted by injury group. `need` = games he is certain to miss
+// from here (1 = already ruled out of the next one, 4 - k0 on a reserve list,
+// 0 = not known — the first step then uses the one-game-missed rate).
+function _ivCum(R, pos, g, k0, need) {
+  const base = R.pos && R.pos[pos] ? R.pos[pos] : R.cont;
+  const shf = R.grp && R.grp[g] ? R.grp[g] : null;
+  const cont = k => {
+    const kk = Math.min(8, Math.max(1, k)), c = base[kk - 1], sh = shf ? shf[Math.min(3, kk) - 1] : 0;
+    return sh ? _ivSgm(_ivLgt(c) + sh) : c;
+  };
+  const cum = [];
+  let surv = need >= 1 ? 1 : cont(Math.max(1, k0));   // P(misses at least 1 more)
+  cum[0] = 1 - surv;
+  for (let a = 1; a <= _IV_CAP; a++) { surv *= a < need ? 1 : cont(k0 + a); cum[a] = 1 - surv; }
+  return cum;
+}
+// How the recent reports read for a player with no timeline: 'minor' / 'serious'
+// off the newest injury HEADLINE that carries a cue (never the take — it names
+// other players). Both cues in one line = no lean.
+const _IV_TONE_MINOR = /not (?:considered |believed |thought )?(?:to be )?(?:overly |too |that )?serious|\bminor\b|day[- ]to[- ]day|no (?:long[- ]term|structural|ligament|significant|major) (?:damage|injury)|clean (?:mri|x-?rays?|scan|ankle|knee)|negative (?:mri|x-?rays?)|avoid(?:s|ed)? (?:a |any )?(?:major|serious|significant|long[- ]term)|precaution|could play|got close|expected to (?:play|return|be (?:fine|ok|okay|available|ready))|good news|best[- ]case/i;
+const _IV_TONE_SERIOUS = /indefinitely|\bIR\b|injured reserve|significant|extended|multiple weeks|multi-?week|miss (?:some |significant |extended )?time|surgery|fractur|broken|\btorn\b|\btear\b|ruptur|dislocat|re-?aggravat|week[- ]to[- ]week|setback/i;
+function _ivReportTone(d) {
+  const arr = window._campNewsIdx && window._campNewsIdx[_campNewsNorm(d.n)];
+  if (!arr || !arr.length) return null;
+  const cut = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
+  const its = arr.filter(it => it && it.date && it.date >= cut && it.headline && (it.tag === 'injury' || it.avail))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  for (let i = 0; i < its.length; i++) {
+    const h = String(its[i].headline);
+    const ser = _IV_TONE_SERIOUS.test(h) || !!(its[i].avail && its[i].avail.k === 'w2w'), min = _IV_TONE_MINOR.test(h);
+    if (ser && min) return null;
+    if (ser || min) return { t: ser ? 'serious' : 'minor', note: its[i].date + ' ' + h };
+  }
+  return null;
+}
+// OUR OWN estimate for a player listed Out with nothing reported (Jack 2026-10-05:
+// "when a player is tbd like chase ... we put in our own estimated timeline based
+// on the injury" / "fine if the range becomes a little bigger until we know
+// more"). From the same research chain: the first week he is 1-in-3 to be back
+// through the week he is 2-in-3. Reports that read minor take the faster half
+// (through even odds); reports that read serious assume the next game is lost.
+// Never a single week — nothing is known yet.
+function _ivOwnEstimate(d, x, raw, ahead) {
+  const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes;
+  if (!R || !R.cont || !ahead.length) return null;
+  if (x.grp === 'acl' || x.grp === 'achilles') return null;   // no week guessed for a likely season-ender
+  const tone = _ivReportTone(d);
+  const serious = !!tone && tone.t === 'serious', minor = !!tone && tone.t === 'minor';
+  const cum = _ivCum(R, d.s, x.grp, _ivK0(raw, x.cw), serious ? 1 : 0);
+  const at = th => { for (let a = 0; a < cum.length; a++) if (cum[a] >= th) return a; return null; };
+  const aLo = at(1 / 3), aMid = at(0.5);
+  let aHi = at(minor ? 0.5 : 2 / 3);
+  if (aLo == null || ahead[aLo] == null) return null;
+  if (aHi != null && aHi <= aLo) aHi = aLo + 1;
+  const hi = aHi != null && ahead[aHi] != null ? ahead[aHi] : null;
+  const odds = [];
+  for (let a = 0; a < cum.length && a < ahead.length && odds.length < 6; a++) odds.push([ahead[a], cum[a]]);
+  return { lo: ahead[aLo], hi: hi, open: hi == null, mid: aMid != null && ahead[aMid] != null ? ahead[aMid] : null, odds: odds, src: 'est', tone: tone, byInj: !!(R.grp && R.grp[x.grp]) };
+}
+// Estimated return. `raw` = the engine row; `r` = the same row unless its read
+// is spent (a one-week dock for a game that has already kicked off).
+function _ivKicked(d, raw) {
+  if (raw && raw.kd) return true;
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !Array.isArray(SP.injKd) || !SP.teamOf) return false;
+  let tm = SP.teamOf[d.n];
+  if (!tm && typeof TEAM_ABBR_MAP !== 'undefined') tm = TEAM_ABBR_MAP[d.t];
+  return !!tm && SP.injKd.indexOf(tm) >= 0;
+}
+function _ivReturn(d, r, raw, code, cw, det, x) {
+  const kicked = _ivKicked(d, raw);
+  const ahead = cw ? _ivGameWeeks(d, kicked ? cw + 1 : cw) : [];   // his games still to be played
+  const next = ahead.length ? ahead[0] : null;
+  const fin = o => {
+    if (!o.season && o.lo != null && o.lo > 18) o = { season: true, src: o.src, note: o.note };
+    if (o.season) { o.sort = 99; return o; }
+    if (o.lo != null) {
+      if (next != null && o.lo < next) o.lo = next;
+      if (o.hi != null && o.hi < o.lo) o.hi = o.lo;
+      o.missLo = ahead.filter(w => w < o.lo).length;
+      o.missHi = o.hi != null ? ahead.filter(w => w < o.hi).length : null;
+      o.sort = o.lo + (o.pct != null ? (1 - o.pct) / 10 : o.hi != null ? (o.hi - o.lo) / 100 : 0.5);
+    } else o.sort = 50;
+    return o;
+  };
+  // News newer than the export wins: an item dated after the export's day, or
+  // on it when the export ran before the midday news pass. A news window the
+  // layer already holds is only replaced by a later-dated item.
+  const SP = window.SIM_PROJ_2026;
+  const nt = _ivNewsTimeline(d);
+  let useNews = false;
+  if (nt) {
+    if (!r) useNews = true;
+    else if (/^news/.test(r.src) && r.nt) useNews = nt.date > String(r.nt).slice(0, 10);
+    else {
+      const ex = SP && SP.updated ? new Date(SP.updated) : null;
+      if (ex && !isNaN(ex)) {
+        const exDay = ex.getFullYear() + '-' + String(ex.getMonth() + 1).padStart(2, '0') + '-' + String(ex.getDate()).padStart(2, '0');
+        useNews = nt.date > exDay || (nt.date === exDay && ex.getHours() < 12);
+      }
+    }
+    // a timeline that has already run out says nothing about the weeks ahead
+    if (useNews && !nt.season && next != null && nt.hi != null && nt.hi < next) useNews = false;
+  }
+  if (useNews) return fin(nt);
+  if (r) {
+    if (r.t >= 18 || r.src === 'news-season' || r.src === 'dx-season') return fin({ season: true, src: r.src === 'dx-season' ? 'dx' : r.src === 'override' ? 'set' : 'news', note: r.nt || '' });
+    if (r.m > 0) {
+      // one-week dock (Questionable / Doubtful / an Out the reports have not confirmed)
+      const unc = /unconfirmed/.test(r.src);
+      return fin({ lo: r.f, hi: r.f, pct: r.pl != null ? r.pl : unc ? null : r.m, unc: unc, src: 'dock' });
+    }
+    const odds = r.c ? Object.keys(r.c).map(Number).sort((a, b) => a - b).map(w => [w, r.c[w]]) : [];
+    const at = th => { const x = odds.find(o => o[1] >= th); return x ? x[0] : null; };
+    if (r.src === 'ir' || r.src === 'na') {
+      // Reserve list with no reported timeline: the layer rolls a four-game
+      // window forward every week, so the floor here is the list's own rule —
+      // eligible after four missed games — with no firm end.
+      const gw = _ivGameWeeks(d, cw);
+      const elig = gw[Math.max(0, 4 - (r.pm || 0))];
+      return fin({ lo: elig != null ? elig : 19, hi: null, open: true, mid: at(0.5), odds: odds, src: 'ir', elig: (r.pm || 0) >= 4 });
+    }
+    if (odds.length) {
+      const news = /^news/.test(r.src) && r.src !== 'news-out';
+      let lo = at(1 / 3);
+      const hi = at(news ? 0.8 : 2 / 3);
+      if (lo == null) lo = r.nx != null ? r.nx : odds[0][0];
+      return fin({ lo: lo, hi: hi, open: hi == null, mid: at(0.5), odds: odds, src: news ? 'news' : 'curve', note: news ? (r.nt || '') : '', k: r.k });
+    }
+    if (r.nx != null) return fin({ lo: r.nx, hi: r.nx, src: r.src === 'override' ? 'set' : r.src });
+    return fin({ season: true, src: r.src });   // the window runs through his last game
+  }
+  // designation alone
+  if (code === 'Q' || code === 'D') return fin({ lo: next, hi: next, dtd: true, src: 'tag' });
+  if (code === 'IR' || code === 'PUP') {
+    const w0 = det && det.d ? _ivWeekOfMs(Date.parse(det.d + 'T16:00:00Z')) : null;
+    if (w0 != null) { const gw = _ivGameWeeks(d, w0); return fin({ lo: gw[4] != null ? gw[4] : 19, hi: null, open: true, src: 'ir' }); }
+  }
+  if (code === 'O') { const e = _ivOwnEstimate(d, x, raw, ahead); if (e) return fin(e); }
+  return fin({ lo: null, src: 'tag' });
+}
+// Timeline phrase out of a news line the Sim Lab layer already accepted (older
+// items carry no structured `avail`). Only ever fed the layer's own `nt` line.
+function _ivPhrase(line) {
+  const t = String(line || '').replace(/^\d{4}-\d\d-\d\d\s*/, '');
+  if (/out for the (rest of the )?(season|year)|season[- ]ending/i.test(t)) return ['season-ending', 'season'];
+  let m = t.match(/(\d+)\s*(?:-|–|to)\s*(\d+)[\s-]*(week|game)/i);
+  if (m) return [m[1] + '–' + m[2] + ' ' + m[3].toLowerCase() + 's', m[1] + '–' + m[2] + (/^w/i.test(m[3]) ? ' wks' : ' gms')];
+  m = t.match(/(\d+)[\s-]*(week|game)/i);
+  if (m) return [m[1] + '+ ' + m[2].toLowerCase() + 's', m[1] + '+ ' + (/^w/i.test(m[2]) ? 'wks' : 'gms')];
+  m = t.match(/week\s*(\d+)/i);
+  if (m && +m[1] >= 1 && +m[1] <= 18) return ['out until Wk ' + m[1], 'til Wk ' + m[1]];
+  return null;
+}
+// "Typical" for this injury, from the research tables in the sim export. Out /
+// reserve list: how many MORE games players at his position with this injury
+// group went on to miss from where he is now (the chain of P(misses the next
+// game | missed k)), as the middle half — 25th to 75th percentile — with the
+// median. Questionable: how often that designation + practice level has played.
+function _ivTypical(d, x, raw, ahead) {
+  const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes;
+  if (!R || !R.cont || x.code === 'SUS') return null;
+  const g = x.grp, pos = d.s;
+  if (x.code === 'D') return { rare: true };
+  if (x.code === 'Q') {
+    const cls = x.pracLast ? 'Q-' + x.pracLast : '';
+    if (!cls || !R.play || !R.play[cls]) return { dtd: true, all: R.playAll || null };
+    let pp = R.play[cls][pos] != null ? R.play[cls][pos] : (R.playAll && R.playAll[cls]);
+    if (pp == null) return { dtd: true, all: R.playAll || null };
+    const sh = (R.shift && R.shift[cls] && R.shift[cls][g]) || 0;
+    if (sh) pp = _ivSgm(_ivLgt(pp) + sh);
+    return { play: pp, cls: cls, byInj: !!sh };
+  }
+  if (g === 'acl' || g === 'achilles') return { season: true };
+  const k0 = _ivK0(raw, x.cw);
+  const need = (x.code === 'IR' || x.code === 'PUP') ? Math.max(1, 4 - k0) : 1;   // reserve lists: four games minimum
+  const cum = _ivCum(R, pos, g, k0, need);
+  const CAP = _IV_CAP;
+  const q = [0.25, 0.5, 0.75].map(t => { for (let a = 1; a <= CAP; a++) if (cum[a] >= t) return a; return null; });
+  const shf = R.grp && R.grp[g] ? R.grp[g] : null;
+  const left = ahead.length;
+  const fix = v => (v == null || v >= CAP) ? null : v;   // null = runs past the table
+  let lo = fix(q[0]), mid = fix(q[1]), hi = fix(q[2]);
+  if (lo == null) lo = CAP;
+  const ros = left > 0 && (hi == null || hi >= left);    // the long end is the rest of his season
+  return { lo: lo, mid: mid, hi: ros ? null : hi, ros: ros, k0: k0, byInj: !!shf, pos: pos };
+}
+function _ivTimeline(d, x, r, raw) {
+  const ahead = x.cw ? _ivGameWeeks(d, _ivKicked(d, raw) ? x.cw + 1 : x.cw) : [];
+  const next = ahead.length ? ahead[0] : null;
+  const tl = { rep: null, typ: _ivTypical(d, x, raw, ahead) };
+  // what has been reported: the newest timeline on the feed that has not run out, else the line the layer holds
+  const nt = _ivNewsTimeline(d);
+  if (nt && nt.rep && (nt.season || nt.hi == null || next == null || nt.hi >= next)) tl.rep = { txt: nt.rep, m: nt.repM, note: nt.note };
+  else if (r && /^news/.test(r.src) && r.src !== 'news-out' && r.nt) {
+    const ph = _ivPhrase(r.nt);
+    if (ph) tl.rep = { txt: ph[0], m: ph[1], note: r.nt };
+  } else if (r && r.src === 'override' && r.t > x.cw) tl.rep = { txt: r.t >= 18 ? 'season-ending' : 'out through Wk ' + r.t, m: r.t >= 18 ? 'season' : 'thru Wk ' + r.t, note: "Jack's set window", set: true };
+  if (tl.typ && tl.typ.season && tl.rep && !/season/.test(tl.rep.txt)) tl.typ = null;
+  const t = tl.typ;
+  tl.sort = !t ? 50 : t.season ? 99 : t.play != null ? 1 - t.play : t.rare ? 0.99 : t.dtd ? 0.5 : (t.mid != null ? t.mid : 12) + (t.lo || 0) / 100;
+  return tl;
+}
+function _ivTypText(t) {
+  if (!t) return null;
+  if (t.season) return { d: 'usually season-ending', m: 'season' };
+  if (t.rare) return { d: 'rarely plays', m: 'rarely plays' };
+  if (t.dtd) {
+    const a = t.all, r = a ? 'plays ' + Math.round(a['Q-DNP'] * 100) + '–' + Math.round(a['Q-FP'] * 100) + '%' : 'day-to-day';
+    return { d: r, m: 'GTD' };
+  }
+  if (t.play != null) return { d: 'plays ' + Math.round(t.play * 100) + '%', m: Math.round(t.play * 100) + '% play' };
+  if (t.mid == null) return { d: t.lo + '+ more games', m: t.lo + '+ gms' };
+  const rng = t.hi == null ? ' (' + t.lo + '+)' : t.hi > t.lo ? ' (' + t.lo + '–' + t.hi + ')' : '';
+  return { d: '~' + t.mid + ' more game' + (t.mid === 1 ? '' : 's') + rng, m: '~' + t.mid + ' gm' + (t.mid === 1 ? '' : 's') };
+}
+function _ivTlTip(d, x) {
+  const tl = x.tl, t = tl.typ, L = [];
+  if (tl.rep) L.push((tl.rep.set ? 'Set window: ' : 'Reported: ') + tl.rep.txt + (tl.rep.note && !tl.rep.set ? '\n' + tl.rep.note : ''));
+  else L.push('No timeline reported yet.');
+  if (t) {
+    const who = d.s + 's' + (t.byInj && x.grp ? ' with ' + _ivInjPhrase(x.grp) : '');
+    const res = x.code === 'IR' || x.code === 'PUP';
+    const PR = { 'Q-FP': 'a full practice', 'Q-LP': 'a limited practice', 'Q-DNP': 'no practice' };
+    if (t.season) L.push('Typical: ' + (x.grp === 'acl' ? 'ACL' : 'Achilles') + ' injuries that land a player on the shelf are season-ending.');
+    else if (t.rare) L.push('Typical: Doubtful players almost never suit up (about 1 in 100, 2019-25).');
+    else if (t.dtd) L.push('Typical: it depends on practice — Questionable players have played about ' + (t.all ? Math.round(t.all['Q-FP'] * 100) + '% after a full practice, ' + Math.round(t.all['Q-LP'] * 100) + '% after a limited one and ' + Math.round(t.all['Q-DNP'] * 100) + '% with no practice' : '7 times in 10') + ' (2019-25). No practice report for him yet this week.');
+    else if (t.play != null) L.push('Typical: Questionable ' + who + ' coming off ' + (PR[t.cls] || 'practice') + ' have played ' + Math.round(t.play * 100) + '% of the time (2019-25, recent seasons weighted).');
+    else {
+      L.push('Typical: ' + who + (t.k0 ? ' who have already missed ' + t.k0 + ' game' + (t.k0 === 1 ? '' : 's') : res ? '' : ' who are ruled out') + (res ? ' on a reserve list (four games minimum)' : '')
+        + ' — half are back within ' + (t.mid != null ? t.mid : '10+') + ' more game' + (t.mid === 1 ? '' : 's')
+        + (t.ros ? '; the slow quarter are out for the rest of the season.' : t.hi != null ? '; a quarter miss more than ' + t.hi + '.' : '.'));
+      L.push('Middle half of starters\' absences, 2019-25' + (t.byInj ? '' : x.grp && x.grp !== 'none' ? ' (no separate split for ' + x.grp + ' injuries — position only)' : ' (position only)') + '.');
+    }
+  }
+  return L.join('\n');
+}
+function _ivBuild(d) {
+  if (!d || d._isDevy || d._isFuturePick || d._retired || d.s === 'DST') return null;
+  const SP = window.SIM_PROJ_2026 || null;
+  const cw = (SP && SP.currentWeek) || (typeof window._weeklyScheduleWeek === 'function' ? window._weeklyScheduleWeek() : null) || null;
+  const raw = _ivEngineRow(d);
+  // no forward read left once his game has kicked off: a one-week dock spoke for that game, and a
+  // set window that ended with it hands back to the designation
+  const r = raw && !(raw.kd && (raw.m > 0 || (raw.src === 'override' && raw.t <= cw))) ? raw : null;
+  const tag = String(d.inj || '');
+  const pill = tag ? _injPill(d) : '';
+  let code = pill ? ((pill.match(/data-status="([A-Z]+)"/) || [])[1] || '') : '';
+  let body = '';
+  const bm = tag.match(/^(.*?),\s*(IR|PUP|Out|Doubtful|Questionable|Suspended|DNR|NA)\b/i);
+  if (bm) body = bm[1].trim();
+  else if (code) body = tag.replace(/\b(IR|PUP|Out|Doubtful|Questionable|Suspended)\b/ig, '').replace(/^[\s,–-]+|[\s,–-]+$/g, '').trim().slice(0, 28);
+  if (code && code !== 'SUS' && _ivGroup(body) === 'none') return null;   // healthy scratch / personal — not an injury
+  if (!code && r && r.m < 1) {
+    // the NFL report has him listed before the Sleeper feed does
+    code = /^out$/i.test(r.gs || '') ? 'O' : /doubt/i.test(r.gs || '') ? 'D' : /^(q-|out-unconfirmed)/.test(r.src) || /question/i.test(r.gs || '') ? 'Q'
+      : r.src === 'ir' ? 'IR' : r.src === 'sus' ? 'SUS' : r.m === 0 ? 'O' : '';
+  }
+  if (!code) return null;
+  const PR = window.PRACTICE_2026;
+  const pr = PR && PR.players ? PR.players[d.n] : null;
+  if (!body || /undisclosed/i.test(body)) {
+    if (pr && pr.inj && !/not injury/i.test(pr.inj)) body = pr.inj;
+    else if (raw && raw.g && raw.g !== 'rest') body = _ivCap(raw.g);
+  }
+  const det = (window.INJURY_UPDATES && INJURY_UPDATES.detail && INJURY_UPDATES.detail[d.n]) || null;
+  // practice log: this week's only, and only until his game kicks off
+  let prac = '';
+  if (!_ivKicked(d, raw)) {
+    if (raw && raw.sq) prac = String(raw.sq).split('-').slice(-3).join(' › ');
+    else if (pr && pr.pr && (!PR.week || !cw || +PR.week === +cw)) prac = pr.pr;
+  }
+  const x = { code: code, sev: _IV_SEV[code] || 0, body: body || 'Undisclosed', grp: _ivGroup(body) || (raw && raw.g && raw.g !== 'rest' ? raw.g : ''),
+    note: det && det.n && det.n.toLowerCase() !== String(body).toLowerCase() ? det.n : '', prac: prac, raw: raw, cw: cw, tag: tag, dpos: d.s + 's' };
+  // latest practice level this week (FP / LP / DNP) for the Questionable play odds
+  const pl = prac ? prac.split(' › ').pop() : '';
+  x.pracLast = /^(FP|LP|DNP)$/.test(pl) ? pl : '';
+  x.ret = _ivReturn(d, r, raw, code, cw, det, x);
+  x.tl = _ivTimeline(d, x, r, raw);
+  return x;
+}
+function _ivInfo(d) {
+  if (!d || !d.n) return null;
+  const SP = window.SIM_PROJ_2026, IU = window.INJURY_UPDATES, CN = window.CAMP_NEWS, PR = window.PRACTICE_2026;
+  const sig = [SP && SP.updated, IU && IU.updated, CN && CN.updated, PR && PR.updated, window._irMap ? Object.keys(window._irMap).length : 0].join('|');
+  if (!_ivCache || _ivCache.sig !== sig) _ivCache = { sig: sig, m: new Map() };
+  const hit = _ivCache.m.get(d.n);
+  if (hit && hit.tag === (d.inj || '')) return hit.x;
+  const x = _ivBuild(d);
+  _ivCache.m.set(d.n, { tag: d.inj || '', x: x });
+  return x;
+}
+window._ivInfo = _ivInfo;
+function _ivRetText(ret) {
+  if (ret.season) return { main: 'Out for season', sub: '', color: '#ef4444' };
+  if (ret.lo == null) return { main: 'TBD', sub: 'no timeline yet', color: 'var(--text2)' };
+  let main = 'Wk ' + ret.lo;
+  if (ret.hi != null && ret.hi > ret.lo) main += '–' + ret.hi;
+  else if (ret.open) main += '+';
+  let sub;
+  if (ret.pct != null) sub = Math.round(ret.pct * 100) + '% to play';
+  else if (ret.unc) sub = 'not confirmed out';
+  else if (ret.dtd) sub = 'day-to-day';
+  else if (ret.missHi == null) sub = ret.missLo ? 'out ' + ret.missLo + '+ more' : (ret.elig ? 'eligible now' : 'no firm timeline');
+  else if (ret.missHi === ret.missLo) sub = ret.missLo ? 'misses ' + ret.missLo + ' more' : 'next game';
+  else sub = ret.missLo ? 'misses ' + ret.missLo + '–' + ret.missHi + ' more' : 'up to ' + ret.missHi + ' more missed';
+  if (ret.src === 'est') sub = 'our est. · ' + sub;
+  const color = ret.pct != null ? (ret.pct >= 0.75 ? '#22c55e' : ret.pct >= 0.5 ? '#facc15' : '#f59e0b')
+    : (ret.dtd || ret.unc) ? '#facc15' : (ret.missLo || 0) >= 3 ? '#f97316' : (ret.missLo || 0) >= 1 ? '#f59e0b' : '#facc15';
+  return { main: main, sub: sub, color: color };
+}
+function _ivRetTip(x) {
+  const ret = x.ret, t = _ivRetText(ret), L = [];
+  L.push('Estimated return: ' + t.main + (ret.mid != null && ret.hi !== ret.lo ? ' (most likely Wk ' + ret.mid + ')' : ''));
+  if (!ret.season && ret.lo != null && ret.pct == null && !ret.dtd && !ret.unc) {
+    L.push(ret.missHi == null ? 'Misses at least ' + (ret.missLo || 0) + ' more game' + (ret.missLo === 1 ? '' : 's')
+      : ret.missHi === ret.missLo ? 'Misses ' + ret.missLo + ' more game' + (ret.missLo === 1 ? '' : 's')
+      : ret.missLo ? 'Misses ' + ret.missLo + ' to ' + ret.missHi + ' more games' : 'Could be back for the next game; could miss up to ' + ret.missHi + ' more');
+  }
+  if (ret.pct != null) L.push('About ' + Math.round(ret.pct * 100) + '% to play in Week ' + ret.lo + ' (2019-25 play rates for this designation, practice level, position and injury)');
+  if (ret.odds && ret.odds.length) L.push('Odds he plays: ' + ret.odds.slice(0, 6).map(o => 'Wk ' + o[0] + ' ' + Math.round(o[1] * 100) + '%').join(' · '));
+  const SRC = {
+    news: 'Reported timeline', newsfeed: 'Reported timeline (news feed)', set: "Jack's set window",
+    curve: 'No reported timeline — how long players with this designation, position and injury have stayed out (2019-25)',
+    ir: 'Reserve list — eligible after four missed games; no timeline reported', dx: 'Season-ending diagnosis',
+    dock: 'This week\'s designation + practice report', tag: 'Designation only — no timeline reported', sus: 'Suspension',
+    est: 'Our estimate — nothing reported yet. How long ' + (x.dpos || 'players') + (ret.byInj && x.grp ? ' with ' + _ivInjPhrase(x.grp) : '') + ' have typically been out (starters, 2019-25); the range tightens once there is a report'
+  };
+  if (SRC[ret.src]) L.push('Source: ' + SRC[ret.src]);
+  if (ret.src === 'est' && ret.tone) L.push((ret.tone.t === 'minor' ? 'Reports read minor, so it leans to the faster half: ' : 'Reports read serious, so it assumes he misses the next game: ') + ret.tone.note);
+  if (ret.note) L.push(ret.note);
+  return L.join('\n');
+}
+function _ivCellsHtml(d) {
+  const x = _ivInfo(d);
+  if (!x) return '<td class="injv-cell injv-inj">—</td><td class="injv-cell injv-ret">—</td><td class="injv-cell injv-tl">—</td>';
+  const st = _IV_STATUS[x.code] || x.code;
+  const subBits = ['<span style="color:' + (_IV_STATUS_COLOR[x.code] || 'var(--text2)') + ';font-weight:700">' + _ivEsc(st) + '</span>'];
+  if (x.note) subBits.push(_ivEsc(x.note.toLowerCase()));
+  if (x.prac) subBits.push(_ivEsc(x.prac));
+  const injTip = [x.body + ' — ' + st].concat(x.note ? ['Note: ' + x.note] : [], x.prac ? ['Practice this week: ' + x.prac] : [], x.tag ? ['Feed tag: ' + x.tag] : []).join('\n');
+  const t = _ivRetText(x.ret);
+  // TIMELINE: the report leads when there is one, the research "typical" sits under it
+  const tl = x.tl, ty = _ivTypText(tl.typ);
+  const k = s => '<span class="injv-k">' + s + '</span>';
+  let tlMain, tlSub, tlLbl, tlM;
+  if (tl.rep) {
+    tlMain = k(tl.rep.set ? 'Set' : 'Reported') + _ivEsc(tl.rep.txt); tlLbl = tl.rep.set ? 'SET' : 'REPORTED'; tlM = tl.rep.m;
+    tlSub = ty ? 'typical: ' + ty.d : '';
+  } else if (ty) {
+    tlMain = k('Typical') + _ivEsc(ty.d); tlLbl = 'TYPICAL'; tlM = ty.m;
+    tlSub = 'no timeline reported';
+  } else { tlMain = ''; tlSub = ''; tlLbl = ''; tlM = ''; }
+  const lbl = x.body.length > 14 ? x.body.slice(0, 13) + '…' : x.body;
+  return '<td class="injv-cell injv-inj" title="' + _ivEsc(injTip) + '"><span class="injv-main">' + _ivEsc(x.body) + '</span><span class="injv-sub">' + subBits.join(' · ') + '</span></td>'
+    + '<td class="injv-cell injv-ret" data-lbl="' + _ivEsc(lbl.toUpperCase()) + '" title="' + _ivEsc(_ivRetTip(x)) + '"><span class="injv-main" style="color:' + t.color + '">' + _ivEsc(t.main) + '</span>' + (t.sub ? '<span class="injv-sub">' + _ivEsc(t.sub) + '</span>' : '') + '</td>'
+    + (tlMain ? '<td class="injv-cell injv-tl" data-lbl="' + tlLbl + '" title="' + _ivEsc(_ivTlTip(d, x)) + '"><span class="injv-main"><span class="injv-d">' + tlMain + '</span><span class="injv-m">' + _ivEsc(tlM) + '</span></span>' + (tlSub ? '<span class="injv-sub">' + _ivEsc(tlSub) + '</span>' : '') + '</td>'
+      : '<td class="injv-cell injv-tl">—</td>');
+}
+window._toggleInjOnly = function (force) {
+  const on = typeof force === 'boolean' ? force : !window._injOnly;
+  if (on === window._injOnly) return;
+  window._injOnly = on;
+  const btn = document.getElementById('injFilterBtn');
+  if (btn) { btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  if (!on && /^inj/.test(sortKey)) {
+    // leaving the view while sorted on one of its columns: back to board order
+    sortKey = 'myrank'; sortDir = 1;
+    document.querySelectorAll('thead th[data-sort]').forEach(t => {
+      const me = t.dataset.sort === 'myrank', a = t.querySelector('.arrow');
+      t.classList.toggle('sorted', me);
+      if (a) a.textContent = me ? '▲' : '';
+      t.setAttribute('aria-sort', me ? 'ascending' : 'none');
+    });
+  }
+  render();
+};
 // --- Cloud sync (users/{uid}/data/watchlist — existing per-user rules, no
 // rules change needed). Local stays the source of truth for signed-out use;
 // on sign-in the newer side wins (localStorage mff_watchlist_at vs the doc's
@@ -4532,6 +5046,9 @@ function getFiltered(applyTopN) {
     }
     return true;
   });
+  // INJURIES view shows each player's rank in the full list, not a 1..N recount
+  // of the injured (stamped before the ★ / TOP-N / TEAMS / injury cuts).
+  if (window._injOnly) f.forEach((d, i) => { d._ivRank = i + 1; });
   // Watchlist-only view (★ pill): AND with the current position filter.
   // TOP-N is skipped here — a starred deep sleeper always shows in the ★ view.
   if (window._watchOnly && window._watchSet) {
@@ -4548,6 +5065,8 @@ function getFiltered(applyTopN) {
   // board meaning — "TOP 40 + DET" = Lions inside the top 40. d.t is the full
   // team name for every row, D/ST included.
   if (window._teamFilter && window._teamFilter.size) f = f.filter(d => window._teamFilter.has(d.t));
+  // INJURIES filter (pill): injured players only, same after-the-cap rule as TEAMS.
+  if (window._injOnly) f = f.filter(d => !!_ivInfo(d));
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
     // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
@@ -4588,8 +5107,8 @@ function getFiltered(applyTopN) {
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
-        case 'jm': if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
+        case 'yrr': if (_sm === 'vor') { av = _vorSort(a, 'vp'); bv = _vorSort(b, 'vp'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'jm': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
           // Sort by SOS rank in the active week window (1 = easiest schedule).
@@ -4640,6 +5159,9 @@ function getFiltered(applyTopN) {
           };
           av = _op(a); bv = _op(b); break;
         }
+        case 'injSt': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.sev : 0; bv = xb ? xb.sev : 0; break; }
+        case 'injRet': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.ret.sort : 999; bv = xb ? xb.ret.sort : 999; break; }
+        case 'injTl': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.tl.sort : 999; bv = xb ? xb.tl.sort : 999; break; }
         case 'xfpG': {
           const _xg = d => { const x = _xfpAgg(d, rankingScoringFmt, null); return x ? x.xfpg : -Infinity; };
           av = _xg(a); bv = _xg(b); break;
@@ -6698,6 +7220,11 @@ function render() {
   // post-sort slice only still matters for the DEVY early-return path, which
   // skips the shared cap; everywhere else data.length is already ≤ N.
   if (rankTopN != null && rankTopN > 0 && !query) data = data.slice(0, rankTopN);
+  // SIM VOR board: tiers are computed (VOR natural breaks), per visible row.
+  if (currentVersion === 'sims' && filter !== 'DEVY') {
+    tiers = _simsTiersFor(data);
+    versionTiers.sims[_tierMode()][_tierPK()] = tiers;
+  }
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
   const editable = canEdit();
@@ -6799,9 +7326,13 @@ function render() {
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
-  document.body.classList.toggle('rnk-vor', _statMode === 'vor');
+  document.body.classList.toggle('rnk-vor', _statMode === 'vor');   // also hides the AGE column (index.html)
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
   document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor');
+  // INJURIES view: three extra columns in front of Cons (CSS keys off these classes).
+  const _injView = !!window._injOnly && filter !== 'DEVY';
+  document.body.classList.toggle('inj-view', _injView);
+  document.body.classList.toggle('inj-view-fant', _injView && _statMode === 'fantasy');
   // REDRAFT (rest-of-season board): Team Total column = rest-of-season average
   // implied team total, FANTASY stats view only (CSS keys off this class).
   const _rosTtCol = currentMode === 'redraft' && _statMode === 'fantasy'
@@ -6835,7 +7366,9 @@ function render() {
   // the cross-platform AVERAGE (2026-09-09 — Flock's ADP matrix gap).
   const _isAdpCmp = _statMode === 'adp';
   const _isDynBoard = currentMode === 'dynasty' || currentMode === 'dynastysf';
-  const showJm = _isAdpCmp || _isDynBoard;
+  // VOR season view: the JM column carries GMS (PO VOR takes the tail column).
+  const _vorSeasonCols = _statMode === 'vor' && !_isWeekly;
+  const showJm = _isAdpCmp || _isDynBoard || _vorSeasonCols;
   const showLanding = _isAdpCmp || (_isDynBoard && filter === 'ROOKIE');
   // Tier banner rows whose start falls between the previous row's rank and this
   // one — shared by the regular rows and the DEVY rows.
@@ -6876,6 +7409,7 @@ function render() {
   let html = '';
   let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
   let _devyWallDone = false; // DEVY rows: premium wall emitted once, above the first blurred row
+  let _injWallDone = false;  // INJURIES view: same, above the first row ranked past the free window
   data.forEach((d, i) => {
     // DEVY filter: custom row rendering — a full rankings row (tiers, blur,
     // card link, watch star) with the prospect columns from _devyStatCellsHtml.
@@ -6960,7 +7494,10 @@ function render() {
     const _ccCmp = _consCmp(d);
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (!!_ccCmp && _ccCmp.mine != null && _ccCmp.ref !== _ccCmp.mine);
     const checked = compareSet.has(d.idx) ? 'checked' : '';
-    const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
+    // INJURIES view shows real ranks, so its free window is rank-based (a row-count
+    // window would hand out ranks from deep in a premium board).
+    const _injBlurRank = _injView && d._ivRank;
+    const blurred = shouldBlur && (_injBlurRank ? d._ivRank : (i + 1)) > blurCutoff ? 'premium-blur' : '';
     // Hoist per-row computations called 2-4× inside the row template. Saves
     // ~20% of JS time in render() (measured 113ms → 90ms for the pure JS pass).
     // Total sort-click time is still ~300ms because browser layout/paint of
@@ -6972,6 +7509,7 @@ function render() {
     let _statTds;
     let _statTd1 = ''; // first stat cell (Proj PPG / stat-view PPG / UD-ADP) — rendered BEFORE the weekly OPP/SPREAD/TOTAL block
     let _statYdsTail = null; // proj/lines views: the Yds line, shown in the tail (yrr) column
+    let _statJmCell = null; // VOR season view: GMS rides the JM column
     if (_statMode === 'fantasy') {
       // Sim Lab first (season PPG on season boards, active-week sim in
       // weekly), site engine fallback — see _displayProjPpg.
@@ -7074,13 +7612,21 @@ function render() {
         // Rest-of-season total: the per-game gap over the weeks he plays.
         const _totTxt = !_ve ? '—' : _ve.vt >= 10 ? '+' + Math.round(_ve.vt) : _ve.vt > 0 ? '+' + _ve.vt.toFixed(1) : '0';
         const _totC = !_ve ? null : _ve.vt > 0 ? _vorC : 'var(--text2)';
-        const _totTip = _ve ? ' title="' + (_totTxt + ' points above replacement over the ' + _ve.g + ' game' + (_ve.g === 1 ? '' : 's') + ' he is projected to play, weeks ' + _vt.from + '-' + _vt.to + ' (a week he projects under replacement counts as zero) · ' + _rkTxt + (_kd ? ' at the position' : ' on the VOR board')).replace(/"/g, '&quot;') + '"' : '';
+        const _poTxt = (_ve && _vt.st.poW !== 1 && _ve.sgp) ? ', playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' counted ' + _vt.st.poW + 'x (plays ' + _ve.gp + ' of ' + _ve.sgp + ')' : '';
+        const _totTip = _ve ? ' title="' + (_totTxt + ' points above replacement over the ' + _ve.g + ' game' + (_ve.g === 1 ? '' : 's') + ' he is projected to play, weeks ' + _vt.from + '-' + _vt.to + _poTxt + '. A week he misses or projects under replacement counts as zero · ' + _rkTxt + (_kd ? ' at the position' : ' on the VOR board') + (_ve.tA ? ' · ' + (_kd ? _ve.tP : _ve.tA).name : '')).replace(/"/g, '&quot;') + '"' : '';
         const _short = _ve && _ve.g < _ve.sg;
         _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_totC ? ' style="color:' + _totC + '"' : ''}>${_totTxt}</span></td>`;
         _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
       <td class="pts-cell l4ppg-cell"${_totTip}${_totC ? ' style="color:' + _totC + ';font-weight:700;cursor:help"' : ''}>${_totTxt}</td>`;
+        // PO VOR tail: the playoff-weeks gap (tiebreaker), amber when he misses a playoff week.
+        const _poMiss = _ve && _ve.gp < _ve.sgp;
+        const _poC = !_ve ? null : _poMiss ? '#f59e0b' : _ve.vp > 0 ? _vorC : 'var(--text2)';
+        const _poT = !_ve ? '—' : _ve.vp >= 10 ? '+' + Math.round(_ve.vp) : _ve.vp > 0 ? '+' + _ve.vp.toFixed(1) : '0';
         _statYdsTail = _ve
-          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left through week ' + _vt.to + (_short ? ' — the missed games cost rest-of-season VOR' : '') + '">' + _ve.g + '</span>'
+          ? '<span style="cursor:help;font-weight:700' + (_poC ? ';color:' + _poC : '') + '" title="' + (_poT + ' points above replacement in the fantasy-playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' — projected to play ' + _ve.gp + ' of his team\'s ' + _ve.sgp + (_poMiss ? ', so he misses playoff time' : '') + '. Breaks ties on ROS VOR.').replace(/"/g, '&quot;') + '">' + _poT + '</span>'
+          : '—';
+        _statJmCell = _ve
+          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left, weeks ' + _vt.from + '-' + _vt.to + (_ve.sgp ? ' (' + _ve.gp + ' of ' + _ve.sgp + ' in the fantasy playoffs)' : '') + (_short ? ' — each missed week costs that week\'s gap over replacement' : '') + '">' + _ve.g + '</span>'
           : '—';
       }
     } else if (_statMode === 'xfp') {
@@ -7153,15 +7699,17 @@ function render() {
     const _displayTierLabel = _tierLabelForRank(displayRank);
 
     // Insert premium wall row right at the cutoff, above blurred rows
-    if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
+    if (_injBlurRank) { if (blurred && !_injWallDone) { _injWallDone = true; html += _premiumWallHtml(); } }
+    else if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
     const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
-      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
+      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || (i + 1)) : d.myRank}</span></td>
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
+      ${_injView ? _ivCellsHtml(d) : ''}
       <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? (_cc.txt || _cc.r) : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
       ${_statTd1}${_wkSplit.pre}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
@@ -7177,7 +7725,7 @@ function render() {
       ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">' + (_rosTtCol ? _rosTtCellHtml(d) : '—') + '</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
       ${_wkSplit.post}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
-      <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
+      <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_statJmCell != null ? _statJmCell : _isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
       <td class="psos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
@@ -7241,7 +7789,7 @@ function render() {
   attachTierListeners();
   // WEEKLY board just painted — make sure the kickoff / LIVE / FINAL chips
   // have fresh scoreboard data (no-op when the last fetch is recent).
-  if (currentMode === 'weekly' && typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
+  if ((currentMode === 'weekly' || currentVersion === 'sims' || _statMode === 'vor') && typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
   // showYrr / showJm / showLanding hoisted above the row loop (reused here).
   // In the ADP comparison STATS view the Y/RR column is repurposed as the CBS
   // ADP column and shown for every position filter.
@@ -7253,7 +7801,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'vor' ? 'GMS ' : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -7270,6 +7818,9 @@ function render() {
         sp.innerHTML = 'AVG ';
         sp.setAttribute('data-gloss', 'Cross-platform average — mean of every platform that lists the player (Underdog for premium, Sleeper, ESPN, CBS, Yahoo). Hover a value to see which went in. Green = the market as a whole drafts the player later than this rank (value), red = earlier (reach).');
       }
+    } else if (_vorSeasonCols && id === 'jmHeader') {
+      sp.innerHTML = 'GMS ';
+      sp.setAttribute('data-gloss', 'Games he is projected to play from now through the last fantasy-playoff week — games already kicked off are not counted, and the weeks with no sim projection (bye, injury, suspension) are taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
     } else {
       sp.innerHTML = h._origLbl.html;
       sp.setAttribute('data-gloss', h._origLbl.gloss);
@@ -7291,7 +7842,7 @@ function render() {
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
-  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Games he is projected to play from this week through week 17 — the weeks with a sim projection above zero, so byes, injuries and suspensions are already taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
+  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Playoff-weeks VOR — his points over replacement in the fantasy-playoff weeks only (set in the VOR bar; 15-17 by default), each week counted once. Already inside ROS VOR (weighted there if the playoff weight is above 1); shown on its own so you can see who carries value into the weeks that decide titles, and it breaks ties on ROS VOR. Amber = projected to miss a playoff week.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
   window._applyCellVisibility = function () {
@@ -7322,12 +7873,13 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? '📋 SIM VOR' : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : '📋 SIM VOR') : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
     <span class="stat-chip">Showing <strong>${data.length}</strong></span>
     ${(window._teamFilter && window._teamFilter.size) ? `<span class="stat-chip" style="color:#58a7ff;cursor:pointer" onclick="window._toggleTeamFilterPop(true)" title="Team filter is on — click to change">Teams <strong>${window._tfSummary()}</strong></span>` : ''}
+    ${window._injOnly ? `<span class="stat-chip" style="color:#f87171;cursor:pointer" onclick="window._toggleInjOnly(false)" title="Injured players only — click to show everyone">Injured only <strong>✕</strong></span>` : ''}
     <span class="stat-chip">QB <strong>${qbs}</strong></span>
     <span class="stat-chip">RB <strong>${rbs}</strong></span>
     <span class="stat-chip">WR <strong>${wrs}</strong></span>
@@ -8302,10 +8854,10 @@ window._updateRnkStatHeaders = function() {
       _set(c3, 'l4ppgHeader', 'Rank by VOR across QB, RB, WR and TE this week — the order a pure points-over-replacement board puts them in. Kickers and D/STs are ranked inside their own position (K1, DST1).', 'VOR RK', 'Wk' + _wkNum);
     } else {
       const _vt = _vorTable();
-      const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + '-' + _vt.to : 'ROS';
+      const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + '-' + _vt.to + (_vst.poW !== 1 ? ' · PO ' + _vst.poW + 'x' : '') : 'ROS';
       _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game (' + fmtLabel + ' scoring' + _vx + '), games already played excluded — the number VOR is measured from.', 'PPG', fmtLabel);
       _set(c2, 'ppg25Header', 'Value over replacement per game — projected points above the replacement-level player at the position. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. ' + _how + ' Hover a value for the replacement player.', 'VOR/G', _vsub);
-      _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — the per-game gap added up over the weeks he is projected to PLAY, this week through week 17. Weeks he misses (injury, suspension, bye) add nothing, and a week he projects under replacement counts as zero, so a star who is out a month ranks below a slightly lesser player who plays them all. This is the number the SIM VOR board is ordered by.', 'ROS VOR', _span);
+      _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — his projected points over replacement week by week, added up over the games still to be played (this week\'s games drop out as they kick off — no actual results are in it, what is already scored does not help a roster from here), through the last fantasy-playoff week. ' + _vorPlayoffLabel(_vst).charAt(0).toUpperCase() + _vorPlayoffLabel(_vst).slice(1) + '. A week he misses (injury, suspension, bye) or projects under replacement counts as zero because the replacement plays instead — so a better player who misses a couple of weeks keeps his edge for the rest, and loses more if the missed weeks are playoff weeks. This is the number the SIM VOR board and its tiers are ordered by.', 'ROS VOR', _span);
     }
   } else if (rnkStatMode === 'xfp') {
     const _wkX = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
@@ -8515,8 +9067,9 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // (2026-09-16) In-season it grades the opponent's SCHEDULE-ADJUSTED fantasy
   // points allowed per game to this position (FPA_2026, final games only —
   // see _wkOppPpgTable), blended with Mike Clay's preseason unit rank as a
-  // prior that fades OUT by game 8 (Jack 2026-09-16): in-season weight =
-  // min(1, sqrt(g / 8)) → 1 gm 35%, 2 gm 50%, 4 gm 71%, 6 gm 87%, 8+ gm 100%.
+  // prior that fades OUT by game 4 (Jack 2026-10-05: "4 weeks feels like a
+  // pretty large sample size, there are also injuries"; was game 8): in-season
+  // weight = min(1, sqrt(g / 4)) → 1 gm 50%, 2 gm 71%, 3 gm 87%, 4+ gm 100%.
   // Before any final game it's Clay only (defRk for skill positions, offRk
   // for D/ST). Blended rank 1 =
   // softest (allows the most): top third → easy (green), bottom third → hard
@@ -8549,25 +9102,43 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const posLbl = pos === 'DST' ? 'D/STs' : pos + 's';
     let s = lbl + ' matchup for ' + posLbl + ' (#' + m.rank + ' of ' + m.n + ', 1 = softest)';
     if (m.adj) s += ' — allows ' + m.raw.v + ' pts/gm (#' + m.raw.rank + ' raw, #' + m.adj.rank + ' schedule-adjusted, ' + m.games + ' gm)';
-    if (typeof m.clayRk === 'number') s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
-    if (m.adj) s += ' · in-season weight ' + Math.round(m.w * 100) + '%';
+    if (typeof m.clayRk === 'number' && !(m.adj && m.w >= 1)) s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
+    if (m.lastSeason) s += ' · grade = ' + Math.round(m.w * 100) + '% this season, ' + (100 - Math.round(m.w * 100)) + '% last season, touchdown luck removed';
+    else if (m.adj) s += ' · in-season weight ' + Math.round(m.w * 100) + '%';
     else s += ' · preseason only until final games post';
     return s;
   };
   // Blended table per position: team → grade bundle. Cached alongside the
   // Opp PPG table (same FPA_2026 + scoring-format key) so it rebuilds only
   // when the postgame importer publishes a new week.
-  const _WK_OPP_FADE_GAMES = 8;   // Clay prior is gone once the opponent has this many final games
+  const _WK_OPP_FADE_GAMES = 4;   // Clay prior is gone once the opponent has this many final games (8 until 2026-10-05)
   let _wkOppBlendCache = null;
   function _wkOppBlendTable(pos) {
     const T = _wkOppPpgTable();   // null before any final game
     const FP = window.FPA_2026;
     const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
     const src = FP && FP.weeks || null;
-    if (!_wkOppBlendCache || _wkOppBlendCache.src !== src || _wkOppBlendCache.fmt !== fmt) _wkOppBlendCache = { src, fmt, pos: {} };
+    // The shared opponent grade (this season x last season, touchdown-neutral -
+    // _mtObservedFpa) once it is on; the Clay fade below is the fallback.
+    const G = (typeof window._mtObservedFpa === 'function') ? window._mtObservedFpa() : null;
+    if (!_wkOppBlendCache || _wkOppBlendCache.src !== src || _wkOppBlendCache.fmt !== fmt || _wkOppBlendCache.g !== G) _wkOppBlendCache = { src, fmt, g: G, pos: {} };
     if (_wkOppBlendCache.pos[pos]) return _wkOppBlendCache.pos[pos];
     const CG = window.CLAY_TEAM_GRADES_2026 || {};
     const A = T && T.pos[pos] || {};
+    if (pos !== 'K' && G && G.blended && G.z && G.z[pos] && G.w && G.w[pos]) {
+      const gr = Object.keys(G.z[pos]).map(t => ({ team: t, score: -G.z[pos][t] }));   // lower z = easier -> higher score = softer
+      gr.sort((a, b) => b.score - a.score);
+      const gn = gr.length, gThird = gn / 3, gOut = {};
+      gr.forEach((r, i) => {
+        const rank = i + 1, a = A[r.team];
+        gOut[r.team] = { diff: rank <= gThird ? 'easy' : rank > 2 * gThird ? 'hard' : 'medium', rank, n: gn,
+          games: a ? a.games : 0, w: G.w[pos][r.team], clayRk: null, lastSeason: true,
+          raw: a ? { v: a.v, rank: a.rank } : null,
+          adj: (a && typeof a.adjRank === 'number') ? { v: a.adjV, rank: a.adjRank } : null };
+      });
+      _wkOppBlendCache.pos[pos] = gOut;
+      return gOut;
+    }
     const teams = {};
     Object.keys(CG).forEach(t => { teams[t] = 1; });
     Object.keys(A).forEach(t => { teams[t] = 1; });
@@ -8736,6 +9307,15 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     _wkOppPpgCache = out;
     return out;
   }
+  // Same table by opponent abbreviation (SOS tooltips, weekly card box).
+  window._oppAllowedFor = function(opp, pos) {
+    if (!opp || !pos) return null;
+    opp = String(opp).toUpperCase();
+    opp = _WK_OPP_ABBR[opp] || opp;
+    const T = _wkOppPpgTable();
+    const m = T && T.pos[pos];
+    return (m && m[opp]) || null;
+  };
   window._weeklyOppPpgFor = function(team, pos) {
     if (!team || !pos || typeof window._weeklyOppFor !== 'function') return null;
     let opp = window._weeklyOppFor(team);
@@ -9210,8 +9790,13 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     let oppFactor = 1;
     const oppAbbr = entry.opp;
     const cg = window.CLAY_TEAM_GRADES_2026 && window.CLAY_TEAM_GRADES_2026[oppAbbr];
-    if (cg && typeof cg.defRk === 'number') {
-      oppFactor = 1 + (cg.defRk - 16.5) * 0.0075;
+    // In-season: the blended matchup rank (schedule-adjusted points allowed, Clay
+    // faded out by game 4) on the same 1 = toughest scale; Clay rank otherwise.
+    const _bl = (d.s !== 'K' && d.s !== 'DST' && typeof _wkOppBlendTable === 'function') ? _wkOppBlendTable(d.s)[_WK_OPP_ABBR[oppAbbr] || oppAbbr] : null;
+    const _oppRk = (_bl && _bl.adj && _bl.n > 1) ? 1 + (_bl.n - _bl.rank) * 31 / (_bl.n - 1)
+                 : (cg && typeof cg.defRk === 'number') ? cg.defRk : null;
+    if (_oppRk != null) {
+      oppFactor = 1 + (_oppRk - 16.5) * 0.0075;
       oppFactor = Math.max(0.85, Math.min(1.15, oppFactor));
     }
     _tag('heuristic');
@@ -10124,6 +10709,7 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    _vorBarRender();   // PLAYOFFS pill is season-boards only
     // WEEKLY hides ALL + ROOKIES pills — if those were active, bounce to FLEX
     // so the table doesn't render an empty / wrong filter state.
     if (currentMode === 'weekly' && (filter === 'ALL' || filter === 'ROOKIE')) {
@@ -10313,7 +10899,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || key === 'injSt' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -11150,23 +11736,40 @@ function _simSeasonPpgRow(d) {
 // VOR (value over replacement) off the Sim Lab projection — drives the
 // rankings STATS "VOR" view and the SIM VOR board (version `sims`).
 // League shape = _vorState(): teams, starters per position, FLEX (RB/WR/TE),
-// SUPERFLEX, bench — the standard 12-team lineup by default, a synced My Teams
-// league's own lineup when one is picked in the VOR bar (_vorApplyLeague).
-// Roster spots are filled from the sim's rest-of-season points in the selected
-// scoring format: starters first, then the flex / superflex spots with the
-// best players left, then the bench (a backup QB and TE for about half the
-// teams, the rest to the best RB/WR left). A position's replacement level is
-// the best player left unrostered, per scheduled game.
-//   VOR/G   = PPG minus that replacement level
-//   ROS VOR = the same gap summed over the weeks he is projected to play,
-//             current week through week 17 (weeks under replacement count 0 —
-//             you would start someone else), so missed games cost value
+// SUPERFLEX, bench, fantasy-playoff weeks + weight — the standard 12-team
+// lineup by default, a synced My Teams league's own settings when one is
+// picked in the VOR bar (_vorApplyLeague).
+// Window = the games still to be played: from the current fantasy week (games
+// that have already kicked off this week are dropped — live ESPN scoreboard,
+// _liveKickedTeams) through the last fantasy-playoff week. No actual results
+// are in it — what a player already scored is sunk value.
+// Roster spots are filled from the sim's points over that window in the
+// selected scoring format: starters first, then the flex / superflex spots
+// with the best players left, then the bench (a backup QB and TE for about
+// half the teams, the rest to the best RB/WR left). A position's replacement
+// level is the best player left unrostered, per scheduled game.
+//   VOR/G   = his per-game projection minus that replacement level
+//   ROS VOR = the gap week by week over the games he is projected to play,
+//             fantasy-playoff weeks counted poW times (default 1.5). A week he
+//             misses or projects under replacement counts 0 — the replacement
+//             fills in — so a short absence costs only those weeks' gap, and
+//             costs more when it lands in the playoffs.
 // The WEEKLY board prices the active week only.
-// Returns { map: Map(D row -> { v, g, sg, tot, vor, vt, rk, posRk }), repl: { pos: {...} } }
-// (g = games he is projected to play, sg = games his team has left).
-const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, tep: 0, passTd: 4 };
-const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20] };
-const _VOR_LAST_WEEK = 17;   // fantasy seasons end in week 17
+// Tiers: natural breaks (Jenks) on the ranking value — overall for QB/RB/WR/TE,
+// and separately inside each position for the position views and K / D/ST.
+//   PO VOR  = the gap inside the fantasy-playoff weeks only (unweighted) — shown
+//             as its own column and used to break ROS VOR ties
+// Returns { map: Map(D row -> { v, g, sg, gp, sgp, tot, vor, vt, vp, rk, posRk, tA, tP, rkP, tAp, tPp }), repl: { pos: {...} } }
+// (rkP / tAp / tPp = rank and tiers by PO VOR, for the PLAYOFFS view of the SIM VOR board).
+// (g = games he is projected to play, sg = games his team has left, gp / sgp = the
+// same inside the fantasy playoffs; tA / tP = overall / position tier).
+const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, poStart: 15, poEnd: 17, poW: 1.5, tep: 0, passTd: 4 };
+const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20], poStart: [10, 18], poEnd: [10, 18] };
+const _VOR_PO_W = [1, 3];   // playoff-week weight range (steps of 0.25)
+function _vorClampW(v) {
+  const n = Math.round(Number(v) * 4) / 4;
+  return isFinite(n) ? Math.min(_VOR_PO_W[1], Math.max(_VOR_PO_W[0], n)) : _VOR_DEFAULT.poW;
+}
 function _vorState() {
   if (!window._vorSt) {
     let s = null;
@@ -11176,6 +11779,8 @@ function _vorState() {
       const n = Math.round(Number(st[k])), lim = _VOR_LIMITS[k];
       st[k] = isFinite(n) ? Math.min(lim[1], Math.max(lim[0], n)) : _VOR_DEFAULT[k];
     });
+    if (st.poEnd < st.poStart) st.poEnd = st.poStart;
+    st.poW = _vorClampW(st.poW);
     st.tep = Math.max(0, Number(st.tep) || 0);
     st.passTd = isFinite(Number(st.passTd)) ? Number(st.passTd) : 4;
     st.league = st.league ? String(st.league) : '';
@@ -11199,6 +11804,10 @@ function _vorLineupLabel(st) {
   [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['FLEX', 'FLEX'], ['SF', 'SUPERFLEX'], ['K', 'K'], ['DST', 'D/ST']].forEach(p => { if (st[p[0]]) parts.push(st[p[0]] + ' ' + p[1]); });
   return st.teams + '-team league starting ' + parts.join(', ') + (st.BN ? ' with ' + st.BN + ' bench spot' + (st.BN === 1 ? '' : 's') : ' (no bench)');
 }
+function _vorPlayoffLabel(st) {
+  st = st || _vorLineup();
+  return 'fantasy playoffs week' + (st.poEnd > st.poStart ? 's ' + st.poStart + '-' + st.poEnd : ' ' + st.poStart) + (st.poW !== 1 ? ' counted ' + st.poW + 'x' : ' counted like any other week');
+}
 // League scoring extras on top of the PPR / Half / Standard sim number: TE
 // premium (the sim's PPR minus standard value IS his receptions) and passing
 // TDs worth other than 4 (Clay's per-game rate, else last season's).
@@ -11215,6 +11824,60 @@ function _vorPts(d, row, fi, st, tdRate, basePpg) {
   else if (d.s === 'QB' && st.passTd !== 4 && tdRate) v += (st.passTd - 4) * tdRate * (basePpg > 0 ? Math.min(1.5, row[fi] / basePpg) : 1);
   return v;
 }
+// Natural breaks (Jenks / optimal 1-D k-means) on values sorted high to low:
+// the fewest tiers (3-10) that explain 98% of the spread. Returns tier start indices.
+function _vorJenks(v) {
+  const n = v.length;
+  if (n < 6) return [0];
+  const S = [0], Q = [0];
+  for (let i = 0; i < n; i++) { S.push(S[i] + v[i]); Q.push(Q[i] + v[i] * v[i]); }
+  const ss = (a, b) => { const s = S[b] - S[a]; return (Q[b] - Q[a]) - s * s / (b - a); };
+  const tss = ss(0, n);
+  if (!(tss > 0)) return [0];
+  const kMax = Math.min(10, Math.floor(n / 2));
+  const Dp = [new Float64Array(n + 1).fill(Infinity)], P = [new Int32Array(n + 1)];
+  Dp[0][0] = 0;
+  for (let k = 1; k <= kMax; k++) {
+    Dp.push(new Float64Array(n + 1).fill(Infinity)); P.push(new Int32Array(n + 1));
+    for (let i = k; i <= n; i++) {
+      for (let m = k - 1; m < i; m++) {
+        const c = Dp[k - 1][m] + ss(m, i);
+        if (c < Dp[k][i]) { Dp[k][i] = c; P[k][i] = m; }
+      }
+    }
+    if (k >= 3 && 1 - Dp[k][n] / tss >= 0.98) return _vorCuts(P, k, n);
+  }
+  return _vorCuts(P, kMax, n);
+}
+function _vorCuts(P, k, n) {
+  const cuts = [];
+  let i = n;
+  for (let j = k; j > 0; j--) { cuts.unshift(P[j][i]); i = P[j][i]; }
+  return cuts;
+}
+// Assign tiers to entries sorted best-first. Top `cap` with value > 0 are
+// clustered; positive value past the cap = DEEP BENCH; the rest = REPLACEMENT.
+function _vorAssignTiers(es, valKey, slot, cap) {
+  const pos = es.filter(e => e[valKey] > 0).slice(0, cap);
+  const cuts = _vorJenks(pos.map(e => e[valKey]));
+  const f = v => (v > 0 ? '+' : '') + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1));
+  const tiers = [];
+  cuts.forEach((c, j) => {
+    const end = j + 1 < cuts.length ? cuts[j + 1] : pos.length;
+    const lab = TIER_LABELS[j] || ('T' + j);
+    const hi = pos[c][valKey], lo = pos[end - 1][valKey];
+    // One object per tier — _simsTiersFor opens a banner where the object changes.
+    tiers.push({ obj: { label: lab, name: (j === 0 ? 'ELITE' : 'TIER ' + lab) + ' · ' + f(hi) + (end - 1 > c ? ' to ' + f(lo) : '') }, from: c, to: end });
+  });
+  const extra = [];
+  if (es.length > pos.length && es[pos.length][valKey] > 0) extra.push('DEEP BENCH');
+  if (es.some(e => !(e[valKey] > 0))) extra.push('REPLACEMENT LEVEL');
+  let t = tiers.length;
+  const trail = {};
+  extra.forEach(nm => { trail[nm] = { label: TIER_LABELS[t] || ('T' + t), name: nm }; t++; });
+  tiers.forEach(tr => { for (let i = tr.from; i < tr.to; i++) pos[i][slot] = tr.obj; });
+  es.slice(pos.length).forEach(e => { e[slot] = e[valKey] > 0 ? trail['DEEP BENCH'] : trail['REPLACEMENT LEVEL']; });
+}
 function _vorTable() {
   const SP = window.SIM_PROJ_2026;
   if (!SP || !SP.weeks || typeof D === 'undefined') return null;
@@ -11222,30 +11885,39 @@ function _vorTable() {
   const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
   const cw = SP.currentWeek || 1;
   const wk = currentMode === 'weekly' ? (window._weeklyActiveWeek || cw) : 0;
-  const key = [fi, wk, cw, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.tep, st.passTd].join('|');
+  // First week still to play: the export's current week, or the site's fantasy
+  // week when that has already rolled (Tuesday 07:00) ahead of the next export.
+  const sw = (typeof window._weeklyScheduleWeek === 'function' && window._weeklyScheduleWeek()) || cw;
+  const from = Math.max(cw, sw);
+  // Teams whose game in that week has kicked off (live scoreboard) — those games are played.
+  const kicked = (!wk && typeof window._liveKickedTeams === 'function') ? window._liveKickedTeams(from) : null;
+  const kSig = kicked ? [...kicked].sort().join(',') : '';
+  const key = [fi, wk, cw, from, kSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
   const weeks = [];
-  if (wk) weeks.push(wk); else for (let w = cw; w <= Math.max(cw, _VOR_LAST_WEEK); w++) weeks.push(w);
+  if (wk) weeks.push(wk); else for (let w = from; w <= Math.max(from, st.poEnd); w++) weeks.push(w);
+  const isPO = w => !wk && w >= st.poStart && w <= st.poEnd;
+  const wt = w => isPO(w) ? st.poW : 1;
+  const abbrOf = d => teamAbbr(d.t);
+  const playsWk = (d, w) => !(kicked && w === from && kicked.has(abbrOf(d)));
   const pools = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
   const seen = new Set();
   D.forEach(d => {
     if (!d || !pools[d.s] || d._retired || d._isFuturePick || seen.has(d.n)) return;
     const sp = wk ? null : _simSeasonPpgRow(d);
-    if (!wk && !sp) return;   // no rest-of-season sim row
     const tdRate = (d.s === 'QB' && st.passTd !== 4) ? _vorPassTdRate(d) : 0;
     const base = sp ? sp[fi] : 0;
     const wp = [];
-    let tot = 0, g = 0;
+    let tot = 0, g = 0, gp = 0;
     weeks.forEach(w => {
-      const p = _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base);
+      const p = playsWk(d, w) ? _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base) : 0;
       wp.push(p);
-      if (p > 0) { tot += p; g++; }
+      if (p > 0) { tot += p; g++; if (isPO(w)) gp++; }
     });
     if (!g) return;   // out / on bye / no remaining games
     seen.add(d.n);
-    const ppg = (sp && base > 0) ? _vorPts(d, sp, fi, st, tdRate, base) : tot / g;
-    pools[d.s].push({ d, tot, g, ppg, wp });
+    pools[d.s].push({ d, tot, g, gp, ppg: tot / g, wp });
   });
   const n = {};
   Object.keys(pools).forEach(p => {
@@ -11270,47 +11942,95 @@ function _vorTable() {
     n[x[0]] += add; bench -= add;
   });
   _fill(['RB', 'WR'], bench);
-  // Scheduled games in the window (a team's D/ST has a row every non-bye week).
+  // Games the team has left in the window (its D/ST has a row every non-bye week),
+  // all and inside the fantasy playoffs.
   const _schedMemo = {};
   const _sched = d => {
-    if (wk) return 1;
-    const k = 'DST_' + teamAbbr(d.t);
-    if (_schedMemo[k] == null) {
-      let s = 0;
-      weeks.forEach(w => { if (SP.weeks[w] && SP.weeks[w][k]) s++; });
-      _schedMemo[k] = s || weeks.length;
+    if (wk) return [1, 0];
+    const k = 'DST_' + abbrOf(d);
+    if (!_schedMemo[k]) {
+      let s = 0, sp = 0;
+      weeks.forEach(w => { if (SP.weeks[w] && SP.weeks[w][k] && playsWk(d, w)) { s++; if (isPO(w)) sp++; } });
+      _schedMemo[k] = [s || weeks.length, sp];
     }
     return _schedMemo[k];
   };
   const r1 = v => Math.round(v * 10) / 10;
-  const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1] };
+  const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1], kicked: kicked ? kicked.size : 0 };
   const all = [];
-  const _cmp = (a, b) => (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
+  // Ties on ROS VOR go to the bigger playoff-weeks VOR.
+  const _cmp = (a, b) => (b.vt - a.vt) || (b.vp - a.vp) || (b.vor - a.vor) || (b.tot - a.tot);
+  const _cmpP = (a, b) => (b.vp - a.vp) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
     const ri = Math.min(n[p], pool.length - 1);
-    const R = pool[ri].tot / _sched(pool[ri].d);
+    const R = pool[ri].tot / _sched(pool[ri].d)[0];
     out.repl[p] = { v: r1(R), n: pool[ri].d.n, rk: ri + 1, rostered: n[p], starters: nStart[p] };
     const es = pool.map((x, i) => {
       const vor = r1(x.ppg - R);
-      // Rest-of-season: only the weeks he beats replacement add value.
-      const vt = wk ? vor : r1(x.wp.reduce((s, v) => s + (v > R ? v - R : 0), 0));
-      const e = { v: r1(x.ppg), g: x.g, sg: _sched(x.d), tot: x.tot, vor, vt, posRk: i + 1, rk: null };
+      // Rest-of-season: only the weeks he beats replacement add value; playoff weeks count poW times.
+      const vt = wk ? vor : r1(x.wp.reduce((s, v, j) => s + (v > R ? (v - R) * wt(weeks[j]) : 0), 0));
+      // PO VOR: the same week-by-week gap inside the fantasy playoffs only, unweighted.
+      const vp = wk ? 0 : r1(x.wp.reduce((s, v, j) => s + (isPO(weeks[j]) && v > R ? v - R : 0), 0));
+      const sc = _sched(x.d);
+      const e = { v: r1(x.ppg), g: x.g, sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
       out.map.set(x.d, e);
       return e;
     });
     // K and D/ST are ranked inside their own position, not against the field.
-    if (p === 'K' || p === 'DST') es.slice().sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
+    const sorted = es.slice().sort(_cmp);
+    if (p === 'K' || p === 'DST') sorted.forEach((e, i) => { e.rk = i + 1; });
     else es.forEach(e => all.push(e));
+    _vorAssignTiers(sorted, 'vt', 'tP', 150);
+    if (p === 'K' || p === 'DST') sorted.forEach(e => { e.tA = e.tP; });
+    // PLAYOFFS view: the same ranks and tiers on PO VOR.
+    if (!wk) {
+      const sortedP = es.slice().sort(_cmpP);
+      if (p === 'K' || p === 'DST') sortedP.forEach((e, i) => { e.rkP = i + 1; });
+      _vorAssignTiers(sortedP, 'vp', 'tPp', 150);
+      if (p === 'K' || p === 'DST') sortedP.forEach(e => { e.tAp = e.tPp; });
+    }
   });
   all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
+  _vorAssignTiers(all, 'vt', 'tA', 150);   // top-150 draftable range
+  if (!wk) {
+    const allP = all.slice().sort(_cmpP);
+    allP.forEach((e, i) => { e.rkP = i + 1; });
+    _vorAssignTiers(allP, 'vp', 'tAp', 150);
+  }
   window._vorCache = out;
   return out;
 }
 function _vorFor(d) {
   const t = _vorTable();
   return (t && t.map.get(d)) || null;
+}
+// PLAYOFFS view of the SIM VOR board: ranked and tiered by PO VOR (season boards only).
+window._vorPlayoffs = false;
+function _vorPlayoffsOn() {
+  return !!window._vorPlayoffs && currentVersion === 'sims' && currentMode !== 'weekly';
+}
+// SIM VOR tier banners for the rows on screen: tier membership is per player
+// (overall tiers on ALL / ROOKIES / FLEX, position tiers on a position pill),
+// so filtered views — WAIVERS, TEAMS, TOP N — keep each player's real tier and
+// a banner opens at the first visible player of each. Ranks follow render()'s
+// displayRank (position rank on positional views, board rank otherwise).
+function _simsTiersFor(data) {
+  const posView = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].includes(filter);
+  const positional = _tierRankIsPositional();
+  const rows = data.slice().sort((a, b) => (a.myRank || 0) - (b.myRank || 0));
+  const out = [];
+  let prev = null;
+  rows.forEach((d, i) => {
+    const e = _vorFor(d);
+    const po = _vorPlayoffsOn();
+    const t = e && (posView ? (po ? e.tPp : e.tP) : (po ? e.tAp : e.tA));
+    if (!t || t === prev) return;
+    prev = t;
+    out.push({ id: 's' + out.length, label: t.label, name: t.name, afterRank: positional ? i + 1 : d.myRank });
+  });
+  return out;
 }
 
 // SIM VOR board (version `sims`): the board order IS the VOR rank — QB / RB /
@@ -11320,9 +12040,11 @@ function _vorFor(d) {
 function _simsBoardEnsure() {
   const t = _vorTable();
   const src = (window._simsBoardSrc = window._simsBoardSrc || {});
-  if (!t || src[currentMode] === t) return false;
+  const po = _vorPlayoffsOn();
+  const srcKey = currentMode + (po ? ':po' : '');
+  if (!t || src[srcKey] === t) return false;
   const skill = [], ks = [], ds = [];
-  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, e.rk]); });
+  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : e.rk]); });
   const order = [];
   [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
   // Players without a sim row trail in consensus order (hidden on this board).
@@ -11330,7 +12052,9 @@ function _simsBoardEnsure() {
   (versionBoards.consensus[currentMode] || []).forEach(i => { if (!used.has(i)) { used.add(i); order.push(i); } });
   for (let i = 0; i < D.length; i++) if (!used.has(i) && !D[i]._retired) order.push(i);
   versionBoards.sims[currentMode] = order;
-  src[currentMode] = t;
+  // One board slot per mode: forget the other view's source so flipping back rebuilds.
+  delete src[currentMode]; delete src[currentMode + ':po'];
+  src[srcKey] = t;
   return true;
 }
 
@@ -11387,6 +12111,14 @@ function _vorApplyLeague(id) {
   if (teams.length) st.teams = clamp('teams', teams.length);
   st.tep = Math.max(0, Number(f.tep) || 0);
   st.passTd = (f.passTd != null && isFinite(Number(f.passTd))) ? Number(f.passTd) : 4;
+  // Fantasy playoffs: Sleeper's start week + one round per bracket level (6 teams = 3 weeks).
+  const ps = Number(lg.playoffStart);
+  if (ps >= _VOR_LIMITS.poStart[0] && ps <= _VOR_LIMITS.poStart[1]) {
+    const pt = Number(lg.playoffTeams) || 6;
+    const rounds = pt <= 2 ? 1 : pt <= 4 ? 2 : pt <= 8 ? 3 : 4;
+    st.poStart = ps;
+    st.poEnd = Math.min(_VOR_LIMITS.poEnd[1], ps + rounds - 1);
+  }
   return lg;
 }
 // Players on a roster in the picked league (WAIVERS filter). Suffix-folded
@@ -11425,9 +12157,13 @@ function _vorBarRender() {
     + num('QB', 'QB', 'Starting QBs per team') + num('RB', 'RB', 'Starting RBs per team') + num('WR', 'WR', 'Starting WRs per team') + num('TE', 'TE', 'Starting TEs per team')
     + num('FLEX', 'Flex', 'Flex spots per team (RB / WR / TE)') + num('SF', 'SFlex', 'Superflex spots per team (QB / RB / WR / TE)')
     + num('K', 'K', 'Starting kickers per team') + num('DST', 'D/ST', 'Starting defenses per team') + num('BN', 'Bench', 'Bench spots per team — set 0 to measure against the last starter instead of the best free agent')
+    + '<span class="vor-po" title="Fantasy playoff weeks and how much a playoff week counts against a regular-season week in rest-of-season VOR. The season ends with the last playoff week. Synced Sleeper leagues fill the weeks in.">'
+    + num('poStart', 'Playoffs Wk', 'First fantasy-playoff week') + '<span class="vor-dash">–</span>' + num('poEnd', '', 'Last fantasy-playoff week (the end of the fantasy season)')
+    + '<label class="vor-num" title="How much each playoff week counts — 1 = like any other week, 1.5 = half again as much. Missing a playoff week costs that much more.">×<input type="number" inputmode="decimal" data-vor="poW" min="' + _VOR_PO_W[0] + '" max="' + _VOR_PO_W[1] + '" step="0.25" value="' + st.poW + '"></label></span>'
     + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
+    + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorPlayoffsOn() ? ' on' : '') + '" id="vorPlayoffBtn" title="Re-rank the SIM VOR board by PO VOR — value over replacement in the fantasy-playoff weeks only (' + st.poStart + (st.poEnd > st.poStart ? '-' + st.poEnd : '') + ') — with tiers drawn on that number. For trading for the title run.">PLAYOFFS</button>' : '')
     + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
-    + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench) with no league">RESET</button>';
+    + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench, playoffs weeks 15-17 at 1.5x) with no league">RESET</button>';
 }
 // Any lineup / league change: persist, drop the table, repaint.
 function _vorChanged() {
@@ -11450,12 +12186,31 @@ function _vorChanged() {
       return;
     }
     const k = t.dataset && t.dataset.vor;
+    const st = _vorState();
+    if (k === 'poW') { st.poW = _vorClampW(t.value); _vorChanged(); return; }
     if (!k || !_VOR_LIMITS[k]) return;
     const n = Math.round(Number(t.value));
-    _vorState()[k] = isFinite(n) ? Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], n)) : _VOR_DEFAULT[k];
+    st[k] = isFinite(n) ? Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], n)) : _VOR_DEFAULT[k];
+    if (k === 'poStart' && st.poEnd < st.poStart) st.poEnd = st.poStart;
+    if (k === 'poEnd' && st.poStart > st.poEnd) st.poStart = st.poEnd;
     _vorChanged();
   });
   bar.addEventListener('click', e => {
+    if (e.target.closest('#vorPlayoffBtn')) {
+      // Same pattern as WAIVERS: from another board it opens SIM VOR with the view on.
+      if (currentVersion !== 'sims') {
+        window._vorPlayoffs = true;
+        const tab = document.querySelector('.version-tab[data-version="sims"]');
+        if (tab) tab.click();
+        return;
+      }
+      window._vorPlayoffs = !window._vorPlayoffs;
+      _vorBarRender();
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+      syncMode(); renumber();
+      render();
+      return;
+    }
     if (e.target.closest('#vorWaiverBtn')) {
       // From another board the pill jumps to the SIM VOR board with the filter on.
       if (currentVersion !== 'sims') {
@@ -11470,6 +12225,7 @@ function _vorChanged() {
     } else if (e.target.closest('#vorResetBtn')) {
       window._vorSt = Object.assign({}, _VOR_DEFAULT);
       window._vorWaivers = false;
+      window._vorPlayoffs = false;
       _vorChanged();
     }
   });
@@ -13168,9 +13924,17 @@ window._seasonStripRefresh = _seasonStrip;
     const cur = _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick));
     return cur ? { wk: cur.wk, kick: cur.kick, end: wkEnd(cur.kick) } : null;
   }
+  // Rankings in a VOR surface (SIM VOR board / VOR stats view) on a season
+  // board: the scoreboard tells it which of this week's games are already played.
+  function vorOpen() {
+    const rk = document.getElementById('pageRankings');
+    return !!(rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode !== 'weekly'
+      && ((typeof currentVersion !== 'undefined' && currentVersion === 'sims') || (typeof rnkStatMode !== 'undefined' && rnkStatMode === 'vor')));
+  }
   function surfaceOpen() {
     const rk = document.getElementById('pageRankings');
     if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly') return true;
+    if (vorOpen()) return true;
     const ss = document.getElementById('pageStartSit');
     if (ss && ss.classList.contains('active')) return true;
     const mt = document.getElementById('pageMyTeams'); // lineup check locks
@@ -13260,6 +14024,14 @@ window._seasonStripRefresh = _seasonStrip;
       S.act = map; S.actWeek = wk; S.actAt = now;
     } catch (e) { /* stale actuals stay */ }
   }
+  // Teams (abbr) whose game in week `wk` has kicked off — null when the
+  // scoreboard is not loaded or shows another week.
+  window._liveKickedTeams = function(wk) {
+    if (!S.sbWeek || S.sbWeek !== wk) return null;
+    const out = new Set();
+    Object.keys(S.games).forEach(k => { if (S.games[k].st !== 'pre') out.add(k); });
+    return out;
+  };
   window._liveGameFor = function(d) {
     if (!d || !curWindow() || !S.sbWeek || S.sbWeek !== activeWeek()) return null;
     const ab = abbrOf(d);
@@ -13308,6 +14080,11 @@ window._seasonStripRefresh = _seasonStrip;
     try {
       const rk = document.getElementById('pageRankings');
       if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly' && typeof render === 'function') render();
+      // VOR window drops games as they kick off — the table re-keys itself.
+      else if (vorOpen() && typeof render === 'function') {
+        if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+        render();
+      }
       if (typeof window._sstRefresh === 'function') window._sstRefresh();
       if (typeof window._mtLiveRefresh === 'function') window._mtLiveRefresh();
     } catch (e) {}
@@ -13968,13 +14745,19 @@ function buildWeeklyCardView(d) {
     html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">';
     html += box('WK ' + wk + ' MATCHUP', '<span style="color:' + r.color + '">' + r.label + '</span> <span style="font-size:.62rem;color:var(--text2)">#' + r.rank + '/' + r.n + '</span>', '',
       'Position-weighted matchup rating for this week (1 = easiest schedule slot league-wide)');
-    html += box(isDst ? 'OPP OFFENSE' : 'OPP DEFENSE',
+    const _alw = (r.priorLive === false && typeof window._oppAllowedFor === 'function') ? window._oppAllowedFor(r.opp, d.s) : null;
+    if (_alw && typeof _alw.v === 'number') html += box('OPP ALLOWS',
+      fmt1(_alw.v) + ' <span style="font-size:.62rem;color:var(--text2)">#' + _alw.rank + '/' + _alw.n + '</span>', '',
+      (isDst ? 'Fantasy points opposing D/STs have scored per game against this offense'
+             : 'Fantasy points this opponent has allowed per game to ' + d.s + 's')
+        + ' in 2026 (' + _alw.games + ' gm) — #1 allows the most');
+    else html += box(isDst ? 'OPP OFFENSE' : 'OPP DEFENSE',
       isDst ? (r.clayOffRk ? 'Clay #' + r.clayOffRk : '—')
             : ((r.posUnits ? '' : (r.clayDefRk ? 'Clay #' + r.clayDefRk : '—')) + (r.posUnits ? '<span style="font-size:.68rem">' + esc(r.posUnits) + '</span>' : '')),
       '', isDst ? 'Opponent\'s Clay offense rank — a D/ST\'s matchup is the offense it must stop'
                 : (r.posUnits ? 'Opponent\'s Clay unit grades weighted for ' + d.s + ' scoring' : 'Opponent\'s overall Clay defense rank'));
     html += '</div>';
-    if (typeof r.oppg === 'number' && !isDst) {
+    if (typeof r.oppg === 'number' && !isDst && r.priorLive !== false) {
       html += '<div style="font-size:.55rem;color:var(--text2);margin-top:6px">Opponent allows ' + fmt1(r.oppg) + ' PA/gm.</div>';
     }
   }
@@ -15641,10 +16424,11 @@ function openPlayerCard(d, ctxMode) {
           if (!r) return `<div class="card-rank-box"><div class="lbl">Week ${w}</div><div class="num" style="color:var(--text2)">—</div></div>`;
           const _arrow = r.home ? 'vs' : '@';
           const _sub = [];
+          if (r.allowedNote) _sub.push(r.allowedNote);
           if (r.isDst) {
-            if (r.clayOffRk) _sub.push('Clay O#' + r.clayOffRk);
+            if (r.clayOffRk && r.priorLive !== false) _sub.push('Clay O#' + r.clayOffRk);
             if (typeof r.oppImplied === 'number') _sub.push(r.oppImplied.toFixed(1) + ' opp impl');
-          } else {
+          } else if (r.priorLive !== false) {
             if (r.posUnits) _sub.push(r.posUnits);
             if (typeof r.oppg === 'number') _sub.push(r.oppg.toFixed(1) + ' PA');
           }
@@ -51868,7 +52652,8 @@ Rules:
     // signal, so these are deliberately small — they only carry the RESIDUAL
     // game-script effect on top of expected points.
     K:   0.05,  // marginal: blowout leads trade late FGs for kneeldowns
-    DST: 0.15,  // trailing opponents throw → sacks + INTs beyond points allowed
+    DST: 0,     // was 0.15 until 2026-10-05: the opponent's implied total already carries it - no spread term
+                // scored .214 vs .203 with it, better in 8 of 10 seasons (scripts/research_sos_mix.py)
   };
 
   // How the two SOS axes are weighted per position: `def` = opponent-quality
@@ -51910,12 +52695,46 @@ Rules:
   // fully dropped). The Vegas layer (baseline-relative implied totals +
   // spreads) stays throughout — this replaces only the defensive signal.
   // Preseason: no 2026 rows → share 0 → behavior identical to today.
+  // 2026-10-05 (Jack: "4 weeks feels like a pretty large sample size, there are
+  // also injuries" - the preseason grades can't see them): the ramp is now
+  // (weeksPlayed − 1) / 3 → W2 33%, W3 67%, W4+ 100%.
   // fpts basis (half-PPR) doesn't matter — the signal is z-scored per week.
   const _MT_FPA_POS = ['QB', 'RB', 'WR', 'TE'];
+  // D/ST (Jack 2026-10-05: "for dst can we now use in season grades"): the DST
+  // key on an FPA row is what the opposing D/ST scored AGAINST that team's
+  // offense, so its z replaces the Clay preseason offense grade on the same
+  // ramp. 2018-25 check (offense's D/ST points allowed through week N vs the
+  // rest of its season): r .43 after 4 weeks / .45 after 5 against .24 for the
+  // prior season's number, best in-season weight .75 / .80 - the ramp below.
+  // Kept out of OVERALL (that is the four skill positions).
+  const _MT_FPA_SRC = _MT_FPA_POS.concat('DST');
+  // === THE OPPONENT GRADE (2026-10-05, Jack: "go and build it") ===
+  // Supersedes the ramp above whenever data/fpa_prior_2025.js is loaded. For each
+  // position the grade is  w x this season + (1 - w) x last season,
+  // w = games / (games + k), both sides schedule-adjusted and TOUCHDOWN-NEUTRAL
+  // (<POS>_tdn keys: actual TDs swapped for the league TD rate on the yards
+  // allowed; D/ST: defensive / return TDs out). The Clay preseason grades are
+  // out of the blend from the first final game. k = how many games last season
+  // is worth: after 4 games this season carries QB 57% / RB 50% / WR 40% /
+  // TE 67% / D/ST 67%, after 8 games 73 / 67 / 57 / 80 / 80.
+  // Backtest (scripts/research_opp_grade_schemes.py, 2016-25, settings picked
+  // leave-one-season-out, correlation with the next 4 weeks / rest of season):
+  // this form QB .157 / RB .202 / WR .154 / TE .173 / D/ST .378 against .137 /
+  // .194 / .113 / .169 / .357 for 100% in-season from week 4. Failed there:
+  // volume allowed as the input, pooling the QB number into WR / TE.
+  // Shared with the weekly OPP color (_wkOppBlendTable). Displayed points
+  // allowed (OPP PPG, tooltips) stay ACTUAL points.
+  // Off switches: window.MFF_OPP_PRIOR_OFF = true (old ramp + Clay),
+  // window.MFF_OPP_TDN_OFF = true (actual points on the in-season side).
+  // New season: build the prior with scripts/build_fpa_prior.py.
+  const _MT_FPA_PRIOR_K = { QB: 3, RB: 4, WR: 6, TE: 2, DST: 2 };
   let _mtFpaCache = null;
   function _mtObservedFpa() {
-    if (_mtFpaCache) return _mtFpaCache;
-    _mtFpaCache = { weeksPlayed: 0, share: 0, z: null };
+    const _src = (window.FPA_2026 && window.FPA_2026.weeks) || null;
+    if (_mtFpaCache && _mtFpaCache.src === _src) return _mtFpaCache;
+    _mtFpaCache = { weeksPlayed: 0, share: 0, z: null, src: _src };
+    const useTdn = window.MFF_OPP_TDN_OFF !== true;
+    let tdn = false;
     // 2026-09-14: prefer the COMPLETE-league table (data/fpa_2026.js, built by
     // scripts/pull_postgame_stats.py from EVERY Sleeper QB/RB/WR/TE in FINAL
     // games, half-PPR). The board-only sum below undercounts whenever a
@@ -51923,7 +52742,7 @@ Rules:
     // because Cooper Rush isn't on the board; NE 0.5 because Drew Lock isn't).
     const FP = window.FPA_2026;
     const acc = {};
-    _MT_FPA_POS.forEach(p => { acc[p] = {}; });
+    _MT_FPA_SRC.forEach(p => { acc[p] = {}; });
     // SCHEDULE-ADJUSTED (Jack 2026-09-30: "adjust for SOS"): a defense that gave up
     // 30 to the Bills is not as soft as one that gave up 30 to the Panthers. Same
     // additive fit the weekly OPP color uses (_wkSchedAdjust: points = league avg +
@@ -51931,15 +52750,16 @@ Rules:
     // rank reads the DEFENSE effect instead of raw points allowed. Needs the
     // offense on every row, so only the FPA_2026 path (not the board-only fallback).
     const games = {};
-    _MT_FPA_POS.forEach(p => { games[p] = []; });
+    _MT_FPA_SRC.forEach(p => { games[p] = []; });
     let maxWk = 0;
     if (FP && FP.weeks && Object.keys(FP.weeks).length) {
       Object.keys(FP.weeks).forEach(wk => {
         const w = +wk, teams = FP.weeks[wk];
         Object.keys(teams).forEach(team => {
-          _MT_FPA_POS.forEach(pos => {
-            const v = teams[team][pos];
+          _MT_FPA_SRC.forEach(pos => {
+            let v = teams[team][pos];
             if (typeof v !== 'number') return;
+            if (useTdn && typeof teams[team][pos + '_tdn'] === 'number') { v = teams[team][pos + '_tdn']; tdn = true; }
             const slot = acc[pos][team] || (acc[pos][team] = { pts: 0, wks: new Set() });
             slot.pts += v;
             slot.wks.add(w);
@@ -51955,7 +52775,7 @@ Rules:
       const YEAR = '2026';
       for (const name in WS) {
         const rec = WS[name];
-        if (!rec || !acc[rec.pos] || !rec.seasons) continue;
+        if (!rec || _MT_FPA_POS.indexOf(rec.pos) < 0 || !rec.seasons) continue;
         const rows = rec.seasons[YEAR];
         if (!rows) continue;
         for (let i = 0; i < rows.length; i++) {
@@ -51970,12 +52790,12 @@ Rules:
       }
     }
     if (!maxWk) return _mtFpaCache;
-    const share = Math.min(1, Math.max(0, (maxWk - 1) / 4));
+    const share = Math.min(1, Math.max(0, (maxWk - 1) / 3));
     // Per-position z across teams: MORE points allowed = weaker defense =
     // EASIER, and in this system lower z = easier — so invert the sign
     // (mirrors zO = -(oppg − mu)/sd in the preseason priors).
     const z = {};
-    _MT_FPA_POS.forEach(pos => {
+    _MT_FPA_SRC.forEach(pos => {
       const perGame = {};
       Object.keys(acc[pos]).forEach(team => {
         const s = acc[pos][team];
@@ -51993,6 +52813,33 @@ Rules:
       z[pos] = {};
       Object.keys(perGame).forEach(team => { z[pos][team] = -(perGame[team] - mu) / sd; });
     });
+    // Blend each position with last season's number (see THE OPPONENT GRADE above).
+    // The prior is the season before the points-allowed file's own season (FPA_PRIOR_2025 for 2026).
+    const _prObj = window['FPA_PRIOR_' + (((FP && +FP.season) || 2026) - 1)];
+    const PR = (window.MFF_OPP_PRIOR_OFF !== true && _prObj && _prObj.pos) || null;
+    const wIn = {};
+    if (PR) _MT_FPA_SRC.forEach(pos => {
+      const pv = PR[pos];
+      if (!z[pos] || !pv) return;
+      const pt = Object.keys(pv).filter(t => typeof pv[t] === 'number');
+      if (pt.length < 24) return;
+      const mu = pt.reduce((a, t) => a + pv[t], 0) / pt.length;
+      const sd = Math.sqrt(pt.reduce((a, t) => a + (pv[t] - mu) * (pv[t] - mu), 0) / pt.length) || 1;
+      const k = _MT_FPA_PRIOR_K[pos], out = {}, all = {};
+      wIn[pos] = {};
+      pt.forEach(t => { all[t] = 1; });
+      Object.keys(z[pos]).forEach(t => { all[t] = 1; });
+      Object.keys(all).forEach(t => {
+        const zi = z[pos][t];
+        const zp = typeof pv[t] === 'number' ? -(pv[t] - mu) / sd : null;   // same sign: more allowed = easier = lower
+        const g = acc[pos][t] ? acc[pos][t].wks.size : 0;
+        const w = typeof zi !== 'number' ? 0 : zp == null ? 1 : g / (g + k);
+        out[t] = w * (typeof zi === 'number' ? zi : 0) + (1 - w) * (zp == null ? 0 : zp);
+        wIn[pos][t] = w;
+      });
+      z[pos] = out;
+    });
+    const blended = _MT_FPA_POS.every(p => wIn[p]);
     // OVERALL (K fallback + mixed views): mean of the four position z's.
     if (_MT_FPA_POS.every(p => z[p])) {
       z.OVERALL = {};
@@ -52002,17 +52849,48 @@ Rules:
         if (n) z.OVERALL[team] = s / n;
       });
     }
-    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share, z, adjusted: !!_mtFpaCache.adjusted };
+    // rank[pos][team]: 1 = softest grade (tooltips)
+    const rank = {};
+    _MT_FPA_SRC.forEach(pos => {
+      if (!z[pos]) return;
+      rank[pos] = {};
+      Object.keys(z[pos]).sort((a, b) => z[pos][a] - z[pos][b]).forEach((t, i) => { rank[pos][t] = i + 1; });
+    });
+    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share: blended ? 1 : share, z, adjusted: !!_mtFpaCache.adjusted,
+                                               blended, w: wIn, rank, tdn, src: _src };
     return _mtFpaCache;
   }
   window._mtObservedFpa = _mtObservedFpa; // console inspection / testing
+  // Tooltip text for what an opponent has allowed per game to this position in
+  // 2026 ("allows 21.3 to RBs, 5th most") - raw average in the board's scoring,
+  // from the weekly OPP PPG table. null until the in-season share is on.
+  const _mtOrd = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] || 'th'));
+  function _mtAllowedNote(abbr, posKey) {
+    if (!_mtObservedFpa().share || typeof window._oppAllowedFor !== 'function') return null;
+    if (_MT_FPA_SRC.indexOf(posKey) < 0) return null;
+    const a = window._oppAllowedFor(abbr, posKey);
+    if (!a || typeof a.v !== 'number') return null;
+    // Blended grade on: lead with the grade's own rank - it can sit far from the
+    // actual-points rank (one touchdown-heavy game, or a very different last season).
+    const f = _mtObservedFpa();
+    const gr = (f.blended && f.rank && f.rank[posKey]) ? f.rank[posKey][abbr] : null;
+    if (gr) return '#' + gr + ' softest vs ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', allows ' + a.v.toFixed(1) + '/gm';
+    return 'allows ' + a.v.toFixed(1) + ' to ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', ' + _mtOrd(a.rank) + ' most';
+  }
+  // true while the preseason grades still carry weight in the blend
+  const _mtPriorLive = () => !(_mtObservedFpa().share >= 1);
+  // the tooltip numbers follow the board's scoring, so the caches key on it
+  const _mtFmtKey = () => (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
 
   function _mtMatchupZ(oppRec, posKey) {
-    if (posKey === 'DST') return oppRec.zOff; // DST matchup = opposing OFFENSE — FPA doesn't apply
-    const prior = (posKey === 'K' || posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
+    // DST matchup = the opposing OFFENSE: Clay preseason offense grade, replaced
+    // in-season by what D/STs have scored against it (z.DST, same ramp).
+    const isDst = posKey === 'DST';
+    const prior = isDst ? oppRec.zOff
+                : (posKey === 'K' || posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
     const fpa = _mtObservedFpa();
     if (!fpa.share || !fpa.z) return prior;
-    const zMap = fpa.z[(posKey === 'K' || posKey === 'OVERALL') ? 'OVERALL' : posKey];
+    const zMap = fpa.z[isDst ? 'DST' : (posKey === 'K' || posKey === 'OVERALL') ? 'OVERALL' : posKey];
     const zObs = zMap ? zMap[oppRec.abbr] : undefined;
     if (typeof zObs !== 'number') return prior;
     return prior * (1 - fpa.share) + zObs * fpa.share;
@@ -52161,6 +53039,40 @@ Rules:
   // floats to the top of the easy list in every window. Subtracting each
   // team's own median cancels that constant and leaves the schedule effect,
   // exactly as _mtImpliedBaselines does for skill positions.
+  // SPREAD VS THE TEAM'S OWN NORM (2026-10-05). A raw spread mostly says "this is
+  // a good team" - roster quality, the same trap the implied total had - while
+  // the SOS rank is about the schedule. For the positions listed here the spread
+  // signal is the window's average spread MINUS the team's own season median.
+  // scripts/research_sos_mix.py (2016-25, signals rebuilt as of each week): RB
+  // .158 vs .143 raw at the same weight, better in 7 of 10 seasons. QB (-0.10),
+  // WR, TE and K scored the same or worse relative, so they stay raw; the mix of
+  // opponent grade vs implied total (3:1, K 1:3, D/ST 1:2) held up there as is.
+  const POSITION_SPREAD_RELATIVE = { RB: true };
+  let _mtSprBaseCache = null;
+  function _mtSpreadBaselines() {
+    if (_mtSprBaseCache) return _mtSprBaseCache;
+    _mtSprBaseCache = {};
+    if (typeof window.getNflScheduleForTeam !== 'function'
+        || typeof window.getNflTeamSpread !== 'function') return _mtSprBaseCache;
+    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+      const sched = window.getNflScheduleForTeam(team);
+      if (!sched) return;
+      const vals = [];
+      for (let w = 1; w <= 18; w++) {
+        const g = sched[w];
+        if (!g || g.bye || !g.opp) continue;
+        const sp = window.getNflTeamSpread(w, team, g.opp, g.home);
+        if (typeof sp === 'number') vals.push(sp);
+      }
+      if (vals.length >= 6) {
+        vals.sort((a, b) => a - b);
+        const m = Math.floor(vals.length / 2);
+        _mtSprBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+      }
+    });
+    return _mtSprBaseCache;
+  }
+
   let _mtOppImplBaseCache = null;
   function _mtOppImpliedBaselines() {
     if (_mtOppImplBaseCache) return _mtOppImplBaseCache;
@@ -52220,7 +53132,7 @@ Rules:
     const posKey = _mtPosKey(pos);
     const isDstView = posKey === 'DST';
     const mix = _mtSignalMix(posKey);
-    const key = posKey + '_' + wks.join('_');
+    const key = posKey + '_' + wks.join('_') + '_' + _mtFmtKey();
     if (_mtPlayoffSosCache[key]) return _mtPlayoffSosCache[key];
     _mtPlayoffSosCache[key] = {};
     if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosCache[key];
@@ -52280,7 +53192,7 @@ Rules:
             clayDefGr: oppRec.clay ? oppRec.clay.defGr : null,
             clayOffRk: oppRec.clay ? oppRec.clay.offRk : null,
             posUnits, gameTotal: gt, teamSpread, impliedTotal: impliedTot,
-            oppImplied,
+            oppImplied, allowedNote: _mtAllowedNote(oppRec.abbr, posKey),
           });
         }
       });
@@ -52321,12 +53233,21 @@ Rules:
     // Spread z-score across teams (centered ~0 by construction — favored offset
     // underdog, sums to 0 league-wide). Sd ~3-4 over 3-game playoff window.
     let sMu = 0, sSd = 1, spreadsReady = false;
+    const sprRel = POSITION_SPREAD_RELATIVE[posKey] === true;
+    if (sprRel) {
+      const sprBase = _mtSpreadBaselines();
+      Object.keys(teamSpr).forEach(t => {
+        if (typeof sprBase[t] === 'number') teamSpr[t].avg -= sprBase[t];
+        else delete teamSpr[t];
+      });
+    }
     const sprAvgs = Object.values(teamSpr).filter(t => t.n >= minN).map(t => t.avg);
     if (sprAvgs.length >= 4) {
       const m = sprAvgs.reduce((s, v) => s + v, 0) / sprAvgs.length;
       const variance = sprAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / sprAvgs.length;
       sMu = m; sSd = Math.sqrt(variance) || 1;
-      spreadsReady = true;
+      // relative spreads collapse toward 0 on near-season-length windows - skip, as the totals do
+      spreadsReady = !(sprRel && sSd < 0.5);
     }
     const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
     const finalScores = Object.entries(teamDef).map(([team, d]) => {
@@ -52361,6 +53282,7 @@ Rules:
     // League thirds (32 teams → 11/21 cuts, matching the original buckets).
     // Custom windows can drop bye-week teams below 32, so scale by count.
     const _fsN = finalScores.length;
+    const _priorLive = _mtPriorLive();
     const _easyCut = Math.round(_fsN / 3);
     const _hardCut = _fsN - Math.round(_fsN / 3);
     finalScores.forEach((data, i) => {
@@ -52374,15 +53296,20 @@ Rules:
       const tip = tipPrefix + posTag + ' #' + rank + '/' + _fsN + ' (1 = easiest) · ' + data.opps.map(o => {
         const parts = ['W' + o.wk + ' ' + (o.home ? 'vs ' : '@ ') + o.opp];
         const sub = [];
+        // In-season points allowed first; the preseason grades (Clay units /
+        // projected PA) only while they still count in the blend.
+        if (o.allowedNote) sub.push(o.allowedNote);
         if (isDstView) {
           // A DST's matchup is the opposing OFFENSE — show offense rank and
           // the points that offense is priced to score.
-          if (o.clayOffRk) sub.push('Clay O#' + o.clayOffRk);
+          if (_priorLive && o.clayOffRk) sub.push('Clay O#' + o.clayOffRk);
           if (typeof o.oppImplied === 'number') sub.push(o.oppImplied.toFixed(1) + ' opp impl');
         } else {
-          if (o.posUnits) sub.push(o.posUnits);
-          else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
-          if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
+          if (_priorLive) {
+            if (o.posUnits) sub.push(o.posUnits);
+            else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
+            if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
+          }
           if (typeof o.impliedTotal === 'number') sub.push('impl ' + o.impliedTotal.toFixed(1));
         }
         if (typeof o.gameTotal === 'number') sub.push('O/U ' + o.gameTotal.toFixed(1));
@@ -52417,7 +53344,7 @@ Rules:
     const posKey = _mtPosKey(pos);
     const isDstView = posKey === 'DST';
     const mix = _mtSignalMix(posKey);
-    const cacheKey = posKey + '_' + week;
+    const cacheKey = posKey + '_' + week + '_' + _mtFmtKey();
     if (_mtPlayoffSosWeeklyCache[cacheKey]) return _mtPlayoffSosWeeklyCache[cacheKey];
     _mtPlayoffSosWeeklyCache[cacheKey] = {};
     if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosWeeklyCache[cacheKey];
@@ -52458,7 +53385,12 @@ Rules:
       x.rel = (typeof v === 'number' && typeof _implBase[t] === 'number') ? v - _implBase[t] : null;
     });
     const rels = Object.values(teamRows).map(x => x.rel).filter(v => typeof v === 'number');
-    const spreads = Object.values(teamRows).map(x => x.sp).filter(v => typeof v === 'number');
+    // spZ = the spread the blend reads: vs the team's own season norm where POSITION_SPREAD_RELATIVE says so
+    const sprBase = POSITION_SPREAD_RELATIVE[posKey] === true ? _mtSpreadBaselines() : null;
+    Object.entries(teamRows).forEach(([t, x]) => {
+      x.spZ = typeof x.sp !== 'number' ? null : !sprBase ? x.sp : typeof sprBase[t] === 'number' ? x.sp - sprBase[t] : null;
+    });
+    const spreads = Object.values(teamRows).map(x => x.spZ).filter(v => typeof v === 'number');
     const useTotals = rels.length >= 4 && std(rels) >= 0.5;
     const useSpreads = spreads.length >= 4;
     const tMu = useTotals ? mean(rels) : 0;
@@ -52476,8 +53408,8 @@ Rules:
         const zT = isDstView ? zRaw : -zRaw;
         blend = (x.defZ * mix.def + zT * mix.tot) / (mix.def + mix.tot);
       }
-      if (useSpreads && sprWeight !== 0 && typeof x.sp === 'number') {
-        const zS = (x.sp - sMu) / sSd;
+      if (useSpreads && sprWeight !== 0 && typeof x.spZ === 'number') {
+        const zS = (x.spZ - sMu) / sSd;
         blend += sprWeight * zS;
       }
       return { t, blend, ...x };
@@ -52506,6 +53438,8 @@ Rules:
         opp: d.g.opp, home: d.g.home,
         gameTotal: d.gt, teamSpread: d.sp, impliedTotal: d.it,
         oppImplied: d.oppIt,
+        allowedNote: _mtAllowedNote(d.oppRec.abbr, posKey),
+        priorLive: _mtPriorLive(),   // false once the preseason grades no longer count
         clayDefRk: c.defRk || null, clayOffRk: c.offRk || null,
         posUnits, oppg: d.oppRec.dst.oppg,
       };
@@ -53190,6 +54124,12 @@ Rules:
         const playoffStart = +lgSet.playoff_week_start || 15;
         league.playoffStart = playoffStart;
         league.playoffTeams = +lgSet.playoff_teams || 6;
+        league.playoffReseed = +lgSet.playoff_seed_type === 1; // 1 = re-seed each round
+        const ssc = league.scoring_settings || {}, sd = {};
+        ['rec', 'pass_td', 'pass_yd', 'rush_yd', 'rush_td', 'rec_yd', 'rec_td', 'bonus_rec_te'].forEach(k => {
+          if (typeof ssc[k] === 'number') sd[k] = ssc[k];
+        });
+        league.scoringDetail = Object.keys(sd).length ? sd : null;
         const wks = [];
         for (let w = 1; w < playoffStart; w++) wks.push(w);
         const lists = await Promise.all(wks.map(w =>
@@ -53393,6 +54333,17 @@ Rules:
       pass_td: lg.passTd != null ? lg.passTd : 4
     };
   }
+  // Normalized payload → the league-level fields _mtSaveLeagueToCloud keeps
+  // (schedule, playoff shape, per-stat scoring). Shared by every ESPN/Yahoo
+  // save path so a new field can't be dropped by one of them.
+  function _mtNormalizedLeagueMeta(lg) {
+    return {
+      name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null,
+      playoffStart: lg.playoffStart || null, playoffTeams: lg.playoffTeams || null,
+      playoffReseed: lg.playoffReseed != null ? lg.playoffReseed : null,
+      scoringDetail: lg.scoringDetail || null
+    };
+  }
   function _mtNormalizedFormat(lg) {
     const prevFormat = _mtFormat;
     _mtDetectFormat({
@@ -53463,7 +54414,7 @@ Rules:
         const savedMine = (sv.teams || []).find(t => t && t.isMyTeam);
         const teams = _mtNormalizedSaveTeams(lg, savedMine);
         _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
-        _mtSaveLeagueToCloud(key, { name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null }, teams, fmt);
+        _mtSaveLeagueToCloud(key, _mtNormalizedLeagueMeta(lg), teams, fmt);
         console.log('[MyTeams] Auto-saved fresh extension sync:', lg.name || key);
         const hint = document.getElementById('mtEspnHint');
         if (hint) hint.textContent = 'Fresh sync auto-saved — click IMPORT to load a league.';
@@ -53597,7 +54548,7 @@ Rules:
         status.style.color = unmatched > 0 ? '#f59e0b' : '#22c55e';
       }
 
-      _mtSaveLeagueToCloud(source + '_' + lg.leagueId, { name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null }, teams);
+      _mtSaveLeagueToCloud(source + '_' + lg.leagueId, _mtNormalizedLeagueMeta(lg), teams);
     } catch (err) {
       console.warn('[MyTeams] ' + source + ' import error:', err);
       if (status) { status.textContent = 'Error: ' + err.message; status.style.color = '#ef4444'; }
@@ -53817,9 +54768,14 @@ Rules:
         for (let i = 0; i < n; i++) apiSlots.push(lbl);
       });
       let rec = null, passTd = null;
+      // per-stat scoring on Sleeper keys (Sim Lab's league sim reads these)
+      const YSTAT = { 4: 'pass_yd', 5: 'pass_td', 9: 'rush_yd', 10: 'rush_td', 11: 'rec', 12: 'rec_yd', 13: 'rec_td' };
+      const scoringDetail = { rec: 0 };
       ((svc.settings && svc.settings.stat_categories) || []).forEach(c => {
         if (Number(c.stat_id) === 11) rec = parseFloat(c.stat_modifier) || 0;
         if (Number(c.stat_id) === 5) passTd = parseFloat(c.stat_modifier); // passing TDs (Yahoo default 4)
+        const k = YSTAT[Number(c.stat_id)], v = parseFloat(c.stat_modifier);
+        if (k && isFinite(v)) scoringDetail[k] = v;
       });
 
       // 2) League home HTML — team ids/names/records via the standings parse;
@@ -53860,6 +54816,10 @@ Rules:
         norm.sf = apiSlots.indexOf('SUPER_FLEX') >= 0 || apiSlots.filter(s => s === 'QB').length >= 2;
       }
       if (passTd != null && isFinite(passTd)) norm.passTd = passTd;
+      norm.scoringDetail = scoringDetail;
+      // playoff field size is in the settings JSON; the start week is not (Yahoo default wk15)
+      const nPo = parseInt(svc.settings && svc.settings.num_playoff_teams, 10);
+      if (nPo > 1) norm.playoffTeams = nPo;
       norm.syncedAt = Date.now();
       norm.direct = true; // in-site fetch, not the extension — enables the ↻ re-sync button
       return norm;
@@ -56740,9 +57700,16 @@ Rules:
         // extension/direct payload). Callers that don't carry one (my-team
         // re-save) must not wipe a previously saved schedule.
         schedule: league.schedule || (existing[leagueId] && existing[leagueId].schedule) || null,
-        // Playoff shape (Sleeper settings) — consumers default wk15 / 6 teams.
+        // Playoff shape (Sleeper settings; ESPN scheduleSettings + Yahoo
+        // num_playoff_teams since 2026-10-05) — consumers default wk15 / 6.
         playoffStart: league.playoffStart || (existing[leagueId] && existing[leagueId].playoffStart) || null,
         playoffTeams: league.playoffTeams || (existing[leagueId] && existing[leagueId].playoffTeams) || null,
+        playoffReseed: league.playoffReseed != null ? !!league.playoffReseed
+          : (existing[leagueId] && existing[leagueId].playoffReseed != null ? existing[leagueId].playoffReseed : null),
+        // Per-stat scoring on Sleeper keys {rec, pass_td, pass_yd, rush_yd,
+        // rush_td, rec_yd, rec_td, bonus_rec_te} — Sim Lab's LOAD FROM MFF
+        // league sim scores with it. Kept across saves that don't carry one.
+        scoring: league.scoringDetail || (existing[leagueId] && existing[leagueId].scoring) || null,
         // Value history (daily points written by _mtRecordHistoryPoint) —
         // never wiped by a roster re-save.
         history: (existing[leagueId] && Array.isArray(existing[leagueId].history)) ? existing[leagueId].history : null,
@@ -57555,8 +58522,7 @@ Rules:
     if (_mtEspnLiveSig(norm) === _mtEspnSavedSig(lg)) return;
     const savedMine = (lg.teams || []).find(t => t && t.isMyTeam);
     const teams = _mtNormalizedSaveTeams(norm, savedMine);
-    await _mtSaveLeagueToCloud('espn_' + norm.leagueId,
-      { name: norm.name, season: String(norm.season || ''), schedule: norm.schedule || null },
+    await _mtSaveLeagueToCloud('espn_' + norm.leagueId, _mtNormalizedLeagueMeta(norm),
       teams, _mtNormalizedFormat(norm));
     console.log('[MyTeams] Background-refreshed ESPN league:', norm.name || id);
   }
@@ -57573,8 +58539,7 @@ Rules:
     const norm = await _mtFetchYahooLeague(id, { myTeamId: savedMine ? savedMine.id : null });
     if (!norm) return; // non-viewable leagues throw at the proxy → caught by the sweep
     const teams = _mtNormalizedSaveTeams(norm, savedMine);
-    await _mtSaveLeagueToCloud('yahoo_' + norm.leagueId,
-      { name: norm.name, season: String(norm.season || ''), schedule: norm.schedule || null },
+    await _mtSaveLeagueToCloud('yahoo_' + norm.leagueId, _mtNormalizedLeagueMeta(norm),
       teams, _mtNormalizedFormat(norm));
     console.log('[MyTeams] Background-refreshed Yahoo league:', norm.name || id);
   }
@@ -58828,6 +59793,7 @@ Rules:
     if (t.scrollLeft > 20) {
       const h = document.querySelector('#udTab_board .ud-scroll-hint');
       if (h) h.classList.add('seen'); // class, not inline — the mobile CSS is !important
+      window._udBoardHintSeen = true; // survives the board's view-toggle repaint
     }
   }, true);
 
@@ -59306,6 +60272,11 @@ Rules:
   // We append to a 30-day rolling history in Firestore, then override
   // D[i].udA / D[i].sfa with the latest values so rankings and portfolio
   // reflect live ADP without reloading the static d.js.
+  // Last-resort ADP key: UD drops generational suffixes ("Marvin Harrison"
+  // for d.js "Marvin Harrison Jr."). Exact name and udN are tried first.
+  function _udAdpBaseName(n) {
+    return String(n).replace(/\s+(jr|sr|ii|iii|iv|v)\.?$/i, '');
+  }
   window._mffSetAdpSnapshot = function(snapshot) {
     if (!snapshot || !snapshot.adps || !snapshot.date) return;
     const adpMap = snapshot.adps;
@@ -59319,8 +60290,10 @@ Rules:
     if (Array.isArray(window.D)) {
       for (let i = 0; i < window.D.length; i++) {
         const row = window.D[i];
-        if (!row || !row.n) continue;
-        const ent = adpMap[row.n] || (row.udN ? adpMap[row.udN] : null);
+        // Retired rows never take a live ADP: UD keys Marvin Harrison Jr. as
+        // plain "Marvin Harrison", which is the retired Colt's exact name.
+        if (!row || !row.n || row._retired) continue;
+        const ent = adpMap[row.n] || (row.udN ? adpMap[row.udN] : null) || adpMap[_udAdpBaseName(row.n)];
         if (!ent) continue;
         if (ent.bbm != null && !isNaN(ent.bbm)) { row.udA = ent.bbm; appliedBbm++; }
         if (ent.sf != null && !isNaN(ent.sf)) { row.sfa = ent.sf; appliedSf++; }
@@ -59416,8 +60389,8 @@ Rules:
         if (Array.isArray(window.D)) {
           for (let i = 0; i < window.D.length; i++) {
             const row = window.D[i];
-            if (!row || !row.n) continue;
-            const ent = latest.adps[row.n] || (row.udN ? latest.adps[row.udN] : null);
+            if (!row || !row.n || row._retired) continue;   // see _mffSetAdpSnapshot
+            const ent = latest.adps[row.n] || (row.udN ? latest.adps[row.udN] : null) || latest.adps[_udAdpBaseName(row.n)];
             if (!ent) continue;
             if (ent.bbm != null && !isNaN(ent.bbm)) { row.udA = ent.bbm; appliedBbm++; }
             if (ent.sf != null && !isNaN(ent.sf)) { row.sfa = ent.sf; appliedSf++; }
@@ -61128,44 +62101,21 @@ Rules:
   }
   window._udLiveDraft = _udLiveDraft;
 
-  // Field-average share of entries holding an advancing spot at the stage this
-  // draft is in — the baseline the ADVANCE RATE card prints under my own rate.
-  // Round 1 = adv / pool size; each later round multiplies its own adv / size
-  // on top (an Eliminator entry leading its Week 4 H2H is in the surviving
-  // 6/12 x 1/2 x 1/2 x 1/2 of the field). An eliminated entry is measured
-  // against the round the contest has reached by week — but only when later
-  // rounds are synced for that contest (lateSynced); with Round 1 pools alone
-  // every entry is judged on Round 1. null = a later round's pool size isn't
-  // on file.
-  function _udFieldAdvRate(L, lastWk, lateSynced) {
-    const rule = L.rule, rounds = rule.rounds || [];
-    const size1 = (L.teams && L.teams.length) || (rounds[0] && rounds[0].size) || 12;
-    let p = Math.min(1, rule.adv / size1);
-    if (!rule.multi || !L.h2h) return p;
-    let k = L.h2h.alive ? ((L.h2h.latest && L.h2h.latest.round) || 1) : 1;
-    if (!L.h2h.alive && lateSynced) rounds.forEach((rd, i) => { if (rd.week && rd.week[0] <= lastWk) k = i + 1; });
-    for (let i = 1; i < k; i++) {
-      const rd = rounds[i];
-      if (!rd || rd.final) break;
-      const row = L.h2h.rounds.find(r => r.round === i + 1);
-      const size = rd.size || (row && row.of) || null;
-      if (!size) return null;
-      p *= Math.min(1, rd.adv / size);
-    }
-    return p;
+  // Round 1 advancing spot (Jack 2026-10-05: advance rate IS Round 1 — top
+  // 2 of 12 over Weeks 1-14 in BBM). Read off the Round 1 pool standings,
+  // never the playoff rounds L.inAdv follows after Week 14, so the ADVANCE
+  // RATE card, the ADVANCING exposure toggle and the draft board's advance
+  // views all count the same thing and freeze once Round 1 is final.
+  function _udR1Adv(L) {
+    return !!(L && L.fieldComplete && L.scored && L.me && L.me.adv);
   }
 
-  // Portfolio roll-up over the (filtered) drafts: advance rate + $ in the money.
+  // Portfolio roll-up over the (filtered) drafts: Round 1 advance rate + $ in
+  // the money. Field avg = each pool's advance share (2 / 12 = 16.7% in BBM).
   function _udLiveSummary(data) {
     const drafts = data && data.drafts ? Object.values(data.drafts) : [];
-    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0, nMoney = 0, fieldSum = 0, nFieldAvg = 0;
+    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0, nPts = 0, nMoney = 0, fieldSum = 0, r1Weeks = 0;
     const lw = _udLiveWeekInfo();
-    const lastWk = lw.kicked.length ? Math.max.apply(null, lw.kicked) : 0;
-    const lateSynced = {};   // contest -> some entry has a later-round group linked
-    drafts.forEach(d => {
-      const L = _udLiveDraft(d);
-      if (L && L.h2h && L.h2h.rounds.length > 1) lateSynced[d.tournament || ''] = true;
-    });
     drafts.forEach(d => {
       const L = _udLiveDraft(d);
       if (!L) return;
@@ -61173,23 +62123,27 @@ Rules:
       if (!L.fieldComplete || !L.scored) return;
       winning += L.moneyNow || 0;
       if (L.moneyNow > 0) nMoney++;
+      if (L.me) {
+        n++;
+        if (_udR1Adv(L)) nAdv++;
+        fieldSum += Math.min(1, L.rule.adv / (L.teams.length || 12));
+        r1Weeks = Math.max(r1Weeks, (L.weekList || []).length);
+      }
       if (L.advKnown === false) return;   // H2H round with the opponent's roster unknown
-      n++;
+      nPts++;
       ptsSum += L.myPts || 0;
-      if (L.inAdv) nAdv++;
       if (L.myRank) { rankSum += L.myRank; nRank++; }
-      const fa = _udFieldAdvRate(L, lastWk, !!lateSynced[d.tournament || '']);
-      if (fa != null) { fieldSum += fa; nFieldAvg++; }
     });
     return {
       n, nAdv, nField, nMoney,
       advRate: n ? nAdv / n : null,
-      fieldAdv: nFieldAvg ? fieldSum / nFieldAvg : null,
+      fieldAdv: n ? fieldSum / n : null,
       groups: window._udRoundGroups ? Object.keys(window._udRoundGroups).length : 0,
       winning: Math.round(winning * 100) / 100,
       avgRank: nRank ? rankSum / nRank : null,
-      avgPts: n ? ptsSum / n : null,
-      weeks: lw.kicked.length,
+      avgPts: nPts ? ptsSum / nPts : null,
+      weeks: r1Weeks,                 // Round 1 weeks scored (the advance-rate stamp)
+      weeksAll: lw.kicked.length,     // every kicked week (live rank / points)
       liveWk: lw.liveWk
     };
   }
@@ -61213,7 +62167,7 @@ Rules:
   }
 
   // EXPOSURE tab ADVANCING toggle (Jack 2026-10-05): exposure across only the
-  // drafts that currently sit in an advancing spot — the same live test the
+  // drafts that hold a Round 1 advancing spot — the same _udR1Adv test the
   // ADVANCE RATE card counts. The scope is what every exposure surface (rows,
   // expand panel, combo search) reads: the data, the sorted player list and
   // the draft count, for either the whole filtered portfolio or that subset.
@@ -61229,7 +62183,7 @@ Rules:
     const drafts = {};
     Object.entries(data.drafts).forEach(([id, d]) => {
       const L = _udLiveDraft(d);
-      if (L && L.fieldComplete && L.scored && L.advKnown !== false && L.inAdv) drafts[id] = d;
+      if (_udR1Adv(L)) drafts[id] = d;
     });
     const sig = Object.keys(drafts).join(',');
     if (!_udExpAdvCache || _udExpAdvCache.all !== data || _udExpAdvCache.sig !== sig) {
@@ -61238,6 +62192,65 @@ Rules:
                          playerList: Object.entries(sub.players).sort((a, b) => b[1].exposure - a[1].exposure) };
     }
     return _udExpAdvCache;
+  }
+
+  // DRAFT BOARD view toggle (Jack 2026-10-05). EXPOSURE = ownership % (the
+  // original board). The two advance-rate views are Best Ball Mania only (the
+  // one contest with enough teams per player to read a rate off):
+  //   MY ADV RATE      — of my teams rostering the player, the share sitting
+  //                      in an advancing spot                         -> `by`
+  //   OVERALL ADV RATE — the same share over EVERY team in my synced pools,
+  //                      all 12 per pool: which players have carried teams
+  //                      across the whole field                       -> `fby`
+  // Advancing = top 2 of the 12-team Round 1 pool (Weeks 1-14) in BOTH views
+  // (Jack 2026-10-05: advance rate IS Round 1). Unlike the ADVANCE RATE card
+  // it never follows a team into the Week 15+ playoff rounds, so the board
+  // freezes on the final Round 1 standings once Week 14 is in.
+  // Both maps are keyed by the site (D) name; `sig` / `fsig` move whenever a
+  // counted team crosses the advance line.
+  window._udBoardView = 'exp';
+  let _udBoardAdvShown = null;
+  const _UD_BBM_RE = /best\s*ball\s*mania/i;
+  function _udBoardAdvStats(data) {
+    const drafts = {}, by = {}, fby = {}, sig = [], fsig = [];
+    let fTeams = 0, fAdv = 0, fPools = 0, mTeams = 0, mAdv = 0;
+    const count = (map, picks, isAdv) => {
+      const seen = {};
+      (picks || []).forEach(p => {
+        if (!p || !p.name) return;
+        const m = _udMatchPlayer(p.name);
+        const key = m ? m.n : p.name;
+        if (seen[key]) return;
+        seen[key] = 1;
+        const r = map[key] || (map[key] = { n: 0, adv: 0 });
+        r.n++;
+        if (isAdv) r.adv++;
+      });
+    };
+    Object.entries((data && data.drafts) || {}).forEach(([id, d]) => {
+      if (!d || !_UD_BBM_RE.test(String(d.tournament || ''))) return;
+      drafts[id] = d;
+      const L = _udLiveDraft(d);
+      if (!L || !L.fieldComplete || !L.scored) return;
+      const advBy = {};
+      L.teams.forEach(t => { advBy[t.entryId] = t.adv; });
+      fPools++;
+      Object.values(d.allTeams || {}).forEach(t => {
+        const isAdv = !!advBy[t.entryId];
+        fTeams++;
+        if (isAdv) fAdv++;
+        count(fby, t.picks, isAdv);
+      });
+      fsig.push(id + ':' + L.teams.filter(t => t.adv).map(t => t.entryId).join('/'));
+      if (!L.me) return;
+      const mine = !!L.me.adv;
+      mTeams++;
+      if (mine) mAdv++;
+      sig.push(id + (mine ? '+' : '-'));
+      count(by, d.picks, mine);
+    });
+    return { by, fby, drafts, nBbm: Object.keys(drafts).length,
+             fPools, fTeams, fAdv, mTeams, mAdv, sig: sig.join(','), fsig: fsig.join(',') };
   }
   function _udKpiWinHtml(sum) {
     if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
@@ -61268,6 +62281,12 @@ Rules:
           const inp = document.getElementById('udExpFilter');
           expList.innerHTML = _udExpListHtml(inp ? inp.value : '', window._udExpPosFilter || 'ALL', sc);
         }
+      }
+      // Draft board ADVANCE RATE view: same rule — repaint when a team crossed the line.
+      if (window._udBoardView !== 'exp') {
+        const board = document.getElementById('udTab_board');
+        const bs = board ? _udBoardAdvStats(data) : null;
+        if (bs && (window._udBoardView === 'field' ? bs.fsig : bs.sig) !== _udBoardAdvShown) board.innerHTML = _udBoardTabHtml(data);
       }
       const teamsTab = document.getElementById('udTab_teams');
       if (window._udTeamsBuilt && teamsTab && teamsTab.style.display !== 'none') {
@@ -62755,7 +63774,7 @@ Rules:
     const _kpiAdv = _udKpiAdvHtml(_liveSum), _kpiWin = _udKpiWinHtml(_liveSum);
     const cards = [
       { label: 'DRAFTS', val: numDrafts, sub: _draftsSub, subTitle: _tourneyFull, gloss: 'Total number of drafts in your imported portfolio across the selected phase + contest filters.' },
-      { id: 'adv', label: 'ADVANCE RATE', val: _kpiAdv.val, sub: _kpiAdv.sub, color: '#22c55e', gloss: 'LIVE — share of your synced pools where you currently sit in an advancing spot (top 2 of 12 in BBM / Puppy-style contests, top 6 in The Eliminator\'s Week 1). Standings are computed from every team\'s best-ball lineup on real weekly stats, including games in progress. FIELD AVG underneath is the baseline for the same drafts — the share of all entries that hold an advancing spot (2 of 12 = 16.7% in a BBM pool) — with your edge over it.' },
+      { id: 'adv', label: 'ADVANCE RATE', val: _kpiAdv.val, sub: _kpiAdv.sub, color: '#22c55e', gloss: 'LIVE — share of your synced pools where you hold a Round 1 advancing spot (top 2 of 12 over Weeks 1-14 in BBM / Puppy-style contests, top 6 in The Eliminator\'s Week 1). Round 1 only: once Round 1 is final the rate stays put through the playoff weeks. Standings are computed from every team\'s best-ball lineup on real weekly stats, including games in progress. FIELD AVG underneath is the baseline for the same drafts — the share of all entries that hold an advancing spot (2 of 12 = 16.7% in a BBM pool) — with your edge over it.' },
       { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry', gloss: 'Total dollars invested across all drafts in the current filter. Subtext shows your average entry fee.' },
       { id: 'win', label: 'WINNING', val: _kpiWin.val, sub: _kpiWin.sub, color: '#22c55e', gloss: 'LIVE — what your entries would pay if the round ended today: the guaranteed min-cash for every pool where you hold an advancing spot (BBM VII $25, The Puppy $5, other contests = entry fee back; The Eliminator pays nothing until Round 3).' }
     ];
@@ -62802,7 +63821,7 @@ Rules:
       html += `<button onclick="window._udFilterExposurePos('${pos}')" data-udposfilter="${pos}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? posFilterColors[pos] : 'var(--border)'};background:${active ? posFilterColors[pos] : 'var(--surface)'};color:${active ? (pos === 'ALL' ? '#000' : '#fff') : 'var(--text2)'}">${pos}</button>`;
     });
     html += `</div>`;
-    html += `<button id="udExpAdvBtn" onclick="window._udToggleExpAdv()" title="Show exposure across only the teams currently in an advancing spot (the same live standings as the ADVANCE RATE card)" style="${_udExpAdvBtnStyle(window._udExpAdvOnly)}">ADVANCING</button>`;
+    html += `<button id="udExpAdvBtn" onclick="window._udToggleExpAdv()" title="Show exposure across only the teams holding a Round 1 advancing spot (the same standings as the ADVANCE RATE card)" style="${_udExpAdvBtnStyle(window._udExpAdvOnly)}">ADVANCING</button>`;
     html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter… or &quot;maye + aj brown&quot; for stacks" title="Type one name to filter the list, or combine names with + (or a comma) to see every draft that rosters ALL of them" style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px;flex:1;min-width:100px;max-width:260px">`;
     html += `</div>`;
     html += `<div id="udExposureList">`;
@@ -62824,29 +63843,10 @@ Rules:
     html += `<div id="udTeamsBody"></div>`;
     html += `</div>`;
 
-    // DRAFT BOARD TAB
-    // v0.9.92: detect format from filtered drafts (majority wins) so the
-    // board uses the right Underdog ADP scale and shows it in the header.
-    let _udBoardSf = 0, _udBoardBbm = 0;
-    Object.values(data.drafts).forEach(dr => {
-      if (dr && dr.phase === 'superflex') _udBoardSf++; else _udBoardBbm++;
-    });
-    const _udBoardLabel = _udBoardSf > _udBoardBbm ? 'Superflex' : 'Best Ball';
+    // DRAFT BOARD TAB — body built by _udBoardTabHtml so the EXPOSURE /
+    // ADVANCE RATE view toggle can repaint it in place.
     html += `<div id="udTab_board" style="display:${_activeTabId === 'board' ? '' : 'none'}">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${_udBoardLabel} ADP</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${_udBoardLabel} ADP in a 12-team grid. Color = your ownership%.</div>`;
-    // Legend
-    html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
-    html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e"></span> 11%+</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#facc15"></span> 5–11%</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444"></span> 0–5%</span>`;
-    html += `</div>`;
-    // Mobile scroll hint (Jack 2026-09-02): the 12-slot grid scrolls sideways
-    // on phones — say so. CSS shows it only ≤600px; the capture-phase scroll
-    // listener below hides it once the board has been swiped.
-    html += `<div class="ud-scroll-hint" style="display:none;align-items:center;gap:6px;margin-bottom:8px;padding:6px 10px;border:1px dashed var(--accent);border-radius:6px;font-size:.62rem;color:var(--accent)"><span style="font-size:.9rem;line-height:1">↔</span> Swipe sideways to see all 12 draft slots</div>`;
-    html += _udRenderDraftBoard(data);
+    html += _udBoardTabHtml(data);
     html += `</div>`;
 
     // VALUE PICKS TAB
@@ -63279,7 +64279,7 @@ Rules:
     } else if (!_liveSum.n) {
       html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No games scored yet — live standings for every pool appear once Week 1 kicks off (weekly stats + in-game scoring).</div>`;
     } else {
-      const _thru = _liveSum.weeks ? ' · thru W' + _liveSum.weeks : '';
+      const _thru = _liveSum.weeksAll ? ' · thru W' + _liveSum.weeksAll : '';
       html += _udSummaryCard('LIVE AVG RANK', (_liveSum.avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field' + _thru, '#fbbf24');
       html += _udSummaryCard('ADVANCING', Math.round(100 * _liveSum.advRate) + '%', _liveSum.nAdv + ' of ' + _liveSum.n + ' pools in advance spots', '#3b82f6');
       html += _udSummaryCard('WINNING', _udFmtMoney(_liveSum.winning), 'min-cash if the round ended today', '#22c55e');
@@ -63813,11 +64813,138 @@ Rules:
     return html;
   }
 
-  function _udRenderDraftBoard(data) {
+  // DRAFT BOARD tab body: title + view toggle, blurb, legend, swipe hint, grid.
+  // Rebuilt whole by _udSetBoardView and by the live tick (advance-rate views).
+  // MY ADVANCING (Jack 2026-10-05): raw count of my advancing teams with the
+  // player — "who is on the most of my advancing teams", exposure x rate.
+  const _UD_BOARD_VIEWS = ['exp', 'adv', 'cnt', 'field'];
+  function _udBoardTabHtml(data) {
+    const view = _UD_BOARD_VIEWS.includes(window._udBoardView) ? window._udBoardView : 'exp';
+    const adv = view !== 'exp', field = view === 'field', cnt = view === 'cnt';
+    const st = adv ? _udBoardAdvStats(data) : null;
+    _udBoardAdvShown = st ? (field ? st.fsig : st.sig) : null;
+    // v0.9.92: detect format from filtered drafts (majority wins) so the
+    // board uses the right Underdog ADP scale and shows it in the header.
+    // The advance-rate views are Best Ball Mania teams only → always Best Ball.
+    let sfN = 0, bbmN = 0;
+    Object.values(data.drafts).forEach(dr => {
+      if (dr && dr.phase === 'superflex') sfN++; else bbmN++;
+    });
+    const label = (!adv && sfN > bbmN) ? 'Superflex' : 'Best Ball';
+    const swatch = (c, txt) => `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:${c}"></span> ${txt}</span>`;
+    const strong = v => `<span style="color:var(--text);font-weight:600">${v}</span>`;
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${label} ADP</span></span>`;
+    html += `<div style="display:flex;gap:3px">`;
+    [['exp', 'EXPOSURE', 'Color each player by your ownership %'],
+     ['adv', 'MY ADV RATE', 'Color each player by how often your Best Ball Mania teams rostering the player hold an advancing spot (top 2 of the Round 1 pool, Weeks 1-14)'],
+     ['cnt', 'MY ADVANCING', 'Color each player by how many of your advancing Best Ball Mania teams roster him — your most-advancing players'],
+     ['field', 'OVERALL ADV RATE', 'Color each player by how often ANY team rostering the player holds an advancing spot (top 2 of the Round 1 pool, Weeks 1-14), across every team in your synced Best Ball Mania pools — who has given the biggest edge']].forEach(([id, txt, tip]) => {
+      const on = id === view;
+      html += `<button onclick="window._udSetBoardView('${id}')" title="${tip}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;white-space:nowrap;border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};background:${on ? 'var(--accent)' : 'var(--surface)'};color:${on ? '#000' : 'var(--text2)'}">${txt}</button>`;
+    });
+    html += `</div></div>`;
+    if (adv && !(field ? st.fTeams : st.mTeams)) {
+      html += `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">${st.nBbm
+        ? 'No Best Ball Mania standings yet. This view needs the full field synced from Underdog and at least one scored week.'
+        : 'No Best Ball Mania drafts in the current filter. Advance rate by player is Best Ball Mania only.'}</div>`;
+      return html;
+    }
+    if (adv) {
+      // Color cuts hang off the field average (2 of 12 = 16.7% in a Round 1
+      // pool): the outer bands are the players well clear of it either way.
+      const base = st.fAdv / st.fTeams;
+      st.view = view; st.field = field; st.base = base; st.map = field ? st.fby : st.by;
+      const T_HI = { c: '#dcfce7', bg: 'rgba(34,197,94,.45)', bd: '#22c55e' }, T_GOOD = { c: '#22c55e', bg: 'rgba(34,197,94,.16)', bd: '#22c55e' },
+            T_MID = { c: '#facc15', bg: 'rgba(250,204,21,.13)', bd: '#facc15' }, T_LOW = { c: '#ef4444', bg: 'rgba(239,68,68,.14)', bd: '#ef4444' },
+            T_BAD = { c: '#fee2e2', bg: 'rgba(239,68,68,.45)', bd: '#ef4444' };
+      st.tier = rate =>
+        rate >= base * 1.5 ? T_HI : rate >= base * 1.2 ? T_GOOD : rate >= base * 0.8 ? T_MID : rate >= base * 0.5 ? T_LOW : T_BAD;
+      // MY ADVANCING cuts scale off the top count so the board always spreads:
+      // filled green = 60%+ of the leader's count, green = 30%+, yellow = 1+,
+      // red = rostered but never advancing.
+      const maxCnt = Object.values(st.by).reduce((m, r) => Math.max(m, r.adv), 0);
+      const cA = Math.max(2, Math.ceil(0.3 * maxCnt)), cB = Math.max(cA + 1, Math.ceil(0.6 * maxCnt));
+      st.cntTier = c => c >= cB ? T_HI : c >= cA ? T_GOOD : c >= 1 ? T_MID : T_LOW;
+      const cut = k => Math.round(100 * base * k);
+      const intro = 'Players sorted by raw Underdog Best Ball ADP in a 12-team grid. ';
+      const r1 = 'an advancing spot (top 2 of 12 in the Round 1 pool, Weeks 1–14)';
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:10px">` + intro + (field
+        ? `Color = how often a team rostering that player holds ${r1}, across the ${strong(st.fTeams.toLocaleString('en-US'))} teams in your ${strong(st.fPools)} Best Ball Mania pools — you plus the 11 opponents in each; Underdog doesn't publish the rest of the contest's rosters, so this is a sample of the full field. The small count is advancing teams / teams in those pools that drafted the player (at most one per pool) · field avg ${strong((100 * base).toFixed(1) + '%')}.`
+        : cnt
+        ? `Color = how many of your ${strong(st.mAdv)} advancing Best Ball Mania teams (top 2 of 12 in the Round 1 pool, Weeks 1–14) roster that player — your most-advancing players, exposure and advance rate combined. The small count is advancing teams / your teams with the player.`
+        : `Color = how often your Best Ball Mania teams with that player hold ${r1}; the small count is advancing teams / teams rostering the player. Overall: ${strong(st.mAdv + ' of ' + st.mTeams)} teams advancing (${strong(Math.round(100 * st.mAdv / st.mTeams) + '%')}) · field avg ${strong((100 * base).toFixed(1) + '%')}.`) + `</div>`;
+      const callout = (lbl, col, list, chipTxt, chipTier, chipTip) => `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:${col};min-width:92px">${lbl}</span>${list.map(e => {
+          const t = chipTier(e);
+          const nm = String(e.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+          return `<span onclick="window._mtOpenCardByName('${nm}')" title="${chipTip(e)} — click for the player card" style="padding:2px 7px;border-radius:4px;background:${t.bg};border:1px solid ${t.bd}55;color:${t.c};font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer">${_esc(e.name)} <span style="font-weight:700">${chipTxt(e)}</span></span>`;
+        }).join('')}</div>`;
+      if (cnt && maxCnt > 0) {
+        const top = Object.entries(st.by).filter(([, r]) => r.adv > 0)
+          .map(([name, r]) => ({ name, r }))
+          .sort((x, y) => (y.r.adv - x.r.adv) || (y.r.adv / y.r.n - x.r.adv / x.r.n))
+          .slice(0, 10);
+        html += callout('MOST ADVANCING', '#22c55e', top, e => e.r.adv, e => st.cntTier(e.r.adv),
+          e => `On ${e.r.adv} of your ${st.mAdv} advancing teams · advancing on ${e.r.adv} of ${e.r.n} teams with him (${Math.round(100 * e.r.adv / e.r.n)}%)`);
+        html += `<div style="height:4px"></div>`;
+      }
+      // OVERALL view: the biggest edges either way, called out above the grid.
+      // Floor of half the pools keeps a late-round flier drafted a handful of
+      // times from topping the list on a tiny sample.
+      if (field) {
+        const minN = Math.max(3, Math.ceil(st.fPools / 2));
+        const ranked = Object.entries(st.fby).filter(([, r]) => r.n >= minN)
+          .map(([name, r]) => ({ name, r, rate: r.adv / r.n }))
+          .sort((x, y) => (y.rate - x.rate) || (y.r.n - x.r.n));
+        const edgeRow = (lbl, col, list) => callout(lbl, col, list, e => Math.round(100 * e.rate) + '%', e => st.tier(e.rate), e => {
+          const edge = 100 * (e.rate - base);
+          return `Advancing on ${e.r.adv} of ${e.r.n} teams in your pools · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg`;
+        });
+        if (ranked.length >= 16) {
+          html += edgeRow('BIGGEST EDGE', '#22c55e', ranked.slice(0, 8));
+          html += edgeRow('BIGGEST DRAG', '#ef4444', ranked.slice(-8).reverse());
+          html += `<div style="height:4px"></div>`;
+        }
+      }
+      html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center;flex-wrap:wrap">`;
+      if (cnt) {
+        const rng = (a, b) => a === b ? String(a) : a + '–' + b;
+        html += `<span style="color:var(--text2)">ADVANCING TEAMS:</span>`;
+        html += swatch('#22c55e', cB + '+') + swatch('rgba(34,197,94,.4)', rng(cA, cB - 1)) + swatch('#facc15', rng(1, cA - 1)) +
+                swatch('rgba(239,68,68,.4)', '0') + swatch('#64748b', 'not rostered');
+      } else {
+        html += `<span style="color:var(--text2)">ADVANCE RATE:</span>`;
+        html += swatch('#22c55e', cut(1.5) + '%+') + swatch('rgba(34,197,94,.4)', cut(1.2) + '–' + cut(1.5) + '%') + swatch('#facc15', cut(0.8) + '–' + cut(1.2) + '%') +
+                swatch('rgba(239,68,68,.4)', cut(0.5) + '–' + cut(0.8) + '%') + swatch('#ef4444', 'under ' + cut(0.5) + '%') + swatch('#64748b', field ? 'not drafted' : 'not rostered');
+      }
+      html += `</div>`;
+    } else {
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${label} ADP in a 12-team grid. Color = your ownership%.</div>`;
+      html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
+      html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
+      html += swatch('#22c55e', '11%+') + swatch('#facc15', '5–11%') + swatch('#ef4444', '0–5%');
+      html += `</div>`;
+    }
+    // Mobile scroll hint (Jack 2026-09-02): the 12-slot grid scrolls sideways
+    // on phones — say so. CSS shows it only ≤600px; the capture-phase scroll
+    // listener (top of this module) hides it once the board has been swiped.
+    html += `<div class="ud-scroll-hint${window._udBoardHintSeen ? ' seen' : ''}" style="display:none;align-items:center;gap:6px;margin-bottom:8px;padding:6px 10px;border:1px dashed var(--accent);border-radius:6px;font-size:.62rem;color:var(--accent)"><span style="font-size:.9rem;line-height:1">↔</span> Swipe sideways to see all 12 draft slots</div>`;
+    html += _udRenderDraftBoard(data, st);
+    return html;
+  }
+  window._udSetBoardView = function(view) {
+    window._udBoardView = _UD_BOARD_VIEWS.includes(view) ? view : 'exp';
+    const el = document.getElementById('udTab_board');
+    if (el && window._udData) el.innerHTML = _udBoardTabHtml(window._udData);
+  };
+
+  // adv (advance-rate views) = _udBoardAdvStats result plus the map / tier /
+  // base _udBoardTabHtml picked for the view; null = the ownership board.
+  function _udRenderDraftBoard(data, adv) {
     if (typeof D === 'undefined') return '<div style="color:var(--text2);font-size:.78rem">Player data not loaded</div>';
 
     // Determine grid size from drafts
-    const firstDraft = Object.values(data.drafts)[0];
+    const firstDraft = Object.values(adv ? adv.drafts : data.drafts)[0];
     const teamCount = firstDraft ? (firstDraft.size || 12) : 12;
     const roundCount = firstDraft ? firstDraft.picks.length : 20;
     const totalSlots = teamCount * roundCount;
@@ -63832,11 +64959,11 @@ Rules:
     Object.values(data.drafts).forEach(dr => {
       if (dr && dr.phase === 'superflex') _sfCount++; else _bbmCount++;
     });
-    const _udBoardFmt = _sfCount > _bbmCount ? 'sf' : 'bbm';
+    const _udBoardFmt = (!adv && _sfCount > _bbmCount) ? 'sf' : 'bbm';
     const _udBoardField = _udBoardFmt === 'sf' ? 'sfa' : 'udA';
     const adpPlayers = D.filter(d => {
         const v = d[_udBoardField];
-        return v != null && v < 900 && d.s && !d.s.includes('D/ST') && d.s !== 'K';
+        return v != null && v < 900 && !d._retired && d.s && !d.s.includes('D/ST') && d.s !== 'K';
       })
       .map(d => ({ name: d.n, pos: d.s, team: d.t || '', adp: d[_udBoardField] }))
       .sort((a, b) => a.adp - b.adp)
@@ -63889,18 +65016,34 @@ Rules:
         }
 
         const own = ownershipMap[player.name] || 0;
-        let ownColor, ownBg;
-        if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }
+        let ownColor, ownBg, cellVal = own + '%', cellSub = player.pos, cellTip = 'Open player card';
+        let ownBorder = null;
+        if (adv) {
+          const r = adv.map[player.name];
+          const mine = adv.by[player.name], all = adv.fby[player.name];
+          const part = (x, who) => x ? `${who}: ${x.adv} of ${x.n} (${Math.round(100 * x.adv / x.n)}%)` : `${who}: none`;
+          if (!r) {
+            ownColor = '#64748b'; ownBg = 'rgba(100,116,139,.08)'; cellVal = '—';
+            cellTip = (adv.field ? 'Not drafted in your scored Best Ball Mania pools' : 'On none of your scored Best Ball Mania teams · ' + part(all, 'all teams in your pools')) + ' — click for the player card';
+          } else {
+            const rate = r.adv / r.n, t = adv.view === 'cnt' ? adv.cntTier(r.adv) : adv.tier(rate), edge = 100 * (rate - adv.base);
+            ownColor = t.c; ownBg = t.bg; ownBorder = t.bd;
+            cellVal = adv.view === 'cnt' ? String(r.adv) : Math.round(100 * rate) + '%';
+            cellSub = player.pos + ' · ' + r.adv + '/' + r.n;
+            cellTip = `Teams advancing with this player — ${part(mine, 'yours')} · ${part(all, 'all teams in your pools')} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card`;
+          }
+        }
+        else if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }
         else if (own < 5) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.15)'; }
         else if (own <= 11) { ownColor = '#facc15'; ownBg = 'rgba(250,204,21,.15)'; }
         else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.18)'; }
 
         html += `<td style="padding:2px;border:1px solid var(--border)">`;
-        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="Open player card" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownColor}30;min-height:32px;cursor:pointer">`;
+        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="${cellTip}" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownBorder || ownColor}30;min-height:32px;cursor:pointer">`;
         html += `<div style="font-size:.58rem;font-weight:600;color:${ownColor};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
         html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:1px">`;
-        html += `<span style="font-size:.48rem;color:var(--text2)">${player.pos}</span>`;
-        html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${own}%</span>`;
+        html += `<span style="font-size:.48rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;margin-right:3px">${cellSub}</span>`;
+        html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${cellVal}</span>`;
         html += `</div>`;
         html += `</div></td>`;
       }

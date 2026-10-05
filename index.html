@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-05-mvinj" as="script">
+<link rel="preload" href="app.js?v=2026-10-05-vor7-mvinj" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1364,6 +1364,9 @@ CLEAR ALL
      the first stat cell with VOR beside it; the phone card has only that one
      stat cell, so it swaps to the VOR there. */
   #pageRankings tbody .vor-m{display:none}
+  /* VOR views drop AGE (Jack 2026-10-05) — beats the COLS toggle's inline style. */
+  body.rnk-vor #pageRankings #ageHeader,
+  body.rnk-vor #pageRankings .age-cell{display:none!important}
   @media (max-width:600px){
     body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-ppg{display:none}
     body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-m{display:inline}
@@ -1484,6 +1487,42 @@ CLEAR ALL
 <button class="pos-btn team-filter-btn" id="teamFilterBtn" onclick="window._toggleTeamFilterPop()" title="Filter by NFL team — pick one team or several; only players from those teams show. Stacks with the position filter, ★ and TOP N.">TEAMS<span id="teamFilterCount" style="margin-left:4px"></span></button>
 <div id="teamFilterPop" class="team-filter-pop" style="display:none" role="dialog" aria-label="Filter rankings by team"></div>
 </span>
+<button class="pos-btn inj-filter-btn" id="injFilterBtn" onclick="window._toggleInjOnly()" aria-pressed="false" title="Show only injured players, still in rank order — adds the injury, an estimated return week (or range) and the general timeline (reported + typical for the injury) in front of Cons. Stacks with the position filter, ★, TEAMS and TOP N.">INJURIES</button>
+<style>
+/* INJURIES pill + the three injury-view columns (render() sets body.inj-view) */
+.inj-filter-btn.on{background:rgba(239,68,68,.16);border-color:#ef4444;color:#f87171}
+#pageRankings th.injv-col{display:none}
+body.inj-view #pageRankings th.injv-col{display:table-cell}
+#pageRankings td.injv-cell{line-height:1.15;padding-right:.7rem}
+#pageRankings td.injv-cell .injv-main{display:block;font-weight:700;color:var(--text)}
+#pageRankings td.injv-cell .injv-sub{display:block;font-size:.62rem;color:var(--text2);margin-top:2px;font-weight:500}
+#pageRankings td.injv-cell[title]{cursor:help}
+#pageRankings td.injv-cell .injv-k{font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.8px;font-weight:400;color:var(--text2);margin-right:5px;text-transform:uppercase}
+#pageRankings td.injv-cell .injv-m{display:none}
+/* The injury view trades L4 / Age / P-SOS / +/- for its own three columns. */
+body.inj-view #pageRankings #ageHeader,
+body.inj-view #pageRankings .age-cell,
+body.inj-view #pageRankings #psosHeader,
+body.inj-view #pageRankings .psos-cell,
+body.inj-view #pageRankings thead th[data-sort="diff"],
+body.inj-view #pageRankings .diff-cell,
+body.inj-view-fant #pageRankings #l4ppgHeaderTh,
+body.inj-view-fant #pageRankings .l4ppg-cell{display:none!important}
+@media (max-width:600px){
+  /* Phone cards: the pill by the name carries the status, so the card shows
+     RETURN (body part as its label) + TIMELINE (short form, REPORTED / TYPICAL
+     as its label) and drops Cons to make room. */
+  body.inj-view #pageRankings tbody td.injv-cell .injv-m{display:inline}
+  body.inj-view #pageRankings tbody td.injv-inj,
+  body.inj-view #pageRankings tbody .adp-cell,
+  body.inj-view #pageRankings tbody td.injv-cell .injv-sub,
+  body.inj-view #pageRankings tbody td.injv-cell .injv-d,
+  body.inj-view #pageRankings tbody tr[data-idx] td:first-child,
+  body.inj-view #pageRankings tbody tr[data-idx] .watch-star{display:none!important}
+  body.inj-view #pageRankings tbody td.injv-cell{flex:0 0 auto;text-align:center!important;font-size:.76rem;padding:0 3px!important;min-width:44px!important;line-height:1.05}
+  body.inj-view #pageRankings tbody td.injv-cell::after{content:attr(data-lbl);display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2);max-width:64px;overflow:hidden;text-overflow:ellipsis}
+}
+</style>
 <style>
 /* TEAMS multi-select pill + division-grouped popover (rankings filter row) */
 .team-filter-btn.on{background:rgba(88,167,255,.16);border-color:#58a7ff;color:#58a7ff}
@@ -1616,6 +1655,8 @@ body.vor-bar-on .vor-bar{display:flex}
 .vor-num{display:inline-flex;align-items:center;gap:4px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2);white-space:nowrap}
 .vor-num input{width:38px;padding:2px 3px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;text-align:center}
 .vor-bar-x{font-size:.66rem;font-weight:600;color:var(--accent);white-space:nowrap}
+.vor-po{display:inline-flex;align-items:center;gap:4px;padding-left:8px;border-left:1px solid var(--border)}
+.vor-dash{color:var(--text2);font-size:.7rem}
 .vor-bar .vor-waiver-btn{padding:.25rem .75rem;font-size:.65rem}
 .vor-bar .vor-waiver-btn.on{background:rgba(34,197,94,.16);border-color:#22c55e;color:#22c55e}
 .vor-reset{margin-left:auto;padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.58rem;letter-spacing:.6px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
@@ -1826,6 +1867,9 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="name" tabindex="0" aria-sort="none">Player <span class="arrow"></span></th>
 <th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
+<th data-sort="injSt" id="injStHeader" class="injv-col" tabindex="0" aria-sort="none"><span data-gloss="The injury: body part on top, then the current designation (Questionable / Doubtful / Out / IR / PUP), any note from the feed (surgery, sprain) and this week's practice log, oldest to newest (DNP = did not practice, LP = limited, FP = full). Sleeper injury feed + the official NFL practice report, refreshed daily. Click the Q / O / IR pill by the name for the full detail.">Injury</span> <span class="arrow"></span></th>
+<th data-sort="injRet" id="injRetHeader" class="injv-col" tabindex="0" aria-sort="none"><span data-gloss="Estimated return, counted forward from today (games already missed are not counted). One week when the read is firm, a range when it is not: with a reported timeline the range runs from the reported minimum to the reported maximum; with none, from the first week he has about a 1-in-3 chance to play to the week he is about 2-in-3 to be back. Wk 7+ = that week at the earliest with no firm end. The line underneath is how many more games he is expected to miss, or his odds to play this week for a Questionable player. Source, in order: the Sim Lab injury layer that is inside the projections (reported timelines, plus how long players with this designation, position and injury have historically stayed out, 2019-25), then a timeline reported on the news feed. A player listed Out with nothing reported yet gets our own estimate (marked "our est."): how long that injury has typically kept players at his position out, leaned shorter when the reports read minor and longer when they read serious — a deliberately wider range that tightens once there is a report. Hover a value for the week-by-week odds and the source.">Est. Return</span> <span class="arrow"></span></th>
+<th data-sort="injTl" id="injTlHeader" class="injv-col" tabindex="0" aria-sort="none"><span data-gloss="The general timeline for the injury, two reads. REPORTED = the latest timeline from the team or a national reporter on the news feed (3–6 weeks, out until Wk 9, season-ending); SET = a window Jack has set by hand. TYPICAL = what the research says: for a player who is out, how many more games players at his position with this kind of injury went on to miss from the same spot — the midpoint first (~2 more games), then the middle half of absences in brackets (1–4); starters, 2019-25, games he has already missed not counted. For a Questionable player it is how often that designation and practice level has played. When there is a report it leads and the typical range sits underneath. Hover for the report itself and the full typical read.">Timeline</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Consensus rank — where this player sits on the CONSENSUS board for this format (Jack's + market ADP + Sleeper + FantasyPros + Underdog/ESPN/CBS/Yahoo blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.">Cons</span> <span class="arrow"></span></th>
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Sim Lab projected fantasy points per game — season boards show the REST-OF-SEASON average (games already played excluded); the WEEKLY board shows this week's sim. Refreshed daily and ~30 min before kickoffs (Vegas lines, matchups, usage, injuries priced in).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="simBoom" id="simBoomHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome this week (1,000 Sim Lab runs). High boom + high bust = wide-range player.">Boom</span> <span class="arrow"></span></th>
@@ -4492,7 +4536,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weather_2026.js?v=2026-10-05-10" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-10-05-1313" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-05-1032" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-05-1313" defer></script>
 <script src="data/matchup_edges_2026.js?v=2026-10-05-1032" defer></script>
 <script src="data/site_projections.js?v=2026-10-04" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -4558,6 +4602,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
 <script src="data/betting_lines_2026.js?v=2026-10-05b" defer></script>
 <script src="data/future_totals_2026.js?v=2026-10-05-1032" defer></script>
+<script src="data/fpa_prior_2025.js?v=2026-10-05" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-10-04pool" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
 <script>
@@ -5972,7 +6017,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-05-mvinj"></script>
+<script defer src="app.js?v=2026-10-05-vor7-mvinj"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -108,6 +108,41 @@
     return 0;
   }
 
+  // Per-stat scoring on Sleeper scoring_settings keys (the keys Sim Lab's
+  // league sim reads): scoringItems statId → key; absent stat = null so the
+  // consumer keeps its own default. rec 0 when receptions aren't scored.
+  var STAT_KEY = { 3: "pass_yd", 4: "pass_td", 24: "rush_yd", 25: "rush_td", 42: "rec_yd", 43: "rec_td", 53: "rec" };
+  function scoringDetail(settings, basePpr) {
+    var out = { rec: 0 };
+    try {
+      (settings.scoringSettings.scoringItems || []).forEach(function (it) {
+        var key = STAT_KEY[it.statId];
+        if (!key) return;
+        var pts = it.pointsOverrides && it.pointsOverrides["16"] != null ? it.pointsOverrides["16"] : it.points;
+        if (typeof pts === "number") out[key] = pts;
+      });
+    } catch (_) {}
+    out.bonus_rec_te = tePremiumValue(settings, basePpr);
+    return out;
+  }
+
+  // Playoff shape from scheduleSettings (mSettings view): matchupPeriodCount
+  // = regular-season matchup periods; matchupPeriods maps period → NFL weeks,
+  // so the first playoff NFL week is period (count + 1)'s first week.
+  function playoffShape(settings) {
+    var out = { playoffTeams: null, playoffStart: null, playoffReseed: null };
+    try {
+      var ss = settings.scheduleSettings || {};
+      if (ss.playoffTeamCount) out.playoffTeams = ss.playoffTeamCount;
+      if (ss.matchupPeriodCount) {
+        var nxt = ss.matchupPeriods && ss.matchupPeriods[String(ss.matchupPeriodCount + 1)];
+        out.playoffStart = nxt && nxt.length ? nxt[0] : ss.matchupPeriodCount + 1;
+      }
+      if (typeof ss.playoffReseed === "boolean") out.playoffReseed = ss.playoffReseed;
+    } catch (_) {}
+    return out;
+  }
+
   function scoringLabel(ppr) {
     if (ppr >= 1) return "ppr";
     if (ppr > 0) return "half";
@@ -271,6 +306,7 @@
       if (!trades.length) trades = [];
     }
 
+    var po = playoffShape(settings);
     return {
       platform: "espn",
       leagueId: String(raw.id),
@@ -280,6 +316,10 @@
       pprValue: ppr,
       passTd: passTdValue(settings),
       tePremium: tePremiumValue(settings, ppr),
+      scoringDetail: scoringDetail(settings, ppr),
+      playoffTeams: po.playoffTeams,
+      playoffStart: po.playoffStart,
+      playoffReseed: po.playoffReseed,
       rosterPositions: rp,
       sf: rp.indexOf("SUPER_FLEX") >= 0 || qbSlots >= 2,
       keeper: keeperCount > 0,

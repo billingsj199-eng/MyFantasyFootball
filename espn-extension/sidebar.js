@@ -2083,15 +2083,24 @@
   // ADJUSTED fantasy points allowed per game this season (site
   // fpa_2026.json, FINAL games only; the strength of the offenses faced is
   // stripped out by an additive defense-effect / offense-effect ridge fit)
-  // blended with Clay's preseason unit rank (sim_pack's
-  // CLAY_TEAM_GRADES_2026) as a prior that fades OUT by game 8 (Jack
-  // 2026-09-16): weight = min(1, sqrt(g / 8)) → 1 gm 35% in-season, 2 gm 50%,
-  // 4 gm 71%, 8+ gm 100%. Blended rank 1 = softest; top third easy
-  // (green), bottom third hard (red), middle = tooltip only. D/ST grades the
-  // opposing OFFENSE (offRk + D/ST points allowed). K gets no grade, so
-  // wkOppInfo keeps its Vegas fallback there (and whenever the fetch fails).
-  // Same math as app.js _wkSchedAdjust / _wkOppBlendTable — keep in sync.
-  const OPP_FADE_GAMES = 8;   // Clay prior gone once the opponent has this many final games
+  // 2026-10-05 (site app.js _mtObservedFpa, "THE OPPONENT GRADE"): when the
+  // feed carries last season's numbers (fpa_2026.json `prior`, written by the
+  // postgame importer from data/fpa_prior_2025.js) the grade is
+  //   w x this season + (1 - w) x last season,  w = games / (games + k),
+  // k QB 3 / RB 4 / WR 6 / TE 2 / D/ST 2, both sides schedule-adjusted and
+  // TOUCHDOWN-NEUTRAL (<POS>_tdn keys). Clay is out of it. Backtest 2016-25
+  // (scripts/research_opp_grade_schemes.py): beat in-season-only at every
+  // position. Displayed points allowed stay ACTUAL in the board's format.
+  // Fallback when the prior is missing: the schedule-adjusted points allowed
+  // blended with Clay's preseason unit rank (sim_pack's CLAY_TEAM_GRADES_2026),
+  // fading OUT by game 4 (was 8 until 2026-10-05): weight = min(1, sqrt(g / 4)).
+  // Rank 1 = softest; top third easy (green), bottom third hard (red), middle =
+  // tooltip only. D/ST grades the opposing OFFENSE (D/ST points it gives up;
+  // Clay offRk in the fallback). K gets no grade, so wkOppInfo keeps its Vegas
+  // fallback there (and whenever the fetch fails).
+  // Same math as app.js _wkSchedAdjust / _mtObservedFpa / _wkOppBlendTable — keep in sync.
+  const OPP_FADE_GAMES = 4;   // fallback only: Clay prior gone once the opponent has this many final games
+  const OPP_PRIOR_K = { QB: 3, RB: 4, WR: 6, TE: 2, DST: 2 };   // last season is worth k games of this one
   const OPP_ABBR_FIX = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
   let _oppGradeCache = null;
   function oppSchedAdjust(games, K) {
@@ -2107,6 +2116,49 @@
       Object.keys(oE).forEach((t) => { oE[t] = os[t] / (oN[t] + K); });
     }
     return { mu, dE, oE };
+  }
+  // {team: {z, w}} - lower z = softer (site sign); null = fall back to the Clay fade
+  function oppBlendedZ(pos) {
+    const FP = state.fpa;
+    const PR = FP && FP.prior && FP.prior.pos && FP.prior.pos[pos];
+    if (!FP || !FP.weeks || !PR || !OPP_PRIOR_K[pos]) return null;
+    const acc = {}, games = [];
+    Object.keys(FP.weeks).forEach((wk) => {
+      const teams = FP.weeks[wk];
+      Object.keys(teams).forEach((team) => {
+        const rec = teams[team];
+        let v = rec[pos];
+        if (typeof v !== 'number') return;
+        if (typeof rec[pos + '_tdn'] === 'number') v = rec[pos + '_tdn'];
+        const t = acc[team] || (acc[team] = { pts: 0, wks: {} });
+        t.pts += v; t.wks[wk] = 1;
+        let o = rec.opp ? String(rec.opp).toUpperCase() : null;
+        if (o) { o = OPP_ABBR_FIX[o] || o; games.push({ d: team, o, v }); }
+      });
+    });
+    const gp = (t) => (acc[t] ? Object.keys(acc[t].wks).length : 0);
+    const perGame = {};
+    Object.keys(acc).forEach((t) => { perGame[t] = acc[t].pts / gp(t); });
+    const S = oppSchedAdjust(games, 1);
+    if (S) Object.keys(perGame).forEach((t) => { if (typeof S.dE[t] === 'number') perGame[t] = S.mu + S.dE[t]; });
+    const zOf = (m) => {
+      const ks = Object.keys(m).filter((t) => typeof m[t] === 'number');
+      if (ks.length < 24) return null;   // need most of the league before z-scoring
+      const mu = ks.reduce((a, t) => a + m[t], 0) / ks.length;
+      const sd = Math.sqrt(ks.reduce((a, t) => a + (m[t] - mu) * (m[t] - mu), 0) / ks.length) || 1;
+      const z = {};
+      ks.forEach((t) => { z[t] = -(m[t] - mu) / sd; });   // more allowed = softer = lower
+      return z;
+    };
+    const zi = zOf(perGame), zp = zOf(PR);
+    if (!zi || !zp) return null;
+    const k = OPP_PRIOR_K[pos], out = {};
+    Object.keys(Object.assign({}, zp, zi)).forEach((t) => {
+      const a = zi[t], b = zp[t];
+      const w = typeof a !== 'number' ? 0 : typeof b !== 'number' ? 1 : gp(t) / (gp(t) + k);
+      out[t] = { z: w * (typeof a === 'number' ? a : 0) + (1 - w) * (typeof b === 'number' ? b : 0), w };
+    });
+    return out;
   }
   function oppFmtSuffix() {
     const recPts = (state.scoringVals && state.scoringVals.recPts != null) ? state.scoringVals.recPts : 1;
@@ -2143,7 +2195,22 @@
       adj.sort((a, b) => b.v - a.v);
       adj.forEach((r, i) => { A[r.team].adjV = Math.round(r.v * 10) / 10; A[r.team].adjRank = i + 1; });
     }
-    // 2) blend with Clay's preseason rank (fades out by OPP_FADE_GAMES games)
+    // 2) the shared opponent grade (this season x last season) when the prior is in the feed
+    const B = oppBlendedZ(pos);
+    if (B) {
+      const gr = Object.keys(B).map((t) => ({ team: t, score: -B[t].z })).sort((a, b) => b.score - a.score);
+      const gn = gr.length, gThird = gn / 3, gOut = {};
+      gr.forEach((r, i) => {
+        const rank = i + 1, a = A[r.team];
+        gOut[r.team] = { diff: rank <= gThird ? 'easy' : rank > 2 * gThird ? 'hard' : 'medium', rank, n: gn,
+          games: a ? a.games : 0, w: B[r.team].w, clayRk: null, lastSeason: true,
+          raw: a ? { v: a.v, rank: a.rank } : null,
+          adj: (a && typeof a.adjRank === 'number') ? { v: a.adjV, rank: a.adjRank } : null };
+      });
+      _oppGradeCache.pos[pos] = gOut;
+      return gOut;
+    }
+    // 3) fallback: blend with Clay's preseason rank (fades out by OPP_FADE_GAMES games)
     const CG = (typeof window !== 'undefined' && window.CLAY_TEAM_GRADES_2026) || {};
     const teams = {};
     Object.keys(CG).forEach((t) => { teams[t] = 1; });
@@ -2189,7 +2256,12 @@
     const posLbl = pos === 'DST' ? 'D/STs' : pos + 's';
     let s = lbl + ' matchup for ' + posLbl + ' (#' + m.rank + ' of ' + m.n + ', 1 = softest)';
     if (m.adj) s += ' — allows ' + m.raw.v + ' pts/gm (#' + m.raw.rank + ' raw, #' + m.adj.rank + ' schedule-adjusted, ' + m.games + ' gm)';
-    if (typeof m.clayRk === 'number') s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
+    if (m.lastSeason) {
+      const pc = Math.round(m.w * 100);
+      s += ' · grade = ' + pc + '% this season, ' + (100 - pc) + '% last season, touchdown luck removed';
+      return s;
+    }
+    if (typeof m.clayRk === 'number' && !(m.adj && m.w >= 1)) s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
     s += m.adj ? ' · in-season weight ' + Math.round(m.w * 100) + '%' : ' · preseason only until final games post';
     return s;
   }

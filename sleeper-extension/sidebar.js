@@ -706,7 +706,9 @@
   // projections meaningfully). VOR/upside/ceiling stay export-baked (½PPR).
   function applyLeagueScoring(scoring) {
     state.leagueScoring = scoring || null; // full rules: K distance buckets + DST values
-    const recPts = scoring && scoring.rec != null ? scoring.rec : 1;
+    // A league's scoring object without `rec` = 0 per catch (the site's
+    // _mtDetectFormat reads it the same way); PPR only when there is no scoring at all.
+    const recPts = scoring && scoring.rec != null ? scoring.rec : (scoring && Object.keys(scoring).length ? 0 : 1);
     const passTd = scoring && scoring.pass_td != null ? scoring.pass_td : 4;
     const teBonus = (scoring && scoring.bonus_rec_te) || 0; // TE premium
     state.scoringLabel =
@@ -3175,6 +3177,9 @@
   }
   async function initForLeague(leagueId) {
     state.seasonLeagueId = leagueId;
+    // A format hand-picked in another league (or a draft) this page session
+    // must not ride into this one - Sleeper is a single-page app (2026-10-05).
+    state.modeManual = false;
     state.seasonLeague = null;
     state.seasonRosters = [];
     state.seasonMatchups = [];
@@ -6066,8 +6071,13 @@
           }
         } catch (e) { /* best-effort */ }
       }
-      applyLeagueScoring(state.league && state.league.scoring_settings);
+      // No league (mock / standalone draft): the draft's scoring_type is the only
+      // scoring signal - "std" / "half_ppr" read as 0 / 0.5 per catch, not PPR (2026-10-05).
+      const stype = String((state.draft && state.draft.metadata && state.draft.metadata.scoring_type) || '').toLowerCase();
+      const metaScoring = /half/.test(stype) ? { rec: 0.5 } : /std|standard/.test(stype) ? { rec: 0 } : null;
+      applyLeagueScoring((state.league && state.league.scoring_settings) || metaScoring);
       state.modeDetected = await detectMode();
+      state.modeManual = false;   // set again below only from THIS draft's saved prefs
       if (prefs) {
         state.mySlot = prefs.slot || null;
         state.myUserId = prefs.userId || null;
@@ -6089,9 +6099,10 @@
           saveDraftPrefs();
           try { chrome.runtime.sendMessage({ type: 'mffWatch', draftId }, () => chrome.runtime.lastError); } catch (e) {}
         }
-      } else if (state.modeDetected) {
-        applyMode(state.modeDetected, false);
       }
+      // A saved AUTO-detected mode is re-detected (draft settings can change
+      // before the draft starts); only a hand-picked one sticks (2026-10-05).
+      if (!state.modeManual && state.modeDetected) applyMode(state.modeDetected, false);
       state.statusMsg = state.players.length + ' players · data ' + state.exportedAt;
     } catch (e) {
       state.statusMsg = 'Draft load failed: ' + e.message;

@@ -1834,7 +1834,11 @@
       if (typeof v === 'number') byStat[it.statId] = v;
     }
     const put = (k, v) => { if (v != null) out[k] = v; };
-    put('rec', byStat[53]); put('pass_td', byStat[4]);
+    // ESPN lists only the stats a league scores: items present but no
+    // receptions (53) = standard, 0 per catch. It fell through to the PPR
+    // default in applyLeagueScoring until 2026-10-05 (the draft path and
+    // normalize.js already read it as 0).
+    put('rec', byStat[53] != null ? byStat[53] : (items.length ? 0 : null)); put('pass_td', byStat[4]);
     // yardage/TD values for the season-sim engine's scoringFromLeague
     // (3 passYds · 24 rushYds · 42 recYds · 25 rushTD · 43 recTD — ESPN
     // stores per-yard points directly, e.g. 0.04)
@@ -2775,6 +2779,9 @@
     state.seasonLeagueId = leagueId;
     state.seasonId = urlParams().get('seasonId') || (MOCK && MOCK.seasonId) || currentSeason();
     state.seasonTeams = [];
+    // A format hand-picked in another league (or a draft) this page session
+    // must not ride into this one - season mode re-detects per league (2026-10-05).
+    state.modeManual = false;
     state.seasonStatus = 'Loading league…';
     buildPanel();
     render();

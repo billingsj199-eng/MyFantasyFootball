@@ -6698,6 +6698,11 @@ function render() {
   // post-sort slice only still matters for the DEVY early-return path, which
   // skips the shared cap; everywhere else data.length is already ≤ N.
   if (rankTopN != null && rankTopN > 0 && !query) data = data.slice(0, rankTopN);
+  // SIM VOR board: tiers are computed (VOR natural breaks), per visible row.
+  if (currentVersion === 'sims' && filter !== 'DEVY') {
+    tiers = _simsTiersFor(data);
+    versionTiers.sims[_tierMode()][_tierPK()] = tiers;
+  }
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
   const editable = canEdit();
@@ -7074,13 +7079,14 @@ function render() {
         // Rest-of-season total: the per-game gap over the weeks he plays.
         const _totTxt = !_ve ? '—' : _ve.vt >= 10 ? '+' + Math.round(_ve.vt) : _ve.vt > 0 ? '+' + _ve.vt.toFixed(1) : '0';
         const _totC = !_ve ? null : _ve.vt > 0 ? _vorC : 'var(--text2)';
-        const _totTip = _ve ? ' title="' + (_totTxt + ' points above replacement over the ' + _ve.g + ' game' + (_ve.g === 1 ? '' : 's') + ' he is projected to play, weeks ' + _vt.from + '-' + _vt.to + ' (a week he projects under replacement counts as zero) · ' + _rkTxt + (_kd ? ' at the position' : ' on the VOR board')).replace(/"/g, '&quot;') + '"' : '';
+        const _poTxt = (_vt.st.poW !== 1 && _ve.sgp) ? ', playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' counted ' + _vt.st.poW + 'x (plays ' + _ve.gp + ' of ' + _ve.sgp + ')' : '';
+        const _totTip = _ve ? ' title="' + (_totTxt + ' points above replacement over the ' + _ve.g + ' game' + (_ve.g === 1 ? '' : 's') + ' he is projected to play, weeks ' + _vt.from + '-' + _vt.to + _poTxt + '. A week he misses or projects under replacement counts as zero · ' + _rkTxt + (_kd ? ' at the position' : ' on the VOR board') + (_ve.tA ? ' · ' + (_kd ? _ve.tP : _ve.tA).name : '')).replace(/"/g, '&quot;') + '"' : '';
         const _short = _ve && _ve.g < _ve.sg;
         _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_totC ? ' style="color:' + _totC + '"' : ''}>${_totTxt}</span></td>`;
         _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
       <td class="pts-cell l4ppg-cell"${_totTip}${_totC ? ' style="color:' + _totC + ';font-weight:700;cursor:help"' : ''}>${_totTxt}</td>`;
         _statYdsTail = _ve
-          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left through week ' + _vt.to + (_short ? ' — the missed games cost rest-of-season VOR' : '') + '">' + _ve.g + '</span>'
+          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left, weeks ' + _vt.from + '-' + _vt.to + (_ve.sgp ? ' (' + _ve.gp + ' of ' + _ve.sgp + ' in the fantasy playoffs)' : '') + (_short ? ' — each missed week costs that week\'s gap over replacement' : '') + '">' + _ve.g + '</span>'
           : '—';
       }
     } else if (_statMode === 'xfp') {
@@ -7241,7 +7247,7 @@ function render() {
   attachTierListeners();
   // WEEKLY board just painted — make sure the kickoff / LIVE / FINAL chips
   // have fresh scoreboard data (no-op when the last fetch is recent).
-  if (currentMode === 'weekly' && typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
+  if ((currentMode === 'weekly' || currentVersion === 'sims' || _statMode === 'vor') && typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
   // showYrr / showJm / showLanding hoisted above the row loop (reused here).
   // In the ADP comparison STATS view the Y/RR column is repurposed as the CBS
   // ADP column and shown for every position filter.
@@ -7291,7 +7297,7 @@ function render() {
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
-  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Games he is projected to play from this week through week 17 — the weeks with a sim projection above zero, so byes, injuries and suspensions are already taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
+  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Games he is projected to play from now through the last fantasy-playoff week — games already kicked off are not counted, and the weeks with no sim projection (bye, injury, suspension) are taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
   window._applyCellVisibility = function () {
@@ -8302,10 +8308,10 @@ window._updateRnkStatHeaders = function() {
       _set(c3, 'l4ppgHeader', 'Rank by VOR across QB, RB, WR and TE this week — the order a pure points-over-replacement board puts them in. Kickers and D/STs are ranked inside their own position (K1, DST1).', 'VOR RK', 'Wk' + _wkNum);
     } else {
       const _vt = _vorTable();
-      const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + '-' + _vt.to : 'ROS';
+      const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + '-' + _vt.to + (_vst.poW !== 1 ? ' · PO ' + _vst.poW + 'x' : '') : 'ROS';
       _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game (' + fmtLabel + ' scoring' + _vx + '), games already played excluded — the number VOR is measured from.', 'PPG', fmtLabel);
       _set(c2, 'ppg25Header', 'Value over replacement per game — projected points above the replacement-level player at the position. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. ' + _how + ' Hover a value for the replacement player.', 'VOR/G', _vsub);
-      _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — the per-game gap added up over the weeks he is projected to PLAY, this week through week 17. Weeks he misses (injury, suspension, bye) add nothing, and a week he projects under replacement counts as zero, so a star who is out a month ranks below a slightly lesser player who plays them all. This is the number the SIM VOR board is ordered by.', 'ROS VOR', _span);
+      _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — his projected points over replacement week by week, added up over the games still to be played (this week\'s games drop out as they kick off — no actual results are in it, what is already scored does not help a roster from here), through the last fantasy-playoff week. ' + _vorPlayoffLabel(_vst).charAt(0).toUpperCase() + _vorPlayoffLabel(_vst).slice(1) + '. A week he misses (injury, suspension, bye) or projects under replacement counts as zero because the replacement plays instead — so a better player who misses a couple of weeks keeps his edge for the rest, and loses more if the missed weeks are playoff weeks. This is the number the SIM VOR board and its tiers are ordered by.', 'ROS VOR', _span);
     }
   } else if (rnkStatMode === 'xfp') {
     const _wkX = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
@@ -11150,23 +11156,37 @@ function _simSeasonPpgRow(d) {
 // VOR (value over replacement) off the Sim Lab projection — drives the
 // rankings STATS "VOR" view and the SIM VOR board (version `sims`).
 // League shape = _vorState(): teams, starters per position, FLEX (RB/WR/TE),
-// SUPERFLEX, bench — the standard 12-team lineup by default, a synced My Teams
-// league's own lineup when one is picked in the VOR bar (_vorApplyLeague).
-// Roster spots are filled from the sim's rest-of-season points in the selected
-// scoring format: starters first, then the flex / superflex spots with the
-// best players left, then the bench (a backup QB and TE for about half the
-// teams, the rest to the best RB/WR left). A position's replacement level is
-// the best player left unrostered, per scheduled game.
-//   VOR/G   = PPG minus that replacement level
-//   ROS VOR = the same gap summed over the weeks he is projected to play,
-//             current week through week 17 (weeks under replacement count 0 —
-//             you would start someone else), so missed games cost value
+// SUPERFLEX, bench, fantasy-playoff weeks + weight — the standard 12-team
+// lineup by default, a synced My Teams league's own settings when one is
+// picked in the VOR bar (_vorApplyLeague).
+// Window = the games still to be played: from the current fantasy week (games
+// that have already kicked off this week are dropped — live ESPN scoreboard,
+// _liveKickedTeams) through the last fantasy-playoff week. No actual results
+// are in it — what a player already scored is sunk value.
+// Roster spots are filled from the sim's points over that window in the
+// selected scoring format: starters first, then the flex / superflex spots
+// with the best players left, then the bench (a backup QB and TE for about
+// half the teams, the rest to the best RB/WR left). A position's replacement
+// level is the best player left unrostered, per scheduled game.
+//   VOR/G   = his per-game projection minus that replacement level
+//   ROS VOR = the gap week by week over the games he is projected to play,
+//             fantasy-playoff weeks counted poW times (default 1.5). A week he
+//             misses or projects under replacement counts 0 — the replacement
+//             fills in — so a short absence costs only those weeks' gap, and
+//             costs more when it lands in the playoffs.
 // The WEEKLY board prices the active week only.
-// Returns { map: Map(D row -> { v, g, sg, tot, vor, vt, rk, posRk }), repl: { pos: {...} } }
-// (g = games he is projected to play, sg = games his team has left).
-const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, tep: 0, passTd: 4 };
-const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20] };
-const _VOR_LAST_WEEK = 17;   // fantasy seasons end in week 17
+// Tiers: natural breaks (Jenks) on the ranking value — overall for QB/RB/WR/TE,
+// and separately inside each position for the position views and K / D/ST.
+// Returns { map: Map(D row -> { v, g, sg, gp, sgp, tot, vor, vt, rk, posRk, tA, tP }), repl: { pos: {...} } }
+// (g = games he is projected to play, sg = games his team has left, gp / sgp = the
+// same inside the fantasy playoffs; tA / tP = overall / position tier).
+const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, poStart: 15, poEnd: 17, poW: 1.5, tep: 0, passTd: 4 };
+const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20], poStart: [10, 18], poEnd: [10, 18] };
+const _VOR_PO_W = [1, 3];   // playoff-week weight range (steps of 0.25)
+function _vorClampW(v) {
+  const n = Math.round(Number(v) * 4) / 4;
+  return isFinite(n) ? Math.min(_VOR_PO_W[1], Math.max(_VOR_PO_W[0], n)) : _VOR_DEFAULT.poW;
+}
 function _vorState() {
   if (!window._vorSt) {
     let s = null;
@@ -11176,6 +11196,8 @@ function _vorState() {
       const n = Math.round(Number(st[k])), lim = _VOR_LIMITS[k];
       st[k] = isFinite(n) ? Math.min(lim[1], Math.max(lim[0], n)) : _VOR_DEFAULT[k];
     });
+    if (st.poEnd < st.poStart) st.poEnd = st.poStart;
+    st.poW = _vorClampW(st.poW);
     st.tep = Math.max(0, Number(st.tep) || 0);
     st.passTd = isFinite(Number(st.passTd)) ? Number(st.passTd) : 4;
     st.league = st.league ? String(st.league) : '';
@@ -11199,6 +11221,10 @@ function _vorLineupLabel(st) {
   [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['FLEX', 'FLEX'], ['SF', 'SUPERFLEX'], ['K', 'K'], ['DST', 'D/ST']].forEach(p => { if (st[p[0]]) parts.push(st[p[0]] + ' ' + p[1]); });
   return st.teams + '-team league starting ' + parts.join(', ') + (st.BN ? ' with ' + st.BN + ' bench spot' + (st.BN === 1 ? '' : 's') : ' (no bench)');
 }
+function _vorPlayoffLabel(st) {
+  st = st || _vorLineup();
+  return 'fantasy playoffs week' + (st.poEnd > st.poStart ? 's ' + st.poStart + '-' + st.poEnd : ' ' + st.poStart) + (st.poW !== 1 ? ' counted ' + st.poW + 'x' : ' counted like any other week');
+}
 // League scoring extras on top of the PPR / Half / Standard sim number: TE
 // premium (the sim's PPR minus standard value IS his receptions) and passing
 // TDs worth other than 4 (Clay's per-game rate, else last season's).
@@ -11215,6 +11241,60 @@ function _vorPts(d, row, fi, st, tdRate, basePpg) {
   else if (d.s === 'QB' && st.passTd !== 4 && tdRate) v += (st.passTd - 4) * tdRate * (basePpg > 0 ? Math.min(1.5, row[fi] / basePpg) : 1);
   return v;
 }
+// Natural breaks (Jenks / optimal 1-D k-means) on values sorted high to low:
+// the fewest tiers (3-10) that explain 98% of the spread. Returns tier start indices.
+function _vorJenks(v) {
+  const n = v.length;
+  if (n < 6) return [0];
+  const S = [0], Q = [0];
+  for (let i = 0; i < n; i++) { S.push(S[i] + v[i]); Q.push(Q[i] + v[i] * v[i]); }
+  const ss = (a, b) => { const s = S[b] - S[a]; return (Q[b] - Q[a]) - s * s / (b - a); };
+  const tss = ss(0, n);
+  if (!(tss > 0)) return [0];
+  const kMax = Math.min(10, Math.floor(n / 2));
+  const Dp = [new Float64Array(n + 1).fill(Infinity)], P = [new Int32Array(n + 1)];
+  Dp[0][0] = 0;
+  for (let k = 1; k <= kMax; k++) {
+    Dp.push(new Float64Array(n + 1).fill(Infinity)); P.push(new Int32Array(n + 1));
+    for (let i = k; i <= n; i++) {
+      for (let m = k - 1; m < i; m++) {
+        const c = Dp[k - 1][m] + ss(m, i);
+        if (c < Dp[k][i]) { Dp[k][i] = c; P[k][i] = m; }
+      }
+    }
+    if (k >= 3 && 1 - Dp[k][n] / tss >= 0.98) return _vorCuts(P, k, n);
+  }
+  return _vorCuts(P, kMax, n);
+}
+function _vorCuts(P, k, n) {
+  const cuts = [];
+  let i = n;
+  for (let j = k; j > 0; j--) { cuts.unshift(P[j][i]); i = P[j][i]; }
+  return cuts;
+}
+// Assign tiers to entries sorted best-first. Top `cap` with value > 0 are
+// clustered; positive value past the cap = DEEP BENCH; the rest = REPLACEMENT.
+function _vorAssignTiers(es, valKey, slot, cap) {
+  const pos = es.filter(e => e[valKey] > 0).slice(0, cap);
+  const cuts = _vorJenks(pos.map(e => e[valKey]));
+  const f = v => (v > 0 ? '+' : '') + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1));
+  const tiers = [];
+  cuts.forEach((c, j) => {
+    const end = j + 1 < cuts.length ? cuts[j + 1] : pos.length;
+    const lab = TIER_LABELS[j] || ('T' + j);
+    const hi = pos[c][valKey], lo = pos[end - 1][valKey];
+    // One object per tier — _simsTiersFor opens a banner where the object changes.
+    tiers.push({ obj: { label: lab, name: (j === 0 ? 'ELITE' : 'TIER ' + lab) + ' · ' + f(hi) + (end - 1 > c ? ' to ' + f(lo) : '') }, from: c, to: end });
+  });
+  const extra = [];
+  if (es.length > pos.length && es[pos.length][valKey] > 0) extra.push('DEEP BENCH');
+  if (es.some(e => !(e[valKey] > 0))) extra.push('REPLACEMENT LEVEL');
+  let t = tiers.length;
+  const trail = {};
+  extra.forEach(nm => { trail[nm] = { label: TIER_LABELS[t] || ('T' + t), name: nm }; t++; });
+  tiers.forEach(tr => { for (let i = tr.from; i < tr.to; i++) pos[i][slot] = tr.obj; });
+  es.slice(pos.length).forEach(e => { e[slot] = e[valKey] > 0 ? trail['DEEP BENCH'] : trail['REPLACEMENT LEVEL']; });
+}
 function _vorTable() {
   const SP = window.SIM_PROJ_2026;
   if (!SP || !SP.weeks || typeof D === 'undefined') return null;
@@ -11222,30 +11302,39 @@ function _vorTable() {
   const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
   const cw = SP.currentWeek || 1;
   const wk = currentMode === 'weekly' ? (window._weeklyActiveWeek || cw) : 0;
-  const key = [fi, wk, cw, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.tep, st.passTd].join('|');
+  // First week still to play: the export's current week, or the site's fantasy
+  // week when that has already rolled (Tuesday 07:00) ahead of the next export.
+  const sw = (typeof window._weeklyScheduleWeek === 'function' && window._weeklyScheduleWeek()) || cw;
+  const from = Math.max(cw, sw);
+  // Teams whose game in that week has kicked off (live scoreboard) — those games are played.
+  const kicked = (!wk && typeof window._liveKickedTeams === 'function') ? window._liveKickedTeams(from) : null;
+  const kSig = kicked ? [...kicked].sort().join(',') : '';
+  const key = [fi, wk, cw, from, kSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
   const weeks = [];
-  if (wk) weeks.push(wk); else for (let w = cw; w <= Math.max(cw, _VOR_LAST_WEEK); w++) weeks.push(w);
+  if (wk) weeks.push(wk); else for (let w = from; w <= Math.max(from, st.poEnd); w++) weeks.push(w);
+  const isPO = w => !wk && w >= st.poStart && w <= st.poEnd;
+  const wt = w => isPO(w) ? st.poW : 1;
+  const abbrOf = d => teamAbbr(d.t);
+  const playsWk = (d, w) => !(kicked && w === from && kicked.has(abbrOf(d)));
   const pools = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
   const seen = new Set();
   D.forEach(d => {
     if (!d || !pools[d.s] || d._retired || d._isFuturePick || seen.has(d.n)) return;
     const sp = wk ? null : _simSeasonPpgRow(d);
-    if (!wk && !sp) return;   // no rest-of-season sim row
     const tdRate = (d.s === 'QB' && st.passTd !== 4) ? _vorPassTdRate(d) : 0;
     const base = sp ? sp[fi] : 0;
     const wp = [];
-    let tot = 0, g = 0;
+    let tot = 0, g = 0, gp = 0;
     weeks.forEach(w => {
-      const p = _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base);
+      const p = playsWk(d, w) ? _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base) : 0;
       wp.push(p);
-      if (p > 0) { tot += p; g++; }
+      if (p > 0) { tot += p; g++; if (isPO(w)) gp++; }
     });
     if (!g) return;   // out / on bye / no remaining games
     seen.add(d.n);
-    const ppg = (sp && base > 0) ? _vorPts(d, sp, fi, st, tdRate, base) : tot / g;
-    pools[d.s].push({ d, tot, g, ppg, wp });
+    pools[d.s].push({ d, tot, g, gp, ppg: tot / g, wp });
   });
   const n = {};
   Object.keys(pools).forEach(p => {
@@ -11270,47 +11359,73 @@ function _vorTable() {
     n[x[0]] += add; bench -= add;
   });
   _fill(['RB', 'WR'], bench);
-  // Scheduled games in the window (a team's D/ST has a row every non-bye week).
+  // Games the team has left in the window (its D/ST has a row every non-bye week),
+  // all and inside the fantasy playoffs.
   const _schedMemo = {};
   const _sched = d => {
-    if (wk) return 1;
-    const k = 'DST_' + teamAbbr(d.t);
-    if (_schedMemo[k] == null) {
-      let s = 0;
-      weeks.forEach(w => { if (SP.weeks[w] && SP.weeks[w][k]) s++; });
-      _schedMemo[k] = s || weeks.length;
+    if (wk) return [1, 0];
+    const k = 'DST_' + abbrOf(d);
+    if (!_schedMemo[k]) {
+      let s = 0, sp = 0;
+      weeks.forEach(w => { if (SP.weeks[w] && SP.weeks[w][k] && playsWk(d, w)) { s++; if (isPO(w)) sp++; } });
+      _schedMemo[k] = [s || weeks.length, sp];
     }
     return _schedMemo[k];
   };
   const r1 = v => Math.round(v * 10) / 10;
-  const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1] };
+  const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1], kicked: kicked ? kicked.size : 0 };
   const all = [];
   const _cmp = (a, b) => (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
     const ri = Math.min(n[p], pool.length - 1);
-    const R = pool[ri].tot / _sched(pool[ri].d);
+    const R = pool[ri].tot / _sched(pool[ri].d)[0];
     out.repl[p] = { v: r1(R), n: pool[ri].d.n, rk: ri + 1, rostered: n[p], starters: nStart[p] };
     const es = pool.map((x, i) => {
       const vor = r1(x.ppg - R);
-      // Rest-of-season: only the weeks he beats replacement add value.
-      const vt = wk ? vor : r1(x.wp.reduce((s, v) => s + (v > R ? v - R : 0), 0));
-      const e = { v: r1(x.ppg), g: x.g, sg: _sched(x.d), tot: x.tot, vor, vt, posRk: i + 1, rk: null };
+      // Rest-of-season: only the weeks he beats replacement add value; playoff weeks count poW times.
+      const vt = wk ? vor : r1(x.wp.reduce((s, v, j) => s + (v > R ? (v - R) * wt(weeks[j]) : 0), 0));
+      const sc = _sched(x.d);
+      const e = { v: r1(x.ppg), g: x.g, sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, posRk: i + 1, rk: null, tA: null, tP: null };
       out.map.set(x.d, e);
       return e;
     });
     // K and D/ST are ranked inside their own position, not against the field.
-    if (p === 'K' || p === 'DST') es.slice().sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
+    const sorted = es.slice().sort(_cmp);
+    if (p === 'K' || p === 'DST') sorted.forEach((e, i) => { e.rk = i + 1; });
     else es.forEach(e => all.push(e));
+    _vorAssignTiers(sorted, 'vt', 'tP', 150);
+    if (p === 'K' || p === 'DST') sorted.forEach(e => { e.tA = e.tP; });
   });
   all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
+  _vorAssignTiers(all, 'vt', 'tA', 150);   // top-150 draftable range
   window._vorCache = out;
   return out;
 }
 function _vorFor(d) {
   const t = _vorTable();
   return (t && t.map.get(d)) || null;
+}
+// SIM VOR tier banners for the rows on screen: tier membership is per player
+// (overall tiers on ALL / ROOKIES / FLEX, position tiers on a position pill),
+// so filtered views — WAIVERS, TEAMS, TOP N — keep each player's real tier and
+// a banner opens at the first visible player of each. Ranks follow render()'s
+// displayRank (position rank on positional views, board rank otherwise).
+function _simsTiersFor(data) {
+  const posView = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].includes(filter);
+  const positional = _tierRankIsPositional();
+  const rows = data.slice().sort((a, b) => (a.myRank || 0) - (b.myRank || 0));
+  const out = [];
+  let prev = null;
+  rows.forEach((d, i) => {
+    const e = _vorFor(d);
+    const t = e && (posView ? e.tP : e.tA);
+    if (!t || t === prev) return;
+    prev = t;
+    out.push({ id: 's' + out.length, label: t.label, name: t.name, afterRank: positional ? i + 1 : d.myRank });
+  });
+  return out;
 }
 
 // SIM VOR board (version `sims`): the board order IS the VOR rank — QB / RB /
@@ -11387,6 +11502,14 @@ function _vorApplyLeague(id) {
   if (teams.length) st.teams = clamp('teams', teams.length);
   st.tep = Math.max(0, Number(f.tep) || 0);
   st.passTd = (f.passTd != null && isFinite(Number(f.passTd))) ? Number(f.passTd) : 4;
+  // Fantasy playoffs: Sleeper's start week + one round per bracket level (6 teams = 3 weeks).
+  const ps = Number(lg.playoffStart);
+  if (ps >= _VOR_LIMITS.poStart[0] && ps <= _VOR_LIMITS.poStart[1]) {
+    const pt = Number(lg.playoffTeams) || 6;
+    const rounds = pt <= 2 ? 1 : pt <= 4 ? 2 : pt <= 8 ? 3 : 4;
+    st.poStart = ps;
+    st.poEnd = Math.min(_VOR_LIMITS.poEnd[1], ps + rounds - 1);
+  }
   return lg;
 }
 // Players on a roster in the picked league (WAIVERS filter). Suffix-folded
@@ -11425,9 +11548,12 @@ function _vorBarRender() {
     + num('QB', 'QB', 'Starting QBs per team') + num('RB', 'RB', 'Starting RBs per team') + num('WR', 'WR', 'Starting WRs per team') + num('TE', 'TE', 'Starting TEs per team')
     + num('FLEX', 'Flex', 'Flex spots per team (RB / WR / TE)') + num('SF', 'SFlex', 'Superflex spots per team (QB / RB / WR / TE)')
     + num('K', 'K', 'Starting kickers per team') + num('DST', 'D/ST', 'Starting defenses per team') + num('BN', 'Bench', 'Bench spots per team — set 0 to measure against the last starter instead of the best free agent')
+    + '<span class="vor-po" title="Fantasy playoff weeks and how much a playoff week counts against a regular-season week in rest-of-season VOR. The season ends with the last playoff week. Synced Sleeper leagues fill the weeks in.">'
+    + num('poStart', 'Playoffs Wk', 'First fantasy-playoff week') + '<span class="vor-dash">–</span>' + num('poEnd', '', 'Last fantasy-playoff week (the end of the fantasy season)')
+    + '<label class="vor-num" title="How much each playoff week counts — 1 = like any other week, 1.5 = half again as much. Missing a playoff week costs that much more.">×<input type="number" inputmode="decimal" data-vor="poW" min="' + _VOR_PO_W[0] + '" max="' + _VOR_PO_W[1] + '" step="0.25" value="' + st.poW + '"></label></span>'
     + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
     + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
-    + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench) with no league">RESET</button>';
+    + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench, playoffs weeks 15-17 at 1.5x) with no league">RESET</button>';
 }
 // Any lineup / league change: persist, drop the table, repaint.
 function _vorChanged() {
@@ -11450,9 +11576,13 @@ function _vorChanged() {
       return;
     }
     const k = t.dataset && t.dataset.vor;
+    const st = _vorState();
+    if (k === 'poW') { st.poW = _vorClampW(t.value); _vorChanged(); return; }
     if (!k || !_VOR_LIMITS[k]) return;
     const n = Math.round(Number(t.value));
-    _vorState()[k] = isFinite(n) ? Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], n)) : _VOR_DEFAULT[k];
+    st[k] = isFinite(n) ? Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], n)) : _VOR_DEFAULT[k];
+    if (k === 'poStart' && st.poEnd < st.poStart) st.poEnd = st.poStart;
+    if (k === 'poEnd' && st.poStart > st.poEnd) st.poStart = st.poEnd;
     _vorChanged();
   });
   bar.addEventListener('click', e => {
@@ -13168,9 +13298,17 @@ window._seasonStripRefresh = _seasonStrip;
     const cur = _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick));
     return cur ? { wk: cur.wk, kick: cur.kick, end: wkEnd(cur.kick) } : null;
   }
+  // Rankings in a VOR surface (SIM VOR board / VOR stats view) on a season
+  // board: the scoreboard tells it which of this week's games are already played.
+  function vorOpen() {
+    const rk = document.getElementById('pageRankings');
+    return !!(rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode !== 'weekly'
+      && ((typeof currentVersion !== 'undefined' && currentVersion === 'sims') || (typeof rnkStatMode !== 'undefined' && rnkStatMode === 'vor')));
+  }
   function surfaceOpen() {
     const rk = document.getElementById('pageRankings');
     if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly') return true;
+    if (vorOpen()) return true;
     const ss = document.getElementById('pageStartSit');
     if (ss && ss.classList.contains('active')) return true;
     const mt = document.getElementById('pageMyTeams'); // lineup check locks
@@ -13260,6 +13398,14 @@ window._seasonStripRefresh = _seasonStrip;
       S.act = map; S.actWeek = wk; S.actAt = now;
     } catch (e) { /* stale actuals stay */ }
   }
+  // Teams (abbr) whose game in week `wk` has kicked off — null when the
+  // scoreboard is not loaded or shows another week.
+  window._liveKickedTeams = function(wk) {
+    if (!S.sbWeek || S.sbWeek !== wk) return null;
+    const out = new Set();
+    Object.keys(S.games).forEach(k => { if (S.games[k].st !== 'pre') out.add(k); });
+    return out;
+  };
   window._liveGameFor = function(d) {
     if (!d || !curWindow() || !S.sbWeek || S.sbWeek !== activeWeek()) return null;
     const ab = abbrOf(d);
@@ -13308,6 +13454,11 @@ window._seasonStripRefresh = _seasonStrip;
     try {
       const rk = document.getElementById('pageRankings');
       if (rk && rk.classList.contains('active') && typeof currentMode !== 'undefined' && currentMode === 'weekly' && typeof render === 'function') render();
+      // VOR window drops games as they kick off — the table re-keys itself.
+      else if (vorOpen() && typeof render === 'function') {
+        if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+        render();
+      }
       if (typeof window._sstRefresh === 'function') window._sstRefresh();
       if (typeof window._mtLiveRefresh === 'function') window._mtLiveRefresh();
     } catch (e) {}

@@ -808,7 +808,9 @@ let currentVersion = 'consensus';
 const versionBoards = {
   consensus: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
   jacks: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
-  mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
+  mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
+  // SIM VOR board: computed from the Sim Lab projection (_simsBoardEnsure) — read-only, never saved.
+  sims: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
 };
 // MAIN-world content scripts (page-bridge.js) can't reach top-level const via window.X — attach explicitly.
 window.versionBoards = versionBoards;
@@ -831,12 +833,14 @@ function _clonePosTierCtrs(src) {
 const versionTiers = {
   consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
-  mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
+  mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
+  sims: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
 };
 const versionTierCounters = {
   consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
-  mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
+  mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
+  sims: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
 // DEVY board tiers (2026-09-30): the devy list is one board shared by both
 // dynasty formats, so its tiers live in their own `devy` slot per version
@@ -845,7 +849,7 @@ const versionTierCounters = {
 // DEVY (whole board, overall devy rank) + one per class view, DEVY_2027 /
 // DEVY_2028 (class rank — like the position views; created on demand by
 // _devyTierKey). Saved as `<ver>.devy` (see _devySerialize).
-['consensus', 'jacks', 'mine'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
+['consensus', 'jacks', 'mine', 'sims'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
 // MAIN-world content scripts read tier boundaries too (extension jacks-boards
 // bridge, board-gating Phase B) — attach like versionBoards above.
 window.versionTiers = versionTiers;
@@ -1173,6 +1177,7 @@ let tiers = versionTiers[currentVersion].redraft.ALL;
 let tierCounter = 0;
 
 function syncMode() {
+  if (currentVersion === 'sims') _simsBoardEnsure();   // computed board — keep it current
   board = versionBoards[currentVersion][currentMode];
   tiers = versionTiers[_tierVer()][_tierMode()][_tierPK()];
   tierCounter = versionTierCounters[_tierVer()][_tierMode()][_tierPK()];
@@ -1217,7 +1222,7 @@ function _isDevyPK(pk) { return typeof pk === 'string' && pk.indexOf('DEVY') ===
 function _devyTierKey() {
   const c = window._devyClass;
   const k = (c && c !== 'ALL') ? 'DEVY_' + c : 'DEVY';
-  ['consensus', 'jacks', 'mine'].forEach(v => {
+  ['consensus', 'jacks', 'mine', 'sims'].forEach(v => {
     if (!versionTiers[v].devy[k]) { versionTiers[v].devy[k] = []; versionTierCounters[v].devy[k] = 0; }
   });
   return k;
@@ -1231,7 +1236,7 @@ function _tierVer(pk) { return (_isDevyPK(pk || _tierPK()) && typeof _devySrcVer
 // Check if current user can edit the active version
 function canEdit() {
   if (typeof window._authCurrentUser !== 'undefined' && !window._authCurrentUser) return false;
-  if (currentVersion === 'consensus') return false;
+  if (currentVersion === 'consensus' || currentVersion === 'sims') return false;
   if (currentVersion === 'mine') return true;
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
@@ -1841,6 +1846,7 @@ function _devyIsCustom(ver) {
 // Version whose devy board is DISPLAYED: "My Rankings" mirrors Jack's until
 // the user's first devy edit (same idea as the mine-follows-Jack's seeding).
 function _devySrcVer() {
+  if (currentVersion === 'sims') return 'consensus';   // no sims for prospects — the devy pill shows the (free) consensus board
   return (currentVersion === 'mine' && !_devyIsCustom('mine')) ? 'jacks' : currentVersion;
 }
 // First edit on a mirrored "My Rankings" devy board: pin the order on screen
@@ -3596,7 +3602,7 @@ function _updateViewOptsSummary() {
   const _st = (typeof rnkStatMode !== 'undefined') ? rnkStatMode : 'fantasy';
   const _ad = (typeof rnkAdpSrc !== 'undefined') ? rnkAdpSrc : 'consensus';
   const sc = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' }[rankingScoringFmt] || rankingScoringFmt;
-  const st = { fantasy: 'Fantasy', sims: 'Sims', proj: 'Projections', lines: 'Betting Lines', adp: 'ADP compare' }[_st] || _st;
+  const st = { fantasy: 'Fantasy', sims: 'Sims', vor: 'VOR', proj: 'Projections', lines: 'Betting Lines', adp: 'ADP compare' }[_st] || _st;
   const ad = { consensus: 'Consensus', underdog: 'Underdog', dk: 'DK', espn: 'ESPN', cbs: 'CBS', sleeper: 'Sleeper', ktc: 'KTC', yahoo: 'Yahoo' }[_ad] || _ad;
   el.textContent = sc + ' · ' + st + ' · ' + ad + ' ADP';
   el.style.color = (rankingScoringFmt !== 'ppr' || _st !== 'fantasy' || _ad !== 'consensus') ? 'var(--accent)' : 'var(--text2)';
@@ -3640,13 +3646,14 @@ function _viewPresetsStore(list) {
   try { localStorage.setItem('mff_view_presets', JSON.stringify(list)); } catch (e) {}
 }
 function _viewPresetDefaultName(s) {
-  const ver = { consensus: 'Consensus', jacks: "Jack's", mine: 'Mine' }[s.version] || s.version;
+  const ver = { consensus: 'Consensus', jacks: "Jack's", mine: 'Mine', sims: 'Sim VOR' }[s.version] || s.version;
   const mode = { redraft: 'Redraft', superflex: 'SFLEX', dynasty: 'Dyn 1QB', dynastysf: 'Dyn SF', weekly: 'Weekly', bestball: 'Best Ball' }[s.mode] || s.mode;
   const sc = { ppr: 'PPR', half: 'Half', std: 'STD' }[s.scoring] || s.scoring;
   const parts = [ver, mode, sc];
   if (s.pos && s.pos !== 'ALL') parts.push(s.pos);
   if (s.topN) parts.push('Top ' + s.topN);
   if (Array.isArray(s.teams) && s.teams.length) parts.push(s.teams.length <= 3 ? s.teams.map(_tfAbbr).join('+') : s.teams.length + ' teams');
+  if (s.inj) parts.push('Injured');
   return parts.join(' · ');
 }
 window._saveViewPreset = function () {
@@ -3656,7 +3663,8 @@ window._saveViewPreset = function () {
     stats: (typeof rnkStatMode !== 'undefined' ? rnkStatMode : 'fantasy'),
     adp: (typeof rnkAdpSrc !== 'undefined' ? rnkAdpSrc : 'consensus'),
     topN: (typeof rankTopN !== 'undefined' && rankTopN != null) ? rankTopN : null,
-    teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : []
+    teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : [],
+    inj: !!window._injOnly
   };
   const list = _viewPresetsLoad();
   if (list.length >= 8) { if (typeof toast === 'function') toast('Preset limit reached (8) — remove one first'); return; }
@@ -3690,6 +3698,7 @@ window._applyViewPreset = function (i) {
   }
   // Teams: presets saved before this field existed carry none → clears the pill.
   if (typeof window._setTeamFilter === 'function') window._setTeamFilter(Array.isArray(s.teams) ? s.teams : [], true);
+  if (typeof window._toggleInjOnly === 'function') window._toggleInjOnly(!!s.inj);
   _renderViewPresets(i);
 };
 window._deleteViewPreset = function (i) {
@@ -3984,6 +3993,517 @@ window._toggleTeamFilterPop = function (force) {
     render();
   });
 })();
+
+// ── INJURIES filter (rankings, Jack 2026-10-05: "an injuries filter in rankings
+// that shows all the injured players ... in order of rank") ────────────────────
+// INJURIES pill beside TEAMS: only players carrying an injury designation, still
+// in board order. While it is on, the table gains three columns in front of Cons
+// — INJURY (body part, designation, practice log), EST. RETURN (a week or a
+// range, counted forward from now) and TIMELINE (what has been reported + what
+// is typical for the injury) — and drops L4 / Age / P-SOS / +/-.
+// The return estimate comes from, in order:
+//   1. the Sim Lab injury layer (SIM_PROJ_2026.inj — the same out-windows and
+//      availability curve that are inside the projections),
+//   2. a structured timeline on the news feed (camp_news `avail`) when the
+//      layer has no forward read or the item is newer than the export,
+//   3. the designation alone.
+// TIMELINE's "typical" line is read off the Sim Lab research tables shipped in
+// the same export (SIM_PROJ_2026.injRes: P(misses the next game | missed k) by
+// position + injury group, and Questionable play odds by practice level).
+// ANDs with position / ★ / TEAMS / search, applied after the TOP-N cap like
+// TEAMS. Session-only, saved into view presets (s.inj).
+window._injOnly = false;
+const _IV_STATUS = { Q: 'Questionable', D: 'Doubtful', O: 'Out', IR: 'IR', PUP: 'PUP', SUS: 'Suspended' };
+const _IV_STATUS_COLOR = { Q: '#f59e0b', D: '#f97316', O: '#ef4444', IR: '#ef4444', PUP: '#ef4444', SUS: '#a78bfa' };
+const _IV_SEV = { Q: 1, D: 2, O: 3, SUS: 4, PUP: 5, IR: 6 };
+// Body part -> injury group. First match wins (Achilles before calf, ACL before knee).
+const _IV_GROUPS = [
+  ['none', /coach|personal|not injury|\brest|suspen/],
+  ['achilles', /achilles/], ['acl', /\bacl\b/], ['knee', /knee|\bmcl\b|\bpcl\b|\blcl\b|menisc|patell/],
+  ['hamstring', /hamstring/], ['calf', /calf/], ['groin', /groin|adductor/], ['quad', /quad|thigh/],
+  ['foot', /foot|lisfranc|heel|plantar/], ['toe', /toe/], ['ankle', /ankle/],
+  ['concussion', /concussion|head/], ['neck', /neck|stinger/], ['back', /back|spine|lumbar/],
+  ['shoulder', /shoulder|labrum|rotator/], ['collarbone', /collarbone|clavicle/], ['hip', /hip|glute/],
+  ['core', /abdom|oblique|core|hernia/], ['chest', /chest|pectoral|\bpec\b/], ['ribs', /\brib/],
+  ['arm', /elbow|biceps|triceps|forearm|\barm\b/], ['hand', /hand|wrist|finger|thumb/],
+  ['leg', /fibula|tibia|shin|\bleg\b/], ['illness', /illness|sick|\bflu\b/]
+];
+function _ivGroup(body) {
+  const b = String(body || '').toLowerCase();
+  if (!b) return '';
+  for (let i = 0; i < _IV_GROUPS.length; i++) if (_IV_GROUPS[i][1].test(b)) return _IV_GROUPS[i][0];
+  return '';
+}
+// "a hamstring injury" / "an ankle injury" / "a concussion"
+function _ivInjPhrase(g) {
+  const art = /^[aeiou]/.test(g) ? 'an ' : 'a ';
+  return art + g + (g === 'concussion' || g === 'illness' ? '' : ' injury');
+}
+function _ivCap(s) { s = String(s || ''); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function _ivEsc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// NFL week a timestamp falls in (weeks roll two days before the opening kickoff).
+function _ivWeekOfMs(ms) {
+  let kicks = null;
+  try { kicks = _SEASON_KICKS_2026; } catch (e) { return null; }   // TDZ before the const runs
+  if (!Array.isArray(kicks) || !kicks.length || !isFinite(ms)) return null;
+  let w = kicks[0].wk;
+  for (let i = 0; i < kicks.length; i++) { if (ms >= kicks[i].kick - 2 * 86400000) w = kicks[i].wk; else break; }
+  return w;
+}
+// His team's game weeks from `from` on (bye skipped).
+function _ivGameWeeks(d, from) {
+  const out = [];
+  for (let w = Math.max(1, from || 1); w <= 18; w++) if (w !== d.bye) out.push(w);
+  return out;
+}
+function _ivEngineRow(d) {
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !SP.inj) return null;
+  let r = SP.inj[d.n];
+  if (!r) {
+    let idx = window._ivEngIdx;
+    if (!idx || idx._src !== SP.inj) {
+      idx = { _src: SP.inj, m: {} };
+      Object.keys(SP.inj).forEach(k => { idx.m[_campNewsNorm(k)] = SP.inj[k]; });
+      window._ivEngIdx = idx;
+    }
+    r = idx.m[_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+let _ivCache = null;
+// Newest structured timeline on the news feed for this player (season / "N-M
+// weeks" / "out until week N"). The team's or an insider's read beats an
+// analyst's; a newer "expected to play" item cancels it.
+function _ivNewsTimeline(d) {
+  const arr = window._campNewsIdx && window._campNewsIdx[_campNewsNorm(d.n)];
+  if (!arr || !arr.length) return null;
+  const cut = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
+  let best = null, lastPlay = '';
+  arr.forEach(it => {
+    const a = it && it.avail;
+    if (!a || !it.date || it.date < cut) return;
+    if (a.k === 'play') { if (it.date > lastPlay) lastPlay = it.date; return; }
+    if (a.k !== 'season' && a.k !== 'weeks' && a.k !== 'ret') return;
+    const rank = it.src_type === 'expert' ? 0 : 1;
+    if (!best || rank > best.rank || (rank === best.rank && it.date > best.it.date)) best = { it: it, rank: rank };
+  });
+  if (!best || lastPlay > best.it.date) return null;
+  const it = best.it, a = it.avail, dms = Date.parse(it.date + 'T16:00:00Z');
+  const o = { src: 'newsfeed', date: it.date, note: it.date + ' ' + it.headline };
+  if (a.k === 'season') { o.season = true; o.rep = 'season-ending'; o.repM = 'season'; return o; }
+  if (a.k === 'ret') {
+    if (!(a.wk >= 1 && a.wk <= 18)) return null;
+    o.lo = +a.wk; o.hi = Math.min(18, +a.wk + 1);
+    o.rep = 'out until Wk ' + a.wk; o.repM = 'til Wk ' + a.wk;
+  } else {
+    const lo = +a.lo, hi = a.hi != null ? +a.hi : lo + 2;
+    if (!(lo >= 0) || !(hi >= lo)) return null;
+    const u = a.unit === 'g' ? ['game', 'gm'] : ['week', 'wk'];
+    const span = a.hi == null ? lo + '+' : hi > lo ? lo + '–' + hi : String(lo);
+    o.rep = span + ' ' + u[0] + (span === '1' ? '' : 's'); o.repM = span + ' ' + u[1] + (span === '1' ? '' : 's');
+    if (a.unit === 'g') {
+      // "N games": counted in his team's own games after the report
+      const gw = _ivGameWeeks(d, _ivWeekOfMs(dms + 2 * 86400000) || 1);
+      o.lo = gw[lo] != null ? gw[lo] : 19; o.hi = gw[hi] != null ? gw[hi] : 19;
+    } else {
+      // "N weeks": the first game on or after report date + N weeks (three days of slack, as the Sim Lab reads it)
+      o.lo = _ivWeekOfMs(dms + (7 * lo - 3) * 86400000); o.hi = _ivWeekOfMs(dms + (7 * hi - 3) * 86400000);
+      if (o.lo == null || o.hi == null) return null;
+    }
+  }
+  if (o.lo === d.bye) o.lo++;
+  if (o.hi === d.bye) o.hi++;
+  if (o.lo > 18) { o.season = true; delete o.lo; delete o.hi; }
+  else if (o.hi > 18) { o.hi = null; o.open = true; }
+  return o;
+}
+function _ivLgt(p) { p = Math.min(0.995, Math.max(0.005, p)); return Math.log(p / (1 - p)); }
+function _ivSgm(z) { return 1 / (1 + Math.exp(-z)); }
+const _IV_CAP = 10;
+// Games missed in a row so far (this week's too once it has kicked off without him).
+function _ivK0(raw, cw) {
+  return raw ? (raw.pm || 0) + (raw.kd && !raw.pd && raw.m === 0 && raw.f <= cw && raw.t >= cw ? 1 : 0) : 0;
+}
+// cum[a] = P(he misses at most `a` more games), a = 0 .. _IV_CAP, from the research
+// tables (SIM_PROJ_2026.injRes): the chain of P(misses the next game | missed k)
+// for his position, shifted by injury group. `need` = games he is certain to miss
+// from here (1 = already ruled out of the next one, 4 - k0 on a reserve list,
+// 0 = not known — the first step then uses the one-game-missed rate).
+function _ivCum(R, pos, g, k0, need) {
+  const base = R.pos && R.pos[pos] ? R.pos[pos] : R.cont;
+  const shf = R.grp && R.grp[g] ? R.grp[g] : null;
+  const cont = k => {
+    const kk = Math.min(8, Math.max(1, k)), c = base[kk - 1], sh = shf ? shf[Math.min(3, kk) - 1] : 0;
+    return sh ? _ivSgm(_ivLgt(c) + sh) : c;
+  };
+  const cum = [];
+  let surv = need >= 1 ? 1 : cont(Math.max(1, k0));   // P(misses at least 1 more)
+  cum[0] = 1 - surv;
+  for (let a = 1; a <= _IV_CAP; a++) { surv *= a < need ? 1 : cont(k0 + a); cum[a] = 1 - surv; }
+  return cum;
+}
+// How the recent reports read for a player with no timeline: 'minor' / 'serious'
+// off the newest injury HEADLINE that carries a cue (never the take — it names
+// other players). Both cues in one line = no lean.
+const _IV_TONE_MINOR = /not (?:considered |believed |thought )?(?:to be )?(?:overly |too |that )?serious|\bminor\b|day[- ]to[- ]day|no (?:long[- ]term|structural|ligament|significant|major) (?:damage|injury)|clean (?:mri|x-?rays?|scan|ankle|knee)|negative (?:mri|x-?rays?)|avoid(?:s|ed)? (?:a |any )?(?:major|serious|significant|long[- ]term)|precaution|could play|got close|expected to (?:play|return|be (?:fine|ok|okay|available|ready))|good news|best[- ]case/i;
+const _IV_TONE_SERIOUS = /indefinitely|\bIR\b|injured reserve|significant|extended|multiple weeks|multi-?week|miss (?:some |significant |extended )?time|surgery|fractur|broken|\btorn\b|\btear\b|ruptur|dislocat|re-?aggravat|week[- ]to[- ]week|setback/i;
+function _ivReportTone(d) {
+  const arr = window._campNewsIdx && window._campNewsIdx[_campNewsNorm(d.n)];
+  if (!arr || !arr.length) return null;
+  const cut = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
+  const its = arr.filter(it => it && it.date && it.date >= cut && it.headline && (it.tag === 'injury' || it.avail))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  for (let i = 0; i < its.length; i++) {
+    const h = String(its[i].headline);
+    const ser = _IV_TONE_SERIOUS.test(h) || !!(its[i].avail && its[i].avail.k === 'w2w'), min = _IV_TONE_MINOR.test(h);
+    if (ser && min) return null;
+    if (ser || min) return { t: ser ? 'serious' : 'minor', note: its[i].date + ' ' + h };
+  }
+  return null;
+}
+// OUR OWN estimate for a player listed Out with nothing reported (Jack 2026-10-05:
+// "when a player is tbd like chase ... we put in our own estimated timeline based
+// on the injury" / "fine if the range becomes a little bigger until we know
+// more"). From the same research chain: the first week he is 1-in-3 to be back
+// through the week he is 2-in-3. Reports that read minor take the faster half
+// (through even odds); reports that read serious assume the next game is lost.
+// Never a single week — nothing is known yet.
+function _ivOwnEstimate(d, x, raw, ahead) {
+  const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes;
+  if (!R || !R.cont || !ahead.length) return null;
+  if (x.grp === 'acl' || x.grp === 'achilles') return null;   // no week guessed for a likely season-ender
+  const tone = _ivReportTone(d);
+  const serious = !!tone && tone.t === 'serious', minor = !!tone && tone.t === 'minor';
+  const cum = _ivCum(R, d.s, x.grp, _ivK0(raw, x.cw), serious ? 1 : 0);
+  const at = th => { for (let a = 0; a < cum.length; a++) if (cum[a] >= th) return a; return null; };
+  const aLo = at(1 / 3), aMid = at(0.5);
+  let aHi = at(minor ? 0.5 : 2 / 3);
+  if (aLo == null || ahead[aLo] == null) return null;
+  if (aHi != null && aHi <= aLo) aHi = aLo + 1;
+  const hi = aHi != null && ahead[aHi] != null ? ahead[aHi] : null;
+  const odds = [];
+  for (let a = 0; a < cum.length && a < ahead.length && odds.length < 6; a++) odds.push([ahead[a], cum[a]]);
+  return { lo: ahead[aLo], hi: hi, open: hi == null, mid: aMid != null && ahead[aMid] != null ? ahead[aMid] : null, odds: odds, src: 'est', tone: tone, byInj: !!(R.grp && R.grp[x.grp]) };
+}
+// Estimated return. `raw` = the engine row; `r` = the same row unless its read
+// is spent (a one-week dock for a game that has already kicked off).
+function _ivKicked(d, raw) {
+  if (raw && raw.kd) return true;
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !Array.isArray(SP.injKd) || !SP.teamOf) return false;
+  let tm = SP.teamOf[d.n];
+  if (!tm && typeof TEAM_ABBR_MAP !== 'undefined') tm = TEAM_ABBR_MAP[d.t];
+  return !!tm && SP.injKd.indexOf(tm) >= 0;
+}
+function _ivReturn(d, r, raw, code, cw, det, x) {
+  const kicked = _ivKicked(d, raw);
+  const ahead = cw ? _ivGameWeeks(d, kicked ? cw + 1 : cw) : [];   // his games still to be played
+  const next = ahead.length ? ahead[0] : null;
+  const fin = o => {
+    if (!o.season && o.lo != null && o.lo > 18) o = { season: true, src: o.src, note: o.note };
+    if (o.season) { o.sort = 99; return o; }
+    if (o.lo != null) {
+      if (next != null && o.lo < next) o.lo = next;
+      if (o.hi != null && o.hi < o.lo) o.hi = o.lo;
+      o.missLo = ahead.filter(w => w < o.lo).length;
+      o.missHi = o.hi != null ? ahead.filter(w => w < o.hi).length : null;
+      o.sort = o.lo + (o.pct != null ? (1 - o.pct) / 10 : o.hi != null ? (o.hi - o.lo) / 100 : 0.5);
+    } else o.sort = 50;
+    return o;
+  };
+  // News newer than the export wins: an item dated after the export's day, or
+  // on it when the export ran before the midday news pass. A news window the
+  // layer already holds is only replaced by a later-dated item.
+  const SP = window.SIM_PROJ_2026;
+  const nt = _ivNewsTimeline(d);
+  let useNews = false;
+  if (nt) {
+    if (!r) useNews = true;
+    else if (/^news/.test(r.src) && r.nt) useNews = nt.date > String(r.nt).slice(0, 10);
+    else {
+      const ex = SP && SP.updated ? new Date(SP.updated) : null;
+      if (ex && !isNaN(ex)) {
+        const exDay = ex.getFullYear() + '-' + String(ex.getMonth() + 1).padStart(2, '0') + '-' + String(ex.getDate()).padStart(2, '0');
+        useNews = nt.date > exDay || (nt.date === exDay && ex.getHours() < 12);
+      }
+    }
+    // a timeline that has already run out says nothing about the weeks ahead
+    if (useNews && !nt.season && next != null && nt.hi != null && nt.hi < next) useNews = false;
+  }
+  if (useNews) return fin(nt);
+  if (r) {
+    if (r.t >= 18 || r.src === 'news-season' || r.src === 'dx-season') return fin({ season: true, src: r.src === 'dx-season' ? 'dx' : r.src === 'override' ? 'set' : 'news', note: r.nt || '' });
+    if (r.m > 0) {
+      // one-week dock (Questionable / Doubtful / an Out the reports have not confirmed)
+      const unc = /unconfirmed/.test(r.src);
+      return fin({ lo: r.f, hi: r.f, pct: r.pl != null ? r.pl : unc ? null : r.m, unc: unc, src: 'dock' });
+    }
+    const odds = r.c ? Object.keys(r.c).map(Number).sort((a, b) => a - b).map(w => [w, r.c[w]]) : [];
+    const at = th => { const x = odds.find(o => o[1] >= th); return x ? x[0] : null; };
+    if (r.src === 'ir' || r.src === 'na') {
+      // Reserve list with no reported timeline: the layer rolls a four-game
+      // window forward every week, so the floor here is the list's own rule —
+      // eligible after four missed games — with no firm end.
+      const gw = _ivGameWeeks(d, cw);
+      const elig = gw[Math.max(0, 4 - (r.pm || 0))];
+      return fin({ lo: elig != null ? elig : 19, hi: null, open: true, mid: at(0.5), odds: odds, src: 'ir', elig: (r.pm || 0) >= 4 });
+    }
+    if (odds.length) {
+      const news = /^news/.test(r.src) && r.src !== 'news-out';
+      let lo = at(1 / 3);
+      const hi = at(news ? 0.8 : 2 / 3);
+      if (lo == null) lo = r.nx != null ? r.nx : odds[0][0];
+      return fin({ lo: lo, hi: hi, open: hi == null, mid: at(0.5), odds: odds, src: news ? 'news' : 'curve', note: news ? (r.nt || '') : '', k: r.k });
+    }
+    if (r.nx != null) return fin({ lo: r.nx, hi: r.nx, src: r.src === 'override' ? 'set' : r.src });
+    return fin({ season: true, src: r.src });   // the window runs through his last game
+  }
+  // designation alone
+  if (code === 'Q' || code === 'D') return fin({ lo: next, hi: next, dtd: true, src: 'tag' });
+  if (code === 'IR' || code === 'PUP') {
+    const w0 = det && det.d ? _ivWeekOfMs(Date.parse(det.d + 'T16:00:00Z')) : null;
+    if (w0 != null) { const gw = _ivGameWeeks(d, w0); return fin({ lo: gw[4] != null ? gw[4] : 19, hi: null, open: true, src: 'ir' }); }
+  }
+  if (code === 'O') { const e = _ivOwnEstimate(d, x, raw, ahead); if (e) return fin(e); }
+  return fin({ lo: null, src: 'tag' });
+}
+// Timeline phrase out of a news line the Sim Lab layer already accepted (older
+// items carry no structured `avail`). Only ever fed the layer's own `nt` line.
+function _ivPhrase(line) {
+  const t = String(line || '').replace(/^\d{4}-\d\d-\d\d\s*/, '');
+  if (/out for the (rest of the )?(season|year)|season[- ]ending/i.test(t)) return ['season-ending', 'season'];
+  let m = t.match(/(\d+)\s*(?:-|–|to)\s*(\d+)[\s-]*(week|game)/i);
+  if (m) return [m[1] + '–' + m[2] + ' ' + m[3].toLowerCase() + 's', m[1] + '–' + m[2] + (/^w/i.test(m[3]) ? ' wks' : ' gms')];
+  m = t.match(/(\d+)[\s-]*(week|game)/i);
+  if (m) return [m[1] + '+ ' + m[2].toLowerCase() + 's', m[1] + '+ ' + (/^w/i.test(m[2]) ? 'wks' : 'gms')];
+  m = t.match(/week\s*(\d+)/i);
+  if (m && +m[1] >= 1 && +m[1] <= 18) return ['out until Wk ' + m[1], 'til Wk ' + m[1]];
+  return null;
+}
+// "Typical" for this injury, from the research tables in the sim export. Out /
+// reserve list: how many MORE games players at his position with this injury
+// group went on to miss from where he is now (the chain of P(misses the next
+// game | missed k)), as the middle half — 25th to 75th percentile — with the
+// median. Questionable: how often that designation + practice level has played.
+function _ivTypical(d, x, raw, ahead) {
+  const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes;
+  if (!R || !R.cont || x.code === 'SUS') return null;
+  const g = x.grp, pos = d.s;
+  if (x.code === 'D') return { rare: true };
+  if (x.code === 'Q') {
+    const cls = x.pracLast ? 'Q-' + x.pracLast : '';
+    if (!cls || !R.play || !R.play[cls]) return { dtd: true, all: R.playAll || null };
+    let pp = R.play[cls][pos] != null ? R.play[cls][pos] : (R.playAll && R.playAll[cls]);
+    if (pp == null) return { dtd: true, all: R.playAll || null };
+    const sh = (R.shift && R.shift[cls] && R.shift[cls][g]) || 0;
+    if (sh) pp = _ivSgm(_ivLgt(pp) + sh);
+    return { play: pp, cls: cls, byInj: !!sh };
+  }
+  if (g === 'acl' || g === 'achilles') return { season: true };
+  const k0 = _ivK0(raw, x.cw);
+  const need = (x.code === 'IR' || x.code === 'PUP') ? Math.max(1, 4 - k0) : 1;   // reserve lists: four games minimum
+  const cum = _ivCum(R, pos, g, k0, need);
+  const CAP = _IV_CAP;
+  const q = [0.25, 0.5, 0.75].map(t => { for (let a = 1; a <= CAP; a++) if (cum[a] >= t) return a; return null; });
+  const shf = R.grp && R.grp[g] ? R.grp[g] : null;
+  const left = ahead.length;
+  const fix = v => (v == null || v >= CAP) ? null : v;   // null = runs past the table
+  let lo = fix(q[0]), mid = fix(q[1]), hi = fix(q[2]);
+  if (lo == null) lo = CAP;
+  const ros = left > 0 && (hi == null || hi >= left);    // the long end is the rest of his season
+  return { lo: lo, mid: mid, hi: ros ? null : hi, ros: ros, k0: k0, byInj: !!shf, pos: pos };
+}
+function _ivTimeline(d, x, r, raw) {
+  const ahead = x.cw ? _ivGameWeeks(d, _ivKicked(d, raw) ? x.cw + 1 : x.cw) : [];
+  const next = ahead.length ? ahead[0] : null;
+  const tl = { rep: null, typ: _ivTypical(d, x, raw, ahead) };
+  // what has been reported: the newest timeline on the feed that has not run out, else the line the layer holds
+  const nt = _ivNewsTimeline(d);
+  if (nt && nt.rep && (nt.season || nt.hi == null || next == null || nt.hi >= next)) tl.rep = { txt: nt.rep, m: nt.repM, note: nt.note };
+  else if (r && /^news/.test(r.src) && r.src !== 'news-out' && r.nt) {
+    const ph = _ivPhrase(r.nt);
+    if (ph) tl.rep = { txt: ph[0], m: ph[1], note: r.nt };
+  } else if (r && r.src === 'override' && r.t > x.cw) tl.rep = { txt: r.t >= 18 ? 'season-ending' : 'out through Wk ' + r.t, m: r.t >= 18 ? 'season' : 'thru Wk ' + r.t, note: "Jack's set window", set: true };
+  if (tl.typ && tl.typ.season && tl.rep && !/season/.test(tl.rep.txt)) tl.typ = null;
+  const t = tl.typ;
+  tl.sort = !t ? 50 : t.season ? 99 : t.play != null ? 1 - t.play : t.rare ? 0.99 : t.dtd ? 0.5 : (t.mid != null ? t.mid : 12) + (t.lo || 0) / 100;
+  return tl;
+}
+function _ivTypText(t) {
+  if (!t) return null;
+  if (t.season) return { d: 'usually season-ending', m: 'season' };
+  if (t.rare) return { d: 'rarely plays', m: 'rarely plays' };
+  if (t.dtd) {
+    const a = t.all, r = a ? 'plays ' + Math.round(a['Q-DNP'] * 100) + '–' + Math.round(a['Q-FP'] * 100) + '%' : 'day-to-day';
+    return { d: r, m: 'GTD' };
+  }
+  if (t.play != null) return { d: 'plays ' + Math.round(t.play * 100) + '%', m: Math.round(t.play * 100) + '% play' };
+  if (t.mid == null) return { d: t.lo + '+ more games', m: t.lo + '+ gms' };
+  const rng = t.hi == null ? ' (' + t.lo + '+)' : t.hi > t.lo ? ' (' + t.lo + '–' + t.hi + ')' : '';
+  return { d: '~' + t.mid + ' more game' + (t.mid === 1 ? '' : 's') + rng, m: '~' + t.mid + ' gm' + (t.mid === 1 ? '' : 's') };
+}
+function _ivTlTip(d, x) {
+  const tl = x.tl, t = tl.typ, L = [];
+  if (tl.rep) L.push((tl.rep.set ? 'Set window: ' : 'Reported: ') + tl.rep.txt + (tl.rep.note && !tl.rep.set ? '\n' + tl.rep.note : ''));
+  else L.push('No timeline reported yet.');
+  if (t) {
+    const who = d.s + 's' + (t.byInj && x.grp ? ' with ' + _ivInjPhrase(x.grp) : '');
+    const res = x.code === 'IR' || x.code === 'PUP';
+    const PR = { 'Q-FP': 'a full practice', 'Q-LP': 'a limited practice', 'Q-DNP': 'no practice' };
+    if (t.season) L.push('Typical: ' + (x.grp === 'acl' ? 'ACL' : 'Achilles') + ' injuries that land a player on the shelf are season-ending.');
+    else if (t.rare) L.push('Typical: Doubtful players almost never suit up (about 1 in 100, 2019-25).');
+    else if (t.dtd) L.push('Typical: it depends on practice — Questionable players have played about ' + (t.all ? Math.round(t.all['Q-FP'] * 100) + '% after a full practice, ' + Math.round(t.all['Q-LP'] * 100) + '% after a limited one and ' + Math.round(t.all['Q-DNP'] * 100) + '% with no practice' : '7 times in 10') + ' (2019-25). No practice report for him yet this week.');
+    else if (t.play != null) L.push('Typical: Questionable ' + who + ' coming off ' + (PR[t.cls] || 'practice') + ' have played ' + Math.round(t.play * 100) + '% of the time (2019-25, recent seasons weighted).');
+    else {
+      L.push('Typical: ' + who + (t.k0 ? ' who have already missed ' + t.k0 + ' game' + (t.k0 === 1 ? '' : 's') : res ? '' : ' who are ruled out') + (res ? ' on a reserve list (four games minimum)' : '')
+        + ' — half are back within ' + (t.mid != null ? t.mid : '10+') + ' more game' + (t.mid === 1 ? '' : 's')
+        + (t.ros ? '; the slow quarter are out for the rest of the season.' : t.hi != null ? '; a quarter miss more than ' + t.hi + '.' : '.'));
+      L.push('Middle half of starters\' absences, 2019-25' + (t.byInj ? '' : x.grp && x.grp !== 'none' ? ' (no separate split for ' + x.grp + ' injuries — position only)' : ' (position only)') + '.');
+    }
+  }
+  return L.join('\n');
+}
+function _ivBuild(d) {
+  if (!d || d._isDevy || d._isFuturePick || d._retired || d.s === 'DST') return null;
+  const SP = window.SIM_PROJ_2026 || null;
+  const cw = (SP && SP.currentWeek) || (typeof window._weeklyScheduleWeek === 'function' ? window._weeklyScheduleWeek() : null) || null;
+  const raw = _ivEngineRow(d);
+  // no forward read left once his game has kicked off: a one-week dock spoke for that game, and a
+  // set window that ended with it hands back to the designation
+  const r = raw && !(raw.kd && (raw.m > 0 || (raw.src === 'override' && raw.t <= cw))) ? raw : null;
+  const tag = String(d.inj || '');
+  const pill = tag ? _injPill(d) : '';
+  let code = pill ? ((pill.match(/data-status="([A-Z]+)"/) || [])[1] || '') : '';
+  let body = '';
+  const bm = tag.match(/^(.*?),\s*(IR|PUP|Out|Doubtful|Questionable|Suspended|DNR|NA)\b/i);
+  if (bm) body = bm[1].trim();
+  else if (code) body = tag.replace(/\b(IR|PUP|Out|Doubtful|Questionable|Suspended)\b/ig, '').replace(/^[\s,–-]+|[\s,–-]+$/g, '').trim().slice(0, 28);
+  if (code && code !== 'SUS' && _ivGroup(body) === 'none') return null;   // healthy scratch / personal — not an injury
+  if (!code && r && r.m < 1) {
+    // the NFL report has him listed before the Sleeper feed does
+    code = /^out$/i.test(r.gs || '') ? 'O' : /doubt/i.test(r.gs || '') ? 'D' : /^(q-|out-unconfirmed)/.test(r.src) || /question/i.test(r.gs || '') ? 'Q'
+      : r.src === 'ir' ? 'IR' : r.src === 'sus' ? 'SUS' : r.m === 0 ? 'O' : '';
+  }
+  if (!code) return null;
+  const PR = window.PRACTICE_2026;
+  const pr = PR && PR.players ? PR.players[d.n] : null;
+  if (!body || /undisclosed/i.test(body)) {
+    if (pr && pr.inj && !/not injury/i.test(pr.inj)) body = pr.inj;
+    else if (raw && raw.g && raw.g !== 'rest') body = _ivCap(raw.g);
+  }
+  const det = (window.INJURY_UPDATES && INJURY_UPDATES.detail && INJURY_UPDATES.detail[d.n]) || null;
+  // practice log: this week's only, and only until his game kicks off
+  let prac = '';
+  if (!_ivKicked(d, raw)) {
+    if (raw && raw.sq) prac = String(raw.sq).split('-').slice(-3).join(' › ');
+    else if (pr && pr.pr && (!PR.week || !cw || +PR.week === +cw)) prac = pr.pr;
+  }
+  const x = { code: code, sev: _IV_SEV[code] || 0, body: body || 'Undisclosed', grp: _ivGroup(body) || (raw && raw.g && raw.g !== 'rest' ? raw.g : ''),
+    note: det && det.n && det.n.toLowerCase() !== String(body).toLowerCase() ? det.n : '', prac: prac, raw: raw, cw: cw, tag: tag, dpos: d.s + 's' };
+  // latest practice level this week (FP / LP / DNP) for the Questionable play odds
+  const pl = prac ? prac.split(' › ').pop() : '';
+  x.pracLast = /^(FP|LP|DNP)$/.test(pl) ? pl : '';
+  x.ret = _ivReturn(d, r, raw, code, cw, det, x);
+  x.tl = _ivTimeline(d, x, r, raw);
+  return x;
+}
+function _ivInfo(d) {
+  if (!d || !d.n) return null;
+  const SP = window.SIM_PROJ_2026, IU = window.INJURY_UPDATES, CN = window.CAMP_NEWS, PR = window.PRACTICE_2026;
+  const sig = [SP && SP.updated, IU && IU.updated, CN && CN.updated, PR && PR.updated, window._irMap ? Object.keys(window._irMap).length : 0].join('|');
+  if (!_ivCache || _ivCache.sig !== sig) _ivCache = { sig: sig, m: new Map() };
+  const hit = _ivCache.m.get(d.n);
+  if (hit && hit.tag === (d.inj || '')) return hit.x;
+  const x = _ivBuild(d);
+  _ivCache.m.set(d.n, { tag: d.inj || '', x: x });
+  return x;
+}
+window._ivInfo = _ivInfo;
+function _ivRetText(ret) {
+  if (ret.season) return { main: 'Out for season', sub: '', color: '#ef4444' };
+  if (ret.lo == null) return { main: 'TBD', sub: 'no timeline yet', color: 'var(--text2)' };
+  let main = 'Wk ' + ret.lo;
+  if (ret.hi != null && ret.hi > ret.lo) main += '–' + ret.hi;
+  else if (ret.open) main += '+';
+  let sub;
+  if (ret.pct != null) sub = Math.round(ret.pct * 100) + '% to play';
+  else if (ret.unc) sub = 'not confirmed out';
+  else if (ret.dtd) sub = 'day-to-day';
+  else if (ret.missHi == null) sub = ret.missLo ? 'out ' + ret.missLo + '+ more' : (ret.elig ? 'eligible now' : 'no firm timeline');
+  else if (ret.missHi === ret.missLo) sub = ret.missLo ? 'misses ' + ret.missLo + ' more' : 'next game';
+  else sub = ret.missLo ? 'misses ' + ret.missLo + '–' + ret.missHi + ' more' : 'up to ' + ret.missHi + ' more missed';
+  if (ret.src === 'est') sub = 'our est. · ' + sub;
+  const color = ret.pct != null ? (ret.pct >= 0.75 ? '#22c55e' : ret.pct >= 0.5 ? '#facc15' : '#f59e0b')
+    : (ret.dtd || ret.unc) ? '#facc15' : (ret.missLo || 0) >= 3 ? '#f97316' : (ret.missLo || 0) >= 1 ? '#f59e0b' : '#facc15';
+  return { main: main, sub: sub, color: color };
+}
+function _ivRetTip(x) {
+  const ret = x.ret, t = _ivRetText(ret), L = [];
+  L.push('Estimated return: ' + t.main + (ret.mid != null && ret.hi !== ret.lo ? ' (most likely Wk ' + ret.mid + ')' : ''));
+  if (!ret.season && ret.lo != null && ret.pct == null && !ret.dtd && !ret.unc) {
+    L.push(ret.missHi == null ? 'Misses at least ' + (ret.missLo || 0) + ' more game' + (ret.missLo === 1 ? '' : 's')
+      : ret.missHi === ret.missLo ? 'Misses ' + ret.missLo + ' more game' + (ret.missLo === 1 ? '' : 's')
+      : ret.missLo ? 'Misses ' + ret.missLo + ' to ' + ret.missHi + ' more games' : 'Could be back for the next game; could miss up to ' + ret.missHi + ' more');
+  }
+  if (ret.pct != null) L.push('About ' + Math.round(ret.pct * 100) + '% to play in Week ' + ret.lo + ' (2019-25 play rates for this designation, practice level, position and injury)');
+  if (ret.odds && ret.odds.length) L.push('Odds he plays: ' + ret.odds.slice(0, 6).map(o => 'Wk ' + o[0] + ' ' + Math.round(o[1] * 100) + '%').join(' · '));
+  const SRC = {
+    news: 'Reported timeline', newsfeed: 'Reported timeline (news feed)', set: "Jack's set window",
+    curve: 'No reported timeline — how long players with this designation, position and injury have stayed out (2019-25)',
+    ir: 'Reserve list — eligible after four missed games; no timeline reported', dx: 'Season-ending diagnosis',
+    dock: 'This week\'s designation + practice report', tag: 'Designation only — no timeline reported', sus: 'Suspension',
+    est: 'Our estimate — nothing reported yet. How long ' + (x.dpos || 'players') + (ret.byInj && x.grp ? ' with ' + _ivInjPhrase(x.grp) : '') + ' have typically been out (starters, 2019-25); the range tightens once there is a report'
+  };
+  if (SRC[ret.src]) L.push('Source: ' + SRC[ret.src]);
+  if (ret.src === 'est' && ret.tone) L.push((ret.tone.t === 'minor' ? 'Reports read minor, so it leans to the faster half: ' : 'Reports read serious, so it assumes he misses the next game: ') + ret.tone.note);
+  if (ret.note) L.push(ret.note);
+  return L.join('\n');
+}
+function _ivCellsHtml(d) {
+  const x = _ivInfo(d);
+  if (!x) return '<td class="injv-cell injv-inj">—</td><td class="injv-cell injv-ret">—</td><td class="injv-cell injv-tl">—</td>';
+  const st = _IV_STATUS[x.code] || x.code;
+  const subBits = ['<span style="color:' + (_IV_STATUS_COLOR[x.code] || 'var(--text2)') + ';font-weight:700">' + _ivEsc(st) + '</span>'];
+  if (x.note) subBits.push(_ivEsc(x.note.toLowerCase()));
+  if (x.prac) subBits.push(_ivEsc(x.prac));
+  const injTip = [x.body + ' — ' + st].concat(x.note ? ['Note: ' + x.note] : [], x.prac ? ['Practice this week: ' + x.prac] : [], x.tag ? ['Feed tag: ' + x.tag] : []).join('\n');
+  const t = _ivRetText(x.ret);
+  // TIMELINE: the report leads when there is one, the research "typical" sits under it
+  const tl = x.tl, ty = _ivTypText(tl.typ);
+  const k = s => '<span class="injv-k">' + s + '</span>';
+  let tlMain, tlSub, tlLbl, tlM;
+  if (tl.rep) {
+    tlMain = k(tl.rep.set ? 'Set' : 'Reported') + _ivEsc(tl.rep.txt); tlLbl = tl.rep.set ? 'SET' : 'REPORTED'; tlM = tl.rep.m;
+    tlSub = ty ? 'typical: ' + ty.d : '';
+  } else if (ty) {
+    tlMain = k('Typical') + _ivEsc(ty.d); tlLbl = 'TYPICAL'; tlM = ty.m;
+    tlSub = 'no timeline reported';
+  } else { tlMain = ''; tlSub = ''; tlLbl = ''; tlM = ''; }
+  const lbl = x.body.length > 14 ? x.body.slice(0, 13) + '…' : x.body;
+  return '<td class="injv-cell injv-inj" title="' + _ivEsc(injTip) + '"><span class="injv-main">' + _ivEsc(x.body) + '</span><span class="injv-sub">' + subBits.join(' · ') + '</span></td>'
+    + '<td class="injv-cell injv-ret" data-lbl="' + _ivEsc(lbl.toUpperCase()) + '" title="' + _ivEsc(_ivRetTip(x)) + '"><span class="injv-main" style="color:' + t.color + '">' + _ivEsc(t.main) + '</span>' + (t.sub ? '<span class="injv-sub">' + _ivEsc(t.sub) + '</span>' : '') + '</td>'
+    + (tlMain ? '<td class="injv-cell injv-tl" data-lbl="' + tlLbl + '" title="' + _ivEsc(_ivTlTip(d, x)) + '"><span class="injv-main"><span class="injv-d">' + tlMain + '</span><span class="injv-m">' + _ivEsc(tlM) + '</span></span>' + (tlSub ? '<span class="injv-sub">' + _ivEsc(tlSub) + '</span>' : '') + '</td>'
+      : '<td class="injv-cell injv-tl">—</td>');
+}
+window._toggleInjOnly = function (force) {
+  const on = typeof force === 'boolean' ? force : !window._injOnly;
+  if (on === window._injOnly) return;
+  window._injOnly = on;
+  const btn = document.getElementById('injFilterBtn');
+  if (btn) { btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  if (!on && /^inj/.test(sortKey)) {
+    // leaving the view while sorted on one of its columns: back to board order
+    sortKey = 'myrank'; sortDir = 1;
+    document.querySelectorAll('thead th[data-sort]').forEach(t => {
+      const me = t.dataset.sort === 'myrank', a = t.querySelector('.arrow');
+      t.classList.toggle('sorted', me);
+      if (a) a.textContent = me ? '▲' : '';
+      t.setAttribute('aria-sort', me ? 'ascending' : 'none');
+    });
+  }
+  render();
+};
 // --- Cloud sync (users/{uid}/data/watchlist — existing per-user rules, no
 // rules change needed). Local stays the source of truth for signed-out use;
 // on sign-in the newer side wins (localStorage mff_watchlist_at vs the doc's
@@ -4427,6 +4947,8 @@ function getFiltered(applyTopN) {
   // the BOTTOM of every secondary sort (window._rankBelowCut, consumed after
   // the sort below, by the table's divider row and by the tier-card view) —
   // sorting by a metric shouldn't float 300 irrelevant names to the top.
+  // SIM VOR board is computed — rebuild it if the VOR table moved since the last paint.
+  if (currentVersion === 'sims' && _simsBoardEnsure()) { syncMode(); renumber(); }
   let _boardSrc = board;
   window._rankBelowCut = null;
   if (typeof window._boardCutoffFor === 'function') {
@@ -4466,6 +4988,14 @@ function getFiltered(applyTopN) {
   let f = _boardSrc.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
+  // SIM VOR board lists only players the sim projects; WAIVERS narrows it to
+  // players nobody in the picked league rosters.
+  if (currentVersion === 'sims') {
+    const _vt = _vorTable();
+    if (_vt) f = f.filter(d => _vt.map.has(d));
+    const _ros = _vorRostered();
+    if (_ros) f = f.filter(d => !_ros.has(d));
+  }
   // Out-for-season players: hidden from season formats (redraft / bestball /
   // superflex / weekly) but untouched in dynasty modes. A typed search still
   // surfaces them so their card (and the admin unflag toggle on it) stays
@@ -4516,6 +5046,9 @@ function getFiltered(applyTopN) {
     }
     return true;
   });
+  // INJURIES view shows each player's rank in the full list, not a 1..N recount
+  // of the injured (stamped before the ★ / TOP-N / TEAMS / injury cuts).
+  if (window._injOnly) f.forEach((d, i) => { d._ivRank = i + 1; });
   // Watchlist-only view (★ pill): AND with the current position filter.
   // TOP-N is skipped here — a starred deep sleeper always shows in the ★ view.
   if (window._watchOnly && window._watchSet) {
@@ -4532,6 +5065,8 @@ function getFiltered(applyTopN) {
   // board meaning — "TOP 40 + DET" = Lions inside the top 40. d.t is the full
   // team name for every row, D/ST included.
   if (window._teamFilter && window._teamFilter.size) f = f.filter(d => window._teamFilter.has(d.t));
+  // INJURIES filter (pill): injured players only, same after-the-cap rule as TEAMS.
+  if (window._injOnly) f = f.filter(d => !!_ivInfo(d));
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
     // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
@@ -4555,6 +5090,8 @@ function getFiltered(applyTopN) {
     const _wkStat = currentMode === 'weekly';
     // ADP comparison view: missing ADPs sort to the bottom in the (default) ascending order.
     const _smAdp = (d, src) => { const v = _adpBySource(d, src); return v == null ? 9999 : v; };
+    // VOR view: PPG / VOR / games sort high-first, the weekly VOR rank low-first; no sim row sinks.
+    const _vorSort = (d, k) => { const e = _vorFor(d); return e ? e[k] : (k === 'rk' ? 9999 : -Infinity); };
     f.sort((a, b) => {
       let av, bv;
       switch(sortKey) {
@@ -4563,14 +5100,14 @@ function getFiltered(applyTopN) {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': { const ca = _consCmp(a), cb = _consCmp(b); av = ca ? ca.ref : 999; bv = cb ? cb.ref : 999; break; }
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
-        case 'l4ppg': if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'pts': if (_sm === 'vor') { av = _vorSort(a, 'v'); bv = _vorSort(b, 'v'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
+        case 'fpts25': if (_sm === 'vor') { av = _vorSort(a, 'vor'); bv = _vorSort(b, 'vor'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
+        case 'l4ppg': if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'yrr': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
         case 'jm': if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -4622,6 +5159,9 @@ function getFiltered(applyTopN) {
           };
           av = _op(a); bv = _op(b); break;
         }
+        case 'injSt': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.sev : 0; bv = xb ? xb.sev : 0; break; }
+        case 'injRet': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.ret.sort : 999; bv = xb ? xb.ret.sort : 999; break; }
+        case 'injTl': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.tl.sort : 999; bv = xb ? xb.tl.sort : 999; break; }
         case 'xfpG': {
           const _xg = d => { const x = _xfpAgg(d, rankingScoringFmt, null); return x ? x.xfpg : -Infinity; };
           av = _xg(a); bv = _xg(b); break;
@@ -6780,6 +7320,14 @@ function render() {
   const _statMode = _effStatMode();
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
+  // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
+  document.body.classList.toggle('rnk-vor', _statMode === 'vor');
+  // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
+  document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor');
+  // INJURIES view: three extra columns in front of Cons (CSS keys off these classes).
+  const _injView = !!window._injOnly && filter !== 'DEVY';
+  document.body.classList.toggle('inj-view', _injView);
+  document.body.classList.toggle('inj-view-fant', _injView && _statMode === 'fantasy');
   // REDRAFT (rest-of-season board): Team Total column = rest-of-season average
   // implied team total, FANTASY stats view only (CSS keys off this class).
   const _rosTtCol = currentMode === 'redraft' && _statMode === 'fantasy'
@@ -6854,6 +7402,7 @@ function render() {
   let html = '';
   let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
   let _devyWallDone = false; // DEVY rows: premium wall emitted once, above the first blurred row
+  let _injWallDone = false;  // INJURIES view: same, above the first row ranked past the free window
   data.forEach((d, i) => {
     // DEVY filter: custom row rendering — a full rankings row (tiers, blur,
     // card link, watch star) with the prospect columns from _devyStatCellsHtml.
@@ -6938,7 +7487,10 @@ function render() {
     const _ccCmp = _consCmp(d);
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (!!_ccCmp && _ccCmp.mine != null && _ccCmp.ref !== _ccCmp.mine);
     const checked = compareSet.has(d.idx) ? 'checked' : '';
-    const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
+    // INJURIES view shows real ranks, so its free window is rank-based (a row-count
+    // window would hand out ranks from deep in a premium board).
+    const _injBlurRank = _injView && d._ivRank;
+    const blurred = shouldBlur && (_injBlurRank ? d._ivRank : (i + 1)) > blurCutoff ? 'premium-blur' : '';
     // Hoist per-row computations called 2-4× inside the row template. Saves
     // ~20% of JS time in render() (measured 113ms → 90ms for the pure JS pass).
     // Total sort-click time is still ~300ms because browser layout/paint of
@@ -7018,6 +7570,49 @@ function render() {
       // Tail column: Total Yds (per game on the weekly board). Season Top-12
       // odds are no longer surfaced (table + card chip removed 2026-09-08).
       _statYdsTail = _totYdsCellHtml(d, _isWeekly);
+    } else if (_statMode === 'vor') {
+      // VOR view (see _vorTable). Season boards: PPG · VOR per game · rest-of-
+      // season VOR, projected games in the tail column. WEEKLY: this week's
+      // projection · VOR · VOR rank. Phones show one stat cell, so it carries
+      // the VOR there (.vor-m).
+      const _ve = _vorFor(d);
+      const _vt = _ve ? _vorTable() : null;
+      const _rp = _vt ? _vt.repl[d.s] : null;
+      let _v = _ve ? _ve.v : null;
+      if (_v == null) {
+        // No VOR entry (ruled out this week / no remaining games): still show the sim number.
+        const _fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+        const _sr = _isWeekly
+          ? _simProjRow(d, window._weeklyActiveWeek || (window.SIM_PROJ_2026 && window.SIM_PROJ_2026.currentWeek) || 1)
+          : _simSeasonPpgRow(d);
+        _v = _sr ? _sr[_fi] : null;
+      }
+      const _vc = (_v != null) ? ((_isWeekly && filter === 'FLEX') ? flexFptsColor(_v) : posFptsColor(_v, d.s)) : null;
+      const _sgn = v => (v > 0 ? '+' : '') + v.toFixed(1);
+      const _vorTxt = _ve ? _sgn(_ve.vor) : '—';
+      const _vorC = !_ve ? null : _ve.vor >= 6 ? '#22c55e' : _ve.vor >= 3 ? '#4ade80' : _ve.vor > 0 ? '#facc15' : 'var(--text2)';
+      const _posPl = d.s === 'K' ? 'kickers' : d.s === 'DST' ? 'D/STs' : d.s + 's';
+      const _vorTip = _rp ? ' title="' + (d.s + ' replacement level: ' + d.s + _rp.rk + ' ' + _rp.n + ', ' + _rp.v + (_isWeekly ? ' pts this week' : ' a game') + ' — ' + _rp.rostered + ' ' + _posPl + ' rostered in this format' + (_rp.rostered !== _rp.starters ? ' (' + _rp.starters + ' start)' : '')).replace(/"/g, '&quot;') + '"' : '';
+      const _kd = d.s === 'K' || d.s === 'DST';
+      const _rkTxt = _ve ? (_kd ? d.s + _ve.rk : '#' + _ve.rk) : '';
+      if (_isWeekly) {
+        const _rkTip = _ve ? ' title="' + (_kd ? 'Rank among ' + _posPl + ' by VOR this week' : '#' + _ve.rk + ' by VOR across QB / RB / WR / TE this week · ' + d.s + _ve.posRk + ' by projection') + '"' : '';
+        _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_vorC ? ' style="color:' + _vorC + '"' : ''}>${_vorTxt}</span></td>`;
+        _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
+      <td class="pts-cell l4ppg-cell"${_rkTip}${_ve ? ' style="font-weight:700;cursor:help"' : ''}>${_ve ? (_kd ? d.s + _ve.rk : _ve.rk) : '—'}</td>`;
+      } else {
+        // Rest-of-season total: the per-game gap over the weeks he plays.
+        const _totTxt = !_ve ? '—' : _ve.vt >= 10 ? '+' + Math.round(_ve.vt) : _ve.vt > 0 ? '+' + _ve.vt.toFixed(1) : '0';
+        const _totC = !_ve ? null : _ve.vt > 0 ? _vorC : 'var(--text2)';
+        const _totTip = _ve ? ' title="' + (_totTxt + ' points above replacement over the ' + _ve.g + ' game' + (_ve.g === 1 ? '' : 's') + ' he is projected to play, weeks ' + _vt.from + '-' + _vt.to + ' (a week he projects under replacement counts as zero) · ' + _rkTxt + (_kd ? ' at the position' : ' on the VOR board')).replace(/"/g, '&quot;') + '"' : '';
+        const _short = _ve && _ve.g < _ve.sg;
+        _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_totC ? ' style="color:' + _totC + '"' : ''}>${_totTxt}</span></td>`;
+        _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
+      <td class="pts-cell l4ppg-cell"${_totTip}${_totC ? ' style="color:' + _totC + ';font-weight:700;cursor:help"' : ''}>${_totTxt}</td>`;
+        _statYdsTail = _ve
+          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left through week ' + _vt.to + (_short ? ' — the missed games cost rest-of-season VOR' : '') + '">' + _ve.g + '</span>'
+          : '—';
+      }
     } else if (_statMode === 'xfp') {
       // xFP view: actual · expected · over expected (+ TD-luck part in the tail).
       const _xa = _xfpAgg(d, rankingScoringFmt, _isWeekly ? (window._weeklyActiveWeek || 1) : null);
@@ -7088,15 +7683,17 @@ function render() {
     const _displayTierLabel = _tierLabelForRank(displayRank);
 
     // Insert premium wall row right at the cutoff, above blurred rows
-    if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
+    if (_injBlurRank) { if (blurred && !_injWallDone) { _injWallDone = true; html += _premiumWallHtml(); } }
+    else if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
     const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
-      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
+      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || (i + 1)) : d.myRank}</span></td>
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
+      ${_injView ? _ivCellsHtml(d) : ''}
       <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? (_cc.txt || _cc.r) : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
       ${_statTd1}${_wkSplit.pre}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
@@ -7183,12 +7780,12 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const _simsMode = _statMode === 'sims';
   const yrrH = document.getElementById('yrrHeader');
-  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
+  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || (_statMode === 'vor' && !_isWeekly) || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
   yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'vor' ? 'GMS ' : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -7226,6 +7823,7 @@ function render() {
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
+  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Games he is projected to play from this week through week 17 — the weeks with a sim projection above zero, so byes, injuries and suspensions are already taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
   window._applyCellVisibility = function () {
@@ -7256,12 +7854,13 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? '📋 SIM VOR' : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
     <span class="stat-chip">Showing <strong>${data.length}</strong></span>
     ${(window._teamFilter && window._teamFilter.size) ? `<span class="stat-chip" style="color:#58a7ff;cursor:pointer" onclick="window._toggleTeamFilterPop(true)" title="Team filter is on — click to change">Teams <strong>${window._tfSummary()}</strong></span>` : ''}
+    ${window._injOnly ? `<span class="stat-chip" style="color:#f87171;cursor:pointer" onclick="window._toggleInjOnly(false)" title="Injured players only — click to show everyone">Injured only <strong>✕</strong></span>` : ''}
     <span class="stat-chip">QB <strong>${qbs}</strong></span>
     <span class="stat-chip">RB <strong>${rbs}</strong></span>
     <span class="stat-chip">WR <strong>${wrs}</strong></span>
@@ -8164,6 +8763,8 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
       if (ppg25Fmt) ppg25Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
       const l4Fmt = document.querySelector('#l4ppgHeader .th-fmt');
       if (l4Fmt) l4Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
+    } else if (rnkStatMode === 'vor') {
+      window._updateRnkStatHeaders();   // PPG sub-label + glosses name the format
     }
     render();
   });
@@ -8218,6 +8819,26 @@ window._updateRnkStatHeaders = function() {
       _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game — average of the player\'s remaining weekly sims (in week 5 that\'s weeks 5-18, games already played excluded). In-season the sub-line shows org (preseason projection frozen at Week 1 kickoff) and now (actual 2026 PPG to date). Hover a value for median / floor / ceiling season totals. Refreshed daily.', 'PPG', 'ROS Sim');
       _set(c2, 'ppg25Header', 'Chance of finishing 25%+ ABOVE his own median simulated season (400 seasons).', 'Boom', 'Season');
       _set(c3, 'l4ppgHeader', 'Chance of finishing 25%+ BELOW his own median simulated season — injuries and role collapse drive this tail (400 seasons).', 'Bust', 'Season');
+    }
+  } else if (rnkStatMode === 'vor') {
+    const _wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const _wkly = currentMode === 'weekly';
+    const _vst = _vorLineup();
+    const _vlg = _vorLeague();
+    const _lg = _vorLineupLabel(_vst) + (_vlg ? ' (' + (_vlg.name || 'your league') + ')' : '');
+    const _vx = (_vst.tep ? ', TE premium +' + _vst.tep : '') + (_vst.passTd !== 4 ? ', ' + _vst.passTd + '-point passing TDs' : '');
+    const _vsub = _vlg ? 'League' : _vst.teams + '-Team' + (_vst.SF ? ' SF' : '');
+    const _how = 'Replacement level = the best ' + (_vst.BN ? 'player left unrostered' : 'player who would not start') + ' at the position in a ' + _lg + ': starters first, then the flex spots to the best leftover RB / WR / TE' + (_vst.BN ? ', then the bench (a backup QB and TE for about half the teams, the rest to the best RB / WR left)' : '') + ', all by sim points in ' + fmtLabel + ' scoring' + _vx + ' — so the level moves with the scoring toggle and the lineup in the VOR bar.';
+    if (_wkly) {
+      _set(c1, null, 'Sim Lab projection for this week (' + fmtLabel + ' scoring' + _vx + ') — the number VOR is measured from.', 'Proj', fmtLabel);
+      _set(c2, 'ppg25Header', 'Value over replacement this week — projected points above the replacement-level player at the position. ' + _how + ' Hover a value for the replacement player.', 'VOR', _vsub);
+      _set(c3, 'l4ppgHeader', 'Rank by VOR across QB, RB, WR and TE this week — the order a pure points-over-replacement board puts them in. Kickers and D/STs are ranked inside their own position (K1, DST1).', 'VOR RK', 'Wk' + _wkNum);
+    } else {
+      const _vt = _vorTable();
+      const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + '-' + _vt.to : 'ROS';
+      _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game (' + fmtLabel + ' scoring' + _vx + '), games already played excluded — the number VOR is measured from.', 'PPG', fmtLabel);
+      _set(c2, 'ppg25Header', 'Value over replacement per game — projected points above the replacement-level player at the position. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. ' + _how + ' Hover a value for the replacement player.', 'VOR/G', _vsub);
+      _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — the per-game gap added up over the weeks he is projected to PLAY, this week through week 17. Weeks he misses (injury, suspension, bye) add nothing, and a week he projects under replacement counts as zero, so a star who is out a month ranks below a slightly lesser player who plays them all. This is the number the SIM VOR board is ordered by.', 'ROS VOR', _span);
     }
   } else if (rnkStatMode === 'xfp') {
     const _wkX = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
@@ -8330,13 +8951,27 @@ function updateRnkAdpLocks() {
 }
 updateRnkAdpLocks();
 
-// Version tabs: switch between Consensus, Jack's, and My Rankings
+// Entering the SIM VOR board: a picked league's reception scoring takes over
+// the PPR / Half / STD toggle, and the stat columns switch to the VOR view.
+function _simsEnter() {
+  const lg = _vorLeague();
+  if (lg) _vorSyncScoring(lg);
+  if (rnkStatMode !== 'vor') {
+    rnkStatMode = 'vor';
+    document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'vor'));
+    if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+  }
+}
+
+// Version tabs: switch between Consensus, Jack's, Sim VOR and My Rankings
 document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.version === currentVersion) return;
     document.querySelectorAll('.version-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentVersion = btn.dataset.version;
+    if (currentVersion === 'sims') _simsEnter();
+    _vorBarRender();
     syncMode();
     renumber();
     compareSet.clear();
@@ -8344,7 +8979,7 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     render();
     if (typeof updateToolbarVisibility === 'function') updateToolbarVisibility();
     if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
-    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : 'My Rankings');
+    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'sims' ? 'Sim VOR Rankings' : 'My Rankings');
   });
 });
 
@@ -10244,7 +10879,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); sortDir = _isAdpCmp ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || key === 'injSt' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -10266,7 +10901,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
 function _exportCutoff() {
   const _isPrem = typeof hasPremium === 'function' && hasPremium();
   if (_isPrem) return Infinity;
-  if (currentVersion === 'consensus') return Infinity;
+  if (currentVersion === 'consensus' || currentVersion === 'sims') return Infinity;
   // Not signed in on My Rankings should get 0, but canEdit gate already prevents that flow; still safe to return 0.
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
   return (filter === 'ALL') ? 36 : 12;
@@ -10287,7 +10922,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   
   // Build CSV
@@ -10353,7 +10988,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' \u2014 upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const useFilteredRank = _tierRankIsPositional();
 
@@ -10427,7 +11062,7 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   if (current.players.length) groups.push(current);
 
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const payload = {
     source: 'myfantasyfootball.co',
@@ -10549,7 +11184,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   // Underdog's current export quotes every populated field; mirror that exactly.
   const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
@@ -10643,7 +11278,7 @@ document.getElementById('fileImport').addEventListener('change', e => {
 document.getElementById('btnClear').addEventListener('click', () => {
   if (!canEdit()) {
     if (!window._authCurrentUser) { toast("Sign in to create your rankings"); if (typeof window.openAuthModal === 'function') window.openAuthModal(); }
-    else if (currentVersion === 'consensus') toast("Consensus rankings are auto-generated and can't be edited");
+    else if (currentVersion === 'consensus' || currentVersion === 'sims') toast((currentVersion === 'sims' ? 'Sim VOR' : 'Consensus') + " rankings are auto-generated and can't be edited");
     else toast("Only admins can edit Jack's rankings");
     return;
   }
@@ -11077,6 +11712,349 @@ function _simSeasonPpgRow(d) {
   }
   return r || null;
 }
+
+// VOR (value over replacement) off the Sim Lab projection — drives the
+// rankings STATS "VOR" view and the SIM VOR board (version `sims`).
+// League shape = _vorState(): teams, starters per position, FLEX (RB/WR/TE),
+// SUPERFLEX, bench — the standard 12-team lineup by default, a synced My Teams
+// league's own lineup when one is picked in the VOR bar (_vorApplyLeague).
+// Roster spots are filled from the sim's rest-of-season points in the selected
+// scoring format: starters first, then the flex / superflex spots with the
+// best players left, then the bench (a backup QB and TE for about half the
+// teams, the rest to the best RB/WR left). A position's replacement level is
+// the best player left unrostered, per scheduled game.
+//   VOR/G   = PPG minus that replacement level
+//   ROS VOR = the same gap summed over the weeks he is projected to play,
+//             current week through week 17 (weeks under replacement count 0 —
+//             you would start someone else), so missed games cost value
+// The WEEKLY board prices the active week only.
+// Returns { map: Map(D row -> { v, g, sg, tot, vor, vt, rk, posRk }), repl: { pos: {...} } }
+// (g = games he is projected to play, sg = games his team has left).
+const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, tep: 0, passTd: 4 };
+const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20] };
+const _VOR_LAST_WEEK = 17;   // fantasy seasons end in week 17
+function _vorState() {
+  if (!window._vorSt) {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem('mff_vor_fmt')); } catch (e) {}
+    const st = Object.assign({}, _VOR_DEFAULT, (s && typeof s === 'object') ? s : {});
+    Object.keys(_VOR_LIMITS).forEach(k => {
+      const n = Math.round(Number(st[k])), lim = _VOR_LIMITS[k];
+      st[k] = isFinite(n) ? Math.min(lim[1], Math.max(lim[0], n)) : _VOR_DEFAULT[k];
+    });
+    st.tep = Math.max(0, Number(st.tep) || 0);
+    st.passTd = isFinite(Number(st.passTd)) ? Number(st.passTd) : 4;
+    st.league = st.league ? String(st.league) : '';
+    window._vorSt = st;
+  }
+  return window._vorSt;
+}
+function _vorStateSave() {
+  try { localStorage.setItem('mff_vor_fmt', JSON.stringify(_vorState())); } catch (e) {}
+}
+// The lineup the engine prices: the SUPERFLEX / DYNASTY SF tabs imply a
+// superflex spot unless a synced league's own lineup is in charge.
+function _vorLineup() {
+  const st = _vorState();
+  if (!st.league && !st.SF && (currentMode === 'superflex' || currentMode === 'dynastysf')) return Object.assign({}, st, { SF: 1 });
+  return st;
+}
+function _vorLineupLabel(st) {
+  st = st || _vorLineup();
+  const parts = [];
+  [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['FLEX', 'FLEX'], ['SF', 'SUPERFLEX'], ['K', 'K'], ['DST', 'D/ST']].forEach(p => { if (st[p[0]]) parts.push(st[p[0]] + ' ' + p[1]); });
+  return st.teams + '-team league starting ' + parts.join(', ') + (st.BN ? ' with ' + st.BN + ' bench spot' + (st.BN === 1 ? '' : 's') : ' (no bench)');
+}
+// League scoring extras on top of the PPR / Half / Standard sim number: TE
+// premium (the sim's PPR minus standard value IS his receptions) and passing
+// TDs worth other than 4 (Clay's per-game rate, else last season's).
+function _vorPassTdRate(d) {
+  const cp = (typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') ? clayLookup(d.n) : null;
+  if (cp && cp.gm > 0) return (cp.ptd || 0) / cp.gm;
+  if (d.s25 && d.s25.gp > 0) return (d.s25.ptd || 0) / d.s25.gp;
+  return 0;
+}
+function _vorPts(d, row, fi, st, tdRate, basePpg) {
+  let v = row ? row[fi] : null;
+  if (!(v > 0)) return 0;
+  if (d.s === 'TE' && st.tep) v += st.tep * Math.max(0, (row[1] || 0) - (row[2] || 0));
+  else if (d.s === 'QB' && st.passTd !== 4 && tdRate) v += (st.passTd - 4) * tdRate * (basePpg > 0 ? Math.min(1.5, row[fi] / basePpg) : 1);
+  return v;
+}
+function _vorTable() {
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !SP.weeks || typeof D === 'undefined') return null;
+  const st = _vorLineup();
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const cw = SP.currentWeek || 1;
+  const wk = currentMode === 'weekly' ? (window._weeklyActiveWeek || cw) : 0;
+  const key = [fi, wk, cw, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.tep, st.passTd].join('|');
+  const c = window._vorCache;
+  if (c && c._src === SP && c._key === key) return c;
+  const weeks = [];
+  if (wk) weeks.push(wk); else for (let w = cw; w <= Math.max(cw, _VOR_LAST_WEEK); w++) weeks.push(w);
+  const pools = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
+  const seen = new Set();
+  D.forEach(d => {
+    if (!d || !pools[d.s] || d._retired || d._isFuturePick || seen.has(d.n)) return;
+    const sp = wk ? null : _simSeasonPpgRow(d);
+    if (!wk && !sp) return;   // no rest-of-season sim row
+    const tdRate = (d.s === 'QB' && st.passTd !== 4) ? _vorPassTdRate(d) : 0;
+    const base = sp ? sp[fi] : 0;
+    const wp = [];
+    let tot = 0, g = 0;
+    weeks.forEach(w => {
+      const p = _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base);
+      wp.push(p);
+      if (p > 0) { tot += p; g++; }
+    });
+    if (!g) return;   // out / on bye / no remaining games
+    seen.add(d.n);
+    const ppg = (sp && base > 0) ? _vorPts(d, sp, fi, st, tdRate, base) : tot / g;
+    pools[d.s].push({ d, tot, g, ppg, wp });
+  });
+  const n = {};
+  Object.keys(pools).forEach(p => {
+    pools[p].sort((a, b) => b.tot - a.tot);
+    n[p] = Math.min(pools[p].length, (st[p] || 0) * st.teams);
+  });
+  // Shared spots: each goes to the best player (rest-of-season points) not yet rostered.
+  const _fill = (elig, count) => {
+    for (let i = 0; i < count; i++) {
+      let best = null;
+      elig.forEach(p => { const x = pools[p][n[p]]; if (x && (!best || x.tot > pools[best][n[best]].tot)) best = p; });
+      if (!best) break;
+      n[best]++;
+    }
+  };
+  _fill(['RB', 'WR', 'TE'], st.FLEX * st.teams);
+  _fill(['QB', 'RB', 'WR', 'TE'], st.SF * st.teams);
+  const nStart = Object.assign({}, n);
+  let bench = st.BN * st.teams;
+  [['QB', st.QB + st.SF], ['TE', st.TE]].forEach(x => {
+    const add = Math.max(0, Math.min(Math.round(st.teams * 0.5 * x[1]), Math.floor(st.BN * st.teams * 0.25), pools[x[0]].length - n[x[0]], bench));
+    n[x[0]] += add; bench -= add;
+  });
+  _fill(['RB', 'WR'], bench);
+  // Scheduled games in the window (a team's D/ST has a row every non-bye week).
+  const _schedMemo = {};
+  const _sched = d => {
+    if (wk) return 1;
+    const k = 'DST_' + teamAbbr(d.t);
+    if (_schedMemo[k] == null) {
+      let s = 0;
+      weeks.forEach(w => { if (SP.weeks[w] && SP.weeks[w][k]) s++; });
+      _schedMemo[k] = s || weeks.length;
+    }
+    return _schedMemo[k];
+  };
+  const r1 = v => Math.round(v * 10) / 10;
+  const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1] };
+  const all = [];
+  const _cmp = (a, b) => (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
+  Object.keys(pools).forEach(p => {
+    const pool = pools[p];
+    if (!pool.length) return;
+    const ri = Math.min(n[p], pool.length - 1);
+    const R = pool[ri].tot / _sched(pool[ri].d);
+    out.repl[p] = { v: r1(R), n: pool[ri].d.n, rk: ri + 1, rostered: n[p], starters: nStart[p] };
+    const es = pool.map((x, i) => {
+      const vor = r1(x.ppg - R);
+      // Rest-of-season: only the weeks he beats replacement add value.
+      const vt = wk ? vor : r1(x.wp.reduce((s, v) => s + (v > R ? v - R : 0), 0));
+      const e = { v: r1(x.ppg), g: x.g, sg: _sched(x.d), tot: x.tot, vor, vt, posRk: i + 1, rk: null };
+      out.map.set(x.d, e);
+      return e;
+    });
+    // K and D/ST are ranked inside their own position, not against the field.
+    if (p === 'K' || p === 'DST') es.slice().sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
+    else es.forEach(e => all.push(e));
+  });
+  all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
+  window._vorCache = out;
+  return out;
+}
+function _vorFor(d) {
+  const t = _vorTable();
+  return (t && t.map.get(d)) || null;
+}
+
+// SIM VOR board (version `sims`): the board order IS the VOR rank — QB / RB /
+// WR / TE by rest-of-season VOR (this week's VOR on WEEKLY), then K, then D/ST.
+// Computed, never saved (the save paths only write jacks / mine), rebuilt
+// whenever the VOR table changes (scoring, lineup, league, week, new export).
+function _simsBoardEnsure() {
+  const t = _vorTable();
+  const src = (window._simsBoardSrc = window._simsBoardSrc || {});
+  if (!t || src[currentMode] === t) return false;
+  const skill = [], ks = [], ds = [];
+  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, e.rk]); });
+  const order = [];
+  [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
+  // Players without a sim row trail in consensus order (hidden on this board).
+  const used = new Set(order);
+  (versionBoards.consensus[currentMode] || []).forEach(i => { if (!used.has(i)) { used.add(i); order.push(i); } });
+  for (let i = 0; i < D.length; i++) if (!used.has(i) && !D[i]._retired) order.push(i);
+  versionBoards.sims[currentMode] = order;
+  src[currentMode] = t;
+  return true;
+}
+
+// ── VOR bar: league picker + lineup + WAIVERS (shown on the SIM VOR board and
+// in the VOR stats view). A synced My Teams league fills the lineup, team
+// count, bench and scoring (PPR toggle + TE premium + passing-TD points) and
+// unlocks WAIVERS — the board filtered to players nobody in that league rosters.
+window._vorWaivers = false;
+function _vorLeague() {
+  const id = _vorState().league;
+  if (!id) return null;
+  return (window._mtSavedLeagues || []).find(l => l && String(l.leagueId) === id) || null;
+}
+function _vorScoringOf(lg) {
+  const f = (lg && lg.format) || {};
+  const ppr = f.bestBall ? 1 : (f.ppr != null ? Number(f.ppr) : 0.5);
+  return ppr >= 0.75 ? 'ppr' : ppr >= 0.25 ? 'half' : 'std';
+}
+// Point the PPR / Half / STD toggle at the league's reception scoring.
+function _vorSyncScoring(lg) {
+  const want = _vorScoringOf(lg);
+  if (rankingScoringFmt === want) return false;
+  const b = document.querySelector('.rnk-scoring-btn[data-rnkscoring="' + want + '"]');
+  if (!b) return false;
+  b.click();
+  return true;
+}
+function _vorApplyLeague(id) {
+  const st = _vorState();
+  const lg = (window._mtSavedLeagues || []).find(l => l && String(l.leagueId) === String(id)) || null;
+  if (!lg) {
+    st.league = ''; st.tep = 0; st.passTd = 4;
+    window._vorWaivers = false;
+    return null;
+  }
+  st.league = String(lg.leagueId);
+  const f = lg.format || {};
+  const rp = Array.isArray(f.rosterPositions) ? f.rosterPositions : [];
+  const teams = lg.teams || [];
+  const c = s => rp.filter(x => x === s).length;
+  const clamp = (k, v) => Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], Math.round(v)));
+  if (rp.length) {
+    st.QB = clamp('QB', c('QB')); st.RB = clamp('RB', c('RB')); st.WR = clamp('WR', c('WR')); st.TE = clamp('TE', c('TE'));
+    st.FLEX = clamp('FLEX', c('FLEX') + c('WRRB_FLEX') + c('WR_RB_FLEX') + c('REC_FLEX'));
+    st.SF = clamp('SF', c('SUPER_FLEX')); st.K = clamp('K', c('K')); st.DST = clamp('DST', c('DEF') + c('DST'));
+    let bn = c('BN');
+    if (!bn && teams.length) {
+      // Payload without bench slots: average roster size minus the starting spots.
+      const avg = teams.reduce((s, t) => s + ((t.players || []).length), 0) / teams.length;
+      bn = Math.max(0, avg - rp.filter(x => x !== 'BN' && x !== 'IR' && x !== 'TAXI').length);
+    }
+    st.BN = clamp('BN', bn);
+  } else if (f.sf) st.SF = Math.max(1, st.SF);
+  if (teams.length) st.teams = clamp('teams', teams.length);
+  st.tep = Math.max(0, Number(f.tep) || 0);
+  st.passTd = (f.passTd != null && isFinite(Number(f.passTd))) ? Number(f.passTd) : 4;
+  return lg;
+}
+// Players on a roster in the picked league (WAIVERS filter). Suffix-folded
+// like the My Teams waiver wire so "Marvin Harrison" never leaks past Jr.
+function _vorRostered() {
+  if (!window._vorWaivers || currentVersion !== 'sims') return null;
+  const lg = _vorLeague();
+  if (!lg) return null;
+  let c = window._vorRosterCache;
+  if (!c || c.lg !== lg) {
+    const norm = n => String(n).toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’]/g, '').trim();
+    const names = new Set();
+    (lg.teams || []).forEach(t => (t.players || []).forEach(n => { if (n) { names.add(n); names.add(norm(n)); } }));
+    c = window._vorRosterCache = { lg, has: d => names.has(d.n) || names.has(norm(d.n)) };
+  }
+  return c;
+}
+function _vorBarRender() {
+  const bar = document.getElementById('vorBar');
+  if (!bar) return;
+  const st = _vorState();
+  const lgs = window._mtSavedLeagues || [];
+  const lg = _vorLeague();
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const num = (k, lbl, tip) => '<label class="vor-num" title="' + tip + '">' + lbl + '<input type="number" inputmode="numeric" data-vor="' + k + '" min="' + _VOR_LIMITS[k][0] + '" max="' + _VOR_LIMITS[k][1] + '" value="' + st[k] + '"></label>';
+  const extras = [];
+  if (st.tep) extras.push('TEP +' + st.tep);
+  if (st.passTd !== 4) extras.push(st.passTd + 'pt pass TD');
+  bar.innerHTML = '<span class="vor-bar-lbl"><span data-gloss="The league the VOR numbers are priced for. Pick a league you synced in MY TEAMS and its lineup, team count, bench and scoring fill in on their own; or set the lineup by hand. More starting spots or a deeper bench push the replacement level down, which raises the value of depth at that position.">VOR League</span></span>'
+    + '<select id="vorLeagueSel" title="Use a synced My Teams league: its starting lineup, bench, team count and scoring">'
+    + '<option value="">Custom lineup</option>'
+    + lgs.map(l => '<option value="' + esc(l.leagueId) + '"' + (lg === l ? ' selected' : '') + '>' + esc(l.name || 'League') + '</option>').join('')
+    + (lgs.length ? '' : '<option value="" disabled>Sync a league in MY TEAMS to list it here</option>')
+    + '</select>'
+    + num('teams', 'Teams', 'Teams in the league')
+    + num('QB', 'QB', 'Starting QBs per team') + num('RB', 'RB', 'Starting RBs per team') + num('WR', 'WR', 'Starting WRs per team') + num('TE', 'TE', 'Starting TEs per team')
+    + num('FLEX', 'Flex', 'Flex spots per team (RB / WR / TE)') + num('SF', 'SFlex', 'Superflex spots per team (QB / RB / WR / TE)')
+    + num('K', 'K', 'Starting kickers per team') + num('DST', 'D/ST', 'Starting defenses per team') + num('BN', 'Bench', 'Bench spots per team — set 0 to measure against the last starter instead of the best free agent')
+    + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
+    + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
+    + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench) with no league">RESET</button>';
+}
+// Any lineup / league change: persist, drop the table, repaint.
+function _vorChanged() {
+  _vorStateSave();
+  window._vorCache = null;
+  _vorBarRender();
+  if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+  if (currentVersion === 'sims') { syncMode(); renumber(); }
+  render();
+}
+(function _vorBarInit() {
+  const bar = document.getElementById('vorBar');
+  if (!bar) return;
+  bar.addEventListener('change', e => {
+    const t = e.target;
+    if (t.id === 'vorLeagueSel') {
+      const lg = _vorApplyLeague(t.value);
+      _vorChanged();
+      if (lg) { _vorSyncScoring(lg); if (typeof toast === 'function') toast('VOR priced for ' + (lg.name || 'your league')); }
+      return;
+    }
+    const k = t.dataset && t.dataset.vor;
+    if (!k || !_VOR_LIMITS[k]) return;
+    const n = Math.round(Number(t.value));
+    _vorState()[k] = isFinite(n) ? Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], n)) : _VOR_DEFAULT[k];
+    _vorChanged();
+  });
+  bar.addEventListener('click', e => {
+    if (e.target.closest('#vorWaiverBtn')) {
+      // From another board the pill jumps to the SIM VOR board with the filter on.
+      if (currentVersion !== 'sims') {
+        window._vorWaivers = true;
+        const tab = document.querySelector('.version-tab[data-version="sims"]');
+        if (tab) tab.click();
+        return;
+      }
+      window._vorWaivers = !window._vorWaivers;
+      _vorBarRender();
+      render();
+    } else if (e.target.closest('#vorResetBtn')) {
+      window._vorSt = Object.assign({}, _VOR_DEFAULT);
+      window._vorWaivers = false;
+      _vorChanged();
+    }
+  });
+  _vorBarRender();
+})();
+// Saved leagues (re)loaded — My Teams calls this. A picked league re-reads its
+// lineup so a re-sync that changed the roster settings carries through.
+window._vorRefreshLeagues = function () {
+  const st = _vorState();
+  // Only when the saved list is actually loaded — signed out keeps the pick.
+  if (st.league && Array.isArray(window._mtSavedLeagues)) { _vorApplyLeague(st.league); _vorStateSave(); }
+  window._vorCache = null;
+  window._vorRosterCache = null;
+  _vorBarRender();
+  if (currentVersion === 'sims' || (typeof rnkStatMode !== 'undefined' && rnkStatMode === 'vor')) {
+    if (currentVersion === 'sims') { syncMode(); renumber(); }
+    render();
+  }
+};
 
 // Original (preseason) PPG row [half, ppr, std] — frozen at Week 1 kickoff.
 function _simBaselinePpgRow(d) {
@@ -56551,6 +57529,7 @@ Rules:
       if (typeof window._calcRefreshLeagues === 'function') window._calcRefreshLeagues();
       if (typeof window._finderPopulateLeagueDropdown === 'function') window._finderPopulateLeagueDropdown();
       if (typeof window._qaRefreshLeagues === 'function') window._qaRefreshLeagues();
+      if (typeof window._vorRefreshLeagues === 'function') window._vorRefreshLeagues();
       // Extension payload may have arrived before the saved list — commit now.
       _mtAutoCommitEspnLeagues();
       // Silently freshen every snapshot in the background (probe-guarded).
@@ -58572,6 +59551,7 @@ Rules:
     if (t.scrollLeft > 20) {
       const h = document.querySelector('#udTab_board .ud-scroll-hint');
       if (h) h.classList.add('seen'); // class, not inline — the mobile CSS is !important
+      window._udBoardHintSeen = true; // survives the board's view-toggle repaint
     }
   }, true);
 
@@ -60983,6 +61963,65 @@ Rules:
     }
     return _udExpAdvCache;
   }
+
+  // DRAFT BOARD view toggle (Jack 2026-10-05). EXPOSURE = ownership % (the
+  // original board). The two advance-rate views are Best Ball Mania only (the
+  // one contest with enough teams per player to read a rate off):
+  //   MY ADV RATE      — of my teams rostering the player, the share sitting
+  //                      in an advancing spot                         -> `by`
+  //   OVERALL ADV RATE — the same share over EVERY team in my synced pools,
+  //                      all 12 per pool: which players have carried teams
+  //                      across the whole field                       -> `fby`
+  // Advancing = top 2 of the 12-team Round 1 pool (Weeks 1-14) in BOTH views
+  // (Jack 2026-10-05: advance rate IS Round 1). Unlike the ADVANCE RATE card
+  // it never follows a team into the Week 15+ playoff rounds, so the board
+  // freezes on the final Round 1 standings once Week 14 is in.
+  // Both maps are keyed by the site (D) name; `sig` / `fsig` move whenever a
+  // counted team crosses the advance line.
+  window._udBoardView = 'exp';
+  let _udBoardAdvShown = null;
+  const _UD_BBM_RE = /best\s*ball\s*mania/i;
+  function _udBoardAdvStats(data) {
+    const drafts = {}, by = {}, fby = {}, sig = [], fsig = [];
+    let fTeams = 0, fAdv = 0, fPools = 0, mTeams = 0, mAdv = 0;
+    const count = (map, picks, isAdv) => {
+      const seen = {};
+      (picks || []).forEach(p => {
+        if (!p || !p.name) return;
+        const m = _udMatchPlayer(p.name);
+        const key = m ? m.n : p.name;
+        if (seen[key]) return;
+        seen[key] = 1;
+        const r = map[key] || (map[key] = { n: 0, adv: 0 });
+        r.n++;
+        if (isAdv) r.adv++;
+      });
+    };
+    Object.entries((data && data.drafts) || {}).forEach(([id, d]) => {
+      if (!d || !_UD_BBM_RE.test(String(d.tournament || ''))) return;
+      drafts[id] = d;
+      const L = _udLiveDraft(d);
+      if (!L || !L.fieldComplete || !L.scored) return;
+      const advBy = {};
+      L.teams.forEach(t => { advBy[t.entryId] = t.adv; });
+      fPools++;
+      Object.values(d.allTeams || {}).forEach(t => {
+        const isAdv = !!advBy[t.entryId];
+        fTeams++;
+        if (isAdv) fAdv++;
+        count(fby, t.picks, isAdv);
+      });
+      fsig.push(id + ':' + L.teams.filter(t => t.adv).map(t => t.entryId).join('/'));
+      if (!L.me) return;
+      const mine = !!L.me.adv;
+      mTeams++;
+      if (mine) mAdv++;
+      sig.push(id + (mine ? '+' : '-'));
+      count(by, d.picks, mine);
+    });
+    return { by, fby, drafts, nBbm: Object.keys(drafts).length,
+             fPools, fTeams, fAdv, mTeams, mAdv, sig: sig.join(','), fsig: fsig.join(',') };
+  }
   function _udKpiWinHtml(sum) {
     if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
     return {
@@ -61012,6 +62051,12 @@ Rules:
           const inp = document.getElementById('udExpFilter');
           expList.innerHTML = _udExpListHtml(inp ? inp.value : '', window._udExpPosFilter || 'ALL', sc);
         }
+      }
+      // Draft board ADVANCE RATE view: same rule — repaint when a team crossed the line.
+      if (window._udBoardView !== 'exp') {
+        const board = document.getElementById('udTab_board');
+        const bs = board ? _udBoardAdvStats(data) : null;
+        if (bs && (window._udBoardView === 'field' ? bs.fsig : bs.sig) !== _udBoardAdvShown) board.innerHTML = _udBoardTabHtml(data);
       }
       const teamsTab = document.getElementById('udTab_teams');
       if (window._udTeamsBuilt && teamsTab && teamsTab.style.display !== 'none') {
@@ -62568,29 +63613,10 @@ Rules:
     html += `<div id="udTeamsBody"></div>`;
     html += `</div>`;
 
-    // DRAFT BOARD TAB
-    // v0.9.92: detect format from filtered drafts (majority wins) so the
-    // board uses the right Underdog ADP scale and shows it in the header.
-    let _udBoardSf = 0, _udBoardBbm = 0;
-    Object.values(data.drafts).forEach(dr => {
-      if (dr && dr.phase === 'superflex') _udBoardSf++; else _udBoardBbm++;
-    });
-    const _udBoardLabel = _udBoardSf > _udBoardBbm ? 'Superflex' : 'Best Ball';
+    // DRAFT BOARD TAB — body built by _udBoardTabHtml so the EXPOSURE /
+    // ADVANCE RATE view toggle can repaint it in place.
     html += `<div id="udTab_board" style="display:${_activeTabId === 'board' ? '' : 'none'}">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${_udBoardLabel} ADP</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${_udBoardLabel} ADP in a 12-team grid. Color = your ownership%.</div>`;
-    // Legend
-    html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
-    html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e"></span> 11%+</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#facc15"></span> 5–11%</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444"></span> 0–5%</span>`;
-    html += `</div>`;
-    // Mobile scroll hint (Jack 2026-09-02): the 12-slot grid scrolls sideways
-    // on phones — say so. CSS shows it only ≤600px; the capture-phase scroll
-    // listener below hides it once the board has been swiped.
-    html += `<div class="ud-scroll-hint" style="display:none;align-items:center;gap:6px;margin-bottom:8px;padding:6px 10px;border:1px dashed var(--accent);border-radius:6px;font-size:.62rem;color:var(--accent)"><span style="font-size:.9rem;line-height:1">↔</span> Swipe sideways to see all 12 draft slots</div>`;
-    html += _udRenderDraftBoard(data);
+    html += _udBoardTabHtml(data);
     html += `</div>`;
 
     // VALUE PICKS TAB
@@ -63557,11 +64583,106 @@ Rules:
     return html;
   }
 
-  function _udRenderDraftBoard(data) {
+  // DRAFT BOARD tab body: title + view toggle, blurb, legend, swipe hint, grid.
+  // Rebuilt whole by _udSetBoardView and by the live tick (advance-rate views).
+  function _udBoardTabHtml(data) {
+    const view = window._udBoardView === 'adv' || window._udBoardView === 'field' ? window._udBoardView : 'exp';
+    const adv = view !== 'exp', field = view === 'field';
+    const st = adv ? _udBoardAdvStats(data) : null;
+    _udBoardAdvShown = st ? (field ? st.fsig : st.sig) : null;
+    // v0.9.92: detect format from filtered drafts (majority wins) so the
+    // board uses the right Underdog ADP scale and shows it in the header.
+    // The advance-rate views are Best Ball Mania teams only → always Best Ball.
+    let sfN = 0, bbmN = 0;
+    Object.values(data.drafts).forEach(dr => {
+      if (dr && dr.phase === 'superflex') sfN++; else bbmN++;
+    });
+    const label = (!adv && sfN > bbmN) ? 'Superflex' : 'Best Ball';
+    const swatch = (c, txt) => `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:${c}"></span> ${txt}</span>`;
+    const strong = v => `<span style="color:var(--text);font-weight:600">${v}</span>`;
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${label} ADP</span></span>`;
+    html += `<div style="display:flex;gap:3px">`;
+    [['exp', 'EXPOSURE', 'Color each player by your ownership %'],
+     ['adv', 'MY ADV RATE', 'Color each player by how often your Best Ball Mania teams rostering the player hold an advancing spot (top 2 of the Round 1 pool, Weeks 1-14)'],
+     ['field', 'OVERALL ADV RATE', 'Color each player by how often ANY team rostering the player holds an advancing spot (top 2 of the Round 1 pool, Weeks 1-14), across every team in your synced Best Ball Mania pools — who has given the biggest edge']].forEach(([id, txt, tip]) => {
+      const on = id === view;
+      html += `<button onclick="window._udSetBoardView('${id}')" title="${tip}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;white-space:nowrap;border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};background:${on ? 'var(--accent)' : 'var(--surface)'};color:${on ? '#000' : 'var(--text2)'}">${txt}</button>`;
+    });
+    html += `</div></div>`;
+    if (adv && !(field ? st.fTeams : st.mTeams)) {
+      html += `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">${st.nBbm
+        ? 'No Best Ball Mania standings yet. This view needs the full field synced from Underdog and at least one scored week.'
+        : 'No Best Ball Mania drafts in the current filter. Advance rate by player is Best Ball Mania only.'}</div>`;
+      return html;
+    }
+    if (adv) {
+      // Color cuts hang off the field average (2 of 12 = 16.7% in a Round 1
+      // pool): the outer bands are the players well clear of it either way.
+      const base = st.fAdv / st.fTeams;
+      st.field = field; st.base = base; st.map = field ? st.fby : st.by;
+      st.tier = rate =>
+        rate >= base * 1.5 ? { c: '#dcfce7', bg: 'rgba(34,197,94,.45)', bd: '#22c55e' } :
+        rate >= base * 1.2 ? { c: '#22c55e', bg: 'rgba(34,197,94,.16)', bd: '#22c55e' } :
+        rate >= base * 0.8 ? { c: '#facc15', bg: 'rgba(250,204,21,.13)', bd: '#facc15' } :
+        rate >= base * 0.5 ? { c: '#ef4444', bg: 'rgba(239,68,68,.14)', bd: '#ef4444' } :
+                             { c: '#fee2e2', bg: 'rgba(239,68,68,.45)', bd: '#ef4444' };
+      const cut = k => Math.round(100 * base * k);
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:10px">` + (field
+        ? `Players sorted by raw Underdog Best Ball ADP in a 12-team grid. Color = how often a team rostering that player holds an advancing spot (top 2 of 12 in its Round 1 pool, Weeks 1–14), across every team in your Best Ball Mania pools: ${strong(st.fTeams.toLocaleString('en-US'))} teams in ${strong(st.fPools)} pools · field avg ${strong((100 * base).toFixed(1) + '%')}. The small count is advancing teams / teams rostering the player.`
+        : `Players sorted by raw Underdog Best Ball ADP in a 12-team grid. Color = how often your Best Ball Mania teams with that player hold an advancing spot (top 2 of 12 in the Round 1 pool, Weeks 1–14); the small count is advancing teams / teams rostering the player. Overall: ${strong(st.mAdv + ' of ' + st.mTeams)} teams advancing (${strong(Math.round(100 * st.mAdv / st.mTeams) + '%')}) · field avg ${strong((100 * base).toFixed(1) + '%')}.`) + `</div>`;
+      // OVERALL view: the biggest edges either way, called out above the grid.
+      // Floor of half the pools keeps a late-round flier drafted a handful of
+      // times from topping the list on a tiny sample.
+      if (field) {
+        const minN = Math.max(3, Math.ceil(st.fPools / 2));
+        const ranked = Object.entries(st.fby).filter(([, r]) => r.n >= minN)
+          .map(([name, r]) => ({ name, r, rate: r.adv / r.n }))
+          .sort((x, y) => (y.rate - x.rate) || (y.r.n - x.r.n));
+        const chip = e => {
+          const t = st.tier(e.rate), edge = 100 * (e.rate - base);
+          const nm = String(e.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+          return `<span onclick="window._mtOpenCardByName('${nm}')" title="Advancing on ${e.r.adv} of ${e.r.n} teams · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card" style="padding:2px 7px;border-radius:4px;background:${t.bg};border:1px solid ${t.bd}55;color:${t.c};font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer">${_esc(e.name)} <span style="font-weight:700">${Math.round(100 * e.rate)}%</span></span>`;
+        };
+        const edgeRow = (lbl, col, list) => `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:${col};min-width:92px">${lbl}</span>${list.map(chip).join('')}</div>`;
+        if (ranked.length >= 16) {
+          html += edgeRow('BIGGEST EDGE', '#22c55e', ranked.slice(0, 8));
+          html += edgeRow('BIGGEST DRAG', '#ef4444', ranked.slice(-8).reverse());
+          html += `<div style="height:4px"></div>`;
+        }
+      }
+      html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center;flex-wrap:wrap">`;
+      html += `<span style="color:var(--text2)">ADVANCE RATE:</span>`;
+      html += swatch('#22c55e', cut(1.5) + '%+') + swatch('rgba(34,197,94,.4)', cut(1.2) + '–' + cut(1.5) + '%') + swatch('#facc15', cut(0.8) + '–' + cut(1.2) + '%') +
+              swatch('rgba(239,68,68,.4)', cut(0.5) + '–' + cut(0.8) + '%') + swatch('#ef4444', 'under ' + cut(0.5) + '%') + swatch('#64748b', field ? 'not drafted' : 'not rostered');
+      html += `</div>`;
+    } else {
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${label} ADP in a 12-team grid. Color = your ownership%.</div>`;
+      html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
+      html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
+      html += swatch('#22c55e', '11%+') + swatch('#facc15', '5–11%') + swatch('#ef4444', '0–5%');
+      html += `</div>`;
+    }
+    // Mobile scroll hint (Jack 2026-09-02): the 12-slot grid scrolls sideways
+    // on phones — say so. CSS shows it only ≤600px; the capture-phase scroll
+    // listener (top of this module) hides it once the board has been swiped.
+    html += `<div class="ud-scroll-hint${window._udBoardHintSeen ? ' seen' : ''}" style="display:none;align-items:center;gap:6px;margin-bottom:8px;padding:6px 10px;border:1px dashed var(--accent);border-radius:6px;font-size:.62rem;color:var(--accent)"><span style="font-size:.9rem;line-height:1">↔</span> Swipe sideways to see all 12 draft slots</div>`;
+    html += _udRenderDraftBoard(data, st);
+    return html;
+  }
+  window._udSetBoardView = function(view) {
+    window._udBoardView = view === 'adv' || view === 'field' ? view : 'exp';
+    const el = document.getElementById('udTab_board');
+    if (el && window._udData) el.innerHTML = _udBoardTabHtml(window._udData);
+  };
+
+  // adv (advance-rate views) = _udBoardAdvStats result plus the map / tier /
+  // base _udBoardTabHtml picked for the view; null = the ownership board.
+  function _udRenderDraftBoard(data, adv) {
     if (typeof D === 'undefined') return '<div style="color:var(--text2);font-size:.78rem">Player data not loaded</div>';
 
     // Determine grid size from drafts
-    const firstDraft = Object.values(data.drafts)[0];
+    const firstDraft = Object.values(adv ? adv.drafts : data.drafts)[0];
     const teamCount = firstDraft ? (firstDraft.size || 12) : 12;
     const roundCount = firstDraft ? firstDraft.picks.length : 20;
     const totalSlots = teamCount * roundCount;
@@ -63576,7 +64697,7 @@ Rules:
     Object.values(data.drafts).forEach(dr => {
       if (dr && dr.phase === 'superflex') _sfCount++; else _bbmCount++;
     });
-    const _udBoardFmt = _sfCount > _bbmCount ? 'sf' : 'bbm';
+    const _udBoardFmt = (!adv && _sfCount > _bbmCount) ? 'sf' : 'bbm';
     const _udBoardField = _udBoardFmt === 'sf' ? 'sfa' : 'udA';
     const adpPlayers = D.filter(d => {
         const v = d[_udBoardField];
@@ -63633,18 +64754,34 @@ Rules:
         }
 
         const own = ownershipMap[player.name] || 0;
-        let ownColor, ownBg;
-        if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }
+        let ownColor, ownBg, cellVal = own + '%', cellSub = player.pos, cellTip = 'Open player card';
+        let ownBorder = null;
+        if (adv) {
+          const r = adv.map[player.name];
+          const mine = adv.by[player.name], all = adv.fby[player.name];
+          const part = (x, who) => x ? `${who}: ${x.adv} of ${x.n} (${Math.round(100 * x.adv / x.n)}%)` : `${who}: none`;
+          if (!r) {
+            ownColor = '#64748b'; ownBg = 'rgba(100,116,139,.08)'; cellVal = '—';
+            cellTip = (adv.field ? 'Not drafted in your scored Best Ball Mania pools' : 'On none of your scored Best Ball Mania teams · ' + part(all, 'all teams')) + ' — click for the player card';
+          } else {
+            const rate = r.adv / r.n, t = adv.tier(rate), edge = 100 * (rate - adv.base);
+            ownColor = t.c; ownBg = t.bg; ownBorder = t.bd;
+            cellVal = Math.round(100 * rate) + '%';
+            cellSub = player.pos + ' · ' + r.adv + '/' + r.n;
+            cellTip = `Teams advancing with this player — ${part(mine, 'yours')} · ${part(all, 'all teams')} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card`;
+          }
+        }
+        else if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }
         else if (own < 5) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.15)'; }
         else if (own <= 11) { ownColor = '#facc15'; ownBg = 'rgba(250,204,21,.15)'; }
         else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.18)'; }
 
         html += `<td style="padding:2px;border:1px solid var(--border)">`;
-        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="Open player card" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownColor}30;min-height:32px;cursor:pointer">`;
+        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="${cellTip}" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownBorder || ownColor}30;min-height:32px;cursor:pointer">`;
         html += `<div style="font-size:.58rem;font-weight:600;color:${ownColor};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
         html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:1px">`;
-        html += `<span style="font-size:.48rem;color:var(--text2)">${player.pos}</span>`;
-        html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${own}%</span>`;
+        html += `<span style="font-size:.48rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;margin-right:3px">${cellSub}</span>`;
+        html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${cellVal}</span>`;
         html += `</div>`;
         html += `</div></td>`;
       }

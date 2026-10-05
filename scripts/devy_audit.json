@@ -43,7 +43,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 73.3,
+     "pff": 77.0,
      "pffRush": null
     }
    },
@@ -65,7 +65,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 72.8,
+     "pff": 72.0,
      "pffRush": null
     }
    },
@@ -84,7 +84,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 80.2,
+     "pff": 80.4,
      "pffRush": null
     }
    },
@@ -110,7 +110,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 79.7,
+     "pff": 88.5,
      "pffRush": null
     }
    },
@@ -158,8 +158,8 @@
      "pffRush": 85.8
     },
     "2026": {
-     "pff": 63.1,
-     "pffRush": 72.3
+     "pff": 60.4,
+     "pffRush": 79.1
     }
    },
    "pos": "RB",
@@ -203,7 +203,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 61.7,
+     "pff": 61.3,
      "pffRush": null
     }
    },
@@ -251,7 +251,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 59.8,
+     "pff": 67.3,
      "pffRush": null
     }
    },
@@ -269,7 +269,7 @@
    "eligYr": 2028,
    "pff": {
     "2026": {
-     "pff": null,
+     "pff": 61.9,
      "pffRush": null
     }
    },
@@ -299,7 +299,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 69.4,
+     "pff": 71.4,
      "pffRush": null
     }
    },
@@ -328,7 +328,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 71.2,
      "pffRush": null
     }
    },
@@ -356,8 +356,8 @@
      "pffRush": 63.3
     },
     "2026": {
-     "pff": 59.3,
-     "pffRush": 72.1
+     "pff": 55.6,
+     "pffRush": 79.8
     }
    },
    "pos": "RB",
@@ -381,7 +381,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 92.0,
      "pffRush": null
     }
    },
@@ -457,7 +457,7 @@
     },
     "2026": {
      "pff": 60.3,
-     "pffRush": 77.1
+     "pffRush": 74.7
     }
    },
    "pos": "RB",
@@ -505,8 +505,8 @@
      "pffRush": 89.4
     },
     "2026": {
-     "pff": 57.0,
-     "pffRush": 70.9
+     "pff": 55.2,
+     "pffRush": 78.5
     }
    },
    "pos": "RB",
@@ -557,7 +557,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 76.9,
+     "pff": 88.7,
      "pffRush": null
     }
    },
@@ -589,7 +589,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 63.7,
+     "pff": 68.3,
      "pffRush": null
     }
    },
@@ -618,7 +618,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 72.1,
      "pffRush": null
     }
    },
@@ -642,7 +642,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 64.7,
+     "pff": 74.4,
      "pffRush": null
     }
    },
@@ -680,7 +680,7 @@
    "eligYr": 2028,
    "pff": {
     "2026": {
-     "pff": 73.4,
+     "pff": 76.3,
      "pffRush": null
     }
    },
@@ -757,7 +757,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 86.2,
+     "pff": 92.6,
      "pffRush": null
     }
    },
@@ -786,7 +786,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 73.0,
+     "pff": 72.2,
      "pffRush": null
     }
    },
@@ -866,7 +866,7 @@
      "pffRush": 91.4
     },
     "2026": {
-     "pff": 91.1,
+     "pff": 91.4,
      "pffRush": 75.6
     }
    },
@@ -893,8 +893,8 @@
      "pffRush": 73.5
     },
     "2026": {
-     "pff": 53.3,
-     "pffRush": 69.5
+     "pff": 51.2,
+     "pffRush": 74.5
     }
    },
    "pos": "RB",
@@ -921,7 +921,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 70.0,
+     "pff": 71.9,
      "pffRush": null
     }
    },
@@ -981,7 +981,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 70.6,
+     "pff": 67.3,
      "pffRush": null
     }
    },
@@ -1083,7 +1083,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 59.1,
+     "pff": 60.6,
      "pffRush": null
     }
    },
@@ -1108,8 +1108,8 @@
      "pffRush": 71.4
     },
     "2026": {
-     "pff": 54.9,
-     "pffRush": 69.5
+     "pff": 51.0,
+     "pffRush": 73.3
     }
    },
    "pos": "RB",
@@ -1218,7 +1218,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 61.7,
+     "pff": 62.2,
      "pffRush": null
     }
    },
@@ -1239,8 +1239,8 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 60.0,
-     "pffRush": 69.4
+     "pff": 51.8,
+     "pffRush": 75.7
     }
    },
    "pos": "RB",
@@ -1269,7 +1269,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 62.5,
+     "pff": 62.7,
      "pffRush": null
     }
    },
@@ -1308,8 +1308,8 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 54.4,
-     "pffRush": 81.9
+     "pff": 48.5,
+     "pffRush": 90.4
     }
    },
    "pos": "RB",
@@ -1359,7 +1359,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 74.5,
+     "pff": 76.1,
      "pffRush": null
     }
    },
@@ -1396,7 +1396,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 90.8,
+     "pff": 90.6,
      "pffRush": null
     }
    },
@@ -1414,7 +1414,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 88.0,
+     "pff": 94.9,
      "pffRush": null
     }
    },
@@ -1534,8 +1534,8 @@
      "pffRush": 88.6
     },
     "2026": {
-     "pff": 59.1,
-     "pffRush": 63.8
+     "pff": 61.2,
+     "pffRush": 67.9
     }
    },
    "pos": "RB",
@@ -1558,7 +1558,7 @@
      "pffRush": 91.4
     },
     "2026": {
-     "pff": 47.1,
+     "pff": 47.3,
      "pffRush": 71.7
     }
    },
@@ -1589,7 +1589,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 82.6,
      "pffRush": null
     }
    },
@@ -1618,7 +1618,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 65.6,
      "pffRush": null
     }
    },
@@ -1684,7 +1684,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 79.6,
+     "pff": 92.1,
      "pffRush": null
     }
    },
@@ -1743,7 +1743,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 77.4,
+     "pff": 87.4,
      "pffRush": null
     }
    },
@@ -1813,8 +1813,8 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 62.6,
-     "pffRush": 71.6
+     "pff": 61.1,
+     "pffRush": 85.5
     }
    },
    "pos": "RB",
@@ -1837,7 +1837,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 67.2,
+     "pff": 67.9,
      "pffRush": null
     }
    },
@@ -1860,7 +1860,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 75.5,
+     "pff": 91.3,
      "pffRush": null
     }
    },
@@ -1891,7 +1891,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 68.2,
+     "pff": 67.5,
      "pffRush": null
     }
    },
@@ -1952,8 +1952,8 @@
      "pffRush": 87.9
     },
     "2026": {
-     "pff": 66.2,
-     "pffRush": 77.8
+     "pff": 63.7,
+     "pffRush": 85.3
     }
    },
    "pos": "RB",
@@ -1973,7 +1973,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 63.0,
+     "pff": 63.9,
      "pffRush": null
     }
    },
@@ -2055,7 +2055,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 79.1,
+     "pff": 86.3,
      "pffRush": null
     }
    },
@@ -2079,7 +2079,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 87.1,
+     "pff": 93.0,
      "pffRush": null
     }
    },
@@ -2110,7 +2110,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 61.9,
+     "pff": 54.4,
      "pffRush": null
     }
    },
@@ -2139,7 +2139,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 72.1,
+     "pff": 73.9,
      "pffRush": null
     }
    },
@@ -2171,8 +2171,8 @@
      "pffRush": 92.0
     },
     "2026": {
-     "pff": 57.9,
-     "pffRush": 69.6
+     "pff": 69.0,
+     "pffRush": 78.8
     }
    },
    "pos": "RB",
@@ -2228,7 +2228,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 63.8,
+     "pff": 66.9,
      "pffRush": null
     }
    },
@@ -2325,7 +2325,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 54.3,
      "pffRush": null
     }
    },
@@ -2354,7 +2354,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 69.0,
+     "pff": 82.2,
      "pffRush": null
     }
    },
@@ -2419,7 +2419,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 59.5,
+     "pff": 56.3,
      "pffRush": null
     }
    },
@@ -2452,7 +2452,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 60.7,
+     "pff": 63.8,
      "pffRush": null
     }
    },
@@ -2477,8 +2477,8 @@
      "pffRush": 80.5
     },
     "2026": {
-     "pff": 59.8,
-     "pffRush": 86.9
+     "pff": 62.7,
+     "pffRush": 88.6
     }
    },
    "pos": "RB",
@@ -2547,8 +2547,8 @@
      "pffRush": 90.0
     },
     "2026": {
-     "pff": null,
-     "pffRush": null
+     "pff": 53.0,
+     "pffRush": 72.8
     }
    },
    "pos": "RB",
@@ -2641,7 +2641,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 83.8,
+     "pff": 88.0,
      "pffRush": null
     }
    },
@@ -2670,7 +2670,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 66.0,
+     "pff": 71.3,
      "pffRush": null
     }
    },
@@ -2730,7 +2730,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 72.0,
+     "pff": 79.5,
      "pffRush": null
     }
    },
@@ -2759,7 +2759,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 64.1,
+     "pff": 65.4,
      "pffRush": null
     }
    },
@@ -2783,7 +2783,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 82.0,
      "pffRush": null
     }
    },
@@ -2860,7 +2860,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 81.1,
      "pffRush": null
     }
    },
@@ -2941,7 +2941,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 84.1,
+     "pff": 84.0,
      "pffRush": null
     }
    },

@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-05-sosmix" as="script">
+<link rel="preload" href="app.js?v=2026-10-05-oppgrade-ud" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1360,6 +1360,15 @@ CLEAR ALL
   body.format-weekly.wk-xfp-col #pageRankings .xfpg-cell { display: table-cell !important; }
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
+  /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in
+     the first stat cell with VOR beside it; the phone card has only that one
+     stat cell, so it swaps to the VOR there. */
+  #pageRankings tbody .vor-m{display:none}
+  @media (max-width:600px){
+    body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-ppg{display:none}
+    body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-m{display:inline}
+    body.rnk-vor #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"VOR"}
+  }
   /* The always-on weekly Boom/Bust pair (simboom/simbust) stays hidden since
      2026-09-08 (Jack) — the SIMS stats view still shows boom/bust in the
      '25 PPG / L4 PPG swap columns. */
@@ -1421,6 +1430,7 @@ CLEAR ALL
 <div class="version-tabs">
 <button class="version-tab active" data-version="consensus">CONSENSUS</button>
 <button class="version-tab" data-version="jacks">JACK'S</button>
+<button class="version-tab" data-version="sims" title="Sim VOR board — every player ordered by rest-of-season value over replacement from the Sim Lab projection (points above the replacement player at his position, added up over the games he is projected to play). Set the lineup or pick a synced league in the VOR bar; WEEKLY ranks this week only.">SIM VOR</button>
 <button class="version-tab" data-version="mine">MY RANKINGS</button>
 </div>
 <span class="filter-row-label">Format</span>
@@ -1474,6 +1484,42 @@ CLEAR ALL
 <button class="pos-btn team-filter-btn" id="teamFilterBtn" onclick="window._toggleTeamFilterPop()" title="Filter by NFL team — pick one team or several; only players from those teams show. Stacks with the position filter, ★ and TOP N.">TEAMS<span id="teamFilterCount" style="margin-left:4px"></span></button>
 <div id="teamFilterPop" class="team-filter-pop" style="display:none" role="dialog" aria-label="Filter rankings by team"></div>
 </span>
+<button class="pos-btn inj-filter-btn" id="injFilterBtn" onclick="window._toggleInjOnly()" aria-pressed="false" title="Show only injured players, still in rank order — adds the injury, an estimated return week (or range) and the general timeline (reported + typical for the injury) in front of Cons. Stacks with the position filter, ★, TEAMS and TOP N.">INJURIES</button>
+<style>
+/* INJURIES pill + the three injury-view columns (render() sets body.inj-view) */
+.inj-filter-btn.on{background:rgba(239,68,68,.16);border-color:#ef4444;color:#f87171}
+#pageRankings th.injv-col{display:none}
+body.inj-view #pageRankings th.injv-col{display:table-cell}
+#pageRankings td.injv-cell{line-height:1.15;padding-right:.7rem}
+#pageRankings td.injv-cell .injv-main{display:block;font-weight:700;color:var(--text)}
+#pageRankings td.injv-cell .injv-sub{display:block;font-size:.62rem;color:var(--text2);margin-top:2px;font-weight:500}
+#pageRankings td.injv-cell[title]{cursor:help}
+#pageRankings td.injv-cell .injv-k{font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.8px;font-weight:400;color:var(--text2);margin-right:5px;text-transform:uppercase}
+#pageRankings td.injv-cell .injv-m{display:none}
+/* The injury view trades L4 / Age / P-SOS / +/- for its own three columns. */
+body.inj-view #pageRankings #ageHeader,
+body.inj-view #pageRankings .age-cell,
+body.inj-view #pageRankings #psosHeader,
+body.inj-view #pageRankings .psos-cell,
+body.inj-view #pageRankings thead th[data-sort="diff"],
+body.inj-view #pageRankings .diff-cell,
+body.inj-view-fant #pageRankings #l4ppgHeaderTh,
+body.inj-view-fant #pageRankings .l4ppg-cell{display:none!important}
+@media (max-width:600px){
+  /* Phone cards: the pill by the name carries the status, so the card shows
+     RETURN (body part as its label) + TIMELINE (short form, REPORTED / TYPICAL
+     as its label) and drops Cons to make room. */
+  body.inj-view #pageRankings tbody td.injv-cell .injv-m{display:inline}
+  body.inj-view #pageRankings tbody td.injv-inj,
+  body.inj-view #pageRankings tbody .adp-cell,
+  body.inj-view #pageRankings tbody td.injv-cell .injv-sub,
+  body.inj-view #pageRankings tbody td.injv-cell .injv-d,
+  body.inj-view #pageRankings tbody tr[data-idx] td:first-child,
+  body.inj-view #pageRankings tbody tr[data-idx] .watch-star{display:none!important}
+  body.inj-view #pageRankings tbody td.injv-cell{flex:0 0 auto;text-align:center!important;font-size:.76rem;padding:0 3px!important;min-width:44px!important;line-height:1.05}
+  body.inj-view #pageRankings tbody td.injv-cell::after{content:attr(data-lbl);display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2);max-width:64px;overflow:hidden;text-overflow:ellipsis}
+}
+</style>
 <style>
 /* TEAMS multi-select pill + division-grouped popover (rankings filter row) */
 .team-filter-btn.on{background:rgba(88,167,255,.16);border-color:#58a7ff;color:#58a7ff}
@@ -1567,6 +1613,7 @@ tr:hover .watch-star{opacity:.55}
 <div class="career-log-toggle" id="rankingStatModeToggle">
 <button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / season PPG / L4 PPG)">FANTASY</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points per game above the replacement-level player at the position, the rest-of-season total over the games he is projected to play, and those games. Standard 12-team lineup by default; set your own or pick a synced league in the VOR bar. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="xfp" title="Expected fantasy points view — actual PPG, expected PPG from usage (every target by completion probability and expected YAC, every carry by field position, league TD rates; QBs net expected INTs), points over expected, and the TD-luck part of the gap. WEEKLY board shows the active week once it has been played.">xFP</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
@@ -1592,6 +1639,25 @@ tr:hover .watch-star{opacity:.55}
 <span id="rnkAdpHintText">Additional ADP sources require a Premium account.</span>
 </div>
 </div><!-- /viewOptsWrap -->
+
+<!-- VOR bar: league picker + lineup + WAIVERS for the SIM VOR board and the
+     VOR stats view (render() sets body.vor-bar-on; built by _vorBarRender in
+     app.js, state in localStorage mff_vor_fmt). -->
+<div class="vor-bar" id="vorBar"></div>
+<style>
+.vor-bar{display:none;align-items:center;gap:8px 10px;flex-wrap:wrap;margin:2px 2rem 6px;padding:5px 10px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.05);font-family:'DM Sans',sans-serif}
+body.vor-bar-on .vor-bar{display:flex}
+.vor-bar-lbl{font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.2px;color:var(--accent);white-space:nowrap}
+.vor-bar select{max-width:190px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer}
+.vor-num{display:inline-flex;align-items:center;gap:4px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2);white-space:nowrap}
+.vor-num input{width:38px;padding:2px 3px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;text-align:center}
+.vor-bar-x{font-size:.66rem;font-weight:600;color:var(--accent);white-space:nowrap}
+.vor-bar .vor-waiver-btn{padding:.25rem .75rem;font-size:.65rem}
+.vor-bar .vor-waiver-btn.on{background:rgba(34,197,94,.16);border-color:#22c55e;color:#22c55e}
+.vor-reset{margin-left:auto;padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.58rem;letter-spacing:.6px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
+.vor-reset:hover{color:var(--text);border-color:var(--text2)}
+@media (max-width:600px){.vor-bar{margin:2px 10px 6px;gap:6px 8px}.vor-reset{margin-left:0}}
+</style>
 
 <!-- Saved view presets: chips render here only when presets exist
      (_renderViewPresets in app.js; SAVE VIEW lives in the MORE menu). -->
@@ -1796,6 +1862,9 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="name" tabindex="0" aria-sort="none">Player <span class="arrow"></span></th>
 <th data-sort="pos" tabindex="0" aria-sort="none">Pos <span class="arrow"></span></th>
 <th data-sort="posRank" tabindex="0" aria-sort="none">Pos<span class="hide-on-mobile"> Rank</span> <span class="arrow"></span></th>
+<th data-sort="injSt" id="injStHeader" class="injv-col" tabindex="0" aria-sort="none"><span data-gloss="The injury: body part on top, then the current designation (Questionable / Doubtful / Out / IR / PUP), any note from the feed (surgery, sprain) and this week's practice log, oldest to newest (DNP = did not practice, LP = limited, FP = full). Sleeper injury feed + the official NFL practice report, refreshed daily. Click the Q / O / IR pill by the name for the full detail.">Injury</span> <span class="arrow"></span></th>
+<th data-sort="injRet" id="injRetHeader" class="injv-col" tabindex="0" aria-sort="none"><span data-gloss="Estimated return, counted forward from today (games already missed are not counted). One week when the read is firm, a range when it is not: with a reported timeline the range runs from the reported minimum to the reported maximum; with none, from the first week he has about a 1-in-3 chance to play to the week he is about 2-in-3 to be back. Wk 7+ = that week at the earliest with no firm end. The line underneath is how many more games he is expected to miss, or his odds to play this week for a Questionable player. Source, in order: the Sim Lab injury layer that is inside the projections (reported timelines, plus how long players with this designation, position and injury have historically stayed out, 2019-25), then a timeline reported on the news feed. A player listed Out with nothing reported yet gets our own estimate (marked "our est."): how long that injury has typically kept players at his position out, leaned shorter when the reports read minor and longer when they read serious — a deliberately wider range that tightens once there is a report. Hover a value for the week-by-week odds and the source.">Est. Return</span> <span class="arrow"></span></th>
+<th data-sort="injTl" id="injTlHeader" class="injv-col" tabindex="0" aria-sort="none"><span data-gloss="The general timeline for the injury, two reads. REPORTED = the latest timeline from the team or a national reporter on the news feed (3–6 weeks, out until Wk 9, season-ending); SET = a window Jack has set by hand. TYPICAL = what the research says: for a player who is out, how many more games players at his position with this kind of injury went on to miss from the same spot — the midpoint first (~2 more games), then the middle half of absences in brackets (1–4); starters, 2019-25, games he has already missed not counted. For a Questionable player it is how often that designation and practice level has played. When there is a report it leads and the typical range sits underneath. Hover for the report itself and the full typical read.">Timeline</span> <span class="arrow"></span></th>
 <th data-sort="adp" id="adpHeader" tabindex="0" aria-sort="none"><span data-gloss="Consensus rank — where this player sits on the CONSENSUS board for this format (Jack's + market ADP + Sleeper + FantasyPros + Underdog/ESPN/CBS/Yahoo blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.">Cons</span> <span class="arrow"></span></th>
 <th data-sort="pts" id="ppgProjHeader" tabindex="0" aria-sort="none"><span class="th-stack"><span data-gloss="Sim Lab projected fantasy points per game — season boards show the REST-OF-SEASON average (games already played excluded); the WEEKLY board shows this week's sim. Refreshed daily and ~30 min before kickoffs (Vegas lines, matchups, usage, injuries priced in).">Proj PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="simBoom" id="simBoomHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Chance of finishing 50%+ ABOVE his own median sim outcome this week (1,000 Sim Lab runs). High boom + high bust = wide-range player.">Boom</span> <span class="arrow"></span></th>
@@ -4461,8 +4530,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weekly_projections.js?v=2026-10-04" defer></script>
 <script src="data/weather_2026.js?v=2026-10-05-10" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
-<script src="data/player_roles_2026.js?v=2026-10-05-0820" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-05-1032" defer></script>
+<script src="data/player_roles_2026.js?v=2026-10-05-1313" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-05-1313" defer></script>
 <script src="data/matchup_edges_2026.js?v=2026-10-05-1032" defer></script>
 <script src="data/site_projections.js?v=2026-10-04" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -4599,7 +4668,7 @@ window.clayLookup = clayLookup;
 <script src="data/combine_d_patches.js?v=2026-09-30f" defer></script>
 <script src="data/devy_headshots.js?v=2026-10-05" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
 <script src="data/projected_testing.js?v=2026-10-05" defer></script>
-<script defer src="data/draft_proj.js?v=2026-10-05"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
+<script defer src="data/draft_proj.js?v=2026-10-05db2"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
@@ -5495,7 +5564,7 @@ window._ensureCollegeStatsData = (function() {
     // In-season devy/future-class rows (weekly auto-refresh, scripts/refresh_devy_stats.py):
     // defines window._csPatchDevy (applied last, below) + this season's COLLEGE_WEEKLY game logs.
     const spz = _loadScript('data/sp_def_z.js?v=2026-09-30');  // SP+ defense z per team-season (RB schedule-adjusted production experiment)
-    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-10-05');
+    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-10-05dv2');
     // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
     // populate the same COLLEGE_WEEKLY object and have no order dependency;
@@ -5651,7 +5720,7 @@ window._ensureResearchData = (function() {
 // season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
 // that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
 // section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-10-05-0820';
+window._ADV_STATS_V = '2026-10-05-1313';
 window._ensureAdvStats = (function() {
   const cache = {};
   return function _ensureAdvStats(yr, wk) {
@@ -5671,7 +5740,7 @@ window._ensureAdvStats = (function() {
 // Research page Coach Profiles: data/coach_profiles.js (window.COACH_PROFILES, one row per
 // team-season, scripts/build_coach_profiles.py), loaded when the section opens.
 // route_pct_daily.ps1 bumps _COACH_V.
-window._COACH_V = '2026-10-05-0820';
+window._COACH_V = '2026-10-05-1313';
 window._ensureCoachProfiles = (function() {
   let promise = null;
   return function _ensureCoachProfiles() {
@@ -5716,7 +5785,7 @@ window._ensureCardExtras = (function() {
 // Player-card USAGE row (everyone): data/usage_trend.js (window.USAGE_TREND, built daily by
 // scripts/build_usage_trend.py). openPlayerCard loads it on the first card open and re-renders once.
 // route_pct_daily.ps1 bumps _USAGE_TREND_V.
-window._USAGE_TREND_V = '2026-10-05-0820';
+window._USAGE_TREND_V = '2026-10-05-1313';
 window._ensureUsageTrend = (function() {
   let promise = null;
   return function _ensureUsageTrend() {
@@ -5861,9 +5930,9 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-10-05-0820',
+    'data/snap_counts.js?v=2026-10-05-1313',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-10-05-0820'
+    'data/route_pct.js?v=2026-10-05-1313'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }
@@ -5943,7 +6012,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-05-sosmix"></script>
+<script defer src="app.js?v=2026-10-05-oppgrade-ud"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

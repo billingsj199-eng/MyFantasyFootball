@@ -7604,7 +7604,7 @@ function render() {
       const _vorTxt = _ve ? _sgn(_ve.vor) : '—';
       const _vorC = !_ve ? null : _ve.vor >= 6 ? '#22c55e' : _ve.vor >= 3 ? '#4ade80' : _ve.vor > 0 ? '#facc15' : 'var(--text2)';
       const _posPl = d.s === 'K' ? 'kickers' : d.s === 'DST' ? 'D/STs' : d.s + 's';
-      const _vorTip = _rp ? ' title="' + (d.s + ' replacement level: ' + d.s + _rp.rk + ' ' + _rp.n + ', ' + _rp.v + (_isWeekly ? ' pts this week' : ' a game') + ' — ' + _rp.rostered + ' ' + _posPl + ' rostered in this format' + (_rp.rostered !== _rp.starters ? ' (' + _rp.starters + ' start)' : '')).replace(/"/g, '&quot;') + '"' : '';
+      const _vorTip = _rp ? ' title="' + (d.s + ' replacement level: ' + d.s + _rp.rk + ' ' + _rp.n + ', ' + _rp.v + (_isWeekly ? ' pts this week' : ' a game') + ' — ' + 'the best one who would not start (' + _rp.starters + ' ' + _posPl + ' start in this format)').replace(/"/g, '&quot;') + '"' : '';
       const _kd = d.s === 'K' || d.s === 'DST';
       const _rkTxt = _ve ? (_kd ? d.s + _ve.rk : '#' + _ve.rk) : '';
       if (_ve && currentVersion !== 'sims' && _vorLocked(d, _ve)) {
@@ -8858,7 +8858,7 @@ window._updateRnkStatHeaders = function() {
     const _lg = _vorLineupLabel(_vst) + (_vlg ? ' (' + (_vlg.name || 'your league') + ')' : '');
     const _vx = (_vst.tep ? ', TE premium +' + _vst.tep : '') + (_vst.passTd !== 4 ? ', ' + _vst.passTd + '-point passing TDs' : '');
     const _vsub = _vlg ? 'League' : _vst.teams + '-Team' + (_vst.SF ? ' SF' : '');
-    const _how = 'Replacement level = the best ' + (_vst.BN ? 'player left unrostered' : 'player who would not start') + ' at the position in a ' + _lg + ': starters first, then the flex spots to the best leftover RB / WR / TE' + (_vst.BN ? ', then the bench (a backup QB and TE for about half the teams, the rest to the best RB / WR left)' : '') + ', all by sim points in ' + fmtLabel + ' scoring' + _vx + ' — so the level moves with the scoring toggle and the lineup in the VOR bar.';
+    const _how = 'Replacement level = the best player who would not start at the position in a ' + _lg + ' — bench players don\'t win weeks: starters first, then the flex spots to the best leftover RB / WR / TE, all by sim points in ' + fmtLabel + ' scoring' + _vx + ' — so the level moves with the scoring toggle and the lineup in the VOR bar.';
     if (_wkly) {
       _set(c1, null, 'Sim Lab projection for this week (' + fmtLabel + ' scoring' + _vx + ') — the number VOR is measured from.', 'Proj', fmtLabel);
       _set(c2, 'ppg25Header', 'Value over replacement this week — projected points above the replacement-level player at the position. ' + _how + ' Hover a value for the replacement player.', 'VOR', _vsub);
@@ -11761,7 +11761,9 @@ function _simSeasonPpgRow(d) {
 // selected scoring format: starters first, then the flex / superflex spots
 // with the best players left, then the bench (a backup QB and TE for about
 // half the teams, the rest to the best RB/WR left). A position's replacement
-// level is the best player left unrostered, per scheduled game.
+// level is the best player who would NOT start (Jack 10-05: bench players
+// don't win weeks), per scheduled game; the bench only sets the waiver floor
+// (best player left unrostered) the lineup sims fill holes with.
 //   VOR/G   = his per-game projection minus that replacement level
 //   ROS VOR = the gap week by week over the games he is projected to play,
 //             fantasy-playoff weeks counted poW times (default 1.5). A week he
@@ -11971,7 +11973,7 @@ function _vorTable() {
     return _schedMemo[k];
   };
   const r1 = v => Math.round(v * 10) / 10;
-  const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1], kicked: kicked ? kicked.size : 0 };
+  const out = { _src: SP, _key: key, map: new Map(), repl: {}, waiver: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1], kicked: kicked ? kicked.size : 0 };
   const all = [];
   // Ties on ROS VOR go to the bigger playoff-weeks VOR.
   const _cmp = (a, b) => (b.vt - a.vt) || (b.vp - a.vp) || (b.vor - a.vor) || (b.tot - a.tot);
@@ -11979,9 +11981,15 @@ function _vorTable() {
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
-    const ri = Math.min(n[p], pool.length - 1);
+    // Replacement = the best player who would NOT start (Jack 10-05: the bench
+    // doesn't win weeks, so value is measured against a start-worthy level).
+    const ri = Math.min(nStart[p], pool.length - 1);
     const R = pool[ri].tot / _sched(pool[ri].d)[0];
     out.repl[p] = { v: r1(R), n: pool[ri].d.n, rk: ri + 1, rostered: n[p], starters: nStart[p] };
+    // Waiver floor = the best player left after the bench fills — who actually
+    // plugs a bye or injury hole in the lineup sims (_vorLineupSim).
+    const wi = Math.min(n[p], pool.length - 1);
+    out.waiver[p] = { v: r1(pool[wi].tot / _sched(pool[wi].d)[0]), n: pool[wi].d.n, rk: wi + 1 };
     const es = pool.map((x, i) => {
       const vor = r1(x.ppg - R);
       // Rest-of-season: only the weeks he beats replacement add value; playoff weeks count poW times.
@@ -12171,7 +12179,7 @@ function _vorBarRender() {
   const extras = [];
   if (st.tep) extras.push('TEP +' + st.tep);
   if (st.passTd !== 4) extras.push(st.passTd + 'pt pass TD');
-  bar.innerHTML = '<span class="vor-bar-lbl"><span data-gloss="The league the VOR numbers are priced for. Pick a league you synced in MY TEAMS and its lineup, team count, bench and scoring fill in on their own; or set the lineup by hand. More starting spots or a deeper bench push the replacement level down, which raises the value of depth at that position.">VOR League</span></span>'
+  bar.innerHTML = '<span class="vor-bar-lbl"><span data-gloss="The league the VOR numbers are priced for. Pick a league you synced in MY TEAMS and its lineup, team count, bench and scoring fill in on their own; or set the lineup by hand. More starting spots push the replacement level down, which raises the value of depth at that position. Replacement is the best player who would not start; the bench only sets the free-agent level the trade and team lineup sims fill holes with.">VOR League</span></span>'
     + '<select id="vorLeagueSel" title="Use a synced My Teams league: its starting lineup, bench, team count and scoring">'
     + '<option value="">Custom lineup</option>'
     + lgs.map(l => '<option value="' + esc(l.leagueId) + '"' + (lg === l ? ' selected' : '') + '>' + esc(l.name || 'League') + '</option>').join('')
@@ -12180,7 +12188,7 @@ function _vorBarRender() {
     + num('teams', 'Teams', 'Teams in the league')
     + num('QB', 'QB', 'Starting QBs per team') + num('RB', 'RB', 'Starting RBs per team') + num('WR', 'WR', 'Starting WRs per team') + num('TE', 'TE', 'Starting TEs per team')
     + num('FLEX', 'Flex', 'Flex spots per team (RB / WR / TE)') + num('SF', 'SFlex', 'Superflex spots per team (QB / RB / WR / TE)')
-    + num('K', 'K', 'Starting kickers per team') + num('DST', 'D/ST', 'Starting defenses per team') + num('BN', 'Bench', 'Bench spots per team — set 0 to measure against the last starter instead of the best free agent')
+    + num('K', 'K', 'Starting kickers per team') + num('DST', 'D/ST', 'Starting defenses per team') + num('BN', 'Bench', 'Bench spots per team — sets the free-agent level the trade calculator and My Teams lineup sims use for byes and injuries. VOR itself is measured against the best player who would not start.')
     + '<span class="vor-po" title="Fantasy playoff weeks and how much a playoff week counts against a regular-season week in rest-of-season VOR. The season ends with the last playoff week. Synced Sleeper leagues fill the weeks in.">'
     + num('poStart', 'Playoffs Wk', 'First fantasy-playoff week') + '<span class="vor-dash">–</span>' + num('poEnd', '', 'Last fantasy-playoff week (the end of the fantasy season)')
     + '<label class="vor-num" title="How much each playoff week counts — 1 = like any other week, 1.5 = half again as much. Missing a playoff week costs that much more.">×<input type="number" inputmode="decimal" data-vor="poW" min="' + _VOR_PO_W[0] + '" max="' + _VOR_PO_W[1] + '" step="0.25" value="' + st.poW + '"></label></span>'
@@ -12298,7 +12306,7 @@ function _vorLineupSim(t) {
   for (let w = t.from; w <= t.to; w++) weeks.push(w);
   const isPO = w => w >= st.poStart && w <= st.poEnd;
   const R = {};
-  ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => { R[p] = (t.repl[p] && t.repl[p].v) || 0; });
+  ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => { R[p] = (t.waiver[p] && t.waiver[p].v) || 0; });
   const ptsMemo = new Map();
   const ptsOf = d => {
     let a = ptsMemo.get(d);

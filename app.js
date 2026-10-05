@@ -53913,6 +53913,12 @@ Rules:
         const playoffStart = +lgSet.playoff_week_start || 15;
         league.playoffStart = playoffStart;
         league.playoffTeams = +lgSet.playoff_teams || 6;
+        league.playoffReseed = +lgSet.playoff_seed_type === 1; // 1 = re-seed each round
+        const ssc = league.scoring_settings || {}, sd = {};
+        ['rec', 'pass_td', 'pass_yd', 'rush_yd', 'rush_td', 'rec_yd', 'rec_td', 'bonus_rec_te'].forEach(k => {
+          if (typeof ssc[k] === 'number') sd[k] = ssc[k];
+        });
+        league.scoringDetail = Object.keys(sd).length ? sd : null;
         const wks = [];
         for (let w = 1; w < playoffStart; w++) wks.push(w);
         const lists = await Promise.all(wks.map(w =>
@@ -54116,6 +54122,17 @@ Rules:
       pass_td: lg.passTd != null ? lg.passTd : 4
     };
   }
+  // Normalized payload → the league-level fields _mtSaveLeagueToCloud keeps
+  // (schedule, playoff shape, per-stat scoring). Shared by every ESPN/Yahoo
+  // save path so a new field can't be dropped by one of them.
+  function _mtNormalizedLeagueMeta(lg) {
+    return {
+      name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null,
+      playoffStart: lg.playoffStart || null, playoffTeams: lg.playoffTeams || null,
+      playoffReseed: lg.playoffReseed != null ? lg.playoffReseed : null,
+      scoringDetail: lg.scoringDetail || null
+    };
+  }
   function _mtNormalizedFormat(lg) {
     const prevFormat = _mtFormat;
     _mtDetectFormat({
@@ -54186,7 +54203,7 @@ Rules:
         const savedMine = (sv.teams || []).find(t => t && t.isMyTeam);
         const teams = _mtNormalizedSaveTeams(lg, savedMine);
         _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
-        _mtSaveLeagueToCloud(key, { name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null }, teams, fmt);
+        _mtSaveLeagueToCloud(key, _mtNormalizedLeagueMeta(lg), teams, fmt);
         console.log('[MyTeams] Auto-saved fresh extension sync:', lg.name || key);
         const hint = document.getElementById('mtEspnHint');
         if (hint) hint.textContent = 'Fresh sync auto-saved — click IMPORT to load a league.';
@@ -54320,7 +54337,7 @@ Rules:
         status.style.color = unmatched > 0 ? '#f59e0b' : '#22c55e';
       }
 
-      _mtSaveLeagueToCloud(source + '_' + lg.leagueId, { name: lg.name, season: String(lg.season || ''), schedule: lg.schedule || null }, teams);
+      _mtSaveLeagueToCloud(source + '_' + lg.leagueId, _mtNormalizedLeagueMeta(lg), teams);
     } catch (err) {
       console.warn('[MyTeams] ' + source + ' import error:', err);
       if (status) { status.textContent = 'Error: ' + err.message; status.style.color = '#ef4444'; }
@@ -54540,9 +54557,14 @@ Rules:
         for (let i = 0; i < n; i++) apiSlots.push(lbl);
       });
       let rec = null, passTd = null;
+      // per-stat scoring on Sleeper keys (Sim Lab's league sim reads these)
+      const YSTAT = { 4: 'pass_yd', 5: 'pass_td', 9: 'rush_yd', 10: 'rush_td', 11: 'rec', 12: 'rec_yd', 13: 'rec_td' };
+      const scoringDetail = { rec: 0 };
       ((svc.settings && svc.settings.stat_categories) || []).forEach(c => {
         if (Number(c.stat_id) === 11) rec = parseFloat(c.stat_modifier) || 0;
         if (Number(c.stat_id) === 5) passTd = parseFloat(c.stat_modifier); // passing TDs (Yahoo default 4)
+        const k = YSTAT[Number(c.stat_id)], v = parseFloat(c.stat_modifier);
+        if (k && isFinite(v)) scoringDetail[k] = v;
       });
 
       // 2) League home HTML — team ids/names/records via the standings parse;
@@ -54583,6 +54605,10 @@ Rules:
         norm.sf = apiSlots.indexOf('SUPER_FLEX') >= 0 || apiSlots.filter(s => s === 'QB').length >= 2;
       }
       if (passTd != null && isFinite(passTd)) norm.passTd = passTd;
+      norm.scoringDetail = scoringDetail;
+      // playoff field size is in the settings JSON; the start week is not (Yahoo default wk15)
+      const nPo = parseInt(svc.settings && svc.settings.num_playoff_teams, 10);
+      if (nPo > 1) norm.playoffTeams = nPo;
       norm.syncedAt = Date.now();
       norm.direct = true; // in-site fetch, not the extension — enables the ↻ re-sync button
       return norm;
@@ -57463,9 +57489,16 @@ Rules:
         // extension/direct payload). Callers that don't carry one (my-team
         // re-save) must not wipe a previously saved schedule.
         schedule: league.schedule || (existing[leagueId] && existing[leagueId].schedule) || null,
-        // Playoff shape (Sleeper settings) — consumers default wk15 / 6 teams.
+        // Playoff shape (Sleeper settings; ESPN scheduleSettings + Yahoo
+        // num_playoff_teams since 2026-10-05) — consumers default wk15 / 6.
         playoffStart: league.playoffStart || (existing[leagueId] && existing[leagueId].playoffStart) || null,
         playoffTeams: league.playoffTeams || (existing[leagueId] && existing[leagueId].playoffTeams) || null,
+        playoffReseed: league.playoffReseed != null ? !!league.playoffReseed
+          : (existing[leagueId] && existing[leagueId].playoffReseed != null ? existing[leagueId].playoffReseed : null),
+        // Per-stat scoring on Sleeper keys {rec, pass_td, pass_yd, rush_yd,
+        // rush_td, rec_yd, rec_td, bonus_rec_te} — Sim Lab's LOAD FROM MFF
+        // league sim scores with it. Kept across saves that don't carry one.
+        scoring: league.scoringDetail || (existing[leagueId] && existing[leagueId].scoring) || null,
         // Value history (daily points written by _mtRecordHistoryPoint) —
         // never wiped by a roster re-save.
         history: (existing[leagueId] && Array.isArray(existing[leagueId].history)) ? existing[leagueId].history : null,
@@ -58278,8 +58311,7 @@ Rules:
     if (_mtEspnLiveSig(norm) === _mtEspnSavedSig(lg)) return;
     const savedMine = (lg.teams || []).find(t => t && t.isMyTeam);
     const teams = _mtNormalizedSaveTeams(norm, savedMine);
-    await _mtSaveLeagueToCloud('espn_' + norm.leagueId,
-      { name: norm.name, season: String(norm.season || ''), schedule: norm.schedule || null },
+    await _mtSaveLeagueToCloud('espn_' + norm.leagueId, _mtNormalizedLeagueMeta(norm),
       teams, _mtNormalizedFormat(norm));
     console.log('[MyTeams] Background-refreshed ESPN league:', norm.name || id);
   }
@@ -58296,8 +58328,7 @@ Rules:
     const norm = await _mtFetchYahooLeague(id, { myTeamId: savedMine ? savedMine.id : null });
     if (!norm) return; // non-viewable leagues throw at the proxy → caught by the sweep
     const teams = _mtNormalizedSaveTeams(norm, savedMine);
-    await _mtSaveLeagueToCloud('yahoo_' + norm.leagueId,
-      { name: norm.name, season: String(norm.season || ''), schedule: norm.schedule || null },
+    await _mtSaveLeagueToCloud('yahoo_' + norm.leagueId, _mtNormalizedLeagueMeta(norm),
       teams, _mtNormalizedFormat(norm));
     console.log('[MyTeams] Background-refreshed Yahoo league:', norm.name || id);
   }

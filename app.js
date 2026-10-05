@@ -51624,7 +51624,9 @@ Rules:
       Object.keys(perGame).forEach(team => { z[pos][team] = -(perGame[team] - mu) / sd; });
     });
     // Blend each position with last season's number (see THE OPPONENT GRADE above).
-    const PR = (window.MFF_OPP_PRIOR_OFF !== true && window.FPA_PRIOR_2025 && window.FPA_PRIOR_2025.pos) || null;
+    // The prior is the season before the points-allowed file's own season (FPA_PRIOR_2025 for 2026).
+    const _prObj = window['FPA_PRIOR_' + (((FP && +FP.season) || 2026) - 1)];
+    const PR = (window.MFF_OPP_PRIOR_OFF !== true && _prObj && _prObj.pos) || null;
     const wIn = {};
     if (PR) _MT_FPA_SRC.forEach(pos => {
       const pv = PR[pos];

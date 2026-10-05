@@ -15,6 +15,9 @@ Touchdown-neutral = actual TDs out, the league TD rate on the yards allowed in
 for the in-season side - keep the two in sync.
 
 Run once a year after the regular season:  python scripts/build_fpa_prior.py --season 2025
+(scripts/january_outcomes_refresh.ps1 does it on the second Tuesday of January.) app.js picks
+window.FPA_PRIOR_<season of the points-allowed file - 1>, so the season rollover only has to
+point the <script> tag in index.html at the new file.
 Source: nflverse player-week + team-week stats. Final regular-season week dropped.
 """
 import argparse

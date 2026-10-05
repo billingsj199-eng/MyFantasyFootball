@@ -41,6 +41,24 @@ Set-Location $Repo
 Write-Log ('=== January outcomes refresh start (season {0}) ===' -f $Season)
 Set-Content -Path $Report -Value ("JM January refresh {0} - completed season {1}" -f (Get-Date -Format 'yyyy-MM-dd'), $Season) -Encoding utf8
 
+# 0. Opponent-grade prior (added 2026-10-05): the completed season's touchdown-neutral
+#    points allowed by position -> data/fpa_prior_<season>.js, the "last season" half of
+#    the site's opponent grade (app.js _mtObservedFpa picks FPA_PRIOR_<points-allowed season - 1>).
+#    Independent of the JM steps, so it runs and commits first. The season rollover still
+#    has to point the <script> tag in index.html at the new file.
+$PriorFile = ('data/fpa_prior_{0}.js' -f $Season)
+$env:PYTHONIOENCODING = 'utf-8'
+$rc = Run-Step 'opponent-grade prior' $Python @('scripts\build_fpa_prior.py', '--season', "$Season")
+if ($rc -ne 0) {
+    Write-Log "opponent-grade prior FAILED (exit $rc) - JM steps continue"
+} elseif ((Test-Path $PriorFile) -and (git status --porcelain -- $PriorFile)) {
+    git add $PriorFile
+    git commit -m ('Opponent-grade prior for the {0} season (touchdown-neutral points allowed by position)' -f $Season)
+    git pull --rebase --autostash origin main
+    git push origin main
+    if ($LASTEXITCODE -eq 0) { Write-Log 'opponent-grade prior pushed' } else { Write-Log "opponent-grade prior PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
+}
+
 $Files = @('data/backtest_outcomes.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) { Write-Log "SKIP: uncommitted changes present:`n$dirty"; exit 0 }

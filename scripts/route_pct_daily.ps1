@@ -3,14 +3,11 @@
 # Feeds the SNP% and RT% columns on the player-card game log for the current season:
 #   1. scripts/pull_snap_counts.py   nflverse snap counts (in-season, updates nightly)
 #                                     -> data/snap_counts.js
-#   2. scripts/pull_pff_weekly.py    PFF Premium weekly receiving table (routes) via a
-#                                     dedicated logged-in Chrome profile
+#   2. scripts/pull_pff_weekly.py    PFF weekly receiving table (routes) from the official
+#                                     PFF Developer API (PFF Pro key in pbp_cache/pff/api_key.txt)
 #                                     -> pbp_cache/pff/weekly/pff_receiving_<yr>_w<N>.csv
-#                                     Not logged in => exit 2, logged, NOT fatal: the RT%
-#                                     column keeps its ~snap-share estimate until Jack
-#                                     logs in to premium.pff.com in that Chrome window
-#                                     (run `python scripts/pull_pff_weekly.py --login-wait 600`
-#                                     by hand once; the profile keeps the session).
+#                                     No key / key refused => exit 2, logged, NOT fatal: the RT%
+#                                     column keeps its ~snap-share estimate for the new weeks.
 #   3. scripts/pull_route_pct.py     real weeks from the PFF files, estimate for the rest
 #                                     -> data/route_pct.js
 #   4. scripts/build_player_roles.py depth-chart archetypes for the card ROLE row (ESPN depth
@@ -60,9 +57,9 @@ $out = & $Python 'scripts\pull_snap_counts.py' 2>&1 | Out-String
 Write-Log ('snap counts: ' + ($out -split "`n" | Select-Object -Last 3 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "SNAP PULL FAILED (exit $LASTEXITCODE) - continuing with the file on disk" }
 
-$out = & $Python 'scripts\pull_pff_weekly.py' '--login-wait' '90' 2>&1 | Out-String
+$out = & $Python 'scripts\pull_pff_weekly.py' 2>&1 | Out-String
 Write-Log ('pff weekly: ' + $out.Trim())
-if ($LASTEXITCODE -eq 2) { Write-Log 'PFF LOGIN NEEDED - RT% stays estimated until Jack logs in to premium.pff.com in the PFF Chrome profile' }
+if ($LASTEXITCODE -eq 2) { Write-Log 'PFF API KEY MISSING OR REFUSED - RT% stays estimated until the key in pbp_cache/pff/api_key.txt works (PFF Pro, www.pff.com/account/api-keys)' }
 elseif ($LASTEXITCODE -ne 0) { Write-Log "PFF PULL FAILED (exit $LASTEXITCODE) - using the weekly files already on disk" }
 
 $out = & $Python 'scripts\pull_route_pct.py' '--years' '2026' 2>&1 | Out-String

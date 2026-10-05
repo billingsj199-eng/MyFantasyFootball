@@ -59361,6 +59361,7 @@ Rules:
     if (t.scrollLeft > 20) {
       const h = document.querySelector('#udTab_board .ud-scroll-hint');
       if (h) h.classList.add('seen'); // class, not inline — the mobile CSS is !important
+      window._udBoardHintSeen = true; // survives the board's view-toggle repaint
     }
   }, true);
 
@@ -61772,6 +61773,65 @@ Rules:
     }
     return _udExpAdvCache;
   }
+
+  // DRAFT BOARD view toggle (Jack 2026-10-05). EXPOSURE = ownership % (the
+  // original board). The two advance-rate views are Best Ball Mania only (the
+  // one contest with enough teams per player to read a rate off):
+  //   MY ADV RATE      — of my teams rostering the player, the share sitting
+  //                      in an advancing spot                         -> `by`
+  //   OVERALL ADV RATE — the same share over EVERY team in my synced pools,
+  //                      all 12 per pool: which players have carried teams
+  //                      across the whole field                       -> `fby`
+  // Advancing = top 2 of the 12-team Round 1 pool (Weeks 1-14) in BOTH views
+  // (Jack 2026-10-05: advance rate IS Round 1). Unlike the ADVANCE RATE card
+  // it never follows a team into the Week 15+ playoff rounds, so the board
+  // freezes on the final Round 1 standings once Week 14 is in.
+  // Both maps are keyed by the site (D) name; `sig` / `fsig` move whenever a
+  // counted team crosses the advance line.
+  window._udBoardView = 'exp';
+  let _udBoardAdvShown = null;
+  const _UD_BBM_RE = /best\s*ball\s*mania/i;
+  function _udBoardAdvStats(data) {
+    const drafts = {}, by = {}, fby = {}, sig = [], fsig = [];
+    let fTeams = 0, fAdv = 0, fPools = 0, mTeams = 0, mAdv = 0;
+    const count = (map, picks, isAdv) => {
+      const seen = {};
+      (picks || []).forEach(p => {
+        if (!p || !p.name) return;
+        const m = _udMatchPlayer(p.name);
+        const key = m ? m.n : p.name;
+        if (seen[key]) return;
+        seen[key] = 1;
+        const r = map[key] || (map[key] = { n: 0, adv: 0 });
+        r.n++;
+        if (isAdv) r.adv++;
+      });
+    };
+    Object.entries((data && data.drafts) || {}).forEach(([id, d]) => {
+      if (!d || !_UD_BBM_RE.test(String(d.tournament || ''))) return;
+      drafts[id] = d;
+      const L = _udLiveDraft(d);
+      if (!L || !L.fieldComplete || !L.scored) return;
+      const advBy = {};
+      L.teams.forEach(t => { advBy[t.entryId] = t.adv; });
+      fPools++;
+      Object.values(d.allTeams || {}).forEach(t => {
+        const isAdv = !!advBy[t.entryId];
+        fTeams++;
+        if (isAdv) fAdv++;
+        count(fby, t.picks, isAdv);
+      });
+      fsig.push(id + ':' + L.teams.filter(t => t.adv).map(t => t.entryId).join('/'));
+      if (!L.me) return;
+      const mine = !!L.me.adv;
+      mTeams++;
+      if (mine) mAdv++;
+      sig.push(id + (mine ? '+' : '-'));
+      count(by, d.picks, mine);
+    });
+    return { by, fby, drafts, nBbm: Object.keys(drafts).length,
+             fPools, fTeams, fAdv, mTeams, mAdv, sig: sig.join(','), fsig: fsig.join(',') };
+  }
   function _udKpiWinHtml(sum) {
     if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
     return {
@@ -61801,6 +61861,12 @@ Rules:
           const inp = document.getElementById('udExpFilter');
           expList.innerHTML = _udExpListHtml(inp ? inp.value : '', window._udExpPosFilter || 'ALL', sc);
         }
+      }
+      // Draft board ADVANCE RATE view: same rule — repaint when a team crossed the line.
+      if (window._udBoardView !== 'exp') {
+        const board = document.getElementById('udTab_board');
+        const bs = board ? _udBoardAdvStats(data) : null;
+        if (bs && (window._udBoardView === 'field' ? bs.fsig : bs.sig) !== _udBoardAdvShown) board.innerHTML = _udBoardTabHtml(data);
       }
       const teamsTab = document.getElementById('udTab_teams');
       if (window._udTeamsBuilt && teamsTab && teamsTab.style.display !== 'none') {
@@ -63357,29 +63423,10 @@ Rules:
     html += `<div id="udTeamsBody"></div>`;
     html += `</div>`;
 
-    // DRAFT BOARD TAB
-    // v0.9.92: detect format from filtered drafts (majority wins) so the
-    // board uses the right Underdog ADP scale and shows it in the header.
-    let _udBoardSf = 0, _udBoardBbm = 0;
-    Object.values(data.drafts).forEach(dr => {
-      if (dr && dr.phase === 'superflex') _udBoardSf++; else _udBoardBbm++;
-    });
-    const _udBoardLabel = _udBoardSf > _udBoardBbm ? 'Superflex' : 'Best Ball';
+    // DRAFT BOARD TAB — body built by _udBoardTabHtml so the EXPOSURE /
+    // ADVANCE RATE view toggle can repaint it in place.
     html += `<div id="udTab_board" style="display:${_activeTabId === 'board' ? '' : 'none'}">`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${_udBoardLabel} ADP</span></div>`;
-    html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${_udBoardLabel} ADP in a 12-team grid. Color = your ownership%.</div>`;
-    // Legend
-    html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
-    html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e"></span> 11%+</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#facc15"></span> 5–11%</span>`;
-    html += `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444"></span> 0–5%</span>`;
-    html += `</div>`;
-    // Mobile scroll hint (Jack 2026-09-02): the 12-slot grid scrolls sideways
-    // on phones — say so. CSS shows it only ≤600px; the capture-phase scroll
-    // listener below hides it once the board has been swiped.
-    html += `<div class="ud-scroll-hint" style="display:none;align-items:center;gap:6px;margin-bottom:8px;padding:6px 10px;border:1px dashed var(--accent);border-radius:6px;font-size:.62rem;color:var(--accent)"><span style="font-size:.9rem;line-height:1">↔</span> Swipe sideways to see all 12 draft slots</div>`;
-    html += _udRenderDraftBoard(data);
+    html += _udBoardTabHtml(data);
     html += `</div>`;
 
     // VALUE PICKS TAB
@@ -64346,11 +64393,106 @@ Rules:
     return html;
   }
 
-  function _udRenderDraftBoard(data) {
+  // DRAFT BOARD tab body: title + view toggle, blurb, legend, swipe hint, grid.
+  // Rebuilt whole by _udSetBoardView and by the live tick (advance-rate views).
+  function _udBoardTabHtml(data) {
+    const view = window._udBoardView === 'adv' || window._udBoardView === 'field' ? window._udBoardView : 'exp';
+    const adv = view !== 'exp', field = view === 'field';
+    const st = adv ? _udBoardAdvStats(data) : null;
+    _udBoardAdvShown = st ? (field ? st.fsig : st.sig) : null;
+    // v0.9.92: detect format from filtered drafts (majority wins) so the
+    // board uses the right Underdog ADP scale and shows it in the header.
+    // The advance-rate views are Best Ball Mania teams only → always Best Ball.
+    let sfN = 0, bbmN = 0;
+    Object.values(data.drafts).forEach(dr => {
+      if (dr && dr.phase === 'superflex') sfN++; else bbmN++;
+    });
+    const label = (!adv && sfN > bbmN) ? 'Superflex' : 'Best Ball';
+    const swatch = (c, txt) => `<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:${c}"></span> ${txt}</span>`;
+    const strong = v => `<span style="color:var(--text);font-weight:600">${v}</span>`;
+    let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">DRAFT BOARD <span style="font-size:.65rem;color:var(--text2);letter-spacing:1px">· ${label} ADP</span></span>`;
+    html += `<div style="display:flex;gap:3px">`;
+    [['exp', 'EXPOSURE', 'Color each player by your ownership %'],
+     ['adv', 'MY ADV RATE', 'Color each player by how often your Best Ball Mania teams rostering the player hold an advancing spot (top 2 of the Round 1 pool, Weeks 1-14)'],
+     ['field', 'OVERALL ADV RATE', 'Color each player by how often ANY team rostering the player holds an advancing spot (top 2 of the Round 1 pool, Weeks 1-14), across every team in your synced Best Ball Mania pools — who has given the biggest edge']].forEach(([id, txt, tip]) => {
+      const on = id === view;
+      html += `<button onclick="window._udSetBoardView('${id}')" title="${tip}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;white-space:nowrap;border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};background:${on ? 'var(--accent)' : 'var(--surface)'};color:${on ? '#000' : 'var(--text2)'}">${txt}</button>`;
+    });
+    html += `</div></div>`;
+    if (adv && !(field ? st.fTeams : st.mTeams)) {
+      html += `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">${st.nBbm
+        ? 'No Best Ball Mania standings yet. This view needs the full field synced from Underdog and at least one scored week.'
+        : 'No Best Ball Mania drafts in the current filter. Advance rate by player is Best Ball Mania only.'}</div>`;
+      return html;
+    }
+    if (adv) {
+      // Color cuts hang off the field average (2 of 12 = 16.7% in a Round 1
+      // pool): the outer bands are the players well clear of it either way.
+      const base = st.fAdv / st.fTeams;
+      st.field = field; st.base = base; st.map = field ? st.fby : st.by;
+      st.tier = rate =>
+        rate >= base * 1.5 ? { c: '#dcfce7', bg: 'rgba(34,197,94,.45)', bd: '#22c55e' } :
+        rate >= base * 1.2 ? { c: '#22c55e', bg: 'rgba(34,197,94,.16)', bd: '#22c55e' } :
+        rate >= base * 0.8 ? { c: '#facc15', bg: 'rgba(250,204,21,.13)', bd: '#facc15' } :
+        rate >= base * 0.5 ? { c: '#ef4444', bg: 'rgba(239,68,68,.14)', bd: '#ef4444' } :
+                             { c: '#fee2e2', bg: 'rgba(239,68,68,.45)', bd: '#ef4444' };
+      const cut = k => Math.round(100 * base * k);
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:10px">` + (field
+        ? `Players sorted by raw Underdog Best Ball ADP in a 12-team grid. Color = how often a team rostering that player holds an advancing spot (top 2 of 12 in its Round 1 pool, Weeks 1–14), across every team in your Best Ball Mania pools: ${strong(st.fTeams.toLocaleString('en-US'))} teams in ${strong(st.fPools)} pools · field avg ${strong((100 * base).toFixed(1) + '%')}. The small count is advancing teams / teams rostering the player.`
+        : `Players sorted by raw Underdog Best Ball ADP in a 12-team grid. Color = how often your Best Ball Mania teams with that player hold an advancing spot (top 2 of 12 in the Round 1 pool, Weeks 1–14); the small count is advancing teams / teams rostering the player. Overall: ${strong(st.mAdv + ' of ' + st.mTeams)} teams advancing (${strong(Math.round(100 * st.mAdv / st.mTeams) + '%')}) · field avg ${strong((100 * base).toFixed(1) + '%')}.`) + `</div>`;
+      // OVERALL view: the biggest edges either way, called out above the grid.
+      // Floor of half the pools keeps a late-round flier drafted a handful of
+      // times from topping the list on a tiny sample.
+      if (field) {
+        const minN = Math.max(3, Math.ceil(st.fPools / 2));
+        const ranked = Object.entries(st.fby).filter(([, r]) => r.n >= minN)
+          .map(([name, r]) => ({ name, r, rate: r.adv / r.n }))
+          .sort((x, y) => (y.rate - x.rate) || (y.r.n - x.r.n));
+        const chip = e => {
+          const t = st.tier(e.rate), edge = 100 * (e.rate - base);
+          const nm = String(e.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+          return `<span onclick="window._mtOpenCardByName('${nm}')" title="Advancing on ${e.r.adv} of ${e.r.n} teams · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card" style="padding:2px 7px;border-radius:4px;background:${t.bg};border:1px solid ${t.bd}55;color:${t.c};font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer">${_esc(e.name)} <span style="font-weight:700">${Math.round(100 * e.rate)}%</span></span>`;
+        };
+        const edgeRow = (lbl, col, list) => `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:${col};min-width:92px">${lbl}</span>${list.map(chip).join('')}</div>`;
+        if (ranked.length >= 16) {
+          html += edgeRow('BIGGEST EDGE', '#22c55e', ranked.slice(0, 8));
+          html += edgeRow('BIGGEST DRAG', '#ef4444', ranked.slice(-8).reverse());
+          html += `<div style="height:4px"></div>`;
+        }
+      }
+      html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center;flex-wrap:wrap">`;
+      html += `<span style="color:var(--text2)">ADVANCE RATE:</span>`;
+      html += swatch('#22c55e', cut(1.5) + '%+') + swatch('rgba(34,197,94,.4)', cut(1.2) + '–' + cut(1.5) + '%') + swatch('#facc15', cut(0.8) + '–' + cut(1.2) + '%') +
+              swatch('rgba(239,68,68,.4)', cut(0.5) + '–' + cut(0.8) + '%') + swatch('#ef4444', 'under ' + cut(0.5) + '%') + swatch('#64748b', field ? 'not drafted' : 'not rostered');
+      html += `</div>`;
+    } else {
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${label} ADP in a 12-team grid. Color = your ownership%.</div>`;
+      html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center">`;
+      html += `<span style="color:var(--text2)">OWNERSHIP:</span>`;
+      html += swatch('#22c55e', '11%+') + swatch('#facc15', '5–11%') + swatch('#ef4444', '0–5%');
+      html += `</div>`;
+    }
+    // Mobile scroll hint (Jack 2026-09-02): the 12-slot grid scrolls sideways
+    // on phones — say so. CSS shows it only ≤600px; the capture-phase scroll
+    // listener (top of this module) hides it once the board has been swiped.
+    html += `<div class="ud-scroll-hint${window._udBoardHintSeen ? ' seen' : ''}" style="display:none;align-items:center;gap:6px;margin-bottom:8px;padding:6px 10px;border:1px dashed var(--accent);border-radius:6px;font-size:.62rem;color:var(--accent)"><span style="font-size:.9rem;line-height:1">↔</span> Swipe sideways to see all 12 draft slots</div>`;
+    html += _udRenderDraftBoard(data, st);
+    return html;
+  }
+  window._udSetBoardView = function(view) {
+    window._udBoardView = view === 'adv' || view === 'field' ? view : 'exp';
+    const el = document.getElementById('udTab_board');
+    if (el && window._udData) el.innerHTML = _udBoardTabHtml(window._udData);
+  };
+
+  // adv (advance-rate views) = _udBoardAdvStats result plus the map / tier /
+  // base _udBoardTabHtml picked for the view; null = the ownership board.
+  function _udRenderDraftBoard(data, adv) {
     if (typeof D === 'undefined') return '<div style="color:var(--text2);font-size:.78rem">Player data not loaded</div>';
 
     // Determine grid size from drafts
-    const firstDraft = Object.values(data.drafts)[0];
+    const firstDraft = Object.values(adv ? adv.drafts : data.drafts)[0];
     const teamCount = firstDraft ? (firstDraft.size || 12) : 12;
     const roundCount = firstDraft ? firstDraft.picks.length : 20;
     const totalSlots = teamCount * roundCount;
@@ -64365,7 +64507,7 @@ Rules:
     Object.values(data.drafts).forEach(dr => {
       if (dr && dr.phase === 'superflex') _sfCount++; else _bbmCount++;
     });
-    const _udBoardFmt = _sfCount > _bbmCount ? 'sf' : 'bbm';
+    const _udBoardFmt = (!adv && _sfCount > _bbmCount) ? 'sf' : 'bbm';
     const _udBoardField = _udBoardFmt === 'sf' ? 'sfa' : 'udA';
     const adpPlayers = D.filter(d => {
         const v = d[_udBoardField];
@@ -64422,18 +64564,34 @@ Rules:
         }
 
         const own = ownershipMap[player.name] || 0;
-        let ownColor, ownBg;
-        if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }
+        let ownColor, ownBg, cellVal = own + '%', cellSub = player.pos, cellTip = 'Open player card';
+        let ownBorder = null;
+        if (adv) {
+          const r = adv.map[player.name];
+          const mine = adv.by[player.name], all = adv.fby[player.name];
+          const part = (x, who) => x ? `${who}: ${x.adv} of ${x.n} (${Math.round(100 * x.adv / x.n)}%)` : `${who}: none`;
+          if (!r) {
+            ownColor = '#64748b'; ownBg = 'rgba(100,116,139,.08)'; cellVal = '—';
+            cellTip = (adv.field ? 'Not drafted in your scored Best Ball Mania pools' : 'On none of your scored Best Ball Mania teams · ' + part(all, 'all teams')) + ' — click for the player card';
+          } else {
+            const rate = r.adv / r.n, t = adv.tier(rate), edge = 100 * (rate - adv.base);
+            ownColor = t.c; ownBg = t.bg; ownBorder = t.bd;
+            cellVal = Math.round(100 * rate) + '%';
+            cellSub = player.pos + ' · ' + r.adv + '/' + r.n;
+            cellTip = `Teams advancing with this player — ${part(mine, 'yours')} · ${part(all, 'all teams')} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card`;
+          }
+        }
+        else if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }
         else if (own < 5) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.15)'; }
         else if (own <= 11) { ownColor = '#facc15'; ownBg = 'rgba(250,204,21,.15)'; }
         else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.18)'; }
 
         html += `<td style="padding:2px;border:1px solid var(--border)">`;
-        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="Open player card" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownColor}30;min-height:32px;cursor:pointer">`;
+        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="${cellTip}" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownBorder || ownColor}30;min-height:32px;cursor:pointer">`;
         html += `<div style="font-size:.58rem;font-weight:600;color:${ownColor};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
         html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:1px">`;
-        html += `<span style="font-size:.48rem;color:var(--text2)">${player.pos}</span>`;
-        html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${own}%</span>`;
+        html += `<span style="font-size:.48rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;margin-right:3px">${cellSub}</span>`;
+        html += `<span style="font-size:.55rem;font-weight:700;color:${ownColor}">${cellVal}</span>`;
         html += `</div>`;
         html += `</div></td>`;
       }

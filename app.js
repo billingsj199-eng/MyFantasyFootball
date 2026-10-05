@@ -60030,6 +60030,11 @@ Rules:
   // We append to a 30-day rolling history in Firestore, then override
   // D[i].udA / D[i].sfa with the latest values so rankings and portfolio
   // reflect live ADP without reloading the static d.js.
+  // Last-resort ADP key: UD drops generational suffixes ("Marvin Harrison"
+  // for d.js "Marvin Harrison Jr."). Exact name and udN are tried first.
+  function _udAdpBaseName(n) {
+    return String(n).replace(/\s+(jr|sr|ii|iii|iv|v)\.?$/i, '');
+  }
   window._mffSetAdpSnapshot = function(snapshot) {
     if (!snapshot || !snapshot.adps || !snapshot.date) return;
     const adpMap = snapshot.adps;
@@ -60043,8 +60048,10 @@ Rules:
     if (Array.isArray(window.D)) {
       for (let i = 0; i < window.D.length; i++) {
         const row = window.D[i];
-        if (!row || !row.n) continue;
-        const ent = adpMap[row.n] || (row.udN ? adpMap[row.udN] : null);
+        // Retired rows never take a live ADP: UD keys Marvin Harrison Jr. as
+        // plain "Marvin Harrison", which is the retired Colt's exact name.
+        if (!row || !row.n || row._retired) continue;
+        const ent = adpMap[row.n] || (row.udN ? adpMap[row.udN] : null) || adpMap[_udAdpBaseName(row.n)];
         if (!ent) continue;
         if (ent.bbm != null && !isNaN(ent.bbm)) { row.udA = ent.bbm; appliedBbm++; }
         if (ent.sf != null && !isNaN(ent.sf)) { row.sfa = ent.sf; appliedSf++; }
@@ -60140,8 +60147,8 @@ Rules:
         if (Array.isArray(window.D)) {
           for (let i = 0; i < window.D.length; i++) {
             const row = window.D[i];
-            if (!row || !row.n) continue;
-            const ent = latest.adps[row.n] || (row.udN ? latest.adps[row.udN] : null);
+            if (!row || !row.n || row._retired) continue;   // see _mffSetAdpSnapshot
+            const ent = latest.adps[row.n] || (row.udN ? latest.adps[row.udN] : null) || latest.adps[_udAdpBaseName(row.n)];
             if (!ent) continue;
             if (ent.bbm != null && !isNaN(ent.bbm)) { row.udA = ent.bbm; appliedBbm++; }
             if (ent.sf != null && !isNaN(ent.sf)) { row.sfa = ent.sf; appliedSf++; }
@@ -64701,7 +64708,7 @@ Rules:
     const _udBoardField = _udBoardFmt === 'sf' ? 'sfa' : 'udA';
     const adpPlayers = D.filter(d => {
         const v = d[_udBoardField];
-        return v != null && v < 900 && d.s && !d.s.includes('D/ST') && d.s !== 'K';
+        return v != null && v < 900 && !d._retired && d.s && !d.s.includes('D/ST') && d.s !== 'K';
       })
       .map(d => ({ name: d.n, pos: d.s, team: d.t || '', adp: d[_udBoardField] }))
       .sort((a, b) => a.adp - b.adp)

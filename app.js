@@ -67182,10 +67182,29 @@ function _rsScatter(cfg) {
   // improvments" - a game the player left hurt is dropped from both windows (default on)
   let _mvInj = true, _mvHurt = 0;
   try { if (localStorage.getItem('rsMvInj') === '0') _mvInj = false; } catch (e) { /* storage blocked */ }
+  // Feeds spell names their own way ("DJ Moore" vs "D.J. Moore"), so look up by a
+  // normalized key: lowercase letters only, suffix dropped (same rule as [InjuryUpdates]).
+  const _mvNorm = n => String(n || '').toLowerCase().replace(/\b(jr|sr|ii|iii|iv|v)\.?$/, '').replace(/[^a-z]/g, '');
+  let _mvTagIx = null;
+  function _mvTag(src, n) {
+    const pl = src && src.players;
+    if (!pl) return null;
+    if (pl[n] != null) return pl[n];
+    if (!_mvTagIx) _mvTagIx = new Map();
+    let ix = _mvTagIx.get(src);
+    if (!ix) {
+      ix = {};
+      Object.keys(pl).forEach(k => { const nk = _mvNorm(k); if (!(nk in ix)) ix[nk] = pl[k]; });
+      _mvTagIx.set(src, ix);
+    }
+    return ix[_mvNorm(n)] || null;
+  }
+  // Questionable counts too: it only applies together with a snap drop in the latest game,
+  // and a fresh Q tag right after a short game means he got hurt (Rice W4 2026: 10% snaps, hamstring Q)
   function _mvOutNow(n) {
-    const s = (window.INJURY_UPDATES && window.INJURY_UPDATES.players && window.INJURY_UPDATES.players[n]) || '';
-    const p = window.PRACTICE_2026 && window.PRACTICE_2026.players && window.PRACTICE_2026.players[n];
-    return /\b(IR|Out|Doubtful|PUP)\b/i.test(s) || !!(p && /Out|Doubtful/i.test(p.gs || ''));
+    const s = _mvTag(window.INJURY_UPDATES, n) || '';
+    const p = _mvTag(window.PRACTICE_2026, n);
+    return /\b(IR|Out|Doubtful|Questionable|PUP)\b/i.test(s) || !!(p && /Out|Doubtful|Questionable/i.test(p.gs || ''));
   }
   // An injury game = snaps under 75% of his best other game AND a sign he was hurt: the
   // play-by-play says so (week file `inj`), he missed the next week, or (latest week of the

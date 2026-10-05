@@ -5091,7 +5091,7 @@ function getFiltered(applyTopN) {
     // ADP comparison view: missing ADPs sort to the bottom in the (default) ascending order.
     const _smAdp = (d, src) => { const v = _adpBySource(d, src); return v == null ? 9999 : v; };
     // VOR view: PPG / VOR / games sort high-first, the weekly VOR rank low-first; no sim row sinks.
-    const _vorSort = (d, k) => { const e = _vorFor(d); return e ? e[k] : (k === 'rk' ? 9999 : -Infinity); };
+    const _vorSort = (d, k) => { const e = _vorFor(d); if (e && k !== 'v' && k !== 'g' && currentVersion !== 'sims' && _vorLocked(d, e)) return k === 'rk' ? 9999 : -Infinity; return e ? e[k] : (k === 'rk' ? 9999 : -Infinity); };
     f.sort((a, b) => {
       let av, bv;
       switch(sortKey) {
@@ -7263,10 +7263,13 @@ function render() {
   const isMine = currentVersion === 'mine';
   const isConsensus = currentVersion === 'consensus';
   const isSignedOut = !window._authCurrentUser;
+  const isSims = currentVersion === 'sims';
   const blurCutoff = (isMine && isSignedOut) ? 0
+                   : isSims ? _VOR_FREE_N(filter)
                    : (filter === 'ALL') ? 36
                    : 12;
   const shouldBlur = !isConsensus && (
+    (isSims && !isPremium) ||
     (isJacks && !isPremium) ||
     (isMine && isSignedOut) ||
     (isMine && !isPremium)
@@ -7400,9 +7403,9 @@ function render() {
     } else if (isMine && !isPremium) {
       html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in this filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
     } else if (!_isSignedIn) {
-      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Create a free account, then upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
+      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Create a free account, then upgrade to PRO to see ' + (isSims ? 'the full SIM VOR board' : 'all of Jack\'s rankings') + '.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
     } else {
-      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see all of Jack\'s rankings.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
+      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see ' + (isSims ? 'the full SIM VOR board' : 'all of Jack\'s rankings') + '.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
     }
     return html;
   };
@@ -7603,7 +7606,14 @@ function render() {
       const _vorTip = _rp ? ' title="' + (d.s + ' replacement level: ' + d.s + _rp.rk + ' ' + _rp.n + ', ' + _rp.v + (_isWeekly ? ' pts this week' : ' a game') + ' — ' + _rp.rostered + ' ' + _posPl + ' rostered in this format' + (_rp.rostered !== _rp.starters ? ' (' + _rp.starters + ' start)' : '')).replace(/"/g, '&quot;') + '"' : '';
       const _kd = d.s === 'K' || d.s === 'DST';
       const _rkTxt = _ve ? (_kd ? d.s + _ve.rk : '#' + _ve.rk) : '';
-      if (_isWeekly) {
+      if (_ve && currentVersion !== 'sims' && _vorLocked(d, _ve)) {
+        // Free sessions: VOR past the top 30 (12 at K / D/ST) is a Season Pass
+        // feature — the SIM VOR board blurs those rows, so the stat view locks them.
+        const _lk = '<span class="cons-lock" aria-label="Premium" title="' + _VOR_LOCK_TIP + '">🔒</span>';
+        _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m">${_lk}</span></td>`;
+        _statTds = `<td class="pts-cell ppg25-cell">${_lk}</td>\n      <td class="pts-cell l4ppg-cell">${_lk}</td>`;
+        if (!_isWeekly) { _statYdsTail = _lk; _statJmCell = String(_ve.g); }
+      } else if (_isWeekly) {
         const _rkTip = _ve ? ' title="' + (_kd ? 'Rank among ' + _posPl + ' by VOR this week' : '#' + _ve.rk + ' by VOR across QB / RB / WR / TE this week · ' + d.s + _ve.posRk + ' by projection') + '"' : '';
         _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_vorC ? ' style="color:' + _vorC + '"' : ''}>${_vorTxt}</span></td>`;
         _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
@@ -10921,7 +10931,8 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
 function _exportCutoff() {
   const _isPrem = typeof hasPremium === 'function' && hasPremium();
   if (_isPrem) return Infinity;
-  if (currentVersion === 'consensus' || currentVersion === 'sims') return Infinity;
+  if (currentVersion === 'consensus') return Infinity;
+  if (currentVersion === 'sims') return _VOR_FREE_N(filter);
   // Not signed in on My Rankings should get 0, but canEdit gate already prevents that flow; still safe to return 0.
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
   return (filter === 'ALL') ? 36 : 12;
@@ -12005,6 +12016,15 @@ function _vorTable() {
 function _vorFor(d) {
   const t = _vorTable();
   return (t && t.map.get(d)) || null;
+}
+// Free window for SIM VOR (Jack 2026-10-05: premium past the top 30): 30 on the
+// overall / FLEX views, 12 on a position pill (same split as Jack's 36/12).
+function _VOR_FREE_N(f) { return (f === 'ALL' || f === 'FLEX') ? 30 : 12; }
+const _VOR_LOCK_TIP = 'SIM VOR past the top 30 is a Season Pass feature — upgrade to see every player\'s value over replacement.';
+// VOR stats view on the free boards: lock players outside the SIM VOR free window.
+function _vorLocked(d, e) {
+  if (!e || hasPremium()) return false;
+  return (d.s === 'K' || d.s === 'DST') ? e.rk > 12 : e.rk > 30;
 }
 // PLAYOFFS view of the SIM VOR board: ranked and tiered by PO VOR (season boards only).
 window._vorPlayoffs = false;

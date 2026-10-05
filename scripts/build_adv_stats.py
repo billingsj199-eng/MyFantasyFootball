@@ -26,6 +26,12 @@ Sources (local caches; only the current season's snap counts are fetched live):
                      receiving_scheme   man / zone routes, targets, yards
                      receiving_concept  slot + screen
                      receiving_depth    behind LOS / short / medium / deep (20+)
+                     v2_passing / v2_receiving / v2_rushing / v2_offense / v2_pass_blocking
+                                        PFF Pro single-week player reports (graded-play
+                                        rates, over-expected numbers, offensive snaps, line
+                                        pass-block win rate), 2019 on
+                     team_offense_rushing / team_offense_passing / team_defense_rushing
+                                        PFF Pro team tables (run game, pressure over expectation)
                    The 2018-2025 weekly receiving facets list ONLY players with >= 1
                    target that week, so season route counts come from the season
                    CSV and facet route counts (man/zone/slot) are scaled by
@@ -130,12 +136,32 @@ def qb_ftn_values(c, p):
             int(p['fqdb']), int(p['fqpa']), int(p['fqatt']), int(p['fqiw']), int(p['fqcat']), int(cd), int(p['fqoop']), int(p['fqscr'])]
 
 
+# PFF Pro /v2 week reports (2026-10-05, Research additions; pull_pff_weekly.py pull_v2): displayed
+# gpr / gnr = share of the player's offensive plays PFF graded positive / negative (weighted by
+# offensive snaps, hidden gsn); QB cmoe / acoe = completion % / accuracy % over expected (weights
+# vatt attempts, vaim aimed passes), npae / nsce = EPA per dropback without play action / without
+# screens (weight vdb dropbacks); WR/TE croe = catch rate over expected in pct points
+# (= catches over expected xroe / targets vtg, both hidden).
+V2_QB_F = ['gpr', 'gnr', 'cmoe', 'acoe', 'npae', 'nsce', 'gsn', 'vatt', 'vaim', 'vdb']
+V2_RB_F = ['gpr', 'gnr', 'gsn']
+V2_REC_F = ['gpr', 'gnr', 'croe', 'gsn', 'vtg', 'xroe']
+# TEAM run game (PFF team tables, weighted by the week's designed runs vru) + line pass-block
+# win rate (snap-weighted over T/G/C, hidden pass-block snaps pbs / true-pass-set snaps tps) +
+# pressure rate over expectation allowed (weight vpa dropbacks) + defense yards before contact
+# and stuff rate allowed (weight vdru opponent designed runs).
+V2_TM_F = ['ybc', 'yacc', 'stuf', 'izr', 'ozr', 'duo', 'pwr', 'ctr', 'pin', 'pbwr', 'tpbwr', 'proex', 'dybc', 'dstuf',
+           'vru', 'vpa', 'vdru', 'pbs', 'tps']
+TM_RUN_COLS = [('ybc', 'yardsBeforeContactPerCarry', 1, 2), ('yacc', 'yardsAfterContactPerCarry', 1, 2),
+               ('stuf', 'runStuffRate', 100, 1), ('izr', 'insideZoneRate', 100, 1), ('ozr', 'outsideZoneRate', 100, 1),
+               ('duo', 'manDuoRate', 100, 1), ('pwr', 'powerRate', 100, 1), ('ctr', 'counterRate', 100, 1),
+               ('pin', 'pullLeadRate', 100, 1)]
+
 QB_F =['n', 'on', 'tm', 'g', 'fpt', 'db', 'att', 'cmpp', 'ypa', 'anya', 'td', 'int',
         'cpoe', 'epa', 'grd', 'acc', 'adot', 'ttt', 'deep', 'btt', 'twp', 'tdp', 'intp',
         'prs', 'p2s', 'skp', 'cgr', 'cacc', 'pgr', 'pacc', 'pypa', 'blz', 'bgr', 'bypa',
         'ra', 'ry', 'rtd', 'scr',
         'sk', 'cpn', 'dbn', 'aim', 'airn', 'ns', 'psn', 'dgp', 'pdb', 'cdb', 'caim', 'paim', 'patt', 'bdb', 'batt',
-        'xfpt'] + QB_FTN_F
+        'xfpt'] + QB_FTN_F + V2_QB_F
 # xfpt = season expected half-PPR points (xFP) - displayed, appended last so the page reads it by key
 # Trailing short keys on every table are NOT displayed: they are the denominators the
 # page uses to rebuild a multi-week range from week files (each rate re-weighted by its
@@ -146,7 +172,7 @@ RB_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'att', 'tgt', 'tch', 'scy', 'tds',
         'rts', 'tprr', 'yprr', 'recg', 'pbg',
         'xt', 'xc', 'xi',
         'tsn', 'ttc', 'tmt', 'tmd', 'tmi', 'rsy', 'pcar', 'gz', 'rpl',
-        'xfpt', 'xrec'] + SIT_F + FTN_F + ['inj']
+        'xfpt', 'xrec'] + SIT_F + FTN_F + ['inj'] + V2_RB_F
 # SIT_F (defined below the tables) = situational usage: displayed shares + hidden counts
 # xrec = expected receptions (hidden) so the page can re-score xFP as PPR / STD; actual
 # receptions come from tch - att (RB) or the hidden rec field (WR/TE)
@@ -159,7 +185,7 @@ REC_F = ['n', 'on', 'tm', 'g', 'snp', 'fpt', 'rts', 'tgt', 'yds', 'tds',
          'myprr', 'zyprr', 'mtprr', 'ztprr', 'slyprr', 'scr', 'deep', 'dyd', 'dctch', 'blos',
          'xt', 'xa',
          'tsn', 'tmd', 'tmt', 'tma', 'al', 'ppl', 'rec', 'dr', 'ct', 'pry', 'pay', 'mr', 'zr', 'slr', 'cbt', 'dbt', 'dy', 'dtg',
-         'xfpt', 'xrec'] + SIT_F + FTN_F + ['inj']
+         'xfpt', 'xrec'] + SIT_F + FTN_F + ['inj'] + V2_REC_F
 # TEAM table: one row per team (n = team name, tm = code). Offense, tendency and defense from
 # nflverse pbp; protection / pressure / man coverage from PFF (defense = what opponents saw).
 TM_F = ['n', 'on', 'tm', 'g',
@@ -169,7 +195,7 @@ TM_F = ['n', 'on', 'tm', 'g',
         'skp', 'prsa', 'blzf', 'ttt', 'manf',
         'depa', 'ddbepa', 'druepa', 'dsr', 'dxp', 'dskp', 'dprs', 'dblz', 'dman', 'dtdc', 'drztd',
         'pcn', 'npl', 'edn', 'pon', 'ayn', 'cmp', 'tdn', 'rzt', 'drv', 'pdbt', 'tttw', 'mzr',
-        'dpl', 'dpa', 'drua', 'dpdbt', 'dmzr', 'dtdn', 'drzt'] + TM_FTN_F
+        'dpl', 'dpa', 'drua', 'dpdbt', 'dmzr', 'dtdn', 'drzt'] + TM_FTN_F + V2_TM_F
 TEAM_NAMES = {
     'ARI': 'Arizona Cardinals', 'ATL': 'Atlanta Falcons', 'BAL': 'Baltimore Ravens', 'BUF': 'Buffalo Bills',
     'CAR': 'Carolina Panthers', 'CHI': 'Chicago Bears', 'CIN': 'Cincinnati Bengals', 'CLE': 'Cleveland Browns',
@@ -359,6 +385,67 @@ def agg_rushing(yr, only=None):
         a.addw('pbg', row.get('grades_pass_block'), row.get('run_plays'))
         a.addw('recg', row.get('grades_pass_route'), row.get('routes'))
     return out
+
+
+def agg_v2(yr, only=None):
+    """PFF /v2 week reports per player (V2_*_F): graded-play rates weighted by that week's offensive
+    snaps (one line per player-week - the rate is the same player-level number in every report),
+    QB over-expected / no-play-action / no-screen numbers, receiver catches over expected."""
+    snaps = {}
+    for wk, pid, row in weekly('v2_offense', yr, only):
+        v = fnum(row.get('snapCountsTotal'))
+        if v:
+            snaps[(pid, wk)] = v
+    out, seen = {}, set()
+    for facet in ('v2_passing', 'v2_receiving', 'v2_rushing'):
+        for wk, pid, row in weekly(facet, yr, only):
+            a = out.setdefault(pid, Acc())
+            sn = snaps.get((pid, wk))
+            pr, nr = fnum(row.get('offensePosGradedRate')), fnum(row.get('offenseNegGradedRate'))
+            if (pid, wk) not in seen and sn and pr is not None and nr is not None:
+                seen.add((pid, wk))
+                a.addw('gpr', pr, sn)
+                a.addw('gnr', nr, sn)
+            if facet == 'v2_passing':
+                a.addw('cmoe', row.get('completionOe'), row.get('attempts'))
+                a.addw('acoe', row.get('accuracyOe'), row.get('aimedPasses'))
+                db = row.get('dropbacks')
+                if fnum(row.get('npaEpa')) is not None and fnum(row.get('noScreenEpa')) is not None:
+                    a.addw('npae', row.get('npaEpa'), db)
+                    a.addw('nsce', row.get('noScreenEpa'), db)
+            elif facet == 'v2_receiving':
+                xt, tg = fnum(row.get('receptionsOeTotal')), fnum(row.get('targets'))
+                if xt is not None and tg:
+                    a.s['xroe'] += xt
+                    a.s['vtg'] += tg
+    return out
+
+
+def v2_values(a, kind):
+    """The V2_QB_F / V2_RB_F / V2_REC_F values for one row (a = agg_v2 accumulator or None)."""
+    def wt(k):
+        return int(round(a.w[k][1])) if a and k in a.w else 0
+    gpr, gnr = (rnd(a.avg('gpr')), rnd(a.avg('gnr'))) if a else (None, None)
+    if kind == 'QB':
+        return [gpr, gnr, rnd(a.avg('cmoe')) if a else None, rnd(a.avg('acoe')) if a else None,
+                rnd(a.avg('npae'), 3) if a else None, rnd(a.avg('nsce'), 3) if a else None,
+                wt('gpr'), wt('cmoe'), wt('acoe'), wt('npae')]
+    if kind == 'RB':
+        return [gpr, gnr, wt('gpr')]
+    s = a.s if a else {}
+    return [gpr, gnr, div(s.get('xroe'), s.get('vtg'), 100), wt('gpr'), int(s.get('vtg', 0)), rnd(s.get('xroe', 0.0), 1)]
+
+
+def team_weekly(facet, yr, only=None):
+    """Rows of a PFF team-table week file (pull_pff_weekly TEAM_TABLES): (wk, team, row)."""
+    for wk in weekly_weeks(facet, yr):
+        if only is not None and wk not in only:
+            continue
+        with open(os.path.join(PFF_WEEKLY, f'pff_{facet}_{yr}_w{wk}.csv'), encoding='utf-8-sig', newline='') as fh:
+            for row in csv.DictReader(fh):
+                tm = team(row.get('team_name'))
+                if tm:
+                    yield wk, tm, row
 
 
 def agg_facet(facet, yr, cols, only=None):
@@ -799,6 +886,54 @@ def team_rows(yr, pbp, sel, ftn=None):
                 S[(side, t)]['man'] += mr
                 S[(side, t)]['mzr'] += mr + zr
 
+    # PFF Pro team tables, one line per team-week: weight each week by its own designed runs /
+    # dropbacks (pbp), so a season or a page-rebuilt range is the play-weighted mean
+    wk_ru = plays[plays.rush == 1].groupby(['posteam', 'week']).size().to_dict()
+    wk_db = plays[plays['pass'] == 1].groupby(['posteam', 'week']).size().to_dict()
+    wk_dru = plays[plays.rush == 1].groupby(['defteam', 'week']).size().to_dict()
+    for wk, tm, row in team_weekly('team_offense_rushing', yr, sel):
+        w = wk_ru.get((tm, wk), 0)
+        if not w:
+            continue
+        S[('o', tm)]['vru'] += w
+        for key, col, mult, _dec in TM_RUN_COLS:
+            v = fnum(row.get(col))
+            if v is not None:
+                S[('o', tm)][key + '_s'] += v * mult * w
+                S[('o', tm)][key + '_w'] += w
+    for wk, tm, row in team_weekly('team_offense_passing', yr, sel):
+        w, v = wk_db.get((tm, wk), 0), fnum(row.get('pressureOeAllowed'))
+        if w:
+            S[('o', tm)]['vpa'] += w
+            if v is not None:
+                S[('o', tm)]['proex_s'] += v * 100 * w
+                S[('o', tm)]['proex_w'] += w
+    for wk, tm, row in team_weekly('team_defense_rushing', yr, sel):
+        w = wk_dru.get((tm, wk), 0)
+        if not w:
+            continue
+        S[('o', tm)]['vdru'] += w
+        for key, col, mult in (('dybc', 'yardsBeforeContactPerCarryAllowed', 1), ('dstuf', 'stuffRate', 100)):
+            v = fnum(row.get(col))
+            if v is not None:
+                S[('o', tm)][key + '_s'] += v * mult * w
+                S[('o', tm)][key + '_w'] += w
+    for wk, _pid, row in weekly('v2_pass_blocking', yr, sel):
+        if (row.get('position') or '').strip() not in ('T', 'G', 'C'):
+            continue
+        tm = team(row.get('team_name'))
+        w, v = fnum(row.get('snapCountsPassBlock')) or 0, fnum(row.get('pbwr'))
+        if w and v is not None:
+            S[('o', tm)]['pbwr_s'] += v * w
+            S[('o', tm)]['pbs'] += w
+        w2, v2 = fnum(row.get('truePassSetSnapCountsPassBlock')) or 0, fnum(row.get('truePassSetPbwr'))
+        if w2 and v2 is not None:
+            S[('o', tm)]['tpbwr_s'] += v2 * w2
+            S[('o', tm)]['tps'] += w2
+
+    def wv(o, key, dec=1):
+        return div(o[key + '_s'], o[key + '_w'], 1, dec)
+
     rows = []
     for tm in sorted([t for (side, t) in list(S) if side == 'o' and S[(side, t)]['pl'] > 0]):
         o, d = S[('o', tm)], S[('d', tm)]
@@ -826,6 +961,10 @@ def team_rows(yr, pbp, sel, ftn=None):
             div(o['fbox'], o['fbxn'], 1, 1), div(o['flbx'], o['fbxn'], 100),
             int(o['fpl']), int(o['fdb']), int(o['fpa']), int(o['fmot']), int(o['frpo']), int(o['fscr']),
             rnd(o['fbox'], 1), int(o['fbxn']), int(o['flbx']),
+        ] + [wv(o, key, dec) for key, _col, _m, dec in TM_RUN_COLS] + [
+            div(o['pbwr_s'], o['pbs'], 1, 1), div(o['tpbwr_s'], o['tps'], 1, 1), wv(o, 'proex'),
+            wv(o, 'dybc', 2), wv(o, 'dstuf'),
+            int(o['vru']), int(o['vpa']), int(o['vdru']), int(o['pbs']), int(o['tps']),
         ])
     return rows
 
@@ -910,6 +1049,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
     qb = agg_passing(yr, sel)
     rec = agg_receiving(yr, sel)
     rush = agg_rushing(yr, sel)
+    v2 = agg_v2(yr, sel)
     sch = agg_facet('receiving_scheme', yr, ['man_routes', 'man_targets', 'man_yards', 'zone_routes', 'zone_targets', 'zone_yards'], sel)
     con = agg_facet('receiving_concept', yr, ['slot_routes', 'slot_yards', 'screen_targets', 'base_targets'], sel)
     dep = agg_facet('receiving_depth', yr, ['deep_targets', 'deep_receptions', 'deep_yards', 'medium_yards', 'short_yards',
@@ -1039,7 +1179,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(s['def_gen_pressures']), int(s['p_dropbacks']), int(s['c_dropbacks']), int(s['c_aimed_passes']),
                 int(s['p_aimed_passes']), int(s['p_attempts']), int(s['b_dropbacks']), int(s['b_attempts']),
                 rnd(half_xfp(p, True)) if c['fpt'] is not None else None,
-            ] + qb_ftn_values(c, p))
+            ] + qb_ftn_values(c, p) + v2_values(v2.get(pid), 'QB'))
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
         elif pos == 'RB':
@@ -1090,7 +1230,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(round(yds)), int(p['car']), int(ru['gap_attempts'] + ru['zone_attempts']), int(ru['run_plays']),
                 rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
                 rnd(p['xrec'], 2) if c['fpt'] is not None else None,
-            ] + sit_values(c, p) + ftn_values(c, p) + [inj_games(c)])
+            ] + sit_values(c, p) + ftn_values(c, p) + [inj_games(c)] + v2_values(v2.get(pid), 'RB'))
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
         elif pos in ('WR', 'TE'):
@@ -1165,7 +1305,7 @@ def build_table(yr, xw, dlookup, pbp, snaps, thru, week=None, wks=None, span=Non
                 int(k['base_targets']), int(d['base_targets']), int(round(dy)), int(d['deep_targets']),
                 rnd(half_xfp(p, False)) if c['fpt'] is not None else None,
                 rnd(p['xrec'], 2) if c['fpt'] is not None else None,
-            ] + sit_values(c, p) + ftn_values(c, p) + [inj_games(c)])
+            ] + sit_values(c, p) + ftn_values(c, p) + [inj_games(c)] + v2_values(v2.get(pid), 'REC'))
             if collect is not None:
                 collect[pid] = (pos, c['n'], c['tm'])
 

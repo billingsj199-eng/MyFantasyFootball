@@ -66973,6 +66973,14 @@ function _rsScatter(cfg) {
     c('boxr', 'Box Faced', CHG, 1, 'Average defenders in the box on designed runs.' + FTN_NOTE, N),
     c('lbxr', '8+ Box%', CHG, 1, 'Share of designed runs against 8 or more in the box.' + FTN_NOTE, N)
   ];
+  // PFF Pro additions (Jack 2026-10-05): play grading for every position; the scale differs by
+  // position (blocking snaps count), so compare players within a tab. Week ranges weight by snaps.
+  const GRD = 'Graded Plays';
+  const PRO_NOTE = ' PFF Pro, 2019 on.';
+  const GRADED_COLS = [
+    c('gpr', 'Pos Graded%', GRD, 1, 'Share of the player\'s offensive plays PFF graded positive (weighted by offensive snaps). The best raw next-game predictor among the PFF Pro additions in the 2019-2025 check.' + PRO_NOTE),
+    c('gnr', 'Neg Graded%', GRD, 1, 'Share of the player\'s offensive plays PFF graded negative (weighted by offensive snaps).' + PRO_NOTE, LO)
+  ];
   const QB_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     n('fpt', 'FPTS', 'FP/G', VOL, 1, 1, 'Half-PPR fantasy points (nflverse play-by-play; 2-pt conversions not counted)'),
@@ -66988,6 +66996,10 @@ function _rsScatter(cfg) {
     c('epa', 'EPA/DB', 'Efficiency', 3, 'Expected points added per dropback (nflverse qb_epa, scrambles included)'),
     c('grd', 'Pass Grd', 'Efficiency', 1, 'PFF passing grade (dropback-weighted weekly grades)'),
     c('acc', 'Acc%', 'Efficiency', 1, 'PFF adjusted accuracy: (completions + drops) / aimed passes'),
+    c('cmoe', 'Cmp% OE', 'Efficiency', 1, 'Completion % over expected, PFF model, in percentage points (weighted by attempts).' + PRO_NOTE),
+    c('acoe', 'Acc% OE', 'Efficiency', 1, 'Adjusted accuracy over expected, PFF model, in percentage points (weighted by aimed passes).' + PRO_NOTE),
+    c('npae', 'EPA No PA', 'Efficiency', 3, 'EPA per dropback on plays without play action (PFF).' + PRO_NOTE),
+    c('nsce', 'EPA No Scrn', 'Efficiency', 3, 'EPA per dropback with screens taken out (PFF).' + PRO_NOTE),
     c('tdp', 'TD%', 'Efficiency', 1, 'Touchdowns per attempt'),
     c('intp', 'INT%', 'Efficiency', 1, 'Interceptions per attempt', LO),
     c('adot', 'aDOT', 'Style', 1, 'Average depth of target in air yards (PFF)', N),
@@ -67010,7 +67022,7 @@ function _rsScatter(cfg) {
     n('ry', 'Rush Yds', 'RuYd/G', 'Rushing', 0, 1, 'Rushing yards'),
     n('rtd', 'Rush TD', 'RuTD/G', 'Rushing', 0, 2, 'Rushing touchdowns'),
     n('scr', 'Scrambles', 'Scr/G', 'Rushing', 0, 1, 'Scrambles (nflverse)', N)
-  ].concat(QB_FTN_COLS);
+  ].concat(QB_FTN_COLS).concat(GRADED_COLS);
   // Situational usage (RB and WR/TE): opportunity shares from play-by-play for every season;
   // on-field snap shares need nflverse participation, published after each season.
   const SITG = 'Situational';
@@ -67060,7 +67072,7 @@ function _rsScatter(cfg) {
     c('yprr', 'YPRR', 'Receiving', 2, 'Receiving yards per route run'),
     c('recg', 'Route Grd', 'Receiving', 1, 'PFF receiving grade'),
     c('pbg', 'PBlk Grd', 'Receiving', 1, 'PFF pass-blocking grade')
-  ].concat(SIT_COLS).concat(FTN_COLS);
+  ].concat(SIT_COLS).concat(FTN_COLS).concat(GRADED_COLS);
   const REC_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
@@ -67090,6 +67102,7 @@ function _rsScatter(cfg) {
     c('mtfr', 'MTF/Rec', 'Efficiency', 2, 'Avoided tackles per reception (PFF)'),
     c('fdr', '1D/RR', 'Efficiency', 3, 'First downs per route run'),
     c('ctch', 'Catch%', 'Efficiency', 1, 'Receptions / targets'),
+    c('croe', 'Catch% OE', 'Efficiency', 1, 'Catch rate over expected in percentage points: PFF catches over expected / targets.' + PRO_NOTE),
     c('drp', 'Drop%', 'Efficiency', 1, 'PFF drop rate: drops / (drops + receptions)', LO),
     c('cc', 'CC%', 'Efficiency', 1, 'Contested catch rate (PFF)'),
     c('ctg', 'Cont Tgt%', 'Efficiency', 1, 'Share of targets that were contested (PFF)', N),
@@ -67105,8 +67118,8 @@ function _rsScatter(cfg) {
     c('dyd', 'Deep Yd%', 'Coverage & depth', 1, 'Share of receiving yards on 20+ air-yard targets', N),
     c('dctch', 'Deep Catch%', 'Coverage & depth', 1, 'Catch rate on 20+ air-yard targets'),
     c('blos', 'bLOS Tgt%', 'Coverage & depth', 1, 'Share of targets caught at or behind the line of scrimmage (PFF)', N)
-  ].concat(SIT_COLS).concat(FTN_COLS);
-  const OFF = 'Offense', DEF = 'Defense';
+  ].concat(SIT_COLS).concat(FTN_COLS).concat(GRADED_COLS);
+  const OFF = 'Offense', DEF = 'Defense', RUNG = 'Run Game';
   const TM_COLS = [
     c('g', 'G', VOL, 0, 'Games played', N),
     n('pl', 'Plays', 'Plays/G', VOL, 0, 1, 'Offensive plays: dropbacks (incl. sacks and scrambles) + designed runs'),
@@ -67133,8 +67146,20 @@ function _rsScatter(cfg) {
     c('tdc', '3D Conv%', OFF, 1, 'Third-down conversion rate'),
     c('rztd', 'RZ TD%', OFF, 1, 'Drives reaching the opponent 20 that end in a touchdown'),
     c('tdd', 'TD/Drive%', OFF, 1, 'Drives ending in a touchdown'),
+    c('ybc', 'YBC/Car', RUNG, 2, 'Yards before contact per carry: what the blocking creates (PFF, weighted by designed runs).' + PRO_NOTE),
+    c('yacc', 'YAC/Car', RUNG, 2, 'Yards after contact per carry: what the backs add (PFF).' + PRO_NOTE),
+    c('stuf', 'Stuff%', RUNG, 1, 'Runs stopped for no gain or a loss (PFF).' + PRO_NOTE, LO),
+    c('izr', 'Inside Zone%', RUNG, 1, 'Share of runs on inside zone (PFF run concept).' + PRO_NOTE, N),
+    c('ozr', 'Outside Zone%', RUNG, 1, 'Share of runs on outside zone.' + PRO_NOTE, N),
+    c('duo', 'Duo%', RUNG, 1, 'Share of runs on man / duo.' + PRO_NOTE, N),
+    c('pwr', 'Power%', RUNG, 1, 'Share of runs on power.' + PRO_NOTE, N),
+    c('ctr', 'Counter%', RUNG, 1, 'Share of runs on counter.' + PRO_NOTE, N),
+    c('pin', 'Pin-Pull%', RUNG, 1, 'Share of runs on pin-pull / pull lead.' + PRO_NOTE, N),
     c('skp', 'Sack%', 'Protection', 1, 'Sacks per dropback', LO),
     c('prsa', 'Pressure%', 'Protection', 1, 'Share of dropbacks under pressure (PFF)', LO),
+    c('proex', 'Prs% OE', 'Protection', 1, 'Pressure rate allowed over expectation, in percentage points (PFF model; below 0 = the line and QB beat the expected rate).' + PRO_NOTE, LO),
+    c('pbwr', 'PBWR', 'Protection', 1, 'Pass-block win rate of the offensive line, snap-weighted over tackles, guards and centers (PFF).' + PRO_NOTE),
+    c('tpbwr', 'True-Set PBWR', 'Protection', 1, 'Line pass-block win rate on true pass sets only (PFF: no play action, screens, rollouts or quick throws).' + PRO_NOTE),
     c('blzf', 'Blitzed%', 'Protection', 1, 'Share of dropbacks facing a blitz (PFF)', N),
     c('ttt', 'TTT', 'Protection', 2, 'Average time to throw in seconds (PFF)', N),
     c('manf', 'Man% Faced', 'Protection', 1, 'Share of receiver routes run against man coverage (PFF)', N),
@@ -67148,7 +67173,9 @@ function _rsScatter(cfg) {
     c('dblz', 'Blitz%', DEF, 1, 'Share of opponent dropbacks facing a blitz (PFF)', N),
     c('dman', 'Man%', DEF, 1, 'Share of opponent receiver routes against man coverage (PFF)', N),
     c('dtdc', '3D Conv%', DEF, 1, 'Third-down conversion rate allowed', LO),
-    c('drztd', 'RZ TD%', DEF, 1, 'Opponent red-zone drives ending in a touchdown', LO)
+    c('drztd', 'RZ TD%', DEF, 1, 'Opponent red-zone drives ending in a touchdown', LO),
+    c('dybc', 'YBC/Car', DEF, 2, 'Yards before contact allowed per carry (PFF).' + PRO_NOTE, LO),
+    c('dstuf', 'Stuff%', DEF, 1, 'Opponent runs stopped for no gain or a loss (PFF).' + PRO_NOTE)
   ].concat(TM_FTN_COLS);
   const COLS = { QB: QB_COLS, RB: RB_COLS, WR: REC_COLS, TE: REC_COLS, TM: TM_COLS };
 
@@ -67349,7 +67376,8 @@ function _rsScatter(cfg) {
       deep: 'airn', btt: 'ns', twp: 'psn', tdp: 'att', intp: 'att', prs: 'db', p2s: 'dgp', skp: 'db',
       cgr: 'cdb', cacc: 'caim', pgr: 'pdb', pacc: 'paim', pypa: 'patt', blz: 'db', bgr: 'bdb', bypa: 'batt',
       qpar: { r: ['fqpa', 'fqdb'], pct: 1 }, qiwp: { r: ['fqiw', 'fqatt'], pct: 1 }, qcatp: { r: ['fqcat', 'fqcd'], pct: 1 },
-      qoop: { r: ['fqoop', 'fqdb'], pct: 1 }, qscr: { r: ['fqscr', 'fqatt'], pct: 1 } },
+      qoop: { r: ['fqoop', 'fqdb'], pct: 1 }, qscr: { r: ['fqscr', 'fqatt'], pct: 1 },
+      gpr: 'gsn', gnr: 'gsn', cmoe: 'vatt', acoe: 'vaim', npae: 'vdb', nsce: 'vdb' },
     RB: { snp: 'tsn', car: 'ttc', tsh: 'tmt', rtp: 'tmd', i10s: 'tmi', ypc: 'att', yco: 'att', mtf: 'att', elu: 'att',
       bay: 'rsy', exp: 'att', fdp: 'pcar', suc: 'pcar', repa: 'pcar', rgr: 'att', gap: 'gz',
       tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl',
@@ -67357,7 +67385,8 @@ function _rsScatter(cfg) {
       eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 },
       pats: { r: ['fpa', 'tfpa'], pct: 1 }, pap: { r: ['fpa', 'ftg'], pct: 1 }, r1p: { r: ['fr1', 'frd'], pct: 1 }, chkp: { r: ['fchk', 'frd'], pct: 1 },
       motp: { r: ['fmot', 'ftg'], pct: 1 }, rpop: { r: ['frpo', 'fopp'], pct: 1 }, sgcp: { r: ['fsg', 'fcar'], pct: 1 },
-      boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 } },
+      boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 },
+      gpr: 'gsn', gnr: 'gsn' },
     REC: { snp: 'tsn', rtp: 'tmd', tsh: 'tmt', ays: 'tma', wopr: { wopr: 1 }, tprr: 'rts', slot: 'al', wide: 'al', inl: 'al',
       pbr: 'ppl', yprr: 'rts', grd: 'rts', adot: 'tgt', racr: { r: ['pry', 'pay'] }, yac: 'rec', mtfr: 'rec', fdr: 'rts',
       ctch: 'tgt', drp: 'dr', cc: 'ct', ctg: 'tgt', tqbr: 'tgt', epat: 'xt',
@@ -67367,14 +67396,17 @@ function _rsScatter(cfg) {
       eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 },
       pats: { r: ['fpa', 'tfpa'], pct: 1 }, pap: { r: ['fpa', 'ftg'], pct: 1 }, r1p: { r: ['fr1', 'frd'], pct: 1 }, chkp: { r: ['fchk', 'frd'], pct: 1 },
       motp: { r: ['fmot', 'ftg'], pct: 1 }, rpop: { r: ['frpo', 'fopp'], pct: 1 }, sgcp: { r: ['fsg', 'fcar'], pct: 1 },
-      boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 } },
+      boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 },
+      gpr: 'gsn', gnr: 'gsn', croe: { r: ['xroe', 'vtg'], pct: 1 } },
     TM: { npace: 'pcn', sg: 'pl', nh: 'pl', pr: 'pl', npr: 'npl', edpr: 'edn', proe: 'pon', rroe: 'pon',
       epa: 'pl', dbepa: 'pa', ruepa: 'rua', sr: 'pl', dbsr: 'pa', rusr: 'rua', xpp: 'pa', xrp: 'rua', adot: 'ayn', yac: 'cmp',
       tdc: 'tdn', rztd: 'rzt', tdd: 'drv', skp: 'pa', prsa: 'pdbt', blzf: 'pdbt', ttt: 'tttw', manf: 'mzr',
       depa: 'dpl', ddbepa: 'dpa', druepa: 'drua', dsr: 'dpl', dxp: 'dpl', dskp: 'dpa', dprs: 'dpdbt', dblz: 'dpdbt',
       dman: 'dmzr', dtdc: 'dtdn', drztd: 'drzt',
       par: { r: ['fpa', 'fdb'], pct: 1 }, motr: { r: ['fmot', 'fpl'], pct: 1 }, rpor: { r: ['frpo', 'fpl'], pct: 1 }, scrr: { r: ['fscr', 'fdb'], pct: 1 },
-      boxr: { r: ['fbox', 'fbxn'] }, lbxr: { r: ['flbx', 'fbxn'], pct: 1 } }
+      boxr: { r: ['fbox', 'fbxn'] }, lbxr: { r: ['flbx', 'fbxn'], pct: 1 },
+      ybc: 'vru', yacc: 'vru', stuf: 'vru', izr: 'vru', ozr: 'vru', duo: 'vru', pwr: 'vru', ctr: 'vru', pin: 'vru',
+      pbwr: 'pbs', tpbwr: 'tps', proex: 'vpa', dybc: 'vdru', dstuf: 'vdru' }
   };
   // sets = season and / or week datasets in time order (the last one names a player's team);
   // whole seasons combine the same way because the season files carry the same hidden fields
@@ -68033,7 +68065,7 @@ function _rsScatter(cfg) {
     if (foot) foot.textContent = NOTES[_pos] + (teamTot
       ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tm1 + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tm1 + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
       : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick one team to see its season split. ') +
-      'Sources: PFF Premium, nflverse play-by-play + snap counts; Charting columns are FTN charting (2022 on, refreshed in season).' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
+      'Sources: PFF Premium, nflverse play-by-play + snap counts; Charting columns are FTN charting (2022 on, refreshed in season); Graded Plays, the over-expected columns, Run Game, PBWR and Prs% OE are PFF Pro (2019 on).' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
       (scope && _yrs.some(y => y < 2026) && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
       (combined ? ' The seasons and weeks you ticked are combined into one sample: counting stats add up and every rate is re-weighted by its own denominator; a player\'s team is his latest.' : '') +
       (!hid[WK] ? ' WEEK ' + _wkNum() + ' columns: Proj = the site\'s Sim Lab export' + ((window.SIM_PROJ_2026 || {}).updated ? ' (' + String(window.SIM_PROJ_2026.updated).slice(0, 16).replace('T', ' ') + ' UTC)' : '') +

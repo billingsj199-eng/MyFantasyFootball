@@ -54662,10 +54662,40 @@ Rules:
   //      stored leagues here (works for any league the user can see).
   //   2. Direct sync (below) — link-viewable leagues fetched anonymously via
   //      the yahooProxy Cloud Function, no extension needed.
+  // Yahoo extension exports before helper 0.9.38 (2026-10-05) read the team
+  // page's position glossary ("QB Only quarterbacks", W/R, W/T, K, DEF and the
+  // injury key's "D Doubtful") as lineup slots: a second QB flagged every league
+  // SUPERFLEX, plus phantom W/R + W/T flex slots. Signature = W/R AND W/T AND
+  // 2+ QB. Rebuild from the fullest team's current starter slots when the
+  // rosters carry them (they were never affected - glossary rows have no
+  // player), else cut the list at the glossary's QB. Returns the cleaned slot
+  // list, or null when the list looks fine.
+  function _mtYahooGlossaryFix(rp, teams) {
+    if (!Array.isArray(rp)) return null;
+    if (!(rp.indexOf('WRRB_FLEX') >= 0 && rp.indexOf('REC_FLEX') >= 0 && rp.filter(s => s === 'QB').length >= 2)) return null;
+    let best = null;
+    (teams || []).forEach(t => {
+      const st = ((t && t.roster) || []).map(r => r && r.slot).filter(s => s && s !== 'BN' && s !== 'IR');
+      if (st.length && (!best || st.length > best.length)) best = st;
+    });
+    if (!best) {
+      const q2 = rp.indexOf('QB', rp.indexOf('QB') + 1);
+      best = rp.slice(0, q2);
+      if (best.length > 1 && best[best.length - 1] === 'DEF' && best[best.length - 2] === 'DEF') best.pop();   // "D Doubtful"
+    }
+    return best.length ? best : null;
+  }
+  window._mtYahooGlossaryFix = _mtYahooGlossaryFix;   // console / tests
+  const _mtSfOf = rp => rp.indexOf('SUPER_FLEX') >= 0 || rp.filter(s => s === 'QB').length >= 2;
+
   document.addEventListener('mff-yahoo-league-from-extension', function (e) {
     try {
       const leagues = e.detail && e.detail.leagues;
       if (!leagues || typeof leagues !== 'object') return;
+      Object.values(leagues).forEach(lg => {
+        const fx = lg && !lg.direct ? _mtYahooGlossaryFix(lg.rosterPositions, lg.teams) : null;
+        if (fx) { lg.rosterPositions = fx; lg.sf = _mtSfOf(fx); }
+      });
       _mtYahooLeagues = leagues;
       _mtRenderYahooCard();
     } catch (err) { console.warn('[MyTeams] Yahoo bridge event error:', err); }
@@ -54767,11 +54797,14 @@ Rules:
         const n = parseInt(r.count, 10) || 0;
         for (let i = 0; i < n; i++) apiSlots.push(lbl);
       });
-      let rec = null, passTd = null;
+      // Yahoo lists only the categories a league scores: categories present but
+      // no Receptions (11) = standard, 0 per catch (fell back to ½PPR until 2026-10-05).
+      const yCats = (svc.settings && svc.settings.stat_categories) || [];
+      let rec = yCats.length ? 0 : null, passTd = null;
       // per-stat scoring on Sleeper keys (Sim Lab's league sim reads these)
       const YSTAT = { 4: 'pass_yd', 5: 'pass_td', 9: 'rush_yd', 10: 'rush_td', 11: 'rec', 12: 'rec_yd', 13: 'rec_td' };
       const scoringDetail = { rec: 0 };
-      ((svc.settings && svc.settings.stat_categories) || []).forEach(c => {
+      yCats.forEach(c => {
         if (Number(c.stat_id) === 11) rec = parseFloat(c.stat_modifier) || 0;
         if (Number(c.stat_id) === 5) passTd = parseFloat(c.stat_modifier); // passing TDs (Yahoo default 4)
         const k = YSTAT[Number(c.stat_id)], v = parseFloat(c.stat_modifier);
@@ -58265,6 +58298,12 @@ Rules:
 
     // Restore format
     if (lg.format) _mtFormat = { ...lg.format };
+    // Yahoo saves made from a pre-0.9.38 extension export carry the glossary
+    // slots (every league SUPERFLEX) - clean them on load (_mtYahooGlossaryFix).
+    if (lg.format && String(lg.leagueId || '').indexOf('yahoo_') === 0) {
+      const fx = _mtYahooGlossaryFix(_mtFormat.rosterPositions, null);
+      if (fx) { _mtFormat.rosterPositions = fx; _mtFormat.sf = _mtSfOf(fx); _mtFormat.starters = fx.length; }
+    }
     // Format change can hide ESPN/Yahoo (redraft-only sources) — run before
     // scoring so a fallback to consensus applies to this league's grades.
     _mtUpdateAdpSrcVisibility();

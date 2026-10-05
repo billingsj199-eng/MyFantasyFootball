@@ -3653,6 +3653,7 @@ function _viewPresetDefaultName(s) {
   if (s.pos && s.pos !== 'ALL') parts.push(s.pos);
   if (s.topN) parts.push('Top ' + s.topN);
   if (Array.isArray(s.teams) && s.teams.length) parts.push(s.teams.length <= 3 ? s.teams.map(_tfAbbr).join('+') : s.teams.length + ' teams');
+  if (s.inj) parts.push('Injured');
   return parts.join(' · ');
 }
 window._saveViewPreset = function () {
@@ -3662,7 +3663,8 @@ window._saveViewPreset = function () {
     stats: (typeof rnkStatMode !== 'undefined' ? rnkStatMode : 'fantasy'),
     adp: (typeof rnkAdpSrc !== 'undefined' ? rnkAdpSrc : 'consensus'),
     topN: (typeof rankTopN !== 'undefined' && rankTopN != null) ? rankTopN : null,
-    teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : []
+    teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : [],
+    inj: !!window._injOnly
   };
   const list = _viewPresetsLoad();
   if (list.length >= 8) { if (typeof toast === 'function') toast('Preset limit reached (8) — remove one first'); return; }
@@ -3696,6 +3698,7 @@ window._applyViewPreset = function (i) {
   }
   // Teams: presets saved before this field existed carry none → clears the pill.
   if (typeof window._setTeamFilter === 'function') window._setTeamFilter(Array.isArray(s.teams) ? s.teams : [], true);
+  if (typeof window._toggleInjOnly === 'function') window._toggleInjOnly(!!s.inj);
   _renderViewPresets(i);
 };
 window._deleteViewPreset = function (i) {
@@ -3990,6 +3993,517 @@ window._toggleTeamFilterPop = function (force) {
     render();
   });
 })();
+
+// ── INJURIES filter (rankings, Jack 2026-10-05: "an injuries filter in rankings
+// that shows all the injured players ... in order of rank") ────────────────────
+// INJURIES pill beside TEAMS: only players carrying an injury designation, still
+// in board order. While it is on, the table gains three columns in front of Cons
+// — INJURY (body part, designation, practice log), EST. RETURN (a week or a
+// range, counted forward from now) and TIMELINE (what has been reported + what
+// is typical for the injury) — and drops L4 / Age / P-SOS / +/-.
+// The return estimate comes from, in order:
+//   1. the Sim Lab injury layer (SIM_PROJ_2026.inj — the same out-windows and
+//      availability curve that are inside the projections),
+//   2. a structured timeline on the news feed (camp_news `avail`) when the
+//      layer has no forward read or the item is newer than the export,
+//   3. the designation alone.
+// TIMELINE's "typical" line is read off the Sim Lab research tables shipped in
+// the same export (SIM_PROJ_2026.injRes: P(misses the next game | missed k) by
+// position + injury group, and Questionable play odds by practice level).
+// ANDs with position / ★ / TEAMS / search, applied after the TOP-N cap like
+// TEAMS. Session-only, saved into view presets (s.inj).
+window._injOnly = false;
+const _IV_STATUS = { Q: 'Questionable', D: 'Doubtful', O: 'Out', IR: 'IR', PUP: 'PUP', SUS: 'Suspended' };
+const _IV_STATUS_COLOR = { Q: '#f59e0b', D: '#f97316', O: '#ef4444', IR: '#ef4444', PUP: '#ef4444', SUS: '#a78bfa' };
+const _IV_SEV = { Q: 1, D: 2, O: 3, SUS: 4, PUP: 5, IR: 6 };
+// Body part -> injury group. First match wins (Achilles before calf, ACL before knee).
+const _IV_GROUPS = [
+  ['none', /coach|personal|not injury|\brest|suspen/],
+  ['achilles', /achilles/], ['acl', /\bacl\b/], ['knee', /knee|\bmcl\b|\bpcl\b|\blcl\b|menisc|patell/],
+  ['hamstring', /hamstring/], ['calf', /calf/], ['groin', /groin|adductor/], ['quad', /quad|thigh/],
+  ['foot', /foot|lisfranc|heel|plantar/], ['toe', /toe/], ['ankle', /ankle/],
+  ['concussion', /concussion|head/], ['neck', /neck|stinger/], ['back', /back|spine|lumbar/],
+  ['shoulder', /shoulder|labrum|rotator/], ['collarbone', /collarbone|clavicle/], ['hip', /hip|glute/],
+  ['core', /abdom|oblique|core|hernia/], ['chest', /chest|pectoral|\bpec\b/], ['ribs', /\brib/],
+  ['arm', /elbow|biceps|triceps|forearm|\barm\b/], ['hand', /hand|wrist|finger|thumb/],
+  ['leg', /fibula|tibia|shin|\bleg\b/], ['illness', /illness|sick|\bflu\b/]
+];
+function _ivGroup(body) {
+  const b = String(body || '').toLowerCase();
+  if (!b) return '';
+  for (let i = 0; i < _IV_GROUPS.length; i++) if (_IV_GROUPS[i][1].test(b)) return _IV_GROUPS[i][0];
+  return '';
+}
+// "a hamstring injury" / "an ankle injury" / "a concussion"
+function _ivInjPhrase(g) {
+  const art = /^[aeiou]/.test(g) ? 'an ' : 'a ';
+  return art + g + (g === 'concussion' || g === 'illness' ? '' : ' injury');
+}
+function _ivCap(s) { s = String(s || ''); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function _ivEsc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+// NFL week a timestamp falls in (weeks roll two days before the opening kickoff).
+function _ivWeekOfMs(ms) {
+  let kicks = null;
+  try { kicks = _SEASON_KICKS_2026; } catch (e) { return null; }   // TDZ before the const runs
+  if (!Array.isArray(kicks) || !kicks.length || !isFinite(ms)) return null;
+  let w = kicks[0].wk;
+  for (let i = 0; i < kicks.length; i++) { if (ms >= kicks[i].kick - 2 * 86400000) w = kicks[i].wk; else break; }
+  return w;
+}
+// His team's game weeks from `from` on (bye skipped).
+function _ivGameWeeks(d, from) {
+  const out = [];
+  for (let w = Math.max(1, from || 1); w <= 18; w++) if (w !== d.bye) out.push(w);
+  return out;
+}
+function _ivEngineRow(d) {
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !SP.inj) return null;
+  let r = SP.inj[d.n];
+  if (!r) {
+    let idx = window._ivEngIdx;
+    if (!idx || idx._src !== SP.inj) {
+      idx = { _src: SP.inj, m: {} };
+      Object.keys(SP.inj).forEach(k => { idx.m[_campNewsNorm(k)] = SP.inj[k]; });
+      window._ivEngIdx = idx;
+    }
+    r = idx.m[_campNewsNorm(d.n)];
+  }
+  return r || null;
+}
+let _ivCache = null;
+// Newest structured timeline on the news feed for this player (season / "N-M
+// weeks" / "out until week N"). The team's or an insider's read beats an
+// analyst's; a newer "expected to play" item cancels it.
+function _ivNewsTimeline(d) {
+  const arr = window._campNewsIdx && window._campNewsIdx[_campNewsNorm(d.n)];
+  if (!arr || !arr.length) return null;
+  const cut = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
+  let best = null, lastPlay = '';
+  arr.forEach(it => {
+    const a = it && it.avail;
+    if (!a || !it.date || it.date < cut) return;
+    if (a.k === 'play') { if (it.date > lastPlay) lastPlay = it.date; return; }
+    if (a.k !== 'season' && a.k !== 'weeks' && a.k !== 'ret') return;
+    const rank = it.src_type === 'expert' ? 0 : 1;
+    if (!best || rank > best.rank || (rank === best.rank && it.date > best.it.date)) best = { it: it, rank: rank };
+  });
+  if (!best || lastPlay > best.it.date) return null;
+  const it = best.it, a = it.avail, dms = Date.parse(it.date + 'T16:00:00Z');
+  const o = { src: 'newsfeed', date: it.date, note: it.date + ' ' + it.headline };
+  if (a.k === 'season') { o.season = true; o.rep = 'season-ending'; o.repM = 'season'; return o; }
+  if (a.k === 'ret') {
+    if (!(a.wk >= 1 && a.wk <= 18)) return null;
+    o.lo = +a.wk; o.hi = Math.min(18, +a.wk + 1);
+    o.rep = 'out until Wk ' + a.wk; o.repM = 'til Wk ' + a.wk;
+  } else {
+    const lo = +a.lo, hi = a.hi != null ? +a.hi : lo + 2;
+    if (!(lo >= 0) || !(hi >= lo)) return null;
+    const u = a.unit === 'g' ? ['game', 'gm'] : ['week', 'wk'];
+    const span = a.hi == null ? lo + '+' : hi > lo ? lo + '–' + hi : String(lo);
+    o.rep = span + ' ' + u[0] + (span === '1' ? '' : 's'); o.repM = span + ' ' + u[1] + (span === '1' ? '' : 's');
+    if (a.unit === 'g') {
+      // "N games": counted in his team's own games after the report
+      const gw = _ivGameWeeks(d, _ivWeekOfMs(dms + 2 * 86400000) || 1);
+      o.lo = gw[lo] != null ? gw[lo] : 19; o.hi = gw[hi] != null ? gw[hi] : 19;
+    } else {
+      // "N weeks": the first game on or after report date + N weeks (three days of slack, as the Sim Lab reads it)
+      o.lo = _ivWeekOfMs(dms + (7 * lo - 3) * 86400000); o.hi = _ivWeekOfMs(dms + (7 * hi - 3) * 86400000);
+      if (o.lo == null || o.hi == null) return null;
+    }
+  }
+  if (o.lo === d.bye) o.lo++;
+  if (o.hi === d.bye) o.hi++;
+  if (o.lo > 18) { o.season = true; delete o.lo; delete o.hi; }
+  else if (o.hi > 18) { o.hi = null; o.open = true; }
+  return o;
+}
+function _ivLgt(p) { p = Math.min(0.995, Math.max(0.005, p)); return Math.log(p / (1 - p)); }
+function _ivSgm(z) { return 1 / (1 + Math.exp(-z)); }
+const _IV_CAP = 10;
+// Games missed in a row so far (this week's too once it has kicked off without him).
+function _ivK0(raw, cw) {
+  return raw ? (raw.pm || 0) + (raw.kd && !raw.pd && raw.m === 0 && raw.f <= cw && raw.t >= cw ? 1 : 0) : 0;
+}
+// cum[a] = P(he misses at most `a` more games), a = 0 .. _IV_CAP, from the research
+// tables (SIM_PROJ_2026.injRes): the chain of P(misses the next game | missed k)
+// for his position, shifted by injury group. `need` = games he is certain to miss
+// from here (1 = already ruled out of the next one, 4 - k0 on a reserve list,
+// 0 = not known — the first step then uses the one-game-missed rate).
+function _ivCum(R, pos, g, k0, need) {
+  const base = R.pos && R.pos[pos] ? R.pos[pos] : R.cont;
+  const shf = R.grp && R.grp[g] ? R.grp[g] : null;
+  const cont = k => {
+    const kk = Math.min(8, Math.max(1, k)), c = base[kk - 1], sh = shf ? shf[Math.min(3, kk) - 1] : 0;
+    return sh ? _ivSgm(_ivLgt(c) + sh) : c;
+  };
+  const cum = [];
+  let surv = need >= 1 ? 1 : cont(Math.max(1, k0));   // P(misses at least 1 more)
+  cum[0] = 1 - surv;
+  for (let a = 1; a <= _IV_CAP; a++) { surv *= a < need ? 1 : cont(k0 + a); cum[a] = 1 - surv; }
+  return cum;
+}
+// How the recent reports read for a player with no timeline: 'minor' / 'serious'
+// off the newest injury HEADLINE that carries a cue (never the take — it names
+// other players). Both cues in one line = no lean.
+const _IV_TONE_MINOR = /not (?:considered |believed |thought )?(?:to be )?(?:overly |too |that )?serious|\bminor\b|day[- ]to[- ]day|no (?:long[- ]term|structural|ligament|significant|major) (?:damage|injury)|clean (?:mri|x-?rays?|scan|ankle|knee)|negative (?:mri|x-?rays?)|avoid(?:s|ed)? (?:a |any )?(?:major|serious|significant|long[- ]term)|precaution|could play|got close|expected to (?:play|return|be (?:fine|ok|okay|available|ready))|good news|best[- ]case/i;
+const _IV_TONE_SERIOUS = /indefinitely|\bIR\b|injured reserve|significant|extended|multiple weeks|multi-?week|miss (?:some |significant |extended )?time|surgery|fractur|broken|\btorn\b|\btear\b|ruptur|dislocat|re-?aggravat|week[- ]to[- ]week|setback/i;
+function _ivReportTone(d) {
+  const arr = window._campNewsIdx && window._campNewsIdx[_campNewsNorm(d.n)];
+  if (!arr || !arr.length) return null;
+  const cut = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
+  const its = arr.filter(it => it && it.date && it.date >= cut && it.headline && (it.tag === 'injury' || it.avail))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  for (let i = 0; i < its.length; i++) {
+    const h = String(its[i].headline);
+    const ser = _IV_TONE_SERIOUS.test(h) || !!(its[i].avail && its[i].avail.k === 'w2w'), min = _IV_TONE_MINOR.test(h);
+    if (ser && min) return null;
+    if (ser || min) return { t: ser ? 'serious' : 'minor', note: its[i].date + ' ' + h };
+  }
+  return null;
+}
+// OUR OWN estimate for a player listed Out with nothing reported (Jack 2026-10-05:
+// "when a player is tbd like chase ... we put in our own estimated timeline based
+// on the injury" / "fine if the range becomes a little bigger until we know
+// more"). From the same research chain: the first week he is 1-in-3 to be back
+// through the week he is 2-in-3. Reports that read minor take the faster half
+// (through even odds); reports that read serious assume the next game is lost.
+// Never a single week — nothing is known yet.
+function _ivOwnEstimate(d, x, raw, ahead) {
+  const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes;
+  if (!R || !R.cont || !ahead.length) return null;
+  if (x.grp === 'acl' || x.grp === 'achilles') return null;   // no week guessed for a likely season-ender
+  const tone = _ivReportTone(d);
+  const serious = !!tone && tone.t === 'serious', minor = !!tone && tone.t === 'minor';
+  const cum = _ivCum(R, d.s, x.grp, _ivK0(raw, x.cw), serious ? 1 : 0);
+  const at = th => { for (let a = 0; a < cum.length; a++) if (cum[a] >= th) return a; return null; };
+  const aLo = at(1 / 3), aMid = at(0.5);
+  let aHi = at(minor ? 0.5 : 2 / 3);
+  if (aLo == null || ahead[aLo] == null) return null;
+  if (aHi != null && aHi <= aLo) aHi = aLo + 1;
+  const hi = aHi != null && ahead[aHi] != null ? ahead[aHi] : null;
+  const odds = [];
+  for (let a = 0; a < cum.length && a < ahead.length && odds.length < 6; a++) odds.push([ahead[a], cum[a]]);
+  return { lo: ahead[aLo], hi: hi, open: hi == null, mid: aMid != null && ahead[aMid] != null ? ahead[aMid] : null, odds: odds, src: 'est', tone: tone, byInj: !!(R.grp && R.grp[x.grp]) };
+}
+// Estimated return. `raw` = the engine row; `r` = the same row unless its read
+// is spent (a one-week dock for a game that has already kicked off).
+function _ivKicked(d, raw) {
+  if (raw && raw.kd) return true;
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !Array.isArray(SP.injKd) || !SP.teamOf) return false;
+  let tm = SP.teamOf[d.n];
+  if (!tm && typeof TEAM_ABBR_MAP !== 'undefined') tm = TEAM_ABBR_MAP[d.t];
+  return !!tm && SP.injKd.indexOf(tm) >= 0;
+}
+function _ivReturn(d, r, raw, code, cw, det, x) {
+  const kicked = _ivKicked(d, raw);
+  const ahead = cw ? _ivGameWeeks(d, kicked ? cw + 1 : cw) : [];   // his games still to be played
+  const next = ahead.length ? ahead[0] : null;
+  const fin = o => {
+    if (!o.season && o.lo != null && o.lo > 18) o = { season: true, src: o.src, note: o.note };
+    if (o.season) { o.sort = 99; return o; }
+    if (o.lo != null) {
+      if (next != null && o.lo < next) o.lo = next;
+      if (o.hi != null && o.hi < o.lo) o.hi = o.lo;
+      o.missLo = ahead.filter(w => w < o.lo).length;
+      o.missHi = o.hi != null ? ahead.filter(w => w < o.hi).length : null;
+      o.sort = o.lo + (o.pct != null ? (1 - o.pct) / 10 : o.hi != null ? (o.hi - o.lo) / 100 : 0.5);
+    } else o.sort = 50;
+    return o;
+  };
+  // News newer than the export wins: an item dated after the export's day, or
+  // on it when the export ran before the midday news pass. A news window the
+  // layer already holds is only replaced by a later-dated item.
+  const SP = window.SIM_PROJ_2026;
+  const nt = _ivNewsTimeline(d);
+  let useNews = false;
+  if (nt) {
+    if (!r) useNews = true;
+    else if (/^news/.test(r.src) && r.nt) useNews = nt.date > String(r.nt).slice(0, 10);
+    else {
+      const ex = SP && SP.updated ? new Date(SP.updated) : null;
+      if (ex && !isNaN(ex)) {
+        const exDay = ex.getFullYear() + '-' + String(ex.getMonth() + 1).padStart(2, '0') + '-' + String(ex.getDate()).padStart(2, '0');
+        useNews = nt.date > exDay || (nt.date === exDay && ex.getHours() < 12);
+      }
+    }
+    // a timeline that has already run out says nothing about the weeks ahead
+    if (useNews && !nt.season && next != null && nt.hi != null && nt.hi < next) useNews = false;
+  }
+  if (useNews) return fin(nt);
+  if (r) {
+    if (r.t >= 18 || r.src === 'news-season' || r.src === 'dx-season') return fin({ season: true, src: r.src === 'dx-season' ? 'dx' : r.src === 'override' ? 'set' : 'news', note: r.nt || '' });
+    if (r.m > 0) {
+      // one-week dock (Questionable / Doubtful / an Out the reports have not confirmed)
+      const unc = /unconfirmed/.test(r.src);
+      return fin({ lo: r.f, hi: r.f, pct: r.pl != null ? r.pl : unc ? null : r.m, unc: unc, src: 'dock' });
+    }
+    const odds = r.c ? Object.keys(r.c).map(Number).sort((a, b) => a - b).map(w => [w, r.c[w]]) : [];
+    const at = th => { const x = odds.find(o => o[1] >= th); return x ? x[0] : null; };
+    if (r.src === 'ir' || r.src === 'na') {
+      // Reserve list with no reported timeline: the layer rolls a four-game
+      // window forward every week, so the floor here is the list's own rule —
+      // eligible after four missed games — with no firm end.
+      const gw = _ivGameWeeks(d, cw);
+      const elig = gw[Math.max(0, 4 - (r.pm || 0))];
+      return fin({ lo: elig != null ? elig : 19, hi: null, open: true, mid: at(0.5), odds: odds, src: 'ir', elig: (r.pm || 0) >= 4 });
+    }
+    if (odds.length) {
+      const news = /^news/.test(r.src) && r.src !== 'news-out';
+      let lo = at(1 / 3);
+      const hi = at(news ? 0.8 : 2 / 3);
+      if (lo == null) lo = r.nx != null ? r.nx : odds[0][0];
+      return fin({ lo: lo, hi: hi, open: hi == null, mid: at(0.5), odds: odds, src: news ? 'news' : 'curve', note: news ? (r.nt || '') : '', k: r.k });
+    }
+    if (r.nx != null) return fin({ lo: r.nx, hi: r.nx, src: r.src === 'override' ? 'set' : r.src });
+    return fin({ season: true, src: r.src });   // the window runs through his last game
+  }
+  // designation alone
+  if (code === 'Q' || code === 'D') return fin({ lo: next, hi: next, dtd: true, src: 'tag' });
+  if (code === 'IR' || code === 'PUP') {
+    const w0 = det && det.d ? _ivWeekOfMs(Date.parse(det.d + 'T16:00:00Z')) : null;
+    if (w0 != null) { const gw = _ivGameWeeks(d, w0); return fin({ lo: gw[4] != null ? gw[4] : 19, hi: null, open: true, src: 'ir' }); }
+  }
+  if (code === 'O') { const e = _ivOwnEstimate(d, x, raw, ahead); if (e) return fin(e); }
+  return fin({ lo: null, src: 'tag' });
+}
+// Timeline phrase out of a news line the Sim Lab layer already accepted (older
+// items carry no structured `avail`). Only ever fed the layer's own `nt` line.
+function _ivPhrase(line) {
+  const t = String(line || '').replace(/^\d{4}-\d\d-\d\d\s*/, '');
+  if (/out for the (rest of the )?(season|year)|season[- ]ending/i.test(t)) return ['season-ending', 'season'];
+  let m = t.match(/(\d+)\s*(?:-|–|to)\s*(\d+)[\s-]*(week|game)/i);
+  if (m) return [m[1] + '–' + m[2] + ' ' + m[3].toLowerCase() + 's', m[1] + '–' + m[2] + (/^w/i.test(m[3]) ? ' wks' : ' gms')];
+  m = t.match(/(\d+)[\s-]*(week|game)/i);
+  if (m) return [m[1] + '+ ' + m[2].toLowerCase() + 's', m[1] + '+ ' + (/^w/i.test(m[2]) ? 'wks' : 'gms')];
+  m = t.match(/week\s*(\d+)/i);
+  if (m && +m[1] >= 1 && +m[1] <= 18) return ['out until Wk ' + m[1], 'til Wk ' + m[1]];
+  return null;
+}
+// "Typical" for this injury, from the research tables in the sim export. Out /
+// reserve list: how many MORE games players at his position with this injury
+// group went on to miss from where he is now (the chain of P(misses the next
+// game | missed k)), as the middle half — 25th to 75th percentile — with the
+// median. Questionable: how often that designation + practice level has played.
+function _ivTypical(d, x, raw, ahead) {
+  const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes;
+  if (!R || !R.cont || x.code === 'SUS') return null;
+  const g = x.grp, pos = d.s;
+  if (x.code === 'D') return { rare: true };
+  if (x.code === 'Q') {
+    const cls = x.pracLast ? 'Q-' + x.pracLast : '';
+    if (!cls || !R.play || !R.play[cls]) return { dtd: true, all: R.playAll || null };
+    let pp = R.play[cls][pos] != null ? R.play[cls][pos] : (R.playAll && R.playAll[cls]);
+    if (pp == null) return { dtd: true, all: R.playAll || null };
+    const sh = (R.shift && R.shift[cls] && R.shift[cls][g]) || 0;
+    if (sh) pp = _ivSgm(_ivLgt(pp) + sh);
+    return { play: pp, cls: cls, byInj: !!sh };
+  }
+  if (g === 'acl' || g === 'achilles') return { season: true };
+  const k0 = _ivK0(raw, x.cw);
+  const need = (x.code === 'IR' || x.code === 'PUP') ? Math.max(1, 4 - k0) : 1;   // reserve lists: four games minimum
+  const cum = _ivCum(R, pos, g, k0, need);
+  const CAP = _IV_CAP;
+  const q = [0.25, 0.5, 0.75].map(t => { for (let a = 1; a <= CAP; a++) if (cum[a] >= t) return a; return null; });
+  const shf = R.grp && R.grp[g] ? R.grp[g] : null;
+  const left = ahead.length;
+  const fix = v => (v == null || v >= CAP) ? null : v;   // null = runs past the table
+  let lo = fix(q[0]), mid = fix(q[1]), hi = fix(q[2]);
+  if (lo == null) lo = CAP;
+  const ros = left > 0 && (hi == null || hi >= left);    // the long end is the rest of his season
+  return { lo: lo, mid: mid, hi: ros ? null : hi, ros: ros, k0: k0, byInj: !!shf, pos: pos };
+}
+function _ivTimeline(d, x, r, raw) {
+  const ahead = x.cw ? _ivGameWeeks(d, _ivKicked(d, raw) ? x.cw + 1 : x.cw) : [];
+  const next = ahead.length ? ahead[0] : null;
+  const tl = { rep: null, typ: _ivTypical(d, x, raw, ahead) };
+  // what has been reported: the newest timeline on the feed that has not run out, else the line the layer holds
+  const nt = _ivNewsTimeline(d);
+  if (nt && nt.rep && (nt.season || nt.hi == null || next == null || nt.hi >= next)) tl.rep = { txt: nt.rep, m: nt.repM, note: nt.note };
+  else if (r && /^news/.test(r.src) && r.src !== 'news-out' && r.nt) {
+    const ph = _ivPhrase(r.nt);
+    if (ph) tl.rep = { txt: ph[0], m: ph[1], note: r.nt };
+  } else if (r && r.src === 'override' && r.t > x.cw) tl.rep = { txt: r.t >= 18 ? 'season-ending' : 'out through Wk ' + r.t, m: r.t >= 18 ? 'season' : 'thru Wk ' + r.t, note: "Jack's set window", set: true };
+  if (tl.typ && tl.typ.season && tl.rep && !/season/.test(tl.rep.txt)) tl.typ = null;
+  const t = tl.typ;
+  tl.sort = !t ? 50 : t.season ? 99 : t.play != null ? 1 - t.play : t.rare ? 0.99 : t.dtd ? 0.5 : (t.mid != null ? t.mid : 12) + (t.lo || 0) / 100;
+  return tl;
+}
+function _ivTypText(t) {
+  if (!t) return null;
+  if (t.season) return { d: 'usually season-ending', m: 'season' };
+  if (t.rare) return { d: 'rarely plays', m: 'rarely plays' };
+  if (t.dtd) {
+    const a = t.all, r = a ? 'plays ' + Math.round(a['Q-DNP'] * 100) + '–' + Math.round(a['Q-FP'] * 100) + '%' : 'day-to-day';
+    return { d: r, m: 'GTD' };
+  }
+  if (t.play != null) return { d: 'plays ' + Math.round(t.play * 100) + '%', m: Math.round(t.play * 100) + '% play' };
+  if (t.mid == null) return { d: t.lo + '+ more games', m: t.lo + '+ gms' };
+  const rng = t.hi == null ? ' (' + t.lo + '+)' : t.hi > t.lo ? ' (' + t.lo + '–' + t.hi + ')' : '';
+  return { d: '~' + t.mid + ' more game' + (t.mid === 1 ? '' : 's') + rng, m: '~' + t.mid + ' gm' + (t.mid === 1 ? '' : 's') };
+}
+function _ivTlTip(d, x) {
+  const tl = x.tl, t = tl.typ, L = [];
+  if (tl.rep) L.push((tl.rep.set ? 'Set window: ' : 'Reported: ') + tl.rep.txt + (tl.rep.note && !tl.rep.set ? '\n' + tl.rep.note : ''));
+  else L.push('No timeline reported yet.');
+  if (t) {
+    const who = d.s + 's' + (t.byInj && x.grp ? ' with ' + _ivInjPhrase(x.grp) : '');
+    const res = x.code === 'IR' || x.code === 'PUP';
+    const PR = { 'Q-FP': 'a full practice', 'Q-LP': 'a limited practice', 'Q-DNP': 'no practice' };
+    if (t.season) L.push('Typical: ' + (x.grp === 'acl' ? 'ACL' : 'Achilles') + ' injuries that land a player on the shelf are season-ending.');
+    else if (t.rare) L.push('Typical: Doubtful players almost never suit up (about 1 in 100, 2019-25).');
+    else if (t.dtd) L.push('Typical: it depends on practice — Questionable players have played about ' + (t.all ? Math.round(t.all['Q-FP'] * 100) + '% after a full practice, ' + Math.round(t.all['Q-LP'] * 100) + '% after a limited one and ' + Math.round(t.all['Q-DNP'] * 100) + '% with no practice' : '7 times in 10') + ' (2019-25). No practice report for him yet this week.');
+    else if (t.play != null) L.push('Typical: Questionable ' + who + ' coming off ' + (PR[t.cls] || 'practice') + ' have played ' + Math.round(t.play * 100) + '% of the time (2019-25, recent seasons weighted).');
+    else {
+      L.push('Typical: ' + who + (t.k0 ? ' who have already missed ' + t.k0 + ' game' + (t.k0 === 1 ? '' : 's') : res ? '' : ' who are ruled out') + (res ? ' on a reserve list (four games minimum)' : '')
+        + ' — half are back within ' + (t.mid != null ? t.mid : '10+') + ' more game' + (t.mid === 1 ? '' : 's')
+        + (t.ros ? '; the slow quarter are out for the rest of the season.' : t.hi != null ? '; a quarter miss more than ' + t.hi + '.' : '.'));
+      L.push('Middle half of starters\' absences, 2019-25' + (t.byInj ? '' : x.grp && x.grp !== 'none' ? ' (no separate split for ' + x.grp + ' injuries — position only)' : ' (position only)') + '.');
+    }
+  }
+  return L.join('\n');
+}
+function _ivBuild(d) {
+  if (!d || d._isDevy || d._isFuturePick || d._retired || d.s === 'DST') return null;
+  const SP = window.SIM_PROJ_2026 || null;
+  const cw = (SP && SP.currentWeek) || (typeof window._weeklyScheduleWeek === 'function' ? window._weeklyScheduleWeek() : null) || null;
+  const raw = _ivEngineRow(d);
+  // no forward read left once his game has kicked off: a one-week dock spoke for that game, and a
+  // set window that ended with it hands back to the designation
+  const r = raw && !(raw.kd && (raw.m > 0 || (raw.src === 'override' && raw.t <= cw))) ? raw : null;
+  const tag = String(d.inj || '');
+  const pill = tag ? _injPill(d) : '';
+  let code = pill ? ((pill.match(/data-status="([A-Z]+)"/) || [])[1] || '') : '';
+  let body = '';
+  const bm = tag.match(/^(.*?),\s*(IR|PUP|Out|Doubtful|Questionable|Suspended|DNR|NA)\b/i);
+  if (bm) body = bm[1].trim();
+  else if (code) body = tag.replace(/\b(IR|PUP|Out|Doubtful|Questionable|Suspended)\b/ig, '').replace(/^[\s,–-]+|[\s,–-]+$/g, '').trim().slice(0, 28);
+  if (code && code !== 'SUS' && _ivGroup(body) === 'none') return null;   // healthy scratch / personal — not an injury
+  if (!code && r && r.m < 1) {
+    // the NFL report has him listed before the Sleeper feed does
+    code = /^out$/i.test(r.gs || '') ? 'O' : /doubt/i.test(r.gs || '') ? 'D' : /^(q-|out-unconfirmed)/.test(r.src) || /question/i.test(r.gs || '') ? 'Q'
+      : r.src === 'ir' ? 'IR' : r.src === 'sus' ? 'SUS' : r.m === 0 ? 'O' : '';
+  }
+  if (!code) return null;
+  const PR = window.PRACTICE_2026;
+  const pr = PR && PR.players ? PR.players[d.n] : null;
+  if (!body || /undisclosed/i.test(body)) {
+    if (pr && pr.inj && !/not injury/i.test(pr.inj)) body = pr.inj;
+    else if (raw && raw.g && raw.g !== 'rest') body = _ivCap(raw.g);
+  }
+  const det = (window.INJURY_UPDATES && INJURY_UPDATES.detail && INJURY_UPDATES.detail[d.n]) || null;
+  // practice log: this week's only, and only until his game kicks off
+  let prac = '';
+  if (!_ivKicked(d, raw)) {
+    if (raw && raw.sq) prac = String(raw.sq).split('-').slice(-3).join(' › ');
+    else if (pr && pr.pr && (!PR.week || !cw || +PR.week === +cw)) prac = pr.pr;
+  }
+  const x = { code: code, sev: _IV_SEV[code] || 0, body: body || 'Undisclosed', grp: _ivGroup(body) || (raw && raw.g && raw.g !== 'rest' ? raw.g : ''),
+    note: det && det.n && det.n.toLowerCase() !== String(body).toLowerCase() ? det.n : '', prac: prac, raw: raw, cw: cw, tag: tag, dpos: d.s + 's' };
+  // latest practice level this week (FP / LP / DNP) for the Questionable play odds
+  const pl = prac ? prac.split(' › ').pop() : '';
+  x.pracLast = /^(FP|LP|DNP)$/.test(pl) ? pl : '';
+  x.ret = _ivReturn(d, r, raw, code, cw, det, x);
+  x.tl = _ivTimeline(d, x, r, raw);
+  return x;
+}
+function _ivInfo(d) {
+  if (!d || !d.n) return null;
+  const SP = window.SIM_PROJ_2026, IU = window.INJURY_UPDATES, CN = window.CAMP_NEWS, PR = window.PRACTICE_2026;
+  const sig = [SP && SP.updated, IU && IU.updated, CN && CN.updated, PR && PR.updated, window._irMap ? Object.keys(window._irMap).length : 0].join('|');
+  if (!_ivCache || _ivCache.sig !== sig) _ivCache = { sig: sig, m: new Map() };
+  const hit = _ivCache.m.get(d.n);
+  if (hit && hit.tag === (d.inj || '')) return hit.x;
+  const x = _ivBuild(d);
+  _ivCache.m.set(d.n, { tag: d.inj || '', x: x });
+  return x;
+}
+window._ivInfo = _ivInfo;
+function _ivRetText(ret) {
+  if (ret.season) return { main: 'Out for season', sub: '', color: '#ef4444' };
+  if (ret.lo == null) return { main: 'TBD', sub: 'no timeline yet', color: 'var(--text2)' };
+  let main = 'Wk ' + ret.lo;
+  if (ret.hi != null && ret.hi > ret.lo) main += '–' + ret.hi;
+  else if (ret.open) main += '+';
+  let sub;
+  if (ret.pct != null) sub = Math.round(ret.pct * 100) + '% to play';
+  else if (ret.unc) sub = 'not confirmed out';
+  else if (ret.dtd) sub = 'day-to-day';
+  else if (ret.missHi == null) sub = ret.missLo ? 'out ' + ret.missLo + '+ more' : (ret.elig ? 'eligible now' : 'no firm timeline');
+  else if (ret.missHi === ret.missLo) sub = ret.missLo ? 'misses ' + ret.missLo + ' more' : 'next game';
+  else sub = ret.missLo ? 'misses ' + ret.missLo + '–' + ret.missHi + ' more' : 'up to ' + ret.missHi + ' more missed';
+  if (ret.src === 'est') sub = 'our est. · ' + sub;
+  const color = ret.pct != null ? (ret.pct >= 0.75 ? '#22c55e' : ret.pct >= 0.5 ? '#facc15' : '#f59e0b')
+    : (ret.dtd || ret.unc) ? '#facc15' : (ret.missLo || 0) >= 3 ? '#f97316' : (ret.missLo || 0) >= 1 ? '#f59e0b' : '#facc15';
+  return { main: main, sub: sub, color: color };
+}
+function _ivRetTip(x) {
+  const ret = x.ret, t = _ivRetText(ret), L = [];
+  L.push('Estimated return: ' + t.main + (ret.mid != null && ret.hi !== ret.lo ? ' (most likely Wk ' + ret.mid + ')' : ''));
+  if (!ret.season && ret.lo != null && ret.pct == null && !ret.dtd && !ret.unc) {
+    L.push(ret.missHi == null ? 'Misses at least ' + (ret.missLo || 0) + ' more game' + (ret.missLo === 1 ? '' : 's')
+      : ret.missHi === ret.missLo ? 'Misses ' + ret.missLo + ' more game' + (ret.missLo === 1 ? '' : 's')
+      : ret.missLo ? 'Misses ' + ret.missLo + ' to ' + ret.missHi + ' more games' : 'Could be back for the next game; could miss up to ' + ret.missHi + ' more');
+  }
+  if (ret.pct != null) L.push('About ' + Math.round(ret.pct * 100) + '% to play in Week ' + ret.lo + ' (2019-25 play rates for this designation, practice level, position and injury)');
+  if (ret.odds && ret.odds.length) L.push('Odds he plays: ' + ret.odds.slice(0, 6).map(o => 'Wk ' + o[0] + ' ' + Math.round(o[1] * 100) + '%').join(' · '));
+  const SRC = {
+    news: 'Reported timeline', newsfeed: 'Reported timeline (news feed)', set: "Jack's set window",
+    curve: 'No reported timeline — how long players with this designation, position and injury have stayed out (2019-25)',
+    ir: 'Reserve list — eligible after four missed games; no timeline reported', dx: 'Season-ending diagnosis',
+    dock: 'This week\'s designation + practice report', tag: 'Designation only — no timeline reported', sus: 'Suspension',
+    est: 'Our estimate — nothing reported yet. How long ' + (x.dpos || 'players') + (ret.byInj && x.grp ? ' with ' + _ivInjPhrase(x.grp) : '') + ' have typically been out (starters, 2019-25); the range tightens once there is a report'
+  };
+  if (SRC[ret.src]) L.push('Source: ' + SRC[ret.src]);
+  if (ret.src === 'est' && ret.tone) L.push((ret.tone.t === 'minor' ? 'Reports read minor, so it leans to the faster half: ' : 'Reports read serious, so it assumes he misses the next game: ') + ret.tone.note);
+  if (ret.note) L.push(ret.note);
+  return L.join('\n');
+}
+function _ivCellsHtml(d) {
+  const x = _ivInfo(d);
+  if (!x) return '<td class="injv-cell injv-inj">—</td><td class="injv-cell injv-ret">—</td><td class="injv-cell injv-tl">—</td>';
+  const st = _IV_STATUS[x.code] || x.code;
+  const subBits = ['<span style="color:' + (_IV_STATUS_COLOR[x.code] || 'var(--text2)') + ';font-weight:700">' + _ivEsc(st) + '</span>'];
+  if (x.note) subBits.push(_ivEsc(x.note.toLowerCase()));
+  if (x.prac) subBits.push(_ivEsc(x.prac));
+  const injTip = [x.body + ' — ' + st].concat(x.note ? ['Note: ' + x.note] : [], x.prac ? ['Practice this week: ' + x.prac] : [], x.tag ? ['Feed tag: ' + x.tag] : []).join('\n');
+  const t = _ivRetText(x.ret);
+  // TIMELINE: the report leads when there is one, the research "typical" sits under it
+  const tl = x.tl, ty = _ivTypText(tl.typ);
+  const k = s => '<span class="injv-k">' + s + '</span>';
+  let tlMain, tlSub, tlLbl, tlM;
+  if (tl.rep) {
+    tlMain = k(tl.rep.set ? 'Set' : 'Reported') + _ivEsc(tl.rep.txt); tlLbl = tl.rep.set ? 'SET' : 'REPORTED'; tlM = tl.rep.m;
+    tlSub = ty ? 'typical: ' + ty.d : '';
+  } else if (ty) {
+    tlMain = k('Typical') + _ivEsc(ty.d); tlLbl = 'TYPICAL'; tlM = ty.m;
+    tlSub = 'no timeline reported';
+  } else { tlMain = ''; tlSub = ''; tlLbl = ''; tlM = ''; }
+  const lbl = x.body.length > 14 ? x.body.slice(0, 13) + '…' : x.body;
+  return '<td class="injv-cell injv-inj" title="' + _ivEsc(injTip) + '"><span class="injv-main">' + _ivEsc(x.body) + '</span><span class="injv-sub">' + subBits.join(' · ') + '</span></td>'
+    + '<td class="injv-cell injv-ret" data-lbl="' + _ivEsc(lbl.toUpperCase()) + '" title="' + _ivEsc(_ivRetTip(x)) + '"><span class="injv-main" style="color:' + t.color + '">' + _ivEsc(t.main) + '</span>' + (t.sub ? '<span class="injv-sub">' + _ivEsc(t.sub) + '</span>' : '') + '</td>'
+    + (tlMain ? '<td class="injv-cell injv-tl" data-lbl="' + tlLbl + '" title="' + _ivEsc(_ivTlTip(d, x)) + '"><span class="injv-main"><span class="injv-d">' + tlMain + '</span><span class="injv-m">' + _ivEsc(tlM) + '</span></span>' + (tlSub ? '<span class="injv-sub">' + _ivEsc(tlSub) + '</span>' : '') + '</td>'
+      : '<td class="injv-cell injv-tl">—</td>');
+}
+window._toggleInjOnly = function (force) {
+  const on = typeof force === 'boolean' ? force : !window._injOnly;
+  if (on === window._injOnly) return;
+  window._injOnly = on;
+  const btn = document.getElementById('injFilterBtn');
+  if (btn) { btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  if (!on && /^inj/.test(sortKey)) {
+    // leaving the view while sorted on one of its columns: back to board order
+    sortKey = 'myrank'; sortDir = 1;
+    document.querySelectorAll('thead th[data-sort]').forEach(t => {
+      const me = t.dataset.sort === 'myrank', a = t.querySelector('.arrow');
+      t.classList.toggle('sorted', me);
+      if (a) a.textContent = me ? '▲' : '';
+      t.setAttribute('aria-sort', me ? 'ascending' : 'none');
+    });
+  }
+  render();
+};
 // --- Cloud sync (users/{uid}/data/watchlist — existing per-user rules, no
 // rules change needed). Local stays the source of truth for signed-out use;
 // on sign-in the newer side wins (localStorage mff_watchlist_at vs the doc's
@@ -4532,6 +5046,9 @@ function getFiltered(applyTopN) {
     }
     return true;
   });
+  // INJURIES view shows each player's rank in the full list, not a 1..N recount
+  // of the injured (stamped before the ★ / TOP-N / TEAMS / injury cuts).
+  if (window._injOnly) f.forEach((d, i) => { d._ivRank = i + 1; });
   // Watchlist-only view (★ pill): AND with the current position filter.
   // TOP-N is skipped here — a starred deep sleeper always shows in the ★ view.
   if (window._watchOnly && window._watchSet) {
@@ -4548,6 +5065,8 @@ function getFiltered(applyTopN) {
   // board meaning — "TOP 40 + DET" = Lions inside the top 40. d.t is the full
   // team name for every row, D/ST included.
   if (window._teamFilter && window._teamFilter.size) f = f.filter(d => window._teamFilter.has(d.t));
+  // INJURIES filter (pill): injured players only, same after-the-cap rule as TEAMS.
+  if (window._injOnly) f = f.filter(d => !!_ivInfo(d));
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
     // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
@@ -4640,6 +5159,9 @@ function getFiltered(applyTopN) {
           };
           av = _op(a); bv = _op(b); break;
         }
+        case 'injSt': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.sev : 0; bv = xb ? xb.sev : 0; break; }
+        case 'injRet': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.ret.sort : 999; bv = xb ? xb.ret.sort : 999; break; }
+        case 'injTl': { const xa = _ivInfo(a), xb = _ivInfo(b); av = xa ? xa.tl.sort : 999; bv = xb ? xb.tl.sort : 999; break; }
         case 'xfpG': {
           const _xg = d => { const x = _xfpAgg(d, rankingScoringFmt, null); return x ? x.xfpg : -Infinity; };
           av = _xg(a); bv = _xg(b); break;
@@ -6802,6 +7324,10 @@ function render() {
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
   document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor');
+  // INJURIES view: three extra columns in front of Cons (CSS keys off these classes).
+  const _injView = !!window._injOnly && filter !== 'DEVY';
+  document.body.classList.toggle('inj-view', _injView);
+  document.body.classList.toggle('inj-view-fant', _injView && _statMode === 'fantasy');
   // REDRAFT (rest-of-season board): Team Total column = rest-of-season average
   // implied team total, FANTASY stats view only (CSS keys off this class).
   const _rosTtCol = currentMode === 'redraft' && _statMode === 'fantasy'
@@ -6876,6 +7402,7 @@ function render() {
   let html = '';
   let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
   let _devyWallDone = false; // DEVY rows: premium wall emitted once, above the first blurred row
+  let _injWallDone = false;  // INJURIES view: same, above the first row ranked past the free window
   data.forEach((d, i) => {
     // DEVY filter: custom row rendering — a full rankings row (tiers, blur,
     // card link, watch star) with the prospect columns from _devyStatCellsHtml.
@@ -6960,7 +7487,10 @@ function render() {
     const _ccCmp = _consCmp(d);
     const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (!!_ccCmp && _ccCmp.mine != null && _ccCmp.ref !== _ccCmp.mine);
     const checked = compareSet.has(d.idx) ? 'checked' : '';
-    const blurred = shouldBlur && (i + 1) > blurCutoff ? 'premium-blur' : '';
+    // INJURIES view shows real ranks, so its free window is rank-based (a row-count
+    // window would hand out ranks from deep in a premium board).
+    const _injBlurRank = _injView && d._ivRank;
+    const blurred = shouldBlur && (_injBlurRank ? d._ivRank : (i + 1)) > blurCutoff ? 'premium-blur' : '';
     // Hoist per-row computations called 2-4× inside the row template. Saves
     // ~20% of JS time in render() (measured 113ms → 90ms for the pure JS pass).
     // Total sort-click time is still ~300ms because browser layout/paint of
@@ -7153,15 +7683,17 @@ function render() {
     const _displayTierLabel = _tierLabelForRank(displayRank);
 
     // Insert premium wall row right at the cutoff, above blurred rows
-    if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
+    if (_injBlurRank) { if (blurred && !_injWallDone) { _injWallDone = true; html += _premiumWallHtml(); } }
+    else if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
     const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
-      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? (i + 1) : d.myRank}</span></td>
+      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || (i + 1)) : d.myRank}</span></td>
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
+      ${_injView ? _ivCellsHtml(d) : ''}
       <td class="adp-cell cons-cell${_cc.cls}" data-lbl="${currentVersion === 'consensus' ? "JACK'S" : 'CONS'}" title="${_cc.tip.replace(/"/g, '&quot;')}">${_cc.r != null ? (_cc.txt || _cc.r) : _cc.locked ? '<span class="cons-lock" aria-label="Premium">🔒</span>' : '—'}</td>
       ${_statTd1}${_wkSplit.pre}
       ${_isWeekly ? `${_wkSimBoomBustCell(d, 'boom')}
@@ -7328,6 +7860,7 @@ function updateStats(data) {
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
     <span class="stat-chip">Showing <strong>${data.length}</strong></span>
     ${(window._teamFilter && window._teamFilter.size) ? `<span class="stat-chip" style="color:#58a7ff;cursor:pointer" onclick="window._toggleTeamFilterPop(true)" title="Team filter is on — click to change">Teams <strong>${window._tfSummary()}</strong></span>` : ''}
+    ${window._injOnly ? `<span class="stat-chip" style="color:#f87171;cursor:pointer" onclick="window._toggleInjOnly(false)" title="Injured players only — click to show everyone">Injured only <strong>✕</strong></span>` : ''}
     <span class="stat-chip">QB <strong>${qbs}</strong></span>
     <span class="stat-chip">RB <strong>${rbs}</strong></span>
     <span class="stat-chip">WR <strong>${wrs}</strong></span>
@@ -10313,7 +10846,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || key === 'injSt' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';

@@ -70,6 +70,19 @@ FACETS = [
     ('defense_pass_rush', 'defense/pass_rush'),        # per rusher pass-rush win rate / pressures
 ]
 FACET_LEAD = ['season', 'week', 'player', 'player_id', 'position', 'team_name', 'franchise_id', 'player_game_count']
+# PFF Pro /v2 single-week tables (2026-10-05, Research additions): league-wide player reports
+# (graded-play rates, completion / accuracy / catch over expected, EPA without play action or
+# screens, offensive snaps, line pass-block win rate) and team tables (run game, pressure over
+# expectation). Same file naming: pff_<key>_<season>_w<N>.csv; player rows get player_id /
+# team_name like the facets, team rows team_name. Consumer: scripts/build_adv_stats.py.
+V2_API = API_BASE + '/v2/nfl/positions/reports/{report}?season={season}&weekGroup=REG&week={week}'
+TEAM_API = API_BASE + '/v2/nfl/teams/stats?season={season}&weekIds={week}&category={cat}'
+V2_REPORTS = [('v2_passing', 'passing'), ('v2_receiving', 'receiving'), ('v2_rushing', 'rushing'),
+              ('v2_offense', 'offense'), ('v2_pass_blocking', 'pass-blocking')]
+TEAM_TABLES = [('team_offense_rushing', 'offense-rushing'), ('team_offense_passing', 'offense-passing'),
+               ('team_defense_rushing', 'defense-rushing')]
+V2_LEAD = ['season', 'week', 'player', 'player_id', 'position', 'team_name']
+TEAM_LEAD = ['season', 'week', 'team_name']
 # Column order of the season exports already in pbp_cache/pff (kept identical so
 # every consumer can read both shapes); anything else PFF sends is appended.
 LEAD_COLS = ['season', 'player', 'player_id', 'position', 'team_name', 'player_game_count', 'routes',
@@ -271,6 +284,64 @@ def pull_facets(key, season, week, force=False):
     return done
 
 
+def _v2_rows(body, team_table):
+    """/v2 {columns, rows} body -> rows with the facet identity columns added."""
+    try:
+        j = json.loads(body)
+    except ValueError:
+        return None
+    rows = j.get('rows') if isinstance(j, dict) else None
+    if not isinstance(rows, list):
+        return None
+    out = []
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        r = dict(r)
+        if team_table:
+            r['team_name'] = r.get('abbreviation')
+        else:
+            r['player_id'] = r.get('playerId')
+            r['team_name'] = r.get('teamAbbreviation') or r.get('team') or r.get('teamName')
+        out.append(r)
+    return out
+
+
+def pull_v2(key, season, week, force=False, quiet=False):
+    """Every V2_REPORTS + TEAM_TABLES entry for one played week. -> list of (key, rows) written."""
+    done = []
+    for fkey, rep in V2_REPORTS + TEAM_TABLES:
+        team_table = fkey.startswith('team_')
+        path = facet_path(fkey, season, week)
+        if os.path.exists(path) and not force:
+            continue
+        url = (TEAM_API.format(season=season, week=week, cat=rep) if team_table
+               else V2_API.format(report=rep, season=season, week=week))
+        status, body = _api_fetch(key, url)
+        rows = _v2_rows(body, team_table) if status == 200 else None
+        if rows is None:
+            print(f'  {season} week {week}: {rep} HTTP {status} {_err(body)} - skipped')
+            continue
+        _write_csv(path, season, week, rows, lead=TEAM_LEAD if team_table else V2_LEAD)
+        done.append((fkey, len(rows)))
+    if done and not quiet:
+        print(f'  week {week}: v2 ' + ', '.join(f'{k} {n}' for k, n in done))
+    return done
+
+
+def backfill_v2(key, years):
+    """One-off: the /v2 week files for past seasons (Research's Past Seasons view). Six requests
+    in flight - each report takes ~5 s server-side, the budget is 100 reads / minute."""
+    from concurrent.futures import ThreadPoolExecutor
+    jobs = [(y, w) for y in years for w in range(1, (17 if y <= 2020 else 18) + 1)]
+    t0 = time.time()
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for i, done in enumerate(ex.map(lambda j: pull_v2(key, j[0], j[1], quiet=True), jobs), 1):
+            if i % 20 == 0:
+                print(f'  backfill {i}/{len(jobs)} weeks ({time.time() - t0:.0f}s)', flush=True)
+    print(f'v2 backfill {years[0]}-{years[-1]}: {len(jobs)} weeks checked ({time.time() - t0:.0f}s)')
+
+
 def _write_csv(path, season, week, rows, lead=None):
     cols = list(lead or LEAD_COLS)
     for r in rows:
@@ -298,6 +369,7 @@ def main():
     ap.add_argument('--login-wait', type=int, default=300, help='ignored (kept so old job command lines still parse)')
     ap.add_argument('--no-facets', action='store_true', help='skip the scheme/alignment facet files (receiving only)')
     ap.add_argument('--prior-refetch', action='store_true', help='refetch the prior-season weekly facet files')
+    ap.add_argument('--v2-backfill', default=None, help='YYYY-YYYY: only fill missing /v2 week files for those seasons')
     a = ap.parse_args()
     today = dt.date.today()
     season = a.season or (today.year if today.month >= 8 else today.year - 1)
@@ -322,6 +394,10 @@ def main():
         print(f'PFF API REFUSED ({status}) - no files written; the RT% column keeps its snap-share estimate.')
         return 2
     print(f'api key ok: week 1 rows={len(rows1)}')
+    if a.v2_backfill:
+        y0, _, y1 = a.v2_backfill.partition('-')
+        backfill_v2(key, list(range(int(y0), int(y1 or y0) + 1)))
+        return 0
 
     if a.weeks == 'auto':
         todo_all = list(range(1, 19))
@@ -360,12 +436,14 @@ def main():
         print(f'  week {wk}: {len(live)} players with routes -> pff_receiving_{season}_w{wk}.csv')
         if not a.no_facets:
             pull_facets(key, season, wk, force=True)
+            pull_v2(key, season, wk, force=True)
         time.sleep(1.0)
     # scheme facets for weeks whose receiving file was kept (first run after
     # the 2026-09-15 facet addition, or a facet PFF was down for)
     if not a.no_facets:
         for wk in kept:
             pull_facets(key, season, wk, force=False)
+            pull_v2(key, season, wk, force=False)
         pull_prior_season(key, season, force=a.prior_refetch)
     print(f'done: wrote {[w for w, _ in written]}, kept {kept}')
     return 0

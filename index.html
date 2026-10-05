@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-05-udadv" as="script">
+<link rel="preload" href="app.js?v=2026-10-05-vor" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1360,6 +1360,15 @@ CLEAR ALL
   body.format-weekly.wk-xfp-col #pageRankings .xfpg-cell { display: table-cell !important; }
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
+  /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in
+     the first stat cell with VOR beside it; the phone card has only that one
+     stat cell, so it swaps to the VOR there. */
+  #pageRankings tbody .vor-m{display:none}
+  @media (max-width:600px){
+    body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-ppg{display:none}
+    body.rnk-vor #pageRankings tbody tr:not(.devy-row) .vor-m{display:inline}
+    body.rnk-vor #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"VOR"}
+  }
   /* The always-on weekly Boom/Bust pair (simboom/simbust) stays hidden since
      2026-09-08 (Jack) — the SIMS stats view still shows boom/bust in the
      '25 PPG / L4 PPG swap columns. */
@@ -1567,6 +1576,7 @@ tr:hover .watch-star{opacity:.55}
 <div class="career-log-toggle" id="rankingStatModeToggle">
 <button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / season PPG / L4 PPG)">FANTASY</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points above the replacement-level player at the position in a standard 12-team league (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST), and the overall VOR rank. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="xfp" title="Expected fantasy points view — actual PPG, expected PPG from usage (every target by completion probability and expected YAC, every carry by field position, league TD rates; QBs net expected INTs), points over expected, and the TD-luck part of the gap. WEEKLY board shows the active week once it has been played.">xFP</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
@@ -5942,7 +5952,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-05-udadv"></script>
+<script defer src="app.js?v=2026-10-05-vor"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

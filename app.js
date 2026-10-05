@@ -51463,7 +51463,8 @@ Rules:
     // signal, so these are deliberately small — they only carry the RESIDUAL
     // game-script effect on top of expected points.
     K:   0.05,  // marginal: blowout leads trade late FGs for kneeldowns
-    DST: 0.15,  // trailing opponents throw → sacks + INTs beyond points allowed
+    DST: 0,     // was 0.15 until 2026-10-05: the opponent's implied total already carries it - no spread term
+                // scored .214 vs .203 with it, better in 8 of 10 seasons (scripts/research_sos_mix.py)
   };
 
   // How the two SOS axes are weighted per position: `def` = opponent-quality
@@ -51849,6 +51850,40 @@ Rules:
   // floats to the top of the easy list in every window. Subtracting each
   // team's own median cancels that constant and leaves the schedule effect,
   // exactly as _mtImpliedBaselines does for skill positions.
+  // SPREAD VS THE TEAM'S OWN NORM (2026-10-05). A raw spread mostly says "this is
+  // a good team" - roster quality, the same trap the implied total had - while
+  // the SOS rank is about the schedule. For the positions listed here the spread
+  // signal is the window's average spread MINUS the team's own season median.
+  // scripts/research_sos_mix.py (2016-25, signals rebuilt as of each week): RB
+  // .158 vs .143 raw at the same weight, better in 7 of 10 seasons. QB (-0.10),
+  // WR, TE and K scored the same or worse relative, so they stay raw; the mix of
+  // opponent grade vs implied total (3:1, K 1:3, D/ST 1:2) held up there as is.
+  const POSITION_SPREAD_RELATIVE = { RB: true };
+  let _mtSprBaseCache = null;
+  function _mtSpreadBaselines() {
+    if (_mtSprBaseCache) return _mtSprBaseCache;
+    _mtSprBaseCache = {};
+    if (typeof window.getNflScheduleForTeam !== 'function'
+        || typeof window.getNflTeamSpread !== 'function') return _mtSprBaseCache;
+    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+      const sched = window.getNflScheduleForTeam(team);
+      if (!sched) return;
+      const vals = [];
+      for (let w = 1; w <= 18; w++) {
+        const g = sched[w];
+        if (!g || g.bye || !g.opp) continue;
+        const sp = window.getNflTeamSpread(w, team, g.opp, g.home);
+        if (typeof sp === 'number') vals.push(sp);
+      }
+      if (vals.length >= 6) {
+        vals.sort((a, b) => a - b);
+        const m = Math.floor(vals.length / 2);
+        _mtSprBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+      }
+    });
+    return _mtSprBaseCache;
+  }
+
   let _mtOppImplBaseCache = null;
   function _mtOppImpliedBaselines() {
     if (_mtOppImplBaseCache) return _mtOppImplBaseCache;
@@ -52009,12 +52044,21 @@ Rules:
     // Spread z-score across teams (centered ~0 by construction — favored offset
     // underdog, sums to 0 league-wide). Sd ~3-4 over 3-game playoff window.
     let sMu = 0, sSd = 1, spreadsReady = false;
+    const sprRel = POSITION_SPREAD_RELATIVE[posKey] === true;
+    if (sprRel) {
+      const sprBase = _mtSpreadBaselines();
+      Object.keys(teamSpr).forEach(t => {
+        if (typeof sprBase[t] === 'number') teamSpr[t].avg -= sprBase[t];
+        else delete teamSpr[t];
+      });
+    }
     const sprAvgs = Object.values(teamSpr).filter(t => t.n >= minN).map(t => t.avg);
     if (sprAvgs.length >= 4) {
       const m = sprAvgs.reduce((s, v) => s + v, 0) / sprAvgs.length;
       const variance = sprAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / sprAvgs.length;
       sMu = m; sSd = Math.sqrt(variance) || 1;
-      spreadsReady = true;
+      // relative spreads collapse toward 0 on near-season-length windows - skip, as the totals do
+      spreadsReady = !(sprRel && sSd < 0.5);
     }
     const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
     const finalScores = Object.entries(teamDef).map(([team, d]) => {
@@ -52152,7 +52196,12 @@ Rules:
       x.rel = (typeof v === 'number' && typeof _implBase[t] === 'number') ? v - _implBase[t] : null;
     });
     const rels = Object.values(teamRows).map(x => x.rel).filter(v => typeof v === 'number');
-    const spreads = Object.values(teamRows).map(x => x.sp).filter(v => typeof v === 'number');
+    // spZ = the spread the blend reads: vs the team's own season norm where POSITION_SPREAD_RELATIVE says so
+    const sprBase = POSITION_SPREAD_RELATIVE[posKey] === true ? _mtSpreadBaselines() : null;
+    Object.entries(teamRows).forEach(([t, x]) => {
+      x.spZ = typeof x.sp !== 'number' ? null : !sprBase ? x.sp : typeof sprBase[t] === 'number' ? x.sp - sprBase[t] : null;
+    });
+    const spreads = Object.values(teamRows).map(x => x.spZ).filter(v => typeof v === 'number');
     const useTotals = rels.length >= 4 && std(rels) >= 0.5;
     const useSpreads = spreads.length >= 4;
     const tMu = useTotals ? mean(rels) : 0;
@@ -52170,8 +52219,8 @@ Rules:
         const zT = isDstView ? zRaw : -zRaw;
         blend = (x.defZ * mix.def + zT * mix.tot) / (mix.def + mix.tot);
       }
-      if (useSpreads && sprWeight !== 0 && typeof x.sp === 'number') {
-        const zS = (x.sp - sMu) / sSd;
+      if (useSpreads && sprWeight !== 0 && typeof x.spZ === 'number') {
+        const zS = (x.spZ - sMu) / sSd;
         blend += sprWeight * zS;
       }
       return { t, blend, ...x };

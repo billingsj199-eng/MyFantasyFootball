@@ -4068,3 +4068,364 @@ importance-weighted, final week dropped, 10,542 player-weeks; (seasons better of
   pool is filtered on a trailing 3-game baseline, so part of that is regression to the mean. Not applied; re-test with a
   season-to-date baseline before touching POOL tgt weights.
 - Engine unchanged. Jones is a single case where the books price far more than the typical next-RB gain (+31% in history).
+
+## Injury signals - 2026-10-01 SHIPPED (engine.js backup engine.js.bak_pre_injsignals_20261001)
+- Ask (Jack): daily practice reports for every team, injury type -> plays this week / timeline, news from the big
+  accounts + injury analysts, and whether books have lines up. Data layer `build_injury_signals.py` (end of
+  refresh_data.py) -> `data/sim_injury_signals.js`: Sleeper body part + notes, practice report by week with the
+  day-by-day sequence (`data/practice_seq_2026.json`, backfilled from the repo's git history - the only daily archive
+  that exists), availability read off `camp_news_2026.json`, and `data/lines_signal_log.jsonl`.
+- `backtest_injury_type_play.py` (injury_type_play.log), 1,641 Questionable starter rows 2019-25: injury type + recent
+  seasons weighted (half-life 3) -> forward Brier -1.26% (4/4), leave-one-season-out -0.86% (5/7). Play rates drifted:
+  Q + limited 76% -> 65% since 2023, Q + no practice 44% -> 54%. Engine INJ_PLAY / INJ_TYPE, kill SIM_INJ_TYPE.
+- `backtest_avail_recency.py` (avail_recency.log), 1,668 absence states: position + injury on the report -> forward
+  Brier next game -2.50%, next four -3.58% (4/4); LOSO -2.34% / -3.82% (6/7). RECENCY REJECTED for the curve (+0.1%;
+  missed 4+ -> 80% miss the next in 2019-22, 84% in 2023-25 - long absences are not getting shorter). Engine
+  AVAIL_POS / AVAIL_GRP, kill SIM_AVAIL_V2. A corroborated Doubtful now starts the curve too.
+- News windows (kill SIM_NEWS_WINDOWS): timeline / season / ruled out / expected to play. Headline-only parser, or the
+  routine's own `avail` field (prompt in news_routine_prompt_20261001.md; previous in ..._prev_20260727.md). News never
+  acts alone - the player's designation has to agree and a game played since the item voids it (weeks 1-3: two wrong
+  timeline items, both on players Sleeper listed healthy). `backtest_news_status.py`: ruled out played 1/25, expected
+  to play 15/16, game-time decision 6/6. Manual IN_SEASON_OUT_OVERRIDES wins unless the news is newer than
+  IN_SEASON_OUT_OVERRIDES_ASOF (or the entry's own third element); an EXPIRED manual window now falls through to the
+  designation (Dowdle was projected 7.6 while ruled out).
+- Season-ending diagnosis (kill SIM_DX_SEASON): Sleeper body part ACL / Achilles + played this season + on a reserve
+  list or Out -> out through week 18.
+- Lines up = INTEL ONLY: `lines_signal_scorecard.py` (Tuesday chain) grades the pre-inactives state only (last log row
+  100+ minutes before his kickoff). Weeks 1-3: Questionable with lines at 2+ books played 15/17, no lines 5/17. Wire
+  a weight at ~100 Questionable player-weeks. Practice-trend cells are in the same scorecard (n too small to read).
+- NOTES chip "INJ: <injury> · practice DNP-LP-LP · lines up at N books · news: ..."; the NOTES sheet now redraws once
+  the injury layer arms (first view used to show pre-arm numbers).
+
+## Our own future team totals - 2026-10-02 SHIPPED (build_own_totals.py; old file data/sim_future_totals.bak_pre_own_20261002.js)
+- Ask (Jack): the book took the far-out look-ahead lines down and will re-post them week by week, so stop leaning on
+  them - build our own future totals from the data, each new week's lines included, with current and future injuries.
+- `build_own_totals.py` now writes data/sim_future_totals.js (same shape; refresh_data.py calls it, the 09-29
+  build_future_totals.py is the fallback and still writes the site twin from the file). Future game = our team RATING
+  (preseason rating fit on the 272 frozen preseason lines) + shift from every in-season line incl. the current week and
+  any later week already re-posted (per quarterback, weather out) + results (scoring surprise x .10 / .15 / .20 by
+  games played) + quarterback MIX per future week (`dump_team_state.js`: depth chart x availability from the injury
+  layer) with a -3.0 dock for a replacement quarterback who has no lines yet.
+- `backtest_own_totals.py` (own_totals_backtest.log), 2019-25 closing lines, live timing: rating + QB + weather 2.22
+  miss vs the eventual closing line; + results -3.9% (7/7); + new-QB dock -10.2% (7/7); shipped form -14.1% (7/7),
+  -30.7% vs a rating that is never updated, points-scored MSE -2.3%.
+- SKILL-PLAYER INJURIES REJECTED for team totals: oracle knowledge of every future absence -2.4%, but knowing exactly
+  when the players out TODAY return = 0.0% (0/7) and the availability-curve version +0.1% (0/7). Only the quarterback
+  moves a team total; skill absences stay in the player-level opportunity pool.
+- 2026 walk-forward (`--test`, 312 team-games): the game-specific part of the stale lines is sd 0.55 pts; own rating
+  + shift 1.47 = stale game line + shift 1.47, so dropping the book's old lines costs nothing. Results term is a wash on
+  2026 so far (1.52; bad from week 2 on one game, better from weeks 3-4).
+- Effect when switched on: current week 0 rows; rest-of-season mean |change| 0.8% (LV +3-6%, NE / LAC -1 to -3%).
+- Caveat: the preseason QB-room guesses still drive who starts for LV (Mendoza from week 5) and CLE (Sanders from week 8).
+- Preseason weight by week (`backtest_own_totals_prior.py`, own_totals_prior.log; Jack 10-02: "early in the season
+  factoring the preseason totals more?"): ridge 2 is the leave-one-season-out pick through week 4 and MORE preseason
+  weight (4 / 8 / 16) is worse at every checkpoint, week 2 included; from week 6 the preseason should count for LESS
+  (ridge 0.5: -1.3% at week 6, -3.8% at week 12). Shipped `ridge_for()`: 2.0 through 4 weeks played, 1.0 at 5, 0.5
+  from 6 (-0.74% vs flat 2.0, 6/7). Results weight: dropping it is +2.5% to +9% worse at every checkpoint; the
+  .10 / .15 / .20 schedule is the pick at 6 of 7 checkpoints.
+
+## Season sim banks played games - 2026-10-02 SHIPPED (engine.js.bak_pre_bankplayed_20261002)
+- Jack: "season sim shouldn't resimulate any games already played". `build_actuals.py` (hooked in refresh_data.py) ->
+  data/sim_actuals_2026.js: per week the teams whose game is final (kickoff + 5 h) and every pool player's Sleeper stat
+  line. Engine simSeason banks a finished team-week at the real points under the sim's scoring (league-sim formula),
+  0 with no stat line; only games still to play are sampled (shock / missed-game draws on those alone). Result rows
+  gain banked / bankedWeeks / gamesSim; games = played + to play. Kill: window.SIM_BANK_PLAYED = false; opts.actuals
+  = null re-simulates everything.
+- App: note under the run names the banked weeks; the drawer lists played weeks as "actual"; the median stat line =
+  real stat lines for played games + the projection for the rest. The site export's seasonSim block inherits it
+  (file is in export_site_proj.js's list).
+- Check: banked half-PPR = the weekly stats file for all 350 skill players (max diff 0.5); a weeks 1-3 run has no
+  spread except one team defense with no Sleeper row that week (sampled, not zeroed). Players without a Sleeper id
+  use the weekly stats file's half-PPR week.
+
+## Shadow return timing - 2026-10-02 SHIPPED shadow-only (engine.js.bak_pre_shadowreturn_20261002)
+- Jack: "add a return timing that we just created with all the injury reports / past data". shadowOut() held anyone
+  currently out at zero in EVERY later week (v2.9, a this-week rule), so the Clay-free model had no rest-of-season
+  number for injured players and handed their work to teammates all year. For weeks after the current one it now
+  defers to the injury layer like the live number: out-windows, news timelines, season-ending diagnosis, availability
+  curve v2 (P(plays) scales the week), return ramp. An expired manual window falls through to the status, as live.
+- `backtest_shadow_return.py` (shadow_return.log), 1,668 absence states: next-four-games Brier hold .422, back next
+  game .578, curve .222 (-47% vs hold); expected games 1.91 vs actual 1.84.
+- Check: shipped numbers unchanged on all player-weeks; shadow rest-of-season totals Mayfield 0 -> 185 (live 197),
+  Hall 0 -> 127 (138), Etienne 0 -> 106 (131); Jalon Daniels 187 -> 30. Kill window.SIM_NC_RETURN = false.
+- Still off for injured players: the ESPN chart drops a player while he is out, so the shadow's demoted-veteran dock
+  (dock3) follows him after his return (Etienne, Charbonnet, Mason, Jacobs run 1.6-3.4 a game under live).
+- PRE-INJURY CHART SPOT (same day, engine.js.bak_pre_chartpre_20261002): `build_injury_signals.py` adds
+  SIM_INJ_SIGNALS.chartPre (the list index each player who is out now held on the ESPN chart going into his last
+  game, from the repo's depth-chart history; cache data/chart_pre_2026.json). Engine chartListFor(): for weeks after
+  the current one effectiveString reads the chart with those players put back at that spot (no game this season =
+  ADP rank in the room); players out for every remaining week are not restored (Dart / Winston would double count).
+  Shadow rest-of-season totals: Etienne 106 -> 125 (live 131), Jacobs 101 -> 137 (160), Pierce 80 -> 95 (84),
+  Mason 72 -> 84 (102); fill-ins down (K. Miller 58 -> 38, Lloyd 50 -> 38). Live numbers and the current week
+  unchanged. Kill window.SIM_NC_CHARTPRE = false.
+- BACKTEST of the pre-injury chart spot (`backtest_chart_pre.py`, chart_pre_backtest.log; nflverse weekly depth charts
+  2019-24, bt_common base x the shipped return ramp): 1,454 first-three-games-back rows (RB / WR / TE). Returning
+  players produce at their pre-injury level whatever the chart showed while they were out: dropped off the chart
+  1.02 of base (n 283), listed lower 1.01 (n 60), same spot 1.06 (n 1,084). On the 314 rows where the two rules
+  differ: actual 7.97, pre-injury spot predicts 7.97, chart-as-listed 4.94 -> MSE -32.8%, MAE -12.0%, 5/6 seasons
+  (RB -39% 6/6, WR -32% 5/6, TE -8% 3/6; missed 4+ games -40% 6/6). The teammate listed first while a starter was
+  out (220 cases, mostly WR): 8.8 a game before, 10.0 while he was out, 8.5 after the return - the bump is gone.
+
+## What the Clay-free model still misses in season - 2026-10-02 RESEARCH (nothing shipped)
+- `research_shadow_residuals.py` (shadow_residuals.log): shadow v2.24 form on 13,932 in-season player-weeks 2019-25
+  (2+ games played), residual by player type + vs 160 pre-kickoff metrics. Harness base = prior/evidence x Vegas x FPA
+  only, so snap trend, weather, TD luck and the banged-up docks show up as "misses" there but ARE in the live chain.
+- Not covered anywhere yet: (1) usage LEVEL for TE / WR - snap share last game r +.12 TE / +.08 WR, target share
+  +.06 / +.05 (TE evidence is points only); (2) QB rushing usage - xFP +.07, red-zone carries +.06; dropbacks -.065;
+  (3) QB types: changed teams .896 of projection (0/5 seasons), no ADP .927, team implied under 19 .906;
+  (4) WR early (games 2-5): target share under 12% .854, rookies .887, ADP 101-180 .911, team implied under 19 .864,
+  scoring below usage .886 (usage evidence weight looks too high early); (5) RB carry share under 30% early .862;
+  (6) TE level 1.04 across the board (level fixes failed LOYO before - skew, not a multiplier).
+- 2026 weeks 2-3 (409 rows, small): backup QBs are the worst outliers (McCarthy 27.3 projected / 0, Flacco 14.1 / 0)
+  = the fill-in double count (own starter prior + 85% inheritance); rows carrying a chart dock still ran .75.
+- Next tests, in order: backup-QB double count; TE / WR usage-level evidence; QB rushing usage + mover / no-ADP dock;
+  WR early evidence mix + low-volume dock; team-shift signal for bad offenses early.
+
+## Next layers for the Clay-free model - 2026-10-02 TESTED (`backtest_shadow_next.py`, shadow_next.log; nothing wired yet)
+- Graded on the shadow itself (v2.24 form, 17,569 player-weeks), setting picked leave-one-season-out and forward
+  (earlier seasons only, 2022-25); a narrow layer is judged on the rows it touches, the top-150 weighted error over
+  the whole board is the guard. Bar: LOSO touched rows better in 5+ of 7, forward 3+ of 4.
+- BACKUP QB (43 fill-in starts for a known regular starter): actual 14.7; his own number 14.3; starter x .85 12.2;
+  the average of the two best (-7.7%, 3/4); BOTH ADDED = what the live shadow does = 26.4 (+241% error). Fix = never
+  add: the larger (or the average) of his own number and the starter's x .85.
+- PASS: snap-share LEVEL WR + TE e .3 (touched -0.60% 6/7, fwd -0.59% 3/4, rank rho +.0034; TE alone fwd -1.6% 4/4);
+  QB who changed teams x .90 (-2.97% 5/7, fwd -3.52% 3/4); QB on a team implied under 19, e .75 (-1.68% 6/7, fwd
+  -1.02% 3/4); rookie WR games 2-5 x .90 (-1.27% 5/7, fwd -2.47% 3/4); RB under 30% of carries games 2-5 x .90
+  (-1.54% 6/7, fwd -2.01% 4/4). Stacked: top-150 weighted -0.21% (5/7), all rows -0.49%, rank rho .3837 -> .3875.
+- FAIL (do not re-pitch): TE xFP evidence, target-share level (hurts the top 150), QB xFP / rushing evidence (worse at
+  every weight), QB with no ADP, WR on low-total teams, WR evidence mix (shipped schedule is right), WR under 12% of
+  targets (4/7, fwd 2/4), WR target trend, team shift (any position).
+
+## Shadow v2.25 "next layers" WIRED (shadow-only) - 2026-10-02
+- Jack: "lets do it". The five layers that passed backtest_shadow_next.py plus the backup-QB fix are in `engine.js`
+  (`NC_SHADOW.next`), applied to the Clay-free number only (`ncMean`). Live / site projections unchanged: 0 of the
+  player-weeks 4-18 moved (scratch shadow_dump.js before / after). Backups `engine.js.bak_pre_shadownext_20261002`,
+  `engine.js.bak_pre_snapfar_20261002`.
+  - QB who changed teams (`SIM_INJ_SIGNALS.prevTm`, built by build_injury_signals.py from snap_counts_2025) x .90 `+mover`
+  - QB on a team implied under 19: x (1 - .75 x (19 - implied) / 19) `+lowtot`
+  - rookie WR, games 2-5: x .90 `+rkwr`
+  - RB under 30% of team carries, games 2-5: x .90 `+lowcar` (carries from SIM_XFP_2026: index 4 on skill rows,
+    index 3 on QB rows - the first cut summed QB rush yards and flagged McCaffrey / Barkley)
+  - WR / TE snap-share LEVEL: x clamp(1 + e x (last game snap % - ref[bin]) / 100, .7, 1.4) `+snaplv`; bins on the
+    half-PPR weekly number; e .3 for the current week, e .15 (`snapEFar`) for later weeks
+  - fill-in QB: the LARGER of his own number and the starter's x .85, never the sum (Mariota wk 4 29.8 -> 15.2)
+  Kill switches: `SIM_NC_NEXT = false` (the five layers), `SIM_NC_QBMAX = false` (the QB fix).
+- `backtest_snap_level_horizon.py` (snap_level_horizon.log), run after the first wiring docked Justin Jefferson 21% for
+  the whole season off a game he left hurt (snaps 92 / 100 / 12):
+  - EXIT GAMES (last game under 60% of his prior share, 303 rows): the next game ran .751 of the shadow (everyone else
+    1.013). Reading the last game as-is cut the error on those rows 9.6% (6/7); swapping in his season share made it
+    worse (+0.8%, 2/7). The exit game stays in the reading.
+  - HORIZON: e .3 is -0.70% (7/7) for the next game, -0.19% two games out, flat from three out. e .15 holds -0.10 to
+    -0.21% at every distance (4-6 of 7 seasons). So later weeks use e .15. Jefferson ROS 144 -> 128 (was 113).
+
+## Shadow v2.26 REST-OF-SEASON settings (shadow-only) + research screens - 2026-10-02
+- Jack: "at this point pre season is not relevant lets focus on in season so rest of season by this point and we should
+  be able to improve the model through backtesting". `backtest_shadow_ros.py` (shadow_ros.log; `ROS_MINF=1` writes
+  shadow_ros_minf1.log): checkpoint = a player entering a game with 3-10 games played; graded on his per-game average
+  over the rest of the season (final week dropped) against the context-free rate x the average of those weeks' layers.
+  8,542 checkpoints with 4+ games left, 9,848 with no survivor filter. A change is kept only if it holds in BOTH runs.
+- WHERE WE STAND: Clay-free rate vs the Clay blend (P = 5), rest of season: -7.8% (7/7), top-150 weighted -4.1%; no
+  filter -5.0% (6/7), weighted -3.4%. QB -17% / -6%, RB -6.5% / -5.7%, WR -4.0% / -3.7%, TE -5.6% / -4.7% (TE top-150
+  weighted is a tie). Rank order within position about level (.582 vs .575).
+- KEPT AS IS (tested, shipped setting is right): prior weights QB 12 / WR 8 / TE 8; evidence mix (points vs xFP) at
+  every position; pulling toward / away from the position average.
+- WIRED (engine `NC_SHADOW.next`, weeks after the current one only, kill `SIM_NC_ROS = false`; backup
+  `engine.js.bak_pre_shadowros_20261002`; live numbers and current-week shadow numbers unchanged, verified headless):
+  - RB snap trend carried through later weeks (`rbSnapCarry`; live snapMult returns 1 once the last snap week is 3+
+    weeks behind): -4.0% on RB rows 6/7, forward -4.4% 4/4; no filter -3.5% 6/7, forward -4.6% 4/4.
+  - QB who changed teams x.84 for later weeks (`qbMoverFar`; .90 stays for the current week): -27% 6/7, forward -25% 4/4.
+  - TE snap-share level e .3 for later weeks, WR 0 (`snapEFar {WR 0, TE .3}`, was .15 for both): TE -1.8% 6/7, forward
+    -2.7% 4/4; WR worse at every strength (0/7).
+  - TE team pass-rate tilt e .04 (`teTilt`, `+rtilt`; z from rosTiltZ, half strength one week ahead): -0.8% 5/7,
+    forward -3.0% 3/4; no filter -0.4% 5/7, forward -1.8% 3/4.
+  Stacked on the rest-of-season test: -3.4% vs the shipped shadow (6/7), -10.9% vs the Clay blend (7/7); rank order
+  .582 -> .598 (Clay blend .575).
+- FAILED one or both runs (do not re-pitch): RB prior weight 8 (forward fails without the filter), TE level x1.06-1.09
+  (survivor effect - 1.078 with 4+ games left, 1.054 without), RB level, RB rookies / second year / age slope, TE second
+  year / rookies, QB pass-attempt tilt (worse on the top 150), QB rushing-share tilt, WR yards per route vs man, WR
+  scoring over usage, WR 25% under his prior, WR rookies, WR / TE snap trend carried (half strength only, not stable).
+- `research_next_candidates.py` (next_candidates.log), first look only: game after an early exit RB .79 / WR .74 /
+  TE .78 of the shadow (7/7, also on a clean report); Questionable hamstring .715 and illness .78 vs all Questionable
+  .883 (groin / hip / quad, foot, back: no drop); WR first game after the bye .903 (7/7). Nothing: quarterback form
+  for his receivers, short weeks, RB rest.
+
+## Shadow v2.27 rest-of-season STRUCTURE by draft slot (shadow-only) + weakness map - 2026-10-02
+- `backtest_shadow_ros.py` section 6 = WEAKNESS MAP of the model as wired, by type of player (level, size of the miss,
+  error and rank order vs the Clay blend). Clay blend still closer on WR ADP 101-150 (+7.2%, rank order .30 vs .48), RBs
+  running 25%+ over their preseason level (+4.4%), second-year QBs (+12%), WR ADP 61-100 (+3.6%). Under-projected: TE
+  ADP 31-60 1.17, RB rookies 1.13, small-role RBs 1.07-1.085, TE overall 1.055. Over-projected: WR 25%+ under preseason
+  level .92, WR with the QB out .93, QB ADP 31-60 .94.
+- Section 7 = STRUCTURAL tests (Jack: "lets do it"): prior weight by position x draft band (16 cells), prior weight when
+  running hot vs cold (25 pairs per position), late-round receiver inputs (usage weight; target / snap / air-yard share
+  tilts; depth string), second-year QB prior, TE ADP 31-60 and small-role RB levels. Fold-picked settings were unstable
+  at the grid edges, so each kept setting is a FIXED, more conservative value that beats the shipped one in 5-7 of 7
+  seasons in both runs (with and without the 4-games-left filter):
+  - RB drafted 61-100: prior weight x2.5 (P 12.5): -4.5% / -4.7% (6/7, 7/7). Rank order inside the band a touch lower.
+  - WR drafted 61-100: prior weight x0.6 (P 4.8): -3.1% / -2.5% (6/7, 6/7).
+  - second-year QB: prior weight x0.75 (P 9): -2.4% / -2.5% (5/7, 7/7).
+  - WR drafted 101-150: usage (xFP) weight capped at .25: -3.1% / -2.7% (5/7, 6/7); rank order in the band .31 -> ~.45
+    (Clay blend .48).
+  - TE drafted 31-60: x1.10: -24.5% / -17.9% (6/7, 5/7) on 139-165 rows - a small sample.
+- WIRED shadow-only: `NC_SHADOW.next.struct`, tags `+rsP`, `+rsLam`, `+rsTE`; weeks after the current one, 3+ games
+  played; kill `window.SIM_NC_ROS2 = false`; backup `engine.js.bak_pre_shadowros2_20261002`. Live numbers and
+  current-week shadow numbers unchanged (0 player-weeks, headless before / after).
+- FAILED (do not re-pitch): hot / cold prior weights at every position, every other position x band prior weight (RB
+  ADP 1-60 x1.6 is the closest: -1.5%, 5-6 of 7, fails the top-150 guard), late-round WR target / snap / air-yard tilts and
+  depth-string levels, second-year QB prior toward ADP, QB ADP 31-60 level, small-role RB levels.
+
+## Shadow v2.28 - inside the weak spots (shadow-only) - 2026-10-02
+- Jack: "can we continue looking into our weaknesses". `backtest_shadow_ros.py` section 8 = inside each weak type of
+  player, what the rest-of-season miss lines up with and what lines up with the Clay blend being closer (model as wired
+  through v2.27). Section 9 = the leads tested, with and without the 4-games-left filter.
+- WIRED shadow-only (`NC_SHADOW.next.struct`: `wrLateColdP .4`, `rbPlays .04`, `rbBackup 1.04`; tags `+rsCold +rsVol
+  +rsBk`; later weeks, 3+ games; same kill `SIM_NC_ROS2`; backup `engine.js.bak_pre_shadowros3_20261002`; live and
+  current-week shadow numbers unchanged):
+  - WR drafted 101-150 running BELOW his preseason level: prior weight x0.4 (-6.9% / -6.2% on those rows, 5-6 of 7,
+    forward 3/4 both; rank order +.07 to +.10). With v2.27 the WR ADP 101-150 gap to the Clay blend goes +4% -> ~0.
+  - RB team play-volume tilt, e .04 per sd of team plays a game (`rosTiltZ().plays` from SIM_PACE_2026 cur.plays): RBs on
+    high-volume offenses come down, low-volume go up. -1.5% / -1.5%, 5-6 of 7, forward 3/4 and 4/4, top-150 weighted
+    -2.0% / -1.7%.
+  - RB backups drafted in the top 150 (effective string 2+): x1.04. -4.2% / -2.9% at that fixed setting (6/7 both); the
+    fold-picked x1.08-1.12 fails without the filter (survivor effect), so this is the weakest of the three.
+- FAILED (do not re-pitch): RB JM talent tilt (5/7, forward fails), rookie RB JM tilt and draft-capital levels, coach's
+  lead-back history (all RBs and hot RBs), hot-RB scoring-over-usage tilt, WR cold + low snap share docks, WR cold snap
+  trend (passes only without the filter), WR ADP 151+ cold prior weight, TE coach target history, TE run-blocking line
+  tilt, TE scoring-over-usage, QB JM tilt.
+- STILL OPEN: RBs running 25%+ over their preseason level (+2 to +5% vs the Clay blend, nothing Clay-free separates the
+  real ones), second-year QBs (228 rows, too few seasons to test), RB rookies (under by 12%, no stable fix), TE level.
+
+## Shadow v2.29 PRUNE after a whole-board ablation (shadow-only) - 2026-10-02
+- Jack: "can we continue and take out anything that overall hurts the backtest". Every piece of the Clay-free model
+  removed one at a time and graded on the WHOLE board (all rows, top-150 weighted, rank order), not just its own rows.
+  - NEXT GAME: `ablate_shadow_next.py` (ablate_shadow_next.log), 17,569 player-weeks. The base now carries the engine's
+    snap-trend multiplier (ctx `snapmult`) - the earlier v2.25 tests did not, and that changes two verdicts.
+  - REST OF SEASON: `backtest_shadow_ros.py` section 10, both runs. All 15 pieces help or are mixed (rank order within
+    +-.0015); nothing removed.
+- REMOVED from the shadow (`ncPrune`, restore with `window.SIM_NC_PRUNE = false`; backup `engine.js.bak_pre_prune_20261002`;
+  live numbers unchanged on every player-week, only WR shadow rows moved):
+  - WR snap TREND in the shadow chain (`ncSM = 1` for WR; the live chain keeps it). Trend and level are substitutes for
+    WRs on the shadow base: level only = all rows -0.50%, top-150 weighted -0.26% (5/7), rank order +.0076 vs neither;
+    trend only = +0.07%, rank -.0014; both = +0.40%, rank -.0019.
+  - rookie WR games 2-5 x.90: -2.1% on its own rows but top-150 weighted +0.01% (worse in 5 of 7 seasons), rank -.0003.
+- KEPT, mixed (one of three measures against): QB game-total tilt (weighted +0.02%, rank +.0024), QB low team total,
+  RB under 30% of carries, TE snap trend with level (weighted +0.5 pts vs level only, rank +.003), usage evidence at
+  the rest-of-season horizon (error -0.7%, rank -.001).
+- NEXT-GAME LEADS tested on the same base: game after an early exit - WR / TE gone once the trend / level layers are in
+  (1.00), RB .90 left, x.95 only marginal (not wired); first game after the bye FAILS at WR / QB / TE; hamstring
+  Questionable on top of a generic x.90 dock: -9.8% LOSO 6/7 but forward +3.9% 2/4 (92 rows) - not wired; groin / hip /
+  quad / foot / back Questionable score 1.125 of a x.90-docked number, giving the dock back PASSES (-1.5% 6/7, forward
+  3/4). Both injury items belong in the injury layer (shared with the live number), tested against its real docks.
+
+## Shadow v2.30 - JM and the learned prior (shadow-only) - 2026-10-02
+- Jack: "do we have the jm model factoring in at all?" JM reaches the shadow only as 1 of 16 features of the learned
+  season prior (ridge_prior.js): RB .85 pts per sd (3rd largest feature), QB .62 (unused - QB ridge weight was 0), TE .21,
+  WR .09. Not in the live number.
+- `backtest_jm_ridge.py` (jm_ridge.log), next game (pruned v2.29 layer set) + rest of season with and without the
+  4-games-left filter:
+  - JM itself (prior rebuilt WITHOUT the jm feature): worse next game in 7 of 7 seasons (top-150 weighted +0.09%), rest
+    of season +0.68% / +0.62%. All of it is RB (+0.27% on RB rows next game, +1.4% / +1.2% rest of season); WR / TE flat
+    (WR slightly better without at the long horizon, 4/7). Rookies + second-year: never better without.
+  - Weight on the learned prior: RB .75 beats .5 at every horizon (rows -0.25% 6/7, -0.73% / -0.22% 5/7; top-150
+    weighted better in 5-6 of 7); WR / TE .5 is right.
+  - QBs on the learned prior: hurts QBs drafted in the top 100 (+0.8% next game, +3% rest of season), helps QBs drafted
+    after pick 100 (-0.5% next game, -2.5% / -2.1% rest of season at weight .25, 6/7 each; whole-board weighted flat).
+- WIRED shadow-only: `NC_SHADOW.ridgeW2 { RB .75, lateQbAdp 100, lateQbW .25 }`, kill `window.SIM_NC_RIDGE2 = false`,
+  backup `engine.js.bak_pre_ridge2_20261002`. Live numbers unchanged; 45 RBs and 8 QBs move a point or more rest of season.
+
+## Factor ranking by position - 2026-10-02
+- Jack: "can you rank the best factors for each position (most predictive)". `research_factor_rank.py` (factor_rank.log):
+  metric_atlas_rows.parquet (live 5+, 3+ games played, 14,871 player-weeks) joined to the harness ADP / history; factors
+  grouped into families; per family the multiple R alone (next game, rest-of-season PPG) and the unique share (drop in
+  R-squared when removed from the all-family model).
+- All families together: next game R .42 QB / .56 RB / .50 WR / .51 TE; rest of season .61 / .74 / .73 / .75.
+- QB next game: Vegas .33 (unique 14.6%), history .32, season PPG .32, passing volume .29 (unique 7.2%), ADP .27.
+  RB: xFP .51, PPG .51, history .49, workload .49, snaps .48, ADP .44. WR: history .47, xFP .46, PPG .45, target volume
+  .44, receiving quality .42, ADP .41. TE: history .46, target volume .44, xFP .44, PPG .43, snaps .39 (unique 3.7%).
+- Matchup (points allowed) is last or near last at every position (R .01-.06); Vegas is weak alone for RB / WR / TE
+  (.12-.15) but carries unique information (1-3%). PPG shows 0 unique only because xFP + points-over-xFP rebuild it.
+
+## Usage with injury-driven games separated + PPG by games played - 2026-10-02 (research, nothing wired)
+- `research_usage_injury.py` (usage_injury.log; Jack: "how important is usage or xfp in season with factoring out usage
+  because of injuries"). Per-game xFP rebuilt by differencing ctx running totals; each past game tagged teammate out (RB
+  20%+ of carries out, WR 15%+ of WR targets out, TE 15%+ of team targets out), left early, or normal.
+  - Usage alone vs the next game: RB .46, WR .41, TE .38 (points .50 / .44 / .39). On top of history + points it adds
+    +0.24 / +0.27 / +0.46 pts of R-squared next game, +0.23 / +0.47 / +1.21 rest of season.
+  - Teammate-out games: 20% / 23% / 41% of games; usage in them +26% / +16% / +15%. Of that bump, 9% / 22% / 22% carries
+    to the next game once the teammate is back, 41% / 32% / 42% while he is still out, 18% / 25% / 28% rest of season.
+  - Usage from normal games only is slightly LESS predictive than all games (.451 vs .463, .394 vs .406, .350 vs .376) -
+    fewer games costs more than the bias removed. Shadow with the evidence rebuilt from normal games: usage only +0.32%
+    (2/7), usage and points +3.4% (0/7). Players with inflated usage and the teammate back: actual / shadow 1.000.
+    REJECTED - do not re-pitch "clean usage".
+- `research_ppg_by_games.py` (ppg_by_games.log): season PPG vs rest-of-season PPG rises to games 5-7 then flattens (QB
+  .38 -> .50, RB .50 -> .72, WR .51 -> .70, TE .42 -> .63); it passes past-seasons history at QB game 5, RB 6-7, WR
+  8-10, TE 11+. The dip at 11+ is the shorter remaining schedule: against a fixed next-three-games target it does not
+  dip (QB .40 -> .47, RB .63, WR .62, TE .55). Injuries cut it at every stage (RB with a teammate out .52-.56 vs
+  .65-.72; Questionable RB .38-.49 vs .64-.69), young players run lower than veterans (WR .49-.54 vs .58-.66).
+
+## Shadow v2.31 - elite players and docks; Jefferson out week 4 - 2026-10-02
+- Jack: "elite players like jefferson should not be projected very low if he plays but he is actually out now for this
+  week". `overrides.js`: 'Justin Jefferson': [4, 4, '2026-10-02'] (the feed had only a DNP). Live week 4 = 0; the manual
+  window also ends the model's hedge on later weeks, so Addison's weeks 5+ drop ~0.8 (Jefferson assumed back week 5).
+- `research_elite_docks.py` (elite_docks.log), next game, by draft band:
+  - snap-share level DOCK of 5%+ (WR / TE): ADP 1-30 score .998 of the UNDOCKED number (1.112 of the docked one, n 93);
+    ADP 31-60 .963 (a wash); ADP 61-150 .875 and later .837 (dock right, 5-7 of 7 seasons).
+  - game after an early exit, RB: ADP 1-30 1.03 (n 28), ADP 61-150 .79.
+  - first game back after a 3+ week gap: ADP 1-30 .885 (6/7 seasons under; x.92 ramp -6.1%) - the return ramp HOLDS for
+    elite players. Listed Questionable and played: ADP 1-30 .841 (7/7 under; x.90 dock -10.5%) - the Questionable dock
+    holds for elite players too, more than for ADP 31-150 (.95).
+- WIRED shadow-only: `NC_SHADOW.next.snapNoDockAdp 30` - no snap-level dock for players drafted in the top 30 (boost
+  side untouched). Kill `window.SIM_NC_ELITE = false`; backup `engine.js.bak_pre_elite_20261002`.
+
+## Shadow v2.32 - blowouts and injury exits vs snap / usage numbers - 2026-10-02
+- Jack: "make sure we dont hurt players snap and target share for injuries and blowouts". `research_excused_games.py`
+  (excused_games.log), 14,608 RB / WR / TE games: injury exit (under 60% of his prior snap share AND on the report /
+  missing games after) 185, blowout rest (21+ final margin, under 85% of his share) 413, role loss (under 60%, no
+  excuse) 225.
+  - BLOWOUTS, top 150: the next game RB 1.109 of a number the snap trend had docked 7% (carried rest of season +10.1%
+    error, 1/6); WR / TE 1.011 with no level dock, 1.053 with it. Later / undrafted players .757 (their dock is right).
+  - INJURY EXITS: the next game he plays, top-150 WR / TE run .790 of the undocked number (6/6 seasons); the level dock
+    cuts that error 5.6%. Reading the last normal game instead: +9.3% (1/7). Leaving exit games out of the points + usage
+    evidence: +1.9% (1/7), next game +4.1%. Not excused (the top-30 exemption from v2.31 stays).
+  - Leaving blowout games out of the evidence: +0.3% (2/7) - no gain, evidence untouched. Role-loss control: +1.4%.
+- WIRED shadow-only (`NC_SHADOW.next.blowNoDockAdp 150`, `blowMinShare .15`, tag `+blow`, kill `window.SIM_NC_BLOW =
+  false`, backup `engine.js.bak_pre_blow_20261002`): the snap-level layer now reads the last game's share on competitive
+  plays (the same ctxShare re-measure the live snap trend uses), and for players drafted in the top 150 a last game with
+  real garbage time (15%+ of the team's plays, 6+) cannot dock the snap level or the RB snap trend. Live numbers
+  unchanged; 8 players move (Stevenson, Henderson, Brian Thomas, Hunter Henry, Strange, Loveland, Washington, Dowdle).
+
+## Shadow v2.33 - are the weights right player by player? - 2026-10-02
+- Jack: "do we feel like the weights are correct on each player". `backtest_shadow_ros.py` section 11: the weight the model
+  puts on THIS SEASON (games / (prior weight + games)) vs the weight that fits the rest of the season best, by position,
+  stage, experience and draft band (no survivor filter): QB 34 / 34%, WR 46 / 45% (matched at every stage); RB 50 / 43%
+  and TE 43 / 36% (model a little heavy on the season); ADP 1-60 players 8-12 pts heavy at QB / RB / WR.
+  ROOKIES are the clear miss: best-fit weight on the season QB 4% (model 33), RB 18% (49), WR 33% (48), TE 8% (43) - a
+  rookie's first games say far less than his draft-capital level.
+- Tested prior-weight multipliers by experience group and by stage, both runs. Held up: rookie RB x1.6 (-2.2% / -1.9%,
+  5/7 both; x2.5 -3.4% / -3.1% but forward 2/4), rookie TE x2.5 (-1.9% / -1.1% LOSO 5/7, forward 3/4 both). Failed: rookie
+  QB and WR, second-year at every position, years 3-5 (QB x2.5 passes with the filter only), 6+ years, and every
+  stage-specific weight (3-4 / 5-7 / 8-10 games) at every position.
+- WIRED shadow-only: `NC_SHADOW.next.struct.rookieP { RB 1.6, TE 2.5 }` (tag `+rsRk`, later weeks, 3+ games, kill
+  `SIM_NC_ROS2`; a rookie RB drafted 61-100 keeps the larger band weight). Backup `engine.js.bak_pre_rookiew_20261002`.
+  Live numbers unchanged; four rookies move (Mike Washington, Emmett Johnson, Sadiq, Love).
+
+## Season trend check - 2026-10-02 (nothing wired)
+- Jack: "did we in general optimize the beginning and later half of season though every week should be tweaked a little
+  different in a general trend throughout the season". `backtest_season_trend.py` (season_trend.log), next game, model as
+  wired, 17,569 player-weeks.
+  - Through the season vs the Clay blend: week 1 -2.4% (5/7), weeks 2-4 -5.6% (7/7), 5-8 -3.2% (6/7), 9-13 -3.1% (7/7),
+    14-17 -3.1% (7/7); rank order ahead in every stretch from week 2 (week 1 .356 vs .362). Soft spots: TE week 1
+    (actual .855 of projected, Clay +3.3% better), TE weeks 14-17 (top-150 weighted +3.0%, rank .485 vs .517), QB week 1.
+  - The weight on this season already moves every game (games / (prior weight + games)); the best-fit weight by games
+    played scatters around that curve with no trend away from it.
+  - FAILED (all of them, effects within +-0.3%): a different curve shape (exponent .7-1.5 on games played, each
+    position), first two games counting less or more, games from the 9th counting more, matchup and Vegas strength by
+    stretch of the season (weeks 2-4 / 5-8 / 9-13 / 14-17), and a level by position x stretch (20 cells).
+
+## Clay-free vs Clay blend by TIER - 2026-10-02
+- Jack: "show the top 10 vs top 30 vs top 60 vs top 100". `backtest_vs_clay_tiers.py` (vs_clay_tiers.log), model as wired.
+  NEXT GAME by preseason ADP: 1-10 -2.0% (5/7), 11-30 -2.7% (7/7), 31-60 -1.9% (6/7), 61-100 -3.6% (7/7), 101-150 -4.1%.
+  By OUR weekly projection rank: top 10 -0.6% (4/7, a tie; Clay's rank order a touch better .139 vs .124), 11-30 -3.9%,
+  31-60 -4.7%, 61-100 -4.1% (all 6-7 of 7). By position rank: QB1-6 -1.2% (4/7), TE1-6 -0.6% (2/7) = ties; RB1-12 -3.3%,
+  WR1-12 -2.3%; everything below the top tier -3 to -9%.
+  REST OF SEASON by ADP: 1-10 +4.1% (Clay better, we win 4/7), 11-30 -12.1% (6/7), 31-60 -5.3%, 61-100 -5.0%, 101-150 -11.3%.
+  Pattern: the very top (top 10 / QB1-6 / TE1-6) is a tie or slightly Clay; the edge grows down the board.

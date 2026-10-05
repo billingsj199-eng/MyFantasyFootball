@@ -1,0 +1,165 @@
+=== season trend: 17,569 player-weeks 2019-25, model as wired (next game) ===
+
+--- 1  THROUGH THE SEASON: level, error vs the Clay blend, rank order ---
+  all:
+    week 1                           n  1221  actual / projected 0.976  error vs Clay blend  -2.40% (5/7)  top-150 weighted  -1.21%  rank order 0.356 vs 0.362
+    weeks 2-4                        n  3509  actual / projected 1.021  error vs Clay blend  -5.57% (7/7)  top-150 weighted  -4.33%  rank order 0.368 vs 0.336
+    weeks 5-8                        n  4064  actual / projected 1.009  error vs Clay blend  -3.18% (6/7)  top-150 weighted  -2.89%  rank order 0.387 vs 0.352
+    weeks 9-13                       n  4958  actual / projected 0.976  error vs Clay blend  -3.06% (7/7)  top-150 weighted  -1.38%  rank order 0.398 vs 0.378
+    weeks 14-17 (fantasy playoffs)   n  3817  actual / projected 1.001  error vs Clay blend  -3.05% (7/7)  top-150 weighted  -1.66%  rank order 0.405 vs 0.394
+  QB:
+    week 1                           n   189  actual / projected 1.019  error vs Clay blend  -2.24% (3/7)  top-150 weighted  +3.90%  rank order 0.346 vs 0.336
+    weeks 2-4                        n   545  actual / projected 1.015  error vs Clay blend  -6.81% (6/7)  top-150 weighted  -3.53%  rank order 0.405 vs 0.384
+    weeks 5-8                        n   622  actual / projected 1.005  error vs Clay blend  -5.25% (6/7)  top-150 weighted  -2.05%  rank order 0.257 vs 0.230
+    weeks 9-13                       n   733  actual / projected 0.986  error vs Clay blend  -5.52% (7/7)  top-150 weighted  -3.01%  rank order 0.367 vs 0.348
+    weeks 14-17 (fantasy playoffs)   n   546  actual / projected 1.001  error vs Clay blend  -2.57% (4/7)  top-150 weighted  -1.92%  rank order 0.332 vs 0.297
+  RB:
+    week 1                           n   314  actual / projected 0.965  error vs Clay blend  -4.36% (5/7)  top-150 weighted  -5.09%  rank order 0.524 vs 0.508
+    weeks 2-4                        n   912  actual / projected 1.033  error vs Clay blend  -5.42% (6/7)  top-150 weighted  -3.62%  rank order 0.523 vs 0.489
+    weeks 5-8                        n  1029  actual / projected 1.014  error vs Clay blend  -3.75% (5/7)  top-150 weighted  -2.60%  rank order 0.566 vs 0.547
+    weeks 9-13                       n  1271  actual / projected 0.960  error vs Clay blend  -3.55% (6/7)  top-150 weighted  -0.86%  rank order 0.479 vs 0.463
+    weeks 14-17 (fantasy playoffs)   n   997  actual / projected 1.011  error vs Clay blend  -5.25% (7/7)  top-150 weighted  -1.96%  rank order 0.445 vs 0.410
+  WR:
+    week 1                           n   489  actual / projected 0.994  error vs Clay blend  -2.59% (5/7)  top-150 weighted  -1.39%  rank order 0.300 vs 0.313
+    weeks 2-4                        n  1411  actual / projected 1.039  error vs Clay blend  -6.13% (7/7)  top-150 weighted  -5.72%  rank order 0.352 vs 0.279
+    weeks 5-8                        n  1664  actual / projected 0.992  error vs Clay blend  -1.09% (4/7)  top-150 weighted  -3.09%  rank order 0.370 vs 0.335
+    weeks 9-13                       n  2069  actual / projected 0.968  error vs Clay blend  -1.56% (6/7)  top-150 weighted  -1.45%  rank order 0.348 vs 0.336
+    weeks 14-17 (fantasy playoffs)   n  1587  actual / projected 0.985  error vs Clay blend  -2.47% (6/7)  top-150 weighted  -2.15%  rank order 0.371 vs 0.371
+  TE:
+    week 1                           n   229  actual / projected 0.855  error vs Clay blend  +3.25% (3/7)  top-150 weighted  +4.25%  rank order 0.252 vs 0.291
+    weeks 2-4                        n   641  actual / projected 0.954  error vs Clay blend  -1.35% (5/7)  top-150 weighted  -2.16%  rank order 0.194 vs 0.192
+    weeks 5-8                        n   749  actual / projected 1.059  error vs Clay blend  -4.58% (5/7)  top-150 weighted  -4.52%  rank order 0.353 vs 0.291
+    weeks 9-13                       n   885  actual / projected 1.015  error vs Clay blend  -2.70% (5/7)  top-150 weighted  -0.05%  rank order 0.397 vs 0.362
+    weeks 14-17 (fantasy playoffs)   n   687  actual / projected 1.028  error vs Clay blend  -0.31% (3/7)  top-150 weighted  +2.95%  rank order 0.485 vs 0.517
+
+--- 2  WEIGHT ON THIS SEASON by games played: model vs best fit (next game) ---
+    QB (model % / best-fit %, by games played)   1: 8 / 14   2: 14 / 26   3: 20 / 20   4: 25 / 18   5: 29 / 36   6-7: 35 / 15   8-10: 43 / 50   11-13: 50 / 50   14+: 54 / 101
+    RB (model % / best-fit %, by games played)   1: 17 / 15   2: 29 / 28   3: 38 / 43   4: 44 / 32   5: 50 / 32   6-7: 56 / 65   8-10: 64 / 57   11-13: 70 / 53   14+: 74 / 60
+    WR (model % / best-fit %, by games played)   1: 2 / 8   2: 20 / 16   3: 27 / 22   4: 33 / 26   5: 38 / 48   6-7: 45 / 35   8-10: 53 / 62   11-13: 60 / 69   14+: 64 / 52
+    TE (model % / best-fit %, by games played)   1: 11 / 17   2: 20 / 19   3: 27 / 32   4: 33 / 6   5: 38 / 30   6-7: 45 / 32   8-10: 53 / 40   11-13: 60 / 79
+
+--- 3  THE SHAPE OF THE WEIGHT CURVE through the season ---
+  3a QB: exponent on games played (1 = shipped; under 1 = quick early then slower; over 1 = slow early then quicker)   (rows 2,225)
+    fixed settings (seasons better): a 0.7: +0.22% (2)  a 0.85: +0.05% (3)  a 1.15: +0.11% (3)  a 1.3: +0.37% (3)  a 1.5: +0.95% (1)
+    LOSO +0.23% 0/7 | whole board top-150 weighted +0.013%, rank order +0.0004 | FORWARD +0.27% 0/4, weighted +0.025% -> FAIL (best pooled: 1.0 (shipped))
+  3b QB: first two games count less (x)   (rows 410)
+    fixed settings (seasons better): x0.5: +0.76% (1)  x0.75: +0.32% (1)  x1.25: -0.21% (5)  x1.5: -0.33% (5)
+    LOSO -0.18% 5/7 | whole board top-150 weighted -0.003%, rank order +0.0001 | FORWARD -0.03% 3/4, weighted +0.009% -> FAIL (best pooled: x1.5)
+  3c QB: games from the 9th on count more (the season outruns the preseason level late)   (rows 871)
+    fixed settings (seasons better): x0.75: +0.06% (4)  x1.25: +0.05% (3)  x1.5: +0.15% (3)  x2.0: +0.40% (3)
+    LOSO +0.34% 0/7 | whole board top-150 weighted +0.016%, rank order -0.0000 | FORWARD +0.38% 0/4, weighted +0.014% -> FAIL (best pooled: 1.0 (shipped))
+  3a RB: exponent on games played (1 = shipped; under 1 = quick early then slower; over 1 = slow early then quicker)   (rows 3,820)
+    fixed settings (seasons better): a 0.7: -0.16% (4)  a 0.85: -0.17% (5)  a 1.15: +0.33% (1)  a 1.3: +0.75% (1)  a 1.5: +1.39% (1)
+    LOSO -0.02% 4/7 | whole board top-150 weighted -0.006%, rank order +0.0007 | FORWARD +0.05% 2/4, weighted -0.022% -> FAIL (best pooled: a 0.85)
+  3b RB: first two games count less (x)   (rows 702)
+    fixed settings (seasons better): x0.5: +0.24% (4)  x0.75: +0.02% (4)  x1.25: +0.11% (3)  x1.5: +0.32% (3)
+    LOSO +0.27% 0/7 | whole board top-150 weighted +0.019%, rank order +0.0001 | FORWARD +0.31% 2/4, weighted +0.009% -> FAIL (best pooled: 1.0 (shipped))
+  3c RB: games from the 9th on count more (the season outruns the preseason level late)   (rows 1,514)
+    fixed settings (seasons better): x0.75: -0.17% (5)  x1.25: +0.20% (2)  x1.5: +0.40% (1)  x2.0: +0.75% (1)
+    LOSO -0.17% 5/7 | whole board top-150 weighted -0.019%, rank order +0.0001 | FORWARD -0.16% 3/4, weighted -0.021% -> FAIL (best pooled: x0.75)
+  3a WR: exponent on games played (1 = shipped; under 1 = quick early then slower; over 1 = slow early then quicker)   (rows 6,093)
+    fixed settings (seasons better): a 0.7: +0.34% (2)  a 0.85: +0.10% (2)  a 1.15: +0.04% (3)  a 1.3: +0.21% (3)  a 1.5: +0.58% (1)
+    LOSO +0.06% 0/7 | whole board top-150 weighted +0.021%, rank order -0.0002 | FORWARD +0.07% 0/4, weighted +0.003% -> FAIL (best pooled: 1.0 (shipped))
+  3b WR: first two games count less (x)   (rows 1,125)
+    fixed settings (seasons better): x0.5: +0.02% (2)  x0.75: -0.02% (3)  x1.25: +0.08% (4)  x1.5: +0.19% (2)
+    LOSO +0.15% 1/7 | whole board top-150 weighted -0.008%, rank order -0.0000 | FORWARD +0.25% 0/4, weighted -0.028% -> FAIL (best pooled: x0.75)
+  3c WR: games from the 9th on count more (the season outruns the preseason level late)   (rows 2,377)
+    fixed settings (seasons better): x0.75: +0.22% (2)  x1.25: -0.08% (4)  x1.5: -0.10% (4)  x2.0: -0.05% (4)
+    LOSO -0.05% 4/7 | whole board top-150 weighted +0.014%, rank order +0.0003 | FORWARD +0.05% 2/4, weighted +0.026% -> FAIL (best pooled: x1.5)
+  3a TE: exponent on games played (1 = shipped; under 1 = quick early then slower; over 1 = slow early then quicker)   (rows 2,678)
+    fixed settings (seasons better): a 0.7: +0.25% (3)  a 0.85: +0.03% (4)  a 1.15: +0.16% (2)  a 1.3: +0.50% (2)  a 1.5: +1.15% (1)
+    LOSO +0.16% 0/7 | whole board top-150 weighted +0.015%, rank order -0.0008 | FORWARD +0.14% 0/4, weighted +0.014% -> FAIL (best pooled: 1.0 (shipped))
+  3b TE: first two games count less (x)   (rows 511)
+    fixed settings (seasons better): x0.5: +0.53% (2)  x0.75: +0.18% (3)  x1.25: -0.04% (3)  x1.5: +0.04% (3)
+    LOSO +0.28% 0/7 | whole board top-150 weighted +0.009%, rank order -0.0001 | FORWARD -0.06% 1/4, weighted -0.001% -> FAIL (best pooled: x1.25)
+  3c TE: games from the 9th on count more (the season outruns the preseason level late)   (rows 1,003)
+    fixed settings (seasons better): x0.75: +0.26% (3)  x1.25: -0.09% (4)  x1.5: -0.10% (4)  x2.0: -0.03% (3)
+    LOSO +0.21% 3/7 | whole board top-150 weighted +0.006%, rank order -0.0011 | FORWARD +0.31% 2/4, weighted +0.012% -> FAIL (best pooled: x1.5)
+
+--- 4  MATCHUP AND VEGAS strength by stretch of the season (exponent on the multiplier; 1 = shipped) ---
+  4a matchup (points allowed), weeks 2-4   (rows 3,307)
+    fixed settings (seasons better): e 0.0: +0.10% (3)  e 0.5: +0.04% (3)  e 1.5: -0.02% (4)  e 2.0: -0.02% (4)
+    LOSO +0.06% 3/7 | whole board top-150 weighted +0.010%, rank order +0.0002 | FORWARD +0.07% 1/4, weighted +0.025% -> FAIL (best pooled: e 1.5)
+  4b Vegas, weeks 2-4   (rows 3,379)
+    fixed settings (seasons better): e 0.5: +0.47% (2)  e 0.75: +0.19% (2)  e 1.25: -0.10% (3)  e 1.5: -0.11% (3)
+    LOSO +0.01% 3/7 | whole board top-150 weighted +0.030%, rank order +0.0007 | FORWARD +0.03% 1/4, weighted -0.020% -> FAIL (best pooled: e 1.5)
+  4a matchup (points allowed), weeks 5-8   (rows 4,008)
+    fixed settings (seasons better): e 0.0: -0.16% (5)  e 0.5: -0.13% (5)  e 1.5: +0.24% (1)  e 2.0: +0.58% (0)
+    LOSO -0.10% 5/7 | whole board top-150 weighted -0.022%, rank order -0.0014 | FORWARD -0.19% 3/4, weighted -0.020% -> FAIL (best pooled: e 0.0)
+  4b Vegas, weeks 5-8   (rows 4,008)
+    fixed settings (seasons better): e 0.5: +0.25% (2)  e 0.75: +0.08% (2)  e 1.25: +0.02% (5)  e 1.5: +0.15% (2)
+    LOSO +0.07% 0/7 | whole board top-150 weighted +0.013%, rank order -0.0002 | FORWARD +0.00% 0/4, weighted +0.000% -> FAIL (best pooled: 1.0 (shipped))
+  4a matchup (points allowed), weeks 9-13   (rows 4,923)
+    fixed settings (seasons better): e 0.0: +0.43% (2)  e 0.5: +0.11% (3)  e 1.5: +0.11% (3)  e 2.0: +0.45% (1)
+    LOSO +0.26% 0/7 | whole board top-150 weighted +0.085%, rank order -0.0016 | FORWARD +0.00% 0/4, weighted +0.000% -> FAIL (best pooled: 1.0 (shipped))
+  4b Vegas, weeks 9-13   (rows 4,923)
+    fixed settings (seasons better): e 0.5: +0.23% (1)  e 0.75: +0.05% (1)  e 1.25: +0.07% (1)  e 1.5: +0.27% (0)
+    LOSO +0.00% 0/7 | whole board top-150 weighted +0.000%, rank order +0.0000 | FORWARD +0.00% 0/4, weighted +0.000% -> FAIL (best pooled: 1.0 (shipped))
+  4a matchup (points allowed), weeks 14-17   (rows 3,796)
+    fixed settings (seasons better): e 0.0: -0.19% (5)  e 0.5: -0.19% (5)  e 1.5: +0.38% (1)  e 2.0: +0.95% (1)
+    LOSO -0.04% 5/7 | whole board top-150 weighted -0.026%, rank order -0.0017 | FORWARD +0.16% 2/4, weighted -0.002% -> FAIL (best pooled: e 0.0)
+  4b Vegas, weeks 14-17   (rows 3,796)
+    fixed settings (seasons better): e 0.5: +0.22% (2)  e 0.75: +0.05% (2)  e 1.25: +0.08% (5)  e 1.5: +0.29% (4)
+    LOSO +0.20% 0/7 | whole board top-150 weighted +0.077%, rank order -0.0001 | FORWARD +0.28% 1/4, weighted +0.127% -> FAIL (best pooled: 1.0 (shipped))
+
+--- 5  LEVEL by stretch of the season (does a position run high or low at a time of year?) ---
+  5 QB week 1: level   (rows 189)
+    fixed settings (seasons better): x0.92: +4.47% (2)  x0.95: +1.99% (2)  x0.97: +0.87% (2)  x1.03: +0.10% (5)  x1.05: +0.70% (5)  x1.08: +2.40% (3)
+    LOSO +3.51% 0/7 | whole board top-150 weighted +0.054%, rank order +0.0000 | FORWARD +7.12% 0/4, weighted +0.111% -> FAIL (best pooled: 1.00 (shipped))
+  5 QB weeks 2-4: level   (rows 545)
+    fixed settings (seasons better): x0.92: +4.91% (2)  x0.95: +2.22% (2)  x0.97: +0.99% (2)  x1.03: +0.04% (4)  x1.05: +0.63% (4)  x1.08: +2.38% (2)
+    LOSO +0.97% 0/7 | whole board top-150 weighted +0.039%, rank order +0.0000 | FORWARD +3.31% 0/4, weighted +0.142% -> FAIL (best pooled: 1.00 (shipped))
+  5 QB weeks 5-8: level   (rows 622)
+    fixed settings (seasons better): x0.92: +3.09% (1)  x0.95: +1.14% (2)  x0.97: +0.36% (3)  x1.03: +0.59% (3)  x1.05: +1.51% (2)  x1.08: +3.69% (1)
+    LOSO +0.00% 0/7 | whole board top-150 weighted +0.000%, rank order +0.0000 | FORWARD +0.38% 0/4, weighted +0.012% -> FAIL (best pooled: 1.00 (shipped))
+  5 QB weeks 9-13: level   (rows 733)
+    fixed settings (seasons better): x0.92: +2.23% (2)  x0.95: +0.50% (2)  x0.97: -0.06% (2)  x1.03: +1.13% (3)  x1.05: +2.49% (2)  x1.08: +5.41% (1)
+    LOSO +0.84% 0/7 | whole board top-150 weighted +0.020%, rank order +0.0000 | FORWARD +0.40% 0/4, weighted +0.009% -> FAIL (best pooled: x0.97)
+  5 QB weeks 14-17: level   (rows 546)
+    fixed settings (seasons better): x0.92: +3.24% (1)  x0.95: +1.26% (1)  x0.97: +0.45% (2)  x1.03: +0.47% (2)  x1.05: +1.30% (2)  x1.08: +3.31% (1)
+    LOSO +0.45% 0/7 | whole board top-150 weighted +0.022%, rank order +0.0000 | FORWARD +0.66% 0/4, weighted +0.035% -> FAIL (best pooled: 1.00 (shipped))
+  5 RB week 1: level   (rows 314)
+    fixed settings (seasons better): x0.92: +0.91% (3)  x0.95: +0.14% (3)  x0.97: -0.08% (4)  x1.03: +0.59% (3)  x1.05: +1.27% (3)  x1.08: +2.72% (2)
+    LOSO +0.79% 1/7 | whole board top-150 weighted +0.030%, rank order +0.0000 | FORWARD +0.46% 1/4, weighted +0.018% -> FAIL (best pooled: x0.97)
+  5 RB weeks 2-4: level   (rows 912)
+    fixed settings (seasons better): x0.92: +2.80% (1)  x0.95: +1.41% (1)  x0.97: +0.71% (1)  x1.03: -0.31% (4)  x1.05: -0.30% (4)  x1.08: +0.06% (4)
+    LOSO -0.04% 4/7 | whole board top-150 weighted +0.039%, rank order +0.0000 | FORWARD -0.09% 2/4, weighted +0.050% -> FAIL (best pooled: x1.03)
+  5 RB weeks 5-8: level   (rows 1,029)
+    fixed settings (seasons better): x0.92: +2.67% (1)  x0.95: +1.28% (2)  x0.97: +0.61% (2)  x1.03: -0.13% (5)  x1.05: +0.04% (4)  x1.08: +0.69% (3)
+    LOSO +0.31% 4/7 | whole board top-150 weighted -0.010%, rank order +0.0000 | FORWARD -0.02% 2/4, weighted -0.009% -> FAIL (best pooled: x1.03)
+  5 RB weeks 9-13: level   (rows 1,271)
+    fixed settings (seasons better): x0.92: -0.11% (3)  x0.95: -0.51% (5)  x0.97: -0.49% (6)  x1.03: +1.02% (1)  x1.05: +2.00% (1)  x1.08: +3.91% (0)
+    LOSO -0.31% 5/7 | whole board top-150 weighted -0.089%, rank order +0.0000 | FORWARD +0.08% 2/4, weighted -0.068% -> FAIL (best pooled: x0.95)
+  5 RB weeks 14-17: level   (rows 997)
+    fixed settings (seasons better): x0.92: +1.43% (3)  x0.95: +0.50% (3)  x0.97: +0.14% (4)  x1.03: +0.34% (3)  x1.05: +0.83% (3)  x1.08: +1.97% (3)
+    LOSO +0.37% 0/7 | whole board top-150 weighted +0.046%, rank order +0.0000 | FORWARD +0.33% 0/4, weighted +0.037% -> FAIL (best pooled: 1.00 (shipped))
+  5 WR week 1: level   (rows 489)
+    fixed settings (seasons better): x0.92: +1.17% (2)  x0.95: +0.43% (3)  x0.97: +0.14% (3)  x1.03: +0.23% (4)  x1.05: +0.58% (4)  x1.08: +1.41% (3)
+    LOSO +1.29% 0/7 | whole board top-150 weighted +0.059%, rank order +0.0000 | FORWARD +2.76% 0/4, weighted +0.053% -> FAIL (best pooled: 1.00 (shipped))
+  5 WR weeks 2-4: level   (rows 1,411)
+    fixed settings (seasons better): x0.92: +2.55% (0)  x0.95: +1.29% (0)  x0.97: +0.66% (0)  x1.03: -0.29% (5)  x1.05: -0.29% (4)  x1.08: +0.02% (3)
+    LOSO -0.18% 4/7 | whole board top-150 weighted +0.017%, rank order +0.0000 | FORWARD -0.05% 2/4, weighted +0.057% -> FAIL (best pooled: x1.03)
+  5 WR weeks 5-8: level   (rows 1,664)
+    fixed settings (seasons better): x0.92: +1.56% (1)  x0.95: +0.64% (2)  x0.97: +0.25% (4)  x1.03: +0.15% (3)  x1.05: +0.47% (3)  x1.08: +1.29% (2)
+    LOSO +0.00% 0/7 | whole board top-150 weighted +0.000%, rank order +0.0000 | FORWARD +0.18% 0/4, weighted +0.002% -> FAIL (best pooled: 1.00 (shipped))
+  5 WR weeks 9-13: level   (rows 2,069)
+    fixed settings (seasons better): x0.92: +0.62% (4)  x0.95: +0.04% (4)  x0.97: -0.12% (4)  x1.03: +0.53% (2)  x1.05: +1.12% (2)  x1.08: +2.35% (1)
+    LOSO +0.05% 3/7 | whole board top-150 weighted +0.006%, rank order +0.0000 | FORWARD -0.03% 2/4, weighted -0.020% -> FAIL (best pooled: x0.97)
+  5 WR weeks 14-17: level   (rows 1,587)
+    fixed settings (seasons better): x0.92: +1.05% (2)  x0.95: +0.34% (4)  x0.97: +0.07% (5)  x1.03: +0.31% (1)  x1.05: +0.74% (1)  x1.08: +1.70% (1)
+    LOSO +0.28% 0/7 | whole board top-150 weighted +0.046%, rank order +0.0000 | FORWARD +0.25% 2/4, weighted +0.041% -> FAIL (best pooled: 1.00 (shipped))
+  5 TE week 1: level   (rows 229)
+    fixed settings (seasons better): x0.92: -2.99% (4)  x0.95: -2.19% (5)  x0.97: -1.44% (5)  x1.03: +1.82% (2)  x1.05: +3.25% (2)  x1.08: +5.71% (2)
+    LOSO -2.99% 4/7 | whole board top-150 weighted -0.001%, rank order +0.0000 | FORWARD -3.09% 2/4, weighted -0.019% -> FAIL (best pooled: x0.92)
+  5 TE weeks 2-4: level   (rows 641)
+    fixed settings (seasons better): x0.92: -0.20% (4)  x0.95: -0.41% (5)  x0.97: -0.36% (5)  x1.03: +0.70% (2)  x1.05: +1.36% (2)  x1.08: +2.63% (2)
+    LOSO +0.06% 5/7 | whole board top-150 weighted -0.001%, rank order +0.0000 | FORWARD -0.67% 3/4, weighted -0.014% -> FAIL (best pooled: x0.95)
+  5 TE weeks 5-8: level   (rows 749)
+    fixed settings (seasons better): x0.92: +2.78% (2)  x0.95: +1.48% (2)  x0.97: +0.78% (3)  x1.03: -0.47% (3)  x1.05: -0.60% (3)  x1.08: -0.54% (3)
+    LOSO +0.50% 3/7 | whole board top-150 weighted +0.012%, rank order +0.0000 | FORWARD +1.04% 1/4, weighted +0.063% -> FAIL (best pooled: x1.05)
+  5 TE weeks 9-13: level   (rows 885)
+    fixed settings (seasons better): x0.92: +1.59% (2)  x0.95: +0.71% (2)  x0.97: +0.31% (2)  x1.03: +0.03% (3)  x1.05: +0.23% (3)  x1.08: +0.83% (3)
+    LOSO +0.35% 0/7 | whole board top-150 weighted +0.011%, rank order +0.0000 | FORWARD +0.24% 0/4, weighted -0.007% -> FAIL (best pooled: 1.00 (shipped))
+  5 TE weeks 14-17: level   (rows 687)
+    fixed settings (seasons better): x0.92: +1.80% (0)  x0.95: +0.85% (1)  x0.97: +0.40% (1)  x1.03: -0.07% (2)  x1.05: +0.07% (2)  x1.08: +0.56% (2)
+    LOSO +0.16% 0/7 | whole board top-150 weighted +0.015%, rank order +0.0000 | FORWARD +0.68% 0/4, weighted +0.068% -> FAIL (best pooled: x1.03)

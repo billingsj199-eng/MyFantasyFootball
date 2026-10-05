@@ -1,0 +1,36 @@
+
+--- 1  THE GAME AFTER HE LEFT EARLY, WR + TE: no dock vs the snap-level dock ---
+    ADP 1-30 (elite)     n   24 (too few)
+    ADP 31-60            n   22 (too few)
+    ADP 61-150           n   70  actual  6.43  no dock  7.68 -> actual / projected 0.838 (under in 4/7 seasons)  | with the dock  6.59 -> 0.976, error -2.7% (4/7)
+    later / undrafted    n  187  actual  3.82  no dock  5.18 -> actual / projected 0.737 (under in 7/7 seasons)  | with the dock  4.66 -> 0.819, error -6.9% (5/7)
+
+--- 1b THE GAME AFTER HE LEFT EARLY, RB (snap trend only) ---
+    ADP 1-30 (elite)     n   28  actual 12.59  projected 12.22 -> actual / projected 1.030 (under in 1/3 seasons)
+    ADP 31-60            n   24 (too few)
+    ADP 61-150           n   50  actual  6.85  projected  8.70 -> actual / projected 0.787 (under in 2/3 seasons)
+    later / undrafted    n   12 (too few)
+
+--- 2  SNAP-LEVEL DOCK of 5%+ (WR + TE), any reason: no dock vs with ---
+    ADP 1-30 (elite)     n   93  actual 13.89  no dock 13.92 -> actual / projected 0.998 (under in 3/6 seasons)  | with the dock 12.49 -> 1.112, error +0.1% (3/6)
+    ADP 31-60            n  113  actual 10.35  no dock 10.75 -> actual / projected 0.963 (under in 3/7 seasons)  | with the dock  9.71 -> 1.066, error -0.2% (4/7)
+    ADP 61-150           n  445  actual  6.93  no dock  7.92 -> actual / projected 0.875 (under in 6/7 seasons)  | with the dock  7.19 -> 0.965, error -2.8% (5/7)
+    later / undrafted    n  864  actual  4.48  no dock  5.35 -> actual / projected 0.837 (under in 7/7 seasons)  | with the dock  4.87 -> 0.918, error -3.2% (7/7)
+
+--- 2b SNAP-LEVEL BOOST of 5%+ (WR + TE): no boost vs with ---
+    ADP 1-30 (elite)     n    8 (too few)
+    ADP 31-60            n   43  actual 12.39  no boost  9.20 -> actual / projected 1.347 (under in 0/4 seasons)  | with the boost  9.72 -> 1.274, error -5.8% (4/4)
+    ADP 61-150           n  249  actual  7.84  no boost  7.74 -> actual / projected 1.013 (under in 2/7 seasons)  | with the boost  8.23 -> 0.952, error +0.3% (3/7)
+    later / undrafted    n  967  actual  6.33  no boost  5.72 -> actual / projected 1.106 (under in 1/7 seasons)  | with the boost  6.16 -> 1.028, error -1.2% (6/7)
+
+--- 3  FIRST GAME BACK after a 3+ week gap (RB / WR / TE), no ramp applied ---
+    ADP 1-30 (elite)     n   56  actual 11.80  projected 13.32 -> actual / projected 0.885 (under in 6/7 seasons)  | with a x.92 ramp 12.26 -> 0.962, error -6.1% (6/7)
+    ADP 31-60            n   48  actual 10.42  projected 10.55 -> actual / projected 0.987 (under in 3/6 seasons)  | with a x.92 ramp  9.71 -> 1.073, error -0.4% (3/6)
+    ADP 61-150           n  133  actual  6.13  projected  7.54 -> actual / projected 0.813 (under in 5/7 seasons)  | with a x.92 ramp  6.93 -> 0.884, error -5.7% (5/7)
+    later / undrafted    n  241  actual  3.55  projected  4.88 -> actual / projected 0.727 (under in 7/7 seasons)  | with a x.92 ramp  4.49 -> 0.790, error -3.7% (6/7)
+
+--- 4  LISTED QUESTIONABLE AND PLAYED (RB / WR / TE), no dock applied ---
+    ADP 1-30 (elite)     n  129  actual 11.23  projected 13.37 -> actual / projected 0.841 (under in 7/7 seasons)  | with a x.90 dock 12.03 -> 0.934, error -10.5% (6/7)
+    ADP 31-60            n  137  actual 10.92  projected 11.41 -> actual / projected 0.957 (under in 5/7 seasons)  | with a x.90 dock 10.27 -> 1.063, error -0.5% (2/7)
+    ADP 61-150           n  222  actual  8.44  projected  8.92 -> actual / projected 0.946 (under in 5/7 seasons)  | with a x.90 dock  8.03 -> 1.051, error -1.2% (4/7)
+    later / undrafted    n  255  actual  5.92  projected  6.63 -> actual / projected 0.893 (under in 6/7 seasons)  | with a x.90 dock  5.96 -> 0.992, error -2.2% (6/7)

@@ -1,0 +1,47 @@
+=== Clay-free model (as wired) vs the Clay blend, by tier; 2019-25; typical miss = root mean squared error in points ===
+
+--- NEXT GAME, by preseason ADP ---
+    tier                           rows  | typical miss ours / Clay | error vs Clay (seasons better) | level ours / Clay | rank order ours / Clay
+    ADP 1-10                         728 |      8.71 /  8.80        |    -2.01% (5/7)            |  0.985 / 0.991  |  0.113 / 0.042
+    ADP 11-30                       1551 |      8.11 /  8.22        |    -2.68% (7/7)            |  1.004 / 1.006  |  0.194 / 0.149
+    ADP 31-60                       2212 |      7.35 /  7.42        |    -1.88% (6/7)            |  1.026 / 1.025  |  0.120 / 0.111
+    ADP 61-100                      2498 |      6.57 /  6.70        |    -3.63% (7/7)            |  1.022 / 1.035  |  0.315 / 0.283
+    ADP 101-150 (less important)    2797 |      6.35 /  6.48        |    -4.08% (7/7)            |  0.995 / 1.053  |  0.322 / 0.278
+
+--- NEXT GAME, by OUR weekly projection rank (all positions) ---
+    tier                           rows  | typical miss ours / Clay | error vs Clay (seasons better) | level ours / Clay | rank order ours / Clay
+    our top 10 that week            1100 |      8.47 /  8.50        |    -0.64% (4/7)            |  0.995 / 1.010  |  0.124 / 0.139
+    our 11-30                       2200 |      7.88 /  8.03        |    -3.88% (7/7)            |  0.986 / 1.025  |  0.106 / 0.101
+    our 31-60                       3300 |      7.50 /  7.68        |    -4.71% (7/7)            |  1.026 / 1.057  |  0.122 / 0.085
+    our 61-100                      4398 |      6.08 /  6.21        |    -4.05% (6/7)            |  1.009 / 1.079  |  0.153 / 0.125
+    our 101-150                     4018 |      5.11 /  5.19        |    -3.01% (7/7)            |  0.973 / 1.063  |  0.204 / 0.155
+
+--- NEXT GAME, by CLAY'S weekly projection rank ---
+    tier                           rows  | typical miss ours / Clay | error vs Clay (seasons better) | level ours / Clay | rank order ours / Clay
+    Clay's top 10 that week         1100 |      8.32 /  8.39        |    -1.61% (6/7)            |  0.989 / 0.976  |  0.157 / 0.156
+    Clay's 11-30                    2200 |      7.91 /  8.01        |    -2.27% (7/7)            |  0.999 / 0.999  |  0.170 / 0.097
+    Clay's 31-60                    3300 |      7.48 /  7.58        |    -2.62% (7/7)            |  1.024 / 1.046  |  0.169 / 0.089
+    Clay's 61-100                   4394 |      5.99 /  6.11        |    -3.89% (6/7)            |  1.006 / 1.076  |  0.225 / 0.184
+
+--- REST OF SEASON (3-10 games played), by preseason ADP ---
+    tier                           rows  | typical miss ours / Clay | error vs Clay (seasons better) | level ours / Clay | rank order ours / Clay
+    ADP 1-10                         408 |      3.59 /  3.52        |    +4.06% (4/7)            |  0.993 / 0.988  |  0.771 / 0.729
+    ADP 11-30                        873 |      3.82 /  4.07        |   -12.11% (6/7)            |  1.007 / 0.993  |  0.256 / 0.157
+    ADP 31-60                       1241 |      3.39 /  3.48        |    -5.33% (5/7)            |  1.038 / 1.022  |  0.286 / 0.254
+    ADP 61-100                      1400 |      3.34 /  3.42        |    -4.97% (6/7)            |  1.041 / 1.037  |  0.451 / 0.445
+    ADP 101-150 (less important)    1553 |      3.16 /  3.36        |   -11.31% (7/7)            |  1.018 / 1.049  |  0.510 / 0.439
+
+--- NEXT GAME, by OUR position rank that week ---
+    tier                           rows  | typical miss ours / Clay | error vs Clay (seasons better) | level ours / Clay | rank order ours / Clay
+    QB1-6 (our rank)                 660 |      8.04 /  8.08        |    -1.15% (4/7)            |  0.991 / 0.995  |  0.089 / 0.115
+    QB7-12 (our rank)                660 |      7.51 /  7.65        |    -3.48% (6/7)            |  0.998 / 1.039  |  0.187 / 0.086
+    QB13-24 (our rank)              1030 |      7.34 /  7.69        |    -8.98% (7/7)            |  1.014 / 1.097  |  0.155 / 0.093
+    RB1-12 (our rank)               1320 |      8.35 /  8.49        |    -3.31% (6/7)            |  0.994 / 1.038  |  0.220 / 0.199
+    RB13-24 (our rank)              1308 |      6.69 /  6.86        |    -4.96% (6/7)            |  1.014 / 1.104  |  0.181 / 0.168
+    RB25-48 (our rank)              1473 |      5.41 /  5.58        |    -6.04% (6/7)            |  1.000 / 1.092  |  0.351 / 0.298
+    WR1-12 (our rank)               1320 |      8.25 /  8.34        |    -2.30% (7/7)            |  0.998 / 0.992  |  0.176 / 0.140
+    WR13-24 (our rank)              1320 |      6.95 /  7.06        |    -2.92% (7/7)            |  1.036 / 1.044  |  0.135 / 0.066
+    WR25-48 (our rank)              2570 |      5.75 /  5.84        |    -2.89% (6/7)            |  0.976 / 1.049  |  0.235 / 0.210
+    TE1-6 (our rank)                 660 |      6.65 /  6.67        |    -0.56% (2/7)            |  1.022 / 1.054  |  0.201 / 0.216
+    TE7-12 (our rank)                660 |      5.67 /  5.76        |    -3.15% (5/7)            |  1.016 / 1.082  |  0.085 / 0.032
+    TE13-24 (our rank)              1224 |      4.62 /  4.71        |    -4.01% (7/7)            |  1.025 / 1.107  |  0.230 / 0.179

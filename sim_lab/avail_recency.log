@@ -1,0 +1,65 @@
+=== availability curve v2: 1668 absence states, 605 absences, 2019-25 ===
+
+  are players coming back sooner? P(misses the next game | missed k so far), by season:
+    missed 1   2019:  74% (39)  2020:  63% (62)  2021:  65% (82)  2022:  64% (75)  2023:  64% (66)  2024:  69% (91)  2025:  61% (95)   | 2019-22 66% -> 2023-25 65%
+    missed 2-3 2019:  70% (44)  2020:  65% (54)  2021:  83% (89)  2022:  72% (74)  2023:  78% (67)  2024:  66% (92)  2025:  80% (93)   | 2019-22 74% -> 2023-25 74%
+    missed 4+  2019:  77% (31)  2020:  80% (44)  2021:  79% (76)  2022:  83% (72)  2023:  84% (49)  2024:  86% (66)  2025:  82% (90)   | 2019-22 80% -> 2023-25 84%
+
+  absences that reached 4 missed games with 4+ games left in the season: share back within the next 4 games
+    2019-22: n  56  back for game 5:  25%  back within 2:  46%  within 4:  61%
+    2023-25: n  47  back for game 5:  26%  back within 2:  43%  within 4:  55%
+
+  by injury on the report, P(misses the next game) after 1 / 2 / 3+ missed (n >= 20):
+    ankle        64% ( 59)    80% ( 35)    65% ( 55)
+    concussion   40% ( 42)      -          70% ( 20)
+    foot         73% ( 22)      -          93% ( 55)
+    hamstring    73% ( 62)    65% ( 43)    59% ( 54)
+    hand         62% ( 24)      -          76% ( 29)
+    knee         71% ( 69)    65% ( 46)    84% ( 91)
+    neck           -            -          95% ( 20)
+    shoulder     67% ( 45)    46% ( 26)    86% ( 49)
+    unlisted     71% ( 93)    87% ( 60)    87% (181)
+    ALL          65% (510)    72% (307)    80% (634)
+
+  FORWARD (train on earlier seasons, test 2022-25): Brier, next game / next four games
+    pooled (shipped)                       next 0.1901 (+0.00%)   next four 0.2321 (+0.00%)   seasons better 0/4
+    recency half-life 3                    next 0.1903 (+0.10%)   next four 0.2320 (-0.02%)   seasons better 2/4
+    recency half-life 2                    next 0.1905 (+0.18%)   next four 0.2322 (+0.04%)   seasons better 1/4
+    recency half-life 1                    next 0.1910 (+0.45%)   next four 0.2329 (+0.34%)   seasons better 0/4
+    position                               next 0.1898 (-0.14%)   next four 0.2305 (-0.69%)   seasons better 2/4
+    injury type                            next 0.1856 (-2.35%)   next four 0.2251 (-3.02%)   seasons better 4/4
+    position + injury type                 next 0.1854 (-2.50%)   next four 0.2238 (-3.58%)   seasons better 4/4
+    position + injury type + recency 3     next 0.1864 (-1.96%)   next four 0.2246 (-3.22%)   seasons better 4/4
+    position + injury type + recency 2     next 0.1869 (-1.67%)   next four 0.2252 (-2.98%)   seasons better 4/4
+    injury type + recency 3                next 0.1863 (-2.00%)   next four 0.2254 (-2.90%)   seasons better 4/4
+
+  LEAVE-ONE-SEASON-OUT: Brier, next game / next four games
+    pooled (shipped)                       next 0.1918 (+0.00%)   next four 0.2310 (+0.00%)   seasons better 0/7
+    recency half-life 3                    next 0.1919 (+0.02%)   next four 0.2308 (-0.07%)   seasons better 3/7
+    recency half-life 2                    next 0.1920 (+0.09%)   next four 0.2309 (-0.02%)   seasons better 3/7
+    recency half-life 1                    next 0.1926 (+0.39%)   next four 0.2316 (+0.28%)   seasons better 3/7
+    position                               next 0.1921 (+0.16%)   next four 0.2296 (-0.59%)   seasons better 3/7
+    injury type                            next 0.1870 (-2.50%)   next four 0.2232 (-3.38%)   seasons better 6/7
+    position + injury type                 next 0.1873 (-2.34%)   next four 0.2222 (-3.82%)   seasons better 6/7
+    position + injury type + recency 3     next 0.1876 (-2.18%)   next four 0.2226 (-3.64%)   seasons better 7/7
+    position + injury type + recency 2     next 0.1881 (-1.97%)   next four 0.2232 (-3.35%)   seasons better 7/7
+    injury type + recency 3                next 0.1877 (-2.17%)   next four 0.2238 (-3.09%)   seasons better 7/7
+
+  SHIPPED TABLE (all seasons): P(misses the next game | missed k)
+    pooled   k1 0.65  k2 0.72  k3 0.77  k4 0.77  k5 0.75  k6 0.87  k7 0.86  k8 0.89
+    QB       k1 0.69  k2 0.74  k3 0.79  k4 0.84  k5 0.79  k6 0.89  k7 0.91  k8 0.87
+    RB       k1 0.68  k2 0.69  k3 0.72  k4 0.72  k5 0.77  k6 0.86  k7 0.82  k8 0.91
+    WR       k1 0.61  k2 0.71  k3 0.76  k4 0.75  k5 0.73  k6 0.87  k7 0.87  k8 0.93
+    TE       k1 0.63  k2 0.77  k3 0.80  k4 0.81  k5 0.72  k6 0.86  k7 0.84  k8 0.87
+    injury-type logit shift at k = 1 / 2 / 3+ (and the rate it gives at the pooled level):
+      ankle       k1:   -           k2: +0.22 -> 76%   k3: -0.52 -> 67%
+      concussion  k1: -0.59 -> 51%   k2:   -           k3: -0.24 -> 73%
+      foot        k1: +0.15 -> 68%   k2:   -           k3: +0.62 -> 86%
+      hamstring   k1: +0.23 -> 70%   k2: -0.20 -> 68%   k3: -0.71 -> 63%
+      hand        k1:   -           k2:   -           k3: -0.13 -> 75%
+      knee        k1: +0.19 -> 69%   k2: -0.21 -> 68%   k3: +0.16 -> 80%
+      neck        k1:   -           k2:   -           k3: +0.43 -> 84%
+      shoulder    k1:   -           k2: -0.55 -> 60%   k3: +0.23 -> 81%
+      unlisted    k1: +0.20 -> 70%   k2: +0.55 -> 82%   k3: +0.44 -> 84%
+
+  -> data/avail_curve_v2.json

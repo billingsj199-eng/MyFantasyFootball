@@ -1,0 +1,6 @@
+=== return timing for a player who is out now: 1668 absence states, 2019-25 ===
+  plays game +1 / +2 / +3 / +4 after today: actual 27% / 41% / 50% / 56%   curve 26% / 43% / 55% / 63%   (hold = 0%, back = 100%)
+  held out every later week (shadow before today)  Brier 0.422   games played over the next four: 0.00 vs actual 1.84 (miss 1.84)
+  back the next game (no return timing)            Brier 0.578   games played over the next four: 4.00 vs actual 1.84 (miss 2.16)
+  availability curve v2 (shipped)                  Brier 0.222   games played over the next four: 1.91 vs actual 1.84 (miss 1.37)
+  curve vs hold: Brier -47%

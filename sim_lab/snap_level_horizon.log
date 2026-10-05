@@ -1,0 +1,42 @@
+=== 1 EXIT GAMES: last game under 60% of the snap share he had before it (WR + TE, had 50%+ before) ===
+  rows 303 of 9338 (3.2%); share before 70%, last game 27%, actual / shadow 0.751  (everyone else 1.013)
+  reading = last game as-is (wired today)
+    e 0.3: all WR / TE rows                      n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.70%  seasons better 7/7
+    e 0.3: exit rows only                        n   303  actual  5.25  base  6.99  with layer  6.09  | error -9.62%  seasons better 6/7
+    e 0.3: top-100 ADP rows                      n  3562  actual 11.56  base 11.21  with layer 11.22  | error -0.56%  seasons better 5/7
+  reading = season share
+    e 0.3: all WR / TE rows                      n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.28%  seasons better 7/7
+    e 0.3: exit rows only                        n   303  actual  5.25  base  6.99  with layer  6.89  | error -1.45%  seasons better 6/7
+    e 0.3: top-100 ADP rows                      n  3562  actual 11.56  base 11.21  with layer 11.23  | error -0.23%  seasons better 5/7
+  reading = season share when the last game is an exit
+    e 0.3: all WR / TE rows                      n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.49%  seasons better 7/7
+    e 0.3: exit rows only                        n   303  actual  5.25  base  6.99  with layer  7.02  | error +0.76%  seasons better 2/7
+    e 0.3: top-100 ADP rows                      n  3562  actual 11.56  base 11.21  with layer 11.22  | error -0.29%  seasons better 5/7
+  reading = larger of his last two games
+    e 0.3: all WR / TE rows                      n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.44%  seasons better 7/7
+    e 0.3: exit rows only                        n   303  actual  5.25  base  6.99  with layer  6.84  | error -0.45%  seasons better 4/7
+    e 0.3: top-100 ADP rows                      n  3562  actual 11.56  base 11.21  with layer 11.22  | error -0.36%  seasons better 5/7
+
+=== 2 HORIZON: the reading made h games ahead (base = his rate then x that week's layers) ===
+  reading = last game as-is
+    1 game ahead (tested case), e 0.3            n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.70%  seasons better 7/7
+    1 game ahead (tested case), e 0.15           n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.47%  seasons better 7/7
+    2 games ahead, e 0.3                         n  8477  actual  8.28  base  8.24  with layer  8.24  | error -0.19%  seasons better 5/7
+    2 games ahead, e 0.15                        n  8477  actual  8.28  base  8.24  with layer  8.24  | error -0.21%  seasons better 6/7
+    3 games ahead, e 0.3                         n  7677  actual  8.33  base  8.26  with layer  8.27  | error +0.01%  seasons better 2/7
+    3 games ahead, e 0.15                        n  7677  actual  8.33  base  8.26  with layer  8.27  | error -0.11%  seasons better 4/7
+    4-6 games ahead, e 0.3                       n  6934  actual  8.38  base  8.25  with layer  8.26  | error +0.02%  seasons better 3/7
+    4-6 games ahead, e 0.15                      n  6934  actual  8.38  base  8.25  with layer  8.26  | error -0.10%  seasons better 6/7
+    7+ games ahead, e 0.3                        n  4669  actual  8.50  base  8.30  with layer  8.31  | error -0.04%  seasons better 4/7
+    7+ games ahead, e 0.15                       n  4669  actual  8.50  base  8.30  with layer  8.31  | error -0.13%  seasons better 6/7
+  reading = season share when the last game is an exit
+    1 game ahead (tested case), e 0.3            n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.49%  seasons better 7/7
+    1 game ahead (tested case), e 0.15           n  9338  actual  8.23  base  8.18  with layer  8.18  | error -0.34%  seasons better 7/7
+    2 games ahead, e 0.3                         n  8477  actual  8.28  base  8.24  with layer  8.24  | error -0.27%  seasons better 5/7
+    2 games ahead, e 0.15                        n  8477  actual  8.28  base  8.24  with layer  8.24  | error -0.22%  seasons better 7/7
+    3 games ahead, e 0.3                         n  7677  actual  8.33  base  8.26  with layer  8.27  | error -0.06%  seasons better 4/7
+    3 games ahead, e 0.15                        n  7677  actual  8.33  base  8.26  with layer  8.26  | error -0.12%  seasons better 5/7
+    4-6 games ahead, e 0.3                       n  6934  actual  8.38  base  8.25  with layer  8.26  | error -0.03%  seasons better 3/7
+    4-6 games ahead, e 0.15                      n  6934  actual  8.38  base  8.25  with layer  8.26  | error -0.10%  seasons better 5/7
+    7+ games ahead, e 0.3                        n  4669  actual  8.50  base  8.30  with layer  8.30  | error -0.12%  seasons better 5/7
+    7+ games ahead, e 0.15                       n  4669  actual  8.50  base  8.30  with layer  8.30  | error -0.15%  seasons better 5/7

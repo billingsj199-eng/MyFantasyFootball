@@ -1,0 +1,122 @@
+=== JM / learned prior: shipped prior rebuilt, max difference from the harness prior 0.0000; JM changes the learned prior on 19,038 rows ===
+  player-seasons with a JM score in the training table: 1073 of 1404
+
+##### NEXT GAME: 17,569 rows, 10,520 top-150; shipped rank order 0.3888 #####
+  A  the learned prior WITHOUT the jm feature (positive = JM is helping)
+    without JM, RB + WR + TE                     rows 14934  its rows  +0.09% (2/7)  | whole board: all  +0.07%  top-150 weighted  +0.09% (0/7)  rank order +0.0004
+    without JM, RB only                          rows  4523  its rows  +0.27% (0/7)  | whole board: all  +0.08%  top-150 weighted  +0.10% (1/7)  rank order -0.0003
+    without JM, WR only                          rows  7220  its rows  -0.02% (3/7)  | whole board: all  -0.01%  top-150 weighted  +0.00% (4/7)  rank order -0.0003
+    without JM, TE only                          rows  3191  its rows  +0.03% (2/7)  | whole board: all  +0.00%  top-150 weighted  -0.00% (4/7)  rank order +0.0010
+    without JM, rookies + second-year            rows  4386  its rows  +0.14% (0/7)  | whole board: all  +0.03%  top-150 weighted  +0.02% (2/7)  rank order -0.0012
+    without JM, veterans (3+ years)              rows 10548  its rows  +0.07% (2/7)  | whole board: all  +0.04%  top-150 weighted  +0.07% (0/7)  rank order +0.0013
+  B  weight on the learned prior by position (shipped .5)
+    RB weight 0.0                                rows  4523  its rows  +1.33% (0/7)  | whole board: all  +0.37%  top-150 weighted  +0.25% (1/7)  rank order -0.0011
+    RB weight 0.25                               rows  4523  its rows  +0.53% (0/7)  | whole board: all  +0.15%  top-150 weighted  +0.09% (2/7)  rank order -0.0004
+    RB weight 0.75                               rows  4523  its rows  -0.25% (6/7)  | whole board: all  -0.07%  top-150 weighted  -0.02% (5/7)  rank order +0.0002
+    RB weight 1.0                                rows  4523  its rows  -0.21% (4/7)  | whole board: all  -0.06%  top-150 weighted  +0.02% (4/7)  rank order -0.0001
+    WR weight 0.0                                rows  7220  its rows  +1.50% (0/7)  | whole board: all  +0.60%  top-150 weighted  +0.28% (1/7)  rank order -0.0027
+    WR weight 0.25                               rows  7220  its rows  +0.61% (0/7)  | whole board: all  +0.24%  top-150 weighted  +0.11% (2/7)  rank order -0.0011
+    WR weight 0.75                               rows  7220  its rows  -0.34% (5/7)  | whole board: all  -0.14%  top-150 weighted  -0.05% (4/7)  rank order +0.0001
+    WR weight 1.0                                rows  7220  its rows  -0.41% (4/7)  | whole board: all  -0.16%  top-150 weighted  -0.04% (3/7)  rank order +0.0001
+    TE weight 0.0                                rows  3191  its rows  +0.61% (1/7)  | whole board: all  +0.07%  top-150 weighted  +0.05% (1/7)  rank order -0.0021
+    TE weight 0.25                               rows  3191  its rows  +0.17% (1/7)  | whole board: all  +0.02%  top-150 weighted  +0.01% (2/7)  rank order -0.0003
+    TE weight 0.75                               rows  3191  its rows  +0.10% (3/7)  | whole board: all  +0.01%  top-150 weighted  +0.01% (4/7)  rank order -0.0008
+    TE weight 1.0                                rows  3191  its rows  +0.47% (2/7)  | whole board: all  +0.06%  top-150 weighted  +0.04% (2/7)  rank order -0.0018
+  C  quarterbacks on the learned prior (shipped: weight 0)
+    QB weight 0.25, with JM                      rows  2610  its rows  -0.12% (4/7)  | whole board: all  -0.02%  top-150 weighted  +0.04% (2/7)  rank order -0.0011
+    QB weight 0.5, with JM                       rows  2610  its rows  -0.04% (4/7)  | whole board: all  -0.01%  top-150 weighted  +0.11% (1/7)  rank order -0.0023
+    QB weight 0.75, with JM                      rows  2610  its rows  +0.25% (3/7)  | whole board: all  +0.05%  top-150 weighted  +0.19% (1/7)  rank order -0.0035
+    QB weight 1.0, with JM                       rows  2610  its rows  +0.75% (3/7)  | whole board: all  +0.15%  top-150 weighted  +0.30% (1/7)  rank order -0.0046
+    QB weight 0.5, without JM                    rows 17544  its rows  +0.09% (1/7)  | whole board: all  +0.09%  top-150 weighted  +0.19% (1/7)  rank order -0.0007
+    QB weight 1.0, without JM                    rows 17544  its rows  +0.26% (1/7)  | whole board: all  +0.26%  top-150 weighted  +0.35% (1/7)  rank order -0.0018
+      QB weight .5: rookies + second-year        rows   658  its rows  +0.26% (4/7)  | whole board: all  -0.01%  top-150 weighted  +0.11% (1/7)  rank order -0.0023
+      QB weight .5: veterans                     rows  1977  its rows  -0.14% (4/7)  | whole board: all  -0.01%  top-150 weighted  +0.11% (1/7)  rank order -0.0023
+      QB weight .5: ADP 1-100                    rows  1040  its rows  +0.80% (2/7)  | whole board: all  -0.01%  top-150 weighted  +0.11% (1/7)  rank order -0.0023
+      QB weight .5: ADP 101+ / none              rows  1595  its rows  -0.66% (6/7)  | whole board: all  -0.01%  top-150 weighted  +0.11% (1/7)  rank order -0.0023
+  D  only quarterbacks drafted after pick 100 (or undrafted) on the learned prior; then with RB weight .75
+    late QB weight 0.25                          rows  1570  its rows  -0.48% (6/7)  | whole board: all  -0.06%  top-150 weighted  -0.00% (4/7)  rank order -0.0004
+    late QB weight 0.5                           rows  1570  its rows  -0.67% (6/7)  | whole board: all  -0.08%  top-150 weighted  +0.00% (4/7)  rank order -0.0012
+    late QB weight 0.75                          rows  1570  its rows  -0.58% (6/7)  | whole board: all  -0.07%  top-150 weighted  +0.02% (3/7)  rank order -0.0017
+    late QB weight 1.0                           rows  1570  its rows  -0.19% (6/7)  | whole board: all  -0.02%  top-150 weighted  +0.04% (3/7)  rank order -0.0016
+    RB weight .75 + late QB weight .5            rows  6093  its rows  -0.37% (6/7)  | whole board: all  -0.15%  top-150 weighted  -0.02% (4/7)  rank order -0.0010
+    RB weight .75 + late QB weight .75           rows  6093  its rows  -0.34% (6/7)  | whole board: all  -0.14%  top-150 weighted  -0.01% (4/7)  rank order -0.0015
+
+##### REST OF SEASON, 4+ games left: 8,542 rows, 5,212 top-150; shipped rank order 0.5945 #####
+  A  the learned prior WITHOUT the jm feature (positive = JM is helping)
+    without JM, RB + WR + TE                     rows  7283  its rows  +0.31% (1/7)  | whole board: all  +0.25%  top-150 weighted  +0.68% (2/7)  rank order -0.0001
+    without JM, RB only                          rows  2215  its rows  +1.37% (1/7)  | whole board: all  +0.41%  top-150 weighted  +0.86% (1/7)  rank order -0.0011
+    without JM, WR only                          rows  3509  its rows  -0.44% (4/7)  | whole board: all  -0.17%  top-150 weighted  -0.12% (4/7)  rank order +0.0004
+    without JM, TE only                          rows  1559  its rows  +0.06% (3/7)  | whole board: all  +0.01%  top-150 weighted  -0.06% (4/7)  rank order +0.0006
+    without JM, rookies + second-year            rows  2223  its rows  +0.91% (0/7)  | whole board: all  +0.26%  top-150 weighted  +0.32% (2/7)  rank order +0.0001
+    without JM, veterans (3+ years)              rows  5060  its rows  -0.01% (4/7)  | whole board: all  -0.00%  top-150 weighted  +0.36% (2/7)  rank order -0.0007
+  B  weight on the learned prior by position (shipped .5)
+    RB weight 0.0                                rows  2215  its rows  +3.95% (1/7)  | whole board: all  +1.19%  top-150 weighted  +1.80% (0/7)  rank order -0.0013
+    RB weight 0.25                               rows  2215  its rows  +1.56% (1/7)  | whole board: all  +0.47%  top-150 weighted  +0.76% (0/7)  rank order +0.0000
+    RB weight 0.75                               rows  2215  its rows  -0.73% (5/7)  | whole board: all  -0.22%  top-150 weighted  -0.49% (6/7)  rank order -0.0005
+    RB weight 1.0                                rows  2215  its rows  -0.62% (5/7)  | whole board: all  -0.19%  top-150 weighted  -0.69% (6/7)  rank order +0.0007
+    WR weight 0.0                                rows  3509  its rows  +3.77% (1/7)  | whole board: all  +1.42%  top-150 weighted  +0.65% (3/7)  rank order -0.0011
+    WR weight 0.25                               rows  3509  its rows  +1.50% (1/7)  | whole board: all  +0.56%  top-150 weighted  +0.22% (3/7)  rank order -0.0005
+    WR weight 0.75                               rows  3509  its rows  -0.71% (5/7)  | whole board: all  -0.27%  top-150 weighted  -0.02% (3/7)  rank order +0.0002
+    WR weight 1.0                                rows  3509  its rows  -0.64% (3/7)  | whole board: all  -0.24%  top-150 weighted  +0.16% (3/7)  rank order -0.0003
+    TE weight 0.0                                rows  1559  its rows  +3.80% (0/7)  | whole board: all  +0.49%  top-150 weighted  +0.51% (2/7)  rank order -0.0031
+    TE weight 0.25                               rows  1559  its rows  +1.48% (0/7)  | whole board: all  +0.19%  top-150 weighted  +0.21% (3/7)  rank order +0.0000
+    TE weight 0.75                               rows  1559  its rows  -0.63% (4/7)  | whole board: all  -0.08%  top-150 weighted  -0.13% (4/7)  rank order -0.0004
+    TE weight 1.0                                rows  1559  its rows  -0.42% (3/7)  | whole board: all  -0.05%  top-150 weighted  -0.17% (4/7)  rank order -0.0010
+  C  quarterbacks on the learned prior (shipped: weight 0)
+    QB weight 0.25, with JM                      rows  1252  its rows  -0.74% (5/7)  | whole board: all  -0.14%  top-150 weighted  +0.24% (2/7)  rank order -0.0018
+    QB weight 0.5, with JM                       rows  1252  its rows  -0.74% (5/7)  | whole board: all  -0.14%  top-150 weighted  +0.56% (2/7)  rank order -0.0031
+    QB weight 0.75, with JM                      rows  1252  its rows  -0.00% (4/7)  | whole board: all  -0.00%  top-150 weighted  +0.95% (1/7)  rank order -0.0057
+    QB weight 1.0, with JM                       rows  1252  its rows  +1.47% (3/7)  | whole board: all  +0.28%  top-150 weighted  +1.42% (1/7)  rank order -0.0075
+    QB weight 0.5, without JM                    rows  8535  its rows  +0.29% (4/7)  | whole board: all  +0.28%  top-150 weighted  +1.23% (1/7)  rank order -0.0043
+    QB weight 1.0, without JM                    rows  8535  its rows  +0.85% (2/7)  | whole board: all  +0.84%  top-150 weighted  +2.08% (0/7)  rank order -0.0090
+      QB weight .5: rookies + second-year        rows   326  its rows  -1.77% (3/7)  | whole board: all  -0.14%  top-150 weighted  +0.56% (2/7)  rank order -0.0031
+      QB weight .5: veterans                     rows   933  its rows  -0.30% (3/7)  | whole board: all  -0.14%  top-150 weighted  +0.56% (2/7)  rank order -0.0031
+      QB weight .5: ADP 1-100                    rows   511  its rows  +3.12% (1/7)  | whole board: all  -0.14%  top-150 weighted  +0.56% (2/7)  rank order -0.0031
+      QB weight .5: ADP 101+ / none              rows   748  its rows  -3.75% (6/7)  | whole board: all  -0.14%  top-150 weighted  +0.56% (2/7)  rank order -0.0031
+  D  only quarterbacks drafted after pick 100 (or undrafted) on the learned prior; then with RB weight .75
+    late QB weight 0.25                          rows   741  its rows  -2.45% (6/7)  | whole board: all  -0.26%  top-150 weighted  +0.02% (3/7)  rank order +0.0010
+    late QB weight 0.5                           rows   741  its rows  -3.86% (6/7)  | whole board: all  -0.41%  top-150 weighted  +0.07% (3/7)  rank order +0.0002
+    late QB weight 0.75                          rows   741  its rows  -4.22% (6/7)  | whole board: all  -0.45%  top-150 weighted  +0.15% (3/7)  rank order +0.0002
+    late QB weight 1.0                           rows   741  its rows  -3.54% (4/7)  | whole board: all  -0.37%  top-150 weighted  +0.26% (3/7)  rank order -0.0022
+    RB weight .75 + late QB weight .5            rows  2956  its rows  -1.54% (6/7)  | whole board: all  -0.63%  top-150 weighted  -0.42% (5/7)  rank order -0.0003
+    RB weight .75 + late QB weight .75           rows  2956  its rows  -1.63% (5/7)  | whole board: all  -0.66%  top-150 weighted  -0.34% (6/7)  rank order -0.0004
+
+##### REST OF SEASON, 1+ games left: 9,848 rows, 5,847 top-150; shipped rank order 0.5679 #####
+  A  the learned prior WITHOUT the jm feature (positive = JM is helping)
+    without JM, RB + WR + TE                     rows  8380  its rows  +0.30% (1/7)  | whole board: all  +0.23%  top-150 weighted  +0.62% (1/7)  rank order -0.0006
+    without JM, RB only                          rows  2529  its rows  +1.21% (0/7)  | whole board: all  +0.35%  top-150 weighted  +0.74% (1/7)  rank order -0.0012
+    without JM, WR only                          rows  4026  its rows  -0.37% (4/7)  | whole board: all  -0.14%  top-150 weighted  -0.07% (4/7)  rank order +0.0005
+    without JM, TE only                          rows  1825  its rows  +0.10% (4/7)  | whole board: all  +0.01%  top-150 weighted  -0.05% (4/7)  rank order +0.0001
+    without JM, rookies + second-year            rows  2583  its rows  +0.83% (0/7)  | whole board: all  +0.22%  top-150 weighted  +0.27% (1/7)  rank order -0.0002
+    without JM, veterans (3+ years)              rows  5797  its rows  +0.02% (3/7)  | whole board: all  +0.01%  top-150 weighted  +0.35% (2/7)  rank order -0.0012
+  B  weight on the learned prior by position (shipped .5)
+    RB weight 0.0                                rows  2529  its rows  +2.49% (1/7)  | whole board: all  +0.73%  top-150 weighted  +1.09% (1/7)  rank order -0.0014
+    RB weight 0.25                               rows  2529  its rows  +0.90% (1/7)  | whole board: all  +0.26%  top-150 weighted  +0.43% (1/7)  rank order +0.0004
+    RB weight 0.75                               rows  2529  its rows  -0.22% (5/7)  | whole board: all  -0.06%  top-150 weighted  -0.21% (6/7)  rank order +0.0003
+    RB weight 1.0                                rows  2529  its rows  +0.25% (5/7)  | whole board: all  +0.07%  top-150 weighted  -0.20% (5/7)  rank order +0.0013
+    WR weight 0.0                                rows  4026  its rows  +2.78% (2/7)  | whole board: all  +1.01%  top-150 weighted  +0.25% (3/7)  rank order -0.0008
+    WR weight 0.25                               rows  4026  its rows  +1.07% (2/7)  | whole board: all  +0.39%  top-150 weighted  +0.05% (3/7)  rank order -0.0001
+    WR weight 0.75                               rows  4026  its rows  -0.41% (5/7)  | whole board: all  -0.15%  top-150 weighted  +0.11% (3/7)  rank order -0.0000
+    WR weight 1.0                                rows  4026  its rows  -0.16% (3/7)  | whole board: all  -0.06%  top-150 weighted  +0.38% (3/7)  rank order -0.0004
+    TE weight 0.0                                rows  1825  its rows  +2.77% (2/7)  | whole board: all  +0.33%  top-150 weighted  +0.35% (2/7)  rank order -0.0027
+    TE weight 0.25                               rows  1825  its rows  +1.01% (2/7)  | whole board: all  +0.12%  top-150 weighted  +0.14% (2/7)  rank order +0.0001
+    TE weight 0.75                               rows  1825  its rows  -0.25% (4/7)  | whole board: all  -0.03%  top-150 weighted  -0.07% (5/7)  rank order -0.0003
+    TE weight 1.0                                rows  1825  its rows  +0.25% (4/7)  | whole board: all  +0.03%  top-150 weighted  -0.07% (4/7)  rank order +0.0006
+  C  quarterbacks on the learned prior (shipped: weight 0)
+    QB weight 0.25, with JM                      rows  1452  its rows  -0.71% (5/7)  | whole board: all  -0.16%  top-150 weighted  +0.22% (2/7)  rank order -0.0020
+    QB weight 0.5, with JM                       rows  1452  its rows  -0.87% (5/7)  | whole board: all  -0.19%  top-150 weighted  +0.52% (2/7)  rank order -0.0031
+    QB weight 0.75, with JM                      rows  1452  its rows  -0.48% (5/7)  | whole board: all  -0.10%  top-150 weighted  +0.87% (2/7)  rank order -0.0056
+    QB weight 1.0, with JM                       rows  1452  its rows  +0.47% (4/7)  | whole board: all  +0.10%  top-150 weighted  +1.29% (1/7)  rank order -0.0072
+    QB weight 0.5, without JM                    rows  9832  its rows  +0.15% (2/7)  | whole board: all  +0.15%  top-150 weighted  +1.08% (0/7)  rank order -0.0045
+    QB weight 1.0, without JM                    rows  9832  its rows  +0.53% (2/7)  | whole board: all  +0.53%  top-150 weighted  +1.78% (1/7)  rank order -0.0098
+      QB weight .5: rookies + second-year        rows   396  its rows  -2.32% (4/7)  | whole board: all  -0.19%  top-150 weighted  +0.52% (2/7)  rank order -0.0031
+      QB weight .5: veterans                     rows  1072  its rows  -0.19% (3/7)  | whole board: all  -0.19%  top-150 weighted  +0.52% (2/7)  rank order -0.0031
+      QB weight .5: ADP 1-100                    rows   566  its rows  +2.93% (2/7)  | whole board: all  -0.19%  top-150 weighted  +0.52% (2/7)  rank order -0.0031
+      QB weight .5: ADP 101+ / none              rows   902  its rows  -3.21% (6/7)  | whole board: all  -0.19%  top-150 weighted  +0.52% (2/7)  rank order -0.0031
+  D  only quarterbacks drafted after pick 100 (or undrafted) on the learned prior; then with RB weight .75
+    late QB weight 0.25                          rows   886  its rows  -2.06% (6/7)  | whole board: all  -0.27%  top-150 weighted  +0.02% (3/7)  rank order +0.0005
+    late QB weight 0.5                           rows   886  its rows  -3.39% (6/7)  | whole board: all  -0.45%  top-150 weighted  +0.06% (3/7)  rank order -0.0002
+    late QB weight 0.75                          rows   886  its rows  -3.99% (6/7)  | whole board: all  -0.52%  top-150 weighted  +0.13% (3/7)  rank order -0.0004
+    late QB weight 1.0                           rows   886  its rows  -3.86% (5/7)  | whole board: all  -0.51%  top-150 weighted  +0.22% (3/7)  rank order -0.0028
+    RB weight .75 + late QB weight .5            rows  3415  its rows  -1.20% (6/7)  | whole board: all  -0.51%  top-150 weighted  -0.15% (5/7)  rank order +0.0001
+    RB weight .75 + late QB weight .75           rows  3415  its rows  -1.38% (5/7)  | whole board: all  -0.59%  top-150 weighted  -0.08% (4/7)  rank order -0.0001

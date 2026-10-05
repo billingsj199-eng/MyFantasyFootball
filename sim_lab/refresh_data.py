@@ -729,13 +729,37 @@ except Exception as e:
         with open(os.path.join(OUT, "sim_weather.js"), "w", encoding="utf-8") as f:
             f.write("window.SIM_WEATHER_2026 = {};\n")
 
-# Future game totals re-rated from this season's lines (build_future_totals.py, 2026-09-29): runs on the
-# betting file copied above, non-fatal - a failure leaves yesterday's file (or none = the book's lines as posted).
+# OUR OWN future game totals (build_own_totals.py, 2026-10-02; Jack: the book's far-out look-ahead lines "aren't
+# necessarily true anymore"): team ratings from the preseason lines + every line posted this season + results,
+# per quarterback with start probabilities from the injury layer. Runs on the betting file copied above. If it
+# fails, the 09-29 re-rate (build_future_totals.py: stale game line + shift) runs instead; if that fails too the
+# last file stays (or none = the book's lines as posted).
 try:
-    import build_future_totals as _bft
-    _bft.build()
+    import build_own_totals as _bot
+    _bot.build()
 except Exception as e:
-    print(f"WARN sim_future_totals.js skipped ({e}) - future weeks keep the book's posted lines")
+    print(f"WARN own team totals failed ({e}) - falling back to the 09-29 re-rate")
+    try:
+        import build_future_totals as _bft
+        _bft.build()
+    except Exception as e2:
+        print(f"WARN sim_future_totals.js skipped ({e2}) - future weeks keep the book's posted lines")
+
+# Real results for games already played (build_actuals.py, 2026-10-02): the season sim banks them instead of
+# sampling. Non-fatal: a failure leaves the last file (played games then keep their last banked state).
+try:
+    import build_actuals as _bact
+    _bact.build()
+except Exception as e:
+    print(f"WARN sim_actuals_2026.js skipped ({e})")
+
+# Injury signals (build_injury_signals.py, 2026-10-01): Sleeper diagnosis + practice-sequence archive + news
+# availability reads + the lines-up log -> data/sim_injury_signals.js. Non-fatal: a failure leaves the last file.
+try:
+    import build_injury_signals as _bis
+    _bis.build(allp if 'allp' in globals() else None)
+except Exception as e:
+    print(f"WARN sim_injury_signals.js skipped ({e}) - injury layer runs on designations alone")
 
 # Cache-bust every script tag in index.html (?v=epoch) so browsers always
 # pick up new builds — same pattern as the main site.

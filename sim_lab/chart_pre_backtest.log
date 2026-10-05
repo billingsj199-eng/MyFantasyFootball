@@ -1,0 +1,29 @@
+=== pre-injury chart spot: 1454 first-three-games-back rows, RB / WR / TE, 2019-24 ===
+
+  what the chart showed in the last week he missed, vs his spot going into his last game:
+    dropped off the chart    n  283  actual / (base x return ramp) 1.021   by position: RB 0.95 (n 83)  TE 0.96 (n 78)  WR 1.11 (n 122)
+    listed higher            n   27  actual / (base x return ramp) 1.178   by position: RB 1.13 (n 16)
+    listed lower             n   60  actual / (base x return ramp) 1.012   by position: RB 1.01 (n 32)  WR 1.01 (n 15)
+    same spot                n 1084  actual / (base x return ramp) 1.061   by position: RB 1.11 (n 348)  TE 0.99 (n 202)  WR 1.05 (n 534)
+    starters (first string before the absence) only:
+      dropped off the chart  n  210  actual / base 0.992   games missed: median 4
+      listed lower           n   41  actual / base 1.040   games missed: median 2
+      same spot              n  688  actual / base 1.002   games missed: median 1
+
+  rows where the two rules differ: 314 (22% of return rows)
+    all                                n  314  actual  7.97  pre-injury spot predicts  7.97  chart-as-listed predicts  4.94  | MSE pre-injury vs listed -32.8%  MAE -12.0%  seasons better 5/6
+    RB                                 n  131  actual  8.16  pre-injury spot predicts  8.33  chart-as-listed predicts  4.53  | MSE pre-injury vs listed -39.2%  MAE -17.1%  seasons better 6/6
+    WR                                 n  102  actual  9.00  pre-injury spot predicts  8.67  chart-as-listed predicts  5.20  | MSE pre-injury vs listed -31.5%  MAE -10.6%  seasons better 5/6
+    TE                                 n   81  actual  6.35  pre-injury spot predicts  6.51  chart-as-listed predicts  5.27  | MSE pre-injury vs listed -7.6%  MAE -1.6%  seasons better 3/6
+    was first string                   n  251  actual  8.55  pre-injury spot predicts  8.56  chart-as-listed predicts  5.07  | MSE pre-injury vs listed -36.7%  MAE -14.1%  seasons better 6/6
+    dropped off the chart              n  238  actual  8.29  pre-injury spot predicts  8.43  chart-as-listed predicts  4.87  | MSE pre-injury vs listed -34.7%  MAE -12.9%  seasons better 6/6
+    listed lower                       n   57  actual  7.11  pre-injury spot predicts  6.82  chart-as-listed predicts  4.17  | MSE pre-injury vs listed -26.3%  MAE -2.2%  seasons better 4/4
+    missed 4+ games                    n  146  actual  8.06  pre-injury spot predicts  7.98  chart-as-listed predicts  4.45  | MSE pre-injury vs listed -40.0%  MAE -15.8%  seasons better 6/6
+    missed 1-3 games                   n  168  actual  7.89  pre-injury spot predicts  7.96  chart-as-listed predicts  5.36  | MSE pre-injury vs listed -24.9%  MAE -8.7%  seasons better 5/6
+    game 1 back                        n  122  actual  7.58  pre-injury spot predicts  7.51  chart-as-listed predicts  4.64  | MSE pre-injury vs listed -26.7%  MAE -6.5%  seasons better 6/6
+    game 2 back                        n  102  actual  7.63  pre-injury spot predicts  8.15  chart-as-listed predicts  5.03  | MSE pre-injury vs listed -27.1%  MAE -6.2%  seasons better 4/6
+    game 3 back                        n   90  actual  8.89  pre-injury spot predicts  8.40  chart-as-listed predicts  5.24  | MSE pre-injury vs listed -48.3%  MAE -25.5%  seasons better 5/6
+
+  the teammate listed first while a starter was out (220 cases): points per game
+    ALL  n 220  before the injury  8.82  while he was out  9.99  after he returned  8.50  (kept -28% of the bump)
+    WR   n 189  before the injury  9.28  while he was out 10.40  after he returned  8.76  (kept -46% of the bump)

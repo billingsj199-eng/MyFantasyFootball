@@ -1,0 +1,61 @@
+=== usage and injuries: 11,354 checkpoints (RB / WR / TE, 3+ games played); per-game xFP rebuilt cleanly on 100% ===
+  RB: games tagged normal 77%, teammate out 20%, left early 3%;  xFP a game: normal 9.71, teammate out 10.55, left early 5.55
+  WR: games tagged normal 74%, teammate out 23%, left early 3%;  xFP a game: normal 8.45, teammate out 8.79, left early 3.13
+  TE: games tagged normal 56%, teammate out 41%, left early 3%;  xFP a game: normal 5.96, teammate out 6.57, left early 2.55
+
+--- 1  HOW PREDICTIVE USAGE IS, all games vs normal games only ---
+  RB (3,227 checkpoints with 2+ normal games):
+    next game       correlation: points per game 0.497 | usage, all games 0.463 | usage, normal games only 0.451 | points, normal games only 0.479
+                    explained (R-squared): history + points 25.8% | + usage, all games 26.0% (+0.24) | + usage, normal games 25.9% (+0.15) | history + normal-game points + normal-game usage 25.5%
+    rest of season  correlation: points per game 0.700 | usage, all games 0.640 | usage, normal games only 0.632 | points, normal games only 0.682
+                    explained (R-squared): history + points 51.4% | + usage, all games 51.7% (+0.23) | + usage, normal games 51.6% (+0.22) | history + normal-game points + normal-game usage 51.1%
+    players who also had a teammate-out game (1081), next game: usage all games r 0.424 | normal games only r 0.408 | teammate-out games only r 0.314
+    players who also had a teammate-out game (753), rest of season: usage all games r 0.601 | normal games only r 0.594 | teammate-out games only r 0.446
+  WR (5,323 checkpoints with 2+ normal games):
+    next game       correlation: points per game 0.440 | usage, all games 0.406 | usage, normal games only 0.394 | points, normal games only 0.421
+                    explained (R-squared): history + points 21.6% | + usage, all games 21.9% (+0.27) | + usage, normal games 21.8% (+0.16) | history + normal-game points + normal-game usage 21.6%
+    rest of season  correlation: points per game 0.672 | usage, all games 0.612 | usage, normal games only 0.599 | points, normal games only 0.649
+                    explained (R-squared): history + points 50.8% | + usage, all games 51.3% (+0.47) | + usage, normal games 51.1% (+0.34) | history + normal-game points + normal-game usage 50.8%
+    players who also had a teammate-out game (2192), next game: usage all games r 0.400 | normal games only r 0.381 | teammate-out games only r 0.297
+    players who also had a teammate-out game (1567), rest of season: usage all games r 0.592 | normal games only r 0.567 | teammate-out games only r 0.413
+  TE (2,235 checkpoints with 2+ normal games):
+    next game       correlation: points per game 0.387 | usage, all games 0.376 | usage, normal games only 0.350 | points, normal games only 0.350
+                    explained (R-squared): history + points 17.2% | + usage, all games 17.6% (+0.46) | + usage, normal games 17.5% (+0.31) | history + normal-game points + normal-game usage 17.3%
+    rest of season  correlation: points per game 0.611 | usage, all games 0.598 | usage, normal games only 0.569 | points, normal games only 0.572
+                    explained (R-squared): history + points 43.8% | + usage, all games 45.0% (+1.21) | + usage, normal games 44.9% (+1.06) | history + normal-game points + normal-game usage 44.8%
+    players who also had a teammate-out game (1339), next game: usage all games r 0.398 | normal games only r 0.362 | teammate-out games only r 0.305
+    players who also had a teammate-out game (970), rest of season: usage all games r 0.629 | normal games only r 0.588 | teammate-out games only r 0.459
+
+--- 2  THE TEAMMATE-OUT BUMP: how big, and how much carries forward ---
+  RB: 1086 checkpoints with both kinds of game. Usage in teammate-out games 11.75 vs normal 9.31 xFP (+26%); points 11.82 vs 9.81 (+21%)
+    teammate BACK for the next game        n  452: next game = 0.61 + 0.95 x normal usage + 0.09 x bump  ->  9% of the bump carries; actual 9.95 vs normal-game points 9.86 / all-game points 10.19
+    teammate still OUT for the next game   n  634: next game = 4.29 + 0.65 x normal usage + 0.27 x bump  ->  41% of the bump carries; actual 10.77 vs normal-game points 9.77 / all-game points 10.18
+    rest of season                         n  758: 3.05 + 0.74 x normal usage + 0.13 x bump  ->  18% of the bump carries
+  WR: 2203 checkpoints with both kinds of game. Usage in teammate-out games 9.44 vs normal 8.13 xFP (+16%); points 9.60 vs 8.69 (+10%)
+    teammate BACK for the next game        n  998: next game = 0.90 + 0.88 x normal usage + 0.20 x bump  ->  22% of the bump carries; actual 8.73 vs normal-game points 9.16 / all-game points 9.31
+    teammate still OUT for the next game   n 1205: next game = 3.14 + 0.68 x normal usage + 0.22 x bump  ->  32% of the bump carries; actual 8.69 vs normal-game points 8.31 / all-game points 8.40
+    rest of season                         n 1577: 2.35 + 0.75 x normal usage + 0.18 x bump  ->  25% of the bump carries
+  TE: 1343 checkpoints with both kinds of game. Usage in teammate-out games 7.12 vs normal 6.20 xFP (+15%); points 7.67 vs 6.50 (+18%)
+    teammate BACK for the next game        n  387: next game = 0.81 + 1.01 x normal usage + 0.23 x bump  ->  22% of the bump carries; actual 7.46 vs normal-game points 6.75 / all-game points 6.94
+    teammate still OUT for the next game   n  956: next game = 2.84 + 0.67 x normal usage + 0.28 x bump  ->  42% of the bump carries; actual 7.23 vs normal-game points 6.39 / all-game points 6.83
+    rest of season                         n  973: 2.06 + 0.84 x normal usage + 0.23 x bump  ->  28% of the bump carries
+
+--- 3  THE MODEL: evidence from every game (shipped) vs from normal games only ---
+  players whose all-game usage runs 0.5+ xFP above their normal-game usage: 1743 rows
+    teammate back        n  579  actual 8.27  Clay-free 8.27  -> actual / projected 1.000  (3/7 seasons under)
+    teammate still out   n 1164  actual 8.59  Clay-free 8.34  -> actual / projected 1.029  (4/7 seasons under)
+  usage from normal games only: rows changed 3182
+    all changed rows     n  3182  error +0.32% (2/7)   actual 9.36  shipped 9.44  normal-games 9.36
+    teammate back        n  1432  error +0.01% (4/7)   actual 9.12  shipped 9.33  normal-games 9.27
+    teammate still out   n  1750  error +0.59% (1/7)   actual 9.56  shipped 9.53  normal-games 9.44
+    RB                   n  1048  error +0.34% (2/7)   actual 10.52  shipped 10.46  normal-games 10.37
+    WR                   n  2134  error +0.31% (2/7)   actual 8.80  shipped 8.93  normal-games 8.87
+    whole board: all rows +0.062%  top-150 weighted +0.041%  rank order +0.0006
+  usage AND points from normal games only: rows changed 4629
+    all changed rows     n  4629  error +3.39% (0/7)   actual 8.70  shipped 8.62  normal-games 8.45
+    teammate back        n  1836  error +0.85% (2/7)   actual 8.76  shipped 8.80  normal-games 8.68
+    teammate still out   n  2793  error +5.23% (0/7)   actual 8.66  shipped 8.50  normal-games 8.30
+    RB                   n  1086  error +4.58% (2/7)   actual 10.43  shipped 10.33  normal-games 10.05
+    WR                   n  2202  error +2.48% (0/7)   actual 8.71  shipped 8.84  normal-games 8.75
+    TE                   n  1341  error +4.02% (0/7)   actual 7.29  shipped 6.87  normal-games 6.66
+    whole board: all rows +0.850%  top-150 weighted +0.431%  rank order -0.0072

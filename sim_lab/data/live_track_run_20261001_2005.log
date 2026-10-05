@@ -1,0 +1,163 @@
+games: PIT@CLE
+tracking 20 players on ['CLE', 'PIT'], season 2026 week 4, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  CLE: pre PRE f=0.00 score 0.0-0.0
+  PIT: pre PRE f=0.00 score 0.0-0.0
+    Jaylen Warren         RB   proj  16.5  scored   0.0  live fit  16.5 | +exit  16.5 | v1  16.5 | naive  16.5
+    Aaron Rodgers         QB   proj  14.5  scored   0.0  live fit  14.5 | +exit  14.5 | v1  14.5 | naive  14.5
+    Deshaun Watson        QB   proj  14.0  scored   0.0  live fit  14.0 | +exit  14.0 | v1  14.0 | naive  14.0
+    Quinshon Judkins      RB   proj  11.7  scored   0.0  live fit  11.7 | +exit  11.7 | v1  11.7 | naive  11.7
+    DK Metcalf            WR   proj  11.3  scored   0.0  live fit  11.3 | +exit  11.3 | v1  11.3 | naive  11.3
+    Harold Fannin         TE   proj  10.6  scored   0.0  live fit  10.6 | +exit  10.6 | v1  10.6 | naive  10.6
+    KC Concepcion         WR   proj  10.5  scored   0.0  live fit  10.5 | +exit  10.5 | v1  10.5 | naive  10.5
+    Michael Pittman Jr.   WR   proj   9.6  scored   0.0  live fit   9.6 | +exit   9.6 | v1   9.6 | naive   9.6
+    Denzel Boston         WR   proj   9.5  scored   0.0  live fit   9.5 | +exit   9.5 | v1   9.5 | naive   9.5
+    Chris Boswell         K    proj   8.1  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.1
+    Pittsburgh Steelers D/STDST  proj   8.1  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.1 | naive   8.1
+    Pat Freiermuth        TE   proj   7.9  scored   0.0  live fit   7.9 | +exit   7.9 | v1   7.9 | naive   7.9
+  CLE: in Q1 12:09 f=0.05 score 0.0-0.0
+  PIT: in Q1 12:09 f=0.05 score 0.0-0.0
+    Jaylen Warren         RB   proj  16.5  scored   0.4  live fit  15.3 | +exit  15.3 | v1  16.1 | naive  16.1
+    Aaron Rodgers         QB   proj  14.5  scored   0.0  live fit  13.7 | +exit  13.7 | v1  13.8 | naive  13.8
+    Deshaun Watson        QB   proj  14.0  scored   0.3  live fit  13.6 | +exit  13.6 | v1  13.6 | naive  13.6
+    Quinshon Judkins      RB   proj  11.7  scored   0.2  live fit  10.8 | +exit  10.8 | v1  11.3 | naive  11.3
+    DK Metcalf            WR   proj  11.3  scored   0.0  live fit  10.3 | +exit  10.3 | v1  10.8 | naive  10.8
+    Harold Fannin         TE   proj  10.6  scored   0.0  live fit   9.7 | +exit   9.7 | v1  10.1 | naive  10.1
+    KC Concepcion         WR   proj  10.5  scored   0.0  live fit   9.6 | +exit   9.6 | v1  10.0 | naive  10.0
+    Michael Pittman Jr.   WR   proj   9.6  scored   0.0  live fit   8.8 | +exit   8.8 | v1   9.1 | naive   9.1
+    Denzel Boston         WR   proj   9.5  scored   1.5  live fit  10.4 | +exit  10.4 | v1  10.6 | naive  10.6
+    Chris Boswell         K    proj   8.1  scored   0.0  live fit   7.7 | +exit   7.7 | v1   7.7 | naive   7.7
+    Pittsburgh Steelers D/STDST  proj   8.1  scored  10.0  live fit   7.0 | +exit   7.0 | v1  17.7 | naive  17.7
+    Pat Freiermuth        TE   proj   7.9  scored   0.0  live fit   7.2 | +exit   7.2 | v1   7.5 | naive   7.5
+  CLE: in Q1 7:27 f=0.13 score 0.0-0.0
+  PIT: in Q1 7:27 f=0.13 score 0.0-0.0
+    Jaylen Warren         RB   proj  16.5  scored   3.2  live fit  17.6 | +exit  17.6 | v1  17.6 | naive  17.6
+    Aaron Rodgers         QB   proj  14.5  scored   1.6  live fit  14.5 | +exit  14.5 | v1  14.2 | naive  14.2
+    Deshaun Watson        QB   proj  14.0  scored   0.3  live fit  12.4 | +exit  12.4 | v1  12.5 | naive  12.5
+    Quinshon Judkins      RB   proj  11.7  scored   0.2  live fit   9.8 | +exit   9.8 | v1  10.4 | naive  10.4
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  14.3 | +exit  14.3 | v1  14.1 | naive  14.1
+    Harold Fannin         TE   proj  10.6  scored   0.0  live fit   8.9 | +exit   8.9 | v1   9.3 | naive   9.3
+    KC Concepcion         WR   proj  10.5  scored   0.0  live fit   8.8 | +exit   8.8 | v1   9.2 | naive   9.2
+    Michael Pittman Jr.   WR   proj   9.6  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.4 | naive   8.4
+    Denzel Boston         WR   proj   9.5  scored   1.5  live fit   9.7 | +exit   9.7 | v1   9.8 | naive   9.8
+    Chris Boswell         K    proj   8.1  scored   0.0  live fit   7.1 | +exit   7.1 | v1   7.1 | naive   7.1
+    Pittsburgh Steelers D/STDST  proj   8.1  scored  10.0  live fit   7.4 | +exit   7.4 | v1  17.1 | naive  17.1
+    Pat Freiermuth        TE   proj   7.9  scored   0.0  live fit   6.6 | +exit   6.6 | v1   6.9 | naive   6.9
+  CLE: in Q1 2:59 f=0.20 score 0.0-7.0
+  PIT: in Q1 2:59 f=0.20 score 7.0-0.0
+    Jaylen Warren         RB   proj  16.5  scored   4.2  live fit  16.8 | +exit  16.8 | v1  17.6 | naive  17.4
+    Aaron Rodgers         QB   proj  14.5  scored   6.4  live fit  17.8 | +exit  17.8 | v1  18.7 | naive  18.0
+    Deshaun Watson        QB   proj  14.0  scored   0.3  live fit  12.7 | +exit  11.6 | v1  11.0 | naive  11.5  exit x0.91 (stale 0.18)
+    Quinshon Judkins      RB   proj  11.7  scored   0.2  live fit   9.3 | +exit   9.3 | v1   9.1 | naive   9.6
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  12.5 | +exit  12.5 | v1  13.6 | naive  13.2
+    Harold Fannin         TE   proj  10.6  scored   0.0  live fit   9.0 | +exit   9.0 | v1   8.1 | naive   8.5
+    KC Concepcion         WR   proj  10.5  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.0 | naive   8.4
+    Michael Pittman Jr.   WR   proj   9.6  scored   1.9  live fit   8.8 | +exit   8.8 | v1   9.6 | naive   9.6
+    Denzel Boston         WR   proj   9.5  scored   1.5  live fit   9.8 | +exit   9.8 | v1   9.0 | naive   9.1
+    Chris Boswell         K    proj   8.1  scored   1.0  live fit   7.3 | +exit   7.3 | v1   7.3 | naive   7.5
+    Pittsburgh Steelers D/STDST  proj   8.1  scored  10.0  live fit   8.3 | +exit   8.3 | v1  18.1 | naive  16.5
+    Pat Freiermuth        TE   proj   7.9  scored   0.0  live fit   5.4 | +exit   5.4 | v1   6.0 | naive   6.3
+  CLE: in Q1 1:21 f=0.23 score 0.0-7.0
+  PIT: in Q1 1:21 f=0.23 score 7.0-0.0
+    Jaylen Warren         RB   proj  16.5  scored   5.0  live fit  17.3 | +exit  17.3 | v1  18.0 | naive  17.8
+    Aaron Rodgers         QB   proj  14.5  scored   6.4  live fit  17.4 | +exit  17.4 | v1  18.2 | naive  17.6
+    Deshaun Watson        QB   proj  14.0  scored   1.1  live fit  13.3 | +exit  13.3 | v1  11.5 | naive  11.9
+    Quinshon Judkins      RB   proj  11.7  scored   0.4  live fit   9.1 | +exit   9.1 | v1   9.0 | naive   9.4
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  12.2 | +exit  12.2 | v1  13.2 | naive  12.9
+    Harold Fannin         TE   proj  10.6  scored   0.0  live fit   8.7 | +exit   8.7 | v1   7.7 | naive   8.2
+    KC Concepcion         WR   proj  10.5  scored   3.1  live fit  12.1 | +exit  12.1 | v1  11.3 | naive  11.2
+    Michael Pittman Jr.   WR   proj   9.6  scored   1.9  live fit   8.5 | +exit   8.5 | v1   9.3 | naive   9.3
+    Denzel Boston         WR   proj   9.5  scored   1.5  live fit   9.5 | +exit   9.5 | v1   8.7 | naive   8.8
+    Chris Boswell         K    proj   8.1  scored   1.0  live fit   7.1 | +exit   7.1 | v1   7.1 | naive   7.3
+    Pittsburgh Steelers D/STDST  proj   8.1  scored  10.0  live fit   8.5 | +exit   8.5 | v1  17.8 | naive  16.3
+    Pat Freiermuth        TE   proj   7.9  scored   0.0  live fit   5.3 | +exit   5.3 | v1   5.8 | naive   6.1
+  CLE: in Q2 12:14 f=0.30 score 7.0-7.0
+  PIT: in Q2 12:14 f=0.30 score 7.0-7.0
+    Jaylen Warren         RB   proj  16.5  scored   7.5  live fit  19.7 | +exit  19.7 | v1  19.6 | naive  19.1
+    Aaron Rodgers         QB   proj  14.5  scored   5.8  live fit  17.0 | +exit  17.0 | v1  16.2 | naive  16.0
+    Deshaun Watson        QB   proj  14.0  scored   2.1  live fit  12.1 | +exit  12.1 | v1  11.6 | naive  12.0
+    Quinshon Judkins      RB   proj  11.7  scored   2.9  live fit  10.9 | +exit  10.9 | v1  11.0 | naive  11.1
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  12.3 | +exit  12.3 | v1  12.3 | naive  12.2
+    Harold Fannin         TE   proj  10.6  scored   2.3  live fit   9.7 | +exit   9.7 | v1   9.6 | naive   9.8
+    KC Concepcion         WR   proj  10.5  scored   3.1  live fit  10.6 | +exit  10.6 | v1  10.5 | naive  10.5
+    Michael Pittman Jr.   WR   proj   9.6  scored   1.9  live fit   8.6 | +exit   8.6 | v1   8.5 | naive   8.7
+    Denzel Boston         WR   proj   9.5  scored   1.5  live fit   8.1 | +exit   8.1 | v1   8.0 | naive   8.2
+    Chris Boswell         K    proj   8.1  scored   1.0  live fit   6.5 | +exit   6.5 | v1   6.5 | naive   6.7
+    Pittsburgh Steelers D/STDST  proj   8.1  scored   4.0  live fit   4.7 | +exit   4.7 | v1  10.0 | naive   9.7
+    Pat Freiermuth        TE   proj   7.9  scored   0.0  live fit   5.4 | +exit   5.4 | v1   5.2 | naive   5.6
+  CLE: in Q2 9:50 f=0.34 score 7.0-7.0
+  PIT: in Q2 9:50 f=0.34 score 7.0-7.0
+    Jaylen Warren         RB   proj  16.5  scored   7.5  live fit  18.9 | +exit  18.9 | v1  18.8 | naive  18.4
+    Aaron Rodgers         QB   proj  14.5  scored   6.0  live fit  16.5 | +exit  16.5 | v1  15.8 | naive  15.6
+    Deshaun Watson        QB   proj  14.0  scored   4.7  live fit  14.7 | +exit  14.7 | v1  14.0 | naive  14.0
+    Quinshon Judkins      RB   proj  11.7  scored   2.9  live fit  10.4 | +exit  10.4 | v1  10.5 | naive  10.7
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  11.9 | +exit  11.9 | v1  11.8 | naive  11.7
+    Harold Fannin         TE   proj  10.6  scored   2.3  live fit   9.3 | +exit   9.3 | v1   9.1 | naive   9.3
+    KC Concepcion         WR   proj  10.5  scored   4.6  live fit  11.8 | +exit  11.8 | v1  11.8 | naive  11.6
+    Michael Pittman Jr.   WR   proj   9.6  scored   1.9  live fit   8.2 | +exit   8.2 | v1   8.1 | naive   8.3
+    Denzel Boston         WR   proj   9.5  scored   8.5  live fit  15.5 | +exit  15.5 | v1  15.7 | naive  14.8
+    Chris Boswell         K    proj   8.1  scored   1.0  live fit   6.1 | +exit   6.1 | v1   6.1 | naive   6.4
+    Pittsburgh Steelers D/STDST  proj   8.1  scored   4.0  live fit   4.7 | +exit   4.7 | v1   9.6 | naive   9.4
+    Pat Freiermuth        TE   proj   7.9  scored   1.5  live fit   6.7 | +exit   6.7 | v1   6.5 | naive   6.7
+  CLE: in Q2 5:21 f=0.41 score 14.0-7.0
+  PIT: in Q2 5:21 f=0.41 score 7.0-14.0
+    Jaylen Warren         RB   proj  16.5  scored  10.1  live fit  21.0 | +exit  21.0 | v1  20.3 | naive  19.8
+    Aaron Rodgers         QB   proj  14.5  scored   6.6  live fit  17.0 | +exit  17.0 | v1  15.2 | naive  15.1
+    Deshaun Watson        QB   proj  14.0  scored   5.0  live fit  12.5 | +exit  12.5 | v1  13.1 | naive  13.2
+    Quinshon Judkins      RB   proj  11.7  scored  10.8  live fit  18.7 | +exit  18.7 | v1  18.6 | naive  17.7
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  11.7 | +exit  11.7 | v1  10.8 | naive  10.9
+    Harold Fannin         TE   proj  10.6  scored   2.3  live fit   7.8 | +exit   7.8 | v1   8.2 | naive   8.6
+    KC Concepcion         WR   proj  10.5  scored   4.6  live fit  10.3 | +exit  10.3 | v1  10.8 | naive  10.8
+    Michael Pittman Jr.   WR   proj   9.6  scored   3.5  live fit   9.9 | +exit   9.9 | v1   9.1 | naive   9.2
+    Denzel Boston         WR   proj   9.5  scored   8.5  live fit  14.1 | +exit  14.1 | v1  14.8 | naive  14.1
+    Chris Boswell         K    proj   8.1  scored   0.0  live fit   4.3 | +exit   4.3 | v1   4.3 | naive   4.8
+    Pittsburgh Steelers D/STDST  proj   8.1  scored   1.0  live fit   2.3 | +exit   2.3 | v1   5.4 | naive   5.8
+    Pat Freiermuth        TE   proj   7.9  scored   3.4  live fit   8.7 | +exit   8.7 | v1   8.1 | naive   8.1
+  CLE: in Q2 2:00 f=0.47 score 14.0-7.0
+  PIT: in Q2 2:00 f=0.47 score 7.0-14.0
+    Jaylen Warren         RB   proj  16.5  scored  10.1  live fit  19.5 | +exit  19.5 | v1  19.2 | naive  18.9
+    Aaron Rodgers         QB   proj  14.5  scored   6.6  live fit  15.4 | +exit  15.4 | v1  14.3 | naive  14.3
+    Deshaun Watson        QB   proj  14.0  scored   6.6  live fit  13.2 | +exit  13.2 | v1  14.1 | naive  14.1
+    Quinshon Judkins      RB   proj  11.7  scored  11.0  live fit  17.9 | +exit  17.9 | v1  18.0 | naive  17.2
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  10.6 | +exit  10.6 | v1  10.1 | naive  10.2
+    Harold Fannin         TE   proj  10.6  scored   2.3  live fit   7.0 | +exit   7.0 | v1   7.6 | naive   8.0
+    KC Concepcion         WR   proj  10.5  scored   9.8  live fit  15.1 | +exit  15.1 | v1  16.1 | naive  15.4
+    Michael Pittman Jr.   WR   proj   9.6  scored   3.5  live fit   9.0 | +exit   9.0 | v1   8.5 | naive   8.6
+    Denzel Boston         WR   proj   9.5  scored  10.4  live fit  15.3 | +exit  15.3 | v1  16.3 | naive  15.5
+    Chris Boswell         K    proj   8.1  scored   0.0  live fit   3.8 | +exit   3.8 | v1   3.8 | naive   4.3
+    Pittsburgh Steelers D/STDST  proj   8.1  scored   1.0  live fit   2.0 | +exit   2.0 | v1   5.0 | naive   5.3
+    Pat Freiermuth        TE   proj   7.9  scored   3.4  live fit   7.9 | +exit   7.9 | v1   7.6 | naive   7.6
+  CLE: in Q2 1:22 f=0.48 score 21.0-7.0
+  PIT: in Q2 1:22 f=0.48 score 7.0-21.0
+    Jaylen Warren         RB   proj  16.5  scored  10.1  live fit  19.5 | +exit  19.5 | v1  19.0 | naive  18.7
+    Aaron Rodgers         QB   proj  14.5  scored   6.6  live fit  16.2 | +exit  16.2 | v1  14.1 | naive  14.1
+    Deshaun Watson        QB   proj  14.0  scored  11.2  live fit  17.3 | +exit  17.3 | v1  19.1 | naive  18.6
+    Quinshon Judkins      RB   proj  11.7  scored  14.6  live fit  21.7 | +exit  21.7 | v1  21.9 | naive  20.7
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  11.1 | +exit  11.1 | v1   9.9 | naive  10.1
+    Harold Fannin         TE   proj  10.6  scored   9.5  live fit  14.0 | +exit  14.0 | v1  15.6 | naive  15.0
+    KC Concepcion         WR   proj  10.5  scored   9.8  live fit  14.3 | +exit  14.3 | v1  15.9 | naive  15.3
+    Michael Pittman Jr.   WR   proj   9.6  scored   3.5  live fit   9.3 | +exit   9.3 | v1   8.4 | naive   8.5
+    Denzel Boston         WR   proj   9.5  scored  10.4  live fit  14.6 | +exit  14.6 | v1  16.1 | naive  15.4
+    Chris Boswell         K    proj   8.1  scored   0.0  live fit   3.7 | +exit   3.7 | v1   3.7 | naive   4.2
+    Pittsburgh Steelers D/STDST  proj   8.1  scored   0.0  live fit   0.8 | +exit   0.8 | v1   3.7 | naive   4.2
+    Pat Freiermuth        TE   proj   7.9  scored   3.4  live fit   8.2 | +exit   8.2 | v1   7.5 | naive   7.5
+  CLE: in Q2 0:08 f=0.50 score 21.0-10.0
+  PIT: in Q2 0:08 f=0.50 score 10.0-21.0
+    Jaylen Warren         RB   proj  16.5  scored  10.1  live fit  18.9 | +exit  18.9 | v1  18.6 | naive  18.4
+    Aaron Rodgers         QB   proj  14.5  scored   8.5  live fit  17.4 | +exit  17.4 | v1  16.0 | naive  15.8
+    Deshaun Watson        QB   proj  14.0  scored  11.2  live fit  17.2 | +exit  17.2 | v1  18.8 | naive  18.3
+    Quinshon Judkins      RB   proj  11.7  scored  14.6  live fit  21.4 | +exit  21.4 | v1  21.6 | naive  20.5
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  10.4 | +exit  10.4 | v1   9.7 | naive   9.9
+    Harold Fannin         TE   proj  10.6  scored   9.5  live fit  14.0 | +exit  14.0 | v1  15.3 | naive  14.8
+    KC Concepcion         WR   proj  10.5  scored   9.8  live fit  14.2 | +exit  14.2 | v1  15.7 | naive  15.1
+    Michael Pittman Jr.   WR   proj   9.6  scored   3.5  live fit   8.8 | +exit   8.8 | v1   8.2 | naive   8.3
+    Denzel Boston         WR   proj   9.5  scored  10.4  live fit  14.6 | +exit  14.6 | v1  15.9 | naive  15.2
+    Chris Boswell         K    proj   8.1  scored   3.0  live fit   6.9 | +exit   6.9 | v1   6.9 | naive   7.1
+    Pittsburgh Steelers D/STDST  proj   8.1  scored   0.0  live fit   0.9 | +exit   0.9 | v1   3.6 | naive   4.1
+    Pat Freiermuth        TE   proj   7.9  scored   3.4  live fit   7.8 | +exit   7.8 | v1   7.3 | naive   7.4
+  CLE: in HALF f=0.50 score 21.0-10.0
+  PIT: in HALF f=0.50 score 10.0-21.0
+    Jaylen Warren         RB   proj  16.5  scored  10.1  live fit  18.8 | +exit  18.8 | v1  18.6 | naive  18.4
+    Aaron Rodgers         QB   proj  14.5  scored   8.5  live fit  17.4 | +exit  17.4 | v1  15.9 | naive  15.8
+    Deshaun Watson        QB   proj  14.0  scored  11.1  live fit  17.1 | +exit  17.1 | v1  18.7 | naive  18.1
+    Quinshon Judkins      RB   proj  11.7  scored  14.6  live fit  21.4 | +exit  21.4 | v1  21.5 | naive  20.4
+    DK Metcalf            WR   proj  11.3  scored   4.2  live fit  10.4 | +exit  10.4 | v1   9.7 | naive   9.8

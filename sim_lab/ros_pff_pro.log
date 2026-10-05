@@ -1,0 +1,27 @@
+=== rest-of-season PFF Pro tilts: 9567 checkpoints ===
+
+--- WR: positively graded play rate (n=3970) ---
+  WR graded-play-rate tilt              picks [0.02, 0.0, 0.02, 0.02, 0.02, 0.02, 0.02]  ROS MSE  +0.04% (3/7)  level-weighted  +0.39% (3/7)
+      graded-play rate low  n=1296  ROS/live 0.973
+      graded-play rate mid  n=1523  ROS/live 1.003
+      graded-play rate high n=1151  ROS/live 1.024
+
+--- TE: positively graded play rate (n=1378) ---
+  TE graded-play-rate tilt              picks [0.02, 0.02, 0.02, 0.04, 0.04, 0.02, 0.04]  ROS MSE  +0.27% (4/7)  level-weighted  +1.47% (5/7)
+  TE shipped pass-rate tilt alone (e .08) picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  ROS MSE  -5.03% (5/7)  level-weighted  -5.65% (5/7)
+  TE graded tilt ON TOP of shipped tilt picks [0.02, 0.02, 0.02, 0.04, 0.04, 0.02, 0.04]  ROS MSE  -5.18% (5/7)  level-weighted  -5.29% (4/7)
+  (vs the shipped tilt as the base:)
+  TE graded tilt ON TOP of shipped tilt picks [0.02, 0.02, 0.02, 0.04, 0.04, 0.02, 0.04]  ROS MSE  -0.16% (4/7)  level-weighted  +0.39% (5/7)
+      graded-play rate low  n= 507  ROS/live 1.005
+      graded-play rate mid  n= 470  ROS/live 1.062
+      graded-play rate high n= 401  ROS/live 1.109
+
+--- RB: own offense (n=2493) ---
+  RB blitzed-rate tilt                  picks [0.06, 0.04, 0.04, 0.04, 0.04, 0.06, 0.04]  ROS MSE  -0.88% (5/7)  level-weighted  -0.54% (5/7)
+  RB offense success-rate tilt          picks [0.04, 0.04, 0.04, 0.04, 0.02, 0.06, 0.04]  ROS MSE  -0.49% (4/7)  level-weighted  -0.67% (5/7)
+      blitzed low  n= 792  ROS/live 1.069
+      blitzed mid  n= 933  ROS/live 1.029
+      blitzed high n= 768  ROS/live 0.953
+      success low  n= 808  ROS/live 1.069
+      success mid  n= 936  ROS/live 1.021
+      success high n= 749  ROS/live 0.967

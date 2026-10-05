@@ -15,7 +15,14 @@
 // games estimated from Clay's point split).
 // ============================================================================
 window.QB_ROOM_OVERRIDES = {
-  ATL: [['Cooper Rush', 2], ['Michael Penix Jr.', 15], ['Tua Tagovailoa', 0]],   // 2026-09-23 (Jack): Rush started W1-2, Penix announced starter from W3 on; Tua 0 = benched (Penix keeps Clay's per-start rate)
+  ATL: [['Cooper Rush', 2], ['Michael Penix Jr.', 15], ['Tua Tagovailoa', 0]],   // 2026-09-23 (Jack): Rush started W1-2, Penix announced starter from W3 on; Tua 0 = benched (Penix keeps Clay's per-start rate). 2026-10-02 (Jack): Penix is the starter the rest of the season barring injury - unchanged
+  // 2026-10-02 (Jack): "both browns and raiders starting qbs have played well so I would assume they go further into
+  // the season". The preseason guess had Cousins handing off after 4 games and Watson after 7. No switch is announced,
+  // so the handoff is moved to each team's BYE (my reading of "further" - Jack gave no week): Cousins starts through
+  // week 12 (LV bye 13), Watson through week 10 (CLE bye 11). Set the veteran to 17 / the rookie to 0 if he keeps
+  // the job all year, or move the split when a change is announced.
+  LV:  [['Kirk Cousins', 12], ['Fernando Mendoza', 5]],
+  CLE: [['Deshaun Watson', 10], ['Shedeur Sanders', 7]],
 };
 
 // INJURY_WINDOW_OVERRIDES: correct a start-of-season injury window when news
@@ -35,8 +42,20 @@ window.INJURY_WINDOW_OVERRIDES = {
 // Examples:
 //   'Puka Nacua': [5, 6],     // "out ~2 weeks" — weeks 5-6 zeroed
 //   'Bijan Robinson': 0,      // tag is stale — confirmed playing
+//
+// 2026-10-01 (injury signals): the news feed now fills these windows by itself
+// (data/sim_injury_signals.js: "out 4-6 weeks", "out until week 7", "out for the
+// season", "ruled out"), so this list is for what the news cannot say. Rules:
+//   - an entry here wins over the news UNLESS the news item is newer than the entry.
+//     An entry's date = an optional third element, [from, to, 'YYYY-MM-DD'];
+//     entries without one use IN_SEASON_OUT_OVERRIDES_ASOF below.
+//   - once a window has ended (to < current week) it no longer speaks for the
+//     player: his current designation takes over (it used to read as "healthy").
+// Bump the ASOF date whenever the whole list is re-checked.
+window.IN_SEASON_OUT_OVERRIDES_ASOF = '2026-09-27';
 window.IN_SEASON_OUT_OVERRIDES = {
   'Brock Bowers': [1, 1],   // 2026-09-09: ruled out for Week 1 (Jack)
+  'Justin Jefferson': [4, 4, '2026-10-02'],   // 2026-10-02 (Jack): out this week (ankle sprain from W3; feed only had a DNP, no game status yet)
   'Sam Darnold': 0,         // 2026-09-27: off the injury report, full practice, "ready to go" W3 (was [2, 6] from the Sep 15 4-6 week report)
   'Jordan Mason': [2, 6],   // 2026-09-16: placed on IR (thumb surgery) — earliest return W7 vs IND (MIN bye W6); Aaron Jones absorbs the RB pool
   'Jaxson Dart': [3, 18],   // 2026-09-23 (Jack): out for the season — Jameis Winston starts (QB 85% next-man-up)

@@ -1,0 +1,33 @@
+=== own team totals: weight of the preseason rating by point in the season (2019-25, live timing) ===
+
+  miss vs the eventual closing line, results at the shipped schedule; ridge across (bigger = more preseason):
+    standing after   never updated   ridge 0.5    ridge 1.0    ridge 2.0    ridge 4.0    ridge 8.0    ridge 16.0   best (LOSO picks)
+    week 2           2.623           2.069        2.037        2.029        2.037        2.049        2.059       [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+    week 3           2.660           2.052        2.027        2.021        2.036        2.057        2.075       [2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 2.0]
+    week 4           2.705           1.946        1.931        1.931        1.948        1.972        1.994       [2.0, 2.0, 1.0, 1.0, 2.0, 1.0, 2.0]
+    week 6           2.784           1.847        1.849        1.872        1.913        1.957        1.993       [0.5, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0]
+    week 8           2.852           1.761        1.765        1.793        1.840        1.895        1.942       [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0]
+    week 10          2.939           1.690        1.707        1.753        1.818        1.885        1.938       [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    week 12          3.055           1.628        1.643        1.692        1.768        1.848        1.910       [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+  same, graded on POINTS ACTUALLY SCORED (MSE vs the shipped ridge 2, %):
+    week 2    ridge 0.5: +0.39%   ridge 1.0: +0.09%   ridge 2.0: +0.00%   ridge 4.0: +0.04%   ridge 8.0: +0.13%   ridge 16.0: +0.19%   picks [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+    week 3    ridge 0.5: +0.22%   ridge 1.0: +0.01%   ridge 2.0: +0.00%   ridge 4.0: +0.13%   ridge 8.0: +0.30%   ridge 16.0: +0.44%   picks [2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0]
+    week 4    ridge 0.5: +0.24%   ridge 1.0: +0.04%   ridge 2.0: +0.00%   ridge 4.0: +0.11%   ridge 8.0: +0.29%   ridge 16.0: +0.45%   picks [2.0, 2.0, 1.0, 1.0, 1.0, 2.0, 2.0]
+    week 6    ridge 0.5: -0.01%   ridge 1.0: -0.09%   ridge 2.0: +0.00%   ridge 4.0: +0.25%   ridge 8.0: +0.56%   ridge 16.0: +0.83%   picks [0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0]
+    week 8    ridge 0.5: -0.16%   ridge 1.0: -0.16%   ridge 2.0: +0.00%   ridge 4.0: +0.31%   ridge 8.0: +0.68%   ridge 16.0: +1.00%   picks [0.5, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0]
+    week 10   ridge 0.5: -0.52%   ridge 1.0: -0.35%   ridge 2.0: +0.00%   ridge 4.0: +0.48%   ridge 8.0: +0.97%   ridge 16.0: +1.35%   picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    week 12   ridge 0.5: -0.60%   ridge 1.0: -0.38%   ridge 2.0: +0.00%   ridge 4.0: +0.55%   ridge 8.0: +1.14%   ridge 16.0: +1.61%   picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+  results weight (x the shipped schedule), ridge 2 - miss vs closing line / points MSE vs shipped:
+    week 2    x0.0: +2.99% / +0.24%   x0.5: +0.72% / +0.01%   x1.0: +0.00% / +0.00%   x1.5: +0.87% / +0.22%   picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    week 3    x0.0: +2.45% / +0.14%   x0.5: -0.36% / -0.15%   x1.0: +0.00% / +0.00%   x1.5: +3.49% / +0.58%   picks [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    week 4    x0.0: +4.05% / +0.17%   x0.5: +0.65% / -0.09%   x1.0: +0.00% / +0.00%   x1.5: +1.95% / +0.43%   picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    week 6    x0.0: +5.60% / -0.22%   x0.5: +1.71% / -0.25%   x1.0: +0.00% / +0.00%   x1.5: +0.64% / +0.52%   picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    week 8    x0.0: +6.09% / +0.63%   x0.5: +1.07% / +0.11%   x1.0: +0.00% / +0.00%   x1.5: +2.89% / +0.30%   picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    week 10   x0.0: +6.89% / +0.84%   x0.5: +1.50% / +0.23%   x1.0: +0.00% / +0.00%   x1.5: +2.07% / +0.15%   picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    week 12   x0.0: +9.13% / +1.10%   x0.5: +2.78% / +0.37%   x1.0: +0.00% / +0.00%   x1.5: +1.85% / -0.00%   picks [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
+  a week-by-week schedule (ridge and results weight re-picked at every checkpoint, leave-one-season-out) vs the flat shipped setting: 1.895 vs 1.909 (-0.74%, 6/7 seasons)
+  flat ridge 1.0 everywhere: 1.897 (-0.62% vs shipped, 6/7 seasons)
+  flat ridge 4.0 everywhere: 1.939 (+1.61% vs shipped, 0/7 seasons)

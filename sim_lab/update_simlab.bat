@@ -28,6 +28,12 @@ if errorlevel 1 (
 python pull_pace_tracker.py >> "%LOG%" 2>&1
 if errorlevel 1 echo PACE PULL FAILED - continuing >> "%LOG%"
 
+REM Team totals again (2026-10-02): refresh_data.py built them BEFORE the pace pull above downloaded
+REM the newest play-by-play, so last night's results were one run behind. Rebuild now that the
+REM results are in (our own future team totals: build_own_totals.py). Non-fatal.
+python build_own_totals.py --quiet >> "%LOG%" 2>&1
+if errorlevel 1 echo OWN TOTALS REBUILD FAILED - continuing >> "%LOG%"
+
 REM NOTES sheet (2026-09-15): headless twin of the NOTES tab -> notes/notes_w<N>_half.txt
 REM + notes/notes_latest.txt (deploys with the site: /notes/notes_latest.txt). Non-fatal.
 set NODE=E:\node\node.exe

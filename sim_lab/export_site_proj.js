@@ -70,12 +70,14 @@ global.window = global;
   'data/sim_routes.js',
   'data/sim_weather.js',
   'data/sim_practice.js',
+  'data/sim_injury_signals.js',
   'data/sim_news.js',
   'data/sim_context.js',
   'data/opp_prior_2026.js',
   'data/learned_shadow_model.js',
   'data/sim_depth.js',
   'data/sim_2026.js',
+  'data/sim_actuals_2026.js',
   'data/pace_2026.js',
   'data/sim_tuning.js',
   'overrides.js',
@@ -436,6 +438,68 @@ function kickoffMs(kicks, wk, tm) {
   (players.list || []).forEach(p => { if (!p.isDST && XM[p.norm] && XM[p.norm].w) xfp[p.name] = XM[p.norm].w; });
   console.log('xFP rows for the card: ' + Object.keys(xfp).length);
 
+  // INJURY BOARD for the site's rankings INJ view (2026-10-05, Jack: "an injuries filter in rankings ... the
+  // estimate return week it can be a range"). The injury layer's own read per player, so the return estimate
+  // the site shows is the one inside the projections. inj[name] = { f, t: the zeroed / docked window (weeks),
+  // m: multiplier inside it, pl: the P(plays) part of a one-week dock, src, g: injury group, c: {wk: P(plays)}
+  // for the game weeks after the window (availability curve / news soft landing), k: games missed in a row
+  // including the window, pm: team games already missed in a row before this week, nx: first game week after
+  // the window, rr: first-game-back multiplier (return ramp) at nx, sq / gs: this week's practice sequence and
+  // NFL game status, nt: the news line behind a news window, kd: 1 = his team's game this week has kicked off,
+  // pd: 1 = he has a game row this week }. Non-fatal: a failure here never blocks the projections.
+  const inj = {};
+  // teams whose game this week has kicked off (engine team codes, as in teamOf) - tells the site that a
+  // designation with no row above speaks for a game already played
+  const injKd = [];
+  try {
+    Object.keys((schedule.gameWeeks) || {}).forEach(tm => {
+      if (schedule.gameWeeks[tm].indexOf(currentWeek) >= 0 && now >= kickoffMs(kicks, currentWeek, tm)) injKd.push(tm);
+    });
+    const J26 = (global.SIM_2026 && global.SIM_2026.players) || {};
+    const byNm = {};
+    (players.list || []).forEach(p => { if (!p.isDST) byNm[p.name] = p; });
+    injState.zeros.forEach(z => {
+      const p = byNm[z.name];
+      if (!p) return;
+      const gw = (schedule.gameWeeks && schedule.gameWeeks[p.tm]) || [];
+      const wks = (J26[p.norm] && J26[p.norm].wks) || [];
+      let pm = 0;
+      for (let gi = gw.length - 1; gi >= 0; gi--) {
+        if (gw[gi] >= currentWeek) continue;
+        if (wks.indexOf(gw[gi]) >= 0) break;
+        pm++;
+      }
+      const nx = gw.find(w => w > z.to) || null;
+      const sig = E.injSignalInfo(p, currentWeek) || {};
+      const o = { f: z.from, t: z.to, m: z.mult, src: z.src, pm: pm, nx: nx };
+      if (z.play != null) o.pl = z.play;
+      if (z.g || sig.g) o.g = z.g || sig.g;
+      if (z.curve && Object.keys(z.curve).length) o.c = z.curve;
+      if (z.missed != null) o.k = z.missed;
+      if (nx != null) { const rr = E.returnDock(p, nx, schedule); if (rr !== 1) o.rr = rr; }
+      if (sig.seq) o.sq = sig.seq;
+      if (sig.gs) o.gs = sig.gs;
+      if (z.note && /^news/.test(z.src)) o.nt = String(z.note).slice(0, 160);
+      if (gw.indexOf(currentWeek) >= 0 && now >= kickoffMs(kicks, currentWeek, p.tm)) o.kd = 1;
+      if (wks.indexOf(currentWeek) >= 0) o.pd = 1;
+      inj[p.name] = o;
+    });
+    console.log('injury board rows for the rankings INJ view: ' + Object.keys(inj).length);
+  } catch (e) { console.warn('injury board skipped: ' + e.message); }
+  // The research tables behind the layer, for the INJ view's TIMELINE column ("typical" absence length / play
+  // odds): data/avail_curve_v2.json (backtest_avail_recency.py: P(misses the next game | missed k) pooled and by
+  // position, logit shift by injury group at k = 1 / 2 / 3+) and data/injury_type_play.json
+  // (backtest_injury_type_play.py: Questionable play odds by practice level x position, logit shift by injury).
+  let injRes = null;
+  try {
+    const av = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'avail_curve_v2.json'), 'utf8'));
+    const pl = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'injury_type_play.json'), 'utf8'));
+    const arr = o => [1, 2, 3, 4, 5, 6, 7, 8].map(k => o[k]);
+    const pos = {}; Object.keys(av.pos || {}).forEach(p => { pos[p] = arr(av.pos[p]); });
+    const grp = {}; Object.keys(av.grpShift || {}).forEach(g => { grp[g] = [1, 2, 3].map(k => av.grpShift[g][k] || 0); });
+    injRes = { asOf: av.asOf, cont: arr(av.cont), pos: pos, grp: grp, play: pl.play, playAll: pl.classRate, shift: pl.shift };
+  } catch (e) { console.warn('injury research tables skipped: ' + e.message); }
+
   const payload = {
     updated: new Date().toISOString(),
     season: SEASON,
@@ -450,7 +514,10 @@ function kickoffMs(kicks, wk, tm) {
     baselinePpg: baselinePpg,
     teamOf: teamOf,
     luck: luck,
-    xfp: xfp
+    xfp: xfp,
+    inj: inj,
+    injKd: injKd,
+    injRes: injRes
   };
   fs.writeFileSync(OUT_JSON, JSON.stringify(payload));
   const jsHeader =
@@ -460,7 +527,8 @@ function kickoffMs(kicks, wk, tm) {
     '// Rows for teams whose game already kicked off are FROZEN at their\n' +
     '// pre-kickoff values by the exporter (never recomputed).\n' +
     '// luck[name] = [pos, expectedTD|expectedKickPts, actual, games, adjThisWeekHalf|null, weekly xtd/td map|null] (card TD/FG LUCK box).\n' +
-    '// xfp[name][wk] = expected components: RB/WR/TE tg,xrec,xrecyd,xrectd,car,xruyd,xrutd; QB att,xpyd,xptd,car,xruyd,xrutd,xint (card xFP column; targets via nflfastR cp/xYAC, xint = expected INTs).\n';
+    '// xfp[name][wk] = expected components: RB/WR/TE tg,xrec,xrecyd,xrectd,car,xruyd,xrutd; QB att,xpyd,xptd,car,xruyd,xrutd,xint (card xFP column; targets via nflfastR cp/xYAC, xint = expected INTs).\n' +
+    '// inj[name] = the injury layer\'s read (rankings INJ view): f,t window; m mult; pl P(plays); src; g group; c {wk: P(plays)} after the window; k / pm games missed; nx first game week back; rr first-game-back multiplier; sq practice; gs game status; nt news line; kd kicked off; pd played.\n';
   fs.writeFileSync(OUT_JS, jsHeader + 'window.SIM_PROJ_2026 = ' + JSON.stringify(payload) + ';\n');
   const kb = Math.round(fs.statSync(OUT_JS).size / 1024);
   console.log('wrote ' + OUT_JS + ' (' + kb + ' KB)');

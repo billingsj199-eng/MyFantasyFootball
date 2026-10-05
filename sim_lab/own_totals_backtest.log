@@ -1,0 +1,188 @@
+
+=== our own future team totals, 2019-25: ratings + quarterback + weather (shipped form) vs + skill injuries / + results - lines through the checkpoint week only ===
+  team-games: 3742; with a skill starter out: 26%, average value missing when any 13.1 pts
+  closing line minus the preseason view, by skill value missing: none -0.09 (n 2535)  8-12 -0.37 (n 577)  12-20 -1.26 (n 292)  20+ -2.50 (n 114)
+
+  ALL future games, every checkpoint  (n=16590 team-games)
+    preseason rating, never updated          miss vs the closing line 2.714
+    OUR TOTALS (ratings + QB + weather)      2.258  (-16.8%)   points-scored MSE -4.39%
+    + skill injuries, ORACLE future (ceiling)    2.209  (-2.14% vs our totals, 5/7 seasons)  k picks [0.1, 0.08, 0.08, 0.08, 0.08, 0.08, 0.1]   pooled: 0.02:-0.91% 0.04:-1.62% 0.06:-2.11% 0.08:-2.33% 0.1:-2.27% 0.13:-1.77%
+    + skill injuries, TIMELINES KNOWN (out now)  2.260  (+0.09% vs our totals, 0/7 seasons)  k picks [0.02, 0.0, 0.02, 0.0, 0.02, 0.0, 0.02]   pooled: 0.02:+0.01% 0.04:+0.08% 0.06:+0.21% 0.08:+0.41% 0.1:+0.68% 0.13:+1.23%
+    + skill injuries, REALISTIC (out now x curve) 2.259  (+0.05% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.04% 0.04:+0.11% 0.06:+0.21% 0.08:+0.37% 0.1:+0.57% 0.13:+0.96%
+    + flat dock, new QB with no lines yet        2.039  (-9.70% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-5.05% -2.0:-8.48% -3.0:-9.70% -4.0:-8.96%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.907  (-15.51% vs our totals, 7/7 seasons; -29.7% vs never updated)   points-scored MSE -2.55% vs our totals
+    + results (scoring surprise)                 2.125  (-5.87% vs our totals, 7/7 seasons)  weight picks [0.2, 0.15, 0.2, 0.2, 0.2, 0.15, 0.2]   pooled: 0.05:-2.88% 0.1:-4.91% 0.15:-5.98% 0.2:-6.04% 0.3:-3.15%
+
+  standing after week 2  (n=3294 team-games)
+    preseason rating, never updated          miss vs the closing line 2.577
+    OUR TOTALS (ratings + QB + weather)      2.407  (-6.6%)   points-scored MSE -1.92%
+    + skill injuries, ORACLE future (ceiling)    2.387  (-0.83% vs our totals, 4/7 seasons)  k picks [0.08, 0.08, 0.04, 0.06, 0.06, 0.06, 0.08]   pooled: 0.02:-0.64% 0.04:-1.05% 0.06:-1.25% 0.08:-1.22% 0.1:-0.95% 0.13:-0.15%
+    + skill injuries, TIMELINES KNOWN (out now)  2.410  (+0.10% vs our totals, 0/7 seasons)  k picks [0.02, 0.0, 0.0, 0.04, 0.0, 0.0, 0.0]   pooled: 0.02:+0.02% 0.04:+0.05% 0.06:+0.12% 0.08:+0.21% 0.1:+0.33% 0.13:+0.57%
+    + skill injuries, REALISTIC (out now x curve) 2.410  (+0.10% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.04, 0.0, 0.0, 0.0]   pooled: 0.02:+0.03% 0.04:+0.07% 0.06:+0.12% 0.08:+0.19% 0.1:+0.27% 0.13:+0.42%
+    + flat dock, new QB with no lines yet        2.198  (-8.67% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-4.94% -2.0:-8.02% -3.0:-8.67% -4.0:-7.05%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 2.099  (-12.79% vs our totals, 7/7 seasons; -18.5% vs never updated)   points-scored MSE -2.32% vs our totals
+    + results (scoring surprise)                 2.313  (-3.92% vs our totals, 7/7 seasons)  weight picks [0.15, 0.1, 0.15, 0.15, 0.15, 0.15, 0.15]   pooled: 0.05:-2.54% 0.1:-4.04% 0.15:-4.21% 0.2:-3.11% 0.3:+2.82%
+
+  standing after week 4  (n=2850 team-games)
+    preseason rating, never updated          miss vs the closing line 2.660
+    OUR TOTALS (ratings + QB + weather)      2.288  (-14.0%)   points-scored MSE -3.78%
+    + skill injuries, ORACLE future (ceiling)    2.247  (-1.79% vs our totals, 6/7 seasons)  k picks [0.1, 0.08, 0.06, 0.08, 0.08, 0.08, 0.1]   pooled: 0.02:-0.90% 0.04:-1.58% 0.06:-2.01% 0.08:-2.20% 0.1:-2.10% 0.13:-1.56%
+    + skill injuries, TIMELINES KNOWN (out now)  2.294  (+0.25% vs our totals, 0/7 seasons)  k picks [0.04, 0.0, 0.02, 0.0, 0.04, 0.0, 0.0]   pooled: 0.02:+0.00% 0.04:+0.05% 0.06:+0.16% 0.08:+0.33% 0.1:+0.58% 0.13:+1.06%
+    + skill injuries, REALISTIC (out now x curve) 2.295  (+0.31% vs our totals, 0/7 seasons)  k picks [0.06, 0.0, 0.06, 0.0, 0.04, 0.0, 0.0]   pooled: 0.02:-0.02% 0.04:-0.02% 0.06:+0.01% 0.08:+0.10% 0.1:+0.25% 0.13:+0.56%
+    + flat dock, new QB with no lines yet        2.070  (-9.52% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-5.06% -2.0:-8.53% -3.0:-9.52% -4.0:-8.48%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.948  (-14.84% vs our totals, 7/7 seasons; -26.7% vs never updated)   points-scored MSE -2.44% vs our totals
+    + results (scoring surprise)                 2.158  (-5.67% vs our totals, 7/7 seasons)  weight picks [0.2, 0.2, 0.2, 0.2, 0.2, 0.15, 0.2]   pooled: 0.05:-2.83% 0.1:-4.76% 0.15:-5.82% 0.2:-5.89% 0.3:-3.24%
+
+  standing after week 8  (n=2040 team-games)
+    preseason rating, never updated          miss vs the closing line 2.818
+    OUR TOTALS (ratings + QB + weather)      2.178  (-22.7%)   points-scored MSE -5.34%
+    + skill injuries, ORACLE future (ceiling)    2.105  (-3.35% vs our totals, 6/7 seasons)  k picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]   pooled: 0.02:-1.11% 0.04:-2.02% 0.06:-2.74% 0.08:-3.20% 0.1:-3.35% 0.13:-3.06%
+    + skill injuries, TIMELINES KNOWN (out now)  2.185  (+0.30% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 0.04]   pooled: 0.02:+0.03% 0.04:+0.14% 0.06:+0.32% 0.08:+0.61% 0.1:+1.01% 0.13:+1.81%
+    + skill injuries, REALISTIC (out now x curve) 2.182  (+0.19% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.04, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.05% 0.04:+0.15% 0.06:+0.31% 0.08:+0.53% 0.1:+0.80% 0.13:+1.35%
+    + flat dock, new QB with no lines yet        1.946  (-10.66% vs our totals, 7/7 seasons)  picks [-4.0, -4.0, -3.0, -3.0, -4.0, -3.0, -3.0]   pooled: -1.0:-5.37% -2.0:-9.32% -3.0:-11.26% -4.0:-11.26%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.768  (-18.85% vs our totals, 7/7 seasons; -37.3% vs never updated)   points-scored MSE -3.18% vs our totals
+    + results (scoring surprise)                 2.013  (-7.58% vs our totals, 7/7 seasons)  weight picks [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]   pooled: 0.05:-2.95% 0.1:-5.24% 0.15:-6.83% 0.2:-7.58% 0.3:-6.74%
+
+  standing after week 12  (n=1242 team-games)
+    preseason rating, never updated          miss vs the closing line 2.965
+    OUR TOTALS (ratings + QB + weather)      2.091  (-29.5%)   points-scored MSE -7.79%
+    + skill injuries, ORACLE future (ceiling)    2.014  (-3.69% vs our totals, 6/7 seasons)  k picks [0.13, 0.13, 0.13, 0.1, 0.13, 0.1, 0.13]   pooled: 0.02:-1.17% 0.04:-2.25% 0.06:-3.12% 0.08:-3.68% 0.1:-4.02% 0.13:-4.12%
+    + skill injuries, TIMELINES KNOWN (out now)  2.105  (+0.65% vs our totals, 0/7 seasons)  k picks [0.0, 0.02, 0.04, 0.0, 0.02, 0.0, 0.06]   pooled: 0.02:-0.01% 0.04:+0.02% 0.06:+0.13% 0.08:+0.36% 0.1:+0.72% 0.13:+1.46%
+    + skill injuries, REALISTIC (out now x curve) 2.102  (+0.54% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.06, 0.0, 0.0, 0.0, 0.02]   pooled: 0.02:+0.06% 0.04:+0.17% 0.06:+0.32% 0.08:+0.50% 0.1:+0.71% 0.13:+1.12%
+    + flat dock, new QB with no lines yet        1.815  (-13.21% vs our totals, 7/7 seasons)  picks [-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0]   pooled: -1.0:-5.45% -2.0:-9.34% -3.0:-12.03% -4.0:-13.21%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.653  (-20.94% vs our totals, 7/7 seasons; -44.2% vs never updated)   points-scored MSE -3.73% vs our totals
+    + results (scoring surprise)                 1.905  (-8.88% vs our totals, 7/7 seasons)  weight picks [0.2, 0.3, 0.3, 0.3, 0.3, 0.3, 0.2]   pooled: 0.05:-3.35% 0.1:-6.12% 0.15:-8.19% 0.2:-9.42% 0.3:-9.60%
+
+  future games started by a quarterback who is not the opening starter and had no lines yet  (n=3069 team-games)
+    preseason rating, never updated          miss vs the closing line 3.833
+    OUR TOTALS (ratings + QB + weather)      3.693  (-3.7%)   points-scored MSE -1.44%
+    + skill injuries, ORACLE future (ceiling)    3.257  (-11.81% vs our totals, 7/7 seasons)  k picks [0.13, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13]   pooled: 0.02:-2.07% 0.04:-4.08% 0.06:-6.01% 0.08:-7.85% 0.1:-9.53% 0.13:-11.81%
+    + skill injuries, TIMELINES KNOWN (out now)  3.693  (+0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.16% 0.04:+0.32% 0.06:+0.50% 0.08:+0.68% 0.1:+0.87% 0.13:+1.18%
+    + skill injuries, REALISTIC (out now x curve) 3.693  (+0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.11% 0.04:+0.21% 0.06:+0.32% 0.08:+0.44% 0.1:+0.55% 0.13:+0.73%
+    + flat dock, new QB with no lines yet        2.510  (-32.04% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-16.69% -2.0:-28.03% -3.0:-32.04% -4.0:-29.60%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 2.468  (-33.18% vs our totals, 7/7 seasons; -35.6% vs never updated)   points-scored MSE -9.95% vs our totals
+    + results (scoring surprise)                 3.622  (-1.93% vs our totals, 5/7 seasons)  weight picks [0.15, 0.2, 0.15, 0.15, 0.2, 0.2, 0.2]   pooled: 0.05:-1.03% 0.1:-1.79% 0.15:-2.23% 0.2:-2.33% 0.3:-1.55%
+
+  future games where the team has a skill starter out AT THE CHECKPOINT (expected missing > 0)  (n=2512 team-games)
+    preseason rating, never updated          miss vs the closing line 2.638
+    OUR TOTALS (ratings + QB + weather)      2.027  (-23.2%)   points-scored MSE -6.14%
+    + skill injuries, ORACLE future (ceiling)    1.959  (-3.31% vs our totals, 4/7 seasons)  k picks [0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.1]   pooled: 0.02:-1.48% 0.04:-2.61% 0.06:-3.37% 0.08:-3.58% 0.1:-3.35% 0.13:-2.08%
+    + skill injuries, TIMELINES KNOWN (out now)  2.019  (-0.37% vs our totals, 4/7 seasons)  k picks [0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.06]   pooled: 0.02:-0.40% 0.04:-0.55% 0.06:-0.41% 0.08:+0.05% 0.1:+0.84% 0.13:+2.73%
+    + skill injuries, REALISTIC (out now x curve) 2.021  (-0.25% vs our totals, 5/7 seasons)  k picks [0.06, 0.06, 0.08, 0.04, 0.06, 0.06, 0.06]   pooled: 0.02:-0.24% 0.04:-0.38% 0.06:-0.43% 0.08:-0.33% 0.1:-0.09% 0.13:+0.52%
+    + flat dock, new QB with no lines yet        1.855  (-8.44% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -4.0, -3.0, -3.0]   pooled: -1.0:-4.66% -2.0:-7.77% -3.0:-8.99% -4.0:-8.65%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.685  (-16.83% vs our totals, 7/7 seasons; -36.1% vs never updated)   points-scored MSE -3.51% vs our totals
+    + results (scoring surprise)                 1.878  (-7.32% vs our totals, 7/7 seasons)  weight picks [0.2, 0.2, 0.15, 0.2, 0.2, 0.15, 0.2]   pooled: 0.05:-3.49% 0.1:-6.13% 0.15:-7.58% 0.2:-7.71% 0.3:-4.47%
+
+  future games where a skill starter actually missed that game  (n=5077 team-games)
+    preseason rating, never updated          miss vs the closing line 3.030
+    OUR TOTALS (ratings + QB + weather)      2.654  (-12.4%)   points-scored MSE -3.53%
+    + skill injuries, ORACLE future (ceiling)    2.468  (-6.98% vs our totals, 6/7 seasons)  k picks [0.1, 0.1, 0.08, 0.1, 0.1, 0.1, 0.1]   pooled: 0.02:-2.55% 0.04:-4.62% 0.06:-6.16% 0.08:-7.09% 0.1:-7.37% 0.13:-6.87%
+    + skill injuries, TIMELINES KNOWN (out now)  2.655  (+0.05% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 0.02]   pooled: 0.02:+0.02% 0.04:+0.11% 0.06:+0.27% 0.08:+0.52% 0.1:+0.83% 0.13:+1.47%
+    + skill injuries, REALISTIC (out now x curve) 2.654  (+0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.16% 0.04:+0.34% 0.06:+0.58% 0.08:+0.87% 0.1:+1.21% 0.13:+1.82%
+    + flat dock, new QB with no lines yet        2.241  (-15.55% vs our totals, 7/7 seasons)  picks [-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0]   pooled: -1.0:-6.26% -2.0:-11.08% -3.0:-14.12% -4.0:-15.55%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 2.132  (-19.66% vs our totals, 7/7 seasons; -29.6% vs never updated)   points-scored MSE -5.20% vs our totals
+    + results (scoring surprise)                 2.510  (-5.42% vs our totals, 7/7 seasons)  weight picks [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]   pooled: 0.05:-2.37% 0.1:-4.11% 0.15:-5.15% 0.2:-5.42% 0.3:-3.52%
+
+  next 1-4 weeks only  (n=5754 team-games)
+    preseason rating, never updated          miss vs the closing line 2.410
+    OUR TOTALS (ratings + QB + weather)      1.773  (-26.4%)   points-scored MSE -4.84%
+    + skill injuries, ORACLE future (ceiling)    1.764  (-0.51% vs our totals, 5/7 seasons)  k picks [0.04, 0.06, 0.04, 0.04, 0.04, 0.04, 0.06]   pooled: 0.02:-0.49% 0.04:-0.70% 0.06:-0.64% 0.08:-0.28% 0.1:+0.38% 0.13:+1.81%
+    + skill injuries, TIMELINES KNOWN (out now)  1.774  (+0.03% vs our totals, 5/7 seasons)  k picks [0.04, 0.02, 0.04, 0.02, 0.04, 0.04, 0.06]   pooled: 0.02:-0.12% 0.04:-0.15% 0.06:-0.09% 0.08:+0.09% 0.1:+0.38% 0.13:+1.05%
+    + skill injuries, REALISTIC (out now x curve) 1.774  (+0.02% vs our totals, 4/7 seasons)  k picks [0.02, 0.02, 0.04, 0.02, 0.02, 0.02, 0.04]   pooled: 0.02:-0.04% 0.04:-0.03% 0.06:+0.03% 0.08:+0.12% 0.1:+0.27% 0.13:+0.58%
+    + flat dock, new QB with no lines yet        1.655  (-6.65% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-3.69% -2.0:-6.04% -3.0:-6.65% -4.0:-5.78%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.457  (-17.83% vs our totals, 7/7 seasons; -39.5% vs never updated)   points-scored MSE -2.17% vs our totals
+    + results (scoring surprise)                 1.557  (-12.19% vs our totals, 7/7 seasons)  weight picks [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]   pooled: 0.05:-5.11% 0.1:-8.97% 0.15:-11.36% 0.2:-12.19% 0.3:-9.31%
+
+=== our own future team totals, 2019-25: ratings + quarterback + weather (shipped form) vs + skill injuries / + results - LIVE TIMING (next week already lined) ===
+  team-games: 3742; with a skill starter out: 26%, average value missing when any 13.1 pts
+  closing line minus the preseason view, by skill value missing: none -0.09 (n 2535)  8-12 -0.37 (n 577)  12-20 -1.26 (n 292)  20+ -2.50 (n 114)
+
+  ALL future games, every checkpoint  (n=15138 team-games)
+    preseason rating, never updated          miss vs the closing line 2.756
+    OUR TOTALS (ratings + QB + weather)      2.222  (-19.4%)   points-scored MSE -5.10%
+    + skill injuries, ORACLE future (ceiling)    2.170  (-2.36% vs our totals, 5/7 seasons)  k picks [0.1, 0.1, 0.08, 0.08, 0.08, 0.08, 0.1]   pooled: 0.02:-1.00% 0.04:-1.77% 0.06:-2.31% 0.08:-2.59% 0.1:-2.58% 0.13:-2.16%
+    + skill injuries, TIMELINES KNOWN (out now)  2.222  (-0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.06% 0.04:+0.19% 0.06:+0.40% 0.08:+0.70% 0.1:+1.08% 0.13:+1.77%
+    + skill injuries, REALISTIC (out now x curve) 2.224  (+0.07% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.07% 0.04:+0.20% 0.06:+0.39% 0.08:+0.63% 0.1:+0.94% 0.13:+1.50%
+    + flat dock, new QB with no lines yet        1.995  (-10.22% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-5.14% -2.0:-8.76% -3.0:-10.22% -4.0:-9.78%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.909  (-14.10% vs our totals, 7/7 seasons; -30.7% vs never updated)   points-scored MSE -2.31% vs our totals
+    + results (scoring surprise)                 2.136  (-3.86% vs our totals, 7/7 seasons)  weight picks [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]   pooled: 0.05:-2.27% 0.1:-3.57% 0.15:-3.86% 0.2:-3.12% 0.3:+1.34%
+
+  standing after week 2  (n=3070 team-games)
+    preseason rating, never updated          miss vs the closing line 2.623
+    OUR TOTALS (ratings + QB + weather)      2.290  (-12.7%)   points-scored MSE -3.41%
+    + skill injuries, ORACLE future (ceiling)    2.255  (-1.56% vs our totals, 5/7 seasons)  k picks [0.08, 0.08, 0.06, 0.08, 0.08, 0.08, 0.08]   pooled: 0.02:-0.78% 0.04:-1.36% 0.06:-1.71% 0.08:-1.78% 0.1:-1.52% 0.13:-0.75%
+    + skill injuries, TIMELINES KNOWN (out now)  2.290  (+0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.07% 0.04:+0.19% 0.06:+0.36% 0.08:+0.57% 0.1:+0.82% 0.13:+1.27%
+    + skill injuries, REALISTIC (out now x curve) 2.290  (+0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.07% 0.04:+0.18% 0.06:+0.32% 0.08:+0.51% 0.1:+0.74% 0.13:+1.16%
+    + flat dock, new QB with no lines yet        2.089  (-8.78% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-4.97% -2.0:-8.12% -3.0:-8.78% -4.0:-7.41%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 2.029  (-11.43% vs our totals, 7/7 seasons; -22.7% vs never updated)   points-scored MSE -1.97% vs our totals
+    + results (scoring surprise)                 2.239  (-2.23% vs our totals, 6/7 seasons)  weight picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]   pooled: 0.05:-1.76% 0.1:-2.23% 0.15:-1.35% 0.2:+0.88% 0.3:+9.08%
+
+  standing after week 4  (n=2644 team-games)
+    preseason rating, never updated          miss vs the closing line 2.705
+    OUR TOTALS (ratings + QB + weather)      2.249  (-16.9%)   points-scored MSE -4.81%
+    + skill injuries, ORACLE future (ceiling)    2.203  (-2.01% vs our totals, 6/7 seasons)  k picks [0.1, 0.1, 0.08, 0.08, 0.08, 0.08, 0.1]   pooled: 0.02:-0.87% 0.04:-1.51% 0.06:-1.95% 0.08:-2.20% 0.1:-2.19% 0.13:-1.78%
+    + skill injuries, TIMELINES KNOWN (out now)  2.252  (+0.17% vs our totals, 0/7 seasons)  k picks [0.02, 0.0, 0.02, 0.0, 0.02, 0.0, 0.0]   pooled: 0.02:+0.03% 0.04:+0.13% 0.06:+0.31% 0.08:+0.59% 0.1:+0.97% 0.13:+1.65%
+    + skill injuries, REALISTIC (out now x curve) 2.254  (+0.22% vs our totals, 0/7 seasons)  k picks [0.02, 0.0, 0.04, 0.0, 0.02, 0.0, 0.0]   pooled: 0.02:+0.01% 0.04:+0.08% 0.06:+0.20% 0.08:+0.39% 0.1:+0.67% 0.13:+1.19%
+    + flat dock, new QB with no lines yet        2.009  (-10.64% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-5.41% -2.0:-9.23% -3.0:-10.64% -4.0:-9.89%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.931  (-14.12% vs our totals, 7/7 seasons; -28.6% vs never updated)   points-scored MSE -2.01% vs our totals
+    + results (scoring surprise)                 2.153  (-4.25% vs our totals, 7/7 seasons)  weight picks [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]   pooled: 0.05:-2.37% 0.1:-3.83% 0.15:-4.25% 0.2:-3.75% 0.3:+0.27%
+
+  standing after week 8  (n=1844 team-games)
+    preseason rating, never updated          miss vs the closing line 2.852
+    OUR TOTALS (ratings + QB + weather)      2.137  (-25.1%)   points-scored MSE -6.22%
+    + skill injuries, ORACLE future (ceiling)    2.059  (-3.66% vs our totals, 5/7 seasons)  k picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.13]   pooled: 0.02:-1.24% 0.04:-2.27% 0.06:-3.10% 0.08:-3.62% 0.1:-3.87% 0.13:-3.71%
+    + skill injuries, TIMELINES KNOWN (out now)  2.140  (+0.12% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.02]   pooled: 0.02:+0.07% 0.04:+0.25% 0.06:+0.52% 0.08:+0.92% 0.1:+1.39% 0.13:+2.31%
+    + skill injuries, REALISTIC (out now x curve) 2.140  (+0.12% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.11% 0.04:+0.34% 0.06:+0.62% 0.08:+0.96% 0.1:+1.35% 0.13:+2.04%
+    + flat dock, new QB with no lines yet        1.893  (-11.42% vs our totals, 7/7 seasons)  picks [-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0]   pooled: -1.0:-5.21% -2.0:-8.97% -3.0:-10.98% -4.0:-11.42%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.793  (-16.09% vs our totals, 7/7 seasons; -37.1% vs never updated)   points-scored MSE -2.98% vs our totals
+    + results (scoring surprise)                 2.052  (-3.98% vs our totals, 5/7 seasons)  weight picks [0.2, 0.15, 0.15, 0.15, 0.2, 0.15, 0.2]   pooled: 0.05:-2.31% 0.1:-3.80% 0.15:-4.58% 0.2:-4.54% 0.3:-2.12%
+
+  standing after week 12  (n=1032 team-games)
+    preseason rating, never updated          miss vs the closing line 3.055
+    OUR TOTALS (ratings + QB + weather)      2.075  (-32.1%)   points-scored MSE -8.32%
+    + skill injuries, ORACLE future (ceiling)    1.987  (-4.24% vs our totals, 5/7 seasons)  k picks [0.13, 0.13, 0.1, 0.1, 0.13, 0.1, 0.13]   pooled: 0.02:-1.41% 0.04:-2.59% 0.06:-3.56% 0.08:-4.32% 0.1:-4.71% 0.13:-4.83%
+    + skill injuries, TIMELINES KNOWN (out now)  2.081  (+0.28% vs our totals, 2/7 seasons)  k picks [0.04, 0.04, 0.04, 0.0, 0.04, 0.02, 0.06]   pooled: 0.02:-0.10% 0.04:-0.15% 0.06:-0.06% 0.08:+0.20% 0.1:+0.62% 0.13:+1.38%
+    + skill injuries, REALISTIC (out now x curve) 2.084  (+0.43% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.06, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.05% 0.04:+0.11% 0.06:+0.24% 0.08:+0.45% 0.1:+0.71% 0.13:+1.16%
+    + flat dock, new QB with no lines yet        1.818  (-12.43% vs our totals, 7/7 seasons)  picks [-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0]   pooled: -1.0:-4.71% -2.0:-8.38% -3.0:-11.05% -4.0:-12.43%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.692  (-18.49% vs our totals, 7/7 seasons; -44.6% vs never updated)   points-scored MSE -3.09% vs our totals
+    + results (scoring surprise)                 1.912  (-7.86% vs our totals, 7/7 seasons)  weight picks [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]   pooled: 0.05:-3.01% 0.1:-5.31% 0.15:-7.00% 0.2:-7.86% 0.3:-6.78%
+
+  future games started by a quarterback who is not the opening starter and had no lines yet  (n=2685 team-games)
+    preseason rating, never updated          miss vs the closing line 3.961
+    OUR TOTALS (ratings + QB + weather)      3.797  (-4.2%)   points-scored MSE -1.63%
+    + skill injuries, ORACLE future (ceiling)    3.334  (-12.19% vs our totals, 7/7 seasons)  k picks [0.13, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13]   pooled: 0.02:-2.09% 0.04:-4.14% 0.06:-6.13% 0.08:-8.03% 0.1:-9.77% 0.13:-12.19%
+    + skill injuries, TIMELINES KNOWN (out now)  3.797  (+0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.23% 0.04:+0.47% 0.06:+0.72% 0.08:+0.98% 0.1:+1.24% 0.13:+1.66%
+    + skill injuries, REALISTIC (out now x curve) 3.797  (+0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.17% 0.04:+0.35% 0.06:+0.53% 0.08:+0.71% 0.1:+0.90% 0.13:+1.18%
+    + flat dock, new QB with no lines yet        2.517  (-33.71% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-16.97% -2.0:-28.92% -3.0:-33.71% -4.0:-32.26%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 2.485  (-34.56% vs our totals, 7/7 seasons; -37.3% vs never updated)   points-scored MSE -10.77% vs our totals
+    + results (scoring surprise)                 3.760  (-0.96% vs our totals, 4/7 seasons)  weight picks [0.15, 0.2, 0.15, 0.15, 0.2, 0.15, 0.2]   pooled: 0.05:-0.72% 0.1:-1.23% 0.15:-1.45% 0.2:-1.37% 0.3:-0.41%
+
+  future games where the team has a skill starter out AT THE CHECKPOINT (expected missing > 0)  (n=2209 team-games)
+    preseason rating, never updated          miss vs the closing line 2.668
+    OUR TOTALS (ratings + QB + weather)      1.976  (-25.9%)   points-scored MSE -7.32%
+    + skill injuries, ORACLE future (ceiling)    1.930  (-2.31% vs our totals, 4/7 seasons)  k picks [0.08, 0.06, 0.06, 0.06, 0.08, 0.06, 0.08]   pooled: 0.02:-1.31% 0.04:-2.27% 0.06:-2.81% 0.08:-2.83% 0.1:-2.37% 0.13:-1.01%
+    + skill injuries, TIMELINES KNOWN (out now)  1.976  (+0.01% vs our totals, 3/7 seasons)  k picks [0.02, 0.02, 0.02, 0.0, 0.02, 0.02, 0.02]   pooled: 0.02:-0.13% 0.04:+0.06% 0.06:+0.57% 0.08:+1.44% 0.1:+2.63% 0.13:+4.87%
+    + skill injuries, REALISTIC (out now x curve) 1.983  (+0.35% vs our totals, 1/7 seasons)  k picks [0.02, 0.02, 0.04, 0.0, 0.02, 0.0, 0.0]   pooled: 0.02:-0.05% 0.04:+0.08% 0.06:+0.35% 0.08:+0.76% 0.1:+1.34% 0.13:+2.48%
+    + flat dock, new QB with no lines yet        1.796  (-9.08% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -4.0, -3.0, -3.0]   pooled: -1.0:-4.84% -2.0:-8.23% -3.0:-9.71% -4.0:-9.64%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.676  (-15.20% vs our totals, 7/7 seasons; -37.2% vs never updated)   points-scored MSE -3.38% vs our totals
+    + results (scoring surprise)                 1.865  (-5.58% vs our totals, 7/7 seasons)  weight picks [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]   pooled: 0.05:-3.10% 0.1:-5.07% 0.15:-5.58% 0.2:-4.84% 0.3:+0.16%
+
+  future games where a skill starter actually missed that game  (n=4707 team-games)
+    preseason rating, never updated          miss vs the closing line 3.081
+    OUR TOTALS (ratings + QB + weather)      2.635  (-14.5%)   points-scored MSE -3.90%
+    + skill injuries, ORACLE future (ceiling)    2.442  (-7.34% vs our totals, 5/7 seasons)  k picks [0.13, 0.13, 0.1, 0.1, 0.1, 0.1, 0.13]   pooled: 0.02:-2.68% 0.04:-4.88% 0.06:-6.57% 0.08:-7.70% 0.1:-8.21% 0.13:-8.04%
+    + skill injuries, TIMELINES KNOWN (out now)  2.635  (-0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.18% 0.04:+0.44% 0.06:+0.78% 0.08:+1.20% 0.1:+1.71% 0.13:+2.61%
+    + skill injuries, REALISTIC (out now x curve) 2.635  (-0.00% vs our totals, 0/7 seasons)  k picks [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   pooled: 0.02:+0.29% 0.04:+0.66% 0.06:+1.09% 0.08:+1.58% 0.1:+2.13% 0.13:+3.09%
+    + flat dock, new QB with no lines yet        2.203  (-16.41% vs our totals, 7/7 seasons)  picks [-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0]   pooled: -1.0:-6.32% -2.0:-11.33% -3.0:-14.60% -4.0:-16.41%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 2.145  (-18.60% vs our totals, 7/7 seasons; -30.4% vs never updated)   points-scored MSE -5.16% vs our totals
+    + results (scoring surprise)                 2.541  (-3.58% vs our totals, 7/7 seasons)  weight picks [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]   pooled: 0.05:-1.96% 0.1:-3.16% 0.15:-3.58% 0.2:-3.23% 0.3:-0.06%
+
+  next 1-4 weeks only  (n=4302 team-games)
+    preseason rating, never updated          miss vs the closing line 2.453
+    OUR TOTALS (ratings + QB + weather)      1.712  (-30.2%)   points-scored MSE -5.82%
+    + skill injuries, ORACLE future (ceiling)    1.701  (-0.61% vs our totals, 5/7 seasons)  k picks [0.04, 0.06, 0.04, 0.04, 0.04, 0.04, 0.06]   pooled: 0.02:-0.57% 0.04:-0.82% 0.06:-0.74% 0.08:-0.34% 0.1:+0.32% 0.13:+1.82%
+    + skill injuries, TIMELINES KNOWN (out now)  1.714  (+0.10% vs our totals, 4/7 seasons)  k picks [0.02, 0.02, 0.02, 0.0, 0.02, 0.02, 0.04]   pooled: 0.02:-0.07% 0.04:-0.00% 0.06:+0.19% 0.08:+0.51% 0.1:+0.94% 0.13:+1.78%
+    + skill injuries, REALISTIC (out now x curve) 1.714  (+0.10% vs our totals, 2/7 seasons)  k picks [0.02, 0.0, 0.04, 0.0, 0.02, 0.02, 0.02]   pooled: 0.02:-0.03% 0.04:+0.02% 0.06:+0.15% 0.08:+0.36% 0.1:+0.63% 0.13:+1.14%
+    + flat dock, new QB with no lines yet        1.598  (-6.63% vs our totals, 7/7 seasons)  picks [-3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0]   pooled: -1.0:-3.42% -2.0:-5.74% -3.0:-6.63% -4.0:-6.18%
+    SHIPPED FORM (results .10/.15/.20 + new QB -3) 1.451  (-15.24% vs our totals, 7/7 seasons; -40.9% vs never updated)   points-scored MSE -1.68% vs our totals
+    + results (scoring surprise)                 1.569  (-8.37% vs our totals, 7/7 seasons)  weight picks [0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]   pooled: 0.05:-4.23% 0.1:-7.09% 0.15:-8.37% 0.2:-7.94% 0.3:-2.58%

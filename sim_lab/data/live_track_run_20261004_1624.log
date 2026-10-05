@@ -1,0 +1,199 @@
+games: MIA@MIN, KC@LV, DEN@SF, LAC@SEA
+tracking 85 players on ['DEN', 'KC', 'LAC', 'LV', 'MIA', 'MIN', 'SEA', 'SF'], season 2026 week 4, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  DEN: pre PRE f=0.00 score 0.0-0.0
+  KC: pre PRE f=0.00 score 0.0-0.0
+  LAC: pre PRE f=0.00 score 0.0-0.0
+  LV: pre PRE f=0.00 score 0.0-0.0
+  MIA: in Q1 7:54 f=0.12 score 0.0-3.0
+  MIN: in Q1 7:54 f=0.12 score 3.0-0.0
+  SEA: pre PRE f=0.00 score 0.0-0.0
+  SF: pre PRE f=0.00 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   0.0  live fit  21.7 | +exit  21.7 | v1  21.7 | naive  21.7
+    Christian McCaffrey   RB   proj  21.2  scored   0.0  live fit  21.2 | +exit  21.2 | v1  21.2 | naive  21.2
+    Brock Purdy           QB   proj  19.3  scored   0.0  live fit  19.3 | +exit  19.3 | v1  19.3 | naive  19.3
+    Patrick Mahomes       QB   proj  19.2  scored   0.0  live fit  19.2 | +exit  19.2 | v1  19.2 | naive  19.2
+    Bo Nix                QB   proj  18.5  scored   0.0  live fit  18.5 | +exit  18.5 | v1  18.5 | naive  18.5
+    Kyler Murray          QB   proj  17.6  scored   1.6  live fit  16.5 | +exit  16.5 | v1  17.1 | naive  17.1
+    Ashton Jeanty         RB   proj  17.5  scored   0.0  live fit  17.5 | +exit  17.5 | v1  17.5 | naive  17.5
+    Sam Darnold           QB   proj  17.2  scored   0.0  live fit  17.2 | +exit  17.2 | v1  17.2 | naive  17.2
+    Brock Bowers          TE   proj  17.1  scored   0.0  live fit  17.1 | +exit  17.1 | v1  17.1 | naive  17.1
+    Kirk Cousins          QB   proj  16.5  scored   0.0  live fit  16.5 | +exit  16.5 | v1  16.5 | naive  16.5
+    Aaron Jones           RB   proj  15.6  scored   0.2  live fit  12.9 | +exit  12.9 | v1  13.9 | naive  13.9
+    George Kittle         TE   proj  14.5  scored   0.0  live fit  14.5 | +exit  14.5 | v1  14.5 | naive  14.5
+  DEN: in Q1 11:03 f=0.07 score 0.0-0.0
+  KC: in Q1 10:26 f=0.08 score 0.0-0.0
+  LAC: in Q1 12:30 f=0.04 score 0.0-0.0
+  LV: in Q1 10:26 f=0.08 score 0.0-0.0
+  MIA: in Q1 2:39 f=0.21 score 0.0-3.0
+  MIN: in Q1 2:39 f=0.21 score 3.0-0.0
+  SEA: in Q1 12:30 f=0.04 score 0.0-0.0
+  SF: in Q1 11:03 f=0.07 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   0.0  live fit  19.9 | +exit  19.9 | v1  20.8 | naive  20.8
+    Christian McCaffrey   RB   proj  21.2  scored   1.5  live fit  20.6 | +exit  20.6 | v1  21.3 | naive  21.3
+    Brock Purdy           QB   proj  19.3  scored   0.5  live fit  18.5 | +exit  18.5 | v1  18.5 | naive  18.5
+    Patrick Mahomes       QB   proj  19.2  scored   0.2  live fit  17.8 | +exit  17.8 | v1  17.9 | naive  17.9
+    Bo Nix                QB   proj  18.5  scored   0.1  live fit  17.2 | +exit  17.2 | v1  17.4 | naive  17.4
+    Kyler Murray          QB   proj  17.6  scored   1.6  live fit  14.9 | +exit  14.9 | v1  15.1 | naive  15.5
+    Ashton Jeanty         RB   proj  17.5  scored   0.0  live fit  15.2 | +exit  15.2 | v1  16.2 | naive  16.2
+    Sam Darnold           QB   proj  17.2  scored  -1.0  live fit  15.1 | +exit  15.1 | v1  15.5 | naive  15.5
+    Brock Bowers          TE   proj  17.1  scored   0.0  live fit  15.2 | +exit  15.2 | v1  15.8 | naive  15.8
+    Kirk Cousins          QB   proj  16.5  scored   0.0  live fit  15.1 | +exit  15.1 | v1  15.2 | naive  15.2
+    Aaron Jones           RB   proj  15.6  scored   0.4  live fit  11.6 | +exit  11.6 | v1  12.2 | naive  12.8
+    George Kittle         TE   proj  14.5  scored   0.0  live fit  13.0 | +exit  13.0 | v1  13.6 | naive  13.6
+  DEN: in Q1 5:11 f=0.16 score 0.0-0.0
+  KC: in Q1 7:34 f=0.12 score 0.0-7.0
+  LAC: in Q1 10:03 f=0.08 score 3.0-0.0
+  LV: in Q1 7:34 f=0.12 score 7.0-0.0
+  MIA: in Q2 14:06 f=0.27 score 0.0-3.0
+  MIN: in Q2 14:06 f=0.27 score 3.0-0.0
+  SEA: in Q1 10:03 f=0.08 score 0.0-3.0
+  SF: in Q1 5:11 f=0.16 score 0.0-0.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   0.0  live fit  20.0 | +exit  20.0 | v1  19.9 | naive  19.9
+    Christian McCaffrey   RB   proj  21.2  scored   1.5  live fit  18.3 | +exit  18.3 | v1  18.8 | naive  19.2
+    Brock Purdy           QB   proj  19.3  scored   0.6  live fit  16.6 | +exit  16.6 | v1  16.2 | naive  16.7
+    Patrick Mahomes       QB   proj  19.2  scored   0.7  live fit  19.6 | +exit  19.6 | v1  17.5 | naive  17.5
+    Bo Nix                QB   proj  18.5  scored   1.7  live fit  17.3 | +exit  17.3 | v1  16.9 | naive  17.1
+    Kyler Murray          QB   proj  17.6  scored   1.6  live fit  13.8 | +exit  13.8 | v1  14.0 | naive  14.6
+    Ashton Jeanty         RB   proj  17.5  scored   0.4  live fit  14.2 | +exit  14.2 | v1  15.7 | naive  15.7
+    Sam Darnold           QB   proj  17.2  scored  -1.0  live fit  15.3 | +exit  15.3 | v1  14.8 | naive  14.8
+    Brock Bowers          TE   proj  17.1  scored   0.0  live fit  12.8 | +exit  12.8 | v1  15.0 | naive  15.0
+    Kirk Cousins          QB   proj  16.5  scored   5.8  live fit  19.7 | +exit  19.7 | v1  20.3 | naive  20.3
+    Aaron Jones           RB   proj  15.6  scored   1.6  live fit  12.1 | +exit  12.1 | v1  12.6 | naive  13.1
+    George Kittle         TE   proj  14.5  scored   1.3  live fit  13.1 | +exit  13.1 | v1  13.2 | naive  13.4
+  DEN: in Q1 0:39 f=0.24 score 3.0-0.0
+  KC: in Q1 2:23 f=0.21 score 7.0-7.0
+  LAC: in Q1 8:14 f=0.11 score 3.0-7.0
+  LV: in Q1 2:23 f=0.21 score 7.0-7.0
+  MIA: in Q2 12:15 f=0.30 score 0.0-3.0
+  MIN: in Q2 12:15 f=0.30 score 3.0-0.0
+  SEA: in Q1 8:14 f=0.11 score 7.0-3.0
+  SF: in Q1 0:39 f=0.24 score 0.0-3.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   0.0  live fit  17.3 | +exit  17.3 | v1  19.2 | naive  19.2
+    Christian McCaffrey   RB   proj  21.2  scored   1.7  live fit  17.0 | +exit  17.0 | v1  17.2 | naive  17.8
+    Brock Purdy           QB   proj  19.3  scored   0.8  live fit  16.0 | +exit  16.0 | v1  14.7 | naive  15.4
+    Patrick Mahomes       QB   proj  19.2  scored   6.6  live fit  23.0 | +exit  23.0 | v1  22.3 | naive  21.8
+    Bo Nix                QB   proj  18.5  scored   2.4  live fit  15.9 | +exit  15.9 | v1  16.1 | naive  16.5
+    Kyler Murray          QB   proj  17.6  scored   1.6  live fit  13.2 | +exit  13.2 | v1  13.4 | naive  14.0
+    Ashton Jeanty         RB   proj  17.5  scored   0.4  live fit  13.1 | +exit  13.1 | v1  13.6 | naive  14.2
+    Sam Darnold           QB   proj  17.2  scored   3.9  live fit  18.9 | +exit  18.9 | v1  19.2 | naive  19.2
+    Brock Bowers          TE   proj  17.1  scored   0.0  live fit  13.0 | +exit  13.0 | v1  12.8 | naive  13.5
+    Kirk Cousins          QB   proj  16.5  scored   5.8  live fit  19.9 | +exit  19.9 | v1  19.3 | naive  18.9
+    Aaron Jones           RB   proj  15.6  scored   2.0  live fit  12.0 | +exit  12.0 | v1  12.5 | naive  13.0
+    George Kittle         TE   proj  14.5  scored   1.3  live fit  12.5 | +exit  12.5 | v1  11.9 | naive  12.3
+  DEN: in Q2 12:47 f=0.29 score 3.0-0.0
+  KC: in Q2 13:40 f=0.27 score 7.0-7.0
+  LAC: in Q1 3:55 f=0.18 score 3.0-7.0
+  LV: in Q2 13:40 f=0.27 score 7.0-7.0
+  MIA: in Q2 7:08 f=0.38 score 0.0-6.0
+  MIN: in Q2 7:08 f=0.38 score 6.0-0.0
+  SEA: in Q1 3:55 f=0.18 score 7.0-3.0
+  SF: in Q2 12:47 f=0.29 score 0.0-3.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   1.9  live fit  18.1 | +exit  18.1 | v1  19.2 | naive  19.6
+    Christian McCaffrey   RB   proj  21.2  scored   2.0  live fit  16.2 | +exit  16.2 | v1  16.4 | naive  17.1
+    Brock Purdy           QB   proj  19.3  scored   0.8  live fit  14.9 | +exit  14.9 | v1  13.7 | naive  14.5
+    Patrick Mahomes       QB   proj  19.2  scored   6.7  live fit  21.9 | +exit  21.9 | v1  20.9 | naive  20.7
+    Bo Nix                QB   proj  18.5  scored   2.6  live fit  15.2 | +exit  15.2 | v1  15.4 | naive  15.8
+    Kyler Murray          QB   proj  17.6  scored   3.0  live fit  12.7 | +exit  12.7 | v1  13.3 | naive  13.9
+    Ashton Jeanty         RB   proj  17.5  scored   0.4  live fit  11.9 | +exit  11.9 | v1  12.3 | naive  13.1
+    Sam Darnold           QB   proj  17.2  scored   4.4  live fit  18.2 | +exit  18.2 | v1  18.7 | naive  18.4
+    Brock Bowers          TE   proj  17.1  scored   0.0  live fit  12.0 | +exit  12.0 | v1  11.6 | naive  12.4
+    Kirk Cousins          QB   proj  16.5  scored   6.4  live fit  19.6 | +exit  19.6 | v1  18.8 | naive  18.4
+    Aaron Jones           RB   proj  15.6  scored   6.0  live fit  15.4 | +exit  15.4 | v1  15.7 | naive  15.7
+    George Kittle         TE   proj  14.5  scored   1.3  live fit  11.8 | +exit  11.8 | v1  11.1 | naive  11.6
+  DEN: in Q2 9:06 f=0.35 score 3.0-0.0
+  KC: in Q2 8:41 f=0.36 score 7.0-7.0
+  LAC: in Q1 0:00 f=0.25 score 3.0-7.0
+  LV: in Q2 8:41 f=0.36 score 7.0-7.0
+  MIA: in Q2 5:32 f=0.41 score 0.0-6.0
+  MIN: in Q2 5:32 f=0.41 score 6.0-0.0
+  SEA: in Q1 0:00 f=0.25 score 7.0-3.0
+  SF: in Q2 9:06 f=0.35 score 0.0-3.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   3.5  live fit  18.7 | +exit  18.7 | v1  19.4 | naive  19.8
+    Christian McCaffrey   RB   proj  21.2  scored   2.0  live fit  14.9 | +exit  14.9 | v1  14.9 | naive  15.8
+    Brock Purdy           QB   proj  19.3  scored   0.9  live fit  13.8 | +exit  13.8 | v1  12.6 | naive  13.5
+    Patrick Mahomes       QB   proj  19.2  scored   7.2  live fit  20.6 | +exit  20.6 | v1  19.6 | naive  19.6
+    Bo Nix                QB   proj  18.5  scored   3.0  live fit  14.4 | +exit  14.4 | v1  14.5 | naive  15.1
+    Kyler Murray          QB   proj  17.6  scored   3.0  live fit  12.1 | +exit  12.1 | v1  12.8 | naive  13.4
+    Ashton Jeanty         RB   proj  17.5  scored   0.4  live fit  10.4 | +exit   9.8 | v1  10.7 | naive  11.7  exit x0.94 (stale 0.24)
+    Sam Darnold           QB   proj  17.2  scored   4.6  live fit  17.3 | +exit  17.3 | v1  17.6 | naive  17.5
+    Brock Bowers          TE   proj  17.1  scored   2.8  live fit  13.7 | +exit  13.7 | v1  13.3 | naive  13.8
+    Kirk Cousins          QB   proj  16.5  scored   7.4  live fit  19.2 | +exit  19.2 | v1  18.3 | naive  18.1
+    Aaron Jones           RB   proj  15.6  scored   6.2  live fit  15.2 | +exit  15.2 | v1  15.4 | naive  15.4
+    George Kittle         TE   proj  14.5  scored   2.7  live fit  12.5 | +exit  12.5 | v1  11.8 | naive  12.2
+  DEN: in Q2 4:17 f=0.43 score 3.0-0.0
+  KC: in Q2 3:19 f=0.44 score 7.0-10.0
+  LAC: in Q2 11:44 f=0.30 score 3.0-7.0
+  LV: in Q2 3:19 f=0.44 score 10.0-7.0
+  MIA: in Q2 2:53 f=0.45 score 0.0-6.0
+  MIN: in Q2 2:53 f=0.45 score 6.0-0.0
+  SEA: in Q2 11:44 f=0.30 score 7.0-3.0
+  SF: in Q2 4:17 f=0.43 score 0.0-3.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   3.5  live fit  17.6 | +exit  17.6 | v1  18.1 | naive  18.6
+    Christian McCaffrey   RB   proj  21.2  scored   2.0  live fit  12.9 | +exit  12.9 | v1  13.1 | naive  14.1
+    Brock Purdy           QB   proj  19.3  scored   1.6  live fit  12.7 | +exit  12.7 | v1  11.7 | naive  12.7
+    Patrick Mahomes       QB   proj  19.2  scored   7.2  live fit  18.6 | +exit  18.6 | v1  17.6 | naive  17.8
+    Bo Nix                QB   proj  18.5  scored   3.9  live fit  13.7 | +exit  13.7 | v1  13.9 | naive  14.5
+    Kyler Murray          QB   proj  17.6  scored   3.0  live fit  10.9 | +exit  10.9 | v1  12.0 | naive  12.7
+    Ashton Jeanty         RB   proj  17.5  scored   2.6  live fit  11.1 | +exit  11.1 | v1  11.6 | naive  12.3
+    Sam Darnold           QB   proj  17.2  scored   5.4  live fit  17.3 | +exit  17.3 | v1  17.4 | naive  17.4
+    Brock Bowers          TE   proj  17.1  scored   4.5  live fit  13.2 | +exit  13.2 | v1  13.6 | naive  14.0
+    Kirk Cousins          QB   proj  16.5  scored   8.4  live fit  17.6 | +exit  17.6 | v1  17.8 | naive  17.6
+    Aaron Jones           RB   proj  15.6  scored   6.2  live fit  14.2 | +exit  14.2 | v1  14.6 | naive  14.8
+    George Kittle         TE   proj  14.5  scored   2.7  live fit  11.1 | +exit  11.1 | v1  10.5 | naive  11.0
+  DEN: in Q2 1:43 f=0.47 score 3.0-0.0
+  KC: in Q2 1:30 f=0.47 score 7.0-10.0
+  LAC: in Q2 6:12 f=0.40 score 3.0-13.0
+  LV: in Q2 1:30 f=0.47 score 10.0-7.0
+  MIA: in HALF f=0.50 score 0.0-9.0
+  MIN: in HALF f=0.50 score 9.0-0.0
+  SEA: in Q2 6:12 f=0.40 score 13.0-3.0
+  SF: in Q2 1:43 f=0.47 score 0.0-3.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   7.3  live fit  18.7 | +exit  18.7 | v1  20.2 | naive  20.4
+    Christian McCaffrey   RB   proj  21.2  scored   3.2  live fit  13.1 | +exit  13.1 | v1  13.5 | naive  14.4
+    Brock Purdy           QB   proj  19.3  scored   3.1  live fit  13.1 | +exit  13.1 | v1  12.5 | naive  13.3
+    Patrick Mahomes       QB   proj  19.2  scored   9.7  live fit  20.5 | +exit  20.5 | v1  19.8 | naive  19.7
+    Bo Nix                QB   proj  18.5  scored   3.9  live fit  12.4 | +exit  12.4 | v1  13.0 | naive  13.7
+    Kyler Murray          QB   proj  17.6  scored   5.9  live fit  12.5 | +exit  12.5 | v1  14.3 | naive  14.7
+    Ashton Jeanty         RB   proj  17.5  scored   2.6  live fit  10.4 | +exit  10.4 | v1  11.0 | naive  11.8
+    Sam Darnold           QB   proj  17.2  scored   6.6  live fit  15.8 | +exit  15.8 | v1  17.0 | naive  17.0
+    Brock Bowers          TE   proj  17.1  scored   4.5  live fit  12.4 | +exit  12.4 | v1  13.0 | naive  13.5
+    Kirk Cousins          QB   proj  16.5  scored   8.4  live fit  16.7 | +exit  16.7 | v1  17.2 | naive  17.1
+    Aaron Jones           RB   proj  15.6  scored   6.7  live fit  13.7 | +exit  13.7 | v1  14.4 | naive  14.5
+    George Kittle         TE   proj  14.5  scored   2.7  live fit  10.1 | +exit  10.1 | v1   9.8 | naive  10.4
+  DEN: in Q2 0:41 f=0.49 score 3.0-3.0
+  KC: in HALF f=0.50 score 10.0-13.0
+  LAC: in Q2 2:39 f=0.46 score 3.0-13.0
+  LV: in HALF f=0.50 score 13.0-10.0
+  MIA: in HALF f=0.50 score 0.0-9.0
+  MIN: in HALF f=0.50 score 9.0-0.0
+  SEA: in Q2 2:39 f=0.46 score 13.0-3.0
+  SF: in Q2 0:41 f=0.49 score 3.0-3.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   7.3  live fit  16.8 | +exit  16.8 | v1  18.8 | naive  19.1
+    Christian McCaffrey   RB   proj  21.2  scored   3.2  live fit  12.5 | +exit  12.5 | v1  13.1 | naive  14.0
+    Brock Purdy           QB   proj  19.3  scored   3.1  live fit  12.0 | +exit  12.0 | v1  12.2 | naive  13.0
+    Patrick Mahomes       QB   proj  19.2  scored   9.7  live fit  19.6 | +exit  19.6 | v1  19.3 | naive  19.3
+    Bo Nix                QB   proj  18.5  scored   4.4  live fit  13.1 | +exit  13.1 | v1  13.3 | naive  13.9
+    Kyler Murray          QB   proj  17.6  scored   5.9  live fit  12.5 | +exit  12.5 | v1  14.3 | naive  14.7
+    Ashton Jeanty         RB   proj  17.5  scored   2.7  live fit  10.0 | +exit  10.0 | v1  10.7 | naive  11.4
+    Sam Darnold           QB   proj  17.2  scored   6.6  live fit  14.2 | +exit  14.2 | v1  15.8 | naive  16.0
+    Brock Bowers          TE   proj  17.1  scored   7.1  live fit  14.6 | +exit  14.6 | v1  15.5 | naive  15.7
+    Kirk Cousins          QB   proj  16.5  scored   9.8  live fit  17.7 | +exit  17.7 | v1  18.3 | naive  18.1
+    Aaron Jones           RB   proj  15.6  scored   6.7  live fit  13.7 | +exit  13.7 | v1  14.4 | naive  14.5
+    George Kittle         TE   proj  14.5  scored   2.7  live fit   9.4 | +exit   9.4 | v1   9.6 | naive  10.1
+  DEN: in HALF f=0.50 score 3.0-3.0
+  KC: in HALF f=0.50 score 10.0-13.0
+  LAC: in Q2 0:31 f=0.49 score 3.0-20.0
+  LV: in HALF f=0.50 score 13.0-10.0
+  MIA: in Q3 11:56 f=0.55 score 3.0-9.0
+  MIN: in Q3 11:56 f=0.55 score 9.0-3.0
+  SEA: in Q2 0:31 f=0.49 score 20.0-3.0
+  SF: in HALF f=0.50 score 3.0-3.0
+    Jaxon Smith-Njigba    WR   proj  21.7  scored   9.6  live fit  17.1 | +exit  17.1 | v1  20.5 | naive  20.6
+    Christian McCaffrey   RB   proj  21.2  scored   4.7  live fit  13.9 | +exit  13.9 | v1  14.6 | naive  15.3
+    Brock Purdy           QB   proj  19.3  scored   5.1  live fit  13.9 | +exit  13.9 | v1  14.2 | naive  14.8
+    Patrick Mahomes       QB   proj  19.2  scored   9.7  live fit  19.6 | +exit  19.6 | v1  19.3 | naive  19.3
+    Bo Nix                QB   proj  18.5  scored   4.4  live fit  12.8 | +exit  12.8 | v1  13.1 | naive  13.7
+    Kyler Murray          QB   proj  17.6  scored   5.9  live fit  12.3 | +exit  12.3 | v1  13.3 | naive  13.8
+    Ashton Jeanty         RB   proj  17.5  scored   2.7  live fit  10.0 | +exit  10.0 | v1  10.7 | naive  11.4
+    Sam Darnold           QB   proj  17.2  scored   7.6  live fit  13.2 | +exit  13.2 | v1  16.3 | naive  16.4
+    Brock Bowers          TE   proj  17.1  scored   7.1  live fit  14.6 | +exit  14.6 | v1  15.5 | naive  15.7

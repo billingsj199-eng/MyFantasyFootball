@@ -1,0 +1,56 @@
+=== injury type -> plays this week: 1641 Questionable report rows (starters), 2019-25 ===
+
+  play rate by season (is it drifting?):
+    Q-FP   2019:  97% (n  29)  2020:  86% (n  37)  2021:  84% (n  25)  2022:  91% (n  32)  2023:  90% (n  61)  2024:  80% (n  45)  2025:  86% (n  35)
+    Q-LP   2019:  71% (n 146)  2020:  76% (n 153)  2021:  80% (n 197)  2022:  77% (n 193)  2023:  66% (n 158)  2024:  63% (n 131)  2025:  66% (n 130)
+    Q-DNP  2019:  38% (n  34)  2020:  42% (n  38)  2021:  38% (n  45)  2022:  58% (n  45)  2023:  56% (n  45)  2024:  50% (n  36)  2025:  58% (n  26)
+    2019-22 vs 2023-25: Q-FP 89% -> 86%  Q-LP 76% -> 65%  Q-DNP 44% -> 54%
+
+  LEAVE-ONE-SEASON-OUT - Brier on 'played' (lower = better)
+    class x position (shipped form)    all 0.1906 (+0.00%)  Q-FP +0.00%  Q-LP +0.00%  Q-DNP +0.00%  seasons better 0/7
+    + recency (half-life 3 seasons)    all 0.1907 (+0.07%)  Q-FP -0.18%  Q-LP +0.08%  Q-DNP +0.15%  seasons better 3/7
+    + recency (half-life 2)            all 0.1910 (+0.20%)  Q-FP -0.12%  Q-LP +0.19%  Q-DNP +0.38%  seasons better 3/7
+    + injury type                      all 0.1881 (-1.32%)  Q-FP -0.23%  Q-LP -1.19%  Q-DNP -2.19%  seasons better 7/7
+    + injury type + recency 3          all 0.1890 (-0.86%)  Q-FP -0.26%  Q-LP -0.68%  Q-DNP -1.70%  seasons better 5/7
+    + injury type + recency 2          all 0.1896 (-0.55%)  Q-FP -0.14%  Q-LP -0.37%  Q-DNP -1.30%  seasons better 5/7
+
+  FORWARD (train on earlier seasons only) - Brier on 'played' (lower = better)
+    class x position (shipped form)    all 0.2007 (+0.00%)  Q-FP +0.00%  Q-LP +0.00%  Q-DNP +0.00%  seasons better 0/4
+    + recency (half-life 3 seasons)    all 0.2004 (-0.16%)  Q-FP -0.46%  Q-LP +0.00%  Q-DNP -0.54%  seasons better 3/4
+    + recency (half-life 2)            all 0.2003 (-0.21%)  Q-FP -0.55%  Q-LP -0.01%  Q-DNP -0.70%  seasons better 3/4
+    + injury type                      all 0.1986 (-1.05%)  Q-FP +0.40%  Q-LP -0.98%  Q-DNP -2.02%  seasons better 4/4
+    + injury type + recency 3          all 0.1982 (-1.26%)  Q-FP -0.13%  Q-LP -1.08%  Q-DNP -2.44%  seasons better 4/4
+    + injury type + recency 2          all 0.1981 (-1.32%)  Q-FP -0.25%  Q-LP -1.12%  Q-DNP -2.52%  seasons better 4/4
+
+  SHIPPED TABLE (all seasons, half-life 3): logit shift by class x injury group (n >= 25, shrunk K=40); play rate at the class average shown
+    Q-FP (class 86%):
+      knee        shift +0.24  ->  89%   raw  97%  n 34
+      ankle       shift +0.14  ->  88%   raw  93%  n 28  (inside the noise, dropped)
+      concussion  shift -0.26  ->  83%   raw  79%  n 28
+    Q-LP (class 70%):
+      calf        shift +0.38  ->  78%   raw  94%  n 31
+      quad        shift +0.27  ->  76%   raw  84%  n 44
+      back        shift +0.26  ->  75%   raw  89%  n 27
+      groin       shift +0.23  ->  75%   raw  83%  n 60
+      hip         shift +0.21  ->  74%   raw  82%  n 45
+      toe         shift +0.10  ->  72%   raw  81%  n 27  (inside the noise, dropped)
+      core        shift +0.09  ->  72%   raw  79%  n 76  (inside the noise, dropped)
+      hand        shift -0.01  ->  70%   raw  73%  n 44  (inside the noise, dropped)
+      knee        shift -0.04  ->  69%   raw  71%  n 168  (inside the noise, dropped)
+      ankle       shift -0.07  ->  69%   raw  68%  n 191  (inside the noise, dropped)
+      foot        shift -0.14  ->  67%   raw  67%  n 45  (inside the noise, dropped)
+      hamstring   shift -0.22  ->  65%   raw  66%  n 150
+      shoulder    shift -0.26  ->  65%   raw  64%  n 113
+      concussion  shift -0.30  ->  64%   raw  47%  n 32
+    Q-DNP (class 51%):
+      illness     shift +0.32  ->  59%   raw  72%  n 39
+      knee        shift -0.00  ->  51%   raw  47%  n 32  (inside the noise, dropped)
+      hamstring   shift -0.12  ->  48%   raw  36%  n 28  (inside the noise, dropped)
+      ankle       shift -0.25  ->  45%   raw  34%  n 44
+
+  recency-weighted play rate by class x position (shrunk K=50) - replaces the BANGED play column:
+    Q-FP   QB 0.830  RB 0.898  WR 0.868  TE 0.857   (unweighted class 0.875)
+    Q-LP   QB 0.528  RB 0.715  WR 0.737  TE 0.750   (unweighted class 0.721)
+    Q-DNP  QB 0.466  RB 0.481  WR 0.537  TE 0.523   (unweighted class 0.483)
+
+  -> data/injury_type_play.json

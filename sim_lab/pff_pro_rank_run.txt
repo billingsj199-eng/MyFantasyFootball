@@ -1,0 +1,58 @@
+=== PFF Pro metrics on the weekly RANK objective (top 150, within position-week, LOYO + forward) ===
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+
+  -- qb_pos_graded  (top-150 rows with a value: 2804 of 11066)
+     QB: LOYO rho +0.0011 (base 0.307), pair -0.20, MSE +4.62%, better 4/7, picks [0.06, 0.1] | fwd rho -0.0005, pair -0.17, 2/5
+
+  -- own_wepa  (top-150 rows with a value: 10277 of 11066)
+     RB: LOYO rho -0.0017 (base 0.504), pair -0.11, MSE +0.02%, better 0/7, picks [-0.03, 0.0] | fwd rho -0.0032, pair -0.19, 0/5
+
+  -- own_conversionAfter4  (top-150 rows with a value: 10277 of 11066)
+     RB: LOYO rho +0.0000 (base 0.504), pair +0.00, MSE +0.00%, better 0/7, picks [0.0] | fwd rho -0.0018, pair -0.09, 0/5
+
+  -- own_successRate  (top-150 rows with a value: 10277 of 11066)
+     RB: LOYO rho +0.0000 (base 0.504), pair +0.00, MSE +0.00%, better 0/7, picks [0.0] | fwd rho +0.0000, pair +0.00, 0/5
+
+  -- ol_pbwr  (top-150 rows with a value: 10277 of 11066)
+     RB: LOYO rho +0.0000 (base 0.504), pair +0.00, MSE +0.00%, better 0/7, picks [0.0] | fwd rho -0.0002, pair -0.04, 1/5
+
+  -- own_blitzRateAgainst  (top-150 rows with a value: 10277 of 11066)
+     RB: LOYO rho +0.0001 (base 0.504), pair -0.01, MSE +0.12%, better 4/7, picks [-0.06, -0.03] | fwd rho -0.0046, pair -0.26, 1/5
+
+  -- opp_blitzRate  (top-150 rows with a value: 10277 of 11066)
+     RB: LOYO rho +0.0035 (base 0.504), pair +0.16, MSE -0.26%, better 5/7, picks [-0.03] | fwd rho +0.0022, pair +0.06, 3/5
+
+  -- rec_pos_graded  (top-150 rows with a value: 9113 of 11066)
+     WR: LOYO rho +0.0019 (base 0.347), pair +0.04, MSE +0.90%, better 4/7, picks [0.03, 0.06] | fwd rho +0.0044, pair +0.07, 4/5
+     TE: LOYO rho +0.0064 (base 0.339), pair -0.02, MSE +1.28%, better 4/7, picks [0.06, 0.1] | fwd rho +0.0043, pair -0.01, 3/5
+     RB: LOYO rho -0.0014 (base 0.504), pair -0.05, MSE +0.07%, better 0/7, picks [-0.03, 0.0] | fwd rho +0.0000, pair +0.00, 0/5
+
+  -- own_isPassOe  (top-150 rows with a value: 10277 of 11066)
+     TE: LOYO rho -0.0035 (base 0.339), pair -0.01, MSE +0.21%, better 3/7, picks [-0.06, -0.03, 0.0] | fwd rho -0.0086, pair -0.46, 1/5
+
+  -- own_explosiveRunRate  (top-150 rows with a value: 10277 of 11066)
+     TE: LOYO rho -0.0079 (base 0.339), pair -0.47, MSE +0.80%, better 2/7, picks [-0.03, 0.03] | fwd rho -0.0175, pair -0.89, 1/5
+
+  -- own_zoneCoveragePctAgainst  (top-150 rows with a value: 10277 of 11066)
+     TE: LOYO rho -0.0127 (base 0.339), pair -0.79, MSE +0.65%, better 0/7, picks [-0.03, 0.0, 0.03, 0.06] | fwd rho -0.0107, pair -0.72, 0/5
+
+  -- opp_yacPerReceptionAllowed  (top-150 rows with a value: 10277 of 11066)
+     TE: LOYO rho -0.0050 (base 0.339), pair -0.16, MSE +0.28%, better 1/7, picks [0.0, 0.06] | fwd rho +0.0007, pair -0.21, 2/5
+
+14 position-level tests; 0 pass
+(52s)

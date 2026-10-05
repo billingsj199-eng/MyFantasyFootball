@@ -55,6 +55,7 @@
         var active = firstKick != null && now >= firstKick - 4 * 24 * 3600 * 1000;
         var st = E.applyInSeasonInjuries(state.players, cur, { active: active });
         state.injuryWeek = cur;
+        state.injuryActive = active; // the field-sim workers re-apply the same layer
         // 2026-09-27: current-week games already final (kickoff 5h+ ago) -> league sims bank the real scores
         try {
           var doneTm = {}, kc = kicks[cur] || {};
@@ -71,6 +72,9 @@
         } else if (active) {
           $('status').textContent += ' · wk ' + cur + ' injury layer: no designations';
         }
+        // 2026-10-01: the NOTES sheet is first drawn at boot, before this layer arms — redraw it so it never shows
+        // ruled-out players at their healthy numbers (Pierce 7.9 behind an active out-window until the week was re-picked)
+        try { if ($('nt-week') && $('nt-week').options.length) renderNotesTab(); } catch (eN) { /* notes not built yet */ }
         if (state.weekResults) $('wk-note').textContent += ' — injury layer armed after this run; re-run to apply';
       } catch (e) { /* no kickoff cache deployed — layer stays off */ }
     })();
@@ -168,6 +172,24 @@
     $('bb-user').addEventListener('change', onBBUserChange);
     $('bb-show').addEventListener('change', renderBBTable);
     $('bb-tourney').addEventListener('change', renderBBTable);
+    if ($('bbf-file')) { // a cached older index.html has no OVERALL STANDINGS block
+      $('bbf-file').addEventListener('change', importBBFieldFile);
+      $('bbf-run').addEventListener('click', runBBFieldSim);
+      $('bbf-find').addEventListener('click', bbfLookup);
+      $('bbf-user').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') bbfLookup(); });
+      if ($('bbf-mine')) $('bbf-mine').addEventListener('change', bbfToggleMine);
+      if ($('bbf-view')) $('bbf-view').addEventListener('change', bbfSetView);
+      if ($('bbf-refresh')) {
+        $('bbf-refresh').addEventListener('click', function () { if (state.bbField) { state.bbField.nowAt = 0; bbfRefreshNow(); } });
+        setInterval(function () {
+          if (!document.hidden && $('pane-bb') && $('pane-bb').classList.contains('on')) bbfMaybeRefresh();
+        }, 60000);
+      }
+      if ($('bbf-forget')) {
+        $('bbf-forget').addEventListener('click', bbfForget);
+        bbfBootSaved();
+      }
+    }
     loadBBFromLS();
     renderGameList();
     renderTracking();
@@ -179,6 +201,7 @@
   function showTab(name) {
     document.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === name); });
     document.querySelectorAll('.pane').forEach(function (p) { p.classList.toggle('on', p.id === 'pane-' + name); });
+    if (name === 'bb') { bbfAutoLoad(); bbfMaybeRefresh(); }
   }
 
   function currentScoring(sel) {
@@ -573,8 +596,18 @@
         weekFrom: from, weekTo: to
       });
       state.seasonMeta = { from: from, to: to, sims: sims, preset: $('sn-scoring').value, ms: performance.now() - t0 };
+      // games already played are banked at their real results, never re-simulated (data/sim_actuals_2026.js)
+      var AC = (window.SIM_BANK_PLAYED !== false && window.SIM_ACTUALS_2026) || null, bankTxt = '';
+      if (AC && AC.done) {
+        var bw = Object.keys(AC.done).map(Number).filter(function (w) { return w >= from && w <= to; }).sort(function (a, b) { return a - b; });
+        var full = bw.filter(function (w) { return AC.done[w].length >= ((state.schedule.byWeek[w] || []).length * 2); });
+        var part = bw.filter(function (w) { return full.indexOf(w) < 0; });
+        if (bw.length) bankTxt = ' Played games use real results, not sims: ' +
+          (full.length ? 'week' + (full.length > 1 ? 's ' + full[0] + '–' + full[full.length - 1] : ' ' + full[0]) : '') +
+          (part.length ? (full.length ? ' + ' : '') + part.map(function (w) { return 'week ' + w + ' (' + AC.done[w].join('/') + ')'; }).join(', ') : '') + '.';
+      }
       $('sn-note').textContent = state.seasonResults.length + ' players × ' + label + ' simmed ' + sims +
-        'x in ' + state.seasonMeta.ms.toFixed(0) + 'ms (' + $('sn-scoring').value.toUpperCase() + '). Click a row for the week-by-week path.';
+        'x in ' + state.seasonMeta.ms.toFixed(0) + 'ms (' + $('sn-scoring').value.toUpperCase() + ').' + bankTxt + ' Click a row for the week-by-week path.';
       $('sn-detail').innerHTML = '';
       renderSeasonTable();
     });
@@ -686,7 +719,10 @@
         var c = x.wp.comps || {};
         Object.keys(c).forEach(function (k) { tot[k] = (tot[k] || 0) + c[k]; });
       });
-      var ratio = r.mean > 1 ? r.p50 / r.mean : 1;
+      // games already played are banked at their real points (engine simSeason): only the part still to play is
+      // a projection, so it is scaled to the median of THAT part and the real stat lines are added on top
+      var bk = r.banked || 0, simMean = r.mean - bk, simMed = r.p50 - bk;
+      var ratio = simMean > 1 ? simMed / simMean : 1;
       var m = {
         py: (tot.py || 0) * ratio, ptd: (tot.ptd || 0) * ratio,
         ry: (tot.ry || 0) * ratio, rtd: (tot.rtd || 0) * ratio,
@@ -697,9 +733,13 @@
         var raw = sc.pass_yd * m.py + sc.pass_td * m.ptd + sc.rush_yd * m.ry + sc.rush_td * m.rtd +
           sc.rec * m.rec + sc.rec_yd * m.rcy + sc.rec_td * m.rctd +
           (p.pos === 'TE' && sc.bonus_rec_te ? sc.bonus_rec_te * m.rec : 0);
-        var f = raw > 1 ? r.p50 / raw : 1;
+        var f = raw > 1 ? simMed / raw : 1;
         Object.keys(m).forEach(function (k) { m[k] *= f; });
       }
+      (r.bankedWeeks || []).forEach(function (b) {   // row = [pts_std, rec, pass_td, pass_yd, rush_yd, rush_td, rec_yd, rec_td]
+        var a = b.row; if (!a) return;
+        m.rec += a[1]; m.ptd += a[2]; m.py += a[3]; m.ry += a[4]; m.rtd += a[5]; m.rcy += a[6]; m.rctd += a[7];
+      });
       m.tgt = CATCH_RATE[p.pos] ? m.rec / CATCH_RATE[p.pos] : null;
       m.rrtd = m.rtd + m.rctd;
       return { r: r, m: m };
@@ -741,6 +781,12 @@
     var html = '<h3>' + esc(p.name) + ' (' + p.pos + ', ' + p.tm + ') — week-by-week path</h3>' +
       '<table style="max-width:640px"><thead><tr><th>Wk</th><th class="l">Opp</th><th>Implied</th>' +
       '<th>Env mult</th><th>Proj mean</th></tr></thead><tbody>';
+    (r.bankedWeeks || []).forEach(function (b) {   // already played: the real score, not a projection
+      var s0 = state.schedule.byTeam[p.tm] && state.schedule.byTeam[p.tm][b.wk];
+      html += '<tr><td>' + b.wk + '</td><td class="l">' + (s0 ? (s0.home ? 'vs ' : '@ ') + s0.opp : '') +
+        '</td><td class="dim" colspan="2">played' + (b.row ? '' : ' — no stat line (did not play)') +
+        '</td><td><b>' + fmt(b.pts) + '</b> <span class="dim">actual</span></td></tr>';
+    });
     r.weeks.forEach(function (x) {
       var s = x.wp.slot;
       html += '<tr><td>' + x.wk + '</td><td class="l">' + (s.home ? 'vs ' : '@ ') + s.opp +
@@ -819,6 +865,10 @@
       // weeks via weeklyProjection, so a Sleeper IR tag must not wipe the
       // rest of the season for a player with a known return. 0/null = healthy.
       if (p && Object.prototype.hasOwnProperty.call(ov, p.name)) return;
+      // 2026-10-01: same for a timeline read off the news feed or a season-ending diagnosis (src news* / dx-*) —
+      // the injury layer already zeroes exactly those weeks, a blanket season exclusion would overstate it.
+      var injSt = E.injuryState ? E.injuryState() : null;
+      if (p && injSt && injSt.map && injSt.map[p.norm] && /^(news|dx-)/.test(injSt.map[p.norm].src || '')) return;
       if (c === 'ir' || c === 'sus') eff[sid] = 'ir';
       else if (c === 'pup' && inSeason && !windowed) eff[sid] = 'ir';
       else if (c === 'out' && inSeason) eff[sid] = 'out';
@@ -916,6 +966,7 @@
       state.league = {
         id: lid, name: league.name, league: league, teams: teams, pairsByWeek: pairsByWeek,
         regWeeks: simWeeks, playoffStart: playoffStart, playoffTeams: playoffTeams,
+        playoffReseed: +(league.settings && league.settings.playoff_seed_type) === 1,
         lineupSlots: slots, scoring: E.scoringFromLeague(league.scoring_settings),
         synthSchedule: !anyPairs, demo: false,
         unavailable: unavailable, currentWeek: curWeek, lockedReal: lockedReal,
@@ -1049,8 +1100,12 @@
       var inSeason = !!(nflState && nflState.season_type === 'regular');
       var curWeek = (inSeason && nflState.week > 0) ? nflState.week : 1;
       var ss = settings.scheduleSettings || {};
-      var regCount = ss.regularSeasonMatchupPeriodCount || 14;
-      var playoffStart = regCount + 1;
+      // ESPN's key is matchupPeriodCount (regular-season periods; verified on a live league 2026-10-05 — the old
+      // regularSeasonMatchupPeriodCount read never existed and always fell back to 14); matchupPeriods maps a
+      // period to its NFL weeks, so the first playoff week is period (count + 1)'s first week.
+      var regCount = ss.matchupPeriodCount || ss.regularSeasonMatchupPeriodCount || 14;
+      var nextPer = ss.matchupPeriods && ss.matchupPeriods[String(regCount + 1)];
+      var playoffStart = nextPer && nextPer.length ? nextPer[0] : regCount + 1;
       var playoffTeams = ss.playoffTeamCount || 6;
       var regWeeks = [];
       for (var w = 1; w < playoffStart; w++) regWeeks.push(w);
@@ -1108,7 +1163,7 @@
         id: 'espn:' + lid, name: (settings.name || ('ESPN League ' + lid)), teams: teams,
         pairsByWeek: pairsByWeek, regWeeks: simWeeks, playoffStart: playoffStart,
         playoffTeams: playoffTeams, lineupSlots: slots, scoring: scoring,
-        synthSchedule: !anyPairs, demo: false, platform: 'espn',
+        synthSchedule: !anyPairs, demo: false, platform: 'espn', playoffReseed: ss.playoffReseed === true,
         unavailable: unavailable, currentWeek: curWeek
         // no pickInventory — trade analyzer falls back to own-picks (ESPN has
         // no traded-picks API; these are redraft leagues anyway)
@@ -1347,7 +1402,14 @@
     var fmt = lg.format || {};
     var slots = (fmt.rosterPositions || []).filter(function (s) { return s !== 'BN' && s !== 'IR' && s !== 'TAXI'; });
     if (!slots.length) slots = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'K', 'DEF'];
-    var scoring = E.scoringFromLeague({ rec: typeof fmt.ppr === 'number' ? fmt.ppr : 0.5 });
+    // Scoring: the snapshot's per-stat `scoring` map (Sleeper keys; site saves it since 2026-10-05) wins; older
+    // snapshots fall back to the format's rec + passTd + tep (TE premium per catch, saved since 2026-09-02).
+    var scSrc = lg.scoring && typeof lg.scoring === 'object' ? 'league settings' : 'site format';
+    var scoring = E.scoringFromLeague(Object.assign({
+      rec: typeof fmt.ppr === 'number' ? fmt.ppr : 0.5,
+      pass_td: typeof fmt.passTd === 'number' ? fmt.passTd : 4,
+      bonus_rec_te: typeof fmt.tep === 'number' ? fmt.tep : 0
+    }, scSrc === 'league settings' ? lg.scoring : {}));
 
     var nflState = await sleeper('/state/nfl').catch(function () { return null; });
     var inSeason = !!(nflState && nflState.season_type === 'regular');
@@ -1360,7 +1422,15 @@
     var slSet = (slLeague && slLeague.settings) || {};
     var playoffStart = +lg.playoffStart || +slSet.playoff_week_start || 15;
     var playoffTeams = +lg.playoffTeams || +slSet.playoff_teams || 6;
-    var playoffSrc = +lg.playoffStart ? 'site snapshot' : (+slSet.playoff_week_start ? 'Sleeper (live)' : 'assumed');
+    var playoffReseed = lg.playoffReseed != null ? !!lg.playoffReseed : +slSet.playoff_seed_type === 1;
+    var playoffSrc = (+lg.playoffStart || +lg.playoffTeams)
+      ? 'site snapshot' + (+lg.playoffStart ? '' : ', start wk assumed')
+      : (+slSet.playoff_week_start ? 'Sleeper (live)' : 'assumed');
+    // older Sleeper snapshots without a scoring map: the live league's scoring_settings are exact
+    if (scSrc !== 'league settings' && slLeague && slLeague.scoring_settings) {
+      scoring = E.scoringFromLeague(slLeague.scoring_settings);
+      scSrc = 'Sleeper league (live)';
+    }
     var regWeeks = []; for (var w = 1; w < playoffStart; w++) regWeeks.push(w);
     var simWeeks = regWeeks.filter(function (w2) { return w2 >= curWeek; });
     var unavailable = {};
@@ -1477,7 +1547,7 @@
       lockedReal: lockedRealM, lockedRealAt: lockedRealAt,
       id: 'mff:' + (lg.leagueId || lg.name), name: lg.name || 'MFF League', teams: teams,
       pairsByWeek: realPairs || roundRobin(teams.map(function (t2) { return t2.rosterId; }), regWeeks),
-      regWeeks: simWeeks, playoffStart: playoffStart, playoffTeams: playoffTeams,
+      regWeeks: simWeeks, playoffStart: playoffStart, playoffTeams: playoffTeams, playoffReseed: playoffReseed,
       lineupSlots: slots, scoring: scoring,
       synthSchedule: !realPairs, demo: false, platform: 'mff',
       unavailable: unavailable, currentWeek: curWeek
@@ -1494,7 +1564,8 @@
       teams.length + ' teams, ' + simWeeks.length + ' of ' + regWeeks.length + ' regular-season weeks left to sim' +
       ' · ' + matched + '/' + total + ' players matched to projections' +
       ' · injuries: ' + nOut + ' OUT this week, ' + nIR + ' IR/PUP/Susp excluded' +
-      ' · rec=' + scoring.rec + ' from the site format (pass TD assumed 4) · playoffs wk' + playoffStart + ' / ' + playoffTeams + ' teams (' + playoffSrc + ')' +
+      ' · scoring from the ' + scSrc + ': rec ' + scoring.rec + ', pass TD ' + scoring.pass_td + ', pass yd ' + scoring.pass_yd + (scoring.bonus_rec_te ? ', TE premium +' + scoring.bonus_rec_te : '') +
+      ' · playoffs wk' + playoffStart + ' / ' + playoffTeams + ' teams' + (state.league.playoffReseed ? ', re-seeded' : '') + ' (' + playoffSrc + (playoffSrc === 'assumed' ? ' — re-sync the league on My Teams, or set the Playoffs boxes' : '') + ')' +
       (state.league.synthSchedule
         ? ' · SYNTHESIZED round-robin schedule — ' + (slId ? 'Sleeper has not posted matchups yet' : 're-sync the league on My Teams (ESPN helper v0.20.19+) to sync the real one')
         : ' · REAL schedule from ' + schedSrc) +
@@ -1557,7 +1628,7 @@
       var res = E.simLeague({
         teams: L.teams, sims: 1500, seed: 99, scoring: L.scoring, schedule: state.schedule,
         players: state.players, pairsByWeek: L.pairsByWeek, regWeeks: L.regWeeks,
-        playoffTeams: L.playoffTeams, playoffStart: L.playoffStart, lineupSlots: L.lineupSlots,
+        playoffTeams: L.playoffTeams, playoffReseed: !!L.playoffReseed, playoffStart: L.playoffStart, lineupSlots: L.lineupSlots,
         unavailable: L.unavailable || {}, currentWeek: L.currentWeek || 1
       });
       state.tradeFinish = {};
@@ -1676,7 +1747,7 @@
     var sims = 3000, seed = 1234; // same seed both runs -> deltas are less noisy
     var opts = {
       sims: sims, seed: seed, scoring: L.scoring, schedule: state.schedule, players: state.players,
-      pairsByWeek: L.pairsByWeek, regWeeks: L.regWeeks, playoffTeams: L.playoffTeams,
+      pairsByWeek: L.pairsByWeek, regWeeks: L.regWeeks, playoffTeams: L.playoffTeams, playoffReseed: !!L.playoffReseed,
       playoffStart: L.playoffStart, lineupSlots: L.lineupSlots,
       unavailable: L.unavailable || {}, currentWeek: L.currentWeek || 1
     };
@@ -1770,8 +1841,43 @@
     $('tr-result').innerHTML = html;
   }
 
+  // Playoff shape override (Jack 2026-10-05: 14-team ESPN league with 7 spots loaded as the assumed 6). The
+  // loader's numbers are the default; the Playoffs boxes override them per league id (localStorage, this browser).
+  function poKey(L) { return 'simlab_po_' + L.id; }
+  function applyPlayoffShape(L, nTeams, start) {
+    nTeams = Math.max(2, Math.min(L.teams.length, Math.round(nTeams) || L.playoffTeams));
+    start = Math.max(2, Math.min(18, Math.round(start) || L.playoffStart));
+    if (start !== L.playoffStart) {
+      var all = []; for (var w = 1; w < start; w++) all.push(w);
+      if (L.synthSchedule) L.pairsByWeek = roundRobin(L.teams.map(function (t) { return t.rosterId; }), all);
+      L.regWeeks = all.filter(function (w2) { return w2 >= (L.currentWeek || 1); });
+    }
+    L.playoffTeams = nTeams; L.playoffStart = start;
+  }
+  function syncPlayoffInputs() {
+    var L = state.league;
+    if (!L.poDefault) {
+      L.poDefault = { teams: L.playoffTeams, start: L.playoffStart };
+      try {
+        var sv = JSON.parse(localStorage.getItem(poKey(L)) || 'null');
+        if (sv && sv.teams && sv.start) applyPlayoffShape(L, sv.teams, sv.start);
+      } catch (e) { /* storage blocked — loader numbers stand */ }
+    }
+    $('lg-po-teams').value = L.playoffTeams; $('lg-po-start').value = L.playoffStart;
+  }
+  function readPlayoffInputs() {
+    var L = state.league;
+    applyPlayoffShape(L, +$('lg-po-teams').value, +$('lg-po-start').value);
+    $('lg-po-teams').value = L.playoffTeams; $('lg-po-start').value = L.playoffStart;
+    try {
+      if (L.poDefault && L.playoffTeams === L.poDefault.teams && L.playoffStart === L.poDefault.start) localStorage.removeItem(poKey(L));
+      else localStorage.setItem(poKey(L), JSON.stringify({ teams: L.playoffTeams, start: L.playoffStart }));
+    } catch (e) { /* storage blocked — override lasts this load only */ }
+  }
+
   function renderLeagueTeams() {
     var L = state.league;
+    syncPlayoffInputs();
     $('lg-teams-h').style.display = '';
     fillTradeSelects();
     var unav = L.unavailable || {};
@@ -1792,6 +1898,7 @@
     var L = state.league;
     if (!L) { $('lg-note').textContent = 'Load a league (or the demo) first.'; return; }
     var sims = Math.max(10, Math.min(10000, +$('lg-sims').value || 100));
+    readPlayoffInputs();
     runBlocking('lg-run', 'lg-note', 'Simulating "' + L.name + '" ' + sims + 'x…', function () {
       var t0 = performance.now();
       var lockedPts = null, lockedTeams = null, LK = state.locked;
@@ -1825,7 +1932,7 @@
         lockedPts: lockedPts, lockedTeams: lockedTeams, lockedReal: lockedRealUse,
         sims: sims, scoring: L.scoring, schedule: state.schedule, players: state.players,
         teams: L.teams, pairsByWeek: L.pairsByWeek, regWeeks: L.regWeeks,
-        playoffTeams: L.playoffTeams, playoffStart: L.playoffStart, lineupSlots: L.lineupSlots,
+        playoffTeams: L.playoffTeams, playoffReseed: !!L.playoffReseed, playoffStart: L.playoffStart, lineupSlots: L.lineupSlots,
         unavailable: L.unavailable || {}, currentWeek: L.currentWeek || 1
       });
       var ms = performance.now() - t0;
@@ -1841,7 +1948,9 @@
       var sosOrder = state.leagueResults.slice().sort(function (a, b) { return b.sos - a.sos; });
       state.leagueResults.forEach(function (r) { r.sosRank = sosOrder.indexOf(r) + 1; });
 
-      $('lg-note').textContent = '"' + L.name + '" — ' + sims + ' season sims in ' + ms.toFixed(0) + 'ms.' + (lockedTeams ? ' Wk ' + LK.week + ' played games banked (' + Object.keys(LK.teams).join('/') + (L.lockedReal ? ', real lineups' + (L.lockedRealAt ? ' from the site sync' : '') + (staleReal ? ' — ' + staleReal + ' players synced BEFORE kickoff use sim lineups, re-sync the league' : '') : ', sim lineups') + ').' : '') +
+      var poByes = Math.pow(2, E.bracketRounds(L.playoffTeams)) - L.playoffTeams;
+      $('lg-note').textContent = '"' + L.name + '" — ' + sims + ' season sims in ' + ms.toFixed(0) + 'ms.' +
+        ' Playoffs: ' + L.playoffTeams + ' teams from wk ' + L.playoffStart + (poByes ? ', top ' + (poByes > 1 ? poByes + ' seeds get' : 'seed gets') + ' a bye' : ', no byes') + '.' + (lockedTeams ? ' Wk ' + LK.week + ' played games banked (' + Object.keys(LK.teams).join('/') + (L.lockedReal ? ', real lineups' + (L.lockedRealAt ? ' from the site sync' : '') + (staleReal ? ' — ' + staleReal + ' players synced BEFORE kickoff use sim lineups, re-sync the league' : '') : ', sim lineups') + ').' : '') +
         (L.synthSchedule ? (L.platform === 'yahoo' || L.platform === 'mff'
           ? ' Schedule is synthesized round-robin (no matchup feed on this import path).'
           : ' Schedule is synthesized round-robin until the platform publishes real matchups.') : '');
@@ -2124,11 +2233,11 @@
     html += '</tr></tbody></table>';
 
     // playoff weeks: projected score + who you'd face and how often you're alive
-    var roundName = {};
-    roundName[L.playoffStart] = 'Round 1';
-    roundName[L.playoffStart + 1] = 'Semis';
-    roundName[L.playoffStart + 2] = 'Championship';
-    if (L.playoffTeams <= 4) { roundName[L.playoffStart] = 'Semis'; roundName[L.playoffStart + 1] = 'Championship'; delete roundName[L.playoffStart + 2]; }
+    var roundName = {}, nRounds = E.bracketRounds(L.playoffTeams);
+    for (var ri = 0; ri < nRounds; ri++) {
+      var fromEnd = nRounds - 1 - ri;
+      roundName[L.playoffStart + ri] = ['Championship', 'Semis', 'Quarterfinals'][fromEnd] || ('Round ' + (ri + 1));
+    }
     var pWks = Object.keys(roundName).map(Number).sort(function (a, b) { return a - b; });
     html += '<h3>Playoff weeks (if the bracket goes your way)</h3>' +
       '<table style="max-width:760px"><thead><tr><th>Wk</th><th class="l">Round</th><th>Alive</th>' +
@@ -2486,10 +2595,17 @@
   // Ward / Kenny Gainwell ARE in the Clay guide — as Chigoziem Okonkwo, Ken
   // Walker III, Cameron Ward, Kenneth Gainwell). Tiers after the exact norm
   // match: same last name + shared first-name prefix of >=3 chars (Cam→
-  // Cameron, Chig→Chigoziem, Kenny/Ken→Kenneth), then same last name + first
-  // initial when that leaves exactly one candidate. Position-gated whenever
-  // the CSV/cloud row carries one, so name twins at other positions can't
-  // steal the match.
+  // Cameron, Chig→Chigoziem, Kenny/Ken→Kenneth), exactly one candidate.
+  // Position-gated whenever the CSV/cloud row carries one, so name twins at
+  // other positions can't steal the match. Underdog-only nicknames
+  // (Hollywood Brown) go through the engine's alias table first.
+  // The old last tier — same last name + first INITIAL when unique — is gone
+  // (2026-10-02): against the full 617-player Underdog field it handed real
+  // players to the wrong man — J'Mari Taylor → Jonathan Taylor, Josh
+  // Williams → Javonte Williams, Trevor → Travis Etienne, Kyle → Ke'Shawn
+  // Williams, Tyler → Tez Johnson — giving those rosters a star's points and
+  // projection. Every legitimate nickname in that field clears the prefix
+  // tier; a player with no pool match is simply unprojected.
   var _bbMatchCache = {};
   function bbMatchPlayer(name, pos) {
     var ck = name + '|' + (pos || '');
@@ -2499,7 +2615,7 @@
     return m;
   }
   function bbMatchUncached(name, pos) {
-    var nk = E.norm(name);
+    var nk = E.bbAliasNorm(name);
     var exact = state.players.byNorm[nk];
     if (exact && (exact.isDST || exact.pos === 'K')) exact = null;
     if (exact && (!pos || exact.pos === pos)) return exact;
@@ -2518,8 +2634,6 @@
       return n >= 3;
     });
     if (pref.length === 1) return pref[0];
-    var init = cands.filter(function (c) { return c.norm[0] === first[0]; });
-    if (init.length === 1) return init[0];
     return exact; // pos-mismatched exact name beats no match at all
   }
 
@@ -2632,10 +2746,15 @@
   //    tier from the top pays. Cutoff defaults = REAL BBM VI numbers
   //    (advancing W15 median 165.0, W16 175.1; finals winner 187.9, top-10
   //    171.6, top-50 152.9 — redraft teams, but the best anchor we have).
-  //  * RE-DRAFT playoffs (BBM itself, since BBM IV): every playoff round is
-  //    a FRESH 18-pick draft (Dec timestamps in the rd2-rd4 files) — your
-  //    drafted roster only plays wks 1-14, so playoff equity conditional on
-  //    advancing is ~flat: EV = advCash x P(adv) + perAdvEV x P(adv).
+  //  * CORRECTED 2026-10-02 (Jack: "there are no redrafts — you keep your
+  //    team"): BBM playoffs are SAME-ROSTER. The Dec timestamps in the
+  //    rd2-rd4 files are when Underdog creates the playoff GROUPS, not new
+  //    drafts. BBM now defaults to the ladder with its own preset below, and
+  //    a saved BBM model left in re-draft mode is put back on it. What
+  //    follows describes the old flat-equity mode, kept only as a manual
+  //    option:
+  //  * FLAT-EQUITY mode (was "re-draft"): treats playoff equity conditional
+  //    on advancing as flat: EV = advCash x P(adv) + perAdvEV x P(adv).
   //    STRUCTURE CHANGES YEARLY (Jack 2026-08-25: "adjust for that"):
   //      W15 gates: II 2-of-18 (verified per-pod: 1440 pods x 18, 2 advanced
   //      from every one) -> III 1/10,1/16 -> IV 1/16,1/16 -> V/VI 1/13,1/16
@@ -2673,8 +2792,7 @@
   // mode auto-detect from the tournament title; saved models override
   function defaultMode(title) {
     if (/eliminator/i.test(title || '')) return 'eliminator';
-    if (/best ball mania|bbm/i.test(title || '')) return 'redraft';
-    return 'ladder';
+    return 'ladder'; // BBM included — same rosters all the way through
   }
   // Per-tournament structural presets (2026 structures), matched by title
   // when no saved model exists — the structure differs per tournament:
@@ -2686,7 +2804,19 @@
   //  * The Eliminator: weekly SURVIVOR (top-6 of pod wk1, then 50% cut every
   //    week, 3-person final) — the advance/finals model doesn't apply; no
   //    preset, EV column will mislead there.
+  var BBM_RE = /best ball mania|\bbbm\b/i;
   var PRIZE_PRESETS = [
+    // BBM VII (Underdog rules page): top 2 of 12 advance ($25 floor for every
+    // advancer), W15 1-of-14, W16 1-of-12, 667-team final paid by placement
+    { re: BBM_RE, model: {
+      adv15N: 14, adv16N: 12, finalsSize: 667, advCash: 25,
+      ftiers: [{ top: 1, prize: 2000000 }, { top: 2, prize: 1000000 }, { top: 3, prize: 500000 }, { top: 4, prize: 400000 },
+               { top: 5, prize: 300000 }, { top: 6, prize: 250000 }, { top: 7, prize: 200000 }, { top: 8, prize: 150000 },
+               { top: 9, prize: 125000 }, { top: 10, prize: 100240 }, { top: 15, prize: 90000 }, { top: 20, prize: 70000 },
+               { top: 30, prize: 50000 }, { top: 40, prize: 25000 }, { top: 50, prize: 15150 }, { top: 100, prize: 7500 },
+               { top: 200, prize: 5500 }, { top: 300, prize: 4500 }],
+      minCash: 3750
+    } },
     { re: /puppy/i, model: {
       adv15N: 10, adv16N: 10, finalsSize: 333, advCash: 0,
       ftiers: [{ top: 1, prize: 50000 }, { top: 10, prize: 2500 }, { top: 50, prize: 400 }],
@@ -2696,6 +2826,9 @@
   function prizeFor(title) {
     var all = loadLS('simlab_bb_prize', {});
     var saved = all[title] || {};
+    // a BBM model saved in the old re-draft mode carries a structure that
+    // never existed — drop it and fall back to the BBM preset
+    if (BBM_RE.test(title || '') && (saved.mode === 'redraft' || saved.redraft === true)) saved = {};
     var base = Object.assign({}, DEF_PRIZE);
     for (var pi = 0; pi < PRIZE_PRESETS.length; pi++) {
       if (PRIZE_PRESETS[pi].re.test(title || '')) { Object.assign(base, PRIZE_PRESETS[pi].model); break; }
@@ -2902,6 +3035,1275 @@
     });
   }
 
+  // ---------------- BEST BALL: OVERALL STANDINGS ----------------
+  // Underdog pays the top OVERALL Round-1 scores (the regular-season prize) —
+  // a race against all ~672k entries, not the 12-team pod. Input is a field
+  // file (mff_bbm_leaderboard_*.json, kind 'mff_ud_leaderboard'): the
+  // tournament leaderboard with each team's place, official points, payout
+  // and 18-man roster, plus the user's own entries. Rosters never change
+  // after the drafts close, so ONE file lasts the season: its points are
+  // rolled forward at run time by adding each completed week since the pull
+  // from Sleeper stats, then the remaining weeks are simmed for every team
+  // at once (engine bbFieldRun) — each of your teams gets a final-rank
+  // distribution against the exact field.
+  //   pages:   [[page, weight]...]  weight = leaderboard pages it stands for
+  //            (all 1 in a complete file; >1 only in a partial/sampled one)
+  //   apps:    [[name, pos, seasonPts]...]
+  //   entries: [[page, place, points, payout, username, [appIdx...]]...]
+  //            (v1 files carry an index into `pages` instead of the page no.)
+  //   mine:    [{draftId, title, points, podPlace, payoutText, apps:[appIdx...]}]
+  function importBBFieldFile(ev) {
+    var f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    $('bbf-note').textContent = 'Reading ' + f.name + ' (' + (f.size / 1048576).toFixed(0) + ' MB)…';
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var d = JSON.parse(String(reader.result));
+        if (d && d.kind === 'mff_ud_mypods') bbfImportPods(d);
+        else {
+          loadBBField(d);
+          bbfSaveFile(f);
+          bbfApplySavedPods().then(bbfRefreshNow);
+        }
+      } catch (e) { $('bbf-note').textContent = 'Import failed: ' + e.message; }
+      ev.target.value = '';
+    };
+    reader.readAsText(f);
+  }
+  window._bbFieldLoad = function (obj) { loadBBField(obj); }; // test hook
+
+  // ---- saved field file ----
+  // The file is 60+ MB — far past localStorage — so the picked File itself
+  // goes into IndexedDB (this device + browser only; never uploaded). It is
+  // NOT parsed at page load (that costs seconds and ~300 MB on every visit):
+  // boot reads only the small 'meta' record, and the blob is parsed the first
+  // time RUN OVERALL SIM or FIND TEAMS needs it.
+  var BBF_DB = 'simlab_bbfield', BBF_STORE = 'files';
+  function bbfDb(mode, fn) {
+    return new Promise(function (resolve, reject) {
+      var rq = indexedDB.open(BBF_DB, 1);
+      rq.onupgradeneeded = function () { rq.result.createObjectStore(BBF_STORE); };
+      rq.onerror = function () { reject(rq.error); };
+      rq.onsuccess = function () {
+        var db = rq.result, tx = db.transaction(BBF_STORE, mode), out = fn(tx.objectStore(BBF_STORE));
+        tx.oncomplete = function () { db.close(); resolve(out && out.result); };
+        tx.onerror = tx.onabort = function () { db.close(); reject(tx.error); };
+      };
+    });
+  }
+  function bbfSavedLine(meta) {
+    return meta.tournament + ' field file saved on this device (' + (meta.teams || 0).toLocaleString() + ' teams, pulled ' +
+      String(meta.pulledAt || '').slice(0, 10) + ', ' + (meta.size / 1048576).toFixed(0) + ' MB)';
+  }
+  function bbfSaveFile(file) {
+    var f = state.bbField, note = $('bbf-note').textContent;
+    var meta = { name: file.name, size: file.size, savedAt: Date.now(), pulledAt: f.meta.pulledAt,
+                 tournament: f.meta.tournament, teams: f.nField };
+    bbfDb('readwrite', function (st) { st.put(file, 'blob'); st.put(meta, 'meta'); }).then(function () {
+      state.bbfSaved = meta;
+      $('bbf-forget').style.display = '';
+      if ($('bbf-note').textContent === note) $('bbf-note').textContent = note + ' Saved on this device — no need to pick it again.';
+      // ask the browser not to evict it under storage pressure (no prompt in Chrome)
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
+    }).catch(function (e) {
+      if ($('bbf-note').textContent === note) $('bbf-note').textContent = note + ' (Could not save it on this device: ' + ((e && e.message) || e) + ' — it will need re-picking after a reload.)';
+    });
+  }
+  function bbfBootSaved() {
+    if (!window.indexedDB) return;
+    bbfDb('readonly', function (st) { return st.get('meta'); }).then(function (meta) {
+      if (!meta || state.bbField) return;
+      state.bbfSaved = meta;
+      $('bbf-forget').style.display = '';
+      $('bbf-note').textContent = bbfSavedLine(meta) + ' — it loads itself when you open this tab.';
+      if ($('pane-bb') && $('pane-bb').classList.contains('on')) bbfAutoLoad();
+    }).catch(function () {});
+  }
+  // Parse the saved blob; false = nothing saved. One load at a time — the
+  // tab-open auto-load and a RUN / FIND click share the same promise.
+  function bbfEnsureLoaded() {
+    if (state.bbField) return Promise.resolve(true);
+    if (!state.bbfSaved) return Promise.resolve(false);
+    if (!state.bbfLoadP) {
+      state.bbfLoadP = (async function () {
+        $('bbf-note').textContent = 'Loading the saved field file (' + (state.bbfSaved.size / 1048576).toFixed(0) + ' MB)…';
+        await new Promise(function (r) { setTimeout(r, 30); }); // let the note paint
+        var blob = await bbfDb('readonly', function (st) { return st.get('blob'); });
+        if (!blob) { state.bbfSaved = null; return false; }
+        loadBBField(JSON.parse(await blob.text()));
+        $('bbf-note').textContent += ' (Loaded from the copy saved on this device.)';
+        await bbfApplySavedPods();
+        bbfRefreshNow();
+        return true;
+      })();
+      state.bbfLoadP.then(function () { state.bbfLoadP = null; }, function () { state.bbfLoadP = null; });
+    }
+    return state.bbfLoadP;
+  }
+  // Opening the BEST BALL tab loads the saved file by itself, so the section
+  // is ready without a pick or a click. Only then — never at page boot — as
+  // the parse costs a second or two and ~300 MB.
+  function bbfAutoLoad() {
+    if (state.bbField || !state.bbfSaved || state.bbfLoadP) return;
+    bbfEnsureLoaded().catch(function (e) {
+      $('bbf-note').textContent = 'Could not load the saved field file: ' + ((e && e.message) || e) + ' — pick it again.';
+    });
+  }
+  function bbfForget() {
+    bbfDb('readwrite', function (st) { st.delete('blob'); st.delete('meta'); st.delete('pods'); }).then(function () {
+      state.bbfSaved = null;
+      $('bbf-forget').style.display = 'none';
+      $('bbf-note').textContent = 'Saved field file removed from this device' +
+        (state.bbField ? ' (still loaded until you reload the page).' : '. Pick a file to load one.');
+    }).catch(function (e) { $('bbf-note').textContent = 'Could not remove it: ' + ((e && e.message) || e); });
+  }
+
+  // NFL weeks roll on Tuesday morning; anything pulled after Thursday's
+  // kickoff already has part of the current week inside its points.
+  var BBF_WEEK_MS = 7 * 86400000, BBF_WEEK_ANCHOR = Date.UTC(2026, 8, 8, 9); // Tue Sep 8 2026, 5am ET
+  function bbfWeekIdx(t) { return Math.floor((t - BBF_WEEK_ANCHOR) / BBF_WEEK_MS); }
+
+  function loadBBField(d) {
+    if (!d || d.kind !== 'mff_ud_leaderboard' || !Array.isArray(d.entries) || !Array.isArray(d.apps) || !Array.isArray(d.pages)) {
+      throw new Error('not a field file (expected an mff_bbm_leaderboard_*.json file)');
+    }
+    if (!d.mine || !d.mine.length) throw new Error('the file has none of your own entries in it');
+    var POS = { QB: 1, RB: 1, WR: 1, TE: 1 }, unmatched = [];
+    // appearance -> index into the unique roster-player list. A player with no
+    // projection stays on the roster as a STUB: he never sims, but real weeks
+    // (roll-forward, finished games) still score him.
+    var plist = [], plIx = {}, appPl = new Int32Array(d.apps.length);
+    d.apps.forEach(function (a, i) {
+      var p = bbMatchPlayer(a[0], POS[a[1]] ? a[1] : null), k;
+      if (p) k = 'p:' + (p.sid || p.norm);
+      else {
+        unmatched.push(a[0]);
+        p = { name: a[0], pos: a[1] === 'FB' ? 'RB' : a[1], sid: null, stub: true };
+        k = 's:' + a[0] + '|' + a[1];
+      }
+      if (plIx[k] === undefined) { plIx[k] = plist.length; plist.push(p); }
+      appPl[i] = plIx[k];
+    });
+    // Underdog's season points per player as of the pull (for the team pop-up)
+    var plPulled = new Float64Array(plist.length);
+    d.apps.forEach(function (a, i) { if (a[2] != null && a[2] > plPulled[appPl[i]]) plPulled[appPl[i]] = a[2]; });
+    var v2 = (d.v || 1) >= 2, wOf = {};
+    if (v2) d.pages.forEach(function (pg) { wOf[pg[0]] = pg[1]; });
+    function wFor(e0) { return v2 ? (wOf[e0] || 1) : (d.pages[e0] || [0, 1])[1]; }
+
+    var E0 = d.entries, nF = E0.length, nM = d.mine.length, nQ = nF + nM, nPicks = 0, i, j;
+    for (i = 0; i < nF; i++) nPicks += E0[i][5].length;
+    for (i = 0; i < nM; i++) nPicks += d.mine[i].apps.length;
+    var start = new Int32Array(nQ + 1), ix = new Int32Array(nPicks), n = 0;
+    var pulled = new Float64Array(nQ), weight = new Float64Array(nQ), place = new Int32Array(nQ), users = new Array(nQ);
+    // your own entries also sit somewhere on the leaderboard — find them by
+    // roster + points so they aren't counted twice (and to read their place)
+    var mineSig = {}, minePts = {}, minePlace = new Array(nM).fill(0);
+    function sigOf(apps) { return apps.slice().sort(function (a, b) { return a - b; }).join(','); }
+    d.mine.forEach(function (m, mi) { mineSig[sigOf(m.apps)] = mi; minePts[(+m.points).toFixed(2)] = 1; });
+    var payPlace = [], payAmt = [], fieldW = 0, lastPaid = 0;
+    // draft group ("pod") per team — v3 files only; the Round-1 advance and the
+    // playoff sim need to know which 12 teams drafted together
+    var pod = new Int32Array(nQ).fill(-1), nPodded = 0;
+    for (i = 0; i < nF; i++) {
+      var e = E0[i], apps = e[5];
+      if (e[6] != null && e[6] >= 0) { pod[i] = e[6]; nPodded++; }
+      start[i] = n;
+      for (j = 0; j < apps.length; j++) { var pl = appPl[apps[j]]; if (pl >= 0) ix[n++] = pl; }
+      pulled[i] = e[2]; place[i] = e[1]; users[i] = e[4]; weight[i] = wFor(e[0]);
+      if (e[3] > 0) { payPlace.push(e[1]); payAmt.push(e[3]); if (e[1] > lastPaid) lastPaid = e[1]; }
+      if (minePts[e[2].toFixed(2)]) {
+        var mi2 = mineSig[sigOf(apps)];
+        if (mi2 !== undefined && !minePlace[mi2]) { minePlace[mi2] = e[1]; weight[i] = 0; pod[nF + mi2] = pod[i]; }
+      }
+      fieldW += weight[i];
+    }
+    var teams = [], own = [];
+    d.mine.forEach(function (m, mi) {
+      var q = nF + mi;
+      start[q] = n;
+      for (j = 0; j < m.apps.length; j++) { var pl2 = appPl[m.apps[j]]; if (pl2 >= 0) ix[n++] = pl2; }
+      pulled[q] = m.points; weight[q] = 1; place[q] = minePlace[mi];
+      users[q] = (d.me && d.me.username) || 'me';
+      if (pod[q] < 0 && m.pod != null && m.pod >= 0) pod[q] = m.pod;
+      own.push(q);
+      teams.push({ own: true, title: m.title || m.draftId, podPlace: m.podPlace, place: minePlace[mi],
+                   picks: m.apps.map(function (a) { return d.apps[a]; }),
+                   inactive: m.apps.filter(function (a) { return plist[appPl[a]].stub; }).length });
+    });
+    start[nQ] = n;
+    // place -> payout exactly as the leaderboard shows it (paid places only;
+    // anything past the last paid place is $0). In a partial file a rank
+    // between two pulled places takes the next pulled place's payout.
+    var ord = payPlace.map(function (_, k) { return k; }).sort(function (a, b) { return payPlace[a] - payPlace[b]; });
+    var pp = ord.map(function (k) { return payPlace[k]; }), pa = ord.map(function (k) { return payAmt[k]; });
+    var tiers = [];
+    for (i = 0; i < pp.length; i++) {
+      var last = tiers[tiers.length - 1];
+      if (last && last.amt === pa[i]) last.to = pp[i];
+      else tiers.push({ from: pp[i], to: pp[i], amt: pa[i] });
+    }
+    state.bbField = {
+      meta: { pulledAt: d.pulledAt, tournament: (d.tournament && d.tournament.title) || 'Tournament',
+              total: d.total || (d.tournament && d.tournament.entry_count) || null, complete: d.complete !== false,
+              me: (d.me && d.me.username) || null },
+      roster: { players: plist, start: start.subarray(0, nQ + 1), ix: ix.subarray(0, n) },
+      pulled: pulled, banked: Float64Array.from(pulled), weight: weight, place: place, users: users,
+      nField: nF, nQ: nQ, own: own, teams: teams,
+      // board state: everything visible (own entries' leaderboard twins are
+      // hidden — weight 0 — the titled copies at the end stand in for them)
+      vis: Int32Array.from(Array.from(weight).map(function (w, q) { return w > 0 ? q : -1; }).filter(function (q) { return q >= 0; })),
+      curPts: Float64Array.from(pulled), curRank: Int32Array.from(place),
+      view: { user: '', mine: false, page: 0, key: 'cur', dir: 'asc' }, all: null, ownRes: null, projRank: null, runId: 0,
+      pod: pod, hasPods: nPodded > nF * 0.9, podRank: null, podExact: null, plKeyIx: plIx,
+      plPulled: plPulled, plNow: null, nowWeek: null, lockMask: null,
+      po: bbfPlayoffCfg((d.tournament && d.tournament.title) || ''),
+      payPlace: pp, payAmt: pa, tiers: tiers, lastPaid: lastPaid, fieldW: fieldW + nM,
+      unmatched: unmatched, userIx: null, results: null
+    };
+    $('bbf-summary').innerHTML = '';
+    $('bbf-table').innerHTML = '';
+    $('bbf-detail').innerHTML = '';
+    $('bbf-lookup').innerHTML = '';
+    if ($('bbf-now')) $('bbf-now').textContent = '';
+    var m = state.bbField.meta, pulledMs = Date.parse(m.pulledAt), warn = [];
+    if (!m.complete) warn.push('PARTIAL file — the pulled teams stand in for the rest, so deep ranks and username look-ups are incomplete');
+    var found = minePlace.filter(function (x) { return x > 0; }).length;
+    $('bbf-note').textContent = m.tournament + ': ' + nF.toLocaleString() + ' field teams' +
+      (m.complete ? ' (the whole field)' : ' standing in for ' + Math.round(m.total ? Math.min(fieldW, +m.total) : fieldW).toLocaleString() +
+        (m.total ? ' of ' + (+m.total).toLocaleString() : '') + ' entries') + ' + ' + teams.length + ' of yours' +
+      (found ? ' (' + found + ' located on the leaderboard)' : '') +
+      ' · pulled ' + String(m.pulledAt || '').slice(0, 16).replace('T', ' ') + ' UTC' +
+      (lastPaid ? ' · regular-season prizes pay through place ' + lastPaid.toLocaleString() : ' · no payouts in the file') +
+      (unmatched.length ? ' · ' + unmatched.length + ' player' + (unmatched.length === 1 ? '' : 's') + ' with no projection (real points count in played weeks, 0 in simmed weeks)' : '') +
+      (state.bbField.hasPods ? ' · draft groups included (playoff sim on)' : ' · no draft groups in this file — load a draft-groups file too (Draft Helper → Pull my draft groups, ~2 min) for your teams\' playoff odds') +
+      (warn.length ? ' — ⚠ ' + warn.join('; ') : '') + '. Press RUN OVERALL SIM.';
+    bbfPodRanks(state.bbField);
+    if ($('bbf-mine')) $('bbf-mine').checked = false;
+    if ($('bbf-view')) $('bbf-view').value = 'now';
+    renderBBFieldTable();
+  }
+
+  // Tournament bracket + playoff prizes, keyed on the tournament title.
+  // BBM VII (Underdog rules page + the lobby line "2/12 - 1/14 - 1/12 - 667
+  // Seat Final"): top 2 of each 12-team draft -> 112,056 teams in 14-team
+  // groups on week 15, winners -> 8,004 teams in 12-team groups on week 16,
+  // winners -> a 667-team final on week 17. Same rosters throughout. Prizes
+  // by finishing place: the final 1st..667th as listed; Round-3 groups 2nd
+  // $1,000 / 3rd $500 / 4th-12th $70; every other Round-2 team $25. The
+  // tiers add up to the $13.5M playoff pool ($15M less the $1.5M paid on the
+  // regular-season leaderboard).
+  function bbfPlayoffCfg(title) {
+    if (!/best ball mania vii\b/i.test(title)) return null;
+    var tiers = [[1, 2000000], [2, 1000000], [3, 500000], [4, 400000], [5, 300000], [6, 250000], [7, 200000], [8, 150000],
+                 [9, 125000], [10, 100240], [15, 90000], [20, 70000], [30, 50000], [40, 25000], [50, 15150], [100, 7500],
+                 [200, 5500], [300, 4500], [667, 3750]];
+    var finalPrize = [], from = 1;
+    tiers.forEach(function (t) { for (var pl = from; pl <= t[0]; pl++) finalPrize.push(t[1]); from = t[0] + 1; });
+    // reps: playoff replays per simulated regular season (cheap, and the
+    // only way the prize EV settles — one team takes $2M every run).
+    // entryFee / pool: for the "return on entries" line ($15M over ~672k
+    // $25 entries = an average team gets back ~89 cents on the dollar).
+    return { adv1: 2, g2: 14, g3: 12, lastWeek: BB_REG_TO + 3, r2Prize: 25, r3Prize: [0, 1000, 500, 70], finalPrize: finalPrize,
+             reps: 12, entryFee: 25, pool: 15000000 };
+  }
+  // DRAFT GROUPS FROM A QUICK PULL (kind 'mff_ud_mypods'): the user's own
+  // drafts, all 12 rosters each. Every roster is found on the loaded field by
+  // its players (order-free), which gives those ~1,800 teams their REAL draft
+  // group — so the user's own Round-1 advance odds are exact. Everyone else
+  // gets a random stand-in group of 12: fine as playoff opposition (the top 2
+  // of random groups look just like the top 2 of real ones), but their own
+  // advance numbers are estimates, flagged ~ on the board.
+  function bbfApplyPods(f, pd) {
+    if (!pd || pd.kind !== 'mff_ud_mypods' || !Array.isArray(pd.mine) || !Array.isArray(pd.apps)) throw new Error('not a draft-groups file');
+    var POS = { QB: 1, RB: 1, WR: 1, TE: 1 }, r = f.roster, vis = f.vis;
+    var toPl = pd.apps.map(function (a) {
+      var p = bbMatchPlayer(a[0], POS[a[1]] ? a[1] : null);
+      var k = p ? 'p:' + (p.sid || p.norm) : 's:' + a[0] + '|' + a[1];
+      return f.plKeyIx[k] !== undefined ? f.plKeyIx[k] : -1;
+    });
+    function hashOf(arr, from, to) { var h = 0; for (var i = from; i < to; i++) { var x = arr[i] + 1; h += x * x * 31 + x * 7919; } return h; }
+    var byHash = new Map(), i, q;
+    for (i = 0; i < vis.length; i++) {
+      q = vis[i];
+      var h = hashOf(r.ix, r.start[q], r.start[q + 1]), l = byHash.get(h);
+      if (l) l.push(q); else byHash.set(h, [q]);
+    }
+    function sortedKey(arr, from, to) { return Array.prototype.slice.call(arr, from, to).sort(function (a, b) { return a - b; }).join(','); }
+    var pod = new Int32Array(f.nQ).fill(-1), exact = new Uint8Array(f.nQ), matched = 0, wanted = 0, withMine = 0;
+    pd.mine.forEach(function (m, pi) {
+      var hasOwn = false;
+      (m.podRosters || []).forEach(function (ro) {
+        wanted++;
+        var pl = ro.map(function (a) { return toPl[a]; });
+        if (pl.indexOf(-1) >= 0) return;
+        var cands = byHash.get(hashOf(pl, 0, pl.length)) || [], key = sortedKey(pl, 0, pl.length);
+        for (var c = 0; c < cands.length; c++) {
+          var cq = cands[c];
+          if (pod[cq] >= 0 || sortedKey(r.ix, r.start[cq], r.start[cq + 1]) !== key) continue;
+          pod[cq] = pi; exact[cq] = 1; matched++;
+          if (cq >= f.nField) hasOwn = true;
+          break;
+        }
+      });
+      if (hasOwn) withMine++;
+    });
+    if (matched < wanted * 0.5) throw new Error('only ' + matched + ' of ' + wanted + ' teams in that file were found on the loaded field — is it the same tournament?');
+    // random stand-in groups of 12 for everyone else (fixed seed: same groups every load)
+    var rest = [], rng = E.makeRng(20261002);
+    for (i = 0; i < vis.length; i++) if (pod[vis[i]] < 0) rest.push(vis[i]);
+    for (i = rest.length - 1; i > 0; i--) { var j = (rng.rand() * (i + 1)) | 0, t = rest[i]; rest[i] = rest[j]; rest[j] = t; }
+    var nExact = pd.mine.length;
+    for (i = 0; i < rest.length; i++) pod[rest[i]] = nExact + ((i / 12) | 0);
+    f.pod = pod; f.podExact = exact; f.hasPods = true;
+    f.podInfo = { groups: nExact, matched: matched, wanted: wanted, withMine: withMine, pulledAt: pd.pulledAt };
+    f.runId++;
+    bbfPodRanks(f);
+    return f.podInfo;
+  }
+  function bbfPodsLine(info) {
+    return 'Your ' + info.groups + ' real draft groups are applied (' + info.matched.toLocaleString() + ' of ' + info.wanted.toLocaleString() +
+      ' teams found on the field) — your teams\' advance and playoff odds use their actual opponents; every other team sits in a random stand-in group (~ on the board).';
+  }
+  function bbfImportPods(pd) {
+    bbfEnsureLoaded().then(function (ok) {
+      if (!ok) { $('bbf-note').textContent = 'Load the field file (mff_bbm_leaderboard_*.json) first, then this draft-groups file.'; return; }
+      var info = bbfApplyPods(state.bbField, pd);
+      $('bbf-note').textContent = bbfPodsLine(info) + ' Press RUN OVERALL SIM.';
+      renderBBFieldTable();
+      state.bbField.nowAt = 0;
+      bbfRefreshNow();
+      bbfDb('readwrite', function (st) { st.put(pd, 'pods'); }).then(function () {
+        $('bbf-note').textContent += ' Saved on this device.';
+      }).catch(function () {});
+    }).catch(function (e) { $('bbf-note').textContent = 'Could not apply the draft groups: ' + ((e && e.message) || e); });
+  }
+  // a field file without its own draft groups picks up the saved quick pull
+  function bbfApplySavedPods() {
+    var f = state.bbField;
+    if (!f || f.hasPods || !window.indexedDB) return Promise.resolve();
+    return bbfDb('readonly', function (st) { return st.get('pods'); }).then(function (pd) {
+      if (!pd || state.bbField !== f || f.hasPods) return;
+      var info = bbfApplyPods(f, pd);
+      $('bbf-note').textContent += ' ' + bbfPodsLine(info);
+      renderBBFieldTable();
+    }).catch(function () {});
+  }
+
+  // Each team's place in its own draft group on current points (1 = leading).
+  function bbfPodRanks(f) {
+    if (!f.hasPods) { f.podRank = null; return; }
+    var vis = f.vis, pts = f.curPts, pod = f.pod, by = {}, pr = new Int8Array(f.nQ);
+    for (var i = 0; i < vis.length; i++) { var q = vis[i]; if (pod[q] >= 0) (by[pod[q]] = by[pod[q]] || []).push(q); }
+    Object.keys(by).forEach(function (k) {
+      var m = by[k];
+      m.sort(function (a, b) { return pts[b] - pts[a]; });
+      for (var j = 0; j < m.length; j++) pr[m[j]] = (j > 0 && pts[m[j]] === pts[m[j - 1]]) ? pr[m[j - 1]] : j + 1;
+    });
+    f.podRank = pr;
+  }
+  // A file pulled part-way through a week already holds the games that were
+  // final by then. Returns those players' points for that week so the run can
+  // take them back out and add the week whole (or lock it) like any other.
+  // "Final by then" = kicked off more than 4.5 hours before the pull.
+  async function bbfPrePull(f, season, wk, pulledMs) {
+    var fin = {}, nFinal = 0, live = 0;
+    try {
+      var sb = await (await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=' + wk + '&dates=' + season)).json();
+      (sb.events || []).forEach(function (ev) {
+        var comp = ev.competitions && ev.competitions[0], ko = Date.parse(ev.date);
+        if (!comp || !ko) return;
+        if (ko < pulledMs + 3 * 3600000 && ko > pulledMs - 4.5 * 3600000) live++;
+        if (ko >= pulledMs - 4.5 * 3600000) return;
+        nFinal++;
+        (comp.competitors || []).forEach(function (c) {
+          var ab = E.normTeam(String((c.team && c.team.abbreviation) || '').toUpperCase());
+          if (ab) fin[ab] = 1;
+        });
+      });
+    } catch (e) { return { err: (e && e.message) || String(e), nFinal: 0 }; }
+    if (!nFinal) return { nFinal: 0, live: live };
+    var all = await bbfWeekVals(f, season, wk, wk), vals = new Float64Array(all.length);
+    for (var i = 0; i < all.length; i++) if (f.pTeams[i] && fin[f.pTeams[i]]) vals[i] = all[i];
+    return { nFinal: nFinal, live: live, vals: vals };
+  }
+
+  function bbFieldPayout(f, rank) {
+    var r = Math.round(rank), pl = f.payPlace, lo = 0, hi = pl.length;
+    while (lo < hi) { var mid = (lo + hi) >> 1; if (pl[mid] < r) lo = mid + 1; else hi = mid; }
+    return lo < pl.length ? f.payAmt[lo] : 0;
+  }
+  function bbfSquadPicks(f, q) {
+    var out = [], r = f.roster;
+    for (var i = r.start[q]; i < r.start[q + 1]; i++) out.push([r.players[r.ix[i]].name, r.players[r.ix[i]].pos, null]);
+    return out;
+  }
+
+  // A Sleeper id (and current team) for EVERY roster player — pool players
+  // carry one, stubs and id-less pool players are looked up by name in
+  // Sleeper's full player list. Kept in localStorage for a day.
+  async function bbfResolveSids(f) {
+    if (f.sids) return;
+    var P = f.roster.players;
+    var sids = P.map(function (p) { return p.sid != null ? String(p.sid) : null; });
+    var teams = P.map(function (p) { return p.stub ? null : (E.normTeam(p.tmNow || p.tm || '') || null); });
+    var need = [];
+    P.forEach(function (p, i) { if (!sids[i]) need.push(i); });
+    if (need.length) {
+      var cache = loadLS('simlab_bbf_sidmap', null), by = (cache && Date.now() - cache.at < 86400000) ? cache.by : null;
+      var keyOf = function (p) { return p.name + '|' + p.pos; };
+      if (!by || need.some(function (i) { return by[keyOf(P[i])] === undefined; })) {
+        var index = E.bbSleeperIndex(await (await fetch(API + '/players/nfl')).json());
+        by = {};
+        need.forEach(function (i) {
+          var hit = E.bbResolveSid(index, P[i].name, P[i].pos);
+          by[keyOf(P[i])] = hit ? [hit.sid, hit.team] : 0;
+        });
+        saveLS('simlab_bbf_sidmap', { at: Date.now(), by: by });
+      }
+      need.forEach(function (i) {
+        var hit = by[keyOf(P[i])];
+        if (!hit) return;
+        sids[i] = hit[0];
+        if (!teams[i] && hit[1]) teams[i] = E.normTeam(hit[1]);
+      });
+    }
+    f.sids = sids; f.pTeams = teams;
+  }
+  // One week's REAL points for every roster player (Underdog half PPR out of
+  // Sleeper stats — reproduces Underdog's own team totals for 99.9% of the
+  // field). A finished week is cached: for good once it is two weeks old, for
+  // a day while stat corrections can still land.
+  async function bbfWeekVals(f, season, wk, cur) {
+    var key = 'simlab_bbf_wk_' + season + '_' + wk, done = wk < cur;
+    var c = done ? loadLS(key, null) : null;
+    var fresh = c && (wk < cur - 1 || Date.now() - c.at < 86400000) &&
+      !f.sids.some(function (sid) { return sid != null && c.by[sid] === undefined; });
+    if (!fresh) {
+      var stats = await (await fetch(API + '/stats/nfl/regular/' + season + '/' + wk)).json();
+      c = { at: Date.now(), by: {} };
+      f.sids.forEach(function (sid) {
+        if (sid == null) return;
+        var s = stats[sid];
+        c.by[sid] = s ? +(((s.pts_std || 0) + 0.5 * (s.rec || 0)).toFixed(2)) : 0;
+      });
+      if (done) saveLS(key, c);
+    }
+    return Float64Array.from(f.sids, function (sid) { return sid != null ? (c.by[sid] || 0) : 0; });
+  }
+  // The week in progress: which games are FINAL (ESPN scoreboard)? Players on
+  // those teams are locked at their real points for the week; everyone else
+  // is still simmed. Games in progress count as not played yet.
+  async function bbfLockWeek(f, season, wk) {
+    var fin = {}, nGames = 0, nFinal = 0;
+    try {
+      var sb = await (await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=' + wk + '&dates=' + season)).json();
+      (sb.events || []).forEach(function (ev) {
+        var comp = ev.competitions && ev.competitions[0];
+        if (!comp) return;
+        nGames++;
+        var stt = comp.status || ev.status || {};
+        if (!(stt.type && stt.type.completed)) return;
+        nFinal++;
+        (comp.competitors || []).forEach(function (c) {
+          var ab = E.normTeam(String((c.team && c.team.abbreviation) || '').toUpperCase());
+          if (ab) fin[ab] = 1;
+        });
+      });
+    } catch (e) { return { err: (e && e.message) || String(e), nFinal: 0 }; }
+    if (!nFinal) return { nGames: nGames, nFinal: 0 };
+    var mask = new Uint8Array(f.sids.length);
+    f.roster.players.forEach(function (p, i) { if (p.stub || (f.pTeams[i] && fin[f.pTeams[i]])) mask[i] = 1; });
+    return { nGames: nGames, nFinal: nFinal, mask: mask, vals: await bbfWeekVals(f, season, wk, wk) };
+  }
+
+  // ---- the sim across CPU cores ----
+  // One sim of the whole field takes 1.5-3 s on one core. The sims are
+  // independent, so they are dealt out to Web Workers (bbf_worker.js): each
+  // loads the same data scripts + engine as this page, rebuilds the player
+  // pool, runs its share with its own seed and hands back its running sums,
+  // which add straight together. Costs ~120 MB of memory per worker.
+  function bbfCores(sims) {
+    if (!window.Worker) return 1;
+    var want = +($('bbf-cores') && $('bbf-cores').value) || 0;
+    // measured on a 20-thread machine: 1 core 2.0 s/sim, 8 -> 0.42, 16 -> 0.31
+    // (memory bandwidth flattens it), so auto stops at 12
+    var auto = Math.max(1, Math.min(12, (navigator.hardwareConcurrency || 4) - 2));
+    return Math.max(1, Math.min(want > 0 ? want : auto, 16, sims));
+  }
+  function bbfDist(arr) {
+    var d = Float64Array.from(arr).sort(), sum = 0, n = d.length;
+    for (var i = 0; i < n; i++) sum += d[i];
+    function pc(q) { return d[Math.min(n - 1, Math.max(0, Math.round(q * (n - 1))))]; }
+    return { mean: sum / n, p10: pc(0.10), p25: pc(0.25), p50: pc(0.50), p75: pc(0.75), p90: pc(0.90), min: d[0], max: d[n - 1] };
+  }
+  function bbfRunParallel(f, o, cores, onProgress) {
+    return new Promise(function (resolve, reject) {
+      var scripts = Array.prototype.slice.call(document.scripts).map(function (sc) { return sc.src; })
+        .filter(function (src) { return src && /\/(data\/[^/]+|overrides|engine)\.js(\?|$)/.test(src); });
+      var ver = (scripts[scripts.length - 1] || '').split('?')[1] || '';
+      var rp = f.roster.players.map(function (p) {
+        return p.stub ? { stub: 1, name: p.name, pos: p.pos } : { sid: p.sid != null ? p.sid : null, norm: p.norm, name: p.name, pos: p.pos };
+      });
+      var ix16 = Uint16Array.from(f.roster.ix); // player indexes fit 16 bits: half the copy per worker
+      var per = Math.floor(o.sims / cores), extra = o.sims - per * cores, seed0 = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
+      var workers = [], parts = new Array(cores), done = new Array(cores).fill(0), left = cores, failed = false;
+      function fail(err) {
+        if (failed) return;
+        failed = true;
+        workers.forEach(function (w) { try { w.terminate(); } catch (e) {} });
+        reject(err);
+      }
+      for (var c = 0; c < cores; c++) (function (c) {
+        var w = new Worker('bbf_worker.js' + (ver ? '?' + ver : ''));
+        workers.push(w);
+        w.onerror = function (ev) { fail(new Error(ev.message || 'worker error')); };
+        w.onmessage = function (ev) {
+          var m = ev.data;
+          if (m.type === 'progress') {
+            done[c] = m.done;
+            onProgress(done.reduce(function (a, b) { return a + b; }, 0), cores);
+          } else if (m.type === 'error') fail(new Error(m.message));
+          else if (m.type === 'done') {
+            parts[c] = m; w.terminate();
+            if (--left === 0 && !failed) resolve(bbfMergeParts(parts));
+          }
+        };
+        w.postMessage({
+          cmd: 'run', scripts: scripts, players: rp, start: f.roster.start, ix: ix16,
+          injury: state.injuryWeek ? { week: state.injuryWeek, active: !!state.injuryActive } : null,
+          sims: per + (c < extra ? 1 : 0), seed: (seed0 + c * 7919) >>> 0,
+          regTo: o.regTo, banked: o.banked, weight: o.weight, mine: o.mine, fromWeek: o.fromWeek, unavailable: o.unavailable,
+          cutRanks: o.cutRanks, lockMask: o.lockMask, lockVals: o.lockVals, all: o.all, playoff: o.playoff
+        });
+      })(c);
+    });
+  }
+  // Add the workers' results together into one engine-shaped result.
+  function bbfMergeParts(parts) {
+    var p0 = parts[0], sims = 0, A = {}, MIN = { best: 1, finBest: 1 };
+    parts.forEach(function (p) { sims += p.sims; });
+    Object.keys(p0.A).forEach(function (k) {
+      var out = p0.A[k];
+      if (k !== 'nowTot') {
+        for (var j = 1; j < parts.length; j++) {
+          var src = parts[j].A[k], n = out.length, i;
+          if (MIN[k]) { for (i = 0; i < n; i++) if (src[i] < out[i]) out[i] = src[i]; }
+          else for (i = 0; i < n; i++) out[i] += src[i];
+        }
+      }
+      A[k] = out;
+    });
+    function cat(get) {
+      var out = new Float64Array(sims), at = 0;
+      parts.forEach(function (p) { var a = get(p); out.set(a, at); at += a.length; });
+      return out;
+    }
+    var T = p0.squads.length, teams = [];
+    for (var t = 0; t < T; t++) (function (t) {
+      var totals = cat(function (p) { return p.totals.subarray(t * p.sims, (t + 1) * p.sims); });
+      var ranks = cat(function (p) { return p.ranks.subarray(t * p.sims, (t + 1) * p.sims); });
+      teams.push({ squad: p0.squads[t], banked: p0.banked[t], curRank: p0.curRank[t], totals: totals, ranks: ranks,
+                   total: bbfDist(totals), rank: bbfDist(ranks) });
+    })(t);
+    var cuts = p0.cuts.map(function (c, ci) {
+      return { rank: c.rank, cur: c.cur, final: bbfDist(cat(function (p) { return p.cuts[ci].raw; })) };
+    });
+    var po = null;
+    if (p0.playoff) {
+      po = { nPods: p0.playoff.nPods, advancers: 0, round3: 0, finalists: 0 };
+      parts.forEach(function (p) { ['advancers', 'round3', 'finalists'].forEach(function (k) { po[k] += p.playoff[k] * p.sims / sims; }); });
+    }
+    return { sims: sims, fromWeek: p0.fromWeek, regTo: p0.regTo, weeksSimmed: p0.weeksSimmed, nSquads: p0.nSquads,
+             fieldWeight: p0.fieldWeight, nPlayers: p0.nPlayers, teams: teams, cuts: cuts, all: A, simsDone: sims, playoff: po };
+  }
+
+  // ---- standings from games already played ----
+  // Bring the file's points up to this minute, no sim involved:
+  //   pulled points
+  //   - any games of the pull week that were already inside them (bbfPrePull)
+  //   + every week finished since, whole (Sleeper stats)
+  // and work out which of the current week's games are final (bbfLockWeek).
+  // Keyed to week NUMBERS, so a late or early Sleeper week rollover can never
+  // add a week twice. f.banked = points through the last finished week.
+  async function bbfBankNow(f) {
+    var st = await (await fetch(API + '/state/nfl')).json();
+    var inSeason = !!st && st.season_type === 'regular';
+    var cur = inSeason ? Math.min(18, st.week || 1) : 1;
+    await bbfResolveSids(f);
+    var pulledMs = Date.parse(f.meta.pulledAt);
+    var pullWeek = pulledMs ? Math.max(1, bbfWeekIdx(pulledMs) + 1) : cur, added = [];
+    var banked = Float64Array.from(f.pulled), plNow = Float64Array.from(f.plPulled), pi;
+    var pre = (pulledMs && inSeason && pullWeek <= BB_REG_TO) ? await bbfPrePull(f, st.season, pullWeek, pulledMs) : null;
+    if (pre && pre.nFinal) {
+      E.bbFieldAddWeek(f.roster, pre.vals, banked, -1);
+      for (pi = 0; pi < plNow.length; pi++) plNow[pi] -= pre.vals[pi];
+    }
+    for (var wk = pullWeek; wk < cur && wk <= BB_REG_TO; wk++) {
+      var wv = await bbfWeekVals(f, st.season, wk, cur);
+      E.bbFieldAddWeek(f.roster, wv, banked);
+      for (pi = 0; pi < plNow.length; pi++) plNow[pi] += wv[pi];
+      added.push(wk);
+    }
+    // the week in progress: finished games count for real
+    var lock = (inSeason && cur >= pullWeek && cur <= BB_REG_TO) ? await bbfLockWeek(f, st.season, cur) : null;
+    if (lock && lock.nFinal) for (pi = 0; pi < plNow.length; pi++) if (lock.mask[pi]) plNow[pi] += lock.vals[pi];
+    f.banked = banked; // swapped in whole, so a failed refresh never leaves half-added weeks
+    f.plNow = plNow; f.nowWeek = cur; f.lockMask = (lock && lock.nFinal) ? lock.mask : null;
+    return { st: st, cur: cur, added: added, lock: lock, pre: pre, pullWeek: pullWeek };
+  }
+  // Points + overall rank + place in the draft group for every team, from
+  // f.banked plus this week's finished games. Ties share the better place
+  // (Underdog's "T-1253"); totals are rounded to the cent first so float
+  // dust from adding weeks can't split a tie.
+  function bbfSetStandings(f, B, pts) {
+    if (!pts) {
+      pts = Float64Array.from(f.banked);
+      if (B.lock && B.lock.nFinal) {
+        var vals = new Float64Array(B.lock.vals.length);
+        for (var i = 0; i < vals.length; i++) if (B.lock.mask[i]) vals[i] = B.lock.vals[i];
+        E.bbFieldAddWeek(f.roster, vals, pts);
+      }
+    }
+    for (var k = 0; k < pts.length; k++) pts[k] = Math.round(pts[k] * 100) / 100;
+    var by = Int32Array.from(f.vis), rk = new Int32Array(f.nQ);
+    by.sort(function (a, b) { return pts[b] - pts[a]; });
+    for (var o = 0; o < by.length; o++) rk[by[o]] = (o > 0 && pts[by[o]] === pts[by[o - 1]]) ? rk[by[o - 1]] : o + 1;
+    f.curPts = pts; f.curRank = rk; f.runId++;
+    f.added = B.added; f.lockInfo = B.lock; f.pre = B.pre;
+    f.nowAt = Date.now();
+    bbfPodRanks(f);
+    if ($('bbf-now')) $('bbf-now').textContent = bbfNowLine(f, B);
+  }
+  function bbfNowLine(f, B) {
+    var a = B.added, lk = B.lock, parts = ['Underdog\'s points at the pull (' + String(f.meta.pulledAt || '').slice(0, 10) + ')'];
+    if (a.length) parts.push('week' + (a.length > 1 ? 's ' + a[0] + '–' + a[a.length - 1] : ' ' + a[0]) + ' from game stats');
+    if (lk && lk.nGames) parts.push('week ' + B.cur + ': ' + (lk.nFinal || 0) + ' of ' + lk.nGames + ' games final');
+    return 'Standings as of ' + new Date(f.nowAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' = ' + parts.join(' + ') +
+      (lk && lk.err ? ' (could not read this week\'s game status: ' + lk.err + ')' : '') +
+      (B.pre && B.pre.live ? ' — ⚠ games were live around the pull, some points may be off' : '') +
+      '. Games count once they are final; this refreshes whenever you open the tab, or press UPDATE STANDINGS.';
+  }
+  // Runs on its own after a file loads, when the tab is opened, every 10
+  // minutes while it stays open, and from the UPDATE STANDINGS button.
+  async function bbfRefreshNow() {
+    var f = state.bbField;
+    if (!f || f.running || f.refreshing) return;
+    f.refreshing = true;
+    try {
+      if ($('bbf-now') && !f.nowAt) $('bbf-now').textContent = 'Updating the standings from finished games…';
+      var B = await bbfBankNow(f);
+      if (state.bbField !== f || f.running) return;
+      bbfSetStandings(f, B);
+      renderBBFieldTable();
+    } catch (e) {
+      if ($('bbf-now')) $('bbf-now').textContent = 'Could not update the standings from game stats (' + ((e && e.message) || e) + ') — showing the last points in hand.';
+    } finally { f.refreshing = false; }
+  }
+  function bbfMaybeRefresh() {
+    var f = state.bbField;
+    if (f && (!f.nowAt || Date.now() - f.nowAt > 10 * 60000)) bbfRefreshNow();
+  }
+
+  async function runBBFieldSim() {
+    try {
+      if (!(await bbfEnsureLoaded())) { $('bbf-note').textContent = 'Load a field file (mff_bbm_leaderboard_*.json) first.'; return; }
+    } catch (e0) { $('bbf-note').textContent = 'Could not load the saved field file: ' + ((e0 && e0.message) || e0); return; }
+    var f = state.bbField;
+    if (f.running) return;
+    var sims = Math.max(20, Math.min(10000, +$('bbf-sims').value || 100));
+    $('bbf-note').textContent = 'Checking NFL week / weekly stats…';
+    var btn = $('bbf-run');
+    btn.disabled = true; f.running = true;
+    try {
+      var ctx = await getBankedContext(); // injuries for the simmed weeks
+      var B = await bbfBankNow(f), cur = B.cur, added = B.added, lock = B.lock, pre = B.pre, pullWeek = B.pullWeek;
+      var cutRanks = [1, 10, 100, 1000];
+      if (f.lastPaid && cutRanks.indexOf(f.lastPaid) < 0) cutRanks.push(f.lastPaid);
+      cutRanks = cutRanks.filter(function (r) { return r <= f.fieldW; });
+      var mine = f.own, t0 = performance.now();
+      var runOpts = {
+        sims: sims, regTo: BB_REG_TO, banked: f.banked, weight: f.weight, mine: mine,
+        fromWeek: Math.min(cur, BB_REG_TO + 1), unavailable: ctx.unavailable || {}, cutRanks: cutRanks,
+        lockMask: (lock && lock.mask) || null, lockVals: (lock && lock.vals) || null,
+        all: { payPlace: f.payPlace, payAmt: f.payAmt },
+        playoff: (f.hasPods && f.po) ? { pod: f.pod, adv1: f.po.adv1, g2: f.po.g2, g3: f.po.g3, lastWeek: f.po.lastWeek,
+                                         r2Prize: f.po.r2Prize, r3Prize: f.po.r3Prize, finalPrize: f.po.finalPrize, reps: f.po.reps } : null
+      };
+      var nTeams = (f.roster.start.length - 1).toLocaleString();
+      function progress(nDone, cores) {
+        $('bbf-note').textContent = 'Simulating ' + nTeams + ' teams' + (cores > 1 ? ' on ' + cores + ' cores' : '') + ' — sim ' + nDone + ' of ' + sims +
+          (nDone > 1 ? ' · about ' + Math.max(1, Math.round((performance.now() - t0) / nDone * (sims - nDone) / 1000)) + 's left' : '') + '…';
+      }
+      var cores = bbfCores(sims), res = null, coresUsed = 1;
+      if (cores > 1) {
+        try { res = await bbfRunParallel(f, runOpts, cores, progress); coresUsed = cores; }
+        catch (eW) { console.warn('[overall sim] workers failed, running on one core:', eW); res = null; }
+      }
+      if (!res) {
+        var run = E.bbFieldRun(Object.assign({ scoring: E.PRESETS.half, schedule: state.schedule, players: state.players, roster: f.roster }, runOpts));
+        var nDone = 0;
+        await new Promise(function (resolve, reject) {
+          (function tick() {
+            try {
+              var t = performance.now();
+              do { nDone = run.step(1); } while (!run.done() && performance.now() - t < 350);
+              progress(nDone, 1);
+              if (run.done()) resolve(); else setTimeout(tick, 0);
+            } catch (e) { reject(e); }
+          })();
+        });
+        res = run.result();
+      }
+      f.coresUsed = coresUsed;
+      res.teams.forEach(function (r, i) {
+        var top100 = 0, top1k = 0, cash = 0, ev = 0;
+        for (var s = 0; s < sims; s++) {
+          var rk = r.ranks[s], p = bbFieldPayout(f, rk);
+          if (rk <= 100) top100++;
+          if (rk <= 1000) top1k++;
+          if (p > 0) { cash++; ev += p; }
+        }
+        r.i = i;
+        r.t = f.teams[i];
+        r.top100 = top100 / sims; r.top1k = top1k / sims; r.cash = cash / sims; r.ev = ev / sims;
+        r.payNow = bbFieldPayout(f, r.curRank);
+      });
+      // whole-field results for the board: today's points + exact standings
+      // rank (ties share the better place, like Underdog's T-1253), and each
+      // team's place by projected final total
+      f.all = res.all; f.simsDone = sims; f.runId++;
+      f.ownRes = {};
+      res.teams.forEach(function (r) { f.ownRes[r.squad] = r; });
+      bbfSetStandings(f, B, res.all.nowTot);
+      var vis = f.vis, sumLog = res.all.sumLogRank;
+      f.projRank = new Float64Array(f.nQ);
+      for (var o = 0; o < vis.length; o++) f.projRank[vis[o]] = Math.exp(sumLog[vis[o]] / sims); // typical simmed finish
+      // projected season leaderboard: every team's place by projected final points
+      var sumTot = res.all.sumTot, byProj = Int32Array.from(vis);
+      byProj.sort(function (x, y) { return sumTot[y] - sumTot[x]; });
+      f.projPtsRank = new Int32Array(f.nQ);
+      for (var o2 = 0; o2 < byProj.length; o2++) f.projPtsRank[byProj[o2]] = o2 + 1;
+      if (f.view.mode === 'proj') { f.view.key = 'ppr'; f.view.dir = 'asc'; f.view.page = 0; }
+      f.results = res;
+      $('bbf-note').textContent = f.meta.tournament + ': ' + f.own.length + ' of your teams' +
+        ' ranked against ' + f.nField.toLocaleString() +
+        ' field teams, ' + sims + ' sims in ' + ((performance.now() - t0) / 1000).toFixed(1) + 's' +
+        (f.coresUsed > 1 ? ' on ' + f.coresUsed + ' cores' : '') + '. ' +
+        (added.length ? 'Week' + (added.length > 1 ? 's ' + added[0] + '–' + added[added.length - 1] : ' ' + added[0]) +
+          ' added to the file\'s points from Sleeper stats. ' : 'Points as pulled from Underdog. ') +
+        (lock && lock.nFinal ? 'Week ' + cur + ': ' + lock.nFinal + ' of ' + lock.nGames + ' games final — real points in for those players, the other games simmed. '
+          : (lock && lock.err ? 'Could not read this week\'s game status (' + lock.err + ') — week ' + cur + ' simmed as unplayed. ' : '')) +
+        (pre && pre.nFinal ? 'The file was pulled with ' + pre.nFinal + ' week-' + pullWeek + ' game' + (pre.nFinal === 1 ? '' : 's') + ' already played — handled' +
+          (pre.live ? ', but ' + pre.live + ' game' + (pre.live === 1 ? ' was' : 's were') + ' LIVE around the pull, so some points may be off' : '') + '. ' : '') +
+        (res.weeksSimmed ? 'Weeks ' + res.fromWeek + '–' + res.regTo + ' simmed' + (res.playoff ? ', then the playoffs (weeks ' + (res.regTo + 1) + '–' + f.po.lastWeek + ') played out' : '') + '.'
+          : 'Regular season is over — these are the final standings.') +
+        ' The table is the whole leaderboard — tick My teams for yours.';
+      $('bbf-detail').innerHTML = '';
+      renderBBFieldTable();
+    } catch (e) {
+      $('bbf-note').textContent = 'Sim failed: ' + (e && e.message || e);
+    } finally {
+      btn.disabled = false; f.running = false;
+    }
+  }
+
+  function bbfRank(v) { return Math.round(v).toLocaleString(); }
+
+  // ---- the board: the WHOLE leaderboard, 150 a page ----
+  // Every team in the tournament with its username, like Underdog's own
+  // overall leaderboard, plus (after a sim) where each one projects. Filters:
+  // "my teams", or one username = that player's portfolio with a summary on
+  // top. Any column sorts the whole filtered set, not just the page.
+  var BBF_PAGE = 150;
+  // Each column renders its own cell, so a view is just an ordering of ids.
+  //   now  = current standings first (Underdog's leaderboard, kept current)
+  //   proj = PROJECTED standings first: teams ranked by projected final points
+  var BBF_EST = ' class="dim" title="random stand-in draft group — an estimate"';
+  var BBF_BOARD_COLS = [
+    { id: 'cur', h: 'Rank now', k: 'cur', dir: 'asc', cell: function (f, q) { return f.curRank[q] ? bbfRank(f.curRank[q]) : '—'; } },
+    { id: 'ppr', h: 'Proj pts rank', k: 'ppr', dir: 'asc', sim: 1, cell: function (f, q) { return '<b>' + bbfRank(f.projPtsRank[q]) + '</b>'; } },
+    { id: 'mv', h: 'vs now', k: 'mv', sim: 1, cell: function (f, q) {
+        var d = (f.curRank[q] || 0) - f.projPtsRank[q];
+        return !f.curRank[q] || !d ? '<span class="dim">—</span>'
+          : '<span style="color:' + (d > 0 ? 'var(--acc)' : '#f85149') + '">' + (d > 0 ? '▲ ' : '▼ ') + Math.abs(d).toLocaleString() + '</span>';
+      } },
+    { id: 'user', h: 'User / team', l: 1, cell: function (f, q, st, own) {
+        return (own ? '<b>' + esc(own.title) + '</b> ' : '') + '<a href="#" data-u="' + esc(f.users[q]) + '" title="open this player\'s portfolio" style="text-decoration:none;color:' + (own ? 'var(--dim)' : '#58a7ff') + '">@' + esc(f.users[q]) + '</a>' +
+          (own && own.inactive ? ' <span class="dim" title="no projection — hurt/unrostered, 0 in simmed weeks">' + own.inactive + ' inactive</span>' : '');
+      } },
+    { id: 'pts', h: 'Pts now', k: 'pts', cell: function (f, q) { return fmt(f.curPts[q], 2); } },
+    { id: 'pay', h: 'Paying now', k: 'pay', cell: function (f, q) {
+        var pay = bbFieldPayout(f, f.curRank[q] || 1e9);
+        return pay > 0 ? '<span style="color:var(--acc)">' + bbfMoney(pay) + '</span>' : '<span class="dim">—</span>';
+      } },
+    { id: 'proj', h: 'Proj final pts', k: 'proj', sim: 1, cell: function (f, q, st) { return '<b>' + fmt(st.proj, 0) + '</b>'; } },
+    { id: 'prank', h: 'Typical finish', k: 'prank', dir: 'asc', sim: 1, cell: function (f, q, st) { return bbfRank(st.prank); } },
+    { id: 'best', h: 'Top finish', k: 'best', dir: 'asc', sim: 1, cell: function (f, q, st) { return bbfRank(st.best); } },
+    { id: 't100', h: 'Top 100', k: 't100', sim: 1, cell: function (f, q, st) { return fmtOdds(st.t100); } },
+    { id: 't1k', h: 'Top 1,000', k: 't1k', sim: 1, cell: function (f, q, st) { return fmtOdds(st.t1k); } },
+    { id: 'cash', h: 'Cash %', k: 'cash', sim: 1, cell: function (f, q, st) { return fmtOdds(st.cash); } },
+    { id: 'ev', h: 'Reg EV $', k: 'ev', sim: 1, cell: function (f, q, st) { return st.ev > 0 ? bbfMoney(st.ev) : '<span class="dim">$0</span>'; } },
+    { id: 'podr', h: 'Pod now', k: 'podr', dir: 'asc', pods: 1, cell: function (f, q) {
+        var prk = f.podRank[q];
+        if (f.podExact && !f.podExact[q]) return '<span' + BBF_EST + '>~' + (prk || '—') + '</span>';
+        return prk ? (prk <= 2 ? '<span style="color:var(--acc)">' + prk + '</span>' : String(prk)) : '—';
+      } },
+    { id: 'adv1', h: 'Adv %', k: 'adv1', po: 1, cell: function (f, q, st) {
+        return (f.podExact && !f.podExact[q]) ? '<span' + BBF_EST + '>~' + fmtOdds(st.po.adv1) + '</span>' : '<b>' + fmtOdds(st.po.adv1) + '</b>';
+      } },
+    { id: 'adv2', h: 'Rd 3 %', k: 'adv2', po: 1, cell: function (f, q, st) { return fmtOdds(st.po.adv2); } },
+    { id: 'adv3', h: 'Final %', k: 'adv3', po: 1, cell: function (f, q, st) { return fmtOdds(st.po.adv3); } },
+    { id: 'favg', h: 'Avg final', k: 'favg', dir: 'asc', po: 1, cell: function (f, q, st) { return st.po.favg != null ? bbfRank(st.po.favg) : '<span class="dim">—</span>'; } },
+    { id: 'fbest', h: 'Best final', k: 'fbest', dir: 'asc', po: 1, cell: function (f, q, st) { return st.po.fbest != null ? bbfRank(st.po.fbest) : '<span class="dim">—</span>'; } },
+    { id: 'win', h: 'Win %', k: 'win', po: 1, cell: function (f, q, st) { return fmtOdds(st.po.win); } },
+    { id: 'poev', h: 'Playoff EV $', k: 'poev', po: 1, cell: function (f, q, st) { return bbfMoney(st.po.ev); } },
+    { id: 'tev', h: 'Total EV $', k: 'tev', po: 1, cell: function (f, q, st) { return '<b>' + bbfMoney(st.po.ev + st.ev) + '</b>'; } }
+  ];
+  var BBF_VIEW_ORDER = {
+    now: ['cur', 'user', 'pts', 'pay', 'proj', 'ppr', 'prank', 'best', 't100', 't1k', 'cash', 'ev', 'podr', 'adv1', 'adv2', 'adv3', 'favg', 'fbest', 'win', 'poev', 'tev'],
+    proj: ['ppr', 'mv', 'user', 'proj', 'cur', 'pts', 'pay', 'prank', 'best', 't100', 't1k', 'cash', 'ev', 'podr', 'adv1', 'adv2', 'adv3', 'favg', 'fbest', 'win', 'poev', 'tev']
+  };
+  function bbfColOn(f, c) {
+    if (c.pods) return !!f.podRank;
+    if (c.po) return !!(f.all && f.all.adv1);
+    return !c.sim || !!f.all;
+  }
+  function bbfViewCols(f) {
+    var byId = {};
+    BBF_BOARD_COLS.forEach(function (c) { byId[c.id] = c; });
+    return BBF_VIEW_ORDER[(f.view.mode === 'proj' && f.all) ? 'proj' : 'now'].map(function (id) { return byId[id]; })
+      .filter(function (c) { return bbfColOn(f, c); });
+  }
+  // sim results for squad q (null before a run). Your own teams use their
+  // exact per-sim ranks; everyone else the whole-field running sums.
+  function bbfStat(f, q) {
+    var A = f.all;
+    if (!A) return null;
+    var n = f.simsDone, own = f.ownRes && f.ownRes[q];
+    return {
+      proj: A.sumTot[q] / n, prank: own ? own.rank.p50 : f.projRank[q], best: own ? own.rank.min : A.best[q],
+      t100: own ? own.top100 : A.top100[q] / n, t1k: own ? own.top1k : A.top1k[q] / n,
+      cash: own ? own.cash : A.cash[q] / n, ev: own ? own.ev : A.ev[q] / n,
+      // playoffs (null without draft groups)
+      po: A.adv1 ? { adv1: A.adv1[q] / n, adv2: A.adv2[q] / n, adv3: A.adv3[q] / n, win: A.win[q] / n,
+                     favg: A.adv3[q] ? A.finSum[q] / A.adv3[q] : null, fbest: A.adv3[q] ? A.finBest[q] : null,
+                     ev: A.poEv[q] / n } : null
+    };
+  }
+  function bbfSortKey(f, key, q) {
+    var A = f.all;
+    switch (key) {
+      case 'pts': return f.curPts[q];
+      case 'pay': return bbFieldPayout(f, f.curRank[q] || 1e9);
+      case 'proj': return A.sumTot[q];
+      case 'prank': return f.projRank[q];
+      case 'ppr': return f.projPtsRank[q];
+      case 'mv': return (f.curRank[q] || 0) - f.projPtsRank[q];
+      case 'best': return A.best[q];
+      case 't100': return A.top100[q];
+      case 't1k': return A.top1k[q];
+      case 'cash': return A.cash[q];
+      case 'ev': return A.ev[q];
+      case 'podr': return f.podRank[q] || 99;
+      case 'adv1': return A.adv1[q];
+      case 'adv2': return A.adv2[q];
+      case 'adv3': return A.adv3[q];
+      case 'win': return A.win[q];
+      case 'favg': return A.adv3[q] ? A.finSum[q] / A.adv3[q] : 1e9;
+      case 'fbest': return A.adv3[q] ? A.finBest[q] : 1e9;
+      case 'poev': return A.poEv[q];
+      case 'tev': return A.poEv[q] + A.ev[q];
+      default: return f.curRank[q] || 1e9;
+    }
+  }
+  function bbfUserSquads(f, name) {
+    if (!f.userIx) {
+      f.userIx = new Map();
+      for (var i = 0; i < f.vis.length; i++) {
+        var q = f.vis[i], u = String(f.users[q]).toLowerCase(), arr = f.userIx.get(u);
+        if (!arr) f.userIx.set(u, arr = []);
+        arr.push(q);
+      }
+    }
+    return f.userIx.get(String(name).toLowerCase()) || [];
+  }
+  // filtered + sorted squad list for the current view (cached until it changes)
+  function bbfBoardList(f) {
+    var v = f.view, col = null;
+    BBF_BOARD_COLS.forEach(function (c) { if (c.k === v.key) col = c; });
+    if (!col || !bbfColOn(f, col)) { v.key = 'cur'; v.dir = 'asc'; }
+    var sig = [v.user, v.mine, v.key, v.dir, f.runId || 0].join('|');
+    if (f._list && f._listSig === sig) return f._list;
+    var base = v.user ? Int32Array.from(bbfUserSquads(f, v.user)) : (v.mine ? Int32Array.from(f.own) : f.vis);
+    var n = base.length, keys = new Float64Array(n), idx = new Int32Array(n), sgn = v.dir === 'asc' ? 1 : -1;
+    for (var i = 0; i < n; i++) { keys[i] = sgn * bbfSortKey(f, v.key, base[i]); idx[i] = i; }
+    var cr = f.curRank;
+    idx.sort(function (a, b) { return (keys[a] - keys[b]) || ((cr[base[a]] || 1e9) - (cr[base[b]] || 1e9)); });
+    var out = new Int32Array(n);
+    for (var j = 0; j < n; j++) out[j] = base[idx[j]];
+    f._list = out; f._listSig = sig;
+    return out;
+  }
+  function bbfMoney(v) { return '$' + (v >= 100 ? Math.round(v).toLocaleString() : v.toFixed(v < 10 ? 2 : 0)); }
+  // "What do these teams pay back?" — regular-season EV + playoff EV against
+  // their entry fees. Without draft groups there is no playoff sim, so the
+  // total is regular season only and says so.
+  // A steadier playoff EV. The simmed figure pays each team by where it
+  // actually finished, and one $2M winner per run makes that jumpy even over
+  // thousands of playoff replays. This one keeps the sim's odds of advancing
+  // and of winning a week-15 group (many events, stable) and pays every
+  // Round-3 team the AVERAGE Round-3-and-beyond prize instead of its own
+  // finish: r2Prize x P(out in Round 2) + avgR3 x P(reach Round 3). It ignores
+  // a team being better or worse than average once it is in Round 3.
+  function bbfSmoothPo(f, adv1, adv2) {
+    var po = f.po, pl = f.results && f.results.playoff;
+    if (!po || !pl || !pl.round3) return null;
+    var nFin = Math.round(pl.finalists), finalPool = 0;
+    for (var i = 0; i < nFin; i++) finalPool += po.finalPrize[Math.min(i, po.finalPrize.length - 1)];
+    var r3Pool = 0;
+    for (var k = 1; k < po.g3; k++) r3Pool += po.r3Prize[Math.min(k, po.r3Prize.length - 1)];
+    var avgR3 = (finalPool + r3Pool * nFin) / pl.round3;
+    return po.r2Prize * Math.max(0, adv1 - adv2) + avgR3 * adv2;
+  }
+  function bbfReturnCards(f, card, nTeams, regEv, poEv, poSmooth) {
+    var hasPo = poEv != null, total = regEv + (hasPo ? poEv : 0);
+    var fee = (f.po && f.po.entryFee) || 0, fees = fee * nTeams;
+    var avg = (fee && f.po.pool && f.meta.total) ? 100 * f.po.pool / (+f.meta.total * fee) : null;
+    var st = poSmooth != null ? regEv + poSmooth : null;
+    return card('Total expected return', bbfMoney(total),
+        hasPo ? 'regular season ' + bbfMoney(regEv) + ' + playoffs ' + bbfMoney(poEv) + (st != null ? ' · steadier estimate ' + bbfMoney(st) : '')
+          : 'regular season only — the playoff money needs a file with draft groups') +
+      (fees ? card('Entry fees', bbfMoney(fees), nTeams + ' × $' + fee) : '') +
+      (fees && hasPo ? card('Return on entries', (100 * total / fees).toFixed(1) + '%',
+        (total >= fees ? '+' : '−') + bbfMoney(Math.abs(total - fees)) + ' expected net' +
+        (st != null ? ' · steadier estimate ' + (100 * st / fees).toFixed(1) + '%' : '') +
+        (avg ? ' · an average team returns ' + avg.toFixed(1) + '%' : '')) : '');
+  }
+  function bbfPortfolioHtml(f, list) {
+    var v = f.view, n = list.length, pts = 0, payN = 0, pay = 0, bestNow = 1e9, expCash = 0, ev = 0, likely = 0, bestProj = 1e9, expo = {}, r = f.roster;
+    var advNow = 0, expAdv = 0, expR3 = 0, expFin = 0, expWin = 0, poEv = 0, bestFin = 1e9, hasPo = false;
+    for (var i = 0; i < n; i++) {
+      var q = list[i], p = bbFieldPayout(f, f.curRank[q] || 1e9), s = bbfStat(f, q);
+      pts += f.curPts[q];
+      if (f.podRank && f.podRank[q] && f.podRank[q] <= 2) advNow++;
+      if (s && s.po) {
+        hasPo = true; expAdv += s.po.adv1; expR3 += s.po.adv2; expFin += s.po.adv3; expWin += s.po.win; poEv += s.po.ev;
+        if (s.po.fbest != null && s.po.fbest < bestFin) bestFin = s.po.fbest;
+      }
+      if (p > 0) { payN++; pay += p; }
+      if (f.curRank[q] && f.curRank[q] < bestNow) bestNow = f.curRank[q];
+      if (s) { expCash += s.cash; ev += s.ev; if (s.cash >= 0.5) likely++; if (s.prank < bestProj) bestProj = s.prank; }
+      for (var k = r.start[q]; k < r.start[q + 1]; k++) expo[r.ix[k]] = (expo[r.ix[k]] || 0) + 1;
+    }
+    var top = Object.keys(expo).sort(function (a, b) { return expo[b] - expo[a]; }).slice(0, 20);
+    function card(label, val, sub) {
+      return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 16px;min-width:110px">' +
+        '<div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">' + label + '</div>' +
+        '<div style="font-size:19px;font-weight:700">' + val + '</div>' +
+        (sub ? '<div style="font-size:11px;color:var(--dim)">' + sub + '</div>' : '') + '</div>';
+    }
+    var isMe = v.mine || (f.meta.me && String(v.user).toLowerCase() === String(f.meta.me).toLowerCase());
+    var podNow = (!f.podRank && isMe) ? f.teams.filter(function (t) { return t.podPlace && t.podPlace <= 2; }).length : null;
+    return '<h3 style="margin-bottom:6px">' + (v.user ? '@' + esc(f.users[list[0]]) : 'My teams') +
+      ' <button id="bbf-clear" style="padding:2px 9px;font-weight:normal">× show everyone</button></h3>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 8px">' +
+      card('Teams', n, 'avg ' + fmt(pts / n) + ' pts · best rank ' + (bestNow < 1e9 ? bbfRank(bestNow) : '—')) +
+      card('In the money now', payN, bbfMoney(pay) + ' at current ranks') +
+      (f.all ? card('Projected in the money', expCash.toFixed(expCash < 10 ? 2 : 1), likely + ' team' + (likely === 1 ? '' : 's') + ' better than 50/50') : '') +
+      (f.all ? card('Projected winnings', bbfMoney(ev), 'reg-season EV · best proj rank ' + bbfRank(bestProj)) : '') +
+      (podNow != null ? card('Top 2 in pod', podNow, 'advancing to Round 2 as of the pull') : '') +
+      (f.podRank ? card('Advancing now', advNow, 'top 2 in their draft · ' + (100 * advNow / n).toFixed(1) + '% (even = 16.7%)') : '') +
+      (hasPo ? card('Projected advancing', expAdv.toFixed(expAdv < 10 ? 2 : 1), (100 * expAdv / n).toFixed(1) + '% of teams') : '') +
+      (hasPo ? card('Projected in Round 3', expR3.toFixed(2), 'win a week-15 group') : '') +
+      (hasPo ? card('Projected finalists', expFin.toFixed(2), 'best final place ' + (bestFin < 1e9 ? bbfRank(bestFin) : '—') + ' · win ' + fmtOdds(expWin)) : '') +
+      (hasPo ? card('Playoff EV', bbfMoney(poEv), 'as simmed · steadier estimate ' + bbfMoney(bbfSmoothPo(f, expAdv, expR3) || 0)) : '') +
+      (f.all ? bbfReturnCards(f, card, n, ev, hasPo ? poEv : null, hasPo ? bbfSmoothPo(f, expAdv, expR3) : null) : '') +
+      '</div>' +
+      (f.all ? '' : '<p class="dim" style="font-size:11px;margin:0 0 6px">Run the sim to add projected finishes for these teams.</p>') +
+      '<p style="font-size:12px;margin:0 0 6px"><b>Exposure:</b> ' + top.map(function (k) {
+        return esc(r.players[k].name) + ' <span class="dim">' + (100 * expo[k] / n).toFixed(0) + '%</span>';
+      }).join(' · ') + '</p>' +
+      '<p class="dim" style="font-size:11px;margin:0 0 8px">"In the money" = inside the overall regular-season paid places.' +
+      (f.podRank ? ' Advancing = top 2 of the team\'s own 12-team draft.' +
+        ((f.podExact && !isMe) ? ' <b>These teams sit in random stand-in draft groups</b> (only your own drafts\' real groups are loaded), so their advancing and playoff figures are estimates.' : '')
+        : ' Pod advancing (top 2 of each 12-team draft) and the playoff sim need draft groups — load a draft-groups file (Draft Helper → Pull my draft groups).') + '</p>';
+  }
+  function renderBBFieldBoard() {
+    var f = state.bbField;
+    if (!f) return;
+    var v = f.view, list = bbfBoardList(f), n = list.length;
+    $('bbf-lookup').innerHTML = (v.user || v.mine) && n ? bbfPortfolioHtml(f, list) : '';
+    if ($('bbf-clear')) $('bbf-clear').addEventListener('click', function () {
+      v.user = ''; v.mine = false; v.page = 0; $('bbf-mine').checked = false; $('bbf-user').value = '';
+      renderBBFieldBoard();
+    });
+    var pages = Math.max(1, Math.ceil(n / BBF_PAGE));
+    v.page = Math.max(0, Math.min(pages - 1, v.page));
+    var from = v.page * BBF_PAGE, to = Math.min(n, from + BBF_PAGE);
+    var cols = bbfViewCols(f);
+    function pager() {
+      return '<div class="bar bbf-pager" style="margin:6px 0"><button data-pg="first">«</button><button data-pg="prev">‹ Prev</button> ' +
+        '<label>Page <input type="number" class="bbf-pgnum" value="' + (v.page + 1) + '" min="1" max="' + pages + '" style="width:76px"> of ' +
+        pages.toLocaleString() + '</label> <button data-pg="next">Next ›</button><button data-pg="last">»</button> ' +
+        '<span class="dim">' + (n ? (from + 1).toLocaleString() + '–' + to.toLocaleString() + ' of ' : '') + n.toLocaleString() + ' teams' +
+        (v.user ? ' for @' + esc(v.user) : (v.mine ? ' (yours)' : '')) + '</span></div>';
+    }
+    var html = pager() + '<table><thead>' + thRow(cols, { key: v.key, dir: v.dir }) + '</thead><tbody>';
+    for (var i = from; i < to; i++) {
+      var q = list[i], own = q >= f.nField ? f.teams[q - f.nField] : null, st = bbfStat(f, q);
+      html += '<tr data-q="' + q + '" style="cursor:pointer">';
+      for (var ci = 0; ci < cols.length; ci++) html += '<td' + (cols[ci].l ? ' class="l"' : '') + '>' + cols[ci].cell(f, q, st, own) + '</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table>' + (to - from > 25 ? pager() : '') +
+      '<p class="dim" style="font-size:11px">Rank / Pts now = ' + (f.nowAt ? 'Underdog\'s points at pull time plus every game finished since (Sleeper stats — the same method reproduces Underdog\'s own totals for 99.9% of teams), kept current without running a sim'
+        : 'as pulled from Underdog — updating from finished games') +
+      '. Paying now = the regular-season prize at the current rank. ' +
+      (f.all ? 'Proj final pts = average simmed final total; Proj pts rank = where that total places among every team (the projected season leaderboard — pick the Projected standings view to lead with it; "vs now" = places gained or lost against the current rank). ' +
+        'Averages bunch much tighter than any one real season does, so a single season usually lands a team worse than its Proj pts rank: Typical finish = the team\'s typical simmed place (the median for your own teams, the geometric mean of the simmed ranks for everyone else). Top finish = the best overall place the team reached in any of the ' +
+        f.simsDone + ' sims. Top 100 / Top 1,000 / Cash % = share of sims finishing there; EV $ = average regular-season payout (the Round-2 advance prize is separate). ' +
+        '0% means "not once in ' + f.simsDone + ' sims", not impossible. ' : '') +
+      (f.podRank ? 'Pod now = place in its own 12-team draft on current points (top 2 advance). ' : '') +
+      (f.podExact ? 'Only YOUR drafts\' real groups are loaded: a ~ marks a team in a random stand-in group, so its pod place, advance odds and playoff ' +
+        'numbers are estimates (yours are exact). ' : '') +
+      (f.all && f.all.adv1 ? 'Adv % = finishes top 2 in its draft; Rd 3 % = also wins its 14-team week-15 group; Final % = also wins its 12-team week-16 group and ' +
+        'reaches the 667-team week-17 final; Avg / Best final = its average and best finishing place in the finals it reached; Win % = takes first. Playoff groups are ' +
+        're-drawn at random, and each simulated regular season\'s playoffs are replayed ' + ((f.po && f.po.reps) || 1) + ' times so the prize money settles. ' +
+        'Playoff EV = average playoff prize; Total EV adds the regular-season EV. ' : '') +
+      'Click a column to sort the whole list, a username for that player\'s portfolio, a row for the roster.</p>';
+    $('bbf-table').innerHTML = html;
+    document.querySelectorAll('#bbf-table .bbf-pager button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = b.dataset.pg;
+        v.page = p === 'first' ? 0 : p === 'last' ? pages - 1 : v.page + (p === 'next' ? 1 : -1);
+        renderBBFieldBoard();
+      });
+    });
+    document.querySelectorAll('#bbf-table .bbf-pgnum').forEach(function (inp) {
+      inp.addEventListener('change', function () { v.page = (+inp.value || 1) - 1; renderBBFieldBoard(); });
+    });
+    document.querySelectorAll('#bbf-table a[data-u]').forEach(function (a) {
+      a.addEventListener('click', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        $('bbf-user').value = a.dataset.u;
+        bbfLookup();
+      });
+    });
+    document.querySelectorAll('#bbf-table tbody tr').forEach(function (tr) {
+      tr.addEventListener('click', function () { renderBBFieldDetail(+tr.dataset.q); });
+    });
+    document.querySelectorAll('#bbf-table th[data-sort]').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var k = th.dataset.sort, col = null;
+        BBF_BOARD_COLS.forEach(function (c) { if (c.k === k) col = c; });
+        if (v.key === k) v.dir = v.dir === 'desc' ? 'asc' : 'desc';
+        else { v.key = k; v.dir = (col && col.dir) || 'desc'; }
+        v.page = 0;
+        renderBBFieldBoard();
+      });
+    });
+  }
+
+  // cards + cut lines for YOUR teams (after a run), then the board
+  function renderBBFieldTable() {
+    var f = state.bbField;
+    if (!f) return;
+    if (!f.results) { $('bbf-summary').innerHTML = ''; renderBBFieldBoard(); return; }
+    var res = f.results, ownRows = res.teams;
+    function card(label, val, sub) {
+      return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 16px;min-width:110px">' +
+        '<div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">' + label + '</div>' +
+        '<div style="font-size:19px;font-weight:700">' + val + '</div>' +
+        (sub ? '<div style="font-size:11px;color:var(--dim)">' + sub + '</div>' : '') + '</div>';
+    }
+    var evSum = 0, cashSum = 0, payNow = 0, nPayNow = 0, best = ownRows[0], top = ownRows[0];
+    ownRows.forEach(function (r) {
+      var pn = bbFieldPayout(f, f.curRank[r.squad] || 1e9);
+      evSum += r.ev; cashSum += r.cash; payNow += pn;
+      if (pn > 0) nPayNow++;
+      if ((f.curRank[r.squad] || 1e9) < (f.curRank[best.squad] || 1e9)) best = r;
+      if (r.rank.min < top.rank.min) top = r;
+    });
+    var html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 10px">' +
+      card('Your teams', ownRows.length, esc(f.meta.tournament)) +
+      card('Best rank now', bbfRank(f.curRank[best.squad]), esc(best.t.title) + ' · ' + fmt(f.curPts[best.squad]) + ' pts') +
+      card('Paying now', '$' + payNow.toFixed(0), nPayNow + ' team' + (nPayNow === 1 ? '' : 's') + ' inside the paid places') +
+      card('Expected cashes', cashSum.toFixed(2), 'teams finishing in the paid places') +
+      card('Reg-season EV', '$' + evSum.toFixed(evSum < 10 ? 2 : 0), 'all ' + ownRows.length + ' teams') +
+      card('Top finish', bbfRank(top.rank.min), esc(top.t.title) + ' — best place in any sim') +
+      '</div>';
+    if (f.all && f.all.adv1) {
+      var A = f.all, nS = f.simsDone, a1 = 0, a2 = 0, a3 = 0, w = 0, pe = 0, advNow = 0, bf = 1e9;
+      f.own.forEach(function (q) {
+        a1 += A.adv1[q] / nS; a2 += A.adv2[q] / nS; a3 += A.adv3[q] / nS; w += A.win[q] / nS; pe += A.poEv[q] / nS;
+        if (f.podRank[q] && f.podRank[q] <= 2) advNow++;
+        if (A.adv3[q] && A.finBest[q] < bf) bf = A.finBest[q];
+      });
+      html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 10px">' +
+        card('Advancing now', advNow, 'of ' + f.own.length + ' · top 2 in their draft') +
+        card('Projected advancing', a1.toFixed(1), (100 * a1 / f.own.length).toFixed(1) + '% (even = 16.7%)') +
+        card('Projected in Round 3', a2.toFixed(2), 'win a week-15 group') +
+        card('Projected finalists', a3.toFixed(2), 'best final place ' + (bf < 1e9 ? bbfRank(bf) : '—')) +
+        card('Title odds', fmtOdds(w), 'any of your teams wins it') +
+        card('Playoff EV', bbfMoney(pe), 'as simmed · steadier estimate ' + bbfMoney(bbfSmoothPo(f, a1, a2) || 0)) +
+        '</div>';
+    }
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 10px">' +
+      bbfReturnCards(f, card, ownRows.length, evSum, (f.all && f.all.adv1) ? pe : null, (f.all && f.all.adv1) ? bbfSmoothPo(f, a1, a2) : null) + '</div>' +
+      ((f.all && f.all.adv1) ? '<p class="dim" style="font-size:11px;margin:-4px 0 10px">Playoff EV "as simmed" pays each team by where it actually finished — one team wins $2M ' +
+        'every run, so it stays jumpy even over thousands of playoff replays. The steadier estimate keeps the simmed odds of advancing and of winning a week-15 group but pays every ' +
+        'Round-3 team the average Round-3-and-beyond prize. The truth is most likely between the two; more sims pull them together.</p>' : '');
+    html += '<table style="margin-bottom:10px"><thead><tr><th class="l">Overall place</th><th>Score now</th><th>Projected final</th>' +
+      '<th>p10</th><th>p90</th><th>Pts/wk from here</th></tr></thead><tbody>';
+    res.cuts.forEach(function (c) {
+      html += '<tr><td class="l">' + (c.rank === f.lastPaid ? 'Last paid place (' + bbfRank(c.rank) + ')' : (c.rank === 1 ? '1st' : 'Place ' + bbfRank(c.rank))) +
+        '</td><td>' + fmt(c.cur) + '</td><td><b>' + fmt(c.final.mean, 0) + '</b></td><td class="dim">' + fmt(c.final.p10, 0) +
+        '</td><td class="dim">' + fmt(c.final.p90, 0) + '</td><td>' +
+        (res.weeksSimmed ? fmt((c.final.mean - c.cur) / res.weeksSimmed) : '—') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    if (f.tiers.length) {
+      html += '<p class="dim" style="font-size:11px;margin:0 0 10px"><b>Regular-season payouts on the leaderboard:</b> ' +
+        f.tiers.map(function (t) {
+          return (t.from === t.to ? bbfRank(t.from) : bbfRank(t.from) + '–' + bbfRank(t.to)) + ': $' + t.amt.toLocaleString();
+        }).join(' · ') + '</p>';
+    }
+    $('bbf-summary').innerHTML = html;
+    renderBBFieldBoard();
+  }
+
+  // TEAM POP-UP: click a row -> the roster with every player's points so far
+  // and projected points the rest of the regular season, plus the team's own
+  // numbers. "Proj rest" = the sum of the engine's weekly means for the weeks
+  // still to play (this week skipped once the player's game is final).
+  // Player projections add up to MORE than the team's projected points —
+  // best ball only counts the top 8 scores each week.
+  function bbfPlayerRows(f, q) {
+    var r = f.roster, rows = [], cur = f.nowWeek || state.injuryWeek || 1, pts = f.plNow || f.plPulled;
+    for (var i = r.start[q]; i < r.start[q + 1]; i++) {
+      var k = r.ix[i], p = r.players[k], rest = 0, wks = 0;
+      if (!p.stub) {
+        for (var wk = cur; wk <= BB_REG_TO; wk++) {
+          if (wk === cur && f.lockMask && f.lockMask[k]) continue; // already played this week
+          var wp = E.weeklyProjection(p, wk, E.PRESETS.half, state.schedule);
+          if (wp) { rest += E.effMean(wp); wks++; }
+        }
+      }
+      rows.push({ name: p.name, pos: p.pos, tm: (f.pTeams && f.pTeams[k]) || (p.stub ? '' : E.normTeam(p.tmNow || p.tm || '')), now: pts[k] || 0,
+                  rest: rest, wks: wks, stub: !!p.stub, played: !!(f.lockMask && f.lockMask[k]) });
+    }
+    return rows;
+  }
+  function bbfCloseModal() { var m = $('bbf-modal'); if (m) m.style.display = 'none'; }
+  function renderBBFieldDetail(q) {
+    var f = state.bbField;
+    if (!f) return;
+    var m = $('bbf-modal');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'bbf-modal';
+      m.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1000;overflow:auto;padding:4vh 12px';
+      m.addEventListener('click', function (ev) { if (ev.target === m) bbfCloseModal(); });
+      document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') bbfCloseModal(); });
+      document.body.appendChild(m);
+    }
+    var own = q >= f.nField ? f.teams[q - f.nField] : null, r = f.ownRes && f.ownRes[q], s = bbfStat(f, q);
+    var pay = bbFieldPayout(f, f.curRank[q] || 1e9);
+    function stat(label, val, sub) {
+      return '<div style="background:var(--bg,#0d1117);border:1px solid var(--line);border-radius:8px;padding:6px 12px;min-width:92px">' +
+        '<div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">' + label + '</div>' +
+        '<div style="font-size:16px;font-weight:700">' + val + '</div>' + (sub ? '<div style="font-size:10px;color:var(--dim)">' + sub + '</div>' : '') + '</div>';
+    }
+    var html = '<div style="max-width:900px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px">' +
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px"><h3 style="margin:0;flex:1">' + (own ? esc(own.title) + ' <span class="dim" style="font-weight:normal">· ' : '') +
+      '@' + esc(f.users[q]) + (own ? '</span>' : '') + '</h3>' +
+      '<button id="bbf-modal-user" style="padding:2px 9px">portfolio</button><button id="bbf-modal-x" style="padding:2px 9px">✕</button></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+      stat('Rank now', f.curRank[q] ? bbfRank(f.curRank[q]) : '—', fmt(f.curPts[q], 2) + ' pts' + (pay > 0 ? ' · paying ' + bbfMoney(pay) : '')) +
+      (f.podRank && f.podRank[q] ? stat('In its draft', ((f.podExact && !f.podExact[q]) ? '~' : '') + f.podRank[q] + ' of 12', f.podRank[q] <= 2 ? 'advancing now' : 'top 2 advance') : '') +
+      (s ? stat('Proj final', fmt(s.proj, 0) + ' pts', 'proj-points rank ' + bbfRank(f.projPtsRank[q])) +
+           stat('Typical finish', bbfRank(s.prank), 'top finish ' + bbfRank(s.best)) +
+           stat('Cash %', fmtOdds(s.cash), 'reg-season EV ' + bbfMoney(s.ev)) : '') +
+      (s && s.po ? stat('Advance', fmtOdds(s.po.adv1), 'Rd 3 ' + fmtOdds(s.po.adv2) + ' · final ' + fmtOdds(s.po.adv3)) +
+                   stat('Total EV', bbfMoney(s.po.ev + s.ev), 'playoffs ' + bbfMoney(s.po.ev) + ' · win ' + fmtOdds(s.po.win)) : '') +
+      '</div>';
+    var rows = bbfPlayerRows(f, q), order = { QB: 0, RB: 1, WR: 2, TE: 3 }, sumNow = 0, sumRest = 0;
+    rows.sort(function (x, y) { return (order[x.pos] - order[y.pos]) || ((y.now + y.rest) - (x.now + x.rest)); });
+    html += '<table><thead><tr><th class="l">Player</th><th>Pos</th><th>Team</th><th>Proj season pts</th><th>Pts so far</th><th>Proj rest of season</th><th>Proj / wk</th></tr></thead><tbody>';
+    var lastPos = null;
+    rows.forEach(function (x) {
+      sumNow += x.now; sumRest += x.rest;
+      html += '<tr' + (lastPos && lastPos !== x.pos ? ' style="border-top:2px solid var(--line)"' : '') + '><td class="l">' + (x.stub ? '<span class="dim">' + esc(x.name) + '</span>' : '<b>' + esc(x.name) + '</b>') +
+        (x.played ? ' <span class="dim" title="this week\'s game is final">✓ wk ' + (f.nowWeek || '') + '</span>' : '') +
+        '</td><td class="dim">' + esc(x.pos) + '</td><td class="dim">' + esc(x.tm || '—') + '</td><td><b>' + fmt(x.now + x.rest) + '</b></td><td>' + fmt(x.now) + '</td><td>' +
+        (x.stub ? '<span class="dim" title="no projection — hurt or unrostered">—</span>' : fmt(x.rest)) + '</td><td class="dim">' + (x.wks ? fmt(x.rest / x.wks) : '—') +
+        '</td></tr>';
+      lastPos = x.pos;
+    });
+    html += '<tr style="border-top:2px solid var(--line)"><td class="l dim" colspan="3">All ' + rows.length + ' players</td><td class="dim">' + fmt(sumNow + sumRest) + '</td><td class="dim">' + fmt(sumNow) + '</td><td class="dim">' + fmt(sumRest) +
+      '</td><td></td></tr></tbody></table>' +
+      '<p class="dim" style="font-size:11px;margin:8px 0 0">Proj season pts = the player\'s projected total for the regular season (weeks 1–' + BB_REG_TO + '): what he has scored plus what he is projected to add. Pts so far = every point the player has scored this season (Underdog\'s count at the pull, plus games finished since). ' +
+      'Proj rest of season = his projected points for the regular-season weeks still to play (through week ' + BB_REG_TO + '). The team\'s own total is lower than the players\' sum — ' +
+      'best ball only counts the best QB, 2 RB, 3 WR, TE and flex each week' + (s ? ', which is what "Proj final" simulates' : '') + '.</p>';
+    if (r) {
+      var edges = [10, 100, 1000, 10000, 100000], counts = new Array(edges.length + 1).fill(0);
+      for (var i = 0; i < r.ranks.length; i++) {
+        var bk = 0;
+        while (bk < edges.length && r.ranks[i] > edges[bk]) bk++;
+        counts[bk]++;
+      }
+      var labels = ['Top 10', '11–100', '101–1,000', '1,001–10,000', '10,001–100,000', '100,001+'];
+      html += '<table style="margin-top:12px"><thead><tr>' + labels.map(function (l) { return '<th>' + l + '</th>'; }).join('') + '</tr></thead><tbody><tr>' +
+        counts.map(function (c) { return '<td>' + fmtOdds(c / r.ranks.length) + '</td>'; }).join('') + '</tr></tbody></table>' +
+        '<p class="dim" style="font-size:11px;margin:6px 0 0">Where this team finished overall across ' + r.ranks.length + ' sims · median ' + bbfRank(r.rank.p50) +
+        ' · good run (10th pct) ' + bbfRank(r.rank.p10) + ' · final total ' + fmt(r.total.p10, 0) + ' / ' + fmt(r.total.p50, 0) + ' / ' + fmt(r.total.p90, 0) + ' (p10 / median / p90).</p>';
+    }
+    m.innerHTML = html + '</div>';
+    m.style.display = 'block';
+    m.scrollTop = 0;
+    $('bbf-modal-x').addEventListener('click', bbfCloseModal);
+    $('bbf-modal-user').addEventListener('click', function () { bbfCloseModal(); $('bbf-user').value = f.users[q]; bbfLookup(); });
+  }
+
+  // ---- username look-up: anyone's portfolio = the board filtered to them ----
+  async function bbfLookup() {
+    try {
+      if (!(await bbfEnsureLoaded())) { $('bbf-note').textContent = 'Load a field file first.'; return; }
+    } catch (e0) { $('bbf-note').textContent = 'Could not load the saved field file: ' + ((e0 && e0.message) || e0); return; }
+    var f = state.bbField, name = $('bbf-user').value.trim().replace(/^@/, '').toLowerCase();
+    if (name && !bbfUserSquads(f, name).length) {
+      $('bbf-lookup').innerHTML = '<p class="dim">No teams for <b>' + esc(name) + '</b> in this file' +
+        (f.meta.complete ? ' — check the spelling (exact Underdog username).' : ' — it is a PARTIAL file, so they may simply not have been pulled.') + '</p>';
+      return;
+    }
+    f.view.user = name; f.view.mine = false; f.view.page = 0;
+    $('bbf-mine').checked = false;
+    $('bbf-detail').innerHTML = '';
+    renderBBFieldBoard();
+  }
+  // Current standings <-> projected standings (teams ranked by projected final points)
+  function bbfSetView() {
+    var f = state.bbField, mode = $('bbf-view').value;
+    if (!f) return;
+    if (mode === 'proj' && !f.all) {
+      $('bbf-view').value = 'now';
+      $('bbf-note').textContent = 'The projected standings need a sim — press RUN OVERALL SIM first.';
+      return;
+    }
+    f.view.mode = mode;
+    f.view.key = mode === 'proj' ? 'ppr' : 'cur'; f.view.dir = 'asc'; f.view.page = 0;
+    renderBBFieldBoard();
+  }
+  function bbfToggleMine() {
+    var f = state.bbField;
+    if (!f) return;
+    f.view.mine = $('bbf-mine').checked; f.view.user = ''; f.view.page = 0;
+    $('bbf-user').value = '';
+    renderBBFieldBoard();
+  }
+
   function bbLabel(t) {
     return (t.isMine ? '★ ' : '') + t.title + (t.teamName ? ' – ' + t.teamName : '') +
       (isSfTeam(t) ? ' [SF]' : '') + (t.slot ? ' · slot ' + t.slot : '') +
@@ -2966,7 +4368,7 @@
       html += '<div class="bar" style="margin-bottom:4px;font-size:12px;color:var(--dim)">Prize model for <b style="color:var(--tx)">' + esc(tf) +
         '</b>: <select id="bb-pz-mode">' +
         '<option value="ladder"' + (m.mode === 'ladder' ? ' selected' : '') + '>same-roster playoffs (score ladder)</option>' +
-        '<option value="redraft"' + (m.mode === 'redraft' ? ' selected' : '') + '>re-draft playoffs (BBM-style)</option>' +
+        '<option value="redraft"' + (m.mode === 'redraft' ? ' selected' : '') + '>flat $ per advancer (no bracket)</option>' +
         '<option value="eliminator"' + (m.mode === 'eliminator' ? ' selected' : '') + '>eliminator (weekly survivor)</option>' +
         '</select>' +
         (m.mode !== 'eliminator' ? '<label>$ per advance <input type="number" id="bb-pz-adv" value="' + m.advCash + '" step="10"></label>' : '') +
@@ -4934,6 +6336,20 @@
     }
     else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
     if (p.isDST) return chips;
+    // INJURY SIGNALS (2026-10-01): injury on the report, day-by-day practice, books with lines up, the news read
+    if (E.injSignalInfo) {
+      var isg = E.injSignalInfo(p, wk), desig = /Questionable|Doubtful|Out|IR|PUP/i.test(String(p.injFlag || ''));
+      if (isg && (iA < 1 || isg.seq || isg.news || desig)) {
+        var ib = [];
+        if (isg.inj || isg.body) ib.push(isg.inj || isg.body);
+        if (isg.seq) ib.push('practice ' + isg.seq);
+        if (isg.lines != null && (iA < 1 || isg.gs || desig)) ib.push(isg.lines ? 'lines up at ' + isg.lines + ' book' + (isg.lines > 1 ? 's' : '') : 'no lines up');
+        if (isg.news && isg.news.flag) ib.push('news: ' + ({ play: 'expected to play', doubt: 'unlikely to play', gtd: 'game-time decision' }[isg.news.flag.k] || isg.news.flag.k));
+        if (isg.news && isg.news.expert) ib.push('analyst: ' + String(isg.news.expert.hl || '').slice(0, 70));
+        if (/^(news|dx-)/.test(isg.src || '') && isg.note) ib.push(({ 'news-season': 'out for the season', 'dx-season': 'out for the season', 'news-out': 'ruled out', 'news-return': 'return window', news: 'reported timeline' }[isg.src] || isg.src) + ' (' + isg.note.slice(0, 80) + ')');
+        if (ib.length) chips.push('INJ: ' + ib.join(' · '));
+      }
+    }
     var l = E.tdLuckAdj(p, sc) * Math.min(1, iA);
     if (Math.abs(l) >= 0.05) chips.push('TD luck ' + ntSigned(l, 1));
     var w = E.weatherMult(p, wk, slot); if (w !== 1) chips.push('weather ×' + ntF(w, 2));

@@ -1,42 +1,46 @@
-===== Sim Lab refresh Wed 09/30/2026 13:26:14.36 ===== 
+===== Sim Lab refresh Mon 10/05/2026 10:30:28.46 ===== 
 copied mike_clay_projections.js  (36 KB)
 copied player_weekly_sigma.js  (56 KB)
-copied betting_lines_2026.js  (361 KB)
+copied betting_lines_2026.js  (396 KB)
 copied clay_team_grades_2026.js  (4 KB)
 copied yahoo_normalize.js  (13 KB)
-wrapped sim_practice.js  (301 entries, 2026-09-30T00:18)
-wrapped sim_depth.js  (32 entries, 2026-09-30T15:41)
-wrapped sim_news.js  (340 entries, 2026-09-30T16:17)
-wrapped sleeper_players.js  (587 players, exported 2026-09-30 13:26:05)
-wrapped sim_snaps.js  (353 players with 2026 snaps, 340 with a 2025 late snap share)
-wrapped sim_2026.js  (453 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
-defense availability: 32 teams, 423 regular defenders, 62 with a status
-wrapped sleeper_meta.js  (579 players, 127 true rookies, 6 elite CBs)
-wrapped sim_weather.js  (23 outdoor kickoffs in forecast window · site weather_2026.json (2026-09-30T15:41))
-future totals: current week 4, 64 in-season games observed, 193 future games re-rated, 15 fresh book lines kept, quarterback context ON -> sim_future_totals.js
-cache-busted index.html scripts (?v=1790789177)
-stamped 2026-09-30 13:26
-wrote E:\MyFantasyFootball\sim_lab\data\sim_context.js - 96 team-weeks, 28 with 6+ garbage plays
-wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 295 players with 2026 route data (295 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 99 RBs + 258 WR/TEs + 47 QBs with TD-luck data, 37 kickers with FG-luck data, 32 DSTs, 406 players with xFP components
-wrote E:\MyFantasyFootball\sim_lab\data\zones_2026.js - 32 defenses, 344 receivers with 2026 targets, 249 with 2025 priors
-wrote E:\MyFantasyFootball\sim_lab\data\scheme_2026.js - 2026 weeks [1, 2, 3], 32 defenses, 338 receivers, 175 rushers, 53 QBs; prior 2025 (32 D, coach-aware: same 17, coach 5, new-no-history 10, team (no coach data) 0); W-vs-prior r: man 0.56, blitz 0.72, prs 0.31, prwr 0.27, sBox 0.39, dbRush 0.78, mtRate 0.32, slotYd 0.01, screenTg 0.02, grCov 0.18, grRun 0.15, grPrsh 0.09, run.ypc 0.19, run.yco 0.06, run.gap 0.23, run.edge 0.31, run.exp 0.2, run.mtf 0.24; same-DC (17) vs new-DC (15) r: man 0.46/0.52, blitz 0.82/0.34, dbRush 0.85/0.5, sBox 0.68/-0.23
-wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 32 with 2026 data
-browser: installed Edge (fallback; first choice failed - see notes/export_notes_launch.log)
-wrote E:\MyFantasyFootball\sim_lab\notes\notes_w4_half.txt (221015 chars, 16 games) + notes_latest.txt | page errors: console: Failed to load resource: the server responded with a status of 404 (Not Found)
+wrapped sim_practice.js  (317 entries, 2026-10-05T14:29)
+wrapped sim_depth.js  (32 entries, 2026-10-05T14:30)
+wrapped sim_news.js  (373 entries, 2026-10-05T02:14)
+wrapped sleeper_players.js  (630 players, exported 2026-10-05 10:30:28)
+wrapped sim_snaps.js  (395 players with 2026 snaps, 369 with a 2025 late snap share)
+wrapped sim_2026.js  (494 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
+defense availability: 32 teams, 422 regular defenders, 92 with a status
+OL availability: 32 teams (11 with a starter out: BAL 1, CAR 2, CHI 1, CLE 1, GB 2, LV 1, NO 1, NYJ 1, PHI 1, TEN 1, WAS 1); unmatched linemen assumed available: NE Michael Onwenu, LV Delmar Glaze, BAL Olaivavega Ioane
+wrapped sleeper_meta.js  (622 players, 129 true rookies, 6 elite CBs)
+wrapped sim_weather.js  (11 outdoor kickoffs in forecast window Â· site weather_2026.json (2026-10-05T14:30))
+own team totals: current week 4, 79 in-season lines observed, 63 results, 193 future games built from our ratings, 15 fresh book lines kept, quarterback context ON -> sim_future_totals.js
+wrapped sim_actuals_2026.js  (wk 1: 32 teams final / 331 stat lines, wk 2: 32 teams final / 346 stat lines, wk 3: 32 teams final / 339 stat lines, wk 4: 30 teams final / 309 stat lines)
+wrapped sim_injury_signals.js  (week 4: 185 diagnoses, 90 on the practice report, news: 25 timelines / 15 ruled out / 18 play-or-doubt flags, 0 lines-log rows, 61 pre-injury chart spots)
+cache-busted index.html scripts (?v=1791210634)
+stamped 2026-10-05 10:30
+wrote E:\MyFantasyFootball\sim_lab\data\sim_context.js - 126 team-weeks, 30 with 6+ garbage plays
+wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js â€” 85 players with 2026 route data (85 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 103 RBs + 270 WR/TEs + 49 QBs with TD-luck data, 37 kickers with FG-luck data, 32 DSTs, 424 players with xFP components
+wrote E:\MyFantasyFootball\sim_lab\data\zones_2026.js - 32 defenses, 362 receivers with 2026 targets, 249 with 2025 priors
+wrote E:\MyFantasyFootball\sim_lab\data\scheme_2026.js - 2026 weeks [1, 2, 3, 4], 32 defenses, 338 receivers, 175 rushers, 53 QBs; prior 2025 (32 D, coach-aware: same 17, coach 5, new-no-history 10, team (no coach data) 0); W-vs-prior r: man 0.57, blitz 0.71, prs 0.32, prwr 0.28, sBox 0.39, dbRush 0.78, mtRate 0.36, slotYd -0.02, screenTg 0.04, grCov 0.19, grRun 0.17, grPrsh 0.14, run.ypc 0.19, run.yco 0.07, run.gap 0.21, run.edge 0.3, run.exp 0.21, run.mtf 0.27; same-DC (17) vs new-DC (15) r: man 0.46/0.54, blitz 0.82/0.36, dbRush 0.85/0.49, sBox 0.68/-0.23
+wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js â€” 32 teams, 32 with 2026 data
+wrote E:\MyFantasyFootball\sim_lab\notes\notes_w5_half.txt (223923 chars, 15 games) + notes_latest.txt
 
-[1m[37m===[39m Deploying to 'jackb933-website'...[22m
+=== Deploying to 'jackb933-website'...
 
-[36m[1mi [22m[39m deploying [1mhosting[22m
-[36m[1mi  hosting[jb-simlab-2026]:[22m[39m beginning deploy...
-[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 607 files in [1msim_lab[22m
-[32m[1m+  hosting[jb-simlab-2026]:[22m[39m file upload complete
-[36m[1mi  hosting[jb-simlab-2026]:[22m[39m finalizing version...
-[32m[1m+  hosting[jb-simlab-2026]:[22m[39m version finalized
-[36m[1mi  hosting[jb-simlab-2026]:[22m[39m releasing new version...
-[32m[1m+  hosting[jb-simlab-2026]:[22m[39m release complete
+i  deploying hosting
+i  hosting[jb-simlab-2026]: beginning deploy...
+i  hosting[jb-simlab-2026]: found 719 files in sim_lab
+i  hosting: uploading new files [16/17] (94%)
+i  hosting: upload complete
++  hosting[jb-simlab-2026]: file upload complete
+i  hosting[jb-simlab-2026]: finalizing version...
++  hosting[jb-simlab-2026]: version finalized
+i  hosting[jb-simlab-2026]: releasing new version...
++  hosting[jb-simlab-2026]: release complete
 
-[32m[1m+ [22m[39m [1m[4mDeploy complete![24m[22m
++  Deploy complete!
 
-[1mProject Console:[22m https://console.firebase.google.com/project/jackb933-website/overview
-[1mHosting URL:[22m https://jb-simlab-2026.web.app
-===== done Wed 09/30/2026 13:26:49.80 ===== 
+Project Console: https://console.firebase.google.com/project/jackb933-website/overview
+Hosting URL: https://jb-simlab-2026.web.app
+===== done Mon 10/05/2026 10:31:42.49 ===== 

@@ -61890,44 +61890,21 @@ Rules:
   }
   window._udLiveDraft = _udLiveDraft;
 
-  // Field-average share of entries holding an advancing spot at the stage this
-  // draft is in — the baseline the ADVANCE RATE card prints under my own rate.
-  // Round 1 = adv / pool size; each later round multiplies its own adv / size
-  // on top (an Eliminator entry leading its Week 4 H2H is in the surviving
-  // 6/12 x 1/2 x 1/2 x 1/2 of the field). An eliminated entry is measured
-  // against the round the contest has reached by week — but only when later
-  // rounds are synced for that contest (lateSynced); with Round 1 pools alone
-  // every entry is judged on Round 1. null = a later round's pool size isn't
-  // on file.
-  function _udFieldAdvRate(L, lastWk, lateSynced) {
-    const rule = L.rule, rounds = rule.rounds || [];
-    const size1 = (L.teams && L.teams.length) || (rounds[0] && rounds[0].size) || 12;
-    let p = Math.min(1, rule.adv / size1);
-    if (!rule.multi || !L.h2h) return p;
-    let k = L.h2h.alive ? ((L.h2h.latest && L.h2h.latest.round) || 1) : 1;
-    if (!L.h2h.alive && lateSynced) rounds.forEach((rd, i) => { if (rd.week && rd.week[0] <= lastWk) k = i + 1; });
-    for (let i = 1; i < k; i++) {
-      const rd = rounds[i];
-      if (!rd || rd.final) break;
-      const row = L.h2h.rounds.find(r => r.round === i + 1);
-      const size = rd.size || (row && row.of) || null;
-      if (!size) return null;
-      p *= Math.min(1, rd.adv / size);
-    }
-    return p;
+  // Round 1 advancing spot (Jack 2026-10-05: advance rate IS Round 1 — top
+  // 2 of 12 over Weeks 1-14 in BBM). Read off the Round 1 pool standings,
+  // never the playoff rounds L.inAdv follows after Week 14, so the ADVANCE
+  // RATE card, the ADVANCING exposure toggle and the draft board's advance
+  // views all count the same thing and freeze once Round 1 is final.
+  function _udR1Adv(L) {
+    return !!(L && L.fieldComplete && L.scored && L.me && L.me.adv);
   }
 
-  // Portfolio roll-up over the (filtered) drafts: advance rate + $ in the money.
+  // Portfolio roll-up over the (filtered) drafts: Round 1 advance rate + $ in
+  // the money. Field avg = each pool's advance share (2 / 12 = 16.7% in BBM).
   function _udLiveSummary(data) {
     const drafts = data && data.drafts ? Object.values(data.drafts) : [];
-    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0, nMoney = 0, fieldSum = 0, nFieldAvg = 0;
+    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0, nPts = 0, nMoney = 0, fieldSum = 0, r1Weeks = 0;
     const lw = _udLiveWeekInfo();
-    const lastWk = lw.kicked.length ? Math.max.apply(null, lw.kicked) : 0;
-    const lateSynced = {};   // contest -> some entry has a later-round group linked
-    drafts.forEach(d => {
-      const L = _udLiveDraft(d);
-      if (L && L.h2h && L.h2h.rounds.length > 1) lateSynced[d.tournament || ''] = true;
-    });
     drafts.forEach(d => {
       const L = _udLiveDraft(d);
       if (!L) return;
@@ -61935,23 +61912,27 @@ Rules:
       if (!L.fieldComplete || !L.scored) return;
       winning += L.moneyNow || 0;
       if (L.moneyNow > 0) nMoney++;
+      if (L.me) {
+        n++;
+        if (_udR1Adv(L)) nAdv++;
+        fieldSum += Math.min(1, L.rule.adv / (L.teams.length || 12));
+        r1Weeks = Math.max(r1Weeks, (L.weekList || []).length);
+      }
       if (L.advKnown === false) return;   // H2H round with the opponent's roster unknown
-      n++;
+      nPts++;
       ptsSum += L.myPts || 0;
-      if (L.inAdv) nAdv++;
       if (L.myRank) { rankSum += L.myRank; nRank++; }
-      const fa = _udFieldAdvRate(L, lastWk, !!lateSynced[d.tournament || '']);
-      if (fa != null) { fieldSum += fa; nFieldAvg++; }
     });
     return {
       n, nAdv, nField, nMoney,
       advRate: n ? nAdv / n : null,
-      fieldAdv: nFieldAvg ? fieldSum / nFieldAvg : null,
+      fieldAdv: n ? fieldSum / n : null,
       groups: window._udRoundGroups ? Object.keys(window._udRoundGroups).length : 0,
       winning: Math.round(winning * 100) / 100,
       avgRank: nRank ? rankSum / nRank : null,
-      avgPts: n ? ptsSum / n : null,
-      weeks: lw.kicked.length,
+      avgPts: nPts ? ptsSum / nPts : null,
+      weeks: r1Weeks,                 // Round 1 weeks scored (the advance-rate stamp)
+      weeksAll: lw.kicked.length,     // every kicked week (live rank / points)
       liveWk: lw.liveWk
     };
   }
@@ -61975,7 +61956,7 @@ Rules:
   }
 
   // EXPOSURE tab ADVANCING toggle (Jack 2026-10-05): exposure across only the
-  // drafts that currently sit in an advancing spot — the same live test the
+  // drafts that hold a Round 1 advancing spot — the same _udR1Adv test the
   // ADVANCE RATE card counts. The scope is what every exposure surface (rows,
   // expand panel, combo search) reads: the data, the sorted player list and
   // the draft count, for either the whole filtered portfolio or that subset.
@@ -61991,7 +61972,7 @@ Rules:
     const drafts = {};
     Object.entries(data.drafts).forEach(([id, d]) => {
       const L = _udLiveDraft(d);
-      if (L && L.fieldComplete && L.scored && L.advKnown !== false && L.inAdv) drafts[id] = d;
+      if (_udR1Adv(L)) drafts[id] = d;
     });
     const sig = Object.keys(drafts).join(',');
     if (!_udExpAdvCache || _udExpAdvCache.all !== data || _udExpAdvCache.sig !== sig) {
@@ -63582,7 +63563,7 @@ Rules:
     const _kpiAdv = _udKpiAdvHtml(_liveSum), _kpiWin = _udKpiWinHtml(_liveSum);
     const cards = [
       { label: 'DRAFTS', val: numDrafts, sub: _draftsSub, subTitle: _tourneyFull, gloss: 'Total number of drafts in your imported portfolio across the selected phase + contest filters.' },
-      { id: 'adv', label: 'ADVANCE RATE', val: _kpiAdv.val, sub: _kpiAdv.sub, color: '#22c55e', gloss: 'LIVE — share of your synced pools where you currently sit in an advancing spot (top 2 of 12 in BBM / Puppy-style contests, top 6 in The Eliminator\'s Week 1). Standings are computed from every team\'s best-ball lineup on real weekly stats, including games in progress. FIELD AVG underneath is the baseline for the same drafts — the share of all entries that hold an advancing spot (2 of 12 = 16.7% in a BBM pool) — with your edge over it.' },
+      { id: 'adv', label: 'ADVANCE RATE', val: _kpiAdv.val, sub: _kpiAdv.sub, color: '#22c55e', gloss: 'LIVE — share of your synced pools where you hold a Round 1 advancing spot (top 2 of 12 over Weeks 1-14 in BBM / Puppy-style contests, top 6 in The Eliminator\'s Week 1). Round 1 only: once Round 1 is final the rate stays put through the playoff weeks. Standings are computed from every team\'s best-ball lineup on real weekly stats, including games in progress. FIELD AVG underneath is the baseline for the same drafts — the share of all entries that hold an advancing spot (2 of 12 = 16.7% in a BBM pool) — with your edge over it.' },
       { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry', gloss: 'Total dollars invested across all drafts in the current filter. Subtext shows your average entry fee.' },
       { id: 'win', label: 'WINNING', val: _kpiWin.val, sub: _kpiWin.sub, color: '#22c55e', gloss: 'LIVE — what your entries would pay if the round ended today: the guaranteed min-cash for every pool where you hold an advancing spot (BBM VII $25, The Puppy $5, other contests = entry fee back; The Eliminator pays nothing until Round 3).' }
     ];
@@ -63629,7 +63610,7 @@ Rules:
       html += `<button onclick="window._udFilterExposurePos('${pos}')" data-udposfilter="${pos}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? posFilterColors[pos] : 'var(--border)'};background:${active ? posFilterColors[pos] : 'var(--surface)'};color:${active ? (pos === 'ALL' ? '#000' : '#fff') : 'var(--text2)'}">${pos}</button>`;
     });
     html += `</div>`;
-    html += `<button id="udExpAdvBtn" onclick="window._udToggleExpAdv()" title="Show exposure across only the teams currently in an advancing spot (the same live standings as the ADVANCE RATE card)" style="${_udExpAdvBtnStyle(window._udExpAdvOnly)}">ADVANCING</button>`;
+    html += `<button id="udExpAdvBtn" onclick="window._udToggleExpAdv()" title="Show exposure across only the teams holding a Round 1 advancing spot (the same standings as the ADVANCE RATE card)" style="${_udExpAdvBtnStyle(window._udExpAdvOnly)}">ADVANCING</button>`;
     html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter… or &quot;maye + aj brown&quot; for stacks" title="Type one name to filter the list, or combine names with + (or a comma) to see every draft that rosters ALL of them" style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px;flex:1;min-width:100px;max-width:260px">`;
     html += `</div>`;
     html += `<div id="udExposureList">`;
@@ -64087,7 +64068,7 @@ Rules:
     } else if (!_liveSum.n) {
       html += `<div style="grid-column:1/-1;text-align:center;padding:14px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;color:var(--text2);font-size:.78rem">No games scored yet — live standings for every pool appear once Week 1 kicks off (weekly stats + in-game scoring).</div>`;
     } else {
-      const _thru = _liveSum.weeks ? ' · thru W' + _liveSum.weeks : '';
+      const _thru = _liveSum.weeksAll ? ' · thru W' + _liveSum.weeksAll : '';
       html += _udSummaryCard('LIVE AVG RANK', (_liveSum.avgRank || 0).toFixed(1) + ' / 12', 'where you sit in the field' + _thru, '#fbbf24');
       html += _udSummaryCard('ADVANCING', Math.round(100 * _liveSum.advRate) + '%', _liveSum.nAdv + ' of ' + _liveSum.n + ' pools in advance spots', '#3b82f6');
       html += _udSummaryCard('WINNING', _udFmtMoney(_liveSum.winning), 'min-cash if the round ended today', '#22c55e');

@@ -64592,9 +64592,12 @@ Rules:
 
   // DRAFT BOARD tab body: title + view toggle, blurb, legend, swipe hint, grid.
   // Rebuilt whole by _udSetBoardView and by the live tick (advance-rate views).
+  // MY ADVANCING (Jack 2026-10-05): raw count of my advancing teams with the
+  // player — "who is on the most of my advancing teams", exposure x rate.
+  const _UD_BOARD_VIEWS = ['exp', 'adv', 'cnt', 'field'];
   function _udBoardTabHtml(data) {
-    const view = window._udBoardView === 'adv' || window._udBoardView === 'field' ? window._udBoardView : 'exp';
-    const adv = view !== 'exp', field = view === 'field';
+    const view = _UD_BOARD_VIEWS.includes(window._udBoardView) ? window._udBoardView : 'exp';
+    const adv = view !== 'exp', field = view === 'field', cnt = view === 'cnt';
     const st = adv ? _udBoardAdvStats(data) : null;
     _udBoardAdvShown = st ? (field ? st.fsig : st.sig) : null;
     // v0.9.92: detect format from filtered drafts (majority wins) so the
@@ -64612,6 +64615,7 @@ Rules:
     html += `<div style="display:flex;gap:3px">`;
     [['exp', 'EXPOSURE', 'Color each player by your ownership %'],
      ['adv', 'MY ADV RATE', 'Color each player by how often your Best Ball Mania teams rostering the player hold an advancing spot (top 2 of the Round 1 pool, Weeks 1-14)'],
+     ['cnt', 'MY ADVANCING', 'Color each player by how many of your advancing Best Ball Mania teams roster him — your most-advancing players'],
      ['field', 'OVERALL ADV RATE', 'Color each player by how often ANY team rostering the player holds an advancing spot (top 2 of the Round 1 pool, Weeks 1-14), across every team in your synced Best Ball Mania pools — who has given the biggest edge']].forEach(([id, txt, tip]) => {
       const on = id === view;
       html += `<button onclick="window._udSetBoardView('${id}')" title="${tip}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;white-space:nowrap;border:1px solid ${on ? 'var(--accent)' : 'var(--border)'};background:${on ? 'var(--accent)' : 'var(--surface)'};color:${on ? '#000' : 'var(--text2)'}">${txt}</button>`;
@@ -64627,17 +64631,40 @@ Rules:
       // Color cuts hang off the field average (2 of 12 = 16.7% in a Round 1
       // pool): the outer bands are the players well clear of it either way.
       const base = st.fAdv / st.fTeams;
-      st.field = field; st.base = base; st.map = field ? st.fby : st.by;
+      st.view = view; st.field = field; st.base = base; st.map = field ? st.fby : st.by;
+      const T_HI = { c: '#dcfce7', bg: 'rgba(34,197,94,.45)', bd: '#22c55e' }, T_GOOD = { c: '#22c55e', bg: 'rgba(34,197,94,.16)', bd: '#22c55e' },
+            T_MID = { c: '#facc15', bg: 'rgba(250,204,21,.13)', bd: '#facc15' }, T_LOW = { c: '#ef4444', bg: 'rgba(239,68,68,.14)', bd: '#ef4444' },
+            T_BAD = { c: '#fee2e2', bg: 'rgba(239,68,68,.45)', bd: '#ef4444' };
       st.tier = rate =>
-        rate >= base * 1.5 ? { c: '#dcfce7', bg: 'rgba(34,197,94,.45)', bd: '#22c55e' } :
-        rate >= base * 1.2 ? { c: '#22c55e', bg: 'rgba(34,197,94,.16)', bd: '#22c55e' } :
-        rate >= base * 0.8 ? { c: '#facc15', bg: 'rgba(250,204,21,.13)', bd: '#facc15' } :
-        rate >= base * 0.5 ? { c: '#ef4444', bg: 'rgba(239,68,68,.14)', bd: '#ef4444' } :
-                             { c: '#fee2e2', bg: 'rgba(239,68,68,.45)', bd: '#ef4444' };
+        rate >= base * 1.5 ? T_HI : rate >= base * 1.2 ? T_GOOD : rate >= base * 0.8 ? T_MID : rate >= base * 0.5 ? T_LOW : T_BAD;
+      // MY ADVANCING cuts scale off the top count so the board always spreads:
+      // filled green = 60%+ of the leader's count, green = 30%+, yellow = 1+,
+      // red = rostered but never advancing.
+      const maxCnt = Object.values(st.by).reduce((m, r) => Math.max(m, r.adv), 0);
+      const cA = Math.max(2, Math.ceil(0.3 * maxCnt)), cB = Math.max(cA + 1, Math.ceil(0.6 * maxCnt));
+      st.cntTier = c => c >= cB ? T_HI : c >= cA ? T_GOOD : c >= 1 ? T_MID : T_LOW;
       const cut = k => Math.round(100 * base * k);
-      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:10px">` + (field
-        ? `Players sorted by raw Underdog Best Ball ADP in a 12-team grid. Color = how often a team rostering that player holds an advancing spot (top 2 of 12 in its Round 1 pool, Weeks 1–14), across every team in your Best Ball Mania pools: ${strong(st.fTeams.toLocaleString('en-US'))} teams in ${strong(st.fPools)} pools · field avg ${strong((100 * base).toFixed(1) + '%')}. The small count is advancing teams / teams rostering the player.`
-        : `Players sorted by raw Underdog Best Ball ADP in a 12-team grid. Color = how often your Best Ball Mania teams with that player hold an advancing spot (top 2 of 12 in the Round 1 pool, Weeks 1–14); the small count is advancing teams / teams rostering the player. Overall: ${strong(st.mAdv + ' of ' + st.mTeams)} teams advancing (${strong(Math.round(100 * st.mAdv / st.mTeams) + '%')}) · field avg ${strong((100 * base).toFixed(1) + '%')}.`) + `</div>`;
+      const intro = 'Players sorted by raw Underdog Best Ball ADP in a 12-team grid. ';
+      const r1 = 'an advancing spot (top 2 of 12 in the Round 1 pool, Weeks 1–14)';
+      html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:10px">` + intro + (field
+        ? `Color = how often a team rostering that player holds ${r1}, across the ${strong(st.fTeams.toLocaleString('en-US'))} teams in your ${strong(st.fPools)} Best Ball Mania pools — you plus the 11 opponents in each; Underdog doesn't publish the rest of the contest's rosters, so this is a sample of the full field. The small count is advancing teams / teams in those pools that drafted the player (at most one per pool) · field avg ${strong((100 * base).toFixed(1) + '%')}.`
+        : cnt
+        ? `Color = how many of your ${strong(st.mAdv)} advancing Best Ball Mania teams (top 2 of 12 in the Round 1 pool, Weeks 1–14) roster that player — your most-advancing players, exposure and advance rate combined. The small count is advancing teams / your teams with the player.`
+        : `Color = how often your Best Ball Mania teams with that player hold ${r1}; the small count is advancing teams / teams rostering the player. Overall: ${strong(st.mAdv + ' of ' + st.mTeams)} teams advancing (${strong(Math.round(100 * st.mAdv / st.mTeams) + '%')}) · field avg ${strong((100 * base).toFixed(1) + '%')}.`) + `</div>`;
+      const callout = (lbl, col, list, chipTxt, chipTier, chipTip) => `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:${col};min-width:92px">${lbl}</span>${list.map(e => {
+          const t = chipTier(e);
+          const nm = String(e.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+          return `<span onclick="window._mtOpenCardByName('${nm}')" title="${chipTip(e)} — click for the player card" style="padding:2px 7px;border-radius:4px;background:${t.bg};border:1px solid ${t.bd}55;color:${t.c};font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer">${_esc(e.name)} <span style="font-weight:700">${chipTxt(e)}</span></span>`;
+        }).join('')}</div>`;
+      if (cnt && maxCnt > 0) {
+        const top = Object.entries(st.by).filter(([, r]) => r.adv > 0)
+          .map(([name, r]) => ({ name, r }))
+          .sort((x, y) => (y.r.adv - x.r.adv) || (y.r.adv / y.r.n - x.r.adv / x.r.n))
+          .slice(0, 10);
+        html += callout('MOST ADVANCING', '#22c55e', top, e => e.r.adv, e => st.cntTier(e.r.adv),
+          e => `On ${e.r.adv} of your ${st.mAdv} advancing teams · advancing on ${e.r.adv} of ${e.r.n} teams with him (${Math.round(100 * e.r.adv / e.r.n)}%)`);
+        html += `<div style="height:4px"></div>`;
+      }
       // OVERALL view: the biggest edges either way, called out above the grid.
       // Floor of half the pools keeps a late-round flier drafted a handful of
       // times from topping the list on a tiny sample.
@@ -64646,12 +64673,10 @@ Rules:
         const ranked = Object.entries(st.fby).filter(([, r]) => r.n >= minN)
           .map(([name, r]) => ({ name, r, rate: r.adv / r.n }))
           .sort((x, y) => (y.rate - x.rate) || (y.r.n - x.r.n));
-        const chip = e => {
-          const t = st.tier(e.rate), edge = 100 * (e.rate - base);
-          const nm = String(e.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
-          return `<span onclick="window._mtOpenCardByName('${nm}')" title="Advancing on ${e.r.adv} of ${e.r.n} teams · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card" style="padding:2px 7px;border-radius:4px;background:${t.bg};border:1px solid ${t.bd}55;color:${t.c};font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer">${_esc(e.name)} <span style="font-weight:700">${Math.round(100 * e.rate)}%</span></span>`;
-        };
-        const edgeRow = (lbl, col, list) => `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:${col};min-width:92px">${lbl}</span>${list.map(chip).join('')}</div>`;
+        const edgeRow = (lbl, col, list) => callout(lbl, col, list, e => Math.round(100 * e.rate) + '%', e => st.tier(e.rate), e => {
+          const edge = 100 * (e.rate - base);
+          return `Advancing on ${e.r.adv} of ${e.r.n} teams in your pools · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg`;
+        });
         if (ranked.length >= 16) {
           html += edgeRow('BIGGEST EDGE', '#22c55e', ranked.slice(0, 8));
           html += edgeRow('BIGGEST DRAG', '#ef4444', ranked.slice(-8).reverse());
@@ -64659,9 +64684,16 @@ Rules:
         }
       }
       html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:.6rem;align-items:center;flex-wrap:wrap">`;
-      html += `<span style="color:var(--text2)">ADVANCE RATE:</span>`;
-      html += swatch('#22c55e', cut(1.5) + '%+') + swatch('rgba(34,197,94,.4)', cut(1.2) + '–' + cut(1.5) + '%') + swatch('#facc15', cut(0.8) + '–' + cut(1.2) + '%') +
-              swatch('rgba(239,68,68,.4)', cut(0.5) + '–' + cut(0.8) + '%') + swatch('#ef4444', 'under ' + cut(0.5) + '%') + swatch('#64748b', field ? 'not drafted' : 'not rostered');
+      if (cnt) {
+        const rng = (a, b) => a === b ? String(a) : a + '–' + b;
+        html += `<span style="color:var(--text2)">ADVANCING TEAMS:</span>`;
+        html += swatch('#22c55e', cB + '+') + swatch('rgba(34,197,94,.4)', rng(cA, cB - 1)) + swatch('#facc15', rng(1, cA - 1)) +
+                swatch('rgba(239,68,68,.4)', '0') + swatch('#64748b', 'not rostered');
+      } else {
+        html += `<span style="color:var(--text2)">ADVANCE RATE:</span>`;
+        html += swatch('#22c55e', cut(1.5) + '%+') + swatch('rgba(34,197,94,.4)', cut(1.2) + '–' + cut(1.5) + '%') + swatch('#facc15', cut(0.8) + '–' + cut(1.2) + '%') +
+                swatch('rgba(239,68,68,.4)', cut(0.5) + '–' + cut(0.8) + '%') + swatch('#ef4444', 'under ' + cut(0.5) + '%') + swatch('#64748b', field ? 'not drafted' : 'not rostered');
+      }
       html += `</div>`;
     } else {
       html += `<div style="font-size:.62rem;color:var(--text2);margin-bottom:12px">Players sorted by raw Underdog ${label} ADP in a 12-team grid. Color = your ownership%.</div>`;
@@ -64678,7 +64710,7 @@ Rules:
     return html;
   }
   window._udSetBoardView = function(view) {
-    window._udBoardView = view === 'adv' || view === 'field' ? view : 'exp';
+    window._udBoardView = _UD_BOARD_VIEWS.includes(view) ? view : 'exp';
     const el = document.getElementById('udTab_board');
     if (el && window._udData) el.innerHTML = _udBoardTabHtml(window._udData);
   };
@@ -64769,13 +64801,13 @@ Rules:
           const part = (x, who) => x ? `${who}: ${x.adv} of ${x.n} (${Math.round(100 * x.adv / x.n)}%)` : `${who}: none`;
           if (!r) {
             ownColor = '#64748b'; ownBg = 'rgba(100,116,139,.08)'; cellVal = '—';
-            cellTip = (adv.field ? 'Not drafted in your scored Best Ball Mania pools' : 'On none of your scored Best Ball Mania teams · ' + part(all, 'all teams')) + ' — click for the player card';
+            cellTip = (adv.field ? 'Not drafted in your scored Best Ball Mania pools' : 'On none of your scored Best Ball Mania teams · ' + part(all, 'all teams in your pools')) + ' — click for the player card';
           } else {
-            const rate = r.adv / r.n, t = adv.tier(rate), edge = 100 * (rate - adv.base);
+            const rate = r.adv / r.n, t = adv.view === 'cnt' ? adv.cntTier(r.adv) : adv.tier(rate), edge = 100 * (rate - adv.base);
             ownColor = t.c; ownBg = t.bg; ownBorder = t.bd;
-            cellVal = Math.round(100 * rate) + '%';
+            cellVal = adv.view === 'cnt' ? String(r.adv) : Math.round(100 * rate) + '%';
             cellSub = player.pos + ' · ' + r.adv + '/' + r.n;
-            cellTip = `Teams advancing with this player — ${part(mine, 'yours')} · ${part(all, 'all teams')} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card`;
+            cellTip = `Teams advancing with this player — ${part(mine, 'yours')} · ${part(all, 'all teams in your pools')} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card`;
           }
         }
         else if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }

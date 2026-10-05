@@ -689,7 +689,9 @@
         if (!state.modeManual) applyMode(state.modeDetected, false);
       }
       const cats = (svc.settings && svc.settings.stat_categories) || [];
-      let rec = null, passTd = null;
+      // Yahoo lists only scored categories: categories present but no Receptions
+      // (11) = standard, 0 per catch (it stayed on the ½PPR default until 2026-10-05).
+      let rec = cats.length ? 0 : null, passTd = null;
       for (const c of cats) {
         if (c.stat_id === 11) rec = parseFloat(c.stat_modifier) || 0;
         if (c.stat_id === 5) passTd = parseFloat(c.stat_modifier) || 4;
@@ -850,8 +852,11 @@
       const slotLbl = SLOT_MAP[slotTok];
       if (!slotLbl) continue;
       const info = parsePlayerCell(row);
-      if (slotLbl !== 'BN' && slotLbl !== 'IR') slots.push(slotLbl);
-      if (!info) continue; // empty roster slot — still counts toward lineup slots
+      // Unscoped sweep: the team page's position glossary + injury key are
+      // slot-labeled rows too ("QB Only quarterbacks", "D Doubtful") - count a
+      // slot only when the row carries a player (2026-10-05).
+      if (slotLbl !== 'BN' && slotLbl !== 'IR' && (scoped.length || info)) slots.push(slotLbl);
+      if (!info) continue; // empty roster slot — still counts toward lineup slots (scoped tables)
       entries.push(Object.assign(info, { slotLbl, starting: slotLbl !== 'BN' && slotLbl !== 'IR' }));
     }
     if (!slots.length || !entries.length) return null;
@@ -940,7 +945,9 @@
     if (Array.isArray(saved.slots) && saved.slots.length) state.seasonSlots = saved.slots;
     if (saved.teamName) state.teamName = saved.teamName;
     if (saved.faSeen) state.faSeen = saved.faSeen;
-    if (saved.mode && MODES[saved.mode]) { state.mode = saved.mode; state.modeManual = !!saved.modeManual; }
+    // Only a HAND-PICKED format is restored; an auto-detected one is re-detected
+    // each visit (a stale or mis-scraped SF read used to stick - 2026-10-05).
+    if (saved.mode && MODES[saved.mode] && saved.modeManual) { state.mode = saved.mode; state.modeManual = true; }
     if (saved.scoringPrefs) { state.scoringPrefs = saved.scoringPrefs; state.scoringManual = !!saved.scoringManual; applyScoringPrefs(); }
     if (saved.tab) state.seasonTab = saved.tab;
     if (saved.posFilter) state.seasonPosFilter = saved.posFilter;
@@ -3200,7 +3207,20 @@
     decorateYahooRows();
     matchupStripTick();
   }
+  // Per-league fields back to their defaults before a league loads - switching
+  // leagues in the same tab used to carry the last league's format (incl. a
+  // hand-picked one), API slots and scoring into the next (2026-10-05).
+  function resetLeagueState() {
+    Object.assign(state, {
+      teamName: '', seasonSlots: null, roster: [], rosterTs: 0, faSeen: {}, myKeys: new Set(),
+      mode: 're_1qb', modeManual: false, modeDetected: null,
+      scoringPrefs: { rec: 0.5, passTd: 4 }, scoringManual: false, apiSlots: null, apiScoring: false,
+      playoffTeams: undefined, playoffStart: undefined, _rosterSig: null,
+    });
+    applyScoringPrefs();
+  }
   async function initForLeague(leagueId) {
+    resetLeagueState();
     state.leagueId = leagueId;
     buildPanel();
     render();

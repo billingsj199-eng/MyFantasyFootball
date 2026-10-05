@@ -393,8 +393,10 @@
     }
     syncRounds();
     st.mode = sl.sf > 0 ? 're_sf' : 're_1qb';
-    let rec = 0.5, passTd = 4;
     const cats = (svc.settings && svc.settings.stat_categories) || [];
+    // Yahoo lists only scored categories: categories present but no Receptions
+    // (11) = standard, 0 per catch (was ½PPR until 2026-10-05).
+    let rec = cats.length ? 0 : 0.5, passTd = 4;
     for (const c of cats) {
       if (c.stat_id === 11) rec = parseFloat(c.stat_modifier) || 0;
       if (c.stat_id === 5) passTd = parseFloat(c.stat_modifier) || 4;

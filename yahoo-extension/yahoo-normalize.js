@@ -76,8 +76,16 @@
   // Team page Document → { roster:[{name,pos,team}], slots:[...] }.
   // slots = the starting lineup structure (non-BN/IR), roster = every player
   // on the page including bench and IR.
+  // 2026-10-05: roster rows live in the statTable0/1/2 tables. A page-wide
+  // sweep ALSO caught the team page's position glossary ("QB Quarterback /
+  // Only quarterbacks", W/R, W/T, K, DEF, "D Defensive Player") and the
+  // injury key ("D Doubtful") - 8+ phantom slots including a second QB, so
+  // every league exported or direct-imported read as SUPERFLEX (verified on
+  // league 1301476). Scope to the statTables; without them, only rows that
+  // carry a player count as slots (an empty slot can then be missed).
   function parseTeamDoc(doc) {
-    var rows = doc.querySelectorAll("tr");
+    var scoped = doc.querySelectorAll('table[id^="statTable"] tr');
+    var rows = scoped.length ? scoped : doc.querySelectorAll("tr");
     var roster = [], slots = [];
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
@@ -86,12 +94,37 @@
       var slotTok = cells[0].textContent.trim().toUpperCase().replace(/\s+/g, "");
       var slotLbl = SLOT_MAP[slotTok];
       if (!slotLbl) continue;
-      if (slotLbl !== "BN" && slotLbl !== "IR") slots.push(slotLbl);
       var info = parsePlayerCell(row);
+      if (slotLbl !== "BN" && slotLbl !== "IR" && (scoped.length || info)) slots.push(slotLbl);
       if (info) { info.slot = slotLbl; roster.push(info); } // current lineup slot → site LINEUP CHECK
     }
     if (!slots.length) return null;
     return { roster: roster, slots: slots };
+  }
+
+  // League settings JSON (pub-api /fantasy/v3/settings/nfl/<id>?format=rawjson)
+  // → { slots, rec, passTd }: the EXACT lineup slots and scoring, authoritative
+  // over the page scrape. Yahoo lists only the stat categories a league scores,
+  // so a payload WITH categories but no Receptions (stat 11) is 0 per catch
+  // (standard) - not the ½PPR default it used to fall back to (2026-10-05).
+  function settingsFormat(json) {
+    var svc = (json && (json.service || json)) || {};
+    var st = svc.settings || {};
+    var slots = [];
+    (st.roster_positions || []).forEach(function (r) {
+      var lbl = SLOT_MAP[String(r.position || "").toUpperCase().replace(/\s+/g, "")];
+      if (!lbl || lbl === "BN" || lbl === "IR") return;
+      var n = parseInt(r.count, 10) || 0;
+      for (var i = 0; i < n; i++) slots.push(lbl);
+    });
+    var cats = st.stat_categories || [];
+    var rec = cats.length ? 0 : null, passTd = null;
+    cats.forEach(function (c) {
+      var v = parseFloat(c.stat_modifier);
+      if (Number(c.stat_id) === 11) rec = isFinite(v) ? v : 0;
+      if (Number(c.stat_id) === 5 && isFinite(v)) passTd = v;
+    });
+    return { slots: slots, rec: rec, passTd: passTd };
   }
 
   // League page Document → { name, teams:[{teamId, name, wins, losses,
@@ -163,15 +196,17 @@
         roster: t.roster || []
       };
     });
-    var slots = null;
+    // opts.slots (from settingsFormat) beats the scraped team pages
+    var slots = opts.slots && opts.slots.length ? opts.slots : null;
     for (var i = 0; i < (opts.teams || []).length && !slots; i++) {
       if (opts.teams[i].slots && opts.teams[i].slots.length) slots = opts.teams[i].slots;
     }
     var rp = (slots || []).filter(function (s) { return s !== "IR"; });
     var qbSlots = rp.filter(function (s) { return s === "QB"; }).length;
     var rec = opts.scoringPrefs && opts.scoringPrefs.rec != null ? opts.scoringPrefs.rec : 0.5;
+    var passTd = opts.scoringPrefs && opts.scoringPrefs.passTd != null ? opts.scoringPrefs.passTd : null;
     var now = new Date();
-    return {
+    var payload = {
       platform: "yahoo",
       leagueId: String(opts.leagueId),
       season: now.getMonth() < 2 ? now.getFullYear() - 1 : now.getFullYear(),
@@ -185,6 +220,8 @@
       drafted: teams.some(function (t) { return t.roster.length > 0; }),
       teams: teams
     };
+    if (passTd != null) payload.passTd = passTd;
+    return payload;
   }
 
   // Transactions page (/f1/<id>/transactions?transactionsfilter=trade) →
@@ -275,6 +312,7 @@
     parseStandingsDoc: parseStandingsDoc,
     parseTransactionsDoc: parseTransactionsDoc,
     buildLeaguePayload: buildLeaguePayload,
+    settingsFormat: settingsFormat,
     SLOT_MAP: SLOT_MAP,
     ABBR_FULL: ABBR_FULL
   };

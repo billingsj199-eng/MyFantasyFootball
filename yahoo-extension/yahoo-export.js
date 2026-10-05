@@ -31,15 +31,29 @@
 
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
+  // The sidebar's saved league state: {prefs, manual} - manual = the user set
+  // the scoring chips by hand, which beats the settings API.
   function getScoringPrefs(leagueId) {
     return new Promise(function (res) {
       try {
         chrome.storage.local.get(["yahooLeague_" + leagueId], function (cur) {
           var lg = cur && cur["yahooLeague_" + leagueId];
-          res((lg && lg.scoringPrefs) || null);
+          res({ prefs: (lg && lg.scoringPrefs) || null, manual: !!(lg && lg.scoringManual) });
         });
-      } catch (_) { res(null); }
+      } catch (_) { res({ prefs: null, manual: false }); }
     });
+  }
+
+  // Exact lineup slots + scoring from the league settings API (same cookie-auth
+  // call the sidebar makes). null when it fails - the scrape + saved prefs stay
+  // the fallback. 2026-10-05: the export used to take slots from the team-page
+  // scrape only, which read the position glossary as lineup slots (two QBs) and
+  // flagged every league SUPERFLEX.
+  function fetchSettingsFormat(leagueId) {
+    return fetch("https://pub-api.fantasysports.yahoo.com/fantasy/v3/settings/nfl/" + leagueId + "?format=rawjson", { credentials: "include" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { return j ? window.MFF_YAHOO.settingsFormat(j) : null; })
+      .catch(function () { return null; });
   }
 
   function saveLeague(payload) {
@@ -69,9 +83,10 @@
     if (!leagueId) return;
     setBtn("Reading league…", true);
     var N = window.MFF_YAHOO;
-    var standings = null;
+    var standings = null, fmt = null;
 
-    fetchDoc("/f1/" + leagueId)
+    fetchSettingsFormat(leagueId)
+      .then(function (f) { fmt = f; return fetchDoc("/f1/" + leagueId); })
       .then(function (doc) {
         standings = N.parseStandingsDoc(doc, leagueId);
         if (!standings.teams.length) {
@@ -99,13 +114,15 @@
         return next();
       })
       .then(function () { return getScoringPrefs(leagueId); })
-      .then(function (prefs) {
+      .then(function (saved) {
+        var apiPrefs = fmt && fmt.rec != null ? { rec: fmt.rec, passTd: fmt.passTd != null ? fmt.passTd : 4 } : null;
         var payload = window.MFF_YAHOO.buildLeaguePayload({
           leagueId: leagueId,
           name: standings.name,
           teams: standings.teams,
           myTeamId: standings.myTeamId,
-          scoringPrefs: prefs
+          slots: fmt && fmt.slots.length ? fmt.slots : null,
+          scoringPrefs: (saved.manual && saved.prefs) || apiPrefs || saved.prefs
         });
         if (!payload.teams.length) throw new Error("empty league payload");
         return saveLeague(payload).then(function () { return payload; });

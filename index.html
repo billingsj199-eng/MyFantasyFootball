@@ -1647,6 +1647,24 @@ tr:hover .watch-star{opacity:.55}
      VOR stats view (render() sets body.vor-bar-on; built by _vorBarRender in
      app.js, state in localStorage mff_vor_fmt). -->
 <div class="vor-bar" id="vorBar"></div>
+<!-- LEAGUE bar (every board): synced My Teams league → MINE / FA row marks +
+     SHOW filter. Built by _rnkLgBarRender in app.js. -->
+<div class="vor-bar lg-bar" id="rnkLgBar"></div>
+<style>
+.vor-bar.lg-bar{display:flex;border-color:var(--border);background:transparent;padding:4px 10px}
+.lg-bar-hint{font-size:.66rem;color:var(--text2)}
+.lg-key{display:inline-flex;align-items:center;gap:4px;font-size:.64rem;color:var(--text2);white-space:nowrap}
+.lg-bar .lg-show-btn{padding:.2rem .65rem;font-size:.62rem}
+.lg-bar .lg-show-btn.on{background:rgba(245,158,11,.16);border-color:var(--accent);color:var(--accent)}
+.lg-chip{display:inline-block;margin-left:5px;padding:0 4px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.58rem;letter-spacing:.6px;line-height:1.45;vertical-align:1px}
+.lg-key .lg-chip{margin-left:0}
+.lg-chip-mine{background:rgba(245,158,11,.18);color:#f59e0b;border:1px solid rgba(245,158,11,.55)}
+.lg-chip-fa{background:rgba(34,197,94,.14);color:#22c55e;border:1px solid rgba(34,197,94,.5)}
+tr.lg-mine>td{background:rgba(245,158,11,.07)}
+tr.lg-mine>td:nth-child(3){box-shadow:inset 3px 0 0 #f59e0b}
+tr.lg-fa>td{background:rgba(34,197,94,.06)}
+tr.lg-fa>td:nth-child(3){box-shadow:inset 3px 0 0 #22c55e}
+</style>
 <style>
 .vor-bar{display:none;align-items:center;gap:8px 10px;flex-wrap:wrap;margin:2px 2rem 6px;padding:5px 10px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.05);font-family:'DM Sans',sans-serif}
 body.vor-bar-on .vor-bar{display:flex}
@@ -3952,6 +3970,33 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-reset-btn" id="tradeResetBtn">RESET TRADE</button>
 </div>
 </div>
+<!-- VOR TRADE IMPACT (2026-10-05): rest-of-season lineup simulation for both
+     teams (Sim Lab VOR). Rendered by _tradeVorRender in app.js. -->
+<div class="trade-vor" id="tradeVorImpact" style="display:none"></div>
+<style>
+.tp-vor{margin-left:6px;padding:0 5px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.5px;color:#22c55e;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);white-space:nowrap;cursor:help}
+.tp-vor.neg{color:var(--text2);background:transparent;border-color:var(--border)}
+.trade-vor{margin-top:1rem;padding:12px 14px;border:1px solid rgba(245,158,11,.35);border-radius:8px;background:rgba(245,158,11,.04)}
+.tvi-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:10px}
+.tvi-title{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)}
+.tvi-sub{font-size:.62rem;color:var(--text2)}
+.tvi-teams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tvi-team{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);min-width:0}
+.tvi-name{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text)}
+.tvi-big{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;line-height:1.1;color:var(--text2)}
+.tvi-big.pos,.tvi-stats b.pos{color:#22c55e}.tvi-big.neg,.tvi-stats b.neg{color:#ef4444}
+.tvi-line{font-size:.64rem;color:var(--text2);margin-top:3px;line-height:1.4}
+.tvi-drop{color:#f59e0b}.tvi-open{color:#58a7ff}
+.tvi-stats{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.66rem;color:var(--text2);margin-top:4px}
+.tvi-wk{display:flex;align-items:flex-end;gap:2px;height:44px;margin-top:8px;padding-top:4px;border-top:1px solid var(--border)}
+.tvi-wkcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%;cursor:help}
+.tvi-wkcol span{font-size:.5rem;color:var(--text2)}
+.tvi-wkcol.po span{color:var(--accent);font-weight:700}
+.tvi-wkbar{width:70%;max-width:14px;border-radius:2px 2px 0 0}
+.tvi-wkbar.up{background:#22c55e}.tvi-wkbar.dn{background:#ef4444}
+.tvi-note{font-size:.64rem;color:var(--text2);margin-top:8px;line-height:1.45}
+@media (max-width:600px){.tvi-teams{grid-template-columns:1fr}}
+</style>
 <!-- RECENT REAL TRADES (2026-09-09): live Sleeper-league trades from FantasyCalc's
      public feed, filtered to the players in this trade and re-priced with OUR
      values. Rendered by _realTradesRefresh in app.js (trade calculator module). -->

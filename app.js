@@ -4988,6 +4988,7 @@ function getFiltered(applyTopN) {
   let f = _boardSrc.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
+  f = _rnkLgFilter(f);
   // SIM VOR board lists only players the sim projects; WAIVERS narrows it to
   // players nobody in the picked league rosters.
   if (currentVersion === 'sims') {
@@ -7713,10 +7714,10 @@ function render() {
     else if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
     const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
-    html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
+    html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || (i + 1)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -7830,7 +7831,7 @@ function render() {
       }
     } else if (_vorSeasonCols && id === 'jmHeader') {
       sp.innerHTML = 'GMS ';
-      sp.setAttribute('data-gloss', 'Games he is projected to play from now through the last fantasy-playoff week — games already kicked off are not counted, and the weeks with no sim projection (bye, injury, suspension) are taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
+      sp.setAttribute('data-gloss', 'Games he is projected to play from now through the last fantasy-playoff week — once a week kicks off, that whole week is out for everyone (a Monday-night game is not an extra game), and the weeks with no sim projection (bye, injury, suspension) are taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
     } else {
       sp.innerHTML = h._origLbl.html;
       sp.setAttribute('data-gloss', h._origLbl.gloss);
@@ -11750,9 +11751,11 @@ function _simSeasonPpgRow(d) {
 // SUPERFLEX, bench, fantasy-playoff weeks + weight — the standard 12-team
 // lineup by default, a synced My Teams league's own settings when one is
 // picked in the VOR bar (_vorApplyLeague).
-// Window = the games still to be played: from the current fantasy week (games
-// that have already kicked off this week are dropped — live ESPN scoreboard,
-// _liveKickedTeams) through the last fantasy-playoff week. No actual results
+// Window = the games still to be played: from the current fantasy week through
+// the last fantasy-playoff week. Once the week's first game kicks off (live
+// ESPN scoreboard, _liveKickedTeams) the WHOLE week leaves the window for
+// everyone — Jack 10-05: a Monday-night player (Drake London) must not out-rank
+// a Sunday player on an extra game; per-game value decides it. No actual results
 // are in it — what a player already scored is sunk value.
 // Roster spots are filled from the sim's points over that window in the
 // selected scoring format: starters first, then the flex / superflex spots
@@ -11900,18 +11903,19 @@ function _vorTable() {
   // week when that has already rolled (Tuesday 07:00) ahead of the next export.
   const sw = (typeof window._weeklyScheduleWeek === 'function' && window._weeklyScheduleWeek()) || cw;
   const from = Math.max(cw, sw);
-  // Teams whose game in that week has kicked off (live scoreboard) — those games are played.
+  // Any game of that week kicked off (live scoreboard) → the week is spent for everyone.
   const kicked = (!wk && typeof window._liveKickedTeams === 'function') ? window._liveKickedTeams(from) : null;
-  const kSig = kicked ? [...kicked].sort().join(',') : '';
+  const kSig = (kicked && kicked.size) ? 'k' : '';
   const key = [fi, wk, cw, from, kSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
   const weeks = [];
-  if (wk) weeks.push(wk); else for (let w = from; w <= Math.max(from, st.poEnd); w++) weeks.push(w);
+  const from1 = kSig ? from + 1 : from;
+  if (wk) weeks.push(wk); else for (let w = from1; w <= Math.max(from1, st.poEnd); w++) weeks.push(w);
   const isPO = w => !wk && w >= st.poStart && w <= st.poEnd;
   const wt = w => isPO(w) ? st.poW : 1;
   const abbrOf = d => teamAbbr(d.t);
-  const playsWk = (d, w) => !(kicked && w === from && kicked.has(abbrOf(d)));
+  const playsWk = () => true;
   const pools = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
   const seen = new Set();
   D.forEach(d => {
@@ -12201,6 +12205,7 @@ function _vorChanged() {
     const t = e.target;
     if (t.id === 'vorLeagueSel') {
       const lg = _vorApplyLeague(t.value);
+      if (lg) _rnkLgSet(lg.leagueId, true);
       _vorChanged();
       if (lg) { _vorSyncScoring(lg); if (typeof toast === 'function') toast('VOR priced for ' + (lg.name || 'your league')); }
       return;
@@ -12259,12 +12264,246 @@ window._vorRefreshLeagues = function () {
   if (st.league && Array.isArray(window._mtSavedLeagues)) { _vorApplyLeague(st.league); _vorStateSave(); }
   window._vorCache = null;
   window._vorRosterCache = null;
+  window._rnkLgCache = null;
   _vorBarRender();
+  _rnkLgBarRender();
   if (currentVersion === 'sims' || (typeof rnkStatMode !== 'undefined' && rnkStatMode === 'vor')) {
     if (currentVersion === 'sims') { syncMode(); renumber(); }
     render();
   }
 };
+
+// ── VOR TRADE IMPACT (trade calculator). The rest-of-season VOR table is
+// built on a season board even when the rankings page sits on WEEKLY.
+function _vorTableROS(sf) {
+  const keep = currentMode;
+  if (currentMode === 'weekly' || (sf && currentMode !== 'superflex' && currentMode !== 'dynastysf')) currentMode = sf ? 'superflex' : 'redraft';
+  try { return _vorTable(); } finally { currentMode = keep; }
+}
+// Each team's best legal starting lineup, week by week, over the games still
+// to play (the VOR window: this week's unplayed games through the last
+// fantasy-playoff week), before and after the trade. A starting spot never
+// scores under that position's replacement level — a free agent fills a bye,
+// an injury or an empty spot. The team that takes back more players than it
+// sends cuts its lowest-ROS-VOR players (never one it just got) to stay at
+// its roster size; the team that ends up short just has an open spot, which
+// the replacement floor already covers. That is what prices 2-for-1s and
+// 3-for-2s: depth only counts in the weeks it would actually start.
+// rosters: [teamA D rows, teamB D rows]; give: [rows A sends, rows B sends].
+function _vorLineupSim(t) {
+  if (!t || t.weekly) return null;
+  const st = t.st;
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const weeks = [];
+  for (let w = t.from; w <= t.to; w++) weeks.push(w);
+  const isPO = w => w >= st.poStart && w <= st.poEnd;
+  const R = {};
+  ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => { R[p] = (t.repl[p] && t.repl[p].v) || 0; });
+  const ptsMemo = new Map();
+  const ptsOf = d => {
+    let a = ptsMemo.get(d);
+    if (a) return a;
+    const sp = _simSeasonPpgRow(d);
+    const base = sp ? sp[fi] : 0;
+    const tdRate = (d.s === 'QB' && st.passTd !== 4) ? _vorPassTdRate(d) : 0;
+    a = weeks.map(w => _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base));
+    ptsMemo.set(d, a);
+    return a;
+  };
+  const slots = [];
+  ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => { for (let i = 0; i < (st[p] || 0); i++) slots.push([p]); });
+  for (let i = 0; i < (st.FLEX || 0); i++) slots.push(['RB', 'WR', 'TE']);
+  for (let i = 0; i < (st.SF || 0); i++) slots.push(['QB', 'RB', 'WR', 'TE']);
+  // Lineup points in week j: fill dedicated spots first, then FLEX, then SF,
+  // each with the best player left (or the replacement floor).
+  const weekPts = (roster, j) => {
+    const left = roster.map(d => ({ d, p: ptsOf(d)[j] })).sort((a, b) => b.p - a.p);
+    const used = new Set();
+    let tot = 0;
+    const who = [];
+    slots.forEach(el => {
+      let pick = null;
+      for (const x of left) if (!used.has(x) && el.includes(x.d.s)) { pick = x; break; }
+      const floor = Math.max(...el.map(p => R[p]));
+      if (pick && pick.p >= floor) { used.add(pick); tot += pick.p; who.push(pick.d); }
+      else tot += floor;
+    });
+    return { tot, who };
+  };
+  const vt = d => { const e = t.map.get(d); return e ? e.vt + e.tot * 1e-4 : -1; };
+  const run = roster => {
+    const wk = weeks.map((w, j) => weekPts(roster, j));
+    let raw = 0, po = 0, wtd = 0;
+    const starts = new Map();
+    wk.forEach((x, j) => {
+      raw += x.tot;
+      const w = weeks[j];
+      if (isPO(w)) po += x.tot;
+      wtd += x.tot * (isPO(w) ? st.poW : 1);
+      x.who.forEach(d => starts.set(d, (starts.get(d) || 0) + 1));
+    });
+    return { wk: wk.map(x => x.tot), raw, po, wtd, starts };
+  };
+  // Team VOR: lineup points over an all-free-agent lineup (every spot at replacement).
+  const floor = run([]);
+  return { weeks, isPO, st, run, vt, floor };
+}
+function _vorTradeImpact(rosters, give, t) {
+  const sim = _vorLineupSim(t);
+  if (!sim) return null;
+  const { weeks, isPO, st, run, vt } = sim;
+  const teams = [0, 1].map(i => {
+    const out = new Set(give[i]), inc = give[1 - i];
+    let after = rosters[i].filter(d => !out.has(d)).concat(inc.filter(d => !rosters[i].includes(d)));
+    const drops = [];
+    const over = after.length - rosters[i].length;
+    if (over > 0) {
+      const incSet = new Set(inc);
+      after.filter(d => !incSet.has(d)).sort((a, b) => vt(a) - vt(b)).slice(0, over).forEach(d => drops.push(d));
+      const dropSet = new Set(drops);
+      after = after.filter(d => !dropSet.has(d));
+    }
+    const b = run(rosters[i]), a = run(after);
+    return { before: b, after: a, drops, open: Math.max(0, -over), inc, out: give[i] };
+  });
+  return { weeks, isPO, st, teams };
+}
+
+// Price VOR for a synced league (lineup, bench, scoring) from another page —
+// the same pick the VOR bar makes, so the rankings follow along.
+function _vorUseLeague(lg) {
+  if (!lg || !lg.leagueId || _vorState().league === String(lg.leagueId)) return;
+  _vorApplyLeague(lg.leagueId);
+  _vorStateSave();
+  window._vorCache = null;
+  _rnkLgSet(lg.leagueId, true);
+  _vorBarRender();
+  _vorSyncScoring(lg);
+}
+// League roster name → D row (suffix-folded, active players first).
+function _vorDByName(n) {
+  let m = window._vorNameIdx;
+  if (!m || m._n !== D.length) {
+    m = new Map();
+    D.forEach(d => { if (!d || !d.n || d._isFuturePick) return; const k = _rnkLgNorm(d.n); if (!m.has(k) || (m.get(k)._retired && !d._retired)) m.set(k, d); });
+    m._n = D.length;
+    window._vorNameIdx = m;
+  }
+  return n ? (m.get(_rnkLgNorm(n)) || null) : null;
+}
+// Team ROS VOR for a My Teams league: each roster's best lineup every
+// remaining week minus an all-replacement lineup, playoff weeks weighted.
+// Prices VOR for that league first (same as picking it in the VOR bar).
+function _vorTeamsROS(lg, teams) {
+  _vorUseLeague(lg);
+  const f = lg && lg.format;
+  const sim = _vorLineupSim(_vorTableROS(!!(f && f.sf)));
+  if (!sim) return null;
+  const res = new Map();
+  teams.forEach(tm => {
+    const r = sim.run((tm.players || []).map(_vorDByName).filter(Boolean));
+    res.set(tm, { vt: r.wtd - sim.floor.wtd, raw: r.raw - sim.floor.raw, po: r.po - sim.floor.po, pts: r.raw, weeks: sim.weeks.length });
+  });
+  return { res, sim };
+}
+
+// ── LEAGUE bar (every rankings board): pick a synced My Teams league and the
+// board marks your roster (amber MINE) and the players nobody in that league
+// has (green FA, the waiver wire). Display + an optional SHOW filter, never a
+// board-order change. Picking a league in the VOR bar picks it here too.
+// State: localStorage mff_rnk_lg / mff_rnk_lg_show.
+var _rnkLgId = (() => { try { return localStorage.getItem('mff_rnk_lg') || ''; } catch (e) { return ''; } })();
+var _rnkLgShow = (() => { try { return localStorage.getItem('mff_rnk_lg_show') || 'all'; } catch (e) { return 'all'; } })();
+function _rnkLgNorm(n) { return String(n).toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’]/g, '').trim(); }
+function _rnkLg() {
+  if (!_rnkLgId) return null;
+  return (window._mtSavedLeagues || []).find(l => l && String(l.leagueId) === _rnkLgId) || null;
+}
+// { mine, taken } name sets (raw + suffix-folded) for the picked league.
+function _rnkLgRosters() {
+  const lg = _rnkLg();
+  if (!lg) return null;
+  let c = window._rnkLgCache;
+  if (c && c.lg === lg) return c;
+  const mine = new Set(), taken = new Set();
+  (lg.teams || []).forEach(t => (t.players || []).forEach(n => {
+    if (!n) return;
+    const k = _rnkLgNorm(n);
+    taken.add(n); taken.add(k);
+    if (t.isMyTeam) { mine.add(n); mine.add(k); }
+  }));
+  c = window._rnkLgCache = { lg, mine, taken, hasMine: mine.size > 0 };
+  return c;
+}
+// 'mine' | 'fa' | 'taken' | '' (no league picked)
+function _rnkLgStatus(d) {
+  const r = _rnkLgRosters();
+  if (!r || !d || !d.n) return '';
+  const k = _rnkLgNorm(d.n);
+  if (r.mine.has(d.n) || r.mine.has(k)) return 'mine';
+  if (r.taken.has(d.n) || r.taken.has(k)) return 'taken';
+  return 'fa';
+}
+function _rnkLgRowCls(d) {
+  const s = _rnkLgStatus(d);
+  return s === 'mine' ? ' lg-mine' : s === 'fa' ? ' lg-fa' : '';
+}
+function _rnkLgChip(d) {
+  const s = _rnkLgStatus(d);
+  if (s !== 'mine' && s !== 'fa') return '';
+  const nm = String(_rnkLg().name || 'this league').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  return s === 'mine'
+    ? '<span class="lg-chip lg-chip-mine" title="On your roster in ' + nm + '">MINE</span>'
+    : '<span class="lg-chip lg-chip-fa" title="Nobody in ' + nm + ' rosters this player — on the waiver wire">FA</span>';
+}
+// SHOW filter: all | mine | fa (applied in the board filter chain).
+function _rnkLgFilter(f) {
+  if (!_rnkLg() || _rnkLgShow === 'all') return f;
+  return f.filter(d => _rnkLgStatus(d) === _rnkLgShow);
+}
+function _rnkLgSet(id, quiet) {
+  _rnkLgId = id ? String(id) : '';
+  if (!_rnkLgId) _rnkLgShow = 'all';
+  try { localStorage.setItem('mff_rnk_lg', _rnkLgId); localStorage.setItem('mff_rnk_lg_show', _rnkLgShow); } catch (e) {}
+  window._rnkLgCache = null;
+  _rnkLgBarRender();
+  if (!quiet) render();
+}
+function _rnkLgBarRender() {
+  const bar = document.getElementById('rnkLgBar');
+  if (!bar) return;
+  const lgs = window._mtSavedLeagues || [];
+  const lg = _rnkLg();
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  if (!lgs.length) {
+    bar.innerHTML = '<span class="vor-bar-lbl">League</span><span class="lg-bar-hint">Sync a league in MY TEAMS to mark your roster and the waiver wire on any board.</span>';
+    return;
+  }
+  const r = _rnkLgRosters();
+  const pill = (v, lbl, tip) => '<button class="pos-btn lg-show-btn' + (_rnkLgShow === v ? ' on' : '') + '" data-lg-show="' + v + '" title="' + tip + '">' + lbl + '</button>';
+  bar.innerHTML = '<span class="vor-bar-lbl"><span data-gloss="Pick a league you synced in MY TEAMS. On any board your players get an amber MINE tag and players nobody in the league rosters get a green FA tag (the waiver wire). Untagged players are on another team.">League</span></span>'
+    + '<select id="rnkLgSel" title="Mark your roster and the waiver wire for this league"><option value="">Off</option>'
+    + lgs.map(l => '<option value="' + esc(l.leagueId) + '"' + (lg === l ? ' selected' : '') + '>' + esc(l.name || 'League') + '</option>').join('')
+    + '</select>'
+    + (lg ? '<span class="lg-key"><span class="lg-chip lg-chip-mine">MINE</span>your roster</span><span class="lg-key"><span class="lg-chip lg-chip-fa">FA</span>waiver wire</span>'
+      + pill('all', 'ALL', 'Show every player') + pill('mine', 'MY TEAM', 'Show only your roster')
+      + pill('fa', 'AVAILABLE', 'Show only players nobody in the league rosters')
+      + (r && !r.hasMine ? '<span class="lg-bar-hint">Your team isn&#39;t marked in this league — re-sync it in MY TEAMS.</span>' : '') : '');
+}
+(function _rnkLgBarInit() {
+  const bar = document.getElementById('rnkLgBar');
+  if (!bar) return;
+  bar.addEventListener('change', e => { if (e.target.id === 'rnkLgSel') _rnkLgSet(e.target.value); });
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('[data-lg-show]');
+    if (!b) return;
+    _rnkLgShow = b.dataset.lgShow;
+    try { localStorage.setItem('mff_rnk_lg_show', _rnkLgShow); } catch (e2) {}
+    _rnkLgBarRender();
+    render();
+  });
+  _rnkLgBarRender();
+})();
 
 // Original (preseason) PPG row [half, ppr, std] — frozen at Week 1 kickoff.
 function _simBaselinePpgRow(d) {
@@ -29453,7 +29692,7 @@ window.fmtHeight = fmtHeight;
         html += `<div class="trade-player-chip">
           <span class="tp-pos ${d.s}">${d.s}</span>
           <a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>${_injPill(d)}
-          ${tierHtml}
+          ${tierHtml}${_tradeVorTag(d)}
           <span class="tp-val">${val}</span>
           <button class="tp-remove" data-idx="${idx}" data-side="${sideClass}">&times;</button>
         </div>`;
@@ -29499,6 +29738,92 @@ window.fmtHeight = fmtHeight;
     updateResult();
   }
 
+  // ── VOR in the calculator: each player's rest-of-season VOR on his chip,
+  // and the VOR TRADE IMPACT panel under the verdict. With both teams picked
+  // in the League row it runs _vorTradeImpact (each team's best lineup week
+  // by week, before vs after, playoff weeks counted like the VOR bar says);
+  // without teams it compares the ROS VOR each side takes home.
+  function _tradeVorT() {
+    return _vorTableROS(tradeMode === 'superflex' || tradeMode === 'dynastysf');
+  }
+  function _tradeVorTag(d) {
+    const t = _tradeVorT();
+    const e = t && t.map.get(d);
+    if (!e) return '';
+    if (_vorLocked(d, e)) return '<span class="tp-vor" title="' + _VOR_LOCK_TIP.replace(/"/g, '&quot;') + '">VOR 🔒</span>';
+    const f = v => (v > 0 ? '+' : '') + Math.round(v);
+    return '<span class="tp-vor' + (e.vt > 0 ? '' : ' neg') + '" title="Rest-of-season VOR: ' + f(e.vt) + ' points over a replacement player across his remaining games (fantasy-playoff weeks counted ' + t.st.poW + 'x) · ' + (e.vor > 0 ? '+' : '') + e.vor + ' per game">VOR ' + f(e.vt) + '</span>';
+  }
+  function _tradeVorRender() {
+    const el = document.getElementById('tradeVorImpact');
+    if (!el) return;
+    const pA = sideA.players.map(i => D[i]).filter(Boolean), pB = sideB.players.map(i => D[i]).filter(Boolean);
+    if (!pA.length && !pB.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    const fA = _calcSideFilters.a, fB = _calcSideFilters.b;
+    const lg = (window._mtSavedLeagues || [])[_finderState.leagueIdx];
+    if (fA && fB && lg) _vorUseLeague(lg);
+    const t = _tradeVorT();
+    if (!t) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    const { nameA, nameB } = _tradeSideNames();
+    const f1 = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
+    const f0 = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Math.round(v));
+    const cls = v => v > 0.5 ? 'pos' : v < -0.5 ? 'neg' : '';
+    const free = hasPremium();
+    const head = '<div class="tvi-head"><span class="tvi-title">VOR TRADE IMPACT</span><span class="tvi-sub">Sim Lab · weeks ' + t.from + '-' + t.to + ' · ' + _vorLineupLabel(t.st) + ' · ' + _vorPlayoffLabel(t.st) + '</span></div>';
+    // No teams: ROS VOR each side takes home.
+    if (!(fA && fB)) {
+      const sum = arr => arr.reduce((s, d) => { const e = t.map.get(d); return s + (e && e.vt > 0 ? e.vt : 0); }, 0);
+      const getA = sum(pB), getB = sum(pA);
+      const locked = !free && pA.concat(pB).some(d => _vorLocked(d, t.map.get(d)));
+      el.style.display = '';
+      el.innerHTML = head
+        + '<div class="tvi-teams">'
+        + [[nameA, getA, getB, pB.length, pA.length], [nameB, getB, getA, pA.length, pB.length]].map(x =>
+          '<div class="tvi-team"><div class="tvi-name">' + _esc(x[0]) + '</div><div class="tvi-big ' + cls(x[1] - x[2]) + '">' + (locked ? '🔒' : f0(x[1] - x[2])) + '</div><div class="tvi-line">ROS VOR in ' + (locked ? '—' : Math.round(x[1])) + ' · out ' + (locked ? '—' : Math.round(x[2])) + '</div></div>').join('')
+        + '</div>'
+        + '<div class="tvi-note">VOR adds up only if every player starts for you. Pick both teams in the <b>League</b> row above to simulate each lineup week by week — that is what shows whether the second player in a 2-for-1 ever plays, and what the side giving up depth loses.</div>';
+      return;
+    }
+    const rows = f => [...f.idxSet].map(i => D[i]).filter(Boolean);
+    const r = _vorTradeImpact([rows(fA), rows(fB)], [pA, pB], t);
+    if (!r) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    if (!free) {
+      el.style.display = '';
+      el.innerHTML = head + '<div class="tvi-note">🔒 The week-by-week lineup simulation is a Season Pass feature. ' + _esc(nameA) + ' and ' + _esc(nameB) + ' lineups are ready to run — upgrade to see how this trade moves each team’s points the rest of the way and in the playoffs.</div>';
+      return;
+    }
+    const nm = [nameA, nameB];
+    const bars = tm => {
+      const mx = Math.max(1, ...r.teams.map(x => Math.max(...x.after.wk.map((v, j) => Math.abs(v - x.before.wk[j])))));
+      return '<div class="tvi-wk">' + r.weeks.map((w, j) => {
+        const dv = tm.after.wk[j] - tm.before.wk[j];
+        const h = Math.round(Math.abs(dv) / mx * 26);
+        return '<div class="tvi-wkcol' + (r.isPO(w) ? ' po' : '') + '" title="Week ' + w + (r.isPO(w) ? ' (playoffs)' : '') + ': ' + tm.before.wk[j].toFixed(1) + ' → ' + tm.after.wk[j].toFixed(1) + ' (' + f1(dv) + ')"><div class="tvi-wkbar ' + (dv >= 0 ? 'up' : 'dn') + '" style="height:' + Math.max(dv ? 2 : 0, h) + 'px"></div><span>' + w + '</span></div>';
+      }).join('') + '</div>';
+    };
+    const startsLine = (tm) => {
+      const parts = [];
+      tm.inc.forEach(d => { const n = tm.after.starts.get(d) || 0; parts.push('<b>' + _esc(d.n) + '</b> starts ' + n + ' of ' + r.weeks.length); });
+      tm.out.forEach(d => { const n = tm.before.starts.get(d) || 0; parts.push(_esc(d.n) + ' was starting ' + n); });
+      return parts.join(' · ');
+    };
+    el.style.display = '';
+    el.innerHTML = head + '<div class="tvi-teams">' + r.teams.map((tm, i) => {
+      const dW = tm.after.wtd - tm.before.wtd, dR = tm.after.raw - tm.before.raw, dP = tm.after.po - tm.before.po;
+      return '<div class="tvi-team"><div class="tvi-name">' + _esc(nm[i]) + '</div>'
+        + '<div class="tvi-big ' + cls(dW) + '">' + f1(dW) + '</div>'
+        + '<div class="tvi-line">lineup pts rest of season, playoff weeks ' + r.st.poW + 'x</div>'
+        + '<div class="tvi-stats"><span>ROS <b class="' + cls(dR) + '">' + f1(dR) + '</b></span><span>per week <b class="' + cls(dR) + '">' + f1(dR / r.weeks.length) + '</b></span><span>playoffs <b class="' + cls(dP) + '">' + f1(dP) + '</b></span></div>'
+        + '<div class="tvi-stats"><span>' + Math.round(tm.before.raw) + ' → ' + Math.round(tm.after.raw) + ' pts</span></div>'
+        + bars(tm)
+        + '<div class="tvi-line">' + startsLine(tm) + '</div>'
+        + (tm.drops.length ? '<div class="tvi-line tvi-drop">Roster full: cuts ' + tm.drops.map(d => _esc(d.n)).join(', ') + ' (lowest ROS VOR)</div>' : '')
+        + (tm.open ? '<div class="tvi-line tvi-open">' + tm.open + ' open roster spot' + (tm.open > 1 ? 's' : '') + ' → waiver pickup</div>' : '')
+        + '</div>';
+    }).join('') + '</div>'
+      + '<div class="tvi-note">Each team’s best legal lineup every remaining week from the Sim Lab projection; a starter never scores below a free agent at that spot. Bars = weekly change (gold weeks = fantasy playoffs).</div>';
+  }
+
   // Each panel holds what that team GIVES UP, so Team A receives side B's
   // total and vice versa — the winner is whoever receives the bigger package.
   function _tradeSideNames() {
@@ -29526,6 +29851,7 @@ window.fmtHeight = fmtHeight;
       verdict.className = 'trade-verdict even'; sub.textContent = '';
       if (resultEl) resultEl.classList.add('is-empty');
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
+      _tradeVorRender();
       if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
       return;
     }
@@ -29569,6 +29895,7 @@ window.fmtHeight = fmtHeight;
         insightsEl.innerHTML = '';
       }
     }
+    _tradeVorRender();
     if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
   }
 
@@ -56852,11 +57179,18 @@ Rules:
       { key: 'TE', label: 'TE', color: '#f59e0b' }
     ];
     if (wkNum) sortOpts.splice(2, 0, { key: 'week', label: 'WK ' + wkNum, color: '#22d3ee' });
+    // ROS VOR: Sim Lab lineup simulation, redraft-style seasons only.
+    if (!isDynasty || _mtViewMode === 'contender') sortOpts.splice(wkNum ? 3 : 2, 0, { key: 'vor', label: 'ROS VOR', color: '#f59e0b' });
+    if (_mtSortBy === 'vor') {
+      const _vr = (typeof _vorTeamsROS === 'function') ? _vorTeamsROS(_mtActiveSavedLeague(), teams) : null;
+      if (!_vr) _mtSortBy = 'total';
+      else teams.forEach(t => { const x = _vr.res.get(t); t.vorRos = x ? Math.round(x.vt) : 0; t.vorInfo = x; });
+    }
     // Add PICKS sort for dynasty/keeper leagues (only in value mode)
     if (isDynasty && _mtViewMode === 'value') sortOpts.push({ key: 'picks', label: 'PICKS', color: '#a855f7' });
     sortOpts.forEach(o => {
       const active = _mtSortBy === o.key;
-      html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' || o.key === 'picks' || o.key === 'week' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
+      html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' || o.key === 'picks' || o.key === 'week' || o.key === 'vor' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
     });
     html += `</div>`;
 
@@ -56866,6 +57200,7 @@ Rules:
       if (_mtSortBy === 'total') return (b.strengthTotal || 0) - (a.strengthTotal || 0) || b.score.total - a.score.total;
       if (_mtSortBy === 'ppg') return (b.lineupPpg || 0) - (a.lineupPpg || 0);
       if (_mtSortBy === 'week') return (b.weekPpg || 0) - (a.weekPpg || 0);
+      if (_mtSortBy === 'vor') return (b.vorRos || 0) - (a.vorRos || 0);
       if (_mtSortBy === 'picks') return (b.score.pickTotal || 0) - (a.score.pickTotal || 0);
       // Positional sort: rank first — rank comes from the unrounded strength
       // in _mtComputePosRanks, while .strength is rounded for display, so
@@ -56880,6 +57215,7 @@ Rules:
       if (_mtSortBy === 'total') return x.strengthTotal || 0;
       if (_mtSortBy === 'ppg') return x.lineupPpg || 0;
       if (_mtSortBy === 'week') return x.weekPpg || 0;
+      if (_mtSortBy === 'vor') return x.vorRos || 0;
       if (_mtSortBy === 'picks') return x.score.pickTotal || 0;
       return ((x.posRanks || {})[_mtSortBy] || { strength: 0 }).strength;
     });
@@ -56906,14 +57242,15 @@ Rules:
       const _tier = _tierInfo ? _tierInfo.byTeam.get(t) : null;
       const _tierChip = _tier ? _mtTeamTierChip(_tier) : '';
       const meStyle = isMe ? `border:2px solid var(--accent);background:rgba(245,158,11,.06)` : `border:1px solid var(--border);background:var(--surface)`;
-      const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks' && _mtSortBy !== 'week';
+      const isPosSort = _mtSortBy !== 'total' && _mtSortBy !== 'ppg' && _mtSortBy !== 'picks' && _mtSortBy !== 'week' && _mtSortBy !== 'vor';
       const posRankEntry = isPosSort ? ((t.posRanks || {})[_mtSortBy] || { rank: teams.length, strength: 0 }) : null;
-      const displayScore = _mtSortBy === 'total' ? (t.strengthTotal || 0) : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'week' ? (t.weekPpg || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : posRankEntry.strength;
+      const displayScore = _mtSortBy === 'total' ? (t.strengthTotal || 0) : _mtSortBy === 'ppg' ? (t.lineupPpg || 0) : _mtSortBy === 'week' ? (t.weekPpg || 0) : _mtSortBy === 'vor' ? (t.vorRos || 0) : _mtSortBy === 'picks' ? (sc.pickTotal || 0) : posRankEntry.strength;
       // League-relative delta for the numeric sorts — raw totals cluster (the
       // shared bench baseline), so ± vs league avg is where separation reads.
-      const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg' || _mtSortBy === 'week') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
+      const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg' || _mtSortBy === 'week' || _mtSortBy === 'vor') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
       const deltaHtml = delta === null ? '' : ` · <span style="color:${delta >= 0 ? '#22c55e' : '#ef4444'};font-weight:700">${delta >= 0 ? '+' : ''}${delta} vs avg</span>`;
       const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · roster value ${sc.total} (win-now = above replacement) · league avg ${avgScore}"`
+        : _mtSortBy === 'vor' && t.vorInfo ? `title="Rest-of-season VOR: best-lineup points over an all-free-agent lineup across ${t.vorInfo.weeks} remaining weeks (Sim Lab; fantasy-playoff weeks counted ${_vorState().poW}x) · ${t.vorInfo.raw >= 0 ? '+' : ''}${Math.round(t.vorInfo.raw)} unweighted · playoffs ${t.vorInfo.po >= 0 ? '+' : ''}${Math.round(t.vorInfo.po)} · ${Math.round(t.vorInfo.pts)} lineup pts · league avg ${avgScore}"`
         : _mtSortBy === 'week' ? `title="Week ${wkNum} best-lineup projected points (weekly props/Vegas/sim-adjusted; byes and ruled-out players benched; K/DST not counted) · league avg ${avgScore}"` : '';
       const scoreColor = isPosSort
         ? _mtPosRankColor(posRankEntry.rank, teams.length)

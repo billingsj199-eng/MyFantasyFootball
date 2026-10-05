@@ -92,8 +92,12 @@ $changed = git status --porcelain -- @Files
 if (-not $changed) {
     Write-Log 'no devy data movement - nothing to commit'
 } else {
-    git add @Files
+    # Stage only paths that exist: apply_projected_testing.py writes projected_testing_hits.json
+    # only once a projected time has a real result to grade, and one missing path makes git add
+    # stage nothing (2026-10-05: the whole refresh sat uncommitted and blocked the sim export).
+    git add -- @($Files | Where-Object { Test-Path $_ })
     git commit -m ('Auto devy refresh {0} (college_stats_devy.js + 2027 draftProj + ?v= bump)' -f (Get-Date -Format 'yyyy-MM-dd'))
+    if ($LASTEXITCODE -ne 0) { Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - devy files left uncommitted" }
     # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
     git pull --rebase --autostash origin main
     git push origin main

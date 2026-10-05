@@ -4628,7 +4628,7 @@ window.clayLookup = clayLookup;
 <script src="data/combine_d_patches.js?v=2026-09-30f" defer></script>
 <script src="data/devy_headshots.js?v=2026-10-05" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
 <script src="data/projected_testing.js?v=2026-10-05" defer></script>
-<script defer src="data/draft_proj.js?v=2026-10-05"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
+<script defer src="data/draft_proj.js?v=2026-10-05db2"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
@@ -5524,7 +5524,7 @@ window._ensureCollegeStatsData = (function() {
     // In-season devy/future-class rows (weekly auto-refresh, scripts/refresh_devy_stats.py):
     // defines window._csPatchDevy (applied last, below) + this season's COLLEGE_WEEKLY game logs.
     const spz = _loadScript('data/sp_def_z.js?v=2026-09-30');  // SP+ defense z per team-season (RB schedule-adjusted production experiment)
-    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-10-05');
+    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-10-05dv2');
     // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
     // populate the same COLLEGE_WEEKLY object and have no order dependency;

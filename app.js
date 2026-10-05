@@ -4588,8 +4588,8 @@ function getFiltered(applyTopN) {
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
-        case 'jm': if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
+        case 'yrr': if (_sm === 'vor') { av = _vorSort(a, 'vp'); bv = _vorSort(b, 'vp'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'jm': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
           // Sort by SOS rank in the active week window (1 = easiest schedule).
@@ -6804,7 +6804,7 @@ function render() {
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
-  document.body.classList.toggle('rnk-vor', _statMode === 'vor');
+  document.body.classList.toggle('rnk-vor', _statMode === 'vor');   // also hides the AGE column (index.html)
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
   document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor');
   // REDRAFT (rest-of-season board): Team Total column = rest-of-season average
@@ -6840,7 +6840,9 @@ function render() {
   // the cross-platform AVERAGE (2026-09-09 — Flock's ADP matrix gap).
   const _isAdpCmp = _statMode === 'adp';
   const _isDynBoard = currentMode === 'dynasty' || currentMode === 'dynastysf';
-  const showJm = _isAdpCmp || _isDynBoard;
+  // VOR season view: the JM column carries GMS (PO VOR takes the tail column).
+  const _vorSeasonCols = _statMode === 'vor' && !_isWeekly;
+  const showJm = _isAdpCmp || _isDynBoard || _vorSeasonCols;
   const showLanding = _isAdpCmp || (_isDynBoard && filter === 'ROOKIE');
   // Tier banner rows whose start falls between the previous row's rank and this
   // one — shared by the regular rows and the DEVY rows.
@@ -6977,6 +6979,7 @@ function render() {
     let _statTds;
     let _statTd1 = ''; // first stat cell (Proj PPG / stat-view PPG / UD-ADP) — rendered BEFORE the weekly OPP/SPREAD/TOTAL block
     let _statYdsTail = null; // proj/lines views: the Yds line, shown in the tail (yrr) column
+    let _statJmCell = null; // VOR season view: GMS rides the JM column
     if (_statMode === 'fantasy') {
       // Sim Lab first (season PPG on season boards, active-week sim in
       // weekly), site engine fallback — see _displayProjPpg.
@@ -7079,13 +7082,20 @@ function render() {
         // Rest-of-season total: the per-game gap over the weeks he plays.
         const _totTxt = !_ve ? '—' : _ve.vt >= 10 ? '+' + Math.round(_ve.vt) : _ve.vt > 0 ? '+' + _ve.vt.toFixed(1) : '0';
         const _totC = !_ve ? null : _ve.vt > 0 ? _vorC : 'var(--text2)';
-        const _poTxt = (_vt.st.poW !== 1 && _ve.sgp) ? ', playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' counted ' + _vt.st.poW + 'x (plays ' + _ve.gp + ' of ' + _ve.sgp + ')' : '';
+        const _poTxt = (_ve && _vt.st.poW !== 1 && _ve.sgp) ? ', playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' counted ' + _vt.st.poW + 'x (plays ' + _ve.gp + ' of ' + _ve.sgp + ')' : '';
         const _totTip = _ve ? ' title="' + (_totTxt + ' points above replacement over the ' + _ve.g + ' game' + (_ve.g === 1 ? '' : 's') + ' he is projected to play, weeks ' + _vt.from + '-' + _vt.to + _poTxt + '. A week he misses or projects under replacement counts as zero · ' + _rkTxt + (_kd ? ' at the position' : ' on the VOR board') + (_ve.tA ? ' · ' + (_kd ? _ve.tP : _ve.tA).name : '')).replace(/"/g, '&quot;') + '"' : '';
         const _short = _ve && _ve.g < _ve.sg;
         _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_totC ? ' style="color:' + _totC + '"' : ''}>${_totTxt}</span></td>`;
         _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
       <td class="pts-cell l4ppg-cell"${_totTip}${_totC ? ' style="color:' + _totC + ';font-weight:700;cursor:help"' : ''}>${_totTxt}</td>`;
+        // PO VOR tail: the playoff-weeks gap (tiebreaker), amber when he misses a playoff week.
+        const _poMiss = _ve && _ve.gp < _ve.sgp;
+        const _poC = !_ve ? null : _poMiss ? '#f59e0b' : _ve.vp > 0 ? _vorC : 'var(--text2)';
+        const _poT = !_ve ? '—' : _ve.vp >= 10 ? '+' + Math.round(_ve.vp) : _ve.vp > 0 ? '+' + _ve.vp.toFixed(1) : '0';
         _statYdsTail = _ve
+          ? '<span style="cursor:help;font-weight:700' + (_poC ? ';color:' + _poC : '') + '" title="' + (_poT + ' points above replacement in the fantasy-playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' — projected to play ' + _ve.gp + ' of his team\'s ' + _ve.sgp + (_poMiss ? ', so he misses playoff time' : '') + '. Breaks ties on ROS VOR.').replace(/"/g, '&quot;') + '">' + _poT + '</span>'
+          : '—';
+        _statJmCell = _ve
           ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left, weeks ' + _vt.from + '-' + _vt.to + (_ve.sgp ? ' (' + _ve.gp + ' of ' + _ve.sgp + ' in the fantasy playoffs)' : '') + (_short ? ' — each missed week costs that week\'s gap over replacement' : '') + '">' + _ve.g + '</span>'
           : '—';
       }
@@ -7183,7 +7193,7 @@ function render() {
       ${_wkOppPpgCell(d)}` : '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">' + (_rosTtCol ? _rosTtCellHtml(d) : '—') + '</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'}
       ${_wkSplit.post}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
-      <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
+      <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_statJmCell != null ? _statJmCell : _isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
       <td class="psos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
@@ -7259,7 +7269,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'vor' ? 'GMS ' : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -7276,6 +7286,9 @@ function render() {
         sp.innerHTML = 'AVG ';
         sp.setAttribute('data-gloss', 'Cross-platform average — mean of every platform that lists the player (Underdog for premium, Sleeper, ESPN, CBS, Yahoo). Hover a value to see which went in. Green = the market as a whole drafts the player later than this rank (value), red = earlier (reach).');
       }
+    } else if (_vorSeasonCols && id === 'jmHeader') {
+      sp.innerHTML = 'GMS ';
+      sp.setAttribute('data-gloss', 'Games he is projected to play from now through the last fantasy-playoff week — games already kicked off are not counted, and the weeks with no sim projection (bye, injury, suspension) are taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
     } else {
       sp.innerHTML = h._origLbl.html;
       sp.setAttribute('data-gloss', h._origLbl.gloss);
@@ -7297,7 +7310,7 @@ function render() {
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
-  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Games he is projected to play from now through the last fantasy-playoff week — games already kicked off are not counted, and the weeks with no sim projection (bye, injury, suspension) are taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
+  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Playoff-weeks VOR — his points over replacement in the fantasy-playoff weeks only (set in the VOR bar; 15-17 by default), each week counted once. Already inside ROS VOR (weighted there if the playoff weight is above 1); shown on its own so you can see who carries value into the weeks that decide titles, and it breaks ties on ROS VOR. Amber = projected to miss a playoff week.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
   window._applyCellVisibility = function () {
@@ -7328,7 +7341,7 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? '📋 SIM VOR' : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : '📋 SIM VOR') : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -10130,6 +10143,7 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    _vorBarRender();   // PLAYOFFS pill is season-boards only
     // WEEKLY hides ALL + ROOKIES pills — if those were active, bounce to FLEX
     // so the table doesn't render an empty / wrong filter state.
     if (currentMode === 'weekly' && (filter === 'ALL' || filter === 'ROOKIE')) {
@@ -11177,7 +11191,10 @@ function _simSeasonPpgRow(d) {
 // The WEEKLY board prices the active week only.
 // Tiers: natural breaks (Jenks) on the ranking value — overall for QB/RB/WR/TE,
 // and separately inside each position for the position views and K / D/ST.
-// Returns { map: Map(D row -> { v, g, sg, gp, sgp, tot, vor, vt, rk, posRk, tA, tP }), repl: { pos: {...} } }
+//   PO VOR  = the gap inside the fantasy-playoff weeks only (unweighted) — shown
+//             as its own column and used to break ROS VOR ties
+// Returns { map: Map(D row -> { v, g, sg, gp, sgp, tot, vor, vt, vp, rk, posRk, tA, tP, rkP, tAp, tPp }), repl: { pos: {...} } }
+// (rkP / tAp / tPp = rank and tiers by PO VOR, for the PLAYOFFS view of the SIM VOR board).
 // (g = games he is projected to play, sg = games his team has left, gp / sgp = the
 // same inside the fantasy playoffs; tA / tP = overall / position tier).
 const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, poStart: 15, poEnd: 17, poW: 1.5, tep: 0, passTd: 4 };
@@ -11375,7 +11392,9 @@ function _vorTable() {
   const r1 = v => Math.round(v * 10) / 10;
   const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1], kicked: kicked ? kicked.size : 0 };
   const all = [];
-  const _cmp = (a, b) => (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
+  // Ties on ROS VOR go to the bigger playoff-weeks VOR.
+  const _cmp = (a, b) => (b.vt - a.vt) || (b.vp - a.vp) || (b.vor - a.vor) || (b.tot - a.tot);
+  const _cmpP = (a, b) => (b.vp - a.vp) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
@@ -11386,8 +11405,10 @@ function _vorTable() {
       const vor = r1(x.ppg - R);
       // Rest-of-season: only the weeks he beats replacement add value; playoff weeks count poW times.
       const vt = wk ? vor : r1(x.wp.reduce((s, v, j) => s + (v > R ? (v - R) * wt(weeks[j]) : 0), 0));
+      // PO VOR: the same week-by-week gap inside the fantasy playoffs only, unweighted.
+      const vp = wk ? 0 : r1(x.wp.reduce((s, v, j) => s + (isPO(weeks[j]) && v > R ? v - R : 0), 0));
       const sc = _sched(x.d);
-      const e = { v: r1(x.ppg), g: x.g, sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, posRk: i + 1, rk: null, tA: null, tP: null };
+      const e = { v: r1(x.ppg), g: x.g, sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
       out.map.set(x.d, e);
       return e;
     });
@@ -11397,15 +11418,32 @@ function _vorTable() {
     else es.forEach(e => all.push(e));
     _vorAssignTiers(sorted, 'vt', 'tP', 150);
     if (p === 'K' || p === 'DST') sorted.forEach(e => { e.tA = e.tP; });
+    // PLAYOFFS view: the same ranks and tiers on PO VOR.
+    if (!wk) {
+      const sortedP = es.slice().sort(_cmpP);
+      if (p === 'K' || p === 'DST') sortedP.forEach((e, i) => { e.rkP = i + 1; });
+      _vorAssignTiers(sortedP, 'vp', 'tPp', 150);
+      if (p === 'K' || p === 'DST') sortedP.forEach(e => { e.tAp = e.tPp; });
+    }
   });
   all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
   _vorAssignTiers(all, 'vt', 'tA', 150);   // top-150 draftable range
+  if (!wk) {
+    const allP = all.slice().sort(_cmpP);
+    allP.forEach((e, i) => { e.rkP = i + 1; });
+    _vorAssignTiers(allP, 'vp', 'tAp', 150);
+  }
   window._vorCache = out;
   return out;
 }
 function _vorFor(d) {
   const t = _vorTable();
   return (t && t.map.get(d)) || null;
+}
+// PLAYOFFS view of the SIM VOR board: ranked and tiered by PO VOR (season boards only).
+window._vorPlayoffs = false;
+function _vorPlayoffsOn() {
+  return !!window._vorPlayoffs && currentVersion === 'sims' && currentMode !== 'weekly';
 }
 // SIM VOR tier banners for the rows on screen: tier membership is per player
 // (overall tiers on ALL / ROOKIES / FLEX, position tiers on a position pill),
@@ -11420,7 +11458,8 @@ function _simsTiersFor(data) {
   let prev = null;
   rows.forEach((d, i) => {
     const e = _vorFor(d);
-    const t = e && (posView ? e.tP : e.tA);
+    const po = _vorPlayoffsOn();
+    const t = e && (posView ? (po ? e.tPp : e.tP) : (po ? e.tAp : e.tA));
     if (!t || t === prev) return;
     prev = t;
     out.push({ id: 's' + out.length, label: t.label, name: t.name, afterRank: positional ? i + 1 : d.myRank });
@@ -11435,9 +11474,11 @@ function _simsTiersFor(data) {
 function _simsBoardEnsure() {
   const t = _vorTable();
   const src = (window._simsBoardSrc = window._simsBoardSrc || {});
-  if (!t || src[currentMode] === t) return false;
+  const po = _vorPlayoffsOn();
+  const srcKey = currentMode + (po ? ':po' : '');
+  if (!t || src[srcKey] === t) return false;
   const skill = [], ks = [], ds = [];
-  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, e.rk]); });
+  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : e.rk]); });
   const order = [];
   [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
   // Players without a sim row trail in consensus order (hidden on this board).
@@ -11445,7 +11486,9 @@ function _simsBoardEnsure() {
   (versionBoards.consensus[currentMode] || []).forEach(i => { if (!used.has(i)) { used.add(i); order.push(i); } });
   for (let i = 0; i < D.length; i++) if (!used.has(i) && !D[i]._retired) order.push(i);
   versionBoards.sims[currentMode] = order;
-  src[currentMode] = t;
+  // One board slot per mode: forget the other view's source so flipping back rebuilds.
+  delete src[currentMode]; delete src[currentMode + ':po'];
+  src[srcKey] = t;
   return true;
 }
 
@@ -11552,6 +11595,7 @@ function _vorBarRender() {
     + num('poStart', 'Playoffs Wk', 'First fantasy-playoff week') + '<span class="vor-dash">–</span>' + num('poEnd', '', 'Last fantasy-playoff week (the end of the fantasy season)')
     + '<label class="vor-num" title="How much each playoff week counts — 1 = like any other week, 1.5 = half again as much. Missing a playoff week costs that much more.">×<input type="number" inputmode="decimal" data-vor="poW" min="' + _VOR_PO_W[0] + '" max="' + _VOR_PO_W[1] + '" step="0.25" value="' + st.poW + '"></label></span>'
     + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
+    + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorPlayoffsOn() ? ' on' : '') + '" id="vorPlayoffBtn" title="Re-rank the SIM VOR board by PO VOR — value over replacement in the fantasy-playoff weeks only (' + st.poStart + (st.poEnd > st.poStart ? '-' + st.poEnd : '') + ') — with tiers drawn on that number. For trading for the title run.">PLAYOFFS</button>' : '')
     + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
     + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench, playoffs weeks 15-17 at 1.5x) with no league">RESET</button>';
 }
@@ -11586,6 +11630,21 @@ function _vorChanged() {
     _vorChanged();
   });
   bar.addEventListener('click', e => {
+    if (e.target.closest('#vorPlayoffBtn')) {
+      // Same pattern as WAIVERS: from another board it opens SIM VOR with the view on.
+      if (currentVersion !== 'sims') {
+        window._vorPlayoffs = true;
+        const tab = document.querySelector('.version-tab[data-version="sims"]');
+        if (tab) tab.click();
+        return;
+      }
+      window._vorPlayoffs = !window._vorPlayoffs;
+      _vorBarRender();
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+      syncMode(); renumber();
+      render();
+      return;
+    }
     if (e.target.closest('#vorWaiverBtn')) {
       // From another board the pill jumps to the SIM VOR board with the filter on.
       if (currentVersion !== 'sims') {
@@ -11600,6 +11659,7 @@ function _vorChanged() {
     } else if (e.target.closest('#vorResetBtn')) {
       window._vorSt = Object.assign({}, _VOR_DEFAULT);
       window._vorWaivers = false;
+      window._vorPlayoffs = false;
       _vorChanged();
     }
   });

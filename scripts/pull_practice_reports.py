@@ -22,6 +22,7 @@ norm() (suffix/punctuation-insensitive).
 Output: window.PRACTICE_2026 = {updated, week, src, players: {name: {tm, pos,
 inj, pr: 'DNP'|'LP'|'FP'|'', gs: 'Out'|'Doubtful'|'Questionable'|''}}}
 """
+import html as _html
 import json
 import os
 import re
@@ -55,7 +56,8 @@ PRACTICE = [
 
 
 def _text(html):
-    return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', html)).strip()
+    # unescape entities: the page writes apostrophes as &#x27; ("D&#x27;Andre Swift")
+    return _html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', html))).strip()
 
 
 def parse(html):

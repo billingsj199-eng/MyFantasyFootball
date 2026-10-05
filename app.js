@@ -13742,6 +13742,7 @@ function _campNewsNorm(n) {
         (idx[k] = idx[k] || []).push(it);
       });
       window._campNewsIdx = idx;
+      window.dispatchEvent(new Event('mff:campnews'));   // Movers re-checks injury games
     })
     .catch(() => {});
 })();
@@ -68349,9 +68350,25 @@ function _rsScatter(cfg) {
     const p = _mvTag(window.PRACTICE_2026, n);
     return /\b(IR|Out|Doubtful|Questionable|PUP)\b/i.test(s) || !!(p && /Out|Doubtful|Questionable/i.test(p.gs || ''));
   }
+  // Injury news around that week (2026 only - the camp-news feed is this season's): an
+  // `injury` item dated from 6 days before the week's first kickoff up to the next week's
+  // kickoff. Catches a late-week add who played hurt and then cleared every tag (Swift W4
+  // 2026: knee DNP Thursday, 35% snaps, nothing on the report by Monday).
+  function _mvNewsHurt(n, w) {
+    const ix = window._campNewsIdx;
+    if (_mvYr !== 2026 || !ix || typeof _SEASON_KICKS_2026 === 'undefined') return false;
+    const k = _SEASON_KICKS_2026.find(x => x.wk === w);
+    if (!k) return false;
+    const nx = _SEASON_KICKS_2026.find(x => x.wk === w + 1);
+    const lo = k.kick - 6 * 864e5, hi = nx ? nx.kick : k.kick + 7 * 864e5;
+    return (ix[_campNewsNorm(n)] || []).some(it => {
+      const t = it.tag === 'injury' && it.date ? Date.parse(it.date + 'T12:00:00Z') : NaN;
+      return t >= lo && t < hi;
+    });
+  }
   // An injury game = snaps under 75% of his best other game AND a sign he was hurt: the
-  // play-by-play says so (week file `inj`), he missed the next week, or (latest week of the
-  // current season) the injury report has him Out / Doubtful / IR now.
+  // play-by-play says so (week file `inj`), he missed the next week, injury news that week,
+  // or (latest week of the current season) the injury report has him tagged now.
   function _mvMarkHurt(e, latest) {
     e.g.forEach((x, i) => {
       const others = e.g.filter(y => y !== x && y.snp != null).map(y => y.snp);
@@ -68359,7 +68376,7 @@ function _rsScatter(cfg) {
       const drop = x.snp != null && top != null && x.snp < 0.75 * top;
       const nxt = e.g[i + 1];
       const missed = x.w < _mvWk && (!nxt || nxt.w > x.w + 1);
-      x.hurt = x.inj ? (top == null || drop) : drop && (missed || (x.w === latest && _mvOutNow(e.n)));
+      x.hurt = x.inj ? (top == null || drop) : drop && (missed || (x.w === latest && _mvOutNow(e.n)) || _mvNewsHurt(e.n, x.w));
     });
   }
   try {
@@ -68534,7 +68551,7 @@ function _rsScatter(cfg) {
       'Each row compares ' + met.l.toLowerCase() + ' in the ' + (_mvWin === 1 ? 'last game played' : 'last 3 games played (2 or more of the 3 weeks ending at the week picked)') +
       ' with the player\'s average over the 3 games played before that, from the same week files as the Advanced Stats table (shares are of that week\'s team volume). ' +
       'Players need an average of 3 opportunities (RB) or 6 routes (WR, TE) per game in one of the two windows. Δ is descriptive, not a forecast: in 2019-2025 testing, players who had risen scored less over the next 3 games than others at the same recent usage, and players who had fallen scored more. ' +
-      (_mvInj ? 'Injury games are left out of both windows (snaps under 75% of his best other game, plus the play-by-play marking him hurt, a missed next week, or an Out / Doubtful / IR tag now)' + (_mvHurt ? '; ' + _mvHurt + ' player' + (_mvHurt === 1 ? '' : 's') + ' dropped for it' : '') + '. ' : '') +
+      (_mvInj ? 'Injury games are left out of both windows (snaps under 75% of his best other game, plus the play-by-play marking him hurt, a missed next week, injury news that week, or an injury tag now)' + (_mvHurt ? '; ' + _mvHurt + ' player' + (_mvHurt === 1 ? '' : 's') + ' dropped for it' : '') + '. ' : '') +
       'Hover Δ for the by-game trail; click a player to open the card.' +
       (wkOn ? ' Week ' + wk + ' columns: Proj = the site\'s Sim Lab projection (' + FMT_NAME[_fmt] + ', the Advanced Stats scoring toggle), Book = DK / FD / MGM / UD / PP props scored as fantasy points, Site-Book = the gap, team total and spread = DK lines.' : '');
   }
@@ -68592,6 +68609,10 @@ function _rsScatter(cfg) {
       _mvRender();
     });
     _el('rsMvTm').addEventListener('change', e => { _mvTm = e.target.value; _mvRender(); });
+    // the news feed lands async; redo the injury-game cut once it's in
+    window.addEventListener('mff:campnews', () => {
+      if (_mvInj && _mvYr === 2026 && _mvWk != null && (window.ADV_STATS || {})[_mvYr + '-w' + _mvWk]) _mvRender();
+    });
     const inj = _el('rsMvInj');
     if (inj) {
       inj.checked = _mvInj;

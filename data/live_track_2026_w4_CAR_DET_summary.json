@@ -1,0 +1,266 @@
+{
+ "files": [
+  "live_track_2026_w4_CAR_DET.csv"
+ ],
+ "bins": {
+  "Q1": {
+   "fit": 4.474,
+   "fitx": 4.47,
+   "v1": 5.131,
+   "naive": 5.091,
+   "n": 840
+  },
+  "Q2": {
+   "fit": 3.569,
+   "fitx": 3.551,
+   "v1": 3.908,
+   "naive": 3.934,
+   "n": 1272
+  },
+  "Q3": {
+   "fit": 2.568,
+   "fitx": 2.554,
+   "v1": 2.749,
+   "naive": 2.687,
+   "n": 1152
+  },
+  "Q4": {
+   "fit": 1.311,
+   "fitx": 1.301,
+   "v1": 1.389,
+   "naive": 1.394,
+   "n": 1416
+  }
+ },
+ "players": {
+  "Jahmyr Gibbs": {
+   "pos": "RB",
+   "proj": 25.7,
+   "final": 17.7,
+   "fit": 3.77,
+   "fitx": 3.77,
+   "v1": 3.97,
+   "naive": 4.24
+  },
+  "Amon-Ra St. Brown": {
+   "pos": "WR",
+   "proj": 20.0,
+   "final": 15.5,
+   "fit": 1.97,
+   "fitx": 1.97,
+   "v1": 2.26,
+   "naive": 2.25
+  },
+  "Bryce Young": {
+   "pos": "QB",
+   "proj": 19.4,
+   "final": 21.56,
+   "fit": 2.02,
+   "fitx": 2.02,
+   "v1": 2.34,
+   "naive": 2.13
+  },
+  "Jared Goff": {
+   "pos": "QB",
+   "proj": 18.3,
+   "final": 20.48,
+   "fit": 4.68,
+   "fitx": 4.68,
+   "v1": 5.39,
+   "naive": 5.07
+  },
+  "Chuba Hubbard": {
+   "pos": "RB",
+   "proj": 16.6,
+   "final": 25.9,
+   "fit": 5.36,
+   "fitx": 5.36,
+   "v1": 5.18,
+   "naive": 5.34
+  },
+  "Tetairoa McMillan": {
+   "pos": "WR",
+   "proj": 16.4,
+   "final": 45.2,
+   "fit": 10.0,
+   "fitx": 10.0,
+   "v1": 9.51,
+   "naive": 10.43
+  },
+  "Sam LaPorta": {
+   "pos": "TE",
+   "proj": 13.0,
+   "final": 22.4,
+   "fit": 10.52,
+   "fitx": 10.52,
+   "v1": 10.79,
+   "naive": 10.61
+  },
+  "Jameson Williams": {
+   "pos": "WR",
+   "proj": 12.7,
+   "final": 16.2,
+   "fit": 2.69,
+   "fitx": 2.69,
+   "v1": 2.63,
+   "naive": 2.45
+  },
+  "Jake Bates": {
+   "pos": "K",
+   "proj": 9.5,
+   "final": 18.0,
+   "fit": 2.45,
+   "fitx": 2.45,
+   "v1": 2.45,
+   "naive": 2.41
+  },
+  "Darren Waller": {
+   "pos": "TE",
+   "proj": 8.8,
+   "final": 6.6,
+   "fit": 1.34,
+   "fitx": 1.34,
+   "v1": 1.32,
+   "naive": 1.14
+  },
+  "Jalen Coker": {
+   "pos": "WR",
+   "proj": 8.5,
+   "final": 0.0,
+   "fit": 3.45,
+   "fitx": 3.45,
+   "v1": 3.58,
+   "naive": 3.93
+  },
+  "Ryan Fitzgerald": {
+   "pos": "K",
+   "proj": 7.3,
+   "final": 7.0,
+   "fit": 1.17,
+   "fitx": 1.17,
+   "v1": 1.17,
+   "naive": 1.04
+  },
+  "Detroit Lions D/ST": {
+   "pos": "DST",
+   "proj": 5.7,
+   "final": 3.0,
+   "fit": 1.58,
+   "fitx": 1.58,
+   "v1": 4.28,
+   "naive": 4.04
+  },
+  "Brycen Tremayne": {
+   "pos": "WR",
+   "proj": 5.6,
+   "final": 5.2,
+   "fit": 1.29,
+   "fitx": 1.29,
+   "v1": 1.31,
+   "naive": 1.16
+  },
+  "Isaac TeSlaa": {
+   "pos": "WR",
+   "proj": 5.3,
+   "final": 13.5,
+   "fit": 7.8,
+   "fitx": 7.8,
+   "v1": 7.95,
+   "naive": 7.85
+  },
+  "Carolina Panthers D/ST": {
+   "pos": "DST",
+   "proj": 4.2,
+   "final": 1.0,
+   "fit": 2.2,
+   "fitx": 2.2,
+   "v1": 4.72,
+   "naive": 4.49
+  },
+  "Tommy Tremble": {
+   "pos": "TE",
+   "proj": 3.8,
+   "final": 5.2,
+   "fit": 0.74,
+   "fitx": 0.74,
+   "v1": 0.91,
+   "naive": 0.73
+  },
+  "Ja'Tavion Sanders": {
+   "pos": "TE",
+   "proj": 2.7,
+   "final": 0.0,
+   "fit": 1.1,
+   "fitx": 1.1,
+   "v1": 1.14,
+   "naive": 1.25
+  },
+  "Sione Vaki": {
+   "pos": "RB",
+   "proj": 2.6,
+   "final": 2.7,
+   "fit": 0.89,
+   "fitx": 0.83,
+   "v1": 0.84,
+   "naive": 0.75
+  },
+  "Jacob Saylors": {
+   "pos": "RB",
+   "proj": 1.7,
+   "final": 0.0,
+   "fit": 0.68,
+   "fitx": 0.68,
+   "v1": 0.72,
+   "naive": 0.78
+  },
+  "Brock Wright": {
+   "pos": "TE",
+   "proj": 1.5,
+   "final": 1.8,
+   "fit": 0.66,
+   "fitx": 0.66,
+   "v1": 0.64,
+   "naive": 0.59
+  },
+  "Tay Martin": {
+   "pos": "WR",
+   "proj": 0.8,
+   "final": 0.0,
+   "fit": 0.36,
+   "fitx": 0.36,
+   "v1": 0.34,
+   "naive": 0.37
+  },
+  "Kenny Pickett": {
+   "pos": "QB",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.24,
+   "fitx": 0.12,
+   "v1": 0.25,
+   "naive": 0.28
+  },
+  "Joshua Dobbs": {
+   "pos": "QB",
+   "proj": 0.6,
+   "final": 0.0,
+   "fit": 0.27,
+   "fitx": 0.16,
+   "v1": 0.25,
+   "naive": 0.28
+  }
+ },
+ "all": {
+  "fit": 2.802,
+  "fitx": 2.79,
+  "v1": 3.08,
+  "naive": 3.066,
+  "n": 4680
+ },
+ "wins": {
+  "fit": 11,
+  "fitx": 2,
+  "v1": 3,
+  "naive": 8
+ }
+}

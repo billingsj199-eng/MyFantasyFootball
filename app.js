@@ -8449,7 +8449,8 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     let s = lbl + ' matchup for ' + posLbl + ' (#' + m.rank + ' of ' + m.n + ', 1 = softest)';
     if (m.adj) s += ' — allows ' + m.raw.v + ' pts/gm (#' + m.raw.rank + ' raw, #' + m.adj.rank + ' schedule-adjusted, ' + m.games + ' gm)';
     if (typeof m.clayRk === 'number' && !(m.adj && m.w >= 1)) s += ' · Clay preseason ' + (pos === 'DST' ? 'offense' : 'defense') + ' #' + m.clayRk;
-    if (m.adj) s += ' · in-season weight ' + Math.round(m.w * 100) + '%';
+    if (m.lastSeason) s += ' · grade = ' + Math.round(m.w * 100) + '% this season, ' + (100 - Math.round(m.w * 100)) + '% last season, touchdown luck removed';
+    else if (m.adj) s += ' · in-season weight ' + Math.round(m.w * 100) + '%';
     else s += ' · preseason only until final games post';
     return s;
   };
@@ -8463,10 +8464,27 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const FP = window.FPA_2026;
     const fmt = (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
     const src = FP && FP.weeks || null;
-    if (!_wkOppBlendCache || _wkOppBlendCache.src !== src || _wkOppBlendCache.fmt !== fmt) _wkOppBlendCache = { src, fmt, pos: {} };
+    // The shared opponent grade (this season x last season, touchdown-neutral -
+    // _mtObservedFpa) once it is on; the Clay fade below is the fallback.
+    const G = (typeof window._mtObservedFpa === 'function') ? window._mtObservedFpa() : null;
+    if (!_wkOppBlendCache || _wkOppBlendCache.src !== src || _wkOppBlendCache.fmt !== fmt || _wkOppBlendCache.g !== G) _wkOppBlendCache = { src, fmt, g: G, pos: {} };
     if (_wkOppBlendCache.pos[pos]) return _wkOppBlendCache.pos[pos];
     const CG = window.CLAY_TEAM_GRADES_2026 || {};
     const A = T && T.pos[pos] || {};
+    if (pos !== 'K' && G && G.blended && G.z && G.z[pos] && G.w && G.w[pos]) {
+      const gr = Object.keys(G.z[pos]).map(t => ({ team: t, score: -G.z[pos][t] }));   // lower z = easier -> higher score = softer
+      gr.sort((a, b) => b.score - a.score);
+      const gn = gr.length, gThird = gn / 3, gOut = {};
+      gr.forEach((r, i) => {
+        const rank = i + 1, a = A[r.team];
+        gOut[r.team] = { diff: rank <= gThird ? 'easy' : rank > 2 * gThird ? 'hard' : 'medium', rank, n: gn,
+          games: a ? a.games : 0, w: G.w[pos][r.team], clayRk: null, lastSeason: true,
+          raw: a ? { v: a.v, rank: a.rank } : null,
+          adj: (a && typeof a.adjRank === 'number') ? { v: a.adjV, rank: a.adjRank } : null };
+      });
+      _wkOppBlendCache.pos[pos] = gOut;
+      return gOut;
+    }
     const teams = {};
     Object.keys(CG).forEach(t => { teams[t] = 1; });
     Object.keys(A).forEach(t => { teams[t] = 1; });
@@ -51500,10 +51518,33 @@ Rules:
   // prior season's number, best in-season weight .75 / .80 - the ramp below.
   // Kept out of OVERALL (that is the four skill positions).
   const _MT_FPA_SRC = _MT_FPA_POS.concat('DST');
+  // === THE OPPONENT GRADE (2026-10-05, Jack: "go and build it") ===
+  // Supersedes the ramp above whenever data/fpa_prior_2025.js is loaded. For each
+  // position the grade is  w x this season + (1 - w) x last season,
+  // w = games / (games + k), both sides schedule-adjusted and TOUCHDOWN-NEUTRAL
+  // (<POS>_tdn keys: actual TDs swapped for the league TD rate on the yards
+  // allowed; D/ST: defensive / return TDs out). The Clay preseason grades are
+  // out of the blend from the first final game. k = how many games last season
+  // is worth: after 4 games this season carries QB 57% / RB 50% / WR 40% /
+  // TE 67% / D/ST 67%, after 8 games 73 / 67 / 57 / 80 / 80.
+  // Backtest (scripts/research_opp_grade_schemes.py, 2016-25, settings picked
+  // leave-one-season-out, correlation with the next 4 weeks / rest of season):
+  // this form QB .157 / RB .202 / WR .154 / TE .173 / D/ST .378 against .137 /
+  // .194 / .113 / .169 / .357 for 100% in-season from week 4. Failed there:
+  // volume allowed as the input, pooling the QB number into WR / TE.
+  // Shared with the weekly OPP color (_wkOppBlendTable). Displayed points
+  // allowed (OPP PPG, tooltips) stay ACTUAL points.
+  // Off switches: window.MFF_OPP_PRIOR_OFF = true (old ramp + Clay),
+  // window.MFF_OPP_TDN_OFF = true (actual points on the in-season side).
+  // New season: build the prior with scripts/build_fpa_prior.py.
+  const _MT_FPA_PRIOR_K = { QB: 3, RB: 4, WR: 6, TE: 2, DST: 2 };
   let _mtFpaCache = null;
   function _mtObservedFpa() {
-    if (_mtFpaCache) return _mtFpaCache;
-    _mtFpaCache = { weeksPlayed: 0, share: 0, z: null };
+    const _src = (window.FPA_2026 && window.FPA_2026.weeks) || null;
+    if (_mtFpaCache && _mtFpaCache.src === _src) return _mtFpaCache;
+    _mtFpaCache = { weeksPlayed: 0, share: 0, z: null, src: _src };
+    const useTdn = window.MFF_OPP_TDN_OFF !== true;
+    let tdn = false;
     // 2026-09-14: prefer the COMPLETE-league table (data/fpa_2026.js, built by
     // scripts/pull_postgame_stats.py from EVERY Sleeper QB/RB/WR/TE in FINAL
     // games, half-PPR). The board-only sum below undercounts whenever a
@@ -51526,8 +51567,9 @@ Rules:
         const w = +wk, teams = FP.weeks[wk];
         Object.keys(teams).forEach(team => {
           _MT_FPA_SRC.forEach(pos => {
-            const v = teams[team][pos];
+            let v = teams[team][pos];
             if (typeof v !== 'number') return;
+            if (useTdn && typeof teams[team][pos + '_tdn'] === 'number') { v = teams[team][pos + '_tdn']; tdn = true; }
             const slot = acc[pos][team] || (acc[pos][team] = { pts: 0, wks: new Set() });
             slot.pts += v;
             slot.wks.add(w);
@@ -51581,6 +51623,31 @@ Rules:
       z[pos] = {};
       Object.keys(perGame).forEach(team => { z[pos][team] = -(perGame[team] - mu) / sd; });
     });
+    // Blend each position with last season's number (see THE OPPONENT GRADE above).
+    const PR = (window.MFF_OPP_PRIOR_OFF !== true && window.FPA_PRIOR_2025 && window.FPA_PRIOR_2025.pos) || null;
+    const wIn = {};
+    if (PR) _MT_FPA_SRC.forEach(pos => {
+      const pv = PR[pos];
+      if (!z[pos] || !pv) return;
+      const pt = Object.keys(pv).filter(t => typeof pv[t] === 'number');
+      if (pt.length < 24) return;
+      const mu = pt.reduce((a, t) => a + pv[t], 0) / pt.length;
+      const sd = Math.sqrt(pt.reduce((a, t) => a + (pv[t] - mu) * (pv[t] - mu), 0) / pt.length) || 1;
+      const k = _MT_FPA_PRIOR_K[pos], out = {}, all = {};
+      wIn[pos] = {};
+      pt.forEach(t => { all[t] = 1; });
+      Object.keys(z[pos]).forEach(t => { all[t] = 1; });
+      Object.keys(all).forEach(t => {
+        const zi = z[pos][t];
+        const zp = typeof pv[t] === 'number' ? -(pv[t] - mu) / sd : null;   // same sign: more allowed = easier = lower
+        const g = acc[pos][t] ? acc[pos][t].wks.size : 0;
+        const w = typeof zi !== 'number' ? 0 : zp == null ? 1 : g / (g + k);
+        out[t] = w * (typeof zi === 'number' ? zi : 0) + (1 - w) * (zp == null ? 0 : zp);
+        wIn[pos][t] = w;
+      });
+      z[pos] = out;
+    });
+    const blended = _MT_FPA_POS.every(p => wIn[p]);
     // OVERALL (K fallback + mixed views): mean of the four position z's.
     if (_MT_FPA_POS.every(p => z[p])) {
       z.OVERALL = {};
@@ -51590,7 +51657,15 @@ Rules:
         if (n) z.OVERALL[team] = s / n;
       });
     }
-    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share, z, adjusted: !!_mtFpaCache.adjusted };
+    // rank[pos][team]: 1 = softest grade (tooltips)
+    const rank = {};
+    _MT_FPA_SRC.forEach(pos => {
+      if (!z[pos]) return;
+      rank[pos] = {};
+      Object.keys(z[pos]).sort((a, b) => z[pos][a] - z[pos][b]).forEach((t, i) => { rank[pos][t] = i + 1; });
+    });
+    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share: blended ? 1 : share, z, adjusted: !!_mtFpaCache.adjusted,
+                                               blended, w: wIn, rank, tdn, src: _src };
     return _mtFpaCache;
   }
   window._mtObservedFpa = _mtObservedFpa; // console inspection / testing
@@ -51603,6 +51678,11 @@ Rules:
     if (_MT_FPA_SRC.indexOf(posKey) < 0) return null;
     const a = window._oppAllowedFor(abbr, posKey);
     if (!a || typeof a.v !== 'number') return null;
+    // Blended grade on: lead with the grade's own rank - it can sit far from the
+    // actual-points rank (one touchdown-heavy game, or a very different last season).
+    const f = _mtObservedFpa();
+    const gr = (f.blended && f.rank && f.rank[posKey]) ? f.rank[posKey][abbr] : null;
+    if (gr) return '#' + gr + ' softest vs ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', allows ' + a.v.toFixed(1) + '/gm';
     return 'allows ' + a.v.toFixed(1) + ' to ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', ' + _mtOrd(a.rank) + ' most';
   }
   // true while the preseason grades still carry weight in the blend

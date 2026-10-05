@@ -60682,10 +60682,44 @@ Rules:
   }
   window._udLiveDraft = _udLiveDraft;
 
+  // Field-average share of entries holding an advancing spot at the stage this
+  // draft is in — the baseline the ADVANCE RATE card prints under my own rate.
+  // Round 1 = adv / pool size; each later round multiplies its own adv / size
+  // on top (an Eliminator entry leading its Week 4 H2H is in the surviving
+  // 6/12 x 1/2 x 1/2 x 1/2 of the field). An eliminated entry is measured
+  // against the round the contest has reached by week — but only when later
+  // rounds are synced for that contest (lateSynced); with Round 1 pools alone
+  // every entry is judged on Round 1. null = a later round's pool size isn't
+  // on file.
+  function _udFieldAdvRate(L, lastWk, lateSynced) {
+    const rule = L.rule, rounds = rule.rounds || [];
+    const size1 = (L.teams && L.teams.length) || (rounds[0] && rounds[0].size) || 12;
+    let p = Math.min(1, rule.adv / size1);
+    if (!rule.multi || !L.h2h) return p;
+    let k = L.h2h.alive ? ((L.h2h.latest && L.h2h.latest.round) || 1) : 1;
+    if (!L.h2h.alive && lateSynced) rounds.forEach((rd, i) => { if (rd.week && rd.week[0] <= lastWk) k = i + 1; });
+    for (let i = 1; i < k; i++) {
+      const rd = rounds[i];
+      if (!rd || rd.final) break;
+      const row = L.h2h.rounds.find(r => r.round === i + 1);
+      const size = rd.size || (row && row.of) || null;
+      if (!size) return null;
+      p *= Math.min(1, rd.adv / size);
+    }
+    return p;
+  }
+
   // Portfolio roll-up over the (filtered) drafts: advance rate + $ in the money.
   function _udLiveSummary(data) {
     const drafts = data && data.drafts ? Object.values(data.drafts) : [];
-    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0, nMoney = 0;
+    let n = 0, nAdv = 0, winning = 0, rankSum = 0, nRank = 0, nField = 0, ptsSum = 0, nMoney = 0, fieldSum = 0, nFieldAvg = 0;
+    const lw = _udLiveWeekInfo();
+    const lastWk = lw.kicked.length ? Math.max.apply(null, lw.kicked) : 0;
+    const lateSynced = {};   // contest -> some entry has a later-round group linked
+    drafts.forEach(d => {
+      const L = _udLiveDraft(d);
+      if (L && L.h2h && L.h2h.rounds.length > 1) lateSynced[d.tournament || ''] = true;
+    });
     drafts.forEach(d => {
       const L = _udLiveDraft(d);
       if (!L) return;
@@ -60698,11 +60732,13 @@ Rules:
       ptsSum += L.myPts || 0;
       if (L.inAdv) nAdv++;
       if (L.myRank) { rankSum += L.myRank; nRank++; }
+      const fa = _udFieldAdvRate(L, lastWk, !!lateSynced[d.tournament || '']);
+      if (fa != null) { fieldSum += fa; nFieldAvg++; }
     });
-    const lw = _udLiveWeekInfo();
     return {
       n, nAdv, nField, nMoney,
       advRate: n ? nAdv / n : null,
+      fieldAdv: nFieldAvg ? fieldSum / nFieldAvg : null,
       groups: window._udRoundGroups ? Object.keys(window._udRoundGroups).length : 0,
       winning: Math.round(winning * 100) / 100,
       avgRank: nRank ? rankSum / nRank : null,
@@ -60721,10 +60757,41 @@ Rules:
     if (!sum || !sum.n) {
       return { val: '—', sub: sum && sum.nField ? 'no games scored yet' : 'sync from Underdog to see the field' };
     }
-    return {
-      val: Math.round(100 * sum.advRate) + '%',
-      sub: sum.nAdv + ' of ' + sum.n + ' in advance spots' + (sum.weeks ? ' · thru W' + sum.weeks : '')
-    };
+    let sub = sum.nAdv + ' of ' + sum.n + ' in advance spots' + (sum.weeks ? ' · thru W' + sum.weeks : '');
+    if (sum.fieldAdv != null) {
+      const edge = 100 * (sum.advRate - sum.fieldAdv);
+      const ec = edge >= 0.05 ? '#22c55e' : edge <= -0.05 ? '#ef4444' : 'var(--text2)';
+      sub += '<div title="Field average for these drafts — the share of all entries holding an advancing spot — and how far your rate sits above or below it" style="margin-top:2px">field avg <span style="color:var(--text);font-weight:600">' + (100 * sum.fieldAdv).toFixed(1) + '%</span> · <span style="color:' + ec + ';font-weight:600">' + (edge >= 0 ? '+' : '') + edge.toFixed(1) + '</span></div>';
+    }
+    return { val: Math.round(100 * sum.advRate) + '%', sub };
+  }
+
+  // EXPOSURE tab ADVANCING toggle (Jack 2026-10-05): exposure across only the
+  // drafts that currently sit in an advancing spot — the same live test the
+  // ADVANCE RATE card counts. The scope is what every exposure surface (rows,
+  // expand panel, combo search) reads: the data, the sorted player list and
+  // the draft count, for either the whole filtered portfolio or that subset.
+  window._udExpAdvOnly = false;
+  let _udExpAdvCache = null, _udExpAdvShown = null;
+  function _udExpScope(data, playerList, numDrafts) {
+    data = data || window._udData;
+    if (!data) return null;
+    if (!window._udExpAdvOnly) {
+      return { adv: false, data, playerList: playerList || window._udPlayerList || [],
+               numDrafts: numDrafts != null ? numDrafts : (window._udNumDrafts || data.numDrafts) };
+    }
+    const drafts = {};
+    Object.entries(data.drafts).forEach(([id, d]) => {
+      const L = _udLiveDraft(d);
+      if (L && L.fieldComplete && L.scored && L.advKnown !== false && L.inAdv) drafts[id] = d;
+    });
+    const sig = Object.keys(drafts).join(',');
+    if (!_udExpAdvCache || _udExpAdvCache.all !== data || _udExpAdvCache.sig !== sig) {
+      const sub = _udRebuildPlayers(drafts);
+      _udExpAdvCache = { adv: true, sig, all: data, data: sub, numDrafts: sub.numDrafts,
+                         playerList: Object.entries(sub.players).sort((a, b) => b[1].exposure - a[1].exposure) };
+    }
+    return _udExpAdvCache;
   }
   function _udKpiWinHtml(sum) {
     if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
@@ -60747,6 +60814,15 @@ Rules:
       const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
       set('udKpiVal_adv', adv.val); set('udKpiSub_adv', adv.sub);
       set('udKpiVal_win', win.val); set('udKpiSub_win', win.sub);
+      // ADVANCING exposure view: repaint only when the set of advancing drafts moved.
+      if (window._udExpAdvOnly) {
+        const expList = document.getElementById('udExposureList');
+        const sc = _udExpScope(data);
+        if (expList && sc && sc.sig !== _udExpAdvShown) {
+          const inp = document.getElementById('udExpFilter');
+          expList.innerHTML = _udExpListHtml(inp ? inp.value : '', window._udExpPosFilter || 'ALL', sc);
+        }
+      }
       const teamsTab = document.getElementById('udTab_teams');
       if (window._udTeamsBuilt && teamsTab && teamsTab.style.display !== 'none') {
         const open = new Set();
@@ -62233,7 +62309,7 @@ Rules:
     const _kpiAdv = _udKpiAdvHtml(_liveSum), _kpiWin = _udKpiWinHtml(_liveSum);
     const cards = [
       { label: 'DRAFTS', val: numDrafts, sub: _draftsSub, subTitle: _tourneyFull, gloss: 'Total number of drafts in your imported portfolio across the selected phase + contest filters.' },
-      { id: 'adv', label: 'ADVANCE RATE', val: _kpiAdv.val, sub: _kpiAdv.sub, color: '#22c55e', gloss: 'LIVE — share of your synced pools where you currently sit in an advancing spot (top 2 of 12 in BBM / Puppy-style contests, top 6 in The Eliminator\'s Week 1). Standings are computed from every team\'s best-ball lineup on real weekly stats, including games in progress.' },
+      { id: 'adv', label: 'ADVANCE RATE', val: _kpiAdv.val, sub: _kpiAdv.sub, color: '#22c55e', gloss: 'LIVE — share of your synced pools where you currently sit in an advancing spot (top 2 of 12 in BBM / Puppy-style contests, top 6 in The Eliminator\'s Week 1). Standings are computed from every team\'s best-ball lineup on real weekly stats, including games in progress. FIELD AVG underneath is the baseline for the same drafts — the share of all entries that hold an advancing spot (2 of 12 = 16.7% in a BBM pool) — with your edge over it.' },
       { label: 'INVESTED', val: '$' + data.totalInvestment.toFixed(0), sub: '$' + (data.totalInvestment / numDrafts).toFixed(2) + ' avg entry', gloss: 'Total dollars invested across all drafts in the current filter. Subtext shows your average entry fee.' },
       { id: 'win', label: 'WINNING', val: _kpiWin.val, sub: _kpiWin.sub, color: '#22c55e', gloss: 'LIVE — what your entries would pay if the round ended today: the guaranteed min-cash for every pool where you hold an advancing spot (BBM VII $25, The Puppy $5, other contests = entry fee back; The Eliminator pays nothing until Round 3).' }
     ];
@@ -62274,15 +62350,17 @@ Rules:
     // Position filter buttons
     html += `<div style="display:flex;gap:3px">`;
     const posFilterColors = { ALL: 'var(--accent)', QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-    ['ALL','QB','RB','WR','TE'].forEach((pos, pi) => {
-      const active = pi === 0;
+    const _expPos = posFilterColors[window._udExpPosFilter] ? window._udExpPosFilter : 'ALL';
+    ['ALL','QB','RB','WR','TE'].forEach(pos => {
+      const active = pos === _expPos;
       html += `<button onclick="window._udFilterExposurePos('${pos}')" data-udposfilter="${pos}" style="padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? posFilterColors[pos] : 'var(--border)'};background:${active ? posFilterColors[pos] : 'var(--surface)'};color:${active ? (pos === 'ALL' ? '#000' : '#fff') : 'var(--text2)'}">${pos}</button>`;
     });
     html += `</div>`;
+    html += `<button id="udExpAdvBtn" onclick="window._udToggleExpAdv()" title="Show exposure across only the teams currently in an advancing spot (the same live standings as the ADVANCE RATE card)" style="${_udExpAdvBtnStyle(window._udExpAdvOnly)}">ADVANCING</button>`;
     html += `<input id="udExpFilter" oninput="window._udFilterExposure(this.value)" placeholder="Filter… or &quot;maye + aj brown&quot; for stacks" title="Type one name to filter the list, or combine names with + (or a comma) to see every draft that rosters ALL of them" style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem;font-family:'DM Sans',sans-serif;width:150px;flex:1;min-width:100px;max-width:260px">`;
     html += `</div>`;
     html += `<div id="udExposureList">`;
-    html += _udRenderExposureRows(playerList, numDrafts, '', 'ALL');
+    html += _udExpListHtml('', _expPos, _udExpScope(data, playerList, numDrafts));
     html += `</div>`;
     html += `</div>`;
 
@@ -63387,7 +63465,9 @@ Rules:
     return html;
   }
 
-  function _udRenderExposureRows(playerList, numDrafts, filter, posFilter) {
+  // allPlayers (ADVANCING view only) = the whole portfolio's player aggregates,
+  // so each row can say how many of the player's teams are the advancing ones.
+  function _udRenderExposureRows(playerList, numDrafts, filter, posFilter, allPlayers) {
     let filtered = playerList;
     if (filter) filtered = filtered.filter(([name]) => name.toLowerCase().includes(filter.toLowerCase()));
     if (posFilter && posFilter !== 'ALL') filtered = filtered.filter(([, info]) => info.pos === posFilter);
@@ -63417,7 +63497,8 @@ Rules:
       html += `<div style="font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span onclick="event.stopPropagation();window._mtOpenCardByName('${String(name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="Open player card — click anywhere else on the row to expand drafts" style="cursor:pointer">${_esc(name)}</span> <span style="font-weight:400;color:var(--text2);font-size:.65rem">${info.team || ''}</span></div>`;
       html += `<div style="display:flex;align-items:center;gap:6px;margin-top:2px">`;
       html += `<div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px"></div></div>`;
-      html += `<span style="font-size:.65rem;color:var(--text2)">Avg pick: ${Math.round(info.avgPick)} (${info.minPick}–${info.maxPick})</span>`;
+      const allInfo = allPlayers ? allPlayers[name] : null;
+      html += `<span style="font-size:.65rem;color:var(--text2)">Avg pick: ${Math.round(info.avgPick)} (${info.minPick}–${info.maxPick})${allInfo ? ` · <span style="color:#22c55e">${info.count} of ${allInfo.count} advancing</span>` : ''}</span>`;
       html += `</div>`;
       html += `</div>`;
       html += `<div style="text-align:right;min-width:50px">`;
@@ -63464,7 +63545,8 @@ Rules:
   // drafts). The CSV import is the user's portfolio export, so every pick in a draft
   // belongs to the user — co-drafts are simply the other 17 picks per draft.
   function _udBuildExpRowPanel(name) {
-    const data = window._udData;
+    const scope = _udExpScope();
+    const data = scope && scope.data;
     if (!data) return `<div style="color:var(--text2);font-size:.7rem">Portfolio data not loaded.</div>`;
     // Resolve market ADP for this player once (Underdog BB preferred, consensus fallback).
     let marketAdp = null;
@@ -63517,7 +63599,7 @@ Rules:
     h += `</div>`;
 
     // === DRAFTS list ===
-    h += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">DRAFTS WITH THIS PLAYER (${totalDraftsWithPlayer})</div>`;
+    h += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">${scope.adv ? 'ADVANCING ' : ''}DRAFTS WITH THIS PLAYER (${totalDraftsWithPlayer})</div>`;
     // Column layout: tournament | slot | pick | (adp+delta if available) | round
     const _withAdp = marketAdp != null;
     const _cols = _withAdp ? '1fr auto auto auto auto auto' : '1fr auto auto auto';
@@ -63710,10 +63792,37 @@ Rules:
     // position chips — they're a draft list, not a player list)
     const textFilter = document.getElementById('udExpFilter') ? document.getElementById('udExpFilter').value : '';
     const el = document.getElementById('udExposureList');
-    if (el && window._udPlayerList) {
-      const combo = _udComboSearchHtml(textFilter);
-      el.innerHTML = combo != null ? combo : _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, textFilter, pos);
+    if (el && window._udPlayerList) el.innerHTML = _udExpListHtml(textFilter, pos);
+  };
+
+  // The exposure list body for the current scope (whole portfolio, or the
+  // ADVANCING subset): combo-search result or the player rows.
+  function _udExpListHtml(val, pos, scope) {
+    scope = scope || _udExpScope();
+    if (!scope) return '';
+    _udExpAdvShown = scope.adv ? scope.sig : null;
+    let head = '';
+    if (scope.adv) {
+      if (!scope.numDrafts) {
+        return `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">No teams in an advancing spot right now. This view needs the full field synced from Underdog and at least one scored week.</div>`;
+      }
+      head = `<div style="padding:2px 4px 8px;font-size:.68rem;color:var(--text2)"><span style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#22c55e">ADVANCING TEAMS</span> — ${scope.numDrafts} of ${scope.all.numDrafts} drafts · exposure is the share of your advancing teams</div>`;
     }
+    const combo = _udComboSearchHtml(val, scope);
+    return head + (combo != null ? combo
+      : _udRenderExposureRows(scope.playerList, scope.numDrafts, val, pos, scope.adv ? scope.all.players : null));
+  }
+
+  function _udExpAdvBtnStyle(on) {
+    return `padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${on ? '#22c55e' : 'var(--border)'};background:${on ? '#22c55e' : 'var(--surface)'};color:${on ? '#fff' : 'var(--text2)'}`;
+  }
+  window._udToggleExpAdv = function() {
+    window._udExpAdvOnly = !window._udExpAdvOnly;
+    const btn = document.getElementById('udExpAdvBtn');
+    if (btn) btn.style.cssText = _udExpAdvBtnStyle(window._udExpAdvOnly);
+    const inp = document.getElementById('udExpFilter');
+    const el = document.getElementById('udExposureList');
+    if (el && window._udData) el.innerHTML = _udExpListHtml(inp ? inp.value : '', window._udExpPosFilter || 'ALL');
   };
 
   // Combo search: "drake maye + aj brown" (separators: + , &) lists every
@@ -63721,19 +63830,21 @@ Rules:
   // resolves to the highest-exposure portfolio player it substring-matches;
   // rows open the draft-roster popup (_vpOpenDraft). Returns null when the
   // query isn't a combo so the caller falls back to the normal name filter.
-  function _udComboSearchHtml(val) {
+  function _udComboSearchHtml(val, scope) {
     const raw = String(val || '');
     if (!/[+,&]/.test(raw)) return null;
     const terms = raw.split(/[+,&]/).map(t => t.trim().toLowerCase()).filter(t => t.length >= 2);
     if (terms.length < 2) return null;
-    const data = window._udData;
+    scope = scope || _udExpScope();
+    const data = scope && scope.data;
     if (!data || !data.drafts || !data.players) return null;
+    const advWord = scope.adv ? 'advancing ' : '';
     const names = Object.keys(data.players);
     const matched = [];
     for (const t of terms) {
       const hits = names.filter(n => n.toLowerCase().includes(t));
       if (!hits.length) {
-        return `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">No player in your portfolio matches &ldquo;${_esc(t)}&rdquo;.</div>`;
+        return `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">No player ${scope.adv ? 'on your advancing teams' : 'in your portfolio'} matches &ldquo;${_esc(t)}&rdquo;.</div>`;
       }
       hits.sort((a, b) => (data.players[b].exposure || 0) - (data.players[a].exposure || 0));
       if (!matched.includes(hits[0])) matched.push(hits[0]);
@@ -63745,12 +63856,12 @@ Rules:
       (d.picks || []).forEach(p => { if (p && p.name) byName[p.name] = p.pick; });
       if (matched.every(n => byName[n] != null)) rows.push({ did, d, picks: matched.map(n => byName[n]) });
     });
-    const numDrafts = window._udNumDrafts || Object.keys(data.drafts).length;
+    const numDrafts = scope.numDrafts || Object.keys(data.drafts).length;
     const pct = numDrafts ? Math.round(1000 * rows.length / numDrafts) / 10 : 0;
     let html = `<div style="padding:8px 4px 10px;font-size:.75rem;color:var(--text)">` +
       `<span style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--accent)">TEAMS WITH</span> ` +
       matched.map(n => `<span style="font-weight:600">${_esc(n)}</span>`).join('<span style="color:var(--text2)"> + </span>') +
-      ` <span style="color:var(--text2)">— ${rows.length} of ${numDrafts} draft${numDrafts === 1 ? '' : 's'} (${pct}%)</span></div>`;
+      ` <span style="color:var(--text2)">— ${rows.length} of ${numDrafts} ${advWord}draft${numDrafts === 1 ? '' : 's'} (${pct}%)</span></div>`;
     if (!rows.length) {
       html += `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">No draft has all of them together.</div>`;
       return html;
@@ -63775,9 +63886,7 @@ Rules:
     if (!window._udPlayerList) return;
     const el = document.getElementById('udExposureList');
     if (!el) return;
-    const combo = _udComboSearchHtml(val);
-    el.innerHTML = combo != null ? combo
-      : _udRenderExposureRows(window._udPlayerList, window._udNumDrafts, val, window._udExpPosFilter || 'ALL');
+    el.innerHTML = _udExpListHtml(val, window._udExpPosFilter || 'ALL');
   };
 
   window._udSwitchTab = function(tabId) {

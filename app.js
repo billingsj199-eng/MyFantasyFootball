@@ -15197,7 +15197,8 @@ function openPlayerCard(d, ctxMode) {
           const _arrow = r.home ? 'vs' : '@';
           const _sub = [];
           if (r.isDst) {
-            if (r.clayOffRk) _sub.push('Clay O#' + r.clayOffRk);
+            if (typeof r.dstAllowed === 'number') _sub.push('allows ' + r.dstAllowed.toFixed(1) + ' to D/STs');
+            if (r.clayOffRk && !(typeof r.dstAllowed === 'number' && r.clayLive === false)) _sub.push('Clay O#' + r.clayOffRk);
             if (typeof r.oppImplied === 'number') _sub.push(r.oppImplied.toFixed(1) + ' opp impl');
           } else {
             if (r.posUnits) _sub.push(r.posUnits);
@@ -51467,10 +51468,19 @@ Rules:
   // Preseason: no 2026 rows → share 0 → behavior identical to today.
   // fpts basis (half-PPR) doesn't matter — the signal is z-scored per week.
   const _MT_FPA_POS = ['QB', 'RB', 'WR', 'TE'];
+  // D/ST (Jack 2026-10-05: "for dst can we now use in season grades"): the DST
+  // key on an FPA row is what the opposing D/ST scored AGAINST that team's
+  // offense, so its z replaces the Clay preseason offense grade on the same
+  // ramp. 2018-25 check (offense's D/ST points allowed through week N vs the
+  // rest of its season): r .43 after 4 weeks / .45 after 5 against .24 for the
+  // prior season's number, best in-season weight .75 / .80 - the ramp below.
+  // Kept out of OVERALL (that is the four skill positions).
+  const _MT_FPA_SRC = _MT_FPA_POS.concat('DST');
   let _mtFpaCache = null;
   function _mtObservedFpa() {
     if (_mtFpaCache) return _mtFpaCache;
     _mtFpaCache = { weeksPlayed: 0, share: 0, z: null };
+    const allowed = {};   // pos -> team -> raw points allowed per game (tooltips)
     // 2026-09-14: prefer the COMPLETE-league table (data/fpa_2026.js, built by
     // scripts/pull_postgame_stats.py from EVERY Sleeper QB/RB/WR/TE in FINAL
     // games, half-PPR). The board-only sum below undercounts whenever a
@@ -51478,7 +51488,7 @@ Rules:
     // because Cooper Rush isn't on the board; NE 0.5 because Drew Lock isn't).
     const FP = window.FPA_2026;
     const acc = {};
-    _MT_FPA_POS.forEach(p => { acc[p] = {}; });
+    _MT_FPA_SRC.forEach(p => { acc[p] = {}; });
     // SCHEDULE-ADJUSTED (Jack 2026-09-30: "adjust for SOS"): a defense that gave up
     // 30 to the Bills is not as soft as one that gave up 30 to the Panthers. Same
     // additive fit the weekly OPP color uses (_wkSchedAdjust: points = league avg +
@@ -51486,13 +51496,13 @@ Rules:
     // rank reads the DEFENSE effect instead of raw points allowed. Needs the
     // offense on every row, so only the FPA_2026 path (not the board-only fallback).
     const games = {};
-    _MT_FPA_POS.forEach(p => { games[p] = []; });
+    _MT_FPA_SRC.forEach(p => { games[p] = []; });
     let maxWk = 0;
     if (FP && FP.weeks && Object.keys(FP.weeks).length) {
       Object.keys(FP.weeks).forEach(wk => {
         const w = +wk, teams = FP.weeks[wk];
         Object.keys(teams).forEach(team => {
-          _MT_FPA_POS.forEach(pos => {
+          _MT_FPA_SRC.forEach(pos => {
             const v = teams[team][pos];
             if (typeof v !== 'number') return;
             const slot = acc[pos][team] || (acc[pos][team] = { pts: 0, wks: new Set() });
@@ -51510,7 +51520,7 @@ Rules:
       const YEAR = '2026';
       for (const name in WS) {
         const rec = WS[name];
-        if (!rec || !acc[rec.pos] || !rec.seasons) continue;
+        if (!rec || _MT_FPA_POS.indexOf(rec.pos) < 0 || !rec.seasons) continue;
         const rows = rec.seasons[YEAR];
         if (!rows) continue;
         for (let i = 0; i < rows.length; i++) {
@@ -51530,12 +51540,13 @@ Rules:
     // EASIER, and in this system lower z = easier — so invert the sign
     // (mirrors zO = -(oppg − mu)/sd in the preseason priors).
     const z = {};
-    _MT_FPA_POS.forEach(pos => {
+    _MT_FPA_SRC.forEach(pos => {
       const perGame = {};
       Object.keys(acc[pos]).forEach(team => {
         const s = acc[pos][team];
         if (s.wks.size >= 1) perGame[team] = s.pts / s.wks.size;
       });
+      allowed[pos] = Object.assign({}, perGame);
       // swap raw points allowed for the schedule-adjusted number when every row carried its offense
       const S = (typeof window._wkSchedAdjust === 'function' && games[pos].length && window.MFF_SOS_RAW_FPA !== true)
         ? window._wkSchedAdjust(games[pos]) : null;
@@ -51557,17 +51568,27 @@ Rules:
         if (n) z.OVERALL[team] = s / n;
       });
     }
-    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share, z, adjusted: !!_mtFpaCache.adjusted };
+    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share, z, adjusted: !!_mtFpaCache.adjusted, allowed };
     return _mtFpaCache;
   }
   window._mtObservedFpa = _mtObservedFpa; // console inspection / testing
+  // Raw D/ST points the opposing offense has given up per game (tooltips); null
+  // until the in-season share is on.
+  function _mtDstAllowed(abbr) {
+    const fpa = _mtObservedFpa();
+    const v = fpa.share && fpa.z && fpa.z.DST && fpa.allowed && fpa.allowed.DST ? fpa.allowed.DST[abbr] : null;
+    return typeof v === 'number' ? v : null;
+  }
 
   function _mtMatchupZ(oppRec, posKey) {
-    if (posKey === 'DST') return oppRec.zOff; // DST matchup = opposing OFFENSE — FPA doesn't apply
-    const prior = (posKey === 'K' || posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
+    // DST matchup = the opposing OFFENSE: Clay preseason offense grade, replaced
+    // in-season by what D/STs have scored against it (z.DST, same ramp).
+    const isDst = posKey === 'DST';
+    const prior = isDst ? oppRec.zOff
+                : (posKey === 'K' || posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
     const fpa = _mtObservedFpa();
     if (!fpa.share || !fpa.z) return prior;
-    const zMap = fpa.z[(posKey === 'K' || posKey === 'OVERALL') ? 'OVERALL' : posKey];
+    const zMap = fpa.z[isDst ? 'DST' : (posKey === 'K' || posKey === 'OVERALL') ? 'OVERALL' : posKey];
     const zObs = zMap ? zMap[oppRec.abbr] : undefined;
     if (typeof zObs !== 'number') return prior;
     return prior * (1 - fpa.share) + zObs * fpa.share;
@@ -51835,7 +51856,7 @@ Rules:
             clayDefGr: oppRec.clay ? oppRec.clay.defGr : null,
             clayOffRk: oppRec.clay ? oppRec.clay.offRk : null,
             posUnits, gameTotal: gt, teamSpread, impliedTotal: impliedTot,
-            oppImplied,
+            oppImplied, dstAllowed: isDstView ? _mtDstAllowed(oppRec.abbr) : null,
           });
         }
       });
@@ -51932,7 +51953,8 @@ Rules:
         if (isDstView) {
           // A DST's matchup is the opposing OFFENSE — show offense rank and
           // the points that offense is priced to score.
-          if (o.clayOffRk) sub.push('Clay O#' + o.clayOffRk);
+          if (typeof o.dstAllowed === 'number') sub.push('allows ' + o.dstAllowed.toFixed(1) + ' to D/STs');
+          if (o.clayOffRk && !(typeof o.dstAllowed === 'number' && _mtObservedFpa().share >= 1)) sub.push('Clay O#' + o.clayOffRk);
           if (typeof o.oppImplied === 'number') sub.push(o.oppImplied.toFixed(1) + ' opp impl');
         } else {
           if (o.posUnits) sub.push(o.posUnits);
@@ -52061,6 +52083,8 @@ Rules:
         opp: d.g.opp, home: d.g.home,
         gameTotal: d.gt, teamSpread: d.sp, impliedTotal: d.it,
         oppImplied: d.oppIt,
+        dstAllowed: isDstView ? _mtDstAllowed(d.oppRec.abbr) : null,
+        clayLive: _mtObservedFpa().share < 1,   // false once the preseason grade no longer counts
         clayDefRk: c.defRk || null, clayOffRk: c.offRk || null,
         posUnits, oppg: d.oppRec.dst.oppg,
       };

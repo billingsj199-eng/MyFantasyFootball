@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-05-vor" as="script">
+<link rel="preload" href="app.js?v=2026-10-05-vor2" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1430,6 +1430,7 @@ CLEAR ALL
 <div class="version-tabs">
 <button class="version-tab active" data-version="consensus">CONSENSUS</button>
 <button class="version-tab" data-version="jacks">JACK'S</button>
+<button class="version-tab" data-version="sims" title="Sim VOR board — every player ordered by rest-of-season value over replacement from the Sim Lab projection (points above the replacement player at his position, added up over the games he is projected to play). Set the lineup or pick a synced league in the VOR bar; WEEKLY ranks this week only.">SIM VOR</button>
 <button class="version-tab" data-version="mine">MY RANKINGS</button>
 </div>
 <span class="filter-row-label">Format</span>
@@ -1576,7 +1577,7 @@ tr:hover .watch-star{opacity:.55}
 <div class="career-log-toggle" id="rankingStatModeToggle">
 <button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / season PPG / L4 PPG)">FANTASY</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
-<button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points above the replacement-level player at the position in a standard 12-team league (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST), and the overall VOR rank. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points per game above the replacement-level player at the position, the rest-of-season total over the games he is projected to play, and those games. Standard 12-team lineup by default; set your own or pick a synced league in the VOR bar. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="xfp" title="Expected fantasy points view — actual PPG, expected PPG from usage (every target by completion probability and expected YAC, every carry by field position, league TD rates; QBs net expected INTs), points over expected, and the TD-luck part of the gap. WEEKLY board shows the active week once it has been played.">xFP</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
@@ -1602,6 +1603,25 @@ tr:hover .watch-star{opacity:.55}
 <span id="rnkAdpHintText">Additional ADP sources require a Premium account.</span>
 </div>
 </div><!-- /viewOptsWrap -->
+
+<!-- VOR bar: league picker + lineup + WAIVERS for the SIM VOR board and the
+     VOR stats view (render() sets body.vor-bar-on; built by _vorBarRender in
+     app.js, state in localStorage mff_vor_fmt). -->
+<div class="vor-bar" id="vorBar"></div>
+<style>
+.vor-bar{display:none;align-items:center;gap:8px 10px;flex-wrap:wrap;margin:2px 2rem 6px;padding:5px 10px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.05);font-family:'DM Sans',sans-serif}
+body.vor-bar-on .vor-bar{display:flex}
+.vor-bar-lbl{font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.2px;color:var(--accent);white-space:nowrap}
+.vor-bar select{max-width:190px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer}
+.vor-num{display:inline-flex;align-items:center;gap:4px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2);white-space:nowrap}
+.vor-num input{width:38px;padding:2px 3px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;text-align:center}
+.vor-bar-x{font-size:.66rem;font-weight:600;color:var(--accent);white-space:nowrap}
+.vor-bar .vor-waiver-btn{padding:.25rem .75rem;font-size:.65rem}
+.vor-bar .vor-waiver-btn.on{background:rgba(34,197,94,.16);border-color:#22c55e;color:#22c55e}
+.vor-reset{margin-left:auto;padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.58rem;letter-spacing:.6px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
+.vor-reset:hover{color:var(--text);border-color:var(--text2)}
+@media (max-width:600px){.vor-bar{margin:2px 10px 6px;gap:6px 8px}.vor-reset{margin-left:0}}
+</style>
 
 <!-- Saved view presets: chips render here only when presets exist
      (_renderViewPresets in app.js; SAVE VIEW lives in the MORE menu). -->
@@ -5952,7 +5972,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-05-vor"></script>
+<script defer src="app.js?v=2026-10-05-vor2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

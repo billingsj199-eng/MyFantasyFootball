@@ -808,7 +808,9 @@ let currentVersion = 'consensus';
 const versionBoards = {
   consensus: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
   jacks: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
-  mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
+  mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
+  // SIM VOR board: computed from the Sim Lab projection (_simsBoardEnsure) — read-only, never saved.
+  sims: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
 };
 // MAIN-world content scripts (page-bridge.js) can't reach top-level const via window.X — attach explicitly.
 window.versionBoards = versionBoards;
@@ -831,12 +833,14 @@ function _clonePosTierCtrs(src) {
 const versionTiers = {
   consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
-  mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
+  mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
+  sims: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
 };
 const versionTierCounters = {
   consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
-  mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
+  mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
+  sims: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
 // DEVY board tiers (2026-09-30): the devy list is one board shared by both
 // dynasty formats, so its tiers live in their own `devy` slot per version
@@ -845,7 +849,7 @@ const versionTierCounters = {
 // DEVY (whole board, overall devy rank) + one per class view, DEVY_2027 /
 // DEVY_2028 (class rank — like the position views; created on demand by
 // _devyTierKey). Saved as `<ver>.devy` (see _devySerialize).
-['consensus', 'jacks', 'mine'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
+['consensus', 'jacks', 'mine', 'sims'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
 // MAIN-world content scripts read tier boundaries too (extension jacks-boards
 // bridge, board-gating Phase B) — attach like versionBoards above.
 window.versionTiers = versionTiers;
@@ -1173,6 +1177,7 @@ let tiers = versionTiers[currentVersion].redraft.ALL;
 let tierCounter = 0;
 
 function syncMode() {
+  if (currentVersion === 'sims') _simsBoardEnsure();   // computed board — keep it current
   board = versionBoards[currentVersion][currentMode];
   tiers = versionTiers[_tierVer()][_tierMode()][_tierPK()];
   tierCounter = versionTierCounters[_tierVer()][_tierMode()][_tierPK()];
@@ -1217,7 +1222,7 @@ function _isDevyPK(pk) { return typeof pk === 'string' && pk.indexOf('DEVY') ===
 function _devyTierKey() {
   const c = window._devyClass;
   const k = (c && c !== 'ALL') ? 'DEVY_' + c : 'DEVY';
-  ['consensus', 'jacks', 'mine'].forEach(v => {
+  ['consensus', 'jacks', 'mine', 'sims'].forEach(v => {
     if (!versionTiers[v].devy[k]) { versionTiers[v].devy[k] = []; versionTierCounters[v].devy[k] = 0; }
   });
   return k;
@@ -1231,7 +1236,7 @@ function _tierVer(pk) { return (_isDevyPK(pk || _tierPK()) && typeof _devySrcVer
 // Check if current user can edit the active version
 function canEdit() {
   if (typeof window._authCurrentUser !== 'undefined' && !window._authCurrentUser) return false;
-  if (currentVersion === 'consensus') return false;
+  if (currentVersion === 'consensus' || currentVersion === 'sims') return false;
   if (currentVersion === 'mine') return true;
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
@@ -1841,6 +1846,7 @@ function _devyIsCustom(ver) {
 // Version whose devy board is DISPLAYED: "My Rankings" mirrors Jack's until
 // the user's first devy edit (same idea as the mine-follows-Jack's seeding).
 function _devySrcVer() {
+  if (currentVersion === 'sims') return 'consensus';   // no sims for prospects — the devy pill shows the (free) consensus board
   return (currentVersion === 'mine' && !_devyIsCustom('mine')) ? 'jacks' : currentVersion;
 }
 // First edit on a mirrored "My Rankings" devy board: pin the order on screen
@@ -3640,7 +3646,7 @@ function _viewPresetsStore(list) {
   try { localStorage.setItem('mff_view_presets', JSON.stringify(list)); } catch (e) {}
 }
 function _viewPresetDefaultName(s) {
-  const ver = { consensus: 'Consensus', jacks: "Jack's", mine: 'Mine' }[s.version] || s.version;
+  const ver = { consensus: 'Consensus', jacks: "Jack's", mine: 'Mine', sims: 'Sim VOR' }[s.version] || s.version;
   const mode = { redraft: 'Redraft', superflex: 'SFLEX', dynasty: 'Dyn 1QB', dynastysf: 'Dyn SF', weekly: 'Weekly', bestball: 'Best Ball' }[s.mode] || s.mode;
   const sc = { ppr: 'PPR', half: 'Half', std: 'STD' }[s.scoring] || s.scoring;
   const parts = [ver, mode, sc];
@@ -4427,6 +4433,8 @@ function getFiltered(applyTopN) {
   // the BOTTOM of every secondary sort (window._rankBelowCut, consumed after
   // the sort below, by the table's divider row and by the tier-card view) —
   // sorting by a metric shouldn't float 300 irrelevant names to the top.
+  // SIM VOR board is computed — rebuild it if the VOR table moved since the last paint.
+  if (currentVersion === 'sims' && _simsBoardEnsure()) { syncMode(); renumber(); }
   let _boardSrc = board;
   window._rankBelowCut = null;
   if (typeof window._boardCutoffFor === 'function') {
@@ -4466,6 +4474,14 @@ function getFiltered(applyTopN) {
   let f = _boardSrc.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
+  // SIM VOR board lists only players the sim projects; WAIVERS narrows it to
+  // players nobody in the picked league rosters.
+  if (currentVersion === 'sims') {
+    const _vt = _vorTable();
+    if (_vt) f = f.filter(d => _vt.map.has(d));
+    const _ros = _vorRostered();
+    if (_ros) f = f.filter(d => !_ros.has(d));
+  }
   // Out-for-season players: hidden from season formats (redraft / bestball /
   // superflex / weekly) but untouched in dynasty modes. A typed search still
   // surfaces them so their card (and the admin unflag toggle on it) stays
@@ -4555,7 +4571,7 @@ function getFiltered(applyTopN) {
     const _wkStat = currentMode === 'weekly';
     // ADP comparison view: missing ADPs sort to the bottom in the (default) ascending order.
     const _smAdp = (d, src) => { const v = _adpBySource(d, src); return v == null ? 9999 : v; };
-    // VOR view: PPG / VOR sort high-first, VOR rank low-first; no sim row sinks.
+    // VOR view: PPG / VOR / games sort high-first, the weekly VOR rank low-first; no sim row sinks.
     const _vorSort = (d, k) => { const e = _vorFor(d); return e ? e[k] : (k === 'rk' ? 9999 : -Infinity); };
     f.sort((a, b) => {
       let av, bv;
@@ -4567,12 +4583,12 @@ function getFiltered(applyTopN) {
         case 'round': av = a.round; bv = b.round; break;
         case 'pts': if (_sm === 'vor') { av = _vorSort(a, 'v'); bv = _vorSort(b, 'v'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
         case 'fpts25': if (_sm === 'vor') { av = _vorSort(a, 'vor'); bv = _vorSort(b, 'vor'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
-        case 'l4ppg': if (_sm === 'vor') { av = _vorSort(a, 'rk'); bv = _vorSort(b, 'rk'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'l4ppg': if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'yrr': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
         case 'jm': if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -6784,6 +6800,8 @@ function render() {
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');
+  // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
+  document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor');
   // REDRAFT (rest-of-season board): Team Total column = rest-of-season average
   // implied team total, FANTASY stats view only (CSS keys off this class).
   const _rosTtCol = currentMode === 'redraft' && _statMode === 'fantasy'
@@ -7023,26 +7041,48 @@ function render() {
       // odds are no longer surfaced (table + card chip removed 2026-09-08).
       _statYdsTail = _totYdsCellHtml(d, _isWeekly);
     } else if (_statMode === 'vor') {
-      // VOR view: sim PPG · value over replacement · VOR rank (see _vorTable).
-      // Phones show one stat cell, so it carries the VOR there (.vor-m).
-      const _fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
-      const _sr = _isWeekly
-        ? _simProjRow(d, window._weeklyActiveWeek || (window.SIM_PROJ_2026 && window.SIM_PROJ_2026.currentWeek) || 1)
-        : _simSeasonPpgRow(d);
-      const _v = _sr ? _sr[_fi] : null;
-      const _vc = (_v != null) ? ((_isWeekly && filter === 'FLEX') ? flexFptsColor(_v) : posFptsColor(_v, d.s)) : null;
+      // VOR view (see _vorTable). Season boards: PPG · VOR per game · rest-of-
+      // season VOR, projected games in the tail column. WEEKLY: this week's
+      // projection · VOR · VOR rank. Phones show one stat cell, so it carries
+      // the VOR there (.vor-m).
       const _ve = _vorFor(d);
       const _vt = _ve ? _vorTable() : null;
       const _rp = _vt ? _vt.repl[d.s] : null;
-      const _vorTxt = _ve ? (_ve.vor > 0 ? '+' : '') + _ve.vor.toFixed(1) : '—';
+      let _v = _ve ? _ve.v : null;
+      if (_v == null) {
+        // No VOR entry (ruled out this week / no remaining games): still show the sim number.
+        const _fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+        const _sr = _isWeekly
+          ? _simProjRow(d, window._weeklyActiveWeek || (window.SIM_PROJ_2026 && window.SIM_PROJ_2026.currentWeek) || 1)
+          : _simSeasonPpgRow(d);
+        _v = _sr ? _sr[_fi] : null;
+      }
+      const _vc = (_v != null) ? ((_isWeekly && filter === 'FLEX') ? flexFptsColor(_v) : posFptsColor(_v, d.s)) : null;
+      const _sgn = v => (v > 0 ? '+' : '') + v.toFixed(1);
+      const _vorTxt = _ve ? _sgn(_ve.vor) : '—';
       const _vorC = !_ve ? null : _ve.vor >= 6 ? '#22c55e' : _ve.vor >= 3 ? '#4ade80' : _ve.vor > 0 ? '#facc15' : 'var(--text2)';
-      const _per = _isWeekly ? ' pts this week' : ' PPG';
-      const _vorTip = _rp ? ' title="' + (d.s + ' replacement level: ' + d.s + _rp.rk + ' ' + _rp.n + ', ' + _rp.v + _per + ' — ' + _rp.starters + ' ' + (d.s === 'K' ? 'kickers' : d.s === 'DST' ? 'D/STs' : d.s + 's') + ' start in a 12-team league').replace(/"/g, '&quot;') + '"' : '';
+      const _posPl = d.s === 'K' ? 'kickers' : d.s === 'DST' ? 'D/STs' : d.s + 's';
+      const _vorTip = _rp ? ' title="' + (d.s + ' replacement level: ' + d.s + _rp.rk + ' ' + _rp.n + ', ' + _rp.v + (_isWeekly ? ' pts this week' : ' a game') + ' — ' + _rp.rostered + ' ' + _posPl + ' rostered in this format' + (_rp.rostered !== _rp.starters ? ' (' + _rp.starters + ' start)' : '')).replace(/"/g, '&quot;') + '"' : '';
       const _kd = d.s === 'K' || d.s === 'DST';
-      const _rkTip = _ve ? ' title="' + (_kd ? 'Rank among ' + (d.s === 'K' ? 'kickers' : 'D/STs') + ' by VOR' : '#' + _ve.rk + ' by VOR across QB / RB / WR / TE · ' + d.s + _ve.posRk + ' by sim PPG') + '"' : '';
-      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_vorC ? ' style="color:' + _vorC + '"' : ''}>${_vorTxt}</span></td>`;
-      _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
+      const _rkTxt = _ve ? (_kd ? d.s + _ve.rk : '#' + _ve.rk) : '';
+      if (_isWeekly) {
+        const _rkTip = _ve ? ' title="' + (_kd ? 'Rank among ' + _posPl + ' by VOR this week' : '#' + _ve.rk + ' by VOR across QB / RB / WR / TE this week · ' + d.s + _ve.posRk + ' by projection') + '"' : '';
+        _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_vorC ? ' style="color:' + _vorC + '"' : ''}>${_vorTxt}</span></td>`;
+        _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
       <td class="pts-cell l4ppg-cell"${_rkTip}${_ve ? ' style="font-weight:700;cursor:help"' : ''}>${_ve ? (_kd ? d.s + _ve.rk : _ve.rk) : '—'}</td>`;
+      } else {
+        // Rest-of-season total: the per-game gap over the weeks he plays.
+        const _totTxt = !_ve ? '—' : _ve.vt >= 10 ? '+' + Math.round(_ve.vt) : _ve.vt > 0 ? '+' + _ve.vt.toFixed(1) : '0';
+        const _totC = !_ve ? null : _ve.vt > 0 ? _vorC : 'var(--text2)';
+        const _totTip = _ve ? ' title="' + (_totTxt + ' points above replacement over the ' + _ve.g + ' game' + (_ve.g === 1 ? '' : 's') + ' he is projected to play, weeks ' + _vt.from + '-' + _vt.to + ' (a week he projects under replacement counts as zero) · ' + _rkTxt + (_kd ? ' at the position' : ' on the VOR board')).replace(/"/g, '&quot;') + '"' : '';
+        const _short = _ve && _ve.g < _ve.sg;
+        _statTd1 = `<td class="pts-cell ppg-proj-cell"${_vc ? ' style="color:' + _vc + ';font-weight:700"' : ''}><span class="vor-ppg">${_v == null ? '—' : _v}</span><span class="vor-m"${_totC ? ' style="color:' + _totC + '"' : ''}>${_totTxt}</span></td>`;
+        _statTds = `<td class="pts-cell ppg25-cell"${_vorTip}${_vorC ? ' style="color:' + _vorC + ';font-weight:700;cursor:help"' : ''}>${_vorTxt}</td>
+      <td class="pts-cell l4ppg-cell"${_totTip}${_totC ? ' style="color:' + _totC + ';font-weight:700;cursor:help"' : ''}>${_totTxt}</td>`;
+        _statYdsTail = _ve
+          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left through week ' + _vt.to + (_short ? ' — the missed games cost rest-of-season VOR' : '') + '">' + _ve.g + '</span>'
+          : '—';
+      }
     } else if (_statMode === 'xfp') {
       // xFP view: actual · expected · over expected (+ TD-luck part in the tail).
       const _xa = _xfpAgg(d, rankingScoringFmt, _isWeekly ? (window._weeklyActiveWeek || 1) : null);
@@ -7208,12 +7248,12 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const _simsMode = _statMode === 'sims';
   const yrrH = document.getElementById('yrrHeader');
-  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
+  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || (_statMode === 'vor' && !_isWeekly) || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
   yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'vor' ? 'GMS ' : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -7251,6 +7291,7 @@ function render() {
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
+  if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Games he is projected to play from this week through week 17 — the weeks with a sim projection above zero, so byes, injuries and suspensions are already taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
   window._applyCellVisibility = function () {
@@ -7281,7 +7322,7 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? '📋 SIM VOR' : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -8249,13 +8290,23 @@ window._updateRnkStatHeaders = function() {
   } else if (rnkStatMode === 'vor') {
     const _wkNum = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     const _wkly = currentMode === 'weekly';
-    const _sfB = currentMode === 'superflex' || currentMode === 'dynastysf';
-    const _lg = '12-team league starting 1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX' + (_sfB ? ', 1 SUPERFLEX' : '') + ', 1 K and 1 D/ST';
-    _set(c1, null, _wkly
-      ? 'Sim Lab projection for this week (' + fmtLabel + ' scoring) — the number VOR is measured from.'
-      : 'Sim Lab REST-OF-SEASON projection per game (' + fmtLabel + ' scoring), games already played excluded — the number VOR is measured from.', _wkly ? 'Proj' : 'PPG', fmtLabel);
-    _set(c2, 'ppg25Header', 'Value over replacement — projected points ' + (_wkly ? 'this week' : 'per game') + ' above the best player at the position who would NOT start in a ' + _lg + '. The flex spots go to the best leftover RB / WR / TE in the selected scoring (' + fmtLabel + '), so the replacement level moves when you switch PPR / Half / Standard. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. Hover a value for the replacement player.', 'VOR', _sfB ? '12-Tm SF' : '12-Team');
-    _set(c3, 'l4ppgHeader', 'Rank by VOR across QB, RB, WR and TE — the order a pure points-over-replacement board would put them in' + (_wkly ? ' this week' : ' for the rest of the season') + '. Kickers and D/STs are ranked inside their own position (K1, DST1).', 'VOR RK', _wkly ? 'Wk' + _wkNum : 'Overall');
+    const _vst = _vorLineup();
+    const _vlg = _vorLeague();
+    const _lg = _vorLineupLabel(_vst) + (_vlg ? ' (' + (_vlg.name || 'your league') + ')' : '');
+    const _vx = (_vst.tep ? ', TE premium +' + _vst.tep : '') + (_vst.passTd !== 4 ? ', ' + _vst.passTd + '-point passing TDs' : '');
+    const _vsub = _vlg ? 'League' : _vst.teams + '-Team' + (_vst.SF ? ' SF' : '');
+    const _how = 'Replacement level = the best ' + (_vst.BN ? 'player left unrostered' : 'player who would not start') + ' at the position in a ' + _lg + ': starters first, then the flex spots to the best leftover RB / WR / TE' + (_vst.BN ? ', then the bench (a backup QB and TE for about half the teams, the rest to the best RB / WR left)' : '') + ', all by sim points in ' + fmtLabel + ' scoring' + _vx + ' — so the level moves with the scoring toggle and the lineup in the VOR bar.';
+    if (_wkly) {
+      _set(c1, null, 'Sim Lab projection for this week (' + fmtLabel + ' scoring' + _vx + ') — the number VOR is measured from.', 'Proj', fmtLabel);
+      _set(c2, 'ppg25Header', 'Value over replacement this week — projected points above the replacement-level player at the position. ' + _how + ' Hover a value for the replacement player.', 'VOR', _vsub);
+      _set(c3, 'l4ppgHeader', 'Rank by VOR across QB, RB, WR and TE this week — the order a pure points-over-replacement board puts them in. Kickers and D/STs are ranked inside their own position (K1, DST1).', 'VOR RK', 'Wk' + _wkNum);
+    } else {
+      const _vt = _vorTable();
+      const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + '-' + _vt.to : 'ROS';
+      _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game (' + fmtLabel + ' scoring' + _vx + '), games already played excluded — the number VOR is measured from.', 'PPG', fmtLabel);
+      _set(c2, 'ppg25Header', 'Value over replacement per game — projected points above the replacement-level player at the position. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. ' + _how + ' Hover a value for the replacement player.', 'VOR/G', _vsub);
+      _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — the per-game gap added up over the weeks he is projected to PLAY, this week through week 17. Weeks he misses (injury, suspension, bye) add nothing, and a week he projects under replacement counts as zero, so a star who is out a month ranks below a slightly lesser player who plays them all. This is the number the SIM VOR board is ordered by.', 'ROS VOR', _span);
+    }
   } else if (rnkStatMode === 'xfp') {
     const _wkX = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     const _wkly = currentMode === 'weekly';
@@ -8367,13 +8418,27 @@ function updateRnkAdpLocks() {
 }
 updateRnkAdpLocks();
 
-// Version tabs: switch between Consensus, Jack's, and My Rankings
+// Entering the SIM VOR board: a picked league's reception scoring takes over
+// the PPR / Half / STD toggle, and the stat columns switch to the VOR view.
+function _simsEnter() {
+  const lg = _vorLeague();
+  if (lg) _vorSyncScoring(lg);
+  if (rnkStatMode !== 'vor') {
+    rnkStatMode = 'vor';
+    document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'vor'));
+    if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+  }
+}
+
+// Version tabs: switch between Consensus, Jack's, Sim VOR and My Rankings
 document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.version === currentVersion) return;
     document.querySelectorAll('.version-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentVersion = btn.dataset.version;
+    if (currentVersion === 'sims') _simsEnter();
+    _vorBarRender();
     syncMode();
     renumber();
     compareSet.clear();
@@ -8381,7 +8446,7 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     render();
     if (typeof updateToolbarVisibility === 'function') updateToolbarVisibility();
     if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
-    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : 'My Rankings');
+    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'sims' ? 'Sim VOR Rankings' : 'My Rankings');
   });
 });
 
@@ -10248,7 +10313,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -10270,7 +10335,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
 function _exportCutoff() {
   const _isPrem = typeof hasPremium === 'function' && hasPremium();
   if (_isPrem) return Infinity;
-  if (currentVersion === 'consensus') return Infinity;
+  if (currentVersion === 'consensus' || currentVersion === 'sims') return Infinity;
   // Not signed in on My Rankings should get 0, but canEdit gate already prevents that flow; still safe to return 0.
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
   return (filter === 'ALL') ? 36 : 12;
@@ -10291,7 +10356,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   
   // Build CSV
@@ -10357,7 +10422,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' \u2014 upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const useFilteredRank = _tierRankIsPositional();
 
@@ -10431,7 +10496,7 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   if (current.players.length) groups.push(current);
 
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const payload = {
     source: 'myfantasyfootball.co',
@@ -10553,7 +10618,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   // Underdog's current export quotes every populated field; mirror that exactly.
   const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
@@ -10647,7 +10712,7 @@ document.getElementById('fileImport').addEventListener('change', e => {
 document.getElementById('btnClear').addEventListener('click', () => {
   if (!canEdit()) {
     if (!window._authCurrentUser) { toast("Sign in to create your rankings"); if (typeof window.openAuthModal === 'function') window.openAuthModal(); }
-    else if (currentVersion === 'consensus') toast("Consensus rankings are auto-generated and can't be edited");
+    else if (currentVersion === 'consensus' || currentVersion === 'sims') toast((currentVersion === 'sims' ? 'Sim VOR' : 'Consensus') + " rankings are auto-generated and can't be edited");
     else toast("Only admins can edit Jack's rankings");
     return;
   }
@@ -11082,68 +11147,164 @@ function _simSeasonPpgRow(d) {
   return r || null;
 }
 
-// VOR (value over replacement) off the Sim Lab projection — rankings STATS
-// "VOR" view. Standard 12-team lineup: 1 QB · 2 RB · 2 WR · 1 TE · 1 FLEX
-// (RB/WR/TE) · 1 K · 1 D/ST, plus 1 SUPERFLEX on the superflex boards.
-// Starters are filled from the sim PPG in the selected scoring format — the
-// flex spots go to the best leftover RB/WR/TE, so PPR pushes more WRs into the
-// flex and standard more RBs — and a position's replacement level is its best
-// player who does NOT start. VOR = PPG minus that replacement PPG. Season
-// boards use the rest-of-season sim PPG, the WEEKLY board the active week's sim.
-// Returns { map: Map(D row -> { v, vor, rk, posRk }), repl: { pos: { v, n, rk } } }.
-const _VOR_TEAMS = 12;
-const _VOR_LINEUP = { QB: 1, RB: 2, WR: 2, TE: 1, K: 1, DST: 1 };
+// VOR (value over replacement) off the Sim Lab projection — drives the
+// rankings STATS "VOR" view and the SIM VOR board (version `sims`).
+// League shape = _vorState(): teams, starters per position, FLEX (RB/WR/TE),
+// SUPERFLEX, bench — the standard 12-team lineup by default, a synced My Teams
+// league's own lineup when one is picked in the VOR bar (_vorApplyLeague).
+// Roster spots are filled from the sim's rest-of-season points in the selected
+// scoring format: starters first, then the flex / superflex spots with the
+// best players left, then the bench (a backup QB and TE for about half the
+// teams, the rest to the best RB/WR left). A position's replacement level is
+// the best player left unrostered, per scheduled game.
+//   VOR/G   = PPG minus that replacement level
+//   ROS VOR = the same gap summed over the weeks he is projected to play,
+//             current week through week 17 (weeks under replacement count 0 —
+//             you would start someone else), so missed games cost value
+// The WEEKLY board prices the active week only.
+// Returns { map: Map(D row -> { v, g, sg, tot, vor, vt, rk, posRk }), repl: { pos: {...} } }
+// (g = games he is projected to play, sg = games his team has left).
+const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, tep: 0, passTd: 4 };
+const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20] };
+const _VOR_LAST_WEEK = 17;   // fantasy seasons end in week 17
+function _vorState() {
+  if (!window._vorSt) {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem('mff_vor_fmt')); } catch (e) {}
+    const st = Object.assign({}, _VOR_DEFAULT, (s && typeof s === 'object') ? s : {});
+    Object.keys(_VOR_LIMITS).forEach(k => {
+      const n = Math.round(Number(st[k])), lim = _VOR_LIMITS[k];
+      st[k] = isFinite(n) ? Math.min(lim[1], Math.max(lim[0], n)) : _VOR_DEFAULT[k];
+    });
+    st.tep = Math.max(0, Number(st.tep) || 0);
+    st.passTd = isFinite(Number(st.passTd)) ? Number(st.passTd) : 4;
+    st.league = st.league ? String(st.league) : '';
+    window._vorSt = st;
+  }
+  return window._vorSt;
+}
+function _vorStateSave() {
+  try { localStorage.setItem('mff_vor_fmt', JSON.stringify(_vorState())); } catch (e) {}
+}
+// The lineup the engine prices: the SUPERFLEX / DYNASTY SF tabs imply a
+// superflex spot unless a synced league's own lineup is in charge.
+function _vorLineup() {
+  const st = _vorState();
+  if (!st.league && !st.SF && (currentMode === 'superflex' || currentMode === 'dynastysf')) return Object.assign({}, st, { SF: 1 });
+  return st;
+}
+function _vorLineupLabel(st) {
+  st = st || _vorLineup();
+  const parts = [];
+  [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['FLEX', 'FLEX'], ['SF', 'SUPERFLEX'], ['K', 'K'], ['DST', 'D/ST']].forEach(p => { if (st[p[0]]) parts.push(st[p[0]] + ' ' + p[1]); });
+  return st.teams + '-team league starting ' + parts.join(', ') + (st.BN ? ' with ' + st.BN + ' bench spot' + (st.BN === 1 ? '' : 's') : ' (no bench)');
+}
+// League scoring extras on top of the PPR / Half / Standard sim number: TE
+// premium (the sim's PPR minus standard value IS his receptions) and passing
+// TDs worth other than 4 (Clay's per-game rate, else last season's).
+function _vorPassTdRate(d) {
+  const cp = (typeof MIKE_CLAY_PROJ !== 'undefined' && typeof clayLookup === 'function') ? clayLookup(d.n) : null;
+  if (cp && cp.gm > 0) return (cp.ptd || 0) / cp.gm;
+  if (d.s25 && d.s25.gp > 0) return (d.s25.ptd || 0) / d.s25.gp;
+  return 0;
+}
+function _vorPts(d, row, fi, st, tdRate, basePpg) {
+  let v = row ? row[fi] : null;
+  if (!(v > 0)) return 0;
+  if (d.s === 'TE' && st.tep) v += st.tep * Math.max(0, (row[1] || 0) - (row[2] || 0));
+  else if (d.s === 'QB' && st.passTd !== 4 && tdRate) v += (st.passTd - 4) * tdRate * (basePpg > 0 ? Math.min(1.5, row[fi] / basePpg) : 1);
+  return v;
+}
 function _vorTable() {
   const SP = window.SIM_PROJ_2026;
-  if (!SP || typeof D === 'undefined') return null;
+  if (!SP || !SP.weeks || typeof D === 'undefined') return null;
+  const st = _vorLineup();
   const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
-  const wk = currentMode === 'weekly' ? (window._weeklyActiveWeek || SP.currentWeek || 1) : 0;
-  const sf = currentMode === 'superflex' || currentMode === 'dynastysf';
-  const key = fi + '|' + wk + '|' + (sf ? 1 : 0) + '|' + D.length;
+  const cw = SP.currentWeek || 1;
+  const wk = currentMode === 'weekly' ? (window._weeklyActiveWeek || cw) : 0;
+  const key = [fi, wk, cw, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
+  const weeks = [];
+  if (wk) weeks.push(wk); else for (let w = cw; w <= Math.max(cw, _VOR_LAST_WEEK); w++) weeks.push(w);
   const pools = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
   const seen = new Set();
   D.forEach(d => {
     if (!d || !pools[d.s] || d._retired || d._isFuturePick || seen.has(d.n)) return;
-    const r = wk ? _simProjRow(d, wk) : _simSeasonPpgRow(d);
-    const v = r ? r[fi] : null;
-    if (!(v > 0)) return;   // no sim row / ruled out / on bye
+    const sp = wk ? null : _simSeasonPpgRow(d);
+    if (!wk && !sp) return;   // no rest-of-season sim row
+    const tdRate = (d.s === 'QB' && st.passTd !== 4) ? _vorPassTdRate(d) : 0;
+    const base = sp ? sp[fi] : 0;
+    const wp = [];
+    let tot = 0, g = 0;
+    weeks.forEach(w => {
+      const p = _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base);
+      wp.push(p);
+      if (p > 0) { tot += p; g++; }
+    });
+    if (!g) return;   // out / on bye / no remaining games
     seen.add(d.n);
-    pools[d.s].push({ d, v });
+    const ppg = (sp && base > 0) ? _vorPts(d, sp, fi, st, tdRate, base) : tot / g;
+    pools[d.s].push({ d, tot, g, ppg, wp });
   });
-  const nStart = {};
+  const n = {};
   Object.keys(pools).forEach(p => {
-    pools[p].sort((a, b) => b.v - a.v);
-    nStart[p] = Math.min(pools[p].length, _VOR_LINEUP[p] * _VOR_TEAMS);
+    pools[p].sort((a, b) => b.tot - a.tot);
+    n[p] = Math.min(pools[p].length, (st[p] || 0) * st.teams);
   });
-  // One flex-type slot per team: each goes to the best player still on the bench.
-  const _fill = elig => {
-    for (let i = 0; i < _VOR_TEAMS; i++) {
+  // Shared spots: each goes to the best player (rest-of-season points) not yet rostered.
+  const _fill = (elig, count) => {
+    for (let i = 0; i < count; i++) {
       let best = null;
-      elig.forEach(p => { const x = pools[p][nStart[p]]; if (x && (!best || x.v > pools[best][nStart[best]].v)) best = p; });
+      elig.forEach(p => { const x = pools[p][n[p]]; if (x && (!best || x.tot > pools[best][n[best]].tot)) best = p; });
       if (!best) break;
-      nStart[best]++;
+      n[best]++;
     }
   };
-  _fill(['RB', 'WR', 'TE']);
-  if (sf) _fill(['QB', 'RB', 'WR', 'TE']);
-  const out = { _src: SP, _key: key, map: new Map(), repl: {}, sf };
+  _fill(['RB', 'WR', 'TE'], st.FLEX * st.teams);
+  _fill(['QB', 'RB', 'WR', 'TE'], st.SF * st.teams);
+  const nStart = Object.assign({}, n);
+  let bench = st.BN * st.teams;
+  [['QB', st.QB + st.SF], ['TE', st.TE]].forEach(x => {
+    const add = Math.max(0, Math.min(Math.round(st.teams * 0.5 * x[1]), Math.floor(st.BN * st.teams * 0.25), pools[x[0]].length - n[x[0]], bench));
+    n[x[0]] += add; bench -= add;
+  });
+  _fill(['RB', 'WR'], bench);
+  // Scheduled games in the window (a team's D/ST has a row every non-bye week).
+  const _schedMemo = {};
+  const _sched = d => {
+    if (wk) return 1;
+    const k = 'DST_' + teamAbbr(d.t);
+    if (_schedMemo[k] == null) {
+      let s = 0;
+      weeks.forEach(w => { if (SP.weeks[w] && SP.weeks[w][k]) s++; });
+      _schedMemo[k] = s || weeks.length;
+    }
+    return _schedMemo[k];
+  };
+  const r1 = v => Math.round(v * 10) / 10;
+  const out = { _src: SP, _key: key, map: new Map(), repl: {}, st, weekly: !!wk, from: weeks[0], to: weeks[weeks.length - 1] };
   const all = [];
+  const _cmp = (a, b) => (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
-    const ri = Math.min(nStart[p], pool.length - 1);
-    out.repl[p] = { v: pool[ri].v, n: pool[ri].d.n, rk: ri + 1, starters: nStart[p] };
-    pool.forEach((x, i) => {
-      const e = { v: x.v, vor: Math.round((x.v - pool[ri].v) * 10) / 10, posRk: i + 1, rk: null };
+    const ri = Math.min(n[p], pool.length - 1);
+    const R = pool[ri].tot / _sched(pool[ri].d);
+    out.repl[p] = { v: r1(R), n: pool[ri].d.n, rk: ri + 1, rostered: n[p], starters: nStart[p] };
+    const es = pool.map((x, i) => {
+      const vor = r1(x.ppg - R);
+      // Rest-of-season: only the weeks he beats replacement add value.
+      const vt = wk ? vor : r1(x.wp.reduce((s, v) => s + (v > R ? v - R : 0), 0));
+      const e = { v: r1(x.ppg), g: x.g, sg: _sched(x.d), tot: x.tot, vor, vt, posRk: i + 1, rk: null };
       out.map.set(x.d, e);
-      // K and D/ST are ranked inside their own position, not against the field.
-      if (p === 'K' || p === 'DST') e.rk = i + 1; else all.push(e);
+      return e;
     });
+    // K and D/ST are ranked inside their own position, not against the field.
+    if (p === 'K' || p === 'DST') es.slice().sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
+    else es.forEach(e => all.push(e));
   });
-  all.sort((a, b) => (b.vor - a.vor) || (b.v - a.v));
-  all.forEach((e, i) => { e.rk = i + 1; });
+  all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
   window._vorCache = out;
   return out;
 }
@@ -11151,6 +11312,183 @@ function _vorFor(d) {
   const t = _vorTable();
   return (t && t.map.get(d)) || null;
 }
+
+// SIM VOR board (version `sims`): the board order IS the VOR rank — QB / RB /
+// WR / TE by rest-of-season VOR (this week's VOR on WEEKLY), then K, then D/ST.
+// Computed, never saved (the save paths only write jacks / mine), rebuilt
+// whenever the VOR table changes (scoring, lineup, league, week, new export).
+function _simsBoardEnsure() {
+  const t = _vorTable();
+  const src = (window._simsBoardSrc = window._simsBoardSrc || {});
+  if (!t || src[currentMode] === t) return false;
+  const skill = [], ks = [], ds = [];
+  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, e.rk]); });
+  const order = [];
+  [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
+  // Players without a sim row trail in consensus order (hidden on this board).
+  const used = new Set(order);
+  (versionBoards.consensus[currentMode] || []).forEach(i => { if (!used.has(i)) { used.add(i); order.push(i); } });
+  for (let i = 0; i < D.length; i++) if (!used.has(i) && !D[i]._retired) order.push(i);
+  versionBoards.sims[currentMode] = order;
+  src[currentMode] = t;
+  return true;
+}
+
+// ── VOR bar: league picker + lineup + WAIVERS (shown on the SIM VOR board and
+// in the VOR stats view). A synced My Teams league fills the lineup, team
+// count, bench and scoring (PPR toggle + TE premium + passing-TD points) and
+// unlocks WAIVERS — the board filtered to players nobody in that league rosters.
+window._vorWaivers = false;
+function _vorLeague() {
+  const id = _vorState().league;
+  if (!id) return null;
+  return (window._mtSavedLeagues || []).find(l => l && String(l.leagueId) === id) || null;
+}
+function _vorScoringOf(lg) {
+  const f = (lg && lg.format) || {};
+  const ppr = f.bestBall ? 1 : (f.ppr != null ? Number(f.ppr) : 0.5);
+  return ppr >= 0.75 ? 'ppr' : ppr >= 0.25 ? 'half' : 'std';
+}
+// Point the PPR / Half / STD toggle at the league's reception scoring.
+function _vorSyncScoring(lg) {
+  const want = _vorScoringOf(lg);
+  if (rankingScoringFmt === want) return false;
+  const b = document.querySelector('.rnk-scoring-btn[data-rnkscoring="' + want + '"]');
+  if (!b) return false;
+  b.click();
+  return true;
+}
+function _vorApplyLeague(id) {
+  const st = _vorState();
+  const lg = (window._mtSavedLeagues || []).find(l => l && String(l.leagueId) === String(id)) || null;
+  if (!lg) {
+    st.league = ''; st.tep = 0; st.passTd = 4;
+    window._vorWaivers = false;
+    return null;
+  }
+  st.league = String(lg.leagueId);
+  const f = lg.format || {};
+  const rp = Array.isArray(f.rosterPositions) ? f.rosterPositions : [];
+  const teams = lg.teams || [];
+  const c = s => rp.filter(x => x === s).length;
+  const clamp = (k, v) => Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], Math.round(v)));
+  if (rp.length) {
+    st.QB = clamp('QB', c('QB')); st.RB = clamp('RB', c('RB')); st.WR = clamp('WR', c('WR')); st.TE = clamp('TE', c('TE'));
+    st.FLEX = clamp('FLEX', c('FLEX') + c('WRRB_FLEX') + c('WR_RB_FLEX') + c('REC_FLEX'));
+    st.SF = clamp('SF', c('SUPER_FLEX')); st.K = clamp('K', c('K')); st.DST = clamp('DST', c('DEF') + c('DST'));
+    let bn = c('BN');
+    if (!bn && teams.length) {
+      // Payload without bench slots: average roster size minus the starting spots.
+      const avg = teams.reduce((s, t) => s + ((t.players || []).length), 0) / teams.length;
+      bn = Math.max(0, avg - rp.filter(x => x !== 'BN' && x !== 'IR' && x !== 'TAXI').length);
+    }
+    st.BN = clamp('BN', bn);
+  } else if (f.sf) st.SF = Math.max(1, st.SF);
+  if (teams.length) st.teams = clamp('teams', teams.length);
+  st.tep = Math.max(0, Number(f.tep) || 0);
+  st.passTd = (f.passTd != null && isFinite(Number(f.passTd))) ? Number(f.passTd) : 4;
+  return lg;
+}
+// Players on a roster in the picked league (WAIVERS filter). Suffix-folded
+// like the My Teams waiver wire so "Marvin Harrison" never leaks past Jr.
+function _vorRostered() {
+  if (!window._vorWaivers || currentVersion !== 'sims') return null;
+  const lg = _vorLeague();
+  if (!lg) return null;
+  let c = window._vorRosterCache;
+  if (!c || c.lg !== lg) {
+    const norm = n => String(n).toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’]/g, '').trim();
+    const names = new Set();
+    (lg.teams || []).forEach(t => (t.players || []).forEach(n => { if (n) { names.add(n); names.add(norm(n)); } }));
+    c = window._vorRosterCache = { lg, has: d => names.has(d.n) || names.has(norm(d.n)) };
+  }
+  return c;
+}
+function _vorBarRender() {
+  const bar = document.getElementById('vorBar');
+  if (!bar) return;
+  const st = _vorState();
+  const lgs = window._mtSavedLeagues || [];
+  const lg = _vorLeague();
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const num = (k, lbl, tip) => '<label class="vor-num" title="' + tip + '">' + lbl + '<input type="number" inputmode="numeric" data-vor="' + k + '" min="' + _VOR_LIMITS[k][0] + '" max="' + _VOR_LIMITS[k][1] + '" value="' + st[k] + '"></label>';
+  const extras = [];
+  if (st.tep) extras.push('TEP +' + st.tep);
+  if (st.passTd !== 4) extras.push(st.passTd + 'pt pass TD');
+  bar.innerHTML = '<span class="vor-bar-lbl"><span data-gloss="The league the VOR numbers are priced for. Pick a league you synced in MY TEAMS and its lineup, team count, bench and scoring fill in on their own; or set the lineup by hand. More starting spots or a deeper bench push the replacement level down, which raises the value of depth at that position.">VOR League</span></span>'
+    + '<select id="vorLeagueSel" title="Use a synced My Teams league: its starting lineup, bench, team count and scoring">'
+    + '<option value="">Custom lineup</option>'
+    + lgs.map(l => '<option value="' + esc(l.leagueId) + '"' + (lg === l ? ' selected' : '') + '>' + esc(l.name || 'League') + '</option>').join('')
+    + (lgs.length ? '' : '<option value="" disabled>Sync a league in MY TEAMS to list it here</option>')
+    + '</select>'
+    + num('teams', 'Teams', 'Teams in the league')
+    + num('QB', 'QB', 'Starting QBs per team') + num('RB', 'RB', 'Starting RBs per team') + num('WR', 'WR', 'Starting WRs per team') + num('TE', 'TE', 'Starting TEs per team')
+    + num('FLEX', 'Flex', 'Flex spots per team (RB / WR / TE)') + num('SF', 'SFlex', 'Superflex spots per team (QB / RB / WR / TE)')
+    + num('K', 'K', 'Starting kickers per team') + num('DST', 'D/ST', 'Starting defenses per team') + num('BN', 'Bench', 'Bench spots per team — set 0 to measure against the last starter instead of the best free agent')
+    + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
+    + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
+    + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench) with no league">RESET</button>';
+}
+// Any lineup / league change: persist, drop the table, repaint.
+function _vorChanged() {
+  _vorStateSave();
+  window._vorCache = null;
+  _vorBarRender();
+  if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+  if (currentVersion === 'sims') { syncMode(); renumber(); }
+  render();
+}
+(function _vorBarInit() {
+  const bar = document.getElementById('vorBar');
+  if (!bar) return;
+  bar.addEventListener('change', e => {
+    const t = e.target;
+    if (t.id === 'vorLeagueSel') {
+      const lg = _vorApplyLeague(t.value);
+      _vorChanged();
+      if (lg) { _vorSyncScoring(lg); if (typeof toast === 'function') toast('VOR priced for ' + (lg.name || 'your league')); }
+      return;
+    }
+    const k = t.dataset && t.dataset.vor;
+    if (!k || !_VOR_LIMITS[k]) return;
+    const n = Math.round(Number(t.value));
+    _vorState()[k] = isFinite(n) ? Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], n)) : _VOR_DEFAULT[k];
+    _vorChanged();
+  });
+  bar.addEventListener('click', e => {
+    if (e.target.closest('#vorWaiverBtn')) {
+      // From another board the pill jumps to the SIM VOR board with the filter on.
+      if (currentVersion !== 'sims') {
+        window._vorWaivers = true;
+        const tab = document.querySelector('.version-tab[data-version="sims"]');
+        if (tab) tab.click();
+        return;
+      }
+      window._vorWaivers = !window._vorWaivers;
+      _vorBarRender();
+      render();
+    } else if (e.target.closest('#vorResetBtn')) {
+      window._vorSt = Object.assign({}, _VOR_DEFAULT);
+      window._vorWaivers = false;
+      _vorChanged();
+    }
+  });
+  _vorBarRender();
+})();
+// Saved leagues (re)loaded — My Teams calls this. A picked league re-reads its
+// lineup so a re-sync that changed the roster settings carries through.
+window._vorRefreshLeagues = function () {
+  const st = _vorState();
+  // Only when the saved list is actually loaded — signed out keeps the pick.
+  if (st.league && Array.isArray(window._mtSavedLeagues)) { _vorApplyLeague(st.league); _vorStateSave(); }
+  window._vorCache = null;
+  window._vorRosterCache = null;
+  _vorBarRender();
+  if (currentVersion === 'sims' || (typeof rnkStatMode !== 'undefined' && rnkStatMode === 'vor')) {
+    if (currentVersion === 'sims') { syncMode(); renumber(); }
+    render();
+  }
+};
 
 // Original (preseason) PPG row [half, ppr, std] — frozen at Week 1 kickoff.
 function _simBaselinePpgRow(d) {
@@ -56468,6 +56806,7 @@ Rules:
       if (typeof window._calcRefreshLeagues === 'function') window._calcRefreshLeagues();
       if (typeof window._finderPopulateLeagueDropdown === 'function') window._finderPopulateLeagueDropdown();
       if (typeof window._qaRefreshLeagues === 'function') window._qaRefreshLeagues();
+      if (typeof window._vorRefreshLeagues === 'function') window._vorRefreshLeagues();
       // Extension payload may have arrived before the saved list — commit now.
       _mtAutoCommitEspnLeagues();
       // Silently freshen every snapshot in the background (probe-guarded).

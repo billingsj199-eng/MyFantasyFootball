@@ -5389,8 +5389,17 @@ function _tcvOppChipHtml(d) {
 const _TCV_RANGE_MAX = 3;
 function _tcvRange() {
   if (typeof currentMode === 'undefined' || currentMode === 'weekly' || typeof _vorWin !== 'function' || !_vorWin()) return null;
-  const t = _vorTable();
-  if (!t || !t.win) return null;
+  let t = null;
+  try { t = _vorTable(); } catch (_) {}
+  if (!t || !t.win) {
+    // VOR table unpriced or it dropped the window: the cards still honor the
+    // picker's weeks straight from the saved setting (Custom = exactly wFrom-wTo).
+    const st = _vorState(), SP = window.SIM_PROJ_2026;
+    const from1 = Math.max((SP && SP.currentWeek) || 1, (typeof window._weeklyScheduleWeek === 'function' && window._weeklyScheduleWeek()) || 1);
+    const sp = _vorWinSpan(st, from1, st.win === -1 ? 18 : Math.max(from1, st.poEnd));
+    if (!(sp[0] <= sp[1])) return null;
+    t = { win: st.win, from: sp[0], to: sp[1] };
+  }
   const weeks = [];
   for (let w = t.from; w <= t.to; w++) weeks.push(w);
   return { from: t.from, to: t.to, weeks: weeks, tag: _vorWinTag(t), desc: _vorWinDesc(t), strip: weeks.length <= _TCV_RANGE_MAX };
@@ -12112,8 +12121,11 @@ function _vorTable() {
   const from1 = kSig ? from + 1 : from;
   // WINDOW: the next N weeks, the fantasy playoffs or a custom range (never
   // past the end of the fantasy season); a range already played = rest of season.
+  // CUSTOM weeks are the user's explicit pick: bounded by the sim's last week,
+  // not poEnd (a week-14 playoff end blanked a 15-17 range on the tier cards).
   const last = Math.max(from1, st.poEnd);
-  let span = win ? _vorWinSpan(st, from1, last) : null;
+  const simLast = Math.max(last, ...Object.keys(SP.weeks).map(Number).filter(isFinite));
+  let span = win ? _vorWinSpan(st, from1, win === -1 ? simLast : last) : null;
   if (span && span[0] > span[1]) { span = null; win = 0; }
   if (wk) weeks.push(wk); else for (let w = span ? span[0] : from1; w <= (span ? span[1] : last); w++) weeks.push(w);
   // A window prices raw points now — no playoff weight, no PO VOR.

@@ -5430,6 +5430,19 @@ function _tcvRangeStripHtml(d, R, cls) {
   };
   return '<div class="' + cls + '">' + rf.wk.map(cell).join('') + '</div>';
 }
+// ROW cards: the same weeks as compact chips under the name (opponent logo
+// with vs/@ on its corner + that week's projection). Mirrored in _tcvRowCardCanvas.
+function _tcvRangeChipsHtml(d, R) {
+  return _tcvRangeFor(d, R).wk.map(x => {
+    const tip = 'Week ' + x.w + ': ' + (x.bye ? 'BYE' : (x.away ? 'at ' : 'vs ') + x.abbr + (x.p > 0 ? ' · proj ' + x.p : ' · not projected to play'));
+    if (x.bye) return '<span class="tcv-rngc tcv-rngc-bye" title="' + tip + '">BYE</span>';
+    const pc = x.p > 0 && typeof posFptsColor === 'function' ? posFptsColor(x.p, d.s) : null;
+    return '<span class="tcv-rngc" title="' + tip + '"><span class="tcv-rngc-logo">'
+      + (x.logoUrl ? '<img src="' + x.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : x.abbr)
+      + '<span class="tcv-rngc-pre">' + (x.away ? '@' : 'vs') + '</span></span>'
+      + '<b' + (pc ? ' style="color:' + pc + '"' : ' class="tcv-rngc-na"') + '>' + (x.p > 0 ? x.p.toFixed(1) : '—') + '</b></span>';
+  }).join('');
+}
 
 // Season PPG for the card's second line: actual '26 PPG to date (site scoring)
 // as soon as the in-season weekly-stats pull has 2026 rows for the player;
@@ -5849,7 +5862,7 @@ async function _tcvMoveLoadDate(dateStr) {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44, RNG_STATS_X: 336 };
+const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44, RNG_STATS_X: 308 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -5870,7 +5883,14 @@ function _tcvSeasonBye(d) {
   if (!window.BYE_WEEKS || typeof TEAM_ABBR_MAP === 'undefined') return null;
   const abbr = TEAM_ABBR_MAP[d.t] || d.t;
   const wk = window.BYE_WEEKS[abbr];
-  return (wk != null && isFinite(wk)) ? wk : null;
+  if (wk == null || !isFinite(wk)) return null;
+  // Only a bye still ahead (Jack 2026-10-06): a WEEKS range shows it only
+  // inside the range; otherwise it drops once the bye week has passed.
+  const R = _tcvRange();
+  if (R) return (wk >= R.from && wk <= R.to) ? wk : null;
+  const SP = window.SIM_PROJ_2026;
+  const cw = Math.max((SP && SP.currentWeek) || 1, (typeof window._weeklyScheduleWeek === 'function' && window._weeklyScheduleWeek()) || 1);
+  return wk >= cw ? wk : null;
 }
 // SELECT-mode state, kept OUTSIDE the DOM: the rankings table re-renders in
 // the background (auth, data pulls, refresh) and rebuilds the tier view from
@@ -5956,9 +5976,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
   const _rng = cs.range && cs.range.strip ? cs.range : null;
   if (_rng) card.classList.add('tcv-row-rng');
   const seasonBye = (opp || _rng) ? null : _tcvSeasonBye(d);
-  if (_rng) {
-    oppHtml = _tcvRangeStripHtml(d, _rng, 'tcv-rng tcv-rng-row');
-  } else if (seasonBye != null) {
+  if (seasonBye != null) {
     oppHtml = '<div class="tcv-row-opp tcv-row-bye" title="Bye week ' + seasonBye + '"><span class="tcv-row-bye-l">BYE</span><span class="tcv-row-bye-n">' + seasonBye + '</span></div>';
   } else if (opp) {
     oppHtml = opp.bye
@@ -5966,7 +5984,9 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
       : '<div class="tcv-row-opp' + (opp.diff ? ' tcv-opp-' + opp.diff : '') + '" title="' + _tcvOppTitle(opp) + '"><span class="tcv-opp-pre">' + (opp.away ? '@' : 'vs') + '</span>' +
         (opp.logoUrl ? '<img src="' + opp.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '<span style="font-family:\'Bebas Neue\',Impact,sans-serif;font-size:13px">' + safe(opp.abbr) + '</span>') + '</div>';
   }
-  const miniLogoHtml = (logoId || d._devyLogo)
+  // Week range: the matchups take the team logo's place under the name.
+  const miniLogoHtml = _rng ? _tcvRangeChipsHtml(d, _rng)
+    : (logoId || d._devyLogo)
     ? '<img class="tcv-row-team-mini" src="' + window._logoSrc(d, logoId) + '" alt="" loading="lazy" title="' + safe(d.t) + '"/>'
     : '';
 
@@ -6491,8 +6511,8 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   const band = _tcvRowBand(d.t);
   const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
-  // Week-range strip (mirrors .tcv-rng-row): matchup cells where the bye chip
-  // sits, the stats box shrinks to two slots.
+  // Week range (mirrors .tcv-row-rng): matchup chips under the name in place of
+  // the team logo, the stats box shrinks to two slots.
   const rng = cs.range && cs.range.strip ? _tcvRangeFor(d, cs.range) : null;
   const [head, logo, oppLogo, ...rngLogos] = await Promise.all([
     _tcvLoadImg(d._slImg ? _tcvHiResHeadshot(d._slImg) : null),
@@ -6578,7 +6598,42 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   ctx.fillStyle = _TCV_POS_COLORS[pos] || '#64748b'; ctx.fill();
   ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
   ctx.fillText(pos, L.NAME_X + 5, Y + 49.5);
-  if (logo) {
+  if (rng) {
+    // Chips (mirrors .tcv-rngc): opponent logo, vs/@ on its corner, that week's projection
+    let x0 = L.NAME_X + pillW + 4;
+    rng.wk.forEach((x, i) => {
+      if (x.bye) {
+        ctx.font = '11px ' + BEBAS;
+        const w = ctx.measureText('BYE').width + 12;
+        _tcvRoundRect(ctx, x0, Y + 40, w, 18, 4); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
+        ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText('BYE', x0 + 6, Y + 49.5);
+        x0 += w + 4;
+        return;
+      }
+      const txt = x.p > 0 ? x.p.toFixed(1) : '—';
+      ctx.font = 'bold 10px ' + SANS;
+      const w = 7 + 16 + 3 + ctx.measureText(txt).width + 4;
+      _tcvRoundRect(ctx, x0, Y + 40, w, 18, 4); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
+      const im = rngLogos[i];
+      if (im) {
+        ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
+        _tcvDrawContain(ctx, im, x0 + 7, Y + 41, 16, 16, 'center');
+        ctx.restore();
+      } else {
+        ctx.font = '10px ' + BEBAS; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(x.abbr, x0 + 15, Y + 49.5);
+      }
+      ctx.font = '9px ' + BEBAS; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+      ctx.lineWidth = 1.8; ctx.strokeStyle = '#0a0a0a';
+      ctx.strokeText(x.away ? '@' : 'vs', x0 + 1, Y + 59);
+      ctx.fillStyle = '#e2e8f0'; ctx.fillText(x.away ? '@' : 'vs', x0 + 1, Y + 59);
+      ctx.font = 'bold 10px ' + SANS; ctx.textBaseline = 'middle';
+      ctx.fillStyle = x.p > 0 ? (posFptsColor(x.p, d.s) || '#fff') : 'rgba(255,255,255,.35)';
+      ctx.fillText(txt, x0 + 26, Y + 49.5);
+      x0 += w + 4;
+    });
+  } else if (logo) {
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
     _tcvDrawContain(ctx, logo, L.NAME_X + pillW + 6, Y + 49 - L.MINI_LOGO / 2, L.MINI_LOGO, L.MINI_LOGO, 'center');
     ctx.restore();
@@ -6591,40 +6646,6 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
   const colW = statsW / cs.slots.length;
   ctx.textAlign = 'center';
-  if (rng) {
-    // Matchup cells: W15 · opponent logo (vs/@ on its corner) · that week's projection
-    const cw = (L.RNG_STATS_X - 4 - L.OPP_X) / rng.wk.length;
-    _tcvRoundRect(ctx, L.OPP_X, sy, L.RNG_STATS_X - 4 - L.OPP_X, L.STATS_H, 6);
-    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
-    rng.wk.forEach((x, i) => {
-      const cx = L.OPP_X + cw * i + cw / 2;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '600 7px ' + SANS; ctx.fillStyle = 'rgba(255,255,255,.62)';
-      ctx.fillText('W' + x.w, cx, sy + 8);
-      if (x.bye) {
-        ctx.font = '12px ' + BEBAS; ctx.fillStyle = '#94a3b8';
-        ctx.fillText('BYE', cx, sy + 27);
-      } else {
-        const im = rngLogos[i], lg = 20;
-        if (im) {
-          ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
-          _tcvDrawContain(ctx, im, cx - lg / 2, sy + 10, lg, lg, 'center');
-          ctx.restore();
-        } else {
-          ctx.font = '11px ' + BEBAS; ctx.fillStyle = '#fff'; ctx.fillText(x.abbr, cx, sy + 25);
-        }
-        ctx.font = '10px ' + BEBAS; ctx.textAlign = 'left'; ctx.lineJoin = 'round';
-        ctx.lineWidth = 2.2; ctx.strokeStyle = '#0a0a0a';
-        ctx.strokeText(x.away ? '@' : 'vs', cx - lg / 2 - 3, sy + 30);
-        ctx.fillStyle = '#e2e8f0'; ctx.fillText(x.away ? '@' : 'vs', cx - lg / 2 - 3, sy + 30);
-        ctx.textAlign = 'center';
-      }
-      ctx.font = 'bold 9px ' + SANS;
-      ctx.fillStyle = x.p > 0 ? (posFptsColor(x.p, d.s) || '#fff') : 'rgba(255,255,255,.35)';
-      ctx.fillText(x.p > 0 ? x.p.toFixed(1) : '—', cx, sy + 41);
-    });
-    ctx.textAlign = 'center';
-  }
   cs.slots.forEach((sl, i) => {
     const cx = statsX + colW * i + colW / 2;
     const blank = (sl.v == null || sl.v === '' || (typeof sl.v === 'number' && !isFinite(sl.v)));
@@ -6688,7 +6709,7 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   try { ctx.letterSpacing = '1px'; } catch (_) {}
   ctx.fillStyle = 'rgba(255,255,255,.85)';
   ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 3;
-  ctx.fillText('MYFANTASYFOOTBALL.CO', rng ? (L.OPP_X + L.W - 10) / 2 : L.STATS_X + L.STATS_W / 2, Y + H - 3);
+  ctx.fillText('MYFANTASYFOOTBALL.CO', rng ? (L.RNG_STATS_X + L.W - 10) / 2 : L.STATS_X + L.STATS_W / 2, Y + H - 3);
   ctx.restore();
 
   return c;

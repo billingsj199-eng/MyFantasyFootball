@@ -200,7 +200,9 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   .mt-pf-grid{grid-template-columns:1fr!important}
   .mt-pr-mine{right:8px!important;top:-7px!important;font-size:.5rem!important;white-space:nowrap!important;max-width:none!important}
   #mtLeagueHeader{gap:8px!important}
-  #mtLeagueSwitch{flex:1 1 100%;max-width:100%!important}
+  #mtLeagueSwitchWrap{flex:1 1 100%}
+  #mtLeagueSwitch{width:100%}
+  #mtLeagueMenu{width:100%!important;max-width:100%!important}
   #mtValueSrcBar .mt-vs-hint{display:none}
   #mtOwnerSearchWrap{flex:1 1 100%;margin-left:0!important}
   #mtOwnerSearch{width:100%!important}

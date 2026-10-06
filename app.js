@@ -56054,50 +56054,6 @@ Rules:
     }).filter(Boolean);
   }
 
-  // Saved-card trade log (Jack 2026-09-02: "show the trade log on the
-  // saved league cards too") — same fetch/render, but teams + mode come
-  // from the snapshot so nothing has to be loaded into view.
-  function _mtModeForFormat(f) {
-    if (!f) return 'redraft';
-    if (f.type === 'dynasty' && f.sf) return 'dynastysf';
-    if (f.type === 'dynasty') return 'dynasty';
-    if (f.sf) return 'superflex';
-    return 'redraft';
-  }
-  window._mtToggleSavedTradeLog = async function (idx) {
-    const lg = (window._mtSavedLeagues || [])[idx];
-    const box = document.getElementById('mtSavedTradeLog-' + idx);
-    if (!lg || !box) return;
-    const leagueId = String(lg.leagueId || '');
-    if (box.style.display !== 'none') { box.style.display = 'none'; return; }
-    box.style.display = '';
-    const key = 'saved_' + leagueId;
-    // Saved ids are 'espn_<id>' / 'yahoo_<id>' / bare Sleeper id → same
-    // cache keys the loaded-league panel uses.
-    const _src = leagueId.indexOf('espn_') === 0 ? 'espn' : leagueId.indexOf('yahoo_') === 0 ? 'yahoo' : 'sleeper';
-    const _pid = leagueId.replace(/^(espn|yahoo)_/, '');
-    const _ck = _src + '_' + _pid;
-    if (!_mtTradeLogCache[_ck]) box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:6px 0">Loading trade history…</div>';
-    try {
-      let trades = _mtTradeLogCache[_ck];
-      if (!trades) trades = _mtTradeLogCache[_ck] = await _mtFetchTradesFor(_src, _pid, lg);
-      if (box.style.display === 'none') return;
-      _mtTradeLogCache[key] = trades;
-      // Score the snapshot under its own format so picks carry projected
-      // slots (same as the loaded-league path); fall back to raw teams.
-      let teams = lg.teams || [];
-      if (lg.format && typeof D !== 'undefined' && D.length) {
-        const prevFormat = _mtFormat;
-        _mtFormat = { ...lg.format };
-        try { teams = _mtScoreSnapshotTeams(lg); } catch (_) { teams = lg.teams || []; } finally { _mtFormat = prevFormat; }
-      }
-      _mtRenderTradeLog(trades, { key, box, teams, mode: _mtModeForFormat(lg.format), mine: !!((_mtTradeLogCtx[key] || {}).mine) });
-    } catch (err) {
-      console.warn('[MyTeams] Saved trade log error:', err);
-      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:6px 0">Couldn\'t load trades: ' + _esc(err.message) + '</div>';
-    }
-  };
-
   // ── SEASON OUTLOOK (projected records + playoff odds) ────────────────
   // Full-season head-to-head schedule × each team's best-lineup season PPG
   // (sim-export means via _mtGetPlayerPpg — NO player sims run in-browser;
@@ -58358,9 +58314,9 @@ Rules:
 
   // ── Page chrome (Jack 2026-09-02: "the top is very cluttered and we need
   // an easier way to switch the league") ────────────────────────────────
-  // Flock-style layout: the loaded league sits at the top with a ‹ MY
-  // LEAGUES back button and a league-switcher <select> (name · tier) over
-  // the saved leagues; the value-source tabs collapse behind a one-line
+  // Flock-style layout: the loaded league sits at the top with a league
+  // switcher dropdown (2026-10-06: the only league list — switch, reorder,
+  // remove, add); the value-source tabs collapse behind a one-line
   // bar; the explainer + import cards live in a collapsible ADD A LEAGUE
   // panel at the bottom that auto-collapses once anything is saved or
   // loaded (a manual toggle is respected for the rest of the session).
@@ -58399,36 +58355,106 @@ Rules:
     if (_mtActiveSource === 'yahoo') return _mtActiveYahooId ? 'yahoo_' + _mtActiveYahooId : null;
     return _mtActiveSleeperId ? String(_mtActiveSleeperId) : null;
   }
-  function _mtPopulateLeagueSwitch() {
-    const sel = document.getElementById('mtLeagueSwitch');
-    const nameEl = document.getElementById('mtLeagueName');
-    if (!sel) return;
-    const leagues = window._mtSavedLeagues || [];
-    const key = _mtActiveLeagueKey();
-    if (!leagues.length) { sel.style.display = 'none'; if (nameEl) nameEl.style.display = ''; return; }
-    let html = '';
-    let found = false;
-    leagues.forEach((lg, i) => {
-      const tier = _mtSavedLeagueMyTier(lg);
-      const isActive = !!key && String(lg.leagueId) === key;
-      if (isActive) found = true;
-      html += `<option value="${i}"${isActive ? ' selected' : ''}>${_esc(lg.name || 'League')}${tier ? ' · ' + tier.label : ''}</option>`;
-    });
-    if (!found && window._mtLeague) html = `<option value="__current" selected>${_esc(window._mtLeague.name || 'League')} · NOT SAVED</option>` + html;
-    sel.innerHTML = html;
-    sel.style.display = '';
-    if (nameEl) nameEl.style.display = 'none';
+  function _mtFmtShort(f) {
+    if (!f) return '';
+    const p = [];
+    if (f.type) p.push(f.type.charAt(0).toUpperCase() + f.type.slice(1));
+    if (f.sf) p.push('SF');
+    p.push(f.ppr === 1 ? 'PPR' : f.ppr === 0.5 ? '.5 PPR' : 'STD');
+    return p.join(' · ');
   }
-  window._mtSwitchLeague = function (v) {
-    if (v === '__current') return;
-    const idx = parseInt(v, 10);
-    if (!isNaN(idx) && window._mtSavedLeagues && window._mtSavedLeagues[idx]) window._mtLoadSavedLeague(idx);
+  function _mtActiveSavedIdx() {
+    const key = _mtActiveLeagueKey();
+    return key ? (window._mtSavedLeagues || []).findIndex(lg => String(lg.leagueId) === key) : -1;
+  }
+  // Button = active league name + tier + a count of OTHER leagues whose
+  // lineup needs a look; the menu (built on open) carries the rest.
+  function _mtPopulateLeagueSwitch() {
+    const wrap = document.getElementById('mtLeagueSwitchWrap');
+    const btn = document.getElementById('mtLeagueSwitch');
+    const nameEl = document.getElementById('mtLeagueName');
+    const syncEl = document.getElementById('mtLeagueSynced');
+    if (!wrap || !btn) return;
+    const leagues = window._mtSavedLeagues || [];
+    const idx = _mtActiveSavedIdx();
+    const lg = idx >= 0 ? leagues[idx] : null;
+    if (syncEl) {
+      const rel = lg ? _mtRelTime(lg.savedAt) : '';
+      syncEl.innerHTML = lg ? (rel ? '· <span title="' + _esc(new Date(lg.savedAt).toLocaleString()) + '" style="cursor:help">synced ' + rel + '</span>' : '') : (window._mtLeague ? '· <span style="color:#f59e0b">not saved</span>' : '');
+    }
+    if (!leagues.length) { wrap.style.display = 'none'; if (nameEl) nameEl.style.display = ''; return; }
+    const name = lg ? (lg.name || 'League') : ((window._mtLeague && window._mtLeague.name) || 'Choose a league');
+    const tier = lg ? _mtSavedLeagueMyTier(lg) : null;
+    let needs = 0;
+    leagues.forEach((x, i) => { if (i === idx) return; const st = _mtLineupState(x); if (st && st.key !== 'ok') needs++; });
+    btn.innerHTML = '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(name) + '</span>' + (tier ? _mtTeamTierChip(tier) : '') +
+      (needs ? '<span title="' + needs + ' other league' + (needs > 1 ? 's have' : ' has') + ' a lineup to fix" style="font-size:.62rem;letter-spacing:.5px;color:#000;background:#f59e0b;border-radius:9px;padding:0 7px;line-height:1.5">' + needs + ' LINEUP' + (needs > 1 ? 'S' : '') + '</span>' : '') +
+      '<span style="color:var(--text2);font-size:.8rem;margin-left:2px">▾</span>';
+    wrap.style.display = '';
+    if (nameEl) nameEl.style.display = 'none';
+    const menu = document.getElementById('mtLeagueMenu');
+    if (menu && menu.style.display !== 'none') _mtRenderLeagueMenu();
+  }
+  function _mtRenderLeagueMenu() {
+    const menu = document.getElementById('mtLeagueMenu');
+    if (!menu) return;
+    const leagues = window._mtSavedLeagues || [];
+    const active = _mtActiveSavedIdx();
+    const wk = _mtLineupWeek();
+    const btnS = "padding:0 5px;font-size:.55rem;line-height:1.35;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer";
+    let html = '<div style="padding:8px 12px 6px;font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2);border-bottom:1px solid var(--border)">YOUR LEAGUES' + (wk ? ' · LINEUPS WK ' + wk : '') + '</div>';
+    if (active < 0 && window._mtLeague) {
+      html += '<div style="padding:8px 12px;background:rgba(245,158,11,.06);border-bottom:1px solid var(--border)"><div style="font-weight:600;font-size:.8rem;color:var(--text)">' + _esc(window._mtLeague.name || 'League') + '</div><div style="font-size:.62rem;color:#f59e0b">open now · not saved</div></div>';
+    }
+    leagues.forEach((lg, i) => {
+      const on = i === active;
+      const tier = _mtSavedLeagueMyTier(lg);
+      const st = _mtLineupState(lg);
+      const rel = _mtRelTime(lg.savedAt);
+      const unseen = _mtUnseenChanges(lg).length;
+      const n = lg.teams ? lg.teams.length : 0;
+      html += '<div onclick="window._mtPickLeague(' + i + ')" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);' + (on ? 'background:rgba(245,158,11,.08);box-shadow:inset 3px 0 0 var(--accent)' : '') + '" onmouseover="if(!' + on + ')this.style.background=\'var(--surface2)\'" onmouseout="if(!' + on + ')this.style.background=\'\'">';
+      if (leagues.length > 1) html += '<div style="display:flex;flex-direction:column;gap:2px;flex:0 0 auto"><button onclick="event.stopPropagation();window._mtMoveSavedLeague(' + i + ',-1)" title="Move up"' + (i === 0 ? ' disabled' : '') + ' style="' + btnS + (i === 0 ? ';opacity:.3;cursor:default' : '') + '">▲</button><button onclick="event.stopPropagation();window._mtMoveSavedLeague(' + i + ',1)" title="Move down"' + (i === leagues.length - 1 ? ' disabled' : '') + ' style="' + btnS + (i === leagues.length - 1 ? ';opacity:.3;cursor:default' : '') + '">▼</button></div>';
+      html += '<div style="flex:1;min-width:0">';
+      html += '<div style="display:flex;align-items:center;gap:4px;min-width:0"><span style="font-weight:600;font-size:.8rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(lg.name || 'League') + '</span>' + (tier ? '<span style="flex:0 0 auto;line-height:1">' + _mtTeamTierChip(tier) + '</span>' : '') + '</div>';
+      html += '<div style="font-size:.6rem;color:var(--text2)">' + n + ' teams · ' + _esc(_mtFmtShort(lg.format)) + (rel ? ' · <span title="' + _esc(new Date(lg.savedAt).toLocaleString()) + '">synced ' + rel + '</span>' : '') + (unseen ? ' · <span style="color:#fbbf24;font-weight:700">● ' + unseen + ' new</span>' : '') + '</div>';
+      html += '</div>';
+      if (st) {
+        const mv = st.l.moves && st.l.moves[0];
+        const tip = st.key === 'ok' ? 'Lineup is optimal' : 'Set ' + st.l.actualPts + ' · best ' + st.l.optimalPts + (st.l.flagged.length ? ' · ' + st.l.flagged.join(', ') : '') + (mv && mv.start ? ' · start ' + mv.start.name + (mv.sit ? ' over ' + mv.sit.name : '') : '') + ' — click to open LINEUP CHECK';
+        html += '<span onclick="event.stopPropagation();window._mtCloseLeagueMenu();window._mtOpenLeagueLineup(' + i + ')" title="' + _esc(tip) + '" style="flex:0 0 auto;font-family:\'Bebas Neue\',sans-serif;font-size:.68rem;letter-spacing:.5px;color:' + st.col + ';background:' + st.col + '15;border:1px solid ' + st.col + ';border-radius:4px;padding:1px 7px;white-space:nowrap;cursor:pointer">' + st.label + '</span>';
+      }
+      html += '<button onclick="event.stopPropagation();window._mtDeleteSavedLeague(\'' + _esc(lg.leagueId) + '\')" title="Remove this league" style="flex:0 0 auto;padding:2px 7px;background:none;border:1px solid transparent;border-radius:4px;font-size:.7rem;color:var(--text2);cursor:pointer" onmouseover="this.style.color=\'#ef4444\';this.style.borderColor=\'#ef444466\'" onmouseout="this.style.color=\'var(--text2)\';this.style.borderColor=\'transparent\'">✕</button>';
+      html += '</div>';
+    });
+    html += '<div onclick="window._mtCloseLeagueMenu();window._mtOpenAddLeague()" style="padding:9px 12px;cursor:pointer;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.2px;color:var(--accent)" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">+ ADD A LEAGUE <span style="font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:0;color:var(--text2)">Sleeper · ESPN · Yahoo</span></div>';
+    menu.innerHTML = html;
+  }
+  window._mtToggleLeagueMenu = function (ev) {
+    if (ev) ev.stopPropagation();
+    const menu = document.getElementById('mtLeagueMenu');
+    if (!menu) return;
+    if (menu.style.display === 'none') { _mtRenderLeagueMenu(); menu.style.display = ''; }
+    else menu.style.display = 'none';
   };
-  window._mtBackToLeagues = function () {
-    const v = document.getElementById('mtLeagueView');
-    if (v) v.style.display = 'none';
-    const s = document.getElementById('mtSavedTeams');
-    if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window._mtCloseLeagueMenu = function () {
+    const menu = document.getElementById('mtLeagueMenu');
+    if (menu) menu.style.display = 'none';
+  };
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('mtLeagueSwitchWrap');
+    if (wrap && !wrap.contains(e.target)) window._mtCloseLeagueMenu();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window._mtCloseLeagueMenu(); });
+  window._mtPickLeague = function (idx) {
+    window._mtCloseLeagueMenu();
+    if (idx !== _mtActiveSavedIdx() && window._mtSavedLeagues && window._mtSavedLeagues[idx]) window._mtLoadSavedLeague(idx);
+  };
+  window._mtOpenAddLeague = function () {
+    _mtSetupUserToggled = true;
+    _mtSetSetupOpen(true);
+    const el = document.getElementById('mtSetup');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   // ── "Who owns…?" (Flock-audit item 8, Jack 2026-09-02) ───────────────
@@ -58477,24 +58503,10 @@ Rules:
     if (det) det.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // ── Saved-card tier filter + reorder (Flock-audit items 6-7) ────────
-  // Filter chips bucket the tier labels; order persists to the user doc
+  // ── League order (Flock-audit item 7) ────────────────────────────────
+  // ▲▼ in the switcher menu; order persists to the user doc
   // (savedLeagueOrder) with a localStorage mirror, applied when the saved
-  // list loads. Drag-and-drop on desktop, ▲▼ arrows everywhere.
-  let _mtSavedFilter = 'all';
-  const _MT_TIER_BUCKET = {
-    contend: ['JUGGERNAUT', 'STRONG CONTENDER', 'CONTENDER', 'ALL IN', 'TITLE CONTENDER', 'PLAYOFF TEAM', 'DARK HORSE', 'OVERACHIEVER'],
-    rebuild: ['STRONG REBUILDER', 'REBUILDER', 'RETOOLING', 'LOADED']
-  };
-  function _mtSavedCardMatches(lg) {
-    if (_mtSavedFilter === 'all') return true;
-    if (_mtSavedFilter === 'dynasty') return !!(lg.format && (lg.format.type === 'dynasty' || lg.format.type === 'keeper'));
-    if (_mtSavedFilter === 'redraft') return !(lg.format && (lg.format.type === 'dynasty' || lg.format.type === 'keeper'));
-    const tier = _mtSavedLeagueMyTier(lg);
-    if (!tier) return false;
-    return (_MT_TIER_BUCKET[_mtSavedFilter] || []).indexOf(tier.label) >= 0;
-  }
-  window._mtSetSavedFilter = function (f) { _mtSavedFilter = f; _mtRenderSavedTeams(window._mtSavedLeagues || []); };
+  // list loads.
   function _mtPersistLeagueOrder() {
     const ids = (window._mtSavedLeagues || []).map(lg => String(lg.leagueId));
     try { localStorage.setItem('mt_league_order', JSON.stringify(ids)); } catch (_) {}
@@ -58522,128 +58534,47 @@ Rules:
     if (i < 0 || i >= L.length || j < 0 || j >= L.length) return;
     const tmp = L[i]; L[i] = L[j]; L[j] = tmp;
     _mtPersistLeagueOrder();
-    _mtRenderSavedTeams(L);
+    _mtPopulateLeagueSwitch();
   };
-  let _mtDragIdx = null;
-  function _mtWireSavedDrag(container) {
-    if (container._mtDragWired) return;
-    container._mtDragWired = true;
-    container.addEventListener('dragstart', e => {
-      const card = e.target.closest && e.target.closest('[data-mtidx]');
-      if (!card) return;
-      _mtDragIdx = parseInt(card.dataset.mtidx, 10);
-      card.style.opacity = '.5';
-      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(_mtDragIdx)); } catch (_) {}
-    });
-    container.addEventListener('dragend', e => { const card = e.target.closest && e.target.closest('[data-mtidx]'); if (card) card.style.opacity = ''; });
-    container.addEventListener('dragover', e => { if (_mtDragIdx == null) return; e.preventDefault(); const card = e.target.closest && e.target.closest('[data-mtidx]'); container.querySelectorAll('[data-mtidx]').forEach(c => { c.style.outline = ''; }); if (card && parseInt(card.dataset.mtidx, 10) !== _mtDragIdx) card.style.outline = '2px dashed var(--accent)'; });
-    container.addEventListener('drop', e => {
-      e.preventDefault();
-      const card = e.target.closest && e.target.closest('[data-mtidx]');
-      const from = _mtDragIdx; _mtDragIdx = null;
-      if (!card || from == null) return;
-      const to = parseInt(card.dataset.mtidx, 10);
-      if (isNaN(to) || to === from) return;
-      const L = window._mtSavedLeagues || [];
-      const [moved] = L.splice(from, 1);
-      L.splice(to, 0, moved);
-      _mtPersistLeagueOrder();
-      _mtRenderSavedTeams(L);
-    });
-  }
 
   let _mtSavedTierRetry = false;
   let _mtAutoOpenedOnce = false;
+  let _mtOpenFirstPending = false;
   window._mtRenderSavedTeams = function(leagues) { return _mtRenderSavedTeams(leagues || window._mtSavedLeagues || []); }; // debug/harness hook
   function _mtRenderSavedTeams(leagues) {
-    const container = document.getElementById('mtSavedTeams');
-    if (!container) return;
-    if (!leagues.length) { container.innerHTML = ''; return; }
-    // Tier chips need the board — first auth render can beat the data
-    // boot; re-render once it lands.
+    // Tier chips + lineup flags need the board — first auth render can beat
+    // the data boot; re-render once it lands.
     if ((typeof D === 'undefined' || !D.length) && !_mtSavedTierRetry) {
       _mtSavedTierRetry = true;
       setTimeout(() => { _mtSavedTierRetry = false; _mtRenderSavedTeams(window._mtSavedLeagues || []); }, 3000);
     }
-
-    let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text);margin-bottom:10px">SAVED LEAGUES <span style="font-family:system-ui,sans-serif;font-size:.6rem;letter-spacing:.2px;font-weight:400;color:var(--text2);margin-left:6px;vertical-align:2px">rosters &amp; records auto-update when you visit</span></div>';
-    // Filter chips (2+ leagues): tier buckets + format.
-    if (leagues.length >= 2) {
-      html += `<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:8px">`;
-      [['all', 'ALL', 'var(--accent)'], ['contend', 'CONTENDING', '#22c55e'], ['rebuild', 'REBUILDING', '#38bdf8'], ['dynasty', 'DYNASTY', '#a855f7'], ['redraft', 'REDRAFT', '#f472b6']].forEach(([k, lbl, col]) => {
-        const on = _mtSavedFilter === k;
-        html += `<button onclick="window._mtSetSavedFilter('${k}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${on ? col : 'var(--border)'};background:${on ? col : 'var(--surface)'};color:${on ? '#000' : 'var(--text2)'}">${lbl}</button>`;
-      });
-      html += `<span style="font-size:.55rem;color:var(--text2);margin-left:6px">drag cards or use ▲▼ to reorder</span></div>`;
-    }
-    let shown = 0;
-    leagues.forEach((lg, i) => {
-      if (!_mtSavedCardMatches(lg)) return;
-      shown++;
-      const teamCount = lg.teams ? lg.teams.length : 0;
-      const fmtParts = [];
-      if (lg.format) {
-        fmtParts.push(lg.format.type ? lg.format.type.charAt(0).toUpperCase() + lg.format.type.slice(1) : '');
-        if (lg.format.sf) fmtParts.push('SF');
-        fmtParts.push(lg.format.ppr === 1 ? 'PPR' : lg.format.ppr === 0.5 ? '.5 PPR' : 'STD');
-      }
-      const savedAbs = lg.savedAt ? new Date(lg.savedAt).toLocaleString() : '';
-      const savedRel = _mtRelTime(lg.savedAt);
-      const isEspnId = String(lg.leagueId || '').indexOf('espn_') === 0;
-      const isYahooId = String(lg.leagueId || '').indexOf('yahoo_') === 0;
-
-      // Find user's team for roster preview
-      const myTeam = (lg.teams || []).find(t => t.isMyTeam);
-      let rosterPreview = '';
-      if (myTeam && myTeam.players && myTeam.players.length) {
-        const names = myTeam.players.slice(0, 4).map(p => typeof p === 'string' ? p : (p && p.name) || '').filter(Boolean);
-        if (names.length) {
-          const more = myTeam.players.length > 4 ? ' +' + (myTeam.players.length - 4) + ' more' : '';
-          rosterPreview = '<div style="font-size:.62rem;color:var(--text2);margin-top:3px"><span style="color:var(--accent);font-weight:600">⭐ ' + _esc(myTeam.owner || 'My Team') + ':</span> ' + _esc(names.join(', ')) + more + '</div>';
-        }
-      }
-
-      html += `<div class="mt-saved-card" draggable="true" data-mtidx="${i}" onclick="window._mtLoadSavedLeague(${i})" title="Click to load league · drag to reorder" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;cursor:pointer;transition:border-color .15s,background .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(245,158,11,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">`;
-      if (leagues.length >= 2) html += `<div class="mt-saved-order" style="display:flex;flex-direction:column;gap:2px;flex:0 0 auto"><button onclick="event.stopPropagation();window._mtMoveSavedLeague(${i},-1)" title="Move up" ${i === 0 ? 'disabled' : ''} style="padding:0 6px;font-size:.6rem;line-height:1.3;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;${i === 0 ? 'opacity:.3;cursor:default' : ''}">▲</button><button onclick="event.stopPropagation();window._mtMoveSavedLeague(${i},1)" title="Move down" ${i === leagues.length - 1 ? 'disabled' : ''} style="padding:0 6px;font-size:.6rem;line-height:1.3;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;${i === leagues.length - 1 ? 'opacity:.3;cursor:default' : ''}">▼</button></div>`;
-      const _myTier = _mtSavedLeagueMyTier(lg);
-      html += `<div style="flex:1;min-width:0">`;
-      html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(lg.name || 'League')}${_myTier ? _mtTeamTierChip(_myTier) : ''}</div>`;
-      html += `<div style="font-size:.65rem;color:var(--text2)">${teamCount} teams · ${fmtParts.join(' · ')}${lg.season ? ' · ' + lg.season : ''}${savedRel ? ' · <span title="' + _esc(savedAbs) + '" style="cursor:help">Saved ' + savedRel + '</span>' : ''}</div>`;
-      html += rosterPreview;
-      // Unread activity since this league's ACTIVITY panel was last opened.
-      const _unseen = _mtUnseenChanges(lg);
-      if (_unseen.length) {
-        const _sum = _mtChangeSummary(_unseen);
-        if (_sum) html += `<div style="font-size:.62rem;color:#fbbf24;margin-top:3px"><span style="font-weight:700">● Since your last visit:</span> ${_esc(_sum)}</div>`;
-      }
-      html += `</div>`;
-      const _isSleeperLg = !!lg.leagueId; // every source has a trade log now (Sleeper API / ESPN feed / Yahoo page)
-      if (_isSleeperLg) html += `<button onclick="event.stopPropagation();window._mtToggleSavedTradeLog(${i})" title="League trade history, priced on your value board" style="padding:6px 10px;background:var(--surface2);color:#38bdf8;border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">TRADES</button>`;
-      html += `<button onclick="event.stopPropagation();window._mtLoadSavedLeague(${i})" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.5px;cursor:pointer">LOAD</button>`;
-      html += `<button onclick="event.stopPropagation();window._mtDeleteSavedLeague('${_esc(lg.leagueId)}')" title="Remove this saved league" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:#ef4444;cursor:pointer;font-weight:700">✕</button>`;
-      html += `</div>`;
-      // Inline trade-log panel for this card (Sleeper leagues; filled on demand).
-      if (_isSleeperLg) html += `<div id="mtSavedTradeLog-${i}" style="display:none;margin:-2px 0 8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px"></div>`;
-    });
-    if (!shown) html += `<div style="padding:10px 12px;font-size:.72rem;color:var(--text2);border:1px dashed var(--border);border-radius:8px">No saved leagues match this filter.</div>`;
-    container.innerHTML = html;
-    _mtWireSavedDrag(container);
-    // Lineup checklist rides the same render (and the same D-boot retry).
-    // (Portfolio summary REMOVED 2026-09-02 at Jack's request.)
-    _mtRenderLineupChecklist(leagues);
     _mtPopulateLeagueSwitch();
     _mtAutoSetupState();
-    // Auto-open the league you had open last time (Jack 2026-09-02) — once
-    // per page load, only if nothing is loaded yet, and only once the board
-    // has booted (scoring needs D). Removed leagues simply don't match.
-    if (!_mtAutoOpenedOnce && !(window._mtTeams && window._mtTeams.length) && typeof D !== 'undefined' && D.length) {
+    // Removed the open league → fall through to the first remaining one;
+    // removed the last league → close the view and open ADD A LEAGUE.
+    if (_mtOpenFirstPending) {
+      _mtOpenFirstPending = false;
+      if (leagues.length) { try { window._mtLoadSavedLeague(0); } catch (e) { console.warn('[MyTeams] open-first failed:', e); } }
+      else {
+        window._mtTeams = [];
+        const v = document.getElementById('mtLeagueView');
+        if (v) v.style.display = 'none';
+        _mtSetupUserToggled = false;
+        _mtAutoSetupState();
+      }
+      return;
+    }
+    // Auto-open the league you had open last time (Jack 2026-09-02), else the
+    // first saved league — the switcher is the only league list now, so the
+    // page always lands inside a league. Once per page load, only if nothing
+    // is loaded yet, and only once the board has booted (scoring needs D).
+    if (!_mtAutoOpenedOnce && leagues.length && !(window._mtTeams && window._mtTeams.length) && typeof D !== 'undefined' && D.length) {
       let key = null;
       try { key = localStorage.getItem('mt_last_opened'); } catch (_) {}
-      const idx = key ? leagues.findIndex(lg => String(lg.leagueId) === key) : -1;
-      if (idx >= 0) {
-        _mtAutoOpenedOnce = true;
-        try { window._mtLoadSavedLeague(idx); } catch (e) { console.warn('[MyTeams] auto-open failed:', e); }
-      }
+      let idx = key ? leagues.findIndex(lg => String(lg.leagueId) === key) : -1;
+      if (idx < 0) idx = 0;
+      _mtAutoOpenedOnce = true;
+      try { window._mtLoadSavedLeague(idx); } catch (e) { console.warn('[MyTeams] auto-open failed:', e); }
     }
   }
 
@@ -58739,58 +58670,21 @@ Rules:
   }
   window._mtSavedLeagueTier = _mtSavedLeagueMyTier; // trade calc / finder league pickers
 
-  // ── CROSS-LEAGUE LINEUP CHECKLIST (Jack 2026-09-02) ─────────────────────
-  // One block above the saved leagues: every league where my team is marked
-  // and the platform reported a lineup, with the LINEUP CHECK verdict
-  // (optimal / points on the bench / empty slots / bye-out starters), the
-  // top suggested move, and a FIX button that loads the league with the
-  // lineup panel open. Rides _mtSavedLeagueInfo's memo (per snapshot, value
-  // source and week).
-  function _mtRenderLineupChecklist(leagues) {
-    const box = document.getElementById('mtLineupChecklist');
-    if (!box) return;
-    if (typeof D === 'undefined' || !D.length) { box.innerHTML = ''; return; }
-    const rows = (leagues || []).map((lg, idx) => ({ lg, idx, info: _mtSavedLeagueInfo(lg) })).filter(x => x.info && x.info.lineup);
-    if (!rows.length) { box.innerHTML = ''; return; }
-    const wk = _mtLineupWeek();
-    if (typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
-    const state = r => {
-      const l = r.info.lineup;
-      if (!l.hasStarters) return { key: 'nodata', col: 'var(--text2)', label: 'NO LINEUP DATA', order: 3 };
-      if (!l.ok) return { key: 'nodata', col: 'var(--text2)', label: 'CAN\'T SCORE', order: 3 };
-      if (l.empty) return { key: 'bad', col: '#ef4444', label: l.empty + ' EMPTY SLOT' + (l.empty > 1 ? 'S' : ''), order: 0 };
-      if (l.flagged.length) return { key: 'bad', col: '#ef4444', label: l.flagged.length + ' ON BYE/OUT', order: 0 };
-      if (l.delta >= 1) return { key: 'warn', col: '#f59e0b', label: '+' + l.delta + ' ON BENCH', order: 1 };
-      if (l.delta >= 0.5) return { key: 'minor', col: '#facc15', label: '+' + l.delta + ' ON BENCH', order: 2 };
-      return { key: 'ok', col: '#22c55e', label: '✓ OPTIMAL', order: 4 };
-    };
-    rows.forEach(r => { r.st = state(r); });
-    rows.sort((a, b) => a.st.order - b.st.order);
-    const scored = rows.filter(r => r.st.key !== 'nodata');
-    const okCount = scored.filter(r => r.st.key === 'ok').length;
-    const needs = scored.length - okCount;
-    const headCol = needs === 0 ? '#22c55e' : scored.some(r => r.st.key === 'bad') ? '#ef4444' : '#f59e0b';
-    let html = `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px">`;
-    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--text)">LINEUPS${wk ? ' · WK ' + wk : ''}</span>`;
-    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;color:${headCol}">${scored.length ? (needs === 0 ? 'ALL ' + scored.length + ' SET' : needs + ' OF ' + scored.length + ' NEED A LOOK') : 'WAITING FOR LINEUP DATA'}</span>`;
-    html += `<span style="font-size:.62rem;color:var(--text2)">your set lineup vs the best lineup in every saved league${wk ? ' · weekly projections' : ' · season projections'}</span>`;
-    html += `</div><div style="display:flex;flex-direction:column;gap:5px">`;
-    rows.forEach(r => {
-      const l = r.info.lineup;
-      const st = r.st;
-      html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--surface);border:1px solid ${st.key === 'bad' ? '#ef444455' : st.key === 'warn' ? '#f59e0b55' : 'var(--border)'};border-radius:8px">`;
-      html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.5px;color:${st.col};background:${st.col}15;border:1px solid ${st.col};border-radius:4px;padding:2px 8px;white-space:nowrap">${st.label}</span>`;
-      html += `<span style="font-weight:600;font-size:.82rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(r.lg.name || 'League')}</span>`;
-      if (l.ok) html += `<span style="font-size:.65rem;color:var(--text2)">set <b style="color:var(--text)">${l.actualPts}</b> · best <b style="color:#22c55e">${l.optimalPts}</b>${l.locked ? ' · <span title="Players whose game has kicked off — locked where they are" style="cursor:help">🔒 ' + l.locked + '</span>' : ''}</span>`;
-      if (l.ok && l.flagged.length) html += `<span style="font-size:.65rem;color:#ef4444">${_esc(l.flagged.join(', '))}</span>`;
-      const mv = l.ok && l.moves && l.moves[0];
-      if (mv && mv.start) html += `<span style="font-size:.65rem;color:var(--text2)"><span style="color:#22c55e;font-weight:700">▲</span> ${_esc(mv.start.name)}${mv.sit ? ` over <span style="color:#ef4444;font-weight:700">▼</span> ${_esc(mv.sit.name)}` : ''}${mv.gain > 0 ? ` <span style="color:#22c55e;font-weight:700">+${mv.gain}</span>` : ''}${l.moves.length > 1 ? ` <span style="opacity:.7">+${l.moves.length - 1} more</span>` : ''}</span>`;
-      if (!l.hasStarters) html += `<span style="font-size:.65rem;color:var(--text2)">arrives on the next sync${String(r.lg.leagueId || '').indexOf('espn_') === 0 ? ' (private ESPN: re-export from the ESPN Helper)' : ''}</span>`;
-      html += `<button onclick="window._mtOpenLeagueLineup(${r.idx})" style="margin-left:auto;padding:4px 10px;background:${st.key === 'ok' || st.key === 'nodata' ? 'var(--surface2)' : 'var(--accent)'};color:${st.key === 'ok' || st.key === 'nodata' ? 'var(--text2)' : '#000'};border:1px solid ${st.key === 'ok' || st.key === 'nodata' ? 'var(--border)' : 'var(--accent)'};border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;cursor:pointer">${st.key === 'ok' || st.key === 'nodata' ? 'OPEN' : 'FIX'}</button>`;
-      html += `</div>`;
-    });
-    html += `</div>`;
-    box.innerHTML = html;
+  // ── Per-league lineup verdict (Jack 2026-09-02; moved into the league
+  // switcher menu 2026-10-06) ─────────────────────────────────────────
+  // LINEUP CHECK summary for a saved league (optimal / points on the bench /
+  // empty slots / bye-out starters) off _mtSavedLeagueInfo's memo. null when
+  // my team isn't marked or the platform sent no lineup.
+  function _mtLineupState(lg) {
+    const info = _mtSavedLeagueInfo(lg);
+    const l = info && info.lineup;
+    if (!l) return null;
+    if (!l.hasStarters || !l.ok) return null;
+    if (l.empty) return { key: 'bad', col: '#ef4444', label: l.empty + ' EMPTY', l };
+    if (l.flagged.length) return { key: 'bad', col: '#ef4444', label: l.flagged.length + ' BYE/OUT', l };
+    if (l.delta >= 1) return { key: 'warn', col: '#f59e0b', label: '+' + l.delta + ' BENCH', l };
+    if (l.delta >= 0.5) return { key: 'minor', col: '#facc15', label: '+' + l.delta + ' BENCH', l };
+    return { key: 'ok', col: '#22c55e', label: '✓ SET', l };
   }
   // The load renders synchronously, but the on-load auto-refresh can
   // re-import and re-render moments later (which closes every panel) — so
@@ -59367,7 +59261,7 @@ Rules:
   window._mtLiveRefresh = function () {
     try {
       if (_mtLineupCheckOpen) _mtRenderLineupCheck();
-      if (window._mtSavedLeagues) _mtRenderLineupChecklist(window._mtSavedLeagues);
+      if (window._mtSavedLeagues) _mtPopulateLeagueSwitch();
     } catch (_) {}
     // Underdog portfolio: live ADVANCE RATE / WINNING cards + TEAMS leaderboards.
     try { if (typeof window._udLiveRefresh === 'function') window._udLiveRefresh(); } catch (_) {}
@@ -60328,6 +60222,7 @@ Rules:
     })
     .then(() => {
       console.log('[MyTeams] Deleted league:', leagueId);
+      if (_mtActiveLeagueKey() === String(leagueId)) _mtOpenFirstPending = true;
       _mtLoadSavedLeagues();
     })
     .catch(e => { console.warn('[MyTeams] Delete error:', e); });

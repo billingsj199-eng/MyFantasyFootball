@@ -61,12 +61,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-09-28-rostt" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-06-lgswitch" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-06-papers" as="script">
+<link rel="preload" href="app.js?v=2026-10-06-lgswitch" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-06" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-06" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-09-28-rostt">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-06-lgswitch">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2937,10 +2937,16 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      <select> over the saved leagues (name · tier), so changing leagues is one pick. -->
 <div id="mtLeagueView" style="display:none">
 <div id="mtLeagueHeader" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-<button onclick="window._mtBackToLeagues()" title="Back to your leagues" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">‹ MY LEAGUES</button>
-<select id="mtLeagueSwitch" onchange="window._mtSwitchLeague(this.value)" title="Switch league" style="display:none;max-width:340px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer"></select>
+<!-- League switcher (2026-10-06): the ONE place to change, add or remove leagues — replaces the
+     SAVED LEAGUES cards + cross-league LINEUPS list that used to stack under the page.
+     Menu rows: name · tier · synced time · lineup flag · ✕ remove; footer = + ADD A LEAGUE. -->
+<div id="mtLeagueSwitchWrap" style="display:none;position:relative;max-width:100%">
+<button id="mtLeagueSwitch" onclick="window._mtToggleLeagueMenu(event)" title="Switch, add or remove leagues" style="display:flex;align-items:center;gap:8px;max-width:100%;padding:7px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer"></button>
+<div id="mtLeagueMenu" style="display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:60;width:460px;max-width:92vw;max-height:70vh;overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.5)"></div>
+</div>
 <span id="mtLeagueName" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text)">LEAGUE</span>
 <span id="mtLeagueInfo" style="font-size:.7rem;color:var(--text2)"></span>
+<span id="mtLeagueSynced" style="font-size:.7rem;color:var(--text2)"></span>
 <!-- Who owns…? — searches every roster in the loaded league (2026-09-02) -->
 <div id="mtOwnerSearchWrap" style="position:relative;margin-left:auto;min-width:0">
 <input id="mtOwnerSearch" type="text" placeholder="Who owns…?" autocomplete="off" oninput="window._mtOwnerSearch(this.value)" onfocus="window._mtOwnerSearch(this.value)" onblur="setTimeout(function(){var r=document.getElementById('mtOwnerSearchResults');if(r)r.style.display='none'},200)" style="width:170px;max-width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.75rem;box-sizing:border-box">
@@ -3023,10 +3029,6 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 </div>
 
-<!-- Saved Teams -->
-<!-- Cross-league lineup checklist (set lineup vs best lineup, every saved league — filled by _mtRenderLineupChecklist) -->
-<div id="mtLineupChecklist" style="margin-top:20px"></div>
-<div id="mtSavedTeams" style="margin-top:20px"></div>
 
 <!-- ADD A LEAGUE — explainer + import cards, collapsible (2026-09-02 declutter: auto-collapses once a league is saved or loaded; window._mtToggleSetup) -->
 <div id="mtSetup" style="margin-top:20px;margin-bottom:16px">
@@ -6071,7 +6073,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-06-papers"></script>
+<script defer src="app.js?v=2026-10-06-lgswitch"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

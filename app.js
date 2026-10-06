@@ -5380,6 +5380,57 @@ function _tcvOppChipHtml(d) {
   return '<div class="tcv-opp-chip' + (o.diff ? ' tcv-opp-' + o.diff : '') + '" title="' + _tcvOppTitle(o) + '"><span class="tcv-opp-pre">' + (o.away ? '@' : 'vs') + '</span>' + logoHtml + '</div>';
 }
 
+// WEEK RANGE on the tier cards (Jack 2026-10-06): the VOR WINDOW (VOR bar or
+// the WEEKS picker in the card toolbar) set on a season board turns the PROJ
+// slot into his Sim Lab PPG over those weeks (games he plays), and a range of
+// 3 weeks or fewer — e.g. PLAYOFFS 15-17 — shows each week's opponent and
+// projection on the card (playoff-schedule view). Vertical cards, ROW cards
+// and the PNG export all read _tcvRange / _tcvRangeFor.
+const _TCV_RANGE_MAX = 3;
+function _tcvRange() {
+  if (typeof currentMode === 'undefined' || currentMode === 'weekly' || typeof _vorWin !== 'function' || !_vorWin()) return null;
+  const t = _vorTable();
+  if (!t || !t.win) return null;
+  const weeks = [];
+  for (let w = t.from; w <= t.to; w++) weeks.push(w);
+  return { from: t.from, to: t.to, weeks: weeks, tag: _vorWinTag(t), desc: _vorWinDesc(t), strip: weeks.length <= _TCV_RANGE_MAX };
+}
+function _tcvLogoForAbbr(abbr) {
+  if (!window._tcvAbbrToLogoId && typeof TEAM_ABBR_MAP !== 'undefined' && typeof TEAM_LOGO_IDS !== 'undefined') {
+    window._tcvAbbrToLogoId = {};
+    Object.keys(TEAM_ABBR_MAP).forEach(full => { if (TEAM_LOGO_IDS[full]) window._tcvAbbrToLogoId[TEAM_ABBR_MAP[full]] = TEAM_LOGO_IDS[full]; });
+  }
+  const id = window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[abbr] : null;
+  return id ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png' : null;
+}
+// { ppg, wk: [{ w, bye, away, abbr, logoUrl, p }] } over the range's weeks.
+function _tcvRangeFor(d, R) {
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const sched = (typeof getNflScheduleForTeam === 'function' && d.t) ? (getNflScheduleForTeam(teamAbbr(d.t)) || []) : [];
+  let sum = 0, n = 0;
+  const wk = R.weeks.map(w => {
+    const g = sched.find(x => x && x.wk === w);
+    const row = _simProjRow(d, w);
+    const p = row && row[fi] > 0 ? Math.round(row[fi] * 10) / 10 : 0;
+    if (p > 0) { sum += p; n++; }
+    if (!g || g.bye) return { w: w, bye: true, p: 0 };
+    return { w: w, bye: false, away: !g.home, abbr: g.opp, logoUrl: _tcvLogoForAbbr(g.opp), p: p };
+  });
+  return { ppg: n ? Math.round(sum / n * 10) / 10 : null, wk: wk };
+}
+function _tcvRangeStripHtml(d, R, cls) {
+  const rf = _tcvRangeFor(d, R);
+  const cell = x => {
+    const tip = 'Week ' + x.w + ': ' + (x.bye ? 'BYE' : (x.away ? 'at ' : 'vs ') + x.abbr + (x.p > 0 ? ' · proj ' + x.p : ' · not projected to play'));
+    const pc = x.p > 0 && typeof posFptsColor === 'function' ? posFptsColor(x.p, d.s) : null;
+    return '<div class="tcv-rng-cell" title="' + tip + '"><span class="tcv-rng-w">W' + x.w + '</span>'
+      + (x.bye ? '<span class="tcv-rng-bye">BYE</span>'
+        : '<span class="tcv-rng-logo">' + (x.logoUrl ? '<img src="' + x.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '<b>' + x.abbr + '</b>') + '<span class="tcv-rng-pre">' + (x.away ? '@' : 'vs') + '</span></span>')
+      + '<span class="tcv-rng-p"' + (pc ? ' style="color:' + pc + '"' : '') + '>' + (x.p > 0 ? x.p.toFixed(1) : '—') + '</span></div>';
+  };
+  return '<div class="' + cls + '">' + rf.wk.map(cell).join('') + '</div>';
+}
+
 // Season PPG for the card's second line: actual '26 PPG to date (site scoring)
 // as soon as the in-season weekly-stats pull has 2026 rows for the player;
 // until then last season's adjusted '25 PPG. Same helper feeds the KEY label.
@@ -5421,7 +5472,8 @@ function _tcvBookProjVal(d) {
   } catch(_) { return null; }
 }
 function _tcvCardStats(d) {
-  const _bookVal = _tcvBookPref() ? _tcvBookProjVal(d) : null;
+  const _R = _tcvRange();
+  const _bookVal = (!_R && _tcvBookPref()) ? _tcvBookProjVal(d) : null;
   const _book = _bookVal != null;
   const projVal = _book ? _bookVal
     : (typeof _displayProjPpg === 'function') ? _displayProjPpg(d)
@@ -5449,6 +5501,14 @@ function _tcvCardStats(d) {
     _ttSlot = { v: _tp ? _tp.ppg.toFixed(1) : null, c: _tc, lbl: 'Team PPG' };
   }
   _ttSlot.short = (typeof currentMode !== 'undefined' && currentMode === 'weekly') ? (d.s === 'DST' ? 'OPP TT' : 'TEAM TT') : 'TEAM PPG';
+  if (_R) {
+    // Week range: PPG over those weeks; short ranges trade TEAM PPG for the matchup strip.
+    const rv = _tcvRangeFor(d, _R).ppg;
+    const rc = (rv != null && typeof posFptsColor === 'function') ? posFptsColor(rv, d.s) : null;
+    const rs = [{ v: rv, c: rc, lbl: 'Sim Lab proj PPG, ' + _R.desc, short: _R.tag }, { v: _25Val, c: _25Color, lbl: _seasonPpg.lbl, short: "'" + _seasonPpg.yr + ' PPG' }];
+    if (!_R.strip) rs.push(_ttSlot);
+    return { projVal: rv, projColor: rc, slots: rs, range: _R };
+  }
   const slots = [
     _book
       ? { v: projVal, c: projColor, lbl: (typeof currentMode !== 'undefined' && currentMode === 'weekly') ? 'Sportsbook proj (weekly prop lines)' : 'Sportsbook proj PPG (season props)', short: 'BOOK' }
@@ -5533,7 +5593,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
     '</div>' +
     '<div class="tcv-card-photo">' + logoHtml + headshotHtml + '</div>' +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
-    _tcvOppChipHtml(d) +
+    (_cs.range && _cs.range.strip ? _tcvRangeStripHtml(d, _cs.range, 'tcv-rng tcv-rng-v') : _tcvOppChipHtml(d)) +
     '<div class="tcv-card-name" style="font-size:' + _tcvCardNameFit(lastName) + 'px" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
       // Mystery silhouette: the player's REAL headshot blacked out to a ghost
@@ -5789,7 +5849,7 @@ async function _tcvMoveLoadDate(dateStr) {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44 };
+const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44, RNG_STATS_X: 336 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
@@ -5893,8 +5953,12 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
     '<div class="tcv-row-stat" title="' + safe(sl.lbl) + '"><span class="tcv-row-stat-v">' + _tcvFmtStat(sl.v, sl.c) + '</span><span class="tcv-row-stat-l">' + safe(sl.short) + '</span></div>'
   ).join('');
   let oppHtml = '';
-  const seasonBye = opp ? null : _tcvSeasonBye(d);
-  if (seasonBye != null) {
+  const _rng = cs.range && cs.range.strip ? cs.range : null;
+  if (_rng) card.classList.add('tcv-row-rng');
+  const seasonBye = (opp || _rng) ? null : _tcvSeasonBye(d);
+  if (_rng) {
+    oppHtml = _tcvRangeStripHtml(d, _rng, 'tcv-rng tcv-rng-row');
+  } else if (seasonBye != null) {
     oppHtml = '<div class="tcv-row-opp tcv-row-bye" title="Bye week ' + seasonBye + '"><span class="tcv-row-bye-l">BYE</span><span class="tcv-row-bye-n">' + seasonBye + '</span></div>';
   } else if (opp) {
     oppHtml = opp.bye
@@ -6427,10 +6491,14 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   const band = _tcvRowBand(d.t);
   const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
-  const [head, logo, oppLogo] = await Promise.all([
+  // Week-range strip (mirrors .tcv-rng-row): matchup cells where the bye chip
+  // sits, the stats box shrinks to two slots.
+  const rng = cs.range && cs.range.strip ? _tcvRangeFor(d, cs.range) : null;
+  const [head, logo, oppLogo, ...rngLogos] = await Promise.all([
     _tcvLoadImg(d._slImg ? _tcvHiResHeadshot(d._slImg) : null),
     _tcvLoadImg((logoId || d._devyLogo) ? window._logoSrc(d, logoId) : null),
-    _tcvLoadImg(opp && !opp.bye ? opp.logoUrl : null)
+    _tcvLoadImg(opp && !opp.bye ? opp.logoUrl : null),
+    ...(rng ? rng.wk.map(x => _tcvLoadImg(x.bye ? null : x.logoUrl)) : [])
   ]);
 
   const Y = L.PAD_TOP, H = L.H;
@@ -6518,12 +6586,47 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
 
   // Stats block (dark, so the green→red value colors stay readable on any band)
   const sy = Y + (H - L.STATS_H) / 2;
-  _tcvRoundRect(ctx, L.STATS_X, sy, L.STATS_W, L.STATS_H, 6);
+  const statsX = rng ? L.RNG_STATS_X : L.STATS_X, statsW = rng ? L.W - 10 - L.RNG_STATS_X : L.STATS_W;
+  _tcvRoundRect(ctx, statsX, sy, statsW, L.STATS_H, 6);
   ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
-  const colW = L.STATS_W / cs.slots.length;
+  const colW = statsW / cs.slots.length;
   ctx.textAlign = 'center';
+  if (rng) {
+    // Matchup cells: W15 · opponent logo (vs/@ on its corner) · that week's projection
+    const cw = (L.RNG_STATS_X - 4 - L.OPP_X) / rng.wk.length;
+    _tcvRoundRect(ctx, L.OPP_X, sy, L.RNG_STATS_X - 4 - L.OPP_X, L.STATS_H, 6);
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
+    rng.wk.forEach((x, i) => {
+      const cx = L.OPP_X + cw * i + cw / 2;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.font = '600 7px ' + SANS; ctx.fillStyle = 'rgba(255,255,255,.62)';
+      ctx.fillText('W' + x.w, cx, sy + 8);
+      if (x.bye) {
+        ctx.font = '12px ' + BEBAS; ctx.fillStyle = '#94a3b8';
+        ctx.fillText('BYE', cx, sy + 27);
+      } else {
+        const im = rngLogos[i], lg = 20;
+        if (im) {
+          ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
+          _tcvDrawContain(ctx, im, cx - lg / 2, sy + 10, lg, lg, 'center');
+          ctx.restore();
+        } else {
+          ctx.font = '11px ' + BEBAS; ctx.fillStyle = '#fff'; ctx.fillText(x.abbr, cx, sy + 25);
+        }
+        ctx.font = '10px ' + BEBAS; ctx.textAlign = 'left'; ctx.lineJoin = 'round';
+        ctx.lineWidth = 2.2; ctx.strokeStyle = '#0a0a0a';
+        ctx.strokeText(x.away ? '@' : 'vs', cx - lg / 2 - 3, sy + 30);
+        ctx.fillStyle = '#e2e8f0'; ctx.fillText(x.away ? '@' : 'vs', cx - lg / 2 - 3, sy + 30);
+        ctx.textAlign = 'center';
+      }
+      ctx.font = 'bold 9px ' + SANS;
+      ctx.fillStyle = x.p > 0 ? (posFptsColor(x.p, d.s) || '#fff') : 'rgba(255,255,255,.35)';
+      ctx.fillText(x.p > 0 ? x.p.toFixed(1) : '—', cx, sy + 41);
+    });
+    ctx.textAlign = 'center';
+  }
   cs.slots.forEach((sl, i) => {
-    const cx = L.STATS_X + colW * i + colW / 2;
+    const cx = statsX + colW * i + colW / 2;
     const blank = (sl.v == null || sl.v === '' || (typeof sl.v === 'number' && !isFinite(sl.v)));
     ctx.font = 'bold 15px ' + SANS;
     ctx.fillStyle = blank ? 'rgba(255,255,255,.35)' : (sl.c || '#fff');
@@ -6565,8 +6668,8 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
     }
   }
 
-  // Season boards: BYE week chip in the matchup slot
-  const seasonBye = opp ? null : _tcvSeasonBye(d);
+  // Season boards: BYE week chip in the matchup slot (not under a week-range strip)
+  const seasonBye = (opp || rng) ? null : _tcvSeasonBye(d);
   if (seasonBye != null) {
     const ox = L.OPP_X + 2, ow = L.OPP_W - 4, oh = 34;
     _tcvRoundRect(ctx, ox, Y + H / 2 - oh / 2, ow, oh, 5);
@@ -6585,7 +6688,7 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   try { ctx.letterSpacing = '1px'; } catch (_) {}
   ctx.fillStyle = 'rgba(255,255,255,.85)';
   ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 3;
-  ctx.fillText('MYFANTASYFOOTBALL.CO', L.STATS_X + L.STATS_W / 2, Y + H - 3);
+  ctx.fillText('MYFANTASYFOOTBALL.CO', rng ? (L.OPP_X + L.W - 10) / 2 : L.STATS_X + L.STATS_W / 2, Y + H - 3);
   ctx.restore();
 
   return c;
@@ -6848,6 +6951,8 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn' + (_tcvCenteredPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleCenter" title="Center each tier\'s cards (pyramid layout — fits vertical video). The tier letter rides against the leftmost card.">⇔ CENTER</button>' +
     '<button class="tcv-reveal-btn' + (_tcvRows ? ' tcv-primary' : '') + '" data-tcvaction="toggleRows" title="Horizontal graphic cards — headshot, name, PROJ / season PPG / team total, matchup and team logo on a team-color band, one player per line (tier-list video look)">▤ ROW CARDS</button>' +
     '<button class="tcv-reveal-btn' + (_tcvBookPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleBook" title="Switch the PROJ number on every card between OUR projection and the SPORTSBOOK projection (posted prop lines scored in the current format). Players with no posted lines keep our projection, labelled PROJ instead of BOOK.">$ ' + (_tcvBookPref() ? 'BOOK PROJ' : 'OUR PROJ') + '</button>' +
+    (currentMode !== 'weekly' ? '<span class="tcv-move-ctl" title="Week range for the cards: REST OF SEASON = the normal season projection. NEXT N / PLAYOFFS / CUSTOM = each card shows his projected PPG over those weeks, and for 3 weeks or fewer each week\'s opponent and projection (PLAYOFFS = the playoff-schedule view). Same setting as WINDOW in the VOR bar — the SIM VOR board re-ranks on it."><span class="tcv-zoom-lbl">WEEKS</span><select class="tcv-move-date" data-tcvwin>' + _vorWinOptsHtml(_vorState()) + '</select>'
+      + (_vorState().win === -1 ? '<input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wFrom" min="1" max="18" value="' + _vorState().wFrom + '"><span class="tcv-zoom-lbl">–</span><input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wTo" min="1" max="18" value="' + _vorState().wTo + '">' : '') + '</span>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvMoveOn ? ' tcv-primary' : '') + '" data-tcvaction="toggleMove" title="Rank movement: each card shows RANK THEN › RANK NOW — the second number green if the player rose, red if he fell. Compares against the weekly anchor (up to 7 days back)' + (_tcvIsAdminViewer() ? ', or pick any date to compare against the board saved that day' : '') + '.">↕ MOVEMENT</button>' +
     (_tcvMoveOn ? (_tcvIsAdminViewer()
       ? '<span class="tcv-move-ctl" title="Compare against the board as it was saved on or before this date (newest rankings backup that day)"><span class="tcv-zoom-lbl">VS</span>' +
@@ -6879,7 +6984,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:#ef4444">CUT LINE:</b> hover a card → <b style="color:#ef4444">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
@@ -7029,6 +7134,18 @@ function _renderTierCardView(data, container) {
       _renderTierCardView(data, container);
     });
   }
+  // WEEKS picker → the shared VOR window; _vorChanged re-renders the board and cards.
+  controls.addEventListener('change', e => {
+    const el = e.target;
+    if (el.matches('[data-tcvwin]')) { _vorWinSet(el.value); _vorChanged(); return; }
+    const k = el.getAttribute && el.getAttribute('data-tcvwk');
+    if (!k) return;
+    const st = _vorState(), n = Math.round(Number(el.value));
+    st[k] = isFinite(n) ? Math.min(18, Math.max(1, n)) : _VOR_DEFAULT[k];
+    if (k === 'wFrom' && st.wTo < st.wFrom) st.wTo = st.wFrom;
+    if (k === 'wTo' && st.wFrom > st.wTo) st.wFrom = st.wTo;
+    _vorChanged();
+  });
   root.querySelectorAll('[data-tcvaction]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-tcvaction');
@@ -7892,7 +8009,7 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() ? '📋 SIM VOR · NEXT ' + _vorWin() + ' WK' + (_vorWin() > 1 ? 'S' : '') : '📋 SIM VOR') : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -8876,7 +8993,7 @@ window._updateRnkStatHeaders = function() {
       const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + (_vt.to > _vt.from ? '-' + _vt.to : '') + (!_vt.win && _vst.poW !== 1 ? ' · PO ' + _vst.poW + 'x' : '') : 'ROS';
       _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game (' + fmtLabel + ' scoring' + _vx + '), games already played excluded — the number VOR is measured from.', 'PPG', fmtLabel);
       _set(c2, 'ppg25Header', 'Value over replacement per game — projected points above the replacement-level player at the position. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. ' + _how + ' Hover a value for the replacement player.', 'VOR/G', _vsub);
-      if (_vt && _vt.win) _set(c3, 'l4ppgHeader', 'Win-now VOR — his projected points over replacement week by week, added up over the next ' + _vt.win + ' week' + (_vt.win > 1 ? 's' : '') + ' only (weeks ' + _vt.from + '-' + _vt.to + ', set by WINDOW in the VOR bar), each week counted once. Replacement level is re-drawn on the same weeks, so a player with soft matchups or a teammate out right now rises, and a star who is hurt or on bye drops. For a team that needs wins before the playoffs. A week he misses or projects under replacement counts as zero. The SIM VOR board and its tiers are ordered by this number while the window is set.', 'VOR · NEXT ' + _vt.win, _span);
+      if (_vt && _vt.win) _set(c3, 'l4ppgHeader', 'Win-now VOR — his projected points over replacement week by week, added up over ' + _vorWinDesc(_vt) + ' only (set by WINDOW in the VOR bar), each week counted once. Replacement level is re-drawn on the same weeks, so a player with soft matchups or a teammate out right now rises, and a star who is hurt or on bye drops. A week he misses or projects under replacement counts as zero. The SIM VOR board and its tiers are ordered by this number while the window is set.', 'VOR · ' + _vorWinTag(_vt), _span);
       else _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — his projected points over replacement week by week, added up over the games still to be played (this week\'s games drop out as they kick off — no actual results are in it, what is already scored does not help a roster from here), through the last fantasy-playoff week. ' + _vorPlayoffLabel(_vst).charAt(0).toUpperCase() + _vorPlayoffLabel(_vst).slice(1) + '. A week he misses (injury, suspension, bye) or projects under replacement counts as zero because the replacement plays instead — so a better player who misses a couple of weeks keeps his edge for the rest, and loses more if the missed weeks are playoff weeks. This is the number the SIM VOR board and its tiers are ordered by.', 'ROS VOR', _span);
     }
   } else if (rnkStatMode === 'xfp') {
@@ -11788,16 +11905,51 @@ function _simSeasonPpgRow(d) {
 // (rkP / tAp / tPp = rank and tiers by PO VOR, for the PLAYOFFS view of the SIM VOR board).
 // (g = games he is projected to play, sg = games his team has left, gp / sgp = the
 // same inside the fantasy playoffs; tA / tP = overall / position tier).
-const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, poStart: 15, poEnd: 17, poW: 1.5, tep: 0, passTd: 4, win: 0 };
-const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20], poStart: [10, 18], poEnd: [10, 18], win: [0, 18] };
-// VOR WINDOW options (weeks from now; 0 = rest of season). Win-now view for
-// teams that need points before the playoffs, not a title-run price.
-const _VOR_WIN_OPTS = [0, 1, 2, 3, 4, 6, 8];
+const _VOR_DEFAULT = { league: '', teams: 12, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, SF: 0, K: 1, DST: 1, BN: 6, poStart: 15, poEnd: 17, poW: 1.5, tep: 0, passTd: 4, win: 0, wFrom: 15, wTo: 17 };
+const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0, 3], FLEX: [0, 5], SF: [0, 2], K: [0, 2], DST: [0, 2], BN: [0, 20], poStart: [10, 18], poEnd: [10, 18], win: [-2, 18], wFrom: [1, 18], wTo: [1, 18] };
+// VOR WINDOW options: 0 = rest of season, N = the next N weeks (win-now),
+// -2 = the fantasy-playoff weeks (poStart-poEnd), -1 = custom weeks
+// (wFrom-wTo). Every week inside a window counts once (no playoff weight).
+const _VOR_WIN_OPTS = [0, 1, 2, 3, 4, 6, 8, -2, -1];
 // Active window: season boards, the trade calc and the My Teams VOR sort all
 // share it (_vorTableROS(sf, true)).
 function _vorWin() {
   if (currentMode === 'weekly' || window._vorWinOff) return 0;
   return _vorState().win || 0;
+}
+// Weeks [a, b] the window covers, clipped to the games still to play (a > b = already played).
+function _vorWinSpan(st, from1, last) {
+  const w = st.win || 0;
+  if (w > 0) return [from1, Math.min(last, from1 + w - 1)];
+  if (w === -2) return [Math.max(from1, st.poStart), Math.min(last, st.poEnd)];
+  if (w === -1) return [Math.max(from1, st.wFrom), Math.min(last, st.wTo)];
+  return [from1, last];
+}
+function _vorWinOptsHtml(st) {
+  const cur = st.win || 0;
+  const lab = n => n > 0 ? 'Next ' + n + ' wk' + (n > 1 ? 's' : '')
+    : n === -2 ? 'Playoffs (wk ' + st.poStart + (st.poEnd > st.poStart ? '-' + st.poEnd : '') + ')'
+    : n === -1 ? 'Custom (wk ' + st.wFrom + (st.wTo > st.wFrom ? '-' + st.wTo : '') + ')'
+    : 'Rest of season';
+  return _VOR_WIN_OPTS.map(n => '<option value="' + n + '"' + (cur === n ? ' selected' : '') + '>' + lab(n) + '</option>').join('');
+}
+// Shared setter for every WINDOW picker (VOR bar, tier cards, trade calc, My Teams).
+function _vorWinSet(v) {
+  const n = Math.round(Number(v));
+  _vorState().win = _VOR_WIN_OPTS.includes(n) ? n : 0;
+  if (n) window._vorPlayoffs = false;
+}
+// Labels for a priced table with a window: tag 'NEXT 3' / 'WK 15-17', desc for sentences.
+function _vorWinTag(t) {
+  return t.win > 0 ? 'NEXT ' + t.win : 'WK ' + t.from + (t.to > t.from ? '-' + t.to : '');
+}
+function _vorWinDesc(t) {
+  return t.win > 0 ? 'the next ' + t.win + ' week' + (t.win > 1 ? 's' : '') + ' (weeks ' + t.from + (t.to > t.from ? '-' + t.to : '') + ')' : 'weeks ' + t.from + (t.to > t.from ? '-' + t.to : '');
+}
+// Same tag from the saved setting alone (before a table is priced).
+function _vorWinStTag(st) {
+  const w = st.win || 0;
+  return w > 0 ? 'NEXT ' + w : w === -2 ? 'WK ' + st.poStart + '-' + st.poEnd : w === -1 ? 'WK ' + st.wFrom + (st.wTo > st.wFrom ? '-' + st.wTo : '') : '';
 }
 const _VOR_PO_W = [1, 3];   // playoff-week weight range (steps of 0.25)
 function _vorClampW(v) {
@@ -11818,6 +11970,8 @@ function _vorState() {
     st.tep = Math.max(0, Number(st.tep) || 0);
     st.passTd = isFinite(Number(st.passTd)) ? Number(st.passTd) : 4;
     st.league = st.league ? String(st.league) : '';
+    if (!_VOR_WIN_OPTS.includes(st.win)) st.win = 0;
+    if (st.wTo < st.wFrom) st.wTo = st.wFrom;
     window._vorSt = st;
   }
   return window._vorSt;
@@ -11926,18 +12080,21 @@ function _vorTable() {
   // Any game of that week kicked off (live scoreboard) → the week is spent for everyone.
   const kicked = (!wk && typeof window._liveKickedTeams === 'function') ? window._liveKickedTeams(from) : null;
   const kSig = (kicked && kicked.size) ? 'k' : '';
-  const win = wk ? 0 : _vorWin();
+  let win = wk ? 0 : _vorWin();
   // Jack's OUT FOR SEASON flags: never priced, never a replacement level.
   const irOut = window._irHiddenHere && window._irHiddenHere(currentMode) ? (d => window._irIsOut(d.n)) : null;
   const irSig = irOut ? Object.keys(window._irMap || {}).sort().join(',') : '';
-  const key = [fi, wk, cw, from, kSig, win, irSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
+  const key = [fi, wk, cw, from, kSig, win, st.wFrom, st.wTo, irSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
   const weeks = [];
   const from1 = kSig ? from + 1 : from;
-  // WINDOW: the next `win` weeks only (never past the end of the fantasy season).
+  // WINDOW: the next N weeks, the fantasy playoffs or a custom range (never
+  // past the end of the fantasy season); a range already played = rest of season.
   const last = Math.max(from1, st.poEnd);
-  if (wk) weeks.push(wk); else for (let w = from1; w <= (win ? Math.min(last, from1 + win - 1) : last); w++) weeks.push(w);
+  let span = win ? _vorWinSpan(st, from1, last) : null;
+  if (span && span[0] > span[1]) { span = null; win = 0; }
+  if (wk) weeks.push(wk); else for (let w = span ? span[0] : from1; w <= (span ? span[1] : last); w++) weeks.push(w);
   // A window prices raw points now — no playoff weight, no PO VOR.
   const isPO = w => !wk && !win && w >= st.poStart && w <= st.poEnd;
   const wt = w => isPO(w) ? st.poW : 1;
@@ -12210,9 +12367,9 @@ function _vorBarRender() {
     + lgs.map(l => '<option value="' + esc(l.leagueId) + '"' + (lg === l ? ' selected' : '') + '>' + esc(l.name || 'League') + '</option>').join('')
     + (lgs.length ? '' : '<option value="" disabled>Sync a league in MY TEAMS to list it here</option>')
     + '</select>'
-    + (currentMode !== 'weekly' ? '<label class="vor-num vor-win" title="How many weeks VOR adds up. REST OF SEASON = every game left through the last fantasy-playoff week (playoff weeks weighted). NEXT N WEEKS = only the next N weeks, every week counted once: win-now value for a team that needs wins before the playoffs. Replacement level is re-drawn on the same weeks.">Window<select id="vorWinSel">'
-      + _VOR_WIN_OPTS.map(n => '<option value="' + n + '"' + ((st.win || 0) === n ? ' selected' : '') + '>' + (n ? 'Next ' + n + ' wk' + (n > 1 ? 's' : '') : 'Rest of season') + '</option>').join('')
-      + '</select></label>' : '')
+    + (currentMode !== 'weekly' ? '<label class="vor-num vor-win" title="Which weeks VOR adds up. REST OF SEASON = every game left through the last fantasy-playoff week (playoff weeks weighted). NEXT N WEEKS = win-now value for a team that needs wins before the playoffs. PLAYOFFS = the fantasy-playoff weeks only (playoff schedule). CUSTOM = any week range. Inside a window every week counts once and replacement level is re-drawn on the same weeks. Tier cards show each week\'s matchup and projection for short windows.">Window<select id="vorWinSel">'
+      + _vorWinOptsHtml(st)
+      + '</select></label>' + (st.win === -1 ? num('wFrom', 'Wk', 'First week of the custom range') + '<span class="vor-dash">–</span>' + num('wTo', '', 'Last week of the custom range') : '') : '')
     + num('teams', 'Teams', 'Teams in the league')
     + num('QB', 'QB', 'Starting QBs per team') + num('RB', 'RB', 'Starting RBs per team') + num('WR', 'WR', 'Starting WRs per team') + num('TE', 'TE', 'Starting TEs per team')
     + num('FLEX', 'Flex', 'Flex spots per team (RB / WR / TE)') + num('SF', 'SFlex', 'Superflex spots per team (QB / RB / WR / TE)')
@@ -12247,9 +12404,7 @@ function _vorChanged() {
       return;
     }
     if (t.id === 'vorWinSel') {
-      const n = Math.round(Number(t.value));
-      _vorState().win = _VOR_WIN_OPTS.includes(n) ? n : 0;
-      if (n) window._vorPlayoffs = false;
+      _vorWinSet(t.value);
       _vorChanged();
       return;
     }
@@ -12261,6 +12416,8 @@ function _vorChanged() {
     st[k] = isFinite(n) ? Math.min(_VOR_LIMITS[k][1], Math.max(_VOR_LIMITS[k][0], n)) : _VOR_DEFAULT[k];
     if (k === 'poStart' && st.poEnd < st.poStart) st.poEnd = st.poStart;
     if (k === 'poEnd' && st.poStart > st.poEnd) st.poStart = st.poEnd;
+    if (k === 'wFrom' && st.wTo < st.wFrom) st.wTo = st.wFrom;
+    if (k === 'wTo' && st.wFrom > st.wTo) st.wFrom = st.wTo;
     _vorChanged();
   });
   bar.addEventListener('click', e => {
@@ -29843,7 +30000,7 @@ window.fmtHeight = fmtHeight;
   }
   // Label for the VOR number in play: ROS, or the NEXT N window.
   function _tradeVorLbl(t) {
-    return t && t.win ? 'VOR next ' + t.win + ' wk' + (t.win > 1 ? 's' : '') : 'ROS VOR';
+    return t && t.win ? 'VOR ' + _vorWinTag(t).toLowerCase() : 'ROS VOR';
   }
   // WINDOW picker in the VOR TRADE IMPACT head — the same setting as the
   // rankings VOR bar, so a win-now trade and a win-now board agree.
@@ -29852,9 +30009,7 @@ window.fmtHeight = fmtHeight;
     if (!el) return;
     el.addEventListener('change', e => {
       if (e.target.id !== 'tviWinSel') return;
-      const n = Math.round(Number(e.target.value));
-      _vorState().win = _VOR_WIN_OPTS.includes(n) ? n : 0;
-      if (n) window._vorPlayoffs = false;
+      _vorWinSet(e.target.value);
       _vorChanged();
       renderAll();
     });
@@ -29865,7 +30020,7 @@ window.fmtHeight = fmtHeight;
     if (!e) return '';
     if (_vorLocked(d, e)) return '<span class="tp-vor" title="' + _VOR_LOCK_TIP.replace(/"/g, '&quot;') + '">VOR 🔒</span>';
     const f = v => (v > 0 ? '+' : '') + Math.round(v);
-    const span = t.win ? 'over the next ' + t.win + ' week' + (t.win > 1 ? 's' : '') + ' (weeks ' + t.from + '-' + t.to + ')' : 'across his remaining games (fantasy-playoff weeks counted ' + t.st.poW + 'x)';
+    const span = t.win ? 'over ' + _vorWinDesc(t) : 'across his remaining games (fantasy-playoff weeks counted ' + t.st.poW + 'x)';
     return '<span class="tp-vor' + (e.vt > 0 ? '' : ' neg') + '" title="' + (t.win ? 'Win-now' : 'Rest-of-season') + ' VOR: ' + f(e.vt) + ' points over a replacement player ' + span + ' · ' + (e.vor > 0 ? '+' : '') + e.vor + ' per game">VOR ' + f(e.vt) + '</span>';
   }
   // Cumulative ROS VOR of a list of players (below-replacement counts 0).
@@ -29898,9 +30053,9 @@ window.fmtHeight = fmtHeight;
     const cls = v => v > 0.5 ? 'pos' : v < -0.5 ? 'neg' : '';
     const free = hasPremium();
     const W = t.win;
-    const winSel = '<label class="tvi-win" title="How many weeks the trade is judged over. REST OF SEASON = every game left through the fantasy playoffs. NEXT N WEEKS = only the next N weeks, each counted once — for a team that needs wins now. Same setting as WINDOW in the rankings VOR bar.">Window <select id="tviWinSel">'
-      + _VOR_WIN_OPTS.map(n => '<option value="' + n + '"' + ((W || 0) === n ? ' selected' : '') + '>' + (n ? 'Next ' + n + ' wk' + (n > 1 ? 's' : '') : 'Rest of season') + '</option>').join('') + '</select></label>';
-    const head = '<div class="tvi-head"><span class="tvi-title">VOR TRADE IMPACT</span>' + winSel + '<span class="tvi-sub">Sim Lab · weeks ' + t.from + '-' + t.to + ' · ' + _vorLineupLabel(t.st) + ' · ' + (W ? 'win-now window, each week counted once' : _vorPlayoffLabel(t.st)) + '</span></div>';
+    const winSel = '<label class="tvi-win" title="Which weeks the trade is judged over. REST OF SEASON = every game left through the fantasy playoffs. NEXT N WEEKS = win-now, for a team that needs wins now. PLAYOFFS = the fantasy-playoff weeks only. Every week in a window counts once. Same setting as WINDOW in the rankings VOR bar (set a custom range there).">Window <select id="tviWinSel">'
+      + _vorWinOptsHtml(_vorState()) + '</select></label>';
+    const head = '<div class="tvi-head"><span class="tvi-title">VOR TRADE IMPACT</span>' + winSel + '<span class="tvi-sub">Sim Lab · weeks ' + t.from + '-' + t.to + ' · ' + _vorLineupLabel(t.st) + ' · ' + (W ? _vorWinDesc(t) + ', each week counted once' : _vorPlayoffLabel(t.st)) + '</span></div>';
     const nm = [nameA, nameB];
     const give = [pA, pB];
     const paper = i => { const a = _tradeVorSum(give[1 - i]), b = _tradeVorSum(give[i]); return { inn: a ? a.sum : 0, out: b ? b.sum : 0, locked: !!((a && a.locked) || (b && b.locked)) }; };
@@ -29949,7 +30104,7 @@ window.fmtHeight = fmtHeight;
       const pp = paper(i);
       return '<div class="tvi-team"><div class="tvi-name">' + _esc(nm[i]) + '</div>'
         + '<div class="tvi-big ' + cls(dR) + '">' + f1(dR) + ' pts</div>'
-        + '<div class="tvi-line">' + (W ? 'next ' + W + ' week' + (W > 1 ? 's' : '') : 'season') + ' +/- for this lineup if you make the trade (weeks ' + r.weeks[0] + '-' + r.weeks[r.weeks.length - 1] + ')</div>'
+        + '<div class="tvi-line">' + (W ? _vorWinTag(t).toLowerCase() : 'season') + ' +/- for this lineup if you make the trade (weeks ' + r.weeks[0] + '-' + r.weeks[r.weeks.length - 1] + ')</div>'
         + '<div class="tvi-stats"><span>per week <b class="' + cls(dR) + '">' + f1(dR / r.weeks.length) + '</b></span>' + (W ? '' : '<span>playoffs <b class="' + cls(dP) + '">' + f1(dP) + '</b></span><span>playoff-weighted <b class="' + cls(dW) + '">' + f1(dW) + '</b></span>') + '</div>'
         + '<div class="tvi-stats"><span>' + Math.round(tm.before.raw) + ' → ' + Math.round(tm.after.raw) + ' pts</span><span title="' + _tradeVorLbl(t) + ' in minus out, as if every player starts — vs the ' + (W ? '' : 'playoff-weighted ') + 'change your real lineup gets">VOR on paper <b class="' + cls(pp.inn - pp.out) + '">' + f0(pp.inn - pp.out) + '</b> → lineup <b class="' + cls(dW) + '">' + f0(dW) + '</b></span></div>'
         + bars(tm)
@@ -57314,7 +57469,7 @@ Rules:
     if (wkNum) sortOpts.splice(2, 0, { key: 'week', label: 'WK ' + wkNum, color: '#22d3ee' });
     // ROS VOR: Sim Lab lineup simulation, redraft-style seasons only.
     const _vWin = _vorState().win || 0;
-    if (!isDynasty || _mtViewMode === 'contender') sortOpts.splice(wkNum ? 3 : 2, 0, { key: 'vor', label: _vWin ? 'VOR NEXT ' + _vWin : 'ROS VOR', color: '#f59e0b' });
+    if (!isDynasty || _mtViewMode === 'contender') sortOpts.splice(wkNum ? 3 : 2, 0, { key: 'vor', label: _vWin ? 'VOR ' + _vorWinStTag(_vorState()) : 'ROS VOR', color: '#f59e0b' });
     if (_mtSortBy === 'vor') {
       const _vr = (typeof _vorTeamsROS === 'function') ? _vorTeamsROS(_mtActiveSavedLeague(), teams) : null;
       if (!_vr) _mtSortBy = 'total';
@@ -57328,8 +57483,8 @@ Rules:
     });
     // VOR sort: WINDOW picker (same setting as the rankings VOR bar and trade calc).
     if (_mtSortBy === 'vor') {
-      html += `<select onchange="window._mtSetVorWin(this.value)" title="How many weeks the VOR sort adds up. Rest of season = every game left through the fantasy playoffs (playoff weeks weighted). Next N weeks = only the next N weeks, each counted once: who is strongest right now. Same setting as WINDOW on the rankings VOR bar and the trade calculator." style="margin-left:4px;padding:2px 4px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-size:.68rem;cursor:pointer">`
-        + _VOR_WIN_OPTS.map(n => `<option value="${n}"${_vWin === n ? ' selected' : ''}>${n ? 'Next ' + n + ' wk' + (n > 1 ? 's' : '') : 'Rest of season'}</option>`).join('')
+      html += `<select onchange="window._mtSetVorWin(this.value)" title="Which weeks the VOR sort adds up. Rest of season = every game left through the fantasy playoffs (playoff weeks weighted). Next N weeks = who is strongest right now. Playoffs = the fantasy-playoff weeks only. Every week in a window counts once. Same setting as WINDOW on the rankings VOR bar and the trade calculator." style="margin-left:4px;padding:2px 4px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-size:.68rem;cursor:pointer">`
+        + _vorWinOptsHtml(_vorState())
         + `</select>`;
     }
     html += `</div>`;
@@ -57390,7 +57545,7 @@ Rules:
       const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg' || _mtSortBy === 'week' || _mtSortBy === 'vor') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
       const deltaHtml = delta === null ? '' : ` · <span style="color:${delta >= 0 ? '#22c55e' : '#ef4444'};font-weight:700">${delta >= 0 ? '+' : ''}${delta} vs avg</span>`;
       const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · roster value ${sc.total} (win-now = above replacement) · league avg ${avgScore}"`
-        : _mtSortBy === 'vor' && t.vorInfo && _vWin ? `title="Win-now VOR: best-lineup points over an all-free-agent lineup across the next ${t.vorInfo.weeks} week${t.vorInfo.weeks === 1 ? '' : 's'} (Sim Lab; each week counted once) · ${Math.round(t.vorInfo.pts)} lineup pts · league avg ${avgScore}"`
+        : _mtSortBy === 'vor' && t.vorInfo && _vWin ? `title="${_vorWinStTag(_vorState())} VOR: best-lineup points over an all-free-agent lineup across ${t.vorInfo.weeks} week${t.vorInfo.weeks === 1 ? '' : 's'} (Sim Lab; each week counted once) · ${Math.round(t.vorInfo.pts)} lineup pts · league avg ${avgScore}"`
         : _mtSortBy === 'vor' && t.vorInfo ? `title="Rest-of-season VOR: best-lineup points over an all-free-agent lineup across ${t.vorInfo.weeks} remaining weeks (Sim Lab; fantasy-playoff weeks counted ${_vorState().poW}x) · ${t.vorInfo.raw >= 0 ? '+' : ''}${Math.round(t.vorInfo.raw)} unweighted · playoffs ${t.vorInfo.po >= 0 ? '+' : ''}${Math.round(t.vorInfo.po)} · ${Math.round(t.vorInfo.pts)} lineup pts · league avg ${avgScore}"`
         : _mtSortBy === 'week' ? `title="Week ${wkNum} best-lineup projected points (weekly props/Vegas/sim-adjusted; byes and ruled-out players benched; K/DST not counted) · league avg ${avgScore}"` : '';
       const scoreColor = isPosSort
@@ -57458,9 +57613,7 @@ Rules:
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
   };
   window._mtSetVorWin = function(v) {
-    const n = Math.round(Number(v));
-    _vorState().win = _VOR_WIN_OPTS.includes(n) ? n : 0;
-    if (n) window._vorPlayoffs = false;
+    _vorWinSet(v);
     _vorChanged();
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
   };

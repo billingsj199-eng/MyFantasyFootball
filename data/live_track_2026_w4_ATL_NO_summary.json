@@ -1,0 +1,243 @@
+{
+ "files": [
+  "live_track_2026_w4_ATL_NO.csv"
+ ],
+ "bins": {
+  "Q3": {
+   "fit": 3.189,
+   "fitx": 3.189,
+   "v1": 3.308,
+   "naive": 3.229,
+   "n": 1104
+  },
+  "Q4": {
+   "fit": 1.414,
+   "fitx": 1.414,
+   "v1": 1.656,
+   "naive": 1.63,
+   "n": 1035
+  }
+ },
+ "players": {
+  "Bijan Robinson": {
+   "pos": "RB",
+   "proj": 21.8,
+   "final": 27.7,
+   "fit": 3.9,
+   "fitx": 3.9,
+   "v1": 4.46,
+   "naive": 3.74
+  },
+  "Tyler Shough": {
+   "pos": "QB",
+   "proj": 20.6,
+   "final": 15.94,
+   "fit": 1.46,
+   "fitx": 1.46,
+   "v1": 2.14,
+   "naive": 1.85
+  },
+  "Chris Olave": {
+   "pos": "WR",
+   "proj": 18.8,
+   "final": 19.6,
+   "fit": 1.51,
+   "fitx": 1.51,
+   "v1": 1.87,
+   "naive": 1.79
+  },
+  "Drake London": {
+   "pos": "WR",
+   "proj": 17.1,
+   "final": 14.6,
+   "fit": 2.22,
+   "fitx": 2.22,
+   "v1": 4.04,
+   "naive": 3.88
+  },
+  "Michael Penix": {
+   "pos": "QB",
+   "proj": 16.5,
+   "final": 12.72,
+   "fit": 2.74,
+   "fitx": 2.74,
+   "v1": 1.52,
+   "naive": 1.46
+  },
+  "Devaughn Vele": {
+   "pos": "WR",
+   "proj": 11.6,
+   "final": 17.4,
+   "fit": 8.04,
+   "fitx": 8.04,
+   "v1": 9.34,
+   "naive": 9.03
+  },
+  "Juwan Johnson": {
+   "pos": "TE",
+   "proj": 11.6,
+   "final": 11.9,
+   "fit": 2.96,
+   "fitx": 2.96,
+   "v1": 1.78,
+   "naive": 1.61
+  },
+  "Alvin Kamara": {
+   "pos": "RB",
+   "proj": 11.0,
+   "final": 22.8,
+   "fit": 2.97,
+   "fitx": 2.97,
+   "v1": 3.07,
+   "naive": 3.28
+  },
+  "Daniel Carlson": {
+   "pos": "K",
+   "proj": 8.4,
+   "final": 5.0,
+   "fit": 0.67,
+   "fitx": 0.67,
+   "v1": 0.67,
+   "naive": 0.59
+  },
+  "Nick Folk": {
+   "pos": "K",
+   "proj": 8.3,
+   "final": 9.0,
+   "fit": 0.59,
+   "fitx": 0.59,
+   "v1": 0.59,
+   "naive": 0.52
+  },
+  "Kyle Pitts": {
+   "pos": "TE",
+   "proj": 7.7,
+   "final": 7.7,
+   "fit": 1.44,
+   "fitx": 1.44,
+   "v1": 0.98,
+   "naive": 0.93
+  },
+  "New Orleans Saints D/ST": {
+   "pos": "DST",
+   "proj": 6.1,
+   "final": -3.0,
+   "fit": 2.61,
+   "fitx": 2.61,
+   "v1": 3.9,
+   "naive": 4.15
+  },
+  "Brian Robinson": {
+   "pos": "RB",
+   "proj": 5.9,
+   "final": 25.7,
+   "fit": 7.03,
+   "fitx": 7.03,
+   "v1": 7.01,
+   "naive": 7.59
+  },
+  "Jahan Dotson": {
+   "pos": "WR",
+   "proj": 5.6,
+   "final": 13.4,
+   "fit": 7.36,
+   "fitx": 7.36,
+   "v1": 7.02,
+   "naive": 6.83
+  },
+  "Atlanta Falcons D/ST": {
+   "pos": "DST",
+   "proj": 5.0,
+   "final": 5.0,
+   "fit": 2.13,
+   "fitx": 2.13,
+   "v1": 3.6,
+   "naive": 3.29
+  },
+  "Bryce Lance": {
+   "pos": "WR",
+   "proj": 4.5,
+   "final": 1.7,
+   "fit": 1.67,
+   "fitx": 1.67,
+   "v1": 1.17,
+   "naive": 1.25
+  },
+  "Kendre Miller": {
+   "pos": "RB",
+   "proj": 4.0,
+   "final": 1.9,
+   "fit": 0.81,
+   "fitx": 0.81,
+   "v1": 0.77,
+   "naive": 0.64
+  },
+  "Olamide Zaccheaus": {
+   "pos": "WR",
+   "proj": 3.3,
+   "final": 0.0,
+   "fit": 0.47,
+   "fitx": 0.47,
+   "v1": 0.77,
+   "naive": 0.92
+  },
+  "Noah Fant": {
+   "pos": "TE",
+   "proj": 3.1,
+   "final": 0.0,
+   "fit": 1.09,
+   "fitx": 1.09,
+   "v1": 0.73,
+   "naive": 0.86
+  },
+  "Austin Hooper": {
+   "pos": "TE",
+   "proj": 2.8,
+   "final": 1.9,
+   "fit": 0.49,
+   "fitx": 0.49,
+   "v1": 0.79,
+   "naive": 0.78
+  },
+  "Zachariah Branch": {
+   "pos": "WR",
+   "proj": 2.6,
+   "final": 3.0,
+   "fit": 0.52,
+   "fitx": 0.52,
+   "v1": 0.82,
+   "naive": 0.72
+  },
+  "Oscar Delp": {
+   "pos": "TE",
+   "proj": 1.3,
+   "final": 0.0,
+   "fit": 0.46,
+   "fitx": 0.46,
+   "v1": 0.3,
+   "naive": 0.36
+  },
+  "Barion Brown": {
+   "pos": "WR",
+   "proj": 1.0,
+   "final": -0.5,
+   "fit": 0.46,
+   "fitx": 0.46,
+   "v1": 0.35,
+   "naive": 0.41
+  }
+ },
+ "all": {
+  "fit": 2.33,
+  "fitx": 2.33,
+  "v1": 2.508,
+  "naive": 2.456,
+  "n": 2139
+ },
+ "wins": {
+  "fit": 9,
+  "fitx": 1,
+  "v1": 5,
+  "naive": 8
+ }
+}

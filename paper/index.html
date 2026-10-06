@@ -44,11 +44,14 @@ input,select{font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(-
 select.saving{opacity:.6}
 .addh{margin-top:18px!important;border-top:1px solid var(--hair);padding-top:14px}
 @media (max-width:560px){.pgrid{grid-template-columns:1fr}}
-.topbar{font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-size:13px;display:flex;gap:14px;align-items:center;max-width:1240px;margin:0 auto 6px;padding:0 clamp(0px,1vw,8px)}
+.backmff{display:inline-block;font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-size:14px;font-weight:600;color:var(--tomato);text-decoration:none;padding:8px 0;min-height:40px}.backmff:hover{text-decoration:underline}
+.topbar a{display:inline-flex;align-items:center;min-height:40px;font-weight:600;text-decoration:none}.topbar a:hover{text-decoration:underline}
+.topbar{font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-size:14px;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;max-width:1240px;margin:0 auto 6px;padding:0 clamp(0px,1vw,8px)}
 .topbar a{color:var(--tomato)}
 </style>
 </head><body>
 <div class="gate" id="gate">
+  <a class="backmff" href="/">← Back to MyFantasyFootball</a>
   <div class="gmast">League Papers</div>
   <p class="gsub">The weekly papers of Jack's leagues · invite-only · <a href="/" style="color:inherit">MyFantasyFootball</a></p>
   <div id="g-body" class="gbox"><p class="dim">Loading…</p></div>
@@ -79,7 +82,7 @@ select.saving{opacity:.6}
       j.data.imgBase = p.url;
       document.title = j.title + ' · MyFantasyFootball';
       var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = HOST + '/a/ledger.css'; document.head.appendChild(css);
-      document.body.innerHTML = '<div class="topbar"><a href="/paper/">← All papers</a><span class="dim">' + esc(p.league || '') + '</span></div>' + j.html;
+      document.body.innerHTML = '<div class="topbar"><a href="/">← MyFantasyFootball</a><a href="/paper/">All papers</a><span class="dim">' + esc(p.league || '') + '</span></div>' + j.html;
       var d = document.createElement('script'); d.id = 'np-data'; d.type = 'application/json'; d.textContent = JSON.stringify(j.data); document.body.appendChild(d);
       var s = document.createElement('script'); s.id = 'np-js'; s.src = HOST + '/a/ledger.js'; document.body.appendChild(s);
     }).catch(function (e) { say('<p class="err">Couldn’t load ' + esc(p.title) + ' (' + esc(e.message) + '). Try again in a moment.</p>'); });

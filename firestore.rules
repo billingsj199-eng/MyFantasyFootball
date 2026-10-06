@@ -320,67 +320,62 @@ service cloud.firestore {
                     && request.auth.uid == resource.data.ownerUid;
     }
 
-    // ---------------- League paper (myfantasyfootball.co/ledger/<league>/) ----------------
-    // Managers sign in with Google and claim their team once (claim + member doc written in ONE
-    // batch, each validated against the other with getAfter). Each member writes only their own
-    // ballot / picks / trade votes. Pick'em weeks live at weeks/p<week>_<lockMs>: writes must land
-    // before lockMs and nobody but the owner (and Jack) reads them until then. Ballots and trade
-    // votes are readable only by someone who has cast their own for that week. Jack can reset.
-    function _lgMember(lg) {
+    // ---------------- League papers (myfantasyfootball.co/paper/) ----------------
+    // Invite-only. Jack keeps the list: ledger_access/{email-key} = { email, name, teams: { <league>: "<teamId>" } }
+    // (same email key + verified-email guard as gifted_premium, so an unverified signup can't borrow an
+    // invited address). Jack assigns every person their team in each league; every ballot / pick written
+    // must carry exactly that team. Pick'em weeks live at weeks/p<week>_<lockMs>: writes must land before
+    // lockMs and nobody but the owner (and Jack) reads them until then. Ballots and trade votes are readable
+    // only by someone who has cast their own for that week. Jack can read and reset everything.
+    function _paperVerified() {
       return request.auth != null
-             && exists(/databases/$(database)/documents/ledger/$(lg)/members/$(request.auth.uid));
+             && 'email' in request.auth.token
+             && 'email_verified' in request.auth.token
+             && request.auth.token.email_verified == true;
     }
-    // A claim lists every manager of the team (shared teams have 2+, max 4). A manager adds or removes only
-    // themself; adding must be paired with their member doc (getAfter). Jack can rewrite or delete any claim.
-    match /ledger/{lg}/claims/{teamId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null
-                    && request.resource.data.keys().hasOnly(['uids', 'at'])
-                    && request.resource.data.uids == [request.auth.uid]
-                    && getAfter(/databases/$(database)/documents/ledger/$(lg)/members/$(request.auth.uid)).data.team == teamId;
-      allow update: if request.auth != null
-                    && request.resource.data.keys().hasOnly(['uids', 'at'])
-                    && request.resource.data.uids is list && request.resource.data.uids.size() <= 4
-                    && (isJack()
-                        || (request.resource.data.uids.size() == resource.data.uids.size() + 1
-                            && request.resource.data.uids.hasAll(resource.data.uids)
-                            && request.auth.uid in request.resource.data.uids
-                            && !(request.auth.uid in resource.data.uids)
-                            && getAfter(/databases/$(database)/documents/ledger/$(lg)/members/$(request.auth.uid)).data.team == teamId)
-                        || (request.resource.data.uids.size() == resource.data.uids.size() - 1
-                            && resource.data.uids.hasAll(request.resource.data.uids)
-                            && request.auth.uid in resource.data.uids
-                            && !(request.auth.uid in request.resource.data.uids)));
-      allow delete: if request.auth != null && (resource.data.uids == [request.auth.uid] || isJack());
+    function hasPaperAccess() {
+      return isJack()
+             || (_paperVerified() && exists(/databases/$(database)/documents/ledger_access/$(_giftKey())));
     }
-    match /ledger/{lg}/members/{uid} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == uid
-                    && request.resource.data.keys().hasOnly(['team', 'name', 'at'])
-                    && request.resource.data.team is string && request.resource.data.team.size() <= 8
-                    && request.resource.data.name is string && request.resource.data.name.size() <= 80
-                    && uid in getAfter(/databases/$(database)/documents/ledger/$(lg)/claims/$(request.resource.data.team)).data.uids;
-      allow delete: if request.auth != null && (request.auth.uid == uid || isJack());
+    function _paperTeam(lg) {
+      return get(/databases/$(database)/documents/ledger_access/$(_giftKey())).data.get('teams', {}).get(lg, '');
+    }
+    function _lgMember(lg) {
+      return isJack() || (hasPaperAccess() && _paperTeam(lg) != '');
+    }
+    function _ownTeam(lg) {
+      return isJack() || request.resource.data.team == _paperTeam(lg);
+    }
+    match /ledger_access/{docId} {
+      allow read: if isJack() || (_paperVerified() && docId == _giftKey());
+      allow write: if isJack();
+    }
+    // paper index: ledger/{lg} = { title, league, url, order } (the private link of each paper)
+    match /ledger/{lg} {
+      allow read: if hasPaperAccess();
+      allow write: if isJack();
     }
     match /ledger/{lg}/weeks/{wk}/ballots/{uid} {
       allow read: if request.auth != null
                   && (request.auth.uid == uid || isJack()
                       || exists(/databases/$(database)/documents/ledger/$(lg)/weeks/$(wk)/ballots/$(request.auth.uid)));
-      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg)
-                    && request.resource.data.keys().hasOnly(['order', 'notes', 'team', 'at'])
+      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg) && _ownTeam(lg)
+                    && request.resource.data.keys().hasOnly(['order', 'notes', 'team', 'name', 'at'])
                     && request.resource.data.order is list && request.resource.data.order.size() <= 20
-                    && request.resource.data.notes is map && request.resource.data.notes.size() <= 20;
+                    && request.resource.data.notes is map && request.resource.data.notes.size() <= 20
+                    && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 80));
       allow delete: if request.auth != null && (request.auth.uid == uid || isJack());
     }
     match /ledger/{lg}/weeks/{wk}/picks/{uid} {
       function _lockMs() { return int(wk.split('_')[1]); }
       allow read: if request.auth != null
                   && (request.auth.uid == uid || isJack()
-                      || (wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() >= _lockMs()));
-      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg)
+                      || (wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() >= _lockMs() && _lgMember(lg)));
+      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg) && _ownTeam(lg)
                     && wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() < _lockMs()
-                    && request.resource.data.keys().hasOnly(['g', 'team', 'at'])
-                    && request.resource.data.g is map && request.resource.data.g.size() <= 12;
+                    && request.resource.data.keys().hasOnly(['g', 'team', 'name', 'at'])
+                    && request.resource.data.g is map && request.resource.data.g.size() <= 12
+                    && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 80));
       allow delete: if isJack();
     }
     match /ledger/{lg}/weeks/{wk}/tvotes/{uid} {

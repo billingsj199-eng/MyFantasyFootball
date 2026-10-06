@@ -35,6 +35,15 @@ input,select{font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(-
 .acc th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
 .acc select{min-height:34px;font-size:14px;padding:4px 6px;max-width:190px}
 @media (max-width:700px){.acc thead{display:none}.acc tr{display:block;border:1px solid var(--hair);margin:0 0 10px;padding:8px}.acc td{display:block;border:0;padding:3px 0}.acc td[data-l]::before{content:attr(data-l);display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}.acc select{max-width:100%;width:100%}}
+.people{display:grid;gap:10px;margin:10px 0 4px}
+.person{border:1px solid var(--hair);background:var(--paper);padding:12px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}.phead b{display:block;font-size:16px}.phead .dim{display:block}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}.fld span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.fld select,.fld input{width:100%;min-width:0}
+select.saving{opacity:.6}
+.addh{margin-top:18px!important;border-top:1px solid var(--hair);padding-top:14px}
+@media (max-width:560px){.pgrid{grid-template-columns:1fr}}
 .topbar{font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-size:13px;display:flex;gap:14px;align-items:center;max-width:1240px;margin:0 auto 6px;padding:0 clamp(0px,1vw,8px)}
 .topbar a{color:var(--tomato)}
 </style>
@@ -121,13 +130,17 @@ input,select{font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(-
     var people = [];
     var teamSel = function (p, cur, id) { var t = p.teams || {}; return '<select data-lg="' + esc(p.key) + '"' + (id ? ' id="' + id + '"' : '') + '><option value="">—</option>' + Object.keys(t).sort(function (a, b) { return String(t[a].n).localeCompare(String(t[b].n)); }).map(function (tid) { return '<option value="' + esc(tid) + '"' + (String(cur) === String(tid) ? ' selected' : '') + '>' + esc(t[tid].n) + (t[tid].m ? ' (' + esc(t[tid].m) + ')' : '') + '</option>'; }).join('') + '</select>'; };
     function render() {
-      admin.innerHTML = '<div class="gbox"><h2>Paper access</h2><p class="sm">Only people on this list can open the papers, and each person’s ballots and picks count for the team you set here. Co-managers of a shared team each get their own row with the same team. Only you see this.</p>' +
-        '<table class="acc"><thead><tr><th>Person</th>' + papers.map(function (p) { return '<th>' + esc(p.title) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>' +
-        people.map(function (a) { return '<tr data-id="' + esc(a.id) + '"><td data-l="Person"><b>' + esc(a.name || '') + '</b><br><span class="sm dim">' + esc(a.email) + '</span></td>' + papers.map(function (p) { return '<td data-l="' + esc(p.title) + '">' + teamSel(p, (a.teams || {})[p.key]) + '</td>'; }).join('') + '<td><button class="ghost sm" data-del="' + esc(a.id) + '">Remove</button></td></tr>'; }).join('') +
-        '</tbody></table><h2 style="margin-top:16px">Add a person</h2><div class="row"><input id="a-email" type="email" placeholder="Their MFF account email"><input id="a-name" type="text" maxlength="60" placeholder="Name shown on ballots"></div>' +
-        '<div class="row">' + papers.map(function (p) { return '<label class="sm">' + esc(p.title) + '<br>' + teamSel(p, '', 'a-' + p.key) + '</label>'; }).join('') + '</div><div class="row"><button class="btn" id="a-add">Add</button><span id="a-msg" class="sm"></span></div>' +
-        '<p class="sm dim">They sign in with that email (Google, or an MFF email account they’ve verified).</p></div>';
-      admin.querySelectorAll('tr[data-id] select').forEach(function (sel) { sel.onchange = function () { var id = sel.closest('tr').getAttribute('data-id'), upd = {}; upd['teams.' + sel.getAttribute('data-lg')] = sel.value ? sel.value : firebase.firestore.FieldValue.delete(); db.doc('ledger_access/' + id).update(upd).catch(function (e) { alert('Couldn’t save (' + e.code + ')'); }); }; });
+      var field = function (p, cur, id) { return '<label class="fld"><span>' + esc(p.title) + '</span>' + teamSel(p, cur, id) + '</label>'; };
+      admin.innerHTML = '<div class="gbox"><h2>Paper access</h2><p class="sm">Only people on this list can open the papers, and each person sees only the leagues where you set a team. Their ballots and picks count for that team. Co-managers of a shared team each get their own card with the same team. Only you see this.</p>' +
+        '<div class="people">' + (people.length ? people.map(function (a) {
+          return '<div class="person" data-id="' + esc(a.id) + '"><div class="phead"><div><b>' + esc(a.name || '') + '</b><span class="sm dim">' + esc(a.email) + '</span></div><button class="ghost sm" data-del="' + esc(a.id) + '">Remove</button></div>' +
+            '<div class="pgrid">' + papers.map(function (p) { return field(p, (a.teams || {})[p.key]); }).join('') + '</div></div>';
+        }).join('') : '<p class="sm dim">Nobody added yet.</p>') + '</div>' +
+        '<h2 class="addh">Add a person</h2><div class="pgrid"><label class="fld"><span>MFF account email</span><input id="a-email" type="email" placeholder="name@example.com"></label><label class="fld"><span>Name shown on ballots</span><input id="a-name" type="text" maxlength="60" placeholder="First Last"></label></div>' +
+        '<div class="pgrid">' + papers.map(function (p) { return field(p, '', 'a-' + p.key); }).join('') + '</div>' +
+        '<div class="row"><button class="btn" id="a-add">Add person</button><span id="a-msg" class="sm"></span></div>' +
+        '<p class="sm dim">They sign in with that email (Google, or an MFF email account they’ve verified). Leave a league on “—” if they aren’t in it.</p></div>';
+      admin.querySelectorAll('.person select').forEach(function (sel) { sel.onchange = function () { var id = sel.closest('.person').getAttribute('data-id'), upd = {}; upd['teams.' + sel.getAttribute('data-lg')] = sel.value ? sel.value : firebase.firestore.FieldValue.delete(); sel.classList.add('saving'); db.doc('ledger_access/' + id).update(upd).then(function () { sel.classList.remove('saving'); }).catch(function (e) { sel.classList.remove('saving'); alert('Couldn’t save (' + e.code + ')'); }); }; });
       admin.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { var a = people.find(function (x) { return x.id === b.getAttribute('data-del'); }); if (a && confirm('Remove ' + (a.name || a.email) + ' from the papers?')) db.doc('ledger_access/' + a.id).delete(); }; });
       $('#a-add').onclick = function () {
         var em = $('#a-email').value.trim().toLowerCase(), nm = $('#a-name').value.trim().slice(0, 60), msg = $('#a-msg');

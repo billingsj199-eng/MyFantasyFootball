@@ -11919,7 +11919,10 @@ function _vorTable() {
   const kicked = (!wk && typeof window._liveKickedTeams === 'function') ? window._liveKickedTeams(from) : null;
   const kSig = (kicked && kicked.size) ? 'k' : '';
   const win = wk ? 0 : _vorWin();
-  const key = [fi, wk, cw, from, kSig, win, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
+  // Jack's OUT FOR SEASON flags: never priced, never a replacement level.
+  const irOut = window._irHiddenHere && window._irHiddenHere(currentMode) ? (d => window._irIsOut(d.n)) : null;
+  const irSig = irOut ? Object.keys(window._irMap || {}).sort().join(',') : '';
+  const key = [fi, wk, cw, from, kSig, win, irSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
   const weeks = [];
@@ -11935,7 +11938,7 @@ function _vorTable() {
   const pools = { QB: [], RB: [], WR: [], TE: [], K: [], DST: [] };
   const seen = new Set();
   D.forEach(d => {
-    if (!d || !pools[d.s] || d._retired || d._isFuturePick || seen.has(d.n)) return;
+    if (!d || !pools[d.s] || d._retired || d._isFuturePick || seen.has(d.n) || (irOut && irOut(d))) return;
     const sp = wk ? null : _simSeasonPpgRow(d);
     const tdRate = (d.s === 'QB' && st.passTd !== 4) ? _vorPassTdRate(d) : 0;
     const base = sp ? sp[fi] : 0;
@@ -12342,7 +12345,9 @@ function _vorLineupSim(t) {
     const sp = _simSeasonPpgRow(d);
     const base = sp ? sp[fi] : 0;
     const tdRate = (d.s === 'QB' && st.passTd !== 4) ? _vorPassTdRate(d) : 0;
-    a = weeks.map(w => _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base));
+    // Out for season (Jack's flag): a roster spot that never starts.
+    const ir = typeof window._irIsOut === 'function' && window._irIsOut(d.n);
+    a = weeks.map(w => ir ? 0 : _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base));
     ptsMemo.set(d, a);
     return a;
   };

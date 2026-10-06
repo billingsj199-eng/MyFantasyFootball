@@ -324,8 +324,8 @@ service cloud.firestore {
     // Invite-only. Jack keeps the list: ledger_access/{email-key} = { email, name, teams: { <league>: "<teamId>" } }
     // (same email key + verified-email guard as gifted_premium, so an unverified signup can't borrow an
     // invited address). Jack assigns every person their team in each league; every ballot / pick written
-    // must carry exactly that team. Pick'em bets live at weeks/p<week>_<lockMs>/bets: final when made, priced at
-    // the line of that moment, before lockMs, and nobody but the bettor (and Jack) reads them until then. Ballots and trade votes are readable
+    // must carry exactly that team. Pick'em picks live at weeks/p<week>_<lockMs>/bets: changeable until lockMs (the
+    // week's first kickoff), graded at the closing line, and nobody but the picker (and Jack) reads them until then. Ballots and trade votes are readable
     // only by someone who has cast their own for that week. Jack can read and reset everything.
     function _paperVerified() {
       return request.auth != null
@@ -373,20 +373,20 @@ service cloud.firestore {
       allow read: if _lgMember(lg);
       allow write: if isJack();
     }
-    // Pick'em bets are final: create-only (no update), made before the week's first kickoff (lockMs in the week id),
-    // at exactly the current line: the spread / moneyline stored with the bet must match ledger/{lg}/lines/{wk}.
-    // Doc id = <uid>_<gameKey>_<su|ats>, so each person gets one winner pick and one spread pick per game.
-    // Nobody but the bettor (and Jack) reads a bet until kickoff; then the league's members can.
+    // Pick'em picks: changeable until the week's first kickoff (lockMs in the week id), then frozen. Graded at the
+    // line in ledger/{lg}/lines/{wk} as it stands at kickoff (the closing line), not the line when the pick was made.
+    // Doc id = <uid>_<gameKey>_<su|ats>, so each person has one winner pick and one spread pick per game.
+    // Nobody but the picker (and Jack) reads a pick until kickoff; then the league's members can.
     match /ledger/{lg}/weeks/{wk}/bets/{betId} {
       function _lockMs() { return int(wk.split('_')[1]); }
+      function _open() { return wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() < _lockMs(); }
       function _lines() { return get(/databases/$(database)/documents/ledger/$(lg)/lines/$(wk)).data.games; }
       function _ln() { return _lines()[request.resource.data.game]; }
       allow read: if request.auth != null
                   && (resource.data.uid == request.auth.uid || isJack()
                       || (wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() >= _lockMs() && _lgMember(lg)));
-      allow create: if request.auth != null && _lgMember(lg) && _ownTeam(lg)
-                    && wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() < _lockMs()
-                    && request.resource.data.keys().hasOnly(['uid', 'team', 'name', 'game', 'market', 'pick', 'fav', 'spread', 'odds', 'at'])
+      allow create, update: if request.auth != null && _lgMember(lg) && _ownTeam(lg) && _open()
+                    && request.resource.data.keys().hasOnly(['uid', 'team', 'name', 'game', 'market', 'pick', 'at'])
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.market in ['su', 'ats']
                     && request.resource.data.game is string
@@ -394,12 +394,8 @@ service cloud.firestore {
                     && request.resource.data.at == request.time
                     && request.resource.data.name is string && request.resource.data.name.size() <= 80
                     && request.resource.data.game in _lines()
-                    && request.resource.data.pick in [_ln().home, _ln().away]
-                    && request.resource.data.fav == _ln().fav
-                    && request.resource.data.spread == _ln().spread
-                    && request.resource.data.odds == (request.resource.data.market == 'ats' ? -110
-                         : (request.resource.data.pick == _ln().home ? _ln().hml : _ln().aml));
-      allow delete: if isJack();
+                    && request.resource.data.pick in [_ln().home, _ln().away];
+      allow delete: if request.auth != null && ((resource.data.uid == request.auth.uid && _open()) || isJack());
     }
     match /ledger/{lg}/weeks/{wk}/tvotes/{uid} {
       allow read: if request.auth != null

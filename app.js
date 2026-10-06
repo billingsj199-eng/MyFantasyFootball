@@ -29653,15 +29653,24 @@ window.fmtHeight = fmtHeight;
     const WN = window._WINNOW_VAL;
     return Math.max(Math.round(window._winnowBaseValue(WN.replRank)), 1);
   };
-  window._packageAdjustedTotal = function(values, mode) {
+  // vsCount = pieces coming back the other way (default 1, the n-for-1 case
+  // the finders price). Only UNMATCHED pieces pay — the side sending more
+  // pieces is discounted on its smallest (n − vsCount) assets, and the side
+  // sending fewer counts in full (Jack 2026-10-06: a 3-for-5 used to dock
+  // BOTH sides, so the extra pieces still added up cumulatively).
+  window._packageAdjustedTotal = function(values, mode, vsCount) {
     if (!values || !values.length) return 0;
     const m = mode || tradeMode;
     const cost = window._packageRosterCost(m);
     const w = window._WINNOW_VAL.extraPieceW;
     const sorted = values.slice().sort((a, b) => b - a);
-    let total = sorted[0];
-    for (let i = 1; i < sorted.length; i++) total += Math.max(sorted[i] - cost, 0) * w;
-    total -= (window._WINNOW_VAL.pkgTax || 0) * (sorted.length - 1);
+    const matched = Math.max(1, vsCount == null ? 1 : vsCount);
+    const extras = Math.max(sorted.length - matched, 0);
+    let total = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      total += i < sorted.length - extras ? sorted[i] : Math.max(sorted[i] - cost, 0) * w;
+    }
+    total -= (window._WINNOW_VAL.pkgTax || 0) * extras;
     return Math.max(Math.round(total), 1);
   };
 
@@ -29698,12 +29707,15 @@ window.fmtHeight = fmtHeight;
   }
 
   // raw = straight sum; total = package-adjusted (extra pieces pay a roster-spot cost)
+  // Discount only applies to pieces beyond what the OTHER side sends back.
   function calcSideDetail(side) {
     const vals = [];
     side.players.forEach(idx => { vals.push(getPlayerValue(D[idx])); });
     side.picks.forEach(p => { vals.push(getPickValue(p.round, p.year, p.slot, p._pickNum)); });
+    const other = side === sideA ? sideB : sideA;
+    const vsCount = other.players.length + other.picks.length;
     const raw = vals.reduce((s, v) => s + v, 0);
-    const total = window._packageAdjustedTotal(vals, tradeMode);
+    const total = window._packageAdjustedTotal(vals, tradeMode, vsCount);
     return { raw, total, adj: total - raw, count: vals.length };
   }
 
@@ -29764,7 +29776,7 @@ window.fmtHeight = fmtHeight;
       adjEl.textContent = 'multi-piece adj ' + det.adj + ' (raw ' + det.raw + ')';
       adjEl.title = (() => {
         const WN = window._WINNOW_VAL;
-        let t = 'Each asset after this side\'s best pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
+        let t = 'This side sends more pieces than it gets back, so each unmatched extra (its smallest assets) pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
         if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains';
         if (WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
         return t + ' — junk throw-ins can\'t tilt a trade';
@@ -30717,10 +30729,13 @@ window.fmtHeight = fmtHeight;
     const _extraW = window._WINNOW_VAL.extraPieceW || 1;
     const _pkgSlack = Math.ceil(_extraW * _pkgCost + (1 - _extraW) * 260
       + (window._WINNOW_VAL.pkgTax || 0));
-    const _pkgSideTotal = side => window._packageAdjustedTotal(side.map(a => a.value), tradeMode);
+    const _pkgSideTotal = (side, vsCount) => window._packageAdjustedTotal(side.map(a => a.value), tradeMode, vsCount);
 
-    function scoreCombo(giveSide, getSide, getTotal) {
-      const giveTotal = _pkgSideTotal(giveSide);
+    function scoreCombo(giveSide, getSide, getTotalPre) {
+      // Re-price both sides against each other's piece count (only unmatched
+      // extras pay the roster-spot cost) — matches the calculator verdict.
+      const giveTotal = _pkgSideTotal(giveSide, getSide.length);
+      const getTotal = _pkgSideTotal(getSide, giveSide.length);
       const delta = (giveTotal - getTotal) / getTotal;
       let fit = 0;
       giveSide.forEach(a => {
@@ -31128,7 +31143,7 @@ window.fmtHeight = fmtHeight;
       return s;
     }
     // One side priced with OUR numbers: {vals, total, assets:[{kind, idx, pick, name, pos, val, inCalc}]}
-    function priceSide(assets, inCalc) {
+    function priceSide(assets, inCalc, vsAssets) {
       const out = [];
       const vals = [];
       assets.forEach(a => {
@@ -31145,7 +31160,7 @@ window.fmtHeight = fmtHeight;
         if (v != null) vals.push(v);
         out.push({ kind: 'p', idx: idx, name: d ? d.n : a.n, pos: a.p || (d && d.s) || '', val: v, inCalc: idx != null && inCalc.has(idx) });
       });
-      const total = vals.length ? window._packageAdjustedTotal(vals, tradeMode) : 0;
+      const total = vals.length ? window._packageAdjustedTotal(vals, tradeMode, vsAssets ? vsAssets.length : 1) : 0;
       return { assets: out, total: total, unpriced: out.filter(x => x.val == null).length };
     }
     function ago(iso) {
@@ -31200,7 +31215,7 @@ window.fmtHeight = fmtHeight;
         html += '<div class="rt-empty">No trade in the pool includes ' + (names.length === 1 ? _esc(names[0]) : 'these players') + ' yet. The pool grows each visit (' + all.length + ' trades so far) — try ALL RECENT.</div>';
       } else {
         html += '<div class="rt-list">' + shown.map(t => {
-          const s1 = priceSide(t.s1, inCalc), s2 = priceSide(t.s2, inCalc);
+          const s1 = priceSide(t.s1, inCalc, t.s2), s2 = priceSide(t.s2, inCalc, t.s1);
           // Side 1 GIVES s1 and receives s2 (calc framing: bigger received = winner)
           let verdict = '', vcls = 'even';
           if (s1.total && s2.total) {
@@ -55795,6 +55810,14 @@ Rules:
       const team = byId[String(rid)];
       return { rid, team, owner: team ? team.owner : ('Roster ' + rid), mine: !!(team && team.isMyTeam), assets, raw, total };
     });
+    // Two-team deals: re-price each side against the other's piece count so
+    // only the unmatched extras pay the roster-spot cost (calculator rule).
+    if (sides.length === 2 && typeof window._packageAdjustedTotal === 'function') {
+      sides.forEach((s, i) => {
+        const vals = s.assets.map(a => a.val);
+        if (vals.length) s.total = Math.round(window._packageAdjustedTotal(vals, mode, sides[1 - i].assets.length));
+      });
+    }
     let verdict = { text: 'FAIR', color: '#94a3b8', winner: null };
     if (sides.length >= 2) {
       const sorted = sides.slice().sort((a, b) => b.total - a.total);

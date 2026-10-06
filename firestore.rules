@@ -319,5 +319,67 @@ service cloud.firestore {
       allow delete: if request.auth != null
                     && request.auth.uid == resource.data.ownerUid;
     }
+
+    // ---------------- League paper (myfantasyfootball.co/ledger/<league>/) ----------------
+    // Managers sign in with Google and claim their team once (claim + member doc written in ONE
+    // batch, each validated against the other with getAfter). Each member writes only their own
+    // ballot / picks / trade votes. Pick'em weeks live at weeks/p<week>_<lockMs>: writes must land
+    // before lockMs and nobody but the owner (and Jack) reads them until then. Ballots and trade
+    // votes are readable only by someone who has cast their own for that week. Jack can reset.
+    function _lgMember(lg) {
+      return request.auth != null
+             && exists(/databases/$(database)/documents/ledger/$(lg)/members/$(request.auth.uid));
+    }
+    match /ledger/{lg}/claims/{teamId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly(['uid', 'at'])
+                    && request.resource.data.uid == request.auth.uid
+                    && getAfter(/databases/$(database)/documents/ledger/$(lg)/members/$(request.auth.uid)).data.team == teamId;
+      allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isJack());
+    }
+    match /ledger/{lg}/members/{uid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['team', 'name', 'at'])
+                    && request.resource.data.team is string && request.resource.data.team.size() <= 8
+                    && request.resource.data.name is string && request.resource.data.name.size() <= 80
+                    && getAfter(/databases/$(database)/documents/ledger/$(lg)/claims/$(request.resource.data.team)).data.uid == uid;
+      allow delete: if request.auth != null && (request.auth.uid == uid || isJack());
+    }
+    match /ledger/{lg}/weeks/{wk}/ballots/{uid} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == uid || isJack()
+                      || exists(/databases/$(database)/documents/ledger/$(lg)/weeks/$(wk)/ballots/$(request.auth.uid)));
+      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg)
+                    && request.resource.data.keys().hasOnly(['order', 'notes', 'team', 'at'])
+                    && request.resource.data.order is list && request.resource.data.order.size() <= 20
+                    && request.resource.data.notes is map && request.resource.data.notes.size() <= 20;
+      allow delete: if request.auth != null && (request.auth.uid == uid || isJack());
+    }
+    match /ledger/{lg}/weeks/{wk}/picks/{uid} {
+      function _lockMs() { return int(wk.split('_')[1]); }
+      allow read: if request.auth != null
+                  && (request.auth.uid == uid || isJack()
+                      || (wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() >= _lockMs()));
+      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg)
+                    && wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() < _lockMs()
+                    && request.resource.data.keys().hasOnly(['g', 'team', 'at'])
+                    && request.resource.data.g is map && request.resource.data.g.size() <= 12;
+      allow delete: if isJack();
+    }
+    match /ledger/{lg}/weeks/{wk}/tvotes/{uid} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == uid || isJack()
+                      || exists(/databases/$(database)/documents/ledger/$(lg)/weeks/$(wk)/tvotes/$(request.auth.uid)));
+      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg)
+                    && request.resource.data.keys().hasOnly(['t', 'at'])
+                    && request.resource.data.t is map && request.resource.data.t.size() <= 30;
+      allow delete: if request.auth != null && (request.auth.uid == uid || isJack());
+    }
+    match /ledger/{lg}/edits/{edition} {
+      allow read: if true;
+      allow write: if isJack() && request.resource.data.keys().hasOnly(['t', 'at']) && request.resource.data.t is map;
+    }
   }
 }

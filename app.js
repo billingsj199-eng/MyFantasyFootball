@@ -56559,6 +56559,7 @@ Rules:
     if (typeof D !== 'undefined') {
       for (const d of D) {
         if (rostered.has(d.n) || rosteredNorm.has(_wwNorm(d.n))) continue;
+        if (d.s === 'PICK' || d._isFuturePick) continue; // dynasty board pick rows aren't free agents
         const rank = _mtGetPlayerRank(d.n);
         if (rank > 150) continue;
         fas.push({ d, rank });
@@ -57182,6 +57183,56 @@ Rules:
     return ` <span title="${_esc(tier.label)} — ${_esc(tier.desc || '')}${tier.tip ? ' · ' + _esc(tier.tip) : ''} (${tier.teams.length} team${tier.teams.length === 1 ? '' : 's'} in this tier)" style="font-size:.5rem;font-weight:700;color:${tier.color};background:${tier.color}18;border:1px solid ${tier.color};border-radius:3px;padding:0 5px;vertical-align:1px;letter-spacing:.5px;white-space:nowrap">${tier.label}</span>`;
   }
 
+  // ── League tool registry (toolbar tabs + MORE menu) ─────────────────
+  // k → open flag, toggle, eligibility. main = shown as a tab; the rest
+  // live under MORE ▾. Order here = order on screen.
+  function _mtToolList(teams) {
+    const hasId = (_mtActiveSource === 'sleeper' && _mtActiveSleeperId) || (_mtActiveSource === 'espn' && _mtActiveEspnId) || (_mtActiveSource === 'yahoo' && _mtActiveYahooId);
+    const isDyn = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';
+    const off = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
+    const wk = (!off || window._weeklyPublishedWeek) ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
+    const saved = _mtActiveSavedLeague();
+    const me = teams.find(t => t.isMyTeam);
+    const lc = (me && Array.isArray(me.starters) && !_mtLineupCheckOpen) ? _mtLineupAnalysis(me) : null;
+    const lcBad = lc && (lc.delta >= 1 || lc.empty || lc.flagged.length);
+    const acNew = saved && !_mtActivityOpen ? _mtUnseenChanges(saved).length : 0;
+    const T = [
+      { k: 'lineup', label: 'LINEUP', main: true, open: _mtLineupCheckOpen, color: '#22d3ee', toggle: window._mtToggleLineupCheck, show: true, alert: !!lcBad, badge: lcBad ? (lc.delta >= 1 ? '+' + lc.delta : '!') : '', title: 'Your set lineup vs the best lineup for your roster' },
+      { k: 'matchups', label: 'MATCHUPS', main: true, open: _mtMatchupsOpen, color: '#f472b6', toggle: window._mtToggleMatchups, show: !!wk && (_mtActiveSource === 'sleeper' || _mtActiveSource === 'espn'), title: 'This week head-to-head with win odds' },
+      { k: 'waivers', label: 'WAIVERS', main: true, open: _mtWaiversOpen, color: '#4ade80', toggle: window._mtToggleWaivers, show: true, title: 'Best available free agents' },
+      { k: 'trades', label: 'TRADES', main: true, open: _mtTradesOpen, color: '#a855f7', toggle: window._mtToggleTradeFinder, show: true, title: 'Trade ideas with every team in the league' },
+      { k: 'activity', label: 'ACTIVITY', main: true, open: _mtActivityOpen, color: '#fbbf24', toggle: window._mtToggleActivity, show: !!saved, alert: acNew > 0, badge: acNew ? acNew + ' NEW' : '', title: 'Roster moves and standings changes since your last visit' },
+      { k: 'season', label: 'SEASON', open: _mtSeasonOpen, color: '#fb923c', toggle: window._mtToggleSeason, show: !!wk && (_mtActiveSource === 'sleeper' || _mtActiveSource === 'espn'), title: 'Projected records + playoff odds' },
+      { k: 'playoffs', label: 'PLAYOFFS', open: _mtPlayoffsOpen, color: '#f97316', toggle: window._mtTogglePlayoffs, show: typeof window._mtGetPlayoffSosWeekly === 'function', title: 'Week 15-17 lineups with matchups priced in' },
+      { k: 'results', label: 'RESULTS', open: _mtResultsOpen, color: '#c084fc', toggle: window._mtToggleResults, show: _mtResultsAvailable(), title: 'Week-by-week scores, all-play record, luck' },
+      { k: 'byes', label: 'BYES', open: _mtByesOpen, color: '#facc15', toggle: window._mtToggleByes, show: typeof window.getNflScheduleForTeam === 'function', title: 'Projected starters on bye, every week' },
+      { k: 'tradelog', label: 'TRADE LOG', open: _mtTradeLogOpen, color: '#38bdf8', toggle: window._mtToggleTradeLog, show: !!hasId, title: 'Completed league trades, priced' },
+      { k: 'history', label: 'HISTORY', open: _mtHistoryOpen, color: '#2dd4bf', toggle: window._mtToggleHistory, show: !!saved, title: 'Team strength, PPG and rank over time' },
+      { k: 'picks', label: 'PICKS', open: _mtDraftCapitalOpen, color: '#a855f7', toggle: window._mtToggleDraftCapital, show: isDyn && teams.some(t => (t.draftPicks || []).length), title: 'Every future pick by team, year, round' },
+      { k: 'draftboard', label: 'DRAFT BOARD', open: _mtDraftBoardOpen, color: '#22d3ee', toggle: window._mtToggleDraftBoard, show: _mtFormat.type === 'redraft' && !!hasId, title: 'Your league draft, graded' },
+      { k: 'share', label: 'SHARE', open: _mtShareOpen, color: '#f59e0b', toggle: window._mtToggleShare, show: true, title: 'Power rankings image for the group chat' }
+    ];
+    return T.filter(t => t.show);
+  }
+  window._mtOpenTool = function (k) {
+    const tools = _mtToolList(window._mtTeams || []);
+    const t = tools.find(x => x.k === k);
+    if (!t || typeof t.toggle !== 'function') return;
+    // Close every other open panel first (their close branch is sync).
+    tools.forEach(x => { if (x !== t && x.open && typeof x.toggle === 'function') { try { x.toggle(); } catch (_) {} } });
+    t.toggle();
+  };
+  window._mtToggleToolMore = function (ev) {
+    if (ev) ev.stopPropagation();
+    const m = document.getElementById('mtToolMore');
+    if (m) m.style.display = m.style.display === 'none' ? '' : 'none';
+  };
+  document.addEventListener('click', e => {
+    const w = document.getElementById('mtToolMoreWrap');
+    const m = document.getElementById('mtToolMore');
+    if (m && w && !w.contains(e.target)) m.style.display = 'none';
+  });
+
   function _mtRenderTeamList(teams) {
     // Rebuild positional-rank maps on every list render — cheap, and keeps
     // them in sync with value-source switches and live rankings edits.
@@ -57191,98 +57242,40 @@ Rules:
     const pr = document.getElementById('mtPowerRankings');
     let html = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">POWER RANKINGS</div>';
 
-    // "Pick Your Team" dropdown
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">`;
-    html += `<span style="font-size:.75rem;color:var(--text2)">My Team:</span>`;
-    html += `<select id="mtMyTeamSelect" onchange="window._mtSelectMyTeam(this.value)" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.75rem">`;
-    html += `<option value="">— Select your team —</option>`;
+    // Toolbar (2026-10-06 declutter, Jack: "a lot going on"): "My Team"
+    // picker + five primary tool tabs + a MORE ▾ menu for the rest. One
+    // panel open at a time (window._mtOpenTool closes the others).
+    const _tools = _mtToolList(teams);
+    const _tbStart = html.length;
+    html += `<div id="mtToolbar" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap">`;
+    html += `<select id="mtMyTeamSelect" onchange="window._mtSelectMyTeam(this.value)" title="Which team is yours" style="max-width:170px;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.72rem">`;
+    html += `<option value="">— Pick your team —</option>`;
     teams.forEach((t, i) => {
-      const sel = t.isMyTeam ? 'selected' : '';
-      html += `<option value="${i}" ${sel}>${_esc(t.owner)}</option>`;
+      html += `<option value="${i}" ${t.isMyTeam ? 'selected' : ''}>${t.isMyTeam ? '⭐ ' : ''}${_esc(t.owner)}</option>`;
     });
-    html += `</select>`;
-    // Draft board toggle — redraft leagues, all three sources (Sleeper picks
-    // API, ESPN mDraftDetail, Yahoo draftresults page via yahooProxy).
-    const _dbEligible = _mtFormat.type === 'redraft' &&
-      ((_mtActiveSource === 'sleeper' && _mtActiveSleeperId) ||
-       (_mtActiveSource === 'espn' && _mtActiveEspnId) ||
-       (_mtActiveSource === 'yahoo' && _mtActiveYahooId));
-    if (_dbEligible) {
-      const dbActive = _mtDraftBoardOpen;
-      html += `<button onclick="window._mtToggleDraftBoard()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${dbActive ? '#22d3ee' : 'var(--border)'};background:${dbActive ? '#22d3ee' : 'var(--surface)'};color:${dbActive ? '#000' : 'var(--text2)'}">DRAFT BOARD</button>`;
+    html += `</select><span style="width:1px;align-self:stretch;background:var(--border);margin:0 2px"></span>`;
+    const _tabBtn = (t, label) => `<button onclick="window._mtOpenTool('${t.k}')" title="${_esc(t.title || '')}" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;white-space:nowrap;border:1px solid ${t.open ? t.color : t.alert ? '#f59e0b' : 'var(--border)'};background:${t.open ? t.color : 'var(--surface)'};color:${t.open ? '#000' : t.alert ? '#f59e0b' : 'var(--text2)'}">${label}</button>`;
+    _tools.filter(t => t.main).forEach(t => { html += _tabBtn(t, t.label + (t.badge ? ' · ' + t.badge : '')); });
+    const _more = _tools.filter(t => !t.main);
+    if (_more.length) {
+      const openMore = _more.find(t => t.open);
+      html += `<div style="position:relative" id="mtToolMoreWrap">`;
+      html += `<button onclick="window._mtToggleToolMore(event)" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;white-space:nowrap;border:1px solid ${openMore ? openMore.color : 'var(--border)'};background:${openMore ? openMore.color : 'var(--surface)'};color:${openMore ? '#000' : 'var(--text2)'}">${openMore ? openMore.label : 'MORE'} ▾</button>`;
+      html += `<div id="mtToolMore" style="display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:55;min-width:230px;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.5);padding:4px 0">`;
+      _more.forEach(t => {
+        html += `<div onclick="window._mtOpenTool('${t.k}')" style="display:flex;align-items:baseline;gap:8px;padding:7px 12px;cursor:pointer;${t.open ? 'background:rgba(245,158,11,.08);box-shadow:inset 3px 0 0 ' + t.color : ''}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='${t.open ? 'rgba(245,158,11,.08)' : ''}'"><span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:.8px;color:${t.open ? t.color : 'var(--text)'};min-width:86px">${t.label}</span><span style="font-size:.6rem;color:var(--text2)">${_esc(t.title || '')}</span></div>`;
+      });
+      html += `</div></div>`;
     }
-    // Waiver wire — any loaded league (rosters are all we need)
-    {
-      const wwActive = _mtWaiversOpen;
-      html += `<button onclick="window._mtToggleWaivers()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${wwActive ? '#4ade80' : 'var(--border)'};background:${wwActive ? '#4ade80' : 'var(--surface)'};color:${wwActive ? '#000' : 'var(--text2)'}">WAIVERS</button>`;
-      const tfActive = _mtTradesOpen;
-      html += `<button onclick="window._mtToggleTradeFinder()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tfActive ? '#a855f7' : 'var(--border)'};background:${tfActive ? '#a855f7' : 'var(--surface)'};color:${tfActive ? '#fff' : 'var(--text2)'}">TRADE FINDER</button>`;
-      // Lineup check — set lineup vs best lineup (needs the platform's
-      // starters; the panel explains when a snapshot predates them).
-      {
-        const lcActive = _mtLineupCheckOpen;
-        const _lcMe = teams.find(t => t.isMyTeam);
-        const _lcA = (_lcMe && Array.isArray(_lcMe.starters) && !lcActive) ? _mtLineupAnalysis(_lcMe) : null;
-        const _lcBad = _lcA && (_lcA.delta >= 1 || _lcA.empty || _lcA.flagged.length);
-        html += `<button onclick="window._mtToggleLineupCheck()" title="Your set lineup vs the best lineup for your roster" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${lcActive ? '#22d3ee' : _lcBad ? '#f59e0b' : 'var(--border)'};background:${lcActive ? '#22d3ee' : 'var(--surface)'};color:${lcActive ? '#000' : _lcBad ? '#f59e0b' : 'var(--text2)'}">LINEUP${_lcBad ? ' · ' + (_lcA.delta >= 1 ? '+' + _lcA.delta : '!') : ''}</button>`;
-      }
-      // Activity feed + value history — saved leagues only (both live on the snapshot).
-      {
-        const _acLg = _mtActiveSavedLeague();
-        if (_acLg) {
-          const hsActive = _mtHistoryOpen;
-          html += `<button onclick="window._mtToggleHistory()" title="Team strength, PPG and rank over time, with trades marked" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${hsActive ? '#2dd4bf' : 'var(--border)'};background:${hsActive ? '#2dd4bf' : 'var(--surface)'};color:${hsActive ? '#000' : 'var(--text2)'}">HISTORY</button>`;
-          const acActive = _mtActivityOpen;
-          const _acNew = acActive ? 0 : _mtUnseenChanges(_acLg).length;
-          html += `<button onclick="window._mtToggleActivity()" title="Roster moves and standings changes since your last visit" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${acActive ? '#fbbf24' : _acNew ? '#fbbf24' : 'var(--border)'};background:${acActive ? '#fbbf24' : 'var(--surface)'};color:${acActive ? '#000' : _acNew ? '#fbbf24' : 'var(--text2)'}">ACTIVITY${_acNew ? ' · ' + _acNew + ' NEW' : ''}</button>`;
-        }
-      }
-      // Trade log — Sleeper transactions API / ESPN activity feed / Yahoo
-      // transactions page; offseason trades included.
-      if ((_mtActiveSource === 'sleeper' && _mtActiveSleeperId) || (_mtActiveSource === 'espn' && _mtActiveEspnId) || (_mtActiveSource === 'yahoo' && _mtActiveYahooId)) {
-        const tlActive = _mtTradeLogOpen;
-        html += `<button onclick="window._mtToggleTradeLog()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${tlActive ? '#38bdf8' : 'var(--border)'};background:${tlActive ? '#38bdf8' : 'var(--surface)'};color:${tlActive ? '#000' : 'var(--text2)'}">TRADE LOG</button>`;
-      }
-      // Draft capital grid — dynasty/keeper leagues with picks on rosters.
-      if ((_mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper') && teams.some(t => (t.draftPicks || []).length)) {
-        const dcActive = _mtDraftCapitalOpen;
-        html += `<button onclick="window._mtToggleDraftCapital()" title="Every future pick by team, year and round" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${dcActive ? '#a855f7' : 'var(--border)'};background:${dcActive ? '#a855f7' : 'var(--surface)'};color:${dcActive ? '#fff' : 'var(--text2)'}">PICKS</button>`;
-      }
-      // Bye-week stress — needs the NFL schedule tables.
-      if (typeof window.getNflScheduleForTeam === 'function') {
-        const byActive = _mtByesOpen;
-        html += `<button onclick="window._mtToggleByes()" title="Projected starters on bye, every team, every week" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${byActive ? '#facc15' : 'var(--border)'};background:${byActive ? '#facc15' : 'var(--surface)'};color:${byActive ? '#000' : 'var(--text2)'}">BYES</button>`;
-      }
-      // Playoff-week strength — W15-17 lineups with per-week matchup ratings.
-      if (typeof window._mtGetPlayoffSosWeekly === 'function') {
-        const poActive = _mtPlayoffsOpen;
-        html += `<button onclick="window._mtTogglePlayoffs()" title="Best lineups for weeks 15-17 with each player's playoff matchups priced in" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${poActive ? '#f97316' : 'var(--border)'};background:${poActive ? '#f97316' : 'var(--surface)'};color:${poActive ? '#000' : 'var(--text2)'}">PLAYOFFS</button>`;
-      }
-      // Share card — PNG of the power rankings for the league chat.
-      {
-        const shActive = _mtShareOpen;
-        html += `<button onclick="window._mtToggleShare()" title="Export the power rankings as an image" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${shActive ? 'var(--accent)' : 'var(--border)'};background:${shActive ? 'var(--accent)' : 'var(--surface)'};color:${shActive ? '#000' : 'var(--text2)'}">SHARE</button>`;
-      }
-      // Results — completed weeks (Sleeper matchups / ESPN schedule scores);
-      // shows once a week is in the books, or for a past-season league.
-      if (_mtResultsAvailable()) {
-        const rsActive = _mtResultsOpen;
-        html += `<button onclick="window._mtToggleResults()" title="Week-by-week scores, all-play record and luck" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${rsActive ? '#c084fc' : 'var(--border)'};background:${rsActive ? '#c084fc' : 'var(--surface)'};color:${rsActive ? '#000' : 'var(--text2)'}">RESULTS</button>`;
-      }
-      // Matchups — Sleeper API / ESPN schedule payload (Yahoo lacks a
-      // proxy-reachable scoreboard); in-season or published week only.
-      // (Local week calc — the sort-chip wkNum const is declared later.)
-      const _muOff = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
-      const _muWk = (!_muOff || window._weeklyPublishedWeek) ? (window._weeklyActiveWeek || window._weeklyPublishedWeek || 1) : 0;
-      if (_muWk && (_mtActiveSource === 'sleeper' || _mtActiveSource === 'espn')) {
-        const muActive = _mtMatchupsOpen;
-        html += `<button onclick="window._mtToggleMatchups()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${muActive ? '#f472b6' : 'var(--border)'};background:${muActive ? '#f472b6' : 'var(--surface)'};color:${muActive ? '#000' : 'var(--text2)'}">MATCHUPS</button>`;
-        const ssActive = _mtSeasonOpen;
-        html += `<button onclick="window._mtToggleSeason()" style="padding:4px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${ssActive ? '#fb923c' : 'var(--border)'};background:${ssActive ? '#fb923c' : 'var(--surface)'};color:${ssActive ? '#000' : 'var(--text2)'}">SEASON</button>`;
-      }
-    }
-    html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)"></span>`;
+    const _fmtPrev = (document.getElementById('mtFormatDisplay') || {}).textContent || '';
+    html += `<span id="mtFormatDisplay" style="margin-left:auto;font-size:.65rem;color:var(--text2)">${_esc(_fmtPrev)}</span>`;
     html += `</div>`;
+    // Toolbar lives in its own slot under the league header, ABOVE the tool
+    // panels — so the tabs stay put when a panel opens.
+    {
+      const slot = document.getElementById('mtToolbarSlot');
+      if (slot) { slot.innerHTML = html.slice(_tbStart); html = html.slice(0, _tbStart); }
+    }
 
     // Value vs Contender toggle (dynasty only)
     const isDynasty = _mtFormat.type === 'dynasty' || _mtFormat.type === 'keeper';

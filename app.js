@@ -18962,6 +18962,23 @@ window.switchPage = switchPage;
     if (tvBtn) tvBtn.style.display = admin ? '' : 'none';
     const rsBtn = document.getElementById('navResearchBtn');
     if (rsBtn) rsBtn.style.display = admin ? '' : 'none';
+    _navPapersCheck(admin);
+  }
+  // League Papers (myfantasyfootball.co/paper/): Jack, plus anyone on his papers list (Firestore ledger_access/<email-key>,
+  // readable only by its own verified email). One read per signed-in user, cached.
+  let _papersFor = null, _papersOk = false;
+  function _navPapersCheck(admin) {
+    const pb = document.getElementById('navPapersBtn'); if (!pb) return;
+    if (admin) { pb.style.display = ''; return; }
+    let u = null; try { u = (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) ? firebase.auth().currentUser : null; } catch (e) { u = null; }
+    if (!u || !u.email || !u.emailVerified) { pb.style.display = 'none'; _papersFor = null; return; }
+    if (_papersFor === u.uid) { pb.style.display = _papersOk ? '' : 'none'; return; }
+    _papersFor = u.uid; _papersOk = false; pb.style.display = 'none';
+    try {
+      firebase.firestore().doc('ledger_access/' + u.email.toLowerCase().replace(/[^a-z0-9]/g, '_')).get()
+        .then(d => { if (_papersFor !== u.uid) return; _papersOk = d.exists && Object.values((d.data() || {}).teams || {}).some(Boolean); pb.style.display = _papersOk ? '' : 'none'; })
+        .catch(() => {});
+    } catch (e) {}
   }
   _whenFirebaseReady(function(){
     if (typeof firebase !== 'undefined' && firebase.auth) {

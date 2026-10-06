@@ -350,9 +350,10 @@ service cloud.firestore {
       allow read: if isJack() || (_paperVerified() && docId == _giftKey());
       allow write: if isJack();
     }
-    // paper index: ledger/{lg} = { title, league, url, order } (the private link of each paper)
+    // paper index: ledger/{lg} = { title, league, url, order, teams } (the private link of each paper).
+    // One role (the access list); each person sees only the papers of leagues where Jack assigned them a team.
     match /ledger/{lg} {
-      allow read: if hasPaperAccess();
+      allow read: if _lgMember(lg);
       allow write: if isJack();
     }
     match /ledger/{lg}/weeks/{wk}/ballots/{uid} {

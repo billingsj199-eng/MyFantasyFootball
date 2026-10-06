@@ -95,8 +95,16 @@ input,select{font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(-
       $('#g-reload').onclick = function () { u.reload().then(function () { return u.getIdToken(true); }).then(function () { location.reload(); }); };
       wireOut(); return;
     }
-    db.collection('ledger').get().then(function (q) {
-      papers = q.docs.map(function (d) { return Object.assign({ key: d.id }, d.data()); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+    // Jack sees every paper; everyone else only the leagues where Jack assigned them a team (the rules enforce it)
+    var load = isJack ? db.collection('ledger').get().then(function (q) { return q.docs; })
+      : db.doc('ledger_access/' + key(u.email)).get().then(function (a) {
+        if (!a.exists) { var e = new Error('not invited'); e.code = 'permission-denied'; throw e; }
+        var lgs = Object.keys((a.data() || {}).teams || {}).filter(function (k) { return a.data().teams[k]; });
+        return Promise.all(lgs.map(function (k) { return db.doc('ledger/' + k).get().catch(function () { return null; }); }));
+      }).then(function (docs) { return docs.filter(function (d) { return d && d.exists; }); });
+    load.then(function (docs) {
+      papers = docs.map(function (d) { return Object.assign({ key: d.id }, d.data()); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+      if (!papers.length && !isJack) { say('<h2>No papers yet</h2><p>You’re on the list, but Jack hasn’t assigned you a team in any league yet.</p>' + who); wireOut(); return; }
       var p = want && papers.find(function (x) { return x.key === want; });
       if (p) { openPaper(p); return; }
       say('<h2>Your papers</h2><div class="papers">' + papers.map(function (x) { return '<a class="pcard" href="?l=' + encodeURIComponent(x.key) + '"><b>' + esc(x.title) + '</b><span class="dim">' + esc(x.league || '') + (x.week ? ' · Week ' + x.week + ' edition' : '') + '</span></a>'; }).join('') + '</div>' + who);

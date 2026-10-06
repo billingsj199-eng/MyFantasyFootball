@@ -11785,8 +11785,8 @@ const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0
 // VOR WINDOW options (weeks from now; 0 = rest of season). Win-now view for
 // teams that need points before the playoffs, not a title-run price.
 const _VOR_WIN_OPTS = [0, 1, 2, 3, 4, 6, 8];
-// Active window: season boards only; the trade calc / My Teams ROS sims
-// (_vorTableROS) always price the full rest of season.
+// Active window: season boards and the trade calc (shared setting); the My
+// Teams ROS VOR sort (_vorTableROS without useWin) always prices the full season.
 function _vorWin() {
   if (currentMode === 'weekly' || window._vorWinOff) return 0;
   return _vorState().win || 0;
@@ -12309,10 +12309,11 @@ window._vorRefreshLeagues = function () {
 
 // ── VOR TRADE IMPACT (trade calculator). The rest-of-season VOR table is
 // built on a season board even when the rankings page sits on WEEKLY.
-function _vorTableROS(sf) {
+// useWin: honor the WINDOW pick (trade calc); otherwise the full rest of season.
+function _vorTableROS(sf, useWin) {
   const keep = currentMode;
   if (currentMode === 'weekly' || (sf && currentMode !== 'superflex' && currentMode !== 'dynastysf')) currentMode = sf ? 'superflex' : 'redraft';
-  window._vorWinOff = true;
+  window._vorWinOff = !useWin;
   try { return _vorTable(); } finally { currentMode = keep; window._vorWinOff = false; }
 }
 // Each team's best legal starting lineup, week by week, over the games still
@@ -12331,7 +12332,7 @@ function _vorLineupSim(t) {
   const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
   const weeks = [];
   for (let w = t.from; w <= t.to; w++) weeks.push(w);
-  const isPO = w => w >= st.poStart && w <= st.poEnd;
+  const isPO = w => !t.win && w >= st.poStart && w <= st.poEnd;
   const R = {};
   ['QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => { R[p] = (t.waiver[p] && t.waiver[p].v) || 0; });
   const ptsMemo = new Map();
@@ -29780,8 +29781,8 @@ window.fmtHeight = fmtHeight;
         vorEl.className = 'trade-total-vornote';
         totalEl.parentElement.appendChild(vorEl);
       }
-      vorEl.innerHTML = 'ROS VOR <b>' + (vs.locked ? '🔒' : (vs.sum > 0 ? '+' : '') + Math.round(vs.sum)) + '</b>';
-      vorEl.title = 'Rest-of-season VOR of the players on this side added up (players below replacement count 0 — they would sit on a bench). It assumes every one of them starts; pick your team in the League row to see what the trade does to your actual lineup.';
+      vorEl.innerHTML = _tradeVorLbl(_tradeVorT()) + ' <b>' + (vs.locked ? '🔒' : (vs.sum > 0 ? '+' : '') + Math.round(vs.sum)) + '</b>';
+      vorEl.title = (_tradeVorT() && _tradeVorT().win ? 'Win-now VOR (WINDOW in the VOR Trade Impact panel)' : 'Rest-of-season VOR') + ' of the players on this side added up (players below replacement count 0 — they would sit on a bench). It assumes every one of them starts; pick your team in the League row to see what the trade does to your actual lineup.';
     } else if (vorEl) {
       vorEl.remove();
     }
@@ -29795,15 +29796,34 @@ window.fmtHeight = fmtHeight;
   // by week, before vs after, playoff weeks counted like the VOR bar says);
   // without teams it compares the ROS VOR each side takes home.
   function _tradeVorT() {
-    return _vorTableROS(tradeMode === 'superflex' || tradeMode === 'dynastysf');
+    return _vorTableROS(tradeMode === 'superflex' || tradeMode === 'dynastysf', true);
   }
+  // Label for the VOR number in play: ROS, or the NEXT N window.
+  function _tradeVorLbl(t) {
+    return t && t.win ? 'VOR next ' + t.win + ' wk' + (t.win > 1 ? 's' : '') : 'ROS VOR';
+  }
+  // WINDOW picker in the VOR TRADE IMPACT head — the same setting as the
+  // rankings VOR bar, so a win-now trade and a win-now board agree.
+  (function () {
+    const el = document.getElementById('tradeVorImpact');
+    if (!el) return;
+    el.addEventListener('change', e => {
+      if (e.target.id !== 'tviWinSel') return;
+      const n = Math.round(Number(e.target.value));
+      _vorState().win = _VOR_WIN_OPTS.includes(n) ? n : 0;
+      if (n) window._vorPlayoffs = false;
+      _vorChanged();
+      renderAll();
+    });
+  })();
   function _tradeVorTag(d) {
     const t = _tradeVorT();
     const e = t && t.map.get(d);
     if (!e) return '';
     if (_vorLocked(d, e)) return '<span class="tp-vor" title="' + _VOR_LOCK_TIP.replace(/"/g, '&quot;') + '">VOR 🔒</span>';
     const f = v => (v > 0 ? '+' : '') + Math.round(v);
-    return '<span class="tp-vor' + (e.vt > 0 ? '' : ' neg') + '" title="Rest-of-season VOR: ' + f(e.vt) + ' points over a replacement player across his remaining games (fantasy-playoff weeks counted ' + t.st.poW + 'x) · ' + (e.vor > 0 ? '+' : '') + e.vor + ' per game">VOR ' + f(e.vt) + '</span>';
+    const span = t.win ? 'over the next ' + t.win + ' week' + (t.win > 1 ? 's' : '') + ' (weeks ' + t.from + '-' + t.to + ')' : 'across his remaining games (fantasy-playoff weeks counted ' + t.st.poW + 'x)';
+    return '<span class="tp-vor' + (e.vt > 0 ? '' : ' neg') + '" title="' + (t.win ? 'Win-now' : 'Rest-of-season') + ' VOR: ' + f(e.vt) + ' points over a replacement player ' + span + ' · ' + (e.vor > 0 ? '+' : '') + e.vor + ' per game">VOR ' + f(e.vt) + '</span>';
   }
   // Cumulative ROS VOR of a list of players (below-replacement counts 0).
   function _tradeVorSum(arr) {
@@ -29834,14 +29854,17 @@ window.fmtHeight = fmtHeight;
     const f0 = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(Math.round(v));
     const cls = v => v > 0.5 ? 'pos' : v < -0.5 ? 'neg' : '';
     const free = hasPremium();
-    const head = '<div class="tvi-head"><span class="tvi-title">VOR TRADE IMPACT</span><span class="tvi-sub">Sim Lab · weeks ' + t.from + '-' + t.to + ' · ' + _vorLineupLabel(t.st) + ' · ' + _vorPlayoffLabel(t.st) + '</span></div>';
+    const W = t.win;
+    const winSel = '<label class="tvi-win" title="How many weeks the trade is judged over. REST OF SEASON = every game left through the fantasy playoffs. NEXT N WEEKS = only the next N weeks, each counted once — for a team that needs wins now. Same setting as WINDOW in the rankings VOR bar.">Window <select id="tviWinSel">'
+      + _VOR_WIN_OPTS.map(n => '<option value="' + n + '"' + ((W || 0) === n ? ' selected' : '') + '>' + (n ? 'Next ' + n + ' wk' + (n > 1 ? 's' : '') : 'Rest of season') + '</option>').join('') + '</select></label>';
+    const head = '<div class="tvi-head"><span class="tvi-title">VOR TRADE IMPACT</span>' + winSel + '<span class="tvi-sub">Sim Lab · weeks ' + t.from + '-' + t.to + ' · ' + _vorLineupLabel(t.st) + ' · ' + (W ? 'win-now window, each week counted once' : _vorPlayoffLabel(t.st)) + '</span></div>';
     const nm = [nameA, nameB];
     const give = [pA, pB];
     const paper = i => { const a = _tradeVorSum(give[1 - i]), b = _tradeVorSum(give[i]); return { inn: a ? a.sum : 0, out: b ? b.sum : 0, locked: !!((a && a.locked) || (b && b.locked)) }; };
     // A team with no picked roster: the ROS VOR it takes home vs sends out.
     const paperCard = i => {
       const x = paper(i);
-      return '<div class="tvi-team"><div class="tvi-name">' + _esc(nm[i]) + '</div><div class="tvi-big ' + cls(x.inn - x.out) + '">' + (x.locked ? '🔒' : f0(x.inn - x.out)) + '</div><div class="tvi-line">ROS VOR on paper · in ' + (x.locked ? '—' : Math.round(x.inn)) + ' · out ' + (x.locked ? '—' : Math.round(x.out)) + '</div></div>';
+      return '<div class="tvi-team"><div class="tvi-name">' + _esc(nm[i]) + '</div><div class="tvi-big ' + cls(x.inn - x.out) + '">' + (x.locked ? '🔒' : f0(x.inn - x.out)) + '</div><div class="tvi-line">' + _tradeVorLbl(t) + ' on paper · in ' + (x.locked ? '—' : Math.round(x.inn)) + ' · out ' + (x.locked ? '—' : Math.round(x.out)) + '</div></div>';
     };
     // No teams: ROS VOR each side takes home.
     if (!fA && !fB) {
@@ -29883,19 +29906,19 @@ window.fmtHeight = fmtHeight;
       const pp = paper(i);
       return '<div class="tvi-team"><div class="tvi-name">' + _esc(nm[i]) + '</div>'
         + '<div class="tvi-big ' + cls(dR) + '">' + f1(dR) + ' pts</div>'
-        + '<div class="tvi-line">season +/- for this lineup if you make the trade (weeks ' + r.weeks[0] + '-' + r.weeks[r.weeks.length - 1] + ')</div>'
-        + '<div class="tvi-stats"><span>per week <b class="' + cls(dR) + '">' + f1(dR / r.weeks.length) + '</b></span><span>playoffs <b class="' + cls(dP) + '">' + f1(dP) + '</b></span><span>playoff-weighted <b class="' + cls(dW) + '">' + f1(dW) + '</b></span></div>'
-        + '<div class="tvi-stats"><span>' + Math.round(tm.before.raw) + ' → ' + Math.round(tm.after.raw) + ' pts</span><span title="ROS VOR in minus out, as if every player starts — vs the playoff-weighted change your real lineup gets">VOR on paper <b class="' + cls(pp.inn - pp.out) + '">' + f0(pp.inn - pp.out) + '</b> → lineup <b class="' + cls(dW) + '">' + f0(dW) + '</b></span></div>'
+        + '<div class="tvi-line">' + (W ? 'next ' + W + ' week' + (W > 1 ? 's' : '') : 'season') + ' +/- for this lineup if you make the trade (weeks ' + r.weeks[0] + '-' + r.weeks[r.weeks.length - 1] + ')</div>'
+        + '<div class="tvi-stats"><span>per week <b class="' + cls(dR) + '">' + f1(dR / r.weeks.length) + '</b></span>' + (W ? '' : '<span>playoffs <b class="' + cls(dP) + '">' + f1(dP) + '</b></span><span>playoff-weighted <b class="' + cls(dW) + '">' + f1(dW) + '</b></span>') + '</div>'
+        + '<div class="tvi-stats"><span>' + Math.round(tm.before.raw) + ' → ' + Math.round(tm.after.raw) + ' pts</span><span title="' + _tradeVorLbl(t) + ' in minus out, as if every player starts — vs the ' + (W ? '' : 'playoff-weighted ') + 'change your real lineup gets">VOR on paper <b class="' + cls(pp.inn - pp.out) + '">' + f0(pp.inn - pp.out) + '</b> → lineup <b class="' + cls(dW) + '">' + f0(dW) + '</b></span></div>'
         + bars(tm)
         + '<div class="tvi-line">' + startsLine(tm) + '</div>'
         + depthLine(tm)
-        + (tm.drops.length ? '<div class="tvi-line tvi-drop">Roster full: cuts ' + tm.drops.map(d => _esc(d.n)).join(', ') + ' (lowest ROS VOR)</div>' : '')
+        + (tm.drops.length ? '<div class="tvi-line tvi-drop">Roster full: cuts ' + tm.drops.map(d => _esc(d.n)).join(', ') + ' (lowest ' + _tradeVorLbl(t) + ')</div>' : '')
         + (tm.open ? '<div class="tvi-line tvi-open">' + tm.open + ' open roster spot' + (tm.open > 1 ? 's' : '') + ' → waiver pickup</div>' : '')
         + '</div>';
     };
     el.style.display = '';
     el.innerHTML = head + '<div class="tvi-teams">' + r.teams.map((tm, i) => tm ? simCard(tm, i) : paperCard(i)).join('') + '</div>'
-      + '<div class="tvi-note">Each picked team’s best legal lineup every remaining week from the Sim Lab projection, before vs after; a starter never scores below a free agent at that spot, so depth you can’t start adds nothing. Bars = weekly change (gold weeks = fantasy playoffs).' + (r.teams[0] && r.teams[1] ? '' : ' Pick the other team too to simulate both lineups.') + '</div>';
+      + '<div class="tvi-note">Each picked team’s best legal lineup every ' + (W ? 'week in the window' : 'remaining week') + ' from the Sim Lab projection, before vs after; a starter never scores below a free agent at that spot, so depth you can’t start adds nothing. Bars = weekly change (gold weeks = fantasy playoffs).' + (r.teams[0] && r.teams[1] ? '' : ' Pick the other team too to simulate both lineups.') + '</div>';
   }
 
   // Each panel holds what that team GIVES UP, so Team A receives side B's

@@ -966,8 +966,8 @@ window._verBoardFor = function(src, mode) {
 };
 
 // === CONSENSUS RANKING ENGINE ===
-// Redraft / best ball: FantasyPros only (see _fpOnly below). Superflex + dynasty
-// average ranks from: Jack's + market ADP + Sleeper + FantasyPros + KTC (dynasty)
+// Redraft / best ball: FantasyPros only (see _fpOnly below). Dynasty 1QB/SF: KTC
+// only (_ktcOnly). Superflex averages Jack's + market ADP + Sleeper + FantasyPros.
 function _computeConsensusBoard(mode, gf) {
   // gf(i, field) = source-field getter (default: live D). RANKINGS MOVERS passes
   // a dated snapshot of the same inputs (data/cons_rank_history.json) to rebuild
@@ -1099,10 +1099,15 @@ function _computeConsensusBoard(mode, gf) {
   // order so the deep tail stays sensible. Superflex and dynasty keep the
   // blend: FantasyPros publishes no rest-of-season list for them.
   const _fpOnly = mode === 'redraft' || mode === 'bestball';
+  // DYNASTY 1QB / DYNASTY SF consensus = KTC only (Jack 2026-10-06): KTC is the
+  // one dynasty source that keeps updating through the season (daily 9am pull).
+  // Players KTC does not value follow in the old blend's order.
+  const _ktcOnly = mode === 'dynasty' || mode === 'dynastysf';
+  const soloRank = _fpOnly ? fRank : _ktcOnly ? kRank : null;
   // Players with zero sources: sort by their index (stable) at the end
   scored.sort((a, b) => {
-    if (_fpOnly) {
-      const fa = fRank[a.idx], fb = fRank[b.idx];
+    if (soloRank) {
+      const fa = soloRank[a.idx], fb = soloRank[b.idx];
       if (fa != null && fb != null) return fa - fb;
       if (fa != null) return -1;
       if (fb != null) return 1;
@@ -2510,11 +2515,14 @@ function _syncConsColHeader() {
   const want = isC ? "Jack's" : 'Cons';
   const locked = isC && _consColLocked();
   const _fpOnly = currentMode === 'redraft' || currentMode === 'bestball';
+  const _ktcOnly = currentMode === 'dynasty' || currentMode === 'dynastysf';
   let gloss = locked ? _CONS_LOCK_TIP : isC
     ? "Jack's rank — where this player sits on Jack's board for this format. Green = the consensus is higher on him than Jack, red = lower."
     : _fpOnly
       ? 'Consensus rank — where this player sits on the CONSENSUS board: FantasyPros\' expert consensus (rest-of-season rankings in season, refreshed daily). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.'
-      : 'Consensus rank — where this player sits on the CONSENSUS board for this format (Jack\'s + market ADP + Sleeper + FantasyPros + KTC blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.';
+      : _ktcOnly
+        ? 'Consensus rank — where this player sits on the CONSENSUS board: KeepTradeCut dynasty values (' + (currentMode === 'dynastysf' ? 'superflex' : '1QB') + '), refreshed daily. Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.'
+        : 'Consensus rank — where this player sits on the CONSENSUS board for this format (Jack\'s + market ADP + Sleeper + FantasyPros blend). Green = this board is 3+ spots higher on him than consensus, red = 3+ lower. K/DST show their consensus position rank.';
   if (!locked && _ktcPosView()) gloss += ' On a single-position view this column and +/- compare POSITION ranks (QB1 vs QB1), not overall slots.';
   if (lab.textContent !== want || lab.getAttribute('data-gloss') !== gloss) {
     lab.textContent = want;

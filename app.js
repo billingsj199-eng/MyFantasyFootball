@@ -11785,8 +11785,8 @@ const _VOR_LIMITS = { teams: [4, 32], QB: [0, 3], RB: [0, 5], WR: [0, 5], TE: [0
 // VOR WINDOW options (weeks from now; 0 = rest of season). Win-now view for
 // teams that need points before the playoffs, not a title-run price.
 const _VOR_WIN_OPTS = [0, 1, 2, 3, 4, 6, 8];
-// Active window: season boards and the trade calc (shared setting); the My
-// Teams ROS VOR sort (_vorTableROS without useWin) always prices the full season.
+// Active window: season boards, the trade calc and the My Teams VOR sort all
+// share it (_vorTableROS(sf, true)).
 function _vorWin() {
   if (currentMode === 'weekly' || window._vorWinOff) return 0;
   return _vorState().win || 0;
@@ -12430,12 +12430,13 @@ function _vorDByName(n) {
   return n ? (m.get(_rnkLgNorm(n)) || null) : null;
 }
 // Team ROS VOR for a My Teams league: each roster's best lineup every
-// remaining week minus an all-replacement lineup, playoff weeks weighted.
+// remaining week (or every week in the WINDOW) minus an all-replacement
+// lineup, playoff weeks weighted (no weighting inside a window).
 // Prices VOR for that league first (same as picking it in the VOR bar).
 function _vorTeamsROS(lg, teams) {
   _vorUseLeague(lg);
   const f = lg && lg.format;
-  const sim = _vorLineupSim(_vorTableROS(!!(f && f.sf)));
+  const sim = _vorLineupSim(_vorTableROS(!!(f && f.sf), true));
   if (!sim) return null;
   const res = new Map();
   teams.forEach(tm => {
@@ -57333,7 +57334,8 @@ Rules:
     ];
     if (wkNum) sortOpts.splice(2, 0, { key: 'week', label: 'WK ' + wkNum, color: '#22d3ee' });
     // ROS VOR: Sim Lab lineup simulation, redraft-style seasons only.
-    if (!isDynasty || _mtViewMode === 'contender') sortOpts.splice(wkNum ? 3 : 2, 0, { key: 'vor', label: 'ROS VOR', color: '#f59e0b' });
+    const _vWin = _vorState().win || 0;
+    if (!isDynasty || _mtViewMode === 'contender') sortOpts.splice(wkNum ? 3 : 2, 0, { key: 'vor', label: _vWin ? 'VOR NEXT ' + _vWin : 'ROS VOR', color: '#f59e0b' });
     if (_mtSortBy === 'vor') {
       const _vr = (typeof _vorTeamsROS === 'function') ? _vorTeamsROS(_mtActiveSavedLeague(), teams) : null;
       if (!_vr) _mtSortBy = 'total';
@@ -57345,6 +57347,12 @@ Rules:
       const active = _mtSortBy === o.key;
       html += `<button onclick="window._mtSortTeams('${o.key}')" style="padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;border-radius:4px;cursor:pointer;border:1px solid ${active ? o.color : 'var(--border)'};background:${active ? o.color : 'var(--surface)'};color:${active ? (o.key === 'total' || o.key === 'picks' || o.key === 'week' || o.key === 'vor' ? '#000' : '#fff') : 'var(--text2)'}">${o.label}</button>`;
     });
+    // VOR sort: WINDOW picker (same setting as the rankings VOR bar and trade calc).
+    if (_mtSortBy === 'vor') {
+      html += `<select onchange="window._mtSetVorWin(this.value)" title="How many weeks the VOR sort adds up. Rest of season = every game left through the fantasy playoffs (playoff weeks weighted). Next N weeks = only the next N weeks, each counted once: who is strongest right now. Same setting as WINDOW on the rankings VOR bar and the trade calculator." style="margin-left:4px;padding:2px 4px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-size:.68rem;cursor:pointer">`
+        + _VOR_WIN_OPTS.map(n => `<option value="${n}"${_vWin === n ? ' selected' : ''}>${n ? 'Next ' + n + ' wk' + (n > 1 ? 's' : '') : 'Rest of season'}</option>`).join('')
+        + `</select>`;
+    }
     html += `</div>`;
 
     // Sort teams
@@ -57403,6 +57411,7 @@ Rules:
       const delta = (_mtSortBy === 'total' || _mtSortBy === 'ppg' || _mtSortBy === 'week' || _mtSortBy === 'vor') ? Math.round((displayScore - avgExact) * 10) / 10 : null;
       const deltaHtml = delta === null ? '' : ` · <span style="color:${delta >= 0 ? '#22c55e' : '#ef4444'};font-weight:700">${delta >= 0 ? '+' : ''}${delta} vs avg</span>`;
       const chipTip = _mtSortBy === 'total' ? `title="Starter-weighted team strength (bench mostly discounted) · roster value ${sc.total} (win-now = above replacement) · league avg ${avgScore}"`
+        : _mtSortBy === 'vor' && t.vorInfo && _vWin ? `title="Win-now VOR: best-lineup points over an all-free-agent lineup across the next ${t.vorInfo.weeks} week${t.vorInfo.weeks === 1 ? '' : 's'} (Sim Lab; each week counted once) · ${Math.round(t.vorInfo.pts)} lineup pts · league avg ${avgScore}"`
         : _mtSortBy === 'vor' && t.vorInfo ? `title="Rest-of-season VOR: best-lineup points over an all-free-agent lineup across ${t.vorInfo.weeks} remaining weeks (Sim Lab; fantasy-playoff weeks counted ${_vorState().poW}x) · ${t.vorInfo.raw >= 0 ? '+' : ''}${Math.round(t.vorInfo.raw)} unweighted · playoffs ${t.vorInfo.po >= 0 ? '+' : ''}${Math.round(t.vorInfo.po)} · ${Math.round(t.vorInfo.pts)} lineup pts · league avg ${avgScore}"`
         : _mtSortBy === 'week' ? `title="Week ${wkNum} best-lineup projected points (weekly props/Vegas/sim-adjusted; byes and ruled-out players benched; K/DST not counted) · league avg ${avgScore}"` : '';
       const scoreColor = isPosSort
@@ -57467,6 +57476,13 @@ Rules:
 
   window._mtSortTeams = function(key) {
     _mtSortBy = key;
+    if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
+  };
+  window._mtSetVorWin = function(v) {
+    const n = Math.round(Number(v));
+    _vorState().win = _VOR_WIN_OPTS.includes(n) ? n : 0;
+    if (n) window._vorPlayoffs = false;
+    _vorChanged();
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
   };
 

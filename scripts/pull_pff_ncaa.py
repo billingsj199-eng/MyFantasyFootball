@@ -9,7 +9,10 @@ PFF Pro API key from pbp_cache/pff/api_key.txt), but for the NCAA league:
             -> pbp_cache/pff/ncaa/pff_ncaa_<key>_<S>.csv   (--seasons)
 
 Facets: passing/summary, rushing/summary, receiving/summary, offense/summary
-(every FBS+FCS player, ~7k rows/week for offense). Consumed by
+(every FBS+FCS player, ~7k rows/week for offense). Season-level only (SEASON_FACETS,
+2026-10-06): receiving scheme / concept, rushing direction, passing pressure /
+depth / concept -> pff_ncaa_<key>_<S>.csv, backfilled 2014-2025 for the prospect-model
+study (scripts/jm_pff_extras_study.py). Season tables are slow (~30-60 s per call). Consumed by
 scripts/refresh_devy_stats.py, which lifts per-game grades/analytics for the
 devy prospects into data/college_stats_devy.js. Full files are kept so any
 new prospect added later is already covered.
@@ -40,6 +43,20 @@ FACETS = [
     ("receiving", "receiving/summary"),
     ("offense", "offense/summary"),
 ]
+# PFF Pro extras (2026-10-06): SEASON-level only (the prospect model reads season
+# profiles; weekly copies would cost ~7 more calls per played week for no consumer).
+# Pulled for the current season on every run and for --seasons backfills.
+# receiving/depth (509 columns) is NOT in the list: PFF answers 504 upstream_timeout
+# for full seasons from 2019 on (every retry burns minutes of the job's 1 h budget);
+# 2019-2023 were rebuilt by summing the weekly tables for the 10-06 study.
+SEASON_FACETS = [
+    ("receiving_scheme", "receiving/scheme"),      # man vs zone routes / targets / yprr
+    ("receiving_concept", "receiving/concept"),    # screen / slot / non-screen splits
+    ("rushing_direction", "rushing/direction"),    # carries by gap
+    ("passing_pressure", "passing/pressure"),      # QB pressured / blitzed / clean splits
+    ("passing_depth", "passing/depth"),            # QB by target depth
+    ("passing_concept", "passing/concept"),        # QB play action / screen / RPO splits
+]  # passing/time_in_pocket is 404 for league=ncaa
 LEAD = ["season", "week", "player", "player_id", "position", "team_name", "franchise_id", "player_game_count"]
 
 
@@ -82,9 +99,9 @@ def pull_week(key, season, week, force):
     return written, False
 
 
-def pull_season(key, season, force):
+def pull_season(key, season, force, facets=None):
     written = []
-    for fkey, facet in FACETS:
+    for fkey, facet in (facets or FACETS + SEASON_FACETS):
         path = path_for(fkey, season)
         if os.path.exists(path) and not force:
             continue
@@ -105,6 +122,8 @@ def main():
     ap.add_argument("--refetch", type=int, default=1, help="re-pull this many newest existing weeks")
     ap.add_argument("--seasons", default="", help="comma list of seasons to pull SEASON-level files for")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--only", default="", help="comma list of facet keys (e.g. receiving_scheme) for --seasons backfills")
+    ap.add_argument("--season-only", action="store_true", help="skip the current-season refresh + weekly loop")
     ap.add_argument("--login-wait", type=int, default=300, help="ignored (old job command lines still parse)")
     a = ap.parse_args()
     today = dt.date.today()
@@ -128,9 +147,13 @@ def main():
     # run (PFF season grades are not averages of game grades - the season row's
     # film grade must come from the season table, refreshed as the season grows).
     seasons = [int(x) for x in a.seasons.split(",") if x.strip()]
+    only = {x.strip() for x in a.only.split(",") if x.strip()}
+    sel = [f for f in FACETS + SEASON_FACETS if not only or f[0] in only]
     for s in seasons:
-        w = pull_season(key, s, a.force)
+        w = pull_season(key, s, a.force, sel)
         print("  season %d: %s" % (s, ", ".join("%s %d" % x for x in w) or "nothing new"), flush=True)
+    if a.season_only:
+        return 0
     if season not in seasons:
         w = pull_season(key, season, True)
         print("  season %d (current, refreshed): %s" % (season, ", ".join("%s %d" % x for x in w) or "nothing"), flush=True)

@@ -12360,7 +12360,9 @@ function _vorTradeImpact(rosters, give, t) {
   const sim = _vorLineupSim(t);
   if (!sim) return null;
   const { weeks, isPO, st, run, vt } = sim;
+  // A null roster (team not picked) leaves that side out of the simulation.
   const teams = [0, 1].map(i => {
+    if (!rosters[i]) return null;
     const out = new Set(give[i]), inc = give[1 - i];
     let after = rosters[i].filter(d => !out.has(d)).concat(inc.filter(d => !rosters[i].includes(d)));
     const drops = [];
@@ -29742,6 +29744,20 @@ window.fmtHeight = fmtHeight;
     } else if (adjEl) {
       adjEl.remove();
     }
+    // Cumulative ROS VOR of everything on this side (players only).
+    let vorEl = totalEl.parentElement.querySelector('.trade-total-vornote');
+    const vs = _tradeVorSum(side.players.map(i => D[i]).filter(Boolean));
+    if (vs) {
+      if (!vorEl) {
+        vorEl = document.createElement('div');
+        vorEl.className = 'trade-total-vornote';
+        totalEl.parentElement.appendChild(vorEl);
+      }
+      vorEl.innerHTML = 'ROS VOR <b>' + (vs.locked ? '🔒' : (vs.sum > 0 ? '+' : '') + Math.round(vs.sum)) + '</b>';
+      vorEl.title = 'Rest-of-season VOR of the players on this side added up (players below replacement count 0 — they would sit on a bench). It assumes every one of them starts; pick your team in the League row to see what the trade does to your actual lineup.';
+    } else if (vorEl) {
+      vorEl.remove();
+    }
     attachRemoveListeners();
     updateResult();
   }
@@ -29762,6 +29778,20 @@ window.fmtHeight = fmtHeight;
     const f = v => (v > 0 ? '+' : '') + Math.round(v);
     return '<span class="tp-vor' + (e.vt > 0 ? '' : ' neg') + '" title="Rest-of-season VOR: ' + f(e.vt) + ' points over a replacement player across his remaining games (fantasy-playoff weeks counted ' + t.st.poW + 'x) · ' + (e.vor > 0 ? '+' : '') + e.vor + ' per game">VOR ' + f(e.vt) + '</span>';
   }
+  // Cumulative ROS VOR of a list of players (below-replacement counts 0).
+  function _tradeVorSum(arr) {
+    const t = _tradeVorT();
+    if (!t || !arr.length) return null;
+    let sum = 0, any = false, locked = false;
+    arr.forEach(d => {
+      const e = t.map.get(d);
+      if (!e) return;
+      any = true;
+      if (!hasPremium() && _vorLocked(d, e)) locked = true;
+      if (e.vt > 0) sum += e.vt;
+    });
+    return any ? { sum, locked } : null;
+  }
   function _tradeVorRender() {
     const el = document.getElementById('tradeVorImpact');
     if (!el) return;
@@ -29769,7 +29799,7 @@ window.fmtHeight = fmtHeight;
     if (!pA.length && !pB.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
     const fA = _calcSideFilters.a, fB = _calcSideFilters.b;
     const lg = (window._mtSavedLeagues || [])[_finderState.leagueIdx];
-    if (fA && fB && lg) _vorUseLeague(lg);
+    if ((fA || fB) && lg) _vorUseLeague(lg);
     const t = _tradeVorT();
     if (!t) { el.style.display = 'none'; el.innerHTML = ''; return; }
     const { nameA, nameB } = _tradeSideNames();
@@ -29778,58 +29808,67 @@ window.fmtHeight = fmtHeight;
     const cls = v => v > 0.5 ? 'pos' : v < -0.5 ? 'neg' : '';
     const free = hasPremium();
     const head = '<div class="tvi-head"><span class="tvi-title">VOR TRADE IMPACT</span><span class="tvi-sub">Sim Lab · weeks ' + t.from + '-' + t.to + ' · ' + _vorLineupLabel(t.st) + ' · ' + _vorPlayoffLabel(t.st) + '</span></div>';
+    const nm = [nameA, nameB];
+    const give = [pA, pB];
+    const paper = i => { const a = _tradeVorSum(give[1 - i]), b = _tradeVorSum(give[i]); return { inn: a ? a.sum : 0, out: b ? b.sum : 0, locked: !!((a && a.locked) || (b && b.locked)) }; };
+    // A team with no picked roster: the ROS VOR it takes home vs sends out.
+    const paperCard = i => {
+      const x = paper(i);
+      return '<div class="tvi-team"><div class="tvi-name">' + _esc(nm[i]) + '</div><div class="tvi-big ' + cls(x.inn - x.out) + '">' + (x.locked ? '🔒' : f0(x.inn - x.out)) + '</div><div class="tvi-line">ROS VOR on paper · in ' + (x.locked ? '—' : Math.round(x.inn)) + ' · out ' + (x.locked ? '—' : Math.round(x.out)) + '</div></div>';
+    };
     // No teams: ROS VOR each side takes home.
-    if (!(fA && fB)) {
-      const sum = arr => arr.reduce((s, d) => { const e = t.map.get(d); return s + (e && e.vt > 0 ? e.vt : 0); }, 0);
-      const getA = sum(pB), getB = sum(pA);
-      const locked = !free && pA.concat(pB).some(d => _vorLocked(d, t.map.get(d)));
+    if (!fA && !fB) {
       el.style.display = '';
-      el.innerHTML = head
-        + '<div class="tvi-teams">'
-        + [[nameA, getA, getB, pB.length, pA.length], [nameB, getB, getA, pA.length, pB.length]].map(x =>
-          '<div class="tvi-team"><div class="tvi-name">' + _esc(x[0]) + '</div><div class="tvi-big ' + cls(x[1] - x[2]) + '">' + (locked ? '🔒' : f0(x[1] - x[2])) + '</div><div class="tvi-line">ROS VOR in ' + (locked ? '—' : Math.round(x[1])) + ' · out ' + (locked ? '—' : Math.round(x[2])) + '</div></div>').join('')
-        + '</div>'
-        + '<div class="tvi-note">VOR adds up only if every player starts for you. Pick both teams in the <b>League</b> row above to simulate each lineup week by week — that is what shows whether the second player in a 2-for-1 ever plays, and what the side giving up depth loses.</div>';
+      el.innerHTML = head + '<div class="tvi-teams">' + paperCard(0) + paperCard(1) + '</div>'
+        + '<div class="tvi-note">VOR adds up only if every player starts for you. Pick your team in the <b>League</b> row above to see the season points this trade adds or costs your actual lineup — if you are already deep at a position, the player you get may never start.</div>';
       return;
     }
-    const rows = f => [...f.idxSet].map(i => D[i]).filter(Boolean);
+    const rows = f => f ? [...f.idxSet].map(i => D[i]).filter(Boolean) : null;
     const r = _vorTradeImpact([rows(fA), rows(fB)], [pA, pB], t);
     if (!r) { el.style.display = 'none'; el.innerHTML = ''; return; }
     if (!free) {
       el.style.display = '';
-      el.innerHTML = head + '<div class="tvi-note">🔒 The week-by-week lineup simulation is a Season Pass feature. ' + _esc(nameA) + ' and ' + _esc(nameB) + ' lineups are ready to run — upgrade to see how this trade moves each team’s points the rest of the way and in the playoffs.</div>';
+      el.innerHTML = head + '<div class="tvi-note">🔒 The week-by-week lineup simulation is a Season Pass feature. ' + nm.filter((n, i) => r.teams[i]).map(_esc).join(' and ') + ' lineup' + (r.teams[0] && r.teams[1] ? 's are' : ' is') + ' ready to run — upgrade to see how many season points this trade adds or costs, the rest of the way and in the playoffs.</div>';
       return;
     }
-    const nm = [nameA, nameB];
-    const bars = tm => {
-      const mx = Math.max(1, ...r.teams.map(x => Math.max(...x.after.wk.map((v, j) => Math.abs(v - x.before.wk[j])))));
-      return '<div class="tvi-wk">' + r.weeks.map((w, j) => {
-        const dv = tm.after.wk[j] - tm.before.wk[j];
-        const h = Math.round(Math.abs(dv) / mx * 26);
-        return '<div class="tvi-wkcol' + (r.isPO(w) ? ' po' : '') + '" title="Week ' + w + (r.isPO(w) ? ' (playoffs)' : '') + ': ' + tm.before.wk[j].toFixed(1) + ' → ' + tm.after.wk[j].toFixed(1) + ' (' + f1(dv) + ')"><div class="tvi-wkbar ' + (dv >= 0 ? 'up' : 'dn') + '" style="height:' + Math.max(dv ? 2 : 0, h) + 'px"></div><span>' + w + '</span></div>';
-      }).join('') + '</div>';
-    };
+    const sims = r.teams.filter(Boolean);
+    const mx = Math.max(1, ...sims.map(x => Math.max(...x.after.wk.map((v, j) => Math.abs(v - x.before.wk[j])))));
+    const bars = tm => '<div class="tvi-wk">' + r.weeks.map((w, j) => {
+      const dv = tm.after.wk[j] - tm.before.wk[j];
+      const h = Math.round(Math.abs(dv) / mx * 26);
+      return '<div class="tvi-wkcol' + (r.isPO(w) ? ' po' : '') + '" title="Week ' + w + (r.isPO(w) ? ' (playoffs)' : '') + ': ' + tm.before.wk[j].toFixed(1) + ' → ' + tm.after.wk[j].toFixed(1) + ' (' + f1(dv) + ')"><div class="tvi-wkbar ' + (dv >= 0 ? 'up' : 'dn') + '" style="height:' + Math.max(dv ? 2 : 0, h) + 'px"></div><span>' + w + '</span></div>';
+    }).join('') + '</div>';
     const startsLine = (tm) => {
       const parts = [];
       tm.inc.forEach(d => { const n = tm.after.starts.get(d) || 0; parts.push('<b>' + _esc(d.n) + '</b> starts ' + n + ' of ' + r.weeks.length); });
       tm.out.forEach(d => { const n = tm.before.starts.get(d) || 0; parts.push(_esc(d.n) + ' was starting ' + n); });
       return parts.join(' · ');
     };
-    el.style.display = '';
-    el.innerHTML = head + '<div class="tvi-teams">' + r.teams.map((tm, i) => {
+    // Incoming players who start under half the weeks: that position is
+    // already deep, so their VOR mostly sits on the bench.
+    const depthLine = tm => {
+      const half = r.weeks.length / 2;
+      const pos = [...new Set(tm.inc.filter(d => (tm.after.starts.get(d) || 0) < half).map(d => d.s))];
+      return pos.length ? '<div class="tvi-line tvi-depth">Already deep at ' + pos.join('/') + ' — who you get there mostly rides the bench.</div>' : '';
+    };
+    const simCard = (tm, i) => {
       const dW = tm.after.wtd - tm.before.wtd, dR = tm.after.raw - tm.before.raw, dP = tm.after.po - tm.before.po;
+      const pp = paper(i);
       return '<div class="tvi-team"><div class="tvi-name">' + _esc(nm[i]) + '</div>'
-        + '<div class="tvi-big ' + cls(dW) + '">' + f1(dW) + '</div>'
-        + '<div class="tvi-line">lineup pts rest of season, playoff weeks ' + r.st.poW + 'x</div>'
-        + '<div class="tvi-stats"><span>ROS <b class="' + cls(dR) + '">' + f1(dR) + '</b></span><span>per week <b class="' + cls(dR) + '">' + f1(dR / r.weeks.length) + '</b></span><span>playoffs <b class="' + cls(dP) + '">' + f1(dP) + '</b></span></div>'
-        + '<div class="tvi-stats"><span>' + Math.round(tm.before.raw) + ' → ' + Math.round(tm.after.raw) + ' pts</span></div>'
+        + '<div class="tvi-big ' + cls(dR) + '">' + f1(dR) + ' pts</div>'
+        + '<div class="tvi-line">season +/- for this lineup if you make the trade (weeks ' + r.weeks[0] + '-' + r.weeks[r.weeks.length - 1] + ')</div>'
+        + '<div class="tvi-stats"><span>per week <b class="' + cls(dR) + '">' + f1(dR / r.weeks.length) + '</b></span><span>playoffs <b class="' + cls(dP) + '">' + f1(dP) + '</b></span><span>playoff-weighted <b class="' + cls(dW) + '">' + f1(dW) + '</b></span></div>'
+        + '<div class="tvi-stats"><span>' + Math.round(tm.before.raw) + ' → ' + Math.round(tm.after.raw) + ' pts</span><span title="ROS VOR in minus out, as if every player starts — vs the playoff-weighted change your real lineup gets">VOR on paper <b class="' + cls(pp.inn - pp.out) + '">' + f0(pp.inn - pp.out) + '</b> → lineup <b class="' + cls(dW) + '">' + f0(dW) + '</b></span></div>'
         + bars(tm)
         + '<div class="tvi-line">' + startsLine(tm) + '</div>'
+        + depthLine(tm)
         + (tm.drops.length ? '<div class="tvi-line tvi-drop">Roster full: cuts ' + tm.drops.map(d => _esc(d.n)).join(', ') + ' (lowest ROS VOR)</div>' : '')
         + (tm.open ? '<div class="tvi-line tvi-open">' + tm.open + ' open roster spot' + (tm.open > 1 ? 's' : '') + ' → waiver pickup</div>' : '')
         + '</div>';
-    }).join('') + '</div>'
-      + '<div class="tvi-note">Each team’s best legal lineup every remaining week from the Sim Lab projection; a starter never scores below a free agent at that spot. Bars = weekly change (gold weeks = fantasy playoffs).</div>';
+    };
+    el.style.display = '';
+    el.innerHTML = head + '<div class="tvi-teams">' + r.teams.map((tm, i) => tm ? simCard(tm, i) : paperCard(i)).join('') + '</div>'
+      + '<div class="tvi-note">Each picked team’s best legal lineup every remaining week from the Sim Lab projection, before vs after; a starter never scores below a free agent at that spot, so depth you can’t start adds nothing. Bars = weekly change (gold weeks = fantasy playoffs).' + (r.teams[0] && r.teams[1] ? '' : ' Pick the other team too to simulate both lineups.') + '</div>';
   }
 
   // Each panel holds what that team GIVES UP, so Team A receives side B's

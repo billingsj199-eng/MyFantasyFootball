@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-05-lgvor2" as="script">
+<link rel="preload" href="app.js?v=2026-10-06-tradevor" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -3986,7 +3986,9 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 .tvi-big{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;line-height:1.1;color:var(--text2)}
 .tvi-big.pos,.tvi-stats b.pos{color:#22c55e}.tvi-big.neg,.tvi-stats b.neg{color:#ef4444}
 .tvi-line{font-size:.64rem;color:var(--text2);margin-top:3px;line-height:1.4}
-.tvi-drop{color:#f59e0b}.tvi-open{color:#58a7ff}
+.tvi-drop{color:#f59e0b}.tvi-open{color:#58a7ff}.tvi-depth{color:#f59e0b}
+.trade-total-vornote{flex-basis:100%;text-align:right;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.8px;color:var(--text2);margin-top:3px;cursor:help}
+.trade-total-vornote b{color:#22c55e;font-weight:400}
 .tvi-stats{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.66rem;color:var(--text2);margin-top:4px}
 .tvi-wk{display:flex;align-items:flex-end;gap:2px;height:44px;margin-top:8px;padding-top:4px;border-top:1px solid var(--border)}
 .tvi-wkcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%;cursor:help}
@@ -6062,7 +6064,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-05-lgvor2"></script>
+<script defer src="app.js?v=2026-10-06-tradevor"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

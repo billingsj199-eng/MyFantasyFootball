@@ -1476,7 +1476,7 @@
   // availability sit on top as before. scope 'later' = weeks ahead only (the current week keeps its anchored number);
   // 'all' = every week. Kill: window.SIM_BASE_BLEND = false; override: window.SIM_BASE_BLEND = { w: .7, scope: 'later' | 'all' }.
   // Backup engine.js.bak_pre_baseblend_20261007.
-  var BASE_BLEND = { w: 0.7, scope: 'later' };
+  var BASE_BLEND = { w: 0.7, scope: 'all' };   // 2026-10-07 evening, Jack: "switch the current week to the blend too" (was 'later')
   function volumeZ() {
     var d = (typeof window !== 'undefined' && window.SIM_PACE_2026) || null, T = d && d.teams; if (!T) return null;
     var keys = [], ex = [], at = [];
@@ -3547,7 +3547,7 @@
         lcCorr: p._wk.lcCorr != null ? p._wk.lcCorr : null,   // learned-correction shadow (half-PPR points)
         useLam: p._wk.use ? p._wk.use.lam : null, usePg: p._wk.use ? p._wk.use.xfpPg : null, jsNoUse: p._wk.jsNoUse != null ? p._wk.jsNoUse : null,   // live usage evidence (usage_scorecard.py)
         peck: p._wk.peck != null ? p._wk.peck : 1, peckRank: p._wk.peckRank != null ? p._wk.peckRank : null,   // pecking-order dock (peck_scorecard.py)
-        vol: p._wk.vol != null ? p._wk.vol : 1, health: p._wk.health != null ? p._wk.health : 0, useHurt: p._wk.use && p._wk.use.hurtG != null ? p._wk.use.hurtG : 0,   // 2026-10-07 layers: volume context, banged-up prior lift (pts/g), hurt games in the usage inputs
+        vol: p._wk.vol != null ? p._wk.vol : 1, health: p._wk.health != null ? p._wk.health : 0, useHurt: p._wk.use && p._wk.use.hurtG != null ? p._wk.use.hurtG : 0, bb: p._wk.bb || 0, jsPre: p._wk.jsPre != null ? p._wk.jsPre : null,   // 2026-10-07 layers: volume context, banged-up prior lift (pts/g), hurt games in the usage inputs
         ret: p._wk.ret != null ? p._wk.ret : 1,   // return ramp (return_scorecard.py)
         qbf: p._wk.qbf != null ? p._wk.qbf : 1,   // QB starter floor (return_scorecard.py)
         propSrc: p._wk.propSrc || null,

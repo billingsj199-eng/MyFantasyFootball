@@ -26,9 +26,10 @@ import backtest_qb_injury_usage as QI
 NW = QI.NW; cal = QI.cal; YEARS = QI.YEARS; POS4 = QI.POS4; FWD = QI.FWD
 CACHE = r"E:\MyFantasyFootball\pbp_cache"
 warnings.filterwarnings("ignore")
-LOG = open(os.path.join(HERE, "volume_context.log"), "w", encoding="utf-8")
+LOG = open(os.path.join(HERE, "volume_context.log"), "w", encoding="utf-8") if __name__ == "__main__" else None
 def P(s=""):
-    print(s); LOG.write(s + chr(10)); LOG.flush()
+    print(s)
+    if LOG: LOG.write(s + chr(10)); LOG.flush()
 TM_ALIAS = {"LA": "LAR", "OAK": "LV", "SD": "LAC", "STL": "LAR", "WSH": "WAS", "JAC": "JAX", "ARZ": "ARI"}
 
 

@@ -2942,9 +2942,27 @@
     var jsRec = jsData().players ? jsData().players[p.norm] : null;
     var h3 = (p.histPpg != null && p.histGames >= 8) ? p.histPpg * scale : null;          // 3-yr weighted PPG
     var l8 = (jsRec && jsRec.l8 != null && jsRec.l8g >= 4) ? jsRec.l8 * scale : null;      // last 8 played games (2024-26)
-    if (h3 != null && l8 != null) { ncPrior = 0.5 * h3 + 0.5 * l8; ncSrc = 'hist+l8'; }
-    else if (l8 != null) { ncPrior = l8; ncSrc = 'l8'; }
-    else if (h3 != null) { ncPrior = h3; ncSrc = 'hist'; }
+    // HEALTHY-GAMES HISTORY (backtest_shadow_healthy_prior.py V3, 2026-10-07; Jack: "let's do it in order", item 1). SHADOW ONLY.
+    // The history pieces are rebuilt from games he was not listed Questionable / limited-DNP / under 75% of his median snaps:
+    // h3 -> healthy 3-yr weighted PPG, l8 -> last 8 healthy prior-season games + every game this season (V1 form). Vets on the
+    // opportunity prior with 3+ hurt games last season keep the healthy history instead of the opp blend. 2019-25 harness shadow:
+    // rest of season -1.07% (7/7), forward -0.63% (4/4), whole board -0.55%; next game -0.17% (7/7). Data: SIM_PRIOR_HEALTH.h.
+    // Kill: window.SIM_NC_HEALTHY = false. Backup engine.js.bak_pre_nchealthy_20261007.
+    var hlthOn = !(typeof window !== 'undefined' && window.SIM_NC_HEALTHY === false), PHd = typeof window !== 'undefined' ? window.SIM_PRIOR_HEALTH : null;
+    var hRow = (hlthOn && PHd && PHd.h) ? (PHd.h[p.name] || PHd.h[p.norm]) : null, hPrev = (PHd && PHd.p) ? (PHd.p[p.name] || PHd.p[p.norm]) : null, hTag = '';
+    if (hRow && !p.isRookie) {
+      if (hRow.h3h != null && hRow.h3g >= 8) { h3 = hRow.h3h * scale; hTag = '+hlth'; }
+      if (hRow.l8h && hRow.l8h.length) {
+        var tailH = hRow.l8h.slice();
+        if (jsRec && jsRec.wf) Object.keys(jsRec.wf).map(Number).sort(function (a, b) { return a - b; }).forEach(function (w) { if (w < wk && isFinite(+jsRec.wf[w])) tailH.push(+jsRec.wf[w]); });
+        tailH = tailH.slice(-8);
+        if (tailH.length >= 4) { var sumH = 0; for (var ti = 0; ti < tailH.length; ti++) sumH += tailH[ti]; l8 = (sumH / tailH.length) * scale; hTag = '+hlth'; }
+      }
+    }
+    var hlthSkipOpp = hTag !== '' && hPrev && hPrev[2] >= 3;   // 3+ hurt games last season: the healthy history replaces the opportunity blend
+    if (h3 != null && l8 != null) { ncPrior = 0.5 * h3 + 0.5 * l8; ncSrc = 'hist+l8' + hTag; }
+    else if (l8 != null) { ncPrior = l8; ncSrc = 'l8' + hTag; }
+    else if (h3 != null) { ncPrior = h3; ncSrc = 'hist' + hTag; }
     var ncRawHist = ncPrior;   // raw history blend before the age / regression curves (v2.23 parity)
     if (ncSrc !== 'clay-fallback') {
       var sa = shadowAgeAdjust(p, ncPrior / scale);   // curves live in half-PPR units
@@ -2954,7 +2972,7 @@
       // ONLY). cal = [a, b history, c opportunity] in half-PPR. Rookies are not in the file (OPP lost to Clay there).
       var opd = typeof window !== 'undefined' ? window.SIM_OPP_PRIOR_2026 : null;
       var opr = opd && opd.players ? opd.players[p.norm] : null, occ = opd && opd.cal ? opd.cal[p.pos] : null;
-      if (opr && occ && occ.length === 3 && ncPrior / scale >= 4 && !(typeof window !== 'undefined' && window.SIM_SHADOW_OPP === false)) {   // >= 4 half PPG like the age curve: the calibration was fit on real roles and lifts deep backups
+      if (opr && occ && occ.length === 3 && ncPrior / scale >= 4 && !hlthSkipOpp && !(typeof window !== 'undefined' && window.SIM_SHADOW_OPP === false)) {   // >= 4 half PPG like the age curve: the calibration was fit on real roles and lifts deep backups; hlthSkipOpp = healthy history instead (2026-10-07)
         // v2.23 PARITY (2026-09-17, audit after Jack's 'are there any other bugs like that'): the HIST + OPP calibration (backtest_opp_prior.py)
         // was FITTED on HISTREG = the 3-season weighted PPG (.5 / .3 / .2, NO last-8) after the regression curve, and the weekly harness uses that fitted value
         // (SHADOWCAL) directly. Live was feeding it the age-adjusted 50/50 blend of 3-season and LAST 8, so one bad stretch hit a veteran's
@@ -3277,6 +3295,10 @@
       var gtz = gameTotalZ(schedule, wk, p.tm);
       if (gtz != null) { ncMean *= Math.exp(NC_SHADOW.qbTotalC * gtz); ncSrc += '+tot'; }
     }
+    // VOLUME CONTEXT ON THE SHADOW (backtest_shadow_ports.py 3b, 2026-10-07): the same two WR / TE multipliers as the live number
+    // (script-excess .03z everyone, att/g .04z underdogs) re-graded on the harness shadow: -0.65% (6/7), forward -0.19% (3/4), board -0.29%.
+    // Kill: window.SIM_NC_VOL = false. Backup engine.js.bak_pre_ncvol_20261007.
+    if (ncMean != null && mVol !== 1 && !(typeof window !== 'undefined' && window.SIM_NC_VOL === false)) { ncMean = Math.max(0, ncMean * mVol); ncSrc += '+vol'; }
     if (ncOut) { ncMean = 0; ncSrc += '+out:' + ncOut; }
     else if (wk >= 2 && /^Questionable/i.test(String(p.injFlag || '')) && !(typeof window !== 'undefined' && window.SIM_NC_QRET === false)) {   // v2.10
       var qrRec = jsData().players ? jsData().players[p.norm] : null, playedLast = !!(qrRec && qrRec.wks && qrRec.wks.indexOf(wk - 1) >= 0);

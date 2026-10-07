@@ -1469,6 +1469,14 @@
   // Data: SIM_PACE_2026.teams[t].cur.vol = {games, att, plays, nrate, exc} (build_pace_vol.py, run by pull_pace_tracker.py).
   // Kill: window.SIM_VOLUME_CTX = false. Backup engine.js.bak_pre_volume_20261007.
   var VOLUME_CTX = { eExc: 0.03, eAtt: 0.04, minGames: 2, lo: 0.8, hi: 1.2, pos: { WR: 1, TE: 1 } };
+  // BASE BLEND FOR THE WEEKS AHEAD (backtest_base_remeasure.py + backtest_shadow_ros.py, 2026-10-07; Jack: "wire it"). The public
+  // rest-of-season numbers (season PPG, VOR, season sims) ran on the Clay blend alone; the Clay-free shadow rate beats it 7.8% (7/7)
+  // on rest of season and the 70/30 shadow + Clay blend is the most accurate next-game base (-1.05% 7/7, LOYO .6-.7 every fold).
+  // For weeks after the current one the model number becomes w x shadow + (1 - w) x Clay-blend model; the book anchor, docks and
+  // availability sit on top as before. scope 'later' = weeks ahead only (the current week keeps its anchored number);
+  // 'all' = every week. Kill: window.SIM_BASE_BLEND = false; override: window.SIM_BASE_BLEND = { w: .7, scope: 'later' | 'all' }.
+  // Backup engine.js.bak_pre_baseblend_20261007.
+  var BASE_BLEND = { w: 0.7, scope: 'later' };
   function volumeZ() {
     var d = (typeof window !== 'undefined' && window.SIM_PACE_2026) || null, T = d && d.teams; if (!T) return null;
     var keys = [], ex = [], at = [];
@@ -3300,6 +3308,14 @@
     // Kill: window.SIM_NC_VOL = false. Backup engine.js.bak_pre_ncvol_20261007.
     if (ncMean != null && mVol !== 1 && !(typeof window !== 'undefined' && window.SIM_NC_VOL === false)) { ncMean = Math.max(0, ncMean * mVol); ncSrc += '+vol'; }
     if (ncOut) { ncMean = 0; ncSrc += '+out:' + ncOut; }
+    // BASE BLEND (weeks ahead): the shadow joins the model number before the market steps
+    var bbW = 0, jsPre = jsMean, bbRatio = 1;
+    var bbCfg = typeof window !== 'undefined' ? window.SIM_BASE_BLEND : undefined;
+    if (bbCfg !== false && !p.isDST && jsMean != null && ncMean != null && ncMean > 0 && !ncOut && iA > 0) {
+      var bbw = (bbCfg && typeof bbCfg.w === 'number') ? bbCfg.w : BASE_BLEND.w, bbs = (bbCfg && bbCfg.scope) ? bbCfg.scope : BASE_BLEND.scope;
+      var bbLater = _inj && _inj.week >= 1 && wk > _inj.week;
+      if (bbw > 0 && (bbs === 'all' || bbLater)) { bbW = bbw; jsMean = bbw * ncMean + (1 - bbw) * jsMean; bbRatio = jsPre > 0 ? jsMean / jsPre : 1; }
+    }
     else if (wk >= 2 && /^Questionable/i.test(String(p.injFlag || '')) && !(typeof window !== 'undefined' && window.SIM_NC_QRET === false)) {   // v2.10
       var qrRec = jsData().players ? jsData().players[p.norm] : null, playedLast = !!(qrRec && qrRec.wks && qrRec.wks.indexOf(wk - 1) >= 0);
       if (!playedLast) { ncMean *= NC_SHADOW.qRet.mult; ncSrc += '+qret'; }
@@ -3357,7 +3373,7 @@
       if (mkt) {
         var mw = propWeight(p) * mkt.conf;
         if (mw > 0) {
-          propMean = Math.max(0, (mw * mkt.rate + (1 - mw) * jsPg * mDock) * jsChain + (1 - mw) * luckAdj * mDock);   // mDock = model side only
+          propMean = Math.max(0, (mw * mkt.rate + (1 - mw) * jsPg * bbRatio * mDock) * jsChain + (1 - mw) * luckAdj * mDock);   // mDock = model side only; bbRatio = the weeks-ahead shadow blend
           propSrc = 'rate';
         }
       }
@@ -3376,11 +3392,11 @@
       rmMean = (espnPts != null && espnPts > 0.5 && ncMean > 0) ? NC_SHADOW.rankMixW * ncMean + (1 - NC_SHADOW.rankMixW) * espnPts : ncMean;
       rmFinal = (propSrc === 'line' && propMean != null && propWUsed != null) ? Math.max(0, propMean + (1 - propWUsed) * (rmMean - baseM)) : rmMean;   // same market, our base swapped in
     }
-    return { qb2: qb2Tag, mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse, ret: mRet, qbf: mQbf, health: hLift, vol: mVol,
+    return { qb2: qb2Tag, mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse, ret: mRet, qbf: mQbf, health: hLift, vol: mVol, bb: bbW, jsPre: jsPre,
       // WHY (2026-09-16, NOTES per-player why notes): every factor of the JS model in engine order - app.js ntWhy turns it into a points waterfall
       why: { clayPg: clayPg, clayPg0: clayPg0, health: hLift, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: qbInh > 0 ? jsPgOwn : jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied,
              opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, ret: mRet, avail: injAvail(p, wk), qbFloor: mQbf, rosTilt: mRos, snap: mSnap, route: mRoute, ramp: rampF, iA: (qbInh > 0 && jsPgOwn > 0) ? jsPg / jsPgOwn : iA,
-             luck: luckAdj, jsMean: jsMean, perGameDiv: perGameDiv, peck: mPeck, peckRank: peckR.rank, vol: mVol } };
+             luck: luckAdj, jsMean: jsMean, jsPre: jsPre, bb: bbW, ncMean: ncMean, perGameDiv: perGameDiv, peck: mPeck, peckRank: peckR.rank, vol: mVol } };
   }
 
   // ---------- correlated sampling ----------

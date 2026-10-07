@@ -6365,6 +6365,7 @@
     if (wp && wp.health > 0) chips.push('healthy-prior +' + ntF(wp.health, 1) + '/g');   // banged-up prior lift (2026-10-07)
     if (wp && wp.use && wp.use.hurtG > 0) chips.push('usage: ' + wp.use.hurtG + ' banged-up game' + (wp.use.hurtG > 1 ? 's' : '') + ' ×0.5');
     if (wp && wp.vol != null && Math.abs(wp.vol - 1) >= 0.005) chips.push('pass volume ×' + ntF(wp.vol, 2));   // volume context (2026-10-07)
+    if (wp && wp.bb) chips.push('base: ' + Math.round(100 * wp.bb) + '% Clay-free shadow (' + ntF(wp.ncMean, 1) + ') for weeks ahead');
     var sn = E.snapMult(p, wk); if (Math.abs(sn - 1) >= 0.02) chips.push('snap trend ×' + ntF(sn, 2));
     var rkL = E.rookieLevel ? E.rookieLevel(p) : 1; if (rkL !== 1) chips.push('rookie level ×' + ntF(rkL, 2));
     var rbU = E.rbUsagePg ? E.rbUsagePg(p, wk) : null; if (rbU) chips.push('snap usage ' + ntF(rbU.share, 0) + '% x ' + ntF(rbU.plays, 0) + ' plays = ' + ntF(rbU.half, 1) + ' half-PPR/g (15% blend)');
@@ -6422,7 +6423,9 @@
     var lm = (p.pos === 'QB' ? window.SIM_QB_TDLUCK_2026 : (p.pos === 'RB' ? window.SIM_RB_TDLUCK_2026 : window.SIM_REC_TDLUCK_2026)) || null, lr = lm ? lm[p.norm] : null;
     push('luck', w.luck, 'TD luck (' + (lr ? lr.td + ' TD on ' + ntF(lr.xtd, 1) + ' expected' : 'regression') + ')',
       'TD regression (' + (lr ? lr.td + ' TD' + (lr.td === 1 ? '' : 's') + ' on ' + ntF(lr.xtd, 1) + ' expected from where he got the ball' : 'scoring back toward his usage') + ')');
-    var model = Math.max(0, run + w.luck), eff = E.effMean(wp);
+    var modelPre = Math.max(0, run + w.luck);
+    if (w.bb) push('blend', w.jsMean - modelPre, Math.round(100 * w.bb) + '% Clay-free shadow (' + ntF(w.ncMean, 1) + ') for weeks ahead', 'blended with our history-based model for the weeks ahead');
+    var model = w.bb ? w.jsMean : modelPre, eff = E.effMean(wp);
     var mk = eff - model;
     var mkLab = wp.propSrc === 'line' ? 'books\' lines (' + ntF(wp.propMean, 1) + ', anchored ' + Math.round(100 * (wp.propW || 0.7)) + '%)' : wp.propSrc === 'rate' ? 'market rate from other weeks (' + ntF(wp.propMean, 1) + ')' : 'market / effective mean';
     var mkPub = wp.propSrc === 'line' ? 'sportsbook player props (they imply ' + ntF(wp.propMean, 1) + ')' : wp.propSrc === 'rate' ? 'sportsbook props from his other weeks' : 'market adjustment';

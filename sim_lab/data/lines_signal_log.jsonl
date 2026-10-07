@@ -852,3 +852,7 @@
 {"ts":"2026-10-07T22:00Z","wk":5,"n":"tyler shough","name":"Tyler Shough","pos":"QB","tm":"NO","gs":"","pr":"LP","seq":"LP","sl":"Questionable","g":"hand","books":["DK","FD","PP","UD"],"usual":true,"ko":"2026-10-11T17:00Z"}
 {"ts":"2026-10-07T22:00Z","wk":5,"n":"will mallory","name":"Will Mallory","pos":"TE","tm":"IND","gs":"","pr":"FP","seq":"FP","sl":"IR","g":"hand","books":[],"usual":false,"ko":"2026-10-11T17:00Z"}
 {"ts":"2026-10-07T22:00Z","wk":5,"n":"zay flowers","name":"Zay Flowers","pos":"WR","tm":"BAL","gs":"","pr":"LP","seq":"LP","sl":"Questionable","g":"hamstring","books":["DK","FD","PP","UD"],"usual":true,"ko":"2026-10-12T00:20Z"}
+{"ts":"2026-10-07T22:30Z","wk":5,"n":"brock bowers","name":"Brock Bowers","pos":"TE","tm":"LV","gs":"","pr":"","seq":"","sl":"Questionable","g":"knee","books":["DK","FD","MGM","PP","UD"],"usual":true,"ko":"2026-10-11T17:00Z"}
+{"ts":"2026-10-07T22:30Z","wk":5,"n":"cody white","name":"Cody White","pos":"WR","tm":"LV","gs":"","pr":"","seq":"","sl":"Questionable","g":"ankle","books":[],"usual":true,"ko":"2026-10-11T17:00Z"}
+{"ts":"2026-10-07T22:30Z","wk":5,"n":"jakobi meyers","name":"Jakobi Meyers","pos":"WR","tm":"JAX","gs":"","pr":"FP","seq":"FP","sl":"","g":"","books":["DK","FD","PP","UD"],"usual":true,"ko":"2026-10-11T13:30Z"}
+{"ts":"2026-10-07T22:30Z","wk":5,"n":"lequint allen","name":"LeQuint Allen Jr.","pos":"RB","tm":"JAX","gs":"","pr":"FP","seq":"FP","sl":"","g":"","books":[],"usual":true,"ko":"2026-10-11T13:30Z"}

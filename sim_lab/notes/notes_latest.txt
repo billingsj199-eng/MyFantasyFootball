@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 5 (half) — generated 2026-10-07 22:03Z
-# 500 players · 272 Vegas games · avg implied 22.7 · data 2026-10-07 18:03 · wk 5 injury layer: 63 out/docked
+# Sim Lab notes — Week 5 (half) — generated 2026-10-07 22:31Z
+# 500 players · 272 Vegas games · avg implied 22.7 · data 2026-10-07 18:31 · wk 5 injury layer: 63 out/docked
 
-SIM LAB NOTES — Week 5 (half) — 2026-10-07 22:03
+SIM LAB NOTES — Week 5 (half) — 2026-10-07 22:31
 
 TD LUCK (top 5 each way):
   QB DUE UP: Tyson Bagent (0 TD on 1.8 xTD, +0.5); Jacoby Brissett (6 TD on 8.9 xTD, +0.6); Baker Mayfield (2 TD on 3.8 xTD, +0.4); Drake Maye (4 TD on 6.2 xTD, +0.5); Cameron Ward (3 TD on 5.1 xTD, +0.5)
@@ -35,9 +35,9 @@ MATCHUP EDGES (week 5, % of projection; [intel] = advanced read not in PROJ):
     Jake Ferguson (DAL TE vs TB) PROJ 7.5 edge +9% (priced +3, intel +6): TB missing S Antoine Winfield Jr. (68) +4% [intel]; TB allows +34% to TEs (4 gm, priced at 25%) +3%; TB man 21% (4 gm 18%, prior 23%; lg 26%) vs his YPRR 0.64 man / 1.17 zone +2% [intel]
     Kyren Williams (LAR RB vs BUF) PROJ 17.3 edge +9% (priced +4, intel +6): BUF allows +25% to RBs (4 gm, priced at 25%) +4%; BUF leaky short 0-9 (1.18x pts/tgt, his 81% of targets) +2% [intel]; BUF run D 4.5 ypc blended (98 car 3.8, prior 4.9; lg 4.3) +2% [intel]; BUF allows 3.26 after contact/att blended (lg 2.99) +2% [intel]
     Amon-Ra St. Brown (DET WR @ ARI) PROJ 16.0 edge +8% (priced +4, intel +5): ARI allows +27% to WRs (4 gm, priced at 25%) +4%; ARI leaky short 0-9 (1.29x pts/tgt, his 55% of targets) +3% [intel]; ARI missing CB Will Johnson (59) +1% [intel]
-    Michael Wilson (ARI WR vs DET) PROJ 11.8 edge +8% (priced +3, intel +5): DET missing S Brian Branch (67) +4% [intel]; DET allows +37% to WRs (4 gm, priced at 25%) +3%; DET man 31% (4 gm 22%, prior 40%; lg 26%) vs his YPRR 2.21 man / 1.66 zone +2% [intel]
+    Michael Wilson (ARI WR vs DET) PROJ 11.9 edge +8% (priced +3, intel +5): DET missing S Brian Branch (67) +4% [intel]; DET allows +37% to WRs (4 gm, priced at 25%) +3%; DET man 31% (4 gm 22%, prior 40%; lg 26%) vs his YPRR 2.21 man / 1.66 zone +2% [intel]
     Jalon Daniels (TB QB @ DAL) PROJ 15.0 edge +8% (priced +6, intel +2): DAL allows +34% to QBs (4 gm, priced at 25%) +3%; soft pass rush +3%; DAL missing S Jalen Thompson (64), CB Cobie Durant (62) +2% [intel]
-    Ollie Gordon II (MIA RB vs CIN) PROJ 7.8 edge +7% (priced -1, intel +9): CIN run D 5.0 ypc blended (74 car 4.5, prior 5.3; lg 4.3) +6% [intel]; CIN allows 3.38 after contact/att blended (lg 3.00) +2% [intel]; CIN allows -13% to RBs (4 gm, priced at 25%) -1%
+    Ollie Gordon II (MIA RB vs CIN) PROJ 7.7 edge +7% (priced -1, intel +9): CIN run D 5.0 ypc blended (74 car 4.5, prior 5.3; lg 4.3) +6% [intel]; CIN allows 3.38 after contact/att blended (lg 3.00) +2% [intel]; CIN allows -13% to RBs (4 gm, priced at 25%) -1%
     D'Andre Swift (CHI RB @ GB) PROJ 10.1 edge +7% (priced +1, intel +6): GB leaky behind los (1.33x pts/tgt, his 59% of targets) +4% [intel]; GB allows +43% to RBs (4 gm, priced at 25%) +3%; GB missing LB Edgerrin Cooper (64) +2% [intel]; CHI OL starters out -2%
     Blake Corum (LAR RB vs BUF) PROJ 7.7 edge +7% (priced +4, intel +3): BUF allows +25% to RBs (4 gm, priced at 25%) +4%; BUF run D 4.5 ypc blended (98 car 3.8, prior 4.9; lg 4.3) +2% [intel]; BUF allows 3.26 after contact/att blended (lg 2.99) +2% [intel]
   TOUGHEST:
@@ -83,8 +83,8 @@ MIA offense vs CIN defense
   - CIN D availability: DI Dexter Lawrence (71, Q) · S Bryan Cook (69, Q) · LB Barrett Carter (58, Q) · S Jordan Battle (56, Q) [intel]
 
 PLAYERS (PROJ half):
-  Joe Burrow (CIN QB) 17.6 · xFP 19.0/g (+1.0 over expected) [TD luck -0.3, weather ×0.97, soft rush ×1.02, market lower (17.6 vs model 19.4)]
-      why: PROJ 17.6 = Clay 18.4 · 2026 form (19.9 half PPG in 4 gm, 44% weight) +0.7 · Vegas (CIN implied 24.5 vs avg 22.7) +0.4 · opp MIA allows +3% to QBs (4 gm) +0.3 · soft pass rush +0.5 · wind -0.6 · TD luck (7 TD on 5.7 expected) -0.3 · books' lines (17.6, anchored 68%) -1.8 — biggest driver: books' lines -1.8
+  Joe Burrow (CIN QB) 17.8 · xFP 19.0/g (+1.0 over expected) [TD luck -0.3, weather ×0.97, soft rush ×1.02, market lower (17.8 vs model 19.4)]
+      why: PROJ 17.8 = Clay 18.4 · 2026 form (19.9 half PPG in 4 gm, 44% weight) +0.7 · Vegas (CIN implied 24.5 vs avg 22.7) +0.4 · opp MIA allows +3% to QBs (4 gm) +0.3 · soft pass rush +0.5 · wind -0.6 · TD luck (7 TD on 5.7 expected) -0.3 · books' lines (17.8, anchored 68%) -1.6 — biggest driver: books' lines -1.6
       matchup +1% (priced +1, intel +0): wind -3%; soft pass rush +2%; MIA defense grade vs QBs +2%
       learned shadow +0.9 half-PPR (not in PROJ): season snap share +0.4, position +0.4, last-game snap share +0.3
   Chase Brown (CIN RB) 14.8 · xFP 14.4/g (-2.5 over expected) [TD luck +0.2, snap usage 73% x 62 plays = 14.2 half-PPR/g (15% blend)] — Behind LOS guy (46% of targets, lg 17%)
@@ -104,12 +104,12 @@ PLAYERS (PROJ half):
       why: PROJ 8.1 = Clay 10.7 · 2026 form (14.7 half PPG in 4 gm, 44% weight) +1.0 · Vegas (CIN implied 24.5 vs avg 22.7) +0.2 · opp MIA allows -37% to WRs (4 gm) -0.1 · wind -0.4 · snap trend (last 79% vs avg 79%) +0.3 · availability q-dnp x0.75 -3.0 · pass-volume context (CIN script-driven throws, underdog) -0.5 · market rate from other weeks (8.1) -0.2 — biggest driver: availability q-dnp x0.75 -3.0
       matchup -4% (priced -4, intel +0): wind -3%; MIA allows -37% to WRs (4 gm, priced at 25%) -1%
   Bengals D/ST (CIN DST) 7.9
-  Ollie Gordon II (MIA RB) 7.8 · xFP 7.1/g (+0.5 over expected) [role boost ×2.13, TD luck -0.9, REPORTS +1 riser (10d) - shadow] — screen guy (50% of targets) · D plays man 40% (#2) · D bleeds slot yards (40% of rec yds, lg 28%, noisy)
-      why: PROJ 7.8 = Clay 1.9 · 2026 form (7.7 half PPG in 4 gm, 44% weight) +2.6 · Vegas (MIA implied 18.0 vs avg 22.7) -0.5 · vacated work from injured teammates x2.13 +4.5 · TD luck (2 TD on 0.7 expected) -0.9 · books' lines (7.8, anchored 11%) +0.2 — biggest driver: vacated work from injured teammates x2.13 +4.5
+  Ollie Gordon II (MIA RB) 7.7 · xFP 7.1/g (+0.5 over expected) [role boost ×2.13, TD luck -0.9, REPORTS +1 riser (10d) - shadow] — screen guy (50% of targets) · D plays man 40% (#2) · D bleeds slot yards (40% of rec yds, lg 28%, noisy)
+      why: PROJ 7.7 = Clay 1.9 · 2026 form (7.7 half PPG in 4 gm, 44% weight) +2.6 · Vegas (MIA implied 18.0 vs avg 22.7) -0.5 · vacated work from injured teammates x2.13 +4.5 · TD luck (2 TD on 0.7 expected) -0.9 · books' lines (7.7, anchored 11%) +0.2 — biggest driver: vacated work from injured teammates x2.13 +4.5
       matchup +7% (priced -1, intel +9): CIN run D 5.0 ypc blended (74 car 4.5, prior 5.3; lg 4.3) +6% [intel]; CIN allows 3.38 after contact/att blended (lg 3.00) +2% [intel]; CIN allows -13% to RBs (4 gm, priced at 25%) -1%
       learned shadow +0.5 half-PPR (not in PROJ): last-game snap share -0.4, Clay level +0.3, team pace +0.2
-  Malik Washington (MIA WR) 7.2 · xFP 10.4/g (-3.0 over expected) [role boost ×1.04, TD luck +0.5, weather ×0.97, pass volume ×1.04, snap trend ×0.97, blowout wk2: role read on competitive snaps] — Behind LOS guy (29% of targets, lg 17%) · rarely short 0-9 (39%) · screen guy (33% of targets) · D plays man 40% (#2)
-      why: PROJ 7.2 = Clay 4.4 · 2026 form (7.4 half PPG in 4 gm, 44% weight) +2.5 · Vegas (MIA implied 18.0 vs avg 22.7) -0.4 · wind -0.2 · snap trend (last 87% vs avg 86%) -0.2 · vacated work from injured teammates x1.04 +0.2 · pass-volume context (MIA script-driven throws, underdog) +0.3 · TD luck (0 TD on 0.7 expected) +0.2 · books' lines (7.2, anchored 43%) +0.5 — biggest driver: 2026 form +2.5
+  Malik Washington (MIA WR) 7.1 · xFP 10.4/g (-3.0 over expected) [role boost ×1.04, TD luck +0.5, weather ×0.97, pass volume ×1.04, snap trend ×0.97, blowout wk2: role read on competitive snaps] — Behind LOS guy (29% of targets, lg 17%) · rarely short 0-9 (39%) · screen guy (33% of targets) · D plays man 40% (#2)
+      why: PROJ 7.1 = Clay 4.4 · 2026 form (7.4 half PPG in 4 gm, 44% weight) +2.5 · Vegas (MIA implied 18.0 vs avg 22.7) -0.4 · wind -0.2 · snap trend (last 87% vs avg 86%) -0.2 · vacated work from injured teammates x1.04 +0.2 · pass-volume context (MIA script-driven throws, underdog) +0.3 · TD luck (0 TD on 0.7 expected) +0.2 · books' lines (7.1, anchored 43%) +0.4 — biggest driver: 2026 form +2.5
       matchup -3% (priced -3, intel +0): wind -3%
       learned shadow +0.9 half-PPR (not in PROJ): team total -0.3, size of the projection +0.2, team pace +0.2
   Mike Gesicki (CIN TE) 6.9 · xFP 7.9/g (+1.8 over expected) [role boost ×1.06, TD luck -1.5, weather ×0.98, healthy-prior +0.5/g, pass volume ×0.94, snap trend ×1.08, route trend ×1.06] — rarely behind los (2%) · Int 10-19 guy (37% of targets, lg 22%) · slot (80%) · detached TE (2% inline) · zone-beater (YPRR 0.55 vs man, 1.76 vs zone; small n) (2025 too)
@@ -119,7 +119,7 @@ PLAYERS (PROJ half):
   Riley Patterson (MIA K) 6.0 [weather ×0.95]
       why: PROJ 6.0 = Clay 7.3 · Vegas (MIA implied 18.0 vs avg 22.7) -0.8 · wind -0.3 · market rate from other weeks (6.0) -0.3 — biggest driver: Vegas -0.8
   Chris Bell (MIA WR) 5.4 · xFP 5.2/g (-2.3 over expected) [role boost ×1.13, INJ: Knee · practice LP · lines up at 2 books, TD luck +0.3, weather ×0.97, usage: 1 banged-up game ×0.5, pass volume ×1.04, snap trend ×1.09] — rarely short 0-9 (41%) · Deep 20+ guy (22% of targets, lg 12%) · D plays man 40% (#2)
-      why: PROJ 5.4 = Clay 5.8 · 2026 form (2.9 half PPG in 4 gm, 44% weight) -0.2 · Vegas (MIA implied 18.0 vs avg 22.7) -0.3 · wind -0.2 · snap trend (last 82% vs avg 62%) +0.5 · vacated work from injured teammates x1.13 +0.7 · pass-volume context (MIA script-driven throws, underdog) +0.3 · TD luck (0 TD on 0.4 expected) +0.1 · books' lines (5.4, anchored 85%) -1.1 — biggest driver: books' lines -1.1
+      why: PROJ 5.4 = Clay 5.8 · 2026 form (2.9 half PPG in 4 gm, 44% weight) -0.2 · Vegas (MIA implied 18.0 vs avg 22.7) -0.3 · wind -0.2 · snap trend (last 82% vs avg 62%) +0.5 · vacated work from injured teammates x1.13 +0.7 · pass-volume context (MIA script-driven throws, underdog) +0.3 · TD luck (0 TD on 0.4 expected) +0.1 · books' lines (5.4, anchored 85%) -1.2 — biggest driver: books' lines -1.2
       matchup -3% (priced -3, intel +0): wind -3%
       learned shadow +0.4 half-PPR (not in PROJ): team pace +0.2, team total -0.2, size of the projection +0.2
   Dolphins D/ST (MIA DST) 5.1
@@ -159,7 +159,7 @@ LV offense vs NE defense
   - NE DC Zak Kuhr (new, no playcalling history in the data; replaced Terrell Williams — prior = team 2025, weak)
   - LV O style (PFF): 46% gap / 54% zone, edge 36%, 3.5 ypc · sees man 23% (lg 25%) · screens 7% · blitzed 29% / pressured 35%
   - LV OC Andrew Janocko (new, no playcalling history in the data; replaced Chip Kelly, Greg Olson — prior = team 2025, weak)
-  - NE D availability: ED Harold Landry III (65, PUP) · CB Christian Gonzalez (63, Q) · DI Christian Barmore (56, Q) — quality lost 0.7 (grade pts above 55 / 10, snap-weighted) [intel]
+  - NE D availability: ED Harold Landry III (65, PUP) · CB Carlton Davis III (66, Q) · CB Christian Gonzalez (63, Q) · S Craig Woodson (63, Q) · LB Christian Elliss (61, Q) · DI Christian Barmore (56, Q) — quality lost 0.7 (grade pts above 55 / 10, snap-weighted) [intel]
 
 NE offense vs LV defense
   - Pace (4 gm): 62.5 plays/gm (base 59.8, +2.7) · neutral pass 61% (base 62%) · PROE -0.4 (base +2.4)
@@ -181,7 +181,7 @@ PLAYERS (PROJ half):
       why: PROJ 15.1 = Clay 11.8 · 2026 form (20.7 half PPG in 4 gm, 44% weight) +4.0 · rookie level x1.00 +0.2 · Vegas (LV implied 21.0 vs avg 22.7) -0.3 · opp NE allows -16% to QBs (4 gm) -0.4 · CB shadow -0.6 · TD luck (11 TD on 7.0 expected) -0.9 · books' lines (15.1, anchored 68%) +1.3 — biggest driver: 2026 form +4.0
       matchup -7% (priced -7, intel +0): CB shadow -4%; NE allows -16% to QBs (4 gm, priced at 25%) -3%
       learned shadow +1.6 half-PPR (not in PROJ): Clay level +0.7, position +0.5, last-game snap share +0.4
-  Brock Bowers (LV TE) 13.6 · xFP 19.3/g (+0.8 over expected) [TD luck -0.4, healthy-prior +0.5/g, usage: 2 banged-up games ×0.5, pass volume ×1.04, REPORTS 1 injury (10d) - shadow] — rarely behind los (9%) · detached TE (28% inline) · man-beater (YPRR 2.48 vs man, 1.69 vs zone; small n) (new vs 2025) · D plays man 40% (#4) — GOOD SPOT
+  Brock Bowers (LV TE) 13.6 · xFP 19.3/g (+0.8 over expected) [INJ: Knee · lines up at 5 books, TD luck -0.4, healthy-prior +0.5/g, usage: 2 banged-up games ×0.5, pass volume ×1.04, REPORTS 1 injury (10d) - shadow] — rarely behind los (9%) · detached TE (28% inline) · man-beater (YPRR 2.48 vs man, 1.69 vs zone; small n) (new vs 2025) · D plays man 40% (#4) — GOOD SPOT
       why: PROJ 13.6 = Clay 11.7 · healthy prior +0.5 (last season he outscored this baseline when healthy; 3+ games played hurt) +0.5 · 2026 form (20.1 half PPG in 2 gm, 29% weight) +1.7 · Vegas (LV implied 21.0 vs avg 22.7) -0.3 · opp NE allows -61% to TEs (4 gm) -0.4 · pass-volume context (LV script-driven throws) +0.5 · TD luck (2 TD on 1.6 expected) -0.3 — biggest driver: 2026 form +1.7
       matchup +1% (priced -3, intel +5): NE man 36% (4 gm 40%, prior 32%; lg 26%) vs his YPRR 2.48 man / 1.69 zone +5% [intel]; NE allows -61% to TEs (4 gm, priced at 25%) -3%
   Rhamondre Stevenson (NE RB) 10.7 · xFP 11.4/g (-2.1 over expected) [INJ: Undisclosed · practice LP · no lines up, TD luck +0.3, snap trend ×0.95, snap usage 60% x 63 plays = 11.8 half-PPR/g (15% blend)] — Behind LOS guy (37% of targets, lg 17%) · gap/power back (65% gap) (2025 too) · D leaky vs run so far (5.0 ypc) · man-beater (YPRR 2.60 vs man, 0.99 vs zone; small n) (2025 too)
@@ -226,7 +226,7 @@ PLAYERS (PROJ half):
       learned shadow +0.7 half-PPR (not in PROJ): TD luck +0.2, Clay level +0.2, missed practice -0.1
   Mike Washington Jr. (LV RB) 4.1 · xFP 4.0/g (+0.6 over expected) [TD luck -0.3, rookie level ×1.08, snap usage 19% x 65 plays = 3.8 half-PPR/g (15% blend)] — bounces outside (edge 50%, lg 31%) · D on edge runs: 5.2 yds/att (lg 4.5, noisy)
       why: PROJ 4.1 = Clay 3.7 · 2026 form (4.6 half PPG in 4 gm, 44% weight) +0.4 · rookie level x1.08 +0.3 · Vegas (LV implied 21.0 vs avg 22.7) -0.2 · return-from-injury ramp +0.3 · TD luck (1 TD on 0.4 expected) -0.3 — biggest driver: 2026 form +0.4
-  Eli Raridon (NE TE) 3.5 · xFP 3.6/g (+0.4 over expected) [role boost ×1.06, INJ: Ankle · no lines up, usage: 2 banged-up games ×0.5, pass volume ×1.01, route trend ×1.03]
+  Eli Raridon (NE TE) 3.5 · xFP 3.6/g (+0.4 over expected) [role boost ×1.06, usage: 2 banged-up games ×0.5, pass volume ×1.01, route trend ×1.03]
       why: PROJ 3.5 = Clay 2.2 · 2026 form (4.0 half PPG in 3 gm, 38% weight) +0.6 · return-from-injury ramp +0.2 · vacated work from injured teammates x1.06 +0.2 — biggest driver: 2026 form +0.6
       matchup +3% (priced +3, intel +0): LV allows +34% to TEs (4 gm, priced at 25%) +3%
       learned shadow +0.7 half-PPR (not in PROJ): Clay level +0.4, week of season +0.2, size of the projection +0.1
@@ -268,8 +268,8 @@ PLAYERS (PROJ half):
       why: PROJ 17.8 = Clay 16.0 · 2026 form (22.1 half PPG in 4 gm, 44% weight) +2.7 · Vegas (NO implied 20.5 vs avg 22.7) -0.5 · opp MIN allows -34% to QBs (4 gm) -0.4 — biggest driver: 2026 form +2.7
       matchup -6% (priced -2, intel -4): MIN pressure 45% (4 gm 46%, prior 44%; lg 36%), his grade 56 pressured vs 77 clean -2% [intel]; MIN allows -34% to QBs (4 gm, priced at 25%) -2%; MIN blitz 70% (4 gm 77%, prior 63%; lg 34%) vs his 6.9 YPA blitzed / 7.0 not -2% [intel]
       learned shadow -0.4 half-PPR (not in PROJ): PPG so far -0.6, size of the projection -0.4, last-game snap share +0.3
-  Kyler Murray (MIN QB) 15.4 · xFP 10.6/g (-2.7 over expected) [TD luck +0.1]
-      why: PROJ 15.4 = Clay 17.1 · 2026 form (7.8 half PPG in 3 gm, 38% weight) -3.5 · rookie level x1.00 +0.9 · Vegas (MIN implied 22.0 vs avg 22.7) -0.1 · books' lines (15.4, anchored 35%) +1.1 — biggest driver: 2026 form -3.5
+  Kyler Murray (MIN QB) 16.4 · xFP 10.6/g (-2.7 over expected) [TD luck +0.1, market higher (16.4 vs model 14.3)]
+      why: PROJ 16.4 = Clay 17.1 · 2026 form (7.8 half PPG in 3 gm, 38% weight) -3.5 · rookie level x1.00 +0.9 · Vegas (MIN implied 22.0 vs avg 22.7) -0.1 · books' lines (16.4, anchored 68%) +2.0 — biggest driver: 2026 form -3.5
       matchup +2% (priced +0, intel +2): NO pressure 32% (4 gm 30%, prior 34%; lg 36%) - clean pockets +2% [intel]
       learned shadow +1.4 half-PPR (not in PROJ): position +0.5, last-game snap share +0.4, team total -0.3
   Aaron Jones (MIN RB) 14.1 · xFP 13.6/g (-1.9 over expected) [role boost ×1.22, INJ: practice LP, TD luck +0.1, OL out ×0.98, snap trend ×1.07, snap usage 70% x 59 plays = 12.9 half-PPR/g (15% blend)] — Behind LOS guy (52% of targets, lg 17%) · right-heavy (57%) · D allows 3.65 after contact/att (lg 2.91, noisy) · D leaky vs run so far (5.2 ypc) · screen guy (48% of targets)
@@ -371,14 +371,14 @@ PLAYERS (PROJ half):
   Harold Fannin Jr. (CLE TE) 8.2 · xFP 8.0/g (+2.4 over expected) [TD luck -1.0, pass volume ×0.99, route trend ×1.03, REPORTS +1 riser (10d) - shadow] — Short 0-9 guy (68% of targets, lg 49%) · zone-beater (YPRR 1.21 vs man, 1.84 vs zone) (2025 too)
       why: PROJ 8.2 = Clay 8.9 · 2026 form (10.4 half PPG in 4 gm, 44% weight) +0.7 · Vegas (CLE implied 19.0 vs avg 22.7) -0.4 · opp NYJ allows -32% to TEs (4 gm) -0.3 · route trend +0.3 · vacated work from injured teammates x1.01 +0.1 · pass-volume context (CLE script-driven throws) -0.1 · TD luck (3 TD on 1.6 expected) -1.0 — biggest driver: TD luck -1.0
       matchup -3% (priced -3, intel +0): NYJ allows -32% to TEs (4 gm, priced at 25%) -3%
-  KC Concepcion (CLE WR) 7.8 · xFP 9.1/g (-3.7 over expected) [TD luck +0.4, pass volume ×0.99, snap trend ×1.05] — screen guy (33% of targets) · man-beater (YPRR 2.17 vs man, 1.03 vs zone)
-      why: PROJ 7.8 = Clay 7.4 · 2026 form (5.5 half PPG in 4 gm, 44% weight) +0.2 · Vegas (CLE implied 19.0 vs avg 22.7) -0.3 · opp NYJ allows -16% to WRs (4 gm) -0.1 · snap trend (last 92% vs avg 78%) +0.4 · pass-volume context (CLE script-driven throws) -0.1 · TD luck (0 TD on 0.6 expected) +0.2 — biggest driver: snap trend +0.4
-      matchup -2% (priced -2, intel +0): NYJ allows -16% to WRs (4 gm, priced at 25%) -2%
-      learned shadow +0.8 half-PPR (not in PROJ): last-game snap share +0.2, team pace +0.2, size of the projection +0.2
   Kenyon Sadiq (NYJ TE) 7.7 · xFP 5.9/g (+2.3 over expected) [TD luck -0.8, usage: 2 banged-up games ×0.5, pass volume ×1.01, snap trend ×1.08, route trend ×1.07, ASCENDING (age 21, yr 1, snaps+routes up) - shadow, REPORTS +1 riser (10d) - shadow] — D plays man 54% (#1)
       why: PROJ 7.7 = Clay 7.2 · Vegas (NYJ implied 20.5 vs avg 22.7) -0.2 · opp CLE allows +25% to TEs (4 gm) +0.2 · snap trend (last 69% vs avg 51%) +0.5 · route trend +0.5 · vacated work from injured teammates x1.01 +0.1 · TD luck (2 TD on 0.8 expected) -0.6 · books' lines (7.7, anchored 11%) -0.2 — biggest driver: TD luck -0.6
       matchup +3% (priced +3, intel +0): CLE allows +25% to TEs (4 gm, priced at 25%) +3%
       learned shadow +0.7 half-PPR (not in PROJ): team pace +0.3, season snap share -0.1, Clay level -0.1
+  KC Concepcion (CLE WR) 7.7 · xFP 9.1/g (-3.7 over expected) [TD luck +0.4, pass volume ×0.99, snap trend ×1.05] — screen guy (33% of targets) · man-beater (YPRR 2.17 vs man, 1.03 vs zone)
+      why: PROJ 7.7 = Clay 7.4 · 2026 form (5.5 half PPG in 4 gm, 44% weight) +0.2 · Vegas (CLE implied 19.0 vs avg 22.7) -0.3 · opp NYJ allows -16% to WRs (4 gm) -0.1 · snap trend (last 92% vs avg 78%) +0.4 · pass-volume context (CLE script-driven throws) -0.1 · TD luck (0 TD on 0.6 expected) +0.2 — biggest driver: snap trend +0.4
+      matchup -2% (priced -2, intel +0): NYJ allows -16% to WRs (4 gm, priced at 25%) -2%
+      learned shadow +0.8 half-PPR (not in PROJ): last-game snap share +0.2, team pace +0.2, size of the projection +0.2
   Jets D/ST (NYJ DST) 7.5
   Browns D/ST (CLE DST) 6.9
   Blake Grupe (NYJ K) 6.7
@@ -560,15 +560,12 @@ PLAYERS (PROJ half):
   Joey Slye (TEN K) 6.1
       why: PROJ 6.1 = Clay 7.1 · Vegas (TEN implied 15.0 vs avg 22.7) -1.2 · books' lines (6.1, anchored 70%) +0.2 — biggest driver: Vegas -1.2
   Titans D/ST (TEN DST) 6.0
-  Kayshon Boutte (HOU WR) 5.0 · xFP 5.3/g (-1.3 over expected) [TD luck +0.4, usage: 1 banged-up game ×0.5, pass volume ×0.92, snap trend ×1.04] — rarely behind los (0%) · rarely short 0-9 (29%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 12%) · left-heavy (54%)
-      why: PROJ 5.0 = Clay 6.7 · 2026 form (4.0 half PPG in 4 gm, 44% weight) -0.5 · snap trend (last 62% vs avg 62%) +0.2 · pass-volume context (HOU script-driven throws, underdog) -0.5 · TD luck (0 TD on 0.6 expected) +0.2 · books' lines (5.0, anchored 85%) -1.0 — biggest driver: books' lines -1.0
+  Kayshon Boutte (HOU WR) 4.9 · xFP 5.3/g (-1.3 over expected) [TD luck +0.4, usage: 1 banged-up game ×0.5, pass volume ×0.92, snap trend ×1.04] — rarely behind los (0%) · rarely short 0-9 (29%) · Int 10-19 guy (46% of targets, lg 22%) · Deep 20+ guy (25% of targets, lg 12%) · left-heavy (54%)
+      why: PROJ 4.9 = Clay 6.7 · 2026 form (4.0 half PPG in 4 gm, 44% weight) -0.5 · snap trend (last 62% vs avg 62%) +0.2 · pass-volume context (HOU script-driven throws, underdog) -0.5 · TD luck (0 TD on 0.6 expected) +0.2 · books' lines (4.9, anchored 85%) -1.1 — biggest driver: books' lines -1.1
       matchup +2% (priced +0, intel +2): TEN man 16% (4 gm 16%, prior 16%; lg 26%) vs his YPRR 1.18 man / 1.57 zone +2% [intel]
   Tyjae Spears (TEN RB) 4.9 · xFP 3.7/g (-0.4 over expected) [role boost ×1.09, TD luck +0.1, OL out ×0.98, snap trend ×0.98, snap usage 42% x 54 plays = 7.2 half-PPR/g (15% blend), REPORTS 1 injury (10d) - shadow] — Behind LOS guy (65% of targets, lg 17%) · right-heavy (52%) · D funnels behind los (21% of targets faced) · D stingy behind los so far (0.58x, noisy) · D stingy vs run so far (3.4 ypc) · screen guy (38% of targets)
       why: PROJ 4.9 = Clay 7.6 · 2026 form (3.3 half PPG in 4 gm, 44% weight) -2.0 · snap usage 42% x 54 plays +0.2 · Vegas (TEN implied 15.0 vs avg 22.7) -1.0 · opp HOU allows -21% to RBs (4 gm) -0.1 · snap trend (last 36% vs avg 42%) -0.1 · vacated work from injured teammates x1.09 +0.4 · TD luck (0 TD on 0.2 expected) +0.1 · books' lines (4.9, anchored 11%) -0.2 — biggest driver: 2026 form -2.0
       matchup -16% (priced -5, intel -11): HOU run D 3.5 ypc blended (88 car 3.4, prior 3.6; lg 4.3) -6% [intel]; HOU stingy behind los (0.58x pts/tgt, his 65% of targets) -5% [intel]; HOU allows -21% to RBs (4 gm, priced at 25%) -3%; TEN OL starters out -2%
-  Xavier Hutchinson (HOU WR) 4.8 · xFP 10.0/g (-4.3 over expected) [TD luck +0.6, healthy-prior +0.5/g, usage: 1 banged-up game ×0.5, pass volume ×0.92, snap trend ×0.92, REPORTS +1 riser (10d) - shadow] — rarely behind los (3%) · Int 10-19 guy (30% of targets, lg 22%) · man-beater (YPRR 1.94 vs man, 1.19 vs zone; small n) (new vs 2025)
-      why: PROJ 4.8 = Clay 4.3 · healthy prior +0.5 (last season he outscored this baseline when healthy; 3+ games played hurt) +0.5 · 2026 form (5.8 half PPG in 4 gm, 44% weight) +1.4 · snap trend (last 31% vs avg 56%) -0.5 · pass-volume context (HOU script-driven throws, underdog) -0.5 · TD luck (0 TD on 0.9 expected) +0.2 · books' lines (4.8, anchored 43%) -0.6 — biggest driver: 2026 form +1.4
-      matchup -6% (priced +0, intel -6): TEN man 16% (4 gm 16%, prior 16%; lg 26%) vs his YPRR 1.94 man / 1.19 zone -6% [intel]
   Gunnar Helm (TEN TE) 4.7 · xFP 5.0/g (-1.9 over expected) [TD luck +0.8, pass volume ×0.99, route trend ×0.93] — Short 0-9 guy (62% of targets, lg 49%) · rarely deep 20+ (3%)
       why: PROJ 4.7 = Clay 6.0 · 2026 form (3.1 half PPG in 4 gm, 44% weight) -0.8 · Vegas (TEN implied 15.0 vs avg 22.7) -0.4 · opp HOU allows -24% to TEs (4 gm) -0.1 · route trend -0.3 · TD luck (0 TD on 1.2 expected) +0.6 — biggest driver: 2026 form -0.8
       matchup -2% (priced -3, intel +0): HOU allows -24% to TEs (4 gm, priced at 25%) -3%; HOU man 21% (4 gm 17%, prior 26%; lg 26%) vs his YPRR 0.73 man / 1.56 zone +2% [intel]; HOU stingy short 0-9 (0.83x pts/tgt, his 62% of targets) -2% [intel]
@@ -576,6 +573,9 @@ PLAYERS (PROJ half):
   Jaylin Noel (HOU WR) 3.9 · xFP 4.6/g (+1.7 over expected) [TD luck +0.1, usage: 2 banged-up games ×0.5, pass volume ×0.92, snap trend ×1.06, market lower (3.9 vs model 5.5)] — Deep 20+ guy (23% of targets, lg 12%) · left-heavy (49%) · slot (70%) · zone-beater (YPRR 0.86 vs man, 2.66 vs zone; small n) (2025 too)
       why: PROJ 3.9 = Clay 6.3 · 2026 form (6.3 half PPG in 4 gm, 44% weight) -0.2 · snap trend (last 62% vs avg 45%) +0.4 · pass-volume context (HOU script-driven throws, underdog) -0.5 · books' lines (3.9, anchored 85%) -2.0 — biggest driver: books' lines -2.0
       matchup +7% (priced +0, intel +7): TEN man 16% (4 gm 16%, prior 16%; lg 26%) vs his YPRR 0.86 man / 2.66 zone +7% [intel]
+  Xavier Hutchinson (HOU WR) 3.8 · xFP 10.0/g (-4.3 over expected) [TD luck +0.6, healthy-prior +0.5/g, usage: 1 banged-up game ×0.5, pass volume ×0.92, snap trend ×0.92, REPORTS +1 riser (10d) - shadow] — rarely behind los (3%) · Int 10-19 guy (30% of targets, lg 22%) · man-beater (YPRR 1.94 vs man, 1.19 vs zone; small n) (new vs 2025)
+      why: PROJ 3.8 = Clay 4.3 · healthy prior +0.5 (last season he outscored this baseline when healthy; 3+ games played hurt) +0.5 · 2026 form (5.8 half PPG in 4 gm, 44% weight) +1.4 · snap trend (last 31% vs avg 56%) -0.5 · pass-volume context (HOU script-driven throws, underdog) -0.5 · TD luck (0 TD on 0.9 expected) +0.2 · books' lines (3.8, anchored 85%) -1.7 — biggest driver: books' lines -1.7
+      matchup -6% (priced +0, intel -6): TEN man 16% (4 gm 16%, prior 16%; lg 26%) vs his YPRR 1.94 man / 1.19 zone -6% [intel]
   Elic Ayomanor (TEN WR) 3.3 · xFP 5.0/g (-0.0 over expected) [TD luck +0.3, CB shadow ×0.95, pass volume ×0.99, snap trend ×1.03] — rarely behind los (1%) · Int 10-19 guy (36% of targets, lg 22%) · D leaky int 10-19 so far (1.23x, noisy)
       why: PROJ 3.3 = Clay 1.1 · 2026 form (5.0 half PPG in 4 gm, 44% weight) +2.3 · Vegas (TEN implied 15.0 vs avg 22.7) -0.3 · CB shadow -0.2 · TD luck (1 TD on 1.4 expected) +0.1 — biggest driver: 2026 form +2.3
       matchup +0% (priced -3, intel +3): CB shadow -5%; HOU leaky int 10-19 (1.23x pts/tgt, his 36% of targets) +3% [intel]; HOU allows +39% to WRs (4 gm, priced at 25%) +2%
@@ -666,8 +666,8 @@ PLAYERS (PROJ half):
       why: PROJ 4.1 = Clay 2.2 · 2026 form (6.5 half PPG in 3 gm, 38% weight) +1.4 · wind -0.1 · snap trend (last 59% vs avg 42%) +0.2 · vacated work from injured teammates x1.27 +1.0 · TD luck (2 TD on 0.6 expected) -0.4 · market rate from other weeks (4.1) -0.2 — biggest driver: 2026 form +1.4
       matchup -2% (priced -3, intel +1): wind -3%; NYG missing CB Paulson Adebo (59) +1% [intel]
       learned shadow +0.6 half-PPR (not in PROJ): Clay level +0.3, week of season +0.2, size of the projection +0.1
-  Darnell Mooney (NYG WR) 3.5 · xFP 3.4/g (-0.1 over expected) [role boost ×1.11, TD luck +0.1, weather ×0.97, pass volume ×1.02] — rarely behind los (3%) · rarely short 0-9 (28%) · Int 10-19 guy (47% of targets, lg 22%) · Deep 20+ guy (22% of targets, lg 12%) · left-heavy (51%) · D leaky int 10-19 so far (1.65x, noisy)
-      why: PROJ 3.5 = Clay 3.9 · 2026 form (3.4 half PPG in 4 gm, 44% weight) +0.3 · Vegas (NYG implied 19.5 vs avg 22.7) -0.2 · opp WAS allows +24% to WRs (4 gm) +0.2 · wind -0.1 · vacated work from injured teammates x1.11 +0.4 · books' lines (3.5, anchored 85%) -1.1 — biggest driver: books' lines -1.1
+  Darnell Mooney (NYG WR) 4.0 · xFP 3.4/g (-0.1 over expected) [role boost ×1.11, TD luck +0.1, weather ×0.97, pass volume ×1.02] — rarely behind los (3%) · rarely short 0-9 (28%) · Int 10-19 guy (47% of targets, lg 22%) · Deep 20+ guy (22% of targets, lg 12%) · left-heavy (51%) · D leaky int 10-19 so far (1.65x, noisy)
+      why: PROJ 4.0 = Clay 3.9 · 2026 form (3.4 half PPG in 4 gm, 44% weight) +0.3 · Vegas (NYG implied 19.5 vs avg 22.7) -0.2 · opp WAS allows +24% to WRs (4 gm) +0.2 · wind -0.1 · vacated work from injured teammates x1.11 +0.4 · books' lines (4.0, anchored 43%) -0.6 — biggest driver: books' lines -0.6
       matchup +8% (priced +1, intel +8): WAS leaky int 10-19 (1.65x pts/tgt, his 47% of targets) +8% [intel]; WAS allows +24% to WRs (4 gm, priced at 25%) +4%; wind -3%
       learned shadow +0.6 half-PPR (not in PROJ): Clay level +0.2, team pace +0.2, week of season +0.1
 
@@ -780,7 +780,7 @@ ARI offense vs DET defense
   - DET DC Kelvin Sheppard (2nd yr here) — Kelvin Sheppard as playcaller: man 40% · blitz 26% · pressure 37% · S in box 26% · gap faced 41% · edge faced 42% (2025 DET)
   - ARI O style (PFF): 45% gap / 55% zone, edge 25%, 4.0 ypc · sees man 26% (lg 25%) · screens 6% · blitzed 36% / pressured 28%
   - ARI OC Nathaniel Hackett (new; prior = NYJ 2024 under him, replaced Drew Petzing) — Nathaniel Hackett as playcaller: sees man 33%/34% · screens 12%/14% · gap runs 43%/39% · edge runs 34%/32% (2023 NYJ, 2024 NYJ)
-  - DET D availability: S Brian Branch (67, PUP) — quality lost 1.2 (grade pts above 55 / 10, snap-weighted) [intel]
+  - DET D availability: S Brian Branch (67, PUP) · ED D.J. Wonnum (57, Q) — quality lost 1.2 (grade pts above 55 / 10, snap-weighted) [intel]
 
 PLAYERS (PROJ half):
   Jahmyr Gibbs (DET RB) 24.3 · xFP 23.3/g (+3.0 over expected) [TD luck -1.0, snap trend ×1.03, snap usage 78% x 66 plays = 16.3 half-PPR/g (15% blend)] — Behind LOS guy (37% of targets, lg 17%) · Short 0-9 guy (58% of targets, lg 49%) · middle-heavy (32%) · D leaky short 0-9 so far (1.29x, noisy) · makes people miss (0.28 MTF/att)
@@ -806,8 +806,8 @@ PLAYERS (PROJ half):
       why: PROJ 13.3 = Clay 14.4 · 2026 form (10.8 half PPG in 4 gm, 44% weight) -1.6 · rookie level x1.08 +1.0 · snap usage 48% x 65 plays -0.6 · Vegas (ARI implied 24.5 vs avg 22.7) +0.5 · ARI OL starters out -0.3 · snap trend (last 45% vs avg 48%) +0.2 · TD luck (2 TD on 1.6 expected) -0.2 · books' lines (13.3, anchored 11%) -0.2 — biggest driver: 2026 form -1.6
       matchup -2% (priced -2, intel -0): DET allows 2.53 after contact/att blended (lg 3.00) -3% [intel]; DET run D 4.6 ypc blended (86 car 4.5, prior 4.6; lg 4.3) +2% [intel]; ARI OL starters out -2%
       learned shadow +1.0 half-PPR (not in PROJ): snap usage +0.2, week of season +0.1
-  Michael Wilson (ARI WR) 11.8 · xFP 17.5/g (-6.4 over expected) [TD luck +1.6, pass volume ×0.94, snap trend ×1.02, REPORTS +1 riser (10d) - shadow] — rarely behind los (8%) · Int 10-19 guy (32% of targets, lg 22%)
-      why: PROJ 11.8 = Clay 8.3 · 2026 form (11.1 half PPG in 4 gm, 44% weight) +2.5 · Vegas (ARI implied 24.5 vs avg 22.7) +0.2 · opp DET allows +37% to WRs (4 gm) +0.3 · snap trend (last 94% vs avg 92%) +0.2 · pass-volume context (ARI script-driven throws, underdog) -0.6 · TD luck (1 TD on 3.4 expected) +0.6 · books' lines (11.8, anchored 43%) +0.3 — biggest driver: 2026 form +2.5
+  Michael Wilson (ARI WR) 11.9 · xFP 17.5/g (-6.4 over expected) [TD luck +1.6, pass volume ×0.94, snap trend ×1.02, REPORTS +1 riser (10d) - shadow] — rarely behind los (8%) · Int 10-19 guy (32% of targets, lg 22%)
+      why: PROJ 11.9 = Clay 8.3 · 2026 form (11.1 half PPG in 4 gm, 44% weight) +2.5 · Vegas (ARI implied 24.5 vs avg 22.7) +0.2 · opp DET allows +37% to WRs (4 gm) +0.3 · snap trend (last 94% vs avg 92%) +0.2 · pass-volume context (ARI script-driven throws, underdog) -0.6 · TD luck (1 TD on 3.4 expected) +0.6 · books' lines (11.9, anchored 43%) +0.4 — biggest driver: 2026 form +2.5
       matchup +8% (priced +3, intel +5): DET missing S Brian Branch (67) +4% [intel]; DET allows +37% to WRs (4 gm, priced at 25%) +3%; DET man 31% (4 gm 22%, prior 40%; lg 26%) vs his YPRR 2.21 man / 1.66 zone +2% [intel]
       learned shadow +0.4 half-PPR (not in PROJ): TD luck -0.4, last-game snap share +0.3, week of season +0.2
   Sam LaPorta (DET TE) 10.5 · xFP 13.3/g (-1.8 over expected) [TD luck +0.8, pass volume ×0.90] — Short 0-9 guy (64% of targets, lg 49%) · rarely deep 20+ (4%) · middle-heavy (32%) · D leaky short 0-9 so far (1.29x, noisy) · zone-beater (YPRR 1.08 vs man, 1.81 vs zone) (2025 too)
@@ -1022,7 +1022,7 @@ BAL offense vs ATL defense
   - ATL DC Jeff Ulbrich (2nd yr here) — Jeff Ulbrich as playcaller: man 36%/36%/23% · blitz 17%/28%/42% · pressure 40%/37%/37% · S in box 31%/38%/49% · gap faced 52%/52%/58% · edge faced 37%/38%/30% (2023 NYJ, 2024 NYJ, 2025 ATL)
   - BAL O style (PFF): 35% gap / 65% zone, edge 34%, 4.4 ypc · sees man 32% (lg 25%) · screens 9% · blitzed 38% / pressured 37%
   - BAL OC Declan Doyle (new; prior = CHI 2025 under him, replaced Todd Monken) — Declan Doyle as playcaller: sees man 27% · screens 12% · gap runs 33% · edge runs 31% (2025 CHI)
-  - ATL D availability: CB A.J. Terrell (60, IR) · DI Da'Shawn Hand (59, IR) · ED James Pearce Jr. (58, Sus) — quality lost 0.8 (grade pts above 55 / 10, snap-weighted) [intel]
+  - ATL D availability: CB A.J. Terrell (60, IR) · DI Da'Shawn Hand (59, IR) · ED James Pearce Jr. (58, Sus) · ED Cameron Thomas (77, Q) — quality lost 0.8 (grade pts above 55 / 10, snap-weighted) [intel]
 
 ATL offense vs BAL defense
   - Pace (4 gm): 60.8 plays/gm (base 60.5, +0.3) · neutral pass 47% (base 57%) · PROE -11.1 (base -6.2)
@@ -1122,8 +1122,8 @@ PLAYERS (PROJ half):
       why: PROJ 24.3 = Clay 22.4 · 2026 form (28.8 half PPG in 4 gm, 44% weight) +2.8 · Vegas (BUF implied 25.8 vs avg 22.7) +0.8 · opp LAR allows -7% to QBs (4 gm) -0.4 · soft pass rush +0.7 · wind -0.8 · TD luck (6 TD on 5.4 expected) -0.1 · books' lines (24.3, anchored 68%) -1.1 — biggest driver: 2026 form +2.8
       matchup -3% (priced -2, intel -1): wind -3%; soft pass rush +3%; LAR allows -7% to QBs (4 gm, priced at 25%) -2%; LAR pressure 41% (4 gm 42%, prior 41%; lg 36%), his grade 52 pressured vs 77 clean -1% [intel]
       learned shadow -1.3 half-PPR (not in PROJ): size of the projection -1.3, PPG so far -1.0, season snap share +0.3
-  Matthew Stafford (LAR QB) 19.5 · xFP 19.3/g (-2.4 over expected) [TD luck -0.2, weather ×0.97] — D pressure 43% (#4)
-      why: PROJ 19.5 = Clay 17.8 · 2026 form (16.9 half PPG in 4 gm, 44% weight) -0.4 · Vegas (LAR implied 28.8 vs avg 22.7) +1.2 · opp BUF allows +25% to QBs (4 gm) +0.6 · wind -0.6 · TD luck (6 TD on 5.2 expected) -0.2 · books' lines (19.5, anchored 35%) +1.1 — biggest driver: Vegas +1.2
+  Matthew Stafford (LAR QB) 19.6 · xFP 19.3/g (-2.4 over expected) [TD luck -0.2, weather ×0.97] — D pressure 43% (#4)
+      why: PROJ 19.6 = Clay 17.8 · 2026 form (16.9 half PPG in 4 gm, 44% weight) -0.4 · Vegas (LAR implied 28.8 vs avg 22.7) +1.2 · opp BUF allows +25% to QBs (4 gm) +0.6 · wind -0.6 · TD luck (6 TD on 5.2 expected) -0.2 · books' lines (19.6, anchored 35%) +1.2 — biggest driver: books' lines +1.2
       matchup +0% (priced +0, intel +0): BUF allows +25% to QBs (4 gm, priced at 25%) +3%; wind -3%
   Kyren Williams (LAR RB) 17.3 · xFP 16.1/g (+3.7 over expected) [TD luck -0.6, snap usage 68% x 67 plays = 14.4 half-PPR/g (15% blend), blowout wk1: role read on competitive snaps] — Short 0-9 guy (81% of targets, lg 49%) · man-beater (YPRR 1.47 vs man, 1.06 vs zone; small n) (new vs 2025)
       why: PROJ 17.3 = Clay 12.9 · 2026 form (19.8 half PPG in 4 gm, 44% weight) +3.1 · snap usage 68% x 67 plays -0.2 · Vegas (LAR implied 28.8 vs avg 22.7) +2.1 · opp BUF allows +25% to RBs (4 gm) +0.6 · snap trend (last 83% vs avg 68%) -0.2 · TD luck (4 TD on 2.8 expected) -0.6 · books' lines (17.3, anchored 11%) -0.2 — biggest driver: 2026 form +3.1
@@ -1138,7 +1138,7 @@ PLAYERS (PROJ half):
       matchup -7% (priced -3, intel -4): LAR stingy behind los (0.73x pts/tgt, his 38% of targets) -3% [intel]; LAR allows -32% to RBs (4 gm, priced at 25%) -3%; LAR stingy short 0-9 (0.79x pts/tgt, his 58% of targets) -3% [intel]; LAR man 31% (4 gm 40%, prior 22%; lg 26%) vs his YPRR 1.92 man / 0.76 zone +2% [intel]
       learned shadow +0.9 half-PPR (not in PROJ): size of the projection -0.6, snap-trend layer +0.2, team pace +0.2
   Davante Adams (LAR WR) 13.7 · xFP 14.8/g (+0.7 over expected) [TD luck -0.4, weather ×0.97, healthy-prior +1.0/g, usage: 1 banged-up game ×0.5, pass volume ×0.98, snap trend ×1.09] — rarely behind los (0%) · rarely short 0-9 (37%) · Int 10-19 guy (39% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 12%) · left-heavy (50%) · D funnels int 10-19 (30% of targets faced)
-      why: PROJ 13.7 = Clay 11.6 · healthy prior +1.0 (last season he outscored this baseline when healthy; 3+ games played hurt) +1.0 · 2026 form (15.5 half PPG in 4 gm, 44% weight) +0.6 · Vegas (LAR implied 28.8 vs avg 22.7) +0.9 · opp BUF allows +29% to WRs (4 gm) +0.5 · wind -0.4 · snap trend (last 95% vs avg 74%) +1.3 · pass-volume context (LAR script-driven throws) -0.3 · TD luck (2 TD on 1.5 expected) -0.1 · books' lines (13.7, anchored 43%) -1.2 — biggest driver: snap trend +1.3
+      why: PROJ 13.7 = Clay 11.6 · healthy prior +1.0 (last season he outscored this baseline when healthy; 3+ games played hurt) +1.0 · 2026 form (15.5 half PPG in 4 gm, 44% weight) +0.6 · Vegas (LAR implied 28.8 vs avg 22.7) +0.9 · opp BUF allows +29% to WRs (4 gm) +0.5 · wind -0.4 · snap trend (last 95% vs avg 74%) +1.3 · pass-volume context (LAR script-driven throws) -0.3 · TD luck (2 TD on 1.5 expected) -0.1 · books' lines (13.7, anchored 43%) -1.3 — biggest driver: snap trend +1.3
       matchup +0% (priced +0, intel +0): BUF allows +29% to WRs (4 gm, priced at 25%) +3%; wind -3%
       learned shadow -1.2 half-PPR (not in PROJ): size of the projection -0.6, team pace -0.4, snap trend -0.3
   DJ Moore (BUF WR) 9.1 · xFP 7.6/g (-0.0 over expected) [INJ: Undisclosed · no lines up, TD luck -0.2, weather ×0.97, pass volume ×1.02, REPORTS 1 injury (10d) - shadow] — rarely short 0-9 (31%) · Int 10-19 guy (31% of targets, lg 22%) · Deep 20+ guy (24% of targets, lg 12%) · D plays man 40% (#3)
@@ -1153,7 +1153,7 @@ PLAYERS (PROJ half):
   Tyler Bass (BUF K) 8.4 [weather ×0.95]
       why: PROJ 8.4 = Clay 8.1 · Vegas (BUF implied 25.8 vs avg 22.7) +0.5 · wind -0.4 · market rate from other weeks (8.4) +0.1 — biggest driver: Vegas +0.5
   Dalton Kincaid (BUF TE) 8.1 · xFP 7.1/g (+2.5 over expected) [TD luck -0.3, weather ×0.98, healthy-prior +0.6/g, pass volume ×1.02, snap trend ×0.97] — rarely behind los (8%) · rarely short 0-9 (33%) · Int 10-19 guy (46% of targets, lg 22%) · middle-heavy (32%) · detached TE (29% inline) · zone-beater (YPRR 2.10 vs man, 3.51 vs zone; small n) (2025 too) · D plays man 40% (#3) — TOUGH SPOT
-      why: PROJ 8.1 = Clay 7.7 · healthy prior +0.6 (last season he outscored this baseline when healthy; 3+ games played hurt) +0.6 · 2026 form (9.6 half PPG in 4 gm, 44% weight) +0.2 · Vegas (BUF implied 25.8 vs avg 22.7) +0.3 · opp LAR allows -53% to TEs (4 gm) -0.3 · wind -0.2 · snap trend (last 59% vs avg 66%) -0.3 · pass-volume context (BUF script-driven throws) +0.2 · TD luck (1 TD on 0.5 expected) -0.2 — biggest driver: healthy prior +0.6 +0.6
+      why: PROJ 8.1 = Clay 7.7 · healthy prior +0.6 (last season he outscored this baseline when healthy; 3+ games played hurt) +0.6 · 2026 form (9.6 half PPG in 4 gm, 44% weight) +0.2 · Vegas (BUF implied 25.8 vs avg 22.7) +0.3 · opp LAR allows -53% to TEs (4 gm) -0.3 · wind -0.2 · snap trend (last 59% vs avg 66%) -0.3 · pass-volume context (BUF script-driven throws) +0.2 · TD luck (1 TD on 0.5 expected) -0.2 · books' lines (8.1, anchored 11%) +0.1 — biggest driver: healthy prior +0.6 +0.6
       matchup -7% (priced -5, intel -2): LAR allows -53% to TEs (4 gm, priced at 25%) -3%; LAR man 31% (4 gm 40%, prior 22%; lg 26%) vs his YPRR 2.10 man / 3.51 zone -2% [intel]; wind -2%
       learned shadow +0.7 half-PPR (not in PROJ): team pace +0.2, Clay level -0.2, size of the projection +0.1
   Blake Corum (LAR RB) 7.7 · xFP 5.9/g (-0.9 over expected) [TD luck +0.1, snap trend ×0.97, snap usage 28% x 67 plays = 5.9 half-PPR/g (15% blend)]
@@ -1304,7 +1304,7 @@ PLAYERS (PROJ half):
       matchup -1% (priced -1, intel +0): CB shadow -4%; soft pass rush +3%
       learned shadow +0.8 half-PPR (not in PROJ): size of the projection -0.4, position +0.4, last-game snap share +0.4
   Jalen Hurts (PHI QB) 15.4 · xFP 16.7/g (+0.8 over expected) [TD luck -0.5] — struggles vs blitz (5.8 YPA vs 7.4)
-      why: PROJ 15.4 = Clay 19.4 · 2026 form (17.5 half PPG in 4 gm, 44% weight) -0.8 · Vegas (PHI implied 17.8 vs avg 22.7) -1.0 · opp JAX allows -10% to QBs (4 gm) -0.2 · TD luck (7 TD on 4.9 expected) -0.5 · books' lines (15.4, anchored 68%) -1.4 — biggest driver: books' lines -1.4
+      why: PROJ 15.4 = Clay 19.4 · 2026 form (17.5 half PPG in 4 gm, 44% weight) -0.8 · Vegas (PHI implied 17.8 vs avg 22.7) -1.0 · opp JAX allows -10% to QBs (4 gm) -0.2 · TD luck (7 TD on 4.9 expected) -0.5 · books' lines (15.4, anchored 68%) -1.5 — biggest driver: books' lines -1.5
       matchup -1% (priced -1, intel +0): JAX allows -10% to QBs (4 gm, priced at 25%) -1%
   Bhayshul Tuten (JAX RB) 12.1 · xFP 11.2/g (+1.0 over expected) [TD luck +0.1, snap trend ×1.02, snap usage 52% x 55 plays = 9.0 half-PPR/g (15% blend), REPORTS 1 role (10d) - shadow] — makes people miss (0.26 MTF/att) · screen guy (42% of targets)
       why: PROJ 12.1 = Clay 11.2 · 2026 form (12.2 half PPG in 4 gm, 44% weight) +0.4 · snap usage 52% x 55 plays -0.4 · Vegas (JAX implied 24.8 vs avg 22.7) +0.5 · snap trend (last 59% vs avg 52%) +0.3 — biggest driver: Vegas +0.5
@@ -1320,12 +1320,12 @@ PLAYERS (PROJ half):
   Cam Little (JAX K) 8.6
       why: PROJ 8.6 = Clay 8.4 · Vegas (JAX implied 24.8 vs avg 22.7) +0.4 · books' lines (8.6, anchored 70%) -0.2 — biggest driver: Vegas +0.4
   Jaguars D/ST (JAX DST) 8.1
-  Jakobi Meyers (JAX WR) 7.8 · xFP 6.2/g (+2.6 over expected) [TD luck -0.5, CB shadow ×0.97, usage: 2 banged-up games ×0.5, pass volume ×1.05, blowout wk1/wk3: role read on competitive snaps] — rarely behind los (7%) · Int 10-19 guy (39% of targets, lg 22%)
+  Jakobi Meyers (JAX WR) 7.8 · xFP 6.2/g (+2.6 over expected) [INJ: practice FP, TD luck -0.5, CB shadow ×0.97, usage: 2 banged-up games ×0.5, pass volume ×1.05, blowout wk1/wk3: role read on competitive snaps] — rarely behind los (7%) · Int 10-19 guy (39% of targets, lg 22%)
       why: PROJ 7.8 = Clay 8.6 · Vegas (JAX implied 24.8 vs avg 22.7) +0.2 · opp PHI allows +14% to WRs (4 gm) +0.1 · CB shadow -0.3 · snap trend (last 82% vs avg 80%) -0.2 · pass-volume context (JAX script-driven throws) +0.4 · TD luck (2 TD on 1.3 expected) -0.2 · books' lines (7.8, anchored 85%) -1.0 — biggest driver: books' lines -1.0
       matchup +0% (priced -1, intel +2): CB shadow -3%; PHI leaky int 10-19 (1.15x pts/tgt, his 39% of targets) +2% [intel]; PHI allows +14% to WRs (4 gm, priced at 25%) +2%
       learned shadow +0.6 half-PPR (not in PROJ): team pace +0.3, snap trend -0.2, Clay level -0.2
   Brenton Strange (JAX TE) 7.5 · xFP 6.3/g (+1.1 over expected) [TD luck -0.2, pass volume ×1.05, blowout wk1/wk3: role read on competitive snaps, route trend ×1.05] — rarely behind los (6%) · Short 0-9 guy (65% of targets, lg 49%) · D funnels short 0-9 (54% of targets faced) · D stingy short 0-9 so far (0.75x, noisy)
-      why: PROJ 7.5 = Clay 7.0 · 2026 form (7.4 half PPG in 4 gm, 44% weight) +0.2 · Vegas (JAX implied 24.8 vs avg 22.7) +0.2 · opp PHI allows -46% to TEs (4 gm) -0.2 · route trend +0.4 · pass-volume context (JAX script-driven throws) +0.4 · TD luck (1 TD on 0.7 expected) -0.2 · books' lines (7.5, anchored 11%) -0.1 — biggest driver: pass-volume context +0.4
+      why: PROJ 7.5 = Clay 7.0 · 2026 form (7.4 half PPG in 4 gm, 44% weight) +0.2 · Vegas (JAX implied 24.8 vs avg 22.7) +0.2 · opp PHI allows -46% to TEs (4 gm) -0.2 · route trend +0.4 · pass-volume context (JAX script-driven throws) +0.4 · TD luck (1 TD on 0.7 expected) -0.2 — biggest driver: pass-volume context +0.4
       matchup -6% (priced -3, intel -3): PHI stingy short 0-9 (0.75x pts/tgt, his 65% of targets) -3% [intel]; PHI allows -46% to TEs (4 gm, priced at 25%) -3%
       learned shadow +0.8 half-PPR (not in PROJ): team pace +0.2, size of the projection +0.2, week of season +0.1
   Dontayvion Wicks (PHI WR) 7.4 · xFP 8.2/g (-0.3 over expected) [role boost ×1.06, TD luck +0.4, healthy-prior +0.5/g, usage: 1 banged-up game ×0.5, pass volume ×1.01, snap trend ×1.02, blowout wk3: role read on competitive snaps] — rarely behind los (3%) · D funnels int 10-19 (27% of targets faced) · man-beater (YPRR 1.68 vs man, 1.14 vs zone; small n) (2025 too)

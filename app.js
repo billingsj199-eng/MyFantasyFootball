@@ -3340,6 +3340,8 @@ function _linesStatLine(d) {
       yds: hasYds ? Math.round((py + ry + rcy) * 10) / 10 : null,
       tds: hasTd ? Math.round(tdLine * 10) / 10 : null,
       rec: s.rec != null ? Math.round(s.rec * 10) / 10 : null,
+      // Rushing-yards line: the tail column shows it instead of Rec on the QB filter.
+      ry: ry ? Math.round(ry * 10) / 10 : null,
       tdsOdds: _isQB ? null : atd,
       tip: 'Week ' + wk + ' O/U avg of ' + W.books.join('/') + (W.asOf ? ' (as of ' + W.asOf + ')' : '') + ': ' + parts.join(' · ')
     };
@@ -5094,7 +5096,7 @@ function getFiltered(applyTopN) {
     const _smYds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.yds != null) ? s.yds : -Infinity; };
     const _smTds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.tds != null) ? s.tds : -Infinity; };
     const _smTeamPpg = d => { const t = _impliedTeamPpg(d.t); return t ? t.ppg : -Infinity; };
-    const _smRec = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.rec != null) ? s.rec : -Infinity; };
+    const _smRec = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); const k = (_sm !== 'proj' && filter === 'QB') ? 'ry' : 'rec'; return (s && s[k] != null) ? s[k] : -Infinity; };
     // WEEKLY proj/lines column order (2026-09-08): ppg25 = Yds, l4ppg = TD, tail = Rec.
     const _wkStat = currentMode === 'weekly';
     // ADP comparison view: missing ADPs sort to the bottom in the (default) ascending order.
@@ -7852,7 +7854,9 @@ function render() {
         // TEAM TOTAL), then the projected stat line — Yds / TD / Rec — in the
         // two swap columns + the tail. Season-average Team PPG dropped here:
         // TEAM TOTAL already carries the week's Vegas number.
-        const _recHtml = (_line && _line.rec != null) ? String(Math.round(_line.rec * 10) / 10) : '—';
+        // Betting lines on the QB filter: the tail shows the rushing-yards line instead of Rec.
+        const _tailK = (_statMode === 'lines' && filter === 'QB') ? 'ry' : 'rec';
+        const _recHtml = (_line && _line[_tailK] != null) ? String(Math.round(_line[_tailK] * 10) / 10) : '—';
         _statYdsTail = _tipAttr ? '<span' + _tipAttr + '>' + _recHtml + '</span>' : _recHtml;
         _statTds = `<td class="pts-cell ppg25-cell"${_tipAttr}>${_ydsHtml}</td>
       <td class="pts-cell l4ppg-cell"${_tipAttr}>${_tdsHtml}</td>`;
@@ -7967,7 +7971,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode && filter === 'QB') ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -7997,6 +8001,8 @@ function render() {
       ? 'CBS expert-consensus rank (their PPR top200 list) compared to the current ranks. Green = CBS has the player later than this rank (value), red = earlier (reach).'
       : _linesPpgMode
       ? 'Season-long sportsbook yardage lines (O/U), averaged across the books that posted one (DK / FanDuel / BetMGM / Underdog). Combined passing + rushing + receiving. Hover a value for the breakdown.'
+      : (_wkLinesPpgMode && filter === 'QB')
+      ? 'This week\'s rushing-yards prop line (O/U), averaged across the books that posted one. Blank = no rushing line posted for this QB. Hover a value for the full prop line.'
       : _wkLinesPpgMode
       ? 'This week\'s receptions prop line (O/U), averaged across the books that posted one. Blank = no receptions line posted for this player. Hover a value for the full prop line.'
       : _projPpgMode

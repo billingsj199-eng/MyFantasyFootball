@@ -2800,7 +2800,7 @@ function _kStarterBadge(d) {
   }
   const s = _kStarterByTeam[d.t];
   if (!s || s.n !== d.n) return '';
-  return ' <span data-gloss="Projected starting kicker for this team (best-ranked K on the board)" style="display:inline-block;background:rgba(34,197,94,.16);color:#22c55e;border:1px solid rgba(34,197,94,.45);border-radius:3px;font-size:.55rem;font-weight:800;line-height:1;padding:1px 3px;vertical-align:1px">S</span>';
+  return ' <span data-gloss="Projected starting kicker for this team (best-ranked K on the board)" style="display:inline-block;background:rgba(34,197,94,.16);color:var(--green);border:1px solid rgba(34,197,94,.45);border-radius:3px;font-size:.55rem;font-weight:800;line-height:1;padding:1px 3px;vertical-align:1px">S</span>';
 }
 
 function last4Ppg(d) {
@@ -7159,22 +7159,22 @@ function _renderTierCardView(data, container) {
   keyCard.className = 'tcv-key-card';
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
-    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE</b> row = players on bye this week with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:var(--green)">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:var(--text)">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE</b> row = players on bye this week with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:var(--accent-blue)">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
-    ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:#ef4444">CUT LINE:</b> hover a card → <b style="color:#ef4444">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
+    ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:var(--accent)">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:var(--text)">TIERS:</b> hover a card → <b style="color:var(--text)">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:var(--red)">CUT LINE:</b> hover a card → <b style="color:var(--red)">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:var(--text)">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
         _tcvMoveMap
-          ? '<b style="color:#e2e8f0">RANK</b> = <span style="opacity:.8">was</span> › <b style="color:#22c55e">now</b> vs ' +
+          ? '<b style="color:var(--text)">RANK</b> = <span style="opacity:.8">was</span> › <b style="color:var(--green)">now</b> vs ' +
             (_tcvMoveSrc && _tcvMoveSrc.at ? _tcvMoveDateLabel(_tcvMoveSrc.at) : 'last snapshot') +
             (_tcvMoveSrc && _tcvMoveSrc.custom ? ' (saved board)' : ' (weekly anchor)') +
-            ' · <b style="color:#22c55e">green</b> rose · <b style="color:#ef4444">red</b> fell · <span style="color:#93c5fd">NEW</span> = not on the board then' +
+            ' · <b style="color:var(--green)">green</b> rose · <b style="color:var(--red)">red</b> fell · <span style="color:#93c5fd">NEW</span> = not on the board then' +
             ((filterLabel !== 'ALL') ? ' · ranks counted within ' + filterLabel : '')
           : (window._tcvMove.loading
-              ? '<b style="color:#f59e0b">MOVEMENT:</b> loading the board saved on ' + _tcvMoveDateLabel(window._tcvMove.date + 'T12:00:00') + '…'
+              ? '<b style="color:var(--accent)">MOVEMENT:</b> loading the board saved on ' + _tcvMoveDateLabel(window._tcvMove.date + 'T12:00:00') + '…'
             : window._tcvMove.err
-              ? '<b style="color:#f59e0b">MOVEMENT:</b> ' + window._tcvMove.err
-              : '<b style="color:#f59e0b">MOVEMENT:</b> no comparison snapshot for the ' + ((typeof currentMode !== 'undefined') ? currentMode.toUpperCase() : '') + ' board' +
+              ? '<b style="color:var(--accent)">MOVEMENT:</b> ' + window._tcvMove.err
+              : '<b style="color:var(--accent)">MOVEMENT:</b> no comparison snapshot for the ' + ((typeof currentMode !== 'undefined') ? currentMode.toUpperCase() : '') + ' board' +
                 (_tcvIsAdminViewer() ? ' — pick a date above' : ' (weekly anchor covers the redraft board only)'))
       ) + '</span>' : '');
   root.appendChild(keyCard);
@@ -7201,7 +7201,7 @@ function _renderTierCardView(data, container) {
     if (g.cut) {
       // Below the cut line — hidden from viewers, shown to the editor only
       letter.className = 'tcv-letter';
-      letter.style.background = 'linear-gradient(135deg,#991b1b,#ef4444)';
+      letter.style.background = 'linear-gradient(135deg,#991b1b,var(--red))';
       glowRgb = '239,68,68';
     } else if (g.bye) {
       // This week's bye players, pulled back under the board (see _tcvByeRowPlayers)
@@ -7834,9 +7834,9 @@ function render() {
           const _cutName = _isPosCutView ? ((filter === 'DST' ? 'D/ST' : filter) + ' CUT LINE — ' + filter + _cutN) : ('CUT LINE — #' + _cutN);
           const _cutLbl = currentMode === 'weekly' ? 'below hidden from published week' : 'below hidden from viewers';
           html += `<tr class="tier-row cut-line-row">
-            <td colspan="17"><div class="tier-inner" style="border-color:#ef4444">
-              <span class="tier-badge" style="background:#ef4444;color:#fff">✂</span>
-              <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#ef4444">${_cutName} · ${_cutLbl}</span>
+            <td colspan="17"><div class="tier-inner" style="border-color:var(--red)">
+              <span class="tier-badge" style="background:var(--red);color:#fff">✂</span>
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--red)">${_cutName} · ${_cutLbl}</span>
               ${_cutCtrls ? `<div class="tier-controls">
                 ${_prevRank > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}"${_cutPosAttr} title="Move line up (cut one more player)">▲</button>` : ''}
                 <button class="tier-btn" data-cut-set="${_rowRank}"${_cutPosAttr} title="Move line down (keep ${d.n})">▼</button>
@@ -7998,7 +7998,7 @@ function render() {
           ? '<span style="cursor:help;font-weight:700' + (_poC ? ';color:' + _poC : '') + '" title="' + (_poT + ' points above replacement in the fantasy-playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' — projected to play ' + _ve.gp + ' of his team\'s ' + _ve.sgp + (_poMiss ? ', so he misses playoff time' : '') + '. Breaks ties on ROS VOR.').replace(/"/g, '&quot;') + '">' + _poT + '</span>'
           : '—';
         _statJmCell = _ve
-          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left, weeks ' + _vt.from + '-' + _vt.to + (_ve.eg != null && _ve.eg < _ve.g - 0.05 ? ' (about ' + _ve.eg + ' expected with his play odds)' : '') + (_ve.sgp ? ' (' + _ve.gp + ' of ' + _ve.sgp + ' in the fantasy playoffs)' : '') + (_short ? ' — each missed week costs that week\'s gap over replacement' : '') + '">' + _ve.g + '</span>'
+          ? '<span style="cursor:help' + (_short ? ';color:var(--accent);font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left, weeks ' + _vt.from + '-' + _vt.to + (_ve.eg != null && _ve.eg < _ve.g - 0.05 ? ' (about ' + _ve.eg + ' expected with his play odds)' : '') + (_ve.sgp ? ' (' + _ve.gp + ' of ' + _ve.sgp + ' in the fantasy playoffs)' : '') + (_short ? ' — each missed week costs that week\'s gap over replacement' : '') + '">' + _ve.g + '</span>'
           : '—';
       }
     } else if (_statMode === 'xfp') {
@@ -8111,7 +8111,7 @@ function render() {
       // WEEKLY QB/K/DST views place that group's own position-rank cut line
       // (i+1 = position rank there); everywhere else it's the overall cut.
       const _addCutPos = (typeof window._posCutGroupsFor === 'function' && window._posCutGroupsFor(currentMode).includes(filter)) ? filter : null;
-      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button><button class="add-tier-btn" data-add-cut="${_addCutPos ? (i + 1) : d.myRank}"${_addCutPos ? ` data-cut-pos="${_addCutPos}"` : ''} style="color:#ef4444;border-color:#ef4444" title="Place the cut line here — players below are hidden from viewers">✂ CUT</button></td></tr>`;
+      html += `<tr class="add-tier-row" data-after-rank="${displayRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${displayRank}">+ ADD TIER</button><button class="add-tier-btn" data-add-cut="${_addCutPos ? (i + 1) : d.myRank}"${_addCutPos ? ` data-cut-pos="${_addCutPos}"` : ''} style="color:var(--red);border-color:var(--red)" title="Place the cut line here — players below are hidden from viewers">✂ CUT</button></td></tr>`;
     }
     // Progressive-render chunk boundary: snapshot at end of an iteration so
     // the split always lands between complete <tr>s (tier/cut rows included).
@@ -8290,7 +8290,7 @@ function updateCompareBtn() {
     if (!badge) {
       badge = document.createElement('span');
       badge.className = 'compare-badge';
-      badge.style.cssText = 'position:absolute;top:2px;right:6px;background:var(--accent);color:var(--bg);border-radius:50%;width:16px;height:16px;font-size:.55rem;display:flex;align-items:center;justify-content:center;font-weight:700';
+      badge.style.cssText = 'position:absolute;top:2px;right:6px;background:var(--accent);color:var(--accent-ink);border-radius:50%;width:16px;height:16px;font-size:.55rem;display:flex;align-items:center;justify-content:center;font-weight:700';
       navBtn.appendChild(badge);
     }
     badge.textContent = cnt;
@@ -12048,7 +12048,7 @@ function _simProjCells(d, wk, fmt, isBye) {
   const fi = fmt === 'ppr' ? 1 : fmt === 'std' ? 2 : 0;
   const proj = r[fi];
   return (proj === 0 && r[3] == null)
-    ? '<td style="color:#ef4444;font-weight:700" title="Ruled out (injury/suspension)">0</td>'
+    ? '<td style="color:var(--red);font-weight:700" title="Ruled out (injury/suspension)">0</td>'
     : '<td style="font-weight:700">' + proj + '</td>';
 }
 // TD / FG luck row for the player card (SIM_PROJ_2026.luck, exported by
@@ -13860,7 +13860,7 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
     let _xs = 0, _xd = 0, _xt = 0, _xi = 0, _xn = 0;
     adjusted.forEach(w => { const x = _xfpFor(d, w, pos, fmt); if (x) { _xs += x.xfp; _xd += x.diff; _xt += x.tdPart; _xi += x.intPart || 0; _xn++; } });
     const _sg = v => (v >= 0 ? '+' : '') + (Math.round(v * 10) / 10).toFixed(1);
-    totalRow += _xn ? '<td title="Season: scored ' + _sg(_xd) + ' vs expected over ' + _xn + ' game' + (_xn > 1 ? 's' : '') + ' — TD luck ' + _sg(_xt) + ', ' + (pos === 'QB' && _xi ? 'INTs ' + _sg(_xi) + ', ' : '') + 'yards/catches ' + _sg(_xd - _xt - _xi) + '" style="cursor:help;font-weight:700' + (_xd <= -1.5 ? ';color:#22c55e' : _xd >= 1.5 ? ';color:#f87171' : '') + '">' + (Math.round(_xs * 10) / 10).toFixed(1) + '</td>' : '<td style="color:var(--text2)">—</td>';
+    totalRow += _xn ? '<td title="Season: scored ' + _sg(_xd) + ' vs expected over ' + _xn + ' game' + (_xn > 1 ? 's' : '') + ' — TD luck ' + _sg(_xt) + ', ' + (pos === 'QB' && _xi ? 'INTs ' + _sg(_xi) + ', ' : '') + 'yards/catches ' + _sg(_xd - _xt - _xi) + '" style="cursor:help;font-weight:700' + (_xd <= -1.5 ? ';color:var(--green)' : _xd >= 1.5 ? ';color:#f87171' : '') + '">' + (Math.round(_xs * 10) / 10).toFixed(1) + '</td>' : '<td style="color:var(--text2)">—</td>';
   }
   totalRow += '<td>' + (_totSnp != null ? Math.round(_totSnp) + '%' : '—') + '</td>';
   let _totTsCell = '<td style="color:var(--text2)">—</td>';
@@ -18837,7 +18837,7 @@ function renderCompareGrid() {
                 <span class="pos-badge ${d.s}">${d.s}</span>
                 <span class="card-team">${d.t}</span>
                 ${(()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
-                <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:#f59e0b;font-weight:600">${yrsActive || 'RETIRED'}</span>
+                <span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.15);color:var(--accent);font-weight:600">${yrsActive || 'RETIRED'}</span>
               </div>
             </div>
           </div>
@@ -18908,7 +18908,7 @@ function renderCompareGrid() {
     const removeBtn = isSearch 
       ? `<button class="remove-from-search" data-key="${sr._key}">&times;</button>`
       : `<button class="remove-from-compare" data-idx="${d.idx}">&times;</button>`;
-    const activeTag = isSearch ? '<span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(34,197,94,.15);color:#22c55e;font-weight:600">2026</span>' : '';
+    const activeTag = isSearch ? '<span style="font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(34,197,94,.15);color:var(--green);font-weight:600">2026</span>' : '';
 
     return `<div class="compare-col">
       <div class="card-header" style="position:relative">
@@ -19417,6 +19417,23 @@ window.switchPage = switchPage;
 document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   btn.addEventListener('click', () => switchPage(btn.dataset.page));
 });
+// === Phone MORE tab (≤600px) ===
+// Toggles .more-open on the sidebar so tier-2 tabs render as a grid sheet above
+// the five primary tabs (styles/main.css ≤600px block). Any tab tap, or a tap
+// outside the bar, closes it. Desktop never shows #navMoreBtn.
+(function () {
+  const side = document.querySelector('.sidebar');
+  const more = document.getElementById('navMoreBtn');
+  if (!side || !more) return;
+  const set = o => {
+    side.classList.toggle('more-open', o);
+    more.classList.toggle('active', o);
+    more.setAttribute('aria-expanded', o ? 'true' : 'false');
+  };
+  more.addEventListener('click', e => { e.stopPropagation(); set(!side.classList.contains('more-open')); });
+  side.addEventListener('click', e => { const b = e.target.closest('.nav-btn'); if (b && b !== more) set(false); });
+  document.addEventListener('click', e => { if (side.classList.contains('more-open') && !side.contains(e.target)) set(false); });
+})();
 document.querySelectorAll('[data-goto]').forEach(el => {
   el.addEventListener('click', () => switchPage(el.dataset.goto));
 });
@@ -27139,8 +27156,8 @@ function allSearchable(){
 
 ["ALL","QB","RB","WR","TE","K","DST"].forEach(pos=>{
   const b=document.createElement('button');b.className='lg-pos-btn'+(pos===sPos?' active':'');b.textContent=pos;
-  if(pos==="ALL"&&pos===sPos)b.style.cssText='border-color:var(--accent);background:var(--accent);color:#0a0e17';
-  b.onclick=()=>{sPos=pos;sFE.querySelectorAll('.lg-pos-btn').forEach(x=>{const p=x.textContent,a=p===sPos;x.className='lg-pos-btn'+(a?' active':'');if(p==="ALL")x.style.cssText=a?'border-color:var(--accent);background:var(--accent);color:#0a0e17':'';else x.style.cssText=a?'border-color:'+_PC[p]+';background:'+_PC[p]+';color:#fff':'';});sRD();};
+  if(pos==="ALL"&&pos===sPos)b.style.cssText='border-color:var(--accent);background:var(--accent);color:var(--accent-ink)';
+  b.onclick=()=>{sPos=pos;sFE.querySelectorAll('.lg-pos-btn').forEach(x=>{const p=x.textContent,a=p===sPos;x.className='lg-pos-btn'+(a?' active':'');if(p==="ALL")x.style.cssText=a?'border-color:var(--accent);background:var(--accent);color:var(--accent-ink)':'';else x.style.cssText=a?'border-color:'+_PC[p]+';background:'+_PC[p]+';color:#fff':'';});sRD();};
   sFE.appendChild(b);
 });
 
@@ -27155,7 +27172,7 @@ function sRD(){
   const already=new Set([...searchAdded.map(p=>p._key),...[...compareSet].map(i=>'C:'+D[i].n)]);
   sDE.innerHTML=list.map(p=>{
     const used=already.has(p._key);
-    const tag=p._isAvg?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(59,130,246,.15);color:#60a5fa;margin-left:4px">BASELINE</span>':p._retired?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(245,158,11,.15);color:#f59e0b;margin-left:4px">RETIRED</span>':'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(34,197,94,.15);color:#22c55e;margin-left:4px">ACTIVE</span>';
+    const tag=p._isAvg?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(59,130,246,.15);color:#60a5fa;margin-left:4px">BASELINE</span>':p._retired?'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(245,158,11,.15);color:var(--accent);margin-left:4px">RETIRED</span>':'<span style="font-size:.52rem;padding:1px 4px;border-radius:2px;background:rgba(34,197,94,.15);color:var(--green);margin-left:4px">ACTIVE</span>';
     return '<div class="lg-drop-item'+(used?' used':'')+'" data-key="'+p._key+'"><span class="lg-badge" style="background:'+_PB[p.s]+';color:'+_PC[p.s]+'">'+p.s+'</span><span style="font-weight:600">'+p.n+'</span>'+tag+'<span style="color:var(--text2);font-size:.66rem;margin-left:auto">'+p.yrs+'</span></div>';
   }).join('');
   sDE.querySelectorAll('.lg-drop-item:not(.used)').forEach(el=>{
@@ -27260,12 +27277,12 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
   // Pos filter buttons (same look as the Compare search filter).
   ['ALL'].concat(POS).forEach(p => {
     const b = document.createElement('button'); b.className = 'lg-pos-btn' + (p === sPos ? ' active' : ''); b.textContent = p;
-    if (p === 'ALL') b.style.cssText = 'border-color:var(--accent);background:var(--accent);color:#0a0e17';
+    if (p === 'ALL') b.style.cssText = 'border-color:var(--accent);background:var(--accent);color:var(--accent-ink)';
     b.onclick = () => {
       sPos = p;
       fE.querySelectorAll('.lg-pos-btn').forEach(x => {
         const q = x.textContent, a = q === sPos; x.className = 'lg-pos-btn' + (a ? ' active' : '');
-        if (q === 'ALL') x.style.cssText = a ? 'border-color:var(--accent);background:var(--accent);color:#0a0e17' : '';
+        if (q === 'ALL') x.style.cssText = a ? 'border-color:var(--accent);background:var(--accent);color:var(--accent-ink)' : '';
         else x.style.cssText = a ? 'border-color:' + PC[q] + ';background:' + PC[q] + ';color:#fff' : '';
       });
       renderDrop();
@@ -27716,15 +27733,15 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const upd = Wk.generated ? new Date(Wk.generated) : null;
     let html = '<div class="sst-edges-head"><span class="sst-edges-title">MATCHUP EDGES · WEEK ' + wk + '</span>'
       + '<div class="lg-pos-btns" id="sstEdgePos">' + ['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => '<button class="lg-pos-btn' + (p === ePos ? ' active' : '') + '" data-p="' + p + '"'
-        + (p === ePos ? ' style="' + (p === 'ALL' ? 'border-color:var(--accent);background:var(--accent);color:#0a0e17' : 'border-color:' + PC[p] + ';background:' + PC[p] + ';color:#fff') + '"' : '') + '>' + p + '</button>').join('') + '</div></div>';
+        + (p === ePos ? ' style="' + (p === 'ALL' ? 'border-color:var(--accent);background:var(--accent);color:var(--accent-ink)' : 'border-color:' + PC[p] + ';background:' + PC[p] + ';color:#fff') + '"' : '') + '>' + p + '</button>').join('') + '</div></div>';
     html += '<div class="sst-sub" style="margin-bottom:.2rem">How much this week\'s matchup moves each player, as a % of his projection. '
       + '<span class="sst-edge-tag in">IN PROJ</span> is already baked into the projection (opponent points allowed, pass rush, cornerback matchup, O-line injuries, wind). '
       + '<span class="sst-edge-tag read">READ</span> is advanced matchup context that does not change the number: man/zone coverage fit, pressure and blitz vs the QB, run defense, target zones and defensive injuries. '
       + 'Early-season defense rates are blended with last season. Tap a player to add him to Start/Sit.'
       + (upd && !isNaN(upd) ? ' <span class="sst-dim">Updated ' + upd.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '.</span>' : '') + '</div>';
     html += '<div class="sst-edges-cols">'
-      + '<div><div class="sst-edge-col-title" style="color:#22c55e">BEST MATCHUPS</div>' + (best.length ? best.map(rowHtml).join('') : '<div class="sst-edges-empty">No positive edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
-      + '<div><div class="sst-edge-col-title" style="color:#ef4444">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '<div><div class="sst-edge-col-title" style="color:var(--green)">BEST MATCHUPS</div>' + (best.length ? best.map(rowHtml).join('') : '<div class="sst-edges-empty">No positive edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
+      + '<div><div class="sst-edge-col-title" style="color:var(--red)">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
       + '</div>';
     el.innerHTML = html;
     el.querySelectorAll('#sstEdgePos .lg-pos-btn').forEach(b => { b.onclick = () => { ePos = b.dataset.p; renderEdges(); }; });
@@ -28134,7 +28151,7 @@ window.fmtHeight = fmtHeight;
         '<div style="display:flex;gap:4px;flex-shrink:0">' +
           '<button class="acct-btn acct-btn-outline" data-pc-copy="' + code + '" style="padding:.3rem .55rem;font-size:.65rem">COPY</button>' +
           '<button class="acct-btn acct-btn-outline" data-pc-toggle="' + code + '" data-pc-disabled="' + (disabled ? '1' : '0') + '" style="padding:.3rem .55rem;font-size:.65rem">' + (disabled ? 'ENABLE' : 'DISABLE') + '</button>' +
-          '<button class="acct-btn acct-btn-outline" data-pc-delete="' + code + '" style="padding:.3rem .55rem;font-size:.65rem;color:#ef4444">DELETE</button>' +
+          '<button class="acct-btn acct-btn-outline" data-pc-delete="' + code + '" style="padding:.3rem .55rem;font-size:.65rem;color:var(--red)">DELETE</button>' +
         '</div>' +
       '</div>';
     }
@@ -28153,7 +28170,7 @@ window.fmtHeight = fmtHeight;
         snap.forEach(doc => { rows.push(_renderPremCodeRow(doc.id, doc.data() || {})); });
         premCodeListEl.innerHTML = rows.join('');
       }).catch(e => {
-        premCodeListEl.innerHTML = '<div style="color:#ef4444;font-size:.7rem">Load error: ' + (e.message || e) + '</div>';
+        premCodeListEl.innerHTML = '<div style="color:var(--red);font-size:.7rem">Load error: ' + (e.message || e) + '</div>';
       });
     }
 
@@ -28271,7 +28288,7 @@ window.fmtHeight = fmtHeight;
 
     function _adminQaRow(docId, x) {
       const typeChip = x.type === 'trade'
-        ? '<span style="background:rgba(59,130,246,.15);color:#3b82f6;padding:2px 7px;border-radius:4px;font-size:.62rem;font-weight:700">🔁 TRADE</span>'
+        ? '<span style="background:rgba(59,130,246,.15);color:var(--wr);padding:2px 7px;border-radius:4px;font-size:.62rem;font-weight:700">🔁 TRADE</span>'
         : '<span style="background:rgba(245,158,11,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.62rem;font-weight:700">🔀 START/SIT</span>';
       const when = x.createdAt ? new Date(x.createdAt).toLocaleString() : '';
       const safeId = _qaAdminEsc(docId);
@@ -28280,7 +28297,7 @@ window.fmtHeight = fmtHeight;
       html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + typeChip +
         '<b style="font-size:.8rem">' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span style="font-size:.62rem;color:var(--text2)">' + _qaAdminEsc(when) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span>' +
-        (x.status === 'answered' ? '<span style="font-size:.62rem;color:#22c55e;font-weight:700">ANSWERED</span>' : '') +
+        (x.status === 'answered' ? '<span style="font-size:.62rem;color:var(--green);font-weight:700">ANSWERED</span>' : '') +
         '</div>';
       if (x.league && x.league.name) {
         html += '<div style="font-size:.66rem;color:var(--text2);margin-bottom:4px">🔗 ' + _qaAdminEsc(x.league.name) +
@@ -28300,7 +28317,7 @@ window.fmtHeight = fmtHeight;
       }
       html += '<div style="display:flex;gap:8px;margin-top:8px;align-items:center">' +
         '<input type="text" id="adminQaNote-' + safeId + '" placeholder="Optional note to send with your pick" maxlength="1000" value="' + _qaAdminEsc(x.answer || '') + '" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.72rem">' +
-        '<button onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:#ef4444;cursor:pointer;font-weight:700">✕</button>' +
+        '<button onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:var(--red);cursor:pointer;font-weight:700">✕</button>' +
         '</div>';
       html += '</div>';
       return html;
@@ -32382,7 +32399,7 @@ window.fmtHeight = fmtHeight;
     // green success styling (reuses the .auth-error slot)
     authError.style.background = 'rgba(34,197,94,.1)';
     authError.style.borderColor = 'rgba(34,197,94,.3)';
-    authError.style.color = '#22c55e';
+    authError.style.color = 'var(--green)';
     authError.textContent = msg;
     authError.classList.add('show');
   }
@@ -34131,7 +34148,7 @@ window.fmtHeight = fmtHeight;
       const pctLabel = Math.round(_activePromo.pct * 100) + '%';
       priceEl.innerHTML = '<span style="text-decoration:line-through;color:var(--text2);font-size:.7em;margin-right:6px">$' + basePrice.toFixed(2) + '</span>'
         + '$' + discounted.toFixed(2) + ' <span>/ ' + planLabel + '</span>'
-        + '<div style="font-size:.62rem;color:#22c55e;letter-spacing:1px;margin-top:2px">' + pctLabel + ' OFF — code ' + _activePromo.code + '</div>';
+        + '<div style="font-size:.62rem;color:var(--green);letter-spacing:1px;margin-top:2px">' + pctLabel + ' OFF — code ' + _activePromo.code + '</div>';
     } else {
       priceEl.innerHTML = '$' + basePrice.toFixed(2) + ' <span>/ ' + planLabel + '</span>';
     }
@@ -34521,11 +34538,11 @@ window.fmtHeight = fmtHeight;
       let billingHtml = '<strong style="color:var(--text1)">Plan:</strong> Pro (' + (data.plan || 'Premium Access') + ')';
       billingHtml += '<br><strong style="color:var(--text1)">Activated:</strong> ' + actDate;
       if (data.source === 'stripe' && data.cancelAtPeriodEnd) {
-        billingHtml += '<br><strong style="color:var(--text1)">Access ends:</strong> ' + expDate + ' <span style="color:#f59e0b">(canceled — won’t renew)</span>';
+        billingHtml += '<br><strong style="color:var(--text1)">Access ends:</strong> ' + expDate + ' <span style="color:var(--accent)">(canceled — won’t renew)</span>';
       } else if (data.source === 'stripe') {
-        billingHtml += '<br><strong style="color:var(--text1)">Renews:</strong> ' + expDate + ' <span style="color:#22c55e">(auto-renew on)</span>';
+        billingHtml += '<br><strong style="color:var(--text1)">Renews:</strong> ' + expDate + ' <span style="color:var(--green)">(auto-renew on)</span>';
       } else {
-        billingHtml += '<br><strong style="color:var(--text1)">Expires:</strong> ' + expDate + ' <span style="color:#22c55e">(' + days + ' day' + (days !== 1 ? 's' : '') + ' left)</span>';
+        billingHtml += '<br><strong style="color:var(--text1)">Expires:</strong> ' + expDate + ' <span style="color:var(--green)">(' + days + ' day' + (days !== 1 ? 's' : '') + ' left)</span>';
       }
       billingDetails.innerHTML = billingHtml;
 
@@ -35934,9 +35951,9 @@ window.fmtHeight = fmtHeight;
           const _vd = _liveValueDiff(pick);
           let tdStyle = '';
           if (mdMode !== 'rookie' || pick.overall >= 3) {
-            if (_vd >= 12) tdStyle = 'box-shadow: inset 3px 0 0 #22c55e;';
+            if (_vd >= 12) tdStyle = 'box-shadow: inset 3px 0 0 var(--green);';
             else if (_vd >= 5) tdStyle = 'box-shadow: inset 2px 0 0 #4ade80;';
-            else if (_vd <= -16) tdStyle = 'box-shadow: inset 3px 0 0 #ef4444;';
+            else if (_vd <= -16) tdStyle = 'box-shadow: inset 3px 0 0 var(--red);';
             else if (_vd <= -8) tdStyle = 'box-shadow: inset 2px 0 0 #f97316;';
           }
           const styleAttr = tdStyle ? ' style="' + tdStyle + '"' : '';
@@ -36062,7 +36079,7 @@ window.fmtHeight = fmtHeight;
       const pc = p.pos;
       const needed = posNeeds[pc] > 0;
       const maxed = (userCounts[pc] || 0) >= getMaxForPos(pc);
-      const needTag = needed ? '<span style="font-size:.55rem;background:rgba(34,197,94,.15);color:#22c55e;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700">NEED</span>' : '';
+      const needTag = needed ? '<span style="font-size:.55rem;background:rgba(34,197,94,.15);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700">NEED</span>' : '';
       const rowStyle = maxed ? 'opacity:.35;pointer-events:none' : '';
       const rawAdp = mdSourceAdp(D[p.idx]);
       const rankNum = Math.round(p.adp);
@@ -36102,7 +36119,7 @@ window.fmtHeight = fmtHeight;
             const r = parseInt(hex.substr(0,2),16), g = parseInt(hex.substr(2,2),16), b = parseInt(hex.substr(4,2),16);
             return 'background:rgba('+r+','+g+','+b+',.15);color:'+_ts.color;
           }
-          return jmScore >= 82 ? 'background:rgba(34,197,94,.15);color:#34d399' : jmScore >= 66 ? 'background:rgba(96,165,250,.15);color:#60a5fa' : jmScore >= 50 ? 'background:rgba(251,191,36,.12);color:#fbbf24' : 'background:rgba(248,113,113,.12);color:#f87171';
+          return jmScore >= 82 ? 'background:rgba(34,197,94,.15);color:#34d399' : jmScore >= 66 ? 'background:rgba(96,165,250,.15);color:#60a5fa' : jmScore >= 50 ? 'background:rgba(251,191,36,.12);color:var(--accent2)' : 'background:rgba(248,113,113,.12);color:#f87171';
         })();
         const jmHtml = jmScore != null
           ? '<span style="font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;letter-spacing:.3px;' + _jmBadgeStyle + '">JM ' + Math.round(jmScore) + '</span>' : '';
@@ -36813,12 +36830,12 @@ window.fmtHeight = fmtHeight;
     if (topSteals.length || topReaches.length) {
       analyticsHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
       analyticsHtml += '<div style="padding:10px 12px;background:var(--surface);border:1px solid rgba(34,197,94,.3);border-radius:8px">' +
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1px;color:#22c55e;margin-bottom:6px">💎 BIGGEST STEALS</div>';
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--green);margin-bottom:6px">💎 BIGGEST STEALS</div>';
       if (topSteals.length) {
         topSteals.forEach(s => {
           analyticsHtml += '<div style="display:flex;align-items:center;justify-content:space-between;font-size:.7rem;padding:3px 0">' +
             '<span><span style="color:var(--text2)">R'+s.pick.round+'</span> '+escapeHTML(s.pick.player.name)+' <span style="color:var(--text2);font-size:.62rem">'+s.pick.player.pos+'</span></span>' +
-            '<span style="color:#22c55e;font-family:\'Bebas Neue\',sans-serif;letter-spacing:.5px">+'+s.diff+'</span>' +
+            '<span style="color:var(--green);font-family:\'Bebas Neue\',sans-serif;letter-spacing:.5px">+'+s.diff+'</span>' +
             '</div>';
         });
       } else {
@@ -36827,12 +36844,12 @@ window.fmtHeight = fmtHeight;
       analyticsHtml += '</div>';
 
       analyticsHtml += '<div style="padding:10px 12px;background:var(--surface);border:1px solid rgba(239,68,68,.3);border-radius:8px">' +
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1px;color:#ef4444;margin-bottom:6px">⚠️ BIGGEST REACHES</div>';
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--red);margin-bottom:6px">⚠️ BIGGEST REACHES</div>';
       if (topReaches.length) {
         topReaches.forEach(s => {
           analyticsHtml += '<div style="display:flex;align-items:center;justify-content:space-between;font-size:.7rem;padding:3px 0">' +
             '<span><span style="color:var(--text2)">R'+s.pick.round+'</span> '+escapeHTML(s.pick.player.name)+' <span style="color:var(--text2);font-size:.62rem">'+s.pick.player.pos+'</span></span>' +
-            '<span style="color:#ef4444;font-family:\'Bebas Neue\',sans-serif;letter-spacing:.5px">'+s.diff+'</span>' +
+            '<span style="color:var(--red);font-family:\'Bebas Neue\',sans-serif;letter-spacing:.5px">'+s.diff+'</span>' +
             '</div>';
         });
       } else {
@@ -37973,7 +37990,7 @@ window.fmtHeight = fmtHeight;
         const display = row.fmt ? row.fmt(raw) : (raw == null || raw === '' ? '—' : escapeHTML(String(raw)));
         const isBest = best != null && numericVals[i] === best && validNums.length > 1;
         let style = 'padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--text)';
-        if (isBest) style += ';color:#22c55e;font-weight:700';
+        if (isBest) style += ';color:var(--green);font-weight:700';
         // JM/RAS column tinting
         if (row.color === 'jm' && typeof raw === 'number' && window._jmTierStyle) {
           style += ';color:' + window._jmTierStyle(raw, p.pos).color + ';font-weight:700';
@@ -43218,9 +43235,9 @@ window.fmtHeight = fmtHeight;
       return ''
         + `<div class="bt-kpi"><div class="bt-kpi-label">Sample</div><div class="bt-kpi-val">${rows.length}</div><div class="bt-kpi-sub">${n} graded · ${prov} provisional</div></div>`
         + `<div class="bt-kpi" title="Career grade 0-100: best four of the first six NFL seasons, weighted 40 / 30 / 20 / 10"><div class="bt-kpi-label">Avg Career Grade</div><div class="bt-kpi-val" style="color:#60a5fa">${n ? avg.toFixed(0) : '—'}</div><div class="bt-kpi-sub">out of 100</div></div>`
-        + `<div class="bt-kpi" title="At least one season worth 85 or more: about a top-5 QB or top-6 RB / WR finish in points per game"><div class="bt-kpi-label">Had an Elite Season</div><div class="bt-kpi-val" style="color:#22c55e">${pct(el, n)}</div><div class="bt-kpi-sub">${el} of ${n}</div></div>`
-        + `<div class="bt-kpi" title="Two or more starter-level seasons (season value 50 or more)"><div class="bt-kpi-label">Two+ Starter Seasons</div><div class="bt-kpi-val" style="color:#fbbf24">${pct(st, n)}</div><div class="bt-kpi-sub">${st} of ${n}</div></div>`
-        + `<div class="bt-kpi" title="Career grade under 10"><div class="bt-kpi-label">Empty Career</div><div class="bt-kpi-val" style="color:#ef4444">${pct(em, n)}</div><div class="bt-kpi-sub">${em} of ${n}</div></div>`;
+        + `<div class="bt-kpi" title="At least one season worth 85 or more: about a top-5 QB or top-6 RB / WR finish in points per game"><div class="bt-kpi-label">Had an Elite Season</div><div class="bt-kpi-val" style="color:var(--green)">${pct(el, n)}</div><div class="bt-kpi-sub">${el} of ${n}</div></div>`
+        + `<div class="bt-kpi" title="Two or more starter-level seasons (season value 50 or more)"><div class="bt-kpi-label">Two+ Starter Seasons</div><div class="bt-kpi-val" style="color:var(--accent2)">${pct(st, n)}</div><div class="bt-kpi-sub">${st} of ${n}</div></div>`
+        + `<div class="bt-kpi" title="Career grade under 10"><div class="bt-kpi-label">Empty Career</div><div class="bt-kpi-val" style="color:var(--red)">${pct(em, n)}</div><div class="bt-kpi-sub">${em} of ${n}</div></div>`;
     }
 
     // Value 0-1 for the selected metric (career = average career grade / 100).
@@ -43272,9 +43289,9 @@ window.fmtHeight = fmtHeight;
           + `<td><span class="bt-tier-badge" style="background:${t.color}22;color:${t.color}">${t.label}</span>${minStr ? `<span style="opacity:.5;font-size:.7rem;margin-left:6px">${minStr}</span>` : ''}</td>`
           + `<td class="bt-pct-cell">${s.total}${s.prov ? ` <span style="opacity:.5" title="fewer than four NFL seasons played out">(${s.prov} prov)</span>` : ''}</td>`
           + `<td class="bt-pct-cell" style="color:${avgCar != null ? _btCareerColor(avgCar) : 'inherit'}">${avgCar != null ? avgCar.toFixed(0) : '—'}</td>`
-          + `<td class="bt-pct-cell" style="color:#22c55e">${pctCell(s.eliteYr)}</td>`
-          + `<td class="bt-pct-cell" style="color:#fbbf24">${pctCell(s.steady)}</td>`
-          + `<td class="bt-pct-cell" style="color:#ef4444">${pctCell(s.empty)}</td>`
+          + `<td class="bt-pct-cell" style="color:var(--green)">${pctCell(s.eliteYr)}</td>`
+          + `<td class="bt-pct-cell" style="color:var(--accent2)">${pctCell(s.steady)}</td>`
+          + `<td class="bt-pct-cell" style="color:var(--red)">${pctCell(s.empty)}</td>`
           + `<td class="bt-pct-cell">${avgPpg}</td>`
           + `<td class="bt-bar-cell"><div class="bt-bar-bg"><div class="bt-bar-fill" style="width:${barWidth}%;background:${M.color}66"></div><div class="bt-bar-label">${barLbl}</div></div></td>`
           + `</tr>`;
@@ -43661,7 +43678,7 @@ window.fmtHeight = fmtHeight;
           _btApplyWeightOverride(parsed);
           _btCurrentWeightsOverride = parsed;
           if (typeof window._renderBacktest === 'function') window._renderBacktest();
-          _btWeightLabSetResults(warnHtml + `<div style="color:#22c55e;font-size:.78rem;padding:8px 0">✓ Re-ran with override weights. Compare Δ deltas in the cards above.</div>`);
+          _btWeightLabSetResults(warnHtml + `<div style="color:var(--green);font-size:.78rem;padding:8px 0">✓ Re-ran with override weights. Compare Δ deltas in the cards above.</div>`);
         } catch (e) {
           console.error('[Weight Lab] error', e);
           _btWeightLabSetResults(`<div class="bt-weight-lab-error">Error during rebuild: ${e.message}<br>See console. Click Reset to recover.</div>`);
@@ -45811,9 +45828,9 @@ window.fmtHeight = fmtHeight;
           case 'risk': {
             const _riskVal = (p.bustAdj || 0) + (p.sleeperAdj || 0);
             if (_riskVal < 0) {
-              rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:#ef4444" title="Bust penalty: ${p.bustAdj}${p.sleeperAdj ? ', Sleeper: +' + p.sleeperAdj : ''}">▼${Math.abs(_riskVal)}</span></td>`;
+              rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:var(--red)" title="Bust penalty: ${p.bustAdj}${p.sleeperAdj ? ', Sleeper: +' + p.sleeperAdj : ''}">▼${Math.abs(_riskVal)}</span></td>`;
             } else if (_riskVal > 0) {
-              rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:#22c55e" title="Sleeper bonus: +${p.sleeperAdj}${p.bustAdj ? ', Bust: ' + p.bustAdj : ''}">▲${_riskVal}</span></td>`;
+              rows += `<td style="text-align:center"><span style="font-size:.75rem;font-weight:700;color:var(--green)" title="Sleeper bonus: +${p.sleeperAdj}${p.bustAdj ? ', Bust: ' + p.bustAdj : ''}">▲${_riskVal}</span></td>`;
             } else {
               rows += `<td style="text-align:center;color:var(--text2);opacity:.4">—</td>`;
             }
@@ -47883,9 +47900,9 @@ window.fmtHeight = fmtHeight;
     }
 
     // === SECTION 1: DRAFT CAPITAL BY ERA ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 1: DRAFT CAPITAL BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 1: DRAFT CAPITAL BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     positions.forEach(pos => {
       const t = thresholds[pos];
@@ -47919,9 +47936,9 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 2: DRAFT AGE BY ERA ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 2: DRAFT AGE vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 2: DRAFT AGE vs SUCCESS BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     const ageRanges = [
       { label: '≤20.5', fn: a => a <= 20.5 },
@@ -47961,9 +47978,9 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 3: COLLEGE PRODUCTION BY ERA ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 3: COLLEGE PRODUCTION (Best PPG) vs NFL SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 3: COLLEGE PRODUCTION (Best PPG) vs NFL SUCCESS BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     // prodRanges moved to data/prod_ranges.js
 
@@ -47995,9 +48012,9 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 4: RAS BY ERA ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 4: RAS (Athleticism) vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 4: RAS (Athleticism) vs SUCCESS BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     const rasRanges = [
       { label: '9.0+', fn: r => r >= 9.0 },
@@ -48034,9 +48051,9 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 5: SIZE (Height) BY ERA ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 5: HEIGHT vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 5: HEIGHT vs SUCCESS BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     // htRanges moved to data/ht_ranges.js
 
@@ -48068,9 +48085,9 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 6: CONFERENCE BY ERA ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 6: CONFERENCE vs SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 6: CONFERENCE vs SUCCESS BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     const confGroups = [
       { label: 'SEC', fn: c => c === 'SEC' },
@@ -48109,9 +48126,9 @@ window.fmtHeight = fmtHeight;
       });
     });
 
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 7: YARDS PER CARRY (RB) vs NFL SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 7: YARDS PER CARRY (RB) vs NFL SUCCESS BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     const ypcRanges = [
       { label: '7.0+ YPC', fn: y => y >= 7.0 },
@@ -48148,9 +48165,9 @@ window.fmtHeight = fmtHeight;
       });
     });
 
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 8: YARDS PER RECEPTION (WR/TE) vs NFL SUCCESS BY ERA', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 8: YARDS PER RECEPTION (WR/TE) vs NFL SUCCESS BY ERA', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     const yprRanges = [
       { label: '18.0+ YPR', fn: y => y >= 18.0 },
@@ -48189,10 +48206,10 @@ window.fmtHeight = fmtHeight;
       });
     });
 
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 9: NFL TIER ANALYSIS — What prospect profiles produce each tier?', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c  Tiers account for PEAK performance AND longevity (sustained production)', 'color: #f59e0b');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 9: NFL TIER ANALYSIS — What prospect profiles produce each tier?', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c  Tiers account for PEAK performance AND longevity (sustained production)', 'color: var(--accent)');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     // Tier definitions by position — combining peak PPG with years of starter-level production
     // "Starter seasons" = seasons where PPG >= position starter threshold
@@ -48275,7 +48292,7 @@ window.fmtHeight = fmtHeight;
       const td = tierDefs[pos];
       const modernPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2017);
 
-      console.log('%c\n' + pos + ' NFL TIERS — Modern Era (n=' + modernPlayers.length + ')', 'color: #22c55e; font-weight: bold; font-size: 13px');
+      console.log('%c\n' + pos + ' NFL TIERS — Modern Era (n=' + modernPlayers.length + ')', 'color: var(--green); font-weight: bold; font-size: 13px');
 
       td.tiers.forEach(tier => {
         const group = modernPlayers.filter(p => p.tier === tier.name);
@@ -48311,10 +48328,10 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 10: FACTOR GAP ANALYSIS — Which factors separate tiers most? ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 10: FACTOR GAP ANALYSIS — What separates each tier?', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c  Shows the % difference in each factor between adjacent tiers', 'color: #f59e0b');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 10: FACTOR GAP ANALYSIS — What separates each tier?', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c  Shows the % difference in each factor between adjacent tiers', 'color: var(--accent)');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     positions.forEach(pos => {
       const td = tierDefs[pos];
@@ -48342,7 +48359,7 @@ window.fmtHeight = fmtHeight;
         });
       });
 
-      console.log('%c\n' + pos + ' — Factor Averages by Tier (Modern)', 'color: #22c55e; font-weight: bold');
+      console.log('%c\n' + pos + ' — Factor Averages by Tier (Modern)', 'color: var(--green); font-weight: bold');
       let header = '  Tier'.padEnd(20);
       fields.forEach(f => { header += labels[f].padStart(12); });
       console.log(header);
@@ -48376,9 +48393,9 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 11: BREAKOUT THRESHOLD OPTIMIZATION ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  Testing different PPG thresholds to find which best separates hits from busts', 'color: #f59e0b');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  Testing different PPG thresholds to find which best separates hits from busts', 'color: var(--accent)');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     // For each position, test various breakout PPG thresholds
     // For each threshold, calculate breakout age for every player, then compare
@@ -48397,7 +48414,7 @@ window.fmtHeight = fmtHeight;
       // Get players with college stats (required for breakout analysis)
       const posPlayers = players.filter(p => p.pos === pos && p.draftYr && p.draftYr >= 2017 && p.collegeSeasons && p.collegeSeasons.length > 0);
 
-      console.log('%c\n' + pos + ' Breakout Threshold Test (n=' + posPlayers.length + ' with college stats, 2010+)', 'color: #22c55e; font-weight: bold; font-size: 13px');
+      console.log('%c\n' + pos + ' Breakout Threshold Test (n=' + posPlayers.length + ' with college stats, 2010+)', 'color: var(--green); font-weight: bold; font-size: 13px');
       if (!posPlayers.length) { console.log('  No players with college season data found'); return; }
       console.log('  Threshold    Broke Out   No Breakout   BO Starter%   No-BO Starter%   GAP     BO Elite%   No-BO Elite%   Elite GAP   Avg BO Age');
 
@@ -48467,10 +48484,10 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 12: HIGH DRAFT CAPITAL BUST PROFILE ANALYSIS ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 12: HIGH DRAFT CAPITAL BUST PROFILE ANALYSIS', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c  Compares prospect profiles of high-DC busts vs high-DC hits to find bust signals', 'color: #f59e0b');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 12: HIGH DRAFT CAPITAL BUST PROFILE ANALYSIS', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c  Compares prospect profiles of high-DC busts vs high-DC hits to find bust signals', 'color: var(--accent)');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     const bustTiers = new Set(['BUST', 'BACKUP/BUST', 'ROLE PLAYER', 'ONE-YEAR WONDER']);
     const hitTiers = new Set(['GENERATIONAL', 'ELITE', 'FRANCHISE', 'STRONG RB1', 'STRONG WR1', 'STRONG TE1', 'SOLID STARTER']);
@@ -48490,7 +48507,7 @@ window.fmtHeight = fmtHeight;
       console.log('%c\n' + pos + ' — High Draft Capital (Rd 1-2, 2010-2022): ' +
         highDC.length + ' total, ' + hits.length + ' hits, ' + busts.length + ' busts (' +
         Math.round(busts.length / highDC.length * 100) + '% bust rate)',
-        'color: #22c55e; font-weight: bold; font-size: 13px');
+        'color: var(--green); font-weight: bold; font-size: 13px');
 
       if (busts.length < 3) {
         console.log('  (Too few busts to analyze)');
@@ -48648,10 +48665,10 @@ window.fmtHeight = fmtHeight;
     });
 
     // === SECTION 13: LATE-ROUND SLEEPER PROFILE ANALYSIS ===
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c  SECTION 13: LATE-ROUND SLEEPER PROFILE ANALYSIS', 'color: #f59e0b; font-weight: bold; font-size: 14px');
-    console.log('%c  Compares prospect profiles of late-DC hits vs late-DC misses to find sleeper signals', 'color: #f59e0b');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c  SECTION 13: LATE-ROUND SLEEPER PROFILE ANALYSIS', 'color: var(--accent); font-weight: bold; font-size: 14px');
+    console.log('%c  Compares prospect profiles of late-DC hits vs late-DC misses to find sleeper signals', 'color: var(--accent)');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
 
     // "Late draft" = Rd 3+ (pick 65+) and UDFAs
     // "Sleeper hit" = reached SOLID STARTER or better tier
@@ -48675,7 +48692,7 @@ window.fmtHeight = fmtHeight;
       console.log('%c\n' + pos + ' — Late Draft Capital (Rd 3+/UDFA, 2010-2022): ' +
         lateDC.length + ' total, ' + sleepers.length + ' sleeper hits, ' + misses.length + ' misses (' +
         hitRate + '% hit rate)',
-        'color: #22c55e; font-weight: bold; font-size: 13px');
+        'color: var(--green); font-weight: bold; font-size: 13px');
 
       if (sleepers.length < 3) {
         console.log('  (Too few sleeper hits to analyze)');
@@ -48845,8 +48862,8 @@ window.fmtHeight = fmtHeight;
       });
     });
 
-    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: #f59e0b');
-    console.log('%c══════════════════════════════════════════════════════════════', 'color: #f59e0b');
+    console.log('%c\n══════════════════════════════════════════════════════════════', 'color: var(--accent)');
+    console.log('%c══════════════════════════════════════════════════════════════', 'color: var(--accent)');
   }
 
   // Run analysis once on first prospect page load
@@ -49034,8 +49051,8 @@ window.fmtHeight = fmtHeight;
     saveBtn.style.display = _isAdmCatalog ? '' : 'none';
     saveBtn.textContent = '💾 Save to Catalog';
     saveBtn.style.opacity = '1';
-    saveBtn.style.color = '#22c55e';
-    saveBtn.style.borderColor = '#22c55e';
+    saveBtn.style.color = 'var(--green)';
+    saveBtn.style.borderColor = 'var(--green)';
     delete saveBtn.dataset.saved;
     // v0.10.7: run the verifier. Reference table + cross-check happen
     // here so every entry point (template click, GENERATE, AI prompt,
@@ -49274,7 +49291,7 @@ window.fmtHeight = fmtHeight;
       html += `<span style="color:${clr};font-variant-numeric:tabular-nums;font-size:.9rem">${_triviaGame.timerRemaining}s</span>`;
     }
     if (_triviaGame.stealActive) {
-      html += `<span style="color:#f59e0b;animation:triviaShake .5s infinite;font-size:.9rem">STEAL!</span>`;
+      html += `<span style="color:var(--accent);animation:triviaShake .5s infinite;font-size:.9rem">STEAL!</span>`;
     }
     html += '</div>';
     html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
@@ -49293,7 +49310,7 @@ window.fmtHeight = fmtHeight;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:${isElim ? 'var(--text2)' : clr};${isElim ? 'text-decoration:line-through;' : ''}">${_esc(tc.name)}</div>`;
       html += `<div style="font-size:1.4rem;font-weight:700;color:${isElim ? 'var(--text2)' : clr};font-family:'Bebas Neue',sans-serif">${_triviaGame.scores[i]} pts</div>`;
       if (isElim) {
-        html += '<div style="font-size:.6rem;color:#ef4444;font-weight:700;letter-spacing:1px">ELIMINATED</div>';
+        html += '<div style="font-size:.6rem;color:var(--red);font-weight:700;letter-spacing:1px">ELIMINATED</div>';
       } else if (wrongsLeft != null) {
         let livesHtml = '';
         for (let j = 0; j < _triviaGame.maxWrong; j++) {
@@ -49726,7 +49743,7 @@ window.fmtHeight = fmtHeight;
     matches.slice(0, 8).forEach(p => {
       const opt = document.createElement('div');
       opt.style.cssText = 'padding:6px 10px;font-size:.78rem;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px';
-      const posBadge = p.pos ? `<span style="font-size:.55rem;font-weight:700;padding:1px 4px;border-radius:3px;background:rgba(168,85,247,.15);color:#a855f7">${p.pos}</span>` : '';
+      const posBadge = p.pos ? `<span style="font-size:.55rem;font-weight:700;padding:1px 4px;border-radius:3px;background:rgba(168,85,247,.15);color:var(--te)">${p.pos}</span>` : '';
       const teamLbl = p.team ? `<span style="color:var(--text2);font-size:.65rem;margin-left:auto">${p.team}</span>` : '';
       opt.innerHTML = `${posBadge}<span>${p.name}</span>${teamLbl}`;
       opt.addEventListener('mousedown', (e) => {
@@ -49858,7 +49875,7 @@ window.fmtHeight = fmtHeight;
     if (!_triviaData || !_triviaData.items[idx]) return;
     const item = _triviaData.items[idx];
     cell.classList.add('wrong');
-    cell.style.borderColor = '#ef4444';
+    cell.style.borderColor = 'var(--red)';
     cell.style.background = 'rgba(239,68,68,.08)';
     _triviaPlayIncorrect();
 
@@ -50137,8 +50154,8 @@ window.fmtHeight = fmtHeight;
 
     db.collection('trivia_catalog').add(catalogEntry).then(docRef => {
       btn.textContent = '✓ Saved!';
-      btn.style.borderColor = '#22c55e';
-      btn.style.color = '#22c55e';
+      btn.style.borderColor = 'var(--green)';
+      btn.style.color = 'var(--green)';
       btn.dataset.saved = '1';
       console.log('[TriviaCatalog] Saved:', docRef.id);
       // Refresh catalog if visible
@@ -50146,9 +50163,9 @@ window.fmtHeight = fmtHeight;
     }).catch(err => {
       console.error('[TriviaCatalog] Save error:', err);
       btn.textContent = '💾 Save Failed';
-      btn.style.color = '#ef4444';
-      btn.style.borderColor = '#ef4444';
-      setTimeout(() => { btn.textContent = '💾 Save to Catalog'; btn.style.color = '#22c55e'; btn.style.borderColor = '#22c55e'; }, 2000);
+      btn.style.color = 'var(--red)';
+      btn.style.borderColor = 'var(--red)';
+      setTimeout(() => { btn.textContent = '💾 Save to Catalog'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green)'; }, 2000);
     });
   };
 
@@ -50192,7 +50209,7 @@ window.fmtHeight = fmtHeight;
       list.innerHTML = html;
     }).catch(err => {
       console.error('[TriviaCatalog] Load error:', err);
-      list.innerHTML = '<div style="color:#ef4444;font-size:.8rem;padding:8px">Error loading catalog.</div>';
+      list.innerHTML = '<div style="color:var(--red);font-size:.8rem;padding:8px">Error loading catalog.</div>';
     });
   }
 
@@ -51271,7 +51288,7 @@ window.fmtHeight = fmtHeight;
       // correctness).
       const diffs = [];
       if (result.ref && !result.ref.ok) {
-        diffs.push('<div style="font-weight:600;color:#f59e0b;margin-top:4px">Top-10 differs from NFL record book:</div>');
+        diffs.push('<div style="font-weight:600;color:var(--accent);margin-top:4px">Top-10 differs from NFL record book:</div>');
         if (result.ref.missing && result.ref.missing.length) {
           diffs.push('<div style="font-size:.7rem;margin-left:10px"><strong>Missing</strong> (expected in top 10): ' + result.ref.missing.map(_esc).join(', ') + '</div>');
         }
@@ -51280,7 +51297,7 @@ window.fmtHeight = fmtHeight;
         }
       }
       if (result.cross && !result.cross.ok) {
-        diffs.push('<div style="font-weight:600;color:#f59e0b;margin-top:4px">Top-10 differs from LEGEND_CAREERS direct:</div>');
+        diffs.push('<div style="font-weight:600;color:var(--accent);margin-top:4px">Top-10 differs from LEGEND_CAREERS direct:</div>');
         if (result.cross.missing && result.cross.missing.length) {
           diffs.push('<div style="font-size:.7rem;margin-left:10px"><strong>Missing</strong>: ' + result.cross.missing.map(_esc).join(', ') + '</div>');
         }
@@ -51423,9 +51440,9 @@ window.fmtHeight = fmtHeight;
     tip.innerHTML =
       '<div style="font-size:1.4rem;line-height:1;flex-shrink:0;margin-top:1px">👋</div>' +
       '<div style="flex:1">' +
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:#38bdf8;margin-bottom:4px">HOW IT WORKS</div>' +
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent-blue);margin-bottom:4px">HOW IT WORKS</div>' +
         '<div style="margin-bottom:6px">A new fantasy-football trivia board drops every day — same one for everyone. Hit <strong style="color:#ffd166">PLAY TODAY</strong>, type guesses for each cell, and share your result grid when you finish.</div>' +
-        '<div style="font-size:.72rem;color:var(--text2)">Want variety? Try <strong style="color:#c084fc">🎲 Surprise Me</strong> for an AI-generated random board, or pick a quick-start template below.</div>' +
+        '<div style="font-size:.72rem;color:var(--text2)">Want variety? Try <strong style="color:var(--accent-purple)">🎲 Surprise Me</strong> for an AI-generated random board, or pick a quick-start template below.</div>' +
       '</div>' +
       '<button onclick="window._triviaDismissIntro()" title="Dismiss" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1;padding:0;flex-shrink:0">✕</button>';
     panel.parentNode.insertBefore(tip, panel);
@@ -51663,7 +51680,7 @@ window.fmtHeight = fmtHeight;
       list.innerHTML = html;
     }).catch(err => {
       console.error('[TriviaDaily] archive load error:', err);
-      list.innerHTML = '<div style="color:#ef4444;font-size:.78rem;padding:6px">Failed to load archive.</div>';
+      list.innerHTML = '<div style="color:var(--red);font-size:.78rem;padding:6px">Failed to load archive.</div>';
     });
   }
 
@@ -51788,7 +51805,7 @@ window.fmtHeight = fmtHeight;
     }).catch(err => {
       console.error('[TriviaReport] submit error:', err);
       if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.textContent = 'SUBMIT REPORT'; }
-      if (confirmEl) { confirmEl.style.color = '#ef4444'; confirmEl.textContent = 'Submit failed: ' + (err && err.message); }
+      if (confirmEl) { confirmEl.style.color = 'var(--red)'; confirmEl.textContent = 'Submit failed: ' + (err && err.message); }
     });
   };
 
@@ -51837,7 +51854,7 @@ window.fmtHeight = fmtHeight;
       list.innerHTML = html;
     }).catch(err => {
       console.error('[TriviaReports] load error:', err);
-      list.innerHTML = '<div style="color:#ef4444;padding:8px">Failed to load reports.</div>';
+      list.innerHTML = '<div style="color:var(--red);padding:8px">Failed to load reports.</div>';
     });
   }
 
@@ -52073,7 +52090,7 @@ window.fmtHeight = fmtHeight;
         const topN = draftEntries.slice(0, count);
 
         if (topN.length === 0) {
-          area.innerHTML = '<div class="trivia-loading" style="color:#ef4444">No draft data found. Try different filters.</div>';
+          area.innerHTML = '<div class="trivia-loading" style="color:var(--red)">No draft data found. Try different filters.</div>';
           btn.disabled = false; btn.textContent = 'GENERATE';
           return;
         }
@@ -52449,7 +52466,7 @@ window.fmtHeight = fmtHeight;
       const topN = allEntries.slice(0, count);
 
       if (topN.length === 0) {
-        area.innerHTML = '<div class="trivia-loading" style="color:#ef4444">No matching data found. Try different filters.</div>';
+        area.innerHTML = '<div class="trivia-loading" style="color:var(--red)">No matching data found. Try different filters.</div>';
         btn.disabled = false; btn.textContent = 'GENERATE';
         return;
       }
@@ -52868,7 +52885,7 @@ Rules:
       if (!resp.ok) {
         const errText = await resp.text().catch(() => 'Unknown error');
         console.error('[Trivia] API HTTP error:', resp.status, errText);
-        area.innerHTML = `<div class="trivia-loading" style="color:#ef4444">API error (${resp.status}). Check console.<br><span style="font-size:.7rem;opacity:.6">${_esc(errText.slice(0,200))}</span></div>`;
+        area.innerHTML = `<div class="trivia-loading" style="color:var(--red)">API error (${resp.status}). Check console.<br><span style="font-size:.7rem;opacity:.6">${_esc(errText.slice(0,200))}</span></div>`;
         btn.disabled = false; btn.textContent = 'GENERATE';
         return;
       }
@@ -52913,11 +52930,11 @@ Rules:
 
         _renderBoard(parsed);
       } else {
-        area.innerHTML = '<div class="trivia-loading" style="color:#ef4444">No response text received. Check console.</div>';
+        area.innerHTML = '<div class="trivia-loading" style="color:var(--red)">No response text received. Check console.</div>';
       }
     } catch(err) {
       console.error('[Trivia] Generation failed:', err);
-      area.innerHTML = `<div class="trivia-loading" style="color:#ef4444">Error generating board: ${_esc(err.message || String(err))}<br><span style="font-size:.7rem;opacity:.6">Check browser console for details.</span></div>`;
+      area.innerHTML = `<div class="trivia-loading" style="color:var(--red)">Error generating board: ${_esc(err.message || String(err))}<br><span style="font-size:.7rem;opacity:.6">Check browser console for details.</span></div>`;
     }
 
     btn.disabled = false;
@@ -53190,7 +53207,7 @@ Rules:
 
     const pool = _cfgBuildPool(settings);
     if (pool.length < totalPicks * 2) {
-      document.getElementById('cfgGameArea').innerHTML = `<div style="text-align:center;color:#ef4444;padding:20px;font-size:.9rem">Not enough players found (${pool.length}). Try different settings or a wider filter.</div>`;
+      document.getElementById('cfgGameArea').innerHTML = `<div style="text-align:center;color:var(--red);padding:20px;font-size:.9rem">Not enough players found (${pool.length}). Try different settings or a wider filter.</div>`;
       return;
     }
 
@@ -53246,7 +53263,7 @@ Rules:
 
       game.options = getOptions();
       if (game.options.length === 0) {
-        area.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px">No more eligible players for this slot.</div>';
+        area.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px">No more eligible players for this slot.</div>';
         return;
       }
 
@@ -53261,7 +53278,7 @@ Rules:
       if (game.picks.length > 0) {
         html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">';
         game.picks.forEach((p, i) => {
-          html += `<div style="font-size:.6rem;padding:2px 6px;border-radius:4px;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)">${slots[i].label}: ${p.name.split(' ').pop()} ${p.fpts}</div>`;
+          html += `<div style="font-size:.6rem;padding:2px 6px;border-radius:4px;background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)">${slots[i].label}: ${p.name.split(' ').pop()} ${p.fpts}</div>`;
         });
         html += '</div>';
       }
@@ -53296,7 +53313,7 @@ Rules:
         const ptsEl = cards[idx].querySelector('div:last-child');
         if (ptsEl) { ptsEl.textContent = picked.fpts + ' pts'; ptsEl.style.color = 'var(--accent)'; ptsEl.style.fontWeight = '700'; }
         // Highlight picked
-        cards[idx].style.borderColor = '#22c55e';
+        cards[idx].style.borderColor = 'var(--green)';
         cards[idx].style.background = 'rgba(34,197,94,.1)';
         // Reveal others
         game.options.forEach((opt, i) => {
@@ -55138,7 +55155,7 @@ Rules:
 
     } catch (err) {
       status.textContent = 'Error: ' + err.message;
-      status.style.color = '#ef4444';
+      status.style.color = 'var(--red)';
     }
     btn.disabled = false;
     btn.textContent = 'IMPORT';
@@ -55353,7 +55370,7 @@ Rules:
       const synced = lg.syncedAt ? _mtRelTime(new Date(lg.syncedAt).toISOString()) : '';
       html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">`;
       html += `<div style="flex:1;min-width:0"><div style="font-size:.75rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(lg.name || 'ESPN League')}</div>`;
-      html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:#f59e0b">pre-draft</span>'}</div></div>`;
+      html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:var(--accent)">pre-draft</span>'}</div></div>`;
       if (lg.direct) html += `<button onclick="window._mtResyncEspn('${_esc(lg.leagueId)}')" title="Re-fetch fresh rosters from ESPN" style="padding:6px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text2);cursor:pointer">↻</button>`;
       html += `<button onclick="window._mtImportEspn('${_esc(lg.leagueId)}')" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">IMPORT</button>`;
       html += `</div>`;
@@ -55400,7 +55417,7 @@ Rules:
     const lg = _mtEspnLeagues && _mtEspnLeagues[String(leagueId)];
     const status = document.getElementById('mtEspnStatus');
     if (!lg) {
-      if (status) { status.textContent = 'League not found — re-sync from the extension.'; status.style.color = '#ef4444'; }
+      if (status) { status.textContent = 'League not found — re-sync from the extension.'; status.style.color = 'var(--red)'; }
       return;
     }
     _mtImportNormalized(lg, 'espn', status);
@@ -55465,7 +55482,7 @@ Rules:
       _mtSaveLeagueToCloud(source + '_' + lg.leagueId, _mtNormalizedLeagueMeta(lg), teams);
     } catch (err) {
       console.warn('[MyTeams] ' + source + ' import error:', err);
-      if (status) { status.textContent = 'Error: ' + err.message; status.style.color = '#ef4444'; }
+      if (status) { status.textContent = 'Error: ' + err.message; status.style.color = 'var(--red)'; }
     }
   }
 
@@ -55510,7 +55527,7 @@ Rules:
     const teamMatch = raw.match(/teamId=(\d+)/i);
     const id = urlMatch ? urlMatch[1] : (raw.match(/^\d+$/) || [''])[0];
     if (!id) {
-      if (status) { status.textContent = 'Paste your ESPN league ID (or the league URL).'; status.style.color = '#f59e0b'; }
+      if (status) { status.textContent = 'Paste your ESPN league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
     if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
@@ -55557,7 +55574,7 @@ Rules:
         status.textContent = err instanceof TypeError
           ? 'Couldn\'t reach ESPN — check your connection and try again.'
           : 'Error: ' + err.message;
-        status.style.color = '#ef4444';
+        status.style.color = 'var(--red)';
       }
     }
     if (btn) { btn.disabled = false; btn.textContent = 'IMPORT'; }
@@ -55632,7 +55649,7 @@ Rules:
       const synced = lg.syncedAt ? _mtRelTime(new Date(lg.syncedAt).toISOString()) : '';
       html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:5px">`;
       html += `<div style="flex:1;min-width:0"><div style="font-size:.75rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(lg.name || 'Yahoo League')}</div>`;
-      html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:#f59e0b">pre-draft</span>'}</div></div>`;
+      html += `<div style="font-size:.62rem;color:var(--text2)">${fmt.join(' · ')}${synced ? ' · synced ' + synced : ''}${lg.drafted ? '' : ' · <span style="color:var(--accent)">pre-draft</span>'}</div></div>`;
       if (lg.direct) html += `<button onclick="window._mtResyncYahoo('${_esc(lg.leagueId)}')" title="Re-fetch fresh rosters from Yahoo" style="padding:6px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text2);cursor:pointer">↻</button>`;
       html += `<button onclick="window._mtImportYahoo('${_esc(lg.leagueId)}')" style="padding:6px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;cursor:pointer">IMPORT</button>`;
       html += `</div>`;
@@ -55644,7 +55661,7 @@ Rules:
     const lg = _mtYahooLeagues && _mtYahooLeagues[String(leagueId)];
     const status = document.getElementById('mtYahooStatus');
     if (!lg) {
-      if (status) { status.textContent = 'League not found — re-sync it.'; status.style.color = '#ef4444'; }
+      if (status) { status.textContent = 'League not found — re-sync it.'; status.style.color = 'var(--red)'; }
       return;
     }
     _mtImportNormalized(lg, 'yahoo', status);
@@ -55786,7 +55803,7 @@ Rules:
     const id = urlMatch ? urlMatch[1] : (raw.match(/^\d+$/) || [''])[0];
     const urlTeamId = urlMatch && urlMatch[2] ? parseInt(urlMatch[2], 10) : null;
     if (!id) {
-      if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = '#f59e0b'; }
+      if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
     if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
@@ -55823,7 +55840,7 @@ Rules:
           status.textContent = err instanceof TypeError
             ? 'Couldn\'t reach Yahoo — check your connection and try again.'
             : 'Error: ' + err.message;
-          status.style.color = '#ef4444';
+          status.style.color = 'var(--red)';
         }
       }
     }
@@ -56148,7 +56165,7 @@ Rules:
       box.innerHTML = _mtBuildMatchupsHtml(pairs, wkNum);
     } catch (err) {
       console.warn('[MyTeams] Matchups error:', err);
-      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load matchups: ' + _esc(err.message) + '</div>';
+      box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">Couldn\'t load matchups: ' + _esc(err.message) + '</div>';
     }
   };
 
@@ -56157,7 +56174,7 @@ Rules:
     // ≈ √2 × 28-pt weekly team sigma.
     const winProb = diff => 1 / (1 + Math.exp(-1.702 * (diff / 39.6)));
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
-      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#f472b6">WEEK ${wkNum} MATCHUPS</span>` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--accent-pink)">WEEK ${wkNum} MATCHUPS</span>` +
       `<span style="font-size:.6rem;color:var(--text2)">Best-lineup weekly projections (byes & ruled-out benched) · win odds from the projection gap</span></div>`;
     // My matchup first
     const sorted = pairs.slice().sort((a, b) => (b[0].isMyTeam || b[1].isMyTeam ? 1 : 0) - (a[0].isMyTeam || a[1].isMyTeam ? 1 : 0));
@@ -56173,7 +56190,7 @@ Rules:
         `<span style="font-size:.65rem;color:var(--text2)">${ppg} proj · <span style="font-weight:700;color:${pct >= 50 ? '#22c55e' : '#ef4444'}">${pct}%</span></span></div>`;
       html += `<div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border:${mine ? '2px solid var(--accent)' : '1px solid var(--border)'};border-radius:8px;background:${mine ? 'rgba(245,158,11,.06)' : 'var(--surface)'}">` +
         side(a, pa, wp, false) +
-        `<div style="width:110px;flex-shrink:0"><div style="height:6px;border-radius:3px;background:#ef444455;overflow:hidden"><div style="height:100%;width:${wp}%;background:#22c55e"></div></div></div>` +
+        `<div style="width:110px;flex-shrink:0"><div style="height:6px;border-radius:3px;background:#ef444455;overflow:hidden"><div style="height:100%;width:${wp}%;background:var(--green)"></div></div></div>` +
         side(b, pb, 100 - wp, true) +
         `</div>`;
     });
@@ -56303,7 +56320,7 @@ Rules:
     const hasMine = (ctx.teams || []).some(t => t.isMyTeam);
     const shown = ctx.mine ? priced.filter(x => x.p.sides.some(s => s.mine)) : priced;
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
-      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#38bdf8">TRADE LOG</span>` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--accent-blue)">TRADE LOG</span>` +
       `<span style="font-size:.6rem;color:var(--text2)">${trades.length} completed trade${trades.length === 1 ? '' : 's'} · priced on today's ${_mtValueSrc === 'jacks' ? "Jack's" : _mtValueSrc === 'mine' ? 'My Ranks' : _mtValueSrc} board, calc package math · picks at the original team's projected slot</span>`;
     if (hasMine) {
       html += `<span style="margin-left:auto;display:flex;gap:2px;background:var(--surface2);padding:2px;border-radius:6px">`;
@@ -56370,7 +56387,7 @@ Rules:
       _mtRenderTradeLog(trades, { key, box, teams: window._mtTeams || [], mode: _mtGetRankingMode(), mine: !!((_mtTradeLogCtx[key] || {}).mine) });
     } catch (err) {
       console.warn('[MyTeams] Trade log error:', err);
-      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load trades: ' + _esc(err.message) + '</div>';
+      box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">Couldn\'t load trades: ' + _esc(err.message) + '</div>';
     }
   };
 
@@ -56557,7 +56574,7 @@ Rules:
       box.innerHTML = _mtBuildSeasonHtml(byWeek);
     } catch (err) {
       console.warn('[MyTeams] Season outlook error:', err);
-      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t project the season: ' + _esc(err.message) + '</div>';
+      box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">Couldn\'t project the season: ' + _esc(err.message) + '</div>';
     }
   };
 
@@ -56606,7 +56623,7 @@ Rules:
         `<div style="width:22px;text-align:right;font-family:'Bebas Neue',sans-serif;color:var(--text2)">${i + 1}</div>` +
         `<div style="flex:1;min-width:0;font-weight:${mine ? 700 : 600};font-size:.8rem;color:${mine ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${mine ? '⭐ ' : ''}${_esc(t.owner)}</div>` +
         `<div style="min-width:64px;text-align:right;font-size:.75rem"><span style="font-size:.5rem;color:var(--text2)">PROJ </span><span style="font-weight:700;color:var(--text)">${rec}</span></div>` +
-        `<div style="min-width:56px;text-align:right;font-size:.75rem"><span style="font-size:.5rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:#22c55e">${t.lineupPpg || 0}</span></div>` +
+        `<div style="min-width:56px;text-align:right;font-size:.75rem"><span style="font-size:.5rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${t.lineupPpg || 0}</span></div>` +
         `<div style="width:120px;flex-shrink:0;display:flex;align-items:center;gap:6px"><div style="flex:1;height:6px;border-radius:3px;background:var(--surface2,#222);overflow:hidden"><div style="height:100%;width:${po}%;background:${po >= 50 ? '#22c55e' : po >= 25 ? '#f59e0b' : '#ef4444'}"></div></div><span style="font-size:.65rem;font-weight:700;color:${po >= 50 ? '#22c55e' : po >= 25 ? '#f59e0b' : '#ef4444'};min-width:32px;text-align:right">${po}%</span></div>` +
         `</div>`;
     });
@@ -56655,7 +56672,7 @@ Rules:
         `<span style="font-size:.55rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(h.pos)}</span>` +
         `<span style="flex:1;min-width:0;font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(h.name)}</span>` +
         `<span style="font-size:.62rem;color:var(--text2)">#${h.rank < 999 ? h.rank : '—'}</span>` +
-        `<span style="font-size:.68rem;color:#a855f7;white-space:nowrap">${_esc(h.owner)}</span></div>`;
+        `<span style="font-size:.68rem;color:var(--te);white-space:nowrap">${_esc(h.owner)}</span></div>`;
     });
     if (!hits.length) html = `<div style="padding:8px 10px;font-size:.72rem;color:var(--text2)">No QB/RB/WR/TE on another roster matches</div>`;
     box.innerHTML = html;
@@ -56785,8 +56802,8 @@ Rules:
       } else {
         const n = teams.length;
         html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.78rem;margin-bottom:6px">` +
-          `<span style="font-size:.6rem;color:#22c55e;font-weight:700">GET</span> ${chip(tgt.name, res.td.s, res.tv)}` +
-          `<span style="font-size:.62rem;color:var(--text2)">from</span> <span style="font-weight:700;color:#a855f7">${_esc(them.owner)}</span>` +
+          `<span style="font-size:.6rem;color:var(--green);font-weight:700">GET</span> ${chip(tgt.name, res.td.s, res.tv)}` +
+          `<span style="font-size:.62rem;color:var(--text2)">from</span> <span style="font-weight:700;color:var(--te)">${_esc(them.owner)}</span>` +
           `<span style="font-size:.6rem;color:var(--text2)">their ${res.td.s}: ${_mtOrdinal(res.rankOf(them, res.td.s))} of ${n} · your ${res.td.s}: ${_mtOrdinal(res.rankOf(me, res.td.s))}</span></div>`;
         if (!res.offers.length) {
           html += `<div style="font-size:.75rem;color:var(--text2);padding:4px 0 10px">No package from your roster lands within 15% of his value` +
@@ -56800,13 +56817,13 @@ Rules:
             const gapTxt = o.fairLbl === 'FAIR' ? `FAIR · ±${pct}%` : (o.gap > 0 ? `you send +${pct}%` : `you get +${pct}%`);
             html += `<div style="border:1px solid ${o.fairLbl === 'FAIR' ? 'rgba(34,197,94,.35)' : 'var(--border)'};border-radius:8px;background:var(--surface);padding:8px 12px">` +
               `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.78rem">` +
-              `<span style="font-size:.6rem;color:#ef4444;font-weight:700">SEND</span> ${sendHtml}` +
+              `<span style="font-size:.6rem;color:var(--red);font-weight:700">SEND</span> ${sendHtml}` +
               `<span style="color:var(--text2)">⇄</span>` +
-              `<span style="font-size:.6rem;color:#22c55e;font-weight:700">GET</span> ${chip(tgt.name, res.td.s, res.tv)}` +
+              `<span style="font-size:.6rem;color:var(--green);font-weight:700">GET</span> ${chip(tgt.name, res.td.s, res.tv)}` +
               `<span title="Package value ${Math.round(o.pkg)} vs his ${Math.round(res.tv)} in trade-calc units (extra pieces count net of the roster-spot cost). FAIR = inside the calculator's own 5% band." style="margin-left:auto;font-size:.6rem;font-weight:700;color:${col};cursor:help">${gapTxt}</span></div>` +
               `<div style="font-size:.6rem;color:var(--text2);margin-top:3px">${o.send.length} for 1` +
               (o.notes.length ? ' · ' + _esc(o.notes.join(' · ')) : '') +
-              (o.warn.length ? ` · <span style="color:#f59e0b">⚠ ${_esc(o.warn.join(', '))}</span>` : '') + `</div></div>`;
+              (o.warn.length ? ` · <span style="color:var(--accent)">⚠ ${_esc(o.warn.join(', '))}</span>` : '') + `</div></div>`;
           });
           html += `</div>`;
         }
@@ -56831,7 +56848,7 @@ Rules:
     if (!box || !teams || !teams.length) return;
     const me = teams.find(t => t.isMyTeam);
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
-      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#a855f7">TRADE FINDER</span>` +
+      `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--te)">TRADE FINDER</span>` +
       `<span style="font-size:.6rem;color:var(--text2)">Your surplus for their need · fairness in trade-calc values · players only, no K/DST</span></div>`;
     if (!me) {
       box.innerHTML = html + `<div style="font-size:.75rem;color:var(--text2);padding:8px">Pick your team first (My Team dropdown above).</div>`;
@@ -56928,12 +56945,12 @@ Rules:
       const pct = Math.round(o.diff / Math.max(sendVal, o.get.val) * 100);
       html += `<div style="border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:8px 12px">` +
         `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.78rem">` +
-        `<span style="font-weight:700;color:#a855f7">${_esc(o.them.owner)}</span>` +
+        `<span style="font-weight:700;color:var(--te)">${_esc(o.them.owner)}</span>` +
         `<span style="font-size:.6rem;color:var(--text2)">their ${o.getPos}: ${_mtOrdinal(rankOf(o.them, o.getPos))} · their ${o.givePos}: ${_mtOrdinal(rankOf(o.them, o.givePos))}</span></div>` +
         `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;font-size:.78rem">` +
-        `<span style="font-size:.6rem;color:#ef4444;font-weight:700">SEND</span> ${sendHtml}` +
+        `<span style="font-size:.6rem;color:var(--red);font-weight:700">SEND</span> ${sendHtml}` +
         `<span style="color:var(--text2)">⇄</span>` +
-        `<span style="font-size:.6rem;color:#22c55e;font-weight:700">GET</span> ${chip(o.get, o.getPos)}` +
+        `<span style="font-size:.6rem;color:var(--green);font-weight:700">GET</span> ${chip(o.get, o.getPos)}` +
         `<span title="Value gap in trade-calc units — under 15% reads as balanced" style="margin-left:auto;font-size:.6rem;color:${pct <= 7 ? '#22c55e' : '#f59e0b'}">±${pct}% value gap</span></div>` +
         `<div style="font-size:.6rem;color:var(--text2);margin-top:3px">Fixes your ${o.getPos} (${_mtOrdinal(rankOf(me, o.getPos))} of ${n}) from your ${o.givePos} depth (${_mtOrdinal(rankOf(me, o.givePos))})</div>` +
         `</div>`;
@@ -57015,7 +57032,7 @@ Rules:
     const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a78bfa', DST: '#94a3b8' };
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
       `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#4ade80">WAIVER WIRE</span>` +
-      `<span style="font-size:.6rem;color:var(--text2)">Best available in this league · your selected rankings, top 150 · <span style="color:#22c55e;font-weight:700">▲ = beats your weakest starter</span></span></div>`;
+      `<span style="font-size:.6rem;color:var(--text2)">Best available in this league · your selected rankings, top 150 · <span style="color:var(--green);font-weight:700">▲ = beats your weakest starter</span></span></div>`;
     html += `<div style="display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap">`;
     ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => {
       const act = _mtWaiverPos === p;
@@ -57044,7 +57061,7 @@ Rules:
       const w = weakest[d.s];
       const delta = (w != null && ppg > 0) ? Math.round((ppg - w) * 10) / 10 : null;
       const upgrade = delta != null && delta >= 0.5
-        ? `<span title="Projects ${delta} PPG over your weakest ${d.s} starter" style="font-size:.6rem;font-weight:700;color:#22c55e;background:#22c55e18;border:1px solid #22c55e;border-radius:4px;padding:1px 6px">▲ +${delta}</span>`
+        ? `<span title="Projects ${delta} PPG over your weakest ${d.s} starter" style="font-size:.6rem;font-weight:700;color:var(--green);background:#22c55e18;border:1px solid var(--green);border-radius:4px;padding:1px 6px">▲ +${delta}</span>`
         : '';
       const val = valByName[d.n] != null ? Math.round(valByName[d.n]) : 0;
       html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;${i ? 'border-top:1px solid var(--border);' : ''}">` +
@@ -57054,7 +57071,7 @@ Rules:
         ` <span style="font-size:.6rem;color:var(--text2)">${_esc(d.t || 'FA')}</span></div>` +
         upgrade +
         `<div style="min-width:52px;text-align:right"><span style="font-size:.5rem;color:var(--text2)">VAL </span><span style="font-weight:700;color:var(--text)">${val}</span></div>` +
-        `<div style="min-width:44px;text-align:right"><span style="font-size:.5rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:#22c55e">${ppg || '—'}</span></div>` +
+        `<div style="min-width:44px;text-align:right"><span style="font-size:.5rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${ppg || '—'}</span></div>` +
         wkHtml +
         `</div>`;
     });
@@ -57076,7 +57093,7 @@ Rules:
     if (window._mtTeams) _mtRenderTeamList(window._mtTeams);
     const src = _mtActiveSource;
     const leagueId = src === 'sleeper' ? _mtActiveSleeperId : src === 'espn' ? _mtActiveEspnId : src === 'yahoo' ? _mtActiveYahooId : null;
-    if (!leagueId) { box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">No league loaded.</div>'; return; }
+    if (!leagueId) { box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">No league loaded.</div>'; return; }
     box.innerHTML = '<div style="color:var(--text2);font-size:.75rem;padding:10px">Loading draft board…</div>';
     try {
       const cacheKey = src + '_' + leagueId;
@@ -57092,7 +57109,7 @@ Rules:
       box.innerHTML = _mtBuildDraftBoardHtml(data);
     } catch (err) {
       console.warn('[MyTeams] Draft board error:', err);
-      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load the draft: ' + _esc(err.message) + '</div>';
+      box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">Couldn\'t load the draft: ' + _esc(err.message) + '</div>';
     }
   };
 
@@ -57141,7 +57158,7 @@ Rules:
 
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
       `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22d3ee">DRAFT BOARD</span>` +
-      `<span style="font-size:.6rem;color:var(--text2)">Graded vs your selected rankings · <span style="color:#22c55e;font-weight:700">green = value</span> · <span style="color:#ef4444;font-weight:700">red = reach</span> · K/DST and off-board picks ungraded</span></div>`;
+      `<span style="font-size:.6rem;color:var(--text2)">Graded vs your selected rankings · <span style="color:var(--green);font-weight:700">green = value</span> · <span style="color:var(--red);font-weight:700">red = reach</span> · K/DST and off-board picks ungraded</span></div>`;
     html += `<div style="overflow-x:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg)">`;
     html += `<div style="display:grid;grid-template-columns:26px repeat(${slotCount},minmax(88px,1fr));gap:3px;min-width:${26 + slotCount * 92}px">`;
     // Header row
@@ -57152,7 +57169,7 @@ Rules:
       const mine = t && t.isMyTeam;
       html += `<div style="text-align:center;padding:3px 2px;border-radius:5px;${mine ? 'border:1px solid var(--accent);background:rgba(245,158,11,.08)' : ''}">` +
         `<div style="font-size:.58rem;font-weight:700;color:${mine ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(t ? t.owner : 'Slot ' + s)}</div>` +
-        `<div style="font-size:.52rem"><span style="color:#22c55e">${tl.steal}▲</span> <span style="color:#ef4444">${tl.reach}▼</span></div></div>`;
+        `<div style="font-size:.52rem"><span style="color:var(--green)">${tl.steal}▲</span> <span style="color:var(--red)">${tl.reach}▼</span></div></div>`;
     }
     // Round rows
     for (let r = 1; r <= roundCount; r++) {
@@ -57830,7 +57847,7 @@ Rules:
       // Availability flag: projected starters ruled out (IR/PUP/SUS/Out)
       const _injOut = _mtTeamInjuredStarters(t);
       const _injChip = _injOut.length
-        ? ` <span title="Projected starters ruled out: ${_esc(_injOut.map(x => x.name + ' (' + x.tag + ')').join(', '))}" style="font-size:.55rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:0 5px;vertical-align:1px">${_injOut.length} OUT</span>`
+        ? ` <span title="Projected starters ruled out: ${_esc(_injOut.map(x => x.name + ' (' + x.tag + ')').join(', '))}" style="font-size:.55rem;font-weight:700;color:var(--red);background:#ef444418;border:1px solid var(--red);border-radius:3px;padding:0 5px;vertical-align:1px">${_injOut.length} OUT</span>`
         : '';
       html += `<div style="font-weight:600;font-size:.85rem;color:var(--text)">${_esc(t.owner)}${_tierChip}${_injChip}</div>`;
       // Record line: W-L(-T) · PF · PA · streak once the season has points
@@ -57858,7 +57875,7 @@ Rules:
       });
       if (isDynasty && _mtViewMode === 'value') {
         const pickHighlight = _mtSortBy === 'picks' ? 'font-size:.8rem;text-decoration:underline' : 'font-size:.7rem';
-        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">PICKS</div><div style="${pickHighlight};font-weight:700;color:#a855f7">${sc.pickTotal || 0}</div></div>`;
+        html += `<div style="text-align:center;min-width:28px"><div style="font-size:.5rem;color:var(--text2)">PICKS</div><div style="${pickHighlight};font-weight:700;color:var(--te)">${sc.pickTotal || 0}</div></div>`;
       }
       html += `</div>`;
       // MY TEAM badge is the row's LAST child — the mobile stylesheet styles
@@ -58141,7 +58158,7 @@ Rules:
     let html = `<div style="margin-top:18px;margin-bottom:8px">`;
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
     html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">${isWeekly ? `BEST LINEUP · JACK'S WK ${lineup.week || 1}` : 'BEST LINEUP'}</div>`;
-    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#22c55e">${lineup.totalPpg} <span style="font-size:.65rem;color:var(--text2);font-weight:400">${isWeekly ? 'WK PROJ PPG' : 'PROJ PPG'}</span></div>`;
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--green)">${lineup.totalPpg} <span style="font-size:.65rem;color:var(--text2);font-weight:400">${isWeekly ? 'WK PROJ PPG' : 'PROJ PPG'}</span></div>`;
     html += `</div>`;
 
     // Starter slots
@@ -58160,7 +58177,7 @@ Rules:
         html += `<span style="font-size:.55rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p.pos] || '#666')}20">${p.pos}</span>`;
         html += `<span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="font-size:.78rem;font-weight:600;color:var(--text);cursor:pointer">${_esc(p.name)}</span>`;
         html += (typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : '';
-        if (isWeekly && p.out) html += `<span style="font-size:.55rem;font-weight:700;color:#ef4444">${p.out}</span>`;
+        if (isWeekly && p.out) html += `<span style="font-size:.55rem;font-weight:700;color:var(--red)">${p.out}</span>`;
         html += `</div>`;
         if (isWeekly) {
           html += `<div style="display:flex;align-items:baseline;gap:8px">`;
@@ -58189,7 +58206,7 @@ Rules:
         html += `<div style="display:flex;align-items:center;gap:8px;padding:3px 8px;opacity:.65">`;
         html += `<div style="min-width:28px;text-align:center;font-size:.55rem;color:var(--text2)">BN</div>`;
         html += `<span style="font-size:.5rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
-        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${(typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : ''}${isWeekly && p.out ? ' <span style="color:#ef4444;font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
+        html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${(typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : ''}${isWeekly && p.out ? ' <span style="color:var(--red);font-size:.55rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
         if (isWeekly) html += `<span style="font-size:.72rem;color:var(--accent);min-width:30px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
         html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg : '—'}</span>`;
         html += `</div>`;
@@ -58478,7 +58495,7 @@ Rules:
     const el = document.getElementById('mtManualRoster');
     el.innerHTML = window._mtManualRoster.map(name => {
       const pos = _mtGetPlayerPos(name);
-      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-size:.7rem;color:var(--text)"><span style="color:var(--text2)">${pos}</span> ${_esc(name)} <span onclick="window._mtRemoveManualPlayer('${name.replace(/'/g, "\\'")}')" style="cursor:pointer;color:#ef4444;font-weight:700">✕</span></span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-size:.7rem;color:var(--text)"><span style="color:var(--text2)">${pos}</span> ${_esc(name)} <span onclick="window._mtRemoveManualPlayer('${name.replace(/'/g, "\\'")}')" style="cursor:pointer;color:var(--red);font-weight:700">✕</span></span>`;
     }).join('');
   }
   window._mtCreateManualTeam = function() {
@@ -58591,9 +58608,9 @@ Rules:
     _mtRenderManualRoster();
 
     let html = '';
-    if (matched.length) html += '<div style="color:#22c55e">✓ Added ' + matched.length + ' player' + (matched.length === 1 ? '' : 's') + '</div>';
+    if (matched.length) html += '<div style="color:var(--green)">✓ Added ' + matched.length + ' player' + (matched.length === 1 ? '' : 's') + '</div>';
     if (dupes.length) html += '<div style="color:var(--text2)">↩ Skipped ' + dupes.length + ' already on roster: ' + _esc(dupes.slice(0, 4).join(', ')) + (dupes.length > 4 ? '…' : '') + '</div>';
-    if (unmatched.length) html += '<div style="color:#ef4444">✗ Not found (' + unmatched.length + '): ' + _esc(unmatched.slice(0, 6).join(', ')) + (unmatched.length > 6 ? '…' : '') + '</div>';
+    if (unmatched.length) html += '<div style="color:var(--red)">✗ Not found (' + unmatched.length + '): ' + _esc(unmatched.slice(0, 6).join(', ')) + (unmatched.length > 6 ? '…' : '') + '</div>';
     if (!matched.length && !dupes.length && !unmatched.length) html = '<span style="color:var(--text2)">Nothing to add.</span>';
     out.innerHTML = html;
   };
@@ -58794,7 +58811,7 @@ Rules:
     const lg = idx >= 0 ? leagues[idx] : null;
     if (syncEl) {
       const rel = lg ? _mtRelTime(lg.savedAt) : '';
-      syncEl.innerHTML = lg ? (rel ? '· <span title="' + _esc(new Date(lg.savedAt).toLocaleString()) + '" style="cursor:help">synced ' + rel + '</span>' : '') : (window._mtLeague ? '· <span style="color:#f59e0b">not saved</span>' : '');
+      syncEl.innerHTML = lg ? (rel ? '· <span title="' + _esc(new Date(lg.savedAt).toLocaleString()) + '" style="cursor:help">synced ' + rel + '</span>' : '') : (window._mtLeague ? '· <span style="color:var(--accent)">not saved</span>' : '');
     }
     if (!leagues.length) { wrap.style.display = 'none'; if (nameEl) nameEl.style.display = ''; return; }
     const name = lg ? (lg.name || 'League') : ((window._mtLeague && window._mtLeague.name) || 'Choose a league');
@@ -58802,7 +58819,7 @@ Rules:
     let needs = 0;
     leagues.forEach((x, i) => { if (i === idx) return; const st = _mtLineupState(x); if (st && st.key !== 'ok') needs++; });
     btn.innerHTML = '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(name) + '</span>' + (tier ? _mtTeamTierChip(tier) : '') +
-      (needs ? '<span title="' + needs + ' other league' + (needs > 1 ? 's have' : ' has') + ' a lineup to fix" style="font-size:.62rem;letter-spacing:.5px;color:#000;background:#f59e0b;border-radius:9px;padding:0 7px;line-height:1.5">' + needs + ' LINEUP' + (needs > 1 ? 'S' : '') + '</span>' : '') +
+      (needs ? '<span title="' + needs + ' other league' + (needs > 1 ? 's have' : ' has') + ' a lineup to fix" style="font-size:.62rem;letter-spacing:.5px;color:#000;background:var(--accent);border-radius:9px;padding:0 7px;line-height:1.5">' + needs + ' LINEUP' + (needs > 1 ? 'S' : '') + '</span>' : '') +
       '<span style="color:var(--text2);font-size:.8rem;margin-left:2px">▾</span>';
     wrap.style.display = '';
     if (nameEl) nameEl.style.display = 'none';
@@ -58818,7 +58835,7 @@ Rules:
     const btnS = "padding:0 5px;font-size:.55rem;line-height:1.35;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer";
     let html = '<div style="padding:8px 12px 6px;font-family:\'Bebas Neue\',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2);border-bottom:1px solid var(--border)">YOUR LEAGUES' + (wk ? ' · LINEUPS WK ' + wk : '') + '</div>';
     if (active < 0 && window._mtLeague) {
-      html += '<div style="padding:8px 12px;background:rgba(245,158,11,.06);border-bottom:1px solid var(--border)"><div style="font-weight:600;font-size:.8rem;color:var(--text)">' + _esc(window._mtLeague.name || 'League') + '</div><div style="font-size:.62rem;color:#f59e0b">open now · not saved</div></div>';
+      html += '<div style="padding:8px 12px;background:rgba(245,158,11,.06);border-bottom:1px solid var(--border)"><div style="font-weight:600;font-size:.8rem;color:var(--text)">' + _esc(window._mtLeague.name || 'League') + '</div><div style="font-size:.62rem;color:var(--accent)">open now · not saved</div></div>';
     }
     leagues.forEach((lg, i) => {
       const on = i === active;
@@ -58831,7 +58848,7 @@ Rules:
       if (leagues.length > 1) html += '<div style="display:flex;flex-direction:column;gap:2px;flex:0 0 auto"><button onclick="event.stopPropagation();window._mtMoveSavedLeague(' + i + ',-1)" title="Move up"' + (i === 0 ? ' disabled' : '') + ' style="' + btnS + (i === 0 ? ';opacity:.3;cursor:default' : '') + '">▲</button><button onclick="event.stopPropagation();window._mtMoveSavedLeague(' + i + ',1)" title="Move down"' + (i === leagues.length - 1 ? ' disabled' : '') + ' style="' + btnS + (i === leagues.length - 1 ? ';opacity:.3;cursor:default' : '') + '">▼</button></div>';
       html += '<div style="flex:1;min-width:0">';
       html += '<div style="display:flex;align-items:center;gap:4px;min-width:0"><span style="font-weight:600;font-size:.8rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(lg.name || 'League') + '</span>' + (tier ? '<span style="flex:0 0 auto;line-height:1">' + _mtTeamTierChip(tier) + '</span>' : '') + '</div>';
-      html += '<div style="font-size:.6rem;color:var(--text2)">' + n + ' teams · ' + _esc(_mtFmtShort(lg.format)) + (rel ? ' · <span title="' + _esc(new Date(lg.savedAt).toLocaleString()) + '">synced ' + rel + '</span>' : '') + (unseen ? ' · <span style="color:#fbbf24;font-weight:700">● ' + unseen + ' new</span>' : '') + '</div>';
+      html += '<div style="font-size:.6rem;color:var(--text2)">' + n + ' teams · ' + _esc(_mtFmtShort(lg.format)) + (rel ? ' · <span title="' + _esc(new Date(lg.savedAt).toLocaleString()) + '">synced ' + rel + '</span>' : '') + (unseen ? ' · <span style="color:var(--accent2);font-weight:700">● ' + unseen + ' new</span>' : '') + '</div>';
       html += '</div>';
       if (st) {
         const mv = st.l.moves && st.l.moves[0];
@@ -58901,7 +58918,7 @@ Rules:
     if (!hits.length) {
       // Not rostered anywhere — is it a real player on the board?
       const fa = (typeof D !== 'undefined') ? D.filter(p => p.n && p.n.toLowerCase().indexOf(q) >= 0 && !p._isFuturePick).slice(0, 5) : [];
-      if (fa.length) fa.forEach(p => { html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(30,42,66,.5)"><span style="font-size:.55rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(p.s || '')}</span><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.n)}</span><span style="font-size:.62rem;font-weight:700;color:#22c55e">FREE AGENT</span></div>`; });
+      if (fa.length) fa.forEach(p => { html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(30,42,66,.5)"><span style="font-size:.55rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(p.s || '')}</span><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.n)}</span><span style="font-size:.62rem;font-weight:700;color:var(--green)">FREE AGENT</span></div>`; });
       else html += `<div style="padding:8px 10px;font-size:.72rem;color:var(--text2)">No match</div>`;
     }
     box.innerHTML = html;
@@ -59163,7 +59180,7 @@ Rules:
     const status = document.getElementById('mtSleeperStatus');
     if (status) {
       status.textContent = `Loaded "${lg.name}" from saved data (${lg.savedAt ? new Date(lg.savedAt).toLocaleDateString() : ''})`;
-      status.style.color = '#22c55e';
+      status.style.color = 'var(--green)';
     }
     // Kick off the background roster-freshness check. Sleeper + public ESPN
     // probe on every load; Yahoo's per-team page scrape is throttled to 6h.
@@ -59197,7 +59214,7 @@ Rules:
       if (savedSig !== null && savedSig === liveSig) {
         if (status) {
           status.textContent = `Loaded "${lg.name}" — rosters up to date`;
-          status.style.color = '#22c55e';
+          status.style.color = 'var(--green)';
         }
         return;
       }
@@ -59234,7 +59251,7 @@ Rules:
       if (liveSig === savedSig) {
         if (status) {
           status.textContent = `Loaded "${lg.name}" — rosters up to date`;
-          status.style.color = '#22c55e';
+          status.style.color = 'var(--green)';
         }
         return;
       }
@@ -59563,7 +59580,7 @@ Rules:
     const seen = lg ? _mtSeenAt(String(lg.leagueId || '')) : null;
     let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
-    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#fbbf24">LEAGUE ACTIVITY</span>`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent2)">LEAGUE ACTIVITY</span>`;
     html += `<span style="font-size:.6rem;color:var(--text2)">roster moves and standings changes caught by the auto-refresh · newest first</span>`;
     html += `<button onclick="window._mtToggleActivity()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
     html += `</div>`;
@@ -59582,18 +59599,18 @@ Rules:
       log.forEach(e => {
         const isNew = !seen || (e.at && e.at > seen);
         html += `<div style="padding:7px 10px;border:1px solid ${isNew ? '#fbbf2455' : 'var(--border)'};border-radius:6px;background:${isNew ? 'rgba(251,191,36,.05)' : 'var(--bg)'}">`;
-        html += `<div style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;margin-bottom:3px">${_esc(_mtRelTime(e.at))}${e.at ? ' · ' + _esc(new Date(e.at).toLocaleString()) : ''}${isNew ? ' <span style="color:#fbbf24;font-weight:700">NEW</span>' : ''}</div>`;
+        html += `<div style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;margin-bottom:3px">${_esc(_mtRelTime(e.at))}${e.at ? ' · ' + _esc(new Date(e.at).toLocaleString()) : ''}${isNew ? ' <span style="color:var(--accent2);font-weight:700">NEW</span>' : ''}</div>`;
         const lines = [];
         (e.trades || []).forEach(tr => {
-          lines.push(`<span style="color:#38bdf8;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">TRADE</span>${teamHtml(tr.a)} sent ${list(tr.aToB)} to ${teamHtml(tr.b)} for ${list(tr.bToA)}`);
+          lines.push(`<span style="color:var(--accent-blue);font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">TRADE</span>${teamHtml(tr.a)} sent ${list(tr.aToB)} to ${teamHtml(tr.b)} for ${list(tr.bToA)}`);
         });
         (e.adds || []).forEach(a => {
-          lines.push(`<span style="color:#22c55e;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">ADD</span>${teamHtml(a.team)} added ${list(a.names)}`);
+          lines.push(`<span style="color:var(--green);font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">ADD</span>${teamHtml(a.team)} added ${list(a.names)}`);
         });
         (e.drops || []).forEach(d => {
-          lines.push(`<span style="color:#ef4444;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">DROP</span>${teamHtml(d.team)} dropped ${list(d.names)}`);
+          lines.push(`<span style="color:var(--red);font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">DROP</span>${teamHtml(d.team)} dropped ${list(d.names)}`);
         });
-        if (e.records) lines.push(`<span style="color:#a855f7;font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">STANDINGS</span><span style="color:var(--text2)">Records updated — week results are in</span>`);
+        if (e.records) lines.push(`<span style="color:var(--te);font-weight:700;font-size:.55rem;letter-spacing:.5px;margin-right:4px">STANDINGS</span><span style="color:var(--text2)">Records updated — week results are in</span>`);
         html += lines.map(l => `<div style="font-size:.72rem;color:var(--text2);line-height:1.5">${l}</div>`).join('');
         html += `</div>`;
       });
@@ -59710,20 +59727,20 @@ Rules:
         const chipTxt = good ? '✓ LINEUP IS OPTIMAL' : (a.delta >= 0.5 ? '+' + a.delta + ' PPG ON YOUR BENCH' : 'CHECK YOUR LINEUP');
         html += `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">`;
         html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:${chipCol};background:${chipCol}15;border:1px solid ${chipCol};border-radius:6px;padding:3px 10px">${chipTxt}</span>`;
-        html += `<span style="font-size:.72rem;color:var(--text2)">Set lineup <b style="color:var(--text)">${a.actualPts}</b> · best lineup <b style="color:#22c55e">${a.optimalPts}</b></span>`;
+        html += `<span style="font-size:.72rem;color:var(--text2)">Set lineup <b style="color:var(--text)">${a.actualPts}</b> · best lineup <b style="color:var(--green)">${a.optimalPts}</b></span>`;
         if (a.locked && a.locked.length) html += `<span title="${_esc(a.locked.map(p => p.name + ' (' + (p.live && p.live.st === 'post' ? 'final' : 'live') + (p.live && p.live.actual != null ? ', ' + p.live.actual + ' pts' : '') + ')').join(', '))}" style="font-size:.62rem;font-weight:700;color:#94a3b8;background:#94a3b818;border:1px solid #94a3b8;border-radius:3px;padding:1px 6px;cursor:help">🔒 ${a.locked.length} LOCKED${a.locked.some(p => p.live && p.live.st === 'in') ? ' · LIVE' : ''}</span>`;
-        if (a.empty) html += `<span style="font-size:.62rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:1px 6px">${a.empty} EMPTY SLOT${a.empty > 1 ? 'S' : ''}</span>`;
-        if (a.flagged.length) html += `<span title="${_esc(a.flagged.map(p => p.name + ' (' + p.out + ')').join(', '))}" style="font-size:.62rem;font-weight:700;color:#ef4444;background:#ef444418;border:1px solid #ef4444;border-radius:3px;padding:1px 6px;cursor:help">${a.flagged.length} STARTER${a.flagged.length > 1 ? 'S' : ''} ON BYE/OUT</span>`;
+        if (a.empty) html += `<span style="font-size:.62rem;font-weight:700;color:var(--red);background:#ef444418;border:1px solid var(--red);border-radius:3px;padding:1px 6px">${a.empty} EMPTY SLOT${a.empty > 1 ? 'S' : ''}</span>`;
+        if (a.flagged.length) html += `<span title="${_esc(a.flagged.map(p => p.name + ' (' + p.out + ')').join(', '))}" style="font-size:.62rem;font-weight:700;color:var(--red);background:#ef444418;border:1px solid var(--red);border-radius:3px;padding:1px 6px;cursor:help">${a.flagged.length} STARTER${a.flagged.length > 1 ? 'S' : ''} ON BYE/OUT</span>`;
         html += `</div>`;
         if (a.moves.length) {
           html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin-bottom:4px">SUGGESTED MOVES</div>`;
           html += `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
           a.moves.forEach(m => {
             html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px">`;
-            if (m.start) html += `<span style="color:#22c55e;font-weight:700;font-size:.62rem">▲ START</span>${posBadge(m.start.pos)}${_mtNameLink(m.start.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:#22c55e">${m.start.ppg}</span>`;
+            if (m.start) html += `<span style="color:var(--green);font-weight:700;font-size:.62rem">▲ START</span>${posBadge(m.start.pos)}${_mtNameLink(m.start.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--green)">${m.start.ppg}</span>`;
             if (m.start && m.sit) html += `<span style="color:var(--text2);font-size:.7rem">over</span>`;
-            if (m.sit) html += `<span style="color:#ef4444;font-weight:700;font-size:.62rem">▼ SIT</span>${posBadge(m.sit.pos)}${_mtNameLink(m.sit.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:#ef4444">${m.sit.ppg > 0 ? m.sit.ppg : '—'}</span>${m.sit.out ? '<span style="font-size:.55rem;font-weight:700;color:#ef4444">' + m.sit.out + '</span>' : ''}`;
-            if (m.start && m.gain > 0) html += `<span style="margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:#22c55e">+${m.gain}</span>`;
+            if (m.sit) html += `<span style="color:var(--red);font-weight:700;font-size:.62rem">▼ SIT</span>${posBadge(m.sit.pos)}${_mtNameLink(m.sit.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--red)">${m.sit.ppg > 0 ? m.sit.ppg : '—'}</span>${m.sit.out ? '<span style="font-size:.55rem;font-weight:700;color:var(--red)">' + m.sit.out + '</span>' : ''}`;
+            if (m.start && m.gain > 0) html += `<span style="margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--green)">+${m.gain}</span>`;
             if (!m.start && m.sit) html += `<span style="margin-left:auto;font-size:.6rem;color:var(--text2)">${m.sit.out ? 'not playing' : 'no projection'} — nobody better on your bench</span>`;
             html += `</div>`;
           });
@@ -59734,14 +59751,14 @@ Rules:
         const row = (n, mark) => {
           const p = a.entry(n);
           const col = p.ppg >= 15 ? '#22c55e' : p.ppg >= 10 ? '#4ade80' : p.ppg >= 6 ? '#facc15' : p.ppg > 0 ? '#f59e0b' : 'var(--text2)';
-          return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);${mark === 'sit' ? 'background:rgba(239,68,68,.07)' : mark === 'start' ? 'background:rgba(34,197,94,.08)' : ''}">${mark === 'sit' ? '<span style="color:#ef4444;font-size:.6rem;font-weight:700">▼</span>' : mark === 'start' ? '<span style="color:#22c55e;font-size:.6rem;font-weight:700">▲</span>' : '<span style="width:8px"></span>'}${posBadge(p.pos)}<span style="flex:1;min-width:0;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_mtNameLink(n)}</span>${p.out ? '<span style="font-size:.55rem;font-weight:700;color:#ef4444">' + p.out + '</span>' : ''}${(p.d && typeof window._wkStatusChipHtml === 'function') ? window._wkStatusChipHtml(p.d, _mtFormat.ppr === 1 ? 'ppr' : _mtFormat.ppr === 0 ? 'std' : 'half') : ''}${p.locked ? '<span title="Game kicked off — locked ' + (p.locked === 'start' ? 'in your lineup' : 'on your bench') + '" style="font-size:.6rem;cursor:help">🔒</span>' : ''}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:${col}">${p.ppg > 0 ? p.ppg : '—'}</span></div>`;
+          return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);${mark === 'sit' ? 'background:rgba(239,68,68,.07)' : mark === 'start' ? 'background:rgba(34,197,94,.08)' : ''}">${mark === 'sit' ? '<span style="color:var(--red);font-size:.6rem;font-weight:700">▼</span>' : mark === 'start' ? '<span style="color:var(--green);font-size:.6rem;font-weight:700">▲</span>' : '<span style="width:8px"></span>'}${posBadge(p.pos)}<span style="flex:1;min-width:0;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_mtNameLink(n)}</span>${p.out ? '<span style="font-size:.55rem;font-weight:700;color:var(--red)">' + p.out + '</span>' : ''}${(p.d && typeof window._wkStatusChipHtml === 'function') ? window._wkStatusChipHtml(p.d, _mtFormat.ppr === 1 ? 'ppr' : _mtFormat.ppr === 0 ? 'std' : 'half') : ''}${p.locked ? '<span title="Game kicked off — locked ' + (p.locked === 'start' ? 'in your lineup' : 'on your bench') + '" style="font-size:.6rem;cursor:help">🔒</span>' : ''}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:${col}">${p.ppg > 0 ? p.ppg : '—'}</span></div>`;
         };
         const sitSet = new Set(a.shouldSit.map(p => p.name));
         const startSet = new Set(a.shouldStart.map(p => p.name));
         html += `<div style="display:flex;gap:12px;flex-wrap:wrap">`;
         html += `<div style="flex:1 1 260px;min-width:0"><div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin-bottom:4px">YOUR SET LINEUP · ${a.actualPts}</div>`;
         a.actual.forEach(n => {
-          html += n ? row(n, sitSet.has(n) ? 'sit' : '') : `<div style="padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);font-size:.7rem;color:#ef4444;font-weight:700">EMPTY SLOT</div>`;
+          html += n ? row(n, sitSet.has(n) ? 'sit' : '') : `<div style="padding:4px 8px;border-bottom:1px solid rgba(30,42,66,.4);font-size:.7rem;color:var(--red);font-weight:700">EMPTY SLOT</div>`;
         });
         html += `</div>`;
         html += `<div style="flex:1 1 260px;min-width:0"><div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1px;color:var(--text2);margin-bottom:4px">BENCH</div>`;
@@ -59927,7 +59944,7 @@ Rules:
       box.innerHTML = _mtBuildResultsHtml(games);
     } catch (err) {
       console.warn('[MyTeams] Results error:', err);
-      box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t load results: ' + _esc(err.message) + '</div>';
+      box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">Couldn\'t load results: ' + _esc(err.message) + '</div>';
     }
   };
   function _mtBuildResultsHtml(games) {
@@ -59935,7 +59952,7 @@ Rules:
     const r1 = v => Math.round(v * 10) / 10;
     let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
-    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#c084fc">RESULTS</span>`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent-purple)">RESULTS</span>`;
     html += `<span style="font-size:.6rem;color:var(--text2)">completed weeks · all-play = your record if you'd played every team each week · luck = actual wins − all-play expected wins</span>`;
     html += `<button onclick="window._mtToggleResults()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
     html += `</div>`;
@@ -59995,8 +60012,8 @@ Rules:
     const unluckiest = rows.slice().sort((x, y) => x.luck - y.luck)[0];
     if (luckiest && unluckiest && luckiest !== unluckiest) {
       html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:.66rem;color:var(--text2)">` +
-        `<span style="padding:3px 8px;border:1px solid #22c55e55;border-radius:5px">🍀 Luckiest: <b style="color:var(--text)">${_esc(luckiest.t.owner)}</b> <span style="color:#22c55e;font-weight:700">+${luckiest.luck}</span> wins over all-play</span>` +
-        `<span style="padding:3px 8px;border:1px solid #ef444455;border-radius:5px">😤 Unluckiest: <b style="color:var(--text)">${_esc(unluckiest.t.owner)}</b> <span style="color:#ef4444;font-weight:700">${unluckiest.luck}</span> wins vs all-play</span></div>`;
+        `<span style="padding:3px 8px;border:1px solid #22c55e55;border-radius:5px">🍀 Luckiest: <b style="color:var(--text)">${_esc(luckiest.t.owner)}</b> <span style="color:var(--green);font-weight:700">+${luckiest.luck}</span> wins over all-play</span>` +
+        `<span style="padding:3px 8px;border:1px solid #ef444455;border-radius:5px">😤 Unluckiest: <b style="color:var(--text)">${_esc(unluckiest.t.owner)}</b> <span style="color:var(--red);font-weight:700">${unluckiest.luck}</span> wins vs all-play</span></div>`;
     }
     html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.7rem;min-width:520px">`;
     html += `<thead><tr style="color:var(--text2);font-size:.55rem;letter-spacing:.5px;text-align:right"><th style="text-align:left;padding:4px 6px">#</th><th style="text-align:left;padding:4px 6px">TEAM</th><th style="padding:4px 6px">W-L</th><th style="padding:4px 6px">PF</th><th style="padding:4px 6px">PA</th><th style="padding:4px 6px" title="Record vs every team every week">ALL-PLAY</th><th style="padding:4px 6px" title="Actual wins minus all-play expected wins">LUCK</th></tr></thead><tbody>`;
@@ -60050,14 +60067,14 @@ Rules:
     }).sort((a, b) => b.chest - a.chest || b.raw - a.raw);
     let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">`;
-    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#a855f7">DRAFT CAPITAL</span>`;
-    html += `<span style="font-size:.6rem;color:var(--text2)">picks per year/round · <span style="color:#22c55e">green</span> = holds extras · <span style="color:#ef4444">red</span> = own pick traded away · hover a cell for slots · WAR CHEST = package-adjusted pick value (bench-spot cost applied)</span>`;
+    html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--te)">DRAFT CAPITAL</span>`;
+    html += `<span style="font-size:.6rem;color:var(--text2)">picks per year/round · <span style="color:var(--green)">green</span> = holds extras · <span style="color:var(--red)">red</span> = own pick traded away · hover a cell for slots · WAR CHEST = package-adjusted pick value (bench-spot cost applied)</span>`;
     html += `<button onclick="window._mtToggleDraftCapital()" style="margin-left:auto;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.65rem;cursor:pointer">✕</button>`;
     html += `</div>`;
     const mostFirsts = rows.slice().sort((a, b) => b.firsts - a.firsts)[0];
     const fewest = rows.slice().sort((a, b) => a.picks.length - b.picks.length)[0];
     html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:.66rem;color:var(--text2)">`;
-    if (rows[0]) html += `<span style="padding:3px 8px;border:1px solid #a855f755;border-radius:5px">💰 Biggest war chest: <b style="color:var(--text)">${_esc(rows[0].t.owner)}</b> <span style="color:#a855f7;font-weight:700">${rows[0].chest}</span> (${rows[0].picks.length} picks)</span>`;
+    if (rows[0]) html += `<span style="padding:3px 8px;border:1px solid #a855f755;border-radius:5px">💰 Biggest war chest: <b style="color:var(--text)">${_esc(rows[0].t.owner)}</b> <span style="color:var(--te);font-weight:700">${rows[0].chest}</span> (${rows[0].picks.length} picks)</span>`;
     if (mostFirsts && mostFirsts.firsts) html += `<span style="padding:3px 8px;border:1px solid var(--border);border-radius:5px">🥇 Most 1sts: <b style="color:var(--text)">${_esc(mostFirsts.t.owner)}</b> <span style="font-weight:700;color:var(--text)">${mostFirsts.firsts}</span></span>`;
     if (fewest) html += `<span style="padding:3px 8px;border:1px solid var(--border);border-radius:5px">🪫 Fewest picks: <b style="color:var(--text)">${_esc(fewest.t.owner)}</b> <span style="font-weight:700;color:var(--text)">${fewest.picks.length}</span></span>`;
     html += `</div>`;
@@ -60080,7 +60097,7 @@ Rules:
         html += `<td title="${_esc(tip)}" style="padding:5px 4px;text-align:center;${i === 0 ? 'border-left:1px solid var(--border);' : ''}color:${col};font-weight:${n ? 700 : 400};${n === 0 ? 'opacity:.55' : ''}">${n ? n : '—'}${n && !own ? '<span style="font-size:.5rem;vertical-align:top">†</span>' : ''}</td>`;
       }));
       html += `<td style="padding:5px 6px;text-align:right;border-left:1px solid var(--border);color:var(--text)">${x.picks.length}</td>`;
-      html += `<td style="padding:5px 6px;text-align:right;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:#a855f7">${x.chest}</td></tr>`;
+      html += `<td style="padding:5px 6px;text-align:right;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--te)">${x.chest}</td></tr>`;
     });
     html += `</tbody></table></div><div style="font-size:.55rem;color:var(--text2);margin-top:4px">† includes a pick acquired from another team · picks price at the original team's projected slot (current-year picks by exact number, next year early/mid/late, later years mid)</div></div>`;
     box.innerHTML = html;
@@ -60218,7 +60235,7 @@ Rules:
       const d = (p && p.d) || _mtLookupD(x.name);
       holes.push({ wk: null, why: x.tag, player: { name: x.name, pos: (d && d.s) || (p && p.pos) || '?', ppg: p ? p.ppg : 0, d } });
     });
-    if (!holes.length) return `<div style="font-size:.68rem;color:#22c55e;margin-bottom:10px">✓ No byes or ruled-out starters to plan around.</div>`;
+    if (!holes.length) return `<div style="font-size:.68rem;color:var(--green);margin-bottom:10px">✓ No byes or ruled-out starters to plan around.</div>`;
     const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a855f7', DST: '#94a3b8' };
     const posBadge = p => `<span style="font-size:.55rem;font-weight:700;color:${posColors[p] || 'var(--text2)'};padding:1px 4px;border-radius:3px;background:${(posColors[p] || '#666')}20">${_esc(p || '?')}</span>`;
     const link = n => { const safe = String(n).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'"); return `<span onclick="window._mtOpenCardByName('${safe}', true)" style="cursor:pointer;color:var(--text);font-weight:600">${_esc(n)}</span>`; };
@@ -60238,10 +60255,10 @@ Rules:
         if (benchPick) usedBench.add(benchPick.name);
         const faPicks = (fa[p.pos] || []).filter(f => (g.wk == null || f.bye !== g.wk) && !outRe.test(f.inj)).slice(0, 2);
         html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.7rem;padding:3px 0">`;
-        html += `<span style="min-width:0">${posBadge(p.pos)} ${link(p.name)} <span style="color:var(--text2)">${p.ppg ? p.ppg : ''}${h.wk == null ? ' · <span style="color:#ef4444;font-weight:700">' + _esc(h.why) + '</span>' : ''}</span></span>`;
+        html += `<span style="min-width:0">${posBadge(p.pos)} ${link(p.name)} <span style="color:var(--text2)">${p.ppg ? p.ppg : ''}${h.wk == null ? ' · <span style="color:var(--red);font-weight:700">' + _esc(h.why) + '</span>' : ''}</span></span>`;
         html += `<span style="color:var(--text2)">→</span>`;
         if (benchPick) html += `<span title="Best bench cover at a compatible slot" style="color:var(--text2)">bench: ${link(benchPick.name)} <span style="color:${benchPick.ppg >= p.ppg * 0.8 ? '#22c55e' : '#f59e0b'};font-weight:700">${benchPick.ppg}</span></span>`;
-        else html += `<span style="color:#ef4444">no bench cover</span>`;
+        else html += `<span style="color:var(--red)">no bench cover</span>`;
         if (faPicks.length) html += `<span style="color:var(--text2)">· FA: ${faPicks.map(f => link(f.name) + ' <span style="font-weight:700;color:' + (f.ppg >= p.ppg * 0.8 ? '#22c55e' : 'var(--text)') + '">' + f.ppg + '</span>').join(', ')}</span>`;
         else html += `<span style="color:var(--text2)">· no draftable FA at ${_esc(p.pos)}</span>`;
         html += `</div>`;
@@ -60314,8 +60331,8 @@ Rules:
     const faller = rows.slice().sort((a, b) => a.delta - b.delta)[0];
     html += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:.66rem;color:var(--text2)">`;
     if (rows[0]) html += `<span style="padding:3px 8px;border:1px solid #f9731655;border-radius:5px">🏆 Best in December: <b style="color:var(--text)">${_esc(rows[0].t.owner)}</b> <span style="color:#f97316;font-weight:700">${rows[0].avg}</span></span>`;
-    if (riser && riser.delta > 0) html += `<span style="padding:3px 8px;border:1px solid #22c55e55;border-radius:5px">📈 Schedule helps: <b style="color:var(--text)">${_esc(riser.t.owner)}</b> <span style="color:#22c55e;font-weight:700">+${riser.delta}</span></span>`;
-    if (faller && faller.delta < 0) html += `<span style="padding:3px 8px;border:1px solid #ef444455;border-radius:5px">📉 Schedule hurts: <b style="color:var(--text)">${_esc(faller.t.owner)}</b> <span style="color:#ef4444;font-weight:700">${faller.delta}</span></span>`;
+    if (riser && riser.delta > 0) html += `<span style="padding:3px 8px;border:1px solid #22c55e55;border-radius:5px">📈 Schedule helps: <b style="color:var(--text)">${_esc(riser.t.owner)}</b> <span style="color:var(--green);font-weight:700">+${riser.delta}</span></span>`;
+    if (faller && faller.delta < 0) html += `<span style="padding:3px 8px;border:1px solid #ef444455;border-radius:5px">📉 Schedule hurts: <b style="color:var(--text)">${_esc(faller.t.owner)}</b> <span style="color:var(--red);font-weight:700">${faller.delta}</span></span>`;
     html += `</div>`;
     html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.7rem;min-width:560px">`;
     html += `<thead><tr style="color:var(--text2);font-size:.55rem;letter-spacing:.5px;text-align:right"><th style="text-align:left;padding:4px 6px">#</th><th style="text-align:left;padding:4px 6px">TEAM</th>`;
@@ -60592,7 +60609,7 @@ Rules:
       try { canvas = await _mtDrawShareCanvas(false); dataUrl = canvas.toDataURL('image/png'); } catch (e2) { console.warn('[MyTeams] share card failed:', e2); }
     }
     if (!_mtShareOpen) return;
-    if (!dataUrl) { box.innerHTML = '<div style="color:#ef4444;font-size:.75rem;padding:10px">Couldn\'t draw the card in this browser.</div>'; return; }
+    if (!dataUrl) { box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">Couldn\'t draw the card in this browser.</div>'; return; }
     window._mtShareDataUrl = dataUrl;
     const fname = 'power-rankings-' + String((window._mtLeague || {}).name || 'league').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() + '.png';
     let html = `<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">`;
@@ -61298,7 +61315,7 @@ Rules:
         const parsed = _udParseCSV(text, phase);
         if (!parsed.drafts || Object.keys(parsed.drafts).length === 0) {
           status.textContent = 'No draft data found in CSV. Make sure this is an Underdog export.';
-          status.style.color = '#ef4444';
+          status.style.color = 'var(--red)';
           return;
         }
 
@@ -61328,12 +61345,12 @@ Rules:
         const phaseSummary = Object.entries(phaseCounts).map(([p,c]) => c + ' ' + _udPhaseLabel(p)).join(', ');
         const addedMsg = addedCount + ' new' + (replacedCount ? ', ' + replacedCount + ' updated' : '');
         status.textContent = `Imported ${Object.keys(parsed.drafts).length} ${_udPhaseLabel(phase)} drafts (${addedMsg}). Portfolio: ${merged.numDrafts} drafts (${phaseSummary}), ${Object.keys(merged.players).length} unique players.`;
-        status.style.color = '#22c55e';
+        status.style.color = 'var(--green)';
         _udRenderDashboard(merged);
         _udSaveToCloud(merged);
       } catch(err) {
         status.textContent = 'Error parsing CSV: ' + err.message;
-        status.style.color = '#ef4444';
+        status.style.color = 'var(--red)';
       }
     };
     reader.readAsText(file);
@@ -61437,7 +61454,7 @@ Rules:
         const status = document.getElementById('mtUnderdogStatus');
         if (status) {
           status.textContent = `Loaded ${rebuilt.numDrafts} drafts (merged extension sync + ${srcLabel})`;
-          status.style.color = '#22c55e';
+          status.style.color = 'var(--green)';
         }
         _udRenderDashboard(rebuilt);
         // Persist the merged result back to cloud so future loads see it.
@@ -61454,7 +61471,7 @@ Rules:
       if (status) {
         const when = savedAt ? ` (saved ${new Date(savedAt).toLocaleDateString()})` : '';
         status.textContent = `Loaded ${parsed.numDrafts} drafts from ${srcLabel}${when}`;
-        status.style.color = '#22c55e';
+        status.style.color = 'var(--green)';
       }
       // v0.9.64: defer the heavy BB-engine render off page-load critical path
       _udRenderDashboardDeferred(parsed);
@@ -61633,7 +61650,7 @@ Rules:
     const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
     const status = document.getElementById('mtUnderdogStatus');
     if (!db || !user || !isAdminNow) {
-      if (status) { status.textContent = 'Sync only available for admin.'; status.style.color = '#ef4444'; }
+      if (status) { status.textContent = 'Sync only available for admin.'; status.style.color = 'var(--red)'; }
       return;
     }
     if (status) { status.textContent = 'Syncing to shared doc...'; status.style.color = ''; }
@@ -61682,13 +61699,13 @@ Rules:
     }).then(payload => {
       if (status) {
         status.textContent = `✓ Synced ${payload.drafts.length} drafts to shared/jacks_portfolio. Premium members can now see your portfolio.`;
-        status.style.color = '#22c55e';
+        status.style.color = 'var(--green)';
       }
       console.log('[Portfolio] Manual sync complete', payload.drafts.length, 'drafts');
     }).catch(e => {
       if (status) {
         status.textContent = 'Sync failed: ' + (e.message || e) + '. Check console & Firestore rules.';
-        status.style.color = '#ef4444';
+        status.style.color = 'var(--red)';
       }
       console.error('[Portfolio] Manual sync error:', e);
     });
@@ -62216,7 +62233,7 @@ Rules:
       '<select id="qaLeague-' + type + '" onchange="window._qaLeagueChanged(\'' + type + '\')" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:7px 9px;font-size:.72rem;margin-bottom:8px" title="Attach a synced league so Jack sees your actual roster — player suggestions narrow to that league\'s rosters">' +
       _qaLeagueOptions(-1) + '</select>' +
       '<button onclick="window._qaSubmit(\'' + type + '\')" id="qaSendBtn-' + type + '" style="width:100%;padding:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer">SEND TO JACK</button>' +
-      '<div id="qaMsg-' + type + '" style="font-size:.65rem;color:#ef4444;margin-top:5px"></div>';
+      '<div id="qaMsg-' + type + '" style="font-size:.65rem;color:var(--red);margin-top:5px"></div>';
   }
 
   function _qaSubmittedHtml(x) {
@@ -62224,8 +62241,8 @@ Rules:
       const picked = x.status === 'answered' && x.pick === i;
       const sideTag = x.type === 'trade' ? '<span style="font-size:.58rem;color:var(--text2)">' + (i === 0 ? 'YOU GIVE: ' : 'YOU GET: ') + '</span>' : '';
       return '<div style="padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
-        (picked ? 'background:rgba(34,197,94,.12);border:1px solid #22c55e;color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
-        (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + (picked ? ' <span style="color:#22c55e;font-size:.6rem;float:right;margin-top:2px">JACK\'S PICK</span>' : '') +
+        (picked ? 'background:rgba(34,197,94,.12);border:1px solid var(--green);color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
+        (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + (picked ? ' <span style="color:var(--green);font-size:.6rem;float:right;margin-top:2px">JACK\'S PICK</span>' : '') +
         '</div>';
     }).join('');
     return opts +
@@ -64652,7 +64669,7 @@ Rules:
     ];
     cards.forEach(c => {
       html += `<div style="text-align:center;padding:14px 8px;background:var(--surface);border:1px solid ${c.color ? c.color + '55' : 'var(--border)'};border-radius:10px">`;
-      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)"><span data-gloss="${_esc(c.gloss)}">${c.label}</span>${c.id ? ' <span style="font-size:.5rem;color:#22c55e;letter-spacing:1px">LIVE</span>' : ''}</div>`;
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--text2)"><span data-gloss="${_esc(c.gloss)}">${c.label}</span>${c.id ? ' <span style="font-size:.5rem;color:var(--green);letter-spacing:1px">LIVE</span>' : ''}</div>`;
       html += `<div${c.id ? ` id="udKpiVal_${c.id}"` : ''} style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:1px;color:${c.color || 'var(--accent)'};margin:2px 0">${c.val}</div>`;
       const _subTitleAttr = c.subTitle ? ` title="${_esc(c.subTitle)}"` : '';
       html += `<div${c.id ? ` id="udKpiSub_${c.id}"` : ''}${_subTitleAttr} style="font-size:.6rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.sub}</div>`;
@@ -64762,26 +64779,26 @@ Rules:
       }
       out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${headerColor};margin:6px 0 10px;padding:6px 10px;background:rgba(251,191,36,.06);border-left:3px solid ${headerColor};border-radius:4px">${label} <span style="color:var(--text2);font-size:.7rem;letter-spacing:.5px;font-weight:400">· ${lists.drafts} draft${lists.drafts === 1 ? '' : 's'}</span></div>`;
       // STEALS
-      out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22c55e;margin-bottom:8px">🔥 BIGGEST STEALS</div>`;
+      out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--green);margin-bottom:8px">🔥 BIGGEST STEALS</div>`;
       out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted after their current ADP — value is % past ADP, so early-round discounts count for more than late-round ones</div>`;
       if (lists.steals.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:20px">No major value picks found</div>`;
       } else {
         out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:20px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted past ADP across your picks of this player. +50% means you got him half a draft-stage later than the market — 10 picks late at ADP 20 beats 30 picks late at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.steals.slice(0, 20).forEach(vp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)"><span onclick="window._mtOpenCardByName('${String(vp.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_esc(vp.name)}</span></td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(vp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#22c55e" title="${_vpValueTitle(vp)}">+${vp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)"><span onclick="window._mtOpenCardByName('${String(vp.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_esc(vp.name)}</span></td><td style="padding:5px 8px;color:var(--text2)">${vp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${vp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(vp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:var(--green)" title="${_vpValueTitle(vp)}">+${vp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${vp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }
       // REACHES
-      out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#ef4444;margin-bottom:8px">📉 BIGGEST REACHES</div>`;
+      out += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--red);margin-bottom:8px">📉 BIGGEST REACHES</div>`;
       out += `<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Players drafted before their current ADP — % ahead of ADP, so early-round reaches count for more than late-round ones</div>`;
       if (lists.reaches.length === 0) {
         out += `<div style="padding:12px;color:var(--text2);font-size:.78rem;margin-bottom:24px">No major reaches found</div>`;
       } else {
         out += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;max-width:100%;margin-bottom:24px"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.75rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:5px 8px;color:var(--text2)">PLAYER</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">POS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)">ADP</th><th style="text-align:left;padding:5px 8px;color:var(--text2)">PICKS</th><th style="text-align:center;padding:5px 8px;color:var(--text2)"><span data-gloss="Average % drafted ahead of ADP across your picks of this player. −50% means you paid half a draft-stage early — reaching 10 picks at ADP 20 costs more than 30 picks at ADP 200. Hover the value for the raw pick difference.">VALUE</span></th><th style="text-align:center;padding:5px 8px;color:var(--text2)">COUNT</th></tr></thead><tbody>`;
         lists.reaches.slice(0, 20).forEach(bp => {
-          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)"><span onclick="window._mtOpenCardByName('${String(bp.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_esc(bp.name)}</span></td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(bp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:#ef4444" title="${_vpValueTitle(bp)}">${bp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
+          out += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 8px;color:var(--text)"><span onclick="window._mtOpenCardByName('${String(bp.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" style="cursor:pointer" title="Open player card">${_esc(bp.name)}</span></td><td style="padding:5px 8px;color:var(--text2)">${bp.pos}</td><td style="text-align:center;padding:5px 8px;color:var(--text)">${bp.adp}</td><td style="padding:5px 8px;max-width:280px;white-space:normal;line-height:1.5">${_vpPicksCell(bp)}</td><td style="text-align:center;padding:5px 8px;font-weight:700;color:var(--red)" title="${_vpValueTitle(bp)}">${bp.value}%</td><td style="text-align:center;padding:5px 8px;color:var(--text2)">${bp.count}/${lists.drafts}</td></tr>`;
         });
         out += `</tbody></table></div>`;
       }
@@ -64886,7 +64903,7 @@ Rules:
         if (roundPos[rd][p.pos] !== undefined) roundPos[rd][p.pos]++;
       });
     });
-    html += `<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:4px 8px;color:var(--text2)">RD</th><th style="text-align:center;padding:4px 8px;color:#ef4444">QB</th><th style="text-align:center;padding:4px 8px;color:#22c55e">RB</th><th style="text-align:center;padding:4px 8px;color:#3b82f6">WR</th><th style="text-align:center;padding:4px 8px;color:#f59e0b">TE</th></tr></thead><tbody>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:.7rem"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:4px 8px;color:var(--text2)">RD</th><th style="text-align:center;padding:4px 8px;color:var(--red)">QB</th><th style="text-align:center;padding:4px 8px;color:var(--green)">RB</th><th style="text-align:center;padding:4px 8px;color:var(--wr)">WR</th><th style="text-align:center;padding:4px 8px;color:var(--accent)">TE</th></tr></thead><tbody>`;
     Object.keys(roundPos).sort((a, b) => Number(a) - Number(b)).forEach(rd => {
       const rp = roundPos[rd];
       const total = rp.QB + rp.RB + rp.WR + rp.TE;
@@ -65252,32 +65269,32 @@ Rules:
           const cush = L.cushion;
           const cushStr = cush == null ? '' :
             (cush >= 0
-              ? ` · <span style="color:#22c55e;font-weight:700">+${cush.toFixed(1)}</span> <span style="color:var(--text2)">cushion</span>`
-              : ` · <span style="color:#ef4444;font-weight:700">${cush.toFixed(1)}</span> <span style="color:var(--text2)">to cut</span>`);
+              ? ` · <span style="color:var(--green);font-weight:700">+${cush.toFixed(1)}</span> <span style="color:var(--text2)">cushion</span>`
+              : ` · <span style="color:var(--red);font-weight:700">${cush.toFixed(1)}</span> <span style="color:var(--text2)">to cut</span>`);
           const wkStr = (L.wkCol && L.myWk != null) ? ` · W${L.wkCol} <span style="color:var(--text);font-weight:600">${L.myWk.toFixed(1)}</span>` : '';
           const payStr = L.inAdv
-            ? ` · <span style="color:#22c55e;font-weight:700">${_udFmtMoney(L.advPrize)}</span>${L.advPrize ? '' : ' <span style="color:var(--text2)">(pays from R3)</span>'}`
+            ? ` · <span style="color:var(--green);font-weight:700">${_udFmtMoney(L.advPrize)}</span>${L.advPrize ? '' : ' <span style="color:var(--text2)">(pays from R3)</span>'}`
             : '';
           if (L.h2h) {
             const H = L.h2h, la = H.latest;
             let line = '';
             if (!H.alive) {
-              line = `<span style="color:#ef4444;font-weight:700">ELIMINATED</span> in R${H.elim}${H.elim === 1 ? ' (pool #' + (L.me ? L.me.rank : '—') + '/' + L.teams.length + ')' : ''}`;
+              line = `<span style="color:var(--red);font-weight:700">ELIMINATED</span> in R${H.elim}${H.elim === 1 ? ' (pool #' + (L.me ? L.me.rank : '—') + '/' + L.teams.length + ')' : ''}`;
             } else if (la.round === 1) {
               line = `<span style="color:var(--text);font-weight:700;font-size:.78rem">${(L.me ? L.me.pts : 0).toFixed(1)}</span> PTS · R1 pool #${L.me ? L.me.rank : '—'}/${L.teams.length} · top ${L.rule.adv} advance` +
-                (L.r1Done ? (L.inAdv ? ' · <span style="color:#22c55e;font-weight:700">ADVANCED</span> · awaiting R2 group' : '') : cushStr);
+                (L.r1Done ? (L.inAdv ? ' · <span style="color:var(--green);font-weight:700">ADVANCED</span> · awaiting R2 group' : '') : cushStr);
             } else if (la.type === 'pool') {
               const st = !la.known ? 'group rosters not synced' : !la.played ? 'not started' : la.final ? '' : (la.adv ? (la.done ? 'ADVANCED' : 'in top ' + la.advN) : (la.done ? 'ELIMINATED' : 'outside top ' + la.advN));
               const stCol = !la.known || !la.played ? 'var(--text2)' : la.adv ? '#22c55e' : '#ef4444';
-              const cu = la.cushion == null ? '' : (la.cushion >= 0 ? ` · <span style="color:#22c55e;font-weight:700">+${la.cushion.toFixed(1)}</span> <span style="color:var(--text2)">cushion</span>` : ` · <span style="color:#ef4444;font-weight:700">${la.cushion.toFixed(1)}</span> <span style="color:var(--text2)">to cut</span>`);
+              const cu = la.cushion == null ? '' : (la.cushion >= 0 ? ` · <span style="color:var(--green);font-weight:700">+${la.cushion.toFixed(1)}</span> <span style="color:var(--text2)">cushion</span>` : ` · <span style="color:var(--red);font-weight:700">${la.cushion.toFixed(1)}</span> <span style="color:var(--text2)">to cut</span>`);
               line = `${la.final ? 'FINAL' : 'R' + la.round} · W${la.week[0]}${la.week[1] !== la.week[0] ? '-' + la.week[1] : ''} · ${la.of}-team group · <span style="color:var(--text);font-weight:700;font-size:.78rem">${la.myPts != null ? la.myPts.toFixed(1) : '—'}</span> PTS · #${la.rank != null && la.known ? la.rank : '—'}/${la.of}${cu}${st ? ` · <span style="color:${stCol};font-weight:700">${st}</span>` : ''}`;
             } else {
               const lead = la.leading == null ? (la.known ? 'tied' : 'opp roster not synced') : (la.leading ? (la.done ? 'WON' : 'LEADING') : (la.done ? 'LOST' : 'TRAILING'));
               const leadCol = la.leading == null ? 'var(--text2)' : la.leading ? '#22c55e' : '#ef4444';
               line = `R${la.round} · W${la.week[0]} vs <span style="color:var(--text);font-weight:600">${_esc(la.opp)}</span> · <span style="color:var(--text);font-weight:700;font-size:.78rem">${la.myPts != null ? la.myPts.toFixed(1) : '—'}</span> – <span style="color:var(--text);font-weight:600">${la.oppPts != null ? la.oppPts.toFixed(1) : '—'}</span> · <span style="color:${leadCol};font-weight:700">${lead}</span>`;
             }
-            const lockStr = H.locked ? ` · <span style="color:#22c55e;font-weight:700">${_udFmtMoney(H.locked)}</span> <span style="color:var(--text2)">locked</span>` : '';
-            const nowStr = (L.moneyNow && L.moneyNow !== H.locked) ? ` · <span style="color:#22c55e">${_udFmtMoney(L.moneyNow)} if it ended today</span>` : (!H.locked && H.alive && H.isH2h ? ' · <span style="color:var(--text2)">pays from R4</span>' : '');
+            const lockStr = H.locked ? ` · <span style="color:var(--green);font-weight:700">${_udFmtMoney(H.locked)}</span> <span style="color:var(--text2)">locked</span>` : '';
+            const nowStr = (L.moneyNow && L.moneyNow !== H.locked) ? ` · <span style="color:var(--green)">${_udFmtMoney(L.moneyNow)} if it ended today</span>` : (!H.locked && H.alive && H.isH2h ? ' · <span style="color:var(--text2)">pays from R4</span>' : '');
             html += `<div style="font-size:.68rem;color:var(--text2)">${line}${lockStr}${nowStr}</div>`;
           } else {
             html += `<div style="font-size:.68rem;color:var(--text2)"><span style="color:var(--text);font-weight:700;font-size:.78rem">${L.myPts.toFixed(1)}</span> PTS${wkStr}${cushStr}${payStr}</div>`;
@@ -65326,7 +65343,7 @@ Rules:
     const leader = L.teams[0];
     const wkLbl = L.wkCol ? 'W' + L.wkCol : 'WK';
     const thru = L.weekList.length ? (L.weekList.length === 1 ? 'Week ' + L.weekList[0] : 'Weeks ' + L.weekList[0] + '-' + L.weekList[L.weekList.length - 1]) : '';
-    const liveTag = (L.liveWk && L.weekList.includes(L.liveWk)) ? ' <span style="color:#22c55e;font-weight:700">● LIVE</span>' : '';
+    const liveTag = (L.liveWk && L.weekList.includes(L.liveWk)) ? ' <span style="color:var(--green);font-weight:700">● LIVE</span>' : '';
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;font-size:.62rem;color:var(--text2)">
       <span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text)">LIVE LEADERBOARD</span>
       <span>${_esc(thru)}${liveTag}</span>
@@ -65350,7 +65367,7 @@ Rules:
       html += `<div onclick="event.stopPropagation();window._udToggleTeamsRoster(${i}, ${ti})" style="padding:7px 12px;border:1px solid ${adv ? '#22c55e40' : 'var(--border)'};border-radius:6px;margin-bottom:4px;${rowBg}cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">`;
       html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">`;
       html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${rkColor};width:30px">#${rk != null ? rk : '—'}</div>`;
-      html += `<div style="flex:1;min-width:90px;font-size:.72rem">${teamLabel}${adv ? ' <span style="font-size:.5rem;color:#22c55e;letter-spacing:.5px;font-weight:700">ADV</span>' : ''}</div>`;
+      html += `<div style="flex:1;min-width:90px;font-size:.72rem">${teamLabel}${adv ? ' <span style="font-size:.5rem;color:var(--green);letter-spacing:.5px;font-weight:700">ADV</span>' : ''}</div>`;
       html += `<div style="text-align:right;min-width:64px"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--text);line-height:1">${pts != null ? pts.toFixed(1) : '—'}</div><div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px">TOTAL PTS</div></div>`;
       html += `<div style="text-align:right;min-width:48px"><div style="font-size:.75rem;font-weight:700;color:var(--text)">${wk != null ? wk.toFixed(1) : '—'}</div><div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px">${wkLbl}</div></div>`;
       html += `<div style="text-align:right;min-width:60px"><div style="font-size:.72rem;font-weight:700;color:${behind == null ? 'var(--text2)' : behind >= 0 ? '#22c55e' : (adv ? 'var(--text2)' : '#ef4444')}">${behind == null ? (rk === 1 ? '—' : '') : (behind > 0 ? '+' : '') + behind.toFixed(1)}</div><div style="font-size:.45rem;color:var(--text2);letter-spacing:.5px">${gapLbl.toUpperCase()}</div></div>`;
@@ -65359,7 +65376,7 @@ Rules:
       html += `<div id="udTeamsRoster_${i}_${ti}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0"></div>`;
       html += `</div>`;
       if (rk != null && lt && ti === L.rule.adv - 1 && row.teams.length > L.rule.adv) {
-        html += `<div style="display:flex;align-items:center;gap:8px;margin:6px 0 8px;font-size:.5rem;letter-spacing:1.5px;color:#22c55e"><span style="flex:1;border-top:1px dashed #22c55e80"></span>ADVANCE LINE · ${L.cutPts != null ? L.cutPts.toFixed(1) + ' PTS' : ''}<span style="flex:1;border-top:1px dashed #22c55e80"></span></div>`;
+        html += `<div style="display:flex;align-items:center;gap:8px;margin:6px 0 8px;font-size:.5rem;letter-spacing:1.5px;color:var(--green)"><span style="flex:1;border-top:1px dashed #22c55e80"></span>ADVANCE LINE · ${L.cutPts != null ? L.cutPts.toFixed(1) + ' PTS' : ''}<span style="flex:1;border-top:1px dashed #22c55e80"></span></div>`;
       }
     });
     return html;
@@ -65376,11 +65393,11 @@ Rules:
     let html = `<div style="margin-bottom:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">`;
     html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;font-size:.62rem;color:var(--text2)">
       <span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text)">${H.isH2h ? 'ELIMINATOR ROUNDS' : 'PLAYOFF ROUNDS'}</span>
-      <span>${H.alive ? '<b style="color:#22c55e">ALIVE</b> · reached ' + (L.rule.rounds[H.reached - 1] && L.rule.rounds[H.reached - 1].final ? 'the FINAL' : 'R' + H.reached) : '<b style="color:#ef4444">OUT</b> in R' + H.elim}</span>
+      <span>${H.alive ? '<b style="color:var(--green)">ALIVE</b> · reached ' + (L.rule.rounds[H.reached - 1] && L.rule.rounds[H.reached - 1].final ? 'the FINAL' : 'R' + H.reached) : '<b style="color:var(--red)">OUT</b> in R' + H.elim}</span>
       <span>· locked <b style="color:${H.locked ? '#22c55e' : 'var(--text2)'}">${_udFmtMoney(H.locked)}</b></span>
       <span>· ${H.groupsLinked} playoff group${H.groupsLinked === 1 ? '' : 's'} synced</span>
-      ${L.rule.inferred ? '<span title="No public rules page for this contest — bracket and payouts assumed from its launch headline (same $ entry / prize pool / 1st place as The Little Board)." style="color:#f59e0b">· bracket INFERRED</span>' : ''}
-      ${L.rule.unknownBracket ? '<span title="Underdog publishes no rules page for this contest. Rounds below use the standard playoff shape (Week 15, Week 16, final in Week 17, top 1 advancing) and the pool sizes of whatever groups have synced; payouts assume entry fee back." style="color:#f59e0b">· bracket NOT ON FILE (generic shape)</span>' : ''}
+      ${L.rule.inferred ? '<span title="No public rules page for this contest — bracket and payouts assumed from its launch headline (same $ entry / prize pool / 1st place as The Little Board)." style="color:var(--accent)">· bracket INFERRED</span>' : ''}
+      ${L.rule.unknownBracket ? '<span title="Underdog publishes no rules page for this contest. Rounds below use the standard playoff shape (Week 15, Week 16, final in Week 17, top 1 advancing) and the pool sizes of whatever groups have synced; payouts assume entry fee back." style="color:var(--accent)">· bracket NOT ON FILE (generic shape)</span>' : ''}
     </div>`;
     html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:560px;border-collapse:collapse;font-size:.68rem"><thead><tr style="border-bottom:1px solid var(--border)">
       <th style="text-align:left;padding:3px 6px;color:var(--text2)">ROUND</th><th style="text-align:left;padding:3px 6px;color:var(--text2)">WEEK</th>
@@ -65443,12 +65460,12 @@ Rules:
         const nm = isMine ? '<span style="color:var(--accent);font-weight:700">' + _esc(t.username || 'YOU') + '</span> <span style="font-size:.55rem;color:var(--accent)">(YOU)</span>' : _esc(t.username || ('Opponent ' + String(t.entryId || '').slice(0, 6)));
         html += `<div style="display:flex;align-items:center;gap:10px;padding:5px 10px;margin-top:3px;border:1px solid ${t.adv ? '#22c55e40' : 'var(--border)'};border-radius:6px;${bg}font-size:.7rem">
           <span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:${t.adv ? '#22c55e' : 'var(--text)'};width:34px">#${t.rank != null ? t.rank : '—'}</span>
-          <span style="flex:1;min-width:80px">${nm}${t.adv ? ' <span style="font-size:.5rem;color:#22c55e;font-weight:700;letter-spacing:.5px">ADV</span>' : ''}${!t.hasPicks ? ' <span style="font-size:.5rem;color:var(--text2)">roster not synced</span>' : ''}</span>
+          <span style="flex:1;min-width:80px">${nm}${t.adv ? ' <span style="font-size:.5rem;color:var(--green);font-weight:700;letter-spacing:.5px">ADV</span>' : ''}${!t.hasPicks ? ' <span style="font-size:.5rem;color:var(--text2)">roster not synced</span>' : ''}</span>
           <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--text)">${t.pts != null ? t.pts.toFixed(1) : '—'}</span>
-          ${la.final ? `<span style="min-width:64px;text-align:right;font-size:.65rem;color:#22c55e">${t.rank != null ? _udFmtMoney(_udFinalPrize(L.rule, t.rank) || 0) : ''}</span>` : ''}
+          ${la.final ? `<span style="min-width:64px;text-align:right;font-size:.65rem;color:var(--green)">${t.rank != null ? _udFmtMoney(_udFinalPrize(L.rule, t.rank) || 0) : ''}</span>` : ''}
         </div>`;
         if (!la.final && ti === la.advN - 1 && la.teams.length > la.advN) {
-          html += `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.5rem;letter-spacing:1.5px;color:#22c55e"><span style="flex:1;border-top:1px dashed #22c55e80"></span>ADVANCE LINE<span style="flex:1;border-top:1px dashed #22c55e80"></span></div>`;
+          html += `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.5rem;letter-spacing:1.5px;color:var(--green)"><span style="flex:1;border-top:1px dashed #22c55e80"></span>ADVANCE LINE<span style="flex:1;border-top:1px dashed #22c55e80"></span></div>`;
         }
       });
       if (la.teams.length > cap) html += `<div style="font-size:.6rem;color:var(--text2);margin-top:4px">… ${la.teams.length - cap} more</div>`;
@@ -65583,8 +65600,8 @@ Rules:
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
-              ${_liveOn ? `<th style="text-align:right;padding:3px 6px;color:#22c55e"><span data-gloss="2026 half-PPR points so far (FINAL games from the stats feed + live scoring for games in progress).">PTS</span></th>
-              <th style="text-align:right;padding:3px 6px;color:#22c55e"><span data-gloss="Points in the current scoring week.">${_wkHdr}</span></th>` : ''}
+              ${_liveOn ? `<th style="text-align:right;padding:3px 6px;color:var(--green)"><span data-gloss="2026 half-PPR points so far (FINAL games from the stats feed + live scoring for games in progress).">PTS</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--green)"><span data-gloss="Points in the current scoring week.">${_wkHdr}</span></th>` : ''}
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected fantasy points per game.">PROJ PPG</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected total season points.">SZN PTS</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Value Over Replacement — season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13).">VOR</span></th>
@@ -65611,7 +65628,7 @@ Rules:
             const _grpLive = _liveOn ? group.reduce((acc, p) => { const r = _udPlayerSeasonPts(p.name, live); if (r.pts != null) acc.pts = (acc.pts || 0) + r.pts; if (r.wk != null) acc.wk = (acc.wk || 0) + r.wk; return acc; }, { pts: null, wk: null }) : null;
             html += `<tr class="bb-pos-section-row" style="background:${_hdrColor}10;border-top:2px solid ${_hdrColor}50;border-bottom:1px solid ${_hdrColor}30">
               <td colspan="5" style="padding:5px 6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:${_hdrColor}">${pos} <span style="font-size:.55rem;color:var(--text2);letter-spacing:.5px;font-family:'DM Sans',sans-serif;margin-left:6px">${group.length} player${group.length===1?'':'s'}</span></td>
-              ${_liveOn ? `<td style="padding:5px 6px;text-align:right;font-weight:700;color:#22c55e">${_grpLive.pts != null ? _grpLive.pts.toFixed(1) : '—'}</td><td style="padding:5px 6px;text-align:right;color:#22c55e">${_grpLive.wk != null ? _grpLive.wk.toFixed(1) : '—'}</td>` : ''}
+              ${_liveOn ? `<td style="padding:5px 6px;text-align:right;font-weight:700;color:var(--green)">${_grpLive.pts != null ? _grpLive.pts.toFixed(1) : '—'}</td><td style="padding:5px 6px;text-align:right;color:var(--green)">${_grpLive.wk != null ? _grpLive.wk.toFixed(1) : '—'}</td>` : ''}
               <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_hdrColor}">${_totalProj > 0 ? _totalProj : '—'}</td>
               <td style="padding:5px 6px;text-align:right;color:var(--text2)">${_totalSzn > 0 ? _totalSzn : '—'}</td>
               <td style="padding:5px 6px;text-align:right;font-weight:700;color:${_vorClr}">${_totalVor > 0 ? '+' : ''}${_totalVor}</td>
@@ -65959,7 +65976,7 @@ Rules:
       html += `<div style="display:flex;align-items:center;gap:6px;margin-top:2px">`;
       html += `<div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px"></div></div>`;
       const allInfo = allPlayers ? allPlayers[name] : null;
-      html += `<span style="font-size:.65rem;color:var(--text2)">Avg pick: ${Math.round(info.avgPick)} (${info.minPick}–${info.maxPick})${allInfo ? ` · <span style="color:#22c55e">${info.count} of ${allInfo.count} advancing</span>` : ''}</span>`;
+      html += `<span style="font-size:.65rem;color:var(--text2)">Avg pick: ${Math.round(info.avgPick)} (${info.minPick}–${info.maxPick})${allInfo ? ` · <span style="color:var(--green)">${info.count} of ${allInfo.count} advancing</span>` : ''}</span>`;
       html += `</div>`;
       html += `</div>`;
       html += `<div style="text-align:right;min-width:50px">`;
@@ -66267,7 +66284,7 @@ Rules:
       if (!scope.numDrafts) {
         return `<div style="padding:12px 4px;color:var(--text2);font-size:.75rem">No teams in an advancing spot right now. This view needs the full field synced from Underdog and at least one scored week.</div>`;
       }
-      head = `<div style="padding:2px 4px 8px;font-size:.68rem;color:var(--text2)"><span style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#22c55e">ADVANCING TEAMS</span> — ${scope.numDrafts} of ${scope.all.numDrafts} drafts · exposure is the share of your advancing teams</div>`;
+      head = `<div style="padding:2px 4px 8px;font-size:.68rem;color:var(--text2)"><span style="font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:var(--green)">ADVANCING TEAMS</span> — ${scope.numDrafts} of ${scope.all.numDrafts} drafts · exposure is the share of your advancing teams</div>`;
     }
     const combo = _udComboSearchHtml(val, scope);
     return head + (combo != null ? combo

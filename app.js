@@ -19524,6 +19524,79 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
   window._mffTagNumericCols = tag;
 })();
+// === Feature analytics (GA4 custom events, mirrored to Clarity) ===
+// One helper + delegated capture-phase listeners, so tracking survives every
+// re-render and costs nothing when neither tag is loaded (MFF_GA_ID /
+// MFF_CLARITY_ID empty in index.html). GA4 custom event names are snake_case;
+// params are short strings. page_view itself is sent by switchPage().
+(function () {
+  const track = (name, params) => {
+    try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) {}
+    try { if (typeof window.clarity === 'function') window.clarity('event', name); } catch (e) {}
+  };
+  window._mffTrack = track;
+  const page = () => { const a = document.querySelector('.page.active'); return a ? a.id.replace(/^page/, '').toLowerCase() : ''; };
+  const CLICK = [
+    ['.version-tab[data-version]', b => ['board_version', { version: b.dataset.version }]],
+    ['.mode-tab[data-mode]', b => ['board_mode', { mode: b.dataset.mode }]],
+    ['.pos-btn[data-pos]', b => ['pos_filter', { pos: b.dataset.pos, page: page() }]],
+    ['#navMoreBtn', () => ['nav_more_open', {}]],
+    ['.nav-btn[data-nav-tier="2"][data-page]', b => ['nav_tool_tab', { page: b.dataset.page }]],
+    ['#btnThemeToggle', () => ['theme_toggle', { theme: document.documentElement.dataset.theme === 'light' ? 'dark' : 'light' }]],
+    ['.export-menu-item', b => ['export', { format: ((b.id || '').replace(/^btnExport/, '') || 'csv').toLowerCase() }]],
+    ['#btnColumnToggle', () => ['cols_menu_open', {}]],
+    ['#btnDraftHelper', () => ['draft_helper_open', {}]],
+    ['#btnShareRanks', () => ['share_ranks', {}]],
+    ['#btnSave', () => ['ranks_save', { version: typeof currentVersion === 'string' ? currentVersion : '' }]],
+    ['#authGoogle', () => ['sign_in_start', { method: 'google' }]],
+    ['#authSubmit', () => ['sign_in_start', { method: 'email' }]],
+    ['#globalAuthBar button', b => /sign\s*in/i.test(b.textContent) ? ['sign_in_open', { page: page() }] : null],
+    ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked', b => ['premium_cta', { source: b.id || (b.className || '').split(' ')[0], page: page() }]],
+    ['#mtSleeperImportBtn, #mtEspnImportBtn, #mtYahooImportBtn', b => ['league_import', { platform: b.id.replace(/^mt|ImportBtn$/g, '').toLowerCase() }]],
+    ['#tcvFullscreenBtn', () => ['tier_cards_fullscreen', {}]],
+    ['#sstDropdown', () => ['startsit_add', {}]],
+  ];
+  document.addEventListener('click', e => {
+    const t = e.target; if (!t || !t.closest) return;
+    for (const [sel, fn] of CLICK) {
+      const b = t.closest(sel);
+      if (b) { const r = fn(b); if (r) track(r[0], r[1]); return; }
+    }
+  }, true);
+  // Player card opens (every entry point goes through openPlayerCard). The card
+  // re-renders itself through the same function (lazy weekly data, section
+  // toggles), so one tap can mean several calls: count one per player per 2s.
+  if (typeof openPlayerCard === 'function') {
+    const _opc = openPlayerCard;
+    let lastKey = '', lastAt = 0;
+    openPlayerCard = function (d, ctxMode) {
+      const key = d ? (d.n || d.id || '') + '|' + (d.s || '') : '';
+      const now = Date.now();
+      if (key !== lastKey || now - lastAt > 2000) track('player_card', { pos: (d && d.s) || '', page: page(), ctx: ctxMode || '' });
+      lastKey = key; lastAt = now;
+      return _opc.apply(this, arguments);
+    };
+    window.openPlayerCard = openPlayerCard;
+  }
+  // Start/Sit: one search event per focus once the query is 2+ chars
+  const sst = document.getElementById('sstSearch');
+  if (sst) {
+    let fired = false;
+    sst.addEventListener('focus', () => { fired = false; });
+    sst.addEventListener('input', () => { if (!fired && sst.value.trim().length >= 2) { fired = true; track('startsit_search', {}); } });
+  }
+  // Completed sign-ins: the first auth callback is the persisted state, not a login
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+      let first = true, signed = false;
+      firebase.auth().onAuthStateChanged(u => {
+        if (first) { first = false; signed = !!u; return; }
+        if (u && !signed) track('login', { method: ((u.providerData && u.providerData[0]) || {}).providerId || 'password' });
+        signed = !!u;
+      });
+    }
+  } catch (e) {}
+})();
 // === Phone MORE tab (≤600px) ===
 // Toggles .more-open on the sidebar so tier-2 tabs render as a grid sheet above
 // the five primary tabs (styles/main.css ≤600px block). Any tab tap, or a tap

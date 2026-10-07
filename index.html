@@ -6,7 +6,7 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firestore.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com https://lm-api-reads.lazydays.host https://lm-api-reads.fantasy.espn.com https://a.espncdn.com https://site.api.espn.com https://sports.core.api.espn.com https://late-wind-6322.billingsj199.workers.dev https://api.sleeper.app https://api.sleeper.com https://api.fantasycalc.com https://*.cloudfunctions.net https://*.run.app https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; frame-src https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firestore.googleapis.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com https://lm-api-reads.lazydays.host https://lm-api-reads.fantasy.espn.com https://a.espncdn.com https://site.api.espn.com https://sports.core.api.espn.com https://late-wind-6322.billingsj199.workers.dev https://api.sleeper.app https://api.sleeper.com https://api.fantasycalc.com https://*.cloudfunctions.net https://*.run.app https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://c.bing.com; frame-src https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com;">
 <title>MyFantasyFootball — Dynasty Rankings, Prospect Model & Mock Drafts</title>
 <meta name="description" content="Free dynasty and redraft fantasy football rankings, JM prospect model, mock draft simulator, trade calculator, and daily games. Built for serious fantasy managers.">
 <meta property="og:type" content="website">
@@ -50,6 +50,22 @@
   document.head.appendChild(s);
 })();
 </script>
+<!-- Microsoft Clarity (click/scroll heatmaps + session recordings). INERT until
+     MFF_CLARITY_ID is set: create a project at clarity.microsoft.com for
+     www.myfantasyfootball.co, paste its project ID here and deploy. The CSP above
+     already allows www.clarity.ms / *.clarity.ms / c.bing.com. app.js's _mffTrack
+     mirrors every GA4 feature event to Clarity as a custom event so recordings can
+     be filtered by what the visitor did. -->
+<script>
+(function(){
+  var MFF_CLARITY_ID = '';
+  if (!MFF_CLARITY_ID) return;
+  window.clarity = window.clarity || function(){ (window.clarity.q = window.clarity.q || []).push(arguments); };
+  var s = document.createElement('script'); s.async = true;
+  s.src = 'https://www.clarity.ms/tag/' + MFF_CLARITY_ID;
+  document.head.appendChild(s);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://a.espncdn.com" crossorigin>
@@ -66,7 +82,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-07-byeout1" as="script">
+<link rel="preload" href="app.js?v=2026-10-07-events2" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -6096,7 +6112,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-07-byeout1"></script>
+<script defer src="app.js?v=2026-10-07-events2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -12429,12 +12429,15 @@ function _vorTable() {
     // Replacement = the best player who would NOT start (Jack 10-05: the bench
     // doesn't win weeks, so value is measured against a start-worthy level).
     const ri = Math.min(nStart[p], pool.length - 1);
-    const R = pool[ri].tot / _sched(pool[ri].d)[0];
+    // Per game he PLAYS (expected points over expected games), the same basis as
+    // every player's PPG / VOR per game — a replacement with a return window is
+    // not priced as if his odds-scaled weeks were full games.
+    const R = pool[ri].tot / pool[ri].eg;
     out.repl[p] = { v: r1(R), n: pool[ri].d.n, rk: ri + 1, rostered: n[p], starters: nStart[p] };
     // Waiver floor = the best player left after the bench fills — who actually
     // plugs a bye or injury hole in the lineup sims (_vorLineupSim).
     const wi = Math.min(n[p], pool.length - 1);
-    out.waiver[p] = { v: r1(pool[wi].tot / _sched(pool[wi].d)[0]), n: pool[wi].d.n, rk: wi + 1 };
+    out.waiver[p] = { v: r1(pool[wi].tot / pool[wi].eg), n: pool[wi].d.n, rk: wi + 1 };
     const es = pool.map((x, i) => {
       const vor = r1(x.ppg - R);
       // Rest-of-season: only the weeks he beats replacement add value; playoff weeks count poW times.

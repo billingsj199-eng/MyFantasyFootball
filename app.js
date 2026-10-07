@@ -7051,7 +7051,13 @@ function _renderTierCardView(data, container) {
   });
   // Drop a ✂ group the BYE row emptied, then the BYE row itself goes last
   for (let gi = groups.length - 1; gi >= 0; gi--) if (groups[gi].cut && !groups[gi].players.length) groups.splice(gi, 1);
-  if (_tcvBye) groups.push({ label: '', cut: false, bye: true, players: _tcvBye.players.map(p => ({ d: p.d, displayRank: p.seasonRank, tierRank: null, cutRank: null })) });
+  if (_tcvBye) {
+    // Right before the ✂ cut group (Jack 2026-10-07: "right before the cut
+    // line, everywhere"), so it moves with the line; last when there is none.
+    const byeG = { label: '', cut: false, bye: true, players: _tcvBye.players.map(p => ({ d: p.d, displayRank: p.seasonRank, tierRank: null, cutRank: null })) };
+    const ci = groups.findIndex(g => g.cut);
+    if (ci >= 0) groups.splice(ci, 0, byeG); else groups.push(byeG);
+  }
 
   // Build DOM
   const root = document.createElement('div');
@@ -7686,6 +7692,40 @@ function render() {
   const showLanding = _isAdpCmp || (_isDynBoard && filter === 'ROOKIE');
   // Tier banner rows whose start falls between the previous row's rank and this
   // one — shared by the regular rows and the DEVY rows.
+  // BYE BLOCK (weekly, Jack 2026-10-07): the tier cards' BYE row in table
+  // form — this week's good bye players (same _tcvByeRowPlayers rule and
+  // BYE ≤ cutoffs), shown by SEASON rank, placed RIGHT BEFORE the cut line
+  // so it rides up and down with the line (after the last row when there is
+  // no line). Bye players already sitting below the cut are skipped in the
+  // tail so they appear once. Rows carry no data-idx: not draggable.
+  const _byeBlk = (currentMode === 'weekly' && filter !== 'DEVY' && typeof _tcvByeRowPlayers === 'function') ? _tcvByeRowPlayers(data, window._rankBelowCut || null) : null;
+  let _byeBlkDone = false, _cutLineDone = false;
+  const _byeBlockHtml = () => {
+    _byeBlkDone = true;
+    const wk = window._weeklyActiveWeek || 1;
+    const posLbl = filter === 'FLEX' ? 'FLEX' : filter === 'ALL' ? 'OVERALL' : filter === 'DST' ? 'D/ST' : filter;
+    const n = _byeBlk.players.length;
+    let h = `<tr class="tier-row bye-line-row"><td colspan="17"><div class="tier-inner" style="border-color:rgba(148,163,184,.45)">
+      <span class="tier-badge bye-badge">BYE</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} BYES · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
+    </div></td></tr>`;
+    _byeBlk.players.forEach(p => {
+      const d = p.d, dn = (d.n || '').replace(/"/g, '&quot;');
+      const w = window._watchSet && window._watchSet.has(d.n);
+      const sp = _tcvSeasonPpg(d);
+      const rankLbl = (filter === 'FLEX' || filter === 'ALL') ? '#' + p.seasonRank : (d.s === 'DST' ? 'D/ST' : d.s) + p.seasonRank;
+      const blur = (shouldBlur && p.seasonRank > blurCutoff) ? ' premium-blur' : '';
+      h += `<tr class="bye-row${blur}" data-bye-name="${dn}">
+        <td></td>
+        <td class="myrank-cell"><span class="myrank-num bye-rank" title="On bye in week ${wk} — season ${d.s === 'DST' ? 'D/ST' : d.s} rank ${p.seasonRank} on the redraft board (not ranked this week)">${rankLbl}</span></td>
+        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
+        <td><span class="pos-badge ${d.s}">${d.s}</span></td>
+        <td class="pos-rank-cell bye-cell">BYE</td>
+        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}back for week ${wk + 1}</td>
+      </tr>`;
+    });
+    return h;
+  };
   const _tierRowsHtml = (prevDisplayRank, displayRank) => {
     let html = '';
     tiers.forEach(t => {
@@ -7756,6 +7796,8 @@ function render() {
       if (_chunkLen === 0 && i >= 119) _chunkLen = html.length;
       return;
     }
+    // Bye players the BYE block already shows (they sit below the cut) — once only
+    if (_byeBlk && _byeBlk.names.has(d.n) && window._rankBelowCut && window._rankBelowCut.has(d.n)) return;
     const displayRank = useFilteredRank ? (i + 1) : d.myRank;
     // Cut line (all formats): tier-style divider at the overall cutoff rank.
     // Players below it are hidden from non-editors; the editor drags players
@@ -7778,11 +7820,15 @@ function render() {
         // any sort, so the divider goes at the first below-cut row (the rank
         // compare alone misfires once rows are out of board order).
         const _bcSet = window._rankBelowCut;
+        // First below-cut row still on screen (bye players skipped from the
+        // tail may have been the first ones, so a flag, not a prev-row compare).
         const _atCut = _bcSet
-          ? (_bcSet.has(d.n) && (i === 0 || !_bcSet.has(data[i - 1].n)))
+          ? (_bcSet.has(d.n) && !_cutLineDone)
           : (_rowRank > _cutN && _prevRank <= _cutN);
         const _cutCtrls = editable && sortKey === 'myrank' && sortDir === 1;
         if (_atCut) {
+          _cutLineDone = true;
+          if (_byeBlk && !_byeBlkDone) html += _byeBlockHtml();   // BYE block rides right above the line
           const _cutUp = Math.max(1, _prevRank > 0 ? _prevRank - 1 : 0);
           const _cutPosAttr = _isPosCutView ? ` data-cut-pos="${filter}"` : '';
           const _cutName = _isPosCutView ? ((filter === 'DST' ? 'D/ST' : filter) + ' CUT LINE — ' + filter + _cutN) : ('CUT LINE — #' + _cutN);
@@ -8066,6 +8112,8 @@ function render() {
     // the split always lands between complete <tr>s (tier/cut rows included).
     if (_chunkLen === 0 && i >= 119) _chunkLen = html.length;
   });
+  // No cut line on this board → the BYE block closes the list
+  if (_byeBlk && !_byeBlkDone) html += _byeBlockHtml();
 
   // Tiers that come after the last player
   if (showTiers) {

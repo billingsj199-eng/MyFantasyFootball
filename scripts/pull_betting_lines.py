@@ -232,7 +232,11 @@ def emit_game_totals_block(lines):
 def update_game_lines(src):
     print('Phase A: game lines (ESPN/DraftKings)...')
     pulled = pull_game_lines()
-    if len(pulled) < 200:
+    # Guard = "ESPN outage", not "full season posted": in-season ESPN only
+    # carries odds through ~2 weeks ahead (93 games by W5), and the old
+    # <200 floor froze every line from 10-02 on. Merge below keeps any game
+    # ESPN didn't return, so a partial pull is safe.
+    if len(pulled) < 12:
         print(f'  !! only {len(pulled)} games pulled — refusing to rewrite gameTotals '
               f'(existing block kept)')
         return src, 0

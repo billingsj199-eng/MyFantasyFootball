@@ -59,6 +59,14 @@ if ($rc -ne 0) {
     if ($LASTEXITCODE -eq 0) { Write-Log 'opponent-grade prior pushed' } else { Write-Log "opponent-grade prior PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
 
+# 0b. Prior-health file for the sim engine (added 2026-10-07): the completed season's healthy-vs-all points per game and
+#     healthy history -> sim_lab/data/sim_prior_health.js (live banged-up prior lift + the shadow's healthy-history prior).
+#     Downloads nflverse injuries_<season>.parquet if missing. sim_lab is unversioned; backup_to_branch.py snapshots it.
+$SimLab = 'E:\MyFantasyFootball\sim_lab'
+$rc = Run-Step 'prior health rebuild' $Python @((Join-Path $SimLab 'build_prior_health.py'), '--season', "$Season")
+if ($rc -ne 0) { Write-Log "prior health rebuild FAILED (exit $rc) - engine keeps last year's file; JM steps continue" }
+else { Run-Step 'sim_lab backup branch' $Python @((Join-Path $SimLab 'backup_to_branch.py'), ('sim_prior_health.js rebuilt for the {0} season' -f $Season)) | Out-Null }
+
 $Files = @('data/backtest_outcomes.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) { Write-Log "SKIP: uncommitted changes present:`n$dirty"; exit 0 }

@@ -1468,7 +1468,10 @@
   // season better; mean move .4/g, max 2.2. Pace / neutral pass rate alone, favorites, volume-cleaned evidence all failed.
   // Data: SIM_PACE_2026.teams[t].cur.vol = {games, att, plays, nrate, exc} (build_pace_vol.py, run by pull_pace_tracker.py).
   // Kill: window.SIM_VOLUME_CTX = false. Backup engine.js.bak_pre_volume_20261007.
-  var VOLUME_CTX = { eExc: 0.03, eAtt: 0.04, minGames: 2, lo: 0.8, hi: 1.2, pos: { WR: 1, TE: 1 } };
+  var VOLUME_CTX = { eExc: 0.03, eAtt: 0.04, eBox: 0.04, minGames: 2, lo: 0.8, hi: 1.2, pos: { WR: 1, TE: 1 } };
+  // BOX COUNT FACED (backtest_box_context.py, 2026-10-07): WR / TE on offenses that see heavier boxes (defenders in the box, season to
+  // date) out-produce the number: 1 + .04 z(box) -> -0.43% (6/7), forward -0.50% (4/4), board -0.19% on 2019-25 participation data;
+  // the FTN screen agreed (-0.64% 4/4). Live source = FTN charting (cur.vol.box via build_pace_vol.py). Kill: window.SIM_BOX_CTX = false.
   // BASE BLEND FOR THE WEEKS AHEAD (backtest_base_remeasure.py + backtest_shadow_ros.py, 2026-10-07; Jack: "wire it"). The public
   // rest-of-season numbers (season PPG, VOR, season sims) ran on the Clay blend alone; the Clay-free shadow rate beats it 7.8% (7/7)
   // on rest of season and the 70/30 shadow + Clay blend is the most accurate next-game base (-1.05% 7/7, LOYO .6-.7 every fold).
@@ -1479,10 +1482,11 @@
   var BASE_BLEND = { w: { QB: 0.7, RB: 0.7, WR: 0.7, TE: 0.3 }, scope: 'all' };   // 2026-10-07 evening: scope 'all' (Jack: "switch the current week to the blend too"); TE .3 (every cut of the re-measure had tight ends as Clay's: at .7 the TE number was +0.4% worse than the live number, at .3 -0.1%)
   function volumeZ() {
     var d = (typeof window !== 'undefined' && window.SIM_PACE_2026) || null, T = d && d.teams; if (!T) return null;
-    var keys = [], ex = [], at = [];
+    var keys = [], ex = [], at = [], bxKeys = [], bx = [];
     Object.keys(T).forEach(function (t) {
       var v = T[t].cur && T[t].cur.vol;
       if (v && v.games >= VOLUME_CTX.minGames && v.exc != null && v.att != null) { keys.push(t); ex.push(v.exc); at.push(v.att); }
+      if (v && v.games >= VOLUME_CTX.minGames && v.box != null) { bxKeys.push(t); bx.push(v.box); }
     });
     if (keys.length < 16) return null;
     var z = function (arr) {
@@ -1492,14 +1496,20 @@
       return arr.map(function (v) { return Math.max(-2.5, Math.min(2.5, (v - m) / s)); });
     };
     var zE = z(ex), zA = z(at); if (!zE || !zA) return null;
-    var out = {}; keys.forEach(function (t, i) { out[t] = { exc: zE[i], att: zA[i] }; }); return out;
+    var out = {}; keys.forEach(function (t, i) { out[t] = { exc: zE[i], att: zA[i] }; });
+    var zB = bxKeys.length >= 16 ? z(bx) : null; if (zB) bxKeys.forEach(function (t, i) { if (out[t]) out[t].box = zB[i]; else out[t] = { box: zB[i] }; });
+    return out;
   }
   function volumeMult(p, slot) {
     if (typeof window !== 'undefined' && window.SIM_VOLUME_CTX === false) return 1;
     if (!p || p.isDST || !VOLUME_CTX.pos[p.pos]) return 1;
     var Z = volumeZ(), z = Z && Z[p.tm]; if (!z) return 1;
-    var m = Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eExc * z.exc));
-    if (slot && typeof slot.spread === 'number' && slot.spread > 0) m *= Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eAtt * z.att));
+    var m = 1;
+    if (z.exc != null && z.att != null) {
+      m = Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eExc * z.exc));
+      if (slot && typeof slot.spread === 'number' && slot.spread > 0) m *= Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eAtt * z.att));
+    }
+    if (z.box != null && !(typeof window !== 'undefined' && window.SIM_BOX_CTX === false)) m *= Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 + VOLUME_CTX.eBox * z.box));
     return m;
   }
   var _fillinCache = {};

@@ -20,6 +20,16 @@ def team_vol(season=2026):
     d = pd.read_csv(p, compression="gzip", usecols=["week", "posteam", "pass_attempt", "play_type", "qtr", "score_differential", "season_type"], low_memory=False)
     d = d[(d.season_type == "REG") & d.posteam.notna() & d.play_type.isin(["pass", "run"])]
     d["neutral"] = (d.qtr <= 3) & (d.score_differential.abs() <= 8)
+    # defenders in the box faced (box-count layer, backtest_box_context.py 2026-10-07): FTN charting, weekly in-season
+    fp = os.path.join(CACHE, f"ftn_charting_{season}.parquet"); box_by = {}
+    if os.path.exists(fp):
+        try:
+            f = pd.read_parquet(fp, columns=["nflverse_game_id", "nflverse_play_id", "n_defense_box"])
+            p2 = pd.read_csv(p, compression="gzip", usecols=["game_id", "play_id", "posteam", "play_type", "season_type"], low_memory=False)
+            p2 = p2[(p2.season_type == "REG") & p2.posteam.notna() & p2.play_type.isin(["pass", "run"])]
+            j = p2.merge(f, left_on=["game_id", "play_id"], right_on=["nflverse_game_id", "nflverse_play_id"], how="inner"); j = j[j.n_defense_box > 0]
+            for tm, g2 in j.groupby("posteam"): box_by[TM_ALIAS.get(str(tm), str(tm))] = (float(g2.n_defense_box.mean()), int(len(g2)))
+        except Exception as e: print(f"WARN box from FTN not built ({e})")
     out = {}
     for tm, g in d.groupby("posteam"):
         t = TM_ALIAS.get(str(tm), str(tm)); games = g.week.nunique()
@@ -27,7 +37,8 @@ def team_vol(season=2026):
         nt = g[g.neutral]; att = g.pass_attempt.sum() / games; plays = len(g) / games
         nrate = float(nt.pass_attempt.sum() / len(nt)) if len(nt) >= 20 else None
         out[t] = {"games": int(games), "att": round(float(att), 2), "plays": round(float(plays), 2), "nrate": round(nrate, 4) if nrate is not None else None,
-                  "exc": round(float(att - nrate * plays), 2) if nrate is not None else None}
+                  "exc": round(float(att - nrate * plays), 2) if nrate is not None else None,
+                  "box": round(box_by[t][0], 3) if t in box_by and box_by[t][1] >= 40 else None, "boxPlays": box_by[t][1] if t in box_by else 0}
     return out
 
 
@@ -44,7 +55,7 @@ def inject(pace_path=PACE, season=2026):
         else: rec["cur"].pop("vol", None)
     with open(pace_path, "w", encoding="utf-8") as f:
         f.write(head + json.dumps(obj, separators=(",", ":")) + ";\n")
-    print(f"pace vol injected for {n} teams: " + ", ".join(f"{t} att {vol[t]['att']} exc {vol[t]['exc']}" for t in sorted(vol)[:6]) + " ...")
+    print(f"pace vol injected for {n} teams ({sum(1 for v in vol.values() if v.get('box') is not None)} with box): " + ", ".join(f"{t} att {vol[t]['att']} exc {vol[t]['exc']} box {vol[t].get('box')}" for t in sorted(vol)[:5]) + " ...")
     return n
 
 

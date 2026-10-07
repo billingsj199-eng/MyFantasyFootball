@@ -4,7 +4,7 @@ Live grading of the 2026-10-07 layers from the lock rows (run by weekly_scorecar
 
 Lock rows since 2026-10-07 store:
   bb / jsPre     base blend: jsMean = bb x ncMean + (1 - bb) x jsPre  (jsPre = the Clay-blend model before the blend)
-  vol            volume-context multiplier inside jsMean (WR / TE; absent = 1)
+  vol            volume-context multiplier inside jsMean (WR / TE; absent = 1) - from 10-07 evening this includes the box-count factor
   health         banged-up prior lift in points per game (WR / TE; absent = 0)
   useHurt        banged-up games given half weight in the usage inputs (count; absent = 0)
 Per week + cumulative:

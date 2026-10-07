@@ -175,6 +175,32 @@ function kickoffMs(kicks, wk, tm) {
   if (injState.zeros.length) console.log('in-season injury layer (wk ' + currentWeek + ', active ' + injActive + '):', injState.zeros.map(z => z.name + ' wk' + z.from + '-' + z.to + (z.mult ? ' x' + z.mult : '') + ' [' + z.src + ']').join('; '));
   else console.log('in-season injury layer: ' + (injActive ? 'no designations' : 'inactive until ' + new Date(wkFirstKick - 4 * 24 * 3600 * 1000).toISOString()));
 
+  // PREFLIGHT (2026-10-07): which engine layers are actually active this week, and on how many players. Every layer shipped
+  // today reads a data file another job refreshes (pace vol, prior health, practice archive, snaps); if one comes up empty the
+  // layer silently does nothing. Warnings only - the export still runs - but they land in the task log.
+  try {
+    const W = global, warn = [];
+    const pace = W.SIM_PACE_2026, teams = pace && pace.teams ? Object.keys(pace.teams) : [];
+    const volTeams = teams.filter(t => pace.teams[t].cur && pace.teams[t].cur.vol && pace.teams[t].cur.vol.games >= 2).length;
+    const PH = W.SIM_PRIOR_HEALTH, phP = PH && PH.p ? Object.keys(PH.p).length : 0, phH = PH && PH.h ? Object.keys(PH.h).length : 0;
+    const SIG = W.SIM_INJ_SIGNALS, pracWeeks = SIG && SIG.prac ? Object.keys(SIG.prac).map(Number).sort((a, b) => a - b) : [];
+    const snapsN = W.SIM_SNAPS_2026 ? Object.keys(W.SIM_SNAPS_2026).length : 0, xfpN = W.SIM_XFP_2026 ? Object.keys(W.SIM_XFP_2026).length : 0, routesN = W.SIM_ROUTES_2026 ? Object.keys(W.SIM_ROUTES_2026).length : 0;
+    const kills = ['SIM_BASE_BLEND', 'SIM_VOLUME_CTX', 'SIM_HEALTH_PRIOR', 'SIM_HURT_USAGE', 'SIM_TE_USE_G1', 'SIM_NC_HEALTHY', 'SIM_NC_VOL', 'SIM_LIVE_USAGE', 'SIM_FILLIN', 'SIM_PECK_DOCK', 'SIM_PROP_ANCHOR'].filter(k => W[k] === false);
+    let c = { rows: 0, blend: 0, shadow: 0, vol: 0, health: 0, hurt: 0, teUse: 0, wrUse: 0, peck: 0, line: 0, rate: 0 };
+    players.list.forEach(p => { if (p.isDST) return; const wp = E.weeklyProjection(p, currentWeek, scH, schedule); if (!wp || !(E.effMean(wp) >= 2)) return;
+      c.rows++; if (wp.bb) c.blend++; if (wp.ncMean != null) c.shadow++; if (wp.vol != null && Math.abs(wp.vol - 1) > 0.005) c.vol++; if (wp.health > 0) c.health++;
+      if (wp.use && wp.use.hurtG > 0) c.hurt++; if (wp.use && p.pos === 'TE') c.teUse++; if (wp.use && p.pos === 'WR') c.wrUse++; if (wp.peck != null && wp.peck !== 1) c.peck++;
+      if (wp.propSrc === 'line') c.line++; else if (wp.propSrc === 'rate') c.rate++; });
+    console.log(`PREFLIGHT week ${currentWeek}: rows ${c.rows} | base blend on ${c.blend} (shadow available ${c.shadow}) | volume mult on ${c.vol} (teams with vol ${volTeams}/${teams.length}) | health lift ${c.health} (file p ${phP}, h ${phH}) | hurt-usage games ${c.hurt} (practice weeks ${pracWeeks.join(',') || 'none'}, snaps ${snapsN}, xFP ${xfpN}, routes ${routesN}) | usage WR ${c.wrUse} TE ${c.teUse} | peck ${c.peck} | lines ${c.line} rate ${c.rate}` + (kills.length ? ` | KILL SWITCHES SET: ${kills.join(', ')}` : ''));
+    if (c.rows && !c.blend) warn.push('base blend inactive (no bb on any row)'); if (c.shadow < c.rows * 0.5) warn.push(`shadow on only ${c.shadow} of ${c.rows} rows`);
+    if (volTeams < 16) warn.push(`volume context: only ${volTeams} teams carry cur.vol (build_pace_vol.py)`); if (!phP || !phH) warn.push('prior health file empty (sim_prior_health.js)');
+    if (!pracWeeks.length || pracWeeks[pracWeeks.length - 1] < currentWeek - 1) warn.push(`practice archive stops at week ${pracWeeks[pracWeeks.length - 1] || 'none'}`);
+    if (!snapsN || !xfpN || !routesN) warn.push('usage inputs missing (snaps / xFP / routes)'); if (c.rows && !c.wrUse) warn.push('WR usage evidence inactive'); if (c.rows && !c.teUse) warn.push('TE usage evidence inactive');
+    if (c.rows && !c.line) warn.push('no prop lines anchored this week'); if (kills.length) warn.push('kill switches set in the export environment');
+    warn.forEach(w => console.log('PREFLIGHT WARN: ' + w));
+    if (!warn.length) console.log('PREFLIGHT OK');
+  } catch (e) { console.log('PREFLIGHT failed: ' + (e && e.message)); }
+
   // previous state for the freeze merge
   let prev = null;
   try { prev = JSON.parse(fs.readFileSync(OUT_JSON, 'utf8')); } catch (_) {}

@@ -1476,7 +1476,7 @@
   // availability sit on top as before. scope 'later' = weeks ahead only (the current week keeps its anchored number);
   // 'all' = every week. Kill: window.SIM_BASE_BLEND = false; override: window.SIM_BASE_BLEND = { w: .7, scope: 'later' | 'all' }.
   // Backup engine.js.bak_pre_baseblend_20261007.
-  var BASE_BLEND = { w: 0.7, scope: 'all' };   // 2026-10-07 evening, Jack: "switch the current week to the blend too" (was 'later')
+  var BASE_BLEND = { w: { QB: 0.7, RB: 0.7, WR: 0.7, TE: 0.3 }, scope: 'all' };   // 2026-10-07 evening: scope 'all' (Jack: "switch the current week to the blend too"); TE .3 (every cut of the re-measure had tight ends as Clay's: at .7 the TE number was +0.4% worse than the live number, at .3 -0.1%)
   function volumeZ() {
     var d = (typeof window !== 'undefined' && window.SIM_PACE_2026) || null, T = d && d.teams; if (!T) return null;
     var keys = [], ex = [], at = [];
@@ -3312,7 +3312,8 @@
     var bbW = 0, jsPre = jsMean, bbRatio = 1;
     var bbCfg = typeof window !== 'undefined' ? window.SIM_BASE_BLEND : undefined;
     if (bbCfg !== false && !p.isDST && jsMean != null && ncMean != null && ncMean > 0 && !ncOut && iA > 0) {
-      var bbw = (bbCfg && typeof bbCfg.w === 'number') ? bbCfg.w : BASE_BLEND.w, bbs = (bbCfg && bbCfg.scope) ? bbCfg.scope : BASE_BLEND.scope;
+      var bbwRaw = (bbCfg && bbCfg.w != null) ? bbCfg.w : BASE_BLEND.w, bbs = (bbCfg && bbCfg.scope) ? bbCfg.scope : BASE_BLEND.scope;
+      var bbw = typeof bbwRaw === 'number' ? bbwRaw : (bbwRaw && bbwRaw[p.pos] != null ? bbwRaw[p.pos] : 0.7);   // one weight, or per position
       var bbLater = _inj && _inj.week >= 1 && wk > _inj.week;
       if (bbw > 0 && (bbs === 'all' || bbLater)) { bbW = bbw; jsMean = bbw * ncMean + (1 - bbw) * jsMean; bbRatio = jsPre > 0 ? jsMean / jsPre : 1; }
     }

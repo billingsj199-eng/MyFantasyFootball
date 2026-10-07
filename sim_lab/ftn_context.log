@@ -1,0 +1,81 @@
+  2022: 33,676 charted plays joined
+  2023: 33,957 charted plays joined
+  2024: 33,471 charted plays joined
+  2025: 32,937 charted plays joined
+
+=== FTN CONTEXT SCREEN: 6,398 top-150 player-weeks 2022-25, base = blended number as wired ===
+
+--- 1  Spearman of actual / base with each metric's within-week z, by position (|rho| >= .05 flagged) ---
+    metric                   QB             RB             WR             TE
+    pa           +0.013  n908   -0.007  n1958  +0.048  n2406  +0.036  n680  
+    motion       -0.060* n908   +0.001  n1958  -0.019  n2406  -0.027  n680  
+    screen       +0.023  n908   -0.028  n1958  -0.008  n2406  +0.006  n680  
+    huddle       -0.013  n908   -0.008  n1958  +0.027  n2406  +0.017  n680  
+    rpo          -0.006  n908   -0.010  n1958  -0.008  n2406  -0.088* n680  
+    blitz        -0.002  n908   -0.026  n1958  +0.025  n2406  +0.085* n680  
+    rushers      +0.002  n908   -0.051* n1958  +0.018  n2406  +0.032  n680  
+    oop          -0.008  n908   -0.016  n1958  -0.001  n2406  +0.046  n680  
+    intw         +0.024  n908   +0.020  n1958  -0.019  n2406  -0.046  n680  
+    throwaway    -0.056* n908   -0.017  n1958  -0.009  n2406  -0.028  n680  
+    box          +0.031  n908   -0.030  n1958  +0.021  n2406  +0.091* n680  
+    catchable    -0.020  n908   -0.009  n1958  +0.026  n2406  -0.067* n680  
+    r_screen                n/a +0.023  n1540  -0.002  n2322  +0.079* n634  
+    r_catchable             n/a -0.007  n1540  +0.025  n2322  +0.019  n634  
+    r_contested             n/a +0.027  n1540  +0.013  n2322  -0.042  n634  
+    r_drop                  n/a +0.024  n1540  -0.020  n2322  -0.002  n634  
+    r_created               n/a +0.024  n1540  +0.021  n2322  -0.019  n634  
+
+--- 2  quintiles (WR + TE for team metrics / receiver metrics; RB for team metrics): actual / base low -> high ---
+    pa           WR+TE 0.977 0.960 1.049 1.020 1.038   (metric 0.145 -> 0.296)
+    pa           RB    1.048 0.990 0.990 0.943 1.005   (metric 0.144 -> 0.290)
+    pa           QB    0.947 1.047 1.006 0.989 0.986   (metric 0.150 -> 0.298)
+    motion       WR+TE 1.026 1.032 0.981 1.017 0.990   (metric 0.320 -> 0.640)
+    motion       RB    1.007 0.976 1.020 0.976 0.995   (metric 0.328 -> 0.641)
+    motion       QB    1.015 1.016 0.994 0.981 0.971   (metric 0.320 -> 0.665)
+    screen       WR+TE 1.034 0.980 1.012 1.004 1.013   (metric 0.055 -> 0.127)
+    screen       RB    1.040 0.997 0.950 1.046 0.944   (metric 0.055 -> 0.123)
+    screen       QB    0.989 0.990 0.960 1.001 1.038   (metric 0.053 -> 0.128)
+    huddle       WR+TE 1.004 1.002 1.004 1.027 1.008   (metric 0.033 -> 0.213)
+    huddle       RB    0.953 1.045 0.975 1.031 0.970   (metric 0.035 -> 0.238)
+    huddle       QB    0.979 1.046 0.979 1.012 0.964   (metric 0.032 -> 0.239)
+    rpo          WR+TE 1.039 0.992 1.027 1.001 0.983   (metric 0.015 -> 0.101)
+    rpo          RB    1.013 0.999 1.011 0.999 0.952   (metric 0.014 -> 0.095)
+    rpo          QB    1.022 0.984 0.968 0.991 1.012   (metric 0.015 -> 0.099)
+    blitz        WR+TE 0.976 1.016 1.023 0.970 1.057   (metric 0.202 -> 0.347)
+    blitz        RB    1.024 1.000 1.020 0.957 0.977   (metric 0.207 -> 0.341)
+    blitz        QB    0.991 0.979 1.054 0.983 0.972   (metric 0.202 -> 0.349)
+    rushers      WR+TE 0.991 0.961 1.055 1.015 1.021   (metric 4.054 -> 4.392)
+    rushers      RB    1.048 1.034 0.961 0.946 0.986   (metric 4.049 -> 4.371)
+    rushers      QB    0.982 0.997 0.999 1.027 0.975   (metric 4.033 -> 4.395)
+    oop          WR+TE 1.013 1.008 1.009 1.002 1.012   (metric 0.103 -> 0.252)
+    oop          RB    1.038 1.006 0.997 0.954 0.975   (metric 0.104 -> 0.250)
+    oop          QB    1.009 1.042 0.956 0.969 1.006   (metric 0.106 -> 0.257)
+    intw         WR+TE 1.036 0.991 0.999 1.006 1.011   (metric 0.019 -> 0.055)
+    intw         RB    0.971 0.995 1.007 0.975 1.027   (metric 0.019 -> 0.055)
+    intw         QB    0.967 1.013 0.945 1.022 1.032   (metric 0.017 -> 0.050)
+    throwaway    WR+TE 1.022 0.997 1.049 0.963 1.011   (metric 0.016 -> 0.052)
+    throwaway    RB    0.993 0.987 0.999 1.006 0.990   (metric 0.016 -> 0.053)
+    throwaway    QB    1.006 1.027 1.003 0.982 0.962   (metric 0.016 -> 0.051)
+    box          WR+TE 0.964 0.998 1.001 1.053 1.027   (metric 5.861 -> 6.399)
+    box          RB    1.023 1.079 0.926 0.978 0.974   (metric 5.843 -> 6.390)
+    box          QB    0.988 0.966 0.995 1.012 1.016   (metric 5.850 -> 6.366)
+    catchable    WR+TE 1.006 1.002 1.041 0.976 1.018   (metric 0.577 -> 0.714)
+    catchable    RB    1.032 0.979 0.967 1.007 0.991   (metric 0.578 -> 0.714)
+    catchable    QB    1.002 0.975 1.023 0.997 0.980   (metric 0.578 -> 0.716)
+    r_screen     WR+TE 1.029 0.980 1.001 1.021 1.021   (metric 0.006 -> 0.191)
+    r_catchable  WR+TE 0.982 1.010 0.996 1.035 1.024   (metric 0.616 -> 0.862)
+    r_contested  WR+TE 1.008 1.043 0.981 1.039 0.981   (metric 0.054 -> 0.284)
+    r_drop       WR+TE 1.038 0.969 1.022 1.043 0.979   (metric 0.003 -> 0.081)
+    r_created    WR+TE 1.022 1.020 0.987 1.020 1.003   (metric 0.000 -> 0.089)
+
+--- 3  multipliers 1 + e x z (sign from the correlation), leave-one-season-out over 4 seasons; weighted error vs base ---
+    pa           WR+TE rho +0.047 | e 0.01: -0.13%  e 0.02: -0.19%  e 0.04: -0.14% | LOYO -0.06% 2/4 picks ['e 0.04', 'e 0.02', 'e 0.04', 'e 0.02']
+    motion       QB    rho -0.060 | e 0.01: -0.25%  e 0.02: -0.38%  e 0.04: -0.24% | LOYO +0.11% 3/4 picks ['e 0.02', 'e 0.01', 'e 0.02', 'e 0.04']
+    blitz        WR+TE rho +0.036 | e 0.01: -0.10%  e 0.02: -0.14%  e 0.04: -0.06% | LOYO -0.05% 3/4 picks ['e 0.04', 'e 0.02', 'e 0.02', 'e 0.02']
+    rushers      RB    rho -0.051 | e 0.01: -0.26%  e 0.02: -0.45%  e 0.04: -0.63% | LOYO -0.42% 3/4 picks ['e 0.04', 'e 0.02', 'e 0.04', 'e 0.04']
+    throwaway    QB    rho -0.056 | e 0.01: -0.16%  e 0.02: -0.19%  e 0.04: +0.13% | LOYO +0.15% 0/4 picks ['off', 'e 0.02', 'e 0.02', 'e 0.02']
+    box          WR+TE rho +0.038 | e 0.01: -0.23%  e 0.02: -0.41%  e 0.04: -0.64% | LOYO -0.64% 4/4 picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.04']
+    box          QB    rho +0.031 | e 0.01: -0.04%  e 0.02: +0.04%  e 0.04: +0.59% | LOYO +1.18% 0/4 picks ['off', 'off', 'e 0.01', 'e 0.04']
+    r_catchable  WR+TE rho +0.032 | e 0.01: -0.04%  e 0.02: -0.04%  e 0.04: +0.07% | LOYO +0.06% 1/4 picks ['e 0.02', 'e 0.02', 'e 0.01', 'off']
+
+Limitations: 4 seasons of charting (2022-25), screen only; team rates season to date from charted plays; receiver metrics need 10+ charted targets; the blended base already carries Vegas, FPA and the shadow's context.

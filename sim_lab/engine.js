@@ -1468,7 +1468,7 @@
   // season better; mean move .4/g, max 2.2. Pace / neutral pass rate alone, favorites, volume-cleaned evidence all failed.
   // Data: SIM_PACE_2026.teams[t].cur.vol = {games, att, plays, nrate, exc} (build_pace_vol.py, run by pull_pace_tracker.py).
   // Kill: window.SIM_VOLUME_CTX = false. Backup engine.js.bak_pre_volume_20261007.
-  var VOLUME_CTX = { eExc: 0.03, eAtt: 0.04, eBox: 0.04, minGames: 2, lo: 0.8, hi: 1.2, pos: { WR: 1, TE: 1 } };
+  var VOLUME_CTX = { eExc: 0.03, eAtt: 0.04, eBox: 0.04, boxAdp: 60, minGames: 2, lo: 0.8, hi: 1.2, pos: { WR: 1, TE: 1 } };
   // BOX COUNT FACED (backtest_box_context.py, 2026-10-07): WR / TE on offenses that see heavier boxes (defenders in the box, season to
   // date) out-produce the number: 1 + .04 z(box) -> -0.43% (6/7), forward -0.50% (4/4), board -0.19% on 2019-25 participation data;
   // the FTN screen agreed (-0.64% 4/4). Live source = FTN charting (cur.vol.box via build_pace_vol.py). Kill: window.SIM_BOX_CTX = false.
@@ -1509,7 +1509,7 @@
       m = Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eExc * z.exc));
       if (slot && typeof slot.spread === 'number' && slot.spread > 0) m *= Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eAtt * z.att));
     }
-    if (z.box != null && !(typeof window !== 'undefined' && window.SIM_BOX_CTX === false)) m *= Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 + VOLUME_CTX.eBox * z.box));
+    if (z.box != null && p.adp != null && p.adp <= VOLUME_CTX.boxAdp && !(typeof window !== 'undefined' && window.SIM_BOX_CTX === false)) m *= Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 + VOLUME_CTX.eBox * z.box));   // box: ADP <= 60 only (backtest_pressure_proxy.py 2: 61-150 was +0.17% worse, 0/7 LOYO)
     return m;
   }
   var _fillinCache = {};

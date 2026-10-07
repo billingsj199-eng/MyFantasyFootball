@@ -18,9 +18,10 @@ import backtest_base_remeasure as BR
 SN = BR.SN; NW = BR.NW; cal = NW.cal; YEARS = BR.YEARS; POS4 = BR.POS4; FWD = (2022, 2023, 2024, 2025)
 CACHE = r"E:\MyFantasyFootball\pbp_cache"
 warnings.filterwarnings("ignore")
-LOG = open(os.path.join(HERE, "box_context.log"), "w", encoding="utf-8")
+LOG = open(os.path.join(HERE, "box_context.log"), "w", encoding="utf-8") if __name__ == "__main__" else None
 def P(s=""):
-    print(s); LOG.write(s + chr(10)); LOG.flush()
+    print(s)
+    if LOG: LOG.write(s + chr(10)); LOG.flush()
 TM_ALIAS = {"LA": "LAR", "OAK": "LV", "SD": "LAC", "STL": "LAR", "WSH": "WAS", "JAC": "JAX", "ARZ": "ARI"}
 BBW = {"QB": 0.7, "RB": 0.7, "WR": 0.7, "TE": 0.3}
 

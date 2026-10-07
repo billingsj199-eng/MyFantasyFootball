@@ -3120,6 +3120,7 @@ function _projStatLine(d) {
       yds: r1(py + ry + rcy),
       tds: Math.round(((ptd + rtd + rctd) / gm) * 100) / 100,
       rec: cp.rec ? r1(cp.rec) : null,
+      ry: ry ? r1(ry) : null,
       tip: 'Mike Clay 2026 per game (' + gm + ' gm pace): ' + parts.join(' · ')
     };
   }
@@ -5096,7 +5097,7 @@ function getFiltered(applyTopN) {
     const _smYds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.yds != null) ? s.yds : -Infinity; };
     const _smTds = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); return (s && s.tds != null) ? s.tds : -Infinity; };
     const _smTeamPpg = d => { const t = _impliedTeamPpg(d.t); return t ? t.ppg : -Infinity; };
-    const _smRec = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); const k = (_sm !== 'proj' && filter === 'QB') ? 'ry' : 'rec'; return (s && s[k] != null) ? s[k] : -Infinity; };
+    const _smRec = d => { const s = _sm === 'proj' ? _projStatLine(d) : _linesStatLine(d); const k = filter === 'QB' ? 'ry' : 'rec'; return (s && s[k] != null) ? s[k] : -Infinity; };
     // WEEKLY proj/lines column order (2026-09-08): ppg25 = Yds, l4ppg = TD, tail = Rec.
     const _wkStat = currentMode === 'weekly';
     // ADP comparison view: missing ADPs sort to the bottom in the (default) ascending order.
@@ -7854,8 +7855,8 @@ function render() {
         // TEAM TOTAL), then the projected stat line — Yds / TD / Rec — in the
         // two swap columns + the tail. Season-average Team PPG dropped here:
         // TEAM TOTAL already carries the week's Vegas number.
-        // Betting lines on the QB filter: the tail shows the rushing-yards line instead of Rec.
-        const _tailK = (_statMode === 'lines' && filter === 'QB') ? 'ry' : 'rec';
+        // QB filter (lines + proj): the tail shows rushing yards instead of Rec.
+        const _tailK = filter === 'QB' ? 'ry' : 'rec';
         const _recHtml = (_line && _line[_tailK] != null) ? String(Math.round(_line[_tailK] * 10) / 10) : '—';
         _statYdsTail = _tipAttr ? '<span' + _tipAttr + '>' + _recHtml + '</span>' : _recHtml;
         _statTds = `<td class="pts-cell ppg25-cell"${_tipAttr}>${_ydsHtml}</td>
@@ -7971,7 +7972,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode && filter === 'QB') ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -8007,6 +8008,8 @@ function render() {
       ? 'This week\'s receptions prop line (O/U), averaged across the books that posted one. Blank = no receptions line posted for this player. Hover a value for the full prop line.'
       : _projPpgMode
       ? 'Projected total yards for 2026 (passing + rushing + receiving) — Mike Clay projections. Hover a value for the breakdown.'
+      : (_wkProjPpgMode && filter === 'QB')
+      ? 'Projected rushing yards PER GAME — Mike Clay season projection divided by projected games. Hover a value for the full stat line.'
       : _wkProjPpgMode
       ? 'Projected receptions PER GAME — Mike Clay season projection divided by projected games. Hover a value for the full stat line.'
       : _isWeekly

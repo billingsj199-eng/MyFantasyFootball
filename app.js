@@ -5348,6 +5348,22 @@ const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1
 //   null (not weekly / no schedule) | {bye:true, wk} |
 //   {bye:false, away, abbr, diff, logoId, logoUrl, wk}
 // diff = opponent difficulty (schedule-adjusted pts allowed blended with Clay's preseason rank; D/ST = opp offense).
+// Ruled OUT this week — the same gate _weeklyAdjustPpg zeroes on: IR / PUP /
+// SUS / season-ending always; a plain "Out" tag only when a week-scoped
+// source agrees (_weeklyOutConfirmed — Sleeper's Out lingers from Sunday's
+// inactives; Jack 2026-09-30: anyone at least Questionable stays in order).
+// Returns the status code ('OUT' | 'IR' | 'PUP' | 'SUS') or null.
+function _tcvOutThisWeek(d) {
+  if (!d || !d.inj) return null;
+  if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return null;
+  const t = String(d.inj).toLowerCase();
+  if (/\bir\b/.test(t)) return 'IR';
+  if (/\bpup\b/.test(t)) return 'PUP';
+  if (/suspend/.test(t)) return 'SUS';
+  if (/out for season|season.?ending/.test(t)) return 'OUT';
+  if (/\bout\b/.test(t) && typeof window._weeklyOutConfirmed === 'function' && window._weeklyOutConfirmed(d, window._weeklyActiveWeek || 1)) return 'OUT';
+  return null;
+}
 function _tcvOppInfo(d) {
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
   if (typeof window._weeklyOppFor !== 'function') return null;
@@ -5365,12 +5381,13 @@ function _tcvOppInfo(d) {
     Object.keys(TEAM_ABBR_MAP).forEach(full => { if (TEAM_LOGO_IDS[full]) window._tcvAbbrToLogoId[TEAM_ABBR_MAP[full]] = TEAM_LOGO_IDS[full]; });
   }
   const logoId = window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[abbr] : null;
-  return { bye: false, away: away, abbr: abbr, diff: diff, logoId: logoId, wk: wk,
+  return { bye: false, out: _tcvOutThisWeek(d), away: away, abbr: abbr, diff: diff, logoId: logoId, wk: wk,
     logoUrl: logoId ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png' : null };
 }
 function _tcvOppTitle(o) {
   if (!o) return '';
   if (o.bye) return 'Week ' + o.wk + ': BYE';
+  if (o.out) return 'Week ' + o.wk + ': ' + (o.out === 'IR' ? 'injured reserve' : o.out === 'PUP' ? 'PUP list' : o.out === 'SUS' ? 'suspended' : 'ruled OUT') + ' — ' + (o.away ? 'at ' : 'vs ') + o.abbr;
   const diffLbl = o.diff === 'hard' ? ' · tough matchup' : o.diff === 'easy' ? ' · soft matchup' : '';
   return 'Week ' + o.wk + ': ' + (o.away ? 'at ' : 'vs ') + o.abbr + diffLbl;
 }
@@ -5379,6 +5396,7 @@ function _tcvOppChipHtml(d) {
   const o = _tcvOppInfo(d);
   if (!o) return '';
   if (o.bye) return '<div class="tcv-opp-chip tcv-opp-bye" title="' + _tcvOppTitle(o) + '">BYE</div>';
+  if (o.out) return '<div class="tcv-opp-chip tcv-opp-bye tcv-opp-out" title="' + _tcvOppTitle(o) + '">' + o.out + '</div>';
   const logoHtml = o.logoUrl ? '<img src="' + o.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '';
   return '<div class="tcv-opp-chip' + (o.diff ? ' tcv-opp-' + o.diff : '') + '" title="' + _tcvOppTitle(o) + '"><span class="tcv-opp-pre">' + (o.away ? '@' : 'vs') + '</span>' + logoHtml + '</div>';
 }
@@ -5993,8 +6011,8 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
   if (seasonBye != null) {
     oppHtml = '<div class="tcv-row-opp tcv-row-bye" title="Bye week ' + seasonBye + '"><span class="tcv-row-bye-l">BYE</span><span class="tcv-row-bye-n">' + seasonBye + '</span></div>';
   } else if (opp) {
-    oppHtml = opp.bye
-      ? '<div class="tcv-row-opp tcv-opp-bye" title="' + _tcvOppTitle(opp) + '">BYE</div>'
+    oppHtml = (opp.bye || opp.out)
+      ? '<div class="tcv-row-opp tcv-opp-bye' + (opp.out ? ' tcv-opp-out' : '') + '" title="' + _tcvOppTitle(opp) + '">' + (opp.out || 'BYE') + '</div>'
       : '<div class="tcv-row-opp' + (opp.diff ? ' tcv-opp-' + opp.diff : '') + '" title="' + _tcvOppTitle(opp) + '"><span class="tcv-opp-pre">' + (opp.away ? '@' : 'vs') + '</span>' +
         (opp.logoUrl ? '<img src="' + opp.logoUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>' : '<span style="font-family:\'Bebas Neue\',Impact,sans-serif;font-size:13px">' + safe(opp.abbr) + '</span>') + '</div>';
   }
@@ -6676,11 +6694,12 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   // Matchup (weekly only): opponent logo + vs/@ riding its bottom-left, or BYE
   if (opp) {
     const ox = L.OPP_X, ow = L.OPP_W;
-    if (opp.bye) {
+    if (opp.bye || opp.out) {
+      // BYE, or the ruled-out status (OUT / IR / PUP / SUS) in the matchup slot
       _tcvRoundRect(ctx, ox + 2, Y + H / 2 - 11, ow - 4, 22, 4);
       ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
-      ctx.font = '12px ' + BEBAS; ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center';
-      ctx.fillText('BYE', ox + ow / 2, Y + H / 2 + 0.5);
+      ctx.font = '12px ' + BEBAS; ctx.fillStyle = opp.out ? '#fca5a5' : '#94a3b8'; ctx.textAlign = 'center';
+      ctx.fillText(opp.out || 'BYE', ox + ow / 2, Y + H / 2 + 0.5);
     } else {
       // Logo is bigger than its slot: centered, overflowing ~3px into the
       // empty gaps either side so the card doesn't have to get wider
@@ -6978,6 +6997,13 @@ function _tcvByeCutCloudInit(u) {
   } catch(_) {}
 }
 try { firebase.auth().onAuthStateChanged(u => { if (u) _tcvByeCutCloudInit(u); }); } catch(_) {}
+// Why a player is not playing this week: { kind:'bye' } | { kind:'out', code } | null
+// (Jack 2026-10-07: the row is BYE / OUT — start-worthy players sitting out either way).
+function _tcvAwayWhy(d) {
+  if (typeof window._weeklyOppFor === 'function' && window._weeklyOppFor(d.t) === 'BYE') return { kind: 'bye', code: 'BYE' };
+  const code = _tcvOutThisWeek(d);
+  return code ? { kind: 'out', code: code } : null;
+}
 function _tcvByeRowPlayers(data, belowCut) {
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
   if (typeof filter === 'undefined' || filter === 'ROOKIE' || filter === 'DEVY') return null;
@@ -6993,7 +7019,7 @@ function _tcvByeRowPlayers(data, belowCut) {
     inData.add(d.n);
     if (belowCut && belowCut.has(d.n)) return;
     visible.add(d.n);
-    if (window._weeklyOppFor(d.t) !== 'BYE') visibleN++;
+    if (!_tcvAwayWhy(d)) visibleN++;
   });
   // Custom "BYE ≤ N" cutoff for this view beats the automatic visible-card count
   const customCut = _tcvByeCutPref(filter);
@@ -7009,9 +7035,10 @@ function _tcvByeRowPlayers(data, belowCut) {
     if (!d || d._retired || d._isFuturePick || !posSet[d.s]) continue;
     rank++;
     if (visible.has(d.n)) continue;                        // above the cut — Jack's placement wins
-    if (window._weeklyOppFor(d.t) !== 'BYE') continue;
+    const why = _tcvAwayWhy(d);
+    if (!why) continue;
     if (narrowed && !inData.has(d.n)) continue;
-    out.push({ d: d, seasonRank: rank });
+    out.push({ d: d, seasonRank: rank, why: why.kind, code: why.code });
     names.add(d.n);
   }
   return out.length ? { players: out, names: names, limit: limit, custom: customCut != null } : null;
@@ -7054,7 +7081,7 @@ function _renderTierCardView(data, container) {
   if (_tcvBye) {
     // Right before the ✂ cut group (Jack 2026-10-07: "right before the cut
     // line, everywhere"), so it moves with the line; last when there is none.
-    const byeG = { label: '', cut: false, bye: true, players: _tcvBye.players.map(p => ({ d: p.d, displayRank: p.seasonRank, tierRank: null, cutRank: null })) };
+    const byeG = { label: '', cut: false, bye: true, players: _tcvBye.players.map(p => ({ d: p.d, displayRank: p.seasonRank, tierRank: null, cutRank: null, why: p.why, code: p.code })) };
     const ci = groups.findIndex(g => g.cut);
     if (ci >= 0) groups.splice(ci, 0, byeG); else groups.push(byeG);
   }
@@ -7128,7 +7155,7 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn' + (_tcvBookPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleBook" title="Switch the PROJ number on every card between OUR projection and the SPORTSBOOK projection (posted prop lines scored in the current format). Players with no posted lines keep our projection, labelled PROJ instead of BOOK.">$ ' + (_tcvBookPref() ? 'BOOK PROJ' : 'OUR PROJ') + '</button>' +
     (currentMode !== 'weekly' ? '<span class="tcv-move-ctl" title="Week range for the cards: REST OF SEASON = the normal season projection. NEXT N / PLAYOFFS / CUSTOM = each card shows his projected PPG over those weeks, and for 3 weeks or fewer each week\'s opponent and projection (PLAYOFFS = the playoff-schedule view). Same setting as WINDOW in the VOR bar — the SIM VOR board re-ranks on it."><span class="tcv-zoom-lbl">WEEKS</span><select class="tcv-move-date" data-tcvwin>' + _vorWinOptsHtml(_vorState()) + '</select>'
       + (_vorState().win === -1 ? '<input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wFrom" min="1" max="18" value="' + _vorState().wFrom + '"><span class="tcv-zoom-lbl">–</span><input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wTo" min="1" max="18" value="' + _vorState().wTo + '">' : '') + '</span>' : '') +
-    ((currentMode === 'weekly' && filter !== 'ROOKIE' && filter !== 'DEVY') ? '<span class="tcv-move-ctl" title="BYE row cutoff for the ' + filterLabel + ' view: a player on bye this week joins the bottom BYE row when his SEASON rank in this position group is this number or better (QB 20 = bye QBs ranked QB1-QB20 on your redraft board). Blank = AUTO, the number of cards shown above the cut line. Saved per view to your account (signed in) and on this device.' + (_tcvBye ? ' Currently: top ' + _tcvBye.limit + (_tcvBye.custom ? ' (custom)' : ' (auto)') : '') + '"><span class="tcv-zoom-lbl">BYE ≤</span><input type="number" class="tcv-move-date tcv-wk-in tcv-bye-in" data-tcvbyecut min="1" max="600" placeholder="AUTO" value="' + (_tcvByeCutPref(filter) != null ? _tcvByeCutPref(filter) : '') + '"></span>' : '') +
+    ((currentMode === 'weekly' && filter !== 'ROOKIE' && filter !== 'DEVY') ? '<span class="tcv-move-ctl" title="BYE row cutoff for the ' + filterLabel + ' view: a player on bye or ruled out this week (IR / PUP / SUS / confirmed Out) joins the BYE / OUT row when his SEASON rank in this position group is this number or better (QB 20 = bye QBs ranked QB1-QB20 on your redraft board). Blank = AUTO, the number of cards shown above the cut line. Saved per view to your account (signed in) and on this device.' + (_tcvBye ? ' Currently: top ' + _tcvBye.limit + (_tcvBye.custom ? ' (custom)' : ' (auto)') : '') + '"><span class="tcv-zoom-lbl">BYE ≤</span><input type="number" class="tcv-move-date tcv-wk-in tcv-bye-in" data-tcvbyecut min="1" max="600" placeholder="AUTO" value="' + (_tcvByeCutPref(filter) != null ? _tcvByeCutPref(filter) : '') + '"></span>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvMoveOn ? ' tcv-primary' : '') + '" data-tcvaction="toggleMove" title="Rank movement: each card shows RANK THEN › RANK NOW — the second number green if the player rose, red if he fell. Compares against the weekly anchor (up to 7 days back)' + (_tcvIsAdminViewer() ? ', or pick any date to compare against the board saved that day' : '') + '.">↕ MOVEMENT</button>' +
     (_tcvMoveOn ? (_tcvIsAdminViewer()
       ? '<span class="tcv-move-ctl" title="Compare against the board as it was saved on or before this date (newest rankings backup that day)"><span class="tcv-zoom-lbl">VS</span>' +
@@ -7160,7 +7187,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:var(--green)">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:var(--text)">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE</b> row = players on bye this week with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:var(--accent-blue)">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:var(--text)">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE / OUT</b> row = start-worthy players on bye or ruled out this week (IR / PUP / SUS / confirmed Out) with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:var(--accent-blue)">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:var(--accent)">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:var(--text)">TIERS:</b> hover a card → <b style="color:var(--text)">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:var(--red)">CUT LINE:</b> hover a card → <b style="color:var(--red)">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:var(--text)">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
@@ -7217,8 +7244,11 @@ function _renderTierCardView(data, container) {
       glowRgb = c.glow;
       _coloredTierIdx++;
     }
-    letter.textContent = g.cut ? '✂' : g.bye ? 'BYE' : (g.label || '—');
-    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : g.bye ? 'ON BYE IN WEEK ' + (window._weeklyActiveWeek || 1) + ' — good players sitting out this week, numbered by their SEASON rank (not ranked on this week\'s board). ' : '') + 'Click to hide / reveal every player in this ' + (g.bye ? 'row' : 'tier') + ' (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
+    // BYE / OUT row tile reads by content: BYE, OUT, or both on two lines
+    const _byeKinds = g.bye ? { bye: g.players.some(p => p.why !== 'out'), out: g.players.some(p => p.why === 'out') } : null;
+    letter.textContent = g.cut ? '✂' : g.bye ? (_byeKinds.bye && _byeKinds.out ? '' : _byeKinds.out ? 'OUT' : 'BYE') : (g.label || '—');
+    if (g.bye && _byeKinds.bye && _byeKinds.out) { letter.classList.add('tcv-letter-2l'); letter.innerHTML = 'BYE<br>OUT'; }
+    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : g.bye ? 'NOT PLAYING IN WEEK ' + (window._weeklyActiveWeek || 1) + ' — start-worthy players on bye or ruled out (IR / PUP / SUS / Out), numbered by their SEASON rank (not ranked on this week\'s board). ' : '') + 'Click to hide / reveal every player in this ' + (g.bye ? 'row' : 'tier') + ' (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
     // EDIT RANKS: the tier object behind this group (none for ✂ / untiered)
     const _gTier = (!g.cut && g.label && typeof tiers !== 'undefined') ? tiers.find(t => t.label === g.label) : null;
     if (_gTier) row._tcvTierId = _gTier.id;
@@ -7250,7 +7280,7 @@ function _renderTierCardView(data, container) {
       // (BYE row cards carry a season rank, so movement never applies to them)
       const _pr = (_tcvMoveMap && !g.bye) ? (_tcvMoveMap[p.d.n] != null ? _tcvMoveMap[p.d.n] : null) : undefined;
       const _card = _tcvRows ? _tcvBuildRowCard(p.d, p.displayRank, g.label, glowRgb, _tcvFilePrefix, _pr) : _tcvBuildCard(p.d, p.displayRank, g.label, glowRgb, _pr);
-      if (g.bye) _card.classList.add('tcv-bye-card');
+      if (g.bye) { _card.classList.add('tcv-bye-card'); if (p.why === 'out') _card.classList.add('tcv-out-card'); }
       _card._tcvTierRank = p.tierRank;
       _card._tcvCutRank = p.cutRank;
       if (_tcvCanEditRanks() && p.cutRank != null && typeof window._setBoardCutoff === 'function') {
@@ -7707,7 +7737,7 @@ function render() {
     const n = _byeBlk.players.length;
     let h = `<tr class="tier-row bye-line-row"><td colspan="17"><div class="tier-inner" style="border-color:rgba(148,163,184,.45)">
       <span class="tier-badge bye-badge">BYE</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} BYES · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} ${(() => { const b = _byeBlk.players.some(p => p.why !== 'out'), o = _byeBlk.players.some(p => p.why === 'out'); return b && o ? 'BYES &amp; OUT' : o ? 'RULED OUT' : 'BYES'; })()} · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
     </div></td></tr>`;
     _byeBlk.players.forEach(p => {
       const d = p.d, dn = (d.n || '').replace(/"/g, '&quot;');
@@ -7720,8 +7750,8 @@ function render() {
         <td class="myrank-cell"><span class="myrank-num bye-rank" title="On bye in week ${wk} — season ${d.s === 'DST' ? 'D/ST' : d.s} rank ${p.seasonRank} on the redraft board (not ranked this week)">${rankLbl}</span></td>
         <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
-        <td class="pos-rank-cell bye-cell">BYE</td>
-        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}back for week ${wk + 1}</td>
+        <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
+        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}</td>
       </tr>`;
     });
     return h;

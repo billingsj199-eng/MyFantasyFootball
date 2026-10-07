@@ -66,7 +66,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-07-tokens3" as="script">
+<link rel="preload" href="app.js?v=2026-10-07-byeout1" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1759,6 +1759,10 @@ body.vor-bar-on .vor-bar{display:flex}
 /* BYE ROW (weekly): this week's good bye players pulled back under the board,
    numbered by season rank — dashed slate tile, muted rank digits. */
 .tcv-tier-row.tcv-bye-row{margin-top:8px;border-top:1px dashed rgba(148,163,184,.3);padding-top:4px;border-radius:0}
+/* BYE / OUT: two-line tile when the row mixes byes and ruled-out players; OUT chips read red */
+.tcv-letter.tcv-letter-bye.tcv-letter-2l{font-size:12px;line-height:1.05;text-align:center;letter-spacing:1px}
+.tcv-opp-chip.tcv-opp-out,.tcv-row-opp.tcv-opp-out{color:#fca5a5}
+tr.bye-row .bye-cell.out-cell{color:#fca5a5}
 /* Rankings table BYE block (weekly): divider + season-rank rows right above the cut line */
 .tier-badge.bye-badge{background:#334155;color:#cbd5e1;border:1px dashed rgba(148,163,184,.6)}
 tr.bye-row{background:rgba(148,163,184,.05)}
@@ -6092,7 +6096,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-07-tokens3"></script>
+<script defer src="app.js?v=2026-10-07-byeout1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

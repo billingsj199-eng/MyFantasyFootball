@@ -6902,7 +6902,26 @@ function _tcvHideCutPref() {
 // that season rank is inside the number of cards the view shows (a 30-QB
 // tier list → bye QBs ranked QB30 or better). Bye players Jack placed ABOVE
 // the cut stay in their tier; only below-cut / off-board ones move down here.
-// Returns { players:[{d, seasonRank}], names:Set } or null.
+// Returns { players:[{d, seasonRank}], names:Set, limit, custom } or null.
+//
+// CUSTOM CUTOFF (Jack 2026-10-07): the "BYE ≤ N" box in the card toolbar
+// overrides the automatic limit per position view — N = the season rank a
+// bye player must be at or inside (QB ≤ 20, RB ≤ 40 …). Blank = AUTO (the
+// visible-card count). Kept per view key in localStorage tcv_bye_cut
+// {QB:20, FLEX:60, …}, like the other tier-card prefs (ROW CARDS, breaks).
+function _tcvByeCutAll() {
+  try { const o = JSON.parse(localStorage.getItem('tcv_bye_cut') || '{}'); return (o && typeof o === 'object') ? o : {}; } catch(_) { return {}; }
+}
+function _tcvByeCutPref(key) {
+  const v = _tcvByeCutAll()[key];
+  return (typeof v === 'number' && isFinite(v) && v > 0) ? Math.round(v) : null;
+}
+function _tcvSetByeCut(key, n) {
+  const all = _tcvByeCutAll();
+  const v = Math.round(Number(n));
+  if (isFinite(v) && v > 0) all[key] = Math.min(600, v); else delete all[key];
+  try { localStorage.setItem('tcv_bye_cut', JSON.stringify(all)); } catch(_) {}
+}
 function _tcvByeRowPlayers(data, belowCut) {
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
   if (typeof filter === 'undefined' || filter === 'ROOKIE' || filter === 'DEVY') return null;
@@ -6920,13 +6939,16 @@ function _tcvByeRowPlayers(data, belowCut) {
     visible.add(d.n);
     if (window._weeklyOppFor(d.t) !== 'BYE') visibleN++;
   });
-  if (!visibleN) return null;
+  // Custom "BYE ≤ N" cutoff for this view beats the automatic visible-card count
+  const customCut = _tcvByeCutPref(filter);
+  const limit = customCut != null ? customCut : visibleN;
+  if (!limit) return null;
   const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
   const season = (vb && vb[currentVersion] && vb[currentVersion].redraft) || (vb && vb.jacks && vb.jacks.redraft) || null;
   if (!season) return null;
   const out = [], names = new Set();
   let rank = 0;
-  for (let i = 0; i < season.length && rank < visibleN; i++) {
+  for (let i = 0; i < season.length && rank < limit; i++) {
     const d = D[season[i]];
     if (!d || d._retired || d._isFuturePick || !posSet[d.s]) continue;
     rank++;
@@ -6936,7 +6958,7 @@ function _tcvByeRowPlayers(data, belowCut) {
     out.push({ d: d, seasonRank: rank });
     names.add(d.n);
   }
-  return out.length ? { players: out, names: names } : null;
+  return out.length ? { players: out, names: names, limit: limit, custom: customCut != null } : null;
 }
 
 function _renderTierCardView(data, container) {
@@ -7044,6 +7066,7 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn' + (_tcvBookPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleBook" title="Switch the PROJ number on every card between OUR projection and the SPORTSBOOK projection (posted prop lines scored in the current format). Players with no posted lines keep our projection, labelled PROJ instead of BOOK.">$ ' + (_tcvBookPref() ? 'BOOK PROJ' : 'OUR PROJ') + '</button>' +
     (currentMode !== 'weekly' ? '<span class="tcv-move-ctl" title="Week range for the cards: REST OF SEASON = the normal season projection. NEXT N / PLAYOFFS / CUSTOM = each card shows his projected PPG over those weeks, and for 3 weeks or fewer each week\'s opponent and projection (PLAYOFFS = the playoff-schedule view). Same setting as WINDOW in the VOR bar — the SIM VOR board re-ranks on it."><span class="tcv-zoom-lbl">WEEKS</span><select class="tcv-move-date" data-tcvwin>' + _vorWinOptsHtml(_vorState()) + '</select>'
       + (_vorState().win === -1 ? '<input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wFrom" min="1" max="18" value="' + _vorState().wFrom + '"><span class="tcv-zoom-lbl">–</span><input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wTo" min="1" max="18" value="' + _vorState().wTo + '">' : '') + '</span>' : '') +
+    ((currentMode === 'weekly' && filter !== 'ROOKIE' && filter !== 'DEVY') ? '<span class="tcv-move-ctl" title="BYE row cutoff for the ' + filterLabel + ' view: a player on bye this week joins the bottom BYE row when his SEASON rank in this position group is this number or better (QB 20 = bye QBs ranked QB1-QB20 on your redraft board). Blank = AUTO, the number of cards shown above the cut line. Saved per view on this device.' + (_tcvBye ? ' Currently: top ' + _tcvBye.limit + (_tcvBye.custom ? ' (custom)' : ' (auto)') : '') + '"><span class="tcv-zoom-lbl">BYE ≤</span><input type="number" class="tcv-move-date tcv-wk-in tcv-bye-in" data-tcvbyecut min="1" max="600" placeholder="AUTO" value="' + (_tcvByeCutPref(filter) != null ? _tcvByeCutPref(filter) : '') + '"></span>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvMoveOn ? ' tcv-primary' : '') + '" data-tcvaction="toggleMove" title="Rank movement: each card shows RANK THEN › RANK NOW — the second number green if the player rose, red if he fell. Compares against the weekly anchor (up to 7 days back)' + (_tcvIsAdminViewer() ? ', or pick any date to compare against the board saved that day' : '') + '.">↕ MOVEMENT</button>' +
     (_tcvMoveOn ? (_tcvIsAdminViewer()
       ? '<span class="tcv-move-ctl" title="Compare against the board as it was saved on or before this date (newest rankings backup that day)"><span class="tcv-zoom-lbl">VS</span>' +
@@ -7075,7 +7098,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE</b> row = good players on bye this week, numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE</b> row = players on bye this week with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:#ef4444">CUT LINE:</b> hover a card → <b style="color:#ef4444">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
@@ -7236,6 +7259,14 @@ function _renderTierCardView(data, container) {
   controls.addEventListener('change', e => {
     const el = e.target;
     if (el.matches('[data-tcvwin]')) { _vorWinSet(el.value); _vorChanged(); return; }
+    // BYE ≤ N cutoff for this view (blank = AUTO) → rebuild the cards
+    if (el.matches('[data-tcvbyecut]')) {
+      _tcvSetByeCut(filter, el.value);
+      const v = _tcvByeCutPref(filter);
+      if (typeof toast === 'function') toast('BYE row (' + filterLabel + '): ' + (v != null ? 'season top ' + v : 'AUTO — matches the cards shown'));
+      _renderTierCardView(data, container);
+      return;
+    }
     const k = el.getAttribute && el.getAttribute('data-tcvwk');
     if (!k) return;
     const st = _vorState(), n = Math.round(Number(el.value));

@@ -7952,7 +7952,7 @@ function render() {
           ? '<span style="cursor:help;font-weight:700' + (_poC ? ';color:' + _poC : '') + '" title="' + (_poT + ' points above replacement in the fantasy-playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' — projected to play ' + _ve.gp + ' of his team\'s ' + _ve.sgp + (_poMiss ? ', so he misses playoff time' : '') + '. Breaks ties on ROS VOR.').replace(/"/g, '&quot;') + '">' + _poT + '</span>'
           : '—';
         _statJmCell = _ve
-          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left, weeks ' + _vt.from + '-' + _vt.to + (_ve.sgp ? ' (' + _ve.gp + ' of ' + _ve.sgp + ' in the fantasy playoffs)' : '') + (_short ? ' — each missed week costs that week\'s gap over replacement' : '') + '">' + _ve.g + '</span>'
+          ? '<span style="cursor:help' + (_short ? ';color:#f59e0b;font-weight:700' : '') + '" title="Projected to play ' + _ve.g + ' of his team\'s ' + _ve.sg + ' games left, weeks ' + _vt.from + '-' + _vt.to + (_ve.eg != null && _ve.eg < _ve.g - 0.05 ? ' (about ' + _ve.eg + ' expected with his play odds)' : '') + (_ve.sgp ? ' (' + _ve.gp + ' of ' + _ve.sgp + ' in the fantasy playoffs)' : '') + (_short ? ' — each missed week costs that week\'s gap over replacement' : '') + '">' + _ve.g + '</span>'
           : '—';
       }
     } else if (_statMode === 'xfp') {
@@ -9187,8 +9187,8 @@ window._updateRnkStatHeaders = function() {
     } else {
       const _vt = _vorTable();
       const _span = _vt && !_vt.weekly ? 'Wk' + _vt.from + (_vt.to > _vt.from ? '-' + _vt.to : '') + (!_vt.win && _vst.poW !== 1 ? ' · PO ' + _vst.poW + 'x' : '') : 'ROS';
-      _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game (' + fmtLabel + ' scoring' + _vx + '), games already played excluded — the number VOR is measured from.', 'PPG', fmtLabel);
-      _set(c2, 'ppg25Header', 'Value over replacement per game — projected points above the replacement-level player at the position. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. ' + _how + ' Hover a value for the replacement player.', 'VOR/G', _vsub);
+      _set(c1, null, 'Sim Lab REST-OF-SEASON projection per game he plays (' + fmtLabel + ' scoring' + _vx + '), games already played excluded — a week he might play counts by his play odds in both the points and the games, so a return window does not drag the average. The number VOR is measured from.', 'PPG', fmtLabel);
+      _set(c2, 'ppg25Header', 'Value over replacement per game he plays — projected points above the replacement-level player at the position. Puts every position on one scale: +5 at RB and +5 at QB are worth the same over the alternative. ' + _how + ' Hover a value for the replacement player.', 'VOR/G', _vsub);
       if (_vt && _vt.win) _set(c3, 'l4ppgHeader', 'Win-now VOR — his projected points over replacement week by week, added up over ' + _vorWinDesc(_vt) + ' only (set by WINDOW in the VOR bar), each week counted once. Replacement level is re-drawn on the same weeks, so a player with soft matchups or a teammate out right now rises, and a star who is hurt or on bye drops. A week he misses or projects under replacement counts as zero. The SIM VOR board and its tiers are ordered by this number while the window is set.', 'VOR · ' + _vorWinTag(_vt), _span);
       else _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — his projected points over replacement week by week, added up over the games still to be played (this week\'s games drop out as they kick off — no actual results are in it, what is already scored does not help a roster from here), through the last fantasy-playoff week. ' + _vorPlayoffLabel(_vst).charAt(0).toUpperCase() + _vorPlayoffLabel(_vst).slice(1) + '. A week he misses (injury, suspension, bye) or projects under replacement counts as zero because the replacement plays instead — so a better player who misses a couple of weeks keeps his edge for the rest, and loses more if the missed weeks are playoff weeks. A week he might play counts his play odds times his edge if he plays. This is the number the SIM VOR board and its tiers are ordered by. Color = the total per game of his schedule, on the VOR/G scale.', 'ROS VOR', _span);
     }
@@ -12086,7 +12086,9 @@ function _simSeasonPpgRow(d) {
 // level is the best player who would NOT start (Jack 10-05: bench players
 // don't win weeks), per scheduled game; the bench only sets the waiver floor
 // (best player left unrostered) the lineup sims fill holes with.
-//   VOR/G   = his per-game projection minus that replacement level
+//   VOR/G   = his per-game projection minus that replacement level (per game
+//             he PLAYS: expected points over expected games, so a 50% week is
+//             half a game, not a full one that drags the average)
 //   ROS VOR = the gap week by week over the games he is projected to play,
 //             fantasy-playoff weeks counted poW times (default 1.5). A week he
 //             misses or projects under replacement counts 0 — the replacement
@@ -12310,7 +12312,7 @@ function _vorTable() {
     const base = sp ? sp[fi] : 0;
     const inj = wk ? null : _ivEngineRow(d);
     const wp = [], wq = [];
-    let tot = 0, g = 0, gp = 0;
+    let tot = 0, g = 0, gp = 0, eg = 0;
     weeks.forEach(w => {
       const p = playsWk(d, w) ? _vorPts(d, _simProjRow(d, w), fi, st, tdRate, base) : 0;
       // P(plays) this week from the injury layer (soft-return landing / game-status
@@ -12323,11 +12325,13 @@ function _vorTable() {
         else if (w === weeks[0] && inj.pl > 0 && inj.pl < 1 && inj.m === inj.pl) q = inj.pl;
       }
       wp.push(p); wq.push(q);
-      if (p > 0) { tot += p; g++; if (isPO(w)) gp++; }
+      // eg = expected games (sum of play odds): PPG / VOR per game are per game he
+      // PLAYS, so a 50% week is half a game in the denominator too, not a full one.
+      if (p > 0) { tot += p; g++; eg += q; if (isPO(w)) gp++; }
     });
     if (!g) return;   // out / on bye / no remaining games
     seen.add(d.n);
-    pools[d.s].push({ d, tot, g, gp, ppg: tot / g, wp, wq });
+    pools[d.s].push({ d, tot, g, gp, eg, ppg: tot / eg, wp, wq });
   });
   const n = {};
   Object.keys(pools).forEach(p => {
@@ -12392,7 +12396,7 @@ function _vorTable() {
       // PO VOR: the same week-by-week gap inside the fantasy playoffs only, unweighted.
       const vp = wk ? 0 : r1(x.wp.reduce((s, v, j) => s + (isPO(weeks[j]) ? gapW(j) : 0), 0));
       const sc = _sched(x.d);
-      const e = { v: r1(x.ppg), g: x.g, sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
+      const e = { v: r1(x.ppg), g: x.g, eg: r1(x.eg), sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
       out.map.set(x.d, e);
       return e;
     });

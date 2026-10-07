@@ -5500,9 +5500,11 @@ function _tcvCardStats(d) {
   const _R = _tcvRange();
   const _bookVal = (!_R && _tcvBookPref()) ? _tcvBookProjVal(d) : null;
   const _book = _bookVal != null;
-  const projVal = _book ? _bookVal
+  let projVal = _book ? _bookVal
     : (typeof _displayProjPpg === 'function') ? _displayProjPpg(d)
     : ((typeof adjProjPpg === 'function') ? adjProjPpg(d) : null);
+  // Weekly bye: no game, so no projection — a dash, not a red 0 (BYE row cards)
+  if (typeof currentMode !== 'undefined' && currentMode === 'weekly' && typeof window._weeklyOppFor === 'function' && window._weeklyOppFor(d.t) === 'BYE') projVal = null;
   const projColor = (projVal != null && typeof posFptsColor === 'function') ? posFptsColor(projVal, d.s) : null;
   const _seasonPpg = _tcvSeasonPpg(d);
   const _25Val = _seasonPpg.v;
@@ -6299,6 +6301,7 @@ function _tcvWireEdit(root, data, container) {
     const el = document.elementFromPoint(x, y);
     if (ghost) ghost.style.display = '';
     if (!el || !root.contains(el)) return null;
+    if (el.closest('.tcv-bye-row')) return null;   // nothing drops into the BYE row
     const card = el.closest('.tcv-card');
     if (card && card !== dragCard) {
       const r = card.getBoundingClientRect();
@@ -6424,6 +6427,7 @@ function _tcvWireEdit(root, data, container) {
       card = letter; dragTier = row._tcvCutRow ? '__cut__' : row._tcvTierId;
     }
     if (!card || !root.contains(card)) return;
+    if (card.closest('.tcv-bye-row')) return;   // BYE row cards aren't board positions — nothing to drag
     dragCard = card; startX = pointerX = e.clientX; startY = pointerY = e.clientY; moving = false;
     document.addEventListener('pointermove', onMove, { passive: false });
     document.addEventListener('pointerup', onUp);
@@ -6451,7 +6455,7 @@ function _tcvWireEdit(root, data, container) {
     if (e.target.closest('.tcv-tier-name-input')) { e.stopPropagation(); return; }
     const rankEl = e.target.closest('.tcv-row-rank, .tcv-card-rank');
     const card = rankEl && rankEl.closest('.tcv-card');
-    if (card && root.contains(card) && !card.classList.contains('tcv-covered')) {
+    if (card && root.contains(card) && !card.classList.contains('tcv-covered') && !card.closest('.tcv-bye-row')) {
       e.stopPropagation(); e.preventDefault();
       _tcvOpenRankInput(root, data, card);
     }
@@ -6889,6 +6893,52 @@ function _tcvHideCutPref() {
   try { return localStorage.getItem('tcv_hide_cut') === '1'; } catch(_) { return false; }
 }
 
+// ── BYE ROW (Jack 2026-10-07) ─────────────────────────────────────────────
+// WEEKLY boards: the week's default order sinks bye-week players to the tail
+// (they project 0), so once byes start the good ones vanish below the cut
+// line. The tier view pulls them back as its own bottom row — a "BYE" tile,
+// cards numbered by SEASON (redraft) rank within the view's position group —
+// so the graphic still shows who is sitting out. A bye player is "good" when
+// that season rank is inside the number of cards the view shows (a 30-QB
+// tier list → bye QBs ranked QB30 or better). Bye players Jack placed ABOVE
+// the cut stay in their tier; only below-cut / off-board ones move down here.
+// Returns { players:[{d, seasonRank}], names:Set } or null.
+function _tcvByeRowPlayers(data, belowCut) {
+  if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
+  if (typeof filter === 'undefined' || filter === 'ROOKIE' || filter === 'DEVY') return null;
+  if (typeof window._weeklyOppFor !== 'function' || typeof D === 'undefined') return null;
+  const posSet = filter === 'FLEX' ? { RB: 1, WR: 1, TE: 1 } : filter === 'ALL' ? { QB: 1, RB: 1, WR: 1, TE: 1 } : {};
+  if (filter !== 'FLEX' && filter !== 'ALL') posSet[filter] = 1;
+  // Narrowing filters (search, ★, INJURIES, TEAMS): only pull bye players the
+  // view already holds below the cut — never someone the filter excluded.
+  const narrowed = !!((typeof query !== 'undefined' && query) || window._watchOnly || window._injOnly || (window._teamFilter && window._teamFilter.size));
+  const inData = new Set(), visible = new Set();
+  let visibleN = 0;
+  data.forEach(d => {
+    inData.add(d.n);
+    if (belowCut && belowCut.has(d.n)) return;
+    visible.add(d.n);
+    if (window._weeklyOppFor(d.t) !== 'BYE') visibleN++;
+  });
+  if (!visibleN) return null;
+  const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
+  const season = (vb && vb[currentVersion] && vb[currentVersion].redraft) || (vb && vb.jacks && vb.jacks.redraft) || null;
+  if (!season) return null;
+  const out = [], names = new Set();
+  let rank = 0;
+  for (let i = 0; i < season.length && rank < visibleN; i++) {
+    const d = D[season[i]];
+    if (!d || d._retired || d._isFuturePick || !posSet[d.s]) continue;
+    rank++;
+    if (visible.has(d.n)) continue;                        // above the cut — Jack's placement wins
+    if (window._weeklyOppFor(d.t) !== 'BYE') continue;
+    if (narrowed && !inData.has(d.n)) continue;
+    out.push({ d: d, seasonRank: rank });
+    names.add(d.n);
+  }
+  return out.length ? { players: out, names: names } : null;
+}
+
 function _renderTierCardView(data, container) {
   // Decide whether to use position-rank (for QB/RB/WR/TE filters) or overall myRank for tier lookup
   const useFilteredRank = _tierRankIsPositional();
@@ -6904,8 +6954,11 @@ function _renderTierCardView(data, container) {
   const _tcvBelowCut = window._rankBelowCut || null;
   const _tcvCutPos = _tcvCutPosView();
   const _tcvCutGroups = (typeof window._posCutGroupsFor === 'function') ? window._posCutGroupsFor(currentMode) : [];
+  // BYE ROW (weekly): this week's good bye players come back as the bottom row
+  const _tcvBye = _tcvByeRowPlayers(data, _tcvBelowCut);
   data.forEach((d, i) => {
     const _isCut = !!(_tcvBelowCut && _tcvBelowCut.has(d.n));
+    if (_isCut && _tcvBye && _tcvBye.names.has(d.n)) return;   // moves to the BYE row
     const rankForTier = useFilteredRank ? (i + 1) : (d.myRank || (i + 1));
     const tierLabel = _isCut ? '' : ((typeof getTierForRank === 'function') ? getTierForRank(rankForTier) : '');
     const groupKey = _isCut ? '__cut__' : (tierLabel || '__none__');
@@ -6918,6 +6971,9 @@ function _renderTierCardView(data, container) {
     const cutRank = d._isDevy ? null : _tcvCutPos ? (i + 1) : ((_tcvCutGroups.includes(d.s)) ? null : d.myRank); // devy: no cut line (it would cut the dynasty board)
     currentGroup.players.push({ d: d, displayRank: i + 1, tierRank: rankForTier, cutRank: cutRank });
   });
+  // Drop a ✂ group the BYE row emptied, then the BYE row itself goes last
+  for (let gi = groups.length - 1; gi >= 0; gi--) if (groups[gi].cut && !groups[gi].players.length) groups.splice(gi, 1);
+  if (_tcvBye) groups.push({ label: '', cut: false, bye: true, players: _tcvBye.players.map(p => ({ d: p.d, displayRank: p.seasonRank, tierRank: null, cutRank: null })) });
 
   // Build DOM
   const root = document.createElement('div');
@@ -6951,8 +7007,10 @@ function _renderTierCardView(data, container) {
   const _tcvMoveMap = _tcvMoveOn ? _tcvPrevRankMap() : undefined;
   if (_tcvMoveOn) root.classList.add('tcv-move');
   if (_tcvRows && window._tcvSel.on && _tcvIsAdminViewer()) root.classList.add('tcv-select');
-  const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n)).length : 0;
+  const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n) && !(_tcvBye && _tcvBye.names.has(d.n))).length : 0;
   if (_tcvCutCount && _tcvHideCutPref()) root.classList.add('tcv-hide-cut');
+  // BYE row players the board itself didn't hold (TOP-N trimmed them, etc.)
+  const _tcvByeExtra = _tcvBye ? _tcvBye.players.filter(p => data.indexOf(p.d) < 0).length : 0;
 
   // Header: filter context
   const header = document.createElement('div');
@@ -6963,8 +7021,8 @@ function _renderTierCardView(data, container) {
     ? 'ROOKIE ' + rookiePosFilter
     : filter;
   function _tcvHeaderText() {
-    const n = root.classList.contains('tcv-hide-cut') ? (data.length - _tcvCutCount) : data.length;
-    return 'TIER CARDS — ' + filterLabel + ' · ' + n + ' PLAYERS' + (_tcvCutCount && root.classList.contains('tcv-hide-cut') ? ' · ' + _tcvCutCount + ' CUT HIDDEN' : '');
+    const n = (root.classList.contains('tcv-hide-cut') ? (data.length - _tcvCutCount) : data.length) + _tcvByeExtra;
+    return 'TIER CARDS — ' + filterLabel + ' · ' + n + ' PLAYERS' + (_tcvBye ? ' · ' + _tcvBye.players.length + ' ON BYE' : '') + (_tcvCutCount && root.classList.contains('tcv-hide-cut') ? ' · ' + _tcvCutCount + ' CUT HIDDEN' : '');
   }
   ctx.textContent = _tcvHeaderText();
   header.appendChild(ctx);
@@ -7017,7 +7075,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:#22c55e">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:#e2e8f0">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE</b> row = good players on bye this week, numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:#38bdf8">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:#f59e0b">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:#e2e8f0">TIERS:</b> hover a card → <b style="color:#e2e8f0">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:#ef4444">CUT LINE:</b> hover a card → <b style="color:#ef4444">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:#e2e8f0">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
@@ -7052,6 +7110,7 @@ function _renderTierCardView(data, container) {
     row.className = 'tcv-tier-row';
     row.setAttribute('data-tcv-group', String(gIdx));
     if (g.cut) row.classList.add('tcv-cut-row');
+    if (g.bye) row.classList.add('tcv-bye-row');
     const letter = document.createElement('div');
     let glowRgb = null;
     if (g.cut) {
@@ -7059,6 +7118,10 @@ function _renderTierCardView(data, container) {
       letter.className = 'tcv-letter';
       letter.style.background = 'linear-gradient(135deg,#991b1b,#ef4444)';
       glowRgb = '239,68,68';
+    } else if (g.bye) {
+      // This week's bye players, pulled back under the board (see _tcvByeRowPlayers)
+      letter.className = 'tcv-letter tcv-letter-bye';
+      glowRgb = '148,163,184';
     } else if (!g.label) {
       // No tier set — neutral placeholder
       letter.className = 'tcv-letter tier-default';
@@ -7069,8 +7132,8 @@ function _renderTierCardView(data, container) {
       glowRgb = c.glow;
       _coloredTierIdx++;
     }
-    letter.textContent = g.cut ? '✂' : (g.label || '—');
-    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : '') + 'Click to hide / reveal every player in this tier (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
+    letter.textContent = g.cut ? '✂' : g.bye ? 'BYE' : (g.label || '—');
+    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : g.bye ? 'ON BYE IN WEEK ' + (window._weeklyActiveWeek || 1) + ' — good players sitting out this week, numbered by their SEASON rank (not ranked on this week\'s board). ' : '') + 'Click to hide / reveal every player in this ' + (g.bye ? 'row' : 'tier') + ' (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
     // EDIT RANKS: the tier object behind this group (none for ✂ / untiered)
     const _gTier = (!g.cut && g.label && typeof tiers !== 'undefined') ? tiers.find(t => t.label === g.label) : null;
     if (_gTier) row._tcvTierId = _gTier.id;
@@ -7096,11 +7159,13 @@ function _renderTierCardView(data, container) {
     cards.className = 'tcv-cards';
     // ROW SPLIT: manual line breaks inside this tier (vertical cards only)
     const _brkTier = g.cut ? '✂' : (g.label || '—');
-    const _brk = _tcvRows ? null : _tcvBreakSet(filterLabel, _brkTier);
+    const _brk = (_tcvRows || g.bye) ? null : _tcvBreakSet(filterLabel, _brkTier);
     g.players.forEach((p, pIdx) => {
       // MOVEMENT view: undefined = off, null = not on the board at the comparison date
-      const _pr = _tcvMoveMap ? (_tcvMoveMap[p.d.n] != null ? _tcvMoveMap[p.d.n] : null) : undefined;
+      // (BYE row cards carry a season rank, so movement never applies to them)
+      const _pr = (_tcvMoveMap && !g.bye) ? (_tcvMoveMap[p.d.n] != null ? _tcvMoveMap[p.d.n] : null) : undefined;
       const _card = _tcvRows ? _tcvBuildRowCard(p.d, p.displayRank, g.label, glowRgb, _tcvFilePrefix, _pr) : _tcvBuildCard(p.d, p.displayRank, g.label, glowRgb, _pr);
+      if (g.bye) _card.classList.add('tcv-bye-card');
       _card._tcvTierRank = p.tierRank;
       _card._tcvCutRank = p.cutRank;
       if (_tcvCanEditRanks() && p.cutRank != null && typeof window._setBoardCutoff === 'function') {
@@ -7108,7 +7173,7 @@ function _renderTierCardView(data, container) {
       }
       // EDIT RANKS: "+ TIER" on hover starts a new tier at this player (not on
       // the first card of a tier — a break is already there — nor below the cut)
-      if (_tcvCanEditRanks() && !g.cut && !(p.tierRank === (_gTier && _gTier.afterRank))) {
+      if (_tcvCanEditRanks() && !g.cut && !g.bye && !(p.tierRank === (_gTier && _gTier.afterRank))) {
         _card.insertAdjacentHTML('beforeend', '<button class="tcv-tier-add" type="button" title="Start a new tier at ' + (p.d.n || '') + ' (rank ' + p.tierRank + ')">+ TIER</button>');
       }
       // ROW SPLIT: ↵ on every card but the tier's first — toggles a full-width

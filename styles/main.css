@@ -669,7 +669,7 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
 #pageRankings .stats-bar{position:sticky;top:var(--rnk-sticky-3,0px);z-index:18}
 #pageRankings thead th{top:var(--rnk-sticky-top,0px)}
 table{width:100%;border-collapse:collapse;min-width:1100px}
-thead th{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#a8b3c7;padding:.6rem .4rem;text-align:left;border-bottom:2px solid var(--accent);position:sticky;top:0;background:var(--surface);z-index:10;cursor:pointer;user-select:none;white-space:nowrap}
+thead th{font-family:'DM Sans',sans-serif;font-size:.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);padding:.6rem .4rem;text-align:left;border-bottom:2px solid var(--accent);position:sticky;top:0;background:var(--surface);z-index:10;cursor:pointer;user-select:none;white-space:nowrap}
 thead th:hover{color:var(--accent)}
 thead th.sorted{color:var(--accent)}
 thead th .arrow{margin-left:3px;font-size:.6875rem}
@@ -919,10 +919,10 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 .career-table-wrap{max-height:260px;overflow-y:auto;overflow-x:auto;border-radius:4px;border:1px solid var(--border)}
 /* Stat size scales with the viewport (clamp): ~8.8px on phones up to ~14.4px
    on desktop — the wraps scroll horizontally, so bigger type just means scroll. */
-.career-table{border-collapse:collapse;border-spacing:0;margin:0;font-size:clamp(.55rem,.38rem + .6vw,.9rem);width:100% !important;min-width:0 !important}
+.career-table{border-collapse:collapse;border-spacing:0;margin:0;font-size:clamp(.6875rem,.38rem + .6vw,.9rem);width:100% !important;min-width:0 !important}
 .career-table thead{position:sticky;top:0;z-index:1;background:var(--surface)}
 .career-table th,.career-table td{padding:3px 6px;text-align:center;white-space:nowrap;border-bottom:1px solid rgba(30,42,66,.2);line-height:1.1}
-.career-table th{font-size:clamp(.42rem,.32rem + .35vw,.66rem);text-transform:uppercase;letter-spacing:0;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border)}
+.career-table th{font-size:.6875rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border)}
 .career-table th:first-child,.career-table td:first-child{text-align:left;padding-left:3px}
 .career-table td{color:var(--text)}
 .career-table td:first-child{font-weight:700;color:var(--accent)}
@@ -936,8 +936,8 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 .fbc-row{display:flex;align-items:flex-end;gap:5px;min-width:max-content;padding:0 2px}
 .fbc-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;flex:1 0 auto;min-width:26px}
 .fbc-bar{width:clamp(12px,1.5vw,22px);border-radius:3px 3px 0 0;min-height:2px}
-.fbc-val{font-size:clamp(.52rem,.4rem + .35vw,.78rem);font-weight:700;line-height:1}
-.fbc-lbl{font-size:clamp(.48rem,.4rem + .25vw,.66rem);color:var(--text2);line-height:1}
+.fbc-val{font-size:clamp(.6875rem,.4rem + .35vw,.78rem);font-weight:700;line-height:1}
+.fbc-lbl{font-size:clamp(.6875rem,.4rem + .25vw,.6875rem);color:var(--text2);line-height:1}
 /* Desktop: taller stat viewport so the larger rows still show plenty of seasons */
 @media(min-width:900px){
   .career-table-wrap{max-height:320px}
@@ -1725,7 +1725,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .md-roster-pick .md-rp-team{font-size:.6875rem;color:var(--text2)}
 .md-board-area{flex:1;min-width:0;display:flex;flex-direction:column}
 .md-full-board table{width:100%;border-collapse:collapse;font-size:.6875rem}
-.md-full-board th{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);padding:3px 4px;text-align:center;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg)}
+.md-full-board th{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.06em;color:var(--text2);padding:3px 4px;text-align:center;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg)}
 .md-full-board th.user-col{color:var(--accent);border-bottom:2px solid var(--accent)}
 .md-full-board td{padding:3px 4px;text-align:center;border-bottom:1px solid rgba(30,42,66,.15);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
 .md-full-board td.user-pick{background:rgba(245,158,11,.08);font-weight:700}
@@ -1909,7 +1909,7 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 tr.pm-cmp-selected td{background:rgba(245,158,11,.06)}
 tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .pm-table thead{position:sticky;top:0;z-index:5}
-.pm-table th{background:var(--surface2);padding:8px 10px;text-align:left;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#a8b3c7;border-bottom:2px solid var(--accent);cursor:pointer;user-select:none;transition:color .15s;font-weight:700}
+.pm-table th{background:var(--surface2);padding:8px 10px;text-align:left;font-family:'DM Sans',sans-serif;font-size:.6875rem;letter-spacing:.06em;color:var(--text2);border-bottom:2px solid var(--accent);cursor:pointer;user-select:none;transition:color .15s;font-weight:600}
 .pm-table th:hover{color:var(--accent)}
 .pm-table th.sorted-asc,.pm-table th.sorted-desc{color:var(--accent)}
 .pm-table th.sorted-asc::after{content:' ▲';font-size:.6875rem}
@@ -2428,7 +2428,7 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
    exists for the rankings grid and would otherwise force these narrow tables
    into a horizontal scroll they don't need. */
 .ds-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:0}
-.ds-table th{background:var(--surface2);color:var(--text2);font-weight:600;font-size:.72rem;letter-spacing:.5px;padding:var(--space-2) var(--space-3);text-align:center;white-space:nowrap;border-bottom:1px solid var(--border)}
+.ds-table th{background:var(--surface2);color:var(--text2);font-weight:600;font-size:.6875rem;letter-spacing:.06em;padding:var(--space-2) var(--space-3);text-align:center;white-space:nowrap;border-bottom:1px solid var(--border)}
 .ds-table td{padding:var(--space-2) var(--space-3);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
 .ds-table tbody tr:last-child td{border-bottom:none}
 .ds-rnd-h,.ds-strm-h{text-align:left!important}
@@ -2648,3 +2648,15 @@ td.cons-cell .cons-lock{font-size:.72rem;opacity:.55;cursor:help}
 .why-mu-head{margin-bottom:2px}
 .why-mu-item{color:var(--text)}
 @media (max-width:600px){.why-row{grid-template-columns:1fr 44px 42px;gap:6px}}
+
+/* ===== Numeric columns (2026-10-07) =====
+   app.js tags th/td of mostly-numeric columns with .num-col after every table render
+   (MutationObserver, see 'Numeric column alignment'). Right-aligned with tabular figures
+   on desktop only: the <=600px card layout lays cells out as flex rows and keeps its own
+   alignment. First column, '#'/rank headers and blank '—' cells are never tagged. */
+table{font-variant-numeric:tabular-nums}
+@media(min-width:601px){
+  th.num-col,td.num-col{text-align:right}
+  #pageRankings thead th.num-col,#pageRankings tbody td.num-col{text-align:right}
+  th.num-col .th-stack{align-items:flex-end;text-align:right;margin-right:0;margin-left:4px}
+}

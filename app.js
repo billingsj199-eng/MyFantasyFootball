@@ -19417,6 +19417,83 @@ window.switchPage = switchPage;
 document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   btn.addEventListener('click', () => switchPage(btn.dataset.page));
 });
+// === Numeric column alignment ===
+// Tags columns whose body cells are mostly numbers with .num-col on the th and
+// every td, so styles/main.css can right-align them with tabular figures (desktop
+// only). Re-runs after any table re-render via a debounced MutationObserver;
+// class toggles are attribute mutations, so they never re-trigger the observer.
+(function () {
+  const NUM = /^[▲▼△▽+\-−–]?\s*\$?\d[\d,]*(?:\.\d+)?\s*(?:%|x|pts?|k)?(?:\s*·)?$/i;
+  const BLANK = /^[—–\-·\s]*$/;
+  const SKIP_HEAD = /^(#|rk|rank|)$/i;
+  const headText = th => th.textContent.replace(/[▲▼▴▾△▽⇅\s]/g, '');
+  // Header and body cells are matched GEOMETRICALLY (x-overlap of their boxes):
+  // the rankings thead carries injury-view ths with no td until that view
+  // renders, and responsive CSS hides different cells in thead and tbody, so
+  // neither raw indexes nor visible-position counting line up. One template
+  // row per distinct cell count keeps the layout reads cheap.
+  function tag(table) {
+    const head = table.tHead; if (!head || !head.rows.length || !table.tBodies.length) return;
+    if (!table.getBoundingClientRect().width) return; // hidden page: tagged on next show
+    const ths = head.rows[head.rows.length - 1].cells; if (ths.length < 2) return;
+    const thBox = Array.from(ths, th => th.getBoundingClientRect());
+    const sample = Array.from(table.tBodies[0].rows).slice(0, 80); if (sample.length < 2) return;
+    const tmpl = new Map(); // row cell count -> array: th index -> td index (or -1)
+    const mapFor = r => {
+      const n = r.cells.length;
+      if (!tmpl.has(n)) {
+        const m = new Array(ths.length).fill(-1);
+        const tdBox = Array.from(r.cells, td => td.getBoundingClientRect());
+        for (let i = 0; i < ths.length; i++) {
+          if (!thBox[i].width) continue;
+          const cx = thBox[i].left + thBox[i].width / 2;
+          for (let j = 0; j < tdBox.length; j++) if (tdBox[j].width && cx >= tdBox[j].left && cx <= tdBox[j].right) { m[i] = j; break; }
+        }
+        tmpl.set(n, m);
+      }
+      return tmpl.get(n);
+    };
+    const num = new Array(ths.length).fill(0), tot = new Array(ths.length).fill(0);
+    for (const r of sample) {
+      const m = mapFor(r);
+      for (let i = 1; i < ths.length; i++) {
+        if (m[i] < 0) continue;
+        const t = r.cells[m[i]].textContent.trim(); if (!t || BLANK.test(t)) continue;
+        tot[i]++; if (NUM.test(t)) num[i]++;
+      }
+    }
+    const on = new Array(ths.length).fill(false);
+    for (let i = 1; i < ths.length; i++) {
+      on[i] = tot[i] >= 2 && num[i] / tot[i] >= 0.8 && !SKIP_HEAD.test(headText(ths[i]));
+      ths[i].classList.toggle('num-col', on[i]);
+    }
+    for (const body of table.tBodies) for (const r of body.rows) {
+      const m = mapFor(r);
+      for (let i = 1; i < ths.length; i++) if (m[i] >= 0) r.cells[m[i]].classList.toggle('num-col', on[i]);
+    }
+  }
+  const dirty = new Set(); let pending = 0;
+  function flush() { pending = 0; dirty.forEach(t => { if (t.isConnected) { try { tag(t); } catch (e) {} } }); dirty.clear(); }
+  function mark(node) {
+    if (!node || node.nodeType !== 1) return;
+    const t = node.closest('table');
+    if (t) dirty.add(t); else node.querySelectorAll('table').forEach(x => dirty.add(x));
+    if (!pending) pending = requestAnimationFrame(flush);
+  }
+  const mo = new MutationObserver(ms => { for (const m of ms) { m.addedNodes.forEach(mark); mark(m.target); } });
+  function start() {
+    document.querySelectorAll('table').forEach(t => dirty.add(t)); if (!pending) pending = requestAnimationFrame(flush);
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+  const retagVisible = () => { document.querySelectorAll('.page.active table').forEach(t => dirty.add(t)); if (!pending) pending = requestAnimationFrame(flush); };
+  document.addEventListener('click', e => { if (e.target.closest('.nav-btn,[data-goto]')) setTimeout(retagVisible, 60); });
+  // Responsive breakpoints show/hide columns (geometry changes), and a table laid
+  // out at zero width (hidden pane, background prerender) is skipped by tag() —
+  // both resolve on the next resize.
+  let rsz = 0; window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(retagVisible, 150); });
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+  window._mffTagNumericCols = tag;
+})();
 // === Phone MORE tab (≤600px) ===
 // Toggles .more-open on the sidebar so tier-2 tabs render as a grid sheet above
 // the five primary tabs (styles/main.css ≤600px block). Any tab tap, or a tap

@@ -1,0 +1,216 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+rows covered 12,596; WR/TE with 1+ off-QB game 1,140; new starter (<= 1 prior start) 1,011; with 4+ same-QB games in the prior two seasons 4,354; off-QB rows that also have same-QB history 309
+
+=== V1 QB-quality ratio (Clay QB pts/g), off-QB games ===
+  NEXT GAME  rows 1,021  actual/live 0.977
+    fixed: b 0.25: +0.35% (3/7) n1021  b 0.5: +1.02% (3/7) n1021  b 0.75: +2.01% (2/7) n1021  b 1.0: +3.33% (2/7) n1021
+    WR no change n700 | TE no change n321 | ADP<=60 no change n197 | 61-150 no change n262  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.29% 1/4 | picks ['b 0.25', 'b 0.25', 'b 0.25', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 522  actual/live 1.005
+    fixed: b 0.25: +1.69% (2/7) n522  b 0.5: +4.17% (1/7) n522  b 0.75: +7.43% (1/7) n522  b 1.0: +11.56% (1/7) n522
+    WR no change n360 | TE no change n162 | ADP<=60 no change n96 | 61-150 no change n132  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 666  actual/live 0.976
+    fixed: b 0.25: +0.61% (2/7) n666  b 0.5: +1.97% (2/7) n666  b 0.75: +4.08% (1/7) n666  b 1.0: +6.98% (1/7) n666
+    WR no change n461 | TE no change n205 | ADP<=60 no change n124 | 61-150 no change n157  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.96% 0/4 | picks ['b 0.25', 'b 0.25', 'b 0.25', 'off']
+    -> FAIL
+
+=== V1 QB-quality ratio, ACTUAL starter (oracle) ===
+  NEXT GAME  rows 1,088  actual/live 0.970
+    fixed: b 0.5: +0.96% (2/7) n1088  b 1.0: +2.89% (0/7) n1088
+    WR no change n754 | TE no change n334 | ADP<=60 no change n209 | 61-150 no change n286  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 613  actual/live 1.009
+    fixed: b 0.5: +3.58% (0/7) n613  b 1.0: +9.24% (0/7) n613
+    WR no change n426 | TE no change n187 | ADP<=60 no change n116 | 61-150 no change n157  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 749  actual/live 0.985
+    fixed: b 0.5: +1.88% (2/7) n749  b 1.0: +5.93% (1/7) n749
+    WR no change n524 | TE no change n225 | ADP<=60 no change n140 | 61-150 no change n182  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.25% 0/4 | picks ['b 0.5', 'off', 'off', 'off']
+    -> FAIL
+
+=== V2 team implied-total ratio, off-QB games ===
+  NEXT GAME  rows 1,021  actual/live 0.977
+    fixed: b 0.25: -0.03% (3/7) n1021  b 0.5: -0.02% (3/7) n1021  b 0.75: +0.04% (3/7) n1021  b 1.0: +0.13% (3/7) n1021
+    WR +0.03% (3/7) n700 | TE -0.21% (5/6) n321 | ADP<=60 +0.07% (2/6) n197 | 61-150 -0.09% (4/6) n262  (best fixed b 0.25)
+    LOYO +0.23% 1/7 | board +0.022% | picks ['b 0.5', 'b 0.25', 'off', 'b 0.5', 'b 0.5', 'b 0.5', 'off']
+    FWD  +0.32% 0/4 | picks ['b 1.0', 'b 0.75', 'b 0.25', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 522  actual/live 1.005
+    fixed: b 0.25: +0.27% (1/7) n522  b 0.5: +0.63% (1/7) n522  b 0.75: +1.09% (1/7) n522  b 1.0: +1.63% (1/7) n522
+    WR no change n360 | TE no change n162 | ADP<=60 no change n96 | 61-150 no change n132  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 666  actual/live 0.976
+    fixed: b 0.25: +0.08% (2/7) n666  b 0.5: +0.26% (2/7) n666  b 0.75: +0.51% (1/7) n666  b 1.0: +0.85% (1/7) n666
+    WR no change n461 | TE no change n205 | ADP<=60 no change n124 | 61-150 no change n157  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.22% 0/4 | picks ['b 0.5', 'b 0.5', 'off', 'off']
+    -> FAIL
+
+=== V2 team implied-total ratio, EVERY game (Vegas-cleaned evidence) ===
+  NEXT GAME  rows 8,350  actual/live 0.995
+    fixed: b 0.25: -0.11% (5/7) n8350  b 0.5: -0.14% (5/7) n8350  b 1.0: +0.03% (4/7) n8350
+    WR -0.16% (5/7) n5729 | TE -0.10% (5/7) n2621 | ADP<=60 -0.14% (4/7) n1980 | 61-150 -0.23% (4/7) n2410  (best fixed b 0.5)
+    LOYO -0.11% 5/7 | board -0.065% | picks ['b 0.5', 'b 0.25', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    FWD  +0.09% 2/4 | picks ['b 1.0', 'b 0.5', 'b 0.5', 'b 0.5']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 5,723  actual/live 1.020
+    fixed: b 0.25: -0.24% (6/7) n5723  b 0.5: -0.27% (6/7) n5723  b 1.0: +0.25% (2/7) n5723
+    WR -0.32% (5/7) n3918 | TE -0.13% (3/7) n1805 | ADP<=60 -0.91% (6/7) n1363 | 61-150 -0.15% (4/7) n1661  (best fixed b 0.5)
+    LOYO -0.23% 6/7 | board -0.206% | picks ['b 0.5', 'b 0.25', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    FWD  -0.17% 3/4 | picks ['b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 6,505  actual/live 1.007
+    fixed: b 0.25: -0.20% (7/7) n6505  b 0.5: -0.22% (5/7) n6505  b 1.0: +0.30% (2/7) n6505
+    WR -0.30% (5/7) n4430 | TE +0.09% (3/7) n2075 | ADP<=60 -0.91% (5/7) n1485 | 61-150 -0.18% (4/7) n1841  (best fixed b 0.5)
+    LOYO -0.15% 5/7 | board -0.174% | picks ['b 0.5', 'b 0.25', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.25', 'b 0.5']
+    FWD  -0.11% 2/4 | picks ['b 0.5', 'b 0.5', 'b 0.25', 'b 0.5']
+    -> FAIL
+
+=== V2 team re-rated UP 10%+ since the game, every game ===
+  NEXT GAME  rows 8,350  actual/live 0.995
+    fixed: b 0.5: -0.03% (5/7) n8350  b 1.0: +0.11% (1/7) n8350
+    WR +0.02% (2/7) n5729 | TE -0.18% (5/7) n2621 | ADP<=60 -0.14% (5/7) n1980 | 61-150 +0.05% (3/7) n2410  (best fixed b 0.5)
+    LOYO +0.02% 4/7 | board -0.018% | picks ['b 0.5', 'off', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    FWD  +0.12% 2/4 | picks ['b 1.0', 'b 0.5', 'b 0.5', 'b 0.5']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 5,723  actual/live 1.020
+    fixed: b 0.5: -0.45% (4/7) n5723  b 1.0: -0.45% (4/7) n5723
+    WR -0.34% (5/7) n3918 | TE -0.84% (5/7) n1805 | ADP<=60 -1.06% (5/7) n1363 | 61-150 -0.10% (4/7) n1661  (best fixed b 0.5)
+    LOYO -0.12% 4/7 | board -0.074% | picks ['b 1.0', 'b 0.5', 'b 0.5', 'b 1.0', 'b 0.5', 'b 0.5', 'b 1.0']
+    FWD  -0.07% 2/4 | picks ['b 1.0', 'b 0.5', 'b 0.5', 'b 1.0']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 6,505  actual/live 1.007
+    fixed: b 0.5: -0.24% (4/7) n6505  b 1.0: -0.08% (3/7) n6505
+    WR -0.17% (3/7) n4430 | TE -0.51% (4/7) n2075 | ADP<=60 -0.66% (5/7) n1485 | 61-150 +0.04% (4/7) n1841  (best fixed b 0.5)
+    LOYO -0.24% 4/7 | board -0.129% | picks ['b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    FWD  -0.21% 2/4 | picks ['b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    -> FAIL
+
+=== V2 team re-rated UP 10%+, off-QB games only ===
+  NEXT GAME  rows 1,021  actual/live 0.977
+    fixed: b 0.5: +0.03% (2/7) n1021  b 1.0: +0.15% (2/7) n1021
+    WR no change n700 | TE no change n321 | ADP<=60 no change n197 | 61-150 no change n262  (best fixed off)
+    LOYO +0.12% 0/7 | board +0.008% | picks ['b 0.5', 'off', 'off', 'off', 'b 0.5', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 522  actual/live 1.005
+    fixed: b 0.5: +0.21% (4/7) n522  b 1.0: +0.63% (4/7) n522
+    WR no change n360 | TE no change n162 | ADP<=60 no change n96 | 61-150 no change n132  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.09% 1/4 | picks ['off', 'b 0.5', 'b 0.5', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 666  actual/live 0.976
+    fixed: b 0.5: +0.24% (3/7) n666  b 1.0: +0.65% (3/7) n666
+    WR no change n461 | TE no change n205 | ADP<=60 no change n124 | 61-150 no change n157  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+=== V3 same-QB prior-season games join the evidence ===
+  NEXT GAME  rows 4,125  actual/live 0.996
+    fixed: k 0.25: +0.37% (2/7) n4125  k 0.5: +0.92% (1/7) n4125  k 1.0: +1.76% (1/7) n4125
+    WR no change n2753 | TE no change n1372 | ADP<=60 no change n1322 | 61-150 no change n1113  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 2,882  actual/live 1.002
+    fixed: k 0.25: +1.29% (4/7) n2882  k 0.5: +4.09% (2/7) n2882  k 1.0: +8.20% (1/7) n2882
+    WR no change n1912 | TE no change n970 | ADP<=60 no change n922 | 61-150 no change n767  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 3,224  actual/live 0.992
+    fixed: k 0.25: +1.16% (3/7) n3224  k 0.5: +3.48% (2/7) n3224  k 1.0: +6.88% (1/7) n3224
+    WR no change n2127 | TE no change n1097 | ADP<=60 no change n1001 | 61-150 no change n872  (best fixed off)
+    LOYO +1.17% 0/7 | board +0.384% | picks ['off', 'off', 'off', 'off', 'off', 'k 0.25', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+=== V3 same-QB history, off-QB rows only ===
+  NEXT GAME  rows 278  actual/live 0.972
+    fixed: k 0.5: -0.55% (4/6) n278  k 1.0: -0.29% (4/6) n278
+    WR +0.78% (3/6) n199 | TE -4.08% (2/3) n79 | ADP<=60 -3.80% (3/4) n86 | 61-150 +3.63% (2/4) n90  (best fixed k 0.5)
+    LOYO +1.72% 2/7 | board +0.001% | picks ['k 0.5', 'off', 'k 1.0', 'k 1.0', 'k 0.5', 'k 0.5', 'off']
+    FWD  +0.75% 0/4 | picks ['k 0.5', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 138  actual/live 0.966
+    fixed: k 0.5: +0.72% (3/5) n138  k 1.0: +2.87% (3/5) n138
+    WR no change n103 | TE no change n35 | ADP<=60 no change n38 | 61-150 no change n47  (best fixed off)
+    LOYO +11.68% 0/7 | board +0.049% | picks ['off', 'off', 'k 1.0', 'k 0.5', 'k 0.5', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 171  actual/live 0.973
+    fixed: k 0.5: +0.23% (3/5) n171  k 1.0: +1.77% (3/5) n171
+    WR no change n123 | TE no change n48 | ADP<=60 no change n50 | 61-150 no change n55  (best fixed off)
+    LOYO +7.76% 0/7 | board +0.056% | picks ['off', 'off', 'k 1.0', 'k 0.5', 'k 0.5', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+=== V3 same-QB history, NEW starter rows only (<= 1 prior start) ===
+  NEXT GAME  rows 390  actual/live 1.024
+    fixed: k 0.5: +3.38% (1/7) n390  k 1.0: +5.32% (0/7) n390
+    WR no change n261 | TE no change n129 | ADP<=60 no change n112 | 61-150 no change n105  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 382  actual/live 1.004
+    fixed: k 0.5: +14.98% (0/7) n382  k 1.0: +26.09% (0/7) n382
+    WR no change n253 | TE no change n129 | ADP<=60 no change n109 | 61-150 no change n104  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 386  actual/live 1.000
+    fixed: k 0.5: +14.96% (0/7) n386  k 1.0: +26.10% (0/7) n386
+    WR no change n257 | TE no change n129 | ADP<=60 no change n109 | 61-150 no change n104  (best fixed off)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+=== V4 team-total ratio b .5 on off-QB games + same-QB history k .5 ===
+  NEXT GAME  rows 1,021  actual/live 0.977
+    fixed: both: -0.14% (3/7) n1021
+    WR +0.31% (2/7) n700 | TE -1.41% (5/6) n321 | ADP<=60 -1.32% (2/6) n197 | 61-150 +0.96% (3/6) n262  (best fixed both)
+    LOYO +0.32% 1/7 | board +0.012% | picks ['both', 'off', 'both', 'both', 'both', 'both', 'off']
+    FWD  +0.39% 0/4 | picks ['both', 'both', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, 4+ games left  rows 522  actual/live 1.005
+    fixed: both: +0.74% (3/7) n522
+    WR no change n360 | TE no change n162 | ADP<=60 no change n96 | 61-150 no change n132  (best fixed off)
+    LOYO +0.90% 0/7 | board -0.001% | picks ['off', 'off', 'both', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+  REST OF SEASON, no survivor filter  rows 666  actual/live 0.976
+    fixed: both: +0.37% (3/7) n666
+    WR no change n461 | TE no change n205 | ADP<=60 no change n124 | 61-150 no change n157  (best fixed off)
+    LOYO +1.38% 0/7 | board +0.029% | picks ['off', 'off', 'both', 'both', 'both', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+=== LONDON-TYPE ROWS: WR/TE whose expected starter has <= 1 start this season AND 4+ games with him in the prior two seasons ===
+    n 390 | actual 8.49 | live 8.30 | this-season ppg 7.84 | same-QB history ppg 8.47 | act/live 1.024
+    same-QB history 20%+ ABOVE this season: n 209 actual 7.74 live 7.85 history 8.61 -> act/live 0.987
+    same-QB history 20%+ BELOW this season: n 109 actual 9.26 live 8.69 history 7.64 -> act/live 1.066
+
+Limitations: QB quality = Clay's preseason QB number (not his play this season); team implied totals only where the context row exists; starter = top passer of the game.

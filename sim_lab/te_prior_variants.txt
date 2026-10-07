@@ -1,0 +1,39 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== prior variants, games-weighted MSE of log(act/pred) | act/pred level ===
+
+TE n=217
+  Clay                                         MSE 0.2080  act/pred 0.978  beats Clay 0/7
+  prev (no change)                             MSE 0.2141  act/pred 0.955  beats Clay 4/7
+  Clay capped at 1.10x prev                    MSE 0.1933  act/pred 1.033  beats Clay 5/7
+  Clay capped at 1.20x prev                    MSE 0.1945  act/pred 1.013  beats Clay 5/7
+  50/50 Clay + prev                            MSE 0.1905  act/pred 0.966  beats Clay 6/7
+  Clay, jumps >=1.2x cut to 1.1x               MSE 0.1938  act/pred 1.029  beats Clay 5/7
+  market ADP curve (where present, else Clay)  MSE 0.2140  act/pred 0.996  beats Clay 0/7
+  50/50 Clay + market (else Clay)              MSE 0.2099  act/pred 0.987  beats Clay 2/7
+
+WR n=445
+  Clay                                         MSE 0.1766  act/pred 0.991  beats Clay 0/7
+  prev (no change)                             MSE 0.1931  act/pred 0.971  beats Clay 3/7
+  Clay capped at 1.10x prev                    MSE 0.1835  act/pred 1.045  beats Clay 1/7
+  Clay capped at 1.20x prev                    MSE 0.1792  act/pred 1.028  beats Clay 2/7
+  50/50 Clay + prev                            MSE 0.1578  act/pred 0.981  beats Clay 5/7
+  Clay, jumps >=1.2x cut to 1.1x               MSE 0.1837  act/pred 1.041  beats Clay 1/7
+  market ADP curve (where present, else Clay)  MSE 0.1749  act/pred 1.001  beats Clay 3/7
+  50/50 Clay + market (else Clay)              MSE 0.1718  act/pred 0.996  beats Clay 4/7
+
+RB n=250
+  Clay                                         MSE 0.1729  act/pred 0.968  beats Clay 0/7
+  prev (no change)                             MSE 0.2060  act/pred 0.978  beats Clay 2/7
+  Clay capped at 1.10x prev                    MSE 0.1789  act/pred 1.021  beats Clay 3/7
+  Clay capped at 1.20x prev                    MSE 0.1760  act/pred 1.000  beats Clay 4/7
+  50/50 Clay + prev                            MSE 0.1700  act/pred 0.973  beats Clay 4/7
+  Clay, jumps >=1.2x cut to 1.1x               MSE 0.1798  act/pred 1.015  beats Clay 3/7
+  market ADP curve (where present, else Clay)  MSE 0.1775  act/pred 1.017  beats Clay 3/7
+  50/50 Clay + market (else Clay)              MSE 0.1680  act/pred 0.992  beats Clay 3/7

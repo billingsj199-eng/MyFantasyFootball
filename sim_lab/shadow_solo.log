@@ -1,0 +1,141 @@
+=== SOLVE THE SHADOW ALONE: 10,520 top-150 player-weeks, next game pre-book, 2019-25 ===
+    rebuild check: parts-built shadow vs shadow_current max |diff| 0.0000
+
+--- LADDER: each fix on the shadow as it stands (earlier passes stacked); touched rows weighted error vs the current shadow ---
+
+  A  injury chain: x banged-up dock (Questionable / Doubtful, the live cond_mult)
+    rows 529 | actual / shadow on them 0.910 | vs live blend on them +3.95%
+    fixed: x cond: -4.58% (7/7)
+    LOYO -4.58% 7/7 | board -0.180% | picks ['x cond', 'x cond', 'x cond', 'x cond', 'x cond', 'x cond', 'x cond']
+    FWD  -3.96% 4/4 | board -0.154% | picks ['x cond', 'x cond', 'x cond', 'x cond']
+    -> PASS: x cond
+
+  A2 weather multiplier (live)
+    rows 1,510 | actual / shadow on them 0.976 | vs live blend on them -0.35%
+    fixed: x weather: -0.35% (4/7)
+    LOYO +0.68% 2/7 | board +0.091% | picks ['x weather', 'x weather', 'off', 'x weather', 'x weather', 'x weather', 'off']
+    FWD  +0.71% 1/4 | board +0.089% | picks ['x weather', 'x weather', 'x weather', 'off']
+    -> FAIL
+
+  B  hot streak (3+ games, evidence >= 1.25x prior): evidence pulled toward the prior, WR
+    rows 562 | actual / shadow on them 1.018 | vs live blend on them +0.77%
+    fixed: k 0.6: +2.08% (2/7)  k 0.75: +0.95% (3/7)  k 0.9: +0.24% (3/7)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  B  hot streak: TE
+    rows 212 | actual / shadow on them 1.024 | vs live blend on them +3.37%
+    fixed: k 0.6: +2.35% (1/7)  k 0.75: +1.14% (2/7)  k 0.9: +0.32% (2/7)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  B  hot streak: RB
+    rows 533 | actual / shadow on them 0.965 | vs live blend on them -1.39%
+    fixed: k 0.6: +0.28% (4/7)  k 0.75: -0.46% (4/7)  k 0.9: -0.44% (5/7)
+    LOYO +1.40% 4/7 | board +0.077% | picks ['k 0.6', 'k 0.9', 'k 0.9', 'k 0.75', 'k 0.9', 'k 0.9', 'k 0.75']
+    FWD  +0.14% 3/4 | board +0.006% | picks ['k 0.9', 'k 0.9', 'k 0.9', 'k 0.75']
+    -> FAIL
+
+  B  hot streak: QB
+    rows 123 | actual / shadow on them 1.007 | vs live blend on them -3.36%
+    fixed: k 0.6: +2.36% (2/7)  k 0.75: +1.07% (2/7)  k 0.9: +0.26% (2/7)
+    LOYO +1.45% 0/7 | board +0.017% | picks ['k 0.75', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  B2 cold streak (evidence <= .8x prior): evidence pulled toward the prior, WR (check only)
+    rows 671 | actual / shadow on them 0.991 | vs live blend on them -4.86%
+    fixed: k 0.75: +0.18% (4/7)  k 0.9: -0.04% (4/7)
+    LOYO +0.02% 3/7 | board +0.001% | picks ['k 0.9', 'k 0.9', 'k 0.9', 'k 0.9', 'k 0.9', 'k 0.9', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  C1 TE prior weight (shadow P 8 today)
+    rows 1,157 | actual / shadow on them 1.038 | vs live blend on them +1.47%
+    fixed: x0.6: +0.70% (1/7)  x1.5: -0.12% (4/7)  x2.0: -0.01% (4/7)  x3.0: +0.32% (4/7)
+    LOYO +0.01% 3/7 | board +0.001% | picks ['x1.5', 'x1.5', 'off', 'x1.5', 'x1.5', 'x1.5', 'x1.5']
+    FWD  -0.16% 2/4 | board -0.011% | picks ['off', 'x1.5', 'x1.5', 'x1.5']
+    -> FAIL
+
+  C2 TE level
+    rows 1,252 | actual / shadow on them 1.026 | vs live blend on them +1.15%
+    fixed: x1.03: +0.04% (3/7)  x1.05: +0.31% (3/7)  x1.08: +1.07% (2/7)
+    LOYO +0.32% 0/7 | board +0.027% | picks ['off', 'off', 'x1.03', 'x1.03', 'x1.03', 'off', 'off']
+    FWD  +0.44% 0/4 | board +0.033% | picks ['x1.03', 'x1.03', 'off', 'off']
+    -> FAIL
+
+  C3 TE prior pulled toward the market (ADP curve) where it exists
+    rows 1,252 | actual / shadow on them 1.026 | vs live blend on them +1.15%
+    fixed: w 0.3: -0.01% (3/7)  w 0.5: +0.06% (3/7)  w 0.7: +0.20% (3/7)
+    LOYO +0.29% 0/7 | board +0.024% | picks ['w 0.3', 'off', 'off', 'w 0.3', 'w 0.5', 'w 0.3', 'off']
+    FWD  +0.44% 0/4 | board +0.032% | picks ['w 0.7', 'w 0.5', 'off', 'off']
+    -> FAIL
+
+  C4 TE prior pulled toward the market AND hot-streak shrink k .75
+    rows 1,252 | actual / shadow on them 1.026 | vs live blend on them +1.15%
+    fixed: w 0.3: +0.20% (3/7)  w 0.5: +0.26% (3/7)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  D1 second-year QB: prior pulled toward the market
+    rows 242 | actual / shadow on them 1.057 | vs live blend on them +4.68%
+    fixed: w 0.5: +1.12% (3/7)  w 0.75: +1.85% (3/7)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +2.52% 1/4 | board +0.044% | picks ['w 0.75', 'w 0.75', 'w 0.75', 'off']
+    -> FAIL
+
+  D2 second-year QB: prior weight
+    rows 225 | actual / shadow on them 1.052 | vs live blend on them +4.27%
+    fixed: x0.5: -1.94% (3/7)  x1.5: +1.56% (1/7)  x2.0: +2.73% (1/7)
+    LOYO -1.94% 3/7 | board -0.040% | picks ['x0.5', 'x0.5', 'x0.5', 'x0.5', 'x0.5', 'x0.5', 'x0.5']
+    FWD  -0.39% 1/4 | board -0.006% | picks ['x0.5', 'x0.5', 'x0.5', 'x0.5']
+    -> FAIL
+
+  E  RB committee (30-55% of carries): level
+    rows 968 | actual / shadow on them 1.019 | vs live blend on them +1.40%
+    fixed: x1.03: -0.59% (5/7)  x1.05: -0.72% (5/7)  x1.08: -0.52% (5/7)
+    LOYO -0.21% 5/7 | board -0.016% | picks ['x1.05', 'x1.03', 'x1.05', 'x1.05', 'x1.08', 'x1.05', 'x1.05']
+    FWD  +0.36% 3/4 | board +0.026% | picks ['x1.08', 'x1.08', 'x1.03', 'x1.05']
+    -> FAIL
+
+  F  WR prior pulled toward the market (ADP curve)
+    rows 4,222 | actual / shadow on them 1.022 | vs live blend on them -1.00%
+    fixed: w 0.3: +0.10% (3/7)  w 0.5: +0.30% (2/7)
+    LOYO +0.11% 0/7 | board +0.043% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'w 0.3']
+    FWD  +0.17% 2/4 | board +0.070% | picks ['w 0.3', 'w 0.3', 'w 0.3', 'w 0.3']
+    -> FAIL
+
+  F2 RB prior pulled toward the market (ADP curve)
+    rows 3,355 | actual / shadow on them 1.008 | vs live blend on them -1.66%
+    fixed: w 0.3: +0.25% (2/7)  w 0.5: +0.57% (2/7)
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.20% 0/4 | board +0.067% | picks ['w 0.3', 'off', 'off', 'off']
+    -> FAIL
+
+=== STACKED SHADOW (fixes that passed: A  injury chain x cond) ===
+    cut                                    n | shadow wired vs live | stacked shadow vs live | stacked vs shadow wired | 70/30 blend vs live | 70/30 w/ stacked vs live | rank rho live/shadow/stacked
+    ALL top 150                        10520 |         -0.77% (5/7) |           -0.95% (5/7) |            -0.18% (7/7) |        -1.05% (7/7) |             -1.17% (7/7) | 0.387 / 0.390 / 0.392
+    QB                                  1691 |         -0.13% (4/7) |           -0.32% (4/7) |            -0.19% (5/7) |        -0.77% (5/7) |             -0.89% (4/7) | 0.326 / 0.335 / 0.338
+    RB                                  3355 |         -1.48% (5/7) |           -1.66% (5/7) |            -0.18% (6/7) |        -1.58% (6/7) |             -1.70% (7/7) | 0.504 / 0.510 / 0.510
+    WR                                  4222 |         -0.80% (4/7) |           -1.00% (5/7) |            -0.20% (6/7) |        -1.00% (5/7) |             -1.12% (6/7) | 0.347 / 0.356 / 0.360
+    TE                                  1252 |         +1.21% (3/7) |           +1.15% (3/7) |            -0.06% (4/7) |        +0.42% (3/7) |             +0.37% (3/7) | 0.372 / 0.356 / 0.360
+    listed Questionable                  537 |         +3.90% (1/7) |           -0.82% (4/7) |            -4.54% (7/7) |        +1.93% (1/7) |             -1.21% (4/7) | nan / nan / nan
+    running hot (ev >= 1.25x prior)     1430 |         +0.06% (3/7) |           -0.27% (4/7) |            -0.33% (5/7) |        -0.30% (4/7) |             -0.52% (4/7) | 0.343 / 0.317 / 0.317
+    second-year QB                       242 |         +4.19% (1/7) |           +4.68% (1/7) |            +0.48% (1/7) |        +2.41% (2/7) |             +2.76% (2/7) | nan / nan / nan
+    RB committee 30-55%                  968 |         +1.81% (2/7) |           +1.40% (4/7) |            -0.40% (6/7) |        +0.68% (3/7) |             +0.38% (4/7) | 0.427 / 0.402 / 0.399
+    ADP 1-30                            2452 |         -1.19% (5/7) |           -1.43% (5/7) |            -0.25% (6/7) |        -1.22% (6/7) |             -1.38% (6/7) | 0.223 / 0.242 / 0.248
+    ADP 31-60                           2378 |         -0.05% (4/7) |           -0.18% (4/7) |            -0.13% (5/7) |        -0.60% (6/7) |             -0.69% (6/7) | 0.082 / 0.110 / 0.116
+    ADP 61-100                          2689 |         -0.69% (4/7) |           -0.73% (4/7) |            -0.04% (5/7) |        -1.20% (5/7) |             -1.23% (4/7) | 0.298 / 0.331 / 0.332
+    ADP 101-150                         3001 |         -0.37% (3/7) |           -0.52% (3/7) |            -0.15% (4/7) |        -0.97% (3/7) |             -1.06% (4/7) | 0.350 / 0.356 / 0.358
+    rookies                             1173 |         -1.84% (4/7) |           -1.99% (4/7) |            -0.15% (4/7) |        -2.88% (5/7) |             -2.97% (5/7) | 0.499 / 0.556 / 0.556
+    weeks 1-4                           2812 |         -1.22% (4/7) |           -1.40% (6/7) |            -0.18% (5/7) |        -1.56% (6/7) |             -1.69% (6/7) | 0.368 / 0.365 / 0.367
+    weeks 5+                            7708 |         -0.61% (6/7) |           -0.79% (6/7) |            -0.18% (7/7) |        -0.87% (6/7) |             -0.99% (7/7) | 0.394 / 0.398 / 0.400
+
+    by season, stacked shadow vs live: 2019: -1.3%  2020: +0.1%  2021: +0.4%  2022: -1.2%  2023: -2.7%  2024: -1.3%  2025: -0.3%
+    by season, stacked shadow vs shadow wired: 2019: -0.0%  2020: -0.5%  2021: -0.2%  2022: -0.4%  2023: -0.1%  2024: -0.1%  2025: -0.1%
+    level: actual / stacked shadow by position: QB 1.001  RB 1.008  WR 1.022  TE 1.026
+
+Not replicable here (sit on top of either base): book anchor, pecking dock, banged-up prior lift; shadow v2.32 competitive-snap read; rest-of-season structure.

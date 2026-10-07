@@ -1,0 +1,64 @@
+  pbp 2019: 19,138 dropbacks
+  pbp 2020: 19,160 dropbacks
+  pbp 2021: 19,997 dropbacks
+  pbp 2022: 19,393 dropbacks
+  pbp 2023: 19,735 dropbacks
+  pbp 2024: 19,153 dropbacks
+  pbp 2025: 18,739 dropbacks
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+
+=== rows: WR/TE with a QB rating 7,731 (of 9,411); week-1 rows use the QB's prior season ===
+
+--- 1  does the live miss correlate with the QB's analytics?  Spearman of (actual - live) and of (actual / live) with each metric's within-week z; WR, TE, and the QB himself ---
+    metric         WR resid   WR ratio     n   TE resid   TE ratio     n   QB resid   QB ratio     n
+    cpoe             +0.015     +0.015  3297     -0.007     +0.004   988     -0.006     -0.002  1532
+    epa              +0.001     +0.002  3297     +0.008     +0.026   988     -0.014     -0.008  1532
+    succ             +0.000     -0.001  3297     -0.016     +0.001   988     -0.008     -0.005  1532
+    adot             -0.034     -0.033  3297     +0.042     +0.031   988     -0.010     -0.005  1532
+    sack             +0.027     +0.024  3297     +0.026     +0.018   988     +0.020     +0.017  1532
+    attpg            -0.052     -0.038  3297     -0.110     -0.098   988     -0.083     -0.080  1532
+    team_attpg       -0.051     -0.033  3412     -0.107     -0.098  1015     -0.069     -0.061  1527
+    (for reference: Vegas team implied total is already inside the live number; a correlation here is what the QB's play adds beyond it)
+
+--- 2  actual / live by QB-analytic quintile (WR + TE, top 150) ---
+    cpoe         Q1: 0.972 (n857) | Q2: 0.997 (n857) | Q3: 1.024 (n857) | Q4: 0.996 (n856) | Q5: 1.007 (n858)  | metric mean by Q: -3.99 -> 7.13
+    epa          Q1: 0.994 (n857) | Q2: 1.004 (n857) | Q3: 0.998 (n856) | Q4: 0.979 (n856) | Q5: 1.021 (n859)  | metric mean by Q: -0.16 -> 0.27
+    succ         Q1: 1.005 (n855) | Q2: 1.003 (n858) | Q3: 0.989 (n856) | Q4: 0.981 (n859) | Q5: 1.019 (n857)  | metric mean by Q: 0.39 -> 0.53
+    adot         Q1: 1.025 (n857) | Q2: 1.003 (n857) | Q3: 0.981 (n857) | Q4: 0.972 (n857) | Q5: 1.016 (n857)  | metric mean by Q: 6.16 -> 8.81
+    sack         Q1: 0.973 (n857) | Q2: 0.985 (n857) | Q3: 1.005 (n857) | Q4: 1.024 (n856) | Q5: 1.012 (n858)  | metric mean by Q: 0.04 -> 0.10
+    attpg        Q1: 1.028 (n857) | Q2: 1.053 (n856) | Q3: 1.036 (n855) | Q4: 0.948 (n859) | Q5: 0.944 (n858)  | metric mean by Q: 28.17 -> 41.07
+    team_attpg   Q1: 1.034 (n886) | Q2: 1.048 (n883) | Q3: 1.013 (n887) | Q4: 0.989 (n885) | Q5: 0.925 (n886)  | metric mean by Q: 29.28 -> 42.55
+
+--- 3  as a multiplier on the live number: 1 + e x z (WR + TE), LOYO + forward, ship bar 5/7 + 3/4 ---
+    cpoe         n4285 | e 0.01: -0.08% (5/7)  e 0.02: -0.11% (5/7)  e 0.04: -0.03% (4/7)  e 0.06: +0.24% (3/7) | LOYO +0.00% 5/7 | FWD -0.05% 3/4 -> FAIL
+    epa          n4285 | e 0.01: -0.09% (5/7)  e 0.02: -0.13% (5/7)  e 0.04: -0.04% (5/7)  e 0.06: +0.27% (2/7) | LOYO +0.04% 5/7 | FWD +0.13% 3/4 -> FAIL
+    succ         n4285 | e 0.01: -0.07% (4/7)  e 0.02: -0.10% (4/7)  e 0.04: +0.02% (4/7)  e 0.06: +0.33% (3/7) | LOYO +0.08% 4/7 | FWD -0.05% 3/4 -> FAIL
+    adot         n4285 | e 0.01: +0.08% (2/7)  e 0.02: +0.21% (1/7)  e 0.04: +0.60% (1/7)  e 0.06: +1.17% (1/7) | LOYO +0.00% 0/7 | FWD +0.00% 0/4 -> FAIL
+    sack         n4285 | e 0.01: +0.02% (3/7)  e 0.02: +0.08% (3/7)  e 0.04: +0.34% (3/7)  e 0.06: +0.77% (2/7) | LOYO +0.07% 0/7 | FWD +0.07% 0/4 -> FAIL
+    attpg        n4285 | e 0.01: -0.11% (5/7)  e 0.02: -0.17% (4/7)  e 0.04: -0.13% (4/7)  e 0.06: +0.11% (3/7) | LOYO -0.06% 4/7 | FWD +0.14% 1/4 -> FAIL
+    team_attpg   n4427 | e 0.01: -0.19% (7/7)  e 0.02: -0.33% (7/7)  e 0.04: -0.46% (7/7)  e 0.06: -0.37% (4/7) | LOYO -0.46% 7/7 | FWD -0.12% 2/4 -> FAIL
+
+--- 4  is the QB's quality already in the receiver's own numbers?  Spearman of the QB's season-to-date CPOE / EPA with the receiver's season-to-date PPG over his Clay number (WR + TE, 3+ games) ---
+    cpoe         rho +0.169 (n3677)
+    epa          rho +0.211 (n3677)
+    succ         rho +0.172 (n3677)
+    attpg        rho +0.119 (n3677)
+    team_attpg   rho +0.094 (n3677)
+
+--- 5  QB-change weeks only: replacement's trailing CPOE / EPA (prior seasons) minus the regular's, vs actual / live (WR + TE) ---
+    CPOE diff    [-99, -3): act/live 0.915 n133 | [-3, -1): act/live 0.929 n37 | [-1, 1): act/live 0.925 n38 | [1, 3): act/live 1.186 n40 | [3, 99): act/live 1.078 n152
+    EPA/db diff  [-99, -0.15): act/live 0.866 n102 | [-0.15, -0.05): act/live 0.949 n52 | [-0.05, 0.05): act/live 1.062 n71 | [0.05, 0.15): act/live 1.079 n74 | [0.15, 99): act/live 1.086 n101
+    Spearman replacement-minus-regular CPOE vs act/live: +0.093 (n400); EPA: +0.101
+
+--- 6  GRADED DOCK BY THE REPLACEMENT'S TRAILING PLAY (QB-change weeks, WR + TE): multiplier clip(1 + b x EPA/db diff, .8, 1.2) and clip(1 + c x CPOE diff / 10, .8, 1.2); LOYO + forward ---
+    EPA/db diff  n400 (top-150 193) | b 0.2: -0.95% (4/7)  b 0.35: -1.18% (4/7)  b 0.5: -1.25% (4/7)  b 0.8: -0.72% (4/7)
+                 top-150 rows at best fixed (b 0.5): -0.51% | LOYO -0.72% 4/7 picks ['b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.2', 'b 0.35'] | FWD -1.29% 3/4 -> FAIL
+    CPOE diff    n400 (top-150 193) | b 0.1: -0.59% (4/7)  b 0.2: -0.07% (4/7)  b 0.3: +0.20% (4/7)  b 0.5: +0.32% (3/7)
+                 top-150 rows at best fixed (b 0.1): +0.42% | LOYO +0.59% 4/7 picks ['b 0.1', 'b 0.1', 'b 0.1', 'b 0.1', 'b 0.5', 'b 0.1', 'b 0.1'] | FWD +0.47% 3/4 -> FAIL

@@ -142,8 +142,20 @@ dstWeeklyMean, evidence = mean(actual − raw model), shrunk to 0, clamp ±3)
 the clean model sits >= 3 pts under a market-implied mean of >= 8 —
 engine BELOW_GAP / BELOW_STARTER_MIN in propAnchorMean; pooled across
 positions, evidence = MAE-minimising w on those rows, shrunk to PROP_W;
-per-player overrides still win). Every lock row stores `tun` (incl. `wa`
-= the market weight actually applied, since belowW can differ from
+per-player overrides still win), and since 2026-10-07 its mirror `aboveW`
+(WR only — engine ABOVE_GAP 1.0 / ABOVE_POS / ABOVE_MARKET_MAX 12: when
+the clean model sits >= 1 pt ABOVE a face-value market under 12 the
+engine takes max(w, aboveW), i.e. it only raises the weight; W1-4 the
+market was closer on 64-74% of those WR rows in every tier under 12, all
+WR3/WR4 pecking-order optimism; on WR1 markets >= 12 the model was closer
+5/8 so they are exempt; RB/TE/QB showed no side).
+Also since 2026-10-07 `atdJuice[pos]` (anytime-TD devig inside
+propImpliedFp replacing the flat PROP_ATD_JUICE 1.06 — J such that Σ
+λ(p_raw/J) matches Σ actual rush+rec TDs, Poisson-honest shrink, clamp
+1.0-1.35; written for RB + WR per Jack, evidence printed for all four:
+W1-4 books ran hot on RB 0.89 / WR 0.91 / QB 0.84 and cold on TE 1.12).
+Every lock row stores `tun` (incl. `wa`
+= the market weight actually applied, since belowW/aboveW can differ from
 propW[pos]) = the values live
 at lock (export_site_proj.js), and the tuner divides them back out so the
 loop measures against the RAW prior and converges instead of compounding.
@@ -216,9 +228,12 @@ Third weekly mean `propMean` (full spec: PROP_ANCHOR_SPEC.md): where weekly
 prop lines exist (`BETTING_2026.weeklyProps` — UD/PP stat medians + DK
 anytime-TD odds, auto-pulled pregame in-season), the shipped mean blends
 **70% market / 30% model** (base = JS Weekly in-season, Clay preseason).
-Mechanics: consensus line = median across books; lines are medians, so
-they're converted to mean scale with the player's closed-form gamma
-median/mean ratio (from his own sampled shape — no sim needed); pass TDs
+Mechanics: consensus line = median across books, taken at FACE VALUE ×
+per-stat `PROP_LINE_SCALE` (all 1.0) since 2026-10-07 — the original
+median→mean gamma divisor (`gammaMedRatio`, median ×1.14) made the market
+run +0.6 pts high over W1-4 2026 while face-value lines tied the clean
+model; `window.SIM_PROP_GAMMA_RATIO = true` restores it, kickers still use
+it; pass TDs
 use the posted line; rush+rec TDs come from devigged anytime-TD odds →
 Poisson mean, split rush/rec by the model's own ratio; uncovered stats stay
 model. Coverage gate: posted lines must cover ≥60% of the player's non-TD
@@ -226,8 +241,10 @@ model points or no anchor; K/DST never anchored. Sigma, correlations and
 the season shock are untouched — the market moves the center, not the width.
 
 Honest-scoreboard rules: `comps` stay CLEAN everywhere (vsBooks grading and
-the LINES view are non-circular — the LINES view now medianizes with the
-closed-form ratio instead of the sim run's p50/mean). Locks store
+the LINES view are non-circular — the LINES view compares the clean comps
+at face value against the lines since 2026-10-07; it never reads the sim
+run's p50/mean, and `window.SIM_PROP_GAMMA_RATIO = true` brings back the
+closed-form medianizing). Locks store
 clayMean/jsMean/propMean; SCORE grades all three (report field `propModel`)
 plus head-to-heads PROP-vs-Clay and PROP-vs-JS in the TRACKING table.
 PROP_W is retroactively tunable: every lock has clean comps + lines +

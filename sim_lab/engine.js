@@ -1443,7 +1443,96 @@
     var w = wp.why;
     try { return learnedShadowCorr(p, wk, PRESETS.half, wp.slot, { clayPg: w.clayPg, mult: w.veg, rbU: w.usage, iA: w.iA, jsMean: w.jsMean, explain: true }); } catch (_) { return null; }
   }
-  function jsBasePg(p, sc, clayPg, priorP, usage) {
+  // FILL-IN EVIDENCE RESCALE (backtest_fillin_usage.py / fillin_usage.log, 2026-10-05; Jack: "players were only used because
+  // the starter was out ... we need context around usage so far"). 2019-25 on the live form: once the starter is back, a backup
+  // whose evidence holds fill-in games lands at RB .87 / WR .92 of projection next game (RB .69 when those games are half his
+  // evidence). Fill-in game = he played while a same-team, same-position REGULAR (Clay half-PPR per game >= 5.0 and above his own)
+  // sat; STALE = that regular is back for the week being projected (injury layer: plays with P >= .5). With 2+ stale games in his
+  // evidence, those games' points (and xFP) are divided by the position's vacated-role boost (RB 1.26, WR 1.08) - the game count
+  // stays (excluding or down-weighting them FAILED: the blend falls back to a Clay number that over-projects these backups too).
+  // LOYO starter-back rows: next game -0.61% (7/7), rest of season 4+ games left -1.59% (7/7), no filter -1.76% (6/7); forward
+  // 2022-25 4/4, 4/4, 3/4; whole board -0.05% / -0.12%. TE mixed (n~100) -> not applied. Fill-in games while the regular is
+  // STILL out are untouched (that evidence is right). Kill: window.SIM_FILLIN = false. Backup engine.js.bak_pre_fillin_20261005.
+  // ADP bands (fillin_usage.log section 5, Jack: "top 30, 60 and 100 are our main focus"): never fires in the top 30; RB better in
+  // every band with rows; WRs drafted 31-100 keep producing after the starter returns (actual / projected 1.0-1.03) and the rescale
+  // HURT their rest of season (+2.3% to +4.8%, n 9-43) -> the WR half only applies past ADP 100 (or no ADP): next game -0.77% (5/7,
+  // fwd 3/4), rest of season -1.04% / -0.91% (4/7 - marginal).
+  var FILLIN = { boost: { RB: 1.26, WR: 1.08 }, minAdp: { WR: 100 }, regMin: 5.0, minStale: 2, backP: 0.5 };
+  var PRIOR_HEALTH = { a: 0.5, cap: 2.0, minHurt: 3, minHealthy: 4, pos: { WR: 1, TE: 1 }, src: 'backtest_qb_injury_usage.py --refine 2026-10-07' };
+  // VOLUME CONTEXT (backtest_volume_context.py, 2026-10-07; Jack: "run the volume context test" -> "wire it"). The live number
+  // over-credits team pass volume: WR / TE on the highest-attempt offenses scored .925 of it, the lowest .934 -> 1.034, and the part
+  // that does not persist is SCRIPT-driven volume (attempts above neutral pass rate x plays) and realized volume on teams the
+  // market expects to trail. Two model-side multipliers on WR / TE, team season-to-date (2+ team games), z across the 32 teams:
+  //   1 - .03 x z(script excess att/g) for everyone, and 1 - .04 x z(att/g) when his team is this week's underdog (spread > 0).
+  // 2019-25, top-150 weighted: stacked -0.33% whole board (7/7), WR/TE rows -0.75% (7/7), forward 2022-25 -0.50% (4/4); every
+  // season better; mean move .4/g, max 2.2. Pace / neutral pass rate alone, favorites, volume-cleaned evidence all failed.
+  // Data: SIM_PACE_2026.teams[t].cur.vol = {games, att, plays, nrate, exc} (build_pace_vol.py, run by pull_pace_tracker.py).
+  // Kill: window.SIM_VOLUME_CTX = false. Backup engine.js.bak_pre_volume_20261007.
+  var VOLUME_CTX = { eExc: 0.03, eAtt: 0.04, minGames: 2, lo: 0.8, hi: 1.2, pos: { WR: 1, TE: 1 } };
+  function volumeZ() {
+    var d = (typeof window !== 'undefined' && window.SIM_PACE_2026) || null, T = d && d.teams; if (!T) return null;
+    var keys = [], ex = [], at = [];
+    Object.keys(T).forEach(function (t) {
+      var v = T[t].cur && T[t].cur.vol;
+      if (v && v.games >= VOLUME_CTX.minGames && v.exc != null && v.att != null) { keys.push(t); ex.push(v.exc); at.push(v.att); }
+    });
+    if (keys.length < 16) return null;
+    var z = function (arr) {
+      var m = 0, i; for (i = 0; i < arr.length; i++) m += arr[i]; m /= arr.length;
+      var s = 0; for (i = 0; i < arr.length; i++) s += (arr[i] - m) * (arr[i] - m); s = Math.sqrt(s / arr.length);
+      if (!(s > 0)) return null;
+      return arr.map(function (v) { return Math.max(-2.5, Math.min(2.5, (v - m) / s)); });
+    };
+    var zE = z(ex), zA = z(at); if (!zE || !zA) return null;
+    var out = {}; keys.forEach(function (t, i) { out[t] = { exc: zE[i], att: zA[i] }; }); return out;
+  }
+  function volumeMult(p, slot) {
+    if (typeof window !== 'undefined' && window.SIM_VOLUME_CTX === false) return 1;
+    if (!p || p.isDST || !VOLUME_CTX.pos[p.pos]) return 1;
+    var Z = volumeZ(), z = Z && Z[p.tm]; if (!z) return 1;
+    var m = Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eExc * z.exc));
+    if (slot && typeof slot.spread === 'number' && slot.spread > 0) m *= Math.max(VOLUME_CTX.lo, Math.min(VOLUME_CTX.hi, 1 - VOLUME_CTX.eAtt * z.att));
+    return m;
+  }
+  var _fillinCache = {};
+  function fillinStale(p, wk) {
+    var B = FILLIN.boost[p.pos];
+    if (!B || p.isDST || !_poolByNorm || (typeof window !== 'undefined' && window.SIM_FILLIN === false)) return null;
+    var ma = FILLIN.minAdp[p.pos]; if (ma != null && p.adp != null && p.adp <= ma) return null;
+    var ck = p.norm + '|' + wk;
+    if (_fillinCache[ck] !== undefined) return _fillinCache[ck];
+    var d = jsData(), rec = d.players && d.players[p.norm], res = null;
+    if (rec && rec.wks && rec.wks.length) {
+      var lvl = function (q) { var dv = clayDiv(q); return dv > 0 ? seasonPoints(q, PRESETS.half) / dv : 0; };
+      var mine = lvl(p), regs = [], keys = Object.keys(_poolByNorm), seen = {};
+      for (var i = 0; i < keys.length; i++) {
+        var q = _poolByNorm[keys[i]];
+        if (!q || q === p || seen[q.norm] || q.isDST || q.pos !== p.pos || q.tm !== p.tm) continue;
+        seen[q.norm] = 1;
+        var lq = lvl(q); if (lq >= FILLIN.regMin && lq > mine) regs.push(q);
+      }
+      if (regs.length) {
+        var back = regs.filter(function (q) { return injAdj(q, wk) >= FILLIN.backP; });
+        var stale = [];
+        rec.wks.forEach(function (w) {
+          if (w >= wk) return;
+          if (back.some(function (q) { var r = d.players[q.norm]; return !(r && r.wks && r.wks.indexOf(w) >= 0); })) stale.push(w);
+        });
+        if (stale.length >= FILLIN.minStale) res = { weeks: stale, B: B };
+      }
+    }
+    _fillinCache[ck] = res;
+    return res;
+  }
+  // points factor on his season-to-date evidence: the stale games' half-PPR points divided by the boost
+  function fillinPtsF(p, wk) {
+    var fs = fillinStale(p, wk); if (!fs) return 1;
+    var rec = jsData().players[p.norm], wf = rec && rec.wf; if (!wf) return 1;
+    var tot = 0, st = 0;
+    Object.keys(wf).forEach(function (w) { var v = +wf[w]; if (+w >= wk || !isFinite(v)) return; tot += v; if (fs.weeks.indexOf(+w) >= 0) st += v; });
+    return tot > 0 ? Math.max(0, (tot - st * (1 - 1 / fs.B)) / tot) : 1;
+  }
+  function jsBasePg(p, sc, clayPg, priorP, usage, ptsF) {
     // priorP (optional): prior strength in games. Live = JS_PRIOR_STRENGTH (5, twice backtested for the
     // Clay prior); the Clay-free shadow passes its own per-position strength (backtest_noclay_weekly.py).
     var PS = priorP != null ? priorP : JS_PRIOR_STRENGTH;
@@ -1461,6 +1550,7 @@
     ppg += (sc.rec_td - 6) * (pg.rctd || 0);
     if (p.pos === 'TE' && sc.bonus_rec_te) ppg += sc.bonus_rec_te * (pg.rec || 0);
     ppg = Math.max(0, ppg);
+    if (ptsF != null && ptsF !== 1) ppg *= ptsF;   // live FILL-IN rescale (fillinPtsF)
     // v2.18 (shadow only): usage evidence. usage = { xfpPg, lam } -> the evidence is lam x xFP/g + (1 - lam) x points/g
     if (usage && usage.ptsScale != null) ppg *= usage.ptsScale;   // v2.24 Vegas-adjusted points evidence (shadow only)
     if (usage && usage.lam > 0 && usage.xfpPg != null) ppg = usage.lam * usage.xfpPg + (1 - usage.lam) * ppg;
@@ -1611,31 +1701,66 @@
   // Kill: window.SIM_LIVE_USAGE = false.
   var LIVE_USAGE = {
     WR: { c: [0.37, 0.53, 0.005, 0.050], lam: [[1, 0.8], [2, 0.8], [3, 0.6], [5, 0.6], [8, 0.5], [99, 0.3]] },
-    TE: { c: [-1.87, 0.47, 0.023, 0.057], lam: [[3, 0], [5, 0.3], [8, 0.3], [99, 0.3]] }
+    // TE FROM GAME 1 (backtest_qb_injury_usage.py 3a, 2026-10-07; Jack: "increase the usage in the projections"): .3 from the first
+    // game instead of 0 through 3 games. 2019-25 live form: TE next game -0.09% (5/7), rest of season -0.26% (5/7), forward 3/4;
+    // .5 and heavier WR schedules were worse everywhere (WR held-out weights +0.9% ROS, 0/7). Kill: window.SIM_TE_USE_G1 = false.
+    TE: { c: [-1.87, 0.47, 0.023, 0.057], lam: [[99, 0.3]], lamOld: [[3, 0], [5, 0.3], [8, 0.3], [99, 0.3]] }
   };
+  // OWN BANGED-UP GAMES x0.5 IN THE USAGE INPUTS (same backtest, 3b; Jack: "make sure usage is hyper aware of situation"): a game he
+  // played while listed Questionable, with a Limited / DNP final practice, or at < 75% of his own median snap share describes his role
+  // less well. xFP and snap share from those games get weight .5 (route rate untouched, points evidence untouched - 2c: docking the
+  // points was worse on the next game). 2019-25: WR/TE rest of season -0.62% (6/7, forward 4/4), next game -0.03%; x0 was better on
+  // ROS but worse next game and in ADP 61-100. Kill: window.SIM_HURT_USAGE = false.
+  var HURT_USAGE = { w: 0.5, snapFrac: 0.75 };
+  function hurtGameW(p, k, wk, sn) {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_HURT_USAGE === false) return 1;
+    var S = injSig(), r = S && S.prac && S.prac[k] ? S.prac[k][p.norm] : null, hurt = false;
+    if (r) {
+      if (r.gs === 'Questionable') hurt = true;
+      var sq = typeof r.seq === 'string' ? r.seq.split('-') : [], last = sq.length ? sq[sq.length - 1] : '';
+      if (last === 'LP' || last === 'DNP') hurt = true;
+    }
+    if (!hurt && sn && sn.w && typeof sn.w[k] === 'number') {
+      var vals = [];
+      Object.keys(sn.w).forEach(function (q) { if (+q < wk && typeof sn.w[q] === 'number' && sn.w[q] > 0) vals.push(sn.w[q]); });
+      if (vals.length >= 3) {
+        vals.sort(function (a, b) { return a - b; });
+        var med = vals.length % 2 ? vals[(vals.length - 1) / 2] : 0.5 * (vals[vals.length / 2 - 1] + vals[vals.length / 2]);
+        if (sn.w[k] > 0 && sn.w[k] < HURT_USAGE.snapFrac * med) hurt = true;
+      }
+    }
+    return hurt ? HURT_USAGE.w : 1;
+  }
   function liveUsage(p, wk, sc) {
     var wnd = typeof window !== 'undefined' ? window : null;
     if (!wnd || wnd.SIM_LIVE_USAGE === false) return null;
     var cfg = LIVE_USAGE[p.pos]; if (!cfg) return null;
     var d = jsData(), rec = d.players && d.players[p.norm]; if (!rec || !rec.g) return null;
-    var lam = 0; for (var i = 0; i < cfg.lam.length; i++) { if (rec.g <= cfg.lam[i][0]) { lam = cfg.lam[i][1]; break; } }
+    var lamS = (p.pos === 'TE' && wnd.SIM_TE_USE_G1 === false && cfg.lamOld) ? cfg.lamOld : cfg.lam;
+    var lam = 0; for (var i = 0; i < lamS.length; i++) { if (rec.g <= lamS[i][0]) { lam = lamS[i][1]; break; } }
     if (!(lam > 0)) return null;
     var xr = wnd.SIM_XFP_2026 ? wnd.SIM_XFP_2026[p.norm] : null, sn = wnd.SIM_SNAPS_2026 ? wnd.SIM_SNAPS_2026[p.name] : null, rr = wnd.SIM_ROUTES_2026 ? wnd.SIM_ROUTES_2026[p.norm] : null;
     if (!xr || !xr.w || !sn || !sn.w || !rr) return null;   // all three or nothing: the mix was fit on rows that had them all
-    var H = PRESETS.half, xh = 0, xs = 0, nX = 0, sSum = 0, nS = 0, rSum = 0, nR = 0;
+    var H = PRESETS.half, xh = 0, xs = 0, nX = 0, wX = 0, sSum = 0, nS = 0, wS = 0, rSum = 0, nR = 0, nHurt = 0;
+    var fsU = fillinStale(p, wk);   // FILL-IN rescale: stale games' xFP / boost, like their points
     Object.keys(xr.w).forEach(function (k) {
       if (+k >= wk) return; var r = xr.w[k]; if (!r) return; nX++;
-      xh += H.rec * (r[1] || 0) + H.rec_yd * (r[2] || 0) + H.rec_td * (r[3] || 0) + H.rush_yd * (r[5] || 0) + H.rush_td * (r[6] || 0);
-      xs += sc.rec * (r[1] || 0) + sc.rec_yd * (r[2] || 0) + sc.rec_td * (r[3] || 0) + sc.rush_yd * (r[5] || 0) + sc.rush_td * (r[6] || 0);
-      if (p.pos === 'TE' && sc.bonus_rec_te) xs += sc.bonus_rec_te * (r[1] || 0);
+      var fk = (fsU && fsU.weeks.indexOf(+k) >= 0) ? 1 / fsU.B : 1;
+      var hw = hurtGameW(p, +k, wk, sn); if (hw < 1) nHurt++; wX += hw;   // banged-up game: half weight in the usage inputs
+      xh += hw * fk * (H.rec * (r[1] || 0) + H.rec_yd * (r[2] || 0) + H.rec_td * (r[3] || 0) + H.rush_yd * (r[5] || 0) + H.rush_td * (r[6] || 0));
+      var xsk = sc.rec * (r[1] || 0) + sc.rec_yd * (r[2] || 0) + sc.rec_td * (r[3] || 0) + sc.rush_yd * (r[5] || 0) + sc.rush_td * (r[6] || 0);
+      if (p.pos === 'TE' && sc.bonus_rec_te) xsk += sc.bonus_rec_te * (r[1] || 0);
+      xs += hw * fk * xsk;
     });
-    Object.keys(sn.w).forEach(function (k) { if (+k < wk && typeof sn.w[k] === 'number') { sSum += sn.w[k]; nS++; } });
+    Object.keys(sn.w).forEach(function (k) { if (+k < wk && typeof sn.w[k] === 'number') { var hw = hurtGameW(p, +k, wk, sn); sSum += hw * sn.w[k]; nS++; wS += hw; } });
     Object.keys(rr).forEach(function (k) { if (+k < wk && typeof rr[k] === 'number') { rSum += rr[k]; nR++; } });
     if (!nX || !nS || !nR) return null;
-    var gN = Math.max(rec.g, nX), c = cfg.c;
-    var uHalf = Math.max(0, c[0] + c[1] * (xh / gN) + c[2] * (rSum / nR) + c[3] * (sSum / nS));
+    // gN: games with no xFP row still count as zero-usage games (as before); the hurt games count at their weight
+    var gN = Math.max(rec.g, nX) - nX + wX, c = cfg.c, snapAvg = wS > 0 ? sSum / wS : sSum / nS;
+    var uHalf = Math.max(0, c[0] + c[1] * (xh / gN) + c[2] * (rSum / nR) + c[3] * snapAvg);
     var toSheet = xh > 0 ? xs / xh : 1;   // half-PPR -> this scoring sheet, by his own expected stat mix
-    return { xfpPg: uHalf * toSheet, lam: lam, half: uHalf, snap: sSum / nS, route: rSum / nR, xfpHalf: xh / gN };
+    return { xfpPg: uHalf * toSheet, lam: lam, half: uHalf, snap: snapAvg, route: rSum / nR, xfpHalf: xh / gN, hurtG: nHurt };
   }
   function shadowUsage(p, wk, sc) {
     if (typeof window !== 'undefined' && window.SIM_NC_USAGE === false) return null;
@@ -1739,6 +1864,26 @@
   // real slates re-pull pregame so live entries are always days old at most
   var PROP_STATS = ['py', 'ry', 'rcy', 'rec']; // non-TD anchor stats
   var PROP_SC    = { py: 'pass_yd', ry: 'rush_yd', rcy: 'rec_yd', rec: 'rec' };
+  // Line scale (2026-10-07). Prop lines are medians, so the anchor used to
+  // divide every line by the player's closed-form gamma median/mean ratio
+  // (gammaMedRatio, 0.75-1.0 -> x1.05-x1.33, median x1.14) to put it on
+  // mean scale. Four weeks of locks (968 anchored QB/RB/WR/TE player-weeks,
+  // W1-4 2026) say the books already shade for the skew: actual/line ran
+  // 1.03-1.06 on every stat except receiving yards (WR 1.20 / RB 1.23), and
+  // the inflated market sat +0.60 pts HIGH (MAE 4.89) while the face-value
+  // lines sat -0.40 (MAE 4.66, tied with the clean model). At face value the
+  // tuned-weight blend improved MAE on all four positions with within-
+  // position rank order flat, so lines now enter at face value times a
+  // per-stat scale (default 1.0 everywhere; rcy 1.1-1.2 traded MAE for
+  // bias and was not taken). window.SIM_PROP_LINE_SCALE = {rcy: 1.1}
+  // overrides per stat; window.SIM_PROP_GAMMA_RATIO = true restores the old
+  // divisor. Kickers keep the gamma divisor (one line; kLevel owns their level).
+  var PROP_LINE_SCALE = { py: 1.0, ptd: 1.0, ry: 1.0, rec: 1.0, rcy: 1.0 };
+  function propLineScale(k) {
+    var o = (typeof window !== 'undefined' && window.SIM_PROP_LINE_SCALE) || null;
+    if (o && typeof o[k] === 'number' && o[k] > 0) return o[k];
+    return PROP_LINE_SCALE[k] != null ? PROP_LINE_SCALE[k] : 1.0;
+  }
 
   var _propWkCache = {};
   function propCacheReset() { _propWkCache = {}; }
@@ -1805,6 +1950,10 @@
   // back out exactly).
   function propImpliedFp(p, entry, sc, compsWk) {
     var medRatio = gammaMedRatio(p);
+    // Skill-position lines: face value x per-stat scale (see PROP_LINE_SCALE);
+    // the gamma divisor only on the opt-in switch.
+    var useGamma = (typeof window !== 'undefined' && window.SIM_PROP_GAMMA_RATIO === true);
+    function lineMean(k, line) { return useGamma ? line / medRatio : line * propLineScale(k); }
     // Kickers (Phase 3): a kicking-points line IS the fantasy stat — no
     // coverage gate (one line is full coverage). FG-made fallback: 3/FG +
     // the model's XP mean.
@@ -1820,9 +1969,9 @@
       if (k === 'rec' && p.pos === 'TE' && sc.bonus_rec_te) v += sc.bonus_rec_te;
       return v;
     }
-    // Non-TD stats: line (median -> mean scale) where posted, model comp
-    // (already mean scale) where not. Gate: posted lines must cover >=60%
-    // of the model's non-TD points or we don't anchor at all.
+    // Non-TD stats: line (face value x scale, see PROP_LINE_SCALE) where
+    // posted, model comp (mean scale) where not. Gate: posted lines must
+    // cover >=60% of the model's non-TD points or we don't anchor at all.
     var covered = 0, modelNonTd = 0, fp = 0;
     PROP_STATS.forEach(function (k) {
       var mPts = (compsWk[k] || 0) * scv(k);
@@ -1830,7 +1979,7 @@
       var line = propConsensus(entry, k);
       if (line != null && line > 0) {
         covered += mPts;
-        fp += (line / medRatio) * scv(k);
+        fp += lineMean(k, line) * scv(k);
       } else {
         fp += mPts;
       }
@@ -1838,13 +1987,18 @@
     if (!(modelNonTd > 0) || covered / modelNonTd < PROP_COVERAGE_MIN) return null;
     // Pass TDs: the posted line when there is one, else the model.
     var ptdLine = propConsensus(entry, 'ptd');
-    fp += (ptdLine != null && ptdLine > 0 ? ptdLine / medRatio : (compsWk.ptd || 0)) * sc.pass_td;
+    fp += (ptdLine != null && ptdLine > 0 ? lineMean('ptd', ptdLine) : (compsWk.ptd || 0)) * sc.pass_td;
     // Rush+rec TDs: devigged anytime-TD odds -> Poisson mean, split rush/rec
     // by the model's own ratio; raw 0.5 rtd/rctd novelty lines are ignored.
     var atd = propConsensus(entry, 'atd');
     var rtdM = compsWk.rtd || 0, rctdM = compsWk.rctd || 0;
     if (atd != null) {
-      var pTd = Math.min(0.85, Math.max(0.01, amToProb(atd) / PROP_ATD_JUICE));
+      // Devig: flat PROP_ATD_JUICE unless the weekly tuner has fit a
+      // per-position factor (SIM_TUNING.atdJuice, 2026-10-07: RB books ran
+      // ~11% hot on TD counts W1-4 — Σλ 120 vs 107 scored at 1.06).
+      var TUj = (typeof window !== 'undefined' && window.SIM_TUNING && window.SIM_TUNING.atdJuice) || null;
+      var juice = (TUj && typeof TUj[p.pos] === 'number' && TUj[p.pos] >= 1) ? TUj[p.pos] : PROP_ATD_JUICE;
+      var pTd = Math.min(0.85, Math.max(0.01, amToProb(atd) / juice));
       var lam = -Math.log(1 - pTd);
       var tot = rtdM + rctdM;
       var rushShare = tot > 0 ? rtdM / tot : (p.pos === 'QB' ? 1 : p.pos === 'RB' ? 0.85 : 0.03);
@@ -1879,11 +2033,25 @@
     var TU = (typeof window !== 'undefined' && window.SIM_TUNING) || null;
     if (TU && typeof TU.belowW === 'number' && ovMap[p.name] == null
         && fp - base >= BELOW_GAP && fp >= BELOW_STARTER_MIN) w = Math.min(w, Math.max(0, TU.belowW));   // min: belowW only ever LOWERS the weight (RB/TE propW sits under it since 2026-09-29)
+    // Mirror image (Jack 2026-10-07, tuner `aboveW`): when the CLEAN model
+    // sits ABOVE the face-value market on a WR by >= ABOVE_GAP, W1-4 2026
+    // had the market closer 67% of the time (n=94, every week; MAE-best
+    // weight 1.0) — all WR3/WR4s the model likes more than the books
+    // (pecking-order optimism). A separate, HIGHER market weight applies
+    // there. WR only: RB/TE/QB above-market rows showed no side (model
+    // closer 41-54%). Not on WR1-level markets (>= ABOVE_MARKET_MAX): there
+    // the model was the closer side (5/8, JSN/St. Brown/Jefferson booms) and
+    // Jack's rule is never to dock elite players. max(): only ever RAISES.
+    if (TU && typeof TU.aboveW === 'number' && ovMap[p.name] == null
+        && ABOVE_POS[p.pos] && base - fp >= ABOVE_GAP && fp < ABOVE_MARKET_MAX) w = Math.max(w, Math.min(1, TU.aboveW));
     p._propWUsed = w;
     return w * fp + (1 - w) * base;
   }
   var BELOW_GAP = 3.0;          // half-PPR pts the market must sit above the clean model
   var BELOW_STARTER_MIN = 8.0;  // market-implied mean that counts as a starter
+  var ABOVE_GAP = 1.0;          // half-PPR pts the clean model must sit above the market
+  var ABOVE_POS = { WR: 1 };    // positions the aboveW rule applies to
+  var ABOVE_MARKET_MAX = 12.0;  // market-implied mean at or above this = WR1 market, rule off
 
   // ---------- Phase 4: market rate track ----------
   // A weekly prop is the market's estimate of the player's per-game rate,
@@ -2181,6 +2349,23 @@
     TE: { lead: { tgtSame: [0.25, 0.10], carSame: [], tgtOther: 0.36 },
           sec:  { tgtSame: [0.00, 0.22], carSame: [], tgtOther: 0.00 } }
   };
+  // TE BACKUP SHARE (backtest_te_vacated.py / te_vacated.log, 2026-10-05; Jack: "ship the te rule"). With the starting TE out,
+  // his backup ran 1.40x the live projection next game (156 rows, 6 of 7 seasons under): when the absent TE is not his team's
+  // top target-getter (the 'sec' rule, 140 of 156 rows) the TE2 got 0.00 of his targets - the 09-11 split had sent backups with
+  // no trailing baseline to 'new bodies'; measured directly TE2 absorbs +0.39. Fix: the sec-rule TE2 takes the lead rule's .25,
+  // only for a true backup (own Clay < 4.0 half-PPR a game; co-starters were about right). Fixed value, not fitted: next game
+  // -12.1% (5/7, fwd 3/4), ROS 4+ left -21.8% (5/6, 3/4), ROS -22.4% (5/7, 3/4); TE board -0.64%; ADP 1-100: 0 rows touched
+  // (it moves only the TE2's own number). Fitted shares failed the season counts (4/7). Kill: window.SIM_TE_SEC2 = false.
+  // Backup engine.js.bak_pre_tesec_20261005.
+  var TE_SEC2 = { share: 0.25, maxOwnHalf: 4.0 };
+  function poolTgtShare(rule, apos, sec, i, q) {
+    var wt = rule.tgtSame[i] || 0;
+    if (apos === 'TE' && sec && i === 0 && !wt && !(typeof window !== 'undefined' && window.SIM_TE_SEC2 === false)) {
+      var dv = clayDiv(q), own = dv > 0 ? seasonPoints(q, PRESETS.half) / dv : 0;
+      if (own < TE_SEC2.maxOwnHalf) wt = TE_SEC2.share;
+    }
+    return wt;
+  }
   var POOL_EFF_T = 0.92, POOL_EFF_C = 1.00;
   var POOL_LEVEL_FLOOR = 4.0; // PPR pts/g — denominator floor for the gained-points ratio
   var POOL_CR  = { RB: 0.77, WR: 0.63, TE: 0.68 };   // catch rate -> targets from Clay rec
@@ -2195,6 +2380,7 @@
   }
   function applyInSeasonInjuries(players, currentWeek, opts) {
     _ncCache = {};   // v2.12: the shadow redistribution cache follows the injury state
+    _fillinCache = {};   // fill-in rescale: "back" reads the injury layer
     _chartPreCache = {};   // so do the pre-injury chart spots (who is out now)
     _peckCache = {}; // pecking-order ranks follow it too (an absent WR2 promotes the WR3)
     opts = opts || {};
@@ -2250,7 +2436,24 @@
       // manual window: wins while it is running, unless the news is newer than the entry. An EXPIRED window no
       // longer speaks for the player (2026-10-01: Dowdle, Out + no practice, projected at full strength behind an
       // expired [3, 3]) - the current designation takes over.
-      if (o && o.length >= 2 && !newsNewer && o[1] >= currentWeek) { map[p.norm] = { from: o[0], to: o[1], mult: 0, src: 'override' }; return; }
+      // 2026-10-05 (Jack: "IR players don't return the first week eligible"): a manual window no longer
+      // ends in a guaranteed full return - the weeks after it get a soft landing (built in the curve block
+      // below) unless the entry says 'firm' or the current team report has him practicing (LP / FP).
+      // The landing keeps speaking AFTER the window ends, through its own weeks (lmax, else to + 3): an IR player still listed
+      // IR the week after his window used to fall to the designation (IR = 4 more zeroed weeks) - the very "not the first week
+      // eligible" read inverted. In that phase: practicing (LP / FP) or a 'firm' entry -> the designation decides (Questionable
+      // docks still apply); the NFL report's game status Out -> this week is zeroed and the landing starts after it.
+      var oLand = o && o.length >= 2 && o[3] !== 'firm' && (typeof o[3] === 'number' ? o[3] : o[1] + 3) >= currentWeek;
+      if (o && o.length >= 2 && !newsNewer && (o[1] >= currentWeek || oLand)) {
+        var practicing0 = practiced === 'LP' || practiced === 'FP';
+        var firm = o[3] === 'firm' || practicing0;
+        if (o[1] < currentWeek && firm) { /* landing phase, practicing: fall through to the designation */ }
+        else {
+          var oTo = (o[1] < currentWeek && gs === 'out') ? currentWeek : o[1];
+          map[p.norm] = { from: o[0], to: oTo, mult: 0, src: 'override', firm: firm, lmax: typeof o[3] === 'number' ? Math.max(o[3], oTo + 1) : null, note: firm && o[3] !== 'firm' ? 'practicing (' + practiced + ')' : '' };
+          return;
+        }
+      }
       if ((o === null || o === 0) && !newsNewer) return;
       if (nwin) {
         var ncv = {}; Object.keys(nwin.curve || {}).forEach(function (cw) { if (+cw > nwin.to) ncv[+cw] = nwin.curve[cw]; });
@@ -2371,6 +2574,27 @@
         var sh = (availV2 && g && AVAIL_GRP[g]) ? AVAIL_GRP[g][Math.min(3, kk) - 1] : 0;
         return sh ? _sgm(_lgt(c) + sh) : c;
       };
+      // OVERRIDE LANDING (2026-10-05): after a manual window, P(plays) = .60 / .80 / .90 over his next three
+      // games - the same landing as a news "back week N" item (build_injury_signals.py) - or, when the entry
+      // names a latest week ([from, to, date, lmax]), 50% rising to 90% by that week like a reported range.
+      // 'firm' entries and players practicing on the current report return at full strength. The return ramp
+      // (returnDock) still stacks on his first games back.
+      list.forEach(function (p) {
+        var m = map[p.norm];
+        if (!m || m.src !== 'override' || m.firm || m.to >= WEEKS) return;
+        // landing weeks count from the end of the window (a landing already under way keeps its step), shown from this week on
+        var gw = gwOf(p.tm), tail = gw.filter(function (w) { return w > m.to; }), curve = {};
+        if (m.lmax && m.lmax > m.to) {
+          var span = tail.filter(function (w) { return w <= m.lmax; }).slice(0, 6);
+          span.forEach(function (w, j) { curve[w] = span.length > 1 ? +(0.5 + 0.4 * j / (span.length - 1)).toFixed(2) : 0.6; });
+          var nx = tail.filter(function (w) { return w > (span.length ? span[span.length - 1] : m.lmax); });
+          if (span.length === 1 && nx.length) curve[nx[0]] = 0.85;
+        } else {
+          tail.slice(0, 3).forEach(function (w, j) { curve[w] = [0.6, 0.8, 0.9][j]; });
+        }
+        Object.keys(curve).forEach(function (w) { if (+w < currentWeek) delete curve[w]; });
+        if (Object.keys(curve).length) m.curve = curve;
+      });
       list.forEach(function (p) {
         var m = map[p.norm];
         // Out / IR / exempt designations, a news "ruled out", and a corroborated Doubtful (plays 1%: he is one missed game in)
@@ -2457,7 +2681,7 @@
           var lvl = function (q) { return (q.ptsPPR || 0) / (q.qbWindow ? (q.qbWindow.games || 17) : (q.clayGames || 17)); };
           same.sort(function (a, b) { var ra = depthRankOf(a), rb = depthRankOf(b); return ra !== rb ? ra - rb : lvl(b) - lvl(a); });
           same.forEach(function (q, i) {
-            var wt = rule.tgtSame[i], wc = rule.carSame[i];
+            var wt = poolTgtShare(rule, apos, !v.lead, i, q), wc = rule.carSame[i];
             if (wt) gainT[q.norm] = (gainT[q.norm] || 0) + v.tgt * wt;
             if (wc) gainC[q.norm] = (gainC[q.norm] || 0) + v.car * wc;
           });
@@ -2605,7 +2829,27 @@
     }
     var iA = injAdj(p, wk); // in-season availability / vacated-opportunity factor
     var factor = mult * dAdj * cbM * sM * rampF * iA;
-    var clayPg = seasonPoints(p, sc) / perGameDiv;
+    var clayPg0 = seasonPoints(p, sc) / perGameDiv;
+    // BANGED-UP PRIOR (backtest_qb_injury_usage.py --refine, 2026-10-07; Jack, London / Bowers: "last year brock bowers was banged up
+    // many games and underperformed for it"): Clay's per-game prior for a WR / TE who played 3+ games last season listed Questionable,
+    // with a Limited / DNP final practice, or at < 75% of his own median snap share, and whose HEALTHY games (4+) averaged more than
+    // Clay's number, is lifted by .5 x (healthy ppg - all ppg), floored at 0 and capped at 2.0 half-PPR a game (converted to this
+    // sheet's scoring). The live form under-projected these players 5-15% (WR ADP 1-30: actual 1.10-1.15 x projection, 0/6 seasons
+    // the other way). 2019-25, every season out: WR next game -1.1% (6/7), rest of season -7.4% (6/7), forward 4/4; TE -0.2% / -3.4%
+    // (4/5), forward 3/3; ADP 1-30 -11% ROS (6/6); still -4% once 8+ games are in. RB failed (+1 to +6%) and is excluded. Data:
+    // data/sim_prior_health.js (2025 tags, rebuilt each January by the same script). Kill: window.SIM_HEALTH_PRIOR = false (the data object is window.SIM_PRIOR_HEALTH).
+    var hLift = 0;
+    if (!p.isDST && PRIOR_HEALTH.pos[p.pos] && clayPg0 > 0 && !(typeof window !== 'undefined' && window.SIM_HEALTH_PRIOR === false)) {
+      var PH = typeof window !== 'undefined' && window.SIM_PRIOR_HEALTH, hRow = PH && PH.p ? (PH.p[p.name] || PH.p[p.norm]) : null;
+      if (hRow && hRow[0] != null && hRow[2] >= PRIOR_HEALTH.minHurt && hRow[3] >= PRIOR_HEALTH.minHealthy) {
+        var clayHalf = seasonPoints(p, PRESETS.half) / perGameDiv;
+        if (clayHalf > 0 && hRow[0] > clayHalf) {
+          var liftHalf = Math.min(PRIOR_HEALTH.cap, Math.max(0, PRIOR_HEALTH.a * (hRow[0] - hRow[1])));
+          hLift = liftHalf * clayPg0 / clayHalf;
+        }
+      }
+    }
+    var clayPg = clayPg0 + hLift;
     // QB NEXT MAN UP = ADDITIVE POINTS (2026-09-18, Drew Lock 30.5 / W3 202.7, Cooper Rush 69.8): the QB boost is
     // 1 + 85% x lost / the backup's own Clay level (season / 17, ~0.5), i.e. a x28 ratio that only means "his level +
     // 85% of the starter's". Once the backup has a 2026 game the JS base (2.5) and the market rate (15) are no longer
@@ -2613,10 +2857,37 @@
     // it was sized on and add them to the base; the chain then carries no availability factor for him.
     var qbInh = 0, iAc = iA;
     if (p.pos === 'QB' && iA > 1) { qbInh = (iA - 1) * seasonPoints(p, sc) / (p.qbWindow ? (p.qbWindow.games || 17) : 17); iAc = 1; }
+    // LIVE BACKUP-QB RULE (2026-10-05, Jack: "Mariota was only used because the starter was out - Daniels is back next
+    // week ... we need context around usage so far"). The live number had no starter check: a backup's fill-in starts
+    // become his JS base (Mariota 15/g), that base was projected EVERY week (two WAS QBs at 15 and 19 once Daniels
+    // returns), the inherited 85% of the starter was ADDED on top of it, and the market-rate fallback replayed the lines
+    // the books set while he started. Now, as in the shadow (v2.8 backup cap + v2.25 qbFill): a QB at string 2+ on his
+    // team's chart for THIS week (effectiveString - available players only; for later weeks a starter who is out now is
+    // put back at his pre-injury spot) is held to backup level, and a fill-in takes the LARGER of his own number and the
+    // inherited 85%, never both (43 fill-in starts: actual 14.7, own 14.3, added 26.4). This week's posted lines still win.
+    // Kill: window.SIM_LIVE_QB2 = false. Backup engine.js.bak_pre_liveqb2_20261005.
+    var qb2Cap = null, qb2Tag = null, qb2On = p.pos === 'QB' && !(typeof window !== 'undefined' && window.SIM_LIVE_QB2 === false);
+    if (qb2On) {
+      var qdL = typeof window !== 'undefined' ? window.SIM_DEPTH_2026 : null;
+      var chL = qdL && qdL.teams && qdL.teams[p.tm] && qdL.teams[p.tm].QB && qdL.teams[p.tm].QB.length;
+      if (chL) {
+        var qsL = effectiveString(p, wk);
+        if (qsL == null || qsL >= 2) {
+          var hpL = seasonPoints(p, PRESETS.half) / perGameDiv;
+          qb2Cap = NC_SHADOW.qbBackupPpg * ((hpL > 0 && clayPg > 0) ? clayPg / hpL : 1);
+          qb2Tag = qsL == null ? 'x' : String(qsL);
+        }
+      }
+    }
+    var qbJoin = function (own) {   // own per-game number + the inherited role, the live backup-QB way
+      if (!qb2On) return own + qbInh;
+      if (qb2Cap != null && own > qb2Cap) own = qb2Cap;
+      return qbInh > 0 ? Math.max(own, qbInh) : own;
+    };
     var mQbf = 1;
     if (p.pos === 'QB' && !(qbInh > 0) && !(iA > 1) && clayPg > 0) { var cf = qbFloor(clayPg, sc); mQbf = cf / clayPg; }
     var mRos = rosTilt(p, wk); mQbf *= mRos;   // rest-of-season volume tilt rides the same model-side multiplier (weeks ahead only)
-    mean = (clayPg * mQbf + qbInh) * (factor / iA * iAc) * rookieLevel(p);
+    mean = qbJoin(clayPg * mQbf) * (factor / iA * iAc) * rookieLevel(p);
     // JS Weekly (in-season model): Clay prior shrunk toward 2026 actuals,
     // actual FPA-by-position opponent adj replacing Clay unit grades as the
     // sample grows. Preseason (no 2026 data) both terms collapse to Clay's,
@@ -2631,7 +2902,8 @@
     // Backup engine.js.bak_pre_wrlate_20261005.
     var livePs = (p.pos === 'WR' && lvU && (p.adp == null || p.adp > 60)
                   && !(typeof window !== 'undefined' && window.SIM_LIVE_BLEND_POS === false)) ? 4 : null;
-    var jsBaseNoU = jsBasePg(p, sc, clayPg), jsBase0 = lvU ? jsBasePg(p, sc, clayPg, livePs, lvU) : jsBaseNoU, mRook = rookieLevel(p);
+    var fiF = fillinPtsF(p, wk);   // FILL-IN rescale (1 unless 2+ stale fill-in games)
+    var jsBaseNoU = jsBasePg(p, sc, clayPg, null, null, fiF), jsBase0 = lvU ? jsBasePg(p, sc, clayPg, livePs, lvU, fiF) : jsBaseNoU, mRook = rookieLevel(p);
     var jsPg = jsBase0 * mRook;
     var jsPgPre = jsPg;
     if (p.pos === 'QB' && !(qbInh > 0) && !(iA > 1)) { jsPg = qbFloor(jsPg, sc); mQbf = jsPgPre > 0 ? jsPg / jsPgPre : 1; }
@@ -2645,28 +2917,28 @@
     var oppM = jsOppMult(slot.opp, p.pos, dAdj);
     var jsChain = mult * oppM * cbM * sM * rampF * iAc;
     var jsPgOwn = jsPg;   // before the inherited QB role (WHY waterfall)
-    jsPg += qbInh;
+    jsPg = qbJoin(jsPg);
     // TD-luck mean reversion (RB/WR/TE/QB), additive after the chain. Scaled by
     // AVAILABILITY only: iA also carries the vacated-opportunity boost for
     // backups (>1, Cooper Rush x210 on a near-zero base) which must not
     // multiply a points term - min(1, iA) keeps Out/Doubtful docks and drops the boost.
-    var luckFull = tdLuckAdj(p, sc) * Math.min(1, iA);
+    var luckFull = (qb2Cap != null && !(qbInh > 0)) ? 0 : tdLuckAdj(p, sc) * Math.min(1, iA);   // a held backup carries no TD luck from his fill-in starts
     var luckAdj = luckFull * (lvU ? 1 - lvU.lam : 1);   // only the points share of the evidence carries touchdown luck
     var jsMean = Math.max(0, jsPg * jsChain + luckAdj);
     var jsNoUse = lvU ? Math.max(0, (jsBaseNoU * mRook + qbInh) * jsChain + luckFull) : null;   // the same number without the usage evidence (usage_scorecard.py)
     var jsRawPk = jsMean;   // before the pecking-order dock: the learned shadow was fit on this number
-    var pkHalf = seasonPoints(p, PRESETS.half) / perGameDiv, peckR = peckDock(p, wk, sc, schedule, jsRawPk, (pkHalf > 0 && clayPg > 0) ? jsRawPk * pkHalf / clayPg : jsRawPk);
-    var mPeck = peckR.m;
-    if (mPeck !== 1) { mean *= mPeck; jsMean = jsRawPk * mPeck; if (jsNoUse != null) jsNoUse *= mPeck; }
+    var pkHalf = seasonPoints(p, PRESETS.half) / perGameDiv, peckR = peckDock(p, wk, sc, schedule, jsRawPk, (pkHalf > 0 && clayPg0 > 0) ? jsRawPk * pkHalf / clayPg0 : jsRawPk);
+    var mPeck = peckR.m, mVol = volumeMult(p, slot), mDock = mPeck * mVol;   // model-side docks: pecking order x volume context
+    if (mDock !== 1) { mean *= mDock; jsMean = jsRawPk * mDock; if (jsNoUse != null) jsNoUse *= mDock; }
     var lcCorr = null;
-    try { lcCorr = learnedShadowCorr(p, wk, sc, slot, { clayPg: clayPg, mult: mult, rbU: rbU, iA: iA, jsMean: jsRawPk }); } catch (_) { lcCorr = null; }   // SHADOW (learned correction)
+    try { lcCorr = learnedShadowCorr(p, wk, sc, slot, { clayPg: clayPg0, mult: mult, rbU: rbU, iA: iA, jsMean: jsRawPk }); } catch (_) { lcCorr = null; }   // SHADOW (learned correction)
     // CLAY-FREE SHADOW BASE (2026-09-15): same blend and chain, but the prior is the
     // player's OWN 3-yr weighted PPG (player_weekly_sigma mean_ppg, half-PPR, rescaled to
     // this sheet by the Clay stat mix) instead of Clay. Graded every Tuesday next to the
     // shipped mean (score_week.py "No-Clay shadow"); the season ledger decides whether
     // Clay can go. No history -> Clay prior, flagged 'clay-fallback'.
-    var ncSrc = 'clay-fallback', ncPrior = clayPg;
-    var halfPg = seasonPoints(p, PRESETS.half) / perGameDiv, scale = (halfPg > 0 && clayPg > 0) ? clayPg / halfPg : 1;
+    var ncSrc = 'clay-fallback', ncPrior = clayPg0;   // the Clay-free shadow never sees the banged-up lift
+    var halfPg = seasonPoints(p, PRESETS.half) / perGameDiv, scale = (halfPg > 0 && clayPg0 > 0) ? clayPg0 / halfPg : 1;
     var jsRec = jsData().players ? jsData().players[p.norm] : null;
     var h3 = (p.histPpg != null && p.histGames >= 8) ? p.histPpg * scale : null;          // 3-yr weighted PPG
     var l8 = (jsRec && jsRec.l8 != null && jsRec.l8g >= 4) ? jsRec.l8 * scale : null;      // last 8 played games (2024-26)
@@ -2966,10 +3238,10 @@
           all.forEach(function (Z) {
             var cz = C[Z.norm]; if (cz.cap >= 1) return;
             var lostRec = cz.full * cz.rf * (1 - cz.cap), lostRush = cz.full * (1 - cz.rf) * (1 - cz.cap);
-            var rule = POOL[Z.pos][recLvl(Z) >= topRec - 1e-9 ? 'lead' : 'sec'];
+            var zSec = !(recLvl(Z) >= topRec - 1e-9), rule = POOL[Z.pos][zSec ? 'sec' : 'lead'];
             var same = healthy.filter(function (q) { return q.pos === Z.pos; }).sort(function (a, b) { var d = strOf(a) - strOf(b); return d !== 0 ? d : C[b.norm].own - C[a.norm].own; });
             var i = same.indexOf(p);
-            if (i >= 0) gained += (rule.tgtSame[i] || 0) * lostRec * POOL_EFF_T + (rule.carSame[i] || 0) * lostRush * POOL_EFF_C;
+            if (i >= 0) gained += poolTgtShare(rule, Z.pos, zSec, i, p) * lostRec * POOL_EFF_T + (rule.carSame[i] || 0) * lostRush * POOL_EFF_C;
             if (rule.tgtOther > 0 && p.pos !== Z.pos && p.pos !== 'RB') {
               var others = healthy.filter(function (q) { return q.pos !== Z.pos && q.pos !== 'RB'; }), tot = 0;
               others.forEach(function (q) { tot += C[q.norm].own * C[q.norm].rf; });
@@ -3011,7 +3283,7 @@
       if (!playedLast) { ncMean *= NC_SHADOW.qRet.mult; ncSrc += '+qret'; }
     }
     var compsWk = {};
-    factor = factor * mPeck;  // stat lines carry the pecking-order dock like every other model-side dock
+    factor = factor * mDock;  // stat lines carry the pecking-order and volume docks like every other model-side dock
     Object.keys(p.comps).forEach(function (k) {
       if (p.comps[k]) compsWk[k] = +(p.comps[k] / perGameDiv * factor).toFixed(2);
     });
@@ -3054,7 +3326,7 @@
     }
     var propSrc = propMean != null ? 'line' : null;
     var propWUsed = propMean != null ? p._propWUsed : null;
-    if (propMean == null && iA > 0) {
+    if (propMean == null && iA > 0 && qb2Cap == null) {   // a backup QB's standing market rate is his fill-in starts' lines: never for a held backup
       // Phase 4: no lines for THIS week — fall back to the market's standing
       // per-game rate from other observed weeks, re-multiplied through this
       // week's own JS chain (Vegas/FPA/snaps/ramp/availability), confidence-weighted.
@@ -3063,7 +3335,7 @@
       if (mkt) {
         var mw = propWeight(p) * mkt.conf;
         if (mw > 0) {
-          propMean = Math.max(0, (mw * mkt.rate + (1 - mw) * jsPg * mPeck) * jsChain + (1 - mw) * luckAdj * mPeck);   // mPeck = model side only
+          propMean = Math.max(0, (mw * mkt.rate + (1 - mw) * jsPg * mDock) * jsChain + (1 - mw) * luckAdj * mDock);   // mDock = model side only
           propSrc = 'rate';
         }
       }
@@ -3082,11 +3354,11 @@
       rmMean = (espnPts != null && espnPts > 0.5 && ncMean > 0) ? NC_SHADOW.rankMixW * ncMean + (1 - NC_SHADOW.rankMixW) * espnPts : ncMean;
       rmFinal = (propSrc === 'line' && propMean != null && propWUsed != null) ? Math.max(0, propMean + (1 - propWUsed) * (rmMean - baseM)) : rmMean;   // same market, our base swapped in
     }
-    return { mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse, ret: mRet, qbf: mQbf,
+    return { qb2: qb2Tag, mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse, ret: mRet, qbf: mQbf, health: hLift, vol: mVol,
       // WHY (2026-09-16, NOTES per-player why notes): every factor of the JS model in engine order - app.js ntWhy turns it into a points waterfall
-      why: { clayPg: clayPg, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: qbInh > 0 ? jsPgOwn : jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied,
+      why: { clayPg: clayPg, clayPg0: clayPg0, health: hLift, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: qbInh > 0 ? jsPgOwn : jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied,
              opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, ret: mRet, avail: injAvail(p, wk), qbFloor: mQbf, rosTilt: mRos, snap: mSnap, route: mRoute, ramp: rampF, iA: (qbInh > 0 && jsPgOwn > 0) ? jsPg / jsPgOwn : iA,
-             luck: luckAdj, jsMean: jsMean, perGameDiv: perGameDiv, peck: mPeck, peckRank: peckR.rank } };
+             luck: luckAdj, jsMean: jsMean, perGameDiv: perGameDiv, peck: mPeck, peckRank: peckR.rank, vol: mVol } };
   }
 
   // ---------- correlated sampling ----------
@@ -3237,6 +3509,7 @@
         lcCorr: p._wk.lcCorr != null ? p._wk.lcCorr : null,   // learned-correction shadow (half-PPR points)
         useLam: p._wk.use ? p._wk.use.lam : null, usePg: p._wk.use ? p._wk.use.xfpPg : null, jsNoUse: p._wk.jsNoUse != null ? p._wk.jsNoUse : null,   // live usage evidence (usage_scorecard.py)
         peck: p._wk.peck != null ? p._wk.peck : 1, peckRank: p._wk.peckRank != null ? p._wk.peckRank : null,   // pecking-order dock (peck_scorecard.py)
+        vol: p._wk.vol != null ? p._wk.vol : 1, health: p._wk.health != null ? p._wk.health : 0, useHurt: p._wk.use && p._wk.use.hurtG != null ? p._wk.use.hurtG : 0,   // 2026-10-07 layers: volume context, banged-up prior lift (pts/g), hurt games in the usage inputs
         ret: p._wk.ret != null ? p._wk.ret : 1,   // return ramp (return_scorecard.py)
         qbf: p._wk.qbf != null ? p._wk.qbf : 1,   // QB starter floor (return_scorecard.py)
         propSrc: p._wk.propSrc || null,

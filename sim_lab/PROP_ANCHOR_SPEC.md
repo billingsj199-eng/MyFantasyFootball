@@ -76,6 +76,17 @@ propAnchorMean(p, wk, sc, cleanWkMean, jsWkMean, comps, sigmaPct)
    with sd = m × sigmaPct (post-SIGMA_CAL), medRatio ≈ (3k−0.8)/(3k+0.2),
    clamped [0.75, 1.0]. propImpliedMean = propFPmedian / medRatio. Same
    shape assumption both directions ⇒ no systematic drift, no sim needed.
+   **RETIRED for skill positions 2026-10-07** (kickers keep it): over 968
+   anchored player-weeks W1-4 2026 the divisor (median ×1.14, p90 ×1.24)
+   left the market-implied mean +0.60 pts high (MAE 4.89) while the same
+   lines at face value sat −0.40 (MAE 4.66, tied with the clean model);
+   actual/line was 1.03-1.06 on every stat except rec yards (WR 1.20, RB
+   1.23), i.e. the books already shade the skew. Lines now enter at face
+   value × per-stat `PROP_LINE_SCALE` (all 1.0; `window.SIM_PROP_LINE_SCALE`
+   overrides, `window.SIM_PROP_GAMMA_RATIO = true` restores the divisor).
+   Tuned-weight blend at face value: MAE better on all four positions,
+   within-position rank ρ flat (0.4825 → 0.4774). Evidence scripts: scratch
+   `conv.py` from the 10-07 session; recompute from the W1-4 locks.
 5. **Blend**: `propMean = PROP_W × propImpliedMean + (1−PROP_W) × base`
    where base = jsWkMean in-season, cleanWkMean preseason (i.e. whatever
    effMean would have returned). PROP_W = 0.70 to start.

@@ -1,0 +1,186 @@
+season-long table: 1,395 player-seasons 2019-25
+rows with a prior season of 6+ games and 6+ games this season: 1,070  (QB 158 RB 250 WR 445 TE 217)
+definitions: Clay JUMP = Clay/prev >= 1.2; BREAKOUT = actual/prev >= 1.25 and actual >= floor (QB 16 / RB 10 / WR 10 / TE 8 half-PPR per game); DROP = actual/prev <= .80
+
+=== 1  CLAY'S PROJECTED JUMPS BY POSITION ===
+    pos    n breakouts  rate | Clay jumps  rate | precision recall | act/clay jump act/clay rest | act/prev jump   rest | drop rate jump  rest
+    QB   158        21  0.13 |         23  0.15 |      0.48   0.52 |         1.013         1.009 |          1.96   0.98 |           0.04  0.21
+    RB   250        39  0.16 |         54  0.22 |      0.31   0.44 |         0.927         0.978 |          1.42   0.96 |           0.20  0.35
+    WR   445        48  0.11 |         85  0.19 |      0.20   0.35 |         0.881         1.015 |          1.41   0.94 |           0.18  0.35
+    TE   217        27  0.12 |         51  0.24 |      0.12   0.22 |         0.823         1.021 |          1.21   0.93 |           0.22  0.44
+    read: precision = share of Clay's jump calls that became breakouts; act/clay < 1 on jump players = he projected the jump too big
+
+    jump size: act/prev by how big a jump Clay called
+    QB: Clay 0.0-0.9x: n 32 act 0.87x act/clay 1.02 | Clay 0.9-1.1x: n 90 act 1.00x act/clay 1.01 | Clay 1.1-1.2x: n 13 act 1.13x act/clay 1.00 | Clay 1.2-1.4x: n 13 act 1.18x act/clay 0.93 | Clay 1.4-9.9x: n 10 act 2.98x act/clay 1.12
+    RB: Clay 0.0-0.9x: n 71 act 0.81x act/clay 1.03 | Clay 0.9-1.1x: n 91 act 0.99x act/clay 0.95 | Clay 1.1-1.2x: n 34 act 1.19x act/clay 0.97 | Clay 1.2-1.4x: n 28 act 1.13x act/clay 0.87 | Clay 1.4-9.9x: n 26 act 1.74x act/clay 0.99
+    WR: Clay 0.0-0.9x: n153 act 0.84x act/clay 1.07 | Clay 0.9-1.1x: n161 act 0.98x act/clay 0.99 | Clay 1.1-1.2x: n 46 act 1.15x act/clay 0.98 | Clay 1.2-1.4x: n 30 act 1.11x act/clay 0.86 | Clay 1.4-9.9x: n 55 act 1.58x act/clay 0.89
+    TE: Clay 0.0-0.9x: n 74 act 0.83x act/clay 1.08 | Clay 0.9-1.1x: n 72 act 0.98x act/clay 0.98 | Clay 1.1-1.2x: n 20 act 1.16x act/clay 1.00 | Clay 1.2-1.4x: n 28 act 1.16x act/clay 0.90 | Clay 1.4-9.9x: n 23 act 1.28x act/clay 0.74
+
+=== 2  BY EXPERIENCE YEAR (exp = seasons before this one): is the breakout later for TEs? ===
+    pos   exp    n break rate drop rate act/prev | Clay jump rate Clay precision act/clay | market/prev
+    QB    yr2   26       0.27      0.15     1.23 |           0.42           0.45    1.012 |        1.22
+    QB    yr3   19       0.11      0.21     0.98 |           0.11            nan    1.002 |        1.00
+    QB    yr4   19       0.00      0.11     0.98 |           0.00            nan    0.977 |        0.98
+    QB  yr5-6   31       0.13      0.10     1.02 |           0.13            nan    0.996 |        1.03
+    QB   yr7+   63       0.13      0.25     1.21 |           0.10           0.50    1.030 |        1.01
+    RB    yr2   49       0.24      0.31     1.28 |           0.39           0.42    1.016 |        1.23
+    RB    yr3   51       0.10      0.33     0.97 |           0.14           0.14    0.918 |        1.04
+    RB    yr4   40       0.20      0.28     1.01 |           0.28           0.45    0.956 |        0.98
+    RB  yr5-6   61       0.16      0.21     1.09 |           0.16           0.30    1.021 |        0.98
+    RB   yr7+   45       0.07      0.47     0.89 |           0.13           0.00    0.912 |        0.91
+    WR    yr2   85       0.14      0.19     1.23 |           0.44           0.16    0.974 |        1.27
+    WR    yr3   79       0.15      0.29     1.08 |           0.14           0.27    1.057 |        1.08
+    WR    yr4   67       0.13      0.28     1.03 |           0.15           0.20    1.041 |        1.03
+    WR  yr5-6  106       0.09      0.38     1.01 |           0.21           0.18    0.978 |        1.05
+    WR   yr7+  107       0.05      0.39     0.87 |           0.05           0.40    0.946 |        0.91
+    TE    yr2   29       0.21      0.21     1.30 |           0.41           0.33    1.102 |        1.22
+    TE    yr3   31       0.13      0.26     1.10 |           0.26           0.00    1.004 |        1.13
+    TE    yr4   28       0.25      0.36     1.01 |           0.25           0.14    1.045 |        0.97
+    TE  yr5-6   60       0.08      0.47     0.88 |           0.22           0.08    0.924 |        1.00
+    TE   yr7+   69       0.07      0.46     0.92 |           0.16           0.00    0.941 |        0.94
+
+=== 3  ONE SIGNAL AT A TIME: breakout rate and act/prev by bucket (TE first, then WR / RB for contrast) ===
+
+  --- TE (n 217, base breakout rate 0.12) ---
+    age                                                  <24: n 27 brk 0.19 act/prev 1.20 act/clay 1.04 | 24-25: n 59 brk 0.20 act/prev 1.08 act/clay 1.07 | 26-27: n 55 brk 0.07 act/prev 0.92 act/clay 0.93 | 28-30: n 62 brk 0.08 act/prev 0.92 act/clay 0.92 | 31+: n 14 brk 0.07 act/prev 0.89 act/clay 0.95
+    prior-yr target share                                <10%: n 36 brk 0.06 act/prev 1.17 act/clay 1.02 | 10-15: n 55 brk 0.15 act/prev 0.93 act/clay 0.94 | 15-20: n 40 brk 0.10 act/prev 0.94 act/clay 0.96 | 20-25: n 30 brk 0.20 act/prev 0.95 act/clay 0.99
+    prior-yr late trend (last 3 games share - season share) < -5pt: n 11 brk 0.09 act/prev 0.91 act/clay 1.02 | -5..-1: n 39 brk 0.13 act/prev 0.97 act/clay 0.95 | flat: n 35 brk 0.14 act/prev 0.96 act/clay 0.94 | +1..+5: n 58 brk 0.12 act/prev 1.03 act/clay 0.97 | +5pt+: n 25 brk 0.12 act/prev 0.99 act/clay 1.02
+    prior-yr last-5-games ppg / season ppg               <.8: n 59 brk 0.10 act/prev 0.97 act/clay 0.89 | .8-.95: n 38 brk 0.16 act/prev 1.02 act/clay 1.00 | .95-1.1: n 41 brk 0.10 act/prev 0.96 act/clay 0.95 | 1.1-1.3: n 36 brk 0.14 act/prev 1.02 act/clay 1.03 | 1.3+: n 43 brk 0.14 act/prev 1.03 act/clay 1.07
+    prior-yr snap share                                  <50: n 15 brk 0.00 act/prev 1.27 act/clay 1.09 | 50-65: n 52 brk 0.13 act/prev 1.03 act/clay 0.91 | 65-80: n 54 brk 0.17 act/prev 0.90 act/clay 0.92 | 80+: n 47 brk 0.11 act/prev 0.95 act/clay 1.03
+    prior-yr PFF route rate                              65-80: n 23 brk 0.13 act/prev 1.01 act/clay 0.98 | 80+: n169 brk 0.13 act/prev 0.99 act/clay 0.98
+    prior-yr routes run                                  <200: n 19 brk 0.11 act/prev 1.12 act/clay 1.03 | 200-350: n 75 brk 0.11 act/prev 1.02 act/clay 0.94 | 350-450: n 49 brk 0.16 act/prev 0.97 act/clay 1.01 | 450+: n 51 brk 0.14 act/prev 0.95 act/clay 1.00
+    prior-yr yards per route (PFF)                       <1.2: n 67 brk 0.09 act/prev 1.05 act/clay 1.00 | 1.2-1.6: n 72 brk 0.12 act/prev 0.95 act/clay 0.94 | 1.6-2.0: n 33 brk 0.12 act/prev 1.02 act/clay 1.00 | 2.0+: n 22 brk 0.27 act/prev 0.98 act/clay 1.03
+    prior-yr targets per route                           <.15: n 50 brk 0.08 act/prev 1.05 act/clay 1.05 | .15-.20: n 84 brk 0.13 act/prev 0.99 act/clay 0.96 | .20-.25: n 45 brk 0.13 act/prev 0.95 act/clay 0.98 | .25+: n 15 brk 0.27 act/prev 1.02 act/clay 0.98
+    market: ADP curve / prev                             <.9: n 40 brk 0.07 act/prev 0.83 act/clay 0.96 | .9-1.1: n 43 brk 0.14 act/prev 0.99 act/clay 1.02 | 1.1-1.3: n 17 brk 0.35 act/prev 1.12 act/clay 0.92 | 1.3+: n 13 brk 0.23 act/prev 1.23 act/clay 0.81
+    new playcaller                                       no: n128 brk 0.12 act/prev 0.96 act/clay 0.97 | yes: n 89 brk 0.12 act/prev 1.05 act/clay 0.99
+    playcaller TE target share tendency                  <17%: n 34 brk 0.12 act/prev 0.93 act/clay 0.99 | 17-21: n 50 brk 0.10 act/prev 0.97 act/clay 0.90 | 21-25: n 19 brk 0.05 act/prev 0.92 act/clay 1.04 | 25%+: n 50 brk 0.16 act/prev 1.04 act/clay 1.01
+    changed teams                                        no: n177 brk 0.14 act/prev 1.02 act/clay 1.00 | yes: n 40 brk 0.07 act/prev 0.91 act/clay 0.87
+    JM prospect score                                    <55: n 84 brk 0.11 act/prev 1.02 act/clay 1.03 | 55-65: n 10 brk 0.20 act/prev 1.13 act/clay 1.08 | 65-75: n 32 brk 0.22 act/prev 1.20 act/clay 1.07 | 75+: n 29 brk 0.17 act/prev 1.02 act/clay 0.95
+    week-1 depth chart string                            1st: n162 brk 0.15 act/prev 1.01 act/clay 0.97 | 2nd: n 50 brk 0.06 act/prev 0.96 act/clay 1.01
+
+  --- WR (n 445, base breakout rate 0.11) ---
+    age                                                  <24: n 96 brk 0.20 act/prev 1.23 act/clay 1.00 | 24-25: n134 brk 0.10 act/prev 1.06 act/clay 1.04 | 26-27: n111 brk 0.08 act/prev 0.98 act/clay 0.95 | 28-30: n 84 brk 0.06 act/prev 0.88 act/clay 0.97 | 31+: n 19 brk 0.05 act/prev 0.83 act/clay 0.93
+    prior-yr target share                                <10%: n 33 brk 0.06 act/prev 1.37 act/clay 1.09 | 10-15: n 57 brk 0.11 act/prev 1.12 act/clay 1.02 | 15-20: n 78 brk 0.18 act/prev 1.01 act/clay 0.97 | 20-25: n 95 brk 0.13 act/prev 0.95 act/clay 0.97 | 25%+: n 83 brk 0.10 act/prev 0.94 act/clay 0.98
+    prior-yr late trend (last 3 games share - season share) < -5pt: n 33 brk 0.18 act/prev 1.01 act/clay 1.03 | -5..-1: n105 brk 0.10 act/prev 1.03 act/clay 0.97 | flat: n 56 brk 0.09 act/prev 0.99 act/clay 0.95 | +1..+5: n 97 brk 0.12 act/prev 1.07 act/clay 0.99 | +5pt+: n 55 brk 0.15 act/prev 1.02 act/clay 0.99
+    prior-yr last-5-games ppg / season ppg               <.8: n106 brk 0.07 act/prev 1.04 act/clay 1.01 | .8-.95: n 72 brk 0.15 act/prev 1.07 act/clay 1.00 | .95-1.1: n109 brk 0.10 act/prev 0.97 act/clay 0.97 | 1.1-1.3: n 97 brk 0.14 act/prev 1.04 act/clay 1.03 | 1.3+: n 61 brk 0.08 act/prev 1.08 act/clay 0.92
+    prior-yr snap share                                  <50: n 35 brk 0.06 act/prev 1.47 act/clay 1.01 | 50-65: n 39 brk 0.10 act/prev 1.05 act/clay 0.96 | 65-80: n120 brk 0.19 act/prev 1.00 act/clay 0.99 | 80+: n152 brk 0.09 act/prev 0.95 act/clay 0.98
+    prior-yr PFF route rate                              80+: n397 brk 0.11 act/prev 1.04 act/clay 0.99
+    prior-yr routes run                                  <200: n 34 brk 0.06 act/prev 1.31 act/clay 1.01 | 200-350: n 83 brk 0.11 act/prev 1.08 act/clay 0.94 | 350-450: n 86 brk 0.13 act/prev 0.99 act/clay 1.02 | 450+: n194 brk 0.11 act/prev 0.99 act/clay 1.00
+    prior-yr yards per route (PFF)                       <1.2: n 64 brk 0.09 act/prev 1.24 act/clay 1.11 | 1.2-1.6: n102 brk 0.10 act/prev 1.08 act/clay 0.97 | 1.6-2.0: n122 brk 0.12 act/prev 1.00 act/clay 1.00 | 2.0+: n109 brk 0.12 act/prev 0.92 act/clay 0.97
+    prior-yr targets per route                           <.15: n 68 brk 0.07 act/prev 1.19 act/clay 1.13 | .15-.20: n135 brk 0.13 act/prev 1.07 act/clay 1.00 | .20-.25: n143 brk 0.11 act/prev 0.96 act/clay 0.96 | .25+: n 51 brk 0.12 act/prev 0.94 act/clay 1.00
+    market: ADP curve / prev                             <.9: n 96 brk 0.04 act/prev 0.87 act/clay 0.99 | .9-1.1: n118 brk 0.18 act/prev 1.02 act/clay 1.01 | 1.1-1.3: n 51 brk 0.22 act/prev 1.04 act/clay 0.93 | 1.3+: n 38 brk 0.24 act/prev 1.49 act/clay 0.88
+    new playcaller                                       no: n262 brk 0.09 act/prev 1.02 act/clay 0.98 | yes: n183 brk 0.14 act/prev 1.05 act/clay 1.00
+    playcaller TE target share tendency                  <17%: n 89 brk 0.11 act/prev 1.03 act/clay 1.00 | 17-21: n118 brk 0.09 act/prev 1.06 act/clay 1.00 | 21-25: n 43 brk 0.12 act/prev 0.98 act/clay 0.94 | 25%+: n 70 brk 0.07 act/prev 0.99 act/clay 0.96
+    changed teams                                        no: n365 brk 0.11 act/prev 1.05 act/clay 1.00 | yes: n 80 brk 0.10 act/prev 0.97 act/clay 0.96
+    JM prospect score                                    <55: n151 brk 0.07 act/prev 1.07 act/clay 1.04 | 55-65: n 39 brk 0.13 act/prev 1.12 act/clay 1.04 | 65-75: n 55 brk 0.15 act/prev 1.02 act/clay 0.89 | 75+: n 70 brk 0.23 act/prev 1.12 act/clay 0.98
+    week-1 depth chart string                            1st: n357 brk 0.12 act/prev 1.03 act/clay 0.98 | 2nd: n 86 brk 0.06 act/prev 1.05 act/clay 1.14
+
+  --- RB (n 250, base breakout rate 0.16) ---
+    age                                                  <24: n 49 brk 0.16 act/prev 1.15 act/clay 0.99 | 24-25: n 94 brk 0.19 act/prev 1.10 act/clay 0.96 | 26-27: n 63 brk 0.14 act/prev 1.01 act/clay 1.00 | 28-30: n 35 brk 0.06 act/prev 0.91 act/clay 0.90
+    prior-yr target share                                <10%: n110 brk 0.17 act/prev 1.07 act/clay 0.99 | 10-15: n 69 brk 0.12 act/prev 0.92 act/clay 0.92 | 15-20: n 14 brk 0.21 act/prev 1.04 act/clay 0.94
+    prior-yr late trend (last 3 games share - season share) < -5pt: n 10 brk 0.00 act/prev 0.87 act/clay 0.84 | -5..-1: n 73 brk 0.18 act/prev 0.96 act/clay 0.97 | flat: n 52 brk 0.17 act/prev 1.06 act/clay 1.03 | +1..+5: n 55 brk 0.15 act/prev 1.06 act/clay 0.92
+    prior-yr last-5-games ppg / season ppg               <.8: n 54 brk 0.07 act/prev 1.08 act/clay 0.94 | .8-.95: n 37 brk 0.03 act/prev 0.96 act/clay 0.89 | .95-1.1: n 72 brk 0.31 act/prev 1.09 act/clay 1.03 | 1.1-1.3: n 44 brk 0.14 act/prev 1.00 act/clay 0.99 | 1.3+: n 43 brk 0.14 act/prev 1.13 act/clay 0.94
+    prior-yr snap share                                  <50: n 80 brk 0.14 act/prev 1.07 act/clay 0.95 | 50-65: n 70 brk 0.21 act/prev 1.00 act/clay 1.00 | 65-80: n 43 brk 0.12 act/prev 0.93 act/clay 0.90
+    prior-yr PFF route rate                              65-80: n138 brk 0.14 act/prev 0.99 act/clay 0.96 | 80+: n 69 brk 0.19 act/prev 1.14 act/clay 0.99
+    prior-yr routes run                                  <200: n 77 brk 0.14 act/prev 1.14 act/clay 1.01 | 200-350: n109 brk 0.18 act/prev 0.97 act/clay 0.95 | 350-450: n 20 brk 0.05 act/prev 0.98 act/clay 0.97
+    prior-yr yards per route (PFF)                       <1.2: n120 brk 0.16 act/prev 1.05 act/clay 0.98 | 1.2-1.6: n 59 brk 0.19 act/prev 1.06 act/clay 0.95 | 1.6-2.0: n 22 brk 0.05 act/prev 0.89 act/clay 0.91
+    prior-yr targets per route                           <.15: n 56 brk 0.18 act/prev 1.19 act/clay 1.04 | .15-.20: n 85 brk 0.12 act/prev 0.95 act/clay 0.93 | .20-.25: n 48 brk 0.17 act/prev 0.99 act/clay 0.94 | .25+: n 20 brk 0.20 act/prev 1.05 act/clay 0.97
+    market: ADP curve / prev                             <.9: n 73 brk 0.05 act/prev 0.84 act/clay 0.94 | .9-1.1: n 81 brk 0.21 act/prev 0.97 act/clay 0.94 | 1.1-1.3: n 24 brk 0.29 act/prev 1.16 act/clay 1.01 | 1.3+: n 30 brk 0.30 act/prev 1.47 act/clay 0.97
+    new playcaller                                       no: n137 brk 0.12 act/prev 1.05 act/clay 0.97 | yes: n113 brk 0.20 act/prev 1.07 act/clay 0.96
+    playcaller TE target share tendency                  <17%: n 52 brk 0.17 act/prev 1.09 act/clay 1.04 | 17-21: n 69 brk 0.14 act/prev 1.09 act/clay 0.94 | 21-25: n 21 brk 0.10 act/prev 0.98 act/clay 0.92 | 25%+: n 34 brk 0.09 act/prev 0.97 act/clay 0.94
+    changed teams                                        no: n204 brk 0.15 act/prev 1.09 act/clay 0.97 | yes: n 46 brk 0.17 act/prev 0.91 act/clay 0.95
+    JM prospect score                                    <55: n124 brk 0.15 act/prev 1.06 act/clay 0.95 | 55-65: n 27 brk 0.15 act/prev 1.16 act/clay 0.97 | 65-75: n 22 brk 0.14 act/prev 1.05 act/clay 0.96 | 75+: n 42 brk 0.24 act/prev 1.09 act/clay 1.02
+    week-1 depth chart string                            1st: n141 brk 0.22 act/prev 1.03 act/clay 0.96 | 2nd: n 81 brk 0.07 act/prev 1.14 act/clay 0.99 | 3rd+: n 14 brk 0.00 act/prev 0.72 act/clay 0.90
+
+=== 4  CAN A MODEL CALL THE BREAKOUT? LOYO per position ===
+
+  QB: n 158, breakouts 21 (0.13)
+    model                      AUC breakout rate in top 20% LOYO ridge MSE of log(act/prev)
+    signals only              0.77                     0.34                           0.044
+    Clay's call only          0.85                     0.41                           0.046
+    signals + Clay's call     0.79                     0.38                           0.045
+    market only               0.79                     0.44                           0.066
+    no change (act = prev)                                                            0.084
+    Clay as is (act = clay)                                                           0.042
+    strongest signals (standardized logistic coefficients): lmkt +1.07, tgt_full_py -0.48, pc_te_tgt -0.47, lprev -0.45, exp_yr4 -0.34, snap_l1_py -0.27, age +0.21
+
+  RB: n 250, breakouts 39 (0.16)
+    model                      AUC breakout rate in top 20% LOYO ridge MSE of log(act/prev)
+    signals only              0.63                     0.24                           0.204
+    Clay's call only          0.73                     0.30                           0.177
+    signals + Clay's call     0.68                     0.26                           0.189
+    market only               0.65                     0.30                           0.189
+    no change (act = prev)                                                            0.218
+    Clay as is (act = clay)                                                           0.185
+    strongest signals (standardized logistic coefficients): strb_num -1.03, lmkt +0.43, snap_l1_py -0.34, mover +0.26, pc_te_tgt -0.23, late_ratio +0.22, exp_yr3 -0.21
+
+  WR: n 445, breakouts 48 (0.11)
+    model                      AUC breakout rate in top 20% LOYO ridge MSE of log(act/prev)
+    signals only              0.59                     0.17                           0.229
+    Clay's call only          0.68                     0.20                           0.174
+    signals + Clay's call     0.60                     0.17                           0.231
+    market only               0.69                     0.25                           0.192
+    no change (act = prev)                                                            0.209
+    Clay as is (act = clay)                                                           0.190
+    strongest signals (standardized logistic coefficients): lmkt +0.55, lprev +0.43, age -0.42, new_pc +0.30, snap_l1_py -0.24, strb_num -0.22, mover +0.18
+
+  TE: n 217, breakouts 27 (0.12)
+    model                      AUC breakout rate in top 20% LOYO ridge MSE of log(act/prev)
+    signals only              0.50                     0.16                           0.241
+    Clay's call only          0.34                     0.11                           0.206
+    signals + Clay's call     0.50                     0.16                           0.267
+    market only               0.53                     0.17                           0.223
+    no change (act = prev)                                                            0.240
+    Clay as is (act = clay)                                                           0.229
+    strongest signals (standardized logistic coefficients): exp_yr4 +0.39, lprev +0.39, lmkt +0.38, strb_num -0.35, exp_yr2 +0.28, tgt_full_py +0.24, snap_l1_py -0.21
+
+=== 5  TE BREAKOUTS NAMED (2019-25): actual >= 1.25x prev and >= 8 half-PPR/g ===
+    2019 Austin Hooper          exp  3 pick   0 | prev   8.0 -> act  11.9 (1.49x) | Clay   7.7 (0.96x)      | market 0.90x | prior-yr tgt   -1% trend   +0 late5 0.81 routes    0
+    2019 Mark Andrews           exp  1 pick   0 | prev   5.6 -> act  11.7 (2.07x) | Clay   6.9 (1.23x) JUMP | market 1.23x | prior-yr tgt   -1% trend   +0 late5 1.17 routes    0
+    2020 Darren Waller          exp  5 pick   0 | prev  11.0 -> act  14.1 (1.28x) | Clay  10.2 (0.92x)      | market 0.80x | prior-yr tgt   24% trend   -2 late5 1.04 routes  474
+    2020 Jonnu Smith            exp  3 pick   0 | prev   5.8 -> act   8.6 (1.47x) | Clay   6.2 (1.07x)      | market 1.14x | prior-yr tgt   -1% trend   +0 late5 1.38 routes  240
+    2020 Noah Fant              exp  1 pick   0 | prev   5.6 -> act   8.4 (1.50x) | Clay   7.9 (1.41x) JUMP | market 1.30x | prior-yr tgt   14% trend   -5 late5 1.06 routes  369
+    2020 T.J. Hockenson         exp  1 pick   0 | prev   5.4 -> act   8.8 (1.63x) | Clay   7.7 (1.42x) JUMP | market 1.23x | prior-yr tgt   13% trend   -2 late5 0.71 routes  287
+    2020 Travis Kelce           exp  7 pick   0 | prev  12.9 -> act  17.4 (1.35x) | Clay  14.6 (1.14x)      | market 0.92x | prior-yr tgt   25% trend   +6 late5 1.04 routes  551
+    2021 Dalton Schultz         exp  3 pick   0 | prev   7.1 -> act  10.0 (1.40x) | Clay   4.5 (0.63x)      | market nanx | prior-yr tgt   -1% trend   +0 late5 0.95 routes  553
+    2021 Dawson Knox            exp  2 pick   0 | prev   4.8 -> act   9.4 (1.95x) | Clay   5.7 (1.18x)      | market nanx | prior-yr tgt    9% trend   +4 late5 1.42 routes  256
+    2021 Mark Andrews           exp  3 pick   0 | prev  10.1 -> act  14.6 (1.45x) | Clay  10.4 (1.03x)      | market 0.94x | prior-yr tgt   24% trend   +7 late5 1.17 routes  350
+    2022 David Njoku            exp  5 pick   0 | prev   6.0 -> act   8.1 (1.35x) | Clay   6.7 (1.12x)      | market 1.13x | prior-yr tgt   11% trend   -1 late5 0.95 routes  305
+    2022 Evan Engram            exp  5 pick   0 | prev   5.3 -> act   8.3 (1.56x) | Clay   6.6 (1.25x) JUMP | market nanx | prior-yr tgt   15% trend   -1 late5 0.71 routes  459
+    2023 Cole Kmet              exp  3 pick   0 | prev   7.3 -> act   9.6 (1.33x) | Clay   7.2 (0.99x)      | market 0.97x | prior-yr tgt   19% trend   +3 late5 1.19 routes  428
+    2023 Jake Ferguson          exp  1 pick   0 | prev   3.5 -> act   8.3 (2.36x) | Clay   5.4 (1.54x) JUMP | market 1.84x | prior-yr tgt   -1% trend   +0 late5 0.74 routes  105
+    2023 Trey McBride           exp  1 pick   0 | prev   5.2 -> act   8.3 (1.59x) | Clay   3.7 (0.71x)      | market nanx | prior-yr tgt   -1% trend   +0 late5 1.45 routes  317
+    2024 Jonnu Smith            exp  7 pick   0 | prev   6.6 -> act  10.5 (1.59x) | Clay   4.5 (0.68x)      | market nanx | prior-yr tgt   14% trend   +0 late5 0.83 routes  375
+    2024 Trey McBride           exp  2 pick   0 | prev   8.3 -> act  11.8 (1.42x) | Clay   9.4 (1.13x)      | market 1.11x | prior-yr tgt   20% trend   +5 late5 1.42 routes  406
+    2024 Tucker Kraft           exp  1 pick   0 | prev   6.3 -> act   8.1 (1.29x) | Clay   4.3 (0.68x)      | market nanx | prior-yr tgt    7% trend  +12 late5 1.35 routes  295
+    2024 Zach Ertz              exp 11 pick   0 | prev   5.5 -> act   8.5 (1.56x) | Clay   3.9 (0.71x)      | market nanx | prior-yr tgt   21% trend   -3 late5 0.90 routes  186
+    2025 Dallas Goedert         exp  7 pick   0 | prev   8.3 -> act  10.3 (1.25x) | Clay   7.3 (0.89x)      | market 0.85x | prior-yr tgt   20% trend   +3 late5 0.98 routes  225
+    2025 Dalton Kincaid         exp  2 pick   0 | prev   6.1 -> act   8.9 (1.47x) | Clay   7.0 (1.15x)      | market 1.12x | prior-yr tgt   21% trend   -1 late5 0.75 routes  276
+    2025 Dalton Schultz         exp  7 pick   0 | prev   5.4 -> act   8.0 (1.49x) | Clay   5.9 (1.09x)      | market nanx | prior-yr tgt   16% trend   +4 late5 1.39 routes  514
+    2025 Jake Ferguson          exp  3 pick   0 | prev   5.4 -> act   8.7 (1.62x) | Clay   6.9 (1.28x) JUMP | market 1.31x | prior-yr tgt   17% trend   +3 late5 0.69 routes  389
+    2025 Juwan Johnson          exp  5 pick   0 | prev   6.5 -> act   8.3 (1.28x) | Clay   5.4 (0.82x)      | market nanx | prior-yr tgt   12% trend   +4 late5 1.21 routes  410
+    2025 Kyle Pitts             exp  4 pick   0 | prev   6.3 -> act   9.8 (1.55x) | Clay   6.9 (1.09x)      | market 1.01x | prior-yr tgt   14% trend   +0 late5 0.72 routes  452
+    2025 Trey McBride           exp  3 pick   0 | prev  11.8 -> act  14.9 (1.26x) | Clay  11.9 (1.01x)      | market 0.85x | prior-yr tgt   29% trend   -0 late5 1.15 routes  536
+    2025 Tucker Kraft           exp  2 pick   0 | prev   8.1 -> act  12.7 (1.55x) | Clay   7.6 (0.93x)      | market 0.94x | prior-yr tgt   14% trend   -3 late5 0.88 routes  440
+
+    ...and Clay's TE JUMP calls that did NOT break out (act/clay):
+    2020 Hayden Hurst           exp  2 | prev   2.9 Clay   7.7 (2.64x) -> act   5.8 (1.99x, act/clay 0.75) | market 2.81x | late5 1.48
+    2019 Mike Gesicki           exp  1 | prev   2.0 Clay   5.0 (2.47x) -> act   7.3 (3.62x, act/clay 1.47) | market nanx | late5 0.46
+    2020 Ian Thomas             exp  2 | prev   2.2 Clay   5.2 (2.40x) -> act   1.6 (0.72x, act/clay 0.30) | market nanx | late5 1.76
+    2022 Hayden Hurst           exp  4 | prev   3.2 Clay   6.5 (2.06x) -> act   4.1 (1.29x, act/clay 0.63) | market nanx | late5 1.25
+    2024 Hayden Hurst           exp  6 | prev   2.7 Clay   5.3 (1.95x) -> act   1.0 (0.38x, act/clay 0.20) | market nanx | late5 0.77
+    2020 Irv Smith Jr.          exp  1 | prev   3.1 Clay   5.9 (1.91x) -> act   5.7 (1.85x, act/clay 0.97) | market nanx | late5 0.71
+    2023 Logan Thomas           exp  9 | prev   2.9 Clay   5.5 (1.87x) -> act   4.5 (1.52x, act/clay 0.82) | market nanx | late5 0.90
+    2022 Mo Alie-Cox            exp  5 | prev   3.3 Clay   5.5 (1.69x) -> act   2.5 (0.76x, act/clay 0.45) | market nanx | late5 0.59
+    2021 Cole Kmet              exp  1 | prev   3.6 Clay   5.9 (1.63x) -> act   5.4 (1.48x, act/clay 0.91) | market nanx | late5 1.53
+    2022 Robert Tonyan          exp  5 | prev   4.1 Clay   6.6 (1.63x) -> act   3.5 (0.86x, act/clay 0.53) | market 1.70x | late5 0.98
+    2021 Gerald Everett         exp  4 | prev   3.5 Clay   5.6 (1.63x) -> act   4.7 (1.34x, act/clay 0.83) | market 1.92x | late5 0.69
+    2020 Jack Doyle             exp  7 | prev   4.6 Clay   7.1 (1.54x) -> act   3.2 (0.69x, act/clay 0.45) | market 1.40x | late5 0.89
+    2023 Irv Smith Jr.          exp  4 | prev   3.8 Clay   5.8 (1.53x) -> act   1.7 (0.46x, act/clay 0.30) | market nanx | late5 0.92
+    2024 Kylen Granson          exp  3 | prev   2.9 Clay   4.4 (1.52x) -> act   1.3 (0.45x, act/clay 0.30) | market nanx | late5 0.84
+    2019 Vance McDonald         exp  6 | prev   5.5 Clay   8.2 (1.48x) -> act   3.2 (0.59x, act/clay 0.40) | market 1.53x | late5 0.82
+    2022 Tommy Tremble          exp  1 | prev   3.1 Clay   4.5 (1.47x) -> act   3.1 (1.00x, act/clay 0.68) | market nanx | late5 0.70
+    2020 Nick Boyle             exp  5 | prev   2.9 Clay   4.3 (1.46x) -> act   2.6 (0.88x, act/clay 0.60) | market nanx | late5 0.76
+    2023 Kyle Pitts             exp  2 | prev   6.2 Clay   8.8 (1.43x) -> act   6.5 (1.06x, act/clay 0.74) | market 1.39x | late5 1.05
+    2025 Michael Mayer          exp  2 | prev   2.4 Clay   3.4 (1.41x) -> act   4.7 (1.98x, act/clay 1.40) | market nanx | late5 1.51
+    2024 Kyle Pitts             exp  3 | prev   6.5 Clay   9.1 (1.40x) -> act   6.3 (0.97x, act/clay 0.69) | market 1.27x | late5 1.09

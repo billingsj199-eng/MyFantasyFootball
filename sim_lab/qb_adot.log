@@ -1,0 +1,58 @@
+  pbp 2019: 17,852 pass attempts
+  pbp 2020: 18,002 pass attempts
+  pbp 2021: 18,695 pass attempts
+  pbp 2022: 18,062 pass attempts
+  pbp 2023: 18,311 pass attempts
+  pbp 2024: 17,811 pass attempts
+  pbp 2025: 17,439 pass attempts
+  pbp 2026: 4,216 pass attempts
+
+rows with a QB change and aDOT for both QBs and the receiver: 436 (out this week 242, replacement in 2+ weeks 194); top-150 201
+replacement aDOT - regular aDOT: mean +0.21 yds, quartiles -0.71 / +0.27 / +1.38
+
+--- actual / live by receiver depth x replacement aDOT vs regular (WR + TE, all QB-change rows) ---
+  deep receiver (aDOT >= 11)     replacement throws SHORTER (-1.5 yds+): act/live 1.174 n28 | similar: act/live 0.971 n88 | replacement throws DEEPER (+1.5+): act/live 0.915 n46
+  mid (8-11)                     replacement throws SHORTER (-1.5 yds+): act/live 1.180 n16 | similar: act/live 1.076 n74 | replacement throws DEEPER (+1.5+): act/live 0.901 n20
+  short (< 8)                    replacement throws SHORTER (-1.5 yds+): act/live 0.838 n21 | similar: act/live 1.003 n109 | replacement throws DEEPER (+1.5+): act/live 1.060 n34
+  by position:
+  WR                             replacement throws SHORTER (-1.5 yds+): act/live 1.121 n49 | similar: act/live 0.997 n171 | replacement throws DEEPER (+1.5+): act/live 0.932 n67
+  TE                             replacement throws SHORTER (-1.5 yds+): act/live 0.862 n16 | similar: act/live 1.047 n100 | replacement throws DEEPER (+1.5+): act/live 1.007 n33
+  top-150 only:
+  deep receiver (aDOT >= 11)     replacement throws SHORTER (-1.5 yds+): n11 | similar: act/live 1.020 n50 | replacement throws DEEPER (+1.5+): act/live 0.957 n33
+  mid (8-11)                     replacement throws SHORTER (-1.5 yds+): n9 | similar: act/live 1.101 n35 | replacement throws DEEPER (+1.5+): act/live 0.825 n12
+  short (< 8)                    replacement throws SHORTER (-1.5 yds+): n4 | similar: act/live 1.102 n35 | replacement throws DEEPER (+1.5+): act/live 0.975 n12
+  out-this-week rows only:
+  deep receiver (aDOT >= 11)     replacement throws SHORTER (-1.5 yds+): act/live 1.222 n17 | similar: act/live 0.903 n43 | replacement throws DEEPER (+1.5+): act/live 0.842 n26
+  mid (8-11)                     replacement throws SHORTER (-1.5 yds+): act/live 1.333 n12 | similar: act/live 1.095 n40 | replacement throws DEEPER (+1.5+): act/live 0.909 n16
+  short (< 8)                    replacement throws SHORTER (-1.5 yds+): act/live 0.895 n15 | similar: act/live 1.049 n55 | replacement throws DEEPER (+1.5+): act/live 0.956 n18
+
+--- the two cells Jack's read predicts: deep receiver + shorter passer (hurt) and short receiver + deeper passer... and the mirror ---
+  deep receiver, shorter replacement: act/live 1.210 n35 | deep receiver, deeper replacement: act/live 0.906 n56 | short receiver, shorter replacement: act/live 0.838 n21
+
+=== RULE A: deep receiver (aDOT >= 10) x shorter replacement docked / deeper replacement boosted: rows 436, act/live 1.006 ===
+    x0.9 / x1.0                                         +0.96% (1/7)  act/pred 1.014
+    x0.85 / x1.0                                        +1.55% (1/7)  act/pred 1.018
+    x0.9 / x1.05                                        +1.38% (0/7)  act/pred 1.006
+    x0.85 / x1.1                                        +2.57% (0/7)  act/pred 1.003
+    LOYO +0.00% 0/7 picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 picks ['off', 'off', 'off', 'off']
+
+=== RULE B: multiplier = 1 + b x (aDOT change) x (receiver depth above 8 yds, scaled): rows 436, act/live 1.006 ===
+    b 0.01                                              +0.40% (0/7)  act/pred 1.005
+    b 0.02                                              +0.88% (0/7)  act/pred 1.004
+    b 0.03                                              +1.45% (0/7)  act/pred 1.003
+    LOYO +0.00% 0/7 picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 picks ['off', 'off', 'off', 'off']
+
+=== 2026 ATLANTA: passer aDOT by week (season to date) and Drake London ===
+  Cooper Rush        wk1: 22 att, aDOT 3.5, CPOE -10.4, EPA/att -0.40 | wk2: 17 att, aDOT 6.2, CPOE -16.8, EPA/att -0.62
+  Michael Penix Jr.  wk3: 25 att, aDOT 6.0, CPOE +8.8, EPA/att +0.34 | wk4: 20 att, aDOT 6.5, CPOE +1.8, EPA/att +0.65
+  Michael Penix      wk3: 25 att, aDOT 6.0, CPOE +8.8, EPA/att +0.34 | wk4: 20 att, aDOT 6.5, CPOE +1.8, EPA/att +0.65
+  Michael Penix Jr.  aDOT entering 2026 8.3 over 276 att (from 2025)
+  Kirk Cousins       aDOT entering 2026 7.0 over 269 att (from 2025)
+  Cooper Rush        aDOT entering 2026 6.4 over 52 att (from 2025)
+  Tua Tagovailoa     aDOT entering 2026 6.8 over 384 att (from 2025)
+  Drake London aDOT 2024: 10.9 over 158 targets
+  Drake London aDOT 2025: 10.9 over 112 targets
+  Drake London aDOT 2026: 8.3 over 25 targets
+  London 2026 by week: wk1: 4 tgt aDOT 5.5 | wk2: 5 tgt aDOT 4.6 | wk3: 10 tgt aDOT 9.7 | wk4: 6 tgt aDOT 11.0

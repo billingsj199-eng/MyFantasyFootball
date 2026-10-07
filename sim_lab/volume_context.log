@@ -1,0 +1,109 @@
+  pbp 2019: 32,157 plays
+  pbp 2020: 32,572 plays
+  pbp 2021: 34,139 plays
+  pbp 2022: 33,770 plays
+  pbp 2023: 33,957 plays
+  pbp 2024: 33,471 plays
+  pbp 2025: 32,937 plays
+
+=== VOLUME CONTEXT: 4,714 WR/TE top-150 player-weeks with 2+ prior team games (week 1-2 rows excluded by construction) ===
+
+--- 1  Spearman of actual / live with each volume part (WR, TE, RB; top 150) and quintile read ---
+    attpg         WR -0.035 (n3640) | TE -0.107 (n1074) | RB -0.025 (n2864) | WR+TE act/live by quintile low->high: 1.041 1.031 0.971 0.981 0.947 | metric Q1 30.07 -> Q5 42.33
+    neutral_rate  WR +0.002 (n3640) | TE -0.144 (n1074) | RB +0.001 (n2864) | WR+TE act/live by quintile low->high: 1.004 1.024 1.010 0.962 0.969 | metric Q1 0.50 -> Q5 0.64
+    playspg       WR -0.013 (n3640) | TE +0.001 (n1074) | RB -0.058 (n2864) | WR+TE act/live by quintile low->high: 0.994 1.029 0.983 0.974 0.983 | metric Q1 56.62 -> Q5 67.52
+    excess        WR -0.047 (n3640) | TE -0.018 (n1074) | RB +0.009 (n2864) | WR+TE act/live by quintile low->high: 1.057 0.999 0.948 0.997 0.960 | metric Q1 -2.67 -> Q5 3.67
+    ptdiff        WR +0.045 (n3640) | TE +0.051 (n1074) | RB -0.046 (n2864) | WR+TE act/live by quintile low->high: 0.971 0.963 0.999 0.980 1.046 | metric Q1 -8.45 -> Q5 10.16
+    exp_ratio     WR +0.045 (n3640) | TE +0.019 (n1074) | RB -0.010 (n2864) | WR+TE act/live by quintile low->high: 0.969 0.985 0.956 0.992 1.060 | metric Q1 0.91 -> Q5 1.08
+    cross-cut: att/g quintile x point differential (trailing teams throw more): act/live
+      trailing teams (pt diff < -3/g)  low att: 1.046 (n273) | mid: 0.911 (n419) | high att: 0.993 (n559)
+      even (-3..+3)                    low att: 1.010 (n408) | mid: 0.970 (n627) | high att: 0.965 (n575)
+      leading teams (> +3/g)           low att: 1.074 (n813) | mid: 1.026 (n609) | high att: 0.906 (n431)
+
+  A  1 - e x z(team pass attempts per game)  (rows 4,714, actual/live 0.993)
+    fixed: e 0.02: -0.34% (6/7)  e 0.03: -0.43% (6/7)  e 0.04: -0.47% (6/7)  e 0.06: -0.38% (5/7)
+    best fixed e 0.04: WR -0.34% | TE -1.08% | ADP<=60 -0.60% | 61-150 -0.06% | weeks 3-6 -1.03% | 7+ -0.24%
+    LOYO -0.38% 6/7 picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.06', 'e 0.04']
+    FWD  -0.10% 2/4 picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.04']
+    -> FAIL
+
+  B  1 - e x z(script excess attempts per game)  (rows 4,714, actual/live 0.993)
+    fixed: e 0.02: -0.28% (6/7)  e 0.03: -0.34% (5/7)  e 0.04: -0.35% (5/7)  e 0.06: -0.23% (5/7)
+    best fixed e 0.04: WR -0.56% | TE +0.61% | ADP<=60 -0.58% | 61-150 +0.32% | weeks 3-6 -0.18% | 7+ -0.42%
+    LOYO -0.32% 5/7 picks ['e 0.04', 'e 0.03', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04']
+    FWD  -0.28% 3/4 picks ['e 0.04', 'e 0.04', 'e 0.03', 'e 0.04']
+    -> PASS: e 0.04
+
+  C  1 - e x z(neutral pass rate)  (rows 4,714, actual/live 0.993)
+    fixed: e 0.02: -0.00% (4/7)  e 0.03: +0.09% (3/7)  e 0.04: +0.24% (3/7)  e 0.06: +0.74% (3/7)
+    best fixed e 0.02: WR +0.17% | TE -0.84% | ADP<=60 +0.08% | 61-150 -0.24% | weeks 3-6 -0.35% | 7+ +0.14%
+    LOYO +0.20% 1/7 picks ['off', 'e 0.02', 'off', 'e 0.02', 'off', 'e 0.02', 'e 0.02']
+    FWD  +0.27% 2/4 picks ['e 0.03', 'e 0.02', 'e 0.03', 'e 0.02']
+    -> FAIL
+
+  D  1 - e x z(plays per game)  (rows 4,714, actual/live 0.993)
+    fixed: e 0.02: -0.12% (4/7)  e 0.03: -0.10% (4/7)  e 0.04: -0.03% (3/7)  e 0.06: +0.26% (3/7)
+    best fixed e 0.02: WR -0.18% | TE +0.16% | ADP<=60 -0.19% | 61-150 +0.09% | weeks 3-6 -0.33% | 7+ -0.04%
+    LOYO -0.07% 4/7 picks ['e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.03', 'e 0.02', 'e 0.02']
+    FWD  +0.02% 2/4 picks ['e 0.03', 'e 0.03', 'e 0.02', 'e 0.02']
+    -> FAIL
+
+  E  x (neutral pass rate x plays/g / att/g)^b  = replace realized volume with intent x pace  (rows 4,714, actual/live 0.993)
+    fixed: b 0.25: -0.21% (6/7)  b 0.5: -0.28% (6/7)  b 1.0: -0.02% (3/7)
+    best fixed b 0.5: WR -0.42% | TE +0.42% | ADP<=60 -0.40% | 61-150 +0.10% | weeks 3-6 +0.05% | 7+ -0.41%
+    LOYO -0.28% 6/7 picks ['b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    FWD  -0.31% 4/4 picks ['b 0.5', 'b 0.5', 'b 0.5', 'b 0.5']
+    -> FAIL
+
+  F1 A on TRAILING teams only (season point diff < -3/g)  (rows 1,251, actual/live 0.977)
+    fixed: e 0.02: -0.11% (5/7)  e 0.03: -0.06% (4/7)  e 0.04: +0.06% (4/7)  e 0.06: +0.48% (3/7)
+    best fixed e 0.02: WR -0.01% | TE -0.72% | ADP<=60 -0.10% | 61-150 -0.12% | weeks 3-6 -0.45% | 7+ +0.09%
+    LOYO -0.05% 5/7 picks ['e 0.03', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02']
+    FWD  -0.04% 3/4 picks ['e 0.02', 'e 0.03', 'e 0.02', 'e 0.02']
+    -> FAIL
+
+  F2 A on even / leading teams only  (rows 3,463, actual/live 0.998)
+    fixed: e 0.02: -0.42% (6/7)  e 0.03: -0.55% (5/7)  e 0.04: -0.64% (5/7)  e 0.06: -0.66% (5/7)
+    best fixed e 0.06: WR -0.53% | TE -1.25% | ADP<=60 -0.90% | 61-150 +0.12% | weeks 3-6 -1.51% | 7+ -0.37%
+    LOYO -0.50% 5/7 picks ['e 0.04', 'e 0.06', 'e 0.04', 'e 0.06', 'e 0.04', 'e 0.06', 'e 0.06']
+    FWD  -0.30% 2/4 picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    -> FAIL
+
+  F3 A on this week's UNDERDOGS only  (rows 2,671, actual/live 0.997)
+    fixed: e 0.02: -0.52% (7/7)  e 0.03: -0.70% (7/7)  e 0.04: -0.82% (6/7)  e 0.06: -0.89% (6/7)
+    best fixed e 0.06: WR -0.54% | TE -2.34% | ADP<=60 -1.11% | 61-150 -0.07% | weeks 3-6 -1.11% | 7+ -0.80%
+    LOYO -0.82% 6/7 picks ['e 0.06', 'e 0.06', 'e 0.04', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    FWD  -0.48% 3/4 picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    -> PASS: e 0.06
+
+  F4 A on this week's FAVORITES only  (rows 2,038, actual/live 0.985)
+    fixed: e 0.02: -0.07% (4/7)  e 0.03: -0.02% (4/7)  e 0.04: +0.07% (4/7)  e 0.06: +0.40% (3/7)
+    best fixed e 0.02: WR -0.10% | TE +0.13% | ADP<=60 -0.08% | 61-150 -0.03% | weeks 3-6 -0.67% | 7+ +0.16%
+    LOYO +0.06% 3/7 picks ['e 0.02', 'off', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.03', 'e 0.02']
+    FWD  +0.03% 3/4 picks ['e 0.02', 'e 0.02', 'e 0.03', 'e 0.02']
+    -> FAIL
+
+  F5 B (script excess) on FAVORITES only  (rows 2,038, actual/live 0.985)
+    fixed: e 0.02: -0.18% (4/7)  e 0.03: -0.21% (4/7)  e 0.04: -0.20% (4/7)  e 0.06: -0.05% (4/7)
+    best fixed e 0.03: WR -0.32% | TE +0.45% | ADP<=60 -0.40% | 61-150 +0.21% | weeks 3-6 +0.05% | 7+ -0.31%
+    LOYO +0.19% 4/7 picks ['e 0.04', 'e 0.02', 'e 0.03', 'e 0.04', 'e 0.06', 'e 0.03', 'e 0.02']
+    FWD  +0.29% 1/4 picks ['e 0.06', 'e 0.03', 'off', 'e 0.02']
+    -> FAIL
+
+--- G  VOLUME-CLEANED EVIDENCE: each past game's points x (team att/g to date / team attempts in that game)^b, WR + TE ---
+
+  G  volume-cleaned evidence (points regressed for the game's team attempts)  (rows 4,662, actual/live 0.992)
+    fixed: b 0.25: +0.01% (2/7)  b 0.5: +0.04% (2/7)  b 0.75: +0.07% (2/7)
+    best fixed off: WR +0.00% | TE +0.00% | ADP<=60 +0.00% | 61-150 +0.00% | weeks 3-6 +0.00% | 7+ +0.00%
+    LOYO +0.01% 0/7 picks ['off', 'b 0.25', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.02% 0/4 picks ['b 0.75', 'b 0.25', 'b 0.25', 'off']
+    -> FAIL
+
+--- H  STACK CHECK: B (script excess e .04, all WR/TE) and F3 (att/g e .06, underdogs only), alone and together; whole top-150 board and by season ---
+    B only           whole board -0.156% (5/7) | WR/TE rows -0.35% (5/7) | 2022-25 -0.29% (3/4) | by season 2019:+0.6 2020:-1.4 2021:-0.5 2022:-0.2 2023:+0.1 2024:-0.5 2025:-0.6 | moved 4714 rows, mean |d| 0.33, max 1.94
+    F3 only          whole board -0.239% (6/7) | WR/TE rows -0.54% (6/7) | 2022-25 -0.27% (3/4) | by season 2019:-1.3 2020:-0.1 2021:-1.6 2022:+0.2 2023:-0.8 2024:-0.0 2025:-0.3 | moved 2671 rows, mean |d| 0.56, max 2.49
+    B + F3           whole board -0.317% (6/7) | WR/TE rows -0.72% (6/7) | 2022-25 -0.35% (3/4) | by season 2019:-0.5 2020:-1.5 2021:-2.0 2022:+0.1 2023:-0.7 2024:-0.1 2025:-0.6 | moved 4714 rows, mean |d| 0.55, max 3.06
+    F3 at e .04      whole board -0.219% (6/7) | WR/TE rows -0.50% (6/7) | 2022-25 -0.31% (3/4) | by season 2019:-1.0 2020:-0.2 2021:-1.3 2022:+0.0 2023:-0.7 2024:-0.2 2025:-0.3 | moved 2671 rows, mean |d| 0.37, max 1.66
+    B .03 + F3 .04   whole board -0.331% (7/7) | WR/TE rows -0.75% (7/7) | 2022-25 -0.50% (4/4) | by season 2019:-0.5 2020:-1.3 2021:-1.7 2022:-0.2 2023:-0.7 2024:-0.4 2025:-0.7 | moved 4714 rows, mean |d| 0.39, max 2.16
+
+Limitations: team volume parts from the play-by-play, season to date (2+ team games); neutral = quarters 1-3 within 8 points; the live number's Vegas / FPA layers are inside BASE; RB rows only in the correlation table.

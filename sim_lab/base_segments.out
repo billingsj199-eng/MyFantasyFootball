@@ -1,0 +1,229 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== WHO IS THE SHADOW LOWER ON / WHERE IS CLAY'S ADVANTAGE: 10,520 top-150 player-weeks, next game, 2019-25 ===
+    shadow-live = mean points per game the shadow sits above (+) or below (-) the live Clay blend; act/x = actual over projection (>1 = too low)
+    shadow err vs live = importance-weighted squared error, negative = shadow closer; (seasons shadow closer / seasons with rows); best w = blend weight on the shadow
+
+--- 1  POSITION x ADP BAND ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    QB ADP 1-30                                      179       +0.22    0.961    0.952 |   -1.86% (5/7) SHADOW |    0.7
+    QB ADP 31-60                                     358       -0.06    0.980    0.983 |   +0.04% (3/6) tie    |    0.5
+    QB ADP 61-100                                    501       +0.07    1.029    1.026 |   +0.97% (3/7) CLAY   |    0.3
+    QB ADP 101-150                                   653       -0.19    0.995    1.006 |   -0.20% (3/7) tie    |    0.5
+    RB ADP 1-30                                     1143       -0.55    0.976    1.011 |   -1.42% (5/7) SHADOW |    1.0
+    RB ADP 31-60                                     636       -0.90    0.950    1.025 |   -0.98% (3/7) SHADOW |    0.5
+    RB ADP 61-100                                    763       -0.85    0.906    0.989 |   -3.55% (6/7) SHADOW |    0.7
+    RB ADP 101-150                                   813       -0.16    0.965    0.985 |   -0.47% (3/7) tie    |    0.5
+    WR ADP 1-30                                     1009       +0.03    1.011    1.009 |   -1.21% (5/7) SHADOW |    1.0
+    WR ADP 31-60                                    1097       -0.36    1.013    1.045 |   +0.15% (5/7) tie    |    0.5
+    WR ADP 61-100                                   1060       -0.58    0.982    1.042 |   -0.58% (5/7) SHADOW |    0.5
+    WR ADP 101-150                                  1056       -0.43    0.916    0.966 |   -1.57% (5/7) SHADOW |    0.7
+    TE ADP 1-30                                      121       -0.38    0.979    1.007 |   +2.49% (2/5) CLAY   |    0.0
+    TE ADP 31-60                                     287       -0.42    1.031    1.076 |   +0.71% (4/7) CLAY   |    0.3
+    TE ADP 61-100                                    365       -0.20    0.945    0.969 |   -0.27% (4/7) tie    |    0.5
+    TE ADP 101-150                                   479       -0.02    1.031    1.033 |   +1.74% (3/7) CLAY   |    0.0
+
+--- 2  EXPERIENCE / AGE ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    RB rookies                                       537       -0.73    0.934    1.009 |   -2.46% (4/7) SHADOW |    0.7
+    WR rookies                                       437       -0.49    0.983    1.038 |   -0.72% (4/7) SHADOW |    0.5
+    QB second year                                   242       +0.07    1.059    1.055 |   +4.19% (1/6) CLAY   |    0.0
+    RB second year                                   545       -0.53    0.972    1.018 |   -0.55% (4/7) SHADOW |    0.7
+    WR second year                                   685       -0.42    0.970    1.011 |   -0.79% (4/7) SHADOW |    0.7
+    QB age 30+                                       405       +0.10    0.985    0.980 |   +0.51% (2/7) CLAY   |    0.5
+    WR age 30+                                       379       -0.48    0.941    0.982 |   -2.82% (5/6) SHADOW |    1.0
+    TE age 30+                                       173       -0.21    1.020    1.039 |   +0.54% (3/6) CLAY   |    0.3
+
+--- 3  SITUATION CHANGE ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    RB changed teams                                 462       -0.66    0.918    0.979 |   -0.35% (4/5) tie    |    0.5
+    WR changed teams                                 600       -0.51    0.997    1.048 |   -0.82% (3/7) SHADOW |    0.7
+    QB new playcaller                                650       -0.08    1.015    1.020 |   -0.50% (4/7) SHADOW |    0.5
+    RB new playcaller                               1332       -0.51    0.975    1.020 |   -0.79% (2/7) SHADOW |    0.7
+    WR new playcaller                               1646       -0.25    1.003    1.026 |   +0.33% (2/7) tie    |    0.5
+    TE new playcaller                                449       -0.14    1.015    1.034 |   +1.06% (3/7) CLAY   |    0.3
+    QB new head coach                                422       -0.19    1.021    1.032 |   -1.11% (5/7) SHADOW |    0.7
+    RB new head coach                                856       -0.49    0.965    1.008 |   -1.72% (5/7) SHADOW |    1.0
+    WR new head coach                               1053       -0.35    0.995    1.028 |   -0.76% (5/7) SHADOW |    0.7
+    TE new head coach                                236       -0.14    0.988    1.005 |   +1.90% (3/7) CLAY   |    0.0
+    WR, team's QB out this week                      315       -1.08    0.902    1.007 |   -8.74% (5/7) SHADOW |    1.0
+
+--- 4  CLAY vs HISTORY PRIOR (preseason disagreement) ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    RB Clay >= 25% above history                     380       -1.57    0.895    1.057 |   -2.32% (5/7) SHADOW |    0.7
+    WR Clay >= 25% above history                     261       -1.57    0.805    0.975 |  -14.43% (7/7) SHADOW |    1.0
+    QB Clay within 25% of history                   1687       -0.03    0.998    0.999 |   -0.09% (4/7) tie    |    0.5
+    RB Clay within 25% of history                   2803       -0.56    0.955    0.999 |   -1.43% (5/7) SHADOW |    0.7
+    WR Clay within 25% of history                   3872       -0.29    0.995    1.021 |   -0.54% (4/7) SHADOW |    0.7
+    TE Clay within 25% of history                   1181       -0.18    0.997    1.018 |   +0.58% (3/7) CLAY   |    0.3
+    RB Clay <= 25% below history                     172       +1.02    1.185    1.036 |   -1.24% (4/5) SHADOW |    0.5
+
+--- 5  SEASON SO FAR vs CLAY (3+ games) ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    QB running hot (>= 1.25x Clay)                   171       -0.33    0.940    0.955 |   +0.14% (4/7) tie    |    0.5
+    RB running hot (>= 1.25x Clay)                   504       +0.04    0.954    0.951 |   +0.93% (3/7) CLAY   |    0.3
+    WR running hot (>= 1.25x Clay)                   665       -0.03    1.003    1.005 |   +1.55% (1/7) CLAY   |    0.0
+    TE running hot (>= 1.25x Clay)                   187       +0.36    1.031    0.995 |   +3.78% (2/7) CLAY   |    0.0
+    QB near Clay (.8-1.25x)                         1010       +0.07    1.000    0.996 |   -0.78% (4/7) SHADOW |    0.7
+    RB near Clay (.8-1.25x)                         1233       -0.46    0.990    1.027 |   -0.68% (3/7) SHADOW |    0.7
+    WR near Clay (.8-1.25x)                         1736       -0.20    1.013    1.030 |   -0.59% (4/7) SHADOW |    0.7
+    TE near Clay (.8-1.25x)                          481       -0.17    1.020    1.038 |   +1.14% (3/7) CLAY   |    0.0
+    QB running cold (<= .8x Clay)                    136       -0.42    1.034    1.063 |   +2.43% (2/5) CLAY   |    0.3
+    RB running cold (<= .8x Clay)                    862       -0.76    0.937    1.017 |   -1.00% (4/7) SHADOW |    0.7
+    WR running cold (<= .8x Clay)                    888       -0.58    0.907    0.969 |   -3.60% (7/7) SHADOW |    1.0
+    TE running cold (<= .8x Clay)                    299       -0.37    1.033    1.088 |   +1.84% (2/7) CLAY   |    0.0
+
+--- 6  ROLE ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    WR target share >= 25%                          1368       -0.08    1.014    1.020 |   +0.00% (3/7) tie    |    0.5
+    WR target share 15-25%                          1887       -0.31    1.004    1.034 |   -1.25% (5/7) SHADOW |    1.0
+    WR target share < 15%                            521       -0.65    0.839    0.914 |   -6.66% (6/7) SHADOW |    1.0
+    TE target share >= 18%                           642       -0.22    1.015    1.037 |   +1.79% (2/7) CLAY   |    0.0
+    TE target share < 18%                            505       -0.12    1.018    1.035 |   +0.89% (3/7) CLAY   |    0.3
+    RB carry share >= 55%                           1601       -0.54    0.967    1.004 |   -1.58% (5/7) SHADOW |    1.0
+    RB carry share 30-55%                            968       -0.51    0.968    1.015 |   +1.81% (2/7) CLAY   |    0.3
+    RB carry share < 30%                             469       -0.53    0.909    0.985 |   -6.74% (5/7) SHADOW |    1.0
+    WR/TE last-game snap share < 60%                 654       -0.42    0.927    0.979 |   -1.99% (6/7) SHADOW |    0.7
+    WR/TE last-game snap share >= 85%               2271       -0.13    1.014    1.025 |   -0.34% (3/7) tie    |    0.7
+    listed first string                             8708       -0.28    0.990    1.011 |   -0.55% (4/7) SHADOW |    0.7
+    listed second string or lower                   1386       -0.80    0.918    1.013 |   -3.85% (5/7) SHADOW |    0.7
+    listed Questionable                              537       +0.36    0.941    0.911 |   +3.90% (1/7) CLAY   |    0.0
+
+--- 7  GAME CONTEXT ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    team implied < 19                               1257       -0.34    0.955    0.989 |   -1.29% (5/7) SHADOW |    0.7
+    team implied 19-24                              4094       -0.37    0.981    1.013 |   -0.69% (5/7) SHADOW |    0.7
+    team implied 24+                                4380       -0.27    0.998    1.018 |   -0.52% (6/7) SHADOW |    0.7
+
+--- 8  GAMES PLAYED ---
+    type                                               n shadow-live act/live act/shad |  shadow err vs live | best w
+    QB 1-2 games                                     249       +0.02    1.030    1.029 |   +0.19% (4/7) tie    |    0.5
+    QB 3-6 games                                     484       -0.03    1.001    1.002 |   +0.54% (3/7) CLAY   |    0.5
+    QB 7-17 games                                    833       -0.03    0.990    0.992 |   -0.93% (4/7) SHADOW |    0.7
+    RB 1-2 games                                     504       -0.94    0.931    1.010 |   -4.19% (5/7) SHADOW |    1.0
+    RB 3-6 games                                     986       -0.60    0.958    1.010 |   -0.87% (4/7) SHADOW |    0.7
+    RB 7-17 games                                   1613       -0.38    0.974    1.005 |   -0.25% (4/7) tie    |    0.5
+    WR 1-2 games                                     622       -0.55    1.020    1.074 |   -1.31% (4/7) SHADOW |    0.7
+    WR 3-6 games                                    1227       -0.42    0.978    1.018 |   -1.39% (4/7) SHADOW |    0.7
+    WR 7-17 games                                   2062       -0.17    0.991    1.007 |   -0.38% (4/7) tie    |    0.5
+    TE 1-2 games                                     190       -0.38    0.959    1.001 |   +0.14% (4/7) tie    |    0.5
+    TE 3-6 games                                     378       -0.20    1.068    1.093 |   +2.66% (2/7) CLAY   |    0.0
+    TE 7-17 games                                    589       -0.08    1.000    1.009 |   +1.25% (2/7) CLAY   |    0.0
+
+=== 9  SUMMARY: where the shadow sits LOWEST vs the live number (and who was right) ===
+    WR Clay >= 25% above history                   n  261 shadow -1.57/g | act/live 0.805 act/shadow 0.975 | shadow err -14.43% (7/7)
+    RB Clay >= 25% above history                   n  380 shadow -1.57/g | act/live 0.895 act/shadow 1.057 | shadow err -2.32% (5/7)
+    WR, team's QB out this week                    n  315 shadow -1.08/g | act/live 0.902 act/shadow 1.007 | shadow err -8.74% (5/7)
+    RB 1-2 games                                   n  504 shadow -0.94/g | act/live 0.931 act/shadow 1.010 | shadow err -4.19% (5/7)
+    RB ADP 31-60                                   n  636 shadow -0.90/g | act/live 0.950 act/shadow 1.025 | shadow err -0.98% (3/7)
+    RB ADP 61-100                                  n  763 shadow -0.85/g | act/live 0.906 act/shadow 0.989 | shadow err -3.55% (6/7)
+    listed second string or lower                  n 1386 shadow -0.80/g | act/live 0.918 act/shadow 1.013 | shadow err -3.85% (5/7)
+    RB running cold (<= .8x Clay)                  n  862 shadow -0.76/g | act/live 0.937 act/shadow 1.017 | shadow err -1.00% (4/7)
+    RB rookies                                     n  537 shadow -0.73/g | act/live 0.934 act/shadow 1.009 | shadow err -2.46% (4/7)
+    RB changed teams                               n  462 shadow -0.66/g | act/live 0.918 act/shadow 0.979 | shadow err -0.35% (4/5)
+    WR target share < 15%                          n  521 shadow -0.65/g | act/live 0.839 act/shadow 0.914 | shadow err -6.66% (6/7)
+    RB 3-6 games                                   n  986 shadow -0.60/g | act/live 0.958 act/shadow 1.010 | shadow err -0.87% (4/7)
+
+=== 10  SUMMARY: where the shadow sits HIGHEST vs the live number ===
+    RB Clay <= 25% below history                   n  172 shadow +1.02/g | act/live 1.185 act/shadow 1.036 | shadow err -1.24% (4/5)
+    TE running hot (>= 1.25x Clay)                 n  187 shadow +0.36/g | act/live 1.031 act/shadow 0.995 | shadow err +3.78% (2/7)
+    listed Questionable                            n  537 shadow +0.36/g | act/live 0.941 act/shadow 0.911 | shadow err +3.90% (1/7)
+    QB ADP 1-30                                    n  179 shadow +0.22/g | act/live 0.961 act/shadow 0.952 | shadow err -1.86% (5/7)
+    QB age 30+                                     n  405 shadow +0.10/g | act/live 0.985 act/shadow 0.980 | shadow err +0.51% (2/7)
+    QB second year                                 n  242 shadow +0.07/g | act/live 1.059 act/shadow 1.055 | shadow err +4.19% (1/6)
+    QB near Clay (.8-1.25x)                        n 1010 shadow +0.07/g | act/live 1.000 act/shadow 0.996 | shadow err -0.78% (4/7)
+    QB ADP 61-100                                  n  501 shadow +0.07/g | act/live 1.029 act/shadow 1.026 | shadow err +0.97% (3/7)
+    RB running hot (>= 1.25x Clay)                 n  504 shadow +0.04/g | act/live 0.954 act/shadow 0.951 | shadow err +0.93% (3/7)
+    WR ADP 1-30                                    n 1009 shadow +0.03/g | act/live 1.011 act/shadow 1.009 | shadow err -1.21% (5/7)
+
+=== 11  SUMMARY: CLAY'S ADVANTAGE - types where the live Clay blend is closer than the shadow (sorted, 3+ seasons the Clay side won) ===
+    QB second year                                 n  242 Clay closer by +4.19% (Clay better 5/6) | shadow +0.07/g | act/live 1.059 act/shadow 1.055 | best w 0.0
+    listed Questionable                            n  537 Clay closer by +3.90% (Clay better 6/7) | shadow +0.36/g | act/live 0.941 act/shadow 0.911 | best w 0.0
+    TE running hot (>= 1.25x Clay)                 n  187 Clay closer by +3.78% (Clay better 5/7) | shadow +0.36/g | act/live 1.031 act/shadow 0.995 | best w 0.0
+    TE 3-6 games                                   n  378 Clay closer by +2.66% (Clay better 5/7) | shadow -0.20/g | act/live 1.068 act/shadow 1.093 | best w 0.0
+    TE new head coach                              n  236 Clay closer by +1.90% (Clay better 4/7) | shadow -0.14/g | act/live 0.988 act/shadow 1.005 | best w 0.0
+    TE running cold (<= .8x Clay)                  n  299 Clay closer by +1.84% (Clay better 5/7) | shadow -0.37/g | act/live 1.033 act/shadow 1.088 | best w 0.0
+    RB carry share 30-55%                          n  968 Clay closer by +1.81% (Clay better 5/7) | shadow -0.51/g | act/live 0.968 act/shadow 1.015 | best w 0.3
+    TE target share >= 18%                         n  642 Clay closer by +1.79% (Clay better 5/7) | shadow -0.22/g | act/live 1.015 act/shadow 1.037 | best w 0.0
+    TE ADP 101-150                                 n  479 Clay closer by +1.74% (Clay better 4/7) | shadow -0.02/g | act/live 1.031 act/shadow 1.033 | best w 0.0
+    WR running hot (>= 1.25x Clay)                 n  665 Clay closer by +1.55% (Clay better 6/7) | shadow -0.03/g | act/live 1.003 act/shadow 1.005 | best w 0.0
+    TE 7-17 games                                  n  589 Clay closer by +1.25% (Clay better 5/7) | shadow -0.08/g | act/live 1.000 act/shadow 1.009 | best w 0.0
+    TE near Clay (.8-1.25x)                        n  481 Clay closer by +1.14% (Clay better 4/7) | shadow -0.17/g | act/live 1.020 act/shadow 1.038 | best w 0.0
+    TE new playcaller                              n  449 Clay closer by +1.06% (Clay better 4/7) | shadow -0.14/g | act/live 1.015 act/shadow 1.034 | best w 0.3
+    QB ADP 61-100                                  n  501 Clay closer by +0.97% (Clay better 4/7) | shadow +0.07/g | act/live 1.029 act/shadow 1.026 | best w 0.3
+    RB running hot (>= 1.25x Clay)                 n  504 Clay closer by +0.93% (Clay better 4/7) | shadow +0.04/g | act/live 0.954 act/shadow 0.951 | best w 0.3
+
+=== 12  SUMMARY: SHADOW'S ADVANTAGE (sorted, 5+ seasons) ===
+    WR Clay >= 25% above history                   n  261 shadow closer by -14.43% (7/7) | shadow -1.57/g | act/live 0.805 act/shadow 0.975 | best w 1.0
+    WR, team's QB out this week                    n  315 shadow closer by -8.74% (5/7) | shadow -1.08/g | act/live 0.902 act/shadow 1.007 | best w 1.0
+    RB carry share < 30%                           n  469 shadow closer by -6.74% (5/7) | shadow -0.53/g | act/live 0.909 act/shadow 0.985 | best w 1.0
+    WR target share < 15%                          n  521 shadow closer by -6.66% (6/7) | shadow -0.65/g | act/live 0.839 act/shadow 0.914 | best w 1.0
+    RB 1-2 games                                   n  504 shadow closer by -4.19% (5/7) | shadow -0.94/g | act/live 0.931 act/shadow 1.010 | best w 1.0
+    listed second string or lower                  n 1386 shadow closer by -3.85% (5/7) | shadow -0.80/g | act/live 0.918 act/shadow 1.013 | best w 0.7
+    WR running cold (<= .8x Clay)                  n  888 shadow closer by -3.60% (7/7) | shadow -0.58/g | act/live 0.907 act/shadow 0.969 | best w 1.0
+    RB ADP 61-100                                  n  763 shadow closer by -3.55% (6/7) | shadow -0.85/g | act/live 0.906 act/shadow 0.989 | best w 0.7
+    WR age 30+                                     n  379 shadow closer by -2.82% (5/6) | shadow -0.48/g | act/live 0.941 act/shadow 0.982 | best w 1.0
+    RB Clay >= 25% above history                   n  380 shadow closer by -2.32% (5/7) | shadow -1.57/g | act/live 0.895 act/shadow 1.057 | best w 0.7
+    WR/TE last-game snap share < 60%               n  654 shadow closer by -1.99% (6/7) | shadow -0.42/g | act/live 0.927 act/shadow 0.979 | best w 0.7
+    QB ADP 1-30                                    n  179 shadow closer by -1.86% (5/7) | shadow +0.22/g | act/live 0.961 act/shadow 0.952 | best w 0.7
+    RB new head coach                              n  856 shadow closer by -1.72% (5/7) | shadow -0.49/g | act/live 0.965 act/shadow 1.008 | best w 1.0
+    RB carry share >= 55%                          n 1601 shadow closer by -1.58% (5/7) | shadow -0.54/g | act/live 0.967 act/shadow 1.004 | best w 1.0
+    WR ADP 101-150                                 n 1056 shadow closer by -1.57% (5/7) | shadow -0.43/g | act/live 0.916 act/shadow 0.966 | best w 0.7
+
+=== 13  WHEN THE TWO MODELS DISAGREE BY 15%+ (top 150): who was right, by direction and position ===
+    cut                                          n shadow-live act/live act/shad | shadow err vs live | share of the gap the actual closed toward the shadow
+    shadow 15%+ LOWER, all                     973       -2.24    0.862    1.096 |   -6.23% (5/7) | +65% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ HIGHER, all                    345       +2.03    1.086    0.878 |   -0.64% (4/7) | +36% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ LOWER, RB                      422       -2.27    0.853    1.087 |   -6.73% (5/7) | +68% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ LOWER, WR                      412       -2.21    0.850    1.087 |   -7.77% (5/7) | +69% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ LOWER, TE                       93       -1.56    0.995    1.219 |   +6.96% (1/7) | +3% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ HIGHER, RB                     118       +1.88    1.053    0.802 |   +4.12% (2/7) | +17% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ HIGHER, WR                     124       +1.92    1.186    0.972 |   -6.90% (4/7) | +85% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ LOWER, ADP 31-60               207       -2.55    0.906    1.144 |   -1.69% (4/7) | +45% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ LOWER, ADP 61-100              363       -2.24    0.835    1.077 |   -9.49% (6/7) | +74% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ LOWER, ADP 101-150             339       -1.98    0.863    1.101 |   -4.26% (4/7) | +63% (100 = actual landed on the shadow, 0 = on live)
+    shadow 15%+ HIGHER, ADP 101-150            202       +1.77    1.051    0.837 |   +5.16% (2/7) | +20% (100 = actual landed on the shadow, 0 = on live)
+
+=== 14  NAMED: biggest repeat disagreements, player-seasons where the shadow ran 15%+ lower in 4+ weeks (2023-25) ===
+    2023 Quentin Johnston       WR  16 wks | actual   4.5  live   9.4  shadow   5.5  -> shadow right
+    2023 Jahmyr Gibbs           RB  11 wks | actual  14.2  live  17.5  shadow  12.7  -> shadow right
+    2025 Jaylen Waddle          WR  14 wks | actual  10.1  live  11.2  shadow   8.6  -> Clay right
+    2025 David Montgomery       RB  15 wks | actual   9.5  live  10.9  shadow   8.6  -> shadow right
+    2023 James Cook             RB  13 wks | actual  12.2  live  13.5  shadow  10.9  -> Clay right
+    2025 Michael Pittman Jr.    WR  11 wks | actual  11.0  live  10.9  shadow   8.2  -> Clay right
+    2025 TreVeyon Henderson     RB  10 wks | actual  10.9  live  12.0  shadow   9.1  -> Clay right
+    2025 Xavier Worthy          WR  12 wks | actual   6.6  live  11.7  shadow   9.3  -> shadow right
+    2023 Zach Charbonnet        RB  13 wks | actual   5.8  live   8.1  shadow   6.0  -> shadow right
+    2023 Jaxon Smith-Njigba     WR  11 wks | actual   6.5  live   8.2  shadow   5.8  -> shadow right
+    2023 AJ Dillon              RB  12 wks | actual   7.4  live   9.9  shadow   8.0  -> shadow right
+    2023 Samaje Perine          RB  11 wks | actual   6.3  live   8.3  shadow   6.2  -> shadow right
+    2025 Isiah Pacheco          RB  11 wks | actual   6.2  live   9.2  shadow   7.1  -> shadow right
+    2023 Tony Pollard           RB  8 wks | actual  10.5  live  16.5  shadow  13.9  -> shadow right
+
+    ...and where the shadow ran 15%+ HIGHER in 4+ weeks:
+    2023 De'Von Achane          RB  9 wks | actual  15.5  live  12.5  shadow  18.4  -> shadow right
+    2025 Emeka Egbuka           WR  10 wks | actual  11.8  live  10.3  shadow  13.2  -> shadow right
+    2025 Jared Goff             QB  7 wks | actual  17.1  live  16.3  shadow  19.4  -> Clay right
+    2024 Cole Kmet              TE  13 wks | actual   7.4  live   6.7  shadow   8.2  -> Clay right
+    2025 Dallas Goedert         TE  11 wks | actual   9.9  live   7.7  shadow   9.3  -> shadow right
+    2025 Dylan Sampson          RB  13 wks | actual   3.9  live   4.5  shadow   5.6  -> Clay right
+    2024 Jared Goff             QB  4 wks | actual  11.7  live  16.0  shadow  19.1  -> Clay right
+    2023 Zamir White            RB  11 wks | actual   3.7  live   2.7  shadow   3.7  -> shadow right
+    2023 George Kittle          TE  5 wks | actual   8.5  live   9.0  shadow  10.7  -> Clay right
+    2023 Rashod Bateman         WR  5 wks | actual   4.1  live   6.1  shadow   7.5  -> Clay right
+    2025 Luther Burden III      WR  4 wks | actual   6.5  live   4.0  shadow   5.5  -> shadow right
+    2023 Dawson Knox            TE  4 wks | actual   4.3  live   5.7  shadow   7.2  -> Clay right

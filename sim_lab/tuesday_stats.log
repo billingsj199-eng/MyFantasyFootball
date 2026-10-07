@@ -1,12 +1,12 @@
 ﻿
-[2026-09-29 10:10:41] === tuesday stats chain start ===
-[2026-09-29 10:12:32] Loading D array...
-  508 active players to fetch (QB/RB/WR/TE)
+[2026-10-06 08:20:21] === tuesday stats chain start ===
+[2026-10-06 08:21:50] Loading D array...
+  551 active players to fetch (QB/RB/WR/TE)
 
 Fetching Sleeper player database...
   12229 players in Sleeper DB
-  Matched 495/508 players to Sleeper IDs
-  Unmatched (13): ['Kenneth Gainwell', 'Travis Hunter', 'Mitch Tinsley', 'Nathan Carter', 'Josh Palmer', 'Amare Thomas', 'Chip Trayanum', 'Jalil Farooq', 'Jayce Brown', 'Matthew Hibner', 'Rara Thomas', 'Romelo Brinson', 'Kyle Juszczyk']
+  Matched 539/551 players to Sleeper IDs
+  Unmatched (12): ['Kenneth Gainwell', 'Travis Hunter', 'Nathan Carter', 'Josh Palmer', 'Amare Thomas', 'Chip Trayanum', 'Jalil Farooq', 'Jayce Brown', 'Matthew Hibner', 'Rara Thomas', 'Romelo Brinson', 'Kyle Juszczyk']
 
 Fetching Sleeper weekly stats (2017-2026)...
   2017: .................
@@ -19,41 +19,41 @@ Fetching Sleeper weekly stats (2017-2026)...
   2024: ..................
   2025: ..................
   2026: ..................
-  Sleeper data collected for 468 players
+  Sleeper data collected for 512 players
 
-26 players need pre-2017 data (nflfastr)
+34 players need pre-2017 data (nflfastr)
   Fetching years: 2007-2016
   2007: 2 rows matched
   2008: 35 rows matched
   2009: 45 rows matched
   2010: 41 rows matched
-  2011: 51 rows matched
-  2012: 58 rows matched
-  2013: 112 rows matched
-  2014: 182 rows matched
-  2015: 207 rows matched
-  2016: 328 rows matched
+  2011: 70 rows matched
+  2012: 80 rows matched
+  2013: 140 rows matched
+  2014: 212 rows matched
+  2015: 271 rows matched
+  2016: 414 rows matched
 
 Merging with existing data...
-  Loaded 453 existing players
+  Loaded 494 existing players
 
 Finalizing output...
 
 ============================================================
 DONE! weekly_stats_active.js written
-  Players: 453
-  File size: 2,631,244 bytes (2.5 MB)
-  By position: {'QB': 67, 'RB': 120, 'TE': 85, 'WR': 181}
-  D coverage: 436/508 active players
+  Players: 494
+  File size: 2,905,625 bytes (2.8 MB)
+  By position: {'QB': 78, 'RB': 128, 'TE': 94, 'WR': 194}
+  D coverage: 479/551 active players
   Still missing (72): ['Aaron Anderson', 'Adam Randall', 'Amare Thomas', 'Anthony Smith', 'Behren Morton', 'CJ Daniels', 'Carson Beck', 'Caullin Lacy', 'Chase Roberts', 'Chip Trayanum', 'Chris Brazzell II', 'Cole Payton', 'Coleman Bennett', 'DJ Rogers', "Dae'Quan Wright"]...
 
-[2026-09-29 10:12:32] Loading E:\MyFantasyFootball\MyFantasyFootball Files\data\weekly_stats_active.js ...
-  453 players in source file
+[2026-10-06 08:21:50] Loading E:\MyFantasyFootball\MyFantasyFootball Files\data\weekly_stats_active.js ...
+  494 players in source file
 
-DONE ΓÇö wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\player_weekly_sigma.js  (56.8 KB)
-  Players with ╧â:        346
-  Skipped (too few games): 17
-  Skipped (no recent data): 90
+DONE ΓÇö wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\player_weekly_sigma.js  (60.5 KB)
+  Players with ╧â:        369
+  Skipped (too few games): 18
+  Skipped (no recent data): 107
 
 132 starter-caliber players (╬╝ ΓëÑ 8 PPG, ΓëÑ 16 games)
 
@@ -93,63 +93,65 @@ Biggest year-over-year volatility shifts (starters):
   Alec Pierce                          Γåômore consistent      trend=-0.38  ╧â%=0.54  ╬╝=8.4
   Javonte Williams                     Γåômore consistent      trend=-0.37  ╧â%=0.43  ╬╝=11.9
 
-[2026-09-29 10:12:34] scoring W3 (latest lock with actuals)
-weekly_projections.json is not W3; consensus columns will be blank
-scorecard W3 -> E:\MyFantasyFootball\sim_lab\scorecards\w3.log
-scored rows: 552 skill + 93 K + 96 DST across weeks [1, 2, 3]
-  QB: n= 96 anchored= 89  propW 0.70 -> 0.741 (best 0.8)  sigma x1.047 (inside 0.708)  TD ptd x1.084 rtd x1.119
-  RB: n=144 anchored=134  propW 0.70 -> 0.412 (best 0.0)  sigma x0.956 (inside 0.889)  TD rtd x0.944 rctd x1.049
-  WR: n=220 anchored=207  propW 0.70 -> 0.535 (best 0.3)  sigma x1.001 (inside 0.8)  TD rctd x1.011
-  TE: n= 92 anchored= 85  propW 0.70 -> 0.413 (best 0.0)  sigma x1.033 (inside 0.739)  TD rctd x1.253
-  BELOW-market starters: n= 58  belowW 0.70 -> 0.486 (best 0.2, actual under market 0.69)
-  DST: n= 96  shift -0.265 pts (evidence -0.619)  sigma x0.982 (inside 0.823)
-  K : n= 93  level x1.071 (ratio 1.167)  sigma x1.004 (inside 0.785)
+[2026-10-06 08:21:53] scoring W4 (latest lock with actuals)
+archived consensus -> E:\MyFantasyFootball\sim_lab\data\weekly_consensus_w4.json
+scorecard W4 -> E:\MyFantasyFootball\sim_lab\scorecards\w4.log
+scored rows: 726 skill + 124 K + 128 DST across weeks [1, 2, 3, 4]
+  QB: n=129 anchored=121  propW 0.70 -> 0.676 (best 0.65)  sigma x1.037 (inside 0.752)  TD ptd x1.067 rtd x1.061
+  RB: n=185 anchored=168  propW 0.20 -> 0.105 (best 0.0)  sigma x0.952 (inside 0.876)  TD rtd x1.052 rctd x0.996
+  WR: n=292 anchored=273  propW 0.70 -> 0.434 (best 0.15)  sigma x0.997 (inside 0.808)  TD rctd x0.995
+  TE: n=120 anchored=108  propW 0.20 -> 0.105 (best 0.0)  sigma x1.036 (inside 0.75)  TD rctd x1.242
+  BELOW-market starters: n= 81  belowW 0.70 -> 0.350 (best 0.0, actual under market 0.741)
+  DST: n=128  shift -0.409 pts (evidence -0.818)  sigma x0.965 (inside 0.852)
+  K : n=124  level x1.095 (ratio 1.19)  sigma x0.995 (inside 0.806)
 wrote E:\MyFantasyFootball\sim_lab\data\sim_tuning.js
 
-[2026-09-29 10:12:35] W1: 248 lined skill players with actuals (lock preset half)
+[2026-10-06 08:21:54] W1: 248 lined skill players with actuals (lock preset half)
 W2: 242 lined skill players with actuals (lock preset half)
 W3: 235 lined skill players with actuals (lock preset half)
+W4: 243 lined skill players with actuals (lock preset half)
 
-725 rows, 477 with a shadow mean | actual = weekly_stats_active fpts (half-PPR, same as the lock preset; verified on W1)
+968 rows, 720 with a shadow mean | actual = weekly_stats_active fpts (half-PPR, same as the lock preset; verified on W1)
 
 === Anchor weight sweep, Clay-side base (jsMean) ===
-  all lined rows             n= 725 MSE plain/weighted by w -> 0.0:38.15/53.67  0.1:37.86/53.49  0.2:37.62/53.37  0.3:37.44/53.30  0.4:37.31/53.29  0.5:37.24/53.34  0.6:37.23/53.45  0.7:37.27/53.62  0.8:37.37/53.85  0.9:37.53/54.13  1.0:37.74/54.48   | best weighted w = 0.4
-  QB                         n=  91 MSE plain/weighted by w -> 0.0:68.20/71.13  0.1:67.37/70.55  0.2:66.68/70.10  0.3:66.13/69.80  0.4:65.73/69.63  0.5:65.46/69.60  0.6:65.34/69.71  0.7:65.36/69.95  0.8:65.51/70.33  0.9:65.81/70.85  1.0:66.25/71.51   | best weighted w = 0.5
-  RB                         n= 180 MSE plain/weighted by w -> 0.0:33.27/50.99  0.1:33.13/50.82  0.2:33.03/50.70  0.3:32.98/50.61  0.4:32.97/50.57  0.5:33.01/50.57  0.6:33.09/50.61  0.7:33.22/50.69  0.8:33.39/50.81  0.9:33.61/50.98  1.0:33.87/51.18   | best weighted w = 0.5
-  WR                         n= 302 MSE plain/weighted by w -> 0.0:36.73/57.63  0.1:36.34/57.32  0.2:35.99/57.07  0.3:35.69/56.87  0.4:35.44/56.72  0.5:35.23/56.62  0.6:35.07/56.57  0.7:34.95/56.57  0.8:34.88/56.62  0.9:34.85/56.72  1.0:34.87/56.87   | best weighted w = 0.6
-  TE                         n= 152 MSE plain/weighted by w -> 0.0:28.77/40.81  0.1:28.81/41.03  0.2:28.89/41.31  0.3:29.01/41.65  0.4:29.16/42.04  0.5:29.36/42.48  0.6:29.60/42.99  0.7:29.87/43.55  0.8:30.19/44.16  0.9:30.55/44.83  1.0:30.94/45.56   | best weighted w = 0.0
-  week 1                     n= 248 MSE plain/weighted by w -> 0.0:42.03/58.62  0.1:41.59/58.30  0.2:41.22/58.06  0.3:40.92/57.89  0.4:40.68/57.79  0.5:40.52/57.76  0.6:40.42/57.81  0.7:40.39/57.92  0.8:40.44/58.11  0.9:40.55/58.37  1.0:40.73/58.70   | best weighted w = 0.5
-  week 2                     n= 242 MSE plain/weighted by w -> 0.0:35.75/55.48  0.1:35.75/55.59  0.2:35.80/55.77  0.3:35.91/56.01  0.4:36.08/56.31  0.5:36.31/56.67  0.6:36.59/57.09  0.7:36.93/57.57  0.8:37.33/58.12  0.9:37.79/58.73  1.0:38.30/59.40   | best weighted w = 0.0
-  week 3                     n= 235 MSE plain/weighted by w -> 0.0:36.53/46.56  0.1:36.09/46.20  0.2:35.69/45.89  0.3:35.33/45.62  0.4:35.02/45.40  0.5:34.75/45.21  0.6:34.51/45.07  0.7:34.32/44.97  0.8:34.18/44.91  0.9:34.07/44.89  1.0:34.01/44.92   | best weighted w = 0.9
-  shipped 0.7: MSE 37.27 | market alone 37.74 | model alone 38.15 | bias act/proj shipped 0.967, market 0.939, model 1.041
+  all lined rows             n= 968 MSE plain/weighted by w -> 0.0:38.09/52.60  0.1:37.85/52.47  0.2:37.67/52.40  0.3:37.54/52.38  0.4:37.45/52.41  0.5:37.41/52.50  0.6:37.43/52.64  0.7:37.49/52.82  0.8:37.60/53.07  0.9:37.76/53.36  1.0:37.97/53.71   | best weighted w = 0.3
+  QB                         n= 123 MSE plain/weighted by w -> 0.0:58.74/60.89  0.1:58.11/60.43  0.2:57.60/60.10  0.3:57.22/59.88  0.4:56.96/59.79  0.5:56.82/59.81  0.6:56.81/59.95  0.7:56.92/60.21  0.8:57.15/60.59  0.9:57.51/61.09  1.0:57.99/61.71   | best weighted w = 0.4
+  RB                         n= 242 MSE plain/weighted by w -> 0.0:36.40/51.89  0.1:36.30/51.80  0.2:36.24/51.73  0.3:36.22/51.69  0.4:36.23/51.69  0.5:36.27/51.72  0.6:36.34/51.79  0.7:36.45/51.88  0.8:36.59/52.01  0.9:36.77/52.17  1.0:36.98/52.36   | best weighted w = 0.4
+  WR                         n= 399 MSE plain/weighted by w -> 0.0:39.19/59.70  0.1:38.86/59.49  0.2:38.57/59.33  0.3:38.34/59.22  0.4:38.14/59.16  0.5:38.00/59.16  0.6:37.90/59.21  0.7:37.84/59.32  0.8:37.83/59.48  0.9:37.86/59.69  1.0:37.94/59.95   | best weighted w = 0.5
+  TE                         n= 204 MSE plain/weighted by w -> 0.0:25.49/36.29  0.1:25.52/36.45  0.2:25.58/36.67  0.3:25.67/36.92  0.4:25.79/37.22  0.5:25.94/37.56  0.6:26.12/37.94  0.7:26.33/38.36  0.8:26.56/38.83  0.9:26.83/39.33  1.0:27.13/39.88   | best weighted w = 0.0
+  week 1                     n= 248 MSE plain/weighted by w -> 0.0:42.03/58.61  0.1:41.59/58.30  0.2:41.22/58.06  0.3:40.92/57.88  0.4:40.68/57.78  0.5:40.52/57.75  0.6:40.42/57.79  0.7:40.39/57.91  0.8:40.44/58.09  0.9:40.55/58.34  1.0:40.73/58.67   | best weighted w = 0.5
+  week 2                     n= 242 MSE plain/weighted by w -> 0.0:35.75/55.07  0.1:35.75/55.19  0.2:35.80/55.37  0.3:35.91/55.61  0.4:36.08/55.92  0.5:36.31/56.28  0.6:36.59/56.71  0.7:36.93/57.19  0.8:37.33/57.74  0.9:37.79/58.35  1.0:38.30/59.02   | best weighted w = 0.0
+  week 3                     n= 235 MSE plain/weighted by w -> 0.0:36.53/46.63  0.1:36.09/46.28  0.2:35.69/45.97  0.3:35.33/45.71  0.4:35.02/45.49  0.5:34.75/45.31  0.6:34.51/45.17  0.7:34.32/45.07  0.8:34.18/45.02  0.9:34.07/45.01  1.0:34.01/45.04   | best weighted w = 0.9
+  week 4                     n= 243 MSE plain/weighted by w -> 0.0:37.90/49.66  0.1:37.85/49.70  0.2:37.83/49.78  0.3:37.83/49.90  0.4:37.87/50.04  0.5:37.93/50.23  0.6:38.02/50.44  0.7:38.14/50.69  0.8:38.28/50.97  0.9:38.46/51.29  1.0:38.66/51.64   | best weighted w = 0.0
+  shipped 0.7: MSE 37.49 | market alone 37.97 | model alone 38.09 | bias act/proj shipped 0.986, market 0.960, model 1.052
 
 === Same sweep with the Clay-free SHADOW underneath (rows that carry ncMean) ===
-  shadow base                n= 477 MSE plain/weighted by w -> 0.0:35.49/52.11  0.1:35.26/51.75  0.2:35.10/51.48  0.3:35.00/51.29  0.4:34.97/51.18  0.5:35.01/51.15  0.6:35.11/51.21  0.7:35.28/51.35  0.8:35.51/51.57  0.9:35.82/51.88  1.0:36.18/52.27   | best weighted w = 0.5
-  Clay base, same rows       n= 477 MSE plain/weighted by w -> 0.0:36.13/51.09  0.1:35.91/50.97  0.2:35.75/50.91  0.3:35.63/50.90  0.4:35.56/50.94  0.5:35.54/51.03  0.6:35.57/51.17  0.7:35.65/51.37  0.8:35.78/51.62  0.9:35.96/51.92  1.0:36.18/52.27   | best weighted w = 0.3
-  w=0.0: anchored shadow vs anchored Clay +2.01% weighted, -1.77% plain
-  w=0.5: anchored shadow vs anchored Clay +0.25% weighted, -1.50% plain
-  w=0.7: anchored shadow vs anchored Clay -0.04% weighted, -1.04% plain
+  shadow base                n= 720 MSE plain/weighted by w -> 0.0:36.12/51.84  0.1:35.90/51.46  0.2:35.75/51.17  0.3:35.68/50.97  0.4:35.66/50.85  0.5:35.72/50.82  0.6:35.84/50.88  0.7:36.04/51.02  0.8:36.30/51.25  0.9:36.62/51.57  1.0:37.02/51.97   | best weighted w = 0.5
+  Clay base, same rows       n= 720 MSE plain/weighted by w -> 0.0:36.73/50.50  0.1:36.57/50.44  0.2:36.45/50.43  0.3:36.37/50.46  0.4:36.34/50.54  0.5:36.35/50.66  0.6:36.40/50.83  0.7:36.49/51.05  0.8:36.62/51.31  0.9:36.80/51.62  1.0:37.02/51.97   | best weighted w = 0.2
+  w=0.0: anchored shadow vs anchored Clay +2.66% weighted, -1.67% plain
+  w=0.5: anchored shadow vs anchored Clay +0.32% weighted, -1.72% plain
+  w=0.7: anchored shadow vs anchored Clay -0.05% weighted, -1.24% plain
   w=1.0: anchored shadow vs anchored Clay +0.00% weighted, +0.00% plain
 
-725 lined player-weeks over 3 scored week(s): best weighted anchor weight on the Clay-side base = 0.4 (shipped 0.7). Shadow sweep included.
+968 lined player-weeks over 4 scored week(s): best weighted anchor weight on the Clay-side base = 0.3 (shipped 0.7). Shadow sweep included.
 wrote data/anchor_sweep.js
 
-[2026-09-29 10:13:34] d.js players: 587 (649 name variants)
+[2026-10-06 08:22:43] d.js players: 630 (694 name variants)
 2012: 0 rows, 0 matched to d.js players
-2013: 5998 rows, 121 matched to d.js players
-2014: 6087 rows, 205 matched to d.js players
-2015: 6060 rows, 233 matched to d.js players
-2016: 6051 rows, 370 matched to d.js players
-2017: 6138 rows, 646 matched to d.js players
-2018: 6109 rows, 899 matched to d.js players
-2019: 6043 rows, 1235 matched to d.js players
-2020: 6239 rows, 1456 matched to d.js players
-2021: 6688 rows, 1948 matched to d.js players
-2022: 6609 rows, 2486 matched to d.js players
-2023: 6677 rows, 3199 matched to d.js players
-2024: 6624 rows, 3912 matched to d.js players
-2025: 6604 rows, 4631 matched to d.js players
-2026: 1183 rows, 927 matched to d.js players
+2013: 5998 rows, 148 matched to d.js players
+2014: 6087 rows, 234 matched to d.js players
+2015: 6060 rows, 298 matched to d.js players
+2016: 6051 rows, 466 matched to d.js players
+2017: 6138 rows, 773 matched to d.js players
+2018: 6109 rows, 1030 matched to d.js players
+2019: 6043 rows, 1382 matched to d.js players
+2020: 6239 rows, 1599 matched to d.js players
+2021: 6688 rows, 2159 matched to d.js players
+2022: 6609 rows, 2699 matched to d.js players
+2023: 6677 rows, 3496 matched to d.js players
+2024: 6624 rows, 4205 matched to d.js players
+2025: 6604 rows, 4945 matched to d.js players
+2026: 1570 rows, 1329 matched to d.js players
 team 1999: 32 teams
 team 2000: 31 teams
 team 2001: 31 teams
@@ -178,46 +180,34 @@ team 2023: 32 teams
 team 2024: 32 teams
 team 2025: 32 teams
 team 2026: 32 teams
-wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\snap_counts.js: 423 players, 28 team seasons, 433 KB
+wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\snap_counts.js: 468 players, 28 team seasons, 459 KB
 
-[2026-09-29 10:13:37] d.js RB/WR/TE targets: 428
-  2026: PFF weekly exports for weeks [1, 2, 3]
-  2026: ratio medians by pos {RB: 0.98, TE: 1.03, WR: 1.08}
+[2026-10-06 08:22:45] d.js RB/WR/TE targets: 459
+  2026: PFF weekly exports for weeks [1, 2, 3, 4]
+  2026: ratio medians by pos {RB: 0.97, TE: 1.02, WR: 1.08}
   2026: WARNING 2 player-weeks had routes > team dropbacks (clamped to 100) - check the dropback definition
-  2026: 303 players (pff-weekly, 1s); 8 with estimated weeks pending PFF, 6 estimate-only
-wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\route_pct.js: 362 players, 172 KB
+  2026: 339 players (pff-weekly, 1s); 16 with estimated weeks pending PFF, 5 estimate-only
+wrote E:\MyFantasyFootball\MyFantasyFootball Files\data\route_pct.js: 395 players, 178 KB
 
-[2026-09-29 10:13:37] weekly stats unchanged - no site commit
-[2026-09-29 10:13:38] wrote E:\MyFantasyFootball\js_model_site\data\volume_share_model.js: 388 players, 32 teams (lg 25.3 tgt/g, 23.9 car/g)
+[2026-10-06 08:22:47] site weekly stats committed + pushed
+[2026-10-06 08:22:48] wrote E:\MyFantasyFootball\js_model_site\data\volume_share_model.js: 388 players, 32 teams (lg 25.3 tgt/g, 23.9 car/g)
 
-[2026-09-29 10:14:57] IR out for 2026: 5 -> brandon aiyuk, chris brazzell, devon achane, jayden higgins, ricky pearsall
-Jacks boards: {'jR': 619, 'jSf': 619, 'jDy': 619, 'jDsf': 619}  tiers: {'rank': 15, 'jSf': 4, 'jDy': 4, 'jDsf': 7}  updated: 2026-09-28T18:56:39.791Z
-python.exe : Traceback (most recent call last):
-At E:\MyFantasyFootball\sim_lab\tuesday_stats.ps1:110 char:8
-+ $out = & python 'export_sleeper_extension_data.py' 2>&1 | Out-String
-+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
- 
-  File "E:\MyFantasyFootball\MyFantasyFootball Files\export_sleeper_extension_data.py", line 739, in <module>
-    main()
-    ~~~~^^
-  File "E:\MyFantasyFootball\MyFantasyFootball Files\export_sleeper_extension_data.py", line 558, in main
-    byes = load_byes()
-  File "E:\MyFantasyFootball\MyFantasyFootball Files\export_sleeper_extension_data.py", line 250, in load_byes
-    gt = json.load(open(path, encoding="utf-8")).get("gameTotals") or {}
-         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\billi\AppData\Local\Programs\Python\Python313\Lib\json\__init__.py", line 298, in load
-    return loads(fp.read(),
-        cls=cls, object_hook=object_hook,
-        parse_float=parse_float, parse_int=parse_int,
-        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
-  File "C:\Users\billi\AppData\Local\Programs\Python\Python313\Lib\json\__init__.py", line 352, in loads
-    return _default_decoder.decode(s)
-           ~~~~~~~~~~~~~~~~~~~~~~~^^^
-  File "C:\Users\billi\AppData\Local\Programs\Python\Python313\Lib\json\decoder.py", line 348, in decode
-    raise JSONDecodeError("Extra data", s, end)
-json.decoder.JSONDecodeError: Extra data: line 1 column 326046 (char 326045)
+[2026-10-06 08:23:25] IR out for 2026: 5 -> brandon aiyuk, chris brazzell, devon achane, jayden higgins, ricky pearsall
+Jacks boards: {'jR': 662, 'jSf': 662, 'jDy': 662, 'jDsf': 662}  tiers: {'rank': 14, 'jSf': 4, 'jDy': 4, 'jDsf': 7}  updated: 2026-10-05T19:14:18.691Z
+Clay projections: 468  def grades: 32  kicker splits: 29  team byes: 32
+KTC SF: 500  KTC 1QB: 500  Sleeper names: 4119
+Players: 630  sleeper-id matched: 622  KTC-SF matched: 424  JM matched: 484
+Wrote 630 players + 36 pick assets -> sleeper-extension/data/players.json
+Synced copy -> espn-extension/data/players.json
+Synced copy -> yahoo-extension/data/players.json
+Wrote sleeper-extension/data/sim_pack.js
+Wrote espn-extension/data/sim_pack.js
+Wrote yahoo-extension/data/sim_pack.js
+Synced ../sim_lab/engine.js -> sleeper-extension/engine_sim.js
+Synced ../sim_lab/overrides.js -> sleeper-extension/data/sim_overrides.js
+Synced ../sim_lab/engine.js -> espn-extension/engine_sim.js
+Synced ../sim_lab/overrides.js -> espn-extension/data/sim_overrides.js
+Synced ../sim_lab/engine.js -> yahoo-extension/engine_sim.js
+Synced ../sim_lab/overrides.js -> yahoo-extension/data/sim_overrides.js
 
-[2026-09-29 10:14:57] extension export FAILED (exit 1) - helpers keep previous data
-[2026-09-29 10:14:57] === done ===
+[2026-10-06 08:23:26] === done ===

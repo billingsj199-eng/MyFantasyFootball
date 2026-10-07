@@ -480,7 +480,7 @@
     { h: 'Pos', k: 'pos', dir: 'asc', get: function (o) { return o.r.player.pos; } },
     { h: 'Opp', l: 1, k: 'opp', dir: 'asc', get: function (o) { return o.r.slot.opp; } },
     { h: 'Stat', l: 1, k: 'stat', dir: 'asc', get: function (o) { return o.isProb ? 'Anytime TD' : LINE_STATS[o.stat].label; } },
-    { h: 'Our median', k: 'ours', get: function (o) { return o.ours; } },
+    { h: 'Ours', k: 'ours', get: function (o) { return o.ours; } },
     { h: 'Line', k: 'line', get: function (o) { return o.line; } },
     { h: 'Edge', k: 'edge', get: function (o) { return o.edge; } },
     { h: 'Lean', k: 'lean', get: function (o) { return o.ours > o.line ? 1 : 0; } },
@@ -500,9 +500,14 @@
     rows.forEach(function (r) {
       var lines = propByNorm[r.player.norm];
       if (!lines || !r.comps) return;
-      // closed-form CLEAN median ratio — the sim run's p50/mean carries the
-      // prop anchor's level when it's on, which would soften the divergence
-      var ratio = E.gammaMedRatio(r.player);
+      // CLEAN comps at face value (2026-10-07): W1-4 locks showed actual/line
+      // 1.03-1.06 on every stat but rec yards, i.e. the books already shade
+      // the median-vs-mean skew, so medianizing our mean with gammaMedRatio
+      // (x0.88 median) made the model read LOW on every line. Mirrors the
+      // engine's PROP_LINE_SCALE change; window.SIM_PROP_GAMMA_RATIO = true
+      // restores the old read here too. Still never the sim run's p50/mean
+      // (that carries the anchor's level).
+      var ratio = window.SIM_PROP_GAMMA_RATIO === true ? E.gammaMedRatio(r.player) : 1;
       Object.keys(LINE_STATS).forEach(function (k) {
         if (r.comps[k] == null) return;
         var books = [];
@@ -547,7 +552,7 @@
     var ss = state.weekLinesSort = state.weekLinesSort || { key: null, dir: 'desc' };
     out = applySort(out, LINES_COLS, ss);
     var html = '<p class="dim" style="font-size:12px"><b>' + out.length + '</b> player-stat lines compared for week ' + wk +
-      (ss.key ? '' : ' · sorted by biggest % discrepancy') + ' · both sides are medians · click a column header to sort (# = back to the discrepancy order)</p>' +
+      (ss.key ? '' : ' · sorted by biggest % discrepancy') + ' · lines at face value vs our clean stat mean · click a column header to sort (# = back to the discrepancy order)</p>' +
       '<table><thead>' + thRow(LINES_COLS, ss) + '</thead><tbody>';
     out.slice(0, 250).forEach(function (o, i) {
       var p = o.r.player, s = o.r.slot;
@@ -573,8 +578,8 @@
         '</td><td style="color:' + col + '"><b>' + (over ? 'OVER' : 'UNDER') + '</b></td><td class="dim">' + o.books + '</td></tr>';
     });
     $('wk-table').innerHTML = html + '</tbody></table>' +
-      '<p class="dim" style="font-size:11px">Line = median across UD/PP/DK. Our median = CLEAN model stat mean × the player\'s closed-form ' +
-      'gamma median ratio (unaffected by the prop anchor). Anytime TD compares PROBABILITIES: the books\' odds converted to implied % (juice included — books ' +
+      '<p class="dim" style="font-size:11px">Line = median across UD/PP/DK, at face value. Ours = CLEAN model stat mean (unaffected by the prop anchor; no median ' +
+      'scaling since 2026-10-07 — W1-4 showed the books\' lines already sit at the mean, actual/line 1.03-1.06 on all but rec yards). Anytime TD compares PROBABILITIES: the books\' odds converted to implied % (juice included — books ' +
       'run ~5-8% hot on these) vs our Poisson P(≥1 TD) from the median rush+rec TD rate, so a small UNDER lean there is just vig. ' +
       'Big edges are EITHER a potential prop lean OR a model miss — the weekly SCORE grading tells you which over time.</p>';
     wireSort('wk-table', LINES_COLS, ss, renderWeekTable);
@@ -6357,6 +6362,9 @@
     var cs = E.cbShadowMult(slot.opp, p.pos, p); if (cs !== 1) chips.push('CB shadow ×' + ntF(cs, 2));
     var cb = E.cb1OutBoost(slot.opp, p.pos, p); if (cb !== 1) chips.push('CB1 out ×' + ntF(cb, 2));
     var ol = E.olOutDock(p.tm, p.pos); if (ol !== 1) chips.push('OL out ×' + ntF(ol, 2));
+    if (wp && wp.health > 0) chips.push('healthy-prior +' + ntF(wp.health, 1) + '/g');   // banged-up prior lift (2026-10-07)
+    if (wp && wp.use && wp.use.hurtG > 0) chips.push('usage: ' + wp.use.hurtG + ' banged-up game' + (wp.use.hurtG > 1 ? 's' : '') + ' ×0.5');
+    if (wp && wp.vol != null && Math.abs(wp.vol - 1) >= 0.005) chips.push('pass volume ×' + ntF(wp.vol, 2));   // volume context (2026-10-07)
     var sn = E.snapMult(p, wk); if (Math.abs(sn - 1) >= 0.02) chips.push('snap trend ×' + ntF(sn, 2));
     var rkL = E.rookieLevel ? E.rookieLevel(p) : 1; if (rkL !== 1) chips.push('rookie level ×' + ntF(rkL, 2));
     var rbU = E.rbUsagePg ? E.rbUsagePg(p, wk) : null; if (rbU) chips.push('snap usage ' + ntF(rbU.share, 0) + '% x ' + ntF(rbU.plays, 0) + ' plays = ' + ntF(rbU.half, 1) + ' half-PPR/g (15% blend)');
@@ -6385,10 +6393,11 @@
     qb_inherit_mult: 'backup QB role', pos_qb: 'position', pos_rb: 'position', pos_wr: 'position', pos_te: 'position' };
   function ntWhy(p, wk, sc, slot, wp) {
     var w = wp && wp.why; if (!w || p.isDST) return null;
-    var steps = [], all = [], run = w.clayPg;
+    var steps = [], all = [], run = w.clayPg0 != null ? w.clayPg0 : w.clayPg;   // start from Clay's own number; the banged-up lift is its own step
     // lab = Sim Lab wording (NOTES); pub = plain wording for the main-site player card
     var push = function (key, d, lab, pub) { all.push({ key: key, d: d, lab: lab, pub: pub || lab }); if (Math.abs(d) >= 0.1) steps.push({ key: key, d: d, lab: lab, pub: pub || lab }); };
     var rec = window.SIM_2026 && window.SIM_2026.players ? window.SIM_2026.players[p.norm] : null;
+    if (w.health > 0) push('health', w.health, 'healthy prior +' + ntF(w.health, 1) + ' (last season he outscored this baseline when healthy; 3+ games played hurt)', 'last season he outscored his preseason baseline in the games he was healthy');
     if (rec && rec.g) push('form', w.jsBase - w.clayPg, '2026 form (' + ntF(rec.ppg, 1) + ' half PPG in ' + rec.g + ' gm, ' + Math.round(100 * rec.g / (5 + rec.g)) + '% weight)',
       '2026 production so far (' + rec.g + ' game' + (rec.g > 1 ? 's' : '') + ', ' + Math.round(100 * rec.g / (5 + rec.g)) + '% weight vs the preseason baseline)');
     push('rookie', w.jsPgRook - w.jsBase, 'rookie level x' + ntF(w.rook, 2), 'rookie role growth (rookies outscore their early numbers)');
@@ -6406,7 +6415,7 @@
      ['opp', w.opp, oppLab, oppPub], ['cbShadow', w.cbShadow, 'CB shadow', 'shadowed by a top cornerback'],
      ['cb1Out', w.cb1Out, slot.opp + ' CB1 out', slot.opp + ' top cornerback out'], ['olOut', w.olOut, p.tm + ' OL starters out', p.tm + ' offensive line starters out'],
      ['pressure', w.pressure, 'soft pass rush', slot.opp + ' soft pass rush'], ['weather', w.weather, 'wind', 'wind forecast'],
-     ['snap', w.snap, snLab, snPub], ['route', w.route, 'route trend', 'route share trend'], ['ramp', w.ramp, 'return-from-injury ramp', 'first games back from injury'], ['avail', w.iA, avLab, avPub]].forEach(function (m) {
+     ['snap', w.snap, snLab, snPub], ['route', w.route, 'route trend', 'route share trend'], ['ramp', w.ramp, 'return-from-injury ramp', 'first games back from injury'], ['avail', w.iA, avLab, avPub], ['vol', w.vol, 'pass-volume context (' + p.tm + ' script-driven throws' + (slot.spread > 0 ? ', underdog' : '') + ')', 'team pass volume so far that tends not to last']].forEach(function (m) {
       if (m[1] == null || m[1] === 1) return;
       var d = run * (m[1] - 1); run *= m[1]; push(m[0], d, m[2], m[3]);
     });
@@ -6420,9 +6429,10 @@
     all.push({ key: 'market', d: mk, lab: mkLab, pub: mkPub });
     if (Math.abs(mk) >= 0.1) steps.push({ key: 'market', d: mk, lab: mkLab, pub: mkPub });
     var top = steps.slice().sort(function (x, y) { return Math.abs(y.d) - Math.abs(x.d); })[0];
-    var text = 'PROJ ' + ntF(eff, 1) + ' = Clay ' + ntF(w.clayPg, 1) + steps.map(function (s) { return ' \u00b7 ' + s.lab + ' ' + ntSigned(s.d, 1); }).join('') +
+    var clay0 = w.clayPg0 != null ? w.clayPg0 : w.clayPg;
+    var text = 'PROJ ' + ntF(eff, 1) + ' = Clay ' + ntF(clay0, 1) + steps.map(function (s) { return ' \u00b7 ' + s.lab + ' ' + ntSigned(s.d, 1); }).join('') +
       (top ? ' \u2014 biggest driver: ' + top.lab.split(' (')[0] + ' ' + ntSigned(top.d, 1) : '');
-    return { text: text, steps: steps, all: all, model: model, eff: eff, top: top, clay: w.clayPg };
+    return { text: text, steps: steps, all: all, model: model, eff: eff, top: top, clay: clay0 };
   }
   // main-site export (export_notes.js --repo -> data/proj_why_2026.json, player card WEEKLY tab "Why this projection")
   window.SimLabWhy = function (wk) {
@@ -6763,6 +6773,7 @@
         luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live) // 'line' = direct anchor, 'rate' = market rate track
         useLam: r.useLam != null ? +r.useLam.toFixed(2) : undefined, usePg: r.usePg != null ? +r.usePg.toFixed(2) : undefined, jsNoUse: r.jsNoUse != null ? +r.jsNoUse.toFixed(2) : undefined,   // live usage evidence inside jsMean at lock (usage_scorecard.py)
         peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined,   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
+        vol: r.vol != null && r.vol !== 1 ? +r.vol.toFixed(3) : undefined, health: r.health ? +r.health.toFixed(2) : undefined, useHurt: r.useHurt || undefined,   // 2026-10-07 layers for per-layer grading
         ret: r.ret != null && r.ret !== 1 ? +r.ret.toFixed(3) : undefined,   // return ramp inside the number at lock (return_scorecard.py)
         qbf: r.qbf != null && r.qbf !== 1 ? +r.qbf.toFixed(3) : undefined,   // QB starter floor inside the number at lock (return_scorecard.py)
         ncMean: r.ncProj != null ? +r.ncProj.toFixed(2) : null, ncSrc: r.ncSrc || null,   // SHADOW: Clay-free base (own 3-yr PPG prior)

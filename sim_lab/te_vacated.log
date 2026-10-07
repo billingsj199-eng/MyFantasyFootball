@@ -1,0 +1,583 @@
+=== TE VACATED backtest: 18,940 Clay-pool player-weeks 2019-25 (live form replicated from backtest_fillin_usage, P 5) ===
+    team-seasons with a TE1 (Clay >= 4.0 half-PPR/g): 180; harness backup-TE rows in TE1-out weeks: 193 (TE2 191, TE3+ 2); league TE half-PPR pts/target 1.414
+    harness pool replay on those rows: pool_mult > 1 on 101 of 193 (mean when on 1.093); TE1 was his team's target leader (engine 'lead' rule) on 27 rows
+
+--- 1  BIAS: mean actual / mean projected on backup-TE rows while TE1 is out (live = harness live form INCLUDING the engine pool;
+        'no pool' = same without the pool layer).  under = seasons where actual > projected ---
+
+  NEXT GAME
+    ALL backup rows                                n  157 act  6.16 live  4.39 -> 1.405 (under 6/7) | no pool 1.467
+    TE2 of the week                                n  156 act  6.16 live  4.39 -> 1.402 (under 6/7) | no pool 1.461
+    TE3+                                           n    1
+    TE2, first game without TE1                    n   66 act  5.94 live  3.82 -> 1.556 (under 6/7) | no pool 1.621
+    TE2, later games                               n   90 act  6.32 live  4.82 -> 1.312 (under 5/5) | no pool 1.369
+    TE2, 0 fill-in games in evidence               n   37 act  6.76 live  3.93 -> 1.723 (under 6/6) | no pool 1.792
+    TE2, 1+ fill-in games                          n  119 act  5.97 live  4.54 -> 1.315 (under 5/6) | no pool 1.372
+    TE2, 3+ fill-in games                          n   57 act  6.50 live  5.14 -> 1.263 (under 4/4) | no pool 1.299
+    TE2, TE1 Clay >= 9 /g (elite)                  n   28 act  6.92 live  4.06 -> 1.705 (under 3/3) | no pool 1.841
+    TE2, TE1 Clay 6.5-9                            n   41 act  7.40 live  5.04 -> 1.467 (under 5/5) | no pool 1.515
+    TE2, TE1 Clay < 6.5                            n   87 act  5.33 live  4.20 -> 1.270 (under 6/6) | no pool 1.317
+    TE2, own Clay < 2.5 /g                         n   47 act  4.56 live  3.29 -> 1.385 (under 3/3) | no pool 1.491
+    TE2, own Clay 2.5-4                            n   64 act  7.18 live  4.53 -> 1.586 (under 5/5) | no pool 1.622
+    TE2, own Clay >= 4                             n   45 act  6.38 live  5.36 -> 1.190 (under 3/3) | no pool 1.246
+    TE2, TE1 = team target leader (engine lead)    n   16 act  6.84 live  4.66 -> 1.467 (under 2/2) | no pool 1.657
+    TE2, TE1 not target leader (engine sec)        n  140 act  6.08 live  4.36 -> 1.393 (under 6/7) | no pool 1.440
+    TE2, harness pool on (>1)                      n   85 act  6.73 live  4.83 -> 1.393 (under 5/6) | no pool 1.496
+    TE2, harness pool off                          n   71 act  5.47 live  3.87 -> 1.414 (under 5/6) | no pool 1.414
+
+  REST OF SEASON, 4+ games left
+    ALL backup rows                                n   93 act  5.08 live  4.07 -> 1.247 (under 4/6) | no pool 1.280
+    TE2 of the week                                n   93 act  5.08 live  4.07 -> 1.247 (under 4/6) | no pool 1.280
+    TE3+                                           n    0
+    TE2, first game without TE1                    n   41 act  4.71 live  3.70 -> 1.272 (under 4/6) | no pool 1.289
+    TE2, later games                               n   52 act  5.37 live  4.36 -> 1.231 (under 3/4) | no pool 1.273
+    TE2, 0 fill-in games in evidence               n   27 act  4.91 live  3.71 -> 1.325 (under 4/5) | no pool 1.336
+    TE2, 1+ fill-in games                          n   66 act  5.15 live  4.22 -> 1.219 (under 4/6) | no pool 1.259
+    TE2, 3+ fill-in games                          n   23 act  4.82 live  4.91 -> 0.980 (under 0/1) | no pool 1.009
+    TE2, TE1 Clay >= 9 /g (elite)                  n   21 act  6.14 live  3.56 -> 1.724 (under 3/3) | no pool 1.775
+    TE2, TE1 Clay 6.5-9                            n   25 act  5.62 live  4.13 -> 1.362 (under 3/4) | no pool 1.377
+    TE2, TE1 Clay < 6.5                            n   47 act  4.32 live  4.27 -> 1.011 (under 3/5) | no pool 1.043
+    TE2, own Clay < 2.5 /g                         n   27 act  4.55 live  2.97 -> 1.534 (under 2/2) | no pool 1.639
+    TE2, own Clay 2.5-4                            n   35 act  5.55 live  3.66 -> 1.514 (under 4/5) | no pool 1.525
+    TE2, own Clay >= 4                             n   31 act  5.01 live  5.49 -> 0.912 (under 1/2) | no pool 0.931
+    TE2, TE1 = team target leader (engine lead)    n   12 act  5.86 live  4.30 -> 1.363 (under 2/2) | no pool 1.420
+    TE2, TE1 not target leader (engine sec)        n   81 act  4.96 live  4.04 -> 1.229 (under 3/6) | no pool 1.258
+    TE2, harness pool on (>1)                      n   45 act  6.30 live  4.36 -> 1.446 (under 4/4) | no pool 1.520
+    TE2, harness pool off                          n   48 act  3.93 live  3.80 -> 1.034 (under 3/5) | no pool 1.034
+
+  REST OF SEASON, no survivor filter
+    ALL backup rows                                n  121 act  5.15 live  3.89 -> 1.324 (under 4/7) | no pool 1.366
+    TE2 of the week                                n  120 act  5.14 live  3.89 -> 1.320 (under 4/7) | no pool 1.360
+    TE3+                                           n    1
+    TE2, first game without TE1                    n   54 act  4.53 live  3.65 -> 1.240 (under 4/6) | no pool 1.272
+    TE2, later games                               n   66 act  5.63 live  4.09 -> 1.378 (under 3/4) | no pool 1.426
+    TE2, 0 fill-in games in evidence               n   34 act  4.64 live  3.71 -> 1.250 (under 4/5) | no pool 1.267
+    TE2, 1+ fill-in games                          n   86 act  5.33 live  3.96 -> 1.346 (under 4/6) | no pool 1.396
+    TE2, 3+ fill-in games                          n   32 act  6.09 live  4.48 -> 1.359 (under 2/3) | no pool 1.393
+    TE2, TE1 Clay >= 9 /g (elite)                  n   25 act  6.79 live  3.59 -> 1.895 (under 3/3) | no pool 1.961
+    TE2, TE1 Clay 6.5-9                            n   28 act  5.42 live  4.15 -> 1.308 (under 3/4) | no pool 1.326
+    TE2, TE1 Clay < 6.5                            n   67 act  4.40 live  3.90 -> 1.127 (under 3/5) | no pool 1.169
+    TE2, own Clay < 2.5 /g                         n   44 act  4.63 live  2.91 -> 1.590 (under 3/3) | no pool 1.685
+    TE2, own Clay 2.5-4                            n   41 act  5.70 live  3.57 -> 1.596 (under 4/5) | no pool 1.616
+    TE2, own Clay >= 4                             n   35 act  5.10 live  5.49 -> 0.929 (under 1/2) | no pool 0.953
+    TE2, TE1 = team target leader (engine lead)    n   13 act  6.44 live  4.30 -> 1.500 (under 2/2) | no pool 1.577
+    TE2, TE1 not target leader (engine sec)        n  107 act  4.98 live  3.84 -> 1.295 (under 3/7) | no pool 1.332
+    TE2, harness pool on (>1)                      n   60 act  6.30 live  4.19 -> 1.505 (under 4/4) | no pool 1.594
+    TE2, harness pool off                          n   60 act  3.97 live  3.60 -> 1.104 (under 3/6) | no pool 1.104
+
+  CONTROL (selection on games with a stat): TE rows NOT in TE1-out weeks, by own Clay level, next game
+    own Clay < 2.5                                 n  210 act  3.40 live  2.94 -> 1.156 (under 4/7) | no pool 1.156
+    own Clay 2.5-4                                 n  503 act  3.60 live  3.63 -> 0.993 (under 3/7) | no pool 0.993
+    own Clay >= 4                                  n 2285 act  7.39 live  7.38 -> 1.002 (under 3/7) | no pool 1.002
+    TE2 next game by season: 2019: n6 0.88  2020: n13 1.35  2021: n13 1.47  2022: n10 1.10  2023: n36 1.64  2024: n49 1.22  2025: n29 1.53
+
+--- 2  TARGET FLOW (weekly DB, every TE1-out team-week 2019-25; TE1 season-to-date tgt/g before the week; healthy TE ranked by Clay)
+    healthy TE2 (all  ): n  297 | TE1 vacated  4.6 tgt/g | gain +1.76 tgt/g = +0.39 of vacated | +3.01 half-PPR pts/g
+    healthy TE2 (first): n  127 | TE1 vacated  4.6 tgt/g | gain +1.81 tgt/g = +0.40 of vacated | +3.11 half-PPR pts/g
+    healthy TE2 (later): n  170 | TE1 vacated  4.6 tgt/g | gain +1.73 tgt/g = +0.38 of vacated | +2.94 half-PPR pts/g
+    healthy TE3 (all  ): n  135 | TE1 vacated  5.0 tgt/g | gain +1.39 tgt/g = +0.28 of vacated | +1.75 half-PPR pts/g
+    healthy TE3 (first): n   54 | TE1 vacated  4.8 tgt/g | gain +1.20 tgt/g = +0.25 of vacated | +1.23 half-PPR pts/g
+    healthy TE3 (later): n   81 | TE1 vacated  5.2 tgt/g | gain +1.51 tgt/g = +0.29 of vacated | +2.10 half-PPR pts/g
+    (engine: TE lead out -> TE2 +0.25, WR +0.36; TE sec out -> healthy TE ranked 1st +0.00, 2nd +0.22.  backtest_vacated_pool.py needed a
+     trailing baseline in 2 of 3 games, so a back-up with no stat rows fell into 'new bodies' (+0.61 of a sec TE's vacated targets);
+     here a week with no stat row while TE1 played counts as 0 targets for the back-up.)
+
+--- 3  FIXED GRIDS, NEXT GAME: error vs live on the TE2 rows (seasons better); board = all rows of the target ---
+    rule                                                               TE2 rows         TE2 first game              TE2 later   TE3+ (untouched) | board
+    a   TE2 share of TE1 targets (engine rat        0.25  -12.76% (5/7) n156  -11.04% (5/7) n66  -14.42% (4/5) n90 | TE -0.682% TE150w +0.020% TErank -0.0004 | all -0.082% 150w +0.002% rank -0.0001
+    a   TE2 share of TE1 targets (engine rat        0.35  -14.11% (4/7) n156  -13.11% (5/7) n66  -15.08% (4/5) n90 | TE -0.754% TE150w +0.035% TErank -0.0004 | all -0.091% 150w +0.003% rank -0.0001
+    a   TE2 share of TE1 targets (engine rat        0.45  -13.21% (4/7) n156  -13.58% (5/7) n66  -12.86% (3/5) n90 | TE -0.706% TE150w +0.052% TErank -0.0004 | all -0.085% 150w +0.004% rank -0.0001
+    a   TE2 share of TE1 targets (engine rat        0.55  -10.06% (4/7) n156  -12.46% (4/7) n66   -7.75% (3/5) n90 | TE -0.537% TE150w +0.071% TErank -0.0023 | all -0.065% 150w +0.006% rank -0.0005
+    a   TE2 share of TE1 targets (engine rat        0.70   -1.11% (3/7) n156   -7.79% (4/7) n66   +5.30% (3/5) n90 | TE -0.059% TE150w +0.103% TErank -0.0033 | all -0.007% 150w +0.008% rank -0.0008
+    a+  TE2 share, gain ADDED (no floor damp        0.25  -13.92% (5/7) n156  -12.74% (5/7) n66  -15.05% (4/5) n90 | TE -0.744% TE150w +0.016% TErank -0.0004 | all -0.090% 150w +0.001% rank -0.0001
+    a+  TE2 share, gain ADDED (no floor damp        0.35  -14.05% (4/7) n156  -14.43% (5/7) n66  -13.69% (3/5) n90 | TE -0.751% TE150w +0.028% TErank -0.0004 | all -0.090% 150w +0.002% rank -0.0001
+    a+  TE2 share, gain ADDED (no floor damp        0.45  -10.97% (4/7) n156  -13.92% (4/7) n66   -8.14% (3/5) n90 | TE -0.586% TE150w +0.042% TErank -0.0004 | all -0.071% 150w +0.003% rank -0.0001
+    a+  TE2 share, gain ADDED (no floor damp        0.55   -4.68% (4/7) n156  -11.22% (4/7) n66   +1.59% (3/5) n90 | TE -0.250% TE150w +0.057% TErank -0.0020 | all -0.030% 150w +0.005% rank -0.0005
+    a+  TE2 share, gain ADDED (no floor damp        0.70  +10.77% (2/7) n156   -3.05% (3/7) n66  +24.02% (3/5) n90 | TE +0.575% TE150w +0.083% TErank -0.0027 | all +0.069% 150w +0.007% rank -0.0006
+    b   floor k x TE1 level                         0.15   +0.00% (0/7) n156   +0.00% (0/7) n66   +0.00% (0/5) n90 | TE +0.000% TE150w +0.000% TErank +0.0000 | all +0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.25   -0.03% (1/7) n156   -0.07% (1/7) n66   +0.00% (0/5) n90 | TE -0.002% TE150w +0.000% TErank +0.0000 | all -0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.35   -1.80% (4/7) n156   -1.23% (3/7) n66   -2.34% (2/5) n90 | TE -0.096% TE150w +0.000% TErank +0.0000 | all -0.012% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.45   -4.40% (4/7) n156   -2.96% (4/7) n66   -5.78% (2/5) n90 | TE -0.235% TE150w +0.000% TErank +0.0000 | all -0.028% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.55   -6.79% (5/7) n156   -5.20% (4/7) n66   -8.32% (2/5) n90 | TE -0.363% TE150w +0.000% TErank +0.0000 | all -0.044% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.70   -9.35% (4/7) n156  -10.00% (3/7) n66   -8.73% (1/5) n90 | TE -0.500% TE150w +0.000% TErank +0.0000 | all -0.060% 150w +0.000% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.15  -11.44% (5/7) n156  -10.18% (6/7) n66  -12.64% (4/5) n90 | TE -0.611% TE150w +0.006% TErank -0.0003 | all -0.074% 150w +0.000% rank -0.0001
+    b+  additive k x TE1 level (no pool)            0.25  -15.29% (5/7) n156  -14.36% (6/7) n66  -16.19% (4/5) n90 | TE -0.817% TE150w +0.018% TErank -0.0004 | all -0.098% 150w +0.001% rank -0.0001
+    b+  additive k x TE1 level (no pool)            0.35  -15.90% (4/7) n156  -15.88% (5/7) n66  -15.92% (3/5) n90 | TE -0.850% TE150w +0.031% TErank -0.0004 | all -0.102% 150w +0.003% rank -0.0001
+    b+  additive k x TE1 level (no pool)            0.45  -13.26% (4/7) n156  -14.75% (5/7) n66  -11.83% (3/5) n90 | TE -0.709% TE150w +0.046% TErank -0.0004 | all -0.085% 150w +0.004% rank -0.0001
+    b+  additive k x TE1 level (no pool)            0.55   -7.37% (4/7) n156  -10.96% (3/7) n66   -3.93% (3/5) n90 | TE -0.394% TE150w +0.063% TErank -0.0025 | all -0.047% 150w +0.005% rank -0.0006
+    b+  additive k x TE1 level (no pool)            0.70   +7.56% (4/7) n156   -0.28% (2/7) n66  +15.08% (3/5) n90 | TE +0.404% TE150w +0.091% TErank -0.0029 | all +0.049% 150w +0.007% rank -0.0007
+    c   fill-in games blend Pc (pool kept)          0.50  +21.48% (0/7) n156  +10.83% (3/7) n66  +31.70% (2/5) n90 | TE +1.148% TE150w +0.000% TErank +0.0000 | all +0.138% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          1.00  +10.71% (1/7) n156   +4.25% (3/7) n66  +16.90% (2/5) n90 | TE +0.572% TE150w +0.000% TErank +0.0000 | all +0.069% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          2.00   +2.24% (2/7) n156   -0.13% (3/7) n66   +4.51% (2/5) n90 | TE +0.120% TE150w +0.000% TErank +0.0000 | all +0.014% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          3.00   -0.92% (2/7) n156   -1.37% (4/7) n66   -0.47% (2/5) n90 | TE -0.049% TE150w +0.000% TErank +0.0000 | all -0.006% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          5.00   -3.03% (3/7) n156   -1.87% (5/7) n66   -4.14% (2/5) n90 | TE -0.162% TE150w +0.000% TErank +0.0000 | all -0.019% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        0.50  +16.95% (1/7) n156  +10.36% (2/7) n66  +23.28% (2/5) n90 | TE +0.906% TE150w +0.000% TErank +0.0000 | all +0.109% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        1.00   +7.56% (2/7) n156   +4.18% (2/7) n66  +10.79% (2/5) n90 | TE +0.404% TE150w +0.000% TErank +0.0000 | all +0.049% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        2.00   +0.30% (2/7) n156   +0.10% (3/7) n66   +0.48% (2/5) n90 | TE +0.016% TE150w +0.000% TErank +0.0000 | all +0.002% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        3.00   -2.31% (2/7) n156   -1.03% (3/7) n66   -3.54% (2/5) n90 | TE -0.123% TE150w +0.000% TErank +0.0000 | all -0.015% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        5.00   -3.89% (2/7) n156   -1.44% (4/7) n66   -6.25% (2/5) n90 | TE -0.208% TE150w +0.000% TErank +0.0000 | all -0.025% 150w +0.000% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.25  -10.75% (5/7) n156   -9.85% (5/7) n66  -11.61% (3/5) n90 | TE -0.574% TE150w +0.020% TErank -0.0004 | all -0.069% 150w +0.002% rank -0.0001
+    d   sec-rule TE2 share (TE1 not target l        0.35  -11.83% (4/7) n156  -11.56% (5/7) n66  -12.09% (3/5) n90 | TE -0.632% TE150w +0.035% TErank -0.0004 | all -0.076% 150w +0.003% rank -0.0001
+    d   sec-rule TE2 share (TE1 not target l        0.45  -11.06% (4/7) n156  -12.01% (5/7) n66  -10.14% (3/5) n90 | TE -0.591% TE150w +0.052% TErank -0.0004 | all -0.071% 150w +0.004% rank -0.0001
+    d   sec-rule TE2 share (TE1 not target l        0.55   -8.43% (3/7) n156  -11.21% (5/7) n66   -5.76% (2/5) n90 | TE -0.450% TE150w +0.071% TErank -0.0023 | all -0.054% 150w +0.006% rank -0.0005
+    d   sec-rule TE2 share (TE1 not target l        0.70   -1.00% (3/7) n156   -7.64% (4/7) n66   +5.37% (2/5) n90 | TE -0.053% TE150w +0.103% TErank -0.0033 | all -0.006% 150w +0.008% rank -0.0008
+    -- 2022-25 only (fixed) --
+    a   TE2 share of TE1 targets (engine rat        0.25  -12.39% (3/4) n124 | TE -0.854% TE150w +0.017% TErank -0.0010 | all -0.101% 150w +0.001% rank -0.0002
+    a   TE2 share of TE1 targets (engine rat        0.35  -13.84% (2/4) n124 | TE -0.954% TE150w +0.026% TErank -0.0010 | all -0.113% 150w +0.002% rank -0.0002
+    a   TE2 share of TE1 targets (engine rat        0.45  -13.09% (2/4) n124 | TE -0.902% TE150w +0.036% TErank -0.0010 | all -0.106% 150w +0.003% rank -0.0002
+    a   TE2 share of TE1 targets (engine rat        0.55  -10.14% (2/4) n124 | TE -0.699% TE150w +0.047% TErank -0.0015 | all -0.082% 150w +0.003% rank -0.0004
+    a   TE2 share of TE1 targets (engine rat        0.70   -1.60% (2/4) n124 | TE -0.110% TE150w +0.066% TErank -0.0025 | all -0.013% 150w +0.005% rank -0.0006
+    a+  TE2 share, gain ADDED (no floor damp        0.25  -13.50% (3/4) n124 | TE -0.930% TE150w +0.012% TErank -0.0010 | all -0.110% 150w +0.001% rank -0.0002
+    a+  TE2 share, gain ADDED (no floor damp        0.35  -13.66% (2/4) n124 | TE -0.941% TE150w +0.018% TErank -0.0010 | all -0.111% 150w +0.001% rank -0.0002
+    a+  TE2 share, gain ADDED (no floor damp        0.45  -10.64% (2/4) n124 | TE -0.733% TE150w +0.024% TErank -0.0010 | all -0.087% 150w +0.002% rank -0.0002
+    a+  TE2 share, gain ADDED (no floor damp        0.55   -4.42% (2/4) n124 | TE -0.305% TE150w +0.031% TErank -0.0010 | all -0.036% 150w +0.002% rank -0.0002
+    a+  TE2 share, gain ADDED (no floor damp        0.70  +10.88% (1/4) n124 | TE +0.750% TE150w +0.043% TErank -0.0015 | all +0.089% 150w +0.003% rank -0.0004
+    b   floor k x TE1 level                         0.15   +0.00% (0/4) n124 | TE +0.000% TE150w +0.000% TErank +0.0000 | all +0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.25   -0.04% (1/4) n124 | TE -0.003% TE150w +0.000% TErank +0.0000 | all -0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.35   -2.21% (3/4) n124 | TE -0.152% TE150w +0.000% TErank +0.0000 | all -0.018% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.45   -5.46% (4/4) n124 | TE -0.376% TE150w +0.000% TErank +0.0000 | all -0.044% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.55   -8.27% (4/4) n124 | TE -0.570% TE150w +0.000% TErank +0.0000 | all -0.067% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.70  -11.21% (3/4) n124 | TE -0.773% TE150w +0.000% TErank +0.0000 | all -0.091% 150w +0.000% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.15  -11.71% (3/4) n124 | TE -0.807% TE150w +0.009% TErank -0.0001 | all -0.095% 150w +0.001% rank -0.0000
+    b+  additive k x TE1 level (no pool)            0.25  -15.84% (3/4) n124 | TE -1.091% TE150w +0.017% TErank -0.0010 | all -0.129% 150w +0.001% rank -0.0002
+    b+  additive k x TE1 level (no pool)            0.35  -16.55% (2/4) n124 | TE -1.140% TE150w +0.026% TErank -0.0010 | all -0.135% 150w +0.002% rank -0.0002
+    b+  additive k x TE1 level (no pool)            0.45  -13.84% (2/4) n124 | TE -0.954% TE150w +0.036% TErank -0.0010 | all -0.113% 150w +0.003% rank -0.0002
+    b+  additive k x TE1 level (no pool)            0.55   -7.73% (2/4) n124 | TE -0.533% TE150w +0.048% TErank -0.0018 | all -0.063% 150w +0.004% rank -0.0004
+    b+  additive k x TE1 level (no pool)            0.70   +7.85% (2/4) n124 | TE +0.541% TE150w +0.067% TErank -0.0025 | all +0.064% 150w +0.005% rank -0.0006
+    c   fill-in games blend Pc (pool kept)          0.50  +21.91% (0/4) n124 | TE +1.510% TE150w +0.000% TErank +0.0000 | all +0.178% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          1.00  +10.52% (1/4) n124 | TE +0.725% TE150w +0.000% TErank +0.0000 | all +0.086% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          2.00   +1.67% (1/4) n124 | TE +0.115% TE150w +0.000% TErank +0.0000 | all +0.014% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          3.00   -1.56% (1/4) n124 | TE -0.108% TE150w +0.000% TErank +0.0000 | all -0.013% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          5.00   -3.66% (1/4) n124 | TE -0.252% TE150w +0.000% TErank +0.0000 | all -0.030% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        0.50  +17.92% (1/4) n124 | TE +1.235% TE150w +0.000% TErank +0.0000 | all +0.146% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        1.00   +7.77% (1/4) n124 | TE +0.535% TE150w +0.000% TErank +0.0000 | all +0.063% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        2.00   +0.02% (1/4) n124 | TE +0.001% TE150w +0.000% TErank +0.0000 | all +0.000% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        3.00   -2.70% (1/4) n124 | TE -0.186% TE150w +0.000% TErank +0.0000 | all -0.022% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        5.00   -4.30% (1/4) n124 | TE -0.297% TE150w +0.000% TErank +0.0000 | all -0.035% 150w +0.000% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.25  -11.17% (3/4) n124 | TE -0.770% TE150w +0.017% TErank -0.0010 | all -0.091% 150w +0.001% rank -0.0002
+    d   sec-rule TE2 share (TE1 not target l        0.35  -12.41% (2/4) n124 | TE -0.855% TE150w +0.026% TErank -0.0010 | all -0.101% 150w +0.002% rank -0.0002
+    d   sec-rule TE2 share (TE1 not target l        0.45  -11.73% (2/4) n124 | TE -0.808% TE150w +0.036% TErank -0.0010 | all -0.095% 150w +0.003% rank -0.0002
+    d   sec-rule TE2 share (TE1 not target l        0.55   -9.12% (2/4) n124 | TE -0.629% TE150w +0.047% TErank -0.0015 | all -0.074% 150w +0.003% rank -0.0004
+    d   sec-rule TE2 share (TE1 not target l        0.70   -1.61% (2/4) n124 | TE -0.111% TE150w +0.066% TErank -0.0025 | all -0.013% 150w +0.005% rank -0.0006
+
+--- 3  FIXED GRIDS, REST OF SEASON, 4+ games left: error vs live on the TE2 rows (seasons better); board = all rows of the target ---
+    rule                                                               TE2 rows         TE2 first game              TE2 later   TE3+ (untouched) | board
+    a   TE2 share of TE1 targets (engine rat        0.25  -19.91% (4/6) n93  -21.44% (4/6) n41  -19.00% (3/4) n52 | TE -1.337% TE150w +0.012% TErank +0.0000 | all -0.158% 150w +0.001% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.35  -24.95% (4/6) n93  -27.20% (4/6) n41  -23.62% (3/4) n52 | TE -1.676% TE150w +0.017% TErank +0.0000 | all -0.197% 150w +0.001% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.45  -28.04% (4/6) n93  -31.07% (4/6) n41  -26.24% (3/4) n52 | TE -1.883% TE150w +0.023% TErank +0.0000 | all -0.222% 150w +0.002% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.55  -29.17% (4/6) n93  -33.04% (4/6) n41  -26.89% (3/4) n52 | TE -1.960% TE150w +0.029% TErank +0.0000 | all -0.231% 150w +0.002% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.70  -27.22% (3/6) n93  -32.43% (3/6) n41  -24.14% (3/4) n52 | TE -1.828% TE150w +0.039% TErank +0.0000 | all -0.215% 150w +0.003% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.25  -24.86% (4/6) n93  -26.37% (4/6) n41  -23.96% (3/4) n52 | TE -1.670% TE150w +0.009% TErank +0.0000 | all -0.197% 150w +0.001% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.35  -30.40% (4/6) n93  -32.77% (4/6) n41  -29.00% (3/4) n52 | TE -2.042% TE150w +0.012% TErank +0.0000 | all -0.241% 150w +0.001% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.45  -33.15% (4/6) n93  -36.50% (4/6) n41  -31.17% (3/4) n52 | TE -2.227% TE150w +0.016% TErank +0.0000 | all -0.262% 150w +0.001% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.55  -33.10% (3/6) n93  -37.56% (4/6) n41  -30.46% (3/4) n52 | TE -2.224% TE150w +0.020% TErank +0.0000 | all -0.262% 150w +0.002% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.70  -27.79% (3/6) n93  -34.16% (2/6) n41  -24.02% (3/4) n52 | TE -1.867% TE150w +0.027% TErank +0.0000 | all -0.220% 150w +0.002% rank +0.0000
+    b   floor k x TE1 level                         0.15   +0.00% (0/6) n93   +0.00% (0/6) n41   +0.00% (0/4) n52 | TE +0.000% TE150w +0.000% TErank +0.0000 | all +0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.25   -0.55% (1/6) n93   -1.49% (1/6) n41   +0.00% (0/4) n52 | TE -0.037% TE150w +0.000% TErank +0.0000 | all -0.004% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.35   -6.68% (3/6) n93   -9.21% (2/6) n41   -5.18% (2/4) n52 | TE -0.448% TE150w +0.000% TErank +0.0000 | all -0.053% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.45  -13.82% (3/6) n93  -17.30% (3/6) n41  -11.77% (3/4) n52 | TE -0.929% TE150w +0.000% TErank +0.0000 | all -0.109% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.55  -20.65% (3/6) n93  -25.79% (3/6) n41  -17.62% (3/4) n52 | TE -1.388% TE150w +0.000% TErank +0.0000 | all -0.163% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.70  -31.29% (3/6) n93  -38.48% (3/6) n41  -27.04% (3/4) n52 | TE -2.102% TE150w +0.000% TErank +0.0000 | all -0.248% 150w +0.000% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.15  -18.39% (4/6) n93  -22.59% (4/6) n41  -15.90% (3/4) n52 | TE -1.235% TE150w +0.007% TErank +0.0000 | all -0.146% 150w +0.001% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.25  -27.81% (4/6) n93  -34.46% (4/6) n41  -23.87% (3/4) n52 | TE -1.868% TE150w +0.012% TErank +0.0000 | all -0.220% 150w +0.001% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.35  -34.30% (4/6) n93  -43.10% (4/6) n41  -29.10% (3/4) n52 | TE -2.304% TE150w +0.017% TErank +0.0000 | all -0.271% 150w +0.001% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.45  -37.87% (4/6) n93  -48.51% (4/6) n41  -31.58% (3/4) n52 | TE -2.544% TE150w +0.023% TErank +0.0000 | all -0.300% 150w +0.002% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.55  -38.51% (4/6) n93  -50.68% (4/6) n41  -31.31% (3/4) n52 | TE -2.587% TE150w +0.029% TErank +0.0000 | all -0.305% 150w +0.002% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.70  -33.97% (3/6) n93  -47.87% (4/6) n41  -25.75% (3/4) n52 | TE -2.282% TE150w +0.039% TErank +0.0000 | all -0.269% 150w +0.003% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          0.50  +53.79% (1/6) n93  +71.33% (1/6) n41  +43.41% (1/4) n52 | TE +3.613% TE150w +0.000% TErank +0.0000 | all +0.426% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          1.00  +23.94% (2/6) n93  +41.80% (1/6) n41  +13.37% (1/4) n52 | TE +1.608% TE150w +0.000% TErank +0.0000 | all +0.189% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          2.00   +3.17% (2/6) n93  +19.27% (1/6) n41   -6.36% (1/4) n52 | TE +0.213% TE150w +0.000% TErank +0.0000 | all +0.025% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          3.00   -3.39% (2/6) n93  +10.87% (2/6) n41  -11.82% (1/4) n52 | TE -0.228% TE150w +0.000% TErank +0.0000 | all -0.027% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          5.00   -6.87% (2/6) n93   +4.61% (2/6) n41  -13.66% (1/4) n52 | TE -0.461% TE150w +0.000% TErank +0.0000 | all -0.054% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        0.50  +49.26% (1/6) n93  +70.28% (1/6) n41  +36.82% (1/4) n52 | TE +3.309% TE150w +0.000% TErank +0.0000 | all +0.390% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        1.00  +21.35% (2/6) n93  +41.33% (1/6) n41   +9.53% (1/4) n52 | TE +1.434% TE150w +0.000% TErank +0.0000 | all +0.169% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        2.00   +2.16% (2/6) n93  +19.24% (1/6) n41   -7.95% (1/4) n52 | TE +0.145% TE150w +0.000% TErank +0.0000 | all +0.017% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        3.00   -3.74% (2/6) n93  +11.01% (2/6) n41  -12.47% (1/4) n52 | TE -0.251% TE150w +0.000% TErank +0.0000 | all -0.030% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        5.00   -6.67% (3/6) n93   +4.88% (2/6) n41  -13.50% (1/4) n52 | TE -0.448% TE150w +0.000% TErank +0.0000 | all -0.053% 150w +0.000% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.25  -17.69% (3/6) n93  -19.79% (4/6) n41  -16.44% (3/4) n52 | TE -1.188% TE150w +0.012% TErank +0.0000 | all -0.140% 150w +0.001% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.35  -22.03% (3/6) n93  -25.10% (4/6) n41  -20.21% (2/4) n52 | TE -1.480% TE150w +0.017% TErank +0.0000 | all -0.174% 150w +0.001% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.45  -24.61% (3/6) n93  -28.69% (4/6) n41  -22.20% (2/4) n52 | TE -1.653% TE150w +0.023% TErank +0.0000 | all -0.195% 150w +0.002% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.55  -25.44% (3/6) n93  -30.55% (4/6) n41  -22.42% (2/4) n52 | TE -1.709% TE150w +0.029% TErank +0.0000 | all -0.201% 150w +0.002% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.70  -23.39% (3/6) n93  -30.10% (3/6) n41  -19.42% (2/4) n52 | TE -1.571% TE150w +0.039% TErank +0.0000 | all -0.185% 150w +0.003% rank +0.0000
+    -- 2022-25 only (fixed) --
+    a   TE2 share of TE1 targets (engine rat        0.25  -19.23% (2/4) n75 | TE -1.771% TE150w +0.021% TErank +0.0000 | all -0.212% 150w +0.002% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.35  -24.29% (2/4) n75 | TE -2.237% TE150w +0.031% TErank +0.0000 | all -0.268% 150w +0.002% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.45  -27.51% (2/4) n75 | TE -2.534% TE150w +0.041% TErank +0.0000 | all -0.304% 150w +0.003% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.55  -28.88% (2/4) n75 | TE -2.660% TE150w +0.051% TErank +0.0000 | all -0.319% 150w +0.004% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.70  -27.47% (2/4) n75 | TE -2.530% TE150w +0.069% TErank +0.0000 | all -0.303% 150w +0.005% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.25  -24.31% (2/4) n75 | TE -2.239% TE150w +0.015% TErank +0.0000 | all -0.268% 150w +0.001% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.35  -29.95% (2/4) n75 | TE -2.758% TE150w +0.022% TErank +0.0000 | all -0.331% 150w +0.002% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.45  -32.90% (2/4) n75 | TE -3.031% TE150w +0.029% TErank +0.0000 | all -0.363% 150w +0.002% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.55  -33.18% (2/4) n75 | TE -3.056% TE150w +0.036% TErank +0.0000 | all -0.366% 150w +0.003% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.70  -28.58% (2/4) n75 | TE -2.632% TE150w +0.048% TErank +0.0000 | all -0.316% 150w +0.004% rank +0.0000
+    b   floor k x TE1 level                         0.15   +0.00% (0/4) n75 | TE +0.000% TE150w +0.000% TErank +0.0000 | all +0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.25   -0.61% (1/4) n75 | TE -0.057% TE150w +0.000% TErank +0.0000 | all -0.007% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.35   -7.43% (3/4) n75 | TE -0.684% TE150w +0.000% TErank +0.0000 | all -0.082% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.45  -15.41% (3/4) n75 | TE -1.419% TE150w +0.000% TErank +0.0000 | all -0.170% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.55  -23.06% (3/4) n75 | TE -2.124% TE150w +0.000% TErank +0.0000 | all -0.255% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.70  -35.04% (3/4) n75 | TE -3.228% TE150w +0.000% TErank +0.0000 | all -0.387% 150w +0.000% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.15  -18.45% (2/4) n75 | TE -1.700% TE150w +0.012% TErank +0.0000 | all -0.204% 150w +0.001% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.25  -28.05% (2/4) n75 | TE -2.583% TE150w +0.021% TErank +0.0000 | all -0.310% 150w +0.002% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.35  -34.67% (2/4) n75 | TE -3.193% TE150w +0.031% TErank +0.0000 | all -0.383% 150w +0.002% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.45  -38.32% (2/4) n75 | TE -3.530% TE150w +0.041% TErank +0.0000 | all -0.423% 150w +0.003% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.55  -39.00% (2/4) n75 | TE -3.592% TE150w +0.052% TErank +0.0000 | all -0.431% 150w +0.004% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.70  -34.45% (2/4) n75 | TE -3.173% TE150w +0.069% TErank +0.0000 | all -0.380% 150w +0.005% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          0.50  +47.23% (1/4) n75 | TE +4.351% TE150w +0.000% TErank +0.0000 | all +0.522% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          1.00  +19.41% (1/4) n75 | TE +1.787% TE150w +0.000% TErank +0.0000 | all +0.214% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          2.00   +0.53% (1/4) n75 | TE +0.048% TE150w +0.000% TErank +0.0000 | all +0.006% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          3.00   -5.18% (1/4) n75 | TE -0.477% TE150w +0.000% TErank +0.0000 | all -0.057% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          5.00   -7.93% (1/4) n75 | TE -0.730% TE150w +0.000% TErank +0.0000 | all -0.088% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        0.50  +43.84% (1/4) n75 | TE +4.038% TE150w +0.000% TErank +0.0000 | all +0.484% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        1.00  +17.68% (1/4) n75 | TE +1.629% TE150w +0.000% TErank +0.0000 | all +0.195% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        2.00   +0.16% (1/4) n75 | TE +0.015% TE150w +0.000% TErank +0.0000 | all +0.002% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        3.00   -4.99% (1/4) n75 | TE -0.460% TE150w +0.000% TErank +0.0000 | all -0.055% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        5.00   -7.27% (2/4) n75 | TE -0.670% TE150w +0.000% TErank +0.0000 | all -0.080% 150w +0.000% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.25  -18.47% (2/4) n75 | TE -1.701% TE150w +0.021% TErank +0.0000 | all -0.204% 150w +0.002% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.35  -23.25% (2/4) n75 | TE -2.142% TE150w +0.031% TErank +0.0000 | all -0.257% 150w +0.002% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.45  -26.29% (2/4) n75 | TE -2.422% TE150w +0.041% TErank +0.0000 | all -0.290% 150w +0.003% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.55  -27.59% (2/4) n75 | TE -2.541% TE150w +0.051% TErank +0.0000 | all -0.305% 150w +0.004% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.70  -26.28% (2/4) n75 | TE -2.420% TE150w +0.069% TErank +0.0000 | all -0.290% 150w +0.005% rank +0.0000
+
+--- 3  FIXED GRIDS, REST OF SEASON, no survivor filter: error vs live on the TE2 rows (seasons better); board = all rows of the target ---
+    rule                                                               TE2 rows         TE2 first game              TE2 later   TE3+ (untouched) | board
+    a   TE2 share of TE1 targets (engine rat        0.25  -20.69% (4/7) n120  -13.97% (4/6) n54  -23.95% (3/4) n66 | TE -1.815% TE150w +0.029% TErank +0.0003 | all -0.201% 150w +0.002% rank +0.0001
+    a   TE2 share of TE1 targets (engine rat        0.35  -26.36% (4/7) n120  -17.03% (4/6) n54  -30.89% (3/4) n66 | TE -2.313% TE150w +0.052% TErank +0.0003 | all -0.256% 150w +0.004% rank +0.0001
+    a   TE2 share of TE1 targets (engine rat        0.45  -30.10% (3/7) n120  -17.63% (4/6) n54  -36.15% (3/4) n66 | TE -2.641% TE150w +0.076% TErank +0.0000 | all -0.293% 150w +0.006% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.55  -31.91% (3/7) n120  -15.75% (3/6) n54  -39.73% (3/4) n66 | TE -2.799% TE150w +0.102% TErank +0.0000 | all -0.310% 150w +0.008% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.70  -30.98% (3/7) n120   -8.32% (3/6) n54  -41.97% (3/4) n66 | TE -2.718% TE150w +0.145% TErank +0.0000 | all -0.301% 150w +0.011% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.25  -24.53% (4/7) n120  -15.91% (4/6) n54  -28.71% (3/4) n66 | TE -2.152% TE150w +0.024% TErank +0.0003 | all -0.238% 150w +0.002% rank +0.0001
+    a+  TE2 share, gain ADDED (no floor damp        0.35  -30.22% (4/7) n120  -18.26% (4/6) n54  -36.01% (3/4) n66 | TE -2.651% TE150w +0.043% TErank +0.0003 | all -0.294% 150w +0.003% rank +0.0001
+    a+  TE2 share, gain ADDED (no floor damp        0.45  -33.10% (3/7) n120  -17.30% (4/6) n54  -40.76% (3/4) n66 | TE -2.904% TE150w +0.064% TErank +0.0000 | all -0.322% 150w +0.005% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.55  -33.18% (3/7) n120  -13.02% (3/6) n54  -42.95% (3/4) n66 | TE -2.911% TE150w +0.087% TErank +0.0000 | all -0.323% 150w +0.007% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.70  -28.05% (3/7) n120   -0.38% (3/6) n54  -41.45% (3/4) n66 | TE -2.460% TE150w +0.124% TErank +0.0000 | all -0.273% 150w +0.010% rank +0.0000
+    b   floor k x TE1 level                         0.15   +0.00% (0/7) n120   +0.00% (0/6) n54   +0.00% (0/4) n66 | TE +0.000% TE150w +0.000% TErank +0.0000 | all +0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.25   -0.33% (1/7) n120   -1.03% (1/6) n54   +0.00% (0/4) n66 | TE -0.029% TE150w +0.000% TErank +0.0000 | all -0.003% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.35   -4.01% (3/7) n120   -5.14% (2/6) n54   -3.46% (2/4) n66 | TE -0.352% TE150w +0.000% TErank +0.0000 | all -0.039% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.45  -10.62% (3/7) n120  -11.30% (2/6) n54  -10.30% (3/4) n66 | TE -0.932% TE150w +0.000% TErank +0.0000 | all -0.103% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.55  -17.31% (4/7) n120  -17.19% (3/6) n54  -17.36% (3/4) n66 | TE -1.518% TE150w +0.000% TErank +0.0000 | all -0.168% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.70  -27.33% (3/7) n120  -23.26% (3/6) n54  -29.29% (3/4) n66 | TE -2.397% TE150w +0.000% TErank +0.0000 | all -0.266% 150w +0.000% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.15  -17.91% (4/7) n120  -14.90% (3/6) n54  -19.37% (3/4) n66 | TE -1.572% TE150w +0.007% TErank +0.0000 | all -0.174% 150w +0.001% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.25  -27.23% (4/7) n120  -22.52% (3/6) n54  -29.51% (3/4) n66 | TE -2.389% TE150w +0.024% TErank +0.0003 | all -0.265% 150w +0.002% rank +0.0001
+    b+  additive k x TE1 level (no pool)            0.35  -33.42% (4/7) n120  -25.92% (3/6) n54  -37.05% (3/4) n66 | TE -2.931% TE150w +0.044% TErank +0.0003 | all -0.325% 150w +0.003% rank +0.0001
+    b+  additive k x TE1 level (no pool)            0.45  -36.46% (4/7) n120  -25.09% (3/6) n54  -41.97% (3/4) n66 | TE -3.198% TE150w +0.065% TErank +0.0000 | all -0.354% 150w +0.005% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.55  -36.37% (3/7) n120  -20.02% (3/6) n54  -44.28% (3/4) n66 | TE -3.190% TE150w +0.087% TErank +0.0000 | all -0.353% 150w +0.007% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.70  -30.34% (3/7) n120   -4.49% (3/6) n54  -42.86% (3/4) n66 | TE -2.662% TE150w +0.125% TErank +0.0000 | all -0.295% 150w +0.010% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          0.50  +24.17% (1/7) n120  +39.98% (1/6) n54  +16.51% (1/4) n66 | TE +2.120% TE150w +0.000% TErank +0.0000 | all +0.235% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          1.00   +6.22% (2/7) n120  +20.67% (1/6) n54   -0.78% (1/4) n66 | TE +0.545% TE150w +0.000% TErank +0.0000 | all +0.060% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          2.00   -5.71% (2/7) n120   +6.73% (1/6) n54  -11.74% (1/4) n66 | TE -0.501% TE150w +0.000% TErank +0.0000 | all -0.056% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          3.00   -8.97% (2/7) n120   +2.03% (2/6) n54  -14.30% (1/4) n66 | TE -0.787% TE150w +0.000% TErank +0.0000 | all -0.087% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          5.00   -9.89% (2/7) n120   -0.90% (3/6) n54  -14.24% (1/4) n66 | TE -0.867% TE150w +0.000% TErank +0.0000 | all -0.096% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        0.50  +22.46% (2/7) n120  +42.05% (1/6) n54  +12.97% (1/4) n66 | TE +1.970% TE150w +0.000% TErank +0.0000 | all +0.218% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        1.00   +5.71% (3/7) n120  +23.25% (1/6) n54   -2.79% (1/4) n66 | TE +0.501% TE150w +0.000% TErank +0.0000 | all +0.056% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        2.00   -5.24% (3/7) n120   +9.70% (1/6) n54  -12.47% (1/4) n66 | TE -0.460% TE150w +0.000% TErank +0.0000 | all -0.051% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        3.00   -8.10% (2/7) n120   +5.13% (2/6) n54  -14.51% (1/4) n66 | TE -0.711% TE150w +0.000% TErank +0.0000 | all -0.079% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        5.00   -8.69% (2/7) n120   +2.29% (3/6) n54  -14.01% (1/4) n66 | TE -0.763% TE150w +0.000% TErank +0.0000 | all -0.085% 150w +0.000% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.25  -18.02% (3/7) n120   -8.76% (4/6) n54  -22.50% (3/4) n66 | TE -1.581% TE150w +0.029% TErank +0.0003 | all -0.175% 150w +0.002% rank +0.0001
+    d   sec-rule TE2 share (TE1 not target l        0.35  -22.52% (3/7) n120   -9.21% (4/6) n54  -28.96% (2/4) n66 | TE -1.975% TE150w +0.052% TErank +0.0003 | all -0.219% 150w +0.004% rank +0.0001
+    d   sec-rule TE2 share (TE1 not target l        0.45  -25.27% (3/7) n120   -7.54% (4/6) n54  -33.86% (2/4) n66 | TE -2.217% TE150w +0.076% TErank +0.0000 | all -0.246% 150w +0.006% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.55  -26.28% (3/7) n120   -3.73% (2/6) n54  -37.20% (2/4) n66 | TE -2.305% TE150w +0.102% TErank +0.0000 | all -0.255% 150w +0.008% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.70  -24.53% (3/7) n120   +5.98% (2/6) n54  -39.30% (2/4) n66 | TE -2.151% TE150w +0.145% TErank +0.0000 | all -0.238% 150w +0.011% rank +0.0000
+    -- 2022-25 only (fixed) --
+    a   TE2 share of TE1 targets (engine rat        0.25  -20.92% (2/4) n97 | TE -2.607% TE150w +0.017% TErank +0.0000 | all -0.292% 150w +0.001% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.35  -27.12% (2/4) n97 | TE -3.379% TE150w +0.024% TErank +0.0000 | all -0.378% 150w +0.002% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.45  -31.51% (2/4) n97 | TE -3.927% TE150w +0.032% TErank +0.0000 | all -0.439% 150w +0.002% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.55  -34.11% (2/4) n97 | TE -4.251% TE150w +0.040% TErank +0.0000 | all -0.476% 150w +0.003% rank +0.0000
+    a   TE2 share of TE1 targets (engine rat        0.70  -34.64% (2/4) n97 | TE -4.316% TE150w +0.054% TErank +0.0000 | all -0.483% 150w +0.004% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.25  -24.71% (2/4) n97 | TE -3.079% TE150w +0.012% TErank +0.0000 | all -0.345% 150w +0.001% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.35  -30.91% (2/4) n97 | TE -3.852% TE150w +0.017% TErank +0.0000 | all -0.431% 150w +0.001% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.45  -34.44% (2/4) n97 | TE -4.292% TE150w +0.023% TErank +0.0000 | all -0.480% 150w +0.002% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.55  -35.31% (2/4) n97 | TE -4.400% TE150w +0.029% TErank +0.0000 | all -0.492% 150w +0.002% rank +0.0000
+    a+  TE2 share, gain ADDED (no floor damp        0.70  -31.61% (2/4) n97 | TE -3.940% TE150w +0.038% TErank +0.0000 | all -0.441% 150w +0.003% rank +0.0000
+    b   floor k x TE1 level                         0.15   +0.00% (0/4) n97 | TE +0.000% TE150w +0.000% TErank +0.0000 | all +0.000% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.25   -0.36% (1/4) n97 | TE -0.045% TE150w +0.000% TErank +0.0000 | all -0.005% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.35   -4.31% (3/4) n97 | TE -0.537% TE150w +0.000% TErank +0.0000 | all -0.060% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.45  -11.45% (3/4) n97 | TE -1.427% TE150w +0.000% TErank +0.0000 | all -0.160% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.55  -18.76% (3/4) n97 | TE -2.338% TE150w +0.000% TErank +0.0000 | all -0.262% 150w +0.000% rank +0.0000
+    b   floor k x TE1 level                         0.70  -29.87% (2/4) n97 | TE -3.722% TE150w +0.000% TErank +0.0000 | all -0.416% 150w +0.000% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.15  -18.09% (2/4) n97 | TE -2.255% TE150w +0.010% TErank +0.0000 | all -0.252% 150w +0.001% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.25  -27.95% (2/4) n97 | TE -3.483% TE150w +0.017% TErank +0.0000 | all -0.390% 150w +0.001% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.35  -34.74% (2/4) n97 | TE -4.329% TE150w +0.024% TErank +0.0000 | all -0.484% 150w +0.002% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.45  -38.46% (2/4) n97 | TE -4.792% TE150w +0.032% TErank +0.0000 | all -0.536% 150w +0.002% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.55  -39.11% (2/4) n97 | TE -4.874% TE150w +0.041% TErank +0.0000 | all -0.545% 150w +0.003% rank +0.0000
+    b+  additive k x TE1 level (no pool)            0.70  -34.34% (2/4) n97 | TE -4.279% TE150w +0.055% TErank +0.0000 | all -0.479% 150w +0.004% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          0.50  +18.16% (1/4) n97 | TE +2.263% TE150w +0.000% TErank +0.0000 | all +0.253% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          1.00   +2.15% (1/4) n97 | TE +0.268% TE150w +0.000% TErank +0.0000 | all +0.030% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          2.00   -8.06% (1/4) n97 | TE -1.005% TE150w +0.000% TErank +0.0000 | all -0.112% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          3.00  -10.58% (1/4) n97 | TE -1.318% TE150w +0.000% TErank +0.0000 | all -0.147% 150w +0.000% rank +0.0000
+    c   fill-in games blend Pc (pool kept)          5.00  -10.85% (1/4) n97 | TE -1.352% TE150w +0.000% TErank +0.0000 | all -0.151% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        0.50  +17.64% (1/4) n97 | TE +2.199% TE150w +0.000% TErank +0.0000 | all +0.246% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        1.00   +2.59% (1/4) n97 | TE +0.323% TE150w +0.000% TErank +0.0000 | all +0.036% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        2.00   -6.86% (1/4) n97 | TE -0.855% TE150w +0.000% TErank +0.0000 | all -0.096% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        3.00   -9.07% (1/4) n97 | TE -1.131% TE150w +0.000% TErank +0.0000 | all -0.127% 150w +0.000% rank +0.0000
+    c-  fill-in games blend Pc (pool dropped        5.00   -9.12% (1/4) n97 | TE -1.137% TE150w +0.000% TErank +0.0000 | all -0.127% 150w +0.000% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.25  -19.04% (2/4) n97 | TE -2.373% TE150w +0.017% TErank +0.0000 | all -0.266% 150w +0.001% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.35  -24.27% (2/4) n97 | TE -3.025% TE150w +0.024% TErank +0.0000 | all -0.338% 150w +0.002% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.45  -27.84% (2/4) n97 | TE -3.469% TE150w +0.032% TErank +0.0000 | all -0.388% 150w +0.002% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.55  -29.75% (2/4) n97 | TE -3.707% TE150w +0.040% TErank +0.0000 | all -0.415% 150w +0.003% rank +0.0000
+    d   sec-rule TE2 share (TE1 not target l        0.70  -29.49% (2/4) n97 | TE -3.675% TE150w +0.054% TErank +0.0000 | all -0.411% 150w +0.004% rank +0.0000
+
+--- 4  LOYO (fit on the TE2 rows of the other six seasons) and FORWARD (fit on earlier seasons, graded 2022-25): NEXT GAME ---
+    a   TE2 share of TE1 targets (engine ratio form)     LOYO  -10.83% (4/7) n156 | TE -0.578% TE150w +0.030% TErank -0.0004 | all -0.070% 150w +0.002% rank -0.0001
+                                                         picks [0.35, 0.35, 0.35, 0.35, 0.25, 0.45, 0.35]
+                                                         FWD   -11.83% (2/4) n124 | TE -0.815% TE150w +0.026% TErank -0.0010 | all -0.096% 150w +0.002% rank -0.0002  picks [0.35, 0.35, 0.45, 0.35]
+    a+  TE2 share, gain ADDED (no floor damping)         LOYO  -12.23% (4/7) n156 | TE -0.653% TE150w +0.025% TErank -0.0004 | all -0.079% 150w +0.002% rank -0.0001
+                                                         picks [0.35, 0.35, 0.25, 0.35, 0.25, 0.35, 0.25]
+                                                         FWD   -11.82% (2/4) n124 | TE -0.815% TE150w +0.012% TErank -0.0010 | all -0.096% 150w +0.001% rank -0.0002  picks [0.25, 0.25, 0.35, 0.25]
+    b   floor k x TE1 level                              LOYO   -9.35% (4/7) n156 | TE -0.500% TE150w +0.000% TErank +0.0000 | all -0.060% 150w +0.000% rank +0.0000
+                                                         picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+                                                         FWD   -11.21% (3/4) n124 | TE -0.773% TE150w +0.000% TErank +0.0000 | all -0.091% 150w +0.000% rank +0.0000  picks [0.7, 0.7, 0.7, 0.7]
+    b+  additive k x TE1 level (no pool)                 LOYO  -14.44% (4/7) n156 | TE -0.771% TE150w +0.026% TErank -0.0004 | all -0.093% 150w +0.002% rank -0.0001
+                                                         picks [0.35, 0.35, 0.35, 0.35, 0.25, 0.35, 0.35]
+                                                         FWD   -14.74% (2/4) n124 | TE -1.016% TE150w +0.017% TErank -0.0010 | all -0.120% 150w +0.001% rank -0.0002  picks [0.35, 0.25, 0.35, 0.35]
+    c   fill-in games blend Pc (pool kept)               LOYO   -3.03% (3/7) n156 | TE -0.162% TE150w +0.000% TErank +0.0000 | all -0.019% 150w +0.000% rank +0.0000
+                                                         picks [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
+                                                         FWD    -3.66% (1/4) n124 | TE -0.252% TE150w +0.000% TErank +0.0000 | all -0.030% 150w +0.000% rank +0.0000  picks [5.0, 5.0, 5.0, 5.0]
+    c-  fill-in games blend Pc (pool dropped)            LOYO   -3.89% (2/7) n156 | TE -0.208% TE150w +0.000% TErank +0.0000 | all -0.025% 150w +0.000% rank +0.0000
+                                                         picks [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
+                                                         FWD    -4.30% (1/4) n124 | TE -0.297% TE150w +0.000% TErank +0.0000 | all -0.035% 150w +0.000% rank +0.0000  picks [5.0, 5.0, 5.0, 5.0]
+    d   sec-rule TE2 share (TE1 not target leader)       LOYO   -8.47% (4/7) n156 | TE -0.452% TE150w +0.030% TErank -0.0004 | all -0.054% 150w +0.002% rank -0.0001
+                                                         picks [0.35, 0.35, 0.35, 0.35, 0.25, 0.45, 0.35]
+                                                         FWD    -5.53% (2/4) n124 | TE -0.381% TE150w +0.017% TErank -0.0010 | all -0.045% 150w +0.001% rank -0.0002  picks [0.35, 0.25, 0.55, 0.35]
+
+--- 4  LOYO (fit on the TE2 rows of the other six seasons) and FORWARD (fit on earlier seasons, graded 2022-25): REST OF SEASON, 4+ games left ---
+    a   TE2 share of TE1 targets (engine ratio form)     LOYO   -7.61% (4/6) n93 | TE -0.511% TE150w +0.012% TErank +0.0000 | all -0.060% 150w +0.001% rank +0.0000
+                                                         picks [0.55, 0.55, 0.55, 0.55, 0.25, 0.7, 0.55]
+                                                         FWD   -11.62% (2/4) n75 | TE -1.071% TE150w +0.031% TErank +0.0000 | all -0.128% 150w +0.002% rank +0.0000  picks [0.45, 0.35, 0.7, 0.55]
+    a+  TE2 share, gain ADDED (no floor damping)         LOYO   -8.37% (3/6) n93 | TE -0.562% TE150w +0.009% TErank +0.0000 | all -0.066% 150w +0.001% rank +0.0000
+                                                         picks [0.45, 0.55, 0.45, 0.55, 0.25, 0.7, 0.55]
+                                                         FWD   -13.82% (2/4) n75 | TE -1.273% TE150w +0.022% TErank +0.0000 | all -0.153% 150w +0.002% rank +0.0000  picks [0.45, 0.35, 0.7, 0.55]
+    b   floor k x TE1 level                              LOYO  -31.29% (3/6) n93 | TE -2.102% TE150w +0.000% TErank +0.0000 | all -0.248% 150w +0.000% rank +0.0000
+                                                         picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+                                                         FWD    -9.58% (2/4) n75 | TE -0.882% TE150w +0.000% TErank +0.0000 | all -0.106% 150w +0.000% rank +0.0000  picks [0.15, 0.15, 0.7, 0.7]
+    b+  additive k x TE1 level (no pool)                 LOYO  -12.35% (4/6) n93 | TE -0.830% TE150w +0.012% TErank +0.0000 | all -0.098% 150w +0.001% rank +0.0000
+                                                         picks [0.55, 0.55, 0.55, 0.55, 0.25, 0.7, 0.55]
+                                                         FWD   -18.45% (2/4) n75 | TE -1.700% TE150w +0.031% TErank +0.0000 | all -0.204% 150w +0.002% rank +0.0000  picks [0.55, 0.35, 0.7, 0.55]
+    c   fill-in games blend Pc (pool kept)               LOYO   -6.87% (2/6) n93 | TE -0.461% TE150w +0.000% TErank +0.0000 | all -0.054% 150w +0.000% rank +0.0000
+                                                         picks [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
+                                                         FWD    -5.48% (1/4) n75 | TE -0.505% TE150w +0.000% TErank +0.0000 | all -0.061% 150w +0.000% rank +0.0000  picks [5.0, 5.0, 3.0, 5.0]
+    c-  fill-in games blend Pc (pool dropped)            LOYO   -6.67% (3/6) n93 | TE -0.448% TE150w +0.000% TErank +0.0000 | all -0.053% 150w +0.000% rank +0.0000
+                                                         picks [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
+                                                         FWD    -4.86% (1/4) n75 | TE -0.447% TE150w +0.000% TErank +0.0000 | all -0.054% 150w +0.000% rank +0.0000  picks [5.0, 5.0, 3.0, 5.0]
+    d   sec-rule TE2 share (TE1 not target leader)       LOYO   -4.28% (3/6) n93 | TE -0.287% TE150w +0.012% TErank +0.0000 | all -0.034% 150w +0.001% rank +0.0000
+                                                         picks [0.55, 0.55, 0.55, 0.55, 0.25, 0.7, 0.55]
+                                                         FWD    -4.57% (2/4) n75 | TE -0.421% TE150w +0.021% TErank +0.0000 | all -0.050% 150w +0.002% rank +0.0000  picks [0.35, 0.25, 0.7, 0.55]
+
+--- 4  LOYO (fit on the TE2 rows of the other six seasons) and FORWARD (fit on earlier seasons, graded 2022-25): REST OF SEASON, no survivor filter ---
+    a   TE2 share of TE1 targets (engine ratio form)     LOYO  -19.08% (3/7) n120 | TE -1.673% TE150w +0.092% TErank +0.0000 | all -0.185% 150w +0.007% rank +0.0000
+                                                         picks [0.55, 0.7, 0.55, 0.55, 0.35, 0.7, 0.55]
+                                                         FWD   -16.94% (2/4) n97 | TE -2.111% TE150w +0.017% TErank +0.0000 | all -0.236% 150w +0.001% rank +0.0000  picks [0.25, 0.25, 0.7, 0.55]
+    a+  TE2 share, gain ADDED (no floor damping)         LOYO  -19.91% (3/7) n120 | TE -1.746% TE150w +0.080% TErank +0.0000 | all -0.193% 150w +0.006% rank +0.0000
+                                                         picks [0.55, 0.55, 0.45, 0.55, 0.35, 0.7, 0.45]
+                                                         FWD   -22.22% (2/4) n97 | TE -2.769% TE150w +0.012% TErank +0.0000 | all -0.310% 150w +0.001% rank +0.0000  picks [0.25, 0.25, 0.55, 0.45]
+    b   floor k x TE1 level                              LOYO  -27.33% (3/7) n120 | TE -2.397% TE150w +0.000% TErank +0.0000 | all -0.266% 150w +0.000% rank +0.0000
+                                                         picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+                                                         FWD    -9.63% (1/4) n97 | TE -1.201% TE150w +0.000% TErank +0.0000 | all -0.134% 150w +0.000% rank +0.0000  picks [0.15, 0.15, 0.7, 0.7]
+    b+  additive k x TE1 level (no pool)                 LOYO  -20.40% (3/7) n120 | TE -1.790% TE150w +0.078% TErank +0.0000 | all -0.198% 150w +0.006% rank +0.0000
+                                                         picks [0.55, 0.55, 0.45, 0.55, 0.35, 0.7, 0.45]
+                                                         FWD   -15.63% (2/4) n97 | TE -1.948% TE150w +0.010% TErank +0.0000 | all -0.218% 150w +0.001% rank +0.0000  picks [0.25, 0.15, 0.55, 0.45]
+    c   fill-in games blend Pc (pool kept)               LOYO   -6.64% (2/7) n120 | TE -0.582% TE150w +0.000% TErank +0.0000 | all -0.064% 150w +0.000% rank +0.0000
+                                                         picks [5.0, 5.0, 5.0, 5.0, 5.0, 3.0, 3.0]
+                                                         FWD    -5.16% (1/4) n97 | TE -0.643% TE150w +0.000% TErank +0.0000 | all -0.072% 150w +0.000% rank +0.0000  picks [5.0, 5.0, 2.0, 3.0]
+    c-  fill-in games blend Pc (pool dropped)            LOYO   -4.94% (2/7) n120 | TE -0.433% TE150w +0.000% TErank +0.0000 | all -0.048% 150w +0.000% rank +0.0000
+                                                         picks [5.0, 3.0, 5.0, 5.0, 5.0, 3.0, 3.0]
+                                                         FWD    -3.58% (1/4) n97 | TE -0.447% TE150w +0.000% TErank +0.0000 | all -0.050% 150w +0.000% rank +0.0000  picks [5.0, 5.0, 2.0, 3.0]
+    d   sec-rule TE2 share (TE1 not target leader)       LOYO  -10.12% (3/7) n120 | TE -0.888% TE150w +0.088% TErank +0.0000 | all -0.098% 150w +0.007% rank +0.0000
+                                                         picks [0.55, 0.55, 0.55, 0.55, 0.25, 0.7, 0.55]
+                                                         FWD   -12.81% (2/4) n97 | TE -1.596% TE150w +0.017% TErank +0.0000 | all -0.179% 150w +0.001% rank +0.0000  picks [0.25, 0.25, 0.7, 0.55]
+
+--- 5  SUMMARY (TE2 rows: LOYO error change (seasons better /7) | forward (/4) | bias live -> rule | board, LOYO) ---
+    next  a   TE2 share of TE1 targets (engine ratio form)     LOYO -10.83% (4/7) n156       FWD -11.83% (2/4) n124       bias 1.402->1.022 | TE -0.578% TE150w +0.030% TErank -0.0004 | all -0.070% 150w +0.002% rank -0.0001
+    next  a+  TE2 share, gain ADDED (no floor damping)         LOYO -12.23% (4/7) n156       FWD -11.82% (2/4) n124       bias 1.402->1.020 | TE -0.653% TE150w +0.025% TErank -0.0004 | all -0.079% 150w +0.002% rank -0.0001
+    next  b   floor k x TE1 level                              LOYO -9.35% (4/7) n156        FWD -11.21% (3/4) n124       bias 1.402->1.132 | TE -0.500% TE150w +0.000% TErank +0.0000 | all -0.060% 150w +0.000% rank +0.0000
+    next  b+  additive k x TE1 level (no pool)                 LOYO -14.44% (4/7) n156       FWD -14.74% (2/4) n124       bias 1.402->0.989 | TE -0.771% TE150w +0.026% TErank -0.0004 | all -0.093% 150w +0.002% rank -0.0001
+    next  c   fill-in games blend Pc (pool kept)               LOYO -3.03% (3/7) n156        FWD -3.66% (1/4) n124        bias 1.402->1.200 | TE -0.162% TE150w +0.000% TErank +0.0000 | all -0.019% 150w +0.000% rank +0.0000
+    next  c-  fill-in games blend Pc (pool dropped)            LOYO -3.89% (2/7) n156        FWD -4.30% (1/4) n124        bias 1.402->1.239 | TE -0.208% TE150w +0.000% TErank +0.0000 | all -0.025% 150w +0.000% rank +0.0000
+    next  d   sec-rule TE2 share (TE1 not target leader)       LOYO -8.47% (4/7) n156        FWD -5.53% (2/4) n124        bias 1.402->1.056 | TE -0.452% TE150w +0.030% TErank -0.0004 | all -0.054% 150w +0.002% rank -0.0001
+    ros4  a   TE2 share of TE1 targets (engine ratio form)     LOYO -7.61% (4/6) n93         FWD -11.62% (2/4) n75        bias 1.247->0.940 | TE -0.511% TE150w +0.012% TErank +0.0000 | all -0.060% 150w +0.001% rank +0.0000
+    ros4  a+  TE2 share, gain ADDED (no floor damping)         LOYO -8.37% (3/6) n93         FWD -13.82% (2/4) n75        bias 1.247->0.900 | TE -0.562% TE150w +0.009% TErank +0.0000 | all -0.066% 150w +0.001% rank +0.0000
+    ros4  b   floor k x TE1 level                              LOYO -31.29% (3/6) n93        FWD -9.58% (2/4) n75         bias 1.247->1.110 | TE -2.102% TE150w +0.000% TErank +0.0000 | all -0.248% 150w +0.000% rank +0.0000
+    ros4  b+  additive k x TE1 level (no pool)                 LOYO -12.35% (4/6) n93        FWD -18.45% (2/4) n75        bias 1.247->0.903 | TE -0.830% TE150w +0.012% TErank +0.0000 | all -0.098% 150w +0.001% rank +0.0000
+    ros4  c   fill-in games blend Pc (pool kept)               LOYO -6.87% (2/6) n93         FWD -5.48% (1/4) n75         bias 1.247->1.118 | TE -0.461% TE150w +0.000% TErank +0.0000 | all -0.054% 150w +0.000% rank +0.0000
+    ros4  c-  fill-in games blend Pc (pool dropped)            LOYO -6.67% (3/6) n93         FWD -4.86% (1/4) n75         bias 1.247->1.143 | TE -0.448% TE150w +0.000% TErank +0.0000 | all -0.053% 150w +0.000% rank +0.0000
+    ros4  d   sec-rule TE2 share (TE1 not target leader)       LOYO -4.28% (3/6) n93         FWD -4.57% (2/4) n75         bias 1.247->0.962 | TE -0.287% TE150w +0.012% TErank +0.0000 | all -0.034% 150w +0.001% rank +0.0000
+    ros1  a   TE2 share of TE1 targets (engine ratio form)     LOYO -19.08% (3/7) n120       FWD -16.94% (2/4) n97        bias 1.320->0.952 | TE -1.673% TE150w +0.092% TErank +0.0000 | all -0.185% 150w +0.007% rank +0.0000
+    ros1  a+  TE2 share, gain ADDED (no floor damping)         LOYO -19.91% (3/7) n120       FWD -22.22% (2/4) n97        bias 1.320->0.918 | TE -1.746% TE150w +0.080% TErank +0.0000 | all -0.193% 150w +0.006% rank +0.0000
+    ros1  b   floor k x TE1 level                              LOYO -27.33% (3/7) n120       FWD -9.63% (1/4) n97         bias 1.320->1.126 | TE -2.397% TE150w +0.000% TErank +0.0000 | all -0.266% 150w +0.000% rank +0.0000
+    ros1  b+  additive k x TE1 level (no pool)                 LOYO -20.40% (3/7) n120       FWD -15.63% (2/4) n97        bias 1.320->0.908 | TE -1.790% TE150w +0.078% TErank +0.0000 | all -0.198% 150w +0.006% rank +0.0000
+    ros1  c   fill-in games blend Pc (pool kept)               LOYO -6.64% (2/7) n120        FWD -5.16% (1/4) n97         bias 1.320->1.154 | TE -0.582% TE150w +0.000% TErank +0.0000 | all -0.064% 150w +0.000% rank +0.0000
+    ros1  c-  fill-in games blend Pc (pool dropped)            LOYO -4.94% (2/7) n120        FWD -3.58% (1/4) n97         bias 1.320->1.181 | TE -0.433% TE150w +0.000% TErank +0.0000 | all -0.048% 150w +0.000% rank +0.0000
+    ros1  d   sec-rule TE2 share (TE1 not target leader)       LOYO -10.12% (3/7) n120       FWD -12.81% (2/4) n97        bias 1.320->1.001 | TE -0.888% TE150w +0.088% TErank +0.0000 | all -0.098% 150w +0.007% rank +0.0000
+
+--- 6  CANDIDATES IN DETAIL (fixed values, no fitting) ---
+    TE2 rows with ADP <= 150 (the only touched rows inside the top-150 weighting): 2
+      2019 wk11 Eric Ebron             IND ADP   124 own Clay  6.1 TE1 Jack Doyle           ( 6.8) | act   2.7 live   6.8 a.25   7.7
+      2023 wk 6 Dawson Knox            BUF ADP   130 own Clay  5.5 TE1 Dalton Kincaid       ( 6.5) | act   3.2 live   5.4 a.25   6.6
+
+  NEXT GAME
+    a .25  all TE2                        -12.76% (5/7) n156 fwd  -12.39% (3/4) n124 bias 1.402->1.121 | 2019:+43%/n6  2020:-23%/n13  2021:-11%/n13  2022:+11%/n10  2023:-21%/n36  2024:-1%/n49  2025:-13%/n29
+                                         board LOYO-free all seasons: TE -0.682% TE150w +0.020% TErank -0.0004 | all -0.082% 150w +0.002% rank -0.0001 | fwd: TE -0.854% TE150w +0.017% TErank -0.0010 | all -0.101% 150w +0.001% rank -0.0002
+    a .35  all TE2                        -14.11% (4/7) n156 fwd  -13.84% (2/4) n124 bias 1.402->1.026 | 2019:+81%/n6  2020:-24%/n13  2021:-13%/n13  2022:+15%/n10  2023:-26%/n36  2024:+3%/n49  2025:-15%/n29
+                                         board LOYO-free all seasons: TE -0.754% TE150w +0.035% TErank -0.0004 | all -0.091% 150w +0.003% rank -0.0001 | fwd: TE -0.954% TE150w +0.026% TErank -0.0010 | all -0.113% 150w +0.002% rank -0.0002
+    d .25  sec rows only (= lead value)   -10.75% (5/7) n156 fwd  -11.17% (3/4) n124 bias 1.402->1.148 | 2019:+43%/n6  2020:-8%/n13  2021:-12%/n13  2022:+10%/n10  2023:-21%/n36  2024:-1%/n49  2025:-9%/n29
+                                         board LOYO-free all seasons: TE -0.574% TE150w +0.020% TErank -0.0004 | all -0.069% 150w +0.002% rank -0.0001 | fwd: TE -0.770% TE150w +0.017% TErank -0.0010 | all -0.091% 150w +0.001% rank -0.0002
+    b+ .25 additive TE1 level             -15.29% (5/7) n156 fwd  -15.84% (3/4) n124 bias 1.402->1.066 | 2019:+53%/n6  2020:-22%/n13  2021:-10%/n13  2022:+20%/n10  2023:-27%/n36  2024:-0%/n49  2025:-18%/n29
+                                         board LOYO-free all seasons: TE -0.817% TE150w +0.018% TErank -0.0004 | all -0.098% 150w +0.001% rank -0.0001 | fwd: TE -1.091% TE150w +0.017% TErank -0.0010 | all -0.129% 150w +0.001% rank -0.0002
+    b+ .35 additive TE1 level             -15.90% (4/7) n156 fwd  -16.55% (2/4) n124 bias 1.402->0.962 | 2019:+117%/n6  2020:-23%/n13  2021:-12%/n13  2022:+54%/n10  2023:-31%/n36  2024:+5%/n49  2025:-19%/n29
+                                         board LOYO-free all seasons: TE -0.850% TE150w +0.031% TErank -0.0004 | all -0.102% 150w +0.003% rank -0.0001 | fwd: TE -1.140% TE150w +0.026% TErank -0.0010 | all -0.135% 150w +0.002% rank -0.0002
+    a .25  TE2 own Clay < 4               -12.06% (5/7) n156 fwd  -13.20% (3/4) n124 bias 1.402->1.192 | 2019:+4%/n6  2020:-7%/n13  2021:-8%/n13  2022:+6%/n10  2023:-22%/n36  2024:-2%/n49  2025:-13%/n29
+                                         board LOYO-free all seasons: TE -0.644% TE150w +0.000% TErank +0.0000 | all -0.078% 150w +0.000% rank +0.0000 | fwd: TE -0.910% TE150w +0.000% TErank +0.0000 | all -0.107% 150w +0.000% rank +0.0000
+    a .35  TE2 own Clay < 4               -14.06% (5/7) n156 fwd  -15.44% (3/4) n124 bias 1.402->1.115 | 2019:+5%/n6  2020:-7%/n13  2021:-9%/n13  2022:+15%/n10  2023:-27%/n36  2024:-1%/n49  2025:-15%/n29
+                                         board LOYO-free all seasons: TE -0.751% TE150w +0.000% TErank +0.0000 | all -0.090% 150w +0.000% rank +0.0000 | fwd: TE -1.064% TE150w +0.000% TErank +0.0000 | all -0.126% 150w +0.000% rank +0.0000
+    a .45  TE2 own Clay < 4               -14.53% (4/7) n156 fwd  -16.00% (2/4) n124 bias 1.402->1.048 | 2019:+10%/n6  2020:-7%/n13  2021:-10%/n13  2022:+27%/n10  2023:-31%/n36  2024:+3%/n49  2025:-16%/n29
+                                         board LOYO-free all seasons: TE -0.776% TE150w +0.000% TErank +0.0000 | all -0.093% 150w +0.000% rank +0.0000 | fwd: TE -1.102% TE150w +0.000% TErank +0.0000 | all -0.130% 150w +0.000% rank +0.0000
+    b+ .25 TE2 own Clay < 4               -14.64% (5/7) n156 fwd  -16.66% (3/4) n124 bias 1.402->1.125 | 2019:+24%/n6  2020:-6%/n13  2021:-7%/n13  2022:+19%/n10  2023:-28%/n36  2024:-1%/n49  2025:-18%/n29
+                                         board LOYO-free all seasons: TE -0.782% TE150w +0.000% TErank +0.0000 | all -0.094% 150w +0.000% rank +0.0000 | fwd: TE -1.148% TE150w +0.000% TErank +0.0000 | all -0.135% 150w +0.000% rank +0.0000
+    b+ .35 TE2 own Clay < 4               -15.75% (4/7) n156 fwd  -18.09% (2/4) n124 bias 1.402->1.035 | 2019:+58%/n6  2020:-6%/n13  2021:-8%/n13  2022:+49%/n10  2023:-33%/n36  2024:+2%/n49  2025:-20%/n29
+                                         board LOYO-free all seasons: TE -0.841% TE150w +0.000% TErank +0.0000 | all -0.101% 150w +0.000% rank +0.0000 | fwd: TE -1.246% TE150w +0.000% TErank +0.0000 | all -0.147% 150w +0.000% rank +0.0000
+    a .25  TE2 ADP > 150                  -13.10% (5/7) n156 fwd  -12.58% (3/4) n124 bias 1.402->1.124 | 2019:+4%/n6  2020:-23%/n13  2021:-11%/n13  2022:+11%/n10  2023:-21%/n36  2024:-1%/n49  2025:-13%/n29
+                                         board LOYO-free all seasons: TE -0.700% TE150w +0.000% TErank +0.0000 | all -0.084% 150w +0.000% rank +0.0000 | fwd: TE -0.867% TE150w +0.000% TErank +0.0000 | all -0.102% 150w +0.000% rank +0.0000
+    a .35  TE2 ADP > 150                  -14.69% (4/7) n156 fwd  -14.14% (2/4) n124 bias 1.402->1.029 | 2019:+5%/n6  2020:-24%/n13  2021:-13%/n13  2022:+15%/n10  2023:-27%/n36  2024:+3%/n49  2025:-15%/n29
+                                         board LOYO-free all seasons: TE -0.785% TE150w +0.000% TErank +0.0000 | all -0.094% 150w +0.000% rank +0.0000 | fwd: TE -0.974% TE150w +0.000% TErank +0.0000 | all -0.115% 150w +0.000% rank +0.0000
+
+  REST OF SEASON, 4+ games left
+    a .25  all TE2                        -19.91% (4/6) n93 fwd  -19.23% (2/4) n75 bias 1.247->1.095 | 2020:-24%/n10  2021:-29%/n7  2022:+29%/n9  2023:-29%/n16  2024:+5%/n34  2025:-21%/n16
+                                         board LOYO-free all seasons: TE -1.337% TE150w +0.012% TErank +0.0000 | all -0.158% 150w +0.001% rank +0.0000 | fwd: TE -1.771% TE150w +0.021% TErank +0.0000 | all -0.212% 150w +0.002% rank +0.0000
+    a .35  all TE2                        -24.95% (4/6) n93 fwd  -24.29% (2/4) n75 bias 1.247->1.035 | 2020:-22%/n10  2021:-38%/n7  2022:+42%/n9  2023:-40%/n16  2024:+14%/n34  2025:-29%/n16
+                                         board LOYO-free all seasons: TE -1.676% TE150w +0.017% TErank +0.0000 | all -0.197% 150w +0.001% rank +0.0000 | fwd: TE -2.237% TE150w +0.031% TErank +0.0000 | all -0.268% 150w +0.002% rank +0.0000
+    d .25  sec rows only (= lead value)   -17.69% (3/6) n93 fwd  -18.47% (2/4) n75 bias 1.247->1.110 | 2020:+16%/n10  2021:-29%/n7  2022:+29%/n9  2023:-29%/n16  2024:+5%/n34  2025:-19%/n16
+                                         board LOYO-free all seasons: TE -1.188% TE150w +0.012% TErank +0.0000 | all -0.140% 150w +0.001% rank +0.0000 | fwd: TE -1.701% TE150w +0.021% TErank +0.0000 | all -0.204% 150w +0.002% rank +0.0000
+    b+ .25 additive TE1 level             -27.81% (4/6) n93 fwd  -28.05% (2/4) n75 bias 1.247->1.064 | 2020:-23%/n10  2021:-29%/n7  2022:+57%/n9  2023:-43%/n16  2024:+10%/n34  2025:-36%/n16
+                                         board LOYO-free all seasons: TE -1.868% TE150w +0.012% TErank +0.0000 | all -0.220% 150w +0.001% rank +0.0000 | fwd: TE -2.583% TE150w +0.021% TErank +0.0000 | all -0.310% 150w +0.002% rank +0.0000
+    b+ .35 additive TE1 level             -34.30% (4/6) n93 fwd  -34.67% (2/4) n75 bias 1.247->0.996 | 2020:-24%/n10  2021:-38%/n7  2022:+86%/n9  2023:-57%/n16  2024:+22%/n34  2025:-46%/n16
+                                         board LOYO-free all seasons: TE -2.304% TE150w +0.017% TErank +0.0000 | all -0.271% 150w +0.001% rank +0.0000 | fwd: TE -3.193% TE150w +0.031% TErank +0.0000 | all -0.383% 150w +0.002% rank +0.0000
+    a .25  TE2 own Clay < 4               -21.83% (5/6) n93 fwd  -22.52% (3/4) n75 bias 1.247->1.146 | 2020:-1%/n10  2021:-26%/n7  2022:+29%/n9  2023:-30%/n16  2024:-8%/n34  2025:-21%/n16
+                                         board LOYO-free all seasons: TE -1.467% TE150w +0.000% TErank +0.0000 | all -0.173% 150w +0.000% rank +0.0000 | fwd: TE -2.074% TE150w +0.000% TErank +0.0000 | all -0.249% 150w +0.000% rank +0.0000
+    a .35  TE2 own Clay < 4               -29.11% (4/6) n93 fwd  -30.18% (3/4) n75 bias 1.247->1.104 | 2020:+2%/n10  2021:-34%/n7  2022:+41%/n9  2023:-40%/n16  2024:-10%/n34  2025:-29%/n16
+                                         board LOYO-free all seasons: TE -1.956% TE150w +0.000% TErank +0.0000 | all -0.230% 150w +0.000% rank +0.0000 | fwd: TE -2.780% TE150w +0.000% TErank +0.0000 | all -0.333% 150w +0.000% rank +0.0000
+    a .45  TE2 own Clay < 4               -35.10% (4/6) n93 fwd  -36.52% (3/4) n75 bias 1.247->1.064 | 2020:+6%/n10  2021:-42%/n7  2022:+55%/n9  2023:-50%/n16  2024:-10%/n34  2025:-33%/n16
+                                         board LOYO-free all seasons: TE -2.358% TE150w +0.000% TErank +0.0000 | all -0.278% 150w +0.000% rank +0.0000 | fwd: TE -3.364% TE150w +0.000% TErank +0.0000 | all -0.403% 150w +0.000% rank +0.0000
+    b+ .25 TE2 own Clay < 4               -31.27% (5/6) n93 fwd  -32.97% (3/4) n75 bias 1.247->1.109 | 2020:-1%/n10  2021:-27%/n7  2022:+56%/n9  2023:-44%/n16  2024:-9%/n34  2025:-36%/n16
+                                         board LOYO-free all seasons: TE -2.100% TE150w +0.000% TErank +0.0000 | all -0.247% 150w +0.000% rank +0.0000 | fwd: TE -3.037% TE150w +0.000% TErank +0.0000 | all -0.364% 150w +0.000% rank +0.0000
+    b+ .35 TE2 own Clay < 4               -40.51% (4/6) n93 fwd  -42.84% (3/4) n75 bias 1.247->1.057 | 2020:+2%/n10  2021:-36%/n7  2022:+84%/n9  2023:-58%/n16  2024:-11%/n34  2025:-46%/n16
+                                         board LOYO-free all seasons: TE -2.721% TE150w +0.000% TErank +0.0000 | all -0.321% 150w +0.000% rank +0.0000 | fwd: TE -3.946% TE150w +0.000% TErank +0.0000 | all -0.473% 150w +0.000% rank +0.0000
+    a .25  TE2 ADP > 150                  -20.04% (4/6) n93 fwd  -19.38% (2/4) n75 bias 1.247->1.096 | 2020:-24%/n10  2021:-29%/n7  2022:+29%/n9  2023:-30%/n16  2024:+5%/n34  2025:-21%/n16
+                                         board LOYO-free all seasons: TE -1.347% TE150w +0.000% TErank +0.0000 | all -0.159% 150w +0.000% rank +0.0000 | fwd: TE -1.785% TE150w +0.000% TErank +0.0000 | all -0.214% 150w +0.000% rank +0.0000
+    a .35  TE2 ADP > 150                  -25.15% (4/6) n93 fwd  -24.51% (2/4) n75 bias 1.247->1.036 | 2020:-22%/n10  2021:-38%/n7  2022:+42%/n9  2023:-40%/n16  2024:+14%/n34  2025:-29%/n16
+                                         board LOYO-free all seasons: TE -1.689% TE150w +0.000% TErank +0.0000 | all -0.199% 150w +0.000% rank +0.0000 | fwd: TE -2.258% TE150w +0.000% TErank +0.0000 | all -0.271% 150w +0.000% rank +0.0000
+
+  REST OF SEASON, no survivor filter
+    a .25  all TE2                        -20.69% (4/7) n120 fwd  -20.92% (2/4) n97 bias 1.320->1.138 | 2019:+31%/n4  2020:-13%/n12  2021:-29%/n7  2022:+29%/n9  2023:-28%/n27  2024:+7%/n40  2025:-23%/n21
+                                         board LOYO-free all seasons: TE -1.815% TE150w +0.029% TErank +0.0003 | all -0.201% 150w +0.002% rank +0.0001 | fwd: TE -2.607% TE150w +0.017% TErank +0.0000 | all -0.292% 150w +0.001% rank +0.0000
+    a .35  all TE2                        -26.36% (4/7) n120 fwd  -27.12% (2/4) n97 bias 1.320->1.069 | 2019:+60%/n4  2020:-3%/n12  2021:-38%/n7  2022:+42%/n9  2023:-37%/n27  2024:+16%/n40  2025:-32%/n21
+                                         board LOYO-free all seasons: TE -2.313% TE150w +0.052% TErank +0.0003 | all -0.256% 150w +0.004% rank +0.0001 | fwd: TE -3.379% TE150w +0.024% TErank +0.0000 | all -0.378% 150w +0.002% rank +0.0000
+    d .25  sec rows only (= lead value)   -18.02% (3/7) n120 fwd  -19.04% (2/4) n97 bias 1.320->1.153 | 2019:+31%/n4  2020:+22%/n12  2021:-29%/n7  2022:+29%/n9  2023:-27%/n27  2024:+7%/n40  2025:-17%/n21
+                                         board LOYO-free all seasons: TE -1.581% TE150w +0.029% TErank +0.0003 | all -0.175% 150w +0.002% rank +0.0001 | fwd: TE -2.373% TE150w +0.017% TErank +0.0000 | all -0.266% 150w +0.001% rank +0.0000
+    b+ .25 additive TE1 level             -27.23% (4/7) n120 fwd  -27.95% (2/4) n97 bias 1.320->1.090 | 2019:+52%/n4  2020:-17%/n12  2021:-29%/n7  2022:+57%/n9  2023:-39%/n27  2024:+20%/n40  2025:-33%/n21
+                                         board LOYO-free all seasons: TE -2.389% TE150w +0.024% TErank +0.0003 | all -0.265% 150w +0.002% rank +0.0001 | fwd: TE -3.483% TE150w +0.017% TErank +0.0000 | all -0.390% 150w +0.001% rank +0.0000
+    b+ .35 additive TE1 level             -33.42% (4/7) n120 fwd  -34.74% (2/4) n97 bias 1.320->1.010 | 2019:+108%/n4  2020:-12%/n12  2021:-38%/n7  2022:+86%/n9  2023:-51%/n27  2024:+37%/n40  2025:-44%/n21
+                                         board LOYO-free all seasons: TE -2.931% TE150w +0.044% TErank +0.0003 | all -0.325% 150w +0.003% rank +0.0001 | fwd: TE -4.329% TE150w +0.024% TErank +0.0000 | all -0.484% 150w +0.002% rank +0.0000
+    a .25  TE2 own Clay < 4               -22.39% (5/7) n120 fwd  -22.93% (3/4) n97 bias 1.320->1.187 | 2019:+3%/n4  2020:-4%/n12  2021:-26%/n7  2022:+29%/n9  2023:-28%/n27  2024:-5%/n40  2025:-24%/n21
+                                         board LOYO-free all seasons: TE -1.964% TE150w +0.000% TErank +0.0000 | all -0.218% 150w +0.000% rank +0.0000 | fwd: TE -2.858% TE150w +0.000% TErank +0.0000 | all -0.320% 150w +0.000% rank +0.0000
+    a .35  TE2 own Clay < 4               -29.79% (5/7) n120 fwd  -30.62% (3/4) n97 bias 1.320->1.133 | 2019:+5%/n4  2020:-2%/n12  2021:-34%/n7  2022:+41%/n9  2023:-37%/n27  2024:-5%/n40  2025:-34%/n21
+                                         board LOYO-free all seasons: TE -2.613% TE150w +0.000% TErank +0.0000 | all -0.290% 150w +0.000% rank +0.0000 | fwd: TE -3.816% TE150w +0.000% TErank +0.0000 | all -0.427% 150w +0.000% rank +0.0000
+    a .45  TE2 own Clay < 4               -35.78% (4/7) n120 fwd  -36.88% (3/4) n97 bias 1.320->1.085 | 2019:+9%/n4  2020:+1%/n12  2021:-42%/n7  2022:+55%/n9  2023:-44%/n27  2024:-4%/n40  2025:-42%/n21
+                                         board LOYO-free all seasons: TE -3.139% TE150w +0.000% TErank +0.0000 | all -0.348% 150w +0.000% rank +0.0000 | fwd: TE -4.595% TE150w +0.000% TErank +0.0000 | all -0.514% 150w +0.000% rank +0.0000
+    b+ .25 TE2 own Clay < 4               -29.73% (4/7) n120 fwd  -30.96% (2/4) n97 bias 1.320->1.132 | 2019:+30%/n4  2020:-4%/n12  2021:-27%/n7  2022:+56%/n9  2023:-39%/n27  2024:+1%/n40  2025:-34%/n21
+                                         board LOYO-free all seasons: TE -2.608% TE150w +0.000% TErank +0.0000 | all -0.289% 150w +0.000% rank +0.0000 | fwd: TE -3.858% TE150w +0.000% TErank +0.0000 | all -0.432% 150w +0.000% rank +0.0000
+    b+ .35 TE2 own Clay < 4               -37.89% (4/7) n120 fwd  -39.65% (2/4) n97 bias 1.320->1.065 | 2019:+65%/n4  2020:-2%/n12  2021:-36%/n7  2022:+84%/n9  2023:-51%/n27  2024:+6%/n40  2025:-46%/n21
+                                         board LOYO-free all seasons: TE -3.323% TE150w +0.000% TErank +0.0000 | all -0.368% 150w +0.000% rank +0.0000 | fwd: TE -4.941% TE150w +0.000% TErank +0.0000 | all -0.553% 150w +0.000% rank +0.0000
+    a .25  TE2 ADP > 150                  -20.95% (4/7) n120 fwd  -21.01% (2/4) n97 bias 1.320->1.140 | 2019:+3%/n4  2020:-13%/n12  2021:-29%/n7  2022:+29%/n9  2023:-28%/n27  2024:+7%/n40  2025:-23%/n21
+                                         board LOYO-free all seasons: TE -1.838% TE150w +0.000% TErank +0.0000 | all -0.204% 150w +0.000% rank +0.0000 | fwd: TE -2.618% TE150w +0.000% TErank +0.0000 | all -0.293% 150w +0.000% rank +0.0000
+    a .35  TE2 ADP > 150                  -26.81% (4/7) n120 fwd  -27.25% (2/4) n97 bias 1.320->1.071 | 2019:+5%/n4  2020:-3%/n12  2021:-38%/n7  2022:+42%/n9  2023:-37%/n27  2024:+16%/n40  2025:-32%/n21
+                                         board LOYO-free all seasons: TE -2.352% TE150w +0.000% TErank +0.0000 | all -0.261% 150w +0.000% rank +0.0000 | fwd: TE -3.395% TE150w +0.000% TErank +0.0000 | all -0.380% 150w +0.000% rank +0.0000
+
+--- 7  ENGINE-SHAPED: TE2 share only when the TE2 is a true back-up (own Clay < 4 half-PPR/g); share LOYO / forward fitted ---
+    a  share, lead + sec rows                      next  LOYO  -12.25% (4/7) n156 picks [0.45, 0.45, 0.45, 0.45, 0.35, 0.55, 0.45] | FWD  -13.19% (2/4) n124 picks [0.45, 0.35, 0.55, 0.45] | board TE -0.655% TE150w +0.000% TErank +0.0000 | all -0.079% 150w +0.000% rank +0.0000
+    a  share, lead + sec rows                      ros4  LOYO  -38.75% (4/6) n93 picks [0.7, 0.7, 0.7, 0.7, 0.55, 0.7, 0.7] | FWD  -35.18% (3/4) n75 picks [0.7, 0.45, 0.7, 0.7] | board TE -2.603% TE150w +0.000% TErank +0.0000 | all -0.307% 150w +0.000% rank +0.0000
+    a  share, lead + sec rows                      ros1  LOYO  -44.61% (3/7) n120 picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7] | FWD  -39.41% (2/4) n97 picks [0.7, 0.45, 0.7, 0.7] | board TE -3.913% TE150w +0.000% TErank +0.0000 | all -0.434% 150w +0.000% rank +0.0000
+    d  share, sec rows only (lead keeps engine .25) next  LOYO  -11.32% (4/7) n156 picks [0.45, 0.45, 0.45, 0.45, 0.35, 0.55, 0.45] | FWD  -13.47% (2/4) n124 picks [0.45, 0.45, 0.55, 0.45] | board TE -0.605% TE150w +0.000% TErank +0.0000 | all -0.073% 150w +0.000% rank +0.0000
+    d  share, sec rows only (lead keeps engine .25) ros4  LOYO  -37.58% (4/6) n93 picks [0.7, 0.7, 0.7, 0.7, 0.55, 0.7, 0.7] | FWD  -33.96% (3/4) n75 picks [0.7, 0.45, 0.7, 0.7] | board TE -2.525% TE150w +0.000% TErank +0.0000 | all -0.297% 150w +0.000% rank +0.0000
+    d  share, sec rows only (lead keeps engine .25) ros1  LOYO  -39.77% (3/7) n120 picks [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7] | FWD  -34.25% (2/4) n97 picks [0.7, 0.45, 0.7, 0.7] | board TE -3.489% TE150w +0.000% TErank +0.0000 | all -0.387% 150w +0.000% rank +0.0000
+
+--- 8  ADP BANDS: recommended rule (fixed .25, TE2 own Clay < 4) and fixed .25 all TE2 ---
+    touched = rows whose projection changes. Both rules change ONLY the TE2's own row: the engine sec rule has tgtOther 0,
+    so no WR/TE teammate moves (the lead rule's .25 / WR .36 is already live and unchanged).
+
+  NEXT GAME
+    rec  .25 own Clay<4  ADP 1-30   touched 0 rows (band n 2274) -> no change
+    rec  .25 own Clay<4  31-60      touched 0 rows (band n 2203) -> no change
+    rec  .25 own Clay<4  61-100     touched 0 rows (band n 2488) -> no change
+    rec  .25 own Clay<4  top 30     touched 0 rows (band n 2274) -> no change
+    rec  .25 own Clay<4  top 60     touched 0 rows (band n 4477) -> no change
+    rec  .25 own Clay<4  top 100    touched 0 rows (band n 6965) -> no change
+    rec  .25 own Clay<4  101-150    touched 0 rows (band n 2772) -> no change
+    rec  .25 own Clay<4  151+/none  touched 111:  -16.72% (5/7) n111 | all band rows -0.274% (n 6830) | rank +nan
+    all  .25 all TE2     ADP 1-30   touched 0 rows (band n 2274) -> no change
+    all  .25 all TE2     31-60      touched 0 rows (band n 2203) -> no change
+    all  .25 all TE2     61-100     touched 0 rows (band n 2488) -> no change
+    all  .25 all TE2     top 30     touched 0 rows (band n 2274) -> no change
+    all  .25 all TE2     top 60     touched 0 rows (band n 4477) -> no change
+    all  .25 all TE2     top 100    touched 0 rows (band n 6965) -> no change
+    all  .25 all TE2     101-150    touched 2: +68.2% (n2, too few for season counts) | all band rows +0.013% (n 2772) | rank +0.0000
+    all  .25 all TE2     151+/none  touched 154:  -13.16% (5/7) n154 | all band rows -0.297% (n 6830) | rank +nan
+
+  REST OF SEASON, 4+ games left
+    rec  .25 own Clay<4  ADP 1-30   touched 0 rows (band n 1572) -> no change
+    rec  .25 own Clay<4  31-60      touched 0 rows (band n 1536) -> no change
+    rec  .25 own Clay<4  61-100     touched 0 rows (band n 1726) -> no change
+    rec  .25 own Clay<4  top 30     touched 0 rows (band n 1572) -> no change
+    rec  .25 own Clay<4  top 60     touched 0 rows (band n 3108) -> no change
+    rec  .25 own Clay<4  top 100    touched 0 rows (band n 4834) -> no change
+    rec  .25 own Clay<4  101-150    touched 0 rows (band n 1918) -> no change
+    rec  .25 own Clay<4  151+/none  touched 62:  -26.64% (5/7) n62 | all band rows -0.500% (n 4706) | rank +nan
+    all  .25 all TE2     ADP 1-30   touched 0 rows (band n 1572) -> no change
+    all  .25 all TE2     31-60      touched 0 rows (band n 1536) -> no change
+    all  .25 all TE2     61-100     touched 0 rows (band n 1726) -> no change
+    all  .25 all TE2     top 30     touched 0 rows (band n 1572) -> no change
+    all  .25 all TE2     top 60     touched 0 rows (band n 3108) -> no change
+    all  .25 all TE2     top 100    touched 0 rows (band n 4834) -> no change
+    all  .25 all TE2     101-150    touched 1: +42.5% (n1, too few for season counts) | all band rows +0.006% (n 1918) | rank +0.0000
+    all  .25 all TE2     151+/none  touched 92:  -20.11% (4/7) n92 | all band rows -0.459% (n 4706) | rank +nan
+
+  REST OF SEASON, no survivor filter
+    rec  .25 own Clay<4  ADP 1-30   touched 0 rows (band n 1708) -> no change
+    rec  .25 own Clay<4  31-60      touched 0 rows (band n 1665) -> no change
+    rec  .25 own Clay<4  61-100     touched 0 rows (band n 1904) -> no change
+    rec  .25 own Clay<4  top 30     touched 0 rows (band n 1708) -> no change
+    rec  .25 own Clay<4  top 60     touched 0 rows (band n 3373) -> no change
+    rec  .25 own Clay<4  top 100    touched 0 rows (band n 5277) -> no change
+    rec  .25 own Clay<4  101-150    touched 0 rows (band n 2138) -> no change
+    rec  .25 own Clay<4  151+/none  touched 85:  -26.09% (5/7) n85 | all band rows -0.608% (n 5542) | rank +nan
+    all  .25 all TE2     ADP 1-30   touched 0 rows (band n 1708) -> no change
+    all  .25 all TE2     31-60      touched 0 rows (band n 1665) -> no change
+    all  .25 all TE2     61-100     touched 0 rows (band n 1904) -> no change
+    all  .25 all TE2     top 30     touched 0 rows (band n 1708) -> no change
+    all  .25 all TE2     top 60     touched 0 rows (band n 3373) -> no change
+    all  .25 all TE2     top 100    touched 0 rows (band n 5277) -> no change
+    all  .25 all TE2     101-150    touched 2: +35.1% (n2, too few for season counts) | all band rows +0.014% (n 2138) | rank +0.0000
+    all  .25 all TE2     151+/none  touched 118:  -21.10% (4/7) n118 | all band rows -0.569% (n 5542) | rank +nan
+
+  CURRENT live bias, TE rows (ADP <= 100) in weeks a TE teammate (played for the team that season) was out:
+    next  ADP 1-30   n    4
+    next  31-60      n   48  act 12.17 live 10.52 -> 1.156
+    next  61-100     n   20  act  7.68 live  8.69 -> 0.884
+    next  top 30     n    4
+    next  top 60     n   52  act 11.72 live 10.65 -> 1.101
+    next  top 100    n   72  act 10.60 live 10.11 -> 1.049
+    ros4  ADP 1-30   n    2
+    ros4  31-60      n   32  act 11.75 live 10.40 -> 1.130
+    ros4  61-100     n   14  act  6.08 live  8.13 -> 0.748
+    ros4  top 30     n    2
+    ros4  top 60     n   34  act 11.52 live 10.48 -> 1.099
+    ros4  top 100    n   48  act  9.94 live  9.80 -> 1.014
+    ros1  ADP 1-30   n    2
+    ros1  31-60      n   35  act 11.63 live 10.39 -> 1.119
+    ros1  61-100     n   15  act  5.93 live  8.08 -> 0.734
+    ros1  top 30     n    2
+    ros1  top 60     n   37  act 11.42 live 10.47 -> 1.091
+    ros1  top 100    n   52  act  9.84 live  9.78 -> 1.006
+
+Limitations: rows exist only for games with a stat (a back-up's 0-target games are missing from evidence AND targets);
+TE1 'out' = no stat row (a TE1 who played without a stat would read as out); team per game from the schedule; harness = Clay
+pool (40+ pts), so deep back-ups are absent; rest-of-season windows use the starter's ACTUAL absences (oracle; the engine
+knows the injury window + availability curve only); prop anchor / pecking dock not replayable.

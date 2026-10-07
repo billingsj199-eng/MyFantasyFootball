@@ -22,6 +22,13 @@ the way; one wild week barely registers.
   belowW            market weight used ONLY when the clean model sits >= BELOW_GAP pts under
                     the market on a starter (market >= BELOW_STARTER_MIN); pooled across
                     positions, evidence = MAE-minimising w on those rows, shrunk to PROP_W
+  aboveW            market weight used ONLY when the clean model sits >= ABOVE_GAP pts ABOVE
+                    the market on an ABOVE_POS player (WR, 2026-10-07); same fit, shrunk to
+                    PROP_W; the engine takes max(w, aboveW) — it only ever raises the weight
+  atdJuice[pos]     anytime-TD devig factor replacing the flat PROP_ATD_JUICE 1.06 inside the
+                    market-implied mean (2026-10-07, written for ATD_JUICE_POS = RB + WR):
+                    J such that Σ λ(p_raw/J) = Σ actual rush+rec TDs, Poisson-honest shrink
+                    like tdMult, clamp 1.0-1.35; evidence printed for every position
 
 Every lock row carries `tun` = the tuner values live when it was locked
 (export_site_proj.js), so evidence is always measured against the RAW prior
@@ -55,6 +62,20 @@ TD_STATS = {"QB": ("ptd", "rtd"), "RB": ("rtd", "rctd"), "WR": ("rctd",), "TE": 
 TD_CLAMP = (0.70, 1.40)
 BELOW_GAP = 3.0          # mirrors engine.js BELOW_GAP / BELOW_STARTER_MIN
 BELOW_STARTER_MIN = 8.0
+ABOVE_GAP = 1.0          # mirrors engine.js ABOVE_GAP / ABOVE_POS (2026-10-07): clean model >= 1 pt ABOVE the market
+ABOVE_POS = ("WR",)      # W1-4: market closer 67% on those WR rows (n=94); RB/TE/QB showed no side
+ABOVE_MARKET_MAX = 12.0  # mirrors engine.js: WR1-level markets (>= 12) are exempt (model was closer 5/8 there)
+ATD_JUICE_PRIOR = 1.06   # engine PROP_ATD_JUICE (flat devig on anytime-TD implied probability)
+ATD_JUICE_POS = ("RB", "WR")  # positions the fitted factor is WRITTEN for (Jack 2026-10-07: RB, then WR); evidence printed for all
+ATD_JUICE_CLAMP = (1.0, 1.35)
+ATD_BOOKS = ("DK", "FD", "MGM", "UD", "PP")
+def atd_raw_p(lines):
+    """median raw implied P(anytime TD) across books, juice still in."""
+    v = [lines[b]["atd"] for b in ATD_BOOKS if isinstance(lines.get(b), dict) and isinstance(lines[b].get("atd"), (int, float)) and lines[b]["atd"] != 0]
+    if not v:
+        return None
+    o = float(np.median(v))
+    return (-o / (-o + 100)) if o < 0 else 100 / (o + 100)
 W_GRID = np.round(np.arange(0.0, 1.0001, 0.05), 2)
 MIN_PROJ = 5.0
 OUT = os.path.join(HERE, "data", "sim_tuning.js")
@@ -89,7 +110,7 @@ def collect():
                 continue
             rows.append({"wk": wk, "pos": p["pos"], "act": float(w["fpts"]), "stat": w, "comps": p.get("comps") or {},
                          "mean": p["mean"], "js": p.get("jsMean"), "prop": p.get("propMean"), "src": p.get("propSrc"),
-                         "p10": p.get("p10"), "p90": p.get("p90"),
+                         "p10": p.get("p10"), "p90": p.get("p90"), "atd": atd_raw_p(p.get("lines") or {}),
                          "w": tun.get("wa") or tun.get("w") or PRIOR_W, "s": tun.get("s") or 1.0, "td": tun.get("td") or {}})
     return rows, krows, drows
 
@@ -103,7 +124,7 @@ def main():
     nweeks = max(1, len(weeks))
     print(f"scored rows: {len(rows)} skill + {len(krows)} K + {len(drows)} DST across weeks {weeks}")
     tuning = {"asOf": time.strftime("%Y-%m-%d"), "weeksScored": weeks, "priorW": PRIOR_W, "priorWeeks": PRIOR_WEEKS,
-              "propW": {}, "sigmaMult": {}, "tdMult": {}, "kLevel": 1.0, "dstShift": 0.0, "belowW": PRIOR_W, "evidence": {}}
+              "propW": {}, "sigmaMult": {}, "tdMult": {}, "kLevel": 1.0, "dstShift": 0.0, "belowW": PRIOR_W, "aboveW": PRIOR_W, "evidence": {}}
     for pos in POS:
         rs = [r for r in rows if r["pos"] == pos]
         n0 = PRIOR_WEEKS * len(rs) / nweeks
@@ -199,6 +220,43 @@ def main():
                     "modelSide": round(float(np.mean(ac < mk)), 3)})
     tuning["evidence"]["below"] = bev
     print(f"  BELOW-market starters: n={len(bl):3d}  belowW {PRIOR_W:.2f} -> {tuning['belowW']:.3f} (best {bev.get('wBest','-')}, actual under market {bev.get('modelSide','-')})")
+    # --- model-ABOVE-market weight (WR only; mirror of belowW, raises the weight)
+    al = []
+    for r in rows:
+        if r["pos"] not in ABOVE_POS or r["src"] != "line" or not isinstance(r["prop"], (int, float)) or not isinstance(r["js"], (int, float)) or not (0 < r["w"] <= 1):
+            continue
+        mkt = (r["prop"] - (1 - r["w"]) * r["js"]) / r["w"]
+        if r["js"] - mkt >= ABOVE_GAP and mkt < ABOVE_MARKET_MAX:
+            al.append((r["js"], mkt, r["act"]))
+    aev = {"n": len(al), "pos": list(ABOVE_POS)}
+    if len(al) >= 10:
+        base = np.array([b[0] for b in al]); mk = np.array([b[1] for b in al]); ac = np.array([b[2] for b in al])
+        maes = [float(np.mean(np.abs((1 - w) * base + w * mk - ac))) for w in W_GRID]
+        w_best = float(W_GRID[int(np.argmin(maes))])
+        n0 = PRIOR_WEEKS * len(al) / nweeks
+        tuning["aboveW"] = round(float(shrink(PRIOR_W, w_best, len(al), n0)), 3)
+        aev.update({"wBest": w_best, "maeAtPrior": round(maes[int(np.argmin(np.abs(W_GRID - PRIOR_W)))], 3), "maeAtBest": round(min(maes), 3),
+                    "marketSide": round(float(np.mean(np.abs(mk - ac) < np.abs(base - ac))), 3)})
+    tuning["evidence"]["above"] = aev
+    print(f"  ABOVE-market {'/'.join(ABOVE_POS)}: n={len(al):3d}  aboveW {PRIOR_W:.2f} -> {tuning['aboveW']:.3f} (best {aev.get('wBest','-')}, market closer {aev.get('marketSide','-')})")
+    # --- anytime-TD devig per position: J such that Σ λ(p_raw / J) matches Σ actual rush+rec TDs,
+    #     Poisson-honest shrink like tdMult (prior worth PRIOR_WEEKS of projected TDs at the flat 1.06).
+    tuning["atdJuice"] = {}
+    tuning["evidence"]["atd"] = {}
+    for pos in POS:
+        rs = [r for r in rows if r["pos"] == pos and isinstance(r["atd"], (int, float))]
+        if len(rs) < 20:
+            continue
+        lam0 = sum(-np.log(1 - min(0.85, max(0.01, r["atd"] / ATD_JUICE_PRIOR))) for r in rs)
+        actual = sum((r["stat"].get("rtd") or 0) + (r["stat"].get("rctd") or 0) for r in rs)
+        t0 = PRIOR_WEEKS * lam0 / nweeks
+        ratio = (t0 + actual) / (t0 + lam0)          # shrunk actual / book-implied TD count
+        j = ATD_JUICE_PRIOR / ratio
+        j = float(min(ATD_JUICE_CLAMP[1], max(ATD_JUICE_CLAMP[0], j)))
+        tuning["evidence"]["atd"][pos] = {"n": len(rs), "lamAt106": round(float(lam0), 1), "act": round(float(actual), 1), "ratio": round(float(actual / lam0), 3), "juiceFit": round(j, 3), "applied": pos in ATD_JUICE_POS}
+        if pos in ATD_JUICE_POS:
+            tuning["atdJuice"][pos] = round(j, 3)
+    print("  ATD devig: " + "  ".join(f"{pos} n={e['n']} act/Σλ {e['ratio']:.2f} -> J {e['juiceFit']:.3f}{'*' if e['applied'] else ''}" for pos, e in tuning["evidence"]["atd"].items()) + "  (* = written)")
     print(f"  DST: n={len(drows):3d}  shift {tuning['dstShift']:+.3f} pts (evidence {dev.get('evidenceShift','-')})  sigma x{tuning['sigmaMult'].get('DST', 1.0):.3f} (inside {dev.get('bandInside','-')})")
     print(f"  K : n={len(krows):3d}  level x{tuning['kLevel']:.3f} (ratio {kev.get('ratio','-')})  sigma x{tuning['sigmaMult'].get('K', 1.0):.3f} (inside {kev.get('bandInside','-')})")
     if a.dry:

@@ -80,6 +80,7 @@ global.window = global;
   'data/sim_actuals_2026.js',
   'data/pace_2026.js',
   'data/sim_tuning.js',
+  'data/sim_prior_health.js',
   'overrides.js',
   'engine.js'
 ].forEach(f => {
@@ -331,6 +332,7 @@ function kickoffMs(kicks, wk, tm) {
           luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live)
           useLam: r.useLam != null ? +r.useLam.toFixed(2) : undefined, usePg: r.usePg != null ? +r.usePg.toFixed(2) : undefined, jsNoUse: r.jsNoUse != null ? +r.jsNoUse.toFixed(2) : undefined,   // live usage evidence inside jsMean at lock (usage_scorecard.py)
           peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined,   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
+          vol: r.vol != null && r.vol !== 1 ? +r.vol.toFixed(3) : undefined, health: r.health ? +r.health.toFixed(2) : undefined, useHurt: r.useHurt || undefined,   // 2026-10-07 layers (volume context / banged-up prior / hurt usage games) for per-layer grading
           ret: r.ret != null && r.ret !== 1 ? +r.ret.toFixed(3) : undefined,   // return ramp inside the number at lock (return_scorecard.py)
           qbf: r.qbf != null && r.qbf !== 1 ? +r.qbf.toFixed(3) : undefined,   // QB starter floor inside the number at lock (return_scorecard.py)
           ncMean: r.ncProj != null ? +r.ncProj.toFixed(2) : null, ncSrc: r.ncSrc || null,   // SHADOW: Clay-free base (own 3-yr PPG prior)

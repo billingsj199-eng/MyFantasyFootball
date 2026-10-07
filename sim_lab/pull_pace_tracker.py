@@ -888,6 +888,10 @@ def build():
         f.write("window.SIM_PACE_2026 = ")
         json.dump(payload, f, separators=(",", ":"))
         f.write(";\n")
+    try:
+        import build_pace_vol; build_pace_vol.inject(OUT, SEASON)   # team pass-volume parts for the live volume-context layer (2026-10-07)
+    except Exception as e:
+        print(f"WARN pace vol not injected ({e})")
     n_live = sum(1 for t in teams.values() if t["games"])
     print(f"wrote {OUT} — {len(teams)} teams, {n_live} with 2026 data"
           + ("" if got_pbp else " (no 2026 pbp yet — baselines only)"))

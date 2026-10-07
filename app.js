@@ -6920,8 +6920,64 @@ function _tcvSetByeCut(key, n) {
   const all = _tcvByeCutAll();
   const v = Math.round(Number(n));
   if (isFinite(v) && v > 0) all[key] = Math.min(600, v); else delete all[key];
-  try { localStorage.setItem('tcv_bye_cut', JSON.stringify(all)); } catch(_) {}
+  _tcvByeCutPersist(all);
 }
+// ACCOUNT SYNC (Jack 2026-10-07, "save to my account not just this device"):
+// same recipe as the watchlist — users/{uid}/data/tier_prefs {byeCut,
+// updatedAt} under the existing per-user rules (no rules change). Local
+// stays the cache for signed-out use; on sign-in the newer side wins, and a
+// different account's cloud prefs always beat this device's leftovers
+// (tcv_bye_cut_uid = last-synced account). Debounced full set().
+let _tcvByeCutPushTimer = null;
+function _tcvByeCutDoc(uid) {
+  return firebase.firestore().collection('users').doc(uid).collection('data').doc('tier_prefs');
+}
+function _tcvByeCutPersist(all) {
+  try {
+    localStorage.setItem('tcv_bye_cut', JSON.stringify(all));
+    localStorage.setItem('tcv_bye_cut_at', new Date().toISOString());
+  } catch(_) {}
+  clearTimeout(_tcvByeCutPushTimer);
+  _tcvByeCutPushTimer = setTimeout(_tcvByeCutCloudPush, 1200);
+}
+function _tcvByeCutCloudPush() {
+  try {
+    if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return;
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    _tcvByeCutDoc(u.uid).set({ byeCut: _tcvByeCutAll(), updatedAt: new Date().toISOString() }, { merge: true })
+      .then(() => { try { localStorage.setItem('tcv_bye_cut_uid', u.uid); } catch(_) {} })
+      .catch(e => console.warn('[TierCards] bye cutoff cloud save failed:', e));
+  } catch(_) {}
+}
+function _tcvByeCutCloudInit(u) {
+  if (!u) return;
+  try {
+    _tcvByeCutDoc(u.uid).get().then(doc => {
+      const cloud = doc.exists ? doc.data() : null;
+      let lastUid = null, localAt = null;
+      try { lastUid = localStorage.getItem('tcv_bye_cut_uid'); localAt = localStorage.getItem('tcv_bye_cut_at'); } catch(_) {}
+      if (cloud && cloud.byeCut && typeof cloud.byeCut === 'object') {
+        const differentAccount = lastUid && lastUid !== u.uid;
+        const cloudNewer = !localAt || (cloud.updatedAt && cloud.updatedAt > localAt);
+        if (differentAccount || cloudNewer) {
+          try {
+            localStorage.setItem('tcv_bye_cut', JSON.stringify(cloud.byeCut));
+            localStorage.setItem('tcv_bye_cut_at', cloud.updatedAt || new Date().toISOString());
+            localStorage.setItem('tcv_bye_cut_uid', u.uid);
+          } catch(_) {}
+          // Tier cards on screen already? Rebuild so the row follows the account's cutoffs.
+          if (typeof viewMode !== 'undefined' && viewMode === 'tierCard' && typeof render === 'function') { try { render(); } catch(_) {} }
+          return;
+        }
+      }
+      // No cloud prefs, or local is newer — push local up (also claims the uid).
+      if (Object.keys(_tcvByeCutAll()).length || cloud) _tcvByeCutCloudPush();
+      else { try { localStorage.setItem('tcv_bye_cut_uid', u.uid); } catch(_) {} }
+    }).catch(() => {});
+  } catch(_) {}
+}
+try { firebase.auth().onAuthStateChanged(u => { if (u) _tcvByeCutCloudInit(u); }); } catch(_) {}
 function _tcvByeRowPlayers(data, belowCut) {
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return null;
   if (typeof filter === 'undefined' || filter === 'ROOKIE' || filter === 'DEVY') return null;
@@ -7066,7 +7122,7 @@ function _renderTierCardView(data, container) {
     '<button class="tcv-reveal-btn' + (_tcvBookPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleBook" title="Switch the PROJ number on every card between OUR projection and the SPORTSBOOK projection (posted prop lines scored in the current format). Players with no posted lines keep our projection, labelled PROJ instead of BOOK.">$ ' + (_tcvBookPref() ? 'BOOK PROJ' : 'OUR PROJ') + '</button>' +
     (currentMode !== 'weekly' ? '<span class="tcv-move-ctl" title="Week range for the cards: REST OF SEASON = the normal season projection. NEXT N / PLAYOFFS / CUSTOM = each card shows his projected PPG over those weeks, and for 3 weeks or fewer each week\'s opponent and projection (PLAYOFFS = the playoff-schedule view). Same setting as WINDOW in the VOR bar — the SIM VOR board re-ranks on it."><span class="tcv-zoom-lbl">WEEKS</span><select class="tcv-move-date" data-tcvwin>' + _vorWinOptsHtml(_vorState()) + '</select>'
       + (_vorState().win === -1 ? '<input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wFrom" min="1" max="18" value="' + _vorState().wFrom + '"><span class="tcv-zoom-lbl">–</span><input type="number" class="tcv-move-date tcv-wk-in" data-tcvwk="wTo" min="1" max="18" value="' + _vorState().wTo + '">' : '') + '</span>' : '') +
-    ((currentMode === 'weekly' && filter !== 'ROOKIE' && filter !== 'DEVY') ? '<span class="tcv-move-ctl" title="BYE row cutoff for the ' + filterLabel + ' view: a player on bye this week joins the bottom BYE row when his SEASON rank in this position group is this number or better (QB 20 = bye QBs ranked QB1-QB20 on your redraft board). Blank = AUTO, the number of cards shown above the cut line. Saved per view on this device.' + (_tcvBye ? ' Currently: top ' + _tcvBye.limit + (_tcvBye.custom ? ' (custom)' : ' (auto)') : '') + '"><span class="tcv-zoom-lbl">BYE ≤</span><input type="number" class="tcv-move-date tcv-wk-in tcv-bye-in" data-tcvbyecut min="1" max="600" placeholder="AUTO" value="' + (_tcvByeCutPref(filter) != null ? _tcvByeCutPref(filter) : '') + '"></span>' : '') +
+    ((currentMode === 'weekly' && filter !== 'ROOKIE' && filter !== 'DEVY') ? '<span class="tcv-move-ctl" title="BYE row cutoff for the ' + filterLabel + ' view: a player on bye this week joins the bottom BYE row when his SEASON rank in this position group is this number or better (QB 20 = bye QBs ranked QB1-QB20 on your redraft board). Blank = AUTO, the number of cards shown above the cut line. Saved per view to your account (signed in) and on this device.' + (_tcvBye ? ' Currently: top ' + _tcvBye.limit + (_tcvBye.custom ? ' (custom)' : ' (auto)') : '') + '"><span class="tcv-zoom-lbl">BYE ≤</span><input type="number" class="tcv-move-date tcv-wk-in tcv-bye-in" data-tcvbyecut min="1" max="600" placeholder="AUTO" value="' + (_tcvByeCutPref(filter) != null ? _tcvByeCutPref(filter) : '') + '"></span>' : '') +
     '<button class="tcv-reveal-btn' + (_tcvMoveOn ? ' tcv-primary' : '') + '" data-tcvaction="toggleMove" title="Rank movement: each card shows RANK THEN › RANK NOW — the second number green if the player rose, red if he fell. Compares against the weekly anchor (up to 7 days back)' + (_tcvIsAdminViewer() ? ', or pick any date to compare against the board saved that day' : '') + '.">↕ MOVEMENT</button>' +
     (_tcvMoveOn ? (_tcvIsAdminViewer()
       ? '<span class="tcv-move-ctl" title="Compare against the board as it was saved on or before this date (newest rankings backup that day)"><span class="tcv-zoom-lbl">VS</span>' +

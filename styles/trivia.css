@@ -36,19 +36,19 @@
    The actual outline color is set inline per cell via the `--team-outline` var. */
 .trivia-cell-reveal img{width:100%;flex:1 1 0;min-height:0;object-fit:contain;object-position:center;display:block;filter:var(--team-outline-filter,drop-shadow(1.5px 0 0 #22c55e) drop-shadow(-1.5px 0 0 #22c55e) drop-shadow(0 1.5px 0 #22c55e) drop-shadow(0 -1.5px 0 #22c55e))}
 /* Name wraps to 2 lines if needed so the full name is visible. */
-.trivia-cell-reveal .reveal-name{font-family:'DM Sans',sans-serif;font-weight:800;font-size:.6rem;color:#0f172a;text-align:center;line-height:1.05;letter-spacing:0;width:100%;word-break:break-word;white-space:normal;flex:0 0 auto;padding:1px 2px}
+.trivia-cell-reveal .reveal-name{font-family:'DM Sans',sans-serif;font-weight:800;font-size:.6875rem;color:#0f172a;text-align:center;line-height:1.05;letter-spacing:0;width:100%;word-break:break-word;white-space:normal;flex:0 0 auto;padding:1px 2px}
 .trivia-cell.revealed .trivia-cell-body,.trivia-cell.revealed .trivia-cell-hint{display:none}
 .trivia-cell.wrong .trivia-cell-body,.trivia-cell.wrong .trivia-cell-hint{display:none}
 .trivia-cell-answer{display:none}
 .trivia-cell.guessing:hover{transform:none}
 .trivia-cell.next-up{box-shadow:0 0 0 3px var(--accent),0 0 12px rgba(168,85,247,.4);z-index:1}
-.trivia-cell-cat{width:100%;text-align:center;padding:4px 2px;background:linear-gradient(135deg,#a855f7,#7c3aed);font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1px;color:#fff;text-shadow:1px 1px 0 #000;line-height:1.2}
+.trivia-cell-cat{width:100%;text-align:center;padding:4px 2px;background:linear-gradient(135deg,#a855f7,#7c3aed);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:#fff;text-shadow:1px 1px 0 #000;line-height:1.2}
 .trivia-cell-body{flex:1;display:flex;align-items:center;justify-content:center;padding:4px;width:100%}
 .trivia-cell-logo{width:52%;max-width:60px;aspect-ratio:1;object-fit:contain;opacity:.85}
-.trivia-cell-hint{font-size:.6rem;color:var(--text2);text-align:center;padding:0 2px 3px;line-height:1.2}
+.trivia-cell-hint{font-size:.6875rem;color:var(--text2);text-align:center;padding:0 2px 3px;line-height:1.2}
 .trivia-cell.guessing{cursor:default}
-.trivia-guess-input{position:absolute;bottom:0;left:0;right:0;padding:5px 4px;border:none;background:rgba(255,255,255,.97);font-family:'DM Sans',sans-serif;font-size:.65rem;text-align:center;outline:none;color:#111;z-index:2}
-.trivia-guess-input::placeholder{color:#999;font-size:.6rem}
+.trivia-guess-input{position:absolute;bottom:0;left:0;right:0;padding:5px 4px;border:none;background:rgba(255,255,255,.97);font-family:'DM Sans',sans-serif;font-size:.6875rem;text-align:center;outline:none;color:#111;z-index:2}
+.trivia-guess-input::placeholder{color:#999;font-size:.6875rem}
 .trivia-guess-input.shake{animation:triviaShake .4s ease}
 @keyframes triviaShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
 .trivia-score-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px;margin-bottom:8px;border-radius:8px;background:var(--surface2);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;color:var(--text)}

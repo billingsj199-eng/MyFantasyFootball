@@ -61,12 +61,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-07-tokens1" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-07-tokens2" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-07-tokens1" as="script">
+<link rel="preload" href="app.js?v=2026-10-07-tokens2" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-07" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-07-tokens1">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-07-tokens2">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -327,12 +327,12 @@ document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth
 
 <!-- Creator attribution (signup only) -->
 <div id="authCreatorWrap" style="display:none;margin-bottom:.65rem">
-<label style="display:block;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:.3rem">HOW DID YOU HEAR ABOUT US?</label>
+<label style="display:block;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:.3rem">HOW DID YOU HEAR ABOUT US?</label>
 <select id="authCreator" aria-label="How did you hear about us?" class="auth-input" style="padding:.55rem .75rem;cursor:pointer">
 <option value="jackb933">jackb933</option>
 <option value="dyl">dyl</option>
 </select>
-<div style="font-size:.62rem;color:var(--text2);margin-top:.25rem;line-height:1.4">For tracking only — does not affect price or apply a discount.</div>
+<div style="font-size:.6875rem;color:var(--text2);margin-top:.25rem;line-height:1.4">For tracking only — does not affect price or apply a discount.</div>
 </div>
 
 <button class="auth-btn auth-btn-primary" id="authSubmit">SIGN IN</button>
@@ -433,11 +433,11 @@ SIGN IN
 <div class="auth-card-sub">Manage your account settings</div>
 <div style="display:flex;flex-direction:column;gap:.65rem">
 <div>
-<label style="font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Email</label>
+<label style="font-size:.6875rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Email</label>
 <input type="text" class="auth-input" id="acctEmail" aria-label="Email address" readonly style="margin-bottom:0;opacity:.7;cursor:default">
 </div>
 <div>
-<label style="font-size:.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Password</label>
+<label style="font-size:.6875rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Password</label>
 <input aria-label="Password (hidden)" type="text" class="auth-input" value="••••••••" readonly style="margin-bottom:0;opacity:.5;cursor:default">
 </div>
 </div>
@@ -648,18 +648,18 @@ Ask Jack — weekly start/sit &amp; trade Q&amp;A
 <div id="planMonthly" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--border);background:var(--elev-1);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">MONTHLY</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$9.99</div>
-<div style="font-size:.65rem;color:var(--text2)">Billed monthly</div>
+<div style="font-size:.6875rem;color:var(--text2)">Billed monthly</div>
 </div>
 <div id="planSeason" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--border);background:var(--elev-1);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">SEASON PASS</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$24.99</div>
-<div style="font-size:.65rem;color:var(--text2)">One-time · all access through Jan 15, 2027</div>
+<div style="font-size:.6875rem;color:var(--text2)">One-time · all access through Jan 15, 2027</div>
 </div>
 <div id="planYearly" class="plan-option selected" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--accent);background:rgba(245,158,11,.08);cursor:pointer;text-align:center;transition:all .15s;position:relative">
-<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:.55rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;padding:1px 8px;border-radius:3px">BEST VALUE</div>
+<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:.6875rem;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:1px 8px;border-radius:3px">BEST VALUE</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">YEARLY</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$69.99</div>
-<div style="font-size:.65rem;color:var(--text2)">$5.83/mo — Save 42%</div>
+<div style="font-size:.6875rem;color:var(--text2)">$5.83/mo — Save 42%</div>
 </div>
 </div>
 <style>.plan-option.selected{border-color:var(--accent)!important;background:rgba(245,158,11,.08)!important}.plan-option:not(.selected){border-color:var(--border)!important;background:var(--elev-1)!important}.plan-option:not(.selected):hover{border-color:rgba(245,158,11,.3)!important}</style>
@@ -676,7 +676,7 @@ Ask Jack — weekly start/sit &amp; trade Q&amp;A
 <div style="margin-top:.75rem">
 <button class="premium-btn" id="premiumUpgradeBtn">UPGRADE NOW</button>
 </div>
-<div style="font-size:.68rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
+<div style="font-size:.6875rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
 
 <!-- Redeem free-premium code -->
 <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
@@ -1070,10 +1070,10 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
 .season-strip{display:flex;align-items:center;gap:10px;background:var(--ticker-bg);border-bottom:1px solid var(--border);padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:.7rem;letter-spacing:.4px;color:var(--text2);flex-wrap:wrap}
 .ss-week{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--accent);white-space:nowrap}
 .ss-count{background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:1px 9px;font-weight:600;color:var(--text1);font-variant-numeric:tabular-nums;white-space:nowrap}
-.ss-btn{margin-left:auto;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.2px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.ss-btn{margin-left:auto;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:3px 10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
 .ss-btn:hover{background:var(--accent);color:var(--bg)}
 body.mff-embed .season-strip{display:none!important}
-@media (max-width:600px){.season-strip{font-size:.62rem;padding:4px 10px;gap:7px}.ss-week{font-size:.75rem}}
+@media (max-width:600px){.season-strip{font-size:.6875rem;padding:4px 10px;gap:7px}.ss-week{font-size:.75rem}}
 </style>
 <!-- === HOME REDESIGN: ticker + teams hero + action row === -->
 <!-- ADP MOVERS top bar — the old rankings-page card promoted to the page-top
@@ -1150,10 +1150,10 @@ SHARE
 <div style="position:relative;display:inline-flex">
 <button class="tb-btn" id="btnExportMenu" title="Download your rankings in various formats" onclick="event.stopPropagation();var m=document.getElementById('exportMenu');var open=m.style.display!=='none';m.style.display=open?'none':'block';this.setAttribute('aria-expanded',!open)">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-EXPORT <span style="font-size:.5rem;margin-left:1px;opacity:.7">▾</span>
+EXPORT <span style="font-size:.6875rem;margin-left:1px;opacity:.7">▾</span>
 </button>
 <div id="exportMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;z-index:120;min-width:180px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-family:'DM Sans',sans-serif">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:1.5px;color:var(--text2);padding:4px 8px 6px">DOWNLOAD AS</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);padding:4px 8px 6px">DOWNLOAD AS</div>
 <button class="tb-btn export-menu-item" id="btnExport" title="Export rankings to Excel/CSV" style="width:100%;justify-content:flex-start;padding:6px 8px;font-size:.7rem">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 EXCEL (.CSV)
@@ -1181,14 +1181,14 @@ PRINT SHEET
 COLS
 </button>
 <div id="colTogglePopup" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;z-index:100;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:'DM Sans',sans-serif;font-size:.78rem">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px">SHOW COLUMNS</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:6px">SHOW COLUMNS</div>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="adp" checked> Consensus rank</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppgProj" checked> Proj PPG</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppg25" checked> Season PPG ('25 → '26)</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="l4ppg" checked> L4 PPG</label>
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="age" checked> Age</label>
 </div></div>
-<button class="tb-btn" id="btnDraftHelper" title="Get the MFF Helper Chrome extensions — live draft recs on Underdog, Sleeper, ESPN & Yahoo" style="font-size:.55rem">
+<button class="tb-btn" id="btnDraftHelper" title="Get the MFF Helper Chrome extensions — live draft recs on Underdog, Sleeper, ESPN & Yahoo" style="font-size:.6875rem">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
 HELPER
 </button>
@@ -1222,15 +1222,15 @@ CLEAR ALL
   .search-suggest-item img{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);background:var(--surface);flex-shrink:0}
   .ss-text{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
   .ss-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ss-meta{font-size:.62rem;color:var(--text2);letter-spacing:.3px}
-  .ss-pos{display:inline-block;padding:0 5px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.5px;margin-right:5px}
-  .filter-row-label{font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;color:var(--text2);margin-right:6px;text-transform:uppercase;flex-shrink:0;align-self:center}
+  .ss-meta{font-size:.6875rem;color:var(--text2);letter-spacing:.3px}
+  .ss-pos{display:inline-block;padding:0 5px;border-radius:3px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;margin-right:5px}
+  .filter-row-label{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);margin-right:6px;text-transform:uppercase;flex-shrink:0;align-self:center}
   .filter-row-top > .filter-row-label:not(:first-child){margin-left:10px}
   tr.kb-grabbed{outline:2px dashed var(--accent);outline-offset:-2px;background:rgba(245,158,11,.06)}
   tr.kb-grabbed .drag-handle{opacity:1;color:var(--accent)}
   /* U3: stacked column header — main label + smaller muted scoring-format on a second line */
   .th-stack{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle;line-height:1.05;text-align:left;margin-right:4px}
-  .th-fmt{font-size:.55rem;opacity:.6;font-weight:400;letter-spacing:.5px;text-transform:none;margin-top:1px}
+  .th-fmt{font-size:.6875rem;opacity:.6;font-weight:400;letter-spacing:.5px;text-transform:none;margin-top:1px}
   /* P6 Phase 1: virtualization via content-visibility. Browser skips paint/layout
      for off-screen rows. Falls back to no-op on Safari <18 (no harm). */
   #pageRankings tbody tr{content-visibility:auto;contain-intrinsic-size:auto 52px}
@@ -1274,7 +1274,7 @@ CLEAR ALL
        already conveys the position via colour, so showing both is redundant. */
     #pageRankings tbody tr td:nth-child(4){display:none!important}
     /* Position rank ("WR6") — colour-coded chip, position-tinted background */
-    #pageRankings tbody .pos-rank-cell{flex:0 0 auto;font-size:.62rem;font-weight:700;font-family:'Bebas Neue',sans-serif;letter-spacing:.6px;padding:2px 5px!important;min-width:26px;text-align:center!important;border-radius:4px;line-height:1.1}
+    #pageRankings tbody .pos-rank-cell{flex:0 0 auto;font-size:.6875rem;font-weight:700;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 5px!important;min-width:26px;text-align:center!important;border-radius:4px;line-height:1.1}
     #pageRankings tbody tr:has(.pos-badge.QB) .pos-rank-cell{background:rgba(239,68,68,.18);color:#fca5a5}
     #pageRankings tbody tr:has(.pos-badge.RB) .pos-rank-cell{background:rgba(34,197,94,.18);color:#86efac}
     #pageRankings tbody tr:has(.pos-badge.WR) .pos-rank-cell{background:rgba(59,130,246,.18);color:#93c5fd}
@@ -1295,12 +1295,12 @@ CLEAR ALL
     }
     #pageRankings tbody .adp-cell{margin-left:4px}
     #pageRankings tbody .ppg-proj-cell{min-width:42px!important}
-    #pageRankings tbody .adp-cell::after{content:attr(data-lbl);display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
-    #pageRankings tbody .ppg-proj-cell::after{content:"PROJ";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    #pageRankings tbody .adp-cell::after{content:attr(data-lbl);display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
+    #pageRankings tbody .ppg-proj-cell::after{content:"PROJ";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
     /* P-SOS — same value-on-top/label-below treatment as ADP/PROJ (previously
        rendered as a bare unlabeled number cramming the end of the card). */
     #pageRankings tbody .psos-cell{flex:0 0 auto;text-align:center!important;font-size:.82rem;font-weight:600;padding:0 3px!important;min-width:30px!important;line-height:1.05}
-    #pageRankings tbody .psos-cell::after{content:"SOS";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    #pageRankings tbody .psos-cell::after{content:"SOS";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
     /* DEVY rows reuse the stat cells for prospect columns. Phone card = class ·
        KTC · projected pick · JM; RAS + the watch star are dropped so the name
        keeps its width (both are on the player card). */
@@ -1308,10 +1308,10 @@ CLEAR ALL
     #pageRankings tbody tr.devy-row .psos-cell,
     #pageRankings tbody tr.devy-row .watch-star{display:none!important}
     #pageRankings tbody tr.devy-row .jm-cell{flex:0 0 auto;text-align:center!important;font-size:.82rem;padding:0 3px!important;min-width:30px!important;line-height:1.05}
-    #pageRankings tbody tr.devy-row .jm-cell::after{content:"JM";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    #pageRankings tbody tr.devy-row .jm-cell::after{content:"JM";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
     /* WEEKLY cards keep Opp (Spread/Team Total are hidden on phones in main.css) */
     body.format-weekly #pageRankings tbody td.opp-cell{flex:0 0 auto;text-align:center!important;font-size:.78rem;font-weight:600;padding:0 3px!important;min-width:40px!important;line-height:1.05}
-    body.format-weekly #pageRankings tbody td.opp-cell::after{content:"OPP";display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2)}
+    body.format-weekly #pageRankings tbody td.opp-cell::after{content:"OPP";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
     #pageRankings tbody .age-cell{display:none}
     /* Tier banner rows still need to span full card width */
     #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
@@ -1331,7 +1331,7 @@ CLEAR ALL
     .drag-clone tr td:nth-child(3){flex:1 1 auto;min-width:0!important;padding:0 2px!important;overflow:hidden}
     .drag-clone tr td:nth-child(3) .player-cell{gap:7px!important}
     .drag-clone tr td:nth-child(4){display:none!important}
-    .drag-clone .pos-rank-cell{flex:0 0 auto;font-size:.62rem;font-weight:700;font-family:'Bebas Neue',sans-serif;letter-spacing:.6px;padding:2px 6px!important;min-width:30px;text-align:center!important;border-radius:4px;line-height:1.1}
+    .drag-clone .pos-rank-cell{flex:0 0 auto;font-size:.6875rem;font-weight:700;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px!important;min-width:30px;text-align:center!important;border-radius:4px;line-height:1.1}
     .drag-clone .adp-cell,.drag-clone .ppg-proj-cell,.drag-clone .psos-cell{flex:0 0 auto;text-align:center!important;font-size:.82rem;font-weight:600;color:var(--text);padding:0 3px!important;min-width:36px!important;line-height:1.05}
     .drag-clone .age-cell{display:none}
     /* Weekly format: match the card column swap (ADP/SOS out, OPP in) */
@@ -1391,7 +1391,7 @@ CLEAR ALL
   #pageRankings tbody .spread-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:54px}
   #pageRankings tbody .teamtotal-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:56px}
   #pageRankings tbody .oppppg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
-  #pageRankings tbody .oppppg-cell .oppppg-rk{font-size:.58rem;opacity:.55;margin-left:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;vertical-align:1px}
+  #pageRankings tbody .oppppg-cell .oppppg-rk{font-size:.6875rem;opacity:.55;margin-left:3px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;vertical-align:1px}
   #pageRankings tbody .simboom-cell,
   #pageRankings tbody .simbust-cell{text-align:center;font-size:.8rem;font-weight:600;color:var(--text);min-width:42px}
   #pageRankings tbody .opp-cell.opp-home{color:#a7f3d0}
@@ -1409,17 +1409,17 @@ CLEAR ALL
   .oppg-popover{width:320px;max-width:calc(100vw - 16px);max-height:70vh;overflow-y:auto}
   .oppg-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.8px;font-weight:400}
   .oppg-title.opp-easy{color:#22c55e}.oppg-title.opp-medium{color:#f59e0b}.oppg-title.opp-hard{color:#ef4444}
-  .oppg-sub{font-size:.64rem;color:var(--text2);margin:-3px 0 7px}
+  .oppg-sub{font-size:.6875rem;color:var(--text2);margin:-3px 0 7px}
   .oppg-wk{padding:5px 0;border-top:1px solid var(--border)}
   .oppg-wkhead{display:flex;align-items:baseline;gap:8px}
-  .oppg-wkn{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;color:var(--accent);min-width:34px}
+  .oppg-wkn{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.04em;color:var(--accent);min-width:34px}
   .oppg-vs{font-weight:700;font-size:.74rem}
   .oppg-tot{margin-left:auto;font-weight:700;font-size:.76rem}
-  .oppg-pl{display:grid;grid-template-columns:1fr auto;column-gap:8px;padding:2px 0 0 42px;font-size:.68rem}
+  .oppg-pl{display:grid;grid-template-columns:1fr auto;column-gap:8px;padding:2px 0 0 42px;font-size:.6875rem}
   .oppg-pn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .oppg-pp{text-align:right;font-weight:600}
-  .oppg-ps{grid-column:1/-1;font-size:.6rem;color:var(--text2)}
-  .oppg-none{color:var(--text2);font-style:italic;font-size:.66rem}
+  .oppg-ps{grid-column:1/-1;font-size:.6875rem;color:var(--text2)}
+  .oppg-none{color:var(--text2);font-style:italic;font-size:.6875rem}
   /* Render-weight: static per-row layout moved off inline styles (was repeated on
      every one of ~500 rows, ~130 KB of the 1.2 MB tbody HTML string). pc-row only
      on the main ranking rows — devy rows keep the base .player-cell column layout. */
@@ -1457,23 +1457,23 @@ CLEAR ALL
      PUBLISH pushes it live to all users; REMOVE pulls it back to admin-only.
      Saved in Firestore at settings/active_week. -->
 <div id="weeklyWeekSelectorWrap" style="display:none;align-items:center;gap:6px;margin-left:6px;padding:2px 8px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.06)">
-<span style="font-size:.58rem;color:var(--accent);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;white-space:nowrap">ACTIVE WEEK:</span>
+<span style="font-size:.6875rem;color:var(--accent);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;white-space:nowrap">ACTIVE WEEK:</span>
 <select id="activeWeekSelect" style="padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer" title="The week you're currently editing. Click PUBLISH to push it live to users.">
 <option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4</option><option value="5">Week 5</option><option value="6">Week 6</option><option value="7">Week 7</option><option value="8">Week 8</option><option value="9">Week 9</option><option value="10">Week 10</option><option value="11">Week 11</option><option value="12">Week 12</option><option value="13">Week 13</option><option value="14">Week 14</option><option value="15">Week 15</option><option value="16">Week 16</option><option value="17">Week 17</option><option value="18">Week 18</option>
 </select>
-<button id="weeklyPublishBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid #22c55e;background:transparent;color:#22c55e;white-space:nowrap" title="Push the currently-selected week live so all users see it in the WEEKLY tab.">PUBLISH</button>
-<button id="weeklyUnpublishBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid #ef4444;background:transparent;color:#ef4444;white-space:nowrap" title="Hide the WEEKLY tab from all non-admin users.">REMOVE</button>
-<button id="weeklyTrimBtn" style="padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:1px;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Cut the weekly board at an overall rank — removes every player ranked below it (injured / irrelevant tail). Enter 'undo' to restore this session's trim. Hit SAVE after.">TRIM</button>
-<span id="weeklyPublishStatus" style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;margin-left:2px"></span>
+<button id="weeklyPublishBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #22c55e;background:transparent;color:#22c55e;white-space:nowrap" title="Push the currently-selected week live so all users see it in the WEEKLY tab.">PUBLISH</button>
+<button id="weeklyUnpublishBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #ef4444;background:transparent;color:#ef4444;white-space:nowrap" title="Hide the WEEKLY tab from all non-admin users.">REMOVE</button>
+<button id="weeklyTrimBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Cut the weekly board at an overall rank — removes every player ranked below it (injured / irrelevant tail). Enter 'undo' to restore this session's trim. Hit SAVE after.">TRIM</button>
+<span id="weeklyPublishStatus" style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;white-space:nowrap;margin-left:2px"></span>
 </div>
 <!-- Non-admin "live week" chip — shown to users when a week is currently published. -->
 <div id="weeklyPublishedChip" style="display:none;align-items:center;gap:6px;margin-left:6px;padding:2px 10px;border:1px solid rgba(34,197,94,.45);border-radius:6px;background:rgba(34,197,94,.08)">
 <span style="width:6px;height:6px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e"></span>
-<span id="weeklyPublishedChipLabel" style="font-size:.62rem;color:#22c55e;letter-spacing:1px;font-family:'Bebas Neue',sans-serif;font-weight:700">LIVE — WEEK 1</span>
+<span id="weeklyPublishedChipLabel" style="font-size:.6875rem;color:#22c55e;letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-weight:700">LIVE — WEEK 1</span>
 </div>
 <div class="sync-toggle-wrap" id="syncToggleWrap" style="display:flex;align-items:center;gap:5px;margin-left:4px;position:relative">
 <div class="pm-toggle" id="syncToggle" onclick="window._togglePosSync()" title="When ON, positional rankings (RB1, RB2, etc.) stay synced across Redraft / Superflex and across Dynasty 1QB / Dynasty SF. Only the overall interleaving changes per format."></div>
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.55rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across these pairs:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Redraft and dynasty are different timelines, so the two pairs never mix. Only the <em>overall</em> interleaving changes within a pair (QBs rank higher in SF). Your within-position order and tiers stay identical across both paired modes.<br><br>Move any player or add/remove a tier in one mode and its pair updates instantly. Switching into Superflex or Dynasty SF re-pulls positional order from its 1QB board. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.6875rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across these pairs:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Redraft and dynasty are different timelines, so the two pairs never mix. Only the <em>overall</em> interleaving changes within a pair (QBs rank higher in SF). Your within-position order and tiers stay identical across both paired modes.<br><br>Move any player or add/remove a tier in one mode and its pair updates instantly. Switching into Superflex or Dynasty SF re-pulls positional order from its 1QB board. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
 </div>
 </div>
 <div class="pos-filters">
@@ -1501,9 +1501,9 @@ CLEAR ALL
 body.inj-view #pageRankings th.injv-col{display:table-cell}
 #pageRankings td.injv-cell{line-height:1.15;padding-right:.7rem}
 #pageRankings td.injv-cell .injv-main{display:block;font-weight:700;color:var(--text)}
-#pageRankings td.injv-cell .injv-sub{display:block;font-size:.62rem;color:var(--text2);margin-top:2px;font-weight:500}
+#pageRankings td.injv-cell .injv-sub{display:block;font-size:.6875rem;color:var(--text2);margin-top:2px;font-weight:500}
 #pageRankings td.injv-cell[title]{cursor:help}
-#pageRankings td.injv-cell .injv-k{font-family:'Bebas Neue',sans-serif;font-size:.6rem;letter-spacing:.8px;font-weight:400;color:var(--text2);margin-right:5px;text-transform:uppercase}
+#pageRankings td.injv-cell .injv-k{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;font-weight:400;color:var(--text2);margin-right:5px;text-transform:uppercase}
 #pageRankings td.injv-cell .injv-m{display:none}
 /* The injury view trades L4 / Age / P-SOS / +/- for its own three columns. */
 body.inj-view #pageRankings #ageHeader,
@@ -1526,7 +1526,7 @@ body.inj-view-fant #pageRankings .l4ppg-cell{display:none!important}
   body.inj-view #pageRankings tbody tr[data-idx] td:first-child,
   body.inj-view #pageRankings tbody tr[data-idx] .watch-star{display:none!important}
   body.inj-view #pageRankings tbody td.injv-cell{flex:0 0 auto;text-align:center!important;font-size:.76rem;padding:0 3px!important;min-width:44px!important;line-height:1.05}
-  body.inj-view #pageRankings tbody td.injv-cell::after{content:attr(data-lbl);display:block;font-size:.5rem;opacity:.55;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;font-weight:400;margin-top:1px;color:var(--text2);max-width:64px;overflow:hidden;text-overflow:ellipsis}
+  body.inj-view #pageRankings tbody td.injv-cell::after{content:attr(data-lbl);display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2);max-width:64px;overflow:hidden;text-overflow:ellipsis}
 }
 </style>
 <style>
@@ -1535,16 +1535,16 @@ body.inj-view-fant #pageRankings .l4ppg-cell{display:none!important}
 .team-filter-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:60;width:min(600px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.55);padding:10px 12px 12px;text-align:left}
 .team-filter-pop .tfp-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .team-filter-pop .tfp-title{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;color:var(--text)}
-.team-filter-pop .tfp-sub{font-size:.62rem;color:var(--text2)}
+.team-filter-pop .tfp-sub{font-size:.6875rem;color:var(--text2)}
 .team-filter-pop .tfp-act{margin-left:auto;display:flex;gap:6px}
-.team-filter-pop .tfp-act button{padding:3px 9px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2)}
+.team-filter-pop .tfp-act button{padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2)}
 .team-filter-pop .tfp-act button:hover{border-color:var(--text2);color:var(--text)}
 .team-filter-pop .tfp-act button[data-tfact="close"]{background:rgba(88,167,255,.16);border-color:#58a7ff;color:#58a7ff}
 .team-filter-pop .tfp-div{display:grid;grid-template-columns:70px repeat(4,1fr);gap:4px;align-items:stretch;margin-bottom:4px}
-.team-filter-pop .tfp-divname{font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2);background:transparent;border:1px solid transparent;border-radius:4px;cursor:pointer;text-align:left;padding:0 4px}
+.team-filter-pop .tfp-divname{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);background:transparent;border:1px solid transparent;border-radius:4px;cursor:pointer;text-align:left;padding:0 4px}
 .team-filter-pop .tfp-divname:hover{color:var(--text);border-color:var(--border)}
 .team-filter-pop .tfp-divname.on{color:#58a7ff}
-.team-filter-pop .tfp-team{display:flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);border-radius:4px;cursor:pointer;font-size:.68rem;font-weight:700;letter-spacing:.4px;font-family:inherit;transition:all .12s;min-height:30px}
+.team-filter-pop .tfp-team{display:flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);border-radius:4px;cursor:pointer;font-size:.6875rem;font-weight:700;letter-spacing:.4px;font-family:inherit;transition:all .12s;min-height:30px}
 .team-filter-pop .tfp-team img{width:20px;height:20px;object-fit:contain;flex:0 0 auto}
 .team-filter-pop .tfp-team:hover{border-color:var(--text2);color:var(--text)}
 .team-filter-pop .tfp-team.on{background:rgba(88,167,255,.2);border-color:#58a7ff;color:#fff}
@@ -1572,25 +1572,25 @@ tr:hover .watch-star{opacity:.55}
 .adp-spark svg{display:block}
 @media (max-width:600px){.adp-spark{display:none}}
 </style>
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-left:6px">TOP</span>
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;margin-left:6px">TOP</span>
 <input type="number" id="rankTopNInput" min="1" max="600" inputmode="numeric" placeholder="ALL" title="Show only the top N of the current board — 40 on ALL = top 40 overall, 15 on QB = top 15 QBs. Column sorts reorder within that pool, so TOP 125 + the value sort = best values among the top 125. Clear to show everyone." style="width:56px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem">
-<button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
-<button id="posLockToggle" onclick="window._togglePosLock()" style="display:none;padding:2px 7px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:.5px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Position Lock: while ON, a drag pushes along only the position-mates you drag PAST — drag a QB from 14 to 20 and the QBs that sat between land right below him, while a QB at 21+ just slots in under them and a QB at 60 doesn't move at all. Works both directions. Positional order always preserved. Resets on page reload.">🔒 POS LOCK</button>
+<button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
+<button id="posLockToggle" onclick="window._togglePosLock()" style="display:none;padding:2px 7px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Position Lock: while ON, a drag pushes along only the position-mates you drag PAST — drag a QB from 14 to 20 and the QBs that sat between land right below him, while a QB at 21+ just slots in under them and a QB at 60 doesn't move at all. Works both directions. Positional order always preserved. Resets on page reload.">🔒 POS LOCK</button>
 </div>
 <!-- Rookie sub-position filter (shown only when ROOKIE filter is active) -->
 <div class="pos-filters" id="rookieSubPosFilter" style="display:none;margin-top:6px;padding:5px 8px;background:var(--elev-1);border:1px dashed var(--border);border-radius:4px;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">ROOKIE POS:</span>
-<button class="pos-btn rookie-sub-btn active" data-rookiepos="ALL" style="padding:.25rem .65rem;font-size:.65rem">ALL</button>
-<button class="pos-btn rookie-sub-btn" data-rookiepos="QB" style="padding:.25rem .65rem;font-size:.65rem">QB</button>
-<button class="pos-btn rookie-sub-btn" data-rookiepos="RB" style="padding:.25rem .65rem;font-size:.65rem">RB</button>
-<button class="pos-btn rookie-sub-btn" data-rookiepos="WR" style="padding:.25rem .65rem;font-size:.65rem">WR</button>
-<button class="pos-btn rookie-sub-btn" data-rookiepos="TE" style="padding:.25rem .65rem;font-size:.65rem">TE</button>
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;margin-right:4px">ROOKIE POS:</span>
+<button class="pos-btn rookie-sub-btn active" data-rookiepos="ALL" style="padding:.25rem .65rem;font-size:.6875rem">ALL</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="QB" style="padding:.25rem .65rem;font-size:.6875rem">QB</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="RB" style="padding:.25rem .65rem;font-size:.6875rem">RB</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="WR" style="padding:.25rem .65rem;font-size:.6875rem">WR</button>
+<button class="pos-btn rookie-sub-btn" data-rookiepos="TE" style="padding:.25rem .65rem;font-size:.6875rem">TE</button>
 </div>
 <!-- Admin-only view-mode toggle -->
 <div id="adminViewToggle" style="display:none;margin-top:6px;padding:5px 8px;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:.58rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif;margin-right:4px">VIEW:</span>
-<button class="pos-btn view-mode-btn active" data-viewmode="all" style="padding:.25rem .8rem;font-size:.65rem">TABLE</button>
-<button class="pos-btn view-mode-btn" data-viewmode="tierCard" style="padding:.25rem .8rem;font-size:.65rem;background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(236,72,153,.25));border-color:rgba(167,139,250,.4)">🎴 TIER CARDS</button>
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;margin-right:4px">VIEW:</span>
+<button class="pos-btn view-mode-btn active" data-viewmode="all" style="padding:.25rem .8rem;font-size:.6875rem">TABLE</button>
+<button class="pos-btn view-mode-btn" data-viewmode="tierCard" style="padding:.25rem .8rem;font-size:.6875rem;background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(236,72,153,.25));border-color:rgba(167,139,250,.4)">🎴 TIER CARDS</button>
 <button class="pos-btn" id="tcvFullscreenBtn" style="display:none;padding:.25rem .8rem;font-size:.65rem;background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);color:var(--accent)" title="Expand tier view to fullscreen (Esc to exit)">⛶ FULLSCREEN</button>
 </div>
 </div>
@@ -1604,13 +1604,13 @@ tr:hover .watch-star{opacity:.55}
      accent when anything is off-default. Preset chips keep working while
      collapsed: they click the real buttons inside the hidden wrap. -->
 <div class="view-opts-toggle-row" style="display:flex;align-items:center;gap:10px;padding:0 2rem .35rem;flex-wrap:wrap">
-<button id="viewOptsToggle" onclick="window._toggleViewOpts()" aria-expanded="false" aria-controls="viewOptsWrap" style="display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:1.2px;cursor:pointer">⚙ SCORING · STATS · ADP <span id="viewOptsArrow" style="font-size:.55rem">▸</span></button>
-<span id="viewOptsSummary" style="font-family:'DM Sans',sans-serif;font-size:.66rem;color:var(--text2);letter-spacing:.3px"></span>
+<button id="viewOptsToggle" onclick="window._toggleViewOpts()" aria-expanded="false" aria-controls="viewOptsWrap" style="display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;cursor:pointer">⚙ SCORING · STATS · ADP <span id="viewOptsArrow" style="font-size:.6875rem">▸</span></button>
+<span id="viewOptsSummary" style="font-family:'DM Sans',sans-serif;font-size:.6875rem;color:var(--text2);letter-spacing:.3px"></span>
 </div>
 <div id="viewOptsWrap" style="display:none">
 <div class="rnk-scoring-row" style="display:flex;align-items:center;gap:16px;padding:0 2rem .4rem;flex-wrap:wrap">
 <div style="display:flex;align-items:center;gap:8px">
-<span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">SCORING:</span>
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">SCORING:</span>
 <div class="career-log-toggle" id="rankingScoringToggle">
 <button class="rnk-scoring-btn active" data-rnkscoring="ppr">PPR</button>
 <button class="rnk-scoring-btn" data-rnkscoring="half">HALF</button>
@@ -1618,7 +1618,7 @@ tr:hover .watch-star{opacity:.55}
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px">
-<span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">STATS:</span>
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">STATS:</span>
 <div class="career-log-toggle" id="rankingStatModeToggle">
 <button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / season PPG / L4 PPG)">FANTASY</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
@@ -1630,16 +1630,16 @@ tr:hover .watch-star{opacity:.55}
 </div>
 </div>
 <div id="rnkAdpSrcRow" style="display:flex;align-items:center;gap:8px">
-<span style="font-size:.65rem;color:var(--text2);letter-spacing:.5px;font-family:'Bebas Neue',sans-serif">ADP:</span>
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">ADP:</span>
 <div class="md-rank-src-tabs" id="rnkAdpSrcTabs" style="border:none;background:var(--elev-1);padding:1px">
-<button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.65rem;padding:3px 10px">CONSENSUS</button>
-<button class="md-rank-src-tab locked" data-rnkadp="underdog" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
-<button class="md-rank-src-tab locked" data-rnkadp="dk" style="font-size:.65rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>DK</button>
-<button class="md-rank-src-tab" data-rnkadp="espn" style="font-size:.65rem;padding:3px 10px">ESPN</button>
-<button class="md-rank-src-tab" data-rnkadp="cbs" style="font-size:.65rem;padding:3px 10px">CBS</button>
-<button class="md-rank-src-tab" data-rnkadp="sleeper" style="font-size:.65rem;padding:3px 10px">SLEEPER</button>
-<button class="md-rank-src-tab" data-rnkadp="ktc" style="font-size:.65rem;padding:3px 10px">KTC</button>
-<button class="md-rank-src-tab" data-rnkadp="yahoo" style="font-size:.65rem;padding:3px 10px">YAHOO</button>
+<button class="md-rank-src-tab active" data-rnkadp="consensus" style="font-size:.6875rem;padding:3px 10px">CONSENSUS</button>
+<button class="md-rank-src-tab locked" data-rnkadp="underdog" style="font-size:.6875rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
+<button class="md-rank-src-tab locked" data-rnkadp="dk" style="font-size:.6875rem;padding:3px 10px"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>DK</button>
+<button class="md-rank-src-tab" data-rnkadp="espn" style="font-size:.6875rem;padding:3px 10px">ESPN</button>
+<button class="md-rank-src-tab" data-rnkadp="cbs" style="font-size:.6875rem;padding:3px 10px">CBS</button>
+<button class="md-rank-src-tab" data-rnkadp="sleeper" style="font-size:.6875rem;padding:3px 10px">SLEEPER</button>
+<button class="md-rank-src-tab" data-rnkadp="ktc" style="font-size:.6875rem;padding:3px 10px">KTC</button>
+<button class="md-rank-src-tab" data-rnkadp="yahoo" style="font-size:.6875rem;padding:3px 10px">YAHOO</button>
 </div>
 </div>
 </div>
@@ -1658,11 +1658,11 @@ tr:hover .watch-star{opacity:.55}
 <div class="vor-bar lg-bar" id="rnkLgBar"></div>
 <style>
 .vor-bar.lg-bar{display:flex;border-color:var(--border);background:transparent;padding:4px 10px}
-.lg-bar-hint{font-size:.66rem;color:var(--text2)}
-.lg-key{display:inline-flex;align-items:center;gap:4px;font-size:.64rem;color:var(--text2);white-space:nowrap}
-.lg-bar .lg-show-btn{padding:.2rem .65rem;font-size:.62rem}
+.lg-bar-hint{font-size:.6875rem;color:var(--text2)}
+.lg-key{display:inline-flex;align-items:center;gap:4px;font-size:.6875rem;color:var(--text2);white-space:nowrap}
+.lg-bar .lg-show-btn{padding:.2rem .65rem;font-size:.6875rem}
 .lg-bar .lg-show-btn.on{background:rgba(245,158,11,.16);border-color:var(--accent);color:var(--accent)}
-.lg-chip{display:inline-block;margin-left:5px;padding:0 4px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.58rem;letter-spacing:.6px;line-height:1.45;vertical-align:1px}
+.lg-chip{display:inline-block;margin-left:5px;padding:0 4px;border-radius:3px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;line-height:1.45;vertical-align:1px}
 .lg-key .lg-chip{margin-left:0}
 .lg-chip-mine{background:rgba(245,158,11,.18);color:#f59e0b;border:1px solid rgba(245,158,11,.55)}
 .lg-chip-fa{background:rgba(34,197,94,.14);color:#22c55e;border:1px solid rgba(34,197,94,.5)}
@@ -1674,16 +1674,16 @@ tr.lg-fa>td:nth-child(3){box-shadow:inset 3px 0 0 #22c55e}
 <style>
 .vor-bar{display:none;align-items:center;gap:8px 10px;flex-wrap:wrap;margin:2px 2rem 6px;padding:5px 10px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.05);font-family:'DM Sans',sans-serif}
 body.vor-bar-on .vor-bar{display:flex}
-.vor-bar-lbl{font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:1.2px;color:var(--accent);white-space:nowrap}
+.vor-bar-lbl{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--accent);white-space:nowrap}
 .vor-bar select{max-width:190px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer}
-.vor-num{display:inline-flex;align-items:center;gap:4px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2);white-space:nowrap}
+.vor-num{display:inline-flex;align-items:center;gap:4px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);white-space:nowrap}
 .vor-num input{width:38px;padding:2px 3px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;text-align:center}
-.vor-bar-x{font-size:.66rem;font-weight:600;color:var(--accent);white-space:nowrap}
+.vor-bar-x{font-size:.6875rem;font-weight:600;color:var(--accent);white-space:nowrap}
 .vor-po{display:inline-flex;align-items:center;gap:4px;padding-left:8px;border-left:1px solid var(--border)}
 .vor-dash{color:var(--text2);font-size:.7rem}
-.vor-bar .vor-waiver-btn{padding:.25rem .75rem;font-size:.65rem}
+.vor-bar .vor-waiver-btn{padding:.25rem .75rem;font-size:.6875rem}
 .vor-bar .vor-waiver-btn.on{background:rgba(34,197,94,.16);border-color:#22c55e;color:#22c55e}
-.vor-reset{margin-left:auto;padding:2px 8px;font-family:'Bebas Neue',sans-serif;font-size:.58rem;letter-spacing:.6px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
+.vor-reset{margin-left:auto;padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
 .vor-reset:hover{color:var(--text);border-color:var(--text2)}
 @media (max-width:600px){.vor-bar{margin:2px 10px 6px;gap:6px 8px}.vor-reset{margin-left:0}}
 </style>
@@ -1693,11 +1693,11 @@ body.vor-bar-on .vor-bar{display:flex}
 <div class="view-presets" id="viewPresetsRow" style="display:none"></div>
 <style>
 .view-presets{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 2rem 0;font-family:'DM Sans',sans-serif}
-.vp-label{font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:1.5px;color:var(--text2)}
-.vp-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border:1px solid var(--border);border-radius:99px;background:var(--surface2);color:var(--text1);font-size:.68rem;cursor:pointer;transition:border-color .12s,color .12s}
+.vp-label{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2)}
+.vp-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border:1px solid var(--border);border-radius:99px;background:var(--surface2);color:var(--text1);font-size:.6875rem;cursor:pointer;transition:border-color .12s,color .12s}
 .vp-chip:hover{border-color:var(--accent);color:var(--accent)}
 .vp-chip.on{border-color:var(--accent);background:rgba(245,158,11,.12);color:var(--accent)}
-.vp-x{opacity:.5;font-size:.6rem;padding:0 1px}
+.vp-x{opacity:.5;font-size:.6875rem;padding:0 1px}
 .vp-x:hover{opacity:1;color:#ef4444}
 @media (max-width:600px){.view-presets{margin:6px 10px 0}}
 </style>
@@ -1705,7 +1705,7 @@ body.vor-bar-on .vor-bar{display:flex}
 <!-- Data-freshness line: when each auto-pulled feed last refreshed.
      Populated by _renderDataFreshness() in app.js; hidden until at least
      one timestamp is readable. -->
-<div id="dataFreshness" style="display:none;margin:2px 2rem 6px;font-family:'DM Sans',sans-serif;font-size:.66rem;color:var(--text2);letter-spacing:.3px"></div>
+<div id="dataFreshness" style="display:none;margin:2px 2rem 6px;font-family:'DM Sans',sans-serif;font-size:.6875rem;color:var(--text2);letter-spacing:.3px"></div>
 
 <style>
 /* Tier Card View (admin) */
@@ -1764,7 +1764,7 @@ tr.bye-row{background:rgba(148,163,184,.05)}
 tr.bye-row td{border-bottom:1px dashed rgba(148,163,184,.15)}
 tr.bye-row .myrank-num.bye-rank{color:#cbd5e1;background:rgba(51,65,85,.6);border:1px dashed rgba(148,163,184,.5);font-size:.7rem;letter-spacing:.5px}
 tr.bye-row .bye-cell{font-family:'Bebas Neue',Impact,sans-serif;font-size:.75rem;letter-spacing:1px;color:#94a3b8}
-tr.bye-row .bye-note{color:var(--text2);font-size:.68rem;letter-spacing:.3px;white-space:nowrap}
+tr.bye-row .bye-note{color:var(--text2);font-size:.6875rem;letter-spacing:.3px;white-space:nowrap}
 tr.bye-row .bye-note b{color:#cbd5e1;font-weight:600}
 .tcv-letter.tcv-letter-bye{background:linear-gradient(135deg,#1e293b,#334155);color:#cbd5e1;font-size:15px;letter-spacing:1.5px;border:1px dashed rgba(148,163,184,.55);border-radius:4px}
 .tcv-card.tcv-bye-card .tcv-card-rank,.tcv-card.tcv-bye-card .tcv-row-rank,.tcv-card.tcv-bye-card .tcv-cover-rank{color:#cbd5e1;opacity:.85}
@@ -2025,20 +2025,20 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="fg-header">
 <div class="fg-title">FANTASY GAME</div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="fgTypeRegular" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">REGULAR</button>
-<button class="fg-mode-btn" id="fgTypeCustom" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">CUSTOM</button>
+<button class="fg-mode-btn active" id="fgTypeRegular" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">REGULAR</button>
+<button class="fg-mode-btn" id="fgTypeCustom" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">CUSTOM</button>
 </div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="fgLeagueNFL" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">NFL</button>
-<button class="fg-mode-btn" id="fgLeagueCollege" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">COLLEGE</button>
+<button class="fg-mode-btn active" id="fgLeagueNFL" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">NFL</button>
+<button class="fg-mode-btn" id="fgLeagueCollege" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">COLLEGE</button>
 </div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="fgModeSeason" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">BEST SEASON</button>
-<button class="fg-mode-btn" id="fgModeWeek" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">BEST WEEK</button>
+<button class="fg-mode-btn active" id="fgModeSeason" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">BEST SEASON</button>
+<button class="fg-mode-btn" id="fgModeWeek" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">BEST WEEK</button>
 </div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn" id="fgScoringHalf" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">HALF PPR</button>
-<button class="fg-mode-btn active" id="fgScoringPpr" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.85rem">PPR</button>
+<button class="fg-mode-btn" id="fgScoringHalf" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">HALF PPR</button>
+<button class="fg-mode-btn active" id="fgScoringPpr" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">PPR</button>
 </div>
 <div id="fgCustomSettings" style="display:none;margin:2px 0 4px">
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -2062,7 +2062,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <option value="16">WK 16</option><option value="17">WK 17</option><option value="18">WK 18</option>
 </select>
 </div>
-<div style="font-size:.6rem;color:var(--text2);margin-top:3px;font-style:italic">Custom games do not save to the leaderboard</div>
+<div style="font-size:.6875rem;color:var(--text2);margin-top:3px;font-style:italic">Custom games do not save to the leaderboard</div>
 </div>
 <div class="fg-subtitle" id="fgSubtitle">A random NFL team appears — pick from their ALL-TIME roster of players across every era. Their best career fantasy season scores for you. Can you draft the legends?</div>
 </div>
@@ -2153,22 +2153,22 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="gw-header">
 <div class="gw-title">ELITE PULL</div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">CURRENT</button>
-<button class="fg-mode-btn" id="gwMode2000s" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">2000s</button>
-<button class="fg-mode-btn" id="gwMode2010s" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">2010s</button>
-<button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">ALL-TIME</button>
-<button class="fg-mode-btn" id="gwModeCollege" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">COLLEGE</button>
+<button class="fg-mode-btn active" id="gwModeCurrent" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.82rem">CURRENT</button>
+<button class="fg-mode-btn" id="gwMode2000s" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.82rem">2000s</button>
+<button class="fg-mode-btn" id="gwMode2010s" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.82rem">2010s</button>
+<button class="fg-mode-btn" id="gwModeAlltime" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.82rem">ALL-TIME</button>
+<button class="fg-mode-btn" id="gwModeCollege" style="padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.82rem">COLLEGE</button>
 </div>
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px auto 4px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="gwPlayRandom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">RANDOM</button>
-<button class="fg-mode-btn" id="gwPlayCustom" style="padding:5px 14px;font-size:.68rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">CUSTOM</button>
+<button class="fg-mode-btn active" id="gwPlayRandom" style="padding:5px 14px;font-size:.6875rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">RANDOM</button>
+<button class="fg-mode-btn" id="gwPlayCustom" style="padding:5px 14px;font-size:.6875rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">CUSTOM</button>
 </div>
 <div id="gwMinSznRow" style="display:none;align-items:center;justify-content:center;gap:6px;margin:2px auto 4px">
-<span style="font-size:.65rem;color:var(--text2);font-weight:600;letter-spacing:.5px">MIN SZN:</span>
+<span style="font-size:.6875rem;color:var(--text2);font-weight:600;letter-spacing:.5px">MIN SZN:</span>
 <div class="fg-mode-toggle" style="display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" data-gwmin="0" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">ALL</button>
-<button class="fg-mode-btn" data-gwmin="100" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">100+</button>
-<button class="fg-mode-btn" data-gwmin="150" style="padding:4px 10px;font-size:.65rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif">150+</button>
+<button class="fg-mode-btn active" data-gwmin="0" style="padding:4px 10px;font-size:.6875rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">ALL</button>
+<button class="fg-mode-btn" data-gwmin="100" style="padding:4px 10px;font-size:.6875rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">100+</button>
+<button class="fg-mode-btn" data-gwmin="150" style="padding:4px 10px;font-size:.6875rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">150+</button>
 </div>
 </div>
 <!-- Custom mode: pick a player to challenge a friend -->
@@ -2220,17 +2220,17 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="lb-card" style="padding:12px 16px">
 
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin-bottom:8px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
-<button class="fg-mode-btn active" id="lbTabGames" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">GAMES</button>
-<button class="fg-mode-btn" id="lbTabDaily" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.82rem">DAILY</button>
+<button class="fg-mode-btn active" id="lbTabGames" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.82rem">GAMES</button>
+<button class="fg-mode-btn" id="lbTabDaily" style="padding:6px 18px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.82rem">DAILY</button>
 </div>
 
 <!-- GAMES TAB -->
 <div id="lbPanelGames">
 <div class="lb-time-filter" id="lbTimeFilter" style="display:flex;gap:0;margin-bottom:12px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-left:auto;margin-right:auto">
-<button class="lb-time-btn active" data-lbt="alltime" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">All-Time</button>
-<button class="lb-time-btn" data-lbt="month" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Month</button>
-<button class="lb-time-btn" data-lbt="week" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Week</button>
-<button class="lb-time-btn" data-lbt="today" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:.8rem">Today</button>
+<button class="lb-time-btn active" data-lbt="alltime" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.8rem">All-Time</button>
+<button class="lb-time-btn" data-lbt="month" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.8rem">Month</button>
+<button class="lb-time-btn" data-lbt="week" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.8rem">Week</button>
+<button class="lb-time-btn" data-lbt="today" style="padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.8rem">Today</button>
 </div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Fantasy Game — Season</div>
@@ -2506,7 +2506,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="pm-header" style="position:relative">
 <button class="help-btn" id="pmHelpBtn" title="How to read the Prospect Model" style="position:absolute;right:0;top:6px">?</button>
 <div class="pm-title">Prospect Model</div>
-<div class="pm-subtitle">JM Score (<b>Jack's Model</b>, 0-100) predicts NFL fantasy success from draft capital, college production, receiving &amp; film grades, athletic testing, age &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.65rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers (position-specific, monotonic hit-rate gradient):&#10;• QB: 84+ Gen / 66+ Top Prospect / 56+ Starter / 46+ Contributor / 36+ Depth / 28+ Lottery&#10;• RB: 84+ Gen / 74+ Top Prospect / 50+ Starter / 43+ Contributor / 36+ Depth / 30+ Lottery&#10;• WR: 86+ Gen / 80+ Top Prospect / 68+ Starter / 55+ Contributor / 46+ Depth / 38+ Lottery&#10;• TE: 74+ Gen / 56+ Top Prospect / 52+ Starter / 44+ Contributor / 32+ Depth / 28+ Lottery&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
+<div class="pm-subtitle">JM Score (<b>Jack's Model</b>, 0-100) predicts NFL fantasy success from draft capital, college production, receiving &amp; film grades, athletic testing, age &amp; teammate quality <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text2);font-size:.6875rem;text-align:center;line-height:16px;cursor:help;vertical-align:middle;margin-left:4px" title="HIT RATE METHODOLOGY&#10;&#10;Hit = top fantasy season within first 3 NFL years&#10;&#10;Thresholds (half-PPR):&#10;• QB: 200+ fpts (≈ top-12 finish)&#10;• RB: 170+ fpts (≈ top-24 finish)&#10;• WR: 170+ fpts (≈ top-24 finish)&#10;• TE: 120+ fpts (≈ top-12 finish)&#10;&#10;Tiers (position-specific, monotonic hit-rate gradient):&#10;• QB: 84+ Gen / 66+ Top Prospect / 56+ Starter / 46+ Contributor / 36+ Depth / 28+ Lottery&#10;• RB: 84+ Gen / 74+ Top Prospect / 50+ Starter / 43+ Contributor / 36+ Depth / 30+ Lottery&#10;• WR: 86+ Gen / 80+ Top Prospect / 68+ Starter / 55+ Contributor / 46+ Depth / 38+ Lottery&#10;• TE: 74+ Gen / 56+ Top Prospect / 52+ Starter / 44+ Contributor / 32+ Depth / 28+ Lottery&#10;&#10;Sample: 2017-2024 draft classes&#10;&#10;Tier hit rates are shown as percentages next to each tier badge. Hover a badge for exact counts.">?</span></div>
 </div>
 <div class="pm-controls">
 <div class="pm-pos-tabs" id="pmPosTabs">
@@ -3026,17 +3026,17 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtValueSrcBar" onclick="window._mtToggleValueSrc()" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 14px;margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
 <span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text)">VALUE SOURCE</span>
 <span id="mtValueSrcLabel" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--accent)">CONSENSUS</span>
-<span class="mt-vs-hint" style="font-size:.6rem;color:var(--text2)">team grades &amp; player values</span>
+<span class="mt-vs-hint" style="font-size:.6875rem;color:var(--text2)">team grades &amp; player values</span>
 <span id="mtValueSrcChevron" style="margin-left:auto;color:var(--text2);font-size:.8rem">▾</span>
 </div>
 <div id="mtValueSrcPanel" style="display:none;margin-top:6px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px">RANKINGS</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);margin-bottom:4px">RANKINGS</div>
 <div class="trade-mode-tabs" style="margin-bottom:.5rem;background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
 <button class="trade-src-tab mt-src-tab active" data-mtsrc="consensus">CONSENSUS</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="mine">MY RANKS</button>
 </div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:1.5px;color:var(--text2);margin:6px 0 4px">ADP SOURCE</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);margin:6px 0 4px">ADP SOURCE</div>
 <div class="trade-mode-tabs" style="background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
 <button class="trade-src-tab mt-src-tab" data-mtsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
@@ -3052,7 +3052,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtSetup" style="margin-top:20px;margin-bottom:16px">
 <div onclick="window._mtToggleSetup()" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
 <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--accent)">ADD A LEAGUE</span>
-<span style="font-size:.65rem;color:var(--text2)">Sleeper · ESPN · Yahoo · or every league from a Sleeper username</span>
+<span style="font-size:.6875rem;color:var(--text2)">Sleeper · ESPN · Yahoo · or every league from a Sleeper username</span>
 <span id="mtSetupChevron" style="margin-left:auto;color:var(--text2);font-size:.8rem">▾</span>
 </div>
 <div id="mtSetupBody" style="margin-top:10px">
@@ -3061,7 +3061,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="mtImportPreview" style="margin-bottom:16px;padding:16px;background:linear-gradient(135deg,rgba(245,158,11,.04),rgba(245,158,11,.01));border:1px solid rgba(245,158,11,.18);border-radius:12px">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
 <span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">WHAT YOU'LL SEE AFTER IMPORTING</span>
-<span style="font-size:.65rem;color:var(--text2);font-style:italic">Free · paste a league ID below to unlock</span>
+<span style="font-size:.6875rem;color:var(--text2);font-style:italic">Free · paste a league ID below to unlock</span>
 </div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
 <div style="display:flex;gap:10px;align-items:flex-start">
@@ -3108,7 +3108,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- ESPN League Import (direct API sync for public leagues; MFF ESPN extension for private) -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
-<div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
+<div style="position:absolute;top:10px;right:10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">ESPN LEAGUE</div>
 <div id="mtEspnHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px"><b style="color:#22c55e">Free</b> — paste your ESPN league ID or league URL. Private leagues: install the free <a data-ext-store="espn" target="_blank" rel="noopener">MFF ESPN extension</a> and click <b>Export league to MFF</b> on your ESPN league page (no Premium needed).</div>
 <div style="display:flex;gap:6px">
@@ -3121,7 +3121,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- Yahoo League Import (direct proxy sync for publicly viewable leagues; MFF Yahoo extension for the rest) -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
-<div style="position:absolute;top:10px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.55rem;letter-spacing:1px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
+<div style="position:absolute;top:10px;right:10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">YAHOO LEAGUE</div>
 <div id="mtYahooHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px"><b style="color:#22c55e">Free</b> — paste your Yahoo league ID or league URL (from football.fantasysports.yahoo.com — pasting your team's URL auto-selects your team). Private leagues: install the free <a data-ext-store="yahoo" target="_blank" rel="noopener">MFF Yahoo extension</a> and click <b>Export league to MFF</b> on your Yahoo league page (no Premium needed).</div>
 <div style="display:flex;gap:6px">
@@ -3157,7 +3157,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">UNDERDOG PORTFOLIO</div>
-<span style="font-size:.55rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
+<span style="font-size:.6875rem;padding:2px 6px;border-radius:3px;background:var(--accent);color:#000;font-weight:700;letter-spacing:.5px">NEW</span>
 </div>
 <!-- Portfolio source toggle — only shown to non-admin premium members so they
      can choose between managing their own portfolio and viewing Jack's. -->
@@ -3176,12 +3176,12 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- Phase picker (shown when UPLOAD CSV is clicked) -->
 <div id="mtUnderdogPhasePicker" style="display:none;margin-top:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.2px;color:var(--text);margin-bottom:8px">WHICH CONTESTS ARE IN THIS CSV?</div>
-<div style="font-size:.65rem;color:var(--text2);margin-bottom:10px">Underdog separates exports between pre-NFL-draft, NFL season, and superflex contests. Pick the phase, then choose your file.</div>
+<div style="font-size:.6875rem;color:var(--text2);margin-bottom:10px">Underdog separates exports between pre-NFL-draft, NFL season, and superflex contests. Pick the phase, then choose your file.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button type="button" onclick="window._udPickPhase('pre')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">PRE-NFL DRAFT</button>
 <button type="button" onclick="window._udPickPhase('nfl')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">NFL SEASON</button>
 <button type="button" onclick="window._udPickPhase('superflex')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;cursor:pointer">SUPERFLEX</button>
-<button type="button" onclick="document.getElementById('mtUnderdogPhasePicker').style.display='none'" style="padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;color:var(--text2);cursor:pointer">CANCEL</button>
+<button type="button" onclick="document.getElementById('mtUnderdogPhasePicker').style.display='none'" style="padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);cursor:pointer">CANCEL</button>
 </div>
 </div>
 </div>
@@ -3201,7 +3201,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <span class="jt-badge">PREMIUM</span>
 <span class="jt-name">JACK'S TEAMS</span>
 </div>
-<span style="font-size:.65rem;color:var(--text2);font-style:italic">visible to premium members</span>
+<span style="font-size:.6875rem;color:var(--text2);font-style:italic">visible to premium members</span>
 </div>
 <div class="jt-grid"></div>
 </div>
@@ -3230,18 +3230,18 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="triviaDailyPanel" style="margin-bottom:12px;padding:14px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(255,209,102,.10),rgba(168,85,247,.08));border:1px solid rgba(255,209,102,.35);position:relative;overflow:hidden">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
 <div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:#ffd166;line-height:1">DAILY BOARD <span id="triviaDailyDateLabel" style="font-size:.7rem;color:var(--text2);letter-spacing:1px;margin-left:6px"></span> <span id="triviaDailyPreviewBadge" style="display:none;font-size:.6rem;background:#a855f7;color:#fff;padding:2px 7px;border-radius:4px;letter-spacing:1.5px;margin-left:6px;vertical-align:2px">PREVIEW</span></div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:#ffd166;line-height:1">DAILY BOARD <span id="triviaDailyDateLabel" style="font-size:.7rem;color:var(--text2);letter-spacing:1px;margin-left:6px"></span> <span id="triviaDailyPreviewBadge" style="display:none;font-size:.6875rem;background:#a855f7;color:#fff;padding:2px 7px;border-radius:4px;letter-spacing:1.5px;margin-left:6px;vertical-align:2px">PREVIEW</span></div>
 <div id="triviaDailyTitle" style="margin-top:4px;font-size:.85rem;color:var(--text)">—</div>
 <div id="triviaDailyMeta" style="margin-top:2px;font-size:.7rem;color:var(--text2)">Same board for everyone, every day.</div>
 </div>
 <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
 <div style="display:flex;flex-direction:column;align-items:center;min-width:54px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#ffd166;line-height:1" id="triviaDailyStreak">0</div>
-<div style="font-size:.6rem;color:var(--text2);letter-spacing:1px">STREAK 🔥</div>
+<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">STREAK 🔥</div>
 </div>
 <div style="display:flex;flex-direction:column;align-items:center;min-width:60px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--text);line-height:1" id="triviaDailyBest">—</div>
-<div style="font-size:.6rem;color:var(--text2);letter-spacing:1px">TODAY</div>
+<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">TODAY</div>
 </div>
 <div style="display:flex;flex-direction:column;gap:6px">
 <button id="triviaDailyPlayBtn" onclick="window._triviaPlayDaily()" style="padding:10px 22px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;cursor:pointer;font-weight:700">PLAY TODAY</button>
@@ -3257,11 +3257,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <input type="date" id="triviaDailyPreviewDate" aria-label="Preview date" style="padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem;font-family:'DM Sans',sans-serif">
 <button onclick="window._triviaApplyPreview()" style="padding:5px 12px;background:rgba(168,85,247,.2);color:#c084fc;border:1px solid rgba(168,85,247,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">PREVIEW DATE</button>
 <button id="triviaDailyResetPreviewBtn" onclick="window._triviaResetPreview()" style="display:none;padding:5px 10px;background:none;color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer">RESET TO TODAY</button>
-<span style="opacity:.7;font-size:.65rem;flex-basis:100%">Preview runs don't bump streak or write history.</span>
+<span style="opacity:.7;font-size:.6875rem;flex-basis:100%">Preview runs don't bump streak or write history.</span>
 <button id="triviaDailyLockBtn" onclick="window._triviaLockAsDaily()" title="Snapshot the current board as the locked daily for the chosen date. Players on that date will see exactly these items, immune to data drift." style="padding:5px 12px;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">💾 LOCK AS DAILY</button>
 <button onclick="window._triviaToggleArchive()" style="padding:5px 12px;background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">📚 ARCHIVE</button>
 <button onclick="window._triviaOpenReportsPanel()" title="Triage user-submitted cell reports" style="padding:5px 12px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">🚩 REPORTS</button>
-<span id="triviaDailyLockStatus" style="font-size:.65rem;color:var(--text2)"></span>
+<span id="triviaDailyLockStatus" style="font-size:.6875rem;color:var(--text2)"></span>
 </div>
 </div>
 
@@ -3279,7 +3279,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="triviaTemplates" style="margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">QUICK-START TEMPLATES</div>
-<div style="font-size:.6rem;color:var(--text2)">Click any card to play instantly</div>
+<div style="font-size:.6875rem;color:var(--text2)">Click any card to play instantly</div>
 </div>
 <div id="triviaTemplateGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"></div>
 </div>
@@ -3528,7 +3528,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="trivia-prompt-bar">
 <input type="text" id="triviaPrompt" placeholder="e.g. Best 20 fantasy WR seasons since 1999, Top 24 rushing TDs in a season...">
 </div>
-<div style="font-size:.6rem;color:var(--text2);margin-top:3px;font-style:italic">Custom prompts bypass filters and rely on AI — results may be less accurate</div>
+<div style="font-size:.6875rem;color:var(--text2);margin-top:3px;font-style:italic">Custom prompts bypass filters and rely on AI — results may be less accurate</div>
 </div>
 </div>
 <div class="trivia-opts">
@@ -3660,7 +3660,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <span style="font-size:.7rem;opacity:.6">🔇</span>
 <input type="range" id="triviaVolume" min="0" max="100" value="50" style="flex:1;accent-color:var(--accent);height:4px;cursor:pointer">
 <span style="font-size:.7rem;opacity:.6">🔊</span>
-<button onclick="window._triviaTestSound()" style="padding:2px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.65rem;cursor:pointer;white-space:nowrap" title="Test sound">▶ Test</button>
+<button onclick="window._triviaTestSound()" style="padding:2px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.6875rem;cursor:pointer;white-space:nowrap" title="Test sound">▶ Test</button>
 </div>
 </label>
 
@@ -3874,13 +3874,13 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-mode-tab" data-tmode="dynasty">DYNASTY 1QB</button>
 <button class="trade-mode-tab" data-tmode="dynastysf">DYNASTY SF</button>
 </div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px;text-align:center">RANKINGS</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:4px;text-align:center">RANKINGS</div>
 <div class="trade-mode-tabs" style="margin-bottom:.5rem;flex-wrap:wrap">
 <button class="trade-src-tab active" data-tsrc="consensus">CONSENSUS</button>
 <button class="trade-src-tab" data-tsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
 <button class="trade-src-tab" data-tsrc="mine">MY RANKS</button>
 </div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px;text-align:center">ADP SOURCE</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:4px;text-align:center">ADP SOURCE</div>
 <div class="trade-mode-tabs" style="margin-bottom:1.25rem;flex-wrap:wrap">
 <button class="trade-src-tab" data-tsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="trade-src-tab" data-tsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
@@ -3914,7 +3914,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="trade-layout">
 <!-- Side A -->
 <div class="trade-side">
-<div class="trade-side-label side-a">TEAM B RECEIVES<span style="display:block;font-size:.6rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team A</span></div>
+<div class="trade-side-label side-a">TEAM B RECEIVES<span style="display:block;font-size:.6875rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team A</span></div>
 <div class="trade-search-wrap">
 <svg class="trade-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
 <input type="text" class="trade-search" id="tradeSearchA" placeholder="Search player..." autocomplete="off">
@@ -3945,7 +3945,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- Side B -->
 <div class="trade-side">
-<div class="trade-side-label side-b">TEAM A RECEIVES<span style="display:block;font-size:.6rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team B</span></div>
+<div class="trade-side-label side-b">TEAM A RECEIVES<span style="display:block;font-size:.6875rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team B</span></div>
 <div class="trade-search-wrap">
 <svg class="trade-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
 <input type="text" class="trade-search" id="tradeSearchB" placeholder="Search player..." autocomplete="off">
@@ -3999,31 +3999,31 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      teams (Sim Lab VOR). Rendered by _tradeVorRender in app.js. -->
 <div class="trade-vor" id="tradeVorImpact" style="display:none"></div>
 <style>
-.tp-vor{margin-left:6px;padding:0 5px;border-radius:3px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.5px;color:#22c55e;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);white-space:nowrap;cursor:help}
+.tp-vor{margin-left:6px;padding:0 5px;border-radius:3px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:#22c55e;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);white-space:nowrap;cursor:help}
 .tp-vor.neg{color:var(--text2);background:transparent;border-color:var(--border)}
 .trade-vor{margin-top:1rem;padding:12px 14px;border:1px solid rgba(245,158,11,.35);border-radius:8px;background:rgba(245,158,11,.04)}
 .tvi-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:10px}
 .tvi-title{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)}
-.tvi-sub{font-size:.62rem;color:var(--text2)}
-.tvi-win{display:inline-flex;align-items:center;gap:4px;font-family:'Bebas Neue',sans-serif;font-size:.62rem;letter-spacing:.6px;color:var(--text2)}
-.tvi-win select{padding:1px 4px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.68rem;cursor:pointer}
+.tvi-sub{font-size:.6875rem;color:var(--text2)}
+.tvi-win{display:inline-flex;align-items:center;gap:4px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2)}
+.tvi-win select{padding:1px 4px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.6875rem;cursor:pointer}
 .tvi-teams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tvi-team{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);min-width:0}
 .tvi-name{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text)}
 .tvi-big{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;line-height:1.1;color:var(--text2)}
 .tvi-big.pos,.tvi-stats b.pos{color:#22c55e}.tvi-big.neg,.tvi-stats b.neg{color:#ef4444}
-.tvi-line{font-size:.64rem;color:var(--text2);margin-top:3px;line-height:1.4}
+.tvi-line{font-size:.6875rem;color:var(--text2);margin-top:3px;line-height:1.4}
 .tvi-drop{color:#f59e0b}.tvi-open{color:#58a7ff}.tvi-depth{color:#f59e0b}
-.trade-total-vornote{flex-basis:100%;text-align:right;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.8px;color:var(--text2);margin-top:3px;cursor:help}
+.trade-total-vornote{flex-basis:100%;text-align:right;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.04em;color:var(--text2);margin-top:3px;cursor:help}
 .trade-total-vornote b{color:#22c55e;font-weight:400}
-.tvi-stats{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.66rem;color:var(--text2);margin-top:4px}
+.tvi-stats{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.6875rem;color:var(--text2);margin-top:4px}
 .tvi-wk{display:flex;align-items:flex-end;gap:2px;height:44px;margin-top:8px;padding-top:4px;border-top:1px solid var(--border)}
 .tvi-wkcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%;cursor:help}
-.tvi-wkcol span{font-size:.5rem;color:var(--text2)}
+.tvi-wkcol span{font-size:.6875rem;color:var(--text2)}
 .tvi-wkcol.po span{color:var(--accent);font-weight:700}
 .tvi-wkbar{width:70%;max-width:14px;border-radius:2px 2px 0 0}
 .tvi-wkbar.up{background:#22c55e}.tvi-wkbar.dn{background:#ef4444}
-.tvi-note{font-size:.64rem;color:var(--text2);margin-top:8px;line-height:1.45}
+.tvi-note{font-size:.6875rem;color:var(--text2);margin-top:8px;line-height:1.45}
 @media (max-width:600px){.tvi-teams{grid-template-columns:1fr}}
 </style>
 <!-- RECENT REAL TRADES (2026-09-09): live Sleeper-league trades from FantasyCalc's
@@ -4078,20 +4078,20 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      Lives here rather than above the rankings table: this is the page people
      read while planning a draft, so it's where the draft-room tools belong. -->
 <style>
-  .ext-hub-chip{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.2px;padding:5px 13px;border:1px solid var(--border);border-radius:6px;text-decoration:none!important;background:var(--surface);white-space:nowrap;transition:border-color .15s}
+  .ext-hub-chip{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.04em;padding:5px 13px;border:1px solid var(--border);border-radius:6px;text-decoration:none!important;background:var(--surface);white-space:nowrap;transition:border-color .15s}
   .ext-hub-chip:hover{border-color:var(--accent)}
   /* platform tiles in the Draft Helpers install modal */
   .ext-tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-decoration:none!important;text-align:center;transition:border-color .15s}
   .ext-tile:hover{border-color:var(--accent)}
   .ext-tile-name{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px}
-  .ext-tile-sub{font-size:.62rem;color:var(--text2);font-weight:400;line-height:1.3}
+  .ext-tile-sub{font-size:.6875rem;color:var(--text2);font-weight:400;line-height:1.3}
 </style>
 <div id="extHubStrip" style="display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin:0 0 1.1rem;padding:9px 14px;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.03));border:1px solid rgba(245,158,11,.3);border-radius:10px">
 <div style="display:flex;align-items:center;gap:9px;flex-shrink:1;min-width:0">
 <span style="font-size:1.25rem;line-height:1">🔧</span>
 <div style="min-width:0">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1.5px;color:var(--accent);line-height:1.15">MFF DRAFT HELPERS</div>
-<div style="font-size:.64rem;color:var(--text2);line-height:1.3">Free Chrome extensions — live pick recs from Jack's boards + in-season lineup tools, right in your draft room</div>
+<div style="font-size:.6875rem;color:var(--text2);line-height:1.3">Free Chrome extensions — live pick recs from Jack's boards + in-season lineup tools, right in your draft room</div>
 </div>
 </div>
 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">
@@ -4132,7 +4132,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)">DRAFTING ON UNDERDOG?</div>
 <div style="font-size:.74rem;color:var(--text2);margin-top:1px;line-height:1.4">Get the MFF Draft Helper Chrome extension — live BPA recommendations powered by Jack's rankings, on every Underdog draft.</div>
 </div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent);padding:6px 12px;border:1px solid var(--accent);border-radius:6px;flex-shrink:0">INSTALL</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.04em;color:var(--accent);padding:6px 12px;border:1px solid var(--accent);border-radius:6px;flex-shrink:0">INSTALL</div>
 </button>
 <div id="mdResumeBanner" style="display:none"></div>
 <div id="mdPastDrafts" style="display:none"></div>
@@ -4214,7 +4214,7 @@ Additional ADP sources require a <span class="md-premium-link" id="mdAdpPremiumL
 <div class="md-lineup-slot"><span class="md-ls-pos" style="background:var(--elev-2);color:var(--text2)">BENCH</span><div class="md-stepper"><button class="md-step-btn md-lu-dec" data-lupos="BN">−</button><span class="md-step-val md-lu-val" data-lupos="BN">6</span><button class="md-step-btn md-lu-inc" data-lupos="BN">+</button></div></div>
 </div>
 <div class="md-roster-total" id="mdRosterTotal">Roster size: 15 — Rounds will match</div>
-<div id="mdFormatHint" style="font-size:.65rem;color:var(--accent);font-style:italic;margin-top:4px;display:none">Auto-detected: Superflex (using superflex ADP &amp; rankings)</div>
+<div id="mdFormatHint" style="font-size:.6875rem;color:var(--accent);font-style:italic;margin-top:4px;display:none">Auto-detected: Superflex (using superflex ADP &amp; rankings)</div>
 <!-- Rookie Draft Setup (hidden unless rookie mode) -->
 <div id="mdRookieSetup" style="display:none">
 <div class="md-setup-divider"></div>
@@ -4289,8 +4289,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <button class="md-pos-btn" data-mdpos="DST">D/ST</button>
 <span style="flex:1"></span>
 <span class="md-sort-toggle" id="mdSortToggle" style="display:flex;align-items:center;gap:2px;margin-left:auto">
-<button class="md-sort-btn active" data-mdsort="rank" style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;padding:3px 8px;border:1px solid var(--border);background:var(--accent);color:var(--bg);cursor:pointer;border-radius:3px 0 0 3px;transition:all .15s">RANK</button>
-<button class="md-sort-btn" data-mdsort="adp" style="font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:.5px;padding:3px 8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;border-radius:0 3px 3px 0;transition:all .15s">ADP</button>
+<button class="md-sort-btn active" data-mdsort="rank" style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;padding:3px 8px;border:1px solid var(--border);background:var(--accent);color:var(--bg);cursor:pointer;border-radius:3px 0 0 3px;transition:all .15s">RANK</button>
+<button class="md-sort-btn" data-mdsort="adp" style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;padding:3px 8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;border-radius:0 3px 3px 0;transition:all .15s">ADP</button>
 </span>
 </div>
 <div id="mdAlertBanner" class="md-alert-banner" style="display:none"></div>
@@ -4300,7 +4300,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="md-log-title">DRAFT LOG</div>
 <div class="md-log" id="mdLog"></div>
 <div class="md-log-title" style="margin-top:.75rem">FULL DRAFT BOARD</div>
-<div class="md-full-board" id="mdFullBoard" style="overflow-x:auto;font-size:.65rem"></div>
+<div class="md-full-board" id="mdFullBoard" style="overflow-x:auto;font-size:.6875rem"></div>
 </div>
 </div>
 
@@ -4333,7 +4333,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 </div>
 
 <details style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-bottom:14px">
-<summary style="cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--text2)">MANUAL INSTALL — UNDERDOG (POWER USERS)</summary>
+<summary style="cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.04em;color:var(--text2)">MANUAL INSTALL — UNDERDOG (POWER USERS)</summary>
 <ol style="margin:8px 0 4px;padding-left:20px;font-size:.78rem;line-height:1.7;color:var(--text)">
 <li><a id="draftHelperDownload" href="/mff-draft-helper.zip?v=0.17.9" download="mff-draft-helper.zip" style="color:var(--accent);font-weight:600">Download the .zip</a> and unzip anywhere</li>
 <li>Open <code style="background:var(--surface);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:.74rem">chrome://extensions</code> and toggle <b>Developer mode</b></li>
@@ -6091,7 +6091,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-07-tokens1"></script>
+<script defer src="app.js?v=2026-10-07-tokens2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
@@ -6100,7 +6100,7 @@ window.addEventListener('load', function() {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.5rem;border-top:1px solid var(--border);background:var(--surface2);gap:8px;flex-wrap:wrap">
       <div id="mffTourDots" style="display:flex;gap:6px"></div>
       <div style="display:flex;gap:6px">
-        <button id="mffTourSkip" style="padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:.5px;cursor:pointer">SKIP</button>
+        <button id="mffTourSkip" style="padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;cursor:pointer">SKIP</button>
         <button id="mffTourBack" style="display:none;padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.8px;cursor:pointer">← BACK</button>
         <button id="mffTourNext" style="padding:6px 18px;background:var(--accent);color:#000;border:none;border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;cursor:pointer">NEXT →</button>
       </div>
@@ -6226,10 +6226,10 @@ window.addEventListener('load', function() {
     <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--text2);flex:0 0 auto"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="cmdkInput" type="text" placeholder="Search players, pages, tools..." autocomplete="off" style="flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;padding:4px 0">
-      <span style="font-size:.55rem;color:var(--text2);background:var(--surface2);padding:2px 6px;border-radius:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px">ESC</span>
+      <span style="font-size:.6875rem;color:var(--text2);background:var(--surface2);padding:2px 6px;border-radius:3px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em">ESC</span>
     </div>
     <div id="cmdkResults" style="max-height:50vh;overflow-y:auto;padding:6px"></div>
-    <div style="padding:8px 14px;border-top:1px solid var(--border);font-size:.55rem;color:var(--text2);font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;display:flex;gap:14px;flex-wrap:wrap">
+    <div style="padding:8px 14px;border-top:1px solid var(--border);font-size:.6875rem;color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;display:flex;gap:14px;flex-wrap:wrap">
       <span>↑ ↓ navigate</span><span>↵ select</span><span>esc close</span>
     </div>
   </div>

@@ -61,7 +61,7 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-07-tokens3" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-07-tokens4" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
@@ -76,7 +76,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-07" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-07-tokens3">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-07-tokens4">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -363,6 +363,11 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
 <span class="nav-label">Trade Calc</span>
 </button>
+<button class="nav-btn" data-page="startsit" title="Start/Sit" aria-label="Start / Sit">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h7l-3 10H3z"/><path d="M14 7h7v10h-7z"/><path d="M5.5 12l1.5 1.5 3-3"/><path d="M16 10l3 4M19 10l-3 4"/></svg>
+<span class="nav-label">Start/Sit</span>
+</button>
+<div class="nav-divider" role="separator" aria-label="Tools"><span>Tools</span></div>
 <button class="nav-btn" data-nav-tier="2" data-page="mockdraft" title="Mock Draft" aria-label="Mock Draft">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
 <span class="nav-label">Mock Draft</span>
@@ -391,10 +396,6 @@ Continue with Google
 <button class="nav-btn" data-nav-tier="2" data-page="compare" title="Compare" aria-label="Compare Players">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
 <span class="nav-label">Compare</span>
-</button>
-<button class="nav-btn" data-page="startsit" title="Start/Sit" aria-label="Start / Sit">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h7l-3 10H3z"/><path d="M14 7h7v10h-7z"/><path d="M5.5 12l1.5 1.5 3-3"/><path d="M16 10l3 4M19 10l-3 4"/></svg>
-<span class="nav-label">Start/Sit</span>
 </button>
 <button class="nav-btn" data-nav-tier="2" data-page="games" title="Games" aria-label="Games">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>

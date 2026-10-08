@@ -1069,6 +1069,7 @@
     // ref = the snap share players in that bin averaged, 2019-25). qbFill: a fill-in QB takes the LARGER of his own
     // number and 85% of the starter's, never both (43 fill-in starts: actual 14.7, own 14.3, added 26.4).
     next: { qbMover: 0.90, lowTot: [19, 0.75], rookieWr: 0.90, rbCarry: [0.30, 0.90], early: [2, 5], snapE: 0.3, snapEFar: { WR: 0, TE: 0.3 }, snapClamp: [0.7, 1.4],
+      teDockK: 0.5,   // 2026-10-08 TE snap-trend + snap-level multipliers at this exponent (backtest_te_shadow_core.py: docked TE rows scored 1.089 of the shadow; halved docks + the luck term -1.0% next game, -5.7% rest of season, rank +.012/+.018 5/7 both; shadow TE gap to Clay +7.9% -> +1.7% ROS). Kill: window.SIM_NC_TE_DOCKS = false.
             // v2.26 REST OF SEASON (backtest_shadow_ros.py, 8,542 checkpoints with 3-10 games played, graded on the per-game number
             // for the rest of the season, with and without a 4-games-left filter): weeks after the current one use qbMoverFar,
             // the TE team pass-rate tilt and, for RBs, the snap trend as it stands today (the trend layer goes stale 3 weeks out).
@@ -3110,6 +3111,8 @@
       var blLast = blSn && blSn.w ? Math.max.apply(null, Object.keys(blSn.w).map(Number).filter(function (w) { return w < wk; }).concat([0])) : 0;
       if (ncBlowLast(blLast)) { ncSM = 1; ncSrc += '+blow'; }
     }
+    var teDockK = (p.pos === 'TE' && NC_SHADOW.next.teDockK != null && !(typeof window !== 'undefined' && window.SIM_NC_TE_DOCKS === false)) ? NC_SHADOW.next.teDockK : 1;   // 2026-10-08 TE docks at half strength (see NC_SHADOW.next.teDockK)
+    if (teDockK !== 1 && Math.abs(ncSM - 1) > 1e-9) { ncSM = Math.pow(ncSM, teDockK); ncSrc += '+tedock'; }
     var ncChain = sM ? jsChain / sM * ncSM : jsChain, ncChainNoIA = mult * oppM * cbM * ncSM * rampF;   // the chain without the availability factor
     if (ncV2 && p.isRookie && !(typeof window !== 'undefined' && window.SIM_NC_RAMP === false)) {
       var rds = effectiveString(p, wk), rr = NC_SHADOW.rookieRamp, ncRamp = 1;
@@ -3243,6 +3246,7 @@
             var nxM = Math.min(nx.snapClamp[1], Math.max(nx.snapClamp[0], 1 + nxE * (nxShare - nxT.ref[nxB]) / 100));
             if (nxM < 1 && p.adp != null && p.adp <= nx.snapNoDockAdp && !(typeof window !== 'undefined' && window.SIM_NC_ELITE === false)) nxM = 1;
             if (nxM < 1 && ncBlowOn && p.adp != null && p.adp <= nx.blowNoDockAdp && ncBlowLast(nxPast[0])) { nxM = 1; ncSrc += '+blow'; }
+            if (teDockK !== 1 && Math.abs(nxM - 1) > 0.004) { nxM = Math.pow(nxM, teDockK); if (!/\+tedock/.test(ncSrc)) ncSrc += '+tedock'; }   // 2026-10-08 TE level dock / lift at half strength
             if (Math.abs(nxM - 1) > 0.004) { ncBaseW *= nxM; ncSrc += '+snaplv'; }
           }
         }

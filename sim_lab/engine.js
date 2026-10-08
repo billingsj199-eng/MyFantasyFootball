@@ -1480,7 +1480,7 @@
   // availability sit on top as before. scope 'later' = weeks ahead only (the current week keeps its anchored number);
   // 'all' = every week. Kill: window.SIM_BASE_BLEND = false; override: window.SIM_BASE_BLEND = { w: .7, scope: 'later' | 'all' }.
   // Backup engine.js.bak_pre_baseblend_20261007.
-  var BASE_BLEND = { w: { QB: 0.5, RB: 0.8, WR: 0.7, TE: 0.0 }, scope: 'all' };   // 2026-10-07 late: QB .5 (LOYO pick in 6/7 folds), RB .8 (5/7), from backtest_base_remeasure.py per-position fits   // 2026-10-07 evening: scope 'all' (Jack: "switch the current week to the blend too"); TE .3 (every cut of the re-measure had tight ends as Clay's: at .7 the TE number was +0.4% worse than the live number, at .3 -0.1%)   // 2026-10-08: TE 0 - the rank re-grade (backtest_te_blend_rank.py) had TE .3 at -.008 rho (2/7), forward picks 0 every fold, and the error pick did not hold out of sample; Clay-side live form alone for tight ends
+  var BASE_BLEND = { w: { QB: 0.5, RB: 0.8, WR: 0.7, TE: 0.0 }, wNow: { QB: 1.0, RB: 1.0, WR: 1.0, TE: 1.0 }, scope: 'all' };   // 2026-10-08 (Jack "drop the blend on the weekly"): wNow = the CURRENT week's weight = shadow alone (Clay-free weekly number; cost on history ~+0.3% error, rank-neutral, project_clay_free_roadmap); later weeks keep w. Kill wNow only: window.SIM_WEEKLY_NO_BLEND = false (falls back to w).   // 2026-10-07 late: QB .5 (LOYO pick in 6/7 folds), RB .8 (5/7), from backtest_base_remeasure.py per-position fits   // 2026-10-07 evening: scope 'all' (Jack: "switch the current week to the blend too"); TE .3 (every cut of the re-measure had tight ends as Clay's: at .7 the TE number was +0.4% worse than the live number, at .3 -0.1%)   // 2026-10-08: TE 0 - the rank re-grade (backtest_te_blend_rank.py) had TE .3 at -.008 rho (2/7), forward picks 0 every fold, and the error pick did not hold out of sample; Clay-side live form alone for tight ends
   function volumeZ() {
     var d = (typeof window !== 'undefined' && window.SIM_PACE_2026) || null, T = d && d.teams; if (!T) return null;
     var keys = [], ex = [], at = [], bxKeys = [], bx = [];
@@ -3343,8 +3343,9 @@
     var bbCfg = typeof window !== 'undefined' ? window.SIM_BASE_BLEND : undefined;
     if (bbCfg !== false && !p.isDST && !(inWin && winEvid) && jsMean != null && ncMean != null && ncMean > 0 && !ncOut && iA > 0) {   // window QB with cameo-only evidence: the shadow has no planned-window concept and would halve him - skip the blend for him only
       var bbwRaw = (bbCfg && bbCfg.w != null) ? bbCfg.w : BASE_BLEND.w, bbs = (bbCfg && bbCfg.scope) ? bbCfg.scope : BASE_BLEND.scope;
-      var bbw = typeof bbwRaw === 'number' ? bbwRaw : (bbwRaw && bbwRaw[p.pos] != null ? bbwRaw[p.pos] : 0.7);   // one weight, or per position
       var bbLater = _inj && _inj.week >= 1 && wk > _inj.week;
+      if (!bbLater && BASE_BLEND.wNow && !(bbCfg && bbCfg.w != null) && !(typeof window !== 'undefined' && window.SIM_WEEKLY_NO_BLEND === false)) bbwRaw = BASE_BLEND.wNow;   // 2026-10-08 current week: shadow alone
+      var bbw = typeof bbwRaw === 'number' ? bbwRaw : (bbwRaw && bbwRaw[p.pos] != null ? bbwRaw[p.pos] : 0.7);   // one weight, or per position
       if (bbw > 0 && (bbs === 'all' || bbLater)) { bbW = bbw; jsMean = bbw * ncMean + (1 - bbw) * jsMean; bbRatio = jsPre > 0 ? jsMean / jsPre : 1; }
     }
     else if (wk >= 2 && /^Questionable/i.test(String(p.injFlag || '')) && !(typeof window !== 'undefined' && window.SIM_NC_QRET === false)) {   // v2.10

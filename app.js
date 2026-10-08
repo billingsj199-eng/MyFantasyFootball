@@ -12951,6 +12951,20 @@ window._qsValue = function(name, wk, flip) {
   if (a.length < (m + 1) * 3) return null;
   return [a[m * 3], a[m * 3 + 1], a[m * 3 + 2]];
 };
+// SCENARIO SIMS (Jack 2026-10-08: "make sure it sims completely with and without - I don't want a player in between"): each
+// in/out combination is simmed on its own in the export (qs.teams[TM].bb = [boom%, bust% per mask]); boom / bust follow the
+// toggles like PROJ instead of the hedged weekly run. [null, null] = he is out in that combination.
+window._qsBoomBust = function(name, wk, flip) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  const hit = I.by[_qsNorm(name)];
+  if (!hit || !hit.key) return null;
+  const T = window.SIM_PROJ_2026.qs.teams[hit.tm], b = T && T.bb && T.bb[hit.key];
+  if (!b) return null;
+  const m = _qsMask(T, wk, flip);
+  if (b.length < (m + 1) * 2) return null;
+  return [b[m * 2], b[m * 2 + 1]];
+};
 // the questionable teammates whose status moves this player (card WITH / WITHOUT box)
 window._qsTeammates = function(name, wk) {
   const I = _qsIndex();
@@ -12964,7 +12978,11 @@ function _simProjRow(d, wk) {
   const r0 = _simProjRowRaw(d, wk);
   if (d && d.s !== 'DST' && typeof window._qsValue === 'function') {
     const v = window._qsValue(d.n, wk);
-    if (v) return [v[0], v[1], v[2], r0 ? r0[3] : null, r0 ? r0[4] : null];
+    if (v) {
+      const bb = (typeof window._qsBoomBust === 'function') ? window._qsBoomBust(d.n, wk) : null;
+      if (bb) return [v[0], v[1], v[2], bb[0], bb[1]];
+      return [v[0], v[1], v[2], r0 ? r0[3] : null, r0 ? r0[4] : null];
+    }
   }
   return r0;
 }

@@ -320,27 +320,15 @@ function kickoffMs(kicks, wk, tm) {
   // Mask bit i = q[i] OUT. Teammates' values are absolute projections (effMean, same as the weekly rows).
   const qsOut = { wk: currentWeek, teams: {} };
   try {
-    const QS_MIN = 4.0, QS_MAX = 5, SKILL = { QB: 1, RB: 1, WR: 1, TE: 1 };
-    const prRaw = global.SIM_PRACTICE_2026, prN = {};
-    if (prRaw && prRaw.players && (!prRaw.week || +prRaw.week === +currentWeek)) Object.keys(prRaw.players).forEach(n => { prN[n.toLowerCase()] = prRaw.players[n]; });
-    const cand0 = players.list.filter(p => {
-      if (p.isDST || !SKILL[p.pos]) return false;
-      if (now >= kickoffMs(kicks, currentWeek, p.tm)) return false;
-      const t = String(p.injFlag || '').toLowerCase().split('|')[0], g = String((prN[p.name.toLowerCase()] || {}).gs || '').toLowerCase();
-      if (!(/questionable|doubtful|^out$/.test(t) || /questionable|doubtful/.test(g))) return false;
-      return E.injAdj(p, currentWeek) > 0;   // a confirmed Out (zeroed by the engine) stays out - the site zeroes him too
-    });
+    const SKILL = { QB: 1, RB: 1, WR: 1, TE: 1 };
     const projOf = p => {
       const h = E.weeklyProjection(p, currentWeek, scH, schedule), pp = E.weeklyProjection(p, currentWeek, scP, schedule), st = E.weeklyProjection(p, currentWeek, scS, schedule);
       return [h ? E.effMean(h) : 0, pp ? E.effMean(pp) : 0, st ? E.effMean(st) : 0];
     };
-    if (cand0.length) {
-      // healthy level of every candidate (all of them forced in)
-      const allIn = {}; cand0.forEach(q => { allIn[q.name] = 'in'; });
-      E.applyInSeasonInjuries(players, currentWeek, { active: true, force: allIn });
-      const lvl = {}; cand0.forEach(q => { lvl[q.name] = projOf(q)[0]; });
-      const byTm = {};
-      cand0.filter(q => lvl[q.name] >= QS_MIN).sort((a, b) => lvl[b.name] - lvl[a.name]).forEach(q => { const a = byTm[q.tm] || (byTm[q.tm] = []); if (a.length < QS_MAX) a.push(q); });
+    // candidates from the shared engine rule (E.qsCandidates - the Sim Lab page uses the same one)
+    const QC = E.qsCandidates(players, currentWeek, schedule, { skipTeam: tm => now >= kickoffMs(kicks, currentWeek, tm), restore: { active: true } });
+    const byTm = QC.byTm;
+    if (Object.keys(byTm).length) {
       const tms = Object.keys(byTm), maxK = Math.max(0, ...tms.map(t => byTm[t].length));
       const vals = {};   // tm -> name -> [mask][3]
       for (let m = 0; m < (1 << maxK); m++) {

@@ -30,7 +30,7 @@ self.onmessage = function (ev) {
     var E = self.SimEngine;
     if (!E || !E.bbFieldRun) throw new Error('engine did not load in the worker');
     var schedule = E.buildSchedule(), players = E.buildPlayers(schedule);
-    if (m.injury) E.applyInSeasonInjuries(players, m.injury.week, { active: m.injury.active });
+    if (m.injury) E.applyInSeasonInjuries(players, m.injury.week, { active: m.injury.active, force: m.injury.force || null });   // force = Jack's in/out list (2026-10-08)
     var plist = m.players.map(function (rp) {
       var p = rp.stub ? null : ((rp.sid != null && players.bySid[rp.sid]) || players.byNorm[rp.norm]);
       return p || { name: rp.name, pos: rp.pos, sid: null, stub: true };

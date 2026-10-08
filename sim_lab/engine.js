@@ -2455,6 +2455,43 @@
     var cpts = ((c.ry || 0) * 0.1 + (c.rtd || 0) * 6) / div;
     return { tgt: tgt, car: car, ppt: tgt > 0 ? rpts / tgt : 0, ppc: car > 0 ? cpts / car : 0 };
   }
+  // QUESTIONABLE IN/OUT CANDIDATES (2026-10-08, one source for the site export AND the Sim Lab page): this week's QB/RB/WR/TE
+  // tagged Questionable / Doubtful / Out (Sleeper) or Questionable / Doubtful (NFL report) whom the live layer does not zero,
+  // healthy half-PPR >= 4, the 5 biggest per team. opts.skipTeam(tm) drops teams (the exporter skips kicked-off games);
+  // opts.restore = the applyInSeasonInjuries opts to leave in place afterwards (default {active: true}).
+  var QS_CAND = { min: 4.0, max: 5, pos: { QB: 1, RB: 1, WR: 1, TE: 1 } };
+  function qsCandidates(players, cw, schedule, opts) {
+    opts = opts || {};
+    var list = players.list || players, wnd = typeof window !== 'undefined' ? window : {};
+    var prRaw = wnd.SIM_PRACTICE_2026, prN = {};
+    if (prRaw && prRaw.players && (!prRaw.week || +prRaw.week === +cw)) Object.keys(prRaw.players).forEach(function (n) { prN[n.toLowerCase()] = prRaw.players[n]; });
+    var cand0 = list.filter(function (p) {
+      if (p.isDST || !QS_CAND.pos[p.pos]) return false;
+      if (opts.skipTeam && opts.skipTeam(p.tm)) return false;
+      var t = String(p.injFlag || '').toLowerCase().split('|')[0], g = String((prN[p.name.toLowerCase()] || {}).gs || '').toLowerCase();
+      if (!(/questionable|doubtful|^out$/.test(t) || /questionable|doubtful/.test(g))) return false;
+      return injAdj(p, cw) > 0;   // a confirmed Out (zeroed by the live layer) stays out
+    });
+    var byTm = {}, lvl = {};
+    if (cand0.length) {
+      var allIn = {}; cand0.forEach(function (q) { allIn[q.name] = 'in'; });
+      applyInSeasonInjuries(players, cw, { active: true, force: allIn });
+      cand0.forEach(function (q) { var h = weeklyProjection(q, cw, PRESETS.half, schedule); lvl[q.name] = h ? effMean(h) : 0; });
+      applyInSeasonInjuries(players, cw, opts.restore || { active: true });
+      cand0.filter(function (q) { return lvl[q.name] >= QS_CAND.min; }).sort(function (a, b) { return lvl[b.name] - lvl[a.name]; })
+        .forEach(function (q) { var a = byTm[q.tm] || (byTm[q.tm] = []); if (a.length < QS_CAND.max) a.push(q); });
+    }
+    return { byTm: byTm, lvl: lvl };
+  }
+  // The force map for Jack's ASSUMED OUT list (site settings/active_week.assumeOut[wk]), same reading as the site: a candidate
+  // on the list = OUT, a candidate not on it = IN at full strength; anyone else on the list = OUT (Sim Lab redistributes his share).
+  function qsForce(players, cw, schedule, outNames, opts) {
+    var C = qsCandidates(players, cw, schedule, opts), outN = {}, force = {}, list = players.list || players;
+    (outNames || []).forEach(function (n) { var k = norm(n); outN[k] = 1; if (CLAY_NORM_ALIAS[k]) outN[CLAY_NORM_ALIAS[k]] = 1; Object.keys(CLAY_NORM_ALIAS).forEach(function (a) { if (CLAY_NORM_ALIAS[a] === k) outN[a] = 1; }); });
+    Object.keys(C.byTm).forEach(function (tm) { C.byTm[tm].forEach(function (q) { force[q.name] = outN[q.norm] ? 'out' : 'in'; }); });
+    list.forEach(function (p) { if (!p.isDST && outN[p.norm]) force[p.name] = 'out'; });
+    return { force: force, cands: C };
+  }
   function applyInSeasonInjuries(players, currentWeek, opts) {
     _ncCache = {};   // v2.12: the shadow redistribution cache follows the injury state
     _fillinCache = {};   // fill-in rescale: "back" reads the injury layer
@@ -3374,7 +3411,13 @@
             var cz = C[Z.norm]; if (cz.cap >= 1) return;
             var lostRec = cz.full * cz.rf * (1 - cz.cap), lostRush = cz.full * (1 - cz.rf) * (1 - cz.cap);
             var zSec = !(recLvl(Z) >= topRec - 1e-9), rule = POOL[Z.pos][zSec ? 'sec' : 'lead'];
-            var same = healthy.filter(function (q) { return q.pos === Z.pos; }).sort(function (a, b) { var d = strOf(a) - strOf(b); return d !== 0 ? d : C[b.norm].own - C[a.norm].own; });
+            // MULTI-ABSENCE (2026-10-08): each absent player's share is split as if he were the ONLY one out - the other fully-out
+            // teammates keep their rank slots (their shares are simply lost), so a second absence never moves a receiver into the
+            // rank-0 low-share slot (Williams 7.2 with Terry out fell to 6.8 with Terry + Diggs out; Meyers 8.7 -> 7.7). One absence
+            // = identical to before (the backtested case). Kill: window.SIM_NC_MULTI_ABS = false.
+            var multiAbs = !(typeof window !== 'undefined' && window.SIM_NC_MULTI_ABS === false);
+            var same = (multiAbs ? all.filter(function (q) { if (q === Z || q.pos !== Z.pos) return false; if (C[q.norm].cap === 1) return true; if (C[q.norm].cap !== 0) return false; var jr = jsData().players && jsData().players[q.norm]; return !!(jr && jr.wks && jr.wks.some(function (w0) { return w0 >= wk - 3 && w0 < wk; })); }) : healthy.filter(function (q) { return q.pos === Z.pos; }))
+              .sort(function (a, b) { var d = strOf(a) - strOf(b); return d !== 0 ? d : C[b.norm].full - C[a.norm].full; });
             var i = same.indexOf(p);
             if (i >= 0) gained += poolTgtShare(rule, Z.pos, zSec, i, p) * lostRec * POOL_EFF_T + (rule.carSame[i] || 0) * lostRush * POOL_EFF_C;
             if (rule.tgtOther > 0 && p.pos !== Z.pos && p.pos !== 'RB') {
@@ -4985,7 +5028,7 @@
     SEASON: SEASON, WEEKS: WEEKS, PRESETS: PRESETS, BOOM_BUST: BOOM_BUST,
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
-    applyInSeasonInjuries: applyInSeasonInjuries, injAdj: injAdj, injAvail: injAvail, injGroup: injGroup, linesUp: linesUp, injSignalInfo: injSignalInfo, bangedDock: bangedDock, returnDock: returnDock, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, lgbExplain: lgbExplain, learnedShadowExplain: learnedShadowExplain, ctxNote: ctxNote,
+    applyInSeasonInjuries: applyInSeasonInjuries, qsCandidates: qsCandidates, qsForce: qsForce, injAdj: injAdj, injAvail: injAvail, injGroup: injGroup, linesUp: linesUp, injSignalInfo: injSignalInfo, bangedDock: bangedDock, returnDock: returnDock, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, lgbExplain: lgbExplain, learnedShadowExplain: learnedShadowExplain, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult, ncCacheReset: ncCacheReset,

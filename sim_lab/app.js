@@ -56,6 +56,27 @@
         var st = E.applyInSeasonInjuries(state.players, cur, { active: active });
         state.injuryWeek = cur;
         state.injuryActive = active; // the field-sim workers re-apply the same layer
+        // JACK'S IN/OUT LIST (2026-10-08, "update our sims on the site with the new injured teammate feature"): the site's
+        // weekly ASSUMED OUT list (Firestore settings/active_week.assumeOut[week], public read) drives the week the same way
+        // the site's PROJ does - a questionable candidate on the list = OUT (his share flows to teammates), off it = IN at full
+        // strength (E.qsForce, the rule the site export uses). Read at boot; the league-sim workers get the same force map.
+        try {
+          if (active && E.qsForce) {
+            var fsUrl = 'https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)/documents/settings/active_week';
+            var doc = await (await fetch(fsUrl)).json();
+            var ao = doc && doc.fields && doc.fields.assumeOut && doc.fields.assumeOut.mapValue && doc.fields.assumeOut.mapValue.fields;
+            var arr = ao && ao[String(cur)] && ao[String(cur)].arrayValue && ao[String(cur)].arrayValue.values;
+            var outNames = (arr || []).map(function (v) { return v.stringValue; }).filter(Boolean);
+            var qf = E.qsForce(state.players, cur, state.schedule, outNames, { restore: { active: active } });
+            if (Object.keys(qf.force).length) {
+              st = E.applyInSeasonInjuries(state.players, cur, { active: active, force: qf.force });
+              state.injuryForce = qf.force;
+              var nOut = Object.keys(qf.force).filter(function (k) { return qf.force[k] === 'out'; }), nIn = Object.keys(qf.force).filter(function (k) { return qf.force[k] === 'in'; });
+              state.inOutNote = 'in/out list: ' + nOut.length + ' assumed out, ' + nIn.length + ' questionable played in';
+              state.inOutTitle = 'ASSUMED OUT (site list): ' + (nOut.join(', ') || 'none') + '\nQuestionable, kept IN: ' + (nIn.join(', ') || 'none');
+            }
+          }
+        } catch (eAO) { state.inOutNote = 'in/out list unavailable - default injury reads'; }
         // 2026-09-27: current-week games already final (kickoff 5h+ ago) -> league sims bank the real scores
         try {
           var doneTm = {}, kc = kicks[cur] || {};
@@ -68,7 +89,8 @@
         } catch (eL) { /* no stats feed — week stays fully simmed */ }
         if (st.zeros.length) {
           $('status').textContent += ' · wk ' + cur + ' injury layer: ' + st.zeros.length + ' out/docked';
-          $('status').title = st.zeros.map(function (z) { return z.name + ' (' + z.tm + ' ' + z.pos + ') wk' + z.from + (z.to > z.from ? '-' + z.to : '') + (z.mult ? ' x' + z.mult : '') + ' [' + z.src + ']'; }).join('\n');
+          if (state.inOutNote) $('status').textContent += ' · ' + state.inOutNote;
+          $('status').title = (state.inOutTitle ? state.inOutTitle + '\n\n' : '') + st.zeros.map(function (z) { return z.name + ' (' + z.tm + ' ' + z.pos + ') wk' + z.from + (z.to > z.from ? '-' + z.to : '') + (z.mult ? ' x' + z.mult : '') + ' [' + z.src + ']'; }).join('\n');
         } else if (active) {
           $('status').textContent += ' · wk ' + cur + ' injury layer: no designations';
         }
@@ -3578,7 +3600,7 @@
         };
         w.postMessage({
           cmd: 'run', scripts: scripts, players: rp, start: f.roster.start, ix: ix16,
-          injury: state.injuryWeek ? { week: state.injuryWeek, active: !!state.injuryActive } : null,
+          injury: state.injuryWeek ? { week: state.injuryWeek, active: !!state.injuryActive, force: state.injuryForce || null } : null,
           sims: per + (c < extra ? 1 : 0), seed: (seed0 + c * 7919) >>> 0,
           regTo: o.regTo, banked: o.banked, weight: o.weight, mine: o.mine, fromWeek: o.fromWeek, unavailable: o.unavailable,
           cutRanks: o.cutRanks, lockMask: o.lockMask, lockVals: o.lockVals, all: o.all, playoff: o.playoff

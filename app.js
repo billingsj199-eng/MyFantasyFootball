@@ -11676,7 +11676,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   const page = document.getElementById('pageRankings');
   if (!page) return;
   // DOM order, top-down — the running total is what makes each row stack.
-  const rows = ['.controls', '.rnk-scoring-row', '.stats-bar']
+  const rows = ['.controls', '.rnk-scoring-row', '.stats-row']
     .map(sel => page.querySelector(sel))
     .filter(Boolean);
   if (!rows.length) return;
@@ -13601,7 +13601,7 @@ function _rnkLgBarRender() {
   const lg = _rnkLg();
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   if (!lgs.length) {
-    bar.innerHTML = '<span class="vor-bar-lbl">League</span><span class="lg-bar-hint">Sync a league in MY TEAMS to mark your roster and the waiver wire on any board.</span>';
+    bar.innerHTML = '<span class="vor-bar-lbl">League</span><span class="lg-bar-hint">Sync a league in MY TEAMS to tag your roster and the waiver wire on every board.</span>';
     return;
   }
   const r = _rnkLgRosters();
@@ -71110,4 +71110,37 @@ function _rsScatter(cfg) {
     }
     apply();
   };
+})();
+
+// === Ticker row: RANKINGS MOVERS | LINE MOVERS switch (2026-10-08) ===
+// Both bars still render on their own (_adpMovers / _lineMovers set display:flex
+// once their data lands); #tickerRow[data-ticker] picks which one is visible
+// (styles/main.css hides the other). If the chosen bar has no data yet the row
+// falls back to the other one, so it is never blank while either has content.
+// The switch button for a bar with no data is hidden. Choice persists per device
+// in localStorage mff_ticker.
+(function _tickerSwitch() {
+  const row = document.getElementById('tickerRow');
+  if (!row) return;
+  const bars = { adp: document.getElementById('adpMoversBar'), lines: document.getElementById('lineMoversBar') };
+  const other = k => (k === 'adp' ? 'lines' : 'adp');
+  let want = 'adp';
+  try { const s = localStorage.getItem('mff_ticker'); if (s === 'adp' || s === 'lines') want = s; } catch (_) {}
+  const has = k => !!(bars[k] && bars[k].style.display !== 'none');
+  const apply = () => {
+    row.dataset.ticker = has(want) || !has(other(want)) ? want : other(want);
+    row.querySelectorAll('.amb-switch').forEach(b => { b.style.display = has(b.dataset.ticker) ? '' : 'none'; });
+  };
+  row.addEventListener('click', e => {
+    const b = e.target.closest('.amb-switch');
+    if (!b) return;
+    want = b.dataset.ticker;
+    try { localStorage.setItem('mff_ticker', want); } catch (_) {}
+    apply();
+  });
+  if (typeof MutationObserver === 'function') {
+    const mo = new MutationObserver(apply);
+    Object.values(bars).forEach(b => { if (b) mo.observe(b, { attributes: true, attributeFilter: ['style'] }); });
+  }
+  apply();
 })();

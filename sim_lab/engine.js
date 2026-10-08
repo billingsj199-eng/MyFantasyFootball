@@ -2447,8 +2447,15 @@
     if (prRaw && prRaw.players && (!prRaw.week || +prRaw.week === +currentWeek)) {
       Object.keys(prRaw.players).forEach(function (nm) { prMap[norm(nm)] = prRaw.players[nm]; });
     }
+    // QUESTIONABLE SCENARIOS (2026-10-08, Jack: "if I make it so Chase plays ... can it make Antonio Williams' proj without
+    // them playing?"): opts.force = { name: 'in' | 'out' } overrides this week's read for the named players only - 'in' = no
+    // designation (full strength), 'out' = zeroed this week, his share flows to teammates as for any Out. Export-only (the
+    // site's ASSUMED OUT toggle reads the per-scenario rows); never set on the live run.
+    var force = opts.force || null;
     list.forEach(function (p) {
       if (p.isDST) return;
+      if (force && force[p.name] === 'in') return;
+      if (force && force[p.name] === 'out') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'scenario-out' }; return; }
       var o = ov[p.name];
       var t = String(p.injFlag || '').toLowerCase();
       var pr = prMap[p.norm] || null;

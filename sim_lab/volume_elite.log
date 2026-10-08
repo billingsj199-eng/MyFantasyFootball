@@ -1,0 +1,24 @@
+=== VOLUME CONTEXT x ELITE on the Clay-free shadow: 4,729 WR/TE top-150 weeks with 2+ prior team games (box part not in the harness) ===
+  docked rows (mult < .95) act / wired by ADP band: 1-12 1.027 (undocked 0.950, n44) | 13-30 0.994 (undocked 0.920, n59) | 31-60 1.061 (undocked 0.981, n169) | 61-150 1.029 (undocked 0.952, n267)
+
+  fixed, vs WIRED (squared top-150 | cubed top-100 | by band cubed):
+    off                            +0.91% (0/7) | top-100 cubed +1.12% | 1-12:+1.59 13-30:+1.15 31-60:+1.09 61-100:-0.05
+    exempt ADP<=12                 +0.34% (0/7) | top-100 cubed +0.49% | 1-12:+1.59 13-30:+0.00 31-60:+0.00 61-100:+0.00
+    cap .96 ADP<=12                -0.01% (3/7) | top-100 cubed -0.02% | 1-12:-0.07 13-30:+0.00 31-60:+0.00 61-100:+0.00
+    no dock (lifts kept) ADP<=12   +0.13% (0/7) | top-100 cubed +0.20% | 1-12:+0.66 13-30:+0.00 31-60:+0.00 61-100:+0.00
+    exempt ADP<=30                 +0.64% (0/7) | top-100 cubed +0.84% | 1-12:+1.59 13-30:+1.15 31-60:+0.00 61-100:+0.00
+    cap .96 ADP<=30                -0.00% (5/7) | top-100 cubed -0.01% | 1-12:-0.07 13-30:+0.02 31-60:+0.00 61-100:+0.00
+    no dock (lifts kept) ADP<=30   +0.19% (3/7) | top-100 cubed +0.27% | 1-12:+0.66 13-30:+0.21 31-60:+0.00 61-100:+0.00
+    exempt ADP<=60                 +0.93% (1/7) | top-100 cubed +1.13% | 1-12:+1.59 13-30:+1.15 31-60:+1.09 61-100:+0.00
+    cap .96 ADP<=60                -0.01% (4/7) | top-100 cubed -0.02% | 1-12:-0.07 13-30:+0.02 31-60:-0.02 61-100:+0.00
+    no dock (lifts kept) ADP<=60   +0.14% (2/7) | top-100 cubed +0.22% | 1-12:+0.66 13-30:+0.21 31-60:-0.18 61-100:+0.00
+    strength x0.5                  +0.32% (1/7) | top-100 cubed +0.42% | 1-12:+0.61 13-30:+0.47 31-60:+0.39 61-100:-0.14
+    strength x0.75                 +0.12% (1/7) | top-100 cubed +0.17% | 1-12:+0.26 13-30:+0.21 31-60:+0.15 61-100:-0.10
+    strength x1.25                 -0.05% (4/7) | top-100 cubed -0.10% | 1-12:-0.16 13-30:-0.15 31-60:-0.07 61-100:+0.15
+    off vs wired is the layer itself on the new base (positive = the layer still helps)
+  rank vs off (rho 0.3725, pairs 62.93%): wired: rho +0.0010 pairs +0.10  exempt ADP<=12: rho +0.0013 pairs +0.10  cap .96 ADP<=12: rho +0.0008 pairs +0.10  no dock (lifts kept) ADP<=12: rho +0.0015 pairs +0.10  exempt ADP<=30: rho +0.0009 pairs +0.08  cap .96 ADP<=30: rho +0.0005 pairs +0.10  no dock (lifts kept) ADP<=30: rho +0.0014 pairs +0.08  exempt ADP<=60: rho -0.0023 pairs +0.01  cap .96 ADP<=60: rho +0.0029 pairs +0.11  no dock (lifts kept) ADP<=60: rho +0.0031 pairs +0.08  strength x0.5: rho +0.0032 pairs +0.17  strength x0.75: rho +0.0016 pairs +0.16  strength x1.25: rho +0.0005 pairs +0.04
+  LOYO +0.01% 3/7 | board +0.004% | picks ['strength x1.25', 'strength x1.25', 'cap .96 ADP<=60', 'strength x1.25', 'strength x1.25', 'strength x1.25', 'strength x1.25']
+  FWD  +0.00% 2/4 | board +0.002% | picks ['strength x1.25', 'strength x1.25', 'strength x1.25', 'strength x1.25']
+  -> FAIL (wired stays)
+
+Limitations: honest replica, next game, no book anchor; box-count part (ADP <= 60) not in the harness; team volume from play-by-play season to date.

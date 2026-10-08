@@ -310,6 +310,74 @@ function kickoffMs(kicks, wk, tm) {
     if (wk === 1 || wk === WEEKS) console.log('wk ' + wk + ': ' + Object.keys(rows).length + ' players');
   }
 
+  // ---------- QUESTIONABLE SCENARIOS (2026-10-08, Jack) ----------
+  // "Can the weekly proj update based on who I have out vs in - if I put Chase back in it changes Gesicki and Meyers; with
+  // Terry and Diggs both in the injured tier can it project Antonio Williams without them?" For the current week, per team
+  // whose game has not kicked off: the questionable / doubtful / unconfirmed-Out players (healthy half >= QS_MIN, the QS_MAX
+  // biggest per team) are forced IN or OUT in every combination (E.applyInSeasonInjuries opts.force), and every teammate
+  // whose number moves gets one [half, ppr, std] per combination. The site reads the combination matching Jack's ASSUMED OUT
+  // list (in the list = out, otherwise in) so PROJ, the weekly order and the player card follow his toggles.
+  // Mask bit i = q[i] OUT. Teammates' values are absolute projections (effMean, same as the weekly rows).
+  const qsOut = { wk: currentWeek, teams: {} };
+  try {
+    const QS_MIN = 4.0, QS_MAX = 5, SKILL = { QB: 1, RB: 1, WR: 1, TE: 1 };
+    const prRaw = global.SIM_PRACTICE_2026, prN = {};
+    if (prRaw && prRaw.players && (!prRaw.week || +prRaw.week === +currentWeek)) Object.keys(prRaw.players).forEach(n => { prN[n.toLowerCase()] = prRaw.players[n]; });
+    const cand0 = players.list.filter(p => {
+      if (p.isDST || !SKILL[p.pos]) return false;
+      if (now >= kickoffMs(kicks, currentWeek, p.tm)) return false;
+      const t = String(p.injFlag || '').toLowerCase().split('|')[0], g = String((prN[p.name.toLowerCase()] || {}).gs || '').toLowerCase();
+      if (!(/questionable|doubtful|^out$/.test(t) || /questionable|doubtful/.test(g))) return false;
+      return E.injAdj(p, currentWeek) > 0;   // a confirmed Out (zeroed by the engine) stays out - the site zeroes him too
+    });
+    const projOf = p => {
+      const h = E.weeklyProjection(p, currentWeek, scH, schedule), pp = E.weeklyProjection(p, currentWeek, scP, schedule), st = E.weeklyProjection(p, currentWeek, scS, schedule);
+      return [h ? E.effMean(h) : 0, pp ? E.effMean(pp) : 0, st ? E.effMean(st) : 0];
+    };
+    if (cand0.length) {
+      // healthy level of every candidate (all of them forced in)
+      const allIn = {}; cand0.forEach(q => { allIn[q.name] = 'in'; });
+      E.applyInSeasonInjuries(players, currentWeek, { active: true, force: allIn });
+      const lvl = {}; cand0.forEach(q => { lvl[q.name] = projOf(q)[0]; });
+      const byTm = {};
+      cand0.filter(q => lvl[q.name] >= QS_MIN).sort((a, b) => lvl[b.name] - lvl[a.name]).forEach(q => { const a = byTm[q.tm] || (byTm[q.tm] = []); if (a.length < QS_MAX) a.push(q); });
+      const tms = Object.keys(byTm), maxK = Math.max(0, ...tms.map(t => byTm[t].length));
+      const vals = {};   // tm -> name -> [mask][3]
+      for (let m = 0; m < (1 << maxK); m++) {
+        const force = {}, live = [];
+        tms.forEach(t => { const qs = byTm[t]; if (m >= (1 << qs.length)) return; live.push(t); qs.forEach((q, i) => { force[q.name] = (m >> i) & 1 ? 'out' : 'in'; }); });
+        E.applyInSeasonInjuries(players, currentWeek, { active: true, force });
+        live.forEach(t => {
+          const V = vals[t] || (vals[t] = {});
+          players.list.forEach(p => { if (p.isDST || p.tm !== t || !SKILL[p.pos]) return; (V[p.name] || (V[p.name] = []))[m] = projOf(p); });
+        });
+      }
+      tms.forEach(t => {
+        const qs = byTm[t], n = 1 << qs.length, v = {};
+        Object.keys(vals[t] || {}).forEach(nm => {
+          const a = vals[t][nm], self = qs.findIndex(q => q.name === nm);
+          // MONOTONE GUARD: one more teammate out never lowers anyone. The pool shares are by rank among the HEALTHY
+          // receivers (fit on one-absence weeks: the top remaining WR gets the smallest share), so a second absence
+          // promotes a WR3 into the low-share slot - Williams 7.2 with Terry out fell to 6.8 with Terry + Diggs out.
+          // Each combination takes the max of itself and every combination with one fewer teammate out.
+          for (let m = 1; m < n; m++) {
+            if (self >= 0 && ((m >> self) & 1)) continue;   // he is out himself: 0
+            for (let i = 0; i < qs.length; i++) if ((m >> i) & 1) { const sub = a[m & ~(1 << i)]; for (let f = 0; f < 3; f++) if (sub[f] > a[m][f]) a[m][f] = sub[f]; }
+          }
+          let lo = 1e9, hi = -1e9;
+          for (let m = 0; m < n; m++) { lo = Math.min(lo, a[m][0]); hi = Math.max(hi, a[m][0]); }
+          if (hi < 1 || hi - lo < 0.15) return;   // nothing moves (or a deep reserve) - the weekly row stands
+          const flat = []; for (let m = 0; m < n; m++) flat.push(round1(a[m][0]), round1(a[m][1]), round1(a[m][2]));
+          v[nm] = flat;
+        });
+        if (Object.keys(v).length) qsOut.teams[t] = { q: qs.map(q => q.name), v };
+      });
+      console.log('questionable scenarios wk ' + currentWeek + ': ' + Object.keys(qsOut.teams).map(t => t + ' [' + qsOut.teams[t].q.join(', ') + '] ' + Object.keys(qsOut.teams[t].v).length + ' rows').join('; '));
+    } else console.log('questionable scenarios: no candidates');
+  } catch (e) { console.log('questionable scenarios failed: ' + (e && e.stack || e)); qsOut.teams = {}; }
+  // restore the live injury state for everything below (auto-lock, ROS lock)
+  E.applyInSeasonInjuries(players, currentWeek, { active: injActive });
+
   // ---------- AUTO PER-GAME LOCK (Sim Lab tracking snapshots, 2026-09-09) ----------
   // Mirrors the Sim Lab UI's "Lock" button (app.js lockGames): for every
   // current-week game that has kicked off or kicks off within LOCK_LEAD_MIN,
@@ -555,6 +623,7 @@ function kickoffMs(kicks, wk, tm) {
     sims: SIMS,
     currentWeek: currentWeek,
     liveModel: liveModel,
+    qs: qsOut,
     boomBust: { basis: 'median', boomMult: 1.5, bustMult: 0.5 },
     seasonBoomBust: { basis: 'median', boomMult: 1.25, bustMult: 0.75, sims: 400 },
     weeks: weeksOut,
@@ -577,6 +646,7 @@ function kickoffMs(kicks, wk, tm) {
     '// pre-kickoff values by the exporter (never recomputed).\n' +
     '// luck[name] = [pos, expectedTD|expectedKickPts, actual, games, adjThisWeekHalf|null, weekly xtd/td map|null] (card TD/FG LUCK box).\n' +
     '// xfp[name][wk] = expected components: RB/WR/TE tg,xrec,xrecyd,xrectd,car,xruyd,xrutd; QB att,xpyd,xptd,car,xruyd,xrutd,xint (card xFP column; targets via nflfastR cp/xYAC, xint = expected INTs).\n' +
+    '// qs = {wk, teams: {TM: {q: [questionable names], v: {name: [h,p,s per mask]}}}}: this week\'s in/out combinations (mask bit i = q[i] OUT) for the site ASSUMED OUT toggles.\n' +
     '// inj[name] = the injury layer\'s read (rankings INJ view): f,t window; m mult; pl P(plays); src; g group; c {wk: P(plays)} after the window; k / pm games missed; nx first game week back; rr first-game-back multiplier; sq practice; gs game status; nt news line; kd kicked off; pd played.\n';
   fs.writeFileSync(OUT_JS, jsHeader + 'window.SIM_PROJ_2026 = ' + JSON.stringify(payload) + ';\n');
   const kb = Math.round(fs.statSync(OUT_JS).size / 1024);

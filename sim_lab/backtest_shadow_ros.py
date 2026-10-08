@@ -591,6 +591,79 @@ def main():
         w1 = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and ms(S14, m & (year == y)) < ms(S13, m & (year == y)) - 1e-12)
         P(f"    {lab:12s} n {int(m.sum()):5d}  vs section 13 {100*(ms(S14, m)/ms(S13, m)-1):+6.2f}% ({w1}/7) | vs Clay blend {100*(ms(S14, m)/ms(CL, m)-1):+6.2f}% | act/proj {T[m].sum()/S14[m].sum():.3f} (was {T[m].sum()/S13[m].sum():.3f}) | rank order {rho(S14, m & top150):.4f} (was {rho(S13, m & top150):.4f})")
 
+    # ---------------- 15 STRENGTH OF SCHEDULE (Jack 2026-10-08: "anything else to change our ROS projections?" after "adjust by
+    # how good the opponents were"). ctx above = mean of each future game's layers (Vegas x opponent FPA), but that FPA is read AS
+    # OF each future week (a peek ahead). The engine only knows the defense's numbers today. Rebuild the future opponent factor
+    # from what is known at the checkpoint: raw (= the engine), opponent-adjusted, adjusted + last-season adjusted prior early,
+    # stronger, or none; Vegas part kept as is.
+    import backtest_opp_adjusted as OA
+    from backtest_snap_defense import OPP_ALIAS as _OA_ALIAS
+    P(); P("--- 15  STRENGTH OF SCHEDULE: the future opponents' points allowed as known at the checkpoint (model as wired through section 14) ---")
+    allowed15, scored15, offOf15, lg15 = OA.build()
+    def ratio15(Y, d, p_, wk_, adjust):
+        cur = allowed15.get((Y, d, p_), {}); past = [w for w in cur if w < wk_]; L = lg15.get((Y, p_))
+        if not past or not L: return None, 0
+        vals = []
+        for w in past:
+            a = cur[w]
+            if adjust:
+                o = offOf15.get((Y, d, w)); oq = 1.0
+                if o:
+                    og = [v for w2, v in scored15.get((Y, o, p_), {}).items() if w2 < wk_ and w2 != w]
+                    oq = (np.sum(og) / L + 3.0) / (len(og) + 3.0) if og else 1.0
+                a = a / max(oq, 0.4)
+            vals.append(a)
+        return float(np.mean(vals)) / L, len(past)
+    oppA = np.array([C["opp"].values[j] if j >= 0 else None for j in idx], dtype=object)
+    def fpa_raw_at(j):   # the harness's own per-week factor (walk-forward to that future week) - to divide out of layers
+        if oppA[j] is None: return 1.0
+        r, g_ = ratio15(int(year[j]), _OA_ALIAS.get(oppA[j], oppA[j]), pos[j], int(wk[j]), False)
+        return 1.0 if r is None else 1 + 0.25 * (min(1.25, max(0.8, r)) - 1) * min(1.0, g_ / 8.0)
+    fcache = {}
+    def fr(j):
+        if j not in fcache: fcache[j] = fpa_raw_at(j)
+        return fcache[j]
+    pc15 = {}
+    VARS = ("honest raw e .25 (= engine)", "no opponent factor", "honest adjusted e .25", "honest adjusted + prior e .25", "honest adjusted e .40", "honest raw e .40")
+    CTXV = {k: np.full(n, np.nan) for k in VARS}
+    for ix in seq.values():
+        for a, i in enumerate(ix):
+            if not ok[i]: continue
+            Y = int(year[i]); fut = ix[a:]; acc = {k: [] for k in VARS}
+            for j in fut:
+                lj = min(1.8, max(0.5, layers[j])); veg = lj / fr(j)
+                if oppA[j] is None:
+                    for k in VARS: acc[k].append(lj)
+                    continue
+                d = _OA_ALIAS.get(oppA[j], oppA[j])
+                r0, g0 = ratio15(Y, d, pos[i], int(wk[i]), False); r1, _ = ratio15(Y, d, pos[i], int(wk[i]), True)
+                t = min(1.0, g0 / 8.0)
+                kk = (Y - 1, d, pos[i])
+                if kk not in pc15:
+                    rr, gg = ratio15(Y - 1, d, pos[i], 19, True); pc15[kk] = rr if gg >= 10 else None
+                pr = pc15[kk] if pc15[kk] is not None else 1.0
+                f = lambda r, e: 1 + e * (min(1.33, max(0.75, r)) - 1) * t if r is not None else 1.0
+                acc["honest raw e .25 (= engine)"].append(veg * f(r0, 0.25))
+                acc["no opponent factor"].append(veg)
+                acc["honest adjusted e .25"].append(veg * f(r1, 0.25))
+                acc["honest adjusted e .40"].append(veg * f(r1, 0.40))
+                acc["honest raw e .40"].append(veg * f(r0, 0.40))
+                rb = (t * min(1.33, max(0.75, r1)) + (1 - t) * min(1.33, max(0.75, pr))) if r1 is not None else pr
+                acc["honest adjusted + prior e .25"].append(veg * (1 + 0.25 * (rb - 1)))
+            for k in VARS: CTXV[k][i] = np.mean(acc[k])
+    base15 = np.where(ok & ~np.isnan(CTXV[VARS[0]]), S14 / ctx * CTXV[VARS[0]], S14)
+    P(f"    as wired (peek-ahead FPA) vs honest raw: error {100*(ms(base15, ok)/ms(S14, ok)-1):+.2f}% (the size of the peek)")
+    fam = {"honest raw (engine)": base15}
+    for k in VARS[1:]: fam[k] = np.where(ok & ~np.isnan(CTXV[k]), S14 / ctx * CTXV[k], base15)
+    test("15a rest-of-season schedule: future opponents' points allowed known at the checkpoint", fam, ok & ~np.isnan(CTXV[VARS[0]]), "sos")
+    for ps in POS4:
+        mm = ok & (pos == ps) & ~np.isnan(CTXV[VARS[0]])
+        P(f"      {ps}: " + "  ".join(f"{k}: {100*(ms(fam[k], mm)/ms(base15, mm)-1):+.2f}%" for k in list(fam)[1:]))
+    mq = ok & (pos == "QB") & ~np.isnan(CTXV[VARS[0]])
+    famq = {"honest raw (engine)": base15, "QB: no opponent factor": np.where(mq, fam["no opponent factor"], base15),
+            "QB: half-strength raw": np.where(mq, (base15 + fam["no opponent factor"]) / 2, base15), "QB: adjusted + prior": np.where(mq, fam["honest adjusted + prior e .25"], base15)}
+    test("15b QB rest of season: opponent factor off / half / adjusted (other positions unchanged)", famq, mq, "sos_qb")
+
     log.close()
 
 if __name__ == "__main__":

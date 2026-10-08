@@ -5,7 +5,7 @@ global.window = global;
 const E = global.SimEngine, schedule = E.buildSchedule(), players = E.buildPlayers(schedule), sc = E.PRESETS.ppr;
 global.SIM_PROP_ANCHOR = false;
 const LAYERS = [
-  ['MATCHUP', 'SIM_SHADOW_OPP', 'opponent grade (blended FPA)'], ['MATCHUP', 'SIM_NC_VEGEV', 'Vegas implied total'], ['MATCHUP', 'SIM_NC_TOTAL', 'QB shootout tilt (game total)'],
+  ['PLAYER', 'SIM_SHADOW_OPP', 'opportunity prior (preseason projected share x team volume)'], ['MATCHUP', 'SIM_NC_VEGEV', 'Vegas implied total'], ['MATCHUP', 'SIM_NC_TOTAL', 'QB shootout tilt (game total)'],
   ['MATCHUP', 'SIM_WEATHER', 'weather (wind / rain / cold)'], ['MATCHUP', 'SIM_CB_DOCK', 'shadow CB coverage'], ['MATCHUP', 'SIM_CB1_BOOST', "opponent's CB1 out"],
   ['MATCHUP', 'SIM_OL_DOCK', 'own O-line starters out'], ['MATCHUP', 'SIM_PRESSURE_BOOST', 'opponent pass-rush pressure'], ['MATCHUP', 'SIM_BLOWOUT_CTX', 'blowout / garbage-time context'],
   ['TEAM', 'SIM_NC_VOL', 'team pass volume vs script (+ underdog att)'], ['TEAM', 'SIM_BOX_CTX', 'defenders in the box faced'],

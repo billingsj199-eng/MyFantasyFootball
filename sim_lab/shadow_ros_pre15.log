@@ -1335,24 +1335,3 @@
     TE           n  1535  vs section 13  -4.75% (6/7) | vs Clay blend -17.83% | act/proj 1.030 (was 1.063) | rank order 0.6322 (was 0.6223)
     TE top 150   n   618  vs section 13  -3.75% (6/7) | vs Clay blend -14.90% | act/proj 0.998 (was 1.032) | rank order 0.6322 (was 0.6223)
     non-TE       n  6961  vs section 13  +0.00% (0/7) | vs Clay blend -12.14% | act/proj 1.018 (was 1.018) | rank order 0.6033 (was 0.6033)
-
---- 15  STRENGTH OF SCHEDULE: the future opponents' points allowed as known at the checkpoint (model as wired through section 14) ---
-    as wired (peek-ahead FPA) vs honest raw: error -0.07% (the size of the peek)
-
-  15a rest-of-season schedule: future opponents' points allowed known at the checkpoint   (rows 8,452)
-    pooled (seasons better at that fixed setting): no opponent factor: -0.29% (3)  honest adjusted e .25: -0.08% (2)  honest adjusted + prior e .25: -0.11% (4)  honest adjusted e .40: +0.26% (1)  honest raw e .40: +0.44% (1)
-    LEAVE-ONE-SEASON-OUT  -0.29%  seasons better 3/7  | top-150 weighted -0.54%  rank order -0.0013  | picks ['no opponent factor', 'no opponent factor', 'no opponent factor', 'no opponent factor', 'no opponent factor', 'no opponent factor', 'no opponent factor']
-    FORWARD 2022-25       -0.32%  seasons better 1/4  | top-150 weighted -0.82%  | picks ['honest raw (engine)', 'honest raw (engine)', 'honest raw (engine)', 'no opponent factor']
-    rank order with no opponent factor: better in 4/7 seasons (pooled -0.0013)
-    -> FAIL (best pooled: no opponent factor)
-      QB: no opponent factor: -1.68%  honest adjusted e .25: -0.36%  honest adjusted + prior e .25: -0.30%  honest adjusted e .40: +0.75%  honest raw e .40: +1.45%
-      RB: no opponent factor: +0.41%  honest adjusted e .25: +0.02%  honest adjusted + prior e .25: -0.12%  honest adjusted e .40: -0.03%  honest raw e .40: -0.04%
-      WR: no opponent factor: -0.11%  honest adjusted e .25: +0.02%  honest adjusted + prior e .25: +0.01%  honest adjusted e .40: +0.28%  honest raw e .40: +0.28%
-      TE: no opponent factor: -0.32%  honest adjusted e .25: -0.19%  honest adjusted + prior e .25: -0.12%  honest adjusted e .40: +0.12%  honest raw e .40: +0.47%
-
-  15b QB rest of season: opponent factor off / half / adjusted (other positions unchanged)   (rows 1,251)
-    pooled (seasons better at that fixed setting): QB: no opponent factor: -1.68% (4)  QB: half-strength raw: -0.96% (4)  QB: adjusted + prior: -0.30% (5)
-    LEAVE-ONE-SEASON-OUT  -1.68%  seasons better 4/7  | top-150 weighted -1.84%  rank order -0.0030  | picks ['QB: no opponent factor', 'QB: no opponent factor', 'QB: no opponent factor', 'QB: no opponent factor', 'QB: no opponent factor', 'QB: no opponent factor', 'QB: no opponent factor']
-    FORWARD 2022-25       -1.92%  seasons better 3/4  | top-150 weighted -2.95%  | picks ['QB: no opponent factor', 'QB: no opponent factor', 'QB: no opponent factor', 'QB: no opponent factor']
-    rank order with QB: no opponent factor: better in 3/7 seasons (pooled -0.0030)
-    -> FAIL (best pooled: QB: no opponent factor)

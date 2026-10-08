@@ -1,0 +1,24 @@
+=== QB-out WR rows where the backup also started the previous game: 233 (backup's first start: 33) ===
+  all                  n 233 | act/wired 0.998 | seasons over 1.0: 4/7
+  last game > 1.25x    n  76 | act/wired 1.131 | seasons over 1.0: 4/6
+  last game .75-1.25x  n  70 | act/wired 1.065 | seasons over 1.0: 5/6
+  last game < .75x     n  87 | act/wired 0.819 | seasons over 1.0: 2/6
+  ADP <= 60            n 104 | act/wired 0.978 | seasons over 1.0: 4/6
+  ADP 61-150           n 129 | act/wired 1.018 | seasons over 1.0: 4/7
+  control (WR, starter in): last > 1.25x n1022 act/wired 1.011 | last .75-1.25x n972 act/wired 1.056 | last < .75x n1295 act/wired 0.997
+
+  A  last game with the backup carried into the shadow: x (last / shadow)^k (rows 233)
+    fixed: k 0.15: -2.51% (4/7)  k 0.25: -1.83% (4/7)  k 0.4: +2.05% (2/7)
+    rank vs off (rho 0.4881, pairs 64.74%): k 0.15: rho -0.0408 pairs +0.00  k 0.25: rho -0.0759 pairs -1.28  k 0.4: rho -0.2122 pairs -4.49
+    LOYO -1.59% 4/7 | board -0.030% | picks ['k 0.15', 'k 0.15', 'k 0.15', 'k 0.15', 'k 0.25', 'k 0.15', 'k 0.15']
+    FWD  -0.54% 1/4 | board -0.014% | picks ['off', 'off', 'off', 'k 0.15']
+    -> FAIL
+
+  B  control - same rule on every WR with the starter in (should FAIL if the backup case is special) (rows 3,289)
+    fixed: k 0.15: +2.69% (0/7)  k 0.25: +6.53% (0/7)  k 0.4: +13.71% (0/7)
+    rank vs off (rho 0.3590, pairs 63.15%): k 0.15: rho -0.0226 pairs -0.70  k 0.25: rho -0.0443 pairs -1.53  k 0.4: rho -0.0774 pairs -2.64
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+Limitations: 222 rows over 7 seasons; the shadow already holds the last game at its usual weight; honest replica, no book anchor (the lines already price a hot game).

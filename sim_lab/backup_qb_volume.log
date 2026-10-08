@@ -1,0 +1,22 @@
+=== WR weeks with the primary QB out: 315; backup identified with a career volume read: 267 ===
+
+--- 1  actual / UNDOCKED shadow by the backup's career volume (what the dock should be) ---
+  all QB-out WR rows       n 267 | act/undocked 0.910 | act/wired 1.017 | backup att/g 32.4 | seasons under 1.0 (undocked): 6/7
+  backup low volume        n 114 | act/undocked 0.901 | act/wired 0.997 | backup att/g 30.0 | seasons under 1.0 (undocked): 5/7
+  backup mid               n  68 | act/undocked 1.027 | act/wired 1.171 | backup att/g 32.3 | seasons under 1.0 (undocked): 2/6
+  backup high volume       n  85 | act/undocked 0.830 | act/wired 0.923 | backup att/g 35.6 | seasons under 1.0 (undocked): 6/7
+  ADP <= 60 WRs            n 124 | act/undocked 0.853 | act/wired 1.004 | backup att/g 32.1 | seasons under 1.0 (undocked): 5/6
+  ADP 61-150               n 143 | act/undocked 0.979 | act/wired 1.031 | backup att/g 32.6 | seasons under 1.0 (undocked): 4/7
+  backup's first start     n  28 | act/undocked 1.081 | act/wired 1.209 | backup att/g 30.6 | seasons under 1.0 (undocked): 1/3
+
+--- 2  variants on the QB-out WR rows (whole-board guard), vs the WIRED flat dock ---
+  fixed: no dock: +12.82% (1/7)  dock low-volume backups only: +5.65% (2/7)  dock low + mid, not high: +7.63% (0/7)  flat dock + 0.03 x volume z: +0.32% (2/7)  flat dock + 0.06 x volume z: +1.35% (2/7)  no dock, volume tilt 0.03 z: +13.49% (1/7)  no dock, volume tilt 0.06 z: +14.75% (1/7)  backup att/g over 33 (x.95 stars): +7.98% (0/7)
+  rank vs off (rho 0.3924, pairs 62.21%): no dock: rho -0.0106 pairs -0.58  dock low-volume backups only: rho -0.0538 pairs -0.58  dock low + mid, not high: rho -0.0383 pairs -1.16  flat dock + 0.03 x volume z: rho -0.0652 pairs -2.91  flat dock + 0.06 x volume z: rho -0.1049 pairs -4.65  no dock, volume tilt 0.03 z: rho -0.0424 pairs -1.74  no dock, volume tilt 0.06 z: rho -0.0595 pairs -2.91  backup att/g over 33 (x.95 stars): rho -0.1348 pairs -4.65
+  LOYO +0.50% 0/7 | board +0.005% | picks ['off', 'off', 'off', 'off', 'flat dock + 0.03 x volume z', 'off', 'off']
+  FWD  +2.80% 0/4 | board +0.078% | picks ['off', 'no dock', 'off', 'off']
+  -> FAIL (wired flat dock stays)
+
+--- 3  does the WR's last game WITH this backup carry? rows where the backup also started the previous game ---
+  backup's 2nd+ start, n222: act/wired 0.998 | last game with him was big (> 1.25x proj) n74: act/wired 1.123 | was small (< .75x) n81: 0.814
+
+Limitations: backup = previous game's top passer (the pre-kickoff read); career volume from weekly logs (15+ att games, 3+ needed); honest replica next game; no book anchor (live, the lines already carry the backup).

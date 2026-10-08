@@ -15,8 +15,8 @@ body.mff-embed #mffTourOverlay{display:none!important}
 body.mff-embed .page:not(.active){display:none!important}
 body.mff-embed .main-content{padding-bottom:0!important}
 :root{
---bg:#0a0e17;--surface:#111827;--surface2:#1a2236;--border:#2a3a58;
---text:#e2e8f0;--text2:#8899b4;--accent:#f59e0b;--accent2:#fbbf24;--accent-ink:#0a0a14;
+--bg:#0a0e17;--surface:#111827;--surface2:#1a2236;--border:#1e2a40;--border-strong:#3a4a6a;
+--text:#e2e8f0;--text2:#94a3b8;--text3:#6f7f99;--accent:#f59e0b;--accent2:#fbbf24;--accent-ink:#0a0a14;
 --qb:#e74c3c;--rb:#22c55e;--wr:#3b82f6;--te:#a855f7;
 --qb-bg:rgba(231,76,60,.12);--rb-bg:rgba(34,197,94,.12);--wr-bg:rgba(59,130,246,.12);--te-bg:rgba(168,85,247,.12);
 --green:#22c55e;--red:#ef4444;
@@ -27,7 +27,7 @@ body.mff-embed .main-content{padding-bottom:0!important}
 /* Active-state chip/pill colors — softer than the loud full-orange fill we used to use everywhere.
    Keeps brand identity via orange border + orange text, drops the visual weight so primary CTAs
    (SAVE / SHARE / UPLOAD / START) read as the only true call-to-action. */
---chip-active-bg:rgba(245,158,11,.18);--chip-active-fg:var(--accent);--chip-active-border:var(--accent);
+--chip-active-bg:var(--elev-3);--chip-active-fg:var(--text);--chip-active-border:rgba(255,255,255,.08);
 /* Spacing scale (4px grid). Use these when you reach for a margin/padding/gap so the whole site
    marches to the same vertical rhythm. Don't hand-roll 3px / 6.4px / 13px values — pick the
    nearest token. */
@@ -37,13 +37,13 @@ body.mff-embed .main-content{padding-bottom:0!important}
    broken element in light mode, find the inline `color:#...` or `background:#...`
    in index.html and replace with the matching CSS variable. */
 :root[data-theme="light"]{
---bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#cbd5e1;
---text:#0f172a;--text2:#64748b;--accent:#b45309;--accent2:#a16207;--accent-ink:#ffffff;
+--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--border-strong:#94a3b8;
+--text:#0f172a;--text2:#475569;--text3:#64748b;--accent:#b45309;--accent2:#a16207;--accent-ink:#ffffff;
 /* 2026-10-07 contrast audit: position + status hues re-stepped so text clears 4.5:1 on white
    (old shared values were 2.2:1 green / 3.0:1 amber). Tints below stay the same. */
 --qb:#b91c1c;--rb:#15803d;--wr:#1d4ed8;--te:#7e22ce;--green:#15803d;--red:#b91c1c;
 --accent-blue:#0369a1;--accent-purple:#7e22ce;--accent-pink:#be185d;--accent-emerald:#047857;
---chip-active-bg:rgba(180,83,9,.14);
+--chip-active-bg:#ffffff;--chip-active-fg:var(--text);--chip-active-border:#cbd5e1;
 --qb-bg:rgba(231,76,60,.1);--rb-bg:rgba(34,197,94,.1);--wr-bg:rgba(59,130,246,.1);--te-bg:rgba(168,85,247,.1);
 --ticker-bg:#0f172a;
 --elev-1:rgba(0,0,0,.04);--elev-2:rgba(0,0,0,.06);--elev-3:rgba(0,0,0,.1);
@@ -2682,3 +2682,100 @@ table{font-variant-numeric:tabular-nums}
   #pageRankings thead th.num-col,#pageRankings tbody td.num-col{text-align:right}
   th.num-col .th-stack{align-items:flex-end;text-align:right;margin-right:0;margin-left:4px}
 }
+
+/* ===== CLEAN RESTYLE (2026-10-08) =====
+   Benchmarked against FantasyPros / ESPN / Sleeper / KTC: neutral greys instead of
+   blue-tinted ones, hairline borders, one accent (amber = current nav + primary CTA),
+   neutral segmented controls, no gradient-clipped titles, lighter weights on coloured
+   numbers so small text stops looking fuzzy. Appended so the older rules stay
+   readable; these win on cascade order. Active-tab colour is routed through the
+   --chip-active-* tokens in :root — restore the amber values there to go back. */
+
+/* Titles: solid text. Gradient-clipped Bebas anti-aliased soft at every size. */
+h1{background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:var(--text);color:var(--text);letter-spacing:2px}
+.subtitle{color:var(--text3)}
+.tag{color:var(--text2);border-color:var(--border-strong);letter-spacing:.08em}
+
+/* Toolbar: ghost buttons, 6px radius everywhere, amber only on the filled CTA. */
+.controls{padding:.75rem 2rem;gap:.6rem}
+.search-box input{border-radius:8px;border-color:var(--border-strong);font-size:.85rem}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.18)}
+.tb-btn,.help-btn{background:transparent;border-color:var(--border-strong);border-radius:6px;color:var(--text2);letter-spacing:.04em}
+.tb-btn:hover,.help-btn:hover{border-color:var(--text2);color:var(--text);background:var(--elev-1)}
+.tb-btn svg{opacity:.8}
+
+/* Segmented controls (Model / Format / ADP source / Trade tabs / Scoring / Stats):
+   DM Sans caps on a neutral track, active = raised neutral pill. */
+.version-tabs,.mode-tabs,.md-rank-src-tabs,.trade-mode-tabs{background:var(--elev-1);border:1px solid transparent;border-radius:8px;padding:3px}
+.version-tab,.mode-tab,.md-rank-src-tab,.trade-mode-tab,.trade-src-tab{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:5px 12px;border-radius:6px}
+.version-tab.active,.mode-tab.active,.md-rank-src-tab.active,.trade-mode-tab.active,.trade-src-tab.active,.career-log-toggle button.active{font-weight:600;box-shadow:inset 0 0 0 1px var(--chip-active-border),0 1px 2px rgba(0,0,0,.3)}
+.career-log-toggle{border-radius:6px;padding:2px}
+.career-log-toggle button{border-radius:4px}
+#pageRankings .filter-row-label{color:var(--text3)}
+
+/* Position filters: outlined chips, tinted (not filled) when active, no inset shadow. */
+.pos-btn{background:transparent;border-color:var(--border-strong);border-radius:6px;color:var(--text2);font-size:.72rem;letter-spacing:.04em}
+.pos-btn:hover{color:var(--text);background:var(--elev-1);border-color:var(--text2)}
+.pos-btn.active{box-shadow:none;color:var(--text)}
+.pos-btn.active:not([data-pos]),.pos-btn.active[data-pos="ALL"],.pos-btn.active[data-pos="K"],.pos-btn.active[data-pos="DST"]{background:var(--chip-active-bg);border-color:var(--border-strong);color:var(--text)}
+.pos-btn.active[data-pos="QB"]{background:var(--qb-bg);border-color:var(--qb);color:var(--qb)}
+.pos-btn.active[data-pos="RB"]{background:var(--rb-bg);border-color:var(--rb);color:var(--rb)}
+.pos-btn.active[data-pos="WR"]{background:var(--wr-bg);border-color:var(--wr);color:var(--wr)}
+.pos-btn.active[data-pos="TE"]{background:var(--te-bg);border-color:var(--te);color:var(--te)}
+.pos-btn.active[data-pos="DEVY"]{background:rgba(139,92,246,.14);border-color:#8b5cf6;color:#a78bfa}
+
+/* Strips above the table: labels in text colour, not amber. */
+.amb-title{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text)}
+#seasonStrip .ss-week{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.6875rem;letter-spacing:.06em;color:var(--text)}
+#pageRankings .vor-bar-lbl{color:var(--text2)}
+#pageRankings .vor-bar.lg-bar{border:none;background:transparent;padding:2px 0;margin:0 2rem 4px}
+#pageRankings .lg-bar-hint{color:var(--text3)}
+.stats-bar{gap:1.25rem}
+.stat-chip{color:var(--text3)}
+
+/* Table: hairline rows, no zebra, neutral hover, neutral sort state. */
+thead th{border-bottom:1px solid var(--border-strong);color:var(--text3)}
+thead th:hover{color:var(--text)}
+thead th.sorted{color:var(--text)}
+tbody tr{border-bottom:1px solid var(--border)}
+.table-wrap tbody tr:nth-child(even){background:transparent}
+tbody tr:hover{background:var(--elev-1)}
+.pm-table tbody tr:hover td{background:var(--elev-1)}
+.pm-table tbody tr:nth-child(even) td{background:transparent}
+tbody td{font-size:.8125rem}
+.tier-row td{border-bottom-color:var(--border-strong)}
+.drag-handle:hover,.drag-handle:active{color:var(--text)}
+/* Rank: tabular DM Sans, tier carried by colour only (the tier band stripe + the
+   number), no tinted box behind every rank. */
+.myrank-num{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:0;font-variant-numeric:tabular-nums;color:var(--text2)}
+.myrank-num.tier-S,.myrank-num.tier-A,.myrank-num.tier-B,.myrank-num.tier-C,.myrank-num.tier-D{background:transparent}
+.myrank-num.tier-S{color:var(--accent2)}
+.rank-cell{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.8125rem;letter-spacing:0;font-variant-numeric:tabular-nums}
+.player-name{font-size:.85rem}
+.player-team{color:var(--text3)}
+.pos-badge{border-radius:4px;font-weight:600;letter-spacing:.03em}
+.adp-cell{color:var(--text);font-weight:600;font-size:.8125rem}
+/* Age: colour only when it is a warning. Young = plain. No glyph prefixes. */
+.age-cell.age-green{color:var(--text2);font-weight:400}
+.age-cell.age-yellow,.age-cell.age-orange,.age-cell.age-red{font-weight:500}
+.age-cell.age-green::before,.age-cell.age-yellow::before,.age-cell.age-orange::before,.age-cell.age-red::before{content:none}
+/* Coloured projections keep their tier colours but drop to 600 weight — 700 on
+   13px saturated text haloes on a dark surface. */
+#pageRankings tbody td.pts-cell[style*="font-weight:700"]{font-weight:600!important}
+#pageRankings tbody .psos-cell span[style],#pageRankings tbody .teamtotal-cell span[style]{font-weight:600!important}
+
+/* Chrome edges */
+.sidebar{border-right-color:var(--border)}
+.nav-divider{color:var(--text3)}
+/* Context columns next to PROJ (season PPG, team total): plain text so only the projection column carries the tier heat-map. */
+#pageRankings tbody td.ppg25-cell[style]{color:var(--text)!important;font-weight:500!important}
+#pageRankings tbody .teamtotal-cell span[style]{color:var(--text)!important;font-weight:500!important}
+/* Phones: position chips sit on a hairline, not the strong outline, so the wrapped
+   filter grid reads as one group instead of a wall of boxes. */
+@media (max-width:600px){.pos-btn{border-color:var(--border);background:var(--elev-1)}.pos-btn.active:not([data-pos]),.pos-btn.active[data-pos="ALL"],.pos-btn.active[data-pos="K"],.pos-btn.active[data-pos="DST"]{border-color:var(--border-strong)}}
+/* Rank numbers: plain text. In CONSENSUS every row is "tier S", so an amber rank
+   column carried no information; tier bands + tier rows still show tiers. */
+.myrank-num,.myrank-num.tier-S,.myrank-num.tier-A,.myrank-num.tier-B,.myrank-num.tier-C,.myrank-num.tier-D{color:var(--text)}
+/* Section eyebrows (player card, account, trade slots, mock lineup): grey DM Sans caps,
+   the way FantasyPros / ESPN label sections, instead of amber Bebas under 14px. */
+.card-section-title,.acct-section-title,.trade-slot-title,.md-lineup-title{font-family:"DM Sans",sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}

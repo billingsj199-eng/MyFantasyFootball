@@ -3258,7 +3258,7 @@
             var nxM = Math.min(nx.snapClamp[1], Math.max(nx.snapClamp[0], 1 + nxE * (nxShare - nxT.ref[nxB]) / 100));
             if (nxM < 1 && p.adp != null && p.adp <= nx.snapNoDockAdp && !(typeof window !== 'undefined' && window.SIM_NC_ELITE === false)) nxM = 1;
             if (nxM < 1 && ncBlowOn && p.adp != null && p.adp <= nx.blowNoDockAdp && ncBlowLast(nxPast[0])) { nxM = 1; ncSrc += '+blow'; }
-            if (teDockK !== 1 && Math.abs(nxM - 1) > 0.004) { nxM = Math.pow(nxM, teDockK); if (!/\+tedock/.test(ncSrc)) ncSrc += '+tedock'; }   // 2026-10-08 TE level dock / lift at half strength
+            if (teDockK !== 1 && !nxFar && Math.abs(nxM - 1) > 0.004) { nxM = Math.pow(nxM, teDockK); if (!/\+tedock/.test(ncSrc)) ncSrc += '+tedock'; }   // 2026-10-08 TE level dock / lift at half strength - CURRENT WEEK ONLY: the real rest-of-season harness (backtest_shadow_ros.py 5c) has the TE snap level at e .3 for later weeks as a PASS (-2.4% 6/7, fwd 4/4) and e .15 weaker, so later weeks keep full strength (scope fix 10-08 10:15)
             if (Math.abs(nxM - 1) > 0.004) { ncBaseW *= nxM; ncSrc += '+snaplv'; }
           }
         }

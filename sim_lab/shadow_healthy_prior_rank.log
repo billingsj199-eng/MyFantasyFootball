@@ -1,0 +1,69 @@
+injury rows 38,600, snap players 468
+rows with a history prior 16,189; replica of hist (raw) max |diff| 0.000, median 0.000
+players with 3+ hurt games last season: 5,230 rows; healthy-vs-all gap on them: mean +1.10 half-PPR/g
+
+  V1 healthy h3 + l8, prior seasons only | NEXT GAME  rows 1,451  actual/shadow on them 0.993
+    fixed: k .5: -0.09% (6/7)  k 1: -0.16% (6/7)
+    rank vs off (rho 0.3818, pairs 64.20%): k .5: rho -0.0003 pairs -0.00  k 1: rho -0.0007 pairs -0.01 | seasons rank better: k .5 4/7 k 1 3/7
+    best k 1: QB -0.15% (n1207) | RB -0.06% (n111) | WR -0.62% (n110) | TE -0.10% (n23) | g 1-3 -0.31% | g 4-8 -0.15% | g 9+ -0.08% | ADP<=60 -0.08%
+    LOYO -0.16% 6/7 | board -0.024% | picks ['k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1']
+    FWD  -0.05% 3/4 | board -0.008% | picks ['k 1', 'k 1', 'k 1', 'k 1']
+    -> FAIL
+
+  V1 healthy h3 + l8, prior seasons only | REST OF SEASON (4+ left)  rows 972  actual/shadow on them 0.995
+    fixed: k .5: -0.53% (6/7)  k 1: -1.00% (6/7)
+    rank vs off (rho 0.5868, pairs 73.01%): k .5: rho +0.0008 pairs +0.01  k 1: rho +0.0002 pairs +0.00 | seasons rank better: k .5 6/7 k 1 3/7
+    best k 1: QB -0.81% (n833) | RB -3.88% (n64) | WR -0.25% (n63) | TE +0.11% (n12) | g 1-3 -1.38% | g 4-8 -0.95% | g 9+ -0.48% | ADP<=60 -0.10%
+    LOYO -1.00% 6/7 | board -0.169% | picks ['k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1']
+    FWD  -0.61% 4/4 | board -0.110% | picks ['k 1', 'k 1', 'k 1', 'k 1']
+    -> PASS: k 1
+
+  V2 healthy everywhere (this season's hurt games out of l8 too) | NEXT GAME  rows 1,545  actual/shadow on them 0.993
+    fixed: k .5: -0.05% (6/7)  k 1: -0.08% (6/7)
+    rank vs off (rho 0.3818, pairs 64.20%): k .5: rho -0.0004 pairs -0.01  k 1: rho -0.0006 pairs -0.01 | seasons rank better: k .5 4/7 k 1 4/7
+    best k 1: QB -0.08% (n1260) | RB +0.02% (n133) | WR -0.28% (n121) | TE -0.22% (n31) | g 1-3 -0.18% | g 4-8 -0.07% | g 9+ -0.04% | ADP<=60 +0.04%
+    LOYO -0.08% 6/7 | board -0.013% | picks ['k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1']
+    FWD  +0.05% 3/4 | board +0.008% | picks ['k 1', 'k 1', 'k 1', 'k 1']
+    -> FAIL
+
+  V2 healthy everywhere (this season's hurt games out of l8 too) | REST OF SEASON (4+ left)  rows 1,025  actual/shadow on them 0.991
+    fixed: k .5: -0.44% (6/7)  k 1: -0.82% (6/7)
+    rank vs off (rho 0.5868, pairs 73.01%): k .5: rho +0.0004 pairs +0.01  k 1: rho +0.0005 pairs +0.01 | seasons rank better: k .5 5/7 k 1 3/7
+    best k 1: QB -0.64% (n866) | RB -3.12% (n74) | WR -0.23% (n71) | TE -2.55% (n14) | g 1-3 -1.23% | g 4-8 -0.73% | g 9+ -0.45% | ADP<=60 +0.12%
+    LOYO -0.82% 6/7 | board -0.150% | picks ['k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1', 'k 1']
+    FWD  -0.47% 4/4 | board -0.092% | picks ['k 1', 'k 1', 'k 1', 'k 1']
+    -> PASS: k 1
+
+  V3 V1 k 1 + opportunity-prior vets pulled toward healthy history (3+ hurt) | NEXT GAME  rows 4,294  actual/shadow on them 1.015
+    fixed: opp .5: -0.12% (7/7)  opp 1: -0.17% (7/7)
+    rank vs off (rho 0.3818, pairs 64.20%): opp .5: rho -0.0010 pairs -0.02  opp 1: rho -0.0007 pairs -0.03 | seasons rank better: opp .5 3/7 opp 1 3/7
+    best opp 1: QB -0.15% (n1207) | RB -0.06% (n1444) | WR -0.31% (n1367) | TE +0.13% (n276) | g 1-3 -0.25% | g 4-8 -0.08% | g 9+ -0.19% | ADP<=60 -0.13%
+    LOYO -0.17% 7/7 | board -0.076% | picks ['opp 1', 'opp 1', 'opp 1', 'opp 1', 'opp 1', 'opp 1', 'opp 1']
+    FWD  -0.10% 4/4 | board -0.049% | picks ['opp 1', 'opp 1', 'opp 1', 'opp 1']
+    -> FAIL
+
+  V3 V1 k 1 + opportunity-prior vets pulled toward healthy history (3+ hurt) | REST OF SEASON (4+ left)  rows 2,955  actual/shadow on them 1.024
+    fixed: opp .5: -0.74% (7/7)  opp 1: -1.07% (7/7)
+    rank vs off (rho 0.5868, pairs 73.01%): opp .5: rho -0.0000 pairs +0.02  opp 1: rho -0.0005 pairs +0.03 | seasons rank better: opp .5 2/7 opp 1 3/7
+    best opp 1: QB -0.81% (n833) | RB -0.77% (n995) | WR -1.75% (n939) | TE +0.18% (n188) | g 1-3 -1.28% | g 4-8 -0.98% | g 9+ -0.98% | ADP<=60 -0.88%
+    LOYO -1.07% 7/7 | board -0.545% | picks ['opp 1', 'opp 1', 'opp 1', 'opp 1', 'opp 1', 'opp 1', 'opp 1']
+    FWD  -0.63% 4/4 | board -0.352% | picks ['opp 1', 'opp 1', 'opp 1', 'opp 1']
+    -> PASS: opp 1
+
+  V4 lift form: prior + a x (healthy - all) last season, 3+ hurt / 4+ healthy, cap 2 | NEXT GAME  rows 1,903  actual/shadow on them 1.028
+    fixed: a .25: -0.28% (4/7)  a .5: -0.30% (4/7)  a .75: -0.16% (4/7)
+    rank vs off (rho 0.3818, pairs 64.20%): a .25: rho -0.0014 pairs -0.05  a .5: rho -0.0011 pairs -0.03  a .75: rho -0.0016 pairs -0.06 | seasons rank better: a .25 3/7 a .5 3/7 a .75 2/7
+    best a .5: QB -0.45% (n123) | RB +0.66% (n943) | WR -1.67% (n695) | TE -0.69% (n142) | g 1-3 -0.69% | g 4-8 +0.27% | g 9+ -0.58% | ADP<=60 -0.14%
+    LOYO +0.22% 4/7 | board +0.048% | picks ['a .25', 'a .25', 'a .25', 'a .5', 'a .25', 'a .75', 'a .5']
+    FWD  +0.94% 1/4 | board +0.214% | picks ['a .75', 'a .75', 'a .75', 'a .5']
+    -> FAIL
+
+  V4 lift form: prior + a x (healthy - all) last season, 3+ hurt / 4+ healthy, cap 2 | REST OF SEASON (4+ left)  rows 1,336  actual/shadow on them 1.035
+    fixed: a .25: -2.27% (5/7)  a .5: -2.98% (5/7)  a .75: -2.76% (4/7)
+    rank vs off (rho 0.5868, pairs 73.01%): a .25: rho -0.0011 pairs +0.01  a .5: rho -0.0032 pairs -0.05  a .75: rho -0.0042 pairs -0.09 | seasons rank better: a .25 3/7 a .5 3/7 a .75 3/7
+    best a .5: QB +5.90% (n85) | RB +1.47% (n666) | WR -10.49% (n485) | TE -9.47% (n100) | g 1-3 -2.19% | g 4-8 -3.03% | g 9+ -4.34% | ADP<=60 -2.20%
+    LOYO -0.52% 5/7 | board -0.120% | picks ['a .5', 'a .5', 'a .25', 'a .75', 'a .5', 'a .75', 'a .5']
+    FWD  +3.10% 2/4 | board +0.716% | picks ['a .75', 'a .75', 'a .75', 'a .5']
+    -> FAIL
+
+Limitations: harness shadow form (v2.24 + prior swap), the as-wired extra layers are multiplicative and identical across variants; opportunity prior rows only touched in V3; string docks not re-applied to the delta; hurt tags need the nflverse report (2019+) or snap counts.

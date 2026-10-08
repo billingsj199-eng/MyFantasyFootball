@@ -1,0 +1,95 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== RANK RE-GRADE: 10,520 top-150 player-weeks 2019-25, final week dropped, next game pre-book ===
+
+--- 1  BASE BLEND (vs TODAY = live form before the blend) ---
+  TODAY (live pre-book)                        rho 0.3874 (+0.0000, better in 0/7) | pairs 64.35% (+0.00) | wtd error +0.00% (0/7)
+  shadow alone                                 rho 0.3899 (+0.0025, better in 3/7) | pairs 64.59% (+0.23) | wtd error -0.77% (5/7)
+  blend flat .7                                rho 0.3932 (+0.0057, better in 5/7) | pairs 64.71% (+0.35) | wtd error -1.05% (7/7)
+  blend per position .5/.8/.7/.3 (wired)       rho 0.3942 (+0.0068, better in 6/7) | pairs 64.72% (+0.36) | wtd error -1.12% (7/7)
+  QB:
+     shadow alone                              rho 0.3352 (+0.0091, better in 4/7) | pairs 61.73% (+0.34) | wtd error -0.13% (4/7)
+     blend flat .7                             rho 0.3423 (+0.0162, better in 5/7) | pairs 61.80% (+0.41) | wtd error -0.77% (5/7)
+     blend per position (wired)                rho 0.3410 (+0.0149, better in 5/7) | pairs 61.77% (+0.38) | wtd error -0.87% (5/7)
+  RB:
+     shadow alone                              rho 0.5095 (+0.0056, better in 5/7) | pairs 68.32% (+0.09) | wtd error -1.48% (5/7)
+     blend flat .7                             rho 0.5127 (+0.0088, better in 7/7) | pairs 68.51% (+0.28) | wtd error -1.58% (6/7)
+     blend per position (wired)                rho 0.5132 (+0.0093, better in 7/7) | pairs 68.53% (+0.30) | wtd error -1.60% (6/7)
+  WR:
+     shadow alone                              rho 0.3565 (+0.0094, better in 5/7) | pairs 62.78% (+0.39) | wtd error -0.80% (4/7)
+     blend flat .7                             rho 0.3575 (+0.0104, better in 6/7) | pairs 62.85% (+0.46) | wtd error -1.00% (5/7)
+     blend per position (wired)                rho 0.3575 (+0.0104, better in 6/7) | pairs 62.85% (+0.46) | wtd error -1.00% (5/7)
+  TE:
+     shadow alone                              rho 0.3564 (-0.0154, better in 2/7) | pairs 62.73% (-0.71) | wtd error +1.21% (3/7)
+     blend flat .7                             rho 0.3581 (-0.0137, better in 1/7) | pairs 62.92% (-0.52) | wtd error +0.42% (3/7)
+     blend per position (wired)                rho 0.3635 (-0.0083, better in 2/7) | pairs 63.04% (-0.41) | wtd error -0.07% (3/7)
+  by ADP band, blend per position vs TODAY:
+     ADP 1-30                                  rho 0.2329 (+0.0099, better in 6/7) | pairs 58.22% (+0.12) | wtd error -1.28% (6/7)
+     31-60                                     rho 0.1066 (+0.0249, better in 4/7) | pairs 53.89% (+0.65) | wtd error -0.62% (6/7)
+     61-100                                    rho 0.3371 (+0.0396, better in 5/7) | pairs 62.53% (+0.99) | wtd error -1.31% (6/7)
+     101-150                                   rho 0.3678 (+0.0179, better in 5/7) | pairs 63.34% (+0.33) | wtd error -1.08% (5/7)
+  pbp 2019: 32,157 plays
+  pbp 2020: 32,572 plays
+  pbp 2021: 34,139 plays
+  pbp 2022: 33,770 plays
+  pbp 2023: 33,957 plays
+  pbp 2024: 33,471 plays
+  pbp 2025: 32,937 plays
+  2019: 32,157 plays joined
+  2020: 32,572 plays joined
+  2021: 34,139 plays joined
+  2022: 33,770 plays joined
+  2023: 33,957 plays joined
+  2024: 33,471 plays joined
+  2025: 32,937 plays joined
+
+--- 2  VOLUME CONTEXT + BOX COUNT on the wired blend (vs the blend alone) ---
+  rows touched: volume 4,714 WR/TE, box 2,167 WR/TE ADP<=60
+  whole top-150 board:
+     volume (script excess .03 + att/g .04 underdogs) rho 0.3960 (+0.0017, better in 5/7) | pairs 64.80% (+0.08) | wtd error -0.33% (7/7)
+     box (.04 z, ADP<=60)                      rho 0.3951 (+0.0008, better in 4/7) | pairs 64.72% (+0.00) | wtd error -0.20% (5/7)
+     volume + box (as wired)                   rho 0.3954 (+0.0012, better in 4/7) | pairs 64.75% (+0.03) | wtd error -0.39% (6/7)
+  WR / TE rows only:
+     volume                                    rho 0.3639 (+0.0035, better in 5/7) | pairs 63.01% (+0.14) | wtd error -0.68% (7/7)
+     box                                       rho 0.3621 (+0.0017, better in 4/7) | pairs 62.87% (+0.01) | wtd error -0.42% (5/7)
+     volume + box                              rho 0.3628 (+0.0024, better in 4/7) | pairs 62.92% (+0.06) | wtd error -0.81% (6/7)
+     WR volume                                 rho 0.3619 (+0.0044, better in 4/7) | pairs 62.99% (+0.14) | wtd error -0.65% (7/7)
+     WR box                                    rho 0.3578 (+0.0003, better in 5/7) | pairs 62.84% (-0.01) | wtd error -0.38% (5/7)
+     WR volume + box                           rho 0.3587 (+0.0011, better in 5/7) | pairs 62.90% (+0.05) | wtd error -0.74% (6/7)
+     TE volume                                 rho 0.3661 (+0.0026, better in 4/7) | pairs 63.15% (+0.11) | wtd error -0.81% (7/7)
+     TE box                                    rho 0.3667 (+0.0032, better in 4/7) | pairs 63.23% (+0.19) | wtd error -0.61% (4/7)
+     TE volume + box                           rho 0.3672 (+0.0038, better in 4/7) | pairs 63.18% (+0.15) | wtd error -1.12% (4/7)
+  by ADP band (WR/TE), volume + box:
+     ADP 1-30                                  rho 0.2143 (+0.0186, better in 4/7) | pairs 57.45% (+0.56) | wtd error -1.32% (6/7)
+     31-60                                     rho 0.1124 (+0.0168, better in 4/7) | pairs 54.62% (+1.02) | wtd error -0.73% (5/7)
+     61-100                                    rho 0.2919 (+0.0024, better in 4/7) | pairs 60.95% (-0.10) | wtd error +0.11% (4/7)
+     101-150                                   rho 0.2988 (-0.0036, better in 3/7) | pairs 60.36% (+0.03) | wtd error +0.09% (2/7)
+  forward seasons 2022-25, whole board:
+   blend per position vs TODAY                  rho 0.3813 (+0.0077, better in 4/4) | pairs 64.61% (+0.43)
+   volume + box vs blend                        rho 0.3816 (+0.0004, better in 2/4) | pairs 64.65% (+0.04)
+
+--- 3  FULL STACK vs the live form: TODAY -> blend -> + volume + box, by season (rank rho) ---
+  season           TODAY         blend      +vol+box
+  2019            0.4195        0.4153        0.4170
+  2020            0.4150        0.4171        0.4229
+  2021            0.3878        0.4058        0.4054
+  2022            0.3951        0.4038        0.4088
+  2023            0.3749        0.3863        0.3795
+  2024            0.3502        0.3572        0.3632
+  2025            0.3744        0.3783        0.3754
+
+Not in this replica: book anchor, pecking dock, banged-up prior lift, QB window fix (no history test), shadow healthy history / shadow volume (see shadow_*_rank.log).

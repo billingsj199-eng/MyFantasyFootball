@@ -1,0 +1,27 @@
+WR rows with the team's QB out: 315; by weeks already out: 0: n251 act/shadow 0.976 act/undocked 0.877 | 1: n25 act/shadow 1.213 act/undocked 1.076 | 2: n17 act/shadow 1.097 act/undocked 0.968 | 3: n15 act/shadow 1.081 act/undocked 0.958 | 4+: n7 act/shadow 1.485
+
+=== 2  QB-out WR dock scope: rows 315, actual/shadow 1.018 ===
+    fixed: no dock at all: +10.73% (1/7)  first week only: +0.48% (4/7)  first two weeks: +0.97% (2/7)  first three weeks: +1.34% (2/7)  taper 1 / .5 / 0: +0.58% (4/7)  taper 1 / .75 / .5 / .25: +0.43% (4/7)
+    rank vs off (rho 0.3818, pairs 64.20%): no dock at all: rho -0.0004 pairs -0.03  first week only: rho +0.0004 pairs +0.03  first two weeks: rho +0.0002 pairs +0.02  first three weeks: rho +0.0001 pairs +0.01  taper 1 / .5 / 0: rho +0.0003 pairs +0.03  taper 1 / .75 / .5 / .25: rho +0.0002 pairs +0.02 | seasons rank better: no dock at all 2/7 first week only 5/7 first two weeks 3/7 first three weeks 2/7 taper 1 / .5 / 0 5/7 taper 1 / .75 / .5 / .25 4/7
+    best off: WR +0.00% (n315) | ADP<=60 +0.00% | 61-150 +0.00%
+    LOYO +1.71% 0/7 | board +0.047% | picks ['off', 'off', 'off', 'off', 'taper 1 / .5 / 0', 'off', 'first week only']
+    FWD  +1.95% 0/4 | board +0.075% | picks ['first two weeks', 'taper 1 / .5 / 0', 'off', 'first week only']
+    -> FAIL
+
+=== 3a hurt games x.5 in the shadow's usage inputs (WR / RB xFP evidence): rows 3,671, actual/shadow 1.018 ===
+    fixed: x.5: -0.07% (4/7)
+    rank vs off (rho 0.3818, pairs 64.20%): x.5: rho +0.0001 pairs +0.00 | seasons rank better: x.5 2/7
+    best x.5: RB -0.08% (n1726) | WR -0.05% (n1945) | ADP<=60 -0.10% | 61-150 +0.06%
+    LOYO -0.07% 4/7 | board -0.028% | picks ['x.5', 'x.5', 'x.5', 'x.5', 'x.5', 'x.5', 'x.5']
+    FWD  -0.04% 2/4 | board -0.019% | picks ['x.5', 'x.5', 'x.5', 'x.5']
+    -> FAIL
+
+=== 3b volume context on the shadow (script excess everyone + att/g underdogs): rows 4,714, actual/shadow 1.017 ===
+    fixed: B .03 only: -0.33% (5/7)  F3 .04 only: -0.42% (6/7)  B .03 + F3 .04 (live setting): -0.65% (6/7)  B .02 + F3 .03: -0.58% (7/7)  B .04 + F3 .06: -0.58% (5/7)
+    rank vs off (rho 0.3818, pairs 64.20%): B .03 only: rho -0.0013 pairs +0.03  F3 .04 only: rho +0.0018 pairs +0.01  B .03 + F3 .04 (live setting): rho -0.0011 pairs +0.09  B .02 + F3 .03: rho -0.0001 pairs +0.04  B .04 + F3 .06: rho -0.0045 pairs +0.00 | seasons rank better: B .03 only 2/7 F3 .04 only 5/7 B .03 + F3 .04 (live setting) 3/7 B .02 + F3 .03 5/7 B .04 + F3 .06 0/7
+    best B .03 + F3 .04 (live setting): WR -0.59% (n3640) | TE -0.96% (n1074) | ADP<=60 -0.96% | 61-150 +0.29%
+    LOYO -0.65% 6/7 | board -0.289% | picks ['B .03 + F3 .04 (live setting)', 'B .03 + F3 .04 (live setting)', 'B .03 + F3 .04 (live setting)', 'B .03 + F3 .04 (live setting)', 'B .03 + F3 .04 (live setting)', 'B .03 + F3 .04 (live setting)', 'B .03 + F3 .04 (live setting)']
+    FWD  -0.19% 3/4 | board -0.084% | picks ['B .04 + F3 .06', 'B .04 + F3 .06', 'B .03 + F3 .04 (live setting)', 'B .03 + F3 .04 (live setting)']
+    -> PASS: B .03 + F3 .04 (live setting)
+
+Limitations: harness shadow v2.24 form; weeks_out from the game's top passer; 3a reweights the xFP average only (route / snap level not in this form).

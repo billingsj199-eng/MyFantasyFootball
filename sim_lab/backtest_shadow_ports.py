@@ -14,13 +14,14 @@ Log shadow_ports.log.
 import os, sys, warnings
 from collections import defaultdict, Counter
 import numpy as np, pandas as pd
+import rank_grade as RG
 HERE = os.path.dirname(os.path.abspath(__file__)); os.chdir(HERE); sys.path.insert(0, HERE)
 import backtest_shadow_next as SN
 import backtest_qb_injury_usage as QI
 import backtest_volume_context as VC
 NW = SN.NW; cal = NW.cal; YEARS = list(NW.YEARS); POS4 = ("QB", "RB", "WR", "TE"); FWD = (2022, 2023, 2024, 2025)
 warnings.filterwarnings("ignore")
-LOG = open(os.path.join(HERE, "shadow_ports.log"), "w", encoding="utf-8")
+LOG = open(os.path.join(HERE, "shadow_ports_rank.log"), "w", encoding="utf-8")
 def P(s=""):
     print(s); LOG.write(s + chr(10)); LOG.flush()
 
@@ -49,6 +50,7 @@ def main():
         pb = preds[best]
         P(f"\n=== {title}: rows {int(m.sum()):,}, actual/shadow {act[m].sum()/b0[m].sum():.3f} ===")
         P(f"    fixed: {fixed}")
+        P("    " + RG.rank_line(preds, okN, act, year, wk, pos) + " | seasons rank better: " + " ".join(f"{kk} {RG.rank_seasons(preds[kk], preds['off'], okN, act, year, wk, pos, YEARS)}/7" for kk in names[1:]))
         P(f"    best {best}: " + " | ".join(f"{ps} {100*(wm(pb, m & (pos == ps))/wm(b0, m & (pos == ps))-1):+.2f}% (n{int((m & (pos == ps)).sum())})" for ps in POS4 if (m & (pos == ps)).sum() >= 40) + f" | ADP<=60 {100*(wm(pb, m & (adpx <= 60))/wm(b0, m & (adpx <= 60))-1):+.2f}% | 61-150 {100*(wm(pb, m & (adpx > 60))/wm(b0, m & (adpx > 60))-1):+.2f}%")
         P(f"    LOYO {lo[0]:+.2f}% {lo[2]}/7 | board {lo[1]:+.3f}% | picks {lo[3]}")
         P(f"    FWD  {fw[0]:+.2f}% {fw[2]}/4 | board {fw[1]:+.3f}% | picks {fw[3]}")

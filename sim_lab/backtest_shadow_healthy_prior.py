@@ -15,12 +15,13 @@ season read; touched rows, by position, by games played; LOYO + forward. Log sha
 import os, sys, warnings
 from collections import defaultdict
 import numpy as np, pandas as pd
+import rank_grade as RG
 HERE = os.path.dirname(os.path.abspath(__file__)); os.chdir(HERE); sys.path.insert(0, HERE)
 import backtest_shadow_next as SN
 import backtest_qb_injury_usage as QI
 NW = SN.NW; cal = NW.cal; YEARS = list(NW.YEARS); POS4 = ("QB", "RB", "WR", "TE"); FWD = (2022, 2023, 2024, 2025)
 warnings.filterwarnings("ignore")
-LOG = open(os.path.join(HERE, "shadow_healthy_prior.log"), "w", encoding="utf-8")
+LOG = open(os.path.join(HERE, "shadow_healthy_prior_rank.log"), "w", encoding="utf-8")
 def P(s=""):
     print(s); LOG.write(s + chr(10)); LOG.flush()
 W3 = getattr(NW, "W3", (0.5, 0.3, 0.2)); MIN_SEASON_G = getattr(NW, "MIN_SEASON_G", 4); MIN_H3_G = getattr(NW, "MIN_H3_G", 8); MIN_L8_G = getattr(NW, "MIN_L8_G", 4)
@@ -152,6 +153,7 @@ def main():
             pb = preds[best]
             P(f"\n  {title} | {key}  rows {int(m.sum()):,}  actual/shadow on them {T[m].sum()/preds['off'][m].sum():.3f}")
             P(f"    fixed: {fixed}")
+            P("    " + RG.rank_line(preds, ok, T, year, wk, pos) + " | seasons rank better: " + " ".join(f"{kk} {RG.rank_seasons(preds[kk], preds['off'], ok, T, year, wk, pos, YEARS)}/7" for kk in names[1:]))
             P(f"    best {best}: " + " | ".join(f"{ps} {100*(wm(pb, m & (pos == ps), T)/wm(preds['off'], m & (pos == ps), T)-1):+.2f}% (n{int((m & (pos == ps)).sum())})" for ps in POS4) + f" | g 1-3 {100*(wm(pb, m & (g <= 3), T)/wm(preds['off'], m & (g <= 3), T)-1):+.2f}% | g 4-8 {100*(wm(pb, m & (g >= 4) & (g <= 8), T)/wm(preds['off'], m & (g >= 4) & (g <= 8), T)-1):+.2f}% | g 9+ {100*(wm(pb, m & (g >= 9), T)/wm(preds['off'], m & (g >= 9), T)-1):+.2f}% | ADP<=60 {100*(wm(pb, m & (adp <= 60), T)/wm(preds['off'], m & (adp <= 60), T)-1):+.2f}%")
             P(f"    LOYO {lo[0]:+.2f}% {lo[2]}/7 | board {lo[1]:+.3f}% | picks {lo[3]}")
             P(f"    FWD  {fw[0]:+.2f}% {fw[2]}/4 | board {fw[1]:+.3f}% | picks {fw[3]}")

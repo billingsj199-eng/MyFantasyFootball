@@ -1,0 +1,77 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+receiver table: 3,741 team-weeks
+
+=== QB x LEAD RECEIVER OUT: 1,566 top-150 QB player-weeks 2019-25, base = blend as wired ===
+
+--- 1  BIAS: actual / base (1.00 = right level) ---
+  lead = WR: rows with a lead read 1,423; lead out 93 (6.5%)
+    lead in                      n 1330 act 19.06 base 19.04 -> 1.001 | under 1 in 3/7 seasons | 2019:1.02(n157) 2020:1.02(n144) 2021:0.97(n187) 2022:1.01(n182) 2023:0.97(n193) 2024:1.04(n241) 2025:0.98(n226)
+    lead out, any share          n   93 act 17.76 base 18.02 -> 0.985 | under 1 in 4/7 seasons | 2019:1.08(n15) 2020:1.03(n5) 2021:0.83(n10) 2022:0.89(n14) 2023:0.93(n8) 2024:0.90(n17) 2025:1.12(n24)
+    lead out, share >= .20       n   70 act 18.24 base 18.18 -> 1.003 | under 1 in 4/6 seasons | 2019:1.07(n11) 2021:0.85(n7) 2022:0.97(n11) 2023:0.93(n8) 2024:0.93(n14) 2025:1.14(n16)
+    lead out, share >= .25       n   55 act 17.85 base 17.78 -> 1.004 | under 1 in 3/6 seasons | 2019:1.04(n10) 2021:0.78(n6) 2022:0.94(n7) 2023:1.05(n5) 2024:0.96(n12) 2025:1.13(n12)
+    lead out, share < .20        n   23 act 16.29 base 17.53 -> 0.930 | under 1 in 0/1 seasons | 2025:1.07(n8)
+    QB ADP <= 60                 n   22 -> 0.805
+    QB ADP 61-150                n   71 -> 1.053
+    base >= 18                   n   45 -> 0.980
+    base < 18                    n   48 -> 0.992
+  lead = WRTE: rows with a lead read 1,423; lead out 72 (5.1%)
+    lead in                      n 1351 act 19.03 base 19.01 -> 1.001 | under 1 in 3/7 seasons | 2019:1.02(n163) 2020:1.02(n141) 2021:0.97(n189) 2022:1.00(n187) 2023:0.97(n194) 2024:1.04(n243) 2025:0.98(n234)
+    lead out, any share          n   72 act 17.94 base 18.23 -> 0.984 | under 1 in 4/7 seasons | 2019:1.09(n9) 2020:1.13(n8) 2021:0.88(n8) 2022:0.93(n9) 2023:0.90(n7) 2024:0.86(n15) 2025:1.09(n16)
+    lead out, share >= .20       n   71 act 17.95 base 18.19 -> 0.987 | under 1 in 4/7 seasons | 2019:1.09(n9) 2020:1.13(n8) 2021:0.88(n8) 2022:0.93(n9) 2023:0.90(n7) 2024:0.86(n15) 2025:1.11(n15)
+    lead out, share >= .25       n   64 act 18.10 base 18.02 -> 1.005 | under 1 in 4/7 seasons | 2019:1.09(n9) 2020:1.20(n7) 2021:0.82(n7) 2022:0.93(n9) 2023:0.91(n6) 2024:0.87(n12) 2025:1.14(n14)
+    lead out, share < .20        n1
+    QB ADP <= 60                 n   21 -> 0.884
+    QB ADP 61-150                n   51 -> 1.032
+    base >= 18                   n   39 -> 0.977
+    base < 18                    n   33 -> 0.995
+
+--- 2  MULTIPLIERS on the event rows, graded on ALL top-150 QB rows (error) + whole-board guard + rank; LOYO + forward, bar 5/7 + 3/4 ---
+
+  lead WR out, share >= .20 (QB rows 1,566, touched 70, actual/base on touched 1.003)
+    fixed (all QB rows): x0.97: -0.01% (4/7)  x0.95: +0.00% (4/7)  x0.93: +0.04% (4/7)  x0.9: +0.13% (4/7)  1-0.15xshare: +0.05% (4/7)  1-0.25xshare: +0.14% (4/7)
+    on the touched rows only: x0.97: -0.40% (4/6)  x0.95: +0.14% (4/6)  x0.93: +1.33% (4/6)  x0.9: +4.33% (4/6)  1-0.15xshare: +1.59% (4/6)  1-0.25xshare: +4.53% (4/6)
+    rank vs off (rho 0.3405, pairs 61.67%): x0.97: rho -0.0020 pairs -0.03  x0.95: rho -0.0017 pairs +0.02  x0.93: rho -0.0036 pairs -0.07  x0.9: rho -0.0064 pairs -0.20  1-0.15xshare: rho -0.0027 pairs -0.03  1-0.25xshare: rho -0.0038 pairs -0.08 | seasons rank better: x0.97 2/7 x0.95 3/7 x0.93 1/7 x0.9 1/7 1-0.15xshare 1/7 1-0.25xshare 1/7
+    LOYO +0.08% 1/7 | board +0.013% | picks ['x0.97', 'x0.97', 'x0.97', 'off', 'off', 'off', 'x0.95']
+    FWD  +0.02% 2/4 | board +0.003% | picks ['off', 'x0.97', 'x0.95', 'x0.95']
+    -> FAIL
+
+  lead WR out, share >= .25 (QB rows 1,566, touched 55, actual/base on touched 1.004)
+    fixed (all QB rows): x0.97: +0.00% (4/7)  x0.95: +0.02% (3/7)  x0.93: +0.06% (3/7)  x0.9: +0.13% (2/7)  1-0.15xshare: +0.07% (3/7)  1-0.25xshare: +0.16% (3/7)
+    on the touched rows only: x0.97: +0.08% (4/6)  x0.95: +0.86% (3/6)  x0.93: +2.24% (3/6)  x0.9: +5.41% (2/6)  1-0.15xshare: +2.65% (3/6)  1-0.25xshare: +6.43% (3/6)
+    rank vs off (rho 0.3405, pairs 61.67%): x0.97: rho -0.0009 pairs +0.03  x0.95: rho -0.0010 pairs +0.05  x0.93: rho -0.0024 pairs -0.02  x0.9: rho -0.0043 pairs -0.12  1-0.15xshare: rho -0.0017 pairs +0.03  1-0.25xshare: rho -0.0031 pairs -0.06 | seasons rank better: x0.97 3/7 x0.95 3/7 x0.93 2/7 x0.9 1/7 1-0.15xshare 2/7 1-0.25xshare 2/7
+    LOYO +0.07% 0/7 | board +0.011% | picks ['x0.97', 'x0.97', 'off', 'off', 'off', 'off', 'x0.95']
+    FWD  +0.04% 2/4 | board +0.007% | picks ['x0.97', 'x0.95', 'x0.95', 'x0.95']
+    -> FAIL
+
+  lead WRTE out, share >= .20 (QB rows 1,566, touched 71, actual/base on touched 0.987)
+    fixed (all QB rows): x0.97: -0.01% (4/7)  x0.95: +0.00% (4/7)  x0.93: +0.04% (4/7)  x0.9: +0.13% (4/7)  1-0.15xshare: +0.06% (4/7)  1-0.25xshare: +0.16% (4/7)
+    on the touched rows only: x0.97: -0.40% (4/7)  x0.95: +0.04% (4/7)  x0.93: +1.04% (4/7)  x0.9: +3.61% (4/7)  1-0.15xshare: +1.57% (4/7)  1-0.25xshare: +4.43% (4/7)
+    rank vs off (rho 0.3405, pairs 61.67%): x0.97: rho -0.0022 pairs +0.00  x0.95: rho -0.0027 pairs +0.01  x0.93: rho -0.0049 pairs -0.08  x0.9: rho -0.0060 pairs -0.14  1-0.15xshare: rho -0.0039 pairs -0.03  1-0.25xshare: rho -0.0056 pairs -0.11 | seasons rank better: x0.97 3/7 x0.95 2/7 x0.93 2/7 x0.9 1/7 1-0.15xshare 2/7 1-0.25xshare 2/7
+    LOYO +0.10% 2/7 | board +0.017% | picks ['x0.97', 'x0.95', 'x0.97', 'off', 'x0.97', 'off', 'x0.95']
+    FWD  +0.03% 1/4 | board +0.005% | picks ['off', 'off', 'x0.97', 'x0.95']
+    -> FAIL
+
+  lead WRTE out, share >= .25 (QB rows 1,566, touched 64, actual/base on touched 1.005)
+    fixed (all QB rows): x0.97: +0.01% (4/7)  x0.95: +0.04% (4/7)  x0.93: +0.09% (4/7)  x0.9: +0.20% (4/7)  1-0.15xshare: +0.09% (4/7)  1-0.25xshare: +0.21% (4/7)
+    on the touched rows only: x0.97: +0.35% (4/7)  x0.95: +1.22% (4/7)  x0.93: +2.62% (4/7)  x0.9: +5.67% (4/7)  1-0.15xshare: +2.50% (4/7)  1-0.25xshare: +5.93% (4/7)
+    rank vs off (rho 0.3405, pairs 61.67%): x0.97: rho -0.0014 pairs +0.03  x0.95: rho -0.0020 pairs +0.04  x0.93: rho -0.0040 pairs -0.05  x0.9: rho -0.0053 pairs -0.11  1-0.15xshare: rho -0.0031 pairs +0.00  1-0.25xshare: rho -0.0049 pairs -0.08 | seasons rank better: x0.97 3/7 x0.95 2/7 x0.93 2/7 x0.9 1/7 1-0.15xshare 2/7 1-0.25xshare 2/7
+    LOYO +0.11% 0/7 | board +0.018% | picks ['off', 'x0.97', 'off', 'off', 'off', 'off', 'x0.95']
+    FWD  +0.08% 1/4 | board +0.013% | picks ['off', 'off', 'x0.97', 'x0.95']
+    -> FAIL
+
+Limitations: 'out' = no played row (injury, scratch, suspension alike); lead from the last 3 team games' targets (Clay-pool receivers only); the blend already carries Vegas / FPA; book anchor not replayed. The live engine would apply the dock only on an OUT / IR flag, a subset of these events.

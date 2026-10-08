@@ -1,0 +1,16 @@
+=== TE BLEND WEIGHT on the rank objective: 1,252 top-150 TE player-weeks 2019-25 (w 0 = Clay-side live form alone) ===
+  w 0.0: rho 0.3718 (+0.0000, better in 0/7) | pairs 63.44% (+0.00) | wtd error +0.00% (0/7) | by season rho 2019:+0.000 2020:+0.000 2021:+0.000 2022:+0.000 2023:+0.000 2024:+0.000 2025:+0.000
+  w 0.1: rho 0.3702 (-0.0016, better in 4/7) | pairs 63.34% (-0.10) | wtd error -0.06% (3/7) | by season rho 2019:+0.001 2020:-0.008 2021:+0.002 2022:+0.001 2023:-0.014 2024:-0.001 2025:+0.007
+  w 0.2: rho 0.3703 (-0.0015, better in 2/7) | pairs 63.36% (-0.08) | wtd error -0.08% (3/7) | by season rho 2019:-0.001 2020:-0.015 2021:+0.014 2022:-0.013 2023:-0.001 2024:+0.007 2025:-0.001
+  w 0.3: rho 0.3635 (-0.0083, better in 2/7) | pairs 63.04% (-0.41) | wtd error -0.07% (3/7) | by season rho 2019:-0.015 2020:-0.024 2021:+0.014 2022:-0.018 2023:-0.006 2024:+0.008 2025:-0.016
+  w 0.4: rho 0.3655 (-0.0063, better in 3/7) | pairs 63.18% (-0.26) | wtd error -0.01% (3/7) | by season rho 2019:-0.016 2020:-0.027 2021:+0.012 2022:-0.014 2023:+0.004 2024:+0.015 2025:-0.019
+  w 0.5: rho 0.3586 (-0.0132, better in 1/7) | pairs 62.97% (-0.47) | wtd error +0.10% (3/7) | by season rho 2019:-0.012 2020:-0.033 2021:-0.013 2022:-0.019 2023:-0.001 2024:+0.015 2025:-0.031
+  w 0.7: rho 0.3581 (-0.0137, better in 1/7) | pairs 62.92% (-0.52) | wtd error +0.42% (3/7) | by season rho 2019:-0.020 2020:-0.042 2021:-0.004 2022:-0.018 2023:-0.007 2024:+0.030 2025:-0.039
+  ADP <= 60    n 408 | w 0.1: rho +nan err -0.05%  w 0.2: rho +nan err -0.05%  w 0.3: rho +nan err -0.01%  w 0.5: rho +nan err +0.21%
+  ADP 61-150   n 844 | w 0.1: rho -0.0048 err -0.09%  w 0.2: rho -0.0082 err -0.14%  w 0.3: rho -0.0173 err -0.15%  w 0.5: rho -0.0256 err -0.08%
+  games 1-3    n 380 | w 0.1: rho -0.0072 err -0.38%  w 0.2: rho -0.0157 err -0.68%  w 0.3: rho -0.0283 err -0.92%  w 0.5: rho -0.0310 err -1.17%
+  games 4+     n 872 | w 0.1: rho +0.0006 err +0.05%  w 0.2: rho +0.0036 err +0.12%  w 0.3: rho +0.0006 err +0.23%  w 0.5: rho -0.0058 err +0.54%
+  picked on rank  LOYO    : picks [0.0, 0.2, 0.0, 0.2, 0.1, 0.0, 0.0] -> rho -0.0059 vs w 0, error +0.07%
+  picked on rank  forward : picks [0.0, 0.0, 0.0, 0.0] -> rho +0.0000 vs w 0, error +0.00%
+  picked on error LOYO    : picks [0.1, 0.3, 0.4, 0.3, 0.1, 0.0, 0.3] -> rho -0.0088 vs w 0, error +0.35%
+  picked on error forward : picks [0.0, 0.0, 0.0, 0.3] -> rho -0.0042 vs w 0, error +0.10%

@@ -13958,14 +13958,25 @@ function _seasonSimStripHtml(d) {
   const r = _simSeasonRow(d);
   if (!r) return '';
   const med = r[0], p10 = r[1], p90 = r[2], boom = r[3], bust = r[4], games = r[6] || 17;
+  // 2026-10-08 (Jack): the season total is real points already scored + the simulated
+  // rest — show the split. r[7] = banked points, r[8] = games still simulated (export
+  // fields added the same day; older exports fall back to the whole-season read).
+  const banked = (r.length > 8 && r[7] != null) ? r[7] : null;
+  const gamesSim = (r.length > 8 && r[8] != null) ? r[8] : null;
+  const played = (banked != null && gamesSim != null) ? Math.max(0, games - gamesSim) : 0;
+  const rest = banked != null ? Math.max(0, med - banked) : null;
   const chip = (lbl, val, color, gloss) =>
     '<div style="display:flex;flex-direction:column;align-items:center;gap:1px">'
     + '<span style="font-size:.6875rem;letter-spacing:.8px;color:var(--text2);font-family:\'Bebas Neue\',sans-serif">' + (gloss ? '<span data-gloss="' + gloss.replace(/"/g, '&quot;') + '">' + lbl + '</span>' : lbl) + '</span>'
     + '<span style="font-size:.82rem;font-weight:700' + (color ? ';color:' + color : '') + '">' + val + '</span></div>';
-  const ppg = games > 0 ? ' <span style="font-size:.6875rem;font-weight:600;color:var(--text2)">(' + (Math.round(med / games * 10) / 10) + '/g)</span>' : '';
+  const ppg = (banked != null && gamesSim > 0)
+    ? ' <span style="font-size:.6875rem;font-weight:600;color:var(--text2)">(' + (Math.round(rest / gamesSim * 10) / 10) + '/g rest)</span>'
+    : (games > 0 ? ' <span style="font-size:.6875rem;font-weight:600;color:var(--text2)">(' + (Math.round(med / games * 10) / 10) + '/g)</span>' : '');
   return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:8px 10px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)">'
     + '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent)"><span data-gloss="400 simulated 2026 seasons (Sim Lab): every week simmed with Vegas/matchup/usage inputs plus a per-season health/role shock. Totals are half-PPR. Re-run daily.">SEASON SIM</span></span>'
-    + chip('MEDIAN', med + ppg, null, 'Median simulated season total (half-PPR)')
+    + (banked != null && played > 0 ? chip('SO FAR', banked + ' <span style="font-size:.6875rem;font-weight:600;color:var(--text2)">(' + played + 'g)</span>', null, 'Real points already scored this season (half-PPR) — never re-simulated') : '')
+    + (banked != null && played > 0 ? chip('REST', rest + ' <span style="font-size:.6875rem;font-weight:600;color:var(--text2)">(' + gamesSim + 'g)</span>', null, 'Median of the simulated remaining games only') : '')
+    + chip('MEDIAN', med + ppg, null, banked != null ? 'Median season total = points so far + the simulated rest (half-PPR)' : 'Median simulated season total (half-PPR)')
     + chip('FLOOR', p10, '#f87171', '10th percentile season — the bad-outcome case (injury/role loss priced in)')
     + chip('CEILING', p90, '#4ade80', '90th percentile season — the smash case')
     + chip('BOOM', boom != null ? boom + '%' : '—', boom >= 25 ? '#22c55e' : boom >= 15 ? '#4ade80' : null, 'Chance of finishing 25%+ ABOVE his own median season')
@@ -14553,7 +14564,7 @@ function _buildKdstWeeklyTable(d, season, withChart) {
   }
 
   const _is26 = +season === 2026;
-  let hdr = '<tr><th>WK</th><th>OPP</th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RNK</span></th>';
+  let hdr = '<tr><th>WK</th><th>OPP</th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RK</span></th>';
   if (isK) hdr += '<th><span data-gloss="Field goals made">FGM</span></th><th><span data-gloss="Field goal attempts">FGA</span></th><th><span data-gloss="Makes from 40-49 yards">40-49</span></th><th><span data-gloss="Makes from 50+ yards">50+</span></th><th><span data-gloss="Longest make">LNG</span></th><th>XPM</th><th>XPA</th>';
   else hdr += '<th><span data-gloss="Sacks">SCK</span></th><th>INT</th><th><span data-gloss="Opponent fumbles recovered">FR</span></th><th><span data-gloss="Defensive + special-teams TDs">TD</span></th><th><span data-gloss="Safeties">SFTY</span></th><th><span data-gloss="Blocked kicks">BLK</span></th><th><span data-gloss="Points allowed">PA</span></th>';
   hdr += '</tr>';
@@ -14678,10 +14689,10 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   const _is26 = +season === 2026;
   // Column order (Jack 2026-09-14): WK · OPP · PROJ · RNK · FPTS · SNP% · then every
   // share % (CAR% / TS%) BEFORE the counting stats.
-  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th>FPTS</th>' + (_is26 ? _XFP_HDR : '') + '<th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
-  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
-  else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">CAR%</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>ATT</th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
-  else hdr += '<th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RyD</th><th>FL</th>';
+  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RK</span></th><th>FPTS</th>' + (_is26 ? _XFP_HDR : '') + '<th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNAP%</span></th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PASS YDS</th><th>PASS TD</th><th>INT</th><th>RUSH YDS</th><th>RUSH TD</th><th>FL</th>';
+  else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">RUSH%</span></th><th><span data-gloss="Share of team targets that week">TGT%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RTE%</span></th><th>CAR</th><th>RUSH YDS</th><th>TGT</th><th>REC</th><th>REC YDS</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
+  else hdr += '<th><span data-gloss="Share of team targets that week">TGT%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RTE%</span></th><th>TGT</th><th>REC</th><th>REC YDS</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RUSH YDS</th><th>FL</th>';
   hdr += '</tr>';
 
   const _posStatCols = isQB ? 8 : isRB ? 10 : 8;   // RB/WR/TE include RT% (2026-09-14)
@@ -14975,19 +14986,19 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     cols = mode === 'tot' ? [
       ['CMP', null, y => N(y._ex.pc), qc.cmp], ['ATT', null, y => N(y._ex.pa), qc.att],
       ['CMP%', 'Completion percentage', _cmpPct, qc.cmpP],
-      ['PyD', null, y => y.py || 0, qc.py], ['PTD', null, y => y.ptd || 0, qc.ptd], ['INT', null, y => y.int || 0, qc.int],
-      ['CAR', null, y => y.ra || 0, qc.ra], ['RyD', null, y => y.ry || 0, qc.ry], ['RTD', null, y => y.rtd || 0, qc.rtd],
+      ['PASS YDS', null, y => y.py || 0, qc.py], ['PASS TD', null, y => y.ptd || 0, qc.ptd], ['INT', null, y => y.int || 0, qc.int],
+      ['CAR', null, y => y.ra || 0, qc.ra], ['RUSH YDS', null, y => y.ry || 0, qc.ry], ['RUSH TD', null, y => y.rtd || 0, qc.rtd],
       ['FL', null, y => y.fl || 0, null]
     ] : [
       ['CMP', 'Completions per game', y => y._ex.pc != null ? _avg(y._ex.pc, y.gp) : '—', qc.cmp],
       ['ATT', 'Pass attempts per game', y => y._ex.pa != null ? _avg(y._ex.pa, y.gp) : '—', qc.att],
       ['CMP%', 'Completion percentage', _cmpPct, qc.cmpP],
-      ['PyD', 'Passing yards per game', y => _avg(y.py, y.gp), qc.py],
-      ['PTD', 'Passing TDs per game', y => _avg(y.ptd, y.gp), qc.ptd],
+      ['PASS YDS', 'Passing yards per game', y => _avg(y.py, y.gp), qc.py],
+      ['PASS TD', 'Passing TDs per game', y => _avg(y.ptd, y.gp), qc.ptd],
       ['INT', 'Interceptions per game', y => _avg(y.int, y.gp), qc.int],
       ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), qc.ra],
-      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), qc.ry],
-      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), qc.rtd]
+      ['RUSH YDS', 'Rushing yards per game', y => _avg(y.ry, y.gp), qc.ry],
+      ['RUSH TD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), qc.rtd]
     ];
   } else if (_khRows && _khRows.length) {
     // Kicker columns from KICKER_HISTORY. Color ranges: per-game FG volume,
@@ -15056,7 +15067,7 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       : { tgt: [3, 10], rec: [2, 7], rcy: [20, 90], ypr: [7, 15.5], td: [0.1, 0.7], ts: [10, 28], yrr: [0.9, 2.5] };
     const cs = (f, r, inv) => ({ f, lo: r[0], hi: r[1], inv });
     const _tsVal = (y, tm) => _tsPctSeason(tm, y.yr, y._ex.tgt, d.n);
-    const _tsCol = ['TS%', 'Share of team targets that season (weeks played)', (y, tm) => {
+    const _tsCol = ['TGT%', 'Share of team targets that season (weeks played)', (y, tm) => {
       const v = _tsVal(y, tm);
       return v != null ? v.toFixed(1) + '%' : '—';
     }, cs(_tsVal, S.ts)];
@@ -15074,21 +15085,21 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       yrr: cs(y => y.yrr != null ? y.yrr : null, S.yrr)
     };
     const recCols = mode === 'tot' ? [
-      ['TGT', null, y => N(y._ex.tgt), rc.tgt], ['REC', null, y => y.rc || 0, rc.rec], ['RcY', null, y => y.rcy || 0, rc.rcy],
+      ['TGT', null, y => N(y._ex.tgt), rc.tgt], ['REC', null, y => y.rc || 0, rc.rec], ['REC YDS', null, y => y.rcy || 0, rc.rcy],
       ['Y/R', 'Yards per reception', _ypr, rc.ypr],
       _tdCol, _tsCol,
       ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ] : [
       ['TGT', 'Targets per game', y => y._ex.tgt != null ? _avg(y._ex.tgt, y.gp) : '—', rc.tgt],
       ['REC', 'Receptions per game', y => _avg(y.rc, y.gp), rc.rec],
-      ['RcY', 'Receiving yards per game', y => _avg(y.rcy, y.gp), rc.rcy],
+      ['REC YDS', 'Receiving yards per game', y => _avg(y.rcy, y.gp), rc.rcy],
       ['Y/R', 'Yards per reception', _ypr, rc.ypr],
       _tdCol, _tsCol,
       ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ];
     // Rushing block: colored + CAR% for RBs; neutral context stats for WR/TE
     const _carVal = (y, tm) => _carPctSeason(tm, y.yr, y.ra, d.n);
-    const _carCol = ['CAR%', 'Share of team carries that season (weeks played)', (y, tm) => {
+    const _carCol = ['RUSH%', 'Share of team carries that season (weeks played)', (y, tm) => {
       const v = _carVal(y, tm);
       return v != null ? v.toFixed(1) + '%' : '—';
     }, cs(_carVal, [15, 65])];
@@ -15102,10 +15113,10 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     ] : [
       ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), ru.ra]
     ]).concat(isRB ? [_carCol] : []).concat(mode === 'tot' ? [
-      ['RyD', null, y => y.ry || 0, ru.ry],
+      ['RUSH YDS', null, y => y.ry || 0, ru.ry],
       ['YPC', 'Yards per carry', _ypc, ru.ypc]
     ] : [
-      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), ru.ry],
+      ['RUSH YDS', 'Rushing yards per game', y => _avg(y.ry, y.gp), ru.ry],
       ['YPC', 'Yards per carry', _ypc, ru.ypc]
     ]);
     cols = isRB ? rushCols.concat(recCols) : recCols.concat(rushCols);
@@ -15116,8 +15127,8 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     + (mode === 'tot' ? '<th>Pts</th>' : '')
     + '<th><span data-gloss="' + (mode === 'tot'
         ? 'Positional finish that season by total fantasy points, across all NFL players'
-        : 'Positional finish that season by fantasy PPG (min 8 games played), across all NFL players') + '">RNK</span></th>'
-    + '<th><span data-gloss="Offensive snap share that season (nflverse, 2012+)">SNP%</span></th>';
+        : 'Positional finish that season by fantasy PPG (min 8 games played), across all NFL players') + '">RK</span></th>'
+    + '<th><span data-gloss="Offensive snap share that season (nflverse, 2012+)">SNAP%</span></th>';
   cols.forEach(col => {
     hdr += col[1] ? '<th><span data-gloss="' + col[1] + '">' + col[0] + '</span></th>' : '<th>' + col[0] + '</th>';
   });
@@ -16360,7 +16371,17 @@ function buildWeeklyCardView(d) {
       + '<div style="text-align:center;padding:1.4rem 1rem;color:var(--text2);font-size:.8rem"><b style="color:var(--accent)">BYE WEEK</b> — no game.</div></div>';
   }
   const fmt1 = v => (typeof v === 'number') ? (Math.round(v * 10) / 10).toFixed(1) : '—';
-  const box = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
+  const box = (lbl, val, cls, tip, color) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</div></div>';
+  // Tile colours (2026-10-08, Jack: highlight the matchup numbers like the rankings cells).
+  // Same seven-step palette as posFptsColor so the heat-map tint picks them up.
+  const _G2 = '#4ade80', _G = '#22c55e', _Y = '#facc15', _O = '#f97316', _R = '#ef4444';
+  const _spreadCol = v => v == null ? null : v <= -3 ? _G : v < -0.5 ? _G2 : v <= 0.5 ? _Y : v < 3 ? _O : _R;
+  const _ttCol = v => v == null ? null : v >= 26 ? _G2 : v >= 24 ? _G : v >= 21.5 ? _Y : v >= 19.5 ? _O : _R;
+  const _ttColInv = v => v == null ? null : v <= 17 ? _G2 : v <= 19.5 ? _G : v <= 22 ? _Y : v <= 24.5 ? _O : _R;
+  const _ouCol = v => v == null ? null : v >= 50 ? _G2 : v >= 46 ? _G : v >= 42 ? _Y : v >= 39 ? _O : _R;
+  const _ouColInv = v => v == null ? null : v <= 39 ? _G2 : v <= 42 ? _G : v <= 46 ? _Y : v <= 50 ? _O : _R;
+  const _rankCol = (rk, n) => (rk == null || !n) ? null : rk <= n / 3 ? _G : rk > 2 * n / 3 ? _R : _Y;
+  const _ptsCol = v => (v == null || typeof posFptsColor !== 'function') ? null : posFptsColor(v, d.s);
 
   // One call carries the whole matchup: Vegas numbers + position-weighted
   // opponent read + this week's E/M/H rating across the league.
@@ -16375,23 +16396,23 @@ function buildWeeklyCardView(d) {
   const oppDiff = (typeof window._weeklyOppDifficulty === 'function') ? window._weeklyOppDifficulty(d.t, d.s) : null;
   const oppNote = (typeof window._weeklyOppDiffNote === 'function') ? window._weeklyOppDiffNote(d.t, d.s) : '';
   const oppCol = oppDiff === 'hard' ? '#ef4444' : oppDiff === 'easy' ? '#22c55e' : oppDiff === 'medium' ? '#facc15' : null;
-  html += box('OPP', (oppCol ? '<span style="color:' + oppCol + '">' : '') + (entry.home ? 'vs ' : '@ ') + esc(entry.opp) + (oppCol ? '</span>' : ''), oppCol ? '' : 'accent', oppNote || null);
-  html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', sp != null && sp < 0 ? 'green' : '');
+  html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), '', oppNote || null, oppCol);
+  html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', '', 'Point spread for this team — negative = favored', _spreadCol(sp));
   html += isDst
-    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)')
-    : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2');
-  html += box('O/U', ou != null ? fmt1(ou) : '—', '');
+    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)', _ttColInv(oppTT))
+    : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
+  html += box('O/U', ou != null ? fmt1(ou) : '—', '', 'Game total (over/under)', isDst ? _ouColInv(ou) : _ouCol(ou));
   html += '</div>';
   if (r) {
     html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">';
-    html += box('WK ' + wk + ' MATCHUP', '<span style="color:' + r.color + '">' + r.label + '</span> <span style="font-size:.6875rem;color:var(--text2)">#' + r.rank + '/' + r.n + '</span>', '',
-      'Position-weighted matchup rating for this week (1 = easiest schedule slot league-wide)');
+    html += box('WK ' + wk + ' MATCHUP', r.label + ' <span style="font-size:.6875rem;color:var(--text2)">#' + r.rank + '/' + r.n + '</span>', '',
+      'Position-weighted matchup rating for this week (1 = easiest schedule slot league-wide)', r.color || null);
     const _alw = (r.priorLive === false && typeof window._oppAllowedFor === 'function') ? window._oppAllowedFor(r.opp, d.s) : null;
     if (_alw && typeof _alw.v === 'number') html += box('OPP ALLOWS',
       fmt1(_alw.v) + ' <span style="font-size:.6875rem;color:var(--text2)">#' + _alw.rank + '/' + _alw.n + '</span>', '',
       (isDst ? 'Fantasy points opposing D/STs have scored per game against this offense'
              : 'Fantasy points this opponent has allowed per game to ' + d.s + 's')
-        + ' in 2026 (' + _alw.games + ' gm) — #1 allows the most');
+        + ' in 2026 (' + _alw.games + ' gm) — #1 allows the most', _rankCol(_alw.rank, _alw.n));
     else html += box(isDst ? 'OPP OFFENSE' : 'OPP DEFENSE',
       isDst ? (r.clayOffRk ? 'Clay #' + r.clayOffRk : '—')
             : ((r.posUnits ? '' : (r.clayDefRk ? 'Clay #' + r.clayDefRk : '—')) + (r.posUnits ? '<span style="font-size:.6875rem">' + esc(r.posUnits) + '</span>' : '')),
@@ -16412,10 +16433,7 @@ function buildWeeklyCardView(d) {
       + (ws.sub ? ' <span style="font-size:.6875rem;color:var(--text2)">' + esc(ws.sub) + '</span>' : ''), '', ws.tip);
     html += '</div>';
   }
-  // TD / FG luck (SIM_PROJ_2026.luck): what he has scored vs what his touch
-  // locations predicted, and the regression the sim already prices in.
-  const luckBox = (typeof _simLuckBoxHtml === 'function') ? _simLuckBoxHtml(d, box, esc) : '';
-  if (luckBox) html += '<div class="card-rank-row" style="grid-template-columns:1fr;margin-top:.4rem">' + luckBox + '</div>';
+  // (TD / FG luck tile removed 2026-10-08 — the regression still shows in WHY THIS PROJECTION)
   html += '</div>';
 
   // Projection + provenance
@@ -16438,38 +16456,21 @@ function buildWeeklyCardView(d) {
   const cwV = cw ? (rankingScoringFmt === 'ppr' ? cw.p : rankingScoringFmt === 'std' ? cw.s : cw.h) : null;
   html += '<div class="card-section"><div class="card-section-title">Weekly Projection '
     + '<span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
-  html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr">';
-  html += box('WK ' + wk + ' PROJ', proj != null ? '<span class="accent">' + fmt1(proj) + '</span>' : '—', '', 'The number the WEEKLY rankings PROJ column shows');
-  html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference');
-  html += '</div>';
-  // Reference rows: every weekly source in the active scoring format —
-  // Books (this week's prop board scored) + Clay (per-game pace) on top of
-  // the site feeds. e/f/c are [half, ppr, std] arrays (see
-  // pull_weekly_projections.py); Yahoo is absent because they publish no
-  // projections outside a league login.
-  const pickHps = a => (a && a.length === 3) ? a[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0] : null;
-  const eV = cw ? pickHps(cw.e) : null;
-  const fV = cw ? pickHps(cw.f) : null;
-  const cV = cw ? pickHps(cw.c) : null;
   const wkBook = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
-  const clayC = (typeof _clayPpgFor === 'function') ? _clayPpgFor(d) : null;
-  const clayPace = clayC ? Math.round((clayC.total / (clayC.gm || clayC.games)) * 10) / 10 : null;
-  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr);margin-top:.4rem">';
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">';
+  html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
   html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) : '—', '',
-    wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player');
-  html += box('CLAY', clayPace != null ? fmt1(clayPace) : '—', '',
-    clayC ? 'Mike Clay 2026 per-game pace: season stat line ÷ ' + (clayC.gm || clayC.games) + ' projected games' : 'No Clay projection');
-  html += box('SLEEPER', cwV != null ? fmt1(cwV) : '—', '', 'Sleeper\'s weekly consensus projection for reference');
+    wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player', wkBook != null ? _ptsCol(wkBook.ppg) : null);
+  html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
   html += '</div>';
-  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr);margin-top:.4rem">';
-  html += box('ESPN', eV != null ? fmt1(eV) : '—', '', 'ESPN\'s weekly projection for reference');
-  html += box('FANTASYPROS', fV != null ? fmt1(fV) : '—', '', 'FantasyPros\' expert-consensus weekly points (rank-to-points) for reference');
-  html += box('CBS', cV != null ? fmt1(cV) : '—', '', 'CBS\'s weekly projection, rescored from their stat components to site scoring');
-  html += '</div>';
+  // (Clay / Sleeper / ESPN / FantasyPros / CBS reference tiles removed 2026-10-08)
   html += '<div style="margin-top:7px;font-size:.6875rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
-    + (out.src === 'props' ? ' · full prop board on the <b>LINES</b> tab' : '') + '</div>';
+    + (out.src === 'props' ? ' · full prop board below' : '') + '</div>';
   html += '</div>';
-  if (out.src === 'sim' && typeof _projWhyHtml === 'function') html += _projWhyHtml(d, wk, proj, esc);
+  // Week N prop lines sit right under the projection (Jack 2026-10-08)
+  try { html += _buildWeeklyLinesSection(d); } catch (_e) {}
+  // Recent games before the WHY breakdown (Jack 2026-10-08)
+  let _recentHtml = '';
 
   // Recent games (in-season only — WEEKLY_STATS gets 2026 rows from the
   // Tuesday stats pull; empty preseason so the section self-hides).
@@ -16479,19 +16480,17 @@ function buildWeeklyCardView(d) {
     if (rows && rows.length) {
       const recAdj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;
       const last5 = rows.slice(-5).reverse();
-      html += '<div class="card-section"><div class="card-section-title">Recent Games <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· 2026</span></div>';
-      html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + last5.length + ',1fr)">';
+      _recentHtml += '<div class="card-section"><div class="card-section-title">Recent Games <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· 2026</span></div>';
+      _recentHtml += '<div class="card-rank-row" style="grid-template-columns:repeat(' + last5.length + ',1fr)">';
       last5.forEach(g => {
         const pts = (g.fpts || 0) + (g.rec || 0) * recAdj;
-        html += box('W' + g.wk + (g.opp ? ' ' + esc(String(g.opp).replace(/^vs\s*/i, '')) : ''), fmt1(pts), pts >= 15 ? 'green' : '');
+        _recentHtml += box('W' + g.wk + (g.opp ? ' ' + esc(String(g.opp).replace(/^vs\s*/i, '')) : ''), fmt1(pts), '', null, _ptsCol(pts));
       });
-      html += '</div></div>';
+      _recentHtml += '</div></div>';
     }
   } catch (_e) {}
-
-  // Week N prop lines (2026-10-08): moved here from the retired LINES tab, so the
-  // weekly view carries matchup, projection, recent games and the books in one place.
-  try { html += _buildWeeklyLinesSection(d); } catch (_e) {}
+  html += _recentHtml;
+  if (out.src === 'sim' && typeof _projWhyHtml === 'function') html += _projWhyHtml(d, wk, proj, esc);
 
   return html;
 }
@@ -16865,10 +16864,10 @@ function buildCollegeTable(d, scoringFormat) {
   const bestPpg = Math.max(...withFpts.filter(s => s.ppg != null).map(s => s.ppg), 0);
   const bestFpts = Math.max(...withFpts.map(s => s.fpts));
 
-  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th><th>GP</th><th>PPG</th><th>Pts</th>';
-  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>PCT</th><th>RuYd</th><th>RuTD</th>';
-  else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>YPC</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
-  else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>YPR</th><th>RuYd</th><th>RuTD</th>';
+  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th><th>GP</th><th>PPG</th><th>PTS</th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PASS YDS</th><th>PASS TD</th><th>INT</th><th>CMP%</th><th>RUSH YDS</th><th>RUSH TD</th>';
+  else if (isRB) hdr += '<th>CAR</th><th>RUSH YDS</th><th>RUSH TD</th><th>YPC</th><th>REC</th><th>REC YDS</th><th>REC TD</th>';
+  else hdr += '<th>REC</th><th>REC YDS</th><th>REC TD</th><th>Y/R</th><th>RUSH YDS</th><th>RUSH TD</th>';
   hdr += '</tr>';
 
   let rows = withFpts.map(s => {
@@ -16972,9 +16971,9 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
     return '<td>' + (dec ? Number(v).toFixed(dec) : v) + '</td>';
   };
   let hdr = '<tr><th>WK</th><th>TM</th><th>OPP</th><th>FPTS</th>';
-  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>RuYd</th><th>RuTD</th>';
-  else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
-  else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>RuYd</th><th>RuTD</th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PASS YDS</th><th>PASS TD</th><th>INT</th><th>RUSH YDS</th><th>RUSH TD</th>';
+  else if (isRB) hdr += '<th>CAR</th><th>RUSH YDS</th><th>RUSH TD</th><th>REC</th><th>REC YDS</th><th>REC TD</th>';
+  else hdr += '<th>REC</th><th>REC YDS</th><th>REC TD</th><th>RUSH YDS</th><th>RUSH TD</th>';
   pffCols.forEach(([k, label]) => { hdr += '<th title="'+(pffTitles[k]||'')+'" style="border-left:'+(k==='pff'?'1px solid var(--border,#333)':'0')+'">'+label+'</th>'; });
   hdr += '</tr>';
   let rows = withFpts.map(w => {
@@ -18068,23 +18067,6 @@ function openPlayerCard(d, ctxMode) {
   // DYNASTY tab (2026-10-08): the old INFO + COMPS tabs fold in. Career highlights ride on top
   // of the FANTASY career block; the contract fields sit under Prospect Info (height / weight /
   // college already live there, so the Bio duplicates are dropped).
-  const _careerHlHtml = (!_is2026 && d.career && d.career.length > 0) ? (() => {
-    const _cr = d.career;
-    const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
-    const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
-    const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
-    return `<div class="card-section">
-      <div class="card-section-title">Career Highlights</div>
-      <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr">
-        <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
-        <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
-        <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
-        <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
-        <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
-        <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
-      </div>
-    </div>`;
-  })() : '';
   const _contractHtml = (!d._retired && !_is2026) ? `<div class="card-section">
     <div class="card-section-title">Contract</div>
     <div class="card-grid">
@@ -18536,7 +18518,7 @@ function openPlayerCard(d, ctxMode) {
       </div>` : ''}
       ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
       <div class="card-prospect-view card-fantasy-extra" id="cardCareerView" data-ready="${(_hasCareerRows || _career2026Row(d)) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && (_hasCareerRows || _career2026Row(d))) ? 'block' : 'none'}">
-      ${_careerHlHtml}${_careerSectionHtml(d, true)}
+      ${_careerSectionHtml(d, true)}
       </div>` : ''}
       <div class="card-prospect-view" id="cardNewsView" style="display:none">${_newsHtml}</div>
     </div>
@@ -18982,6 +18964,19 @@ function _avgTierSearchEntries() {
 // than a meaningless split. State survives grid re-renders (keyed by name).
 var _cmpSplitState = {};
 
+// Player-card default scope (2026-10-08): the first time a card's splits are read, scope
+// them to the current season when the player has games in it (AVG mode is already the
+// default). Compare cards keep CAREER. Users widen it with the season chips as before.
+function _cmpSplitDefaultSeason(d, st) {
+  if (!st || st._autoSeason || !d) return;
+  try {
+    const yrs = (typeof getWeeklySeasons === 'function') ? getWeeklySeasons(d) : [];
+    if (!yrs || !yrs.length) return; // weekly bundle not in yet — try again on the repaint
+    st._autoSeason = true;
+    const cur = Math.max.apply(null, yrs.map(Number));
+    if (cur >= 2026 && st.seasons == null) st.seasons = new Set([String(cur)]);
+  } catch (_) {}
+}
 function _cmpSplitSt(name) {
   // side: which half of a teammate split this card shows ('both'|'with'|'wo');
   // agg: STATS section display mode ('avg' per-game | 'tot' totals).
@@ -19290,6 +19285,7 @@ function _cmpRankedStatTable(d, st, fmtKey, mode, defs, agg, mval, fmtV) {
 // repaints on every filter change. scoresrc 'gl' = follow the game-log
 // scoring toggle (player-card modal) instead of the compare-card toggle.
 function _cmpFullStatsSectionHtml(d, instKey, scoresrc) {
+  if (scoresrc === 'gl') _cmpSplitDefaultSeason(d, _cmpSplitSt(instKey || (d && d.n)));
   if (!d || !d.n || !d.s) return '';
   try { if (typeof WEEKLY_STATS === 'undefined' || !hasWeeklyData(d)) return ''; } catch (_) { return ''; }
   const key = instKey || d.n;
@@ -19301,8 +19297,8 @@ function _cmpFullStatsSectionHtml(d, instKey, scoresrc) {
   }
   // Collapsible (like SPLITS & FILTERS); hidden/shown state is a single
   // shared preference persisted in localStorage across all cards.
-  let _statsOpen = true;
-  try { _statsOpen = localStorage.getItem('mff_cardStatsOpen') !== '0'; } catch (_) {}
+  let _statsOpen = false; // 2026-10-08: closed by default; a saved '1' re-opens it
+  try { _statsOpen = localStorage.getItem('mff_cardStatsOpen') === '1'; } catch (_) {}
   return '<div class="card-section"><details class="card-collapse cmp-stats-collapse"' + (_statsOpen ? ' open' : '') + '>'
     + '<summary>STATS <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· follows Splits &amp; Filters</span></summary>'
     + '<div class="cmp-fullstats" data-cmpplayer="' + esc + '"' + (scoresrc ? ' data-scoresrc="' + scoresrc + '"' : '') + '>' + _cmpFullStatsHtml(key, fmtOverride) + '</div></details></div>';
@@ -19330,6 +19326,7 @@ function _cmpSplitSectionHtml(d, scoresrc, instKey) {
   const name = instKey || d.n;
   const esc = name.replace(/"/g, '&quot;');
   const st = _cmpSplitSt(name);
+  if (scoresrc === 'gl') _cmpSplitDefaultSeason(d, st);
   const allSeasons = getWeeklySeasons(d);
   if (!allSeasons.length) return '';
   const chips = ['<button class="cmp-split-chip' + (!st.seasons ? ' active' : '') + '" data-cmpplayer="' + esc + '" data-season="ALL">ALL</button>']

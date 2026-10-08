@@ -1,0 +1,54 @@
+replica check: live form with Clay's prior vs BR.live_today max |diff| 0.0000
+=== A  CLAY-FREE ENSEMBLE: shadow x live-form-on-shadow-prior, 10,520 top-150 player-weeks ===
+
+--- NEXT GAME ---
+  level act/number: shadow 1.015  live-on-shadow-prior 1.004  Clay form 0.981  wired blend 1.004
+  live form on the shadow prior (alone)    vs shadow  +0.62% (0/7) | vs wired blend  +0.85% (0/7) | rho 0.3865 (-0.0072 vs shadow, -0.0086 vs blend) | pairs -0.10
+  ensemble w .3 shadow                     vs shadow  +0.19% (1/7) | vs wired blend  +0.43% (0/7) | rho 0.3914 (-0.0023 vs shadow, -0.0037 vs blend) | pairs +0.01
+  ensemble w .5                            vs shadow  +0.02% (4/7) | vs wired blend  +0.25% (1/7) | rho 0.3934 (-0.0003 vs shadow, -0.0018 vs blend) | pairs +0.05
+  ensemble w .7                            vs shadow  -0.05% (6/7) | vs wired blend  +0.18% (3/7) | rho 0.3935 (-0.0002 vs shadow, -0.0016 vs blend) | pairs +0.01
+  wired Clay blend (reference)             vs shadow  -0.23% (6/7) | vs wired blend  +0.00% (0/7) | rho 0.3951 (+0.0014 vs shadow, +0.0000 vs blend) | pairs +0.03
+  Clay form (reference)                    vs shadow  +0.82% (1/7) | vs wired blend  +1.05% (1/7) | rho 0.3874 (-0.0063 vs shadow, -0.0077 vs blend) | pairs -0.24
+  by position, ensemble w .5 vs shadow | vs wired blend:
+    QB: best w 0.7 | w .5 vs shadow  +0.07%, vs blend  +0.63% | live-on-prior alone vs shadow  +1.24% | best w vs blend  +0.47%
+    RB: best w 0.7 | w .5 vs shadow  +0.05%, vs blend  +0.15% | live-on-prior alone vs shadow  +0.46% | best w vs blend  +0.09%
+    WR: best w 0.7 | w .5 vs shadow  -0.02%, vs blend  +0.21% | live-on-prior alone vs shadow  +0.59% | best w vs blend  +0.14%
+    TE: best w 1.0 | w .5 vs shadow  +0.04%, vs blend  +0.20% | live-on-prior alone vs shadow  +0.24% | best w vs blend  +0.15%
+  LOYO     per-position pick: vs shadow +0.01% (5/7), vs wired blend +0.24% (1/7) | rho +0.0013 vs shadow, -0.0001 vs blend | picks QB [0.7, 0.7, 0.7, 0.7, 0.7, 1.0, 0.7] | RB [0.7, 0.7, 0.7, 0.7, 0.7, 1.0, 0.7] | WR [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7] | TE [0.5, 0.7, 1.0, 1.0, 0.5, 1.0, 1.0]
+  forward  per-position pick: vs shadow +0.02% (3/4), vs wired blend +0.05% (1/4) | rho +0.0007 vs shadow, +0.0016 vs blend | picks QB [0.7, 0.7, 0.7, 0.7] | RB [1.0, 1.0, 1.0, 0.7] | WR [0.5, 0.5, 0.7, 0.7] | TE [1.0, 0.5, 1.0, 1.0]
+
+--- REST OF SEASON (4+ left) ---
+  level act/number: shadow 1.022  live-on-shadow-prior 1.011  Clay form 0.986  wired blend 1.011
+  live form on the shadow prior (alone)    vs shadow  +2.12% (1/7) | vs wired blend  +3.97% (1/7) | rho 0.5847 (-0.0100 vs shadow, -0.0182 vs blend) | pairs +0.07
+  ensemble w .3 shadow                     vs shadow  +0.30% (4/7) | vs wired blend  +2.12% (1/7) | rho 0.5926 (-0.0020 vs shadow, -0.0103 vs blend) | pairs +0.28
+  ensemble w .5                            vs shadow  -0.35% (4/7) | vs wired blend  +1.46% (1/7) | rho 0.5965 (+0.0018 vs shadow, -0.0064 vs blend) | pairs +0.32
+  ensemble w .7                            vs shadow  -0.55% (6/7) | vs wired blend  +1.26% (2/7) | rho 0.5968 (+0.0021 vs shadow, -0.0061 vs blend) | pairs +0.22
+  wired Clay blend (reference)             vs shadow  -1.78% (5/7) | vs wired blend  +0.00% (0/7) | rho 0.6029 (+0.0082 vs shadow, +0.0000 vs blend) | pairs +0.34
+  Clay form (reference)                    vs shadow  +1.74% (3/7) | vs wired blend  +3.59% (1/7) | rho 0.5929 (-0.0018 vs shadow, -0.0100 vs blend) | pairs +0.04
+  by position, ensemble w .5 vs shadow | vs wired blend:
+    QB: best w 0.5 | w .5 vs shadow  -1.62%, vs blend  +1.21% | live-on-prior alone vs shadow  +1.63% | best w vs blend  +1.21%
+    RB: best w 0.7 | w .5 vs shadow  +0.21%, vs blend  +1.29% | live-on-prior alone vs shadow  +2.07% | best w vs blend  +1.00%
+    WR: best w 0.7 | w .5 vs shadow  -0.87%, vs blend  +1.16% | live-on-prior alone vs shadow  +1.77% | best w vs blend  +1.08%
+    TE: best w 1.0 | w .5 vs shadow  +1.99%, vs blend  +3.81% | live-on-prior alone vs shadow  +4.61% | best w vs blend  +1.78%
+  LOYO     per-position pick: vs shadow -0.23% (4/7), vs wired blend +1.58% (2/7) | rho -0.0003 vs shadow, -0.0085 vs blend | picks QB [0.7, 0.5, 0.5, 0.7, 0.5, 0.5, 0.5] | RB [1.0, 0.7, 0.7, 0.7, 0.7, 1.0, 0.7] | WR [0.7, 0.5, 0.7, 0.5, 0.7, 0.5, 0.7] | TE [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  forward  per-position pick: vs shadow -0.04% (2/4), vs wired blend +1.28% (2/4) | rho -0.0052 vs shadow, -0.0064 vs blend | picks QB [0.3, 0.3, 0.5, 0.5] | RB [1.0, 1.0, 1.0, 0.7] | WR [0.7, 1.0, 0.5, 0.7] | TE [1.0, 1.0, 1.0, 1.0]
+
+=== B  SHADOW PRIOR STRENGTH BY ADP TIER (P x k per position x band) ===
+
+--- NEXT GAME: error vs shadow (P x 1) per cell; k picked LOYO / forward per cell ---
+  QB: 1-30: k0.5 -0.1% k1.5 +0.3% k2 +0.6% (best 0.5) | 31-60: k0.5 +0.3% k1.5 +0.2% k2 +0.4% (best 1) | 61-100: k0.5 -0.3% k1.5 +0.5% k2 +1.0% (best 0.5) | 101-150: k0.5 +0.7% k1.5 -0.1% k2 -0.1% (best 2)
+  RB: 1-30: k0.5 +0.5% k1.5 -0.0% k2 +0.1% (best 1.5) | 31-60: k0.5 +0.8% k1.5 -0.2% k2 -0.2% (best 2) | 61-100: k0.5 +1.1% k1.5 -0.2% k2 -0.2% (best 1.5) | 101-150: k0.5 +0.2% k1.5 +0.4% k2 +0.9% (best 1)
+  WR: 1-30: k0.5 +0.9% k1.5 -0.2% k2 -0.3% (best 2) | 31-60: k0.5 +0.5% k1.5 -0.0% k2 +0.1% (best 1.5) | 61-100: k0.5 -0.2% k1.5 +0.5% k2 +1.0% (best 0.5) | 101-150: k0.5 +0.1% k1.5 +0.4% k2 +0.8% (best 1)
+  TE: 1-30: k0.5 +0.5% k1.5 +0.0% k2 +0.1% (best 1) | 31-60: k0.5 +0.7% k1.5 +0.0% k2 +0.2% (best 1) | 61-100: k0.5 +0.3% k1.5 +0.3% k2 +0.6% (best 1) | 101-150: k0.5 -0.2% k1.5 +0.5% k2 +0.9% (best 0.5)
+  LOYO     per-cell pick: vs shadow +0.24% (2/7), vs wired blend +0.47% | rho -0.0027 | cells off k 1: 73
+  forward  per-cell pick: vs shadow +0.19% (1/4), vs wired blend +0.23% | rho -0.0042 | cells off k 1: 48
+
+--- REST OF SEASON (4+ left): error vs shadow (P x 1) per cell; k picked LOYO / forward per cell ---
+  QB: 1-30: k0.5 +1.3% k1.5 +0.2% k2 +0.6% (best 1) | 31-60: k0.5 +2.6% k1.5 +0.3% k2 +0.9% (best 1) | 61-100: k0.5 +1.5% k1.5 +1.3% k2 +2.7% (best 1) | 101-150: k0.5 +4.1% k1.5 -0.9% k2 -1.1% (best 2)
+  RB: 1-30: k0.5 +3.7% k1.5 -0.0% k2 +0.8% (best 1.5) | 31-60: k0.5 +5.4% k1.5 -1.6% k2 -2.0% (best 2) | 61-100: k0.5 +7.4% k1.5 -2.6% k2 -3.7% (best 2) | 101-150: k0.5 +5.1% k1.5 -0.7% k2 -0.3% (best 1.5)
+  WR: 1-30: k0.5 +4.4% k1.5 -1.0% k2 -1.1% (best 2) | 31-60: k0.5 +1.8% k1.5 +1.3% k2 +2.9% (best 1) | 61-100: k0.5 -2.6% k1.5 +2.9% k2 +5.2% (best 0.5) | 101-150: k0.5 +0.8% k1.5 +1.3% k2 +2.6% (best 1)
+  TE: 1-30: k0.5 +1.3% k1.5 +0.3% k2 +0.9% (best 1) | 31-60: k0.5 +6.3% k1.5 -1.2% k2 -1.3% (best 2) | 61-100: k0.5 -3.3% k1.5 +3.8% k2 +6.8% (best 0.5) | 101-150: k0.5 +0.3% k1.5 +1.8% k2 +3.6% (best 1)
+  LOYO     per-cell pick: vs shadow +1.27% (2/7), vs wired blend +3.10% | rho -0.0049 | cells off k 1: 72
+  forward  per-cell pick: vs shadow +0.83% (1/4), vs wired blend +2.17% | rho -0.0056 | cells off k 1: 44
+
+Limitations: replicas (honest shadow; live form without the book anchor / docks / prior lift); the live-form-on-shadow-prior keeps the live form's usage coefficients (fit on these seasons).

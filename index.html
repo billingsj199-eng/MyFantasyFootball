@@ -77,12 +77,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-08-mt1" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-08-card2" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-08-mt1" as="script">
+<link rel="preload" href="app.js?v=2026-10-08-aout4" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -92,7 +92,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-08" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-08" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-08-mt1">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-08-card2">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1489,6 +1489,7 @@ CLEAR ALL
 <button id="weeklyPublishBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #22c55e;background:transparent;color:#22c55e;white-space:nowrap" title="Push the currently-selected week live so all users see it in the WEEKLY tab.">PUBLISH</button>
 <button id="weeklyUnpublishBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #ef4444;background:transparent;color:#ef4444;white-space:nowrap" title="Hide the WEEKLY tab from all non-admin users.">REMOVE</button>
 <button id="weeklyTrimBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Cut the weekly board at an overall rank — removes every player ranked below it (injured / irrelevant tail). Enter 'undo' to restore this session's trim. Hit SAVE after.">TRIM</button>
+<button id="weeklySeedQBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #f59e0b;background:transparent;color:#f59e0b;white-space:nowrap" title="Park every Questionable / Doubtful player inside the cut line in this week's BYE / OUT row (assumed out — off the board, PROJ 0). Runs by itself at the Tuesday 7am roll; use this to redo it or run it now. Move a player back with UNDO on his row, the Q pill, or his card.">Q → OUT</button>
 <span id="weeklyPublishStatus" style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;white-space:nowrap;margin-left:2px"></span>
 </div>
 <!-- Non-admin "live week" chip — shown to users when a week is currently published. -->
@@ -1798,6 +1799,10 @@ body.vor-bar-on .vor-bar{display:flex}
 /* BYE / OUT: two-line tile when the row mixes byes and ruled-out players; OUT chips read red */
 .tcv-letter.tcv-letter-bye.tcv-letter-2l{font-size:12px;line-height:1.05;text-align:center;letter-spacing:1px}
 .tcv-opp-chip.tcv-opp-out,.tcv-row-opp.tcv-opp-out{color:#fca5a5}
+.tcv-inj-badge{position:absolute;right:3px;bottom:33px;z-index:3;font-family:'Bebas Neue',Impact,sans-serif;font-size:12px;letter-spacing:.6px;line-height:1;padding:2px 4px 1px;border-radius:3px;background:rgba(0,0,0,.7);color:#facc15;border:1px solid rgba(250,204,21,.65);text-shadow:none}
+.tcv-inj-badge[data-status="D"]{color:#fb923c;border-color:rgba(251,146,60,.65)}
+.tcv-inj-badge[data-status="O"],.tcv-inj-badge[data-status="IR"],.tcv-inj-badge[data-status="PUP"],.tcv-inj-badge[data-status="SUS"]{color:#f87171;border-color:rgba(248,113,113,.65)}
+.tcv-inj-badge.tcv-row-inj{position:static;display:inline-block;margin-left:4px;font-size:11px;padding:1px 4px 0;vertical-align:middle}
 tr.bye-row .bye-cell.out-cell{color:#fca5a5}
 /* Rankings table BYE block (weekly): divider + season-rank rows right above the cut line */
 .tier-badge.bye-badge{background:#334155;color:#cbd5e1;border:1px dashed rgba(148,163,184,.6)}
@@ -1807,6 +1812,12 @@ tr.bye-row .myrank-num.bye-rank{color:#cbd5e1;background:rgba(51,65,85,.6);borde
 tr.bye-row .bye-cell{font-family:'Bebas Neue',Impact,sans-serif;font-size:.75rem;letter-spacing:1px;color:#94a3b8}
 tr.bye-row .bye-note{color:var(--text2);font-size:.6875rem;letter-spacing:.3px;white-space:nowrap}
 tr.bye-row .bye-note b{color:#cbd5e1;font-weight:600}
+tr.bye-row .bye-note b.bye-assumed{color:#fca5a5;font-family:'Bebas Neue',Impact,sans-serif;font-size:.75rem;letter-spacing:1px;font-weight:400}
+.bye-undo-btn,.injp-assume{padding:1px 7px;margin-left:6px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.625rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #f59e0b;background:transparent;color:#f59e0b;white-space:nowrap;vertical-align:middle}
+.injp-assume{display:block;margin:8px 0 0;padding:4px 9px;font-size:.6875rem}
+.injp-assume.on,.bye-undo-btn{border-color:var(--green);color:var(--green)}
+.ao-chip{display:inline-block;margin-left:5px;padding:0 5px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.5625rem;letter-spacing:.04em;line-height:15px;border-radius:3px;cursor:pointer;border:1px solid rgba(245,158,11,.55);background:transparent;color:#f59e0b;vertical-align:middle;opacity:.55}
+tr:hover .ao-chip,.ao-chip:focus{opacity:1}
 .tcv-letter.tcv-letter-bye{background:linear-gradient(135deg,#1e293b,#334155);color:#cbd5e1;font-size:15px;letter-spacing:1.5px;border:1px dashed rgba(148,163,184,.55);border-radius:4px}
 .tcv-card.tcv-bye-card .tcv-card-rank,.tcv-card.tcv-bye-card .tcv-row-rank,.tcv-card.tcv-bye-card .tcv-cover-rank{color:#cbd5e1;opacity:.85}
 .tier-card-view.tcv-centered .tcv-cards{flex:0 1 auto;justify-content:center}
@@ -6137,7 +6148,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-08-mt1"></script>
+<script defer src="app.js?v=2026-10-08-aout4"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -5015,6 +5015,11 @@ function getFiltered(applyTopN) {
   if (window._irHiddenHere(currentMode) && !query) {
     f = f.filter(d => !window._irIsOut(d.n));
   }
+  // WEEKLY: players Jack assumed out this week ride the BYE / OUT row instead
+  // (slot kept; a typed search and the INJURIES view still surface them).
+  if (currentMode === 'weekly' && !query && !window._injOnly && typeof window._weeklyAssumedOut === 'function') {
+    f = f.filter(d => !window._weeklyAssumedOut(d.n));
+  }
   // Defensive dedupe: a player should never appear twice in the rankings.
   // Some board sync paths can occasionally produce duplicate indices pointing
   // to the same D[] entry — keep the first occurrence and drop the rest.
@@ -5353,7 +5358,117 @@ const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1
 // source agrees (_weeklyOutConfirmed — Sleeper's Out lingers from Sunday's
 // inactives; Jack 2026-09-30: anyone at least Questionable stays in order).
 // Returns the status code ('OUT' | 'IR' | 'PUP' | 'SUS') or null.
+// ── WEEKLY "ASSUMED OUT" (Jack 2026-10-08) ───────────────────────────────
+// Admin marks a Questionable / Doubtful (or unconfirmed Out) player as out for
+// the active week before the designation lands. Weekly mode only: he leaves
+// the visible board (his weekly slot is kept), joins the BYE / OUT row as
+// "assumed out", his OPP cell reads OUT and his weekly PROJ is 0. Stored per
+// week on settings/active_week.assumeOut {"5": [names]} so it reaches every
+// client live through the settings snapshot and dies with the week.
+// localStorage mirrors it for pre-snapshot boot.
+window._weeklyAssumeOutMap = {};
+try { window._weeklyAssumeOutMap = JSON.parse(localStorage.getItem('mff_assume_out') || '{}') || {}; } catch(_e) { window._weeklyAssumeOutMap = {}; }
+window._weeklyAssumedOut = function(name, wk) {
+  if (!name) return false;
+  wk = wk || window._weeklyActiveWeek || 1;
+  const a = window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)];
+  return !!(a && a.indexOf(name) >= 0);
+};
+window._weeklyAssumeOutApply = function(map) {
+  map = (map && typeof map === 'object') ? map : {};
+  if (JSON.stringify(map) === JSON.stringify(window._weeklyAssumeOutMap)) return false;
+  window._weeklyAssumeOutMap = map;
+  try { localStorage.setItem('mff_assume_out', JSON.stringify(map)); } catch(_e) {}
+  return true;
+};
+window._weeklyAssumeOutSave = function(next) {
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
+      firebase.firestore().collection('settings').doc('active_week').set({ assumeOut: next }, { merge: true })
+        .catch(e => console.warn('[Weekly] assume-out sync failed:', e));
+    }
+  } catch(e) { console.warn('[Weekly] assume-out sync failed:', e); }
+};
+window._weeklyAssumeOutToggle = function(name, wk) {
+  if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can assume a player out'); return false; }
+  wk = wk || window._weeklyActiveWeek || 1;
+  const k = String(wk), map = window._weeklyAssumeOutMap || {};
+  const cur = (map[k] || []).slice();
+  const i = cur.indexOf(name);
+  if (i >= 0) cur.splice(i, 1); else cur.push(name);
+  const next = Object.assign({}, map);
+  next[k] = cur;   // always written (an empty array clears the week under a merge write)
+  window._weeklyAssumeOutApply(next);
+  window._weeklyAssumeOutSave(next);
+  if (typeof toast === 'function') toast(i >= 0 ? name + ' back in the Week ' + wk + ' rankings' : name + ' assumed OUT for Week ' + wk);
+  if (typeof render === 'function' && typeof currentMode !== 'undefined' && currentMode === 'weekly') { try { render(); } catch(_e) {} }
+  if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
+  return true;
+};
+// START-OF-WEEK SEED (Jack 2026-10-08): "at the start of the week put all
+// questionable players in the injured/byes section and let me move them out
+// — players trend one direction from the reports but stay listed as
+// Questionable regardless." Every Questionable / Doubtful player inside the
+// weekly cut line (this week's, else last week's, else 150 overall / QB 24 /
+// K 16, read on Jack's SEASON board) starts the week assumed out; Jack moves
+// each one back with UNDO as the week's reports come in. Runs once when the
+// admin client writes the Tuesday roll; the Q → OUT button redoes it by hand.
+window._weeklyAssumeOutSeed = function(wk) {
+  wk = wk || window._weeklyActiveWeek || 1;
+  if (typeof D === 'undefined') return [];
+  const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
+  const season = vb && vb.jacks && vb.jacks.redraft;
+  if (!season) return [];
+  const cutOf = pos => {
+    const m = window._boardCutoff && window._boardCutoff.jacks, key = pos ? ':' + pos : '';
+    const n = m && (m['weekly:' + wk + key] || m['weekly:' + (wk - 1) + key]);
+    return (n >= 1) ? n : (pos === 'QB' ? 24 : pos === 'K' ? 16 : 150);
+  };
+  const grp = { QB: 1, K: 1 };
+  const out = [], posSeen = {};
+  let overall = 0;
+  for (let i = 0; i < season.length; i++) {
+    const d = D[season[i]];
+    if (!d || d._retired || d._isFuturePick || d._isDevy) continue;
+    overall++;
+    posSeen[d.s] = (posSeen[d.s] || 0) + 1;
+    if (d.s === 'DST' || !d.inj) continue;
+    if (grp[d.s] ? posSeen[d.s] > cutOf(d.s) : overall > cutOf(null)) continue;
+    const t = String(d.inj).toLowerCase();
+    if (/\bir\b|\bpup\b|suspend|\bout\b|season/.test(t)) continue;          // already out — the row has him anyway
+    if (!/questionable|doubtful|day.?to.?day|\bgtd\b/.test(t)) continue;
+    if (window._irIsOut && window._irIsOut(d.n)) continue;
+    out.push(d.n);
+  }
+  return out;
+};
+// Admin row chip (weekly table, in season): one click parks a Questionable /
+// Doubtful / unconfirmed-Out player in the BYE / OUT row — the UNDO on that
+// row brings him back (Jack 2026-10-08: "allow me to move them out of
+// injuries to rank them and a way to put them back in if they are out").
+function _assumeOutChip(d) {
+  if (!d || !d.inj || d.s === 'DST') return '';
+  if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return '';
+  if (typeof window.isAdmin !== 'function' || !window.isAdmin()) return '';
+  if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return '';
+  const t = String(d.inj).toLowerCase();
+  if (/\bir\b|\bpup\b|suspend|out for season|season.?ending/.test(t)) return '';
+  if (!/questionable|doubtful|day.?to.?day|\bgtd\b|\bout\b/.test(t)) return '';
+  const wk = window._weeklyActiveWeek || 1;
+  return '<button class="ao-chip" type="button" data-assume-out="' + String(d.n).replace(/"/g, '&quot;') + '" title="Assume ' + String(d.n).replace(/"/g, '&quot;') + ' out for week ' + wk + ' — moves him to the BYE / OUT row (slot kept, PROJ 0); UNDO there brings him back">→ OUT</button>';
+}
+// Not coming back this season (Jack's out-for-season flag, a season-ending
+// tag, or the injury read's season-long return) — the BYE / OUT row lists
+// only players who plan on returning (Jack 2026-10-08).
+function _tcvOutForSeason(d) {
+  if (!d) return false;
+  if (window._irIsOut && window._irIsOut(d.n)) return true;
+  if (/out for season|season.?ending/.test(String(d.inj || '').toLowerCase())) return true;
+  try { const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null; if (x && x.ret && x.ret.season) return true; } catch(_e) {}
+  return false;
+}
 function _tcvOutThisWeek(d) {
+  if (d && typeof currentMode !== 'undefined' && currentMode === 'weekly' && window._weeklyAssumedOut(d.n)) return 'OUT';
   if (!d || !d.inj) return null;
   if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return null;
   const t = String(d.inj).toLowerCase();
@@ -5392,6 +5507,33 @@ function _tcvOppTitle(o) {
   return 'Week ' + o.wk + ': ' + (o.away ? 'at ' : 'vs ') + o.abbr + diffLbl;
 }
 // Vertical-card chip: "vs" / "@" + opponent logo (or BYE), colored by difficulty
+// INJURY DESIGNATION on the tier cards (Jack 2026-10-08: "add their up to
+// date injury designation to the tier cards so it's shown they may miss or
+// they are out"). Q / D / O / IR / PUP / SUS from the live feed tag (same
+// codes as the table pill); in WEEKLY the OPP chip already reads OUT / IR /
+// PUP / SUS for a ruled-out player, so the badge then covers only the ones
+// who MAY miss (Questionable / Doubtful / unconfirmed Out), with the play
+// odds from the injuries read in the tooltip.
+function _tcvInjBadgeHtml(d, cls) {
+  if (!d || !d.inj || d.s === 'DST') return '';
+  const pill = _injPill(d);
+  if (!pill) return '';
+  const code = (pill.match(/data-status="([A-Z]+)"/) || [])[1];
+  if (!code) return '';
+  const weekly = typeof currentMode !== 'undefined' && currentMode === 'weekly';
+  if (weekly && _tcvOutThisWeek(d)) return '';
+  const wk = window._weeklyActiveWeek || 1, wkLbl = weekly ? 'Week ' + wk : 'this week';
+  const word = (typeof _INJ_STATUS_WORDS !== 'undefined' && _INJ_STATUS_WORDS[code]) || code;
+  let pct = null;
+  try { const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null; if (x && x.ret && x.ret.pct != null) pct = Math.round(x.ret.pct * 100); } catch (_e) {}
+  let tip = word + ' — ' + String(d.inj);
+  if (code === 'Q') tip += ' · may miss ' + wkLbl + (pct != null ? ' (' + pct + '% to play)' : '');
+  else if (code === 'D') tip += ' · likely misses ' + wkLbl + (pct != null ? ' (' + pct + '% to play)' : '');
+  else if (code === 'O') tip += weekly ? ' · Out tag not yet confirmed for ' + wkLbl : ' · ruled out';
+  else tip += ' · out';
+  const lbl = code === 'O' ? 'OUT' : code;
+  return '<div class="' + cls + '" data-status="' + code + '" title="' + tip.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '">' + lbl + '</div>';
+}
 function _tcvOppChipHtml(d) {
   const o = _tcvOppInfo(d);
   if (!o) return '';
@@ -5638,6 +5780,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
     '</div>' +
     '<div class="tcv-card-photo">' + logoHtml + headshotHtml + '</div>' +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
+    _tcvInjBadgeHtml(d, 'tcv-inj-badge') +
     (_cs.range && _cs.range.strip ? _tcvRangeStripHtml(d, _cs.range, 'tcv-rng tcv-rng-v') : _tcvOppChipHtml(d)) +
     '<div class="tcv-card-name" style="font-size:' + _tcvCardNameFit(lastName) + 'px" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
@@ -6027,7 +6170,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
     '<div class="tcv-row-img">' + headshotHtml + '</div>' +
     '<div class="tcv-row-id">' +
       '<div class="tcv-row-name" title="' + safe(d.n) + ' · ' + safe(abbr) + '">' + safe(d.n) + '</div>' +
-      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span>' + miniLogoHtml + '</div>' +
+      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span>' + _tcvInjBadgeHtml(d, 'tcv-inj-badge tcv-row-inj') + miniLogoHtml + '</div>' +
     '</div>' +
     oppHtml +
     '<div class="tcv-row-stats">' + statsHtml + '</div>' +
@@ -7636,15 +7779,18 @@ function _tcvByeRowPlayers(data, belowCut) {
   if (!season) return null;
   const out = [], names = new Set();
   let rank = 0;
-  for (let i = 0; i < season.length && rank < limit; i++) {
+  for (let i = 0; i < season.length; i++) {
     const d = D[season[i]];
     if (!d || d._retired || d._isFuturePick || !posSet[d.s]) continue;
     rank++;
+    const assumed = window._weeklyAssumedOut(d.n);
+    if (rank > limit && !assumed) continue;                // past the cutoff (an assumed-out always rides along)
     if (visible.has(d.n)) continue;                        // above the cut — Jack's placement wins
     const why = _tcvAwayWhy(d);
     if (!why) continue;
+    if (why.kind === 'out' && !assumed && _tcvOutForSeason(d)) continue;   // not returning this season
     if (narrowed && !inData.has(d.n)) continue;
-    out.push({ d: d, seasonRank: rank, why: why.kind, code: why.code });
+    out.push({ d: d, seasonRank: rank, why: why.kind, code: why.code, assumed: assumed });
     names.add(d.n);
   }
   return out.length ? { players: out, names: names, limit: limit, custom: customCut != null } : null;
@@ -7796,7 +7942,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:var(--green)">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:var(--text)">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE / OUT</b> row = start-worthy players on bye or ruled out this week (IR / PUP / SUS / confirmed Out) with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:var(--accent-blue)">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:var(--text)">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE / OUT</b> row = start-worthy players on bye, ruled out this week (IR / PUP / SUS / confirmed Out) or assumed out by Jack — season-enders left off — with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:var(--accent-blue)">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:var(--accent)">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:var(--text)">TIERS:</b> hover a card → <b style="color:var(--text)">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:var(--red)">CUT LINE:</b> hover a card → <b style="color:var(--red)">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:var(--text)">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
@@ -7857,7 +8003,7 @@ function _renderTierCardView(data, container) {
     const _byeKinds = g.bye ? { bye: g.players.some(p => p.why !== 'out'), out: g.players.some(p => p.why === 'out') } : null;
     letter.textContent = g.cut ? '✂' : g.bye ? (_byeKinds.bye && _byeKinds.out ? '' : _byeKinds.out ? 'OUT' : 'BYE') : (g.label || '—');
     if (g.bye && _byeKinds.bye && _byeKinds.out) { letter.classList.add('tcv-letter-2l'); letter.innerHTML = 'BYE<br>OUT'; }
-    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : g.bye ? 'NOT PLAYING IN WEEK ' + (window._weeklyActiveWeek || 1) + ' — start-worthy players on bye or ruled out (IR / PUP / SUS / Out), numbered by their SEASON rank (not ranked on this week\'s board). ' : '') + 'Click to hide / reveal every player in this ' + (g.bye ? 'row' : 'tier') + ' (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
+    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : g.bye ? 'NOT PLAYING IN WEEK ' + (window._weeklyActiveWeek || 1) + ' — start-worthy players on bye, ruled out (IR / PUP / SUS / Out) or assumed out by Jack, numbered by their SEASON rank (not ranked on this week\'s board). Players out for the season are left off. ' : '') + 'Click to hide / reveal every player in this ' + (g.bye ? 'row' : 'tier') + ' (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
     // EDIT RANKS: the tier object behind this group (none for ✂ / untiered)
     const _gTier = (!g.cut && g.label && typeof tiers !== 'undefined') ? tiers.find(t => t.label === g.label) : null;
     if (_gTier) row._tcvTierId = _gTier.id;
@@ -8355,7 +8501,7 @@ function render() {
     const n = _byeBlk.players.length;
     let h = `<tr class="tier-row bye-line-row"><td colspan="17"><div class="tier-inner" style="border-color:rgba(148,163,184,.45)">
       <span class="tier-badge bye-badge">BYE</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} ${(() => { const b = _byeBlk.players.some(p => p.why !== 'out'), o = _byeBlk.players.some(p => p.why === 'out'); return b && o ? 'BYES &amp; OUT' : o ? 'RULED OUT' : 'BYES'; })()} · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} ${(() => { const b = _byeBlk.players.some(p => p.why !== 'out'), o = _byeBlk.players.some(p => p.why === 'out'), a = o && _byeBlk.players.every(p => p.why !== 'out' || p.assumed); return b && o ? 'BYES &amp; OUT' : a ? 'ASSUMED OUT' : o ? 'RULED OUT' : 'BYES'; })()} · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
     </div></td></tr>`;
     _byeBlk.players.forEach(p => {
       const d = p.d, dn = (d.n || '').replace(/"/g, '&quot;');
@@ -8368,8 +8514,8 @@ function render() {
         <td class="myrank-cell"><span class="myrank-num bye-rank" title="On bye in week ${wk} — season ${d.s === 'DST' ? 'D/ST' : d.s} rank ${p.seasonRank} on the redraft board (not ranked this week)">${rankLbl}</span></td>
         <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
-        <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
-        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}</td>
+        <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.assumed ? 'Assumed out for week ' + wk + ' (Jack\'s call) — ' : ''}${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
+        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.assumed ? '<b class="bye-assumed" title="Jack assumes he sits this week — not yet ruled out">ASSUMED OUT</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}${p.assumed && typeof window.isAdmin === 'function' && window.isAdmin() ? ` <button class="bye-undo-btn" type="button" data-assume-undo="${dn}" title="Put ${dn} back in the week ${wk} rankings">UNDO</button>` : ''}</td>
       </tr>`;
     });
     return h;
@@ -8728,7 +8874,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || (i + 1)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -10654,6 +10800,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const entry = sched[wk];
     if (!entry) return basePpg;
     if (entry.bye) { _tag('bye'); return 0; }
+    if (typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, wk)) { _tag('out'); return 0; }
     // Injury gate (in-season only — offseason tags are stale)
     let injMult = 1;
     const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
@@ -10935,6 +11082,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   function _weeklyApplySettings(d) {
     const sel = document.getElementById('activeWeekSelect');
     window._weeklyLastSettings = d;
+    if (typeof window._weeklyAssumeOutApply === 'function') window._weeklyAssumeOutApply(d.assumeOut);
     let wk = parseInt(d.week, 10);
     let pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
     if (!(pw >= 1 && pw <= 18)) pw = null;
@@ -10963,6 +11111,31 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
             .catch(e => { console.warn('[Weekly] auto-roll write failed:', e); window._weeklyRollWritten = null; });
         }
       }
+    }
+    // START-OF-WEEK SEED (Jack 2026-10-08): once per week, the admin client
+    // parks every Questionable / Doubtful player inside the cut line in the
+    // BYE / OUT row (window._weeklyAssumeOutSeed) and stamps
+    // assumeOutSeededWeek so an UNDO is never re-parked. Keyed on the stamp,
+    // not the list, and run on any admin load — so a week already under way
+    // (week 5 at ship time) gets seeded on Jack's next visit, not only at
+    // the Tuesday roll.
+    if (wk >= 1 && wk <= 18 && (parseInt(d.assumeOutSeededWeek, 10) || 0) < wk && _weeklyIsAdmin()
+        && window._weeklySeedWritten !== wk && typeof window._weeklyAssumeOutSeed === 'function') {
+      window._weeklySeedWritten = wk;
+      try {
+        const _aoMap = Object.assign({}, window._weeklyAssumeOutMap || {});
+        const _cur = _aoMap[String(wk)] || [];
+        const _seed = window._weeklyAssumeOutSeed(wk).filter(n => _cur.indexOf(n) < 0);
+        _aoMap[String(wk)] = _cur.concat(_seed);
+        window._weeklyAssumeOutApply(_aoMap);
+        let _sdb = null;
+        try { _sdb = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
+        if (_sdb) {
+          _sdb.collection('settings').doc('active_week').set({ assumeOut: _aoMap, assumeOutSeededWeek: wk, assumeOutSeededAt: new Date().toISOString() }, { merge: true })
+            .then(() => { console.log('[Weekly] week ' + wk + ' seed: ' + _seed.length + ' Questionable / Doubtful players parked in the BYE / OUT row'); if (_seed.length && typeof toast === 'function') toast('Week ' + wk + ': ' + _seed.length + ' Questionable / Doubtful player' + (_seed.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — UNDO moves one back'); })
+            .catch(e => { console.warn('[Weekly] assume-out seed write failed:', e); window._weeklySeedWritten = null; });
+        } else window._weeklySeedWritten = null;
+      } catch (_e) { console.warn('[Weekly] assume-out seed failed:', _e); window._weeklySeedWritten = null; }
     }
     if (wk >= 1 && wk <= 18) {
       window._weeklyActiveWeek = wk;
@@ -11021,8 +11194,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const d = window._weeklyLastSettings;
       if (!d) return;
       const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+      const _aw = window._weeklyActiveWeek || 0;
       const pendingAdminWrite = !!(sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw
-        && window._weeklyRollWritten !== sw && _weeklyIsAdmin());
+        && window._weeklyRollWritten !== sw && _weeklyIsAdmin())
+        || !!(_aw && (parseInt(d.assumeOutSeededWeek, 10) || 0) < _aw && window._weeklySeedWritten !== _aw && _weeklyIsAdmin());
       if (sw !== window._weeklyLastScheduleWeek || pendingAdminWrite) _weeklyApplySettings(d);
     } catch (_e) {}
   }, 60000);
@@ -11065,6 +11240,29 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // removed from the WEEKLY board only (other formats keep their full lists),
   // so the injured / irrelevant tail is one action to clear. Session-undoable
   // via entering "undo"; SAVE persists like any other reorder.
+  // Q → OUT: park this week's Questionable / Doubtful players in the BYE / OUT row by hand
+  const _seedBtn = document.getElementById('weeklySeedQBtn');
+  if (_seedBtn && !_seedBtn._bound) {
+    _seedBtn._bound = true;
+    _seedBtn.addEventListener('click', () => {
+      if (currentMode !== 'weekly') { if (typeof toast === 'function') toast('Switch to WEEKLY first'); return; }
+      if (!_weeklyIsAdmin()) { if (typeof toast === 'function') toast('Admins only'); return; }
+      const wk = window._weeklyActiveWeek || 1;
+      const cur = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
+      const add = window._weeklyAssumeOutSeed(wk).filter(n => cur.indexOf(n) < 0);
+      if (!add.length) { if (typeof toast === 'function') toast('No new Questionable / Doubtful players to park for Week ' + wk); return; }
+      if (!confirm('Park ' + add.length + ' Questionable / Doubtful player' + (add.length === 1 ? '' : 's') + ' in the Week ' + wk + ' BYE / OUT row?\n\n'
+        + add.slice(0, 30).join(', ') + (add.length > 30 ? ' …' : '')
+        + '\n\nEach one leaves the weekly board (slot kept) with PROJ 0 until you move him back — UNDO on his row, the Q pill, or the player card. Syncs to every user.')) return;
+      const next = Object.assign({}, window._weeklyAssumeOutMap || {});
+      next[String(wk)] = cur.concat(add);
+      window._weeklyAssumeOutApply(next);
+      window._weeklyAssumeOutSave(next);
+      if (typeof render === 'function') render();
+      if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
+      if (typeof toast === 'function') toast(add.length + ' player' + (add.length === 1 ? '' : 's') + ' parked in the Week ' + wk + ' BYE / OUT row');
+    });
+  }
   const _trimBtn = document.getElementById('weeklyTrimBtn');
   if (_trimBtn && !_trimBtn._bound) {
     _trimBtn._bound = true;
@@ -15955,7 +16153,7 @@ _renderDataFreshness();
 // Camp News section — sits directly under ADP Comparison on the FANTASY tab.
 // Newest ≤3 items from the last 14 days for this player; each headline links
 // out to the source article / X post. Returns '' when there's nothing to show.
-function _campNewsSectionHtml(d) {
+function _campNewsSectionHtml(d, max, days) {
   const idx = window._campNewsIdx;
   if (!idx) return '';
   let items = idx[_campNewsNorm(d.n)] || [];
@@ -15969,10 +16167,10 @@ function _campNewsSectionHtml(d) {
     const tm = items.filter(it => !it.team || it.team === dAbbr);
     if (tm.length !== items.length && tm.length) items = tm;
   }
-  const cutoff = Date.now() - 14 * 24 * 3600 * 1000;
+  const cutoff = Date.now() - (days || 14) * 24 * 3600 * 1000;
   items = items.filter(it => !it.date || (Date.parse(it.date + 'T12:00:00') || 0) >= cutoff);
   if (!items.length) return '';
-  items = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
+  items = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, max || 3);
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const tagColor = { injury: 'var(--red)', faller: 'var(--red)', riser: 'var(--green)',
                      role: 'var(--accent)', transaction: 'var(--accent)' };
@@ -15992,7 +16190,7 @@ function _campNewsSectionHtml(d) {
     </div>`;
   }).join('');
   return `<div class="card-section">
-    <div class="card-section-title">Camp News <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· auto-scanned 2x daily</span></div>
+    <div class="card-section-title">News <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· auto-scanned 2x daily</span></div>
     <div style="margin-top:-.15rem">${rows}</div>
   </div>`;
 }
@@ -16233,6 +16431,10 @@ function buildWeeklyCardView(d) {
     }
   } catch (_e) {}
 
+  // Week N prop lines (2026-10-08): moved here from the retired LINES tab, so the
+  // weekly view carries matchup, projection, recent games and the books in one place.
+  try { html += _buildWeeklyLinesSection(d); } catch (_e) {}
+
   return html;
 }
 
@@ -16256,6 +16458,10 @@ function _loadLinesHistory() {
       const host = document.getElementById('cardLinesView');
       if (host && window._linesCardD && typeof buildLinesView === 'function') {
         host.innerHTML = buildLinesView(window._linesCardD);
+      }
+      const wkHost = document.getElementById('cardWeeklyView');
+      if (wkHost && window._weeklyCardD && typeof buildWeeklyCardView === 'function') {
+        wkHost.innerHTML = buildWeeklyCardView(window._weeklyCardD);
       }
       return j;
     })
@@ -16946,6 +17152,9 @@ function _injShowDetail(d, pillEl) {
     rows.push(['Proj impact', '-' + Math.round((1 - d._injDiscount.mult) * 100) + '% baked into Proj PPG']);
   }
   if (det && det.n && det.n.toLowerCase() !== (body || '').toLowerCase()) rows.push(['Note', det.n]);
+  var _aoWk = window._weeklyActiveWeek || 1;
+  var _aoOn = typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, _aoWk);
+  if (_aoOn) rows.push(['Week ' + _aoWk, "Assumed out — Jack's call (not yet ruled out)"]);
   var newsHtml = '';
   if (window._campNewsIdx) {
     var arr = window._campNewsIdx[_campNewsNorm(d.n)];
@@ -16965,6 +17174,18 @@ function _injShowDetail(d, pillEl) {
       return '<span class="injp-k">' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span>';
     }).join('') + '</div>' + newsHtml +
     '<div class="injp-foot">Sleeper injury feed' + (upd && !isNaN(upd) ? ' · updated ' + upd.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '') + '</div>';
+  // Admin, in WEEKLY: assume a Q / D / unconfirmed-Out player out for the week (or undo it)
+  if (typeof window.isAdmin === 'function' && window.isAdmin() && typeof currentMode !== 'undefined' && currentMode === 'weekly'
+      && code !== 'IR' && code !== 'PUP' && code !== 'SUS' && d.s !== 'DST' && typeof window._weeklyAssumeOutToggle === 'function') {
+    var _aoBtn = document.createElement('button');
+    _aoBtn.type = 'button';
+    _aoBtn.className = 'injp-assume' + (_aoOn ? ' on' : '');
+    _aoBtn.textContent = _aoOn ? 'UNDO · BACK IN WEEK ' + _aoWk : 'ASSUME OUT · WEEK ' + _aoWk;
+    _aoBtn.title = _aoOn ? 'Put him back on the Week ' + _aoWk + ' board'
+      : 'Treat him as out for Week ' + _aoWk + ' before the designation lands: pulled off the weekly board into the BYE / OUT row, weekly PROJ 0, OPP reads OUT. His weekly slot is kept — undo any time. Syncs to every user.';
+    _aoBtn.addEventListener('click', function (ev) { ev.stopPropagation(); pop.style.display = 'none'; window._weeklyAssumeOutToggle(d.n, _aoWk); });
+    pop.appendChild(_aoBtn);
+  }
   pop._forName = d.n;
   pop.style.display = 'block';
   var r = pillEl.getBoundingClientRect();
@@ -16974,6 +17195,14 @@ function _injShowDetail(d, pillEl) {
   pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
 }
 window._injShowDetail = _injShowDetail;
+// BYE / OUT row UNDO (admin): put an assumed-out player back on the weekly board
+document.addEventListener('click', function (e) {
+  var b = e.target && e.target.closest ? e.target.closest('[data-assume-undo],[data-assume-out]') : null;
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  var nm = b.getAttribute('data-assume-undo') || b.getAttribute('data-assume-out');
+  if (typeof window._weeklyAssumeOutToggle === 'function') window._weeklyAssumeOutToggle(nm);
+}, true);
 // Name-keyed pill for surfaces that render rows from name strings (My Teams):
 // resolves the D row via nameToIdx and wraps the pill with the data-injname
 // hook the document-level delegate below reads. Empty string when healthy or
@@ -17118,7 +17347,7 @@ async function _snapElement(el, fileLabel) {
   if (window._hsNormalizeAll) await window._hsNormalizeAll(el);   // square-headshot crop before capture
   const src = await window.html2canvas(el, {
     backgroundColor: bg, scale: SCALE, useCORS: true, logging: false,
-    ignoreElements: node => !!((node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close') || node.classList.contains('card-finder-row'))) || node.id === 'cardIrToggle'),
+    ignoreElements: node => !!((node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close') || node.classList.contains('card-finder-row'))) || node.id === 'cardIrToggle' || node.id === 'cardAssumeOutToggle'),
     // html2canvas ignores object-fit and stretches covered imgs (player
     // headshots). Swap them for background-image divs — background-size:
     // cover renders correctly — keeping size, radius, border and position.
@@ -17648,6 +17877,36 @@ function openPlayerCard(d, ctxMode) {
       }
     });
   }
+  // DYNASTY tab (2026-10-08): the JM score + component breakdown come from the prospect
+  // model, which is built lazily (prospect page / dynasty boards). Kick the build off on
+  // the first card open and re-open this card in place once it lands, keeping the tab
+  // and scroll position the user is on. _pmCardBuildPending blocks a second build.
+  if (typeof window._attachJmScores === 'function' && !(window._pmBuiltData && window._pmBuiltData().length) && !window._pmCardBuildPending) {
+    window._pmCardBuildPending = true;
+    const _pmName = d && d.n;
+    if (window._attachJmScores() === true) {
+      window._pmCardBuildPending = false;
+    } else {
+      const _pmPoll = setInterval(function() {
+        if (!(window._pmBuiltData && window._pmBuiltData().length)) return;
+        clearInterval(_pmPoll);
+        window._pmCardBuildPending = false;
+        if (window._cardOpenName !== _pmName || !modal || !modal.classList.contains('open')) return;
+        try {
+          const _cardNow = document.getElementById('playerCard');
+          const _activeBtn = _cardNow && _cardNow.querySelector('.card-view-btn.active');
+          const _activeView = _activeBtn ? _activeBtn.dataset.cardview : null;
+          const _scrollNow = _cardNow ? _cardNow.scrollTop : 0;
+          openPlayerCard(d, ctxMode);
+          const _again = document.getElementById('playerCard');
+          const _btn = _activeView && _again && _again.querySelector('.card-view-btn[data-cardview="' + _activeView + '"]');
+          if (_btn && !_btn.classList.contains('active')) _btn.click();
+          if (_again) _again.scrollTop = _scrollNow;
+        } catch (e) {}
+      }, 400);
+      setTimeout(function() { clearInterval(_pmPoll); window._pmCardBuildPending = false; }, 30000);
+    }
+  }
   // Retired players' careers come from the lazy retired bundle; weekly game logs for
   // ALL players come from the lazy weekly bundles (weekly_stats_active.js joined them
   // 2026-07-20 — it's no longer eager). Fire the loads on click so the card fills in
@@ -17745,6 +18004,45 @@ function openPlayerCard(d, ctxMode) {
     }
   }
 
+  // NEWS tab (2026-10-08): the camp-news feed gets its own tab (10 items / 60 days);
+  // the tab button only renders when there is something to show.
+  const _newsHtml = (!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d, 10, 60) : '';
+  // DYNASTY tab (2026-10-08): the old INFO + COMPS tabs fold in. Career highlights ride on top
+  // of the FANTASY career block; the contract fields sit under Prospect Info (height / weight /
+  // college already live there, so the Bio duplicates are dropped).
+  const _careerHlHtml = (!_is2026 && d.career && d.career.length > 0) ? (() => {
+    const _cr = d.career;
+    const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
+    const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
+    const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
+    return `<div class="card-section">
+      <div class="card-section-title">Career Highlights</div>
+      <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr">
+        <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
+        <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
+        <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
+        <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
+        <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
+        <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
+      </div>
+    </div>`;
+  })() : '';
+  const _contractHtml = (!d._retired && !_is2026) ? `<div class="card-section">
+    <div class="card-section-title">Contract</div>
+    <div class="card-grid">
+      <div class="card-stat"><span class="card-stat-label">Draft Capital</span><span class="card-stat-value">${draftRdLabel(d.dr)}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Contract (AAV)</span><span class="card-stat-value">${d.sal != null ? '$' + fmt(d.sal, 2) + 'M' : '—'}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Contract Year</span><span class="card-stat-value">${(d.cyr != null && !isNaN(+d.cyr)) ? fmtInt(d.cyr) : (d.cyr || '—')}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Potential Out</span><span class="card-stat-value">${(d.out != null && !isNaN(+d.out)) ? fmtInt(d.out) : (d.out || '—')}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Jersey</span><span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span></div>
+    </div>
+  </div>` : (d._retired && d._debut && d._last) ? `<div class="card-section">
+    <div class="card-section-title">Career Span</div>
+    <div class="card-grid">
+      <div class="card-stat"><span class="card-stat-label">Years Active</span><span class="card-stat-value">${d._debut + '–' + d._last}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Jersey</span><span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span></div>
+    </div>
+  </div>` : '';
   cardEl.innerHTML = `
     <div class="card-header">
       <button class="card-share" id="cardShare" title="Copy a shareable link to this player" aria-label="Copy share link">
@@ -17767,8 +18065,10 @@ function openPlayerCard(d, ctxMode) {
             ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
             ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
             ${_buildInjuryBadge(d)}
+            ${(typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow()) ? `<span class="inj-pill" data-status="O" title="Jack assumes he sits in Week ${window._weeklyActiveWeek || 1} — pulled from the weekly board into the BYE / OUT row until he is cleared or ruled out">ASSUMED OUT WK ${window._weeklyActiveWeek || 1}</span>` : ''}
             ${window._irIsOut(d.n) ? `<span class="inj-pill" data-status="OUT" title="Out for season — hidden from the ${IR_SEASON} Redraft / Best Ball / Superflex / Weekly rankings. Dynasty boards and this card are unaffected; the flag clears automatically next season.">OUT FOR SEASON</span>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026) ? `<button id="cardIrToggle" title="${window._irIsOut(d.n) ? 'Restore this player to the season rankings (their board slot was kept)' : 'Hide this player from the ' + IR_SEASON + ' Redraft / Best Ball / Superflex / Weekly rankings — board slot, dynasty ranks, card and search are kept, and the flag auto-clears next season'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};background:transparent;color:${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};white-space:nowrap">${window._irIsOut(d.n) ? 'RESTORE TO RANKINGS' : 'MARK OUT FOR SEASON'}</button>` : ''}
+            ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026 && d.s !== 'DST' && !window._irIsOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow() && typeof window._weeklyAssumeOutToggle === 'function') ? (() => { const _aw = window._weeklyActiveWeek || 1, _on = window._weeklyAssumedOut(d.n, _aw); return `<button id="cardAssumeOutToggle" title="${_on ? 'Put him back on the Week ' + _aw + ' board' : 'Treat him as out for Week ' + _aw + ' before the designation lands: pulled off the weekly board into the BYE / OUT row, weekly PROJ 0, OPP reads OUT. Weekly slot kept — undo any time. Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_on ? 'var(--green)' : '#f59e0b'};background:transparent;color:${_on ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${_on ? 'BACK IN WEEK ' + _aw : 'ASSUME OUT WEEK ' + _aw}</button>`; })() : ''}
           </div>
           ${_playerRoleRow(d)}
           ${_usageTrendRow(d)}
@@ -17778,13 +18078,9 @@ function openPlayerCard(d, ctxMode) {
     <div class="card-body">
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
-        ${_showLogs ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>` : ''}
-        ${_showCareer ? `<button class="card-view-btn" data-cardview="career" id="cardCareerTabBtn"${(_hasCareerRows || _career2026Row(d)) ? '' : ' style="display:none"'}>CAREER</button>` : ''}
-        <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
-        <button class="card-view-btn" data-cardview="comps">COMPS</button>
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
-        ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
-        <button class="card-view-btn" data-cardview="info">INFO</button>
+        <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">DYNASTY</button>
+        ${_newsHtml ? `<button class="card-view-btn" data-cardview="news">NEWS</button>` : ''}
       </div>` : ''}
       <div class="card-pin-strip" id="cardPinStrip"></div>
       <div id="cardNotesWrap"></div>
@@ -17818,78 +18114,7 @@ function openPlayerCard(d, ctxMode) {
         </div>
       </div>` : ''}
 
-      ${_seasonProjSectionHtml(d)}
-
-      ${!d._retired ? (() => {
-        // Mode-aware ADPs scoped to the calling context (Trade Calc dynasty,
-        // My Teams dynasty league, etc.) — uses the helpers defined above.
-        // K/DST included since 2026-08-06: FP/ESPN/Yahoo rank them in their
-        // overall lists, Sleeper ADP covers D/ST; sources without K/DST data
-        // (Underdog, KTC, CBS) just show '—'.
-        const _udAdp = _udAdpInCtx();
-        const _slpAdp = _slpAdpInCtx();
-        const _fmt = v => v != null ? v : '—';
-        // Platform favicon (icons/adp_*.png) inline before the ADP number.
-        const _adpLogo = k => `<img src="icons/adp_${k}.png" alt="" style="width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px">`;
-        // Dynasty contexts swap ESPN/Yahoo (which don't publish dynasty ADPs)
-        // for KTC (the dynasty value standard). Uses KTC_SF map for Superflex.
-        if (_isDynastyCtx) {
-          // KTC shown as a RANK (#12, with the position rank beneath), value
-          // in the hover — see _ktcRankInfo.
-          const _ktcInfo = _ktcRankInfo(d.n, _ctxMode);
-          const _ktcVal = _ktcInfo ? _ktcInfo.ovr : null;
-          const _ktcTip = _ktcInfo ? ('KTC ' + (_ctxMode === 'dynastysf' ? 'Superflex' : '1QB') + ' rank #' + _ktcInfo.ovr + (_ktcInfo.posRank != null ? ' · ' + _ktcInfo.pos + _ktcInfo.posRank : '') + ' · value ' + _ktcInfo.val.toLocaleString()) : 'Not on KTC\'s dynasty list';
-          const _ktcSub = (_ktcInfo && _ktcInfo.posRank != null) ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:2px">' + _ktcInfo.pos + _ktcInfo.posRank + '</div>' : '';
-          return `<div class="card-section">
-          <div class="card-section-title">ADP Comparison <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
-          <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">
-            <div class="card-rank-box">
-              <div class="lbl">Underdog</div>
-              <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('underdog')}${_fmt(_udAdp)}</div>
-            </div>
-            <div class="card-rank-box">
-              <div class="lbl">Sleeper</div>
-              <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('sleeper')}${_fmt(_slpAdp)}</div>
-            </div>
-            <div class="card-rank-box">
-              <div class="lbl" title="${_ktcTip.replace(/"/g, '&quot;')}" style="cursor:help">KTC</div>
-              <div class="num${_ktcVal != null ? ' accent' : ''}"${_ktcVal == null ? ' style="color:var(--text2)"' : ''} title="${_ktcTip.replace(/"/g, '&quot;')}">${_adpLogo('ktc')}${_ktcVal != null ? '#' + _ktcVal : '—'}</div>${_ktcSub}
-            </div>
-          </div>
-        </div>`;
-        }
-        // Redraft / Best Ball / Superflex — ESPN, CBS & Yahoo are wired from
-        // d.js (espnAdp / cbsAdp / yahooAdp = that site's rank order, 1QB
-        // redraft, injected by inject_rankings.py).
-        const _espnAdp = d.espnAdp != null ? d.espnAdp : null;
-        const _cbsAdp  = d.cbsAdp  != null ? d.cbsAdp  : null;
-        const _yahAdp = d.yahooAdp != null ? d.yahooAdp : null;
-        return `<div class="card-section">
-        <div class="card-section-title">ADP Comparison <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
-          <div class="card-rank-box">
-            <div class="lbl">Underdog</div>
-            <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('underdog')}${_fmt(_udAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">Sleeper</div>
-            <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('sleeper')}${_fmt(_slpAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">ESPN</div>
-            <div class="num${_espnAdp != null ? ' accent' : ''}"${_espnAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('espn')}${_fmt(_espnAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">CBS</div>
-            <div class="num${_cbsAdp != null ? ' accent' : ''}"${_cbsAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('cbs')}${_fmt(_cbsAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">Yahoo</div>
-            <div class="num${_yahAdp != null ? ' accent' : ''}"${_yahAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('yahoo')}${_fmt(_yahAdp)}</div>
-          </div>
-        </div>
-      </div>`;
-      })() : ''}
+      <!-- ADP Comparison retired from the card 2026-10-08 (draft season over) -->
 
       ${(!d._retired && (d.bye || _SOS_POS.has(d.s))) ? (() => {
         // Playoff Schedule row: Bye + W15 + W16 + W17 + Total P-SOS
@@ -17946,8 +18171,6 @@ function openPlayerCard(d, ctxMode) {
           </div>
         </div>`;
       })() : ''}
-
-      ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
       ${(d.s === 'K' || d.s === 'DST') && !_is2026 && ((d.career && d.career.length > 0) || _kdstHasHistory(d))
         ? _kdstWeeklyProjSectionHtml(d) + _buildWeeklyLinesSection(d) + _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
@@ -18115,6 +18338,7 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-stat"><span class="card-stat-label">Draft Team</span><span class="card-stat-value">${cb.dt || '—'}</span></div>
         </div>
       </div>
+      ${_contractHtml}
       ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (PPR)</span>
@@ -18153,6 +18377,7 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-stat"><span class="card-stat-label">Position</span><span class="card-stat-value">${d.s}</span></div>
         </div>
       </div>
+      ${_contractHtml}
       ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (PPR)</span>
@@ -18173,8 +18398,7 @@ function openPlayerCard(d, ctxMode) {
         </div>
         <div id="collegeLogContent">${buildCollegeTable(d, 'ppr')}</div>
       </div>` : ''}`; })()}
-      </div>
-      <div class="card-prospect-view" id="cardCompsView" style="display:none">
+      <div id="cardCompsView">
       ${_ageCompsHtml(d)}
       ${(function(){
         // === PROSPECT COMPS ===
@@ -18244,112 +18468,19 @@ function openPlayerCard(d, ctxMode) {
         return html2;
       })()}
       </div>
-      <div class="card-prospect-view" id="cardInfoView" style="display:none">
-      ${!_is2026 && d.career && d.career.length > 0 ? (() => {
-        const _cr = d.career;
-        const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
-        const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
-        const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
-        return `<div class="card-section">
-        <div class="card-section-title">Career Highlights</div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
-          <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
-        </div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">
-          <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
-          <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
-        </div>
-      </div>`;
-      })() : ''}
-
-      ${d.inj ? `<div class="card-section">
-        <div class="card-section-title">Injury Status</div>
-        <div style="padding:8px 4px">${_buildInjuryBadge(d)}</div>
-      </div>` : ''}
-
-      ${!d._retired && !_is2026 ? `<div class="card-section">
-        <div class="card-section-title">Bio</div>
-        <div class="card-grid">
-          <div class="card-stat">
-            <span class="card-stat-label">Draft Capital</span>
-            <span class="card-stat-value">${draftRdLabel(d.dr)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Contract (AAV)</span>
-            <span class="card-stat-value">${d.sal != null ? '$' + fmt(d.sal, 2) + 'M' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Contract Year</span>
-            <span class="card-stat-value">${d.cyr != null ? fmtInt(d.cyr) : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Potential Out</span>
-            <span class="card-stat-value">${d.out != null ? fmtInt(d.out) : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Height</span>
-            <span class="card-stat-value">${fmtHeight(d._height)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Weight</span>
-            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Jersey</span>
-            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">College</span>
-            <span class="card-stat-value">${d._college || '—'}</span>
-          </div>
-        </div>
-      </div>` : (d._height || d._weight || d.dr || d._college) ? `<div class="card-section">
-        <div class="card-section-title">Bio</div>
-        <div class="card-grid">
-          <div class="card-stat">
-            <span class="card-stat-label">Height</span>
-            <span class="card-stat-value">${fmtHeight(d._height)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Weight</span>
-            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Draft Pick</span>
-            <span class="card-stat-value">${d.dr != null ? '#' + d.dr + ' Overall' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">College</span>
-            <span class="card-stat-value">${d._college || '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Jersey</span>
-            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Years Active</span>
-            <span class="card-stat-value">${d._debut && d._last ? d._debut + '–' + d._last : '—'}</span>
-          </div>
-        </div>
-      </div>` : ''}
       </div>
       <div class="card-prospect-view" id="cardWeeklyView" style="display:none">
       ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
       </div>
-      <div class="card-prospect-view" id="cardLinesView" style="display:none">
-      ${(d.s === 'K' || d.s === 'DST') ? '' : buildLinesView(d)}
-      </div>
-      ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
-      <div class="card-prospect-view" id="cardCareerView" style="display:none">
-      ${_careerSectionHtml(d, true)}
-      </div>` : ''}
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
-      <div class="card-prospect-view" id="cardLogsView" style="display:none">
+      <div class="card-prospect-view card-fantasy-extra" id="cardLogsView" data-ready="${hasWeeklyData(d) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && hasWeeklyData(d)) ? 'block' : 'none'}">
       ${_logsSectionHtml(d)}
       </div>` : ''}
+      ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
+      <div class="card-prospect-view card-fantasy-extra" id="cardCareerView" data-ready="${(_hasCareerRows || _career2026Row(d)) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && (_hasCareerRows || _career2026Row(d))) ? 'block' : 'none'}">
+      ${_careerHlHtml}${_careerSectionHtml(d, true)}
+      </div>` : ''}
+      <div class="card-prospect-view" id="cardNewsView" style="display:none">${_newsHtml}</div>
     </div>
   `;
 
@@ -18358,33 +18489,8 @@ function openPlayerCard(d, ctxMode) {
   _renderCardPinStrip(d, _ctxMode);
   if (typeof window._renderCardNotes === 'function') window._renderCardNotes(d);
 
-  // FIND TRADE FOR ME — appears when the player is rostered in a synced league
-  // (and isn't on your team). One click → Trade Calc → Find Trade with target pre-filled.
-  try {
-    if (typeof window._finderHasOwner === 'function' && d && d.idx != null) {
-      const _finderInfo = window._finderHasOwner(d.idx);
-      if (_finderInfo) {
-        const _btn = document.createElement('button');
-        _btn.className = 'card-finder-btn';
-        _btn.innerHTML = '<span style="font-size:.85rem;line-height:1">🎯</span> FIND TRADE FOR ME';
-        _btn.title = 'Owned by ' + _finderInfo.team.owner + (_finderInfo.league.name ? ' · ' + _finderInfo.league.name : '');
-        _btn.addEventListener('click', () => {
-          if (typeof closeCard === 'function') closeCard();
-          if (typeof window._finderShowAndRun === 'function') {
-            setTimeout(() => window._finderShowAndRun(d.idx), 60);
-          }
-        });
-        const _meta = cardEl.querySelector('.card-meta');
-        if (_meta && _meta.parentElement) {
-          const _row = document.createElement('div');
-          _row.className = 'card-finder-row';
-          _row.style.cssText = 'margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap';
-          _row.appendChild(_btn);
-          _meta.parentElement.insertBefore(_row, _meta.nextSibling);
-        }
-      }
-    }
-  } catch (_e) {}
+  // FIND TRADE FOR ME button removed from the card header 2026-10-08 (Jack); the
+  // finder itself still lives in Trade Calc → Find Trade.
 
   // Admin-only: OUT FOR SEASON toggle — flags the player hidden from the
   // season-format rankings (see window._irToggle) and refreshes the card so
@@ -18397,6 +18503,14 @@ function openPlayerCard(d, ctxMode) {
       if (label && !confirm(label)) return;
       if (!window._irToggle(d.n)) return;
       toast(wasOut ? d.n + ' restored to the season rankings' : d.n + ' hidden from ' + IR_SEASON + ' season rankings (' + window._irFlagged().length + ' player' + (window._irFlagged().length === 1 ? '' : 's') + ' flagged)');
+      if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
+    });
+  }
+
+  const _cardAoBtn = document.getElementById('cardAssumeOutToggle');
+  if (_cardAoBtn) {
+    _cardAoBtn.addEventListener('click', () => {
+      if (!window._weeklyAssumeOutToggle(d.n)) return;
       if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
     });
   }
@@ -18453,18 +18567,17 @@ function openPlayerCard(d, ctxMode) {
         const wv = document.getElementById('cardWeeklyView');
         const crv = document.getElementById('cardCareerView');
         const lgv = document.getElementById('cardLogsView');
+        const nv = document.getElementById('cardNewsView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
-        if (cv) cv.style.display = 'none';
         if (iv) iv.style.display = 'none';
         if (lv) lv.style.display = 'none';
         if (wv) wv.style.display = 'none';
         if (crv) crv.style.display = 'none';
         if (lgv) lgv.style.display = 'none';
+        if (nv) nv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
-        } else if (view === 'comps') {
-          if (cv) cv.style.display = 'block';
         } else if (view === 'info') {
           if (iv) iv.style.display = 'block';
         } else if (view === 'lines') {
@@ -18475,8 +18588,13 @@ function openPlayerCard(d, ctxMode) {
           if (crv) crv.style.display = 'block';
         } else if (view === 'logs') {
           if (lgv) lgv.style.display = 'block';
+        } else if (view === 'news') {
+          if (nv) nv.style.display = 'block';
         } else {
           fv.classList.remove('hidden');
+          // Game logs + career ride along inside FANTASY (2026-10-08) once they have data
+          if (lgv && lgv.dataset.ready === '1') lgv.style.display = 'block';
+          if (crv && crv.dataset.ready === '1') crv.style.display = 'block';
         }
       });
     });
@@ -18578,6 +18696,8 @@ function openPlayerCard(d, ctxMode) {
       _clRefresh();
       const clTabBtn = document.getElementById('cardCareerTabBtn');
       if (clTabBtn && clContent.innerHTML.trim()) clTabBtn.style.display = '';
+      const clView = document.getElementById('cardCareerView');
+      if (clView && clContent.innerHTML.trim()) { clView.dataset.ready = '1'; const _fv = document.getElementById('cardFantasyView'); if (_fv && !_fv.classList.contains('hidden')) clView.style.display = 'block'; }
     });
   }
   // L4 PPG also comes from the lazy weekly bundle — a card opened before it
@@ -18640,6 +18760,8 @@ function openPlayerCard(d, ctxMode) {
       }
       const glTabBtn = document.getElementById('cardLogsTabBtn');
       if (glTabBtn) glTabBtn.style.display = '';
+      const glView = document.getElementById('cardLogsView');
+      if (glView) { glView.dataset.ready = '1'; const _fv = document.getElementById('cardFantasyView'); if (_fv && !_fv.classList.contains('hidden')) glView.style.display = 'block'; }
       if (glYearSelect) {
         // Rebuild in full: pre-bundle the selector may hold only the 2026
         // schedule entry. Default to the newest season with real game data.

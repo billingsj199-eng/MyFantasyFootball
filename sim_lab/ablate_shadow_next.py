@@ -19,17 +19,19 @@ from bt_common import load_games
 cal = SN.cal; YEARS = SN.YEARS; NW = SN.NW; CACHE = r"E:\MyFantasyFootball\pbp_cache"
 
 def main():
-    log = open(os.path.join(HERE, "ablate_shadow_next.log"), "w", encoding="utf-8")
+    TOPN = int(os.environ.get("ABL_TOP", "150")); WPOW = float(os.environ.get("ABL_WPOW", "2"))   # 2026-10-08 Jack: top-100 focus, steeper weights (ABL_TOP=100 ABL_WPOW=3)
+    log = open(os.path.join(HERE, "ablate_shadow_next.log" if TOPN == 150 and WPOW == 2 else f"ablate_shadow_next_top{TOPN}_p{WPOW:g}.log"), "w", encoding="utf-8")
     def P(s=""): print(s); log.write(s + "\n"); log.flush()
     X = SN.setup(); n = X["n"]; F = X["F"]
     act, year, wk, pos, g, adp, name, team = X["act"], X["year"], X["wk"], X["pos"], X["g"], X["adp"], X["name"], X["team"]
     SH = SN.shadow(X)
-    finw = np.where(year <= 2020, 17, 18); final = wk == finw; top150 = adp <= 150
+    finw = np.where(year <= 2020, 17, 18); final = wk == finw; top150 = adp <= TOPN
     lv = F["adp_curve"].copy()
     for ps in NW.POS4:
         m = pos == ps; lv[m & np.isnan(lv)] = np.nanmin(lv[m]); lv[m] = lv[m] / lv[m & top150].mean()
-    wt = np.maximum(0.05, lv) ** 2
+    wt = np.maximum(0.05, lv) ** WPOW
     base = top150 & ~final; allr = ~final & (SH >= 3)
+    adpx = np.where(np.isnan(adp), 999.0, adp); BANDS = (("ADP 1-12", adpx <= 12), ("13-30", (adpx > 12) & (adpx <= 30)), ("31-60", (adpx > 30) & (adpx <= 60)), ("61-100", (adpx > 60) & (adpx <= 100)))
     wm = lambda q, mm: float(np.average((q[mm] - act[mm]) ** 2, weights=wt[mm])) if mm.any() else np.nan
     ms = lambda q, mm: float(np.mean((q[mm] - act[mm]) ** 2)) if mm.any() else np.nan
     def rho(p, m):
@@ -80,14 +82,24 @@ def main():
               "WR dock when the QB is out", "snap trend (engine layer), RB", "snap trend (engine layer), WR", "snap trend (engine layer), TE", "v2.25 snap-share level, WR", "v2.25 snap-share level, TE", "v2.25 QB changed teams x.90", "v2.25 QB low team total", "v2.25 rookie WR games 2-5 x.90", "v2.25 RB under 30% of carries, games 2-5 x.90"]
     FULL = full()
     P(f"=== ablation, next game: {int(allr.sum()):,} player-weeks ({int(base.sum()):,} top-150); full model rank order {rho(FULL, base):.4f} ===")
-    P(f"    {'piece':46s} rows  | all rows (seasons it helps) | top-150 weighted (seasons) | rank order | verdict")
+    P(f"    top {TOPN}, weights ADP-curve^{WPOW:g}. Full model by band (rank order / pairs / level act/proj):")
+    for bl_, bm in BANDS:
+        mb = base & bm; groups = defaultdict(list)
+        for i in np.where(mb)[0]: groups[(int(year[i]), int(wk[i]), pos[i])].append(i)
+        pw = tot = 0
+        for ix in (np.array(x) for x in groups.values()):
+            if len(ix) < 4: continue
+            d = FULL[ix][:, None] - FULL[ix][None, :]; o = act[ix][:, None] - act[ix][None, :]; iu = np.triu_indices(len(ix), 1); okp = (d[iu] != 0) & (o[iu] != 0); pw += int(((d[iu] > 0) == (o[iu] > 0))[okp].sum()); tot += int(okp.sum())
+        P(f"      {bl_:10s} n{int(mb.sum()):5d} | pairs right {100*pw/max(1,tot):.1f}% | level {act[mb].sum()/FULL[mb].sum():.3f} | " + " ".join(f"{ps} {act[mb & (pos == ps)].sum()/max(1e-9, FULL[mb & (pos == ps)].sum()):.3f}" for ps in NW.POS4 if (mb & (pos == ps)).sum() >= 30))
+    P(f"    {'piece':46s} rows  | all rows (seasons it helps) | top-{TOPN} weighted (seasons) | rank order | top-30 wtd | 31-100 wtd | verdict")
     for k in PIECES:
         WO = full((k,)); tt = allr & (np.abs(WO - FULL) > 1e-9)
         a = 100 * (ms(FULL, allr) / ms(WO, allr) - 1); b = 100 * (wm(FULL, base) / wm(WO, base) - 1); r = rho(FULL, base) - rho(WO, base)
         sa = sum(1 for y in YEARS if ms(FULL, allr & (year == y)) < ms(WO, allr & (year == y)) - 1e-12); sb = sum(1 for y in YEARS if wm(FULL, base & (year == y)) < wm(WO, base & (year == y)) - 1e-12)
         tr = 100 * (ms(FULL, tt) / ms(WO, tt) - 1) if tt.any() else 0.0
         bad = (a > 0) + (b > 0) + (r < 0)
-        P(f"    {k:46s} {int(tt.sum()):5d} | {a:+6.2f}% ({sa}/7)            | {b:+6.2f}% ({sb}/7)            | {r:+.4f}    | {'HURTS' if bad >= 2 else 'mixed' if bad == 1 else 'helps'}   (its own rows {tr:+.2f}%)")
+        m30 = base & (adpx <= 30); m31 = base & (adpx > 30) & (adpx <= 100); b30 = 100 * (wm(FULL, m30) / wm(WO, m30) - 1); b31 = 100 * (wm(FULL, m31) / wm(WO, m31) - 1)
+        P(f"    {k:46s} {int(tt.sum()):5d} | {a:+6.2f}% ({sa}/7)            | {b:+6.2f}% ({sb}/7)            | {r:+.4f}    | {b30:+6.2f}% | {b31:+6.2f}% | {'HURTS' if bad >= 2 else 'mixed' if bad == 1 else 'helps'}   (its own rows {tr:+.2f}%)")
 
     P(); P("  snap TREND (engine layer) vs snap LEVEL (v2.25), by position - the four combinations, on that position's rows (vs neither):")
     for ps_ in ("WR", "TE"):

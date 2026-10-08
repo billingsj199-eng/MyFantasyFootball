@@ -1,0 +1,22 @@
+replica check vs BR.shadow_current: max |diff| 0.0000
+=== TIER TREATMENT: 7,517 top-100 player-weeks (cubed ADP weights) ===
+  level by band, shadow (act/proj): ADP 1-12 1.007 (RB 1.012 WR 1.005 TE 0.914) | 13-30 1.017 (QB 0.964 RB 1.030 WR 1.022 TE 1.073) | 31-60 1.031 (QB 0.987 RB 1.021 WR 1.051 TE 1.079) | 61-100 1.021 (QB 1.032 RB 0.990 WR 1.045 TE 0.977) | 101-150 0.993 (QB 1.007 RB 0.990 WR 0.960 TE 1.040)
+  pairs ordered right by band: ADP 1-12 51.2% | 13-30 57.8% | 31-60 53.8% | 61-100 61.9% | 101-150 62.7%
+
+--- T2 / T3: tier switches on the layers that cost the top 30 ---
+  T2 RB snap-trend docks off, ADP <= 30          top-100 cubed  -0.07% (5/7 on its rows) | top-30  -0.11% | 31-100  +0.00% | top-150 sq  -0.06% | rank +0.0013 pairs +0.05
+      on its own rows (n1143): fixed -0.21% | LOYO wins 5/7 picks ['on', 'on', 'on', 'on', 'on', 'on', 'off'] | forward wins 3/4
+  T2' RB snap-trend docks off, ADP <= 60         top-100 cubed  -0.07% (4/7 on its rows) | top-30  -0.11% | 31-100  +0.01% | top-150 sq  -0.06% | rank +0.0013 pairs +0.06
+      on its own rows (n2452): fixed -0.11% | LOYO wins 5/7 picks ['on', 'on', 'on', 'on', 'on', 'on', 'off'] | forward wins 3/4
+  T3 QB game-total tilt off, ADP <= 30           top-100 cubed  -0.06% (5/7 on its rows) | top-30  -0.08% | 31-100  +0.00% | top-150 sq  -0.05% | rank -0.0005 pairs -0.01
+      on its own rows (n179): fixed -1.72% | LOYO wins 5/7 picks ['on', 'on', 'on', 'on', 'on', 'on', 'on'] | forward wins 3/4
+  T2 + T3                                        top-100 cubed  -0.13% (5/7 on its rows) | top-30  -0.19% | 31-100  +0.00% | top-150 sq  -0.11% | rank +0.0008 pairs +0.04
+      on its own rows (n2452): fixed -0.19% | LOYO wins 5/7 picks ['on', 'on', 'on', 'on', 'on', 'on', 'on'] | forward wins 3/4
+
+--- T1: band x position level multipliers, picked per cell LOYO / forward; applied together ---
+  LOYO    : top-100 cubed +0.36% (2/7) | top-30 +0.48% | 31-100 +0.12% | 101-150 +0.06% | top-150 sq +0.29% | rank -0.0044 pairs -0.19
+      picks: ADP 1-12 RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.97] | ADP 1-12 WR [1.0, 0.97, 1.0, 0.97, 1.0, 0.97, 1.03] | 13-30 QB [0.97, 0.94, 0.97, 0.94, 0.97, 0.94, 0.97] | 13-30 RB [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.0] | 13-30 WR [1.03, 1.0, 1.03, 1.0, 1.03, 1.03, 1.0] | 13-30 TE [1.0, 1.0, 1.0, 1.0, 1.06, 1.06, 1.06] | 31-60 QB [1.0, 0.97, 0.97, 0.97, 1.0, 1.0, 1.0] | 31-60 RB [1.0, 1.0, 1.03, 1.0, 1.0, 1.0, 1.0] | 31-60 WR [1.03, 1.03, 1.03, 1.06, 1.03, 1.06, 1.06] | 31-60 TE [1.09, 1.09, 1.06, 1.09, 1.06, 1.09, 1.03] | 61-100 QB [1.03, 1.0, 1.03, 1.03, 1.03, 1.03, 1.03] | 61-100 RB [1.0, 0.97, 1.0, 0.97, 0.97, 1.0, 1.0] | 61-100 WR [1.06, 1.06, 1.03, 1.06, 1.06, 1.03, 1.06] | 61-100 TE [1.0, 0.97, 1.0, 1.0, 1.0, 1.0, 1.0] | 101-150 RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.97] | 101-150 WR [0.94, 0.97, 0.97, 0.97, 0.97, 0.94, 0.97] | 101-150 TE [1.03, 1.03, 1.06, 1.06, 1.03, 1.03, 1.03]
+  forward : top-100 cubed +0.53% (0/4) | top-30 +0.42% | 31-100 +0.78% | 101-150 +0.08% | top-150 sq +0.48% | rank -0.0029 pairs -0.14
+      picks: ADP 1-12 RB [1.0, 1.0, 0.97, 0.97] | ADP 1-12 WR [1.0, 1.06, 1.03, 1.03] | 13-30 QB [1.0, 1.0, 0.97, 0.97] | 13-30 WR [1.0, 1.03, 1.03, 1.0] | 13-30 TE [1.0, 1.06, 1.06, 1.06] | 31-60 QB [1.0, 1.03, 1.0, 1.0] | 31-60 RB [1.0, 0.97, 1.0, 1.0] | 31-60 WR [1.09, 1.06, 1.06, 1.06] | 31-60 TE [1.09, 1.06, 1.06, 1.03] | 61-100 QB [1.09, 1.06, 1.03, 1.03] | 61-100 RB [0.97, 1.0, 1.0, 1.0] | 61-100 WR [1.09, 1.09, 1.06, 1.06] | 61-100 TE [1.03, 1.03, 1.0, 1.0] | 101-150 RB [0.94, 0.97, 0.97, 0.97] | 101-150 WR [0.97, 0.94, 0.94, 0.97] | 101-150 TE [1.03, 1.0, 1.03, 1.03]
+
+Limitations: honest replica (no book anchor / docks / prior lift); level multipliers are the crudest tier treatment - a pass here says the bias is stable by band, a fail says it is not.

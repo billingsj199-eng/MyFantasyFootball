@@ -3123,6 +3123,8 @@
       var blLast = blSn && blSn.w ? Math.max.apply(null, Object.keys(blSn.w).map(Number).filter(function (w) { return w < wk; }).concat([0])) : 0;
       if (ncBlowLast(blLast)) { ncSM = 1; ncSrc += '+blow'; }
     }
+    // TIER (2026-10-08, backtest_tier_treatment.py T2; Jack: no role / snap docks on the stars): the RB snap-trend DOCK is off for ADP <= snapNoDockAdp (lifts kept).
+    if (p.pos === 'RB' && p.adp != null && p.adp <= NC_SHADOW.next.snapNoDockAdp && ncSM < 1 && !(typeof window !== 'undefined' && window.SIM_NC_ELITE_TREND === false)) { ncSM = 1; ncSrc += '+elitetrend'; }
     var teDockK = (p.pos === 'TE' && NC_SHADOW.next.teDockK != null && !(typeof window !== 'undefined' && window.SIM_NC_TE_DOCKS === false)) ? NC_SHADOW.next.teDockK : 1;   // 2026-10-08 TE docks at half strength (see NC_SHADOW.next.teDockK)
     if (teDockK !== 1 && Math.abs(ncSM - 1) > 1e-9) { ncSM = Math.pow(ncSM, teDockK); ncSrc += '+tedock'; }
     var ncChain = sM ? jsChain / sM * ncSM : jsChain, ncChainNoIA = mult * oppM * cbM * ncSM * rampF;   // the chain without the availability factor
@@ -3343,7 +3345,8 @@
     // (PFF coverage, pass-rush, run-defense grades, man-rate x YPRR gap, OL grades, spread, wind, dome; re-tuned Vegas / FPA exponents).
     if (p.pos === 'QB' && ncMean > 0 && !(typeof window !== 'undefined' && window.SIM_NC_TOTAL === false)) {
       var gtz = gameTotalZ(schedule, wk, p.tm);
-      if (gtz != null) { ncMean *= Math.exp(NC_SHADOW.qbTotalC * gtz); ncSrc += '+tot'; }
+      var totElite = p.adp != null && p.adp <= NC_SHADOW.next.snapNoDockAdp && !(typeof window !== 'undefined' && window.SIM_NC_TOTAL_ELITE === false);   // 2026-10-08 tier: no shootout tilt on top-30 QBs (backtest_tier_treatment.py T3)
+      if (gtz != null && !totElite) { ncMean *= Math.exp(NC_SHADOW.qbTotalC * gtz); ncSrc += '+tot'; }
     }
     // VOLUME CONTEXT ON THE SHADOW (backtest_shadow_ports.py 3b, 2026-10-07): the same two WR / TE multipliers as the live number
     // (script-excess .03z everyone, att/g .04z underdogs) re-graded on the harness shadow: -0.65% (6/7), forward -0.19% (3/4), board -0.29%.

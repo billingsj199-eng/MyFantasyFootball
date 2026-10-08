@@ -1,3 +1,19 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
 === rest-of-season, in season: 8,496 checkpoints 2019-25 (3-10 games played, 4+ games left), 5,204 top-150 ===
 
 --- 0  WHERE WE STAND: Clay-free rate vs the Clay blend, rest-of-season per-game ---
@@ -1294,3 +1310,11 @@
     non-rookies    n  7272  vs wired  -1.14% (5/7) | vs Clay blend -10.24% | top-150 wtd  -1.36% | rank order 0.6000 (wired 0.5978)
 
 --- 14  TIGHT ENDS: TD floor for role players, snap-level lift strength, run-heavy offense tilt (model as wired through section 13) ---
+Traceback (most recent call last):
+  File "E:\MyFantasyFootball\sim_lab\backtest_shadow_ros.py", line 597, in <module>
+    main()
+    ~~~~^^
+  File "E:\MyFantasyFootball\sim_lab\backtest_shadow_ros.py", line 570, in main
+    rec_ = cal.weekly_rec(name[i], "TE"); _logs14[k_] = {int(w["wk"]): 6 * float(w.get("rctd") or 0) + 6 * float(w.get("rtd") or 0) for w in (rec_ or {}).get("seasons", {}).get(str(Y), []) if cal.played(w) and isinstance(w.get("fpts"), (int, float))}
+           ^^^
+NameError: name 'cal' is not defined

@@ -82,7 +82,7 @@ def live_today(X):
 SHADOW_LUCK = True   # 2026-10-08: the engine shadow has carried the TD-luck term since v2.22 (ncLuckScale); the replica did not - parity restored
 
 
-def shadow_current(X, luck=None, lam_override=None):
+def shadow_current(X, luck=None, lam_override=None, te_dock_k=0.5, te_lift_k=0.5):
     """ablate_shadow_next.full() as wired today: v2.25 layers on, WR snap trend off (v2.29), v2.33 rookie prior weights, TE docks at .5 (10-08), TD luck (v2.22)"""
     luck_on = SHADOW_LUCK if luck is None else luck
     F = X["F"]; n = X["n"]; pos, g, wk, adp, act = X["pos"], X["g"], X["wk"], X["adp"], X["act"]
@@ -113,9 +113,10 @@ def shadow_current(X, luck=None, lam_override=None):
     out = np.where(F["on"], out * np.power(F["pm"], 0.75), out)
     out = np.where(pos == "QB", out * np.exp(0.03 * X["z"]), out)
     out = np.where((pos == "WR") & X["qbo"], out * np.where(adp <= 60, 0.85, 0.95), out)
-    out = np.where(pos == "RB", out * smx, out); out = np.where(pos == "TE", out * np.sqrt(smx), out)          # WR snap trend removed (v2.29 prune); TE docks at .5 (10-08 teDockK)
+    tek = lambda M: np.where(M < 1, np.power(M, te_dock_k), np.power(M, te_lift_k))   # TE dock / lift exponents (wired .5 / .5 current week, 10-08)
+    out = np.where(pos == "RB", out * smx, out); out = np.where(pos == "TE", out * tek(smx), out)          # WR snap trend removed (v2.29 prune)
     out = np.where(pos == "WR", out * np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4), out)
-    out = np.where(pos == "TE", out * np.sqrt(np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4)), out)
+    out = np.where(pos == "TE", out * tek(np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4)), out)
     out = np.where((pos == "QB") & X["mover"], out * 0.90, out)
     out = np.where(pos == "QB", out * (1 - 0.75 * low), out)
     # (WR rookie games 2-5 x.90 is PRUNED in the engine - v2.29 ncPrune skips it - so the replica no longer applies it; 2026-10-08)

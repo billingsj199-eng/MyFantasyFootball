@@ -1,0 +1,63 @@
+=== TE BIAS: 1,252 top-150 TE player-weeks | next act/shadow 1.031 (Clay 1.000) | ROS act/shadow 1.050 ===
+
+--- 1  TOUCHDOWN DEPENDENCE ---
+  TD share of points so far Q1 0.00-0.12   n  266 | next act/shadow 1.110 (Clay 1.080) | ROS act/shadow 1.135 n218 | TD pts/g past 0.26 -> future 1.89 | non-TD past 6.44 -> future 7.12
+  TD share of points so far Q2 0.12-0.21   n  264 | next act/shadow 1.029 (Clay 1.005) | ROS act/shadow 1.024 n151 | TD pts/g past 1.46 -> future 1.75 | non-TD past 7.20 -> future 6.79
+  TD share of points so far Q3 0.21-0.29   n  266 | next act/shadow 1.016 (Clay 0.995) | ROS act/shadow 1.031 n159 | TD pts/g past 2.50 -> future 2.29 | non-TD past 7.53 -> future 7.46
+  TD share of points so far Q4 0.29-0.71   n  266 | next act/shadow 1.013 (Clay 0.979) | ROS act/shadow 0.985 n184 | TD pts/g past 3.48 -> future 2.07 | non-TD past 5.91 -> future 6.09
+  prior-season TD pts/g Q1 0.00-1.20       n  266 | next act/shadow 1.070 (Clay 1.029) | ROS act/shadow 1.076 n170 | TD pts/g past 1.99 -> future 2.11 | non-TD past 6.15 -> future 6.32
+  prior-season TD pts/g Q2 1.20-2.00       n  259 | next act/shadow 1.058 (Clay 1.016) | ROS act/shadow 1.072 n168 | TD pts/g past 1.63 -> future 1.91 | non-TD past 6.84 -> future 6.62
+  prior-season TD pts/g Q3 2.00-2.77       n  330 | next act/shadow 1.040 (Clay 1.012) | ROS act/shadow 1.068 n213 | TD pts/g past 1.81 -> future 2.07 | non-TD past 6.85 -> future 7.04
+  prior-season TD pts/g Q4 2.77-5.60       n  289 | next act/shadow 0.981 (Clay 0.957) | ROS act/shadow 1.018 n188 | TD pts/g past 2.32 -> future 2.14 | non-TD past 6.79 -> future 7.37
+
+--- 2  ROUTES / TARGETS / RED ZONE ---
+  route rate Q1 61.50-85.29                n  289 | next act/shadow 1.102 (Clay 1.081) | ROS act/shadow 1.078 n215 | TD pts/g past 1.64 -> future 1.99 | non-TD past 6.36 -> future 6.93
+  route rate Q2 85.29-88.55                n  289 | next act/shadow 1.007 (Clay 0.985) | ROS act/shadow 1.021 n196 | TD pts/g past 1.89 -> future 2.05 | non-TD past 6.05 -> future 6.36
+  route rate Q3 88.55-91.25                n  289 | next act/shadow 1.004 (Clay 0.974) | ROS act/shadow 1.011 n197 | TD pts/g past 2.03 -> future 1.96 | non-TD past 7.26 -> future 6.98
+  route rate Q4 91.25-100.00               n  290 | next act/shadow 1.064 (Clay 1.023) | ROS act/shadow 1.091 n199 | TD pts/g past 2.02 -> future 2.01 | non-TD past 7.15 -> future 7.18
+  target share Q1 0.03-0.15                n  287 | next act/shadow 0.957 (Clay 0.937) | ROS act/shadow 0.989 n214 | TD pts/g past 1.40 -> future 1.76 | non-TD past 3.79 -> future 5.10
+  target share Q2 0.15-0.19                n  286 | next act/shadow 1.125 (Clay 1.102) | ROS act/shadow 1.060 n202 | TD pts/g past 1.62 -> future 1.89 | non-TD past 5.86 -> future 6.29
+  target share Q3 0.19-0.22                n  287 | next act/shadow 1.006 (Clay 0.975) | ROS act/shadow 1.023 n194 | TD pts/g past 2.01 -> future 1.82 | non-TD past 7.61 -> future 6.97
+  target share Q4 0.22-0.39                n  287 | next act/shadow 1.076 (Clay 1.036) | ROS act/shadow 1.120 n190 | TD pts/g past 2.57 -> future 2.50 | non-TD past 9.61 -> future 9.25
+  red-zone target share Q1 0.00-0.15       n  263 | next act/shadow 1.042 (Clay 1.010) | ROS act/shadow 1.070 n188 | TD pts/g past 0.94 -> future 1.76 | non-TD past 5.63 -> future 6.02
+  red-zone target share Q2 0.15-0.21       n  260 | next act/shadow 1.008 (Clay 0.987) | ROS act/shadow 1.030 n166 | TD pts/g past 1.65 -> future 1.92 | non-TD past 6.18 -> future 6.33
+  red-zone target share Q3 0.21-0.27       n  266 | next act/shadow 1.112 (Clay 1.079) | ROS act/shadow 1.031 n170 | TD pts/g past 2.10 -> future 2.31 | non-TD past 7.27 -> future 7.00
+  red-zone target share Q4 0.27-0.50       n  264 | next act/shadow 1.008 (Clay 0.983) | ROS act/shadow 1.069 n182 | TD pts/g past 3.03 -> future 1.97 | non-TD past 8.03 -> future 8.25
+  snap share Q1 28.00-67.82                n  287 | next act/shadow 1.002 (Clay 0.963) | ROS act/shadow 0.995 n198 | TD pts/g past 1.71 -> future 1.63 | non-TD past 5.01 -> future 5.33
+  snap share Q2 67.82-78.09                n  286 | next act/shadow 1.051 (Clay 1.013) | ROS act/shadow 1.039 n202 | TD pts/g past 1.64 -> future 1.71 | non-TD past 6.68 -> future 6.60
+  snap share Q3 78.09-85.00                n  284 | next act/shadow 0.992 (Clay 0.976) | ROS act/shadow 1.008 n186 | TD pts/g past 2.13 -> future 1.99 | non-TD past 7.30 -> future 7.10
+  snap share Q4 85.00-100.00               n  290 | next act/shadow 1.121 (Clay 1.092) | ROS act/shadow 1.138 n214 | TD pts/g past 2.13 -> future 2.63 | non-TD past 7.89 -> future 8.56
+
+--- 3  OFFENSE QUALITY ---
+  team implied total Q1 9.75-20.75         n  275 | next act/shadow 1.012 (Clay 0.990) | ROS act/shadow 1.036 n175 | TD pts/g past 1.61 -> future 1.65 | non-TD past 6.59 -> future 6.61
+  team implied total Q2 20.75-23.75        n  295 | next act/shadow 1.012 (Clay 0.985) | ROS act/shadow 1.039 n212 | TD pts/g past 1.67 -> future 1.81 | non-TD past 6.47 -> future 6.60
+  team implied total Q3 23.75-26.00        n  279 | next act/shadow 1.042 (Clay 1.011) | ROS act/shadow 1.045 n208 | TD pts/g past 1.84 -> future 2.08 | non-TD past 6.44 -> future 6.68
+  team implied total Q4 26.00-34.50        n  308 | next act/shadow 1.094 (Clay 1.060) | ROS act/shadow 1.076 n212 | TD pts/g past 2.41 -> future 2.43 | non-TD past 7.28 -> future 7.50
+  team pass rate over expected Q1 -16.92--4.11 n  266 | next act/shadow 1.182 (Clay 1.161) | ROS act/shadow 1.205 n169 | TD pts/g past 1.81 -> future 2.73 | non-TD past 6.22 -> future 7.09
+  team pass rate over expected Q2 -4.11--0.95 n  265 | next act/shadow 1.042 (Clay 1.028) | ROS act/shadow 1.057 n175 | TD pts/g past 1.67 -> future 1.79 | non-TD past 6.37 -> future 6.61
+  team pass rate over expected Q3 -0.95-2.44 n  265 | next act/shadow 0.938 (Clay 0.908) | ROS act/shadow 0.934 n181 | TD pts/g past 1.89 -> future 1.41 | non-TD past 6.52 -> future 6.10
+  team pass rate over expected Q4 2.44-15.83 n  266 | next act/shadow 1.009 (Clay 0.971) | ROS act/shadow 1.016 n187 | TD pts/g past 2.33 -> future 2.06 | non-TD past 7.97 -> future 7.65
+
+--- 4  PLAYER TYPE ---
+  ADP 1-30                                 n  121 | next act/shadow 1.031 (Clay 0.979) | ROS act/shadow 1.005 n78 | TD pts/g past 3.46 -> future 2.26 | non-TD past 10.55 -> future 9.63
+  ADP 31-60                                n  287 | next act/shadow 1.079 (Clay 1.031) | ROS act/shadow 1.176 n183 | TD pts/g past 1.92 -> future 2.63 | non-TD past 7.47 -> future 8.34
+  ADP 61-100                               n  365 | next act/shadow 0.977 (Clay 0.945) | ROS act/shadow 0.963 n235 | TD pts/g past 1.80 -> future 1.63 | non-TD past 5.96 -> future 5.86
+  ADP 101-150                              n  479 | next act/shadow 1.040 (Clay 1.031) | ROS act/shadow 1.047 n311 | TD pts/g past 1.56 -> future 1.84 | non-TD past 5.85 -> future 6.03
+  rookies                                  n   90 | next act/shadow 1.020 (Clay 1.011) | ROS act/shadow 1.022 n58 | TD pts/g past 1.18 -> future 1.23 | non-TD past 7.20 -> future 7.24
+  2nd year                                 n   85 | next act/shadow 1.037 (Clay 1.026) | ROS act/shadow 1.064 n62 | TD pts/g past 1.86 -> future 2.45 | non-TD past 7.10 -> future 6.64
+  years 3-5                                n  503 | next act/shadow 1.051 (Clay 1.026) | ROS act/shadow 1.043 n352 | TD pts/g past 1.88 -> future 1.86 | non-TD past 6.60 -> future 6.58
+  6+ years                                 n  485 | next act/shadow 1.044 (Clay 1.005) | ROS act/shadow 1.059 n335 | TD pts/g past 2.03 -> future 2.21 | non-TD past 6.66 -> future 7.13
+  games 1-3                                n  285 | next act/shadow 0.989 (Clay 0.951) | ROS act/shadow 1.053 n283 | TD pts/g past 1.66 -> future 2.01 | non-TD past 6.33 -> future 6.81
+  games 4-8                                n  462 | next act/shadow 1.091 (Clay 1.063) | ROS act/shadow 1.044 n407 | TD pts/g past 1.91 -> future 1.95 | non-TD past 6.72 -> future 6.76
+  games 9+                                 n  410 | next act/shadow 1.028 (Clay 1.005) | ROS act/shadow 1.064 n117 | TD pts/g past 2.03 -> future 2.05 | non-TD past 6.96 -> future 7.01
+  scoring over usage Q1 0.00-0.87          n  263 | next act/shadow 0.994 (Clay 0.964) | ROS act/shadow 0.993 n188 | TD pts/g past 0.81 -> future 1.60 | non-TD past 4.93 -> future 5.65
+  scoring over usage Q2 0.87-1.01          n  263 | next act/shadow 1.033 (Clay 1.004) | ROS act/shadow 1.061 n175 | TD pts/g past 1.46 -> future 1.79 | non-TD past 6.75 -> future 6.97
+  scoring over usage Q3 1.01-1.21          n  263 | next act/shadow 1.068 (Clay 1.038) | ROS act/shadow 1.042 n170 | TD pts/g past 2.26 -> future 2.19 | non-TD past 7.70 -> future 7.49
+  scoring over usage Q4 1.21-2.39          n  264 | next act/shadow 1.066 (Clay 1.044) | ROS act/shadow 1.104 n173 | TD pts/g past 3.20 -> future 2.38 | non-TD past 7.74 -> future 7.50
+
+--- 5  DECOMPOSITION of the rest-of-season miss (TE rows with 2+ games, 4+ left): where do the extra points come from? ---
+  future per game: TD pts 2.01 vs past 1.89 (+0.12) | non-TD 6.92 vs past 6.71 (+0.21) | miss (Tr - shadow ROS) +0.42
+    TD share so far under 25%    n 449 | TD 0.99 -> 2.00 | non-TD 6.82 -> 7.09 | act/shadow ROS 1.069 | miss +0.59
+    TD share 25-45%              n 227 | TD 3.34 -> 2.11 | non-TD 6.96 -> 6.98 | act/shadow ROS 1.034 | miss +0.30
+
+Limitations: replica shadow (TE docks halved on the next-game form); ROS = rescaled next-game number; route rate from route_features; all cuts are correlations, not layer tests.

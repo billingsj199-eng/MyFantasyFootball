@@ -557,6 +557,40 @@ def main():
         w1 = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and ms(S13, m & (year == y)) < ms(M, m & (year == y)) - 1e-12)
         P(f"    {lab:14s} n {int(m.sum()):5d}  vs wired {100*(ms(S13, m)/ms(M, m)-1):+6.2f}% ({w1}/7) | vs Clay blend {100*(ms(S13, m)/ms(CL, m)-1):+6.2f}% | top-150 wtd {100*(wm(S13, m & top150)/wm(M, m & top150)-1):+6.2f}% | rank order {rho(S13, m & top150):.4f} (wired {rho(M, m & top150):.4f})")
 
+    # ---------------- 14 TIGHT ENDS (Jack 2026-10-08: "run all three and wire what passes") ----------------
+    # research_te_bias.py: the shadow's TE under-projection sits in (1) tight ends with a real role and no touchdowns yet,
+    # (2) full-snap tight ends (lifts), (3) run-heavy offenses (pass rate over expected low). Three layers on the final model,
+    # TE rows, LOYO + forward with the whole-board guard (struct = pass -> stacked into st).
+    P(); P("--- 14  TIGHT ENDS: TD floor for role players, snap-level lift strength, run-heavy offense tilt (model as wired through section 13) ---")
+    te14 = pos == "TE"; tdp14 = np.full(n, np.nan)
+    _logs14 = {}
+    for i in np.where(te14 & ok)[0]:
+        Y = int(year[i]); k_ = (name[i], Y)
+        if k_ not in _logs14:
+            rec_ = cal.weekly_rec(name[i], "TE"); _logs14[k_] = {int(w["wk"]): 6 * float(w.get("rctd") or 0) + 6 * float(w.get("rtd") or 0) for w in (rec_ or {}).get("seasons", {}).get(str(Y), []) if cal.played(w) and isinstance(w.get("fpts"), (int, float))}
+        past = [v for w, v in _logs14[k_].items() if w < wk[i]]
+        if past: tdp14[i] = float(np.mean(past))
+    role14 = te14 & ((tsh >= 0.15) | (colv("snap_std") >= 70)); gap14 = np.clip(1.8 - np.nan_to_num(tdp14, nan=1.8), 0, 1.8)
+    m1 = role14 & ~np.isnan(tdp14) & (g >= 2)
+    struct("14a TE with a role and few touchdowns so far: lift per missing TD point", "te_tdfloor", m1, {f"e {e}": dict(mult=np.where(m1, st["mult"] * (1 + e * gap14), st["mult"])) for e in (0.02, 0.04, 0.06, 0.08)})
+    m1b = te14 & ~np.isnan(tdp14) & (g >= 2)
+    struct("14a' same, no role gate", "te_tdfloor_all", m1b, {f"e {e}": dict(mult=np.where(m1b, st["mult"] * (1 + e * gap14), st["mult"])) for e in (0.02, 0.04, 0.06)})
+    M0 = np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4); m2 = te14 & ~np.isnan(l1)
+    var2 = {}
+    for kl in (1.0, 1.5, 2.0):
+        for kd in (0.5, 1.0):
+            if kl == 1.0 and kd == 1.0: continue
+            var2[f"lift ^{kl} / dock ^{kd}"] = dict(mult=np.where(m2, st["mult"] * np.where(M0 > 1, np.power(M0, kl), np.power(M0, kd)) / np.where(M0 > 0, M0, 1.0), st["mult"]))
+    struct("14b TE snap-share level: lift / dock strength (wired e .3 both ways)", "te_snaplift", m2, var2)
+    m3 = te14 & ~np.isnan(zp)
+    struct("14c TE run-heavy offense tilt (wired e .04 symmetric): run-heavy side only", "te_runheavy", m3, {f"e {e}": dict(mult=np.where(m3, st["mult"] * (1 + e * np.clip(-zp, 0, 2.5)), st["mult"])) for e in (0.03, 0.06, 0.09, 0.12)})
+    struct("14c' TE pass-rate tilt symmetric, stronger (on top of the wired .04)", "te_proe2", m3, {f"e {e}": dict(mult=np.where(m3, st["mult"] * (1 - e * zp), st["mult"])) for e in (0.03, 0.06)})
+    S14 = build(); t150 = ok & top150
+    P(); P("  STACKED after section 14 (vs wired through section 13 | vs the Clay blend):")
+    for lab, m in (("ALL rows", ok), ("top 150", t150), ("TE", ok & te14), ("TE top 150", t150 & te14), ("non-TE", ok & ~te14)):
+        w1 = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and ms(S14, m & (year == y)) < ms(S13, m & (year == y)) - 1e-12)
+        P(f"    {lab:12s} n {int(m.sum()):5d}  vs section 13 {100*(ms(S14, m)/ms(S13, m)-1):+6.2f}% ({w1}/7) | vs Clay blend {100*(ms(S14, m)/ms(CL, m)-1):+6.2f}% | act/proj {T[m].sum()/S14[m].sum():.3f} (was {T[m].sum()/S13[m].sum():.3f}) | rank order {rho(S14, m & top150):.4f} (was {rho(S13, m & top150):.4f})")
+
     log.close()
 
 if __name__ == "__main__":

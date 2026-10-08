@@ -1,0 +1,45 @@
+=== TE LAYERS, next game: 1,252 TE rows; act/shadow 1.031 ===
+
+  A  TD floor for tight ends with a role and few TDs so far (rows 898, act/shadow 1.051)
+    fixed: e 0.02: -0.25% (5/7)  e 0.04: -0.41% (5/7)  e 0.06: -0.48% (4/7)  e 0.08: -0.45% (4/7)
+    rank vs off (rho 0.3517, pairs 63.05%): e 0.02: rho +0.0013 pairs +0.00  e 0.04: rho +0.0108 pairs +0.26  e 0.06: rho +0.0132 pairs +0.32  e 0.08: rho +0.0114 pairs +0.35
+    LOYO -0.23% 4/7 | board -0.015% | picks ['e 0.08', 'e 0.08', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.08', 'e 0.04']
+    FWD  -0.57% 3/4 | board -0.034% | picks ['e 0.02', 'e 0.04', 'e 0.06', 'e 0.04']
+    -> FAIL
+
+  A' TD floor, no role gate (rows 1,062, act/shadow 1.041)
+    fixed: e 0.02: -0.24% (5/7)  e 0.04: -0.38% (5/7)  e 0.06: -0.44% (4/7)
+    rank vs off (rho 0.3926, pairs 64.16%): e 0.02: rho +0.0011 pairs +0.08  e 0.04: rho +0.0033 pairs +0.02  e 0.06: rho -0.0033 pairs -0.18
+    LOYO -0.36% 4/7 | board -0.025% | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.04']
+    FWD  -0.54% 3/4 | board -0.035% | picks ['e 0.02', 'e 0.04', 'e 0.06', 'e 0.04']
+    -> FAIL
+
+  B  TE snap level / trend: dock and lift exponents (wired .5 / .5) (rows 1,252, act/shadow 1.031)
+    fixed: dock ^0.5 / lift ^1.0: +0.00% (3/7)  dock ^0.5 / lift ^1.5: +0.44% (3/7)  dock ^1.0 / lift ^1.0: +0.39% (3/7)  dock ^1.0 / lift ^1.5: +0.81% (3/7)  dock ^0.25 / lift ^1.0: -0.06% (3/7)  dock ^0.5 / lift ^2.0: +1.39% (3/7)
+    rank vs off (rho 0.3688, pairs 63.36%): dock ^0.5 / lift ^1.0: rho -0.0034 pairs -0.05  dock ^0.5 / lift ^1.5: rho -0.0008 pairs -0.11  dock ^1.0 / lift ^1.0: rho -0.0041 pairs -0.26  dock ^1.0 / lift ^1.5: rho -0.0095 pairs -0.58  dock ^0.25 / lift ^1.0: rho -0.0012 pairs -0.08  dock ^0.5 / lift ^2.0: rho -0.0082 pairs -0.31
+    LOYO +0.42% 0/7 | board +0.034% | picks ['dock ^0.25 / lift ^1.0', 'off', 'dock ^0.25 / lift ^1.0', 'dock ^0.25 / lift ^1.0', 'dock ^0.25 / lift ^1.0', 'off', 'off']
+    FWD  +0.51% 0/4 | board +0.037% | picks ['dock ^0.25 / lift ^1.0', 'dock ^0.25 / lift ^1.0', 'off', 'off']
+    -> FAIL
+
+  C  run-heavy offense tilt (run-heavy side only) (rows 516, act/shadow 1.030)
+    fixed: e 0.03: -0.33% (4/7)  e 0.06: -0.51% (3/7)  e 0.09: -0.54% (3/7)  e 0.12: -0.42% (3/7)
+    rank vs off (rho 0.3095, pairs 61.54%): e 0.03: rho -0.0045 pairs -0.20  e 0.06: rho -0.0006 pairs +0.03  e 0.09: rho +0.0034 pairs +0.07  e 0.12: rho -0.0024 pairs +0.00
+    LOYO +0.50% 2/7 | board +0.015% | picks ['e 0.09', 'e 0.06', 'e 0.09', 'e 0.12', 'e 0.09', 'off', 'e 0.09']
+    FWD  +0.29% 0/4 | board +0.012% | picks ['e 0.06', 'off', 'off', 'e 0.09']
+    -> FAIL
+
+  C' pass-rate tilt symmetric (rows 516, act/shadow 1.030)
+    fixed: e 0.02: -0.42% (5/7)  e 0.04: -0.57% (4/7)  e 0.06: -0.44% (4/7)
+    rank vs off (rho 0.3095, pairs 61.54%): e 0.02: rho +0.0024 pairs +0.03  e 0.04: rho +0.0122 pairs +0.54  e 0.06: rho +0.0089 pairs +0.27
+    LOYO +0.29% 4/7 | board +0.009% | picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.06', 'e 0.02', 'e 0.02', 'e 0.04']
+    FWD  +1.01% 1/4 | board +0.043% | picks ['e 0.06', 'off', 'e 0.02', 'e 0.04']
+    -> FAIL
+
+  D  implied-total tilt (on top of the Vegas layer) (rows 516, act/shadow 1.030)
+    fixed: e 0.02: +0.24% (2/7)  e 0.04: +0.68% (2/7)  e 0.06: +1.34% (2/7)
+    rank vs off (rho 0.3095, pairs 61.54%): e 0.02: rho -0.0072 pairs -0.07  e 0.04: rho -0.0140 pairs -0.44  e 0.06: rho -0.0237 pairs -0.80
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.71% 0/4 | board +0.030% | picks ['off', 'e 0.06', 'off', 'off']
+    -> FAIL
+
+Limitations: honest replica (TD luck, TE exponents .5/.5 current week); layers are multiplicative on the finished shadow; proe / implied z within week across TE rows.

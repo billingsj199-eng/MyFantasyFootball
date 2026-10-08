@@ -1,0 +1,165 @@
+{
+ "season": 2026,
+ "rules": {
+  "startable": {
+   "QB": 12,
+   "TE": 12,
+   "RB": 24,
+   "WR": 36
+  },
+  "window": 4,
+  "incompleteSnap": 0.5,
+  "windowMinGames": 3
+ },
+ "calls": [
+  {
+   "id": "r7694009452207129375",
+   "kind": "over",
+   "player": "Braelon Allen",
+   "vs": [
+    "TreVeyon Henderson",
+    "Terry McLaurin",
+    "Mike Gesicki",
+    "Dalton Kincaid",
+    "Roman Wilson"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:43:33.730Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
+   "said": "need a flex: gesicki, kincaid, mclaurin, treveyon, braelon allen, roman wilson"
+  },
+  {
+   "id": "r7694050098959876877",
+   "kind": "over",
+   "player": "Jacoby Brissett",
+   "vs": [
+    "Jayden Daniels"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:52:06.802Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Jayden Daniel’s or Jacoby brisset"
+  },
+  {
+   "id": "r7694050245449171725",
+   "kind": "over",
+   "player": "Jayden Daniels",
+   "vs": [
+    "C.J. Stroud"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:51:05.556Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Should I start cj stroud or Jaden daniels"
+  },
+  {
+   "id": "r7694029457523229471",
+   "kind": "over",
+   "player": "Matthew Stafford",
+   "vs": [
+    "Brock Purdy"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:55:02.693Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Who should I start purdy or Stafford?"
+  },
+  {
+   "id": "r7694026209717846797",
+   "kind": "over",
+   "player": "Matthew Stafford",
+   "vs": [
+    "Drake Maye"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:55:40.553Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Stafford or maye?"
+  },
+  {
+   "id": "r7694020185418318622",
+   "kind": "over",
+   "player": "Jacoby Brissett",
+   "vs": [
+    "Trevor Lawrence"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:49:54.669Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "brisset or Lawrence??"
+  },
+  {
+   "id": "r7694011835810972439",
+   "kind": "over",
+   "player": "Sam Darnold",
+   "vs": [
+    "Kyler Murray"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:55:40.553Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Guys, darnold or murray?"
+  },
+  {
+   "id": "r7693964786900009758",
+   "kind": "over",
+   "player": "Aaron Rodgers",
+   "vs": [
+    "Jordan Love"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:56:20.603Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Rodgers or Love for just this week?"
+  },
+  {
+   "id": "r7693961456082043661",
+   "kind": "over",
+   "player": "Jacoby Brissett",
+   "vs": [
+    "Drake Maye"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:56:20.603Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Maye or brisset"
+  },
+  {
+   "id": "r7693968500377043742",
+   "kind": "over",
+   "player": "Tyler Shough",
+   "vs": [
+    "Kyler Murray",
+    "Justin Jefferson"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:55:40.553Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "Would u start Kyler over shough if Justin Jefferson is back?"
+  },
+  {
+   "id": "r7693951466558735134",
+   "kind": "over",
+   "player": "Romeo Doubs",
+   "vs": [
+    "Keon Coleman"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:57:10.897Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
+   "said": "do i start doubs or keon coleman ?"
+  }
+ ],
+ "updated": "2026-10-08T14:03:14.439Z"
+}

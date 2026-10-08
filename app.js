@@ -31121,14 +31121,15 @@ window.fmtHeight = fmtHeight;
   // (#10 71% / #30 36% / #100 10% of #1 vs their 64/32/3) while same-tier
   // players stay near-interchangeable and moving a tier boundary on the
   // board actually moves prices. tierDrop is the live A/B lever.
-  // extraPieceW 1 + pkgTax 0 (Jack 2026-09-01 late: "mimic their trade
-  // calculator with the boosts for 2-for-1/3-for-1"): with the geometric
-  // tierDrop curve in place, packages now count at FULL value like Flock's
-  // plain-sum calculator — the steep curve alone polices quality, so the
-  // old surplus haircut + consolidation tax would double-punish packages.
-  // Extras still pay the waiver-spot cost (~11 = curve value at replRank),
-  // the one guard Flock lacks, so junk throw-ins stay worthless.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 1,
+  // extraPieceW 0.75 (Jack 2026-10-08: "packages too strong" — the #1 pick
+  // for two #19s graded FAIR under the plain Flock-style sum used since
+  // 2026-09-01). Each UNMATCHED extra piece pays the waiver-spot cost (~11 =
+  // curve value at replRank, the guard Flock lacks) and then counts
+  // extraPieceW^k of what remains, k = 1 for the first extra, 2 for the
+  // second… — so a 3-for-1 is docked harder than a 2-for-1 and the single
+  // star needs real quality back, not quantity. The smaller side of a trade
+  // still counts in full (2026-10-06 rule). pkgTax 0 stays a spare lever.
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.75,
     pkgTax: 0,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
@@ -31227,7 +31228,9 @@ window.fmtHeight = fmtHeight;
     const extras = Math.max(sorted.length - matched, 0);
     let total = 0;
     for (let i = 0; i < sorted.length; i++) {
-      total += i < sorted.length - extras ? sorted[i] : Math.max(sorted[i] - cost, 0) * w;
+      // k-th unmatched extra (smallest assets) counts w^k of its post-cost value
+      const k = i - (sorted.length - extras) + 1;
+      total += k < 1 ? sorted[i] : Math.max(sorted[i] - cost, 0) * Math.pow(w, k);
     }
     total -= (window._WINNOW_VAL.pkgTax || 0) * extras;
     return Math.max(Math.round(total), 1);
@@ -31336,7 +31339,7 @@ window.fmtHeight = fmtHeight;
       adjEl.title = (() => {
         const WN = window._WINNOW_VAL;
         let t = 'This side sends more pieces than it gets back, so each unmatched extra (its smallest assets) pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
-        if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains';
+        if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains (each further extra another ' + Math.round(WN.extraPieceW * 100) + '%)';
         if (WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
         return t + ' — junk throw-ins can\'t tilt a trade';
       })();
@@ -32397,12 +32400,13 @@ window.fmtHeight = fmtHeight;
     // Same package adjustment as the calculator, so loaded suggestions match its verdict
     const _pkgCost = window._packageRosterCost(tradeMode);
     // Loop-prune slack: the widest possible raw-sum vs adjusted-total gap per
-    // EXTRA piece. With the extra-piece surplus weight w, an extra worth V
-    // contributes w·(V−cost) − tax, so the gap is w·cost + (1−w)·V + tax —
-    // bound V by the scale max (~250). Collapses to cost when w=1, tax=0
-    // (the Flock-mimic full-sum config, all modes since dynasty unified).
+    // EXTRA piece. The k-th extra worth V contributes w^k·(V−cost) − tax, so
+    // its gap is w^k·cost + (1−w^k)·V + tax — bound V by the scale max (~250)
+    // and take k = 2 (the deepest extra a 3-piece side can have) so the bound
+    // is safe for every loop below. Collapses to cost when w=1, tax=0.
     const _extraW = window._WINNOW_VAL.extraPieceW || 1;
-    const _pkgSlack = Math.ceil(_extraW * _pkgCost + (1 - _extraW) * 260
+    const _extraW2 = _extraW * _extraW;
+    const _pkgSlack = Math.ceil(_extraW2 * _pkgCost + (1 - _extraW2) * 260
       + (window._WINNOW_VAL.pkgTax || 0));
     const _pkgSideTotal = (side, vsCount) => window._packageAdjustedTotal(side.map(a => a.value), tradeMode, vsCount);
 

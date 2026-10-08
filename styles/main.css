@@ -3037,3 +3037,15 @@ tbody td{font-size:.8125rem}
 .card-rank-box .num{font-size:1rem}
 .card-fantasy-extra .card-section{margin-top:0}
 .card-body{padding-bottom:1rem}
+
+/* ===== Docked player card in the TIER CARDS view (2026-10-08) =====
+   #modal gets .modal-docked while the tier-card view is active: no dim, clicks pass
+   through to the tier cards, the card floats (draggable strip, CSS resize corner). */
+#modal.modal-docked{background:transparent!important;backdrop-filter:none!important;pointer-events:none}
+#modal.modal-docked.open{display:block}
+#modal.modal-docked .player-card{position:absolute;pointer-events:auto;max-width:none;max-height:none;min-width:360px;min-height:240px;resize:both;overflow:auto;animation:none;box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.5)}
+.card-dock-bar{display:none}
+#modal.modal-docked .card-dock-bar{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:9;height:24px;padding:0 10px;background:var(--surface2);border-bottom:1px solid var(--border);cursor:move;user-select:none;touch-action:none;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
+#modal.modal-docked .card-dock-bar .card-dock-reset{margin-left:auto;background:none;border:1px solid var(--border-strong);border-radius:4px;color:var(--text2);font:inherit;letter-spacing:.06em;padding:1px 7px;cursor:pointer;line-height:1.4}
+#modal.modal-docked .card-dock-bar .card-dock-reset:hover{color:var(--text);background:var(--elev-1)}
+#modal.modal-docked .card-view-toggle{top:24px}

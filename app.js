@@ -2841,14 +2841,17 @@ function last4Ppg(d) {
 
 // Build the "L4 PPG" display: number + a small trend arrow vs full-season '25 PPG.
 // up (green ▲) if L4 ≥ season + 1, down (red ▼) if ≤ season − 1, else flat (·).
-function l4PpgCellHtml(l4, seasonPpg) {
+// 2026-10-08 (Jack): coloured on the usual PPG tier scale for the position, not on
+// the gap to the season PPG; the ▲ / ▼ still marks the trend vs season.
+function l4PpgCellHtml(l4, seasonPpg, pos) {
   if (l4 == null) return { html: '—', color: null };
   const v = l4.toFixed(1);
-  if (seasonPpg == null) return { html: v, color: null };
+  const tier = (pos && typeof posFptsColor === 'function') ? posFptsColor(l4, pos) : null;
+  if (seasonPpg == null) return { html: v, color: tier };
   const diff = l4 - seasonPpg;
-  if (diff >= 1) return { html: v + ' <span style="font-size:.6875rem">▲</span>', color: '#22c55e' };
-  if (diff <= -1) return { html: v + ' <span style="font-size:.6875rem">▼</span>', color: '#ef4444' };
-  return { html: v, color: null };
+  if (diff >= 1) return { html: v + ' <span style="font-size:.6875rem">▲</span>', color: tier || '#22c55e' };
+  if (diff <= -1) return { html: v + ' <span style="font-size:.6875rem">▼</span>', color: tier || '#ef4444' };
+  return { html: v, color: tier };
 }
 
 // === Kicker projection model (2026-08-25 correlate study) ===
@@ -8526,7 +8529,7 @@ function render() {
   // no yardage line so the K / D/ST pills hide it). Y/RR + Rush YPG retired.
   // Total Yds tail: WEEKLY board only (Yds/G). Jack 2026-09-14: no total-yards
   // column on the rest-of-season (season) boards in FANTASY or SIMS view.
-  const showYrr = _statMode === 'fantasy' && _isWeekly && filter !== 'K' && filter !== 'DST';
+  const showYrr = false; // Yds/G tail retired 2026-10-08 (Jack) — was WEEKLY FANTASY only
   // ADP comparison STATS view borrows the JM + Landing columns for Yahoo and
   // the cross-platform AVERAGE (2026-09-09 — Flock's ADP matrix gap).
   const _isAdpCmp = _statMode === 'adp';
@@ -8729,7 +8732,7 @@ function render() {
       const _25ppg = _sp.v;
       const _25Tip = _sp.yr === 26 ? (_sp.v != null ? ' title="2026 to date · ' + _sp.gp + ' gp"' : ' title="No 2026 game played yet"') : '';
       const _l4ppg = last4Ppg(d);
-      const _l4Cell = l4PpgCellHtml(_l4ppg, _25ppg);
+      const _l4Cell = l4PpgCellHtml(_l4ppg, _25ppg, d.s);
       // WEEKLY FLEX view compares RB/WR/TE head-to-head — color PROJ PPG on
       // one shared scale there; positional pills keep the per-position scale.
       const _projColor = (_projPpg != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_projPpg) : posFptsColor(_projPpg, d.s)) : null;
@@ -16461,11 +16464,14 @@ function buildWeeklyCardView(d) {
   html += '<div class="card-section"><div class="card-section-title">Weekly Projection '
     + '<span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
   const wkBook = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
-  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">';
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
   html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
   html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) : '—', '',
     wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player', wkBook != null ? _ptsCol(wkBook.ppg) : null);
   html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
+  const _xa = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
+  const _xv = (_xa && _xa.n) ? Math.round(_xa.xfpg * 10) / 10 : null;
+  html += box('xFP /GM', _xv != null ? fmt1(_xv) : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
   html += '</div>';
   // (Clay / Sleeper / ESPN / FantasyPros / CBS reference tiles removed 2026-10-08)
   html += '<div style="margin-top:7px;font-size:.6875rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
@@ -18131,7 +18137,7 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
       ${!d._retired ? `<div class="card-section">
         <div class="card-section-title">Rankings <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">
           <div class="card-rank-box">
             <div class="lbl">Your Rank</div>
             <div class="num green">${_ctxRank != null ? _ctxRank : (d.myRank ?? '—')}</div>
@@ -18140,17 +18146,21 @@ function openPlayerCard(d, ctxMode) {
             <div class="lbl">Pos Rank</div>
             <div class="num accent">${d.myPosRank || d.r}</div>
           </div>
+          <div class="card-rank-box">
+            <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
+            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
+          </div>
         </div>
         <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
             <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
           </div>
-          <div class="card-rank-box">
-            <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
-            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
-          </div>
-          ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v);return `<div class="card-rank-box">
+          ${(()=>{const x=(typeof _xfpAgg==='function')?_xfpAgg(d,rankingScoringFmt,null):null;const v=(x&&x.n)?Math.round(x.xfpg*10)/10:null;const c=v!=null?posFptsColor(v,d.s):null;return `<div class="card-rank-box"${x&&x.n?` title="Expected fantasy points per game from usage (targets, carries, field position), 2026 to date — ${x.n} gm, actual ${Math.round(x.ppg*10)/10} /gm"`:''}>
+            <div class="lbl">xFP /GM</div>
+            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v:'—'}</div>
+          </div>`;})()}
+          ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v,d.s);return `<div class="card-rank-box">
             <div class="lbl" title="Average PPG over the last 4 games played (2026 to date, then the end of 2025) — shows which way the player is trending vs the season PPG.">L4 PPG</div>
             <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
           </div>`;})()}
@@ -18753,9 +18763,15 @@ function openPlayerCard(d, ctxMode) {
     document.addEventListener('mff:weeklydata', function _l4Backfill() {
       document.removeEventListener('mff:weeklydata', _l4Backfill);
       if (!_l4Num.isConnected) return;
-      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d));
+      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d), d.s);
       _l4Num.innerHTML = c.html;
       _l4Num.style.color = c.color || '';
+      // xFP /GM tiles (FANTASY + WEEKLY) ride on the same bundle
+      try {
+        const x = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
+        const xv = (x && x.n) ? Math.round(x.xfpg * 10) / 10 : null;
+        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.textContent = xv != null ? xv : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
+      } catch (_) {}
     });
   }
 
@@ -19770,7 +19786,7 @@ function renderCompareGrid() {
           <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
             <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
             <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div></div>
-            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
+            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d),d.s);return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
             ${_teamPpgBoxHtml(d.t)}
           </div>
         </div>
@@ -71471,4 +71487,95 @@ function _rsScatter(cfg) {
     Object.values(bars).forEach(b => { if (b) mo.observe(b, { attributes: true, attributeFilter: ['style'] }); });
   }
   apply();
+})();
+
+// === Docked player card in the TIER CARDS view (2026-10-08, Jack) ==================
+// In the tier-card view (the YouTube / TikTok recording surface) a player click
+// opens the card as a floating panel in the empty space to the right instead of
+// a centered modal: drag it by the strip at the top, resize from the bottom-right
+// corner, and the size + position persist per device (localStorage
+// mff_tcv_card_dock). Clicking another card swaps the content in place; the X
+// (or RESET on the strip) still work. Outside the tier view nothing changes.
+(function _tcvDockedCard() {
+  const KEY = 'mff_tcv_card_dock';
+  const modal = document.getElementById('modal');
+  const card = document.getElementById('playerCard');
+  if (!modal || !card) return;
+  const inTierView = () => { try { return typeof viewMode !== 'undefined' && viewMode === 'tierCard'; } catch (_) { return false; } };
+  const load = () => { try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); return (o && o.w > 0) ? o : null; } catch (_) { return null; } };
+  const save = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (_) {} };
+  const defaults = () => {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const w = Math.min(620, Math.max(360, vw - 40));
+    return { x: Math.max(12, vw - w - 24), y: 72, w, h: Math.max(320, vh - 96) };
+  };
+  const clamp = o => {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    o.w = Math.max(360, Math.min(o.w, vw - 24));
+    o.h = Math.max(240, Math.min(o.h, vh - 24));
+    o.x = Math.max(0, Math.min(o.x, vw - 80));
+    o.y = Math.max(0, Math.min(o.y, vh - 60));
+    return o;
+  };
+  function place(o) {
+    card.style.left = o.x + 'px'; card.style.top = o.y + 'px';
+    card.style.width = o.w + 'px'; card.style.height = o.h + 'px';
+  }
+  function current() {
+    const r = card.getBoundingClientRect();
+    return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) };
+  }
+  function undock() {
+    modal.classList.remove('modal-docked');
+    card.style.left = card.style.top = card.style.width = card.style.height = '';
+  }
+  function dock() {
+    modal.classList.add('modal-docked');
+    place(clamp(load() || defaults()));
+    if (!card.querySelector('.card-dock-bar')) {
+      const bar = document.createElement('div');
+      bar.className = 'card-dock-bar';
+      bar.innerHTML = '<span>⋮⋮ drag · resize from the corner</span><button type="button" class="card-dock-reset" title="Back to the default size and spot">RESET</button>';
+      card.insertBefore(bar, card.firstChild);
+    }
+  }
+  // Drag by the strip
+  let drag = null;
+  card.addEventListener('pointerdown', e => {
+    const bar = e.target.closest('.card-dock-bar');
+    if (!bar || !modal.classList.contains('modal-docked') || e.target.closest('button')) return;
+    const o = current();
+    drag = { dx: e.clientX - o.x, dy: e.clientY - o.y, w: o.w, h: o.h };
+    try { card.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+  card.addEventListener('pointermove', e => {
+    if (!drag) return;
+    place(clamp({ x: e.clientX - drag.dx, y: e.clientY - drag.dy, w: drag.w, h: drag.h }));
+  });
+  const endDrag = e => { if (!drag) return; drag = null; save(current()); };
+  card.addEventListener('pointerup', endDrag);
+  card.addEventListener('pointercancel', endDrag);
+  card.addEventListener('click', e => {
+    if (e.target.closest('.card-dock-reset')) { e.preventDefault(); const o = defaults(); place(o); save(o); }
+  });
+  // Resize (CSS resize handle) → persist
+  if (typeof ResizeObserver === 'function') {
+    let t = null;
+    new ResizeObserver(() => {
+      if (!modal.classList.contains('modal-docked') || drag) return;
+      clearTimeout(t); t = setTimeout(() => { if (modal.classList.contains('open')) save(current()); }, 250);
+    }).observe(card);
+  }
+  // Hook every card open: dock in the tier view, plain modal elsewhere
+  if (typeof openPlayerCard === 'function') {
+    const _open = openPlayerCard;
+    openPlayerCard = function (d, ctx) {
+      const r = _open.apply(this, arguments);
+      try { if (inTierView()) dock(); else undock(); } catch (e) { console.warn('[dock]', e); }
+      return r;
+    };
+    window.openPlayerCard = openPlayerCard;
+  }
+  window.addEventListener('resize', () => { if (modal.classList.contains('modal-docked')) place(clamp(current())); });
 })();

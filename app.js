@@ -9041,8 +9041,9 @@ function render() {
   // No cut line on this board → the BYE block closes the list
   if (_byeBlk && !_byeBlkDone) html += _byeBlockHtml();
 
-  // Tiers that come after the last player
-  if (showTiers) {
+  // Tiers that come after the last player — full board only; a narrowed view (search,
+  // MINE / AVAILABLE, watchlist, teams, injuries) shows just the tiers its players are in.
+  if (showTiers && !_narrowed) {
     const lastDisplayRank = data.length > 0 ? (useFilteredRank ? data.length : data[data.length-1].myRank) : 0;
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {

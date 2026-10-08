@@ -5015,6 +5015,11 @@ function getFiltered(applyTopN) {
   if (window._irHiddenHere(currentMode) && !query) {
     f = f.filter(d => !window._irIsOut(d.n));
   }
+  // WEEKLY: players Jack assumed out this week ride the BYE / OUT row instead
+  // (slot kept; a typed search and the INJURIES view still surface them).
+  if (currentMode === 'weekly' && !query && !window._injOnly && typeof window._weeklyAssumedOut === 'function') {
+    f = f.filter(d => !window._weeklyAssumedOut(d.n));
+  }
   // Defensive dedupe: a player should never appear twice in the rankings.
   // Some board sync paths can occasionally produce duplicate indices pointing
   // to the same D[] entry — keep the first occurrence and drop the rest.
@@ -5353,7 +5358,62 @@ const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1
 // source agrees (_weeklyOutConfirmed — Sleeper's Out lingers from Sunday's
 // inactives; Jack 2026-09-30: anyone at least Questionable stays in order).
 // Returns the status code ('OUT' | 'IR' | 'PUP' | 'SUS') or null.
+// ── WEEKLY "ASSUMED OUT" (Jack 2026-10-08) ───────────────────────────────
+// Admin marks a Questionable / Doubtful (or unconfirmed Out) player as out for
+// the active week before the designation lands. Weekly mode only: he leaves
+// the visible board (his weekly slot is kept), joins the BYE / OUT row as
+// "assumed out", his OPP cell reads OUT and his weekly PROJ is 0. Stored per
+// week on settings/active_week.assumeOut {"5": [names]} so it reaches every
+// client live through the settings snapshot and dies with the week.
+// localStorage mirrors it for pre-snapshot boot.
+window._weeklyAssumeOutMap = {};
+try { window._weeklyAssumeOutMap = JSON.parse(localStorage.getItem('mff_assume_out') || '{}') || {}; } catch(_e) { window._weeklyAssumeOutMap = {}; }
+window._weeklyAssumedOut = function(name, wk) {
+  if (!name) return false;
+  wk = wk || window._weeklyActiveWeek || 1;
+  const a = window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)];
+  return !!(a && a.indexOf(name) >= 0);
+};
+window._weeklyAssumeOutApply = function(map) {
+  map = (map && typeof map === 'object') ? map : {};
+  if (JSON.stringify(map) === JSON.stringify(window._weeklyAssumeOutMap)) return false;
+  window._weeklyAssumeOutMap = map;
+  try { localStorage.setItem('mff_assume_out', JSON.stringify(map)); } catch(_e) {}
+  return true;
+};
+window._weeklyAssumeOutToggle = function(name, wk) {
+  if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can assume a player out'); return false; }
+  wk = wk || window._weeklyActiveWeek || 1;
+  const k = String(wk), map = window._weeklyAssumeOutMap || {};
+  const cur = (map[k] || []).slice();
+  const i = cur.indexOf(name);
+  if (i >= 0) cur.splice(i, 1); else cur.push(name);
+  const next = Object.assign({}, map);
+  next[k] = cur;   // always written (an empty array clears the week under a merge write)
+  window._weeklyAssumeOutApply(next);
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
+      firebase.firestore().collection('settings').doc('active_week').set({ assumeOut: next }, { merge: true })
+        .catch(e => console.warn('[Weekly] assume-out sync failed:', e));
+    }
+  } catch(e) { console.warn('[Weekly] assume-out sync failed:', e); }
+  if (typeof toast === 'function') toast(i >= 0 ? name + ' back in the Week ' + wk + ' rankings' : name + ' assumed OUT for Week ' + wk);
+  if (typeof render === 'function' && typeof currentMode !== 'undefined' && currentMode === 'weekly') { try { render(); } catch(_e) {} }
+  if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
+  return true;
+};
+// Not coming back this season (Jack's out-for-season flag, a season-ending
+// tag, or the injury read's season-long return) — the BYE / OUT row lists
+// only players who plan on returning (Jack 2026-10-08).
+function _tcvOutForSeason(d) {
+  if (!d) return false;
+  if (window._irIsOut && window._irIsOut(d.n)) return true;
+  if (/out for season|season.?ending/.test(String(d.inj || '').toLowerCase())) return true;
+  try { const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null; if (x && x.ret && x.ret.season) return true; } catch(_e) {}
+  return false;
+}
 function _tcvOutThisWeek(d) {
+  if (d && typeof currentMode !== 'undefined' && currentMode === 'weekly' && window._weeklyAssumedOut(d.n)) return 'OUT';
   if (!d || !d.inj) return null;
   if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return null;
   const t = String(d.inj).toLowerCase();
@@ -7636,15 +7696,18 @@ function _tcvByeRowPlayers(data, belowCut) {
   if (!season) return null;
   const out = [], names = new Set();
   let rank = 0;
-  for (let i = 0; i < season.length && rank < limit; i++) {
+  for (let i = 0; i < season.length; i++) {
     const d = D[season[i]];
     if (!d || d._retired || d._isFuturePick || !posSet[d.s]) continue;
     rank++;
+    const assumed = window._weeklyAssumedOut(d.n);
+    if (rank > limit && !assumed) continue;                // past the cutoff (an assumed-out always rides along)
     if (visible.has(d.n)) continue;                        // above the cut — Jack's placement wins
     const why = _tcvAwayWhy(d);
     if (!why) continue;
+    if (why.kind === 'out' && !assumed && _tcvOutForSeason(d)) continue;   // not returning this season
     if (narrowed && !inData.has(d.n)) continue;
-    out.push({ d: d, seasonRank: rank, why: why.kind, code: why.code });
+    out.push({ d: d, seasonRank: rank, why: why.kind, code: why.code, assumed: assumed });
     names.add(d.n);
   }
   return out.length ? { players: out, names: names, limit: limit, custom: customCut != null } : null;
@@ -7796,7 +7859,7 @@ function _renderTierCardView(data, container) {
   keyCard.innerHTML =
     '<span class="tcv-key-title">KEY</span>' +
     '<span class="tcv-key-sample" title="Sample stat stack (top→bottom on each card)"><span style="color:var(--green)">17.3</span>/<span style="color:#facc15">15.8</span>/<span style="color:#facc15">23.4</span></span>' +
-    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:var(--text)">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE / OUT</b> row = start-worthy players on bye or ruled out this week (IR / PUP / SUS / confirmed Out) with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:var(--accent-blue)">↵</b> splits its tier onto a new row') + '</span>' +
+    '<span>= ' + (currentMode === 'weekly' ? 'W' + (window._weeklyActiveWeek || 1) + (_tcvBookPref() ? ' BOOK PROJ' : ' PROJ') : (_tcvRange() ? _tcvRange().tag + ' PROJ PPG (Sim Lab, games he plays)' + (_tcvRange().strip ? ' · W# = each week\'s opponent + projection' : '') : _tcvBookPref() ? 'BOOK PROJ PPG' : 'PROJ PPG')) + ' (' + scoreFmtLabel + (_tcvBookPref() ? ' · sportsbook lines; no lines = our PROJ' : '') + ') / ' + (data.some(d => _tcvSeasonPpg(d).yr === 26) ? '\'26 PPG (to date)' : '\'25 PPG') + ' / ' + (currentMode === 'weekly' ? 'TEAM TOTAL (this week\'s Vegas implied · D/ST = opponent total) · <b style="color:var(--text)">vs / @</b> + opponent logo' + (_tcvRows ? '' : ' (bottom-left)') + ' = W' + (window._weeklyActiveWeek || 1) + ' matchup (<b>green</b> soft · <i>red</i> tough)' + (_tcvBye ? ' · <b style="color:#cbd5e1">BYE / OUT</b> row = start-worthy players on bye, ruled out this week (IR / PUP / SUS / confirmed Out) or assumed out by Jack — season-enders left off — with a season rank in the top ' + _tcvBye.limit + (_tcvBye.custom ? ' (your BYE ≤ cutoff)' : ' (auto = cards shown; set BYE ≤ above to change)') + ', numbered by SEASON rank' : '') : (_tcvRange() && _tcvRange().strip) ? 'no team total (the matchups take its place)' : 'TEAM TOTAL (Vegas implied PPG)' + (_tcvRows ? ' · BYE chip = bye week' : '')) + (_tcvRows ? '' : ' · hover a card → <b style="color:var(--accent-blue)">↵</b> splits its tier onto a new row') + '</span>' +
     '<span class="tcv-key-color-note" style="margin-left:auto">Color = position threshold · <b>green</b> elite → <i>red</i> low</span>' +
     ((_tcvCanEditRanks() && window._tcvEdit.on) ? '<span class="tcv-key-edit" style="flex-basis:100%"><b style="color:var(--accent)">EDITING ' + _tcvEditBoardLabel() + ':</b> drag a card onto another card (above / below it), onto a tier letter (top of that tier) or into a tier\'s empty space (bottom of it) · click a rank number to type a rank · <b style="color:var(--text)">TIERS:</b> hover a card → <b style="color:var(--text)">+ TIER</b> starts a tier there · drag a tier letter onto a card to move its break · ✎ on a letter renames it · ✕ removes it · <b style="color:var(--red)">CUT LINE:</b> hover a card → <b style="color:var(--red)">✂ CUT</b> hides everyone below him · drag the ✂ letter onto a card to move the line · ✕ on ✂ clears it · ' + (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX') ? 'POS LOCK is on — position-mates ride along · ' : '') + 'then <b style="color:var(--text)">SAVE</b></span>' : '') +
     (_tcvMoveOn ? '<span class="tcv-key-move" style="flex-basis:100%">' + (
@@ -7857,7 +7920,7 @@ function _renderTierCardView(data, container) {
     const _byeKinds = g.bye ? { bye: g.players.some(p => p.why !== 'out'), out: g.players.some(p => p.why === 'out') } : null;
     letter.textContent = g.cut ? '✂' : g.bye ? (_byeKinds.bye && _byeKinds.out ? '' : _byeKinds.out ? 'OUT' : 'BYE') : (g.label || '—');
     if (g.bye && _byeKinds.bye && _byeKinds.out) { letter.classList.add('tcv-letter-2l'); letter.innerHTML = 'BYE<br>OUT'; }
-    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : g.bye ? 'NOT PLAYING IN WEEK ' + (window._weeklyActiveWeek || 1) + ' — start-worthy players on bye or ruled out (IR / PUP / SUS / Out), numbered by their SEASON rank (not ranked on this week\'s board). ' : '') + 'Click to hide / reveal every player in this ' + (g.bye ? 'row' : 'tier') + ' (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
+    letter.title = (g.cut ? 'BELOW THE CUT LINE — hidden from viewers. ' : g.bye ? 'NOT PLAYING IN WEEK ' + (window._weeklyActiveWeek || 1) + ' — start-worthy players on bye, ruled out (IR / PUP / SUS / Out) or assumed out by Jack, numbered by their SEASON rank (not ranked on this week\'s board). Players out for the season are left off. ' : '') + 'Click to hide / reveal every player in this ' + (g.bye ? 'row' : 'tier') + ' (' + g.players.length + ' player' + (g.players.length === 1 ? '' : 's') + ')';
     // EDIT RANKS: the tier object behind this group (none for ✂ / untiered)
     const _gTier = (!g.cut && g.label && typeof tiers !== 'undefined') ? tiers.find(t => t.label === g.label) : null;
     if (_gTier) row._tcvTierId = _gTier.id;
@@ -8355,7 +8418,7 @@ function render() {
     const n = _byeBlk.players.length;
     let h = `<tr class="tier-row bye-line-row"><td colspan="17"><div class="tier-inner" style="border-color:rgba(148,163,184,.45)">
       <span class="tier-badge bye-badge">BYE</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} ${(() => { const b = _byeBlk.players.some(p => p.why !== 'out'), o = _byeBlk.players.some(p => p.why === 'out'); return b && o ? 'BYES &amp; OUT' : o ? 'RULED OUT' : 'BYES'; })()} · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} ${(() => { const b = _byeBlk.players.some(p => p.why !== 'out'), o = _byeBlk.players.some(p => p.why === 'out'), a = o && _byeBlk.players.every(p => p.why !== 'out' || p.assumed); return b && o ? 'BYES &amp; OUT' : a ? 'ASSUMED OUT' : o ? 'RULED OUT' : 'BYES'; })()} · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
     </div></td></tr>`;
     _byeBlk.players.forEach(p => {
       const d = p.d, dn = (d.n || '').replace(/"/g, '&quot;');
@@ -8368,8 +8431,8 @@ function render() {
         <td class="myrank-cell"><span class="myrank-num bye-rank" title="On bye in week ${wk} — season ${d.s === 'DST' ? 'D/ST' : d.s} rank ${p.seasonRank} on the redraft board (not ranked this week)">${rankLbl}</span></td>
         <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
-        <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
-        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}</td>
+        <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.assumed ? 'Assumed out for week ' + wk + ' (Jack\'s call) — ' : ''}${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
+        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.assumed ? '<b class="bye-assumed" title="Jack assumes he sits this week — not yet ruled out">ASSUMED OUT</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}${p.assumed && typeof window.isAdmin === 'function' && window.isAdmin() ? ` <button class="bye-undo-btn" type="button" data-assume-undo="${dn}" title="Put ${dn} back in the week ${wk} rankings">UNDO</button>` : ''}</td>
       </tr>`;
     });
     return h;
@@ -10654,6 +10717,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const entry = sched[wk];
     if (!entry) return basePpg;
     if (entry.bye) { _tag('bye'); return 0; }
+    if (typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, wk)) { _tag('out'); return 0; }
     // Injury gate (in-season only — offseason tags are stale)
     let injMult = 1;
     const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
@@ -10935,6 +10999,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   function _weeklyApplySettings(d) {
     const sel = document.getElementById('activeWeekSelect');
     window._weeklyLastSettings = d;
+    if (typeof window._weeklyAssumeOutApply === 'function') window._weeklyAssumeOutApply(d.assumeOut);
     let wk = parseInt(d.week, 10);
     let pw = (d.publishedWeek == null) ? null : parseInt(d.publishedWeek, 10);
     if (!(pw >= 1 && pw <= 18)) pw = null;
@@ -16954,6 +17019,9 @@ function _injShowDetail(d, pillEl) {
     rows.push(['Proj impact', '-' + Math.round((1 - d._injDiscount.mult) * 100) + '% baked into Proj PPG']);
   }
   if (det && det.n && det.n.toLowerCase() !== (body || '').toLowerCase()) rows.push(['Note', det.n]);
+  var _aoWk = window._weeklyActiveWeek || 1;
+  var _aoOn = typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, _aoWk);
+  if (_aoOn) rows.push(['Week ' + _aoWk, "Assumed out — Jack's call (not yet ruled out)"]);
   var newsHtml = '';
   if (window._campNewsIdx) {
     var arr = window._campNewsIdx[_campNewsNorm(d.n)];
@@ -16973,6 +17041,18 @@ function _injShowDetail(d, pillEl) {
       return '<span class="injp-k">' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span>';
     }).join('') + '</div>' + newsHtml +
     '<div class="injp-foot">Sleeper injury feed' + (upd && !isNaN(upd) ? ' · updated ' + upd.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '') + '</div>';
+  // Admin, in WEEKLY: assume a Q / D / unconfirmed-Out player out for the week (or undo it)
+  if (typeof window.isAdmin === 'function' && window.isAdmin() && typeof currentMode !== 'undefined' && currentMode === 'weekly'
+      && code !== 'IR' && code !== 'PUP' && code !== 'SUS' && d.s !== 'DST' && typeof window._weeklyAssumeOutToggle === 'function') {
+    var _aoBtn = document.createElement('button');
+    _aoBtn.type = 'button';
+    _aoBtn.className = 'injp-assume' + (_aoOn ? ' on' : '');
+    _aoBtn.textContent = _aoOn ? 'UNDO · BACK IN WEEK ' + _aoWk : 'ASSUME OUT · WEEK ' + _aoWk;
+    _aoBtn.title = _aoOn ? 'Put him back on the Week ' + _aoWk + ' board'
+      : 'Treat him as out for Week ' + _aoWk + ' before the designation lands: pulled off the weekly board into the BYE / OUT row, weekly PROJ 0, OPP reads OUT. His weekly slot is kept — undo any time. Syncs to every user.';
+    _aoBtn.addEventListener('click', function (ev) { ev.stopPropagation(); pop.style.display = 'none'; window._weeklyAssumeOutToggle(d.n, _aoWk); });
+    pop.appendChild(_aoBtn);
+  }
   pop._forName = d.n;
   pop.style.display = 'block';
   var r = pillEl.getBoundingClientRect();
@@ -16982,6 +17062,13 @@ function _injShowDetail(d, pillEl) {
   pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
 }
 window._injShowDetail = _injShowDetail;
+// BYE / OUT row UNDO (admin): put an assumed-out player back on the weekly board
+document.addEventListener('click', function (e) {
+  var b = e.target && e.target.closest ? e.target.closest('[data-assume-undo]') : null;
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  if (typeof window._weeklyAssumeOutToggle === 'function') window._weeklyAssumeOutToggle(b.getAttribute('data-assume-undo'));
+}, true);
 // Name-keyed pill for surfaces that render rows from name strings (My Teams):
 // resolves the D row via nameToIdx and wraps the pill with the data-injname
 // hook the document-level delegate below reads. Empty string when healthy or
@@ -17126,7 +17213,7 @@ async function _snapElement(el, fileLabel) {
   if (window._hsNormalizeAll) await window._hsNormalizeAll(el);   // square-headshot crop before capture
   const src = await window.html2canvas(el, {
     backgroundColor: bg, scale: SCALE, useCORS: true, logging: false,
-    ignoreElements: node => !!((node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close') || node.classList.contains('card-finder-row'))) || node.id === 'cardIrToggle'),
+    ignoreElements: node => !!((node.classList && (node.classList.contains('card-snap-btn') || node.classList.contains('card-share') || node.classList.contains('card-close') || node.classList.contains('card-finder-row'))) || node.id === 'cardIrToggle' || node.id === 'cardAssumeOutToggle'),
     // html2canvas ignores object-fit and stretches covered imgs (player
     // headshots). Swap them for background-image divs — background-size:
     // cover renders correctly — keeping size, radius, border and position.
@@ -17844,8 +17931,10 @@ function openPlayerCard(d, ctxMode) {
             ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
             ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
             ${_buildInjuryBadge(d)}
+            ${(typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow()) ? `<span class="inj-pill" data-status="O" title="Jack assumes he sits in Week ${window._weeklyActiveWeek || 1} — pulled from the weekly board into the BYE / OUT row until he is cleared or ruled out">ASSUMED OUT WK ${window._weeklyActiveWeek || 1}</span>` : ''}
             ${window._irIsOut(d.n) ? `<span class="inj-pill" data-status="OUT" title="Out for season — hidden from the ${IR_SEASON} Redraft / Best Ball / Superflex / Weekly rankings. Dynasty boards and this card are unaffected; the flag clears automatically next season.">OUT FOR SEASON</span>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026) ? `<button id="cardIrToggle" title="${window._irIsOut(d.n) ? 'Restore this player to the season rankings (their board slot was kept)' : 'Hide this player from the ' + IR_SEASON + ' Redraft / Best Ball / Superflex / Weekly rankings — board slot, dynasty ranks, card and search are kept, and the flag auto-clears next season'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};background:transparent;color:${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};white-space:nowrap">${window._irIsOut(d.n) ? 'RESTORE TO RANKINGS' : 'MARK OUT FOR SEASON'}</button>` : ''}
+            ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026 && d.s !== 'DST' && !window._irIsOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow() && typeof window._weeklyAssumeOutToggle === 'function') ? (() => { const _aw = window._weeklyActiveWeek || 1, _on = window._weeklyAssumedOut(d.n, _aw); return `<button id="cardAssumeOutToggle" title="${_on ? 'Put him back on the Week ' + _aw + ' board' : 'Treat him as out for Week ' + _aw + ' before the designation lands: pulled off the weekly board into the BYE / OUT row, weekly PROJ 0, OPP reads OUT. Weekly slot kept — undo any time. Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_on ? 'var(--green)' : '#f59e0b'};background:transparent;color:${_on ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${_on ? 'BACK IN WEEK ' + _aw : 'ASSUME OUT WEEK ' + _aw}</button>`; })() : ''}
           </div>
           ${_playerRoleRow(d)}
           ${_usageTrendRow(d)}
@@ -18280,6 +18369,14 @@ function openPlayerCard(d, ctxMode) {
       if (label && !confirm(label)) return;
       if (!window._irToggle(d.n)) return;
       toast(wasOut ? d.n + ' restored to the season rankings' : d.n + ' hidden from ' + IR_SEASON + ' season rankings (' + window._irFlagged().length + ' player' + (window._irFlagged().length === 1 ? '' : 's') + ' flagged)');
+      if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
+    });
+  }
+
+  const _cardAoBtn = document.getElementById('cardAssumeOutToggle');
+  if (_cardAoBtn) {
+    _cardAoBtn.addEventListener('click', () => {
+      if (!window._weeklyAssumeOutToggle(d.n)) return;
       if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
     });
   }

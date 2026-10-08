@@ -1,0 +1,47 @@
+=== LOW-PROJECTION TAIL: dud mixture on the shadow center, 10,505 rows ===
+
+--- proj 3-8 ---
+  as wired (gamma)               n 2048 | p10-p90  76.5% (below 12.5, above 11.0) | CRPS 2.852 | pinball 1.806
+  dud q 0.05 f 0.2               n 2048 | p10-p90  78.0% (below 10.4, above 11.7) | CRPS 2.850 | pinball 1.809
+  dud q 0.05 f 0.4               n 2048 | p10-p90  76.9% (below 11.5, above 11.7) | CRPS 2.847 | pinball 1.805
+  dud q 0.10 f 0.2               n 2048 | p10-p90  79.2% (below  8.5, above 12.4) | CRPS 2.859 | pinball 1.806
+  dud q 0.10 f 0.4               n 2048 | p10-p90  77.0% (below 10.6, above 12.4) | CRPS 2.849 | pinball 1.809
+  dud q 0.15 f 0.2               n 2048 | p10-p90  79.7% (below  7.1, above 13.2) | CRPS 2.880 | pinball 1.816
+  dud q 0.15 f 0.4               n 2048 | p10-p90  76.9% (below 10.0, above 13.1) | CRPS 2.859 | pinball 1.812
+  dud q 0.20 f 0.2               n 2048 | p10-p90  79.5% (below  6.6, above 13.9) | CRPS 2.911 | pinball 1.830
+  dud q 0.20 f 0.4               n 2048 | p10-p90  77.1% (below  9.4, above 13.6) | CRPS 2.872 | pinball 1.816
+  sigma x1.15 instead            n 2048 | p10-p90  81.6% (below  9.0, above  9.4) | CRPS 2.859 | pinball 1.809
+
+--- proj 8-12 ---
+  as wired (gamma)               n 3985 | p10-p90  81.0% (below  8.6, above 10.4) | CRPS 3.749 | pinball 2.326
+  dud q 0.05 f 0.2               n 3985 | p10-p90  82.3% (below  6.4, above 11.3) | CRPS 3.785 | pinball 2.338
+  dud q 0.05 f 0.4               n 3985 | p10-p90  81.1% (below  7.4, above 11.4) | CRPS 3.774 | pinball 2.331
+  dud q 0.10 f 0.2               n 3985 | p10-p90  83.0% (below  5.2, above 11.8) | CRPS 3.830 | pinball 2.355
+  dud q 0.10 f 0.4               n 3985 | p10-p90  81.3% (below  6.8, above 11.9) | CRPS 3.804 | pinball 2.333
+  dud q 0.15 f 0.2               n 3985 | p10-p90  83.1% (below  4.2, above 12.7) | CRPS 3.905 | pinball 2.368
+  dud q 0.15 f 0.4               n 3985 | p10-p90  81.1% (below  6.3, above 12.6) | CRPS 3.841 | pinball 2.341
+  dud q 0.20 f 0.2               n 3985 | p10-p90  82.9% (below  3.6, above 13.5) | CRPS 3.988 | pinball 2.393
+  dud q 0.20 f 0.4               n 3985 | p10-p90  80.5% (below  5.9, above 13.6) | CRPS 3.894 | pinball 2.360
+  sigma x1.15 instead            n 3985 | p10-p90  85.6% (below  5.9, above  8.4) | CRPS 3.799 | pinball 2.355
+
+--- proj 12+ ---
+  as wired (gamma)               n 4472 | p10-p90  83.1% (below  8.6, above  8.3) | CRPS 4.543 | pinball 2.842
+  dud q 0.05 f 0.2               n 4472 | p10-p90  85.8% (below  5.4, above  8.8) | CRPS 4.581 | pinball 2.860
+  dud q 0.05 f 0.4               n 4472 | p10-p90  84.5% (below  6.8, above  8.7) | CRPS 4.558 | pinball 2.837
+  dud q 0.10 f 0.2               n 4472 | p10-p90  87.5% (below  3.0, above  9.5) | CRPS 4.655 | pinball 2.914
+  dud q 0.10 f 0.4               n 4472 | p10-p90  84.9% (below  5.5, above  9.6) | CRPS 4.605 | pinball 2.847
+  dud q 0.15 f 0.2               n 4472 | p10-p90  87.5% (below  2.2, above 10.3) | CRPS 4.768 | pinball 2.966
+  dud q 0.15 f 0.4               n 4472 | p10-p90  85.2% (below  4.7, above 10.1) | CRPS 4.667 | pinball 2.858
+  dud q 0.20 f 0.2               n 4472 | p10-p90  87.3% (below  1.8, above 10.9) | CRPS 4.915 | pinball 2.990
+  dud q 0.20 f 0.4               n 4472 | p10-p90  85.1% (below  3.9, above 11.0) | CRPS 4.756 | pinball 2.875
+  sigma x1.15 instead            n 4472 | p10-p90  87.8% (below  6.0, above  6.2) | CRPS 4.606 | pinball 2.917
+
+--- proj 3-8 by position (q .10 f .3 vs wired) ---
+  RB as wired                    n  766 | p10-p90  73.9% (below 14.9, above 11.2) | CRPS 2.810 | pinball 1.828
+  RB dud q .10 f .3              n  766 | p10-p90  76.0% (below 11.6, above 12.4) | CRPS 2.789 | pinball 1.819
+  WR as wired                    n  737 | p10-p90  77.2% (below 12.3, above 10.4) | CRPS 2.934 | pinball 1.819
+  WR dud q .10 f .3              n  737 | p10-p90  77.1% (below 10.3, above 12.6) | CRPS 2.940 | pinball 1.809
+  TE as wired                    n  545 | p10-p90  79.3% (below  9.4, above 11.4) | CRPS 2.806 | pinball 1.774
+  TE dud q .10 f .3              n  545 | p10-p90  81.8% (below  6.1, above 12.1) | CRPS 2.828 | pinball 1.787
+
+Limitations: single-week draws, shadow replica center, no availability / season shock; the mixture leaves the mean at (1 - q + q f) x mu, i.e. it also lowers the center - a wired version would renormalise.

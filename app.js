@@ -14553,7 +14553,7 @@ function _buildKdstWeeklyTable(d, season, withChart) {
   }
 
   const _is26 = +season === 2026;
-  let hdr = '<tr><th>WK</th><th>OPP</th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RNK</span></th>';
+  let hdr = '<tr><th>WK</th><th>OPP</th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th>FPTS</th><th><span data-gloss="Positional rank that week by fantasy points">RK</span></th>';
   if (isK) hdr += '<th><span data-gloss="Field goals made">FGM</span></th><th><span data-gloss="Field goal attempts">FGA</span></th><th><span data-gloss="Makes from 40-49 yards">40-49</span></th><th><span data-gloss="Makes from 50+ yards">50+</span></th><th><span data-gloss="Longest make">LNG</span></th><th>XPM</th><th>XPA</th>';
   else hdr += '<th><span data-gloss="Sacks">SCK</span></th><th>INT</th><th><span data-gloss="Opponent fumbles recovered">FR</span></th><th><span data-gloss="Defensive + special-teams TDs">TD</span></th><th><span data-gloss="Safeties">SFTY</span></th><th><span data-gloss="Blocked kicks">BLK</span></th><th><span data-gloss="Points allowed">PA</span></th>';
   hdr += '</tr>';
@@ -15116,7 +15116,7 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     + (mode === 'tot' ? '<th>Pts</th>' : '')
     + '<th><span data-gloss="' + (mode === 'tot'
         ? 'Positional finish that season by total fantasy points, across all NFL players'
-        : 'Positional finish that season by fantasy PPG (min 8 games played), across all NFL players') + '">RNK</span></th>'
+        : 'Positional finish that season by fantasy PPG (min 8 games played), across all NFL players') + '">RK</span></th>'
     + '<th><span data-gloss="Offensive snap share that season (nflverse, 2012+)">SNAP%</span></th>';
   cols.forEach(col => {
     hdr += col[1] ? '<th><span data-gloss="' + col[1] + '">' + col[0] + '</span></th>' : '<th>' + col[0] + '</th>';

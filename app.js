@@ -9041,8 +9041,9 @@ function render() {
   // No cut line on this board → the BYE block closes the list
   if (_byeBlk && !_byeBlkDone) html += _byeBlockHtml();
 
-  // Tiers that come after the last player
-  if (showTiers) {
+  // Tiers that come after the last player — full board only; a narrowed view (search,
+  // MINE / AVAILABLE, watchlist, teams, injuries) shows just the tiers its players are in.
+  if (showTiers && !_narrowed) {
     const lastDisplayRank = data.length > 0 ? (useFilteredRank ? data.length : data[data.length-1].myRank) : 0;
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {
@@ -31247,8 +31248,26 @@ window.fmtHeight = fmtHeight;
   // second… — so a 3-for-1 is docked harder than a 2-for-1 and the single
   // star needs real quality back, not quantity. The smaller side of a trade
   // still counts in full (2026-10-06 rule). pkgTax 0 stays a spare lever.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.75,
-    pkgTax: 0,
+  // SMOOTH TIERS + extraPieceW 0.825 (Jack 2026-10-08 later: "don't worry
+  // about tiers too much" — Flock's values are a pure rank curve, tiers are
+  // labels there). The tier index is now FRACTIONAL: value slides from one
+  // tier start to the next instead of holding flat inside a tier and dropping
+  // 15% at the break (#4 249 → #5 210 was a cliff). Tier breaks still set the
+  // slope, so Jack's board keeps shaping prices. Benchmarked on 49 same-rank-
+  // slot trades vs Flock's /trades/calculate (smooth tiers alone: mean edge
+  // gap 7.0 → 4.3 pts). smoothTiers false restores the step ladder. Smoothing
+  // AND the tail below apply only in single-season modes (_wnSingleSeason) —
+  // the benchmark was redraft; dynasty keeps the step ladder unchanged.
+  // SINGLE-SEASON TAIL (same day): past rank tailStart the value also decays
+  // ×e^(−(rank − tailStart)/tailScale) in redraft / best ball / superflex /
+  // weekly (the _irHiddenHere modes; dynasty untouched) — our board held mid-
+  // round value too long (#60 at 20% of #1, Flock 12%), so two #55-#65s beat a
+  // #40 (+19% package; Flock FAIR). Smooth + tail, extras 0.875: gap 2.2 pts,
+  // lean 0.0, same verdict direction 45/49 (was 29/49 at the 0.75 step
+  // ladder). The roster-spot cost still reads the UNTAILED base (~10) so junk
+  // throw-ins stay worthless. Script: E:\MyFantasyFootball\trade_calc_flock_compare.
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.875,
+    pkgTax: 0, smoothTiers: true, tailStart: 45, tailScale: 40,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
     // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
@@ -31260,21 +31279,44 @@ window.fmtHeight = fmtHeight;
   // tier index when the board has tiers, pseudo-ladder index by rank when it
   // doesn't (previously tierless boards got factor 1, leaving consensus
   // values flat — rank 60 priced at 88% of #1).
+  // Pseudo-ladder tier index at a rank — fractional when smoothTiers is on:
+  // i + (rank − start_i) / (start_{i+1} − start_i), the last tier spanning 20.
+  const _wnSingleSeason = function(mode) {
+    return typeof window._irHiddenHere === 'function' && window._irHiddenHere(mode);
+  };
+  const _wnPseudoIdx = function(rank, smooth) {
+    const WN = window._WINNOW_VAL;
+    const L = WN.pseudoTiers || [];
+    let idx = 0;
+    for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
+    if (!smooth || !WN.smoothTiers || !L.length) return idx;
+    const from = L[idx], next = L[idx + 1] != null ? L[idx + 1] : from + 20;
+    return idx + Math.min(Math.max((rank - from) / (next - from), 0), 1);
+  };
   window._winnowTierFactor = function(d, src, mode, rank) {
     const WN = window._WINNOW_VAL;
     let idx = null;
+    const single = _wnSingleSeason(mode);
     const tr = window._mtTierRangeFor(d, src, mode);
     if (tr && tr.count >= _WN_MIN_TIERS) {
       idx = tr.index;
+      // Real tiers: slide across the tier's own span [from, to] toward the next break.
+      if (single && WN.smoothTiers && isFinite(tr.rank) && tr.to >= tr.from) {
+        idx += Math.min(Math.max((tr.rank - tr.from) / (tr.to - tr.from + 1), 0), 1);
+      }
     } else if (isFinite(rank) && rank >= 1 && rank < 999) {
-      const L = WN.pseudoTiers || [];
-      idx = 0;
-      for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
+      idx = _wnPseudoIdx(rank, single);
     }
     if (idx == null) return 1;
     // Geometric ladder: each tier break compounds. No floor — deep tiers are
     // supposed to approach worthless on the win-now scale (Flock-steep).
-    return Math.pow(1 - WN.tierDrop, idx);
+    let f = Math.pow(1 - WN.tierDrop, idx);
+    // Single-season tail (see _WINNOW_VAL): rank decay past tailStart.
+    const r = (isFinite(rank) && rank >= 1 && rank < 999) ? rank : (tr && isFinite(tr.rank) ? tr.rank : null);
+    if (single && r != null && WN.tailScale > 0 && r > WN.tailStart) {
+      f *= Math.exp(-(r - WN.tailStart) / WN.tailScale);
+    }
+    return f;
   };
   // A board's OWN tiers drive the ladder only when dense enough to price with
   // (Jack's dynasty/superflex boards carry just 4-7 boundaries — real tiers
@@ -31284,12 +31326,9 @@ window.fmtHeight = fmtHeight;
   const _WN_MIN_TIERS = 8;
   // Source-independent win-now value at a board rank (linear base × the
   // pseudo-ladder tier factor) — the baseline for package economics.
-  window._winnowBaseValue = function(rank) {
+  window._winnowBaseValue = function(rank, mode) {
     const WN = window._WINNOW_VAL;
-    const L = WN.pseudoTiers || [];
-    let idx = 0;
-    for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
-    return Math.max(WN.zero - rank, 0) * WN.slope * Math.pow(1 - WN.tierDrop, idx);
+    return Math.max(WN.zero - rank, 0) * WN.slope * Math.pow(1 - WN.tierDrop, _wnPseudoIdx(rank, _wnSingleSeason(mode)));
   };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
@@ -31329,7 +31368,7 @@ window.fmtHeight = fmtHeight;
   // 09-01 morning history in the repo log).
   window._packageRosterCost = function(mode) {
     const WN = window._WINNOW_VAL;
-    return Math.max(Math.round(window._winnowBaseValue(WN.replRank)), 1);
+    return Math.max(Math.round(window._winnowBaseValue(WN.replRank, mode)), 1);
   };
   // vsCount = pieces coming back the other way (default 1, the n-for-1 case
   // the finders price). Only UNMATCHED pieces pay — the side sending more

@@ -1,0 +1,22 @@
+=== 1  2026 WEEKS 1-4: receiving points allowed per route (half PPR), by alignment ===
+  league per-route: slot 0.264 | wide 0.271 | te 0.275 | all 0.271
+  ratio to league (1.00 = average; 1.30 = allows 30% more per route). 32 defenses.
+
+  vs SLOT WRs: most generous DAL 1.43, ARI 1.39, HOU 1.36, PHI 1.36, TEN 1.28 | stingiest TB 0.60, SEA 0.62, KC 0.67, GB 0.74, PIT 0.78
+
+  vs OUTSIDE WRs: most generous ARI 1.70, WAS 1.32, LAC 1.24, HOU 1.24, NO 1.22 | stingiest KC 0.59, SEA 0.60, CIN 0.69, MIA 0.74, CAR 0.77
+
+  vs TEs: most generous MIA 1.93, WAS 1.81, ARI 1.49, TB 1.47, DET 1.42 | stingiest NE 0.47, PHI 0.49, SF 0.56, LAR 0.61, CHI 0.65
+
+  slot MINUS outside (slot-specific weakness): most generous NYG 0.32, PHI 0.23, DAL 0.23, DEN 0.19, SF 0.19 | stingiest PIT -0.35, ARI -0.31, WAS -0.30, GB -0.30, TB -0.29
+
+=== 2  DOES A 4-WEEK READ HOLD? 2019-25: weeks 1-4 vs the same defense in weeks 5-17 ===
+  all receivers (position FPA-like)  r weeks 1-4 -> 5-17: +0.13 (by season +0.22 +0.45 +0.10 -0.21 +0.06 -0.16 +0.42) | the 4 most extreme defenses keep 6% of their week 1-4 gap
+  slot WRs                           r weeks 1-4 -> 5-17: +0.17 (by season +0.16 +0.28 +0.07 +0.12 +0.23 -0.33 +0.65) | the 4 most extreme defenses keep 17% of their week 1-4 gap
+  outside WRs                        r weeks 1-4 -> 5-17: +0.07 (by season +0.27 +0.20 -0.01 -0.21 +0.13 -0.23 +0.33) | the 4 most extreme defenses keep 13% of their week 1-4 gap
+  TEs                                r weeks 1-4 -> 5-17: +0.16 (by season +0.02 +0.07 +0.36 +0.22 +0.07 +0.04 +0.33) | the 4 most extreme defenses keep 20% of their week 1-4 gap
+  slot-vs-outside contrast           r weeks 1-4 -> 5-17: +0.11 (by season +0.25 -0.29 +0.03 +0.28 +0.18 +0.31 +0.04) | the 4 most extreme defenses keep 6% of their week 1-4 gap
+
+  read: r near 0 = the 4-week ranking is mostly noise; 'keep' = how much of an extreme team's early gap shows up the rest of the year.
+
+Limitations: PFF alignment shares per player-week (a receiver's points split by his route mix); receiving points only; TE = all TE routes; 2026 = 4 games per defense.

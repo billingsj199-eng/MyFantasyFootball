@@ -1,0 +1,770 @@
+[
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_SHADOW_OPP",
+  "lab": "opponent grade (blended FPA)",
+  "n": 63,
+  "of": 187,
+  "up": 44,
+  "dn": 19,
+  "avg": 0.422454873084631,
+  "plus": [
+   "Darnell Mooney +1.0",
+   "Tre Tucker +0.9",
+   "Malik Washington +0.8"
+  ],
+  "minus": [
+   "Trey McBride -1.4",
+   "Tucker Kraft -0.9",
+   "Devaughn Vele -0.8"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_NC_VEGEV",
+  "lab": "Vegas implied total",
+  "n": 43,
+  "of": 187,
+  "up": 20,
+  "dn": 23,
+  "avg": 0.24469407858823916,
+  "plus": [
+   "Bijan Robinson +0.7",
+   "Quinshon Judkins +0.5",
+   "Jaylen Warren +0.3"
+  ],
+  "minus": [
+   "Jahmyr Gibbs -1.0",
+   "James Cook -0.6",
+   "Derrick Henry -0.6"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_NC_TOTAL",
+  "lab": "QB shootout tilt (game total)",
+  "n": 23,
+  "of": 187,
+  "up": 7,
+  "dn": 16,
+  "avg": 0.43709816170462856,
+  "plus": [
+   "Jared Goff +1.4",
+   "Matthew Stafford +1.3",
+   "Jacoby Brissett +1.1"
+  ],
+  "minus": [
+   "C.J. Stroud -0.6",
+   "Cameron Ward -0.5",
+   "Deshaun Watson -0.5"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_WEATHER",
+  "lab": "weather (wind / rain / cold)",
+  "n": 35,
+  "of": 187,
+  "up": 0,
+  "dn": 35,
+  "avg": 0.3604723774148018,
+  "plus": [
+   "Greg Dulcich -0.1",
+   "Courtland Sutton -0.1",
+   "Evan Engram -0.1"
+  ],
+  "minus": [
+   "Jayden Daniels -1.0",
+   "Jameis Winston -0.8",
+   "Malik Nabers -0.6"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_CB_DOCK",
+  "lab": "shadow CB coverage",
+  "n": 17,
+  "of": 187,
+  "up": 0,
+  "dn": 17,
+  "avg": 0.4257656486105373,
+  "plus": [
+   "Roman Wilson -0.2",
+   "Josh Cameron -0.3",
+   "Matthew Golden -0.3"
+  ],
+  "minus": [
+   "Trevor Lawrence -0.7",
+   "Aaron Rodgers -0.7",
+   "Jordan Love -0.7"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_CB1_BOOST",
+  "lab": "opponent's CB1 out",
+  "n": 4,
+  "of": 187,
+  "up": 4,
+  "dn": 0,
+  "avg": 0.4586440367504572,
+  "plus": [
+   "Ladd McConkey +0.8",
+   "Justin Herbert +0.6",
+   "Tre Harris +0.2"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_OL_DOCK",
+  "lab": "own O-line starters out",
+  "n": 15,
+  "of": 187,
+  "up": 0,
+  "dn": 15,
+  "avg": 0.27276214986781916,
+  "plus": [
+   "Tyjae Spears -0.1",
+   "Keaton Mitchell -0.1",
+   "Tony Pollard -0.1"
+  ],
+  "minus": [
+   "Jeremiyah Love -0.7",
+   "Jacoby Brissett -0.5",
+   "Michael Wilson -0.4"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_PRESSURE_BOOST",
+  "lab": "opponent pass-rush pressure",
+  "n": 9,
+  "of": 187,
+  "up": 9,
+  "dn": 0,
+  "avg": 0.49160560335211323,
+  "plus": [
+   "Josh Allen +0.6",
+   "Dak Prescott +0.6",
+   "Jared Goff +0.6"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "MATCHUP",
+  "sw": "SIM_BLOWOUT_CTX",
+  "lab": "blowout / garbage-time context",
+  "n": 9,
+  "of": 187,
+  "up": 4,
+  "dn": 5,
+  "avg": 0.4906762114311124,
+  "plus": [
+   "Ladd McConkey +1.5",
+   "Quentin Johnston +0.4",
+   "Rico Dowdle +0.3"
+  ],
+  "minus": [
+   "Kyren Williams -1.3",
+   "Brenton Strange -0.3",
+   "Tyler Higbee -0.2"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "TEAM",
+  "sw": "SIM_NC_VOL",
+  "lab": "team pass volume vs script (+ underdog att)",
+  "n": 91,
+  "of": 187,
+  "up": 50,
+  "dn": 41,
+  "avg": 0.5875562491897679,
+  "plus": [
+   "Jaxon Smith-Njigba +1.8",
+   "Drake London +1.2",
+   "Brock Bowers +1.2"
+  ],
+  "minus": [
+   "Amon-Ra St. Brown -3.2",
+   "Chris Olave -2.9",
+   "Jameson Williams -2.0"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "TEAM",
+  "sw": "SIM_BOX_CTX",
+  "lab": "defenders in the box faced",
+  "n": 27,
+  "of": 187,
+  "up": 12,
+  "dn": 15,
+  "avg": 0.5312412268629512,
+  "plus": [
+   "Jaxon Smith-Njigba +1.2",
+   "Garrett Wilson +0.9",
+   "DJ Moore +0.9"
+  ],
+  "minus": [
+   "Amon-Ra St. Brown -1.1",
+   "Trey McBride -0.9",
+   "Puka Nacua -0.9"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_NC_USAGE",
+  "lab": "usage evidence (targets / xFP / routes)",
+  "n": 68,
+  "of": 187,
+  "up": 42,
+  "dn": 26,
+  "avg": 0.33753359011003486,
+  "plus": [
+   "DK Metcalf +0.8",
+   "Courtland Sutton +0.8",
+   "Michael Wilson +0.8"
+  ],
+  "minus": [
+   "Drake London -1.2",
+   "Jaxon Smith-Njigba -1.1",
+   "Zay Flowers -1.0"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_NC_DEPTH",
+  "lab": "depth-chart string docks",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_PECK_DOCK",
+  "lab": "pecking order (WR3 / RB2)",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_NC_TE_DOCKS",
+  "lab": "TE snap docks at half strength",
+  "n": 26,
+  "of": 187,
+  "up": 9,
+  "dn": 17,
+  "avg": 0.4529624465492837,
+  "plus": [
+   "Kyle Pitts +0.5",
+   "Mark Andrews +0.5",
+   "Dalton Kincaid +0.5"
+  ],
+  "minus": [
+   "George Kittle -2.1",
+   "Tyler Higbee -0.8",
+   "Trey McBride -0.8"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_NC_ELITE_TREND",
+  "lab": "no RB snap-trend dock for top-30",
+  "n": 5,
+  "of": 187,
+  "up": 5,
+  "dn": 0,
+  "avg": 0.597806589547327,
+  "plus": [
+   "Bijan Robinson +1.0",
+   "Jonathan Taylor +0.9",
+   "James Cook +0.6"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_NC_BLOW",
+  "lab": "RB snap dip excused after a blowout",
+  "n": 4,
+  "of": 187,
+  "up": 4,
+  "dn": 0,
+  "avg": 0.5932475119608402,
+  "plus": [
+   "Ladd McConkey +1.5",
+   "Quentin Johnston +0.4",
+   "Rico Dowdle +0.3"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_NC_PRUNE",
+  "lab": "WR snap trend removed",
+  "n": 66,
+  "of": 187,
+  "up": 35,
+  "dn": 31,
+  "avg": 0.44211804908466773,
+  "plus": [
+   "Justin Jefferson +2.2",
+   "Ja'Marr Chase +2.1",
+   "Denzel Boston +1.2"
+  ],
+  "minus": [
+   "Davante Adams -1.4",
+   "Rome Odunze -1.0",
+   "Zay Flowers -0.8"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "ROLE",
+  "sw": "SIM_ROUTE_TREND",
+  "lab": "route-share trend",
+  "n": 20,
+  "of": 187,
+  "up": 13,
+  "dn": 7,
+  "avg": 0.25426868085628507,
+  "plus": [
+   "George Kittle +0.9",
+   "Tyler Higbee +0.4",
+   "Oronde Gadsden II +0.4"
+  ],
+  "minus": [
+   "Kyle Pitts -0.3",
+   "Greg Dulcich -0.2",
+   "Colston Loveland -0.2"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "TEAMMATES",
+  "sw": "SIM_NC_EXACT",
+  "lab": "vacated targets / carries (pool)",
+  "n": 36,
+  "of": 187,
+  "up": 10,
+  "dn": 26,
+  "avg": 1.1759812367360851,
+  "plus": [
+   "Jalon Daniels +10.7",
+   "Tyson Bagent +9.6",
+   "Tyler Huntley +4.5"
+  ],
+  "minus": [
+   "Ollie Gordon II -2.6",
+   "Emanuel Wilson -2.6",
+   "Braelon Allen -1.5"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "TEAMMATES",
+  "sw": "SIM_NMU",
+  "lab": "next man up (rank cells)",
+  "n": 5,
+  "of": 187,
+  "up": 4,
+  "dn": 1,
+  "avg": 0.319992096475511,
+  "plus": [
+   "Davante Adams +0.6",
+   "Malik Washington +0.4",
+   "Blake Corum +0.2"
+  ],
+  "minus": [
+   "Kyren Williams -0.2"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "TEAMMATES",
+  "sw": "SIM_NC_QBOUT",
+  "lab": "backup QB dock on WRs",
+  "n": 11,
+  "of": 187,
+  "up": 0,
+  "dn": 11,
+  "avg": 1.0109651089938287,
+  "plus": [
+   "Darnell Mooney -0.3",
+   "Malachi Fields -0.3",
+   "Ted Hurst -0.4"
+  ],
+  "minus": [
+   "Zay Flowers -2.1",
+   "Rome Odunze -1.8",
+   "Emeka Egbuka -1.8"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "TEAMMATES",
+  "sw": "SIM_NC_MULTI_ABS",
+  "lab": "multi-absence split",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "TEAMMATES",
+  "sw": "SIM_FILLIN",
+  "lab": "fill-in games rescaled",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "TEAMMATES",
+  "sw": "SIM_NC_QBMAX",
+  "lab": "QB fill-in = max(own, 85% starter)",
+  "n": 5,
+  "of": 187,
+  "up": 0,
+  "dn": 5,
+  "avg": 5.348009127899611,
+  "plus": [
+   "Jalon Daniels -3.4",
+   "Jayden Daniels -3.6",
+   "Jameis Winston -3.8"
+  ],
+  "minus": [
+   "Tyler Huntley -11.3",
+   "Tyson Bagent -4.6",
+   "Jameis Winston -3.8"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "HEALTH",
+  "sw": "SIM_HEALTH_PRIOR",
+  "lab": "banged-up prior (healthy-game lift)",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "HEALTH",
+  "sw": "SIM_HURT_USAGE",
+  "lab": "hurt games down-weighted in usage",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "HEALTH",
+  "sw": "SIM_RETURN_RAMP",
+  "lab": "first games back from injury",
+  "n": 7,
+  "of": 187,
+  "up": 0,
+  "dn": 7,
+  "avg": 0.7443195966477207,
+  "plus": [
+   "DeMario Douglas -0.1",
+   "Aaron Jones -0.1",
+   "Efton Chism III -0.1"
+  ],
+  "minus": [
+   "Jayden Daniels -1.7",
+   "Tyson Bagent -1.6",
+   "Rico Dowdle -0.8"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "HEALTH",
+  "sw": "SIM_BANGED",
+  "lab": "Questionable / Doubtful dock by practice",
+  "n": 4,
+  "of": 187,
+  "up": 4,
+  "dn": 0,
+  "avg": 0.49758214106446186,
+  "plus": [
+   "Braelon Allen +1.3",
+   "Isaiah Williams +0.3",
+   "Courtland Sutton +0.3"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "HEALTH",
+  "sw": "SIM_NEWS_WINDOWS",
+  "lab": "news-reported timelines",
+  "n": 1,
+  "of": 187,
+  "up": 1,
+  "dn": 0,
+  "avg": 0.1479400445768242,
+  "plus": [
+   "DeVonta Smith +0.1"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_TD_LUCK",
+  "lab": "TD luck regression",
+  "n": 112,
+  "of": 187,
+  "up": 53,
+  "dn": 59,
+  "avg": 0.3810801390517947,
+  "plus": [
+   "George Holani +0.9",
+   "Ryan Flournoy +0.9",
+   "J.K. Dobbins +0.8"
+  ],
+  "minus": [
+   "Mike Gesicki -1.5",
+   "George Kittle -1.4",
+   "Josh Cameron -1.3"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_QB_FLOOR",
+  "lab": "QB rushing floor",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_NC_RIDGE",
+  "lab": "ridge career prior",
+  "n": 105,
+  "of": 187,
+  "up": 72,
+  "dn": 33,
+  "avg": 0.4880532896956801,
+  "plus": [
+   "Brock Bowers +2.3",
+   "George Kittle +1.7",
+   "Omarion Hampton +1.0"
+  ],
+  "minus": [
+   "Parker Washington -1.7",
+   "Isaac TeSlaa -1.4",
+   "Tre Harris -1.1"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_SHADOW_AGE",
+  "lab": "age / experience curve",
+  "n": 53,
+  "of": 187,
+  "up": 9,
+  "dn": 44,
+  "avg": 0.33985322715707444,
+  "plus": [
+   "Jameis Winston +1.2",
+   "Deshaun Watson +1.1",
+   "Michael Penix Jr. +0.7"
+  ],
+  "minus": [
+   "Keenan Allen -1.5",
+   "Cooper Kupp -1.1",
+   "Mike Gesicki -0.7"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_NC_YR2",
+  "lab": "second-year bump",
+  "n": 1,
+  "of": 187,
+  "up": 1,
+  "dn": 0,
+  "avg": 0.24415575216815277,
+  "plus": [
+   "Bhayshul Tuten +0.2"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_ROOKIE_LEVEL",
+  "lab": "rookie level by draft capital",
+  "n": 0,
+  "of": 187,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_NC_VETDOCK",
+  "lab": "demoted veteran dock",
+  "n": 31,
+  "of": 187,
+  "up": 0,
+  "dn": 31,
+  "avg": 0.40154032386978517,
+  "plus": [
+   "Matthew Golden -0.1",
+   "Dohnte Meyers -0.1",
+   "Tyjae Spears -0.1"
+  ],
+  "minus": [
+   "Efton Chism III -1.6",
+   "Jaylin Noel -1.1",
+   "Javonte Williams -0.9"
+  ]
+ },
+ {
+  "wk": 5,
+  "grp": "PLAYER",
+  "sw": "SIM_NC_ELITE",
+  "lab": "elite protection",
+  "n": 8,
+  "of": 187,
+  "up": 8,
+  "dn": 0,
+  "avg": 1.0384336092480528,
+  "plus": [
+   "Justin Jefferson +3.4",
+   "Ja'Marr Chase +2.3",
+   "Nico Collins +0.7"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 8,
+  "grp": "ROS",
+  "sw": "SIM_NC_TE_TDFLOOR",
+  "lab": "TE touchdown floor (later weeks)",
+  "n": 11,
+  "of": 192,
+  "up": 11,
+  "dn": 0,
+  "avg": 0.5133598008936034,
+  "plus": [
+   "Colston Loveland +1.4",
+   "Cade Otton +1.1",
+   "Hunter Henry +1.0"
+  ],
+  "minus": []
+ },
+ {
+  "wk": 8,
+  "grp": "ROS",
+  "sw": "SIM_ROS_TILT",
+  "lab": "rest-of-season volume tilt",
+  "n": 0,
+  "of": 192,
+  "up": 0,
+  "dn": 0,
+  "avg": 0,
+  "plus": [],
+  "minus": []
+ },
+ {
+  "wk": 8,
+  "grp": "ROS",
+  "sw": "SIM_NC_ROS",
+  "lab": "RB snap trend carried forward",
+  "n": 125,
+  "of": 192,
+  "up": 62,
+  "dn": 63,
+  "avg": 0.5174430251049318,
+  "plus": [
+   "Colston Loveland +2.9",
+   "Emanuel Wilson +1.4",
+   "Cade Otton +1.3"
+  ],
+  "minus": [
+   "Jauan Jennings -2.3",
+   "Chuba Hubbard -1.8",
+   "D'Andre Swift -1.8"
+  ]
+ },
+ {
+  "wk": 8,
+  "grp": "ROS",
+  "sw": "SIM_AVAIL_CURVE",
+  "lab": "availability curve after an absence",
+  "n": 26,
+  "of": 192,
+  "up": 14,
+  "dn": 12,
+  "avg": 1.631935491532496,
+  "plus": [
+   "Tyler Huntley +11.2",
+   "Braelon Allen +1.0",
+   "Oronde Gadsden II +0.4"
+  ],
+  "minus": [
+   "Breece Hall -5.1",
+   "Jalen Coker -3.9",
+   "Alec Pierce -2.9"
+  ]
+ }
+]

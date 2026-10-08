@@ -213,6 +213,7 @@ function kickoffMs(kicks, wk, tm) {
   // Feeds the rankings PROJ PPG column — a projection, so always fresh
   // (injury-zeroed weeks are excluded; absence risk lives in seasonSim).
   const seasonAgg = {};
+  const rosAgg = {};   // REST-OF-SEASON LOCK (2026-10-08): per player, every future week's model mean / Clay-form (jsPre) / shadow (ncMean), half frame
 
   for (let wk = 1; wk <= WEEKS; wk++) {
     const rows = {};
@@ -231,6 +232,7 @@ function kickoffMs(kicks, wk, tm) {
       }
       const mH = E.effMean(wpH);
       if (!(mH > (p.isDST ? 0 : 0.4))) return;
+      if (wk > currentWeek && !p.isDST) { const ra = rosAgg[p.name] || (rosAgg[p.name] = { pos: p.pos, tm: p.tm, w: {} }); ra.w[wk] = [+mH.toFixed(2), wpH.jsPre != null ? +wpH.jsPre.toFixed(2) : null, wpH.ncMean != null ? +wpH.ncMean.toFixed(2) : null]; }
       const wpP = E.weeklyProjection(p, wk, scP, schedule);
       const wpS = E.weeklyProjection(p, wk, scS, schedule);
       pool.push({
@@ -336,6 +338,20 @@ function kickoffMs(kicks, wk, tm) {
     snap.lockedGames = snap.lockedGames || {};
     snap.players = snap.players || [];
     const todo = due.map(g => g.key).filter(k => !snap.lockedGames[k]);
+    // REST-OF-SEASON LOCK (2026-10-08, Jack: 'add the weekly ros lock for testing'): once per week, at the week's first game lock (or
+    // --ros-lock-now), freeze every player's rest-of-season per-game number from the NEXT week on - the model mean, the Clay-form
+    // number (jsPre) and the shadow (ncMean) per future week - into simlab_ros_w<wk>.json so grade_ros_lock.py can grade the season
+    // projection against the games as they are played. Never re-written for a week that has one.
+    try {
+      const rosPath = path.join(snapDir, 'simlab_ros_w' + lwk + '.json');
+      if ((todo.length || process.argv.includes('--ros-lock-now')) && !fs.existsSync(rosPath)) {
+        const rp = []; Object.keys(rosAgg).forEach(nm => { const ra = rosAgg[nm]; const wks = Object.keys(ra.w).map(Number).filter(w => w > lwk).sort((a, b) => a - b); if (!wks.length) return;
+          const avg = i => { const v = wks.map(w => ra.w[w][i]).filter(x => typeof x === 'number'); return v.length ? +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(2) : null; };
+          const ros = avg(0); if (!(ros >= 1)) return; rp.push({ name: nm, pos: ra.pos, tm: ra.tm, n: wks.length, ros, rosClay: avg(1), rosShadow: avg(2), w: ra.w }); });
+        fs.writeFileSync(rosPath, JSON.stringify({ week: lwk, from: lwk + 1, season: SEASON, preset: 'half', lockedAt: new Date(now).toISOString(), base: 'shadow', players: rp }));
+        console.log('ros-lock wk ' + lwk + ': ' + rp.length + ' players, weeks ' + (lwk + 1) + '-' + WEEKS + ' -> ' + path.basename(rosPath));
+      }
+    } catch (e) { console.warn('ros-lock skipped: ' + e.message); }
     if (todo.length) {
       const lockSc = E.PRESETS[snap.preset] || scH;
       const lres = E.simWeek({ week: lwk, sims: snap.sims || 2000, scoring: lockSc, schedule, players, seed: 20261000 + lwk });

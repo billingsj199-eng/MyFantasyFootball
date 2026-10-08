@@ -1,0 +1,74 @@
+=== COVERAGE: 10,494 top-150 player-weeks 2019-25; sigma = engine's entering-season CV (median 0.699), sampler = engine gamma replica, 1500 draws ===
+
+--- ALL ---
+  Clay form (July center)            n10494 | p10-p90  82.0% (below  9.7, above  8.3) | CRPS 3.924 | pinball 2.476 | level act/mean 0.981
+  shadow (live center)               n10494 | p10-p90  81.2% (below  9.2, above  9.6) | CRPS 3.913 | pinball 2.442 | level act/mean 1.015
+  retired blend                      n10494 | p10-p90  81.4% (below  9.5, above  9.1) | CRPS 3.904 | pinball 2.445 | level act/mean 1.004
+
+--- QB ---
+  Clay form (July center)            n 1691 | p10-p90  80.9% (below 10.9, above  8.2) | CRPS 4.450 | pinball 2.804 | level act/mean 0.997
+  shadow (live center)               n 1691 | p10-p90  80.8% (below 10.8, above  8.4) | CRPS 4.439 | pinball 2.775 | level act/mean 1.004
+  retired blend                      n 1691 | p10-p90  81.5% (below 10.8, above  7.7) | CRPS 4.423 | pinball 2.779 | level act/mean 1.001
+
+--- RB ---
+  Clay form (July center)            n 3329 | p10-p90  83.3% (below  9.3, above  7.4) | CRPS 3.946 | pinball 2.514 | level act/mean 0.956
+  shadow (live center)               n 3329 | p10-p90  82.4% (below  8.5, above  9.1) | CRPS 3.918 | pinball 2.464 | level act/mean 1.010
+  retired blend                      n 3329 | p10-p90  82.4% (below  8.7, above  8.9) | CRPS 3.919 | pinball 2.472 | level act/mean 0.999
+
+--- WR ---
+  Clay form (July center)            n 4222 | p10-p90  81.4% (below 10.1, above  8.6) | CRPS 3.888 | pinball 2.429 | level act/mean 0.987
+  shadow (live center)               n 4222 | p10-p90  80.5% (below  9.5, above 10.0) | CRPS 3.884 | pinball 2.411 | level act/mean 1.024
+  retired blend                      n 4222 | p10-p90  81.0% (below  9.5, above  9.5) | CRPS 3.876 | pinball 2.408 | level act/mean 1.013
+
+--- TE ---
+  Clay form (July center)            n 1252 | p10-p90  81.2% (below  8.8, above 10.0) | CRPS 3.265 | pinball 2.057 | level act/mean 1.000
+  shadow (live center)               n 1252 | p10-p90  79.7% (below  8.4, above 11.9) | CRPS 3.274 | pinball 2.056 | level act/mean 1.031
+  retired blend                      n 1252 | p10-p90  81.5% (below  8.5, above  9.9) | CRPS 3.267 | pinball 2.066 | level act/mean 1.000
+
+--- proj >= 15 ---
+  Clay form (July center)            n 2476 | p10-p90  83.8% (below  9.2, above  7.0) | CRPS 4.659 | pinball 2.948 | level act/mean 0.986
+  shadow (live center)               n 2476 | p10-p90  83.4% (below  9.1, above  7.5) | CRPS 4.663 | pinball 2.930 | level act/mean 0.996
+  retired blend                      n 2476 | p10-p90  83.2% (below  9.2, above  7.6) | CRPS 4.650 | pinball 2.932 | level act/mean 0.993
+
+--- proj 8-15 ---
+  Clay form (July center)            n 5981 | p10-p90  82.7% (below  8.8, above  8.6) | CRPS 3.966 | pinball 2.485 | level act/mean 0.993
+  shadow (live center)               n 5981 | p10-p90  81.7% (below  8.4, above  9.9) | CRPS 3.964 | pinball 2.459 | level act/mean 1.035
+  retired blend                      n 5981 | p10-p90  82.2% (below  8.5, above  9.3) | CRPS 3.955 | pinball 2.460 | level act/mean 1.021
+
+--- proj 3-8 ---
+  Clay form (July center)            n 2037 | p10-p90  78.1% (below 13.0, above  8.9) | CRPS 2.888 | pinball 1.850 | level act/mean 0.910
+  shadow (live center)               n 2037 | p10-p90  77.0% (below 12.0, above 11.0) | CRPS 2.855 | pinball 1.808 | level act/mean 0.985
+  retired blend                      n 2037 | p10-p90  77.4% (below 12.3, above 10.4) | CRPS 2.854 | pinball 1.819 | level act/mean 0.960
+
+--- games 0-3 ---
+  Clay form (July center)            n 3124 | p10-p90  81.4% (below 10.5, above  8.1) | CRPS 3.850 | pinball 2.431 | level act/mean 0.962
+  shadow (live center)               n 3124 | p10-p90  80.2% (below  9.8, above 10.0) | CRPS 3.822 | pinball 2.385 | level act/mean 1.012
+  retired blend                      n 3124 | p10-p90  80.9% (below 10.0, above  9.1) | CRPS 3.818 | pinball 2.391 | level act/mean 0.995
+
+--- games 4+ ---
+  Clay form (July center)            n 7370 | p10-p90  82.1% (below  9.5, above  8.4) | CRPS 3.953 | pinball 2.492 | level act/mean 0.989
+  shadow (live center)               n 7370 | p10-p90  81.5% (below  9.0, above  9.4) | CRPS 3.951 | pinball 2.467 | level act/mean 1.017
+  retired blend                      n 7370 | p10-p90  81.7% (below  9.1, above  9.2) | CRPS 3.942 | pinball 2.471 | level act/mean 1.008
+
+--- sigma multipliers on the SHADOW center (whole board) ---
+  shadow, sigma x0.8                 n10494 | p10-p90  72.6% (below 14.0, above 13.3) | CRPS 3.908 | pinball 2.466 | level act/mean 1.015
+  shadow, sigma x0.9                 n10494 | p10-p90  77.1% (below 11.4, above 11.5) | CRPS 3.902 | pinball 2.442 | level act/mean 1.015
+  shadow, sigma x1.0                 n10494 | p10-p90  81.0% (below  9.2, above  9.7) | CRPS 3.914 | pinball 2.444 | level act/mean 1.015
+  shadow, sigma x1.1                 n10494 | p10-p90  84.5% (below  7.4, above  8.2) | CRPS 3.939 | pinball 2.468 | level act/mean 1.015
+  shadow, sigma x1.2                 n10494 | p10-p90  87.1% (below  5.8, above  7.1) | CRPS 3.983 | pinball 2.512 | level act/mean 1.015
+
+--- sigma multipliers on the shadow center, by position ---
+  QB sigma x0.9                      n 1691 | p10-p90  77.6% (below 12.1, above 10.3) | CRPS 4.425 | pinball 2.768 | level act/mean 1.004
+  QB sigma x1.0                      n 1691 | p10-p90  81.3% (below 10.6, above  8.1) | CRPS 4.438 | pinball 2.777 | level act/mean 1.004
+  QB sigma x1.1                      n 1691 | p10-p90  84.4% (below  8.8, above  6.8) | CRPS 4.474 | pinball 2.808 | level act/mean 1.004
+  RB sigma x0.9                      n 3329 | p10-p90  78.4% (below 10.9, above 10.7) | CRPS 3.911 | pinball 2.451 | level act/mean 1.010
+  RB sigma x1.0                      n 3329 | p10-p90  82.4% (below  8.4, above  9.2) | CRPS 3.920 | pinball 2.462 | level act/mean 1.010
+  RB sigma x1.1                      n 3329 | p10-p90  85.4% (below  6.6, above  7.9) | CRPS 3.954 | pinball 2.503 | level act/mean 1.010
+  WR sigma x0.9                      n 4222 | p10-p90  76.5% (below 11.7, above 11.9) | CRPS 3.874 | pinball 2.412 | level act/mean 1.024
+  WR sigma x1.0                      n 4222 | p10-p90  80.3% (below  9.7, above 10.0) | CRPS 3.879 | pinball 2.411 | level act/mean 1.024
+  WR sigma x1.1                      n 4222 | p10-p90  83.6% (below  7.7, above  8.7) | CRPS 3.904 | pinball 2.427 | level act/mean 1.024
+  TE sigma x0.9                      n 1252 | p10-p90  76.2% (below 10.9, above 12.9) | CRPS 3.274 | pinball 2.066 | level act/mean 1.031
+  TE sigma x1.0                      n 1252 | p10-p90  80.6% (below  8.4, above 11.0) | CRPS 3.280 | pinball 2.056 | level act/mean 1.031
+  TE sigma x1.1                      n 1252 | p10-p90  83.6% (below  6.9, above  9.5) | CRPS 3.299 | pinball 2.065 | level act/mean 1.031
+
+Limitations: single-week draws (no season shock, no availability), replica centers (no book anchor / docks), sigma from the python replica of the engine build; ~1,500 draws per row.

@@ -11676,7 +11676,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   const page = document.getElementById('pageRankings');
   if (!page) return;
   // DOM order, top-down — the running total is what makes each row stack.
-  const rows = ['.controls', '.rnk-scoring-row', '.stats-bar']
+  const rows = ['.controls', '.rnk-scoring-row', '.stats-row']
     .map(sel => page.querySelector(sel))
     .filter(Boolean);
   if (!rows.length) return;
@@ -13601,7 +13601,7 @@ function _rnkLgBarRender() {
   const lg = _rnkLg();
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   if (!lgs.length) {
-    bar.innerHTML = '<span class="vor-bar-lbl">League</span><span class="lg-bar-hint">Sync a league in MY TEAMS to mark your roster and the waiver wire on any board.</span>';
+    bar.innerHTML = '<span class="vor-bar-lbl">League</span><span class="lg-bar-hint">Sync a league in MY TEAMS to tag your roster and the waiver wire on every board.</span>';
     return;
   }
   const r = _rnkLgRosters();
@@ -17776,8 +17776,6 @@ function openPlayerCard(d, ctxMode) {
       </div>
     </div>
     <div class="card-body">
-      <div class="card-pin-strip" id="cardPinStrip"></div>
-      <div id="cardNotesWrap"></div>
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         ${_showLogs ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>` : ''}
@@ -17788,62 +17786,9 @@ function openPlayerCard(d, ctxMode) {
         ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
         <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
+      <div class="card-pin-strip" id="cardPinStrip"></div>
+      <div id="cardNotesWrap"></div>
       <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
-      ${(!d._retired && (d.bye || _SOS_POS.has(d.s))) ? (() => {
-        // Playoff Schedule row: Bye + W15 + W16 + W17 + Total P-SOS
-        // Per-week ratings use _mtGetPlayoffSosWeekly; total uses _mtGetPlayoffSos.
-        const _hasSos = _SOS_POS.has(d.s);
-        const _wkRatings = {};
-        if (_hasSos && typeof window._mtGetPlayoffSosWeekly === 'function') {
-          [15, 16, 17].forEach(w => { _wkRatings[w] = window._mtGetPlayoffSosWeekly(d.t, d.s, w); });
-        }
-        const _totRating = (_hasSos && typeof window._mtGetPlayoffSos === 'function')
-                           ? window._mtGetPlayoffSos(d.t, d.s) : null;
-        const _byeBox = `
-          <div class="card-rank-box">
-            <div class="lbl">Bye</div>
-            <div class="num accent">${d.bye || '—'}</div>
-          </div>`;
-        const _wkBox = (w) => {
-          const r = _wkRatings[w];
-          if (!r) return `<div class="card-rank-box"><div class="lbl">Week ${w}</div><div class="num" style="color:var(--text2)">—</div></div>`;
-          const _arrow = r.home ? 'vs' : '@';
-          const _sub = [];
-          if (r.allowedNote) _sub.push(r.allowedNote);
-          if (r.isDst) {
-            if (r.clayOffRk && r.priorLive !== false) _sub.push('Clay O#' + r.clayOffRk);
-            if (typeof r.oppImplied === 'number') _sub.push(r.oppImplied.toFixed(1) + ' opp impl');
-          } else if (r.priorLive !== false) {
-            if (r.posUnits) _sub.push(r.posUnits);
-            if (typeof r.oppg === 'number') _sub.push(r.oppg.toFixed(1) + ' PA');
-          }
-          if (typeof r.gameTotal === 'number') _sub.push('O/U ' + r.gameTotal.toFixed(1));
-          const _title = `W${w} ${_arrow} ${r.opp} · rank ${r.rank}/${r.n}` + (_sub.length ? ' · ' + _sub.join(', ') : '');
-          return `
-            <div class="card-rank-box" title="${_title.replace(/"/g, '&quot;')}" style="cursor:help">
-              <div class="lbl">Week ${w}</div>
-              <div class="num" style="color:${r.color};font-size:1rem;line-height:1.05">${r.label}</div>
-              <div style="font-size:.6875rem;color:var(--text2);margin-top:2px;font-weight:400">${_arrow} ${r.opp}${typeof r.gameTotal === 'number' ? ' · ' + r.gameTotal : ''}</div>
-            </div>`;
-        };
-        const _totBox = _totRating ? `
-          <div class="card-rank-box" title="${(_totRating.title || '').replace(/"/g, '&quot;')}" style="cursor:help">
-            <div class="lbl">Total P-SOS</div>
-            <div class="num" style="color:${_totRating.color}">${_totRating.label}</div>
-            <div style="font-size:.6875rem;color:var(--text2);margin-top:2px;font-weight:400">rank ${_totRating.rank}/32</div>
-          </div>` : `
-          <div class="card-rank-box">
-            <div class="lbl">Total P-SOS</div>
-            <div class="num" style="color:var(--text2)">—</div>
-          </div>`;
-        return `<div class="card-section">
-          <div class="card-section-title">Playoff Schedule <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· W15-17 SOS, position-weighted</span></div>
-          <div class="card-rank-row" style="grid-template-columns:${_hasSos ? '0.7fr 1fr 1fr 1fr 1fr' : '1fr'}">
-            ${_byeBox}
-            ${_hasSos ? _wkBox(15) + _wkBox(16) + _wkBox(17) + _totBox : ''}
-          </div>
-        </div>`;
-      })() : ''}
       ${!d._retired ? `<div class="card-section">
         <div class="card-section-title">Rankings <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
         <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
@@ -17944,6 +17889,62 @@ function openPlayerCard(d, ctxMode) {
           </div>
         </div>
       </div>`;
+      })() : ''}
+
+      ${(!d._retired && (d.bye || _SOS_POS.has(d.s))) ? (() => {
+        // Playoff Schedule row: Bye + W15 + W16 + W17 + Total P-SOS
+        // Per-week ratings use _mtGetPlayoffSosWeekly; total uses _mtGetPlayoffSos.
+        const _hasSos = _SOS_POS.has(d.s);
+        const _wkRatings = {};
+        if (_hasSos && typeof window._mtGetPlayoffSosWeekly === 'function') {
+          [15, 16, 17].forEach(w => { _wkRatings[w] = window._mtGetPlayoffSosWeekly(d.t, d.s, w); });
+        }
+        const _totRating = (_hasSos && typeof window._mtGetPlayoffSos === 'function')
+                           ? window._mtGetPlayoffSos(d.t, d.s) : null;
+        const _byeBox = `
+          <div class="card-rank-box">
+            <div class="lbl">Bye</div>
+            <div class="num accent">${d.bye || '—'}</div>
+          </div>`;
+        const _wkBox = (w) => {
+          const r = _wkRatings[w];
+          if (!r) return `<div class="card-rank-box"><div class="lbl">Week ${w}</div><div class="num" style="color:var(--text2)">—</div></div>`;
+          const _arrow = r.home ? 'vs' : '@';
+          const _sub = [];
+          if (r.allowedNote) _sub.push(r.allowedNote);
+          if (r.isDst) {
+            if (r.clayOffRk && r.priorLive !== false) _sub.push('Clay O#' + r.clayOffRk);
+            if (typeof r.oppImplied === 'number') _sub.push(r.oppImplied.toFixed(1) + ' opp impl');
+          } else if (r.priorLive !== false) {
+            if (r.posUnits) _sub.push(r.posUnits);
+            if (typeof r.oppg === 'number') _sub.push(r.oppg.toFixed(1) + ' PA');
+          }
+          if (typeof r.gameTotal === 'number') _sub.push('O/U ' + r.gameTotal.toFixed(1));
+          const _title = `W${w} ${_arrow} ${r.opp} · rank ${r.rank}/${r.n}` + (_sub.length ? ' · ' + _sub.join(', ') : '');
+          return `
+            <div class="card-rank-box" title="${_title.replace(/"/g, '&quot;')}" style="cursor:help">
+              <div class="lbl">Week ${w}</div>
+              <div class="num" style="color:${r.color};font-size:1rem;line-height:1.05">${r.label}</div>
+              <div style="font-size:.6875rem;color:var(--text2);margin-top:2px;font-weight:400">${_arrow} ${r.opp}${typeof r.gameTotal === 'number' ? ' · ' + r.gameTotal : ''}</div>
+            </div>`;
+        };
+        const _totBox = _totRating ? `
+          <div class="card-rank-box" title="${(_totRating.title || '').replace(/"/g, '&quot;')}" style="cursor:help">
+            <div class="lbl">Total P-SOS</div>
+            <div class="num" style="color:${_totRating.color}">${_totRating.label}</div>
+            <div style="font-size:.6875rem;color:var(--text2);margin-top:2px;font-weight:400">rank ${_totRating.rank}/32</div>
+          </div>` : `
+          <div class="card-rank-box">
+            <div class="lbl">Total P-SOS</div>
+            <div class="num" style="color:var(--text2)">—</div>
+          </div>`;
+        return `<div class="card-section">
+          <div class="card-section-title">Playoff Schedule <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· W15-17 SOS, position-weighted</span></div>
+          <div class="card-rank-row" style="grid-template-columns:${_hasSos ? '0.7fr 1fr 1fr 1fr 1fr' : '1fr'}">
+            ${_byeBox}
+            ${_hasSos ? _wkBox(15) + _wkBox(16) + _wkBox(17) + _totBox : ''}
+          </div>
+        </div>`;
       })() : ''}
 
       ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
@@ -71110,4 +71111,37 @@ function _rsScatter(cfg) {
     }
     apply();
   };
+})();
+
+// === Ticker row: RANKINGS MOVERS | LINE MOVERS switch (2026-10-08) ===
+// Both bars still render on their own (_adpMovers / _lineMovers set display:flex
+// once their data lands); #tickerRow[data-ticker] picks which one is visible
+// (styles/main.css hides the other). If the chosen bar has no data yet the row
+// falls back to the other one, so it is never blank while either has content.
+// The switch button for a bar with no data is hidden. Choice persists per device
+// in localStorage mff_ticker.
+(function _tickerSwitch() {
+  const row = document.getElementById('tickerRow');
+  if (!row) return;
+  const bars = { adp: document.getElementById('adpMoversBar'), lines: document.getElementById('lineMoversBar') };
+  const other = k => (k === 'adp' ? 'lines' : 'adp');
+  let want = 'adp';
+  try { const s = localStorage.getItem('mff_ticker'); if (s === 'adp' || s === 'lines') want = s; } catch (_) {}
+  const has = k => !!(bars[k] && bars[k].style.display !== 'none');
+  const apply = () => {
+    row.dataset.ticker = has(want) || !has(other(want)) ? want : other(want);
+    row.querySelectorAll('.amb-switch').forEach(b => { b.style.display = has(b.dataset.ticker) ? '' : 'none'; });
+  };
+  row.addEventListener('click', e => {
+    const b = e.target.closest('.amb-switch');
+    if (!b) return;
+    want = b.dataset.ticker;
+    try { localStorage.setItem('mff_ticker', want); } catch (_) {}
+    apply();
+  });
+  if (typeof MutationObserver === 'function') {
+    const mo = new MutationObserver(apply);
+    Object.values(bars).forEach(b => { if (b) mo.observe(b, { attributes: true, attributeFilter: ['style'] }); });
+  }
+  apply();
 })();

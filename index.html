@@ -77,12 +77,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-08-sstbook" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-08-card1" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-08-vboard3" as="script">
+<link rel="preload" href="app.js?v=2026-10-08-card1" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -92,7 +92,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-08" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-08" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-08-sstbook">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-08-card1">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1077,12 +1077,8 @@ Build a stylized PNG of your most- or least-drafted Underdog players (% exposure
      (_SEASON_KICKS_2026 — regenerate for 2027); auto-hides after the season.
      The WEEKLY button only shows when #weeklyModeTab is visible to this user
      (admin, or a published week — _weeklyAdminCheck re-renders the strip). -->
-<div class="season-strip" id="seasonStrip" style="display:none">
-<span class="ss-week" id="ssWeek"></span>
-<span class="ss-msg" id="ssMsg"></span>
-<span class="ss-count" id="ssCount" style="display:none"></span>
-<button class="ss-btn" id="ssWeeklyBtn" style="display:none" title="Jump to the weekly rankings board">WEEKLY RANKINGS →</button>
-</div>
+<!-- 2026-10-08 stacked-rows collapse: the strip itself now sits inside
+     #tickerRow (right-hand block), below — same ids, same renderer. -->
 <style>
 .season-strip{display:flex;align-items:center;gap:10px;background:var(--ticker-bg);border-bottom:1px solid var(--border);padding:5px 14px;font-family:'DM Sans',sans-serif;font-size:.7rem;letter-spacing:.4px;color:var(--text2);flex-wrap:wrap}
 .ss-week{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--accent);white-space:nowrap}
@@ -1099,11 +1095,16 @@ body.mff-embed .season-strip{display:none!important}
      ticker-style behind it; hidden entirely until the ud_adp_history fetch
      succeeds. Rendered by _adpMovers in app.js, which also scales the scroll
      duration to the rendered width so speed stays constant. -->
+<!-- 2026-10-08: one ticker row. RANKINGS MOVERS and LINE MOVERS share the
+     strip behind a switch in the label block (localStorage mff_ticker,
+     _tickerSwitch in app.js sets #tickerRow[data-ticker]); the in-season
+     week strip docks at the right end. -->
+<div class="ticker-row" id="tickerRow">
 <div class="live-ticker" id="adpMoversBar" style="display:none">
 <div class="amb-fixed">
 <span style="font-size:1.05rem;line-height:1">📈</span>
 <div>
-<div class="amb-title" id="adpMoversTitle">ADP MOVERS</div>
+<div class="amb-title"><span id="adpMoversTitle">ADP MOVERS</span><button class="amb-switch" data-ticker="lines" type="button" title="Show the sportsbook line movers instead">Line movers</button></div>
 <div class="amb-sub" id="adpMoversSub"></div>
 <div class="amb-span" id="adpMoversSpan" title="Movement window — how far back the comparison snapshot is"><button data-span="3">3D</button><button data-span="7" class="active">7D</button><button data-span="30">30D</button></div>
 </div>
@@ -1125,7 +1126,7 @@ body.mff-embed .season-strip{display:none!important}
 <div class="amb-fixed">
 <span style="font-size:1.05rem;line-height:1">🎯</span>
 <div>
-<div class="amb-title">LINE MOVERS</div>
+<div class="amb-title"><button class="amb-switch" data-ticker="adp" type="button" title="Show the rankings movers instead">Rankings movers</button><span>LINE MOVERS</span></div>
 <div class="amb-sub" id="lineMoversSub"></div>
 </div>
 <button class="amb-share" id="lineMoversShareBtn" title="Share these line moves (share sheet on mobile, copies text elsewhere)" aria-label="Share line movers" style="display:none">
@@ -1136,6 +1137,13 @@ body.mff-embed .season-strip{display:none!important}
 <div class="live-ticker-inner" id="lineTickerInner"><span id="lineMoversItems"></span></div>
 </div>
 </div>
+<div class="season-strip" id="seasonStrip" data-row="ticker" style="display:none">
+<span class="ss-week" id="ssWeek"></span>
+<span class="ss-msg" id="ssMsg"></span>
+<span class="ss-count" id="ssCount" style="display:none"></span>
+<button class="ss-btn" id="ssWeeklyBtn" style="display:none" title="Jump to the weekly rankings board">WEEKLY RANKINGS →</button>
+</div>
+</div><!-- /tickerRow -->
 <!-- page header element removed 2026-08-24 (declutter): the toolbar and
      sign-in anchor now live in the .controls row beside the search bar. -->
 
@@ -1593,6 +1601,10 @@ tr:hover .watch-star{opacity:.55}
 <input type="number" id="rankTopNInput" min="1" max="600" inputmode="numeric" placeholder="ALL" title="Show only the top N of the current board — 40 on ALL = top 40 overall, 15 on QB = top 15 QBs. Column sorts reorder within that pool, so TOP 125 + the value sort = best values among the top 125. Clear to show everyone." style="width:56px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem">
 <button id="rookiePickToggle" onclick="window._toggleRookiePickView()" style="display:none;padding:2px 7px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Replace 2026 rookies with pick labels">PICK VIEW</button>
 <button id="posLockToggle" onclick="window._togglePosLock()" style="display:none;padding:2px 7px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)" title="Position Lock: while ON, a drag pushes along only the position-mates you drag PAST — drag a QB from 14 to 20 and the QBs that sat between land right below him, while a QB at 21+ just slots in under them and a QB at 60 doesn't move at all. Works both directions. Positional order always preserved. Resets on page reload.">🔒 POS LOCK</button>
+<span class="view-opts-inline" id="viewOptsInline">
+<button id="viewOptsToggle" onclick="window._toggleViewOpts()" aria-expanded="false" aria-controls="viewOptsWrap" style="display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;cursor:pointer">⚙ SCORING · STATS · ADP <span id="viewOptsArrow" style="font-size:.6875rem">▸</span></button>
+<span id="viewOptsSummary" style="font-family:'DM Sans',sans-serif;font-size:.6875rem;color:var(--text2);letter-spacing:.3px"></span>
+</span>
 </div>
 <!-- Rookie sub-position filter (shown only when ROOKIE filter is active) -->
 <div class="pos-filters" id="rookieSubPosFilter" style="display:none;margin-top:6px;padding:5px 8px;background:var(--elev-1);border:1px dashed var(--border);border-radius:4px;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1620,10 +1632,8 @@ tr:hover .watch-star{opacity:.55}
      state so a collapsed non-default view is never invisible — it tints
      accent when anything is off-default. Preset chips keep working while
      collapsed: they click the real buttons inside the hidden wrap. -->
-<div class="view-opts-toggle-row" style="display:flex;align-items:center;gap:10px;padding:0 2rem .35rem;flex-wrap:wrap">
-<button id="viewOptsToggle" onclick="window._toggleViewOpts()" aria-expanded="false" aria-controls="viewOptsWrap" style="display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;cursor:pointer">⚙ SCORING · STATS · ADP <span id="viewOptsArrow" style="font-size:.6875rem">▸</span></button>
-<span id="viewOptsSummary" style="font-family:'DM Sans',sans-serif;font-size:.6875rem;color:var(--text2);letter-spacing:.3px"></span>
-</div>
+<!-- 2026-10-08: the toggle button + summary moved to the right end of the
+     POSITION row (#viewOptsInline inside .pos-filters) — one row fewer. -->
 <div id="viewOptsWrap" style="display:none">
 <div class="rnk-scoring-row" style="display:flex;align-items:center;gap:16px;padding:0 2rem .4rem;flex-wrap:wrap">
 <div style="display:flex;align-items:center;gap:8px">
@@ -1672,7 +1682,7 @@ tr:hover .watch-star{opacity:.55}
 <div class="vor-bar" id="vorBar"></div>
 <!-- LEAGUE bar (every board): synced My Teams league → MINE / FA row marks +
      SHOW filter. Built by _rnkLgBarRender in app.js. -->
-<div class="vor-bar lg-bar" id="rnkLgBar"></div>
+<!-- 2026-10-08: #rnkLgBar now lives inside #statsRow below (same id/renderer). -->
 <style>
 .vor-bar.lg-bar{display:flex;border-color:var(--border);background:transparent;padding:4px 10px}
 .lg-bar-hint{font-size:.6875rem;color:var(--text2)}
@@ -1718,11 +1728,16 @@ body.vor-bar-on .vor-bar{display:flex}
 .vp-x:hover{opacity:1;color:#ef4444}
 @media (max-width:600px){.view-presets{margin:6px 10px 0}}
 </style>
+<!-- 2026-10-08 stats row: counts · league bar · data freshness on ONE sticky
+     line (was three rows). The sticky offset JS measures .stats-row now. -->
+<div class="stats-row" id="statsRow">
 <div class="stats-bar" id="statsBar"></div>
+<div class="vor-bar lg-bar" id="rnkLgBar" data-row="stats"></div>
 <!-- Data-freshness line: when each auto-pulled feed last refreshed.
      Populated by _renderDataFreshness() in app.js; hidden until at least
      one timestamp is readable. -->
-<div id="dataFreshness" style="display:none;margin:2px 2rem 6px;font-family:'DM Sans',sans-serif;font-size:.6875rem;color:var(--text2);letter-spacing:.3px"></div>
+<div id="dataFreshness" style="display:none;font-family:'DM Sans',sans-serif;font-size:.6875rem;color:var(--text2);letter-spacing:.3px"></div>
+</div><!-- /statsRow -->
 
 <style>
 /* Tier Card View (admin) */
@@ -4631,13 +4646,13 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-10-08" defer></script>
 <script src="data/d.js?v=2026-10-08" defer></script>
-<script src="data/injury_updates.js?v=2026-10-08-09" defer></script>
+<script src="data/injury_updates.js?v=2026-10-08-10" defer></script>
 <script src="data/weekly_projections.js?v=2026-10-08" defer></script>
-<script src="data/weather_2026.js?v=2026-10-08-09" defer></script>
+<script src="data/weather_2026.js?v=2026-10-08-10" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-10-08-0719" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-08-0911" defer></script>
-<script src="data/matchup_edges_2026.js?v=2026-10-08-0911" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-08-1007" defer></script>
+<script src="data/matchup_edges_2026.js?v=2026-10-08-1007" defer></script>
 <script src="data/site_projections.js?v=2026-10-08" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
@@ -4700,8 +4715,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-10-08c" defer></script>
-<script src="data/future_totals_2026.js?v=2026-10-08-0911" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-10-08g" defer></script>
+<script src="data/future_totals_2026.js?v=2026-10-08-1007" defer></script>
 <script src="data/fpa_prior_2025.js?v=2026-10-05" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-10-04pool" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
@@ -6117,7 +6132,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-08-vboard3"></script>
+<script defer src="app.js?v=2026-10-08-card1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

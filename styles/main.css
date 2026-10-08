@@ -15,8 +15,8 @@ body.mff-embed #mffTourOverlay{display:none!important}
 body.mff-embed .page:not(.active){display:none!important}
 body.mff-embed .main-content{padding-bottom:0!important}
 :root{
---bg:#0a0e17;--surface:#111827;--surface2:#1a2236;--border:#2a3a58;
---text:#e2e8f0;--text2:#8899b4;--accent:#f59e0b;--accent2:#fbbf24;--accent-ink:#0a0a14;
+--bg:#0a0e17;--surface:#111827;--surface2:#1a2236;--border:#1e2a40;--border-strong:#3a4a6a;
+--text:#e2e8f0;--text2:#94a3b8;--text3:#6f7f99;--accent:#f59e0b;--accent2:#fbbf24;--accent-ink:#0a0a14;
 --qb:#e74c3c;--rb:#22c55e;--wr:#3b82f6;--te:#a855f7;
 --qb-bg:rgba(231,76,60,.12);--rb-bg:rgba(34,197,94,.12);--wr-bg:rgba(59,130,246,.12);--te-bg:rgba(168,85,247,.12);
 --green:#22c55e;--red:#ef4444;
@@ -27,7 +27,7 @@ body.mff-embed .main-content{padding-bottom:0!important}
 /* Active-state chip/pill colors — softer than the loud full-orange fill we used to use everywhere.
    Keeps brand identity via orange border + orange text, drops the visual weight so primary CTAs
    (SAVE / SHARE / UPLOAD / START) read as the only true call-to-action. */
---chip-active-bg:rgba(245,158,11,.18);--chip-active-fg:var(--accent);--chip-active-border:var(--accent);
+--chip-active-bg:var(--elev-3);--chip-active-fg:var(--text);--chip-active-border:rgba(255,255,255,.08);
 /* Spacing scale (4px grid). Use these when you reach for a margin/padding/gap so the whole site
    marches to the same vertical rhythm. Don't hand-roll 3px / 6.4px / 13px values — pick the
    nearest token. */
@@ -37,13 +37,13 @@ body.mff-embed .main-content{padding-bottom:0!important}
    broken element in light mode, find the inline `color:#...` or `background:#...`
    in index.html and replace with the matching CSS variable. */
 :root[data-theme="light"]{
---bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#cbd5e1;
---text:#0f172a;--text2:#64748b;--accent:#b45309;--accent2:#a16207;--accent-ink:#ffffff;
+--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--border-strong:#94a3b8;
+--text:#0f172a;--text2:#475569;--text3:#64748b;--accent:#b45309;--accent2:#a16207;--accent-ink:#ffffff;
 /* 2026-10-07 contrast audit: position + status hues re-stepped so text clears 4.5:1 on white
    (old shared values were 2.2:1 green / 3.0:1 amber). Tints below stay the same. */
 --qb:#b91c1c;--rb:#15803d;--wr:#1d4ed8;--te:#7e22ce;--green:#15803d;--red:#b91c1c;
 --accent-blue:#0369a1;--accent-purple:#7e22ce;--accent-pink:#be185d;--accent-emerald:#047857;
---chip-active-bg:rgba(180,83,9,.14);
+--chip-active-bg:#ffffff;--chip-active-fg:var(--text);--chip-active-border:#cbd5e1;
 --qb-bg:rgba(231,76,60,.1);--rb-bg:rgba(34,197,94,.1);--wr-bg:rgba(59,130,246,.1);--te-bg:rgba(168,85,247,.1);
 --ticker-bg:#0f172a;
 --elev-1:rgba(0,0,0,.04);--elev-2:rgba(0,0,0,.06);--elev-3:rgba(0,0,0,.1);
@@ -2681,4 +2681,210 @@ table{font-variant-numeric:tabular-nums}
   th.num-col,td.num-col{text-align:right}
   #pageRankings thead th.num-col,#pageRankings tbody td.num-col{text-align:right}
   th.num-col .th-stack{align-items:flex-end;text-align:right;margin-right:0;margin-left:4px}
+}
+
+/* ===== CLEAN RESTYLE (2026-10-08) =====
+   Benchmarked against FantasyPros / ESPN / Sleeper / KTC: neutral greys instead of
+   blue-tinted ones, hairline borders, one accent (amber = current nav + primary CTA),
+   neutral segmented controls, no gradient-clipped titles, lighter weights on coloured
+   numbers so small text stops looking fuzzy. Appended so the older rules stay
+   readable; these win on cascade order. Active-tab colour is routed through the
+   --chip-active-* tokens in :root — restore the amber values there to go back. */
+
+/* Titles: solid text. Gradient-clipped Bebas anti-aliased soft at every size. */
+h1{background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:var(--text);color:var(--text);letter-spacing:2px}
+.subtitle{color:var(--text3)}
+.tag{color:var(--text2);border-color:var(--border-strong);letter-spacing:.08em}
+
+/* Toolbar: ghost buttons, 6px radius everywhere, amber only on the filled CTA. */
+.controls{padding:.75rem 2rem;gap:.6rem}
+.search-box input{border-radius:8px;border-color:var(--border-strong);font-size:.85rem}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.18)}
+.tb-btn,.help-btn{background:transparent;border-color:var(--border-strong);border-radius:6px;color:var(--text2);letter-spacing:.04em}
+.tb-btn:hover,.help-btn:hover{border-color:var(--text2);color:var(--text);background:var(--elev-1)}
+.tb-btn svg{opacity:.8}
+
+/* Segmented controls (Model / Format / ADP source / Trade tabs / Scoring / Stats):
+   DM Sans caps on a neutral track, active = raised neutral pill. */
+.version-tabs,.mode-tabs,.md-rank-src-tabs,.trade-mode-tabs{background:var(--elev-1);border:1px solid transparent;border-radius:8px;padding:3px}
+.version-tab,.mode-tab,.md-rank-src-tab,.trade-mode-tab,.trade-src-tab{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:5px 12px;border-radius:6px}
+.version-tab.active,.mode-tab.active,.md-rank-src-tab.active,.trade-mode-tab.active,.trade-src-tab.active,.career-log-toggle button.active{font-weight:600;box-shadow:inset 0 0 0 1px var(--chip-active-border),0 1px 2px rgba(0,0,0,.3)}
+.career-log-toggle{border-radius:6px;padding:2px}
+.career-log-toggle button{border-radius:4px}
+#pageRankings .filter-row-label{color:var(--text3)}
+
+/* Position filters: outlined chips, tinted (not filled) when active, no inset shadow. */
+.pos-btn{background:transparent;border-color:var(--border-strong);border-radius:6px;color:var(--text2);font-size:.72rem;letter-spacing:.04em}
+.pos-btn:hover{color:var(--text);background:var(--elev-1);border-color:var(--text2)}
+.pos-btn.active{box-shadow:none;color:var(--text)}
+.pos-btn.active:not([data-pos]),.pos-btn.active[data-pos="ALL"],.pos-btn.active[data-pos="K"],.pos-btn.active[data-pos="DST"]{background:var(--chip-active-bg);border-color:var(--border-strong);color:var(--text)}
+.pos-btn.active[data-pos="QB"]{background:var(--qb-bg);border-color:var(--qb);color:var(--qb)}
+.pos-btn.active[data-pos="RB"]{background:var(--rb-bg);border-color:var(--rb);color:var(--rb)}
+.pos-btn.active[data-pos="WR"]{background:var(--wr-bg);border-color:var(--wr);color:var(--wr)}
+.pos-btn.active[data-pos="TE"]{background:var(--te-bg);border-color:var(--te);color:var(--te)}
+.pos-btn.active[data-pos="DEVY"]{background:rgba(139,92,246,.14);border-color:#8b5cf6;color:#a78bfa}
+
+/* Strips above the table: labels in text colour, not amber. */
+.amb-title{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text)}
+#seasonStrip .ss-week{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.6875rem;letter-spacing:.06em;color:var(--text)}
+#pageRankings .vor-bar-lbl{color:var(--text2)}
+#pageRankings .vor-bar.lg-bar{border:none;background:transparent;padding:2px 0;margin:0 2rem 4px}
+#pageRankings .lg-bar-hint{color:var(--text3)}
+.stats-bar{gap:1.25rem}
+.stat-chip{color:var(--text3)}
+
+/* Table: hairline rows, no zebra, neutral hover, neutral sort state. */
+thead th{border-bottom:1px solid var(--border-strong);color:var(--text3)}
+thead th:hover{color:var(--text)}
+thead th.sorted{color:var(--text)}
+tbody tr{border-bottom:1px solid var(--border)}
+.table-wrap tbody tr:nth-child(even){background:transparent}
+tbody tr:hover{background:var(--elev-1)}
+.pm-table tbody tr:hover td{background:var(--elev-1)}
+.pm-table tbody tr:nth-child(even) td{background:transparent}
+tbody td{font-size:.8125rem}
+.tier-row td{border-bottom-color:var(--border-strong)}
+.drag-handle:hover,.drag-handle:active{color:var(--text)}
+/* Rank: tabular DM Sans, tier carried by colour only (the tier band stripe + the
+   number), no tinted box behind every rank. */
+.myrank-num{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:0;font-variant-numeric:tabular-nums;color:var(--text2)}
+.myrank-num.tier-S,.myrank-num.tier-A,.myrank-num.tier-B,.myrank-num.tier-C,.myrank-num.tier-D{background:transparent}
+.myrank-num.tier-S{color:var(--accent2)}
+.rank-cell{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.8125rem;letter-spacing:0;font-variant-numeric:tabular-nums}
+.player-name{font-size:.85rem}
+.player-team{color:var(--text3)}
+.pos-badge{border-radius:4px;font-weight:600;letter-spacing:.03em}
+.adp-cell{color:var(--text);font-weight:600;font-size:.8125rem}
+/* Age: colour only when it is a warning. Young = plain. No glyph prefixes. */
+.age-cell.age-green{color:var(--text2);font-weight:400}
+.age-cell.age-yellow,.age-cell.age-orange,.age-cell.age-red{font-weight:500}
+.age-cell.age-green::before,.age-cell.age-yellow::before,.age-cell.age-orange::before,.age-cell.age-red::before{content:none}
+/* Coloured projections keep their tier colours but drop to 600 weight — 700 on
+   13px saturated text haloes on a dark surface. */
+#pageRankings tbody td.pts-cell[style*="font-weight:700"]{font-weight:600!important}
+#pageRankings tbody .psos-cell span[style],#pageRankings tbody .teamtotal-cell span[style]{font-weight:600!important}
+
+/* Chrome edges */
+.sidebar{border-right-color:var(--border)}
+.nav-divider{color:var(--text3)}
+/* Context columns next to PROJ (season PPG, team total): plain text so only the projection column carries the tier heat-map. */
+#pageRankings tbody td.ppg25-cell[style]{color:var(--text)!important;font-weight:500!important}
+#pageRankings tbody .teamtotal-cell span[style]{color:var(--text)!important;font-weight:500!important}
+/* Phones: position chips sit on a hairline, not the strong outline, so the wrapped
+   filter grid reads as one group instead of a wall of boxes. */
+@media (max-width:600px){.pos-btn{border-color:var(--border);background:var(--elev-1)}.pos-btn.active:not([data-pos]),.pos-btn.active[data-pos="ALL"],.pos-btn.active[data-pos="K"],.pos-btn.active[data-pos="DST"]{border-color:var(--border-strong)}}
+/* Rank numbers: plain text. In CONSENSUS every row is "tier S", so an amber rank
+   column carried no information; tier bands + tier rows still show tiers. */
+.myrank-num,.myrank-num.tier-S,.myrank-num.tier-A,.myrank-num.tier-B,.myrank-num.tier-C,.myrank-num.tier-D{color:var(--text)}
+/* Section eyebrows (player card, account, trade slots, mock lineup): grey DM Sans caps,
+   the way FantasyPros / ESPN label sections, instead of amber Bebas under 14px. */
+.card-section-title,.acct-section-title,.trade-slot-title,.md-lineup-title{font-family:"DM Sans",sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}
+
+/* ===== STACKED-ROWS COLLAPSE (2026-10-08) =====
+   Ten rows above the rankings table became five: one ticker row (RANKINGS MOVERS |
+   LINE MOVERS switch, week strip docked at the right), the search/toolbar row,
+   Model + Format, Position + the view-options toggle, then one sticky stats row
+   (counts · league bar · data freshness). Markup moves are in index.html; the
+   sticky-offset measurer in app.js reads .stats-row instead of .stats-bar. */
+#tickerRow{display:flex;align-items:stretch}
+#tickerRow .live-ticker{flex:1 1 0;min-width:0;width:auto}
+#tickerRow .season-strip{flex:0 0 auto;flex-wrap:nowrap;border-left:1px solid var(--border);padding:4px 14px;gap:8px}
+#tickerRow .ss-btn{margin-left:2px}
+#tickerRow[data-ticker="lines"] #adpMoversBar{display:none!important}
+#tickerRow:not([data-ticker="lines"]) #lineMoversBar{display:none!important}
+.amb-title{display:flex;align-items:center;gap:8px}
+.amb-title>*+*::before{content:"·";margin-right:8px;color:var(--text3);font-weight:400}
+.amb-switch{background:none;border:none;padding:0;margin:0;cursor:pointer;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--text3);white-space:nowrap}
+.amb-switch:hover{color:var(--text)}
+.amb-switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* Position row: the SCORING · STATS · ADP toggle + summary sit at the right end. */
+#pageRankings .view-opts-inline{display:inline-flex;align-items:center;gap:8px;margin-left:auto;align-self:center;flex-wrap:wrap}
+#viewOptsToggle{background:transparent!important;border-color:var(--border-strong)!important}
+#viewOptsToggle:hover{color:var(--text)!important;background:var(--elev-1)!important}
+
+/* Stats row: one sticky line. */
+#pageRankings .stats-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 1.25rem;padding:var(--space-2) 2rem;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:var(--rnk-sticky-3,0px);z-index:18}
+#pageRankings .stats-row .stats-bar{position:static;padding:0;border:none;background:none;flex:0 1 auto;top:auto}
+#pageRankings .stats-row .vor-bar.lg-bar{margin:0;padding:0;border:none;flex:0 1 auto;gap:6px 8px}
+#pageRankings .stats-row #dataFreshness{margin-left:auto}
+@media (max-width:600px){
+  #tickerRow{flex-wrap:wrap}
+  #tickerRow .season-strip{flex:1 1 100%;order:-1;border-left:none;flex-wrap:wrap}
+  #pageRankings .view-opts-inline{margin-left:0;flex-basis:100%}
+  #pageRankings .stats-row{position:static;padding:var(--space-2) .75rem}
+  #pageRankings .stats-row #dataFreshness{margin-left:0}
+}
+@media (max-width:600px){#tickerRow .live-ticker{flex:1 1 100%}}  /* basis 0 never overflows, so the bar sat at 0px beside the week strip instead of wrapping under it */
+
+/* ===== PLAYER CARD RESTYLE (2026-10-08) =====
+   Same rules as the table restyle: hairline edges, neutral tiles, DM Sans tabular
+   numbers, colour only where it means something (tier heat-map, SOS, trends).
+   Order in the FANTASY tab is now Rankings → Season Projections → ADP → Playoff
+   Schedule → Camp News, and the tab bar sits directly under the header and sticks
+   while the card scrolls (compare strip + notes moved under it). */
+.player-card{border-radius:12px;border-color:var(--border-strong);box-shadow:0 24px 64px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.4)}
+.card-header{padding:1rem 1.25rem .85rem;border-bottom:1px solid var(--border)}
+.card-hero img{border:2px solid var(--border-strong)}
+.card-name{font-size:1.85rem;letter-spacing:1.5px}
+.card-team{color:var(--text2)}
+.card-meta .card-team+.card-team::before{content:"·";margin-right:.5rem;color:var(--text3)}
+.card-share,.card-close{color:var(--text3);border-radius:6px}
+.card-share:hover,.card-close:hover{color:var(--text);background:var(--elev-2)}
+.card-role-lbl{color:var(--text3)}
+.card-role.tag{background:var(--elev-2);color:var(--text);border-color:transparent}
+.card-role.tag.good{background:var(--rb-bg);color:var(--green)}
+.card-role.tag.dim{background:transparent;color:var(--text2);border-color:var(--border)}
+.card-role-thru{color:var(--text3);opacity:1}
+.card-body{padding:.75rem 1.25rem 1.25rem}
+
+/* Tab bar: first thing under the header, sticky inside the scrolling card. */
+.card-view-toggle{position:sticky;top:0;z-index:6;margin:0 0 .6rem;padding:3px;background:var(--surface);box-shadow:0 1px 0 var(--border);border-radius:0;gap:2px}
+.card-view-btn{border-radius:6px;padding:6px 0;font-size:.72rem}
+.card-view-btn.active{font-weight:600;box-shadow:inset 0 0 0 1px var(--chip-active-border),0 1px 2px rgba(0,0,0,.3)}
+.card-view-btn:hover:not(.active){background:var(--elev-1);color:var(--text)}
+
+/* Compare strip + notes: one quiet utility band under the tabs. */
+.card-pin-strip{margin-bottom:6px}
+.card-pin-chip,.card-pin-add{border-color:var(--border-strong)}
+.card-notes{border:1px solid var(--border);background:transparent;margin:0 0 .9rem}
+.cn-title{color:var(--text2)}
+.card-notes.open{border-color:var(--border-strong);background:var(--elev-1)}
+
+/* Sections */
+.card-section{margin-bottom:1.1rem}
+.card-section-title{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid var(--border);color:var(--text2)}
+.card-section-title>span{letter-spacing:0;text-transform:none;font-weight:400;color:var(--text3)}
+
+/* Stat tiles */
+.card-rank-row{gap:.4rem}
+.card-rank-box{background:var(--elev-1);border:1px solid transparent;border-radius:8px;padding:.5rem .35rem .45rem}
+.card-rank-box .lbl{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.06em;color:var(--text3);margin-bottom:3px}
+.card-rank-box .num{font-family:'DM Sans',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:0;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--text)}
+.card-rank-box .num.accent,.card-rank-box .num.green{color:var(--text)}
+.card-rank-box .num img{vertical-align:-2px}
+.card-rank-box[style*="outline"]{outline:none!important;border-color:var(--border-strong)!important}
+.card-grid{gap:.5rem .9rem}
+.card-stat-label{color:var(--text3);letter-spacing:.06em;font-weight:600}
+.card-stat-value{font-size:.9rem;font-variant-numeric:tabular-nums}
+.card-stat-value.accent{color:var(--text)}
+
+/* Small inline Bebas labels inside tab content (SEASON SIM box in LOGS etc.) → DM Sans caps */
+.player-card [style*="Bebas Neue"][style*="font-size:.72rem"],
+.player-card [style*="Bebas Neue"][style*="font-size:.6875rem"]{font-family:'DM Sans',sans-serif!important;font-weight:600;text-transform:uppercase;letter-spacing:.06em!important}
+
+/* Phones: the card is full-screen; let 4- and 5-up tile rows reflow to 3-up. */
+@media (max-width:600px){
+  .card-header{padding:.85rem 1rem .7rem}
+  .card-body{padding:.6rem .9rem 1.25rem}
+  .card-rank-row{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))!important}
+  .card-name{font-size:1.5rem}
+}
+/* Phone card: 8 tabs wrap into two rows of 4 instead of clipping; meta separators off when the
+   line wraps; tile rows go 4-up (minmax 80px) so 4-tile rows stay intact. */
+@media (max-width:600px){
+  .card-view-toggle{flex-wrap:wrap;gap:2px}
+  .card-view-btn{flex:1 1 23%;padding:7px 0;font-size:.6875rem}
+  .card-meta .card-team+.card-team::before{content:none}
+  .card-rank-row{grid-template-columns:repeat(auto-fit,minmax(80px,1fr))!important}
 }

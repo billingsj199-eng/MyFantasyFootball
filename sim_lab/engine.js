@@ -1479,7 +1479,7 @@
   // availability sit on top as before. scope 'later' = weeks ahead only (the current week keeps its anchored number);
   // 'all' = every week. Kill: window.SIM_BASE_BLEND = false; override: window.SIM_BASE_BLEND = { w: .7, scope: 'later' | 'all' }.
   // Backup engine.js.bak_pre_baseblend_20261007.
-  var BASE_BLEND = { w: { QB: 0.5, RB: 0.8, WR: 0.7, TE: 0.3 }, scope: 'all' };   // 2026-10-07 late: QB .5 (LOYO pick in 6/7 folds), RB .8 (5/7), from backtest_base_remeasure.py per-position fits   // 2026-10-07 evening: scope 'all' (Jack: "switch the current week to the blend too"); TE .3 (every cut of the re-measure had tight ends as Clay's: at .7 the TE number was +0.4% worse than the live number, at .3 -0.1%)
+  var BASE_BLEND = { w: { QB: 0.5, RB: 0.8, WR: 0.7, TE: 0.0 }, scope: 'all' };   // 2026-10-07 late: QB .5 (LOYO pick in 6/7 folds), RB .8 (5/7), from backtest_base_remeasure.py per-position fits   // 2026-10-07 evening: scope 'all' (Jack: "switch the current week to the blend too"); TE .3 (every cut of the re-measure had tight ends as Clay's: at .7 the TE number was +0.4% worse than the live number, at .3 -0.1%)   // 2026-10-08: TE 0 - the rank re-grade (backtest_te_blend_rank.py) had TE .3 at -.008 rho (2/7), forward picks 0 every fold, and the error pick did not hold out of sample; Clay-side live form alone for tight ends
   function volumeZ() {
     var d = (typeof window !== 'undefined' && window.SIM_PACE_2026) || null, T = d && d.teams; if (!T) return null;
     var keys = [], ex = [], at = [], bxKeys = [], bx = [];

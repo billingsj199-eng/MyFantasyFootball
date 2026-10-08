@@ -86,6 +86,7 @@
       $('sn-to').add(new Option('Wk ' + w, w));
     }
     $('sn-to').value = 18;
+    try { var cwSn = (window.SIM_INJ_SIGNALS && window.SIM_INJ_SIGNALS.week) || (window.SIM_PRACTICE_2026 && window.SIM_PRACTICE_2026.week); if (cwSn >= 1 && cwSn <= 18) $('sn-from').value = cwSn; } catch (e) {}   // Season Sim defaults to the current week (ROS audit 10-01 open item, fixed 10-07): played weeks are banked, not re-simulated
     document.querySelectorAll('.tab').forEach(function (b) {
       b.addEventListener('click', function () { showTab(b.dataset.tab); });
     });

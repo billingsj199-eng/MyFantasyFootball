@@ -1550,7 +1550,9 @@
     Object.keys(wf).forEach(function (w) { var v = +wf[w]; if (+w >= wk || !isFinite(v)) return; tot += v; if (fs.weeks.indexOf(+w) >= 0) st += v; });
     return tot > 0 ? Math.max(0, (tot - st * (1 - 1 / fs.B)) / tot) : 1;
   }
-  function jsBasePg(p, sc, clayPg, priorP, usage, ptsF) {
+  function jsBasePg(p, sc, clayPg, priorP, usage, ptsF, evid) {
+    // evid (optional, 2026-10-07): { g, ppgHalf } replaces the season-to-date evidence - used for a QB inside a planned start
+    // window whose season games so far are cameos (0-2 pts in relief), which otherwise drag his window number toward 0.
     // priorP (optional): prior strength in games. Live = JS_PRIOR_STRENGTH (5, twice backtested for the
     // Clay prior); the Clay-free shadow passes its own per-position strength (backtest_noclay_weekly.py).
     var PS = priorP != null ? priorP : JS_PRIOR_STRENGTH;
@@ -1559,6 +1561,8 @@
     if (!rec || !rec.g) return clayPg; // no 2026 sample yet -> pure Clay
     var pg = rec.pg || {};
     var ppg = rec.ppg; // half-PPR actuals -> league scoring via ACTUAL stat mix
+    var gEv = rec.g;
+    if (evid && evid.g != null) { if (!(evid.g > 0)) return clayPg; gEv = evid.g; ppg = evid.ppgHalf; }
     ppg += (sc.rec - 0.5) * (pg.rec || 0);
     ppg += (sc.pass_td - 4) * (pg.ptd || 0);
     ppg += (sc.pass_yd - 0.04) * (pg.py || 0);
@@ -1572,7 +1576,7 @@
     // v2.18 (shadow only): usage evidence. usage = { xfpPg, lam } -> the evidence is lam x xFP/g + (1 - lam) x points/g
     if (usage && usage.ptsScale != null) ppg *= usage.ptsScale;   // v2.24 Vegas-adjusted points evidence (shadow only)
     if (usage && usage.lam > 0 && usage.xfpPg != null) ppg = usage.lam * usage.xfpPg + (1 - usage.lam) * ppg;
-    return (PS * clayPg + rec.g * ppg) / (PS + rec.g);
+    return (PS * clayPg + gEv * ppg) / (PS + gEv);
   }
   // v2.18 IN-SEASON USAGE EVIDENCE (backtest_inseason_usage.py, 2026-09-17; Jack: 'use the previous weeks information ... see how the
   // model does as the season goes on'). Early in the season the volume a player saw (xFP/g: targets, air yards, carries, red zone)
@@ -2884,7 +2888,19 @@
     // put back at his pre-injury spot) is held to backup level, and a fill-in takes the LARGER of his own number and the
     // inherited 85%, never both (43 fill-in starts: actual 14.7, own 14.3, added 26.4). This week's posted lines still win.
     // Kill: window.SIM_LIVE_QB2 = false. Backup engine.js.bak_pre_liveqb2_20261005.
-    var qb2Cap = null, qb2Tag = null, qb2On = p.pos === 'QB' && !(typeof window !== 'undefined' && window.SIM_LIVE_QB2 === false);
+    // PLANNED START WINDOW (ROS audit 10-01 open item, fixed 2026-10-07): a QB with a QB_ROOM_OVERRIDES / injury-start / Clay-split
+    // window IS the starter for the weeks inside it - the depth-chart backup cap must not apply there (Sanders W12+ read 0.9 with a
+    // 14.5 Clay window prior), and his relief cameos (0-2 pts) are not evidence of his level as a starter. Kill: window.SIM_QB_WINDOW_FIX = false.
+    var inWin = p.pos === 'QB' && p.qbWindow && (p.qbWindow.src === 'override' || p.qbWindow.src === 'injury-start' || p.qbWindow.src === 'clay-split') && wk >= p.qbWindow.s && wk <= p.qbWindow.e && !(typeof window !== 'undefined' && window.SIM_QB_WINDOW_FIX === false);
+    var winEvid = null;
+    if (inWin) {
+      var wrec = jsData().players ? jsData().players[p.norm] : null;
+      if (wrec && wrec.wf) {
+        var ks = Object.keys(wrec.wf).filter(function (k) { return +k < wk && isFinite(+wrec.wf[k]); }), starts = ks.filter(function (k) { return +wrec.wf[k] >= 2; });
+        if (starts.length < ks.length) { var sum = 0; starts.forEach(function (k) { sum += +wrec.wf[k]; }); winEvid = { g: starts.length, ppgHalf: starts.length ? sum / starts.length : 0 }; }
+      }
+    }
+    var qb2Cap = null, qb2Tag = null, qb2On = p.pos === 'QB' && !inWin && !(typeof window !== 'undefined' && window.SIM_LIVE_QB2 === false);
     if (qb2On) {
       var qdL = typeof window !== 'undefined' ? window.SIM_DEPTH_2026 : null;
       var chL = qdL && qdL.teams && qdL.teams[p.tm] && qdL.teams[p.tm].QB && qdL.teams[p.tm].QB.length;
@@ -2921,7 +2937,7 @@
     var livePs = (p.pos === 'WR' && lvU && (p.adp == null || p.adp > 60)
                   && !(typeof window !== 'undefined' && window.SIM_LIVE_BLEND_POS === false)) ? 4 : null;
     var fiF = fillinPtsF(p, wk);   // FILL-IN rescale (1 unless 2+ stale fill-in games)
-    var jsBaseNoU = jsBasePg(p, sc, clayPg, null, null, fiF), jsBase0 = lvU ? jsBasePg(p, sc, clayPg, livePs, lvU, fiF) : jsBaseNoU, mRook = rookieLevel(p);
+    var jsBaseNoU = jsBasePg(p, sc, clayPg, null, null, fiF, winEvid), jsBase0 = lvU ? jsBasePg(p, sc, clayPg, livePs, lvU, fiF, winEvid) : jsBaseNoU, mRook = rookieLevel(p);
     var jsPg = jsBase0 * mRook;
     var jsPgPre = jsPg;
     if (p.pos === 'QB' && !(qbInh > 0) && !(iA > 1)) { jsPg = qbFloor(jsPg, sc); mQbf = jsPgPre > 0 ? jsPg / jsPgPre : 1; }
@@ -3321,7 +3337,7 @@
     // BASE BLEND (weeks ahead): the shadow joins the model number before the market steps
     var bbW = 0, jsPre = jsMean, bbRatio = 1;
     var bbCfg = typeof window !== 'undefined' ? window.SIM_BASE_BLEND : undefined;
-    if (bbCfg !== false && !p.isDST && jsMean != null && ncMean != null && ncMean > 0 && !ncOut && iA > 0) {
+    if (bbCfg !== false && !p.isDST && !(inWin && winEvid) && jsMean != null && ncMean != null && ncMean > 0 && !ncOut && iA > 0) {   // window QB with cameo-only evidence: the shadow has no planned-window concept and would halve him - skip the blend for him only
       var bbwRaw = (bbCfg && bbCfg.w != null) ? bbCfg.w : BASE_BLEND.w, bbs = (bbCfg && bbCfg.scope) ? bbCfg.scope : BASE_BLEND.scope;
       var bbw = typeof bbwRaw === 'number' ? bbwRaw : (bbwRaw && bbwRaw[p.pos] != null ? bbwRaw[p.pos] : 0.7);   // one weight, or per position
       var bbLater = _inj && _inj.week >= 1 && wk > _inj.week;

@@ -16497,6 +16497,107 @@ function _projWhyHtml(d, wk, cardProj, esc) {
   return html;
 }
 
+// === PRACTICE REPORT on the WEEKLY card (Jack 2026-10-08: "add the practice report to the weekly card above
+// recent games with color coded and showing each day along with the historical rate of playing") ==============
+// Days: data/practice_days_2026.js (scripts/pull_practice_reports.py files each pull's latest status under the
+// team's report day - Wed/Thu/Fri for a Sunday game, Mon/Tue/Wed for a Thursday game). Rates: how often regular
+// starters whose LAST practice of the week read like that went on to play - sim_lab/build_practice_day_rates.py,
+// nflverse injuries x snap counts 2019-25 (players averaging 40%+ of snaps, final week dropped, recent seasons
+// weighted half-life 3, position shrunk K=50 to the class). any-X = last practice X whatever the designation;
+// none-X = X with no designation on the final report. The final report day with a designation uses the sim's own
+// play odds (SIM_PROJ_2026.injRes.play + injury-type shift) so the card agrees with the projection's dock.
+const _PRAC_DAY_RATES = {"any-FP":{"all":0.97,"QB":0.938,"RB":0.986,"WR":0.979,"TE":0.966},"any-LP":{"all":0.745,"QB":0.511,"RB":0.757,"WR":0.801,"TE":0.766},"any-DNP":{"all":0.225,"QB":0.12,"RB":0.204,"WR":0.256,"TE":0.24},"none-FP":{"all":0.98,"QB":0.95,"RB":0.99,"WR":0.991,"TE":0.979},"none-LP":{"all":0.979,"QB":0.962,"RB":0.981,"WR":0.982,"TE":0.981},"none-DNP":{"all":0.836,"QB":0.743,"RB":0.798,"WR":0.874,"TE":0.87}};
+const _PRAC_COL = { FP: '#22c55e', LP: '#facc15', DNP: '#ef4444' };
+const _PRAC_WORD = { FP: 'FULL', LP: 'LIMITED', DNP: 'DNP' };
+const _PRAC_PHRASE = { FP: 'a full practice', LP: 'a limited practice', DNP: 'no practice' };
+function _pracDayRec(d, wk) {
+  const P = window.PRACTICE_DAYS_2026, W = P && P.weeks && P.weeks[String(wk)];
+  if (!W || !W.players) return null;
+  let rec = W.players[d.n];
+  if (!rec) {
+    let idx = window._pracDaysIdx;
+    if (!idx || idx._src !== W) {
+      idx = { _src: W, m: {} };
+      Object.keys(W.players).forEach(k => { idx.m[_campNewsNorm(k)] = W.players[k]; });
+      if (typeof _foldSimAliases === 'function') _foldSimAliases(idx.m);
+      window._pracDaysIdx = idx;
+    }
+    rec = idx.m[_campNewsNorm(d.n)];
+  }
+  if (!rec || (rec.pos && d.s && rec.pos !== d.s)) return null;   // same name, different player
+  const game = W.games ? W.games[rec.tm] : null;
+  return game ? { rec: rec, game: game } : null;
+}
+function _pracRate(cls, pos) {
+  const t = _PRAC_DAY_RATES[cls];
+  return t ? (t[pos] != null ? t[pos] : t.all) : null;
+}
+// play odds on the final report day once the designation is in: Q = the sim's table (+ injury-type shift)
+function _pracFinalRate(d, st, gs, injTxt) {
+  if (/^out$/i.test(gs)) return 0;
+  if (/doubt/i.test(gs)) return 0.02;
+  if (/question/i.test(gs)) {
+    const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes, cls = 'Q-' + st;
+    let pp = R && R.play && R.play[cls] ? (R.play[cls][d.s] != null ? R.play[cls][d.s] : (R.playAll && R.playAll[cls])) : null;
+    if (pp == null) return _pracRate('any-' + st, d.s);
+    try {
+      const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null;
+      const body = String(injTxt || d.inj || '').replace(/\b(IR|PUP|Out|Doubtful|Questionable|Suspended)\b/ig, '').replace(/^[\s,]+|[\s,]+$/g, '');
+      const grp = (x && x.grp) || (body && typeof _ivGroup === 'function' ? _ivGroup(body) : '');
+      const sh = grp && R.shift && R.shift[cls] ? (R.shift[cls][grp] || 0) : 0;
+      if (sh) pp = 1 / (1 + Math.exp(-(Math.log(pp / (1 - pp)) + sh)));
+    } catch (_) {}
+    return pp;
+  }
+  return _pracRate('none-' + st, d.s);
+}
+function _practiceReportHtml(d, wk, box) {
+  if (!d || d.s === 'DST') return '';
+  const hit = _pracDayRec(d, wk);
+  if (!hit) {
+    // his team has posted this week's report and he is not on it = practicing fully, no designation
+    const P = window.PRACTICE_DAYS_2026, W = P && P.weeks && P.weeks[String(wk)];
+    const tm = (typeof teamAbbr === 'function' && d.t) ? teamAbbr(d.t) : d.t;
+    const posted = W && W.players && Object.keys(W.players).some(k => W.players[k].tm === tm);
+    return posted ? '<div class="card-section"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span></div>'
+      + '<div style="font-size:.75rem;color:var(--text2)"><b style="color:#22c55e">Not on the injury report</b> · full practice, no designation</div></div>' : '';
+  }
+  const rec = hit.rec, gs = String(rec.gs || '');
+  const g = new Date(hit.game + 'T12:00:00');
+  const back = (g.getDay() === 0 || g.getDay() === 1) ? [4, 3, 2] : [3, 2, 1];
+  const iso = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  const DN = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const days = back.map(b => { const x = new Date(g); x.setDate(x.getDate() - b); return x; });
+  if (!days.some(x => rec.d && rec.d[iso(x)])) return '';
+  const pct = v => v == null ? '' : (v >= 0.995 ? '99%' : v < 0.005 ? '0%' : Math.round(v * 100) + '%');
+  let row = '';
+  days.forEach((x, i) => {
+    const st = rec.d ? rec.d[iso(x)] : null;
+    const lbl = DN[x.getDay()] + ' ' + (x.getMonth() + 1) + '/' + x.getDate();
+    if (!st) {
+      const past = iso(x) < iso(new Date());
+      row += box(lbl, '—', '', past ? 'Not on the ' + DN[x.getDay()] + ' report we captured' : 'No ' + DN[x.getDay()] + ' report yet (teams post around 4pm ET)', 'var(--text3)');
+      return;
+    }
+    const last = i === days.length - 1;
+    const r = last && gs ? _pracFinalRate(d, st, gs, rec.inj) : last ? _pracRate('none-' + st, d.s) : _pracRate('any-' + st, d.s);
+    const tip = last && /question/i.test(gs) ? 'Questionable ' + d.s + 's coming off ' + _PRAC_PHRASE[st] + ' on the final report have played ' + pct(r) + ' (2019-25, recent seasons weighted, injury type included) - the same odds the projection uses'
+      : last && /doubt/i.test(gs) ? 'Doubtful players almost never suit up (about 1 in 50, 2019-25)'
+      : last && /^out$/i.test(gs) ? 'Ruled out'
+      : last ? 'No game designation on the final report: ' + d.s + 's listed like this have played ' + pct(r) + ' (2019-25)'
+      : 'Starting ' + d.s + 's whose last report of the week showed ' + _PRAC_PHRASE[st] + ' went on to play ' + pct(r) + ' (2019-25, recent seasons weighted). Later days update it.';
+    row += box(lbl, _PRAC_WORD[st] + '<span style="display:block;font-size:.75rem;font-weight:700;margin-top:2px;opacity:.9">' + pct(r) + ' play</span>', '', tip, _PRAC_COL[st]);
+  });
+  const gsCol = /^out$/i.test(gs) ? '#ef4444' : /doubt/i.test(gs) ? '#f97316' : /question/i.test(gs) ? '#facc15' : null;
+  const inj = String(rec.inj || '').trim();
+  const head = (gs ? ' <span style="font-size:.6875rem;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;color:' + gsCol + ';background:color-mix(in srgb,' + gsCol + ' 15%,transparent)">' + gs.toUpperCase() + '</span>' : '')
+    + (inj && !/not injury/i.test(inj) ? ' <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + inj.replace(/</g, '&lt;') + '</span>' : '');
+  return '<div class="card-section"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span>' + head + '</div>'
+    + '<div class="card-rank-row" style="grid-template-columns:repeat(' + days.length + ',1fr)">' + row + '</div>'
+    + '<div style="margin-top:5px;font-size:.6875rem;color:var(--text2)">% = how often starters whose last practice read like that went on to play (2019-25, same position). The final day uses the game designation.</div>'
+    + '</div>';
+}
+
 function buildWeeklyCardView(d) {
   window._weeklyCardD = d;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -16676,6 +16777,8 @@ function buildWeeklyCardView(d) {
       _recentHtml += '</div></div>';
     }
   } catch (_e) {}
+  // Practice report right above recent games (Jack 2026-10-08)
+  try { html += _practiceReportHtml(d, wk, box); } catch (_e) { console.warn('[Card] practice report failed:', _e); }
   html += _recentHtml;
   if (out.src === 'sim' && typeof _projWhyHtml === 'function') html += _projWhyHtml(d, wk, proj, esc);
 

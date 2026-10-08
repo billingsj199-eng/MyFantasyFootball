@@ -1,0 +1,47 @@
+=== NEXT MAN UP by targets: 1,630 absence-week rows | vacated 5.7 tgt/g (share 0.21) | full-share gain 2.26 pts | pool lift inside the shadow +0.27 pts ===
+  act - shadow by vacated targets per game: < 5: +0.27 pts vs wired cells +0.06 (n773) | 5-7: +0.39 pts vs wired cells +0.14 (n417) | 7-9: +0.25 pts vs wired cells +0.06 (n214) | 9+: +1.21 pts vs wired cells +1.06 (n226)
+  act - wired by his share of the healthy group: < .12: +0.32 (n196) | .12-.2: -0.17 (n354) | .2-.3: +0.04 (n435) | .3+: +0.53 (n645)
+
+  fixed, vs the WIRED rank cells (rows squared | seasons better | top-100 cubed board | bands cubed):
+    off (pool only)              +0.96% (2/7) | top-100 +0.218% | 1-12:+0.47 13-30:+0.04 31-60:-0.02 61-100:+0.13
+    tgt a 0.15 + pool            +0.41% (2/7) | top-100 +0.147% | 1-12:+0.41 13-30:-0.05 31-60:-0.06 61-100:-0.01
+    tgt a 0.15, no pool          +0.72% (1/7) | top-100 +0.196% | 1-12:+0.56 13-30:-0.10 31-60:-0.10 61-100:+0.07
+    tgt a 0.15 + pool + cells    -0.22% (4/7) | top-100 -0.007% | 1-12:+0.02 13-30:-0.02 31-60:+0.00 61-100:-0.10
+    tgt a 0.25 + pool            +0.50% (2/7) | top-100 +0.179% | 1-12:+0.45 13-30:-0.01 31-60:-0.02 61-100:-0.03
+    tgt a 0.25, no pool          +0.62% (3/7) | top-100 +0.201% | 1-12:+0.58 13-30:-0.09 31-60:-0.09 61-100:+0.01
+    tgt a 0.25 + pool + cells    +0.08% (3/7) | top-100 +0.069% | 1-12:+0.12 13-30:+0.06 31-60:+0.08 61-100:-0.10
+    tgt a 0.35 + pool            +0.94% (1/7) | top-100 +0.275% | 1-12:+0.56 13-30:+0.10 31-60:+0.09 61-100:-0.01
+    tgt a 0.35, no pool          +0.88% (3/7) | top-100 +0.270% | 1-12:+0.67 13-30:-0.02 31-60:-0.03 61-100:-0.00
+    tgt a 0.35 + pool + cells    +0.74% (2/7) | top-100 +0.208% | 1-12:+0.27 13-30:+0.21 31-60:+0.22 61-100:-0.04
+    tgt a 0.5 + pool             +2.28% (1/7) | top-100 +0.539% | 1-12:+0.84 13-30:+0.40 31-60:+0.35 61-100:+0.14
+    tgt a 0.5, no pool           +1.94% (2/7) | top-100 +0.494% | 1-12:+0.92 13-30:+0.24 31-60:+0.19 61-100:+0.08
+    tgt a 0.5 + pool + cells     +2.40% (1/7) | top-100 +0.538% | 1-12:+0.63 13-30:+0.58 31-60:+0.53 61-100:+0.14
+    share x(1+0.25 vsh)          +0.64% (2/7) | top-100 +0.191% | 1-12:+0.46 13-30:-0.06 31-60:+0.04 61-100:+0.04
+    share x(1+0.5 vsh)           +2.09% (1/7) | top-100 +0.507% | 1-12:+0.92 13-30:+0.16 31-60:+0.32 61-100:+0.13
+    cells split by hole size     -0.08% (4/7) | top-100 -0.010% | 1-12:+0.04 13-30:-0.13 31-60:+0.00 61-100:+0.04
+  rank vs off (rho 0.3926, pairs 65.17%): wired cells: rho +0.0000 pairs +0.00  off (pool only): rho -0.0049 pairs -0.27  tgt a 0.15 + pool: rho +0.0051 pairs +0.16  tgt a 0.15, no pool: rho +0.0004 pairs -0.07  tgt a 0.15 + pool + cells: rho +0.0075 pairs +0.39  tgt a 0.25 + pool: rho +0.0071 pairs +0.25  tgt a 0.25, no pool: rho -0.0023 pairs -0.20  tgt a 0.25 + pool + cells: rho +0.0038 pairs +0.18  tgt a 0.35 + pool: rho +0.0035 pairs -0.05  tgt a 0.35, no pool: rho -0.0010 pairs -0.27  tgt a 0.35 + pool + cells: rho +0.0045 pairs +0.16  tgt a 0.5 + pool: rho -0.0010 pairs -0.07  tgt a 0.5, no pool: rho -0.0096 pairs -0.52  tgt a 0.5 + pool + cells: rho -0.0061 pairs -0.23  share x(1+0.25 vsh): rho +0.0063 pairs +0.27  share x(1+0.5 vsh): rho +0.0122 pairs +0.50  cells split by hole size: rho +0.0084 pairs +0.32
+
+  act / WIRED by absorber tier x rank group and by the absent player's level (trailing half-PPR receiving pts/g):
+    absorber ADP <= 60     #1 1.004 (n325) | #2-3 0.966 (n287) | #4-6 1.061 (n209)
+    absorber ADP 61-150    #1 1.124 (n195) | #2-3 1.021 (n310) | #4-6 0.997 (n304)
+    absent >= 7 pts/g (star) #1 1.113 (n203) | #2-3 1.006 (n284) | #4-6 1.075 (n259)
+    absent < 7 pts/g       #1 0.993 (n317) | #2-3 0.975 (n313) | #4-6 0.983 (n254)
+    by season, ADP<=60 absorbers with a star out: 2019:1.13 2020:1.05 2021:1.00 2022:1.10 2023:1.13 2024:0.89 2025:1.15
+
+  TIER fit [absorber tier (ADP<=60 vs not) x rank group] LOYO -0.12% 5/7 | board -0.021% | FWD +0.10% 2/4 | bands 1-12:-0.33 13-30:+0.06 31-60:+0.03 61-100:-0.10 -> FAIL
+    cell multipliers on top of the wired cells (all seasons): 0:x1.062(n195) 1:x1.002(n325) 2:x1.010(n310) 3:x0.983(n287) 4:x0.999(n304) 5:x1.030(n209)
+
+  TIER fit [absent level (star vs not) x rank group] LOYO -0.46% 5/7 | board -0.081% | FWD -0.40% 2/4 | bands 1-12:-0.30 13-30:-0.08 31-60:-0.10 61-100:-0.06 -> FAIL
+    cell multipliers on top of the wired cells (all seasons): 0:x0.997(n317) 1:x1.056(n203) 2:x0.987(n313) 3:x1.003(n284) 4:x0.992(n254) 5:x1.037(n259)
+
+  TIER fit [absorber tier x absent level] LOYO -0.11% 5/7 | board -0.019% | FWD -0.08% 3/4 | bands 1-12:-0.07 13-30:-0.09 31-60:-0.11 61-100:-0.04 -> FAIL
+    cell multipliers on top of the wired cells (all seasons): 0:x1.010(n441) 1:x1.032(n368) 2:x0.980(n443) 3:x1.029(n378)
+
+  TIER fit [absorber tier only] LOYO +0.12% 1/7 | board +0.022% | FWD +0.12% 0/4 | bands 1-12:-0.01 13-30:+0.00 31-60:+0.00 61-100:-0.04 -> FAIL
+    cell multipliers on top of the wired cells (all seasons): 0:x1.020(n809) 1:x1.003(n821)
+
+  pick-best vs wired  LOYO +0.21% 2/7 | board +0.037% | picks ['tgt a 0.15 + pool + cells', 'cells split by hole size', 'tgt a 0.15 + pool + cells', 'tgt a 0.15 + pool + cells', 'tgt a 0.15 + pool + cells', 'tgt a 0.15 + pool + cells', 'wired cells']
+                     FWD  +0.10% 0/4 | board +0.018% | picks ['tgt a 0.15, no pool', 'wired cells', 'wired cells', 'wired cells']
+  -> FAIL (wired rank cells stay)
+
+Limitations: honest replica next game, no book anchor; trailing 3-game shares; receiving points per target (half PPR) as the value of an absorbed target; the 'cells split by hole size' variant is a hand-set guess, not fit.

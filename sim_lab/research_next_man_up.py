@@ -97,7 +97,7 @@ def events():
                 for k in healthy:
                     r = cur[k]; t = trail[k]
                     row = {"Y": Y, "wk": wk, "tm": tm, "n": t["n"], "pos": t["pos"], "rank": rank[k], "hrank": hrank[k], "share": share[k],
-                           "dt": r["tgt"] - t["tgt"], "dp": r["rp"] - t["rp"], "tr_rp": t["rp"], "rp": r["rp"], "oa": oa, "vac": vac, "teamTgt": team_tgt,
+                           "dt": r["tgt"] - t["tgt"], "dp": r["rp"] - t["rp"], "tr_rp": t["rp"], "tr_tgt": t["tgt"], "absRp": sum(trail[a]["rp"] for a in absent), "hshare": t["tgt"] / max(1e-9, sum(trail[h]["tgt"] for h in healthy)), "rp": r["rp"], "oa": oa, "vac": vac, "teamTgt": team_tgt,
                            "abs": tuple(sorted(rank[a] for a in absent)), "absShare": tuple(share[a] for a in sorted(absent, key=lambda a: rank[a])), "absPos": tuple(trail[a]["pos"] for a in sorted(absent, key=lambda a: rank[a]))}
                     (E if absent else CTRL).append(row)
     return E, CTRL

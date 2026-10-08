@@ -2519,6 +2519,12 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 .sst-card.sst-v-start{box-shadow:0 0 0 1.5px rgba(34,197,94,.55),0 12px 40px rgba(0,0,0,.4)}
 .sst-proj-row{display:flex;align-items:center;gap:.9rem}
 .sst-proj-big{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;line-height:1;letter-spacing:1px;min-width:3.2rem}
+/* OUR PROJ / BOOK PROJ pair (2026-10-08): our weekly number beside the
+   sportsbooks' (posted prop lines scored in the page format), each labelled */
+.sst-proj-pair{display:flex;align-items:flex-end;gap:.9rem}
+.sst-proj-item{display:flex;flex-direction:column;gap:5px;cursor:help}
+.sst-proj-book{padding-left:.9rem;border-left:1px solid var(--border)}
+.sst-proj-book-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;letter-spacing:1px;min-width:2.6rem}
 /* Projected stat line beside the big number (REC · REC YDS · RUSH YDS · TD …) */
 .sst-proj-stats{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:flex-end;margin-left:auto;cursor:help}
 .sst-ps{text-align:center;min-width:36px}
@@ -2550,6 +2556,7 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
 @media (max-width:600px){
   .sst-card{min-width:280px;max-width:320px}
   .sst-proj-big{font-size:2.1rem}
+  .sst-proj-book-num{font-size:1.7rem}
 }
 /* RECENT REAL TRADES panel (trade calculator, FantasyCalc feed) */
 .trade-real{margin-top:1rem;padding:1rem 1.1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:left}

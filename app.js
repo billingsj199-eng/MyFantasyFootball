@@ -27552,7 +27552,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const wk = week();
     const o = { d: d, wk: wk, proj: null, src: 'base', base: null, bye: false, out: false,
                 opp: null, home: null, spread: null, tt: null, oppTT: null, ou: null, diff: null,
-                lines: null, raw: null, books: [], asOf: null };
+                lines: null, raw: null, books: [], asOf: null, book: null };
     if (d._sstAvg) {
       const a = avgProj(d._sstAvg.pos, d._sstAvg.k);
       o.baseline = true; o.avg = a; o.src = 'avg';
@@ -27571,6 +27571,10 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       const out = {};
       o.proj = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, o.base, out) : o.base;
       o.src = out.src || 'base';
+      // BOOK PROJ beside ours (Jack 2026-10-08): the week's posted prop lines
+      // scored in this page's format — same math as the tier cards' BOOK
+      // PROJ toggle (_weeklyBookPpgFor). Null when nothing is posted.
+      o.book = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
     } catch (e) { console.warn('[Start/Sit] proj', e); }
     finally { rankingScoringFmt = prev; }
     if (o.src === 'out') o.out = true;
@@ -27589,6 +27593,10 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     if (typeof _weeklyPropLinesFor === 'function') {
       const W = _weeklyPropLinesFor(d.n);
       if (W) { o.lines = W.stats; o.books = W.books; o.asOf = W.asOf; }
+    }
+    // Kickers: the books post a kicking-points line — that IS their projection.
+    if (!o.book && d.s === 'K' && o.lines && typeof o.lines.kpts === 'number') {
+      o.book = { ppg: Math.round(o.lines.kpts * 10) / 10, books: o.books, asOf: o.asOf, parts: ['Kicking points line ' + o.lines.kpts] };
     }
     const wp = window.BETTING_2026 && window.BETTING_2026.weeklyProps;
     const board = wp && (wp[wk] || wp[String(wk)]);
@@ -27628,7 +27636,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       gridEl.innerHTML = '<div class="sst-empty">'
         + '<div style="font-size:2rem;margin-bottom:8px;opacity:.25">&#9878;</div>'
         + '<p>Search above to add the players you\'re deciding between.<br>'
-        + '<span style="font-size:.74rem">Each card shows the Week ' + wk + ' projection, matchup, spread, Vegas team total and this week\'s sportsbook lines — best number in each row lights up green.</span></p>'
+        + '<span style="font-size:.74rem">Each card shows our Week ' + wk + ' projection beside the sportsbook projection, matchup, spread, Vegas team total and this week\'s sportsbook lines — best number in each row lights up green.</span></p>'
         + '</div>';
       return;
     }
@@ -27679,6 +27687,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       best[key] = higher ? Math.max.apply(null, v) : Math.min.apply(null, v);
     };
     mark('proj', cards.filter(c => !c.locked).map(c => c.proj), true);
+    mark('book', cards.filter(c => !c.locked).map(c => c.book ? c.book.ppg : null), true);
     mark('tt', cards.filter(c => c.d.s !== 'DST').map(c => c.tt), true);
     mark('oppTT', cards.filter(c => c.d.s === 'DST').map(c => c.oppTT), false);
     mark('spread', cards.map(c => c.spread), false);
@@ -27756,9 +27765,30 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     }
     // Projection
     const projColor = (c.proj != null && typeof posFptsColor === 'function') ? posFptsColor(c.proj, d.s) : null;
-    html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projection <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
-    html += '<div class="sst-proj-row"><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
-      + (c.proj != null ? fmt1(c.proj) : '—') + '</div>';
+    // OUR PROJ (the number the verdict runs on) and BOOK PROJ (this week's
+    // posted sportsbook lines scored in the page format) side by side, each
+    // labelled so the source of every number is readable at a glance.
+    const SRC_LBL = { sim: 'Sim Lab mean — the WEEKLY rankings PROJ number', props: 'posted prop lines scored with site scoring, Clay per-game fill for unposted stats',
+      consensus: 'consensus weekly projection', heuristic: 'season PPG × team total × opponent factor', dst: 'season proj ± the opponent\'s implied total',
+      kicker: 'season PPG × team total', bye: 'bye week', out: 'ruled out this week', base: 'season projection' };
+    const ourTip = 'Our Week ' + wk + ' projection (' + fmt.toUpperCase() + '): ' + (SRC_LBL[c.src] || 'site projection') + '. This is the number the START / SIT call runs on.';
+    html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projections <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
+    html += '<div class="sst-proj-row"><div class="sst-proj-pair">';
+    html += '<div class="sst-proj-item" title="' + esc(ourTip) + '"><div class="sst-ps-lbl">Our Proj</div><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
+      + (c.proj != null ? fmt1(c.proj) : '—') + '</div></div>';
+    if (!isDst) {
+      const b = c.book, bv = b ? b.ppg : null;
+      const bookColor = (bv != null && typeof posFptsColor === 'function') ? posFptsColor(bv, d.s) : null;
+      const bookTip = b
+        ? 'Sportsbook projection: Week ' + wk + ' ' + b.books.join('/') + ' lines scored as ' + fmt.toUpperCase() + ' — ' + b.parts.join(' · ') + (b.asOf ? ' (as of ' + b.asOf + ')' : '')
+          + ((c.proj != null && bv != null) ? '. Ours is ' + (c.proj >= bv ? '+' : '−') + fmt1(Math.abs(c.proj - bv)) + ' vs the books.' : '')
+        : (c.lines && Object.keys(c.lines).length)
+          ? 'Only the ' + (c.lines.atd != null ? 'anytime-TD market' : 'partial board') + ' is posted for ' + d.n + ' in Week ' + wk + ' — no yardage lines to score a projection from yet.'
+          : 'No Week ' + wk + ' sportsbook lines posted for ' + d.n + (c.bye ? ' (bye week)' : ' yet') + ' — nothing to score.';
+      html += '<div class="sst-proj-item sst-proj-book" title="' + esc(bookTip) + '"><div class="sst-ps-lbl">Book Proj</div><div class="sst-proj-book-num' + (isBest('book', bv) ? ' sst-best' : '') + '"' + (bookColor ? ' style="color:' + bookColor + '"' : '') + '>'
+        + (bv != null ? fmt1(bv) : '—') + '</div></div>';
+    }
+    html += '</div>';
     if (c.locked && c.actual != null) {
       const fin = c.live.st === 'post';
       const beat = (c.proj != null) ? (c.actual >= c.proj ? 'up' : 'down') : '';
@@ -27861,9 +27891,9 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         + '<span class="sst-verdict-rank" title="Positional average — a reference line, never a START/SIT call">' + esc(c.verdict.tag) + '</span></div>';
     }
     const projColor = (c.proj != null && typeof posFptsColor === 'function') ? posFptsColor(c.proj, d.s) : null;
-    html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projection <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
-    html += '<div class="sst-proj-row"><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
-      + (c.proj != null ? fmt1(c.proj) : '—') + '</div>';
+    html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projections <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
+    html += '<div class="sst-proj-row"><div class="sst-proj-pair"><div class="sst-proj-item" title="Average of our Week ' + wk + ' projections for this positional slice"><div class="sst-ps-lbl">Our Proj</div><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
+      + (c.proj != null ? fmt1(c.proj) : '—') + '</div></div></div>';
     if (a) {
       html += '<div class="sst-proj-stats" title="Range of the ' + a.n + ' projections averaged">'
         + '<div class="sst-ps"><div class="sst-ps-lbl">' + d.s + a.lo + '</div><div class="sst-ps-val">' + fmt1(a.top) + '</div></div>'

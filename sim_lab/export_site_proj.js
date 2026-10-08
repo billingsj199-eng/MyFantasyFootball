@@ -427,7 +427,10 @@ function kickoffMs(kicks, wk, tm) {
     const key = r.player.isDST ? 'DST_' + r.player.tm : r.player.name;
     seasonSim[key] = [
       Math.round(r.p50), Math.round(r.p10), Math.round(r.p90),
-      pc(r.seasonBoom), pc(r.seasonBust), pc(r.top12), r.games
+      pc(r.seasonBoom), pc(r.seasonBust), pc(r.top12), r.games,
+      // 2026-10-08: banked real points so far + games still simulated, so the site can
+      // show "so far + rest" instead of a whole-season figure (Jack).
+      Math.round(r.banked || 0), r.gamesSim != null ? r.gamesSim : null
     ];
   });
   console.log('season sim: ' + Object.keys(seasonSim).length + ' players');

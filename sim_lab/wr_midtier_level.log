@@ -1,0 +1,32 @@
+=== WR MID-TIER LEVEL: level act/shadow by WR band: 1-12 1.005 (n327) | 13-30 1.022 (n682) | 31-60 1.051 (n1097) | 61-100 1.045 (n1060) | 101-150 0.960 (n1056)
+    by season, WR 31-100: 2019:1.076 2020:1.101 2021:1.084 2022:1.026 2023:1.023 2024:1.051 2025:1.002
+
+  WR ADP 31-60 level (rows 1,097, act/shadow 1.051)
+    fixed: x1.02: -0.33% (5/7)  x1.04: -0.48% (4/7)  x1.06: -0.44% (4/7)  x1.08: -0.22% (4/7)
+    rank vs off (rho 0.0905, pairs 53.53%): x1.02: rho +0.0000 pairs +0.00  x1.04: rho +0.0000 pairs +0.00  x1.06: rho +0.0000 pairs +0.00  x1.08: rho +0.0000 pairs +0.00
+    LOYO -0.25% 4/7 | board -0.026% | top-100 cubed -0.024% | picks ['x1.04', 'x1.04', 'x1.04', 'x1.06', 'x1.04', 'x1.06', 'x1.06']
+    FWD  +1.10% 1/4 | board +0.097% | picks ['x1.08', 'x1.08', 'x1.08', 'x1.06']
+    -> FAIL
+
+  WR ADP 61-100 level (rows 1,060, act/shadow 1.045)
+    fixed: x1.02: -0.36% (5/7)  x1.04: -0.55% (5/7)  x1.06: -0.57% (4/7)  x1.08: -0.43% (4/7)
+    rank vs off (rho 0.2769, pairs 60.47%): x1.02: rho +0.0000 pairs +0.00  x1.04: rho +0.0000 pairs +0.00  x1.06: rho +0.0000 pairs +0.00  x1.08: rho +0.0000 pairs +0.00
+    LOYO -0.19% 4/7 | board -0.011% | top-100 cubed -0.008% | picks ['x1.06', 'x1.04', 'x1.04', 'x1.06', 'x1.06', 'x1.04', 'x1.08']
+    FWD  +0.16% 2/4 | board +0.010% | picks ['x1.08', 'x1.08', 'x1.06', 'x1.08']
+    -> FAIL
+
+  WR ADP 31-100 level (one multiplier) (rows 2,157, act/shadow 1.048)
+    fixed: x1.02: -0.34% (6/7)  x1.04: -0.51% (4/7)  x1.06: -0.49% (4/7)  x1.08: -0.29% (3/7)
+    rank vs off (rho 0.2271, pairs 58.48%): x1.02: rho +0.0000 pairs +0.00  x1.04: rho +0.0000 pairs +0.00  x1.06: rho +0.0000 pairs +0.00  x1.08: rho +0.0000 pairs +0.00
+    LOYO -0.36% 4/7 | board -0.057% | top-100 cubed -0.049% | picks ['x1.04', 'x1.04', 'x1.04', 'x1.06', 'x1.04', 'x1.06', 'x1.06']
+    FWD  +0.44% 0/4 | board +0.066% | picks ['x1.08', 'x1.08', 'x1.06', 'x1.06']
+    -> FAIL
+
+  WR ADP 13-100 level (one multiplier) (rows 2,839, act/shadow 1.041)
+    fixed: x1.02: -0.26% (5/7)  x1.04: -0.32% (5/7)  x1.06: -0.20% (5/7)  x1.08: +0.12% (2/7)
+    rank vs off (rho 0.2475, pairs 59.09%): x1.02: rho +0.0000 pairs +0.00  x1.04: rho +0.0000 pairs +0.00  x1.06: rho +0.0000 pairs +0.00  x1.08: rho +0.0000 pairs +0.00
+    LOYO -0.23% 5/7 | board -0.062% | top-100 cubed -0.056% | picks ['x1.04', 'x1.02', 'x1.04', 'x1.04', 'x1.04', 'x1.04', 'x1.04']
+    FWD  -0.16% 3/4 | board -0.043% | picks ['x1.06', 'x1.04', 'x1.04', 'x1.04']
+    -> FAIL
+
+Limitations: honest replica, next game, no book anchor (live the prop anchor pulls ~57% of any model lift back toward the lines).

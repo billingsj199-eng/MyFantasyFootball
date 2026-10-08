@@ -40,7 +40,7 @@ def main():
     # expected components per game (SIM_XFP_2026 in data/sim_routes.js): skill rows [tgt, xRec, xRecYds, xRecTD, car, xRushYds, xRushTD], QB rows [att, xPassYds, xPassTD, car, xRushYds, xRushTD, xInt]
     rj = open(os.path.join(HERE, "data", "sim_routes.js"), encoding="utf-8").read(); i0 = rj.index("SIM_XFP_2026 = ") + len("SIM_XFP_2026 = "); XF = json.JSONDecoder().raw_decode(rj, i0)[0]
     LAM = {"ry": 0.25, "rec": 0.5, "rcy": {"RB": 0.75, "WR": 0.25, "TE": 0.25}}; PU = 5.0
-    def usage_update(key, ps, wkn, CF, A_rows, td=False, qbpass=False):
+    def usage_update(key, ps, wkn, CF, A_rows, td=False, qbpass=False, P=None):
         xr = XF.get(key) or XF.get(key.title()); rows = [xr["w"][k] for k in (xr or {}).get("w", {}) if int(k) < wkn and xr["w"][k]] if xr else []
         if not rows or not A_rows: return None
         gN = max(len(A_rows), len(rows)); out = dict(CF); A = {s: float(np.mean([r[s] for r in A_rows])) for s in STATS}
@@ -52,9 +52,10 @@ def main():
         for k in keys:
             if k not in u: continue
             lm = LAM.get(k, 0.5); lm = lm[ps] if isinstance(lm, dict) else lm
-            ev = lm * u[k] + (1 - lm) * A[k]; out[k] = (PU * CF[k] + len(A_rows) * ev) / (PU + len(A_rows))
+            PP = PU if P is None else P; ev = lm * u[k] + (1 - lm) * A[k]; out[k] = (PP * CF[k] + len(A_rows) * ev) / (PP + len(A_rows)) if (PP + len(A_rows)) > 0 else CF[k]
         return out
-    E = {c: defaultdict(list) for c in ("Clay (comps)", "Clay + usage (compsU)", f"Clay-free K1 {a.k1:g} K2 {a.k2:g}", "Clay-free + usage (ry/rec/rcy)", "Clay-free + usage incl. TDs", "Clay-free + usage + QB pass", "Clay-free A only (this season)")}
+    CANDS = ("Clay (comps)", "Clay + usage (compsU)", "Clay + usage P5 rebuilt", "Clay + usage P2", "Clay + usage P1", "in-season only (P0, usage-blended)", "hybrid: Clay+usage <3 games, in-season only 3+", f"Clay-free K1 {a.k1:g} K2 {a.k2:g}", "Clay-free + usage (ry/rec/rcy)", "Clay-free A only (this season)")
+    E = {c: defaultdict(list) for c in CANDS}; EG = {c: defaultdict(list) for c in CANDS}   # EG keyed by (pos, stat, gbucket)
     calls = defaultdict(lambda: defaultdict(list))   # candidate -> stat -> hits
     nrows = 0
     for wkn in [int(x) for x in a.weeks.split(",")]:
@@ -89,11 +90,15 @@ def main():
                 if L_ is None: return None
                 q = pts_of(L_); return {s: L_[s] * lvl / q for s in STATS} if q > 0 else None
             CU1 = scl(usage_update(key, ps, wkn, CF0, A_rows)); CU2 = scl(usage_update(key, ps, wkn, CF0, A_rows, td=True)); CU3 = scl(usage_update(key, ps, wkn, CF0, A_rows, td=True, qbpass=True))
-            cands = {"Clay (comps)": comps, "Clay + usage (compsU)": p.get("compsU") or comps, f"Clay-free K1 {a.k1:g} K2 {a.k2:g}": CF, "Clay-free + usage (ry/rec/rcy)": CU1 or CF, "Clay-free + usage incl. TDs": CU2 or CF, "Clay-free + usage + QB pass": CU3 or CF, "Clay-free A only (this season)": AO}
+            compsPG = {s_: float(comps.get(s_, 0) or 0) for s_ in STATS}   # Clay's per-game line at the lock (the compsU prior)
+            CP5 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=5.0)); CP2 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=2.0)); CP1 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=1.0)); CP0 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=0.0))
+            gA = len(A_rows); HYB = (CP0 if (gA >= 3 and CP0) else (CP5 or comps))
+            cands = {"Clay (comps)": comps, "Clay + usage (compsU)": p.get("compsU") or comps, "Clay + usage P5 rebuilt": CP5 or comps, "Clay + usage P2": CP2 or comps, "Clay + usage P1": CP1 or comps, "in-season only (P0, usage-blended)": CP0 or comps, "hybrid: Clay+usage <3 games, in-season only 3+": HYB, f"Clay-free K1 {a.k1:g} K2 {a.k2:g}": CF, "Clay-free + usage (ry/rec/rcy)": CU1 or CF, "Clay-free A only (this season)": AO}
+            gb = "g0" if gA == 0 else ("g1-2" if gA <= 2 else "g3+")
             nrows += 1
             for c, L_ in cands.items():
                 if L_ is None: continue
-                for s in POSSTATS[ps]: E[c][(ps, s)].append(abs(float(L_.get(s, 0) or 0) - actual[s]) * VAL[s])
+                for s in POSSTATS[ps]: E[c][(ps, s)].append(abs(float(L_.get(s, 0) or 0) - actual[s]) * VAL[s]); EG[c][(ps, s, gb)].append(abs(float(L_.get(s, 0) or 0) - actual[s]) * VAL[s])
                 if p.get("lines"):
                     for lk, sk in STAT_KEYS.items():
                         if lk not in STATS: continue
@@ -109,6 +114,14 @@ def main():
             cells = [f"{s} {np.mean(E[c][(ps, s)]):.3f}" for s in POSSTATS[ps] if E[c][(ps, s)]]
             tot = float(np.mean([np.sum([E[c][(ps, s)][i] for s in POSSTATS[ps]]) for i in range(len(E[c][(ps, POSSTATS[ps][0])]))])) if E[c][(ps, POSSTATS[ps][0])] else np.nan
             P(f"  {c:34s} n{len(E[c][(ps, POSSTATS[ps][0])]):4d} | total {tot:.3f} | " + " ".join(cells))
+    P("\n--- by GAMES PLAYED at the lock (total points-weighted abs error per row), the Clay-prior question ---")
+    for gb in ("g0", "g1-2", "g3+"):
+        for ps in POSSTATS:
+            line = f"  {gb:5s} {ps:3s}"
+            for c in CANDS:
+                v = [np.sum([EG[c][(ps, s, gb)][i] for s in POSSTATS[ps]]) for i in range(len(EG[c][(ps, POSSTATS[ps][0], gb)]))] if EG[c][(ps, POSSTATS[ps][0], gb)] else []
+                if len(v) >= 20: line += f" | {c[:22]}: {np.mean(v):.3f} (n{len(v)})"
+            P(line)
     P("\n--- vs the books: stat-prop call hit rate (raw mean vs line), by candidate ---")
     for c in calls:
         allh = [h for lk in calls[c] for h in calls[c][lk]]

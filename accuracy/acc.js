@@ -569,7 +569,8 @@
       if (c.kind === 'buy' || c.kind === 'sell') {
         const c0 = c.cons0 && c.cons0.rank;
         const tr = (c.traj || []).map((t) => 'W' + t.week + ' ' + (t.cons != null ? c.pos + t.cons : '—')).join(' › ');
-        det = (c0 != null ? 'then ' + c.pos + c0 : 'then —') + (tr ? ' › ' + tr : '') + (isNum(c.consDelta) ? ' <b>' + consMove(c) + '</b>' : '') + (isNum(c.ptsTotal) && c.games ? ' · ' + c.ptsTotal + ' pts in ' + c.games + ' gm' : '');
+        const saidOn = c.at ? new Date(c.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+        det = (saidOn ? 'said ' + esc(saidOn) + ': ' : '') + (c0 != null ? c.pos + c0 : '—') + (tr ? ' › ' + tr : '') + (isNum(c.consDelta) ? ' <b>' + consMove(c) + '</b>' : '') + (isNum(c.ptsTotal) && c.games ? ' · ' + c.ptsTotal + ' pts in ' + c.games + ' gm' : '');
       } else if (c.kind === 'over') {
         const vsTxt = (c.vsRes && c.vsRes.length) ? c.vsRes.map((o) => esc(o.player) + ' ' + (isNum(o.pts) ? o.pts.toFixed(1) : '—')).join(', ') : (c.vs || []).map(esc).join(', ');
         det = (isNum(c.pts) ? c.pts.toFixed(1) : '—') + ' vs ' + vsTxt + (c.note ? ' · ' + esc(c.note) : '');

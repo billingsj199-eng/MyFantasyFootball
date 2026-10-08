@@ -31443,6 +31443,7 @@ window.fmtHeight = fmtHeight;
       barA.style.width = '50%'; barB.style.width = '50%';
       verdict.textContent = '';
       verdict.className = 'trade-verdict even'; sub.textContent = '';
+      { const h0 = document.getElementById('tradeEvenHint'); if (h0) { h0.style.display = 'none'; h0.textContent = ''; } }
       if (resultEl) resultEl.classList.add('is-empty');
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
       _tradeVorRender();
@@ -31478,6 +31479,34 @@ window.fmtHeight = fmtHeight;
       sub.textContent = `${nameB} gives ${totalB}, gets ${totalA} back (+${diff} · ${diffPct}% advantage)`;
     }
 
+    // EVEN IT UP (2026-10-08, Jack: improve the calc): name the gap in board terms. The side receiving less should get about
+    // `diff` more back; show the one or two players on the active board (top 200, not already in the trade, one per position)
+    // whose value sits within 20% of that gap, with their positional rank - the Flock-style "add an RB22" read.
+    const hintEl = document.getElementById('tradeEvenHint');
+    if (hintEl) {
+      if (diffPct <= 5) { hintEl.style.display = 'none'; hintEl.textContent = ''; }
+      else {
+        const loser = recvA > recvB ? nameB : nameA, winner = recvA > recvB ? nameA : nameB;
+        const board = _ADP_SRCS.indexOf(tradeSource) >= 0 ? null : window._verBoardFor(tradeSource, tradeMode);
+        const inTrade = new Set([...sideA.players, ...sideB.players]);
+        let ex = [];
+        if (board) {
+          const posSeen = {};
+          board.slice(0, 200).forEach(idx => {
+            const d = D[idx]; if (!d) return;
+            const ps = d.s || d.pos || '?'; posSeen[ps] = (posSeen[ps] || 0) + 1;   // d.s = position (d.p is points)
+            if (inTrade.has(idx)) return;
+            const v = getPlayerValue(d), err = Math.abs(v - diff) / diff;
+            if (err <= 0.2) ex.push({ d, v, pr: ps + posSeen[ps], ps, err });
+          });
+          ex.sort((a, b) => a.err - b.err);
+          const seen = new Set();
+          ex = ex.filter(e => { if (seen.has(e.ps)) return false; seen.add(e.ps); return true; }).slice(0, 2);
+        }
+        hintEl.style.display = '';
+        hintEl.textContent = 'To even it up, ' + loser + ' should get about ' + diff + ' more back from ' + winner + (ex.length ? ' — e.g. ' + ex.map(e => e.d.n + ' (' + e.pr + ', ' + e.v + ')').join(' or ') : '');
+      }
+    }
     // Insights — peak, depth, age, picks, position split
     const insights = _buildTradeInsights(sideA, sideB);
     if (insightsEl) {
@@ -31857,6 +31886,94 @@ window.fmtHeight = fmtHeight;
     return base + '?trade=' + encoded;
   }
 
+  // SHARE CARD (2026-10-08, Jack: improve the trade calc): the trade as a 1200x675 PNG - both sides as what each team RECEIVES,
+  // totals, the verdict bar, the even-up line - same framing as the page (panels = what a team gives, so the headline names the receiver).
+  function _tradeShareCard() {
+    const cs = getComputedStyle(document.body);
+    const gv = (k, d) => (cs.getPropertyValue(k) || '').trim() || d;
+    const C = { bg: gv('--bg', '#0d1117'), panel: gv('--surface', '#161b22'), text: gv('--text', '#e6edf3'), dim: gv('--text2', '#8b949e'), accent: gv('--accent', '#f5b041'), a: '#22c55e', b: '#f5b041', border: gv('--border', '#30363d') };
+    const BF = '"Bebas Neue", Impact, sans-serif', DF = '"DM Sans", Arial, sans-serif';
+    const W = 1200, H = 675, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+    const rr = (px, py, pw, ph, r) => { x.beginPath(); if (x.roundRect) x.roundRect(px, py, pw, ph, r); else x.rect(px, py, pw, ph); };
+    x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
+    const { nameA, nameB } = _tradeSideNames();
+    const totalA = calcSideTotal(sideA), totalB = calcSideTotal(sideB);
+    const recvA = totalB, recvB = totalA, sum = totalA + totalB;
+    x.textBaseline = 'alphabetic';
+    x.fillStyle = C.accent; x.font = '54px ' + BF; x.textAlign = 'center'; try { x.letterSpacing = '3px'; } catch (_) {}
+    x.fillText('TRADE CALCULATOR', W / 2, 72);
+    x.fillStyle = C.dim; x.font = '600 15px ' + DF; try { x.letterSpacing = '1px'; } catch (_) {}
+    const modeLbl = { redraft: 'REDRAFT', superflex: 'SUPERFLEX', dynasty: 'DYNASTY 1QB', dynastysf: 'DYNASTY SF' }[tradeMode] || String(tradeMode).toUpperCase();
+    const srcLbl = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS' }[tradeSource] || String(tradeSource).toUpperCase();
+    x.fillText(modeLbl + '  \u00b7  ' + srcLbl + ' VALUES', W / 2, 100);
+    const col = (side, receiver, giver, left, color, total) => {
+      const px = left, pw = 520, py = 130, ph = 330;
+      x.fillStyle = C.panel; x.strokeStyle = C.border; x.lineWidth = 1; rr(px, py, pw, ph, 12); x.fill(); x.stroke();
+      x.fillStyle = color; x.font = '26px ' + BF; x.textAlign = 'center'; try { x.letterSpacing = '2px'; } catch (_) {}
+      x.fillText(String(receiver).toUpperCase() + ' RECEIVES', px + pw / 2, py + 36);
+      x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.fillText('FROM ' + String(giver).toUpperCase(), px + pw / 2, py + 56);
+      const rows = [];
+      side.players.forEach(i => { const d = D[i]; if (d) rows.push({ pos: d.s, name: d.n, val: getPlayerValue(d), tier: getTierForPlayer(d) || '' }); });
+      side.picks.forEach(p => rows.push({ pos: 'PICK', name: p._pickNum ? (p.year + ' ' + p._pickNum) : (p.year + ' ' + slotLabel(p.slot) + ' ' + p.round), val: getPickValue(p.round, p.year, p.slot, p._pickNum), tier: '' }));
+      x.textAlign = 'left'; let yy = py + 90; const maxRows = 7;
+      rows.slice(0, maxRows).forEach(r => {
+        x.fillStyle = 'rgba(255,255,255,.08)'; rr(px + 18, yy - 17, 52, 24, 5); x.fill();
+        x.fillStyle = C.dim; x.font = '700 12px ' + DF; x.textAlign = 'center'; x.fillText(r.pos, px + 44, yy);
+        x.textAlign = 'left'; x.fillStyle = C.text; x.font = '600 20px ' + DF;
+        let nm = r.name; while (x.measureText(nm).width > 300 && nm.length > 4) nm = nm.slice(0, -2) + '\u2026';
+        x.fillText(nm, px + 84, yy + 1);
+        if (r.tier) { x.fillStyle = C.dim; x.font = '600 11px ' + DF; x.textAlign = 'right'; x.fillText(String(r.tier), px + pw - 90, yy); }
+        x.textAlign = 'right'; x.fillStyle = color; x.font = '24px ' + BF; x.fillText(String(r.val), px + pw - 22, yy + 2);
+        yy += 36;
+      });
+      if (rows.length > maxRows) { x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.textAlign = 'left'; x.fillText('+ ' + (rows.length - maxRows) + ' more', px + 84, yy); }
+      if (!rows.length) { x.fillStyle = C.dim; x.font = 'italic 16px ' + DF; x.textAlign = 'center'; x.fillText('nothing', px + pw / 2, py + 180); }
+      x.fillStyle = C.border; x.fillRect(px + 18, py + ph - 56, pw - 36, 1);
+      x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.textAlign = 'left'; x.fillText('TOTAL VALUE', px + 22, py + ph - 22);
+      x.fillStyle = color; x.font = '34px ' + BF; x.textAlign = 'right'; x.fillText(String(total), px + pw - 22, py + ph - 18);
+    };
+    col(sideA, nameB, nameA, 60, C.a, totalA);
+    col(sideB, nameA, nameB, 620, C.b, totalB);
+    x.fillStyle = C.dim; x.font = '22px ' + BF; x.textAlign = 'center'; x.fillText('VS', W / 2, 300);
+    const by = 492, bh = 18, bx = 60, bw = W - 120;
+    const pctA = sum ? Math.max(8, Math.min(92, Math.round((recvA / sum) * 100))) : 50;
+    x.fillStyle = C.a; rr(bx, by, bw * pctA / 100, bh, 6); x.fill();
+    x.fillStyle = C.b; rr(bx + bw * pctA / 100, by, bw * (100 - pctA) / 100, bh, 6); x.fill();
+    const diff = Math.abs(totalA - totalB), diffPct = sum ? Math.round((diff / Math.max(totalA, totalB)) * 100) : 0;
+    let verdict = 'FAIR TRADE', subline = 'Both sides are roughly equal in value', vcolor = C.text;
+    if (sum && diffPct > 5) {
+      const winner = recvA > recvB ? nameA : nameB, wTot = recvA > recvB ? totalA : totalB, wGet = recvA > recvB ? totalB : totalA;
+      verdict = String(winner).toUpperCase() + ' WINS'; vcolor = recvA > recvB ? C.a : C.b;
+      subline = winner + ' gives ' + wTot + ', gets ' + wGet + ' back (+' + diff + ' \u00b7 ' + diffPct + '% advantage)';
+    }
+    x.fillStyle = vcolor; x.font = '44px ' + BF; x.textAlign = 'center'; try { x.letterSpacing = '3px'; } catch (_) {}
+    x.fillText(verdict, W / 2, 562);
+    x.fillStyle = C.dim; x.font = '600 16px ' + DF; try { x.letterSpacing = '0px'; } catch (_) {}
+    x.fillText(subline, W / 2, 590);
+    const hintEl = document.getElementById('tradeEvenHint'); const hint = hintEl && hintEl.style.display !== 'none' ? hintEl.textContent : '';
+    if (hint) {
+      x.fillStyle = C.accent; x.font = '600 15px ' + DF;
+      const words = hint.split(' '); const lines = []; let line = '';
+      words.forEach(w => { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > W - 160) { lines.push(line); line = w; } else line = t; });
+      if (line) lines.push(line);
+      lines.slice(0, 2).forEach((l, i) => x.fillText(l, W / 2, 618 + i * 20));
+    }
+    x.fillStyle = 'rgba(255,255,255,.55)'; x.font = '14px ' + BF; try { x.letterSpacing = '2px'; } catch (_) {}
+    x.fillText('MYFANTASYFOOTBALL.CO', W / 2, H - 14);
+    return c;
+  }
+  window._tradeShareCard = _tradeShareCard;
+  document.getElementById('tradeCardBtn').addEventListener('click', () => {
+    if (!sideA.players.length && !sideA.picks.length && !sideB.players.length && !sideB.picks.length) {
+      if (typeof toast === 'function') toast('Add players first, then share');
+      return;
+    }
+    try {
+      const c = _tradeShareCard();
+      _tcvSavePng(c, 'trade_' + new Date().toISOString().slice(0, 10) + '.png');
+      if (typeof toast === 'function') toast('Trade card downloaded');
+    } catch (e) { console.warn('[Trade] share card failed:', e); if (typeof toast === 'function') toast('Could not build the card'); }
+  });
   document.getElementById('tradeShareBtn').addEventListener('click', () => {
     if (!sideA.players.length && !sideA.picks.length && !sideB.players.length && !sideB.picks.length) {
       if (typeof toast === 'function') toast('Add players first, then share');
@@ -31892,6 +32009,7 @@ window.fmtHeight = fmtHeight;
       }
       // Source
       if (state.s) {
+        if (state.s && ['consensus', 'jacks', 'mine'].indexOf(state.s) < 0) state.s = 'consensus';   // 2026-10-08: ADP / KTC sources left the trade page; old share links fall back to consensus
         const sTab = document.querySelector('.trade-src-tab[data-tsrc="' + state.s + '"]');
         if (sTab && !sTab.classList.contains('locked')) sTab.click();
       }

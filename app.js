@@ -5449,6 +5449,21 @@ window._weeklyAssumeOutSeed = function(wk) {
   }
   return out;
 };
+// Admin row chip (weekly table, in season): one click parks a Questionable /
+// Doubtful / unconfirmed-Out player in the BYE / OUT row — the UNDO on that
+// row brings him back (Jack 2026-10-08: "allow me to move them out of
+// injuries to rank them and a way to put them back in if they are out").
+function _assumeOutChip(d) {
+  if (!d || !d.inj || d.s === 'DST') return '';
+  if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return '';
+  if (typeof window.isAdmin !== 'function' || !window.isAdmin()) return '';
+  if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return '';
+  const t = String(d.inj).toLowerCase();
+  if (/\bir\b|\bpup\b|suspend|out for season|season.?ending/.test(t)) return '';
+  if (!/questionable|doubtful|day.?to.?day|\bgtd\b|\bout\b/.test(t)) return '';
+  const wk = window._weeklyActiveWeek || 1;
+  return '<button class="ao-chip" type="button" data-assume-out="' + String(d.n).replace(/"/g, '&quot;') + '" title="Assume ' + String(d.n).replace(/"/g, '&quot;') + ' out for week ' + wk + ' — moves him to the BYE / OUT row (slot kept, PROJ 0); UNDO there brings him back">→ OUT</button>';
+}
 // Not coming back this season (Jack's out-for-season flag, a season-ending
 // tag, or the injury read's season-long return) — the BYE / OUT row lists
 // only players who plan on returning (Jack 2026-10-08).
@@ -5499,6 +5514,33 @@ function _tcvOppTitle(o) {
   return 'Week ' + o.wk + ': ' + (o.away ? 'at ' : 'vs ') + o.abbr + diffLbl;
 }
 // Vertical-card chip: "vs" / "@" + opponent logo (or BYE), colored by difficulty
+// INJURY DESIGNATION on the tier cards (Jack 2026-10-08: "add their up to
+// date injury designation to the tier cards so it's shown they may miss or
+// they are out"). Q / D / O / IR / PUP / SUS from the live feed tag (same
+// codes as the table pill); in WEEKLY the OPP chip already reads OUT / IR /
+// PUP / SUS for a ruled-out player, so the badge then covers only the ones
+// who MAY miss (Questionable / Doubtful / unconfirmed Out), with the play
+// odds from the injuries read in the tooltip.
+function _tcvInjBadgeHtml(d, cls) {
+  if (!d || !d.inj || d.s === 'DST') return '';
+  const pill = _injPill(d);
+  if (!pill) return '';
+  const code = (pill.match(/data-status="([A-Z]+)"/) || [])[1];
+  if (!code) return '';
+  const weekly = typeof currentMode !== 'undefined' && currentMode === 'weekly';
+  if (weekly && _tcvOutThisWeek(d)) return '';
+  const wk = window._weeklyActiveWeek || 1, wkLbl = weekly ? 'Week ' + wk : 'this week';
+  const word = (typeof _INJ_STATUS_WORDS !== 'undefined' && _INJ_STATUS_WORDS[code]) || code;
+  let pct = null;
+  try { const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null; if (x && x.ret && x.ret.pct != null) pct = Math.round(x.ret.pct * 100); } catch (_e) {}
+  let tip = word + ' — ' + String(d.inj);
+  if (code === 'Q') tip += ' · may miss ' + wkLbl + (pct != null ? ' (' + pct + '% to play)' : '');
+  else if (code === 'D') tip += ' · likely misses ' + wkLbl + (pct != null ? ' (' + pct + '% to play)' : '');
+  else if (code === 'O') tip += weekly ? ' · Out tag not yet confirmed for ' + wkLbl : ' · ruled out';
+  else tip += ' · out';
+  const lbl = code === 'O' ? 'OUT' : code;
+  return '<div class="' + cls + '" data-status="' + code + '" title="' + tip.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '">' + lbl + '</div>';
+}
 function _tcvOppChipHtml(d) {
   const o = _tcvOppInfo(d);
   if (!o) return '';
@@ -5745,6 +5787,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
     '</div>' +
     '<div class="tcv-card-photo">' + logoHtml + headshotHtml + '</div>' +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
+    _tcvInjBadgeHtml(d, 'tcv-inj-badge') +
     (_cs.range && _cs.range.strip ? _tcvRangeStripHtml(d, _cs.range, 'tcv-rng tcv-rng-v') : _tcvOppChipHtml(d)) +
     '<div class="tcv-card-name" style="font-size:' + _tcvCardNameFit(lastName) + 'px" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
@@ -6134,7 +6177,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
     '<div class="tcv-row-img">' + headshotHtml + '</div>' +
     '<div class="tcv-row-id">' +
       '<div class="tcv-row-name" title="' + safe(d.n) + ' · ' + safe(abbr) + '">' + safe(d.n) + '</div>' +
-      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span>' + miniLogoHtml + '</div>' +
+      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span>' + _tcvInjBadgeHtml(d, 'tcv-inj-badge tcv-row-inj') + miniLogoHtml + '</div>' +
     '</div>' +
     oppHtml +
     '<div class="tcv-row-stats">' + statsHtml + '</div>' +
@@ -8856,7 +8899,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -17182,10 +17225,11 @@ function _injShowDetail(d, pillEl) {
 window._injShowDetail = _injShowDetail;
 // BYE / OUT row UNDO (admin): put an assumed-out player back on the weekly board
 document.addEventListener('click', function (e) {
-  var b = e.target && e.target.closest ? e.target.closest('[data-assume-undo]') : null;
+  var b = e.target && e.target.closest ? e.target.closest('[data-assume-undo],[data-assume-out]') : null;
   if (!b) return;
   e.preventDefault(); e.stopPropagation();
-  if (typeof window._weeklyAssumeOutToggle === 'function') window._weeklyAssumeOutToggle(b.getAttribute('data-assume-undo'));
+  var nm = b.getAttribute('data-assume-undo') || b.getAttribute('data-assume-out');
+  if (typeof window._weeklyAssumeOutToggle === 'function') window._weeklyAssumeOutToggle(nm);
 }, true);
 // Name-keyed pill for surfaces that render rows from name strings (My Teams):
 // resolves the D row via nameToIdx and wraps the pill with the data-injname

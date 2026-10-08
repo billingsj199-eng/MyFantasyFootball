@@ -6930,9 +6930,65 @@ function _tcvVbGroups(root) {
     if (cut) col = { a: '#991b1b', b: '#ef4444', light: false };
     else if (bye) col = { a: '#334155', b: '#64748b', light: false };
     else { col = _TCV_VB_TIER_COLORS[ti % _TCV_VB_TIER_COLORS.length]; ti++; }
-    groups.push({ label: label || '—', cut: cut, bye: bye, col: col, players: players });
+    groups.push({ label: label || '—', cut: cut, bye: bye, col: col, players: players, row: row });
   });
   return groups;
+}
+function _tcvVideoPref() {
+  try { return localStorage.getItem('tcv_video') === '1'; } catch (_) { return false; }
+}
+// RECORD MODE (Jack 2026-10-08: the weekly / ROS rankings videos are a screen
+// recording of the live tier view, not stills). The card rows are replaced by
+// the VIDEO BOARD renderer drawn on a canvas and redrawn on every reveal, so
+// the recording shows exactly what the export would: 6 a row, surname + PROJ,
+// opponent chip, unreached tiers as strips, finished tiers folding when the
+// board gets tall. REVEAL NEXT / spacebar / HIDE ALL / REVEAL ALL / ⇅ / HIDE
+// CUT all keep working (they flip the hidden cards' classes, which the
+// observer picks up). Tier-letter clicks are off while the rows are hidden.
+function _tcvVideoMount(root) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tcv-video-wrap';
+  const cv = document.createElement('canvas');
+  wrap.appendChild(cv);
+  const note = document.createElement('div');
+  note.className = 'tcv-video-note';
+  note.textContent = 'RECORD MODE — loading photos…';
+  wrap.appendChild(note);
+  const firstRow = root.querySelector('.tcv-tier-row');
+  if (firstRow) root.insertBefore(wrap, firstRow); else root.appendChild(wrap);
+  root.classList.add('tcv-video');
+  const st = { images: null, focusRow: null, timer: null };
+  const all = [];
+  _tcvVbGroups(root).forEach(g => g.players.forEach(p => all.push(p)));
+  const draw = () => {
+    if (!st.images || !root.isConnected) return;
+    const groups = _tcvVbGroups(root);
+    const revealed = new Set();
+    root.querySelectorAll('.tcv-card').forEach(c => { if (c._tcvPlayer && !c.classList.contains('tcv-covered')) revealed.add(c._tcvPlayer.n); });
+    let focus = st.focusRow ? groups.findIndex(g => g.row === st.focusRow) : -1;
+    if (focus < 0) focus = groups.findIndex(g => !g.bye && g.players.some(p => revealed.has(p.d.n)) && !g.players.every(p => revealed.has(p.d.n)));
+    if (focus < 0) {
+      const idx = groups.map((g, i) => g.bye ? -1 : i).filter(i => i >= 0);
+      focus = _tcvCountdownPref() ? idx[idx.length - 1] : idx[0];
+    }
+    try {
+      const c = _tcvVbBoardCanvas(groups, revealed, st.images, _tcvCountdownPref(), focus);
+      cv.width = c.width; cv.height = c.height;
+      cv.getContext('2d').drawImage(c, 0, 0);
+      note.textContent = '';
+    } catch (e) { note.textContent = 'RECORD MODE: draw failed — ' + (e && e.message || e); }
+  };
+  const schedule = () => { clearTimeout(st.timer); st.timer = setTimeout(draw, 40); };
+  const mo = new MutationObserver(muts => {
+    for (const m of muts) {
+      const card = m.target && m.target.closest ? m.target.closest('.tcv-card') : null;
+      if (card) { const row = card.closest('.tcv-tier-row'); if (row) st.focusRow = row; }
+    }
+    schedule();
+  });
+  mo.observe(root, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  root._tcvVideoObserver = mo;
+  _tcvVbImages(all).then(imgs => { st.images = imgs; draw(); });
 }
 function _tcvVbFullTeam(abbr) {
   if (!window._tcvAbbrToFull && typeof TEAM_ABBR_MAP !== 'undefined') {
@@ -7258,7 +7314,9 @@ function _tcvVbReadme(prefix, n, countdown, cols) {
     '  PROJ = the same number as the PROJ column (BOOK PROJ toggle respected). Opponent chip = this week\'s matchup (weekly) or the bye week (season boards).'
   ].join('\n');
 }
-async function _tcvDownloadVideoBoard(root, prefix, btn) {
+// cardsOnly = 🃏 FLASH CARDS: just the reveal cards (for the videos where he
+// flashes a card over game footage), no board states.
+async function _tcvDownloadVideoBoard(root, prefix, btn, cardsOnly) {
   if (btn && btn._tcvBusy) return;
   const groups = _tcvVbGroups(root);
   const ranked = [];
@@ -7292,19 +7350,25 @@ async function _tcvDownloadVideoBoard(root, prefix, btn) {
           files.push({ name: 'reveal/' + pre + '_reveal_' + pad(i) + '_' + (clean(it.p.d.n) || 'player') + '.png', data: await _tcvCanvasBytes(rc) });
         } catch (e) { failed++; console.warn('[VideoBoard] reveal card failed:', it.p.d.n, e); }
       }
-      if (btn) btn.textContent = '🎞 board ' + i + ' / ' + order.length + '…';
-      try {
-        const focus = i > 0 ? order[i - 1].gi : order[0].gi;
-        const bc = _tcvVbBoardCanvas(groups, revealed, images, countdown, focus);
-        files.push({ name: 'board/' + pre + '_board_' + pad(i) + '.png', data: await _tcvCanvasBytes(bc) });
-      } catch (e) { failed++; console.warn('[VideoBoard] board state failed:', i, e); }
+      if (btn) btn.textContent = (cardsOnly ? '🃏 card ' : '🎞 board ') + i + ' / ' + order.length + '…';
+      if (!cardsOnly) {
+        try {
+          const focus = i > 0 ? order[i - 1].gi : order[0].gi;
+          const bc = _tcvVbBoardCanvas(groups, revealed, images, countdown, focus);
+          files.push({ name: 'board/' + pre + '_board_' + pad(i) + '.png', data: await _tcvCanvasBytes(bc) });
+        } catch (e) { failed++; console.warn('[VideoBoard] board state failed:', i, e); }
+      }
       await new Promise(r => setTimeout(r, 0));
     }
     const enc = new TextEncoder();
     files.push({ name: 'order.txt', data: enc.encode(orderLines.join('\n')) });
-    files.push({ name: 'README.txt', data: enc.encode(_tcvVbReadme(prefix, order.length, countdown, _TCV_VB.COLS)) });
-    _tcvSaveBlob(_tcvZipBlob(files), pre + '_video_board.zip');
-    if (typeof toast === 'function') toast('Video board: ' + (order.length + 1) + ' board steps + ' + order.length + ' reveal cards zipped' + (failed ? ' (' + failed + ' failed)' : ''));
+    files.push({ name: 'README.txt', data: enc.encode(cardsOnly
+      ? ('FLASH CARDS — ' + prefix + ' — one 560x760 transparent card per player, numbered in ' + (countdown ? 'countdown' : 'top-down') + ' order (order.txt). Drop each on the track above your footage for ~1s as you say the name. PROJ = the PROJ column (BOOK PROJ toggle respected); chip = this week\'s opponent (weekly) or bye week (season boards).')
+      : _tcvVbReadme(prefix, order.length, countdown, _TCV_VB.COLS)) });
+    _tcvSaveBlob(_tcvZipBlob(files), pre + (cardsOnly ? '_flash_cards.zip' : '_video_board.zip'));
+    if (typeof toast === 'function') toast(cardsOnly
+      ? ('Flash cards: ' + order.length + ' reveal cards zipped' + (failed ? ' (' + failed + ' failed)' : ''))
+      : ('Video board: ' + (order.length + 1) + ' board steps + ' + order.length + ' reveal cards zipped' + (failed ? ' (' + failed + ' failed)' : '')));
   } catch (e) {
     console.warn('[VideoBoard] export failed:', e);
     if (typeof toast === 'function') toast('Video board export failed: ' + (e && e.message || e));
@@ -7596,7 +7660,9 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn" data-tcvaction="clearSel" title="Untick every card">✕ CLEAR</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipSel" title="One .zip of just the ticked cards\' PNGs. File: ' + _tcvFilePrefix + '_row_cards_selected.zip">📦 ZIP SELECTED (0)</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipAll" title="One .zip of every revealed row card\'s PNG. File: ' + _tcvFilePrefix + '_row_cards.zip">📦 ZIP ALL</button>' : '') +
-    (_tcvIsAdminViewer() ? '<button class="tcv-reveal-btn" data-tcvaction="dlVideo" title="Admin: one .zip for the rankings video — the tier board as 1080×1150 transparent PNGs, one per reveal step in the ⇅ order (tiers not reached yet collapse to a strip, max 6 cards a row, surname + PROJ only), plus a big 560×760 reveal card per player to drop on screen when you say the name. README inside has the Premiere recipe. File: ' + _tcvFilePrefix + '_video_board.zip">🎞 VIDEO BOARD</button>' : '') +
+    (_tcvIsAdminViewer() ? '<button class="tcv-reveal-btn" data-tcvaction="dlVideo" title="Admin: one .zip for the rankings video — the tier board as 1080×1150 transparent PNGs, one per reveal step in the ⇅ order (tiers not reached yet collapse to a strip, max 6 cards a row, surname + PROJ only), plus a big 560×760 reveal card per player to drop on screen when you say the name. README inside has the Premiere recipe. File: ' + _tcvFilePrefix + '_video_board.zip">🎞 VIDEO BOARD</button>' +
+      '<button class="tcv-reveal-btn" data-tcvaction="dlCards" title="Admin: just the 560×760 reveal cards, one per player (no board states) — for the videos where a card flashes over game footage. File: ' + _tcvFilePrefix + '_flash_cards.zip">🃏 FLASH CARDS</button>' +
+      '<button class="tcv-reveal-btn' + (_tcvVideoPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleVideo" title="Admin: RECORD MODE for screen-recording the rankings — the card rows are replaced by the video-board drawing (6 a row, surname + PROJ, opponent chip, tiers not reached yet as strips) and it redraws on every REVEAL NEXT / spacebar / HIDE ALL / REVEAL ALL. Tier-letter clicks are off while it is on.">🎥 ' + (_tcvVideoPref() ? 'RECORDING VIEW' : 'RECORD MODE') + '</button>' : '') +
     (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✎ on the letter renames it, ✕ removes it. Cut line too: ✂ CUT on a card hides everyone below him, drag the ✂ letter to move the line, ✕ on ✂ clears it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
@@ -7833,6 +7899,13 @@ function _renderTierCardView(data, container) {
       if (action === 'dlZipAll') { _tcvDownloadRowsZip(root, _tcvFilePrefix, btn, false); return; }
       if (action === 'dlZipSel') { _tcvDownloadRowsZip(root, _tcvFilePrefix, btn, true); return; }
       if (action === 'dlVideo') { _tcvDownloadVideoBoard(root, _tcvFilePrefix, btn); return; }
+      if (action === 'dlCards') { _tcvDownloadVideoBoard(root, _tcvFilePrefix, btn, true); return; }
+      if (action === 'toggleVideo') {
+        // Card rows are hidden behind the canvas — persist the pref and rebuild the view
+        try { localStorage.setItem('tcv_video', _tcvVideoPref() ? '0' : '1'); } catch (_) {}
+        _renderTierCardView(data, container);
+        return;
+      }
       if (action === 'toggleSelect') {
         const on = !root.classList.contains('tcv-select');
         root.classList.toggle('tcv-select', on);
@@ -7945,6 +8018,7 @@ function _renderTierCardView(data, container) {
 
   container.innerHTML = '';
   container.appendChild(root);
+  if (_tcvVideoPref() && _tcvIsAdminViewer()) _tcvVideoMount(root);
   // Site watermark: quiet bottom-right tag so screenshots / recordings of the
   // board say where it came from. pointer-events:none → never blocks a card.
   const wm = document.createElement('div');

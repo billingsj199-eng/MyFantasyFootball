@@ -16518,7 +16518,9 @@ const _PRAC_TRAJ = {"day":{"1:FP":0.91,"1:LP":0.832,"1:DNP":0.483,"2:FP":0.946,"
 // top-12 QB/TE / top-24 RB/WR 54% vs 45%. Logit shifts by stage (day 1/2/3, 3f = final report with designation) and latest
 // status, fit in order rest -> vet -> elite on the residuals; leave-one-season-out Brier -7.5% day 1, -11% day 3, -2.6% with
 // the designation, better in 7/7 seasons at every stage.
-const _PRAC_TRAJ_ADJ = {"rest":{"1":{"FP":0.262,"LP":1.081,"DNP":2.069},"2":{"FP":0.411,"LP":0.871,"DNP":1.571},"3":{"FP":0.075,"LP":0.942,"DNP":1.812},"3f":{"FP":-0.13,"LP":0.376,"DNP":0.91}},"vet":{"1":{"FP":0.075,"LP":0.148,"DNP":0.068},"2":{"FP":0.158,"LP":0.117,"DNP":0.146},"3":{"FP":-0.116,"LP":0.284,"DNP":0.189},"3f":{"FP":-0.241,"LP":0.163,"DNP":0.048}},"elite":{"1":{"FP":0.603,"LP":0.121,"DNP":0.048},"2":{"FP":0.566,"LP":0.18,"DNP":0.238},"3":{"FP":0.669,"LP":0.255,"DNP":0.134},"3f":{"FP":0.535,"LP":0.094,"DNP":0.084}}};
+// CONCUSSION (Jack 2026-10-08, Chase W5): research_concussion_return.py - concussion weeks play far less at every pattern
+// (DNP-DNP 5% vs 25%, LP-LP 39% vs 82%; 51% end Out); a 4th shift after rest / vet / elite: -2.1% day 1, -2.1% day 3, 7/7.
+const _PRAC_TRAJ_ADJ = {"rest":{"1":{"FP":0.262,"LP":1.081,"DNP":2.069},"2":{"FP":0.411,"LP":0.871,"DNP":1.571},"3":{"FP":0.075,"LP":0.942,"DNP":1.812},"3f":{"FP":-0.13,"LP":0.376,"DNP":0.91}},"vet":{"1":{"FP":0.075,"LP":0.148,"DNP":0.068},"2":{"FP":0.158,"LP":0.117,"DNP":0.146},"3":{"FP":-0.116,"LP":0.284,"DNP":0.189},"3f":{"FP":-0.241,"LP":0.163,"DNP":0.048}},"elite":{"1":{"FP":0.603,"LP":0.121,"DNP":0.048},"2":{"FP":0.566,"LP":0.18,"DNP":0.238},"3":{"FP":0.669,"LP":0.255,"DNP":0.134},"3f":{"FP":0.535,"LP":0.094,"DNP":0.084}},"conc":{"1":{"FP":-0.407,"LP":-0.749,"DNP":-1.132},"2":{"FP":-0.223,"LP":-1.003,"DNP":-0.978},"3":{"FP":-0.661,"LP":-1.025,"DNP":-1.014},"3f":{"FP":-0.473,"LP":-0.418,"DNP":-0.298}}};
 function _pracSeasonYr() { const n = new Date(); return n.getMonth() >= 2 ? n.getFullYear() : n.getFullYear() - 1; }
 // last season's PPG rank within position (site weekly DB, 8+ games played) - the elite flag
 function _pracPrevRank(d) {
@@ -16552,7 +16554,7 @@ function _pracFlags(d, rec) {
   }
   if (age == null && d.age != null && isFinite(+d.age)) age = +d.age;
   const rk = _pracPrevRank(d);
-  return { rest: /\brest\b|not injury/.test(inj), vet: age != null && age >= 30, elite: rk != null && rk <= ((d.s === 'QB' || d.s === 'TE') ? 12 : 24), rk: rk };
+  return { conc: /concussion/.test(inj + ' ' + String(d.inj || '').toLowerCase()), rest: /\brest\b|not injury/.test(inj), vet: age != null && age >= 30, elite: rk != null && rk <= ((d.s === 'QB' || d.s === 'TE') ? 12 : 24), rk: rk };
 }
 function _pracTrajRate(seq, pos, des, flags) {
   const T = _PRAC_TRAJ, k = seq.length, last = seq[k - 1], key = seq.join('-');
@@ -16568,7 +16570,7 @@ function _pracTrajRate(seq, pos, des, flags) {
   let z = Math.log(p / (1 - p)) + ((T.pos[pos] && T.pos[pos][last]) || 0);
   if (flags) {
     const st = des != null ? '3f' : String(Math.min(k, 3));
-    ['rest', 'vet', 'elite'].forEach(f => { if (flags[f]) { const a = _PRAC_TRAJ_ADJ[f] && _PRAC_TRAJ_ADJ[f][st]; if (a && a[last]) z += a[last]; } });
+    ['rest', 'vet', 'elite', 'conc'].forEach(f => { if (flags[f]) { const a = _PRAC_TRAJ_ADJ[f] && _PRAC_TRAJ_ADJ[f][st]; if (a && a[last]) z += a[last]; } });
   }
   return 1 / (1 + Math.exp(-z));
 }
@@ -16624,7 +16626,7 @@ function _practiceReportHtml(d, wk, box) {
     const P = window.PRACTICE_DAYS_2026, W = P && P.weeks && P.weeks[String(wk)];
     const tm = (typeof teamAbbr === 'function' && d.t) ? teamAbbr(d.t) : d.t;
     const posted = W && W.players && Object.keys(W.players).some(k => W.players[k].tm === tm);
-    return posted ? '<div class="card-section"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span></div>'
+    return posted ? '<div class="card-section card-prac-sec"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span></div>'
       + '<div style="font-size:.75rem;color:var(--text2)"><b style="color:#22c55e">Not on the injury report</b> · full practice, no designation</div></div>' : '';
   }
   const rec = hit.rec, gs = String(rec.gs || '');
@@ -16640,7 +16642,7 @@ function _practiceReportHtml(d, wk, box) {
   let seen = false;
   days.forEach(x => { const st = rec.d ? rec.d[iso(x)] : null; if (st) { seen = true; seqAll.push(st); } else seqAll.push(seen ? null : 'FP'); });
   const flags = _pracFlags(d, rec);
-  const flagTxt = [flags.rest ? 'rest day' : '', flags.vet ? 'veteran (30+)' : '', flags.elite ? 'last season\'s top ' + ((d.s === 'QB' || d.s === 'TE') ? 12 : 24) + ' ' + d.s : ''].filter(Boolean).join(', ');
+  const flagTxt = [flags.rest ? 'rest day' : '', flags.vet ? 'veteran (30+)' : '', flags.elite ? 'last season\'s top ' + ((d.s === 'QB' || d.s === 'TE') ? 12 : 24) + ' ' + d.s : '', flags.conc ? 'concussion (protocol weeks play far less at the same pattern)' : ''].filter(Boolean).join(', ');
   let row = '';
   days.forEach((x, i) => {
     const st = rec.d ? rec.d[iso(x)] : null;
@@ -16671,17 +16673,47 @@ function _practiceReportHtml(d, wk, box) {
       : last && /^out$/i.test(gs) ? 'Ruled out'
       : last ? 'No game designation on the final report: ' + d.s + 's with a ' + seqTxt + ' week have played ' + pct(r) + ' (2019-25)'
       : 'Starting ' + d.s + 's whose week has gone ' + seqTxt + ' so far went on to play ' + pct(r) + ' (2019-25, recent seasons weighted). Later days update it.';
-    const tipAll = tip + (flagTxt && !/^out$/i.test(gs) ? (/\.$/.test(tip) ? ' ' : '. ') + 'Adjusted for: ' + flagTxt + ' (those players historically play more after the same pattern).' : '');
+    const tipAll = tip + (flagTxt && !/^out$/i.test(gs) ? (/\.$/.test(tip) ? ' ' : '. ') + 'Adjusted for: ' + flagTxt + '.' : '');
     row += box(lbl, _PRAC_WORD[st] + '<span style="display:block;font-size:.75rem;font-weight:700;margin-top:2px;opacity:.9">' + pct(r) + ' play</span>', '', tipAll, _PRAC_COL[st]);
   });
   const gsCol = /^out$/i.test(gs) ? '#ef4444' : /doubt/i.test(gs) ? '#f97316' : /question/i.test(gs) ? '#facc15' : null;
   const inj = String(rec.inj || '').trim();
   const head = (gs ? ' <span style="font-size:.6875rem;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;color:' + gsCol + ';background:color-mix(in srgb,' + gsCol + ' 15%,transparent)">' + gs.toUpperCase() + '</span>' : '')
     + (inj && !/not injury/i.test(inj) ? ' <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + inj.replace(/</g, '&lt;') + '</span>' : '');
-  return '<div class="card-section"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span>' + head + '</div>'
+  return '<div class="card-section card-prac-sec"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span>' + head + '</div>'
     + '<div class="card-rank-row" style="grid-template-columns:repeat(' + days.length + ',1fr)">' + row + '</div>'
     + '<div style="margin-top:5px;font-size:.6875rem;color:var(--text2)">% = how often starters with the same practice pattern so far went on to play (2019-25, same position). The final day adds the game designation.</div>'
     + '</div>';
+}
+
+// WEEKLY RANKS on the WEEKLY card (Jack 2026-10-08: "add the weekly rank and positional rank to the left of wk 5 matchup
+// (qbs, dst, and kicker only have positional, other positions have flex rank too)"). Read off the weekly board the table
+// shows (your weekly board on MY RANKINGS in WEEKLY mode, otherwise Jack's), skipping players on bye, assumed out or ruled
+// out - the same players the table moves to its BYE / OUT row.
+function _cardWeeklyRanks(d) {
+  try {
+    const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
+    if (!vb || !d) return null;
+    const ver = (typeof currentMode !== 'undefined' && currentMode === 'weekly' && (currentVersion === 'jacks' || currentVersion === 'mine')
+      && vb[currentVersion] && vb[currentVersion].weekly && vb[currentVersion].weekly.length) ? currentVersion : 'jacks';
+    const board = vb[ver] && vb[ver].weekly;
+    if (!board || !board.length) return null;
+    const FLEX = { RB: 1, WR: 1, TE: 1 };
+    const isOut = p => (typeof window._weeklyOppFor === 'function' && window._weeklyOppFor(p.t) === 'BYE')
+      || (typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(p.n))
+      || /\b(IR|Out|PUP|Suspended)\b/.test(String(p.inj || ''));
+    if (isOut(d)) return { ver: ver, out: true };
+    let flex = 0, pos = 0, fr = null, pr = null, nFlex = 0, nPos = 0;
+    for (let i = 0; i < board.length; i++) {
+      const p = D[board[i]];
+      if (!p || isOut(p)) continue;
+      if (FLEX[p.s]) { nFlex++; if (fr == null) flex++; }
+      if (p.s === d.s) { nPos++; if (pr == null) pos++; }
+      if (p === d || p.n === d.n) { if (FLEX[d.s]) fr = flex; pr = pos; }
+    }
+    if (pr == null) return null;
+    return { ver: ver, flex: FLEX[d.s] ? fr : null, pos: pr, nFlex: nFlex, nPos: nPos };
+  } catch (_) { return null; }
 }
 
 function buildWeeklyCardView(d) {
@@ -16733,8 +16765,23 @@ function buildWeeklyCardView(d) {
     : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
   html += box('O/U', ou != null ? fmt1(ou) : '—', '', 'Game total (over/under)', isDst ? _ouColInv(ou) : _ouCol(ou));
   html += '</div>';
+  // weekly rank boxes sit left of WK N MATCHUP (flex + position for RB / WR / TE, position only for QB / K / D/ST)
+  let _rkHtml = '', _rkN = 0;
+  const _wr = (d.s && typeof _cardWeeklyRanks === 'function') ? _cardWeeklyRanks(d) : null;
+  if (_wr) {
+    const pl = d.s === 'DST' ? 'D/ST' : d.s;
+    const _cut = { QB: [12, 24], TE: [12, 24], K: [12, 24], DST: [12, 24], RB: [24, 40], WR: [24, 48], FLEX: [36, 84] };
+    const _wkCol = (rk, key) => { const c = _cut[key]; return (!c || rk == null) ? null : rk <= c[0] ? _G : rk <= c[1] ? _Y : _R; };
+    const who = _wr.ver === 'mine' ? 'your' : 'Jack\'s';
+    if (_wr.out) { _rkHtml = box('WK ' + wk + ' RANK', 'OUT', '', 'On bye, assumed out or ruled out this week - not ranked on ' + who + ' Week ' + wk + ' board', '#ef4444'); _rkN = 1; }
+    else {
+      if (_wr.flex != null) { _rkHtml += box('WK ' + wk + ' FLEX', '#' + _wr.flex, '', 'Rank among RB / WR / TE on ' + who + ' Week ' + wk + ' board (players on bye / out skipped)', _wkCol(_wr.flex, 'FLEX')); _rkN++; }
+      _rkHtml += box('WK ' + wk + ' ' + pl, pl + _wr.pos, '', 'Position rank on ' + who + ' Week ' + wk + ' board (players on bye / out skipped)', _wkCol(_wr.pos, d.s)); _rkN++;
+    }
+  }
+  if (!r && _rkN) html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + _rkN + ',1fr);margin-top:.4rem">' + _rkHtml + '</div>';
   if (r) {
-    html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">';
+    html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + (2 + _rkN) + ',1fr);margin-top:.4rem">' + _rkHtml;
     html += box('WK ' + wk + ' MATCHUP', r.label + ' <span style="font-size:.6875rem;color:var(--text2)">#' + r.rank + '/' + r.n + '</span>', '',
       'Position-weighted matchup rating for this week (1 = easiest schedule slot league-wide)', r.color || null);
     const _alw = (r.priorLive === false && typeof window._oppAllowedFor === 'function') ? window._oppAllowedFor(r.opp, d.s) : null;
@@ -19138,6 +19185,16 @@ function openPlayerCard(d, ctxMode) {
         const x = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
         const xv = (x && x.n) ? Math.round(x.xfpg * 10) / 10 : null;
         cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.textContent = xv != null ? xv : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
+      } catch (_) {}
+      // PRACTICE REPORT: the elite flag (last season's PPG rank) needs this bundle - redraw the section
+      try {
+        const pw = cardEl.querySelector('.card-prac-sec');
+        if (pw && typeof _practiceReportHtml === 'function') {
+          window._pracRankCache = null;
+          const bx = (lbl, val, cls, tip, color) => '<div class="card-rank-box"' + (tip ? ' title="' + String(tip).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</div></div>';
+          const h = _practiceReportHtml(d, window._weeklyActiveWeek || 1, bx);
+          if (h) pw.outerHTML = h;
+        }
       } catch (_) {}
     });
   }

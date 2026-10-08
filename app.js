@@ -16507,6 +16507,71 @@ function _projWhyHtml(d, wk, cardProj, esc) {
 // none-X = X with no designation on the final report. The final report day with a designation uses the sim's own
 // play odds (SIM_PROJ_2026.injRes.play + injury-type shift) so the card agrees with the projection's dock.
 const _PRAC_DAY_RATES = {"any-FP":{"all":0.97,"QB":0.938,"RB":0.986,"WR":0.979,"TE":0.966},"any-LP":{"all":0.745,"QB":0.511,"RB":0.757,"WR":0.801,"TE":0.766},"any-DNP":{"all":0.225,"QB":0.12,"RB":0.204,"WR":0.256,"TE":0.24},"none-FP":{"all":0.98,"QB":0.95,"RB":0.99,"WR":0.991,"TE":0.979},"none-LP":{"all":0.979,"QB":0.962,"RB":0.981,"WR":0.982,"TE":0.981},"none-DNP":{"all":0.836,"QB":0.743,"RB":0.798,"WR":0.874,"TE":0.87}};
+// TRAJECTORY (Jack 2026-10-08: "have the percentages change based on the trajectory, example limited limited full or
+// dnp limited"): sim_lab/build_practice_trajectory.py on FootballDB's day-by-day reports 2019-25 (every report day kept)
+// x nflverse snaps, regular starters, final week dropped, half-life 3. pre[seq] = P(plays | statuses so far) shrunk to
+// the day's latest status; fin[seq|designation] on the final report; pos = logit shift by position at the latest status.
+const _PRAC_TRAJ = {"day":{"1:FP":0.91,"1:LP":0.832,"1:DNP":0.483,"2:FP":0.946,"2:LP":0.816,"2:DNP":0.343,"3:FP":0.965,"3:LP":0.75,"3:DNP":0.233},"pre":{"DNP":0.481,"FP":0.912,"LP":0.833,"DNP-DNP":0.236,"DNP-FP":0.984,"DNP-LP":0.837,"FP-DNP":0.767,"FP-FP":0.928,"FP-LP":0.832,"LP-DNP":0.478,"LP-FP":0.965,"LP-LP":0.806,"DNP-DNP-DNP":0.112,"DNP-DNP-FP":0.935,"DNP-DNP-LP":0.689,"DNP-FP-DNP":0.275,"DNP-FP-FP":0.992,"DNP-FP-LP":0.781,"DNP-LP-DNP":0.249,"DNP-LP-FP":0.971,"DNP-LP-LP":0.785,"FP-DNP-DNP":0.422,"FP-DNP-FP":0.979,"FP-DNP-LP":0.802,"FP-FP-DNP":0.67,"FP-FP-FP":0.951,"FP-FP-LP":0.758,"FP-LP-DNP":0.321,"FP-LP-FP":0.974,"FP-LP-LP":0.825,"LP-DNP-DNP":0.176,"LP-DNP-FP":0.973,"LP-DNP-LP":0.758,"LP-FP-DNP":0.323,"LP-FP-FP":0.98,"LP-FP-LP":0.769,"LP-LP-DNP":0.298,"LP-LP-FP":0.965,"LP-LP-LP":0.73},"fin":{"DNP-DNP-DNP|Doubtful":0.048,"DNP-DNP-DNP|Out":0.002,"DNP-DNP-DNP|Questionable":0.377,"DNP-DNP-DNP|none":0.674,"DNP-DNP-FP|Doubtful":0.91,"DNP-DNP-FP|Questionable":0.892,"DNP-DNP-FP|none":0.965,"DNP-DNP-LP|Doubtful":0.433,"DNP-DNP-LP|Out":0.267,"DNP-DNP-LP|Questionable":0.739,"DNP-DNP-LP|none":0.948,"DNP-FP-DNP|Out":0.016,"DNP-FP-DNP|Questionable":0.475,"DNP-FP-DNP|none":0.705,"DNP-FP-FP|Questionable":0.895,"DNP-FP-FP|none":0.994,"DNP-FP-LP|Questionable":0.74,"DNP-FP-LP|none":0.937,"DNP-LP-DNP|Doubtful":0.092,"DNP-LP-DNP|Out":0.014,"DNP-LP-DNP|Questionable":0.492,"DNP-LP-DNP|none":0.709,"DNP-LP-FP|Out":0.869,"DNP-LP-FP|Questionable":0.893,"DNP-LP-FP|none":0.994,"DNP-LP-LP|Doubtful":0.486,"DNP-LP-LP|Out":0.276,"DNP-LP-LP|Questionable":0.771,"DNP-LP-LP|none":0.96,"FP-DNP-DNP|Doubtful":0.093,"FP-DNP-DNP|Out":0.014,"FP-DNP-DNP|Questionable":0.515,"FP-DNP-DNP|none":0.778,"FP-DNP-FP|Questionable":0.904,"FP-DNP-FP|none":0.983,"FP-DNP-LP|Questionable":0.765,"FP-DNP-LP|none":0.945,"FP-FP-DNP|Doubtful":0.094,"FP-FP-DNP|Out":0.015,"FP-FP-DNP|Questionable":0.571,"FP-FP-DNP|none":0.867,"FP-FP-FP|Out":0.817,"FP-FP-FP|Questionable":0.833,"FP-FP-FP|none":0.965,"FP-FP-LP|Doubtful":0.507,"FP-FP-LP|Questionable":0.699,"FP-FP-LP|none":0.932,"FP-LP-DNP|Doubtful":0.094,"FP-LP-DNP|Out":0.014,"FP-LP-DNP|Questionable":0.517,"FP-LP-DNP|none":0.708,"FP-LP-FP|Questionable":0.879,"FP-LP-FP|none":0.989,"FP-LP-LP|Doubtful":0.509,"FP-LP-LP|Out":0.308,"FP-LP-LP|Questionable":0.79,"FP-LP-LP|none":0.951,"LP-DNP-DNP|Doubtful":0.088,"LP-DNP-DNP|Out":0.012,"LP-DNP-DNP|Questionable":0.434,"LP-DNP-DNP|none":0.695,"LP-DNP-FP|Questionable":0.902,"LP-DNP-FP|none":0.98,"LP-DNP-LP|Doubtful":0.512,"LP-DNP-LP|Questionable":0.735,"LP-DNP-LP|none":0.929,"LP-FP-DNP|Out":0.016,"LP-FP-DNP|Questionable":0.486,"LP-FP-DNP|none":0.726,"LP-FP-FP|Out":0.884,"LP-FP-FP|Questionable":0.889,"LP-FP-FP|none":0.985,"LP-FP-LP|Questionable":0.704,"LP-FP-LP|none":0.95,"LP-LP-DNP|Doubtful":0.094,"LP-LP-DNP|Out":0.012,"LP-LP-DNP|Questionable":0.514,"LP-LP-DNP|none":0.709,"LP-LP-FP|Doubtful":0.924,"LP-LP-FP|Out":0.869,"LP-LP-FP|Questionable":0.905,"LP-LP-FP|none":0.978,"LP-LP-LP|Doubtful":0.455,"LP-LP-LP|Out":0.169,"LP-LP-LP|Questionable":0.69,"LP-LP-LP|none":0.958},"lastdes":{"DNP|Doubtful":0.096,"DNP|Out":0.017,"DNP|Questionable":0.462,"DNP|none":0.702,"FP|Doubtful":0.933,"FP|Out":0.88,"FP|Questionable":0.893,"FP|none":0.978,"LP|Doubtful":0.517,"LP|Out":0.322,"LP|Questionable":0.728,"LP|none":0.938},"pos":{"QB":{"FP":-0.669,"LP":-0.985,"DNP":-0.705},"RB":{"FP":0.755,"LP":0.074,"DNP":-0.213},"WR":{"FP":0.415,"LP":0.312,"DNP":0.161},"TE":{"FP":-0.09,"LP":0.121,"DNP":0.055}}};
+// REST / VETERAN / ELITE (Jack 2026-10-08: "factors in veterans vs younger players ... elite players / veterans take
+// Wednesday off more"). sim_lab/research_practice_vet_elite.py: 30+ sat Wednesday 43% of listings vs 35% for 25-and-under,
+// 28% of their Wednesday DNPs tagged rest (4% for young players); after a Wednesday DNP vets played 59% vs 39%, last season's
+// top-12 QB/TE / top-24 RB/WR 54% vs 45%. Logit shifts by stage (day 1/2/3, 3f = final report with designation) and latest
+// status, fit in order rest -> vet -> elite on the residuals; leave-one-season-out Brier -7.5% day 1, -11% day 3, -2.6% with
+// the designation, better in 7/7 seasons at every stage.
+const _PRAC_TRAJ_ADJ = {"rest":{"1":{"FP":0.262,"LP":1.081,"DNP":2.069},"2":{"FP":0.411,"LP":0.871,"DNP":1.571},"3":{"FP":0.075,"LP":0.942,"DNP":1.812},"3f":{"FP":-0.13,"LP":0.376,"DNP":0.91}},"vet":{"1":{"FP":0.075,"LP":0.148,"DNP":0.068},"2":{"FP":0.158,"LP":0.117,"DNP":0.146},"3":{"FP":-0.116,"LP":0.284,"DNP":0.189},"3f":{"FP":-0.241,"LP":0.163,"DNP":0.048}},"elite":{"1":{"FP":0.603,"LP":0.121,"DNP":0.048},"2":{"FP":0.566,"LP":0.18,"DNP":0.238},"3":{"FP":0.669,"LP":0.255,"DNP":0.134},"3f":{"FP":0.535,"LP":0.094,"DNP":0.084}}};
+function _pracSeasonYr() { const n = new Date(); return n.getMonth() >= 2 ? n.getFullYear() : n.getFullYear() - 1; }
+// last season's PPG rank within position (site weekly DB, 8+ games played) - the elite flag
+function _pracPrevRank(d) {
+  const yr = String(_pracSeasonYr() - 1);
+  let C = window._pracRankCache;
+  if (!C || C.yr !== yr || !C.n) {
+    C = { yr: yr, m: {}, n: 0 };
+    const by = {};
+    if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS && typeof D !== 'undefined') {
+      const seen = new Set();
+      D.forEach(x => {
+        if (!x || x._isDevy || !/^(QB|RB|WR|TE)$/.test(x.s) || seen.has(x.n)) return;
+        seen.add(x.n);
+        const w = WEEKLY_STATS[x.n], rows = w && w.seasons && w.seasons[yr];
+        if (!rows) return;
+        const pts = rows.filter(g => (g.fpts || 0) !== 0 || (g.pa || 0) > 0 || (g.ra || 0) > 0 || (g.tgt || 0) > 0).map(g => +g.fpts || 0);
+        if (pts.length >= 8) (by[x.s] = by[x.s] || []).push([pts.reduce((a, b) => a + b, 0) / pts.length, x.n]);
+      });
+    }
+    Object.keys(by).forEach(pos => by[pos].sort((a, b) => b[0] - a[0]).forEach((x, i) => { C.m[x[1]] = i + 1; C.n++; }));
+    window._pracRankCache = C;
+  }
+  return C.m[d.n] || null;
+}
+function _pracFlags(d, rec) {
+  const inj = String((rec && rec.inj) || '').toLowerCase();
+  let age = null;
+  if (d.birthDate) {
+    const bd = new Date(d.birthDate + 'T00:00:00');
+    if (!isNaN(bd)) age = (new Date(_pracSeasonYr(), 8, 1) - bd) / (365.25 * 864e5);
+  }
+  if (age == null && d.age != null && isFinite(+d.age)) age = +d.age;
+  const rk = _pracPrevRank(d);
+  return { rest: /\brest\b|not injury/.test(inj), vet: age != null && age >= 30, elite: rk != null && rk <= ((d.s === 'QB' || d.s === 'TE') ? 12 : 24), rk: rk };
+}
+function _pracTrajRate(seq, pos, des, flags) {
+  const T = _PRAC_TRAJ, k = seq.length, last = seq[k - 1], key = seq.join('-');
+  let p;
+  if (des != null) {
+    const d = des || 'none';
+    p = T.fin[key + '|' + d]; if (p == null) p = T.lastdes[last + '|' + d]; if (p == null) p = T.day['3:' + last];
+  } else {
+    p = T.pre[key]; if (p == null) p = T.day[k + ':' + last];
+  }
+  if (p == null) return null;
+  if (p <= 0.001 || p >= 0.999) return p;
+  let z = Math.log(p / (1 - p)) + ((T.pos[pos] && T.pos[pos][last]) || 0);
+  if (flags) {
+    const st = des != null ? '3f' : String(Math.min(k, 3));
+    ['rest', 'vet', 'elite'].forEach(f => { if (flags[f]) { const a = _PRAC_TRAJ_ADJ[f] && _PRAC_TRAJ_ADJ[f][st]; if (a && a[last]) z += a[last]; } });
+  }
+  return 1 / (1 + Math.exp(-z));
+}
 const _PRAC_COL = { FP: '#22c55e', LP: '#facc15', DNP: '#ef4444' };
 const _PRAC_WORD = { FP: 'FULL', LP: 'LIMITED', DNP: 'DNP' };
 const _PRAC_PHRASE = { FP: 'a full practice', LP: 'a limited practice', DNP: 'no practice' };
@@ -16570,6 +16635,12 @@ function _practiceReportHtml(d, wk, box) {
   const days = back.map(b => { const x = new Date(g); x.setDate(x.getDate() - b); return x; });
   if (!days.some(x => rec.d && rec.d[iso(x)])) return '';
   const pct = v => v == null ? '' : (v >= 0.995 ? '99%' : v < 0.005 ? '0%' : Math.round(v * 100) + '%');
+  // the week's statuses in order: a day before his first listing = practicing (FP), a gap after it repeats the last day
+  const seqAll = [];
+  let seen = false;
+  days.forEach(x => { const st = rec.d ? rec.d[iso(x)] : null; if (st) { seen = true; seqAll.push(st); } else seqAll.push(seen ? null : 'FP'); });
+  const flags = _pracFlags(d, rec);
+  const flagTxt = [flags.rest ? 'rest day' : '', flags.vet ? 'veteran (30+)' : '', flags.elite ? 'last season\'s top ' + ((d.s === 'QB' || d.s === 'TE') ? 12 : 24) + ' ' + d.s : ''].filter(Boolean).join(', ');
   let row = '';
   days.forEach((x, i) => {
     const st = rec.d ? rec.d[iso(x)] : null;
@@ -16580,13 +16651,28 @@ function _practiceReportHtml(d, wk, box) {
       return;
     }
     const last = i === days.length - 1;
-    const r = last && gs ? _pracFinalRate(d, st, gs, rec.inj) : last ? _pracRate('none-' + st, d.s) : _pracRate('any-' + st, d.s);
-    const tip = last && /question/i.test(gs) ? 'Questionable ' + d.s + 's coming off ' + _PRAC_PHRASE[st] + ' on the final report have played ' + pct(r) + ' (2019-25, recent seasons weighted, injury type included) - the same odds the projection uses'
+    const seq = seqAll.slice(0, i + 1).map((v, j, a) => v || a.slice(0, j).reverse().find(Boolean) || 'FP');
+    let r = _pracTrajRate(seq, d.s, last ? gs : null, flags);
+    if (r == null) r = last && gs ? _pracFinalRate(d, st, gs, rec.inj) : last ? _pracRate('none-' + st, d.s) : _pracRate('any-' + st, d.s);
+    // Questionable on the final report: the sim's injury-type shift rides on top (same as the projection's dock)
+    if (last && /question/i.test(gs) && r > 0.001 && r < 0.999) {
+      try {
+        const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes, cls = 'Q-' + st;
+        const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null;
+        const body = String(rec.inj || d.inj || '').replace(/\b(IR|PUP|Out|Doubtful|Questionable|Suspended)\b/ig, '').replace(/^[\s,]+|[\s,]+$/g, '');
+        const grp = (x && x.grp) || (body && typeof _ivGroup === 'function' ? _ivGroup(body) : '');
+        const sh = grp && R && R.shift && R.shift[cls] ? (R.shift[cls][grp] || 0) : 0;
+        if (sh) r = 1 / (1 + Math.exp(-(Math.log(r / (1 - r)) + sh)));
+      } catch (_) {}
+    }
+    const seqTxt = seq.map(v => _PRAC_WORD[v]).join(' → ');
+    const tip = last && /question/i.test(gs) ? 'Questionable ' + d.s + 's with a ' + seqTxt + ' week have played ' + pct(r) + ' (2019-25, recent seasons weighted, injury type included)'
       : last && /doubt/i.test(gs) ? 'Doubtful players almost never suit up (about 1 in 50, 2019-25)'
       : last && /^out$/i.test(gs) ? 'Ruled out'
-      : last ? 'No game designation on the final report: ' + d.s + 's listed like this have played ' + pct(r) + ' (2019-25)'
-      : 'Starting ' + d.s + 's whose last report of the week showed ' + _PRAC_PHRASE[st] + ' went on to play ' + pct(r) + ' (2019-25, recent seasons weighted). Later days update it.';
-    row += box(lbl, _PRAC_WORD[st] + '<span style="display:block;font-size:.75rem;font-weight:700;margin-top:2px;opacity:.9">' + pct(r) + ' play</span>', '', tip, _PRAC_COL[st]);
+      : last ? 'No game designation on the final report: ' + d.s + 's with a ' + seqTxt + ' week have played ' + pct(r) + ' (2019-25)'
+      : 'Starting ' + d.s + 's whose week has gone ' + seqTxt + ' so far went on to play ' + pct(r) + ' (2019-25, recent seasons weighted). Later days update it.';
+    const tipAll = tip + (flagTxt && !/^out$/i.test(gs) ? (/\.$/.test(tip) ? ' ' : '. ') + 'Adjusted for: ' + flagTxt + ' (those players historically play more after the same pattern).' : '');
+    row += box(lbl, _PRAC_WORD[st] + '<span style="display:block;font-size:.75rem;font-weight:700;margin-top:2px;opacity:.9">' + pct(r) + ' play</span>', '', tipAll, _PRAC_COL[st]);
   });
   const gsCol = /^out$/i.test(gs) ? '#ef4444' : /doubt/i.test(gs) ? '#f97316' : /question/i.test(gs) ? '#facc15' : null;
   const inj = String(rec.inj || '').trim();
@@ -16594,7 +16680,7 @@ function _practiceReportHtml(d, wk, box) {
     + (inj && !/not injury/i.test(inj) ? ' <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + inj.replace(/</g, '&lt;') + '</span>' : '');
   return '<div class="card-section"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span>' + head + '</div>'
     + '<div class="card-rank-row" style="grid-template-columns:repeat(' + days.length + ',1fr)">' + row + '</div>'
-    + '<div style="margin-top:5px;font-size:.6875rem;color:var(--text2)">% = how often starters whose last practice read like that went on to play (2019-25, same position). The final day uses the game designation.</div>'
+    + '<div style="margin-top:5px;font-size:.6875rem;color:var(--text2)">% = how often starters with the same practice pattern so far went on to play (2019-25, same position). The final day adds the game designation.</div>'
     + '</div>';
 }
 

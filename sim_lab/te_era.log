@@ -1,0 +1,38 @@
+TE pts per team-game by season: 2016:10.23 2017:9.61 2018:9.70 2019:10.01 2020:10.34 2021:9.75 2022:9.38 2023:9.37 2024:9.59 2025:10.51
+TE rows 1,252 | act/shadow by season: 2019:1.025 (L 0.988) 2020:1.089 (L 1.030) 2021:1.013 (L 1.022) 2022:0.974 (L 0.955) 2023:1.030 (L 0.930) 2024:1.020 (L 0.929) 2025:1.070 (L 1.017)
+  corr across seasons of (act/shadow) with L: +0.57
+WR3+ rows 21 | act/shadow by season: 2019:0.640 2020:1.477 2021:0.599 2022:1.093 2023:0.000 2024:1.495 2025:1.057
+
+  A  TE level follows the league TE era (walk-forward)  (rows 1,252)
+    TE x L^0.5     rows -0.02% (5/7) | top-100 cubed -0.028% | 1-12:-0.05 13-30:-0.03 31-60:-0.02 61-100:+0.06 101-150:+0.14
+    TE x L^1.0     rows +0.22% (4/7) | top-100 cubed -0.036% | 1-12:-0.09 13-30:-0.06 31-60:-0.01 61-100:+0.15 101-150:+0.32
+    TE x L^1.5     rows +0.70% (3/7) | top-100 cubed -0.025% | 1-12:-0.11 13-30:-0.07 31-60:+0.03 61-100:+0.27 101-150:+0.52
+    TE flat x1.02  rows -0.16% (5/7) | top-100 cubed -0.007% | 1-12:+0.04 13-30:-0.05 31-60:-0.07 61-100:+0.02 101-150:-0.03
+    TE flat x1.03  rows -0.18% (4/7) | top-100 cubed -0.004% | 1-12:+0.07 13-30:-0.07 31-60:-0.10 61-100:+0.04 101-150:-0.03
+    TE flat x1.04  rows -0.14% (2/7) | top-100 cubed +0.002% | 1-12:+0.10 13-30:-0.08 31-60:-0.12 61-100:+0.06 101-150:-0.03
+    rank vs off (rho 0.3688, pairs 63.36%): TE x L^0.5: rho +0.0000 pairs +0.00  TE x L^1.0: rho +0.0000 pairs +0.00  TE x L^1.5: rho +0.0000 pairs +0.00  TE flat x1.02: rho +0.0000 pairs +0.00  TE flat x1.03: rho +0.0000 pairs +0.00  TE flat x1.04: rho +0.0000 pairs +0.00
+    LOYO -0.01% 4/7 | board -0.000% | top-100 cubed +0.015% | picks ['TE flat x1.03', 'TE flat x1.02', 'TE flat x1.03', 'TE flat x1.03', 'TE flat x1.04', 'TE flat x1.03', 'TE flat x1.02']
+    FWD  +0.54% 1/4 | board +0.040% | picks ['TE flat x1.04', 'TE flat x1.04', 'TE x L^0.5', 'TE flat x1.02']
+    -> FAIL
+
+  B  proven TEs (3 seasons, 1.6x+ the TE mean): flat lift / era lift  (rows 374)
+    proven x1.02   rows -0.17% (5/7) | top-100 cubed -0.005% | 1-12:+0.04 13-30:-0.05 31-60:-0.04 61-100:-0.02 101-150:+0.01
+    proven x1.03   rows -0.18% (5/7) | top-100 cubed -0.003% | 1-12:+0.07 13-30:-0.07 31-60:-0.05 61-100:-0.03 101-150:+0.01
+    proven x1.04   rows -0.13% (5/7) | top-100 cubed +0.002% | 1-12:+0.10 13-30:-0.08 31-60:-0.06 61-100:-0.03 101-150:+0.02
+    proven x1.06   rows +0.12% (3/7) | top-100 cubed +0.021% | 1-12:+0.16 13-30:-0.10 31-60:-0.07 61-100:-0.04 101-150:+0.03
+    proven x L^0.5 rows -0.66% (6/7) | top-100 cubed -0.040% | 1-12:-0.05 13-30:-0.03 31-60:-0.08 61-100:+0.05 101-150:-0.01
+    proven x L^1.0 rows -1.05% (5/7) | top-100 cubed -0.065% | 1-12:-0.09 13-30:-0.05 31-60:-0.13 61-100:+0.11 101-150:-0.01
+    rank vs off (rho nan, pairs 0.00%): proven x1.02: rho +nan pairs +0.00  proven x1.03: rho +nan pairs +0.00  proven x1.04: rho +nan pairs +0.00  proven x1.06: rho +nan pairs +0.00  proven x L^0.5: rho +nan pairs +0.00  proven x L^1.0: rho +nan pairs +0.00
+    LOYO +0.18% 4/7 | board +0.008% | top-100 cubed +0.025% | picks ['proven x L^1.0', 'proven x L^1.0', 'proven x L^1.0', 'proven x L^1.0', 'proven x1.06', 'proven x L^1.0', 'proven x L^1.0']
+    FWD  +0.78% 2/4 | board +0.029% | picks ['proven x1.06', 'proven x1.06', 'proven x L^1.0', 'proven x L^1.0']
+    -> FAIL
+
+  C  WR3+ (depth string 3+) mirror: down when the TE era is up  (rows 21)
+    WR3+ x L^-0.5  rows -0.07% (3/7) | top-100 cubed +0.001% | 1-12:+0.00 13-30:-0.00 31-60:+0.00 61-100:+0.01 101-150:-0.01
+    WR3+ x L^-1.0  rows +0.19% (3/7) | top-100 cubed +0.002% | 1-12:+0.00 13-30:-0.00 31-60:+0.00 61-100:+0.02 101-150:-0.02
+    rank vs off (rho nan, pairs 0.00%): WR3+ x L^-0.5: rho +nan pairs +0.00  WR3+ x L^-1.0: rho +nan pairs +0.00
+    LOYO +0.13% 2/7 | board +0.000% | top-100 cubed -0.000% | picks ['WR3+ x L^-0.5', 'WR3+ x L^-0.5', 'WR3+ x L^-0.5', 'WR3+ x L^-0.5', 'WR3+ x L^-0.5', 'off', 'WR3+ x L^-0.5']
+    FWD  +0.02% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'WR3+ x L^-0.5']
+    -> FAIL
+
+Limitations: honest replica, next game, no book anchor; league TE level from play-by-play receiving points (half PPR); 2016 starts the prior average; 2026 W1-4 sits at 10.83 TE pts per team-game vs 2016-25 average ~9.9.

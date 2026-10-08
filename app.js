@@ -7966,6 +7966,7 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn" data-tcvaction="dlCards" title="Admin: the cards you flash over game footage — a 1080×260 wide lower-third AND a 560×760 portrait card per player (no board states). SELECT mode on with ticked cards = just those players. File: ' + _tcvFilePrefix + '_flash_cards.zip">🃏 FLASH CARDS</button>' +
       '<button class="tcv-reveal-btn' + (_tcvVideoPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleVideo" title="Admin: RECORD MODE for screen-recording the rankings — the card rows are replaced by the video-board drawing (6 a row, surname + PROJ, opponent chip, tiers not reached yet as strips) and it redraws on every REVEAL NEXT / spacebar / HIDE ALL / REVEAL ALL. Tier-letter clicks are off while it is on.">🎥 ' + (_tcvVideoPref() ? 'RECORDING VIEW' : 'RECORD MODE') + '</button>' : '') +
     (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✎ on the letter renames it, ✕ removes it. Cut line too: ✂ CUT on a card hides everyone below him, drag the ✂ letter to move the line, ✕ on ✂ clears it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
+    (_tcvCanEditRanks() ? (() => { const sb = document.getElementById('btnSave'); const dirty = !!(sb && sb.classList.contains('has-changes')); const saved = !!(sb && sb.classList.contains('saved')); return '<button class="tcv-reveal-btn tcv-save-btn' + (dirty ? ' tcv-primary' : '') + '" data-tcvaction="saveRanks" title="Save ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' rankings and tiers to the cloud without leaving this view (same as the SAVE button above the table)">' + (dirty ? '💾 SAVE CHANGES' : saved ? '✓ SAVED' : '💾 SAVE') + '</button>'; })() : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -8219,6 +8220,24 @@ function _renderTierCardView(data, container) {
           const kh = root.querySelector('.tcv-key-edit'); if (kh) kh.remove();
         }
         _tcvUpdateSelCount(root);
+        return;
+      }
+      if (action === 'saveRanks') {
+        // Cloud save from inside the tier view / fullscreen (Jack 2026-10-08): drives the
+        // table's SAVE button, then mirrors its state back onto this toolbar button.
+        const sb = document.getElementById('btnSave');
+        if (!sb) return;
+        sb.click();
+        const mine = btn;
+        mine.textContent = '… SAVING';
+        let tries = 0;
+        const sync = () => {
+          const dirty = sb.classList.contains('has-changes'), saving = sb.classList.contains('saving'), err = sb.classList.contains('save-error');
+          if (saving && tries++ < 40) { setTimeout(sync, 250); return; }
+          mine.textContent = err ? '⚠ SAVE FAILED' : dirty ? '💾 SAVE CHANGES' : '✓ SAVED';
+          mine.classList.toggle('tcv-primary', dirty);
+        };
+        setTimeout(sync, 300);
         return;
       }
       if (action === 'toggleEdit') {

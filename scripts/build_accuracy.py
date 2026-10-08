@@ -291,6 +291,243 @@ def build_actuals(ws, idx):
     return out
 
 
+# ---------------------------------------------------------------- Jack's calls record
+# accuracy/data/calls_2026.json is written by the TikTok bot (tiktok_bot/bin/calls.js:
+# confirmed caption drafts, posted start/sit replies, manual adds). Graded here
+# into accuracy/data/record_2026.json (Jack 2026-10-08):
+#   start X  → hit when X finishes inside the startable cut at his position
+#              (QB/TE 12, RB 24, WR 36, full PPR) — sit Y → hit when Y finishes outside it
+#   X over Y → hit when X outscores every Y
+#   injured / left early (snap share < half his usual) or DNP → INCOMPLETE, not graded
+#   buy/sell → not hit/miss: the player's consensus (FantasyPros ECR) positional
+#              rank on the call day and each of the following 4 weeks, plus his
+#              PPR finish over those weeks for context
+def load_snaps(idx):
+    p = os.path.join(ROOT, 'data', 'snap_counts.js')
+    if not os.path.exists(p):
+        return {}
+    txt = read(p)   # `window.SNAP_COUNTS={...};` may be followed by more statements — decode just the first object
+    raw = json.JSONDecoder().raw_decode(txt, txt.index('{'))[0]
+    out = {}
+    for name, yrs in raw.items():
+        hit = idx.get(name, 'snaps')
+        if not hit:
+            continue
+        w = ((yrs or {}).get(str(SEASON)) or {}).get('w') or {}
+        out[hit['n']] = {int(k): v for k, v in w.items() if v is not None}
+    return out
+
+
+def load_cons_days(idx):
+    """[(date, {name: positional FP-ECR rank})] ascending — consensus ROS rank by day."""
+    p = os.path.join(ROOT, 'data', 'cons_rank_history.json')
+    if not os.path.exists(p):
+        return []
+    raw = json.load(open(p, encoding='utf-8'))
+    fields = raw.get('fields') or []
+    fi = fields.index('fpR') if 'fpR' in fields else None
+    si = fields.index('slR') if 'slR' in fields else None
+    days = []
+    for d in raw.get('days') or []:
+        per_pos = {}
+        for name, vals in (d.get('f') or {}).items():
+            hit = idx.get(name, 'cons')
+            if not hit:
+                continue
+            r = None
+            for i in (fi, si):
+                if i is not None and i < len(vals) and isinstance(vals[i], (int, float)) and vals[i] > 0:
+                    r = vals[i]
+                    break
+            if r is None:
+                continue
+            per_pos.setdefault(hit['pos'], []).append((r, hit['n']))
+        ranks = {}
+        for pos, lst in per_pos.items():
+            lst.sort()
+            for i, (_, n) in enumerate(lst, 1):
+                ranks[n] = i
+        days.append((d['date'], ranks))
+    days.sort()
+    return days
+
+
+def cons_rank_on(days, name, date_str):
+    """Positional consensus rank from the latest day on or before date_str (or the first day after)."""
+    best = None
+    for date, ranks in days:
+        if date <= date_str:
+            best = (date, ranks.get(name))
+        else:
+            if best is None:
+                best = (date, ranks.get(name))
+            break
+    return best
+
+
+def grade_calls(idx, actuals, kicks):
+    p = os.path.join(OUT_DIR, f'calls_{SEASON}.json')
+    if not os.path.exists(p):
+        return None
+    ledger = json.load(open(p, encoding='utf-8'))
+    rules = ledger.get('rules') or {}
+    thr = rules.get('startable') or {'QB': 12, 'TE': 12, 'RB': 24, 'WR': 36}
+    win = int(rules.get('window') or 4)
+    snap_k = float(rules.get('incompleteSnap') or 0.5)
+    min_games = int(rules.get('windowMinGames') or 3)
+    now = datetime.now(timezone.utc)
+    snaps = load_snaps(idx)
+    cons = load_cons_days(idx)
+    # weekly positional finish ranks (full PPR, players with a row that week)
+    finish = {}
+    for n, wk in actuals.items():
+        meta = idx.by_norm.get(norm(n))
+        if not meta:
+            continue
+        for w, a in wk.items():
+            finish.setdefault(w, {}).setdefault(meta['pos'], []).append((a['pts'], n))
+    rank_of = {}
+    for w, by_pos in finish.items():
+        for pos, lst in by_pos.items():
+            lst.sort(reverse=True)
+            for i, (_, n) in enumerate(lst, 1):
+                rank_of[(w, n)] = i
+    week_end = {w: (max(parse_iso(x) for x in k.values()) + timedelta(hours=5)) if k else None for w, k in kicks.items()}
+    week_start = {w: (min(parse_iso(x) for x in k.values())) if k else None for w, k in kicks.items()}
+
+    def played(name, w):
+        """(status, pts, rank, snap, usual) — status: ok | dnp | hurt | pending"""
+        if w not in week_end or week_end[w] is None:
+            return ('pending', None, None, None, None)
+        a = actuals.get(name, {}).get(w)
+        if a is None:
+            return ('pending' if now < week_end[w] else 'dnp', None, None, None, None)
+        s = snaps.get(name, {})
+        cur = s.get(w)
+        prior = [v for k, v in s.items() if k < w and v]
+        usual = sorted(prior)[len(prior) // 2] if prior else None
+        if cur is not None and usual and cur < snap_k * usual:
+            return ('hurt', a['pts'], rank_of.get((w, name)), cur, usual)
+        return ('ok', a['pts'], rank_of.get((w, name)), cur, usual)
+
+    out_calls = []
+    for c in ledger.get('calls') or []:
+        hit = idx.get(c.get('player') or '', 'calls')
+        rec = dict(c)
+        if not hit:
+            rec['result'] = 'unknown'
+            rec['note'] = 'player not in index'
+            out_calls.append(rec)
+            continue
+        name, pos = hit['n'], hit['pos']
+        rec['player'] = name
+        rec['pos'] = pos
+        kind = c.get('kind')
+        if kind in ('start', 'sit', 'over'):
+            w = c.get('week')
+            if not w:
+                rec['result'] = 'unknown'
+                rec['note'] = 'no week'
+                out_calls.append(rec)
+                continue
+            st, pts, rk, snap, usual = played(name, int(w))
+            rec['pts'] = pts
+            rec['rank'] = rk
+            rec['snap'] = snap
+            rec['thr'] = thr.get(pos)
+            if st == 'pending':
+                rec['result'] = 'pending'
+            elif st in ('dnp', 'hurt'):
+                rec['result'] = 'incomplete'
+                rec['note'] = 'did not play' if st == 'dnp' else f'left early ({snap}% of snaps vs usual {usual}%)'
+            elif kind == 'over':
+                opp = []
+                bad = None
+                for vn in c.get('vs') or []:
+                    vh = idx.get(vn, 'calls')
+                    if not vh:
+                        bad = f'{vn} not in index'
+                        break
+                    vst, vpts, vrk, vsnap, vusual = played(vh['n'], int(w))
+                    if vst == 'pending':
+                        bad = 'pending'
+                        break
+                    if vst in ('dnp', 'hurt'):
+                        bad = f'{vh["n"]} ' + ('did not play' if vst == 'dnp' else 'left early')
+                        break
+                    opp.append({'player': vh['n'], 'pts': vpts, 'rank': vrk})
+                rec['vsRes'] = opp
+                if bad == 'pending':
+                    rec['result'] = 'pending'
+                elif bad:
+                    rec['result'] = 'incomplete'
+                    rec['note'] = bad
+                else:
+                    rec['result'] = 'hit' if all(pts > o['pts'] for o in opp) else 'miss'
+            else:
+                inside = rk is not None and rk <= thr.get(pos, 999)
+                rec['result'] = 'hit' if (inside if kind == 'start' else not inside) else 'miss'
+        elif kind in ('buy', 'sell'):
+            at = parse_iso(c.get('at')) if c.get('at') else None
+            if at is None:
+                rec['result'] = 'unknown'
+                rec['note'] = 'no timestamp'
+                out_calls.append(rec)
+                continue
+            day0 = at.date().isoformat()
+            base = cons_rank_on(cons, name, day0)
+            rec['cons0'] = {'date': base[0], 'rank': base[1]} if base else None
+            # following weeks = weeks whose first kickoff is after the call
+            follow = sorted(w for w, s in week_start.items() if s is not None and s > at)[:win]
+            traj = []
+            games = 0
+            pts_total = 0.0
+            for w in follow:
+                # consensus as of the day before that week's first kickoff (the post-week re-rank)
+                dstr = (week_start[w] - timedelta(days=1)).date().isoformat()
+                cr = cons_rank_on(cons, name, dstr) if week_start[w] - timedelta(days=1) <= now else None
+                st, pts, rk, snap, usual = played(name, w)
+                if st == 'ok' or st == 'hurt':
+                    games += 1
+                    pts_total += pts or 0
+                traj.append({'week': w, 'cons': (cr[1] if cr else None), 'consDate': (cr[0] if cr else None), 'pts': pts, 'rank': rk, 'status': st})
+            rec['traj'] = traj
+            rec['games'] = games
+            rec['ptsTotal'] = round(pts_total, 1)
+            done_weeks = [t for t in traj if t['status'] != 'pending']
+            last_cons = next((t['cons'] for t in reversed(traj) if t['cons'] is not None), None)
+            if rec['cons0'] and rec['cons0']['rank'] is not None and last_cons is not None:
+                rec['consDelta'] = rec['cons0']['rank'] - last_cons   # positive = consensus moved him UP
+            rec['result'] = 'done' if len(done_weeks) >= win else ('tracking' if traj else 'pending')
+            if len(done_weeks) >= win and games < min_games:
+                rec['note'] = f'only {games} of {win} weeks played'
+        else:
+            rec['result'] = 'unknown'
+        out_calls.append(rec)
+
+    tally = {}
+    for r in out_calls:
+        k = r.get('kind')
+        w = r.get('week') or 0
+        t = tally.setdefault(k, {'all': {}, 'weeks': {}})
+        for bucket in (t['all'], t['weeks'].setdefault(str(w), {})):
+            bucket[r['result']] = bucket.get(r['result'], 0) + 1
+    record = {'season': SEASON, 'updated': now.isoformat(timespec='seconds'), 'rules': rules, 'ledgerUpdated': ledger.get('updated'),
+              'tally': tally, 'calls': out_calls}
+    rp = os.path.join(OUT_DIR, f'record_{SEASON}.json')
+    if os.path.exists(rp):
+        try:
+            old = json.load(open(rp, encoding='utf-8'))
+            if {k: v for k, v in old.items() if k != 'updated'} == {k: v for k, v in record.items() if k != 'updated'}:
+                record['updated'] = old['updated']
+        except Exception:
+            pass
+    json.dump(record, open(rp, 'w', encoding='utf-8'), separators=(',', ':'))
+    n = len(out_calls)
+    print(f'record_{SEASON}.json: {n} calls, ' + ', '.join(f'{k}: ' + ' '.join(f'{r}={c}' for r, c in v['all'].items()) for k, v in tally.items()))
+    return record
+
+
 # ---------------------------------------------------------------- weekly
 def load_kickoffs():
     p = os.path.join(SIM_LAB, 'data', f'kickoffs_{SEASON}.json')
@@ -443,6 +680,10 @@ def main():
             pass
     json.dump(season, open(season_p, 'w', encoding='utf-8'), separators=(',', ':'))
     print(f'season_{SEASON}.json: {len(players)} players, weeks {[w["week"] for w in week_meta]}')
+    try:
+        grade_calls(idx, actuals, kicks)
+    except Exception as e:  # never let the calls record break the main build
+        print(f'WARN record build failed: {e!r}')
     for src, names in idx.unmatched.items():
         print(f'  unmatched names [{src}]: {len(names)} e.g. {sorted(names)[:8]}')
 

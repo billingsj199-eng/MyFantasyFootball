@@ -32,7 +32,7 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   const S = { season: null, weeks: {}, jack: {}, jackMeta: {}, tab: 'season', user: null,
-    ctl: { pos: 'RB', basis: 'total', n: 0, wk: 0, wpos: 'ALL', metric: 'mae', tpos: 'ALL', q: '' } };
+    ctl: { pos: 'RB', basis: 'total', n: 0, wk: 0, wpos: 'ALL', metric: 'mae', tpos: 'ALL', q: '', rwk: 0, rkind: 'ALL' } };
 
   // ------------------------------------------------------------------ auth
   async function boot() {
@@ -73,6 +73,7 @@
     const played = S.season.weeks.filter((w) => w.played > 0);
     await Promise.all(played.map(async (w) => { S.weeks[w.week] = await getJSON('data/w' + w.week + '.json'); }));
     S.ctl.wk = played.length ? played[played.length - 1].week : 0;
+    try { S.record = await getJSON('data/record_' + SEASON + '.json'); } catch (e) { S.record = null; }
     bindTabs();
     render();
     setStatus('Reading Jack\'s weekly boards…');
@@ -494,6 +495,118 @@
     inp.onkeydown = (e) => { if (e.key === 'Enter') { c.q = inp.value.trim(); render(); } };
   }
 
+  // ------------------------------------------------------------------ RECORD (Jack's calls)
+  // data/record_2026.json = scripts/build_accuracy.py grade_calls() over the
+  // calls ledger the TikTok bot writes (confirmed caption drafts, posted
+  // start/sit replies, manual adds). Starts, sits and "X over Y" are hit/miss
+  // (injured / DNP = incomplete); buys and sells are tracked by consensus rank
+  // the following weeks, no hit/miss.
+  const KIND_L = { start: 'STARTS', sit: 'SITS', over: 'START X OVER Y', buy: 'BUYS', sell: 'SELLS' };
+  const RES_L = { hit: '✓ HIT', miss: '✗ MISS', incomplete: 'INC', pending: '…', tracking: 'TRACKING', done: 'DONE', unknown: '?' };
+  function wl(b) { return (b.hit || 0) + '-' + (b.miss || 0); }
+  function consMove(r) { return isNum(r.consDelta) ? (r.consDelta > 0 ? '+' : '') + r.consDelta : '—'; }
+  function recordRows() {
+    const R = S.record; if (!R) return [];
+    const wk = S.ctl.rwk, kind = S.ctl.rkind;
+    return R.calls.filter((c) => (!wk || String(c.week) === String(wk)) && (kind === 'ALL' || c.kind === kind));
+  }
+  function renderRecord() {
+    const R = S.record;
+    if (!R) { $('#tab-record').innerHTML = '<div class="card">No calls record yet — confirm some calls with <code>node bin/calls.js confirm</code> in the TikTok bot and the next postgame build will grade them.</div>'; return; }
+    const weeks = [...new Set(R.calls.map((c) => c.week).filter(Boolean))].sort((a, b) => a - b);
+    const html = [];
+    html.push('<div class="controls"><label>Week ' + sel('rwk', [[0, 'SEASON']].concat(weeks.map((w) => [w, 'W' + w])), S.ctl.rwk) + '</label>' +
+      '<label>Kind ' + sel('rkind', [['ALL', 'ALL'], ['start', 'Starts'], ['sit', 'Sits'], ['over', 'X over Y'], ['buy', 'Buys'], ['sell', 'Sells']], S.ctl.rkind) + '</label>' +
+      '<button id="btnReceipts">⬇ RECEIPTS CARD</button><span class="muted">graded ' + new Date(R.updated).toLocaleString() + ' · rules: start QB/TE top ' + R.rules.startable.QB + ', RB top ' + R.rules.startable.RB + ', WR top ' + R.rules.startable.WR + ' · buys/sells tracked ' + R.rules.window + ' weeks</span></div>');
+    // KPIs for the selected week (or season)
+    const rows = recordRows();
+    const by = {};
+    rows.forEach((c) => { const b = by[c.kind] = by[c.kind] || {}; b[c.result] = (b[c.result] || 0) + 1; });
+    html.push('<div class="kpis">');
+    ['start', 'sit', 'over'].forEach((k) => {
+      const b = by[k] || {};
+      html.push('<div class="kpi"><div class="l">' + KIND_L[k] + '</div><div class="v">' + wl(b) + '</div><div class="s">' + (b.incomplete ? b.incomplete + ' incomplete · ' : '') + (b.pending ? b.pending + ' pending' : '') + '</div></div>');
+    });
+    ['buy', 'sell'].forEach((k) => {
+      const list = rows.filter((c) => c.kind === k && isNum(c.consDelta));
+      const a = avg(list.map((c) => c.consDelta));
+      const good = k === 'buy' ? list.filter((c) => c.consDelta > 0).length : list.filter((c) => c.consDelta < 0).length;
+      html.push('<div class="kpi"><div class="l">' + KIND_L[k] + '</div><div class="v">' + (isNum(a) ? (a > 0 ? '+' : '') + a.toFixed(1) : '—') + '</div><div class="s">avg consensus move · ' + good + ' of ' + list.length + ' moved the right way' + ((by[k] || {}).tracking ? ' · ' + by[k].tracking + ' tracking' : '') + '</div></div>');
+    });
+    html.push('</div>');
+    // per-week table
+    html.push('<div class="card"><h2>By week</h2><table><thead><tr><th class="l">Week</th><th>Starts</th><th>Sits</th><th>X over Y</th><th>Buys (avg move)</th><th>Sells (avg move)</th><th>Incomplete</th></tr></thead><tbody>');
+    weeks.forEach((w) => {
+      const wr = R.calls.filter((c) => c.week === w);
+      const b = {}; wr.forEach((c) => { const x = b[c.kind] = b[c.kind] || {}; x[c.result] = (x[c.result] || 0) + 1; });
+      const mv = (k) => { const l = wr.filter((c) => c.kind === k && isNum(c.consDelta)); const a = avg(l.map((c) => c.consDelta)); return l.length ? l.length + ' (' + (a > 0 ? '+' : '') + a.toFixed(1) + ')' : '—'; };
+      const inc = wr.filter((c) => c.result === 'incomplete').length;
+      html.push('<tr><td class="l">W' + w + '</td><td>' + wl(b.start || {}) + '</td><td>' + wl(b.sit || {}) + '</td><td>' + wl(b.over || {}) + '</td><td>' + mv('buy') + '</td><td>' + mv('sell') + '</td><td class="dim">' + (inc || '') + '</td></tr>');
+    });
+    html.push('</tbody></table><p class="note">Hit/miss = starts, sits and over-calls only. Incomplete = did not play or left early (under half his usual snaps). Buys and sells show the consensus positional-rank move since the call (positive = consensus moved him up).</p></div>');
+    // calls list
+    html.push('<div class="card"><h2>Calls</h2><div class="tablewrap"><table><thead><tr><th class="l">Wk</th><th class="l">Kind</th><th class="l">Player</th><th class="l">Pos</th><th class="l">Detail</th><th>Result</th><th class="l">Source</th></tr></thead><tbody>');
+    rows.slice().sort((a, b) => (b.week || 0) - (a.week || 0) || cmp(a.kind, b.kind)).forEach((c) => {
+      let det = '';
+      if (c.kind === 'buy' || c.kind === 'sell') {
+        const c0 = c.cons0 && c.cons0.rank;
+        const tr = (c.traj || []).map((t) => 'W' + t.week + ' ' + (t.cons != null ? c.pos + t.cons : '—')).join(' › ');
+        det = (c0 != null ? 'then ' + c.pos + c0 : 'then —') + (tr ? ' › ' + tr : '') + (isNum(c.consDelta) ? ' <b>' + consMove(c) + '</b>' : '') + (isNum(c.ptsTotal) && c.games ? ' · ' + c.ptsTotal + ' pts in ' + c.games + ' gm' : '');
+      } else if (c.kind === 'over') {
+        const vsTxt = (c.vsRes && c.vsRes.length) ? c.vsRes.map((o) => esc(o.player) + ' ' + (isNum(o.pts) ? o.pts.toFixed(1) : '—')).join(', ') : (c.vs || []).map(esc).join(', ');
+        det = (isNum(c.pts) ? c.pts.toFixed(1) : '—') + ' vs ' + vsTxt + (c.note ? ' · ' + esc(c.note) : '');
+      } else {
+        det = (isNum(c.pts) ? c.pts.toFixed(1) + ' pts, ' + c.pos + (c.rank || '?') : '—') + (c.thr ? ' (cut ' + c.pos + c.thr + ')' : '') + (c.note ? ' · ' + esc(c.note) : '');
+      }
+      const cls = c.result === 'hit' ? 'best' : c.result === 'miss' ? 'worst' : 'dim';
+      html.push('<tr><td class="l">' + (c.week || '—') + '</td><td class="l">' + esc(c.kind) + '</td><td class="l"><a href="#" data-player="' + esc(c.player) + '">' + esc(c.player) + '</a></td><td class="l">' + esc(c.pos || '') + '</td><td class="l" title="' + esc(c.said || '') + '">' + det + '</td><td class="' + cls + '">' + (RES_L[c.result] || esc(c.result)) + '</td><td class="l dim">' + esc(c.source || '') + '</td></tr>');
+    });
+    html.push('</tbody></table></div></div>');
+    $('#tab-record').innerHTML = html.join('');
+    $('#rwk').onchange = (e) => { S.ctl.rwk = Number(e.target.value); render(); };
+    $('#rkind').onchange = (e) => { S.ctl.rkind = e.target.value; render(); };
+    $('#btnReceipts').onclick = () => receiptsCard(rows, S.ctl.rwk);
+  }
+  // 1080×1350 PNG: the week's (or season's) record, ready for a TikTok/IG post.
+  function receiptsCard(rows, week) {
+    const W = 1080, H = 1350, S2 = 2;
+    const c = document.createElement('canvas'); c.width = W * S2; c.height = H * S2;
+    const x = c.getContext('2d'); x.scale(S2, S2);
+    const B = '"Bebas Neue",Impact,"Arial Narrow",sans-serif', F = '"DM Sans",system-ui,sans-serif';
+    x.fillStyle = '#0b1220'; x.fillRect(0, 0, W, H);
+    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(57,135,229,.18)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = '88px ' + B; x.fillText((week ? 'WEEK ' + week : 'SEASON') + ' RECORD', W / 2, 90);
+    x.font = '600 22px ' + F; x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText('EVERY START, SIT AND CALL I MADE, GRADED', W / 2, 150);
+    const by = {}; rows.forEach((r) => { const b = by[r.kind] = by[r.kind] || {}; b[r.result] = (b[r.result] || 0) + 1; });
+    const kpis = [['STARTS', wl(by.start || {})], ['SITS', wl(by.sit || {})], ['X OVER Y', wl(by.over || {})]];
+    const bs = rows.filter((r) => (r.kind === 'buy' || r.kind === 'sell') && isNum(r.consDelta));
+    if (bs.length) { const good = bs.filter((r) => (r.kind === 'buy' ? r.consDelta > 0 : r.consDelta < 0)).length; kpis.push(['BUY/SELL', good + ' of ' + bs.length]); }
+    const kw = (W - 80) / kpis.length;
+    kpis.forEach(([l, v], i) => {
+      const cx = 40 + kw * i + kw / 2;
+      x.fillStyle = 'rgba(255,255,255,.07)'; x.beginPath(); x.roundRect(40 + kw * i + 8, 190, kw - 16, 150, 18); x.fill();
+      x.fillStyle = '#fff'; x.font = '84px ' + B; x.fillText(v, cx, 262);
+      x.fillStyle = 'rgba(255,255,255,.65)'; x.font = '600 18px ' + F; x.fillText(l, cx, 318);
+    });
+    const list = rows.filter((r) => r.result === 'hit' || r.result === 'miss').slice(0, 20);
+    const rowH = 44, y0 = 390;
+    x.textAlign = 'left';
+    list.forEach((r, i) => {
+      const y = y0 + i * rowH;
+      x.fillStyle = i % 2 ? 'rgba(255,255,255,.04)' : 'rgba(255,255,255,0)'; x.fillRect(40, y - rowH / 2, W - 80, rowH);
+      x.fillStyle = r.result === 'hit' ? '#4ade80' : '#f87171'; x.font = '30px ' + B; x.fillText(r.result === 'hit' ? '✓' : '✗', 60, y + 1);
+      x.fillStyle = '#fff'; x.font = '30px ' + B; x.fillText((r.kind === 'over' ? 'START ' : r.kind.toUpperCase() + ' ') + r.player.toUpperCase() + (r.kind === 'over' && r.vs ? ' OVER ' + r.vs.join(', ').toUpperCase() : ''), 100, y + 1);
+      x.textAlign = 'right'; x.fillStyle = 'rgba(255,255,255,.8)'; x.font = '600 20px ' + F;
+      x.fillText(isNum(r.pts) ? r.pts.toFixed(1) + ' pts' + (r.rank ? ' · ' + r.pos + r.rank : '') : '', W - 60, y + 1);
+      x.textAlign = 'left';
+    });
+    x.textAlign = 'center'; x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '26px ' + B;
+    try { x.letterSpacing = '3px'; } catch (e) { /* older canvas */ }
+    x.fillText('MYFANTASYFOOTBALL.CO', W / 2, H - 50);
+    const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = 'record_' + (week ? 'w' + week : 'season') + '.png'; document.body.appendChild(a); a.click(); a.remove();
+  }
+
   // ------------------------------------------------------------------ plumbing
   S.sort = {};
   function sel(id, opts, cur) {
@@ -526,10 +639,11 @@
   }
   function render() {
     document.querySelectorAll('nav.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === S.tab));
-    ['season', 'weekly', 'trend', 'player'].forEach((t) => { $('#tab-' + t).style.display = t === S.tab ? '' : 'none'; });
+    ['season', 'weekly', 'trend', 'player', 'record'].forEach((t) => { const el = $('#tab-' + t); if (el) el.style.display = t === S.tab ? '' : 'none'; });
     if (S.tab === 'season') renderSeason();
     else if (S.tab === 'weekly') renderWeekly();
     else if (S.tab === 'trend') renderTrend();
+    else if (S.tab === 'record') renderRecord();
     else renderPlayer();
   }
   window.addEventListener('resize', () => { if (S.tab === 'trend' && S.season) renderTrend(); });

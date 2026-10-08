@@ -1,0 +1,50 @@
+  R1 target share >= .18           rows   642 | act/shadow 1.049 | scoring 2+ under usage: rows 61 act/shadow 1.029 | over: 1.036
+  R2 xFP/g >= 9                    rows   434 | act/shadow 1.041 | scoring 2+ under usage: rows 44 act/shadow 1.099 | over: 1.005
+  E elite (ADP <= 60 or proven)    rows   452 | act/shadow 1.066 | scoring 2+ under usage: rows 45 act/shadow 1.049 | over: 1.018
+
+  R1 target share >= .18  (rows 642)
+    U usage like WR        rows +0.28% (3/7) | under-usage rows +2.20% | top-100 cubed +0.007% | 1-12:-0.07 13-30:+0.07 31-60:+0.08 61-100:+0.01
+    U25 usage .25          rows +0.14% (3/7) | under-usage rows +0.70% | top-100 cubed +0.005% | 1-12:-0.03 13-30:+0.04 31-60:+0.04 61-100:-0.00
+    D0 no snap docks       rows -0.14% (3/7) | under-usage rows -0.51% | top-100 cubed -0.026% | 1-12:-0.10 13-30:-0.05 31-60:+0.12 61-100:+0.05
+    D1 docks full          rows +0.87% (2/7) | under-usage rows +1.21% | top-100 cubed +0.066% | 1-12:+0.12 13-30:+0.10 31-60:-0.06 61-100:+0.01
+    U+D0                   rows +0.21% (3/7) | under-usage rows +1.72% | top-100 cubed -0.015% | 1-12:-0.16 13-30:+0.02 31-60:+0.20 61-100:+0.06
+    U25+D0                 rows +0.05% (3/7) | under-usage rows +0.21% | top-100 cubed -0.019% | 1-12:-0.13 13-30:-0.01 31-60:+0.16 61-100:+0.05
+    rank vs off (rho 0.2278, pairs 58.14%): as wired: rho +0.0000 pairs +0.00  U usage like WR: rho -0.0145 pairs +0.00  U25 usage .25: rho -0.0119 pairs -0.39  D0 no snap docks: rho -0.0219 pairs -0.78  D1 docks full: rho +0.0044 pairs +0.39  U+D0: rho -0.0063 pairs -0.39  U25+D0: rho -0.0274 pairs -1.16
+    LOYO +0.22% 2/7 | board +0.012% | top-100 cubed +0.008% | picks ['D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks', 'as wired', 'D0 no snap docks', 'D0 no snap docks']
+    FWD  -0.15% 1/4 | board -0.007% | picks ['D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks']
+    -> FAIL
+
+  R1 target share >= .18 | only when scoring 2+ under usage  (rows 61)
+    U usage like WR        rows +2.20% (3/7) | under-usage rows +2.20% | top-100 cubed +0.008% | 1-12:-0.01 13-30:+0.01 31-60:+0.03 61-100:+0.01
+    U25 usage .25          rows +0.70% (3/7) | under-usage rows +0.70% | top-100 cubed +0.003% | 1-12:-0.00 13-30:+0.00 31-60:+0.01 61-100:-0.00
+    usage .5               rows +1.54% (3/7) | under-usage rows +1.54% | top-100 cubed +0.006% | 1-12:-0.00 13-30:+0.01 31-60:+0.03 61-100:-0.00
+    rank vs off (rho nan, pairs 0.00%): as wired: rho +nan pairs +0.00  U usage like WR: rho +nan pairs +0.00  U25 usage .25: rho +nan pairs +0.00  usage .5: rho +nan pairs +0.00
+    LOYO +0.00% 0/7 | board +0.000% | top-100 cubed +0.000% | picks ['as wired', 'as wired', 'as wired', 'as wired', 'as wired', 'as wired', 'as wired']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['as wired', 'as wired', 'as wired', 'as wired']
+    -> FAIL
+
+  R2 xFP/g >= 9  (rows 434)
+    U usage like WR        rows +0.18% (3/7) | under-usage rows +0.81% | top-100 cubed -0.001% | 1-12:-0.06 13-30:+0.07 31-60:+0.03 61-100:+0.01
+    U25 usage .25          rows +0.07% (3/7) | under-usage rows +0.19% | top-100 cubed +0.000% | 1-12:-0.03 13-30:+0.04 31-60:+0.02 61-100:+0.00
+    D0 no snap docks       rows -0.40% (5/7) | under-usage rows -1.02% | top-100 cubed -0.033% | 1-12:-0.10 13-30:-0.05 31-60:+0.06 61-100:+0.07
+    D1 docks full          rows +1.11% (2/7) | under-usage rows +1.39% | top-100 cubed +0.065% | 1-12:+0.12 13-30:+0.09 31-60:-0.02 61-100:-0.06
+    U+D0                   rows -0.17% (4/7) | under-usage rows -0.35% | top-100 cubed -0.032% | 1-12:-0.16 13-30:+0.03 31-60:+0.09 61-100:+0.08
+    U25+D0                 rows -0.29% (4/7) | under-usage rows -0.89% | top-100 cubed -0.032% | 1-12:-0.13 13-30:-0.01 31-60:+0.08 61-100:+0.07
+    rank vs off (rho 0.2619, pairs 60.71%): as wired: rho +0.0000 pairs +0.00  U usage like WR: rho -0.0952 pairs -7.14  U25 usage .25: rho -0.0952 pairs -7.14  D0 no snap docks: rho +0.0714 pairs +7.14  D1 docks full: rho -0.0714 pairs -3.57  U+D0: rho -0.0238 pairs +0.00  U25+D0: rho +0.0476 pairs +3.57
+    LOYO +0.08% 4/7 | board +0.003% | top-100 cubed +0.002% | picks ['D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks', 'as wired', 'D0 no snap docks', 'D0 no snap docks']
+    FWD  -0.64% 3/4 | board -0.020% | picks ['D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks', 'D0 no snap docks']
+    -> FAIL
+
+  E elite (ADP <= 60 or proven)  (rows 452)
+    U usage like WR        rows +0.24% (2/7) | under-usage rows +1.44% | top-100 cubed +0.009% | 1-12:-0.07 13-30:+0.08 31-60:+0.11 61-100:-0.05
+    U25 usage .25          rows +0.17% (2/7) | under-usage rows +0.61% | top-100 cubed +0.007% | 1-12:-0.03 13-30:+0.04 31-60:+0.06 61-100:-0.02
+    D0 no snap docks       rows +0.20% (4/7) | under-usage rows -0.20% | top-100 cubed -0.008% | 1-12:-0.10 13-30:-0.04 31-60:+0.17 61-100:+0.07
+    D1 docks full          rows +0.45% (3/7) | under-usage rows +0.77% | top-100 cubed +0.047% | 1-12:+0.12 13-30:+0.08 31-60:-0.10 61-100:-0.05
+    U+D0                   rows +0.49% (2/7) | under-usage rows +1.32% | top-100 cubed +0.004% | 1-12:-0.16 13-30:+0.04 31-60:+0.28 61-100:+0.02
+    U25+D0                 rows +0.41% (2/7) | under-usage rows +0.44% | top-100 cubed +0.001% | 1-12:-0.13 13-30:+0.01 31-60:+0.24 61-100:+0.05
+    rank vs off (rho nan, pairs 0.00%): as wired: rho +nan pairs +0.00  U usage like WR: rho +nan pairs +0.00  U25 usage .25: rho +nan pairs +0.00  D0 no snap docks: rho +nan pairs +0.00  D1 docks full: rho +nan pairs +0.00  U+D0: rho +nan pairs +0.00  U25+D0: rho +nan pairs +0.00
+    LOYO +0.96% 0/7 | board +0.050% | top-100 cubed +0.051% | picks ['as wired', 'D0 no snap docks', 'as wired', 'U usage like WR', 'as wired', 'D0 no snap docks', 'D0 no snap docks']
+    FWD  +0.89% 0/4 | board +0.038% | picks ['as wired', 'as wired', 'D0 no snap docks', 'D0 no snap docks']
+    -> FAIL
+
+Limitations: honest replica, next game, no book anchor; groups walk-forward from season-to-date target share / xFP (week 1 rows have none and stay as wired).

@@ -13,6 +13,397 @@
  },
  "calls": [
   {
+   "id": "v7693637252836085006-4",
+   "kind": "buy",
+   "player": "Omarion Hampton",
+   "pos": "RB",
+   "week": 4,
+   "at": "2026-10-06T19:22:26.000Z",
+   "source": "video",
+   "ref": "7693637252836085006",
+   "said": "'t really want to tell you to buy Hampton"
+  },
+  {
+   "id": "v7693637252836085006-6",
+   "kind": "buy",
+   "player": "Mark Andrews",
+   "pos": "TE",
+   "week": 4,
+   "at": "2026-10-06T19:22:26.000Z",
+   "source": "video",
+   "ref": "7693637252836085006",
+   "said": "another fantastic buy is Mark Andrews t"
+  },
+  {
+   "id": "v7693585049156914445-1",
+   "kind": "buy",
+   "player": "Matthew Golden",
+   "pos": "WR",
+   "week": 4,
+   "at": "2026-10-06T15:59:56.000Z",
+   "source": "video",
+   "ref": "7693585049156914445",
+   "said": "g off with a guy I want to be buying that is Matthew Golden o"
+  },
+  {
+   "id": "v7693585049156914445-4",
+   "kind": "sell",
+   "player": "Justin Jefferson",
+   "pos": "WR",
+   "week": 4,
+   "at": "2026-10-06T15:59:56.000Z",
+   "source": "video",
+   "ref": "7693585049156914445",
+   "said": "ed and that you might need to sell is Justin Jefferson."
+  },
+  {
+   "id": "v7693585049156914445-5",
+   "kind": "buy",
+   "player": "Alvin Kamara",
+   "pos": "RB",
+   "week": 4,
+   "at": "2026-10-06T15:59:56.000Z",
+   "source": "video",
+   "ref": "7693585049156914445",
+   "said": "Another guy you want to be buying into is Alvin Kamara."
+  },
+  {
+   "id": "v7693274497117359374-1",
+   "kind": "sell",
+   "player": "Bucky Irving",
+   "pos": "RB",
+   "week": 5,
+   "at": "2026-10-05T19:54:35.000Z",
+   "source": "video",
+   "ref": "7693274497117359374",
+   "said": "ve a good record, you need to sell Bucky Irving a"
+  },
+  {
+   "id": "v7691884022175173901-2",
+   "kind": "sit",
+   "player": "Justin Herbert",
+   "pos": "QB",
+   "week": 4,
+   "at": "2026-10-02T01:58:48.000Z",
+   "source": "video",
+   "ref": "7691884022175173901",
+   "said": "But a guy you need benching is Justin Herbert,"
+  },
+  {
+   "id": "v7691884022175173901-3",
+   "kind": "sit",
+   "player": "Kyle Pitts",
+   "pos": "TE",
+   "week": 4,
+   "at": "2026-10-02T01:58:48.000Z",
+   "source": "video",
+   "ref": "7691884022175173901",
+   "said": "I'm benching Kyle Pitts. H"
+  },
+  {
+   "id": "v7691777274143673614-1",
+   "kind": "start",
+   "player": "Michael Wilson",
+   "pos": "WR",
+   "week": 4,
+   "at": "2026-10-01T19:04:47.000Z",
+   "source": "video",
+   "ref": "7691777274143673614",
+   "said": "And the first guy you need to start is Michael Wilson."
+  },
+  {
+   "id": "v7691777274143673614-2",
+   "kind": "start",
+   "player": "Jordan Addison",
+   "pos": "WR",
+   "week": 4,
+   "at": "2026-10-01T19:04:47.000Z",
+   "source": "video",
+   "ref": "7691777274143673614",
+   "said": "Now another guy I would be starting regardless is Jordan Addison."
+  },
+  {
+   "id": "v7691777274143673614-3",
+   "kind": "sit",
+   "player": "DK Metcalf",
+   "pos": "WR",
+   "week": 4,
+   "at": "2026-10-01T19:04:47.000Z",
+   "source": "video",
+   "ref": "7691777274143673614",
+   "said": "The guy actually want to be benching his DK."
+  },
+  {
+   "id": "v7691725843739004173-2",
+   "kind": "start",
+   "player": "Alvin Kamara",
+   "pos": "RB",
+   "week": 4,
+   "at": "2026-10-01T15:45:21.000Z",
+   "source": "video",
+   "ref": "7691725843739004173",
+   "said": "this week that I do wanna be starting is Alvin Kamara w"
+  },
+  {
+   "id": "v7691725843739004173-4",
+   "kind": "sit",
+   "player": "Bucky Irving",
+   "pos": "RB",
+   "week": 4,
+   "at": "2026-10-01T15:45:21.000Z",
+   "source": "video",
+   "ref": "7691725843739004173",
+   "said": "I do really do not want to be starting Bucky Irving."
+  },
+  {
+   "id": "v7691151477477264653-3",
+   "kind": "sit",
+   "player": "Aaron Rodgers",
+   "pos": "QB",
+   "week": 4,
+   "at": "2026-09-30T02:35:59.000Z",
+   "source": "video",
+   "ref": "7691151477477264653",
+   "said": "You got to be benching Aaron Rodgers a"
+  },
+  {
+   "id": "v7690616283410353422-3",
+   "kind": "start",
+   "player": "A.J. Brown",
+   "pos": "WR",
+   "week": 3,
+   "at": "2026-09-28T15:59:42.000Z",
+   "source": "video",
+   "ref": "7690616283410353422",
+   "said": "d even then probably can only start AJ Brown."
+  },
+  {
+   "id": "v7690616283410353422-4",
+   "kind": "start",
+   "player": "Emeka Egbuka",
+   "pos": "WR",
+   "week": 3,
+   "at": "2026-09-28T15:59:42.000Z",
+   "source": "video",
+   "ref": "7690616283410353422",
+   "said": "You probably still have to start Egbuka a"
+  },
+  {
+   "id": "v7689186768536472846-2",
+   "kind": "sit",
+   "player": "Bucky Irving",
+   "pos": "RB",
+   "week": 3,
+   "at": "2026-09-24T19:31:56.000Z",
+   "source": "video",
+   "ref": "7689186768536472846",
+   "said": "I do not want to be starting Bucky Irving i"
+  },
+  {
+   "id": "v7688515607012117774-1",
+   "kind": "buy",
+   "player": "Davante Adams",
+   "pos": "WR",
+   "week": 2,
+   "at": "2026-09-23T00:07:38.000Z",
+   "source": "video",
+   "ref": "7688515607012117774",
+   "said": "that is basically no risk to trade for Devante C"
+  },
+  {
+   "id": "v7685839129959042317-4",
+   "kind": "buy",
+   "player": "Jordan Addison",
+   "pos": "WR",
+   "week": 1,
+   "at": "2026-09-15T19:01:40.000Z",
+   "source": "video",
+   "ref": "7685839129959042317",
+   "said": "keep in mind we are trying to buy low is Jordan Addison."
+  },
+  {
+   "id": "v7687093621752974606-1",
+   "kind": "start",
+   "player": "Sam Darnold",
+   "pos": "QB",
+   "week": 2,
+   "at": "2026-09-19T04:09:38.000Z",
+   "source": "video",
+   "ref": "7687093621752974606",
+   "said": "And last night I told you to start Sam Darnold a"
+  },
+  {
+   "id": "v7689128840819526926-1",
+   "kind": "start",
+   "player": "Jordan Love",
+   "pos": "QB",
+   "week": 3,
+   "at": "2026-09-24T15:47:13.000Z",
+   "source": "video",
+   "ref": "7689128840819526926",
+   "said": "rterbacks, it is fairly easy. I am starting Jordan Love."
+  },
+  {
+   "id": "v7689128840819526926-3",
+   "kind": "start",
+   "player": "Brian Robinson Jr.",
+   "pos": "RB",
+   "week": 3,
+   "at": "2026-09-24T15:47:13.000Z",
+   "source": "video",
+   "ref": "7689128840819526926",
+   "said": "Starting off, we're obviously starting Brian Robinson."
+  },
+  {
+   "id": "v7681083042806517005-1",
+   "kind": "start",
+   "player": "Jameson Williams",
+   "pos": "WR",
+   "week": 1,
+   "at": "2026-09-02T23:25:32.000Z",
+   "source": "video",
+   "ref": "7681083042806517005",
+   "said": "And the first guy we're starting is Jameson Williams."
+  },
+  {
+   "id": "v7681083042806517005-3",
+   "kind": "sit",
+   "player": "Josh Downs",
+   "pos": "WR",
+   "week": 1,
+   "at": "2026-09-02T23:25:32.000Z",
+   "source": "video",
+   "ref": "7681083042806517005",
+   "said": "Another guy I'm sitting is Josh Downs."
+  },
+  {
+   "id": "v7681083042806517005-4",
+   "kind": "start",
+   "player": "Josh Downs",
+   "pos": "WR",
+   "week": 1,
+   "at": "2026-09-02T23:25:32.000Z",
+   "source": "video",
+   "ref": "7681083042806517005",
+   "said": "se guys are out, you're gonna start Josh Downs."
+  },
+  {
+   "id": "v7686976704685952270-1",
+   "kind": "sit",
+   "player": "Brian Thomas Jr.",
+   "pos": "WR",
+   "week": 2,
+   "at": "2026-09-18T20:35:49.000Z",
+   "source": "video",
+   "ref": "7686976704685952270",
+   "said": "And the guy I want to be benching is Brian Thomas J"
+  },
+  {
+   "id": "v7686916242145381645-1",
+   "kind": "start",
+   "player": "Aaron Jones",
+   "pos": "RB",
+   "week": 2,
+   "at": "2026-09-18T16:41:11.000Z",
+   "source": "video",
+   "ref": "7686916242145381645",
+   "said": "The first guy you need to be starting is Aaron Jones."
+  },
+  {
+   "id": "v7686916242145381645-2",
+   "kind": "start",
+   "player": "Javonte Williams",
+   "pos": "RB",
+   "week": 2,
+   "at": "2026-09-18T16:41:11.000Z",
+   "source": "video",
+   "ref": "7686916242145381645",
+   "said": "uclear that you were probably starting anyway is Javonte Williams a"
+  },
+  {
+   "id": "v7681038173555723533-2",
+   "kind": "sit",
+   "player": "Quinshon Judkins",
+   "pos": "RB",
+   "week": 1,
+   "at": "2026-09-02T20:31:28.000Z",
+   "source": "video",
+   "ref": "7681038173555723533",
+   "said": "the first guy you need to be sitting is Quinshon Judkins,"
+  },
+  {
+   "id": "v7681038173555723533-3",
+   "kind": "start",
+   "player": "Chris Rodriguez Jr.",
+   "pos": "RB",
+   "week": 1,
+   "at": "2026-09-02T20:31:28.000Z",
+   "source": "video",
+   "ref": "7681038173555723533",
+   "said": "a bind, you could technically start Chris Rodriguez."
+  },
+  {
+   "id": "v7681038173555723533-4",
+   "kind": "sit",
+   "player": "TreVeyon Henderson",
+   "pos": "RB",
+   "week": 1,
+   "at": "2026-09-02T20:31:28.000Z",
+   "source": "video",
+   "ref": "7681038173555723533",
+   "said": "ld completely avoid trying to start Treyvon Henderson."
+  },
+  {
+   "id": "v7681038173555723533-5",
+   "kind": "start",
+   "player": "Jahmyr Gibbs",
+   "pos": "RB",
+   "week": 1,
+   "at": "2026-09-02T20:31:28.000Z",
+   "source": "video",
+   "ref": "7681038173555723533",
+   "said": "d I know you guys are already starting Jameir Gibbs,"
+  },
+  {
+   "id": "r7694030152757707550",
+   "kind": "over",
+   "player": "Braelon Allen",
+   "vs": [
+    "Emanuel Wilson"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:31:01.072Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
+   "said": "Braelon Allen or Emanuel Wilson"
+  },
+  {
+   "id": "r7694026151215465246",
+   "kind": "over",
+   "player": "Cam Skattebo",
+   "vs": [
+    "Ollie Gordon"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:41:23.496Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
+   "said": "Ollie Gordon or cam skatt at flex?"
+  },
+  {
+   "id": "r7694023942964904711",
+   "kind": "over",
+   "player": "Alvin Kamara",
+   "vs": [
+    "David Montgomery"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:44:44.417Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
+   "said": "Kamara or monty"
+  },
+  {
    "id": "r7694009452207129375",
    "kind": "over",
    "player": "Braelon Allen",
@@ -28,6 +419,19 @@
    "source": "reply",
    "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
    "said": "need a flex: gesicki, kincaid, mclaurin, treveyon, braelon allen, roman wilson"
+  },
+  {
+   "id": "r7694020781248119582",
+   "kind": "over",
+   "player": "Bucky Irving",
+   "vs": [
+    "Rhamondre Stevenson"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:41:41.826Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
+   "said": "rhamondre or bucky this week"
   },
   {
    "id": "r7694050098959876877",
@@ -159,7 +563,34 @@
    "source": "reply",
    "ref": "https://www.tiktok.com/@jackb933/video/7693948584076627213",
    "said": "do i start doubs or keon coleman ?"
+  },
+  {
+   "id": "r7694061901478707981",
+   "kind": "over",
+   "player": "RJ Harvey",
+   "vs": [
+    "Ollie Gordon"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:24:34.456Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
+   "said": "Harvey or Ollie Gordon?"
+  },
+  {
+   "id": "r7694059446665937695",
+   "kind": "over",
+   "player": "Ashton Jeanty",
+   "vs": [
+    "Garrett Wilson",
+    "James Cook"
+   ],
+   "week": 5,
+   "at": "2026-10-07T23:32:28.822Z",
+   "source": "reply",
+   "ref": "https://www.tiktok.com/@jackb933/video/7694005046878473486",
+   "said": "I got James cook and jenty and Wilson who should I play?"
   }
  ],
- "updated": "2026-10-08T14:03:14.439Z"
+ "updated": "2026-10-08T14:08:20.881Z"
 }

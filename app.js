@@ -54252,13 +54252,13 @@ Rules:
     if (src === 'underdog') {
       if (sleeper) sleeper.style.display = 'none';
       if (underdog) underdog.style.display = '';
-      if (btnS) { btnS.style.background = 'var(--surface)'; btnS.style.color = 'var(--text2)'; btnS.style.borderColor = 'var(--border)'; }
-      if (btnU) { btnU.style.background = 'var(--accent)'; btnU.style.color = '#000'; btnU.style.borderColor = 'var(--accent)'; }
+      if (btnS) btnS.classList.remove('active');
+      if (btnU) btnU.classList.add('active');
     } else {
       if (sleeper) sleeper.style.display = '';
       if (underdog) underdog.style.display = 'none';
-      if (btnS) { btnS.style.background = 'var(--accent)'; btnS.style.color = '#000'; btnS.style.borderColor = 'var(--accent)'; }
-      if (btnU) { btnU.style.background = 'var(--surface)'; btnU.style.color = 'var(--text2)'; btnU.style.borderColor = 'var(--border)'; }
+      if (btnS) btnS.classList.add('active');
+      if (btnU) btnU.classList.remove('active');
     }
   };
 

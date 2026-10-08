@@ -77,12 +77,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-08-card1" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-08-mt1" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-08-card1" as="script">
+<link rel="preload" href="app.js?v=2026-10-08-mt1" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -92,7 +92,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-08" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-08" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-08-card1">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-08-mt1">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2973,16 +2973,21 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="auth-anchor" id="authAnchorMyTeams"></div>
 <div style="width:100%;max-width:1200px;margin:0 auto;padding:20px 16px;min-width:0;box-sizing:border-box">
 
-<div style="text-align:center;margin-bottom:1.5rem;position:relative">
-<button class="help-btn" id="mtHelpBtn" title="How to read the My Teams dashboard" style="position:absolute;right:0;top:14px">?</button>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1">MY TEAMS</div>
-<div style="color:var(--text2);font-size:.82rem;margin-top:4px">Import your fantasy teams, analyze rosters, and track your portfolio</div>
+<!-- Page head (2026-10-08 cleanup): compact title + LEAGUES / UNDERDOG segmented control
+     on one row (styles/main.css "MY TEAMS CLEANUP"); the subtitle hides once a league
+     view is open. _mtSwitchSource toggles .active on the two buttons. -->
+<div class="mt-page-head">
+<div>
+<div class="mt-page-title">MY TEAMS</div>
+<div class="mt-page-sub">Import your fantasy teams, analyze rosters, and track your portfolio</div>
 </div>
-
-<!-- Source Toggle -->
-<div style="display:flex;gap:4px;margin-bottom:16px;justify-content:center">
-<button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#000">LEAGUES</button>
-<button onclick="window._mtSwitchSource('underdog')" id="mtSrcUnderdog" style="padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)">UNDERDOG</button>
+<div style="display:flex;align-items:center;gap:10px">
+<div class="mt-src-tabs" role="tablist">
+<button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" class="mt-src-btn active" role="tab">LEAGUES</button>
+<button onclick="window._mtSwitchSource('underdog')" id="mtSrcUnderdog" class="mt-src-btn" role="tab">UNDERDOG</button>
+</div>
+<button class="help-btn" id="mtHelpBtn" title="How to read the My Teams dashboard">?</button>
+</div>
 </div>
 
 <!-- SLEEPER SECTION -->
@@ -4651,8 +4656,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weather_2026.js?v=2026-10-08-10" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-10-08-0719" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-08-1007" defer></script>
-<script src="data/matchup_edges_2026.js?v=2026-10-08-1007" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-08-1017" defer></script>
+<script src="data/matchup_edges_2026.js?v=2026-10-08-1017" defer></script>
 <script src="data/site_projections.js?v=2026-10-08" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
@@ -4715,8 +4720,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-10-08g" defer></script>
-<script src="data/future_totals_2026.js?v=2026-10-08-1007" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-10-08h" defer></script>
+<script src="data/future_totals_2026.js?v=2026-10-08-1017" defer></script>
 <script src="data/fpa_prior_2025.js?v=2026-10-05" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-10-04pool" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
@@ -6132,7 +6137,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-08-card1"></script>
+<script defer src="app.js?v=2026-10-08-mt1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

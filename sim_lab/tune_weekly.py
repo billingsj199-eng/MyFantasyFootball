@@ -101,7 +101,7 @@ def collect():
                 a = kact.get(norm(p["name"]))
                 if a is not None and isinstance(p.get("clayMean"), (int, float)) and p["clayMean"] > 0:
                     krows.append({"wk": wk, "act": a, "clay": p["clayMean"], "mean": p["mean"], "p10": p.get("p10"), "p90": p.get("p90"),
-                                  "k": tun.get("k") or 1.0, "s": tun.get("s") or 1.0})
+                                  "k": tun.get("k") or 1.0, "s": tun.get("s") or 1.0, "src": tun.get("kSrc") or "clay"})
                 continue
             if p.get("pos") not in POS or (p.get("mean") or 0) < MIN_PROJ:
                 continue
@@ -171,9 +171,14 @@ def main():
         print(f"  {pos}: n={len(rs):3d} anchored={len(an):3d}  propW {prior_w:.2f} -> {w_new:.3f} (best {ev.get('wBest','-')})"
               f"  sigma x{m_new:.3f} (inside {ev.get('bandInside','-')})  TD {tds}")
     # --- kickers: level + sigma
-    kev = {"n": len(krows)}
+    # 2026-10-08 Clay-free kicker base: once any scored kicker rows carry the 'vegas' base tag, kLevel is fit on THOSE rows only
+    # (the Clay-base rows would push a level fit for a different base); the engine applies kLevel to the vegas base only when kBase says so.
+    kv = [r for r in krows if r.get("src") == "vegas"]
+    if kv: krows = kv; tuning["kBase"] = "vegas"
+    else: tuning["kBase"] = "clay"
+    kev = {"n": len(krows), "base": tuning["kBase"]}
     if len(krows) >= 15:
-        raw = np.array([r["clay"] / r["k"] for r in krows]); act = np.array([r["act"] for r in krows])
+        raw = np.array([r["clay"] / (r["k"] or 1.0) for r in krows]); act = np.array([r["act"] for r in krows])   # k = the level actually applied at lock time
         p0 = PRIOR_WEEKS * raw.sum() / nweeks
         k_new = (p0 + act.sum()) / (p0 + raw.sum())
         tuning["kLevel"] = round(float(min(1.3, max(0.7, k_new))), 3)

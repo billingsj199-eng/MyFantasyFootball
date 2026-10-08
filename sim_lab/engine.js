@@ -262,7 +262,19 @@
           }
         });
       }
-      if (TU && pos === 'K' && typeof TU.kLevel === 'number' && TU.kLevel > 0) {
+      // CLAY-FREE KICKER (2026-10-08, backtest_kicker_vegas.py): kicker points are near-noise week to week; on 2020-25 a line on the team's implied total
+      // (5.04 + .145 x implied) matches or beats Clay's FG / XP line x kLevel (2026 W1-4 MAE 3.55 vs 3.66, rank order nil for every candidate). Base = that
+      // line at the team's season-average implied total x 17 games, split fgm / xpm at the 2025 league shares per point (.2009 / .2612); the game chain
+      // (Vegas / weather) and the kpts anchor sit on top as before. kLevel applies only once the tuner has re-fit it on this base (TU.kBase === 'vegas').
+      // Kill: window.SIM_K_CLAYFREE = false (restores Clay's line + kLevel). Backup engine.js.bak_pre_kvegas_20261008.
+      var kVegas = false;
+      if (pos === 'K' && !(typeof window !== 'undefined' && window.SIM_K_CLAYFREE === false) && schedule && schedule.byTeam) {
+        var kbt = schedule.byTeam[p.tm], kImp = [], kAvg = schedule.avgImplied || 22.5;
+        if (kbt) Object.keys(kbt).forEach(function (w) { var s0 = kbt[w]; if (s0 && typeof s0.implied === 'number' && s0.implied > 0) kImp.push(s0.implied); });
+        var kSeason = kImp.length ? kImp.reduce(function (a, b) { return a + b; }, 0) / kImp.length : kAvg, kPg = 5.04 + 0.145 * kSeason;
+        p.ptsPPR = +(kPg * 17).toFixed(1); p.clayGames = 17; p.comps.fgm = +(kPg * 17 * 0.2009).toFixed(2); p.comps.xpm = +(kPg * 17 * 0.2612).toFixed(2); p.kSrc = 'vegas'; kVegas = true;
+      }
+      if (TU && pos === 'K' && typeof TU.kLevel === 'number' && TU.kLevel > 0 && (!kVegas || TU.kBase === 'vegas')) {
         p.ptsPPR *= TU.kLevel;
         p.comps.fgm = +(p.comps.fgm * TU.kLevel).toFixed(2);
         p.comps.xpm = +(p.comps.xpm * TU.kLevel).toFixed(2);

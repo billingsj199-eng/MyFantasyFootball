@@ -373,7 +373,8 @@ function kickoffMs(kicks, wk, tm) {
             wa: r.propW != null ? +r.propW.toFixed(3) : undefined,   // market weight actually applied (belowW may differ from propW)
             w: (global.SIM_TUNING.propW || {})[r.player.pos], s: (global.SIM_TUNING.sigmaMult || {})[r.player.pos],
             td: (global.SIM_TUNING.tdMult || {})[r.player.pos] || null,
-            k: r.player.pos === 'K' ? global.SIM_TUNING.kLevel : undefined,
+            k: r.player.pos === 'K' ? ((r.player.kSrc === 'vegas' && global.SIM_TUNING.kBase !== 'vegas') ? 1.0 : global.SIM_TUNING.kLevel) : undefined,   // the level actually applied (vegas base takes kLevel only once kBase says so)
+            kSrc: r.player.pos === 'K' ? (r.player.kSrc || 'clay') : undefined,   // 2026-10-08 Clay-free kicker base tag (tune_weekly.py re-fits kLevel on it)
             d: r.player.pos === 'DST' ? global.SIM_TUNING.dstShift : undefined, asOf: global.SIM_TUNING.asOf
           } : null
         });

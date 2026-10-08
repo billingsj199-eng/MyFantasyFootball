@@ -5381,6 +5381,14 @@ window._weeklyAssumeOutApply = function(map) {
   try { localStorage.setItem('mff_assume_out', JSON.stringify(map)); } catch(_e) {}
   return true;
 };
+window._weeklyAssumeOutSave = function(next) {
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
+      firebase.firestore().collection('settings').doc('active_week').set({ assumeOut: next }, { merge: true })
+        .catch(e => console.warn('[Weekly] assume-out sync failed:', e));
+    }
+  } catch(e) { console.warn('[Weekly] assume-out sync failed:', e); }
+};
 window._weeklyAssumeOutToggle = function(name, wk) {
   if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can assume a player out'); return false; }
   wk = wk || window._weeklyActiveWeek || 1;
@@ -5391,16 +5399,48 @@ window._weeklyAssumeOutToggle = function(name, wk) {
   const next = Object.assign({}, map);
   next[k] = cur;   // always written (an empty array clears the week under a merge write)
   window._weeklyAssumeOutApply(next);
-  try {
-    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
-      firebase.firestore().collection('settings').doc('active_week').set({ assumeOut: next }, { merge: true })
-        .catch(e => console.warn('[Weekly] assume-out sync failed:', e));
-    }
-  } catch(e) { console.warn('[Weekly] assume-out sync failed:', e); }
+  window._weeklyAssumeOutSave(next);
   if (typeof toast === 'function') toast(i >= 0 ? name + ' back in the Week ' + wk + ' rankings' : name + ' assumed OUT for Week ' + wk);
   if (typeof render === 'function' && typeof currentMode !== 'undefined' && currentMode === 'weekly') { try { render(); } catch(_e) {} }
   if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
   return true;
+};
+// START-OF-WEEK SEED (Jack 2026-10-08): "at the start of the week put all
+// questionable players in the injured/byes section and let me move them out
+// — players trend one direction from the reports but stay listed as
+// Questionable regardless." Every Questionable / Doubtful player inside the
+// weekly cut line (this week's, else last week's, else 150 overall / QB 24 /
+// K 16, read on Jack's SEASON board) starts the week assumed out; Jack moves
+// each one back with UNDO as the week's reports come in. Runs once when the
+// admin client writes the Tuesday roll; the Q → OUT button redoes it by hand.
+window._weeklyAssumeOutSeed = function(wk) {
+  wk = wk || window._weeklyActiveWeek || 1;
+  if (typeof D === 'undefined') return [];
+  const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
+  const season = vb && vb.jacks && vb.jacks.redraft;
+  if (!season) return [];
+  const cutOf = pos => {
+    const m = window._boardCutoff && window._boardCutoff.jacks, key = pos ? ':' + pos : '';
+    const n = m && (m['weekly:' + wk + key] || m['weekly:' + (wk - 1) + key]);
+    return (n >= 1) ? n : (pos === 'QB' ? 24 : pos === 'K' ? 16 : 150);
+  };
+  const grp = { QB: 1, K: 1 };
+  const out = [], posSeen = {};
+  let overall = 0;
+  for (let i = 0; i < season.length; i++) {
+    const d = D[season[i]];
+    if (!d || d._retired || d._isFuturePick || d._isDevy) continue;
+    overall++;
+    posSeen[d.s] = (posSeen[d.s] || 0) + 1;
+    if (d.s === 'DST' || !d.inj) continue;
+    if (grp[d.s] ? posSeen[d.s] > cutOf(d.s) : overall > cutOf(null)) continue;
+    const t = String(d.inj).toLowerCase();
+    if (/\bir\b|\bpup\b|suspend|\bout\b|season/.test(t)) continue;          // already out — the row has him anyway
+    if (!/questionable|doubtful|day.?to.?day|\bgtd\b/.test(t)) continue;
+    if (window._irIsOut && window._irIsOut(d.n)) continue;
+    out.push(d.n);
+  }
+  return out;
 };
 // Not coming back this season (Jack's out-for-season flag, a season-ending
 // tag, or the injury read's season-long return) — the BYE / OUT row lists
@@ -11029,6 +11069,31 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         }
       }
     }
+    // START-OF-WEEK SEED (Jack 2026-10-08): once per week, the admin client
+    // parks every Questionable / Doubtful player inside the cut line in the
+    // BYE / OUT row (window._weeklyAssumeOutSeed) and stamps
+    // assumeOutSeededWeek so an UNDO is never re-parked. Keyed on the stamp,
+    // not the list, and run on any admin load — so a week already under way
+    // (week 5 at ship time) gets seeded on Jack's next visit, not only at
+    // the Tuesday roll.
+    if (wk >= 1 && wk <= 18 && (parseInt(d.assumeOutSeededWeek, 10) || 0) < wk && _weeklyIsAdmin()
+        && window._weeklySeedWritten !== wk && typeof window._weeklyAssumeOutSeed === 'function') {
+      window._weeklySeedWritten = wk;
+      try {
+        const _aoMap = Object.assign({}, window._weeklyAssumeOutMap || {});
+        const _cur = _aoMap[String(wk)] || [];
+        const _seed = window._weeklyAssumeOutSeed(wk).filter(n => _cur.indexOf(n) < 0);
+        _aoMap[String(wk)] = _cur.concat(_seed);
+        window._weeklyAssumeOutApply(_aoMap);
+        let _sdb = null;
+        try { _sdb = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
+        if (_sdb) {
+          _sdb.collection('settings').doc('active_week').set({ assumeOut: _aoMap, assumeOutSeededWeek: wk, assumeOutSeededAt: new Date().toISOString() }, { merge: true })
+            .then(() => { console.log('[Weekly] week ' + wk + ' seed: ' + _seed.length + ' Questionable / Doubtful players parked in the BYE / OUT row'); if (_seed.length && typeof toast === 'function') toast('Week ' + wk + ': ' + _seed.length + ' Questionable / Doubtful player' + (_seed.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — UNDO moves one back'); })
+            .catch(e => { console.warn('[Weekly] assume-out seed write failed:', e); window._weeklySeedWritten = null; });
+        } else window._weeklySeedWritten = null;
+      } catch (_e) { console.warn('[Weekly] assume-out seed failed:', _e); window._weeklySeedWritten = null; }
+    }
     if (wk >= 1 && wk <= 18) {
       window._weeklyActiveWeek = wk;
       localStorage.setItem('mff_active_week', String(wk));
@@ -11086,8 +11151,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const d = window._weeklyLastSettings;
       if (!d) return;
       const sw = window._WEEKLY_AUTO_ROLL ? window._weeklyScheduleWeek() : null;
+      const _aw = window._weeklyActiveWeek || 0;
       const pendingAdminWrite = !!(sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw
-        && window._weeklyRollWritten !== sw && _weeklyIsAdmin());
+        && window._weeklyRollWritten !== sw && _weeklyIsAdmin())
+        || !!(_aw && (parseInt(d.assumeOutSeededWeek, 10) || 0) < _aw && window._weeklySeedWritten !== _aw && _weeklyIsAdmin());
       if (sw !== window._weeklyLastScheduleWeek || pendingAdminWrite) _weeklyApplySettings(d);
     } catch (_e) {}
   }, 60000);
@@ -11130,6 +11197,29 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // removed from the WEEKLY board only (other formats keep their full lists),
   // so the injured / irrelevant tail is one action to clear. Session-undoable
   // via entering "undo"; SAVE persists like any other reorder.
+  // Q → OUT: park this week's Questionable / Doubtful players in the BYE / OUT row by hand
+  const _seedBtn = document.getElementById('weeklySeedQBtn');
+  if (_seedBtn && !_seedBtn._bound) {
+    _seedBtn._bound = true;
+    _seedBtn.addEventListener('click', () => {
+      if (currentMode !== 'weekly') { if (typeof toast === 'function') toast('Switch to WEEKLY first'); return; }
+      if (!_weeklyIsAdmin()) { if (typeof toast === 'function') toast('Admins only'); return; }
+      const wk = window._weeklyActiveWeek || 1;
+      const cur = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
+      const add = window._weeklyAssumeOutSeed(wk).filter(n => cur.indexOf(n) < 0);
+      if (!add.length) { if (typeof toast === 'function') toast('No new Questionable / Doubtful players to park for Week ' + wk); return; }
+      if (!confirm('Park ' + add.length + ' Questionable / Doubtful player' + (add.length === 1 ? '' : 's') + ' in the Week ' + wk + ' BYE / OUT row?\n\n'
+        + add.slice(0, 30).join(', ') + (add.length > 30 ? ' …' : '')
+        + '\n\nEach one leaves the weekly board (slot kept) with PROJ 0 until you move him back — UNDO on his row, the Q pill, or the player card. Syncs to every user.')) return;
+      const next = Object.assign({}, window._weeklyAssumeOutMap || {});
+      next[String(wk)] = cur.concat(add);
+      window._weeklyAssumeOutApply(next);
+      window._weeklyAssumeOutSave(next);
+      if (typeof render === 'function') render();
+      if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
+      if (typeof toast === 'function') toast(add.length + ' player' + (add.length === 1 ? '' : 's') + ' parked in the Week ' + wk + ' BYE / OUT row');
+    });
+  }
   const _trimBtn = document.getElementById('weeklyTrimBtn');
   if (_trimBtn && !_trimBtn._bound) {
     _trimBtn._bound = true;

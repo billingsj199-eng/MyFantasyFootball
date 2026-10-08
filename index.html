@@ -82,7 +82,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-08-aout1" as="script">
+<link rel="preload" href="app.js?v=2026-10-08-aout2" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1489,6 +1489,7 @@ CLEAR ALL
 <button id="weeklyPublishBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #22c55e;background:transparent;color:#22c55e;white-space:nowrap" title="Push the currently-selected week live so all users see it in the WEEKLY tab.">PUBLISH</button>
 <button id="weeklyUnpublishBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #ef4444;background:transparent;color:#ef4444;white-space:nowrap" title="Hide the WEEKLY tab from all non-admin users.">REMOVE</button>
 <button id="weeklyTrimBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent);white-space:nowrap" title="Cut the weekly board at an overall rank — removes every player ranked below it (injured / irrelevant tail). Enter 'undo' to restore this session's trim. Hit SAVE after.">TRIM</button>
+<button id="weeklySeedQBtn" style="padding:3px 9px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #f59e0b;background:transparent;color:#f59e0b;white-space:nowrap" title="Park every Questionable / Doubtful player inside the cut line in this week's BYE / OUT row (assumed out — off the board, PROJ 0). Runs by itself at the Tuesday 7am roll; use this to redo it or run it now. Move a player back with UNDO on his row, the Q pill, or his card.">Q → OUT</button>
 <span id="weeklyPublishStatus" style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;white-space:nowrap;margin-left:2px"></span>
 </div>
 <!-- Non-admin "live week" chip — shown to users when a week is currently published. -->
@@ -6141,7 +6142,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-08-aout1"></script>
+<script defer src="app.js?v=2026-10-08-aout2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

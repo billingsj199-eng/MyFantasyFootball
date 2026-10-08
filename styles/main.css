@@ -2756,8 +2756,8 @@ tbody td{font-size:.8125rem}
 .pos-badge{border-radius:4px;font-weight:600;letter-spacing:.03em}
 .adp-cell{color:var(--text);font-weight:600;font-size:.8125rem}
 /* Age: colour only when it is a warning. Young = plain. No glyph prefixes. */
-.age-cell.age-green{color:var(--text2);font-weight:400}
-.age-cell.age-yellow,.age-cell.age-orange,.age-cell.age-red{font-weight:500}
+.age-cell.age-green{color:var(--green);font-weight:600}
+.age-cell.age-yellow,.age-cell.age-orange,.age-cell.age-red{font-weight:600}
 .age-cell.age-green::before,.age-cell.age-yellow::before,.age-cell.age-orange::before,.age-cell.age-red::before{content:none}
 /* Coloured projections keep their tier colours but drop to 600 weight — 700 on
    13px saturated text haloes on a dark surface. */
@@ -2767,9 +2767,6 @@ tbody td{font-size:.8125rem}
 /* Chrome edges */
 .sidebar{border-right-color:var(--border)}
 .nav-divider{color:var(--text3)}
-/* Context columns next to PROJ (season PPG, team total): plain text so only the projection column carries the tier heat-map. */
-#pageRankings tbody td.ppg25-cell[style]{color:var(--text)!important;font-weight:500!important}
-#pageRankings tbody .teamtotal-cell span[style]{color:var(--text)!important;font-weight:500!important}
 /* Phones: position chips sit on a hairline, not the strong outline, so the wrapped
    filter grid reads as one group instead of a wall of boxes. */
 @media (max-width:600px){.pos-btn{border-color:var(--border);background:var(--elev-1)}.pos-btn.active:not([data-pos]),.pos-btn.active[data-pos="ALL"],.pos-btn.active[data-pos="K"],.pos-btn.active[data-pos="DST"]{border-color:var(--border-strong)}}
@@ -2888,3 +2885,148 @@ tbody td{font-size:.8125rem}
   .card-meta .card-team+.card-team::before{content:none}
   .card-rank-row{grid-template-columns:repeat(auto-fit,minmax(80px,1fr))!important}
 }
+
+/* ===== MY TEAMS CLEANUP (2026-10-08) =====
+   The LEAGUES view is built from inline-styled templates in app.js, so this block
+   restyles through the class / id hooks it does expose (.mt-pr-row, .mt-pr-main,
+   .mt-pr-stats, .mt-team-detail-inline, .mt-view-tabs, #mtToolbar, #mtPowerRankings,
+   #mtLeagueHeader) and attribute-substring selectors on the inline styles. Same
+   language as the rankings table and player card: hairline cards, neutral
+   segmented controls, DM Sans caps for small labels, colour only for grades,
+   tags and ranks that mean something. */
+
+/* Page header: compact title row; subtitle only in the empty state. */
+#pageMyTeams .mt-page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#pageMyTeams .mt-page-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;color:var(--text);line-height:1}
+#pageMyTeams .mt-page-sub{font-size:.8rem;color:var(--text3);margin-top:2px}
+#pageMyTeams:has(#mtLeagueView:not([style*="none"])) .mt-page-sub{display:none}
+#pageMyTeams .mt-src-tabs{display:inline-flex;gap:2px;background:var(--elev-1);border-radius:8px;padding:3px}
+#pageMyTeams .mt-src-btn{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:6px 14px;border:none;border-radius:6px;background:none;color:var(--text2);cursor:pointer}
+#pageMyTeams .mt-src-btn:hover{color:var(--text)}
+#pageMyTeams .mt-src-btn.active{background:var(--chip-active-bg);color:var(--chip-active-fg);box-shadow:inset 0 0 0 1px var(--chip-active-border),0 1px 2px rgba(0,0,0,.3)}
+#pageMyTeams #mtHelpBtn{position:static!important}
+
+/* League header */
+#mtLeagueHeader{margin-bottom:10px!important}
+#mtLeagueName{font-size:1.6rem!important;letter-spacing:1.5px!important}
+#mtLeagueInfo,#mtLeagueSynced{color:var(--text3)!important}
+#mtLeagueSwitch{border-color:var(--border-strong)!important;border-radius:8px!important;background:transparent!important;font-size:1.3rem!important}
+#mtOwnerSearch{background:transparent!important;border-color:var(--border-strong)!important;border-radius:6px!important}
+#mtOwnerSearch:focus{border-color:var(--accent)!important;outline:none}
+
+/* Toolbar: team picker + ghost tool tabs. The LINEUP alert keeps its amber outline. */
+#mtToolbar{background:transparent!important;border:none!important;padding:0 0 10px!important;border-bottom:1px solid var(--border)!important;border-radius:0!important;margin-bottom:14px!important}
+#mtMyTeamSelect{border-color:var(--border-strong)!important;border-radius:6px!important;background:transparent!important;padding:5px 8px!important}
+#mtToolbar>button,#mtToolMoreWrap>button{background:transparent!important;border-radius:6px!important;padding:5px 11px!important}
+#mtToolbar>button:not([style*="#f59e0b"]),#mtToolMoreWrap>button{border-color:var(--border-strong)!important;color:var(--text2)!important}
+#mtToolbar>button:not([style*="#f59e0b"]):hover,#mtToolMoreWrap>button:hover{color:var(--text)!important;background:var(--elev-1)!important}
+#mtToolbar>span[style*="width:1px"]{background:var(--border)!important}
+
+/* Section eyebrow + SORT BY chips */
+#mtPowerRankings>div:first-child[style*="Bebas Neue"]{font-family:'DM Sans',sans-serif!important;font-weight:600!important;font-size:.6875rem!important;letter-spacing:.08em!important;text-transform:uppercase;color:var(--text2)!important;margin-bottom:8px!important}
+#mtPowerRankings button[onclick*="_mtSortTeams"]{background:transparent!important;border-color:var(--border-strong)!important;color:var(--text2)!important;border-radius:6px!important;padding:4px 10px!important}
+#mtPowerRankings button[onclick*="_mtSortTeams"][style*="background:var(--accent)"]{background:var(--chip-active-bg)!important;color:var(--text)!important;border-color:var(--border-strong)!important}
+#mtPowerRankings button[onclick*="_mtSortTeams"]:hover{color:var(--text)!important}
+
+/* Standings rows: rank as a plain number, score as a coloured figure (grade hue kept)
+   with no box, tinted tags without outlines, lighter stat weights. */
+.mt-pr-row{border-radius:10px!important;padding:10px 14px!important}
+.mt-pr-row>div:first-child{font-family:'DM Sans',sans-serif!important;font-weight:600!important;font-size:.85rem!important;color:var(--text3)!important;font-variant-numeric:tabular-nums}
+.mt-pr-row>div:nth-child(2){background:transparent!important;border:none!important;width:auto!important;min-width:52px;height:auto!important;font-family:'DM Sans',sans-serif!important;font-weight:700!important;font-size:1.05rem!important;letter-spacing:0!important;font-variant-numeric:tabular-nums;justify-content:flex-start!important}
+.mt-pr-main span[style*="border:1px solid"]{border-color:transparent!important;font-weight:600!important;border-radius:4px!important;padding:1px 6px!important}
+.mt-pr-main>div:first-child{font-size:.9rem!important}
+.mt-pr-main>div:last-child{color:var(--text3)!important}
+.mt-pr-stats>div>div:first-child{color:var(--text3)!important;font-size:.6875rem!important;letter-spacing:.04em}
+.mt-pr-stats>div>div:last-child{font-weight:600!important;font-size:.78rem!important;font-variant-numeric:tabular-nums}
+.mt-pr-stats>div{min-width:36px!important}
+
+/* Expanded team: same treatment for the big grade box and the position tiles. */
+.mt-team-detail-inline{border-radius:10px!important}
+.mt-team-detail-inline>div:first-child>div:first-child[style*="border:3px solid"]{background:transparent!important;border:none!important;width:auto!important;height:auto!important;min-width:56px}
+.mt-team-detail-inline>div:first-child>div:first-child[style*="border:3px solid"]>div{font-family:'DM Sans',sans-serif!important;font-weight:700!important;font-size:1.5rem!important;font-variant-numeric:tabular-nums}
+.mt-team-detail-inline div[style*="border:1px solid #"][style*="border-radius:8px"]{border-color:transparent!important}
+.mt-team-detail-inline span[style*="border:1px solid"]{border-color:transparent!important;font-weight:600!important;border-radius:4px!important;padding:1px 6px!important}
+.mt-view-tabs{background:var(--elev-1)!important;border-radius:8px!important}
+.mt-view-tab{font-family:'DM Sans',sans-serif!important;font-weight:600!important;font-size:.72rem!important;letter-spacing:.04em!important;text-transform:uppercase;border-radius:6px!important}
+.mt-view-tab[style*="var(--accent)"]{background:var(--chip-active-bg)!important;color:var(--text)!important;box-shadow:inset 0 0 0 1px var(--chip-active-border),0 1px 2px rgba(0,0,0,.3)}
+
+/* Small inline Bebas labels anywhere on the page (≤ .9rem) → DM Sans caps. Big display
+   numbers (1.1rem+) keep Bebas. */
+#pageMyTeams [style*="Bebas Neue"][style*="font-size:.6875rem"],
+#pageMyTeams [style*="Bebas Neue"][style*="font-size:.7"],
+#pageMyTeams [style*="Bebas Neue"][style*="font-size:.8"],
+#pageMyTeams [style*="Bebas Neue"][style*="font-size:.9rem"],
+#pageMyTeams [style*="Bebas Neue"][style*="font-size:1rem"]{font-family:'DM Sans',sans-serif!important;font-weight:600;font-size:.72rem!important;letter-spacing:.06em!important;text-transform:uppercase}
+#pageMyTeams [style*="Bebas Neue"][style*="font-size:1.1rem"],
+#pageMyTeams [style*="Bebas Neue"][style*="font-size:1.2rem"]{font-family:'DM Sans',sans-serif!important;font-weight:700;letter-spacing:0!important;font-variant-numeric:tabular-nums}
+
+/* Value-source bar, ADD A LEAGUE bar, import cards: hairline cards, grey eyebrows. */
+#mtValueSrcBar,#mtSetup>div:first-child,#mtValueSrcPanel,#mtImportPreview,#mtImportGrid>div{border-color:var(--border)!important;border-radius:10px!important}
+#mtValueSrcLabel{color:var(--text)!important}
+#mtSetup>div:first-child>span:first-child{color:var(--text)!important}
+#pageMyTeams .mt-vs-hint{color:var(--text3)}
+#mtImportPreview{border-color:var(--border-strong)!important;background:var(--elev-1)!important}
+#mtImportGrid button{border-radius:6px!important}
+
+@media (max-width:600px){
+  #pageMyTeams .mt-page-head{margin-bottom:10px}
+  #mtToolbar{padding-bottom:8px!important}
+}
+
+/* ===== STAT HEAT-MAP CELLS (2026-10-08, Jack: "colour code pretty much all stats,
+   like Flock") =====
+   Every rankings stat that carries a tier / grade colour becomes a boxed cell: the
+   figure in that hue on a tint of the same hue, with a dark hairline around the
+   box and a thin dark edge on the glyphs so they stay crisp over the tint. The
+   tint comes from color-mix(currentColor) so it follows whatever colour the
+   renderer set inline — no per-colour rules to maintain. */
+:root{--heat-mix:15%;--heat-edge:rgba(0,0,0,.55);--heat-ink:0 0 1px rgba(0,0,0,.85),0 1px 1px rgba(0,0,0,.45)}
+:root[data-theme="light"]{--heat-mix:14%;--heat-edge:rgba(0,0,0,.14);--heat-ink:none}
+
+/* td-level colours (PROJ PPG, season PPG, L4, SIMS / VOR / xFP / LINES columns) */
+#pageRankings tbody td[style*="color:"],
+#pageRankings tbody td.age-cell.age-green,#pageRankings tbody td.age-cell.age-yellow,
+#pageRankings tbody td.age-cell.age-orange,#pageRankings tbody td.age-cell.age-red{
+  background:color-mix(in srgb,currentColor var(--heat-mix),transparent);
+  box-shadow:inset 0 0 0 1px var(--heat-edge);
+  font-weight:600!important;text-shadow:var(--heat-ink);text-align:center!important}
+/* span-level colours (team total, playoff SOS, +/- diff): the span fills the cell */
+@media (min-width:601px){
+  #pageRankings tbody td>span[style*="color:"]:only-child,
+  #pageRankings tbody td.diff-cell>span.diff-up,#pageRankings tbody td.diff-cell>span.diff-down{
+    display:block;margin:-.55rem -.4rem;padding:.55rem .4rem;text-align:center;
+    background:color-mix(in srgb,currentColor var(--heat-mix),transparent);
+    box-shadow:inset 0 0 0 1px var(--heat-edge);font-weight:600!important;text-shadow:var(--heat-ink)}
+  #pageRankings tbody td:has(>span[style*="color:"]:only-child),
+  #pageRankings tbody td.diff-cell:has(>span.diff-up),#pageRankings tbody td.diff-cell:has(>span.diff-down){text-align:center!important}
+}
+@media (max-width:600px){
+  #pageRankings tbody td>span[style*="color:"]:only-child,
+  #pageRankings tbody td.diff-cell>span.diff-up,#pageRankings tbody td.diff-cell>span.diff-down{
+    display:inline-block;padding:1px 7px;border-radius:4px;
+    background:color-mix(in srgb,currentColor var(--heat-mix),transparent);
+    box-shadow:inset 0 0 0 1px var(--heat-edge);font-weight:600!important;text-shadow:var(--heat-ink)}
+  #pageRankings tbody td[style*="color:"],
+  #pageRankings tbody td.age-cell.age-green,#pageRankings tbody td.age-cell.age-yellow,
+  #pageRankings tbody td.age-cell.age-orange,#pageRankings tbody td.age-cell.age-red{border-radius:6px}
+}
+/* never box the name / team / position / injury pills / lock */
+#pageRankings tbody td.player-cell,#pageRankings tbody td:has(>.player-cell),#pageRankings tbody td:has(>.pos-badge),
+#pageRankings tbody td.cons-cell:has(>.cons-lock),#pageRankings tbody td.myrank-cell{background:none;box-shadow:none;text-shadow:none;text-align:left!important}
+/* "—" placeholders stay plain */
+#pageRankings tbody td[style*="color:var(--text2)"]{background:none;box-shadow:none;text-shadow:none;font-weight:400!important}
+
+/* My Teams standings: PPG + positional ranks boxed the same way */
+.mt-pr-stats>div>div:last-child[style*="color:"]{background:color-mix(in srgb,currentColor 16%,transparent);box-shadow:inset 0 0 0 1px var(--heat-edge);border-radius:4px;padding:2px 4px!important;text-shadow:var(--heat-ink)}
+.mt-pr-stats>div{min-width:42px!important}
+.mt-pr-main span[style*="color:#22c55e"],.mt-pr-main span[style*="color:#ef4444"],.mt-pr-main span[style*="color:#4ade80"]{text-shadow:var(--heat-ink)}
+
+/* Player card tiles: the whole tile tints to the figure's hue (tier palette + SOS). */
+.card-rank-box:has(>.num[style*="color:#4ade80"]){background:rgba(74,222,128,.14)}
+.card-rank-box:has(>.num[style*="color:#22c55e"]),.card-rank-box:has(>.num[style*="rgb(34, 197, 94)"]){background:rgba(34,197,94,.14)}
+.card-rank-box:has(>.num[style*="color:#60a5fa"]){background:rgba(96,165,250,.14)}
+.card-rank-box:has(>.num[style*="color:#facc15"]),.card-rank-box:has(>.num[style*="color:#eab308"]){background:rgba(250,204,21,.13)}
+.card-rank-box:has(>.num[style*="color:#f97316"]){background:rgba(249,115,22,.14)}
+.card-rank-box:has(>.num[style*="color:#b91c1c"]),.card-rank-box:has(>.num[style*="color:#ef4444"]),.card-rank-box:has(>.num[style*="color:var(--red)"]){background:rgba(239,68,68,.14)}
+.card-rank-box:has(>.num[style*="color:"]){box-shadow:inset 0 0 0 1px var(--heat-edge)}
+.card-rank-box .num[style*="color:"]{text-shadow:var(--heat-ink)}

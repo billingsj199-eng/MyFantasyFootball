@@ -8512,7 +8512,7 @@ function render() {
       : 'Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.';
     if (lab.getAttribute('data-gloss') !== g) lab.setAttribute('data-gloss', g);
   })();
-  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy');
+  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy', _statMode === 'fantasy');
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
   // view carries boom/bust in the ppg25/l4ppg swap columns instead.
@@ -8925,7 +8925,7 @@ function render() {
     if (_injBlurRank) { if (blurred && !_injWallDone) { _injWallDone = true; html += _premiumWallHtml(); } }
     else if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
-    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
+    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy', _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
@@ -14027,22 +14027,26 @@ function _wkXfpCellHtml(d, show) {
 // matchup block · L4 PPG. Splits the '26 PPG / L4 PPG pair so the row can
 // emit '26 PPG + xFP right after PROJ; every other view keeps the pair
 // together after the matchup block (xFP placeholder hidden).
-function _wkSplitStatTds(tds, d, wkFant) {
+function _wkSplitStatTds(tds, d, wkFant, fant) {
   const cell = _wkXfpCellHtml(d, wkFant);
   const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
   const td26 = i < 0 ? tds : tds.slice(0, i), tdL4 = i < 0 ? '' : tds.slice(i);
-  // 2026-10-08: the season-PPG cell sits right after PROJ on every board; the xFP cell
-  // follows it in the weekly FANTASY view and hides with the other weekly cells otherwise.
-  return wkFant ? { pre: td26 + cell, post: tdL4 } : { pre: td26, post: cell + tdL4 };
+  // 2026-10-08: in the FANTASY stat view the season-PPG cell sits right after PROJ on every
+  // board (xFP follows it in the weekly FANTASY view). Other stat views (SIMS / VOR / xFP /
+  // PROJECTIONS / BETTING LINES / ADP) keep their second column after the weekly group —
+  // in BETTING LINES that column is the YDS line and belongs beside TD and RUSH (Jack).
+  if (wkFant) return { pre: td26 + cell, post: tdL4 };
+  return fant ? { pre: td26, post: cell + tdL4 } : { pre: '', post: td26 + cell + tdL4 };
 }
 // Matching <th> order: move '26 PPG + xFP headers right after PROJ in the
 // weekly FANTASY view, back after Opp PPG otherwise. Idempotent; listeners
 // ride along with the nodes.
-function _wkFantasyColOrder(on) {
+function _wkFantasyColOrder(on, fant) {
   const proj = document.getElementById('ppgProjHeader'), p26 = document.getElementById('ppg25HeaderTh');
   const xfp = document.getElementById('xfpGHeader'), opp = document.getElementById('oppPpgHeader');
   if (!proj || !p26 || !xfp || !opp) return;
-  if (proj.nextElementSibling !== p26) proj.after(p26);
+  const p26Anchor = (on || fant !== false) ? proj : opp;   // FANTASY view: beside PROJ; other views: after the weekly group
+  if (p26Anchor.nextElementSibling !== p26) p26Anchor.after(p26);
   const xfpAnchor = on ? p26 : opp;
   if (xfpAnchor.nextElementSibling !== xfp) xfpAnchor.after(xfp);
 }

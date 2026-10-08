@@ -2848,7 +2848,7 @@ function l4PpgCellHtml(l4, seasonPpg) {
   const diff = l4 - seasonPpg;
   if (diff >= 1) return { html: v + ' <span style="font-size:.6875rem">▲</span>', color: '#22c55e' };
   if (diff <= -1) return { html: v + ' <span style="font-size:.6875rem">▼</span>', color: '#ef4444' };
-  return { html: v + ' <span style="font-size:.6875rem;color:var(--text2)">·</span>', color: null };
+  return { html: v, color: null };
 }
 
 // === Kicker projection model (2026-08-25 correlate study) ===
@@ -4788,13 +4788,14 @@ function _devyStatCellsHtml(d) {
       : '<span class="diff-down" title="' + w + ' — ' + (-c.diff) + ' lower than KTC">▼ ' + (-c.diff) + '</span>';
   }
   return '<td class="pts-cell ppg-proj-cell">' + pickHtml + '</td>'
-    + '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'
     + '<td class="pts-cell ppg25-cell">' + ppgHtml + '</td>'
+    + '<td class="simboom-cell weekly-only-cell" style="display:none">—</td><td class="simbust-cell weekly-only-cell" style="display:none">—</td><td class="opp-cell weekly-only-cell" style="display:none">—</td><td class="spread-cell weekly-only-cell" style="display:none">—</td><td class="teamtotal-cell weekly-only-cell" style="display:none">—</td><td class="oppppg-cell weekly-only-cell" style="display:none">—</td>'
     + '<td class="pts-cell l4ppg-cell">' + ageHtml + '</td>'
     + '<td class="pts-cell yrr-cell" style="display:none">—</td>'
     + '<td class="pts-cell landing-cell" style="display:none">—</td>'
     + '<td class="age-cell" style="white-space:nowrap">' + sizeHtml + '</td>'
     + '<td class="psos-cell">' + rasHtml + '</td>'
+    + '<td class="ppsos-cell"></td>'
     + '<td class="diff-cell">' + diffH + '</td>';
 }
 // JM cell — on the devy board it sits right after Class (Jack 2026-09-30:
@@ -4813,6 +4814,7 @@ const _DEVY_HDRS = [
   ['#l4ppgHeaderTh', 'Draft Age', 'Age on draft day of the player\'s class (same as the Prospect Model). Younger is better; hover a value for today\'s age.'],
   ['#ageHeader', 'Ht · Wt', 'Listed height and weight.'],
   ['#psosHeader', 'RAS', 'Relative Athletic Score (0-10). P = projected from a projected forty + size until official testing exists.'],
+  ['#ppsosHeader', '', ''],
   ['th[data-sort="diff"]', '+/-', 'This board\'s devy rank vs the KTC devy rank (both within the class on a 2027 / 2028 view). ▲ = ranked higher here than KTC.']
 ];
 function _syncDevyHeaders() {
@@ -4999,7 +5001,7 @@ function getFiltered(applyTopN) {
   let f = _boardSrc.map(idx => D[idx]);
   // Hide retired players from rankings
   f = f.filter(d => !d._retired);
-  f = _rnkLgFilter(f);
+  if (!window._rankBaseMode) f = _rnkLgFilter(f);
   // SIM VOR board lists only players the sim projects; WAIVERS narrows it to
   // players nobody in the picked league rosters.
   if (currentVersion === 'sims') {
@@ -5012,12 +5014,12 @@ function getFiltered(applyTopN) {
   // superflex / weekly) but untouched in dynasty modes. A typed search still
   // surfaces them so their card (and the admin unflag toggle on it) stays
   // reachable from the rankings page.
-  if (window._irHiddenHere(currentMode) && !query) {
+  if (window._irHiddenHere(currentMode) && (!query || window._rankBaseMode)) {
     f = f.filter(d => !window._irIsOut(d.n));
   }
   // WEEKLY: players Jack assumed out this week ride the BYE / OUT row instead
   // (slot kept; a typed search and the INJURIES view still surface them).
-  if (currentMode === 'weekly' && !query && !window._injOnly && typeof window._weeklyAssumedOut === 'function') {
+  if (currentMode === 'weekly' && (!query || window._rankBaseMode) && !window._injOnly && typeof window._weeklyAssumedOut === 'function') {
     f = f.filter(d => !window._weeklyAssumedOut(d.n));
   }
   // Defensive dedupe: a player should never appear twice in the rankings.
@@ -5038,7 +5040,7 @@ function getFiltered(applyTopN) {
     if (d._isFuturePick) {
       if (!isDynastyMode) return false;
       // Hide unranked (2029/2030) picks unless user is searching for them
-      if (d._unranked && !query) return false;
+      if (d._unranked && (!query || window._rankBaseMode)) return false;
     }
     return true;
   });
@@ -5057,7 +5059,7 @@ function getFiltered(applyTopN) {
     } else if (filter === 'ALL' && (d.s === 'K' || d.s === 'DST')) return false;
     else if (filter === 'FLEX') { if (d.s !== 'RB' && d.s !== 'WR' && d.s !== 'TE') return false; }
     else if (filter !== 'ALL' && filter !== 'ROOKIE' && d.s !== filter) return false;
-    if (query) {
+    if (query && !window._rankBaseMode) {
       const q = query.toLowerCase();
       return d.n.toLowerCase().includes(q) || d.t.toLowerCase().includes(q);
     }
@@ -5068,7 +5070,7 @@ function getFiltered(applyTopN) {
   if (window._injOnly) f.forEach((d, i) => { d._ivRank = i + 1; });
   // Watchlist-only view (★ pill): AND with the current position filter.
   // TOP-N is skipped here — a starred deep sleeper always shows in the ★ view.
-  if (window._watchOnly && window._watchSet) {
+  if (window._watchOnly && window._watchSet && !window._rankBaseMode) {
     f = f.filter(d => window._watchSet.has(d.n));
     applyTopN = false;
   }
@@ -5081,9 +5083,9 @@ function getFiltered(applyTopN) {
   // TEAMS filter (multi-select pill): after the TOP-N cap so the cap keeps its
   // board meaning — "TOP 40 + DET" = Lions inside the top 40. d.t is the full
   // team name for every row, D/ST included.
-  if (window._teamFilter && window._teamFilter.size) f = f.filter(d => window._teamFilter.has(d.t));
+  if (window._teamFilter && window._teamFilter.size && !window._rankBaseMode) f = f.filter(d => window._teamFilter.has(d.t));
   // INJURIES filter (pill): injured players only, same after-the-cap rule as TEAMS.
-  if (window._injOnly) f = f.filter(d => !!_ivInfo(d));
+  if (window._injOnly && !window._rankBaseMode) f = f.filter(d => !!_ivInfo(d));
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
     // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
@@ -5134,6 +5136,11 @@ function getFiltered(applyTopN) {
           const _sosRk = d => (typeof window._mtGetPlayoffSos !== 'function') ? 999
             : (window._mtGetPlayoffSos(d.t, d.s, _wk) || { rank: 999 }).rank;
           av = _sosRk(a); bv = _sosRk(b); break;
+        }
+        case 'ppsos': {
+          const _pRk = d => (typeof window._mtGetPlayoffSos !== 'function') ? 999
+            : (window._mtGetPlayoffSos(d.t, d.s, [15, 16, 17]) || { rank: 999 }).rank;
+          av = _pRk(a); bv = _pRk(b); break;
         }
         case 'diff':
           if (currentMode === 'weekly') { const wa = _weeklyDiff(a), wb = _weeklyDiff(b); av = wa ? wa.diff : 0; bv = wb ? wb.diff : 0; break; }
@@ -8327,6 +8334,20 @@ function render() {
     }
   }
   let data = getFiltered(true);
+  // Narrowing filters (search, league MINE / AVAILABLE, watchlist, team, injuries-only)
+  // keep the player's REAL rank in the # column and his real tier: a base pass of
+  // getFiltered with those filters off gives rank = index in the un-narrowed board
+  // (overall on ALL, positional on a position view, same for K / DST / ROOKIES).
+  const _narrowed = !!(query || window._watchOnly || (window._teamFilter && window._teamFilter.size) || window._injOnly
+    || (typeof _rnkLgShow !== 'undefined' && _rnkLgShow !== 'all' && typeof _rnkLg === 'function' && _rnkLg()));
+  let _baseRanks = null;
+  if (_narrowed && filter !== 'DEVY') {
+    window._rankBaseMode = true;
+    try { _baseRanks = new Map(); getFiltered(false).forEach((p, bi) => { if (p && p.n) _baseRanks.set(p.n, bi + 1); }); }
+    catch (_) { _baseRanks = null; }
+    finally { window._rankBaseMode = false; }
+  }
+  const _rankOf = (p, i) => (_baseRanks && p && _baseRanks.get(p.n)) || (i + 1);
   // TOP-N: the board-rank pool cap lives inside getFiltered (pre-sort). This
   // post-sort slice only still matters for the DEVY early-return path, which
   // skips the shared cap; everywhere else data.length is already ≤ N.
@@ -8387,7 +8408,7 @@ function render() {
   );
 
   // Build a map of afterRank -> tier for tier rows (only in default sort, no search, ALL/position filter)
-  const showTiers = (sortKey === 'myrank' && sortDir === 1 && !query);
+  const showTiers = (sortKey === 'myrank' && sortDir === 1); // search keeps tiers (empties are skipped)
   const useFilteredRank = _tierRankIsPositional();
   const tierMap = {};
   if (showTiers) {
@@ -8522,8 +8543,12 @@ function render() {
   };
   const _tierRowsHtml = (prevDisplayRank, displayRank) => {
     let html = '';
-    tiers.forEach(t => {
-      if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) {
+    // Only the tier this player belongs to — under a narrowing filter the rank gap to
+    // the previous visible player can span several tiers that have no visible rows.
+    let _last = null;
+    tiers.forEach(t => { if (t.afterRank > prevDisplayRank && t.afterRank <= displayRank) _last = t; });
+    [_last].filter(Boolean).forEach(t => {
+      {
         html += `<tr class="tier-row" data-tier-id="${t.id}">
           <td colspan="17"><div class="tier-inner">
             <span class="tier-badge ${tierColor(t.label)}">${t.label}</span>
@@ -8592,7 +8617,7 @@ function render() {
     }
     // Bye players the BYE block already shows (they sit below the cut) — once only
     if (_byeBlk && _byeBlk.names.has(d.n) && window._rankBelowCut && window._rankBelowCut.has(d.n)) return;
-    const displayRank = useFilteredRank ? (i + 1) : d.myRank;
+    const displayRank = useFilteredRank ? _rankOf(d, i) : d.myRank;
     // Cut line (all formats): tier-style divider at the overall cutoff rank.
     // Players below it are hidden from non-editors; the editor drags players
     // across it to add/remove them from the visible list.
@@ -8642,7 +8667,7 @@ function render() {
       }
     }
     // Insert tier row before this player if a tier sits between previous rank and this rank
-    if (showTiers) html += _tierRowsHtml(i > 0 ? (useFilteredRank ? i : data[i-1].myRank) : 0, displayRank);
+    if (showTiers) html += _tierRowsHtml(i > 0 ? (useFilteredRank ? _rankOf(data[i-1], i - 1) : data[i-1].myRank) : 0, displayRank);
 
     const _cc = _consCellInfo(d);
     const _ccCmp = _consCmp(d);
@@ -8873,7 +8898,7 @@ function render() {
     const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
-      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || (i + 1)) : d.myRank}</span></td>
+      <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
       <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
@@ -8897,6 +8922,7 @@ function render() {
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
       <td class="psos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
+      <td class="ppsos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,[15,16,17]);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
     </tr>`;
 
@@ -13964,7 +13990,9 @@ function _wkSplitStatTds(tds, d, wkFant) {
   const cell = _wkXfpCellHtml(d, wkFant);
   const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
   const td26 = i < 0 ? tds : tds.slice(0, i), tdL4 = i < 0 ? '' : tds.slice(i);
-  return wkFant ? { pre: td26 + cell, post: tdL4 } : { pre: '', post: td26 + cell + tdL4 };
+  // 2026-10-08: the season-PPG cell sits right after PROJ on every board; the xFP cell
+  // follows it in the weekly FANTASY view and hides with the other weekly cells otherwise.
+  return wkFant ? { pre: td26 + cell, post: tdL4 } : { pre: td26, post: cell + tdL4 };
 }
 // Matching <th> order: move '26 PPG + xFP headers right after PROJ in the
 // weekly FANTASY view, back after Opp PPG otherwise. Idempotent; listeners
@@ -13973,9 +14001,9 @@ function _wkFantasyColOrder(on) {
   const proj = document.getElementById('ppgProjHeader'), p26 = document.getElementById('ppg25HeaderTh');
   const xfp = document.getElementById('xfpGHeader'), opp = document.getElementById('oppPpgHeader');
   if (!proj || !p26 || !xfp || !opp) return;
-  const anchor = on ? proj : opp;
-  if (anchor.nextElementSibling !== p26) anchor.after(p26);
-  if (p26.nextElementSibling !== xfp) p26.after(xfp);
+  if (proj.nextElementSibling !== p26) proj.after(p26);
+  const xfpAnchor = on ? p26 : opp;
+  if (xfpAnchor.nextElementSibling !== xfp) xfpAnchor.after(xfp);
 }
 function _wkOppPpgCell(d) {
   const r = (typeof window._weeklyOppPpgFor === 'function') ? window._weeklyOppPpgFor(d.t, d.s) : null;
@@ -20061,8 +20089,12 @@ window.switchPage = switchPage;
     ppgProj: { th: 'ppgProjHeader', cell: '.ppg-proj-cell' },
     ppg25: { th: 'ppg25HeaderTh', cell: '.ppg25-cell' },
     l4ppg: { th: 'l4ppgHeaderTh', cell: '.l4ppg-cell' },
-    age: { th: 'ageHeader', cell: '.age-cell' }
+    age: { th: 'ageHeader', cell: '.age-cell' },
+    ppsos: { th: 'ppsosHeader', cell: '.ppsos-cell' }
   };
+  // Columns hidden unless the user ticks them (2026-10-08: Age off during the season).
+  const DEFAULT_OFF = { age: true };
+  const _isOn = (state, k) => state[k] != null ? state[k] !== false : !DEFAULT_OFF[k];
   function _load() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; } catch(_) { return {}; }
   }
@@ -20071,7 +20103,7 @@ window.switchPage = switchPage;
   }
   function _apply(state) {
     Object.keys(COLS).forEach(k => {
-      const visible = state[k] !== false; // default visible
+      const visible = _isOn(state, k);
       // An EXPLICIT check (state true, i.e. the user ticked the box at some
       // point) is applied as inline !important so it beats the mobile
       // declutter hides in main.css. Unset stays '' so those CSS hides apply.
@@ -20092,7 +20124,7 @@ window.switchPage = switchPage;
   }
   function _syncCheckboxes(state) {
     document.querySelectorAll('[data-coltoggle]').forEach(cb => {
-      cb.checked = state[cb.dataset.coltoggle] !== false;
+      cb.checked = _isOn(state, cb.dataset.coltoggle);
     });
   }
   const state = _load();
@@ -55062,8 +55094,21 @@ Rules:
     const _sr = localStorage.getItem('mff_sosRange');
     if (_sr) { const p = JSON.parse(_sr); if (p && p.from >= 1 && p.to <= 18 && p.from <= p.to) _sosRange = { from: +p.from, to: +p.to }; }
   } catch (_) {}
+  // Rest of season = this week through week 17 (week 18 excluded, most leagues are done).
+  // Before kickoff that is 1-17; after week 17 it falls back to the playoff window.
+  function _sosRosWeeks() {
+    try {
+      const now = window._seasonStripNow || Date.now();
+      const wkEnd = kick => { const dd = new Date(kick + 2 * 86400000); while (dd.getUTCDay() !== 2) dd.setUTCDate(dd.getUTCDate() + 1); dd.setUTCHours(9, 0, 0, 0); return dd.getTime(); };
+      const cur = (typeof _SEASON_KICKS_2026 !== 'undefined') ? _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick)) : null;
+      const from = cur ? cur.wk : 1;
+      if (from > 17) return [15, 16, 17];
+      const out = []; for (let w = from; w <= 17; w++) out.push(w);
+      return out;
+    } catch (_) { return [15, 16, 17]; }
+  }
   function _sosActiveWeeks() {
-    if (!_sosRange) return [15, 16, 17];
+    if (!_sosRange) return _sosRosWeeks();
     const out = [];
     for (let w = _sosRange.from; w <= _sosRange.to; w++) out.push(w);
     return out;
@@ -55424,7 +55469,7 @@ Rules:
     function _updateLabel() {
       // Custom window → plain "SOS" (the popover + cell tooltips carry the
       // exact week range); default playoff window → "P-SOS".
-      if (lbl) lbl.textContent = _sosRange ? 'SOS' : 'P-SOS';
+      if (lbl) lbl.textContent = 'SOS'; // playoffs have their own P-SOS column now
     }
     function _close() {
       if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', _outside); }

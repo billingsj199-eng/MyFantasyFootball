@@ -1,0 +1,292 @@
+  receiving: 13,146 player-weeks, 1,362 season rows, seasons [np.int32(2016), np.int32(2017), np.int32(2018), np.int32(2019), np.int32(2020), np.int32(2021), np.int32(2022), np.int32(2023), np.int32(2024), np.int32(2025), np.int32(2026)]
+  rushing: 5,443 player-weeks, 554 season rows, seasons [np.int32(2016), np.int32(2017), np.int32(2018), np.int32(2019), np.int32(2020), np.int32(2021), np.int32(2022), np.int32(2023), np.int32(2024), np.int32(2025), np.int32(2026)]
+  passing: 5,415 player-weeks, 444 season rows, seasons [np.int32(2016), np.int32(2017), np.int32(2018), np.int32(2019), np.int32(2020), np.int32(2021), np.int32(2022), np.int32(2023), np.int32(2024), np.int32(2025), np.int32(2026)]
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+
+=== NEXT GEN STATS SCREEN: 9,722 top-150 player-weeks 2019-25 (in-season rows), base = blend as wired (honest replica) ===
+
+--- 1  Spearman of actual / base with each metric's within-week z (next game | rest of season), by position; |rho| >= .05 flagged ---
+    metric                                                                 QB                       RB                       WR                       TE
+    avg_separation [std]                                                                            n0 +0.007 |+0.022  n3331  +0.050 |+nan  n163  
+    avg_separation [prior season]                                                                   n0 -0.022 |-0.068* n3557  +0.015 |+nan  n201  
+    avg_cushion [std]                                                                               n0 +0.005 |+0.005  n3331  -0.038 |+nan  n163  
+    avg_cushion [prior season]                                                                      n0 -0.015 |+0.016  n3557  -0.097*|+nan  n201  
+    avg_intended_air_yards [std]                     +0.003 |-0.039  n1253                                                                            
+    avg_intended_air_yards [prior season]            +0.050 |+0.076* n1151                                                                            
+    percent_share_of_intended_air_yards [std]                                                       n0 +0.043 |+0.130* n3331  -0.001 |+nan  n163  
+    percent_share_of_intended_air_yards [prior season]                                                n0 +0.048 |+0.096* n3557  +0.043 |+nan  n201  
+    avg_yac_above_expectation [std]                                                                 n0 +0.041 |+0.125* n3325  +0.107*|+nan  n163  
+    avg_yac_above_expectation [prior season]                                                        n0 +0.027 |+0.074* n3557  +0.053*|+nan  n201  
+    avg_expected_yac [std]                                                                          n0 +0.002 |+0.015  n3325  -0.101*|+nan  n163  
+    avg_expected_yac [prior season]                                                                 n0 -0.018 |-0.061* n3557  +0.089*|+nan  n201  
+    catch_percentage [std]                                                                          n0 +0.058*|+0.047  n3331  +0.013 |+nan  n163  
+    catch_percentage [prior season]                                                                 n0 +0.023 |+0.040  n3557  -0.013 |+nan  n201  
+    efficiency [std]                                                       n0 -0.039 |-0.001  n2277                                                   
+    efficiency [prior season]                                              n0 +0.022 |+0.036  n2352                                                   
+    percent_attempts_gte_eight_defenders [std]                             n0 +0.005 |-0.022  n2277                                                   
+    percent_attempts_gte_eight_defenders [prior season]                       n0 -0.015 |-0.124* n2352                                                   
+    avg_time_to_los [std]                                                  n0 -0.038 |-0.020  n2277                                                   
+    avg_time_to_los [prior season]                                         n0 -0.031 |-0.020  n2352                                                   
+    rush_yards_over_expected_per_att [std]                                 n0 +0.072*|+0.077* n2277                                                   
+    rush_yards_over_expected_per_att [prior season]                        n0 -0.011 |-0.026  n2352                                                   
+    rush_pct_over_expected [std]                                           n0 +0.061*|+0.073* n2277                                                   
+    rush_pct_over_expected [prior season]                                  n0 -0.039 |-0.073* n2352                                                   
+    avg_time_to_throw [std]                          -0.061*|-0.074* n1253                                                                            
+    avg_time_to_throw [prior season]                 +0.028 |-0.090* n1151                                                                            
+    aggressiveness [std]                             +0.005 |-0.047  n1253                                                                            
+    aggressiveness [prior season]                    +0.019 |+0.097* n1151                                                                            
+    avg_air_yards_differential [std]                 -0.029 |-0.019  n1253                                                                            
+    avg_air_yards_differential [prior season]        -0.061*|-0.221* n1151                                                                            
+    avg_air_yards_to_sticks [std]                    +0.002 |-0.034  n1253                                                                            
+    avg_air_yards_to_sticks [prior season]           +0.035 |+0.067* n1151                                                                            
+    completion_percentage_above_expectation [std]    +0.007 |-0.024  n1253                                                                            
+    completion_percentage_above_expectation [prior season] -0.050 |-0.082* n1151                                                                            
+    max_completed_air_distance [std]                 -0.036 |-0.099* n1253                                                                            
+    max_completed_air_distance [prior season]        -0.058*|-0.115* n1151                                                                            
+    team receiver separation [std]                   -0.064*|-0.148* n1124                                                                            
+    team receiver cushion [std]                      +0.012 |-0.033  n1124                                                                            
+
+--- 2  QUINTILES (actual / base low -> high) for the flagged leads ---
+    avg_separation [std]                             TE rho +0.050 ros +nan | 0.845 1.158 1.029 0.997 1.061 | metric 2.91 -> 4.28
+    avg_separation [prior season]                    WR rho -0.022 ros -0.068 | 1.027 1.012 0.976 1.049 1.015 | metric 2.38 -> 3.59
+    avg_cushion [prior season]                       TE rho -0.097 ros +nan | 0.958 1.061 0.968 0.895 0.821 | metric 5.27 -> 6.68
+    avg_intended_air_yards [prior season]            QB rho +0.050 ros +0.076 | 1.011 0.956 0.992 1.036 1.037 | metric 6.98 -> 9.34
+    percent_share_of_intended_air_yards [std]        WR rho +0.043 ros +0.130 | 0.978 0.988 1.029 1.037 1.018 | metric 20.88 -> 48.03
+    percent_share_of_intended_air_yards [prior season] WR rho +0.048 ros +0.096 | 0.954 1.061 1.024 1.027 1.004 | metric 14.54 -> 38.92
+    percent_share_of_intended_air_yards [prior season] TE rho +0.043 ros +nan | 0.880 0.932 0.921 0.987 0.967 | metric 9.94 -> 24.79
+    avg_yac_above_expectation [std]                  WR rho +0.041 ros +0.125 | 0.964 1.005 1.016 1.043 1.025 | metric -0.72 -> 2.65
+    avg_yac_above_expectation [std]                  TE rho +0.107 ros +nan | 0.928 0.952 1.004 1.060 1.171 | metric -0.37 -> 1.91
+    avg_yac_above_expectation [prior season]         WR rho +0.027 ros +0.074 | 0.972 0.977 1.086 1.035 1.000 | metric -0.19 -> 2.20
+    avg_yac_above_expectation [prior season]         TE rho +0.053 ros +nan | 1.078 0.734 0.951 1.057 0.908 | metric -0.15 -> 1.96
+    avg_expected_yac [std]                           TE rho -0.101 ros +nan | 1.033 1.213 1.010 0.877 0.964 | metric 3.11 -> 6.18
+    avg_expected_yac [prior season]                  WR rho -0.018 ros -0.061 | 1.011 1.034 1.017 1.007 1.007 | metric 2.80 -> 5.41
+    avg_expected_yac [prior season]                  TE rho +0.089 ros +nan | 0.996 0.834 0.823 0.923 1.113 | metric 3.38 -> 5.47
+    catch_percentage [std]                           WR rho +0.058 ros +0.047 | 0.979 1.016 0.980 1.026 1.054 | metric 51.92 -> 76.89
+    percent_attempts_gte_eight_defenders [prior season] RB rho -0.015 ros -0.124 | 1.026 1.018 0.986 1.013 0.982 | metric 10.71 -> 31.57
+    rush_yards_over_expected_per_att [std]           RB rho +0.072 ros +0.077 | 0.953 0.994 1.024 1.007 1.053 | metric -0.71 -> 1.43
+    rush_pct_over_expected [std]                     RB rho +0.061 ros +0.073 | 0.965 0.985 1.057 1.011 1.019 | metric 0.30 -> 0.48
+    rush_pct_over_expected [prior season]            RB rho -0.039 ros -0.073 | 1.038 1.009 0.997 0.967 1.012 | metric 0.33 -> 0.45
+    avg_time_to_throw [std]                          QB rho -0.061 ros -0.074 | 1.029 1.057 0.971 0.990 0.972 | metric 2.59 -> 3.04
+    avg_time_to_throw [prior season]                 QB rho +0.028 ros -0.090 | 0.996 1.026 0.959 1.033 1.020 | metric 2.62 -> 3.05
+    aggressiveness [prior season]                    QB rho +0.019 ros +0.097 | 0.999 0.994 0.998 1.012 1.032 | metric 11.01 -> 18.33
+    avg_air_yards_differential [prior season]        QB rho -0.061 ros -0.221 | 1.038 1.025 1.000 1.002 0.969 | metric -2.90 -> -1.53
+    avg_air_yards_to_sticks [prior season]           QB rho +0.035 ros +0.067 | 1.001 0.983 0.973 1.026 1.050 | metric -1.83 -> 0.36
+    completion_percentage_above_expectation [prior season] QB rho -0.050 ros -0.082 | 1.081 0.977 0.969 1.034 0.977 | metric -3.09 -> 4.14
+    max_completed_air_distance [std]                 QB rho -0.036 ros -0.099 | 1.027 1.009 0.976 1.045 0.962 | metric 35.74 -> 46.02
+    max_completed_air_distance [prior season]        QB rho -0.058 ros -0.115 | 1.024 1.026 1.013 1.004 0.970 | metric 47.93 -> 61.69
+    team receiver separation [std]                   QB rho -0.064 ros -0.148 | 1.042 0.995 1.038 0.984 0.955 | metric 2.65 -> 3.47
+
+--- 3  MULTIPLIERS 1 + e x z (sign from the correlation) on the flagged leads; LOYO + forward; bar 5/7 + 3/4, whole-board guard; rank line ---
+
+  avg_separation [std] | TE (rho +0.050, sign +, rows 163)
+    fixed: e 0.01: -0.00% (2/7)  e 0.02: +0.04% (2/7)  e 0.03: +0.11% (2/7)  e 0.04: +0.21% (2/7)  e 0.06: +0.54% (2/7)
+    rank vs off (rho 0.4012, pairs 64.89%): e 0.01: rho +0.0073 pairs +0.11  e 0.02: rho +0.0104 pairs +0.21  e 0.03: rho -0.0023 pairs -0.32  e 0.04: rho +0.0124 pairs +0.32  e 0.06: rho +0.0273 pairs +0.53
+    LOYO +1.14% 0/7 | board +0.010% | picks ['e 0.01', 'e 0.01', 'e 0.01', 'e 0.01', 'e 0.06', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  avg_separation [prior season] | WR (rho -0.022, sign -, rows 3,557)
+    fixed: e 0.01: +0.07% (2/7)  e 0.02: +0.19% (2/7)  e 0.03: +0.34% (1/7)  e 0.04: +0.53% (1/7)  e 0.06: +1.02% (0/7)
+    rank vs off (rho 0.3240, pairs 61.86%): e 0.01: rho +0.0006 pairs +0.04  e 0.02: rho +0.0034 pairs +0.18  e 0.03: rho +0.0011 pairs +0.12  e 0.04: rho -0.0018 pairs +0.05  e 0.06: rho -0.0052 pairs -0.06
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  avg_cushion [prior season] | TE (rho -0.097, sign -, rows 201)
+    fixed: e 0.01: -0.52% (4/7)  e 0.02: -0.97% (4/7)  e 0.03: -1.35% (4/7)  e 0.04: -1.66% (4/7)  e 0.06: -2.08% (4/7)
+    rank vs off (rho 0.3574, pairs 62.99%): e 0.01: rho +0.0027 pairs +0.17  e 0.02: rho +0.0134 pairs +0.69  e 0.03: rho -0.0076 pairs -0.26  e 0.04: rho -0.0137 pairs -0.60  e 0.06: rho -0.0020 pairs +0.00
+    LOYO -2.08% 4/7 | board -0.020% | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    FWD  -1.75% 3/4 | board -0.022% | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    -> FAIL
+
+  avg_intended_air_yards [prior season] | QB (rho +0.050, sign +, rows 1,151)
+    fixed: e 0.01: -0.20% (5/7)  e 0.02: -0.28% (5/7)  e 0.03: -0.24% (5/7)  e 0.04: -0.08% (5/7)  e 0.06: +0.61% (3/7)
+    rank vs off (rho 0.3218, pairs 61.19%): e 0.01: rho -0.0021 pairs +0.09  e 0.02: rho -0.0032 pairs +0.10  e 0.03: rho +0.0027 pairs +0.32  e 0.04: rho +0.0011 pairs +0.27  e 0.06: rho -0.0001 pairs +0.19
+    LOYO -0.18% 5/7 | board -0.020% | picks ['e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.03', 'e 0.03']
+    FWD  -0.08% 2/4 | board -0.011% | picks ['e 0.03', 'e 0.03', 'e 0.04', 'e 0.03']
+    -> FAIL
+
+  percent_share_of_intended_air_yards [std] | WR (rho +0.043, sign +, rows 3,331)
+    fixed: e 0.01: +0.03% (2/7)  e 0.02: +0.09% (2/7)  e 0.03: +0.20% (2/7)  e 0.04: +0.36% (2/7)  e 0.06: +0.79% (2/7)
+    rank vs off (rho 0.3370, pairs 62.02%): e 0.01: rho +0.0007 pairs +0.06  e 0.02: rho +0.0003 pairs +0.09  e 0.03: rho +0.0000 pairs +0.06  e 0.04: rho -0.0006 pairs +0.04  e 0.06: rho -0.0040 pairs -0.08
+    LOYO +0.05% 0/7 | board +0.016% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'e 0.01']
+    FWD  +0.15% 1/4 | board +0.051% | picks ['e 0.02', 'e 0.03', 'e 0.02', 'e 0.01']
+    -> FAIL
+
+  percent_share_of_intended_air_yards [prior season] | WR (rho +0.048, sign +, rows 3,557)
+    fixed: e 0.01: +0.03% (3/7)  e 0.02: +0.12% (2/7)  e 0.03: +0.26% (2/7)  e 0.04: +0.45% (2/7)  e 0.06: +0.98% (2/7)
+    rank vs off (rho 0.3240, pairs 61.86%): e 0.01: rho +0.0002 pairs -0.01  e 0.02: rho +0.0007 pairs +0.05  e 0.03: rho -0.0010 pairs +0.04  e 0.04: rho -0.0019 pairs +0.03  e 0.06: rho -0.0044 pairs -0.04
+    LOYO +0.05% 0/7 | board +0.017% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'e 0.01']
+    FWD  +0.07% 0/4 | board +0.028% | picks ['off', 'off', 'e 0.01', 'e 0.01']
+    -> FAIL
+
+  percent_share_of_intended_air_yards [prior season] | TE (rho +0.043, sign +, rows 201)
+    fixed: e 0.01: +0.15% (2/7)  e 0.02: +0.38% (2/7)  e 0.03: +0.69% (2/7)  e 0.04: +1.09% (2/7)  e 0.06: +2.14% (2/7)
+    rank vs off (rho 0.3574, pairs 62.99%): e 0.01: rho +0.0030 pairs +0.00  e 0.02: rho +0.0022 pairs -0.17  e 0.03: rho +0.0003 pairs -0.43  e 0.04: rho -0.0064 pairs -0.43  e 0.06: rho -0.0101 pairs -0.77
+    LOYO +0.17% 0/7 | board +0.002% | picks ['off', 'off', 'off', 'e 0.01', 'off', 'off', 'off']
+    FWD  +1.40% 0/4 | board +0.017% | picks ['e 0.06', 'off', 'off', 'off']
+    -> FAIL
+
+  avg_yac_above_expectation [std] | WR (rho +0.041, sign +, rows 3,325)
+    fixed: e 0.01: +0.02% (3/7)  e 0.02: +0.09% (3/7)  e 0.03: +0.20% (3/7)  e 0.04: +0.34% (3/7)  e 0.06: +0.76% (2/7)
+    rank vs off (rho 0.3381, pairs 62.06%): e 0.01: rho +0.0001 pairs +0.00  e 0.02: rho +0.0029 pairs +0.08  e 0.03: rho +0.0032 pairs +0.10  e 0.04: rho +0.0051 pairs +0.18  e 0.06: rho -0.0016 pairs -0.02
+    LOYO +0.06% 0/7 | board +0.020% | picks ['off', 'e 0.01', 'off', 'off', 'e 0.01', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  avg_yac_above_expectation [std] | TE (rho +0.107, sign +, rows 163)
+    fixed: e 0.01: -0.42% (3/7)  e 0.02: -0.79% (3/7)  e 0.03: -1.12% (2/7)  e 0.04: -1.41% (2/7)  e 0.06: -1.87% (2/7)
+    rank vs off (rho 0.4012, pairs 64.89%): e 0.01: rho -0.0065 pairs -0.32  e 0.02: rho -0.0150 pairs -0.74  e 0.03: rho -0.0114 pairs -0.43  e 0.04: rho -0.0147 pairs -0.53  e 0.06: rho -0.0011 pairs -0.43
+    LOYO -1.02% 2/7 | board -0.009% | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.03', 'e 0.06', 'e 0.06']
+    FWD  -0.06% 1/4 | board -0.001% | picks ['off', 'off', 'e 0.06', 'e 0.06']
+    -> FAIL
+
+  avg_yac_above_expectation [prior season] | WR (rho +0.027, sign +, rows 3,557)
+    fixed: e 0.01: +0.05% (3/7)  e 0.02: +0.14% (3/7)  e 0.03: +0.28% (3/7)  e 0.04: +0.47% (2/7)  e 0.06: +0.98% (2/7)
+    rank vs off (rho 0.3240, pairs 61.86%): e 0.01: rho +0.0026 pairs +0.09  e 0.02: rho +0.0029 pairs +0.08  e 0.03: rho +0.0033 pairs +0.12  e 0.04: rho +0.0026 pairs +0.11  e 0.06: rho -0.0002 pairs -0.06
+    LOYO +0.06% 0/7 | board +0.023% | picks ['off', 'off', 'off', 'off', 'e 0.01', 'off', 'off']
+    FWD  +0.19% 1/4 | board +0.073% | picks ['e 0.03', 'e 0.02', 'off', 'off']
+    -> FAIL
+
+  avg_yac_above_expectation [prior season] | TE (rho +0.053, sign +, rows 201)
+    fixed: e 0.01: +0.14% (3/7)  e 0.02: +0.34% (3/7)  e 0.03: +0.60% (3/7)  e 0.04: +0.93% (3/7)  e 0.06: +1.76% (3/7)
+    rank vs off (rho 0.3574, pairs 62.99%): e 0.01: rho +0.0043 pairs +0.09  e 0.02: rho -0.0055 pairs -0.17  e 0.03: rho -0.0078 pairs -0.26  e 0.04: rho -0.0091 pairs -0.43  e 0.06: rho -0.0163 pairs -0.69
+    LOYO +0.85% 0/7 | board +0.008% | picks ['off', 'off', 'off', 'off', 'e 0.03', 'off', 'off']
+    FWD  +0.70% 0/4 | board +0.009% | picks ['off', 'e 0.02', 'off', 'off']
+    -> FAIL
+
+  avg_expected_yac [std] | TE (rho -0.101, sign -, rows 163)
+    fixed: e 0.01: -0.39% (3/7)  e 0.02: -0.74% (3/7)  e 0.03: -1.05% (3/7)  e 0.04: -1.33% (3/7)  e 0.06: -1.77% (3/7)
+    rank vs off (rho 0.4012, pairs 64.89%): e 0.01: rho -0.0006 pairs +0.32  e 0.02: rho -0.0041 pairs +0.21  e 0.03: rho -0.0176 pairs -0.53  e 0.04: rho -0.0346 pairs -1.38  e 0.06: rho -0.0475 pairs -2.23
+    LOYO -1.77% 3/7 | board -0.016% | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    FWD  -1.58% 2/4 | board -0.022% | picks ['off', 'off', 'e 0.06', 'e 0.06']
+    -> FAIL
+
+  avg_expected_yac [prior season] | WR (rho -0.018, sign -, rows 3,557)
+    fixed: e 0.01: +0.02% (4/7)  e 0.02: +0.07% (3/7)  e 0.03: +0.17% (2/7)  e 0.04: +0.29% (1/7)  e 0.06: +0.66% (0/7)
+    rank vs off (rho 0.3240, pairs 61.86%): e 0.01: rho +0.0001 pairs +0.03  e 0.02: rho +0.0003 pairs +0.11  e 0.03: rho +0.0025 pairs +0.20  e 0.04: rho +0.0002 pairs +0.17  e 0.06: rho -0.0090 pairs -0.22
+    LOYO +0.03% 0/7 | board +0.012% | picks ['off', 'off', 'e 0.01', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  avg_expected_yac [prior season] | TE (rho +0.089, sign +, rows 201)
+    fixed: e 0.01: -0.18% (3/7)  e 0.02: -0.31% (3/7)  e 0.03: -0.39% (3/7)  e 0.04: -0.41% (3/7)  e 0.06: -0.29% (3/7)
+    rank vs off (rho 0.3574, pairs 62.99%): e 0.01: rho +0.0008 pairs +0.09  e 0.02: rho +0.0013 pairs +0.26  e 0.03: rho +0.0074 pairs +0.17  e 0.04: rho +0.0052 pairs +0.09  e 0.06: rho +0.0134 pairs +0.52
+    LOYO +0.66% 3/7 | board +0.006% | picks ['e 0.04', 'e 0.04', 'e 0.02', 'e 0.02', 'e 0.06', 'e 0.06', 'e 0.02']
+    FWD  +0.62% 2/4 | board +0.008% | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.02']
+    -> FAIL
+
+  catch_percentage [std] | WR (rho +0.058, sign +, rows 3,331)
+    fixed: e 0.01: -0.09% (5/7)  e 0.02: -0.15% (5/7)  e 0.03: -0.15% (5/7)  e 0.04: -0.12% (5/7)  e 0.06: +0.08% (4/7)
+    rank vs off (rho 0.3370, pairs 62.02%): e 0.01: rho -0.0005 pairs +0.00  e 0.02: rho +0.0004 pairs +0.02  e 0.03: rho +0.0011 pairs +0.06  e 0.04: rho +0.0014 pairs +0.01  e 0.06: rho +0.0011 pairs -0.03
+    LOYO -0.04% 5/7 | board -0.015% | picks ['e 0.03', 'e 0.03', 'e 0.03', 'e 0.04', 'e 0.02', 'e 0.02', 'e 0.02']
+    FWD  -0.12% 2/4 | board -0.040% | picks ['e 0.01', 'off', 'e 0.01', 'e 0.02']
+    -> FAIL
+
+  percent_attempts_gte_eight_defenders [prior season] | RB (rho -0.015, sign -, rows 2,352)
+    fixed: e 0.01: -0.04% (5/7)  e 0.02: -0.02% (4/7)  e 0.03: +0.06% (4/7)  e 0.04: +0.21% (4/7)  e 0.06: +0.69% (3/7)
+    rank vs off (rho 0.4498, pairs 66.56%): e 0.01: rho -0.0009 pairs +0.02  e 0.02: rho +0.0016 pairs +0.08  e 0.03: rho -0.0004 pairs -0.03  e 0.04: rho +0.0002 pairs -0.03  e 0.06: rho -0.0059 pairs -0.21
+    LOYO +0.11% 4/7 | board +0.033% | picks ['e 0.01', 'e 0.02', 'e 0.01', 'e 0.01', 'e 0.02', 'off', 'e 0.01']
+    FWD  +0.05% 1/4 | board +0.015% | picks ['off', 'e 0.01', 'off', 'e 0.01']
+    -> FAIL
+
+  rush_yards_over_expected_per_att [std] | RB (rho +0.072, sign +, rows 2,277)
+    fixed: e 0.01: -0.03% (3/7)  e 0.02: +0.00% (3/7)  e 0.03: +0.10% (3/7)  e 0.04: +0.26% (3/7)  e 0.06: +0.77% (2/7)
+    rank vs off (rho 0.4166, pairs 65.09%): e 0.01: rho +0.0018 pairs +0.07  e 0.02: rho +0.0034 pairs +0.15  e 0.03: rho +0.0024 pairs +0.18  e 0.04: rho +0.0003 pairs +0.10  e 0.06: rho +0.0019 pairs +0.09
+    LOYO +0.14% 1/7 | board +0.040% | picks ['e 0.01', 'e 0.01', 'off', 'e 0.02', 'e 0.01', 'off', 'e 0.02']
+    FWD  +0.14% 1/4 | board +0.041% | picks ['e 0.02', 'e 0.01', 'e 0.01', 'e 0.02']
+    -> FAIL
+
+  rush_pct_over_expected [std] | RB (rho +0.061, sign +, rows 2,277)
+    fixed: e 0.01: -0.02% (2/7)  e 0.02: +0.02% (2/7)  e 0.03: +0.11% (2/7)  e 0.04: +0.24% (2/7)  e 0.06: +0.67% (2/7)
+    rank vs off (rho 0.4166, pairs 65.09%): e 0.01: rho +0.0034 pairs +0.07  e 0.02: rho +0.0029 pairs +0.06  e 0.03: rho +0.0037 pairs +0.15  e 0.04: rho +0.0033 pairs +0.14  e 0.06: rho +0.0019 pairs +0.14
+    LOYO +0.07% 0/7 | board +0.019% | picks ['e 0.01', 'e 0.01', 'e 0.01', 'e 0.01', 'off', 'off', 'e 0.01']
+    FWD  +0.01% 0/4 | board +0.002% | picks ['off', 'off', 'off', 'e 0.01']
+    -> FAIL
+
+  rush_pct_over_expected [prior season] | RB (rho -0.039, sign -, rows 2,352)
+    fixed: e 0.01: -0.05% (4/7)  e 0.02: -0.05% (4/7)  e 0.03: +0.02% (4/7)  e 0.04: +0.15% (3/7)  e 0.06: +0.59% (2/7)
+    rank vs off (rho 0.4498, pairs 66.56%): e 0.01: rho +0.0002 pairs +0.08  e 0.02: rho -0.0007 pairs +0.02  e 0.03: rho -0.0019 pairs -0.00  e 0.04: rho -0.0018 pairs +0.05  e 0.06: rho -0.0054 pairs -0.08
+    LOYO +0.08% 3/7 | board +0.024% | picks ['e 0.02', 'e 0.01', 'e 0.02', 'e 0.01', 'e 0.02', 'off', 'e 0.01']
+    FWD  -0.02% 1/4 | board -0.006% | picks ['off', 'off', 'off', 'e 0.01']
+    -> FAIL
+
+  avg_time_to_throw [std] | QB (rho -0.061, sign -, rows 1,253)
+    fixed: e 0.01: -0.16% (5/7)  e 0.02: -0.21% (5/7)  e 0.03: -0.14% (4/7)  e 0.04: +0.05% (3/7)  e 0.06: +0.77% (2/7)
+    rank vs off (rho 0.3382, pairs 61.61%): e 0.01: rho +0.0056 pairs +0.25  e 0.02: rho +0.0131 pairs +0.70  e 0.03: rho +0.0143 pairs +0.83  e 0.04: rho +0.0110 pairs +0.71  e 0.06: rho -0.0029 pairs +0.29
+    LOYO -0.11% 5/7 | board -0.013% | picks ['e 0.02', 'e 0.01', 'e 0.01', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02']
+    FWD  -0.04% 2/4 | board -0.005% | picks ['e 0.03', 'e 0.03', 'e 0.02', 'e 0.02']
+    -> FAIL
+
+  avg_time_to_throw [prior season] | QB (rho +0.028, sign +, rows 1,151)
+    fixed: e 0.01: +0.00% (4/7)  e 0.02: +0.13% (4/7)  e 0.03: +0.38% (4/7)  e 0.04: +0.75% (4/7)  e 0.06: +1.86% (4/7)
+    rank vs off (rho 0.3218, pairs 61.19%): e 0.01: rho -0.0004 pairs +0.04  e 0.02: rho -0.0016 pairs +0.15  e 0.03: rho +0.0040 pairs +0.39  e 0.04: rho +0.0061 pairs +0.50  e 0.06: rho +0.0065 pairs +0.48
+    LOYO +0.36% 0/7 | board +0.040% | picks ['off', 'off', 'off', 'off', 'e 0.01', 'e 0.01', 'e 0.02']
+    FWD  +0.49% 1/4 | board +0.070% | picks ['e 0.04', 'e 0.04', 'e 0.03', 'e 0.02']
+    -> FAIL
+
+  aggressiveness [prior season] | QB (rho +0.019, sign +, rows 1,151)
+    fixed: e 0.01: -0.09% (4/7)  e 0.02: -0.04% (4/7)  e 0.03: +0.15% (4/7)  e 0.04: +0.48% (3/7)  e 0.06: +1.54% (2/7)
+    rank vs off (rho 0.3218, pairs 61.19%): e 0.01: rho +0.0016 pairs +0.11  e 0.02: rho +0.0103 pairs +0.48  e 0.03: rho +0.0160 pairs +0.67  e 0.04: rho +0.0063 pairs +0.32  e 0.06: rho +0.0017 pairs +0.04
+    LOYO +0.05% 4/7 | board +0.005% | picks ['e 0.01', 'e 0.01', 'e 0.01', 'e 0.02', 'e 0.01', 'e 0.02', 'e 0.01']
+    FWD  +0.12% 2/4 | board +0.016% | picks ['e 0.02', 'e 0.01', 'e 0.02', 'e 0.01']
+    -> FAIL
+
+  avg_air_yards_differential [prior season] | QB (rho -0.061, sign -, rows 1,151)
+    fixed: e 0.01: -0.19% (6/7)  e 0.02: -0.27% (6/7)  e 0.03: -0.24% (5/7)  e 0.04: -0.11% (5/7)  e 0.06: +0.50% (2/7)
+    rank vs off (rho 0.3218, pairs 61.19%): e 0.01: rho +0.0032 pairs +0.17  e 0.02: rho +0.0050 pairs +0.43  e 0.03: rho +0.0032 pairs +0.27  e 0.04: rho -0.0009 pairs +0.31  e 0.06: rho -0.0085 pairs +0.11
+    LOYO -0.22% 6/7 | board -0.025% | picks ['e 0.03', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02']
+    FWD  -0.27% 3/4 | board -0.039% | picks ['off', 'e 0.01', 'e 0.02', 'e 0.02']
+    -> FAIL
+
+  avg_air_yards_to_sticks [prior season] | QB (rho +0.035, sign +, rows 1,151)
+    fixed: e 0.01: -0.11% (5/7)  e 0.02: -0.11% (4/7)  e 0.03: +0.02% (4/7)  e 0.04: +0.26% (2/7)  e 0.06: +1.11% (0/7)
+    rank vs off (rho 0.3218, pairs 61.19%): e 0.01: rho -0.0010 pairs +0.08  e 0.02: rho -0.0045 pairs +0.14  e 0.03: rho -0.0021 pairs +0.31  e 0.04: rho -0.0064 pairs -0.04  e 0.06: rho -0.0134 pairs -0.06
+    LOYO -0.05% 4/7 | board -0.006% | picks ['e 0.01', 'e 0.01', 'e 0.02', 'e 0.02', 'e 0.01', 'e 0.02', 'e 0.01']
+    FWD  -0.14% 3/4 | board -0.020% | picks ['e 0.01', 'e 0.01', 'e 0.01', 'e 0.01']
+    -> FAIL
+
+  completion_percentage_above_expectation [prior season] | QB (rho -0.050, sign -, rows 1,151)
+    fixed: e 0.01: -0.13% (5/7)  e 0.02: -0.14% (5/7)  e 0.03: -0.04% (5/7)  e 0.04: +0.19% (4/7)  e 0.06: +1.01% (2/7)
+    rank vs off (rho 0.3218, pairs 61.19%): e 0.01: rho +0.0047 pairs +0.28  e 0.02: rho +0.0074 pairs +0.36  e 0.03: rho +0.0111 pairs +0.57  e 0.04: rho +0.0025 pairs +0.36  e 0.06: rho -0.0124 pairs -0.18
+    LOYO -0.04% 5/7 | board -0.004% | picks ['e 0.01', 'e 0.02', 'e 0.01', 'e 0.01', 'e 0.01', 'e 0.02', 'e 0.01']
+    FWD  -0.04% 3/4 | board -0.006% | picks ['e 0.03', 'e 0.03', 'e 0.02', 'e 0.01']
+    -> FAIL
+
+  max_completed_air_distance [std] | QB (rho -0.036, sign -, rows 1,253)
+    fixed: e 0.01: -0.17% (5/7)  e 0.02: -0.22% (5/7)  e 0.03: -0.15% (4/7)  e 0.04: +0.04% (3/7)  e 0.06: +0.80% (1/7)
+    rank vs off (rho 0.3382, pairs 61.61%): e 0.01: rho +0.0033 pairs +0.01  e 0.02: rho +0.0042 pairs +0.17  e 0.03: rho -0.0014 pairs +0.08  e 0.04: rho +0.0020 pairs +0.15  e 0.06: rho -0.0023 pairs -0.09
+    LOYO -0.17% 5/7 | board -0.020% | picks ['e 0.02', 'e 0.02', 'e 0.01', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02']
+    FWD  -0.08% 2/4 | board -0.010% | picks ['e 0.03', 'e 0.02', 'e 0.02', 'e 0.02']
+    -> FAIL
+
+  max_completed_air_distance [prior season] | QB (rho -0.058, sign -, rows 1,151)
+    fixed: e 0.01: -0.12% (3/7)  e 0.02: -0.11% (3/7)  e 0.03: +0.01% (3/7)  e 0.04: +0.25% (3/7)  e 0.06: +1.10% (2/7)
+    rank vs off (rho 0.3218, pairs 61.19%): e 0.01: rho +0.0113 pairs +0.31  e 0.02: rho +0.0204 pairs +0.69  e 0.03: rho +0.0203 pairs +0.67  e 0.04: rho +0.0157 pairs +0.55  e 0.06: rho +0.0026 pairs +0.04
+    LOYO +0.51% 2/7 | board +0.057% | picks ['e 0.01', 'e 0.02', 'e 0.02', 'off', 'e 0.03', 'e 0.02', 'e 0.01']
+    FWD  +0.81% 2/4 | board +0.115% | picks ['e 0.03', 'e 0.06', 'e 0.02', 'e 0.01']
+    -> FAIL
+
+  team receiver separation [std] | QB (rho -0.064, sign -, rows 1,124)
+    fixed: e 0.01: -0.28% (5/7)  e 0.02: -0.43% (5/7)  e 0.03: -0.43% (4/7)  e 0.04: -0.29% (4/7)  e 0.06: +0.41% (4/7)
+    rank vs off (rho 0.3253, pairs 61.13%): e 0.01: rho +0.0023 pairs +0.18  e 0.02: rho +0.0073 pairs +0.50  e 0.03: rho +0.0085 pairs +0.82  e 0.04: rho +0.0046 pairs +0.62  e 0.06: rho -0.0033 pairs +0.34
+    LOYO +0.10% 4/7 | board +0.011% | picks ['e 0.02', 'e 0.03', 'e 0.02', 'e 0.03', 'e 0.02', 'e 0.04', 'e 0.02']
+    FWD  +0.81% 2/4 | board +0.095% | picks ['e 0.06', 'e 0.04', 'e 0.04', 'e 0.02']
+    -> FAIL
+
+Limitations: NGS weekly rows exist only for players over the weekly minimums (the std read needs 2+ qualifying weeks); prior-season = the week-0 season row; the blend already carries Vegas / FPA / usage; book anchor / docks not replayed.

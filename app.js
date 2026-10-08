@@ -31494,7 +31494,7 @@ window.fmtHeight = fmtHeight;
           const posSeen = {};
           board.slice(0, 200).forEach(idx => {
             const d = D[idx]; if (!d) return;
-            const ps = d.p || d.pos || '?'; posSeen[ps] = (posSeen[ps] || 0) + 1;
+            const ps = d.s || d.pos || '?'; posSeen[ps] = (posSeen[ps] || 0) + 1;   // d.s = position (d.p is points)
             if (inTrade.has(idx)) return;
             const v = getPlayerValue(d), err = Math.abs(v - diff) / diff;
             if (err <= 0.2) ex.push({ d, v, pr: ps + posSeen[ps], ps, err });

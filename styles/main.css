@@ -3049,3 +3049,24 @@ tbody td{font-size:.8125rem}
 #modal.modal-docked .card-dock-bar .card-dock-reset{margin-left:auto;background:none;border:1px solid var(--border-strong);border-radius:4px;color:var(--text2);font:inherit;letter-spacing:.06em;padding:1px 7px;cursor:pointer;line-height:1.4}
 #modal.modal-docked .card-dock-bar .card-dock-reset:hover{color:var(--text);background:var(--elev-1)}
 #modal.modal-docked .card-view-toggle{top:24px}
+/* ===== Custom confirm / alert dialog (2026-10-08) =====
+   Replaces window.confirm / alert everywhere (app.js window.mffConfirm / mffAlert).
+   Centered card on desktop, bottom sheet with full-width 48px buttons on phones. */
+.mff-dialog{position:fixed;inset:0;z-index:5000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+.mff-dialog.open{display:flex;animation:fadeIn .12s ease}
+.mff-dialog-box{width:min(420px,100%);background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.55);padding:18px 20px 16px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.mff-dialog-title{font-family:'DM Sans',sans-serif;font-weight:700;font-size:1rem;line-height:1.3;margin-bottom:6px}
+.mff-dialog-msg{font-size:.85rem;line-height:1.5;color:var(--text2);white-space:pre-line;max-height:50vh;overflow:auto}
+.mff-dialog-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.mff-dialog-btn{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.8rem;letter-spacing:.02em;padding:9px 16px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid var(--border-strong);background:transparent;color:var(--text2)}
+.mff-dialog-btn:hover{color:var(--text);background:var(--elev-1)}
+.mff-dialog-ok{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mff-dialog-ok:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.mff-dialog-box.danger .mff-dialog-ok{background:var(--red);border-color:var(--red);color:#fff}
+.mff-dialog-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:600px){
+  .mff-dialog{align-items:flex-end;padding:0}
+  .mff-dialog-box{width:100%;border-radius:14px 14px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom,0))}
+  .mff-dialog-btns{flex-direction:column-reverse;gap:8px}
+  .mff-dialog-btn{width:100%;min-height:48px;font-size:.9rem}
+}

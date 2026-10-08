@@ -2077,7 +2077,7 @@ window._copyRedraftToBestBall = function() {
     return;
   }
   const verLabel = currentVersion === 'jacks' ? "Jack's" : 'My';
-  if (!confirm(`Copy ${verLabel} REDRAFT rankings → BEST BALL?\n\nThis will overwrite your current Best Ball board and tiers with an exact copy of Redraft.`)) return;
+  if (!_mffConfirm(`Copy ${verLabel} REDRAFT rankings → BEST BALL?\n\nThis will overwrite your current Best Ball board and tiers with an exact copy of Redraft.`)) return;
 
   const srcBoard = versionBoards[currentVersion].redraft;
   const srcTiers = versionTiers[currentVersion].redraft;
@@ -2167,7 +2167,7 @@ window._copyBestBallToRedraft = function() {
     return;
   }
   const verLabel = currentVersion === 'jacks' ? "Jack's" : 'My';
-  if (!confirm(`Copy ${verLabel} BEST BALL rankings → REDRAFT?\n\nThis will overwrite your current Redraft board and tiers with an exact copy of Best Ball. Kickers and D/ST keep their current Redraft order at the end.`)) return;
+  if (!_mffConfirm(`Copy ${verLabel} BEST BALL rankings → REDRAFT?\n\nThis will overwrite your current Redraft board and tiers with an exact copy of Best Ball. Kickers and D/ST keep their current Redraft order at the end.`)) return;
 
   const srcBoard = versionBoards[currentVersion].bestball;
   if (!srcBoard || !srcBoard.length) { toast('No Best Ball board to copy from'); return; }
@@ -4626,7 +4626,7 @@ window._devyResetToJm = function () {
   if (!canEdit() || !window._devyList || !window._devyList.length) return;
   const dv = versionTiers[_devySrcVer()].devy;
   const hasTiers = Object.keys(dv).some(k => dv[k].length);
-  if (!confirm('Re-sort the devy board by JM score?\n\nThis replaces the current order for ' + (currentVersion === 'mine' ? 'My Rankings' : "Jack's") + '.' + (hasTiers ? ' Tier lines stay at the same rank numbers.' : ''))) return;
+  if (!_mffConfirm('Re-sort the devy board by JM score?\n\nThis replaces the current order for ' + (currentVersion === 'mine' ? 'My Rankings' : "Jack's") + '.' + (hasTiers ? ' Tier lines stay at the same rank numbers.' : ''))) return;
   _devyMaterializeMine();
   const names = window._devyList.slice().sort((a, b) => (b._pmJm != null ? b._pmJm : -1) - (a._pmJm != null ? a._pmJm : -1) || (b._devyKtc - a._devyKtc)).map(p => p.n);
   _devyBoardSave(currentVersion, 'dynasty', names);
@@ -11310,7 +11310,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const cur = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
       const add = window._weeklyAssumeOutSeed(wk).filter(n => cur.indexOf(n) < 0);
       if (!add.length) { if (typeof toast === 'function') toast('No new Questionable / Doubtful players to park for Week ' + wk); return; }
-      if (!confirm('Park ' + add.length + ' Questionable / Doubtful player' + (add.length === 1 ? '' : 's') + ' in the Week ' + wk + ' BYE / OUT row?\n\n'
+      if (!_mffConfirm('Park ' + add.length + ' Questionable / Doubtful player' + (add.length === 1 ? '' : 's') + ' in the Week ' + wk + ' BYE / OUT row?\n\n'
         + add.slice(0, 30).join(', ') + (add.length > 30 ? ' …' : '')
         + '\n\nEach one leaves the weekly board (slot kept) with PROJ 0 until you move him back — UNDO on his row, the Q pill, or the player card. Syncs to every user.')) return;
       const next = Object.assign({}, window._weeklyAssumeOutMap || {});
@@ -12591,7 +12591,7 @@ document.getElementById('btnClear').addEventListener('click', () => {
   }
   const label = currentMode === 'dynastysf' ? 'Dynasty SF' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft';
   const verLabel = currentVersion === 'jacks' ? "Jack's" : "My";
-  if (!confirm(`Reset ${verLabel} ${label} rankings back to ADP order?`)) return;
+  if (!_mffConfirm(`Reset ${verLabel} ${label} rankings back to ADP order?`)) return;
   versionBoards[currentVersion][currentMode] = currentMode==='dynastysf' ? sfDefaultBoard.slice() : currentMode==='dynasty' ? dynastyDefaultBoard.slice() : currentMode==='superflex' ? superflexDefaultBoard.slice() : currentMode==='bestball' ? bestBallDefaultBoard.slice() : D.map((d,i) => i);
   versionTiers[currentVersion][currentMode] = _mkPosTiers();
   versionTierCounters[currentVersion][currentMode] = _mkPosTierCtrs();
@@ -18554,7 +18554,7 @@ function openPlayerCard(d, ctxMode) {
     _cardIrBtn.addEventListener('click', () => {
       const wasOut = window._irIsOut(d.n);
       const label = wasOut ? null : 'Hide ' + d.n + ' from the ' + IR_SEASON + ' season rankings?\n\nRedraft / Best Ball / Superflex / Weekly hide them; dynasty boards, their board slot, player card and search all stay. Applies for every user immediately.';
-      if (label && !confirm(label)) return;
+      if (label && !_mffConfirm(label)) return;
       if (!window._irToggle(d.n)) return;
       toast(wasOut ? d.n + ' restored to the season rankings' : d.n + ' hidden from ' + IR_SEASON + ' season rankings (' + window._irFlagged().length + ' player' + (window._irFlagged().length === 1 ? '' : 's') + ' flagged)');
       if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
@@ -29292,7 +29292,7 @@ window.fmtHeight = fmtHeight;
           return;
         }
         if (deleteCode) {
-          if (!confirm('Delete code ' + deleteCode + '? This cannot be undone.')) return;
+          if (!_mffConfirm('Delete code ' + deleteCode + '? This cannot be undone.')) return;
           db.collection('premium_codes').doc(deleteCode).delete().then(() => {
             showAdminMsg(premCodeMsg, 'Deleted ' + deleteCode, 'success');
             loadPremiumCodes();
@@ -29393,7 +29393,7 @@ window.fmtHeight = fmtHeight;
     window._adminQaDelete = function(docId) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       if (!db) return;
-      if (!confirm('Delete this question? Deleting frees the member\'s weekly slot (the doc ID is the quota), so they can re-ask this week.')) return;
+      if (!_mffConfirm('Delete this question? Deleting frees the member\'s weekly slot (the doc ID is the quota), so they can re-ask this week.')) return;
       db.collection('qa_questions').doc(docId).delete()
         .then(() => { showAdminMsg(qaMsg, 'Deleted', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
         .catch(e => showAdminMsg(qaMsg, 'Delete error: ' + e.message, 'error'));
@@ -33561,7 +33561,7 @@ window.fmtHeight = fmtHeight;
 
   function openAuth() {
     if (!isConfigured) {
-      alert('Firebase is not configured yet.\n\nTo enable accounts, open the HTML file in a text editor, search for "firebaseConfig", and replace the placeholder values with your Firebase project config.\n\nYou can create a free Firebase project at https://console.firebase.google.com');
+      mffAlert('Firebase is not configured yet.\n\nTo enable accounts, open the HTML file in a text editor, search for "firebaseConfig", and replace the placeholder values with your Firebase project config.\n\nYou can create a free Firebase project at https://console.firebase.google.com');
       return;
     }
     clearError();
@@ -33654,7 +33654,7 @@ window.fmtHeight = fmtHeight;
   acctBtn.addEventListener('click', () => {
     if (currentUser) {
       // Already signed in — offer sign out
-      if (confirm('Sign out of ' + (currentUser.email || 'your account') + '?')) {
+      if (_mffConfirm('Sign out of ' + (currentUser.email || 'your account') + '?')) {
         auth.signOut();
       }
     } else {
@@ -33680,7 +33680,7 @@ window.fmtHeight = fmtHeight;
     if (typeof toast === 'function') toast('Settings saved');
   });
   acctSignoutBtn.addEventListener('click', () => {
-    if (confirm('Sign out?')) { auth.signOut(); acctOverlay.style.display = 'none'; }
+    if (_mffConfirm('Sign out?')) { auth.signOut(); acctOverlay.style.display = 'none'; }
   });
 
   // Home page sign in buttons (skip if home page was removed)
@@ -33695,7 +33695,7 @@ window.fmtHeight = fmtHeight;
         await auth.signInWithPopup(provider);
       } catch(e) {
         if (e.code !== 'auth/popup-closed-by-user') {
-          alert(e.message || 'Google sign-in failed.');
+          mffAlert(e.message || 'Google sign-in failed.');
         }
       }
     });
@@ -33779,7 +33779,7 @@ window.fmtHeight = fmtHeight;
 
   // Sign out
   acctLogout.addEventListener('click', () => {
-    if (confirm('Sign out?')) auth.signOut();
+    if (_mffConfirm('Sign out?')) auth.signOut();
   });
 
   // === FIRESTORE SAVE / LOAD ===
@@ -34037,7 +34037,7 @@ window.fmtHeight = fmtHeight;
       toast('Restore refused — could not read the live board from the server (' + code + '). Check connection / sign-in, then retry.');
       return false;
     }
-    if (!confirm("Restore Jack's official board from " + b.key + " (" + b.at + ", " + b.redraftLen + " redraft names; top: " + b.top5.join(', ') + ")?\n\nThis rewrites rankings/jacks-official." + _liveNote)) return false;
+    if (!_mffConfirm("Restore Jack's official board from " + b.key + " (" + b.at + ", " + b.redraftLen + " redraft names; top: " + b.top5.join(', ') + ")?\n\nThis rewrites rankings/jacks-official." + _liveNote)) return false;
     showSaving();
     try {
       const at = new Date().toISOString();
@@ -34066,7 +34066,7 @@ window.fmtHeight = fmtHeight;
     const list = await _jacksBackupList(10);
     const best = list.find(x => x.key.indexOf('cloud:') === 0 && x.redraftLen > 100) || list.find(x => x.redraftLen > 100);
     if (!best) { toast('Official board is MISSING and no backup was found — do not save'); return; }
-    if (confirm("Jack's official board is MISSING in Firestore (" + reason + ").\n\nRestore the newest backup?\n" + best.key + " from " + best.at + "\n" + best.redraftLen + " redraft names; top: " + best.top5.join(', '))) {
+    if (_mffConfirm("Jack's official board is MISSING in Firestore (" + reason + ").\n\nRestore the newest backup?\n" + best.key + " from " + best.at + "\n" + best.redraftLen + " redraft names; top: " + best.top5.join(', '), () => { window._jacksRestoreOffered = false; window._jacksOfferRestore(reason); })) {
       await window._jacksRestore(best.key);
     }
   };
@@ -35707,7 +35707,7 @@ window.fmtHeight = fmtHeight;
 
   // Sign out from account page
   acctPageSignoutBtn.addEventListener('click', () => {
-    if (confirm('Sign out?')) {
+    if (_mffConfirm('Sign out?')) {
       auth.signOut();
       switchPage('rankings');
     }
@@ -37557,7 +37557,7 @@ window.fmtHeight = fmtHeight;
       '</div>';
     document.getElementById('mdResumeBtn').addEventListener('click', () => _mdResumeDraft(snap));
     document.getElementById('mdDiscardBtn').addEventListener('click', () => {
-      if (confirm('Discard the in-progress draft? This cannot be undone.')) _mdClearProgress();
+      if (_mffConfirm('Discard the in-progress draft? This cannot be undone.')) _mdClearProgress();
     });
   }
 
@@ -38324,7 +38324,7 @@ window.fmtHeight = fmtHeight;
     html += '</div>';
     container.innerHTML = html;
     container.querySelector('#mdClearHistoryBtn').addEventListener('click', () => {
-      if (confirm('Clear draft history? This cannot be undone.')) {
+      if (_mffConfirm('Clear draft history? This cannot be undone.')) {
         localStorage.removeItem('md_draft_history');
         _renderPastDrafts();
       }
@@ -48237,11 +48237,15 @@ window.fmtHeight = fmtHeight;
     if (!name) return;
     const trimmed = name.trim();
     if (!trimmed || trimmed === _PM_WL_DEPLOYED || trimmed.length > 60) {
-      alert('Invalid preset name (max 60 chars, can\'t be empty or reserved).');
+      mffAlert('Invalid preset name (max 60 chars, can\'t be empty or reserved).');
       return;
     }
+    _pmWlSavePresetNamed(trimmed);
+  }
+  // Second half of Save-as (2026-10-08): the overwrite question re-runs this, not the prompt.
+  function _pmWlSavePresetNamed(trimmed) {
     const presets = _pmWlPresetsLoad();
-    if (presets[trimmed] && !confirm('Preset "' + trimmed + '" already exists. Overwrite?')) return;
+    if (presets[trimmed] && !_mffConfirm('Preset "' + trimmed + '" already exists. Overwrite?', () => _pmWlSavePresetNamed(trimmed))) return;
     presets[trimmed] = {
       savedAt: new Date().toISOString(),
       floor:   _pmWlDeepClone(window._JM_WEIGHTS || {}),
@@ -48249,7 +48253,7 @@ window.fmtHeight = fmtHeight;
       tiers:   _pmWlDeepClone(window._POS_TIERS || {})
     };
     if (!_pmWlPresetsSave(presets)) {
-      alert('Failed to save (localStorage may be full or disabled).');
+      mffAlert('Failed to save (localStorage may be full or disabled).');
       return;
     }
     _pmWl.activePreset = trimmed;
@@ -48263,7 +48267,7 @@ window.fmtHeight = fmtHeight;
     if (!sel) return;
     const name = sel.value;
     if (!name || name === _PM_WL_DEPLOYED) return;
-    if (!confirm('Delete preset "' + name + '"? This can\'t be undone.')) return;
+    if (!_mffConfirm('Delete preset "' + name + '"? This can\'t be undone.')) return;
     const presets = _pmWlPresetsLoad();
     delete presets[name];
     _pmWlPresetsSave(presets);
@@ -48503,7 +48507,7 @@ window.fmtHeight = fmtHeight;
       targets.push(n);
     });
     if (!targets.length) return 0;
-    if (!confirm('Mark ' + targets.length + ' 2026 prospect(s) without a DC as UDFA (U)?\n\nThis writes to Firestore and is reversible only by editing each one.')) return 0;
+    if (!_mffConfirm('Mark ' + targets.length + ' 2026 prospect(s) without a DC as UDFA (U)?\n\nThis writes to Firestore and is reversible only by editing each one.')) return 0;
     targets.forEach(function(n) {
       _dcSave(n, 'U');
       _bioSave(n, 'draft', 'U');
@@ -48583,17 +48587,17 @@ window.fmtHeight = fmtHeight;
       if (!_lastParsed) return;
       const ok = _lastParsed.filter(r => r.status === 'ok');
       if (!ok.length) return;
-      if (!confirm('Apply ' + ok.length + ' draft capital update(s) to Firestore?')) return;
+      if (!_mffConfirm('Apply ' + ok.length + ' draft capital update(s) to Firestore?')) return;
       const n = _pmApplyBulk(_lastParsed);
-      alert('Applied ' + n + ' update(s).');
+      mffAlert('Applied ' + n + ' update(s).');
       input.value = '';
       close();
     });
 
     fillBtn.addEventListener('click', function() {
       const n = _pmFillUdfas();
-      if (n > 0) alert('Marked ' + n + ' prospect(s) as UDFA.');
-      else alert('No prospects needed the UDFA fill — all 2026 class already have a DC set.');
+      if (n > 0) mffAlert('Marked ' + n + ' prospect(s) as UDFA.');
+      else mffAlert('No prospects needed the UDFA fill — all 2026 class already have a DC set.');
     });
   })();
   // ===== END BULK DC ENTRY =====
@@ -48807,9 +48811,9 @@ window.fmtHeight = fmtHeight;
       if (!_lastParsed) return;
       const ok = _lastParsed.filter(r => r.status === 'ok');
       if (!ok.length) return;
-      if (!confirm('Apply ' + ok.length + ' RAS update(s) to Firestore?\n\n(This will overwrite existing RAS values for any player in the list.)')) return;
+      if (!_mffConfirm('Apply ' + ok.length + ' RAS update(s) to Firestore?\n\n(This will overwrite existing RAS values for any player in the list.)')) return;
       const n = _pmApplyBulkRas(_lastParsed);
-      alert('Applied ' + n + ' RAS update(s).');
+      mffAlert('Applied ' + n + ' RAS update(s).');
       input.value = '';
       close();
     });
@@ -51343,7 +51347,7 @@ window.fmtHeight = fmtHeight;
     if (btn.dataset.saved) return; // already saved this board
 
     const user = firebase.auth().currentUser;
-    if (!user) { alert('Sign in to save boards to the catalog.'); return; }
+    if (!user) { mffAlert('Sign in to save boards to the catalog.'); return; }
 
     const db = firebase.firestore();
     const gameName = (document.getElementById('triviaGameName').value || '').trim();
@@ -51464,7 +51468,7 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaDeleteFromCatalog = function(docId, el) {
-    if (!confirm('Delete this board from the catalog?')) return;
+    if (!_mffConfirm('Delete this board from the catalog?')) return;
     const db = firebase.firestore();
     db.collection('trivia_catalog').doc(docId).delete().then(() => {
       if (el) el.remove();
@@ -52589,7 +52593,7 @@ window.fmtHeight = fmtHeight;
     const toggle = document.getElementById('triviaCustomPromptToggle');
     const wrap = document.getElementById('triviaCustomPromptWrap');
     if (!promptInput || !toggle) {
-      alert('Custom prompt UI not found.');
+      mffAlert('Custom prompt UI not found.');
       return;
     }
     // Open the Customize disclosure so the user can see what's running
@@ -52686,7 +52690,7 @@ window.fmtHeight = fmtHeight;
     if (!inp) return;
     const v = (inp.value || '').trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) {
-      alert('Pick a valid date (YYYY-MM-DD).');
+      mffAlert('Pick a valid date (YYYY-MM-DD).');
       return;
     }
     _triviaPreviewDate = v;
@@ -52912,7 +52916,7 @@ window.fmtHeight = fmtHeight;
   window._triviaPlayArchived = function(date) {
     _triviaFetchLockedDaily(date).then(snap => {
       if (!snap) {
-        alert('That archived daily could not be loaded.');
+        mffAlert('That archived daily could not be loaded.');
         return;
       }
       _triviaDailyRun = {
@@ -52938,7 +52942,7 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaDeleteArchived = function(date, btnEl) {
-    if (!confirm('Delete the locked daily for ' + date + '? This will free that date back to the auto-shuffle.')) return;
+    if (!_mffConfirm('Delete the locked daily for ' + date + '? This will free that date back to the auto-shuffle.')) return;
     if (typeof firebase === 'undefined' || !firebase.firestore) return;
     firebase.firestore().collection('trivia_daily').doc(date).delete().then(() => {
       delete _triviaDailyArchiveCache[date];
@@ -52948,7 +52952,7 @@ window.fmtHeight = fmtHeight;
       }
     }).catch(err => {
       console.error('[TriviaDaily] delete failed:', err);
-      alert('Delete failed: ' + (err && err.message));
+      mffAlert('Delete failed: ' + (err && err.message));
     });
   };
 
@@ -52985,7 +52989,7 @@ window.fmtHeight = fmtHeight;
     if (_triviaReportPendingIdx < 0) return;
     if (!_triviaData || !_triviaData.items || !_triviaData.items[_triviaReportPendingIdx]) return;
     if (typeof firebase === 'undefined' || !firebase.firestore) {
-      alert('Firestore unavailable.');
+      mffAlert('Firestore unavailable.');
       return;
     }
     const idx = _triviaReportPendingIdx;
@@ -53033,7 +53037,7 @@ window.fmtHeight = fmtHeight;
 
   window._triviaOpenReportsPanel = function() {
     if (typeof window.isAdmin !== 'function' || !window.isAdmin()) {
-      alert('Admin only.');
+      mffAlert('Admin only.');
       return;
     }
     const panel = document.getElementById('triviaReportsPanel');
@@ -53089,7 +53093,7 @@ window.fmtHeight = fmtHeight;
       }
     }).catch(err => {
       console.error('[TriviaReports] delete failed:', err);
-      alert('Delete failed: ' + (err && err.message));
+      mffAlert('Delete failed: ' + (err && err.message));
     });
   };
 
@@ -53141,7 +53145,7 @@ window.fmtHeight = fmtHeight;
       const _eraOk = (yr) => (_eraMin == null || yr >= _eraMin) && (_eraMax == null || yr <= _eraMax);
       const _eraActive = (filterType === 'career') && (era !== 'all');
 
-      if (!positions.length) { alert('Select at least one position'); return; }
+      if (!positions.length) { mffAlert('Select at least one position'); return; }
 
       btn.disabled = true;
       btn.textContent = 'BUILDING...';
@@ -54425,7 +54429,7 @@ Rules:
       SF: parseInt(document.getElementById('cfgSF').value)||0,
     };
     const totalPicks = roster.QB + roster.RB + roster.WR + roster.TE + roster.FLEX + roster.SF;
-    if (totalPicks < 1) { alert('Set at least 1 roster slot.'); return; }
+    if (totalPicks < 1) { mffAlert('Set at least 1 roster slot.'); return; }
 
     const pool = _cfgBuildPool(settings);
     if (pool.length < totalPicks * 2) {
@@ -59740,7 +59744,7 @@ Rules:
       const ps = result.posScores[pos] || { pts: 0 };
       return `${pos}: ${ps.pts}`;
     }).join('  ');
-    alert(`Team Score: ${result.total}\n\n${posLines}`);
+    mffAlert(`Team Score: ${result.total}\n\n${posLines}`);
   };
 
   window._mtTogglePaste = function() {
@@ -61872,7 +61876,7 @@ Rules:
   };
 
   window._mtDeleteSavedLeague = function(leagueId) {
-    if (!confirm('Remove this saved league?')) return;
+    if (!_mffConfirm('Remove this saved league?')) return;
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
@@ -61890,13 +61894,12 @@ Rules:
 
     // Load, remove the key, re-save
     const docRef = db.collection('user_game_data').doc(user.uid);
-    docRef.get().then(doc => {
-      if (!doc.exists || !doc.data().savedLeagues) return;
-      const saved = doc.data().savedLeagues;
-      delete saved[leagueId];
-      try { if (localStorage.getItem('mt_last_opened') === String(leagueId)) localStorage.removeItem('mt_last_opened'); } catch (_) {}
-      return docRef.set({ savedLeagues: saved }, { merge: true });
-    })
+    // 2026-10-08 fix (Jack: "every time I remove a league it comes back"): set(..., {merge:true})
+    // deep-merges the savedLeagues map, so a key missing from the payload was simply kept
+    // in Firestore and the next load resurrected the league. Delete the field itself.
+    try { if (localStorage.getItem('mt_last_opened') === String(leagueId)) localStorage.removeItem('mt_last_opened'); } catch (_) {}
+    const _fp = new firebase.firestore.FieldPath('savedLeagues', String(leagueId));
+    docRef.update(_fp, firebase.firestore.FieldValue.delete())
     .then(() => {
       console.log('[MyTeams] Deleted league:', leagueId);
       if (_mtActiveLeagueKey() === String(leagueId)) _mtOpenFirstPending = true;
@@ -63067,7 +63070,7 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    if (!confirm('Clear your saved portfolio? You can re-upload anytime.')) return;
+    if (!_mffConfirm('Clear your saved portfolio? You can re-upload anytime.')) return;
 
     // v0.9.55: also wipe the extension's cached copies. Without this, the
     // extension's mff_portfolio_sync entry in chrome.storage.local persists
@@ -71578,4 +71581,91 @@ function _rsScatter(cfg) {
     window.openPlayerCard = openPlayerCard;
   }
   window.addEventListener('resize', () => { if (modal.classList.contains('modal-docked')) place(clamp(current())); });
+})();
+
+// === Custom confirm / alert dialogs (2026-10-08, Jack: no browser sheets) ============
+// window.mffConfirm(msg, opts) -> Promise<boolean>   styled in-page dialog
+// window.mffAlert(msg, opts)   -> Promise<true>      same dialog, OK only
+// window._mffConfirm(msg, rerun) keeps the old synchronous call shape so the
+// 25 `if (!confirm(msg)) return;` sites did not have to become async:
+//   first call  -> opens the dialog, returns false (the handler bails out)
+//   OK          -> replays the click / change that reached the handler (or calls
+//                  `rerun`) with the message pre-approved
+//   replay call -> returns true with no dialog (the handler runs for real)
+// Pre-approval is keyed on the exact message and expires after 8 s, so an
+// async handler that awaits before asking still passes on the replay.
+(function () {
+  let trigger = null, approved = null, approvedAt = 0;
+  document.addEventListener('click', e => { trigger = { el: e.target, type: 'click' }; }, true);
+  document.addEventListener('change', e => { trigger = { el: e.target, type: 'change' }; }, true);
+  function replay(t) {
+    if (!t || !t.el) return;
+    if (t.type === 'click') { if (typeof t.el.click === 'function') t.el.click(); }
+    else t.el.dispatchEvent(new Event(t.type, { bubbles: true }));
+  }
+  function build() {
+    let ov = document.getElementById('mffDialog');
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'mffDialog';
+    ov.className = 'mff-dialog';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.innerHTML = '<div class="mff-dialog-box">'
+      + '<div class="mff-dialog-title" id="mffDialogTitle"></div>'
+      + '<div class="mff-dialog-msg" id="mffDialogMsg"></div>'
+      + '<div class="mff-dialog-btns">'
+      + '<button type="button" class="mff-dialog-btn mff-dialog-cancel" id="mffDialogCancel">Cancel</button>'
+      + '<button type="button" class="mff-dialog-btn mff-dialog-ok" id="mffDialogOk">OK</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    return ov;
+  }
+  let active = null; // {resolve}
+  function close(result) {
+    const ov = document.getElementById('mffDialog');
+    if (ov) ov.classList.remove('open');
+    const a = active; active = null;
+    if (a) a.resolve(result);
+  }
+  window.mffConfirm = function (msg, opts) {
+    opts = opts || {};
+    return new Promise(resolve => {
+      if (active) active.resolve(false); // a second dialog replaces the first
+      const ov = build();
+      const box = ov.querySelector('.mff-dialog-box');
+      const title = document.getElementById('mffDialogTitle');
+      const body = document.getElementById('mffDialogMsg');
+      const ok = document.getElementById('mffDialogOk');
+      const cancel = document.getElementById('mffDialogCancel');
+      const text = String(msg == null ? '' : msg);
+      // First line = title, the rest = body (the old confirm strings were written that way).
+      const nl = text.indexOf('\n');
+      title.textContent = opts.title != null ? opts.title : (nl > 0 && nl < 90 ? text.slice(0, nl).trim() : (opts.alert ? 'Heads up' : 'Are you sure?'));
+      body.textContent = opts.title != null ? text : (nl > 0 && nl < 90 ? text.slice(nl + 1).trim() : text);
+      body.style.display = body.textContent ? '' : 'none';
+      ok.textContent = opts.okLabel || (opts.alert ? 'OK' : 'Yes');
+      cancel.textContent = opts.cancelLabel || 'Cancel';
+      cancel.style.display = opts.alert ? 'none' : '';
+      box.classList.toggle('danger', !!opts.danger || (!opts.alert && /delete|remove|discard|clear|overwrite|cannot be undone|sign out/i.test(text)));
+      active = { resolve };
+      ov.classList.add('open');
+      ok.onclick = () => close(true);
+      cancel.onclick = () => close(false);
+      ov.onclick = e => { if (e.target === ov && !opts.alert) close(false); };
+      ov.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); close(!!opts.alert); } else if (e.key === 'Enter') { e.preventDefault(); close(true); } };
+      setTimeout(() => { try { (opts.alert ? ok : (box.classList.contains('danger') ? cancel : ok)).focus(); } catch (_) {} }, 20);
+    });
+  };
+  window.mffAlert = function (msg, opts) { return window.mffConfirm(msg, Object.assign({ alert: true }, opts || {})); };
+  window._mffConfirm = function (msg, rerun) {
+    if (approved === msg && Date.now() - approvedAt < 8000) { approved = null; return true; }
+    const t = rerun ? null : trigger;
+    window.mffConfirm(msg).then(okay => {
+      if (!okay) return;
+      approved = msg; approvedAt = Date.now();
+      try { if (rerun) rerun(); else replay(t); } catch (e) { console.warn('[dialog] replay failed', e); }
+    });
+    return false;
+  };
 })();

@@ -82,13 +82,14 @@ def live_today(X):
 SHADOW_LUCK = True   # 2026-10-08: the engine shadow has carried the TD-luck term since v2.22 (ncLuckScale); the replica did not - parity restored
 
 
-def shadow_current(X, luck=None):
+def shadow_current(X, luck=None, lam_override=None):
     """ablate_shadow_next.full() as wired today: v2.25 layers on, WR snap trend off (v2.29), v2.33 rookie prior weights, TE docks at .5 (10-08), TD luck (v2.22)"""
     luck_on = SHADOW_LUCK if luck is None else luck
     F = X["F"]; n = X["n"]; pos, g, wk, adp, act = X["pos"], X["g"], X["wk"], X["adp"], X["act"]
     finw = np.where(X["year"] <= 2020, 17, 18); final = wk == finw
     SH0 = SN.shadow(X); allr = ~final & (SH0 >= 3)
     base_lam = np.where(pos == "WR", np.maximum(.25, 1 - .08 * np.maximum(g - 1, 0)), np.where(pos == "RB", np.maximum(.25, 1 - .3 * np.maximum(g - 1, 0)), 0.0))
+    if lam_override is not None: base_lam = np.where(np.isnan(lam_override), base_lam, lam_override)   # 2026-10-08 rookie evidence tests
     l1 = X["snap_l1"]; dev = np.zeros(n)
     for ps in ("WR", "TE"):
         m = (pos == ps) & (g >= 1) & ~np.isnan(l1) & allr
@@ -117,7 +118,7 @@ def shadow_current(X, luck=None):
     out = np.where(pos == "TE", out * np.sqrt(np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4)), out)
     out = np.where((pos == "QB") & X["mover"], out * 0.90, out)
     out = np.where(pos == "QB", out * (1 - 0.75 * low), out)
-    out = np.where((pos == "WR") & X["rookie"] & (g >= 2) & (g <= 5), out * 0.90, out)
+    # (WR rookie games 2-5 x.90 is PRUNED in the engine - v2.29 ncPrune skips it - so the replica no longer applies it; 2026-10-08)
     out = np.where((pos == "RB") & (g >= 2) & (g <= 5) & (X["car_sh"] < 0.30), out * 0.90, out)
     return np.maximum(0.0, out + luckT), SH0
 

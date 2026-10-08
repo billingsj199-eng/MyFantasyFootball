@@ -532,6 +532,31 @@ def main():
         for lab, m in STG:
             mm = (pos == ps) & m
             struct(f"11b {ps} after {lab}: prior weight", f"w_{ps}_{lab}", mm, {f"x{k}": dict(pmul=np.where(mm, st["pmul"] * k, st["pmul"])) for k in GR})
+    # ---------------- 13 ROOKIE EVIDENCE (Jack 2026-10-08: "run the rookie evidence test and wire it if it passes") ----------------
+    # Rookies are the largest season-horizon gap left (RB rookies 1.13 under, WR 1.05; model's weight on the season 48% vs best fit
+    # 16% for RB rookies). 11b tried one flat prior-weight multiplier per group (RB x2.5 failed forward). Here, rookie rows only:
+    #   13a usage weight in the evidence (flat lam) per position     13b prior weight by STAGE (3-4 games / 5+ games) per position
+    #   13c the two together. Graded on the rookie rows with the whole-board guard, LOYO + forward (struct = pass -> stacked into st).
+    P(); P("--- 13  ROOKIE EVIDENCE: usage weight and prior weight by stage, rookie rows only (model as wired through section 11) ---")
+    rk13 = colv("exp") == 0; early13 = g <= 4
+    for ps in POS4:
+        m = rk13 & (pos == ps)
+        if (m & ok).sum() < 120: P(f"  13 {ps} rookies: too few rows ({int((m & ok).sum())})"); continue
+        lgrid = (0.0, 0.25, 0.5, 0.75, 1.0) if ps in ("RB", "WR") else (0.25, 0.5)
+        struct(f"13a {ps} rookies: usage weight in the evidence (flat)", f"rk_lam_{ps}", m, {f"lam {l}": dict(lam=np.where(m, l, st["lam"])) for l in lgrid})
+        var = {}
+        for ke in (1.0, 1.6, 2.5, 4.0):
+            for kl in (0.6, 1.0, 1.6, 2.5):
+                if ke == 1.0 and kl == 1.0: continue
+                var[f"early x{ke} / late x{kl}"] = dict(pmul=np.where(m & early13, st["pmul"] * ke, np.where(m & ~early13, st["pmul"] * kl, st["pmul"])))
+        struct(f"13b {ps} rookies: prior weight by stage (3-4 games / 5+)", f"rk_P_{ps}", m, var)
+    S13 = build(); t150 = ok & top150
+    P(); P("  STACKED after section 13 (vs wired through section 11 | vs the Clay blend):")
+    for lab, m in (("ALL rows", ok), ("top 150", t150), ("rookies", ok & rk13), ("RB rookies", ok & rk13 & (pos == "RB")), ("WR rookies", ok & rk13 & (pos == "WR")), ("non-rookies", ok & ~rk13)):
+        if m.sum() < 60: continue
+        w1 = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and ms(S13, m & (year == y)) < ms(M, m & (year == y)) - 1e-12)
+        P(f"    {lab:14s} n {int(m.sum()):5d}  vs wired {100*(ms(S13, m)/ms(M, m)-1):+6.2f}% ({w1}/7) | vs Clay blend {100*(ms(S13, m)/ms(CL, m)-1):+6.2f}% | top-150 wtd {100*(wm(S13, m & top150)/wm(M, m & top150)-1):+6.2f}% | rank order {rho(S13, m & top150):.4f} (wired {rho(M, m & top150):.4f})")
+
     log.close()
 
 if __name__ == "__main__":

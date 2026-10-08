@@ -1,0 +1,79 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== ROOKIE EVIDENCE, next game: 1,162 rookie top-150 player-weeks 2019-25 ===
+  QB rookies n109: act/shadow 0.972 (games 1-3 0.971, 4+ 0.973) | act/Clay form 0.895 | shadow vs Clay error -4.01%
+  RB rookies n526: act/shadow 1.014 (games 1-3 0.945, 4+ 1.040) | act/Clay form 0.938 | shadow vs Clay error -3.35%
+  WR rookies n437: act/shadow 1.045 (games 1-3 1.136, 4+ 1.015) | act/Clay form 0.983 | shadow vs Clay error -1.03%
+  TE rookies n90: act/shadow 1.020 (games 1-3 0.909, 4+ 1.055) | act/Clay form 1.011 | shadow vs Clay error +2.79%
+
+  A  QB rookies: usage weight in the evidence (flat) (rows 109)
+    fixed: lam 0.25: +0.89% (3/7)  lam 0.5: +6.47% (1/7)
+    rank vs off (rho nan, pairs 0.00%): lam 0.25: rho +nan pairs +0.00  lam 0.5: rho +nan pairs +0.00
+    LOYO +2.80% 0/7 | board +0.023% | picks ['off', 'off', 'off', 'off', 'off', 'lam 0.25', 'off']
+    FWD  +6.09% 1/4 | board +0.036% | picks ['lam 0.25', 'lam 0.25', 'lam 0.25', 'off']
+    -> FAIL
+
+  B  QB rookies: prior weight by stage (games 1-3 / 4+) (rows 109)
+    fixed: early x0.6 / late x0.6: -0.31% (2/7)  early x0.6 / late x1.0: -0.72% (4/7)  early x0.6 / late x1.6: -0.90% (4/7)  early x0.6 / late x2.5: -0.92% (4/7)  early x1.0 / late x0.6: +0.41% (1/7)  early x1.0 / late x1.6: -0.17% (3/7)  early x1.0 / late x2.5: -0.19% (3/7)  early x1.6 / late x0.6: +0.98% (0/7)  early x1.6 / late x1.0: +0.57% (0/7)  early x1.6 / late x1.6: +0.40% (2/7)  early x1.6 / late x2.5: +0.38% (2/7)  early x2.5 / late x0.6: +1.40% (0/7)  early x2.5 / late x1.0: +0.99% (0/7)  early x2.5 / late x1.6: +0.82% (2/7)  early x2.5 / late x2.5: +0.80% (2/7)  early x4.0 / late x0.6: +1.72% (0/7)  early x4.0 / late x1.0: +1.31% (0/7)  early x4.0 / late x1.6: +1.14% (2/7)  early x4.0 / late x2.5: +1.12% (2/7)
+    rank vs off (rho nan, pairs 0.00%): early x0.6 / late x0.6: rho +nan pairs +0.00  early x0.6 / late x1.0: rho +nan pairs +0.00  early x0.6 / late x1.6: rho +nan pairs +0.00  early x0.6 / late x2.5: rho +nan pairs +0.00  early x1.0 / late x0.6: rho +nan pairs +0.00  early x1.0 / late x1.6: rho +nan pairs +0.00  early x1.0 / late x2.5: rho +nan pairs +0.00  early x1.6 / late x0.6: rho +nan pairs +0.00  early x1.6 / late x1.0: rho +nan pairs +0.00  early x1.6 / late x1.6: rho +nan pairs +0.00  early x1.6 / late x2.5: rho +nan pairs +0.00  early x2.5 / late x0.6: rho +nan pairs +0.00  early x2.5 / late x1.0: rho +nan pairs +0.00  early x2.5 / late x1.6: rho +nan pairs +0.00  early x2.5 / late x2.5: rho +nan pairs +0.00  early x4.0 / late x0.6: rho +nan pairs +0.00  early x4.0 / late x1.0: rho +nan pairs +0.00  early x4.0 / late x1.6: rho +nan pairs +0.00  early x4.0 / late x2.5: rho +nan pairs +0.00
+    LOYO -0.75% 4/7 | board -0.006% | picks ['early x0.6 / late x1.6', 'early x0.6 / late x1.6', 'early x0.6 / late x2.5', 'early x0.6 / late x2.5', 'early x0.6 / late x2.5', 'early x0.6 / late x2.5', 'early x0.6 / late x2.5']
+    FWD  -0.74% 1/4 | board -0.004% | picks ['early x0.6 / late x2.5', 'early x0.6 / late x2.5', 'early x0.6 / late x2.5', 'early x0.6 / late x2.5']
+    -> FAIL
+
+  A  RB rookies: usage weight in the evidence (flat) (rows 526)
+    fixed: lam 0.0: +0.49% (2/7)  lam 0.25: +0.01% (4/7)  lam 0.5: -0.39% (5/7)  lam 0.75: -0.71% (5/7)  lam 1.0: -0.97% (4/7)
+    rank vs off (rho 0.5557, pairs 71.22%): lam 0.0: rho -0.0190 pairs -1.44  lam 0.25: rho -0.0095 pairs -0.72  lam 0.5: rho +0.0000 pairs +0.00  lam 0.75: rho +0.0238 pairs +0.72  lam 1.0: rho +0.0238 pairs +0.72
+    LOYO -0.97% 4/7 | board -0.028% | picks ['lam 1.0', 'lam 1.0', 'lam 1.0', 'lam 1.0', 'lam 1.0', 'lam 1.0', 'lam 1.0']
+    FWD  -1.57% 3/4 | board -0.043% | picks ['lam 0.75', 'lam 1.0', 'lam 1.0', 'lam 1.0']
+    -> FAIL
+
+  B  RB rookies: prior weight by stage (games 1-3 / 4+) (rows 526)
+    fixed: early x0.6 / late x0.6: +0.43% (3/7)  early x0.6 / late x1.0: +0.37% (3/7)  early x0.6 / late x1.6: +0.42% (4/7)  early x0.6 / late x2.5: +0.55% (4/7)  early x1.0 / late x0.6: +0.06% (3/7)  early x1.0 / late x1.6: +0.05% (4/7)  early x1.0 / late x2.5: +0.18% (4/7)  early x1.6 / late x0.6: -0.15% (3/7)  early x1.6 / late x1.0: -0.21% (4/7)  early x1.6 / late x1.6: -0.16% (4/7)  early x1.6 / late x2.5: -0.03% (4/7)  early x2.5 / late x0.6: -0.28% (3/7)  early x2.5 / late x1.0: -0.34% (4/7)  early x2.5 / late x1.6: -0.29% (3/7)  early x2.5 / late x2.5: -0.16% (3/7)  early x4.0 / late x0.6: -0.36% (3/7)  early x4.0 / late x1.0: -0.42% (4/7)  early x4.0 / late x1.6: -0.37% (3/7)  early x4.0 / late x2.5: -0.24% (3/7)
+    rank vs off (rho 0.5557, pairs 71.22%): early x0.6 / late x0.6: rho +0.0000 pairs +0.00  early x0.6 / late x1.0: rho +0.0286 pairs +1.44  early x0.6 / late x1.6: rho +0.0238 pairs +0.72  early x0.6 / late x2.5: rho +0.0095 pairs +0.00  early x1.0 / late x0.6: rho +0.0000 pairs +0.00  early x1.0 / late x1.6: rho +0.0190 pairs +0.00  early x1.0 / late x2.5: rho +0.0190 pairs +0.00  early x1.6 / late x0.6: rho +0.0238 pairs +0.72  early x1.6 / late x1.0: rho +0.0000 pairs +0.00  early x1.6 / late x1.6: rho -0.0048 pairs -0.72  early x1.6 / late x2.5: rho -0.0048 pairs -0.72  early x2.5 / late x0.6: rho +0.0048 pairs -0.72  early x2.5 / late x1.0: rho +0.0048 pairs -0.72  early x2.5 / late x1.6: rho -0.0238 pairs -2.16  early x2.5 / late x2.5: rho -0.0238 pairs -2.16  early x4.0 / late x0.6: rho +0.0048 pairs -0.72  early x4.0 / late x1.0: rho +0.0048 pairs -0.72  early x4.0 / late x1.6: rho -0.0238 pairs -2.16  early x4.0 / late x2.5: rho -0.0238 pairs -2.16
+    LOYO +0.40% 1/7 | board +0.012% | picks ['early x4.0 / late x0.6', 'early x4.0 / late x0.6', 'early x4.0 / late x1.0', 'early x4.0 / late x1.0', 'early x4.0 / late x2.5', 'early x4.0 / late x1.6', 'early x2.5 / late x0.6']
+    FWD  +0.55% 2/4 | board +0.015% | picks ['early x1.0 / late x2.5', 'early x0.6 / late x2.5', 'early x4.0 / late x1.0', 'early x2.5 / late x0.6']
+    -> FAIL
+
+  A  WR rookies: usage weight in the evidence (flat) (rows 437)
+    fixed: lam 0.0: -0.15% (4/7)  lam 0.25: +0.00% (4/7)  lam 0.5: +0.23% (3/7)  lam 0.75: +0.53% (2/7)  lam 1.0: +0.91% (2/7)
+    rank vs off (rho nan, pairs 0.00%): lam 0.0: rho +nan pairs +0.00  lam 0.25: rho +nan pairs +0.00  lam 0.5: rho +nan pairs +0.00  lam 0.75: rho +nan pairs +0.00  lam 1.0: rho +nan pairs +0.00
+    LOYO +0.18% 3/7 | board +0.004% | picks ['lam 0.0', 'off', 'lam 0.0', 'lam 0.0', 'lam 0.0', 'lam 0.0', 'lam 0.0']
+    FWD  +0.37% 2/4 | board +0.007% | picks ['lam 0.0', 'lam 0.0', 'lam 0.0', 'lam 0.0']
+    -> FAIL
+
+  B  WR rookies: prior weight by stage (games 1-3 / 4+) (rows 437)
+    fixed: early x0.6 / late x0.6: +0.27% (2/7)  early x0.6 / late x1.0: +0.20% (2/7)  early x0.6 / late x1.6: +0.24% (2/7)  early x0.6 / late x2.5: +0.36% (3/7)  early x1.0 / late x0.6: +0.07% (3/7)  early x1.0 / late x1.6: +0.05% (4/7)  early x1.0 / late x2.5: +0.17% (4/7)  early x1.6 / late x0.6: -0.04% (4/7)  early x1.6 / late x1.0: -0.11% (5/7)  early x1.6 / late x1.6: -0.07% (5/7)  early x1.6 / late x2.5: +0.06% (4/7)  early x2.5 / late x0.6: -0.10% (4/7)  early x2.5 / late x1.0: -0.18% (5/7)  early x2.5 / late x1.6: -0.13% (5/7)  early x2.5 / late x2.5: -0.01% (5/7)  early x4.0 / late x0.6: -0.14% (4/7)  early x4.0 / late x1.0: -0.22% (5/7)  early x4.0 / late x1.6: -0.17% (4/7)  early x4.0 / late x2.5: -0.05% (5/7)
+    rank vs off (rho nan, pairs 0.00%): early x0.6 / late x0.6: rho +nan pairs +0.00  early x0.6 / late x1.0: rho +nan pairs +0.00  early x0.6 / late x1.6: rho +nan pairs +0.00  early x0.6 / late x2.5: rho +nan pairs +0.00  early x1.0 / late x0.6: rho +nan pairs +0.00  early x1.0 / late x1.6: rho +nan pairs +0.00  early x1.0 / late x2.5: rho +nan pairs +0.00  early x1.6 / late x0.6: rho +nan pairs +0.00  early x1.6 / late x1.0: rho +nan pairs +0.00  early x1.6 / late x1.6: rho +nan pairs +0.00  early x1.6 / late x2.5: rho +nan pairs +0.00  early x2.5 / late x0.6: rho +nan pairs +0.00  early x2.5 / late x1.0: rho +nan pairs +0.00  early x2.5 / late x1.6: rho +nan pairs +0.00  early x2.5 / late x2.5: rho +nan pairs +0.00  early x4.0 / late x0.6: rho +nan pairs +0.00  early x4.0 / late x1.0: rho +nan pairs +0.00  early x4.0 / late x1.6: rho +nan pairs +0.00  early x4.0 / late x2.5: rho +nan pairs +0.00
+    LOYO +0.41% 2/7 | board +0.008% | picks ['early x4.0 / late x1.0', 'early x4.0 / late x1.0', 'early x4.0 / late x0.6', 'early x4.0 / late x1.6', 'early x4.0 / late x1.0', 'early x4.0 / late x0.6', 'early x4.0 / late x2.5']
+    FWD  +0.58% 2/4 | board +0.011% | picks ['early x4.0 / late x2.5', 'early x4.0 / late x1.6', 'early x4.0 / late x2.5', 'early x4.0 / late x2.5']
+    -> FAIL
+
+  A  TE rookies: usage weight in the evidence (flat) (rows 90)
+    fixed: lam 0.25: -0.12% (3/7)  lam 0.5: -0.21% (3/7)
+    rank vs off (rho nan, pairs 0.00%): lam 0.25: rho +nan pairs +0.00  lam 0.5: rho +nan pairs +0.00
+    LOYO +0.40% 1/7 | board +0.002% | picks ['lam 0.5', 'lam 0.5', 'off', 'lam 0.5', 'lam 0.5', 'lam 0.5', 'off']
+    FWD  +0.69% 0/4 | board +0.002% | picks ['lam 0.5', 'lam 0.5', 'lam 0.5', 'off']
+    -> FAIL
+
+  B  TE rookies: prior weight by stage (games 1-3 / 4+) (rows 90)
+    fixed: early x0.6 / late x0.6: +0.16% (1/7)  early x0.6 / late x1.0: +0.12% (2/7)  early x0.6 / late x1.6: +0.21% (1/7)  early x0.6 / late x2.5: +0.34% (1/7)  early x1.0 / late x0.6: +0.04% (1/7)  early x1.0 / late x1.6: +0.09% (3/7)  early x1.0 / late x2.5: +0.22% (3/7)  early x1.6 / late x0.6: -0.02% (2/7)  early x1.6 / late x1.0: -0.06% (3/7)  early x1.6 / late x1.6: +0.02% (3/7)  early x1.6 / late x2.5: +0.16% (3/7)  early x2.5 / late x0.6: -0.06% (2/7)  early x2.5 / late x1.0: -0.10% (3/7)  early x2.5 / late x1.6: -0.01% (3/7)  early x2.5 / late x2.5: +0.12% (3/7)  early x4.0 / late x0.6: -0.08% (2/7)  early x4.0 / late x1.0: -0.12% (3/7)  early x4.0 / late x1.6: -0.03% (3/7)  early x4.0 / late x2.5: +0.10% (3/7)
+    rank vs off (rho nan, pairs 0.00%): early x0.6 / late x0.6: rho +nan pairs +0.00  early x0.6 / late x1.0: rho +nan pairs +0.00  early x0.6 / late x1.6: rho +nan pairs +0.00  early x0.6 / late x2.5: rho +nan pairs +0.00  early x1.0 / late x0.6: rho +nan pairs +0.00  early x1.0 / late x1.6: rho +nan pairs +0.00  early x1.0 / late x2.5: rho +nan pairs +0.00  early x1.6 / late x0.6: rho +nan pairs +0.00  early x1.6 / late x1.0: rho +nan pairs +0.00  early x1.6 / late x1.6: rho +nan pairs +0.00  early x1.6 / late x2.5: rho +nan pairs +0.00  early x2.5 / late x0.6: rho +nan pairs +0.00  early x2.5 / late x1.0: rho +nan pairs +0.00  early x2.5 / late x1.6: rho +nan pairs +0.00  early x2.5 / late x2.5: rho +nan pairs +0.00  early x4.0 / late x0.6: rho +nan pairs +0.00  early x4.0 / late x1.0: rho +nan pairs +0.00  early x4.0 / late x1.6: rho +nan pairs +0.00  early x4.0 / late x2.5: rho +nan pairs +0.00
+    LOYO +0.87% 1/7 | board +0.003% | picks ['early x2.5 / late x1.0', 'early x4.0 / late x1.0', 'early x4.0 / late x0.6', 'early x4.0 / late x1.0', 'early x4.0 / late x1.0', 'early x4.0 / late x2.5', 'early x4.0 / late x0.6']
+    FWD  +1.04% 0/4 | board +0.004% | picks ['early x4.0 / late x1.6', 'early x4.0 / late x1.6', 'early x4.0 / late x1.6', 'early x4.0 / late x0.6']
+    -> FAIL
+
+Limitations: honest shadow replica (TD luck, TE docks .5; no book anchor / docks); the shadow already carries rookie prior weights (RB x1.6, TE x2.5) and the rookie WR games 2-5 x.9 dock - the multipliers here stack on them.

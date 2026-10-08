@@ -1310,11 +1310,44 @@
     non-rookies    n  7272  vs wired  -1.14% (5/7) | vs Clay blend -10.24% | top-150 wtd  -1.36% | rank order 0.6000 (wired 0.5978)
 
 --- 14  TIGHT ENDS: TD floor for role players, snap-level lift strength, run-heavy offense tilt (model as wired through section 13) ---
-Traceback (most recent call last):
-  File "E:\MyFantasyFootball\sim_lab\backtest_shadow_ros.py", line 597, in <module>
-    main()
-    ~~~~^^
-  File "E:\MyFantasyFootball\sim_lab\backtest_shadow_ros.py", line 570, in main
-    rec_ = cal.weekly_rec(name[i], "TE"); _logs14[k_] = {int(w["wk"]): 6 * float(w.get("rctd") or 0) + 6 * float(w.get("rtd") or 0) for w in (rec_ or {}).get("seasons", {}).get(str(Y), []) if cal.played(w) and isinstance(w.get("fpts"), (int, float))}
-           ^^^
-NameError: name 'cal' is not defined
+
+  14a TE with a role and few touchdowns so far: lift per missing TD point   (rows 507)
+    pooled (seasons better at that fixed setting): e 0.02: -4.94% (6)  e 0.04: -8.88% (6)  e 0.06: -11.83% (6)  e 0.08: -13.78% (6)
+    LEAVE-ONE-SEASON-OUT  -13.78%  seasons better 6/7  | top-150 weighted -11.50%  rank order -0.0755  | picks ['e 0.08', 'e 0.08', 'e 0.08', 'e 0.08', 'e 0.08', 'e 0.08', 'e 0.08']
+    FORWARD 2022-25       -14.70%  seasons better 4/4  | top-150 weighted -12.93%  | picks ['e 0.08', 'e 0.08', 'e 0.08', 'e 0.08']
+    rank order with e 0.08: better in 0/2 seasons (pooled -0.0755)
+    -> PASS: e 0.08
+
+  14a' same, no role gate   (rows 995)
+    pooled (seasons better at that fixed setting): e 0.02: -1.62% (6)  e 0.04: -2.26% (5)  e 0.06: -1.90% (5)
+    LEAVE-ONE-SEASON-OUT  -2.26%  seasons better 5/7  | top-150 weighted +2.34%  rank order +0.0101  | picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04']
+    FORWARD 2022-25       -2.50%  seasons better 4/4  | top-150 weighted +1.95%  | picks ['e 0.02', 'e 0.02', 'e 0.04', 'e 0.04']
+    rank order with e 0.04: better in 3/4 seasons (pooled +0.0101)
+    -> FAIL (best pooled: e 0.04)
+
+  14b TE snap-share level: lift / dock strength (wired e .3 both ways)   (rows 1,516)
+    pooled (seasons better at that fixed setting): lift ^1.0 / dock ^0.5: -0.15% (4)  lift ^1.5 / dock ^0.5: -0.51% (5)  lift ^1.5 / dock ^1.0: -0.36% (5)  lift ^2.0 / dock ^0.5: -0.45% (4)  lift ^2.0 / dock ^1.0: -0.30% (5)
+    LEAVE-ONE-SEASON-OUT  -0.03%  seasons better 4/7  | top-150 weighted +0.85%  rank order -0.0018  | picks ['lift ^1.5 / dock ^0.5', 'lift ^1.5 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^1.5 / dock ^0.5', 'lift ^1.5 / dock ^1.0', 'lift ^1.5 / dock ^0.5']
+    FORWARD 2022-25       +0.10%  seasons better 2/4  | top-150 weighted +2.40%  | picks ['lift ^2.0 / dock ^0.5', 'lift ^1.5 / dock ^0.5', 'lift ^1.5 / dock ^0.5', 'lift ^1.5 / dock ^0.5']
+    rank order with lift ^1.5 / dock ^0.5: better in 1/7 seasons (pooled -0.0020)
+    -> FAIL (best pooled: lift ^1.5 / dock ^0.5)
+
+  14c TE run-heavy offense tilt (wired e .04 symmetric): run-heavy side only   (rows 810)
+    pooled (seasons better at that fixed setting): e 0.03: -1.75% (4)  e 0.06: -1.98% (4)  e 0.09: -0.67% (4)  e 0.12: +2.16% (4)
+    LEAVE-ONE-SEASON-OUT  -0.49%  seasons better 4/7  | top-150 weighted -1.86%  rank order +0.0018  | picks ['e 0.03', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.03', 'e 0.03', 'e 0.06']
+    FORWARD 2022-25       -1.21%  seasons better 2/4  | top-150 weighted -0.14%  | picks ['e 0.03', 'e 0.03', 'e 0.03', 'e 0.06']
+    rank order with e 0.06: better in 1/2 seasons (pooled +0.0403)
+    -> FAIL (best pooled: e 0.06)
+
+  14c' TE pass-rate tilt symmetric, stronger (on top of the wired .04)   (rows 1,535)
+    pooled (seasons better at that fixed setting): e 0.03: +0.30% (3)  e 0.06: +2.19% (3)
+    LEAVE-ONE-SEASON-OUT  +1.41%  seasons better 0/7  | top-150 weighted +3.08%  rank order -0.0107  | picks ['shipped', 'e 0.03', 'shipped', 'shipped', 'shipped', 'shipped', 'e 0.03']
+    FORWARD 2022-25       +0.49%  seasons better 0/4  | top-150 weighted +1.31%  | picks ['shipped', 'shipped', 'shipped', 'e 0.03']
+    -> FAIL (best pooled: shipped)
+
+  STACKED after section 14 (vs wired through section 13 | vs the Clay blend):
+    ALL rows     n  8496  vs section 13  -0.57% (6/7) | vs Clay blend -12.83% | act/proj 1.020 (was 1.024) | rank order 0.6092 (was 0.6072)
+    top 150      n  5204  vs section 13  -0.33% (6/7) | vs Clay blend  -9.93% | act/proj 1.021 (was 1.025) | rank order 0.6092 (was 0.6072)
+    TE           n  1535  vs section 13  -4.75% (6/7) | vs Clay blend -17.83% | act/proj 1.030 (was 1.063) | rank order 0.6322 (was 0.6223)
+    TE top 150   n   618  vs section 13  -3.75% (6/7) | vs Clay blend -14.90% | act/proj 0.998 (was 1.032) | rank order 0.6322 (was 0.6223)
+    non-TE       n  6961  vs section 13  +0.00% (0/7) | vs Clay blend -12.14% | act/proj 1.018 (was 1.018) | rank order 0.6033 (was 0.6033)

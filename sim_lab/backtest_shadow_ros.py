@@ -567,7 +567,7 @@ def main():
     for i in np.where(te14 & ok)[0]:
         Y = int(year[i]); k_ = (name[i], Y)
         if k_ not in _logs14:
-            rec_ = cal.weekly_rec(name[i], "TE"); _logs14[k_] = {int(w["wk"]): 6 * float(w.get("rctd") or 0) + 6 * float(w.get("rtd") or 0) for w in (rec_ or {}).get("seasons", {}).get(str(Y), []) if cal.played(w) and isinstance(w.get("fpts"), (int, float))}
+            rec_ = SN.cal.weekly_rec(name[i], "TE"); _logs14[k_] = {int(w["wk"]): 6 * float(w.get("rctd") or 0) + 6 * float(w.get("rtd") or 0) for w in (rec_ or {}).get("seasons", {}).get(str(Y), []) if SN.cal.played(w) and isinstance(w.get("fpts"), (int, float))}
         past = [v for w, v in _logs14[k_].items() if w < wk[i]]
         if past: tdp14[i] = float(np.mean(past))
     role14 = te14 & ((tsh >= 0.15) | (colv("snap_std") >= 70)); gap14 = np.clip(1.8 - np.nan_to_num(tdp14, nan=1.8), 0, 1.8)

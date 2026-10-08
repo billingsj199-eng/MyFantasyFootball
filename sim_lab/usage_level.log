@@ -1,0 +1,22 @@
+=== USAGE LEVEL vs SNAPS, next game ===
+  TE rows 1,252: route rate (l3) available 1,157; corr(route dev, snap dev) -0.251
+
+  TE: route-rate LEVEL in place of / on top of the snap level (rows 1,157, act/shadow 1.044)
+    fixed: route level e 0.15 (snap level off): +0.34% (3/7)  route level e 0.3 (snap level off): +0.52% (1/7)  route level e 0.5 (snap level off): +0.81% (0/7)  route level e 0.15 + snap level (wired): +0.13% (1/7)  route level e 0.3 + snap level (wired): +0.30% (1/7)  snap level off: +0.19% (3/7)
+    rank vs off (rho 0.3753, pairs 63.58%): route level e 0.15 (snap level off): rho -0.0014 pairs -0.11  route level e 0.3 (snap level off): rho -0.0054 pairs -0.25  route level e 0.5 (snap level off): rho -0.0086 pairs -0.27  route level e 0.15 + snap level (wired): rho -0.0005 pairs +0.04  route level e 0.3 + snap level (wired): rho +0.0003 pairs +0.07  snap level off: rho +0.0031 pairs +0.09
+    best off by band: top-30 +0.00% | 31-100 +0.00% | 101-150 +0.00%
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.18% 1/4 | board +0.013% | picks ['snap level off', 'snap level off', 'snap level off', 'off']
+    -> FAIL
+
+  RB rows 3,340: touch share (l3) available 3,024; corr(touch-l3 dev, snap trend) 0.378
+
+  RB: touch-share LEVEL / TREND in place of / on top of the snap trend (rows 3,024, act/shadow 1.011)
+    fixed: touch level e 0.3 (snap trend off): +1.24% (1/7)  touch level e 0.6 (snap trend off): +3.58% (0/7)  touch level e 1.0 (snap trend off): +8.68% (0/7)  touch level e 0.3 + snap trend (wired): +1.60% (0/7)  touch level e 0.6 + snap trend (wired): +4.56% (0/7)  touch trend e 0.5 (snap trend off): +0.42% (2/7)  touch trend e 1.0 (snap trend off): +2.30% (0/7)  snap trend off: +0.27% (3/7)
+    rank vs off (rho 0.4983, pairs 67.90%): touch level e 0.3 (snap trend off): rho -0.0141 pairs -0.70  touch level e 0.6 (snap trend off): rho -0.0236 pairs -1.09  touch level e 1.0 (snap trend off): rho -0.0441 pairs -1.85  touch level e 0.3 + snap trend (wired): rho -0.0076 pairs -0.41  touch level e 0.6 + snap trend (wired): rho -0.0206 pairs -0.98  touch trend e 0.5 (snap trend off): rho -0.0080 pairs -0.28  touch trend e 1.0 (snap trend off): rho -0.0154 pairs -0.44  snap trend off: rho -0.0104 pairs -0.46
+    best off by band: top-30 +0.00% | 31-100 +0.00% | 101-150 +0.00%
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | board +0.000% | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+Limitations: route rate = PFF weekly receiving summaries (routes / dropbacks), last 3 games; touch share from ctx (season to date and last 3); the snap level reference bins are rebuilt here; honest replica, next game only.

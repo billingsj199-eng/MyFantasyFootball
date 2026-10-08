@@ -73,9 +73,9 @@ def main():
     NOSNAP = SHADOW / snapTE
     m = TE & ~np.isnan(dr); preds = {"off": SHADOW}
     for e in (0.15, 0.3, 0.5):
-        p = NOSNAP.copy(); p[m] = NOSNAP[m] * np.clip(1 + e * dr[m], 0.7, 1.4); preds[f"route level e {e} (snap level off)"] = p
+        p = NOSNAP.copy(); p[m] = NOSNAP[m] * np.clip(1 + e * dr[m] / 100.0, 0.7, 1.4); preds[f"route level e {e} (snap level off)"] = p
     for e in (0.15, 0.3):
-        p = SHADOW.copy(); p[m] = SHADOW[m] * np.clip(1 + e * dr[m], 0.7, 1.4); preds[f"route level e {e} + snap level (wired)"] = p
+        p = SHADOW.copy(); p[m] = SHADOW[m] * np.clip(1 + e * dr[m] / 100.0, 0.7, 1.4); preds[f"route level e {e} + snap level (wired)"] = p
     preds["snap level off"] = NOSNAP
     test("TE: route-rate LEVEL in place of / on top of the snap level", preds, m)
     # ---- RB: touch level vs snap trend

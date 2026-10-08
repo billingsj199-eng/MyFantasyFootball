@@ -477,6 +477,28 @@ def main():
         bad = (a > 0) + (b > 0) + (r < 0)
         P(f"    {k:38s} {int(tt.sum()):5d} | {a:+6.2f}% ({sa}/7)            | {b:+6.2f}% ({sb_}/7)            | {r:+.4f}    | {'HURTS' if bad >= 2 else 'mixed' if bad == 1 else 'helps'}   (its own rows {tr:+.2f}%)")
 
+    # ---------------- 12 THE SEASON BLEND (Jack 2026-10-08: "what else can we test to get rid of the season blend") ----------------
+    # The live later-week number is w x shadow + (1 - w) x Clay form per position (QB .5 / RB .8 / WR .7 / TE 0), weights fit on
+    # the NEXT GAME. Here the full rest-of-season shadow (as wired through v2.28) is blended with the Clay blend at this horizon:
+    # does any weight beat the shadow alone (w 1) out of sample? Picked LOYO + forward per position; rank order beside it.
+    P(); P("--- 12  SEASON BLEND: w x full shadow + (1 - w) x Clay blend, rest of season, per position (w 1 = shadow alone) ---")
+    WG12 = (0.0, 0.3, 0.5, 0.7, 0.8, 0.9, 1.0); WIRED12 = {"QB": 0.5, "RB": 0.8, "WR": 0.7, "TE": 0.0}
+    bl12 = lambda w: w * FULL + (1 - w) * CL
+    bw12 = np.array([WIRED12[p_] for p_ in pos]); WB12 = bw12 * FULL + (1 - bw12) * CL
+    for lab12, m12 in (("all rows", ok), ("top 150", t150)):
+        P(f"  {lab12}: " + " | ".join(f"w {w:.1f}: {100*(wm(bl12(w), m12)/wm(FULL, m12)-1):+.2f}% ({sum(1 for y in YEARS if wm(bl12(w), m12 & (year == y)) < wm(FULL, m12 & (year == y)) - 1e-12)}/7) rho {rho(bl12(w), m12):.4f}" for w in WG12 if w != 1.0) + f" | shadow alone rho {rho(FULL, m12):.4f} | wired weights {100*(wm(WB12, m12)/wm(FULL, m12)-1):+.2f}% rho {rho(WB12, m12):.4f}")
+    for ps in POS4:
+        m12 = t150 & (pos == ps); best = min(WG12, key=lambda w: wm(bl12(w), m12))
+        P(f"  {ps} (n{int(m12.sum())}): best fixed w {best:.1f} ({100*(wm(bl12(best), m12)/wm(FULL, m12)-1):+.2f}% vs shadow alone) | wired w {WIRED12[ps]:.1f}: {100*(wm(bl12(WIRED12[ps]), m12)/wm(FULL, m12)-1):+.2f}% ({sum(1 for y in YEARS if wm(bl12(WIRED12[ps]), m12 & (year == y)) < wm(FULL, m12 & (year == y)) - 1e-12)}/7) | Clay blend alone {100*(wm(CL, m12)/wm(FULL, m12)-1):+.2f}% | rank shadow {rho(FULL, m12):.4f} wired {rho(WB12, m12):.4f} Clay {rho(CL, m12):.4f}")
+    LOSO12 = [([y for y in YEARS if y != t], t) for t in YEARS]; FORW12 = [([y for y in YEARS if y < t], t) for t in FWD]
+    for flab, folds in (("LOYO", LOSO12), ("forward", FORW12)):
+        out = FULL.copy(); picks = {ps: [] for ps in POS4}
+        for tr, te in folds:
+            for ps in POS4:
+                mm = t150 & (pos == ps) & np.isin(year, tr); w = min(WG12, key=lambda w_: wm(bl12(w_), mm)); picks[ps].append(w); sel = (pos == ps) & (year == te); out[sel] = bl12(w)[sel]
+        tem = t150 & np.isin(year, [te for _, te in folds]); wins = sum(1 for _, te in folds if wm(out, tem & (year == te)) < wm(FULL, tem & (year == te)) - 1e-12)
+        P(f"  {flab:8s} per-position pick: vs shadow alone {100*(wm(out, tem)/wm(FULL, tem)-1):+.2f}% ({wins}/{len(folds)}), vs wired weights {100*(wm(out, tem)/wm(WB12, tem)-1):+.2f}% | rank {rho(out, tem):.4f} (shadow {rho(FULL, tem):.4f}, wired {rho(WB12, tem):.4f}) | picks " + " | ".join(f"{ps} {picks[ps]}" for ps in POS4))
+
     # ---------------- 11 are the weights right, player by player? ----------------
     # Jack 2026-10-02: "do we feel like the weights are correct on each player". The weight in question is how much of the number
     # is this season (games / (prior weight + games)) vs the preseason level. (a) the weight the model uses vs the weight that

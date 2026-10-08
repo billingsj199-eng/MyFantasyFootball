@@ -1,0 +1,63 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  QB pooled efficiency: 0.000 pts/target, 0.672 pts/carry, 0.486 pts/pass attempt
+  RB pooled efficiency: 1.165 pts/target, 0.639 pts/carry, 0.000 pts/pass attempt
+  WR pooled efficiency: 1.449 pts/target, 1.551 pts/carry, 0.000 pts/pass attempt
+  TE pooled efficiency: 1.413 pts/target, 1.215 pts/carry, 0.000 pts/pass attempt
+  pbp 2019: 32,157 plays
+  pbp 2020: 32,572 plays
+  pbp 2021: 34,139 plays
+  pbp 2022: 33,770 plays
+  pbp 2023: 33,957 plays
+  pbp 2024: 33,471 plays
+  pbp 2025: 32,937 plays
+
+=== VOLUME FIRST: 9,737 top-150 in-season player-weeks 2019-25 ===
+
+--- NEXT GAME ---
+  volume-first (team shrunk K4, share shrunk KS4, position efficiency) n 8851 | vs shadow   +9.56% | vs Clay   +8.85% | vs blend   +9.77% | rho 0.334 (shadow 0.400, blend 0.401) | level 0.894
+      QB: vs shadow  +15.16% | vs blend  +15.66% | rho 0.265 (shadow 0.343) | level 0.897
+      RB: vs shadow   +9.83% | vs blend   +9.91% | rho 0.436 (shadow 0.505) | level 0.888
+      WR: vs shadow   +8.22% | vs blend   +8.47% | rho 0.321 (shadow 0.359) | level 0.889
+      TE: vs shadow   +3.86% | vs blend   +3.89% | rho 0.314 (shadow 0.395) | level 0.925
+  + own efficiency shrunk (KE 60)                                    n 8851 | vs shadow  +10.25% | vs Clay   +9.54% | vs blend  +10.47% | rho 0.350 (shadow 0.400, blend 0.401) | level 0.886
+  + game-script tilt .05 x spread/10                                 n 8851 | vs shadow   +9.74% | vs Clay   +9.03% | vs blend   +9.96% | rho 0.340 (shadow 0.400, blend 0.401) | level 0.890
+  own volume per game x position efficiency (no team/share model)    n 9043 | vs shadow   +8.01% | vs Clay   +7.30% | vs blend   +8.23% | rho 0.323 (shadow 0.399, blend 0.400) | level 0.975
+  own volume x own efficiency shrunk                                 n 9043 | vs shadow   +7.47% | vs Clay   +6.77% | vs blend   +7.69% | rho 0.336 (shadow 0.399, blend 0.400) | level 0.966
+  ORACLE: actual volume this game x position efficiency              n 9733 | vs shadow  -29.66% | vs Clay  -30.15% | vs blend  -29.50% | rho 0.595 (shadow 0.394, blend 0.395) | level 0.998
+  shadow with volume-first as its usage evidence (xFP replaced): vs shadow -0.06% (4/7) | rho +0.0006
+  shadow x volume-first average w 0.20: vs shadow +0.12% (2/7) | vs blend +0.32% | rho -0.0045
+  shadow x volume-first average w 0.35: vs shadow +0.80% (1/7) | vs blend +1.00% | rho -0.0085
+  shadow x volume-first average w 0.50: vs shadow +1.98% (0/7) | vs blend +2.18% | rho -0.0174
+
+--- REST OF SEASON (4+ left) ---
+  volume-first (team shrunk K4, share shrunk KS4, position efficiency) n 5933 | vs shadow  +39.47% | vs Clay  +35.92% | vs blend  +41.21% | rho 0.509 (shadow 0.595, blend 0.602) | level 0.897
+      QB: vs shadow  +52.05% | vs blend  +55.45% | rho 0.395 (shadow 0.495) | level 0.893
+      RB: vs shadow  +46.54% | vs blend  +47.48% | rho 0.567 (shadow 0.657) | level 0.897
+      WR: vs shadow  +34.03% | vs blend  +35.95% | rho 0.562 (shadow 0.625) | level 0.891
+      TE: vs shadow   +9.16% | vs blend  +10.21% | rho 0.499 (shadow 0.597) | level 0.931
+  + own efficiency shrunk (KE 60)                                    n 5933 | vs shadow  +43.06% | vs Clay  +39.42% | vs blend  +44.84% | rho 0.540 (shadow 0.595, blend 0.602) | level 0.890
+  + game-script tilt .05 x spread/10                                 n 5933 | vs shadow  +40.51% | vs Clay  +36.94% | vs blend  +42.27% | rho 0.513 (shadow 0.595, blend 0.602) | level 0.893
+  own volume per game x position efficiency (no team/share model)    n 6062 | vs shadow  +38.19% | vs Clay  +34.79% | vs blend  +40.09% | rho 0.473 (shadow 0.593, blend 0.600) | level 0.977
+  own volume x own efficiency shrunk                                 n 6062 | vs shadow  +37.25% | vs Clay  +33.87% | vs blend  +39.14% | rho 0.503 (shadow 0.593, blend 0.600) | level 0.968
+  ORACLE: actual volume this game x position efficiency              n 6750 | vs shadow +110.46% | vs Clay +106.84% | vs blend +114.28% | rho 0.429 (shadow 0.594, blend 0.603) | level 0.994
+  shadow with volume-first as its usage evidence (xFP replaced): vs shadow -0.48% (4/7) | rho -0.0008
+  shadow x volume-first average w 0.20: vs shadow -0.74% (4/7) | vs blend +0.50% | rho -0.0008
+  shadow x volume-first average w 0.35: vs shadow +1.54% (2/7) | vs blend +2.81% | rho -0.0062
+  shadow x volume-first average w 0.50: vs shadow +6.25% (1/7) | vs blend +7.57% | rho -0.0188
+
+Limitations: efficiency pooled over all seasons (not held out); shares from ctx (season to date / prior season); team volume from pbp; layers (Vegas / FPA) multiplied on afterwards for every candidate alike; rookies / no prior-season share fall back to the season-to-date share.

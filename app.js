@@ -61743,6 +61743,17 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
+    // Optimistic (2026-10-08, Jack: the row sat in the menu until the cloud round
+    // trip finished): drop it from the local list and repaint the switcher + menu
+    // now; the Firestore reload below is the source of truth and repaints again.
+    try {
+      if (Array.isArray(window._mtSavedLeagues)) {
+        window._mtSavedLeagues = window._mtSavedLeagues.filter(l => String(l && l.leagueId) !== String(leagueId));
+        if (typeof _mtPopulateLeagueSwitch === 'function') _mtPopulateLeagueSwitch();
+        if (typeof _mtRenderLeagueMenu === 'function') _mtRenderLeagueMenu();
+      }
+    } catch (_) {}
+
     // Load, remove the key, re-save
     const docRef = db.collection('user_game_data').doc(user.uid);
     docRef.get().then(doc => {

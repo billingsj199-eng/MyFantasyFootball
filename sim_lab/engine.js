@@ -3170,6 +3170,22 @@
     }
     var ncBaseW = jsBasePg(p, sc, ncPrior, ncP, ncUse), ncVk = NC_SHADOW.vacatedK[p.pos];
     if (rsOn && p.pos === 'TE' && p.adp > rsS.teBand[0] && p.adp <= rsS.teBand[1]) { ncBaseW *= rsS.teLevel; ncSrc += '+rsTE'; }
+    // TE TOUCHDOWN FLOOR, later weeks (2026-10-08, backtest_shadow_ros.py section 14a; Jack: 'what type of TEs are below - is it TDs?'): a tight end with a
+    // real role (season snap share >= 70% or 4.5+ targets a game) and few touchdowns so far is under-projected for the rest of the season - his TD points
+    // come back toward 1.8 a game. Lift = 1 + e x max(0, 1.8 - TD points per game so far): e .08 picked in 7/7 LOYO folds, own rows -13.8% (6/7), forward
+    // -14.7% (4/4), all TE rows -4.75% (6/7), TE level 1.063 -> 1.030, TE rank order .622 -> .632, whole board -0.33%. The next-game version missed the bar
+    // (4/7), so this is rest-of-season only. Kill: window.SIM_NC_TE_TDFLOOR = false. Backup engine.js.bak_pre_tetdfloor_20261008.
+    if (ncRos && p.pos === 'TE' && !(typeof window !== 'undefined' && window.SIM_NC_TE_TDFLOOR === false)) {
+      var tfRec = jsData().players ? jsData().players[p.norm] : null, tfG = tfRec && tfRec.g ? tfRec.g : 0, tfPg = tfRec && tfRec.pg ? tfRec.pg : null;
+      if (tfG >= 3 && tfPg) {
+        var tfSn = (typeof window !== 'undefined' && window.SIM_SNAPS_2026) ? window.SIM_SNAPS_2026[p.name] : null, tfSnapW = tfSn && tfSn.w ? Object.keys(tfSn.w).filter(function (w) { return +w < wk && typeof tfSn.w[w] === 'number'; }).map(function (w) { return tfSn.w[w]; }) : [];
+        var tfSnap = tfSnapW.length ? tfSnapW.reduce(function (a, b) { return a + b; }, 0) / tfSnapW.length : 0, tfTgt = tfPg.tgt || 0;
+        if (tfSnap >= 70 || tfTgt >= 4.5) {
+          var tfTd = 6 * ((tfPg.rctd || 0) + (tfPg.rtd || 0)), tfLift = 1 + 0.08 * Math.max(0, 1.8 - tfTd);
+          if (tfLift > 1.004) { ncBaseW *= tfLift; ncSrc += '+tdfloor'; }
+        }
+      }
+    }
     if (rsOn && p.pos === 'RB') {
       var rsZ = rosTiltZ(), rsPz = rsZ && rsZ.plays ? rsZ.plays[p.tm] : null;
       if (typeof rsPz === 'number' && Math.abs(rsPz) > 0.05) { ncBaseW *= 1 - rsS.rbPlays * rsPz; ncSrc += '+rsVol'; }

@@ -2880,3 +2880,11 @@ tbody td{font-size:.8125rem}
   .card-rank-row{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))!important}
   .card-name{font-size:1.5rem}
 }
+/* Phone card: 8 tabs wrap into two rows of 4 instead of clipping; meta separators off when the
+   line wraps; tile rows go 4-up (minmax 80px) so 4-tile rows stay intact. */
+@media (max-width:600px){
+  .card-view-toggle{flex-wrap:wrap;gap:2px}
+  .card-view-btn{flex:1 1 23%;padding:7px 0;font-size:.6875rem}
+  .card-meta .card-team+.card-team::before{content:none}
+  .card-rank-row{grid-template-columns:repeat(auto-fit,minmax(80px,1fr))!important}
+}

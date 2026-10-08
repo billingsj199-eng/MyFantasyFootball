@@ -79,8 +79,12 @@ def live_today(X):
     return np.maximum(0.0, base * chain + luck), dict(clay_gm=clay_gm, chain=chain, inh=inh, useok=useok)
 
 
-def shadow_current(X):
-    """ablate_shadow_next.full() as wired today: v2.25 layers on, WR snap trend off (v2.29), v2.33 rookie prior weights"""
+SHADOW_LUCK = True   # 2026-10-08: the engine shadow has carried the TD-luck term since v2.22 (ncLuckScale); the replica did not - parity restored
+
+
+def shadow_current(X, luck=None):
+    """ablate_shadow_next.full() as wired today: v2.25 layers on, WR snap trend off (v2.29), v2.33 rookie prior weights, TE docks at .5 (10-08), TD luck (v2.22)"""
+    luck_on = SHADOW_LUCK if luck is None else luck
     F = X["F"]; n = X["n"]; pos, g, wk, adp, act = X["pos"], X["g"], X["wk"], X["adp"], X["act"]
     finw = np.where(X["year"] <= 2020, 17, 18); final = wk == finw
     SH0 = SN.shadow(X); allr = ~final & (SH0 >= 3)
@@ -101,18 +105,21 @@ def shadow_current(X):
     Pw = F["Pvec"] * np.where((pos == "WR") & (g == 1), 5.0, 1.0)
     Pw = Pw * np.where(X["rookie"] & (pos == "RB"), 1.6, np.where(X["rookie"] & (pos == "TE"), 2.5, 1.0))   # v2.33 rookieP
     out = (Pw * X["prior"] + g * ev) / np.maximum(Pw + g, 1e-9) * X["layers"]
+    L = pd.read_parquet(os.path.join(HERE, "ctx_live_layers.parquet")); lk = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(L.year, L.pid, L.wk)) if isinstance(b, str)}
+    lix = np.array([lk.get((int(year[i]), pid[i], int(wk[i])), -1) if pid[i] else -1 for i in range(n)]); tdl = np.where(lix >= 0, L["td_luck_pg"].values[np.maximum(lix, 0)].astype(float), 0.0)
+    tdk = np.array([TDK[p_] for p_ in pos]); luckT = np.where((g > 0) & luck_on, tdk * np.nan_to_num(tdl, nan=0.0) * g / np.maximum(Pw + g, 1e-9) * (1 - base_lam), 0.0)
     for gi, m_ in enumerate([0.7, 0.8], start=1): out = np.where(F["buried_rk"] & (wk == gi), out * m_, out)
     out = np.where(F["on"], out * np.power(F["pm"], 0.75), out)
     out = np.where(pos == "QB", out * np.exp(0.03 * X["z"]), out)
     out = np.where((pos == "WR") & X["qbo"], out * np.where(adp <= 60, 0.85, 0.95), out)
-    for ps_ in ("RB", "TE"): out = np.where(pos == ps_, out * smx, out)          # WR snap trend removed (v2.29 prune)
+    out = np.where(pos == "RB", out * smx, out); out = np.where(pos == "TE", out * np.sqrt(smx), out)          # WR snap trend removed (v2.29 prune); TE docks at .5 (10-08 teDockK)
     out = np.where(pos == "WR", out * np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4), out)
-    out = np.where(pos == "TE", out * np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4), out)
+    out = np.where(pos == "TE", out * np.sqrt(np.clip(1 + 0.3 * dev / 100.0, 0.7, 1.4)), out)
     out = np.where((pos == "QB") & X["mover"], out * 0.90, out)
     out = np.where(pos == "QB", out * (1 - 0.75 * low), out)
     out = np.where((pos == "WR") & X["rookie"] & (g >= 2) & (g <= 5), out * 0.90, out)
     out = np.where((pos == "RB") & (g >= 2) & (g <= 5) & (X["car_sh"] < 0.30), out * 0.90, out)
-    return np.maximum(0.0, out), SH0
+    return np.maximum(0.0, out + luckT), SH0
 
 
 def load_espn(X):

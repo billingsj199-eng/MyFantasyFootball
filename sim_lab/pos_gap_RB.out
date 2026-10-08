@@ -1,0 +1,125 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== RB GAP: 3,355 top-150 RB player-weeks 2019-25 (honest replica: TD luck in, TE docks .5) ===
+  next game:        shadow alone vs Clay form                 -1.42% (7/7) | rho 0.510 (+0.0058) | level 1.009
+                    shadow alone vs the BLEND                 +0.10% (2/7) | rho 0.510 (-0.0013) | level 1.009
+                    blend vs Clay form                        -1.52% (7/7) | rho 0.511 (+0.0071) | level 0.998
+  rest of season:   shadow alone vs Clay form                 -3.73% (4/7) | rho 0.661 (-0.0063) | level 1.029
+                    shadow alone vs the BLEND                 +1.06% (3/7) | rho 0.661 (-0.0042) | level 1.029
+                    blend vs Clay form                        -4.74% (4/7) | rho 0.665 (-0.0021) | level 1.017
+  inputs: ADP 100% | history 95% | ridge 100% | opportunity prior 79% | rookies 16%
+
+--- 1  PRESEASON PRIOR ALONE (0 games, x the game's layers) ---
+  next game (n252):
+    shadow prior (wired) vs Clay              -6.26% (6/7) | rho 0.519 (+0.0071) | level 0.947
+    hand prior vs Clay                        -5.01% (6/7) | rho 0.516 (+0.0044) | level 0.993
+    ridge (where it exists) vs Clay           -4.66% (4/7) | rho 0.523 (+0.0113) | level 0.904
+    Clay per game vs Clay                     +0.00% (0/7) | rho 0.512 (+0.0000) | level 0.875
+    history prior (where it exists) vs Clay   +4.73% (4/7) | rho 0.506 (-0.0060) | level 0.898
+    50/50 shadow prior + Clay vs Clay         -4.78% (6/7) | rho 0.536 (+0.0241) | level 0.909
+      rookies      n  42 | shadow prior vs Clay -12.37% | level shadow 0.663 Clay 0.660
+      vets         n 210 | shadow prior vs Clay  -5.77% | level shadow 0.989 Clay 0.905
+      ADP <= 60    n 130 | shadow prior vs Clay  -6.60% | level shadow 1.011 Clay 0.915
+      ADP 61-150   n 122 | shadow prior vs Clay  -4.57% | level shadow 0.834 Clay 0.801
+  rest of season 4+ (n252):
+    shadow prior (wired) vs Clay             -10.45% (4/7) | rho 0.699 (-0.0108) | level 1.019
+    hand prior vs Clay                        -4.90% (3/7) | rho 0.666 (-0.0438) | level 1.069
+    ridge (where it exists) vs Clay           -7.77% (4/7) | rho 0.717 (+0.0065) | level 0.973
+    Clay per game vs Clay                     +0.00% (0/7) | rho 0.710 (+0.0000) | level 0.942
+    history prior (where it exists) vs Clay  +10.80% (2/7) | rho 0.663 (-0.0468) | level 0.967
+    50/50 shadow prior + Clay vs Clay         -9.96% (6/7) | rho 0.721 (+0.0106) | level 0.979
+      rookies      n  42 | shadow prior vs Clay  -8.69% | level shadow 1.039 Clay 1.033
+      vets         n 210 | shadow prior vs Clay -10.59% | level shadow 1.016 Clay 0.929
+      ADP <= 60    n 130 | shadow prior vs Clay  -9.80% | level shadow 1.028 Clay 0.931
+      ADP 61-150   n 122 | shadow prior vs Clay -13.45% | level shadow 1.003 Clay 0.962
+
+--- 2  IN-SEASON EVIDENCE ALONE (4+ games, x layers) vs the next game: is usage under-weighted? ---
+  raw PPG vs Clay form                      +8.34% (0/7) | rho 0.461 (-0.0343) | level 1.004
+  context-regressed PPG (ppg_v) vs Clay form  +5.77% (0/7) | rho 0.464 (-0.0312) | level 1.015
+  xFP per game vs Clay form                 +7.75% (0/7) | rho 0.434 (-0.0612) | level 1.045
+  .5 xFP + .5 ppg_v vs Clay form            +3.83% (0/7) | rho 0.459 (-0.0368) | level 1.030
+  .25 xFP + .75 ppg_v vs Clay form          +4.07% (0/7) | rho 0.462 (-0.0335) | level 1.023
+  ppg_v x (target share/median)^.5 vs Clay form +31.56% (0/7) | rho 0.443 (-0.0524) | level 0.976
+  ppg_v x (route rate/median)^.5 vs Clay form  +6.53% (0/7) | rho 0.463 (-0.0326) | level 1.014
+  shadow (prior + evidence + layers) vs Clay form  -0.45% (4/7) | rho 0.500 (+0.0043) | level 1.008
+  blend vs Clay form                        -0.60% (5/7) | rho 0.499 (+0.0039) | level 1.000
+
+--- 3  WHERE THE GAP SITS: shadow minus Clay by cut (share of the total gap), next game | rest of season ---
+  NEXT: shadow vs Clay -1.42% overall
+    ADP 1-30           n1143 | shadow vs Clay  -1.27% | of the gap  -64.6% | level act/shadow 1.020 act/Clay 0.976
+    31-60              n 636 | shadow vs Clay  -0.88% | of the gap   -8.0% | level act/shadow 1.021 act/Clay 0.950
+    61-100             n 763 | shadow vs Clay  -3.56% | of the gap  -20.9% | level act/shadow 0.989 act/Clay 0.906
+    101-150            n 813 | shadow vs Clay  -1.40% | of the gap   -6.5% | level act/shadow 0.989 act/Clay 0.965
+    games 0            n 252 | shadow vs Clay  -7.36% | of the gap  -30.8% | level act/shadow 0.974 act/Clay 0.875
+    games 1-3          n 756 | shadow vs Clay  -2.81% | of the gap  -46.8% | level act/shadow 1.023 act/Clay 0.951
+    games 4-8          n1198 | shadow vs Clay  -1.39% | of the gap  -32.7% | level act/shadow 0.989 act/Clay 0.943
+    games 9+           n1149 | shadow vs Clay  +0.40% | of the gap  +10.3% | level act/shadow 1.027 act/Clay 0.988
+    rookies            n 537 | shadow vs Clay  -3.40% | of the gap  -20.0% | level act/shadow 1.010 act/Clay 0.934
+    2nd year           n 545 | shadow vs Clay  -0.85% | of the gap   -8.6% | level act/shadow 1.017 act/Clay 0.972
+    no history         n 172 | shadow vs Clay -21.53% | of the gap  -37.2% | level act/shadow 0.939 act/Clay 0.823
+    opportunity prior  n2634 | shadow vs Clay  -1.05% | of the gap  -64.3% | level act/shadow 1.015 act/Clay 0.963
+    history prior      n 549 | shadow vs Clay  +0.19% | of the gap   +1.4% | level act/shadow 0.995 act/Clay 0.949
+  ROS: shadow vs Clay -3.73% overall
+    ADP 1-30           n 732 | shadow vs Clay  -5.22% | of the gap  -87.3% | level act/shadow 1.020 act/Clay 0.974
+    31-60              n 409 | shadow vs Clay  +3.13% | of the gap  +12.7% | level act/shadow 1.042 act/Clay 0.963
+    61-100             n 496 | shadow vs Clay  +1.28% | of the gap   +4.2% | level act/shadow 1.041 act/Clay 0.950
+    101-150            n 514 | shadow vs Clay -11.05% | of the gap  -29.7% | level act/shadow 1.023 act/Clay 0.996
+    games 1-3          n 735 | shadow vs Clay  -3.71% | of the gap  -34.6% | level act/shadow 1.039 act/Clay 0.963
+    games 4-8          n1097 | shadow vs Clay  -5.20% | of the gap  -70.2% | level act/shadow 1.019 act/Clay 0.969
+    games 9+           n 319 | shadow vs Clay  +1.22% | of the gap   +4.8% | level act/shadow 1.039 act/Clay 0.993
+    rookies            n 346 | shadow vs Clay  +8.64% | of the gap  +21.5% | level act/shadow 1.121 act/Clay 1.034
+    2nd year           n 346 | shadow vs Clay +10.97% | of the gap  +42.9% | level act/shadow 1.089 act/Clay 1.036
+    no history         n 124 | shadow vs Clay +16.13% | of the gap  +15.6% | level act/shadow 1.175 act/Clay 1.058
+    opportunity prior  n1704 | shadow vs Clay  -5.24% | of the gap -121.1% | level act/shadow 1.016 act/Clay 0.962
+    history prior      n 323 | shadow vs Clay  +2.05% | of the gap   +5.5% | level act/shadow 1.063 act/Clay 1.001
+
+--- 4  LEVEL by the shadow's layer state and scoring-over-usage (2+ games) ---
+  extra layers < .95 (docked)          n 732 | act/shadow 1.018 act/Clay 0.968 | shadow vs Clay  -0.64%
+  extra layers .95-1.05                n1678 | act/shadow 1.005 act/Clay 0.955 | shadow vs Clay  -1.29%
+  extra layers > 1.05 (lifted)         n 693 | act/shadow 1.022 act/Clay 0.973 | shadow vs Clay  -0.73%
+  game layers < .9                     n 409 | act/shadow 1.014 act/Clay 0.992 | shadow vs Clay  -0.64%
+  game layers > 1.1                    n 474 | act/shadow 1.017 act/Clay 0.955 | shadow vs Clay  -3.43%
+  scoring/usage Q1 (-9.00-0.84) n 698 | act/shadow 0.959 act/Clay 0.915 | shadow vs Clay  -3.50%
+  scoring/usage Q2 (0.84-0.99) n 698 | act/shadow 0.991 act/Clay 0.952 | shadow vs Clay  -1.19%
+  scoring/usage Q3 (0.99-1.13) n 698 | act/shadow 1.023 act/Clay 0.978 | shadow vs Clay  -0.63%
+  scoring/usage Q4 (1.13-99.00) n 698 | act/shadow 1.047 act/Clay 0.995 | shadow vs Clay  +0.96%
+
+--- 5  COMPONENT SWAPS on the shadow (position rows only), next game | rest of season, vs shadow and vs Clay form ---
+  NEXT Clay per game as the prior vs shadow      +1.01% (2/7) | rho 0.503 (-0.0071) | level 0.971 | vs Clay  -0.43%
+  ROS  Clay per game as the prior vs shadow      +2.15% (4/7) | rho 0.668 (+0.0073) | level 0.985 | vs Clay  -1.66%
+  NEXT 50/50 shadow prior + Clay prior vs shadow  +0.05% (4/7) | rho 0.508 (-0.0013) | level 0.990 | vs Clay  -1.37%
+  ROS  50/50 shadow prior + Clay prior vs shadow  -1.18% (5/7) | rho 0.669 (+0.0079) | level 1.006 | vs Clay  -4.87%
+  NEXT prior strength x .5 vs shadow             +0.60% (2/7) | rho 0.503 (-0.0071) | level 1.007 | vs Clay  -0.83%
+  ROS  prior strength x .5 vs shadow             +4.60% (1/7) | rho 0.652 (-0.0090) | level 1.025 | vs Clay  +0.70%
+  NEXT prior strength x 2 vs shadow              +0.10% (4/7) | rho 0.510 (+0.0005) | level 1.012 | vs Clay  -1.32%
+  ROS  prior strength x 2 vs shadow              -0.41% (4/7) | rho 0.664 (+0.0035) | level 1.033 | vs Clay  -4.13%
+Traceback (most recent call last):
+  File "E:\MyFantasyFootball\sim_lab\research_pos_gap.py", line 131, in <module>
+    main()
+    ~~~~^^
+  File "E:\MyFantasyFootball\sim_lab\research_pos_gap.py", line 124, in main
+    P("  NEXT " + line(k + " vs shadow", p, SHADOW, mP) + f" | vs Clay {100*(wm(p, mP)/wm(TODAY, mP)-1):+6.2f}%")
+                  ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\MyFantasyFootball\sim_lab\research_pos_gap.py", line 53, in line
+    wins = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and wm(p, m & (year == y), T) < wm(ref, m & (year == y), T) - 1e-12)
+  File "E:\MyFantasyFootball\sim_lab\research_pos_gap.py", line 53, in <genexpr>
+    wins = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and wm(p, m & (year == y), T) < wm(ref, m & (year == y), T) - 1e-12)
+                                                                    ~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\MyFantasyFootball\sim_lab\research_pos_gap.py", line 51, in wm
+    def wm(p, m, T=act): return float(np.average((p[m] - T[m]) ** 2, weights=wt[m])) if m.any() else np.nan
+                                                  ~^^^
+TypeError: only integer scalar arrays can be converted to a scalar index

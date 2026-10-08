@@ -1,0 +1,67 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== QB RIDGE PRIOR: 1,691 top-150 QB player-weeks; pooled ridge on 1,691 rows, QB-only ridge on 1,691 ===
+  prior alone at 0 games (n125), error vs Clay per game, next game: hand +3.69% | pooled ridge +0.81% | QB-only ridge +0.81% | 50/50 hand+ridge +1.74%
+  level act/prior at 0 games: hand 0.972 pooled ridge 0.943 QB-only 0.943 Clay 0.969
+
+--- NEXT GAME: 1,691 QB rows | shadow vs Clay form -0.45%, vs blend +0.56% ---
+  pooled ridge w 0.25      vs shadow  +0.27% (2/7) fwd  +0.46% (0/4) | vs Clay  -0.18% | vs BLEND  +0.83% | rho 0.3345 (-0.0069 vs shadow, -0.0054 vs blend, 0/7) | pairs -0.41 | level 0.999
+  pooled ridge w 0.50      vs shadow  +0.66% (1/7) fwd  +1.07% (0/4) | vs Clay  +0.21% | vs BLEND  +1.23% | rho 0.3303 (-0.0111 vs shadow, -0.0096 vs blend, 1/7) | pairs -0.41 | level 0.994
+  pooled ridge w 0.75      vs shadow  +1.19% (1/7) fwd  +1.84% (0/4) | vs Clay  +0.73% | vs BLEND  +1.75% | rho 0.3225 (-0.0189 vs shadow, -0.0174 vs blend, 0/7) | pairs -0.74 | level 0.990
+  pooled ridge w 1.00      vs shadow  +1.84% (1/7) fwd  +2.76% (0/4) | vs Clay  +1.38% | vs BLEND  +2.41% | rho 0.3195 (-0.0218 vs shadow, -0.0203 vs blend, 0/7) | pairs -0.86 | level 0.985
+  QB-only ridge w 0.50     vs shadow  +0.66% (1/7) fwd  +1.07% (0/4) | vs Clay  +0.21% | vs BLEND  +1.23% | rho 0.3303 (-0.0111 vs shadow, -0.0096 vs blend, 1/7) | pairs -0.41 | level 0.994
+  QB-only ridge w 1.00     vs shadow  +1.84% (1/7) fwd  +2.76% (0/4) | vs Clay  +1.38% | vs BLEND  +2.41% | rho 0.3195 (-0.0218 vs shadow, -0.0203 vs blend, 0/7) | pairs -0.86 | level 0.985
+  cuts, pooled ridge w .50 vs shadow / vs blend:
+    ADP <= 60    n 537 | vs shadow  +1.07% | vs blend  +1.06% (shadow was  -0.01%)
+    ADP 61-150   n1154 | vs shadow  +0.34% | vs blend  +1.36% (shadow was  +1.02%)
+    games 0-3    n 497 | vs shadow  +0.51% | vs blend  +1.94% (shadow was  +1.42%)
+    games 4-8    n 584 | vs shadow  +0.99% | vs blend  +1.40% (shadow was  +0.41%)
+    games 9+     n 610 | vs shadow  +0.47% | vs blend  +0.55% (shadow was  +0.08%)
+    2nd year     n 242 | vs shadow  +2.97% | vs blend  +5.94% (shadow was  +2.88%)
+    rookies      n 109 | vs shadow  -2.47% | vs blend  -2.31% (shadow was  +0.16%)
+    vets 3+ yrs  n1340 | vs shadow  +0.48% | vs blend  +0.69% (shadow was  +0.21%)
+  pick LOYO    : error +0.00% vs shadow (0/7), +0.56% vs blend | rho +0.0000 | picks ['shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)']
+  pick forward : error +0.17% vs shadow (0/4), +0.36% vs blend | rho -0.0030 | picks ['pooled ridge w 0.25', 'pooled ridge w 0.25', 'shadow (hand prior)', 'shadow (hand prior)']
+
+--- REST OF SEASON (4+ games left): 1,078 QB rows | shadow vs Clay form -1.49%, vs blend +2.88% ---
+  pooled ridge w 0.25      vs shadow  +2.02% (1/7) fwd  +2.44% (0/4) | vs Clay  +0.50% | vs BLEND  +4.96% | rho 0.4912 (-0.0084 vs shadow, -0.0137 vs blend, 2/7) | pairs -0.19 | level 0.995
+  pooled ridge w 0.50      vs shadow  +4.61% (1/7) fwd  +5.53% (0/4) | vs Clay  +3.06% | vs BLEND  +7.62% | rho 0.4817 (-0.0179 vs shadow, -0.0231 vs blend, 1/7) | pairs -0.80 | level 0.990
+  pooled ridge w 0.75      vs shadow  +7.78% (1/7) fwd  +9.28% (0/4) | vs Clay  +6.18% | vs BLEND +10.88% | rho 0.4675 (-0.0322 vs shadow, -0.0374 vs blend, 0/7) | pairs -1.30 | level 0.985
+  pooled ridge w 1.00      vs shadow +11.52% (1/7) fwd +13.67% (0/4) | vs Clay  +9.86% | vs BLEND +14.73% | rho 0.4511 (-0.0485 vs shadow, -0.0537 vs blend, 0/7) | pairs -1.98 | level 0.980
+  QB-only ridge w 0.50     vs shadow  +4.61% (1/7) fwd  +5.53% (0/4) | vs Clay  +3.06% | vs BLEND  +7.62% | rho 0.4817 (-0.0179 vs shadow, -0.0231 vs blend, 1/7) | pairs -0.80 | level 0.990
+  QB-only ridge w 1.00     vs shadow +11.52% (1/7) fwd +13.67% (0/4) | vs Clay  +9.86% | vs BLEND +14.73% | rho 0.4511 (-0.0485 vs shadow, -0.0537 vs blend, 0/7) | pairs -1.98 | level 0.980
+  cuts, pooled ridge w .50 vs shadow / vs blend:
+    ADP <= 60    n 343 | vs shadow  +7.22% | vs blend +12.49% (shadow was  +4.92%)
+    ADP 61-150   n 735 | vs shadow  +2.00% | vs blend  +2.94% (shadow was  +0.92%)
+    games 0-3    n 363 | vs shadow  +7.90% | vs blend +14.79% (shadow was  +6.39%)
+    games 4-8    n 534 | vs shadow  +3.75% | vs blend  +4.95% (shadow was  +1.16%)
+    games 9+     n 181 | vs shadow  +2.11% | vs blend  +4.95% (shadow was  +2.78%)
+    2nd year     n 154 | vs shadow +10.40% | vs blend +20.19% (shadow was  +8.87%)
+    rookies      n  66 | vs shadow  -2.71% | vs blend +10.12% (shadow was +13.19%)
+    vets 3+ yrs  n 858 | vs shadow  +3.67% | vs blend  +4.93% (shadow was  +1.22%)
+  pick LOYO    : error +0.00% vs shadow (0/7), +2.88% vs blend | rho +0.0000 | picks ['shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)']
+  pick forward : error +0.00% vs shadow (0/4), +0.56% vs blend | rho +0.0000 | picks ['shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)', 'shadow (hand prior)']
+
+Limitations: ridge = backtest_season_long LOYO predictions (each season held out, so the prior is honest); shadow replica (no book anchor / docks / QB window); the QB-only ridge uses the same feature list on ~1/6 of the rows.

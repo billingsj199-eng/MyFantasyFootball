@@ -16734,6 +16734,248 @@ function _cardWeeklyRanks(d) {
   } catch (_) { return null; }
 }
 
+// TEAM tab (Jack 2026-10-08): every teammate on one sheet — this week's Sim Lab projection
+// (with the questionable players flipped in / out right here: a what-if that never touches
+// the ASSUMED OUT list), the team's projected fantasy points next to the Vegas total, and each
+// player's share of the offense: snaps, routes, targets, air yards, aDOT, carries, red-zone
+// looks, xFP, points. Usage counts = data/team_usage_2026.js (scripts/build_team_usage.py,
+// nflverse pbp) in the lazy weekly bundle with SNAP_COUNTS / ROUTE_PCT / WEEKLY_STATS.
+// Shares are over the weeks the player played; LAST 3 = the team's last three games.
+const _teamViewState = { flip: {}, win: 'season', tm: null };
+function _teamDByName() {
+  let m = window._teamDMap;
+  if (m && m._n === D.length) return m;
+  m = { _n: D.length };
+  D.forEach(p => { if (p && p.n && !p._retired && !p._isDevy && !m[p.n]) m[p.n] = p; });
+  window._teamDMap = m;
+  return m;
+}
+function buildTeamCardView(d) {
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fmt1 = v => (typeof v === 'number' && isFinite(v)) ? (Math.round(v * 10) / 10).toFixed(1) : '—';
+  const pctS = v => (typeof v === 'number' && isFinite(v)) ? Math.round(v) + '%' : '—';
+  const wk = window._weeklyActiveWeek || 1;
+  const abbr = teamAbbr(d.t);
+  if (_teamViewState.tm !== abbr) { _teamViewState.tm = abbr; _teamViewState.flip = {}; }
+  const flip = _teamViewState.flip, win = _teamViewState.win;
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const recAdj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;   // WEEKLY_STATS fpts are half-PPR
+  const U = window.TEAM_USAGE_2026, SP = window.SIM_PROJ_2026, R = window.PLAYER_ROLES_2026;
+  const dMap = _teamDByName();
+  const SKILL = { QB: 1, RB: 1, WR: 1, TE: 1 };
+
+  // roster: Sim Lab team list + depth-chart roles + anyone with 2026 usage for this team + d.js team
+  const names = new Set();
+  if (SP && SP.teamOf) Object.keys(SP.teamOf).forEach(n => { if (SP.teamOf[n] === abbr) names.add(n); });
+  if (R && R.p) Object.keys(R.p).forEach(n => { if (R.p[n].t === abbr) names.add(n); });
+  if (U && U.p) Object.keys(U.p).forEach(n => { if (U.p[n].t === abbr) names.add(n); });
+  D.forEach(p => { if (p && !p._retired && !p._isDevy && SKILL[p.s] && p.t && teamAbbr(p.t) === abbr) names.add(p.n); });
+  const players = [];
+  const seen = new Set();
+  names.forEach(n => {
+    const p = dMap[n];
+    if (!p || !SKILL[p.s] || seen.has(p.n) || teamAbbr(p.t) !== abbr) return;
+    seen.add(p.n);
+    players.push(p);
+  });
+
+  // team game weeks + window
+  const tWeeks = (U && U.t && U.t[abbr]) ? Object.keys(U.t[abbr]).map(Number).sort((a, b) => a - b) : [];
+  const winWeeks = win === 'l3' ? tWeeks.slice(-3) : tWeeks;
+  const winSet = new Set(winWeeks.map(String));
+
+  // projections: board state (ASSUMED OUT list) vs this tab's flips
+  const hasFlip = Object.keys(flip).length > 0;
+  const projOf = (p, useFlip) => {
+    const r0 = _simProjRowRaw(p, wk);
+    if (useFlip && hasFlip && typeof window._qsValue === 'function') {
+      const v = window._qsValue(p.n, wk, flip);
+      if (v) return { v: v[fi], out: v[fi] === 0 && !!r0 && r0[3] == null };
+    }
+    const r = _simProjRow(p, wk);
+    if (!r) return null;
+    return { v: r[fi], out: r[fi] === 0 && r[3] == null };
+  };
+
+  const rows = players.map(p => {
+    const u = U && U.p && U.p[p.n];
+    const snapW = (typeof SNAP_COUNTS !== 'undefined' && SNAP_COUNTS[p.n] && SNAP_COUNTS[p.n]['2026'] && SNAP_COUNTS[p.n]['2026'].w) || {};
+    const played = winWeeks.filter(w => (u && u.w[w] && u.w[w][0] === abbr) || (snapW[w] > 0));
+    const agg = [0, 0, 0, 0, 0, 0, 0], tAgg = [0, 0, 0, 0, 0, 0, 0];
+    played.forEach(w => {
+      const r = u && u.w[w];
+      if (r && r[0] === abbr) for (let i = 0; i < 7; i++) agg[i] += r[i + 1];
+      const t = U.t[abbr][w];
+      if (t) for (let i = 0; i < 7; i++) tAgg[i] += t[i];
+    });
+    const avg = (fn) => { let s = 0, n = 0; played.forEach(w => { const v = fn(w); if (v != null) { s += v; n++; } }); return n ? s / n : null; };
+    const snap = avg(w => snapW[w] != null ? snapW[w] : null);
+    const rte = p.s === 'QB' ? null : avg(w => (typeof _routeWeek === 'function') ? _routeWeek(p.n, 2026, w) : null);
+    // points + xFP over the same weeks (game-log rows)
+    let fp = 0, xf = 0, gN = 0, xN = 0;
+    const wd = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS) ? WEEKLY_STATS[p.n] : null;
+    ((wd && wd.seasons && wd.seasons['2026']) || []).forEach(w => {
+      if (typeof w.fpts !== 'number' || !winSet.has(String(w.wk))) return;
+      if (w.tm && w.tm.trim() && w.tm.trim() !== abbr) return;
+      const f = w.fpts + (w.rec || 0) * recAdj;
+      fp += f; gN++;
+      const x = (typeof _xfpFor === 'function') ? _xfpFor(p, Object.assign({}, w, { fpts: f }), p.s, rankingScoringFmt) : null;
+      if (x) { xf += x.xfp; xN++; }
+    });
+    const share = (i) => (played.length && tAgg[i] > 0) ? agg[i] / tAgg[i] * 100 : null;
+    const pj = projOf(p, true), pj0 = hasFlip ? projOf(p, false) : pj;
+    const role = R && R.p && R.p[p.n];
+    return {
+      p, g: played.length, snap, rte,
+      tgtS: p.s === 'QB' ? null : share(0), aySh: p.s === 'QB' ? null : share(1),
+      adot: (p.s !== 'QB' && agg[0] > 0) ? agg[1] / agg[0] : null,
+      tgtG: (p.s !== 'QB' && played.length) ? agg[0] / played.length : null,
+      carS: share(2), carG: played.length ? agg[2] / played.length : null,
+      rzT: agg[3], rzC: agg[4], glC: agg[5], rzTS: share(3), rzCS: share(4),
+      dbG: (p.s === 'QB' && played.length) ? agg[6] / played.length : null,
+      fpg: gN ? fp / gN : null, xfpg: xN ? xf / xN : null,
+      proj: pj ? pj.v : null, out: pj ? pj.out : false, proj0: pj0 ? pj0.v : null,
+      role: role ? role.line : '', dc: role && role.dc != null ? role.dc : 99,
+    };
+  }).filter(r => r.g > 0 || (r.proj != null && r.proj > 0) || r.dc < 99);
+
+  // ---- header: matchup + team points
+  const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+  const entry = sched ? sched[wk] : null;
+  const tt = (typeof window._weeklyTeamTotalFor === 'function') ? window._weeklyTeamTotalFor(d.t) : null;
+  const sum = (arr, k) => arr.reduce((s, r) => s + (typeof r[k] === 'number' ? r[k] : 0), 0);
+  const projTot = sum(rows, 'proj'), projTot0 = sum(rows, 'proj0');
+  const box = (lbl, val, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num">' + val + '</div></div>';
+  const dlt = (a, b) => { const x = Math.round((a - b) * 10) / 10; return Math.abs(x) < 0.1 ? '' : ' <span style="font-size:.6875rem;color:' + (x > 0 ? '#22c55e' : '#ef4444') + '">(' + (x > 0 ? '+' : '') + x.toFixed(1) + ')</span>'; };
+  const fmtLbl = rankingScoringFmt === 'ppr' ? 'PPR' : rankingScoringFmt === 'std' ? 'STD' : 'HALF';
+  let html = '<div class="card-section"><div class="card-section-title">' + esc(abbr) + ' · Week ' + wk
+    + (entry ? (entry.bye ? ' · BYE' : ' · ' + (entry.home ? 'vs ' : '@ ') + esc(entry.opp)) : '') + '</div>';
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">';
+  html += box('VEGAS TEAM TOTAL', tt != null ? fmt1(tt) : '—', 'Implied real points for ' + abbr + ' this week: (game total − spread) / 2');
+  html += box('PROJ FANTASY PTS', (rows.length ? fmt1(projTot) : '—') + (hasFlip ? dlt(projTot, projTot0) : ''), 'Sum of every ' + abbr + ' QB / RB / WR / TE Sim Lab projection this week (' + fmtLbl + ')' + (hasFlip ? ' with your in / out flips; (+/-) vs the board' : ''));
+  const kD = D.find(p => p && p.s === 'K' && !p._retired && p.t && teamAbbr(p.t) === abbr);
+  const kR = kD ? _simProjRow(kD, wk) : null, dstR = (SP && SP.weeks && SP.weeks[wk]) ? SP.weeks[wk]['DST_' + abbr] : null;
+  html += box('K · D/ST', (kR ? fmt1(kR[fi]) : '—') + ' · ' + (dstR ? fmt1(dstR[fi]) : '—'), (kD ? kD.n + ' ' : 'Kicker ') + 'and ' + abbr + ' D/ST projections (not in the total)');
+  html += '</div>';
+
+  // ---- questionable switches (what-if only)
+  const QS = SP && SP.qs && +SP.qs.wk === +wk && SP.qs.teams ? SP.qs.teams[abbr] : null;
+  if (QS && QS.q && QS.q.length && !(typeof _isOffseasonNow === 'function' && _isOffseasonNow())) {
+    const aoList = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
+    html += '<div style="margin-top:8px;padding:7px 9px;border:1px solid var(--border);border-radius:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:.6875rem;color:var(--text2);letter-spacing:.5px;margin-bottom:5px">'
+      + '<span title="Tap a player to flip him in or out. Every projection below re-reads the Sim Lab run for that in / out combination. A what-if on this card only - it does not change the weekly board or the ASSUMED OUT list.">QUESTIONABLE · TAP TO PLAY / SIT</span>'
+      + (hasFlip ? '<button type="button" data-tmreset="1" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.625rem;padding:1px 6px;cursor:pointer">RESET</button>' : '')
+      + '</div><div style="display:flex;flex-wrap:wrap;gap:5px">';
+    QS.q.forEach(qn => {
+      const k = _qsNorm(qn);
+      const boardOut = aoList.some(n => _qsNorm(n) === k);
+      const flipped = Object.prototype.hasOwnProperty.call(flip, k);
+      const isOut = flipped ? flip[k] : boardOut;
+      html += '<button type="button" data-tmqs="' + esc(k) + '" data-tmqsboard="' + (boardOut ? '1' : '0') + '" title="' + (boardOut ? 'Board: assumed out' : 'Board: playing') + (flipped ? ' · flipped here' : '') + '" style="cursor:pointer;font-size:.6875rem;padding:3px 8px;border-radius:999px;border:1px solid ' + (isOut ? 'rgba(239,68,68,.5)' : 'rgba(34,197,94,.5)') + ';background:' + (isOut ? 'rgba(239,68,68,.12)' : 'rgba(34,197,94,.12)') + ';color:var(--text)">'
+        + esc(qn) + ' <b style="color:' + (isOut ? '#ef4444' : '#22c55e') + '">' + (isOut ? 'OUT' : 'IN') + '</b>' + (flipped ? ' <span style="color:var(--text2)">*</span>' : '') + '</button>';
+    });
+    html += '</div></div>';
+  }
+  html += '</div>';
+
+  // ---- usage sheet
+  const u0 = U && U.t && U.t[abbr];
+  html += '<div class="card-section"><div class="card-section-title" style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span>Usage &amp; projections <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + fmtLbl + (tWeeks.length ? ' · thru W' + tWeeks[tWeeks.length - 1] : '') + '</span></span>'
+    + '<span style="display:flex;gap:4px">'
+    + ['season', 'l3'].map(k => '<button type="button" data-tmwin="' + k + '" style="cursor:pointer;font-size:.625rem;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:5px;border:1px solid var(--border);background:' + (win === k ? 'var(--elev-2,#1f2937)' : 'transparent') + ';color:' + (win === k ? 'var(--text)' : 'var(--text2)') + '">' + (k === 'season' ? 'SEASON' : 'LAST 3') + '</button>').join('')
+    + '</span></div>';
+  if (!u0 || !rows.length) {
+    const loading = typeof window.TEAM_USAGE_2026 === 'undefined';
+    html += '<div style="text-align:center;padding:1rem;color:var(--text2);font-size:.75rem">' + (loading ? 'Loading team usage…' : 'No ' + abbr + ' games yet this season.') + '</div></div>';
+    return html;
+  }
+  // cell sizes set per cell: the site's table rules override an inherited font-size
+  const STK = 'position:sticky;left:0;z-index:1;background:var(--surface,#111827)';
+  const H = (lbl, tip) => '<th title="' + esc(tip) + '" style="cursor:help;padding:4px 4px;text-align:right;white-space:nowrap;font-weight:600;font-size:.5625rem;letter-spacing:.3px">' + lbl + '</th>';
+  const td = (v, opt) => '<td style="padding:3px 4px;text-align:right;white-space:nowrap;font-size:.6875rem' + (opt && opt.c ? ';color:' + opt.c : '') + (opt && opt.b ? ';font-weight:700' : '') + '"' + (opt && opt.t ? ' title="' + esc(opt.t) + '"' : '') + '>' + v + '</td>';
+  const shCol = (v, hi, mid) => v == null ? null : v >= hi ? '#22c55e' : v >= mid ? '#facc15' : null;
+  html += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:0;table-layout:auto;border-collapse:collapse;font-size:.71875rem;font-variant-numeric:tabular-nums">';
+  html += '<thead><tr style="color:var(--text2);font-size:.625rem;letter-spacing:.4px;border-bottom:1px solid var(--border)">'
+    + '<th style="padding:4px 5px;text-align:left;font-weight:600;font-size:.5625rem;letter-spacing:.3px;' + STK + '">PLAYER</th>'
+    + H('W' + wk + ' PROJ', 'Sim Lab projection this week (' + fmtLbl + ')' + (hasFlip ? '; (+/-) = change from your in / out flips' : ''))
+    + H('G', 'Games played in the window')
+    + H('SNAP', 'Offensive snap share')
+    + H('RTE', 'Route participation: share of team dropbacks he ran a route on')
+    + H('TGT%', 'Target share: his targets / team targets in his games')
+    + H('TGT/G', 'Targets per game (QB: dropbacks per game)')
+    + H('AY%', 'Air-yard share: his air yards / team air yards in his games')
+    + H('aDOT', 'Average depth of target (air yards per target)')
+    + H('CAR%', 'Carry share: his rush attempts / team rush attempts in his games')
+    + H('CAR/G', 'Carries per game')
+    + H('RZ', 'Red-zone looks (targets + carries inside the 20); hover a cell for the split and goal-line carries')
+    + H('xFP/G', 'Expected fantasy points per game from usage (league-average value of every target / carry / throw)')
+    + H('FP/G', 'Actual fantasy points per game')
+    + '</tr></thead><tbody>';
+  ['QB', 'RB', 'WR', 'TE'].forEach(pos => {
+    const grp = rows.filter(r => r.p.s === pos).sort((a, b) => ((b.proj || 0) - (a.proj || 0)) || ((b.snap || 0) - (a.snap || 0)) || (a.dc - b.dc));
+    if (!grp.length) return;
+    const gp = sum(grp, 'proj'), gp0 = sum(grp, 'proj0');
+    html += '<tr><td colspan="14" style="padding:7px 5px 3px;text-align:left;font-size:.625rem;letter-spacing:.6px;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border)">' + pos + ' · ' + fmt1(gp) + ' PROJ' + (hasFlip ? dlt(gp, gp0) : '') + '</td></tr>';
+    grp.forEach(r => {
+      const me = r.p.n === d.n, isQB = pos === 'QB';
+      const projCell = (r.out || r.proj === 0) ? '<span style="color:#ef4444;font-weight:700">OUT</span>'
+        : (r.proj != null ? fmt1(r.proj) + (hasFlip && r.proj0 != null ? dlt(r.proj, r.proj0) : '') : '—');
+      html += '<tr style="border-bottom:1px solid var(--border)' + (me ? ';background:rgba(250,204,21,.08)' : '') + '">'
+        + '<td style="padding:3px 5px;text-align:left;white-space:nowrap;font-size:.71875rem;' + STK + (me ? ';box-shadow:inset 3px 0 0 #facc15' : '') + '"><a href="#" data-tmplayer="' + esc(r.p.n) + '" style="color:var(--text);text-decoration:none;font-weight:' + (me ? 800 : 600) + '">' + esc(r.p.n) + '</a>'
+        + (r.role ? '<div style="font-size:.5625rem;color:var(--text2);letter-spacing:.3px">' + esc(r.role) + '</div>' : '') + '</td>'
+        + td(projCell, { b: 1 })
+        + td(r.g || '—')
+        + td(pctS(r.snap), { c: shCol(r.snap, 70, 45) })
+        + td(isQB ? '—' : pctS(r.rte), { c: shCol(r.rte, 75, 50) })
+        + td(isQB ? '—' : pctS(r.tgtS), { c: shCol(r.tgtS, 22, 14) })
+        + td(isQB ? fmt1(r.dbG) : fmt1(r.tgtG), isQB ? { t: 'Dropbacks per game' } : null)
+        + td(isQB ? '—' : pctS(r.aySh), { c: shCol(r.aySh, 28, 18) })
+        + td(isQB ? '—' : fmt1(r.adot))
+        + td(pctS(r.carS), { c: pos === 'RB' ? shCol(r.carS, 55, 35) : null })
+        + td(fmt1(r.carG))
+        + td(r.g ? (r.rzT + r.rzC) : '—', { t: r.rzT + ' targets' + (r.rzTS != null ? ' (' + Math.round(r.rzTS) + '% of team)' : '') + ' · ' + r.rzC + ' carries' + (r.rzCS != null ? ' (' + Math.round(r.rzCS) + '% of team)' : '') + ' · ' + r.glC + ' inside the 5' })
+        + td(fmt1(r.xfpg))
+        + td(fmt1(r.fpg))
+        + '</tr>';
+    });
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="margin-top:6px;font-size:.6875rem;color:var(--text2)">Shares count only the games each player played. Tap a name to open his card. Source: nflverse play-by-play (targets, air yards, carries, red zone), snap counts, PFF routes, Sim Lab projections.</div>';
+  html += '</div>';
+  return html;
+}
+// TEAM tab wiring: painted on first open, again on flips / window changes / lazy-data arrival
+function _wireTeamCardView(d) {
+  const host = document.getElementById('cardTeamView');
+  if (!host) return;
+  const paint = () => { if (host.isConnected) { try { host.innerHTML = buildTeamCardView(d); } catch (e) { console.warn('[Card] team view failed:', e); } } };
+  host._paint = paint;
+  host.addEventListener('click', e => {
+    const q = e.target.closest('[data-tmqs]');
+    if (q) {
+      const k = q.dataset.tmqs, board = q.dataset.tmqsboard === '1';
+      const cur = Object.prototype.hasOwnProperty.call(_teamViewState.flip, k) ? _teamViewState.flip[k] : board;
+      if (!cur === board) delete _teamViewState.flip[k]; else _teamViewState.flip[k] = !cur;
+      paint(); return;
+    }
+    if (e.target.closest('[data-tmreset]')) { _teamViewState.flip = {}; paint(); return; }
+    const w = e.target.closest('[data-tmwin]');
+    if (w) { _teamViewState.win = w.dataset.tmwin; paint(); return; }
+    const a = e.target.closest('[data-tmplayer]');
+    if (a) {
+      e.preventDefault();
+      const p = _teamDByName()[a.dataset.tmplayer];
+      if (p && p !== d && typeof openPlayerCard === 'function') openPlayerCard(p);
+    }
+  });
+  document.addEventListener('mff:weeklydata', function _tmRepaint() {
+    document.removeEventListener('mff:weeklydata', _tmRepaint);
+    if (host.dataset.ready === '1') paint();
+  });
+}
+
 function buildWeeklyCardView(d) {
   window._weeklyCardD = d;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -18561,6 +18803,7 @@ function openPlayerCard(d, ctxMode) {
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
+        ${(!d._isDevy && !_is2026 && !d._retired && d.t && d.s !== 'K' && d.s !== 'DST') ? `<button class="card-view-btn" data-cardview="team">TEAM</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">DYNASTY</button>
         ${_newsHtml ? `<button class="card-view-btn" data-cardview="news">NEWS</button>` : ''}
       </div>` : ''}
@@ -18958,6 +19201,7 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-prospect-view" id="cardWeeklyView" style="display:none">
       ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
       </div>
+      <div class="card-prospect-view" id="cardTeamView" style="display:none"></div>
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
       <div class="card-prospect-view card-fantasy-extra" id="cardLogsView" data-ready="${hasWeeklyData(d) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && hasWeeklyData(d)) ? 'block' : 'none'}">
       ${_logsSectionHtml(d)}
@@ -19037,6 +19281,8 @@ function openPlayerCard(d, ctxMode) {
     }
   } catch (_e) {}
 
+  try { _wireTeamCardView(d); } catch (_e) { console.warn('[Card] team tab wiring failed:', _e); }
+
   // Fantasy/Prospect/Comps/Info view toggle
   const _cvToggle = document.getElementById('cardViewToggle');
   if (_cvToggle) {
@@ -19054,6 +19300,7 @@ function openPlayerCard(d, ctxMode) {
         const crv = document.getElementById('cardCareerView');
         const lgv = document.getElementById('cardLogsView');
         const nv = document.getElementById('cardNewsView');
+        const tmv = document.getElementById('cardTeamView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (iv) iv.style.display = 'none';
@@ -19062,6 +19309,7 @@ function openPlayerCard(d, ctxMode) {
         if (crv) crv.style.display = 'none';
         if (lgv) lgv.style.display = 'none';
         if (nv) nv.style.display = 'none';
+        if (tmv) tmv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'info') {
@@ -19076,6 +19324,12 @@ function openPlayerCard(d, ctxMode) {
           if (lgv) lgv.style.display = 'block';
         } else if (view === 'news') {
           if (nv) nv.style.display = 'block';
+        } else if (view === 'team') {
+          if (tmv) {
+            tmv.style.display = 'block';
+            // usage counts + snaps / routes / game logs ride the lazy weekly bundle
+            if (tmv.dataset.ready !== '1') { tmv.dataset.ready = '1'; if (tmv._paint) tmv._paint(); if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData(); }
+          }
         } else {
           fv.classList.remove('hidden');
           // Game logs + career ride along inside FANTASY (2026-10-08) once they have data

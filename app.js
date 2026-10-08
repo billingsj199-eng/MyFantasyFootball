@@ -16589,8 +16589,9 @@ function _lmCell(scope, name, book, stat, cur, fmtFn) {
   const good = _LM_NEG_GOOD[stat] ? !up : up;
   const tip = 'opened ' + _lmFmtVal(stat, open) + ' (' + _lmFmtDate(arr[0][0]) + ') → '
     + _lmFmtVal(stat, cur) + ' (' + _lmFmtDate(last[0]) + ')';
-  return txt + '<span title="' + tip + '" style="font-size:.6875rem;margin-left:2px;color:'
-    + (good ? '#22c55e' : '#ef4444') + '">' + (up ? '▲' : '▼') + '</span>';
+  // 2026-10-08 (Jack): no ▲ / ▼ move markers in the prop tables — they broke the
+  // colour-coded cells. The open → now move stays on hover.
+  return '<span title="' + tip + '">' + txt + '</span>';
 }
 // Newest moves for one player in a scope, across books/stats: [{when, book, stat, from, to}].
 function _lmRecentMoves(scope, name, books, labels, limit) {
@@ -16730,7 +16731,7 @@ function _buildWeeklyLinesSection(d) {
   html += '</tbody></table>';
   html += _lmMovesHtml(wk, d.n, books, Object.fromEntries(ROWS.map(r => [r[0], r[1]])));
   html += '<div style="font-size:.6875rem;color:var(--text2);margin-top:6px">'
-    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. Pass TD / INT Expected = line + juice as an average count. ▲▼ = moved since first posted (hover for open → now).'
+    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. Pass TD / INT Expected = line + juice as an average count. Hover a line for its open → now move.'
     + (rec.asOf ? ' As of ' + rec.asOf + '.' : '') + '</div>';
   html += '</div>';
   return html;

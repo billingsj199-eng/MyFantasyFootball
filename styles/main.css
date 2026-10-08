@@ -2984,37 +2984,37 @@ tbody td{font-size:.8125rem}
 :root[data-theme="light"]{--heat-mix:14%;--heat-edge:rgba(0,0,0,.14);--heat-ink:none}
 
 /* td-level colours (PROJ PPG, season PPG, L4, SIMS / VOR / xFP / LINES columns) */
-#pageRankings tbody td[style*="color:"],
-#pageRankings tbody td.age-cell.age-green,#pageRankings tbody td.age-cell.age-yellow,
-#pageRankings tbody td.age-cell.age-orange,#pageRankings tbody td.age-cell.age-red{
+#pageRankings .table-wrap tbody td[style*="color:"],
+#pageRankings .table-wrap tbody td.age-cell.age-green,#pageRankings .table-wrap tbody td.age-cell.age-yellow,
+#pageRankings .table-wrap tbody td.age-cell.age-orange,#pageRankings .table-wrap tbody td.age-cell.age-red{
   background:color-mix(in srgb,currentColor var(--heat-mix),transparent);
   box-shadow:inset 0 0 0 1px var(--heat-edge);
   font-weight:600!important;text-shadow:var(--heat-ink);text-align:center!important}
 /* span-level colours (team total, playoff SOS, +/- diff): the span fills the cell */
 @media (min-width:601px){
-  #pageRankings tbody td>span[style*="color:"]:only-child,
-  #pageRankings tbody td.diff-cell>span.diff-up,#pageRankings tbody td.diff-cell>span.diff-down{
+  #pageRankings .table-wrap tbody td>span[style*="color:"]:only-child,
+  #pageRankings .table-wrap tbody td.diff-cell>span.diff-up,#pageRankings .table-wrap tbody td.diff-cell>span.diff-down{
     display:block;margin:-.55rem -.4rem;padding:.55rem .4rem;text-align:center;
     background:color-mix(in srgb,currentColor var(--heat-mix),transparent);
     box-shadow:inset 0 0 0 1px var(--heat-edge);font-weight:600!important;text-shadow:var(--heat-ink)}
-  #pageRankings tbody td:has(>span[style*="color:"]:only-child),
-  #pageRankings tbody td.diff-cell:has(>span.diff-up),#pageRankings tbody td.diff-cell:has(>span.diff-down){text-align:center!important}
+  #pageRankings .table-wrap tbody td:has(>span[style*="color:"]:only-child),
+  #pageRankings .table-wrap tbody td.diff-cell:has(>span.diff-up),#pageRankings .table-wrap tbody td.diff-cell:has(>span.diff-down){text-align:center!important}
 }
 @media (max-width:600px){
-  #pageRankings tbody td>span[style*="color:"]:only-child,
-  #pageRankings tbody td.diff-cell>span.diff-up,#pageRankings tbody td.diff-cell>span.diff-down{
+  #pageRankings .table-wrap tbody td>span[style*="color:"]:only-child,
+  #pageRankings .table-wrap tbody td.diff-cell>span.diff-up,#pageRankings .table-wrap tbody td.diff-cell>span.diff-down{
     display:inline-block;padding:1px 7px;border-radius:4px;
     background:color-mix(in srgb,currentColor var(--heat-mix),transparent);
     box-shadow:inset 0 0 0 1px var(--heat-edge);font-weight:600!important;text-shadow:var(--heat-ink)}
-  #pageRankings tbody td[style*="color:"],
-  #pageRankings tbody td.age-cell.age-green,#pageRankings tbody td.age-cell.age-yellow,
-  #pageRankings tbody td.age-cell.age-orange,#pageRankings tbody td.age-cell.age-red{border-radius:6px}
+  #pageRankings .table-wrap tbody td[style*="color:"],
+  #pageRankings .table-wrap tbody td.age-cell.age-green,#pageRankings .table-wrap tbody td.age-cell.age-yellow,
+  #pageRankings .table-wrap tbody td.age-cell.age-orange,#pageRankings .table-wrap tbody td.age-cell.age-red{border-radius:6px}
 }
 /* never box the name / team / position / injury pills / lock */
-#pageRankings tbody td.player-cell,#pageRankings tbody td:has(>.player-cell),#pageRankings tbody td:has(>.pos-badge),
-#pageRankings tbody td.cons-cell:has(>.cons-lock),#pageRankings tbody td.myrank-cell{background:none;box-shadow:none;text-shadow:none;text-align:left!important}
+#pageRankings .table-wrap tbody td.player-cell,#pageRankings .table-wrap tbody td:has(>.player-cell),#pageRankings .table-wrap tbody td:has(>.pos-badge),
+#pageRankings .table-wrap tbody td.cons-cell:has(>.cons-lock),#pageRankings .table-wrap tbody td.myrank-cell{background:none;box-shadow:none;text-shadow:none;text-align:left!important}
 /* "—" placeholders stay plain */
-#pageRankings tbody td[style*="color:var(--text2)"]{background:none;box-shadow:none;text-shadow:none;font-weight:400!important}
+#pageRankings .table-wrap tbody td[style*="color:var(--text2)"]{background:none;box-shadow:none;text-shadow:none;font-weight:400!important}
 
 /* My Teams standings: PPG + positional ranks boxed the same way */
 .mt-pr-stats>div>div:last-child[style*="color:"]{background:color-mix(in srgb,currentColor 16%,transparent);box-shadow:inset 0 0 0 1px var(--heat-edge);border-radius:4px;padding:2px 4px!important;text-shadow:var(--heat-ink)}

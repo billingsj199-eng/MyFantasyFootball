@@ -5507,6 +5507,33 @@ function _tcvOppTitle(o) {
   return 'Week ' + o.wk + ': ' + (o.away ? 'at ' : 'vs ') + o.abbr + diffLbl;
 }
 // Vertical-card chip: "vs" / "@" + opponent logo (or BYE), colored by difficulty
+// INJURY DESIGNATION on the tier cards (Jack 2026-10-08: "add their up to
+// date injury designation to the tier cards so it's shown they may miss or
+// they are out"). Q / D / O / IR / PUP / SUS from the live feed tag (same
+// codes as the table pill); in WEEKLY the OPP chip already reads OUT / IR /
+// PUP / SUS for a ruled-out player, so the badge then covers only the ones
+// who MAY miss (Questionable / Doubtful / unconfirmed Out), with the play
+// odds from the injuries read in the tooltip.
+function _tcvInjBadgeHtml(d, cls) {
+  if (!d || !d.inj || d.s === 'DST') return '';
+  const pill = _injPill(d);
+  if (!pill) return '';
+  const code = (pill.match(/data-status="([A-Z]+)"/) || [])[1];
+  if (!code) return '';
+  const weekly = typeof currentMode !== 'undefined' && currentMode === 'weekly';
+  if (weekly && _tcvOutThisWeek(d)) return '';
+  const wk = window._weeklyActiveWeek || 1, wkLbl = weekly ? 'Week ' + wk : 'this week';
+  const word = (typeof _INJ_STATUS_WORDS !== 'undefined' && _INJ_STATUS_WORDS[code]) || code;
+  let pct = null;
+  try { const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null; if (x && x.ret && x.ret.pct != null) pct = Math.round(x.ret.pct * 100); } catch (_e) {}
+  let tip = word + ' — ' + String(d.inj);
+  if (code === 'Q') tip += ' · may miss ' + wkLbl + (pct != null ? ' (' + pct + '% to play)' : '');
+  else if (code === 'D') tip += ' · likely misses ' + wkLbl + (pct != null ? ' (' + pct + '% to play)' : '');
+  else if (code === 'O') tip += weekly ? ' · Out tag not yet confirmed for ' + wkLbl : ' · ruled out';
+  else tip += ' · out';
+  const lbl = code === 'O' ? 'OUT' : code;
+  return '<div class="' + cls + '" data-status="' + code + '" title="' + tip.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '">' + lbl + '</div>';
+}
 function _tcvOppChipHtml(d) {
   const o = _tcvOppInfo(d);
   if (!o) return '';
@@ -5753,6 +5780,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
     '</div>' +
     '<div class="tcv-card-photo">' + logoHtml + headshotHtml + '</div>' +
     '<div class="tcv-pos-pill ' + (d.s || '') + '">' + (d.s || '') + '</div>' +
+    _tcvInjBadgeHtml(d, 'tcv-inj-badge') +
     (_cs.range && _cs.range.strip ? _tcvRangeStripHtml(d, _cs.range, 'tcv-rng tcv-rng-v') : _tcvOppChipHtml(d)) +
     '<div class="tcv-card-name" style="font-size:' + _tcvCardNameFit(lastName) + 'px" title="' + safeName(d.n) + '">' + safeName(lastName) + '</div>' +
     '<div class="tcv-card-cover"><div class="tcv-cover-rank">' + displayRank + '</div>' +
@@ -6142,7 +6170,7 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
     '<div class="tcv-row-img">' + headshotHtml + '</div>' +
     '<div class="tcv-row-id">' +
       '<div class="tcv-row-name" title="' + safe(d.n) + ' · ' + safe(abbr) + '">' + safe(d.n) + '</div>' +
-      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span>' + miniLogoHtml + '</div>' +
+      '<div class="tcv-row-sub"><span class="tcv-pos-pill ' + safe(d.s) + '">' + safe(d.s) + '</span>' + _tcvInjBadgeHtml(d, 'tcv-inj-badge tcv-row-inj') + miniLogoHtml + '</div>' +
     '</div>' +
     oppHtml +
     '<div class="tcv-row-stats">' + statsHtml + '</div>' +

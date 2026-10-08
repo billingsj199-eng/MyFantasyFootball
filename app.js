@@ -6924,7 +6924,7 @@ function _tcvVbGroups(root) {
       label = (cl.textContent || '').replace(/\s+/g, ' ').trim();
       if (letterEl.classList.contains('tcv-letter-2l')) label = 'BYE/OUT';
     }
-    const players = Array.prototype.slice.call(row.querySelectorAll('.tcv-card')).filter(c => c._tcvPlayer).map(c => ({ d: c._tcvPlayer, rank: c._tcvRank }));
+    const players = Array.prototype.slice.call(row.querySelectorAll('.tcv-card')).filter(c => c._tcvPlayer).map(c => ({ d: c._tcvPlayer, rank: c._tcvRank, prev: c._tcvPrev, selected: c.classList.contains('tcv-selected') }));
     if (!players.length) return;
     let col;
     if (cut) col = { a: '#991b1b', b: '#ef4444', light: false };
@@ -7294,6 +7294,113 @@ function _tcvVbRevealCanvas(p, img, groupLabel) {
   ctx.restore();
   return c;
 }
+// WIDE card (1080×260, transparent): the lower-third for the videos where a
+// card flashes over game footage (buy/sell, waiver, start/sit, D/ST…). Same
+// rules as the board: headshot big, name at 64px, PROJ at 72px with the
+// other two stats readable, opponent as a text chip, nothing under 18px.
+// MOVEMENT view: "7 › 3." colored by direction, like the row card.
+function _tcvVbWideCanvas(p, img) {
+  const L = _TCV_VB, S = L.S, B = _TCV_VB_BEBAS, SANS = _TCV_VB_SANS, d = p.d;
+  const W = 1080, H = 260, TOP = 56, BAND = 184, PAD = 16;
+  const c = document.createElement('canvas');
+  c.width = W * S; c.height = H * S;
+  const ctx = c.getContext('2d');
+  ctx.scale(S, S);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  const tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+  const band = _tcvRowBand(d.t);
+  const ring = _tcvLum(tc.s) < 0.16 ? _tcvTeamOutline(d.t) : tc.s;
+  const fg = band.light ? '#0f172a' : '#ffffff';
+  const Y = TOP, X = PAD, BW = W - PAD * 2;
+  // Band with drop shadow, team gradient, crisp edge
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 8;
+  _tcvRoundRect(ctx, X, Y, BW, BAND, 20); ctx.fillStyle = band.p; ctx.fill();
+  ctx.restore();
+  ctx.save();
+  _tcvRoundRect(ctx, X, Y, BW, BAND, 20); ctx.clip();
+  const g = ctx.createLinearGradient(X, 0, X + BW, 0);
+  g.addColorStop(0, band.p); g.addColorStop(0.62, band.p); g.addColorStop(1, band.s);
+  ctx.fillStyle = g; ctx.fillRect(X, Y, BW, BAND);
+  if (img.logo) { ctx.globalAlpha = 0.16; _tcvDrawContain(ctx, img.logo, X + 300, Y - 20, 230, 230, 'center'); ctx.globalAlpha = 1; }
+  ctx.restore();
+  _tcvRoundRect(ctx, X + 1.5, Y + 1.5, BW - 3, BAND - 3, 18.5); ctx.lineWidth = 3; ctx.strokeStyle = ring; ctx.stroke();
+  // Headshot: bottom-aligned on the band, pokes above it
+  const IMG_W = 270, IMG_H = BAND + TOP - 6;
+  if (img.head) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
+    _tcvDrawContain(ctx, img.head, X + 6, Y + BAND - IMG_H, IMG_W, IMG_H, 'bottom');
+    ctx.restore();
+  } else {
+    ctx.font = '70px ' + B; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?', X + 6 + IMG_W / 2, Y + BAND / 2);
+  }
+  // Rank — top-left corner, stroked; MOVEMENT = "7 › 3."
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.lineJoin = 'round';
+  const rank3 = p.rank >= 100 || (p.prev != null && p.prev >= 100);
+  if (p.prev !== undefined) {
+    let x = X + 12; const yTop = Y + 8; const big = rank3 ? 54 : 66;
+    const piece = (txt, px, color, alpha, lw) => {
+      ctx.font = px + 'px ' + B; const y = yTop + (big - px) * 0.72;
+      ctx.globalAlpha = alpha; ctx.lineWidth = lw; ctx.strokeStyle = '#0a0a0a'; ctx.strokeText(txt, x, y);
+      ctx.fillStyle = color; ctx.fillText(txt, x, y); ctx.globalAlpha = 1;
+      x += ctx.measureText(txt).width + 3;
+    };
+    piece(p.prev == null ? 'NEW' : String(p.prev), rank3 ? 30 : 36, '#ffffff', 0.85, 4);
+    piece('›', rank3 ? 28 : 34, '#ffffff', 0.75, 3.5);
+    piece(p.rank + '.', big, _tcvMoveColor(p.prev, p.rank), 1, 6);
+  } else {
+    ctx.font = (rank3 ? 58 : 70) + 'px ' + B;
+    ctx.lineWidth = 6; ctx.strokeStyle = '#0a0a0a'; ctx.strokeText(p.rank + '.', X + 12, Y + 6);
+    ctx.fillStyle = '#fff'; ctx.fillText(p.rank + '.', X + 12, Y + 6);
+  }
+  // Name block: name, then pos pill + team + opponent chip
+  const NX = X + IMG_W + 14, NW = 400;
+  const full = (_tcvDisplayName(d) || d.n || '').toUpperCase();
+  _tcvFitFont(ctx, full, NW, 64, 36, B);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.save();
+  if (!band.light) { ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2; }
+  ctx.fillStyle = fg; ctx.fillText(full, NX, Y + 86);
+  ctx.restore();
+  let cx = NX;
+  const pos = d.s || '';
+  cx += _tcvVbChip(ctx, pos, cx, Y + 106, 36, 26, _TCV_POS_COLORS[pos] || '#64748b', '#fff', false) + 10;
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+  ctx.font = '600 22px ' + SANS; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = band.light ? 'rgba(15,23,42,.8)' : 'rgba(255,255,255,.85)';
+  ctx.fillText(abbr, cx, Y + 124); cx += ctx.measureText(abbr).width + 14;
+  const opp = _tcvVbOpp(d);
+  if (opp) _tcvVbChip(ctx, opp.text, cx, Y + 106, 36, 26, opp.color, opp.fg, false);
+  if (groupLabelOf(p)) _tcvVbChip(ctx, 'TIER ' + groupLabelOf(p), NX, Y + 150, 28, 20, 'rgba(0,0,0,.5)', '#e2e8f0', false);
+  function groupLabelOf(pp) { return pp.label && pp.label !== '—' && pp.label !== 'BYE' && pp.label !== 'OUT' && pp.label !== 'BYE/OUT' ? pp.label : ''; }
+  // Stats block on a dark scrim at the right end
+  const cs = _tcvCardStats(d);
+  const slots = cs.slots.slice(0, 3);
+  const SW = 360, SX = X + BW - SW - 14, SY = Y + 22, SH = BAND - 44;
+  _tcvRoundRect(ctx, SX, SY, SW, SH, 14); ctx.fillStyle = 'rgba(0,0,0,.58)'; ctx.fill();
+  const colW = SW / slots.length;
+  const wk = (typeof currentMode !== 'undefined' && currentMode === 'weekly') ? (window._weeklyActiveWeek || 1) : null;
+  slots.forEach((sl, i) => {
+    const mx = SX + colW * i + colW / 2;
+    const blank = (sl.v == null || sl.v === '' || (typeof sl.v === 'number' && !isFinite(sl.v)));
+    ctx.font = (i === 0 ? 72 : 48) + 'px ' + B; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = blank ? 'rgba(255,255,255,.35)' : (sl.c || '#fff');
+    ctx.fillText(blank ? '—' : String(sl.v), mx, SY + SH / 2 - 14);
+    ctx.font = '600 18px ' + SANS; ctx.fillStyle = 'rgba(255,255,255,.66)';
+    const lbl = (i === 0 && wk && /^(PROJ|BOOK)$/.test(sl.short || '')) ? ('WK ' + wk + ' ' + sl.short) : (sl.short || '');
+    ctx.fillText(lbl.toUpperCase(), mx, SY + SH - 22);
+  });
+  // Watermark under the stats block
+  ctx.save();
+  ctx.font = '18px ' + B; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+  try { ctx.letterSpacing = '2px'; } catch (_) {}
+  ctx.fillStyle = band.light ? 'rgba(15,23,42,.75)' : 'rgba(255,255,255,.8)';
+  ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 3;
+  ctx.fillText('MYFANTASYFOOTBALL.CO', X + BW - 16, Y + BAND - 6);
+  ctx.restore();
+  return c;
+}
 function _tcvVbReadme(prefix, n, countdown, cols) {
   return [
     'VIDEO BOARD — ' + prefix + ' — exported ' + new Date().toISOString().slice(0, 16).replace('T', ' '),
@@ -7320,7 +7427,10 @@ async function _tcvDownloadVideoBoard(root, prefix, btn, cardsOnly) {
   if (btn && btn._tcvBusy) return;
   const groups = _tcvVbGroups(root);
   const ranked = [];
-  groups.forEach((g, gi) => { if (!g.bye) g.players.forEach(p => ranked.push({ p: p, label: g.label, gi: gi })); });
+  // FLASH CARDS honor SELECT (ticked cards only when SELECT is on with ≥1 tick);
+  // the board export always takes everyone.
+  const selOnly = !!(cardsOnly && window._tcvSel && window._tcvSel.on && groups.some(g => g.players.some(p => p.selected)));
+  groups.forEach((g, gi) => { if (!g.bye) g.players.forEach(p => { if (!selOnly || p.selected) { p.label = g.label; ranked.push({ p: p, label: g.label, gi: gi }); } }); });
   ranked.sort((a, b) => a.p.rank - b.p.rank);
   if (!ranked.length) { if (typeof toast === 'function') toast('No cards on the board to export'); return; }
   if (ranked.length > _TCV_VB.MAX_STATES) { if (typeof toast === 'function') toast('Board too big for a video export (' + ranked.length + ' players) — use TOP-N or HIDE CUT to get under ' + _TCV_VB.MAX_STATES); return; }
@@ -7349,6 +7459,12 @@ async function _tcvDownloadVideoBoard(root, prefix, btn, cardsOnly) {
           const rc = _tcvVbRevealCanvas(it.p, images.get(it.p.d.n) || {}, it.label);
           files.push({ name: 'reveal/' + pre + '_reveal_' + pad(i) + '_' + (clean(it.p.d.n) || 'player') + '.png', data: await _tcvCanvasBytes(rc) });
         } catch (e) { failed++; console.warn('[VideoBoard] reveal card failed:', it.p.d.n, e); }
+        if (cardsOnly) {
+          try {
+            const wc = _tcvVbWideCanvas(it.p, images.get(it.p.d.n) || {});
+            files.push({ name: 'wide/' + pre + '_wide_' + pad(i) + '_' + (clean(it.p.d.n) || 'player') + '.png', data: await _tcvCanvasBytes(wc) });
+          } catch (e) { failed++; console.warn('[VideoBoard] wide card failed:', it.p.d.n, e); }
+        }
       }
       if (btn) btn.textContent = (cardsOnly ? '🃏 card ' : '🎞 board ') + i + ' / ' + order.length + '…';
       if (!cardsOnly) {
@@ -7363,11 +7479,11 @@ async function _tcvDownloadVideoBoard(root, prefix, btn, cardsOnly) {
     const enc = new TextEncoder();
     files.push({ name: 'order.txt', data: enc.encode(orderLines.join('\n')) });
     files.push({ name: 'README.txt', data: enc.encode(cardsOnly
-      ? ('FLASH CARDS — ' + prefix + ' — one 560x760 transparent card per player, numbered in ' + (countdown ? 'countdown' : 'top-down') + ' order (order.txt). Drop each on the track above your footage for ~1s as you say the name. PROJ = the PROJ column (BOOK PROJ toggle respected); chip = this week\'s opponent (weekly) or bye week (season boards).')
+      ? ('FLASH CARDS — ' + prefix + (selOnly ? ' — SELECTED cards only' : '') + '\n\nwide/    1080x260 transparent lower-third per player (headshot, rank, name, pos + team + opponent chip, PROJ big with season PPG and team total) — for cards over game footage.\nreveal/  560x760 portrait card per player — when the card IS the shot.\nBoth numbered in ' + (countdown ? 'countdown' : 'top-down') + ' order; order.txt maps number → player. Drop one on the track above your footage for ~1-2s as you say the name.\nPROJ = the PROJ column (BOOK PROJ toggle respected). Chip = this week\'s opponent (weekly) or the bye week (season boards). MOVEMENT view on = the wide card shows "was › now".\nTip: SELECT mode + tick the players you want, then FLASH CARDS exports only those.')
       : _tcvVbReadme(prefix, order.length, countdown, _TCV_VB.COLS)) });
     _tcvSaveBlob(_tcvZipBlob(files), pre + (cardsOnly ? '_flash_cards.zip' : '_video_board.zip'));
     if (typeof toast === 'function') toast(cardsOnly
-      ? ('Flash cards: ' + order.length + ' reveal cards zipped' + (failed ? ' (' + failed + ' failed)' : ''))
+      ? ('Flash cards: ' + order.length + (selOnly ? ' selected' : '') + ' player' + (order.length === 1 ? '' : 's') + ' × wide + portrait zipped' + (failed ? ' (' + failed + ' failed)' : ''))
       : ('Video board: ' + (order.length + 1) + ' board steps + ' + order.length + ' reveal cards zipped' + (failed ? ' (' + failed + ' failed)' : '')));
   } catch (e) {
     console.warn('[VideoBoard] export failed:', e);
@@ -7661,7 +7777,7 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipSel" title="One .zip of just the ticked cards\' PNGs. File: ' + _tcvFilePrefix + '_row_cards_selected.zip">📦 ZIP SELECTED (0)</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipAll" title="One .zip of every revealed row card\'s PNG. File: ' + _tcvFilePrefix + '_row_cards.zip">📦 ZIP ALL</button>' : '') +
     (_tcvIsAdminViewer() ? '<button class="tcv-reveal-btn" data-tcvaction="dlVideo" title="Admin: one .zip for the rankings video — the tier board as 1080×1150 transparent PNGs, one per reveal step in the ⇅ order (tiers not reached yet collapse to a strip, max 6 cards a row, surname + PROJ only), plus a big 560×760 reveal card per player to drop on screen when you say the name. README inside has the Premiere recipe. File: ' + _tcvFilePrefix + '_video_board.zip">🎞 VIDEO BOARD</button>' +
-      '<button class="tcv-reveal-btn" data-tcvaction="dlCards" title="Admin: just the 560×760 reveal cards, one per player (no board states) — for the videos where a card flashes over game footage. File: ' + _tcvFilePrefix + '_flash_cards.zip">🃏 FLASH CARDS</button>' +
+      '<button class="tcv-reveal-btn" data-tcvaction="dlCards" title="Admin: the cards you flash over game footage — a 1080×260 wide lower-third AND a 560×760 portrait card per player (no board states). SELECT mode on with ticked cards = just those players. File: ' + _tcvFilePrefix + '_flash_cards.zip">🃏 FLASH CARDS</button>' +
       '<button class="tcv-reveal-btn' + (_tcvVideoPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleVideo" title="Admin: RECORD MODE for screen-recording the rankings — the card rows are replaced by the video-board drawing (6 a row, surname + PROJ, opponent chip, tiers not reached yet as strips) and it redraws on every REVEAL NEXT / spacebar / HIDE ALL / REVEAL ALL. Tier-letter clicks are off while it is on.">🎥 ' + (_tcvVideoPref() ? 'RECORDING VIEW' : 'RECORD MODE') + '</button>' : '') +
     (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✎ on the letter renames it, ✕ removes it. Cut line too: ✂ CUT on a card hides everyone below him, drag the ✂ letter to move the line, ✕ on ✂ clears it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +

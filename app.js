@@ -6887,6 +6887,432 @@ async function _tcvDownloadAllRows(root, prefix, onlySelected) {
   if (typeof toast === 'function') toast(n + ' of ' + list.length + ' card PNGs downloaded');
 }
 
+// ── VIDEO BOARD export (Jack 2026-10-08) ──────────────────────────────────
+// One zip for the weekly rankings videos: the tier board as a sequence of
+// 1080×1150 transparent PNGs (one per reveal step, in the ⇅ reveal order)
+// plus a big "reveal card" PNG per player. Sized for the bottom 60% of a
+// 1080×1920 frame under the face cam. Design rules from the 2026-10-08 TikTok
+// review of the Week 4/5 rankings videos: at most 6 cards per row, surname +
+// ONE number (PROJ) per card and nothing under 24px, the opponent as a text
+// chip in the opponent's color (a 75px logo is unreadable at 720p), tiers not
+// reached yet collapse to a slim strip instead of a grid of 40 silhouettes,
+// and the board sits on a navy panel so dark team cards keep an edge.
+const _TCV_VB = { W: 1080, H: 1150, PAD: 20, LETTER_W: 64, GAP: 10, COLS: 6, CARD_H: 196, STRIP_H: 46, ROW_GAP: 12, MAX_STATES: 120, REVEAL_W: 560, REVEAL_H: 760, S: 2 };
+const _TCV_VB_TIER_COLORS = [
+  { a: '#dc2626', b: '#f87171', light: false }, { a: '#ea580c', b: '#fb923c', light: false },
+  { a: '#ca8a04', b: '#facc15', light: true },  { a: '#16a34a', b: '#4ade80', light: false },
+  { a: '#0284c7', b: '#38bdf8', light: false }, { a: '#7c3aed', b: '#a78bfa', light: false },
+  { a: '#475569', b: '#94a3b8', light: false }
+];
+const _TCV_VB_BEBAS = '"Bebas Neue",Impact,"Arial Narrow",sans-serif';
+const _TCV_VB_SANS = '"DM Sans",system-ui,sans-serif';
+
+// Tier rows as rendered (so the tier colors, HIDE CUT and the BYE row match
+// the screen). Covered cards are included — the export does its own reveal.
+function _tcvVbGroups(root) {
+  const hideCut = root.classList.contains('tcv-hide-cut');
+  const groups = [];
+  let ti = 0;
+  root.querySelectorAll('.tcv-tier-row').forEach(row => {
+    const cut = row.classList.contains('tcv-cut-row'), bye = row.classList.contains('tcv-bye-row');
+    if (cut && hideCut) return;
+    const letterEl = row.querySelector('.tcv-letter');
+    let label = '';
+    if (letterEl) {
+      const cl = letterEl.cloneNode(true);
+      cl.querySelectorAll('button').forEach(b => b.remove());
+      label = (cl.textContent || '').replace(/\s+/g, ' ').trim();
+      if (letterEl.classList.contains('tcv-letter-2l')) label = 'BYE/OUT';
+    }
+    const players = Array.prototype.slice.call(row.querySelectorAll('.tcv-card')).filter(c => c._tcvPlayer).map(c => ({ d: c._tcvPlayer, rank: c._tcvRank }));
+    if (!players.length) return;
+    let col;
+    if (cut) col = { a: '#991b1b', b: '#ef4444', light: false };
+    else if (bye) col = { a: '#334155', b: '#64748b', light: false };
+    else { col = _TCV_VB_TIER_COLORS[ti % _TCV_VB_TIER_COLORS.length]; ti++; }
+    groups.push({ label: label || '—', cut: cut, bye: bye, col: col, players: players });
+  });
+  return groups;
+}
+function _tcvVbFullTeam(abbr) {
+  if (!window._tcvAbbrToFull && typeof TEAM_ABBR_MAP !== 'undefined') {
+    window._tcvAbbrToFull = {};
+    Object.keys(TEAM_ABBR_MAP).forEach(f => { window._tcvAbbrToFull[TEAM_ABBR_MAP[f]] = f; });
+  }
+  return window._tcvAbbrToFull ? window._tcvAbbrToFull[abbr] : null;
+}
+// Opponent chip: text in the opponent's team color (weekly), BYE wk on season boards.
+function _tcvVbOpp(d) {
+  const o = _tcvOppInfo(d);
+  if (o) {
+    if (o.bye) return { text: 'BYE', color: '#475569', fg: '#e2e8f0' };
+    if (o.out) return { text: o.out, color: '#7f1d1d', fg: '#fecaca' };
+    const full = _tcvVbFullTeam(o.abbr);
+    const tc = full && _TCV_TEAM_COLORS[full];
+    const bg = tc ? (_tcvLum(tc.p) < 0.14 ? tc.s : tc.p) : '#475569';
+    return { text: (o.away ? '@ ' : 'vs ') + o.abbr, color: bg, fg: _tcvLum(bg) > 0.55 ? '#0f172a' : '#ffffff' };
+  }
+  const bw = _tcvSeasonBye(d);
+  return bw != null ? { text: 'BYE ' + bw, color: '#334155', fg: '#e2e8f0' } : null;
+}
+// Surname for the small card — same rule as the on-screen vertical card
+// (suffixes skipped: "Marvin Harrison Jr." → HARRISON; D/ST → mascot).
+function _tcvVbLastName(d) {
+  const parts = (d.n || '').trim().split(/\s+/);
+  let i = parts.length - 1;
+  while (i > 0 && _TCV_NAME_SUFFIX[parts[i]]) i--;
+  let last = parts[i] || (d.n || '');
+  if (d.s === 'DST') last = _tcvDisplayName(d) || last;
+  return last.toUpperCase();
+}
+// Headshots (ESPN native 600px) + team logos for every player, a few at a time.
+async function _tcvVbImages(players, onProgress) {
+  const map = new Map();
+  let done = 0;
+  const queue = players.slice();
+  const worker = async () => {
+    while (queue.length) {
+      const p = queue.shift();
+      const d = p.d;
+      const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+      const [head, logo] = await Promise.all([
+        _tcvLoadImg(d._slImg ? _tcvHiResHeadshot(d._slImg) : null),
+        _tcvLoadImg((logoId || d._devyLogo) ? window._logoSrc(d, logoId) : null)
+      ]);
+      map.set(d.n, { head: head, logo: logo });
+      done++;
+      if (onProgress) onProgress(done, players.length);
+    }
+  };
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  return map;
+}
+function _tcvVbChip(ctx, text, x, y, h, px, bg, fg, alignRight) {
+  ctx.font = px + 'px ' + _TCV_VB_BEBAS;
+  const w = ctx.measureText(text).width + Math.round(px * 0.8);
+  const cx = alignRight ? x - w : x;
+  _tcvRoundRect(ctx, cx, y, w, h, Math.round(h / 4));
+  ctx.fillStyle = bg; ctx.fill();
+  ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.stroke();
+  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, cx + w / 2, y + h / 2 + 1);
+  return w;
+}
+// One board card (w×h): team-color fill + logo watermark, headshot, rank,
+// opponent chip, PROJ bar, surname. Unrevealed = a quiet slot with the rank.
+function _tcvVbDrawCard(ctx, x, y, w, h, p, img, revealed) {
+  const B = _TCV_VB_BEBAS, d = p.d;
+  if (!revealed) {
+    _tcvRoundRect(ctx, x, y, w, h, 12); ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.stroke();
+    ctx.font = '34px ' + B; ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(p.rank), x + w / 2, y + h / 2);
+    return;
+  }
+  const tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+  const ring = _tcvLum(tc.s) < 0.16 ? _tcvTeamOutline(d.t) : tc.s;
+  const PHOTO_H = Math.round(h * 0.56), BAR_H = Math.round(h * 0.2), NAME_H = h - PHOTO_H - BAR_H;
+  ctx.save();
+  _tcvRoundRect(ctx, x, y, w, h, 12); ctx.clip();
+  ctx.fillStyle = tc.p; ctx.fillRect(x, y, w, h);
+  const g = ctx.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, 'rgba(0,0,0,.05)'); g.addColorStop(0.5, 'rgba(0,0,0,.2)'); g.addColorStop(1, 'rgba(0,0,0,.7)');
+  ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  if (img.logo) { ctx.globalAlpha = 0.28; _tcvDrawContain(ctx, img.logo, x + w * 0.1, y + 6, w * 0.8, w * 0.8, 'center'); ctx.globalAlpha = 1; }
+  if (img.head) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+    _tcvDrawContain(ctx, img.head, x - w * 0.1, y + 4, w * 1.2, PHOTO_H, 'bottom');
+    ctx.restore();
+  } else {
+    ctx.font = '40px ' + B; ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?', x + w / 2, y + PHOTO_H / 2);
+  }
+  // PROJ bar — the one number on the card
+  const cs = _tcvCardStats(d);
+  const barY = y + PHOTO_H;
+  ctx.fillStyle = 'rgba(0,0,0,.58)'; ctx.fillRect(x, barY, w, BAR_H);
+  const pv = cs.projVal;
+  ctx.font = Math.round(BAR_H * 0.9) + 'px ' + B; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = pv != null ? (cs.projColor || '#fff') : 'rgba(255,255,255,.4)';
+  ctx.fillText(pv != null ? String(pv) : '—', x + w / 2, barY + BAR_H / 2 + 1);
+  // Surname
+  const name = _tcvVbLastName(d);
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x, barY + BAR_H, w, NAME_H);
+  _tcvFitFont(ctx, name, w - 10, Math.round(NAME_H * 0.78), 16, B);
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 3;
+  ctx.fillStyle = '#fff'; ctx.fillText(name, x + w / 2, barY + BAR_H + NAME_H / 2 + 1);
+  ctx.restore();
+  ctx.restore();
+  _tcvRoundRect(ctx, x + 1, y + 1, w - 2, h - 2, 11); ctx.lineWidth = 2.5; ctx.strokeStyle = ring; ctx.stroke();
+  // Rank — top-left, stroked so it reads on any team color
+  ctx.font = '30px ' + B; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 4; ctx.strokeStyle = '#0a0a0a'; ctx.strokeText(p.rank + '.', x + 7, y + 4);
+  ctx.fillStyle = '#fff'; ctx.fillText(p.rank + '.', x + 7, y + 4);
+  // Opponent chip — top-right
+  const opp = _tcvVbOpp(d);
+  if (opp) _tcvVbChip(ctx, opp.text, x + w - 6, y + 6, 24, 18, opp.color, opp.fg, true);
+}
+// Board layout for one reveal step. Tiers not reached yet are a slim strip.
+// When the open tiers are too tall for the canvas, FINISHED tiers fold into
+// a one-line names strip too — farthest from the tier being revealed first —
+// until the cards stay at ≥85% size, so a 43-player board never shrinks to
+// the unreadable 9-per-row grid the old videos used.
+function _tcvVbLayout(groups, revealed, focusIdx, avail) {
+  const L = _TCV_VB;
+  const innerW = L.W - L.PAD * 2 - L.LETTER_W - L.GAP;
+  const cardW = Math.floor((innerW - L.GAP * (L.COLS - 1)) / L.COLS);
+  const st = groups.map(g => ({
+    g: g,
+    open: g.bye || g.players.some(p => revealed.has(p.d.n)),
+    done: !g.bye && g.players.every(p => revealed.has(p.d.n)),
+    collapsed: false
+  }));
+  const build = () => {
+    let y = 0;
+    const items = [];
+    st.forEach(s => {
+      if (!s.open || s.collapsed) { items.push({ g: s.g, strip: true, done: s.collapsed, y: y, h: L.STRIP_H }); y += L.STRIP_H + L.ROW_GAP; return; }
+      const rows = Math.ceil(s.g.players.length / L.COLS);
+      const h = rows * L.CARD_H + (rows - 1) * L.GAP;
+      items.push({ g: s.g, strip: false, y: y, h: h, rows: rows });
+      y += h + L.ROW_GAP;
+    });
+    return { items: items, total: Math.max(1, y - L.ROW_GAP), cardW: cardW, innerW: innerW };
+  };
+  let lay = build();
+  const limit = (avail || L.H - L.PAD * 2) / 0.85;
+  for (;;) {
+    if (lay.total <= limit) break;
+    let best = -1, bestDist = -1;
+    st.forEach((s, i) => {
+      if (s.done && !s.collapsed && i !== focusIdx) { const dist = Math.abs(i - (focusIdx == null ? -1 : focusIdx)); if (dist > bestDist) { bestDist = dist; best = i; } }
+    });
+    if (best < 0) break;
+    st[best].collapsed = true;
+    lay = build();
+  }
+  return lay;
+}
+// The whole board at one reveal step. Countdown reveals (N→1) grow upward
+// from the bottom edge, top-down reveals (1→N) hang from the top; a board
+// taller than the canvas is scaled to fit (use TOP-N / HIDE CUT to avoid that).
+function _tcvVbBoardCanvas(groups, revealed, images, anchorBottom, focusIdx) {
+  const L = _TCV_VB, S = L.S, B = _TCV_VB_BEBAS;
+  const c = document.createElement('canvas');
+  c.width = L.W * S; c.height = L.H * S;
+  const ctx = c.getContext('2d');
+  ctx.scale(S, S);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  const avail = L.H - L.PAD * 2;
+  const lay = _tcvVbLayout(groups, revealed, focusIdx, avail);
+  const k = Math.min(1, avail / lay.total);
+  const contentH = lay.total * k;
+  const y0 = L.PAD + (anchorBottom ? (avail - contentH) : 0);
+  // Navy panel so dark team cards have an edge against the video
+  _tcvRoundRect(ctx, 6, y0 - 12, L.W - 12, contentH + 36, 22);
+  ctx.fillStyle = 'rgba(9,17,36,.94)'; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.09)'; ctx.stroke();
+  ctx.save();
+  ctx.translate(L.PAD, y0);
+  ctx.scale(k, k);
+  lay.items.forEach(it => {
+    const g = it.g;
+    const grad = ctx.createLinearGradient(0, it.y, 0, it.y + it.h);
+    grad.addColorStop(0, g.col.a); grad.addColorStop(1, g.col.b);
+    _tcvRoundRect(ctx, 0, it.y, L.LETTER_W, it.h, 10); ctx.fillStyle = grad; ctx.fill();
+    const lblPx = Math.min(44, Math.round(it.h * 0.7), g.label.length > 3 ? 22 : 44);
+    ctx.font = lblPx + 'px ' + B; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = g.col.light ? '#0f172a' : '#ffffff';
+    ctx.fillText(g.label, L.LETTER_W / 2, it.y + it.h / 2 + 1);
+    const x0 = L.LETTER_W + L.GAP;
+    if (it.strip) {
+      _tcvRoundRect(ctx, x0, it.y, lay.innerW, it.h, 10); ctx.fillStyle = it.done ? 'rgba(255,255,255,.09)' : 'rgba(255,255,255,.05)'; ctx.fill();
+      const ranks = g.players.map(p => p.rank);
+      const lo = Math.min.apply(null, ranks), hi = Math.max.apply(null, ranks);
+      const range = lo === hi ? '#' + lo : '#' + lo + ' – #' + hi;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      if (it.done) {
+        // Finished tier folded to save height: rank range + every surname
+        const names = g.players.map(p => _tcvVbLastName(p.d));
+        const maxW = lay.innerW - 32;
+        let txt = range + ' · ' + names.join(' · ');
+        _tcvFitFont(ctx, txt, maxW, 22, 16, B);
+        while (ctx.measureText(txt).width > maxW && names.length > 1) { names.pop(); txt = range + ' · ' + names.join(' · ') + ' …'; }
+        ctx.fillStyle = 'rgba(255,255,255,.85)';
+        ctx.fillText(txt, x0 + 16, it.y + it.h / 2 + 1);
+      } else {
+        ctx.font = '22px ' + B; ctx.fillStyle = 'rgba(255,255,255,.38)';
+        ctx.fillText((g.cut ? 'BELOW THE CUT · ' : '') + range + ' · ' + g.players.length + ' PLAYER' + (g.players.length === 1 ? '' : 'S'), x0 + 16, it.y + it.h / 2 + 1);
+      }
+      return;
+    }
+    g.players.forEach((p, i) => {
+      const col = i % L.COLS, row = Math.floor(i / L.COLS);
+      _tcvVbDrawCard(ctx, x0 + col * (lay.cardW + L.GAP), it.y + row * (L.CARD_H + L.GAP), lay.cardW, L.CARD_H, p, images.get(p.d.n) || {}, g.bye || revealed.has(p.d.n));
+    });
+  });
+  ctx.restore();
+  ctx.save();
+  ctx.font = '20px ' + B; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+  try { ctx.letterSpacing = '2px'; } catch (_) {}
+  ctx.fillStyle = 'rgba(255,255,255,.72)';
+  ctx.fillText('MYFANTASYFOOTBALL.CO', L.W - L.PAD - 4, y0 + contentH + 20);
+  ctx.restore();
+  return c;
+}
+// The reveal card: one player, big — full name, PROJ at 64px, the other two
+// stats readable, opponent chip, rank badge. Drops on top of the board for a
+// second when the name is said, so the site card actually gets seen.
+function _tcvVbRevealCanvas(p, img, groupLabel) {
+  const L = _TCV_VB, S = L.S, W = L.REVEAL_W, H = L.REVEAL_H, B = _TCV_VB_BEBAS, SANS = _TCV_VB_SANS, d = p.d;
+  const c = document.createElement('canvas');
+  c.width = W * S; c.height = H * S;
+  const ctx = c.getContext('2d');
+  ctx.scale(S, S);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  const tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+  const ring = _tcvLum(tc.s) < 0.16 ? _tcvTeamOutline(d.t) : tc.s;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
+  _tcvRoundRect(ctx, 14, 14, W - 28, H - 28, 28); ctx.fillStyle = tc.p; ctx.fill();
+  ctx.restore();
+  ctx.save();
+  _tcvRoundRect(ctx, 14, 14, W - 28, H - 28, 28); ctx.clip();
+  ctx.fillStyle = tc.p; ctx.fillRect(14, 14, W - 28, H - 28);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(0,0,0,.02)'); g.addColorStop(0.45, 'rgba(0,0,0,.15)'); g.addColorStop(1, 'rgba(0,0,0,.78)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (img.logo) { ctx.globalAlpha = 0.22; _tcvDrawContain(ctx, img.logo, W / 2 - 220, 40, 440, 440, 'center'); ctx.globalAlpha = 1; }
+  if (img.head) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
+    _tcvDrawContain(ctx, img.head, 30, 50, W - 60, 440, 'bottom');
+    ctx.restore();
+  }
+  const sc = ctx.createLinearGradient(0, 400, 0, 520);
+  sc.addColorStop(0, 'rgba(0,0,0,0)'); sc.addColorStop(1, 'rgba(0,0,0,.55)');
+  ctx.fillStyle = sc; ctx.fillRect(0, 400, W, 120);
+  ctx.restore();
+  _tcvRoundRect(ctx, 16, 16, W - 32, H - 32, 26); ctx.lineWidth = 5; ctx.strokeStyle = ring; ctx.stroke();
+  // Rank badge + pos pill (top-left)
+  ctx.beginPath(); ctx.arc(74, 74, 46, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,.66)'; ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = ring; ctx.stroke();
+  ctx.font = (String(p.rank).length >= 3 ? 40 : 50) + 'px ' + B; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(String(p.rank), 74, 77);
+  const pos = d.s || '';
+  _tcvVbChip(ctx, pos, 42, 128, 30, 22, _TCV_POS_COLORS[pos] || '#64748b', '#fff', false);
+  if (groupLabel && groupLabel !== '—') _tcvVbChip(ctx, 'TIER ' + groupLabel, 42, 166, 28, 20, 'rgba(0,0,0,.55)', '#e2e8f0', false);
+  // Opponent chip (top-right)
+  const opp = _tcvVbOpp(d);
+  if (opp) _tcvVbChip(ctx, opp.text, W - 30, 36, 44, 30, opp.color, opp.fg, true);
+  // Name + team line
+  const full = (_tcvDisplayName(d) || d.n || '').toUpperCase();
+  _tcvFitFont(ctx, full, W - 56, 70, 34, B);
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(full, W / 2, 556);
+  ctx.restore();
+  ctx.font = '600 20px ' + SANS; ctx.fillStyle = 'rgba(255,255,255,.78)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+  ctx.fillText((d.t || '') + (abbr && abbr !== d.t ? ' · ' + abbr : ''), W / 2, 598);
+  // Stats: PROJ big, the other two readable
+  const cs = _tcvCardStats(d);
+  const slots = cs.slots.slice(0, 3);
+  _tcvRoundRect(ctx, 24, 626, W - 48, 108, 16); ctx.fillStyle = 'rgba(0,0,0,.58)'; ctx.fill();
+  const colW = (W - 48) / slots.length;
+  const wk = (typeof currentMode !== 'undefined' && currentMode === 'weekly') ? (window._weeklyActiveWeek || 1) : null;
+  slots.forEach((sl, i) => {
+    const cx = 24 + colW * i + colW / 2;
+    const blank = (sl.v == null || sl.v === '' || (typeof sl.v === 'number' && !isFinite(sl.v)));
+    ctx.font = (i === 0 ? 64 : 44) + 'px ' + B; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = blank ? 'rgba(255,255,255,.35)' : (sl.c || '#fff');
+    ctx.fillText(blank ? '—' : String(sl.v), cx, 666);
+    ctx.font = '600 15px ' + SANS; ctx.fillStyle = 'rgba(255,255,255,.66)';
+    const lbl = (i === 0 && wk && /^(PROJ|BOOK)$/.test(sl.short || '')) ? ('WEEK ' + wk + ' ' + sl.short) : (sl.short || '');
+    ctx.fillText(lbl.toUpperCase(), cx, 712);
+  });
+  ctx.save();
+  ctx.font = '16px ' + B; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  try { ctx.letterSpacing = '2px'; } catch (_) {}
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.fillText('MYFANTASYFOOTBALL.CO', W / 2, H - 22);
+  ctx.restore();
+  return c;
+}
+function _tcvVbReadme(prefix, n, countdown, cols) {
+  return [
+    'VIDEO BOARD — ' + prefix + ' — exported ' + new Date().toISOString().slice(0, 16).replace('T', ' '),
+    '',
+    'board/   ' + (n + 1) + ' transparent PNGs, 1080x1150, one per reveal step in ' + (countdown ? 'countdown order (' + n + ' -> 1)' : 'top-down order (1 -> ' + n + ')') + ' — the ⇅ setting on the tier view.',
+    '         board_00 = nothing revealed; board_01 = first name revealed; … Tiers you have not reached yet show as a slim strip.',
+    '         Built for the bottom ~60% of a 1080x1920 frame, under the face cam. Cards are ' + cols + ' per row max, surname + PROJ only.',
+    'reveal/  one 560x760 card per player, numbered to match the board step that reveals him (reveal_07 pairs with board_07).',
+    '         Drop it on the track above the board for ~1s when you say the name, then cut it away. This is the card viewers can actually read.',
+    'order.txt  step, rank, player, tier — which board image goes with which name.',
+    '',
+    'PREMIERE: Edit > Preferences > Timeline > Still Image Default Duration = your per-player pace (e.g. 2.5s) BEFORE importing.',
+    '  File > Import the board folder. In the bin, sort by name, select all, right-click > Automate to Sequence (Sequentially, Place: Sequentially).',
+    '  Scale the board layer to taste (it is already 1080 wide). Then import reveal/ and drop each card at the start of its board step.',
+    '',
+    'READABILITY: TikTok serves most phones 720p, so anything under ~24px on this 1080 export disappears. That is why the card carries ONE number.',
+    '  Boards taller than the canvas are scaled down to fit — use TOP-N or HIDE CUT to keep a board at ~48 players or fewer.',
+    '  PROJ = the same number as the PROJ column (BOOK PROJ toggle respected). Opponent chip = this week\'s matchup (weekly) or the bye week (season boards).'
+  ].join('\n');
+}
+async function _tcvDownloadVideoBoard(root, prefix, btn) {
+  if (btn && btn._tcvBusy) return;
+  const groups = _tcvVbGroups(root);
+  const ranked = [];
+  groups.forEach((g, gi) => { if (!g.bye) g.players.forEach(p => ranked.push({ p: p, label: g.label, gi: gi })); });
+  ranked.sort((a, b) => a.p.rank - b.p.rank);
+  if (!ranked.length) { if (typeof toast === 'function') toast('No cards on the board to export'); return; }
+  if (ranked.length > _TCV_VB.MAX_STATES) { if (typeof toast === 'function') toast('Board too big for a video export (' + ranked.length + ' players) — use TOP-N or HIDE CUT to get under ' + _TCV_VB.MAX_STATES); return; }
+  const countdown = _tcvCountdownPref();
+  const order = countdown ? ranked.slice().reverse() : ranked;
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn._tcvBusy = true; btn.disabled = true; }
+  const clean = (x) => (x || '').toString().replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const pre = clean(prefix) || 'BOARD';
+  const files = [];
+  let failed = 0;
+  try {
+    try { if (document.fonts && document.fonts.load) await Promise.all([document.fonts.load('30px "Bebas Neue"'), document.fonts.load('600 16px "DM Sans"')]); } catch (_) {}
+    const all = [];
+    groups.forEach(g => g.players.forEach(p => all.push(p)));
+    const images = await _tcvVbImages(all, (done, n) => { if (btn) btn.textContent = '🎞 photos ' + done + ' / ' + n + '…'; });
+    const revealed = new Set();
+    const pad = (i) => String(i).padStart(2, '0');
+    const orderLines = ['step\trank\tplayer\ttier'];
+    for (let i = 0; i <= order.length; i++) {
+      if (i > 0) {
+        const it = order[i - 1];
+        revealed.add(it.p.d.n);
+        orderLines.push(pad(i) + '\t' + it.p.rank + '\t' + (it.p.d.n || '') + '\t' + it.label);
+        try {
+          const rc = _tcvVbRevealCanvas(it.p, images.get(it.p.d.n) || {}, it.label);
+          files.push({ name: 'reveal/' + pre + '_reveal_' + pad(i) + '_' + (clean(it.p.d.n) || 'player') + '.png', data: await _tcvCanvasBytes(rc) });
+        } catch (e) { failed++; console.warn('[VideoBoard] reveal card failed:', it.p.d.n, e); }
+      }
+      if (btn) btn.textContent = '🎞 board ' + i + ' / ' + order.length + '…';
+      try {
+        const focus = i > 0 ? order[i - 1].gi : order[0].gi;
+        const bc = _tcvVbBoardCanvas(groups, revealed, images, countdown, focus);
+        files.push({ name: 'board/' + pre + '_board_' + pad(i) + '.png', data: await _tcvCanvasBytes(bc) });
+      } catch (e) { failed++; console.warn('[VideoBoard] board state failed:', i, e); }
+      await new Promise(r => setTimeout(r, 0));
+    }
+    const enc = new TextEncoder();
+    files.push({ name: 'order.txt', data: enc.encode(orderLines.join('\n')) });
+    files.push({ name: 'README.txt', data: enc.encode(_tcvVbReadme(prefix, order.length, countdown, _TCV_VB.COLS)) });
+    _tcvSaveBlob(_tcvZipBlob(files), pre + '_video_board.zip');
+    if (typeof toast === 'function') toast('Video board: ' + (order.length + 1) + ' board steps + ' + order.length + ' reveal cards zipped' + (failed ? ' (' + failed + ' failed)' : ''));
+  } catch (e) {
+    console.warn('[VideoBoard] export failed:', e);
+    if (typeof toast === 'function') toast('Video board export failed: ' + (e && e.message || e));
+  } finally {
+    if (btn) { btn._tcvBusy = false; btn.disabled = false; btn.textContent = label; }
+  }
+}
+
 // CENTER layout preference (pyramid look for vertical video) — survives re-renders.
 function _tcvCenteredPref() {
   try { return localStorage.getItem('tcv_centered') === '1'; } catch(_) { return false; }
@@ -7170,6 +7596,7 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn" data-tcvaction="clearSel" title="Untick every card">✕ CLEAR</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipSel" title="One .zip of just the ticked cards\' PNGs. File: ' + _tcvFilePrefix + '_row_cards_selected.zip">📦 ZIP SELECTED (0)</button>' +
       '<button class="tcv-reveal-btn" data-tcvaction="dlZipAll" title="One .zip of every revealed row card\'s PNG. File: ' + _tcvFilePrefix + '_row_cards.zip">📦 ZIP ALL</button>' : '') +
+    (_tcvIsAdminViewer() ? '<button class="tcv-reveal-btn" data-tcvaction="dlVideo" title="Admin: one .zip for the rankings video — the tier board as 1080×1150 transparent PNGs, one per reveal step in the ⇅ order (tiers not reached yet collapse to a strip, max 6 cards a row, surname + PROJ only), plus a big 560×760 reveal card per player to drop on screen when you say the name. README inside has the Premiere recipe. File: ' + _tcvFilePrefix + '_video_board.zip">🎞 VIDEO BOARD</button>' : '') +
     (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✎ on the letter renames it, ✕ removes it. Cut line too: ✂ CUT on a card hides everyone below him, drag the ✂ letter to move the line, ✕ on ✂ clears it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
@@ -7405,6 +7832,7 @@ function _renderTierCardView(data, container) {
       if (action === 'dlSel') { _tcvDownloadAllRows(root, _tcvFilePrefix, true); return; }
       if (action === 'dlZipAll') { _tcvDownloadRowsZip(root, _tcvFilePrefix, btn, false); return; }
       if (action === 'dlZipSel') { _tcvDownloadRowsZip(root, _tcvFilePrefix, btn, true); return; }
+      if (action === 'dlVideo') { _tcvDownloadVideoBoard(root, _tcvFilePrefix, btn); return; }
       if (action === 'toggleSelect') {
         const on = !root.classList.contains('tcv-select');
         root.classList.toggle('tcv-select', on);

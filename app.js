@@ -15955,7 +15955,7 @@ _renderDataFreshness();
 // Camp News section — sits directly under ADP Comparison on the FANTASY tab.
 // Newest ≤3 items from the last 14 days for this player; each headline links
 // out to the source article / X post. Returns '' when there's nothing to show.
-function _campNewsSectionHtml(d) {
+function _campNewsSectionHtml(d, max, days) {
   const idx = window._campNewsIdx;
   if (!idx) return '';
   let items = idx[_campNewsNorm(d.n)] || [];
@@ -15969,10 +15969,10 @@ function _campNewsSectionHtml(d) {
     const tm = items.filter(it => !it.team || it.team === dAbbr);
     if (tm.length !== items.length && tm.length) items = tm;
   }
-  const cutoff = Date.now() - 14 * 24 * 3600 * 1000;
+  const cutoff = Date.now() - (days || 14) * 24 * 3600 * 1000;
   items = items.filter(it => !it.date || (Date.parse(it.date + 'T12:00:00') || 0) >= cutoff);
   if (!items.length) return '';
-  items = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
+  items = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, max || 3);
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const tagColor = { injury: 'var(--red)', faller: 'var(--red)', riser: 'var(--green)',
                      role: 'var(--accent)', transaction: 'var(--accent)' };
@@ -15992,7 +15992,7 @@ function _campNewsSectionHtml(d) {
     </div>`;
   }).join('');
   return `<div class="card-section">
-    <div class="card-section-title">Camp News <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· auto-scanned 2x daily</span></div>
+    <div class="card-section-title">News <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· auto-scanned 2x daily</span></div>
     <div style="margin-top:-.15rem">${rows}</div>
   </div>`;
 }
@@ -17745,6 +17745,9 @@ function openPlayerCard(d, ctxMode) {
     }
   }
 
+  // NEWS tab (2026-10-08): the camp-news feed gets its own tab (10 items / 60 days);
+  // the tab button only renders when there is something to show.
+  const _newsHtml = (!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d, 10, 60) : '';
   cardEl.innerHTML = `
     <div class="card-header">
       <button class="card-share" id="cardShare" title="Copy a shareable link to this player" aria-label="Copy share link">
@@ -17778,12 +17781,11 @@ function openPlayerCard(d, ctxMode) {
     <div class="card-body">
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
-        ${_showLogs ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>` : ''}
-        ${_showCareer ? `<button class="card-view-btn" data-cardview="career" id="cardCareerTabBtn"${(_hasCareerRows || _career2026Row(d)) ? '' : ' style="display:none"'}>CAREER</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
         ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
+        ${_newsHtml ? `<button class="card-view-btn" data-cardview="news">NEWS</button>` : ''}
         <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
       <div class="card-pin-strip" id="cardPinStrip"></div>
@@ -17817,8 +17819,6 @@ function openPlayerCard(d, ctxMode) {
           ${_teamPpgBoxHtml(d.t)}
         </div>
       </div>` : ''}
-
-      ${_seasonProjSectionHtml(d)}
 
       ${!d._retired ? (() => {
         // Mode-aware ADPs scoped to the calling context (Trade Calc dynasty,
@@ -17946,8 +17946,6 @@ function openPlayerCard(d, ctxMode) {
           </div>
         </div>`;
       })() : ''}
-
-      ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
       ${(d.s === 'K' || d.s === 'DST') && !_is2026 && ((d.career && d.career.length > 0) || _kdstHasHistory(d))
         ? _kdstWeeklyProjSectionHtml(d) + _buildWeeklyLinesSection(d) + _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
@@ -18342,14 +18340,15 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-prospect-view" id="cardLinesView" style="display:none">
       ${(d.s === 'K' || d.s === 'DST') ? '' : buildLinesView(d)}
       </div>
-      ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
-      <div class="card-prospect-view" id="cardCareerView" style="display:none">
-      ${_careerSectionHtml(d, true)}
-      </div>` : ''}
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
-      <div class="card-prospect-view" id="cardLogsView" style="display:none">
+      <div class="card-prospect-view card-fantasy-extra" id="cardLogsView" data-ready="${hasWeeklyData(d) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && hasWeeklyData(d)) ? 'block' : 'none'}">
       ${_logsSectionHtml(d)}
       </div>` : ''}
+      ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
+      <div class="card-prospect-view card-fantasy-extra" id="cardCareerView" data-ready="${(_hasCareerRows || _career2026Row(d)) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && (_hasCareerRows || _career2026Row(d))) ? 'block' : 'none'}">
+      ${_careerSectionHtml(d, true)}
+      </div>` : ''}
+      <div class="card-prospect-view" id="cardNewsView" style="display:none">${_newsHtml}</div>
     </div>
   `;
 
@@ -18453,6 +18452,7 @@ function openPlayerCard(d, ctxMode) {
         const wv = document.getElementById('cardWeeklyView');
         const crv = document.getElementById('cardCareerView');
         const lgv = document.getElementById('cardLogsView');
+        const nv = document.getElementById('cardNewsView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (cv) cv.style.display = 'none';
@@ -18461,6 +18461,7 @@ function openPlayerCard(d, ctxMode) {
         if (wv) wv.style.display = 'none';
         if (crv) crv.style.display = 'none';
         if (lgv) lgv.style.display = 'none';
+        if (nv) nv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'comps') {
@@ -18475,8 +18476,13 @@ function openPlayerCard(d, ctxMode) {
           if (crv) crv.style.display = 'block';
         } else if (view === 'logs') {
           if (lgv) lgv.style.display = 'block';
+        } else if (view === 'news') {
+          if (nv) nv.style.display = 'block';
         } else {
           fv.classList.remove('hidden');
+          // Game logs + career ride along inside FANTASY (2026-10-08) once they have data
+          if (lgv && lgv.dataset.ready === '1') lgv.style.display = 'block';
+          if (crv && crv.dataset.ready === '1') crv.style.display = 'block';
         }
       });
     });
@@ -18578,6 +18584,8 @@ function openPlayerCard(d, ctxMode) {
       _clRefresh();
       const clTabBtn = document.getElementById('cardCareerTabBtn');
       if (clTabBtn && clContent.innerHTML.trim()) clTabBtn.style.display = '';
+      const clView = document.getElementById('cardCareerView');
+      if (clView && clContent.innerHTML.trim()) { clView.dataset.ready = '1'; const _fv = document.getElementById('cardFantasyView'); if (_fv && !_fv.classList.contains('hidden')) clView.style.display = 'block'; }
     });
   }
   // L4 PPG also comes from the lazy weekly bundle — a card opened before it
@@ -18640,6 +18648,8 @@ function openPlayerCard(d, ctxMode) {
       }
       const glTabBtn = document.getElementById('cardLogsTabBtn');
       if (glTabBtn) glTabBtn.style.display = '';
+      const glView = document.getElementById('cardLogsView');
+      if (glView) { glView.dataset.ready = '1'; const _fv = document.getElementById('cardFantasyView'); if (_fv && !_fv.classList.contains('hidden')) glView.style.display = 'block'; }
       if (glYearSelect) {
         // Rebuild in full: pre-bundle the selector may hold only the 2026
         // schedule entry. Default to the newest season with real game data.

@@ -18067,13 +18067,32 @@ function openPlayerCard(d, ctxMode) {
   // DYNASTY tab (2026-10-08): the old INFO + COMPS tabs fold in. Career highlights ride on top
   // of the FANTASY career block; the contract fields sit under Prospect Info (height / weight /
   // college already live there, so the Bio duplicates are dropped).
+  // Contract fields come from OverTheCap via scripts/build_player_contracts.py (daily in the
+  // signing windows, every 4 weeks otherwise): cn years / cv total / sal AAV / cg guaranteed /
+  // cyr final league year ("FA" = no active deal) / out = first offseason a cut or trade frees
+  // cap (csav saved, cdead dead money) / cs year signed.
+  const _cM = v => (v != null && !isNaN(+v)) ? '$' + (+v >= 100 ? Math.round(+v) : (+v).toFixed(+v >= 10 ? 1 : 2)) + 'M' : '—';
+  const _cFA = d.cyr === 'FA';
+  const _cHas = d.cv != null || d.sal != null;
+  const _cTerms = _cFA ? 'Free agent' : (d.cn != null && d.cv != null) ? d.cn + ' yr · ' + _cM(d.cv) : (d.cv != null ? _cM(d.cv) : '—');
+  const _cOutTitle = d.out != null && d.csav != null
+    ? 'First league year a cut or trade frees cap: saves ' + _cM(d.csav) + ' vs ' + _cM(d.cdead) + ' dead money'
+    : d.out != null ? 'First league year a cut or trade frees cap'
+    : (_cHas && !_cFA && d.cyr != null) ? 'No cap-positive out before the deal ends' + (d.cg != null && d.cv != null && d.cg >= d.cv * 0.9 ? ' (fully guaranteed)' : '') : '';
+  const _cNow = new Date(), _cSeason = _cNow.getFullYear() - (_cNow.getMonth() < 2 ? 1 : 0);
+  const _cOut = (d.out != null && !isNaN(+d.out)) ? fmtInt(d.out)
+    : (d.out || ((_cHas && !_cFA && d.cyr != null) ? (+d.cyr <= _cSeason ? 'Expiring' : 'None') : '—'));
+  const _cEsc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   const _contractHtml = (!d._retired && !_is2026) ? `<div class="card-section">
     <div class="card-section-title">Contract</div>
     <div class="card-grid">
       <div class="card-stat"><span class="card-stat-label">Draft Capital</span><span class="card-stat-value">${draftRdLabel(d.dr)}</span></div>
-      <div class="card-stat"><span class="card-stat-label">Contract (AAV)</span><span class="card-stat-value">${d.sal != null ? '$' + fmt(d.sal, 2) + 'M' : '—'}</span></div>
-      <div class="card-stat"><span class="card-stat-label">Contract Year</span><span class="card-stat-value">${(d.cyr != null && !isNaN(+d.cyr)) ? fmtInt(d.cyr) : (d.cyr || '—')}</span></div>
-      <div class="card-stat"><span class="card-stat-label">Potential Out</span><span class="card-stat-value">${(d.out != null && !isNaN(+d.out)) ? fmtInt(d.out) : (d.out || '—')}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Contract</span><span class="card-stat-value">${_cTerms}</span></div>
+      <div class="card-stat"><span class="card-stat-label">AAV</span><span class="card-stat-value">${d.sal != null ? _cM(d.sal) : '—'}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Guaranteed</span><span class="card-stat-value">${d.cg != null ? _cM(d.cg) : '—'}</span></div>
+      <div class="card-stat"><span class="card-stat-label" title="Final league year of the current deal">Signed Through</span><span class="card-stat-value">${(d.cyr != null && !isNaN(+d.cyr)) ? fmtInt(d.cyr) : (d.cyr || '—')}</span></div>
+      <div class="card-stat"><span class="card-stat-label" title="${_cEsc(_cOutTitle)}">Potential Out</span><span class="card-stat-value" title="${_cEsc(_cOutTitle)}">${_cOut}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Signed</span><span class="card-stat-value">${(d.cs != null && !isNaN(+d.cs)) ? fmtInt(d.cs) : '—'}</span></div>
       <div class="card-stat"><span class="card-stat-label">Jersey</span><span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span></div>
     </div>
   </div>` : (d._retired && d._debut && d._last) ? `<div class="card-section">

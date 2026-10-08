@@ -31494,14 +31494,14 @@ window.fmtHeight = fmtHeight;
           const posSeen = {};
           board.slice(0, 200).forEach(idx => {
             const d = D[idx]; if (!d) return;
-            posSeen[d.pos] = (posSeen[d.pos] || 0) + 1;
+            const ps = d.p || d.pos || '?'; posSeen[ps] = (posSeen[ps] || 0) + 1;
             if (inTrade.has(idx)) return;
             const v = getPlayerValue(d), err = Math.abs(v - diff) / diff;
-            if (err <= 0.2) ex.push({ d, v, pr: d.pos + posSeen[d.pos], err });
+            if (err <= 0.2) ex.push({ d, v, pr: ps + posSeen[ps], ps, err });
           });
           ex.sort((a, b) => a.err - b.err);
           const seen = new Set();
-          ex = ex.filter(e => { if (seen.has(e.d.pos)) return false; seen.add(e.d.pos); return true; }).slice(0, 2);
+          ex = ex.filter(e => { if (seen.has(e.ps)) return false; seen.add(e.ps); return true; }).slice(0, 2);
         }
         hintEl.style.display = '';
         hintEl.textContent = 'To even it up, ' + loser + ' should get about ' + diff + ' more back from ' + winner + (ex.length ? ' — e.g. ' + ex.map(e => e.d.n + ' (' + e.pr + ', ' + e.v + ')').join(' or ') : '');

@@ -537,6 +537,10 @@
       html.push('<div class="kpi"><div class="l">' + KIND_L[k] + '</div><div class="v">' + (isNum(a) ? (a > 0 ? '+' : '') + a.toFixed(1) : '—') + '</div><div class="s">avg consensus move · ' + good + ' of ' + list.length + ' moved the right way' + ((by[k] || {}).tracking ? ' · ' + by[k].tracking + ' tracking' : '') + '</div></div>');
     });
     html.push('</div>');
+    // chart: every call as green / grey / red, stacked per kind, season then week by week
+    html.push('<div class="card"><h2>Calls — green / grey / red</h2><div class="chartwrap"><canvas id="recordCanvas" style="height:260px"></canvas><div class="tip" id="recordTip"></div></div>'
+      + '<div class="legend"><span><i style="background:' + REC_COL.g + '"></i>hit · consensus moved the right way</span><span><i style="background:' + REC_COL.r + '"></i>miss · moved the wrong way</span><span><i style="background:' + REC_COL.x + '"></i>incomplete · pending · no move yet</span></div>'
+      + '<p class="note">One bar per kind: S = starts, X = sits, B = buys, L = sells. Buys and sells go green when the consensus positional rank has moved in the direction you called, red the other way, grey until the next consensus update lands or while flat.</p></div>');
     // per-week table
     html.push('<div class="card"><h2>By week</h2><table><thead><tr><th class="l">Week</th><th>Starts</th><th>Sits</th><th>X over Y</th><th>Buys (avg move)</th><th>Sells (avg move)</th><th>Incomplete</th></tr></thead><tbody>');
     weeks.forEach((w) => {
@@ -585,6 +589,61 @@
     $('#rwk').onchange = (e) => { S.ctl.rwk = Number(e.target.value); render(); };
     $('#rkind').onchange = (e) => { S.ctl.rkind = e.target.value; render(); };
     $('#btnReceipts').onclick = () => receiptsCard(rows, S.ctl.rwk);
+    drawRecordChart(R.calls, weeks);
+  }
+  // Traffic-light bucket for one call
+  const REC_COL = { g: '#22c55e', x: '#6b7280', r: '#ef4444' };
+  function callLight(c) {
+    if (c.kind === 'buy' || c.kind === 'sell') {
+      if (!isNum(c.consDelta) || c.consDelta === 0) return 'x';
+      return (c.kind === 'buy' ? c.consDelta > 0 : c.consDelta < 0) ? 'g' : 'r';
+    }
+    return c.result === 'hit' ? 'g' : c.result === 'miss' ? 'r' : 'x';
+  }
+  // Stacked green/grey/red bars: a SEASON group, then one group per week; four bars per group (S X B L)
+  function drawRecordChart(calls, weeks) {
+    const cv = $('#recordCanvas'); if (!cv) return;
+    const KINDS = [['start', 'S'], ['sit', 'X'], ['buy', 'B'], ['sell', 'L']];
+    const groups = [{ label: 'SEASON', calls }].concat(weeks.map((w) => ({ label: 'W' + w, calls: calls.filter((c) => c.week === w) })));
+    groups.forEach((gp) => { gp.bars = KINDS.map(([k, l]) => { const b = { k, l, g: 0, x: 0, r: 0 }; gp.calls.filter((c) => c.kind === k).forEach((c) => { b[callLight(c)]++; }); b.n = b.g + b.x + b.r; return b; }); });
+    const dpr = window.devicePixelRatio || 1; const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    const padL = 30, padR = 10, padT = 12, padB = 40;
+    const maxN = Math.max(1, ...groups.flatMap((gp) => gp.bars.map((b) => b.n)));
+    const gw = (W - padL - padR) / groups.length, bw = Math.min(26, (gw - 14) / 4), gap = (gw - bw * 4) / 2;
+    const y = (v) => padT + (H - padT - padB) * (1 - v / maxN);
+    ctx.strokeStyle = '#2c2c2a'; ctx.lineWidth = 1; ctx.fillStyle = '#898781'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    const step = maxN > 12 ? 5 : maxN > 6 ? 2 : 1;
+    for (let v = 0; v <= maxN; v += step) { ctx.beginPath(); ctx.moveTo(padL, y(v)); ctx.lineTo(W - padR, y(v)); ctx.stroke(); ctx.fillText(String(v), padL - 6, y(v) + 4); }
+    const rects = [];
+    groups.forEach((gp, gi) => {
+      const x0 = padL + gw * gi + gap;
+      gp.bars.forEach((b, bi) => {
+        const x = x0 + bw * bi; let top = 0;
+        ['g', 'x', 'r'].forEach((s) => {
+          if (!b[s]) return;
+          const y1 = y(top + b[s]), y0 = y(top);
+          ctx.fillStyle = REC_COL[s]; ctx.fillRect(x + 1, y1, bw - 2, y0 - y1);
+          top += b[s];
+        });
+        if (b.n) { ctx.fillStyle = '#c3c2b7'; ctx.textAlign = 'center'; ctx.font = '10px sans-serif'; ctx.fillText(String(b.n), x + bw / 2, y(b.n) - 3); }
+        ctx.fillStyle = '#898781'; ctx.textAlign = 'center'; ctx.font = '10px sans-serif'; ctx.fillText(b.l, x + bw / 2, H - padB + 12);
+        rects.push({ x: x, w: bw, gp, b });
+      });
+      ctx.fillStyle = gi === 0 ? '#ffffff' : '#c3c2b7'; ctx.font = (gi === 0 ? 'bold ' : '') + '11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(gp.label, x0 + bw * 2, H - padB + 28);
+    });
+    const tip = $('#recordTip'); const names = { start: 'Starts', sit: 'Sits', buy: 'Buys', sell: 'Sells' };
+    cv.onmousemove = (ev) => {
+      const r = cv.getBoundingClientRect(); const mx = ev.clientX - r.left;
+      const hit = rects.find((o) => mx >= o.x && mx <= o.x + o.w);
+      if (!hit) { tip.style.display = 'none'; return; }
+      const b = hit.b;
+      tip.innerHTML = '<b>' + esc(hit.gp.label) + ' · ' + names[b.k] + '</b><br><span style="color:' + REC_COL.g + '">●</span> ' + b.g + ' <span style="color:' + REC_COL.x + '">●</span> ' + b.x + ' <span style="color:' + REC_COL.r + '">●</span> ' + b.r;
+      tip.style.display = 'block'; tip.style.left = Math.min(mx + 12, W - 160) + 'px'; tip.style.top = (ev.clientY - r.top + 12) + 'px';
+    };
+    cv.onmouseleave = () => { tip.style.display = 'none'; };
   }
   // Jack's weekly board vs FP expert consensus: per-week rows + totals.
   // weeks = null → every played week with a Jack board loaded; poses default all four.
@@ -695,6 +754,6 @@
     else if (S.tab === 'record') renderRecord();
     else renderPlayer();
   }
-  window.addEventListener('resize', () => { if (S.tab === 'trend' && S.season) renderTrend(); });
+  window.addEventListener('resize', () => { if (S.tab === 'trend' && S.season) renderTrend(); else if (S.tab === 'record' && S.season) renderRecord(); });
   boot();
 })();

@@ -13371,7 +13371,8 @@ function _vorTable() {
   // Jack's OUT FOR SEASON flags: never priced, never a replacement level.
   const irOut = window._irHiddenHere && window._irHiddenHere(currentMode) ? (d => window._irIsOut(d.n)) : null;
   const irSig = irOut ? Object.keys(window._irMap || {}).sort().join(',') : '';
-  const key = [fi, wk, cw, from, kSig, win, st.wFrom, st.wTo, irSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
+  const aoSig = (window.SIM_PROJ_2026 && window.SIM_PROJ_2026.qs) ? JSON.stringify(((window._weeklyAssumeOutMap || {})[String(window.SIM_PROJ_2026.qs.wk)]) || []) : '';   // questionable in/out list moves this week's rows (SIM_PROJ_2026.qs)
+  const key = [fi, wk, cw, from, kSig, win, st.wFrom, st.wTo, irSig, aoSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
   const weeks = [];
@@ -69507,6 +69508,9 @@ function _rsScatter(cfg) {
     const S = window.SIM_PROJ_2026;
     if (!S || !S.weeks) return null;
     const v = _wkFind(S.weeks[_wkNum()] || S.weeks[String(_wkNum())], r.n);
+    // questionable in/out list (SIM_PROJ_2026.qs, Jack 2026-10-08) - same number as the rankings PROJ
+    const q = (typeof window._qsValue === 'function') ? window._qsValue(r.n, _wkNum()) : null;
+    if (q) return [q[0], q[1], q[2], Array.isArray(v) ? v[3] : null, Array.isArray(v) ? v[4] : null];
     return Array.isArray(v) ? v : null;
   }
   function _wkProj(r) { const v = _wkSim(r); return v && typeof v[FMT_I[_fmt]] === 'number' && (v[0] || v[1] || v[2]) ? v[FMT_I[_fmt]] : null; }
@@ -69553,7 +69557,7 @@ function _rsScatter(cfg) {
   // compares like with like. Cached per week + scoring format.
   let _wkTeamCache = { key: '', map: null };
   function _wkTeam(tm) {
-    const wk = _wkNum(), key = wk + '|' + _fmt;
+    const wk = _wkNum(), key = wk + '|' + _fmt + '|' + JSON.stringify(((window._weeklyAssumeOutMap || {})[String(wk)]) || []);
     if (_wkTeamCache.key !== key || !_wkTeamCache.map) {
       const map = {};
       const S = window.SIM_PROJ_2026, week = S && S.weeks && (S.weeks[wk] || S.weeks[String(wk)]);

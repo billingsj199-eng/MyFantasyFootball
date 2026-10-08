@@ -16110,7 +16110,7 @@ _renderDataFreshness();
 // Camp News section — sits directly under ADP Comparison on the FANTASY tab.
 // Newest ≤3 items from the last 14 days for this player; each headline links
 // out to the source article / X post. Returns '' when there's nothing to show.
-function _campNewsSectionHtml(d) {
+function _campNewsSectionHtml(d, max, days) {
   const idx = window._campNewsIdx;
   if (!idx) return '';
   let items = idx[_campNewsNorm(d.n)] || [];
@@ -16124,10 +16124,10 @@ function _campNewsSectionHtml(d) {
     const tm = items.filter(it => !it.team || it.team === dAbbr);
     if (tm.length !== items.length && tm.length) items = tm;
   }
-  const cutoff = Date.now() - 14 * 24 * 3600 * 1000;
+  const cutoff = Date.now() - (days || 14) * 24 * 3600 * 1000;
   items = items.filter(it => !it.date || (Date.parse(it.date + 'T12:00:00') || 0) >= cutoff);
   if (!items.length) return '';
-  items = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
+  items = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, max || 3);
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const tagColor = { injury: 'var(--red)', faller: 'var(--red)', riser: 'var(--green)',
                      role: 'var(--accent)', transaction: 'var(--accent)' };
@@ -16147,7 +16147,7 @@ function _campNewsSectionHtml(d) {
     </div>`;
   }).join('');
   return `<div class="card-section">
-    <div class="card-section-title">Camp News <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· auto-scanned 2x daily</span></div>
+    <div class="card-section-title">News <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· auto-scanned 2x daily</span></div>
     <div style="margin-top:-.15rem">${rows}</div>
   </div>`;
 }
@@ -16388,6 +16388,10 @@ function buildWeeklyCardView(d) {
     }
   } catch (_e) {}
 
+  // Week N prop lines (2026-10-08): moved here from the retired LINES tab, so the
+  // weekly view carries matchup, projection, recent games and the books in one place.
+  try { html += _buildWeeklyLinesSection(d); } catch (_e) {}
+
   return html;
 }
 
@@ -16411,6 +16415,10 @@ function _loadLinesHistory() {
       const host = document.getElementById('cardLinesView');
       if (host && window._linesCardD && typeof buildLinesView === 'function') {
         host.innerHTML = buildLinesView(window._linesCardD);
+      }
+      const wkHost = document.getElementById('cardWeeklyView');
+      if (wkHost && window._weeklyCardD && typeof buildWeeklyCardView === 'function') {
+        wkHost.innerHTML = buildWeeklyCardView(window._weeklyCardD);
       }
       return j;
     })
@@ -17825,6 +17833,36 @@ function openPlayerCard(d, ctxMode) {
       }
     });
   }
+  // DYNASTY tab (2026-10-08): the JM score + component breakdown come from the prospect
+  // model, which is built lazily (prospect page / dynasty boards). Kick the build off on
+  // the first card open and re-open this card in place once it lands, keeping the tab
+  // and scroll position the user is on. _pmCardBuildPending blocks a second build.
+  if (typeof window._attachJmScores === 'function' && !(window._pmBuiltData && window._pmBuiltData().length) && !window._pmCardBuildPending) {
+    window._pmCardBuildPending = true;
+    const _pmName = d && d.n;
+    if (window._attachJmScores() === true) {
+      window._pmCardBuildPending = false;
+    } else {
+      const _pmPoll = setInterval(function() {
+        if (!(window._pmBuiltData && window._pmBuiltData().length)) return;
+        clearInterval(_pmPoll);
+        window._pmCardBuildPending = false;
+        if (window._cardOpenName !== _pmName || !modal || !modal.classList.contains('open')) return;
+        try {
+          const _cardNow = document.getElementById('playerCard');
+          const _activeBtn = _cardNow && _cardNow.querySelector('.card-view-btn.active');
+          const _activeView = _activeBtn ? _activeBtn.dataset.cardview : null;
+          const _scrollNow = _cardNow ? _cardNow.scrollTop : 0;
+          openPlayerCard(d, ctxMode);
+          const _again = document.getElementById('playerCard');
+          const _btn = _activeView && _again && _again.querySelector('.card-view-btn[data-cardview="' + _activeView + '"]');
+          if (_btn && !_btn.classList.contains('active')) _btn.click();
+          if (_again) _again.scrollTop = _scrollNow;
+        } catch (e) {}
+      }, 400);
+      setTimeout(function() { clearInterval(_pmPoll); window._pmCardBuildPending = false; }, 30000);
+    }
+  }
   // Retired players' careers come from the lazy retired bundle; weekly game logs for
   // ALL players come from the lazy weekly bundles (weekly_stats_active.js joined them
   // 2026-07-20 — it's no longer eager). Fire the loads on click so the card fills in
@@ -17922,6 +17960,45 @@ function openPlayerCard(d, ctxMode) {
     }
   }
 
+  // NEWS tab (2026-10-08): the camp-news feed gets its own tab (10 items / 60 days);
+  // the tab button only renders when there is something to show.
+  const _newsHtml = (!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d, 10, 60) : '';
+  // DYNASTY tab (2026-10-08): the old INFO + COMPS tabs fold in. Career highlights ride on top
+  // of the FANTASY career block; the contract fields sit under Prospect Info (height / weight /
+  // college already live there, so the Bio duplicates are dropped).
+  const _careerHlHtml = (!_is2026 && d.career && d.career.length > 0) ? (() => {
+    const _cr = d.career;
+    const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
+    const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
+    const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
+    return `<div class="card-section">
+      <div class="card-section-title">Career Highlights</div>
+      <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr">
+        <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
+        <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
+        <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
+        <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
+        <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
+        <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
+      </div>
+    </div>`;
+  })() : '';
+  const _contractHtml = (!d._retired && !_is2026) ? `<div class="card-section">
+    <div class="card-section-title">Contract</div>
+    <div class="card-grid">
+      <div class="card-stat"><span class="card-stat-label">Draft Capital</span><span class="card-stat-value">${draftRdLabel(d.dr)}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Contract (AAV)</span><span class="card-stat-value">${d.sal != null ? '$' + fmt(d.sal, 2) + 'M' : '—'}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Contract Year</span><span class="card-stat-value">${(d.cyr != null && !isNaN(+d.cyr)) ? fmtInt(d.cyr) : (d.cyr || '—')}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Potential Out</span><span class="card-stat-value">${(d.out != null && !isNaN(+d.out)) ? fmtInt(d.out) : (d.out || '—')}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Jersey</span><span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span></div>
+    </div>
+  </div>` : (d._retired && d._debut && d._last) ? `<div class="card-section">
+    <div class="card-section-title">Career Span</div>
+    <div class="card-grid">
+      <div class="card-stat"><span class="card-stat-label">Years Active</span><span class="card-stat-value">${d._debut + '–' + d._last}</span></div>
+      <div class="card-stat"><span class="card-stat-label">Jersey</span><span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span></div>
+    </div>
+  </div>` : '';
   cardEl.innerHTML = `
     <div class="card-header">
       <button class="card-share" id="cardShare" title="Copy a shareable link to this player" aria-label="Copy share link">
@@ -17957,13 +18034,9 @@ function openPlayerCard(d, ctxMode) {
     <div class="card-body">
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
-        ${_showLogs ? `<button class="card-view-btn" data-cardview="logs" id="cardLogsTabBtn"${hasWeeklyData(d) ? '' : ' style="display:none"'}>LOGS</button>` : ''}
-        ${_showCareer ? `<button class="card-view-btn" data-cardview="career" id="cardCareerTabBtn"${(_hasCareerRows || _career2026Row(d)) ? '' : ' style="display:none"'}>CAREER</button>` : ''}
-        <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
-        <button class="card-view-btn" data-cardview="comps">COMPS</button>
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
-        ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
-        <button class="card-view-btn" data-cardview="info">INFO</button>
+        <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">DYNASTY</button>
+        ${_newsHtml ? `<button class="card-view-btn" data-cardview="news">NEWS</button>` : ''}
       </div>` : ''}
       <div class="card-pin-strip" id="cardPinStrip"></div>
       <div id="cardNotesWrap"></div>
@@ -17997,78 +18070,7 @@ function openPlayerCard(d, ctxMode) {
         </div>
       </div>` : ''}
 
-      ${_seasonProjSectionHtml(d)}
-
-      ${!d._retired ? (() => {
-        // Mode-aware ADPs scoped to the calling context (Trade Calc dynasty,
-        // My Teams dynasty league, etc.) — uses the helpers defined above.
-        // K/DST included since 2026-08-06: FP/ESPN/Yahoo rank them in their
-        // overall lists, Sleeper ADP covers D/ST; sources without K/DST data
-        // (Underdog, KTC, CBS) just show '—'.
-        const _udAdp = _udAdpInCtx();
-        const _slpAdp = _slpAdpInCtx();
-        const _fmt = v => v != null ? v : '—';
-        // Platform favicon (icons/adp_*.png) inline before the ADP number.
-        const _adpLogo = k => `<img src="icons/adp_${k}.png" alt="" style="width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px">`;
-        // Dynasty contexts swap ESPN/Yahoo (which don't publish dynasty ADPs)
-        // for KTC (the dynasty value standard). Uses KTC_SF map for Superflex.
-        if (_isDynastyCtx) {
-          // KTC shown as a RANK (#12, with the position rank beneath), value
-          // in the hover — see _ktcRankInfo.
-          const _ktcInfo = _ktcRankInfo(d.n, _ctxMode);
-          const _ktcVal = _ktcInfo ? _ktcInfo.ovr : null;
-          const _ktcTip = _ktcInfo ? ('KTC ' + (_ctxMode === 'dynastysf' ? 'Superflex' : '1QB') + ' rank #' + _ktcInfo.ovr + (_ktcInfo.posRank != null ? ' · ' + _ktcInfo.pos + _ktcInfo.posRank : '') + ' · value ' + _ktcInfo.val.toLocaleString()) : 'Not on KTC\'s dynasty list';
-          const _ktcSub = (_ktcInfo && _ktcInfo.posRank != null) ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:2px">' + _ktcInfo.pos + _ktcInfo.posRank + '</div>' : '';
-          return `<div class="card-section">
-          <div class="card-section-title">ADP Comparison <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
-          <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">
-            <div class="card-rank-box">
-              <div class="lbl">Underdog</div>
-              <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('underdog')}${_fmt(_udAdp)}</div>
-            </div>
-            <div class="card-rank-box">
-              <div class="lbl">Sleeper</div>
-              <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('sleeper')}${_fmt(_slpAdp)}</div>
-            </div>
-            <div class="card-rank-box">
-              <div class="lbl" title="${_ktcTip.replace(/"/g, '&quot;')}" style="cursor:help">KTC</div>
-              <div class="num${_ktcVal != null ? ' accent' : ''}"${_ktcVal == null ? ' style="color:var(--text2)"' : ''} title="${_ktcTip.replace(/"/g, '&quot;')}">${_adpLogo('ktc')}${_ktcVal != null ? '#' + _ktcVal : '—'}</div>${_ktcSub}
-            </div>
-          </div>
-        </div>`;
-        }
-        // Redraft / Best Ball / Superflex — ESPN, CBS & Yahoo are wired from
-        // d.js (espnAdp / cbsAdp / yahooAdp = that site's rank order, 1QB
-        // redraft, injected by inject_rankings.py).
-        const _espnAdp = d.espnAdp != null ? d.espnAdp : null;
-        const _cbsAdp  = d.cbsAdp  != null ? d.cbsAdp  : null;
-        const _yahAdp = d.yahooAdp != null ? d.yahooAdp : null;
-        return `<div class="card-section">
-        <div class="card-section-title">ADP Comparison <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
-          <div class="card-rank-box">
-            <div class="lbl">Underdog</div>
-            <div class="num${_udAdp != null ? ' accent' : ''}"${_udAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('underdog')}${_fmt(_udAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">Sleeper</div>
-            <div class="num${_slpAdp != null ? ' accent' : ''}"${_slpAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('sleeper')}${_fmt(_slpAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">ESPN</div>
-            <div class="num${_espnAdp != null ? ' accent' : ''}"${_espnAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('espn')}${_fmt(_espnAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">CBS</div>
-            <div class="num${_cbsAdp != null ? ' accent' : ''}"${_cbsAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('cbs')}${_fmt(_cbsAdp)}</div>
-          </div>
-          <div class="card-rank-box">
-            <div class="lbl">Yahoo</div>
-            <div class="num${_yahAdp != null ? ' accent' : ''}"${_yahAdp == null ? ' style="color:var(--text2)"' : ''}>${_adpLogo('yahoo')}${_fmt(_yahAdp)}</div>
-          </div>
-        </div>
-      </div>`;
-      })() : ''}
+      <!-- ADP Comparison retired from the card 2026-10-08 (draft season over) -->
 
       ${(!d._retired && (d.bye || _SOS_POS.has(d.s))) ? (() => {
         // Playoff Schedule row: Bye + W15 + W16 + W17 + Total P-SOS
@@ -18125,8 +18127,6 @@ function openPlayerCard(d, ctxMode) {
           </div>
         </div>`;
       })() : ''}
-
-      ${(!d._retired && !d._isDevy && !_is2026) ? _campNewsSectionHtml(d) : ''}
 
       ${(d.s === 'K' || d.s === 'DST') && !_is2026 && ((d.career && d.career.length > 0) || _kdstHasHistory(d))
         ? _kdstWeeklyProjSectionHtml(d) + _buildWeeklyLinesSection(d) + _kickerSplitsSectionHtml(d) + _careerSectionHtml(d) + _logsSectionHtml(d)
@@ -18294,6 +18294,7 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-stat"><span class="card-stat-label">Draft Team</span><span class="card-stat-value">${cb.dt || '—'}</span></div>
         </div>
       </div>
+      ${_contractHtml}
       ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (PPR)</span>
@@ -18332,6 +18333,7 @@ function openPlayerCard(d, ctxMode) {
           <div class="card-stat"><span class="card-stat-label">Position</span><span class="card-stat-value">${d.s}</span></div>
         </div>
       </div>
+      ${_contractHtml}
       ${_getCollegeStats(d.n, d.s) ? `<div class="card-section">
         <div class="card-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
           <span id="collegeLogLabel">College Career Log (PPR)</span>
@@ -18352,8 +18354,7 @@ function openPlayerCard(d, ctxMode) {
         </div>
         <div id="collegeLogContent">${buildCollegeTable(d, 'ppr')}</div>
       </div>` : ''}`; })()}
-      </div>
-      <div class="card-prospect-view" id="cardCompsView" style="display:none">
+      <div id="cardCompsView">
       ${_ageCompsHtml(d)}
       ${(function(){
         // === PROSPECT COMPS ===
@@ -18423,112 +18424,19 @@ function openPlayerCard(d, ctxMode) {
         return html2;
       })()}
       </div>
-      <div class="card-prospect-view" id="cardInfoView" style="display:none">
-      ${!_is2026 && d.career && d.career.length > 0 ? (() => {
-        const _cr = d.career;
-        const _bestSzn = _cr.reduce((b, s) => (s.fpts && (!b || s.fpts > b.fpts)) ? s : b, null);
-        const _totalGp = _cr.reduce((sum, s) => sum + (s.gp || 0), 0);
-        const _totalFpts = _cr.reduce((sum, s) => sum + (s.fpts || 0), 0);
-        return `<div class="card-section">
-        <div class="card-section-title">Career Highlights</div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
-          <div class="card-rank-box"><div class="lbl">Best PPG</div><div class="num green">${_bestSzn ? _bestSzn.ppg : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Best Pts</div><div class="num green">${_bestSzn ? _bestSzn.fpts : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Best Yr</div><div class="num accent">${_bestSzn ? _bestSzn.yr : '—'}</div></div>
-          <div class="card-rank-box"><div class="lbl">Seasons</div><div class="num accent">${_cr.length}</div></div>
-        </div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">
-          <div class="card-rank-box"><div class="lbl">Career GP</div><div class="num accent">${_totalGp}</div></div>
-          <div class="card-rank-box"><div class="lbl">Career Pts</div><div class="num accent">${Math.round(_totalFpts)}</div></div>
-        </div>
-      </div>`;
-      })() : ''}
-
-      ${d.inj ? `<div class="card-section">
-        <div class="card-section-title">Injury Status</div>
-        <div style="padding:8px 4px">${_buildInjuryBadge(d)}</div>
-      </div>` : ''}
-
-      ${!d._retired && !_is2026 ? `<div class="card-section">
-        <div class="card-section-title">Bio</div>
-        <div class="card-grid">
-          <div class="card-stat">
-            <span class="card-stat-label">Draft Capital</span>
-            <span class="card-stat-value">${draftRdLabel(d.dr)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Contract (AAV)</span>
-            <span class="card-stat-value">${d.sal != null ? '$' + fmt(d.sal, 2) + 'M' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Contract Year</span>
-            <span class="card-stat-value">${d.cyr != null ? fmtInt(d.cyr) : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Potential Out</span>
-            <span class="card-stat-value">${d.out != null ? fmtInt(d.out) : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Height</span>
-            <span class="card-stat-value">${fmtHeight(d._height)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Weight</span>
-            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Jersey</span>
-            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">College</span>
-            <span class="card-stat-value">${d._college || '—'}</span>
-          </div>
-        </div>
-      </div>` : (d._height || d._weight || d.dr || d._college) ? `<div class="card-section">
-        <div class="card-section-title">Bio</div>
-        <div class="card-grid">
-          <div class="card-stat">
-            <span class="card-stat-label">Height</span>
-            <span class="card-stat-value">${fmtHeight(d._height)}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Weight</span>
-            <span class="card-stat-value">${d._weight ? d._weight + ' lbs' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Draft Pick</span>
-            <span class="card-stat-value">${d.dr != null ? '#' + d.dr + ' Overall' : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">College</span>
-            <span class="card-stat-value">${d._college || '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Jersey</span>
-            <span class="card-stat-value">${d._number != null ? '#' + d._number : '—'}</span>
-          </div>
-          <div class="card-stat">
-            <span class="card-stat-label">Years Active</span>
-            <span class="card-stat-value">${d._debut && d._last ? d._debut + '–' + d._last : '—'}</span>
-          </div>
-        </div>
-      </div>` : ''}
       </div>
       <div class="card-prospect-view" id="cardWeeklyView" style="display:none">
       ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
       </div>
-      <div class="card-prospect-view" id="cardLinesView" style="display:none">
-      ${(d.s === 'K' || d.s === 'DST') ? '' : buildLinesView(d)}
-      </div>
-      ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
-      <div class="card-prospect-view" id="cardCareerView" style="display:none">
-      ${_careerSectionHtml(d, true)}
-      </div>` : ''}
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
-      <div class="card-prospect-view" id="cardLogsView" style="display:none">
+      <div class="card-prospect-view card-fantasy-extra" id="cardLogsView" data-ready="${hasWeeklyData(d) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && hasWeeklyData(d)) ? 'block' : 'none'}">
       ${_logsSectionHtml(d)}
       </div>` : ''}
+      ${d.s !== 'K' && d.s !== 'DST' && _showCareer ? `
+      <div class="card-prospect-view card-fantasy-extra" id="cardCareerView" data-ready="${(_hasCareerRows || _career2026Row(d)) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && (_hasCareerRows || _career2026Row(d))) ? 'block' : 'none'}">
+      ${_careerHlHtml}${_careerSectionHtml(d, true)}
+      </div>` : ''}
+      <div class="card-prospect-view" id="cardNewsView" style="display:none">${_newsHtml}</div>
     </div>
   `;
 
@@ -18537,33 +18445,8 @@ function openPlayerCard(d, ctxMode) {
   _renderCardPinStrip(d, _ctxMode);
   if (typeof window._renderCardNotes === 'function') window._renderCardNotes(d);
 
-  // FIND TRADE FOR ME — appears when the player is rostered in a synced league
-  // (and isn't on your team). One click → Trade Calc → Find Trade with target pre-filled.
-  try {
-    if (typeof window._finderHasOwner === 'function' && d && d.idx != null) {
-      const _finderInfo = window._finderHasOwner(d.idx);
-      if (_finderInfo) {
-        const _btn = document.createElement('button');
-        _btn.className = 'card-finder-btn';
-        _btn.innerHTML = '<span style="font-size:.85rem;line-height:1">🎯</span> FIND TRADE FOR ME';
-        _btn.title = 'Owned by ' + _finderInfo.team.owner + (_finderInfo.league.name ? ' · ' + _finderInfo.league.name : '');
-        _btn.addEventListener('click', () => {
-          if (typeof closeCard === 'function') closeCard();
-          if (typeof window._finderShowAndRun === 'function') {
-            setTimeout(() => window._finderShowAndRun(d.idx), 60);
-          }
-        });
-        const _meta = cardEl.querySelector('.card-meta');
-        if (_meta && _meta.parentElement) {
-          const _row = document.createElement('div');
-          _row.className = 'card-finder-row';
-          _row.style.cssText = 'margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap';
-          _row.appendChild(_btn);
-          _meta.parentElement.insertBefore(_row, _meta.nextSibling);
-        }
-      }
-    }
-  } catch (_e) {}
+  // FIND TRADE FOR ME button removed from the card header 2026-10-08 (Jack); the
+  // finder itself still lives in Trade Calc → Find Trade.
 
   // Admin-only: OUT FOR SEASON toggle — flags the player hidden from the
   // season-format rankings (see window._irToggle) and refreshes the card so
@@ -18640,18 +18523,17 @@ function openPlayerCard(d, ctxMode) {
         const wv = document.getElementById('cardWeeklyView');
         const crv = document.getElementById('cardCareerView');
         const lgv = document.getElementById('cardLogsView');
+        const nv = document.getElementById('cardNewsView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
-        if (cv) cv.style.display = 'none';
         if (iv) iv.style.display = 'none';
         if (lv) lv.style.display = 'none';
         if (wv) wv.style.display = 'none';
         if (crv) crv.style.display = 'none';
         if (lgv) lgv.style.display = 'none';
+        if (nv) nv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
-        } else if (view === 'comps') {
-          if (cv) cv.style.display = 'block';
         } else if (view === 'info') {
           if (iv) iv.style.display = 'block';
         } else if (view === 'lines') {
@@ -18662,8 +18544,13 @@ function openPlayerCard(d, ctxMode) {
           if (crv) crv.style.display = 'block';
         } else if (view === 'logs') {
           if (lgv) lgv.style.display = 'block';
+        } else if (view === 'news') {
+          if (nv) nv.style.display = 'block';
         } else {
           fv.classList.remove('hidden');
+          // Game logs + career ride along inside FANTASY (2026-10-08) once they have data
+          if (lgv && lgv.dataset.ready === '1') lgv.style.display = 'block';
+          if (crv && crv.dataset.ready === '1') crv.style.display = 'block';
         }
       });
     });
@@ -18765,6 +18652,8 @@ function openPlayerCard(d, ctxMode) {
       _clRefresh();
       const clTabBtn = document.getElementById('cardCareerTabBtn');
       if (clTabBtn && clContent.innerHTML.trim()) clTabBtn.style.display = '';
+      const clView = document.getElementById('cardCareerView');
+      if (clView && clContent.innerHTML.trim()) { clView.dataset.ready = '1'; const _fv = document.getElementById('cardFantasyView'); if (_fv && !_fv.classList.contains('hidden')) clView.style.display = 'block'; }
     });
   }
   // L4 PPG also comes from the lazy weekly bundle — a card opened before it
@@ -18827,6 +18716,8 @@ function openPlayerCard(d, ctxMode) {
       }
       const glTabBtn = document.getElementById('cardLogsTabBtn');
       if (glTabBtn) glTabBtn.style.display = '';
+      const glView = document.getElementById('cardLogsView');
+      if (glView) { glView.dataset.ready = '1'; const _fv = document.getElementById('cardFantasyView'); if (_fv && !_fv.classList.contains('hidden')) glView.style.display = 'block'; }
       if (glYearSelect) {
         // Rebuild in full: pre-bundle the selector may hold only the 2026
         // schedule entry. Default to the newest season with real game data.

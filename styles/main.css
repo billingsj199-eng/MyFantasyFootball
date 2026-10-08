@@ -3030,3 +3030,10 @@ tbody td{font-size:.8125rem}
 .card-rank-box:has(>.num[style*="color:#b91c1c"]),.card-rank-box:has(>.num[style*="color:#ef4444"]),.card-rank-box:has(>.num[style*="color:var(--red)"]){background:rgba(239,68,68,.14)}
 .card-rank-box:has(>.num[style*="color:"]){box-shadow:inset 0 0 0 1px var(--heat-edge)}
 .card-rank-box .num[style*="color:"]{text-shadow:var(--heat-ink)}
+/* Player card v2 (2026-10-08): condensed. Season Projections row gone, game logs + career
+   ride inside FANTASY (.card-fantasy-extra), News is its own tab. Tighter rhythm. */
+.card-section{margin-bottom:.85rem}
+.card-rank-box{padding:.4rem .35rem .35rem}
+.card-rank-box .num{font-size:1rem}
+.card-fantasy-extra .card-section{margin-top:0}
+.card-body{padding-bottom:1rem}

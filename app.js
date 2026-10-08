@@ -16233,6 +16233,10 @@ function buildWeeklyCardView(d) {
     }
   } catch (_e) {}
 
+  // Week N prop lines (2026-10-08): moved here from the retired LINES tab, so the
+  // weekly view carries matchup, projection, recent games and the books in one place.
+  try { html += _buildWeeklyLinesSection(d); } catch (_e) {}
+
   return html;
 }
 
@@ -16256,6 +16260,10 @@ function _loadLinesHistory() {
       const host = document.getElementById('cardLinesView');
       if (host && window._linesCardD && typeof buildLinesView === 'function') {
         host.innerHTML = buildLinesView(window._linesCardD);
+      }
+      const wkHost = document.getElementById('cardWeeklyView');
+      if (wkHost && window._weeklyCardD && typeof buildWeeklyCardView === 'function') {
+        wkHost.innerHTML = buildWeeklyCardView(window._weeklyCardD);
       }
       return j;
     })
@@ -17784,7 +17792,6 @@ function openPlayerCard(d, ctxMode) {
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">PROSPECT</button>
         <button class="card-view-btn" data-cardview="comps">COMPS</button>
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
-        ${(!d._isDevy && !_is2026 && !d._retired) ? `<button class="card-view-btn" data-cardview="lines">LINES</button>` : ''}
         ${_newsHtml ? `<button class="card-view-btn" data-cardview="news">NEWS</button>` : ''}
         <button class="card-view-btn" data-cardview="info">INFO</button>
       </div>` : ''}
@@ -18336,9 +18343,6 @@ function openPlayerCard(d, ctxMode) {
       </div>
       <div class="card-prospect-view" id="cardWeeklyView" style="display:none">
       ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
-      </div>
-      <div class="card-prospect-view" id="cardLinesView" style="display:none">
-      ${(d.s === 'K' || d.s === 'DST') ? '' : buildLinesView(d)}
       </div>
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
       <div class="card-prospect-view card-fantasy-extra" id="cardLogsView" data-ready="${hasWeeklyData(d) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && hasWeeklyData(d)) ? 'block' : 'none'}">

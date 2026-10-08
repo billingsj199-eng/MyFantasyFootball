@@ -5550,13 +5550,13 @@ function _tcvInjBadgeHtml(d, cls) {
   return '<div class="' + cls + '" data-status="' + b.code + '" title="' + b.tip.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '">' + b.lbl + '</div>';
 }
 // Canvas twin of .tcv-inj-badge: dark chip, status-colored text + border. Returns its width.
-function _tcvInjChip(ctx, b, x, y, h, px, alignRight, font) {
+function _tcvInjChip(ctx, b, x, y, h, px, alignRight, font, pad) {
   ctx.font = px + 'px ' + (font || _TCV_VB_BEBAS);
-  const w = Math.round(ctx.measureText(b.lbl).width + px * 0.9);
+  const w = Math.round(ctx.measureText(b.lbl).width + (pad != null ? pad : px * 0.8));
   const cx = alignRight ? x - w : x;
   _tcvRoundRect(ctx, cx, y, w, h, Math.max(2, Math.round(h / 4)));
   ctx.fillStyle = b.bg; ctx.fill();
-  ctx.lineWidth = Math.max(1, px / 12); ctx.strokeStyle = b.fg; ctx.globalAlpha = 0.8; ctx.stroke(); ctx.globalAlpha = 1;
+  ctx.lineWidth = 1.5; ctx.strokeStyle = b.fg; ctx.globalAlpha = 0.8; ctx.stroke(); ctx.globalAlpha = 1;
   ctx.fillStyle = b.fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(b.lbl, cx + w / 2, y + h / 2 + 1);
   return w;
@@ -6804,7 +6804,7 @@ async function _tcvRowCardCanvas(d, displayRank, prevRank) {
   ctx.fillText(pos, L.NAME_X + 5, Y + 49.5);
   // Injury designation chip right after the pill (same slot as the on-screen row card)
   const injB = _tcvInjBadge(d);
-  if (injB) { pillW += 4 + _tcvInjChip(ctx, injB, L.NAME_X + pillW + 4, Y + 42, 14, 10, false, BEBAS); ctx.textAlign = 'left'; }
+  if (injB) { pillW += 4 + _tcvInjChip(ctx, injB, L.NAME_X + pillW + 4, Y + 42, 14, 10, false, BEBAS, 10); ctx.textAlign = 'left'; }
   if (rng) {
     // Chips (mirrors .tcv-rngc): opponent logo, vs/@ on its corner, that week's projection
     let x0 = L.NAME_X + pillW + 4;
@@ -7282,7 +7282,7 @@ function _tcvVbDrawCard(ctx, x, y, w, h, p, img, revealed) {
   if (opp) _tcvVbChip(ctx, opp.text, x + w - 6, y + 6, 24, 18, opp.color, opp.fg, true);
   // Injury designation (Q / D / OUT…) under it — the "may miss" read
   const inj = _tcvInjBadge(d);
-  if (inj) _tcvInjChip(ctx, inj, x + w - 6, y + 6 + (opp ? 28 : 0), 22, 16, true);
+  if (inj) _tcvInjChip(ctx, inj, x + w - 6, y + 6 + (opp ? 28 : 0), 24, 18, true);
 }
 // Board layout for one reveal step. Tiers not reached yet are a slim strip.
 // When the open tiers are too tall for the canvas, FINISHED tiers fold into
@@ -7437,7 +7437,7 @@ function _tcvVbRevealCanvas(p, img, groupLabel) {
   const opp = _tcvVbOpp(d);
   if (opp) _tcvVbChip(ctx, opp.text, W - 30, 36, 44, 30, opp.color, opp.fg, true);
   const inj = _tcvInjBadge(d);
-  if (inj) _tcvInjChip(ctx, inj, W - 30, 36 + (opp ? 52 : 0), 38, 26, true);
+  if (inj) _tcvInjChip(ctx, inj, W - 30, 36 + (opp ? 52 : 0), 44, 30, true);
   // Name + team line
   const full = (_tcvDisplayName(d) || d.n || '').toUpperCase();
   _tcvFitFont(ctx, full, W - 56, 70, 34, B);

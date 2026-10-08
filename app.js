@@ -14678,10 +14678,10 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   const _is26 = +season === 2026;
   // Column order (Jack 2026-09-14): WK · OPP · PROJ · RNK · FPTS · SNP% · then every
   // share % (CAR% / TS%) BEFORE the counting stats.
-  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RNK</span></th><th>FPTS</th>' + (_is26 ? _XFP_HDR : '') + '<th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNP%</span></th>';
-  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PyD</th><th>PTD</th><th>INT</th><th>RyD</th><th>RTD</th><th>FL</th>';
-  else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">CAR%</span></th><th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>ATT</th><th>RyD</th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
-  else hdr += '<th><span data-gloss="Share of team targets that week">TS%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RT%</span></th><th>TGT</th><th>REC</th><th>RcY</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RyD</th><th>FL</th>';
+  let hdr = '<tr><th>WK</th><th><span data-gloss="Opponent team. Blank for older seasons where opponent data was not captured.">OPP</span></th>' + (_is26 ? _SIM_PROJ_HDR : '') + '<th><span data-gloss="Positional rank that week by fantasy points, across all NFL players. Dashed when weekly data coverage for that season is too thin to rank.">RK</span></th><th>FPTS</th>' + (_is26 ? _XFP_HDR : '') + '<th><span data-gloss="Offensive snap share that game (nflverse, 2012+)">SNAP%</span></th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PASS YDS</th><th>PASS TD</th><th>INT</th><th>RUSH YDS</th><th>RUSH TD</th><th>FL</th>';
+  else if (isRB) hdr += '<th><span data-gloss="Share of team carries that week">RUSH%</span></th><th><span data-gloss="Share of team targets that week">TGT%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RTE%</span></th><th>CAR</th><th>RUSH YDS</th><th>TGT</th><th>REC</th><th>REC YDS</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>FL</th>';
+  else hdr += '<th><span data-gloss="Share of team targets that week">TGT%</span></th><th><span data-gloss="Route participation: share of team dropbacks the player was on the field for (nflverse participation 2016-25; 2026 from weekly PFF exports)">RTE%</span></th><th>TGT</th><th>REC</th><th>REC YDS</th><th><span data-gloss="Rushing + receiving TDs">TD</span></th><th>RUSH YDS</th><th>FL</th>';
   hdr += '</tr>';
 
   const _posStatCols = isQB ? 8 : isRB ? 10 : 8;   // RB/WR/TE include RT% (2026-09-14)
@@ -14975,19 +14975,19 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     cols = mode === 'tot' ? [
       ['CMP', null, y => N(y._ex.pc), qc.cmp], ['ATT', null, y => N(y._ex.pa), qc.att],
       ['CMP%', 'Completion percentage', _cmpPct, qc.cmpP],
-      ['PyD', null, y => y.py || 0, qc.py], ['PTD', null, y => y.ptd || 0, qc.ptd], ['INT', null, y => y.int || 0, qc.int],
-      ['CAR', null, y => y.ra || 0, qc.ra], ['RyD', null, y => y.ry || 0, qc.ry], ['RTD', null, y => y.rtd || 0, qc.rtd],
+      ['PASS YDS', null, y => y.py || 0, qc.py], ['PASS TD', null, y => y.ptd || 0, qc.ptd], ['INT', null, y => y.int || 0, qc.int],
+      ['CAR', null, y => y.ra || 0, qc.ra], ['RUSH YDS', null, y => y.ry || 0, qc.ry], ['RUSH TD', null, y => y.rtd || 0, qc.rtd],
       ['FL', null, y => y.fl || 0, null]
     ] : [
       ['CMP', 'Completions per game', y => y._ex.pc != null ? _avg(y._ex.pc, y.gp) : '—', qc.cmp],
       ['ATT', 'Pass attempts per game', y => y._ex.pa != null ? _avg(y._ex.pa, y.gp) : '—', qc.att],
       ['CMP%', 'Completion percentage', _cmpPct, qc.cmpP],
-      ['PyD', 'Passing yards per game', y => _avg(y.py, y.gp), qc.py],
-      ['PTD', 'Passing TDs per game', y => _avg(y.ptd, y.gp), qc.ptd],
+      ['PASS YDS', 'Passing yards per game', y => _avg(y.py, y.gp), qc.py],
+      ['PASS TD', 'Passing TDs per game', y => _avg(y.ptd, y.gp), qc.ptd],
       ['INT', 'Interceptions per game', y => _avg(y.int, y.gp), qc.int],
       ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), qc.ra],
-      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), qc.ry],
-      ['RTD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), qc.rtd]
+      ['RUSH YDS', 'Rushing yards per game', y => _avg(y.ry, y.gp), qc.ry],
+      ['RUSH TD', 'Rushing TDs per game', y => _avg(y.rtd, y.gp), qc.rtd]
     ];
   } else if (_khRows && _khRows.length) {
     // Kicker columns from KICKER_HISTORY. Color ranges: per-game FG volume,
@@ -15056,7 +15056,7 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       : { tgt: [3, 10], rec: [2, 7], rcy: [20, 90], ypr: [7, 15.5], td: [0.1, 0.7], ts: [10, 28], yrr: [0.9, 2.5] };
     const cs = (f, r, inv) => ({ f, lo: r[0], hi: r[1], inv });
     const _tsVal = (y, tm) => _tsPctSeason(tm, y.yr, y._ex.tgt, d.n);
-    const _tsCol = ['TS%', 'Share of team targets that season (weeks played)', (y, tm) => {
+    const _tsCol = ['TGT%', 'Share of team targets that season (weeks played)', (y, tm) => {
       const v = _tsVal(y, tm);
       return v != null ? v.toFixed(1) + '%' : '—';
     }, cs(_tsVal, S.ts)];
@@ -15074,21 +15074,21 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
       yrr: cs(y => y.yrr != null ? y.yrr : null, S.yrr)
     };
     const recCols = mode === 'tot' ? [
-      ['TGT', null, y => N(y._ex.tgt), rc.tgt], ['REC', null, y => y.rc || 0, rc.rec], ['RcY', null, y => y.rcy || 0, rc.rcy],
+      ['TGT', null, y => N(y._ex.tgt), rc.tgt], ['REC', null, y => y.rc || 0, rc.rec], ['REC YDS', null, y => y.rcy || 0, rc.rcy],
       ['Y/R', 'Yards per reception', _ypr, rc.ypr],
       _tdCol, _tsCol,
       ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ] : [
       ['TGT', 'Targets per game', y => y._ex.tgt != null ? _avg(y._ex.tgt, y.gp) : '—', rc.tgt],
       ['REC', 'Receptions per game', y => _avg(y.rc, y.gp), rc.rec],
-      ['RcY', 'Receiving yards per game', y => _avg(y.rcy, y.gp), rc.rcy],
+      ['REC YDS', 'Receiving yards per game', y => _avg(y.rcy, y.gp), rc.rcy],
       ['Y/R', 'Yards per reception', _ypr, rc.ypr],
       _tdCol, _tsCol,
       ['Y/RR', 'Yards per route run', _yrrF, rc.yrr]
     ];
     // Rushing block: colored + CAR% for RBs; neutral context stats for WR/TE
     const _carVal = (y, tm) => _carPctSeason(tm, y.yr, y.ra, d.n);
-    const _carCol = ['CAR%', 'Share of team carries that season (weeks played)', (y, tm) => {
+    const _carCol = ['RUSH%', 'Share of team carries that season (weeks played)', (y, tm) => {
       const v = _carVal(y, tm);
       return v != null ? v.toFixed(1) + '%' : '—';
     }, cs(_carVal, [15, 65])];
@@ -15102,10 +15102,10 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     ] : [
       ['CAR', 'Carries per game', y => _avg(y.ra, y.gp), ru.ra]
     ]).concat(isRB ? [_carCol] : []).concat(mode === 'tot' ? [
-      ['RyD', null, y => y.ry || 0, ru.ry],
+      ['RUSH YDS', null, y => y.ry || 0, ru.ry],
       ['YPC', 'Yards per carry', _ypc, ru.ypc]
     ] : [
-      ['RyD', 'Rushing yards per game', y => _avg(y.ry, y.gp), ru.ry],
+      ['RUSH YDS', 'Rushing yards per game', y => _avg(y.ry, y.gp), ru.ry],
       ['YPC', 'Yards per carry', _ypc, ru.ypc]
     ]);
     cols = isRB ? rushCols.concat(recCols) : recCols.concat(rushCols);
@@ -15117,7 +15117,7 @@ function buildCareerTable(d, scoringFormat, statMode, withChart) {
     + '<th><span data-gloss="' + (mode === 'tot'
         ? 'Positional finish that season by total fantasy points, across all NFL players'
         : 'Positional finish that season by fantasy PPG (min 8 games played), across all NFL players') + '">RNK</span></th>'
-    + '<th><span data-gloss="Offensive snap share that season (nflverse, 2012+)">SNP%</span></th>';
+    + '<th><span data-gloss="Offensive snap share that season (nflverse, 2012+)">SNAP%</span></th>';
   cols.forEach(col => {
     hdr += col[1] ? '<th><span data-gloss="' + col[1] + '">' + col[0] + '</span></th>' : '<th>' + col[0] + '</th>';
   });
@@ -16865,10 +16865,10 @@ function buildCollegeTable(d, scoringFormat) {
   const bestPpg = Math.max(...withFpts.filter(s => s.ppg != null).map(s => s.ppg), 0);
   const bestFpts = Math.max(...withFpts.map(s => s.fpts));
 
-  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th><th>GP</th><th>PPG</th><th>Pts</th>';
-  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>PCT</th><th>RuYd</th><th>RuTD</th>';
-  else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>YPC</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
-  else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>YPR</th><th>RuYd</th><th>RuTD</th>';
+  let hdr = '<tr><th>YR</th><th>TEAM</th><th>CONF</th><th>GP</th><th>PPG</th><th>PTS</th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PASS YDS</th><th>PASS TD</th><th>INT</th><th>CMP%</th><th>RUSH YDS</th><th>RUSH TD</th>';
+  else if (isRB) hdr += '<th>CAR</th><th>RUSH YDS</th><th>RUSH TD</th><th>YPC</th><th>REC</th><th>REC YDS</th><th>REC TD</th>';
+  else hdr += '<th>REC</th><th>REC YDS</th><th>REC TD</th><th>Y/R</th><th>RUSH YDS</th><th>RUSH TD</th>';
   hdr += '</tr>';
 
   let rows = withFpts.map(s => {
@@ -16972,9 +16972,9 @@ function buildCollegeWeeklyTable(d, season, scoringFormat) {
     return '<td>' + (dec ? Number(v).toFixed(dec) : v) + '</td>';
   };
   let hdr = '<tr><th>WK</th><th>TM</th><th>OPP</th><th>FPTS</th>';
-  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>YDS</th><th>TD</th><th>INT</th><th>RuYd</th><th>RuTD</th>';
-  else if (isRB) hdr += '<th>CAR</th><th>RuYd</th><th>RuTD</th><th>REC</th><th>RcYd</th><th>RcTD</th>';
-  else hdr += '<th>REC</th><th>RcYd</th><th>RcTD</th><th>RuYd</th><th>RuTD</th>';
+  if (isQB) hdr += '<th>CMP</th><th>ATT</th><th>PASS YDS</th><th>PASS TD</th><th>INT</th><th>RUSH YDS</th><th>RUSH TD</th>';
+  else if (isRB) hdr += '<th>CAR</th><th>RUSH YDS</th><th>RUSH TD</th><th>REC</th><th>REC YDS</th><th>REC TD</th>';
+  else hdr += '<th>REC</th><th>REC YDS</th><th>REC TD</th><th>RUSH YDS</th><th>RUSH TD</th>';
   pffCols.forEach(([k, label]) => { hdr += '<th title="'+(pffTitles[k]||'')+'" style="border-left:'+(k==='pff'?'1px solid var(--border,#333)':'0')+'">'+label+'</th>'; });
   hdr += '</tr>';
   let rows = withFpts.map(w => {

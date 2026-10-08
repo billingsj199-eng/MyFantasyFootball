@@ -5442,6 +5442,21 @@ window._weeklyAssumeOutSeed = function(wk) {
   }
   return out;
 };
+// Admin row chip (weekly table, in season): one click parks a Questionable /
+// Doubtful / unconfirmed-Out player in the BYE / OUT row — the UNDO on that
+// row brings him back (Jack 2026-10-08: "allow me to move them out of
+// injuries to rank them and a way to put them back in if they are out").
+function _assumeOutChip(d) {
+  if (!d || !d.inj || d.s === 'DST') return '';
+  if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return '';
+  if (typeof window.isAdmin !== 'function' || !window.isAdmin()) return '';
+  if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return '';
+  const t = String(d.inj).toLowerCase();
+  if (/\bir\b|\bpup\b|suspend|out for season|season.?ending/.test(t)) return '';
+  if (!/questionable|doubtful|day.?to.?day|\bgtd\b|\bout\b/.test(t)) return '';
+  const wk = window._weeklyActiveWeek || 1;
+  return '<button class="ao-chip" type="button" data-assume-out="' + String(d.n).replace(/"/g, '&quot;') + '" title="Assume ' + String(d.n).replace(/"/g, '&quot;') + ' out for week ' + wk + ' — moves him to the BYE / OUT row (slot kept, PROJ 0); UNDO there brings him back">→ OUT</button>';
+}
 // Not coming back this season (Jack's out-for-season flag, a season-ending
 // tag, or the injury read's season-long return) — the BYE / OUT row lists
 // only players who plan on returning (Jack 2026-10-08).
@@ -8831,7 +8846,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + (i + 1) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || (i + 1)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -17154,10 +17169,11 @@ function _injShowDetail(d, pillEl) {
 window._injShowDetail = _injShowDetail;
 // BYE / OUT row UNDO (admin): put an assumed-out player back on the weekly board
 document.addEventListener('click', function (e) {
-  var b = e.target && e.target.closest ? e.target.closest('[data-assume-undo]') : null;
+  var b = e.target && e.target.closest ? e.target.closest('[data-assume-undo],[data-assume-out]') : null;
   if (!b) return;
   e.preventDefault(); e.stopPropagation();
-  if (typeof window._weeklyAssumeOutToggle === 'function') window._weeklyAssumeOutToggle(b.getAttribute('data-assume-undo'));
+  var nm = b.getAttribute('data-assume-undo') || b.getAttribute('data-assume-out');
+  if (typeof window._weeklyAssumeOutToggle === 'function') window._weeklyAssumeOutToggle(nm);
 }, true);
 // Name-keyed pill for surfaces that render rows from name strings (My Teams):
 // resolves the D row via nameToIdx and wraps the pill with the data-injname

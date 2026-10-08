@@ -82,7 +82,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-08-aout2" as="script">
+<link rel="preload" href="app.js?v=2026-10-08-aout3" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1812,6 +1812,8 @@ tr.bye-row .bye-note b.bye-assumed{color:#fca5a5;font-family:'Bebas Neue',Impact
 .bye-undo-btn,.injp-assume{padding:1px 7px;margin-left:6px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.625rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid #f59e0b;background:transparent;color:#f59e0b;white-space:nowrap;vertical-align:middle}
 .injp-assume{display:block;margin:8px 0 0;padding:4px 9px;font-size:.6875rem}
 .injp-assume.on,.bye-undo-btn{border-color:var(--green);color:var(--green)}
+.ao-chip{display:inline-block;margin-left:5px;padding:0 5px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.5625rem;letter-spacing:.04em;line-height:15px;border-radius:3px;cursor:pointer;border:1px solid rgba(245,158,11,.55);background:transparent;color:#f59e0b;vertical-align:middle;opacity:.55}
+tr:hover .ao-chip,.ao-chip:focus{opacity:1}
 .tcv-letter.tcv-letter-bye{background:linear-gradient(135deg,#1e293b,#334155);color:#cbd5e1;font-size:15px;letter-spacing:1.5px;border:1px dashed rgba(148,163,184,.55);border-radius:4px}
 .tcv-card.tcv-bye-card .tcv-card-rank,.tcv-card.tcv-bye-card .tcv-row-rank,.tcv-card.tcv-bye-card .tcv-cover-rank{color:#cbd5e1;opacity:.85}
 .tier-card-view.tcv-centered .tcv-cards{flex:0 1 auto;justify-content:center}
@@ -6142,7 +6144,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-08-aout2"></script>
+<script defer src="app.js?v=2026-10-08-aout3"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

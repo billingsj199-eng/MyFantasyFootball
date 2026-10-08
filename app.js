@@ -5389,6 +5389,19 @@ window._weeklyAssumeOutApply = function(map) {
   if (JSON.stringify(map) === JSON.stringify(window._weeklyAssumeOutMap)) return false;
   window._weeklyAssumeOutMap = map;
   try { localStorage.setItem('mff_assume_out', JSON.stringify(map)); } catch(_e) {}
+  // Teammates' PROJ moves with the list (SIM_PROJ_2026.qs, Jack 2026-10-08), so the weekly order is re-derived:
+  // positions Jack has not hand-ranked follow the new PROJ, the FLEX interleave re-sorts. Deferred so a settings
+  // snapshot finishes applying (active week) first; coalesced when several toggles land together.
+  if (window.SIM_PROJ_2026 && window.SIM_PROJ_2026.qs && !window._qsReorderT) {
+    window._qsReorderT = setTimeout(function() {
+      window._qsReorderT = null;
+      try {
+        if (typeof currentMode === 'undefined' || currentMode !== 'weekly' || typeof window._weeklyReconcileBoard !== 'function') return;
+        window._weeklyReconcileBoard('jacks');
+        window._weeklyReconcileBoard('mine');
+      } catch (e) { console.warn('[Weekly] questionable re-order failed:', e); }
+    }, 0);
+  }
   return true;
 };
 window._weeklyAssumeOutSave = function(next) {
@@ -12888,7 +12901,73 @@ function _foldSimAliases(idx) {
 // exported offline by sim_lab/export_site_proj.js — no sims run on the site).
 // Row = [half, ppr, std, boom%, bust%]; null boom/bust = player ruled out that
 // week. Rows for started games are frozen upstream by the exporter.
+// QUESTIONABLE SCENARIOS (Jack 2026-10-08: "can the proj weekly points update based on who I have out vs in - put Chase
+// back in and it changes Gesicki and Meyers; Terry and Diggs both in the injured tier, project Antonio Williams without
+// them"). SIM_PROJ_2026.qs = {wk, teams: {TM: {q: [questionable names], v: {name: [h,p,s per combination]}}}} - the Sim
+// Lab export runs every in/out combination of each team's questionable players (combination bit i = q[i] OUT). The
+// combination used is the ASSUMED OUT list: in the list = out, otherwise = in (a Questionable player moved back in
+// projects at full strength, not the engine's hedge). PROJ, the weekly projection order and the player card follow it.
+function _qsNorm(n) { return (typeof _campNewsNorm === 'function') ? _campNewsNorm(n) : String(n || '').toLowerCase(); }
+function _qsIndex() {
+  const SP = window.SIM_PROJ_2026, Q = SP && SP.qs;
+  if (!Q || !Q.teams) return null;
+  if (window._qsIdx && window._qsIdx._src === Q) return window._qsIdx;
+  const by = {};
+  Object.keys(Q.teams).forEach(tm => {
+    const T = Q.teams[tm];
+    Object.keys(T.v || {}).forEach(nm => { by[_qsNorm(nm)] = { tm, key: nm }; });
+    (T.q || []).forEach(nm => { const k = _qsNorm(nm); if (!by[k]) by[k] = { tm, key: null }; });
+  });
+  if (typeof _foldSimAliases === 'function') _foldSimAliases(by);
+  window._qsIdx = { _src: Q, wk: +Q.wk, by };
+  return window._qsIdx;
+}
+// out-state of a team's questionable players: flip = {normName: true(out)/false(in)} overrides the ASSUMED OUT list
+function _qsMask(T, wk, flip) {
+  const map = window._weeklyAssumeOutMap || {}, list = map[String(wk)] || [];
+  const outSet = new Set(list.map(_qsNorm));
+  const AL = window._CLAY_ALIASES || {};
+  let m = 0;
+  (T.q || []).forEach((nm, i) => {
+    const k = _qsNorm(nm), alias = AL[k];
+    let out = outSet.has(k) || (alias != null && outSet.has(alias));
+    if (!out) Object.keys(AL).forEach(a => { if (AL[a] === k && outSet.has(a)) out = true; });
+    if (flip && Object.prototype.hasOwnProperty.call(flip, k)) out = !!flip[k];
+    if (out) m |= (1 << i);
+  });
+  return m;
+}
+// [half, ppr, std] for a player under the current (or flipped) in/out state, or null when no scenario covers him
+window._qsValue = function(name, wk, flip) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return null;
+  const hit = I.by[_qsNorm(name)];
+  if (!hit || !hit.key) return null;
+  const T = window.SIM_PROJ_2026.qs.teams[hit.tm], a = T && T.v[hit.key];
+  if (!a) return null;
+  const m = _qsMask(T, wk, flip);
+  if (a.length < (m + 1) * 3) return null;
+  return [a[m * 3], a[m * 3 + 1], a[m * 3 + 2]];
+};
+// the questionable teammates whose status moves this player (card WITH / WITHOUT box)
+window._qsTeammates = function(name, wk) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  const hit = I.by[_qsNorm(name)];
+  if (!hit) return null;
+  const T = window.SIM_PROJ_2026.qs.teams[hit.tm];
+  return T ? { tm: hit.tm, q: T.q.slice(), self: T.q.findIndex(q => _qsNorm(q) === _qsNorm(hit.key || name)) } : null;
+};
 function _simProjRow(d, wk) {
+  const r0 = _simProjRowRaw(d, wk);
+  if (d && d.s !== 'DST' && typeof window._qsValue === 'function') {
+    const v = window._qsValue(d.n, wk);
+    if (v) return [v[0], v[1], v[2], r0 ? r0[3] : null, r0 ? r0[4] : null];
+  }
+  return r0;
+}
+function _simProjRowRaw(d, wk) {
   const SP = window.SIM_PROJ_2026;
   if (!SP || !SP.weeks || !SP.weeks[wk]) return null;
   const wkMap = SP.weeks[wk];
@@ -16529,6 +16608,44 @@ function buildWeeklyCardView(d) {
   html += box('xFP /GM', _xv != null ? fmt1(_xv) : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
   html += '</div>';
   // (Clay / Sleeper / ESPN / FantasyPros / CBS reference tiles removed 2026-10-08)
+  // WITH / WITHOUT QUESTIONABLE TEAMMATES (Jack 2026-10-08): this player's week projection with each questionable
+  // teammate in vs out (SIM_PROJ_2026.qs), the current ASSUMED OUT state marked; his own line when he is questionable.
+  try {
+    const _qt = (typeof window._qsTeammates === 'function') ? window._qsTeammates(d.n, wk) : null;
+    const _fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+    if (_qt && _qt.q.length) {
+      const nowV = window._qsValue(d.n, wk);
+      const aoList = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
+      const rowsQ = [];
+      _qt.q.forEach((qn, i) => {
+        const k = _qsNorm(qn);
+        const isOut = aoList.some(n => _qsNorm(n) === k);
+        const fIn = {}, fOut = {}; fIn[k] = false; fOut[k] = true;
+        const vin = window._qsValue(d.n, wk, fIn), vout = window._qsValue(d.n, wk, fOut);
+        if (!vin || !vout) return;
+        if (i === _qt.self) { rowsQ.push({ self: true, qn, isOut, vin: vin[_fi] }); return; }
+        if (Math.abs(vin[_fi] - vout[_fi]) < 0.1) return;
+        rowsQ.push({ qn, isOut, vin: vin[_fi], vout: vout[_fi] });
+      });
+      if (rowsQ.length) {
+        html += '<div style="margin-top:8px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:.75rem">'
+          + '<div style="font-size:.6875rem;color:var(--text2);letter-spacing:.5px;margin-bottom:4px" title="Sim Lab projection for this game with each questionable player in vs out. ASSUMED OUT = on the weekly BYE / OUT row; IN = moved back. Follows the toggles.">WITH / WITHOUT QUESTIONABLE' + (nowV ? ' \u00b7 NOW ' + fmt1(nowV[_fi]) : '') + '</div>';
+        rowsQ.forEach(r => {
+          const tag = '<span style="font-size:.625rem;padding:1px 5px;border-radius:4px;margin-left:5px;' + (r.isOut ? 'background:rgba(239,68,68,.15);color:#ef4444">ASSUMED OUT' : 'background:rgba(34,197,94,.15);color:#22c55e">IN') + '</span>';
+          if (r.self) {
+            html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(d.n) + tag + '</span><span style="color:var(--text2)">if he plays <b style="color:var(--text)">' + fmt1(r.vin) + '</b></span></div>';
+          } else {
+            const dlt = r.vout - r.vin;
+            html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(r.qn) + tag + '</span><span style="color:var(--text2)">'
+              + '<span' + (!r.isOut ? ' style="color:var(--text);font-weight:700"' : '') + '>plays ' + fmt1(r.vin) + '</span> \u00b7 '
+              + '<span' + (r.isOut ? ' style="color:var(--text);font-weight:700"' : '') + '>sits ' + fmt1(r.vout) + '</span>'
+              + ' <span style="color:' + (dlt >= 0 ? '#22c55e' : '#ef4444') + '">(' + (dlt >= 0 ? '+' : '') + fmt1(dlt) + ')</span></span></div>';
+          }
+        });
+        html += '</div>';
+      }
+    }
+  } catch (_e) { console.warn('[Card] questionable box failed:', _e); }
   html += '<div style="margin-top:7px;font-size:.6875rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
     + (out.src === 'props' ? ' · full prop board below' : '') + '</div>';
   html += '</div>';

@@ -9906,12 +9906,11 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
   let _modalOriginalNext = null;
 
   function _moveModalIntoFullscreen() {
-    const modal = document.getElementById('modal');
-    if (!modal) return;
-    if (modal.parentNode === wrap) return; // already moved
-    _modalOriginalParent = modal.parentNode;
-    _modalOriginalNext = modal.nextSibling;
-    wrap.appendChild(modal);
+    // 2026-10-08: no longer moves #modal into the wrap. The tier view rebuilds the
+    // wrap's innerHTML on every render() (the prospect-model build fires one about a
+    // second after a card opens), which destroyed the moved modal — the card flashed
+    // and vanished (Jack). Fullscreen now targets the document root instead, so the
+    // modal stays in <body> and is simply raised above the overlay by CSS.
   }
   function _restoreModalToOriginalParent() {
     const modal = document.getElementById('modal');
@@ -9950,8 +9949,9 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
     // Move the player-card modal in so it remains usable while fullscreen
     _moveModalIntoFullscreen();
     // Try the browser Fullscreen API too — gives true distraction-free mode
-    if (wrap.requestFullscreen) {
-      wrap.requestFullscreen().catch(() => { /* CSS overlay still works even if browser FS denied */ });
+    const _fsRoot = document.documentElement;
+    if (_fsRoot.requestFullscreen) {
+      _fsRoot.requestFullscreen().catch(() => { /* CSS overlay still works even if browser FS denied */ });
     }
     fsBtn.textContent = '⛶ EXIT FULLSCREEN';
   }

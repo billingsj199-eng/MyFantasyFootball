@@ -82,7 +82,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-08-dock2" as="script">
+<link rel="preload" href="app.js?v=2026-10-08-fsfix1" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1757,7 +1757,8 @@ body.vor-bar-on .vor-bar{display:flex}
 .tcv-fs-close{position:fixed;top:14px;right:18px;z-index:10001;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.7);color:#fff;font-size:18px;font-family:Arial,sans-serif;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
 .tcv-fs-close:hover{background:rgba(245,158,11,.4);border-color:rgba(245,158,11,.7)}
 /* Player-card modal must sit above the fullscreen overlay + close button */
-#tierCardWrap.tcv-fullscreen #modal{z-index:10010}
+body:has(#tierCardWrap.tcv-fullscreen) #modal{z-index:10010}
+body:has(#tierCardWrap.tcv-fullscreen) #mffDialog{z-index:10020}
 .tcv-tier-row{display:flex;align-items:stretch;margin-bottom:3px;border-radius:4px;overflow:hidden;background:transparent;min-height:0}
 .tcv-letter{flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45);cursor:pointer;user-select:none;transition:filter .15s,opacity .15s;position:relative}
 .tcv-letter:hover{filter:brightness(1.15)}
@@ -6149,7 +6150,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-08-dock2"></script>
+<script defer src="app.js?v=2026-10-08-fsfix1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

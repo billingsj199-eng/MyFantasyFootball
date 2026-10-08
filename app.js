@@ -16626,7 +16626,6 @@ function buildWeeklyCardView(d) {
         const vin = window._qsValue(d.n, wk, fIn), vout = window._qsValue(d.n, wk, fOut);
         if (!vin || !vout) return;
         if (i === _qt.self) { rowsQ.push({ self: true, qn, isOut, vin: vin[_fi] }); return; }
-        if (Math.abs(vin[_fi] - vout[_fi]) < 0.1) return;
         rowsQ.push({ qn, isOut, vin: vin[_fi], vout: vout[_fi] });
       });
       if (rowsQ.length) {
@@ -16638,6 +16637,10 @@ function buildWeeklyCardView(d) {
             html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(d.n) + tag + '</span><span style="color:var(--text2)">if he plays <b style="color:var(--text)">' + fmt1(r.vin) + '</b></span></div>';
           } else {
             const dlt = r.vout - r.vin;
+            if (Math.abs(dlt) < 0.1) {   // every questionable teammate is listed (Jack 2026-10-08: "Stefon Diggs is also questionable")
+              html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(r.qn) + tag + '</span><span style="color:var(--text2)" title="With the other players as you have them set, his status does not move this projection">no change · ' + fmt1(r.vin) + '</span></div>';
+              return;
+            }
             html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(r.qn) + tag + '</span><span style="color:var(--text2)">'
               + '<span' + (!r.isOut ? ' style="color:var(--text);font-weight:700"' : '') + '>plays ' + fmt1(r.vin) + '</span> \u00b7 '
               + '<span' + (r.isOut ? ' style="color:var(--text);font-weight:700"' : '') + '>sits ' + fmt1(r.vout) + '</span>'

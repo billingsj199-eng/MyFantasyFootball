@@ -31443,6 +31443,7 @@ window.fmtHeight = fmtHeight;
       barA.style.width = '50%'; barB.style.width = '50%';
       verdict.textContent = '';
       verdict.className = 'trade-verdict even'; sub.textContent = '';
+      { const h0 = document.getElementById('tradeEvenHint'); if (h0) { h0.style.display = 'none'; h0.textContent = ''; } }
       if (resultEl) resultEl.classList.add('is-empty');
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
       _tradeVorRender();
@@ -31478,6 +31479,34 @@ window.fmtHeight = fmtHeight;
       sub.textContent = `${nameB} gives ${totalB}, gets ${totalA} back (+${diff} · ${diffPct}% advantage)`;
     }
 
+    // EVEN IT UP (2026-10-08, Jack: improve the calc): name the gap in board terms. The side receiving less should get about
+    // `diff` more back; show the one or two players on the active board (top 200, not already in the trade, one per position)
+    // whose value sits within 20% of that gap, with their positional rank - the Flock-style "add an RB22" read.
+    const hintEl = document.getElementById('tradeEvenHint');
+    if (hintEl) {
+      if (diffPct <= 5) { hintEl.style.display = 'none'; hintEl.textContent = ''; }
+      else {
+        const loser = recvA > recvB ? nameB : nameA, winner = recvA > recvB ? nameA : nameB;
+        const board = _ADP_SRCS.indexOf(tradeSource) >= 0 ? null : window._verBoardFor(tradeSource, tradeMode);
+        const inTrade = new Set([...sideA.players, ...sideB.players]);
+        let ex = [];
+        if (board) {
+          const posSeen = {};
+          board.slice(0, 200).forEach(idx => {
+            const d = D[idx]; if (!d) return;
+            posSeen[d.pos] = (posSeen[d.pos] || 0) + 1;
+            if (inTrade.has(idx)) return;
+            const v = getPlayerValue(d), err = Math.abs(v - diff) / diff;
+            if (err <= 0.2) ex.push({ d, v, pr: d.pos + posSeen[d.pos], err });
+          });
+          ex.sort((a, b) => a.err - b.err);
+          const seen = new Set();
+          ex = ex.filter(e => { if (seen.has(e.d.pos)) return false; seen.add(e.d.pos); return true; }).slice(0, 2);
+        }
+        hintEl.style.display = '';
+        hintEl.textContent = 'To even it up, ' + loser + ' should get about ' + diff + ' more back from ' + winner + (ex.length ? ' — e.g. ' + ex.map(e => e.d.n + ' (' + e.pr + ', ' + e.v + ')').join(' or ') : '');
+      }
+    }
     // Insights — peak, depth, age, picks, position split
     const insights = _buildTradeInsights(sideA, sideB);
     if (insightsEl) {
@@ -31892,6 +31921,7 @@ window.fmtHeight = fmtHeight;
       }
       // Source
       if (state.s) {
+        if (state.s && ['consensus', 'jacks', 'mine'].indexOf(state.s) < 0) state.s = 'consensus';   // 2026-10-08: ADP / KTC sources left the trade page; old share links fall back to consensus
         const sTab = document.querySelector('.trade-src-tab[data-tsrc="' + state.s + '"]');
         if (sTab && !sTab.classList.contains('locked')) sTab.click();
       }

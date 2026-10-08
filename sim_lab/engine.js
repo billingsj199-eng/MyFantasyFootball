@@ -1600,6 +1600,48 @@
   // the team's projected starting QB (highest Clay season projection on the roster) is unavailable this week (injury / IR / Out), per the
   // same availability test the depth chart uses. A planned start window (qbWindow) is NOT an outage - Clay's receivers already price it.
   var _pqCache = {};
+  // NEXT MAN UP (backtest_next_man_up.py / next_man_up_bt.log, 2026-10-08; Jack: "how does the next man up produce when top targets
+  // are out - if target 1 is out how do 2 or 3 get better, if target 2 is out does target 1 fill in or target 3"). Pass catchers
+  // ranked by trailing target share (last 3 team games, 2+ played; SIM_XFP_2026 targets); when one with share >= .10 is OUT this
+  // week, the healthy ones' shadow reads (2019-25, wired pool at .75 inside it): original #1 1.083, #2-3 0.980, #4-6 1.061 - the
+  // engine's rank-among-the-healthy shares under-pay the top receiver (rank-0 share .09 / 0) and the deep ones, over-pay #2-3.
+  // Per-cell multipliers fit on training seasons shrunk 50%: LOYO -0.83% (5/7), forward -1.00% (4/4), board -0.147%, top-100
+  // cubed -0.22% (1-12 -0.48%); stable across folds (1.036-1.046 / .984-.997 / 1.024-1.039). Matchup x absence showed NO
+  // interaction (fill-ins gain no more in easy matchups); vacated-size scaling failed (over-shoots). Current week only (the test
+  // was next game). Kill: window.SIM_NMU = false. Backup engine.js.bak_pre_nmu_20261008.
+  var NMU = { minShare: 0.10, minTeamTgt: 20, trail: 3, mult: { 1: 1.04, 2: 0.99, 3: 0.99, 4: 1.03, 5: 1.03, 6: 1.03 } };
+  var _nmuCache = { src: null, t: {} };
+  function nextManUpMult(p, wk, schedule) {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_NMU === false || !_inj || wk !== _inj.week || !_poolByNorm) return 1;
+    if (p.isDST || (p.pos !== 'WR' && p.pos !== 'TE' && p.pos !== 'RB')) return 1;
+    if (injAdj(p, wk) === 0) return 1;
+    if (_nmuCache.src !== _inj) _nmuCache = { src: _inj, t: {} };
+    var T = _nmuCache.t[p.tm];
+    if (T === undefined) {
+      T = null;
+      var X = wnd.SIM_XFP_2026, gw = (schedule && schedule.gameWeeks && schedule.gameWeeks[p.tm]) || [];
+      var prev = gw.filter(function (w) { return w < wk; }).slice(-NMU.trail);
+      if (X && prev.length === NMU.trail) {
+        var trail = [], seen = {}, teamTgt = 0;
+        Object.keys(_poolByNorm).forEach(function (k) {
+          var q = _poolByNorm[k]; if (!q || seen[q.norm] || q.tm !== p.tm || (q.pos !== 'WR' && q.pos !== 'TE' && q.pos !== 'RB')) return; seen[q.norm] = 1;
+          var xr = X[q.norm]; if (!xr || !xr.w) return;
+          var g = 0, t = 0; prev.forEach(function (w) { var r = xr.w[w] || xr.w[String(w)]; if (r) { g++; t += +r[0] || 0; } });
+          teamTgt += t / NMU.trail;
+          if (g >= 2) trail.push({ q: q, tgt: t / g });
+        });
+        if (teamTgt >= NMU.minTeamTgt && trail.length) {
+          trail.sort(function (a, b) { return b.tgt - a.tgt; });
+          var out = trail.some(function (e) { return e.tgt / teamTgt >= NMU.minShare && injAdj(e.q, wk) === 0; });
+          if (out) { T = {}; trail.forEach(function (e, i) { T[e.q.norm] = i + 1; }); }
+        }
+      }
+      _nmuCache.t[p.tm] = T;
+    }
+    if (!T || !T[p.norm]) return 1;
+    return NMU.mult[T[p.norm]] || 1;
+  }
   // QB STARTER FLOOR (backtest_qb_shrink_cartrend.py, 2026-09-30; Jack: "go build the qb shrink"). Quarterbacks projected
   // BELOW the league's starting-QB mean scored well over it 2019-25 (projection 5-12 half-PPR: 1.39x; the top tier was
   // fair at 1.00), so a two-sided shrink lost at the top. One-sided: pred = mu + k x (base - mu) for bases under mu,
@@ -3353,6 +3395,8 @@
       if (iA > 1 && ncVk != null && ncVk !== 1 && !(typeof window !== 'undefined' && window.SIM_NC_VAC === false)) { ncChain = ncChain * Math.pow(iA, ncVk - 1); ncSrc += '+vac'; }
       ncMean = Math.max(0, ncBaseW * ncChain + luckFull * ncLuckScale);   // the shadow keeps the full luck term (its own scale)
     }
+    // NEXT MAN UP (see NMU above): rank-based correction for healthy pass catchers when a target-share teammate is out this week
+    if (ncMean != null && ncMean > 0) { var nmuM = nextManUpMult(p, wk, schedule); if (nmuM !== 1) { ncMean *= nmuM; ncSrc += '+nmu' + (nmuM > 1 ? '+' : '-'); } }
     // v2.20 BACKUP-QB DOCK FOR WIDE RECEIVERS (backtest_qb_out_receivers.py, 2026-09-17; Jack: 'is there any projection change when there
     // are backup qbs or does the team totals account for that'). 1,443 skill weeks 2019-25 with the team's primary QB out: Vegas does move
     // (implied 23.1 -> 19.1) but WRs still land at 0.90 of projection (shadow AND Clay blend; 6 of 7 seasons under 1.0; ADP 1-60 WRs .86,

@@ -1,0 +1,34 @@
+=== NEXT MAN UP layer tests: 1,630 absence-week teammate rows on the board (of 10,505) | act/shadow 1.039 ===
+  vacated share < .17  n  760 act/shadow 1.003 | by season 2019:0.98 2020:1.14 2021:0.99 2022:0.91 2023:0.91 2024:1.07 2025:1.03
+  .17-.24              n  379 act/shadow 1.043 | by season 2019:1.06 2020:1.01 2021:1.01 2022:0.97 2023:1.13 2024:1.02 2025:1.06
+  .24+                 n  491 act/shadow 1.091 | by season 2019:1.03 2020:1.00 2021:0.99 2022:1.10 2023:1.17 2024:1.09 2025:1.17
+  orig rank 1          n  520 act/shadow 1.083 | by season 2019:1.02 2020:1.17 2021:1.05 2022:1.02 2023:1.05 2024:1.14 2025:1.12
+  rank 2-3             n  597 act/shadow 0.980 | by season 2019:1.00 2020:0.94 2021:0.96 2022:0.89 2023:1.02 2024:0.98 2025:1.03
+  rank 4+              n  513 act/shadow 1.061 | by season 2019:0.98 2020:1.01 2021:0.96 2022:1.11 2023:1.05 2024:1.11 2025:1.11
+
+  fixed variants vs the wired shadow (squared top-150 on the rows | seasons better | top-100 cubed board | bands cubed):
+    S size a 0.5     rows -0.22% (4/7) | top-100 cubed +0.013% | 1-12:+0.18 13-30:-0.26 31-60:+0.03 61-100:-0.03 101-150:-0.13
+    S size a 1.0     rows +1.29% (3/7) | top-100 cubed +0.359% | 1-12:+0.83 13-30:-0.23 31-60:+0.27 61-100:+0.11 101-150:-0.04
+    S size a 1.5     rows +4.53% (1/7) | top-100 cubed +1.037% | 1-12:+1.95 13-30:+0.09 31-60:+0.72 61-100:+0.42 101-150:+0.26
+    D deep x1.05     rows -0.55% (6/7) | top-100 cubed -0.140% | 1-12:-0.37 13-30:+0.06 31-60:+0.01 61-100:-0.02 101-150:-0.01
+    D deep x1.1      rows -0.77% (6/7) | top-100 cubed -0.220% | 1-12:-0.67 13-30:+0.20 31-60:+0.06 61-100:-0.01 101-150:+0.03
+    D deep x1.15     rows -0.66% (5/7) | top-100 cubed -0.239% | 1-12:-0.90 13-30:+0.40 31-60:+0.14 61-100:+0.04 101-150:+0.11
+    T top x1.04      rows -0.47% (6/7) | top-100 cubed -0.095% | 1-12:-0.17 13-30:-0.06 31-60:+0.01 61-100:-0.11 101-150:-0.07
+    T top x1.08      rows -0.61% (4/7) | top-100 cubed -0.120% | 1-12:-0.24 13-30:-0.06 31-60:+0.08 61-100:-0.18 101-150:-0.11
+    SD               rows +1.64% (2/7) | top-100 cubed +0.329% | 1-12:+0.36 13-30:+0.23 31-60:+0.45 61-100:+0.22 101-150:+0.18
+    ST               rows +1.35% (2/7) | top-100 cubed +0.379% | 1-12:+0.84 13-30:-0.22 31-60:+0.36 61-100:+0.05 101-150:-0.08
+    SDT              rows +1.70% (3/7) | top-100 cubed +0.349% | 1-12:+0.38 13-30:+0.24 31-60:+0.54 61-100:+0.16 101-150:+0.13
+  rank vs off (rho 0.3878, pairs 64.90%): S size a 0.5: rho +0.0171 pairs +0.86  S size a 1.0: rho +0.0146 pairs +0.73  S size a 1.5: rho +0.0077 pairs +0.20  D deep x1.05: rho +0.0040 pairs +0.20  D deep x1.1: rho -0.0001 pairs -0.02  D deep x1.15: rho +0.0014 pairs -0.11  T top x1.04: rho -0.0008 pairs +0.02  T top x1.08: rho +0.0071 pairs +0.29  SD: rho +0.0197 pairs +0.68  ST: rho +0.0130 pairs +0.70  SDT: rho +0.0205 pairs +0.66
+
+  pick-best  LOYO +0.01% 5/7 | board +0.002% | top-100 cubed -0.004% | picks ['T top x1.08', 'D deep x1.1', 'D deep x1.15', 'D deep x1.1', 'D deep x1.1', 'D deep x1.1', 'T top x1.08']
+             FWD  -0.64% 3/4 | board -0.118% | picks ['T top x1.04', 'T top x1.08', 'T top x1.04', 'T top x1.08']
+  -> FAIL
+
+  C cell fit LOYO -0.83% 5/7 | board -0.147% | FWD -1.00% 4/4 -> PASS
+  C fitted on all seasons (shrunk 50%): orig rank 1 x1.041 (raw 1.083, n520) | rank 2-3 x0.990 (raw 0.980, n597) | rank 4+ x1.030 (raw 1.061, n513)
+  C bands cubed (board): 1-12:-0.478 13-30:-0.037 31-60:+0.019 61-100:-0.130 101-150:-0.065 | top-100 cubed -0.221%
+  C by position on the rows: WR -0.91% (n792) | TE +0.36% (n244) | RB -1.39% (n594)
+  C fitted per season-fold (LOYO multipliers): 2019: 1.045/0.989/1.033 ; 2020: 1.036/0.991/1.032 ; 2021: 1.045/0.992/1.039 ; 2022: 1.046/0.997/1.027 ; 2023: 1.044/0.985/1.032 ; 2024: 1.036/0.990/1.024 ; 2025: 1.037/0.984/1.025
+  rank vs off (rho 0.3878, pairs 64.90%): C: rho +0.0042 pairs +0.23
+
+Limitations: honest replica next game, no book anchor (live, ~35% of WR/TE weeks carry a line that already prices the absence); absences from missing rows; trailing 3-game ranks.

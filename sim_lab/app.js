@@ -6341,6 +6341,8 @@
       chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him) ×' : im && /^q-(dnp|lp|fp)$/.test(im.src || '') ? ('Q + ' + im.src.slice(2).toUpperCase() + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%, x' + im.cond.toFixed(2) + ' if he plays)' : '') + ' ×') : im && /doubtful/.test(im.src || '') ? ('DOUBTFUL' + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%)' : im.src === 'doubtful-unconfirmed' ? ' unconfirmed' : '') + ' ×') : 'docked ×') + ntF(iA, 2));
     }
     else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
+    if (wp && /\+nmu\+/.test(wp.ncSrc || '')) chips.push('next man up: target-share teammate out (lift)');
+    else if (wp && /\+nmu-/.test(wp.ncSrc || '')) chips.push('next man up: target-share teammate out (#2-3 trim)');
     if (p.isDST) return chips;
     // INJURY SIGNALS (2026-10-01): injury on the report, day-by-day practice, books with lines up, the news read
     if (E.injSignalInfo) {

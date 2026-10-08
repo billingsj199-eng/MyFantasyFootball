@@ -360,9 +360,10 @@ function kickoffMs(kicks, wk, tm) {
           // receivers (fit on one-absence weeks: the top remaining WR gets the smallest share), so a second absence
           // promotes a WR3 into the low-share slot - Williams 7.2 with Terry out fell to 6.8 with Terry + Diggs out.
           // Each combination takes the max of itself and every combination with one fewer teammate out.
+          // A QB out is NOT guarded: it SHOULD lower his receivers (v2.20 backup-QB dock - Olave 14.3 -> 13.0 PPR with Shough out).
           for (let m = 1; m < n; m++) {
             if (self >= 0 && ((m >> self) & 1)) continue;   // he is out himself: 0
-            for (let i = 0; i < qs.length; i++) if ((m >> i) & 1) { const sub = a[m & ~(1 << i)]; for (let f = 0; f < 3; f++) if (sub[f] > a[m][f]) a[m][f] = sub[f]; }
+            for (let i = 0; i < qs.length; i++) if (((m >> i) & 1) && qs[i].pos !== 'QB') { const sub = a[m & ~(1 << i)]; for (let f = 0; f < 3; f++) if (sub[f] > a[m][f]) a[m][f] = sub[f]; }
           }
           let lo = 1e9, hi = -1e9;
           for (let m = 0; m < n; m++) { lo = Math.min(lo, a[m][0]); hi = Math.max(hi, a[m][0]); }

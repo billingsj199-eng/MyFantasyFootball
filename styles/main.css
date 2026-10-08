@@ -2816,3 +2816,67 @@ tbody td{font-size:.8125rem}
   #pageRankings .stats-row #dataFreshness{margin-left:0}
 }
 @media (max-width:600px){#tickerRow .live-ticker{flex:1 1 100%}}  /* basis 0 never overflows, so the bar sat at 0px beside the week strip instead of wrapping under it */
+
+/* ===== PLAYER CARD RESTYLE (2026-10-08) =====
+   Same rules as the table restyle: hairline edges, neutral tiles, DM Sans tabular
+   numbers, colour only where it means something (tier heat-map, SOS, trends).
+   Order in the FANTASY tab is now Rankings → Season Projections → ADP → Playoff
+   Schedule → Camp News, and the tab bar sits directly under the header and sticks
+   while the card scrolls (compare strip + notes moved under it). */
+.player-card{border-radius:12px;border-color:var(--border-strong);box-shadow:0 24px 64px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.4)}
+.card-header{padding:1rem 1.25rem .85rem;border-bottom:1px solid var(--border)}
+.card-hero img{border:2px solid var(--border-strong)}
+.card-name{font-size:1.85rem;letter-spacing:1.5px}
+.card-team{color:var(--text2)}
+.card-meta .card-team+.card-team::before{content:"·";margin-right:.5rem;color:var(--text3)}
+.card-share,.card-close{color:var(--text3);border-radius:6px}
+.card-share:hover,.card-close:hover{color:var(--text);background:var(--elev-2)}
+.card-role-lbl{color:var(--text3)}
+.card-role.tag{background:var(--elev-2);color:var(--text);border-color:transparent}
+.card-role.tag.good{background:var(--rb-bg);color:var(--green)}
+.card-role.tag.dim{background:transparent;color:var(--text2);border-color:var(--border)}
+.card-role-thru{color:var(--text3);opacity:1}
+.card-body{padding:.75rem 1.25rem 1.25rem}
+
+/* Tab bar: first thing under the header, sticky inside the scrolling card. */
+.card-view-toggle{position:sticky;top:0;z-index:6;margin:0 0 .6rem;padding:3px;background:var(--surface);box-shadow:0 1px 0 var(--border);border-radius:0;gap:2px}
+.card-view-btn{border-radius:6px;padding:6px 0;font-size:.72rem}
+.card-view-btn.active{font-weight:600;box-shadow:inset 0 0 0 1px var(--chip-active-border),0 1px 2px rgba(0,0,0,.3)}
+.card-view-btn:hover:not(.active){background:var(--elev-1);color:var(--text)}
+
+/* Compare strip + notes: one quiet utility band under the tabs. */
+.card-pin-strip{margin-bottom:6px}
+.card-pin-chip,.card-pin-add{border-color:var(--border-strong)}
+.card-notes{border:1px solid var(--border);background:transparent;margin:0 0 .9rem}
+.cn-title{color:var(--text2)}
+.card-notes.open{border-color:var(--border-strong);background:var(--elev-1)}
+
+/* Sections */
+.card-section{margin-bottom:1.1rem}
+.card-section-title{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid var(--border);color:var(--text2)}
+.card-section-title>span{letter-spacing:0;text-transform:none;font-weight:400;color:var(--text3)}
+
+/* Stat tiles */
+.card-rank-row{gap:.4rem}
+.card-rank-box{background:var(--elev-1);border:1px solid transparent;border-radius:8px;padding:.5rem .35rem .45rem}
+.card-rank-box .lbl{font-family:'DM Sans',sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.06em;color:var(--text3);margin-bottom:3px}
+.card-rank-box .num{font-family:'DM Sans',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:0;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--text)}
+.card-rank-box .num.accent,.card-rank-box .num.green{color:var(--text)}
+.card-rank-box .num img{vertical-align:-2px}
+.card-rank-box[style*="outline"]{outline:none!important;border-color:var(--border-strong)!important}
+.card-grid{gap:.5rem .9rem}
+.card-stat-label{color:var(--text3);letter-spacing:.06em;font-weight:600}
+.card-stat-value{font-size:.9rem;font-variant-numeric:tabular-nums}
+.card-stat-value.accent{color:var(--text)}
+
+/* Small inline Bebas labels inside tab content (SEASON SIM box in LOGS etc.) → DM Sans caps */
+.player-card [style*="Bebas Neue"][style*="font-size:.72rem"],
+.player-card [style*="Bebas Neue"][style*="font-size:.6875rem"]{font-family:'DM Sans',sans-serif!important;font-weight:600;text-transform:uppercase;letter-spacing:.06em!important}
+
+/* Phones: the card is full-screen; let 4- and 5-up tile rows reflow to 3-up. */
+@media (max-width:600px){
+  .card-header{padding:.85rem 1rem .7rem}
+  .card-body{padding:.6rem .9rem 1.25rem}
+  .card-rank-row{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))!important}
+  .card-name{font-size:1.5rem}
+}

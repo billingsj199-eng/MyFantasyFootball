@@ -14,6 +14,7 @@ Fields written on every QB/RB/WR/TE/K player object in D (DST skipped, never tou
   cn    contract years (as OTC lists them)               new 2026-10-08
   cg    guaranteed $M                                    new 2026-10-08
   cs    year signed                                      new 2026-10-08
+  dr    draft round - backfilled from OTC ONLY where d.js has null (pool additions)
   cdead dead-money $M at the `out` year                  new 2026-10-08 (card tooltip)
   csav  cap savings $M at the `out` year                 new 2026-10-08 (card tooltip)
 
@@ -57,6 +58,7 @@ URL = "https://github.com/nflverse/nflverse-data/releases/download/contracts/his
 CACHE = r"E:\MyFantasyFootball\pbp_cache\otc"
 POS = {"QB", "RB", "WR", "TE", "K", "FB"}
 NEW_KEYS = ["cv", "cn", "cg", "cs", "cdead", "csav"]
+dr_fill = {}  # name -> draft round to write where d.js has dr null (filled by build())
 TEAM_NICK = {"Football Team": "Commanders", "Redskins": "Commanders", "Washington": "Commanders"}
 
 
@@ -211,6 +213,7 @@ def build(D, by, season, rule):
     """Returns (updates dict name->fields, unmatched list, matched count, fa count)."""
     updates, unmatched = {}, []
     matched = fa = 0
+    dr_fill.clear()
     for d in D:
         if d.get("s") not in ("QB", "RB", "WR", "TE", "K"):
             continue
@@ -241,6 +244,10 @@ def build(D, by, season, rule):
             "cv": m(row.get("value")), "cn": row.get("years"), "cg": m(row.get("guaranteed")),
             "cs": row.get("year_signed"), "cdead": dead, "csav": sav,
         }
+        # draft round backfill (card "Draft Capital"): pool additions arrive with dr null;
+        # OTC carries draft_round for every drafted player. Existing values are never changed.
+        if d.get("dr") is None and row.get("draft_round"):
+            dr_fill[d["n"]] = int(row["draft_round"])
     return updates, unmatched, matched, fa
 
 
@@ -297,6 +304,8 @@ def splice(txt, updates):
             run = "".join(',"%s":%s' % (k, jsv(u[k])) for k in ("cyr", "out", "sal") + tuple(NEW_KEYS))
             m2 = NAME_RE.search(seg2)
             seg2 = seg2[:m2.end()] + run + seg2[m2.end():]
+            if json.loads(mm.group(1)) in dr_fill:
+                seg2 = re.sub(r'"dr":null', '"dr":%d' % dr_fill[json.loads(mm.group(1))], seg2, count=1)
             if seg2 != seg:
                 changed += 1
             seg = seg2
@@ -355,7 +364,9 @@ def main():
         if any(cur[k] != u[k] for k in cur) or any(d.get(k) != u[k] for k in NEW_KEYS):
             diffs.append((name, d.get("s"), cur, u))
     big = [x for x in diffs if x[2]["cyr"] != x[3]["cyr"] or x[2]["sal"] != x[3]["sal"]]
-    print("%d players change (%d with a new AAV/final year)" % (len(diffs), len(big)))
+    print("%d players change (%d with a new AAV/final year); %d draft rounds backfilled" % (len(diffs), len(big), len(dr_fill)))
+    if dr_fill:
+        print("  dr backfill: " + ", ".join("%s R%d" % kv for kv in sorted(dr_fill.items())[:40]) + (" ..." if len(dr_fill) > 40 else ""))
     for name, s, cur, u in big[:40]:
         print("  %-24s %-2s  %s/%s/%s -> %s yr $%sM (AAV $%sM, gtd $%sM) thru %s, out %s" % (
             name, s, cur["sal"], cur["cyr"], cur["out"], u["cn"], u["cv"], u["sal"], u["cg"], u["cyr"], u["out"]))
@@ -364,7 +375,7 @@ def main():
     if len(big) > args.max_changes:
         print("GUARD: %d AAV/year changes > --max-changes %d - nothing written" % (len(big), args.max_changes))
         return 3
-    if not diffs:
+    if not diffs and not dr_fill:
         print("no changes")
         return 0
     if args.dry_run:
@@ -383,6 +394,9 @@ def main():
             if d2.get(k) != u[k]:
                 print("ERROR: verify failed for %s.%s (%r != %r) - nothing written" % (name, k, d2.get(k), u[k]))
                 return 1
+        if name in dr_fill and d2.get("dr") != dr_fill[name]:
+            print("ERROR: verify failed for %s.dr (%r != %r) - nothing written" % (name, d2.get("dr"), dr_fill[name]))
+            return 1
     with open(DJS, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(new_txt)
     print("wrote data/d.js: %d player objects updated (OTC %s)" % (changed, stamp))

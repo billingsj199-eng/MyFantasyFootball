@@ -5675,6 +5675,11 @@ function _tcvSeasonPpg(d) {
 function _tcvBookPref() {
   try { return localStorage.getItem('tcv_book_proj') === '1'; } catch(_) { return false; }
 }
+// HIDE CONTROLS (Jack 2026-10-08): toolbar + header line + KEY strip off for a clean
+// recording board. Pure CSS class on the view; H key or the ☰ tab brings them back.
+function _tcvHideUiPref() {
+  try { return localStorage.getItem('tcv_hide_ui') === '1'; } catch(_) { return false; }
+}
 function _tcvBookProjVal(d) {
   const wk = (typeof currentMode !== 'undefined' && currentMode === 'weekly');
   try {
@@ -7912,11 +7917,13 @@ function _renderTierCardView(data, container) {
   if (_tcvRows && window._tcvSel.on && _tcvIsAdminViewer()) root.classList.add('tcv-select');
   const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n) && !(_tcvBye && _tcvBye.names.has(d.n))).length : 0;
   if (_tcvCutCount && _tcvHideCutPref()) root.classList.add('tcv-hide-cut');
+  if (_tcvHideUiPref()) root.classList.add('tcv-hide-ui');
   // BYE row players the board itself didn't hold (TOP-N trimmed them, etc.)
   const _tcvByeExtra = _tcvBye ? _tcvBye.players.filter(p => data.indexOf(p.d) < 0).length : 0;
 
   // Header: filter context
   const header = document.createElement('div');
+  header.className = 'tcv-header';
   header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 4px 10px;flex-wrap:wrap;gap:8px';
   const ctx = document.createElement('div');
   ctx.style.cssText = 'font-family:\'Bebas Neue\',Impact,sans-serif;font-size:14px;color:var(--text1);letter-spacing:1.5px';
@@ -7967,6 +7974,7 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn' + (_tcvVideoPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleVideo" title="Admin: RECORD MODE for screen-recording the rankings — the card rows are replaced by the video-board drawing (6 a row, surname + PROJ, opponent chip, tiers not reached yet as strips) and it redraws on every REVEAL NEXT / spacebar / HIDE ALL / REVEAL ALL. Tier-letter clicks are off while it is on.">🎥 ' + (_tcvVideoPref() ? 'RECORDING VIEW' : 'RECORD MODE') + '</button>' : '') +
     (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✎ on the letter renames it, ✕ removes it. Cut line too: ✂ CUT on a card hides everyone below him, drag the ✂ letter to move the line, ✕ on ✂ clears it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
     (_tcvCanEditRanks() ? (() => { const sb = document.getElementById('btnSave'); const dirty = !!(sb && sb.classList.contains('has-changes')); const saved = !!(sb && sb.classList.contains('saved')); return '<button class="tcv-reveal-btn tcv-save-btn' + (dirty ? ' tcv-primary' : '') + '" data-tcvaction="saveRanks" title="Save ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' rankings and tiers to the cloud without leaving this view (same as the SAVE button above the table)">' + (dirty ? '💾 SAVE CHANGES' : saved ? '✓ SAVED' : '💾 SAVE') + '</button>'; })() : '') +
+    '<button class="tcv-reveal-btn" data-tcvaction="hideUi" title="Hide this toolbar, the header line and the KEY strip — a clean board for recording. Press H, or click the faint ☰ tab top-right, to bring them back.">👁 HIDE CONTROLS</button>' +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -8001,6 +8009,12 @@ function _renderTierCardView(data, container) {
                 (_tcvIsAdminViewer() ? ' — pick a date above' : ' (weekly anchor covers the redraft board only)'))
       ) + '</span>' : '');
   root.appendChild(keyCard);
+  const uiPill = document.createElement('button');
+  uiPill.className = 'tcv-ui-pill';
+  uiPill.setAttribute('data-tcvaction', 'hideUi');
+  uiPill.title = 'Show the controls again (H)';
+  uiPill.textContent = '☰';
+  root.appendChild(uiPill);
 
   // Color cycle for tier letters — repeats after 7 tiers (matches tcv-key gradient palette)
   const TIER_COLORS = [
@@ -8172,6 +8186,12 @@ function _renderTierCardView(data, container) {
         _renderTierCardView(data, container);
         return;
       }
+      if (action === 'hideUi') {
+        const on = !root.classList.contains('tcv-hide-ui');
+        root.classList.toggle('tcv-hide-ui', on);
+        try { localStorage.setItem('tcv_hide_ui', on ? '1' : '0'); } catch(_) {}
+        return;
+      }
       if (action === 'toggleBook') {
         try { localStorage.setItem('tcv_book_proj', _tcvBookPref() ? '0' : '1'); } catch(_) {}
         _renderTierCardView(data, container);
@@ -8337,6 +8357,22 @@ function _renderTierCardView(data, container) {
     });
   }
 
+  if (!window._tcvHideUiKeyWired) {
+    window._tcvHideUiKeyWired = true;
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'h' && e.key !== 'H') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      const view = document.querySelector('.tier-card-view');
+      if (!view || !view.getClientRects().length) return;
+      const modal = document.getElementById('modal');
+      if (modal && modal.classList.contains('open') && !modal.classList.contains('modal-docked')) return;
+      e.preventDefault();
+      const pill = view.querySelector('.tcv-ui-pill');
+      if (pill) pill.click();
+    });
+  }
   container.innerHTML = '';
   container.appendChild(root);
   if (_tcvVideoPref() && _tcvIsAdminViewer()) _tcvVideoMount(root);

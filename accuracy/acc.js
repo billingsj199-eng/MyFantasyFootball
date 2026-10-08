@@ -567,8 +567,14 @@
       html.push('</tbody></table><p class="note">Your weekly board (newest save before each player\'s kickoff) against the FantasyPros PPR expert-consensus positional ranks from the last update before kickoff, graded on actual full-PPR finish among players who played. Avg miss = mean |rank − finish|; W-L-T = players where your miss was smaller / larger / equal. Same pool as the WEEKLY tab. Weeks still reading your board from Firestore show once it loads.</p></div>');
     }
     // calls list
-    html.push('<div class="card"><h2>Calls</h2><div class="tablewrap"><table><thead><tr><th class="l">Wk</th><th class="l">Kind</th><th class="l">Player</th><th class="l">Pos</th><th class="l">Detail</th><th>Result</th><th class="l">Source</th></tr></thead><tbody>');
-    rows.slice().sort((a, b) => (b.week || 0) - (a.week || 0) || cmp(a.kind, b.kind)).forEach((c) => {
+    // every call, oldest first, the row tinted by its light (green hit / grey incomplete-pending / red miss)
+    html.push('<div class="card"><h2>Calls — oldest to newest</h2><div class="tablewrap"><table><thead><tr><th class="l">Said</th><th class="l">Wk</th><th class="l">Kind</th><th class="l">Player</th><th class="l">Pos</th><th class="l">Video</th><th class="l">Detail</th><th>Result</th></tr></thead><tbody>');
+    const dateOf = (c) => c.at ? new Date(c.at) : null;
+    rows.slice().sort((a, b) => ((dateOf(a) || 0) - (dateOf(b) || 0)) || (a.week || 0) - (b.week || 0) || cmp(a.kind, b.kind) || cmp(a.player, b.player)).forEach((c) => {
+      const d = dateOf(c);
+      const saidTxt = d ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—';
+      const title = String(c.title || '').replace(/#\S+/g, '').replace(/\s+/g, ' ').trim();
+      const light = callLight(c);
       let det = '';
       if (c.kind === 'buy' || c.kind === 'sell') {
         const c0 = c.cons0 && c.cons0.rank;
@@ -581,8 +587,9 @@
       } else {
         det = (isNum(c.pts) ? c.pts.toFixed(1) + ' pts, ' + c.pos + (c.rank || '?') : '—') + (c.thr ? ' (cut ' + c.pos + c.thr + ')' : '') + (c.note ? ' · ' + esc(c.note) : '');
       }
-      const cls = c.result === 'hit' ? 'best' : c.result === 'miss' ? 'worst' : 'dim';
-      html.push('<tr><td class="l">' + (c.week || '—') + '</td><td class="l">' + esc(c.kind) + '</td><td class="l"><a href="#" data-player="' + esc(c.player) + '">' + esc(c.player) + '</a></td><td class="l">' + esc(c.pos || '') + '</td><td class="l" title="' + esc(c.said || '') + '">' + det + '</td><td class="' + cls + '">' + (RES_L[c.result] || esc(c.result)) + '</td><td class="l dim">' + esc(c.source || '') + '</td></tr>');
+      const cls = light === 'g' ? 'best' : light === 'r' ? 'worst' : 'dim';
+      const resTxt = (c.kind === 'buy' || c.kind === 'sell') ? (light === 'g' ? '✓ RIGHT WAY' : light === 'r' ? '✗ WRONG WAY' : (RES_L[c.result] || esc(c.result))) : (RES_L[c.result] || esc(c.result));
+      html.push('<tr class="rec-' + light + '"><td class="l">' + esc(saidTxt) + '</td><td class="l">' + (c.week || '—') + '</td><td class="l">' + esc(c.kind) + '</td><td class="l"><a href="#" data-player="' + esc(c.player) + '">' + esc(c.player) + '</a></td><td class="l">' + esc(c.pos || '') + '</td><td class="l dim" title="' + esc(title) + '">' + esc(title.length > 34 ? title.slice(0, 32) + '…' : title) + '</td><td class="l" title="' + esc(c.said || '') + '">' + det + '</td><td class="' + cls + '">' + resTxt + '</td></tr>');
     });
     html.push('</tbody></table></div></div>');
     $('#tab-record').innerHTML = html.join('');

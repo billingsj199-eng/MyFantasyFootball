@@ -1,0 +1,93 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== TE GAP: 1,252 top-150 TE player-weeks 2019-25 | shadow vs Clay form error +1.21% | level act/shadow 1.023 act/Clay 1.000 ===
+
+--- 1  WHAT THE PRIOR CAN SEE (share of top-150 rows) ---
+  QB: ADP 100% | history prior 98% | ridge 0% | opportunity prior 0% | market ok 93% | rookies 6% | median ADP 84
+  RB: ADP 100% | history prior 95% | ridge 100% | opportunity prior 79% | market ok 84% | rookies 16% | median ADP 57
+  WR: ADP 100% | history prior 97% | ridge 100% | opportunity prior 86% | market ok 90% | rookies 10% | median ADP 60
+  TE: ADP 100% | history prior 98% | ridge 100% | opportunity prior 89% | market ok 93% | rookies 7% | median ADP 82
+
+--- 2  PRESEASON PRIOR ALONE (0 games played; x the game's layers so all share the context) vs next game / rest of season ---
+  next game (n95):
+    shadow prior (wired)             error vs Clay  -5.38% (5/7) | rho 0.294 | level 0.876
+    hand prior                       error vs Clay  -5.26% (5/7) | rho 0.227 | level 0.922
+    ridge (where it exists)          error vs Clay  -2.16% (2/7) | rho 0.279 | level 0.835
+    Clay per game                    error vs Clay  +0.00% (0/7) | rho 0.272 | level 0.827
+    history prior (where it exists)  error vs Clay  +5.22% (3/7) | rho 0.212 | level 0.801
+      with ADP       n  95 | shadow prior vs Clay  -5.38% | hand  -5.26% | ridge  -2.16% | level shadow 0.876 Clay 0.827
+      with history   n  89 | shadow prior vs Clay  -3.13% | hand  -3.51% | ridge  +0.49% | level shadow 0.860 Clay 0.806
+      ADP <= 60      n  31 | shadow prior vs Clay  -3.96% | hand  -1.05% | ridge  -3.45% | level shadow 0.990 Clay 0.894
+      ADP 61-150     n  64 | shadow prior vs Clay  -7.38% | hand -11.13% | ridge  -0.37% | level shadow 0.802 Clay 0.779
+  rest of season 4+ (n95):
+    shadow prior (wired)             error vs Clay  +2.12% (4/7) | rho 0.531 | level 1.028
+    hand prior                       error vs Clay +12.00% (4/7) | rho 0.480 | level 1.081
+    ridge (where it exists)          error vs Clay  +9.84% (5/7) | rho 0.530 | level 0.980
+    Clay per game                    error vs Clay  +0.00% (0/7) | rho 0.530 | level 0.970
+    history prior (where it exists)  error vs Clay +34.54% (2/7) | rho 0.570 | level 0.940
+      with ADP       n  95 | shadow prior vs Clay  +2.12% | hand +12.00% | ridge  +9.84% | level shadow 1.028 Clay 0.970
+      with history   n  89 | shadow prior vs Clay  +1.78% | hand  +9.96% | ridge  +9.90% | level shadow 1.026 Clay 0.962
+      ADP <= 60      n  31 | shadow prior vs Clay  +4.47% | hand +18.61% | ridge +11.14% | level shadow 1.065 Clay 0.963
+      ADP 61-150     n  64 | shadow prior vs Clay  -0.26% | hand  +5.32% | ridge  +8.53% | level shadow 1.003 Clay 0.974
+
+--- 3  IN-SEASON EVIDENCE ALONE (4+ games, x layers): which read of the season so far predicts the next game ---
+  raw PPG                                  error vs Clay form  +8.71% (1/7) | rho 0.330 | level 1.038
+  context-regressed PPG (ppg_v, shadow)    error vs Clay form  +7.87% (1/7) | rho 0.338 | level 1.055
+  xFP per game                             error vs Clay form  +8.81% (2/7) | rho 0.308 | level 1.101
+  .3 xFP + .7 ppg_v                        error vs Clay form  +6.50% (1/7) | rho 0.356 | level 1.069
+  shadow (prior + evidence)                error vs Clay form  +1.83% (3/7) | rho 0.404 | level 1.048
+  Clay form                                error vs Clay form  +0.00% (0/7) | rho 0.410 | level 1.035
+    same for WR (reference):
+      raw PPG                                 +8.27% | level 0.978
+      context-regressed PPG (ppg_v, shadow)   +7.09% | level 0.989
+      xFP per game                            +7.96% | level 1.052
+      .3 xFP + .7 ppg_v                       +4.64% | level 1.007
+      shadow (prior + evidence)               -0.69% | level 1.013
+
+--- 4  WHERE THE TE ERROR SITS: share of the shadow's weighted squared error by cut, and shadow minus Clay by cut ---
+  ADP 1-30           n 121 | share of TE error: shadow  28.7%  Clay  28.3% | shadow vs Clay here  +2.49% | of the total gap  +58.2% | level act/shadow 1.007 act/Clay 0.979
+  31-60              n 287 | share of TE error: shadow  32.1%  Clay  32.2% | shadow vs Clay here  +0.71% | of the total gap  +18.9% | level act/shadow 1.076 act/Clay 1.031
+  61-100             n 365 | share of TE error: shadow  20.1%  Clay  20.4% | shadow vs Clay here  -0.27% | of the total gap   -4.6% | level act/shadow 0.969 act/Clay 0.945
+  101-150            n 479 | share of TE error: shadow  19.1%  Clay  19.0% | shadow vs Clay here  +1.74% | of the total gap  +27.4% | level act/shadow 1.033 act/Clay 1.031
+  games 0            n  95 | share of TE error: shadow   5.6%  Clay   5.9% | shadow vs Clay here  -3.95% | of the total gap  -19.3% | level act/shadow 0.881 act/Clay 0.827
+  games 1-3          n 285 | share of TE error: shadow  19.8%  Clay  19.9% | shadow vs Clay here  +0.42% | of the total gap   +6.9% | level act/shadow 0.991 act/Clay 0.951
+  games 4-8          n 462 | share of TE error: shadow  38.6%  Clay  38.1% | shadow vs Clay here  +2.42% | of the total gap  +76.1% | level act/shadow 1.082 act/Clay 1.063
+  games 9+           n 410 | share of TE error: shadow  36.0%  Clay  36.0% | shadow vs Clay here  +1.22% | of the total gap  +36.3% | level act/shadow 1.011 act/Clay 1.005
+  rookies            n  90 | share of TE error: shadow   4.5%  Clay   4.5% | shadow vs Clay here  +1.84% | of the total gap   +6.8% | level act/shadow 1.021 act/Clay 1.011
+  no history         n  24 | share of TE error: shadow   0.8%  Clay   0.9% | shadow vs Clay here -10.65% | of the total gap   -8.1% | level act/shadow 0.924 act/Clay 0.894
+  opportunity prior  n1118 | share of TE error: shadow  93.7%  Clay  93.7% | shadow vs Clay here  +1.25% | of the total gap  +96.8% | level act/shadow 1.025 act/Clay 1.003
+  history prior      n 110 | share of TE error: shadow   5.4%  Clay   5.4% | shadow vs Clay here  +2.56% | of the total gap  +11.4% | level act/shadow 1.023 act/Clay 0.987
+
+--- 5  LEVEL by scoring-over-usage and by the shadow's layers (TE, 2+ games) ---
+  scoring/usage Q1 (-9.00-0.87) n 263 | act/shadow 1.032 act/Clay 0.964 | shadow vs Clay  +0.68%
+  scoring/usage Q2 (0.87-1.01) n 263 | act/shadow 1.055 act/Clay 1.004 | shadow vs Clay  +0.52%
+  scoring/usage Q3 (1.01-1.21) n 263 | act/shadow 1.051 act/Clay 1.038 | shadow vs Clay  +2.19%
+  scoring/usage Q4 (1.21-99.00) n 264 | act/shadow 0.995 act/Clay 1.044 | shadow vs Clay  +0.73%
+  shadow extra layers < .95 (docked)   n 299 | act/shadow 1.089 act/Clay 1.018 | shadow vs Clay  -0.02%
+  extra layers .95-1.05                n 509 | act/shadow 1.032 act/Clay 1.011 | shadow vs Clay  +4.75%
+  extra layers > 1.05 (lifted)         n 349 | act/shadow 1.002 act/Clay 1.018 | shadow vs Clay  -2.17%
+  game layers (Vegas/FPA) < .9         n  23 | act/shadow 1.017 act/Clay 1.014 | shadow vs Clay  +3.41%
+  game layers > 1.1                    n  68 | act/shadow 0.948 act/Clay 0.932 | shadow vs Clay  -0.09%
+
+--- 6  COMPONENT SWAPS: the shadow re-run with a different TE prior (evidence handling unchanged) ---
+  Clay per game as the TE prior        vs shadow  -0.04% (2/7) | vs Clay form  +1.16% | rho -0.0005 | level 0.989 | g 0-3  +1.67% | g 4+  +0.99%
+  hand prior only                      vs shadow  +0.53% (1/7) | vs Clay form  +1.75% | rho -0.0101 | level 1.054 | g 0-3  -1.00% | g 4+  +2.71%
+  ridge only (where it exists)         vs shadow  +0.47% (2/7) | vs Clay form  +1.69% | rho -0.0104 | level 0.993 | g 0-3  +2.01% | g 4+  +1.57%
+  history prior only (where it exists) vs shadow  +3.25% (1/7) | vs Clay form  +4.50% | rho -0.0319 | level 0.982 | g 0-3  +8.17% | g 4+  +3.22%
+  shadow prior x 1.05                  vs shadow  +0.06% (3/7) | vs Clay form  +1.28% | rho +0.0008 | level 0.993 | g 0-3  +0.59% | g 4+  +1.52%
+
+Limitations: harness replicas (no book anchor / docks / prior lift); the 'prior alone' rows are week-1-type rows; ridge recovered from the wired 50/50 mix; nothing here is a layer test.

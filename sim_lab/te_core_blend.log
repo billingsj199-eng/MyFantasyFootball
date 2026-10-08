@@ -1,0 +1,36 @@
+
+=== TE blend with shadow as wired ===
+  NEXT GAME (n1252): w 0.2: err -0.08% (3/7) rho -0.0015 (2/7) | w 0.3: err -0.07% (3/7) rho -0.0083 (2/7) | w 0.5: err +0.10% (3/7) rho -0.0132 (1/7) | w 0.7: err +0.42% (3/7) rho -0.0137 (1/7) | w 1.0: err +1.21% (3/7) rho -0.0154 (2/7)
+    picked on error LOYO    : [0.0, 0.3, 0.3, 0.3, 0.2, 0.0, 0.3] -> err +0.30% rho -0.0068 vs w 0
+    picked on error forward : [0.0, 0.0, 0.0, 0.3] -> err +0.10% rho -0.0042 vs w 0
+    picked on rank  LOYO    : [0.0, 0.2, 0.0, 0.2, 0.0, 0.0, 0.0] -> err +0.11% rho -0.0039 vs w 0
+    picked on rank  forward : [0.0, 0.0, 0.0, 0.0] -> err +0.00% rho +0.0000 vs w 0
+  REST OF SEASON (n807): w 0.2: err +0.15% (2/7) rho +0.0053 (5/7) | w 0.3: err +0.50% (2/7) rho +0.0025 (4/7) | w 0.5: err +1.71% (2/7) rho -0.0046 (5/7) | w 0.7: err +3.64% (2/7) rho -0.0141 (2/7) | w 1.0: err +7.87% (2/7) rho -0.0319 (2/7)
+    picked on error LOYO    : [0.0, 0.3, 0.2, 0.0, 0.0, 0.0, 0.2] -> err +1.73% rho -0.0092 vs w 0
+    picked on error forward : [0.0, 0.0, 0.0, 0.2] -> err +0.86% rho +0.0001 vs w 0
+    picked on rank  LOYO    : [0.2, 0.3, 0.3, 0.2, 0.2, 0.0, 0.2] -> err +1.09% rho -0.0076 vs w 0
+    picked on rank  forward : [0.0, 0.0, 0.0, 0.2] -> err +0.86% rho +0.0001 vs w 0
+
+=== TE blend with TD luck only ===
+  NEXT GAME (n1252): w 0.2: err -0.14% (3/7) rho +0.0012 (4/7) | w 0.3: err -0.16% (3/7) rho -0.0006 (3/7) | w 0.5: err -0.11% (3/7) rho -0.0008 (3/7) | w 0.7: err +0.07% (3/7) rho -0.0008 (2/7) | w 1.0: err +0.60% (3/7) rho -0.0074 (2/7)
+    picked on error LOYO    : [0.2, 0.5, 0.5, 0.3, 0.2, 0.2, 0.5] -> err +0.20% rho -0.0032 vs w 0
+    picked on error forward : [0.0, 0.0, 0.2, 0.5] -> err +0.01% rho -0.0016 vs w 0
+    picked on rank  LOYO    : [0.2, 0.7, 0.0, 0.2, 0.2, 0.2, 0.7] -> err +0.25% rho -0.0059 vs w 0
+    picked on rank  forward : [0.2, 0.2, 0.0, 0.7] -> err +0.16% rho -0.0048 vs w 0
+  REST OF SEASON (n807): w 0.2: err -0.27% (5/7) rho +0.0046 (5/7) | w 0.3: err -0.19% (5/7) rho -0.0025 (4/7) | w 0.5: err +0.41% (5/7) rho -0.0072 (4/7) | w 0.7: err +1.59% (4/7) rho -0.0268 (2/7) | w 1.0: err +4.45% (3/7) rho -0.0499 (2/7)
+    picked on error LOYO    : [0.2, 0.7, 0.2, 0.2, 0.0, 0.2, 0.5] -> err +4.57% rho -0.0137 vs w 0
+    picked on error forward : [0.0, 0.0, 0.3, 0.5] -> err +2.06% rho -0.0029 vs w 0
+    picked on rank  LOYO    : [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2] -> err -0.27% rho +0.0046 vs w 0
+    picked on rank  forward : [0.0, 0.2, 0.2, 0.2] -> err -1.32% rho +0.0055 vs w 0
+
+=== TE blend with TD luck + docks halved ===
+  NEXT GAME (n1252): w 0.2: err -0.21% (4/7) rho -0.0016 (4/7) | w 0.3: err -0.26% (4/7) rho -0.0046 (3/7) | w 0.5: err -0.28% (4/7) rho -0.0015 (3/7) | w 0.7: err -0.18% (4/7) rho +0.0012 (3/7) | w 1.0: err +0.20% (3/7) rho -0.0038 (3/7)
+    picked on error LOYO    : [0.3, 0.7, 0.5, 0.5, 0.2, 0.3, 0.5] -> err +0.21% rho -0.0049 vs w 0
+    picked on error forward : [0.2, 0.2, 0.5, 0.5] -> err -0.27% rho -0.0014 vs w 0
+    picked on rank  LOYO    : [0.7, 0.7, 0.0, 0.0, 0.7, 0.0, 0.7] -> err -0.13% rho -0.0063 vs w 0
+    picked on rank  forward : [0.7, 1.0, 0.7, 0.7] -> err -0.89% rho -0.0046 vs w 0
+  REST OF SEASON (n807): w 0.2: err -0.74% (5/7) rho +0.0055 (6/7) | w 0.3: err -0.90% (5/7) rho +0.0089 (5/7) | w 0.5: err -0.82% (5/7) rho +0.0048 (4/7) | w 0.7: err -0.21% (5/7) rho +0.0038 (4/7) | w 1.0: err +1.74% (5/7) rho -0.0135 (4/7)
+    picked on error LOYO    : [0.3, 0.7, 0.3, 0.3, 0.0, 0.3, 0.7] -> err +4.64% rho -0.0031 vs w 0
+    picked on error forward : [0.0, 0.0, 0.7, 0.7] -> err +3.88% rho -0.0032 vs w 0
+    picked on rank  LOYO    : [0.3, 0.5, 0.3, 0.3, 0.3, 0.3, 0.3] -> err +0.05% rho +0.0047 vs w 0
+    picked on rank  forward : [0.2, 0.3, 0.3, 0.3] -> err -2.23% rho +0.0088 vs w 0

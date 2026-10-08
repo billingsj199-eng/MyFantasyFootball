@@ -1,0 +1,39 @@
+=== OUTSIDE CONSENSUS (ESPN weekly) AS THE TE BASE: 1,252 top-150 TE player-weeks 2019-25; ESPN row on 1,241 (99%) ===
+    ESPN coverage by season: 2019:100% 2020:100% 2021:100% 2022:100% 2023:94% 2024:100% 2025:100% | by games played: g0:88% g1:100% g2:100% g3:100%
+    level actual / number on TE rows with ESPN: Clay form 1.004  shadow 1.027  ESPN 1.018
+
+--- NEXT GAME: 1,252 TE rows ---
+  ESPN alone                           error  +0.47% (2/7) | 2022-25  +0.18% (1/4) | rho 0.3393 (-0.0325, 1/7) | pairs 62.22% (-1.22) | level 1.015
+  shadow 0.3 + ESPN                    error  -0.28% (2/7) | 2022-25  -0.74% (1/4) | rho 0.3517 (-0.0201, 1/7) | pairs 62.69% (-0.75) | level 1.017
+  shadow 0.5 + ESPN                    error  -0.31% (3/7) | 2022-25  -0.89% (2/4) | rho 0.3569 (-0.0149, 2/7) | pairs 62.91% (-0.54) | level 1.019
+  shadow 0.7 + ESPN                    error  +0.02% (3/7) | 2022-25  -0.67% (2/4) | rho 0.3579 (-0.0138, 3/7) | pairs 62.86% (-0.58) | level 1.021
+  shadow alone                         error  +1.21% (3/7) | 2022-25  +0.34% (2/4) | rho 0.3564 (-0.0154, 2/7) | pairs 62.73% (-0.71) | level 1.023
+  Clay .5 + ESPN .5 (not Clay-free)    error  -0.63% (3/7) | 2022-25  -0.76% (1/4) | rho 0.3628 (-0.0090, 2/7) | pairs 63.29% (-0.15) | level 1.007
+  cuts, ESPN alone / shadow .5 + ESPN vs CLAY (error):
+    ADP <= 60    n 408 | ESPN alone  -0.22% | shadow .5 + ESPN  -0.33% | shadow alone  +1.54%
+    ADP 61-150   n 844 | ESPN alone  +1.54% | shadow .5 + ESPN  -0.29% | shadow alone  +0.70%
+    games 0-3    n 380 | ESPN alone  -0.60% | shadow .5 + ESPN  -1.49% | shadow alone  -0.58%
+    games 4+     n 872 | ESPN alone  +0.85% | shadow .5 + ESPN  +0.10% | shadow alone  +1.83%
+    rookies      n  90 | ESPN alone  +5.29% | shadow .5 + ESPN  +2.24% | shadow alone  +1.84%
+    vets         n1162 | ESPN alone  +0.25% | shadow .5 + ESPN  -0.43% | shadow alone  +1.18%
+  Clay-free pick LOYO    : error +0.02% vs CLAY (2/7) | rho -0.0182 | picks ['shadow 0.5 + ESPN', 'shadow 0.5 + ESPN', 'shadow 0.5 + ESPN', 'shadow 0.3 + ESPN', 'shadow 0.5 + ESPN', 'shadow 0.3 + ESPN', 'shadow 0.5 + ESPN']
+  Clay-free pick forward : error -0.75% vs CLAY (1/4) | rho -0.0259 | picks ['shadow 0.3 + ESPN', 'shadow 0.3 + ESPN', 'shadow 0.3 + ESPN', 'shadow 0.5 + ESPN']
+
+--- REST OF SEASON (4+ games left): 807 TE rows ---
+  ESPN alone                           error  +5.20% (2/7) | 2022-25  +7.23% (1/4) | rho 0.5529 (-0.0633, 1/7) | pairs 70.20% (-2.74) | level 1.028
+  shadow 0.3 + ESPN                    error  +1.53% (3/7) | 2022-25  +0.87% (1/4) | rho 0.5763 (-0.0399, 1/7) | pairs 71.73% (-1.20) | level 1.033
+  shadow 0.5 + ESPN                    error  +1.22% (1/7) | 2022-25  -1.35% (1/4) | rho 0.5777 (-0.0385, 1/7) | pairs 71.76% (-1.17) | level 1.036
+  shadow 0.7 + ESPN                    error  +2.60% (2/7) | 2022-25  -1.96% (2/4) | rho 0.5780 (-0.0382, 2/7) | pairs 71.93% (-1.01) | level 1.039
+  shadow alone                         error  +7.87% (2/7) | 2022-25  +0.16% (2/4) | rho 0.5843 (-0.0319, 2/7) | pairs 72.15% (-0.78) | level 1.044
+  Clay .5 + ESPN .5 (not Clay-free)    error  -1.25% (4/7) | 2022-25  +0.13% (2/4) | rho 0.5911 (-0.0251, 1/7) | pairs 71.82% (-1.12) | level 1.024
+  cuts, ESPN alone / shadow .5 + ESPN vs CLAY (error):
+    ADP <= 60    n 261 | ESPN alone  +4.62% | shadow .5 + ESPN  +2.85% | shadow alone +10.15%
+    ADP 61-150   n 546 | ESPN alone  +6.13% | shadow .5 + ESPN  -1.44% | shadow alone  +4.15%
+    games 0-3    n 283 | ESPN alone  +5.93% | shadow .5 + ESPN  +2.10% | shadow alone  +8.26%
+    games 4+     n 524 | ESPN alone  +4.93% | shadow .5 + ESPN  +0.90% | shadow alone  +7.73%
+    rookies      n  58 | ESPN alone +47.24% | shadow .5 + ESPN +28.79% | shadow alone +25.73%
+    vets         n 749 | ESPN alone  +3.42% | shadow .5 + ESPN  +0.05% | shadow alone  +7.11%
+  Clay-free pick LOYO    : error +3.43% vs CLAY (1/7) | rho -0.0427 | picks ['shadow 0.5 + ESPN', 'shadow 0.5 + ESPN', 'shadow 0.5 + ESPN', 'shadow 0.3 + ESPN', 'shadow 0.5 + ESPN', 'shadow 0.3 + ESPN', 'shadow 0.5 + ESPN']
+  Clay-free pick forward : error +2.50% vs CLAY (1/4) | rho -0.0214 | picks ['shadow 0.3 + ESPN', 'shadow 0.5 + ESPN', 'shadow 0.3 + ESPN', 'shadow 0.5 + ESPN']
+
+Limitations: ESPN weekly rows only where the file has the player (coverage printed); ESPN is an in-season weekly number, not a preseason prior; both the Clay form and ESPN carry their own game context; book anchor / docks not replayed; non-TE rows untouched.

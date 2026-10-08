@@ -1,0 +1,64 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+=== TE SHADOW CORE: 1,252 top-150 TE player-weeks; usage-implied available on 1,147 rows (g >= 1: 99%) ===
+    level actual / number, TE 4+ games: raw xFP 1.105  usage-implied 1.104  ppg_v 1.066  shadow 1.049  Clay form 1.036
+
+--- NEXT GAME: 1,252 TE rows | shadow vs Clay form here +1.21% ---
+  uimp lam .3                vs shadow  -0.30% (5/7) fwd  -0.88% (4/4) | vs Clay form  +0.91% | rho 0.3581 (+0.0017 vs shadow, -0.0137 vs Clay, 5/7) | pairs +0.16 | level 1.027
+  uimp lam .5                vs shadow  -0.25% (4/7) fwd  -1.21% (3/4) | vs Clay form  +0.95% | rho 0.3578 (+0.0013 vs shadow, -0.0140 vs Clay, 5/7) | pairs +0.13 | level 1.029
+  TD luck only               vs shadow  -0.61% (5/7) fwd  -0.70% (3/4) | vs Clay form  +0.60% | rho 0.3643 (+0.0079 vs shadow, -0.0074 vs Clay, 6/7) | pairs +0.39 | level 1.029
+  uimp .3 + TD luck          vs shadow  -0.52% (4/7) fwd  -1.16% (3/4) | vs Clay form  +0.68% | rho 0.3639 (+0.0075 vs shadow, -0.0078 vs Clay, 5/7) | pairs +0.31 | level 1.031
+  uimp .5 + TD luck          vs shadow  -0.32% (4/7) fwd  -1.32% (3/4) | vs Clay form  +0.89% | rho 0.3582 (+0.0018 vs shadow, -0.0135 vs Clay, 5/7) | pairs +0.02 | level 1.032
+  uimp WR-fade + TD luck     vs shadow  -0.41% (3/7) fwd  -0.77% (2/4) | vs Clay form  +0.80% | rho 0.3584 (+0.0020 vs shadow, -0.0133 vs Clay, 5/7) | pairs +0.21 | level 1.031
+  TD luck + raw ppg evidence vs shadow  -0.54% (5/7) fwd  -0.14% (2/4) | vs Clay form  +0.67% | rho 0.3592 (+0.0028 vs shadow, -0.0126 vs Clay, 4/7) | pairs +0.24 | level 1.023
+  TD luck + half raw ppg     vs shadow  -0.60% (6/7) fwd  -0.45% (3/4) | vs Clay form  +0.61% | rho 0.3615 (+0.0051 vs shadow, -0.0103 vs Clay, 4/7) | pairs +0.34 | level 1.026
+  TD luck + TE docks halved  vs shadow  -1.00% (4/7) fwd  -0.97% (2/4) | vs Clay form  +0.20% | rho 0.3680 (+0.0116 vs shadow, -0.0038 vs Clay, 5/7) | pairs +0.60 | level 1.032
+  TD luck + raw ppg + docks halved vs shadow  -0.98% (5/7) fwd  -0.48% (2/4) | vs Clay form  +0.22% | rho 0.3613 (+0.0049 vs shadow, -0.0104 vs Clay, 4/7) | pairs +0.29 | level 1.025
+  raw ppg evidence only      vs shadow  +0.25% (3/7) fwd  +0.74% (1/4) | vs Clay form  +1.46% | rho 0.3534 (-0.0030 vs shadow, -0.0184 vs Clay, 3/7) | pairs -0.23 | level 1.017
+  cuts (vs shadow / vs Clay), TD luck + raw ppg evidence:
+    ADP <= 60    n 408 | vs shadow  -0.39% | vs Clay  +1.14% (shadow was  +1.54%)
+    ADP 61-150   n 844 | vs shadow  -0.75% | vs Clay  -0.06% (shadow was  +0.70%)
+    games 1-3    n 285 | vs shadow  -1.74% | vs Clay  -1.32% (shadow was  +0.42%)
+    games 4-8    n 462 | vs shadow  -1.01% | vs Clay  +1.38% (shadow was  +2.42%)
+    games 9+     n 410 | vs shadow  +0.54% | vs Clay  +1.77% (shadow was  +1.22%)
+    rookies      n  90 | vs shadow  -0.37% | vs Clay  +1.46% (shadow was  +1.84%)
+  pick LOYO    : error -0.70% vs shadow (4/7), +0.50% vs Clay form | rho +0.0082 | picks ['TD luck + TE docks halved', 'TD luck + TE docks halved', 'TD luck + TE docks halved', 'TD luck + raw ppg + docks halved', 'TD luck + raw ppg + docks halved', 'TD luck + TE docks halved', 'TD luck + TE docks halved']
+  pick forward : error -0.45% vs shadow (2/4), -0.11% vs Clay form | rho +0.0024 | picks ['TD luck + raw ppg + docks halved', 'TD luck + raw ppg + docks halved', 'TD luck + TE docks halved', 'TD luck + TE docks halved']
+
+--- REST OF SEASON (4+ games left): 807 TE rows | shadow vs Clay form here +7.87% ---
+  uimp lam .3                vs shadow  -1.24% (3/7) fwd  -4.98% (2/4) | vs Clay form  +6.54% | rho 0.5656 (-0.0187 vs shadow, -0.0506 vs Clay, 0/7) | pairs -0.70 | level 1.046
+  uimp lam .5                vs shadow  -1.20% (3/7) fwd  -7.37% (2/4) | vs Clay form  +6.57% | rho 0.5477 (-0.0366 vs shadow, -0.0685 vs Clay, 0/7) | pairs -1.20 | level 1.048
+  TD luck only               vs shadow  -3.17% (4/7) fwd  -3.21% (2/4) | vs Clay form  +4.45% | rho 0.5663 (-0.0180 vs shadow, -0.0499 vs Clay, 3/7) | pairs -0.81 | level 1.049
+  uimp .3 + TD luck          vs shadow  -2.72% (4/7) fwd  -6.42% (2/4) | vs Clay form  +4.93% | rho 0.5517 (-0.0326 vs shadow, -0.0645 vs Clay, 0/7) | pairs -1.20 | level 1.049
+  uimp .5 + TD luck          vs shadow  -1.92% (4/7) fwd  -8.00% (2/4) | vs Clay form  +5.80% | rho 0.5412 (-0.0431 vs shadow, -0.0750 vs Clay, 1/7) | pairs -1.56 | level 1.050
+  uimp WR-fade + TD luck     vs shadow  -1.44% (3/7) fwd  -7.38% (2/4) | vs Clay form  +6.32% | rho 0.5235 (-0.0608 vs shadow, -0.0927 vs Clay, 0/7) | pairs -2.09 | level 1.049
+  TD luck + raw ppg evidence vs shadow  -3.03% (3/7) fwd  +0.05% (1/4) | vs Clay form  +4.60% | rho 0.5738 (-0.0105 vs shadow, -0.0424 vs Clay, 4/7) | pairs -0.47 | level 1.043
+  TD luck + half raw ppg     vs shadow  -3.18% (4/7) fwd  -1.66% (2/4) | vs Clay form  +4.44% | rho 0.5703 (-0.0140 vs shadow, -0.0459 vs Clay, 4/7) | pairs -0.56 | level 1.046
+  TD luck + TE docks halved  vs shadow  -5.68% (4/7) fwd  -4.11% (2/4) | vs Clay form  +1.74% | rho 0.6027 (+0.0184 vs shadow, -0.0135 vs Clay, 5/7) | pairs +0.42 | level 1.050
+  TD luck + raw ppg + docks halved vs shadow  -5.67% (5/7) fwd  -0.98% (2/4) | vs Clay form  +1.75% | rho 0.5967 (+0.0124 vs shadow, -0.0195 vs Clay, 5/7) | pairs +0.08 | level 1.044
+  raw ppg evidence only      vs shadow  +0.72% (3/7) fwd  +3.89% (1/4) | vs Clay form  +8.64% | rho 0.5848 (+0.0005 vs shadow, -0.0314 vs Clay, 4/7) | pairs -0.03 | level 1.038
+  cuts (vs shadow / vs Clay), TD luck + raw ppg evidence:
+    ADP <= 60    n 261 | vs shadow  -3.57% | vs Clay  +6.22% (shadow was +10.15%)
+    ADP 61-150   n 546 | vs shadow  -2.10% | vs Clay  +1.96% (shadow was  +4.15%)
+    games 1-3    n 283 | vs shadow  -5.25% | vs Clay  +2.57% (shadow was  +8.26%)
+    games 4-8    n 407 | vs shadow  -2.48% | vs Clay  +6.04% (shadow was  +8.74%)
+    games 9+     n 117 | vs shadow  -1.59% | vs Clay  +3.58% (shadow was  +5.26%)
+    rookies      n  58 | vs shadow  +0.76% | vs Clay +26.68% (shadow was +25.73%)
+  pick LOYO    : error -3.93% vs shadow (4/7), +3.64% vs Clay form | rho +0.0086 | picks ['TD luck + TE docks halved', 'TD luck + TE docks halved', 'TD luck + TE docks halved', 'TD luck + raw ppg + docks halved', 'TD luck + raw ppg + docks halved', 'TD luck + TE docks halved', 'TD luck + raw ppg + docks halved']
+  pick forward : error -0.98% vs shadow (2/4), -0.82% vs Clay form | rho -0.0309 | picks ['TD luck + raw ppg + docks halved', 'TD luck + raw ppg + docks halved', 'TD luck + raw ppg + docks halved', 'TD luck + raw ppg + docks halved']
+
+Limitations: shadow replica (harness form + as-wired layers); the usage-implied coefficients are the live form's (fit on these seasons - the LOYO / forward picks are the honest read); book anchor / docks / prior lift not replayed.

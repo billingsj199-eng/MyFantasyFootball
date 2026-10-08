@@ -12,9 +12,9 @@ only a tiebreaker / last-resort fallback — the 2026-08-04 headshot bake wrote
 wrong ESPN ids for ~40 players (e.g. Kenneth Walker III carries the retired
 WR Kenneth Walker's id), so it must never be the primary join key.
 
-Contract fields (sal/cyr/out) are deliberately left alone: Sleeper carries no
-contract data and ESPN's core contracts endpoint would need ~580 per-athlete
-calls keyed by those same unreliable ESPN ids. Contracts stay manual.
+Contract fields (sal/cyr/out + cv/cn/cg/cs/cdead/csav) are left alone here: since
+2026-10-08 scripts/build_player_contracts.py fills them from OverTheCap (Task
+Scheduler "MFF Player Contracts").
 
 Safety rails:
   * aborts if Sleeper returns < 2500 rostered players (bad/partial payload)

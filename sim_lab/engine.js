@@ -3358,13 +3358,21 @@
       if (p.comps[k]) compsWk[k] = +(p.comps[k] / perGameDiv * factor).toFixed(2);
     });
     compsWk.rrtd = +(((p.comps.rtd || 0) + (p.comps.rctd || 0)) / perGameDiv * factor).toFixed(3);
+    // COMPONENT LEVEL (2026-10-08, grade_stat_shape.py --level): the stat lines were Clay's per-game line x the chain = the Clay-LAYER level, while the
+    // published mean is now the shadow's. Rescaling the same split to the model mean cut the per-stat error on the W1-4 locks (RB 6.26 -> 6.18, WR 5.28 -> 5.15,
+    // TE 4.09 -> 4.04; QB was worse, so QB keeps Clay's level). cwScale also lifts the usage prior below. Kill: window.SIM_COMP_LEVEL = false.
+    var cwScale = 1, COMP_LEVEL_POS = { RB: 1, WR: 1, TE: 1 };
+    if (COMP_LEVEL_POS[p.pos] && jsMean > 0 && !(typeof window !== 'undefined' && window.SIM_COMP_LEVEL === false)) {
+      var cwSum = (compsWk.py || 0) * (sc.pass_yd || 0) + (compsWk.ptd || 0) * (sc.pass_td || 0) + (compsWk.ry || 0) * (sc.rush_yd || 0) + (compsWk.rtd || 0) * (sc.rush_td || 0) + (compsWk.rec || 0) * ((sc.rec || 0) + (p.pos === 'TE' ? (sc.bonus_rec_te || 0) : 0)) + (compsWk.rcy || 0) * (sc.rec_yd || 0) + (compsWk.rctd || 0) * (sc.rec_td || 0);
+      if (cwSum > 0.5) { cwScale = Math.min(2.5, Math.max(0.4, jsMean / cwSum)); if (Math.abs(cwScale - 1) > 0.002) Object.keys(compsWk).forEach(function (k) { compsWk[k] = +(compsWk[k] * cwScale).toFixed(k === 'rrtd' ? 3 : 2); }); else cwScale = 1; }
+    }
     // usage-updated twin of compsWk (see COMP_USAGE): same matchup x availability factor on an in-season per-game base
     var compsU = null, cuE = compUsage(p, wk);
     if (cuE) {
       compsU = {}; Object.keys(compsWk).forEach(function (k) { compsU[k] = compsWk[k]; });
       ['ry', 'rec', 'rcy'].forEach(function (k) {
         if (p.pos === 'QB' && k !== 'ry') return;
-        var prior = (p.comps[k] || 0) / perGameDiv, act = cuE.a[k]; if (typeof act !== 'number') return;
+        var prior = (p.comps[k] || 0) / perGameDiv * cwScale, act = cuE.a[k]; if (typeof act !== 'number') return;   // prior at the component level (cwScale, 2026-10-08)
         var lm = COMP_USAGE.lam[k]; if (typeof lm === 'object') lm = lm[p.pos] != null ? lm[p.pos] : 0.25;
         var ev = cuE.u ? lm * cuE.u[k] + (1 - lm) * act : act;
         if (!prior && !ev) return;                                  // never had the stat, never produced it: leave the key absent

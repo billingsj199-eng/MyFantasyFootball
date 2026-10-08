@@ -19,7 +19,7 @@ pts_of = lambda L: sum(VAL[k] * L.get(k, 0.0) for k in STATS)
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--k1", type=float, default=4); ap.add_argument("--k2", type=float, default=2); ap.add_argument("--weeks", default="1,2,3,4"); a = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument("--k1", type=float, default=4); ap.add_argument("--k2", type=float, default=2); ap.add_argument("--weeks", default="1,2,3,4"); ap.add_argument("--level", default="clay"); a = ap.parse_args()
     LOG = open(os.path.join(HERE, "grade_stat_shape.log"), "w", encoding="utf-8")
     def P(s=""): print(s); LOG.write(s + chr(10)); LOG.flush()
     # position shape from the 2025 pool (8+ games), per half-PPR point
@@ -64,8 +64,11 @@ def main():
             if ps not in POSSTATS or not p.get("comps"): continue
             key = norm(p["name"]); w = actw.get(key)
             if not w: continue
-            actual = {s: float(w.get(s) or 0) for s in STATS}; comps = p["comps"]; lvl = pts_of(comps)
-            if lvl <= 0: continue
+            actual = {s: float(w.get(s) or 0) for s in STATS}; comps = p["comps"]; lvl0 = pts_of(comps)
+            if lvl0 <= 0: continue
+            lvl = lvl0 if a.level == "clay" else (p.get("ncMean") if a.level == "shadow" else p.get("jsMean"))
+            if not isinstance(lvl, (int, float)) or lvl <= 0: continue
+            if a.level != "clay": comps = {s: float(comps.get(s, 0) or 0) * lvl / lvl0 for s in STATS}; cu0 = p.get("compsU"); p["compsU"] = ({s: float(cu0.get(s, 0) or 0) * lvl / pts_of(cu0) for s in STATS} if cu0 and pts_of(cu0) > 0 else None)
             A_rows = [logs26.get(key, {})[k] for k in sorted(logs26.get(key, {})) if k < wkn]; B_rows = logs25.get(key, [])
             A = {s: float(np.mean([r[s] for r in A_rows])) for s in STATS} if A_rows else None
             B = {s: float(np.mean([r[s] for r in B_rows])) for s in STATS} if len(B_rows) >= 4 else None

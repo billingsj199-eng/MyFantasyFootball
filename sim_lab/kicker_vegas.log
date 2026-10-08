@@ -1,0 +1,16 @@
+kicker-weeks with an implied total: 2,506 over [np.int64(2020), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025)]; mean 8.30 pts, implied corr 0.124, prior-ppg corr 0.034
+
+--- LOYO on history: MAE and rank rho (within week) vs a constant (league mean) ---
+  V1 implied                 MAE 3.571 (constant 3.603) | rank rho 0.125 (implied alone 0.125) | full-fit coefs [5.038 0.145]
+  V2 implied + prior ppg     MAE 3.569 (constant 3.603) | rank rho 0.123 (implied alone 0.125) | full-fit coefs [5.078 0.143 0.131]
+  V3 + dome                  MAE 3.559 (constant 3.603) | rank rho 0.149 (implied alone 0.125) | full-fit coefs [5.073 0.13  0.096 0.887]
+
+--- 2026 W1-4 lock rows: MAE / rank rho vs actual kicker points ---
+  jsMean (Clay x kLevel x chain)   n 124 | MAE 3.661 | weekly rank rho 0.018
+  mean (anchored)                  n 124 | MAE 3.606 | weekly rank rho 0.022
+  book kpts line                   n 123 | MAE 3.728 | weekly rank rho -0.043
+  V1 implied                       n 124 | MAE 3.547 | weekly rank rho 0.007
+  V2 implied + prior ppg           n 124 | MAE 3.553 | weekly rank rho -0.009
+  V3 + dome                        n 124 | MAE 3.549 | weekly rank rho -0.005
+
+Limitations: 2026 read is 4 weeks x 32 kickers; history fit = implied + prior-season ppg (+ dome) with no weather; the lock's jsMean carries kLevel and the game chain, the candidates carry only the fitted terms.

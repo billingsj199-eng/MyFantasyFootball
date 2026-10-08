@@ -51,6 +51,7 @@ WS_JS = os.path.join(ROOT, 'data', 'weekly_stats_active.js')
 # whenever a defense faces an untracked player (PIT read 0.0 QB allowed in
 # W1 because Cooper Rush isn't on the board).
 FPA_JS = os.path.join(ROOT, 'data', 'fpa_2026.js')
+FPA_JSON = os.path.join(ROOT, 'data', 'fpa_2026.json')   # same object, fetched by the Sleeper/ESPN/Yahoo helpers
 FPA_POS = ('QB', 'RB', 'WR', 'TE')
 # 2026-09-15: the rankings WEEKLY board's OPP PPG column reads this table too,
 # so every defense-week also carries PPR / STD variants of the four skill
@@ -60,6 +61,20 @@ FPA_POS = ('QB', 'RB', 'WR', 'TE')
 # "defense" key is really the OFFENSE that gave up those points.
 FPA_EXTRA_POS = ('K', 'DEF')
 FPA_SCORING = (('', 'pts_half_ppr'), ('_ppr', 'pts_ppr'), ('_std', 'pts_std'))
+# 2026-10-05: TOUCHDOWN-NEUTRAL twins (`RB_tdn`, `DST_tdn`) - the number the
+# site's opponent GRADE is built on (app.js _mtObservedFpa); the bare keys stay
+# the actual points the board shows. Actual TDs are swapped for the league TD
+# rate on the yards allowed (half-PPR basis); for DST the defensive and return
+# TDs are dropped. 2016-25 backtest (research_opp_grade_schemes.py): this beat
+# actual points at every position. Same constants as build_fpa_prior.py, which
+# builds last season's side of the blend - keep the two in sync.
+TDN_PASS, TDN_RUSH, TDN_REC = 0.00626, 0.00759, 0.00623   # league TDs per yard, 2014-25
+
+
+def td_neutral(s):
+    n = lambda k: s.get(k) or 0  # noqa: E731
+    return ((s.get('pts_half_ppr') or 0) - 4 * n('pass_td') - 6 * (n('rush_td') + n('rec_td'))
+            + 4 * TDN_PASS * n('pass_yd') + 6 * (TDN_RUSH * n('rush_yd') + TDN_REC * n('rec_yd')))
 SLEEPER_DB = {}   # sid -> Sleeper player record (filled by sleeper_id_map)
 
 SEASON = 2026
@@ -107,41 +122,97 @@ def strip_suffix(n):
     return n
 
 
+TEAM_ABBR = {
+    'Arizona Cardinals': 'ARI', 'Atlanta Falcons': 'ATL', 'Baltimore Ravens': 'BAL',
+    'Buffalo Bills': 'BUF', 'Carolina Panthers': 'CAR', 'Chicago Bears': 'CHI',
+    'Cincinnati Bengals': 'CIN', 'Cleveland Browns': 'CLE', 'Dallas Cowboys': 'DAL',
+    'Denver Broncos': 'DEN', 'Detroit Lions': 'DET', 'Green Bay Packers': 'GB',
+    'Houston Texans': 'HOU', 'Indianapolis Colts': 'IND', 'Jacksonville Jaguars': 'JAX',
+    'Kansas City Chiefs': 'KC', 'Las Vegas Raiders': 'LV', 'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LAR', 'Miami Dolphins': 'MIA', 'Minnesota Vikings': 'MIN',
+    'New England Patriots': 'NE', 'New Orleans Saints': 'NO', 'New York Giants': 'NYG',
+    'New York Jets': 'NYJ', 'Philadelphia Eagles': 'PHI', 'Pittsburgh Steelers': 'PIT',
+    'San Francisco 49ers': 'SF', 'Seattle Seahawks': 'SEA', 'Tampa Bay Buccaneers': 'TB',
+    'Tennessee Titans': 'TEN', 'Washington Commanders': 'WAS',
+}
+TARGET_TEAM = {}   # D name -> site team abbr ('' for FA), filled by load_targets
+# Sleeper positions that can stand in for a site position (Juszczyk = FB, Travis Hunter = DB).
+POS_COMPAT = {'QB': ('QB',), 'RB': ('RB', 'FB'), 'WR': ('WR', 'DB', 'CB', 'S'), 'TE': ('TE',)}
+SLEEPER_POOL_POS = ('QB', 'RB', 'WR', 'TE', 'FB', 'DB', 'CB', 'S')
+
+
 def load_targets():
     with open(D_JS, 'r', encoding='utf-8') as f:
         raw = f.read()
     D = json.loads(raw[raw.index('['):raw.rindex(']') + 1])
+    TARGET_TEAM.clear()
+    TARGET_TEAM.update({p['n']: TEAM_ABBR.get(p.get('t') or '', '') for p in D
+                        if p.get('s') in ('QB', 'RB', 'WR', 'TE')})
     return {p['n']: p['s'] for p in D if p.get('s') in ('QB', 'RB', 'WR', 'TE')}
 
 
 def sleeper_id_map(targets):
-    """D name -> (sleeper_id, team) using the Sleeper player DB."""
+    """D name -> (sleeper_id, team) using the Sleeper player DB.
+
+    Match order per target: exact normalized name -> suffix-stripped / suffix-added
+    (Sleeper drops Jr./III; the site keeps them) -> last name + team + position
+    (Sleeper first-name nicknames: Kenny Gainwell, Joshua Palmer, Matt Hibner,
+    DeaMonte Trayanum...). When several Sleeper records share a name, the one on the
+    site's team wins, then the active one, so a suffix-stripped 'Michael Pittman'
+    cannot land on the retired Sr.
+    """
     db = get_json(SLEEPER_PLAYERS, timeout=60)
     SLEEPER_DB.update(db)
-    by_name = {}
+    by_name = defaultdict(list)     # normalized full name -> [(sid, team, pos, active)]
+    by_last = defaultdict(list)     # (last name, team) -> same
     for sid, sp in db.items():
-        if sp.get('position') not in ('QB', 'RB', 'WR', 'TE'):
+        pos = sp.get('position')
+        if pos not in SLEEPER_POOL_POS:
             continue
         full = sp.get('full_name') or ('%s %s' % (sp.get('first_name', ''), sp.get('last_name', ''))).strip()
         if not full:
             continue
+        rec = (sid, sp.get('team') or '', pos, bool(sp.get('active')))
         key = normalize(full)
-        if key not in by_name or sp.get('active'):
-            by_name[key] = (sid, sp.get('team') or '')
-    out = {}
+        by_name[key].append(rec)
+        last = strip_suffix(normalize(sp.get('last_name') or full.split()[-1]))
+        if rec[1]:
+            by_last[(last, rec[1])].append(rec)
+
+    def pick(cands, name, strict_pos):
+        pos_ok = POS_COMPAT[targets[name]] if strict_pos else SLEEPER_POOL_POS
+        cands = [c for c in cands if c[2] in pos_ok]
+        if not cands:
+            return None
+        team = TARGET_TEAM.get(name, '')
+        cands.sort(key=lambda c: (c[1] == team and bool(team), c[3]), reverse=True)
+        return cands[0]
+
+    out, missed = {}, []
     for name in targets:
         key = normalize(name)
-        hit = by_name.get(key)
+        hit = pick(by_name.get(key, []), name, strict_pos=False)
         if not hit:
             st = strip_suffix(key)
-            hit = by_name.get(st) if st != key else None
+            if st != key:
+                hit = pick(by_name.get(st, []), name, strict_pos=False)
             if not hit:
                 for s in SUFFIXES:
-                    if (key + s) in by_name:
-                        hit = by_name[key + s]
+                    hit = pick(by_name.get(key + s, []), name, strict_pos=False)
+                    if hit:
                         break
+        if not hit and TARGET_TEAM.get(name):
+            last = st.split()[-1] if ' ' in st else st
+            cands = by_last.get((last, TARGET_TEAM[name]), [])
+            cands = [c for c in cands if c[2] in POS_COMPAT[targets[name]]]
+            if len(cands) == 1 or (cands and sum(1 for c in cands if c[3]) == 1):
+                hit = pick(cands, name, strict_pos=True)
         if hit:
-            out[name] = hit
+            out[name] = (hit[0], hit[1])
+        else:
+            missed.append('%s (%s %s)' % (name, targets[name], TARGET_TEAM.get(name) or 'FA'))
+    if missed:
+        log('  no Sleeper id for: ' + ', '.join(missed))
     return out
 
 
@@ -245,9 +316,13 @@ def main():
             if pos in FPA_POS:
                 for suf, key in FPA_SCORING:
                     slot[pos + suf] = round(slot.get(pos + suf, 0) + (s.get(key) or 0), 2)
+                slot[pos + '_tdn'] = round(slot.get(pos + '_tdn', 0) + td_neutral(s), 2)
             else:
                 k = 'DST' if pos == 'DEF' else pos
                 slot[k] = round(slot.get(k, 0) + (s.get('pts_std') or pts), 2)
+                if pos == 'DEF':
+                    tds = (s.get('def_td') or 0) + (s.get('def_st_td') or 0) + (s.get('st_td') or 0)
+                    slot['DST_tdn'] = round(slot.get('DST_tdn', 0) + (s.get('pts_std') or pts) - 6 * tds, 2)
         for sid, s in stats.items():
             hit = by_sid.get(sid)
             if not hit:
@@ -304,6 +379,22 @@ def main():
     return 0
 
 
+def load_prior():
+    """Last season's side of the opponent grade (data/fpa_prior_<SEASON-1>.js, built by
+    build_fpa_prior.py). Carried inside fpa_2026.json as `prior` so the Sleeper / ESPN /
+    Yahoo helpers get both halves of the blend in the one fetch they already make."""
+    path = os.path.join(ROOT, 'data', 'fpa_prior_%d.js' % (SEASON - 1))
+    if not os.path.exists(path):
+        return None
+    try:
+        raw = open(path, 'r', encoding='utf-8').read()
+        obj = json.loads(raw[raw.index('{'):raw.rindex('}') + 1])
+        return {'season': obj.get('season'), 'pos': obj.get('pos')} if obj.get('pos') else None
+    except Exception as e:  # noqa: BLE001
+        log('  %s unreadable (%s) - no prior in fpa_2026' % (os.path.basename(path), e))
+        return None
+
+
 def write_fpa(fpa_weeks):
     """Merge this run's complete-league FPA weeks into data/fpa_2026.js
     (fresh week replaces; weeks not recomputed this run are kept)."""
@@ -323,23 +414,33 @@ def write_fpa(fpa_weeks):
             for p in FPA_POS:
                 for suf, _k in FPA_SCORING:
                     full[d][p + suf] = round(rec.get(p + suf, 0), 1)
+                full[d][p + '_tdn'] = round(rec.get(p + '_tdn', 0), 1)
             for p in ('K', 'DST'):
                 full[d][p] = round(rec.get(p, 0), 1)
+            full[d]['DST_tdn'] = round(rec.get('DST_tdn', 0), 1)
         weeks[wk] = full
-    if weeks == (existing.get('weeks') or {}):
+    prior = load_prior()
+    if weeks == (existing.get('weeks') or {}) and prior == existing.get('prior'):
         log('fpa_2026.js: %d weeks, no change' % len(weeks))
         return
     obj = {'season': SEASON, 'basis': 'half_ppr', 'pos': list(FPA_POS),
            'updated': time.strftime('%Y-%m-%dT%H:%M:%S'),
            'weeks': {k: weeks[k] for k in sorted(weeks, key=int)}}
+    if prior:
+        obj['prior'] = prior
     out = ('// AUTO-GENERATED by scripts/pull_postgame_stats.py - fantasy points ALLOWED per defense per week\n'
            '// ALL Sleeper QB/RB/WR/TE in FINAL games (half-PPR; _ppr/_std variants alongside), not just board players. opp = offense faced.\n'
            '// K / DST = points scored AGAINST this team by the opposing kicker / D/ST (Sleeper default scoring).\n'
+           '// <POS>_tdn = touchdown-neutral twin (TDs swapped for the league rate on the yards; DST: defensive / return TDs out) - the opponent GRADE reads these.\n'
            'window.FPA_2026 = ' + json.dumps(obj, separators=(',', ':')) + ';\n')
     with open(FPA_JS, 'w', encoding='utf-8') as f:
         f.write(out)
+    # Plain-JSON twin for the browser extensions (their site fetch proxies
+    # parse JSON only). Tracked with `git add -f` — /data/*.json is excluded.
+    with open(FPA_JSON, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(obj, separators=(',', ':')))
     n = sum(len(v) for v in weeks.values())
-    log('wrote %s (%d weeks, %d defense-weeks)' % (FPA_JS, len(weeks), n))
+    log('wrote %s + %s (%d weeks, %d defense-weeks)' % (FPA_JS, FPA_JSON, len(weeks), n))
 
 
 if __name__ == '__main__':

@@ -31,7 +31,7 @@ Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 # (Site Rankings CSVs are git-excluded local files — these are the tracked targets.)
-$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'og/movers.png', 'movers.html')
+$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'og/movers.png', 'movers.html', 'data/active_team_history.js')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -44,6 +44,14 @@ if ($LASTEXITCODE -ne 0) {
     Write-Log "PULL FAILED (exit $LASTEXITCODE) - nothing committed"
     exit 1
 }
+
+# Team-by-year history: carry today's d.js roster moves into the 2026 end of
+# ACTIVE_TEAM_HISTORY (Compare splits / team-by-year lookups read it first;
+# it went stale all offseason when this was manual — wired 2026-09-24).
+# Bumps its own ?v=. Non-fatal: a failure leaves yesterday's history.
+$out = & $Python 'scripts\sync_active_team_history.py' '--write' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "team history sync FAILED (exit $LASTEXITCODE) - continuing" }
 
 # ADP MOVERS share card (og/movers.png + movers.html) — the OG image the
 # share button's /movers.html link unfurls. Non-fatal: a render failure

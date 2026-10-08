@@ -1,0 +1,1169 @@
+{
+ "source": "C:/Users/billi/AppData/Local/Temp/claude/E--MyFantasyFootball-MyFantasyFootball-Files/49cb85cd-b00e-45aa-a905-bbe008723b17/scratchpad/jm_smoke.json",
+ "date": "2026-09-30",
+ "n": 497,
+ "segments": {
+  "transfer": {
+   "ALL": {
+    "one school": {
+     "n": 448,
+     "hit_plus": 0.212,
+     "bust": 0.685,
+     "mean_outcome": 16.6,
+     "mean_jm": 44.7,
+     "mean_pick": 119.4,
+     "resid_jm": -0.17,
+     "t_jm": -0.13,
+     "resid_dc": -0.15,
+     "t_dc": -0.12
+    },
+    "transfer": {
+     "n": 49,
+     "hit_plus": 0.245,
+     "bust": 0.633,
+     "mean_outcome": 20.8,
+     "mean_jm": 46.8,
+     "mean_pick": 105.3,
+     "resid_jm": 1.52,
+     "t_jm": 0.42,
+     "resid_dc": 1.41,
+     "t_dc": 0.36
+    }
+   },
+   "QB": {
+    "one school": {
+     "n": 48,
+     "hit_plus": 0.312,
+     "bust": 0.604,
+     "mean_outcome": 21.8,
+     "mean_jm": 48.0,
+     "mean_pick": 80.0,
+     "resid_jm": -0.73,
+     "t_jm": -0.17,
+     "resid_dc": -0.76,
+     "t_dc": -0.15
+    },
+    "transfer": {
+     "n": 18,
+     "hit_plus": 0.389,
+     "bust": 0.611,
+     "mean_outcome": 26.5,
+     "mean_jm": 49.6,
+     "mean_pick": 82.4,
+     "resid_jm": 1.94,
+     "t_jm": 0.3,
+     "resid_dc": 2.03,
+     "t_dc": 0.3
+    }
+   },
+   "RB": {
+    "one school": {
+     "n": 125,
+     "hit_plus": 0.232,
+     "bust": 0.648,
+     "mean_outcome": 19.3,
+     "mean_jm": 46.0,
+     "mean_pick": 131.8,
+     "resid_jm": -0.02,
+     "t_jm": -0.01,
+     "resid_dc": -0.07,
+     "t_dc": -0.03
+    },
+    "transfer": {
+     "n": 10,
+     "hit_plus": 0.3,
+     "bust": 0.5,
+     "mean_outcome": 27.0,
+     "mean_jm": 52.0,
+     "mean_pick": 106.5,
+     "resid_jm": 0.19,
+     "t_jm": 0.02,
+     "resid_dc": 0.84,
+     "t_dc": 0.11
+    }
+   },
+   "WR": {
+    "one school": {
+     "n": 184,
+     "hit_plus": 0.158,
+     "bust": 0.734,
+     "mean_outcome": 11.2,
+     "mean_jm": 45.3,
+     "mean_pick": 122.2,
+     "resid_jm": -0.41,
+     "t_jm": -0.22,
+     "resid_dc": -0.5,
+     "t_dc": -0.26
+    },
+    "transfer": {
+     "n": 17,
+     "hit_plus": 0.118,
+     "bust": 0.706,
+     "mean_outcome": 15.0,
+     "mean_jm": 44.1,
+     "mean_pick": 129.2,
+     "resid_jm": 4.48,
+     "t_jm": 0.71,
+     "resid_dc": 5.41,
+     "t_dc": 0.8
+    }
+   },
+   "TE": {
+    "one school": {
+     "n": 91,
+     "hit_plus": 0.242,
+     "bust": 0.681,
+     "mean_outcome": 21.0,
+     "mean_jm": 40.0,
+     "mean_pick": 117.6,
+     "resid_jm": 0.42,
+     "t_jm": 0.16,
+     "resid_dc": 0.75,
+     "t_dc": 0.27
+    },
+    "transfer": {
+     "n": 4,
+     "hit_plus": 0.0,
+     "bust": 0.75,
+     "mean_outcome": 4.7,
+     "mean_jm": 32.9,
+     "mean_pick": 103.5,
+     "resid_jm": -9.59,
+     "t_jm": -0.84,
+     "resid_dc": -17.0,
+     "t_dc": -1.33
+    }
+   }
+  },
+  "path": {
+   "ALL": {
+    "down": {
+     "n": 6,
+     "hit_plus": 0.0,
+     "bust": 0.833,
+     "mean_outcome": 7.1,
+     "mean_jm": 35.6,
+     "mean_pick": 161.7,
+     "resid_jm": -0.21,
+     "t_jm": -0.04,
+     "resid_dc": 4.68,
+     "t_dc": 1.25
+    },
+    "lateral": {
+     "n": 33,
+     "hit_plus": 0.333,
+     "bust": 0.576,
+     "mean_outcome": 26.7,
+     "mean_jm": 51.8,
+     "mean_pick": 87.2,
+     "resid_jm": 0.77,
+     "t_jm": 0.16,
+     "resid_dc": -0.01,
+     "t_dc": -0.0
+    },
+    "none": {
+     "n": 448,
+     "hit_plus": 0.212,
+     "bust": 0.685,
+     "mean_outcome": 16.6,
+     "mean_jm": 44.7,
+     "mean_pick": 119.4,
+     "resid_jm": -0.17,
+     "t_jm": -0.13,
+     "resid_dc": -0.15,
+     "t_dc": -0.12
+    },
+    "up": {
+     "n": 10,
+     "hit_plus": 0.1,
+     "bust": 0.7,
+     "mean_outcome": 9.7,
+     "mean_jm": 37.0,
+     "mean_pick": 131.2,
+     "resid_jm": 5.05,
+     "t_jm": 0.74,
+     "resid_dc": 4.1,
+     "t_dc": 0.48
+    }
+   },
+   "QB": {
+    "down": {
+     "n": 1,
+     "hit_plus": 0.0,
+     "bust": 1.0,
+     "mean_outcome": 7.5,
+     "mean_jm": 47.8,
+     "mean_pick": 86.0,
+     "resid_jm": -14.8,
+     "t_jm": 0.0,
+     "resid_dc": 1.67,
+     "t_dc": 0.0
+    },
+    "lateral": {
+     "n": 15,
+     "hit_plus": 0.467,
+     "bust": 0.533,
+     "mean_outcome": 32.8,
+     "mean_jm": 52.5,
+     "mean_pick": 77.1,
+     "resid_jm": 4.49,
+     "t_jm": 0.59,
+     "resid_dc": 3.89,
+     "t_dc": 0.49
+    },
+    "none": {
+     "n": 48,
+     "hit_plus": 0.312,
+     "bust": 0.604,
+     "mean_outcome": 21.8,
+     "mean_jm": 48.0,
+     "mean_pick": 80.0,
+     "resid_jm": -0.73,
+     "t_jm": -0.17,
+     "resid_dc": -0.76,
+     "t_dc": -0.15
+    },
+    "up": {
+     "n": 2,
+     "hit_plus": 0.0,
+     "bust": 1.0,
+     "mean_outcome": -11.2,
+     "mean_jm": 28.4,
+     "mean_pick": 120.5,
+     "resid_jm": -8.8,
+     "t_jm": 0.0,
+     "resid_dc": -11.74,
+     "t_dc": 0.0
+    }
+   },
+   "RB": {
+    "down": {
+     "n": 1,
+     "hit_plus": 0.0,
+     "bust": 0.0,
+     "mean_outcome": 26.4,
+     "mean_jm": 38.2,
+     "mean_pick": 156.0,
+     "resid_jm": 16.85,
+     "t_jm": 0.0,
+     "resid_dc": 18.61,
+     "t_dc": 0.0
+    },
+    "lateral": {
+     "n": 7,
+     "hit_plus": 0.286,
+     "bust": 0.571,
+     "mean_outcome": 30.2,
+     "mean_jm": 60.7,
+     "mean_pick": 81.4,
+     "resid_jm": -7.58,
+     "t_jm": -1.07,
+     "resid_dc": -4.59,
+     "t_dc": -0.75
+    },
+    "none": {
+     "n": 125,
+     "hit_plus": 0.232,
+     "bust": 0.648,
+     "mean_outcome": 19.3,
+     "mean_jm": 46.0,
+     "mean_pick": 131.8,
+     "resid_jm": -0.02,
+     "t_jm": -0.01,
+     "resid_dc": -0.07,
+     "t_dc": -0.03
+    },
+    "up": {
+     "n": 2,
+     "hit_plus": 0.5,
+     "bust": 0.5,
+     "mean_outcome": 16.3,
+     "mean_jm": 28.4,
+     "mean_pick": 169.5,
+     "resid_jm": 19.05,
+     "t_jm": 0.0,
+     "resid_dc": 10.94,
+     "t_dc": 0.0
+    }
+   },
+   "WR": {
+    "down": {
+     "n": 3,
+     "hit_plus": 0.0,
+     "bust": 1.0,
+     "mean_outcome": -0.2,
+     "mean_jm": 33.8,
+     "mean_pick": 176.7,
+     "resid_jm": -1.48,
+     "t_jm": -0.18,
+     "resid_dc": 0.1,
+     "t_dc": 0.02
+    },
+    "lateral": {
+     "n": 8,
+     "hit_plus": 0.25,
+     "bust": 0.625,
+     "mean_outcome": 21.2,
+     "mean_jm": 48.9,
+     "mean_pick": 116.8,
+     "resid_jm": 6.32,
+     "t_jm": 0.5,
+     "resid_dc": 6.14,
+     "t_dc": 0.45
+    },
+    "none": {
+     "n": 184,
+     "hit_plus": 0.158,
+     "bust": 0.734,
+     "mean_outcome": 11.2,
+     "mean_jm": 45.3,
+     "mean_pick": 122.2,
+     "resid_jm": -0.41,
+     "t_jm": -0.22,
+     "resid_dc": -0.5,
+     "t_dc": -0.26
+    },
+    "up": {
+     "n": 6,
+     "hit_plus": 0.0,
+     "bust": 0.667,
+     "mean_outcome": 14.4,
+     "mean_jm": 42.8,
+     "mean_pick": 122.0,
+     "resid_jm": 5.0,
+     "t_jm": 0.71,
+     "resid_dc": 7.1,
+     "t_dc": 0.93
+    }
+   },
+   "TE": {
+    "down": {
+     "n": 1,
+     "hit_plus": 0.0,
+     "bust": 1.0,
+     "mean_outcome": 9.5,
+     "mean_jm": 26.1,
+     "mean_pick": 198.0,
+     "resid_jm": 1.13,
+     "t_jm": 0.0,
+     "resid_dc": 7.52,
+     "t_dc": 0.0
+    },
+    "lateral": {
+     "n": 3,
+     "hit_plus": 0.0,
+     "bust": 0.667,
+     "mean_outcome": 3.1,
+     "mean_jm": 35.1,
+     "mean_pick": 72.0,
+     "resid_jm": -13.16,
+     "t_jm": -0.86,
+     "resid_dc": -25.17,
+     "t_dc": -1.81
+    },
+    "none": {
+     "n": 91,
+     "hit_plus": 0.242,
+     "bust": 0.681,
+     "mean_outcome": 21.0,
+     "mean_jm": 40.0,
+     "mean_pick": 117.6,
+     "resid_jm": 0.42,
+     "t_jm": 0.16,
+     "resid_dc": 0.75,
+     "t_dc": 0.27
+    }
+   }
+  },
+  "final_tier": {
+   "ALL": {
+    "?": {
+     "n": 21,
+     "hit_plus": 0.238,
+     "bust": 0.524,
+     "mean_outcome": 26.0,
+     "mean_jm": 48.3,
+     "mean_pick": 104.0,
+     "resid_jm": 5.79,
+     "t_jm": 0.93,
+     "resid_dc": 4.63,
+     "t_dc": 0.66
+    },
+    "FCS": {
+     "n": 15,
+     "hit_plus": 0.2,
+     "bust": 0.733,
+     "mean_outcome": 15.8,
+     "mean_jm": 23.3,
+     "mean_pick": 138.5,
+     "resid_jm": 22.71,
+     "t_jm": 3.64,
+     "resid_dc": 7.36,
+     "t_dc": 0.85
+    },
+    "G5": {
+     "n": 93,
+     "hit_plus": 0.108,
+     "bust": 0.72,
+     "mean_outcome": 10.6,
+     "mean_jm": 41.3,
+     "mean_pick": 132.6,
+     "resid_jm": -2.11,
+     "t_jm": -0.86,
+     "resid_dc": 0.08,
+     "t_dc": 0.03
+    },
+    "P4": {
+     "n": 368,
+     "hit_plus": 0.242,
+     "bust": 0.677,
+     "mean_outcome": 18.2,
+     "mean_jm": 46.5,
+     "mean_pick": 114.3,
+     "resid_jm": -0.72,
+     "t_jm": -0.52,
+     "resid_dc": -0.59,
+     "t_dc": -0.4
+    }
+   },
+   "QB": {
+    "?": {
+     "n": 5,
+     "hit_plus": 0.4,
+     "bust": 0.6,
+     "mean_outcome": 36.5,
+     "mean_jm": 60.7,
+     "mean_pick": 57.2,
+     "resid_jm": -2.22,
+     "t_jm": -0.11,
+     "resid_dc": -4.24,
+     "t_dc": -0.17
+    },
+    "FCS": {
+     "n": 1,
+     "hit_plus": 0.0,
+     "bust": 1.0,
+     "mean_outcome": -29.2,
+     "mean_jm": 0.0,
+     "mean_pick": 108.0,
+     "resid_jm": 9.36,
+     "t_jm": 0.0,
+     "resid_dc": -31.35,
+     "t_dc": 0.0
+    },
+    "G5": {
+     "n": 8,
+     "hit_plus": 0.25,
+     "bust": 0.75,
+     "mean_outcome": 22.2,
+     "mean_jm": 44.9,
+     "mean_pick": 111.1,
+     "resid_jm": 3.55,
+     "t_jm": 0.35,
+     "resid_dc": 14.02,
+     "t_dc": 1.69
+    },
+    "P4": {
+     "n": 52,
+     "hit_plus": 0.346,
+     "bust": 0.577,
+     "mean_outcome": 22.9,
+     "mean_jm": 48.7,
+     "mean_pick": 77.7,
+     "resid_jm": -0.51,
+     "t_jm": -0.13,
+     "resid_dc": -1.15,
+     "t_dc": -0.26
+    }
+   },
+   "RB": {
+    "?": {
+     "n": 7,
+     "hit_plus": 0.143,
+     "bust": 0.429,
+     "mean_outcome": 21.4,
+     "mean_jm": 43.0,
+     "mean_pick": 136.4,
+     "resid_jm": 5.82,
+     "t_jm": 0.64,
+     "resid_dc": 6.91,
+     "t_dc": 0.71
+    },
+    "FCS": {
+     "n": 5,
+     "hit_plus": 0.0,
+     "bust": 0.8,
+     "mean_outcome": 15.9,
+     "mean_jm": 26.6,
+     "mean_pick": 152.2,
+     "resid_jm": 20.89,
+     "t_jm": 1.87,
+     "resid_dc": 6.75,
+     "t_dc": 1.46
+    },
+    "G5": {
+     "n": 26,
+     "hit_plus": 0.115,
+     "bust": 0.692,
+     "mean_outcome": 10.6,
+     "mean_jm": 40.6,
+     "mean_pick": 150.5,
+     "resid_jm": -1.92,
+     "t_jm": -0.35,
+     "resid_dc": -1.02,
+     "t_dc": -0.17
+    },
+    "P4": {
+     "n": 97,
+     "hit_plus": 0.289,
+     "bust": 0.629,
+     "mean_outcome": 22.5,
+     "mean_jm": 49.3,
+     "mean_pick": 122.8,
+     "resid_jm": -0.98,
+     "t_jm": -0.34,
+     "resid_dc": -0.57,
+     "t_dc": -0.2
+    }
+   },
+   "WR": {
+    "?": {
+     "n": 8,
+     "hit_plus": 0.25,
+     "bust": 0.5,
+     "mean_outcome": 25.5,
+     "mean_jm": 51.3,
+     "mean_pick": 94.0,
+     "resid_jm": 8.43,
+     "t_jm": 1.08,
+     "resid_dc": 7.83,
+     "t_dc": 1.01
+    },
+    "FCS": {
+     "n": 7,
+     "hit_plus": 0.143,
+     "bust": 0.857,
+     "mean_outcome": 5.2,
+     "mean_jm": 13.8,
+     "mean_pick": 154.4,
+     "resid_jm": 21.94,
+     "t_jm": 2.0,
+     "resid_dc": 2.85,
+     "t_dc": 0.18
+    },
+    "G5": {
+     "n": 41,
+     "hit_plus": 0.073,
+     "bust": 0.756,
+     "mean_outcome": 5.1,
+     "mean_jm": 41.3,
+     "mean_pick": 130.3,
+     "resid_jm": -2.87,
+     "t_jm": -0.91,
+     "resid_dc": -2.82,
+     "t_dc": -0.87
+    },
+    "P4": {
+     "n": 145,
+     "hit_plus": 0.172,
+     "bust": 0.731,
+     "mean_outcome": 12.9,
+     "mean_jm": 47.5,
+     "mean_pick": 120.7,
+     "resid_jm": -0.71,
+     "t_jm": -0.33,
+     "resid_dc": 0.23,
+     "t_dc": 0.1
+    }
+   },
+   "TE": {
+    "?": {
+     "n": 1,
+     "hit_plus": 0.0,
+     "bust": 1.0,
+     "mean_outcome": 10.1,
+     "mean_jm": 0.0,
+     "mean_pick": 192.0,
+     "resid_jm": 24.62,
+     "t_jm": 0.0,
+     "resid_dc": 7.36,
+     "t_dc": 0.0
+    },
+    "FCS": {
+     "n": 2,
+     "hit_plus": 1.0,
+     "bust": 0.0,
+     "mean_outcome": 74.8,
+     "mean_jm": 60.0,
+     "mean_pick": 63.5,
+     "resid_jm": 36.66,
+     "t_jm": 0.0,
+     "resid_dc": 44.03,
+     "t_dc": 0.0
+    },
+    "G5": {
+     "n": 18,
+     "hit_plus": 0.111,
+     "bust": 0.667,
+     "mean_outcome": 18.1,
+     "mean_jm": 40.8,
+     "mean_pick": 121.8,
+     "resid_jm": -3.15,
+     "t_jm": -0.58,
+     "resid_dc": 2.11,
+     "t_dc": 0.35
+    },
+    "P4": {
+     "n": 74,
+     "hit_plus": 0.243,
+     "bust": 0.703,
+     "mean_outcome": 19.5,
+     "mean_jm": 39.4,
+     "mean_pick": 116.3,
+     "resid_jm": -0.56,
+     "t_jm": -0.19,
+     "resid_dc": -1.8,
+     "t_dc": -0.6
+    }
+   }
+  },
+  "ever_small": {
+   "ALL": {
+    "P4 only": {
+     "n": 381,
+     "hit_plus": 0.244,
+     "bust": 0.667,
+     "mean_outcome": 18.8,
+     "mean_jm": 46.8,
+     "mean_pick": 113.3,
+     "resid_jm": -0.45,
+     "t_jm": -0.32,
+     "resid_dc": -0.32,
+     "t_dc": -0.22
+    },
+    "played G5/FCS": {
+     "n": 116,
+     "hit_plus": 0.121,
+     "bust": 0.724,
+     "mean_outcome": 11.0,
+     "mean_jm": 38.6,
+     "mean_pick": 133.5,
+     "resid_jm": 1.47,
+     "t_jm": 0.64,
+     "resid_dc": 1.04,
+     "t_dc": 0.42
+    }
+   },
+   "QB": {
+    "P4 only": {
+     "n": 56,
+     "hit_plus": 0.357,
+     "bust": 0.571,
+     "mean_outcome": 25.1,
+     "mean_jm": 50.2,
+     "mean_pick": 75.4,
+     "resid_jm": -0.36,
+     "t_jm": -0.09,
+     "resid_dc": -0.87,
+     "t_dc": -0.19
+    },
+    "played G5/FCS": {
+     "n": 10,
+     "hit_plus": 0.2,
+     "bust": 0.8,
+     "mean_outcome": 11.9,
+     "mean_jm": 38.0,
+     "mean_pick": 110.1,
+     "resid_jm": 2.02,
+     "t_jm": 0.24,
+     "resid_dc": 4.88,
+     "t_dc": 0.55
+    }
+   },
+   "RB": {
+    "P4 only": {
+     "n": 102,
+     "hit_plus": 0.275,
+     "bust": 0.618,
+     "mean_outcome": 22.5,
+     "mean_jm": 49.3,
+     "mean_pick": 122.8,
+     "resid_jm": -0.91,
+     "t_jm": -0.33,
+     "resid_dc": -0.29,
+     "t_dc": -0.1
+    },
+    "played G5/FCS": {
+     "n": 33,
+     "hit_plus": 0.121,
+     "bust": 0.697,
+     "mean_outcome": 11.8,
+     "mean_jm": 37.7,
+     "mean_pick": 151.9,
+     "resid_jm": 2.81,
+     "t_jm": 0.56,
+     "resid_dc": 0.88,
+     "t_dc": 0.17
+    }
+   },
+   "WR": {
+    "P4 only": {
+     "n": 148,
+     "hit_plus": 0.182,
+     "bust": 0.716,
+     "mean_outcome": 13.7,
+     "mean_jm": 47.9,
+     "mean_pick": 119.0,
+     "resid_jm": -0.27,
+     "t_jm": -0.13,
+     "resid_dc": 0.57,
+     "t_dc": 0.26
+    },
+    "played G5/FCS": {
+     "n": 53,
+     "hit_plus": 0.075,
+     "bust": 0.774,
+     "mean_outcome": 5.5,
+     "mean_jm": 37.6,
+     "mean_pick": 133.2,
+     "resid_jm": 0.77,
+     "t_jm": 0.25,
+     "resid_dc": -1.58,
+     "t_dc": -0.48
+    }
+   },
+   "TE": {
+    "P4 only": {
+     "n": 75,
+     "hit_plus": 0.24,
+     "bust": 0.707,
+     "mean_outcome": 19.3,
+     "mean_jm": 38.9,
+     "mean_pick": 117.3,
+     "resid_jm": -0.22,
+     "t_jm": -0.07,
+     "resid_dc": -1.68,
+     "t_dc": -0.57
+    },
+    "played G5/FCS": {
+     "n": 20,
+     "hit_plus": 0.2,
+     "bust": 0.6,
+     "mean_outcome": 23.8,
+     "mean_jm": 42.7,
+     "mean_pick": 116.0,
+     "resid_jm": 0.83,
+     "t_jm": 0.15,
+     "resid_dc": 6.3,
+     "t_dc": 1.03
+    }
+   }
+  }
+ },
+ "examples": {
+  "small_school_overperformers": [
+   [
+    "Aaron Jones",
+    "RB",
+    2017,
+    182,
+    38.8,
+    97.5,
+    "G5"
+   ],
+   [
+    "Cooper Kupp",
+    "WR",
+    2017,
+    69,
+    54.9,
+    104.6,
+    "FCS"
+   ],
+   [
+    "Tarik Cohen",
+    "RB",
+    2017,
+    119,
+    13.2,
+    36.7,
+    "FCS"
+   ],
+   [
+    "Josh Allen",
+    "QB",
+    2018,
+    7,
+    68.7,
+    105.1,
+    "G5"
+   ],
+   [
+    "Kareem Hunt",
+    "RB",
+    2017,
+    86,
+    58.6,
+    91.3,
+    "G5"
+   ],
+   [
+    "Chase Brown",
+    "RB",
+    2023,
+    163,
+    38.2,
+    57.9,
+    "P4"
+   ],
+   [
+    "Diontae Johnson",
+    "WR",
+    2019,
+    66,
+    53.8,
+    61.5,
+    "G5"
+   ],
+   [
+    "Trey McBride",
+    "TE",
+    2022,
+    55,
+    74,
+    92.3,
+    "G5"
+   ],
+   [
+    "Dallas Goedert",
+    "TE",
+    2018,
+    49,
+    66.3,
+    85.1,
+    "FCS"
+   ],
+   [
+    "Tony Pollard",
+    "RB",
+    2019,
+    128,
+    43.8,
+    55.4,
+    "G5"
+   ],
+   [
+    "Jonnu Smith",
+    "TE",
+    2017,
+    100,
+    60.7,
+    76.3,
+    "G5"
+   ],
+   [
+    "Chase Edmonds",
+    "RB",
+    2018,
+    134,
+    18.6,
+    18,
+    "FCS"
+   ]
+  ],
+  "small_school_underperformers": [
+   [
+    "Taywan Taylor",
+    "WR",
+    2017,
+    72,
+    69,
+    -11.7,
+    "G5"
+   ],
+   [
+    "Kahale Warring",
+    "TE",
+    2019,
+    86,
+    45.8,
+    -18.3,
+    "G5"
+   ],
+   [
+    "Andy Isabella",
+    "WR",
+    2019,
+    62,
+    50.5,
+    -17.9,
+    "G5"
+   ],
+   [
+    "Danny Gray",
+    "WR",
+    2022,
+    105,
+    43,
+    -24.4,
+    "G5"
+   ],
+   [
+    "Harrison Bryant",
+    "TE",
+    2020,
+    115,
+    53.7,
+    0.7,
+    "G5"
+   ],
+   [
+    "Antonio Gandy-Golden",
+    "WR",
+    2020,
+    142,
+    39.1,
+    -24.1,
+    "G5"
+   ],
+   [
+    "Ryquell Armstead",
+    "RB",
+    2019,
+    140,
+    38.6,
+    -20.1,
+    "G5"
+   ],
+   [
+    "Jason Huntley",
+    "RB",
+    2020,
+    172,
+    32.8,
+    -25.3,
+    "G5"
+   ],
+   [
+    "Rashaad Penny",
+    "RB",
+    2018,
+    27,
+    66.3,
+    17,
+    "G5"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    141,
+    36,
+    -23.4,
+    "P4"
+   ],
+   [
+    "Mason Schreck",
+    "TE",
+    2017,
+    251,
+    24,
+    -19.7,
+    "G5"
+   ],
+   [
+    "Logan Woodside",
+    "QB",
+    2018,
+    249,
+    27.8,
+    -29.2,
+    "G5"
+   ]
+  ],
+  "transfer_up_overperformers": [
+   [
+    "Chase Brown",
+    "RB",
+    2023,
+    163,
+    38.2,
+    57.9,
+    "Western Michigan->Illinois"
+   ],
+   [
+    "Kenny Golladay",
+    "WR",
+    2017,
+    96,
+    50.1,
+    41.3,
+    "North Dakota->Northern Illinois"
+   ],
+   [
+    "K.J. Osborn",
+    "WR",
+    2020,
+    176,
+    30.9,
+    11.9,
+    "Buffalo->Miami"
+   ],
+   [
+    "Jayden Reed",
+    "WR",
+    2023,
+    50,
+    63.9,
+    36.8,
+    "Western Michigan->Michigan State"
+   ],
+   [
+    "Jamari Thrash",
+    "WR",
+    2024,
+    156,
+    35.1,
+    9.1,
+    "Georgia State->Louisville"
+   ],
+   [
+    "Devontez Walker",
+    "WR",
+    2024,
+    113,
+    40.7,
+    10.6,
+    "Kent State->North Carolina"
+   ],
+   [
+    "Bailey Zappe",
+    "QB",
+    2022,
+    137,
+    35.7,
+    6.8,
+    "Houston Christian->Western Kentucky"
+   ],
+   [
+    "John Kelly",
+    "RB",
+    2018,
+    176,
+    18.6,
+    -25.3,
+    "Middle Tennessee->Tennessee"
+   ],
+   [
+    "Ryan Finley",
+    "QB",
+    2019,
+    104,
+    21.1,
+    -29.2,
+    "Boise State->NC State"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    141,
+    36,
+    -23.4,
+    "Idaho State->California"
+   ]
+  ],
+  "transfer_underperformers": [
+   [
+    "Davis Webb",
+    "QB",
+    2017,
+    87,
+    49.6,
+    -29.2,
+    "Texas Tech->California"
+   ],
+   [
+    "Will Grier",
+    "QB",
+    2019,
+    100,
+    42.5,
+    -29.2,
+    "Florida->West Virginia"
+   ],
+   [
+    "Jace Sternberger",
+    "TE",
+    2019,
+    75,
+    45.1,
+    -14.9,
+    "Kansas->Texas A&M"
+   ],
+   [
+    "Trey Sermon",
+    "RB",
+    2021,
+    88,
+    61.8,
+    4.1,
+    "Oklahoma->Ohio State"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    141,
+    36,
+    -23.4,
+    "Idaho State->California"
+   ],
+   [
+    "Zach Charbonnet",
+    "RB",
+    2023,
+    52,
+    72.8,
+    27.7,
+    "Michigan->UCLA"
+   ],
+   [
+    "Rodney Adams",
+    "WR",
+    2017,
+    170,
+    32.2,
+    -25.3,
+    "Toledo->South Florida"
+   ],
+   [
+    "Caleb Williams",
+    "QB",
+    2024,
+    1,
+    90.7,
+    57.2,
+    "Oklahoma->USC"
+   ],
+   [
+    "James Washington",
+    "WR",
+    2018,
+    60,
+    44.8,
+    -7.1,
+    "NC State->Oklahoma State"
+   ],
+   [
+    "Nathan Peterman",
+    "QB",
+    2017,
+    171,
+    21.5,
+    -29.2,
+    "Tennessee->Pittsburgh"
+   ]
+  ]
+ }
+}

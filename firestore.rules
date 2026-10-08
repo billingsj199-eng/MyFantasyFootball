@@ -148,11 +148,18 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isJack();
     }
+    // prospect_draft_capital / prospect_bio: Jack's manual DC + ht/wt/pos/PFF
+    // overrides for prospects. app.js _dcLoad/_bioLoad read them for EVERY
+    // visitor (the JM score must reflect the edits on everyone's view), so
+    // reads are public; writes stay admin-only. Was isJack() read until
+    // 2026-09-15 — visitors silently fell back to DraftBuzz projections.
     match /prospect_draft_capital/{doc} {
-      allow read, write: if isJack();
+      allow read: if true;
+      allow write: if isJack();
     }
     match /prospect_bio/{doc} {
-      allow read, write: if isJack();
+      allow read: if true;
+      allow write: if isJack();
     }
     match /trivia_catalog/{docId} {
       allow read: if true;
@@ -311,6 +318,97 @@ service cloud.firestore {
                     && request.resource.data.order.size() <= 600;
       allow delete: if request.auth != null
                     && request.auth.uid == resource.data.ownerUid;
+    }
+
+    // ---------------- League papers (myfantasyfootball.co/paper/) ----------------
+    // Invite-only. Jack keeps the list: ledger_access/{email-key} = { email, name, teams: { <league>: "<teamId>" } }
+    // (same email key + verified-email guard as gifted_premium, so an unverified signup can't borrow an
+    // invited address). Jack assigns every person their team in each league; every ballot / pick written
+    // must carry exactly that team. Pick'em picks live at weeks/p<week>_<lockMs>/bets: changeable until lockMs (the
+    // week's first kickoff), graded at the closing line, and nobody but the picker (and Jack) reads them until then. Ballots and trade votes are readable
+    // only by someone who has cast their own for that week. Jack can read and reset everything.
+    function _paperVerified() {
+      return request.auth != null
+             && 'email' in request.auth.token
+             && 'email_verified' in request.auth.token
+             && request.auth.token.email_verified == true;
+    }
+    function hasPaperAccess() {
+      return isJack()
+             || (_paperVerified() && exists(/databases/$(database)/documents/ledger_access/$(_giftKey())));
+    }
+    function _paperTeam(lg) {
+      return get(/databases/$(database)/documents/ledger_access/$(_giftKey())).data.get('teams', {}).get(lg, '');
+    }
+    function _lgMember(lg) {
+      return isJack() || (hasPaperAccess() && _paperTeam(lg) != '');
+    }
+    function _ownTeam(lg) {
+      return isJack() || request.resource.data.team == _paperTeam(lg);
+    }
+    match /ledger_access/{docId} {
+      allow read: if isJack() || (_paperVerified() && docId == _giftKey());
+      allow write: if isJack();
+    }
+    // paper index: ledger/{lg} = { title, league, url, order, teams } (the private link of each paper).
+    // One role (the access list); each person sees only the papers of leagues where Jack assigned them a team.
+    match /ledger/{lg} {
+      allow read: if _lgMember(lg);
+      allow write: if isJack();
+    }
+    match /ledger/{lg}/weeks/{wk}/ballots/{uid} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == uid || isJack()
+                      || exists(/databases/$(database)/documents/ledger/$(lg)/weeks/$(wk)/ballots/$(request.auth.uid)));
+      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg) && _ownTeam(lg)
+                    && request.resource.data.keys().hasOnly(['order', 'notes', 'team', 'name', 'at'])
+                    && request.resource.data.order is list && request.resource.data.order.size() <= 20
+                    && request.resource.data.notes is map && request.resource.data.notes.size() <= 20
+                    && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 80));
+      allow delete: if request.auth != null && (request.auth.uid == uid || isJack());
+    }
+    // Pick'em lines: ledger/{lg}/lines/p<week>_<lockMs> = { games: { <gameKey>: { home, away, fav, spread, hml, aml } } },
+    // written by Jack's pipeline every morning until the week's first kickoff. Every bet is priced against it.
+    match /ledger/{lg}/lines/{wk} {
+      allow read: if _lgMember(lg);
+      allow write: if isJack();
+    }
+    // Pick'em picks: changeable until the week's first kickoff (lockMs in the week id), then frozen. Graded at the
+    // line in ledger/{lg}/lines/{wk} as it stands at kickoff (the closing line), not the line when the pick was made.
+    // Doc id = <uid>_<gameKey>_<su|ats>, so each person has one winner pick and one spread pick per game.
+    // Nobody but the picker (and Jack) reads a pick until kickoff; then the league's members can.
+    match /ledger/{lg}/weeks/{wk}/bets/{betId} {
+      function _lockMs() { return int(wk.split('_')[1]); }
+      function _open() { return wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() < _lockMs(); }
+      function _lines() { return get(/databases/$(database)/documents/ledger/$(lg)/lines/$(wk)).data.games; }
+      function _ln() { return _lines()[request.resource.data.game]; }
+      allow read: if request.auth != null
+                  && (resource.data.uid == request.auth.uid || isJack()
+                      || (wk.matches('p[0-9]+_[0-9]+') && request.time.toMillis() >= _lockMs() && _lgMember(lg)));
+      allow create, update: if request.auth != null && _lgMember(lg) && _ownTeam(lg) && _open()
+                    && request.resource.data.keys().hasOnly(['uid', 'team', 'name', 'game', 'market', 'pick', 'at'])
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.market in ['su', 'ats']
+                    && request.resource.data.game is string
+                    && betId == request.auth.uid + '_' + request.resource.data.game + '_' + request.resource.data.market
+                    && request.resource.data.at == request.time
+                    && request.resource.data.name is string && request.resource.data.name.size() <= 80
+                    && request.resource.data.game in _lines()
+                    && request.resource.data.pick in [_ln().home, _ln().away];
+      allow delete: if request.auth != null && ((resource.data.uid == request.auth.uid && _open()) || isJack());
+    }
+    match /ledger/{lg}/weeks/{wk}/tvotes/{uid} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == uid || isJack()
+                      || exists(/databases/$(database)/documents/ledger/$(lg)/weeks/$(wk)/tvotes/$(request.auth.uid)));
+      allow create, update: if request.auth != null && request.auth.uid == uid && _lgMember(lg)
+                    && request.resource.data.keys().hasOnly(['t', 'at'])
+                    && request.resource.data.t is map && request.resource.data.t.size() <= 30;
+      allow delete: if request.auth != null && (request.auth.uid == uid || isJack());
+    }
+    match /ledger/{lg}/edits/{edition} {
+      allow read: if true;
+      allow write: if isJack() && request.resource.data.keys().hasOnly(['t', 'at']) && request.resource.data.t is map;
     }
   }
 }

@@ -3,19 +3,29 @@
 # Feeds the SNP% and RT% columns on the player-card game log for the current season:
 #   1. scripts/pull_snap_counts.py   nflverse snap counts (in-season, updates nightly)
 #                                     -> data/snap_counts.js
-#   2. scripts/pull_pff_weekly.py    PFF Premium weekly receiving table (routes) via a
-#                                     dedicated logged-in Chrome profile
+#   2. scripts/pull_pff_weekly.py    PFF weekly receiving table (routes) from the official
+#                                     PFF Developer API (PFF Pro key in pbp_cache/pff/api_key.txt)
 #                                     -> pbp_cache/pff/weekly/pff_receiving_<yr>_w<N>.csv
-#                                     Not logged in => exit 2, logged, NOT fatal: the RT%
-#                                     column keeps its ~snap-share estimate until Jack
-#                                     logs in to premium.pff.com in that Chrome window
-#                                     (run `python scripts/pull_pff_weekly.py --login-wait 600`
-#                                     by hand once; the profile keeps the session).
+#                                     No key / key refused => exit 2, logged, NOT fatal: the RT%
+#                                     column keeps its ~snap-share estimate for the new weeks.
 #   3. scripts/pull_route_pct.py     real weeks from the PFF files, estimate for the rest
 #                                     -> data/route_pct.js
 #   4. scripts/build_player_roles.py depth-chart archetypes for the card ROLE row (ESPN depth
 #                                     chart + nflverse pbp usage + PFF alignment)
 #                                     -> data/player_roles_2026.js
+#   5. scripts/build_adv_stats.py    admin Research page Advanced Stats tables (PFF weekly
+#                                     facets + nflverse pbp + snap counts), current season only
+#                                     -> data/adv_stats_2026.js + data/adv_stats_2026_w<N>.js
+#                                        (index.html _ADV_STATS_V bump)
+#   5b. scripts/build_usage_trend.py  player-card USAGE row (admin-only): usage score last 3 vs prior 3
+#                                     from the adv stats week files -> data/usage_trend.js (_USAGE_TREND_V bump)
+#   6. scripts/build_coach_profiles.py  Research page Coach Profiles, current season only (FTN charting
+#                                     re-downloaded) -> data/coach_profiles.js (_COACH_V bump)
+#   7. scripts/build_contracts.py    Research page Player Lookup contracts (nflverse / OverTheCap),
+#                                     WEEKLY: runs when the last successful build is 7+ days old
+#                                     (stamp: E:\MyFantasyFootball\pbp_cache\contracts_last_build.txt,
+#                                     so a missed day catches up the next morning)
+#                                     -> data/contracts_history.js (its ?v= bumps only when it changed)
 # Schedule: daily 06:15 (WakeToRun). PFF has Sunday's routes by Monday morning, MNF by
 # Tuesday, TNF by Friday. Commits + pushes ONLY when either data file changed, bumping
 # both ?v= in index.html (read fresh from disk - other jobs bump ?v= concurrently).
@@ -36,7 +46,7 @@ Set-Location $Repo
 Write-Log '=== route pct start ==='
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
-$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'index.html')
+$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'data/usage_trend.js', 'data/coach_profiles.js', 'data/contracts_history.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -47,9 +57,9 @@ $out = & $Python 'scripts\pull_snap_counts.py' 2>&1 | Out-String
 Write-Log ('snap counts: ' + ($out -split "`n" | Select-Object -Last 3 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "SNAP PULL FAILED (exit $LASTEXITCODE) - continuing with the file on disk" }
 
-$out = & $Python 'scripts\pull_pff_weekly.py' '--login-wait' '90' 2>&1 | Out-String
+$out = & $Python 'scripts\pull_pff_weekly.py' 2>&1 | Out-String
 Write-Log ('pff weekly: ' + $out.Trim())
-if ($LASTEXITCODE -eq 2) { Write-Log 'PFF LOGIN NEEDED - RT% stays estimated until Jack logs in to premium.pff.com in the PFF Chrome profile' }
+if ($LASTEXITCODE -eq 2) { Write-Log 'PFF API KEY MISSING OR REFUSED - RT% stays estimated until the key in pbp_cache/pff/api_key.txt works (PFF Pro, www.pff.com/account/api-keys)' }
 elseif ($LASTEXITCODE -ne 0) { Write-Log "PFF PULL FAILED (exit $LASTEXITCODE) - using the weekly files already on disk" }
 
 $out = & $Python 'scripts\pull_route_pct.py' '--years' '2026' 2>&1 | Out-String
@@ -63,7 +73,28 @@ $out = & $Python 'scripts\build_player_roles.py' 2>&1 | Out-String
 Write-Log ('player roles: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "ROLE BUILD FAILED (exit $LASTEXITCODE) - roles file left as is" }
 
-$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js
+$out = & $Python 'scripts\build_adv_stats.py' '--years' '2026' 2>&1 | Out-String
+Write-Log ('adv stats: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "ADV STATS BUILD FAILED (exit $LASTEXITCODE) - adv stats file left as is" }
+
+$out = & $Python 'scripts\build_usage_trend.py' 2>&1 | Out-String
+Write-Log ('usage trend: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "USAGE TREND BUILD FAILED (exit $LASTEXITCODE) - trend file left as is" }
+
+$out = & $Python 'scripts\build_coach_profiles.py' '--years' '2026' 2>&1 | Out-String
+Write-Log ('coach profiles: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "COACH PROFILES BUILD FAILED (exit $LASTEXITCODE) - coach file left as is" }
+
+$ContractsStamp = 'E:\MyFantasyFootball\pbp_cache\contracts_last_build.txt'
+$contractsDue = (-not (Test-Path $ContractsStamp)) -or (((Get-Date) - (Get-Item $ContractsStamp).LastWriteTime).TotalDays -ge 6.5)
+if ($contractsDue) {
+    $out = & $Python 'scripts\build_contracts.py' 2>&1 | Out-String
+    Write-Log ('contracts (weekly): ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
+    if ($LASTEXITCODE -eq 0) { Set-Content -Path $ContractsStamp -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -Encoding utf8 }
+    else { Write-Log "CONTRACTS BUILD FAILED (exit $LASTEXITCODE) - contracts file left as is, retry tomorrow" }
+}
+
+$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js
 if (-not $changed) {
     Write-Log 'no snap / route changes - nothing to commit'
 } else {
@@ -73,9 +104,15 @@ if (-not $changed) {
     $html = $html -replace 'snap_counts\.js\?v=[0-9A-Za-z.-]+', ('snap_counts.js?v=' + $stamp)
     $html = $html -replace 'route_pct\.js\?v=[0-9A-Za-z.-]+', ('route_pct.js?v=' + $stamp)
     $html = $html -replace 'player_roles_2026\.js\?v=[0-9A-Za-z.-]+', ('player_roles_2026.js?v=' + $stamp)
+    $html = $html -replace "_ADV_STATS_V = '[0-9A-Za-z.-]+'", ("_ADV_STATS_V = '" + $stamp + "'")
+    $html = $html -replace "_COACH_V = '[0-9A-Za-z.-]+'", ("_COACH_V = '" + $stamp + "'")
+    $html = $html -replace "_USAGE_TREND_V = '[0-9A-Za-z.-]+'", ("_USAGE_TREND_V = '" + $stamp + "'")
+    if (git status --porcelain -- data/contracts_history.js) {
+        $html = $html -replace 'contracts_history\.js\?v=[0-9A-Za-z.-]+', ('contracts_history.js?v=' + $stamp)
+    }
     [System.IO.File]::WriteAllText($idxPath, $html)
-    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js index.html
-    git commit -m ('Auto snap share + route participation + player roles {0} (snap_counts + route_pct + player_roles + ?v= bump)' -f $stamp)
+    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js index.html
+    git commit -m ('Auto snap share + route participation + player roles + adv stats + usage trend + coach profiles {0} (?v= bump)' -f $stamp)
     git pull --rebase --autostash origin main
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'snap/route data committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

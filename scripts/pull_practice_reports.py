@@ -22,6 +22,7 @@ norm() (suffix/punctuation-insensitive).
 Output: window.PRACTICE_2026 = {updated, week, src, players: {name: {tm, pos,
 inj, pr: 'DNP'|'LP'|'FP'|'', gs: 'Out'|'Doubtful'|'Questionable'|''}}}
 """
+import html as _html
 import json
 import os
 import re
@@ -55,7 +56,8 @@ PRACTICE = [
 
 
 def _text(html):
-    return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', html)).strip()
+    # unescape entities: the page writes apostrophes as &#x27; ("D&#x27;Andre Swift")
+    return _html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', html))).strip()
 
 
 def parse(html):
@@ -98,8 +100,17 @@ def main():
     r = requests.get(URL, headers=UA, timeout=45)
     r.raise_for_status()
     players = parse(r.text)
-    if len(players) < 20:
-        sys.exit(f'!! only {len(players)} rows parsed from {URL} — page layout changed? nothing written')
+    # Layout check = team section headers, not row count: the page rolls to the
+    # new week Tue/Wed with only the Thursday teams posted (19 rows on W5 Wed
+    # morning), and a partial current-week report beats last week's (the engine
+    # ignores a report whose week != the sim week anyway).
+    teams = sum(1 for n in re.findall(r'<div class="d3-o-section-sub-title"><span>([^<]*)', r.text)
+                if n.strip() in NICK_TO_ABBR)
+    if teams < 20:
+        sys.exit(f'!! only {teams} team sections on {URL} — page layout changed? nothing written')
+    if not players:
+        print(f'no reports posted yet ({teams} teams listed) — nothing written')
+        return
     week = None
     try:
         st = requests.get(STATE_URL, timeout=20).json()

@@ -14,7 +14,7 @@
 # The Tuesday 8:30 full chain (sim_lab/tuesday_stats.ps1) still rebuilds
 # sigma / Sim Lab / extension packs; this job is stats -> site only.
 #
-# Since 2026-09-14 the importer ALSO writes data/fpa_2026.js (complete-league
+# Since 2026-09-14 the importer ALSO writes data/fpa_2026.js (+ .json twin for the extensions) (complete-league
 # fantasy points allowed per defense/week -> SOS in-season blend + Sim Lab
 # opponent layer); it is staged + ?v=-bumped here alongside the stats file.
 # Commits + pushes ONLY when weekly_stats_active.js / fpa_2026.js changed, bumping ?v=
@@ -38,7 +38,7 @@ Set-Location $Repo
 Write-Log '=== postgame stats start ==='
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
-$Files = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'index.html')
+$Files = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -52,7 +52,23 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-$changed = git status --porcelain -- data/weekly_stats_active.js data/fpa_2026.js
+# Accuracy tracker (admin page /accuracy/): archive today's weekly_projections.json
+# version + regrade every week against the fresh rows. Best-effort - a failure
+# here never blocks the stats publish. Skipped if another session has accuracy/
+# edits in flight.
+$accBuilt = $false
+$accDirty = git status --porcelain -- accuracy/
+if ($accDirty) {
+    Write-Log "accuracy: SKIP build (uncommitted accuracy/ changes present)"
+} elseif (Test-Path 'scripts\build_accuracy.py') {
+    $accOut = & $Python 'scripts\build_accuracy.py' 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { Write-Log "accuracy build FAILED (exit $LASTEXITCODE): $accOut" }
+    else { $accBuilt = $true; Write-Log ('accuracy: ' + (($accOut -split "`n" | Where-Object { $_ -match '^(week|season_|locks:)' }) -join ' | ')) }
+}
+
+$changedPaths = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json')
+if ($accBuilt) { $changedPaths += 'accuracy/data' }
+$changed = git status --porcelain -- @changedPaths
 if (-not $changed) {
     Write-Log 'no new final-game rows - nothing to commit'
 } else {
@@ -63,8 +79,9 @@ if (-not $changed) {
     $html = $html -replace 'weekly_stats_active\.js\?v=[0-9A-Za-z.-]+', ('weekly_stats_active.js?v=' + $stamp)
     $html = $html -replace 'fpa_2026\.js\?v=[0-9A-Za-z.-]+', ('fpa_2026.js?v=' + $stamp)
     [System.IO.File]::WriteAllText($idxPath, $html)
-    git add data/weekly_stats_active.js data/fpa_2026.js index.html
-    git commit -m ('Auto postgame stats {0} (weekly_stats_active 2026 rows + fpa_2026 + ?v= bump)' -f $stamp)
+    git add data/weekly_stats_active.js data/fpa_2026.js data/fpa_2026.json index.html
+    if ($accBuilt) { git add accuracy/data }
+    git commit -m ('Auto postgame stats {0} (weekly_stats_active 2026 rows + fpa_2026 + accuracy regrade + ?v= bump)' -f $stamp)
     git pull --rebase --autostash origin main
     git push origin main
     if ($LASTEXITCODE -eq 0) { Write-Log 'postgame stats committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

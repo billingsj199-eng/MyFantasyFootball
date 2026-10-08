@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>League Papers · MyFantasyFootball</title>
+<!--
+  League papers (invite-only). This page holds NO league content: the site repo is public.
+  Flow: MFF sign-in (Google or email) -> Firestore checks Jack's invite list (ledger_access/<email-key>, verified email)
+  -> the paper index (ledger/<league> docs: title + private link + teams) -> the chosen paper's body + data are fetched
+  from its private Firebase Hosting folder (paper.json) and the shared paper client (/a/ledger.js) renders it here.
+  Jack also manages the invite list and each person's team per league from this page.
+  Built by league_exports/newspaper (build_site.js -> publish.js). Rules: firestore.rules "League papers".
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Literata:opsz,wght@7..72,400;7..72,600&family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap">
+<style>
+:root{--paper:#f3ede0;--card:#fbf7ee;--ink:#1c1712;--ink2:#4a4136;--dim:#857a6a;--rule:#2a231b;--hair:#cfc4ae;--tomato:#b2331d;--basil:#2f6b3a;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#171411;--card:#211d18;--ink:#efe6d5;--ink2:#cdbfa8;--dim:#9a8d79;--rule:#e8dcc6;--hair:#3d352c;--tomato:#ec7a5f;--basil:#7fc48c;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 'Literata',Georgia,serif;padding:18px 16px 40px}
+.gate{max-width:760px;margin:0 auto}
+.gmast{font-family:'UnifrakturMaguntia',Georgia,serif;font-size:clamp(40px,9vw,64px);text-align:center;line-height:1;margin:8px 0 4px}
+.gsub{font-family:'Fraunces',Georgia,serif;font-style:italic;text-align:center;color:var(--ink2);margin:0 0 18px;border-bottom:3px double var(--rule);padding-bottom:12px}
+.gbox{border:2px solid var(--rule);background:var(--card);padding:16px;margin:14px 0;font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-size:15px}
+.gbox h2{font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:22px;margin:0 0 8px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+input,select{font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);min-height:40px}
+.btn{font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--tomato);color:#fff;border:0;padding:10px 16px;cursor:pointer;min-height:44px}
+.ghost{font-family:'IBM Plex Sans Condensed',Arial,sans-serif;border:1px solid var(--rule);background:transparent;color:var(--ink);padding:8px 12px;cursor:pointer;min-height:40px}
+.btn:disabled,.ghost:disabled{opacity:.5}
+.msg{color:var(--basil)}.err{color:var(--tomato)}.dim{color:var(--dim)}.sm{font-size:13px}
+.papers{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}
+.pcard{display:block;border:2px solid var(--rule);background:var(--card);padding:14px;color:inherit;text-decoration:none}
+.pcard:hover{border-color:var(--tomato)}.pcard b{font-family:'Fraunces',Georgia,serif;font-size:21px;display:block}
+.acc{width:100%;border-collapse:collapse;font-size:14px}.acc th,.acc td{border-bottom:1px solid var(--hair);padding:7px 6px;text-align:left;vertical-align:top}
+.acc th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.acc select{min-height:34px;font-size:14px;padding:4px 6px;max-width:190px}
+@media (max-width:700px){.acc thead{display:none}.acc tr{display:block;border:1px solid var(--hair);margin:0 0 10px;padding:8px}.acc td{display:block;border:0;padding:3px 0}.acc td[data-l]::before{content:attr(data-l);display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}.acc select{max-width:100%;width:100%}}
+.people{display:grid;gap:10px;margin:10px 0 4px}
+.person{border:1px solid var(--hair);background:var(--paper);padding:12px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}.phead b{display:block;font-size:16px}.phead .dim{display:block}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}.fld span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.fld select,.fld input{width:100%;min-width:0}
+select.saving{opacity:.6}
+.addh{margin-top:18px!important;border-top:1px solid var(--hair);padding-top:14px}
+@media (max-width:560px){.pgrid{grid-template-columns:1fr}}
+.backmff{display:inline-block;font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-size:14px;font-weight:600;color:var(--tomato);text-decoration:none;padding:8px 0;min-height:40px}.backmff:hover{text-decoration:underline}
+.topbar a{display:inline-flex;align-items:center;min-height:40px;font-weight:600;text-decoration:none}.topbar a:hover{text-decoration:underline}
+.topbar{font-family:'IBM Plex Sans Condensed',Arial,sans-serif;font-size:14px;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;max-width:1240px;margin:0 auto 6px;padding:0 clamp(0px,1vw,8px)}
+.topbar a{color:var(--tomato)}
+</style>
+</head><body>
+<div class="gate" id="gate">
+  <a class="backmff" href="/">← Back to MyFantasyFootball</a>
+  <div class="gmast">League Papers</div>
+  <p class="gsub">The weekly papers of Jack's leagues · invite-only · <a href="/" style="color:inherit">MyFantasyFootball</a></p>
+  <div id="g-body" class="gbox"><p class="dim">Loading…</p></div>
+  <div id="g-admin"></div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  'use strict';
+  var CFG = { apiKey: 'AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY', authDomain: 'jackb933-website.firebaseapp.com', projectId: 'jackb933-website', appId: '1:732824763527:web:2a4b344d01ee89cf668c22' };
+  var HOST = 'https://jackb933-website.web.app';
+  var JACK = 'billingsj199@gmail.com';
+  if (!firebase.apps.length) firebase.initializeApp(CFG);
+  var auth = firebase.auth(), db = firebase.firestore();
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  var key = function (e) { return String(e || '').toLowerCase().replace(/[^a-z0-9]/g, '_'); };
+  var params = new URLSearchParams(location.search), want = params.get('l');
+  var body = $('#g-body'), admin = $('#g-admin'), papers = [], user = null, isJack = false, opened = false;
+  var say = function (h) { body.innerHTML = h; };
+
+  // ---------- open one paper: its body + data come from the private hosting folder ----------
+  function openPaper(p) {
+    say('<p class="dim">Opening ' + esc(p.title) + '…</p>'); opened = true;
+    fetch(p.url + 'paper.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(function (j) {
+      j.data.imgBase = p.url;
+      document.title = j.title + ' · MyFantasyFootball';
+      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = HOST + '/a/ledger.css'; document.head.appendChild(css);
+      document.body.innerHTML = '<div class="topbar"><a href="/">← MyFantasyFootball</a><a href="/paper/">All papers</a><span class="dim">' + esc(p.league || '') + '</span></div>' + j.html;
+      var d = document.createElement('script'); d.id = 'np-data'; d.type = 'application/json'; d.textContent = JSON.stringify(j.data); document.body.appendChild(d);
+      var s = document.createElement('script'); s.id = 'np-js'; s.src = HOST + '/a/ledger.js'; document.body.appendChild(s);
+    }).catch(function (e) { say('<p class="err">Couldn’t load ' + esc(p.title) + ' (' + esc(e.message) + '). Try again in a moment.</p>'); });
+  }
+
+  // ---------- signed-out: MFF account sign-in (Google, or email + password) ----------
+  function signedOut(msg) {
+    say('<h2>Sign in</h2><p>Use your MyFantasyFootball account. These papers are invite-only.</p>' +
+      '<div class="row"><button class="btn" id="g-google">Sign in with Google</button></div>' +
+      '<div class="row"><input id="g-email" type="email" autocomplete="email" placeholder="Email"><input id="g-pass" type="password" autocomplete="current-password" placeholder="Password"><button class="ghost" id="g-login">Sign in with email</button></div>' +
+      '<p class="sm dim">No account yet? Create one at <a href="/" style="color:inherit">myfantasyfootball.co</a> and verify your email, then ask Jack to add you.</p>' + (msg ? '<p class="err sm">' + esc(msg) + '</p>' : ''));
+    $('#g-google').onclick = function () { var pr = new firebase.auth.GoogleAuthProvider(); pr.setCustomParameters({ prompt: 'select_account' }); auth.signInWithPopup(pr).catch(function (e) { if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) return auth.signInWithRedirect(pr); if (e && e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') signedOut('Google sign-in didn’t finish (' + e.code + '). If you opened this in an app’s built-in browser, open it in Safari or Chrome.'); }); };
+    $('#g-login').onclick = function () { auth.signInWithEmailAndPassword($('#g-email').value.trim(), $('#g-pass').value).catch(function (e) { signedOut(e && /wrong-password|invalid-credential|user-not-found|invalid-login/.test(e.code) ? 'That email and password didn’t match an MFF account.' : 'Couldn’t sign in (' + ((e && e.code) || 'error') + ').'); }); };
+  }
+
+  // ---------- signed-in ----------
+  function signedIn(u) {
+    var who = '<p class="sm dim">Signed in as ' + esc(u.email || u.displayName || 'you') + ' · <a href="#" id="g-out" style="color:inherit">Sign out</a></p>';
+    if (u.email && !u.emailVerified) {
+      say('<h2>Verify your email</h2><p>Your MFF account email isn’t verified yet, and the papers only open for verified emails.</p><div class="row"><button class="btn" id="g-verify">Send the verification email</button><button class="ghost" id="g-reload">I’ve verified it</button></div>' + who);
+      $('#g-verify').onclick = function () { u.sendEmailVerification().then(function () { $('#g-verify').textContent = 'Sent. Check your inbox'; $('#g-verify').disabled = true; }).catch(function (e) { alert('Couldn’t send it (' + e.code + ')'); }); };
+      $('#g-reload').onclick = function () { u.reload().then(function () { return u.getIdToken(true); }).then(function () { location.reload(); }); };
+      wireOut(); return;
+    }
+    // Jack sees every paper; everyone else only the leagues where Jack assigned them a team (the rules enforce it)
+    var load = isJack ? db.collection('ledger').get().then(function (q) { return q.docs; })
+      : db.doc('ledger_access/' + key(u.email)).get().then(function (a) {
+        if (!a.exists) { var e = new Error('not invited'); e.code = 'permission-denied'; throw e; }
+        var lgs = Object.keys((a.data() || {}).teams || {}).filter(function (k) { return a.data().teams[k]; });
+        return Promise.all(lgs.map(function (k) { return db.doc('ledger/' + k).get().catch(function () { return null; }); }));
+      }).then(function (docs) { return docs.filter(function (d) { return d && d.exists; }); });
+    load.then(function (docs) {
+      papers = docs.map(function (d) { return Object.assign({ key: d.id }, d.data()); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+      if (!papers.length && !isJack) { say('<h2>No papers yet</h2><p>You’re on the list, but Jack hasn’t assigned you a team in any league yet.</p>' + who); wireOut(); return; }
+      var p = want && papers.find(function (x) { return x.key === want; });
+      if (p) { openPaper(p); return; }
+      say('<h2>Your papers</h2><div class="papers">' + papers.map(function (x) { return '<a class="pcard" href="?l=' + encodeURIComponent(x.key) + '"><b>' + esc(x.title) + '</b><span class="dim">' + esc(x.league || '') + (x.week ? ' · Week ' + x.week + ' edition' : '') + '</span></a>'; }).join('') + '</div>' + who);
+      wireOut(); if (isJack) adminPanel();
+    }).catch(function (e) {
+      say(e && e.code === 'permission-denied' ? '<h2>Invite-only</h2><p>These papers are only for the leagues’ managers. Ask Jack to add <b>' + esc(u.email || 'your account') + '</b>.</p>' + who : '<p class="err">Couldn’t load the papers (' + esc((e && e.code) || e) + ').</p>' + who);
+      wireOut();
+    });
+  }
+  function wireOut() { var o = $('#g-out'); if (o) o.onclick = function (e) { e.preventDefault(); auth.signOut(); }; }
+
+  // ---------- Jack: the invite list and each person's team per league ----------
+  function adminPanel() {
+    var people = [];
+    var teamSel = function (p, cur, id) { var t = p.teams || {}; return '<select data-lg="' + esc(p.key) + '"' + (id ? ' id="' + id + '"' : '') + '><option value="">—</option>' + Object.keys(t).sort(function (a, b) { return String(t[a].n).localeCompare(String(t[b].n)); }).map(function (tid) { return '<option value="' + esc(tid) + '"' + (String(cur) === String(tid) ? ' selected' : '') + '>' + esc(t[tid].n) + (t[tid].m ? ' (' + esc(t[tid].m) + ')' : '') + '</option>'; }).join('') + '</select>'; };
+    function render() {
+      var field = function (p, cur, id) { return '<label class="fld"><span>' + esc(p.title) + '</span>' + teamSel(p, cur, id) + '</label>'; };
+      admin.innerHTML = '<div class="gbox"><h2>Paper access</h2><p class="sm">Only people on this list can open the papers, and each person sees only the leagues where you set a team. Their ballots and picks count for that team. Co-managers of a shared team each get their own card with the same team. Only you see this.</p>' +
+        '<div class="people">' + (people.length ? people.map(function (a) {
+          return '<div class="person" data-id="' + esc(a.id) + '"><div class="phead"><div><b>' + esc(a.name || '') + '</b><span class="sm dim">' + esc(a.email) + '</span></div><button class="ghost sm" data-del="' + esc(a.id) + '">Remove</button></div>' +
+            '<div class="pgrid">' + papers.map(function (p) { return field(p, (a.teams || {})[p.key]); }).join('') + '</div></div>';
+        }).join('') : '<p class="sm dim">Nobody added yet.</p>') + '</div>' +
+        '<h2 class="addh">Add a person</h2><div class="pgrid"><label class="fld"><span>MFF account email</span><input id="a-email" type="email" placeholder="name@example.com"></label><label class="fld"><span>Name shown on ballots</span><input id="a-name" type="text" maxlength="60" placeholder="First Last"></label></div>' +
+        '<div class="pgrid">' + papers.map(function (p) { return field(p, '', 'a-' + p.key); }).join('') + '</div>' +
+        '<div class="row"><button class="btn" id="a-add">Add person</button><span id="a-msg" class="sm"></span></div>' +
+        '<p class="sm dim">They sign in with that email (Google, or an MFF email account they’ve verified). Leave a league on “—” if they aren’t in it.</p></div>';
+      admin.querySelectorAll('.person select').forEach(function (sel) { sel.onchange = function () { var id = sel.closest('.person').getAttribute('data-id'), upd = {}; upd['teams.' + sel.getAttribute('data-lg')] = sel.value ? sel.value : firebase.firestore.FieldValue.delete(); sel.classList.add('saving'); db.doc('ledger_access/' + id).update(upd).then(function () { sel.classList.remove('saving'); }).catch(function (e) { sel.classList.remove('saving'); alert('Couldn’t save (' + e.code + ')'); }); }; });
+      admin.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { var a = people.find(function (x) { return x.id === b.getAttribute('data-del'); }); if (a && confirm('Remove ' + (a.name || a.email) + ' from the papers?')) db.doc('ledger_access/' + a.id).delete(); }; });
+      $('#a-add').onclick = function () {
+        var em = $('#a-email').value.trim().toLowerCase(), nm = $('#a-name').value.trim().slice(0, 60), msg = $('#a-msg');
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.className = 'sm err'; msg.textContent = 'Enter their email.'; return; }
+        if (!nm) { msg.className = 'sm err'; msg.textContent = 'Add the name to show on their ballots.'; return; }
+        var teams = {}; papers.forEach(function (p) { var v = $('#a-' + p.key).value; if (v) teams[p.key] = v; });
+        db.doc('ledger_access/' + key(em)).set({ email: em, name: nm, teams: teams, at: firebase.firestore.FieldValue.serverTimestamp() }).then(function () { msg.className = 'sm msg'; msg.textContent = 'Added ' + nm + '.'; }).catch(function (e) { msg.className = 'sm err'; msg.textContent = 'Couldn’t add (' + e.code + ').'; });
+      };
+    }
+    db.collection('ledger_access').onSnapshot(function (q) { people = q.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }).sort(function (a, b) { return String(a.name || a.email).localeCompare(String(b.name || b.email)); }); var f = document.activeElement; if (!f || !admin.contains(f) || f.tagName === 'BUTTON') render(); }, function (e) { admin.innerHTML = '<p class="err sm">Access list: ' + esc(e.code) + '</p>'; });
+  }
+
+  auth.getRedirectResult().catch(function () { });
+  auth.onAuthStateChanged(function (u) {
+    if (opened) { if (!u) location.href = '/paper/'; return; }   // the paper's own client handles everything once it is open
+    user = u; isJack = !!(u && u.email === JACK && u.emailVerified);
+    admin.innerHTML = '';
+    if (!u) return signedOut();
+    signedIn(u);
+  });
+})();
+</script>
+</body></html>

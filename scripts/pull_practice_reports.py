@@ -47,6 +47,8 @@ from datetime import date, datetime, timedelta, timezone
 
 import requests
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'data', 'practice_2026.js')
 OUT_JSON = os.path.join(ROOT, 'data', 'practice_2026.json')
@@ -126,13 +128,50 @@ def latest_report_day(g, now_et):
 
 
 def read_days():
+    """The saved day log. None when the file exists but cannot be read - callers must not overwrite it then."""
     if not os.path.exists(DAYS_OUT):
         return {'weeks': {}}
     txt = open(DAYS_OUT, encoding='utf-8').read()
     try:
-        return json.loads(txt[txt.index('{'):txt.rstrip().rstrip(';').rindex('}') + 1])
+        body = txt[txt.index('PRACTICE_DAYS_2026 = ') + len('PRACTICE_DAYS_2026 = '):].strip().rstrip(';')
+        store = json.loads(body)
+        return store if isinstance(store.get('weeks'), dict) else None
     except Exception:
-        return {'weeks': {}}
+        return None
+
+
+def merge_fdb(store, week):
+    """FootballDB keeps every report day (nfl.com only the latest): its filled days are authoritative."""
+    import fdb_practice as F
+    r = requests.get(F.URL, headers=F.UA, timeout=45)
+    r.raise_for_status()
+    fw = F.week_of(r.text)
+    if not week or fw != int(week):
+        return f'FootballDB is on week {fw}, not {week} - skipped'
+    rows = F.parse(r.text, datetime.now(timezone.utc).year if datetime.now(timezone.utc).month >= 3 else datetime.now(timezone.utc).year - 1)
+    W = store.setdefault('weeks', {}).setdefault(str(week), {'games': {}, 'players': {}})
+    n = 0
+    for x in rows:
+        if x['pos'] not in DAYS_POS or not x['tm']:
+            continue
+        filled = [(d, lv) for _, d, lv in x['days'] if lv]
+        if not filled:
+            continue
+        key = next((k for k, v in W['players'].items() if v.get('tm') == x['tm'] and _nk(k) == _nk(x['name'])), x['name'])
+        rec = W['players'].setdefault(key, {'tm': x['tm'], 'pos': x['pos'], 'inj': '', 'gs': '', 'd': {}})
+        for d, lv in filled:
+            if rec['d'].get(d) != lv:
+                rec['d'][d] = lv
+                n += 1
+        if x['inj'] and not rec.get('inj'):
+            rec['inj'] = x['inj']
+        if x['gs'] and not rec.get('gs'):
+            rec['gs'] = x['gs']
+    return f'FootballDB: {len(rows)} rows, {n} day statuses filled or corrected'
+
+
+def _nk(n):
+    return re.sub(r'\s+(jr|sr|ii|iii|iv|v)$', '', re.sub(r"[.'\u2019-]", '', str(n).lower())).strip()
 
 
 def apply_days(store, players, games, week, now_et):
@@ -270,9 +309,15 @@ def main():
     now_et = _et(now_utc)
     games = game_dates(r.text, now_et)
     store = read_days()
+    if store is None:
+        sys.exit('!! data/practice_days_2026.js exists but could not be read - refusing to overwrite it')
     if '--backfill-git' in sys.argv:
         print(f'backfill: replayed {backfill_git(games, week, store)} commits of data/practice_2026.js for week {week}')
     filed = apply_days(store, players, games, week, now_et)
+    try:
+        print(merge_fdb(store, week))
+    except Exception as e:
+        print(f'FootballDB merge failed (non-fatal): {e}')
     wk = store.get('weeks', {}).get(str(week), {})
     print(f'day log: {len(games)} game dates, {filed} statuses filed this pull, '
           f'{len(wk.get("players", {}))} skill players logged for week {week}')

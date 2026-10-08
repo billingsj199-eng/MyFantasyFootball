@@ -516,17 +516,20 @@
     const weeks = [...new Set(R.calls.map((c) => c.week).filter(Boolean))].sort((a, b) => a - b);
     const html = [];
     html.push('<div class="controls"><label>Week ' + sel('rwk', [[0, 'SEASON']].concat(weeks.map((w) => [w, 'W' + w])), S.ctl.rwk) + '</label>' +
-      '<label>Kind ' + sel('rkind', [['ALL', 'ALL'], ['start', 'Starts'], ['sit', 'Sits'], ['over', 'X over Y'], ['buy', 'Buys'], ['sell', 'Sells']], S.ctl.rkind) + '</label>' +
+      '<label>Kind ' + sel('rkind', [['ALL', 'ALL'], ['start', 'Starts'], ['sit', 'Sits'], ['buy', 'Buys'], ['sell', 'Sells']], S.ctl.rkind) + '</label>' +
       '<button id="btnReceipts">⬇ RECEIPTS CARD</button><span class="muted">graded ' + new Date(R.updated).toLocaleString() + ' · rules: start QB/TE top ' + R.rules.startable.QB + ', RB top ' + R.rules.startable.RB + ', WR top ' + R.rules.startable.WR + ' · buys/sells tracked ' + R.rules.window + ' weeks</span></div>');
     // KPIs for the selected week (or season)
     const rows = recordRows();
     const by = {};
     rows.forEach((c) => { const b = by[c.kind] = by[c.kind] || {}; b[c.result] = (b[c.result] || 0) + 1; });
     html.push('<div class="kpis">');
-    ['start', 'sit', 'over'].forEach((k) => {
+    ['start', 'sit'].forEach((k) => {
       const b = by[k] || {};
       html.push('<div class="kpi"><div class="l">' + KIND_L[k] + '</div><div class="v">' + wl(b) + '</div><div class="s">' + (b.incomplete ? b.incomplete + ' incomplete · ' : '') + (b.pending ? b.pending + ' pending' : '') + '</div></div>');
     });
+    // Weekly board vs FantasyPros expert consensus (same pool/metrics as the WEEKLY tab)
+    const vf = vsFpSummary(S.ctl.rwk ? [S.ctl.rwk] : null);
+    if (vf) html.push('<div class="kpi"><div class="l">WEEKLY RANKS VS FANTASYPROS</div><div class="v">' + vf.h2h.join('-') + '</div><div class="s">W-L-T by player · closer ' + vf.weeksWon + ' of ' + vf.weeks.length + ' week' + (vf.weeks.length === 1 ? '' : 's') + ' (avg miss ' + f1(vf.jackMae) + ' vs ' + f1(vf.fpMae) + ')</div></div>');
     ['buy', 'sell'].forEach((k) => {
       const list = rows.filter((c) => c.kind === k && isNum(c.consDelta));
       const a = avg(list.map((c) => c.consDelta));
@@ -543,7 +546,22 @@
       const inc = wr.filter((c) => c.result === 'incomplete').length;
       html.push('<tr><td class="l">W' + w + '</td><td>' + wl(b.start || {}) + '</td><td>' + wl(b.sit || {}) + '</td><td>' + wl(b.over || {}) + '</td><td>' + mv('buy') + '</td><td>' + mv('sell') + '</td><td class="dim">' + (inc || '') + '</td></tr>');
     });
-    html.push('</tbody></table><p class="note">Hit/miss = starts, sits and over-calls only. Incomplete = did not play or left early (under half his usual snaps). Buys and sells show the consensus positional-rank move since the call (positive = consensus moved him up).</p></div>');
+    html.push('</tbody></table><p class="note">Hit/miss = starts and sits only. Incomplete = did not play or left early (under half his usual snaps). Buys and sells show the consensus positional-rank move since the call (positive = consensus moved him up).</p></div>');
+    // Weekly board vs FantasyPros, week by week and by position
+    const vfAll = vsFpSummary(null);
+    if (vfAll && vfAll.weeks.length) {
+      html.push('<div class="card"><h2>Weekly ranks vs FantasyPros experts</h2><table><thead><tr><th class="l">Week</th><th>Jack avg miss</th><th>FP avg miss</th><th>Closer</th><th>Jack top-K hits</th><th>FP top-K hits</th><th>W-L-T by player</th><th>Players</th></tr></thead><tbody>');
+      vfAll.rows.forEach((r) => {
+        html.push('<tr><td class="l">W' + r.week + '</td><td class="' + (r.jackMae < r.fpMae ? 'best' : '') + '">' + f1(r.jackMae) + '</td><td class="' + (r.fpMae < r.jackMae ? 'best' : '') + '">' + f1(r.fpMae) + '</td><td>' + (r.jackMae < r.fpMae ? 'JACK' : r.jackMae > r.fpMae ? 'FP' : 'tie') + '</td><td>' + r.jackHits + '/' + r.K + '</td><td>' + r.fpHits + '/' + r.K + '</td><td>' + r.h2h.join('-') + '</td><td class="dim">' + r.n + '</td></tr>');
+      });
+      html.push('<tr class="me"><td class="l">Season</td><td>' + f1(vfAll.jackMae) + '</td><td>' + f1(vfAll.fpMae) + '</td><td>' + vfAll.weeksWon + ' of ' + vfAll.weeks.length + '</td><td>' + vfAll.jackHits + '/' + vfAll.K + '</td><td>' + vfAll.fpHits + '/' + vfAll.K + '</td><td>' + vfAll.h2h.join('-') + '</td><td class="dim">' + vfAll.n + '</td></tr>');
+      html.push('</tbody></table><table style="margin-top:10px"><thead><tr><th class="l">Position (season)</th><th>Jack avg miss</th><th>FP avg miss</th><th>Closer</th><th>W-L-T by player</th></tr></thead><tbody>');
+      POS.forEach((pos) => {
+        const v = vsFpSummary(null, [pos]); if (!v || !v.n) return;
+        html.push('<tr><td class="l">' + pos + '</td><td class="' + (v.jackMae < v.fpMae ? 'best' : '') + '">' + f1(v.jackMae) + '</td><td class="' + (v.fpMae < v.jackMae ? 'best' : '') + '">' + f1(v.fpMae) + '</td><td>' + (v.jackMae < v.fpMae ? 'JACK' : v.jackMae > v.fpMae ? 'FP' : 'tie') + '</td><td>' + v.h2h.join('-') + '</td></tr>');
+      });
+      html.push('</tbody></table><p class="note">Your weekly board (newest save before each player\'s kickoff) against the FantasyPros PPR expert-consensus positional ranks from the last update before kickoff, graded on actual full-PPR finish among players who played. Avg miss = mean |rank − finish|; W-L-T = players where your miss was smaller / larger / equal. Same pool as the WEEKLY tab. Weeks still reading your board from Firestore show once it loads.</p></div>');
+    }
     // calls list
     html.push('<div class="card"><h2>Calls</h2><div class="tablewrap"><table><thead><tr><th class="l">Wk</th><th class="l">Kind</th><th class="l">Player</th><th class="l">Pos</th><th class="l">Detail</th><th>Result</th><th class="l">Source</th></tr></thead><tbody>');
     rows.slice().sort((a, b) => (b.week || 0) - (a.week || 0) || cmp(a.kind, b.kind)).forEach((c) => {
@@ -567,6 +585,34 @@
     $('#rkind').onchange = (e) => { S.ctl.rkind = e.target.value; render(); };
     $('#btnReceipts').onclick = () => receiptsCard(rows, S.ctl.rwk);
   }
+  // Jack's weekly board vs FP expert consensus: per-week rows + totals.
+  // weeks = null → every played week with a Jack board loaded; poses default all four.
+  function vsFpSummary(weeks, poses) {
+    if (!S.season) return null;
+    const played = S.season.weeks.filter((w) => w.played > 0).map((w) => w.week);
+    const ws = (weeks || played).filter((w) => S.weeks[w] && S.jack[w] && Object.keys(S.jack[w]).length);
+    if (!ws.length) return null;
+    const ps = poses || POS;
+    const rows = [];
+    let jackAbs = 0, fpAbs = 0, n = 0, jackHits = 0, fpHits = 0, K = 0; const h2h = [0, 0, 0]; let weeksWon = 0;
+    ws.forEach((w) => {
+      let ja = 0, fa = 0, nn = 0, jh = 0, fh = 0, kk = 0; const hh = [0, 0, 0];
+      ps.forEach((pos) => {
+        const rr = weekRows(w, pos); if (!rr.length) return;
+        const m = rankMetrics(rr, ['jack', 'fpecr'], HIT_K[pos], 'jack');
+        const j = m.jack, f = m.fpecr; if (!j || !f) return;
+        ja += j.mae * j.n; fa += f.mae * f.n; nn += j.n; jh += j.hits; fh += f.hits; kk += j.K;
+        hh[0] += f.h2h[1]; hh[1] += f.h2h[0]; hh[2] += f.h2h[2];   // flip to Jack's perspective
+      });
+      if (!nn) return;
+      const r = { week: w, jackMae: ja / nn, fpMae: fa / nn, n: nn, jackHits: jh, fpHits: fh, K: kk, h2h: hh };
+      rows.push(r);
+      jackAbs += ja; fpAbs += fa; n += nn; jackHits += jh; fpHits += fh; K += kk; h2h[0] += hh[0]; h2h[1] += hh[1]; h2h[2] += hh[2];
+      if (r.jackMae < r.fpMae) weeksWon++;
+    });
+    if (!n) return null;
+    return { weeks: rows.map((r) => r.week), rows, jackMae: jackAbs / n, fpMae: fpAbs / n, n, jackHits, fpHits, K, h2h, weeksWon };
+  }
   // 1080×1350 PNG: the week's (or season's) record, ready for a TikTok/IG post.
   function receiptsCard(rows, week) {
     const W = 1080, H = 1350, S2 = 2;
@@ -579,9 +625,11 @@
     x.font = '88px ' + B; x.fillText((week ? 'WEEK ' + week : 'SEASON') + ' RECORD', W / 2, 90);
     x.font = '600 22px ' + F; x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText('EVERY START, SIT AND CALL I MADE, GRADED', W / 2, 150);
     const by = {}; rows.forEach((r) => { const b = by[r.kind] = by[r.kind] || {}; b[r.result] = (b[r.result] || 0) + 1; });
-    const kpis = [['STARTS', wl(by.start || {})], ['SITS', wl(by.sit || {})], ['X OVER Y', wl(by.over || {})]];
+    const kpis = [['STARTS', wl(by.start || {})], ['SITS', wl(by.sit || {})]];
     const bs = rows.filter((r) => (r.kind === 'buy' || r.kind === 'sell') && isNum(r.consDelta));
     if (bs.length) { const good = bs.filter((r) => (r.kind === 'buy' ? r.consDelta > 0 : r.consDelta < 0)).length; kpis.push(['BUY/SELL', good + ' of ' + bs.length]); }
+    const vf = vsFpSummary(week ? [week] : null);
+    if (vf) kpis.push(['VS FANTASYPROS', vf.h2h[0] + '-' + vf.h2h[1]]);
     const kw = (W - 80) / kpis.length;
     kpis.forEach(([l, v], i) => {
       const cx = 40 + kw * i + kw / 2;

@@ -1,0 +1,50 @@
+position shape per half-PPR point (2025 pool): QB py 12.494 ptd 0.085 ry 0.943 rtd 0.011 | RB ry 4.725 rtd 0.036 rec 0.205 rcy 1.540 rctd 0.010 | WR ry 0.143 rtd 0.001 rec 0.437 rcy 5.548 rctd 0.034 | TE rec 0.486 rcy 5.069 rctd 0.040
+
+=== 2026 weeks 1,2,3,4: 1,179 locked player-weeks with an actual line ===
+
+--- QB: points-weighted abs error per stat (lower is better) ---
+  Clay (comps)                       n 131 | total 8.719 | py 2.454 ptd 3.637 ry 1.103 rtd 1.525
+  Clay + usage (compsU)              n 131 | total 8.796 | py 2.454 ptd 3.637 ry 1.180 rtd 1.525
+  Clay-free K1 4 K2 1                n 131 | total 8.856 | py 2.510 ptd 3.596 ry 1.104 rtd 1.646
+  Clay-free + usage (ry/rec/rcy)     n 131 | total 8.846 | py 2.518 ptd 3.596 ry 1.085 rtd 1.647
+  Clay-free + usage incl. TDs        n 131 | total 8.869 | py 2.532 ptd 3.603 ry 1.089 rtd 1.644
+  Clay-free + usage + QB pass        n 131 | total 8.865 | py 2.532 ptd 3.591 ry 1.094 rtd 1.648
+  Clay-free A only (this season)     n  95 | total 9.841 | py 2.994 ptd 4.106 ry 1.306 rtd 1.435
+
+--- RB: points-weighted abs error per stat (lower is better) ---
+  Clay (comps)                       n 308 | total 6.258 | ry 1.856 rtd 2.160 rec 0.546 rcy 1.003 rctd 0.693
+  Clay + usage (compsU)              n 308 | total 6.188 | ry 1.810 rtd 2.160 rec 0.536 rcy 0.989 rctd 0.693
+  Clay-free K1 4 K2 1                n 308 | total 6.383 | ry 1.905 rtd 2.131 rec 0.569 rcy 1.023 rctd 0.755
+  Clay-free + usage (ry/rec/rcy)     n 308 | total 6.392 | ry 1.906 rtd 2.132 rec 0.575 rcy 1.023 rctd 0.755
+  Clay-free + usage incl. TDs        n 308 | total 6.382 | ry 1.908 rtd 2.123 rec 0.579 rcy 1.028 rctd 0.744
+  Clay-free + usage + QB pass        n 308 | total 6.382 | ry 1.908 rtd 2.123 rec 0.579 rcy 1.028 rctd 0.744
+  Clay-free A only (this season)     n 198 | total 7.350 | ry 2.478 rtd 2.166 rec 0.774 rcy 1.243 rctd 0.689
+
+--- WR: points-weighted abs error per stat (lower is better) ---
+  Clay (comps)                       n 488 | total 5.280 | ry 0.128 rtd 0.053 rec 0.769 rcy 2.378 rctd 1.952
+  Clay + usage (compsU)              n 488 | total 5.151 | ry 0.124 rtd 0.053 rec 0.742 rcy 2.280 rctd 1.952
+  Clay-free K1 4 K2 1                n 488 | total 5.344 | ry 0.139 rtd 0.065 rec 0.798 rcy 2.395 rctd 1.947
+  Clay-free + usage (ry/rec/rcy)     n 488 | total 5.344 | ry 0.137 rtd 0.066 rec 0.802 rcy 2.388 rctd 1.951
+  Clay-free + usage incl. TDs        n 488 | total 5.328 | ry 0.137 rtd 0.062 rec 0.806 rcy 2.398 rctd 1.924
+  Clay-free + usage + QB pass        n 488 | total 5.328 | ry 0.137 rtd 0.062 rec 0.806 rcy 2.398 rctd 1.924
+  Clay-free A only (this season)     n 308 | total 6.034 | ry 0.225 rtd 0.065 rec 1.140 rcy 2.811 rctd 1.793
+
+--- TE: points-weighted abs error per stat (lower is better) ---
+  Clay (comps)                       n 252 | total 4.091 | rec 0.689 rcy 1.614 rctd 1.788
+  Clay + usage (compsU)              n 252 | total 4.073 | rec 0.679 rcy 1.605 rctd 1.788
+  Clay-free K1 4 K2 1                n 252 | total 4.115 | rec 0.689 rcy 1.610 rctd 1.815
+  Clay-free + usage (ry/rec/rcy)     n 252 | total 4.120 | rec 0.687 rcy 1.609 rctd 1.823
+  Clay-free + usage incl. TDs        n 252 | total 4.126 | rec 0.690 rcy 1.615 rctd 1.822
+  Clay-free + usage + QB pass        n 252 | total 4.126 | rec 0.690 rcy 1.615 rctd 1.822
+  Clay-free A only (this season)     n 166 | total 4.511 | rec 0.900 rcy 1.744 rctd 1.867
+
+--- vs the books: stat-prop call hit rate (raw mean vs line), by candidate ---
+  Clay (comps)                       all 53.1% (n1935) | py 51.2% (n123) ptd 54.9% (n122) ry 51.7% (n302) rec 55.5% (n739) rcy 51.2% (n649)
+  Clay + usage (compsU)              all 54.1% (n1935) | py 51.2% (n123) ptd 54.9% (n122) ry 53.0% (n302) rec 56.8% (n739) rcy 51.9% (n649)
+  Clay-free K1 4 K2 1                all 51.5% (n1936) | py 48.8% (n123) ptd 55.3% (n123) ry 52.0% (n302) rec 52.4% (n739) rcy 50.2% (n649)
+  Clay-free + usage (ry/rec/rcy)     all 50.8% (n1936) | py 47.2% (n123) ptd 56.1% (n123) ry 51.0% (n302) rec 51.6% (n739) rcy 49.5% (n649)
+  Clay-free + usage incl. TDs        all 51.0% (n1936) | py 45.5% (n123) ptd 56.1% (n123) ry 50.3% (n302) rec 52.8% (n739) rcy 49.5% (n649)
+  Clay-free + usage + QB pass        all 51.4% (n1936) | py 50.4% (n123) ptd 57.7% (n123) ry 50.0% (n302) rec 52.8% (n739) rcy 49.5% (n649)
+  Clay-free A only (this season)     all 50.5% (n1382) | py 46.7% (n92) ptd 52.2% (n92) ry 48.0% (n225) rec 51.6% (n519) rcy 50.9% (n454)
+
+Limitations: 4 weeks; every candidate scaled to the lock's Clay points (split only); compsU only updates ry / rec / rcy; raw mean-vs-median calls (no skew adjustment).

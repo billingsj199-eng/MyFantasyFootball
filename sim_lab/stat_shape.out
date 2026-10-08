@@ -1,0 +1,117 @@
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+  2019: samples so far 1946
+  2020: samples so far 4039
+  2021: samples so far 6612
+  2022: samples so far 9294
+  2023: samples so far 12496
+  2024: samples so far 15871
+  2025: samples so far 18940
+  skipped: {'weekly': 375, 'team': 270}
+position shapes (stat per half-PPR point, from the prior season's pool):
+  2019 QB: py 12.225 ptd 0.086 ry 1.119 rtd 0.009
+  2019 RB: ry 4.248 rtd 0.034 rec 0.222 rcy 1.875 rctd 0.012
+  2019 WR: ry 0.223 rtd 0.001 rec 0.395 rcy 5.478 rctd 0.038
+  2019 TE: rec 0.433 rcy 5.413 rctd 0.039
+  2022 QB: py 12.485 ptd 0.086 ry 1.023 rtd 0.009
+  2022 RB: ry 4.599 rtd 0.036 rec 0.209 rcy 1.613 rctd 0.010
+  2022 WR: ry 0.158 rtd 0.002 rec 0.430 rcy 5.448 rctd 0.035
+  2022 TE: rec 0.468 rcy 5.528 rctd 0.035
+  2025 QB: py 12.098 ptd 0.082 ry 1.197 rtd 0.012
+  2025 RB: ry 4.803 rtd 0.039 rec 0.196 rcy 1.471 rctd 0.007
+  2025 WR: ry 0.120 rtd 0.001 rec 0.430 rcy 5.485 rctd 0.036
+  2025 TE: rec 0.515 rcy 5.470 rctd 0.032
+
+=== STAT SHAPE: 10,505 top-150 player-weeks 2019-25, every candidate scaled to the same level (shadow number) ===
+
+--- QB (n1691) : points-weighted abs error per stat, vs A (this season alone) ---
+  A this season      n 1566 | total 9.816 ( +0.00% vs A, 0/7) | py 2.527 ptd 3.965 ry 1.411 rtd 1.912
+  B last season      n 1545 | total 9.608 ( -1.93% vs A, 6/7) | py 2.451 ptd 3.868 ry 1.365 rtd 1.924
+  C position shape   n 1691 | total 10.417 ( +6.13% vs A, 0/7) | py 2.580 ptd 3.874 ry 1.801 rtd 2.163
+  K1 2 K2 1          n 1691 | total 9.529 ( -2.92% vs A, 7/7) | py 2.379 ptd 3.840 ry 1.368 rtd 1.940
+  K1 2 K2 2          n 1691 | total 9.552 ( -2.69% vs A, 7/7) | py 2.373 ptd 3.832 ry 1.387 rtd 1.960
+  K1 2 K2 4          n 1691 | total 9.625 ( -1.95% vs A, 7/7) | py 2.377 ptd 3.830 ry 1.428 rtd 1.990
+  K1 4 K2 1          n 1691 | total 9.504 ( -3.17% vs A, 7/7) | py 2.374 ptd 3.833 ry 1.360 rtd 1.937
+  K1 4 K2 2          n 1691 | total 9.522 ( -2.99% vs A, 7/7) | py 2.369 ptd 3.827 ry 1.374 rtd 1.953
+  K1 4 K2 4          n 1691 | total 9.584 ( -2.36% vs A, 7/7) | py 2.372 ptd 3.826 ry 1.408 rtd 1.979
+  K1 8 K2 1          n 1691 | total 9.498 ( -3.23% vs A, 7/7) | py 2.378 ptd 3.831 ry 1.357 rtd 1.932
+  K1 8 K2 2          n 1691 | total 9.507 ( -3.14% vs A, 7/7) | py 2.373 ptd 3.826 ry 1.365 rtd 1.943
+  K1 8 K2 4          n 1691 | total 9.548 ( -2.72% vs A, 7/7) | py 2.372 ptd 3.824 ry 1.388 rtd 1.964
+  oracle             n 1691 | total 5.945 (-39.44% vs A, 7/7) | py 3.101 ptd 1.658 ry 0.792 rtd 0.394
+    games 1-3        n  372 | best K1 8 K2 2 (-9.98% vs A) | C alone -3.39%
+    games 4-8        n  584 | best K1 8 K2 1 (-1.52% vs A) | C alone +7.36%
+    games 9+         n  610 | best K1 8 K2 1 (-0.52% vs A) | C alone +11.31%
+    rookies (no B)   n  146 | best K1 2 K2 2 (-2.29% vs A) | C alone +2.51%
+    LOYO     pick: -3.06% vs A (7/7) | picks ['8/1', '8/1', '8/1', '8/1', '8/1', '8/1', '4/1']
+    forward  pick: -3.60% vs A (4/4) | picks ['8/2', '8/2', '4/1', '4/1']
+
+--- RB (n3340) : points-weighted abs error per stat, vs A (this season alone) ---
+  A this season      n 3086 | total 8.946 ( +0.00% vs A, 0/7) | ry 2.717 rtd 2.957 rec 0.792 rcy 1.492 rctd 0.988
+  B last season      n 2705 | total 9.200 ( +1.19% vs A, 0/7) | ry 2.684 rtd 3.177 rec 0.790 rcy 1.490 rctd 1.059
+  C position shape   n 3340 | total 9.205 ( +2.90% vs A, 2/7) | ry 2.660 rtd 3.185 rec 0.775 rcy 1.488 rctd 1.097
+  K1 2 K2 1          n 3340 | total 8.796 ( -1.68% vs A, 7/7) | ry 2.585 rtd 3.039 rec 0.729 rcy 1.417 rctd 1.026
+  K1 2 K2 2          n 3340 | total 8.809 ( -1.53% vs A, 7/7) | ry 2.578 rtd 3.056 rec 0.726 rcy 1.415 rctd 1.035
+  K1 2 K2 4          n 3340 | total 8.842 ( -1.16% vs A, 6/7) | ry 2.576 rtd 3.078 rec 0.725 rcy 1.416 rctd 1.047
+  K1 4 K2 1          n 3340 | total 8.796 ( -1.67% vs A, 7/7) | ry 2.580 rtd 3.051 rec 0.727 rcy 1.410 rctd 1.029
+  K1 4 K2 2          n 3340 | total 8.807 ( -1.55% vs A, 7/7) | ry 2.575 rtd 3.063 rec 0.724 rcy 1.409 rctd 1.036
+  K1 4 K2 4          n 3340 | total 8.835 ( -1.24% vs A, 6/7) | ry 2.573 rtd 3.081 rec 0.724 rcy 1.411 rctd 1.046
+  K1 8 K2 1          n 3340 | total 8.814 ( -1.48% vs A, 7/7) | ry 2.583 rtd 3.062 rec 0.729 rcy 1.410 rctd 1.030
+  K1 8 K2 2          n 3340 | total 8.819 ( -1.41% vs A, 7/7) | ry 2.577 rtd 3.071 rec 0.726 rcy 1.409 rctd 1.036
+  K1 8 K2 4          n 3340 | total 8.838 ( -1.21% vs A, 7/7) | ry 2.575 rtd 3.085 rec 0.725 rcy 1.409 rctd 1.044
+  oracle             n 3319 | total 5.600 (-37.51% vs A, 7/7) | ry 2.852 rtd 0.942 rec 0.669 rcy 0.901 rctd 0.235
+    games 1-3        n  756 | best K1 4 K2 1 (-6.36% vs A) | C alone -3.29%
+    games 4-8        n 1189 | best K1 4 K2 1 (-0.45% vs A) | C alone +5.07%
+    games 9+         n 1143 | best A this season (+0.00% vs A) | C alone +4.73%
+    rookies (no B)   n  635 | best K1 2 K2 2 (-3.11% vs A) | C alone -1.02%
+    LOYO     pick: -2.06% vs A (7/7) | picks ['2/1', '2/1', '2/1', '2/1', '4/1', '2/1', '2/1']
+    forward  pick: -1.92% vs A (4/4) | picks ['4/2', '4/1', '2/1', '2/1']
+
+--- WR (n4222) : points-weighted abs error per stat, vs A (this season alone) ---
+  A this season      n 3905 | total 7.370 ( +0.00% vs A, 0/7) | ry 0.219 rtd 0.138 rec 1.044 rcy 3.038 rctd 2.930
+  B last season      n 3724 | total 7.423 ( -0.51% vs A, 3/7) | ry 0.231 rtd 0.153 rec 1.000 rcy 3.017 rctd 3.022
+  C position shape   n 4222 | total 7.411 ( +0.55% vs A, 2/7) | ry 0.260 rtd 0.159 rec 0.975 rcy 2.986 rctd 3.030
+  K1 2 K2 1          n 4222 | total 7.292 ( -1.06% vs A, 7/7) | ry 0.213 rtd 0.146 rec 0.978 rcy 2.988 rctd 2.967
+  K1 2 K2 2          n 4222 | total 7.297 ( -1.00% vs A, 6/7) | ry 0.216 rtd 0.147 rec 0.974 rcy 2.984 rctd 2.976
+  K1 2 K2 4          n 4222 | total 7.306 ( -0.87% vs A, 5/7) | ry 0.221 rtd 0.149 rec 0.970 rcy 2.980 rctd 2.986
+  K1 4 K2 1          n 4222 | total 7.287 ( -1.13% vs A, 7/7) | ry 0.213 rtd 0.147 rec 0.974 rcy 2.982 rctd 2.971
+  K1 4 K2 2          n 4222 | total 7.292 ( -1.07% vs A, 6/7) | ry 0.216 rtd 0.148 rec 0.971 rcy 2.980 rctd 2.978
+  K1 4 K2 4          n 4222 | total 7.301 ( -0.94% vs A, 5/7) | ry 0.220 rtd 0.149 rec 0.968 rcy 2.977 rctd 2.987
+  K1 8 K2 1          n 4222 | total 7.288 ( -1.11% vs A, 6/7) | ry 0.215 rtd 0.148 rec 0.972 rcy 2.978 rctd 2.975
+  K1 8 K2 2          n 4222 | total 7.291 ( -1.07% vs A, 6/7) | ry 0.216 rtd 0.149 rec 0.969 rcy 2.976 rctd 2.980
+  K1 8 K2 4          n 4222 | total 7.298 ( -0.97% vs A, 6/7) | ry 0.219 rtd 0.150 rec 0.967 rcy 2.975 rctd 2.987
+  oracle             n 4146 | total 5.539 (-24.56% vs A, 7/7) | ry 0.140 rtd 0.030 rec 1.382 rcy 3.037 rctd 0.950
+    games 1-3        n  932 | best K1 8 K2 1 (-3.96% vs A) | C alone -2.47%
+    games 4-8        n 1493 | best K1 4 K2 1 (-0.40% vs A) | C alone +1.44%
+    games 9+         n 1486 | best K1 4 K2 1 (-0.06% vs A) | C alone +1.63%
+    rookies (no B)   n  498 | best K1 2 K2 1 (-1.55% vs A) | C alone -0.90%
+    LOYO     pick: -1.08% vs A (6/7) | picks ['8/1', '8/1', '4/1', '4/1', '8/1', '4/1', '4/1']
+    forward  pick: -1.28% vs A (4/4) | picks ['4/1', '4/1', '4/1', '4/1']
+
+--- TE (n1252) : points-weighted abs error per stat, vs A (this season alone) ---
+  A this season      n 1152 | total 6.078 ( +0.00% vs A, 0/7) | rec 0.957 rcy 2.439 rctd 2.681
+  B last season      n 1144 | total 6.115 ( -0.35% vs A, 4/7) | rec 0.920 rcy 2.367 rctd 2.828
+  C position shape   n 1252 | total 6.093 ( +0.25% vs A, 4/7) | rec 0.915 rcy 2.373 rctd 2.805
+  K1 2 K2 1          n 1252 | total 6.019 ( -0.96% vs A, 5/7) | rec 0.898 rcy 2.368 rctd 2.753
+  K1 2 K2 2          n 1252 | total 6.022 ( -0.92% vs A, 5/7) | rec 0.897 rcy 2.364 rctd 2.761
+  K1 2 K2 4          n 1252 | total 6.028 ( -0.82% vs A, 4/7) | rec 0.897 rcy 2.362 rctd 2.770
+  K1 4 K2 1          n 1252 | total 6.018 ( -0.98% vs A, 5/7) | rec 0.897 rcy 2.360 rctd 2.760
+  K1 4 K2 2          n 1252 | total 6.021 ( -0.93% vs A, 5/7) | rec 0.896 rcy 2.358 rctd 2.766
+  K1 4 K2 4          n 1252 | total 6.027 ( -0.83% vs A, 4/7) | rec 0.897 rcy 2.358 rctd 2.773
+  K1 8 K2 1          n 1252 | total 6.022 ( -0.92% vs A, 5/7) | rec 0.899 rcy 2.356 rctd 2.766
+  K1 8 K2 2          n 1252 | total 6.024 ( -0.88% vs A, 5/7) | rec 0.899 rcy 2.355 rctd 2.771
+  K1 8 K2 4          n 1252 | total 6.030 ( -0.79% vs A, 4/7) | rec 0.898 rcy 2.355 rctd 2.777
+  oracle             n 1224 | total 4.612 (-23.82% vs A, 7/7) | rec 1.256 rcy 2.461 rctd 0.895
+    games 1-3        n  285 | best K1 4 K2 1 (-3.78% vs A) | C alone -2.13%
+    games 4-8        n  462 | best K1 4 K2 4 (-0.60% vs A) | C alone -0.30%
+    games 9+         n  410 | best A this season (+0.00% vs A) | C alone +2.19%
+    rookies (no B)   n  108 | best A this season (+0.00% vs A) | C alone +7.87%
+    LOYO     pick: -1.42% vs A (5/7) | picks ['4/1', '2/1', '4/1', '4/1', '4/1', '4/2', '2/1']
+    forward  pick: -1.44% vs A (3/4) | picks ['8/1', '4/4', '2/2', '2/1']
+
+Limitations: level fixed to the shadow number for every candidate (split only); Clay's historical lines have no per-stat components, so the Clay comparison is 2026 W1-4 only; rookies have no B and take A + C; fumbles / interceptions not in the component set.

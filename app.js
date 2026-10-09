@@ -29388,6 +29388,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     avgCache = {}; // baseline projections follow the current week/format/injury state
     const cards = names.map(lookup).filter(Boolean).map(build);
     if (!cards.length) {
+      renderSummary([]);
       gridEl.innerHTML = '<div class="sst-empty">'
         + '<div style="font-size:2rem;margin-bottom:8px;opacity:.25">&#9878;</div>'
         + '<p>Search above to add the players you\'re deciding between.<br>'
@@ -29480,9 +29481,36 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const isBest = (key, v) => best[key] != null && typeof v === 'number' && Math.abs((key === 'l:atd' ? oddsProb(v) : v) - best[key]) < 1e-9;
 
     gridEl.innerHTML = cards.map(c => cardHtml(c, isBest)).join('');
+    renderSummary(cards);
     gridEl.querySelectorAll('.sst-x').forEach(b => { b.onclick = e => { e.stopPropagation(); remove(b.dataset.n); }; });
     gridEl.querySelectorAll('.sst-open').forEach(el => {
       el.onclick = () => { const d = lookup(el.dataset.n); if (d && typeof openPlayerCard === 'function') openPlayerCard(d, 'weekly'); };
+    });
+  }
+
+  // Phone summary (2026-10-09): the cards are a sideways strip on phones, one
+  // visible at a time, so the answer sits above them as one ranked row per
+  // player — verdict · name · our proj · book proj. Tap a row = jump to its
+  // card. Hidden on desktop (index.html CSS), where the cards sit side by side.
+  function renderSummary(cards) {
+    let el = document.getElementById('sstSummary');
+    if (!el) { el = document.createElement('div'); el.id = 'sstSummary'; gridEl.parentNode.insertBefore(el, gridEl); }
+    if (cards.length < 2) { el.innerHTML = ''; return; }
+    const order = { FLEX: 0, QB: 1, K: 2, DST: 3 };
+    const key = c => (c.baseline ? 2 : c.locked ? 1 : 0);
+    const rows = cards.map((c, i) => ({ c, i })).sort((a, b) =>
+      (order[a.c.fam] - order[b.c.fam]) || (key(a.c) - key(b.c)) || ((a.c.rank || 99) - (b.c.rank || 99)));
+    el.innerHTML = '<div class="sst-sum-head"><span>PLAYER</span><span>OURS</span><span>BOOK</span></div>' + rows.map(({ c, i }) => {
+      const v = c.verdict;
+      const ours = c.locked ? (c.actual != null ? fmt1(c.actual) : '—') : fmt1(c.proj);
+      return '<button type="button" class="sst-sum-row sst-v-' + (v ? v.cls : 'none') + '" data-i="' + i + '">'
+        + '<span class="sst-sum-v">' + (v ? esc(v.lbl) : '') + '</span>'
+        + '<span class="sst-sum-name"><span class="pos-badge ' + c.d.s + '">' + c.d.s + '</span>' + esc(c.d.n) + '</span>'
+        + '<span class="sst-sum-num">' + ours + '</span>'
+        + '<span class="sst-sum-num sst-sum-book">' + (c.book && !c.locked ? fmt1(c.book.ppg) : '—') + '</span></button>';
+    }).join('');
+    el.querySelectorAll('.sst-sum-row').forEach(b => {
+      b.onclick = () => { const card = gridEl.children[+b.dataset.i]; if (card) gridEl.scrollTo({ left: card.offsetLeft - gridEl.offsetLeft, behavior: 'smooth' }); };
     });
   }
 
@@ -29708,7 +29736,11 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       + '<div><div class="sst-edge-col-title" style="color:var(--green)">BEST MATCHUPS</div>' + (best.length ? best.map(rowHtml).join('') : '<div class="sst-edges-empty">No positive edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
       + '<div><div class="sst-edge-col-title" style="color:var(--red)">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
       + '</div>';
+    // Phones show the top 5 per column (CSS); this button opens the full 12.
+    if (best.length > 5 || worst.length > 5) html += '<button type="button" class="sst-edges-more">' + (el.classList.contains('sst-edges-all') ? 'SHOW TOP 5' : 'SHOW ALL ' + Math.max(best.length, worst.length)) + '</button>';
     el.innerHTML = html;
+    const more = el.querySelector('.sst-edges-more');
+    if (more) more.onclick = () => { el.classList.toggle('sst-edges-all'); renderEdges(); };
     el.querySelectorAll('#sstEdgePos .lg-pos-btn').forEach(b => { b.onclick = () => { ePos = b.dataset.p; renderEdges(); }; });
     el.querySelectorAll('.sst-edge-row').forEach(r => {
       r.onclick = () => {
@@ -59217,6 +59249,10 @@ Rules:
       for (const d of D) {
         if (rostered.has(d.n) || rosteredNorm.has(_wwNorm(d.n))) continue;
         if (d.s === 'PICK' || d._isFuturePick) continue; // dynasty board pick rows aren't free agents
+        // Retired ALL_PLAYERS rows (e.g. "Oronde Gadsden" WR MIA 1999-2003)
+        // fold onto their active Junior's board rank via suffix-stripping and
+        // got listed as a second copy of him when he's unrostered (2026-10-09).
+        if (d._retired) continue;
         const rank = _mtGetPlayerRank(d.n);
         if (rank > 150) continue;
         fas.push({ d, rank });
@@ -62416,7 +62452,7 @@ Rules:
     for (const d of D) {
       if (!pool[d.s]) continue;
       if (rostered.has(d.n) || rosteredNorm.has(norm(d.n))) continue;
-      if (d.rm) continue;
+      if (d.rm || d._retired) continue; // retired dads fold onto Junior's rank (see _mtRenderWaivers)
       // Top-150 draftable rule for skill spots; K/DST are streamers and sit
       // past 150 on every board, so any projected K/DST qualifies.
       if (d.s !== 'K' && d.s !== 'DST' && _mtGetPlayerRank(d.n) > 150) continue;

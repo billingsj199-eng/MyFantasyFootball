@@ -93,10 +93,10 @@
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
-<link rel="preload" href="data/combine_data.js?v=2026-10-05" as="script">
+<link rel="preload" href="data/combine_data.js?v=2026-10-09depth" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-09" as="script">
-<link rel="preload" href="data/d.js?v=2026-10-09b" as="script">
+<link rel="preload" href="data/d.js?v=2026-10-09depth" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-10-09-dbmob">
 
@@ -4811,14 +4811,14 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-10-09" defer></script>
-<script src="data/d.js?v=2026-10-09b" defer></script>
+<script src="data/d.js?v=2026-10-09depth" defer></script>
 <script src="data/injury_updates.js?v=2026-10-09-1136" defer></script>
 <script src="data/practice_days_2026.js?v=2026-10-09-1134" defer></script>
 <script src="data/weekly_projections.js?v=2026-10-09" defer></script>
 <script src="data/weather_2026.js?v=2026-10-09-11" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-10-09-0842" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-09-1209" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-09-1651" defer></script>
 <script src="data/matchup_edges_2026.js?v=2026-10-09-1136" defer></script>
 <script src="data/site_projections.js?v=2026-10-09" defer></script>
 <script src="data/ownership_2026.js?v=2026-10-09" defer></script>
@@ -4854,7 +4854,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      players are filtered out of it). _enrichFromAllPlayers + _applyRetiredBioTeam re-run on
      the 'mff:retireddata' event the loader dispatches. -->
 
-<script src="data/combine_data.js?v=2026-10-05" defer></script>
+<script src="data/combine_data.js?v=2026-10-09depth" defer></script>
 <!-- historical_draft_picks.js (~92 KB) LAZY since 2026-08-04 via window._ensureDraftPicksData()
      — HISTORICAL_DRAFT_PICKS is consumed only inside the prospect-model build
      (buildProspectData nflTeam fallback + _pmComputeRoomAdj) and admin console studies,
@@ -4886,7 +4886,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/betting_lines_2026.js?v=2026-10-09c" defer></script>
 <script src="data/future_totals_2026.js?v=2026-10-09-1005" defer></script>
 <script src="data/fpa_prior_2025.js?v=2026-10-05" defer></script>
-<script src="data/headshot_espn_ids.js?v=2026-10-04pool" defer></script>
+<script src="data/headshot_espn_ids.js?v=2026-10-09depth" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
 <script>
 // === Clay projection lookup (suffix-tolerant + nickname-aware) ===
@@ -6205,10 +6205,10 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-10-09-0839',
+    'data/weekly_stats_active.js?v=2026-10-09-depth',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-10-09-0839',
+    'data/fpa_2026.js?v=2026-10-09-pool',
     'data/weekly_stats_retired_1.js?v=2026-07-21',
     'data/weekly_stats_retired_2.js?v=2026-07-21',
     'data/weekly_stats_retired_3.js?v=2026-07-21',

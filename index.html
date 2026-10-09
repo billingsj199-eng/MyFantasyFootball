@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- DYN SIM data version (data/dynasty_sim_2026.js, lazy-loaded) — bumped by sim_lab/tuesday_stats.ps1 -->
-<meta name="mff-dyn-sim-v" content="2026-10-09-picks">
+<meta name="mff-dyn-sim-v" content="2026-10-09-league">
 <!-- KTC daily value history (data/ktc_history.js, lazy-loaded by TRENDS) — bumped by scripts/build_ktc_history.py -->
 <meta name="mff-ktc-hist-v" content="2026-10-09">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -1822,6 +1822,12 @@ tr.lg-fa>td:nth-child(3){box-shadow:inset 3px 0 0 #22c55e}
 <style>
 .vor-bar{display:none;align-items:center;gap:8px 10px;flex-wrap:wrap;margin:2px 2rem 6px;padding:5px 10px;border:1px solid rgba(245,158,11,.35);border-radius:6px;background:rgba(245,158,11,.05);font-family:'DM Sans',sans-serif}
 body.vor-bar-on .vor-bar{display:flex}
+/* DYN SIM view: the VOR bar sets the league / lineup only — weekly window, playoffs,
+   upside, waivers, K / D/ST / bench do not apply to dynasty values. */
+body[data-rnk-stat="dyn"] .vor-bar .vor-win, body[data-rnk-stat="dyn"] .vor-bar .vor-po,
+body[data-rnk-stat="dyn"] #vorPlayoffBtn, body[data-rnk-stat="dyn"] #vorUpsideBtn, body[data-rnk-stat="dyn"] #vorWaiverBtn,
+body[data-rnk-stat="dyn"] .vor-bar .vor-num:has(input[data-vor="K"]), body[data-rnk-stat="dyn"] .vor-bar .vor-num:has(input[data-vor="DST"]),
+body[data-rnk-stat="dyn"] .vor-bar .vor-num:has(input[data-vor="BN"]){display:none!important}
 .vor-bar-lbl{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--accent);white-space:nowrap}
 .vor-bar select{max-width:190px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer}
 .vor-num{display:inline-flex;align-items:center;gap:4px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);white-space:nowrap}

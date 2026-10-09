@@ -3435,7 +3435,13 @@ function _cdSplitRanks(key) {
 function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   const S = window.DYNASTY_SIM_2026;
   if (!S || !sim) return '';
-  if (sim.locked) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>';
+  // The injury sell note is market timing, not a sim read — shown to everyone.
+  if (sim.locked) {
+    const yrL = (S.meta && S.meta.valuationYear) || 2026;
+    const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
+    return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
+      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null);
+  }
   if (!S._idx) _dynSimFor(d);
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
   const key = fmt + '_' + _dynScoringKey();
@@ -3461,8 +3467,14 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     T('FUTURE / REBUILD', '#38bdf8', 'His value sits in ' + (yr + 2) + '-' + (yr + 4) + ' (#' + fut + ' there) more than now (#' + now + ' for the rest of ' + yr + ' + ' + (yr + 1) + '). Young (' + Math.floor(age) + ') and not producing at that level yet — a rebuilder\'s hold or buy; a contender gets little from him this year.');
     fit = fit || 'Rebuilder';
   }
+  // INJURY SLIDE (Jack 2026-10-09; sim_lab/research_injury_drift.py, KTC daily 2020-26,
+  // established regulars who missed 4+ weeks): KTC barely moves on the news (-0.6% in 3
+  // days), then drifts below similar healthy players: -1.8% at a week, -3.4% at 30 days,
+  // -4.6% at 60, -5.1% at 90, no rebound by 180 (-3.7%), ~-13% a year later. Fresh =
+  // currently Out / IR / PUP and his last game this season was within 8 weeks.
+  const slide = out ? _cdInjurySlide(d, yr) : null;
   if (out && fut <= 80) {
-    T('INJURED STASH', '#a78bfa', 'Out / on IR but still #' + fut + ' for ' + (yr + 2) + '-' + (yr + 4) + '. KTC under-reacts to injury news and keeps sliding for weeks (IR -4% at a week, -13% at 30 days, 2026 data) — the buy window is usually a few weeks after the news, not the day of.');
+    T('INJURED STASH', '#a78bfa', 'Out / on IR but still #' + fut + ' for ' + (yr + 2) + '-' + (yr + 4) + ' — a rebuilder\'s target, but BUY LATE, NOT NOW: after an injury like this KTC keeps drifting below similar healthy players for 2-3 months (about -5% by 90 days, 2020-26 KTC history) and hasn\'t bounced back by 6 months. The cheaper price usually comes weeks after the news, not the day of.');
     fit = fit || 'Rebuilder';
   }
   const clock = (d.s === 'WR' && age >= 27) || (d.s === 'RB' && age >= 26) || (d.s === 'TE' && age >= 29);
@@ -3472,10 +3484,44 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   }
   if (fairDiff != null && fairDiff >= 0.10) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
-  if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>';
+  const slideNote = _cdSlideNoteHtml(slide);
+  if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
-    + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>';
+    + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>' + slideNote;
+}
+// Sell note for owners while the injury slide is still ahead (fresh injury).
+function _cdSlideNoteHtml(slide) {
+  return slide && slide.fresh
+    ? '<div style="font-size:.6875rem;line-height:1.45;color:#fca5a5;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
+      + '<b style="color:#f87171;letter-spacing:.04em">⚠ INJURY SLIDE — SELL WINDOW.</b> ' + (slide.weeks === 0 ? 'Hurt after his Week ' + slide.last + ' game. ' : 'Out ' + (slide.weeks === 1 ? 'a week' : slide.weeks + ' weeks') + ' since his last game (Week ' + slide.last + '). ')
+      + 'After an injury like this KTC barely moves on the news, then drifts below similar healthy players — about −2% in a week, −3 to −4% in a month, −5% by three months — with no rebound by six. '
+      + 'If you\'re moving him, sooner beats later; if you\'re buying, wait.</div>'
+    : '';
+}
+// -> { last: last week played this season, weeks: completed weeks since, fresh } or null.
+// The injury start date isn't in the Sleeper feed (INJURY_UPDATES.detail carries
+// notes only), so the game log dates it: played week L, missed every week since.
+function _cdInjurySlide(d, yr) {
+  const ws = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[d.n] && WEEKLY_STATS[d.n].seasons) || null;
+  const rows = ws && (ws[yr] || ws[String(yr)]);
+  if (!Array.isArray(rows) || !rows.length) return null;
+  let last = 0, maxWk = 0;
+  rows.forEach(w => {
+    if (!w || typeof w.wk !== 'number') return;
+    maxWk = Math.max(maxWk, w.wk);
+    if ((w.fpts || 0) !== 0 || (w.pa || 0) > 0 || (w.ra || 0) > 0 || (w.tgt || 0) > 0) last = Math.max(last, w.wk);
+  });
+  if (!last) return null;
+  // Completed weeks: the week before the active (upcoming) week, or the newest logged week.
+  const act = window._weeklyActiveWeek || window._weeklyPublishedWeek || 0;
+  const done = Math.max(act ? act - 1 : 0, maxWk);
+  const weeks = Math.max(0, done - last);
+  // IR / PUP / out-for-season = an extended absence from day one (fresh even if he
+  // played last week); a plain "Out" only once he has already missed a game.
+  const tag = String(d.inj || '');
+  const ext = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP)\b|season.?ending|out for season/i.test(tag);
+  return { last, weeks, fresh: weeks <= 8 && (ext || weeks >= 1) };
 }
 function _cdRender() {
   const el = document.getElementById('cardDynValBlock');

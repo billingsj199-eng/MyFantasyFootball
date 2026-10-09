@@ -3132,3 +3132,42 @@ tbody td{font-size:.8125rem}
   .mff-dialog-btns{flex-direction:column-reverse;gap:8px}
   .mff-dialog-btn{width:100%;min-height:48px;font-size:.9rem}
 }
+/* === Trade calculator on phones (2026-10-09 pass, Jack: "optimize the trade calc page for mobile") ===
+   The verdict sat ~850px down behind a 70px header, two-row format tabs, a 48px
+   VS badge and 70px total boxes. Tighter chrome puts it on screen for a normal
+   2-for-3; remove buttons were 13x16px. */
+@media (max-width:600px){
+  #pageTrade .trade-header{margin-bottom:.7rem}
+  #pageTrade .trade-subtitle{display:none}
+  #pageTrade .trade-mode-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:flex-start;margin-bottom:.55rem}
+  #pageTrade .trade-mode-tabs::-webkit-scrollbar{display:none}
+  #pageTrade .trade-mode-tabs > button{flex:0 0 auto;min-height:32px}
+  #pageTrade .trade-view-tabs{margin-bottom:.6rem}
+  #pageTrade .trade-layout{gap:.35rem}
+  #pageTrade .trade-side{padding:.75rem}
+  #pageTrade .trade-side-label{margin-bottom:8px;padding-bottom:6px}
+  #pageTrade .trade-search-wrap{margin-bottom:8px}
+  #pageTrade .trade-vs{padding:0}
+  #pageTrade .trade-vs-icon{width:30px;height:30px;font-size:.8rem;letter-spacing:1px}
+  #pageTrade .trade-total{margin-top:.5rem;padding:6px 10px}
+  #pageTrade .trade-total-val{font-size:1.3rem}
+  #pageTrade .trade-player-chip .tp-remove{min-width:32px;min-height:32px;margin:-8px -8px -8px 0;font-size:1.25rem}
+  #pageTrade .rt-btn{min-height:30px}
+}
+/* Sticky verdict (app.js _tradeStickySync) — phones only, above the 64px tab bar;
+   hides (.ts-hide) while the full verdict is on screen. */
+#tradeStickyVerdict{display:none}
+@media (max-width:600px){
+  #pageTrade #tradeStickyVerdict{position:fixed;left:10px;right:10px;bottom:calc(72px + env(safe-area-inset-bottom,0));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.55);color:var(--text);font:inherit;cursor:pointer;transition:opacity .15s,transform .15s}
+  #pageTrade #tradeStickyVerdict.ts-hide{opacity:0;transform:translateY(8px);pointer-events:none}
+  #pageTrade #tradeStickyVerdict[style*="display: none"]{display:none!important}
+  #tradeStickyVerdict .ts-v{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:1.5px;line-height:1;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+  #tradeStickyVerdict.win-a .ts-v{color:var(--green)}
+  #tradeStickyVerdict.win-b .ts-v{color:var(--accent)}
+  #tradeStickyVerdict.even .ts-v{color:var(--text)}
+  #tradeStickyVerdict .ts-tot{font-family:'DM Mono',monospace;font-weight:700;font-size:.82rem;white-space:nowrap}
+  #tradeStickyVerdict .ts-dim{color:var(--text2);font-weight:400}
+  #tradeStickyVerdict .ts-go{color:var(--text2);font-size:.8rem}
+  /* room so the bar never covers the last rows of the page */
+  #pageTrade .trade-wrapper{padding-bottom:64px}
+}

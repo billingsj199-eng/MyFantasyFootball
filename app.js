@@ -59594,7 +59594,8 @@ Rules:
         const wv = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, ppg, out) : null;
         const wkTxt = out.src === 'bye' ? 'BYE' : out.src === 'out' ? 'OUT' : (wv != null && isFinite(wv) ? wv : '—');
         const wkColor = out.src === 'bye' || out.src === 'out' ? '#ef4444' : 'var(--text)';
-        wkHtml = `<div style="min-width:44px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">WK${wkNum} </span><span style="font-weight:700;color:${wkColor}">${wkTxt}</span></div>`;
+        const wkRk = (typeof wkTxt === 'number' && wkTxt > 0) ? _mtPosRankTag(d.s, wkTxt, true) : '';
+        wkHtml = `<div style="min-width:44px;text-align:right;white-space:nowrap"><span style="font-size:.6875rem;color:var(--text2)">WK${wkNum} </span><span style="font-weight:700;color:${wkColor}">${wkTxt}</span>${wkRk}</div>`;
       }
       const w = weakest[d.s];
       const delta = (w != null && ppg > 0) ? Math.round((ppg - w) * 10) / 10 : null;
@@ -59602,17 +59603,20 @@ Rules:
         ? `<span title="Projects ${delta} PPG over your weakest ${d.s} starter" style="font-size:.6875rem;font-weight:700;color:var(--green);background:#22c55e18;border:1px solid var(--green);border-radius:4px;padding:1px 6px">▲ +${delta}</span>`
         : '';
       const val = valByName[d.n] != null ? Math.round(valByName[d.n]) : 0;
-      html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;${i ? 'border-top:1px solid var(--border);' : ''}">` +
+      // Stats ride in one group that wraps under the name on phones (the
+      // position ranks made a one-line row squeeze names to ~15px at 375).
+      html += `<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:6px 12px;${i ? 'border-top:1px solid var(--border);' : ''}">` +
         `<div style="width:30px;text-align:right;font-family:'Bebas Neue',sans-serif;color:var(--text2)">#${f.rank}</div>` +
         // Name on its own line, POS · TEAM abbr under it (full team names wrapped
         // into the name on phones: "Tre' Harris WR Los / Angeles Chargers").
-        `<div style="flex:1;min-width:0;line-height:1.2"><div style="font-weight:600;font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(d.n)}</div>` +
+        `<div style="flex:1 1 130px;min-width:0;line-height:1.2"><div style="font-weight:600;font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(d.n)}</div>` +
         `<div style="font-size:.6875rem;color:var(--text2);white-space:nowrap"><span style="font-weight:700;color:${posColors[d.s] || 'var(--text2)'}">${d.s}</span> · ${_esc(_tfAbbr(d.t || 'FA'))}</div></div>` +
+        `<div style="display:flex;align-items:center;gap:10px;margin-left:auto">` +
         upgrade +
         `<div style="min-width:52px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">VAL </span><span style="font-weight:700;color:var(--text)">${val}</span></div>` +
-        `<div style="min-width:44px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${ppg || '—'}</span></div>` +
+        `<div style="min-width:44px;text-align:right;white-space:nowrap"><span style="font-size:.6875rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${ppg || '—'}</span>${ppg > 0 ? _mtPosRankTag(d.s, ppg, false) : ''}</div>` +
         wkHtml +
-        `</div>`;
+        `</div></div>`;
     });
     html += `</div>`;
     box.innerHTML = html;

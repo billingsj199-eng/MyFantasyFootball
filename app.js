@@ -60688,6 +60688,45 @@ Rules:
   }
 
   // Render best lineup HTML
+  // Position rank of a My Teams PPG (Jack 2026-10-09: same (N) as the player
+  // card). Pool = every active NFL player at the position scored the way this
+  // league scores (_mtGetPlayerPpg: league PPR / TE premium / pass-TD delta);
+  // weekly = the lineup tool's week number (My Teams injury rule + delta).
+  // Cached per league format / position / week for a minute.
+  const _mtPpgRankCache = {};
+  function _mtPosRankPool(pos, weekly) {
+    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const f = _mtFormat || {};
+    const ck = [pos, weekly ? 'w' + wk : 's', f.ppr, f.bestBall ? 1 : 0, f.tep || 0, f.passTd != null ? f.passTd : 4].join('|');
+    let e = _mtPpgRankCache[ck];
+    if (e && Date.now() - e.t < 60000) return e.vals;
+    const vals = [];
+    if (typeof D !== 'undefined' && D) D.forEach(d => {
+      if (!d || d.s !== pos || d._retired || d._isDevy || !d.t) return;
+      let v = 0;
+      try {
+        v = _mtGetPlayerPpg(d.n) || 0;
+        if (weekly && v > 0 && typeof window._weeklyAdjustPpg === 'function') {
+          const sDelta = _mtScoringDelta(d);
+          const adj = window._weeklyAdjustPpg(d, Math.max(0, v - sDelta), { mt: true });
+          v = adj ? Math.round((adj + sDelta) * 10) / 10 : 0;
+        }
+      } catch (_) { v = 0; }
+      if (v > 0) vals.push(v);
+    });
+    _mtPpgRankCache[ck] = { t: Date.now(), vals: vals };
+    return vals;
+  }
+  function _mtPosRankTag(pos, ppg, weekly) {
+    if (!(ppg > 0) || !pos || pos === '?') return '';
+    const vals = _mtPosRankPool(pos, weekly);
+    if (!vals.length) return '';
+    const rank = 1 + vals.filter(v => v > ppg).length;
+    const of = Math.max(vals.length, rank);
+    return '<span style="font-family:DM Sans,sans-serif;font-size:.62rem;font-weight:600;color:var(--text2);margin-left:2px;cursor:help" title="#' + rank + ' of ' + of + ' ' + (pos === 'DST' ? 'D/STs' : pos + 's')
+      + (weekly ? ' this week' : '') + ' (this league\'s scoring)">(' + rank + ')</span>';
+  }
+
   function _mtRenderBestLineup(lineup) {
     if (!lineup) return '';
     const isWeekly = lineup.basis === 'weekly';
@@ -60720,11 +60759,11 @@ Rules:
         html += `</div>`;
         if (isWeekly) {
           html += `<div style="display:flex;align-items:baseline;gap:8px">`;
-          if (p.ppg > 0) html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;color:${ppgColor}">${p.ppg}</span>`;
+          if (p.ppg > 0) html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;color:${ppgColor}">${p.ppg}${_mtPosRankTag(p.pos, p.ppg, true)}</span>`;
           html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--accent);min-width:34px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
           html += `</div>`;
         } else {
-          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${ppgColor}">${p.ppg}</div>`;
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${ppgColor}">${p.ppg}${_mtPosRankTag(p.pos, p.ppg, false)}</div>`;
         }
       } else {
         html += `<div style="flex:1;font-size:.72rem;color:var(--text2);opacity:.5">EMPTY</div>`;
@@ -60747,7 +60786,7 @@ Rules:
         html += `<span style="font-size:.6875rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
         html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${(typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : ''}${isWeekly && p.out ? ' <span style="color:var(--red);font-size:.6875rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
         if (isWeekly) html += `<span style="font-size:.72rem;color:var(--accent);min-width:30px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
-        html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg : '—'}</span>`;
+        html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg + _mtPosRankTag(p.pos, p.ppg, isWeekly) : '—'}</span>`;
         html += `</div>`;
       });
       html += `</div></div>`;
@@ -60947,7 +60986,7 @@ Rules:
         html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
         html += `<div title="Overall rank" style="text-align:center;min-width:26px;font-size:.8rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div>`;
         html += `<div title="Position rank" style="text-align:center;min-width:26px;font-size:.8rem;font-weight:700;color:${posRankColor};line-height:1.05">${posRankNum || '—'}</div>`;
-        html += `<div title="Projected PPG" style="text-align:center;min-width:30px;font-size:.8rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div>`;
+        html += `<div title="Projected PPG" style="text-align:center;min-width:30px;font-size:.8rem;font-weight:700;color:${ppgColor};line-height:1.05;white-space:nowrap">${projPpg > 0 ? projPpg + _mtPosRankTag(pos, projPpg, false) : '—'}</div>`;
         html += `</div>`;
         html += `</div>`;
       });

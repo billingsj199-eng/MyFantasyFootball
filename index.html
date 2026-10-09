@@ -77,12 +77,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-08-cols1" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-08-hideui1" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-08-ctr" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-ctr" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -90,9 +90,9 @@
 <link rel="preload" href="data/combine_data.js?v=2026-10-05" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-08" as="script">
-<link rel="preload" href="data/d.js?v=2026-10-08-ctr" as="script">
+<link rel="preload" href="data/d.js?v=2026-10-09-ctr" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-08-cols1">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-08-hideui1">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1757,7 +1757,16 @@ body.vor-bar-on .vor-bar{display:flex}
 .tcv-fs-close{position:fixed;top:14px;right:18px;z-index:10001;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.7);color:#fff;font-size:18px;font-family:Arial,sans-serif;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
 .tcv-fs-close:hover{background:rgba(245,158,11,.4);border-color:rgba(245,158,11,.7)}
 /* Player-card modal must sit above the fullscreen overlay + close button */
-#tierCardWrap.tcv-fullscreen #modal{z-index:10010}
+body:has(#tierCardWrap.tcv-fullscreen) #modal{z-index:10010}
+body:has(#tierCardWrap.tcv-fullscreen) #mffDialog{z-index:10020}
+/* HIDE CONTROLS (recording): toolbar, header line, KEY strip and the fullscreen X go away; a faint ☰ tab (or H) brings them back */
+.tier-card-view{position:relative}
+.tier-card-view.tcv-hide-ui>.tcv-header,.tier-card-view.tcv-hide-ui>.tcv-reveal-controls,.tier-card-view.tcv-hide-ui>.tcv-key-card{display:none!important}
+#tierCardWrap:has(.tier-card-view.tcv-hide-ui) .tcv-fs-close{display:none}
+.tcv-ui-pill{display:none;position:absolute;top:0;right:0;z-index:12;width:26px;height:22px;padding:0;border-radius:0 0 0 8px;border:1px solid rgba(255,255,255,.14);border-top:none;border-right:none;background:rgba(0,0,0,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;align-items:center;justify-content:center;opacity:.16;transition:opacity .15s}
+.tcv-ui-pill:hover,.tcv-ui-pill:focus-visible{opacity:1}
+.tier-card-view.tcv-hide-ui>.tcv-ui-pill{display:inline-flex}
+#tierCardWrap.tcv-fullscreen .tier-card-view.tcv-hide-ui>.tcv-ui-pill{position:fixed;top:0;right:0}
 .tcv-tier-row{display:flex;align-items:stretch;margin-bottom:3px;border-radius:4px;overflow:hidden;background:transparent;min-height:0}
 .tcv-letter{flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45);cursor:pointer;user-select:none;transition:filter .15s,opacity .15s;position:relative}
 .tcv-letter:hover{filter:brightness(1.15)}
@@ -2738,7 +2747,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- MODEL BACKTEST PAGE -->
-<link rel="stylesheet" href="styles/backtest.css?v=2026-10-08-ctr">
+<link rel="stylesheet" href="styles/backtest.css?v=2026-05-02">
 <div class="page" id="pageBacktest" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorBacktest"></div>
 <div class="bt-wrapper">
@@ -2842,7 +2851,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- RESEARCH PAGE (admin-only) -->
-<link rel="stylesheet" href="styles/research.css?v=2026-10-08-ctr">
+<link rel="stylesheet" href="styles/research.css?v=2026-09-16-scatter18">
 <div class="page" id="pageResearch" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorResearch"></div>
 <div class="rs-wrapper">
@@ -3278,7 +3287,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-08-ctr">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-05-02">
 <div class="trivia-wrap">
 <!-- Tabs -->
 <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
@@ -3940,21 +3949,12 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-mode-tab" data-tmode="dynastysf">DYNASTY SF</button>
 </div>
 <div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:4px;text-align:center">RANKINGS</div>
-<div class="trade-mode-tabs" style="margin-bottom:.5rem;flex-wrap:wrap">
+<div class="trade-mode-tabs" style="margin-bottom:1.25rem;flex-wrap:wrap">
 <button class="trade-src-tab active" data-tsrc="consensus">CONSENSUS</button>
 <button class="trade-src-tab" data-tsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
 <button class="trade-src-tab" data-tsrc="mine">MY RANKS</button>
 </div>
-<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:4px;text-align:center">ADP SOURCE</div>
-<div class="trade-mode-tabs" style="margin-bottom:1.25rem;flex-wrap:wrap">
-<button class="trade-src-tab" data-tsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
-<button class="trade-src-tab" data-tsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
-<button class="trade-src-tab" data-tsrc="cbs"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>CBS</button>
-<button class="trade-src-tab" data-tsrc="sleeper">SLEEPER</button>
-<button class="trade-src-tab" data-tsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
-<button class="trade-src-tab" data-tsrc="ktc">KTC</button>
-</div>
-
+<!-- ADP SOURCE row removed 2026-10-08 (Jack): the calculator prices on rankings only - consensus / Jack's / my ranks -->
 <!-- View toggle: CALCULATOR vs FIND TRADE -->
 <div class="trade-view-tabs">
 <button class="trade-view-tab active" data-tview="calc">CALCULATOR</button>
@@ -4054,9 +4054,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div class="trade-verdict even" id="tradeVerdict"></div>
 <div class="trade-verdict-sub" id="tradeVerdictSub"></div>
+<div class="trade-verdict-sub" id="tradeEvenHint" style="display:none;margin-top:4px;color:var(--accent)"></div>
 <div class="trade-insights" id="tradeInsights" style="display:none"></div>
 <div style="display:flex;gap:8px;justify-content:center;margin-top:1rem;flex-wrap:wrap">
 <button class="trade-reset-btn" id="tradeShareBtn" title="Copy a shareable URL of this trade">🔗 SHARE</button>
+<button class="trade-reset-btn" id="tradeCardBtn" title="Download this trade as an image (verdict, both sides, the even-up line)">🖼 SHARE CARD</button>
 <button class="trade-reset-btn" id="tradeResetBtn">RESET TRADE</button>
 </div>
 </div>
@@ -4669,14 +4671,15 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-10-08" defer></script>
-<script src="data/d.js?v=2026-10-08-ctr" defer></script>
-<script src="data/injury_updates.js?v=2026-10-08-11" defer></script>
+<script src="data/d.js?v=2026-10-09-ctr" defer></script>
+<script src="data/injury_updates.js?v=2026-10-09-08" defer></script>
+<script src="data/practice_days_2026.js?v=2026-10-09-0842" defer></script>
 <script src="data/weekly_projections.js?v=2026-10-08" defer></script>
-<script src="data/weather_2026.js?v=2026-10-08-11" defer></script>
+<script src="data/weather_2026.js?v=2026-10-09-08" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
-<script src="data/player_roles_2026.js?v=2026-10-08-0719" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-08-1107" defer></script>
-<script src="data/matchup_edges_2026.js?v=2026-10-08-1107" defer></script>
+<script src="data/player_roles_2026.js?v=2026-10-09-0842" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-08-2021" defer></script>
+<script src="data/matchup_edges_2026.js?v=2026-10-08-2021" defer></script>
 <script src="data/site_projections.js?v=2026-10-08" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
@@ -4720,14 +4723,14 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- Kicker stat history (nflverse 1999+, FG buckets/XP/finishes) + current FG
      distance splits (ESPN). Feed the kicker card career table + FG SPLITS
      section only — every reader is typeof-guarded. -->
-<script src="data/kicker_history.js?v=2026-10-06" defer></script>
+<script src="data/kicker_history.js?v=2026-10-09" defer></script>
 <script src="data/kicker_splits.js?v=2026-10-02" defer></script>
 <!-- K/DST profile bundles (nflverse): D/ST season history 1999+ w/ finishes,
      plus kicker + D/ST game logs (2020+). Feed the K/DST card career table
      and GAME LOGS section only — every reader is typeof-guarded. -->
-<script src="data/dst_history.js?v=2026-10-06" defer></script>
-<script src="data/dst_weekly.js?v=2026-10-06" defer></script>
-<script src="data/kicker_weekly.js?v=2026-10-06" defer></script>
+<script src="data/dst_history.js?v=2026-10-09" defer></script>
+<script src="data/dst_weekly.js?v=2026-10-09" defer></script>
+<script src="data/kicker_weekly.js?v=2026-10-09" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
 <script src="data/player_weekly_sigma.js?v=2026-10-06" defer></script>
@@ -4739,8 +4742,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-10-08j" defer></script>
-<script src="data/future_totals_2026.js?v=2026-10-08-1102" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-10-09" defer></script>
+<script src="data/future_totals_2026.js?v=2026-10-08-2021" defer></script>
 <script src="data/fpa_prior_2025.js?v=2026-10-05" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-10-04pool" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
@@ -5864,7 +5867,7 @@ window._ensureResearchData = (function() {
 // season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
 // that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
 // section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-10-08-0719';
+window._ADV_STATS_V = '2026-10-09-0842';
 window._ensureAdvStats = (function() {
   const cache = {};
   return function _ensureAdvStats(yr, wk) {
@@ -5884,7 +5887,7 @@ window._ensureAdvStats = (function() {
 // Research page Coach Profiles: data/coach_profiles.js (window.COACH_PROFILES, one row per
 // team-season, scripts/build_coach_profiles.py), loaded when the section opens.
 // route_pct_daily.ps1 bumps _COACH_V.
-window._COACH_V = '2026-10-08-0719';
+window._COACH_V = '2026-10-09-0842';
 window._ensureCoachProfiles = (function() {
   let promise = null;
   return function _ensureCoachProfiles() {
@@ -5929,7 +5932,7 @@ window._ensureCardExtras = (function() {
 // Player-card USAGE row (everyone): data/usage_trend.js (window.USAGE_TREND, built daily by
 // scripts/build_usage_trend.py). openPlayerCard loads it on the first card open and re-renders once.
 // route_pct_daily.ps1 bumps _USAGE_TREND_V.
-window._USAGE_TREND_V = '2026-10-08-0719';
+window._USAGE_TREND_V = '2026-10-09-0842';
 window._ensureUsageTrend = (function() {
   let promise = null;
   return function _ensureUsageTrend() {
@@ -6061,10 +6064,10 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-10-07-1754',
+    'data/weekly_stats_active.js?v=2026-10-09-0839',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-10-07-1754',
+    'data/fpa_2026.js?v=2026-10-09-0839',
     'data/weekly_stats_retired_1.js?v=2026-07-21',
     'data/weekly_stats_retired_2.js?v=2026-07-21',
     'data/weekly_stats_retired_3.js?v=2026-07-21',
@@ -6074,9 +6077,11 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-10-08-0719',
+    'data/snap_counts.js?v=2026-10-09-0842',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-10-08-0719'
+    'data/route_pct.js?v=2026-10-09-0842',
+    // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
+    'data/team_usage_2026.js?v=2026-10-09-0842'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }
@@ -6156,7 +6161,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-08-ctr"></script>
+<script defer src="app.js?v=2026-10-09-ctr"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

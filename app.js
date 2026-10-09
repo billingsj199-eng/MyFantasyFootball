@@ -2077,7 +2077,7 @@ window._copyRedraftToBestBall = function() {
     return;
   }
   const verLabel = currentVersion === 'jacks' ? "Jack's" : 'My';
-  if (!confirm(`Copy ${verLabel} REDRAFT rankings → BEST BALL?\n\nThis will overwrite your current Best Ball board and tiers with an exact copy of Redraft.`)) return;
+  if (!_mffConfirm(`Copy ${verLabel} REDRAFT rankings → BEST BALL?\n\nThis will overwrite your current Best Ball board and tiers with an exact copy of Redraft.`)) return;
 
   const srcBoard = versionBoards[currentVersion].redraft;
   const srcTiers = versionTiers[currentVersion].redraft;
@@ -2167,7 +2167,7 @@ window._copyBestBallToRedraft = function() {
     return;
   }
   const verLabel = currentVersion === 'jacks' ? "Jack's" : 'My';
-  if (!confirm(`Copy ${verLabel} BEST BALL rankings → REDRAFT?\n\nThis will overwrite your current Redraft board and tiers with an exact copy of Best Ball. Kickers and D/ST keep their current Redraft order at the end.`)) return;
+  if (!_mffConfirm(`Copy ${verLabel} BEST BALL rankings → REDRAFT?\n\nThis will overwrite your current Redraft board and tiers with an exact copy of Best Ball. Kickers and D/ST keep their current Redraft order at the end.`)) return;
 
   const srcBoard = versionBoards[currentVersion].bestball;
   if (!srcBoard || !srcBoard.length) { toast('No Best Ball board to copy from'); return; }
@@ -2841,14 +2841,17 @@ function last4Ppg(d) {
 
 // Build the "L4 PPG" display: number + a small trend arrow vs full-season '25 PPG.
 // up (green ▲) if L4 ≥ season + 1, down (red ▼) if ≤ season − 1, else flat (·).
-function l4PpgCellHtml(l4, seasonPpg) {
+// 2026-10-08 (Jack): coloured on the usual PPG tier scale for the position, not on
+// the gap to the season PPG; the ▲ / ▼ still marks the trend vs season.
+function l4PpgCellHtml(l4, seasonPpg, pos) {
   if (l4 == null) return { html: '—', color: null };
   const v = l4.toFixed(1);
-  if (seasonPpg == null) return { html: v, color: null };
+  const tier = (pos && typeof posFptsColor === 'function') ? posFptsColor(l4, pos) : null;
+  if (seasonPpg == null) return { html: v, color: tier };
   const diff = l4 - seasonPpg;
-  if (diff >= 1) return { html: v + ' <span style="font-size:.6875rem">▲</span>', color: '#22c55e' };
-  if (diff <= -1) return { html: v + ' <span style="font-size:.6875rem">▼</span>', color: '#ef4444' };
-  return { html: v, color: null };
+  if (diff >= 1) return { html: v + ' <span style="font-size:.6875rem">▲</span>', color: tier || '#22c55e' };
+  if (diff <= -1) return { html: v + ' <span style="font-size:.6875rem">▼</span>', color: tier || '#ef4444' };
+  return { html: v, color: tier };
 }
 
 // === Kicker projection model (2026-08-25 correlate study) ===
@@ -4623,7 +4626,7 @@ window._devyResetToJm = function () {
   if (!canEdit() || !window._devyList || !window._devyList.length) return;
   const dv = versionTiers[_devySrcVer()].devy;
   const hasTiers = Object.keys(dv).some(k => dv[k].length);
-  if (!confirm('Re-sort the devy board by JM score?\n\nThis replaces the current order for ' + (currentVersion === 'mine' ? 'My Rankings' : "Jack's") + '.' + (hasTiers ? ' Tier lines stay at the same rank numbers.' : ''))) return;
+  if (!_mffConfirm('Re-sort the devy board by JM score?\n\nThis replaces the current order for ' + (currentVersion === 'mine' ? 'My Rankings' : "Jack's") + '.' + (hasTiers ? ' Tier lines stay at the same rank numbers.' : ''))) return;
   _devyMaterializeMine();
   const names = window._devyList.slice().sort((a, b) => (b._pmJm != null ? b._pmJm : -1) - (a._pmJm != null ? a._pmJm : -1) || (b._devyKtc - a._devyKtc)).map(p => p.n);
   _devyBoardSave(currentVersion, 'dynasty', names);
@@ -5386,6 +5389,19 @@ window._weeklyAssumeOutApply = function(map) {
   if (JSON.stringify(map) === JSON.stringify(window._weeklyAssumeOutMap)) return false;
   window._weeklyAssumeOutMap = map;
   try { localStorage.setItem('mff_assume_out', JSON.stringify(map)); } catch(_e) {}
+  // Teammates' PROJ moves with the list (SIM_PROJ_2026.qs, Jack 2026-10-08), so the weekly order is re-derived:
+  // positions Jack has not hand-ranked follow the new PROJ, the FLEX interleave re-sorts. Deferred so a settings
+  // snapshot finishes applying (active week) first; coalesced when several toggles land together.
+  if (window.SIM_PROJ_2026 && window.SIM_PROJ_2026.qs && !window._qsReorderT) {
+    window._qsReorderT = setTimeout(function() {
+      window._qsReorderT = null;
+      try {
+        if (typeof currentMode === 'undefined' || currentMode !== 'weekly' || typeof window._weeklyReconcileBoard !== 'function') return;
+        window._weeklyReconcileBoard('jacks');
+        window._weeklyReconcileBoard('mine');
+      } catch (e) { console.warn('[Weekly] questionable re-order failed:', e); }
+    }, 0);
+  }
   return true;
 };
 window._weeklyAssumeOutSave = function(next) {
@@ -5671,6 +5687,11 @@ function _tcvSeasonPpg(d) {
 // source of each number stays readable on screen and in the PNG.
 function _tcvBookPref() {
   try { return localStorage.getItem('tcv_book_proj') === '1'; } catch(_) { return false; }
+}
+// HIDE CONTROLS (Jack 2026-10-08): toolbar + header line + KEY strip off for a clean
+// recording board. Pure CSS class on the view; H key or the ☰ tab brings them back.
+function _tcvHideUiPref() {
+  try { return localStorage.getItem('tcv_hide_ui') === '1'; } catch(_) { return false; }
 }
 function _tcvBookProjVal(d) {
   const wk = (typeof currentMode !== 'undefined' && currentMode === 'weekly');
@@ -7909,11 +7930,13 @@ function _renderTierCardView(data, container) {
   if (_tcvRows && window._tcvSel.on && _tcvIsAdminViewer()) root.classList.add('tcv-select');
   const _tcvCutCount = _tcvBelowCut ? data.filter(d => _tcvBelowCut.has(d.n) && !(_tcvBye && _tcvBye.names.has(d.n))).length : 0;
   if (_tcvCutCount && _tcvHideCutPref()) root.classList.add('tcv-hide-cut');
+  if (_tcvHideUiPref()) root.classList.add('tcv-hide-ui');
   // BYE row players the board itself didn't hold (TOP-N trimmed them, etc.)
   const _tcvByeExtra = _tcvBye ? _tcvBye.players.filter(p => data.indexOf(p.d) < 0).length : 0;
 
   // Header: filter context
   const header = document.createElement('div');
+  header.className = 'tcv-header';
   header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 4px 10px;flex-wrap:wrap;gap:8px';
   const ctx = document.createElement('div');
   ctx.style.cssText = 'font-family:\'Bebas Neue\',Impact,sans-serif;font-size:14px;color:var(--text1);letter-spacing:1.5px';
@@ -7963,6 +7986,8 @@ function _renderTierCardView(data, container) {
       '<button class="tcv-reveal-btn" data-tcvaction="dlCards" title="Admin: the cards you flash over game footage — a 1080×260 wide lower-third AND a 560×760 portrait card per player (no board states). SELECT mode on with ticked cards = just those players. File: ' + _tcvFilePrefix + '_flash_cards.zip">🃏 FLASH CARDS</button>' +
       '<button class="tcv-reveal-btn' + (_tcvVideoPref() ? ' tcv-primary' : '') + '" data-tcvaction="toggleVideo" title="Admin: RECORD MODE for screen-recording the rankings — the card rows are replaced by the video-board drawing (6 a row, surname + PROJ, opponent chip, tiers not reached yet as strips) and it redraws on every REVEAL NEXT / spacebar / HIDE ALL / REVEAL ALL. Tier-letter clicks are off while it is on.">🎥 ' + (_tcvVideoPref() ? 'RECORDING VIEW' : 'RECORD MODE') + '</button>' : '') +
     (_tcvCanEditRanks() ? '<button class="tcv-reveal-btn tcv-edit-btn' + (window._tcvEdit.on ? ' tcv-primary' : '') + '" data-tcvaction="toggleEdit" title="Edit ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' ranks right here: drag a card to a new spot (drop on a tier letter = top of that tier, in a tier\'s empty space = bottom of it), or click a rank number and type a rank. Tier breaks too: hover a card for + TIER, drag a tier letter onto a card to move its break, ✎ on the letter renames it, ✕ removes it. Cut line too: ✂ CUT on a card hides everyone below him, drag the ✂ letter to move the line, ✕ on ✂ clears it. Tiers shift exactly as they do in the table. Hit SAVE when you\'re done.">' + (window._tcvEdit.on ? '✎ EDITING… (drag cards)' : '✎ EDIT RANKS') + '</button>' : '') +
+    (_tcvCanEditRanks() ? (() => { const sb = document.getElementById('btnSave'); const dirty = !!(sb && sb.classList.contains('has-changes')); const saved = !!(sb && sb.classList.contains('saved')); return '<button class="tcv-reveal-btn tcv-save-btn' + (dirty ? ' tcv-primary' : '') + '" data-tcvaction="saveRanks" title="Save ' + (currentVersion === 'mine' ? 'your' : 'Jack\'s') + ' rankings and tiers to the cloud without leaving this view (same as the SAVE button above the table)">' + (dirty ? '💾 SAVE CHANGES' : saved ? '✓ SAVED' : '💾 SAVE') + '</button>'; })() : '') +
+    '<button class="tcv-reveal-btn" data-tcvaction="hideUi" title="Hide this toolbar, the header line and the KEY strip — a clean board for recording. Press H, or click the faint ☰ tab top-right, to bring them back.">👁 HIDE CONTROLS</button>' +
     '<span class="tcv-zoom-ctl" title="Card size — shrink or grow everything to fit your screen">' +
       '<span class="tcv-zoom-lbl">SIZE</span>' +
       '<button class="tcv-reveal-btn tcv-zoom-btn" data-tcvaction="zoomOut" title="Smaller cards">−</button>' +
@@ -7997,6 +8022,12 @@ function _renderTierCardView(data, container) {
                 (_tcvIsAdminViewer() ? ' — pick a date above' : ' (weekly anchor covers the redraft board only)'))
       ) + '</span>' : '');
   root.appendChild(keyCard);
+  const uiPill = document.createElement('button');
+  uiPill.className = 'tcv-ui-pill';
+  uiPill.setAttribute('data-tcvaction', 'hideUi');
+  uiPill.title = 'Show the controls again (H)';
+  uiPill.textContent = '☰';
+  root.appendChild(uiPill);
 
   // Color cycle for tier letters — repeats after 7 tiers (matches tcv-key gradient palette)
   const TIER_COLORS = [
@@ -8168,6 +8199,12 @@ function _renderTierCardView(data, container) {
         _renderTierCardView(data, container);
         return;
       }
+      if (action === 'hideUi') {
+        const on = !root.classList.contains('tcv-hide-ui');
+        root.classList.toggle('tcv-hide-ui', on);
+        try { localStorage.setItem('tcv_hide_ui', on ? '1' : '0'); } catch(_) {}
+        return;
+      }
       if (action === 'toggleBook') {
         try { localStorage.setItem('tcv_book_proj', _tcvBookPref() ? '0' : '1'); } catch(_) {}
         _renderTierCardView(data, container);
@@ -8216,6 +8253,24 @@ function _renderTierCardView(data, container) {
           const kh = root.querySelector('.tcv-key-edit'); if (kh) kh.remove();
         }
         _tcvUpdateSelCount(root);
+        return;
+      }
+      if (action === 'saveRanks') {
+        // Cloud save from inside the tier view / fullscreen (Jack 2026-10-08): drives the
+        // table's SAVE button, then mirrors its state back onto this toolbar button.
+        const sb = document.getElementById('btnSave');
+        if (!sb) return;
+        sb.click();
+        const mine = btn;
+        mine.textContent = '… SAVING';
+        let tries = 0;
+        const sync = () => {
+          const dirty = sb.classList.contains('has-changes'), saving = sb.classList.contains('saving'), err = sb.classList.contains('save-error');
+          if (saving && tries++ < 40) { setTimeout(sync, 250); return; }
+          mine.textContent = err ? '⚠ SAVE FAILED' : dirty ? '💾 SAVE CHANGES' : '✓ SAVED';
+          mine.classList.toggle('tcv-primary', dirty);
+        };
+        setTimeout(sync, 300);
         return;
       }
       if (action === 'toggleEdit') {
@@ -8315,6 +8370,22 @@ function _renderTierCardView(data, container) {
     });
   }
 
+  if (!window._tcvHideUiKeyWired) {
+    window._tcvHideUiKeyWired = true;
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'h' && e.key !== 'H') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      const view = document.querySelector('.tier-card-view');
+      if (!view || !view.getClientRects().length) return;
+      const modal = document.getElementById('modal');
+      if (modal && modal.classList.contains('open') && !modal.classList.contains('modal-docked')) return;
+      e.preventDefault();
+      const pill = view.querySelector('.tcv-ui-pill');
+      if (pill) pill.click();
+    });
+  }
   container.innerHTML = '';
   container.appendChild(root);
   if (_tcvVideoPref() && _tcvIsAdminViewer()) _tcvVideoMount(root);
@@ -8512,7 +8583,7 @@ function render() {
       : 'Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.';
     if (lab.getAttribute('data-gloss') !== g) lab.setAttribute('data-gloss', g);
   })();
-  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy');
+  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy', _statMode === 'fantasy');
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
   // view carries boom/bust in the ppg25/l4ppg swap columns instead.
@@ -8526,7 +8597,7 @@ function render() {
   // no yardage line so the K / D/ST pills hide it). Y/RR + Rush YPG retired.
   // Total Yds tail: WEEKLY board only (Yds/G). Jack 2026-09-14: no total-yards
   // column on the rest-of-season (season) boards in FANTASY or SIMS view.
-  const showYrr = _statMode === 'fantasy' && _isWeekly && filter !== 'K' && filter !== 'DST';
+  const showYrr = false; // Yds/G tail retired 2026-10-08 (Jack) — was WEEKLY FANTASY only
   // ADP comparison STATS view borrows the JM + Landing columns for Yahoo and
   // the cross-platform AVERAGE (2026-09-09 — Flock's ADP matrix gap).
   const _isAdpCmp = _statMode === 'adp';
@@ -8729,7 +8800,7 @@ function render() {
       const _25ppg = _sp.v;
       const _25Tip = _sp.yr === 26 ? (_sp.v != null ? ' title="2026 to date · ' + _sp.gp + ' gp"' : ' title="No 2026 game played yet"') : '';
       const _l4ppg = last4Ppg(d);
-      const _l4Cell = l4PpgCellHtml(_l4ppg, _25ppg);
+      const _l4Cell = l4PpgCellHtml(_l4ppg, _25ppg, d.s);
       // WEEKLY FLEX view compares RB/WR/TE head-to-head — color PROJ PPG on
       // one shared scale there; positional pills keep the per-position scale.
       const _projColor = (_projPpg != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_projPpg) : posFptsColor(_projPpg, d.s)) : null;
@@ -8925,7 +8996,7 @@ function render() {
     if (_injBlurRank) { if (blurred && !_injWallDone) { _injWallDone = true; html += _premiumWallHtml(); } }
     else if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
-    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy');
+    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy', _statMode === 'fantasy');
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
@@ -8970,8 +9041,9 @@ function render() {
   // No cut line on this board → the BYE block closes the list
   if (_byeBlk && !_byeBlkDone) html += _byeBlockHtml();
 
-  // Tiers that come after the last player
-  if (showTiers) {
+  // Tiers that come after the last player — full board only; a narrowed view (search,
+  // MINE / AVAILABLE, watchlist, teams, injuries) shows just the tiers its players are in.
+  if (showTiers && !_narrowed) {
     const lastDisplayRank = data.length > 0 ? (useFilteredRank ? data.length : data[data.length-1].myRank) : 0;
     tiers.forEach(t => {
       if (t.afterRank > lastDisplayRank) {
@@ -9903,12 +9975,11 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
   let _modalOriginalNext = null;
 
   function _moveModalIntoFullscreen() {
-    const modal = document.getElementById('modal');
-    if (!modal) return;
-    if (modal.parentNode === wrap) return; // already moved
-    _modalOriginalParent = modal.parentNode;
-    _modalOriginalNext = modal.nextSibling;
-    wrap.appendChild(modal);
+    // 2026-10-08: no longer moves #modal into the wrap. The tier view rebuilds the
+    // wrap's innerHTML on every render() (the prospect-model build fires one about a
+    // second after a card opens), which destroyed the moved modal — the card flashed
+    // and vanished (Jack). Fullscreen now targets the document root instead, so the
+    // modal stays in <body> and is simply raised above the overlay by CSS.
   }
   function _restoreModalToOriginalParent() {
     const modal = document.getElementById('modal');
@@ -9947,8 +10018,9 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
     // Move the player-card modal in so it remains usable while fullscreen
     _moveModalIntoFullscreen();
     // Try the browser Fullscreen API too — gives true distraction-free mode
-    if (wrap.requestFullscreen) {
-      wrap.requestFullscreen().catch(() => { /* CSS overlay still works even if browser FS denied */ });
+    const _fsRoot = document.documentElement;
+    if (_fsRoot.requestFullscreen) {
+      _fsRoot.requestFullscreen().catch(() => { /* CSS overlay still works even if browser FS denied */ });
     }
     fsBtn.textContent = '⛶ EXIT FULLSCREEN';
   }
@@ -11307,7 +11379,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const cur = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
       const add = window._weeklyAssumeOutSeed(wk).filter(n => cur.indexOf(n) < 0);
       if (!add.length) { if (typeof toast === 'function') toast('No new Questionable / Doubtful players to park for Week ' + wk); return; }
-      if (!confirm('Park ' + add.length + ' Questionable / Doubtful player' + (add.length === 1 ? '' : 's') + ' in the Week ' + wk + ' BYE / OUT row?\n\n'
+      if (!_mffConfirm('Park ' + add.length + ' Questionable / Doubtful player' + (add.length === 1 ? '' : 's') + ' in the Week ' + wk + ' BYE / OUT row?\n\n'
         + add.slice(0, 30).join(', ') + (add.length > 30 ? ' …' : '')
         + '\n\nEach one leaves the weekly board (slot kept) with PROJ 0 until you move him back — UNDO on his row, the Q pill, or the player card. Syncs to every user.')) return;
       const next = Object.assign({}, window._weeklyAssumeOutMap || {});
@@ -12588,7 +12660,7 @@ document.getElementById('btnClear').addEventListener('click', () => {
   }
   const label = currentMode === 'dynastysf' ? 'Dynasty SF' : currentMode === 'dynasty' ? 'Dynasty 1QB' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'Best Ball' : 'Redraft';
   const verLabel = currentVersion === 'jacks' ? "Jack's" : "My";
-  if (!confirm(`Reset ${verLabel} ${label} rankings back to ADP order?`)) return;
+  if (!_mffConfirm(`Reset ${verLabel} ${label} rankings back to ADP order?`)) return;
   versionBoards[currentVersion][currentMode] = currentMode==='dynastysf' ? sfDefaultBoard.slice() : currentMode==='dynasty' ? dynastyDefaultBoard.slice() : currentMode==='superflex' ? superflexDefaultBoard.slice() : currentMode==='bestball' ? bestBallDefaultBoard.slice() : D.map((d,i) => i);
   versionTiers[currentVersion][currentMode] = _mkPosTiers();
   versionTierCounters[currentVersion][currentMode] = _mkPosTierCtrs();
@@ -12830,7 +12902,91 @@ function _foldSimAliases(idx) {
 // exported offline by sim_lab/export_site_proj.js — no sims run on the site).
 // Row = [half, ppr, std, boom%, bust%]; null boom/bust = player ruled out that
 // week. Rows for started games are frozen upstream by the exporter.
+// QUESTIONABLE SCENARIOS (Jack 2026-10-08: "can the proj weekly points update based on who I have out vs in - put Chase
+// back in and it changes Gesicki and Meyers; Terry and Diggs both in the injured tier, project Antonio Williams without
+// them"). SIM_PROJ_2026.qs = {wk, teams: {TM: {q: [questionable names], v: {name: [h,p,s per combination]}}}} - the Sim
+// Lab export runs every in/out combination of each team's questionable players (combination bit i = q[i] OUT). The
+// combination used is the ASSUMED OUT list: in the list = out, otherwise = in (a Questionable player moved back in
+// projects at full strength, not the engine's hedge). PROJ, the weekly projection order and the player card follow it.
+function _qsNorm(n) { return (typeof _campNewsNorm === 'function') ? _campNewsNorm(n) : String(n || '').toLowerCase(); }
+function _qsIndex() {
+  const SP = window.SIM_PROJ_2026, Q = SP && SP.qs;
+  if (!Q || !Q.teams) return null;
+  if (window._qsIdx && window._qsIdx._src === Q) return window._qsIdx;
+  const by = {};
+  Object.keys(Q.teams).forEach(tm => {
+    const T = Q.teams[tm];
+    Object.keys(T.v || {}).forEach(nm => { by[_qsNorm(nm)] = { tm, key: nm }; });
+    (T.q || []).forEach(nm => { const k = _qsNorm(nm); if (!by[k]) by[k] = { tm, key: null }; });
+  });
+  if (typeof _foldSimAliases === 'function') _foldSimAliases(by);
+  window._qsIdx = { _src: Q, wk: +Q.wk, by };
+  return window._qsIdx;
+}
+// out-state of a team's questionable players: flip = {normName: true(out)/false(in)} overrides the ASSUMED OUT list
+function _qsMask(T, wk, flip) {
+  const map = window._weeklyAssumeOutMap || {}, list = map[String(wk)] || [];
+  const outSet = new Set(list.map(_qsNorm));
+  const AL = window._CLAY_ALIASES || {};
+  let m = 0;
+  (T.q || []).forEach((nm, i) => {
+    const k = _qsNorm(nm), alias = AL[k];
+    let out = outSet.has(k) || (alias != null && outSet.has(alias));
+    if (!out) Object.keys(AL).forEach(a => { if (AL[a] === k && outSet.has(a)) out = true; });
+    if (flip && Object.prototype.hasOwnProperty.call(flip, k)) out = !!flip[k];
+    if (out) m |= (1 << i);
+  });
+  return m;
+}
+// [half, ppr, std] for a player under the current (or flipped) in/out state, or null when no scenario covers him
+window._qsValue = function(name, wk, flip) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return null;
+  const hit = I.by[_qsNorm(name)];
+  if (!hit || !hit.key) return null;
+  const T = window.SIM_PROJ_2026.qs.teams[hit.tm], a = T && T.v[hit.key];
+  if (!a) return null;
+  const m = _qsMask(T, wk, flip);
+  if (a.length < (m + 1) * 3) return null;
+  return [a[m * 3], a[m * 3 + 1], a[m * 3 + 2]];
+};
+// SCENARIO SIMS (Jack 2026-10-08: "make sure it sims completely with and without - I don't want a player in between"): each
+// in/out combination is simmed on its own in the export (qs.teams[TM].bb = [boom%, bust% per mask]); boom / bust follow the
+// toggles like PROJ instead of the hedged weekly run. [null, null] = he is out in that combination.
+window._qsBoomBust = function(name, wk, flip) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  const hit = I.by[_qsNorm(name)];
+  if (!hit || !hit.key) return null;
+  const T = window.SIM_PROJ_2026.qs.teams[hit.tm], b = T && T.bb && T.bb[hit.key];
+  if (!b) return null;
+  const m = _qsMask(T, wk, flip);
+  if (b.length < (m + 1) * 2) return null;
+  return [b[m * 2], b[m * 2 + 1]];
+};
+// the questionable teammates whose status moves this player (card WITH / WITHOUT box)
+window._qsTeammates = function(name, wk) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  const hit = I.by[_qsNorm(name)];
+  if (!hit) return null;
+  const T = window.SIM_PROJ_2026.qs.teams[hit.tm];
+  return T ? { tm: hit.tm, q: T.q.slice(), self: T.q.findIndex(q => _qsNorm(q) === _qsNorm(hit.key || name)) } : null;
+};
 function _simProjRow(d, wk) {
+  const r0 = _simProjRowRaw(d, wk);
+  if (d && d.s !== 'DST' && typeof window._qsValue === 'function') {
+    const v = window._qsValue(d.n, wk);
+    if (v) {
+      const bb = (typeof window._qsBoomBust === 'function') ? window._qsBoomBust(d.n, wk) : null;
+      if (bb) return [v[0], v[1], v[2], bb[0], bb[1]];
+      return [v[0], v[1], v[2], r0 ? r0[3] : null, r0 ? r0[4] : null];
+    }
+  }
+  return r0;
+}
+function _simProjRowRaw(d, wk) {
   const SP = window.SIM_PROJ_2026;
   if (!SP || !SP.weeks || !SP.weeks[wk]) return null;
   const wkMap = SP.weeks[wk];
@@ -13234,7 +13390,8 @@ function _vorTable() {
   // Jack's OUT FOR SEASON flags: never priced, never a replacement level.
   const irOut = window._irHiddenHere && window._irHiddenHere(currentMode) ? (d => window._irIsOut(d.n)) : null;
   const irSig = irOut ? Object.keys(window._irMap || {}).sort().join(',') : '';
-  const key = [fi, wk, cw, from, kSig, win, st.wFrom, st.wTo, irSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
+  const aoSig = (window.SIM_PROJ_2026 && window.SIM_PROJ_2026.qs) ? JSON.stringify(((window._weeklyAssumeOutMap || {})[String(window.SIM_PROJ_2026.qs.wk)]) || []) : '';   // questionable in/out list moves this week's rows (SIM_PROJ_2026.qs)
+  const key = [fi, wk, cw, from, kSig, win, st.wFrom, st.wTo, irSig, aoSig, D.length, st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.K, st.DST, st.BN, st.poStart, st.poEnd, st.poW, st.tep, st.passTd].join('|');
   const c = window._vorCache;
   if (c && c._src === SP && c._key === key) return c;
   const weeks = [];
@@ -14027,22 +14184,26 @@ function _wkXfpCellHtml(d, show) {
 // matchup block · L4 PPG. Splits the '26 PPG / L4 PPG pair so the row can
 // emit '26 PPG + xFP right after PROJ; every other view keeps the pair
 // together after the matchup block (xFP placeholder hidden).
-function _wkSplitStatTds(tds, d, wkFant) {
+function _wkSplitStatTds(tds, d, wkFant, fant) {
   const cell = _wkXfpCellHtml(d, wkFant);
   const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
   const td26 = i < 0 ? tds : tds.slice(0, i), tdL4 = i < 0 ? '' : tds.slice(i);
-  // 2026-10-08: the season-PPG cell sits right after PROJ on every board; the xFP cell
-  // follows it in the weekly FANTASY view and hides with the other weekly cells otherwise.
-  return wkFant ? { pre: td26 + cell, post: tdL4 } : { pre: td26, post: cell + tdL4 };
+  // 2026-10-08: in the FANTASY stat view the season-PPG cell sits right after PROJ on every
+  // board (xFP follows it in the weekly FANTASY view). Other stat views (SIMS / VOR / xFP /
+  // PROJECTIONS / BETTING LINES / ADP) keep their second column after the weekly group —
+  // in BETTING LINES that column is the YDS line and belongs beside TD and RUSH (Jack).
+  if (wkFant) return { pre: td26 + cell, post: tdL4 };
+  return fant ? { pre: td26, post: cell + tdL4 } : { pre: '', post: td26 + cell + tdL4 };
 }
 // Matching <th> order: move '26 PPG + xFP headers right after PROJ in the
 // weekly FANTASY view, back after Opp PPG otherwise. Idempotent; listeners
 // ride along with the nodes.
-function _wkFantasyColOrder(on) {
+function _wkFantasyColOrder(on, fant) {
   const proj = document.getElementById('ppgProjHeader'), p26 = document.getElementById('ppg25HeaderTh');
   const xfp = document.getElementById('xfpGHeader'), opp = document.getElementById('oppPpgHeader');
   if (!proj || !p26 || !xfp || !opp) return;
-  if (proj.nextElementSibling !== p26) proj.after(p26);
+  const p26Anchor = (on || fant !== false) ? proj : opp;   // FANTASY view: beside PROJ; other views: after the weekly group
+  if (p26Anchor.nextElementSibling !== p26) p26Anchor.after(p26);
   const xfpAnchor = on ? p26 : opp;
   if (xfpAnchor.nextElementSibling !== xfp) xfpAnchor.after(xfp);
 }
@@ -16354,6 +16515,467 @@ function _projWhyHtml(d, wk, cardProj, esc) {
   return html;
 }
 
+// === PRACTICE REPORT on the WEEKLY card (Jack 2026-10-08: "add the practice report to the weekly card above
+// recent games with color coded and showing each day along with the historical rate of playing") ==============
+// Days: data/practice_days_2026.js (scripts/pull_practice_reports.py files each pull's latest status under the
+// team's report day - Wed/Thu/Fri for a Sunday game, Mon/Tue/Wed for a Thursday game). Rates: how often regular
+// starters whose LAST practice of the week read like that went on to play - sim_lab/build_practice_day_rates.py,
+// nflverse injuries x snap counts 2019-25 (players averaging 40%+ of snaps, final week dropped, recent seasons
+// weighted half-life 3, position shrunk K=50 to the class). any-X = last practice X whatever the designation;
+// none-X = X with no designation on the final report. The final report day with a designation uses the sim's own
+// play odds (SIM_PROJ_2026.injRes.play + injury-type shift) so the card agrees with the projection's dock.
+const _PRAC_DAY_RATES = {"any-FP":{"all":0.97,"QB":0.938,"RB":0.986,"WR":0.979,"TE":0.966},"any-LP":{"all":0.745,"QB":0.511,"RB":0.757,"WR":0.801,"TE":0.766},"any-DNP":{"all":0.225,"QB":0.12,"RB":0.204,"WR":0.256,"TE":0.24},"none-FP":{"all":0.98,"QB":0.95,"RB":0.99,"WR":0.991,"TE":0.979},"none-LP":{"all":0.979,"QB":0.962,"RB":0.981,"WR":0.982,"TE":0.981},"none-DNP":{"all":0.836,"QB":0.743,"RB":0.798,"WR":0.874,"TE":0.87}};
+// TRAJECTORY (Jack 2026-10-08: "have the percentages change based on the trajectory, example limited limited full or
+// dnp limited"): sim_lab/build_practice_trajectory.py on FootballDB's day-by-day reports 2019-25 (every report day kept)
+// x nflverse snaps, regular starters, final week dropped, half-life 3. pre[seq] = P(plays | statuses so far) shrunk to
+// the day's latest status; fin[seq|designation] on the final report; pos = logit shift by position at the latest status.
+const _PRAC_TRAJ = {"day":{"1:FP":0.91,"1:LP":0.832,"1:DNP":0.483,"2:FP":0.946,"2:LP":0.816,"2:DNP":0.343,"3:FP":0.965,"3:LP":0.75,"3:DNP":0.233},"pre":{"DNP":0.481,"FP":0.912,"LP":0.833,"DNP-DNP":0.236,"DNP-FP":0.984,"DNP-LP":0.837,"FP-DNP":0.767,"FP-FP":0.928,"FP-LP":0.832,"LP-DNP":0.478,"LP-FP":0.965,"LP-LP":0.806,"DNP-DNP-DNP":0.112,"DNP-DNP-FP":0.935,"DNP-DNP-LP":0.689,"DNP-FP-DNP":0.275,"DNP-FP-FP":0.992,"DNP-FP-LP":0.781,"DNP-LP-DNP":0.249,"DNP-LP-FP":0.971,"DNP-LP-LP":0.785,"FP-DNP-DNP":0.422,"FP-DNP-FP":0.979,"FP-DNP-LP":0.802,"FP-FP-DNP":0.67,"FP-FP-FP":0.951,"FP-FP-LP":0.758,"FP-LP-DNP":0.321,"FP-LP-FP":0.974,"FP-LP-LP":0.825,"LP-DNP-DNP":0.176,"LP-DNP-FP":0.973,"LP-DNP-LP":0.758,"LP-FP-DNP":0.323,"LP-FP-FP":0.98,"LP-FP-LP":0.769,"LP-LP-DNP":0.298,"LP-LP-FP":0.965,"LP-LP-LP":0.73},"fin":{"DNP-DNP-DNP|Doubtful":0.048,"DNP-DNP-DNP|Out":0.002,"DNP-DNP-DNP|Questionable":0.377,"DNP-DNP-DNP|none":0.674,"DNP-DNP-FP|Doubtful":0.91,"DNP-DNP-FP|Questionable":0.892,"DNP-DNP-FP|none":0.965,"DNP-DNP-LP|Doubtful":0.433,"DNP-DNP-LP|Out":0.267,"DNP-DNP-LP|Questionable":0.739,"DNP-DNP-LP|none":0.948,"DNP-FP-DNP|Out":0.016,"DNP-FP-DNP|Questionable":0.475,"DNP-FP-DNP|none":0.705,"DNP-FP-FP|Questionable":0.895,"DNP-FP-FP|none":0.994,"DNP-FP-LP|Questionable":0.74,"DNP-FP-LP|none":0.937,"DNP-LP-DNP|Doubtful":0.092,"DNP-LP-DNP|Out":0.014,"DNP-LP-DNP|Questionable":0.492,"DNP-LP-DNP|none":0.709,"DNP-LP-FP|Out":0.869,"DNP-LP-FP|Questionable":0.893,"DNP-LP-FP|none":0.994,"DNP-LP-LP|Doubtful":0.486,"DNP-LP-LP|Out":0.276,"DNP-LP-LP|Questionable":0.771,"DNP-LP-LP|none":0.96,"FP-DNP-DNP|Doubtful":0.093,"FP-DNP-DNP|Out":0.014,"FP-DNP-DNP|Questionable":0.515,"FP-DNP-DNP|none":0.778,"FP-DNP-FP|Questionable":0.904,"FP-DNP-FP|none":0.983,"FP-DNP-LP|Questionable":0.765,"FP-DNP-LP|none":0.945,"FP-FP-DNP|Doubtful":0.094,"FP-FP-DNP|Out":0.015,"FP-FP-DNP|Questionable":0.571,"FP-FP-DNP|none":0.867,"FP-FP-FP|Out":0.817,"FP-FP-FP|Questionable":0.833,"FP-FP-FP|none":0.965,"FP-FP-LP|Doubtful":0.507,"FP-FP-LP|Questionable":0.699,"FP-FP-LP|none":0.932,"FP-LP-DNP|Doubtful":0.094,"FP-LP-DNP|Out":0.014,"FP-LP-DNP|Questionable":0.517,"FP-LP-DNP|none":0.708,"FP-LP-FP|Questionable":0.879,"FP-LP-FP|none":0.989,"FP-LP-LP|Doubtful":0.509,"FP-LP-LP|Out":0.308,"FP-LP-LP|Questionable":0.79,"FP-LP-LP|none":0.951,"LP-DNP-DNP|Doubtful":0.088,"LP-DNP-DNP|Out":0.012,"LP-DNP-DNP|Questionable":0.434,"LP-DNP-DNP|none":0.695,"LP-DNP-FP|Questionable":0.902,"LP-DNP-FP|none":0.98,"LP-DNP-LP|Doubtful":0.512,"LP-DNP-LP|Questionable":0.735,"LP-DNP-LP|none":0.929,"LP-FP-DNP|Out":0.016,"LP-FP-DNP|Questionable":0.486,"LP-FP-DNP|none":0.726,"LP-FP-FP|Out":0.884,"LP-FP-FP|Questionable":0.889,"LP-FP-FP|none":0.985,"LP-FP-LP|Questionable":0.704,"LP-FP-LP|none":0.95,"LP-LP-DNP|Doubtful":0.094,"LP-LP-DNP|Out":0.012,"LP-LP-DNP|Questionable":0.514,"LP-LP-DNP|none":0.709,"LP-LP-FP|Doubtful":0.924,"LP-LP-FP|Out":0.869,"LP-LP-FP|Questionable":0.905,"LP-LP-FP|none":0.978,"LP-LP-LP|Doubtful":0.455,"LP-LP-LP|Out":0.169,"LP-LP-LP|Questionable":0.69,"LP-LP-LP|none":0.958},"lastdes":{"DNP|Doubtful":0.096,"DNP|Out":0.017,"DNP|Questionable":0.462,"DNP|none":0.702,"FP|Doubtful":0.933,"FP|Out":0.88,"FP|Questionable":0.893,"FP|none":0.978,"LP|Doubtful":0.517,"LP|Out":0.322,"LP|Questionable":0.728,"LP|none":0.938},"pos":{"QB":{"FP":-0.669,"LP":-0.985,"DNP":-0.705},"RB":{"FP":0.755,"LP":0.074,"DNP":-0.213},"WR":{"FP":0.415,"LP":0.312,"DNP":0.161},"TE":{"FP":-0.09,"LP":0.121,"DNP":0.055}}};
+// REST / VETERAN / ELITE (Jack 2026-10-08: "factors in veterans vs younger players ... elite players / veterans take
+// Wednesday off more"). sim_lab/research_practice_vet_elite.py: 30+ sat Wednesday 43% of listings vs 35% for 25-and-under,
+// 28% of their Wednesday DNPs tagged rest (4% for young players); after a Wednesday DNP vets played 59% vs 39%, last season's
+// top-12 QB/TE / top-24 RB/WR 54% vs 45%. Logit shifts by stage (day 1/2/3, 3f = final report with designation) and latest
+// status, fit in order rest -> vet -> elite on the residuals; leave-one-season-out Brier -7.5% day 1, -11% day 3, -2.6% with
+// the designation, better in 7/7 seasons at every stage.
+// CONCUSSION (Jack 2026-10-08, Chase W5): research_concussion_return.py - concussion weeks play far less at every pattern
+// (DNP-DNP 5% vs 25%, LP-LP 39% vs 82%; 51% end Out); a 4th shift after rest / vet / elite: -2.1% day 1, -2.1% day 3, 7/7.
+const _PRAC_TRAJ_ADJ = {"rest":{"1":{"FP":0.262,"LP":1.081,"DNP":2.069},"2":{"FP":0.411,"LP":0.871,"DNP":1.571},"3":{"FP":0.075,"LP":0.942,"DNP":1.812},"3f":{"FP":-0.13,"LP":0.376,"DNP":0.91}},"vet":{"1":{"FP":0.075,"LP":0.148,"DNP":0.068},"2":{"FP":0.158,"LP":0.117,"DNP":0.146},"3":{"FP":-0.116,"LP":0.284,"DNP":0.189},"3f":{"FP":-0.241,"LP":0.163,"DNP":0.048}},"elite":{"1":{"FP":0.603,"LP":0.121,"DNP":0.048},"2":{"FP":0.566,"LP":0.18,"DNP":0.238},"3":{"FP":0.669,"LP":0.255,"DNP":0.134},"3f":{"FP":0.535,"LP":0.094,"DNP":0.084}},"conc":{"1":{"FP":-0.407,"LP":-0.749,"DNP":-1.132},"2":{"FP":-0.223,"LP":-1.003,"DNP":-0.978},"3":{"FP":-0.661,"LP":-1.025,"DNP":-1.014},"3f":{"FP":-0.473,"LP":-0.418,"DNP":-0.298}}};
+function _pracSeasonYr() { const n = new Date(); return n.getMonth() >= 2 ? n.getFullYear() : n.getFullYear() - 1; }
+// last season's PPG rank within position (site weekly DB, 8+ games played) - the elite flag
+function _pracPrevRank(d) {
+  const yr = String(_pracSeasonYr() - 1);
+  let C = window._pracRankCache;
+  if (!C || C.yr !== yr || !C.n) {
+    C = { yr: yr, m: {}, n: 0 };
+    const by = {};
+    if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS && typeof D !== 'undefined') {
+      const seen = new Set();
+      D.forEach(x => {
+        if (!x || x._isDevy || !/^(QB|RB|WR|TE)$/.test(x.s) || seen.has(x.n)) return;
+        seen.add(x.n);
+        const w = WEEKLY_STATS[x.n], rows = w && w.seasons && w.seasons[yr];
+        if (!rows) return;
+        const pts = rows.filter(g => (g.fpts || 0) !== 0 || (g.pa || 0) > 0 || (g.ra || 0) > 0 || (g.tgt || 0) > 0).map(g => +g.fpts || 0);
+        if (pts.length >= 8) (by[x.s] = by[x.s] || []).push([pts.reduce((a, b) => a + b, 0) / pts.length, x.n]);
+      });
+    }
+    Object.keys(by).forEach(pos => by[pos].sort((a, b) => b[0] - a[0]).forEach((x, i) => { C.m[x[1]] = i + 1; C.n++; }));
+    window._pracRankCache = C;
+  }
+  return C.m[d.n] || null;
+}
+function _pracFlags(d, rec) {
+  const inj = String((rec && rec.inj) || '').toLowerCase();
+  let age = null;
+  if (d.birthDate) {
+    const bd = new Date(d.birthDate + 'T00:00:00');
+    if (!isNaN(bd)) age = (new Date(_pracSeasonYr(), 8, 1) - bd) / (365.25 * 864e5);
+  }
+  if (age == null && d.age != null && isFinite(+d.age)) age = +d.age;
+  const rk = _pracPrevRank(d);
+  return { conc: /concussion/.test(inj + ' ' + String(d.inj || '').toLowerCase()), rest: /\brest\b|not injury/.test(inj), vet: age != null && age >= 30, elite: rk != null && rk <= ((d.s === 'QB' || d.s === 'TE') ? 12 : 24), rk: rk };
+}
+function _pracTrajRate(seq, pos, des, flags) {
+  const T = _PRAC_TRAJ, k = seq.length, last = seq[k - 1], key = seq.join('-');
+  let p;
+  if (des != null) {
+    const d = des || 'none';
+    p = T.fin[key + '|' + d]; if (p == null) p = T.lastdes[last + '|' + d]; if (p == null) p = T.day['3:' + last];
+  } else {
+    p = T.pre[key]; if (p == null) p = T.day[k + ':' + last];
+  }
+  if (p == null) return null;
+  if (p <= 0.001 || p >= 0.999) return p;
+  let z = Math.log(p / (1 - p)) + ((T.pos[pos] && T.pos[pos][last]) || 0);
+  if (flags) {
+    const st = des != null ? '3f' : String(Math.min(k, 3));
+    ['rest', 'vet', 'elite', 'conc'].forEach(f => { if (flags[f]) { const a = _PRAC_TRAJ_ADJ[f] && _PRAC_TRAJ_ADJ[f][st]; if (a && a[last]) z += a[last]; } });
+  }
+  return 1 / (1 + Math.exp(-z));
+}
+const _PRAC_COL = { FP: '#22c55e', LP: '#facc15', DNP: '#ef4444' };
+const _PRAC_WORD = { FP: 'FULL', LP: 'LIMITED', DNP: 'DNP' };
+const _PRAC_PHRASE = { FP: 'a full practice', LP: 'a limited practice', DNP: 'no practice' };
+function _pracDayRec(d, wk) {
+  const P = window.PRACTICE_DAYS_2026, W = P && P.weeks && P.weeks[String(wk)];
+  if (!W || !W.players) return null;
+  let rec = W.players[d.n];
+  if (!rec) {
+    let idx = window._pracDaysIdx;
+    if (!idx || idx._src !== W) {
+      idx = { _src: W, m: {} };
+      Object.keys(W.players).forEach(k => { idx.m[_campNewsNorm(k)] = W.players[k]; });
+      if (typeof _foldSimAliases === 'function') _foldSimAliases(idx.m);
+      window._pracDaysIdx = idx;
+    }
+    rec = idx.m[_campNewsNorm(d.n)];
+  }
+  if (!rec || (rec.pos && d.s && rec.pos !== d.s)) return null;   // same name, different player
+  const game = W.games ? W.games[rec.tm] : null;
+  return game ? { rec: rec, game: game } : null;
+}
+function _pracRate(cls, pos) {
+  const t = _PRAC_DAY_RATES[cls];
+  return t ? (t[pos] != null ? t[pos] : t.all) : null;
+}
+// play odds on the final report day once the designation is in: Q = the sim's table (+ injury-type shift)
+function _pracFinalRate(d, st, gs, injTxt) {
+  if (/^out$/i.test(gs)) return 0;
+  if (/doubt/i.test(gs)) return 0.02;
+  if (/question/i.test(gs)) {
+    const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes, cls = 'Q-' + st;
+    let pp = R && R.play && R.play[cls] ? (R.play[cls][d.s] != null ? R.play[cls][d.s] : (R.playAll && R.playAll[cls])) : null;
+    if (pp == null) return _pracRate('any-' + st, d.s);
+    try {
+      const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null;
+      const body = String(injTxt || d.inj || '').replace(/\b(IR|PUP|Out|Doubtful|Questionable|Suspended)\b/ig, '').replace(/^[\s,]+|[\s,]+$/g, '');
+      const grp = (x && x.grp) || (body && typeof _ivGroup === 'function' ? _ivGroup(body) : '');
+      const sh = grp && R.shift && R.shift[cls] ? (R.shift[cls][grp] || 0) : 0;
+      if (sh) pp = 1 / (1 + Math.exp(-(Math.log(pp / (1 - pp)) + sh)));
+    } catch (_) {}
+    return pp;
+  }
+  return _pracRate('none-' + st, d.s);
+}
+function _practiceReportHtml(d, wk, box) {
+  if (!d || d.s === 'DST') return '';
+  const hit = _pracDayRec(d, wk);
+  if (!hit) {
+    // his team has posted this week's report and he is not on it = practicing fully, no designation
+    const P = window.PRACTICE_DAYS_2026, W = P && P.weeks && P.weeks[String(wk)];
+    const tm = (typeof teamAbbr === 'function' && d.t) ? teamAbbr(d.t) : d.t;
+    const posted = W && W.players && Object.keys(W.players).some(k => W.players[k].tm === tm);
+    return posted ? '<div class="card-section card-prac-sec"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span></div>'
+      + '<div style="font-size:.75rem;color:var(--text2)"><b style="color:#22c55e">Not on the injury report</b> · full practice, no designation</div></div>' : '';
+  }
+  const rec = hit.rec, gs = String(rec.gs || '');
+  const g = new Date(hit.game + 'T12:00:00');
+  const back = (g.getDay() === 0 || g.getDay() === 1) ? [4, 3, 2] : [3, 2, 1];
+  const iso = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  const DN = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const days = back.map(b => { const x = new Date(g); x.setDate(x.getDate() - b); return x; });
+  if (!days.some(x => rec.d && rec.d[iso(x)])) return '';
+  const pct = v => v == null ? '' : (v >= 0.995 ? '99%' : v < 0.005 ? '0%' : Math.round(v * 100) + '%');
+  // the week's statuses in order: a day before his first listing = practicing (FP), a gap after it repeats the last day
+  const seqAll = [];
+  let seen = false;
+  days.forEach(x => { const st = rec.d ? rec.d[iso(x)] : null; if (st) { seen = true; seqAll.push(st); } else seqAll.push(seen ? null : 'FP'); });
+  const flags = _pracFlags(d, rec);
+  const flagTxt = [flags.rest ? 'rest day' : '', flags.vet ? 'veteran (30+)' : '', flags.elite ? 'last season\'s top ' + ((d.s === 'QB' || d.s === 'TE') ? 12 : 24) + ' ' + d.s : '', flags.conc ? 'concussion (protocol weeks play far less at the same pattern)' : ''].filter(Boolean).join(', ');
+  let row = '';
+  days.forEach((x, i) => {
+    const st = rec.d ? rec.d[iso(x)] : null;
+    const lbl = DN[x.getDay()] + ' ' + (x.getMonth() + 1) + '/' + x.getDate();
+    if (!st) {
+      const past = iso(x) < iso(new Date());
+      row += box(lbl, '—', '', past ? 'Not on the ' + DN[x.getDay()] + ' report we captured' : 'No ' + DN[x.getDay()] + ' report yet (teams post around 4pm ET)', 'var(--text3)');
+      return;
+    }
+    const last = i === days.length - 1;
+    const seq = seqAll.slice(0, i + 1).map((v, j, a) => v || a.slice(0, j).reverse().find(Boolean) || 'FP');
+    let r = _pracTrajRate(seq, d.s, last ? gs : null, flags);
+    if (r == null) r = last && gs ? _pracFinalRate(d, st, gs, rec.inj) : last ? _pracRate('none-' + st, d.s) : _pracRate('any-' + st, d.s);
+    // Questionable on the final report: the sim's injury-type shift rides on top (same as the projection's dock)
+    if (last && /question/i.test(gs) && r > 0.001 && r < 0.999) {
+      try {
+        const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes, cls = 'Q-' + st;
+        const x = (typeof _ivInfo === 'function') ? _ivInfo(d) : null;
+        const body = String(rec.inj || d.inj || '').replace(/\b(IR|PUP|Out|Doubtful|Questionable|Suspended)\b/ig, '').replace(/^[\s,]+|[\s,]+$/g, '');
+        const grp = (x && x.grp) || (body && typeof _ivGroup === 'function' ? _ivGroup(body) : '');
+        const sh = grp && R && R.shift && R.shift[cls] ? (R.shift[cls][grp] || 0) : 0;
+        if (sh) r = 1 / (1 + Math.exp(-(Math.log(r / (1 - r)) + sh)));
+      } catch (_) {}
+    }
+    const seqTxt = seq.map(v => _PRAC_WORD[v]).join(' → ');
+    const tip = last && /question/i.test(gs) ? 'Questionable ' + d.s + 's with a ' + seqTxt + ' week have played ' + pct(r) + ' (2019-25, recent seasons weighted, injury type included)'
+      : last && /doubt/i.test(gs) ? 'Doubtful players almost never suit up (about 1 in 50, 2019-25)'
+      : last && /^out$/i.test(gs) ? 'Ruled out'
+      : last ? 'No game designation on the final report: ' + d.s + 's with a ' + seqTxt + ' week have played ' + pct(r) + ' (2019-25)'
+      : 'Starting ' + d.s + 's whose week has gone ' + seqTxt + ' so far went on to play ' + pct(r) + ' (2019-25, recent seasons weighted). Later days update it.';
+    const tipAll = tip + (flagTxt && !/^out$/i.test(gs) ? (/\.$/.test(tip) ? ' ' : '. ') + 'Adjusted for: ' + flagTxt + '.' : '');
+    row += box(lbl, _PRAC_WORD[st] + '<span style="display:block;font-size:.75rem;font-weight:700;margin-top:2px;opacity:.9">' + pct(r) + ' play</span>', '', tipAll, _PRAC_COL[st]);
+  });
+  const gsCol = /^out$/i.test(gs) ? '#ef4444' : /doubt/i.test(gs) ? '#f97316' : /question/i.test(gs) ? '#facc15' : null;
+  const inj = String(rec.inj || '').trim();
+  const head = (gs ? ' <span style="font-size:.6875rem;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;color:' + gsCol + ';background:color-mix(in srgb,' + gsCol + ' 15%,transparent)">' + gs.toUpperCase() + '</span>' : '')
+    + (inj && !/not injury/i.test(inj) ? ' <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + inj.replace(/</g, '&lt;') + '</span>' : '');
+  return '<div class="card-section card-prac-sec"><div class="card-section-title">Practice Report <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· Week ' + wk + '</span>' + head + '</div>'
+    + '<div class="card-rank-row" style="grid-template-columns:repeat(' + days.length + ',1fr)">' + row + '</div>'
+    + '<div style="margin-top:5px;font-size:.6875rem;color:var(--text2)">% = how often starters with the same practice pattern so far went on to play (2019-25, same position). The final day adds the game designation.</div>'
+    + '</div>';
+}
+
+// WEEKLY RANKS on the WEEKLY card (Jack 2026-10-08: "add the weekly rank and positional rank to the left of wk 5 matchup
+// (qbs, dst, and kicker only have positional, other positions have flex rank too)"). Read off the weekly board the table
+// shows (your weekly board on MY RANKINGS in WEEKLY mode, otherwise Jack's), skipping players on bye, assumed out or ruled
+// out - the same players the table moves to its BYE / OUT row.
+function _cardWeeklyRanks(d) {
+  try {
+    const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
+    if (!vb || !d) return null;
+    const ver = (typeof currentMode !== 'undefined' && currentMode === 'weekly' && (currentVersion === 'jacks' || currentVersion === 'mine')
+      && vb[currentVersion] && vb[currentVersion].weekly && vb[currentVersion].weekly.length) ? currentVersion : 'jacks';
+    const board = vb[ver] && vb[ver].weekly;
+    if (!board || !board.length) return null;
+    const FLEX = { RB: 1, WR: 1, TE: 1 };
+    const isOut = p => (typeof window._weeklyOppFor === 'function' && window._weeklyOppFor(p.t) === 'BYE')
+      || (typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(p.n))
+      || /\b(IR|Out|PUP|Suspended)\b/.test(String(p.inj || ''));
+    if (isOut(d)) return { ver: ver, out: true };
+    let flex = 0, pos = 0, fr = null, pr = null, nFlex = 0, nPos = 0;
+    for (let i = 0; i < board.length; i++) {
+      const p = D[board[i]];
+      if (!p || isOut(p)) continue;
+      if (FLEX[p.s]) { nFlex++; if (fr == null) flex++; }
+      if (p.s === d.s) { nPos++; if (pr == null) pos++; }
+      if (p === d || p.n === d.n) { if (FLEX[d.s]) fr = flex; pr = pos; }
+    }
+    if (pr == null) return null;
+    return { ver: ver, flex: FLEX[d.s] ? fr : null, pos: pr, nFlex: nFlex, nPos: nPos };
+  } catch (_) { return null; }
+}
+
+// TEAM tab (Jack 2026-10-08): every teammate on one sheet — this week's Sim Lab projection
+// (with the questionable players flipped in / out right here: a what-if that never touches
+// the ASSUMED OUT list), the team's projected fantasy points next to the Vegas total, and each
+// player's share of the offense: snaps, routes, targets, air yards, aDOT, carries, red-zone
+// looks, xFP, points. Usage counts = data/team_usage_2026.js (scripts/build_team_usage.py,
+// nflverse pbp) in the lazy weekly bundle with SNAP_COUNTS / ROUTE_PCT / WEEKLY_STATS.
+// Shares are over the weeks the player played; LAST 3 = the team's last three games.
+const _teamViewState = { flip: {}, win: 'season', tm: null };
+function _teamDByName() {
+  let m = window._teamDMap;
+  if (m && m._n === D.length) return m;
+  m = { _n: D.length };
+  D.forEach(p => { if (p && p.n && !p._retired && !p._isDevy && !m[p.n]) m[p.n] = p; });
+  window._teamDMap = m;
+  return m;
+}
+function buildTeamCardView(d) {
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fmt1 = v => (typeof v === 'number' && isFinite(v)) ? (Math.round(v * 10) / 10).toFixed(1) : '—';
+  const pctS = v => (typeof v === 'number' && isFinite(v)) ? Math.round(v) + '%' : '—';
+  const wk = window._weeklyActiveWeek || 1;
+  const abbr = teamAbbr(d.t);
+  if (_teamViewState.tm !== abbr) { _teamViewState.tm = abbr; _teamViewState.flip = {}; }
+  const flip = _teamViewState.flip, win = _teamViewState.win;
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const recAdj = rankingScoringFmt === 'ppr' ? 0.5 : rankingScoringFmt === 'std' ? -0.5 : 0;   // WEEKLY_STATS fpts are half-PPR
+  const U = window.TEAM_USAGE_2026, SP = window.SIM_PROJ_2026, R = window.PLAYER_ROLES_2026;
+  const dMap = _teamDByName();
+  const SKILL = { QB: 1, RB: 1, WR: 1, TE: 1 };
+
+  // roster: Sim Lab team list + depth-chart roles + anyone with 2026 usage for this team + d.js team
+  const names = new Set();
+  if (SP && SP.teamOf) Object.keys(SP.teamOf).forEach(n => { if (SP.teamOf[n] === abbr) names.add(n); });
+  if (R && R.p) Object.keys(R.p).forEach(n => { if (R.p[n].t === abbr) names.add(n); });
+  if (U && U.p) Object.keys(U.p).forEach(n => { if (U.p[n].t === abbr) names.add(n); });
+  D.forEach(p => { if (p && !p._retired && !p._isDevy && SKILL[p.s] && p.t && teamAbbr(p.t) === abbr) names.add(p.n); });
+  const players = [];
+  const seen = new Set();
+  names.forEach(n => {
+    const p = dMap[n];
+    if (!p || !SKILL[p.s] || seen.has(p.n) || teamAbbr(p.t) !== abbr) return;
+    seen.add(p.n);
+    players.push(p);
+  });
+
+  // team game weeks + window
+  const tWeeks = (U && U.t && U.t[abbr]) ? Object.keys(U.t[abbr]).map(Number).sort((a, b) => a - b) : [];
+  const winWeeks = win === 'l3' ? tWeeks.slice(-3) : tWeeks;
+  const winSet = new Set(winWeeks.map(String));
+
+  // projections: board state (ASSUMED OUT list) vs this tab's flips
+  const hasFlip = Object.keys(flip).length > 0;
+  const projOf = (p, useFlip) => {
+    const r0 = _simProjRowRaw(p, wk);
+    if (useFlip && hasFlip && typeof window._qsValue === 'function') {
+      const v = window._qsValue(p.n, wk, flip);
+      if (v) return { v: v[fi], out: v[fi] === 0 && !!r0 && r0[3] == null };
+    }
+    const r = _simProjRow(p, wk);
+    if (!r) return null;
+    return { v: r[fi], out: r[fi] === 0 && r[3] == null };
+  };
+
+  const rows = players.map(p => {
+    const u = U && U.p && U.p[p.n];
+    const snapW = (typeof SNAP_COUNTS !== 'undefined' && SNAP_COUNTS[p.n] && SNAP_COUNTS[p.n]['2026'] && SNAP_COUNTS[p.n]['2026'].w) || {};
+    const played = winWeeks.filter(w => (u && u.w[w] && u.w[w][0] === abbr) || (snapW[w] > 0));
+    const agg = [0, 0, 0, 0, 0, 0, 0], tAgg = [0, 0, 0, 0, 0, 0, 0];
+    played.forEach(w => {
+      const r = u && u.w[w];
+      if (r && r[0] === abbr) for (let i = 0; i < 7; i++) agg[i] += r[i + 1];
+      const t = U.t[abbr][w];
+      if (t) for (let i = 0; i < 7; i++) tAgg[i] += t[i];
+    });
+    const avg = (fn) => { let s = 0, n = 0; played.forEach(w => { const v = fn(w); if (v != null) { s += v; n++; } }); return n ? s / n : null; };
+    const snap = avg(w => snapW[w] != null ? snapW[w] : null);
+    const rte = p.s === 'QB' ? null : avg(w => (typeof _routeWeek === 'function') ? _routeWeek(p.n, 2026, w) : null);
+    // points + xFP over the same weeks (game-log rows)
+    let fp = 0, xf = 0, gN = 0, xN = 0;
+    const wd = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS) ? WEEKLY_STATS[p.n] : null;
+    ((wd && wd.seasons && wd.seasons['2026']) || []).forEach(w => {
+      if (typeof w.fpts !== 'number' || !winSet.has(String(w.wk))) return;
+      if (w.tm && w.tm.trim() && w.tm.trim() !== abbr) return;
+      const f = w.fpts + (w.rec || 0) * recAdj;
+      fp += f; gN++;
+      const x = (typeof _xfpFor === 'function') ? _xfpFor(p, Object.assign({}, w, { fpts: f }), p.s, rankingScoringFmt) : null;
+      if (x) { xf += x.xfp; xN++; }
+    });
+    const share = (i) => (played.length && tAgg[i] > 0) ? agg[i] / tAgg[i] * 100 : null;
+    const pj = projOf(p, true), pj0 = hasFlip ? projOf(p, false) : pj;
+    const role = R && R.p && R.p[p.n];
+    return {
+      p, g: played.length, snap, rte,
+      tgtS: p.s === 'QB' ? null : share(0), aySh: p.s === 'QB' ? null : share(1),
+      adot: (p.s !== 'QB' && agg[0] > 0) ? agg[1] / agg[0] : null,
+      tgtG: (p.s !== 'QB' && played.length) ? agg[0] / played.length : null,
+      carS: share(2), carG: played.length ? agg[2] / played.length : null,
+      rzT: agg[3], rzC: agg[4], glC: agg[5], rzTS: share(3), rzCS: share(4),
+      dbG: (p.s === 'QB' && played.length) ? agg[6] / played.length : null,
+      fpg: gN ? fp / gN : null, xfpg: xN ? xf / xN : null,
+      proj: pj ? pj.v : null, out: pj ? pj.out : false, proj0: pj0 ? pj0.v : null,
+      role: role ? role.line : '', dc: role && role.dc != null ? role.dc : 99,
+    };
+  }).filter(r => r.g > 0 || (r.proj != null && r.proj > 0) || r.dc < 99);
+
+  // ---- header: matchup + team points
+  const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+  const entry = sched ? sched[wk] : null;
+  const tt = (typeof window._weeklyTeamTotalFor === 'function') ? window._weeklyTeamTotalFor(d.t) : null;
+  const sum = (arr, k) => arr.reduce((s, r) => s + (typeof r[k] === 'number' ? r[k] : 0), 0);
+  const projTot = sum(rows, 'proj'), projTot0 = sum(rows, 'proj0');
+  const box = (lbl, val, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num">' + val + '</div></div>';
+  const dlt = (a, b) => { const x = Math.round((a - b) * 10) / 10; return Math.abs(x) < 0.1 ? '' : ' <span style="font-size:.6875rem;color:' + (x > 0 ? '#22c55e' : '#ef4444') + '">(' + (x > 0 ? '+' : '') + x.toFixed(1) + ')</span>'; };
+  const fmtLbl = rankingScoringFmt === 'ppr' ? 'PPR' : rankingScoringFmt === 'std' ? 'STD' : 'HALF';
+  let html = '<div class="card-section"><div class="card-section-title">' + esc(abbr) + ' · Week ' + wk
+    + (entry ? (entry.bye ? ' · BYE' : ' · ' + (entry.home ? 'vs ' : '@ ') + esc(entry.opp)) : '') + '</div>';
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">';
+  html += box('VEGAS TEAM TOTAL', tt != null ? fmt1(tt) : '—', 'Implied real points for ' + abbr + ' this week: (game total − spread) / 2');
+  html += box('PROJ FANTASY PTS', (rows.length ? fmt1(projTot) : '—') + (hasFlip ? dlt(projTot, projTot0) : ''), 'Sum of every ' + abbr + ' QB / RB / WR / TE Sim Lab projection this week (' + fmtLbl + ')' + (hasFlip ? ' with your in / out flips; (+/-) vs the board' : ''));
+  const kD = D.find(p => p && p.s === 'K' && !p._retired && p.t && teamAbbr(p.t) === abbr);
+  const kR = kD ? _simProjRow(kD, wk) : null, dstR = (SP && SP.weeks && SP.weeks[wk]) ? SP.weeks[wk]['DST_' + abbr] : null;
+  html += box('K · D/ST', (kR ? fmt1(kR[fi]) : '—') + ' · ' + (dstR ? fmt1(dstR[fi]) : '—'), (kD ? kD.n + ' ' : 'Kicker ') + 'and ' + abbr + ' D/ST projections (not in the total)');
+  html += '</div>';
+
+  // ---- questionable switches (what-if only)
+  const QS = SP && SP.qs && +SP.qs.wk === +wk && SP.qs.teams ? SP.qs.teams[abbr] : null;
+  if (QS && QS.q && QS.q.length && !(typeof _isOffseasonNow === 'function' && _isOffseasonNow())) {
+    const aoList = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
+    html += '<div style="margin-top:8px;padding:7px 9px;border:1px solid var(--border);border-radius:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:.6875rem;color:var(--text2);letter-spacing:.5px;margin-bottom:5px">'
+      + '<span title="Tap a player to flip him in or out. Every projection below re-reads the Sim Lab run for that in / out combination. A what-if on this card only - it does not change the weekly board or the ASSUMED OUT list.">QUESTIONABLE · TAP TO PLAY / SIT</span>'
+      + (hasFlip ? '<button type="button" data-tmreset="1" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.625rem;padding:1px 6px;cursor:pointer">RESET</button>' : '')
+      + '</div><div style="display:flex;flex-wrap:wrap;gap:5px">';
+    QS.q.forEach(qn => {
+      const k = _qsNorm(qn);
+      const boardOut = aoList.some(n => _qsNorm(n) === k);
+      const flipped = Object.prototype.hasOwnProperty.call(flip, k);
+      const isOut = flipped ? flip[k] : boardOut;
+      html += '<button type="button" data-tmqs="' + esc(k) + '" data-tmqsboard="' + (boardOut ? '1' : '0') + '" title="' + (boardOut ? 'Board: assumed out' : 'Board: playing') + (flipped ? ' · flipped here' : '') + '" style="cursor:pointer;font-size:.6875rem;padding:3px 8px;border-radius:999px;border:1px solid ' + (isOut ? 'rgba(239,68,68,.5)' : 'rgba(34,197,94,.5)') + ';background:' + (isOut ? 'rgba(239,68,68,.12)' : 'rgba(34,197,94,.12)') + ';color:var(--text)">'
+        + esc(qn) + ' <b style="color:' + (isOut ? '#ef4444' : '#22c55e') + '">' + (isOut ? 'OUT' : 'IN') + '</b>' + (flipped ? ' <span style="color:var(--text2)">*</span>' : '') + '</button>';
+    });
+    html += '</div></div>';
+  }
+  html += '</div>';
+
+  // ---- usage sheet
+  const u0 = U && U.t && U.t[abbr];
+  html += '<div class="card-section"><div class="card-section-title" style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span>Usage &amp; projections <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + fmtLbl + (tWeeks.length ? ' · thru W' + tWeeks[tWeeks.length - 1] : '') + '</span></span>'
+    + '<span style="display:flex;gap:4px">'
+    + ['season', 'l3'].map(k => '<button type="button" data-tmwin="' + k + '" style="cursor:pointer;font-size:.625rem;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:5px;border:1px solid var(--border);background:' + (win === k ? 'var(--elev-2,#1f2937)' : 'transparent') + ';color:' + (win === k ? 'var(--text)' : 'var(--text2)') + '">' + (k === 'season' ? 'SEASON' : 'LAST 3') + '</button>').join('')
+    + '</span></div>';
+  if (!u0 || !rows.length) {
+    const loading = typeof window.TEAM_USAGE_2026 === 'undefined';
+    html += '<div style="text-align:center;padding:1rem;color:var(--text2);font-size:.75rem">' + (loading ? 'Loading team usage…' : 'No ' + abbr + ' games yet this season.') + '</div></div>';
+    return html;
+  }
+  // cell sizes set per cell: the site's table rules override an inherited font-size
+  const STK = 'position:sticky;left:0;z-index:1;background:var(--surface,#111827)';
+  const H = (lbl, tip) => '<th title="' + esc(tip) + '" style="cursor:help;padding:4px 4px;text-align:right;white-space:nowrap;font-weight:600;font-size:.5625rem;letter-spacing:.3px">' + lbl + '</th>';
+  const td = (v, opt) => '<td style="padding:3px 4px;text-align:right;white-space:nowrap;font-size:.6875rem' + (opt && opt.c ? ';color:' + opt.c : '') + (opt && opt.b ? ';font-weight:700' : '') + '"' + (opt && opt.t ? ' title="' + esc(opt.t) + '"' : '') + '>' + v + '</td>';
+  const shCol = (v, hi, mid) => v == null ? null : v >= hi ? '#22c55e' : v >= mid ? '#facc15' : null;
+  html += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;min-width:0;table-layout:auto;border-collapse:collapse;font-size:.71875rem;font-variant-numeric:tabular-nums">';
+  html += '<thead><tr style="color:var(--text2);font-size:.625rem;letter-spacing:.4px;border-bottom:1px solid var(--border)">'
+    + '<th style="padding:4px 5px;text-align:left;font-weight:600;font-size:.5625rem;letter-spacing:.3px;' + STK + '">PLAYER</th>'
+    + H('W' + wk + ' PROJ', 'Sim Lab projection this week (' + fmtLbl + ')' + (hasFlip ? '; (+/-) = change from your in / out flips' : ''))
+    + H('G', 'Games played in the window')
+    + H('SNAP', 'Offensive snap share')
+    + H('RTE', 'Route participation: share of team dropbacks he ran a route on')
+    + H('TGT%', 'Target share: his targets / team targets in his games')
+    + H('TGT/G', 'Targets per game (QB: dropbacks per game)')
+    + H('AY%', 'Air-yard share: his air yards / team air yards in his games')
+    + H('aDOT', 'Average depth of target (air yards per target)')
+    + H('CAR%', 'Carry share: his rush attempts / team rush attempts in his games')
+    + H('CAR/G', 'Carries per game')
+    + H('RZ', 'Red-zone looks (targets + carries inside the 20); hover a cell for the split and goal-line carries')
+    + H('xFP/G', 'Expected fantasy points per game from usage (league-average value of every target / carry / throw)')
+    + H('FP/G', 'Actual fantasy points per game')
+    + '</tr></thead><tbody>';
+  ['QB', 'RB', 'WR', 'TE'].forEach(pos => {
+    const grp = rows.filter(r => r.p.s === pos).sort((a, b) => ((b.proj || 0) - (a.proj || 0)) || ((b.snap || 0) - (a.snap || 0)) || (a.dc - b.dc));
+    if (!grp.length) return;
+    const gp = sum(grp, 'proj'), gp0 = sum(grp, 'proj0');
+    html += '<tr><td colspan="14" style="padding:7px 5px 3px;text-align:left;font-size:.625rem;letter-spacing:.6px;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border)">' + pos + ' · ' + fmt1(gp) + ' PROJ' + (hasFlip ? dlt(gp, gp0) : '') + '</td></tr>';
+    grp.forEach(r => {
+      const me = r.p.n === d.n, isQB = pos === 'QB';
+      const projCell = (r.out || r.proj === 0) ? '<span style="color:#ef4444;font-weight:700">OUT</span>'
+        : (r.proj != null ? fmt1(r.proj) + (hasFlip && r.proj0 != null ? dlt(r.proj, r.proj0) : '') : '—');
+      html += '<tr style="border-bottom:1px solid var(--border)' + (me ? ';background:rgba(250,204,21,.08)' : '') + '">'
+        + '<td style="padding:3px 5px;text-align:left;white-space:nowrap;font-size:.71875rem;' + STK + (me ? ';box-shadow:inset 3px 0 0 #facc15' : '') + '"><a href="#" data-tmplayer="' + esc(r.p.n) + '" style="color:var(--text);text-decoration:none;font-weight:' + (me ? 800 : 600) + '">' + esc(r.p.n) + '</a>'
+        + (r.role ? '<div style="font-size:.5625rem;color:var(--text2);letter-spacing:.3px">' + esc(r.role) + '</div>' : '') + '</td>'
+        + td(projCell, { b: 1 })
+        + td(r.g || '—')
+        + td(pctS(r.snap), { c: shCol(r.snap, 70, 45) })
+        + td(isQB ? '—' : pctS(r.rte), { c: shCol(r.rte, 75, 50) })
+        + td(isQB ? '—' : pctS(r.tgtS), { c: shCol(r.tgtS, 22, 14) })
+        + td(isQB ? fmt1(r.dbG) : fmt1(r.tgtG), isQB ? { t: 'Dropbacks per game' } : null)
+        + td(isQB ? '—' : pctS(r.aySh), { c: shCol(r.aySh, 28, 18) })
+        + td(isQB ? '—' : fmt1(r.adot))
+        + td(pctS(r.carS), { c: pos === 'RB' ? shCol(r.carS, 55, 35) : null })
+        + td(fmt1(r.carG))
+        + td(r.g ? (r.rzT + r.rzC) : '—', { t: r.rzT + ' targets' + (r.rzTS != null ? ' (' + Math.round(r.rzTS) + '% of team)' : '') + ' · ' + r.rzC + ' carries' + (r.rzCS != null ? ' (' + Math.round(r.rzCS) + '% of team)' : '') + ' · ' + r.glC + ' inside the 5' })
+        + td(fmt1(r.xfpg))
+        + td(fmt1(r.fpg))
+        + '</tr>';
+    });
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="margin-top:6px;font-size:.6875rem;color:var(--text2)">Shares count only the games each player played. Tap a name to open his card. Source: nflverse play-by-play (targets, air yards, carries, red zone), snap counts, PFF routes, Sim Lab projections.</div>';
+  html += '</div>';
+  return html;
+}
+// TEAM tab wiring: painted on first open, again on flips / window changes / lazy-data arrival
+function _wireTeamCardView(d) {
+  const host = document.getElementById('cardTeamView');
+  if (!host) return;
+  const paint = () => { if (host.isConnected) { try { host.innerHTML = buildTeamCardView(d); } catch (e) { console.warn('[Card] team view failed:', e); } } };
+  host._paint = paint;
+  host.addEventListener('click', e => {
+    const q = e.target.closest('[data-tmqs]');
+    if (q) {
+      const k = q.dataset.tmqs, board = q.dataset.tmqsboard === '1';
+      const cur = Object.prototype.hasOwnProperty.call(_teamViewState.flip, k) ? _teamViewState.flip[k] : board;
+      if (!cur === board) delete _teamViewState.flip[k]; else _teamViewState.flip[k] = !cur;
+      paint(); return;
+    }
+    if (e.target.closest('[data-tmreset]')) { _teamViewState.flip = {}; paint(); return; }
+    const w = e.target.closest('[data-tmwin]');
+    if (w) { _teamViewState.win = w.dataset.tmwin; paint(); return; }
+    const a = e.target.closest('[data-tmplayer]');
+    if (a) {
+      e.preventDefault();
+      const p = _teamDByName()[a.dataset.tmplayer];
+      if (p && p !== d && typeof openPlayerCard === 'function') openPlayerCard(p);
+    }
+  });
+  document.addEventListener('mff:weeklydata', function _tmRepaint() {
+    document.removeEventListener('mff:weeklydata', _tmRepaint);
+    if (host.dataset.ready === '1') paint();
+  });
+}
+
 function buildWeeklyCardView(d) {
   window._weeklyCardD = d;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -16403,8 +17025,23 @@ function buildWeeklyCardView(d) {
     : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
   html += box('O/U', ou != null ? fmt1(ou) : '—', '', 'Game total (over/under)', isDst ? _ouColInv(ou) : _ouCol(ou));
   html += '</div>';
+  // weekly rank boxes sit left of WK N MATCHUP (flex + position for RB / WR / TE, position only for QB / K / D/ST)
+  let _rkHtml = '', _rkN = 0;
+  const _wr = (d.s && typeof _cardWeeklyRanks === 'function') ? _cardWeeklyRanks(d) : null;
+  if (_wr) {
+    const pl = d.s === 'DST' ? 'D/ST' : d.s;
+    const _cut = { QB: [12, 24], TE: [12, 24], K: [12, 24], DST: [12, 24], RB: [24, 40], WR: [24, 48], FLEX: [36, 84] };
+    const _wkCol = (rk, key) => { const c = _cut[key]; return (!c || rk == null) ? null : rk <= c[0] ? _G : rk <= c[1] ? _Y : _R; };
+    const who = _wr.ver === 'mine' ? 'your' : 'Jack\'s';
+    if (_wr.out) { _rkHtml = box('WK ' + wk + ' RANK', 'OUT', '', 'On bye, assumed out or ruled out this week - not ranked on ' + who + ' Week ' + wk + ' board', '#ef4444'); _rkN = 1; }
+    else {
+      if (_wr.flex != null) { _rkHtml += box('WK ' + wk + ' FLEX', '#' + _wr.flex, '', 'Rank among RB / WR / TE on ' + who + ' Week ' + wk + ' board (players on bye / out skipped)', _wkCol(_wr.flex, 'FLEX')); _rkN++; }
+      _rkHtml += box('WK ' + wk + ' ' + pl, pl + _wr.pos, '', 'Position rank on ' + who + ' Week ' + wk + ' board (players on bye / out skipped)', _wkCol(_wr.pos, d.s)); _rkN++;
+    }
+  }
+  if (!r && _rkN) html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + _rkN + ',1fr);margin-top:.4rem">' + _rkHtml + '</div>';
   if (r) {
-    html += '<div class="card-rank-row" style="grid-template-columns:1fr 1fr;margin-top:.4rem">';
+    html += '<div class="card-rank-row" style="grid-template-columns:repeat(' + (2 + _rkN) + ',1fr);margin-top:.4rem">' + _rkHtml;
     html += box('WK ' + wk + ' MATCHUP', r.label + ' <span style="font-size:.6875rem;color:var(--text2)">#' + r.rank + '/' + r.n + '</span>', '',
       'Position-weighted matchup rating for this week (1 = easiest schedule slot league-wide)', r.color || null);
     const _alw = (r.priorLive === false && typeof window._oppAllowedFor === 'function') ? window._oppAllowedFor(r.opp, d.s) : null;
@@ -16457,13 +17094,57 @@ function buildWeeklyCardView(d) {
   html += '<div class="card-section"><div class="card-section-title">Weekly Projection '
     + '<span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
   const wkBook = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
-  html += '<div class="card-rank-row" style="grid-template-columns:repeat(3,1fr)">';
+  html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
   html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
   html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) : '—', '',
     wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player', wkBook != null ? _ptsCol(wkBook.ppg) : null);
   html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
+  const _xa = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
+  const _xv = (_xa && _xa.n) ? Math.round(_xa.xfpg * 10) / 10 : null;
+  html += box('xFP /GM', _xv != null ? fmt1(_xv) : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
   html += '</div>';
   // (Clay / Sleeper / ESPN / FantasyPros / CBS reference tiles removed 2026-10-08)
+  // WITH / WITHOUT QUESTIONABLE TEAMMATES (Jack 2026-10-08): this player's week projection with each questionable
+  // teammate in vs out (SIM_PROJ_2026.qs), the current ASSUMED OUT state marked; his own line when he is questionable.
+  try {
+    const _qt = (typeof window._qsTeammates === 'function') ? window._qsTeammates(d.n, wk) : null;
+    const _fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+    if (_qt && _qt.q.length) {
+      const nowV = window._qsValue(d.n, wk);
+      const aoList = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
+      const rowsQ = [];
+      _qt.q.forEach((qn, i) => {
+        const k = _qsNorm(qn);
+        const isOut = aoList.some(n => _qsNorm(n) === k);
+        const fIn = {}, fOut = {}; fIn[k] = false; fOut[k] = true;
+        const vin = window._qsValue(d.n, wk, fIn), vout = window._qsValue(d.n, wk, fOut);
+        if (!vin || !vout) return;
+        if (i === _qt.self) { rowsQ.push({ self: true, qn, isOut, vin: vin[_fi] }); return; }
+        rowsQ.push({ qn, isOut, vin: vin[_fi], vout: vout[_fi] });
+      });
+      if (rowsQ.length) {
+        html += '<div style="margin-top:8px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:.75rem">'
+          + '<div style="font-size:.6875rem;color:var(--text2);letter-spacing:.5px;margin-bottom:4px" title="Sim Lab projection for this game with each questionable player in vs out. ASSUMED OUT = on the weekly BYE / OUT row; IN = moved back. Follows the toggles.">WITH / WITHOUT QUESTIONABLE' + (nowV ? ' \u00b7 NOW ' + fmt1(nowV[_fi]) : '') + '</div>';
+        rowsQ.forEach(r => {
+          const tag = '<span style="font-size:.625rem;padding:1px 5px;border-radius:4px;margin-left:5px;' + (r.isOut ? 'background:rgba(239,68,68,.15);color:#ef4444">ASSUMED OUT' : 'background:rgba(34,197,94,.15);color:#22c55e">IN') + '</span>';
+          if (r.self) {
+            html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(d.n) + tag + '</span><span style="color:var(--text2)">if he plays <b style="color:var(--text)">' + fmt1(r.vin) + '</b></span></div>';
+          } else {
+            const dlt = r.vout - r.vin;
+            if (Math.abs(dlt) < 0.1) {   // every questionable teammate is listed (Jack 2026-10-08: "Stefon Diggs is also questionable")
+              html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(r.qn) + tag + '</span><span style="color:var(--text2)" title="With the other players as you have them set, his status does not move this projection">no change · ' + fmt1(r.vin) + '</span></div>';
+              return;
+            }
+            html += '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>' + esc(r.qn) + tag + '</span><span style="color:var(--text2)">'
+              + '<span' + (!r.isOut ? ' style="color:var(--text);font-weight:700"' : '') + '>plays ' + fmt1(r.vin) + '</span> \u00b7 '
+              + '<span' + (r.isOut ? ' style="color:var(--text);font-weight:700"' : '') + '>sits ' + fmt1(r.vout) + '</span>'
+              + ' <span style="color:' + (dlt >= 0 ? '#22c55e' : '#ef4444') + '">(' + (dlt >= 0 ? '+' : '') + fmt1(dlt) + ')</span></span></div>';
+          }
+        });
+        html += '</div>';
+      }
+    }
+  } catch (_e) { console.warn('[Card] questionable box failed:', _e); }
   html += '<div style="margin-top:7px;font-size:.6875rem;color:var(--text2)">Source: <span style="color:var(--accent);cursor:help" title="' + esc(src.tip) + '">' + src.lbl + '</span>'
     + (out.src === 'props' ? ' · full prop board below' : '') + '</div>';
   html += '</div>';
@@ -16489,6 +17170,8 @@ function buildWeeklyCardView(d) {
       _recentHtml += '</div></div>';
     }
   } catch (_e) {}
+  // Practice report right above recent games (Jack 2026-10-08)
+  try { html += _practiceReportHtml(d, wk, box); } catch (_e) { console.warn('[Card] practice report failed:', _e); }
   html += _recentHtml;
   if (out.src === 'sim' && typeof _projWhyHtml === 'function') html += _projWhyHtml(d, wk, proj, esc);
 
@@ -16560,8 +17243,9 @@ function _lmCell(scope, name, book, stat, cur, fmtFn) {
   const good = _LM_NEG_GOOD[stat] ? !up : up;
   const tip = 'opened ' + _lmFmtVal(stat, open) + ' (' + _lmFmtDate(arr[0][0]) + ') → '
     + _lmFmtVal(stat, cur) + ' (' + _lmFmtDate(last[0]) + ')';
-  return txt + '<span title="' + tip + '" style="font-size:.6875rem;margin-left:2px;color:'
-    + (good ? '#22c55e' : '#ef4444') + '">' + (up ? '▲' : '▼') + '</span>';
+  // 2026-10-08 (Jack): no ▲ / ▼ move markers in the prop tables — they broke the
+  // colour-coded cells. The open → now move stays on hover.
+  return '<span title="' + tip + '">' + txt + '</span>';
 }
 // Newest moves for one player in a scope, across books/stats: [{when, book, stat, from, to}].
 function _lmRecentMoves(scope, name, books, labels, limit) {
@@ -16701,7 +17385,7 @@ function _buildWeeklyLinesSection(d) {
   html += '</tbody></table>';
   html += _lmMovesHtml(wk, d.n, books, Object.fromEntries(ROWS.map(r => [r[0], r[1]])));
   html += '<div style="font-size:.6875rem;color:var(--text2);margin-top:6px">'
-    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. Pass TD / INT Expected = line + juice as an average count. ▲▼ = moved since first posted (hover for open → now).'
+    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. Pass TD / INT Expected = line + juice as an average count. Hover a line for its open → now move.'
     + (rec.asOf ? ' As of ' + rec.asOf + '.' : '') + '</div>';
   html += '</div>';
   return html;
@@ -18138,6 +18822,7 @@ function openPlayerCard(d, ctxMode) {
       ${d.s !== 'K' && d.s !== 'DST' ? `<div class="card-view-toggle" id="cardViewToggle">
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
+        ${(!d._isDevy && !_is2026 && !d._retired && d.t && d.s !== 'K' && d.s !== 'DST') ? `<button class="card-view-btn" data-cardview="team">TEAM</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">DYNASTY</button>
         ${_newsHtml ? `<button class="card-view-btn" data-cardview="news">NEWS</button>` : ''}
       </div>` : ''}
@@ -18146,7 +18831,7 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-fantasy-view${(d._isDevy || _is2026) ? ' hidden' : ''}" id="cardFantasyView">
       ${!d._retired ? `<div class="card-section">
         <div class="card-section-title">Rankings <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ${_ctxModeLabel}</span></div>
-        <div class="card-rank-row" style="grid-template-columns:1fr 1fr">
+        <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">
           <div class="card-rank-box">
             <div class="lbl">Your Rank</div>
             <div class="num green">${_ctxRank != null ? _ctxRank : (d.myRank ?? '—')}</div>
@@ -18155,17 +18840,21 @@ function openPlayerCard(d, ctxMode) {
             <div class="lbl">Pos Rank</div>
             <div class="num accent">${d.myPosRank || d.r}</div>
           </div>
+          <div class="card-rank-box">
+            <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
+            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
+          </div>
         </div>
         <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
             <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
           </div>
-          <div class="card-rank-box">
-            <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
-            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
-          </div>
-          ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v);return `<div class="card-rank-box">
+          ${(()=>{const x=(typeof _xfpAgg==='function')?_xfpAgg(d,rankingScoringFmt,null):null;const v=(x&&x.n)?Math.round(x.xfpg*10)/10:null;const c=v!=null?posFptsColor(v,d.s):null;return `<div class="card-rank-box"${x&&x.n?` title="Expected fantasy points per game from usage (targets, carries, field position), 2026 to date — ${x.n} gm, actual ${Math.round(x.ppg*10)/10} /gm"`:''}>
+            <div class="lbl">xFP /GM</div>
+            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v:'—'}</div>
+          </div>`;})()}
+          ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v,d.s);return `<div class="card-rank-box">
             <div class="lbl" title="Average PPG over the last 4 games played (2026 to date, then the end of 2025) — shows which way the player is trending vs the season PPG.">L4 PPG</div>
             <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
           </div>`;})()}
@@ -18531,6 +19220,7 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-prospect-view" id="cardWeeklyView" style="display:none">
       ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
       </div>
+      <div class="card-prospect-view" id="cardTeamView" style="display:none"></div>
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
       <div class="card-prospect-view card-fantasy-extra" id="cardLogsView" data-ready="${hasWeeklyData(d) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && hasWeeklyData(d)) ? 'block' : 'none'}">
       ${_logsSectionHtml(d)}
@@ -18559,7 +19249,7 @@ function openPlayerCard(d, ctxMode) {
     _cardIrBtn.addEventListener('click', () => {
       const wasOut = window._irIsOut(d.n);
       const label = wasOut ? null : 'Hide ' + d.n + ' from the ' + IR_SEASON + ' season rankings?\n\nRedraft / Best Ball / Superflex / Weekly hide them; dynasty boards, their board slot, player card and search all stay. Applies for every user immediately.';
-      if (label && !confirm(label)) return;
+      if (label && !_mffConfirm(label)) return;
       if (!window._irToggle(d.n)) return;
       toast(wasOut ? d.n + ' restored to the season rankings' : d.n + ' hidden from ' + IR_SEASON + ' season rankings (' + window._irFlagged().length + ' player' + (window._irFlagged().length === 1 ? '' : 's') + ' flagged)');
       if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
@@ -18610,6 +19300,8 @@ function openPlayerCard(d, ctxMode) {
     }
   } catch (_e) {}
 
+  try { _wireTeamCardView(d); } catch (_e) { console.warn('[Card] team tab wiring failed:', _e); }
+
   // Fantasy/Prospect/Comps/Info view toggle
   const _cvToggle = document.getElementById('cardViewToggle');
   if (_cvToggle) {
@@ -18627,6 +19319,7 @@ function openPlayerCard(d, ctxMode) {
         const crv = document.getElementById('cardCareerView');
         const lgv = document.getElementById('cardLogsView');
         const nv = document.getElementById('cardNewsView');
+        const tmv = document.getElementById('cardTeamView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (iv) iv.style.display = 'none';
@@ -18635,6 +19328,7 @@ function openPlayerCard(d, ctxMode) {
         if (crv) crv.style.display = 'none';
         if (lgv) lgv.style.display = 'none';
         if (nv) nv.style.display = 'none';
+        if (tmv) tmv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'info') {
@@ -18649,6 +19343,12 @@ function openPlayerCard(d, ctxMode) {
           if (lgv) lgv.style.display = 'block';
         } else if (view === 'news') {
           if (nv) nv.style.display = 'block';
+        } else if (view === 'team') {
+          if (tmv) {
+            tmv.style.display = 'block';
+            // usage counts + snaps / routes / game logs ride the lazy weekly bundle
+            if (tmv.dataset.ready !== '1') { tmv.dataset.ready = '1'; if (tmv._paint) tmv._paint(); if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData(); }
+          }
         } else {
           fv.classList.remove('hidden');
           // Game logs + career ride along inside FANTASY (2026-10-08) once they have data
@@ -18768,9 +19468,25 @@ function openPlayerCard(d, ctxMode) {
     document.addEventListener('mff:weeklydata', function _l4Backfill() {
       document.removeEventListener('mff:weeklydata', _l4Backfill);
       if (!_l4Num.isConnected) return;
-      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d));
+      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d), d.s);
       _l4Num.innerHTML = c.html;
       _l4Num.style.color = c.color || '';
+      // xFP /GM tiles (FANTASY + WEEKLY) ride on the same bundle
+      try {
+        const x = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
+        const xv = (x && x.n) ? Math.round(x.xfpg * 10) / 10 : null;
+        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.textContent = xv != null ? xv : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
+      } catch (_) {}
+      // PRACTICE REPORT: the elite flag (last season's PPG rank) needs this bundle - redraw the section
+      try {
+        const pw = cardEl.querySelector('.card-prac-sec');
+        if (pw && typeof _practiceReportHtml === 'function') {
+          window._pracRankCache = null;
+          const bx = (lbl, val, cls, tip, color) => '<div class="card-rank-box"' + (tip ? ' title="' + String(tip).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</div></div>';
+          const h = _practiceReportHtml(d, window._weeklyActiveWeek || 1, bx);
+          if (h) pw.outerHTML = h;
+        }
+      } catch (_) {}
     });
   }
 
@@ -19785,7 +20501,7 @@ function renderCompareGrid() {
           <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
             <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
             <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div></div>
-            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d));return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
+            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d),d.s);return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
             ${_teamPpgBoxHtml(d.t)}
           </div>
         </div>
@@ -29291,7 +30007,7 @@ window.fmtHeight = fmtHeight;
           return;
         }
         if (deleteCode) {
-          if (!confirm('Delete code ' + deleteCode + '? This cannot be undone.')) return;
+          if (!_mffConfirm('Delete code ' + deleteCode + '? This cannot be undone.')) return;
           db.collection('premium_codes').doc(deleteCode).delete().then(() => {
             showAdminMsg(premCodeMsg, 'Deleted ' + deleteCode, 'success');
             loadPremiumCodes();
@@ -29392,7 +30108,7 @@ window.fmtHeight = fmtHeight;
     window._adminQaDelete = function(docId) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       if (!db) return;
-      if (!confirm('Delete this question? Deleting frees the member\'s weekly slot (the doc ID is the quota), so they can re-ask this week.')) return;
+      if (!_mffConfirm('Delete this question? Deleting frees the member\'s weekly slot (the doc ID is the quota), so they can re-ask this week.')) return;
       db.collection('qa_questions').doc(docId).delete()
         .then(() => { showAdminMsg(qaMsg, 'Deleted', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
         .catch(e => showAdminMsg(qaMsg, 'Delete error: ' + e.message, 'error'));
@@ -31064,15 +31780,34 @@ window.fmtHeight = fmtHeight;
   // (#10 71% / #30 36% / #100 10% of #1 vs their 64/32/3) while same-tier
   // players stay near-interchangeable and moving a tier boundary on the
   // board actually moves prices. tierDrop is the live A/B lever.
-  // extraPieceW 1 + pkgTax 0 (Jack 2026-09-01 late: "mimic their trade
-  // calculator with the boosts for 2-for-1/3-for-1"): with the geometric
-  // tierDrop curve in place, packages now count at FULL value like Flock's
-  // plain-sum calculator — the steep curve alone polices quality, so the
-  // old surplus haircut + consolidation tax would double-punish packages.
-  // Extras still pay the waiver-spot cost (~11 = curve value at replRank),
-  // the one guard Flock lacks, so junk throw-ins stay worthless.
-  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 1,
-    pkgTax: 0,
+  // extraPieceW 0.75 (Jack 2026-10-08: "packages too strong" — the #1 pick
+  // for two #19s graded FAIR under the plain Flock-style sum used since
+  // 2026-09-01). Each UNMATCHED extra piece pays the waiver-spot cost (~11 =
+  // curve value at replRank, the guard Flock lacks) and then counts
+  // extraPieceW^k of what remains, k = 1 for the first extra, 2 for the
+  // second… — so a 3-for-1 is docked harder than a 2-for-1 and the single
+  // star needs real quality back, not quantity. The smaller side of a trade
+  // still counts in full (2026-10-06 rule). pkgTax 0 stays a spare lever.
+  // SMOOTH TIERS + extraPieceW 0.825 (Jack 2026-10-08 later: "don't worry
+  // about tiers too much" — Flock's values are a pure rank curve, tiers are
+  // labels there). The tier index is now FRACTIONAL: value slides from one
+  // tier start to the next instead of holding flat inside a tier and dropping
+  // 15% at the break (#4 249 → #5 210 was a cliff). Tier breaks still set the
+  // slope, so Jack's board keeps shaping prices. Benchmarked on 49 same-rank-
+  // slot trades vs Flock's /trades/calculate (smooth tiers alone: mean edge
+  // gap 7.0 → 4.3 pts). smoothTiers false restores the step ladder. Smoothing
+  // AND the tail below apply only in single-season modes (_wnSingleSeason) —
+  // the benchmark was redraft; dynasty keeps the step ladder unchanged.
+  // SINGLE-SEASON TAIL (same day): past rank tailStart the value also decays
+  // ×e^(−(rank − tailStart)/tailScale) in redraft / best ball / superflex /
+  // weekly (the _irHiddenHere modes; dynasty untouched) — our board held mid-
+  // round value too long (#60 at 20% of #1, Flock 12%), so two #55-#65s beat a
+  // #40 (+19% package; Flock FAIR). Smooth + tail, extras 0.875: gap 2.2 pts,
+  // lean 0.0, same verdict direction 45/49 (was 29/49 at the 0.75 step
+  // ladder). The roster-spot cost still reads the UNTAILED base (~10) so junk
+  // throw-ins stay worthless. Script: E:\MyFantasyFootball\trade_calc_flock_compare.
+  window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.875,
+    pkgTax: 0, smoothTiers: true, tailStart: 45, tailScale: 40,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
     // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
@@ -31084,21 +31819,44 @@ window.fmtHeight = fmtHeight;
   // tier index when the board has tiers, pseudo-ladder index by rank when it
   // doesn't (previously tierless boards got factor 1, leaving consensus
   // values flat — rank 60 priced at 88% of #1).
+  // Pseudo-ladder tier index at a rank — fractional when smoothTiers is on:
+  // i + (rank − start_i) / (start_{i+1} − start_i), the last tier spanning 20.
+  const _wnSingleSeason = function(mode) {
+    return typeof window._irHiddenHere === 'function' && window._irHiddenHere(mode);
+  };
+  const _wnPseudoIdx = function(rank, smooth) {
+    const WN = window._WINNOW_VAL;
+    const L = WN.pseudoTiers || [];
+    let idx = 0;
+    for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
+    if (!smooth || !WN.smoothTiers || !L.length) return idx;
+    const from = L[idx], next = L[idx + 1] != null ? L[idx + 1] : from + 20;
+    return idx + Math.min(Math.max((rank - from) / (next - from), 0), 1);
+  };
   window._winnowTierFactor = function(d, src, mode, rank) {
     const WN = window._WINNOW_VAL;
     let idx = null;
+    const single = _wnSingleSeason(mode);
     const tr = window._mtTierRangeFor(d, src, mode);
     if (tr && tr.count >= _WN_MIN_TIERS) {
       idx = tr.index;
+      // Real tiers: slide across the tier's own span [from, to] toward the next break.
+      if (single && WN.smoothTiers && isFinite(tr.rank) && tr.to >= tr.from) {
+        idx += Math.min(Math.max((tr.rank - tr.from) / (tr.to - tr.from + 1), 0), 1);
+      }
     } else if (isFinite(rank) && rank >= 1 && rank < 999) {
-      const L = WN.pseudoTiers || [];
-      idx = 0;
-      for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
+      idx = _wnPseudoIdx(rank, single);
     }
     if (idx == null) return 1;
     // Geometric ladder: each tier break compounds. No floor — deep tiers are
     // supposed to approach worthless on the win-now scale (Flock-steep).
-    return Math.pow(1 - WN.tierDrop, idx);
+    let f = Math.pow(1 - WN.tierDrop, idx);
+    // Single-season tail (see _WINNOW_VAL): rank decay past tailStart.
+    const r = (isFinite(rank) && rank >= 1 && rank < 999) ? rank : (tr && isFinite(tr.rank) ? tr.rank : null);
+    if (single && r != null && WN.tailScale > 0 && r > WN.tailStart) {
+      f *= Math.exp(-(r - WN.tailStart) / WN.tailScale);
+    }
+    return f;
   };
   // A board's OWN tiers drive the ladder only when dense enough to price with
   // (Jack's dynasty/superflex boards carry just 4-7 boundaries — real tiers
@@ -31108,12 +31866,9 @@ window.fmtHeight = fmtHeight;
   const _WN_MIN_TIERS = 8;
   // Source-independent win-now value at a board rank (linear base × the
   // pseudo-ladder tier factor) — the baseline for package economics.
-  window._winnowBaseValue = function(rank) {
+  window._winnowBaseValue = function(rank, mode) {
     const WN = window._WINNOW_VAL;
-    const L = WN.pseudoTiers || [];
-    let idx = 0;
-    for (let i = 0; i < L.length; i++) { if (L[i] <= rank) idx = i; else break; }
-    return Math.max(WN.zero - rank, 0) * WN.slope * Math.pow(1 - WN.tierDrop, idx);
+    return Math.max(WN.zero - rank, 0) * WN.slope * Math.pow(1 - WN.tierDrop, _wnPseudoIdx(rank, _wnSingleSeason(mode)));
   };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
@@ -31153,7 +31908,7 @@ window.fmtHeight = fmtHeight;
   // 09-01 morning history in the repo log).
   window._packageRosterCost = function(mode) {
     const WN = window._WINNOW_VAL;
-    return Math.max(Math.round(window._winnowBaseValue(WN.replRank)), 1);
+    return Math.max(Math.round(window._winnowBaseValue(WN.replRank, mode)), 1);
   };
   // vsCount = pieces coming back the other way (default 1, the n-for-1 case
   // the finders price). Only UNMATCHED pieces pay — the side sending more
@@ -31170,7 +31925,9 @@ window.fmtHeight = fmtHeight;
     const extras = Math.max(sorted.length - matched, 0);
     let total = 0;
     for (let i = 0; i < sorted.length; i++) {
-      total += i < sorted.length - extras ? sorted[i] : Math.max(sorted[i] - cost, 0) * w;
+      // k-th unmatched extra (smallest assets) counts w^k of its post-cost value
+      const k = i - (sorted.length - extras) + 1;
+      total += k < 1 ? sorted[i] : Math.max(sorted[i] - cost, 0) * Math.pow(w, k);
     }
     total -= (window._WINNOW_VAL.pkgTax || 0) * extras;
     return Math.max(Math.round(total), 1);
@@ -31279,7 +32036,7 @@ window.fmtHeight = fmtHeight;
       adjEl.title = (() => {
         const WN = window._WINNOW_VAL;
         let t = 'This side sends more pieces than it gets back, so each unmatched extra (its smallest assets) pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
-        if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains';
+        if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains (each further extra another ' + Math.round(WN.extraPieceW * 100) + '%)';
         if (WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
         return t + ' — junk throw-ins can\'t tilt a trade';
       })();
@@ -31458,6 +32215,7 @@ window.fmtHeight = fmtHeight;
       barA.style.width = '50%'; barB.style.width = '50%';
       verdict.textContent = '';
       verdict.className = 'trade-verdict even'; sub.textContent = '';
+      { const h0 = document.getElementById('tradeEvenHint'); if (h0) { h0.style.display = 'none'; h0.textContent = ''; } }
       if (resultEl) resultEl.classList.add('is-empty');
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
       _tradeVorRender();
@@ -31493,6 +32251,34 @@ window.fmtHeight = fmtHeight;
       sub.textContent = `${nameB} gives ${totalB}, gets ${totalA} back (+${diff} · ${diffPct}% advantage)`;
     }
 
+    // EVEN IT UP (2026-10-08, Jack: improve the calc): name the gap in board terms. The side receiving less should get about
+    // `diff` more back; show the one or two players on the active board (top 200, not already in the trade, one per position)
+    // whose value sits within 20% of that gap, with their positional rank - the Flock-style "add an RB22" read.
+    const hintEl = document.getElementById('tradeEvenHint');
+    if (hintEl) {
+      if (diffPct <= 5) { hintEl.style.display = 'none'; hintEl.textContent = ''; }
+      else {
+        const loser = recvA > recvB ? nameB : nameA, winner = recvA > recvB ? nameA : nameB;
+        const board = _ADP_SRCS.indexOf(tradeSource) >= 0 ? null : window._verBoardFor(tradeSource, tradeMode);
+        const inTrade = new Set([...sideA.players, ...sideB.players]);
+        let ex = [];
+        if (board) {
+          const posSeen = {};
+          board.slice(0, 200).forEach(idx => {
+            const d = D[idx]; if (!d) return;
+            const ps = d.s || d.pos || '?'; posSeen[ps] = (posSeen[ps] || 0) + 1;   // d.s = position (d.p is points)
+            if (inTrade.has(idx)) return;
+            const v = getPlayerValue(d), err = Math.abs(v - diff) / diff;
+            if (err <= 0.2) ex.push({ d, v, pr: ps + posSeen[ps], ps, err });
+          });
+          ex.sort((a, b) => a.err - b.err);
+          const seen = new Set();
+          ex = ex.filter(e => { if (seen.has(e.ps)) return false; seen.add(e.ps); return true; }).slice(0, 2);
+        }
+        hintEl.style.display = '';
+        hintEl.textContent = 'To even it up, ' + loser + ' should get about ' + diff + ' more back from ' + winner + (ex.length ? ' — e.g. ' + ex.map(e => e.d.n + ' (' + e.pr + ', ' + e.v + ')').join(' or ') : '');
+      }
+    }
     // Insights — peak, depth, age, picks, position split
     const insights = _buildTradeInsights(sideA, sideB);
     if (insightsEl) {
@@ -31872,6 +32658,94 @@ window.fmtHeight = fmtHeight;
     return base + '?trade=' + encoded;
   }
 
+  // SHARE CARD (2026-10-08, Jack: improve the trade calc): the trade as a 1200x675 PNG - both sides as what each team RECEIVES,
+  // totals, the verdict bar, the even-up line - same framing as the page (panels = what a team gives, so the headline names the receiver).
+  function _tradeShareCard() {
+    const cs = getComputedStyle(document.body);
+    const gv = (k, d) => (cs.getPropertyValue(k) || '').trim() || d;
+    const C = { bg: gv('--bg', '#0d1117'), panel: gv('--surface', '#161b22'), text: gv('--text', '#e6edf3'), dim: gv('--text2', '#8b949e'), accent: gv('--accent', '#f5b041'), a: '#22c55e', b: '#f5b041', border: gv('--border', '#30363d') };
+    const BF = '"Bebas Neue", Impact, sans-serif', DF = '"DM Sans", Arial, sans-serif';
+    const W = 1200, H = 675, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+    const rr = (px, py, pw, ph, r) => { x.beginPath(); if (x.roundRect) x.roundRect(px, py, pw, ph, r); else x.rect(px, py, pw, ph); };
+    x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
+    const { nameA, nameB } = _tradeSideNames();
+    const totalA = calcSideTotal(sideA), totalB = calcSideTotal(sideB);
+    const recvA = totalB, recvB = totalA, sum = totalA + totalB;
+    x.textBaseline = 'alphabetic';
+    x.fillStyle = C.accent; x.font = '54px ' + BF; x.textAlign = 'center'; try { x.letterSpacing = '3px'; } catch (_) {}
+    x.fillText('TRADE CALCULATOR', W / 2, 72);
+    x.fillStyle = C.dim; x.font = '600 15px ' + DF; try { x.letterSpacing = '1px'; } catch (_) {}
+    const modeLbl = { redraft: 'REDRAFT', superflex: 'SUPERFLEX', dynasty: 'DYNASTY 1QB', dynastysf: 'DYNASTY SF' }[tradeMode] || String(tradeMode).toUpperCase();
+    const srcLbl = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS' }[tradeSource] || String(tradeSource).toUpperCase();
+    x.fillText(modeLbl + '  \u00b7  ' + srcLbl + ' VALUES', W / 2, 100);
+    const col = (side, receiver, giver, left, color, total) => {
+      const px = left, pw = 520, py = 130, ph = 330;
+      x.fillStyle = C.panel; x.strokeStyle = C.border; x.lineWidth = 1; rr(px, py, pw, ph, 12); x.fill(); x.stroke();
+      x.fillStyle = color; x.font = '26px ' + BF; x.textAlign = 'center'; try { x.letterSpacing = '2px'; } catch (_) {}
+      x.fillText(String(receiver).toUpperCase() + ' RECEIVES', px + pw / 2, py + 36);
+      x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.fillText('FROM ' + String(giver).toUpperCase(), px + pw / 2, py + 56);
+      const rows = [];
+      side.players.forEach(i => { const d = D[i]; if (d) rows.push({ pos: d.s, name: d.n, val: getPlayerValue(d), tier: getTierForPlayer(d) || '' }); });
+      side.picks.forEach(p => rows.push({ pos: 'PICK', name: p._pickNum ? (p.year + ' ' + p._pickNum) : (p.year + ' ' + slotLabel(p.slot) + ' ' + p.round), val: getPickValue(p.round, p.year, p.slot, p._pickNum), tier: '' }));
+      x.textAlign = 'left'; let yy = py + 90; const maxRows = 7;
+      rows.slice(0, maxRows).forEach(r => {
+        x.fillStyle = 'rgba(255,255,255,.08)'; rr(px + 18, yy - 17, 52, 24, 5); x.fill();
+        x.fillStyle = C.dim; x.font = '700 12px ' + DF; x.textAlign = 'center'; x.fillText(r.pos, px + 44, yy);
+        x.textAlign = 'left'; x.fillStyle = C.text; x.font = '600 20px ' + DF;
+        let nm = r.name; while (x.measureText(nm).width > 300 && nm.length > 4) nm = nm.slice(0, -2) + '\u2026';
+        x.fillText(nm, px + 84, yy + 1);
+        if (r.tier) { x.fillStyle = C.dim; x.font = '600 11px ' + DF; x.textAlign = 'right'; x.fillText(String(r.tier), px + pw - 90, yy); }
+        x.textAlign = 'right'; x.fillStyle = color; x.font = '24px ' + BF; x.fillText(String(r.val), px + pw - 22, yy + 2);
+        yy += 36;
+      });
+      if (rows.length > maxRows) { x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.textAlign = 'left'; x.fillText('+ ' + (rows.length - maxRows) + ' more', px + 84, yy); }
+      if (!rows.length) { x.fillStyle = C.dim; x.font = 'italic 16px ' + DF; x.textAlign = 'center'; x.fillText('nothing', px + pw / 2, py + 180); }
+      x.fillStyle = C.border; x.fillRect(px + 18, py + ph - 56, pw - 36, 1);
+      x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.textAlign = 'left'; x.fillText('TOTAL VALUE', px + 22, py + ph - 22);
+      x.fillStyle = color; x.font = '34px ' + BF; x.textAlign = 'right'; x.fillText(String(total), px + pw - 22, py + ph - 18);
+    };
+    col(sideA, nameB, nameA, 60, C.a, totalA);
+    col(sideB, nameA, nameB, 620, C.b, totalB);
+    x.fillStyle = C.dim; x.font = '22px ' + BF; x.textAlign = 'center'; x.fillText('VS', W / 2, 300);
+    const by = 492, bh = 18, bx = 60, bw = W - 120;
+    const pctA = sum ? Math.max(8, Math.min(92, Math.round((recvA / sum) * 100))) : 50;
+    x.fillStyle = C.a; rr(bx, by, bw * pctA / 100, bh, 6); x.fill();
+    x.fillStyle = C.b; rr(bx + bw * pctA / 100, by, bw * (100 - pctA) / 100, bh, 6); x.fill();
+    const diff = Math.abs(totalA - totalB), diffPct = sum ? Math.round((diff / Math.max(totalA, totalB)) * 100) : 0;
+    let verdict = 'FAIR TRADE', subline = 'Both sides are roughly equal in value', vcolor = C.text;
+    if (sum && diffPct > 5) {
+      const winner = recvA > recvB ? nameA : nameB, wTot = recvA > recvB ? totalA : totalB, wGet = recvA > recvB ? totalB : totalA;
+      verdict = String(winner).toUpperCase() + ' WINS'; vcolor = recvA > recvB ? C.a : C.b;
+      subline = winner + ' gives ' + wTot + ', gets ' + wGet + ' back (+' + diff + ' \u00b7 ' + diffPct + '% advantage)';
+    }
+    x.fillStyle = vcolor; x.font = '44px ' + BF; x.textAlign = 'center'; try { x.letterSpacing = '3px'; } catch (_) {}
+    x.fillText(verdict, W / 2, 562);
+    x.fillStyle = C.dim; x.font = '600 16px ' + DF; try { x.letterSpacing = '0px'; } catch (_) {}
+    x.fillText(subline, W / 2, 590);
+    const hintEl = document.getElementById('tradeEvenHint'); const hint = hintEl && hintEl.style.display !== 'none' ? hintEl.textContent : '';
+    if (hint) {
+      x.fillStyle = C.accent; x.font = '600 15px ' + DF;
+      const words = hint.split(' '); const lines = []; let line = '';
+      words.forEach(w => { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > W - 160) { lines.push(line); line = w; } else line = t; });
+      if (line) lines.push(line);
+      lines.slice(0, 2).forEach((l, i) => x.fillText(l, W / 2, 618 + i * 20));
+    }
+    x.fillStyle = 'rgba(255,255,255,.55)'; x.font = '14px ' + BF; try { x.letterSpacing = '2px'; } catch (_) {}
+    x.fillText('MYFANTASYFOOTBALL.CO', W / 2, H - 14);
+    return c;
+  }
+  window._tradeShareCard = _tradeShareCard;
+  document.getElementById('tradeCardBtn').addEventListener('click', () => {
+    if (!sideA.players.length && !sideA.picks.length && !sideB.players.length && !sideB.picks.length) {
+      if (typeof toast === 'function') toast('Add players first, then share');
+      return;
+    }
+    try {
+      const c = _tradeShareCard();
+      _tcvSavePng(c, 'trade_' + new Date().toISOString().slice(0, 10) + '.png');
+      if (typeof toast === 'function') toast('Trade card downloaded');
+    } catch (e) { console.warn('[Trade] share card failed:', e); if (typeof toast === 'function') toast('Could not build the card'); }
+  });
   document.getElementById('tradeShareBtn').addEventListener('click', () => {
     if (!sideA.players.length && !sideA.picks.length && !sideB.players.length && !sideB.picks.length) {
       if (typeof toast === 'function') toast('Add players first, then share');
@@ -31907,6 +32781,7 @@ window.fmtHeight = fmtHeight;
       }
       // Source
       if (state.s) {
+        if (state.s && ['consensus', 'jacks', 'mine'].indexOf(state.s) < 0) state.s = 'consensus';   // 2026-10-08: ADP / KTC sources left the trade page; old share links fall back to consensus
         const sTab = document.querySelector('.trade-src-tab[data-tsrc="' + state.s + '"]');
         if (sTab && !sTab.classList.contains('locked')) sTab.click();
       }
@@ -32222,12 +33097,13 @@ window.fmtHeight = fmtHeight;
     // Same package adjustment as the calculator, so loaded suggestions match its verdict
     const _pkgCost = window._packageRosterCost(tradeMode);
     // Loop-prune slack: the widest possible raw-sum vs adjusted-total gap per
-    // EXTRA piece. With the extra-piece surplus weight w, an extra worth V
-    // contributes w·(V−cost) − tax, so the gap is w·cost + (1−w)·V + tax —
-    // bound V by the scale max (~250). Collapses to cost when w=1, tax=0
-    // (the Flock-mimic full-sum config, all modes since dynasty unified).
+    // EXTRA piece. The k-th extra worth V contributes w^k·(V−cost) − tax, so
+    // its gap is w^k·cost + (1−w^k)·V + tax — bound V by the scale max (~250)
+    // and take k = 2 (the deepest extra a 3-piece side can have) so the bound
+    // is safe for every loop below. Collapses to cost when w=1, tax=0.
     const _extraW = window._WINNOW_VAL.extraPieceW || 1;
-    const _pkgSlack = Math.ceil(_extraW * _pkgCost + (1 - _extraW) * 260
+    const _extraW2 = _extraW * _extraW;
+    const _pkgSlack = Math.ceil(_extraW2 * _pkgCost + (1 - _extraW2) * 260
       + (window._WINNOW_VAL.pkgTax || 0));
     const _pkgSideTotal = (side, vsCount) => window._packageAdjustedTotal(side.map(a => a.value), tradeMode, vsCount);
 
@@ -33442,7 +34318,7 @@ window.fmtHeight = fmtHeight;
 
   function openAuth() {
     if (!isConfigured) {
-      alert('Firebase is not configured yet.\n\nTo enable accounts, open the HTML file in a text editor, search for "firebaseConfig", and replace the placeholder values with your Firebase project config.\n\nYou can create a free Firebase project at https://console.firebase.google.com');
+      mffAlert('Firebase is not configured yet.\n\nTo enable accounts, open the HTML file in a text editor, search for "firebaseConfig", and replace the placeholder values with your Firebase project config.\n\nYou can create a free Firebase project at https://console.firebase.google.com');
       return;
     }
     clearError();
@@ -33535,7 +34411,7 @@ window.fmtHeight = fmtHeight;
   acctBtn.addEventListener('click', () => {
     if (currentUser) {
       // Already signed in — offer sign out
-      if (confirm('Sign out of ' + (currentUser.email || 'your account') + '?')) {
+      if (_mffConfirm('Sign out of ' + (currentUser.email || 'your account') + '?')) {
         auth.signOut();
       }
     } else {
@@ -33561,7 +34437,7 @@ window.fmtHeight = fmtHeight;
     if (typeof toast === 'function') toast('Settings saved');
   });
   acctSignoutBtn.addEventListener('click', () => {
-    if (confirm('Sign out?')) { auth.signOut(); acctOverlay.style.display = 'none'; }
+    if (_mffConfirm('Sign out?')) { auth.signOut(); acctOverlay.style.display = 'none'; }
   });
 
   // Home page sign in buttons (skip if home page was removed)
@@ -33576,7 +34452,7 @@ window.fmtHeight = fmtHeight;
         await auth.signInWithPopup(provider);
       } catch(e) {
         if (e.code !== 'auth/popup-closed-by-user') {
-          alert(e.message || 'Google sign-in failed.');
+          mffAlert(e.message || 'Google sign-in failed.');
         }
       }
     });
@@ -33660,7 +34536,7 @@ window.fmtHeight = fmtHeight;
 
   // Sign out
   acctLogout.addEventListener('click', () => {
-    if (confirm('Sign out?')) auth.signOut();
+    if (_mffConfirm('Sign out?')) auth.signOut();
   });
 
   // === FIRESTORE SAVE / LOAD ===
@@ -33918,7 +34794,7 @@ window.fmtHeight = fmtHeight;
       toast('Restore refused — could not read the live board from the server (' + code + '). Check connection / sign-in, then retry.');
       return false;
     }
-    if (!confirm("Restore Jack's official board from " + b.key + " (" + b.at + ", " + b.redraftLen + " redraft names; top: " + b.top5.join(', ') + ")?\n\nThis rewrites rankings/jacks-official." + _liveNote)) return false;
+    if (!_mffConfirm("Restore Jack's official board from " + b.key + " (" + b.at + ", " + b.redraftLen + " redraft names; top: " + b.top5.join(', ') + ")?\n\nThis rewrites rankings/jacks-official." + _liveNote)) return false;
     showSaving();
     try {
       const at = new Date().toISOString();
@@ -33947,7 +34823,7 @@ window.fmtHeight = fmtHeight;
     const list = await _jacksBackupList(10);
     const best = list.find(x => x.key.indexOf('cloud:') === 0 && x.redraftLen > 100) || list.find(x => x.redraftLen > 100);
     if (!best) { toast('Official board is MISSING and no backup was found — do not save'); return; }
-    if (confirm("Jack's official board is MISSING in Firestore (" + reason + ").\n\nRestore the newest backup?\n" + best.key + " from " + best.at + "\n" + best.redraftLen + " redraft names; top: " + best.top5.join(', '))) {
+    if (_mffConfirm("Jack's official board is MISSING in Firestore (" + reason + ").\n\nRestore the newest backup?\n" + best.key + " from " + best.at + "\n" + best.redraftLen + " redraft names; top: " + best.top5.join(', '), () => { window._jacksRestoreOffered = false; window._jacksOfferRestore(reason); })) {
       await window._jacksRestore(best.key);
     }
   };
@@ -35588,7 +36464,7 @@ window.fmtHeight = fmtHeight;
 
   // Sign out from account page
   acctPageSignoutBtn.addEventListener('click', () => {
-    if (confirm('Sign out?')) {
+    if (_mffConfirm('Sign out?')) {
       auth.signOut();
       switchPage('rankings');
     }
@@ -37438,7 +38314,7 @@ window.fmtHeight = fmtHeight;
       '</div>';
     document.getElementById('mdResumeBtn').addEventListener('click', () => _mdResumeDraft(snap));
     document.getElementById('mdDiscardBtn').addEventListener('click', () => {
-      if (confirm('Discard the in-progress draft? This cannot be undone.')) _mdClearProgress();
+      if (_mffConfirm('Discard the in-progress draft? This cannot be undone.')) _mdClearProgress();
     });
   }
 
@@ -38205,7 +39081,7 @@ window.fmtHeight = fmtHeight;
     html += '</div>';
     container.innerHTML = html;
     container.querySelector('#mdClearHistoryBtn').addEventListener('click', () => {
-      if (confirm('Clear draft history? This cannot be undone.')) {
+      if (_mffConfirm('Clear draft history? This cannot be undone.')) {
         localStorage.removeItem('md_draft_history');
         _renderPastDrafts();
       }
@@ -48118,11 +48994,15 @@ window.fmtHeight = fmtHeight;
     if (!name) return;
     const trimmed = name.trim();
     if (!trimmed || trimmed === _PM_WL_DEPLOYED || trimmed.length > 60) {
-      alert('Invalid preset name (max 60 chars, can\'t be empty or reserved).');
+      mffAlert('Invalid preset name (max 60 chars, can\'t be empty or reserved).');
       return;
     }
+    _pmWlSavePresetNamed(trimmed);
+  }
+  // Second half of Save-as (2026-10-08): the overwrite question re-runs this, not the prompt.
+  function _pmWlSavePresetNamed(trimmed) {
     const presets = _pmWlPresetsLoad();
-    if (presets[trimmed] && !confirm('Preset "' + trimmed + '" already exists. Overwrite?')) return;
+    if (presets[trimmed] && !_mffConfirm('Preset "' + trimmed + '" already exists. Overwrite?', () => _pmWlSavePresetNamed(trimmed))) return;
     presets[trimmed] = {
       savedAt: new Date().toISOString(),
       floor:   _pmWlDeepClone(window._JM_WEIGHTS || {}),
@@ -48130,7 +49010,7 @@ window.fmtHeight = fmtHeight;
       tiers:   _pmWlDeepClone(window._POS_TIERS || {})
     };
     if (!_pmWlPresetsSave(presets)) {
-      alert('Failed to save (localStorage may be full or disabled).');
+      mffAlert('Failed to save (localStorage may be full or disabled).');
       return;
     }
     _pmWl.activePreset = trimmed;
@@ -48144,7 +49024,7 @@ window.fmtHeight = fmtHeight;
     if (!sel) return;
     const name = sel.value;
     if (!name || name === _PM_WL_DEPLOYED) return;
-    if (!confirm('Delete preset "' + name + '"? This can\'t be undone.')) return;
+    if (!_mffConfirm('Delete preset "' + name + '"? This can\'t be undone.')) return;
     const presets = _pmWlPresetsLoad();
     delete presets[name];
     _pmWlPresetsSave(presets);
@@ -48384,7 +49264,7 @@ window.fmtHeight = fmtHeight;
       targets.push(n);
     });
     if (!targets.length) return 0;
-    if (!confirm('Mark ' + targets.length + ' 2026 prospect(s) without a DC as UDFA (U)?\n\nThis writes to Firestore and is reversible only by editing each one.')) return 0;
+    if (!_mffConfirm('Mark ' + targets.length + ' 2026 prospect(s) without a DC as UDFA (U)?\n\nThis writes to Firestore and is reversible only by editing each one.')) return 0;
     targets.forEach(function(n) {
       _dcSave(n, 'U');
       _bioSave(n, 'draft', 'U');
@@ -48464,17 +49344,17 @@ window.fmtHeight = fmtHeight;
       if (!_lastParsed) return;
       const ok = _lastParsed.filter(r => r.status === 'ok');
       if (!ok.length) return;
-      if (!confirm('Apply ' + ok.length + ' draft capital update(s) to Firestore?')) return;
+      if (!_mffConfirm('Apply ' + ok.length + ' draft capital update(s) to Firestore?')) return;
       const n = _pmApplyBulk(_lastParsed);
-      alert('Applied ' + n + ' update(s).');
+      mffAlert('Applied ' + n + ' update(s).');
       input.value = '';
       close();
     });
 
     fillBtn.addEventListener('click', function() {
       const n = _pmFillUdfas();
-      if (n > 0) alert('Marked ' + n + ' prospect(s) as UDFA.');
-      else alert('No prospects needed the UDFA fill — all 2026 class already have a DC set.');
+      if (n > 0) mffAlert('Marked ' + n + ' prospect(s) as UDFA.');
+      else mffAlert('No prospects needed the UDFA fill — all 2026 class already have a DC set.');
     });
   })();
   // ===== END BULK DC ENTRY =====
@@ -48688,9 +49568,9 @@ window.fmtHeight = fmtHeight;
       if (!_lastParsed) return;
       const ok = _lastParsed.filter(r => r.status === 'ok');
       if (!ok.length) return;
-      if (!confirm('Apply ' + ok.length + ' RAS update(s) to Firestore?\n\n(This will overwrite existing RAS values for any player in the list.)')) return;
+      if (!_mffConfirm('Apply ' + ok.length + ' RAS update(s) to Firestore?\n\n(This will overwrite existing RAS values for any player in the list.)')) return;
       const n = _pmApplyBulkRas(_lastParsed);
-      alert('Applied ' + n + ' RAS update(s).');
+      mffAlert('Applied ' + n + ' RAS update(s).');
       input.value = '';
       close();
     });
@@ -51224,7 +52104,7 @@ window.fmtHeight = fmtHeight;
     if (btn.dataset.saved) return; // already saved this board
 
     const user = firebase.auth().currentUser;
-    if (!user) { alert('Sign in to save boards to the catalog.'); return; }
+    if (!user) { mffAlert('Sign in to save boards to the catalog.'); return; }
 
     const db = firebase.firestore();
     const gameName = (document.getElementById('triviaGameName').value || '').trim();
@@ -51345,7 +52225,7 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaDeleteFromCatalog = function(docId, el) {
-    if (!confirm('Delete this board from the catalog?')) return;
+    if (!_mffConfirm('Delete this board from the catalog?')) return;
     const db = firebase.firestore();
     db.collection('trivia_catalog').doc(docId).delete().then(() => {
       if (el) el.remove();
@@ -52470,7 +53350,7 @@ window.fmtHeight = fmtHeight;
     const toggle = document.getElementById('triviaCustomPromptToggle');
     const wrap = document.getElementById('triviaCustomPromptWrap');
     if (!promptInput || !toggle) {
-      alert('Custom prompt UI not found.');
+      mffAlert('Custom prompt UI not found.');
       return;
     }
     // Open the Customize disclosure so the user can see what's running
@@ -52567,7 +53447,7 @@ window.fmtHeight = fmtHeight;
     if (!inp) return;
     const v = (inp.value || '').trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) {
-      alert('Pick a valid date (YYYY-MM-DD).');
+      mffAlert('Pick a valid date (YYYY-MM-DD).');
       return;
     }
     _triviaPreviewDate = v;
@@ -52793,7 +53673,7 @@ window.fmtHeight = fmtHeight;
   window._triviaPlayArchived = function(date) {
     _triviaFetchLockedDaily(date).then(snap => {
       if (!snap) {
-        alert('That archived daily could not be loaded.');
+        mffAlert('That archived daily could not be loaded.');
         return;
       }
       _triviaDailyRun = {
@@ -52819,7 +53699,7 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaDeleteArchived = function(date, btnEl) {
-    if (!confirm('Delete the locked daily for ' + date + '? This will free that date back to the auto-shuffle.')) return;
+    if (!_mffConfirm('Delete the locked daily for ' + date + '? This will free that date back to the auto-shuffle.')) return;
     if (typeof firebase === 'undefined' || !firebase.firestore) return;
     firebase.firestore().collection('trivia_daily').doc(date).delete().then(() => {
       delete _triviaDailyArchiveCache[date];
@@ -52829,7 +53709,7 @@ window.fmtHeight = fmtHeight;
       }
     }).catch(err => {
       console.error('[TriviaDaily] delete failed:', err);
-      alert('Delete failed: ' + (err && err.message));
+      mffAlert('Delete failed: ' + (err && err.message));
     });
   };
 
@@ -52866,7 +53746,7 @@ window.fmtHeight = fmtHeight;
     if (_triviaReportPendingIdx < 0) return;
     if (!_triviaData || !_triviaData.items || !_triviaData.items[_triviaReportPendingIdx]) return;
     if (typeof firebase === 'undefined' || !firebase.firestore) {
-      alert('Firestore unavailable.');
+      mffAlert('Firestore unavailable.');
       return;
     }
     const idx = _triviaReportPendingIdx;
@@ -52914,7 +53794,7 @@ window.fmtHeight = fmtHeight;
 
   window._triviaOpenReportsPanel = function() {
     if (typeof window.isAdmin !== 'function' || !window.isAdmin()) {
-      alert('Admin only.');
+      mffAlert('Admin only.');
       return;
     }
     const panel = document.getElementById('triviaReportsPanel');
@@ -52970,7 +53850,7 @@ window.fmtHeight = fmtHeight;
       }
     }).catch(err => {
       console.error('[TriviaReports] delete failed:', err);
-      alert('Delete failed: ' + (err && err.message));
+      mffAlert('Delete failed: ' + (err && err.message));
     });
   };
 
@@ -53022,7 +53902,7 @@ window.fmtHeight = fmtHeight;
       const _eraOk = (yr) => (_eraMin == null || yr >= _eraMin) && (_eraMax == null || yr <= _eraMax);
       const _eraActive = (filterType === 'career') && (era !== 'all');
 
-      if (!positions.length) { alert('Select at least one position'); return; }
+      if (!positions.length) { mffAlert('Select at least one position'); return; }
 
       btn.disabled = true;
       btn.textContent = 'BUILDING...';
@@ -54306,7 +55186,7 @@ Rules:
       SF: parseInt(document.getElementById('cfgSF').value)||0,
     };
     const totalPicks = roster.QB + roster.RB + roster.WR + roster.TE + roster.FLEX + roster.SF;
-    if (totalPicks < 1) { alert('Set at least 1 roster slot.'); return; }
+    if (totalPicks < 1) { mffAlert('Set at least 1 roster slot.'); return; }
 
     const pool = _cfgBuildPool(settings);
     if (pool.length < totalPicks * 2) {
@@ -59621,7 +60501,7 @@ Rules:
       const ps = result.posScores[pos] || { pts: 0 };
       return `${pos}: ${ps.pts}`;
     }).join('  ');
-    alert(`Team Score: ${result.total}\n\n${posLines}`);
+    mffAlert(`Team Score: ${result.total}\n\n${posLines}`);
   };
 
   window._mtTogglePaste = function() {
@@ -61753,20 +62633,30 @@ Rules:
   };
 
   window._mtDeleteSavedLeague = function(leagueId) {
-    if (!confirm('Remove this saved league?')) return;
+    if (!_mffConfirm('Remove this saved league?')) return;
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
+    // Optimistic (2026-10-08, Jack: the row sat in the menu until the cloud round
+    // trip finished): drop it from the local list and repaint the switcher + menu
+    // now; the Firestore reload below is the source of truth and repaints again.
+    try {
+      if (Array.isArray(window._mtSavedLeagues)) {
+        window._mtSavedLeagues = window._mtSavedLeagues.filter(l => String(l && l.leagueId) !== String(leagueId));
+        if (typeof _mtPopulateLeagueSwitch === 'function') _mtPopulateLeagueSwitch();
+        if (typeof _mtRenderLeagueMenu === 'function') _mtRenderLeagueMenu();
+      }
+    } catch (_) {}
+
     // Load, remove the key, re-save
     const docRef = db.collection('user_game_data').doc(user.uid);
-    docRef.get().then(doc => {
-      if (!doc.exists || !doc.data().savedLeagues) return;
-      const saved = doc.data().savedLeagues;
-      delete saved[leagueId];
-      try { if (localStorage.getItem('mt_last_opened') === String(leagueId)) localStorage.removeItem('mt_last_opened'); } catch (_) {}
-      return docRef.set({ savedLeagues: saved }, { merge: true });
-    })
+    // 2026-10-08 fix (Jack: "every time I remove a league it comes back"): set(..., {merge:true})
+    // deep-merges the savedLeagues map, so a key missing from the payload was simply kept
+    // in Firestore and the next load resurrected the league. Delete the field itself.
+    try { if (localStorage.getItem('mt_last_opened') === String(leagueId)) localStorage.removeItem('mt_last_opened'); } catch (_) {}
+    const _fp = new firebase.firestore.FieldPath('savedLeagues', String(leagueId));
+    docRef.update(_fp, firebase.firestore.FieldValue.delete())
     .then(() => {
       console.log('[MyTeams] Deleted league:', leagueId);
       if (_mtActiveLeagueKey() === String(leagueId)) _mtOpenFirstPending = true;
@@ -62937,7 +63827,7 @@ Rules:
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
 
-    if (!confirm('Clear your saved portfolio? You can re-upload anytime.')) return;
+    if (!_mffConfirm('Clear your saved portfolio? You can re-upload anytime.')) return;
 
     // v0.9.55: also wipe the extension's cached copies. Without this, the
     // extension's mff_portfolio_sync entry in chrome.storage.local persists
@@ -69197,6 +70087,9 @@ function _rsScatter(cfg) {
     const S = window.SIM_PROJ_2026;
     if (!S || !S.weeks) return null;
     const v = _wkFind(S.weeks[_wkNum()] || S.weeks[String(_wkNum())], r.n);
+    // questionable in/out list (SIM_PROJ_2026.qs, Jack 2026-10-08) - same number as the rankings PROJ
+    const q = (typeof window._qsValue === 'function') ? window._qsValue(r.n, _wkNum()) : null;
+    if (q) return [q[0], q[1], q[2], Array.isArray(v) ? v[3] : null, Array.isArray(v) ? v[4] : null];
     return Array.isArray(v) ? v : null;
   }
   function _wkProj(r) { const v = _wkSim(r); return v && typeof v[FMT_I[_fmt]] === 'number' && (v[0] || v[1] || v[2]) ? v[FMT_I[_fmt]] : null; }
@@ -69243,7 +70136,7 @@ function _rsScatter(cfg) {
   // compares like with like. Cached per week + scoring format.
   let _wkTeamCache = { key: '', map: null };
   function _wkTeam(tm) {
-    const wk = _wkNum(), key = wk + '|' + _fmt;
+    const wk = _wkNum(), key = wk + '|' + _fmt + '|' + JSON.stringify(((window._weeklyAssumeOutMap || {})[String(wk)]) || []);
     if (_wkTeamCache.key !== key || !_wkTeamCache.map) {
       const map = {};
       const S = window.SIM_PROJ_2026, week = S && S.weeks && (S.weeks[wk] || S.weeks[String(wk)]);
@@ -71357,4 +72250,182 @@ function _rsScatter(cfg) {
     Object.values(bars).forEach(b => { if (b) mo.observe(b, { attributes: true, attributeFilter: ['style'] }); });
   }
   apply();
+})();
+
+// === Docked player card in the TIER CARDS view (2026-10-08, Jack) ==================
+// In the tier-card view (the YouTube / TikTok recording surface) a player click
+// opens the card as a floating panel in the empty space to the right instead of
+// a centered modal: drag it by the strip at the top, resize from the bottom-right
+// corner, and the size + position persist per device (localStorage
+// mff_tcv_card_dock). Clicking another card swaps the content in place; the X
+// (or RESET on the strip) still work. Outside the tier view nothing changes.
+(function _tcvDockedCard() {
+  const KEY = 'mff_tcv_card_dock';
+  const modal = document.getElementById('modal');
+  const card = document.getElementById('playerCard');
+  if (!modal || !card) return;
+  const inTierView = () => { try { return typeof viewMode !== 'undefined' && viewMode === 'tierCard'; } catch (_) { return false; } };
+  const load = () => { try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); return (o && o.w > 0) ? o : null; } catch (_) { return null; } };
+  const save = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (_) {} };
+  const defaults = () => {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const w = Math.min(620, Math.max(360, vw - 40));
+    return { x: Math.max(12, vw - w - 24), y: 72, w, h: Math.max(320, vh - 96) };
+  };
+  const clamp = o => {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    o.w = Math.max(360, Math.min(o.w, vw - 24));
+    o.h = Math.max(240, Math.min(o.h, vh - 24));
+    o.x = Math.max(0, Math.min(o.x, vw - 80));
+    o.y = Math.max(0, Math.min(o.y, vh - 60));
+    return o;
+  };
+  function place(o) {
+    card.style.left = o.x + 'px'; card.style.top = o.y + 'px';
+    card.style.width = o.w + 'px'; card.style.height = o.h + 'px';
+  }
+  function current() {
+    const r = card.getBoundingClientRect();
+    return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) };
+  }
+  function undock() {
+    modal.classList.remove('modal-docked');
+    card.style.left = card.style.top = card.style.width = card.style.height = '';
+  }
+  function dock() {
+    modal.classList.add('modal-docked');
+    place(clamp(load() || defaults()));
+    if (!card.querySelector('.card-dock-bar')) {
+      const bar = document.createElement('div');
+      bar.className = 'card-dock-bar';
+      bar.innerHTML = '<span>⋮⋮ drag · resize from the corner</span><button type="button" class="card-dock-reset" title="Back to the default size and spot">RESET</button>';
+      card.insertBefore(bar, card.firstChild);
+    }
+  }
+  // Drag by the strip
+  let drag = null;
+  card.addEventListener('pointerdown', e => {
+    const bar = e.target.closest('.card-dock-bar');
+    if (!bar || !modal.classList.contains('modal-docked') || e.target.closest('button')) return;
+    const o = current();
+    drag = { dx: e.clientX - o.x, dy: e.clientY - o.y, w: o.w, h: o.h };
+    try { card.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+  card.addEventListener('pointermove', e => {
+    if (!drag) return;
+    place(clamp({ x: e.clientX - drag.dx, y: e.clientY - drag.dy, w: drag.w, h: drag.h }));
+  });
+  const endDrag = e => { if (!drag) return; drag = null; save(current()); };
+  card.addEventListener('pointerup', endDrag);
+  card.addEventListener('pointercancel', endDrag);
+  card.addEventListener('click', e => {
+    if (e.target.closest('.card-dock-reset')) { e.preventDefault(); const o = defaults(); place(o); save(o); }
+  });
+  // Resize (CSS resize handle) → persist
+  if (typeof ResizeObserver === 'function') {
+    let t = null;
+    new ResizeObserver(() => {
+      if (!modal.classList.contains('modal-docked') || drag) return;
+      clearTimeout(t); t = setTimeout(() => { if (modal.classList.contains('open')) save(current()); }, 250);
+    }).observe(card);
+  }
+  // Hook every card open: dock in the tier view, plain modal elsewhere
+  if (typeof openPlayerCard === 'function') {
+    const _open = openPlayerCard;
+    openPlayerCard = function (d, ctx) {
+      const r = _open.apply(this, arguments);
+      try { if (inTierView()) dock(); else undock(); } catch (e) { console.warn('[dock]', e); }
+      return r;
+    };
+    window.openPlayerCard = openPlayerCard;
+  }
+  window.addEventListener('resize', () => { if (modal.classList.contains('modal-docked')) place(clamp(current())); });
+})();
+
+// === Custom confirm / alert dialogs (2026-10-08, Jack: no browser sheets) ============
+// window.mffConfirm(msg, opts) -> Promise<boolean>   styled in-page dialog
+// window.mffAlert(msg, opts)   -> Promise<true>      same dialog, OK only
+// window._mffConfirm(msg, rerun) keeps the old synchronous call shape so the
+// 25 `if (!confirm(msg)) return;` sites did not have to become async:
+//   first call  -> opens the dialog, returns false (the handler bails out)
+//   OK          -> replays the click / change that reached the handler (or calls
+//                  `rerun`) with the message pre-approved
+//   replay call -> returns true with no dialog (the handler runs for real)
+// Pre-approval is keyed on the exact message and expires after 8 s, so an
+// async handler that awaits before asking still passes on the replay.
+(function () {
+  let trigger = null, approved = null, approvedAt = 0;
+  document.addEventListener('click', e => { trigger = { el: e.target, type: 'click' }; }, true);
+  document.addEventListener('change', e => { trigger = { el: e.target, type: 'change' }; }, true);
+  function replay(t) {
+    if (!t || !t.el) return;
+    if (t.type === 'click') { if (typeof t.el.click === 'function') t.el.click(); }
+    else t.el.dispatchEvent(new Event(t.type, { bubbles: true }));
+  }
+  function build() {
+    let ov = document.getElementById('mffDialog');
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'mffDialog';
+    ov.className = 'mff-dialog';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.innerHTML = '<div class="mff-dialog-box">'
+      + '<div class="mff-dialog-title" id="mffDialogTitle"></div>'
+      + '<div class="mff-dialog-msg" id="mffDialogMsg"></div>'
+      + '<div class="mff-dialog-btns">'
+      + '<button type="button" class="mff-dialog-btn mff-dialog-cancel" id="mffDialogCancel">Cancel</button>'
+      + '<button type="button" class="mff-dialog-btn mff-dialog-ok" id="mffDialogOk">OK</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    return ov;
+  }
+  let active = null; // {resolve}
+  function close(result) {
+    const ov = document.getElementById('mffDialog');
+    if (ov) ov.classList.remove('open');
+    const a = active; active = null;
+    if (a) a.resolve(result);
+  }
+  window.mffConfirm = function (msg, opts) {
+    opts = opts || {};
+    return new Promise(resolve => {
+      if (active) active.resolve(false); // a second dialog replaces the first
+      const ov = build();
+      const box = ov.querySelector('.mff-dialog-box');
+      const title = document.getElementById('mffDialogTitle');
+      const body = document.getElementById('mffDialogMsg');
+      const ok = document.getElementById('mffDialogOk');
+      const cancel = document.getElementById('mffDialogCancel');
+      const text = String(msg == null ? '' : msg);
+      // First line = title, the rest = body (the old confirm strings were written that way).
+      const nl = text.indexOf('\n');
+      title.textContent = opts.title != null ? opts.title : (nl > 0 && nl < 90 ? text.slice(0, nl).trim() : (opts.alert ? 'Heads up' : 'Are you sure?'));
+      body.textContent = opts.title != null ? text : (nl > 0 && nl < 90 ? text.slice(nl + 1).trim() : text);
+      body.style.display = body.textContent ? '' : 'none';
+      ok.textContent = opts.okLabel || (opts.alert ? 'OK' : 'Yes');
+      cancel.textContent = opts.cancelLabel || 'Cancel';
+      cancel.style.display = opts.alert ? 'none' : '';
+      box.classList.toggle('danger', !!opts.danger || (!opts.alert && /delete|remove|discard|clear|overwrite|cannot be undone|sign out/i.test(text)));
+      active = { resolve };
+      ov.classList.add('open');
+      ok.onclick = () => close(true);
+      cancel.onclick = () => close(false);
+      ov.onclick = e => { if (e.target === ov && !opts.alert) close(false); };
+      ov.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); close(!!opts.alert); } else if (e.key === 'Enter') { e.preventDefault(); close(true); } };
+      setTimeout(() => { try { (opts.alert ? ok : (box.classList.contains('danger') ? cancel : ok)).focus(); } catch (_) {} }, 20);
+    });
+  };
+  window.mffAlert = function (msg, opts) { return window.mffConfirm(msg, Object.assign({ alert: true }, opts || {})); };
+  window._mffConfirm = function (msg, rerun) {
+    if (approved === msg && Date.now() - approvedAt < 8000) { approved = null; return true; }
+    const t = rerun ? null : trigger;
+    window.mffConfirm(msg).then(okay => {
+      if (!okay) return;
+      approved = msg; approvedAt = Date.now();
+      try { if (rerun) rerun(); else replay(t); } catch (e) { console.warn('[dialog] replay failed', e); }
+    });
+    return false;
+  };
 })();

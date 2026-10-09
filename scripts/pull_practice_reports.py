@@ -21,19 +21,41 @@ norm() (suffix/punctuation-insensitive).
 
 Output: window.PRACTICE_2026 = {updated, week, src, players: {name: {tm, pos,
 inj, pr: 'DNP'|'LP'|'FP'|'', gs: 'Out'|'Doubtful'|'Questionable'|''}}}
+
+DAY LOG (2026-10-08, Jack: "add the practice report to the weekly card ... showing
+each day"): data/practice_days_2026.js = window.PRACTICE_DAYS_2026 = {updated,
+weeks: {wk: {games: {TM: 'YYYY-MM-DD'}, players: {name: {tm, pos, inj, gs,
+d: {'YYYY-MM-DD': 'DNP'|'LP'|'FP'}}}}}} for QB/RB/WR/TE/K, last two weeks. The
+page only shows the LATEST practice day, so each pull files that status under
+the team's latest report day already released: report days are the three days
+ending two days before a Sunday / Monday game (Wed-Thu-Fri, Thu-Fri-Sat) and the
+three days ending the day before any other game (Thursday game = Mon-Tue-Wed),
+a day counting as released from 16:00 ET. Game dates come from the page's own
+date headings. A later pull the same day overwrites that day, so the evening
+pulls settle it.
+
+  python scripts/pull_practice_reports.py --backfill-git   # rebuild this week's
+      day log from the git history of data/practice_2026.js (commit time = pull time)
 """
 import html as _html
 import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
+import subprocess
+from datetime import date, datetime, timedelta, timezone
 
 import requests
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'data', 'practice_2026.js')
 OUT_JSON = os.path.join(ROOT, 'data', 'practice_2026.json')
+DAYS_OUT = os.path.join(ROOT, 'data', 'practice_days_2026.js')
+DAYS_POS = ('QB', 'RB', 'WR', 'TE', 'K')
+MONTHS = {m: i + 1 for i, m in enumerate(('JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY',
+                                         'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'))}
 URL = 'https://www.nfl.com/injuries/'
 STATE_URL = 'https://api.sleeper.app/v1/state/nfl'
 UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -53,6 +75,164 @@ PRACTICE = [
     ('limited participation', 'LP'),
     ('full participation', 'FP'),
 ]
+
+
+def _et(now_utc):
+    """US Eastern wall clock for a UTC datetime (DST: 2nd Sunday of March 07:00 UTC to 1st Sunday of November 06:00 UTC)."""
+    y = now_utc.year
+    mar = datetime(y, 3, 8, 7, tzinfo=timezone.utc)
+    mar += timedelta(days=(6 - mar.weekday()) % 7)
+    nov = datetime(y, 11, 1, 6, tzinfo=timezone.utc)
+    nov += timedelta(days=(6 - nov.weekday()) % 7)
+    off = -4 if mar <= now_utc < nov else -5
+    return (now_utc + timedelta(hours=off)).replace(tzinfo=None)
+
+
+def game_dates(html, now_et):
+    """{TM: date} from the page's date headings ("SUNDAY, OCTOBER 11TH") that precede each matchup's team blocks."""
+    out, cur = {}, None
+    pat = (r'(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY), ([A-Z]+) (\d{1,2})(?:ST|ND|RD|TH)'
+           r'|<div class="d3-o-section-sub-title"><span>([^<]+)</span>')
+    for m in re.finditer(pat, html):
+        if m.group(1):
+            mo = MONTHS.get(m.group(1))
+            if not mo:
+                continue
+            y = now_et.year
+            if mo <= 2 and now_et.month >= 8:
+                y += 1
+            elif mo >= 8 and now_et.month <= 2:
+                y -= 1
+            cur = date(y, mo, int(m.group(2)))
+        elif cur is not None:
+            abbr = NICK_TO_ABBR.get(_text(m.group(3)))
+            if abbr:
+                out[abbr] = cur
+    return out
+
+
+def report_days(g):
+    """The three injury-report days for a game on date g (Sun/Mon game: Wed-Thu-Fri / Thu-Fri-Sat; else the 3 days before)."""
+    back = (4, 3, 2) if g.weekday() in (6, 0) else (3, 2, 1)
+    return [g - timedelta(days=b) for b in back]
+
+
+def latest_report_day(g, now_et):
+    """Newest of the team's report days already released at now_et (a day counts from 16:00 ET), else None."""
+    today = now_et.date()
+    best = None
+    for d in report_days(g):
+        if d < today or (d == today and now_et.hour >= 16):
+            best = d
+    return best
+
+
+def read_days():
+    """The saved day log. None when the file exists but cannot be read - callers must not overwrite it then."""
+    if not os.path.exists(DAYS_OUT):
+        return {'weeks': {}}
+    txt = open(DAYS_OUT, encoding='utf-8').read()
+    try:
+        body = txt[txt.index('PRACTICE_DAYS_2026 = ') + len('PRACTICE_DAYS_2026 = '):].strip().rstrip(';')
+        store = json.loads(body)
+        return store if isinstance(store.get('weeks'), dict) else None
+    except Exception:
+        return None
+
+
+def merge_fdb(store, week):
+    """FootballDB keeps every report day (nfl.com only the latest): its filled days are authoritative."""
+    import fdb_practice as F
+    r = requests.get(F.URL, headers=F.UA, timeout=45)
+    r.raise_for_status()
+    fw = F.week_of(r.text)
+    if not week or fw != int(week):
+        return f'FootballDB is on week {fw}, not {week} - skipped'
+    rows = F.parse(r.text, datetime.now(timezone.utc).year if datetime.now(timezone.utc).month >= 3 else datetime.now(timezone.utc).year - 1)
+    W = store.setdefault('weeks', {}).setdefault(str(week), {'games': {}, 'players': {}})
+    n = 0
+    for x in rows:
+        if x['pos'] not in DAYS_POS or not x['tm']:
+            continue
+        filled = [(d, lv) for _, d, lv in x['days'] if lv]
+        if not filled:
+            continue
+        key = next((k for k, v in W['players'].items() if v.get('tm') == x['tm'] and _nk(k) == _nk(x['name'])), x['name'])
+        rec = W['players'].setdefault(key, {'tm': x['tm'], 'pos': x['pos'], 'inj': '', 'gs': '', 'd': {}})
+        for d, lv in filled:
+            if rec['d'].get(d) != lv:
+                rec['d'][d] = lv
+                n += 1
+        if x['inj'] and not rec.get('inj'):
+            rec['inj'] = x['inj']
+        if x['gs'] and not rec.get('gs'):
+            rec['gs'] = x['gs']
+    return f'FootballDB: {len(rows)} rows, {n} day statuses filled or corrected'
+
+
+def _nk(n):
+    return re.sub(r'\s+(jr|sr|ii|iii|iv|v)$', '', re.sub(r"[.'\u2019-]", '', str(n).lower())).strip()
+
+
+def apply_days(store, players, games, week, now_et):
+    """File each listed skill player's practice status under his team's latest released report day."""
+    if not week:
+        return 0
+    W = store.setdefault('weeks', {}).setdefault(str(week), {'games': {}, 'players': {}})
+    for tm, g in games.items():
+        W['games'][tm] = g.isoformat()
+    n = 0
+    for name, v in players.items():
+        if v.get('pos') not in DAYS_POS or not v.get('pr'):
+            continue
+        g = games.get(v.get('tm'))
+        day = latest_report_day(g, now_et) if g else None
+        if not day:
+            continue
+        rec = W['players'].setdefault(name, {'tm': v['tm'], 'pos': v['pos'], 'inj': '', 'gs': '', 'd': {}})
+        rec['tm'], rec['pos'] = v['tm'], v['pos']
+        if v.get('inj'):
+            rec['inj'] = v['inj']
+        rec['gs'] = v.get('gs', '')
+        rec['d'][day.isoformat()] = v['pr']
+        n += 1
+    keep = sorted(store['weeks'], key=int)[-2:]
+    store['weeks'] = {k: store['weeks'][k] for k in keep}
+    return n
+
+
+def write_days(store, stamp):
+    store['updated'] = stamp
+    body = ('// Auto-generated by scripts/pull_practice_reports.py - do not hand-edit.\n'
+            '// Official NFL injury report, day by day: weeks[wk].players[name].d = {date: DNP|LP|FP}\n'
+            '// filed under the team\'s report day; games[TM] = game date. QB/RB/WR/TE/K, last two weeks.\n'
+            'window.PRACTICE_DAYS_2026 = ' + json.dumps(store, separators=(',', ':'), ensure_ascii=False, sort_keys=True) + ';\n')
+    old = open(DAYS_OUT, encoding='utf-8').read() if os.path.exists(DAYS_OUT) else ''
+    if body != old:
+        open(DAYS_OUT, 'w', encoding='utf-8', newline='\n').write(body)
+    return body != old
+
+
+def backfill_git(games, week, store):
+    """Replay this week's commits of data/practice_2026.js (commit time stands in for the pull time)."""
+    if not games:
+        return 0
+    first = min(report_days(g)[0] for g in games.values()) - timedelta(days=1)
+    log = subprocess.run(['git', 'log', '--reverse', '--format=%H %ct', '--since=' + first.isoformat(), '--', 'data/practice_2026.js'],
+                         cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    n = 0
+    for h, ct in zip(log[0::2], log[1::2]):
+        txt = subprocess.run(['git', 'show', h + ':data/practice_2026.js'], cwd=ROOT, capture_output=True,
+                             text=True, encoding='utf-8').stdout
+        try:
+            pay = json.loads(txt[txt.index('{'):txt.rstrip().rstrip(';').rindex('}') + 1])
+        except Exception:
+            continue
+        if int(pay.get('week') or 0) != int(week):
+            continue
+        apply_days(store, pay.get('players') or {}, games, week, _et(datetime.fromtimestamp(int(ct), timezone.utc)))
+        n += 1
+    return n
 
 
 def _text(html):
@@ -125,8 +305,26 @@ def main():
     outs = [n for n, v in skill.items() if v['gs'] in ('Out', 'Doubtful')]
     print(f'{len(players)} players on the report (week {week}); {len(skill)} skill players; '
           f'{len(outs)} Out/Doubtful; {len(dnp_q)} Questionable+DNP: {", ".join(dnp_q[:8])}')
+    now_utc = datetime.now(timezone.utc)
+    now_et = _et(now_utc)
+    games = game_dates(r.text, now_et)
+    store = read_days()
+    if store is None:
+        sys.exit('!! data/practice_days_2026.js exists but could not be read - refusing to overwrite it')
+    if '--backfill-git' in sys.argv:
+        print(f'backfill: replayed {backfill_git(games, week, store)} commits of data/practice_2026.js for week {week}')
+    filed = apply_days(store, players, games, week, now_et)
+    try:
+        print(merge_fdb(store, week))
+    except Exception as e:
+        print(f'FootballDB merge failed (non-fatal): {e}')
+    wk = store.get('weeks', {}).get(str(week), {})
+    print(f'day log: {len(games)} game dates, {filed} statuses filed this pull, '
+          f'{len(wk.get("players", {}))} skill players logged for week {week}')
     if dry:
         return
+    if write_days(store, now_utc.isoformat()):
+        print('data/practice_days_2026.js written (changed)')
     payload = {
         'updated': datetime.now(timezone.utc).isoformat(),
         'week': week,

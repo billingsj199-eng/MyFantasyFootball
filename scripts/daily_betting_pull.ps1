@@ -47,7 +47,7 @@ Set-Location $Repo
 Write-Log '=== daily betting pull start ==='
 
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
-$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'data/depth_charts_2026.js', 'data/weather_2026.js', 'index.html')
+$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'data/practice_days_2026.js', 'data/depth_charts_2026.js', 'data/weather_2026.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -90,6 +90,16 @@ if ($injChanged) {
 $out = & $Python 'scripts\pull_practice_reports.py' 2>&1 | Out-String
 Write-Log ('practice pull: ' + $out.Trim().Split("`n")[-1])
 $pracChanged = git status --porcelain -- data/practice_2026.js
+# Day-by-day log (data/practice_days_2026.js, the card's PRACTICE REPORT; 2026-10-08)
+# has a site tag - bump its ?v= when it changed, same read-from-disk rule as weather.
+$pdChanged = git status --porcelain -- data/practice_days_2026.js
+if ($pdChanged) {
+    $pracChanged = $true
+    $idx = Join-Path $Repo 'index.html'
+    $html = [System.IO.File]::ReadAllText($idx)
+    $html2 = $html -replace 'practice_days_2026\.js\?v=[\w.-]+', ('practice_days_2026.js?v=' + (Get-Date -Format 'yyyy-MM-dd-HHmm'))
+    if ($html2 -ne $html) { [System.IO.File]::WriteAllText($idx, $html2) }
+}
 
 # ESPN depth charts (engine input for the vacated-share layer). Non-fatal.
 $out = & $Python 'scripts\pull_depth_charts.py' 2>&1 | Out-String

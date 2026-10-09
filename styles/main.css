@@ -3209,3 +3209,20 @@ tbody td{font-size:.8125rem}
   #pageCompare .cmp-split-chip{min-height:28px;padding-left:9px;padding-right:9px}
   #pageCompare :is(.remove-from-search,.remove-from-compare,.cmp-dup-btn){min-width:32px;min-height:32px}
 }
+/* === Games on phones (2026-10-09 pass) — ELITE PULL ran 401px wide on a 375px
+   screen (right edge cut off): its panel shrink-wrapped to the 5-button mode row
+   and the repeat(5,1fr) category grid, whose columns can't go below "SZN HIGH". === */
+@media (max-width:600px){
+  #pageGames :is(#gamesDaily,#gamesGuesswho,#gamesElitepull,#gamesLeaderboard){width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+  #pageGames .gw-cat-row{grid-template-columns:repeat(5,minmax(0,1fr))}
+  #pageGames .gw-cat-row.gw-6col{grid-template-columns:repeat(6,minmax(0,1fr))}
+  #pageGames .gw-cat-header .gw-cat-cell{white-space:normal;line-height:1.1}
+  #pageGames .gw-card .fg-mode-toggle{overflow-x:auto;scrollbar-width:none;justify-content:flex-start;max-width:100%}
+  #pageGames .gw-card .fg-mode-toggle::-webkit-scrollbar{display:none}
+  #pageGames .gw-card .fg-mode-toggle > button{flex:0 0 auto}
+  #pageGames :is(#gwPlayRandom,#gwPlayCustom){min-height:32px}
+  /* Top game tabs wrapped onto two rows — one swipeable line instead. */
+  #pageGames .games-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:flex-start}
+  #pageGames .games-tabs::-webkit-scrollbar{display:none}
+  #pageGames .games-tabs > .games-tab{flex:0 0 auto;min-height:32px}
+}

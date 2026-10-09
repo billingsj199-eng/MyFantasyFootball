@@ -3188,3 +3188,24 @@ tbody td{font-size:.8125rem}
   #pageMockdraft .md-avail-row .md-ar-btn{min-height:34px;padding-left:12px;padding-right:12px}
   #pageMockdraft .md-sort-btn{min-height:30px}
 }
+/* === Compare on phones (2026-10-09 pass) — head-to-head table (app.js
+   _cmpPhoneTable) above the card strip; cards fit the screen and snap. === */
+#cmpPhoneTable{display:none}
+@media (max-width:600px){
+  #cmpPhoneTable:not(:empty){display:block;margin:0 0 .8rem;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow-x:auto}
+  #cmpPhoneTable .cpt{width:100%;border-collapse:collapse;font-size:.8rem;min-width:0!important;table-layout:auto!important}
+  #cmpPhoneTable .cpt :is(th,td){min-width:0!important;width:auto!important;letter-spacing:0}
+  #cmpPhoneTable .cpt th,#cmpPhoneTable .cpt td{padding:7px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+  #cmpPhoneTable .cpt :is(th,td):first-child{padding-left:10px}
+  #cmpPhoneTable .cpt :is(th,td):last-child{padding-right:10px}
+  #cmpPhoneTable .cpt tbody tr:last-child :is(th,td){border-bottom:none}
+  #cmpPhoneTable .cpt tbody th{text-align:left;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
+  #cmpPhoneTable .cpt thead th{font-weight:700;font-size:.78rem;text-align:right;cursor:pointer}
+  #cmpPhoneTable .cpt thead th .pos-badge{display:none}
+  #cmpPhoneTable .cpt td{text-align:right;font-family:'DM Mono',monospace;font-weight:700}
+  #cmpPhoneTable .cpt td.cpt-best{color:var(--green)}
+  #compareGrid{scroll-snap-type:x mandatory}
+  #compareGrid > .compare-col{scroll-snap-align:start;min-width:88%;max-width:88%}
+  #pageCompare .cmp-split-chip{min-height:28px;padding-left:9px;padding-right:9px}
+  #pageCompare :is(.remove-from-search,.remove-from-compare,.cmp-dup-btn){min-width:32px;min-height:32px}
+}

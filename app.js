@@ -20716,6 +20716,7 @@ function renderCompareGrid() {
         renderCompareGrid();
       });
     });
+    _cmpPhoneTable();
     return;
   }
 
@@ -21016,6 +21017,48 @@ function renderCompareGrid() {
 
   _cmpWireSplits(compareGrid);
   _adminInjectCompareSnapBtns();
+  _cmpPhoneTable();
+}
+
+// Phone head-to-head (2026-10-09): on phones the cards are a sideways strip,
+// one visible at a time, so a compact table sits above them — one column per
+// player, one row per RANKINGS box, read straight off the rendered cards (so it
+// always shows what the cards show). Best value per row is green: lower wins
+// for rank / ADP rows, higher for the rest. Hidden on desktop (main.css).
+function _cmpPhoneTable() {
+  const grid = document.getElementById('compareGrid');
+  if (!grid) return;
+  let el = document.getElementById('cmpPhoneTable');
+  if (!el) { el = document.createElement('div'); el.id = 'cmpPhoneTable'; grid.parentNode.insertBefore(el, grid); }
+  const cards = [...grid.querySelectorAll('.compare-col')];
+  if (cards.length < 2) { el.innerHTML = ''; return; }
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const cols = cards.map(c => {
+    const sec = c.querySelector('.card-section');
+    const vals = {};
+    (sec ? [...sec.querySelectorAll('.card-rank-box')] : []).forEach(b => {
+      const l = (b.querySelector('.lbl') || {}).textContent, v = (b.querySelector('.num') || {}).textContent;
+      if (l && v != null) vals[l.trim()] = v.replace(/\s+/g, ' ').trim();
+    });
+    const nm = ((c.querySelector('.card-name') || {}).textContent || '').trim();
+    const parts = nm.split(' ').filter(w => !/^(jr\.?|sr\.?|ii|iii|iv|v)$/i.test(w));
+    return { last: parts.slice(-1)[0] || nm, pos: ((c.querySelector('.pos-badge') || {}).textContent || '').trim(), vals };
+  });
+  const labels = [];
+  cols.forEach(c => Object.keys(c.vals).forEach(l => { if (labels.indexOf(l) < 0 && !/^\+\/-/.test(l)) labels.push(l); }));
+  const num = s => { const m = String(s || '').match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+  const rows = labels.map(l => {
+    const lower = /rank|adp/i.test(l);
+    const ns = cols.map(c => num(c.vals[l]));
+    const ok = ns.filter(v => v != null);
+    const best = ok.length >= 2 ? (lower ? Math.min.apply(null, ok) : Math.max.apply(null, ok)) : null;
+    return '<tr><th>' + esc(l) + '</th>' + cols.map((c, i) => '<td' + (best != null && ns[i] === best ? ' class="cpt-best"' : '') + '>'
+      + esc((c.vals[l] || '—').replace(/\s*\(\d+\)$/, '')) + '</td>').join('') + '</tr>';
+  }).join('');
+  el.innerHTML = '<table class="cpt"><thead><tr><th></th>' + cols.map((c, i) => '<th data-i="' + i + '"><span class="pos-badge ' + esc(c.pos) + '">' + esc(c.pos) + '</span>' + esc(c.last) + '</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  el.querySelectorAll('thead th[data-i]').forEach(th => {
+    th.onclick = () => { const card = cards[+th.dataset.i]; if (card) grid.scrollTo({ left: card.offsetLeft - grid.offsetLeft, behavior: 'smooth' }); };
+  });
 }
 
 // Admin-only: camera buttons on the Compare page — one per card (header, next

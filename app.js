@@ -8565,7 +8565,9 @@ function render() {
   const _ssnXfp = (currentMode === 'redraft' || currentMode === 'superflex' || currentMode === 'dynasty' || currentMode === 'dynastysf') && _statMode === 'fantasy';
   document.body.classList.toggle('ssn-xfp-col', _ssnXfp);
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
-  document.body.classList.toggle('rnk-vor', _statMode === 'vor');   // also hides the AGE column (index.html)
+  document.body.classList.toggle('rnk-vor', _statMode === 'vor');
+  // Phone cards label their one stat cell per STATS view (index.html M1 block).
+  document.body.dataset.rnkStat = _statMode;   // also hides the AGE column (index.html)
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
   document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor');
   // INJURIES view: three extra columns in front of Cons (CSS keys off these classes).

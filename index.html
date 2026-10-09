@@ -77,12 +77,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-09-rdxfp" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-09-mxfp" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-sfxfp" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-mxfp" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -92,7 +92,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-09" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-09b" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-09-rdxfp">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-09-mxfp">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1340,6 +1340,48 @@ CLEAR ALL
     body.format-weekly #pageRankings tbody td.opp-cell{flex:0 0 auto;text-align:center!important;font-size:.78rem;font-weight:600;padding:0 3px!important;min-width:40px!important;line-height:1.05}
     body.format-weekly #pageRankings tbody td.opp-cell::after{content:"OPP";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
     #pageRankings tbody .age-cell{display:none}
+    /* 2026-10-09 mobile pass (Jack: xFP on the cards + tidy the newer columns).
+       xFP card cell — FANTASY view on every board, right after PROJ. */
+    body.wk-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell,
+    body.ssn-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.82rem;padding:0 3px!important;min-width:34px!important;line-height:1.05}
+    #pageRankings tbody td.xfpg-cell::after{content:"xFP";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
+    body.wk-xfp-col #pageRankings tbody tr:is(:has(.pos-badge.K),:has(.pos-badge.DST)) td.xfpg-cell,
+    body.ssn-xfp-col #pageRankings tbody tr:is(:has(.pos-badge.K),:has(.pos-badge.DST)) td.xfpg-cell{display:none!important}
+    /* The STATS-view tail columns (TD luck, JM, site ADPs, book yards, sim
+       totals…) rendered as bare unlabeled numbers squeezed to 2-25px at the
+       end of each card. The card keeps one stat cell; the rest live on desktop
+       and the player card. Devy rows keep JM (rule above). */
+    #pageRankings tbody tr:not(.devy-row) td.yrr-cell,
+    #pageRankings tbody tr:not(.devy-row) td.jm-cell,
+    #pageRankings tbody tr:not(.devy-row) td.landing-cell{display:none!important}
+    /* SIMS view: the "org · now" sub-line widened the stat cell to ~95px. */
+    body[data-rnk-stat="sims"] #pageRankings tbody .ppg-proj-cell > div{display:none}
+    /* The stat cell's label follows the STATS view (it always said PROJ). */
+    body[data-rnk-stat="sims"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"SIM"}
+    body[data-rnk-stat="vor"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"VOR"}
+    body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"PPG"}
+    body[data-rnk-stat="lines"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"BOOK"}
+    body[data-rnk-stat="adp"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"ADP"}
+    /* xFP STATS view: show xFP/Gm (the '26 PPG swap cell) beside actual PPG. */
+    body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) td.ppg25-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.82rem;padding:0 3px!important;min-width:34px!important;line-height:1.05}
+    body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) td.ppg25-cell::after{content:"xFP";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
+    /* WEEKLY OPP: the kickoff / live pill already says it's the game — drop
+       the OPP label under it and shrink the pill (cell was 74px wide). */
+    body.format-weekly #pageRankings tbody td.opp-cell:has(.wk-live-in,.wk-live-post)::after{display:none}
+    body.format-weekly #pageRankings tbody td.opp-cell .wk-live{font-size:.58rem;padding:1px 3px;letter-spacing:.02em;margin-top:2px}
+    /* Pre-game kickoff pill ("SUN 4:25P") was the widest thing on the weekly
+       card; the kickoff lives on the player card. Live + final pills stay. */
+    body.format-weekly #pageRankings tbody td.opp-cell .wk-live-pre{display:none}
+    /* Name room: with PROJ + xFP + SOS/OPP the name had ~38px at 375 wide
+       ("Jah…"). Tighter row gaps, handle, star and stat minimums buy ~35px. */
+    #pageRankings tbody tr{gap:0 4px}
+    #pageRankings tbody tr td:first-child{flex:0 0 18px}
+    #pageRankings tbody tr td:nth-child(3) .player-cell{gap:4px!important}
+    #pageRankings tbody tr td:nth-child(3) .player-headshot-sm{margin-right:0}
+    #pageRankings tbody .watch-star{padding:6px 2px;font-size:1rem}
+    #pageRankings tbody .ppg-proj-cell{min-width:36px!important}
+    body.wk-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell,
+    body.ssn-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell{min-width:32px!important}
     /* Tier banner rows still need to span full card width */
     #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
     #pageRankings tbody tr.tier-row td{display:block;text-align:center!important}
@@ -1360,7 +1402,8 @@ CLEAR ALL
     .drag-clone tr td:nth-child(4){display:none!important}
     .drag-clone .pos-rank-cell{flex:0 0 auto;font-size:.6875rem;font-weight:700;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px!important;min-width:30px;text-align:center!important;border-radius:4px;line-height:1.1}
     .drag-clone .adp-cell,.drag-clone .ppg-proj-cell,.drag-clone .psos-cell{flex:0 0 auto;text-align:center!important;font-size:.82rem;font-weight:600;color:var(--text);padding:0 3px!important;min-width:36px!important;line-height:1.05}
-    .drag-clone .age-cell{display:none}
+    .drag-clone .age-cell,.drag-clone .yrr-cell,.drag-clone .jm-cell,.drag-clone .landing-cell{display:none}
+    body.wk-xfp-col .drag-clone .xfpg-cell,body.ssn-xfp-col .drag-clone .xfpg-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.82rem;min-width:34px!important}
     /* Weekly format: match the card column swap (ADP/SOS out, OPP in) */
     body.format-weekly .drag-clone .adp-cell,body.format-weekly .drag-clone .psos-cell{display:none!important}
     .drag-clone .ppsos-cell{display:none!important}
@@ -1557,6 +1600,8 @@ body.inj-view-fant #pageRankings .l4ppg-cell{display:none!important}
   body.inj-view #pageRankings tbody td.injv-cell .injv-m{display:inline}
   body.inj-view #pageRankings tbody td.injv-inj,
   body.inj-view #pageRankings tbody .adp-cell,
+  body.inj-view #pageRankings tbody tr[data-idx] td.xfpg-cell,
+  body.inj-view #pageRankings tbody tr[data-idx] td.opp-cell,
   body.inj-view #pageRankings tbody td.injv-cell .injv-sub,
   body.inj-view #pageRankings tbody td.injv-cell .injv-d,
   body.inj-view #pageRankings tbody tr[data-idx] td:first-child,
@@ -6164,7 +6209,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-sfxfp"></script>
+<script defer src="app.js?v=2026-10-09-mxfp"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

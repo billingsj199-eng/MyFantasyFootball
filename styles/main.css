@@ -1228,14 +1228,11 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   body.format-weekly #pageRankings td.spread-cell,
   body.format-weekly #pageRankings td.teamtotal-cell,
   body.format-weekly #pageRankings td.oppppg-cell,
-  body.format-weekly #pageRankings td.xfpg-cell,
   body.format-weekly #pageRankings td.simboom-cell,
   body.format-weekly #pageRankings td.simbust-cell{display:none !important}
   /* REDRAFT rest-of-season Team Total: desktop only, same reason. */
   body.ros-tt-col:not(.format-weekly) #pageRankings th#teamTotalHeader,
   body.ros-tt-col:not(.format-weekly) #pageRankings td.teamtotal-cell{display:none !important}
-  body.ssn-xfp-col:not(.format-weekly) #pageRankings th#xfpGHeader,
-  body.ssn-xfp-col:not(.format-weekly) #pageRankings td.xfpg-cell{display:none !important}
   /* Verbose label suffixes — hidden on mobile to keep column widths compact. */
   .hide-on-mobile{display:none}
   /* Constrain the Player column so long names truncate instead of stretching

@@ -3605,6 +3605,73 @@ function _impliedTeamPpg(teamFullName) {
   return _impliedPpgCache[abbr] || null;
 }
 
+// Position rank tags for the player card's stat boxes (Jack 2026-10-09): the
+// same small "(N)" the Team PPG box carries, so '26 PPG / Proj PPG / xFP /GM /
+// L4 PPG (FANTASY) and WK PROJ / BOOKS / SEASON /GM / xFP /GM (WEEKLY) read as
+// "where he sits at his position". Pool = active NFL players at the same
+// position with a value; actual-game stats ('26 PPG, xFP) need at least half
+// the position's max games so a one-game spike doesn't outrank full samples
+// (the card's own player is always ranked). Cached ~60s per key / pos / fmt / week.
+const _cardPosRankCache = {};
+function _cardPosRankVal(p, key) {
+  if (key === 'ppg') { const s = adjSeasonPpg(p); return s.v != null ? { v: s.v, n: s.gp || 0 } : null; }
+  if (key === 'proj') { const v = adjProjPpg(p); return (typeof v === 'number' && v > 0) ? { v: v } : null; }
+  if (key === 'l4') { const v = last4Ppg(p); return v != null ? { v: v } : null; }
+  if (key === 'xfp') { const x = (typeof _xfpAgg === 'function') ? _xfpAgg(p, rankingScoringFmt, null) : null; return (x && x.n) ? { v: x.xfpg, n: x.n } : null; }
+  if (key === 'wkproj') {
+    if (typeof window._weeklyAdjustPpg !== 'function') return null;
+    const v = window._weeklyAdjustPpg(p, adjProjPpg(p), {});
+    return (typeof v === 'number' && v > 0) ? { v: v } : null;
+  }
+  if (key === 'book') { const W = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(p) : null; return W ? { v: W.ppg } : null; }
+  return null;
+}
+function _cardPosRank(d, key) {
+  if (!d || !d.s || typeof D === 'undefined' || !D) return null;
+  const wk = window._weeklyActiveWeek || 1;
+  const ck = key + '|' + d.s + '|' + rankingScoringFmt + '|' + wk + '|' + D.length;
+  let e = _cardPosRankCache[ck];
+  if (!e || Date.now() - e.t > 60000) {
+    const rows = [];
+    let maxN = 0;
+    D.forEach(p => {
+      if (!p || p.s !== d.s || p._retired || p._isDevy || !p.t) return;
+      let r = null;
+      try { r = _cardPosRankVal(p, key); } catch (_) {}
+      if (!r || typeof r.v !== 'number' || !isFinite(r.v)) return;
+      if (r.n > maxN) maxN = r.n;
+      rows.push({ n: p.n, v: r.v, g: r.n });
+    });
+    e = _cardPosRankCache[ck] = { t: Date.now(), rows: rows, minG: Math.max(1, Math.ceil(maxN / 2)) };
+  }
+  const me = e.rows.find(r => r.n === d.n);
+  if (!me) return null;
+  const pool = e.rows.filter(r => r === me || r.g == null || r.g >= e.minG);
+  return { rank: 1 + pool.filter(r => r.v > me.v).length, of: pool.length };
+}
+// Small "(N)" after a box number; tooltip spells out "#N of M QBs".
+function _cardPosRankTag(d, key) {
+  const r = _cardPosRank(d, key);
+  if (!r) return '';
+  const pl = d.s === 'DST' ? 'D/STs' : d.s + 's';
+  return ' <span style="font-size:.6em;font-weight:600;color:var(--text2);cursor:help" title="#' + r.rank + ' of ' + r.of + ' ' + pl
+    + ((key === 'ppg' || key === 'xfp') ? ' (min. games played)' : '') + '">(' + r.rank + ')</span>';
+}
+
+// This week's implied team total ranked across every team playing (#1 = highest).
+// opp = rank the opponent's total instead, lowest first (the D/ST view).
+function _cardWeekTotalRankTag(team, opp) {
+  const fn = opp ? window._weeklyOppTeamTotalFor : window._weeklyTeamTotalFor;
+  if (typeof fn !== 'function' || typeof TEAM_ABBR_MAP === 'undefined') return '';
+  const mine = fn(team);
+  if (mine == null) return '';
+  const all = Object.keys(TEAM_ABBR_MAP).map(t => { try { return fn(t); } catch (_) { return null; } }).filter(v => typeof v === 'number');
+  if (!all.length) return '';
+  const rank = 1 + all.filter(v => opp ? v < mine : v > mine).length;
+  const tip = opp ? '#' + rank + ' of ' + all.length + ' — lowest opponent total this week = #1' : '#' + rank + ' of ' + all.length + ' teams playing this week';
+  return ' <span style="font-size:.6em;font-weight:600;color:var(--text2);cursor:help" title="' + tip + '">(' + rank + ')</span>';
+}
+
 // Team PPG rank box for card Rankings rows (player card + Compare columns).
 // Same color thresholds and (rank) treatment as the rankings-table cell.
 function _teamPpgBoxHtml(team) {
@@ -9006,6 +9073,12 @@ function render() {
         const _poMiss = _ve && _ve.gp < _ve.sgp;
         const _poC = !_ve ? null : _poMiss ? '#f59e0b' : _vorColor(_ve.vp / Math.max(1, _ve.sgp || 0));
         const _poT = !_ve ? '—' : _ve.vp >= 10 ? '+' + Math.round(_ve.vp) : _ve.vp > 0 ? '+' + _ve.vp.toFixed(1) : '0';
+        if (_ve && _vorUpsideOn() && _ve.vu != null) {
+          // UPSIDE view: the tail column carries UPSIDE VOR (the board order), with the gain over ROS VOR in the tip.
+          const _uT = _ve.vu >= 10 ? '+' + Math.round(_ve.vu) : _ve.vu > 0 ? '+' + _ve.vu.toFixed(1) : '0';
+          const _uG = Math.round((_ve.vu - _ve.vt) * 10) / 10;
+          _statYdsTail = '<span style="cursor:help;font-weight:700;color:' + (_vorColor(_ve.vu / Math.max(1, _ve.sg || 1)) || 'inherit') + '" title="' + ('UPSIDE VOR ' + _uT + ' (ROS VOR ' + (_ve.vt > 0 ? '+' : '') + _ve.vt + ', ' + (_uG >= 0 ? '+' : '') + _uG + ' for the chance his projection climbs before each week — role or usage change you can start him for). Projections unchanged.').replace(/"/g, '&quot;') + '">' + _uT + '</span>';
+        } else
         _statYdsTail = (_ve && !_vt.win)
           ? '<span style="cursor:help;font-weight:700' + (_poC ? ';color:' + _poC : '') + '" title="' + (_poT + ' points above replacement in the fantasy-playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' — projected to play ' + _ve.gp + ' of his team\'s ' + _ve.sgp + (_poMiss ? ', so he misses playoff time' : '') + '. Breaks ties on ROS VOR.').replace(/"/g, '&quot;') + '">' + _poT + '</span>'
           : '—';
@@ -9192,7 +9265,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -13548,6 +13621,36 @@ function _vorAssignTiers(es, valKey, slot, cap) {
   tiers.forEach(tr => { for (let i = tr.from; i < tr.to; i++) pos[i][slot] = tr.obj; });
   es.slice(pos.length).forEach(e => { e[slot] = e[valKey] > 0 ? trail['DEEP BENCH'] : trail['REPLACEMENT LEVEL']; });
 }
+// UPSIDE VOR (2026-10-09, Jack: "include the high range of outcomes ... value VOR on the high end rather than averaging it
+// out" + "rookies that haven't performed well but historically could improve"). Projections are untouched; a week's value
+// becomes an OPTION on his projection: it can move before that week (role / usage change) and you start him once it does,
+// so the value is E[max(0, f x e^Z - R)] with Z ~ N(mu, sigma) by position x rookie x weeks ahead (lognormal call).
+// sim_lab/backtest_option_vor.py (option_vor.log, 2019-25, realized STARTABLE value - no hindsight boom credit): FLEX rank
+// .638 -> .643 (6/7 seasons, forward 4/4), bench-zone rank better 6/7 + 4/4, top-12 stashes +5 / +8 realized points.
+// Handcuff option (starter-injury worlds) FAILED as a ranking signal - shown on the card as "IF <starter> SITS" instead.
+// Fits pooled 2019-25 [mu, sigma] for weeks ahead 1-2 / 3-5 / 6-9 / 10+; QB / TE / K / DST carry no drift (= ROS VOR).
+const _UPS_DRIFT = {
+  RB: { vet: [[0.001, 0.074], [0.002, 0.113], [0.000, 0.153], [0.008, 0.191]], rook: [[0.012, 0.126], [0.029, 0.193], [0.054, 0.270], [0.092, 0.344]] },
+  WR: { vet: [[0.002, 0.063], [0.003, 0.099], [0.002, 0.137], [0.002, 0.170]], rook: [[-0.002, 0.103], [-0.007, 0.150], [-0.017, 0.197], [-0.025, 0.243]] }
+};
+function _upsNcdf(x) {   // standard normal CDF (Abramowitz-Stegun 26.2.17)
+  const t = 1 / (1 + 0.2316419 * Math.abs(x)), y = 0.3989422804014327 * Math.exp(-x * x / 2) * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return x >= 0 ? 1 - y : y;
+}
+function _upsCall(f, R, mu, sg) {
+  if (!(f > 0)) return 0;
+  if (!(sg > 1e-6)) return Math.max(0, f * Math.exp(mu) - R);
+  if (!(R > 0)) return f * Math.exp(mu + sg * sg / 2);
+  const d2 = (Math.log(f / R) + mu) / sg, d1 = d2 + sg;
+  return f * Math.exp(mu + sg * sg / 2) * _upsNcdf(d1) - R * _upsNcdf(d2);
+}
+function _upsIsRookie(d) { return !(d.career || []).some(c => c && +c.yr < 2026); }
+function _upsDrift(d, k) {
+  const P = _UPS_DRIFT[d.s];
+  if (!P || !(k > 0)) return null;
+  const b = k <= 2 ? 0 : k <= 5 ? 1 : k <= 9 ? 2 : 3;
+  return P[_upsIsRookie(d) ? 'rook' : 'vet'][b];
+}
 function _vorTable() {
   const SP = window.SIM_PROJ_2026;
   if (!SP || !SP.weeks || typeof D === 'undefined') return null;
@@ -13658,6 +13761,7 @@ function _vorTable() {
   // Ties on ROS VOR go to the bigger playoff-weeks VOR.
   const _cmp = (a, b) => (b.vt - a.vt) || (b.vp - a.vp) || (b.vor - a.vor) || (b.tot - a.tot);
   const _cmpP = (a, b) => (b.vp - a.vp) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
+  const _cmpU = (a, b) => (b.vu - a.vu) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
@@ -13681,8 +13785,14 @@ function _vorTable() {
       const vt = wk ? vor : r1(x.wp.reduce((s, v, j) => s + gapW(j) * wt(weeks[j]), 0));
       // PO VOR: the same week-by-week gap inside the fantasy playoffs only, unweighted.
       const vp = wk ? 0 : r1(x.wp.reduce((s, v, j) => s + (isPO(weeks[j]) ? gapW(j) : 0), 0));
+      // UPSIDE VOR: the same weeks, each priced as an option on his projection (drift by weeks ahead of the window start)
+      const vu = wk ? vor : r1(x.wp.reduce((s, v, j) => {
+        if (!(v > 0)) return s;
+        const q = x.wq[j], f = q < 1 ? v / q : v, dr = _upsDrift(x.d, weeks[j] - weeks[0]);
+        return s + (dr ? _upsCall(f, R, dr[0], dr[1]) : Math.max(0, f - R)) * q * wt(weeks[j]);
+      }, 0));
       const sc = _sched(x.d);
-      const e = { v: r1(x.ppg), g: x.g, eg: r1(x.eg), sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
+      const e = { v: r1(x.ppg), g: x.g, eg: r1(x.eg), sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, vu, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
       out.map.set(x.d, e);
       return e;
     });
@@ -13699,6 +13809,13 @@ function _vorTable() {
       _vorAssignTiers(sortedP, 'vp', 'tPp', 150);
       if (p === 'K' || p === 'DST') sortedP.forEach(e => { e.tAp = e.tPp; });
     }
+    // UPSIDE view: the same ranks and tiers on UPSIDE VOR (season boards, any window).
+    if (!wk) {
+      const sortedU = es.slice().sort(_cmpU);
+      if (p === 'K' || p === 'DST') sortedU.forEach((e, i) => { e.rkU = i + 1; });
+      _vorAssignTiers(sortedU, 'vu', 'tPu', 150);
+      if (p === 'K' || p === 'DST') sortedU.forEach(e => { e.tAu = e.tPu; });
+    }
   });
   all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
   _vorAssignTiers(all, 'vt', 'tA', 150);   // top-150 draftable range
@@ -13706,6 +13823,11 @@ function _vorTable() {
     const allP = all.slice().sort(_cmpP);
     allP.forEach((e, i) => { e.rkP = i + 1; });
     _vorAssignTiers(allP, 'vp', 'tAp', 150);
+  }
+  if (!wk) {
+    const allU = all.slice().sort(_cmpU);
+    allU.forEach((e, i) => { e.rkU = i + 1; });
+    _vorAssignTiers(allU, 'vu', 'tAu', 150);
   }
   window._vorCache = out;
   return out;
@@ -13728,6 +13850,11 @@ window._vorPlayoffs = false;
 function _vorPlayoffsOn() {
   return !!window._vorPlayoffs && currentVersion === 'sims' && currentMode !== 'weekly' && !_vorWin();
 }
+// UPSIDE view of the SIM VOR board: ranked and tiered by UPSIDE VOR (season boards; any window). Exclusive with PLAYOFFS.
+window._vorUpside = false;
+function _vorUpsideOn() {
+  return !!window._vorUpside && currentVersion === 'sims' && currentMode !== 'weekly' && !_vorPlayoffsOn();
+}
 // SIM VOR tier banners for the rows on screen: tier membership is per player
 // (overall tiers on ALL / ROOKIES / FLEX, position tiers on a position pill),
 // so filtered views — WAIVERS, TEAMS, TOP N — keep each player's real tier and
@@ -13741,8 +13868,8 @@ function _simsTiersFor(data) {
   let prev = null;
   rows.forEach((d, i) => {
     const e = _vorFor(d);
-    const po = _vorPlayoffsOn();
-    const t = e && (posView ? (po ? e.tPp : e.tP) : (po ? e.tAp : e.tA));
+    const po = _vorPlayoffsOn(), up = _vorUpsideOn();
+    const t = e && (posView ? (po ? e.tPp : up ? e.tPu : e.tP) : (po ? e.tAp : up ? e.tAu : e.tA));
     if (!t || t === prev) return;
     prev = t;
     out.push({ id: 's' + out.length, label: t.label, name: t.name, afterRank: positional ? i + 1 : d.myRank });
@@ -13757,11 +13884,11 @@ function _simsTiersFor(data) {
 function _simsBoardEnsure() {
   const t = _vorTable();
   const src = (window._simsBoardSrc = window._simsBoardSrc || {});
-  const po = _vorPlayoffsOn();
-  const srcKey = currentMode + (po ? ':po' : '');
+  const po = _vorPlayoffsOn(), up = _vorUpsideOn();
+  const srcKey = currentMode + (po ? ':po' : up ? ':up' : '');
   if (!t || src[srcKey] === t) return false;
   const skill = [], ks = [], ds = [];
-  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : e.rk]); });
+  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : (up && e.rkU != null) ? e.rkU : e.rk]); });
   const order = [];
   [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
   // Players without a sim row trail in consensus order (hidden on this board).
@@ -13882,6 +14009,7 @@ function _vorBarRender() {
     + '<label class="vor-num" title="How much each playoff week counts — 1 = like any other week, 1.5 = half again as much. Missing a playoff week costs that much more.">×<input type="number" inputmode="decimal" data-vor="poW" min="' + _VOR_PO_W[0] + '" max="' + _VOR_PO_W[1] + '" step="0.25" value="' + st.poW + '"></label></span>'
     + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
     + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorPlayoffsOn() ? ' on' : '') + '" id="vorPlayoffBtn" title="Re-rank the SIM VOR board by PO VOR — value over replacement in the fantasy-playoff weeks only (' + st.poStart + (st.poEnd > st.poStart ? '-' + st.poEnd : '') + ') — with tiers drawn on that number. For trading for the title run.">PLAYOFFS</button>' : '')
+    + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorUpsideOn() ? ' on' : '') + '" id="vorUpsideBtn" title="Re-rank the SIM VOR board by UPSIDE VOR — the same weeks as VOR, but each week counts the chance his projection climbs before then (role or usage change) and you start him once it does. Rookie RBs climb the most; a steady low-ceiling player gains little. Projections are unchanged. Backtested 2019-25 on value you could actually start: better stash order in 6 of 7 seasons.">UPSIDE</button>' : '')
     + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
     + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench, playoffs weeks 15-17 at 1.5x, rest-of-season window) with no league">RESET</button>';
 }
@@ -13935,6 +14063,22 @@ function _vorChanged() {
         return;
       }
       window._vorPlayoffs = !window._vorPlayoffs;
+      if (window._vorPlayoffs) window._vorUpside = false;
+      _vorBarRender();
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+      syncMode(); renumber();
+      render();
+      return;
+    }
+    if (e.target.closest('#vorUpsideBtn')) {
+      if (currentVersion !== 'sims') {
+        window._vorUpside = true; window._vorPlayoffs = false;
+        const tab = document.querySelector('.version-tab[data-version="sims"]');
+        if (tab) tab.click();
+        return;
+      }
+      window._vorUpside = !window._vorUpside;
+      if (window._vorUpside) window._vorPlayoffs = false;
       _vorBarRender();
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
       syncMode(); renumber();
@@ -13956,6 +14100,7 @@ function _vorChanged() {
       window._vorSt = Object.assign({}, _VOR_DEFAULT);
       window._vorWaivers = false;
       window._vorPlayoffs = false;
+      window._vorUpside = false;
       _vorChanged();
     }
   });
@@ -14319,8 +14464,29 @@ function _seasonScenBoxHtml(d) {
   }).join('');
 }
 
+// IF <STARTER> SITS (2026-10-09, Jack): a backup RB's per-game projection for the rest of the season in the world where the
+// team's top RB is out (SIM_PROJ_2026.ifSits, Sim Lab export). Information only - handcuff value is real (backups score ~1.6x
+// their own number when the starter misses) but unpredictable, so it is in no ranking (backtest_option_vor.py).
+function _ifSitsHtml(d) {
+  const F = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.ifSits;
+  if (!F || !d || d.s !== 'RB') return '';
+  let r = F[d.n];
+  if (!r && typeof _campNewsNorm === 'function') { const nn = _campNewsNorm(d.n); const k = Object.keys(F).find(x => _campNewsNorm(x) === nn); r = k ? F[k] : null; }
+  if (!r || !r.v) return '';
+  const fi = (typeof rankingScoringFmt !== 'undefined' && rankingScoringFmt === 'ppr') ? 1 : (typeof rankingScoringFmt !== 'undefined' && rankingScoringFmt === 'std') ? 2 : 0;
+  const lab = ['HALF', 'PPR', 'STD'][fi];
+  const sp = _simSeasonPpgRow(d), now = sp && sp[fi] != null ? sp[fi] : null;
+  const last = String(r.s).split(' ').filter(w => !/^(jr\.?|sr\.?|ii|iii|iv|v)$/i.test(w)).slice(-1)[0] || r.s;
+  const up = now != null ? Math.round((r.v[fi] - now) * 10) / 10 : null;
+  const tip = 'His projection per game for the rest of the season if ' + r.s + ' is out (the Sim Lab redistributes the work the same way it does for any absence). Handcuff value: real when it happens, but nobody can predict which starter gets hurt, so it is not part of VOR, UPSIDE VOR or any ranking. ' + lab + ' scoring.';
+  return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:6px 10px;margin-bottom:8px;border:1px dashed var(--border);border-radius:8px;font-size:.75rem">'
+    + '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent)"><span data-gloss="' + tip.replace(/"/g, '&quot;') + '">IF ' + String(last.toUpperCase()).replace(/[<>&"]/g, '') + ' SITS</span></span>'
+    + '<span><b>' + r.v[fi] + '</b> ' + lab + '/g' + (now != null ? ' <span style="color:var(--text2)">(now ' + now + (up > 0 ? ', +' + up : '') + ')</span>' : '') + '</span>'
+    + '</div>';
+}
+
 function _seasonSimStripHtml(d) {
-  const _scBox = _seasonScenBoxHtml(d);
+  const _scBox = _seasonScenBoxHtml(d) + _ifSitsHtml(d);
   const _scW = typeof _seasonScenWorld === 'function' && d && d.s !== 'DST' ? _seasonScenWorld(d.n) : null;
   if (_scW && !_scW.rows.s) return _scBox + '<div style="padding:8px 10px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);font-size:.75rem;color:var(--text2)">Out for the rest of the season in this scenario.</div>';
   const r = _simSeasonRow(d);
@@ -17241,8 +17407,8 @@ function buildWeeklyCardView(d) {
   html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), '', oppNote || null, oppCol);
   html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', '', 'Point spread for this team — negative = favored', _spreadCol(sp));
   html += isDst
-    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)', _ttColInv(oppTT))
-    : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
+    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) + _cardWeekTotalRankTag(d.t, true) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)', _ttColInv(oppTT))
+    : box('TEAM TOTAL', tt != null ? fmt1(tt) + _cardWeekTotalRankTag(d.t, false) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
   html += box('O/U', ou != null ? fmt1(ou) : '—', '', 'Game total (over/under)', isDst ? _ouColInv(ou) : _ouCol(ou));
   html += '</div>';
   // weekly rank boxes sit left of WK N MATCHUP (flex + position for RB / WR / TE, position only for QB / K / D/ST)
@@ -17315,13 +17481,13 @@ function buildWeeklyCardView(d) {
     + '<span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
   const wkBook = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
   html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
-  html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) : '—', '',
+  html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) + (proj > 0 ? _cardPosRankTag(d, 'wkproj') : '') : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
+  html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) + _cardPosRankTag(d, 'book') : '—', '',
     wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player', wkBook != null ? _ptsCol(wkBook.ppg) : null);
-  html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
+  html += box('SEASON /GM', base != null ? fmt1(base) + _cardPosRankTag(d, 'proj') : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
   const _xa = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
   const _xv = (_xa && _xa.n) ? Math.round(_xa.xfpg * 10) / 10 : null;
-  html += box('xFP /GM', _xv != null ? fmt1(_xv) : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
+  html += box('xFP /GM', _xv != null ? fmt1(_xv) + _cardPosRankTag(d, 'xfp') : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
   html += '</div>';
   // (Clay / Sleeper / ESPN / FantasyPros / CBS reference tiles removed 2026-10-08)
   // WITH / WITHOUT QUESTIONABLE TEAMMATES (Jack 2026-10-08): this player's week projection with each questionable
@@ -19063,21 +19229,21 @@ function openPlayerCard(d, ctxMode) {
           </div>
           <div class="card-rank-box">
             <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
-            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
+            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1)+_cardPosRankTag(d,'ppg'):'—';})()}</div>
           </div>
         </div>
         <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
-            <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
+            <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v+_cardPosRankTag(d,'proj'):'—';})()}</div>
           </div>
           ${(()=>{const x=(typeof _xfpAgg==='function')?_xfpAgg(d,rankingScoringFmt,null):null;const v=(x&&x.n)?Math.round(x.xfpg*10)/10:null;const c=v!=null?posFptsColor(v,d.s):null;return `<div class="card-rank-box"${x&&x.n?` title="Expected fantasy points per game from usage (targets, carries, field position), 2026 to date — ${x.n} gm, actual ${Math.round(x.ppg*10)/10} /gm"`:''}>
             <div class="lbl">xFP /GM</div>
-            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v:'—'}</div>
+            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v+_cardPosRankTag(d,'xfp'):'—'}</div>
           </div>`;})()}
           ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v,d.s);return `<div class="card-rank-box">
             <div class="lbl" title="Average PPG over the last 4 games played (2026 to date, then the end of 2025) — shows which way the player is trending vs the season PPG.">L4 PPG</div>
-            <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
+            <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}${c.html!=='—'?_cardPosRankTag(d,'l4'):''}</div>
           </div>`;})()}
           ${_teamPpgBoxHtml(d.t)}
         </div>
@@ -19694,14 +19860,15 @@ function openPlayerCard(d, ctxMode) {
     document.addEventListener('mff:weeklydata', function _l4Backfill() {
       document.removeEventListener('mff:weeklydata', _l4Backfill);
       if (!_l4Num.isConnected) return;
-      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d), d.s);
-      _l4Num.innerHTML = c.html;
+      for (const k in _cardPosRankCache) delete _cardPosRankCache[k];   // ranks computed before the bundle are stale
+      const c = l4PpgCellHtml(last4Ppg(d), adjSeasonPpg(d).v, d.s);
+      _l4Num.innerHTML = c.html + (c.html !== '—' ? _cardPosRankTag(d, 'l4') : '');
       _l4Num.style.color = c.color || '';
       // xFP /GM tiles (FANTASY + WEEKLY) ride on the same bundle
       try {
         const x = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
         const xv = (x && x.n) ? Math.round(x.xfpg * 10) / 10 : null;
-        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.textContent = xv != null ? xv : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
+        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.innerHTML = xv != null ? xv + _cardPosRankTag(d, 'xfp') : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
       } catch (_) {}
       // PRACTICE REPORT: the elite flag (last season's PPG rank) needs this bundle - redraw the section
       try {
@@ -20725,9 +20892,9 @@ function renderCompareGrid() {
             <div class="card-rank-box"><div class="lbl">+/- ADP</div><div class="num ${diffClass}">${diffText}</div></div>
           </div>
           <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
-            <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
-            <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div></div>
-            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d),d.s);return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
+            <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v+_cardPosRankTag(d,'proj'):'—';})()}</div></div>
+            <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1)+_cardPosRankTag(d,'ppg'):'—';})()}</div></div>
+            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d),d.s);return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}${c.html!=='—'?_cardPosRankTag(d,'l4'):''}</div></div>`;})()}
             ${_teamPpgBoxHtml(d.t)}
           </div>
         </div>

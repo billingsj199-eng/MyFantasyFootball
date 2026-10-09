@@ -69,6 +69,14 @@ $out = & $Python 'scripts\build_ktc_history.py' 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "KTC history build FAILED (exit $LASTEXITCODE) - continuing with yesterday's history" }
 
+# MFF VALUE forward tracker (Jack 2026-10-09): today's FAIR / MFF VALUE table
+# (1QB + SF) beside the fresh KTC values -> sim_lab\_dyn_cache\mff_tracker\
+# (outside the repo, nothing to commit). Scored later with
+# `python sim_lab\mff_tracker.py eval`. Non-fatal.
+$out = & $Python 'E:\MyFantasyFootball\sim_lab\mff_tracker.py' snapshot 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "MFF tracker snapshot FAILED (exit $LASTEXITCODE)" }
+
 $changed = git status --porcelain -- @Files
 if (-not $changed) {
     Write-Log 'no ADP movement - nothing to commit'

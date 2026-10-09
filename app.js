@@ -3392,7 +3392,10 @@ function _cdRender() {
   if (!el) return;
   const d = window._cardOpenD;
   if (!d || d.n !== el.dataset.name) return;
-  const mode = el.dataset.mode === 'dynastysf' ? 'dynastysf' : 'dynasty';
+  // 1QB / SF toggle (Jack 2026-10-09): starts on the board the card was opened from;
+  // a pick sticks for the rest of the session (window._cdFmt), not across visits.
+  const mode = window._cdFmt ? (window._cdFmt === 'sf' ? 'dynastysf' : 'dynasty')
+    : (el.dataset.mode === 'dynastysf' ? 'dynastysf' : 'dynasty');
   const fmt = mode === 'dynastysf' ? 'sf' : '1qb';
   const st = window._cdState;
   const sim = _cdSimNow(d, fmt);
@@ -3404,7 +3407,7 @@ function _cdRender() {
   const posLbl = n => n ? (d.s === 'DST' ? 'D/ST' : d.s) + n : '—';
   const now = st.src === 'ktc' ? (ktc && !ktc.devy ? { ovr: ktc.ovr, pos: ktc.posRank } : null)
     : st.src === 'jacks' ? jk : (sim && !sim.locked ? sim : null);
-  const srcName = { sim: 'Dynasty SIM', jacks: "Jack's Dynasty" + (mode === 'dynastysf' ? ' SF' : ''), ktc: 'KTC' }[st.src];
+  const srcName = { sim: 'Dynasty SIM', jacks: "Jack's Dynasty", ktc: 'KTC' }[st.src] + (fmt === 'sf' ? ' SF' : ' 1QB');
   const box = (big, small, sub) => '<div style="flex:1 1 0;min-width:0;background:var(--elev-1,rgba(148,163,184,.08));border:1px solid rgba(148,163,184,.18);border-radius:10px;padding:10px 8px;text-align:center">'
     + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.7rem;line-height:1;color:var(--text1)">' + big + '</div>'
     + '<div style="font-size:.6875rem;letter-spacing:.06em;color:var(--text2);text-transform:uppercase;margin-top:4px">' + small + '</div>'
@@ -3447,6 +3450,8 @@ function _cdRender() {
     + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'
     + chip('data-cdsrc', 'sim', st.src === 'sim', 'SIM') + chip('data-cdsrc', 'jacks', st.src === 'jacks', "JACK'S") + chip('data-cdsrc', 'ktc', st.src === 'ktc', 'KTC')
     + '<span style="width:6px"></span>'
+    + chip('data-cdfmt', '1qb', fmt === '1qb', '1QB') + chip('data-cdfmt', 'sf', fmt === 'sf', 'SF')
+    + '<span style="width:6px"></span>'
     + (st.src !== 'jacks' ? chip('data-cdmetric', 'val', st.metric === 'val', 'VALUE') : '') + chip('data-cdmetric', 'ovr', metric === 'ovr', 'OVERALL') + (st.src !== 'jacks' ? chip('data-cdmetric', 'pos', st.metric === 'pos', 'POSITIONAL') : '')
     + '<span style="width:6px"></span>'
     + [[30, '1M'], [90, '3M'], [180, '6M'], [0, 'ALL']].map(x => chip('data-cdspan', x[0], st.span === x[0], x[1])).join('')
@@ -3458,9 +3463,10 @@ function _cdRender() {
 }
 // One delegated listener for the chips + chart hover (the card body is rebuilt on every open).
 document.addEventListener('click', e => {
-  const b = e.target.closest && e.target.closest('#cardDynValBlock [data-cdsrc], #cardDynValBlock [data-cdmetric], #cardDynValBlock [data-cdspan]');
+  const b = e.target.closest && e.target.closest('#cardDynValBlock [data-cdsrc], #cardDynValBlock [data-cdmetric], #cardDynValBlock [data-cdspan], #cardDynValBlock [data-cdfmt]');
   if (!b) return;
   const st = window._cdState;
+  if (b.dataset.cdfmt) { window._cdFmt = b.dataset.cdfmt; _cdRender(); return; }
   if (b.dataset.cdsrc) st.src = b.dataset.cdsrc;
   if (b.dataset.cdmetric) st.metric = b.dataset.cdmetric;
   if (b.dataset.cdspan != null) st.span = +b.dataset.cdspan;

@@ -3255,6 +3255,14 @@ tbody td{font-size:.8125rem}
   #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
   #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
 }
+/* === Trade calc FIND TRADE on phones (2026-10-09) — results already stack
+   cleanly; slimmer ⇄ divider, and LOAD INTO CALCULATOR (27px, the card's one
+   action) becomes a full-width 38px button under the fit line. === */
+@media (max-width:600px){
+  #tradeFinderView .finder-arrow{padding:0;line-height:1;height:22px;display:flex;align-items:center;justify-content:center}
+  #tradeFinderView .finder-result-meta{flex-wrap:wrap;row-gap:8px}
+  #tradeFinderView .finder-load-btn{flex:1 1 100%;margin-left:0!important;min-height:38px}
+}
 /* === Ask Jack on phones (2026-10-09) — member panel "+ add a 3rd player" was a
    14px text link; admin inbox PICK / delete buttons ~26px (answering from a phone). === */
 @media (max-width:600px){

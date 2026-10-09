@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- DYN SIM data version (data/dynasty_sim_2026.js, lazy-loaded) — bumped by sim_lab/tuesday_stats.ps1 -->
 <meta name="mff-dyn-sim-v" content="2026-10-09-tep">
+<!-- KTC daily value history (data/ktc_history.js, lazy-loaded by TRENDS) — bumped by scripts/build_ktc_history.py -->
+<meta name="mff-ktc-hist-v" content="2026-10-09">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
@@ -1371,6 +1373,7 @@ CLEAR ALL
     body[data-rnk-stat="lines"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"BOOK"}
     body[data-rnk-stat="adp"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"ADP"}
     body[data-rnk-stat="dyn"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"DYN"}
+    body[data-rnk-stat="trend"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"RANK"}
     /* xFP STATS view: show xFP/Gm (the '26 PPG swap cell) beside actual PPG. */
     body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) td.ppg25-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.82rem;padding:0 3px!important;min-width:34px!important;line-height:1.05}
     body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) td.ppg25-cell::after{content:"xFP";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
@@ -1479,6 +1482,7 @@ CLEAR ALL
   body.ssn-xfp-col:not(.format-weekly) #pageRankings .xfpg-cell { display: table-cell !important; }
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
   body:not(.format-dynasty) .rnk-statmode-btn[data-rnkstatmode="dyn"] { display: none !important; }
+  body:not(.trend-ok) .rnk-statmode-btn[data-rnkstatmode="trend"] { display: none !important; }
   body:not([data-rnk-stat="dyn"]) #rnkTepWrap { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
   /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in
@@ -1759,6 +1763,7 @@ tr:hover .watch-star{opacity:.55}
 <button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points per game above the replacement-level player at the position, the rest-of-season total over the games he is projected to play, and those games. Standard 12-team lineup by default; set your own or pick a synced league in the VOR bar. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="xfp" title="Expected fantasy points view — actual PPG, expected PPG from usage (every target by completion probability and expected YAC, every carry by field position, league TD rates; QBs net expected INTs), points over expected, and the TD-luck part of the gap. WEEKLY board shows the active week once it has been played.">xFP</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="dyn" title="PROTOTYPE — Dynasty SIM value: expected points over replacement in the 3-season window plus a youth credit for the seasons after, from the most similar past players. Dynasty boards only.">DYN SIM</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="trend" title="Rank movement — consensus rank history on REDRAFT, KeepTradeCut rank history on DYNASTY: rank today, 7- and 30-day change, a sparkline, and on dynasty the Dynasty SIM vs KTC gap (BUY / SELL).">TRENDS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="adp" title="Every platform side by side — Underdog + Sleeper ADP, ESPN + CBS + Yahoo site ranks, plus the cross-platform AVERAGE — compared to the current ranks — green = that platform has them later than this rank (value), red = earlier (reach)">ADP</button>

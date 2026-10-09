@@ -3440,7 +3440,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     const yrL = (S.meta && S.meta.valuationYear) || 2026;
     const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
     return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
-      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d);
+      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL);
   }
   if (!S._idx) _dynSimFor(d);
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
@@ -3484,11 +3484,59 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   }
   if (fairDiff != null && fairDiff >= 0.10) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
-  const slideNote = _cdSlideNoteHtml(slide, d);
+  const slideNote = _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
     + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>' + slideNote;
+}
+// QB CHANGE note (Jack 2026-10-09; sim_lab/research_situation_layer.py, FFC pool
+// 2020-23): young RB / WR / TE (2nd-3rd season) whose team's QB changed from last
+// year finished well below their Dynasty SIM rank over the next three seasons
+// (mean log(realized / sim rank) +0.32, t>2, n 45) — the one situation signal that
+// held up descriptively; as a sim layer it didn't beat the sim out of sample, so
+// it's a note, not a value change. Last year's QB = most passing yards on his
+// last-season team (ACTIVE_TEAM_HISTORY + career rows); this year's = the best-
+// ranked QB on his current team by ADP (the entering-season starter, so an
+// in-season injury to the starter doesn't trip it), and it only counts when that
+// QB wasn't on his team last year (Daniels / Burrow missing 2025 time = no change).
+function _cdQbChange(d, yr) {
+  if (!d || !['RB', 'WR', 'TE'].includes(d.s) || typeof ACTIVE_TEAM_HISTORY === 'undefined') return null;
+  const teamIn = (n, y) => { const h = ACTIVE_TEAM_HISTORY[n]; const r = h && h.find(x => x.y1 <= y && y <= x.y2); return r ? r.t : null; };
+  const hist = ACTIVE_TEAM_HISTORY[d.n];
+  const first = hist && hist.length ? Math.min.apply(null, hist.map(x => x.y1)) : null;
+  if (!first || first < yr - 2 || first > yr - 1) return null;   // rookie season last year or the year before
+  const t0 = teamIn(d.n, yr - 1), t1 = d.t || teamIn(d.n, yr);
+  if (!t0 || !t1) return null;
+  const c = (window._cdQbCache = window._cdQbCache || {});
+  if (!c.built || c.yr !== yr) {
+    c.prev = {}; c.now = {}; c.yr = yr; c.built = true;
+    D.forEach(q => {
+      if (!q || q.s !== 'QB' || q._retired) return;
+      const r = (q.career || []).find(x => x.yr === yr - 1);
+      const tp = teamIn(q.n, yr - 1);
+      if (r && tp && (r.py || 0) > ((c.prev[tp] && c.prev[tp].py) || 0)) c.prev[tp] = { n: q.n, py: r.py || 0 };
+      const tn = q.t || teamIn(q.n, yr);
+      const a = q.a != null && q.a < 900 ? q.a : null;
+      if (tn && a != null && (!c.now[tn] || a < c.now[tn].a)) c.now[tn] = { n: q.n, a };
+    });
+  }
+  if (/^(FA|free agent)$/i.test(String(t1))) return null;
+  const p = c.prev[t0], q = c.now[t1];
+  if (!p || !q || p.n === q.n) return null;
+  // A starter who was already on his team last year (hurt, or the backup who
+  // closed the year) isn't a new QB for him — only a QB from outside counts.
+  if (teamIn(q.n, yr - 1) === t0) return null;
+  return { prev: p.n, now: q.n, moved: t0 !== t1 };
+}
+function _cdQbNoteHtml(d, yr) {
+  const x = _cdQbChange(d, yr);
+  if (!x) return '';
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  return '<div style="font-size:.6875rem;line-height:1.45;color:var(--text2);background:rgba(148,163,184,.07);border:1px solid rgba(148,163,184,.22);border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
+    + '<b style="color:#fbbf24;letter-spacing:.04em">QB CHANGE.</b> ' + (x.moved ? 'New team and a new QB' : 'New QB') + ': ' + esc(x.prev) + ' last year → ' + esc(x.now) + ' now. '
+    + 'Young ' + (d.s === 'RB' ? 'backs' : 'pass-catchers') + ' in their second or third season whose QB changed have finished well below where the Dynasty SIM ranked them over the next three seasons (2020-23, 45 players). '
+    + 'Not built into the value — treat it as a reason to want a discount.</div>';
 }
 // Sell note for owners while the injury slide is still ahead (fresh injury).
 function _cdSlideNoteHtml(slide, d) {

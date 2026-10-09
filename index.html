@@ -82,7 +82,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-mxfp" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-mctl" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1158,6 +1158,11 @@ body.mff-embed .season-strip{display:none!important}
 <div id="searchSuggest" class="search-suggest" role="listbox" hidden></div>
 </div>
 <button class="help-btn" id="helpBtn" title="How to use">?</button>
+<!-- Phone controls collapse (2026-10-09, Jack): ≤600px the MODEL / FORMAT rows,
+     toolbar, SCORING row and the extra position filters fold behind this bar;
+     the summary mirrors the live state (accent when a filter is on). State in
+     localStorage mff_rnk_mob_ctl. Hidden on desktop. -->
+<button type="button" id="rnkMobCtlToggle" class="rnk-mob-ctl" onclick="window._toggleRnkMobCtl()" aria-expanded="false" aria-controls="rnkFilterRows"><span class="rmc-lbl">FILTERS</span><span id="rnkMobCtlSummary" class="rmc-sum"></span><span id="rnkMobCtlArrow" class="rmc-arrow">▾</span></button>
 <div class="toolbar">
 <button class="tb-btn" id="btnSave" title="Save rankings & tiers to cloud" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1265,6 +1270,7 @@ CLEAR ALL
     #pageRankings tbody tr{contain-intrinsic-size:auto 88px}
     #pageRankings tbody tr.tier-row{contain-intrinsic-size:auto 36px}
   }
+  #rnkMobCtlToggle{display:none}
   /* M1: card-style rankings rows on phones (≤600px). Falls back to the existing
      compact-table CSS at 600-768px (tablets / large phones in landscape).
      Single-line Underdog-style layout: rank · headshot+name/team · posRank · ADP · PROJ. */
@@ -1382,6 +1388,34 @@ CLEAR ALL
     #pageRankings tbody .ppg-proj-cell{min-width:36px!important}
     body.wk-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell,
     body.ssn-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell{min-width:32px!important}
+    /* === Controls collapse (2026-10-09): ~590px of controls above the first
+       card -> search + one summary bar + one swipeable position row. === */
+    #rnkMobCtlToggle{display:flex;align-items:center;gap:8px;width:100%;order:1;margin:2px 0 0;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;min-height:38px}
+    #pageRankings .controls > .filter-rows{order:2}
+    #rnkMobCtlToggle .rmc-lbl{color:var(--text2);flex:0 0 auto}
+    #rnkMobCtlToggle .rmc-sum{flex:1 1 auto;min-width:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #rnkMobCtlToggle .rmc-arrow{flex:0 0 auto;color:var(--text2);transition:transform .15s}
+    body.rnk-mob-ctl-open #rnkMobCtlToggle .rmc-arrow{transform:rotate(180deg)}
+    body:not(.rnk-mob-ctl-open) #pageRankings .controls .toolbar > :not(#authAnchorRankings),
+    body:not(.rnk-mob-ctl-open) #pageRankings .filter-row-top,
+    body:not(.rnk-mob-ctl-open) #pageRankings #viewOptsWrap,
+    body:not(.rnk-mob-ctl-open) #pageRankings #adminViewToggle,
+    body:not(.rnk-mob-ctl-open) #pageRankings #statsBar,
+    body:not(.rnk-mob-ctl-open) #pageRankings #dataFreshness,
+    body:not(.rnk-mob-ctl-open) #pageRankings #rnkLgBar:not(:has(select)){display:none!important}
+    body:not(.rnk-mob-ctl-open) #pageRankings #statsRow:not(:has(#rnkLgBar select)){display:none!important}
+    /* Collapsed position row: the everyday chips on one swipeable line; ★ /
+       TEAMS / INJURIES / TOP / view options live in the open drawer (an
+       active one shows in the summary). */
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters:not(#rookieSubPosFilter){flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:5px;padding-bottom:2px}
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters:not(#rookieSubPosFilter)::-webkit-scrollbar{display:none}
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters:not(#rookieSubPosFilter) > span:not(#devyClassBtns),
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows #watchFilterBtn,
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows #injFilterBtn,
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows #rankTopNInput,
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows #rookiePickToggle,
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows #posLockToggle{display:none!important}
+    body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters:not(#rookieSubPosFilter) .pos-btn{flex:0 0 auto}
     /* Tier banner rows still need to span full card width */
     #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
     #pageRankings tbody tr.tier-row td{display:block;text-align:center!important}
@@ -1509,7 +1543,7 @@ CLEAR ALL
      ranking row. Previously the full 6-circle SVG (~215 B) was inlined per row (~500 rows =
      ~109 KB of duplicate markup in the tbody HTML string rebuilt on every sort/filter). -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="dragDots" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></symbol></svg>
-<div class="filter-rows">
+<div class="filter-rows" id="rnkFilterRows">
 <div class="filter-row-top">
 <span class="filter-row-label">Model</span>
 <div class="version-tabs">
@@ -6209,7 +6243,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-mxfp"></script>
+<script defer src="app.js?v=2026-10-09-mctl"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

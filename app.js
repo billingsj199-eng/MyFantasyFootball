@@ -3609,6 +3609,7 @@ window._toggleViewOpts = function () {
   _viewOptsApply(open);
 };
 function _updateViewOptsSummary() {
+  _updateRnkMobCtlSummary();
   const el = document.getElementById('viewOptsSummary');
   const wrap = document.getElementById('viewOptsWrap');
   if (!el || !wrap) return;
@@ -3625,6 +3626,45 @@ function _updateViewOptsSummary() {
   let open = false;
   try { open = localStorage.getItem('mff_view_opts_open') === '1'; } catch (e) {}
   _viewOptsApply(open);
+})();
+
+// === Phone controls collapse (≤600px, 2026-10-09) ===
+// body.rnk-mob-ctl-open shows the full MODEL / FORMAT / toolbar / SCORING
+// drawer; collapsed, index.html CSS leaves search + #rnkMobCtlToggle + one
+// line of position chips. The summary rides updateStats (every render) via
+// _updateViewOptsSummary, so a filter hidden in the drawer is never silent.
+function _rnkMobCtlApply(open) {
+  document.body.classList.toggle('rnk-mob-ctl-open', open);
+  const btn = document.getElementById('rnkMobCtlToggle');
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (window._stickyFilterSync) window._stickyFilterSync();
+}
+window._toggleRnkMobCtl = function () {
+  const open = !document.body.classList.contains('rnk-mob-ctl-open');
+  try { localStorage.setItem('mff_rnk_mob_ctl', open ? '1' : '0'); } catch (e) {}
+  _rnkMobCtlApply(open);
+};
+function _updateRnkMobCtlSummary() {
+  const el = document.getElementById('rnkMobCtlSummary');
+  if (!el) return;
+  const txt = sel => { const b = document.querySelector(sel); return b ? b.textContent.trim() : ''; };
+  const parts = [txt('.version-tab.active'), txt('.mode-tab.active')];
+  const _st = (typeof rnkStatMode !== 'undefined') ? rnkStatMode : 'fantasy';
+  parts.push({ ppr: 'PPR', half: 'Half', std: 'Std' }[rankingScoringFmt] || rankingScoringFmt);
+  const extra = [];
+  if (_st !== 'fantasy') extra.push({ sims: 'Sims', vor: 'VOR', xfp: 'xFP', proj: 'Proj', lines: 'Lines', adp: 'ADP' }[_st] || _st);
+  if (window._watchOnly) extra.push('★');
+  if (window._teamFilter && window._teamFilter.size) extra.push(window._teamFilter.size + ' team' + (window._teamFilter.size > 1 ? 's' : ''));
+  if (window._injOnly) extra.push('Injuries');
+  const topN = document.getElementById('rankTopNInput');
+  if (topN && topN.value) extra.push('Top ' + topN.value);
+  el.textContent = parts.concat(extra).filter(Boolean).join(' · ');
+  el.style.color = extra.length || rankingScoringFmt !== 'ppr' ? 'var(--accent)' : '';
+}
+(function () {
+  let open = false;
+  try { open = localStorage.getItem('mff_rnk_mob_ctl') === '1'; } catch (e) {}
+  _rnkMobCtlApply(open);
 })();
 
 // === Mobile bottom nav (≤600px) ===

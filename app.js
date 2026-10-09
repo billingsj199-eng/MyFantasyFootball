@@ -32629,6 +32629,45 @@ window.fmtHeight = fmtHeight;
     };
   }
 
+  // Phone sticky verdict (2026-10-09): with a few players per side the verdict
+  // sits below the fold, so a one-line bar above the bottom nav mirrors it
+  // (verdict · what each side gives). Hidden while #tradeResult is on screen
+  // and on desktop (main.css). Tap = scroll to the full result.
+  let _tsEl = null, _tsResultVisible = false;
+  function _tradeStickySync(totalA, totalB) {
+    const resultEl = document.getElementById('tradeResult'), verdict = document.getElementById('tradeVerdict');
+    if (!resultEl || !verdict) return;
+    if (!_tsEl) {
+      _tsEl = document.createElement('button');
+      _tsEl.type = 'button'; _tsEl.id = 'tradeStickyVerdict';
+      _tsEl.onclick = () => resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultEl.parentNode.appendChild(_tsEl);
+      // Scroll check (not IntersectionObserver: it never fires in a hidden/background tab).
+      const check = () => {
+        const r = verdict.getBoundingClientRect();
+        const vis = r.height > 0 && r.top < window.innerHeight - 80 && r.bottom > 0;
+        if (vis !== _tsResultVisible) { _tsResultVisible = vis; _tsEl.classList.toggle('ts-hide', vis); }
+      };
+      const pg = document.getElementById('pageTrade');
+      (pg || window).addEventListener('scroll', check, { passive: true });
+      window.addEventListener('resize', check, { passive: true });
+      _tsEl._check = check;
+    }
+    const txt = verdict.textContent.trim();
+    _tsEl.style.display = txt ? '' : 'none';
+    if (!txt) return;
+    _tsEl._check();
+    _tsEl.className = verdict.className.replace('trade-verdict', 'ts-verdict') + (_tsResultVisible ? ' ts-hide' : '');
+    _tsEl.innerHTML = '<span class="ts-v">' + txt.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]) + '</span>'
+      // From the winner's side, like the verdict subline ("Team A gives 407, gets 454 back").
+      + (totalA != null ? '<span class="ts-tot">' + (/win-b/.test(verdict.className)
+          ? '<span class="ts-dim">gives</span> ' + totalB + ' <span class="ts-dim">· gets</span> ' + totalA
+          : /win-a/.test(verdict.className)
+            ? '<span class="ts-dim">gives</span> ' + totalA + ' <span class="ts-dim">· gets</span> ' + totalB
+            : totalA + ' <span class="ts-dim">vs</span> ' + totalB) + '</span>' : '')
+      + '<span class="ts-go">▾</span>';
+  }
+
   function updateResult() {
     const totalA = calcSideTotal(sideA);
     const totalB = calcSideTotal(sideB);
@@ -32649,6 +32688,7 @@ window.fmtHeight = fmtHeight;
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
       _tradeVorRender();
       if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
+      _tradeStickySync();
       return;
     }
     if (resultEl) resultEl.classList.remove('is-empty');
@@ -32679,6 +32719,8 @@ window.fmtHeight = fmtHeight;
       verdict.textContent = nameB.toUpperCase() + ' WINS'; verdict.className = 'trade-verdict win-b';
       sub.textContent = `${nameB} gives ${totalB}, gets ${totalA} back (+${diff} · ${diffPct}% advantage)`;
     }
+
+    _tradeStickySync(totalA, totalB);
 
     // EVEN IT UP (2026-10-08, Jack: improve the calc): name the gap in board terms. The side receiving less should get about
     // `diff` more back; show the one or two players on the active board (top 200, not already in the trade, one per position)

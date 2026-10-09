@@ -1,4 +1,4 @@
-"""ESPN depth charts (offense: QB / RB / WR / TE by rank) -> data/depth_charts_2026.js / .json.
+"""ESPN depth charts (offense: QB / RB / WR / TE by rank, plus the special-teams kicker K) -> data/depth_charts_2026.js / .json.
 
 Source: site.api.espn.com/apis/site/v2/sports/football/nfl/teams/<id>/depthcharts
 (one call per team, athlete display names inline; the offensive formation
@@ -15,7 +15,7 @@ sim_depth.js (window.SIM_DEPTH_2026) for the engine's vacated-opportunity
 redistribution (depth rank weights the healthy group's share).
 
 Output: window.DEPTH_2026 = {updated, src, teams: {ABBR: {QB: [names by rank],
-RB: [...], WR: [...], TE: [...]}}}
+RB: [...], WR: [...], TE: [...], K: [...]}}}
 """
 import json
 import os
@@ -52,6 +52,16 @@ def pull_team(tid):
     if not off:
         return None
     out = {}
+    # KICKER (2026-10-09, Jack "add kickers from depth charts too"): the Special Teams item's 'pk' slot -> K list.
+    # The sim's membership follows the chart (a released preseason kicker stops projecting for his old team).
+    for it in items:
+        pk = (it.get('positions') or {}).get('pk')
+        if pk:
+            ks = [(a.get('displayName') or '').strip() for a in sorted(pk.get('athletes') or [], key=lambda a: a.get('rank') or 99)]
+            ks = [k for k in ks if k]
+            if ks:
+                out['K'] = ks
+            break
     positions = off.get('positions') or {}
     for key, label in POS_KEYS.items():
         # ESPN keys receivers by SLOT (wr1 / wr2 / wr3 in a 3WR set, wr1 / wr2
@@ -98,7 +108,8 @@ def main():
     print(f'{len(charts)} teams; misses: {", ".join(misses) or "none"}')
     for abbr in ('NE', 'SEA'):
         if abbr in charts:
-            print(f'  {abbr} RB: {charts[abbr].get("RB", [])[:4]}  QB: {charts[abbr].get("QB", [])[:2]}')
+            print(f'  {abbr} RB: {charts[abbr].get("RB", [])[:4]}  QB: {charts[abbr].get("QB", [])[:2]}  K: {charts[abbr].get("K", [])[:1]}')
+    print(f'  kickers charted: {sum(1 for c in charts.values() if c.get("K"))} teams')
     if dry:
         return
     payload = {'updated': datetime.now(timezone.utc).isoformat(), 'src': 'espn depthcharts', 'teams': charts}

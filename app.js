@@ -3119,33 +3119,109 @@ function _dynSimEnsure(cb) {
   document.head.appendChild(sc);
 }
 function _isDynSimMode() { return currentMode === 'dynasty' || currentMode === 'dynastysf'; }
-function _dynSimKey() {
-  return (currentMode === 'dynastysf' ? 'sf' : '1qb') + '_' + (rankingScoringFmt === 'half' || rankingScoringFmt === 'std' ? rankingScoringFmt : 'ppr');
+function _dynScoringKey() { return rankingScoringFmt === 'half' || rankingScoringFmt === 'std' ? rankingScoringFmt : 'ppr'; }
+// LEAGUE-AWARE (Jack 2026-10-09: "we can have the vor change with synced leagues").
+// The VOR bar (league picker + lineup) prices DYN SIM too. Standard 12-team
+// lineup and no league = the precomputed values, untouched. Otherwise each
+// season's value is the standard value x (VOR of his comps' points range at the
+// league's replacement / at the standard one) — sim_lab/backtest_dynasty_league.py:
+// within ~.01 of a model trained per league in 10/12/14-team and superflex.
+function _dynLeagueCtx() {
+  if (typeof _vorState !== 'function' || typeof _VOR_DEFAULT === 'undefined') return null;
+  const st = _vorState(), lg = _vorLeague();
+  const std = ['teams', 'QB', 'RB', 'WR', 'TE', 'FLEX', 'SF'].every(k => (+st[k] || 0) === (+_VOR_DEFAULT[k] || 0)) && !(+st.tep);
+  if (!lg && std) return null;
+  return { st, lg, sig: [lg ? lg.leagueId : '', st.teams, st.QB, st.RB, st.WR, st.TE, st.FLEX, st.SF, st.tep].join(',') };
 }
+function _dynSimFmt() {
+  const c = _dynLeagueCtx();
+  return c ? (+c.st.SF > 0 ? 'sf' : '1qb') : (currentMode === 'dynastysf' ? 'sf' : '1qb');
+}
+function _dynSimKey() { return _dynSimFmt() + '_' + _dynScoringKey(); }
 function _dynSimNorm(n) {
   return String(n || '').toLowerCase().replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/, '').replace(/[.\-']/g, '').replace(/\s+/g, ' ').trim();
 }
 // TE premium (+ pts per TE reception): only TE values change, stored under
-// '<key>_tep0.5' / '_tep1'; everyone's rank is recomputed here.
+// '<key>_tep0.5' / '_tep1'; everyone's rank is recomputed here. A league with
+// its own TE premium overrides the toggle.
 let _dynTep = (() => { try { const v = +localStorage.getItem('mff_dyn_tep'); return v === 0.5 || v === 1 ? v : 0; } catch (e) { return 0; } })();
-function _dynSimVal(e) {
-  const k = _dynSimKey();
-  if (_dynTep && e.pos === 'TE') { const t = e.v[k + '_tep' + _dynTep]; if (t) return t; }
-  return e.v[k] || null;
+function _dynTepEff() {
+  const c = _dynLeagueCtx(), t = c ? +c.st.tep || 0 : 0;
+  return t ? (t >= 0.75 ? 1 : 0.5) : _dynTep;
 }
-// Overall rank per player for the active format / scoring / TE premium.
+function _dynSimSig() { const c = _dynLeagueCtx(); return _dynSimKey() + '|' + _dynTepEff() + '|' + (c ? c.sig : ''); }
+// Starting spots per position for a lineup: fixed spots, then FLEX / SFLEX to
+// whichever position's next-best player scores most (the VOR bar's fill rule,
+// on the historical n-th-best table). Replacement = the first non-starter.
+function _dynReplFor(st, tbl, teTbl) {
+  const t = Object.assign({}, tbl, teTbl ? { TE: teTbl } : {});
+  const n = { QB: st.QB * st.teams, RB: st.RB * st.teams, WR: st.WR * st.teams, TE: st.TE * st.teams };
+  const nxt = p => (t[p] && t[p][n[p]] != null) ? t[p][n[p]] : -1;
+  const fill = (el, cnt) => {
+    for (let i = 0; i < cnt; i++) {
+      let b = null;
+      el.forEach(p => { if (nxt(p) >= 0 && (!b || nxt(p) > nxt(b))) b = p; });
+      if (!b) break;
+      n[b]++;
+    }
+  };
+  fill(['RB', 'WR', 'TE'], st.FLEX * st.teams);
+  fill(['QB', 'RB', 'WR', 'TE'], (st.SF || 0) * st.teams);
+  const r = {};
+  Object.keys(n).forEach(p => { r[p] = nxt(p) >= 0 ? nxt(p) : 0; });
+  return r;
+}
+function _dynReplPair(tep) {
+  const S = window.DYNASTY_SIM_2026, c = _dynLeagueCtx();
+  const sk = _dynScoringKey(), ck = _dynSimSig();
+  S._rp = S._rp || {};
+  if (S._rp[ck]) return S._rp[ck];
+  const R = S.meta.repl || {}, tbl = R[sk] || {};
+  const teTbl = tep ? (R[sk + '_tep' + tep] || {}).TE : null;
+  const std = Object.assign({}, _VOR_DEFAULT, { SF: _dynSimFmt() === 'sf' ? 1 : 0 });
+  S._rp[ck] = { L: _dynReplFor(c.st, tbl, teTbl), R: _dynReplFor(std, tbl, teTbl) };
+  return S._rp[ck];
+}
+const _dynQV = (qs, r) => qs.reduce((s, q) => s + Math.max(0, q - r), 0) / qs.length;
+// -> { val, win3, youth, y:[rest of 2026, 2027..2030], league:bool } or null
+function _dynSimCalc(e) {
+  const S = window.DYNASTY_SIM_2026, k = _dynSimKey(), tep = _dynTepEff();
+  const v = (tep && e.pos === 'TE' && e.v[k + '_tep' + tep]) || e.v[k];
+  if (!v) return null;
+  let y = v.slice(4), league = false;
+  const c = _dynLeagueCtx();
+  if (c && e.d) {
+    const q = (tep && e.pos === 'TE' && e.d[_dynScoringKey() + '_tep' + tep]) || e.d[_dynScoringKey()];
+    if (q) {
+      const rp = _dynReplPair(e.pos === 'TE' ? tep : 0);
+      const mix = e.pos === 'PICK' ? (S.meta.pickPos || {})[e.n.replace(/^\d{4} /, '')] : null;
+      const rOf = o => mix ? Object.keys(mix).reduce((s, p) => s + mix[p] * (o[p] || 0), 0) : (o[e.pos] || 0);
+      const rL = rOf(rp.L), rR = rOf(rp.R), frac = S.meta.frac || 1;
+      y = y.map((a, i) => {
+        const bl = _dynQV(q[i], rL), br = _dynQV(q[i], rR);
+        return br > 1 ? a * bl / br : bl * (i === 0 ? frac : 1);
+      });
+      league = true;
+    }
+  }
+  if (!league) return { val: v[0], win3: v[1], youth: v[2], y, league };   // the stored, backtested numbers
+  const win3 = y[0] + y[1] + y[2], youth = y[3] + y[4];
+  return { val: win3 + (S.meta.youthW || 1.5) * youth, win3, youth, y, league };
+}
+function _dynSimVal(e) { const x = _dynSimCalc(e); return x ? [x.val] : null; }
+// Overall rank per player for the active format / scoring / TE premium / league.
 function _dynSimRanks() {
   const S = window.DYNASTY_SIM_2026;
-  const ck = _dynSimKey() + '|' + _dynTep;
+  const ck = _dynSimSig();
   if (S._rk && S._rk.ck === ck) return S._rk.m;
   const list = [];
-  Object.values(S.players).forEach(e => { const v = _dynSimVal(e); if (v) list.push([e, v[0]]); });
+  Object.values(S.players).forEach(e => { const x = _dynSimCalc(e); if (x) list.push([e, x.val]); });
   list.sort((a, b) => b[1] - a[1]);
   const m = new Map(); list.forEach((x, i) => m.set(x[0], i + 1));
   S._rk = { ck, m };
   return m;
 }
-// -> { val, win3, youth, rk, y:[rest of 2026, 2027..2030], comps:[{n, yr, vor}] } or null
+// -> { val, win3, youth, rk, y:[rest of 2026, 2027..2030], comps:[{n, yr, vor}], league } or null
 function _dynSimFor(d) {
   const S = window.DYNASTY_SIM_2026;
   if (!S || !d) return null;
@@ -3154,9 +3230,10 @@ function _dynSimFor(d) {
     Object.values(S.players).forEach(e => { S._idx[_dynSimNorm(e.n) + '|' + e.pos] = e; });
   }
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
-  const v = e && e.v && _dynSimVal(e);
-  if (!v) return null;
-  return { val: v[0], win3: v[1], youth: v[2], rk: _dynSimRanks().get(e), y: v.slice(4),
+  const x = e && e.v && _dynSimCalc(e);
+  if (!x) return null;
+  return { val: Math.round(x.val), win3: Math.round(x.win3), youth: Math.round(x.youth), rk: _dynSimRanks().get(e),
+           y: x.y.map(Math.round), league: x.league,
            comps: (e.c || []).map(c => ({ n: c[0], yr: c[1], vor: c[2] })),
            // rookie pick entries: class multiplier on the historical slot value (2027 only)
            isPick: e.pos === 'PICK', cls: e.cls ? e.cls[_dynSimKey()] : null };
@@ -3294,7 +3371,7 @@ function _trendSparkHtml(series) {
 // the most-negative / most-positive fifth (the backtested buckets).
 function _trendGapFor(d) {
   if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
-  const ck = _dynSimKey() + '|' + _dynTep + '|' + currentMode;
+  const ck = _dynSimSig() + '|' + currentMode;
   const c = (window._trendGapCache = window._trendGapCache || {});
   if (!c[ck]) {
     const pool = [];
@@ -3331,7 +3408,7 @@ function _trendSortVal(d, k) {
 // players that have both. Cached per format + scoring.
 function _dynSimBlendRank(d) {
   if (typeof _ktcRankInfo !== 'function' || !Array.isArray(D)) return null;
-  const fmt = _dynSimKey() + '|' + _dynTep;
+  const fmt = _dynSimSig();
   const c = (window._dynSimBlendCache = window._dynSimBlendCache || {});
   if (!c[fmt]) {
     const both = [];
@@ -9006,7 +9083,7 @@ function render() {
   // Phone cards label their one stat cell per STATS view (index.html M1 block).
   document.body.dataset.rnkStat = _statMode;   // also hides the AGE column (index.html)
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
-  document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor');
+  document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor' || _statMode === 'dyn');
   // INJURIES view: three extra columns in front of Cons (CSS keys off these classes).
   const _injView = !!window._injOnly && filter !== 'DEVY';
   document.body.classList.toggle('inj-view', _injView);
@@ -10690,7 +10767,7 @@ window._updateRnkStatHeaders = function() {
     const _y0 = _M ? _M.valuationYear : 2026;
     const _f = currentMode === 'dynastysf' ? 'SF' : '1QB';
     const _wk = _M && _M.week ? _M.week : 0;
-    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + ' 12-team ' + fmtLabel + (_dynTep ? ' with a +' + _dynTep + ' TE premium per reception' : '') + ', ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR.' + (hasPremium() ? '' : ' Free: the top 30.'), 'SIM DYN', _f + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR') + (_dynTep ? ' TEP' : ''));
+    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + (function () { const c = _dynLeagueCtx(); return c ? ' Priced for ' + (c.lg ? (c.lg.name || 'your league') : 'the custom lineup') + ' in the VOR bar (' + c.st.teams + ' teams, ' + c.st.QB + ' QB / ' + c.st.RB + ' RB / ' + c.st.WR + ' WR / ' + c.st.TE + ' TE / ' + c.st.FLEX + ' FLEX' + (+c.st.SF ? ' / ' + c.st.SF + ' SF' : '') + '): each season is re-priced against that league\'s replacement level from the player\'s range of comparable outcomes. ' : ' 12-team '; })() + fmtLabel + (_dynTepEff() ? ' with a +' + _dynTepEff() + ' TE premium per reception' : '') + (_dynLeagueCtx() ? '.' : ', ' + _f + ' replacement levels.') + ' Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR.' + (hasPremium() ? '' : ' Free: the top 30.'), 'SIM DYN', (function () { const c = _dynLeagueCtx(); return c ? (c.lg ? 'League' : 'Custom') : _f; })() + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR') + (_dynTepEff() ? ' TEP' : ''));
     _set(c2, 'ppg25Header', 'Expected points over replacement in the 3-season dynasty window (' + (_wk ? 'rest of ' + _y0 + ' after week ' + _wk : _y0) + ' through ' + (_y0 + 2) + ').', '3YR', (_wk ? 'Wk' + (_wk + 1) + '-' : _y0 + '-') + String(_y0 + 2).slice(2));
     _set(c3, 'l4ppgHeader', 'Youth credit — ' + (_M ? _M.youthW : 1.5) + 'x the expected points over replacement in ' + (_y0 + 3) + '-' + (_y0 + 4) + ', the seasons after the window. In the backtest adding it improved both 3-year and 5-year accuracy.', 'YOUTH', (_y0 + 3) + '-' + String(_y0 + 4).slice(2));
   } else if (rnkStatMode === 'xfp') {

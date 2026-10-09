@@ -20792,9 +20792,10 @@ function renderCompareGrid() {
             <div class="card-rank-box"><div class="lbl">Pos Rank</div><div class="num accent">${d.myPosRank || d.r}</div></div>
             <div class="card-rank-box"><div class="lbl">+/- ADP</div><div class="num ${diffClass}">${diffText}</div></div>
           </div>
-          <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
+          <div class="card-rank-row" style="grid-template-columns:repeat(${_impliedTeamPpg(d.t)?5:4},1fr);margin-top:.4rem">
             <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v+_cardPosRankTag(d,'proj'):'—';})()}</div></div>
             <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1)+_cardPosRankTag(d,'ppg'):'—';})()}</div></div>
+            ${(()=>{const x=(typeof _xfpAgg==='function')?_xfpAgg(d,rankingScoringFmt,null):null;const v=(x&&x.n)?Math.round(x.xfpg*10)/10:null;const c=v!=null?posFptsColor(v,d.s):null;return `<div class="card-rank-box"${x&&x.n?` title="Expected fantasy points per game from usage (targets, carries, field position), 2026 to date — ${x.n} gm, actual ${Math.round(x.ppg*10)/10} /gm"`:''}><div class="lbl">xFP /GM</div><div class="num"${c?` style="color:${c}"`:''}>${v!=null?v+_cardPosRankTag(d,'xfp'):'—'}</div></div>`;})()}
             ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d),d.s);return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}${c.html!=='—'?_cardPosRankTag(d,'l4'):''}</div></div>`;})()}
             ${_teamPpgBoxHtml(d.t)}
           </div>

@@ -3226,3 +3226,17 @@ tbody td{font-size:.8125rem}
   #pageGames .games-tabs::-webkit-scrollbar{display:none}
   #pageGames .games-tabs > .games-tab{flex:0 0 auto;min-height:32px}
 }
+/* === Prospect page on phones (2026-10-09) — the 09-15 pass already made the
+   rows two-line cards; this tightens the chrome above them: intro clamped to
+   two lines, controls in a 2-column grid (team + class selects side by side,
+   PPG toggle beside PPR/HALF/STD) instead of one control per row. === */
+@media (max-width:600px){
+  #pageProspect .pm-subtitle{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #pageProspect .pm-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;justify-items:stretch}
+  #pageProspect .pm-controls > *{min-width:0;margin:0!important}
+  #pageProspect .pm-controls > :is(#pmPosTabs,.pm-search-wrap){grid-column:1 / -1}
+  #pageProspect .pm-controls > :is(#pmTeamFilter,#pmDraftClassFilter){width:100%!important}
+  #pageProspect .pm-controls > .pm-search-wrap{width:100%!important;max-width:none!important}
+  #pageProspect .pm-controls > :is(.pm-toggle-wrap,#pmScoringTabs){justify-self:center}
+  #pageProspect .pm-scoring-btn{min-height:30px}
+}

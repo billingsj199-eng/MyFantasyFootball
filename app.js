@@ -10972,7 +10972,11 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // Optional `out` object: on return, out.src names the path that produced
   // the number ('bye'|'out'|'dst'|'props'|'consensus'|'heuristic'|'base') —
   // surfaced on the player card's WEEKLY tab so the projection is auditable.
+  // out.mt = true (My Teams, Jack 2026-10-09): Jack's ASSUME OUT list is a
+  // weekly-board call and does NOT apply — a Questionable player keeps his
+  // projection; Doubtful and a confirmed Out are 0 (bench them).
   window._weeklyAdjustPpg = function(d, basePpg, out) {
+    const _mt = !!(out && out.mt);
     const _tag = s => { if (out) out.src = s; };
     _tag('base');
     if (!d || !d.t) return basePpg;
@@ -10983,7 +10987,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const entry = sched[wk];
     if (!entry) return basePpg;
     if (entry.bye) { _tag('bye'); return 0; }
-    if (typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, wk)) { _tag('out'); return 0; }
+    if (!_mt && typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, wk)) { _tag('out'); return 0; }
     // Injury gate (in-season only — offseason tags are stale)
     let injMult = 1;
     const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
@@ -11002,7 +11006,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (/\bout\b/.test(t)) {
         if (window._weeklyOutConfirmed(d, wk)) { _tag('out'); return 0; }
         injMult = 0.75;
-      } else if (/doubtful/.test(t)) injMult = 0.5;
+      } else if (/doubtful/.test(t)) {
+        if (_mt) { _tag('out'); return 0; }
+        injMult = 0.5;
+      }
     }
     // SIM-FIRST (Jack 2026-08-26): the Sim Lab weekly export is THE weekly
     // number wherever it has a row — same value as the PROJ column and the
@@ -11011,7 +11018,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // here (the hard-zero gate above still catches statuses fresher than the
     // last run). Everything below is fallback for players without a sim row.
     if (typeof _simProjRow === 'function') {
-      const _sr = _simProjRow(d, wk);
+      const _sr = _simProjRow(d, wk, _mt ? window._qsInjFlip(d.n, wk) : undefined);
       if (_sr) {
         const _sv = _sr[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0];
         if (typeof _sv === 'number' && isFinite(_sv)) { _tag('sim'); return _sv; }
@@ -13029,12 +13036,35 @@ window._qsTeammates = function(name, wk) {
   const T = window.SIM_PROJ_2026.qs.teams[hit.tm];
   return T ? { tm: hit.tm, q: T.q.slice(), self: T.q.findIndex(q => _qsNorm(q) === _qsNorm(hit.key || name)) } : null;
 };
-function _simProjRow(d, wk) {
+// My Teams in/out state (Jack 2026-10-09): injury tags, not the ASSUME OUT list -
+// Questionable = IN, Doubtful / confirmed Out / IR / PUP / suspended = OUT. Returned as
+// a _qsMask flip for the player's team, so teammates follow the same world.
+function _qsLookupD(k) {
+  if (typeof D === 'undefined') return null;
+  let m = window._qsDByNorm;
+  if (!m || m._n !== D.length) { m = { _n: D.length }; D.forEach(x => { if (x && x.n && x.s !== 'DST') m[_qsNorm(x.n)] = x; }); window._qsDByNorm = m; }
+  return m[k] || null;
+}
+window._qsInjFlip = function(name, wk) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  const hit = I.by[_qsNorm(name)];
+  const T = hit && window.SIM_PROJ_2026.qs.teams[hit.tm];
+  if (!T) return null;
+  const flip = {};
+  (T.q || []).forEach(nm => {
+    const k = _qsNorm(nm), pd = _qsLookupD(k), t = String((pd && pd.inj) || '').toLowerCase();
+    flip[k] = /doubtful|\bir\b|\bpup\b|suspend/.test(t)
+      || (/\bout\b/.test(t) && typeof window._weeklyOutConfirmed === 'function' && !!window._weeklyOutConfirmed(pd, wk));
+  });
+  return flip;
+};
+function _simProjRow(d, wk, flip) {
   const r0 = _simProjRowRaw(d, wk);
   if (d && d.s !== 'DST' && typeof window._qsValue === 'function') {
-    const v = window._qsValue(d.n, wk);
+    const v = window._qsValue(d.n, wk, flip);
     if (v) {
-      const bb = (typeof window._qsBoomBust === 'function') ? window._qsBoomBust(d.n, wk) : null;
+      const bb = (typeof window._qsBoomBust === 'function') ? window._qsBoomBust(d.n, wk, flip) : null;
       if (bb) return [v[0], v[1], v[2], bb[0], bb[1]];
       return [v[0], v[1], v[2], r0 ? r0[3] : null, r0 ? r0[4] : null];
     }
@@ -59110,7 +59140,7 @@ Rules:
       const ppg = _mtGetPlayerPpg(d.n);
       let wkHtml = '';
       if (wkNum) {
-        const out = {};
+        const out = { mt: true };
         const wv = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, ppg, out) : null;
         const wkTxt = out.src === 'bye' ? 'BYE' : out.src === 'out' ? 'OUT' : (wv != null && isFinite(wv) ? wv : '—');
         const wkColor = out.src === 'bye' || out.src === 'out' ? '#ef4444' : 'var(--text)';
@@ -60082,7 +60112,7 @@ Rules:
         // Weekly sources price standard scoring — adjust the base, then
         // re-add the league's TE-premium / pass-TD delta.
         const sDelta = _mtScoringDelta(d);
-        const adj = window._weeklyAdjustPpg(d, Math.max(0, ppg - sDelta));
+        const adj = window._weeklyAdjustPpg(d, Math.max(0, ppg - sDelta), { mt: true });
         // Adjusted 0 with a real season projection = the injury gate fired
         // (IR/PUP/Out in-season) — bench them like a bye.
         if (!adj && !out) out = 'OUT';

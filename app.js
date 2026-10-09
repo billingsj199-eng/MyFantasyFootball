@@ -2317,6 +2317,28 @@ function _ktcRankIndex(map) {
   _ktcRankCache.set(map, idx);
   return idx;
 }
+// KTC under TE premium (Jack 2026-10-09): KTC's own TE+ / TE++ values for TEs
+// (KTC_TEP_* / KTC_TEPP_*, pulled daily with the dynasty maps; every other
+// position is unchanged under KTC's TEP), merged over the base map so overall
+// ranks re-sort. tep = the Dynasty SIM's TE premium (0.5 -> TE+, 1.0 -> TE++).
+// Falls back to the base map when the TEP maps aren't in the bundle yet.
+const _ktcTepMapCache = new Map();
+function _ktcMapForTep(mode, tep) {
+  const base = _ktcMapFor(mode);
+  if (!tep) return base;
+  const sf = mode === 'dynastysf';
+  const T = tep >= 0.75 ? (sf ? (typeof KTC_TEPP_SF !== 'undefined' ? KTC_TEPP_SF : null) : (typeof KTC_TEPP_1QB !== 'undefined' ? KTC_TEPP_1QB : null))
+                        : (sf ? (typeof KTC_TEP_SF !== 'undefined' ? KTC_TEP_SF : null) : (typeof KTC_TEP_1QB !== 'undefined' ? KTC_TEP_1QB : null));
+  if (!T) return base;
+  let c = _ktcTepMapCache.get(T);
+  if (!c || c.base !== base) { c = { base, map: Object.assign({}, base, T) }; _ktcTepMapCache.set(T, c); }
+  return c.map;
+}
+function _ktcRankInfoTep(name, mode, tep) {
+  if (!tep) return _ktcRankInfo(name, mode);
+  const idx = _ktcRankIndex(_ktcMapForTep(mode, tep));
+  return (idx && idx[_normalizeNameForLookup(name)]) || _ktcRankInfo(name, mode);
+}
 // KTC DEVY (college) maps — pulled daily from keeptradecut.com/devy-rankings
 // into data/ktc_rankings.js alongside the dynasty maps (Phase E2).
 function _ktcDevyMapFor(mode) {
@@ -3707,7 +3729,7 @@ function _trendGapFor(d) {
     const pool = [];
     (D || []).forEach(p => {
       if (!p || p._retired || p._isDevy || p.s === 'PICK') return;
-      const x = _dynSimFor(p); const k = _ktcRankInfo(p.n);
+      const x = _dynSimFor(p); const k = _ktcRankInfoTep(p.n, currentMode, _dynTepEff());
       if (x && k && !k.devy && k.ovr && k.ovr <= 200) {
         const S = window.DYNASTY_SIM_2026, e = S._idx && S._idx[_dynSimNorm(p.n) + '|' + p.s];
         pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie) });
@@ -3797,7 +3819,7 @@ window._mffValueBoard = function(mode) {
     if (p.s !== 'QB' && p.s !== 'RB' && p.s !== 'WR' && p.s !== 'TE') return;
     const x = simOf(p.n, p.s);
     if (!x) return;
-    const k = _ktcRankInfo(p.n, mode);
+    const k = _ktcRankInfoTep(p.n, mode, tep);
     if (k && !k.devy && k.ovr && k.ovr <= 200 && k.val) {
       pool.push({ i, sv: x.sv, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie });
     } else rest.push({ i, sv: x.sv });
@@ -3877,7 +3899,7 @@ function _dynSimBlendRank(d) {
     const both = [];
     D.forEach(p => {
       if (!p || p._retired || p._isDevy) return;
-      const x = _dynSimFor(p); const k = _ktcRankInfo(p.n);
+      const x = _dynSimFor(p); const k = _ktcRankInfoTep(p.n, currentMode, _dynTepEff());
       if (x && k && !k.devy && k.ovr) both.push({ n: p.n, s: x.rk, k: k.ovr });
     });
     const sr = both.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sr = i + 1; });

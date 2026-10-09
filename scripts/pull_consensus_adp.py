@@ -790,6 +790,10 @@ def pull_ktc():
             return norm_idx.get(k, raw)  # picks / deep dynasty keep KTC name
 
         one_qb, sf = {}, {}
+        # TE premium (Jack 2026-10-09, MFF VALUE with the TE PREM toggle): KTC's
+        # own TE+ ('tep', ~+0.5 PPR per TE catch) and TE++ ('tepp', >+1) values,
+        # TEs only — KTC leaves every other position's value unchanged under TEP.
+        tep = {'KTC_TEP_1QB': {}, 'KTC_TEPP_1QB': {}, 'KTC_TEP_SF': {}, 'KTC_TEPP_SF': {}}
         for p in arr:
             name = p.get('playerName') or ''
             if not name:
@@ -801,6 +805,13 @@ def pull_ktc():
                 one_qb[key] = oqb
             if sfv is not None and key not in sf:
                 sf[key] = sfv
+            if p.get('position') == 'TE':
+                for fk, sfx in (('oneQBValues', '1QB'), ('superflexValues', 'SF')):
+                    fv = p.get(fk) or {}
+                    for tier, var in (('tep', 'KTC_TEP_'), ('tepp', 'KTC_TEPP_')):
+                        tv = (fv.get(tier) or {}).get('value') if isinstance(fv.get(tier), dict) else None
+                        if tv and key not in tep[var + sfx]:
+                            tep[var + sfx][key] = tv
         one_qb = dict(sorted(one_qb.items(), key=lambda kv: -kv[1]))
         sf = dict(sorted(sf.items(), key=lambda kv: -kv[1]))
         covered = len([n for n in one_qb if n in exact])
@@ -816,6 +827,12 @@ def pull_ktc():
         for path in (KTC_BUNDLE, KTC_ORPHAN):
             _ktc_splice(path, 'KTC_1QB', lit1)
             _ktc_splice(path, 'KTC_SF', litsf)
+            # TE-premium maps: seeded after KTC_SF the first time, replaced after.
+            if all(len(m) >= 20 for m in tep.values()):
+                for var, m in tep.items():
+                    _ktc_splice(path, var, _ktc_js_literal(var, dict(sorted(m.items(), key=lambda kv: -kv[1]))), insert_after='KTC_SF')
+            else:
+                print('  !! KTC TEP: TE+ / TE++ values missing — kept old TEP maps')
         changed = open(KTC_BUNDLE, 'rb').read() != before
         print(f'  spliced KTC maps into _bundle_lookups.js + ktc_rankings.js'
               f' ({"changed" if changed else "no change"})')

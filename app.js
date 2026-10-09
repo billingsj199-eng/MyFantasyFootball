@@ -19795,6 +19795,15 @@ function openPlayerCard(d, ctxMode) {
 
   modal.classList.add('open');
   document.getElementById('cardClose').addEventListener('click', closeCard);
+  // Phones (2026-10-09): the card scrolls inside a transformed box (open
+  // animation) under a backdrop-filter overlay, so a fixed ✕ can't pin in
+  // there — it scrolled away with the header. Float it on the overlay instead
+  // (main.css .card-close-float); the previous card's copy goes first.
+  if (window.matchMedia && window.matchMedia('(max-width:600px)').matches) {
+    modal.querySelectorAll(':scope > .card-close-float').forEach(b => b.remove());
+    const _cb = document.getElementById('cardClose');
+    if (_cb) { _cb.classList.add('card-close-float'); modal.appendChild(_cb); }
+  }
   _renderCardPinStrip(d, _ctxMode);
   if (typeof window._renderCardNotes === 'function') window._renderCardNotes(d);
 

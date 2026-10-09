@@ -3255,6 +3255,22 @@ tbody td{font-size:.8125rem}
   #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
   #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
 }
+/* === Player card on phones (2026-10-09) ===
+   - the ✕ sat in the scrolling header, so deep in a tab you scrolled back up to
+     close; pinned to the screen's top-right (card sits 10px in, 20px down)
+   - NEWS wrapped onto its own tab row — five tabs share one row
+   - game-log / career tables scroll sideways: pin the first (week / year) column
+   - + ADD PLAYER 22px, season chips 20px, SEASON / LAST 3 21px -> 30-32px */
+@media (max-width:600px){
+  .modal-overlay > #cardClose.card-close-float{position:fixed;top:calc(28px + env(safe-area-inset-top,0));right:18px;left:auto;z-index:1001;width:38px;height:38px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text)}
+  /* right gap = room for the floating ✕ when the tab bar sticks to the top */
+  #playerCard .card-view-toggle{flex-wrap:nowrap;padding-right:42px}
+  #playerCard .card-view-toggle > .card-view-btn{flex:1 1 0;min-width:0;padding-left:2px;padding-right:2px;font-size:.68rem;letter-spacing:.02em}
+  #playerCard .career-table-wrap > table :is(th,td):first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:4px 0 6px -4px rgba(0,0,0,.6)}
+  #playerCard #cardPinAdd{min-height:32px}
+  #playerCard .cmp-split-chip{min-height:28px;padding-left:9px;padding-right:9px}
+  #playerCard .career-log-toggle > button{min-height:30px}
+}
 /* iPhone Safari zooms the whole page when a text field under 16px is focused
    (Games guess boxes 12.8px, My Teams league id 11.2px, …) — 16px on phones. */
 @media (max-width:600px){

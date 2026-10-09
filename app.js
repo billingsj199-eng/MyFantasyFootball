@@ -3484,11 +3484,54 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   }
   if (fairDiff != null && fairDiff >= 0.10) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
-  const slideNote = _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr);
+  const slideNote = _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr) + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
     + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>' + slideNote;
+}
+// WHY line under BUY LOW / SELL HIGH (Jack 2026-10-09: "build the reasons on the
+// card"). sim_lab/research_market_truth.py (FFC pool 2016-23, what still predicts
+// 3-5 year outcomes once the price is known): the market UNDERPAYS production
+// level and JM pedigree, OVERPAYS players who changed teams and older WRs (RB age
+// and veterans' draft capital borderline); breakouts, momentum and contracts are
+// priced about right. research_age_value.py: <= 22 undervalued. Only reasons that
+// point the same way as the call, max 3; FAIR itself is unchanged.
+function _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr) {
+  if (fairDiff == null || Math.abs(fairDiff) < 0.10 || !e || !ktc || ktc.devy || !ktc.posRank) return '';
+  const buy = fairDiff > 0, P = d.s, kp = ktc.posRank;
+  const S = window.DYNASTY_SIM_2026;
+  // Production rank at the position: Dynasty SIM rest of this season + next (NOW).
+  S._cdNowPos = S._cdNowPos || {};
+  const ck = key + '|' + P;
+  if (!S._cdNowPos[ck]) {
+    const m = new Map();
+    Object.values(S.players).filter(x => x.pos === P && x.v && x.v[key]).sort((a, b) => (b.v[key][4] + b.v[key][5]) - (a.v[key][4] + a.v[key][5])).forEach((x, i) => m.set(x, i + 1));
+    S._cdNowPos[ck] = m;
+  }
+  const np = S._cdNowPos[ck].get(e), sp = sim && sim.pos;
+  const r = [];
+  const lbl = n => P + n;
+  if (buy) {
+    if (np && np * 1.3 <= kp) r.push('Producing like ' + lbl(np) + ' over this season and next but priced like ' + lbl(kp) + ' — production level is the factor the market underpays most.');
+    else if (sp && sp * 1.3 <= kp) r.push('Dynasty SIM has him ' + lbl(sp) + ' with his future seasons included; KTC has him ' + lbl(kp) + '.');
+    const hist = typeof ACTIVE_TEAM_HISTORY !== 'undefined' ? ACTIVE_TEAM_HISTORY[d.n] : null;
+    const first = hist && hist.length ? Math.min.apply(null, hist.map(x => x.y1)) : null;
+    const pm = (first == null || first >= yr - 2) && window._pmBuiltData ? window._pmBuiltData().find(p => p.name === d.n) : null;
+    if (pm && pm.jm != null && pm.jm >= 70) r.push('Prospect pedigree (JM ' + Math.round(pm.jm) + ') — the market underpays it, most of all over five years.');
+    if (age != null && age < 23) r.push('Age ' + Math.floor(age) + ' — 22-and-unders have out-produced their price.');
+  } else {
+    if (np && np >= kp * 1.3) r.push('Priced like ' + lbl(kp) + ' but producing like ' + lbl(np) + ' over this season and next — the price is ahead of the production.');
+    else if (sp && sp >= kp * 1.3) r.push('KTC has him ' + lbl(kp) + '; the Dynasty SIM, future seasons included, has him ' + lbl(sp) + '.');
+    const hist = typeof ACTIVE_TEAM_HISTORY !== 'undefined' ? ACTIVE_TEAM_HISTORY[d.n] : null;
+    if (hist && hist.length > 1 && hist.some(x => x.y1 === yr)) r.push('New team this season — players who change teams have finished below their price.');
+    if (P === 'WR' && age >= 28) r.push('Age ' + Math.floor(age) + ' at WR — the market overpays older receivers over the long run.');
+    if (P === 'RB' && age >= 26) r.push('Age ' + Math.floor(age) + ' at RB — values fall off from the mid-20s, and the market is slow to price it.');
+    if (d.dr === 1 && np && np >= kp * 1.3) r.push('Still priced on his 1st-round pedigree — once a veteran\'s production is known, draft capital stops earning a premium.');
+  }
+  if (!r.length) return '';
+  return '<div style="font-size:.6875rem;line-height:1.45;color:var(--text2);margin:-4px 0 10px"><b style="color:' + (buy ? '#22c55e' : '#ef4444') + ';letter-spacing:.04em">WHY ' + (buy ? 'UNDERVALUED' : 'OVERVALUED') + ':</b> '
+    + r.slice(0, 3).map(t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join(' <span style="opacity:.5">·</span> ') + '</div>';
 }
 // QB CHANGE note (Jack 2026-10-09; sim_lab/research_situation_layer.py, FFC pool
 // 2020-23): young RB / WR / TE (2nd-3rd season) whose team's QB changed from last

@@ -3259,6 +3259,10 @@ tbody td{font-size:.8125rem}
    14px text link; admin inbox PICK / delete buttons ~26px (answering from a phone). === */
 @media (max-width:600px){
   #mtAskJack [id^="qaAddBtn-"]{min-height:32px;padding:6px 0!important}
+  /* WAIVER WIRE: position chips 22px; the stats group (▲ upgrade + VAL + PPG
+     + WK with ranks) is ~320px with a ▲ chip — let it wrap inside the row. */
+  #mtWaiverWire .mt-ww-pos{min-height:32px;padding-left:12px!important;padding-right:12px!important}
+  #mtWaiverWire .mt-ww-stats{flex-wrap:wrap;justify-content:flex-end;row-gap:4px;max-width:100%}
   #adminQaList button{min-height:36px}
   #adminQaList summary{padding:6px 0}
 }

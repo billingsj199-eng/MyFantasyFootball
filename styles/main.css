@@ -3171,3 +3171,20 @@ tbody td{font-size:.8125rem}
   /* room so the bar never covers the last rows of the page */
   #pageTrade .trade-wrapper{padding-bottom:64px}
 }
+/* === Mock draft on phones (2026-10-09 pass) ===
+   Draft room: the 683px YOUR TEAM roster sat above the player list, so every
+   pick meant scrolling ~860px to reach the available players (list capped at
+   260px = ~5 players). Setup: a Chrome-extension promo phones can't install. */
+@media (max-width:600px){
+  #pageMockdraft .md-draft-layout > .md-board-area{order:-1}
+  #pageMockdraft .md-avail-list{max-height:min(60vh,520px)}
+  #pageMockdraft .md-roster-pick{min-height:30px;padding:4px 8px}
+  #pageMockdraft #mdDraftHelperBtn{display:none!important}
+  #pageMockdraft .md-subtitle{display:none}
+  #pageMockdraft :is(.md-mode-tabs,.md-rank-src-tabs){flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  #pageMockdraft :is(.md-mode-tabs,.md-rank-src-tabs)::-webkit-scrollbar{display:none}
+  #pageMockdraft :is(.md-mode-tabs,.md-rank-src-tabs) > button{flex:0 0 auto;min-height:32px}
+  /* DRAFT (the most-tapped button) and the RANK / ADP sort were 22px tall. */
+  #pageMockdraft .md-avail-row .md-ar-btn{min-height:34px;padding-left:12px;padding-right:12px}
+  #pageMockdraft .md-sort-btn{min-height:30px}
+}

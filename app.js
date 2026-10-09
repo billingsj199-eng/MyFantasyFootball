@@ -69469,6 +69469,18 @@ Rules:
     host.innerHTML =
       secRules(H) + secPlan(H) + secGrids(H) + secCliffs(H) +
       secStream(H) + secExtremes(H) + secMethod(H);
+    // Phone jump bar (2026-10-09): seven sections / ~8,000px on a phone — a
+    // sticky row of section chips at the top. Hidden on desktop (main.css).
+    const SHORT = ['Rules', 'Round by round', 'Value grid', 'Where it stops', 'K / DST', 'Extremes', 'Stability'];
+    const secs = [...host.querySelectorAll(':scope > .ds-section')];
+    secs.forEach((s, i) => { s.id = 'dsSec' + i; });
+    const nav = document.createElement('nav');
+    nav.className = 'ds-jump';
+    nav.setAttribute('aria-label', 'Jump to section');
+    nav.innerHTML = secs.map((s, i) => '<button type="button" data-i="' + i + '">'
+      + (SHORT[i] || (s.querySelector('.ds-h2') || {}).textContent || ('Section ' + (i + 1))) + '</button>').join('');
+    nav.querySelectorAll('button').forEach(b => { b.onclick = () => secs[+b.dataset.i].scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    host.insertBefore(nav, host.firstChild);
   };
 
 })();

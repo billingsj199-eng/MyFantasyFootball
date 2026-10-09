@@ -3240,3 +3240,18 @@ tbody td{font-size:.8125rem}
   #pageProspect .pm-controls > :is(.pm-toggle-wrap,#pmScoringTabs){justify-self:center}
   #pageProspect .pm-scoring-btn{min-height:30px}
 }
+/* === Draft Strategy on phones (2026-10-09) — ~8,000px of seven sections: a
+   sticky jump bar (app.js _renderDraftStrategy builds .ds-jump); Chrome
+   extension strip hidden (phones can't install it); K/DST table headers
+   ("ADP ↔ finish") may wrap so the table fits instead of scrolling 19px. === */
+.ds-jump{display:none}
+@media (max-width:600px){
+  #pageDraftStrategy .ds-jump{display:flex;gap:6px;position:sticky;top:0;z-index:20;margin:0 -12px 1rem;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+  #pageDraftStrategy .ds-jump::-webkit-scrollbar{display:none}
+  #pageDraftStrategy .ds-jump button{flex:0 0 auto;min-height:32px;padding:0 12px;border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.03em;white-space:nowrap;cursor:pointer}
+  #pageDraftStrategy .ds-section{scroll-margin-top:56px}
+  #pageDraftStrategy #extHubStrip{display:none!important}
+  #pageDraftStrategy .ds-table th{white-space:normal;line-height:1.2;letter-spacing:.02em;overflow-wrap:anywhere}
+  #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
+  #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
+}

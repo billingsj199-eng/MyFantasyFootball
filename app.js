@@ -3387,6 +3387,66 @@ function _cdChartSvg(pts, metric, label) {
     + '<rect x="' + L + '" y="0" width="' + (W - L - R) + '" height="' + H + '" fill="transparent" class="cd-hov-r"/>'
     + '</svg>';
 }
+// VALUE TAGS (Jack 2026-10-09: "tags ... 'win now' 'tank' etc based on their value vs
+// production"). Descriptive rules on backtested pieces: Dynasty SIM's season split
+// (NOW = rest of this season + next; FUTURE = the three seasons after), KTC rank, fair
+// value, injury status, and KTC's own aging curve (sim_lab/research_ktc_alltime.py:
+// WRs -13 to -15%/yr from 26-27). Ranks are among players with a Dynasty SIM value.
+function _cdSplitRanks(key) {
+  const S = window.DYNASTY_SIM_2026;
+  S._cdSplit = S._cdSplit || {};
+  if (!S._cdSplit[key]) {
+    const rows = Object.values(S.players).filter(e => e.pos !== 'PICK' && e.v && e.v[key]);
+    const rk = f => { const m = new Map(); rows.slice().sort((a, b) => f(b) - f(a)).forEach((e, i) => m.set(e, i + 1)); return m; };
+    S._cdSplit[key] = { now: rk(e => e.v[key][4] + e.v[key][5]), fut: rk(e => e.v[key][6] + e.v[key][7] + e.v[key][8]) };
+  }
+  return S._cdSplit[key];
+}
+function _cdTagsHtml(d, fmt, mode, sim, ktc) {
+  const S = window.DYNASTY_SIM_2026;
+  if (!S || !sim) return '';
+  if (sim.locked) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>';
+  if (!S._idx) _dynSimFor(d);
+  const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
+  const key = fmt + '_' + _dynScoringKey();
+  if (!e || !e.v[key]) return '';
+  const sp = _cdSplitRanks(key), now = sp.now.get(e), fut = sp.fut.get(e);
+  const v = e.v[key], nowV = Math.round(v[4] + v[5]), futV = Math.round(v[6] + v[7] + v[8]);
+  const mkt = ktc && !ktc.devy ? ktc.ovr : null;
+  const age = d.age != null ? +d.age : e.age;
+  const injTxt = String(d.inj || '');
+  const out = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(injTxt);
+  let fairDiff = null;
+  if (_trendIsDyn() && currentMode === mode && window.KTC_HISTORY) { const g = _trendGapFor(d); if (g && g.mkt && g.mkt.fairDiff != null) fairDiff = g.mkt.fairDiff; }
+  const yr = (S.meta && S.meta.valuationYear) || 2026;
+  const tags = [];
+  const T = (lbl, col, tip) => tags.push('<span title="' + tip.replace(/"/g, '&quot;') + '" style="display:inline-block;padding:3px 9px;border-radius:999px;border:1px solid ' + col + ';color:' + col + ';background:transparent;font-size:.6875rem;font-weight:800;letter-spacing:.06em;cursor:help">' + lbl + '</span>');
+  let fit = null;
+  if (now <= 15 && fut <= 15) { T('CORNERSTONE', '#f59e0b', 'Top-15 production now (#' + now + ', ' + nowV + ' over replacement in the rest of ' + yr + ' + ' + (yr + 1) + ') AND top-15 after that (#' + fut + ', ' + futV + ' in ' + (yr + 2) + '-' + (yr + 4) + '). Fits any team.'); fit = 'Either'; }
+  if (now <= 48 && mkt && now * 1.6 <= mkt && !(now <= 15 && fut <= 15)) {
+    T('WIN NOW', '#22c55e', 'Producing like the #' + now + ' player over the rest of ' + yr + ' and ' + (yr + 1) + ', but KTC prices him at #' + mkt + (age >= 27 ? ' — the discount is mostly age (' + Math.floor(age) + ')' : ' — the market discounts his situation') + '. A contender\'s buy: points now at a price below that.');
+    fit = fit || 'Contender';
+  }
+  if (fut <= 60 && fut * 1.6 <= now && age != null && age <= 25 && !(now <= 15 && fut <= 15)) {
+    T('FUTURE / REBUILD', '#38bdf8', 'His value sits in ' + (yr + 2) + '-' + (yr + 4) + ' (#' + fut + ' there) more than now (#' + now + ' for the rest of ' + yr + ' + ' + (yr + 1) + '). Young (' + Math.floor(age) + ') and not producing at that level yet — a rebuilder\'s hold or buy; a contender gets little from him this year.');
+    fit = fit || 'Rebuilder';
+  }
+  if (out && fut <= 80) {
+    T('INJURED STASH', '#a78bfa', 'Out / on IR but still #' + fut + ' for ' + (yr + 2) + '-' + (yr + 4) + '. KTC under-reacts to injury news and keeps sliding for weeks (IR -4% at a week, -13% at 30 days, 2026 data) — the buy window is usually a few weeks after the news, not the day of.');
+    fit = fit || 'Rebuilder';
+  }
+  const clock = (d.s === 'WR' && age >= 27) || (d.s === 'RB' && age >= 26) || (d.s === 'TE' && age >= 29);
+  if (clock && now <= 60) {
+    T('AGING CLOCK', '#fb923c', 'Still producing (#' + now + ' now) at ' + Math.floor(age) + '. ' + (d.s === 'WR' ? 'KTC\'s own history: WRs lose about 13-15% a year from 26-27.' : d.s === 'RB' ? 'RB values fall off from the mid-20s.' : 'TEs hold value longer, but the curve turns around 29-30.') + ' A contender piece; a rebuilder should sell before the next drop.');
+    fit = fit || 'Contender';
+  }
+  if (fairDiff != null && fairDiff >= 0.10) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
+  if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
+  if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>';
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
+    + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
+    + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>';
+}
 function _cdRender() {
   const el = document.getElementById('cardDynValBlock');
   if (!el) return;
@@ -3444,6 +3504,7 @@ function _cdRender() {
     + box(valBig, 'Our value', valSub || 'Dynasty SIM')
     + box(now && now.ovr ? '#' + now.ovr : '—', 'Overall rank', srcName)
     + box(now ? posLbl(now.pos) : '—', 'Positional rank', srcName) + '</div>'
+    + _cdTagsHtml(d, fmt, mode, sim, ktc)
     + '<div style="background:var(--elev-1,rgba(148,163,184,.06));border:1px solid rgba(148,163,184,.18);border-radius:10px;padding:10px 10px 6px">'
     + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">'
     + '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.15rem;letter-spacing:.04em;color:var(--text1)">' + srcName + ' · ' + mLbl + '</div>'

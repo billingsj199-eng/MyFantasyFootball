@@ -2069,7 +2069,7 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   
   /* Trivia game settings */
   .trivia-opts{gap:6px 8px!important;font-size:.7rem!important}
-  .trivia-opts select,.trivia-opts input{font-size:.7rem!important;padding:4px 6px!important}
+  .trivia-opts select,.trivia-opts input{font-size:16px!important;padding:4px 6px!important} /* <16px = iPhone zooms on focus */
   
   /* Trivia export bar */
   .trivia-export-bar{flex-wrap:wrap!important;gap:4px!important}
@@ -2216,7 +2216,7 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   }
   /* Sleeper import inputs */
   #mtSleeperLeagueId{
-    font-size:.7rem!important;min-width:0!important;
+    font-size:16px!important;min-width:0!important; /* <16px = iPhone zooms on focus */
   }
   /* Value source bar */
   #mtValueSource{
@@ -3254,6 +3254,11 @@ tbody td{font-size:.8125rem}
   #pageDraftStrategy .ds-table th{white-space:normal;line-height:1.2;letter-spacing:.02em;overflow-wrap:anywhere}
   #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
   #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
+}
+/* iPhone Safari zooms the whole page when a text field under 16px is focused
+   (Games guess boxes 12.8px, My Teams league id 11.2px, …) — 16px on phones. */
+@media (max-width:600px){
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]),select,textarea{font-size:16px!important}
 }
 /* === Research (admin) on phones (2026-10-09) — SEASON EXPLORER dumped all 400
    rows into the page (12,800px) with nothing pinned: now a 70vh scroll box like

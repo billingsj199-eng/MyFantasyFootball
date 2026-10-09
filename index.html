@@ -6266,6 +6266,7 @@ window.addEventListener('load', function() {
 <style>
 @keyframes mffTourFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mffTourPulse{0%,100%{box-shadow:0 0 0 4px rgba(245,158,11,.5),0 0 24px 8px rgba(245,158,11,.4)}50%{box-shadow:0 0 0 6px rgba(245,158,11,.7),0 0 32px 12px rgba(245,158,11,.55)}}
+@media (max-width:600px){#mffTourSkip,#mffTourBack,#mffTourNext{min-height:38px;padding-left:16px!important;padding-right:16px!important}}
 .nav-btn.mff-tour-spot{position:relative;z-index:601;background:rgba(245,158,11,.18)!important;color:var(--accent)!important;border-radius:8px;animation:mffTourPulse 1.6s ease-in-out infinite}
 </style>
 <script>
@@ -6288,12 +6289,16 @@ window.addEventListener('load', function() {
       title: '1. Customize your rankings',
       body: 'Drag players to reorder. Add tiers between rows. Try MY RANKINGS to build your own board, or stick with CONSENSUS / JACK\'S to get expert input.',
       hint: 'Pro tip: hit Cmd/Ctrl + K anywhere to jump-search players or pages.',
+      // Phones (2026-10-09): no keyboard shortcut; the board is in the FILTERS bar.
+      hintM: 'On your phone: tap FILTERS above the list to switch boards, formats and scoring. Tap any player for his full card.',
       targetNav: 'rankings'
     },
     {
       title: '2. Connect your league',
       body: 'My Teams imports your Sleeper league or Underdog portfolio so you can analyze roster strength, run trade scenarios, and build a draft strategy off your real roster.',
       hint: 'ESPN leagues sync free too — paste your league ID (public) or click Export in the free MFF extension (private). Yahoo is free the same way (paste the league ID, or Export in the free MFF Yahoo extension).',
+      // Phones can't install the Chrome extensions — keep the tip to what works there.
+      hintM: 'ESPN and Yahoo leagues sync free too — paste your public league ID. Private leagues: use the free MFF extension on a computer once.',
       targetNav: 'myteams'
     },
     {
@@ -6326,7 +6331,7 @@ window.addEventListener('load', function() {
     body.innerHTML =
       '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.4rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:.6rem">' + _esc(s.title) + '</div>'
       + '<div style="font-size:.85rem;color:var(--text);line-height:1.5">' + _esc(s.body) + '</div>'
-      + (s.hint ? '<div style="margin-top:.8rem;padding:.55rem .7rem;background:var(--surface2);border-left:3px solid var(--accent);border-radius:4px;font-size:.7rem;color:var(--text2);line-height:1.4">' + _esc(s.hint) + '</div>' : '');
+      + ((_isPhone() && s.hintM) || s.hint ? '<div style="margin-top:.8rem;padding:.55rem .7rem;background:var(--surface2);border-left:3px solid var(--accent);border-radius:4px;font-size:.7rem;color:var(--text2);line-height:1.4">' + _esc((_isPhone() && s.hintM) || s.hint) + '</div>' : '');
     dots.innerHTML = STEPS.map((_, i) =>
       '<div style="width:7px;height:7px;border-radius:50%;background:' + (i === idx ? 'var(--accent)' : 'var(--elev-3)') + ';transition:background .2s"></div>'
     ).join('');
@@ -6338,6 +6343,7 @@ window.addEventListener('load', function() {
 
   function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+  function _isPhone() { return !!(window.matchMedia && window.matchMedia('(max-width:600px)').matches); }
   function open() {
     idx = 0;
     overlay.style.display = 'flex';

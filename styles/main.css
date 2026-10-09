@@ -3255,6 +3255,18 @@ tbody td{font-size:.8125rem}
   #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
   #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
 }
+/* === My Teams DRAFT BOARD on phones (2026-10-09) — a 10-12 team grid shows ~3
+   columns: scroll box gets a height so the team header row AND the round
+   column both pin (opaque backgrounds so cells don't show through); app.js
+   opens it scrolled to the user's column. === */
+@media (max-width:600px){
+  #mtDraftBoard .mt-db-scroll{max-height:72vh;overflow:auto!important;padding-top:0!important;padding-left:0!important}
+  #mtDraftBoard .mt-db-hd,#mtDraftBoard .mt-db-corner{position:sticky;top:0;z-index:2;background:var(--bg)}
+  #mtDraftBoard .mt-db-hd.mt-db-mine{background:linear-gradient(rgba(245,158,11,.12),rgba(245,158,11,.12)),var(--bg)!important}
+  #mtDraftBoard .mt-db-rd,#mtDraftBoard .mt-db-corner{position:sticky;left:0;background:var(--bg)}
+  #mtDraftBoard .mt-db-rd{z-index:1;box-shadow:4px 0 6px -4px rgba(0,0,0,.6)}
+  #mtDraftBoard .mt-db-corner{z-index:3}
+}
 /* === Trade calc FIND TRADE on phones (2026-10-09) — results already stack
    cleanly; slimmer ⇄ divider, and LOAD INTO CALCULATOR (27px, the card's one
    action) becomes a full-width 38px button under the fit line. === */

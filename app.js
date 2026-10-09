@@ -60157,6 +60157,11 @@ Rules:
       // Guard: user may have loaded a different league while we fetched
       if (!_mtDraftBoardOpen) return;
       box.innerHTML = _mtBuildDraftBoardHtml(data);
+      // Phones show ~3 of 10-12 columns — open the board on the user's column.
+      if (window.matchMedia && window.matchMedia('(max-width:600px)').matches) {
+        const _sc = box.querySelector('.mt-db-scroll'), _mine = box.querySelector('.mt-db-mine');
+        if (_sc && _mine) _sc.scrollLeft = Math.max(0, _mine.offsetLeft - 40);
+      }
     } catch (err) {
       console.warn('[MyTeams] Draft board error:', err);
       box.innerHTML = '<div style="color:var(--red);font-size:.75rem;padding:10px">Couldn\'t load the draft: ' + _esc(err.message) + '</div>';
@@ -60209,21 +60214,22 @@ Rules:
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
       `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:#22d3ee">DRAFT BOARD</span>` +
       `<span style="font-size:.6875rem;color:var(--text2)">Graded vs your selected rankings · <span style="color:var(--green);font-weight:700">green = value</span> · <span style="color:var(--red);font-weight:700">red = reach</span> · K/DST and off-board picks ungraded</span></div>`;
-    html += `<div style="overflow-x:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg)">`;
-    html += `<div style="display:grid;grid-template-columns:26px repeat(${slotCount},minmax(88px,1fr));gap:3px;min-width:${26 + slotCount * 92}px">`;
+    // mt-db-* class hooks: phones pin the header row + round column (main.css)
+    html += `<div class="mt-db-scroll" style="overflow-x:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg)">`;
+    html += `<div class="mt-db-grid" style="display:grid;grid-template-columns:26px repeat(${slotCount},minmax(88px,1fr));gap:3px;min-width:${26 + slotCount * 92}px">`;
     // Header row
-    html += `<div></div>`;
+    html += `<div class="mt-db-corner"></div>`;
     for (let s = 1; s <= slotCount; s++) {
       const t = slotTeam[s];
       const tl = tally[s] || { steal: 0, reach: 0 };
       const mine = t && t.isMyTeam;
-      html += `<div style="text-align:center;padding:3px 2px;border-radius:5px;${mine ? 'border:1px solid var(--accent);background:rgba(245,158,11,.08)' : ''}">` +
+      html += `<div class="mt-db-hd${mine ? ' mt-db-mine' : ''}" style="text-align:center;padding:3px 2px;border-radius:5px;${mine ? 'border:1px solid var(--accent);background:rgba(245,158,11,.08)' : ''}">` +
         `<div style="font-size:.6875rem;font-weight:700;color:${mine ? 'var(--accent)' : 'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(t ? t.owner : 'Slot ' + s)}</div>` +
         `<div style="font-size:.6875rem"><span style="color:var(--green)">${tl.steal}▲</span> <span style="color:var(--red)">${tl.reach}▼</span></div></div>`;
     }
     // Round rows
     for (let r = 1; r <= roundCount; r++) {
-      html += `<div style="display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:.7rem;color:var(--text2)">${r}</div>`;
+      html += `<div class="mt-db-rd" style="display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:.7rem;color:var(--text2)">${r}</div>`;
       for (let s = 1; s <= slotCount; s++) {
         html += cells[r + '-' + s] || `<div style="border:1px dashed var(--border);border-radius:5px;min-height:30px"></div>`;
       }

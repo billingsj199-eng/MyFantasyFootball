@@ -3793,7 +3793,7 @@ window._mffValueBoard = function(mode) {
   const pool = [], rest = [];
   D.forEach((p, i) => {
     if (!p || p._retired || p._isDevy) return;
-    if (p._isFuturePick || p.s === 'PICK') { const x = simOf(p.n, 'PICK'); if (x) rest.push({ i, sv: x.sv, pick: p.n }); return; }
+    if (p._isFuturePick || p.s === 'PICK') { const x = simOf(p.n, 'PICK'); if (x) rest.push({ i, sv: x.sv, pick: p.n, cls: x.e.cls ? x.e.cls[vk] : null }); return; }
     if (p.s !== 'QB' && p.s !== 'RB' && p.s !== 'WR' && p.s !== 'TE') return;
     const x = simOf(p.n, p.s);
     if (!x) return;
@@ -3842,7 +3842,16 @@ window._mffValueBoard = function(mode) {
     if (!r.pick) return;
     const m3 = /^(\d{4}) (3rd|4th)$/.exec(r.pick);
     const kv = K[r.pick] || (m3 ? K[m3[1] + ' Mid ' + m3[2]] : null);
-    if (kv > 0 && r.mv > 0) r.mv = Math.exp(simSh * Math.log(r.mv) + (1 - simSh) * Math.log(kv));
+    if (kv > 0 && r.mv > 0) {
+      r.mv = Math.exp(simSh * Math.log(r.mv) + (1 - simSh) * Math.log(kv));
+      // Upcoming-class lean (Jack 2026-10-09: "don't factor in class too much but
+      // have it lean one way or the other — we don't have all the info"): the sim
+      // value already carries the JM class read at 25% weight (dyn_picks W_CLASS,
+      // 2027 only; 2028+ = 1.0, not enough info). The KTC blend would dilute it to
+      // ~a third, so the rest of the multiplier goes on top — the pick carries the
+      // full small lean (2027 now: 1sts -3.5..-6%, 2nds -3..-9%).
+      if (r.cls > 0 && r.cls !== 1) r.mv *= Math.pow(r.cls, 1 - simSh);
+    }
   });
   const b = pool.concat(rest).sort((a, b) => b.mv - a.mv).map(r => r.i);
   window._mffValueOf = window._mffValueOf || {};

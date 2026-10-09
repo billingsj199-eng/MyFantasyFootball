@@ -60081,7 +60081,7 @@ Rules:
     html += `<div style="display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap">`;
     ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'].forEach(p => {
       const act = _mtWaiverPos === p;
-      html += `<button onclick="window._mtSetWaiverPos('${p}')" style="padding:3px 10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${act ? '#4ade80' : 'var(--border)'};background:${act ? '#4ade80' : 'var(--surface)'};color:${act ? '#000' : 'var(--text2)'}">${p}</button>`;
+      html += `<button class="mt-ww-pos" onclick="window._mtSetWaiverPos('${p}')" style="padding:3px 10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${act ? '#4ade80' : 'var(--border)'};background:${act ? '#4ade80' : 'var(--surface)'};color:${act ? '#000' : 'var(--text2)'}">${p}</button>`;
     });
     html += `</div>`;
 
@@ -60118,7 +60118,7 @@ Rules:
         // into the name on phones: "Tre' Harris WR Los / Angeles Chargers").
         `<div style="flex:1 1 130px;min-width:0;line-height:1.2"><div style="font-weight:600;font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(d.n)}</div>` +
         `<div style="font-size:.6875rem;color:var(--text2);white-space:nowrap"><span style="font-weight:700;color:${posColors[d.s] || 'var(--text2)'}">${d.s}</span> · ${_esc(_tfAbbr(d.t || 'FA'))}</div></div>` +
-        `<div style="display:flex;align-items:center;gap:10px;margin-left:auto">` +
+        `<div class="mt-ww-stats" style="display:flex;align-items:center;gap:10px;margin-left:auto">` +
         upgrade +
         `<div style="min-width:52px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">VAL </span><span style="font-weight:700;color:var(--text)">${val}</span></div>` +
         `<div style="min-width:44px;text-align:right;white-space:nowrap"><span style="font-size:.6875rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${ppg || '—'}</span>${ppg > 0 ? _mtPosRankTag(d.s, ppg, false) : ''}</div>` +
@@ -65341,9 +65341,10 @@ Rules:
     const opts = (x.options || []).map((o, i) => {
       const picked = x.status === 'answered' && x.pick === i;
       const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'YOU GIVE: ' : 'YOU GET: ') + '</span>' : '';
-      return '<div style="padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
+      // flex, not float: on a phone the floated label wrapped below and hung off the box
+      return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
         (picked ? 'background:rgba(34,197,94,.12);border:1px solid var(--green);color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
-        (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + (picked ? ' <span style="color:var(--green);font-size:.6875rem;float:right;margin-top:2px">JACK\'S PICK</span>' : '') +
+        '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' + (picked ? '<span style="color:var(--green);font-size:.6875rem;margin-left:auto">JACK\'S PICK</span>' : '') +
         '</div>';
     }).join('');
     return opts +

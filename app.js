@@ -1061,6 +1061,10 @@ function _computeConsensusBoard(mode, gf) {
       : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
     const kList = [];
     for (let i = 0; i < D.length; i++) {
+      // Retired rows suffix-fold onto an active Junior's KTC value (Marvin
+      // Harrison, Oronde Gadsden) or still carry one (Roschon Johnson) and
+      // took board slots, pushing every rank behind them down.
+      if (D[i]._retired) continue;
       const v = _ktcLookup(ktcMap, D[i].n);
       if (v != null && v > 0) kList.push({ idx: i, v: v });
     }
@@ -2277,7 +2281,9 @@ function _ktcPosOf(name) {
   if (typeof D === 'undefined') return null;
   if (!_ktcPosIndex || _ktcPosIndexLen !== D.length) {
     _ktcPosIndex = {};
-    D.forEach(p => { if (p && p.n && p.s) _ktcPosIndex[_normalizeNameForLookup(p.n)] = p.s; });
+    // Skip retired rows: "Oronde Gadsden" (WR) strips to the same key as
+    // "Oronde Gadsden II" (TE) and, appended later, overwrote him.
+    D.forEach(p => { if (p && p.n && p.s && !p._retired) _ktcPosIndex[_normalizeNameForLookup(p.n)] = p.s; });
     _ktcPosIndexLen = D.length;
   }
   return _ktcPosIndex[_normalizeNameForLookup(name)] || null;
@@ -3624,6 +3630,38 @@ function _seasonProjSectionHtml(d) {
   </div>`;
 }
 
+// ROSTERED (player card, bottom of FANTASY): % of leagues rostering the player
+// on ESPN / Sleeper / Yahoo, from data/ownership_2026.js (OWNERSHIP_2026,
+// Phase P of the daily 9am job; keyed by d.js-canonical name at pull time).
+// ESPN + Yahoo carry a past-week change; Sleeper's research feed has none.
+function _rosteredSectionHtml(d) {
+  if (d._retired || d._isDevy) return '';
+  const O = window.OWNERSHIP_2026;
+  const o = (O && O.players) ? O.players[d.n] : null;
+  if (!o) return '';
+  const pct = v => (v >= 10 || v === 0 ? Math.round(v) : v.toFixed(1)) + '%';
+  const box = (lbl, v, chg, tip) => {
+    const has = v != null;
+    const sub = (has && chg) ? `<div style="font-size:.6875rem;margin-top:2px;font-weight:600;color:${chg > 0 ? 'var(--green)' : 'var(--red)'}">${chg > 0 ? '+' : ''}${chg.toFixed(1)}</div>` : '';
+    return `<div class="card-rank-box"${has ? ` title="${tip.replace(/"/g, '&quot;')}" style="cursor:help"` : ''}>
+      <div class="lbl">${lbl}</div>
+      <div class="num"${has ? '' : ' style="color:var(--text2)"'}>${has ? pct(v) : '—'}</div>${sub}
+    </div>`;
+  };
+  const chgTip = c => c ? ` (${c > 0 ? '+' : ''}${c.toFixed(1)} over the past week)` : '';
+  const asOf = O.updated ? new Date(O.updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+  const boxes =
+    box('ESPN', o.espn, o.espnChg, `Rostered in ${o.espn}% of ESPN leagues${chgTip(o.espnChg)}`) +
+    box('Sleeper', o.sleeper, null, o.sleeper === 0
+      ? 'Under ~1% rostered on Sleeper (Sleeper only lists players above that)'
+      : `Rostered in ${o.sleeper}% of Sleeper leagues` + (O.sleeperWeek ? ` (Week ${O.sleeperWeek})` : '')) +
+    box('Yahoo', o.yahoo, o.yahooChg, `Rostered in ${o.yahoo}% of Yahoo leagues${chgTip(o.yahooChg)}`);
+  return `<div class="card-section">
+    <div class="card-section-title">Rostered <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· % of leagues${asOf ? ', ' + asOf : ''}</span></div>
+    <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">${boxes}</div>
+  </div>`;
+}
+
 // TEAM PPG: season average of Vegas implied team totals across every game in
 // BETTING_2026.gameTotals ('W{wk}_{AWAY}_{HOME}', spread = home spread).
 // Cached on first use; keyed by team abbreviation.
@@ -3657,6 +3695,90 @@ function _impliedTeamPpg(teamFullName) {
   }
   const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamFullName]) ? TEAM_ABBR_MAP[teamFullName] : teamFullName;
   return _impliedPpgCache[abbr] || null;
+}
+
+// Position rank tags for the player card's stat boxes (Jack 2026-10-09): the
+// same small "(N)" the Team PPG box carries, so '26 PPG / Proj PPG / xFP /GM /
+// L4 PPG (FANTASY) and WK PROJ / BOOKS / SEASON /GM / xFP /GM (WEEKLY) read as
+// "where he sits at his position". Pool = active NFL players at the same
+// position with a value; actual-game stats ('26 PPG, xFP) need at least half
+// the position's max games so a one-game spike doesn't outrank full samples
+// (the card's own player is always ranked). Cached ~60s per key / pos / fmt / week.
+const _cardPosRankCache = {};
+function _cardPosRankVal(p, key) {
+  if (key === 'ppg') { const s = adjSeasonPpg(p); return s.v != null ? { v: s.v, n: s.gp || 0 } : null; }
+  if (key === 'proj') { const v = adjProjPpg(p); return (typeof v === 'number' && v > 0) ? { v: v } : null; }
+  if (key === 'l4') { const v = last4Ppg(p); return v != null ? { v: v } : null; }
+  if (key === 'xfp') { const x = (typeof _xfpAgg === 'function') ? _xfpAgg(p, rankingScoringFmt, null) : null; return (x && x.n) ? { v: x.xfpg, n: x.n } : null; }
+  if (key === 'wkproj') {
+    if (typeof window._weeklyAdjustPpg !== 'function') return null;
+    const v = window._weeklyAdjustPpg(p, adjProjPpg(p), {});
+    return (typeof v === 'number' && v > 0) ? { v: v } : null;
+  }
+  if (key === 'book') { const W = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(p) : null; return W ? { v: W.ppg } : null; }
+  // Start/Sit's number: My Teams injury rule (Q plays, D / Out = 0, ASSUME OUT ignored)
+  if (key === 'sstproj') {
+    if (typeof window._weeklyAdjustPpg !== 'function') return null;
+    const v = window._weeklyAdjustPpg(p, adjProjPpg(p), { mt: true });
+    return (typeof v === 'number' && v > 0) ? { v: v } : null;
+  }
+  if (key === 'disp') { const v = _displayProjPpg(p); return (typeof v === 'number' && v > 0) ? { v: v } : null; }
+  return null;
+}
+function _cardPosRank(d, key) {
+  if (!d || !d.s || typeof D === 'undefined' || !D) return null;
+  const wk = window._weeklyActiveWeek || 1;
+  const ck = key + '|' + d.s + '|' + rankingScoringFmt + '|' + wk + '|' + D.length
+    + (key === 'disp' ? '|' + (typeof currentMode !== 'undefined' ? currentMode : '') + '|' + (typeof currentVersion !== 'undefined' ? currentVersion : '') : '');
+  let e = _cardPosRankCache[ck];
+  if (!e || Date.now() - e.t > 60000) {
+    const rows = [];
+    let maxN = 0;
+    D.forEach(p => {
+      if (!p || p.s !== d.s || p._retired || p._isDevy || !p.t) return;
+      let r = null;
+      try { r = _cardPosRankVal(p, key); } catch (_) {}
+      if (!r || typeof r.v !== 'number' || !isFinite(r.v)) return;
+      if (r.n > maxN) maxN = r.n;
+      rows.push({ n: p.n, v: r.v, g: r.n });
+    });
+    e = _cardPosRankCache[ck] = { t: Date.now(), rows: rows, minG: Math.max(1, Math.ceil(maxN / 2)) };
+  }
+  const me = e.rows.find(r => r.n === d.n);
+  if (!me) return null;
+  const pool = e.rows.filter(r => r === me || r.g == null || r.g >= e.minG);
+  return { rank: 1 + pool.filter(r => r.v > me.v).length, of: pool.length };
+}
+// Small "(N)" after a box number; tooltip spells out "#N of M QBs".
+function _cardPosRankTag(d, key) {
+  const r = _cardPosRank(d, key);
+  if (!r) return '';
+  const pl = d.s === 'DST' ? 'D/STs' : d.s + 's';
+  return ' <span style="font-size:.6em;font-weight:600;color:var(--text2);cursor:help" title="#' + r.rank + ' of ' + r.of + ' ' + pl
+    + ((key === 'ppg' || key === 'xfp') ? ' (min. games played)' : '') + '">(' + r.rank + ')</span>';
+}
+
+// This week's implied team total ranked across every team playing (#1 = highest).
+// opp = rank the opponent's total instead, lowest first (the D/ST view).
+function _cardWeekTotalRankTag(team, opp) {
+  const fn = opp ? window._weeklyOppTeamTotalFor : window._weeklyTeamTotalFor;
+  if (typeof fn !== 'function' || typeof TEAM_ABBR_MAP === 'undefined') return '';
+  const mine = fn(team);
+  if (mine == null) return '';
+  const all = Object.keys(TEAM_ABBR_MAP).map(t => { try { return fn(t); } catch (_) { return null; } }).filter(v => typeof v === 'number');
+  if (!all.length) return '';
+  const rank = 1 + all.filter(v => opp ? v < mine : v > mine).length;
+  const tip = opp ? '#' + rank + ' of ' + all.length + ' — lowest opponent total this week = #1' : '#' + rank + ' of ' + all.length + ' teams playing this week';
+  return ' <span style="font-size:.6em;font-weight:600;color:var(--text2);cursor:help" title="' + tip + '">(' + rank + ')</span>';
+}
+
+// Phone rankings cards: the same position rank, small + muted after the PROJ /
+// xFP value. Hidden on desktop (.mrk, index.html) where the table has room for
+// the full columns instead.
+function _mobPosRankTag(d, key) {
+  const r = _cardPosRank(d, key);
+  if (!r) return '';
+  return '<span class="mrk" title="#' + r.rank + ' of ' + r.of + ' ' + (d.s === 'DST' ? 'D/STs' : d.s + 's') + '">(' + r.rank + ')</span>';
 }
 
 // Team PPG rank box for card Rankings rows (player card + Compare columns).
@@ -8990,7 +9112,7 @@ function render() {
           _cwTip = ' title="' + (head + (parts.length ? ': ' + parts.join(', ') : '') + fp).replace(/"/g, '&quot;') + '"';
         }
       }
-      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg}</td>`;
+      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg+(_projPpg>0&&d.s?_mobPosRankTag(d,'disp'):'')}</td>`;
       _statTds = `<td class="pts-cell ppg25-cell"${_25Tip}${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
     } else if (_statMode === 'sims') {
@@ -9089,6 +9211,12 @@ function render() {
         const _poMiss = _ve && _ve.gp < _ve.sgp;
         const _poC = !_ve ? null : _poMiss ? '#f59e0b' : _vorColor(_ve.vp / Math.max(1, _ve.sgp || 0));
         const _poT = !_ve ? '—' : _ve.vp >= 10 ? '+' + Math.round(_ve.vp) : _ve.vp > 0 ? '+' + _ve.vp.toFixed(1) : '0';
+        if (_ve && _vorUpsideOn() && _ve.vu != null) {
+          // UPSIDE view: the tail column carries UPSIDE VOR (the board order), with the gain over ROS VOR in the tip.
+          const _uT = _ve.vu >= 10 ? '+' + Math.round(_ve.vu) : _ve.vu > 0 ? '+' + _ve.vu.toFixed(1) : '0';
+          const _uG = Math.round((_ve.vu - _ve.vt) * 10) / 10;
+          _statYdsTail = '<span style="cursor:help;font-weight:700;color:' + (_vorColor(_ve.vu / Math.max(1, _ve.sg || 1)) || 'inherit') + '" title="' + ('UPSIDE VOR ' + _uT + ' (ROS VOR ' + (_ve.vt > 0 ? '+' : '') + _ve.vt + ', ' + (_uG >= 0 ? '+' : '') + _uG + ' for the chance his projection climbs before each week — role or usage change you can start him for). Projections unchanged.').replace(/"/g, '&quot;') + '">' + _uT + '</span>';
+        } else
         _statYdsTail = (_ve && !_vt.win)
           ? '<span style="cursor:help;font-weight:700' + (_poC ? ';color:' + _poC : '') + '" title="' + (_poT + ' points above replacement in the fantasy-playoff weeks ' + _vt.st.poStart + '-' + _vt.st.poEnd + ' — projected to play ' + _ve.gp + ' of his team\'s ' + _ve.sgp + (_poMiss ? ', so he misses playoff time' : '') + '. Breaks ties on ROS VOR.').replace(/"/g, '&quot;') + '">' + _poT + '</span>'
           : '—';
@@ -9275,7 +9403,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'dyn' ? 'SIM RK ' : _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'dyn' ? 'SIM RK ' : _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -13196,7 +13324,7 @@ window._qsTeammates = function(name, wk) {
 function _qsLookupD(k) {
   if (typeof D === 'undefined') return null;
   let m = window._qsDByNorm;
-  if (!m || m._n !== D.length) { m = { _n: D.length }; D.forEach(x => { if (x && x.n && x.s !== 'DST') m[_qsNorm(x.n)] = x; }); window._qsDByNorm = m; }
+  if (!m || m._n !== D.length) { m = { _n: D.length }; D.forEach(x => { if (x && x.n && x.s !== 'DST' && !x._retired) m[_qsNorm(x.n)] = x; }); window._qsDByNorm = m; }
   return m[k] || null;
 }
 window._qsInjFlip = function(name, wk) {
@@ -13664,6 +13792,36 @@ function _vorAssignTiers(es, valKey, slot, cap) {
   tiers.forEach(tr => { for (let i = tr.from; i < tr.to; i++) pos[i][slot] = tr.obj; });
   es.slice(pos.length).forEach(e => { e[slot] = e[valKey] > 0 ? trail['DEEP BENCH'] : trail['REPLACEMENT LEVEL']; });
 }
+// UPSIDE VOR (2026-10-09, Jack: "include the high range of outcomes ... value VOR on the high end rather than averaging it
+// out" + "rookies that haven't performed well but historically could improve"). Projections are untouched; a week's value
+// becomes an OPTION on his projection: it can move before that week (role / usage change) and you start him once it does,
+// so the value is E[max(0, f x e^Z - R)] with Z ~ N(mu, sigma) by position x rookie x weeks ahead (lognormal call).
+// sim_lab/backtest_option_vor.py (option_vor.log, 2019-25, realized STARTABLE value - no hindsight boom credit): FLEX rank
+// .638 -> .643 (6/7 seasons, forward 4/4), bench-zone rank better 6/7 + 4/4, top-12 stashes +5 / +8 realized points.
+// Handcuff option (starter-injury worlds) FAILED as a ranking signal - shown on the card as "IF <starter> SITS" instead.
+// Fits pooled 2019-25 [mu, sigma] for weeks ahead 1-2 / 3-5 / 6-9 / 10+; QB / TE / K / DST carry no drift (= ROS VOR).
+const _UPS_DRIFT = {
+  RB: { vet: [[0.001, 0.074], [0.002, 0.113], [0.000, 0.153], [0.008, 0.191]], rook: [[0.012, 0.126], [0.029, 0.193], [0.054, 0.270], [0.092, 0.344]] },
+  WR: { vet: [[0.002, 0.063], [0.003, 0.099], [0.002, 0.137], [0.002, 0.170]], rook: [[-0.002, 0.103], [-0.007, 0.150], [-0.017, 0.197], [-0.025, 0.243]] }
+};
+function _upsNcdf(x) {   // standard normal CDF (Abramowitz-Stegun 26.2.17)
+  const t = 1 / (1 + 0.2316419 * Math.abs(x)), y = 0.3989422804014327 * Math.exp(-x * x / 2) * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return x >= 0 ? 1 - y : y;
+}
+function _upsCall(f, R, mu, sg) {
+  if (!(f > 0)) return 0;
+  if (!(sg > 1e-6)) return Math.max(0, f * Math.exp(mu) - R);
+  if (!(R > 0)) return f * Math.exp(mu + sg * sg / 2);
+  const d2 = (Math.log(f / R) + mu) / sg, d1 = d2 + sg;
+  return f * Math.exp(mu + sg * sg / 2) * _upsNcdf(d1) - R * _upsNcdf(d2);
+}
+function _upsIsRookie(d) { return !(d.career || []).some(c => c && +c.yr < 2026); }
+function _upsDrift(d, k) {
+  const P = _UPS_DRIFT[d.s];
+  if (!P || !(k > 0)) return null;
+  const b = k <= 2 ? 0 : k <= 5 ? 1 : k <= 9 ? 2 : 3;
+  return P[_upsIsRookie(d) ? 'rook' : 'vet'][b];
+}
 function _vorTable() {
   const SP = window.SIM_PROJ_2026;
   if (!SP || !SP.weeks || typeof D === 'undefined') return null;
@@ -13774,6 +13932,7 @@ function _vorTable() {
   // Ties on ROS VOR go to the bigger playoff-weeks VOR.
   const _cmp = (a, b) => (b.vt - a.vt) || (b.vp - a.vp) || (b.vor - a.vor) || (b.tot - a.tot);
   const _cmpP = (a, b) => (b.vp - a.vp) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
+  const _cmpU = (a, b) => (b.vu - a.vu) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
@@ -13797,8 +13956,14 @@ function _vorTable() {
       const vt = wk ? vor : r1(x.wp.reduce((s, v, j) => s + gapW(j) * wt(weeks[j]), 0));
       // PO VOR: the same week-by-week gap inside the fantasy playoffs only, unweighted.
       const vp = wk ? 0 : r1(x.wp.reduce((s, v, j) => s + (isPO(weeks[j]) ? gapW(j) : 0), 0));
+      // UPSIDE VOR: the same weeks, each priced as an option on his projection (drift by weeks ahead of the window start)
+      const vu = wk ? vor : r1(x.wp.reduce((s, v, j) => {
+        if (!(v > 0)) return s;
+        const q = x.wq[j], f = q < 1 ? v / q : v, dr = _upsDrift(x.d, weeks[j] - weeks[0]);
+        return s + (dr ? _upsCall(f, R, dr[0], dr[1]) : Math.max(0, f - R)) * q * wt(weeks[j]);
+      }, 0));
       const sc = _sched(x.d);
-      const e = { v: r1(x.ppg), g: x.g, eg: r1(x.eg), sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
+      const e = { v: r1(x.ppg), g: x.g, eg: r1(x.eg), sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, vu, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
       out.map.set(x.d, e);
       return e;
     });
@@ -13815,6 +13980,13 @@ function _vorTable() {
       _vorAssignTiers(sortedP, 'vp', 'tPp', 150);
       if (p === 'K' || p === 'DST') sortedP.forEach(e => { e.tAp = e.tPp; });
     }
+    // UPSIDE view: the same ranks and tiers on UPSIDE VOR (season boards, any window).
+    if (!wk) {
+      const sortedU = es.slice().sort(_cmpU);
+      if (p === 'K' || p === 'DST') sortedU.forEach((e, i) => { e.rkU = i + 1; });
+      _vorAssignTiers(sortedU, 'vu', 'tPu', 150);
+      if (p === 'K' || p === 'DST') sortedU.forEach(e => { e.tAu = e.tPu; });
+    }
   });
   all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
   _vorAssignTiers(all, 'vt', 'tA', 150);   // top-150 draftable range
@@ -13822,6 +13994,11 @@ function _vorTable() {
     const allP = all.slice().sort(_cmpP);
     allP.forEach((e, i) => { e.rkP = i + 1; });
     _vorAssignTiers(allP, 'vp', 'tAp', 150);
+  }
+  if (!wk) {
+    const allU = all.slice().sort(_cmpU);
+    allU.forEach((e, i) => { e.rkU = i + 1; });
+    _vorAssignTiers(allU, 'vu', 'tAu', 150);
   }
   window._vorCache = out;
   return out;
@@ -13844,6 +14021,11 @@ window._vorPlayoffs = false;
 function _vorPlayoffsOn() {
   return !!window._vorPlayoffs && currentVersion === 'sims' && currentMode !== 'weekly' && !_vorWin();
 }
+// UPSIDE view of the SIM VOR board: ranked and tiered by UPSIDE VOR (season boards; any window). Exclusive with PLAYOFFS.
+window._vorUpside = false;
+function _vorUpsideOn() {
+  return !!window._vorUpside && currentVersion === 'sims' && currentMode !== 'weekly' && !_vorPlayoffsOn();
+}
 // SIM VOR tier banners for the rows on screen: tier membership is per player
 // (overall tiers on ALL / ROOKIES / FLEX, position tiers on a position pill),
 // so filtered views — WAIVERS, TEAMS, TOP N — keep each player's real tier and
@@ -13857,8 +14039,8 @@ function _simsTiersFor(data) {
   let prev = null;
   rows.forEach((d, i) => {
     const e = _vorFor(d);
-    const po = _vorPlayoffsOn();
-    const t = e && (posView ? (po ? e.tPp : e.tP) : (po ? e.tAp : e.tA));
+    const po = _vorPlayoffsOn(), up = _vorUpsideOn();
+    const t = e && (posView ? (po ? e.tPp : up ? e.tPu : e.tP) : (po ? e.tAp : up ? e.tAu : e.tA));
     if (!t || t === prev) return;
     prev = t;
     out.push({ id: 's' + out.length, label: t.label, name: t.name, afterRank: positional ? i + 1 : d.myRank });
@@ -13873,11 +14055,11 @@ function _simsTiersFor(data) {
 function _simsBoardEnsure() {
   const t = _vorTable();
   const src = (window._simsBoardSrc = window._simsBoardSrc || {});
-  const po = _vorPlayoffsOn();
-  const srcKey = currentMode + (po ? ':po' : '');
+  const po = _vorPlayoffsOn(), up = _vorUpsideOn();
+  const srcKey = currentMode + (po ? ':po' : up ? ':up' : '');
   if (!t || src[srcKey] === t) return false;
   const skill = [], ks = [], ds = [];
-  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : e.rk]); });
+  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : (up && e.rkU != null) ? e.rkU : e.rk]); });
   const order = [];
   [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
   // Players without a sim row trail in consensus order (hidden on this board).
@@ -13998,6 +14180,7 @@ function _vorBarRender() {
     + '<label class="vor-num" title="How much each playoff week counts — 1 = like any other week, 1.5 = half again as much. Missing a playoff week costs that much more.">×<input type="number" inputmode="decimal" data-vor="poW" min="' + _VOR_PO_W[0] + '" max="' + _VOR_PO_W[1] + '" step="0.25" value="' + st.poW + '"></label></span>'
     + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
     + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorPlayoffsOn() ? ' on' : '') + '" id="vorPlayoffBtn" title="Re-rank the SIM VOR board by PO VOR — value over replacement in the fantasy-playoff weeks only (' + st.poStart + (st.poEnd > st.poStart ? '-' + st.poEnd : '') + ') — with tiers drawn on that number. For trading for the title run.">PLAYOFFS</button>' : '')
+    + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorUpsideOn() ? ' on' : '') + '" id="vorUpsideBtn" title="Re-rank the SIM VOR board by UPSIDE VOR — the same weeks as VOR, but each week counts the chance his projection climbs before then (role or usage change) and you start him once it does. Rookie RBs climb the most; a steady low-ceiling player gains little. Projections are unchanged. Backtested 2019-25 on value you could actually start: better stash order in 6 of 7 seasons.">UPSIDE</button>' : '')
     + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
     + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench, playoffs weeks 15-17 at 1.5x, rest-of-season window) with no league">RESET</button>';
 }
@@ -14051,6 +14234,22 @@ function _vorChanged() {
         return;
       }
       window._vorPlayoffs = !window._vorPlayoffs;
+      if (window._vorPlayoffs) window._vorUpside = false;
+      _vorBarRender();
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+      syncMode(); renumber();
+      render();
+      return;
+    }
+    if (e.target.closest('#vorUpsideBtn')) {
+      if (currentVersion !== 'sims') {
+        window._vorUpside = true; window._vorPlayoffs = false;
+        const tab = document.querySelector('.version-tab[data-version="sims"]');
+        if (tab) tab.click();
+        return;
+      }
+      window._vorUpside = !window._vorUpside;
+      if (window._vorUpside) window._vorPlayoffs = false;
       _vorBarRender();
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
       syncMode(); renumber();
@@ -14072,6 +14271,7 @@ function _vorChanged() {
       window._vorSt = Object.assign({}, _VOR_DEFAULT);
       window._vorWaivers = false;
       window._vorPlayoffs = false;
+      window._vorUpside = false;
       _vorChanged();
     }
   });
@@ -14435,8 +14635,29 @@ function _seasonScenBoxHtml(d) {
   }).join('');
 }
 
+// IF <STARTER> SITS (2026-10-09, Jack): a backup RB's per-game projection for the rest of the season in the world where the
+// team's top RB is out (SIM_PROJ_2026.ifSits, Sim Lab export). Information only - handcuff value is real (backups score ~1.6x
+// their own number when the starter misses) but unpredictable, so it is in no ranking (backtest_option_vor.py).
+function _ifSitsHtml(d) {
+  const F = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.ifSits;
+  if (!F || !d || d.s !== 'RB') return '';
+  let r = F[d.n];
+  if (!r && typeof _campNewsNorm === 'function') { const nn = _campNewsNorm(d.n); const k = Object.keys(F).find(x => _campNewsNorm(x) === nn); r = k ? F[k] : null; }
+  if (!r || !r.v) return '';
+  const fi = (typeof rankingScoringFmt !== 'undefined' && rankingScoringFmt === 'ppr') ? 1 : (typeof rankingScoringFmt !== 'undefined' && rankingScoringFmt === 'std') ? 2 : 0;
+  const lab = ['HALF', 'PPR', 'STD'][fi];
+  const sp = _simSeasonPpgRow(d), now = sp && sp[fi] != null ? sp[fi] : null;
+  const last = String(r.s).split(' ').filter(w => !/^(jr\.?|sr\.?|ii|iii|iv|v)$/i.test(w)).slice(-1)[0] || r.s;
+  const up = now != null ? Math.round((r.v[fi] - now) * 10) / 10 : null;
+  const tip = 'His projection per game for the rest of the season if ' + r.s + ' is out (the Sim Lab redistributes the work the same way it does for any absence). Handcuff value: real when it happens, but nobody can predict which starter gets hurt, so it is not part of VOR, UPSIDE VOR or any ranking. ' + lab + ' scoring.';
+  return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:6px 10px;margin-bottom:8px;border:1px dashed var(--border);border-radius:8px;font-size:.75rem">'
+    + '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent)"><span data-gloss="' + tip.replace(/"/g, '&quot;') + '">IF ' + String(last.toUpperCase()).replace(/[<>&"]/g, '') + ' SITS</span></span>'
+    + '<span><b>' + r.v[fi] + '</b> ' + lab + '/g' + (now != null ? ' <span style="color:var(--text2)">(now ' + now + (up > 0 ? ', +' + up : '') + ')</span>' : '') + '</span>'
+    + '</div>';
+}
+
 function _seasonSimStripHtml(d) {
-  const _scBox = _seasonScenBoxHtml(d);
+  const _scBox = _seasonScenBoxHtml(d) + _ifSitsHtml(d);
   const _scW = typeof _seasonScenWorld === 'function' && d && d.s !== 'DST' ? _seasonScenWorld(d.n) : null;
   if (_scW && !_scW.rows.s) return _scBox + '<div style="padding:8px 10px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);font-size:.75rem;color:var(--text2)">Out for the rest of the season in this scenario.</div>';
   const r = _simSeasonRow(d);
@@ -14508,7 +14729,7 @@ function _wkXfpCellHtml(d, show) {
   const tip = (x.n + ' game' + (x.n > 1 ? 's' : '') + ' to date: expected ' + f1(x.xfpg) + ' /gm vs actual ' + f1(x.ppg)
     + ' — scored ' + sg(x.fpoeg) + ' /gm vs expected: TD luck ' + sg(x.tdg) + ' (regresses), '
     + (d.s === 'QB' && x.int ? 'INTs ' + sg(x.intg) + ', ' : '') + 'yards/catches ' + sg(x.fpoeg - x.luckg) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
-  return '<td class="xfpg-cell weekly-only-cell pts-cell" style="display:none' + (xc ? ';color:' + xc + ';font-weight:700' : '') + '" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span></td>';
+  return '<td class="xfpg-cell weekly-only-cell pts-cell" style="display:none' + (xc ? ';color:' + xc + ';font-weight:700' : '') + '" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span>' + _mobPosRankTag(d, 'xfp') + '</td>';
 }
 // WEEKLY FANTASY view column order (Jack 2026-09-16): PROJ · '26 PPG · xFP ·
 // matchup block · L4 PPG. Splits the '26 PPG / L4 PPG pair so the row can
@@ -17357,8 +17578,8 @@ function buildWeeklyCardView(d) {
   html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), '', oppNote || null, oppCol);
   html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', '', 'Point spread for this team — negative = favored', _spreadCol(sp));
   html += isDst
-    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)', _ttColInv(oppTT))
-    : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
+    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) + _cardWeekTotalRankTag(d.t, true) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)', _ttColInv(oppTT))
+    : box('TEAM TOTAL', tt != null ? fmt1(tt) + _cardWeekTotalRankTag(d.t, false) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
   html += box('O/U', ou != null ? fmt1(ou) : '—', '', 'Game total (over/under)', isDst ? _ouColInv(ou) : _ouCol(ou));
   html += '</div>';
   // weekly rank boxes sit left of WK N MATCHUP (flex + position for RB / WR / TE, position only for QB / K / D/ST)
@@ -17431,13 +17652,13 @@ function buildWeeklyCardView(d) {
     + '<span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
   const wkBook = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
   html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
-  html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) : '—', '',
+  html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) + (proj > 0 ? _cardPosRankTag(d, 'wkproj') : '') : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
+  html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) + _cardPosRankTag(d, 'book') : '—', '',
     wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player', wkBook != null ? _ptsCol(wkBook.ppg) : null);
-  html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
+  html += box('SEASON /GM', base != null ? fmt1(base) + _cardPosRankTag(d, 'proj') : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
   const _xa = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
   const _xv = (_xa && _xa.n) ? Math.round(_xa.xfpg * 10) / 10 : null;
-  html += box('xFP /GM', _xv != null ? fmt1(_xv) : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
+  html += box('xFP /GM', _xv != null ? fmt1(_xv) + _cardPosRankTag(d, 'xfp') : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
   html += '</div>';
   // (Clay / Sleeper / ESPN / FantasyPros / CBS reference tiles removed 2026-10-08)
   // WITH / WITHOUT QUESTIONABLE TEAMMATES (Jack 2026-10-08): this player's week projection with each questionable
@@ -19179,21 +19400,21 @@ function openPlayerCard(d, ctxMode) {
           </div>
           <div class="card-rank-box">
             <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
-            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
+            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1)+_cardPosRankTag(d,'ppg'):'—';})()}</div>
           </div>
         </div>
         <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
-            <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
+            <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v+_cardPosRankTag(d,'proj'):'—';})()}</div>
           </div>
           ${(()=>{const x=(typeof _xfpAgg==='function')?_xfpAgg(d,rankingScoringFmt,null):null;const v=(x&&x.n)?Math.round(x.xfpg*10)/10:null;const c=v!=null?posFptsColor(v,d.s):null;return `<div class="card-rank-box"${x&&x.n?` title="Expected fantasy points per game from usage (targets, carries, field position), 2026 to date — ${x.n} gm, actual ${Math.round(x.ppg*10)/10} /gm"`:''}>
             <div class="lbl">xFP /GM</div>
-            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v:'—'}</div>
+            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v+_cardPosRankTag(d,'xfp'):'—'}</div>
           </div>`;})()}
           ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v,d.s);return `<div class="card-rank-box">
             <div class="lbl" title="Average PPG over the last 4 games played (2026 to date, then the end of 2025) — shows which way the player is trending vs the season PPG.">L4 PPG</div>
-            <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
+            <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}${c.html!=='—'?_cardPosRankTag(d,'l4'):''}</div>
           </div>`;})()}
           ${_teamPpgBoxHtml(d.t)}
         </div>
@@ -19566,6 +19787,8 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-prospect-view card-fantasy-extra" id="cardCareerView" data-ready="${(_hasCareerRows || _career2026Row(d)) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && (_hasCareerRows || _career2026Row(d))) ? 'block' : 'none'}">
       ${_careerSectionHtml(d, true)}
       </div>` : ''}
+      ${(() => { const _rh = _rosteredSectionHtml(d); return _rh ? `
+      <div class="card-prospect-view card-fantasy-extra" id="cardRosteredView" data-ready="1" style="display:${(d._isDevy || _is2026) ? 'none' : 'block'}">${_rh}</div>` : ''; })()}
       <div class="card-prospect-view" id="cardNewsView" style="display:none">${_newsHtml}</div>
     </div>
   `;
@@ -19657,6 +19880,7 @@ function openPlayerCard(d, ctxMode) {
         const lgv = document.getElementById('cardLogsView');
         const nv = document.getElementById('cardNewsView');
         const tmv = document.getElementById('cardTeamView');
+        const rsv = document.getElementById('cardRosteredView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (iv) iv.style.display = 'none';
@@ -19666,6 +19890,7 @@ function openPlayerCard(d, ctxMode) {
         if (lgv) lgv.style.display = 'none';
         if (nv) nv.style.display = 'none';
         if (tmv) tmv.style.display = 'none';
+        if (rsv) rsv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'info') {
@@ -19691,6 +19916,7 @@ function openPlayerCard(d, ctxMode) {
           // Game logs + career ride along inside FANTASY (2026-10-08) once they have data
           if (lgv && lgv.dataset.ready === '1') lgv.style.display = 'block';
           if (crv && crv.dataset.ready === '1') crv.style.display = 'block';
+          if (rsv) rsv.style.display = 'block';
         }
       });
     });
@@ -19805,14 +20031,15 @@ function openPlayerCard(d, ctxMode) {
     document.addEventListener('mff:weeklydata', function _l4Backfill() {
       document.removeEventListener('mff:weeklydata', _l4Backfill);
       if (!_l4Num.isConnected) return;
-      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d), d.s);
-      _l4Num.innerHTML = c.html;
+      for (const k in _cardPosRankCache) delete _cardPosRankCache[k];   // ranks computed before the bundle are stale
+      const c = l4PpgCellHtml(last4Ppg(d), adjSeasonPpg(d).v, d.s);
+      _l4Num.innerHTML = c.html + (c.html !== '—' ? _cardPosRankTag(d, 'l4') : '');
       _l4Num.style.color = c.color || '';
       // xFP /GM tiles (FANTASY + WEEKLY) ride on the same bundle
       try {
         const x = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
         const xv = (x && x.n) ? Math.round(x.xfpg * 10) / 10 : null;
-        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.textContent = xv != null ? xv : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
+        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.innerHTML = xv != null ? xv + _cardPosRankTag(d, 'xfp') : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
       } catch (_) {}
       // PRACTICE REPORT: the elite flag (last season's PPG rank) needs this bundle - redraw the section
       try {
@@ -20649,6 +20876,7 @@ function renderCompareGrid() {
         renderCompareGrid();
       });
     });
+    _cmpPhoneTable();
     return;
   }
 
@@ -20835,10 +21063,11 @@ function renderCompareGrid() {
             <div class="card-rank-box"><div class="lbl">Pos Rank</div><div class="num accent">${d.myPosRank || d.r}</div></div>
             <div class="card-rank-box"><div class="lbl">+/- ADP</div><div class="num ${diffClass}">${diffText}</div></div>
           </div>
-          <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
-            <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div></div>
-            <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div></div>
-            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d),d.s);return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div></div>`;})()}
+          <div class="card-rank-row" style="grid-template-columns:repeat(${_impliedTeamPpg(d.t)?5:4},1fr);margin-top:.4rem">
+            <div class="card-rank-box"><div class="lbl">Proj PPG</div><div class="num accent">${(()=>{const v=adjProjPpg(d);return v!=null?v+_cardPosRankTag(d,'proj'):'—';})()}</div></div>
+            <div class="card-rank-box"><div class="lbl">${_seasonPpgLabel()}</div><div class="num green">${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1)+_cardPosRankTag(d,'ppg'):'—';})()}</div></div>
+            ${(()=>{const x=(typeof _xfpAgg==='function')?_xfpAgg(d,rankingScoringFmt,null):null;const v=(x&&x.n)?Math.round(x.xfpg*10)/10:null;const c=v!=null?posFptsColor(v,d.s):null;return `<div class="card-rank-box"${x&&x.n?` title="Expected fantasy points per game from usage (targets, carries, field position), 2026 to date — ${x.n} gm, actual ${Math.round(x.ppg*10)/10} /gm"`:''}><div class="lbl">xFP /GM</div><div class="num"${c?` style="color:${c}"`:''}>${v!=null?v+_cardPosRankTag(d,'xfp'):'—'}</div></div>`;})()}
+            ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adj25ppg(d),d.s);return `<div class="card-rank-box"><div class="lbl" title="Average PPG over the last 4 games of 2025 — shows which way the player is trending vs the full season.">L4 PPG</div><div class="num"${c.color?` style="color:${c.color}"`:''}>${c.html}${c.html!=='—'?_cardPosRankTag(d,'l4'):''}</div></div>`;})()}
             ${_teamPpgBoxHtml(d.t)}
           </div>
         </div>
@@ -20948,6 +21177,48 @@ function renderCompareGrid() {
 
   _cmpWireSplits(compareGrid);
   _adminInjectCompareSnapBtns();
+  _cmpPhoneTable();
+}
+
+// Phone head-to-head (2026-10-09): on phones the cards are a sideways strip,
+// one visible at a time, so a compact table sits above them — one column per
+// player, one row per RANKINGS box, read straight off the rendered cards (so it
+// always shows what the cards show). Best value per row is green: lower wins
+// for rank / ADP rows, higher for the rest. Hidden on desktop (main.css).
+function _cmpPhoneTable() {
+  const grid = document.getElementById('compareGrid');
+  if (!grid) return;
+  let el = document.getElementById('cmpPhoneTable');
+  if (!el) { el = document.createElement('div'); el.id = 'cmpPhoneTable'; grid.parentNode.insertBefore(el, grid); }
+  const cards = [...grid.querySelectorAll('.compare-col')];
+  if (cards.length < 2) { el.innerHTML = ''; return; }
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const cols = cards.map(c => {
+    const sec = c.querySelector('.card-section');
+    const vals = {};
+    (sec ? [...sec.querySelectorAll('.card-rank-box')] : []).forEach(b => {
+      const l = (b.querySelector('.lbl') || {}).textContent, v = (b.querySelector('.num') || {}).textContent;
+      if (l && v != null) vals[l.trim()] = v.replace(/\s+/g, ' ').trim();
+    });
+    const nm = ((c.querySelector('.card-name') || {}).textContent || '').trim();
+    const parts = nm.split(' ').filter(w => !/^(jr\.?|sr\.?|ii|iii|iv|v)$/i.test(w));
+    return { last: parts.slice(-1)[0] || nm, pos: ((c.querySelector('.pos-badge') || {}).textContent || '').trim(), vals };
+  });
+  const labels = [];
+  cols.forEach(c => Object.keys(c.vals).forEach(l => { if (labels.indexOf(l) < 0 && !/^\+\/-/.test(l)) labels.push(l); }));
+  const num = s => { const m = String(s || '').match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+  const rows = labels.map(l => {
+    const lower = /rank|adp/i.test(l);
+    const ns = cols.map(c => num(c.vals[l]));
+    const ok = ns.filter(v => v != null);
+    const best = ok.length >= 2 ? (lower ? Math.min.apply(null, ok) : Math.max.apply(null, ok)) : null;
+    return '<tr><th>' + esc(l) + '</th>' + cols.map((c, i) => '<td' + (best != null && ns[i] === best ? ' class="cpt-best"' : '') + '>'
+      + esc((c.vals[l] || '—').replace(/\s*\(\d+\)$/, '')) + '</td>').join('') + '</tr>';
+  }).join('');
+  el.innerHTML = '<table class="cpt"><thead><tr><th></th>' + cols.map((c, i) => '<th data-i="' + i + '"><span class="pos-badge ' + esc(c.pos) + '">' + esc(c.pos) + '</span>' + esc(c.last) + '</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  el.querySelectorAll('thead th[data-i]').forEach(th => {
+    th.onclick = () => { const card = cards[+th.dataset.i]; if (card) grid.scrollTo({ left: card.offsetLeft - grid.offsetLeft, behavior: 'smooth' }); };
+  });
 }
 
 // Admin-only: camera buttons on the Compare page — one per card (header, next
@@ -29305,7 +29576,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         D.forEach(d => {
           if (!d || d.s !== pos || !d.t || d._retired || d.rm || d.devy) return;
           const b = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
-          const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, b, {}) : b;
+          const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, b, { mt: true }) : b;
           if (typeof v === 'number' && isFinite(v) && v > 0) vals.push(v);
         });
       } catch (e) { console.warn('[Start/Sit] avg', e); }
@@ -29440,13 +29711,20 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     rankingScoringFmt = fmt;
     try {
       o.base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
-      const out = {};
+      // Lineup tool = My Teams rule (Jack 2026-10-09): Questionable plays at full
+      // projection, Doubtful / confirmed Out = 0; Jack's ASSUME OUT list is ignored.
+      const out = { mt: true };
       o.proj = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, o.base, out) : o.base;
       o.src = out.src || 'base';
       // BOOK PROJ beside ours (Jack 2026-10-08): the week's posted prop lines
       // scored in this page's format — same math as the tier cards' BOOK
       // PROJ toggle (_weeklyBookPpgFor). Null when nothing is posted.
       o.book = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
+      // Position ranks beside OUR / BOOK PROJ (same (N) as the player card)
+      if (typeof _cardPosRank === 'function') {
+        o.projRk = (o.proj > 0) ? _cardPosRank(d, 'sstproj') : null;
+        o.bookRk = o.book ? _cardPosRank(d, 'book') : null;
+      }
     } catch (e) { console.warn('[Start/Sit] proj', e); }
     finally { rankingScoringFmt = prev; }
     if (o.src === 'out') o.out = true;
@@ -29505,6 +29783,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     avgCache = {}; // baseline projections follow the current week/format/injury state
     const cards = names.map(lookup).filter(Boolean).map(build);
     if (!cards.length) {
+      renderSummary([]);
       gridEl.innerHTML = '<div class="sst-empty">'
         + '<div style="font-size:2rem;margin-bottom:8px;opacity:.25">&#9878;</div>'
         + '<p>Search above to add the players you\'re deciding between.<br>'
@@ -29597,9 +29876,36 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const isBest = (key, v) => best[key] != null && typeof v === 'number' && Math.abs((key === 'l:atd' ? oddsProb(v) : v) - best[key]) < 1e-9;
 
     gridEl.innerHTML = cards.map(c => cardHtml(c, isBest)).join('');
+    renderSummary(cards);
     gridEl.querySelectorAll('.sst-x').forEach(b => { b.onclick = e => { e.stopPropagation(); remove(b.dataset.n); }; });
     gridEl.querySelectorAll('.sst-open').forEach(el => {
       el.onclick = () => { const d = lookup(el.dataset.n); if (d && typeof openPlayerCard === 'function') openPlayerCard(d, 'weekly'); };
+    });
+  }
+
+  // Phone summary (2026-10-09): the cards are a sideways strip on phones, one
+  // visible at a time, so the answer sits above them as one ranked row per
+  // player — verdict · name · our proj · book proj. Tap a row = jump to its
+  // card. Hidden on desktop (index.html CSS), where the cards sit side by side.
+  function renderSummary(cards) {
+    let el = document.getElementById('sstSummary');
+    if (!el) { el = document.createElement('div'); el.id = 'sstSummary'; gridEl.parentNode.insertBefore(el, gridEl); }
+    if (cards.length < 2) { el.innerHTML = ''; return; }
+    const order = { FLEX: 0, QB: 1, K: 2, DST: 3 };
+    const key = c => (c.baseline ? 2 : c.locked ? 1 : 0);
+    const rows = cards.map((c, i) => ({ c, i })).sort((a, b) =>
+      (order[a.c.fam] - order[b.c.fam]) || (key(a.c) - key(b.c)) || ((a.c.rank || 99) - (b.c.rank || 99)));
+    el.innerHTML = '<div class="sst-sum-head"><span>PLAYER</span><span>OURS</span><span>BOOK</span></div>' + rows.map(({ c, i }) => {
+      const v = c.verdict;
+      const ours = c.locked ? (c.actual != null ? fmt1(c.actual) : '—') : fmt1(c.proj);
+      return '<button type="button" class="sst-sum-row sst-v-' + (v ? v.cls : 'none') + '" data-i="' + i + '">'
+        + '<span class="sst-sum-v">' + (v ? esc(v.lbl) : '') + '</span>'
+        + '<span class="sst-sum-name"><span class="pos-badge ' + c.d.s + '">' + c.d.s + '</span>' + esc(c.d.n) + '</span>'
+        + '<span class="sst-sum-num">' + ours + '</span>'
+        + '<span class="sst-sum-num sst-sum-book">' + (c.book && !c.locked ? fmt1(c.book.ppg) : '—') + '</span></button>';
+    }).join('');
+    el.querySelectorAll('.sst-sum-row').forEach(b => {
+      b.onclick = () => { const card = gridEl.children[+b.dataset.i]; if (card) gridEl.scrollTo({ left: card.offsetLeft - gridEl.offsetLeft, behavior: 'smooth' }); };
     });
   }
 
@@ -29613,6 +29919,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const box = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
     const bestCls = k => k ? 'sst-best' : '';
 
+    const rkTag = r => r ? ' <span class="sst-rk" style="font-weight:700;color:var(--text);cursor:help" title="#' + r.rank + ' of ' + r.of + ' ' + (d.s === 'DST' ? 'D/STs' : d.s + 's') + ' this week">(' + r.rank + ')</span>' : '';
     let html = '<div class="compare-col sst-card' + (c.verdict ? ' sst-v-' + c.verdict.cls : '') + '">';
     html += '<div class="card-header" style="position:relative">';
     html += '<button class="sst-x remove-from-compare" data-n="' + esc(d.n) + '" title="Remove">&times;</button>';
@@ -29646,7 +29953,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const ourTip = 'Our Week ' + wk + ' projection (' + fmt.toUpperCase() + '): ' + (SRC_LBL[c.src] || 'site projection') + '. This is the number the START / SIT call runs on.';
     html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projections <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
     html += '<div class="sst-proj-row"><div class="sst-proj-pair">';
-    html += '<div class="sst-proj-item" title="' + esc(ourTip) + '"><div class="sst-ps-lbl">Our Proj</div><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
+    html += '<div class="sst-proj-item" title="' + esc(ourTip) + '"><div class="sst-ps-lbl">Our Proj' + rkTag(c.projRk) + '</div><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
       + (c.proj != null ? fmt1(c.proj) : '—') + '</div></div>';
     if (!isDst) {
       const b = c.book, bv = b ? b.ppg : null;
@@ -29657,7 +29964,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         : (c.lines && Object.keys(c.lines).length)
           ? 'Only the ' + (c.lines.atd != null ? 'anytime-TD market' : 'partial board') + ' is posted for ' + d.n + ' in Week ' + wk + ' — no yardage lines to score a projection from yet.'
           : 'No Week ' + wk + ' sportsbook lines posted for ' + d.n + (c.bye ? ' (bye week)' : ' yet') + ' — nothing to score.';
-      html += '<div class="sst-proj-item sst-proj-book" title="' + esc(bookTip) + '"><div class="sst-ps-lbl">Book Proj</div><div class="sst-proj-book-num' + (isBest('book', bv) ? ' sst-best' : '') + '"' + (bookColor ? ' style="color:' + bookColor + '"' : '') + '>'
+      html += '<div class="sst-proj-item sst-proj-book" title="' + esc(bookTip) + '"><div class="sst-ps-lbl">Book Proj' + rkTag(c.bookRk) + '</div><div class="sst-proj-book-num' + (isBest('book', bv) ? ' sst-best' : '') + '"' + (bookColor ? ' style="color:' + bookColor + '"' : '') + '>'
         + (bv != null ? fmt1(bv) : '—') + '</div></div>';
     }
     html += '</div>';
@@ -29697,8 +30004,8 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       html += box('OPP', oppHtml, '', c.diff ? ((typeof window._weeklyOppDiffNote === 'function' && window._weeklyOppDiffNote(d.t, d.s)) || ((c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent ' + (isDst ? 'offense' : 'defense') + ' rank)')) : null);
       html += box('SPREAD', '<span class="' + bestCls(isBest('spread', c.spread)) + (c.spread != null && c.spread < 0 ? ' green' : '') + '">' + fmtSpread(c.spread) + '</span>', '', 'This team\'s spread (negative = favored)');
       html += isDst
-        ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>', '', 'Points the opponent is priced to score — lower = better D/ST spot')
-        : box('TEAM TOTAL', '<span class="' + bestCls(isBest('tt', c.tt)) + '">' + fmt1(c.tt) + '</span>', '', 'Implied team points: (game total − spread) / 2');
+        ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>' + (c.oppTT != null ? _cardWeekTotalRankTag(d.t, true) : ''), '', 'Points the opponent is priced to score — lower = better D/ST spot')
+        : box('TEAM TOTAL', '<span class="' + bestCls(isBest('tt', c.tt)) + '">' + fmt1(c.tt) + '</span>' + (c.tt != null ? _cardWeekTotalRankTag(d.t, false) : ''), '', 'Implied team points: (game total − spread) / 2');
       html += box('O/U', fmt1(c.ou), '', 'Game total');
       html += '</div>';
       const ws = (typeof _weatherSummary === 'function') ? _weatherSummary(c.wx) : null;
@@ -29825,7 +30132,11 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       + '<div><div class="sst-edge-col-title" style="color:var(--green)">BEST MATCHUPS</div>' + (best.length ? best.map(rowHtml).join('') : '<div class="sst-edges-empty">No positive edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
       + '<div><div class="sst-edge-col-title" style="color:var(--red)">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
       + '</div>';
+    // Phones show the top 5 per column (CSS); this button opens the full 12.
+    if (best.length > 5 || worst.length > 5) html += '<button type="button" class="sst-edges-more">' + (el.classList.contains('sst-edges-all') ? 'SHOW TOP 5' : 'SHOW ALL ' + Math.max(best.length, worst.length)) + '</button>';
     el.innerHTML = html;
+    const more = el.querySelector('.sst-edges-more');
+    if (more) more.onclick = () => { el.classList.toggle('sst-edges-all'); renderEdges(); };
     el.querySelectorAll('#sstEdgePos .lg-pos-btn').forEach(b => { b.onclick = () => { ePos = b.dataset.p; renderEdges(); }; });
     el.querySelectorAll('.sst-edge-row').forEach(r => {
       r.onclick = () => {
@@ -32087,6 +32398,7 @@ window.fmtHeight = fmtHeight;
     };
     const items = [];
     D.forEach((d, idx) => {
+      if (d._retired) return; // KTC still values some retired-row names; never board them
       const v = getVal(d);
       if (v != null && v < 900) items.push({idx, v});
     });
@@ -32323,6 +32635,26 @@ window.fmtHeight = fmtHeight;
     return slot.charAt(0).toUpperCase() + slot.slice(1);
   }
 
+  // Stat line under each trade chip's name (Jack 2026-10-09): projected PPG
+  // and season PPG, each with its position rank — the same (N) as the player
+  // card, so the two sides read in "where he sits at his position" terms.
+  // [{ lbl, v, c, r }] — also drawn on the SHARE CARD (_tradeShareCard).
+  function _tradeStatParts(d) {
+    if (!d || !d.s || typeof _cardPosRank !== 'function') return [];
+    const part = (lbl, v, key) => {
+      if (v == null || !isFinite(v) || v <= 0) return null;
+      return { lbl: lbl, v: Math.round(v * 10) / 10, c: (typeof posFptsColor === 'function') ? posFptsColor(v, d.s) : null, r: _cardPosRank(d, key) };
+    };
+    const sp = adjSeasonPpg(d);
+    return [part('PROJ', adjProjPpg(d), 'proj'), part("'" + _seasonPpgYear(), sp && sp.v, 'ppg')].filter(Boolean);
+  }
+  function _tradeStatLine(d) {
+    const pl = d && d.s === 'DST' ? 'D/STs' : (d && d.s) + 's';
+    const bits = _tradeStatParts(d).map(b => b.lbl + ' <b style="font-weight:700' + (b.c ? ';color:' + b.c : '') + '">' + b.v + '</b>'
+      + (b.r ? '<span title="#' + b.r.rank + ' of ' + b.r.of + ' ' + pl + '" style="cursor:help"> (' + b.r.rank + ')</span>' : ''));
+    return bits.length ? '<span class="tp-sub" style="font-size:.6875rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + bits.join(' · ') + '</span>' : '';
+  }
+
   function renderSide(side, containerId, totalId, sideClass) {
     const container = document.getElementById(containerId);
     const totalEl = document.getElementById(totalId);
@@ -32337,7 +32669,10 @@ window.fmtHeight = fmtHeight;
         const tierHtml = tier ? `<span class="tier-badge ${tierColor(tier)}" style="font-size:.6875rem;padding:1px 5px;min-width:auto;margin-left:auto">${tier}</span>` : '';
         html += `<div class="trade-player-chip">
           <span class="tp-pos ${d.s}">${d.s}</span>
-          <a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>${_injPill(d)}
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25">
+            <span style="display:flex;align-items:center;min-width:0"><a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>${_injPill(d)}</span>
+            ${_tradeStatLine(d)}
+          </span>
           ${tierHtml}${_tradeVorTag(d)}
           <span class="tp-val">${val}</span>
           <button class="tp-remove" data-idx="${idx}" data-side="${sideClass}">&times;</button>
@@ -32537,6 +32872,45 @@ window.fmtHeight = fmtHeight;
     };
   }
 
+  // Phone sticky verdict (2026-10-09): with a few players per side the verdict
+  // sits below the fold, so a one-line bar above the bottom nav mirrors it
+  // (verdict · what each side gives). Hidden while #tradeResult is on screen
+  // and on desktop (main.css). Tap = scroll to the full result.
+  let _tsEl = null, _tsResultVisible = false;
+  function _tradeStickySync(totalA, totalB) {
+    const resultEl = document.getElementById('tradeResult'), verdict = document.getElementById('tradeVerdict');
+    if (!resultEl || !verdict) return;
+    if (!_tsEl) {
+      _tsEl = document.createElement('button');
+      _tsEl.type = 'button'; _tsEl.id = 'tradeStickyVerdict';
+      _tsEl.onclick = () => resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultEl.parentNode.appendChild(_tsEl);
+      // Scroll check (not IntersectionObserver: it never fires in a hidden/background tab).
+      const check = () => {
+        const r = verdict.getBoundingClientRect();
+        const vis = r.height > 0 && r.top < window.innerHeight - 80 && r.bottom > 0;
+        if (vis !== _tsResultVisible) { _tsResultVisible = vis; _tsEl.classList.toggle('ts-hide', vis); }
+      };
+      const pg = document.getElementById('pageTrade');
+      (pg || window).addEventListener('scroll', check, { passive: true });
+      window.addEventListener('resize', check, { passive: true });
+      _tsEl._check = check;
+    }
+    const txt = verdict.textContent.trim();
+    _tsEl.style.display = txt ? '' : 'none';
+    if (!txt) return;
+    _tsEl._check();
+    _tsEl.className = verdict.className.replace('trade-verdict', 'ts-verdict') + (_tsResultVisible ? ' ts-hide' : '');
+    _tsEl.innerHTML = '<span class="ts-v">' + txt.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]) + '</span>'
+      // From the winner's side, like the verdict subline ("Team A gives 407, gets 454 back").
+      + (totalA != null ? '<span class="ts-tot">' + (/win-b/.test(verdict.className)
+          ? '<span class="ts-dim">gives</span> ' + totalB + ' <span class="ts-dim">· gets</span> ' + totalA
+          : /win-a/.test(verdict.className)
+            ? '<span class="ts-dim">gives</span> ' + totalA + ' <span class="ts-dim">· gets</span> ' + totalB
+            : totalA + ' <span class="ts-dim">vs</span> ' + totalB) + '</span>' : '')
+      + '<span class="ts-go">▾</span>';
+  }
+
   function updateResult() {
     const totalA = calcSideTotal(sideA);
     const totalB = calcSideTotal(sideB);
@@ -32557,6 +32931,7 @@ window.fmtHeight = fmtHeight;
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
       _tradeVorRender();
       if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
+      _tradeStickySync();
       return;
     }
     if (resultEl) resultEl.classList.remove('is-empty');
@@ -32587,6 +32962,8 @@ window.fmtHeight = fmtHeight;
       verdict.textContent = nameB.toUpperCase() + ' WINS'; verdict.className = 'trade-verdict win-b';
       sub.textContent = `${nameB} gives ${totalB}, gets ${totalA} back (+${diff} · ${diffPct}% advantage)`;
     }
+
+    _tradeStickySync(totalA, totalB);
 
     // EVEN IT UP (2026-10-08, Jack: improve the calc): name the gap in board terms. The side receiving less should get about
     // `diff` more back; show the one or two players on the active board (top 200, not already in the trade, one per position)
@@ -33022,18 +33399,31 @@ window.fmtHeight = fmtHeight;
       x.fillText(String(receiver).toUpperCase() + ' RECEIVES', px + pw / 2, py + 36);
       x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.fillText('FROM ' + String(giver).toUpperCase(), px + pw / 2, py + 56);
       const rows = [];
-      side.players.forEach(i => { const d = D[i]; if (d) rows.push({ pos: d.s, name: d.n, val: getPlayerValue(d), tier: getTierForPlayer(d) || '' }); });
+      side.players.forEach(i => { const d = D[i]; if (d) rows.push({ pos: d.s, name: d.n, val: getPlayerValue(d), tier: getTierForPlayer(d) || '', st: _tradeStatParts(d) }); });
       side.picks.forEach(p => rows.push({ pos: 'PICK', name: p._pickNum ? (p.year + ' ' + p._pickNum) : (p.year + ' ' + slotLabel(p.slot) + ' ' + p.round), val: getPickValue(p.round, p.year, p.slot, p._pickNum), tier: '' }));
-      x.textAlign = 'left'; let yy = py + 90; const maxRows = 7;
+      // Rows carry a stat line under the name: breathe when there's room (≤4)
+      x.textAlign = 'left'; let yy = py + 92; const maxRows = 7, step = rows.length <= 4 ? 46 : 36;
       rows.slice(0, maxRows).forEach(r => {
         x.fillStyle = 'rgba(255,255,255,.08)'; rr(px + 18, yy - 17, 52, 24, 5); x.fill();
         x.fillStyle = C.dim; x.font = '700 12px ' + DF; x.textAlign = 'center'; x.fillText(r.pos, px + 44, yy);
         x.textAlign = 'left'; x.fillStyle = C.text; x.font = '600 20px ' + DF;
         let nm = r.name; while (x.measureText(nm).width > 300 && nm.length > 4) nm = nm.slice(0, -2) + '\u2026';
-        x.fillText(nm, px + 84, yy + 1);
+        const hasSt = r.st && r.st.length;
+        x.fillText(nm, px + 84, hasSt ? yy - 4 : yy + 1);
+        // PROJ / season PPG with position ranks under the name (same line as the chip)
+        if (hasSt) {
+          let sx = px + 84;
+          const seg = (t, col, f) => { x.fillStyle = col; x.font = f; x.fillText(t, sx, yy + 12); sx += x.measureText(t).width; };
+          r.st.forEach((b, bi) => {
+            if (bi) seg('  \u00b7  ', C.dim, '600 12px ' + DF);
+            seg(b.lbl + ' ', C.dim, '600 12px ' + DF);
+            seg(String(b.v), b.c || C.text, '700 12px ' + DF);
+            if (b.r) seg(' (' + b.r.rank + ')', C.dim, '600 12px ' + DF);
+          });
+        }
         if (r.tier) { x.fillStyle = C.dim; x.font = '600 11px ' + DF; x.textAlign = 'right'; x.fillText(String(r.tier), px + pw - 90, yy); }
         x.textAlign = 'right'; x.fillStyle = color; x.font = '24px ' + BF; x.fillText(String(r.val), px + pw - 22, yy + 2);
-        yy += 36;
+        yy += step;
       });
       if (rows.length > maxRows) { x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.textAlign = 'left'; x.fillText('+ ' + (rows.length - maxRows) + ' more', px + 84, yy); }
       if (!rows.length) { x.fillStyle = C.dim; x.font = 'italic 16px ' + DF; x.textAlign = 'center'; x.fillText('nothing', px + pw / 2, py + 180); }
@@ -59394,7 +59784,8 @@ Rules:
         const wv = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, ppg, out) : null;
         const wkTxt = out.src === 'bye' ? 'BYE' : out.src === 'out' ? 'OUT' : (wv != null && isFinite(wv) ? wv : '—');
         const wkColor = out.src === 'bye' || out.src === 'out' ? '#ef4444' : 'var(--text)';
-        wkHtml = `<div style="min-width:44px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">WK${wkNum} </span><span style="font-weight:700;color:${wkColor}">${wkTxt}</span></div>`;
+        const wkRk = (typeof wkTxt === 'number' && wkTxt > 0) ? _mtPosRankTag(d.s, wkTxt, true) : '';
+        wkHtml = `<div style="min-width:44px;text-align:right;white-space:nowrap"><span style="font-size:.6875rem;color:var(--text2)">WK${wkNum} </span><span style="font-weight:700;color:${wkColor}">${wkTxt}</span>${wkRk}</div>`;
       }
       const w = weakest[d.s];
       const delta = (w != null && ppg > 0) ? Math.round((ppg - w) * 10) / 10 : null;
@@ -59402,17 +59793,20 @@ Rules:
         ? `<span title="Projects ${delta} PPG over your weakest ${d.s} starter" style="font-size:.6875rem;font-weight:700;color:var(--green);background:#22c55e18;border:1px solid var(--green);border-radius:4px;padding:1px 6px">▲ +${delta}</span>`
         : '';
       const val = valByName[d.n] != null ? Math.round(valByName[d.n]) : 0;
-      html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;${i ? 'border-top:1px solid var(--border);' : ''}">` +
+      // Stats ride in one group that wraps under the name on phones (the
+      // position ranks made a one-line row squeeze names to ~15px at 375).
+      html += `<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:6px 12px;${i ? 'border-top:1px solid var(--border);' : ''}">` +
         `<div style="width:30px;text-align:right;font-family:'Bebas Neue',sans-serif;color:var(--text2)">#${f.rank}</div>` +
         // Name on its own line, POS · TEAM abbr under it (full team names wrapped
         // into the name on phones: "Tre' Harris WR Los / Angeles Chargers").
-        `<div style="flex:1;min-width:0;line-height:1.2"><div style="font-weight:600;font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(d.n)}</div>` +
+        `<div style="flex:1 1 130px;min-width:0;line-height:1.2"><div style="font-weight:600;font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(d.n)}</div>` +
         `<div style="font-size:.6875rem;color:var(--text2);white-space:nowrap"><span style="font-weight:700;color:${posColors[d.s] || 'var(--text2)'}">${d.s}</span> · ${_esc(_tfAbbr(d.t || 'FA'))}</div></div>` +
+        `<div style="display:flex;align-items:center;gap:10px;margin-left:auto">` +
         upgrade +
         `<div style="min-width:52px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">VAL </span><span style="font-weight:700;color:var(--text)">${val}</span></div>` +
-        `<div style="min-width:44px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${ppg || '—'}</span></div>` +
+        `<div style="min-width:44px;text-align:right;white-space:nowrap"><span style="font-size:.6875rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${ppg || '—'}</span>${ppg > 0 ? _mtPosRankTag(d.s, ppg, false) : ''}</div>` +
         wkHtml +
-        `</div>`;
+        `</div></div>`;
     });
     html += `</div>`;
     box.innerHTML = html;
@@ -60488,6 +60882,45 @@ Rules:
   }
 
   // Render best lineup HTML
+  // Position rank of a My Teams PPG (Jack 2026-10-09: same (N) as the player
+  // card). Pool = every active NFL player at the position scored the way this
+  // league scores (_mtGetPlayerPpg: league PPR / TE premium / pass-TD delta);
+  // weekly = the lineup tool's week number (My Teams injury rule + delta).
+  // Cached per league format / position / week for a minute.
+  const _mtPpgRankCache = {};
+  function _mtPosRankPool(pos, weekly) {
+    const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+    const f = _mtFormat || {};
+    const ck = [pos, weekly ? 'w' + wk : 's', f.ppr, f.bestBall ? 1 : 0, f.tep || 0, f.passTd != null ? f.passTd : 4].join('|');
+    let e = _mtPpgRankCache[ck];
+    if (e && Date.now() - e.t < 60000) return e.vals;
+    const vals = [];
+    if (typeof D !== 'undefined' && D) D.forEach(d => {
+      if (!d || d.s !== pos || d._retired || d._isDevy || !d.t) return;
+      let v = 0;
+      try {
+        v = _mtGetPlayerPpg(d.n) || 0;
+        if (weekly && v > 0 && typeof window._weeklyAdjustPpg === 'function') {
+          const sDelta = _mtScoringDelta(d);
+          const adj = window._weeklyAdjustPpg(d, Math.max(0, v - sDelta), { mt: true });
+          v = adj ? Math.round((adj + sDelta) * 10) / 10 : 0;
+        }
+      } catch (_) { v = 0; }
+      if (v > 0) vals.push(v);
+    });
+    _mtPpgRankCache[ck] = { t: Date.now(), vals: vals };
+    return vals;
+  }
+  function _mtPosRankTag(pos, ppg, weekly) {
+    if (!(ppg > 0) || !pos || pos === '?') return '';
+    const vals = _mtPosRankPool(pos, weekly);
+    if (!vals.length) return '';
+    const rank = 1 + vals.filter(v => v > ppg).length;
+    const of = Math.max(vals.length, rank);
+    return '<span style="font-family:DM Sans,sans-serif;font-size:.62rem;font-weight:600;color:var(--text2);margin-left:2px;cursor:help" title="#' + rank + ' of ' + of + ' ' + (pos === 'DST' ? 'D/STs' : pos + 's')
+      + (weekly ? ' this week' : '') + ' (this league\'s scoring)">(' + rank + ')</span>';
+  }
+
   function _mtRenderBestLineup(lineup) {
     if (!lineup) return '';
     const isWeekly = lineup.basis === 'weekly';
@@ -60520,11 +60953,11 @@ Rules:
         html += `</div>`;
         if (isWeekly) {
           html += `<div style="display:flex;align-items:baseline;gap:8px">`;
-          if (p.ppg > 0) html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;color:${ppgColor}">${p.ppg}</span>`;
+          if (p.ppg > 0) html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;color:${ppgColor}">${p.ppg}${_mtPosRankTag(p.pos, p.ppg, true)}</span>`;
           html += `<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--accent);min-width:34px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
           html += `</div>`;
         } else {
-          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${ppgColor}">${p.ppg}</div>`;
+          html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:${ppgColor}">${p.ppg}${_mtPosRankTag(p.pos, p.ppg, false)}</div>`;
         }
       } else {
         html += `<div style="flex:1;font-size:.72rem;color:var(--text2);opacity:.5">EMPTY</div>`;
@@ -60547,7 +60980,7 @@ Rules:
         html += `<span style="font-size:.6875rem;font-weight:700;color:${posColors[p.pos] || 'var(--text2)'}">${p.pos}</span>`;
         html += `<span style="flex:1;font-size:.72rem;color:var(--text2)"><span onclick="window._mtOpenCardByName('${String(p.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}', true)" title="Open player card" style="cursor:pointer">${_esc(p.name)}</span>${(typeof window._injPillByName === 'function') ? window._injPillByName(p.name) : ''}${isWeekly && p.out ? ' <span style="color:var(--red);font-size:.6875rem;font-weight:700">' + p.out + '</span>' : ''}</span>`;
         if (isWeekly) html += `<span style="font-size:.72rem;color:var(--accent);min-width:30px;text-align:right" title="Jack's weekly rank">${p.wkRank != null ? '#' + p.wkRank : '—'}</span>`;
-        html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg : '—'}</span>`;
+        html += `<span style="font-size:.72rem;color:${ppgColor}">${p.ppg > 0 ? p.ppg + _mtPosRankTag(p.pos, p.ppg, isWeekly) : '—'}</span>`;
         html += `</div>`;
       });
       html += `</div></div>`;
@@ -60747,7 +61180,7 @@ Rules:
         html += `<div class="mt-roster-stats" style="flex:0 0 auto;display:flex;gap:8px;align-items:center">`;
         html += `<div title="Overall rank" style="text-align:center;min-width:26px;font-size:.8rem;font-weight:700;color:${rankColor};line-height:1.05">${p.rank <= 500 ? p.rank : '—'}</div>`;
         html += `<div title="Position rank" style="text-align:center;min-width:26px;font-size:.8rem;font-weight:700;color:${posRankColor};line-height:1.05">${posRankNum || '—'}</div>`;
-        html += `<div title="Projected PPG" style="text-align:center;min-width:30px;font-size:.8rem;font-weight:700;color:${ppgColor};line-height:1.05">${projPpg > 0 ? projPpg : '—'}</div>`;
+        html += `<div title="Projected PPG" style="text-align:center;min-width:30px;font-size:.8rem;font-weight:700;color:${ppgColor};line-height:1.05;white-space:nowrap">${projPpg > 0 ? projPpg + _mtPosRankTag(pos, projPpg, false) : '—'}</div>`;
         html += `</div>`;
         html += `</div>`;
       });
@@ -60809,7 +61242,7 @@ Rules:
     const box = document.getElementById('mtManualSuggestions');
     if (!query || query.length < 2 || typeof D === 'undefined') { box.style.display = 'none'; return; }
     const q = query.toLowerCase();
-    const matches = D.filter(p => p.n && p.n.toLowerCase().includes(q) && !p.n.includes('D/ST')).slice(0, 8);
+    const matches = D.filter(p => p.n && !p._retired && p.n.toLowerCase().includes(q) && !p.n.includes('D/ST')).slice(0, 8);
     if (!matches.length) { box.style.display = 'none'; return; }
     box.style.display = '';
     box.innerHTML = matches.map(p =>
@@ -61256,7 +61689,7 @@ Rules:
     });
     if (!hits.length) {
       // Not rostered anywhere — is it a real player on the board?
-      const fa = (typeof D !== 'undefined') ? D.filter(p => p.n && p.n.toLowerCase().indexOf(q) >= 0 && !p._isFuturePick).slice(0, 5) : [];
+      const fa = (typeof D !== 'undefined') ? D.filter(p => p.n && !p._retired && p.n.toLowerCase().indexOf(q) >= 0 && !p._isFuturePick).slice(0, 5) : [];
       if (fa.length) fa.forEach(p => { html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(30,42,66,.5)"><span style="font-size:.6875rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(p.s || '')}</span><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.n)}</span><span style="font-size:.6875rem;font-weight:700;color:var(--green)">FREE AGENT</span></div>`; });
       else html += `<div style="padding:8px 10px;font-size:.72rem;color:var(--text2)">No match</div>`;
     }
@@ -65760,7 +66193,9 @@ Rules:
     const REPL_LEVEL = { QB: 12, RB: 30, WR: 42, TE: 13 };
 
     D.forEach(d => {
-      if (!d || !d.s || !['QB','RB','WR','TE'].includes(d.s)) {
+      // Retired rows are out of the pool: clayLookup suffix-folds retired dads
+      // onto their sons' projections (Michael Pittman Sr. landed in the RB pool).
+      if (!d || d._retired || !d.s || !['QB','RB','WR','TE'].includes(d.s)) {
         if (d) { d._seasonPts = null; d._vor = null; d._posRank = null; }
         return;
       }
@@ -69228,6 +69663,18 @@ Rules:
     host.innerHTML =
       secRules(H) + secPlan(H) + secGrids(H) + secCliffs(H) +
       secStream(H) + secExtremes(H) + secMethod(H);
+    // Phone jump bar (2026-10-09): seven sections / ~8,000px on a phone — a
+    // sticky row of section chips at the top. Hidden on desktop (main.css).
+    const SHORT = ['Rules', 'Round by round', 'Value grid', 'Where it stops', 'K / DST', 'Extremes', 'Stability'];
+    const secs = [...host.querySelectorAll(':scope > .ds-section')];
+    secs.forEach((s, i) => { s.id = 'dsSec' + i; });
+    const nav = document.createElement('nav');
+    nav.className = 'ds-jump';
+    nav.setAttribute('aria-label', 'Jump to section');
+    nav.innerHTML = secs.map((s, i) => '<button type="button" data-i="' + i + '">'
+      + (SHORT[i] || (s.querySelector('.ds-h2') || {}).textContent || ('Section ' + (i + 1))) + '</button>').join('');
+    nav.querySelectorAll('button').forEach(b => { b.onclick = () => secs[+b.dataset.i].scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    host.insertBefore(nav, host.firstChild);
   };
 
 })();
@@ -69237,6 +69684,12 @@ Rules:
 // history (window.CONTRACTS_DB, lazy) joined against ALL_PLAYERS_DB actual
 // seasons. Two surfaces: a player lookup panel and a filterable season explorer.
 (function _researchModule() {
+  // Phones clamp the long intro / help paragraphs to three lines (main.css);
+  // a tap opens the full text.
+  document.addEventListener('click', e => {
+    const h = e.target.closest && e.target.closest('#pageResearch :is(.rs-subtitle,.rs-help)');
+    if (h && !e.target.closest('a,button,input,select')) h.classList.toggle('rs-open');
+  });
   let _built = false;
   let _finIdx = null;      // yr -> pos -> name -> {rank, fpts, ppg, gp, tm}
   let _byName = null;      // name -> [ALL_PLAYERS_DB entries]

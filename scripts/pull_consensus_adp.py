@@ -72,6 +72,10 @@
 #             and splices raw ADP decimals into d.js "dk" fields directly —
 #             no CSV/inject step, since inject_rankings.py never parsed the
 #             manual DkPreDraftRankings.csv (its April values were a one-off).
+#   Phase P — % rostered (added 2026-10-09): runs scripts/pull_ownership.py
+#             (ESPN leaguedefaults + Sleeper research + Yahoo public-league
+#             percent_owned, all keyless) -> data/ownership_2026.js, feeding
+#             the player card's ROSTERED row.
 #
 # ESPN/CBS/Yahoo values are stored as SEQUENTIAL RANK ORDER (1..N by that
 # site's own EDITORIAL rank — the order its player list displays, not crowd
@@ -1037,6 +1041,24 @@ def pull_weather():
     return after != before
 
 
+def pull_ownership():
+    """Phase P — run pull_ownership.py (ESPN / Sleeper / Yahoo % rostered ->
+    data/ownership_2026.js). Feeds the player card's ROSTERED row. Returns
+    True if the file changed. Non-fatal: a failure keeps yesterday's file."""
+    out_path = os.path.join(ROOT, 'data', 'ownership_2026.js')
+    before = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    res = subprocess.run(
+        [sys.executable, os.path.join(ROOT, 'scripts', 'pull_ownership.py')],
+        cwd=ROOT, capture_output=True, text=True)
+    print(res.stdout)
+    if res.returncode != 0:
+        print(res.stderr)
+        print('  !! ownership pull failed — previous file kept')
+        return False
+    after = open(out_path, 'rb').read() if os.path.exists(out_path) else b''
+    return after != before
+
+
 def pull_site_projections():
     """Phase M — run pull_site_projections.py (Sleeper/ESPN/CBS season
     projections -> data/site_projections.js). Returns True if the file
@@ -1155,6 +1177,12 @@ def main():
     if wx_changed:
         bump_version(r'data/weather_2026\.js')
 
+    print('
+Phase P — % rostered (ESPN / Sleeper / Yahoo):')
+    own_changed = pull_ownership()
+    if own_changed:
+        bump_version(r'data/ownership_2026\.js')
+
     total = n_fp + n_espn + n_cbs + n_yah + n_ud + n_sl
     print(f'\nCSV sources refreshed: {total}/13 (FP {n_fp}/4, ESPN {n_espn}/1, '
           f'CBS {n_cbs}/1, Yahoo {n_yah}/1, Sleeper {n_sl}/4, UD {n_ud}/2) '
@@ -1166,9 +1194,11 @@ def main():
           f' + injuries {"updated" if inj_changed else "unchanged/skipped"}'
           f' + weeklyproj {"updated" if wp_changed else "unchanged/skipped"}'
           f' + siteproj {"updated" if sp_changed else "unchanged/skipped"}'
-          f' + weather {"updated" if wx_changed else "unchanged/skipped"}')
+          f' + weather {"updated" if wx_changed else "unchanged/skipped"}'
+          f' + ownership {"updated" if own_changed else "unchanged/skipped"}')
     if (total == 0 and not ktc_changed and not roster_changed and not dk_changed
-            and not inj_changed and not wp_changed and not sp_changed and not wx_changed):
+            and not inj_changed and not wp_changed and not sp_changed and not wx_changed
+            and not own_changed):
         print('Nothing refreshed — aborting before inject.')
         sys.exit(1)
 

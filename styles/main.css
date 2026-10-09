@@ -2571,6 +2571,41 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
   .sst-proj-big{font-size:2.1rem}
   .sst-proj-book-num{font-size:1.7rem}
 }
+/* Selected-player chips: index.html's later .lg-chip rule (league legend tags:
+   inline-block, uppercase, 3px radius) was flattening these into "WRCHRIS OLAVE×". */
+.lg-chips > .lg-chip{display:inline-flex;align-items:center;gap:6px;margin-left:0;padding:4px 4px 4px 10px;border-radius:16px;font-size:.78rem;text-transform:none;letter-spacing:0;line-height:1.2;vertical-align:baseline}
+.lg-chips > .lg-chip .lg-chip-x{font-size:1.05rem;padding:2px 6px;min-width:24px;min-height:24px}
+/* Start/Sit ranked summary (app.js renderSummary) — phones only. */
+#sstSummary{display:none}
+@media (max-width:600px){
+  /* 2026-10-09 phone pass: the intro ran five lines before the search box. */
+  #pageStartSit > div > .sst-sub{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:.6rem}
+  #sstSummary:not(:empty){display:block;margin:0 0 .8rem;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+  .sst-sum-head,.sst-sum-row{display:grid;grid-template-columns:74px 1fr 44px 44px;align-items:center;gap:6px;padding:0 10px}
+  .sst-sum-head{padding-top:6px;padding-bottom:4px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.625rem;letter-spacing:.06em;color:var(--text2);border-bottom:1px solid var(--border)}
+  .sst-sum-head span:first-child{grid-column:1 / span 2}
+  .sst-sum-head span:not(:first-child){text-align:right}
+  .sst-sum-row{width:100%;min-height:44px;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font:inherit;text-align:left;cursor:pointer}
+  .sst-sum-row:last-child{border-bottom:none}
+  .sst-sum-v{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;line-height:1;color:var(--text2)}
+  .sst-sum-row.sst-v-start{background:rgba(34,197,94,.08)}
+  .sst-sum-row.sst-v-start .sst-sum-v{color:var(--green)}
+  .sst-sum-row.sst-v-toss .sst-sum-v{color:#facc15}
+  .sst-sum-row.sst-v-sit .sst-sum-v{color:var(--red)}
+  .sst-sum-row.sst-v-lock .sst-sum-v{color:#94a3b8}
+  .sst-sum-name{display:flex;align-items:center;gap:6px;min-width:0;font-weight:600;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sst-sum-name .pos-badge{flex:0 0 auto}
+  .sst-sum-num{text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:.85rem}
+  .sst-sum-book{color:var(--text2)}
+  /* Cards: one per swipe, snapping, with the next card peeking. */
+  #sstGrid{scroll-snap-type:x mandatory;scroll-padding-left:0}
+  #sstGrid > .sst-card{scroll-snap-align:start;min-width:86%;max-width:86%}
+  .sst-card .sst-x{min-width:32px;min-height:32px;font-size:1.2rem}
+  /* Matchup edges: top 5 per column, SHOW ALL opens the 12. */
+  #sstEdges:not(.sst-edges-all) .sst-edges-cols > div > .sst-edge-row:nth-child(n+7){display:none}
+  .sst-edges-more{display:block;width:100%;margin-top:.6rem;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.06em;cursor:pointer}
+}
+.sst-edges-more{display:none}
 /* RECENT REAL TRADES panel (trade calculator, FantasyCalc feed) */
 .trade-real{margin-top:1rem;padding:1rem 1.1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:left}
 .rt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:.6rem}
@@ -3096,4 +3131,143 @@ tbody td{font-size:.8125rem}
   .mff-dialog-box{width:100%;border-radius:14px 14px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom,0))}
   .mff-dialog-btns{flex-direction:column-reverse;gap:8px}
   .mff-dialog-btn{width:100%;min-height:48px;font-size:.9rem}
+}
+/* === Trade calculator on phones (2026-10-09 pass, Jack: "optimize the trade calc page for mobile") ===
+   The verdict sat ~850px down behind a 70px header, two-row format tabs, a 48px
+   VS badge and 70px total boxes. Tighter chrome puts it on screen for a normal
+   2-for-3; remove buttons were 13x16px. */
+@media (max-width:600px){
+  #pageTrade .trade-header{margin-bottom:.7rem}
+  #pageTrade .trade-subtitle{display:none}
+  #pageTrade .trade-mode-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:flex-start;margin-bottom:.55rem}
+  #pageTrade .trade-mode-tabs::-webkit-scrollbar{display:none}
+  #pageTrade .trade-mode-tabs > button{flex:0 0 auto;min-height:32px}
+  #pageTrade .trade-view-tabs{margin-bottom:.6rem}
+  #pageTrade .trade-layout{gap:.35rem}
+  #pageTrade .trade-side{padding:.75rem}
+  #pageTrade .trade-side-label{margin-bottom:8px;padding-bottom:6px}
+  #pageTrade .trade-search-wrap{margin-bottom:8px}
+  #pageTrade .trade-vs{padding:0}
+  #pageTrade .trade-vs-icon{width:30px;height:30px;font-size:.8rem;letter-spacing:1px}
+  #pageTrade .trade-total{margin-top:.5rem;padding:6px 10px}
+  #pageTrade .trade-total-val{font-size:1.3rem}
+  #pageTrade .trade-player-chip .tp-remove{min-width:32px;min-height:32px;margin:-8px -8px -8px 0;font-size:1.25rem}
+  #pageTrade .rt-btn{min-height:30px}
+}
+/* Sticky verdict (app.js _tradeStickySync) — phones only, above the 64px tab bar;
+   hides (.ts-hide) while the full verdict is on screen. */
+#tradeStickyVerdict{display:none}
+@media (max-width:600px){
+  #pageTrade #tradeStickyVerdict{position:fixed;left:10px;right:10px;bottom:calc(72px + env(safe-area-inset-bottom,0));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.55);color:var(--text);font:inherit;cursor:pointer;transition:opacity .15s,transform .15s}
+  #pageTrade #tradeStickyVerdict.ts-hide{opacity:0;transform:translateY(8px);pointer-events:none}
+  #pageTrade #tradeStickyVerdict[style*="display: none"]{display:none!important}
+  #tradeStickyVerdict .ts-v{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:1.5px;line-height:1;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+  #tradeStickyVerdict.win-a .ts-v{color:var(--green)}
+  #tradeStickyVerdict.win-b .ts-v{color:var(--accent)}
+  #tradeStickyVerdict.even .ts-v{color:var(--text)}
+  #tradeStickyVerdict .ts-tot{font-family:'DM Mono',monospace;font-weight:700;font-size:.82rem;white-space:nowrap}
+  #tradeStickyVerdict .ts-dim{color:var(--text2);font-weight:400}
+  #tradeStickyVerdict .ts-go{color:var(--text2);font-size:.8rem}
+  /* room so the bar never covers the last rows of the page */
+  #pageTrade .trade-wrapper{padding-bottom:64px}
+}
+/* === Mock draft on phones (2026-10-09 pass) ===
+   Draft room: the 683px YOUR TEAM roster sat above the player list, so every
+   pick meant scrolling ~860px to reach the available players (list capped at
+   260px = ~5 players). Setup: a Chrome-extension promo phones can't install. */
+@media (max-width:600px){
+  #pageMockdraft .md-draft-layout > .md-board-area{order:-1}
+  #pageMockdraft .md-avail-list{max-height:min(60vh,520px)}
+  #pageMockdraft .md-roster-pick{min-height:30px;padding:4px 8px}
+  #pageMockdraft #mdDraftHelperBtn{display:none!important}
+  #pageMockdraft .md-subtitle{display:none}
+  #pageMockdraft :is(.md-mode-tabs,.md-rank-src-tabs){flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  #pageMockdraft :is(.md-mode-tabs,.md-rank-src-tabs)::-webkit-scrollbar{display:none}
+  #pageMockdraft :is(.md-mode-tabs,.md-rank-src-tabs) > button{flex:0 0 auto;min-height:32px}
+  /* DRAFT (the most-tapped button) and the RANK / ADP sort were 22px tall. */
+  #pageMockdraft .md-avail-row .md-ar-btn{min-height:34px;padding-left:12px;padding-right:12px}
+  #pageMockdraft .md-sort-btn{min-height:30px}
+}
+/* === Compare on phones (2026-10-09 pass) — head-to-head table (app.js
+   _cmpPhoneTable) above the card strip; cards fit the screen and snap. === */
+#cmpPhoneTable{display:none}
+@media (max-width:600px){
+  #cmpPhoneTable:not(:empty){display:block;margin:0 0 .8rem;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow-x:auto}
+  #cmpPhoneTable .cpt{width:100%;border-collapse:collapse;font-size:.8rem;min-width:0!important;table-layout:auto!important}
+  #cmpPhoneTable .cpt :is(th,td){min-width:0!important;width:auto!important;letter-spacing:0}
+  #cmpPhoneTable .cpt th,#cmpPhoneTable .cpt td{padding:7px 6px;border-bottom:1px solid var(--border);white-space:nowrap}
+  #cmpPhoneTable .cpt :is(th,td):first-child{padding-left:10px}
+  #cmpPhoneTable .cpt :is(th,td):last-child{padding-right:10px}
+  #cmpPhoneTable .cpt tbody tr:last-child :is(th,td){border-bottom:none}
+  #cmpPhoneTable .cpt tbody th{text-align:left;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
+  #cmpPhoneTable .cpt thead th{font-weight:700;font-size:.78rem;text-align:right;cursor:pointer}
+  #cmpPhoneTable .cpt thead th .pos-badge{display:none}
+  #cmpPhoneTable .cpt td{text-align:right;font-family:'DM Mono',monospace;font-weight:700}
+  #cmpPhoneTable .cpt td.cpt-best{color:var(--green)}
+  #compareGrid{scroll-snap-type:x mandatory}
+  #compareGrid > .compare-col{scroll-snap-align:start;min-width:88%;max-width:88%}
+  #pageCompare .cmp-split-chip{min-height:28px;padding-left:9px;padding-right:9px}
+  #pageCompare :is(.remove-from-search,.remove-from-compare,.cmp-dup-btn){min-width:32px;min-height:32px}
+}
+/* === Games on phones (2026-10-09 pass) — ELITE PULL ran 401px wide on a 375px
+   screen (right edge cut off): its panel shrink-wrapped to the 5-button mode row
+   and the repeat(5,1fr) category grid, whose columns can't go below "SZN HIGH". === */
+@media (max-width:600px){
+  #pageGames :is(#gamesDaily,#gamesGuesswho,#gamesElitepull,#gamesLeaderboard){width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+  #pageGames .gw-cat-row{grid-template-columns:repeat(5,minmax(0,1fr))}
+  #pageGames .gw-cat-row.gw-6col{grid-template-columns:repeat(6,minmax(0,1fr))}
+  #pageGames .gw-cat-header .gw-cat-cell{white-space:normal;line-height:1.1}
+  #pageGames .gw-card .fg-mode-toggle{overflow-x:auto;scrollbar-width:none;justify-content:flex-start;max-width:100%}
+  #pageGames .gw-card .fg-mode-toggle::-webkit-scrollbar{display:none}
+  #pageGames .gw-card .fg-mode-toggle > button{flex:0 0 auto}
+  #pageGames :is(#gwPlayRandom,#gwPlayCustom){min-height:32px}
+  /* Top game tabs wrapped onto two rows — one swipeable line instead. */
+  #pageGames .games-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:flex-start}
+  #pageGames .games-tabs::-webkit-scrollbar{display:none}
+  #pageGames .games-tabs > .games-tab{flex:0 0 auto;min-height:32px}
+}
+/* === Prospect page on phones (2026-10-09) — the 09-15 pass already made the
+   rows two-line cards; this tightens the chrome above them: intro clamped to
+   two lines, controls in a 2-column grid (team + class selects side by side,
+   PPG toggle beside PPR/HALF/STD) instead of one control per row. === */
+@media (max-width:600px){
+  #pageProspect .pm-subtitle{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #pageProspect .pm-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;justify-items:stretch}
+  #pageProspect .pm-controls > *{min-width:0;margin:0!important}
+  #pageProspect .pm-controls > :is(#pmPosTabs,.pm-search-wrap){grid-column:1 / -1}
+  #pageProspect .pm-controls > :is(#pmTeamFilter,#pmDraftClassFilter){width:100%!important}
+  #pageProspect .pm-controls > .pm-search-wrap{width:100%!important;max-width:none!important}
+  #pageProspect .pm-controls > :is(.pm-toggle-wrap,#pmScoringTabs){justify-self:center}
+  #pageProspect .pm-scoring-btn{min-height:30px}
+}
+/* === Draft Strategy on phones (2026-10-09) — ~8,000px of seven sections: a
+   sticky jump bar (app.js _renderDraftStrategy builds .ds-jump); Chrome
+   extension strip hidden (phones can't install it); K/DST table headers
+   ("ADP ↔ finish") may wrap so the table fits instead of scrolling 19px. === */
+.ds-jump{display:none}
+@media (max-width:600px){
+  #pageDraftStrategy .ds-jump{display:flex;gap:6px;position:sticky;top:0;z-index:20;margin:0 -12px 1rem;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+  #pageDraftStrategy .ds-jump::-webkit-scrollbar{display:none}
+  #pageDraftStrategy .ds-jump button{flex:0 0 auto;min-height:32px;padding:0 12px;border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.03em;white-space:nowrap;cursor:pointer}
+  #pageDraftStrategy .ds-section{scroll-margin-top:56px}
+  #pageDraftStrategy #extHubStrip{display:none!important}
+  #pageDraftStrategy .ds-table th{white-space:normal;line-height:1.2;letter-spacing:.02em;overflow-wrap:anywhere}
+  #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
+  #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
+}
+/* === Research (admin) on phones (2026-10-09) — SEASON EXPLORER dumped all 400
+   rows into the page (12,800px) with nothing pinned: now a 70vh scroll box like
+   ADVANCED STATS, sticky header + sticky player column. Long intro / help text
+   clamps to 3 lines (tap opens it, app.js). Filter chips 23 -> 30px. === */
+@media (max-width:600px){
+  #pageResearch :is(.rs-subtitle,.rs-help):not(.rs-open){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+  #pageResearch #rsExplorerWrap{max-height:70vh;overflow:auto}
+  /* fixed layout at 700px split 22 columns into ~28px each (text ran together) */
+  #pageResearch #rsExplorerWrap > table{table-layout:auto!important;width:max-content!important;min-width:100%!important}
+  #pageResearch #rsExplorerWrap :is(td,th){padding-left:6px;padding-right:6px}
+  #pageResearch #rsExplorerWrap thead th{position:sticky;top:0;z-index:3}
+  #pageResearch #rsExplorerWrap :is(td,th):first-child{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:4px 0 6px -4px rgba(0,0,0,.6);width:112px;min-width:112px;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #pageResearch #rsExplorerWrap thead th:first-child{z-index:4;background:#111827}
+  #pageResearch .rs-adv-chip{min-height:30px}
+  #pageResearch input[type="checkbox"]{width:18px;height:18px}
 }

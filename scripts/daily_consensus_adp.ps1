@@ -13,6 +13,8 @@
 # Then re-exports the draft-helper players.json (sleeper/espn/yahoo
 # extensions) so their baked ranks/ADPs track the fresh d.js — the "v ESPN"
 # value chips went 17 days stale when this was manual (wired 2026-08-28).
+# Phase P writes ESPN / Sleeper / Yahoo % rostered (data/ownership_2026.js)
+# for the player card's ROSTERED row (wired 2026-10-09).
 #
 # Log: scripts/consensus_adp_log.txt (kept to last ~400 lines).
 
@@ -31,7 +33,7 @@ Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 # (Site Rankings CSVs are git-excluded local files — these are the tracked targets.)
-$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'og/movers.png', 'movers.html', 'data/active_team_history.js')
+$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'data/ownership_2026.js', 'og/movers.png', 'movers.html', 'data/active_team_history.js')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"

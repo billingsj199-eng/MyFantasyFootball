@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- DYN SIM data version (data/dynasty_sim_2026.js, lazy-loaded) — bumped by sim_lab/tuesday_stats.ps1 -->
+<meta name="mff-dyn-sim-v" content="2026-10-09-tep">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
@@ -82,7 +84,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-rsmob" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-dynsim" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1368,6 +1370,7 @@ CLEAR ALL
     body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"PPG"}
     body[data-rnk-stat="lines"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"BOOK"}
     body[data-rnk-stat="adp"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"ADP"}
+    body[data-rnk-stat="dyn"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"DYN"}
     /* xFP STATS view: show xFP/Gm (the '26 PPG swap cell) beside actual PPG. */
     body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) td.ppg25-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.82rem;padding:0 3px!important;min-width:34px!important;line-height:1.05}
     body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) td.ppg25-cell::after{content:"xFP";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
@@ -1475,6 +1478,8 @@ CLEAR ALL
   body.ssn-xfp-col:not(.format-weekly) #pageRankings #xfpGHeader,
   body.ssn-xfp-col:not(.format-weekly) #pageRankings .xfpg-cell { display: table-cell !important; }
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
+  body:not(.format-dynasty) .rnk-statmode-btn[data-rnkstatmode="dyn"] { display: none !important; }
+  body:not([data-rnk-stat="dyn"]) #rnkTepWrap { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
   /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in
      the first stat cell with VOR beside it; the phone card has only that one
@@ -1737,6 +1742,15 @@ tr:hover .watch-star{opacity:.55}
 <button class="rnk-scoring-btn" data-rnkscoring="std">STD</button>
 </div>
 </div>
+<!-- TE premium for the DYN SIM view only (CSS hides it elsewhere) -->
+<div id="rnkTepWrap" style="display:flex;align-items:center;gap:8px">
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase" title="TE premium — extra points per TE reception. Changes the DYN SIM values of tight ends (and so everyone's rank).">TE PREM:</span>
+<div class="career-log-toggle" id="rnkTepToggle">
+<button class="rnk-tep-btn active" data-rnktep="0">OFF</button>
+<button class="rnk-tep-btn" data-rnktep="0.5">+0.5</button>
+<button class="rnk-tep-btn" data-rnktep="1">+1.0</button>
+</div>
+</div>
 <div style="display:flex;align-items:center;gap:8px">
 <span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">STATS:</span>
 <div class="career-log-toggle" id="rankingStatModeToggle">
@@ -1744,6 +1758,7 @@ tr:hover .watch-star{opacity:.55}
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points per game above the replacement-level player at the position, the rest-of-season total over the games he is projected to play, and those games. Standard 12-team lineup by default; set your own or pick a synced league in the VOR bar. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="xfp" title="Expected fantasy points view — actual PPG, expected PPG from usage (every target by completion probability and expected YAC, every carry by field position, league TD rates; QBs net expected INTs), points over expected, and the TD-luck part of the gap. WEEKLY board shows the active week once it has been played.">xFP</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="dyn" title="PROTOTYPE — Dynasty SIM value: expected points over replacement in the 3-season window plus a youth credit for the seasons after, from the most similar past players. Dynasty boards only.">DYN SIM</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="adp" title="Every platform side by side — Underdog + Sleeper ADP, ESPN + CBS + Yahoo site ranks, plus the cross-platform AVERAGE — compared to the current ranks — green = that platform has them later than this rank (value), red = earlier (reach)">ADP</button>
@@ -6247,7 +6262,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-rsmob"></script>
+<script defer src="app.js?v=2026-10-09-dynsim"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

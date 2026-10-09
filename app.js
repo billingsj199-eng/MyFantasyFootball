@@ -3088,7 +3088,99 @@ function adjProjPpg(d) {
 function _effStatMode() {
   // DEVY board: college prospects have no sims / lines / ADP — always the base view.
   if (typeof filter !== 'undefined' && filter === 'DEVY') return 'fantasy';
+  // DYN SIM only exists on the dynasty boards (and needs its data file).
+  if (rnkStatMode === 'dyn' && !(_isDynSimMode() && window.DYNASTY_SIM_2026)) return 'fantasy';
   return rnkStatMode;
+}
+
+// === DYN SIM (PROTOTYPE, Jack 2026-10-09) ===
+// Comparables dynasty value from data/dynasty_sim_2026.js: 3-season window
+// (expected VOR rest of 2026 + 2027-28) + youth credit (1.5 x 2029-30).
+// 1QB values on DYNASTY, superflex replacement levels on DYNASTY SF; follows
+// the PPR / HALF / STD toggle. The ~365 KB file loads on first use.
+// The data version lives in index.html (<meta name="mff-dyn-sim-v">) so the
+// Tuesday stats chain can bump it with the rebuilt file, like the other ?v=s.
+function _dynSimSrc() {
+  const m = document.querySelector('meta[name="mff-dyn-sim-v"]');
+  return 'data/dynasty_sim_2026.js?v=' + encodeURIComponent((m && m.content) || '0');
+}
+function _dynSimEnsure(cb) {
+  if (window.DYNASTY_SIM_2026) { if (cb) cb(); return; }
+  const w = (window._dynSimWaiters = window._dynSimWaiters || []);
+  if (cb) w.push(cb);
+  if (window._dynSimLoading) return;
+  window._dynSimLoading = true;
+  const sc = document.createElement('script');
+  sc.src = _dynSimSrc();
+  sc.onload = () => { window._dynSimLoading = false; (window._dynSimWaiters || []).splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); };
+  sc.onerror = () => { window._dynSimLoading = false; window._dynSimWaiters = []; if (typeof toast === 'function') toast('Could not load the dynasty sim values'); };
+  document.head.appendChild(sc);
+}
+function _isDynSimMode() { return currentMode === 'dynasty' || currentMode === 'dynastysf'; }
+function _dynSimKey() {
+  return (currentMode === 'dynastysf' ? 'sf' : '1qb') + '_' + (rankingScoringFmt === 'half' || rankingScoringFmt === 'std' ? rankingScoringFmt : 'ppr');
+}
+function _dynSimNorm(n) {
+  return String(n || '').toLowerCase().replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/, '').replace(/[.\-']/g, '').replace(/\s+/g, ' ').trim();
+}
+// TE premium (+ pts per TE reception): only TE values change, stored under
+// '<key>_tep0.5' / '_tep1'; everyone's rank is recomputed here.
+let _dynTep = (() => { try { const v = +localStorage.getItem('mff_dyn_tep'); return v === 0.5 || v === 1 ? v : 0; } catch (e) { return 0; } })();
+function _dynSimVal(e) {
+  const k = _dynSimKey();
+  if (_dynTep && e.pos === 'TE') { const t = e.v[k + '_tep' + _dynTep]; if (t) return t; }
+  return e.v[k] || null;
+}
+// Overall rank per player for the active format / scoring / TE premium.
+function _dynSimRanks() {
+  const S = window.DYNASTY_SIM_2026;
+  const ck = _dynSimKey() + '|' + _dynTep;
+  if (S._rk && S._rk.ck === ck) return S._rk.m;
+  const list = [];
+  Object.values(S.players).forEach(e => { const v = _dynSimVal(e); if (v) list.push([e, v[0]]); });
+  list.sort((a, b) => b[1] - a[1]);
+  const m = new Map(); list.forEach((x, i) => m.set(x[0], i + 1));
+  S._rk = { ck, m };
+  return m;
+}
+// -> { val, win3, youth, rk, y:[rest of 2026, 2027..2030], comps:[{n, yr, vor}] } or null
+function _dynSimFor(d) {
+  const S = window.DYNASTY_SIM_2026;
+  if (!S || !d) return null;
+  if (!S._idx) {
+    S._idx = {};
+    Object.values(S.players).forEach(e => { S._idx[_dynSimNorm(e.n) + '|' + e.pos] = e; });
+  }
+  const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
+  const v = e && e.v && _dynSimVal(e);
+  if (!v) return null;
+  return { val: v[0], win3: v[1], youth: v[2], rk: _dynSimRanks().get(e), y: v.slice(4),
+           comps: (e.c || []).map(c => ({ n: c[0], yr: c[1], vor: c[2] })) };
+}
+// Free window (same as SIM VOR's): Season Pass past the top 30.
+const _DYN_LOCK_TIP = 'Dynasty SIM values past the top 30 are a Season Pass feature — upgrade to see every player.';
+function _dynLocked(x) { return !!x && !hasPremium() && x.rk > 30; }
+function _dynSortVal(d, k) { const x = _dynSimFor(d); return (!x || _dynLocked(x)) ? -Infinity : x[k]; }
+// 50/50 rank blend with KTC (the backtest's best use of the sim), over the
+// players that have both. Cached per format + scoring.
+function _dynSimBlendRank(d) {
+  if (typeof _ktcRankInfo !== 'function' || !Array.isArray(D)) return null;
+  const fmt = _dynSimKey() + '|' + _dynTep;
+  const c = (window._dynSimBlendCache = window._dynSimBlendCache || {});
+  if (!c[fmt]) {
+    const both = [];
+    D.forEach(p => {
+      if (!p || p._retired || p._isDevy) return;
+      const x = _dynSimFor(p); const k = _ktcRankInfo(p.n);
+      if (x && k && !k.devy && k.ovr) both.push({ n: p.n, s: x.rk, k: k.ovr });
+    });
+    const sr = both.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sr = i + 1; });
+    const kr = both.slice().sort((a, b) => a.k - b.k); kr.forEach((r, i) => { r.kr = i + 1; });
+    both.sort((a, b) => (a.sr + a.kr) - (b.sr + b.kr) || a.kr - b.kr);
+    const m = {}; both.forEach((r, i) => { m[r.n] = { rk: i + 1, ktc: r.k }; });
+    c[fmt] = m;
+  }
+  return c[fmt][d.n] || null;
 }
 
 // PROJECTIONS: combined yards + TDs from Mike Clay's 2026 stat lines.
@@ -5284,14 +5376,14 @@ function getFiltered(applyTopN) {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': { const ca = _consCmp(a), cb = _consCmp(b); av = ca ? ca.ref : 999; bv = cb ? cb.ref : 999; break; }
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': if (_sm === 'vor') { av = _vorSort(a, 'v'); bv = _vorSort(b, 'v'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': if (_sm === 'vor') { av = _vorSort(a, 'vor'); bv = _vorSort(b, 'vor'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
-        case 'l4ppg': if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'pts': if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'v'); bv = _vorSort(b, 'v'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
+        case 'fpts25': if (_sm === 'dyn') { av = _dynSortVal(a, 'win3'); bv = _dynSortVal(b, 'win3'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vor'); bv = _vorSort(b, 'vor'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
+        case 'l4ppg': if (_sm === 'dyn') { av = _dynSortVal(a, 'youth'); bv = _dynSortVal(b, 'youth'); break; } if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'vor') { av = _vorSort(a, 'vp'); bv = _vorSort(b, 'vp'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'yrr': if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vp'); bv = _vorSort(b, 'vp'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
         case 'jm': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
@@ -8736,6 +8828,7 @@ function render() {
   document.body.classList.toggle('ssn-xfp-col', _ssnXfp);
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');
+  document.body.classList.toggle('format-dynasty', _isDynSimMode());   // DYN SIM button (prototype)
   // Phone cards label their one stat cell per STATS view (index.html M1 block).
   document.body.dataset.rnkStat = _statMode;   // also hides the AGE column (index.html)
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
@@ -8966,7 +9059,35 @@ function render() {
     let _statTd1 = ''; // first stat cell (Proj PPG / stat-view PPG / UD-ADP) — rendered BEFORE the weekly OPP/SPREAD/TOTAL block
     let _statYdsTail = null; // proj/lines views: the Yds line, shown in the tail (yrr) column
     let _statJmCell = null; // VOR season view: GMS rides the JM column
-    if (_statMode === 'fantasy') {
+    if (_statMode === 'dyn') {
+      // DYN SIM (PROTOTYPE, Jack 2026-10-09): comparables value — 3-season
+      // window + youth credit (sim_lab/build_dynasty_sim.py). Tail = SIM rank.
+      const x = _dynSimFor(d);
+      const _dc = v => v >= 300 ? '#22c55e' : v >= 150 ? '#4ade80' : v >= 50 ? '#facc15' : 'var(--text2)';
+      if (!x) {
+        _statTd1 = '<td class="pts-cell ppg-proj-cell" title="No dynasty sim value — no 2023-26 games (or no age / draft record)">—</td>';
+        _statTds = '<td class="pts-cell ppg25-cell">—</td>\n      <td class="pts-cell l4ppg-cell">—</td>';
+        _statYdsTail = '—';
+      } else if (_dynLocked(x)) {
+        // Free sessions: past the top 30 is Season Pass (same window as SIM VOR).
+        const _lk = '<span class="cons-lock" aria-label="Premium" title="' + _DYN_LOCK_TIP + '">🔒</span>';
+        _statTd1 = `<td class="pts-cell ppg-proj-cell">${_lk}</td>`;
+        _statTds = `<td class="pts-cell ppg25-cell">${_lk}</td>\n      <td class="pts-cell l4ppg-cell">${_lk}</td>`;
+        _statYdsTail = _lk;
+      } else {
+        const _yr = window.DYNASTY_SIM_2026.meta.valuationYear;
+        const _wk = window.DYNASTY_SIM_2026.meta.week || 0;
+        const _byYr = x.y.map((v, k) => (k === 0 && _wk ? 'rest of ' + _yr : String(_yr + k)) + ' ' + Math.round(v)).join(' · ');
+        const _cmp = (x.comps || []).map(c => c.n + ' \'' + String(c.yr).slice(2) + ' (' + c.vor + ')').join(', ');
+        const _tip = ('Expected points over replacement by season: ' + _byYr + '. Closest comparables (1QB PPR read; their VOR that season): ' + _cmp).replace(/"/g, '&quot;');
+        const _bl = _dynSimBlendRank(d);
+        const _rkTip = ('SIM DYN rank #' + x.rk + (_bl ? ' · KTC #' + _bl.ktc + ' · 50/50 blend #' + _bl.rk : ' · not on KTC')).replace(/"/g, '&quot;');
+        _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${_tip}" style="color:${_dc(x.val)};font-weight:700;cursor:help">${Math.round(x.val)}</td>`;
+        _statTds = `<td class="pts-cell ppg25-cell" title="${_tip}" style="cursor:help">${Math.round(x.win3)}</td>
+      <td class="pts-cell l4ppg-cell" title="Youth credit = ${window.DYNASTY_SIM_2026.meta.youthW} x expected VOR in ${_yr + 3}-${_yr + 4}" style="cursor:help">${Math.round(x.youth)}</td>`;
+        _statYdsTail = `<span title="${_rkTip}" style="cursor:help;font-weight:700">#${x.rk}${_bl ? '<div style="font-size:.6875rem;font-weight:600;color:var(--text2)">blend #' + _bl.rk + '</div>' : ''}</span>`;
+      }
+    } else if (_statMode === 'fantasy') {
       // Sim Lab first (season PPG on season boards, active-week sim in
       // weekly), site engine fallback — see _displayProjPpg.
       let _projPpg = _displayProjPpg(d);
@@ -9277,12 +9398,12 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const _simsMode = _statMode === 'sims';
   const yrrH = document.getElementById('yrrHeader');
-  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || (_statMode === 'vor' && !_isWeekly) || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
+  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || _statMode === 'dyn' || (_statMode === 'vor' && !_isWeekly) || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
   yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'dyn' ? 'SIM RK ' : _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -9327,6 +9448,7 @@ function render() {
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
+  if (_statMode === 'dyn' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Rank by SIM DYN value across QB / RB / WR / TE (' + (currentMode === 'dynastysf' ? 'superflex' : '1QB') + '). Sub-line = 50/50 rank blend with KTC — the combination that beat the dynasty market in the 2015-23 backtest. PROTOTYPE.');
   if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Playoff-weeks VOR — his points over replacement in the fantasy-playoff weeks only (set in the VOR bar; 15-17 by default), each week counted once. Already inside ROS VOR (weighted there if the playoff weight is above 1); shown on its own so you can see who carries value into the weeks that decide titles, and it breaks ties on ROS VOR. Amber = projected to miss a playoff week.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
@@ -10267,8 +10389,8 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
       if (ppg25Fmt) ppg25Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
       const l4Fmt = document.querySelector('#l4ppgHeader .th-fmt');
       if (l4Fmt) l4Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
-    } else if (rnkStatMode === 'vor') {
-      window._updateRnkStatHeaders();   // PPG sub-label + glosses name the format
+    } else if (rnkStatMode === 'vor' || rnkStatMode === 'dyn') {
+      window._updateRnkStatHeaders();   // sub-labels + glosses name the format
     }
     render();
   });
@@ -10345,6 +10467,14 @@ window._updateRnkStatHeaders = function() {
       if (_vt && _vt.win) _set(c3, 'l4ppgHeader', 'Win-now VOR — his projected points over replacement week by week, added up over ' + _vorWinDesc(_vt) + ' only (set by WINDOW in the VOR bar), each week counted once. Replacement level is re-drawn on the same weeks, so a player with soft matchups or a teammate out right now rises, and a star who is hurt or on bye drops. A week he misses or projects under replacement counts as zero. The SIM VOR board and its tiers are ordered by this number while the window is set.', 'VOR · ' + _vorWinTag(_vt), _span);
       else _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — his projected points over replacement week by week, added up over the games still to be played (this week\'s games drop out as they kick off — no actual results are in it, what is already scored does not help a roster from here), through the last fantasy-playoff week. ' + _vorPlayoffLabel(_vst).charAt(0).toUpperCase() + _vorPlayoffLabel(_vst).slice(1) + '. A week he misses (injury, suspension, bye) or projects under replacement counts as zero because the replacement plays instead — so a better player who misses a couple of weeks keeps his edge for the rest, and loses more if the missed weeks are playoff weeks. A week he might play counts his play odds times his edge if he plays. This is the number the SIM VOR board and its tiers are ordered by. Color = the total per game of his schedule, on the VOR/G scale.', 'ROS VOR', _span);
     }
+  } else if (rnkStatMode === 'dyn') {
+    const _M = window.DYNASTY_SIM_2026 && window.DYNASTY_SIM_2026.meta;
+    const _y0 = _M ? _M.valuationYear : 2026;
+    const _f = currentMode === 'dynastysf' ? 'SF' : '1QB';
+    const _wk = _M && _M.week ? _M.week : 0;
+    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + ' 12-team ' + fmtLabel + (_dynTep ? ' with a +' + _dynTep + ' TE premium per reception' : '') + ', ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR.' + (hasPremium() ? '' : ' Free: the top 30.'), 'SIM DYN', _f + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR') + (_dynTep ? ' TEP' : ''));
+    _set(c2, 'ppg25Header', 'Expected points over replacement in the 3-season dynasty window (' + (_wk ? 'rest of ' + _y0 + ' after week ' + _wk : _y0) + ' through ' + (_y0 + 2) + ').', '3YR', (_wk ? 'Wk' + (_wk + 1) + '-' : _y0 + '-') + String(_y0 + 2).slice(2));
+    _set(c3, 'l4ppgHeader', 'Youth credit — ' + (_M ? _M.youthW : 1.5) + 'x the expected points over replacement in ' + (_y0 + 3) + '-' + (_y0 + 4) + ', the seasons after the window. In the backtest adding it improved both 3-year and 5-year accuracy.', 'YOUTH', (_y0 + 3) + '-' + String(_y0 + 4).slice(2));
   } else if (rnkStatMode === 'xfp') {
     const _wkX = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
     const _wkly = currentMode === 'weekly';
@@ -10378,12 +10508,29 @@ window._updateRnkStatHeaders = function() {
   }
 };
 
+// DYN SIM TE premium toggle (OFF / +0.5 / +1.0 per TE reception), remembered.
+document.querySelectorAll('.rnk-tep-btn').forEach(btn => {
+  btn.classList.toggle('active', +btn.dataset.rnktep === _dynTep);
+  btn.addEventListener('click', () => {
+    _dynTep = +btn.dataset.rnktep || 0;
+    try { localStorage.setItem('mff_dyn_tep', String(_dynTep)); } catch (e) { /* private mode */ }
+    document.querySelectorAll('.rnk-tep-btn').forEach(b => b.classList.toggle('active', b === btn));
+    window._updateRnkStatHeaders();
+    render();
+  });
+});
+
 // STATS view toggle (Fantasy / Projections / Betting Lines)
 document.querySelectorAll('.rnk-statmode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     rnkStatMode = btn.dataset.rnkstatmode;
+    // DYN SIM: its data file loads on first use — paint once it is in.
+    if (rnkStatMode === 'dyn' && !window.DYNASTY_SIM_2026) {
+      _dynSimEnsure(() => { if (rnkStatMode === 'dyn') { window._updateRnkStatHeaders(); render(); } });
+      return;
+    }
     window._updateRnkStatHeaders();
     render();
   });
@@ -12275,6 +12422,13 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
       document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'fantasy'));
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
     }
+    // DYN SIM stats view lives on the dynasty boards only (PROTOTYPE).
+    document.body.classList.toggle('format-dynasty', _isDynSimMode());
+    if (!_isDynSimMode() && rnkStatMode === 'dyn') {
+      rnkStatMode = 'fantasy';
+      document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'fantasy'));
+    }
+    if (_isDynSimMode() && typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
     const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
     if (wkSelWrap) wkSelWrap.style.display = (currentMode === 'weekly') ? 'inline-flex' : 'none';
     // Entering WEEKLY: apply the non-admin published-week lock + LIVE chip

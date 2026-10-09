@@ -1061,6 +1061,10 @@ function _computeConsensusBoard(mode, gf) {
       : (typeof KTC_1QB !== 'undefined' ? KTC_1QB : {});
     const kList = [];
     for (let i = 0; i < D.length; i++) {
+      // Retired rows suffix-fold onto an active Junior's KTC value (Marvin
+      // Harrison, Oronde Gadsden) or still carry one (Roschon Johnson) and
+      // took board slots, pushing every rank behind them down.
+      if (D[i]._retired) continue;
       const v = _ktcLookup(ktcMap, D[i].n);
       if (v != null && v > 0) kList.push({ idx: i, v: v });
     }
@@ -2277,7 +2281,9 @@ function _ktcPosOf(name) {
   if (typeof D === 'undefined') return null;
   if (!_ktcPosIndex || _ktcPosIndexLen !== D.length) {
     _ktcPosIndex = {};
-    D.forEach(p => { if (p && p.n && p.s) _ktcPosIndex[_normalizeNameForLookup(p.n)] = p.s; });
+    // Skip retired rows: "Oronde Gadsden" (WR) strips to the same key as
+    // "Oronde Gadsden II" (TE) and, appended later, overwrote him.
+    D.forEach(p => { if (p && p.n && p.s && !p._retired) _ktcPosIndex[_normalizeNameForLookup(p.n)] = p.s; });
     _ktcPosIndexLen = D.length;
   }
   return _ktcPosIndex[_normalizeNameForLookup(name)] || null;
@@ -13141,7 +13147,7 @@ window._qsTeammates = function(name, wk) {
 function _qsLookupD(k) {
   if (typeof D === 'undefined') return null;
   let m = window._qsDByNorm;
-  if (!m || m._n !== D.length) { m = { _n: D.length }; D.forEach(x => { if (x && x.n && x.s !== 'DST') m[_qsNorm(x.n)] = x; }); window._qsDByNorm = m; }
+  if (!m || m._n !== D.length) { m = { _n: D.length }; D.forEach(x => { if (x && x.n && x.s !== 'DST' && !x._retired) m[_qsNorm(x.n)] = x; }); window._qsDByNorm = m; }
   return m[k] || null;
 }
 window._qsInjFlip = function(name, wk) {
@@ -29256,7 +29262,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         D.forEach(d => {
           if (!d || d.s !== pos || !d.t || d._retired || d.rm || d.devy) return;
           const b = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
-          const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, b, {}) : b;
+          const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, b, { mt: true }) : b;
           if (typeof v === 'number' && isFinite(v) && v > 0) vals.push(v);
         });
       } catch (e) { console.warn('[Start/Sit] avg', e); }
@@ -29391,7 +29397,9 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     rankingScoringFmt = fmt;
     try {
       o.base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
-      const out = {};
+      // Lineup tool = My Teams rule (Jack 2026-10-09): Questionable plays at full
+      // projection, Doubtful / confirmed Out = 0; Jack's ASSUME OUT list is ignored.
+      const out = { mt: true };
       o.proj = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, o.base, out) : o.base;
       o.src = out.src || 'base';
       // BOOK PROJ beside ours (Jack 2026-10-08): the week's posted prop lines
@@ -32070,6 +32078,7 @@ window.fmtHeight = fmtHeight;
     };
     const items = [];
     D.forEach((d, idx) => {
+      if (d._retired) return; // KTC still values some retired-row names; never board them
       const v = getVal(d);
       if (v != null && v < 900) items.push({idx, v});
     });
@@ -60792,7 +60801,7 @@ Rules:
     const box = document.getElementById('mtManualSuggestions');
     if (!query || query.length < 2 || typeof D === 'undefined') { box.style.display = 'none'; return; }
     const q = query.toLowerCase();
-    const matches = D.filter(p => p.n && p.n.toLowerCase().includes(q) && !p.n.includes('D/ST')).slice(0, 8);
+    const matches = D.filter(p => p.n && !p._retired && p.n.toLowerCase().includes(q) && !p.n.includes('D/ST')).slice(0, 8);
     if (!matches.length) { box.style.display = 'none'; return; }
     box.style.display = '';
     box.innerHTML = matches.map(p =>
@@ -61239,7 +61248,7 @@ Rules:
     });
     if (!hits.length) {
       // Not rostered anywhere — is it a real player on the board?
-      const fa = (typeof D !== 'undefined') ? D.filter(p => p.n && p.n.toLowerCase().indexOf(q) >= 0 && !p._isFuturePick).slice(0, 5) : [];
+      const fa = (typeof D !== 'undefined') ? D.filter(p => p.n && !p._retired && p.n.toLowerCase().indexOf(q) >= 0 && !p._isFuturePick).slice(0, 5) : [];
       if (fa.length) fa.forEach(p => { html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(30,42,66,.5)"><span style="font-size:.6875rem;font-weight:700;color:var(--text2);min-width:22px">${_esc(p.s || '')}</span><span style="flex:1;font-size:.78rem;font-weight:600;color:var(--text)">${_esc(p.n)}</span><span style="font-size:.6875rem;font-weight:700;color:var(--green)">FREE AGENT</span></div>`; });
       else html += `<div style="padding:8px 10px;font-size:.72rem;color:var(--text2)">No match</div>`;
     }
@@ -65743,7 +65752,9 @@ Rules:
     const REPL_LEVEL = { QB: 12, RB: 30, WR: 42, TE: 13 };
 
     D.forEach(d => {
-      if (!d || !d.s || !['QB','RB','WR','TE'].includes(d.s)) {
+      // Retired rows are out of the pool: clayLookup suffix-folds retired dads
+      // onto their sons' projections (Michael Pittman Sr. landed in the RB pool).
+      if (!d || d._retired || !d.s || !['QB','RB','WR','TE'].includes(d.s)) {
         if (d) { d._seasonPts = null; d._vor = null; d._posRank = null; }
         return;
       }

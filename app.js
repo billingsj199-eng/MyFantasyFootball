@@ -3624,12 +3624,14 @@ function _cardPosRankVal(p, key) {
     return (typeof v === 'number' && v > 0) ? { v: v } : null;
   }
   if (key === 'book') { const W = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(p) : null; return W ? { v: W.ppg } : null; }
+  if (key === 'disp') { const v = _displayProjPpg(p); return (typeof v === 'number' && v > 0) ? { v: v } : null; }
   return null;
 }
 function _cardPosRank(d, key) {
   if (!d || !d.s || typeof D === 'undefined' || !D) return null;
   const wk = window._weeklyActiveWeek || 1;
-  const ck = key + '|' + d.s + '|' + rankingScoringFmt + '|' + wk + '|' + D.length;
+  const ck = key + '|' + d.s + '|' + rankingScoringFmt + '|' + wk + '|' + D.length
+    + (key === 'disp' ? '|' + (typeof currentMode !== 'undefined' ? currentMode : '') + '|' + (typeof currentVersion !== 'undefined' ? currentVersion : '') : '');
   let e = _cardPosRankCache[ck];
   if (!e || Date.now() - e.t > 60000) {
     const rows = [];
@@ -3670,6 +3672,15 @@ function _cardWeekTotalRankTag(team, opp) {
   const rank = 1 + all.filter(v => opp ? v < mine : v > mine).length;
   const tip = opp ? '#' + rank + ' of ' + all.length + ' — lowest opponent total this week = #1' : '#' + rank + ' of ' + all.length + ' teams playing this week';
   return ' <span style="font-size:.6em;font-weight:600;color:var(--text2);cursor:help" title="' + tip + '">(' + rank + ')</span>';
+}
+
+// Phone rankings cards: the same position rank, small + muted after the PROJ /
+// xFP value. Hidden on desktop (.mrk, index.html) where the table has room for
+// the full columns instead.
+function _mobPosRankTag(d, key) {
+  const r = _cardPosRank(d, key);
+  if (!r) return '';
+  return '<span class="mrk" title="#' + r.rank + ' of ' + r.of + ' ' + (d.s === 'DST' ? 'D/STs' : d.s + 's') + '">(' + r.rank + ')</span>';
 }
 
 // Team PPG rank box for card Rankings rows (player card + Compare columns).
@@ -8974,7 +8985,7 @@ function render() {
           _cwTip = ' title="' + (head + (parts.length ? ': ' + parts.join(', ') : '') + fp).replace(/"/g, '&quot;') + '"';
         }
       }
-      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg}</td>`;
+      _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg+(_projPpg>0&&d.s?_mobPosRankTag(d,'disp'):'')}</td>`;
       _statTds = `<td class="pts-cell ppg25-cell"${_25Tip}${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
       <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
     } else if (_statMode === 'sims') {
@@ -14558,7 +14569,7 @@ function _wkXfpCellHtml(d, show) {
   const tip = (x.n + ' game' + (x.n > 1 ? 's' : '') + ' to date: expected ' + f1(x.xfpg) + ' /gm vs actual ' + f1(x.ppg)
     + ' — scored ' + sg(x.fpoeg) + ' /gm vs expected: TD luck ' + sg(x.tdg) + ' (regresses), '
     + (d.s === 'QB' && x.int ? 'INTs ' + sg(x.intg) + ', ' : '') + 'yards/catches ' + sg(x.fpoeg - x.luckg) + ' (skill, mostly repeats)').replace(/"/g, '&quot;');
-  return '<td class="xfpg-cell weekly-only-cell pts-cell" style="display:none' + (xc ? ';color:' + xc + ';font-weight:700' : '') + '" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span></td>';
+  return '<td class="xfpg-cell weekly-only-cell pts-cell" style="display:none' + (xc ? ';color:' + xc + ';font-weight:700' : '') + '" title="' + tip + '"><span style="cursor:help">' + f1(x.xfpg) + '</span>' + _mobPosRankTag(d, 'xfp') + '</td>';
 }
 // WEEKLY FANTASY view column order (Jack 2026-09-16): PROJ · '26 PPG · xFP ·
 // matchup block · L4 PPG. Splits the '26 PPG / L4 PPG pair so the row can

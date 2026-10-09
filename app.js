@@ -1296,6 +1296,47 @@ window._irApplyRemote = function(raw) {
   try { localStorage.setItem('mff_ir_list', JSON.stringify(map)); } catch(e) {}
   return true;
 };
+// === OFF-FIELD RISK (Jack 2026-10-09: "build the off-field flag and SUS caution") ===
+// Admin-flagged players with off-field risk the model can't see (pending legal
+// case, suspension risk, holdout...): {name: {note, at}}. Same plumbing as the IR
+// flag — an `offfield` field merged onto rankings/jacks-official + jacks-public,
+// applied live by the snapshot listeners, mirrored in localStorage. The card
+// shows an OFF-FIELD pill + a caution in the DYNASTY block and holds back BUY LOW
+// (the market's discount may be that risk); values themselves are unchanged.
+// A player the Sleeper feed lists as Suspended gets the same caution (_offRisk).
+window._offMap = {};
+try { window._offMap = JSON.parse(localStorage.getItem('mff_offfield') || '{}') || {}; } catch(e) { window._offMap = {}; }
+window._offApplyRemote = function(raw) {
+  if (raw == null) return false;
+  let map;
+  try { map = JSON.parse(raw) || {}; } catch(e) { return false; }
+  if (JSON.stringify(map) === JSON.stringify(window._offMap)) return false;
+  window._offMap = map;
+  try { localStorage.setItem('mff_offfield', JSON.stringify(map)); } catch(e) {}
+  return true;
+};
+// -> {src: 'flag' | 'sus', note} or null
+window._offRisk = function(d) {
+  if (!d) return null;
+  const f = window._offMap[d.n];
+  if (f) return { src: 'flag', note: f.note || 'Off-field risk', at: f.at || null };
+  if (/suspend/i.test(String(d.inj || ''))) return { src: 'sus', note: 'Suspended (league injury feed)' };
+  return null;
+};
+window._offToggle = function(name, note) {
+  if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can flag off-field risk'); return false; }
+  if (window._offMap[name]) delete window._offMap[name];
+  else window._offMap[name] = { note: String(note || 'Off-field risk').slice(0, 140), at: new Date().toISOString().slice(0, 10) };
+  try { localStorage.setItem('mff_offfield', JSON.stringify(window._offMap)); } catch(e) {}
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
+      const payload = { offfield: JSON.stringify(window._offMap) };
+      ['jacks-official', 'jacks-public'].forEach(id => firebase.firestore().collection('rankings').doc(id)
+        .set(payload, { merge: true }).catch(e => console.warn('[OFF-FIELD] cloud sync failed:', e)));
+    }
+  } catch(e) { console.warn('[OFF-FIELD] cloud sync failed:', e); }
+  return true;
+};
 window._irToggle = function(name) {
   if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can flag players out for season'); return false; }
   if (window._irMap[name] === IR_SEASON) delete window._irMap[name];
@@ -3440,6 +3481,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     const yrL = (S.meta && S.meta.valuationYear) || 2026;
     const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
     return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
+      + _cdOffNoteHtml(window._offRisk ? window._offRisk(d) : null, null)
       + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL);
   }
   if (!S._idx) _dynSimFor(d);
@@ -3482,13 +3524,27 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     T('AGING CLOCK', '#fb923c', 'Still producing (#' + now + ' now) at ' + Math.floor(age) + '. ' + (d.s === 'WR' ? 'KTC\'s own history: WRs lose about 13-15% a year from 26-27.' : d.s === 'RB' ? 'RB values fall off from the mid-20s.' : 'TEs hold value longer, but the curve turns around 29-30.') + ' A contender piece; a rebuilder should sell before the next drop.');
     fit = fit || 'Contender';
   }
-  if (fairDiff != null && fairDiff >= 0.10) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
+  // Off-field risk (admin flag or Suspended in the feed): the market's discount may
+  // be that risk, which the model can't see — hold BUY LOW back and say so.
+  const offR = window._offRisk ? window._offRisk(d) : null;
+  if (fairDiff != null && fairDiff >= 0.10 && !offR) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
-  const slideNote = _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr) + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr);
+  const slideNote = _cdOffNoteHtml(offR, fairDiff) + ((offR && fairDiff > 0) ? '' : _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr))
+    + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
     + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>' + slideNote;
+}
+// OFF-FIELD caution (admin flag / Suspended): shown to everyone (not a sim read).
+function _cdOffNoteHtml(off, fairDiff) {
+  if (!off) return '';
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  return '<div style="font-size:.6875rem;line-height:1.45;color:#fcd34d;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
+    + '<b style="color:#f59e0b;letter-spacing:.04em">⚠ OFF-FIELD RISK.</b> ' + esc(off.note) + (off.at ? ' (flagged ' + esc(off.at) + ')' : '') + '. '
+    + 'The values here are production-only — the market may be discounting risk the model can\'t see (suspension, legal outcome, availability).'
+    + (fairDiff != null && fairDiff >= 0.10 ? ' BUY LOW held back: fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price, but that gap may be the risk itself.' : '')
+    + '</div>';
 }
 // WHY line under BUY LOW / SELL HIGH (Jack 2026-10-09: "build the reasons on the
 // card"). sim_lab/research_market_truth.py (FFC pool 2016-23, what still predicts
@@ -20402,6 +20458,8 @@ function openPlayerCard(d, ctxMode) {
             ${(typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow()) ? `<span class="inj-pill" data-status="O" title="Jack assumes he sits in Week ${window._weeklyActiveWeek || 1} — pulled from the weekly board into the BYE / OUT row until he is cleared or ruled out">ASSUMED OUT WK ${window._weeklyActiveWeek || 1}</span>` : ''}
             ${window._irIsOut(d.n) ? `<span class="inj-pill" data-status="OUT" title="Out for season — hidden from the ${IR_SEASON} Redraft / Best Ball / Superflex / Weekly rankings. Dynasty boards and this card are unaffected; the flag clears automatically next season.">OUT FOR SEASON</span>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026) ? `<button id="cardIrToggle" title="${window._irIsOut(d.n) ? 'Restore this player to the season rankings (their board slot was kept)' : 'Hide this player from the ' + IR_SEASON + ' Redraft / Best Ball / Superflex / Weekly rankings — board slot, dynasty ranks, card and search are kept, and the flag auto-clears next season'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};background:transparent;color:${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};white-space:nowrap">${window._irIsOut(d.n) ? 'RESTORE TO RANKINGS' : 'MARK OUT FOR SEASON'}</button>` : ''}
+            ${(() => { const _of = window._offRisk ? window._offRisk(d) : null; return _of && _of.src === 'flag' ? `<span class="inj-pill" data-status="SUS" title="${String('Off-field risk: ' + _of.note + (_of.at ? ' (flagged ' + _of.at + ')' : '')).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">OFF-FIELD</span>` : ''; })()}
+            ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && ['QB', 'RB', 'WR', 'TE'].includes(d.s)) ? `<button id="cardOffToggle" title="${window._offMap[d.n] ? 'Clear the off-field risk flag' : 'Flag off-field risk (pending legal case, suspension risk, holdout...) — the card cautions that the market may be discounting risk the model cannot see and holds back BUY LOW. Applies for every user immediately.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${window._offMap[d.n] ? 'var(--green)' : '#f59e0b'};background:transparent;color:${window._offMap[d.n] ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${window._offMap[d.n] ? 'CLEAR OFF-FIELD' : 'FLAG OFF-FIELD'}</button>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026 && d.s !== 'DST' && !window._irIsOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow() && typeof window._weeklyAssumeOutToggle === 'function') ? (() => { const _aw = window._weeklyActiveWeek || 1, _on = window._weeklyAssumedOut(d.n, _aw); return `<button id="cardAssumeOutToggle" title="${_on ? 'Put him back on the Week ' + _aw + ' board' : 'Treat him as out for Week ' + _aw + ' before the designation lands: pulled off the weekly board into the BYE / OUT row, weekly PROJ 0, OPP reads OUT. Weekly slot kept — undo any time. Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_on ? 'var(--green)' : '#f59e0b'};background:transparent;color:${_on ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${_on ? 'BACK IN WEEK ' + _aw : 'ASSUME OUT WEEK ' + _aw}</button>`; })() : ''}
           </div>
           ${_playerRoleRow(d)}
@@ -20847,6 +20905,20 @@ function openPlayerCard(d, ctxMode) {
   // Admin-only: OUT FOR SEASON toggle — flags the player hidden from the
   // season-format rankings (see window._irToggle) and refreshes the card so
   // the badge + button state update in place.
+  // Admin-only: OFF-FIELD risk flag (window._offToggle) — asks for a short note.
+  const _cardOffBtn = document.getElementById('cardOffToggle');
+  if (_cardOffBtn) {
+    _cardOffBtn.addEventListener('click', () => {
+      let note = null;
+      if (!window._offMap[d.n]) {
+        note = window.prompt('Off-field risk for ' + d.n + ' — short note shown on the card (e.g. "Pending legal case", "Suspension expected"):', 'Pending legal case');
+        if (note == null) return;
+      }
+      if (!window._offToggle(d.n, note)) return;
+      toast(note == null ? d.n + ': off-field flag cleared' : d.n + ' flagged: ' + note);
+      if (typeof openPlayerCard === 'function') openPlayerCard(d, ctxMode);
+    });
+  }
   const _cardIrBtn = document.getElementById('cardIrToggle');
   if (_cardIrBtn) {
     _cardIrBtn.addEventListener('click', () => {
@@ -36483,6 +36555,7 @@ window.fmtHeight = fmtHeight;
     await db.collection('rankings').doc('jacks-public').set({
       data: JSON.stringify(pub),
       ir: JSON.stringify(window._irMap || {}),
+      offfield: JSON.stringify(window._offMap || {}),
       updatedAt: new Date().toISOString()
     }, { merge: true });
     console.log('[Save] Public slice written (top ' + _PUB_CUT_ALL + ')');
@@ -36945,6 +37018,7 @@ window.fmtHeight = fmtHeight;
         }
       }
       // Out-for-season flags ride the same doc as a separate `ir` field
+      if (doc.exists && typeof window._offApplyRemote === 'function') window._offApplyRemote(doc.data().offfield);   // off-field flags ride along
       if (doc.exists && typeof window._irApplyRemote === 'function' && window._irApplyRemote(doc.data().ir)) {
         renumber(); render();
       }
@@ -37127,6 +37201,7 @@ window.fmtHeight = fmtHeight;
       }
       // Out-for-season flags: apply live so a toggle in one tab (or by Jack)
       // hides/restores the player everywhere without a refresh.
+      if (doc.exists && typeof window._offApplyRemote === 'function') window._offApplyRemote(doc.data().offfield);   // off-field flags ride along
       if (doc.exists && typeof window._irApplyRemote === 'function' && window._irApplyRemote(doc.data().ir)) {
         renumber(); render();
       }

@@ -82,7 +82,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-rdxfp" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-dynxfp" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1394,7 +1394,7 @@ CLEAR ALL
      so its button is hidden on the weekly board. */
   body.format-weekly.wk-xfp-col #pageRankings #xfpGHeader,
   body.format-weekly.wk-xfp-col #pageRankings .xfpg-cell { display: table-cell !important; }
-  /* REDRAFT xFP column (beside PROJ PPG) — FANTASY stats view; render() sets body.ssn-xfp-col. */
+  /* REDRAFT + DYNASTY xFP column (beside PROJ PPG) — FANTASY stats view; render() sets body.ssn-xfp-col. */
   body.ssn-xfp-col:not(.format-weekly) #pageRankings #xfpGHeader,
   body.ssn-xfp-col:not(.format-weekly) #pageRankings .xfpg-cell { display: table-cell !important; }
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
@@ -1988,7 +1988,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <th data-sort="spread" id="spreadHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="DK point spread for this team. Negative = favored, positive = underdog.">Spread</span> <span class="arrow"></span></th>
 <th data-sort="teamTotal" id="teamTotalHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.">Team Total</span> <span class="arrow"></span></th>
 <th data-sort="oppPpg" id="oppPpgHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Fantasy points the OPPONENT allows per game to this position in 2026 (board scoring, final games only). RB facing CAR = what CAR gives up to RBs per game; D/ST facing TEN = what opposing D/STs have scored against TEN. Green = allows the most (top third, soft matchup), red = allows the least (tough). #n = league rank, 1 = allows the most.">Opp PPG</span> <span class="arrow"></span></th>
-<th data-sort="xfpG" id="xfpGHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span class="th-stack"><span data-gloss="Expected fantasy points per game, 2026 to date — what an average player scores from this exact usage: every target valued by depth and field position, every carry by field position (league rates 2018-25). Same color scale as PROJ and '26 PPG — the gap to '26 PPG is the points over expected; hover a value for the TD-luck split. Weekly and Redraft boards, FANTASY stats view; the game-by-game version lives on the player card.">xFP</span><span class="hide-on-mobile th-fmt">'26 /Gm</span></span><span class="arrow"></span></th>
+<th data-sort="xfpG" id="xfpGHeader" class="weekly-only-col" tabindex="0" aria-sort="none" style="display:none"><span class="th-stack"><span data-gloss="Expected fantasy points per game, 2026 to date — what an average player scores from this exact usage: every target valued by depth and field position, every carry by field position (league rates 2018-25). Same color scale as PROJ and '26 PPG — the gap to '26 PPG is the points over expected; hover a value for the TD-luck split. Weekly, Redraft and Dynasty boards, FANTASY stats view; the game-by-game version lives on the player card.">xFP</span><span class="hide-on-mobile th-fmt">'26 /Gm</span></span><span class="arrow"></span></th>
 <th data-sort="l4ppg" id="l4ppgHeaderTh" tabindex="0" aria-sort="none"><span class="th-stack" id="l4ppgHeader"><span data-gloss="Average fantasy PPG over the player's last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.">L4 PPG</span><span class="hide-on-mobile th-fmt">PPR</span></span><span class="arrow"></span></th>
 <th data-sort="yrr" id="yrrHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="Yards per Route Run — receiving yards divided by routes run. Best stable signal of receiver efficiency.">Y/RR</span> <span class="arrow"></span></th>
 <th data-sort="jm" id="jmHeader" tabindex="0" aria-sort="none" style="display:none"><span data-gloss="JM Score (0-100) — Jack's prospect grade combining college production, athleticism, draft capital, and breakout age. Higher = better.">JM</span> <span class="arrow"></span></th>
@@ -6164,7 +6164,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-rdxfp"></script>
+<script defer src="app.js?v=2026-10-09-dynxfp"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

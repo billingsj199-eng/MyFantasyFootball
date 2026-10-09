@@ -8561,8 +8561,8 @@ function render() {
   const _statMode = _effStatMode();
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
-  // REDRAFT xFP column (Jack 2026-10-09): same season xFP/G cell, right after PROJ PPG.
-  const _ssnXfp = currentMode === 'redraft' && _statMode === 'fantasy';
+  // REDRAFT + DYNASTY xFP column (Jack 2026-10-09): same season xFP/G cell, right after PROJ PPG.
+  const _ssnXfp = (currentMode === 'redraft' || currentMode === 'dynasty' || currentMode === 'dynastysf') && _statMode === 'fantasy';
   document.body.classList.toggle('ssn-xfp-col', _ssnXfp);
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');   // also hides the AGE column (index.html)

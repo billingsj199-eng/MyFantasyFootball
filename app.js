@@ -3624,6 +3624,12 @@ function _cardPosRankVal(p, key) {
     return (typeof v === 'number' && v > 0) ? { v: v } : null;
   }
   if (key === 'book') { const W = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(p) : null; return W ? { v: W.ppg } : null; }
+  // Start/Sit's number: My Teams injury rule (Q plays, D / Out = 0, ASSUME OUT ignored)
+  if (key === 'sstproj') {
+    if (typeof window._weeklyAdjustPpg !== 'function') return null;
+    const v = window._weeklyAdjustPpg(p, adjProjPpg(p), { mt: true });
+    return (typeof v === 'number' && v > 0) ? { v: v } : null;
+  }
   if (key === 'disp') { const v = _displayProjPpg(p); return (typeof v === 'number' && v > 0) ? { v: v } : null; }
   return null;
 }
@@ -29560,6 +29566,11 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       // scored in this page's format — same math as the tier cards' BOOK
       // PROJ toggle (_weeklyBookPpgFor). Null when nothing is posted.
       o.book = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
+      // Position ranks beside OUR / BOOK PROJ (same (N) as the player card)
+      if (typeof _cardPosRank === 'function') {
+        o.projRk = (o.proj > 0) ? _cardPosRank(d, 'sstproj') : null;
+        o.bookRk = o.book ? _cardPosRank(d, 'book') : null;
+      }
     } catch (e) { console.warn('[Start/Sit] proj', e); }
     finally { rankingScoringFmt = prev; }
     if (o.src === 'out') o.out = true;
@@ -29754,6 +29765,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const box = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
     const bestCls = k => k ? 'sst-best' : '';
 
+    const rkTag = r => r ? ' <span class="sst-rk" style="font-weight:700;color:var(--text);cursor:help" title="#' + r.rank + ' of ' + r.of + ' ' + (d.s === 'DST' ? 'D/STs' : d.s + 's') + ' this week">(' + r.rank + ')</span>' : '';
     let html = '<div class="compare-col sst-card' + (c.verdict ? ' sst-v-' + c.verdict.cls : '') + '">';
     html += '<div class="card-header" style="position:relative">';
     html += '<button class="sst-x remove-from-compare" data-n="' + esc(d.n) + '" title="Remove">&times;</button>';
@@ -29787,7 +29799,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const ourTip = 'Our Week ' + wk + ' projection (' + fmt.toUpperCase() + '): ' + (SRC_LBL[c.src] || 'site projection') + '. This is the number the START / SIT call runs on.';
     html += '<div class="card-section sst-proj-sec"><div class="card-section-title">Week ' + wk + ' Projections <span class="sst-dim">· ' + fmt.toUpperCase() + '</span></div>';
     html += '<div class="sst-proj-row"><div class="sst-proj-pair">';
-    html += '<div class="sst-proj-item" title="' + esc(ourTip) + '"><div class="sst-ps-lbl">Our Proj</div><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
+    html += '<div class="sst-proj-item" title="' + esc(ourTip) + '"><div class="sst-ps-lbl">Our Proj' + rkTag(c.projRk) + '</div><div class="sst-proj-big' + (isBest('proj', c.proj) ? ' sst-best' : '') + '"' + (projColor ? ' style="color:' + projColor + '"' : '') + '>'
       + (c.proj != null ? fmt1(c.proj) : '—') + '</div></div>';
     if (!isDst) {
       const b = c.book, bv = b ? b.ppg : null;
@@ -29798,7 +29810,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         : (c.lines && Object.keys(c.lines).length)
           ? 'Only the ' + (c.lines.atd != null ? 'anytime-TD market' : 'partial board') + ' is posted for ' + d.n + ' in Week ' + wk + ' — no yardage lines to score a projection from yet.'
           : 'No Week ' + wk + ' sportsbook lines posted for ' + d.n + (c.bye ? ' (bye week)' : ' yet') + ' — nothing to score.';
-      html += '<div class="sst-proj-item sst-proj-book" title="' + esc(bookTip) + '"><div class="sst-ps-lbl">Book Proj</div><div class="sst-proj-book-num' + (isBest('book', bv) ? ' sst-best' : '') + '"' + (bookColor ? ' style="color:' + bookColor + '"' : '') + '>'
+      html += '<div class="sst-proj-item sst-proj-book" title="' + esc(bookTip) + '"><div class="sst-ps-lbl">Book Proj' + rkTag(c.bookRk) + '</div><div class="sst-proj-book-num' + (isBest('book', bv) ? ' sst-best' : '') + '"' + (bookColor ? ' style="color:' + bookColor + '"' : '') + '>'
         + (bv != null ? fmt1(bv) : '—') + '</div></div>';
     }
     html += '</div>';
@@ -29838,8 +29850,8 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       html += box('OPP', oppHtml, '', c.diff ? ((typeof window._weeklyOppDiffNote === 'function' && window._weeklyOppDiffNote(d.t, d.s)) || ((c.diff === 'hard' ? 'Tough matchup' : c.diff === 'easy' ? 'Soft matchup' : 'Average matchup') + ' (opponent ' + (isDst ? 'offense' : 'defense') + ' rank)')) : null);
       html += box('SPREAD', '<span class="' + bestCls(isBest('spread', c.spread)) + (c.spread != null && c.spread < 0 ? ' green' : '') + '">' + fmtSpread(c.spread) + '</span>', '', 'This team\'s spread (negative = favored)');
       html += isDst
-        ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>', '', 'Points the opponent is priced to score — lower = better D/ST spot')
-        : box('TEAM TOTAL', '<span class="' + bestCls(isBest('tt', c.tt)) + '">' + fmt1(c.tt) + '</span>', '', 'Implied team points: (game total − spread) / 2');
+        ? box('OPP TOTAL', '<span class="' + bestCls(isBest('oppTT', c.oppTT)) + '">' + fmt1(c.oppTT) + '</span>' + (c.oppTT != null ? _cardWeekTotalRankTag(d.t, true) : ''), '', 'Points the opponent is priced to score — lower = better D/ST spot')
+        : box('TEAM TOTAL', '<span class="' + bestCls(isBest('tt', c.tt)) + '">' + fmt1(c.tt) + '</span>' + (c.tt != null ? _cardWeekTotalRankTag(d.t, false) : ''), '', 'Implied team points: (game total − spread) / 2');
       html += box('O/U', fmt1(c.ou), '', 'Game total');
       html += '</div>';
       const ws = (typeof _weatherSummary === 'function') ? _weatherSummary(c.wx) : null;

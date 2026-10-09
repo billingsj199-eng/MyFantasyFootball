@@ -33181,11 +33181,13 @@ window.fmtHeight = fmtHeight;
   }
 
   // Expose pick value function globally for My Teams
-  window._getPickValue = function(round, year, slot, mode, pickNum) {
+  window._getPickValue = function(round, year, slot, mode, pickNum, src) {
     const m = mode || tradeMode;
-    // Dynasty modes: use board position
+    // Dynasty modes: use board position — Jack's board (his pick lever), except
+    // the MFF VALUE source, which prices picks on its own board (KTC pick price x
+    // Dynasty SIM) so players and picks share one scale.
     if (m === 'dynasty' || m === 'dynastysf') {
-      return _pickTradeValue(round, year, slot, 'jacks', m, pickNum);
+      return _pickTradeValue(round, year, slot, src === 'mff' ? 'mff' : 'jacks', m, pickNum);
     }
     // Redraft/superflex: use static base values
     const base = PICK_BASE[round] ? PICK_BASE[round][m] : 0;
@@ -34433,7 +34435,7 @@ window.fmtHeight = fmtHeight;
   // Hide lock icon on premium-gated tabs for premium users (icons are hardcoded in HTML)
   function _tradeUpdateJacksLock() {
     const prem = typeof hasPremium === 'function' && hasPremium();
-    ['jacks', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
+    ['jacks', 'mff', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
       if (!tab) return;
       const icon = tab.querySelector('.lock-icon');
@@ -58225,7 +58227,7 @@ Rules:
     // Draft pick values (dynasty only, skip in contender mode)
     let pickTotal = 0;
     const scoredPicks = includePicks ? (draftPicks || []).map(p => {
-      const val = (typeof window._getPickValue === 'function') ? window._getPickValue(p.round, p.year, p.slot, mode, p._pickNum) : 0;
+      const val = (typeof window._getPickValue === 'function') ? window._getPickValue(p.round, p.year, p.slot, mode, p._pickNum, _mtValueSrc) : 0;
       return { ...p, val };
     }) : [];
     if (includePicks) scoredPicks.sort((a, b) => b.val - a.val);
@@ -59868,7 +59870,7 @@ Rules:
           const hit = (t.draftPicks || []).find(p => String(p.year) === yr && p.round === rd && String(p._origId != null ? p._origId : (p._origIdx != null ? (teams[p._origIdx] || {}).id : '')) === String(pk.roster_id));
           if (hit) { slot = hit.slot || 'mid'; pickNum = hit._pickNum || null; break; }
         }
-        const val = typeof window._getPickValue === 'function' ? Math.round(window._getPickValue(rd, yr, slot, mode, pickNum)) : 0;
+        const val = typeof window._getPickValue === 'function' ? Math.round(window._getPickValue(rd, yr, slot, mode, pickNum, _mtValueSrc)) : 0;
         const slotLbl = pickNum ? pickNum : (slot !== 'mid' ? slot.charAt(0).toUpperCase() + slot.slice(1) + ' ' : '');
         assets.push({ type: 'k', name: (pickNum ? yr + ' ' + pickNum : yr + ' ' + slotLbl + rd) + (orig && String(pk.roster_id) !== String(rid) ? ' (via ' + orig.owner + ')' : ''), pos: 'PICK', val, matched: true, slot });
       });
@@ -59919,7 +59921,7 @@ Rules:
     const shown = ctx.mine ? priced.filter(x => x.p.sides.some(s => s.mine)) : priced;
     let html = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">` +
       `<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--accent-blue)">TRADE LOG</span>` +
-      `<span style="font-size:.6875rem;color:var(--text2)">${trades.length} completed trade${trades.length === 1 ? '' : 's'} · priced on today's ${_mtValueSrc === 'jacks' ? "Jack's" : _mtValueSrc === 'mine' ? 'My Ranks' : _mtValueSrc} board, calc package math · picks at the original team's projected slot</span>`;
+      `<span style="font-size:.6875rem;color:var(--text2)">${trades.length} completed trade${trades.length === 1 ? '' : 's'} · priced on today's ${_mtValueSrc === 'jacks' ? "Jack's" : _mtValueSrc === 'mine' ? 'My Ranks' : _mtValueSrc === 'mff' ? 'MFF VALUE' : _mtValueSrc} board, calc package math · picks at the original team's projected slot</span>`;
     if (hasMine) {
       html += `<span style="margin-left:auto;display:flex;gap:2px;background:var(--surface2);padding:2px;border-radius:6px">`;
       [[false, 'ALL'], [true, 'MINE']].forEach(([v, lbl]) => {
@@ -62429,7 +62431,7 @@ Rules:
     panel.style.display = open ? '' : 'none';
     if (chev) chev.textContent = open ? '▴' : '▾';
   };
-  const _MT_SRC_NAMES = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS', underdog: 'UNDERDOG ADP', espn: 'ESPN ADP', cbs: 'CBS ADP', sleeper: 'SLEEPER ADP', yahoo: 'YAHOO ADP', ktc: 'KTC' };
+  const _MT_SRC_NAMES = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS', mff: 'MFF VALUE', underdog: 'UNDERDOG ADP', espn: 'ESPN ADP', cbs: 'CBS ADP', sleeper: 'SLEEPER ADP', yahoo: 'YAHOO ADP', ktc: 'KTC' };
   function _mtUpdateValueSrcLabel() {
     const el = document.getElementById('mtValueSrcLabel');
     if (el) el.textContent = _MT_SRC_NAMES[_mtValueSrc] || String(_mtValueSrc || '').toUpperCase();
@@ -63710,7 +63712,7 @@ Rules:
     const rounds = ['1st', '2nd', '3rd', '4th'];
     const years = [...new Set(teams.flatMap(t => (t.draftPicks || []).map(p => String(p.year))))].sort();
     const roundsUsed = rounds.filter(r => teams.some(t => (t.draftPicks || []).some(p => p.round === r)));
-    const val = p => (typeof window._getPickValue === 'function') ? Math.round(window._getPickValue(p.round, p.year, p.slot, mode, p._pickNum)) : 0;
+    const val = p => (typeof window._getPickValue === 'function') ? Math.round(window._getPickValue(p.round, p.year, p.slot, mode, p._pickNum, _mtValueSrc)) : 0;
     const slotLbl = p => p._pickNum ? p._pickNum : (p.slot ? p.slot.charAt(0).toUpperCase() + p.slot.slice(1) + ' ' : '');
     const rows = teams.map(t => {
       const picks = t.draftPicks || [];
@@ -70117,17 +70119,33 @@ Rules:
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (tab) tab.style.display = show ? '' : 'none';
     });
-    if (!show && (_mtValueSrc === 'espn' || _mtValueSrc === 'cbs' || _mtValueSrc === 'yahoo')) {
+    // MFF VALUE is a dynasty value — dynasty / dynasty SF leagues only.
+    const _mode = _mtGetRankingMode(), dyn = _mode === 'dynasty' || _mode === 'dynastysf';
+    const mffTab = document.querySelector('.mt-src-tab[data-mtsrc="mff"]');
+    if (mffTab) mffTab.style.display = dyn ? '' : 'none';
+    if ((!show && (_mtValueSrc === 'espn' || _mtValueSrc === 'cbs' || _mtValueSrc === 'yahoo')) || (!dyn && _mtValueSrc === 'mff')) {
       _mtValueSrc = 'consensus';
       try { localStorage.setItem('mt_value_src', 'consensus'); } catch(e) {}
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'consensus'));
     }
   }
 
+  // MFF VALUE prices off the Dynasty SIM file (lazy, ~770 KB): until it lands the
+  // board is null and ranks fall back, so load it and re-price everything once in.
+  function _mtMffEnsure() {
+    if (_mtValueSrc !== 'mff' || window.DYNASTY_SIM_2026 || typeof _dynSimEnsure !== 'function') return;
+    _dynSimEnsure(() => { if (_mtValueSrc === 'mff') _mtRefreshAfterSrcChange(); });   // team-list render clears the pos-rank cache
+  }
+  if (_mtValueSrc === 'mff') _mtMffEnsure();   // restored from localStorage
   function _mtRefreshAfterSrcChange() {
     if (typeof _mtUpdateValueSrcLabel === 'function') _mtUpdateValueSrcLabel();
-    // Re-render anything that depends on values
-    if (window._mtTeams && typeof _mtRenderTeamList === 'function') {
+    // Re-score + re-render anything that depends on values. Team totals live on
+    // t.score (set at import / restore), so a plain re-render left them on the
+    // previous source — _mtSetViewMode re-scores every roster (and picks) for
+    // the current view, then renders.
+    if (window._mtTeams && typeof window._mtSetViewMode === 'function') {
+      try { window._mtSetViewMode(_mtViewMode); } catch(e) { console.warn('[MyTeams] re-score teams failed:', e); }
+    } else if (window._mtTeams && typeof _mtRenderTeamList === 'function') {
       try { _mtRenderTeamList(window._mtTeams); } catch(e) { console.warn('[MyTeams] re-render teams failed:', e); }
     }
     // Waiver wire + trade finder ranks/values follow the source too
@@ -70168,11 +70186,17 @@ Rules:
         if (typeof toast === 'function') toast("Jack's Rankings require Premium");
         return;
       }
+      if (src === 'mff') {
+        const m = _mtGetRankingMode();
+        if (m !== 'dynasty' && m !== 'dynastysf') { if (typeof toast === 'function') toast('MFF VALUE is a dynasty value'); return; }
+        if (typeof hasPremium === 'function' && !hasPremium()) { if (typeof toast === 'function') toast('MFF VALUE requires Premium'); return; }
+      }
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       _mtValueSrc = src;
       try { localStorage.setItem('mt_value_src', src); } catch(e) {}
       if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
+      _mtMffEnsure();
       _mtRefreshAfterSrcChange();
     });
   });
@@ -70195,7 +70219,7 @@ Rules:
         _mtRefreshAfterSrcChange();
       }
     }
-    ['jacks', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
+    ['jacks', 'mff', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (!tab) return;
       const icon = tab.querySelector('.lock-icon');

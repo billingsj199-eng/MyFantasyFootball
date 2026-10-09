@@ -3092,7 +3092,12 @@ function _effStatMode() {
 // (expected VOR rest of 2026 + 2027-28) + youth credit (1.5 x 2029-30).
 // 1QB values on DYNASTY, superflex replacement levels on DYNASTY SF; follows
 // the PPR / HALF / STD toggle. The ~365 KB file loads on first use.
-const _DYN_SIM_SRC = 'data/dynasty_sim_2026.js?v=2026-10-09-proto-tep';
+// The data version lives in index.html (<meta name="mff-dyn-sim-v">) so the
+// Tuesday stats chain can bump it with the rebuilt file, like the other ?v=s.
+function _dynSimSrc() {
+  const m = document.querySelector('meta[name="mff-dyn-sim-v"]');
+  return 'data/dynasty_sim_2026.js?v=' + encodeURIComponent((m && m.content) || '0');
+}
 function _dynSimEnsure(cb) {
   if (window.DYNASTY_SIM_2026) { if (cb) cb(); return; }
   const w = (window._dynSimWaiters = window._dynSimWaiters || []);
@@ -3100,7 +3105,7 @@ function _dynSimEnsure(cb) {
   if (window._dynSimLoading) return;
   window._dynSimLoading = true;
   const sc = document.createElement('script');
-  sc.src = _DYN_SIM_SRC;
+  sc.src = _dynSimSrc();
   sc.onload = () => { window._dynSimLoading = false; (window._dynSimWaiters || []).splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); };
   sc.onerror = () => { window._dynSimLoading = false; window._dynSimWaiters = []; if (typeof toast === 'function') toast('Could not load the dynasty sim values'); };
   document.head.appendChild(sc);

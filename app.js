@@ -8561,6 +8561,9 @@ function render() {
   const _statMode = _effStatMode();
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
+  // REDRAFT xFP column (Jack 2026-10-09): same season xFP/G cell, right after PROJ PPG.
+  const _ssnXfp = currentMode === 'redraft' && _statMode === 'fantasy';
+  document.body.classList.toggle('ssn-xfp-col', _ssnXfp);
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');   // also hides the AGE column (index.html)
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
@@ -8583,7 +8586,7 @@ function render() {
       : 'Vegas implied team total for this week (DK line). Higher = expected shootout / positive game-script for this offense.';
     if (lab.getAttribute('data-gloss') !== g) lab.setAttribute('data-gloss', g);
   })();
-  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy', _statMode === 'fantasy');
+  _wkFantasyColOrder(_isWeekly && _statMode === 'fantasy', _statMode === 'fantasy', _ssnXfp);
   // WEEKLY: the always-on Boom/Bust pair (simboom/simbust) is no longer
   // shown (Jack 2026-09-08) — the cells still render hidden; the SIMS stats
   // view carries boom/bust in the ppg25/l4ppg swap columns instead.
@@ -8996,7 +8999,7 @@ function render() {
     if (_injBlurRank) { if (blurred && !_injWallDone) { _injWallDone = true; html += _premiumWallHtml(); } }
     else if (shouldBlur && i === blurCutoff && data.length > blurCutoff) html += _premiumWallHtml();
 
-    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy', _statMode === 'fantasy');
+    const _wkSplit = _wkSplitStatTds(_statTds, d, _isWeekly && _statMode === 'fantasy', _statMode === 'fantasy', _ssnXfp);
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
@@ -14184,8 +14187,8 @@ function _wkXfpCellHtml(d, show) {
 // matchup block · L4 PPG. Splits the '26 PPG / L4 PPG pair so the row can
 // emit '26 PPG + xFP right after PROJ; every other view keeps the pair
 // together after the matchup block (xFP placeholder hidden).
-function _wkSplitStatTds(tds, d, wkFant, fant) {
-  const cell = _wkXfpCellHtml(d, wkFant);
+function _wkSplitStatTds(tds, d, wkFant, fant, ssnXfp) {
+  const cell = _wkXfpCellHtml(d, wkFant || ssnXfp);
   const i = tds.indexOf('<td class="pts-cell l4ppg-cell');
   const td26 = i < 0 ? tds : tds.slice(0, i), tdL4 = i < 0 ? '' : tds.slice(i);
   // 2026-10-08: in the FANTASY stat view the season-PPG cell sits right after PROJ on every
@@ -14193,15 +14196,21 @@ function _wkSplitStatTds(tds, d, wkFant, fant) {
   // PROJECTIONS / BETTING LINES / ADP) keep their second column after the weekly group —
   // in BETTING LINES that column is the YDS line and belongs beside TD and RUSH (Jack).
   if (wkFant) return { pre: td26 + cell, post: tdL4 };
+  if (ssnXfp) return { pre: cell + td26, post: tdL4 };   // REDRAFT: PROJ · xFP · '26 PPG
   return fant ? { pre: td26, post: cell + tdL4 } : { pre: '', post: td26 + cell + tdL4 };
 }
 // Matching <th> order: move '26 PPG + xFP headers right after PROJ in the
 // weekly FANTASY view, back after Opp PPG otherwise. Idempotent; listeners
 // ride along with the nodes.
-function _wkFantasyColOrder(on, fant) {
+function _wkFantasyColOrder(on, fant, ssnXfp) {
   const proj = document.getElementById('ppgProjHeader'), p26 = document.getElementById('ppg25HeaderTh');
   const xfp = document.getElementById('xfpGHeader'), opp = document.getElementById('oppPpgHeader');
   if (!proj || !p26 || !xfp || !opp) return;
+  if (ssnXfp) {   // REDRAFT FANTASY: PROJ · xFP · '26 PPG
+    if (proj.nextElementSibling !== xfp) proj.after(xfp);
+    if (xfp.nextElementSibling !== p26) xfp.after(p26);
+    return;
+  }
   const p26Anchor = (on || fant !== false) ? proj : opp;   // FANTASY view: beside PROJ; other views: after the weekly group
   if (p26Anchor.nextElementSibling !== p26) p26Anchor.after(p26);
   const xfpAnchor = on ? p26 : opp;

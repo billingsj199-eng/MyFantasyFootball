@@ -962,6 +962,7 @@ window._mineToolBoard = function(mode) {
 };
 window._verBoardFor = function(src, mode) {
   if (src === 'mine') return window._mineToolBoard(mode);
+  if (src === 'mff') return typeof window._mffValueBoard === 'function' ? window._mffValueBoard(mode) : null;
   return versionBoards[src] && versionBoards[src][mode];
 };
 
@@ -3756,6 +3757,92 @@ function _trendGapFor(d) {
   }
   return c[ck][d.n] || null;
 }
+// MFF VALUE (Jack 2026-10-09: "our value score is what is ideally used for trades
+// and overall rankings" -> "make it mff value"): a dynasty board in our value
+// order, usable anywhere a board source is (trade calc via _verBoardFor('mff')).
+// KTC top-200 players with a Dynasty SIM value = FAIR VALUE (same order weights
+// as _trendGapFor); everyone else — deeper players, 2026 rookies KTC lacks, the
+// rookie-pick entries — by Dynasty SIM value read onto the same KTC value scale
+// (the pool's sim-ordered KTC values). Format comes from the MODE (not the
+// rankings board), scoring + TE premium from the toggles; no league context.
+// -> [D index, best first] or null until DYNASTY_SIM_2026 is loaded.
+window._mffValueBoard = function(mode) {
+  if (mode !== 'dynasty' && mode !== 'dynastysf') return null;
+  const S = window.DYNASTY_SIM_2026;
+  if (!S || !Array.isArray(D) || typeof _ktcRankInfo !== 'function') return null;
+  const fmt = mode === 'dynastysf' ? 'sf' : '1qb', vk = fmt + '_' + _dynScoringKey(), tep = _dynTepEff();
+  const ck = vk + '|' + tep + '|' + D.length + '|' + (S.meta && S.meta.built);
+  const c = (window._mffBoardCache = window._mffBoardCache || {});
+  if (c[mode] && c[mode].ck === ck) return c[mode].b;
+  if (!S._idx) {
+    S._idx = {};
+    Object.values(S.players).forEach(e => { S._idx[_dynSimNorm(e.n) + '|' + e.pos] = e; });
+  }
+  const simOf = (n, pos) => {
+    const e = S._idx[_dynSimNorm(n) + '|' + pos];
+    const v = e && e.v && ((tep && pos === 'TE' && e.v[vk + '_tep' + tep]) || e.v[vk]);
+    return v ? { sv: v[0], e } : null;
+  };
+  const pool = [], rest = [];
+  D.forEach((p, i) => {
+    if (!p || p._retired || p._isDevy) return;
+    if (p._isFuturePick || p.s === 'PICK') { const x = simOf(p.n, 'PICK'); if (x) rest.push({ i, sv: x.sv, pick: p.n }); return; }
+    if (p.s !== 'QB' && p.s !== 'RB' && p.s !== 'WR' && p.s !== 'TE') return;
+    const x = simOf(p.n, p.s);
+    if (!x) return;
+    const k = _ktcRankInfo(p.n, mode);
+    if (k && !k.devy && k.ovr && k.ovr <= 200 && k.val) {
+      pool.push({ i, sv: x.sv, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie });
+    } else rest.push({ i, sv: x.sv });
+  });
+  if (pool.length < 50) return null;
+  const sr = pool.slice().sort((a, b) => b.sv - a.sv); sr.forEach((r, j) => { r.sp = j + 1; });
+  const kr = pool.slice().sort((a, b) => a.k - b.k); kr.forEach((r, j) => { r.kp = j + 1; });
+  const vals = kr.map(r => r.kv), n = vals.length;
+  const valAt = pr => pr <= 1 ? vals[0] : pr >= n ? vals[n - 1] * Math.pow(n / pr, 1.5)
+    : vals[Math.floor(pr) - 1] + (vals[Math.ceil(pr) - 1] - vals[Math.floor(pr) - 1]) * (pr - Math.floor(pr));
+  const M = S.meta.mktNext;
+  pool.forEach(r => {
+    let z = Math.log(r.kp);
+    if (M && M.coef) {
+      const b = M.coef, ac = M.ageCenter || 25, a = (r.age != null ? r.age : ac) - ac, P = r.pos;
+      z = b[0] + b[1] * Math.log(r.kp) + b[2] * Math.log(r.sp) + b[3] * (r.rookie ? 1 : 0)
+        + (P === 'RB' ? b[4] : 0) + (P === 'WR' ? b[5] : 0) + (P === 'TE' ? b[6] : 0)
+        + a * (P === 'QB' ? b[7] : P === 'RB' ? b[8] : P === 'WR' ? b[9] : b[10]);
+    }
+    r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp);
+  });
+  pool.slice().sort((a, b) => a._fz - b._fz).forEach((r, j) => { r.mv = vals[j]; });
+  // Sim value -> KTC scale: position among the pool's sim values, read off the KTC curve.
+  const svs = sr.map(r => r.sv);
+  rest.forEach(r => {
+    const x = r.sv;
+    if (x >= svs[0]) { r.mv = vals[0]; return; }
+    if (x <= svs[n - 1]) { r.mv = vals[n - 1] * Math.max(x, 0) / Math.max(svs[n - 1], 1) + x * 1e-6; return; }
+    let j = 1;
+    while (j < n && svs[j] > x) j++;
+    r.mv = valAt(j + (svs[j - 1] - x) / Math.max(svs[j - 1] - svs[j], 1e-9));
+  });
+  // Rookie picks get the same market anchor players get: FAIR orders players on
+  // log ranks with weight 0.5 M3 + 0.3 sim + 0.5 KTC, M3 itself = b1 log KTC + b2 log
+  // sim, so the sim's share is (0.5 b2 + 0.3) / (0.5 (b1 + b2) + 0.8) (~.32). A pick
+  // = KTC's own pick price x its Dynasty SIM value on that scale, geometric blend
+  // at that share. KTC prices 3rds/4ths by slot; "2027 3rd" reads the Mid 3rd.
+  const K = _ktcMapFor(mode) || {};
+  const kb1 = M && M.coef ? M.coef[1] : 1, kb2 = M && M.coef ? M.coef[2] : 0;
+  const simSh = (_FAIR_W.m3 * kb2 + _FAIR_W.sim) / (_FAIR_W.m3 * (kb1 + kb2) + _FAIR_W.sim + _FAIR_W.mkt);
+  rest.forEach(r => {
+    if (!r.pick) return;
+    const m3 = /^(\d{4}) (3rd|4th)$/.exec(r.pick);
+    const kv = K[r.pick] || (m3 ? K[m3[1] + ' Mid ' + m3[2]] : null);
+    if (kv > 0 && r.mv > 0) r.mv = Math.exp(simSh * Math.log(r.mv) + (1 - simSh) * Math.log(kv));
+  });
+  const b = pool.concat(rest).sort((a, b) => b.mv - a.mv).map(r => r.i);
+  window._mffValueOf = window._mffValueOf || {};
+  window._mffValueOf[mode] = new Map(pool.concat(rest).map(r => [r.i, Math.round(r.mv)]));
+  c[mode] = { ck, b };
+  return b;
+};
 function _trendSortVal(d, k) {
   const t = _trendFor(d);
   if (k === 'now') return t && t.now != null ? -t.now : -Infinity;
@@ -33061,6 +33148,7 @@ window.fmtHeight = fmtHeight;
   // on top of the rank would double-count age decay.
 
   function _getTierForPlayerFull(d, src, mode) {
+    if (!versionTiers[src] || !versionTiers[src][mode]) return '';   // MFF VALUE / tierless sources
     const srcTiers = versionTiers[src][mode].ALL || [];
     const srcBoard = window._verBoardFor(src, mode) || versionBoards[src][mode];
     const boardPos = srcBoard.indexOf(d.idx);
@@ -34000,7 +34088,11 @@ window.fmtHeight = fmtHeight;
       const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
       if (tab) tab.style.display = show ? '' : 'none';
     });
-    if (!show && (tradeSource === 'espn' || tradeSource === 'cbs' || tradeSource === 'yahoo')) {
+    // MFF VALUE is a dynasty value — dynasty / dynasty SF only.
+    const dyn = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
+    const mffTab = document.querySelector('.trade-src-tab[data-tsrc="mff"]');
+    if (mffTab) mffTab.style.display = dyn ? '' : 'none';
+    if ((!show && (tradeSource === 'espn' || tradeSource === 'cbs' || tradeSource === 'yahoo')) || (!dyn && tradeSource === 'mff')) {
       tradeSource = 'consensus';
       // [data-tsrc] keeps this off the My Teams tabs, which share the class
       document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.toggle('active', b.dataset.tsrc === 'consensus'));
@@ -34028,8 +34120,12 @@ window.fmtHeight = fmtHeight;
       // My Teams tabs share the .trade-src-tab class but carry data-mtsrc
       // only — ignore them here so their clicks can't clobber tradeSource.
       if (!src) return;
-      // Lock Jack's Ranks behind premium
-      if (src === 'jacks' && !hasPremium()) {
+      if (src === 'mff' && tradeMode !== 'dynasty' && tradeMode !== 'dynastysf') {
+        if (typeof toast === 'function') toast('MFF VALUE is a dynasty value');
+        return;
+      }
+      // Lock Jack's Ranks (and MFF VALUE) behind premium
+      if ((src === 'jacks' || src === 'mff') && !hasPremium()) {
         const existing = document.getElementById('tradePremiumLock');
         if (existing) existing.remove();
         const lockMsg = document.createElement('div');
@@ -34037,7 +34133,7 @@ window.fmtHeight = fmtHeight;
         lockMsg.style.cssText = 'text-align:center;padding:1.25rem;margin:1rem 0;border-radius:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18)';
         lockMsg.innerHTML = '<div style="font-size:1.3rem;margin-bottom:.4rem">&#128274;</div>' +
           '<div style="font-family:Bebas Neue,sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:.3rem">PREMIUM FEATURE</div>' +
-          '<div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">Jack\'s trade values are a Pro feature. Upgrade to unlock.</div>' +
+          '<div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">' + (src === 'mff' ? 'MFF VALUE trade values are' : 'Jack\'s trade values are') + ' a Pro feature. Upgrade to unlock.</div>' +
           '<button class="premium-wall-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>document.querySelector(\'[data-acct-tab=premium]\').click(),100)">GET PREMIUM</button>';
         const tradeLayout = document.querySelector('.trade-layout');
         if (tradeLayout) tradeLayout.parentElement.insertBefore(lockMsg, tradeLayout);
@@ -34063,6 +34159,8 @@ window.fmtHeight = fmtHeight;
       document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       tradeSource = src;
+      // MFF VALUE needs the Dynasty SIM file (lazy, ~770 KB): price once it lands.
+      if (src === 'mff' && !window.DYNASTY_SIM_2026) _dynSimEnsure(() => { if (tradeSource === 'mff') renderAll(); });
       renderAll();
     });
   });
@@ -34107,7 +34205,7 @@ window.fmtHeight = fmtHeight;
     x.fillText('TRADE CALCULATOR', W / 2, 72);
     x.fillStyle = C.dim; x.font = '600 15px ' + DF; try { x.letterSpacing = '1px'; } catch (_) {}
     const modeLbl = { redraft: 'REDRAFT', superflex: 'SUPERFLEX', dynasty: 'DYNASTY 1QB', dynastysf: 'DYNASTY SF' }[tradeMode] || String(tradeMode).toUpperCase();
-    const srcLbl = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS' }[tradeSource] || String(tradeSource).toUpperCase();
+    const srcLbl = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS', mff: 'MFF VALUE' }[tradeSource] || String(tradeSource).toUpperCase();
     x.fillText(modeLbl + '  \u00b7  ' + srcLbl + ' VALUES', W / 2, 100);
     const col = (side, receiver, giver, left, color, total) => {
       const px = left, pw = 520, py = 130, ph = 330;

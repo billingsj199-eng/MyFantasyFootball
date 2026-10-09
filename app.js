@@ -3578,6 +3578,7 @@ function _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr) {
     const pm = (first == null || first >= yr - 2) && window._pmBuiltData ? window._pmBuiltData().find(p => p.name === d.n) : null;
     if (pm && pm.jm != null && pm.jm >= 70) r.push('Prospect pedigree (JM ' + Math.round(pm.jm) + ') — the market underpays it, most of all over five years.');
     if (age != null && age < 23) r.push('Age ' + Math.floor(age) + ' — 22-and-unders have out-produced their price.');
+    if (P === 'RB' && e.rbr >= 0.75 && e.rbYprr) r.push('Efficient receiving back (' + e.rbYprr.toFixed(2) + ' yards per route run in ' + ((S.meta.rbRec || {}).season || (yr - 1)) + ') — the market has underpaid RB receiving efficiency.');
   } else {
     if (np && np >= kp * 1.3) r.push('Priced like ' + lbl(kp) + ' but producing like ' + lbl(np) + ' over this season and next — the price is ahead of the production.');
     else if (sp && sp >= kp * 1.3) r.push('KTC has him ' + lbl(kp) + '; the Dynasty SIM, future seasons included, has him ' + lbl(sp) + '.');
@@ -3585,6 +3586,7 @@ function _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr) {
     if (hist && hist.length > 1 && hist.some(x => x.y1 === yr)) r.push('New team this season — players who change teams have finished below their price.');
     if (P === 'WR' && age >= 28) r.push('Age ' + Math.floor(age) + ' at WR — the market overpays older receivers over the long run.');
     if (P === 'RB' && age >= 26) r.push('Age ' + Math.floor(age) + ' at RB — values fall off from the mid-20s, and the market is slow to price it.');
+    if (P === 'RB' && e.rbr <= -0.75 && e.rbYprr) r.push('Little receiving value (' + e.rbYprr.toFixed(2) + ' yards per route run in ' + ((S.meta.rbRec || {}).season || (yr - 1)) + ') — backs without a passing-game role have finished below their price.');
     if (d.dr === 1 && np && np >= kp * 1.3) r.push('Still priced on his 1st-round pedigree — once a veteran\'s production is known, draft capital stops earning a premium.');
   }
   if (!r.length) return '';
@@ -3930,6 +3932,16 @@ function _trendSparkHtml(series) {
 // Fair value order weights on log ranks (sim_lab/backtest_fair_tune.py): expected next-
 // preseason market rank, Dynasty SIM rank, KTC rank today. WR-age term tested and rejected.
 const _FAIR_W = { m3: 0.5, sim: 0.3, mkt: 0.5 };
+// RB RECEIVING TILT (Jack 2026-10-09; sim_lab/research_efficiency_value.py +
+// backtest_fair_eff_terms.py): RBs' prior-season PFF receiving YPRR (75+ carries)
+// beat FAIR out of sample — RB-only 3yr +.022, 4/4 folds, stable k -.24..-.31 per
+// SD. FAIR score += k x z (meta.rbRec.k, -0.25; z = rbr in the sim data). Lower
+// score = better, so efficient receiving backs move up, non-receivers down.
+function _fairRbRec(r) {
+  if (!r || r.pos !== 'RB' || !r.rbr) return 0;
+  const M = window.DYNASTY_SIM_2026 && window.DYNASTY_SIM_2026.meta && window.DYNASTY_SIM_2026.meta.rbRec;
+  return M && M.k ? M.k * r.rbr : 0;
+}
 function _trendGapFor(d) {
   if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
   const ck = _dynSimSig() + '|' + currentMode;
@@ -3941,7 +3953,7 @@ function _trendGapFor(d) {
       const x = _dynSimFor(p); const k = _ktcRankInfoTep(p.n, currentMode, _dynTepEff());
       if (x && k && !k.devy && k.ovr && k.ovr <= 200) {
         const S = window.DYNASTY_SIM_2026, e = S._idx && S._idx[_dynSimNorm(p.n) + '|' + p.s];
-        pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie) });
+        pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie), rbr: e && e.rbr != null ? e.rbr : 0 });
       }
     });
     const sr = pool.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sp = i + 1; });
@@ -3969,7 +3981,7 @@ function _trendGapFor(d) {
         const v1 = valAt(pr), vPeer = valAt(prPeer);
         r.mkt = { pr, val: v1, cur: r.kv, chg: v1 / r.kv - 1, peer: vPeer / r.kv - 1,
                   ovr: pr < n ? ovrs[Math.max(0, Math.round(pr) - 1)] : null };
-        r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp);
+        r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r);
       });
       // FAIR VALUE NOW (Jack 2026-10-09: "value players in the moment with the idea they
       // have future value"): order the pool by 0.5 x the model's expected market rank +
@@ -4063,7 +4075,7 @@ window._mffValueBoard = function(mode) {
     if (!x) return;
     const k = _ktcRankInfoTep(p.n, mode, tep);
     if (k && !k.devy && k.ovr && k.ovr <= 200 && k.val) {
-      pool.push({ i, sv: x.sv, ratio: x.ratio, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie });
+      pool.push({ i, sv: x.sv, ratio: x.ratio, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie, rbr: x.e.rbr != null ? x.e.rbr : 0 });
     } else rest.push({ i, sv: x.sv, ratio: x.ratio });
   });
   if (pool.length < 50) return null;
@@ -4081,7 +4093,7 @@ window._mffValueBoard = function(mode) {
         + (P === 'RB' ? b[4] : 0) + (P === 'WR' ? b[5] : 0) + (P === 'TE' ? b[6] : 0)
         + a * (P === 'QB' ? b[7] : P === 'RB' ? b[8] : P === 'WR' ? b[9] : b[10]);
     }
-    r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp);
+    r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r);
   });
   pool.slice().sort((a, b) => a._fz - b._fz).forEach((r, j) => { r.mv = vals[j]; });
   // Sim value -> KTC scale: position among the pool's sim values, read off the KTC curve.

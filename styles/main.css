@@ -3255,3 +3255,19 @@ tbody td{font-size:.8125rem}
   #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
   #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
 }
+/* === Research (admin) on phones (2026-10-09) — SEASON EXPLORER dumped all 400
+   rows into the page (12,800px) with nothing pinned: now a 70vh scroll box like
+   ADVANCED STATS, sticky header + sticky player column. Long intro / help text
+   clamps to 3 lines (tap opens it, app.js). Filter chips 23 -> 30px. === */
+@media (max-width:600px){
+  #pageResearch :is(.rs-subtitle,.rs-help):not(.rs-open){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+  #pageResearch #rsExplorerWrap{max-height:70vh;overflow:auto}
+  /* fixed layout at 700px split 22 columns into ~28px each (text ran together) */
+  #pageResearch #rsExplorerWrap > table{table-layout:auto!important;width:max-content!important;min-width:100%!important}
+  #pageResearch #rsExplorerWrap :is(td,th){padding-left:6px;padding-right:6px}
+  #pageResearch #rsExplorerWrap thead th{position:sticky;top:0;z-index:3}
+  #pageResearch #rsExplorerWrap :is(td,th):first-child{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:4px 0 6px -4px rgba(0,0,0,.6);width:112px;min-width:112px;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #pageResearch #rsExplorerWrap thead th:first-child{z-index:4;background:#111827}
+  #pageResearch .rs-adv-chip{min-height:30px}
+  #pageResearch input[type="checkbox"]{width:18px;height:18px}
+}

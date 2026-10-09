@@ -69515,6 +69515,12 @@ Rules:
 // history (window.CONTRACTS_DB, lazy) joined against ALL_PLAYERS_DB actual
 // seasons. Two surfaces: a player lookup panel and a filterable season explorer.
 (function _researchModule() {
+  // Phones clamp the long intro / help paragraphs to three lines (main.css);
+  // a tap opens the full text.
+  document.addEventListener('click', e => {
+    const h = e.target.closest && e.target.closest('#pageResearch :is(.rs-subtitle,.rs-help)');
+    if (h && !e.target.closest('a,button,input,select')) h.classList.toggle('rs-open');
+  });
   let _built = false;
   let _finIdx = null;      // yr -> pos -> name -> {rank, fpts, ppg, gp, tm}
   let _byName = null;      // name -> [ALL_PLAYERS_DB entries]

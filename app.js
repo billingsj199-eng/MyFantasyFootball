@@ -8894,12 +8894,13 @@ function render() {
       const x = _dynSimFor(d);
       const _dc = v => v >= 300 ? '#22c55e' : v >= 150 ? '#4ade80' : v >= 50 ? '#facc15' : 'var(--text2)';
       if (!x) {
-        _statTd1 = '<td class="pts-cell ppg-proj-cell" title="No dynasty sim value — no 2025 games (or no age / draft record)">—</td>';
+        _statTd1 = '<td class="pts-cell ppg-proj-cell" title="No dynasty sim value — no 2023-26 games (or no age / draft record)">—</td>';
         _statTds = '<td class="pts-cell ppg25-cell">—</td>\n      <td class="pts-cell l4ppg-cell">—</td>';
         _statYdsTail = '—';
       } else {
         const _yr = window.DYNASTY_SIM_2026.meta.valuationYear;
-        const _byYr = x.y.map((v, k) => (_yr + k) + ' ' + Math.round(v)).join(' · ');
+        const _wk = window.DYNASTY_SIM_2026.meta.week || 0;
+        const _byYr = x.y.map((v, k) => (k === 0 && _wk ? 'rest of ' + _yr : String(_yr + k)) + ' ' + Math.round(v)).join(' · ');
         const _cmp = (x.comps || []).map(c => c.n + ' \'' + String(c.yr).slice(2) + ' (' + c.vor + ')').join(', ');
         const _tip = ('Expected points over replacement by season: ' + _byYr + '. Closest comparables (their VOR that season): ' + _cmp).replace(/"/g, '&quot;');
         const _bl = _dynSimBlendRank(d);
@@ -10287,8 +10288,9 @@ window._updateRnkStatHeaders = function() {
     const _M = window.DYNASTY_SIM_2026 && window.DYNASTY_SIM_2026.meta;
     const _y0 = _M ? _M.valuationYear : 2026;
     const _f = currentMode === 'dynastysf' ? 'SF' : '1QB';
-    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter in ' + _y0 + '-' + (_y0 + 2) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation is what the 30 most similar past players actually produced (age, production vs replacement, games; rookies by draft slot + age), seasons they did not play counting zero. 12-team PPR, ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables.', 'SIM DYN', _f + ' PPR');
-    _set(c2, 'ppg25Header', 'Expected points over replacement in the 3-season dynasty window (' + _y0 + '-' + (_y0 + 2) + ').', '3YR', _y0 + '-' + String(_y0 + 2).slice(2));
+    const _wk = _M && _M.week ? _M.week : 0;
+    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation is what the 30 most similar past players actually produced (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + ' 12-team PPR, ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables.', 'SIM DYN', _f + ' PPR');
+    _set(c2, 'ppg25Header', 'Expected points over replacement in the 3-season dynasty window (' + (_wk ? 'rest of ' + _y0 + ' after week ' + _wk : _y0) + ' through ' + (_y0 + 2) + ').', '3YR', (_wk ? 'Wk' + (_wk + 1) + '-' : _y0 + '-') + String(_y0 + 2).slice(2));
     _set(c3, 'l4ppgHeader', 'Youth credit — ' + (_M ? _M.youthW : 1.5) + 'x the expected points over replacement in ' + (_y0 + 3) + '-' + (_y0 + 4) + ', the seasons after the window. In the backtest adding it improved both 3-year and 5-year accuracy.', 'YOUTH', (_y0 + 3) + '-' + String(_y0 + 4).slice(2));
   } else if (rnkStatMode === 'xfp') {
     const _wkX = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;

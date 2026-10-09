@@ -70440,6 +70440,31 @@ Rules:
   }
   // Team-mode switch re-scores every roster on the new MFF VALUE (window._mffSetMode).
   window._mtRescore = function() { if (_mtValueSrc === 'mff') _mtRefreshAfterSrcChange(); };
+  // DEFAULT SOURCE for premium users who haven't picked one (Jack 2026-10-09: "make
+  // mff value the my teams default for dynasty too"): MFF VALUE for dynasty /
+  // dynasty SF leagues, JACK'S for the rest (2026-08-31 rule). The source is one
+  // global setting, so the default follows the league on screen. A real click sets
+  // mt_value_src_user; a stored non-consensus value from before the flag existed
+  // also counts as a pick (only clicks stored those; 'consensus' was also written by
+  // the redraft-only fallback below, so it doesn't count).
+  function _mtUserPicked() {
+    try {
+      if (localStorage.getItem('mt_value_src_user') === '1') return true;
+      const st = localStorage.getItem('mt_value_src');
+      return !!(st && st !== 'consensus' && st !== 'jsmodel');
+    } catch (e) { return false; }
+  }
+  function _mtApplyDefaultSrc() {
+    if (_mtUserPicked() || typeof hasPremium !== 'function' || !hasPremium()) return false;
+    const m = _mtGetRankingMode();
+    const want = (m === 'dynasty' || m === 'dynastysf') ? 'mff' : 'jacks';
+    if (_mtValueSrc === want || ['consensus', 'jacks', 'mff'].indexOf(_mtValueSrc) < 0) return false;
+    _mtValueSrc = want;
+    document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === want));
+    if (typeof _mtUpdateValueSrcLabel === 'function') _mtUpdateValueSrcLabel();
+    _mtMffEnsure();
+    return true;
+  }
   function _mtUpdateAdpSrcVisibility() {
     const show = _mtGetRankingMode() === 'redraft';
     ['espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
@@ -70455,6 +70480,7 @@ Rules:
       try { localStorage.setItem('mt_value_src', 'consensus'); } catch(e) {}
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'consensus'));
     }
+    _mtApplyDefaultSrc();
     _mtMffBar();
   }
 
@@ -70523,7 +70549,7 @@ Rules:
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       _mtValueSrc = src;
-      try { localStorage.setItem('mt_value_src', src); } catch(e) {}
+      try { localStorage.setItem('mt_value_src', src); localStorage.setItem('mt_value_src_user', '1'); } catch(e) {}
       if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
       _mtMffEnsure();
       _mtRefreshAfterSrcChange();
@@ -70539,15 +70565,8 @@ Rules:
     // explicit saved choice always wins — this only fills the blank — and
     // free users stay on consensus (jacks-official is premium-gated; a
     // top-36 public slice would rank most rosters 999).
-    if (prem && _mtValueSrc === 'consensus') {
-      let stored = null;
-      try { stored = localStorage.getItem('mt_value_src'); } catch (e) {}
-      if (!stored) {
-        _mtValueSrc = 'jacks';
-        document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'jacks'));
-        _mtRefreshAfterSrcChange();
-      }
-    }
+    // (dynasty leagues: MFF VALUE — _mtApplyDefaultSrc; explicit picks always win)
+    if (prem && _mtApplyDefaultSrc()) _mtRefreshAfterSrcChange();
     ['jacks', 'mff', 'underdog', 'espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (!tab) return;

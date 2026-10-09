@@ -5917,7 +5917,7 @@ function getFiltered(applyTopN) {
         case 'round': av = a.round; bv = b.round; break;
         case 'pts': if (_sm === 'trend') { av = _trendSortVal(a, 'now'); bv = _trendSortVal(b, 'now'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'v'); bv = _vorSort(b, 'v'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
         case 'fpts25': if (_sm === 'trend') { av = _trendSortVal(a, 'd7'); bv = _trendSortVal(b, 'd7'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'win3'); bv = _dynSortVal(b, 'win3'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vor'); bv = _vorSort(b, 'vor'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
-        case 'l4ppg': if (_sm === 'trend') { av = _trendSortVal(a, 'd30'); bv = _trendSortVal(b, 'd30'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'youth'); bv = _dynSortVal(b, 'youth'); break; } if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'l4ppg': if (_sm === 'fantasy' && _isDynSimMode()) { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'trend') { av = _trendSortVal(a, 'd30'); bv = _trendSortVal(b, 'd30'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'youth'); bv = _dynSortVal(b, 'youth'); break; } if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
@@ -9375,6 +9375,11 @@ function render() {
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');
   document.body.classList.toggle('format-dynasty', _isDynSimMode());   // DYN SIM button (prototype)
+  // Dynasty FANTASY view's VALUE column needs the Dynasty SIM file: load once, repaint when in.
+  if (_isDynSimMode() && _statMode === 'fantasy' && !window.DYNASTY_SIM_2026 && !window._dynValLoadReq) {
+    window._dynValLoadReq = true;
+    _dynSimEnsure(() => { if (_isDynSimMode()) render(); });
+  }
   document.body.classList.toggle('trend-ok', _isTrendMode());          // TRENDS button
   // Phone cards label their one stat cell per STATS view (index.html M1 block).
   document.body.dataset.rnkStat = _statMode;   // also hides the AGE column (index.html)
@@ -9706,8 +9711,18 @@ function render() {
         }
       }
       _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg+(_projPpg>0&&d.s?_mobPosRankTag(d,'disp'):'')}</td>`;
+      // DYNASTY boards (Jack 2026-10-09): VALUE (Dynasty SIM) replaces L4 PPG.
+      let _l4Td = `<td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
+      if (_isDynSimMode()) {
+        const _dv = window.DYNASTY_SIM_2026 ? _dynSimFor(d) : null;
+        const _dvc = v => v >= 300 ? '#22c55e' : v >= 150 ? '#4ade80' : v >= 50 ? '#facc15' : 'var(--text2)';
+        _l4Td = !window.DYNASTY_SIM_2026 ? '<td class="pts-cell l4ppg-cell" style="color:var(--text2)">…</td>'
+          : !_dv ? '<td class="pts-cell l4ppg-cell" style="color:var(--text2)">—</td>'
+          : _dynLocked(_dv) ? '<td class="pts-cell l4ppg-cell"><span class="cons-lock" aria-label="Premium" title="' + _DYN_LOCK_TIP + '">🔒</span></td>'
+          : `<td class="pts-cell l4ppg-cell" title="Dynasty SIM #${_dv.rk} — 3-season window ${_dv.win3} + youth credit ${_dv.youth} (open DYN SIM for the season split and comparables)" style="color:${_dvc(_dv.val)};font-weight:700;cursor:help">${_dv.val}</td>`;
+      }
       _statTds = `<td class="pts-cell ppg25-cell"${_25Tip}${_25Color?' style="color:'+_25Color+';font-weight:700"':''}>${_25ppg!=null?_25ppg:'—'}</td>
-      <td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
+      ${_l4Td}`;
     } else if (_statMode === 'sims') {
       // SIMS view: sim PPG / boom % / bust %, Total Yds in the tail (yrr)
       // column. Season boards read seasonSim + seasonPpg; the WEEKLY board
@@ -11022,7 +11037,8 @@ window._updateRnkStatHeaders = function() {
     } else {
       _set(c2, 'ppg25Header', 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).', '\'25 PPG', fmtLabel);
     }
-    _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
+    if (_isDynSimMode()) _set(c3, 'l4ppgHeader', 'Dynasty SIM value — expected points over a replacement starter for the rest of this season and the next two, plus a youth credit for the seasons after (' + (currentMode === 'dynastysf' ? 'superflex' : '1QB') + ', follows the scoring toggle). Same number as the player card\'s OUR VALUE and the DYN SIM view; open DYN SIM for the season split and comparables. Free: the Dynasty SIM top 30.', 'Value', 'Dyn SIM');
+    else _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
   } else if (rnkStatMode === 'proj') {
     if (currentMode === 'weekly') {
       // WEEKLY column order (Jack 2026-09-08): PPG · OPP · SPREAD · TEAM TOTAL · Yds · TD · Rec.
@@ -13050,7 +13066,7 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
       rnkStatMode = 'fantasy';
       document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'fantasy'));
     }
-    if (_isDynSimMode() && typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+    if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
     const wkSelWrap = document.getElementById('weeklyWeekSelectorWrap');
     if (wkSelWrap) wkSelWrap.style.display = (currentMode === 'weekly') ? 'inline-flex' : 'none';
     // Entering WEEKLY: apply the non-admin published-week lock + LIVE chip
@@ -22108,12 +22124,14 @@ window.switchPage = switchPage;
   }
   function _apply(state) {
     Object.keys(COLS).forEach(k => {
-      const visible = _isOn(state, k);
+      // DYNASTY boards (Jack 2026-10-09): AGE on, P-SOS off (SOS hides by CSS).
+      const _dyn = document.body.classList.contains('format-dynasty');
+      const visible = _dyn && k === 'age' ? true : _dyn && k === 'ppsos' ? false : _isOn(state, k);
       // An EXPLICIT check (state true, i.e. the user ticked the box at some
       // point) is applied as inline !important so it beats the mobile
       // declutter hides in main.css. Unset stays '' so those CSS hides apply.
       // Never force in WEEKLY format — its column swap owns ADP/Age there.
-      const forced = state[k] === true && !document.body.classList.contains('format-weekly');
+      const forced = state[k] === true && !document.body.classList.contains('format-weekly') && !(_dyn && k === 'age');
       const _setDisp = el => {
         if (!visible) { el.style.display = 'none'; return; }
         if (forced) el.style.setProperty('display', 'table-cell', 'important');

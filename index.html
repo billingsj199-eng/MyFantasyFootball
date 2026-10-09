@@ -1493,6 +1493,9 @@ CLEAR ALL
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
   body:not(.format-dynasty) .rnk-statmode-btn[data-rnkstatmode="dyn"] { display: none !important; }
   body:not(.trend-ok) .rnk-statmode-btn[data-rnkstatmode="trend"] { display: none !important; }
+  /* DYNASTY boards (Jack 2026-10-09): no SOS / P-SOS — schedule strength is a this-season read. */
+  body.format-dynasty #pageRankings #psosHeader, body.format-dynasty #pageRankings .psos-cell,
+  body.format-dynasty #pageRankings #ppsosHeader, body.format-dynasty #pageRankings .ppsos-cell { display: none !important; }
   body:not([data-rnk-stat="dyn"]) #rnkTepWrap { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
   /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in

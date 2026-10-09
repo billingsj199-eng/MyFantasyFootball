@@ -65258,9 +65258,10 @@ Rules:
     const opts = (x.options || []).map((o, i) => {
       const picked = x.status === 'answered' && x.pick === i;
       const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'YOU GIVE: ' : 'YOU GET: ') + '</span>' : '';
-      return '<div style="padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
+      // flex, not float: on a phone the floated label wrapped below and hung off the box
+      return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
         (picked ? 'background:rgba(34,197,94,.12);border:1px solid var(--green);color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
-        (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + (picked ? ' <span style="color:var(--green);font-size:.6875rem;float:right;margin-top:2px">JACK\'S PICK</span>' : '') +
+        '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' + (picked ? '<span style="color:var(--green);font-size:.6875rem;margin-left:auto">JACK\'S PICK</span>' : '') +
         '</div>';
     }).join('');
     return opts +

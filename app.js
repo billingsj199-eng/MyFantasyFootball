@@ -34469,10 +34469,25 @@ window.fmtHeight = fmtHeight;
       tradeMode = btn.dataset.tmode;
       updatePickVisibility();
       updateAdpSrcVisibility();
+      _tradeDefaultMff();
       hideSlotPopover();
       renderAll();
     });
   });
+  // MFF VALUE = the dynasty default for the calculator + FIND TRADE (they share
+  // tradeSource) — Jack 2026-10-09 "make mff value the trade finder default for
+  // dynasty". Season Pass only (MFF VALUE is premium), and only until the user
+  // picks a source themselves (_tradeSrcPicked, set by the source-tab handler —
+  // which also covers ?trade= share links restoring their own source).
+  let _tradeSrcPicked = false;
+  function _tradeDefaultMff() {
+    if (_tradeSrcPicked || tradeSource !== 'consensus') return;
+    if (tradeMode !== 'dynasty' && tradeMode !== 'dynastysf') return;
+    if (typeof hasPremium !== 'function' || !hasPremium()) return;
+    tradeSource = 'mff';
+    document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.toggle('active', b.dataset.tsrc === 'mff'));
+    if (!window.DYNASTY_SIM_2026 && typeof _dynSimEnsure === 'function') _dynSimEnsure(() => { if (tradeSource === 'mff') renderAll(); });
+  }
   updatePickVisibility();
   updateAdpSrcVisibility();
 
@@ -34522,6 +34537,7 @@ window.fmtHeight = fmtHeight;
       document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       tradeSource = src;
+      _tradeSrcPicked = true;   // an explicit pick beats the dynasty MFF VALUE default
       // MFF VALUE needs the Dynasty SIM file (lazy, ~770 KB): price once it lands.
       if (src === 'mff' && !window.DYNASTY_SIM_2026) _dynSimEnsure(() => { if (tradeSource === 'mff') renderAll(); });
       renderAll();

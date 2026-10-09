@@ -3092,7 +3092,7 @@ function _effStatMode() {
 // (expected VOR rest of 2026 + 2027-28) + youth credit (1.5 x 2029-30).
 // 1QB values on DYNASTY, superflex replacement levels on DYNASTY SF; follows
 // the PPR / HALF / STD toggle. The ~365 KB file loads on first use.
-const _DYN_SIM_SRC = 'data/dynasty_sim_2026.js?v=2026-10-09-proto';
+const _DYN_SIM_SRC = 'data/dynasty_sim_2026.js?v=2026-10-09-proto-tep';
 function _dynSimEnsure(cb) {
   if (window.DYNASTY_SIM_2026) { if (cb) cb(); return; }
   const w = (window._dynSimWaiters = window._dynSimWaiters || []);
@@ -3112,6 +3112,26 @@ function _dynSimKey() {
 function _dynSimNorm(n) {
   return String(n || '').toLowerCase().replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/, '').replace(/[.\-']/g, '').replace(/\s+/g, ' ').trim();
 }
+// TE premium (+ pts per TE reception): only TE values change, stored under
+// '<key>_tep0.5' / '_tep1'; everyone's rank is recomputed here.
+let _dynTep = (() => { try { const v = +localStorage.getItem('mff_dyn_tep'); return v === 0.5 || v === 1 ? v : 0; } catch (e) { return 0; } })();
+function _dynSimVal(e) {
+  const k = _dynSimKey();
+  if (_dynTep && e.pos === 'TE') { const t = e.v[k + '_tep' + _dynTep]; if (t) return t; }
+  return e.v[k] || null;
+}
+// Overall rank per player for the active format / scoring / TE premium.
+function _dynSimRanks() {
+  const S = window.DYNASTY_SIM_2026;
+  const ck = _dynSimKey() + '|' + _dynTep;
+  if (S._rk && S._rk.ck === ck) return S._rk.m;
+  const list = [];
+  Object.values(S.players).forEach(e => { const v = _dynSimVal(e); if (v) list.push([e, v[0]]); });
+  list.sort((a, b) => b[1] - a[1]);
+  const m = new Map(); list.forEach((x, i) => m.set(x[0], i + 1));
+  S._rk = { ck, m };
+  return m;
+}
 // -> { val, win3, youth, rk, y:[rest of 2026, 2027..2030], comps:[{n, yr, vor}] } or null
 function _dynSimFor(d) {
   const S = window.DYNASTY_SIM_2026;
@@ -3121,9 +3141,9 @@ function _dynSimFor(d) {
     Object.values(S.players).forEach(e => { S._idx[_dynSimNorm(e.n) + '|' + e.pos] = e; });
   }
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
-  const v = e && e.v && e.v[_dynSimKey()];
+  const v = e && e.v && _dynSimVal(e);
   if (!v) return null;
-  return { val: v[0], win3: v[1], youth: v[2], rk: v[3], y: v.slice(4),
+  return { val: v[0], win3: v[1], youth: v[2], rk: _dynSimRanks().get(e), y: v.slice(4),
            comps: (e.c || []).map(c => ({ n: c[0], yr: c[1], vor: c[2] })) };
 }
 // Free window (same as SIM VOR's): Season Pass past the top 30.
@@ -3134,7 +3154,7 @@ function _dynSortVal(d, k) { const x = _dynSimFor(d); return (!x || _dynLocked(x
 // players that have both. Cached per format + scoring.
 function _dynSimBlendRank(d) {
   if (typeof _ktcRankInfo !== 'function' || !Array.isArray(D)) return null;
-  const fmt = _dynSimKey();
+  const fmt = _dynSimKey() + '|' + _dynTep;
   const c = (window._dynSimBlendCache = window._dynSimBlendCache || {});
   if (!c[fmt]) {
     const both = [];
@@ -10319,7 +10339,7 @@ window._updateRnkStatHeaders = function() {
     const _y0 = _M ? _M.valuationYear : 2026;
     const _f = currentMode === 'dynastysf' ? 'SF' : '1QB';
     const _wk = _M && _M.week ? _M.week : 0;
-    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + ' 12-team ' + fmtLabel + ', ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR.' + (hasPremium() ? '' : ' Free: the top 30.'), 'SIM DYN', _f + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR'));
+    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + ' 12-team ' + fmtLabel + (_dynTep ? ' with a +' + _dynTep + ' TE premium per reception' : '') + ', ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR.' + (hasPremium() ? '' : ' Free: the top 30.'), 'SIM DYN', _f + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR') + (_dynTep ? ' TEP' : ''));
     _set(c2, 'ppg25Header', 'Expected points over replacement in the 3-season dynasty window (' + (_wk ? 'rest of ' + _y0 + ' after week ' + _wk : _y0) + ' through ' + (_y0 + 2) + ').', '3YR', (_wk ? 'Wk' + (_wk + 1) + '-' : _y0 + '-') + String(_y0 + 2).slice(2));
     _set(c3, 'l4ppgHeader', 'Youth credit — ' + (_M ? _M.youthW : 1.5) + 'x the expected points over replacement in ' + (_y0 + 3) + '-' + (_y0 + 4) + ', the seasons after the window. In the backtest adding it improved both 3-year and 5-year accuracy.', 'YOUTH', (_y0 + 3) + '-' + String(_y0 + 4).slice(2));
   } else if (rnkStatMode === 'xfp') {
@@ -10354,6 +10374,18 @@ window._updateRnkStatHeaders = function() {
     }
   }
 };
+
+// DYN SIM TE premium toggle (OFF / +0.5 / +1.0 per TE reception), remembered.
+document.querySelectorAll('.rnk-tep-btn').forEach(btn => {
+  btn.classList.toggle('active', +btn.dataset.rnktep === _dynTep);
+  btn.addEventListener('click', () => {
+    _dynTep = +btn.dataset.rnktep || 0;
+    try { localStorage.setItem('mff_dyn_tep', String(_dynTep)); } catch (e) { /* private mode */ }
+    document.querySelectorAll('.rnk-tep-btn').forEach(b => b.classList.toggle('active', b === btn));
+    window._updateRnkStatHeaders();
+    render();
+  });
+});
 
 // STATS view toggle (Fantasy / Projections / Betting Lines)
 document.querySelectorAll('.rnk-statmode-btn').forEach(btn => {

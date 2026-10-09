@@ -1477,6 +1477,7 @@ CLEAR ALL
   body.ssn-xfp-col:not(.format-weekly) #pageRankings .xfpg-cell { display: table-cell !important; }
   body.format-weekly .rnk-statmode-btn[data-rnkstatmode="xfp"] { display: none !important; }
   body:not(.format-dynasty) .rnk-statmode-btn[data-rnkstatmode="dyn"] { display: none !important; }
+  body:not([data-rnk-stat="dyn"]) #rnkTepWrap { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
   /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in
      the first stat cell with VOR beside it; the phone card has only that one
@@ -1734,6 +1735,15 @@ tr:hover .watch-star{opacity:.55}
 <button class="rnk-scoring-btn active" data-rnkscoring="ppr">PPR</button>
 <button class="rnk-scoring-btn" data-rnkscoring="half">HALF</button>
 <button class="rnk-scoring-btn" data-rnkscoring="std">STD</button>
+</div>
+</div>
+<!-- TE premium for the DYN SIM view only (CSS hides it elsewhere) -->
+<div id="rnkTepWrap" style="display:flex;align-items:center;gap:8px">
+<span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase" title="TE premium — extra points per TE reception. Changes the DYN SIM values of tight ends (and so everyone's rank).">TE PREM:</span>
+<div class="career-log-toggle" id="rnkTepToggle">
+<button class="rnk-tep-btn active" data-rnktep="0">OFF</button>
+<button class="rnk-tep-btn" data-rnktep="0.5">+0.5</button>
+<button class="rnk-tep-btn" data-rnktep="1">+1.0</button>
 </div>
 </div>
 <div style="display:flex;align-items:center;gap:8px">

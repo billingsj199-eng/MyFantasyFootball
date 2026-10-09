@@ -59058,6 +59058,10 @@ Rules:
       for (const d of D) {
         if (rostered.has(d.n) || rosteredNorm.has(_wwNorm(d.n))) continue;
         if (d.s === 'PICK' || d._isFuturePick) continue; // dynasty board pick rows aren't free agents
+        // Retired ALL_PLAYERS rows (e.g. "Oronde Gadsden" WR MIA 1999-2003)
+        // fold onto their active Junior's board rank via suffix-stripping and
+        // got listed as a second copy of him when he's unrostered (2026-10-09).
+        if (d._retired) continue;
         const rank = _mtGetPlayerRank(d.n);
         if (rank > 150) continue;
         fas.push({ d, rank });
@@ -62257,7 +62261,7 @@ Rules:
     for (const d of D) {
       if (!pool[d.s]) continue;
       if (rostered.has(d.n) || rosteredNorm.has(norm(d.n))) continue;
-      if (d.rm) continue;
+      if (d.rm || d._retired) continue; // retired dads fold onto Junior's rank (see _mtRenderWaivers)
       // Top-150 draftable rule for skill spots; K/DST are streamers and sit
       // past 150 on every board, so any projected K/DST qualifies.
       if (d.s !== 'K' && d.s !== 'DST' && _mtGetPlayerRank(d.n) > 150) continue;

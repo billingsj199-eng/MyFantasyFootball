@@ -5253,6 +5253,14 @@ function getFiltered(applyTopN) {
       const _bc = window._rankBelowCut;
       f = f.filter(d => !_bc.has(d.n)).concat(f.filter(d => _bc.has(d.n)));
     }
+  } else if (window._rankBelowCut && !window._rankBaseMode) {
+    // Board-order view (Jack 2026-10-09): the below-cut tail sorts by PROJ PPG
+    // (high first, board rank breaks ties) so the best guys under the line
+    // surface right below it. _rankBaseMode skips it — base ranks stay board order.
+    const _bc = window._rankBelowCut;
+    const _pp = d => { const v = _displayProjPpg(d); return (v != null && isFinite(v)) ? v : -Infinity; };
+    const _tail = f.filter(d => _bc.has(d.n)).sort((a, b) => (_pp(b) - _pp(a)) || (a.myRank - b.myRank));
+    f = f.filter(d => !_bc.has(d.n)).concat(_tail);
   }
   return f;
 }
@@ -8804,7 +8812,7 @@ function render() {
               <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--red)">${_cutName} · ${_cutLbl}</span>
               ${_cutCtrls ? `<div class="tier-controls">
                 ${_prevRank > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}"${_cutPosAttr} title="Move line up (cut one more player)">▲</button>` : ''}
-                <button class="tier-btn" data-cut-set="${_rowRank}"${_cutPosAttr} title="Move line down (keep ${d.n})">▼</button>
+                <button class="tier-btn" data-cut-set="${_isPosCutView ? _rowRank : _cutN + 1}"${_cutPosAttr} title="Move line down (keep one more player)">▼</button>
                 <button class="tier-btn del" data-cut-clear="1"${_cutPosAttr} title="Remove the cut line (everyone visible)">✕</button>
               </div>` : ''}
             </div></td>
@@ -8813,7 +8821,8 @@ function render() {
       }
     }
     // Insert tier row before this player if a tier sits between previous rank and this rank
-    if (showTiers) html += _tierRowsHtml(i > 0 ? (useFilteredRank ? _rankOf(data[i-1], i - 1) : data[i-1].myRank) : 0, displayRank);
+    // Below-cut tail is PROJ PPG ordered (getFiltered), so no tier banners there
+    if (showTiers && !(window._rankBelowCut && window._rankBelowCut.has(d.n))) html += _tierRowsHtml(i > 0 ? (useFilteredRank ? _rankOf(data[i-1], i - 1) : data[i-1].myRank) : 0, displayRank);
 
     const _cc = _consCellInfo(d);
     const _ccCmp = _consCmp(d);
@@ -9073,7 +9082,8 @@ function render() {
     </tr>`;
 
     // "Add tier" + "cut line" mini-buttons between rows (show on hover via CSS)
-    if (editable && showTiers && !tierMap[displayRank]) {
+    // (not in the PROJ-ordered below-cut tail — rank/row slots don't line up there)
+    if (editable && showTiers && !tierMap[displayRank] && !(window._rankBelowCut && window._rankBelowCut.has(d.n))) {
       // WEEKLY QB/K/DST views place that group's own position-rank cut line
       // (i+1 = position rank there); everywhere else it's the overall cut.
       const _addCutPos = (typeof window._posCutGroupsFor === 'function' && window._posCutGroupsFor(currentMode).includes(filter)) ? filter : null;

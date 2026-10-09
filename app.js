@@ -32481,6 +32481,24 @@ window.fmtHeight = fmtHeight;
     return slot.charAt(0).toUpperCase() + slot.slice(1);
   }
 
+  // Stat line under each trade chip's name (Jack 2026-10-09): projected PPG
+  // and season PPG, each with its position rank — the same (N) as the player
+  // card, so the two sides read in "where he sits at his position" terms.
+  function _tradeStatLine(d) {
+    if (!d || !d.s || typeof _cardPosRank !== 'function') return '';
+    const part = (lbl, v, key) => {
+      if (v == null || !isFinite(v) || v <= 0) return '';
+      const c = (typeof posFptsColor === 'function') ? posFptsColor(v, d.s) : null;
+      const r = _cardPosRank(d, key);
+      const pl = d.s === 'DST' ? 'D/STs' : d.s + 's';
+      return lbl + ' <b style="font-weight:700' + (c ? ';color:' + c : '') + '">' + (Math.round(v * 10) / 10) + '</b>'
+        + (r ? '<span title="#' + r.rank + ' of ' + r.of + ' ' + pl + '" style="cursor:help"> (' + r.rank + ')</span>' : '');
+    };
+    const sp = adjSeasonPpg(d);
+    const bits = [part('PROJ', adjProjPpg(d), 'proj'), part("'" + _seasonPpgYear(), sp && sp.v, 'ppg')].filter(Boolean);
+    return bits.length ? '<span class="tp-sub" style="font-size:.6875rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + bits.join(' · ') + '</span>' : '';
+  }
+
   function renderSide(side, containerId, totalId, sideClass) {
     const container = document.getElementById(containerId);
     const totalEl = document.getElementById(totalId);
@@ -32495,7 +32513,10 @@ window.fmtHeight = fmtHeight;
         const tierHtml = tier ? `<span class="tier-badge ${tierColor(tier)}" style="font-size:.6875rem;padding:1px 5px;min-width:auto;margin-left:auto">${tier}</span>` : '';
         html += `<div class="trade-player-chip">
           <span class="tp-pos ${d.s}">${d.s}</span>
-          <a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>${_injPill(d)}
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25">
+            <span style="display:flex;align-items:center;min-width:0"><a class="tp-name tp-card-link" href="javascript:void(0)" data-didx="${idx}" style="color:inherit;text-decoration:none;cursor:pointer">${d.n}</a>${_injPill(d)}</span>
+            ${_tradeStatLine(d)}
+          </span>
           ${tierHtml}${_tradeVorTag(d)}
           <span class="tp-val">${val}</span>
           <button class="tp-remove" data-idx="${idx}" data-side="${sideClass}">&times;</button>

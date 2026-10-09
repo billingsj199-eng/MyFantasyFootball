@@ -3369,6 +3369,7 @@ function _trendSparkHtml(series) {
 // SIM GAP (dynasty): within-pool ranks of the players that have both a Dynasty
 // SIM value and a KTC rank <= 200, gap = log(sim rank / KTC rank), BUY / SELL =
 // the most-negative / most-positive fifth (the backtested buckets).
+const _FAIR_W = 0.7;   // fair value order: 0.7 expected market rank + 0.3 sim rank (backtest best avg)
 function _trendGapFor(d) {
   if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
   const ck = _dynSimSig() + '|' + currentMode;
@@ -3408,6 +3409,15 @@ function _trendGapFor(d) {
         const v1 = valAt(pr), vPeer = valAt(prPeer);
         r.mkt = { pr, val: v1, cur: r.kv, chg: v1 / r.kv - 1, peer: vPeer / r.kv - 1,
                   ovr: pr < n ? ovrs[Math.max(0, Math.round(pr) - 1)] : null };
+        r._fz = _FAIR_W * z + (1 - _FAIR_W) * Math.log(r.sp);
+      });
+      // FAIR VALUE NOW (Jack 2026-10-09: "value players in the moment with the idea they
+      // have future value"): order the pool by 0.7 x the model's expected market rank +
+      // 0.3 x the Dynasty SIM rank, and price each player at TODAY's KTC value for that
+      // spot. Backtest 2015-23 (per-year Spearman; next-yr market / 3yr VOR / 5yr VOR):
+      // KTC now .663/.538/.531, this .692/.556/.553 — the best all-round order tried.
+      pool.slice().sort((a, b) => a._fz - b._fz).forEach((r, i) => {
+        r.mkt.fair = vals[i]; r.mkt.fairRk = ovrs[i]; r.mkt.fairDiff = vals[i] / r.kv - 1;
       });
     }
     const g = pool.map(r => r.gap).sort((a, b) => a - b);
@@ -3428,7 +3438,7 @@ function _trendSortVal(d, k) {
   const t = _trendFor(d);
   if (k === 'now') return t && t.now != null ? -t.now : -Infinity;
   if (k === 'gap') { const g = _trendGapFor(d); return g && !_dynLocked(g.x) ? -g.gap : -Infinity; }
-  if (k === 'mkt') { const g = _trendGapFor(d); return g && g.mkt && !_dynLocked(g.x) ? g.mkt.chg : -Infinity; }
+  if (k === 'mkt') { const g = _trendGapFor(d); return g && g.mkt && g.mkt.fair != null && !_dynLocked(g.x) ? g.mkt.fair : -Infinity; }
   return t && t[k] != null ? t[k] : -Infinity;
 }
 
@@ -9365,14 +9375,15 @@ function render() {
           const col = g.call === 'BUY' ? '#22c55e' : g.call === 'SELL' ? '#ef4444' : 'var(--text2)';
           _statJmCell = `<span title="${tip}" style="cursor:help;font-weight:700;color:${col}">${g.call || (g.sp < g.kp ? '+' : g.sp > g.kp ? '−' : '') + Math.abs(g.kp - g.sp)}</span>`;
         }
-        if (g && g.mkt && !_dynLocked(g.x)) {
-          const mk = g.mkt, edge = mk.chg - mk.peer;
+        if (g && g.mkt && g.mkt.fair != null && !_dynLocked(g.x)) {
+          const mk = g.mkt, edge = mk.chg - mk.peer, fd = mk.fairDiff;
           const pct = v => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 100)) + '%';
-          const col = edge >= 0.05 ? '#22c55e' : edge <= -0.05 ? '#ef4444' : 'var(--text2)';
-          const tip = ('Expected KTC value by next preseason (Aug 2027): about ' + Math.round(mk.val).toLocaleString() + ' (now ' + Math.round(mk.cur).toLocaleString() + ', ' + pct(mk.chg) + ')' + (mk.ovr ? ' — around KTC #' + mk.ovr + ' today\'s scale.' : ' — out of the KTC top 200.')
-            + ' Typical for his KTC rank: ' + pct(mk.peer) + ', so ' + (Math.abs(edge) < 0.05 ? 'in line with his rank.' : pct(edge) + (edge > 0 ? ' better' : ' worse') + ' than peers.')
-            + ' Most values fall a year out because a new rookie class slots in ahead and older players slide; the color is the part beyond that. Model: market rank, Dynasty SIM rank, rookie, position and age by position, fit on 2015-23 dynasty ADP (next-year rank Spearman .70 vs .66 for no change; .26 on who beats his rank\'s drift).').replace(/"/g, '&quot;');
-          _statLandingCell = `<span title="${tip}" style="cursor:help;font-weight:700;color:${col}">${pct(mk.chg)}</span>`;
+          const col = fd >= 0.10 ? '#22c55e' : fd <= -0.10 ? '#ef4444' : 'var(--text2)';
+          const tip = ('Fair value now: ' + Math.round(mk.fair).toLocaleString() + ' on today\'s KTC scale (KTC has ' + Math.round(mk.cur).toLocaleString() + ', ' + pct(fd) + ') — about where KTC #' + mk.fairRk + ' sits today.'
+            + ' It prices what he should cost now, future included: the order blends where the market is expected to have him next preseason (70%) with the Dynasty SIM production view (30%), then reads today\'s KTC value at that spot.'
+            + ' Next preseason the model expects about ' + Math.round(mk.val).toLocaleString() + ' (' + pct(mk.chg) + '; typical for his rank ' + pct(mk.peer) + ').'
+            + ' Backtest 2015-23: this order ranked next year\'s market (.69 vs .66) and 3- / 5-year production (.56 / .55 vs .54 / .53) better than KTC today. Green / red = 10%+ above / below KTC.').replace(/"/g, '&quot;');
+          _statLandingCell = `<span title="${tip}" style="cursor:help;font-weight:700">${Math.round(mk.fair).toLocaleString()}<div style="font-size:.6875rem;line-height:1.2;font-weight:700;color:${col}">${pct(fd)}</div></span>`;
         } else if (g && g.mkt) {
           _statLandingCell = '<span class="cons-lock" aria-label="Premium" title="' + _DYN_LOCK_TIP + '">🔒</span>';
         } else {
@@ -9745,8 +9756,8 @@ function render() {
         sp.setAttribute('data-gloss', 'Cross-platform average — mean of every platform that lists the player (Underdog for premium, Sleeper, ESPN, CBS, Yahoo). Hover a value to see which went in. Green = the market as a whole drafts the player later than this rank (value), red = earlier (reach).');
       }
     } else if (_statMode === 'trend' && _trendIsDyn() && id === 'landingHeader') {
-      sp.innerHTML = 'AUG \'27 ';
-      sp.setAttribute('data-gloss', 'Expected KTC value change by next preseason (August 2027). Predicted from his KTC rank, Dynasty SIM rank, rookie status, position and age by position — fit on 2015-23 dynasty ADP, where it ranked next year\'s market better than "no change" (.70 vs .66). Most values fall a year out (a new rookie class slots in, older players slide); green / red = better / worse than the typical change for his current rank by 5%+, the part the model adds (.26 Spearman on who beats his rank\'s drift). Free: Dynasty SIM top 30.');
+      sp.innerHTML = 'FAIR VALUE ';
+      sp.setAttribute('data-gloss', 'What he should cost NOW with his future priced in, on today\'s KTC value scale. The order blends where the market is expected to have him next preseason (70% — KTC rank, Dynasty SIM rank, rookie status, position, age by position) with the Dynasty SIM production view (30%); each player then takes today\'s KTC value for his spot in that order. Sub-line = vs his KTC value today (green / red = 10%+ above / below). Backtest 2015-23: ranked next year\'s market .69 vs .66 for KTC today, and 3- / 5-year production .56 / .55 vs .54 / .53. Free: Dynasty SIM top 30.');
     } else if (_statMode === 'trend' && _trendIsDyn() && id === 'jmHeader') {
       sp.innerHTML = 'SIM GAP ';
       sp.setAttribute('data-gloss', 'Dynasty SIM rank vs KTC rank among the players both rank (KTC top 200). BUY = the fifth the sim likes most beyond KTC, SELL = the fifth KTC likes most beyond the sim; otherwise the spots between the two ranks (+ = the sim has him higher). 2015-23 backtest: the market moved toward the sim the next year (t 7.4 holding market rank fixed) and the BUY fifth out-produced its market-rank peers by +27 three-year VOR while SELL ran -20. Free: players in the Dynasty SIM top 30.');

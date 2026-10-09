@@ -3538,6 +3538,38 @@ function _seasonProjSectionHtml(d) {
   </div>`;
 }
 
+// ROSTERED (player card, bottom of FANTASY): % of leagues rostering the player
+// on ESPN / Sleeper / Yahoo, from data/ownership_2026.js (OWNERSHIP_2026,
+// Phase P of the daily 9am job; keyed by d.js-canonical name at pull time).
+// ESPN + Yahoo carry a past-week change; Sleeper's research feed has none.
+function _rosteredSectionHtml(d) {
+  if (d._retired || d._isDevy) return '';
+  const O = window.OWNERSHIP_2026;
+  const o = (O && O.players) ? O.players[d.n] : null;
+  if (!o) return '';
+  const pct = v => (v >= 10 || v === 0 ? Math.round(v) : v.toFixed(1)) + '%';
+  const box = (lbl, v, chg, tip) => {
+    const has = v != null;
+    const sub = (has && chg) ? `<div style="font-size:.6875rem;margin-top:2px;font-weight:600;color:${chg > 0 ? 'var(--green)' : 'var(--red)'}">${chg > 0 ? '+' : ''}${chg.toFixed(1)}</div>` : '';
+    return `<div class="card-rank-box"${has ? ` title="${tip.replace(/"/g, '&quot;')}" style="cursor:help"` : ''}>
+      <div class="lbl">${lbl}</div>
+      <div class="num"${has ? '' : ' style="color:var(--text2)"'}>${has ? pct(v) : '—'}</div>${sub}
+    </div>`;
+  };
+  const chgTip = c => c ? ` (${c > 0 ? '+' : ''}${c.toFixed(1)} over the past week)` : '';
+  const asOf = O.updated ? new Date(O.updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+  const boxes =
+    box('ESPN', o.espn, o.espnChg, `Rostered in ${o.espn}% of ESPN leagues${chgTip(o.espnChg)}`) +
+    box('Sleeper', o.sleeper, null, o.sleeper === 0
+      ? 'Under ~1% rostered on Sleeper (Sleeper only lists players above that)'
+      : `Rostered in ${o.sleeper}% of Sleeper leagues` + (O.sleeperWeek ? ` (Week ${O.sleeperWeek})` : '')) +
+    box('Yahoo', o.yahoo, o.yahooChg, `Rostered in ${o.yahoo}% of Yahoo leagues${chgTip(o.yahooChg)}`);
+  return `<div class="card-section">
+    <div class="card-section-title">Rostered <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· % of leagues${asOf ? ', ' + asOf : ''}</span></div>
+    <div class="card-rank-row" style="grid-template-columns:1fr 1fr 1fr">${boxes}</div>
+  </div>`;
+}
+
 // TEAM PPG: season average of Vegas implied team totals across every game in
 // BETTING_2026.gameTotals ('W{wk}_{AWAY}_{HOME}', spread = home spread).
 // Cached on first use; keyed by team abbreviation.
@@ -19418,6 +19450,8 @@ function openPlayerCard(d, ctxMode) {
       <div class="card-prospect-view card-fantasy-extra" id="cardCareerView" data-ready="${(_hasCareerRows || _career2026Row(d)) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && (_hasCareerRows || _career2026Row(d))) ? 'block' : 'none'}">
       ${_careerSectionHtml(d, true)}
       </div>` : ''}
+      ${(() => { const _rh = _rosteredSectionHtml(d); return _rh ? `
+      <div class="card-prospect-view card-fantasy-extra" id="cardRosteredView" data-ready="1" style="display:${(d._isDevy || _is2026) ? 'none' : 'block'}">${_rh}</div>` : ''; })()}
       <div class="card-prospect-view" id="cardNewsView" style="display:none">${_newsHtml}</div>
     </div>
   `;
@@ -19509,6 +19543,7 @@ function openPlayerCard(d, ctxMode) {
         const lgv = document.getElementById('cardLogsView');
         const nv = document.getElementById('cardNewsView');
         const tmv = document.getElementById('cardTeamView');
+        const rsv = document.getElementById('cardRosteredView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
         if (iv) iv.style.display = 'none';
@@ -19518,6 +19553,7 @@ function openPlayerCard(d, ctxMode) {
         if (lgv) lgv.style.display = 'none';
         if (nv) nv.style.display = 'none';
         if (tmv) tmv.style.display = 'none';
+        if (rsv) rsv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
         } else if (view === 'info') {
@@ -19543,6 +19579,7 @@ function openPlayerCard(d, ctxMode) {
           // Game logs + career ride along inside FANTASY (2026-10-08) once they have data
           if (lgv && lgv.dataset.ready === '1') lgv.style.display = 'block';
           if (crv && crv.dataset.ready === '1') crv.style.display = 'block';
+          if (rsv) rsv.style.display = 'block';
         }
       });
     });

@@ -3627,7 +3627,9 @@ function _trendSparkHtml(series) {
 // SIM GAP (dynasty): within-pool ranks of the players that have both a Dynasty
 // SIM value and a KTC rank <= 200, gap = log(sim rank / KTC rank), BUY / SELL =
 // the most-negative / most-positive fifth (the backtested buckets).
-const _FAIR_W = 0.7;   // fair value order: 0.7 expected market rank + 0.3 sim rank (backtest best avg)
+// Fair value order weights on log ranks (sim_lab/backtest_fair_tune.py): expected next-
+// preseason market rank, Dynasty SIM rank, KTC rank today. WR-age term tested and rejected.
+const _FAIR_W = { m3: 0.5, sim: 0.3, mkt: 0.5 };
 function _trendGapFor(d) {
   if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
   const ck = _dynSimSig() + '|' + currentMode;
@@ -3667,13 +3669,14 @@ function _trendGapFor(d) {
         const v1 = valAt(pr), vPeer = valAt(prPeer);
         r.mkt = { pr, val: v1, cur: r.kv, chg: v1 / r.kv - 1, peer: vPeer / r.kv - 1,
                   ovr: pr < n ? ovrs[Math.max(0, Math.round(pr) - 1)] : null };
-        r._fz = _FAIR_W * z + (1 - _FAIR_W) * Math.log(r.sp);
+        r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp);
       });
       // FAIR VALUE NOW (Jack 2026-10-09: "value players in the moment with the idea they
-      // have future value"): order the pool by 0.7 x the model's expected market rank +
-      // 0.3 x the Dynasty SIM rank, and price each player at TODAY's KTC value for that
-      // spot. Backtest 2015-23 (per-year Spearman; next-yr market / 3yr VOR / 5yr VOR):
-      // KTC now .663/.538/.531, this .692/.556/.553 — the best all-round order tried.
+      // have future value"): order the pool by 0.5 x the model's expected market rank +
+      // 0.3 x the Dynasty SIM rank + 0.5 x today's KTC rank, and price each player at
+      // TODAY's KTC value for that spot. Tuned (sim_lab/backtest_fair_tune.py, 2016-23,
+      // per-year Spearman next-yr market / 3yr / 5yr+youth / top-50): was 0.7 M3 + 0.3 sim
+      // .702/.647/.637/.446 -> .697/.667/.651/.447; beat it in 5 of 8 seasons.
       pool.slice().sort((a, b) => a._fz - b._fz).forEach((r, i) => {
         r.mkt.fair = vals[i]; r.mkt.fairRk = ovrs[i]; r.mkt.fairDiff = vals[i] / r.kv - 1;
       });
@@ -9643,9 +9646,9 @@ function render() {
           const pct = v => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 100)) + '%';
           const col = fd >= 0.10 ? '#22c55e' : fd <= -0.10 ? '#ef4444' : 'var(--text2)';
           const tip = ('Fair value now: ' + Math.round(mk.fair).toLocaleString() + ' on today\'s KTC scale (KTC has ' + Math.round(mk.cur).toLocaleString() + ', ' + pct(fd) + ') — about where KTC #' + mk.fairRk + ' sits today.'
-            + ' It prices what he should cost now, future included: the order blends where the market is expected to have him next preseason (70%) with the Dynasty SIM production view (30%), then reads today\'s KTC value at that spot.'
+            + ' It prices what he should cost now, future included: the order blends where the market is expected to have him next preseason, the Dynasty SIM production view and his KTC rank today (weights 0.5 / 0.3 / 0.5), then reads today\'s KTC value at that spot.'
             + ' Next preseason the model expects about ' + Math.round(mk.val).toLocaleString() + ' (' + pct(mk.chg) + '; typical for his rank ' + pct(mk.peer) + ').'
-            + ' Backtest 2015-23: this order ranked next year\'s market (.69 vs .66) and 3- / 5-year production (.56 / .55 vs .54 / .53) better than KTC today. Green / red = 10%+ above / below KTC.').replace(/"/g, '&quot;');
+            + ' Backtest 2016-23: this order ranked next year\'s market (.70 vs .65) and 3- / 5-year production (.67 / .65 vs .65 / .63) better than KTC today. Green / red = 10%+ above / below KTC.').replace(/"/g, '&quot;');
           _statLandingCell = `<span title="${tip}" style="cursor:help;font-weight:700">${Math.round(mk.fair).toLocaleString()}<div style="font-size:.6875rem;line-height:1.2;font-weight:700;color:${col}">${pct(fd)}</div></span>`;
         } else if (g && g.mkt) {
           _statLandingCell = '<span class="cons-lock" aria-label="Premium" title="' + _DYN_LOCK_TIP + '">🔒</span>';
@@ -10030,7 +10033,7 @@ function render() {
       }
     } else if (_statMode === 'trend' && _trendIsDyn() && id === 'landingHeader') {
       sp.innerHTML = 'FAIR VALUE ';
-      sp.setAttribute('data-gloss', 'What he should cost NOW with his future priced in, on today\'s KTC value scale. The order blends where the market is expected to have him next preseason (70% — KTC rank, Dynasty SIM rank, rookie status, position, age by position) with the Dynasty SIM production view (30%); each player then takes today\'s KTC value for his spot in that order. Sub-line = vs his KTC value today (green / red = 10%+ above / below). Backtest 2015-23: ranked next year\'s market .69 vs .66 for KTC today, and 3- / 5-year production .56 / .55 vs .54 / .53. Free: Dynasty SIM top 30.');
+      sp.setAttribute('data-gloss', 'What he should cost NOW with his future priced in, on today\'s KTC value scale. The order blends where the market is expected to have him next preseason (KTC rank, Dynasty SIM rank, rookie status, position, age by position), the Dynasty SIM production view and his KTC rank today (weights 0.5 / 0.3 / 0.5); each player then takes today\'s KTC value for his spot in that order. Sub-line = vs his KTC value today (green / red = 10%+ above / below). Backtest 2016-23: ranked next year\'s market .70 vs .65 for KTC today, and 3- / 5-year production .67 / .65 vs .65 / .63. Free: Dynasty SIM top 30.');
     } else if (_statMode === 'trend' && _trendIsDyn() && id === 'jmHeader') {
       sp.innerHTML = 'SIM GAP ';
       sp.setAttribute('data-gloss', 'Dynasty SIM rank vs KTC rank among the players both rank (KTC top 200). BUY = the fifth the sim likes most beyond KTC, SELL = the fifth KTC likes most beyond the sim; otherwise the spots between the two ranks (+ = the sim has him higher). 2015-23 backtest: the market moved toward the sim the next year (t 7.4 holding market rank fixed) and the BUY fifth out-produced its market-rank peers by +27 three-year VOR while SELL ran -20. Free: players in the Dynasty SIM top 30.');

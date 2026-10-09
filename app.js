@@ -3484,7 +3484,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
     return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
       + _cdOffNoteHtml(window._offRisk ? window._offRisk(d) : null, null)
-      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL);
+      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL) + _cdFilmNoteHtml(d);
   }
   if (!S._idx) _dynSimFor(d);
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
@@ -3532,7 +3532,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   if (fairDiff != null && fairDiff >= 0.10 && !offR) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
   const slideNote = _cdOffNoteHtml(offR, fairDiff) + ((offR && fairDiff > 0) ? '' : _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr))
-    + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr);
+    + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr) + _cdFilmNoteHtml(d);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
@@ -3631,6 +3631,27 @@ function _cdQbChange(d, yr) {
   // closed the year) isn't a new QB for him — only a QB from outside counts.
   if (teamIn(q.n, yr - 1) === t0) return null;
   return { prev: p.n, now: q.n, moved: t0 !== t1 };
+}
+// FILM SAYS MORE ROLE (Jack 2026-10-09; sim_lab/research_grade_volume.py + dyn_film.py):
+// a top-third PFF grade on a bottom-third role this season (WR/TE route grade vs
+// median weekly route participation, RB offense grade vs median weekly carry share)
+// — at the same workload, film has predicted more volume the next season every year
+// 2019-25 (~10% per SD of grade); low-graded part-timers lost role (WR routes -19%).
+// Information only (as a value term it didn't beat FAIR); flags live in the sim data
+// (e.film), rebuilt every Tuesday. Shown to everyone.
+function _cdFilmNoteHtml(d) {
+  const S = window.DYNASTY_SIM_2026;
+  if (!S || !d) return '';
+  if (!S._idx) _dynSimFor(d);
+  const e = S._idx && S._idx[_dynSimNorm(d.n) + '|' + d.s];
+  const f = e && e.film;
+  if (!f) return '';
+  const vol = f.vk === 'carry share' ? Math.round(f.v) + '% carry share' : Math.round(f.v) + '% route participation';
+  const ord = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  return '<div style="font-size:.6875rem;line-height:1.45;color:var(--text2);background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.25);border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
+    + '<b style="color:#38bdf8;letter-spacing:.04em">FILM SAYS MORE ROLE.</b> PFF ' + f.grade + ' ' + f.g + ' (' + ord(Math.round(f.gp)) + ' percentile of ' + d.s + 's) on a limited role — '
+    + vol + ' (' + ord(Math.round(f.vp)) + ' percentile) through Week ' + f.w + ' of ' + f.s + '. '
+    + 'At the same workload, a better grade has meant more volume the next season in every year since 2019 (about +10% per standard deviation); low-graded part-timers tend to lose snaps. Not built into the value.</div>';
 }
 function _cdQbNoteHtml(d, yr) {
   const x = _cdQbChange(d, yr);

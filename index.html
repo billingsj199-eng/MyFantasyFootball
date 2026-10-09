@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- DYN SIM data version (data/dynasty_sim_2026.js, lazy-loaded) — bumped by sim_lab/tuesday_stats.ps1 -->
-<meta name="mff-dyn-sim-v" content="2026-10-09-rbrec">
+<meta name="mff-dyn-sim-v" content="2026-10-09-film">
 <!-- KTC daily value history (data/ktc_history.js, lazy-loaded by TRENDS) — bumped by scripts/build_ktc_history.py -->
 <meta name="mff-ktc-hist-v" content="2026-10-09-site">
 <!-- Dynasty SIM weekly history (player-card DYNASTY chart, lazy) — bumped by sim_lab/dynasty_sim_refresh.ps1 -->
@@ -88,7 +88,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-rbrec" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-film" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -6312,7 +6312,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-rbrec"></script>
+<script defer src="app.js?v=2026-10-09-film"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

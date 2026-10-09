@@ -77,12 +77,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-09-mxfp" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-09-mtick" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-mctl" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-mtick" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -92,7 +92,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-09" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-09b" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-09-mxfp">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-09-mtick">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -1102,7 +1102,7 @@ body.mff-embed .season-strip{display:none!important}
 <div class="ticker-row" id="tickerRow">
 <div class="live-ticker" id="adpMoversBar" style="display:none">
 <div class="amb-fixed">
-<span style="font-size:1.05rem;line-height:1">📈</span>
+<span class="amb-icon" style="font-size:1.05rem;line-height:1">📈</span>
 <div>
 <div class="amb-title"><span id="adpMoversTitle">ADP MOVERS</span><button class="amb-switch" data-ticker="lines" type="button" title="Show the sportsbook line movers instead">Line movers</button></div>
 <div class="amb-sub" id="adpMoversSub"></div>
@@ -1124,7 +1124,7 @@ body.mff-embed .season-strip{display:none!important}
      Rendered by _lineMovers in app.js. -->
 <div class="live-ticker" id="lineMoversBar" style="display:none">
 <div class="amb-fixed">
-<span style="font-size:1.05rem;line-height:1">🎯</span>
+<span class="amb-icon" style="font-size:1.05rem;line-height:1">🎯</span>
 <div>
 <div class="amb-title"><button class="amb-switch" data-ticker="adp" type="button" title="Show the rankings movers instead">Rankings movers</button><span>LINE MOVERS</span></div>
 <div class="amb-sub" id="lineMoversSub"></div>
@@ -1141,7 +1141,7 @@ body.mff-embed .season-strip{display:none!important}
 <span class="ss-week" id="ssWeek"></span>
 <span class="ss-msg" id="ssMsg"></span>
 <span class="ss-count" id="ssCount" style="display:none"></span>
-<button class="ss-btn" id="ssWeeklyBtn" style="display:none" title="Jump to the weekly rankings board">WEEKLY RANKINGS →</button>
+<button class="ss-btn" id="ssWeeklyBtn" style="display:none" title="Jump to the weekly rankings board">WEEKLY<span class="ss-btn-long"> RANKINGS</span> →</button>
 </div>
 </div><!-- /tickerRow -->
 <!-- page header element removed 2026-08-24 (declutter): the toolbar and
@@ -6243,7 +6243,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-mctl"></script>
+<script defer src="app.js?v=2026-10-09-mtick"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

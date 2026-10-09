@@ -72290,8 +72290,10 @@ function _rsScatter(cfg) {
     row.querySelectorAll('.amb-switch').forEach(b => { b.style.display = has(b.dataset.ticker) ? '' : 'none'; });
   };
   row.addEventListener('click', e => {
-    const b = e.target.closest('.amb-switch');
-    if (!b) return;
+    // Phones hide the title row, so the bar's icon is the switch (index.html .amb-icon).
+    const ic = e.target.closest('.amb-icon');
+    const b = e.target.closest('.amb-switch') || (ic && ic.closest('.live-ticker').querySelector('.amb-switch'));
+    if (!b || b.style.display === 'none') return;
     want = b.dataset.ticker;
     try { localStorage.setItem('mff_ticker', want); } catch (_) {}
     apply();

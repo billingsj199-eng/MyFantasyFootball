@@ -2812,6 +2812,20 @@ tbody td{font-size:.8125rem}
   #pageRankings .stats-row #dataFreshness{margin-left:0}
 }
 @media (max-width:600px){#tickerRow .live-ticker{flex:1 1 100%}}  /* basis 0 never overflows, so the bar sat at 0px beside the week strip instead of wrapping under it */
+/* Phone ticker = ONE ~30px row (2026-10-09, was ~80px over two rows): week chip
+   left (WEEK n + countdown + WEEKLY), movers scrolling right. The movers'
+   title / 3D-7D-30D / share collapse to the icon; tapping it switches
+   RANKINGS / LINE movers (app.js _tickerSwitch). Window stays at 7D. */
+@media (max-width:600px){
+  #tickerRow{flex-wrap:nowrap}
+  #tickerRow .season-strip{flex:0 0 auto;order:-1;flex-wrap:nowrap;border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:3px 8px;gap:6px}
+  #tickerRow .ss-msg,#tickerRow .ss-btn-long{display:none}
+  #tickerRow .ss-btn{padding:2px 7px;font-size:.625rem;margin-left:0}
+  #tickerRow .live-ticker{flex:1 1 0;min-width:0;padding:3px 0}
+  #tickerRow .amb-fixed{padding:0 6px 0 8px;gap:0}
+  #tickerRow .amb-fixed > div,#tickerRow .amb-share{display:none!important}
+  #tickerRow .amb-icon{cursor:pointer;padding:4px 2px;font-size:.95rem!important}
+}
 
 /* ===== PLAYER CARD RESTYLE (2026-10-08) =====
    Same rules as the table restyle: hairline edges, neutral tiles, DM Sans tabular

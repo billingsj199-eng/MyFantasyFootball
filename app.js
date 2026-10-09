@@ -29188,7 +29188,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
         D.forEach(d => {
           if (!d || d.s !== pos || !d.t || d._retired || d.rm || d.devy) return;
           const b = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
-          const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, b, {}) : b;
+          const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, b, { mt: true }) : b;
           if (typeof v === 'number' && isFinite(v) && v > 0) vals.push(v);
         });
       } catch (e) { console.warn('[Start/Sit] avg', e); }
@@ -29323,7 +29323,9 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     rankingScoringFmt = fmt;
     try {
       o.base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
-      const out = {};
+      // Lineup tool = My Teams rule (Jack 2026-10-09): Questionable plays at full
+      // projection, Doubtful / confirmed Out = 0; Jack's ASSUME OUT list is ignored.
+      const out = { mt: true };
       o.proj = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, o.base, out) : o.base;
       o.src = out.src || 'base';
       // BOOK PROJ beside ours (Jack 2026-10-08): the week's posted prop lines

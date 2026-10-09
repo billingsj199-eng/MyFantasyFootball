@@ -1876,6 +1876,17 @@ body:has(#tierCardWrap.tcv-fullscreen) #mffDialog{z-index:10020}
 .tier-card-view.tcv-hide-ui>.tcv-ui-pill{display:inline-flex}
 #tierCardWrap.tcv-fullscreen .tier-card-view.tcv-hide-ui>.tcv-ui-pill{position:fixed;top:0;right:0}
 .tcv-tier-row{display:flex;align-items:stretch;margin-bottom:3px;border-radius:4px;overflow:hidden;background:transparent;min-height:0}
+/* Phones (2026-10-09): tier letter as a strip above its cards (was a 38px
+   full-height column) so three cards fit per row; the presentation controls
+   become one swipeable line (were 213px of buttons). app.js sets the zoom. */
+@media (max-width:600px){
+  .tier-card-view .tcv-tier-row{flex-direction:column}
+  .tier-card-view .tcv-letter{flex:0 0 auto;justify-content:flex-start;padding:2px 12px;font-size:22px;min-height:28px}
+  .tier-card-view .tcv-cards{justify-content:flex-start}
+  .tier-card-view .tcv-reveal-controls{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .tier-card-view .tcv-reveal-controls::-webkit-scrollbar{display:none}
+  .tier-card-view .tcv-reveal-controls > *{flex:0 0 auto}
+}
 .tcv-letter{flex:0 0 38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:#fff;font-weight:900;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.45);cursor:pointer;user-select:none;transition:filter .15s,opacity .15s;position:relative}
 .tcv-letter:hover{filter:brightness(1.15)}
 .tcv-letter::after{content:'';position:absolute;bottom:3px;right:3px;width:0;height:0;border-style:solid;border-width:0 0 6px 6px;border-color:transparent transparent rgba(255,255,255,.5) transparent;opacity:0;transition:opacity .15s}

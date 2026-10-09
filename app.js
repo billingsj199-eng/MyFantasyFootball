@@ -8164,7 +8164,14 @@ function _renderTierCardView(data, container) {
   // Auto-size: fewer players on screen (e.g. a TOP-N view) → bigger cards.
   // zoom scales every fixed-px card element together; full boards stay at 1×.
   const _tcvN = data.length;
-  const _tcvBaseZoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
+  let _tcvBaseZoom = _tcvN <= 12 ? 1.9 : _tcvN <= 24 ? 1.65 : _tcvN <= 40 ? 1.45 : _tcvN <= 60 ? 1.3 : _tcvN <= 90 ? 1.15 : _tcvN <= 140 ? 1.05 : 1;
+  // Phones (2026-10-09): the count-based zoom made cards bigger (2 per row,
+  // ~4,700px for 63 RBs). Fit three 118px cards + gaps (~384px at 1x) across
+  // the screen instead; the tier letter becomes a strip above each tier
+  // (index.html CSS) so the cards get the full width. SIZE -/+ still scales it.
+  // ROW CARDS are a fixed 418px broadcast layout (+22px padding) — scale the
+  // whole row to the screen rather than squeezing its fixed-width insides.
+  if (window.matchMedia && window.matchMedia('(max-width:600px)').matches) _tcvBaseZoom = Math.min(1, (window.innerWidth - 40) / (_tcvRowsPref() ? 440 : 384));
   root.style.zoom = _tcvBaseZoom * _tcvZoomMult();
   if (_tcvCenteredPref()) root.classList.add('tcv-centered');
   const _tcvRows = _tcvRowsPref();

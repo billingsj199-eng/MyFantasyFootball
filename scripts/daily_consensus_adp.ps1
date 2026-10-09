@@ -33,7 +33,7 @@ Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 # (Site Rankings CSVs are git-excluded local files — these are the tracked targets.)
-$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'data/ownership_2026.js', 'og/movers.png', 'movers.html', 'data/active_team_history.js')
+$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'data/ownership_2026.js', 'og/movers.png', 'movers.html', 'data/active_team_history.js', 'data/ktc_history.js')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -61,6 +61,13 @@ if ($LASTEXITCODE -ne 0) { Write-Log "team history sync FAILED (exit $LASTEXITCO
 $out = & $Python 'scripts\build_movers_og.py' 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "movers OG card FAILED (exit $LASTEXITCODE) - continuing with yesterday's card" }
+
+# KTC daily value history (rankings TRENDS view, dynasty boards — wired
+# 2026-10-09): rebuilt from the daily ktc_rankings.js commits + today's
+# refreshed file; bumps its own <meta name="mff-ktc-hist-v">. Non-fatal.
+$out = & $Python 'scripts\build_ktc_history.py' 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "KTC history build FAILED (exit $LASTEXITCODE) - continuing with yesterday's history" }
 
 $changed = git status --porcelain -- @Files
 if (-not $changed) {

@@ -3090,6 +3090,8 @@ function _effStatMode() {
   if (typeof filter !== 'undefined' && filter === 'DEVY') return 'fantasy';
   // DYN SIM only exists on the dynasty boards (and needs its data file).
   if (rnkStatMode === 'dyn' && !(_isDynSimMode() && window.DYNASTY_SIM_2026)) return 'fantasy';
+  // TRENDS: redraft + dynasty boards only, once their history file is in.
+  if (rnkStatMode === 'trend' && !(_isTrendMode() && (_trendIsDyn() ? window.KTC_HISTORY : window._consRankHist))) return 'fantasy';
   return rnkStatMode;
 }
 
@@ -3161,6 +3163,168 @@ function _dynSimFor(d) {
 const _DYN_LOCK_TIP = 'Dynasty SIM values past the top 30 are a Season Pass feature — upgrade to see every player.';
 function _dynLocked(x) { return !!x && !hasPremium() && x.rk > 30; }
 function _dynSortVal(d, k) { const x = _dynSimFor(d); return (!x || _dynLocked(x)) ? -Infinity : x[k]; }
+// === TRENDS view (Jack 2026-10-09) ===
+// Rank movement over time. REDRAFT = the consensus board rebuilt from the dated
+// source-input snapshots in data/cons_rank_history.json (same rebuild as the
+// RANKINGS MOVERS bar); DYNASTY / DYNASTY SF = KeepTradeCut ranks from the daily
+// value history in data/ktc_history.js (scripts/build_ktc_history.py).
+// Dynasty also gets SIM GAP: Dynasty SIM rank vs KTC rank. Backtest 2015-23
+// (sim_lab/backtest_dynasty_market_moves.py): the market moved toward the sim
+// the next year (per-year Spearman +.25; t 7.4 holding market rank fixed) and
+// the sim-likes-most fifth beat its market-rank peers by +27 three-year VOR;
+// last year's market move predicted nothing (-.02) — trends are context, the
+// gap is the edge. BUY / SELL = the same within-pool fifths.
+function _isTrendMode() { return currentMode === 'redraft' || currentMode === 'dynasty' || currentMode === 'dynastysf'; }
+function _trendIsDyn() { return currentMode === 'dynasty' || currentMode === 'dynastysf'; }
+function _trendDays(a, b) { return Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 864e5); }
+function _trendLoadScript(src, cb) {
+  const sc = document.createElement('script');
+  sc.src = src;
+  sc.onload = () => cb(true);
+  sc.onerror = () => cb(false);
+  document.head.appendChild(sc);
+}
+function _trendEnsure(cb) {
+  if (_trendIsDyn()) {
+    const done = () => { if (window.KTC_HISTORY) _dynSimEnsure(cb); };
+    if (window.KTC_HISTORY) { done(); return; }
+    const w = (window._ktcHistWaiters = window._ktcHistWaiters || []);
+    w.push(done);
+    if (window._ktcHistLoading) return;
+    window._ktcHistLoading = true;
+    const m = document.querySelector('meta[name="mff-ktc-hist-v"]');
+    _trendLoadScript('data/ktc_history.js?v=' + encodeURIComponent((m && m.content) || '0'), ok => {
+      window._ktcHistLoading = false;
+      if (!ok && typeof toast === 'function') toast('Could not load the KTC history');
+      (window._ktcHistWaiters || []).splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } });
+    });
+    return;
+  }
+  if (window._consRankHist) { cb(); return; }
+  const now = new Date();
+  const stamp = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0');
+  fetch('data/cons_rank_history.json?d=' + stamp)
+    .then(r => (r && r.ok) ? r.json() : null)
+    .then(j => { if (j) { window._consRankHist = j; cb(); } else if (typeof toast === 'function') toast('Could not load the rankings history'); })
+    .catch(() => { if (typeof toast === 'function') toast('Could not load the rankings history'); });
+}
+// name -> rank maps per history date, cached. Dynasty: KTC (picks excluded,
+// same as _ktcRankIndex); redraft: consensus board rebuilt from that day's inputs.
+function _trendRankMaps() {
+  const dyn = _trendIsDyn();
+  const key = dyn ? (currentMode === 'dynastysf' ? 'vsf' : 'v1') : 'cons';
+  const c = (window._trendCache = window._trendCache || {});
+  if (c[key] && (dyn || c[key].src === (versionBoards.consensus && versionBoards.consensus.redraft))) return c[key];
+  const out = { dates: [], maps: [] };
+  if (dyn) {
+    const H = window.KTC_HISTORY;
+    if (!H) return null;
+    const vals = H[key] || {};
+    H.dates.forEach((dt, j) => {
+      const rows = [];
+      for (const n in vals) { const v = vals[n][j]; if (v != null && !/^\d{4}\s/.test(n)) rows.push([n, v]); }
+      if (!rows.length) return;
+      rows.sort((a, b) => b[1] - a[1]);
+      const m = new Map(); rows.forEach((r, i) => m.set(_normalizeNameForLookup(r[0]), i + 1));
+      out.dates.push(dt); out.maps.push(m);
+    });
+  } else {
+    const H = window._consRankHist;
+    if (!H || typeof _computeConsensusBoard !== 'function' || typeof boardToNames !== 'function') return null;
+    // Rebuild when the live consensus board object changes (Jack's board landing re-blends it).
+    out.src = versionBoards.consensus && versionBoards.consensus.redraft;
+    const days = (H.days || []).filter(d => d && d.date && d.f).sort((a, b) => a.date.localeCompare(b.date));
+    const FIELDS = (H.fields && H.fields.length) ? H.fields : ['a', 'slR', 'fpR', 'udA', 'espnAdp', 'cbsAdp', 'yahooAdp'];
+    const fIdx = {}; FIELDS.forEach((f, k) => { fIdx[f] = k; });
+    // Rebuilding a board per day is the cost here — sample ~every 3 days,
+    // always keeping the days nearest 7 and 30 back (the two delta columns).
+    const last = days.length ? days[days.length - 1].date : null;
+    const near = t => days.reduce((b, d) => Math.abs(_trendDays(d.date, last) - t) < Math.abs(_trendDays(b.date, last) - t) ? d : b, days[0]);
+    const want = new Set(days.filter((d, i) => i % 3 === 0).map(d => d.date));
+    if (last) { want.add(near(7).date); want.add(near(30).date); }
+    days.filter(d => want.has(d.date) && d.date !== last).forEach(day => {
+      const gf = (i, f) => { const k = fIdx[f]; if (k == null) return D[i][f]; const r = day.f[D[i].n]; return r && r[k] != null ? r[k] : null; };
+      const names = boardToNames(_computeConsensusBoard('redraft', gf));
+      const m = new Map(); let r = 0; names.forEach(n => { if (n) m.set(_normalizeNameForLookup(n), ++r); });
+      out.dates.push(day.date); out.maps.push(m);
+    });
+    // Today = the live consensus board (what the CONS column shows), like the MOVERS bar.
+    const cur = boardToNames(versionBoards.consensus && versionBoards.consensus.redraft ? versionBoards.consensus.redraft : []);
+    const m = new Map(); let r = 0; cur.forEach(n => { if (n) m.set(_normalizeNameForLookup(n), ++r); });
+    out.dates.push(new Date().toISOString().slice(0, 10)); out.maps.push(m);
+  }
+  c[key] = out;
+  return out;
+}
+// -> { now, d7, d30, series:[[date, rank]] } — d7 / d30 = spots gained (+ = rose)
+function _trendFor(d) {
+  const T = _trendRankMaps();
+  if (!T || !T.dates.length || !d) return null;
+  const k = _normalizeNameForLookup(d.n);
+  const series = [];
+  T.dates.forEach((dt, j) => { const r = T.maps[j].get(k); if (r != null) series.push([dt, r]); });
+  if (!series.length || series[series.length - 1][0] !== T.dates[T.dates.length - 1]) return series.length ? { now: null, d7: null, d30: null, series } : null;
+  const now = series[series.length - 1][1];
+  const last = T.dates[T.dates.length - 1];
+  const back = t => {
+    let best = null;
+    series.forEach(([dt, r]) => { const g = _trendDays(dt, last); if (g >= t * 0.6 && (!best || Math.abs(g - t) < Math.abs(best.g - t))) best = { g, r }; });
+    return best ? best.r - now : null;
+  };
+  return { now, d7: back(7), d30: back(30), series };
+}
+function _trendDeltaHtml(v) {
+  if (v == null) return '<span style="color:var(--text2)">—</span>';
+  if (v === 0) return '<span style="color:var(--text2)">0</span>';
+  return '<span style="color:' + (v > 0 ? '#22c55e' : '#ef4444') + ';font-weight:700">' + (v > 0 ? '▲' : '▼') + Math.abs(v) + '</span>';
+}
+function _trendSparkHtml(series) {
+  if (!series || series.length < 3) return '<span style="color:var(--text2)">—</span>';
+  const s = series.slice(-24), rs = s.map(x => x[1]);
+  const lo = Math.min(...rs), hi = Math.max(...rs), W = 64, H = 18;
+  const pts = s.map((x, i) => (i * (W - 2) / (s.length - 1) + 1).toFixed(1) + ',' + (hi === lo ? H / 2 : 1 + (x[1] - lo) * (H - 2) / (hi - lo)).toFixed(1)).join(' ');
+  const col = rs[rs.length - 1] < rs[0] ? '#22c55e' : rs[rs.length - 1] > rs[0] ? '#ef4444' : '#94a3b8';
+  const tip = ('Rank ' + s[0][0].slice(5) + ' #' + s[0][1] + ' → ' + s[s.length - 1][0].slice(5) + ' #' + s[s.length - 1][1] + ' (best #' + lo + ', worst #' + hi + ')').replace(/"/g, '&quot;');
+  return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="vertical-align:middle;cursor:help"><title>' + tip + '</title><polyline fill="none" stroke="' + col + '" stroke-width="1.6" points="' + pts + '"/></svg>';
+}
+// SIM GAP (dynasty): within-pool ranks of the players that have both a Dynasty
+// SIM value and a KTC rank <= 200, gap = log(sim rank / KTC rank), BUY / SELL =
+// the most-negative / most-positive fifth (the backtested buckets).
+function _trendGapFor(d) {
+  if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
+  const ck = _dynSimKey() + '|' + _dynTep + '|' + currentMode;
+  const c = (window._trendGapCache = window._trendGapCache || {});
+  if (!c[ck]) {
+    const pool = [];
+    (D || []).forEach(p => {
+      if (!p || p._retired || p._isDevy || p.s === 'PICK') return;
+      const x = _dynSimFor(p); const k = _ktcRankInfo(p.n);
+      if (x && k && !k.devy && k.ovr && k.ovr <= 200) pool.push({ n: p.n, s: x.rk, k: k.ovr, x });
+    });
+    const sr = pool.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sp = i + 1; });
+    const kr = pool.slice().sort((a, b) => a.k - b.k); kr.forEach((r, i) => { r.kp = i + 1; });
+    pool.forEach(r => { r.gap = Math.log(r.sp / r.kp); });
+    const g = pool.map(r => r.gap).sort((a, b) => a - b);
+    const q = f => g[Math.min(g.length - 1, Math.floor(f * g.length))];
+    const lo = q(0.2), hi = q(0.8);
+    const m = {};
+    // Log ratios swing hard at the very top (#1 vs #2 = a full fifth), so a
+    // call also needs 3+ spots between the two ranks.
+    pool.forEach(r => {
+      const far = Math.abs(r.sp - r.kp) >= 3;
+      m[r.n] = { gap: r.gap, sp: r.sp, kp: r.kp, call: far && r.gap <= lo ? 'BUY' : far && r.gap >= hi ? 'SELL' : '', x: r.x };
+    });
+    c[ck] = m;
+  }
+  return c[ck][d.n] || null;
+}
+function _trendSortVal(d, k) {
+  const t = _trendFor(d);
+  if (k === 'now') return t && t.now != null ? -t.now : -Infinity;
+  if (k === 'gap') { const g = _trendGapFor(d); return g && !_dynLocked(g.x) ? -g.gap : -Infinity; }
+  return t && t[k] != null ? t[k] : -Infinity;
+}
+
 // 50/50 rank blend with KTC (the backtest's best use of the sim), over the
 // players that have both. Cached per format + scoring.
 function _dynSimBlendRank(d) {
@@ -5376,15 +5540,15 @@ function getFiltered(applyTopN) {
         case 'posRank': av = parseInt((a.myPosRank||a.r).replace(/\D/g,''))||999; bv = parseInt((b.myPosRank||b.r).replace(/\D/g,''))||999; break;
         case 'adp': { const ca = _consCmp(a), cb = _consCmp(b); av = ca ? ca.ref : 999; bv = cb ? cb.ref : 999; break; }
         case 'round': av = a.round; bv = b.round; break;
-        case 'pts': if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'v'); bv = _vorSort(b, 'v'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
-        case 'fpts25': if (_sm === 'dyn') { av = _dynSortVal(a, 'win3'); bv = _dynSortVal(b, 'win3'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vor'); bv = _vorSort(b, 'vor'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
-        case 'l4ppg': if (_sm === 'dyn') { av = _dynSortVal(a, 'youth'); bv = _dynSortVal(b, 'youth'); break; } if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
+        case 'pts': if (_sm === 'trend') { av = _trendSortVal(a, 'now'); bv = _trendSortVal(b, 'now'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'v'); bv = _vorSort(b, 'v'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'ppg'); bv = _xfpSortVal(b, 'ppg'); break; } if (_sm === 'adp') { av = _smAdp(a,'underdog'); bv = _smAdp(b,'underdog'); break; } if (_sm !== 'fantasy' && _sm !== 'sims') { const _pv = d => { if (_sm === 'lines') { if (currentMode === 'weekly') { const W = _weeklyBookPpgFor(d); return W ? W.ppg : -Infinity; } const P = _bookPpgFor(d); return P ? P.ppg[rankingScoringFmt] : -Infinity; } const C = _clayPpgFor(d); if (!C) return -Infinity; return currentMode === 'weekly' ? C.total / (C.gm || C.games) : C.ppg; }; av = _pv(a); bv = _pv(b); break; } av = _displayProjPpg(a)||0; bv = _displayProjPpg(b)||0; if(!isFinite(av))av=0; if(!isFinite(bv))bv=0; break;
+        case 'fpts25': if (_sm === 'trend') { av = _trendSortVal(a, 'd7'); bv = _trendSortVal(b, 'd7'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'win3'); bv = _dynSortVal(b, 'win3'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vor'); bv = _vorSort(b, 'vor'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'xfpg'); bv = _xfpSortVal(b, 'xfpg'); break; } if (_sm === 'adp') { av = _smAdp(a,'sleeper'); bv = _smAdp(b,'sleeper'); break; } if (_sm === 'sims') { av = _simsBB(a, 3); bv = _simsBB(b, 3); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smYds : _smTds; av = _f(a); bv = _f(b); break; } av = adjSeasonPpg(a).v||0; bv = adjSeasonPpg(b).v||0; break;
+        case 'l4ppg': if (_sm === 'trend') { av = _trendSortVal(a, 'd30'); bv = _trendSortVal(b, 'd30'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'youth'); bv = _dynSortVal(b, 'youth'); break; } if (_sm === 'vor') { const _k = _wkStat ? 'rk' : 'vt'; av = _vorSort(a, _k); bv = _vorSort(b, _k); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'fpoeg'); bv = _xfpSortVal(b, 'fpoeg'); break; } if (_sm === 'adp') { const _s3 = _adpCmpThirdSrc(); av = _smAdp(a,_s3); bv = _smAdp(b,_s3); break; } if (_sm === 'sims') { av = _simsBB(a, 4); bv = _simsBB(b, 4); break; } if (_sm !== 'fantasy') { const _f = _wkStat ? _smTds : _smTeamPpg; av = _f(a); bv = _f(b); break; } av = last4Ppg(a); bv = last4Ppg(b); av = (av==null?-Infinity:av); bv = (bv==null?-Infinity:bv); break;
         case 'p25': av = a.p25||0; bv = b.p25||0; break;
         case 'p24': av = a.p24||0; bv = b.p24||0; break;
         case 'p23': av = a.p23||0; bv = b.p23||0; break;
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
-        case 'yrr': if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vp'); bv = _vorSort(b, 'vp'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
-        case 'jm': if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
+        case 'yrr': if (_sm === 'trend') { av = _trendSortVal(a, 'd30'); bv = _trendSortVal(b, 'd30'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vp'); bv = _vorSort(b, 'vp'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
+        case 'jm': if (_sm === 'trend') { av = _trendSortVal(a, 'gap'); bv = _trendSortVal(b, 'gap'); break; } if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
         case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
           // Sort by SOS rank in the active week window (1 = easiest schedule).
@@ -8836,6 +9000,7 @@ function render() {
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');
   document.body.classList.toggle('format-dynasty', _isDynSimMode());   // DYN SIM button (prototype)
+  document.body.classList.toggle('trend-ok', _isTrendMode());          // TRENDS button
   // Phone cards label their one stat cell per STATS view (index.html M1 block).
   document.body.dataset.rnkStat = _statMode;   // also hides the AGE column (index.html)
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
@@ -9066,7 +9231,34 @@ function render() {
     let _statTd1 = ''; // first stat cell (Proj PPG / stat-view PPG / UD-ADP) — rendered BEFORE the weekly OPP/SPREAD/TOTAL block
     let _statYdsTail = null; // proj/lines views: the Yds line, shown in the tail (yrr) column
     let _statJmCell = null; // VOR season view: GMS rides the JM column
-    if (_statMode === 'dyn') {
+    if (_statMode === 'trend') {
+      // TRENDS (Jack 2026-10-09): market rank now · 7D · 30D change ·
+      // sparkline; dynasty adds SIM GAP (BUY / SELL) in the JM column.
+      const t = _trendFor(d);
+      const src = _trendIsDyn() ? 'KTC' : 'consensus';
+      if (!t || t.now == null) {
+        _statTd1 = '<td class="pts-cell ppg-proj-cell" title="Not in the ' + src + ' top ' + (_trendIsDyn() ? 450 : 400) + ' today">—</td>';
+        _statTds = '<td class="pts-cell ppg25-cell">—</td>\n      <td class="pts-cell l4ppg-cell">—</td>';
+        _statYdsTail = t ? _trendSparkHtml(t.series) : '—';
+      } else {
+        const sub = t.d30 != null ? '<div style="font-size:.6875rem;line-height:1.2;font-weight:600">' + _trendDeltaHtml(t.d30) + ' <span style="color:var(--text2)">30D</span></div>' : '';
+        _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${src} rank today" style="font-weight:700;cursor:help">#${t.now}${sub}</td>`;
+        _statTds = `<td class="pts-cell ppg25-cell">${_trendDeltaHtml(t.d7)}</td>\n      <td class="pts-cell l4ppg-cell">${_trendDeltaHtml(t.d30)}</td>`;
+        _statYdsTail = _trendSparkHtml(t.series);
+      }
+      if (_trendIsDyn()) {
+        const g = _trendGapFor(d);
+        if (!g) _statJmCell = '<span style="color:var(--text2)" title="Needs a Dynasty SIM value and a KTC top-200 rank">—</span>';
+        else if (_dynLocked(g.x)) _statJmCell = '<span class="cons-lock" aria-label="Premium" title="' + _DYN_LOCK_TIP + '">🔒</span>';
+        else {
+          // KTC's own 30-day move relative to the sim: toward it = the gap is closing.
+          const cl = (t && t.d30 != null && t.d30 !== 0 && g.sp !== g.kp) ? ((g.sp < g.kp) === (t.d30 > 0) ? ' KTC has moved toward the sim over 30 days (' + (t.d30 > 0 ? '▲' : '▼') + Math.abs(t.d30) + ') — the gap is closing.' : ' KTC has moved away from the sim over 30 days (' + (t.d30 > 0 ? '▲' : '▼') + Math.abs(t.d30) + ') — the gap is widening.') : '';
+          const tip = ('Dynasty SIM #' + g.sp + ' vs KTC #' + g.kp + ' among the ' + 'players both rank (KTC top 200).' + cl + ' ' + (g.call === 'BUY' ? 'BUY: the sim likes him in the top fifth more than KTC does — in the 2015-23 backtest the market moved toward the sim the next year and this fifth out-produced its market-rank peers.' : g.call === 'SELL' ? 'SELL: KTC likes him in the top fifth more than the sim does — that fifth under-produced its market-rank peers in the backtest.' : 'No call — inside the middle three fifths of the gap.')).replace(/"/g, '&quot;');
+          const col = g.call === 'BUY' ? '#22c55e' : g.call === 'SELL' ? '#ef4444' : 'var(--text2)';
+          _statJmCell = `<span title="${tip}" style="cursor:help;font-weight:700;color:${col}">${g.call || (g.sp < g.kp ? '+' : g.sp > g.kp ? '−' : '') + Math.abs(g.kp - g.sp)}</span>`;
+        }
+      }
+    } else if (_statMode === 'dyn') {
       // DYN SIM (PROTOTYPE, Jack 2026-10-09): comparables value — 3-season
       // window + youth credit (sim_lab/build_dynasty_sim.py). Tail = SIM rank.
       const x = _dynSimFor(d);
@@ -9405,12 +9597,12 @@ function render() {
   const _adpCmpMode = _statMode === 'adp';
   const _simsMode = _statMode === 'sims';
   const yrrH = document.getElementById('yrrHeader');
-  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || _statMode === 'dyn' || (_statMode === 'vor' && !_isWeekly) || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
+  const _yrrShow = showYrr || _adpCmpMode || _statMode === 'xfp' || _statMode === 'dyn' || _statMode === 'trend' || (_statMode === 'vor' && !_isWeekly) || (_simsMode && _isWeekly && filter !== 'K' && filter !== 'DST') || _linesPpgMode || _projPpgMode || _wkLinesPpgMode || _wkProjPpgMode;
   yrrH.style.display = _yrrShow ? '' : 'none';
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'dyn' ? 'SIM RK ' : _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'trend' ? 'TREND ' : _statMode === 'dyn' ? 'SIM RK ' : _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -9427,6 +9619,9 @@ function render() {
         sp.innerHTML = 'AVG ';
         sp.setAttribute('data-gloss', 'Cross-platform average — mean of every platform that lists the player (Underdog for premium, Sleeper, ESPN, CBS, Yahoo). Hover a value to see which went in. Green = the market as a whole drafts the player later than this rank (value), red = earlier (reach).');
       }
+    } else if (_statMode === 'trend' && _trendIsDyn() && id === 'jmHeader') {
+      sp.innerHTML = 'SIM GAP ';
+      sp.setAttribute('data-gloss', 'Dynasty SIM rank vs KTC rank among the players both rank (KTC top 200). BUY = the fifth the sim likes most beyond KTC, SELL = the fifth KTC likes most beyond the sim; otherwise the spots between the two ranks (+ = the sim has him higher). 2015-23 backtest: the market moved toward the sim the next year (t 7.4 holding market rank fixed) and the BUY fifth out-produced its market-rank peers by +27 three-year VOR while SELL ran -20. Free: players in the Dynasty SIM top 30.');
     } else if (_vorSeasonCols && id === 'jmHeader') {
       sp.innerHTML = 'GMS ';
       sp.setAttribute('data-gloss', 'Games he is projected to play from now through the last fantasy-playoff week — once a week kicks off, that whole week is out for everyone (a Monday-night game is not an extra game), and the weeks with no sim projection (bye, injury, suspension) are taken out. Amber = fewer than his team has left. Rest-of-season VOR only counts these games.');
@@ -10474,6 +10669,16 @@ window._updateRnkStatHeaders = function() {
       if (_vt && _vt.win) _set(c3, 'l4ppgHeader', 'Win-now VOR — his projected points over replacement week by week, added up over ' + _vorWinDesc(_vt) + ' only (set by WINDOW in the VOR bar), each week counted once. Replacement level is re-drawn on the same weeks, so a player with soft matchups or a teammate out right now rises, and a star who is hurt or on bye drops. A week he misses or projects under replacement counts as zero. The SIM VOR board and its tiers are ordered by this number while the window is set.', 'VOR · ' + _vorWinTag(_vt), _span);
       else _set(c3, 'l4ppgHeader', 'Rest-of-season VOR — his projected points over replacement week by week, added up over the games still to be played (this week\'s games drop out as they kick off — no actual results are in it, what is already scored does not help a roster from here), through the last fantasy-playoff week. ' + _vorPlayoffLabel(_vst).charAt(0).toUpperCase() + _vorPlayoffLabel(_vst).slice(1) + '. A week he misses (injury, suspension, bye) or projects under replacement counts as zero because the replacement plays instead — so a better player who misses a couple of weeks keeps his edge for the rest, and loses more if the missed weeks are playoff weeks. A week he might play counts his play odds times his edge if he plays. This is the number the SIM VOR board and its tiers are ordered by. Color = the total per game of his schedule, on the VOR/G scale.', 'ROS VOR', _span);
     }
+  } else if (rnkStatMode === 'trend') {
+    const _src = _trendIsDyn() ? 'KTC' : 'Consensus';
+    const _H = _trendIsDyn() ? window.KTC_HISTORY : window._consRankHist;
+    const _since = _H && (_H.dates || (_H.days || []).map(x => x.date)).slice().sort()[0];
+    const _how = _trendIsDyn()
+      ? 'KeepTradeCut ' + (currentMode === 'dynastysf' ? 'Superflex' : '1QB') + ' rank (draft picks excluded), from the daily KTC values the site has stored since ' + (_since || 'June') + '.'
+      : 'The consensus board (the CONS column) rebuilt from the daily snapshots of its sources since ' + (_since || 'August') + ' — the same history as the RANKINGS MOVERS bar.';
+    _set(c1, null, _src + ' rank today. ' + _how + ' The sub-line is the 30-day change.', 'NOW', _src);
+    _set(c2, 'ppg25Header', 'Spots gained (▲) or lost (▼) in the ' + _src + ' rank over the last 7 days. ' + _how, '7D', 'Rank');
+    _set(c3, 'l4ppgHeader', 'Spots gained (▲) or lost (▼) in the ' + _src + ' rank over the last 30 days. In the 2015-23 dynasty backtest a player\'s past market move did not predict his next one (Spearman -.02) — use it as context.', '30D', 'Rank');
   } else if (rnkStatMode === 'dyn') {
     const _M = window.DYNASTY_SIM_2026 && window.DYNASTY_SIM_2026.meta;
     const _y0 = _M ? _M.valuationYear : 2026;
@@ -10534,6 +10739,10 @@ document.querySelectorAll('.rnk-statmode-btn').forEach(btn => {
     btn.classList.add('active');
     rnkStatMode = btn.dataset.rnkstatmode;
     // DYN SIM: its data file loads on first use — paint once it is in.
+    if (rnkStatMode === 'trend' && !(_trendIsDyn() ? (window.KTC_HISTORY && window.DYNASTY_SIM_2026) : window._consRankHist)) {
+      _trendEnsure(() => { if (rnkStatMode === 'trend') { window._updateRnkStatHeaders(); render(); } });
+      return;
+    }
     if (rnkStatMode === 'dyn' && !window.DYNASTY_SIM_2026) {
       _dynSimEnsure(() => { if (rnkStatMode === 'dyn') { window._updateRnkStatHeaders(); render(); } });
       return;
@@ -12431,6 +12640,15 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     }
     // DYN SIM stats view lives on the dynasty boards only (PROTOTYPE).
     document.body.classList.toggle('format-dynasty', _isDynSimMode());
+    document.body.classList.toggle('trend-ok', _isTrendMode());
+    if (rnkStatMode === 'trend') {
+      if (!_isTrendMode()) {
+        rnkStatMode = 'fantasy';
+        document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'fantasy'));
+      } else {
+        _trendEnsure(() => { if (rnkStatMode === 'trend') { window._updateRnkStatHeaders(); render(); } });
+      }
+    }
     if (!_isDynSimMode() && rnkStatMode === 'dyn') {
       rnkStatMode = 'fantasy';
       document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === 'fantasy'));
@@ -16939,7 +17157,7 @@ _renderDataFreshness();
   if (_inSeason) {
     fetch('data/cons_rank_history.json?d=' + stamp)
       .then(r => (r && r.ok) ? r.json() : null)
-      .then(j => { if (j) { _consHist = j; _renderRanks(_span); } })
+      .then(j => { if (j) { _consHist = j; window._consRankHist = j; _renderRanks(_span); } })
       .catch(() => {});
   }
 })();

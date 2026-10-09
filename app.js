@@ -3378,11 +3378,38 @@ function _trendGapFor(d) {
     (D || []).forEach(p => {
       if (!p || p._retired || p._isDevy || p.s === 'PICK') return;
       const x = _dynSimFor(p); const k = _ktcRankInfo(p.n);
-      if (x && k && !k.devy && k.ovr && k.ovr <= 200) pool.push({ n: p.n, s: x.rk, k: k.ovr, x });
+      if (x && k && !k.devy && k.ovr && k.ovr <= 200) {
+        const S = window.DYNASTY_SIM_2026, e = S._idx && S._idx[_dynSimNorm(p.n) + '|' + p.s];
+        pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie) });
+      }
     });
     const sr = pool.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sp = i + 1; });
     const kr = pool.slice().sort((a, b) => a.k - b.k); kr.forEach((r, i) => { r.kp = i + 1; });
     pool.forEach(r => { r.gap = Math.log(r.sp / r.kp); });
+    // EXPECTED MARKET VALUE NEXT YEAR (Jack 2026-10-09; sim_lab/backtest_dynasty_market_next.py):
+    // log next-preseason market rank = M3(log market rank, log sim rank, rookie, position,
+    // age x position), fit on 2015-23 dynasty ADP (next-rank Spearman .697 vs .663 for
+    // "no change"; beyond the normal drift for a rank, .255). The predicted pool rank
+    // is read back as today's KTC value at that rank; "peer" = the rank-only drift (M1),
+    // so value change minus peer change = what the sim + age add for this player.
+    const M = window.DYNASTY_SIM_2026.meta.mktNext;
+    if (M && M.coef) {
+      const vals = kr.map(r => r.kv), ovrs = kr.map(r => r.k), n = vals.length;
+      const valAt = pr => pr <= 1 ? vals[0] : pr >= n ? vals[n - 1] * Math.pow(n / pr, 1.5)
+        : vals[Math.floor(pr) - 1] + (vals[Math.ceil(pr) - 1] - vals[Math.floor(pr) - 1]) * (pr - Math.floor(pr));
+      const b = M.coef, b1 = M.m1, ac = M.ageCenter || 25;
+      pool.forEach(r => {
+        const a = (r.age != null ? r.age : ac) - ac, P = r.pos;
+        const z = b[0] + b[1] * Math.log(r.kp) + b[2] * Math.log(r.sp) + b[3] * (r.rookie ? 1 : 0)
+          + (P === 'RB' ? b[4] : 0) + (P === 'WR' ? b[5] : 0) + (P === 'TE' ? b[6] : 0)
+          + a * (P === 'QB' ? b[7] : P === 'RB' ? b[8] : P === 'WR' ? b[9] : b[10]);
+        const pr = Math.min(M.drop || 250, Math.exp(z));
+        const prPeer = Math.min(M.drop || 250, Math.exp(b1[0] + b1[1] * Math.log(r.kp)));
+        const v1 = valAt(pr), vPeer = valAt(prPeer);
+        r.mkt = { pr, val: v1, cur: r.kv, chg: v1 / r.kv - 1, peer: vPeer / r.kv - 1,
+                  ovr: pr < n ? ovrs[Math.max(0, Math.round(pr) - 1)] : null };
+      });
+    }
     const g = pool.map(r => r.gap).sort((a, b) => a - b);
     const q = f => g[Math.min(g.length - 1, Math.floor(f * g.length))];
     const lo = q(0.2), hi = q(0.8);
@@ -3391,7 +3418,7 @@ function _trendGapFor(d) {
     // call also needs 3+ spots between the two ranks.
     pool.forEach(r => {
       const far = Math.abs(r.sp - r.kp) >= 3;
-      m[r.n] = { gap: r.gap, sp: r.sp, kp: r.kp, call: far && r.gap <= lo ? 'BUY' : far && r.gap >= hi ? 'SELL' : '', x: r.x };
+      m[r.n] = { gap: r.gap, sp: r.sp, kp: r.kp, call: far && r.gap <= lo ? 'BUY' : far && r.gap >= hi ? 'SELL' : '', x: r.x, mkt: r.mkt || null };
     });
     c[ck] = m;
   }
@@ -3401,6 +3428,7 @@ function _trendSortVal(d, k) {
   const t = _trendFor(d);
   if (k === 'now') return t && t.now != null ? -t.now : -Infinity;
   if (k === 'gap') { const g = _trendGapFor(d); return g && !_dynLocked(g.x) ? -g.gap : -Infinity; }
+  if (k === 'mkt') { const g = _trendGapFor(d); return g && g.mkt && !_dynLocked(g.x) ? g.mkt.chg : -Infinity; }
   return t && t[k] != null ? t[k] : -Infinity;
 }
 
@@ -5628,7 +5656,7 @@ function getFiltered(applyTopN) {
         case 'age': av = filter==='DST'?(a.oppg||99):(a.age||99); bv = filter==='DST'?(b.oppg||99):(b.age||99); break;
         case 'yrr': if (_sm === 'trend') { av = _trendSortVal(a, 'd30'); bv = _trendSortVal(b, 'd30'); break; } if (_sm === 'dyn') { av = _dynSortVal(a, 'val'); bv = _dynSortVal(b, 'val'); break; } if (_sm === 'vor') { av = _vorSort(a, 'vp'); bv = _vorSort(b, 'vp'); break; } if (_sm === 'xfp') { av = _xfpSortVal(a, 'luckg'); bv = _xfpSortVal(b, 'luckg'); break; } if (_sm === 'adp') { av = _smAdp(a,'cbs'); bv = _smAdp(b,'cbs'); break; } if (_sm === 'lines' || _sm === 'proj') { const _f = _wkStat ? _smRec : _smYds; av = _f(a); bv = _f(b); break; } { const _pg = currentMode === 'weekly'; const _ay = _totYds(a, _pg), _by = _totYds(b, _pg); av = _ay ? _ay.val : 0; bv = _by ? _by.val : 0; } break;
         case 'jm': if (_sm === 'trend') { av = _trendSortVal(a, 'gap'); bv = _trendSortVal(b, 'gap'); break; } if (_sm === 'vor') { av = _vorSort(a, 'g'); bv = _vorSort(b, 'g'); break; } if (_sm === 'adp') { av = _smAdp(a,'yahoo'); bv = _smAdp(b,'yahoo'); break; } av = a._pmJm||0; bv = b._pmJm||0; break;
-        case 'landing': if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
+        case 'landing': if (_sm === 'trend') { av = _trendSortVal(a, 'mkt'); bv = _trendSortVal(b, 'mkt'); break; } if (_sm === 'adp') { const _avA = _adpCmpAvg(a), _avB = _adpCmpAvg(b); av = _avA ? _avA.v : 9999; bv = _avB ? _avB.v : 9999; break; } av = a._pmLandingSpot==null?-1:a._pmLandingSpot; bv = b._pmLandingSpot==null?-1:b._pmLandingSpot; break;
         case 'psos': {
           // Sort by SOS rank in the active week window (1 = easiest schedule).
           // Teams we can't resolve sink to the bottom.
@@ -9124,7 +9152,7 @@ function render() {
   // VOR season view: the JM column carries GMS (PO VOR takes the tail column).
   const _vorSeasonCols = _statMode === 'vor' && !_isWeekly;
   const showJm = _isAdpCmp || _isDynBoard || _vorSeasonCols;
-  const showLanding = _isAdpCmp || (_isDynBoard && filter === 'ROOKIE');
+  const showLanding = _isAdpCmp || (_isDynBoard && filter === 'ROOKIE') || (_statMode === 'trend' && _trendIsDyn());
   // Tier banner rows whose start falls between the previous row's rank and this
   // one — shared by the regular rows and the DEVY rows.
   // BYE BLOCK (weekly, Jack 2026-10-07): the tier cards' BYE row in table
@@ -9310,6 +9338,7 @@ function render() {
     let _statTd1 = ''; // first stat cell (Proj PPG / stat-view PPG / UD-ADP) — rendered BEFORE the weekly OPP/SPREAD/TOTAL block
     let _statYdsTail = null; // proj/lines views: the Yds line, shown in the tail (yrr) column
     let _statJmCell = null; // VOR season view: GMS rides the JM column
+    let _statLandingCell = null; // dynasty TRENDS: AUG '27 expected market value rides the Landing column
     if (_statMode === 'trend') {
       // TRENDS (Jack 2026-10-09): market rank now · 7D · 30D change ·
       // sparkline; dynasty adds SIM GAP (BUY / SELL) in the JM column.
@@ -9335,6 +9364,19 @@ function render() {
           const tip = ('Dynasty SIM #' + g.sp + ' vs KTC #' + g.kp + ' among the ' + 'players both rank (KTC top 200).' + cl + ' ' + (g.call === 'BUY' ? 'BUY: the sim likes him in the top fifth more than KTC does — in the 2015-23 backtest the market moved toward the sim the next year and this fifth out-produced its market-rank peers.' : g.call === 'SELL' ? 'SELL: KTC likes him in the top fifth more than the sim does — that fifth under-produced its market-rank peers in the backtest.' : 'No call — inside the middle three fifths of the gap.')).replace(/"/g, '&quot;');
           const col = g.call === 'BUY' ? '#22c55e' : g.call === 'SELL' ? '#ef4444' : 'var(--text2)';
           _statJmCell = `<span title="${tip}" style="cursor:help;font-weight:700;color:${col}">${g.call || (g.sp < g.kp ? '+' : g.sp > g.kp ? '−' : '') + Math.abs(g.kp - g.sp)}</span>`;
+        }
+        if (g && g.mkt && !_dynLocked(g.x)) {
+          const mk = g.mkt, edge = mk.chg - mk.peer;
+          const pct = v => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 100)) + '%';
+          const col = edge >= 0.05 ? '#22c55e' : edge <= -0.05 ? '#ef4444' : 'var(--text2)';
+          const tip = ('Expected KTC value by next preseason (Aug 2027): about ' + Math.round(mk.val).toLocaleString() + ' (now ' + Math.round(mk.cur).toLocaleString() + ', ' + pct(mk.chg) + ')' + (mk.ovr ? ' — around KTC #' + mk.ovr + ' today\'s scale.' : ' — out of the KTC top 200.')
+            + ' Typical for his KTC rank: ' + pct(mk.peer) + ', so ' + (Math.abs(edge) < 0.05 ? 'in line with his rank.' : pct(edge) + (edge > 0 ? ' better' : ' worse') + ' than peers.')
+            + ' Most values fall a year out because a new rookie class slots in ahead and older players slide; the color is the part beyond that. Model: market rank, Dynasty SIM rank, rookie, position and age by position, fit on 2015-23 dynasty ADP (next-year rank Spearman .70 vs .66 for no change; .26 on who beats his rank\'s drift).').replace(/"/g, '&quot;');
+          _statLandingCell = `<span title="${tip}" style="cursor:help;font-weight:700;color:${col}">${pct(mk.chg)}</span>`;
+        } else if (g && g.mkt) {
+          _statLandingCell = '<span class="cons-lock" aria-label="Premium" title="' + _DYN_LOCK_TIP + '">🔒</span>';
+        } else {
+          _statLandingCell = '<span style="color:var(--text2)" title="Needs a Dynasty SIM value and a KTC top-200 rank">—</span>';
         }
       }
     } else if (_statMode === 'dyn') {
@@ -9605,7 +9647,7 @@ function render() {
       ${_wkSplit.post}
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_statJmCell != null ? _statJmCell : _isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
-      <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
+      <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_statLandingCell != null ? _statLandingCell : _isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
       <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
       <td class="psos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
       <td class="ppsos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,[15,16,17]);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
@@ -9702,6 +9744,9 @@ function render() {
         sp.innerHTML = 'AVG ';
         sp.setAttribute('data-gloss', 'Cross-platform average — mean of every platform that lists the player (Underdog for premium, Sleeper, ESPN, CBS, Yahoo). Hover a value to see which went in. Green = the market as a whole drafts the player later than this rank (value), red = earlier (reach).');
       }
+    } else if (_statMode === 'trend' && _trendIsDyn() && id === 'landingHeader') {
+      sp.innerHTML = 'AUG \'27 ';
+      sp.setAttribute('data-gloss', 'Expected KTC value change by next preseason (August 2027). Predicted from his KTC rank, Dynasty SIM rank, rookie status, position and age by position — fit on 2015-23 dynasty ADP, where it ranked next year\'s market better than "no change" (.70 vs .66). Most values fall a year out (a new rookie class slots in, older players slide); green / red = better / worse than the typical change for his current rank by 5%+, the part the model adds (.26 Spearman on who beats his rank\'s drift). Free: Dynasty SIM top 30.');
     } else if (_statMode === 'trend' && _trendIsDyn() && id === 'jmHeader') {
       sp.innerHTML = 'SIM GAP ';
       sp.setAttribute('data-gloss', 'Dynasty SIM rank vs KTC rank among the players both rank (KTC top 200). BUY = the fifth the sim likes most beyond KTC, SELL = the fifth KTC likes most beyond the sim; otherwise the spots between the two ranks (+ = the sim has him higher). 2015-23 backtest: the market moved toward the sim the next year (t 7.4 holding market rank fixed) and the BUY fifth out-produced its market-rank peers by +27 three-year VOR while SELL ran -20. Free: players in the Dynasty SIM top 30.');

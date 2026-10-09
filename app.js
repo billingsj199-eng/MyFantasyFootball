@@ -58982,7 +58982,8 @@ Rules:
     }
 
     const posColors = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
-    const chip = (p, pos) => `<span style="font-weight:600;color:var(--text)">${_esc(p.name)}</span> <span style="font-size:.6875rem;font-weight:700;color:${posColors[pos]}">${pos}</span> <span style="font-size:.6875rem;color:var(--text2)">${Math.round(p.val)}</span>`;
+    // nowrap: a phone line break must fall BETWEEN players, never inside one ("James Cook RB" / "164").
+    const chip = (p, pos) => `<span style="white-space:nowrap"><span style="font-weight:600;color:var(--text)">${_esc(p.name)}</span> <span style="font-size:.6875rem;font-weight:700;color:${posColors[pos]}">${pos}</span> <span style="font-size:.6875rem;color:var(--text2)">${Math.round(p.val)}</span></span>`;
     html += `<div style="display:flex;flex-direction:column;gap:6px">`;
     picked.forEach(o => {
       const sendHtml = o.send.map(p => chip(p, o.givePos)).join(' <span style="color:var(--text2)">+</span> ');
@@ -58995,9 +58996,9 @@ Rules:
         `<span style="font-weight:700;color:var(--te)">${_esc(o.them.owner)}</span>` +
         `<span style="font-size:.6875rem;color:var(--text2)">their ${o.getPos}: ${_mtOrdinal(rankOf(o.them, o.getPos))} · their ${o.givePos}: ${_mtOrdinal(rankOf(o.them, o.givePos))}</span></div>` +
         `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;font-size:.78rem">` +
-        `<span style="font-size:.6875rem;color:var(--red);font-weight:700">SEND</span> ${sendHtml}` +
+        `<span><span style="font-size:.6875rem;color:var(--red);font-weight:700">SEND</span> ${sendHtml}</span>` +
         `<span style="color:var(--text2)">⇄</span>` +
-        `<span style="font-size:.6875rem;color:var(--green);font-weight:700">GET</span> ${chip(o.get, o.getPos)}` +
+        `<span style="white-space:nowrap"><span style="font-size:.6875rem;color:var(--green);font-weight:700">GET</span> ${chip(o.get, o.getPos)}</span>` +
         `<span title="Value gap in trade-calc units — under 15% reads as balanced" style="margin-left:auto;font-size:.6875rem;color:${pct <= 7 ? '#22c55e' : '#f59e0b'}">±${pct}% value gap</span></div>` +
         `<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">Fixes your ${o.getPos} (${_mtOrdinal(rankOf(me, o.getPos))} of ${n}) from your ${o.givePos} depth (${_mtOrdinal(rankOf(me, o.givePos))})</div>` +
         `</div>`;
@@ -59113,9 +59114,10 @@ Rules:
       const val = valByName[d.n] != null ? Math.round(valByName[d.n]) : 0;
       html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;${i ? 'border-top:1px solid var(--border);' : ''}">` +
         `<div style="width:30px;text-align:right;font-family:'Bebas Neue',sans-serif;color:var(--text2)">#${f.rank}</div>` +
-        `<div style="flex:1;min-width:0"><span style="font-weight:600;font-size:.8rem;color:var(--text)">${_esc(d.n)}</span>` +
-        ` <span style="font-size:.6875rem;font-weight:700;color:${posColors[d.s] || 'var(--text2)'}">${d.s}</span>` +
-        ` <span style="font-size:.6875rem;color:var(--text2)">${_esc(d.t || 'FA')}</span></div>` +
+        // Name on its own line, POS · TEAM abbr under it (full team names wrapped
+        // into the name on phones: "Tre' Harris WR Los / Angeles Chargers").
+        `<div style="flex:1;min-width:0;line-height:1.2"><div style="font-weight:600;font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(d.n)}</div>` +
+        `<div style="font-size:.6875rem;color:var(--text2);white-space:nowrap"><span style="font-weight:700;color:${posColors[d.s] || 'var(--text2)'}">${d.s}</span> · ${_esc(_tfAbbr(d.t || 'FA'))}</div></div>` +
         upgrade +
         `<div style="min-width:52px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">VAL </span><span style="font-weight:700;color:var(--text)">${val}</span></div>` +
         `<div style="min-width:44px;text-align:right"><span style="font-size:.6875rem;color:var(--text2)">PPG </span><span style="font-weight:700;color:var(--green)">${ppg || '—'}</span></div>` +
@@ -61784,9 +61786,11 @@ Rules:
           html += `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">`;
           a.moves.forEach(m => {
             html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px">`;
-            if (m.start) html += `<span style="color:var(--green);font-weight:700;font-size:.6875rem">▲ START</span>${posBadge(m.start.pos)}${_mtNameLink(m.start.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--green)">${m.start.ppg}</span>`;
-            if (m.start && m.sit) html += `<span style="color:var(--text2);font-size:.7rem">over</span>`;
-            if (m.sit) html += `<span style="color:var(--red);font-weight:700;font-size:.6875rem">▼ SIT</span>${posBadge(m.sit.pos)}${_mtNameLink(m.sit.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--red)">${m.sit.ppg > 0 ? m.sit.ppg : '—'}</span>${m.sit.out ? '<span style="font-size:.6875rem;font-weight:700;color:var(--red)">' + m.sit.out + '</span>' : ''}`;
+            // START and "over SIT" are each one unbreakable group, so a phone wraps
+            // between them instead of mid-phrase ("7.2 over ▼ SIT" / "WR Justin Jefferson").
+            const grp = '<span style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap">';
+            if (m.start) html += `${grp}<span style="color:var(--green);font-weight:700;font-size:.6875rem">▲ START</span>${posBadge(m.start.pos)}${_mtNameLink(m.start.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--green)">${m.start.ppg}</span></span>`;
+            if (m.sit) html += `${grp}${m.start ? '<span style="color:var(--text2);font-size:.7rem">over</span>' : ''}<span style="color:var(--red);font-weight:700;font-size:.6875rem">▼ SIT</span>${posBadge(m.sit.pos)}${_mtNameLink(m.sit.name)}<span style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--red)">${m.sit.ppg > 0 ? m.sit.ppg : '—'}</span>${m.sit.out ? '<span style="font-size:.6875rem;font-weight:700;color:var(--red)">' + m.sit.out + '</span>' : ''}</span>`;
             if (m.start && m.gain > 0) html += `<span style="margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:var(--green)">+${m.gain}</span>`;
             if (!m.start && m.sit) html += `<span style="margin-left:auto;font-size:.6875rem;color:var(--text2)">${m.sit.out ? 'not playing' : 'no projection'} — nobody better on your bench</span>`;
             html += `</div>`;

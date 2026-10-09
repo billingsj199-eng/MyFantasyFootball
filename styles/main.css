@@ -215,6 +215,20 @@ thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}
   /* Underdog draft board: 12-slot grid scrolls sideways on phones — show the swipe hint */
   #udTab_board .ud-scroll-hint{display:flex!important}
   #udTab_board .ud-scroll-hint.seen{display:none!important}
+  /* 2026-10-09 phone pass. Tool panels: the ✕ wrapped onto its own row under
+     the intro text (~60px of nothing) — pin it to the header's top-right. */
+  :is(#mtLineupCheck,#mtByeStress,#mtPlayoffStrength,#mtResults) > div > div:first-child{position:relative;padding-right:40px}
+  :is(#mtLineupCheck,#mtByeStress,#mtPlayoffStrength,#mtResults) > div > div:first-child > button:last-child{position:absolute;top:-2px;right:0;margin:0!important;min-height:30px;min-width:32px}
+  /* Wide tables (PLAYOFFS 9 cols, RESULTS 7, BYES W1-18) scroll sideways —
+     keep the team column pinned so the numbers keep their owner. The generic
+     phone rule makes tables display:block + overflow:auto, which turns the
+     table itself into the (non-scrolling) sticky scrollport — these already
+     sit in an overflow-x wrapper, so put them back to a plain table. */
+  :is(#mtPlayoffStrength,#mtResults,#mtByeStress) div[style*="overflow-x"] > table{display:table!important;overflow:visible!important}
+  :is(#mtPlayoffStrength,#mtResults) div[style*="overflow-x"] > table :is(th,td):nth-child(2),
+  #mtByeStress div[style*="overflow-x"] > table :is(th,td):first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:4px 0 6px -4px rgba(0,0,0,.6)}
+  /* Power-rankings SORT BY buttons measured 24px tall. */
+  #mtPowerRankings button[onclick^="window._mtSortTeams"]{min-height:30px}
 }
 /* Mobile — tightest layout, drop PPG/ADP extras */
 @media (max-width:600px){

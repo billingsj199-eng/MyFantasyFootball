@@ -1177,8 +1177,7 @@ def main():
     if wx_changed:
         bump_version(r'data/weather_2026\.js')
 
-    print('
-Phase P — % rostered (ESPN / Sleeper / Yahoo):')
+    print('\nPhase P — % rostered (ESPN / Sleeper / Yahoo):')
     own_changed = pull_ownership()
     if own_changed:
         bump_version(r'data/ownership_2026\.js')

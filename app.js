@@ -3440,7 +3440,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     const yrL = (S.meta && S.meta.valuationYear) || 2026;
     const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
     return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
-      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null);
+      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d);
   }
   if (!S._idx) _dynSimFor(d);
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
@@ -3484,19 +3484,33 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   }
   if (fairDiff != null && fairDiff >= 0.10) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
-  const slideNote = _cdSlideNoteHtml(slide);
+  const slideNote = _cdSlideNoteHtml(slide, d);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
     + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>' + slideNote;
 }
 // Sell note for owners while the injury slide is still ahead (fresh injury).
-function _cdSlideNoteHtml(slide) {
+function _cdSlideNoteHtml(slide, d) {
+  // REPEAT INJURY (sim_lab/research_injury_history.py): hurt in either of the two
+  // seasons before -> KTC slid about twice as fast early (-8.2% vs -3.1% at 30 days
+  // vs healthy peers, n 12 vs 34; level by 180 days). data/injury_recent.js.
+  let rep = '';
+  const R = window.INJURY_RECENT;
+  if (slide && slide.fresh && d && R && R.players) {
+    if (!R._idx) { R._idx = {}; Object.keys(R.players).forEach(n => { R._idx[_normalizeNameForLookup(n)] = R.players[n]; }); }
+    const h = R._idx[_normalizeNameForLookup(d.n)];
+    if (h && h.length) {
+      const what = h.map(r => r[0] + ' ' + String(r[1] || 'injury').toLowerCase() + (r[2] ? ' (' + r[2] + ' wk' + (r[2] === 1 ? '' : 's') + ')' : '')).join(', ');
+      rep = '<div style="margin-top:4px"><b style="color:#f87171">Repeat injury</b> — also hurt in ' + what.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        + '. Players re-injured within two seasons slid about twice as fast in the first months (about −8% at 30 days vs −3%; small sample), so the window to move him is shorter.</div>';
+    }
+  }
   return slide && slide.fresh
     ? '<div style="font-size:.6875rem;line-height:1.45;color:#fca5a5;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
       + '<b style="color:#f87171;letter-spacing:.04em">⚠ INJURY SLIDE — SELL WINDOW.</b> ' + (slide.weeks === 0 ? 'Hurt after his Week ' + slide.last + ' game. ' : 'Out ' + (slide.weeks === 1 ? 'a week' : slide.weeks + ' weeks') + ' since his last game (Week ' + slide.last + '). ')
       + 'After an injury like this KTC barely moves on the news, then drifts below similar healthy players — about −2% in a week, −3 to −4% in a month, −5% by three months — with no rebound by six. '
-      + 'If you\'re moving him, sooner beats later; if you\'re buying, wait.</div>'
+      + 'If you\'re moving him, sooner beats later; if you\'re buying, wait.' + rep + '</div>'
     : '';
 }
 // -> { last: last week played this season, weeks: completed weeks since, fresh } or null.

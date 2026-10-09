@@ -32484,18 +32484,20 @@ window.fmtHeight = fmtHeight;
   // Stat line under each trade chip's name (Jack 2026-10-09): projected PPG
   // and season PPG, each with its position rank — the same (N) as the player
   // card, so the two sides read in "where he sits at his position" terms.
-  function _tradeStatLine(d) {
-    if (!d || !d.s || typeof _cardPosRank !== 'function') return '';
+  // [{ lbl, v, c, r }] — also drawn on the SHARE CARD (_tradeShareCard).
+  function _tradeStatParts(d) {
+    if (!d || !d.s || typeof _cardPosRank !== 'function') return [];
     const part = (lbl, v, key) => {
-      if (v == null || !isFinite(v) || v <= 0) return '';
-      const c = (typeof posFptsColor === 'function') ? posFptsColor(v, d.s) : null;
-      const r = _cardPosRank(d, key);
-      const pl = d.s === 'DST' ? 'D/STs' : d.s + 's';
-      return lbl + ' <b style="font-weight:700' + (c ? ';color:' + c : '') + '">' + (Math.round(v * 10) / 10) + '</b>'
-        + (r ? '<span title="#' + r.rank + ' of ' + r.of + ' ' + pl + '" style="cursor:help"> (' + r.rank + ')</span>' : '');
+      if (v == null || !isFinite(v) || v <= 0) return null;
+      return { lbl: lbl, v: Math.round(v * 10) / 10, c: (typeof posFptsColor === 'function') ? posFptsColor(v, d.s) : null, r: _cardPosRank(d, key) };
     };
     const sp = adjSeasonPpg(d);
-    const bits = [part('PROJ', adjProjPpg(d), 'proj'), part("'" + _seasonPpgYear(), sp && sp.v, 'ppg')].filter(Boolean);
+    return [part('PROJ', adjProjPpg(d), 'proj'), part("'" + _seasonPpgYear(), sp && sp.v, 'ppg')].filter(Boolean);
+  }
+  function _tradeStatLine(d) {
+    const pl = d && d.s === 'DST' ? 'D/STs' : (d && d.s) + 's';
+    const bits = _tradeStatParts(d).map(b => b.lbl + ' <b style="font-weight:700' + (b.c ? ';color:' + b.c : '') + '">' + b.v + '</b>'
+      + (b.r ? '<span title="#' + b.r.rank + ' of ' + b.r.of + ' ' + pl + '" style="cursor:help"> (' + b.r.rank + ')</span>' : ''));
     return bits.length ? '<span class="tp-sub" style="font-size:.6875rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + bits.join(' · ') + '</span>' : '';
   }
 
@@ -33243,18 +33245,31 @@ window.fmtHeight = fmtHeight;
       x.fillText(String(receiver).toUpperCase() + ' RECEIVES', px + pw / 2, py + 36);
       x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.fillText('FROM ' + String(giver).toUpperCase(), px + pw / 2, py + 56);
       const rows = [];
-      side.players.forEach(i => { const d = D[i]; if (d) rows.push({ pos: d.s, name: d.n, val: getPlayerValue(d), tier: getTierForPlayer(d) || '' }); });
+      side.players.forEach(i => { const d = D[i]; if (d) rows.push({ pos: d.s, name: d.n, val: getPlayerValue(d), tier: getTierForPlayer(d) || '', st: _tradeStatParts(d) }); });
       side.picks.forEach(p => rows.push({ pos: 'PICK', name: p._pickNum ? (p.year + ' ' + p._pickNum) : (p.year + ' ' + slotLabel(p.slot) + ' ' + p.round), val: getPickValue(p.round, p.year, p.slot, p._pickNum), tier: '' }));
-      x.textAlign = 'left'; let yy = py + 90; const maxRows = 7;
+      // Rows carry a stat line under the name: breathe when there's room (≤4)
+      x.textAlign = 'left'; let yy = py + 92; const maxRows = 7, step = rows.length <= 4 ? 46 : 36;
       rows.slice(0, maxRows).forEach(r => {
         x.fillStyle = 'rgba(255,255,255,.08)'; rr(px + 18, yy - 17, 52, 24, 5); x.fill();
         x.fillStyle = C.dim; x.font = '700 12px ' + DF; x.textAlign = 'center'; x.fillText(r.pos, px + 44, yy);
         x.textAlign = 'left'; x.fillStyle = C.text; x.font = '600 20px ' + DF;
         let nm = r.name; while (x.measureText(nm).width > 300 && nm.length > 4) nm = nm.slice(0, -2) + '\u2026';
-        x.fillText(nm, px + 84, yy + 1);
+        const hasSt = r.st && r.st.length;
+        x.fillText(nm, px + 84, hasSt ? yy - 4 : yy + 1);
+        // PROJ / season PPG with position ranks under the name (same line as the chip)
+        if (hasSt) {
+          let sx = px + 84;
+          const seg = (t, col, f) => { x.fillStyle = col; x.font = f; x.fillText(t, sx, yy + 12); sx += x.measureText(t).width; };
+          r.st.forEach((b, bi) => {
+            if (bi) seg('  \u00b7  ', C.dim, '600 12px ' + DF);
+            seg(b.lbl + ' ', C.dim, '600 12px ' + DF);
+            seg(String(b.v), b.c || C.text, '700 12px ' + DF);
+            if (b.r) seg(' (' + b.r.rank + ')', C.dim, '600 12px ' + DF);
+          });
+        }
         if (r.tier) { x.fillStyle = C.dim; x.font = '600 11px ' + DF; x.textAlign = 'right'; x.fillText(String(r.tier), px + pw - 90, yy); }
         x.textAlign = 'right'; x.fillStyle = color; x.font = '24px ' + BF; x.fillText(String(r.val), px + pw - 22, yy + 2);
-        yy += 36;
+        yy += step;
       });
       if (rows.length > maxRows) { x.fillStyle = C.dim; x.font = '600 12px ' + DF; x.textAlign = 'left'; x.fillText('+ ' + (rows.length - maxRows) + ' more', px + 84, yy); }
       if (!rows.length) { x.fillStyle = C.dim; x.font = 'italic 16px ' + DF; x.textAlign = 'center'; x.fillText('nothing', px + pw / 2, py + 180); }

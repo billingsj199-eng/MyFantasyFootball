@@ -3599,6 +3599,73 @@ function _impliedTeamPpg(teamFullName) {
   return _impliedPpgCache[abbr] || null;
 }
 
+// Position rank tags for the player card's stat boxes (Jack 2026-10-09): the
+// same small "(N)" the Team PPG box carries, so '26 PPG / Proj PPG / xFP /GM /
+// L4 PPG (FANTASY) and WK PROJ / BOOKS / SEASON /GM / xFP /GM (WEEKLY) read as
+// "where he sits at his position". Pool = active NFL players at the same
+// position with a value; actual-game stats ('26 PPG, xFP) need at least half
+// the position's max games so a one-game spike doesn't outrank full samples
+// (the card's own player is always ranked). Cached ~60s per key / pos / fmt / week.
+const _cardPosRankCache = {};
+function _cardPosRankVal(p, key) {
+  if (key === 'ppg') { const s = adjSeasonPpg(p); return s.v != null ? { v: s.v, n: s.gp || 0 } : null; }
+  if (key === 'proj') { const v = adjProjPpg(p); return (typeof v === 'number' && v > 0) ? { v: v } : null; }
+  if (key === 'l4') { const v = last4Ppg(p); return v != null ? { v: v } : null; }
+  if (key === 'xfp') { const x = (typeof _xfpAgg === 'function') ? _xfpAgg(p, rankingScoringFmt, null) : null; return (x && x.n) ? { v: x.xfpg, n: x.n } : null; }
+  if (key === 'wkproj') {
+    if (typeof window._weeklyAdjustPpg !== 'function') return null;
+    const v = window._weeklyAdjustPpg(p, adjProjPpg(p), {});
+    return (typeof v === 'number' && v > 0) ? { v: v } : null;
+  }
+  if (key === 'book') { const W = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(p) : null; return W ? { v: W.ppg } : null; }
+  return null;
+}
+function _cardPosRank(d, key) {
+  if (!d || !d.s || typeof D === 'undefined' || !D) return null;
+  const wk = window._weeklyActiveWeek || 1;
+  const ck = key + '|' + d.s + '|' + rankingScoringFmt + '|' + wk + '|' + D.length;
+  let e = _cardPosRankCache[ck];
+  if (!e || Date.now() - e.t > 60000) {
+    const rows = [];
+    let maxN = 0;
+    D.forEach(p => {
+      if (!p || p.s !== d.s || p._retired || p._isDevy || !p.t) return;
+      let r = null;
+      try { r = _cardPosRankVal(p, key); } catch (_) {}
+      if (!r || typeof r.v !== 'number' || !isFinite(r.v)) return;
+      if (r.n > maxN) maxN = r.n;
+      rows.push({ n: p.n, v: r.v, g: r.n });
+    });
+    e = _cardPosRankCache[ck] = { t: Date.now(), rows: rows, minG: Math.max(1, Math.ceil(maxN / 2)) };
+  }
+  const me = e.rows.find(r => r.n === d.n);
+  if (!me) return null;
+  const pool = e.rows.filter(r => r === me || r.g == null || r.g >= e.minG);
+  return { rank: 1 + pool.filter(r => r.v > me.v).length, of: pool.length };
+}
+// Small "(N)" after a box number; tooltip spells out "#N of M QBs".
+function _cardPosRankTag(d, key) {
+  const r = _cardPosRank(d, key);
+  if (!r) return '';
+  const pl = d.s === 'DST' ? 'D/STs' : d.s + 's';
+  return ' <span style="font-size:.6em;font-weight:600;color:var(--text2);cursor:help" title="#' + r.rank + ' of ' + r.of + ' ' + pl
+    + ((key === 'ppg' || key === 'xfp') ? ' (min. games played)' : '') + '">(' + r.rank + ')</span>';
+}
+
+// This week's implied team total ranked across every team playing (#1 = highest).
+// opp = rank the opponent's total instead, lowest first (the D/ST view).
+function _cardWeekTotalRankTag(team, opp) {
+  const fn = opp ? window._weeklyOppTeamTotalFor : window._weeklyTeamTotalFor;
+  if (typeof fn !== 'function' || typeof TEAM_ABBR_MAP === 'undefined') return '';
+  const mine = fn(team);
+  if (mine == null) return '';
+  const all = Object.keys(TEAM_ABBR_MAP).map(t => { try { return fn(t); } catch (_) { return null; } }).filter(v => typeof v === 'number');
+  if (!all.length) return '';
+  const rank = 1 + all.filter(v => opp ? v < mine : v > mine).length;
+  const tip = opp ? '#' + rank + ' of ' + all.length + ' — lowest opponent total this week = #1' : '#' + rank + ' of ' + all.length + ' teams playing this week';
+  return ' <span style="font-size:.6em;font-weight:600;color:var(--text2);cursor:help" title="' + tip + '">(' + rank + ')</span>';
+}
+
 // Team PPG rank box for card Rankings rows (player card + Compare columns).
 // Same color thresholds and (rank) treatment as the rankings-table cell.
 function _teamPpgBoxHtml(team) {
@@ -17235,8 +17302,8 @@ function buildWeeklyCardView(d) {
   html += box('OPP', (entry.home ? 'vs ' : '@ ') + esc(entry.opp), '', oppNote || null, oppCol);
   html += box('SPREAD', sp != null ? (sp > 0 ? '+' : '') + sp : '—', '', 'Point spread for this team — negative = favored', _spreadCol(sp));
   html += isDst
-    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)', _ttColInv(oppTT))
-    : box('TEAM TOTAL', tt != null ? fmt1(tt) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
+    ? box('OPP TOTAL', oppTT != null ? fmt1(oppTT) + _cardWeekTotalRankTag(d.t, true) : '—', '', 'Points the opponent is priced to score — the number a D/ST cares about (lower = better)', _ttColInv(oppTT))
+    : box('TEAM TOTAL', tt != null ? fmt1(tt) + _cardWeekTotalRankTag(d.t, false) : '—', '', 'This team\'s implied points: (game total − spread) / 2', _ttCol(tt));
   html += box('O/U', ou != null ? fmt1(ou) : '—', '', 'Game total (over/under)', isDst ? _ouColInv(ou) : _ouCol(ou));
   html += '</div>';
   // weekly rank boxes sit left of WK N MATCHUP (flex + position for RB / WR / TE, position only for QB / K / D/ST)
@@ -17309,13 +17376,13 @@ function buildWeeklyCardView(d) {
     + '<span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';
   const wkBook = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
   html += '<div class="card-rank-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
-  html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) : '—', '',
+  html += box('WK ' + wk + ' PROJ', proj != null ? fmt1(proj) + (proj > 0 ? _cardPosRankTag(d, 'wkproj') : '') : '—', '', 'The number the WEEKLY rankings PROJ column shows', _ptsCol(proj));
+  html += box('BOOKS', wkBook != null ? fmt1(wkBook.ppg) + _cardPosRankTag(d, 'book') : '—', '',
     wkBook ? 'This week\'s ' + wkBook.books.join('/') + ' prop board scored in the current format' + (wkBook.asOf ? ' (as of ' + wkBook.asOf + ')' : '') : 'No weekly prop board posted for this player', wkBook != null ? _ptsCol(wkBook.ppg) : null);
-  html += box('SEASON /GM', base != null ? fmt1(base) : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
+  html += box('SEASON /GM', base != null ? fmt1(base) + _cardPosRankTag(d, 'proj') : '—', '', 'Season-long projected PPG for reference', _ptsCol(base));
   const _xa = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
   const _xv = (_xa && _xa.n) ? Math.round(_xa.xfpg * 10) / 10 : null;
-  html += box('xFP /GM', _xv != null ? fmt1(_xv) : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
+  html += box('xFP /GM', _xv != null ? fmt1(_xv) + _cardPosRankTag(d, 'xfp') : '—', 'card-xfp-num', (_xa && _xa.n) ? 'Expected fantasy points per game from usage, 2026 to date (' + _xa.n + ' gm) — actual ' + fmt1(_xa.ppg) + ' /gm' : 'No 2026 games yet', _ptsCol(_xv));
   html += '</div>';
   // (Clay / Sleeper / ESPN / FantasyPros / CBS reference tiles removed 2026-10-08)
   // WITH / WITHOUT QUESTIONABLE TEAMMATES (Jack 2026-10-08): this player's week projection with each questionable
@@ -19057,21 +19124,21 @@ function openPlayerCard(d, ctxMode) {
           </div>
           <div class="card-rank-box">
             <div class="lbl"${(()=>{const s=adjSeasonPpg(d);return s.yr===26?' title="2026 to date'+(s.gp?' · '+s.gp+' gp':'')+'"':'';})()}>${_seasonPpgLabel()}</div>
-            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1):'—';})()}</div>
+            <div class="num${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?'':' green';})()}"${(()=>{const v=adjSeasonPpg(d).v;return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjSeasonPpg(d).v;return v!=null?v.toFixed(1)+_cardPosRankTag(d,'ppg'):'—';})()}</div>
           </div>
         </div>
         <div class="card-rank-row" style="grid-template-columns:${_impliedTeamPpg(d.t)?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr'};margin-top:.4rem">
           <div class="card-rank-box">
             <div class="lbl">Proj PPG</div>
-            <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v:'—';})()}</div>
+            <div class="num${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?'':' accent';})()}"${(()=>{const v=adjProjPpg(d);return v!=null&&posFptsColor(v,d.s)?' style="color:'+posFptsColor(v,d.s)+'"':'';})()}>${(()=>{const v=adjProjPpg(d);return v!=null?v+_cardPosRankTag(d,'proj'):'—';})()}</div>
           </div>
           ${(()=>{const x=(typeof _xfpAgg==='function')?_xfpAgg(d,rankingScoringFmt,null):null;const v=(x&&x.n)?Math.round(x.xfpg*10)/10:null;const c=v!=null?posFptsColor(v,d.s):null;return `<div class="card-rank-box"${x&&x.n?` title="Expected fantasy points per game from usage (targets, carries, field position), 2026 to date — ${x.n} gm, actual ${Math.round(x.ppg*10)/10} /gm"`:''}>
             <div class="lbl">xFP /GM</div>
-            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v:'—'}</div>
+            <div class="num card-xfp-num"${c?` style="color:${c}"`:''}>${v!=null?v+_cardPosRankTag(d,'xfp'):'—'}</div>
           </div>`;})()}
           ${(()=>{const c=l4PpgCellHtml(last4Ppg(d),adjSeasonPpg(d).v,d.s);return `<div class="card-rank-box">
             <div class="lbl" title="Average PPG over the last 4 games played (2026 to date, then the end of 2025) — shows which way the player is trending vs the season PPG.">L4 PPG</div>
-            <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}</div>
+            <div class="num card-l4-num"${c.color?` style="color:${c.color}"`:''}>${c.html}${c.html!=='—'?_cardPosRankTag(d,'l4'):''}</div>
           </div>`;})()}
           ${_teamPpgBoxHtml(d.t)}
         </div>
@@ -19688,14 +19755,15 @@ function openPlayerCard(d, ctxMode) {
     document.addEventListener('mff:weeklydata', function _l4Backfill() {
       document.removeEventListener('mff:weeklydata', _l4Backfill);
       if (!_l4Num.isConnected) return;
-      const c = l4PpgCellHtml(last4Ppg(d), adj25ppg(d), d.s);
-      _l4Num.innerHTML = c.html;
+      for (const k in _cardPosRankCache) delete _cardPosRankCache[k];   // ranks computed before the bundle are stale
+      const c = l4PpgCellHtml(last4Ppg(d), adjSeasonPpg(d).v, d.s);
+      _l4Num.innerHTML = c.html + (c.html !== '—' ? _cardPosRankTag(d, 'l4') : '');
       _l4Num.style.color = c.color || '';
       // xFP /GM tiles (FANTASY + WEEKLY) ride on the same bundle
       try {
         const x = (typeof _xfpAgg === 'function') ? _xfpAgg(d, rankingScoringFmt, null) : null;
         const xv = (x && x.n) ? Math.round(x.xfpg * 10) / 10 : null;
-        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.textContent = xv != null ? xv : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
+        cardEl.querySelectorAll('.card-xfp-num').forEach(el => { el.innerHTML = xv != null ? xv + _cardPosRankTag(d, 'xfp') : '—'; el.style.color = (xv != null && posFptsColor(xv, d.s)) || ''; });
       } catch (_) {}
       // PRACTICE REPORT: the elite flag (last season's PPG rank) needs this bundle - redraw the section
       try {

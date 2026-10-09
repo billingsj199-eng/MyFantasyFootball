@@ -10972,7 +10972,11 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // Optional `out` object: on return, out.src names the path that produced
   // the number ('bye'|'out'|'dst'|'props'|'consensus'|'heuristic'|'base') —
   // surfaced on the player card's WEEKLY tab so the projection is auditable.
+  // out.mt = true (My Teams, Jack 2026-10-09): Jack's ASSUME OUT list is a
+  // weekly-board call and does NOT apply — a Questionable player keeps his
+  // projection; Doubtful and a confirmed Out are 0 (bench them).
   window._weeklyAdjustPpg = function(d, basePpg, out) {
+    const _mt = !!(out && out.mt);
     const _tag = s => { if (out) out.src = s; };
     _tag('base');
     if (!d || !d.t) return basePpg;
@@ -10983,7 +10987,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     const entry = sched[wk];
     if (!entry) return basePpg;
     if (entry.bye) { _tag('bye'); return 0; }
-    if (typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, wk)) { _tag('out'); return 0; }
+    if (!_mt && typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, wk)) { _tag('out'); return 0; }
     // Injury gate (in-season only — offseason tags are stale)
     let injMult = 1;
     const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
@@ -11002,7 +11006,10 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (/\bout\b/.test(t)) {
         if (window._weeklyOutConfirmed(d, wk)) { _tag('out'); return 0; }
         injMult = 0.75;
-      } else if (/doubtful/.test(t)) injMult = 0.5;
+      } else if (/doubtful/.test(t)) {
+        if (_mt) { _tag('out'); return 0; }
+        injMult = 0.5;
+      }
     }
     // SIM-FIRST (Jack 2026-08-26): the Sim Lab weekly export is THE weekly
     // number wherever it has a row — same value as the PROJ column and the
@@ -11011,7 +11018,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // here (the hard-zero gate above still catches statuses fresher than the
     // last run). Everything below is fallback for players without a sim row.
     if (typeof _simProjRow === 'function') {
-      const _sr = _simProjRow(d, wk);
+      const _sr = _simProjRow(d, wk, _mt ? window._qsInjFlip(d.n, wk) : undefined);
       if (_sr) {
         const _sv = _sr[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0];
         if (typeof _sv === 'number' && isFinite(_sv)) { _tag('sim'); return _sv; }
@@ -13029,12 +13036,79 @@ window._qsTeammates = function(name, wk) {
   const T = window.SIM_PROJ_2026.qs.teams[hit.tm];
   return T ? { tm: hit.tm, q: T.q.slice(), self: T.q.findIndex(q => _qsNorm(q) === _qsNorm(hit.key || name)) } : null;
 };
-function _simProjRow(d, wk) {
+// My Teams in/out state (Jack 2026-10-09): injury tags, not the ASSUME OUT list -
+// Questionable = IN, Doubtful / confirmed Out / IR / PUP / suspended = OUT. Returned as
+// a _qsMask flip for the player's team, so teammates follow the same world.
+function _qsLookupD(k) {
+  if (typeof D === 'undefined') return null;
+  let m = window._qsDByNorm;
+  if (!m || m._n !== D.length) { m = { _n: D.length }; D.forEach(x => { if (x && x.n && x.s !== 'DST') m[_qsNorm(x.n)] = x; }); window._qsDByNorm = m; }
+  return m[k] || null;
+}
+window._qsInjFlip = function(name, wk) {
+  const I = _qsIndex();
+  if (!I || +wk !== I.wk) return null;
+  const hit = I.by[_qsNorm(name)];
+  const T = hit && window.SIM_PROJ_2026.qs.teams[hit.tm];
+  if (!T) return null;
+  const flip = {};
+  (T.q || []).forEach(nm => {
+    const k = _qsNorm(nm), pd = _qsLookupD(k), t = String((pd && pd.inj) || '').toLowerCase();
+    flip[k] = /doubtful|\bir\b|\bpup\b|suspend/.test(t)
+      || (/\bout\b/.test(t) && typeof window._weeklyOutConfirmed === 'function' && !!window._weeklyOutConfirmed(pd, wk));
+  });
+  return flip;
+};
+// SEASON SCENARIOS (2026-10-09, Jack: "season sims in and out for very weird situations like the Packers backfield so
+// we can see Lloyd with and without Jacobs ... on the site"). SIM_PROJ_2026.seasonScen[S] = { tm, note, back, from,
+// players: { name: { in: { w: {wk: [h,p,s]}, s: seasonSimRow }, out: {...} } } } - two full rest-of-season worlds
+// (WITH S from week `back`, WITHOUT S all season) from the Sim Lab export. The default view stays the blended read;
+// a viewer's pick (per scenario, localStorage mff_season_scen) swaps that team's weekly rows, ROS PPG and season sim.
+window._seasonScenSel = (function() { try { return JSON.parse(localStorage.getItem('mff_season_scen') || '{}') || {}; } catch (e) { return {}; } })();
+function _seasonScenHits(name) {
+  const SP = window.SIM_PROJ_2026, SS = SP && SP.seasonScen;
+  if (!SS || !name) return [];
+  const nn = typeof _campNewsNorm === 'function' ? _campNewsNorm(name) : name;
+  const out = [];
+  Object.keys(SS).forEach(S => {
+    const P = SS[S] && SS[S].players; if (!P) return;
+    const k = P[name] ? name : Object.keys(P).find(x => typeof _campNewsNorm === 'function' && _campNewsNorm(x) === nn);
+    if (k) out.push({ S: S, sc: SS[S], pr: P[k] });
+  });
+  return out;
+}
+// the viewer-selected world for this player: { S, sel: 'in' | 'out', rows } or null (blended)
+function _seasonScenWorld(name) {
+  const hits = _seasonScenHits(name);
+  for (let i = 0; i < hits.length; i++) {
+    const sel = window._seasonScenSel[hits[i].S];
+    if ((sel === 'in' || sel === 'out') && hits[i].pr[sel]) return { S: hits[i].S, sel: sel, rows: hits[i].pr[sel] };
+  }
+  return null;
+}
+window._seasonScenSet = function(S, sel) {
+  if (sel === 'in' || sel === 'out') window._seasonScenSel[S] = sel; else delete window._seasonScenSel[S];
+  try { localStorage.setItem('mff_season_scen', JSON.stringify(window._seasonScenSel)); } catch (e) {}
+  if (typeof render === 'function') { try { render(); } catch (_e) {} }
+  if (window._cardOpenD && typeof openPlayerCard === 'function') { try { openPlayerCard(window._cardOpenD, window._cardOpenCtx); } catch (_e) {} }
+};
+document.addEventListener('click', function(ev) {
+  const b = ev.target && ev.target.closest ? ev.target.closest('[data-sscen]') : null;
+  if (!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  window._seasonScenSet(b.getAttribute('data-sscen'), b.getAttribute('data-sscen-sel') || '');
+}, true);
+function _simProjRow(d, wk, flip) {
+  if (d && d.s !== 'DST') {
+    const sw = _seasonScenWorld(d.n);
+    const v = sw && sw.rows.w && sw.rows.w[wk];
+    if (v) { const r1 = _simProjRowRaw(d, wk); return [v[0], v[1], v[2], r1 ? r1[3] : null, r1 ? r1[4] : null]; }
+  }
   const r0 = _simProjRowRaw(d, wk);
   if (d && d.s !== 'DST' && typeof window._qsValue === 'function') {
-    const v = window._qsValue(d.n, wk);
+    const v = window._qsValue(d.n, wk, flip);
     if (v) {
-      const bb = (typeof window._qsBoomBust === 'function') ? window._qsBoomBust(d.n, wk) : null;
+      const bb = (typeof window._qsBoomBust === 'function') ? window._qsBoomBust(d.n, wk, flip) : null;
       if (bb) return [v[0], v[1], v[2], bb[0], bb[1]];
       return [v[0], v[1], v[2], r0 ? r0[3] : null, r0 ? r0[4] : null];
     }
@@ -13213,6 +13287,15 @@ function _simSeasonPpgRow(d) {
   const SP = window.SIM_PROJ_2026;
   const sp = SP && SP.seasonPpg;
   if (!sp) return null;
+  if (d.s !== 'DST' && typeof _seasonScenWorld === 'function') {
+    // season scenario picked: rest-of-season PPG = mean of that world's game weeks (the weeks he plays in it)
+    const sw = _seasonScenWorld(d.n), W = sw && sw.rows.w;
+    if (W) {
+      const t = [0, 0, 0]; let n = 0;
+      Object.keys(W).forEach(k => { const v = W[k]; if (v && v[0] > 0) { t[0] += v[0]; t[1] += v[1]; t[2] += v[2]; n++; } });
+      return n ? [t[0] / n, t[1] / n, t[2] / n].map(x => Math.round(x * 10) / 10) : [0, 0, 0];
+    }
+  }
   if (d.s === 'DST') return sp['DST_' + teamAbbr(d.t)] || null;
   let r = sp[d.n];
   if (!r && typeof _campNewsNorm === 'function') {
@@ -14152,6 +14235,10 @@ function _simSeasonRow(d) {
   const SP = window.SIM_PROJ_2026;
   const ss = SP && SP.seasonSim;
   if (!ss) return null;
+  if (d.s !== 'DST' && typeof _seasonScenWorld === 'function') {
+    const sw = _seasonScenWorld(d.n);
+    if (sw) return sw.rows.s || null;   // no season row in a world = he does not play in it (the WITHOUT world for the player himself)
+  }
   let r = d.s === 'DST' ? ss['DST_' + teamAbbr(d.t)] : ss[d.n];
   if (!r && d.s !== 'DST' && typeof _campNewsNorm === 'function') {
     let idx = window._seasonSimIdx;
@@ -14166,9 +14253,43 @@ function _simSeasonRow(d) {
   return r || null;
 }
 
+// SEASON SCENARIO box above the season-sim strip: both worlds side by side (rest-of-season median + per game) and the
+// BLENDED / WITH / WITHOUT switch, which re-reads the whole site (weekly PROJ, ROS PPG, this strip) for that team.
+function _seasonScenBoxHtml(d) {
+  if (!d || d.s === 'DST' || typeof _seasonScenHits !== 'function') return '';
+  const hits = _seasonScenHits(d.n);
+  if (!hits.length) return '';
+  return hits.map(h => {
+    const last = String(h.S).split(' ').slice(-1)[0];
+    const sel = window._seasonScenSel[h.S] || '';
+    const isSelf = typeof _campNewsNorm === 'function' ? _campNewsNorm(h.S) === _campNewsNorm(d.n) : h.S === d.n;
+    const rest = s => s ? { pts: Math.max(0, s[0] - (s[7] || 0)), g: s[8] } : null;
+    const line = (lab, s) => {
+      const x = rest(s);
+      if (!x) return '<span><b>' + lab + '</b>: out rest of season</span>';
+      const pg = x.g > 0 ? ' <span style="color:var(--text2)">(' + (Math.round(x.pts / x.g * 10) / 10) + '/g, ' + x.g + 'g)</span>' : '';
+      return '<span><b>' + lab + '</b>: ' + x.pts + ' rest' + pg + '</span>';
+    };
+    const btn = (lab, v) => '<button type="button" data-sscen="' + h.S.replace(/"/g, '&quot;') + '" data-sscen-sel="' + v + '" style="font:inherit;font-size:.6875rem;letter-spacing:.6px;padding:2px 8px;border-radius:6px;cursor:pointer;border:1px solid ' + (sel === v ? 'var(--accent)' : 'var(--border)') + ';background:' + (sel === v ? 'var(--accent)' : 'transparent') + ';color:' + (sel === v ? 'var(--bg)' : 'var(--text2)') + '">' + lab + '</button>';
+    const tip = 'Two full rest-of-season sims: WITH ' + h.S + ' (full strength from week ' + h.sc.back + ') and WITHOUT him (out every remaining week). '
+      + (h.sc.note ? h.sc.note + '. ' : '') + 'BLENDED = the normal projection, which prices his chance of playing each week. Your pick changes this team\'s weekly PROJ, ROS PPG and season sim across the site. Half-PPR totals.';
+    return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 10px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);font-size:.75rem">'
+      + '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:.72rem;letter-spacing:1.5px;color:var(--accent)"><span data-gloss="' + tip.replace(/"/g, '&quot;') + '">' + (isSelf ? 'HIS SCENARIOS' : last.toUpperCase() + ' SCENARIOS') + '</span></span>'
+      + line('With ' + last, h.pr.in && h.pr.in.s) + line('Without ' + last, h.pr.out && h.pr.out.s)
+      + '<span style="display:inline-flex;gap:4px;margin-left:auto">' + btn('BLENDED', '') + btn('WITH ' + last.toUpperCase(), 'in') + btn('WITHOUT ' + last.toUpperCase(), 'out') + '</span>'
+      + '</div>';
+  }).join('');
+}
+
 function _seasonSimStripHtml(d) {
+  const _scBox = _seasonScenBoxHtml(d);
+  const _scW = typeof _seasonScenWorld === 'function' && d && d.s !== 'DST' ? _seasonScenWorld(d.n) : null;
+  if (_scW && !_scW.rows.s) return _scBox + '<div style="padding:8px 10px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);font-size:.75rem;color:var(--text2)">Out for the rest of the season in this scenario.</div>';
   const r = _simSeasonRow(d);
-  if (!r) return '';
+  if (!r) return _scBox;
+  return _scBox + _seasonSimStripCore(d, r);
+}
+function _seasonSimStripCore(d, r) {
   const med = r[0], p10 = r[1], p90 = r[2], boom = r[3], bust = r[4], games = r[6] || 17;
   // 2026-10-08 (Jack): the season total is real points already scored + the simulated
   // rest — show the split. r[7] = banked points, r[8] = games still simulated (export
@@ -18653,6 +18774,7 @@ function openPlayerCard(d, ctxMode) {
   // Compare-strip cycling (← →) needs to know which player is on screen
   window._cardOpenName = d && d.n ? d.n : null;
   window._cardOpenCtx = ctxMode;
+  window._cardOpenD = d;   // season-scenario switch re-opens this card in place
   // PFF grades + college stats are lazy-loaded; opening any player card may render
   // prospect/JM/career info that consumes them, so fire the loads on click.
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
@@ -59114,7 +59236,7 @@ Rules:
       const ppg = _mtGetPlayerPpg(d.n);
       let wkHtml = '';
       if (wkNum) {
-        const out = {};
+        const out = { mt: true };
         const wv = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, ppg, out) : null;
         const wkTxt = out.src === 'bye' ? 'BYE' : out.src === 'out' ? 'OUT' : (wv != null && isFinite(wv) ? wv : '—');
         const wkColor = out.src === 'bye' || out.src === 'out' ? '#ef4444' : 'var(--text)';
@@ -60086,7 +60208,7 @@ Rules:
         // Weekly sources price standard scoring — adjust the base, then
         // re-add the league's TE-premium / pass-TD delta.
         const sDelta = _mtScoringDelta(d);
-        const adj = window._weeklyAdjustPpg(d, Math.max(0, ppg - sDelta));
+        const adj = window._weeklyAdjustPpg(d, Math.max(0, ppg - sDelta), { mt: true });
         // Adjusted 0 with a real season projection = the injury gate fired
         // (IR/PUP/Out in-season) — bench them like a bye.
         if (!adj && !out) out = 'OUT';

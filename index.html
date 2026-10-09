@@ -82,7 +82,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-cmpxfp2" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-mobrk" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1686,6 +1686,9 @@ tr:hover .watch-star{opacity:.55}
 .adp-spark{line-height:0;margin-top:2px}
 .adp-spark svg{display:block}
 @media (max-width:600px){.adp-spark{display:none}}
+/* Position rank after PROJ / xFP on the phone rankings cards (_mobPosRankTag) */
+.mrk{display:none}
+@media (max-width:600px){#pageRankings tbody .mrk{display:inline;margin-left:2px;font-size:.62rem;font-weight:600;color:var(--text2)}}
 </style>
 <span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;margin-left:6px">TOP</span>
 <input type="number" id="rankTopNInput" min="1" max="600" inputmode="numeric" placeholder="ALL" title="Show only the top N of the current board — 40 on ALL = top 40 overall, 15 on QB = top 15 QBs. Column sorts reorder within that pool, so TOP 125 + the value sort = best values among the top 125. Clear to show everyone." style="width:56px;padding:2px 6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:.7rem">
@@ -6244,7 +6247,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-cmpxfp2"></script>
+<script defer src="app.js?v=2026-10-09-mobrk"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

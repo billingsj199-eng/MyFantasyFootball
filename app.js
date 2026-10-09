@@ -3242,6 +3242,258 @@ function _dynSimFor(d) {
 const _DYN_LOCK_TIP = 'Dynasty SIM values past the top 30 are a Season Pass feature — upgrade to see every player.';
 function _dynLocked(x) { return !!x && !hasPremium() && x.rk > 30; }
 function _dynSortVal(d, k) { const x = _dynSimFor(d); return (!x || _dynLocked(x)) ? -Infinity : x[k]; }
+
+// === PLAYER CARD · DYNASTY VALUE BLOCK (Jack 2026-10-09) ===
+// Top of the card's DYNASTY tab: OUR VALUE (Dynasty SIM, with fair value and KTC
+// beside it), OVERALL and POSITIONAL rank for the picked source, and a trend chart
+// (VALUE / OVERALL / POSITIONAL x 1M / 3M / 6M / ALL x SIM / JACK'S / KTC).
+// SIM history = data/dynasty_sim_history.js (weekly; backfilled to week 0 by
+// sim_lab/build_dynasty_sim_history.py, +1 point every Tuesday rebuild).
+// KTC history = data/ktc_history.js (KTC's own daily history from mid-April +
+// the 9am job's snapshots). JACK'S = current board ranks only (no history kept).
+window._cdState = (() => {
+  try { return Object.assign({ src: 'sim', metric: 'val', span: 90 }, JSON.parse(localStorage.getItem('mff_card_dyn') || '{}')); }
+  catch (e) { return { src: 'sim', metric: 'val', span: 90 }; }
+})();
+function _cdSave() { try { localStorage.setItem('mff_card_dyn', JSON.stringify(window._cdState)); } catch (e) { /* private mode */ } }
+function _cdLoad(globalName, metaName, file, cb) {
+  if (window[globalName]) { cb(); return; }
+  const wk = '_cdWait_' + globalName;
+  const w = (window[wk] = window[wk] || []);
+  w.push(cb);
+  if (w.length > 1) return;
+  const m = document.querySelector('meta[name="' + metaName + '"]');
+  const sc = document.createElement('script');
+  sc.src = 'data/' + file + '?v=' + encodeURIComponent((m && m.content) || '0');
+  sc.onload = sc.onerror = () => { (window[wk] || []).splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); };
+  document.head.appendChild(sc);
+}
+function _cdEnsure(cb) {
+  let n = 3;
+  const done = () => { if (--n === 0) cb(); };
+  _dynSimEnsure(done);
+  _cdLoad('KTC_HISTORY', 'mff-ktc-hist-v', 'ktc_history.js', done);
+  _cdLoad('DYNASTY_SIM_HISTORY', 'mff-dyn-hist-v', 'dynasty_sim_history.js', done);
+}
+// Current Dynasty SIM value / overall / positional rank for the card's format
+// (follows the board's league + scoring when the card is in the board's mode).
+function _cdSimNow(d, fmt) {
+  const S = window.DYNASTY_SIM_2026;
+  if (!S) return null;
+  if (_isDynSimMode() && _dynSimFmt() === fmt) {
+    const x = _dynSimFor(d);
+    if (!x) return null;
+    let pr = 0;
+    const R = _dynSimRanks();
+    R.forEach((rk, e) => { if (e.pos === d.s && rk <= x.rk) pr++; });
+    return { val: x.val, ovr: x.rk, pos: pr, locked: _dynLocked(x) };
+  }
+  if (!S._idx) _dynSimFor(d);
+  const key = fmt + '_' + _dynScoringKey();
+  S._cdRk = S._cdRk || {};
+  if (!S._cdRk[key]) {
+    const rows = Object.values(S.players).filter(e => e.v && e.v[key]).sort((a, b) => b.v[key][0] - a.v[key][0]);
+    const m = new Map(), pc = {};
+    rows.forEach((e, i) => { pc[e.pos] = (pc[e.pos] || 0) + 1; m.set(e, [i + 1, pc[e.pos]]); });
+    S._cdRk[key] = m;
+  }
+  const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
+  const r = e && S._cdRk[key].get(e);
+  if (!r) return null;
+  return { val: e.v[key][0], ovr: r[0], pos: r[1], locked: !hasPremium() && r[0] > 30 };
+}
+// KTC rank maps per history date for a format: name -> [overall, positional] (picks excluded).
+function _cdKtcSeries(name, pos, fmt) {
+  const H = window.KTC_HISTORY;
+  if (!H) return null;
+  const k = fmt === 'sf' ? 'vsf' : 'v1';
+  H._cdRk = H._cdRk || {};
+  if (!H._cdRk[k]) {
+    const vals = H[k] || {};
+    H._cdRk[k] = H.dates.map((dt, j) => {
+      const rows = [];
+      for (const n in vals) { const v = vals[n][j]; if (v != null && !/^\d{4}\s/.test(n)) rows.push([n, v]); }
+      rows.sort((a, b) => b[1] - a[1]);
+      const m = new Map(), pc = {};
+      rows.forEach((r, i) => { const p = _ktcPosOf(r[0]) || '?'; pc[p] = (pc[p] || 0) + 1; m.set(_normalizeNameForLookup(r[0]), [i + 1, pc[p]]); });
+      return m;
+    });
+  }
+  let key = null;
+  const nk = _normalizeNameForLookup(name);
+  for (const n in (H[k] || {})) { if (_normalizeNameForLookup(n) === nk) { key = n; break; } }
+  if (!key) return null;
+  const out = [];
+  H.dates.forEach((dt, j) => {
+    const v = H[k][key][j];
+    if (v == null) return;
+    const r = H._cdRk[k][j].get(nk);
+    out.push({ d: dt, val: v, ovr: r ? r[0] : null, pos: r ? r[1] : null });
+  });
+  return out;
+}
+function _cdSimSeries(d, fmt) {
+  const H = window.DYNASTY_SIM_HISTORY;
+  if (!H) return null;
+  if (!H._idx) { H._idx = {}; Object.keys(H.p).forEach(k => { const [n, p] = k.split('|'); H._idx[_dynSimNorm(n) + '|' + p] = H.p[k]; }); }
+  const rec = H._idx[_dynSimNorm(d.n) + '|' + d.s];
+  const s = rec && rec[fmt];
+  if (!s) return null;
+  const out = [];
+  H.weeks.forEach((w, j) => { const x = s[j]; if (x) out.push({ d: w.date, val: x[0], ovr: x[1], pos: x[2], wk: w.w }); });
+  return out;
+}
+function _cdJacksNow(d, mode) {
+  const b = typeof versionBoards !== 'undefined' && versionBoards.jacks && versionBoards.jacks[mode];
+  if (!Array.isArray(b) || !b.length) return null;
+  let ovr = 0, pos = 0, found = false;
+  for (const i of b) {
+    const p = D[i];
+    if (!p || p._retired || (typeof window._irIsOut === 'function' && window._irHiddenHere && window._irHiddenHere(mode) && window._irIsOut(p.n))) continue;
+    ovr++;
+    if (p.s === d.s) pos++;
+    if (p === d || p.n === d.n) { found = true; break; }
+  }
+  return found ? { ovr, pos } : null;
+}
+function _cdChartSvg(pts, metric, label) {
+  const W = 600, H = 170, L = 44, R = 12, T = 12, B = 26;
+  const ys = pts.map(p => p.y);
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  if (lo === hi) { lo -= 1; hi += 1; }
+  const pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+  const t0 = Date.parse(pts[0].d), t1 = Date.parse(pts[pts.length - 1].d) || t0 + 1;
+  const xOf = p => L + (pts.length === 1 ? (W - L - R) / 2 : (Date.parse(p.d) - t0) / Math.max(1, t1 - t0) * (W - L - R));
+  const inv = metric !== 'val';   // ranks: better (smaller) at the top
+  const yOf = v => T + (inv ? (v - lo) / (hi - lo) : (hi - v) / (hi - lo)) * (H - T - B);
+  const line = pts.map(p => xOf(p).toFixed(1) + ',' + yOf(p.y).toFixed(1)).join(' ');
+  const area = 'M' + xOf(pts[0]).toFixed(1) + ',' + (H - B) + ' L' + line.replace(/ /g, ' L') + ' L' + xOf(pts[pts.length - 1]).toFixed(1) + ',' + (H - B) + ' Z';
+  const fmtY = v => metric === 'val' ? Math.round(v).toLocaleString() : '#' + Math.round(v);
+  const yTop = inv ? lo + pad : hi - pad, yBot = inv ? hi - pad : lo + pad;
+  const md = s => { const dt = new Date(s + 'T12:00:00'); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  return '<svg class="cd-chart" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:100%;height:170px;display:block" data-pts="' + encodeURIComponent(JSON.stringify(pts.map(p => [p.d, p.y, xOf(p), yOf(p.y)]))) + '" data-metric="' + metric + '">'
+    + '<defs><linearGradient id="cdFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8" stop-opacity=".35"/><stop offset="1" stop-color="#38bdf8" stop-opacity="0"/></linearGradient></defs>'
+    + '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yOf(yTop).toFixed(1) + '" y2="' + yOf(yTop).toFixed(1) + '" stroke="rgba(148,163,184,.18)"/>'
+    + '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yOf(yBot).toFixed(1) + '" y2="' + yOf(yBot).toFixed(1) + '" stroke="rgba(148,163,184,.18)"/>'
+    + '<text x="' + (L - 6) + '" y="' + (yOf(yTop) + 4).toFixed(1) + '" text-anchor="end" font-size="10" fill="#94a3b8">' + fmtY(yTop) + '</text>'
+    + '<text x="' + (L - 6) + '" y="' + (yOf(yBot) + 4).toFixed(1) + '" text-anchor="end" font-size="10" fill="#94a3b8">' + fmtY(yBot) + '</text>'
+    + '<text x="' + L + '" y="' + (H - 8) + '" font-size="10" fill="#94a3b8">' + md(pts[0].d) + '</text>'
+    + '<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end" font-size="10" fill="#94a3b8">' + md(pts[pts.length - 1].d) + '</text>'
+    + (pts.length > 1 ? '<path d="' + area + '" fill="url(#cdFill)"/>' : '')
+    + '<polyline points="' + line + '" fill="none" stroke="#38bdf8" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+    + '<circle cx="' + xOf(pts[pts.length - 1]).toFixed(1) + '" cy="' + yOf(pts[pts.length - 1].y).toFixed(1) + '" r="3.5" fill="#38bdf8"/>'
+    + '<line class="cd-hov-l" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" stroke="rgba(226,232,240,.35)" visibility="hidden"/>'
+    + '<circle class="cd-hov-c" r="4" fill="#e2e8f0" visibility="hidden"/>'
+    + '<rect x="' + L + '" y="0" width="' + (W - L - R) + '" height="' + H + '" fill="transparent" class="cd-hov-r"/>'
+    + '</svg>';
+}
+function _cdRender() {
+  const el = document.getElementById('cardDynValBlock');
+  if (!el) return;
+  const d = window._cardOpenD;
+  if (!d || d.n !== el.dataset.name) return;
+  const mode = el.dataset.mode === 'dynastysf' ? 'dynastysf' : 'dynasty';
+  const fmt = mode === 'dynastysf' ? 'sf' : '1qb';
+  const st = window._cdState;
+  const sim = _cdSimNow(d, fmt);
+  const ktc = (typeof _ktcRankInfo === 'function') ? _ktcRankInfo(d.n, mode) : null;
+  const jk = _cdJacksNow(d, mode);
+  let fair = null;
+  if (_trendIsDyn() && currentMode === mode && window.KTC_HISTORY) { const g = _trendGapFor(d); if (g && g.mkt && g.mkt.fair != null && !_dynLocked(g.x)) fair = Math.round(g.mkt.fair); }
+  const lock = '<span class="cons-lock" title="' + _DYN_LOCK_TIP + '">🔒</span>';
+  const posLbl = n => n ? (d.s === 'DST' ? 'D/ST' : d.s) + n : '—';
+  const now = st.src === 'ktc' ? (ktc && !ktc.devy ? { ovr: ktc.ovr, pos: ktc.posRank } : null)
+    : st.src === 'jacks' ? jk : (sim && !sim.locked ? sim : null);
+  const srcName = { sim: 'Dynasty SIM', jacks: "Jack's Dynasty" + (mode === 'dynastysf' ? ' SF' : ''), ktc: 'KTC' }[st.src];
+  const box = (big, small, sub) => '<div style="flex:1 1 0;min-width:0;background:var(--elev-1,rgba(148,163,184,.08));border:1px solid rgba(148,163,184,.18);border-radius:10px;padding:10px 8px;text-align:center">'
+    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.7rem;line-height:1;color:var(--text1)">' + big + '</div>'
+    + '<div style="font-size:.6875rem;letter-spacing:.06em;color:var(--text2);text-transform:uppercase;margin-top:4px">' + small + '</div>'
+    + (sub ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">' + sub + '</div>' : '') + '</div>';
+  const valBig = sim ? (sim.locked ? lock : sim.val.toLocaleString()) : '—';
+  const valSub = [fair != null ? 'Fair ' + fair.toLocaleString() : null, ktc && !ktc.devy ? 'KTC ' + ktc.val.toLocaleString() : null].filter(Boolean).join(' · ');
+  const chip = (attr, v, cur, lbl) => '<button type="button" ' + attr + '="' + v + '" style="padding:3px 9px;border-radius:6px;border:1px solid ' + (cur ? 'var(--accent,#f59e0b)' : 'rgba(148,163,184,.25)') + ';background:' + (cur ? 'rgba(245,158,11,.12)' : 'transparent') + ';color:' + (cur ? 'var(--accent,#f59e0b)' : 'var(--text2)') + ';font-size:.6875rem;font-weight:700;letter-spacing:.05em;cursor:pointer">' + lbl + '</button>';
+  // series for the chart
+  let pts = null, note = '';
+  const metric = st.src === 'jacks' ? 'ovr' : st.metric;
+  if (st.src === 'sim') {
+    if (sim && sim.locked) note = 'Dynasty SIM history past the top 30 is a Season Pass feature.';
+    else { const s = _cdSimSeries(d, fmt); if (s) pts = s.map(p => ({ d: p.d, y: p[metric] })).filter(p => p.y != null); }
+  } else if (st.src === 'ktc') {
+    const s = _cdKtcSeries(d.n, d.s, fmt);
+    if (s) pts = s.map(p => ({ d: p.d, y: p[metric] })).filter(p => p.y != null);
+  } else {
+    note = jk ? "Jack's dynasty rank today: #" + jk.ovr + ' overall, ' + posLbl(jk.pos) + ". A history of Jack's dynasty ranks isn't tracked yet." : "Not on Jack's dynasty board in this session" + (hasPremium() ? '.' : ' — the full board is a Season Pass feature.');
+  }
+  if (pts && st.span) {
+    const last = Date.parse(pts[pts.length - 1].d);
+    const cut = pts.filter(p => last - Date.parse(p.d) <= st.span * 864e5);
+    pts = cut.length ? cut : pts.slice(-1);
+  }
+  let chg = '';
+  if (pts && pts.length > 1) {
+    const a = pts[0].y, b = pts[pts.length - 1].y, delta = metric === 'val' ? b - a : a - b;
+    const spanLbl = st.span === 30 ? '1 month' : st.span === 90 ? '3 month' : st.span === 180 ? '6 month' : 'all-time';
+    chg = '<div style="text-align:right"><span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;color:' + (delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : 'var(--text2)') + '">' + (delta > 0 ? '▲' : delta < 0 ? '▼' : '') + Math.abs(Math.round(delta)).toLocaleString() + '</span>'
+      + '<div style="font-size:.6875rem;letter-spacing:.06em;color:var(--text2);text-transform:uppercase">' + spanLbl + ' change</div></div>';
+  }
+  const mLbl = { val: 'Value', ovr: 'Overall rank', pos: 'Positional rank' }[metric];
+  el.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:10px">'
+    + box(valBig, 'Our value', valSub || 'Dynasty SIM')
+    + box(now && now.ovr ? '#' + now.ovr : '—', 'Overall rank', srcName)
+    + box(now ? posLbl(now.pos) : '—', 'Positional rank', srcName) + '</div>'
+    + '<div style="background:var(--elev-1,rgba(148,163,184,.06));border:1px solid rgba(148,163,184,.18);border-radius:10px;padding:10px 10px 6px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">'
+    + '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.15rem;letter-spacing:.04em;color:var(--text1)">' + srcName + ' · ' + mLbl + '</div>'
+    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'
+    + chip('data-cdsrc', 'sim', st.src === 'sim', 'SIM') + chip('data-cdsrc', 'jacks', st.src === 'jacks', "JACK'S") + chip('data-cdsrc', 'ktc', st.src === 'ktc', 'KTC')
+    + '<span style="width:6px"></span>'
+    + (st.src !== 'jacks' ? chip('data-cdmetric', 'val', st.metric === 'val', 'VALUE') : '') + chip('data-cdmetric', 'ovr', metric === 'ovr', 'OVERALL') + (st.src !== 'jacks' ? chip('data-cdmetric', 'pos', st.metric === 'pos', 'POSITIONAL') : '')
+    + '<span style="width:6px"></span>'
+    + [[30, '1M'], [90, '3M'], [180, '6M'], [0, 'ALL']].map(x => chip('data-cdspan', x[0], st.span === x[0], x[1])).join('')
+    + '</div></div>' + chg + '</div>'
+    + (pts && pts.length ? '<div style="position:relative;margin-top:6px">' + _cdChartSvg(pts, metric, mLbl) + '<div class="cd-tip" style="position:absolute;top:2px;pointer-events:none;background:#0f172a;border:1px solid rgba(148,163,184,.3);border-radius:6px;padding:3px 7px;font-size:.6875rem;color:#e2e8f0;display:none;white-space:nowrap"></div></div>'
+      + '<div style="font-size:.6875rem;color:var(--text2);margin-top:2px">' + (st.src === 'sim' ? 'Weekly — each Tuesday rebuild adds a point (2026 season backfilled from week 0). PPR.' : 'Daily KTC values (KTC history from mid-April; every 3rd day before the last 45).') + '</div>'
+      : '<div style="padding:18px 6px;text-align:center;color:var(--text2);font-size:.8rem">' + (note || 'No history for this player yet.') + '</div>')
+    + '</div>';
+}
+// One delegated listener for the chips + chart hover (the card body is rebuilt on every open).
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('#cardDynValBlock [data-cdsrc], #cardDynValBlock [data-cdmetric], #cardDynValBlock [data-cdspan]');
+  if (!b) return;
+  const st = window._cdState;
+  if (b.dataset.cdsrc) st.src = b.dataset.cdsrc;
+  if (b.dataset.cdmetric) st.metric = b.dataset.cdmetric;
+  if (b.dataset.cdspan != null) st.span = +b.dataset.cdspan;
+  _cdSave();
+  _cdRender();
+});
+document.addEventListener('mousemove', e => {
+  const r = e.target.closest && e.target.closest('#cardDynValBlock .cd-hov-r');
+  const wrap = document.querySelector('#cardDynValBlock .cd-chart');
+  if (!wrap) return;
+  const tip = wrap.parentNode.querySelector('.cd-tip');
+  const hl = wrap.querySelector('.cd-hov-l'), hc = wrap.querySelector('.cd-hov-c');
+  if (!r) { if (tip) tip.style.display = 'none'; if (hl) hl.setAttribute('visibility', 'hidden'); if (hc) hc.setAttribute('visibility', 'hidden'); return; }
+  const pts = JSON.parse(decodeURIComponent(wrap.dataset.pts));
+  const box = wrap.getBoundingClientRect();
+  const x = (e.clientX - box.left) / box.width * 600;
+  let best = pts[0];
+  pts.forEach(p => { if (Math.abs(p[2] - x) < Math.abs(best[2] - x)) best = p; });
+  hl.setAttribute('x1', best[2]); hl.setAttribute('x2', best[2]); hl.setAttribute('visibility', 'visible');
+  hc.setAttribute('cx', best[2]); hc.setAttribute('cy', best[3]); hc.setAttribute('visibility', 'visible');
+  const dt = new Date(best[0] + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  tip.textContent = dt + ' · ' + (wrap.dataset.metric === 'val' ? Math.round(best[1]).toLocaleString() : '#' + Math.round(best[1]));
+  tip.style.display = 'block';
+  const px = best[2] / 600 * box.width;
+  tip.style.left = Math.max(0, Math.min(box.width - tip.offsetWidth, px - tip.offsetWidth / 2)) + 'px';
+});
+window._cardDynFill = function () {
+  const el = document.getElementById('cardDynValBlock');
+  if (!el || el.dataset.filled) return;
+  el.dataset.filled = '1';
+  el.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text2);font-size:.8rem">Loading dynasty value…</div>';
+  _cdEnsure(_cdRender);
+};
 // === TRENDS view (Jack 2026-10-09) ===
 // Rank movement over time. REDRAFT = the consensus board rebuilt from the dated
 // source-input snapshots in data/cons_rank_history.json (same rebuild as the
@@ -19514,6 +19766,8 @@ function openPlayerCard(d, ctxMode) {
   window._cardOpenName = d && d.n ? d.n : null;
   window._cardOpenCtx = ctxMode;
   window._cardOpenD = d;   // season-scenario switch re-opens this card in place
+  // Cards that open on the DYNASTY tab (devy / 2026 rookies) fill its value block after render.
+  setTimeout(() => { const pv = document.getElementById('cardProspectView'); if (pv && pv.classList.contains('active') && window._cardDynFill) window._cardDynFill(); }, 0);
   // PFF grades + college stats are lazy-loaded; opening any player card may render
   // prospect/JM/career info that consumes them, so fire the loads on click.
   if (typeof window._ensurePffData === 'function') window._ensurePffData();
@@ -19868,6 +20122,7 @@ function openPlayerCard(d, ctxMode) {
 
       </div>
       <div class="card-prospect-view${(d._isDevy || _is2026) ? ' active' : ''}" id="cardProspectView">
+      ${(!d._isDevy && ['QB', 'RB', 'WR', 'TE'].includes(d.s)) ? '<div id="cardDynValBlock" data-name="' + String(d.n).replace(/"/g, '&quot;') + '" data-mode="' + (_ctxMode === 'dynastysf' ? 'dynastysf' : 'dynasty') + '" style="margin:4px 0 14px"></div>' : ''}
       ${_is2026 ? _campNewsSectionHtml(d) : ''}
       ${(() => {
         const _pmD2 = window._pmBuiltData ? window._pmBuiltData().find(p => p.name === d.n) : null;
@@ -20266,6 +20521,7 @@ function openPlayerCard(d, ctxMode) {
         if (rsv) rsv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
+          if (typeof window._cardDynFill === 'function') window._cardDynFill();   // dynasty value block (lazy data)
         } else if (view === 'info') {
           if (iv) iv.style.display = 'block';
         } else if (view === 'lines') {

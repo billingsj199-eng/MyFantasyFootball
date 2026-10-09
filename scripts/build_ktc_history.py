@@ -43,6 +43,50 @@ def parse_maps(text):
     return out
 
 
+def merge_ktc_site_history(snaps):
+    """Fold KTC's /dynasty-rankings/histories into snaps[date][KTC_1QB|KTC_SF][name]."""
+    import sys
+    import urllib.request
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, REPO)
+    # Same fetch + name resolution as the 9am KTC pull (Phase E), so history keys
+    # match data/ktc_rankings.js exactly (d.js-canonical names; picks keep KTC's).
+    import pull_consensus_adp as pca
+    from inject_rankings import norm_name, final_key
+    players = pca._ktc_fetch_players(pca.KTC_URL)
+    if not players:
+        raise RuntimeError('KTC players list not found')
+    dsrc = open(os.path.join(REPO, 'data', 'd.js'), encoding='utf-8').read()
+    dnames = re.findall(r'"n":"([^"]+)"', dsrc)
+    exact, norm_idx = set(dnames), {}
+    for n_ in dnames:
+        norm_idx.setdefault(norm_name(n_), n_)
+
+    def resolve(raw):
+        raw = pca.KTC_ALIASES.get(raw, raw)
+        return raw if raw in exact else norm_idx.get(final_key(raw), raw)
+    names = {p['playerID']: resolve(p['playerName']) for p in players if p.get('playerName')}
+    req = urllib.request.Request('https://keeptradecut.com/dynasty-rankings/histories',
+                                 headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+                                          'Accept': 'application/json'})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        hist = json.loads(resp.read().decode('utf-8'))
+    n = 0
+    for h in hist:
+        name = names.get(h.get('playerID'))
+        if not name:
+            continue
+        n += 1
+        for fmt, var in (('oneQB', 'KTC_1QB'), ('superflex', 'KTC_SF')):
+            for pt in (h.get(fmt) or {}).get('valueHistory') or []:
+                pt = str(pt)
+                if len(pt) < 7 or not pt[:6].isdigit():
+                    continue
+                day = f'20{pt[:2]}-{pt[2:4]}-{pt[4:6]}'
+                snaps.setdefault(day, {}).setdefault(var, {})[name] = int(pt[6:])
+    return n
+
+
 def git(*args):
     return subprocess.run(['git', '-C', REPO, *args], capture_output=True, text=True, encoding='utf-8', check=True).stdout
 
@@ -70,7 +114,24 @@ def main():
     if cur.get('KTC_1QB'):
         snaps[today] = cur
 
+    # KTC's own daily history (Jack 2026-10-09: "we can also look at ktc back from their
+    # site"): the rankings page loads every player's value history in ONE request
+    # (/dynasty-rankings/histories, ~6 months daily, points packed "YYMMDD"+value).
+    # Two requests a day (that + the rankings page for playerID -> name); KTC's numbers
+    # win where they overlap our own snapshots. Non-fatal: git snapshots alone on failure.
+    try:
+        n_ktc = merge_ktc_site_history(snaps)
+        print(f'KTC site history merged: {n_ktc} players')
+    except Exception as e:   # network / template change
+        print(f'KTC site history unavailable ({e}) - git snapshots only')
+
     dates = sorted(snaps)
+    # Size: every day for the last 45, every 3rd day before that (3- and 6-month
+    # charts don't need daily points; ~halves the lazy-loaded file).
+    if dates:
+        last = datetime.date.fromisoformat(dates[-1])
+        old = [d for d in dates if (last - datetime.date.fromisoformat(d)).days > 45]
+        dates = old[::3] + [d for d in dates if (last - datetime.date.fromisoformat(d)).days <= 45]
     keep = set()
     for d in dates:
         for var in ('KTC_1QB', 'KTC_SF'):
@@ -95,7 +156,9 @@ def main():
     with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
         f.write(body)
     html = open(IDX, encoding='utf-8').read()
-    new = re.sub(r'(<meta name="mff-ktc-hist-v" content=")[^"]*(")', r'\g<1>' + today + r'\g<2>', html)
+    # date + time: a second rebuild the same day must still bust the cached file
+    stamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M')
+    new = re.sub(r'(<meta name="mff-ktc-hist-v" content=")[^"]*(")', r'\g<1>' + stamp + r'\g<2>', html)
     if new != html:
         with open(IDX, 'w', encoding='utf-8', newline='') as f:
             f.write(new)

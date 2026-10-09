@@ -3089,13 +3089,30 @@ function _effStatMode() {
 
 // === DYN SIM (PROTOTYPE, Jack 2026-10-09) ===
 // Comparables dynasty value from data/dynasty_sim_2026.js: 3-season window
-// (expected VOR 2026-28) + youth credit (1.5 x 2029-30). 1QB values on
-// DYNASTY, superflex replacement levels on DYNASTY SF. PPR only.
-function _dynSortVal(d, k) { const x = _dynSimFor(d); return x ? x[k] : -Infinity; }
+// (expected VOR rest of 2026 + 2027-28) + youth credit (1.5 x 2029-30).
+// 1QB values on DYNASTY, superflex replacement levels on DYNASTY SF; follows
+// the PPR / HALF / STD toggle. The ~365 KB file loads on first use.
+const _DYN_SIM_SRC = 'data/dynasty_sim_2026.js?v=2026-10-09-proto';
+function _dynSimEnsure(cb) {
+  if (window.DYNASTY_SIM_2026) { if (cb) cb(); return; }
+  const w = (window._dynSimWaiters = window._dynSimWaiters || []);
+  if (cb) w.push(cb);
+  if (window._dynSimLoading) return;
+  window._dynSimLoading = true;
+  const sc = document.createElement('script');
+  sc.src = _DYN_SIM_SRC;
+  sc.onload = () => { window._dynSimLoading = false; (window._dynSimWaiters || []).splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); };
+  sc.onerror = () => { window._dynSimLoading = false; window._dynSimWaiters = []; if (typeof toast === 'function') toast('Could not load the dynasty sim values'); };
+  document.head.appendChild(sc);
+}
 function _isDynSimMode() { return currentMode === 'dynasty' || currentMode === 'dynastysf'; }
+function _dynSimKey() {
+  return (currentMode === 'dynastysf' ? 'sf' : '1qb') + '_' + (rankingScoringFmt === 'half' || rankingScoringFmt === 'std' ? rankingScoringFmt : 'ppr');
+}
 function _dynSimNorm(n) {
   return String(n || '').toLowerCase().replace(/\s+(jr\.?|sr\.?|iii|ii|iv|v)$/, '').replace(/[.\-']/g, '').replace(/\s+/g, ' ').trim();
 }
+// -> { val, win3, youth, rk, y:[rest of 2026, 2027..2030], comps:[{n, yr, vor}] } or null
 function _dynSimFor(d) {
   const S = window.DYNASTY_SIM_2026;
   if (!S || !d) return null;
@@ -3104,13 +3121,20 @@ function _dynSimFor(d) {
     Object.values(S.players).forEach(e => { S._idx[_dynSimNorm(e.n) + '|' + e.pos] = e; });
   }
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
-  return e ? (e[currentMode === 'dynastysf' ? 'sf' : '1qb'] || null) : null;
+  const v = e && e.v && e.v[_dynSimKey()];
+  if (!v) return null;
+  return { val: v[0], win3: v[1], youth: v[2], rk: v[3], y: v.slice(4),
+           comps: (e.c || []).map(c => ({ n: c[0], yr: c[1], vor: c[2] })) };
 }
+// Free window (same as SIM VOR's): Season Pass past the top 30.
+const _DYN_LOCK_TIP = 'Dynasty SIM values past the top 30 are a Season Pass feature — upgrade to see every player.';
+function _dynLocked(x) { return !!x && !hasPremium() && x.rk > 30; }
+function _dynSortVal(d, k) { const x = _dynSimFor(d); return (!x || _dynLocked(x)) ? -Infinity : x[k]; }
 // 50/50 rank blend with KTC (the backtest's best use of the sim), over the
-// players that have both. Cached per format + KTC map generation.
+// players that have both. Cached per format + scoring.
 function _dynSimBlendRank(d) {
   if (typeof _ktcRankInfo !== 'function' || !Array.isArray(D)) return null;
-  const fmt = currentMode === 'dynastysf' ? 'sf' : '1qb';
+  const fmt = _dynSimKey();
   const c = (window._dynSimBlendCache = window._dynSimBlendCache || {});
   if (!c[fmt]) {
     const both = [];
@@ -8897,12 +8921,18 @@ function render() {
         _statTd1 = '<td class="pts-cell ppg-proj-cell" title="No dynasty sim value — no 2023-26 games (or no age / draft record)">—</td>';
         _statTds = '<td class="pts-cell ppg25-cell">—</td>\n      <td class="pts-cell l4ppg-cell">—</td>';
         _statYdsTail = '—';
+      } else if (_dynLocked(x)) {
+        // Free sessions: past the top 30 is Season Pass (same window as SIM VOR).
+        const _lk = '<span class="cons-lock" aria-label="Premium" title="' + _DYN_LOCK_TIP + '">🔒</span>';
+        _statTd1 = `<td class="pts-cell ppg-proj-cell">${_lk}</td>`;
+        _statTds = `<td class="pts-cell ppg25-cell">${_lk}</td>\n      <td class="pts-cell l4ppg-cell">${_lk}</td>`;
+        _statYdsTail = _lk;
       } else {
         const _yr = window.DYNASTY_SIM_2026.meta.valuationYear;
         const _wk = window.DYNASTY_SIM_2026.meta.week || 0;
         const _byYr = x.y.map((v, k) => (k === 0 && _wk ? 'rest of ' + _yr : String(_yr + k)) + ' ' + Math.round(v)).join(' · ');
         const _cmp = (x.comps || []).map(c => c.n + ' \'' + String(c.yr).slice(2) + ' (' + c.vor + ')').join(', ');
-        const _tip = ('Expected points over replacement by season: ' + _byYr + '. Closest comparables (their VOR that season): ' + _cmp).replace(/"/g, '&quot;');
+        const _tip = ('Expected points over replacement by season: ' + _byYr + '. Closest comparables (1QB PPR read; their VOR that season): ' + _cmp).replace(/"/g, '&quot;');
         const _bl = _dynSimBlendRank(d);
         const _rkTip = ('SIM DYN rank #' + x.rk + (_bl ? ' · KTC #' + _bl.ktc + ' · 50/50 blend #' + _bl.rk : ' · not on KTC')).replace(/"/g, '&quot;');
         _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${_tip}" style="color:${_dc(x.val)};font-weight:700;cursor:help">${Math.round(x.val)}</td>`;
@@ -10206,8 +10236,8 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
       if (ppg25Fmt) ppg25Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
       const l4Fmt = document.querySelector('#l4ppgHeader .th-fmt');
       if (l4Fmt) l4Fmt.textContent = _scoringLabelsRnk[rankingScoringFmt];
-    } else if (rnkStatMode === 'vor') {
-      window._updateRnkStatHeaders();   // PPG sub-label + glosses name the format
+    } else if (rnkStatMode === 'vor' || rnkStatMode === 'dyn') {
+      window._updateRnkStatHeaders();   // sub-labels + glosses name the format
     }
     render();
   });
@@ -10289,7 +10319,7 @@ window._updateRnkStatHeaders = function() {
     const _y0 = _M ? _M.valuationYear : 2026;
     const _f = currentMode === 'dynastysf' ? 'SF' : '1QB';
     const _wk = _M && _M.week ? _M.week : 0;
-    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation is what the 30 most similar past players actually produced (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + ' 12-team PPR, ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables.', 'SIM DYN', _f + ' PPR');
+    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + ' 12-team ' + fmtLabel + ', ' + _f + ' replacement levels. Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR.' + (hasPremium() ? '' : ' Free: the top 30.'), 'SIM DYN', _f + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR'));
     _set(c2, 'ppg25Header', 'Expected points over replacement in the 3-season dynasty window (' + (_wk ? 'rest of ' + _y0 + ' after week ' + _wk : _y0) + ' through ' + (_y0 + 2) + ').', '3YR', (_wk ? 'Wk' + (_wk + 1) + '-' : _y0 + '-') + String(_y0 + 2).slice(2));
     _set(c3, 'l4ppgHeader', 'Youth credit — ' + (_M ? _M.youthW : 1.5) + 'x the expected points over replacement in ' + (_y0 + 3) + '-' + (_y0 + 4) + ', the seasons after the window. In the backtest adding it improved both 3-year and 5-year accuracy.', 'YOUTH', (_y0 + 3) + '-' + String(_y0 + 4).slice(2));
   } else if (rnkStatMode === 'xfp') {
@@ -10331,6 +10361,11 @@ document.querySelectorAll('.rnk-statmode-btn').forEach(btn => {
     document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     rnkStatMode = btn.dataset.rnkstatmode;
+    // DYN SIM: its data file loads on first use — paint once it is in.
+    if (rnkStatMode === 'dyn' && !window.DYNASTY_SIM_2026) {
+      _dynSimEnsure(() => { if (rnkStatMode === 'dyn') { window._updateRnkStatHeaders(); render(); } });
+      return;
+    }
     window._updateRnkStatHeaders();
     render();
   });

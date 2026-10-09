@@ -3157,7 +3157,9 @@ function _dynSimFor(d) {
   const v = e && e.v && _dynSimVal(e);
   if (!v) return null;
   return { val: v[0], win3: v[1], youth: v[2], rk: _dynSimRanks().get(e), y: v.slice(4),
-           comps: (e.c || []).map(c => ({ n: c[0], yr: c[1], vor: c[2] })) };
+           comps: (e.c || []).map(c => ({ n: c[0], yr: c[1], vor: c[2] })),
+           // rookie pick entries: class multiplier on the historical slot value (2027 only)
+           isPick: e.pos === 'PICK', cls: e.cls ? e.cls[_dynSimKey()] : null };
 }
 // Free window (same as SIM VOR's): Season Pass past the top 30.
 const _DYN_LOCK_TIP = 'Dynasty SIM values past the top 30 are a Season Pass feature — upgrade to see every player.';
@@ -9278,7 +9280,11 @@ function render() {
         const _wk = window.DYNASTY_SIM_2026.meta.week || 0;
         const _byYr = x.y.map((v, k) => (k === 0 && _wk ? 'rest of ' + _yr : String(_yr + k)) + ' ' + Math.round(v)).join(' · ');
         const _cmp = (x.comps || []).map(c => c.n + ' \'' + String(c.yr).slice(2) + ' (' + c.vor + ')').join(', ');
-        const _tip = ('Expected points over replacement by season: ' + _byYr + '. Closest comparables (1QB PPR read; their VOR that season): ' + _cmp).replace(/"/g, '&quot;');
+        const _pm = window.DYNASTY_SIM_2026.meta.picks;
+        const _tip = (x.isPick
+          ? 'Rookie pick value — what this rookie-draft slot actually turned into (expected points over replacement by season: ' + _byYr + '), from 2015-25 rookie drafts ordered by rookie ADP, busts included; the rookie season is the pick year.'
+            + (x.cls != null && x.cls !== 1 ? ' 2027 class adjustment ×' + x.cls.toFixed(2) + ': the JM prospect model reads this class ' + (x.cls < 1 ? 'weaker' : 'stronger') + ' than an average class at these slots, weighted ' + Math.round(((_pm && _pm.wClass) || 0.25) * 100) + '% — the college season is unfinished and nobody has declared yet.' : '')
+          : 'Expected points over replacement by season: ' + _byYr + '. Closest comparables (1QB PPR read; their VOR that season): ' + _cmp).replace(/"/g, '&quot;');
         const _bl = _dynSimBlendRank(d);
         const _rkTip = ('SIM DYN rank #' + x.rk + (_bl ? ' · KTC #' + _bl.ktc + ' · 50/50 blend #' + _bl.rk : ' · not on KTC')).replace(/"/g, '&quot;');
         _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${_tip}" style="color:${_dc(x.val)};font-weight:700;cursor:help">${Math.round(x.val)}</td>`;

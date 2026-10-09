@@ -2571,6 +2571,41 @@ body.pm-wl-docked .pm-weight-lab .pm-wl-thresh-input{width:38px;font-size:.7rem}
   .sst-proj-big{font-size:2.1rem}
   .sst-proj-book-num{font-size:1.7rem}
 }
+/* Selected-player chips: index.html's later .lg-chip rule (league legend tags:
+   inline-block, uppercase, 3px radius) was flattening these into "WRCHRIS OLAVE×". */
+.lg-chips > .lg-chip{display:inline-flex;align-items:center;gap:6px;margin-left:0;padding:4px 4px 4px 10px;border-radius:16px;font-size:.78rem;text-transform:none;letter-spacing:0;line-height:1.2;vertical-align:baseline}
+.lg-chips > .lg-chip .lg-chip-x{font-size:1.05rem;padding:2px 6px;min-width:24px;min-height:24px}
+/* Start/Sit ranked summary (app.js renderSummary) — phones only. */
+#sstSummary{display:none}
+@media (max-width:600px){
+  /* 2026-10-09 phone pass: the intro ran five lines before the search box. */
+  #pageStartSit > div > .sst-sub{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:.6rem}
+  #sstSummary:not(:empty){display:block;margin:0 0 .8rem;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+  .sst-sum-head,.sst-sum-row{display:grid;grid-template-columns:74px 1fr 44px 44px;align-items:center;gap:6px;padding:0 10px}
+  .sst-sum-head{padding-top:6px;padding-bottom:4px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.625rem;letter-spacing:.06em;color:var(--text2);border-bottom:1px solid var(--border)}
+  .sst-sum-head span:first-child{grid-column:1 / span 2}
+  .sst-sum-head span:not(:first-child){text-align:right}
+  .sst-sum-row{width:100%;min-height:44px;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font:inherit;text-align:left;cursor:pointer}
+  .sst-sum-row:last-child{border-bottom:none}
+  .sst-sum-v{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;line-height:1;color:var(--text2)}
+  .sst-sum-row.sst-v-start{background:rgba(34,197,94,.08)}
+  .sst-sum-row.sst-v-start .sst-sum-v{color:var(--green)}
+  .sst-sum-row.sst-v-toss .sst-sum-v{color:#facc15}
+  .sst-sum-row.sst-v-sit .sst-sum-v{color:var(--red)}
+  .sst-sum-row.sst-v-lock .sst-sum-v{color:#94a3b8}
+  .sst-sum-name{display:flex;align-items:center;gap:6px;min-width:0;font-weight:600;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sst-sum-name .pos-badge{flex:0 0 auto}
+  .sst-sum-num{text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:.85rem}
+  .sst-sum-book{color:var(--text2)}
+  /* Cards: one per swipe, snapping, with the next card peeking. */
+  #sstGrid{scroll-snap-type:x mandatory;scroll-padding-left:0}
+  #sstGrid > .sst-card{scroll-snap-align:start;min-width:86%;max-width:86%}
+  .sst-card .sst-x{min-width:32px;min-height:32px;font-size:1.2rem}
+  /* Matchup edges: top 5 per column, SHOW ALL opens the 12. */
+  #sstEdges:not(.sst-edges-all) .sst-edges-cols > div > .sst-edge-row:nth-child(n+7){display:none}
+  .sst-edges-more{display:block;width:100%;margin-top:.6rem;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.06em;cursor:pointer}
+}
+.sst-edges-more{display:none}
 /* RECENT REAL TRADES panel (trade calculator, FantasyCalc feed) */
 .trade-real{margin-top:1rem;padding:1rem 1.1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:left}
 .rt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:.6rem}

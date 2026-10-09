@@ -1193,6 +1193,8 @@ let tiers = versionTiers[currentVersion].redraft.ALL;
 let tierCounter = 0;
 
 function syncMode() {
+  // MFF VALUE team-mode bar (rankings): only on the MFF VALUE board in dynasty.
+  if (document.body) document.body.classList.toggle('mffv-on', currentVersion === 'mffv' && (currentMode === 'dynasty' || currentMode === 'dynastysf'));
   if (currentVersion === 'sims') _simsBoardEnsure();   // computed board — keep it current
   if (currentVersion === 'mffv') _mffvBoardEnsure();
   board = versionBoards[currentVersion][currentMode];
@@ -4002,12 +4004,41 @@ function _trendGapFor(d) {
 // (the pool's sim-ordered KTC values). Format comes from the MODE (not the
 // rankings board), scoring + TE premium from the toggles; no league context.
 // -> [D index, best first] or null until DYNASTY_SIM_2026 is loaded.
+// TEAM MODE (Jack 2026-10-09: "build the contender rebuilder toggle"): MFF VALUE
+// for the user's window. The Dynasty SIM stores each player's expected value by
+// season (rest of this year, then the next four); BALANCED = the shipped value
+// (1 / 1 / 1 / 1.5 / 1.5). CONTENDER leans on the next two seasons, REBUILDER on
+// the later ones. The mode-weighted sim feeds the FAIR order, then the price is
+// tilted by sqrt(mode value / balanced value) (normalized to the pool median,
+// clamped 0.6-1.6) so picks and young players gain for a rebuilder and producing
+// veterans for a contender. A preference, not a backtested prediction.
+const _MFF_MODE_W = { contender: [2, 1.5, 1, 0.5, 0.25], rebuilder: [0.25, 0.5, 1, 1.75, 1.75] };
+const _MFF_BAL_W = [1, 1, 1, 1.5, 1.5];
+window._mffMode = (() => { try { const m = localStorage.getItem('mff_value_mode'); return _MFF_MODE_W[m] ? m : 'balanced'; } catch (e) { return 'balanced'; } })();
+window._mffSetMode = function(m) {
+  window._mffMode = _MFF_MODE_W[m] ? m : 'balanced';
+  try { localStorage.setItem('mff_value_mode', window._mffMode); } catch (e) {}
+  window._mffBoardCache = {}; window._mffvBoardSrc = {};
+  document.querySelectorAll('[data-mffmode]').forEach(b => b.classList.toggle('active', b.dataset.mffmode === window._mffMode));
+  if (typeof currentVersion !== 'undefined' && currentVersion === 'mffv') { syncMode(); renumber(); render(); }
+  if (typeof window._tradeRefresh === 'function') window._tradeRefresh();
+  if (typeof window._mtRescore === 'function') window._mtRescore();
+  if (typeof toast === 'function') toast('MFF VALUE: ' + window._mffMode.toUpperCase() + (window._mffMode === 'balanced' ? '' : ' mode'));
+};
+document.addEventListener('click', ev => {
+  const b = ev.target.closest && ev.target.closest('[data-mffmode]');
+  if (b) { ev.preventDefault(); window._mffSetMode(b.dataset.mffmode); }
+});
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-mffmode]').forEach(b => b.classList.toggle('active', b.dataset.mffmode === window._mffMode));
+});
 window._mffValueBoard = function(mode) {
   if (mode !== 'dynasty' && mode !== 'dynastysf') return null;
   const S = window.DYNASTY_SIM_2026;
   if (!S || !Array.isArray(D) || typeof _ktcRankInfo !== 'function') return null;
   const fmt = mode === 'dynastysf' ? 'sf' : '1qb', vk = fmt + '_' + _dynScoringKey(), tep = _dynTepEff();
-  const ck = vk + '|' + tep + '|' + D.length + '|' + (S.meta && S.meta.built);
+  const MW = _MFF_MODE_W[window._mffMode] || null;
+  const ck = vk + '|' + tep + '|' + D.length + '|' + (S.meta && S.meta.built) + '|' + window._mffMode;
   const c = (window._mffBoardCache = window._mffBoardCache || {});
   if (c[mode] && c[mode].ck === ck) return c[mode].b;
   if (!S._idx) {
@@ -4017,19 +4048,23 @@ window._mffValueBoard = function(mode) {
   const simOf = (n, pos) => {
     const e = S._idx[_dynSimNorm(n) + '|' + pos];
     const v = e && e.v && ((tep && pos === 'TE' && e.v[vk + '_tep' + tep]) || e.v[vk]);
-    return v ? { sv: v[0], e } : null;
+    if (!v) return null;
+    if (!MW || v.length < 9) return { sv: v[0], sb: v[0], e, ratio: 1 };
+    const y = v.slice(4, 9);
+    const sm = y.reduce((s, q, j) => s + q * MW[j], 0), sb = y.reduce((s, q, j) => s + q * _MFF_BAL_W[j], 0);
+    return { sv: sm, sb: v[0], e, ratio: sb > 5 ? Math.max(sm, 0.1) / sb : 1 };
   };
   const pool = [], rest = [];
   D.forEach((p, i) => {
     if (!p || p._retired || p._isDevy) return;
-    if (p._isFuturePick || p.s === 'PICK') { const x = simOf(p.n, 'PICK'); if (x) rest.push({ i, sv: x.sv, pick: p.n, cls: x.e.cls ? x.e.cls[vk] : null }); return; }
+    if (p._isFuturePick || p.s === 'PICK') { const x = simOf(p.n, 'PICK'); if (x) rest.push({ i, sv: x.sb, ratio: x.ratio, pick: p.n, cls: x.e.cls ? x.e.cls[vk] : null }); return; }
     if (p.s !== 'QB' && p.s !== 'RB' && p.s !== 'WR' && p.s !== 'TE') return;
     const x = simOf(p.n, p.s);
     if (!x) return;
     const k = _ktcRankInfoTep(p.n, mode, tep);
     if (k && !k.devy && k.ovr && k.ovr <= 200 && k.val) {
-      pool.push({ i, sv: x.sv, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie });
-    } else rest.push({ i, sv: x.sv });
+      pool.push({ i, sv: x.sv, ratio: x.ratio, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie });
+    } else rest.push({ i, sv: x.sv, ratio: x.ratio });
   });
   if (pool.length < 50) return null;
   const sr = pool.slice().sort((a, b) => b.sv - a.sv); sr.forEach((r, j) => { r.sp = j + 1; });
@@ -4082,6 +4117,16 @@ window._mffValueBoard = function(mode) {
       if (r.cls > 0 && r.cls !== 1) r.mv *= Math.pow(r.cls, 1 - simSh);
     }
   });
+  // Team-mode tilt (CONTENDER / REBUILDER): sqrt of the mode / balanced sim ratio,
+  // normalized to the pool's median ratio so the KTC scale stays put.
+  if (MW) {
+    const rs = pool.map(r => r.ratio).filter(x => x > 0).sort((a, b) => a - b);
+    const med = rs.length ? rs[Math.floor(rs.length / 2)] : 1;
+    // Picks keep a higher floor (-25%): a pick a contender can't use is still trade
+    // currency for one who helps now. Picks map on the BALANCED sim value, so the
+    // mode reaches them once, here.
+    pool.concat(rest).forEach(r => { if (r.ratio > 0) r.mv *= Math.min(1.6, Math.max(r.pick ? 0.75 : 0.6, Math.sqrt(r.ratio / med))); });
+  }
   const b = pool.concat(rest).sort((a, b) => b.mv - a.mv).map(r => r.i);
   window._mffValueOf = window._mffValueOf || {};
   window._mffValueOf[mode] = new Map(pool.concat(rest).map(r => [r.i, Math.round(r.mv)]));
@@ -34219,6 +34264,8 @@ window.fmtHeight = fmtHeight;
   }
 
   function renderAll() {
+    // MFF VALUE team-mode bar (trade calc): only when MFF VALUE prices the trade.
+    document.body.classList.toggle('trade-mff-on', tradeSource === 'mff' && (tradeMode === 'dynasty' || tradeMode === 'dynastysf'));
     renderSide(sideA, 'tradePlayersA', 'tradeTotalA', 'a');
     renderSide(sideB, 'tradePlayersB', 'tradeTotalB', 'b');
   }
@@ -70370,6 +70417,13 @@ Rules:
   // Hide them when the loaded league isn't redraft and fall back to consensus
   // if one of them was active. Re-run wherever _mtFormat changes (league
   // sync, saved-league restore).
+  // MFF VALUE team-mode bar (My Teams): only when MFF VALUE is the value source.
+  function _mtMffBar() {
+    const m = _mtGetRankingMode();
+    document.body.classList.toggle('mt-mff-on', _mtValueSrc === 'mff' && (m === 'dynasty' || m === 'dynastysf'));
+  }
+  // Team-mode switch re-scores every roster on the new MFF VALUE (window._mffSetMode).
+  window._mtRescore = function() { if (_mtValueSrc === 'mff') _mtRefreshAfterSrcChange(); };
   function _mtUpdateAdpSrcVisibility() {
     const show = _mtGetRankingMode() === 'redraft';
     ['espn', 'cbs', 'yahoo'].forEach(function(srcKey) {
@@ -70385,6 +70439,7 @@ Rules:
       try { localStorage.setItem('mt_value_src', 'consensus'); } catch(e) {}
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'consensus'));
     }
+    _mtMffBar();
   }
 
   // MFF VALUE prices off the Dynasty SIM file (lazy, ~770 KB): until it lands the
@@ -70395,6 +70450,7 @@ Rules:
   }
   if (_mtValueSrc === 'mff') _mtMffEnsure();   // restored from localStorage
   function _mtRefreshAfterSrcChange() {
+    _mtMffBar();
     if (typeof _mtUpdateValueSrcLabel === 'function') _mtUpdateValueSrcLabel();
     // Re-score + re-render anything that depends on values. Team totals live on
     // t.score (set at import / restore), so a plain re-render left them on the

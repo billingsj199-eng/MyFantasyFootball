@@ -88,7 +88,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-offfield" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-mffmode" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1498,6 +1498,12 @@ CLEAR ALL
   body.format-dynasty #pageRankings #ppsosHeader, body.format-dynasty #pageRankings .ppsos-cell { display: none !important; }
   /* MFF VALUE board: dynasty formats only */
   body:not(.format-dynasty) .version-tab[data-version="mffv"] { display: none; }
+  /* MFF VALUE team mode (contender / balanced / rebuilder) — shown where MFF VALUE is active */
+  .mff-mode-bar { display: none; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  body.mffv-on #mffModeBarRank, body.trade-mff-on #mffModeBarTrade, body.mt-mff-on #mffModeBarMt { display: flex; }
+  .mff-mode-lbl { font-size: .6875rem; font-weight: 700; letter-spacing: .08em; color: var(--text2); cursor: help; margin-right: 2px; }
+  .mff-mode-chip { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: .6875rem; font-weight: 700; letter-spacing: .05em; cursor: pointer; }
+  .mff-mode-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(245,158,11,.08); }
   body:not([data-rnk-stat="dyn"]) #rnkTepWrap { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
   /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in
@@ -1577,6 +1583,7 @@ CLEAR ALL
 <button class="version-tab" data-version="mffv" title="MFF VALUE board — every dynasty player and rookie pick in our value order: today's market price re-ordered by the Dynasty SIM and where the market is expected to move (FAIR VALUE), deeper players by Dynasty SIM value on the same scale. Same values as the MFF VALUE trade calculator source. Free: the top 30.">MFF VALUE</button>
 <button class="version-tab" data-version="mine">MY RANKINGS</button>
 </div>
+<div class="mff-mode-bar" id="mffModeBarRank"><span class="mff-mode-lbl" title="Tilt MFF VALUE toward your team's window. BALANCED = the standard value. CONTENDER leans on this season and next; REBUILDER on the seasons after. Applies to the MFF VALUE board, trade calculator and My Teams.">TEAM MODE</span><button class="mff-mode-chip" data-mffmode="contender" title="Win now: weights the rest of this season and next most — producing veterans gain, picks and stashes lose">CONTENDER</button><button class="mff-mode-chip active" data-mffmode="balanced" title="The standard MFF VALUE">BALANCED</button><button class="mff-mode-chip" data-mffmode="rebuilder" title="Build for later: weights the seasons after next most — picks and young players gain, aging producers lose">REBUILDER</button></div>
 <span class="filter-row-label">Format</span>
 <div class="mode-tabs">
 <button class="mode-tab active" data-mode="redraft">REDRAFT</button>
@@ -3258,6 +3265,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="ktc">KTC</button>
 </div>
+<div class="mff-mode-bar" id="mffModeBarMt"><span class="mff-mode-lbl" title="Tilt MFF VALUE toward your team's window. BALANCED = the standard value. CONTENDER leans on this season and next; REBUILDER on the seasons after. Applies to the MFF VALUE board, trade calculator and My Teams.">TEAM MODE</span><button class="mff-mode-chip" data-mffmode="contender" title="Win now: weights the rest of this season and next most — producing veterans gain, picks and stashes lose">CONTENDER</button><button class="mff-mode-chip active" data-mffmode="balanced" title="The standard MFF VALUE">BALANCED</button><button class="mff-mode-chip" data-mffmode="rebuilder" title="Build for later: weights the seasons after next most — picks and young players gain, aging producers lose">REBUILDER</button></div>
 </div>
 
 
@@ -4094,6 +4102,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-src-tab" data-tsrc="mff" style="display:none" title="MFF VALUE — our dynasty value score: today's market price re-ordered by the Dynasty SIM and where the market is expected to move (FAIR VALUE), deeper players and rookie picks by Dynasty SIM value on the same scale. Dynasty only."><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>MFF VALUE</button>
 <button class="trade-src-tab" data-tsrc="mine">MY RANKS</button>
 </div>
+<div class="mff-mode-bar" id="mffModeBarTrade"><span class="mff-mode-lbl" title="Tilt MFF VALUE toward your team's window. BALANCED = the standard value. CONTENDER leans on this season and next; REBUILDER on the seasons after. Applies to the MFF VALUE board, trade calculator and My Teams.">TEAM MODE</span><button class="mff-mode-chip" data-mffmode="contender" title="Win now: weights the rest of this season and next most — producing veterans gain, picks and stashes lose">CONTENDER</button><button class="mff-mode-chip active" data-mffmode="balanced" title="The standard MFF VALUE">BALANCED</button><button class="mff-mode-chip" data-mffmode="rebuilder" title="Build for later: weights the seasons after next most — picks and young players gain, aging producers lose">REBUILDER</button></div>
 <!-- ADP SOURCE row removed 2026-10-08 (Jack): the calculator prices on rankings only - consensus / Jack's / my ranks -->
 <!-- View toggle: CALCULATOR vs FIND TRADE -->
 <div class="trade-view-tabs">
@@ -6303,7 +6312,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-offfield"></script>
+<script defer src="app.js?v=2026-10-09-mffmode"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

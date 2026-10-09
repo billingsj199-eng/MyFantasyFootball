@@ -810,7 +810,9 @@ const versionBoards = {
   jacks: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
   mine: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
   // SIM VOR board: computed from the Sim Lab projection (_simsBoardEnsure) — read-only, never saved.
-  sims: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
+  sims: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
+  // MFF VALUE board (dynasty only): computed from window._mffValueBoard (_mffvBoardEnsure) — read-only, never saved.
+  mffv: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
 };
 // MAIN-world content scripts (page-bridge.js) can't reach top-level const via window.X — attach explicitly.
 window.versionBoards = versionBoards;
@@ -834,13 +836,15 @@ const versionTiers = {
   consensus: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
-  sims: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
+  sims: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
+  mffv: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
 };
 const versionTierCounters = {
   consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
-  sims: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
+  sims: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
+  mffv: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
 // DEVY board tiers (2026-09-30): the devy list is one board shared by both
 // dynasty formats, so its tiers live in their own `devy` slot per version
@@ -849,10 +853,12 @@ const versionTierCounters = {
 // DEVY (whole board, overall devy rank) + one per class view, DEVY_2027 /
 // DEVY_2028 (class rank — like the position views; created on demand by
 // _devyTierKey). Saved as `<ver>.devy` (see _devySerialize).
-['consensus', 'jacks', 'mine', 'sims'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
+['consensus', 'jacks', 'mine', 'sims', 'mffv'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
 // MAIN-world content scripts read tier boundaries too (extension jacks-boards
 // bridge, board-gating Phase B) — attach like versionBoards above.
 window.versionTiers = versionTiers;
+// MFF VALUE board free window (same as the Dynasty SIM's): Season Pass past the top 30.
+const _MFFV_FREE_N = 30;
 
 // === MINE-FOLLOWS-JACKS SEEDING ===
 // Until a user's first save of a format, their "My Ranks" board mirrors Jack's
@@ -1188,6 +1194,7 @@ let tierCounter = 0;
 
 function syncMode() {
   if (currentVersion === 'sims') _simsBoardEnsure();   // computed board — keep it current
+  if (currentVersion === 'mffv') _mffvBoardEnsure();
   board = versionBoards[currentVersion][currentMode];
   tiers = versionTiers[_tierVer()][_tierMode()][_tierPK()];
   tierCounter = versionTierCounters[_tierVer()][_tierMode()][_tierPK()];
@@ -1232,7 +1239,7 @@ function _isDevyPK(pk) { return typeof pk === 'string' && pk.indexOf('DEVY') ===
 function _devyTierKey() {
   const c = window._devyClass;
   const k = (c && c !== 'ALL') ? 'DEVY_' + c : 'DEVY';
-  ['consensus', 'jacks', 'mine', 'sims'].forEach(v => {
+  ['consensus', 'jacks', 'mine', 'sims', 'mffv'].forEach(v => {
     if (!versionTiers[v].devy[k]) { versionTiers[v].devy[k] = []; versionTierCounters[v].devy[k] = 0; }
   });
   return k;
@@ -1246,7 +1253,7 @@ function _tierVer(pk) { return (_isDevyPK(pk || _tierPK()) && typeof _devySrcVer
 // Check if current user can edit the active version
 function canEdit() {
   if (typeof window._authCurrentUser !== 'undefined' && !window._authCurrentUser) return false;
-  if (currentVersion === 'consensus' || currentVersion === 'sims') return false;
+  if (currentVersion === 'consensus' || currentVersion === 'sims' || currentVersion === 'mffv') return false;
   if (currentVersion === 'mine') return true;
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
@@ -1856,7 +1863,7 @@ function _devyIsCustom(ver) {
 // Version whose devy board is DISPLAYED: "My Rankings" mirrors Jack's until
 // the user's first devy edit (same idea as the mine-follows-Jack's seeding).
 function _devySrcVer() {
-  if (currentVersion === 'sims') return 'consensus';   // no sims for prospects — the devy pill shows the (free) consensus board
+  if (currentVersion === 'sims' || currentVersion === 'mffv') return 'consensus';   // no sims for prospects — the devy pill shows the (free) consensus board
   return (currentVersion === 'mine' && !_devyIsCustom('mine')) ? 'jacks' : currentVersion;
 }
 // First edit on a mirrored "My Rankings" devy board: pin the order on screen
@@ -5909,6 +5916,7 @@ function getFiltered(applyTopN) {
   // sorting by a metric shouldn't float 300 irrelevant names to the top.
   // SIM VOR board is computed — rebuild it if the VOR table moved since the last paint.
   if (currentVersion === 'sims' && _simsBoardEnsure()) { syncMode(); renumber(); }
+  if (currentVersion === 'mffv' && _mffvBoardEnsure()) { syncMode(); renumber(); }
   let _boardSrc = board;
   window._rankBelowCut = null;
   if (typeof window._boardCutoffFor === 'function') {
@@ -5956,6 +5964,11 @@ function getFiltered(applyTopN) {
     if (_vt) f = f.filter(d => _vt.map.has(d));
     const _ros = _vorRostered();
     if (_ros) f = f.filter(d => !_ros.has(d));
+  }
+  // MFF VALUE board lists only players (and rookie picks) that carry an MFF value.
+  if (currentVersion === 'mffv') {
+    const _mv = window._mffValueOf && window._mffValueOf[currentMode];
+    if (_mv) f = f.filter(d => _mv.has(d.idx));
   }
   // Out-for-season players: hidden from season formats (redraft / bestball /
   // superflex / weekly) but untouched in dynasty modes. A typed search still
@@ -9456,12 +9469,15 @@ function render() {
   const isConsensus = currentVersion === 'consensus';
   const isSignedOut = !window._authCurrentUser;
   const isSims = currentVersion === 'sims';
+  const isMffv = currentVersion === 'mffv';
   const blurCutoff = (isMine && isSignedOut) ? 0
                    : isSims ? _VOR_FREE_N(filter)
+                   : isMffv ? (filter === 'ALL' ? _MFFV_FREE_N : 12)
                    : (filter === 'ALL') ? 36
                    : 12;
   const shouldBlur = !isConsensus && (
     (isSims && !isPremium) ||
+    (isMffv && !isPremium) ||
     (isJacks && !isPremium) ||
     (isMine && isSignedOut) ||
     (isMine && !isPremium)
@@ -9864,7 +9880,16 @@ function render() {
       _statTd1 = `<td class="pts-cell ppg-proj-cell"${_cwTip}${_projColor?' style="color:'+_projColor+';font-weight:700"':''}>${_projPpg==null?'—':_projPpg+(_projPpg>0&&d.s?_mobPosRankTag(d,'disp'):'')}</td>`;
       // DYNASTY boards (Jack 2026-10-09): VALUE (Dynasty SIM) replaces L4 PPG.
       let _l4Td = `<td class="pts-cell l4ppg-cell"${_l4Cell.color?' style="color:'+_l4Cell.color+';font-weight:700"':''}>${_l4Cell.html}</td>`;
-      if (_isDynSimMode()) {
+      if (_isDynSimMode() && currentVersion === 'mffv') {
+        // MFF VALUE board: the column is the board's own value (KTC scale).
+        const _mv = window._mffValueOf && window._mffValueOf[currentMode], _mvv = _mv ? _mv.get(d.idx) : null;
+        const _dv = window.DYNASTY_SIM_2026 && !d._isFuturePick ? _dynSimFor(d) : null;
+        const _kk = !d._isFuturePick && typeof _ktcRankInfo === 'function' ? _ktcRankInfo(d.n, currentMode) : null;
+        const _tip = ('MFF VALUE ' + _mvv + (_kk && _kk.val ? ' · KTC ' + _kk.val + ' (#' + _kk.ovr + ')' : '') + (_dv ? ' · Dynasty SIM ' + _dv.val + ' (#' + _dv.rk + ')' : '')
+          + (d._isFuturePick ? ' — rookie pick: KTC pick price blended with its Dynasty SIM value' : '')).replace(/"/g, '&quot;');
+        _l4Td = _mvv == null ? '<td class="pts-cell l4ppg-cell" style="color:var(--text2)">' + (window.DYNASTY_SIM_2026 ? '—' : '…') + '</td>'
+          : `<td class="pts-cell l4ppg-cell" title="${_tip}" style="color:${_mvv >= 6000 ? '#22c55e' : _mvv >= 4000 ? '#4ade80' : _mvv >= 2500 ? '#facc15' : 'var(--text2)'};font-weight:700;cursor:help">${_mvv}</td>`;
+      } else if (_isDynSimMode()) {
         const _dv = window.DYNASTY_SIM_2026 ? _dynSimFor(d) : null;
         const _dvc = v => v >= 300 ? '#22c55e' : v >= 150 ? '#4ade80' : v >= 50 ? '#facc15' : 'var(--text2)';
         _l4Td = !window.DYNASTY_SIM_2026 ? '<td class="pts-cell l4ppg-cell" style="color:var(--text2)">…</td>'
@@ -10245,7 +10270,7 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : currentVersion === 'mffv' ? '📋 MFF VALUE' : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -11188,7 +11213,8 @@ window._updateRnkStatHeaders = function() {
     } else {
       _set(c2, 'ppg25Header', 'Actual fantasy points per game from the 2025 season (' + fmtLabel + ' scoring).', '\'25 PPG', fmtLabel);
     }
-    if (_isDynSimMode()) _set(c3, 'l4ppgHeader', 'Dynasty SIM value — expected points over a replacement starter for the rest of this season and the next two, plus a youth credit for the seasons after (' + (currentMode === 'dynastysf' ? 'superflex' : '1QB') + ', follows the scoring toggle). Same number as the player card\'s OUR VALUE and the DYN SIM view; open DYN SIM for the season split and comparables. Free: the Dynasty SIM top 30.', 'Value', 'Dyn SIM');
+    if (_isDynSimMode() && currentVersion === 'mffv') _set(c3, 'l4ppgHeader', 'MFF VALUE — our dynasty value score on the KTC scale: today\'s market price re-ordered by the Dynasty SIM and where the market is expected to move (FAIR VALUE, KTC top 200); deeper players and 2026 rookies by Dynasty SIM value on the same scale; rookie picks blend KTC\'s pick price with their sim value. The board is sorted by it. Same order as the MFF VALUE trade calculator source. Free: the top 30.', 'Value', 'MFF');
+    else if (_isDynSimMode()) _set(c3, 'l4ppgHeader', 'Dynasty SIM value — expected points over a replacement starter for the rest of this season and the next two, plus a youth credit for the seasons after (' + (currentMode === 'dynastysf' ? 'superflex' : '1QB') + ', follows the scoring toggle). Same number as the player card\'s OUR VALUE and the DYN SIM view; open DYN SIM for the season split and comparables. Free: the Dynasty SIM top 30.', 'Value', 'Dyn SIM');
     else _set(c3, 'l4ppgHeader', 'Average fantasy PPG over the player\'s last 4 games PLAYED — 2026 games to date, then the end of 2025 (refreshed after every game). Compared to the season PPG column it shows which way a player is trending: ▲ = trending up, ▼ = trending down.', 'L4 PPG', fmtLabel);
   } else if (rnkStatMode === 'proj') {
     if (currentMode === 'weekly') {
@@ -11403,6 +11429,9 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     btn.classList.add('active');
     currentVersion = btn.dataset.version;
     if (currentVersion === 'sims') _simsEnter();
+    if (currentVersion === 'mffv') _mffvEnter();
+    // The dynasty VALUE column reads MFF VALUE on its own board, Dynasty SIM elsewhere.
+    if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
     _vorBarRender();
     syncMode();
     renumber();
@@ -11411,7 +11440,7 @@ document.querySelectorAll('.version-tab[data-version]').forEach(btn => {
     render();
     if (typeof updateToolbarVisibility === 'function') updateToolbarVisibility();
     if (typeof window._updateCopyFromRedraftBtn === 'function') window._updateCopyFromRedraftBtn();
-    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'sims' ? 'Sim VOR Rankings' : 'My Rankings');
+    toast(currentVersion === 'consensus' ? 'Consensus Rankings' : currentVersion === 'jacks' ? "Jack's Rankings" : currentVersion === 'sims' ? 'Sim VOR Rankings' : currentVersion === 'mffv' ? 'MFF VALUE Rankings' : 'My Rankings');
   });
 });
 
@@ -13181,6 +13210,11 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    // MFF VALUE is a dynasty board — leaving dynasty drops back to CONSENSUS.
+    if (currentVersion === 'mffv' && currentMode !== 'dynasty' && currentMode !== 'dynastysf') {
+      currentVersion = 'consensus';
+      document.querySelectorAll('.version-tab').forEach(b => b.classList.toggle('active', b.dataset.version === 'consensus'));
+    }
     _vorBarRender();   // PLAYOFFS pill is season-boards only
     // WEEKLY hides ALL + ROOKIES pills — if those were active, bounce to FLEX
     // so the table doesn't render an empty / wrong filter state.
@@ -13411,6 +13445,7 @@ function _exportCutoff() {
   if (_isPrem) return Infinity;
   if (currentVersion === 'consensus') return Infinity;
   if (currentVersion === 'sims') return _VOR_FREE_N(filter);
+  if (currentVersion === 'mffv') return filter === 'ALL' ? _MFFV_FREE_N : 12;
   // Not signed in on My Rankings should get 0, but canEdit gate already prevents that flow; still safe to return 0.
   if (currentVersion === 'mine' && !window._authCurrentUser) return 0;
   return (filter === 'ALL') ? 36 : 12;
@@ -13431,7 +13466,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   
   // Build CSV
@@ -13497,7 +13532,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' \u2014 upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const useFilteredRank = _tierRankIsPositional();
 
@@ -13571,7 +13606,7 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   if (current.players.length) groups.push(current);
 
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const payload = {
     source: 'myfantasyfootball.co',
@@ -13693,7 +13728,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   // Underdog's current export quotes every populated field; mirror that exactly.
   const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
@@ -13787,7 +13822,7 @@ document.getElementById('fileImport').addEventListener('change', e => {
 document.getElementById('btnClear').addEventListener('click', () => {
   if (!canEdit()) {
     if (!window._authCurrentUser) { toast("Sign in to create your rankings"); if (typeof window.openAuthModal === 'function') window.openAuthModal(); }
-    else if (currentVersion === 'consensus' || currentVersion === 'sims') toast((currentVersion === 'sims' ? 'Sim VOR' : 'Consensus') + " rankings are auto-generated and can't be edited");
+    else if (currentVersion === 'consensus' || currentVersion === 'sims' || currentVersion === 'mffv') toast((currentVersion === 'sims' ? 'Sim VOR' : currentVersion === 'mffv' ? 'MFF VALUE' : 'Consensus') + " rankings are auto-generated and can't be edited");
     else toast("Only admins can edit Jack's rankings");
     return;
   }
@@ -14841,6 +14876,31 @@ function _simsTiersFor(data) {
 // WR / TE by rest-of-season VOR (this week's VOR on WEEKLY), then K, then D/ST.
 // Computed, never saved (the save paths only write jacks / mine), rebuilt
 // whenever the VOR table changes (scoring, lineup, league, week, new export).
+// MFF VALUE board (Jack 2026-10-09: "build the mff value rankings board"): the
+// dynasty board in our value order — window._mffValueBoard (FAIR VALUE for the KTC
+// top 200, Dynasty SIM on the KTC scale for the rest, rookie picks blended with
+// KTC's pick price). Dynasty / dynasty SF only; rebuilt when the format, scoring or
+// TE premium changes the value order. Players without a value trail (hidden).
+function _mffvLoad() {
+  if (window.DYNASTY_SIM_2026 || window._mffvLoadReq) return;
+  window._mffvLoadReq = true;
+  _dynSimEnsure(() => { window._mffvLoadReq = false; if (currentVersion === 'mffv') { syncMode(); renumber(); render(); } });
+}
+function _mffvEnter() { _mffvLoad(); }
+function _mffvBoardEnsure() {
+  const m = currentMode;
+  if (m !== 'dynasty' && m !== 'dynastysf') return false;
+  if (!window.DYNASTY_SIM_2026) { _mffvLoad(); return false; }
+  const b = typeof window._mffValueBoard === 'function' ? window._mffValueBoard(m) : null;
+  const src = (window._mffvBoardSrc = window._mffvBoardSrc || {});
+  if (!b || src[m] === b) return false;
+  const used = new Set(b), order = b.slice();
+  (versionBoards.consensus[m] || []).forEach(i => { if (!used.has(i)) { used.add(i); order.push(i); } });
+  for (let i = 0; i < D.length; i++) if (!used.has(i) && !D[i]._retired) order.push(i);
+  versionBoards.mffv[m] = order;
+  src[m] = b;
+  return true;
+}
 function _simsBoardEnsure() {
   const t = _vorTable();
   const src = (window._simsBoardSrc = window._simsBoardSrc || {});

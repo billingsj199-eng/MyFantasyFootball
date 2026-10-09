@@ -88,7 +88,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-mffvalue" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-mffboard" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1496,6 +1496,8 @@ CLEAR ALL
   /* DYNASTY boards (Jack 2026-10-09): no SOS / P-SOS — schedule strength is a this-season read. */
   body.format-dynasty #pageRankings #psosHeader, body.format-dynasty #pageRankings .psos-cell,
   body.format-dynasty #pageRankings #ppsosHeader, body.format-dynasty #pageRankings .ppsos-cell { display: none !important; }
+  /* MFF VALUE board: dynasty formats only */
+  body:not(.format-dynasty) .version-tab[data-version="mffv"] { display: none; }
   body:not([data-rnk-stat="dyn"]) #rnkTepWrap { display: none !important; }
   #pageRankings tbody .xfpg-cell{text-align:center;font-size:.85rem;font-weight:600;color:var(--text);min-width:60px;white-space:nowrap}
   /* VOR stats view (render() sets body.rnk-vor): desktop shows the sim PPG in
@@ -1572,6 +1574,7 @@ CLEAR ALL
 <button class="version-tab active" data-version="consensus">CONSENSUS</button>
 <button class="version-tab" data-version="jacks">JACK'S</button>
 <button class="version-tab" data-version="sims" title="Sim VOR board — every player ordered by rest-of-season value over replacement from the Sim Lab projection (points above the replacement player at his position, added up over the games he is projected to play). Set the lineup or pick a synced league in the VOR bar; WEEKLY ranks this week only.">SIM VOR</button>
+<button class="version-tab" data-version="mffv" title="MFF VALUE board — every dynasty player and rookie pick in our value order: today's market price re-ordered by the Dynasty SIM and where the market is expected to move (FAIR VALUE), deeper players by Dynasty SIM value on the same scale. Same values as the MFF VALUE trade calculator source. Free: the top 30.">MFF VALUE</button>
 <button class="version-tab" data-version="mine">MY RANKINGS</button>
 </div>
 <span class="filter-row-label">Format</span>
@@ -6298,7 +6301,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-mffvalue"></script>
+<script defer src="app.js?v=2026-10-09-mffboard"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

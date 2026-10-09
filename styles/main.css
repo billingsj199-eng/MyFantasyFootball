@@ -3255,6 +3255,19 @@ tbody td{font-size:.8125rem}
   #pageDraftStrategy .ds-table :is(th,td){padding-left:4px;padding-right:4px}
   #pageDraftStrategy .ds-table td{white-space:normal;overflow-wrap:anywhere}
 }
+/* === My Teams · UNDERDOG on phones (2026-10-09) ===
+   EXPOSURE: 141-player list ~7,000px — the position / ADVANCING / search header
+   pins while scrolling. DRAFT BOARD: the 4 view toggles ran 416px wide off the
+   card (22px tall) — they wrap. VALUE: steals / reaches tables are 560px wide —
+   pin the PLAYER column (the dashboard's phone rule makes each table its own
+   sideways scroller, so sticky cells work against it). */
+@media (max-width:600px){
+  #udTab_exposure > :first-child{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:6px;padding-bottom:6px}
+  #udTab_exposure > :first-child button{min-height:30px}
+  #udTab_board button{min-height:30px}
+  #udTab_board div[style*="display:flex;gap:3px"]{flex-wrap:wrap}
+  #udTab_value table :is(th,td):first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:4px 0 6px -4px rgba(0,0,0,.6)}
+}
 /* === Player card on phones (2026-10-09) ===
    - the ✕ sat in the scrolling header, so deep in a tab you scrolled back up to
      close; pinned to the screen's top-right (card sits 10px in, 20px down)

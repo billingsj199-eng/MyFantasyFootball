@@ -1419,6 +1419,14 @@ CLEAR ALL
     body:not(.rnk-mob-ctl-open) #rnkFilterRows #rookiePickToggle,
     body:not(.rnk-mob-ctl-open) #rnkFilterRows #posLockToggle{display:none!important}
     body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters:not(#rookieSubPosFilter) .pos-btn{flex:0 0 auto}
+    /* WEEKLY BYE / OUT rows (2026-10-09): the note ("'26 PPG (3 gp) 15 ·
+       ASSUMED OUT · Ankle, Questionable") shared the line with the name, which
+       squeezed names to "De… Smi…" and ran the note off the card. Note drops
+       to its own full-width line; the section header wraps. */
+    #pageRankings tbody tr.bye-row{flex-wrap:wrap;row-gap:3px}
+    #pageRankings tbody tr.bye-row td.bye-note{flex:1 1 100%;order:10;white-space:normal!important;padding-left:50px!important;font-size:.72rem;line-height:1.35;color:var(--text2)}
+    #pageRankings tbody tr.bye-row td:first-child{align-self:center;margin:0 0 0 -4px!important}
+    #pageRankings tbody tr.bye-line-row .tier-inner > span:not(.tier-badge){white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.3}
     /* Tier banner rows still need to span full card width */
     #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
     #pageRankings tbody tr.tier-row td{display:block;text-align:center!important}

@@ -2869,7 +2869,7 @@ tbody td{font-size:.8125rem}
   #tickerRow{flex-wrap:nowrap}
   #tickerRow .season-strip{flex:0 0 auto;order:-1;flex-wrap:nowrap;border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:3px 8px;gap:6px}
   #tickerRow .ss-msg,#tickerRow .ss-btn-long{display:none}
-  #tickerRow .ss-btn{padding:2px 7px;font-size:.625rem;margin-left:0}
+  #tickerRow .ss-btn{padding:2px 8px;font-size:.625rem;margin-left:0;min-height:28px}
   #tickerRow .live-ticker{flex:1 1 0;min-width:0;padding:3px 0}
   #tickerRow .amb-fixed{padding:0 6px 0 8px;gap:0}
   #tickerRow .amb-fixed > div,#tickerRow .amb-share{display:none!important}

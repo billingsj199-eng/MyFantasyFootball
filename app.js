@@ -10179,7 +10179,8 @@ function render() {
   // WEEKLY xFP column rides the FANTASY stats view only (CSS keys off this class).
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
   // REDRAFT / SUPERFLEX / DYNASTY xFP column (Jack 2026-10-09): same season xFP/G cell, right after PROJ PPG.
-  const _ssnXfp = (currentMode === 'redraft' || currentMode === 'superflex' || currentMode === 'dynasty' || currentMode === 'dynastysf') && _statMode === 'fantasy';
+  const _ssnXfp = (currentMode === 'redraft' || currentMode === 'superflex' || currentMode === 'dynasty' || currentMode === 'dynastysf') && _statMode === 'fantasy'
+    && filter !== 'DEVY';   // devy rows have no xFP cell (college players) — the header shifted every column after PROJ
   document.body.classList.toggle('ssn-xfp-col', _ssnXfp);
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');

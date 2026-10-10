@@ -33713,9 +33713,12 @@ window.fmtHeight = fmtHeight;
   // flock"): dynasty modes drop the tier ladder for a smooth rank decay,
   // factor e^(−((rank−1)/dynScale)^dynPow) on the linear base — fit to Flock's
   // dynasty /trades/calculate curve (#20 62% / #40 41% / #100 14% of #1 vs
-  // their 62/40/13; the step ladder was 50/30/10). Flock's position factors
-  // (RB 1.52 / QB 1.38 / TE 1.22 vs WR) are NOT copied — MFF VALUE already
-  // sets the cross-position order. dynScale 0 restores the step ladder.
+  // their 62/40/13; the step ladder was 50/30/10). Flock also scales each
+  // position by the league settings sent with the trade (scoring + lineup
+  // slots; vs WR at PPR ≈ RB 1.12 / QB 1.07 / TE 1.08, at half PPR 1.52 /
+  // 1.38 / 1.22, none without settings). NOT copied — MFF VALUE is already
+  // built per scoring and sets the cross-position order. dynScale 0 restores
+  // the step ladder.
   window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.875,
     // dynExtraPieceW (same day, "match flock's package discount for dynasty
     // too"): Flock's dynasty calc discounts extras far less than redraft —

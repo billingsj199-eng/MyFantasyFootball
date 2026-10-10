@@ -3328,16 +3328,25 @@ function _dynLocked(x) { return !!x && !hasPremium() && x.rk > 30; }
 function _dynSortVal(d, k) { const x = _dynSimFor(d); return (!x || _dynLocked(x)) ? -Infinity : x[k]; }
 
 // === PLAYER CARD · DYNASTY VALUE BLOCK (Jack 2026-10-09) ===
-// Top of the card's DYNASTY tab: OUR VALUE (Dynasty SIM, with fair value and KTC
-// beside it), OVERALL and POSITIONAL rank for the picked source, and a trend chart
-// (VALUE / OVERALL / POSITIONAL x 1M / 3M / 6M / ALL x SIM / JACK'S / KTC).
+// Top of the card's DYNASTY tab: OUR VALUE (MFF VALUE since 10-10 — was the raw Dynasty
+// SIM — with KTC beside it), OVERALL and POSITIONAL rank for the picked source, and a
+// trend chart (VALUE / OVERALL / POSITIONAL x 1M / 3M / 6M / ALL x MFF VALUE / SIM / JACK'S / KTC).
+// MFF VALUE history = data/mff_value_history.js (sim_lab/build_mff_value_history.py, 9am job).
 // SIM history = data/dynasty_sim_history.js (weekly; backfilled to week 0 by
 // sim_lab/build_dynasty_sim_history.py, +1 point every Tuesday rebuild).
 // KTC history = data/ktc_history.js (KTC's own daily history from mid-April +
 // the 9am job's snapshots). JACK'S = current board ranks only (no history kept).
+// MFF VALUE FIRST (Jack 2026-10-10: "dyn sim isnt too important our value score is
+// definately a priority" -> "make the card change all three"): OUR VALUE + the rank
+// boxes + the chart default to MFF VALUE (the board's value, in the selected
+// BALANCED / CONTENDER / REBUILDER mode); SIM / JACK'S / KTC stay as toggles. Saved
+// states from before switch to MFF once (v2 flag), later picks stick.
 window._cdState = (() => {
-  try { return Object.assign({ src: 'sim', metric: 'val', span: 90 }, JSON.parse(localStorage.getItem('mff_card_dyn') || '{}')); }
-  catch (e) { return { src: 'sim', metric: 'val', span: 90 }; }
+  try {
+    const s = Object.assign({ src: 'mff', metric: 'val', span: 90 }, JSON.parse(localStorage.getItem('mff_card_dyn') || '{}'));
+    if (!s.v2) { s.src = 'mff'; s.v2 = 1; }
+    return s;
+  } catch (e) { return { src: 'mff', metric: 'val', span: 90, v2: 1 }; }
 })();
 function _cdSave() { try { localStorage.setItem('mff_card_dyn', JSON.stringify(window._cdState)); } catch (e) { /* private mode */ } }
 function _cdLoad(globalName, metaName, file, cb) {
@@ -3353,11 +3362,47 @@ function _cdLoad(globalName, metaName, file, cb) {
   document.head.appendChild(sc);
 }
 function _cdEnsure(cb) {
-  let n = 3;
+  let n = 4;
   const done = () => { if (--n === 0) cb(); };
   _dynSimEnsure(done);
   _cdLoad('KTC_HISTORY', 'mff-ktc-hist-v', 'ktc_history.js', done);
   _cdLoad('DYNASTY_SIM_HISTORY', 'mff-dyn-hist-v', 'dynasty_sim_history.js', done);
+  _cdLoad('MFF_VALUE_HISTORY', 'mff-mffv-hist-v', 'mff_value_history.js', done);
+}
+// MFF VALUE now for the card: the board's value + overall / positional rank (players
+// only — picks sit on the board but aren't counted) in the selected mode. Locked past
+// the board's free window (_MFFV_FREE_N overall) for free users, like the board.
+function _cdMffNow(d, mode) {
+  const b = typeof window._mffValueBoard === 'function' ? window._mffValueBoard(mode) : null;
+  const V = window._mffValueOf && window._mffValueOf[mode];
+  if (!b || !V) return null;
+  let ovr = 0, pos = 0;
+  for (const i of b) {
+    const p = D[i];
+    if (!p || p.s === 'PICK' || p._isFuturePick) continue;
+    ovr++;
+    if (p.s === d.s) pos++;
+    if (p === d) return { val: V.get(i) || 0, ovr, pos, locked: !hasPremium() && ovr > _MFFV_FREE_N };
+  }
+  return null;
+}
+// MFF VALUE history (data/mff_value_history.js, tracker snapshots, BALANCED) + today's
+// live board point (mode as selected) at the end.
+function _cdMffSeries(d, fmt, now) {
+  const H = window.MFF_VALUE_HISTORY;
+  const out = [];
+  if (H && H.p) {
+    if (!H._idx) { H._idx = {}; Object.keys(H.p).forEach(k => { const [n, p] = k.split('|'); H._idx[_dynSimNorm(n) + '|' + p] = H.p[k]; }); }
+    const rec = H._idx[_dynSimNorm(d.n) + '|' + d.s];
+    const s = rec && rec[fmt];
+    if (s) H.dates.forEach((dt, j) => { const x = s[j]; if (x) out.push({ d: dt, val: x[0], ovr: x[1], pos: x[2] }); });
+  }
+  if (now) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (out.length && out[out.length - 1].d === today) out.pop();
+    out.push({ d: today, val: now.val, ovr: now.ovr, pos: now.pos });
+  }
+  return out;
 }
 // Current Dynasty SIM value / overall / positional rank for the card's format
 // (follows the board's league + scoring when the card is in the board's mode).
@@ -3501,7 +3546,13 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
   const key = fmt + '_' + _dynScoringKey();
   if (!e || !e.v[key]) return '';
-  const sp = _cdSplitRanks(key), now = sp.now.get(e), fut = sp.fut.get(e);
+  const sp = _cdSplitRanks(key), fut = sp.fut.get(e);
+  // Same availability rules as MFF VALUE (10-10): an unsigned free agent with no 2026
+  // games or a player out for the season has no "production now" (no WIN NOW /
+  // CORNERSTONE / AGING CLOCK off the raw sim's split) — Tyreek Hill read WIN NOW.
+  const _noNow = (!e.g26 && /^(FA|free agent)?$/i.test(String(d.t || '').trim()))
+    || (typeof window._irIsOut === 'function' && window._irIsOut(d.n));
+  const now = _noNow ? 999 : sp.now.get(e);
   const v = e.v[key], nowV = Math.round(v[4] + v[5]), futV = Math.round(v[6] + v[7] + v[8]);
   const mkt = ktc && !ktc.devy ? ktc.ovr : null;
   const age = d.age != null ? +d.age : e.age;
@@ -3544,10 +3595,10 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
   const slideNote = _cdOffNoteHtml(offR, fairDiff) + ((offR && fairDiff > 0) ? '' : _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr))
     + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr) + _cdBounceNoteHtml(d, yr) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
-  if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
+  if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (' + (_noNow ? 'none — not playing' : '#' + now) + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
-    + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now #' + now + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>' + slideNote;
+    + '<span style="font-size:.6875rem;color:var(--text2);margin-left:auto">Now ' + (_noNow ? '—' : '#' + now) + ' · Future #' + fut + (mkt ? ' · KTC #' + mkt : '') + '</span></div>' + slideNote;
 }
 // OFF-FIELD caution (admin flag / Suspended): shown to everyone (not a sim read).
 function _cdOffNoteHtml(off, fairDiff) {
@@ -3812,24 +3863,27 @@ function _cdRender() {
   const sim = _cdSimNow(d, fmt);
   const ktc = (typeof _ktcRankInfo === 'function') ? _ktcRankInfo(d.n, mode) : null;
   const jk = _cdJacksNow(d, mode);
-  let fair = null;
-  if (_trendIsDyn() && currentMode === mode && window.KTC_HISTORY) { const g = _trendGapFor(d); if (g && g.mkt && g.mkt.fair != null && !_dynLocked(g.x)) fair = Math.round(g.mkt.fair); }
+  const mff = _cdMffNow(d, mode);
+  const mLbl0 = window._mffMode && window._mffMode !== 'balanced' ? ' · ' + window._mffMode.toUpperCase() : '';
   const lock = '<span class="cons-lock" title="' + _DYN_LOCK_TIP + '">🔒</span>';
   const posLbl = n => n ? (d.s === 'DST' ? 'D/ST' : d.s) + n : '—';
   const now = st.src === 'ktc' ? (ktc && !ktc.devy ? { ovr: ktc.ovr, pos: ktc.posRank } : null)
-    : st.src === 'jacks' ? jk : (sim && !sim.locked ? sim : null);
-  const srcName = { sim: 'Dynasty SIM', jacks: "Jack's Dynasty", ktc: 'KTC' }[st.src] + (fmt === 'sf' ? ' SF' : ' 1QB');
+    : st.src === 'jacks' ? jk : st.src === 'mff' ? (mff && !mff.locked ? mff : null) : (sim && !sim.locked ? sim : null);
+  const srcName = { mff: 'MFF VALUE', sim: 'Dynasty SIM', jacks: "Jack's Dynasty", ktc: 'KTC' }[st.src] + (fmt === 'sf' ? ' SF' : ' 1QB') + (st.src === 'mff' ? mLbl0 : '');
   const box = (big, small, sub) => '<div style="flex:1 1 0;min-width:0;background:var(--elev-1,rgba(148,163,184,.08));border:1px solid rgba(148,163,184,.18);border-radius:10px;padding:10px 8px;text-align:center">'
     + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.7rem;line-height:1;color:var(--text1)">' + big + '</div>'
     + '<div style="font-size:.6875rem;letter-spacing:.06em;color:var(--text2);text-transform:uppercase;margin-top:4px">' + small + '</div>'
     + (sub ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">' + sub + '</div>' : '') + '</div>';
-  const valBig = sim ? (sim.locked ? lock : sim.val.toLocaleString()) : '—';
-  const valSub = [fair != null ? 'Fair ' + fair.toLocaleString() : null, ktc && !ktc.devy ? 'KTC ' + ktc.val.toLocaleString() : null].filter(Boolean).join(' · ');
+  const valBig = mff ? (mff.locked ? lock : mff.val.toLocaleString()) : '—';
+  const valSub = ['MFF VALUE' + mLbl0, ktc && !ktc.devy ? 'KTC ' + ktc.val.toLocaleString() : null].filter(Boolean).join(' · ');
   const chip = (attr, v, cur, lbl) => '<button type="button" ' + attr + '="' + v + '" style="padding:3px 9px;border-radius:6px;border:1px solid ' + (cur ? 'var(--accent,#f59e0b)' : 'rgba(148,163,184,.25)') + ';background:' + (cur ? 'rgba(245,158,11,.12)' : 'transparent') + ';color:' + (cur ? 'var(--accent,#f59e0b)' : 'var(--text2)') + ';font-size:.6875rem;font-weight:700;letter-spacing:.05em;cursor:pointer">' + lbl + '</button>';
   // series for the chart
   let pts = null, note = '';
   const metric = st.src === 'jacks' ? 'ovr' : st.metric;
-  if (st.src === 'sim') {
+  if (st.src === 'mff') {
+    if (mff && mff.locked) note = 'MFF VALUE past the top ' + _MFFV_FREE_N + ' is a Season Pass feature.';
+    else { const s = _cdMffSeries(d, fmt, mff); if (s.length) pts = s.map(p => ({ d: p.d, y: p[metric] })).filter(p => p.y != null); }
+  } else if (st.src === 'sim') {
     if (sim && sim.locked) note = 'Dynasty SIM history past the top 30 is a Season Pass feature.';
     else { const s = _cdSimSeries(d, fmt); if (s) pts = s.map(p => ({ d: p.d, y: p[metric] })).filter(p => p.y != null); }
   } else if (st.src === 'ktc') {
@@ -3852,7 +3906,7 @@ function _cdRender() {
   }
   const mLbl = { val: 'Value', ovr: 'Overall rank', pos: 'Positional rank' }[metric];
   el.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:10px">'
-    + box(valBig, 'Our value', valSub || 'Dynasty SIM')
+    + box(valBig, 'Our value', valSub)
     + box(now && now.ovr ? '#' + now.ovr : '—', 'Overall rank', srcName)
     + box(now ? posLbl(now.pos) : '—', 'Positional rank', srcName) + '</div>'
     + _cdTagsHtml(d, fmt, mode, sim, ktc)
@@ -3860,7 +3914,7 @@ function _cdRender() {
     + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">'
     + '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.15rem;letter-spacing:.04em;color:var(--text1)">' + srcName + ' · ' + mLbl + '</div>'
     + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'
-    + chip('data-cdsrc', 'sim', st.src === 'sim', 'SIM') + chip('data-cdsrc', 'jacks', st.src === 'jacks', "JACK'S") + chip('data-cdsrc', 'ktc', st.src === 'ktc', 'KTC')
+    + chip('data-cdsrc', 'mff', st.src === 'mff', 'MFF VALUE') + chip('data-cdsrc', 'sim', st.src === 'sim', 'SIM') + chip('data-cdsrc', 'jacks', st.src === 'jacks', "JACK'S") + chip('data-cdsrc', 'ktc', st.src === 'ktc', 'KTC')
     + '<span style="width:6px"></span>'
     + chip('data-cdfmt', '1qb', fmt === '1qb', '1QB') + chip('data-cdfmt', 'sf', fmt === 'sf', 'SF')
     + '<span style="width:6px"></span>'
@@ -3869,7 +3923,8 @@ function _cdRender() {
     + [[30, '1M'], [90, '3M'], [180, '6M'], [0, 'ALL']].map(x => chip('data-cdspan', x[0], st.span === x[0], x[1])).join('')
     + '</div></div>' + chg + '</div>'
     + (pts && pts.length ? '<div style="position:relative;margin-top:6px">' + _cdChartSvg(pts, metric, mLbl) + '<div class="cd-tip" style="position:absolute;top:2px;pointer-events:none;background:#0f172a;border:1px solid rgba(148,163,184,.3);border-radius:6px;padding:3px 7px;font-size:.6875rem;color:#e2e8f0;display:none;white-space:nowrap"></div></div>'
-      + '<div style="font-size:.6875rem;color:var(--text2);margin-top:2px">' + (st.src === 'sim' ? 'Weekly — each Tuesday rebuild adds a point (2026 season backfilled from week 0). PPR.' : 'Daily KTC values (KTC history from mid-April; every 3rd day before the last 45).') + '</div>'
+      + '<div style="font-size:.6875rem;color:var(--text2);margin-top:2px">' + (st.src === 'mff' ? 'Daily from the morning value snapshot (weekly Sep 7-28, BALANCED, KTC top 200, PPR); the last point is today\'s live value.'
+        : st.src === 'sim' ? 'Weekly — each Tuesday rebuild adds a point (2026 season backfilled from week 0). PPR.' : 'Daily KTC values (KTC history from mid-April; every 3rd day before the last 45).') + '</div>'
       : '<div style="padding:18px 6px;text-align:center;color:var(--text2);font-size:.8rem">' + (note || 'No history for this player yet.') + '</div>')
     + '</div>';
 }
@@ -10418,7 +10473,7 @@ function render() {
             + (x.cls != null && x.cls !== 1 ? ' 2027 class adjustment ×' + x.cls.toFixed(2) + ': the JM prospect model reads this class ' + (x.cls < 1 ? 'weaker' : 'stronger') + ' than an average class at these slots, weighted ' + Math.round(((_pm && _pm.wClass) || 0.25) * 100) + '% — the college season is unfinished and nobody has declared yet.' : '')
           : 'Expected points over replacement by season: ' + _byYr + '. Closest comparables (1QB PPR read; their VOR that season): ' + _cmp).replace(/"/g, '&quot;');
         const _bl = _dynSimBlendRank(d);
-        const _rkTip = ('SIM DYN rank #' + x.rk + (_bl ? ' · KTC #' + _bl.ktc + ' · 50/50 blend #' + _bl.rk : ' · not on KTC')).replace(/"/g, '&quot;');
+        const _rkTip = ('Raw SIM rank #' + x.rk + (_bl ? ' · KTC #' + _bl.ktc + ' · 50/50 blend #' + _bl.rk : ' · not on KTC')).replace(/"/g, '&quot;');
         _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${_tip}" style="color:${_dc(x.val)};font-weight:700;cursor:help">${Math.round(x.val)}</td>`;
         _statTds = `<td class="pts-cell ppg25-cell" title="${_tip}" style="cursor:help">${Math.round(x.win3)}</td>
       <td class="pts-cell l4ppg-cell" title="Youth credit = ${window.DYNASTY_SIM_2026.meta.youthW} x expected VOR in ${_yr + 3}-${_yr + 4}" style="cursor:help">${Math.round(x.youth)}</td>`;
@@ -10810,7 +10865,7 @@ function render() {
       : 'Total yards last season — passing + rushing + receiving (2025 actuals). Hover a value for the breakdown.');
   }
   if (_statMode === 'xfp' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'The luck part of points over expected: touchdown points scored minus TD points expected from where the touches came (QBs: plus interception luck vs the INTs expected on their throws)' + (_isWeekly ? '' : ', per game') + '. This is the half of the gap that regresses — the Sim Lab projection already prices it in.' + ' Over-expected reads are slow to firm up: through 8 games only about a third of a player&#39;s gap repeats in his next 8 (2019-25), so treat early-season FPOE as a lead, not a verdict.');
-  if (_statMode === 'dyn' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Rank by SIM DYN value across QB / RB / WR / TE (' + (currentMode === 'dynastysf' ? 'superflex' : '1QB') + '). Sub-line = 50/50 rank blend with KTC — the combination that beat the dynasty market in the 2015-23 backtest. PROTOTYPE.');
+  if (_statMode === 'dyn' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Rank by RAW SIM value (the Dynasty SIM alone, a research input — MFF VALUE is our value) across QB / RB / WR / TE (' + (currentMode === 'dynastysf' ? 'superflex' : '1QB') + '). Sub-line = 50/50 rank blend with KTC — the combination that beat the dynasty market in the 2015-23 backtest. PROTOTYPE.');
   if (_statMode === 'vor' && yrrH.childNodes[0].setAttribute) yrrH.childNodes[0].setAttribute('data-gloss', 'Playoff-weeks VOR — his points over replacement in the fantasy-playoff weeks only (set in the VOR bar; 15-17 by default), each week counted once. Already inside ROS VOR (weighted there if the playoff weight is above 1); shown on its own so you can see who carries value into the weeks that decide titles, and it breaks ties on ROS VOR. Amber = projected to miss a playoff week.');
   // Cell-visibility pass — assigned per render (captures this render's flags)
   // so the progressive-render tail can re-run it over late-appended rows.
@@ -11846,7 +11901,7 @@ window._updateRnkStatHeaders = function() {
     const _y0 = _M ? _M.valuationYear : 2026;
     const _f = currentMode === 'dynastysf' ? 'SF' : '1QB';
     const _wk = _M && _M.week ? _M.week : 0;
-    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_M && _M.jmCond ? ' Young players also lean on the JM prospect score (how past prospects with a similar score produced): half the read for rookies (not TEs), half again in year 2 after a slow rookie season (a fifth after a productive one), a little in year 3 — and none after two slow seasons, when pedigree stops predicting a breakout.' : '') + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + (function () { const c = _dynLeagueCtx(); return c ? ' Priced for ' + (c.lg ? (c.lg.name || 'your league') : 'the custom lineup') + ' in the VOR bar (' + c.st.teams + ' teams, ' + c.st.QB + ' QB / ' + c.st.RB + ' RB / ' + c.st.WR + ' WR / ' + c.st.TE + ' TE / ' + c.st.FLEX + ' FLEX' + (+c.st.SF ? ' / ' + c.st.SF + ' SF' : '') + '): each season is re-priced against that league\'s replacement level from the player\'s range of comparable outcomes. ' : ' 12-team '; })() + fmtLabel + (_dynTepEff() ? ' with a +' + _dynTepEff() + ' TE premium per reception' : '') + (_dynLeagueCtx() ? '.' : ', ' + _f + ' replacement levels.') + ' Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR.' + (hasPremium() ? '' : ' Free: the top 30.'), 'SIM DYN', (function () { const c = _dynLeagueCtx(); return c ? (c.lg ? 'League' : 'Custom') : _f; })() + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR') + (_dynTepEff() ? ' TEP' : ''));
+    _set(c1, null, 'Dynasty SIM value (PROTOTYPE) — the 3-season window plus a youth credit: expected points over a replacement starter ' + (_wk ? 'for the rest of ' + _y0 + ' (after week ' + _wk + ') and ' + (_y0 + 1) + '-' + (_y0 + 2) : 'in ' + _y0 + '-' + (_y0 + 2)) + ', plus ' + (_M ? _M.youthW : 1.5) + 'x the expected value in ' + (_y0 + 3) + '-' + (_y0 + 4) + '. Each expectation comes from what the most similar past players actually produced — the trend across the 120 closest (age, production vs replacement, games; rookies by draft slot + age, shifting to their own ' + _y0 + ' games as they play), seasons they did not play counting zero.' + (_M && _M.jmCond ? ' Young players also lean on the JM prospect score (how past prospects with a similar score produced): half the read for rookies (not TEs), half again in year 2 after a slow rookie season (a fifth after a productive one), a little in year 3 — and none after two slow seasons, when pedigree stops predicting a breakout.' : '') + (_wk ? ' ' + _y0 + ' games so far count about as much as all of last season.' : '') + (function () { const c = _dynLeagueCtx(); return c ? ' Priced for ' + (c.lg ? (c.lg.name || 'your league') : 'the custom lineup') + ' in the VOR bar (' + c.st.teams + ' teams, ' + c.st.QB + ' QB / ' + c.st.RB + ' RB / ' + c.st.WR + ' WR / ' + c.st.TE + ' TE / ' + c.st.FLEX + ' FLEX' + (+c.st.SF ? ' / ' + c.st.SF + ' SF' : '') + '): each season is re-priced against that league\'s replacement level from the player\'s range of comparable outcomes. ' : ' 12-team '; })() + fmtLabel + (_dynTepEff() ? ' with a +' + _dynTepEff() + ' TE premium per reception' : '') + (_dynLeagueCtx() ? '.' : ', ' + _f + ' replacement levels.') + ' Hover a value for the season split and the closest comparables. Backtested 2015-23 in PPR. RAW SIM is a research input (about a third of MFF VALUE) — MFF VALUE is our value.' + (hasPremium() ? '' : ' Free: the top 30.'), 'RAW SIM', (function () { const c = _dynLeagueCtx(); return c ? (c.lg ? 'League' : 'Custom') : _f; })() + ' ' + ({ ppr: 'PPR', half: 'HALF', std: 'STD' }[rankingScoringFmt] || 'PPR') + (_dynTepEff() ? ' TEP' : ''));
     _set(c2, 'ppg25Header', 'Expected points over replacement in the 3-season dynasty window (' + (_wk ? 'rest of ' + _y0 + ' after week ' + _wk : _y0) + ' through ' + (_y0 + 2) + ').', '3YR', (_wk ? 'Wk' + (_wk + 1) + '-' : _y0 + '-') + String(_y0 + 2).slice(2));
     _set(c3, 'l4ppgHeader', 'Youth credit — ' + (_M ? _M.youthW : 1.5) + 'x the expected points over replacement in ' + (_y0 + 3) + '-' + (_y0 + 4) + ', the seasons after the window. In the backtest adding it improved both 3-year and 5-year accuracy.', 'YOUTH', (_y0 + 3) + '-' + String(_y0 + 4).slice(2));
   } else if (rnkStatMode === 'xfp') {

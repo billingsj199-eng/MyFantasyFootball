@@ -33,7 +33,7 @@ Write-Log '=== daily consensus ADP pull start ==='
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 # (Site Rankings CSVs are git-excluded local files — these are the tracked targets.)
-$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'data/ownership_2026.js', 'og/movers.png', 'movers.html', 'data/active_team_history.js', 'data/ktc_history.js')
+$Files = @('data/d.js', 'index.html', 'data/_bundle_lookups.js', 'data/ktc_rankings.js', 'data/ud_adp_history.json', 'data/cons_rank_history.json', 'data/mike_clay_projections.js', 'data/injury_updates.js', 'data/weekly_projections.js', 'data/weekly_projections.json', 'data/weather_2026.js', 'data/site_projections.js', 'data/ownership_2026.js', 'og/movers.png', 'movers.html', 'data/active_team_history.js', 'data/ktc_history.js', 'data/mff_value_history.js')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -76,6 +76,13 @@ if ($LASTEXITCODE -ne 0) { Write-Log "KTC history build FAILED (exit $LASTEXITCO
 $out = & $Python 'E:\MyFantasyFootball\sim_lab\mff_tracker.py' snapshot 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) { Write-Log "MFF tracker snapshot FAILED (exit $LASTEXITCODE)" }
+
+# MFF VALUE history for the player card's DYNASTY chart (Jack 2026-10-10): the tracker
+# snapshots -> data/mff_value_history.js; bumps its own <meta name="mff-mffv-hist-v">.
+# Non-fatal: a failure leaves yesterday's history.
+$out = & $Python 'E:\MyFantasyFootball\sim_lab\build_mff_value_history.py' '--site' $Repo 2>&1 | Out-String
+Write-Log $out
+if ($LASTEXITCODE -ne 0) { Write-Log "MFF value history build FAILED (exit $LASTEXITCODE) - continuing" }
 
 $changed = git status --porcelain -- @Files
 if (-not $changed) {

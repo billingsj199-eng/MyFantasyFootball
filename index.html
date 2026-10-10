@@ -9,6 +9,8 @@
 <meta name="mff-ktc-hist-v" content="2026-10-10-0901">
 <!-- Dynasty SIM weekly history (player-card DYNASTY chart, lazy) — bumped by sim_lab/dynasty_sim_refresh.ps1 -->
 <meta name="mff-dyn-hist-v" content="2026-10-10-fillin">
+<!-- MFF VALUE history (player-card DYNASTY chart, lazy) — bumped by sim_lab/build_mff_value_history.py in the 9am job -->
+<meta name="mff-mffv-hist-v" content="2026-10-10">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
@@ -1374,7 +1376,7 @@ CLEAR ALL
     body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"PPG"}
     body[data-rnk-stat="lines"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"BOOK"}
     body[data-rnk-stat="adp"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"ADP"}
-    body[data-rnk-stat="dyn"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"DYN"}
+    body[data-rnk-stat="dyn"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"RAW"}
     body[data-rnk-stat="trend"] #pageRankings tbody tr:not(.devy-row) .ppg-proj-cell::after{content:"RANK"}
     /* xFP STATS view: show xFP/Gm (the '26 PPG swap cell) beside actual PPG. */
     body[data-rnk-stat="xfp"] #pageRankings tbody tr:not(.devy-row) td.ppg25-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.82rem;padding:0 3px!important;min-width:34px!important;line-height:1.05}
@@ -1785,7 +1787,7 @@ tr:hover .watch-star{opacity:.55}
 <button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points per game above the replacement-level player at the position, the rest-of-season total over the games he is projected to play, and those games. Standard 12-team lineup by default; set your own or pick a synced league in the VOR bar. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="xfp" title="Expected fantasy points view — actual PPG, expected PPG from usage (every target by completion probability and expected YAC, every carry by field position, league TD rates; QBs net expected INTs), points over expected, and the TD-luck part of the gap. WEEKLY board shows the active week once it has been played.">xFP</button>
-<button class="rnk-statmode-btn" data-rnkstatmode="dyn" title="PROTOTYPE — Dynasty SIM value: expected points over replacement in the 3-season window plus a youth credit for the seasons after, from the most similar past players. Dynasty boards only.">DYN SIM</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="dyn" title="RAW SIM — the Dynasty SIM on its own, a research input: expected points over replacement in the 3-season window plus a youth credit for the seasons after, from the most similar past players. It's about a third of MFF VALUE — our value (the MFF VALUE board tab) adds the market, team context and availability. Dynasty boards only.">RAW SIM</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="trend" title="Rank movement — consensus rank history on REDRAFT, KeepTradeCut rank history on DYNASTY: rank today, 7- and 30-day change, a sparkline, and on dynasty the Dynasty SIM vs KTC gap (BUY / SELL).">TRENDS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="proj" title="Projected total yards, TDs, team PPG and Clay-based fantasy PPG (Mike Clay 2026 projections)">PROJECTIONS</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="lines" title="Sportsbook season prop lines — yards and TDs averaged across DK / FanDuel / BetMGM / Underdog, Vegas implied team PPG, plus the blended-books projected PPG">BETTING LINES</button>

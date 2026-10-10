@@ -3578,7 +3578,7 @@ function _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr) {
     const pm = (first == null || first >= yr - 2) && window._pmBuiltData ? window._pmBuiltData().find(p => p.name === d.n) : null;
     if (pm && pm.jm != null && pm.jm >= 70) r.push('Prospect pedigree (JM ' + Math.round(pm.jm) + ') — the market underpays it, most of all over five years.');
     if (age != null && age < 23) r.push('Age ' + Math.floor(age) + ' — 22-and-unders have out-produced their price.');
-    if (P === 'RB' && e.rbr >= 0.75 && e.rbYprr) r.push('Efficient receiving back (' + e.rbYprr.toFixed(2) + ' yards per route run in ' + ((S.meta.rbRec || {}).season || (yr - 1)) + ') — the market has underpaid RB receiving efficiency.');
+    if (P === 'RB' && e.rbr >= 0.75 && e.rbYacR) r.push('Efficient receiving back (' + e.rbYacR.toFixed(2) + ' yards after the catch per route run in ' + ((S.meta.rbRec || {}).season || (yr - 1)) + ') — the market has underpaid RB receiving efficiency.');
   } else {
     if (np && np >= kp * 1.3) r.push('Priced like ' + lbl(kp) + ' but producing like ' + lbl(np) + ' over this season and next — the price is ahead of the production.');
     else if (sp && sp >= kp * 1.3) r.push('KTC has him ' + lbl(kp) + '; the Dynasty SIM, future seasons included, has him ' + lbl(sp) + '.');
@@ -3586,7 +3586,7 @@ function _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr) {
     if (hist && hist.length > 1 && hist.some(x => x.y1 === yr)) r.push('New team this season — players who change teams have finished below their price.');
     if (P === 'WR' && age >= 28) r.push('Age ' + Math.floor(age) + ' at WR — the market overpays older receivers over the long run.');
     if (P === 'RB' && age >= 26) r.push('Age ' + Math.floor(age) + ' at RB — values fall off from the mid-20s, and the market is slow to price it.');
-    if (P === 'RB' && e.rbr <= -0.75 && e.rbYprr) r.push('Little receiving value (' + e.rbYprr.toFixed(2) + ' yards per route run in ' + ((S.meta.rbRec || {}).season || (yr - 1)) + ') — backs without a passing-game role have finished below their price.');
+    if (P === 'RB' && e.rbr <= -0.75 && e.rbYacR) r.push('Little receiving value (' + e.rbYacR.toFixed(2) + ' yards after the catch per route run in ' + ((S.meta.rbRec || {}).season || (yr - 1)) + ') — backs without a passing-game role have finished below their price.');
     if (d.dr === 1 && np && np >= kp * 1.3) r.push('Still priced on his 1st-round pedigree — once a veteran\'s production is known, draft capital stops earning a premium.');
   }
   if (!r.length) return '';
@@ -3990,6 +3990,8 @@ const _FAIR_W = { m3: 0.5, sim: 0.3, mkt: 0.5 };
 // backtest_fair_eff_terms.py): RBs' prior-season PFF receiving YPRR (75+ carries)
 // beat FAIR out of sample — RB-only 3yr +.022, 4/4 folds, stable k -.24..-.31 per
 // SD. FAIR score += k x z (meta.rbRec.k, -0.25; z = rbr in the sim data). Lower
+// 10-09 swap (research_value_atlas.py): the stat is now YARDS AFTER CATCH PER ROUTE
+// (rbYacR) — beat the YPRR version 4/5 seasons 3yr, 3/3 5yr; rbr = its z.
 // score = better, so efficient receiving backs move up, non-receivers down.
 function _fairRbRec(r) {
   if (!r || r.pos !== 'RB' || !r.rbr) return 0;

@@ -3495,7 +3495,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
     return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
       + _cdOffNoteHtml(window._offRisk ? window._offRisk(d) : null, null)
-      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
+      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL) + _cdWrBounceNoteHtml(d, yrL) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
   }
   if (!S._idx) _dynSimFor(d);
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
@@ -3543,7 +3543,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   if (fairDiff != null && fairDiff >= 0.10 && !offR) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
   const slideNote = _cdOffNoteHtml(offR, fairDiff) + ((offR && fairDiff > 0) ? '' : _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr))
-    + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
+    + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr) + _cdWrBounceNoteHtml(d, yr) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
@@ -3696,6 +3696,41 @@ function _cdFilmNoteHtml(d) {
     + '<b style="color:#38bdf8;letter-spacing:.04em">FILM SAYS MORE ROLE.</b> PFF ' + f.grade + ' ' + f.g + ' (' + ord(Math.round(f.gp)) + ' percentile of ' + d.s + 's) on a limited role — '
     + vol + ' (' + ord(Math.round(f.vp)) + ' percentile) through Week ' + f.w + ' of ' + f.s + '. '
     + 'At the same workload, a better grade has meant more volume the next season in every year since 2019 (about +10% per standard deviation); low-graded part-timers tend to lose snaps. Not built into the value.</div>';
+}
+// WR BOUNCE-BACK ROLE (Jack 2026-10-10; sim_lab/research_wr_bounce_volume.py +
+// backtest_wr_bounce_inseason.py): year-2 WRs coming off a slow rookie year (< 4 games
+// or below the WR replacement starter per game) — target share over his first 2026
+// games was the best early read on who bounces back (top-24 within 3 seasons, WRs
+// drafted 2018-22: 18%+ 4 of 5, 12-18% 2 of 9, 5-12% 0 of 9, < 5% 2 of 106). By about
+// Week 4 the Dynasty SIM's in-season fold catches it on its own, so this is an early
+// heads-up only, not a value change. Counts: data/team_usage_2026.js (lazy weekly bundle).
+const _WR_REPL_PPG = { 2025: 8.1 };   // PPR per game of the 1QB 12-team replacement WR (dyn_common World._repl / 17)
+function _cdWrBounceNoteHtml(d, yr) {
+  if (!d || d.s !== 'WR' || typeof ACTIVE_TEAM_HISTORY === 'undefined') return '';
+  const hist = ACTIVE_TEAM_HISTORY[d.n];
+  const first = hist && hist.length ? Math.min.apply(null, hist.map(x => x.y1)) : null;
+  if (first !== yr - 1) return '';   // second season only
+  const c = (d.career || []).find(x => x.yr === yr - 1);
+  const gp = c ? (c.gp || 0) : 0;
+  const ppr = c ? (c.rc || 0) + 0.1 * ((c.rcy || 0) + (c.ry || 0)) + 6 * ((c.rctd || 0) + (c.rtd || 0)) - 2 * (c.fl || 0) : 0;
+  const repl = _WR_REPL_PPG[yr - 1];
+  if (!repl || (gp >= 4 && ppr / gp >= repl)) return '';   // rookie year wasn't slow
+  const U = window.TEAM_USAGE_2026, p = U && U.p && U.p[d.n];
+  if (!p || !p.w) return '';
+  let pt = 0, tt = 0, g = 0;
+  Object.keys(p.w).forEach(wk => {
+    const r = p.w[wk], t = U.t && U.t[r[0]] && U.t[r[0]][wk];
+    if (t && t[0] > 0) { pt += r[1] || 0; tt += t[0]; g++; }
+  });
+  if (!g || !tt) return '';
+  const pct = Math.round(pt / tt * 100);   // tiers on the shown (rounded) share so text and tier agree
+  const tier = pct >= 18 ? ['#22c55e', 'rgba(34,197,94,.06)', 'rgba(34,197,94,.25)', 'EARNING A ROLE.', '4 of 5 bounced back']
+    : pct >= 12 ? ['#fbbf24', 'rgba(251,191,36,.06)', 'rgba(251,191,36,.25)', 'SOME ROLE.', '2 of 9 bounced back']
+    : ['#94a3b8', 'rgba(148,163,184,.07)', 'rgba(148,163,184,.22)', 'NO ROLE YET.', pct >= 5 ? '0 of 9 bounced back' : '2 of 106 bounced back'];
+  return '<div style="font-size:.6875rem;line-height:1.45;color:var(--text2);background:' + tier[1] + ';border:1px solid ' + tier[2] + ';border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
+    + '<b style="color:' + tier[0] + ';letter-spacing:.04em">' + tier[3] + '</b> Slow rookie year (' + (yr - 1) + ': ' + (gp ? (ppr / gp).toFixed(1) + ' PPR per game in ' + gp + ' games' : 'no games') + '), now '
+    + pct + '% of his team\'s targets through ' + g + ' game' + (g === 1 ? '' : 's') + ' of ' + yr + '. Second-year WRs off a slow rookie year at that share: ' + tier[4]
+    + ' (top-24 season within three years, WRs drafted 2018-22). An early read — by about Week 4 the Dynasty SIM picks it up from his production. Not built into the value.</div>';
 }
 function _cdQbNoteHtml(d, yr) {
   const x = _cdQbChange(d, yr);

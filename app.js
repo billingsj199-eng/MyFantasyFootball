@@ -4114,7 +4114,7 @@ function _fairQbTt(r) { return r && r.qz ? -_FAIR_QB_TT.k * r.qz : 0; }
 function _fairQbTtSig() { return (window.MFF_QB_TT_OFF ? 'off' : (window.BETTING_2026 && window.BETTING_2026.gameTotals ? 'tt' : 'nott')); }
 function _trendGapFor(d) {
   if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
-  const ck = _dynSimSig() + '|' + currentMode + '|' + _fairQbTtSig();
+  const ck = _dynSimSig() + '|' + currentMode + '|' + _fairQbTtSig() + '|' + (_mffRosOn() ? window.SIM_PROJ_2026.updated : '');
   const c = (window._trendGapCache = window._trendGapCache || {});
   if (!c[ck]) {
     const pool = [];
@@ -4123,9 +4123,21 @@ function _trendGapFor(d) {
       const x = _dynSimFor(p); const k = _ktcRankInfoTep(p.n, currentMode, _dynTepEff());
       if (x && k && !k.devy && k.ovr && k.ovr <= 200) {
         const S = window.DYNASTY_SIM_2026, e = S._idx && S._idx[_dynSimNorm(p.n) + '|' + p.s];
-        pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie), rbr: e && e.rbr != null ? e.rbr : 0, t: p.t });
+        pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie), rbr: e && e.rbr != null ? e.rbr : 0, t: p.t, p, e });
       }
     });
+    // Same sim value as the MFF VALUE board (10-10, Jack "sync the card and tracker too"):
+    // weekly-sim rest-of-2026 + the FA / out-for-season rules, BALANCED, stored values for
+    // the board format (no league context — the board has none either).
+    if (_mffRosOn()) {
+      const tep = _dynTepEff(), vk = (currentMode === 'dynastysf' ? 'sf' : '1qb') + '_' + _dynScoringKey();
+      const ros = _mffRosY0Map(vk, tep);
+      pool.forEach(r => {
+        const v = r.e && r.e.v && ((tep && r.pos === 'TE' && r.e.v[vk + '_tep' + tep]) || r.e.v[vk]);
+        const b = v ? _mffBalSimVal(r.p, r.e, v, ros) : null;
+        r.s = -(b != null ? b : 0);   // one scale for the whole pool (no value -> bottom)
+      });
+    }
     const sr = pool.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sp = i + 1; });
     const kr = pool.slice().sort((a, b) => a.k - b.k); kr.forEach((r, i) => { r.kp = i + 1; });
     pool.forEach(r => { r.gap = Math.log(r.sp / r.kp); });
@@ -4215,6 +4227,50 @@ document.addEventListener('click', ev => {
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-mffmode]').forEach(b => b.classList.toggle('active', b.dataset.mffmode === window._mffMode));
 });
+// Sim entry -> weekly-sim rest-of-2026 mapped onto the sim's y0 scale (see the REST-OF-
+// SEASON note in _mffValueBoard). Shared by the MFF VALUE board and the card's FAIR /
+// BUY-SELL (_trendGapFor) so both read the same value. Cached per values key + export.
+function _mffRosOn() {
+  const SPj = window.SIM_PROJ_2026;
+  return !!(SPj && SPj.weeks) && !window.MFF_CONTENDER_ROS_OFF && !window.MFF_ROS_Y0_OFF;
+}
+function _mffRosY0Map(vk, tep) {
+  const S = window.DYNASTY_SIM_2026, SPj = window.SIM_PROJ_2026;
+  if (!S || !S._idx || !_mffRosOn() || !Array.isArray(D)) return new Map();
+  const ck = vk + '|' + tep + '|' + SPj.updated + '|' + (S.meta && S.meta.built) + '|' + D.length;
+  const C = (window._mffRosCache = window._mffRosCache || {});
+  if (C.ck === ck) return C.m;
+  const m = new Map();
+  const fi = { half: 0, ppr: 1, std: 2 }[vk.split('_')[1]] ?? 1;
+  const w0 = ((S.meta && S.meta.week) || 0) + 1;
+  const byPos = {};
+  D.forEach(p => {
+    if (!p || p._retired || p._isDevy || !['QB', 'RB', 'WR', 'TE'].includes(p.s)) return;
+    const e = S._idx[_dynSimNorm(p.n) + '|' + p.s];
+    const v = e && e.v && ((tep && p.s === 'TE' && e.v[vk + '_tep' + tep]) || e.v[vk]);
+    if (!v || v.length < 9 || m.has(e)) return;
+    let pts = 0;
+    for (let wk = w0; wk <= 18; wk++) { const r = _simProjRowRaw(p, wk); if (r && typeof r[fi] === 'number') pts += r[fi]; }
+    m.set(e, null);
+    (byPos[p.s] = byPos[p.s] || []).push({ e, y0: v[4], pts });
+  });
+  Object.values(byPos).forEach(g => {
+    const ys = g.map(x => x.y0).sort((a, b) => a - b);
+    g.slice().sort((a, b) => a.pts - b.pts).forEach((x, j) => m.set(x.e, ys[j]));
+  });
+  C.ck = ck; C.m = m;
+  return m;
+}
+// BALANCED sim value with the board's availability rules + the weekly-sim y0 (one place,
+// used by _trendGapFor; _mffValueBoard's simOf applies the same rules per mode).
+function _mffBalSimVal(p, e, v, rosY0) {
+  if (!v) return null;
+  if (!e.g26 && /^(FA|free agent)?$/i.test(String(p.t || '').trim())) return 0;
+  const out = typeof window._irIsOut === 'function' && window._irIsOut(p.n) && v.length >= 9;
+  if (out) return Math.max(0, v[0] - v[4]);
+  const r0 = v.length >= 9 ? rosY0.get(e) : null;
+  return r0 != null ? Math.max(0, v[0] - v[4] + r0) : v[0];
+}
 window._mffValueBoard = function(mode) {
   if (mode !== 'dynasty' && mode !== 'dynastysf') return null;
   const S = window.DYNASTY_SIM_2026;
@@ -4240,26 +4296,7 @@ window._mffValueBoard = function(mode) {
   // Week 8: contender 3yr +.012, balanced 3yr +.007-.009 (5yr +.007-.011, 3/3). Raw rows
   // (not the card's what-if toggles). Every mode (balanced: v[0] - y0 + mapped y0).
   // Kill: window.MFF_ROS_Y0_OFF (or the older MFF_CONTENDER_ROS_OFF).
-  const rosY0 = new Map();
-  if (rosOn) {
-    const fi = { half: 0, ppr: 1, std: 2 }[_dynScoringKey()];
-    const w0 = ((S.meta && S.meta.week) || 0) + 1;
-    const byPos = {};
-    D.forEach(p => {
-      if (!p || p._retired || p._isDevy || !['QB', 'RB', 'WR', 'TE'].includes(p.s)) return;
-      const e = S._idx[_dynSimNorm(p.n) + '|' + p.s];
-      const v = e && e.v && ((tep && p.s === 'TE' && e.v[vk + '_tep' + tep]) || e.v[vk]);
-      if (!v || v.length < 9 || rosY0.has(e)) return;
-      let pts = 0;
-      for (let wk = w0; wk <= 18; wk++) { const r = _simProjRowRaw(p, wk); if (r && typeof r[fi] === 'number') pts += r[fi]; }
-      rosY0.set(e, null);
-      (byPos[p.s] = byPos[p.s] || []).push({ e, y0: v[4], pts });
-    });
-    Object.values(byPos).forEach(g => {
-      const ys = g.map(x => x.y0).sort((a, b) => a - b);
-      g.slice().sort((a, b) => a.pts - b.pts).forEach((x, j) => rosY0.set(x.e, ys[j]));
-    });
-  }
+  const rosY0 = rosOn ? _mffRosY0Map(vk, tep) : new Map();
   // AVAILABILITY (Jack 2026-10-10, "build and test the fix" — Tyreek Hill FA WR28,
   // Aiyuk ACL WR53): the sim only sees past production. An unsigned free agent with
   // no 2026 games gets sim value 0 (market + M3 still price him); a player flagged

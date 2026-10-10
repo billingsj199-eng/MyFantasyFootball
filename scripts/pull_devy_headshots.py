@@ -81,7 +81,12 @@ def espn_teams():
         for k in (tm.get("location"), tm.get("displayName"), tm.get("abbreviation"), tm.get("nickname")):
             if k:
                 out.setdefault(tnorm(k), int(tm["id"]))
+        if tm.get("color"):
+            TEAM_COLORS[int(tm["id"])] = {"p": "#" + tm["color"].upper(), "s": "#" + (tm.get("alternateColor") or "ffffff").upper()}
     return out
+
+
+TEAM_COLORS = {}   # ESPN team id -> {p: primary, s: alternate}, filled by espn_teams()
 
 
 def digest(p):
@@ -181,6 +186,8 @@ def main():
           "// + ESPN team ids per combine_data.js school (logo: a.espncdn.com/i/teamlogos/ncaa/500/<tid>.png).",
           "window.DEVY_HEADSHOTS = " + json.dumps({n: found[n] for n in sorted(found)}, separators=(",", ":"), ensure_ascii=False) + ";",
           "window.COLLEGE_TEAM_IDS = " + json.dumps(dict(sorted(team_ids.items())), separators=(",", ":"), ensure_ascii=False) + ";",
+          "// ESPN team colors per school (devy tier cards: card fill = p, ring = s)",
+          "window.COLLEGE_TEAM_COLORS = " + json.dumps({sc: TEAM_COLORS[t] for sc, t in sorted(team_ids.items()) if t in TEAM_COLORS}, separators=(",", ":"), ensure_ascii=False) + ";",
           "// ESPN roster height/weight for devy entries that have none (never overwrites)",
           "(function () {",
           "  if (typeof COMBINE_DATA === 'undefined') return;",

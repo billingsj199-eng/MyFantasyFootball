@@ -88,7 +88,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-10-rossync" as="script">
+<link rel="preload" href="app.js?v=2026-10-10-devycolors" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1988,6 +1988,8 @@ tr:hover .ao-chip,.ao-chip:focus{opacity:1}
 .tcv-card-rank{position:absolute;top:2px;left:4px;font-family:'Bebas Neue',Impact,sans-serif;font-size:23px;font-weight:900;line-height:1;z-index:3;letter-spacing:.4px;color:#fff;-webkit-text-stroke:1.3px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7)}
 .tcv-card-stats{position:absolute;top:2px;right:2px;padding:1px 3px;border-radius:4px;background:rgba(0,0,0,.5);font-size:12px;color:#e2e8f0;text-align:right;line-height:1.22;font-weight:700;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.8)}
 .tcv-card-stats .tcv-stat-blank{opacity:.25}
+.tcv-card-stats.tcv-card-stats-solo{top:3px;right:3px;padding:2px 6px 1px;border-radius:6px;background:rgba(0,0,0,.62);font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-weight:400;font-size:28px;line-height:.95;text-align:center;letter-spacing:.3px}
+.tcv-card-stats.tcv-card-stats-solo::after{content:attr(data-lbl);display:block;font-family:Inter,Arial,sans-serif;font-size:8px;font-weight:800;letter-spacing:.6px;line-height:1.1;color:#cbd5e1;opacity:.85}
 /* Photo area: team logo watermark behind an oversized headshot (wider than the card, shoulders crop at the edges) */
 .tcv-card-photo{position:relative;height:110px;overflow:hidden}
 .tcv-card-bg-logo{position:absolute;left:50%;top:50%;width:128px;height:128px;max-width:none;transform:translate(-50%,-50%);object-fit:contain;opacity:.3;pointer-events:none}
@@ -4964,7 +4966,7 @@ window.clayLookup = clayLookup;
      data scripts above can be defer'd — it was the only parse-time reader. defer keeps it
      executing after combine_data.js/d.js and before app.js (document order). -->
 <script src="data/combine_d_patches.js?v=2026-09-30f" defer></script>
-<script src="data/devy_headshots.js?v=2026-10-05" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
+<script src="data/devy_headshots.js?v=2026-10-10-colors" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
 <script src="data/projected_testing.js?v=2026-10-05" defer></script>
 <script defer src="data/draft_proj.js?v=2026-10-05db2"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
@@ -6312,7 +6314,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-10-rossync"></script>
+<script defer src="app.js?v=2026-10-10-devycolors"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -6319,12 +6319,15 @@ function _devyStatCellsHtml(d) {
     const col = c.pick <= 32 ? '#22c55e' : c.pick <= 64 ? '#4ade80' : c.pick <= 105 ? '#facc15' : '#f59e0b';
     pickHtml = '<span style="color:' + col + ';font-weight:700;cursor:help" title="' + _devyEsc('Projected pick #' + c.pick + ' overall (Round ' + rd + ')' + (c.draftYr ? ', ' + c.draftYr + ' draft' : '') + ' — the draft capital the JM score uses') + '">#' + c.pick + '</span>';
   }
+  // College PPG heat (position scale) so every value boxes like the other stat columns
+  const _pT = { QB: [28, 23, 18], RB: [20, 16, 12], WR: [20, 16, 12], TE: [15, 11, 8] }[d.s] || [20, 16, 12];
+  const ppgCol = c.ppg == null ? '' : c.ppg >= _pT[0] ? '#22c55e' : c.ppg >= _pT[1] ? '#4ade80' : c.ppg >= _pT[2] ? '#facc15' : '#f97316';
   const ppgHtml = c.ppg != null
-    ? '<span' + tip(c.yr + ' college season to date · ' + c.gp + ' game' + (c.gp === 1 ? '' : 's')) + '>' + c.ppg.toFixed(1) + '</span>'
+    ? '<span style="color:' + ppgCol + ';font-weight:700;cursor:help" title="' + _devyEsc(c.yr + ' college season to date · ' + c.gp + ' game' + (c.gp === 1 ? '' : 's')) + '">' + c.ppg.toFixed(1) + '</span>'
     : '<span' + tip('No ' + c.yr + ' college games on file') + '>—</span>';
   let ageHtml = '—';
   if (c.age != null) {
-    const col = c.age <= 21.5 ? '#22c55e' : c.age <= 22.5 ? '' : c.age <= 23.5 ? '#facc15' : '#f97316';
+    const col = c.age <= 21.5 ? '#22c55e' : c.age <= 22.5 ? '#cbd5e1' : c.age <= 23.5 ? '#facc15' : '#f97316';
     const bd = (typeof LEGEND_BIRTH_YEARS !== 'undefined' && typeof LEGEND_BIRTH_YEARS[d.n] === 'string') ? LEGEND_BIRTH_YEARS[d.n] : null;
     let now = null;
     if (bd) { const t = Date.parse(bd); if (isFinite(t)) now = Math.floor((Date.now() - t) / 31557600000 * 10) / 10; }
@@ -6332,7 +6335,7 @@ function _devyStatCellsHtml(d) {
   }
   const htTxt = c.htIn != null ? Math.floor(c.htIn / 12) + '\'' + (c.htIn % 12) + '"' : null;
   const sizeHtml = (htTxt || c.wt != null)
-    ? (htTxt ? _devyEsc(htTxt) : '—') + '<span style="color:var(--text2)"> · </span>' + (c.wt != null ? c.wt : '—')
+    ? (htTxt ? _devyEsc(htTxt) : '—') + '<span class="devy-sep" style="opacity:.45"> · </span>' + (c.wt != null ? c.wt : '—')   // no inline color: the heat-cell CSS would block-box the separator
     : '—';
   let rasHtml = '—';
   if (c.ras != null) {

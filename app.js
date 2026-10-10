@@ -4221,12 +4221,42 @@ window._mffValueBoard = function(mode) {
   if (!S || !Array.isArray(D) || typeof _ktcRankInfo !== 'function') return null;
   const fmt = mode === 'dynastysf' ? 'sf' : '1qb', vk = fmt + '_' + _dynScoringKey(), tep = _dynTepEff();
   const MW = _MFF_MODE_W[window._mffMode] || null;
-  const ck = vk + '|' + tep + '|' + D.length + '|' + (S.meta && S.meta.built) + '|' + window._mffMode + '|' + _fairQbTtSig();
+  const SPj = window.SIM_PROJ_2026;
+  const rosOn = window._mffMode === 'contender' && SPj && SPj.weeks && !window.MFF_CONTENDER_ROS_OFF;
+  const ck = vk + '|' + tep + '|' + D.length + '|' + (S.meta && S.meta.built) + '|' + window._mffMode + '|' + _fairQbTtSig() + '|' + (rosOn ? SPj.updated : '');
   const c = (window._mffBoardCache = window._mffBoardCache || {});
   if (c[mode] && c[mode].ck === ck) return c[mode].b;
   if (!S._idx) {
     S._idx = {};
     Object.values(S.players).forEach(e => { S._idx[_dynSimNorm(e.n) + '|' + e.pos] = e; });
+  }
+  // CONTENDER REST-OF-SEASON (Jack 2026-10-10, "wire option 1 for contender";
+  // sim_lab/backtest_contender_ros_swap.py): in CONTENDER mode the rest-of-2026 piece
+  // (y0, the sim's comps estimate) is replaced by the WEEKLY sim's own projection for
+  // the weeks after the dynasty valuation week (SIM_PROJ_2026, injury layer included —
+  // a backup gets his starter-out weeks), quantile-mapped onto the sim's y0 values per
+  // position so the scale is unchanged. Contender 3yr Spearman +.012 held out (5/5 at
+  // Week 4 and Week 8). Raw rows (not the card's what-if toggles). Kill:
+  // window.MFF_CONTENDER_ROS_OFF. BALANCED / REBUILDER unchanged.
+  const rosY0 = new Map();
+  if (rosOn && MW) {
+    const fi = { half: 0, ppr: 1, std: 2 }[_dynScoringKey()];
+    const w0 = ((S.meta && S.meta.week) || 0) + 1;
+    const byPos = {};
+    D.forEach(p => {
+      if (!p || p._retired || p._isDevy || !['QB', 'RB', 'WR', 'TE'].includes(p.s)) return;
+      const e = S._idx[_dynSimNorm(p.n) + '|' + p.s];
+      const v = e && e.v && ((tep && p.s === 'TE' && e.v[vk + '_tep' + tep]) || e.v[vk]);
+      if (!v || v.length < 9 || rosY0.has(e)) return;
+      let pts = 0;
+      for (let wk = w0; wk <= 18; wk++) { const r = _simProjRowRaw(p, wk); if (r && typeof r[fi] === 'number') pts += r[fi]; }
+      rosY0.set(e, null);
+      (byPos[p.s] = byPos[p.s] || []).push({ e, y0: v[4], pts });
+    });
+    Object.values(byPos).forEach(g => {
+      const ys = g.map(x => x.y0).sort((a, b) => a - b);
+      g.slice().sort((a, b) => a.pts - b.pts).forEach((x, j) => rosY0.set(x.e, ys[j]));
+    });
   }
   // AVAILABILITY (Jack 2026-10-10, "build and test the fix" — Tyreek Hill FA WR28,
   // Aiyuk ACL WR53): the sim only sees past production. An unsigned free agent with
@@ -4240,6 +4270,7 @@ window._mffValueBoard = function(mode) {
     const out = p && pos !== 'PICK' && typeof window._irIsOut === 'function' && window._irIsOut(p.n) && v.length >= 9;
     if (!MW || v.length < 9) { const s0 = out ? Math.max(0, v[0] - v[4]) : v[0]; return { sv: s0, sb: s0, e, ratio: 1 }; }
     const y = v.slice(4, 9);
+    if (rosY0.get(e) != null) y[0] = rosY0.get(e);
     if (out) y[0] = 0;
     const sm = y.reduce((s, q, j) => s + q * MW[j], 0), sb = y.reduce((s, q, j) => s + q * _MFF_BAL_W[j], 0);
     return { sv: sm, sb: out ? sb : v[0], e, ratio: sb > 5 ? Math.max(sm, 0.1) / sb : 1 };

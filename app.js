@@ -6300,7 +6300,33 @@ function getFiltered(applyTopN) {
     if (_keep) {
       const _below = new Set();
       const _kept = board.filter((idx, bi) => { const k = _keep(idx, bi); if (!k && D[idx]) _below.add(D[idx].n); return k; });
-      if (typeof canEdit === 'function' && canEdit()) { if (_below.size) window._rankBelowCut = _below; }
+      if (typeof canEdit === 'function' && canEdit()) {
+        if (_below.size) {
+          window._rankBelowCut = _below;
+          // Jack 2026-10-09: the below-cut tail is ranked by PROJ PPG on the
+          // BOARD itself (not just displayed that way), so the rank numbers
+          // under the line run in order. Each group permutes only its own
+          // below-cut slots (flex / per pos-cut group) so no player crosses
+          // the line; retired + out-for-season rows stay put.
+          if (!window._rankBaseMode) {
+            const _pp = p => { const v = _displayProjPpg(p); return (v != null && isFinite(v)) ? v : -Infinity; };
+            const _slots = {};
+            board.forEach((idx, bi) => {
+              const p = D[idx];
+              if (!p || !_below.has(p.n) || p._retired || window._irIsOut(p.n)) return;
+              const g = _cutGroups.includes(p.s) ? p.s : '_flex';
+              (_slots[g] = _slots[g] || []).push(bi);
+            });
+            let _moved = false;
+            Object.values(_slots).forEach(sl => {
+              const ids = sl.map(bi => board[bi]);
+              const sorted = ids.slice().sort((a, b) => (_pp(D[b]) - _pp(D[a])) || (D[a].myRank - D[b].myRank));
+              sl.forEach((bi, k) => { if (board[bi] !== sorted[k]) { board[bi] = sorted[k]; _moved = true; } });
+            });
+            if (_moved) renumber();
+          }
+        }
+      }
       else _boardSrc = _kept;
     }
   }
@@ -6521,15 +6547,9 @@ function getFiltered(applyTopN) {
       const _bc = window._rankBelowCut;
       f = f.filter(d => !_bc.has(d.n)).concat(f.filter(d => _bc.has(d.n)));
     }
-  } else if (window._rankBelowCut && !window._rankBaseMode) {
-    // Board-order view (Jack 2026-10-09): the below-cut tail sorts by PROJ PPG
-    // (high first, board rank breaks ties) so the best guys under the line
-    // surface right below it. _rankBaseMode skips it — base ranks stay board order.
-    const _bc = window._rankBelowCut;
-    const _pp = d => { const v = _displayProjPpg(d); return (v != null && isFinite(v)) ? v : -Infinity; };
-    const _tail = f.filter(d => _bc.has(d.n)).sort((a, b) => (_pp(b) - _pp(a)) || (a.myRank - b.myRank));
-    f = f.filter(d => !_bc.has(d.n)).concat(_tail);
   }
+  // Board-order view: the below-cut tail is already PROJ PPG order on the
+  // board itself (re-ranked above, Jack 2026-10-09), so ranks read in order.
   return f;
 }
 

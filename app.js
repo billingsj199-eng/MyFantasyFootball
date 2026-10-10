@@ -6371,7 +6371,33 @@ function getFiltered(applyTopN) {
     if (_keep) {
       const _below = new Set();
       const _kept = board.filter((idx, bi) => { const k = _keep(idx, bi); if (!k && D[idx]) _below.add(D[idx].n); return k; });
-      if (typeof canEdit === 'function' && canEdit()) { if (_below.size) window._rankBelowCut = _below; }
+      if (typeof canEdit === 'function' && canEdit()) {
+        if (_below.size) {
+          window._rankBelowCut = _below;
+          // Jack 2026-10-09: the below-cut tail is ranked by PROJ PPG on the
+          // BOARD itself (not just displayed that way), so the rank numbers
+          // under the line run in order. Each group permutes only its own
+          // below-cut slots (flex / per pos-cut group) so no player crosses
+          // the line; retired + out-for-season rows stay put.
+          if (!window._rankBaseMode) {
+            const _pp = p => { const v = _displayProjPpg(p); return (v != null && isFinite(v)) ? v : -Infinity; };
+            const _slots = {};
+            board.forEach((idx, bi) => {
+              const p = D[idx];
+              if (!p || !_below.has(p.n) || p._retired || window._irIsOut(p.n)) return;
+              const g = _cutGroups.includes(p.s) ? p.s : '_flex';
+              (_slots[g] = _slots[g] || []).push(bi);
+            });
+            let _moved = false;
+            Object.values(_slots).forEach(sl => {
+              const ids = sl.map(bi => board[bi]);
+              const sorted = ids.slice().sort((a, b) => (_pp(D[b]) - _pp(D[a])) || (D[a].myRank - D[b].myRank));
+              sl.forEach((bi, k) => { if (board[bi] !== sorted[k]) { board[bi] = sorted[k]; _moved = true; } });
+            });
+            if (_moved) renumber();
+          }
+        }
+      }
       else _boardSrc = _kept;
     }
   }
@@ -6592,15 +6618,9 @@ function getFiltered(applyTopN) {
       const _bc = window._rankBelowCut;
       f = f.filter(d => !_bc.has(d.n)).concat(f.filter(d => _bc.has(d.n)));
     }
-  } else if (window._rankBelowCut && !window._rankBaseMode) {
-    // Board-order view (Jack 2026-10-09): the below-cut tail sorts by PROJ PPG
-    // (high first, board rank breaks ties) so the best guys under the line
-    // surface right below it. _rankBaseMode skips it — base ranks stay board order.
-    const _bc = window._rankBelowCut;
-    const _pp = d => { const v = _displayProjPpg(d); return (v != null && isFinite(v)) ? v : -Infinity; };
-    const _tail = f.filter(d => _bc.has(d.n)).sort((a, b) => (_pp(b) - _pp(a)) || (a.myRank - b.myRank));
-    f = f.filter(d => !_bc.has(d.n)).concat(_tail);
   }
+  // Board-order view: the below-cut tail is already PROJ PPG order on the
+  // board itself (re-ranked above, Jack 2026-10-09), so ranks read in order.
   return f;
 }
 
@@ -33760,8 +33780,21 @@ window.fmtHeight = fmtHeight;
   // lean 0.0, same verdict direction 45/49 (was 29/49 at the 0.75 step
   // ladder). The roster-spot cost still reads the UNTAILED base (~10) so junk
   // throw-ins stay worthless. Script: E:\MyFantasyFootball\trade_calc_flock_compare.
+  // DYNASTY CURVE (Jack 2026-10-09: "flatten the dynasty curve to match
+  // flock"): dynasty modes drop the tier ladder for a smooth rank decay,
+  // factor e^(−((rank−1)/dynScale)^dynPow) on the linear base — fit to Flock's
+  // dynasty /trades/calculate curve (#20 62% / #40 41% / #100 14% of #1 vs
+  // their 62/40/13; the step ladder was 50/30/10). Flock's position factors
+  // (RB 1.52 / QB 1.38 / TE 1.22 vs WR) are NOT copied — MFF VALUE already
+  // sets the cross-position order. dynScale 0 restores the step ladder.
   window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.875,
-    pkgTax: 0, smoothTiers: true, tailStart: 45, tailScale: 40,
+    // dynExtraPieceW (same day, "match flock's package discount for dynasty
+    // too"): Flock's dynasty calc discounts extras far less than redraft —
+    // grid vs its dynasty /trades/calculate on 49 same-slot trades, roster-
+    // spot cost kept: 0.875 gap 4.5 / lean +4.2 → 0.96 gap ~1.4 / lean ~0,
+    // 49/49 same call; junk throw-ins still price like Flock's (#10 for
+    // #11 + #150 ≈ even).
+    pkgTax: 0, smoothTiers: true, tailStart: 45, tailScale: 40, dynScale: 50.5, dynPow: 0.85, dynExtraPieceW: 0.96,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
     // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
@@ -33787,10 +33820,20 @@ window.fmtHeight = fmtHeight;
     const from = L[idx], next = L[idx + 1] != null ? L[idx + 1] : from + 20;
     return idx + Math.min(Math.max((rank - from) / (next - from), 0), 1);
   };
+  // Dynasty rank-decay factor (see _WINNOW_VAL dynScale); null = use the ladder.
+  const _wnDynFactor = function(rank) {
+    const WN = window._WINNOW_VAL;
+    if (!(WN.dynScale > 0) || !isFinite(rank) || rank < 1) return null;
+    return Math.exp(-Math.pow((rank - 1) / WN.dynScale, WN.dynPow));
+  };
   window._winnowTierFactor = function(d, src, mode, rank) {
     const WN = window._WINNOW_VAL;
     let idx = null;
     const single = _wnSingleSeason(mode);
+    if (!single) {
+      const df = _wnDynFactor(rank < 999 ? rank : NaN);
+      if (df != null) return df;
+    }
     const tr = window._mtTierRangeFor(d, src, mode);
     if (tr && tr.count >= _WN_MIN_TIERS) {
       idx = tr.index;
@@ -33822,7 +33865,8 @@ window.fmtHeight = fmtHeight;
   // pseudo-ladder tier factor) — the baseline for package economics.
   window._winnowBaseValue = function(rank, mode) {
     const WN = window._WINNOW_VAL;
-    return Math.max(WN.zero - rank, 0) * WN.slope * Math.pow(1 - WN.tierDrop, _wnPseudoIdx(rank, _wnSingleSeason(mode)));
+    const single = _wnSingleSeason(mode), df = single ? null : _wnDynFactor(rank);
+    return Math.max(WN.zero - rank, 0) * WN.slope * (df != null ? df : Math.pow(1 - WN.tierDrop, _wnPseudoIdx(rank, single)));
   };
   window._getTradeValue = function(d, src, mode) {
     const s = src || tradeSource;
@@ -33864,6 +33908,12 @@ window.fmtHeight = fmtHeight;
     const WN = window._WINNOW_VAL;
     return Math.max(Math.round(window._winnowBaseValue(WN.replRank, mode)), 1);
   };
+  // Weight per unmatched extra piece: dynasty modes use dynExtraPieceW.
+  window._packageExtraW = function(mode) {
+    const WN = window._WINNOW_VAL;
+    const w = (!_wnSingleSeason(mode || tradeMode) && WN.dynExtraPieceW != null) ? WN.dynExtraPieceW : WN.extraPieceW;
+    return w || 1;
+  };
   // vsCount = pieces coming back the other way (default 1, the n-for-1 case
   // the finders price). Only UNMATCHED pieces pay — the side sending more
   // pieces is discounted on its smallest (n − vsCount) assets, and the side
@@ -33873,7 +33923,7 @@ window.fmtHeight = fmtHeight;
     if (!values || !values.length) return 0;
     const m = mode || tradeMode;
     const cost = window._packageRosterCost(m);
-    const w = window._WINNOW_VAL.extraPieceW;
+    const w = window._packageExtraW(m);
     const sorted = values.slice().sort((a, b) => b - a);
     const matched = Math.max(1, vsCount == null ? 1 : vsCount);
     const extras = Math.max(sorted.length - matched, 0);
@@ -34013,7 +34063,8 @@ window.fmtHeight = fmtHeight;
       adjEl.title = (() => {
         const WN = window._WINNOW_VAL;
         let t = 'This side sends more pieces than it gets back, so each unmatched extra (its smallest assets) pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
-        if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains (each further extra another ' + Math.round(WN.extraPieceW * 100) + '%)';
+        const xw = window._packageExtraW(tradeMode);
+        if (xw < 1) t += ', then counts ' + Math.round(xw * 100) + '% of what remains (each further extra another ' + Math.round(xw * 100) + '%)';
         if (WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
         return t + ' — junk throw-ins can\'t tilt a trade';
       })();
@@ -35161,7 +35212,7 @@ window.fmtHeight = fmtHeight;
     // its gap is w^k·cost + (1−w^k)·V + tax — bound V by the scale max (~250)
     // and take k = 2 (the deepest extra a 3-piece side can have) so the bound
     // is safe for every loop below. Collapses to cost when w=1, tax=0.
-    const _extraW = window._WINNOW_VAL.extraPieceW || 1;
+    const _extraW = window._packageExtraW(tradeMode);
     const _extraW2 = _extraW * _extraW;
     const _pkgSlack = Math.ceil(_extraW2 * _pkgCost + (1 - _extraW2) * 260
       + (window._WINNOW_VAL.pkgTax || 0));

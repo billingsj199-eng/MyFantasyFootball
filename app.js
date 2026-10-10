@@ -6930,6 +6930,12 @@ const _TCV_TEAM_COLORS = {
   'Seattle Seahawks':{p:'#002244',s:'#69BE28'}, 'Tampa Bay Buccaneers':{p:'#D50A0A',s:'#FF7900'},
   'Tennessee Titans':{p:'#0C2340',s:'#4B92DB'}, 'Washington Commanders':{p:'#5A1414',s:'#FFB612'}
 };
+// Team colors for a card: NFL map by full team name; DEVY cards carry the
+// school as d.t, colored from ESPN's college team colors (COLLEGE_TEAM_COLORS,
+// data/devy_headshots.js via scripts/pull_devy_headshots.py).
+function _tcvTC(teamName){
+  return _TCV_TEAM_COLORS[teamName] || (window.COLLEGE_TEAM_COLORS && window.COLLEGE_TEAM_COLORS[teamName]) || null;
+}
 function _tcvLum(hex){
   const m = hex.replace('#',''); if (m.length < 6) return 1;
   const r=parseInt(m.slice(0,2),16), g=parseInt(m.slice(2,4),16), b=parseInt(m.slice(4,6),16);
@@ -6942,7 +6948,7 @@ function _tcvHexToRgb(hex){
 // Pick the most visible team color for an outline on the dark card bg:
 // use primary unless it's too dark to read, then fall back to secondary.
 function _tcvTeamOutline(teamName){
-  const c = _TCV_TEAM_COLORS[teamName];
+  const c = _tcvTC(teamName);
   if (!c) return '#64748b';
   return _tcvLum(c.p) < 0.16 ? c.s : c.p;
 }
@@ -7297,6 +7303,15 @@ function _tcvBookProjVal(d) {
   } catch(_) { return null; }
 }
 function _tcvCardStats(d) {
+  // DEVY: this season's college PPG (the devy board's PPG column) is the
+  // card's only number, shown big (Jack 2026-10-10).
+  if (d._isDevy) {
+    const dc = _devyCols(d);
+    const dcol = (dc.ppg != null && typeof posFptsColor === 'function') ? posFptsColor(dc.ppg, d.s) : null;
+    const yy = String(dc.yr).slice(2);
+    return { projVal: dc.ppg, projColor: dcol, slots: [{ v: dc.ppg != null ? dc.ppg.toFixed(1) : null, c: dcol,
+      lbl: "'" + yy + ' college PPG' + (dc.gp ? ' (' + dc.gp + ' gp)' : ''), short: "'" + yy + ' PPG' }] };
+  }
   const _R = _tcvRange();
   const _bookVal = (!_R && _tcvBookPref()) ? _tcvBookProjVal(d) : null;
   const _book = _bookVal != null;
@@ -7374,7 +7389,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
   // darkening toward the name, the team logo as a big watermark behind the
   // player (so no separate logo badge), ringed in the secondary color.
   {
-    const _tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+    const _tc = _tcvTC(d.t) || { p: '#1f2937', s: '#64748b' };
     card.style.background = 'linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.18) 52%,rgba(0,0,0,.66) 100%),' + _tc.p;
     const teamRgb = _tcvHexToRgb(_tcvLum(_tc.s) < 0.16 ? _tcvTeamOutline(d.t) : _tc.s);
     const baseShadow = '0 0 0 1.5px rgba(' + teamRgb + ',.9), 0 2px 7px rgba(' + teamRgb + ',.3)';
@@ -7415,7 +7430,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
 
   card.innerHTML =
     _tcvRankHtml('tcv-card-rank', displayRank, prevRank) +
-    '<div class="tcv-card-stats" title="' + _statsTitle + '">' +
+    '<div class="tcv-card-stats' + (_statSlots.length === 1 ? ' tcv-card-stats-solo" data-lbl="' + _statSlots[0].short : '') + '" title="' + _statsTitle + '">' +
       _statsHtml +
     '</div>' +
     '<div class="tcv-card-photo">' + logoHtml + headshotHtml + '</div>' +
@@ -7680,7 +7695,7 @@ async function _tcvMoveLoadDate(dateStr) {
 const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44, RNG_STATS_X: 308 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
-  const c = _TCV_TEAM_COLORS[teamName] || { p: '#1f2937', s: '#475569' };
+  const c = _tcvTC(teamName) || { p: '#1f2937', s: '#475569' };
   // Light primaries (Saints gold, Steelers gold, Chargers powder blue) need dark text
   return { p: c.p, s: c.s, light: _tcvLum(c.p) > 0.55 };
 }
@@ -8851,7 +8866,7 @@ function _tcvVbDrawCard(ctx, x, y, w, h, p, img, revealed) {
     ctx.fillText(String(p.rank), x + w / 2, y + h / 2);
     return;
   }
-  const tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+  const tc = _tcvTC(d.t) || { p: '#1f2937', s: '#64748b' };
   const ring = _tcvLum(tc.s) < 0.16 ? _tcvTeamOutline(d.t) : tc.s;
   const PHOTO_H = Math.round(h * 0.56), BAR_H = Math.round(h * 0.2), NAME_H = h - PHOTO_H - BAR_H;
   ctx.save();
@@ -9015,7 +9030,7 @@ function _tcvVbRevealCanvas(p, img, groupLabel) {
   const ctx = c.getContext('2d');
   ctx.scale(S, S);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  const tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+  const tc = _tcvTC(d.t) || { p: '#1f2937', s: '#64748b' };
   const ring = _tcvLum(tc.s) < 0.16 ? _tcvTeamOutline(d.t) : tc.s;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
@@ -9098,7 +9113,7 @@ function _tcvVbWideCanvas(p, img) {
   const ctx = c.getContext('2d');
   ctx.scale(S, S);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  const tc = _TCV_TEAM_COLORS[d.t] || { p: '#1f2937', s: '#64748b' };
+  const tc = _tcvTC(d.t) || { p: '#1f2937', s: '#64748b' };
   const band = _tcvRowBand(d.t);
   const ring = _tcvLum(tc.s) < 0.16 ? _tcvTeamOutline(d.t) : tc.s;
   const fg = band.light ? '#0f172a' : '#ffffff';

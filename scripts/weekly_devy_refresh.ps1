@@ -35,22 +35,50 @@ function Write-Log($msg) {
 Set-Location $Repo
 Write-Log '=== weekly devy refresh start ==='
 
-# Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
+# Commit + push exactly $paths (data files) plus ONLY their ?v= tags in index.html
+# (scripts/stage_vbump.py stages HEAD's index.html with just those tags swapped), so
+# another session's uncommitted index.html edits never block or ride along.
+function Commit-Push($paths, $msg) {
+    $chg = git status --porcelain -- @paths
+    if (-not $chg) { Write-Log "$msg - no movement, nothing to commit"; return }
+    git add -- @($paths | Where-Object { Test-Path $_ })
+    $o = & $Python 'scripts\stage_vbump.py' @paths 2>&1 | Out-String
+    Write-Log $o.Trim()
+    git commit -m ('{0} {1}' -f $msg, (Get-Date -Format 'yyyy-MM-dd'))
+    if ($LASTEXITCODE -ne 0) { Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - $msg left uncommitted"; return }
+    # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
+    git pull --rebase --autostash origin main
+    git push origin main
+    if ($LASTEXITCODE -eq 0) { Write-Log "pushed: $msg" } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - $msg commit is local" }
+}
+
+# 1. draft boards -> draftProj (+ new 2027-class adds). Runs FIRST and commits on its
+#    own every week (Jack 2026-10-10: consensus boards must run weekly) - a later step
+#    failing, a PFF login wait hitting the 1h task limit, or another session's dirty
+#    index.html can no longer lose or skip it (10-05: the 07:15 pull sat uncommitted).
+$BoardFiles = @('data/combine_data.js', 'data/draft_proj.js', 'scripts/draft_boards_2027.json')
+$dirty = git status --porcelain -- @BoardFiles
+if ($dirty) {
+    Write-Log "BOARDS SKIP: uncommitted changes in board files:`n$dirty"
+} else {
+    $out = & $Python 'scripts\pull_draft_boards.py' '--add' 2>&1 | Out-String
+    Write-Log ('draft boards: ' + $out.Trim())
+    if ($LASTEXITCODE -eq 3) { Write-Log 'consensus board unavailable - draftProj unchanged this week' }
+    elseif ($LASTEXITCODE -ne 0) { Write-Log "draft boards FAILED (exit $LASTEXITCODE) - continuing" }
+    Commit-Push $BoardFiles 'Auto draft boards (consensus + PFF -> 2027 draftProj)'
+}
+
+# Refuse to run the rest on dirty target files so a half-finished manual session isn't
+# clobbered (index.html is NOT checked - Commit-Push stages only our ?v= tags in it).
 $Files = @('data/college_stats_devy.js', 'data/combine_data.js', 'scripts/devy_refresh_cache.json',
            'scripts/devy_audit.json', 'scripts/draft_boards_2027.json', 'data/devy_headshots.js',
            'scripts/devy_headshots_cache.json', 'data/projected_testing.js', 'data/draft_proj.js', 'scripts/projected_testing_hits.json',
-           'data/legend_birth_years.js', 'data/_bundle_lookups.js', 'data/_bundle_bbm.js', 'scripts/devy_birthdays_cache.json', 'index.html')
+           'data/legend_birth_years.js', 'data/_bundle_lookups.js', 'data/_bundle_bbm.js', 'scripts/devy_birthdays_cache.json')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
     exit 0
 }
-
-# 1. draft boards -> draftProj (+ new 2027-class adds)
-$out = & $Python 'scripts\pull_draft_boards.py' '--add' 2>&1 | Out-String
-Write-Log ('draft boards: ' + $out.Trim())
-if ($LASTEXITCODE -eq 3) { Write-Log 'consensus board unavailable - draftProj unchanged this week' }
-elseif ($LASTEXITCODE -ne 0) { Write-Log "draft boards FAILED (exit $LASTEXITCODE) - continuing" }
 
 # 2. PFF college weekly facets (needs the PFF Pro API key in pbp_cache/pff/api_key.txt)
 $out = & $Python 'scripts\pull_pff_ncaa.py' 2>&1 | Out-String
@@ -88,21 +116,10 @@ $out = & $Python 'scripts\sync_nfl_birthdates.py' 2>&1 | Out-String
 Write-Log ('nfl birthdates: ' + ($out.Trim() -split "`n" | Select-Object -Last 3 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "nfl birthdates FAILED (exit $LASTEXITCODE) - continuing" }
 
-$changed = git status --porcelain -- @Files
-if (-not $changed) {
-    Write-Log 'no devy data movement - nothing to commit'
-} else {
-    # Stage only paths that exist: apply_projected_testing.py writes projected_testing_hits.json
-    # only once a projected time has a real result to grade, and one missing path makes git add
-    # stage nothing (2026-10-05: the whole refresh sat uncommitted and blocked the sim export).
-    git add -- @($Files | Where-Object { Test-Path $_ })
-    git commit -m ('Auto devy refresh {0} (college_stats_devy.js + 2027 draftProj + ?v= bump)' -f (Get-Date -Format 'yyyy-MM-dd'))
-    if ($LASTEXITCODE -ne 0) { Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - devy files left uncommitted" }
-    # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
-    git pull --rebase --autostash origin main
-    git push origin main
-    if ($LASTEXITCODE -eq 0) { Write-Log 'pushed devy refresh' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
-}
+# Stage only paths that exist (Commit-Push filters): apply_projected_testing.py writes
+# projected_testing_hits.json only once a projected time has a real result to grade, and one
+# missing path makes git add stage nothing (2026-10-05: the whole refresh sat uncommitted).
+Commit-Push $Files 'Auto devy refresh (college_stats_devy.js + headshots + birthdays + ?v= bump)'
 
 # Trim log to last 300 lines.
 $lines = Get-Content $Log

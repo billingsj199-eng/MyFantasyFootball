@@ -6379,7 +6379,9 @@ function getFiltered(applyTopN) {
           // under the line run in order. Each group permutes only its own
           // below-cut slots (flex / per pos-cut group) so no player crosses
           // the line; retired + out-for-season rows stay put.
-          if (!window._rankBaseMode) {
+          // NOT dynasty/dynastysf: one season's PPG is meaningless there and
+          // the re-sort reshuffled Jack's dynasty tail ("rankings reset").
+          if (!window._rankBaseMode && currentMode !== 'dynasty' && currentMode !== 'dynastysf') {
             const _pp = p => { const v = _displayProjPpg(p); return (v != null && isFinite(v)) ? v : -Infinity; };
             const _slots = {};
             board.forEach((idx, bi) => {

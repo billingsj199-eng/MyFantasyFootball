@@ -88,7 +88,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-09-qbtt" as="script">
+<link rel="preload" href="app.js?v=2026-10-09-restfb" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -96,7 +96,7 @@
 <link rel="preload" href="data/combine_data.js?v=2026-10-09depth" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-09-tep" as="script">
-<link rel="preload" href="data/d.js?v=2026-10-09qb" as="script">
+<link rel="preload" href="data/d.js?v=2026-10-10-0833" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-10-09-dbmob">
 
@@ -4820,16 +4820,16 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-10-09-tep" defer></script>
-<script src="data/d.js?v=2026-10-09qb" defer></script>
+<script src="data/d.js?v=2026-10-10-0833" defer></script>
 <script src="data/injury_updates.js?v=2026-10-09-1136" defer></script>
 <script src="data/injury_recent.js?v=2026-10-09" defer></script>
 <script src="data/practice_days_2026.js?v=2026-10-09-1134" defer></script>
 <script src="data/weekly_projections.js?v=2026-10-09" defer></script>
 <script src="data/weather_2026.js?v=2026-10-09-11" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
-<script src="data/player_roles_2026.js?v=2026-10-09-0842" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-09-2015" defer></script>
-<script src="data/matchup_edges_2026.js?v=2026-10-09-2015" defer></script>
+<script src="data/player_roles_2026.js?v=2026-10-10-0835" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-09-2348" defer></script>
+<script src="data/matchup_edges_2026.js?v=2026-10-09-2348" defer></script>
 <script src="data/site_projections.js?v=2026-10-09" defer></script>
 <script src="data/ownership_2026.js?v=2026-10-09" defer></script>
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -6018,7 +6018,7 @@ window._ensureResearchData = (function() {
 // season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
 // that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
 // section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-10-09-0842';
+window._ADV_STATS_V = '2026-10-10-0835';
 window._ensureAdvStats = (function() {
   const cache = {};
   return function _ensureAdvStats(yr, wk) {
@@ -6038,7 +6038,7 @@ window._ensureAdvStats = (function() {
 // Research page Coach Profiles: data/coach_profiles.js (window.COACH_PROFILES, one row per
 // team-season, scripts/build_coach_profiles.py), loaded when the section opens.
 // route_pct_daily.ps1 bumps _COACH_V.
-window._COACH_V = '2026-10-09-0842';
+window._COACH_V = '2026-10-10-0835';
 window._ensureCoachProfiles = (function() {
   let promise = null;
   return function _ensureCoachProfiles() {
@@ -6083,7 +6083,7 @@ window._ensureCardExtras = (function() {
 // Player-card USAGE row (everyone): data/usage_trend.js (window.USAGE_TREND, built daily by
 // scripts/build_usage_trend.py). openPlayerCard loads it on the first card open and re-renders once.
 // route_pct_daily.ps1 bumps _USAGE_TREND_V.
-window._USAGE_TREND_V = '2026-10-09-0842';
+window._USAGE_TREND_V = '2026-10-10-0835';
 window._ensureUsageTrend = (function() {
   let promise = null;
   return function _ensureUsageTrend() {
@@ -6215,10 +6215,10 @@ window._loadWeeklyData = function(opts) {
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
     // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
     // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-10-09-depth',
+    'data/weekly_stats_active.js?v=2026-10-10-0832',
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-10-09-pool',
+    'data/fpa_2026.js?v=2026-10-10-0832',
     'data/weekly_stats_retired_1.js?v=2026-07-21',
     'data/weekly_stats_retired_2.js?v=2026-07-21',
     'data/weekly_stats_retired_3.js?v=2026-07-21',
@@ -6228,11 +6228,11 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-10-09-0842',
+    'data/snap_counts.js?v=2026-10-10-0835',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-10-09-0842',
+    'data/route_pct.js?v=2026-10-10-0835',
     // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
-    'data/team_usage_2026.js?v=2026-10-09-0842'
+    'data/team_usage_2026.js?v=2026-10-10-0835'
   ];
   window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }
@@ -6312,7 +6312,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-09-qbtt"></script>
+<script defer src="app.js?v=2026-10-09-restfb"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

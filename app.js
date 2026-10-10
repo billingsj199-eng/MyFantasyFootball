@@ -6388,7 +6388,9 @@ function getFiltered(applyTopN) {
           // under the line run in order. Each group permutes only its own
           // below-cut slots (flex / per pos-cut group) so no player crosses
           // the line; retired + out-for-season rows stay put.
-          if (!window._rankBaseMode) {
+          // NOT dynasty/dynastysf: one season's PPG is meaningless there and
+          // the re-sort reshuffled Jack's dynasty tail ("rankings reset").
+          if (!window._rankBaseMode && currentMode !== 'dynasty' && currentMode !== 'dynastysf') {
             const _pp = p => { const v = _displayProjPpg(p); return (v != null && isFinite(v)) ? v : -Infinity; };
             const _slots = {};
             board.forEach((idx, bi) => {
@@ -33793,9 +33795,12 @@ window.fmtHeight = fmtHeight;
   // flock"): dynasty modes drop the tier ladder for a smooth rank decay,
   // factor e^(−((rank−1)/dynScale)^dynPow) on the linear base — fit to Flock's
   // dynasty /trades/calculate curve (#20 62% / #40 41% / #100 14% of #1 vs
-  // their 62/40/13; the step ladder was 50/30/10). Flock's position factors
-  // (RB 1.52 / QB 1.38 / TE 1.22 vs WR) are NOT copied — MFF VALUE already
-  // sets the cross-position order. dynScale 0 restores the step ladder.
+  // their 62/40/13; the step ladder was 50/30/10). Flock also scales each
+  // position by the league settings sent with the trade (scoring + lineup
+  // slots; vs WR at PPR ≈ RB 1.12 / QB 1.07 / TE 1.08, at half PPR 1.52 /
+  // 1.38 / 1.22, none without settings). NOT copied — MFF VALUE is already
+  // built per scoring and sets the cross-position order. dynScale 0 restores
+  // the step ladder.
   window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.875,
     // dynExtraPieceW (same day, "match flock's package discount for dynasty
     // too"): Flock's dynasty calc discounts extras far less than redraft —
@@ -36980,7 +36985,7 @@ window.fmtHeight = fmtHeight;
       // whole week regardless of how many times Jack saves in between.
       let prevSnapshot = null;
       try {
-        const existingDoc = await db.collection('rankings').doc('jacks-official').get();
+        const existingDoc = await _jacksOfficialGet();
         if (existingDoc.exists && existingDoc.data().data) {
           const existingObj = JSON.parse(existingDoc.data().data);
           const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -37042,7 +37047,7 @@ window.fmtHeight = fmtHeight;
       // dynasty/bestball tiers on 2026-05-14. User can override via prompt.
       let _safetyReadOk = false;
       try {
-        const existing = await db.collection('rankings').doc('jacks-official').get();
+        const existing = await _jacksOfficialGet();
         _safetyReadOk = true;
         if (existing.exists && existing.data().data) {
           const prev = JSON.parse(existing.data().data);
@@ -37218,6 +37223,49 @@ window.fmtHeight = fmtHeight;
     return 'jacks-public';
   }
 
+  // Direct Firestore REST read of rankings/jacks-official with the user's ID
+  // token, shaped like an SDK snapshot ({exists, data(), metadata}). Used when
+  // the SDK claims the doc is missing; null when REST can't confirm it either.
+  async function _jacksRestFallback() {
+    try {
+      const u = firebase.auth().currentUser;
+      if (!u) return null;
+      const tok = await u.getIdToken();
+      const r = await fetch('https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)/documents/rankings/jacks-official',
+        { headers: { Authorization: 'Bearer ' + tok }, cache: 'no-store' });
+      if (!r.ok) return null;
+      const j = await r.json();
+      const val = v => {
+        if (!v || typeof v !== 'object') return v;
+        if ('stringValue' in v) return v.stringValue;
+        if ('integerValue' in v) return Number(v.integerValue);
+        if ('doubleValue' in v) return v.doubleValue;
+        if ('booleanValue' in v) return v.booleanValue;
+        if ('nullValue' in v) return null;
+        if ('timestampValue' in v) return v.timestampValue;
+        if ('mapValue' in v) { const o = {}; Object.entries((v.mapValue && v.mapValue.fields) || {}).forEach(([k, x]) => { o[k] = val(x); }); return o; }
+        if ('arrayValue' in v) return ((v.arrayValue && v.arrayValue.values) || []).map(val);
+        return undefined;
+      };
+      const out = {};
+      Object.entries(j.fields || {}).forEach(([k, x]) => { out[k] = val(x); });
+      if (!out.data) return null;
+      window._jacksViaRest = true;
+      return { exists: true, id: 'jacks-official', data: () => out, metadata: { fromCache: false, hasPendingWrites: false } };
+    } catch (e) {
+      console.warn('[Auth] REST fallback for jacks-official failed:', e && (e.message || e));
+      return null;
+    }
+  }
+
+  // SDK read of the official doc; a 'missing' answer is re-checked over REST
+  // (see _jacksRestFallback) so save-path safety checks see the real board.
+  async function _jacksOfficialGet() {
+    const d = await db.collection('rankings').doc('jacks-official').get();
+    if (d.exists) return d;
+    return (await _jacksRestFallback()) || d;
+  }
+
   // Load Jack's rankings from the shared document for this session's tier
   async function loadJacksFromCloud() {
     if (!db) return;
@@ -37259,7 +37307,17 @@ window.fmtHeight = fmtHeight;
               doc = sdoc; _ok = true;
               console.warn('[Auth] official board: cached read said missing but the SERVER has it (updatedAt ' + (sdoc.data().updatedAt || '?') + ') — using the server copy');
               if (typeof window._authDiagPush === 'function') window._authDiagPush('firestore-cache-stale', { doc: 'jacks-official', note: 'cache said missing, server has it' });
-            } else _serverMissing = true;
+            } else {
+              // 2026-10-09: Jack's browser SDK answered exists=false from the SERVER while a
+              // direct REST read (same token) returned the doc (createTime 2026-03-31 — never
+              // deleted). Before calling it missing, ask Firestore REST directly and load that.
+              const rdoc = await _jacksRestFallback();
+              if (rdoc) {
+                doc = rdoc; _ok = true;
+                console.warn('[Auth] official board: SDK said missing but direct REST has it (updatedAt ' + (rdoc.data().updatedAt || '?') + ') — using the REST copy');
+                if (typeof window._authDiagPush === 'function') window._authDiagPush('firestore-sdk-missing-rest-ok', { doc: 'jacks-official' });
+              } else _serverMissing = true;
+            }
           } catch (se) {
             const _code = (se && (se.code || se.message)) || String(se);
             _note += ', server read failed: ' + _code;

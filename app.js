@@ -33697,7 +33697,13 @@ window.fmtHeight = fmtHeight;
   // (RB 1.52 / QB 1.38 / TE 1.22 vs WR) are NOT copied — MFF VALUE already
   // sets the cross-position order. dynScale 0 restores the step ladder.
   window._WINNOW_VAL = { zero: 500, slope: 0.5, tierDrop: 0.15, replRank: 160, extraPieceW: 0.875,
-    pkgTax: 0, smoothTiers: true, tailStart: 45, tailScale: 40, dynScale: 50.5, dynPow: 0.85,
+    // dynExtraPieceW (same day, "match flock's package discount for dynasty
+    // too"): Flock's dynasty calc discounts extras far less than redraft —
+    // grid vs its dynasty /trades/calculate on 49 same-slot trades, roster-
+    // spot cost kept: 0.875 gap 4.5 / lean +4.2 → 0.96 gap ~1.4 / lean ~0,
+    // 49/49 same call; junk throw-ins still price like Flock's (#10 for
+    // #11 + #150 ≈ even).
+    pkgTax: 0, smoothTiers: true, tailStart: 45, tailScale: 40, dynScale: 50.5, dynPow: 0.85, dynExtraPieceW: 0.96,
     // Stand-in tier ladder for boards WITHOUT tier data (consensus + ADP
     // sources): tier START ranks, snapshot of Jack's live redraft ladder
     // 2026-09-01 (Jack: consensus should "decrease on the same path" as his
@@ -33811,6 +33817,12 @@ window.fmtHeight = fmtHeight;
     const WN = window._WINNOW_VAL;
     return Math.max(Math.round(window._winnowBaseValue(WN.replRank, mode)), 1);
   };
+  // Weight per unmatched extra piece: dynasty modes use dynExtraPieceW.
+  window._packageExtraW = function(mode) {
+    const WN = window._WINNOW_VAL;
+    const w = (!_wnSingleSeason(mode || tradeMode) && WN.dynExtraPieceW != null) ? WN.dynExtraPieceW : WN.extraPieceW;
+    return w || 1;
+  };
   // vsCount = pieces coming back the other way (default 1, the n-for-1 case
   // the finders price). Only UNMATCHED pieces pay — the side sending more
   // pieces is discounted on its smallest (n − vsCount) assets, and the side
@@ -33820,7 +33832,7 @@ window.fmtHeight = fmtHeight;
     if (!values || !values.length) return 0;
     const m = mode || tradeMode;
     const cost = window._packageRosterCost(m);
-    const w = window._WINNOW_VAL.extraPieceW;
+    const w = window._packageExtraW(m);
     const sorted = values.slice().sort((a, b) => b - a);
     const matched = Math.max(1, vsCount == null ? 1 : vsCount);
     const extras = Math.max(sorted.length - matched, 0);
@@ -33960,7 +33972,8 @@ window.fmtHeight = fmtHeight;
       adjEl.title = (() => {
         const WN = window._WINNOW_VAL;
         let t = 'This side sends more pieces than it gets back, so each unmatched extra (its smallest assets) pays a roster-spot cost of ' + window._packageRosterCost(tradeMode);
-        if ((WN.extraPieceW || 1) < 1) t += ', then counts ' + Math.round(WN.extraPieceW * 100) + '% of what remains (each further extra another ' + Math.round(WN.extraPieceW * 100) + '%)';
+        const xw = window._packageExtraW(tradeMode);
+        if (xw < 1) t += ', then counts ' + Math.round(xw * 100) + '% of what remains (each further extra another ' + Math.round(xw * 100) + '%)';
         if (WN.pkgTax > 0) t += ', plus a ' + WN.pkgTax + '-point consolidation premium per extra piece';
         return t + ' — junk throw-ins can\'t tilt a trade';
       })();
@@ -35108,7 +35121,7 @@ window.fmtHeight = fmtHeight;
     // its gap is w^k·cost + (1−w^k)·V + tax — bound V by the scale max (~250)
     // and take k = 2 (the deepest extra a 3-piece side can have) so the bound
     // is safe for every loop below. Collapses to cost when w=1, tax=0.
-    const _extraW = window._WINNOW_VAL.extraPieceW || 1;
+    const _extraW = window._packageExtraW(tradeMode);
     const _extraW2 = _extraW * _extraW;
     const _pkgSlack = Math.ceil(_extraW2 * _pkgCost + (1 - _extraW2) * 260
       + (window._WINNOW_VAL.pkgTax || 0));

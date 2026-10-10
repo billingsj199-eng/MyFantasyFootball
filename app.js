@@ -3701,7 +3701,8 @@ function _cdFilmNoteHtml(d) {
 // backtest_wr_bounce_inseason.py): year-2 WRs coming off a slow rookie year (< 4 games
 // or below the WR replacement starter per game) — target share over his first 2026
 // games was the best early read on who bounces back (top-24 within 3 seasons, WRs
-// drafted 2018-22: 18%+ 4 of 5, 12-18% 2 of 9, 5-12% 0 of 9, < 5% 2 of 106). By about
+// drafted 2018-22: 18%+ 5 of 10, 12-17% 2 of 17, 5-11% 0 of 23, < 5% 1 of 79 — target
+// share from game logs + pbp team targets, sim_lab/early_tgt_share.py, 10-10 fix). By about
 // Week 4 the Dynasty SIM's in-season fold catches it on its own, so this is an early
 // heads-up only, not a value change. Counts: data/team_usage_2026.js (lazy weekly bundle).
 const _WR_REPL_PPG = { 2025: 8.1 };   // PPR per game of the 1QB 12-team replacement WR (dyn_common World._repl / 17)
@@ -3724,9 +3725,9 @@ function _cdWrBounceNoteHtml(d, yr) {
   });
   if (!g || !tt) return '';
   const pct = Math.round(pt / tt * 100);   // tiers on the shown (rounded) share so text and tier agree
-  const tier = pct >= 18 ? ['#22c55e', 'rgba(34,197,94,.06)', 'rgba(34,197,94,.25)', 'EARNING A ROLE.', '4 of 5 bounced back']
-    : pct >= 12 ? ['#fbbf24', 'rgba(251,191,36,.06)', 'rgba(251,191,36,.25)', 'SOME ROLE.', '2 of 9 bounced back']
-    : ['#94a3b8', 'rgba(148,163,184,.07)', 'rgba(148,163,184,.22)', 'NO ROLE YET.', pct >= 5 ? '0 of 9 bounced back' : '2 of 106 bounced back'];
+  const tier = pct >= 18 ? ['#22c55e', 'rgba(34,197,94,.06)', 'rgba(34,197,94,.25)', 'EARNING A ROLE.', '5 of 10 bounced back']
+    : pct >= 12 ? ['#fbbf24', 'rgba(251,191,36,.06)', 'rgba(251,191,36,.25)', 'SOME ROLE.', '2 of 17 bounced back']
+    : ['#94a3b8', 'rgba(148,163,184,.07)', 'rgba(148,163,184,.22)', 'NO ROLE YET.', pct >= 5 ? '0 of 23 bounced back' : '1 of 79 bounced back'];
   return '<div style="font-size:.6875rem;line-height:1.45;color:var(--text2);background:' + tier[1] + ';border:1px solid ' + tier[2] + ';border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
     + '<b style="color:' + tier[0] + ';letter-spacing:.04em">' + tier[3] + '</b> Slow rookie year (' + (yr - 1) + ': ' + (gp ? (ppr / gp).toFixed(1) + ' PPR per game in ' + gp + ' games' : 'no games') + '), now '
     + pct + '% of his team\'s targets through ' + g + ' game' + (g === 1 ? '' : 's') + ' of ' + yr + '. Second-year WRs off a slow rookie year at that share: ' + tier[4]

@@ -3185,9 +3185,20 @@ function _dynSimEnsure(cb) {
   if (cb) w.push(cb);
   if (window._dynSimLoading) return;
   window._dynSimLoading = true;
+  // ESPN depth charts ride along (MFF VALUE's QB team-total term reads QB1 —
+  // _fairQbStarters); waiters run once both settle, a failed chart load is fine.
+  let pend = 1;
+  const done = () => { if (--pend > 0) return; window._dynSimLoading = false; (window._dynSimWaiters || []).splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); };
+  if (!window.DEPTH_2026) {
+    pend++;
+    const dc = document.createElement('script');
+    dc.src = 'data/depth_charts_2026.js?v=' + new Date().toISOString().slice(0, 10);   // pulled daily
+    dc.onload = done; dc.onerror = done;
+    document.head.appendChild(dc);
+  }
   const sc = document.createElement('script');
   sc.src = _dynSimSrc();
-  sc.onload = () => { window._dynSimLoading = false; (window._dynSimWaiters || []).splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); };
+  sc.onload = done;
   sc.onerror = () => { window._dynSimLoading = false; window._dynSimWaiters = []; if (typeof toast === 'function') toast('Could not load the dynasty sim values'); };
   document.head.appendChild(sc);
 }
@@ -3998,9 +4009,67 @@ function _fairRbRec(r) {
   const M = window.DYNASTY_SIM_2026 && window.DYNASTY_SIM_2026.meta && window.DYNASTY_SIM_2026.meta.rbRec;
   return M && M.k ? M.k * r.rbr : 0;
 }
+// QB TEAM TOTAL (Jack 2026-10-09: "projected team totals ... solid offense";
+// sim_lab/research_team_totals_value.py, log _dyn_cache/team_totals_value_run1.log):
+// a QB's team implied total entering the season beat FAIR on REALIZED production
+// (fantasy points over replacement, not KTC) — whole board season .666 -> .674
+// (6/6), 3yr .680 -> .686, 5yr .662 -> .667; leave-one-year-out k .3-.5, +.012
+// held out. WR/TE/RB versions HURT (the market already prices offense for them).
+// z = (team's rest-of-season mean implied total - QB pool mean) / 3.0 (training
+// SD), score -= 0.4 z x age weight. No lines loaded / season over -> 0.
+// AGE TAPER (Jack: "projecting how much a player can improve gives them inherent
+// value"; sim_lab/_dyn_cache/tt_age.py): team total ranks QBs 30+ well (+.36
+// season / +.17 3yr vs FAIR's miss) but not QBs <= 24 (-.08 / .00) — young QBs'
+// offenses change and they improve. Weight 1 at 27+, .5 at 25-26, 0 at <= 24.
+// STARTERS ONLY (Jack: "find the real team depth charts not changing ones due to
+// injury"): the team's QB1 on ESPN's depth chart (window.DEPTH_2026, loaded with
+// the sim) — ESPN keeps a hurt starter at QB1 (Daniels WAS), unlike games played.
+// No chart for the team -> most 2026 games (sim g26), ties -> lower ADP.
+// Backups get no term. Kill: window.MFF_QB_TT_OFF.
+const _FAIR_QB_TT = { k: 0.4, sd: 3.0 };
+function _fairQbTtAgeW(age) { return age == null ? 0 : age >= 27 ? 1 : age >= 25 ? 0.5 : 0; }
+function _fairQbStarters() {
+  const S = window.DYNASTY_SIM_2026, st = {};
+  const DC = window.DEPTH_2026 && window.DEPTH_2026.teams;
+  const qb1 = {};
+  if (DC && typeof TEAM_ABBR_MAP !== 'undefined') {
+    Object.keys(TEAM_ABBR_MAP).forEach(full => {
+      const c = DC[TEAM_ABBR_MAP[full]];
+      if (c && c.QB && c.QB[0]) qb1[full] = _dynSimNorm(c.QB[0]);
+    });
+  }
+  const qbs = (D || []).filter(q => q && q.s === 'QB' && !q._retired && !q._isDevy && q.t);
+  const chart = new Set();
+  qbs.forEach(q => { if (qb1[q.t] && _dynSimNorm(q.n) === qb1[q.t]) { st[q.t] = { n: q.n }; chart.add(q.t); } });
+  qbs.forEach(q => {
+    if (chart.has(q.t)) return;
+    const e = S && S._idx && S._idx[_dynSimNorm(q.n) + '|QB'];
+    const g = e && e.g26 ? e.g26 : 0, a = q.a != null && q.a < 900 ? q.a : 999;
+    const c = st[q.t];
+    if (!c || g > c.g || (g === c.g && a < c.a)) st[q.t] = { n: q.n, g, a };
+  });
+  return st;
+}
+function _fairQbTtPrep(pool) {
+  const on = !window.MFF_QB_TT_OFF && typeof window._rosTeamTotalFor === 'function';
+  const st = on ? _fairQbStarters() : {};
+  const qs = [];
+  pool.forEach(r => {
+    r.qtt = null;
+    if (on && r.pos === 'QB' && r.t && st[r.t] && st[r.t].n === r.n) {
+      const x = window._rosTeamTotalFor(r.t); if (x && x.v > 0) { r.qtt = x.v; qs.push(x.v); }
+    }
+  });
+  const mu = qs.length >= 8 ? qs.reduce((a, b) => a + b, 0) / qs.length : null;
+  pool.forEach(r => { r.qz = mu != null && r.qtt != null ? (r.qtt - mu) / _FAIR_QB_TT.sd * _fairQbTtAgeW(r.age) : 0; });
+}
+function _fairQbTt(r) { return r && r.qz ? -_FAIR_QB_TT.k * r.qz : 0; }
+// Cache-key part: team totals arrive with a deferred data file, so boards built
+// before it loaded must rebuild once it is there.
+function _fairQbTtSig() { return (window.MFF_QB_TT_OFF ? 'off' : (window.BETTING_2026 && window.BETTING_2026.gameTotals ? 'tt' : 'nott')); }
 function _trendGapFor(d) {
   if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
-  const ck = _dynSimSig() + '|' + currentMode;
+  const ck = _dynSimSig() + '|' + currentMode + '|' + _fairQbTtSig();
   const c = (window._trendGapCache = window._trendGapCache || {});
   if (!c[ck]) {
     const pool = [];
@@ -4009,12 +4078,13 @@ function _trendGapFor(d) {
       const x = _dynSimFor(p); const k = _ktcRankInfoTep(p.n, currentMode, _dynTepEff());
       if (x && k && !k.devy && k.ovr && k.ovr <= 200) {
         const S = window.DYNASTY_SIM_2026, e = S._idx && S._idx[_dynSimNorm(p.n) + '|' + p.s];
-        pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie), rbr: e && e.rbr != null ? e.rbr : 0 });
+        pool.push({ n: p.n, s: x.rk, k: k.ovr, kv: k.val, x, pos: p.s, age: e && e.age != null ? e.age : p.age, rookie: !!(e && e.rookie), rbr: e && e.rbr != null ? e.rbr : 0, t: p.t });
       }
     });
     const sr = pool.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sp = i + 1; });
     const kr = pool.slice().sort((a, b) => a.k - b.k); kr.forEach((r, i) => { r.kp = i + 1; });
     pool.forEach(r => { r.gap = Math.log(r.sp / r.kp); });
+    _fairQbTtPrep(pool);
     // EXPECTED MARKET VALUE NEXT YEAR (Jack 2026-10-09; sim_lab/backtest_dynasty_market_next.py):
     // log next-preseason market rank = M3(log market rank, log sim rank, rookie, position,
     // age x position), fit on 2015-23 dynasty ADP (next-rank Spearman .697 vs .663 for
@@ -4037,7 +4107,7 @@ function _trendGapFor(d) {
         const v1 = valAt(pr), vPeer = valAt(prPeer);
         r.mkt = { pr, val: v1, cur: r.kv, chg: v1 / r.kv - 1, peer: vPeer / r.kv - 1,
                   ovr: pr < n ? ovrs[Math.max(0, Math.round(pr) - 1)] : null };
-        r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r);
+        r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r) + _fairQbTt(r);
       });
       // FAIR VALUE NOW (Jack 2026-10-09: "value players in the moment with the idea they
       // have future value"): order the pool by 0.5 x the model's expected market rank +
@@ -4106,7 +4176,7 @@ window._mffValueBoard = function(mode) {
   if (!S || !Array.isArray(D) || typeof _ktcRankInfo !== 'function') return null;
   const fmt = mode === 'dynastysf' ? 'sf' : '1qb', vk = fmt + '_' + _dynScoringKey(), tep = _dynTepEff();
   const MW = _MFF_MODE_W[window._mffMode] || null;
-  const ck = vk + '|' + tep + '|' + D.length + '|' + (S.meta && S.meta.built) + '|' + window._mffMode;
+  const ck = vk + '|' + tep + '|' + D.length + '|' + (S.meta && S.meta.built) + '|' + window._mffMode + '|' + _fairQbTtSig();
   const c = (window._mffBoardCache = window._mffBoardCache || {});
   if (c[mode] && c[mode].ck === ck) return c[mode].b;
   if (!S._idx) {
@@ -4131,7 +4201,7 @@ window._mffValueBoard = function(mode) {
     if (!x) return;
     const k = _ktcRankInfoTep(p.n, mode, tep);
     if (k && !k.devy && k.ovr && k.ovr <= 200 && k.val) {
-      pool.push({ i, sv: x.sv, ratio: x.ratio, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie, rbr: x.e.rbr != null ? x.e.rbr : 0 });
+      pool.push({ i, sv: x.sv, ratio: x.ratio, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie, rbr: x.e.rbr != null ? x.e.rbr : 0, t: p.t, n: p.n });
     } else rest.push({ i, sv: x.sv, ratio: x.ratio });
   });
   if (pool.length < 50) return null;
@@ -4141,6 +4211,7 @@ window._mffValueBoard = function(mode) {
   const valAt = pr => pr <= 1 ? vals[0] : pr >= n ? vals[n - 1] * Math.pow(n / pr, 1.5)
     : vals[Math.floor(pr) - 1] + (vals[Math.ceil(pr) - 1] - vals[Math.floor(pr) - 1]) * (pr - Math.floor(pr));
   const M = S.meta.mktNext;
+  _fairQbTtPrep(pool);
   pool.forEach(r => {
     let z = Math.log(r.kp);
     if (M && M.coef) {
@@ -4149,7 +4220,7 @@ window._mffValueBoard = function(mode) {
         + (P === 'RB' ? b[4] : 0) + (P === 'WR' ? b[5] : 0) + (P === 'TE' ? b[6] : 0)
         + a * (P === 'QB' ? b[7] : P === 'RB' ? b[8] : P === 'WR' ? b[9] : b[10]);
     }
-    r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r);
+    r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r) + _fairQbTt(r);
   });
   pool.slice().sort((a, b) => a._fz - b._fz).forEach((r, j) => { r.mv = vals[j]; });
   // Sim value -> KTC scale: position among the pool's sim values, read off the KTC curve.

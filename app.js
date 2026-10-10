@@ -4136,9 +4136,9 @@ function _trendGapFor(d) {
 // MFF VALUE (Jack 2026-10-09: "our value score is what is ideally used for trades
 // and overall rankings" -> "make it mff value"): a dynasty board in our value
 // order, usable anywhere a board source is (trade calc via _verBoardFor('mff')).
-// KTC top-200 players with a Dynasty SIM value = FAIR VALUE (same order weights
-// as _trendGapFor); everyone else — deeper players, 2026 rookies KTC lacks, the
-// rookie-pick entries — by Dynasty SIM value read onto the same KTC value scale
+// KTC-ranked players with a Dynasty SIM value = FAIR VALUE (same order weights
+// as _trendGapFor; all KTC ranks since 10-10, was top 200); everyone else — 2026
+// rookies KTC lacks, the rookie-pick entries — by Dynasty SIM value read onto the same KTC value scale
 // (the pool's sim-ordered KTC values). Format comes from the MODE (not the
 // rankings board), scoring + TE premium from the toggles; no league context.
 // -> [D index, best first] or null until DYNASTY_SIM_2026 is loaded.
@@ -4183,24 +4183,33 @@ window._mffValueBoard = function(mode) {
     S._idx = {};
     Object.values(S.players).forEach(e => { S._idx[_dynSimNorm(e.n) + '|' + e.pos] = e; });
   }
-  const simOf = (n, pos) => {
+  // AVAILABILITY (Jack 2026-10-10, "build and test the fix" — Tyreek Hill FA WR28,
+  // Aiyuk ACL WR53): the sim only sees past production. An unsigned free agent with
+  // no 2026 games gets sim value 0 (market + M3 still price him); a player flagged
+  // OUT FOR SEASON loses his rest-of-2026 season (y0) — later years stay.
+  const simOf = (n, pos, p) => {
     const e = S._idx[_dynSimNorm(n) + '|' + pos];
     const v = e && e.v && ((tep && pos === 'TE' && e.v[vk + '_tep' + tep]) || e.v[vk]);
     if (!v) return null;
-    if (!MW || v.length < 9) return { sv: v[0], sb: v[0], e, ratio: 1 };
+    if (p && pos !== 'PICK' && !e.g26 && /^(FA|free agent)?$/i.test(String(p.t || '').trim())) return { sv: 0, sb: 0, e, ratio: 1 };
+    const out = p && pos !== 'PICK' && typeof window._irIsOut === 'function' && window._irIsOut(p.n) && v.length >= 9;
+    if (!MW || v.length < 9) { const s0 = out ? Math.max(0, v[0] - v[4]) : v[0]; return { sv: s0, sb: s0, e, ratio: 1 }; }
     const y = v.slice(4, 9);
+    if (out) y[0] = 0;
     const sm = y.reduce((s, q, j) => s + q * MW[j], 0), sb = y.reduce((s, q, j) => s + q * _MFF_BAL_W[j], 0);
-    return { sv: sm, sb: v[0], e, ratio: sb > 5 ? Math.max(sm, 0.1) / sb : 1 };
+    return { sv: sm, sb: out ? sb : v[0], e, ratio: sb > 5 ? Math.max(sm, 0.1) / sb : 1 };
   };
   const pool = [], rest = [];
   D.forEach((p, i) => {
     if (!p || p._retired || p._isDevy) return;
     if (p._isFuturePick || p.s === 'PICK') { const x = simOf(p.n, 'PICK'); if (x) rest.push({ i, sv: x.sb, ratio: x.ratio, pick: p.n, cls: x.e.cls ? x.e.cls[vk] : null }); return; }
     if (p.s !== 'QB' && p.s !== 'RB' && p.s !== 'WR' && p.s !== 'TE') return;
-    const x = simOf(p.n, p.s);
+    const x = simOf(p.n, p.s, p);
     if (!x) return;
     const k = _ktcRankInfoTep(p.n, mode, tep);
-    if (k && !k.devy && k.ovr && k.ovr <= 200 && k.val) {
+    // Every KTC-ranked player is in the FAIR pool (was KTC top 200 — deeper players
+    // got the sim value alone, with no market anchor).
+    if (k && !k.devy && k.ovr && k.val) {
       pool.push({ i, sv: x.sv, ratio: x.ratio, k: k.ovr, kv: k.val, pos: p.s, age: x.e.age != null ? x.e.age : p.age, rookie: !!x.e.rookie, rbr: x.e.rbr != null ? x.e.rbr : 0, t: p.t, n: p.n });
     } else rest.push({ i, sv: x.sv, ratio: x.ratio });
   });

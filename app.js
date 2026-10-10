@@ -3484,7 +3484,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
     const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
     return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
       + _cdOffNoteHtml(window._offRisk ? window._offRisk(d) : null, null)
-      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL) + _cdFilmNoteHtml(d);
+      + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
   }
   if (!S._idx) _dynSimFor(d);
   const e = S._idx[_dynSimNorm(d.n) + '|' + d.s];
@@ -3532,7 +3532,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   if (fairDiff != null && fairDiff >= 0.10 && !offR) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
   const slideNote = _cdOffNoteHtml(offR, fairDiff) + ((offR && fairDiff > 0) ? '' : _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr))
-    + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr) + _cdFilmNoteHtml(d);
+    + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (#' + now + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
     + (fit ? '<span style="font-size:.6875rem;color:var(--text2);margin-left:4px">Best fit: <b style="color:var(--text1)">' + fit + '</b></span>' : '')
@@ -3639,6 +3639,39 @@ function _cdQbChange(d, yr) {
 // 2019-25 (~10% per SD of grade); low-graded part-timers lost role (WR routes -19%).
 // Information only (as a value term it didn't beat FAIR); flags live in the sim data
 // (e.film), rebuilt every Tuesday. Shown to everyone.
+// Sim entry for a card player (shared by the film / fade / man notes).
+function _cdSimEntry(d) {
+  const S = window.DYNASTY_SIM_2026;
+  if (!S || !d) return null;
+  if (!S._idx) _dynSimFor(d);
+  return (S._idx && S._idx[_dynSimNorm(d.n) + '|' + d.s]) || null;
+}
+// RB EFFICIENCY FADING (Jack 2026-10-09; sim_lab/research_juke_decline.py +
+// dyn_film.fade_flags): bottom-fifth drop in yards after contact per carry or juke
+// rate (avoided tackles per touch) vs last season — those backs collapsed the next
+// season 41-51% of the time vs 28% for all RBs. Already priced (no edge vs FAIR), so
+// a warning, not a value change. Early-season samples are small.
+function _cdFadeNoteHtml(d) {
+  const e = _cdSimEntry(d), f = e && e.fade;
+  if (!f) return '';
+  const bits = [];
+  if (f.hit.indexOf('yco') >= 0) bits.push('yards after contact ' + f.yco0.toFixed(2) + ' → ' + f.yco.toFixed(2) + ' per carry');
+  if (f.hit.indexOf('juke') >= 0 && f.juke0 != null) bits.push('juke rate ' + Math.round(f.juke0 * 100) + '% → ' + Math.round(f.juke * 100) + '% of touches');
+  return '<div style="font-size:.6875rem;line-height:1.45;color:#fdba74;background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.28);border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
+    + '<b style="color:#f97316;letter-spacing:.04em">RB EFFICIENCY FADING.</b> ' + bits.join(', ') + ' (last season → ' + f.s + ' through Week ' + f.w + ', among the biggest drops). '
+    + 'Backs with drops like this have collapsed the next season about half the time (vs 28% for all RBs). Early-season samples are small; the market and the model already lean this way.</div>';
+}
+// BEATS MAN COVERAGE (Jack 2026-10-09; research_efficiency_value.py + dyn_film.man_flags):
+// top-third WR YPRR vs man coverage last season — those receivers out-produced their
+// market price long-term (beyond market 3yr -0.23*, beyond FAIR 5yr -0.35*); the market
+// pays more for zone production. Didn't hold year-by-year as a value term -> note only.
+function _cdManNoteHtml(d) {
+  const e = _cdSimEntry(d), f = e && e.manwin;
+  if (!f) return '';
+  return '<div style="font-size:.6875rem;line-height:1.45;color:var(--text2);background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:6px 10px;margin:-4px 0 10px">'
+    + '<b style="color:#22c55e;letter-spacing:.04em">BEATS MAN COVERAGE.</b> ' + f.man.toFixed(2) + ' yards per route vs man in ' + f.s + ' (' + f.zone.toFixed(2) + ' vs zone; top third of WRs vs man). '
+    + 'Receivers who win against man have out-produced their market price over the long run — the market pays more for production against zone. Not built into the value.</div>';
+}
 function _cdFilmNoteHtml(d) {
   const S = window.DYNASTY_SIM_2026;
   if (!S || !d) return '';

@@ -13,7 +13,6 @@ const ACTIVE_TEAM_HISTORY = {
     'Ameer Abdullah': [{t:'Jacksonville Jaguars',y1:2026,y2:2099}],
     'Amon-Ra St. Brown': [{t:'Detroit Lions',y1:2021,y2:2099}],
     'Andrei Iosivas': [{t:'Cincinnati Bengals',y1:2023,y2:2099}],
-    'Andy Dalton': [{t:'Philadelphia Eagles',y1:2026,y2:2099}],
     'Anthony Richardson': [{t:'Indianapolis Colts',y1:2023,y2:2099}],
     'Anthony Smith': [{t:'Dallas Cowboys',y1:2026,y2:2099}],
     'Antonio Williams': [{t:'Washington Commanders',y1:2026,y2:2099}],

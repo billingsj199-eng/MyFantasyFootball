@@ -805,6 +805,10 @@ def pull_ud_weekly(week_by_matchup):
             val = float(line.get('stat_value'))
         except (TypeError, ValueError):
             continue
+        # TD ladder (2026-10-11): some players only get a 1.5/2.5 rrtd line
+        # (higher-only) — its price is 2+ TD odds, not anytime. 0.5 only.
+        if stat == 'rrtd' and val != 0.5:
+            continue
         name = f"{p.get('first_name', '')} {p.get('last_name', '')}".strip()
         wkd = out.setdefault(wk, {})
         if stat in wkd.get(name, {}):

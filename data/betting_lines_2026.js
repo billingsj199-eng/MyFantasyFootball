@@ -2494,7 +2494,7 @@ const _WEEKLY_PROPS_2026 = {
     'Max Klare': { DK: { atd: 2500 }, FD: { atd: 2500 }, asOf: '2026-10-11' },
     'Eric Saubert': { DK: { atd: 2000 }, FD: { atd: 1900 }, MGM: { atd: 1550 }, UD: { rrtd: 0.5, atd: 1250 }, asOf: '2026-10-11' },
     'Robert Henry Jr.': { FD: { atd: 1800 }, asOf: '2026-10-11' },
-    'Dallas Goedert': { DK: { atd: 280 }, FD: { atd: 290 }, MGM: { atd: 270 }, UD: { rrtd: 0.5, atd: 243 }, asOf: '2026-10-09' },
+    'Dallas Goedert': { DK: { rec: 6.5, rcy: 48.5, atd: 280 }, FD: { atd: 290 }, MGM: { atd: 270 }, UD: { rrtd: 0.5, atd: 243 }, asOf: '2026-10-09' },
     'Dohnte Meyers': { DK: { atd: 320 }, FD: { atd: 320 }, UD: { rec: 2.5, rcy: 24.5, rrtd: 0.5, atd: 259 }, PP: { rcy: 23.5 }, asOf: '2026-10-11' },
     'Mike Gesicki': { DK: { rec: 3.5, rcy: 30.5, atd: 275 }, FD: { rec: 2.5, rcy: 30.5, atd: 290 }, MGM: { atd: 260 }, UD: { rec: 2.5, rcy: 24.5, rrtd: 0.5, atd: 251 }, PP: { rcy: 30.5 }, asOf: '2026-10-11' },
     'Colbie Young': { DK: { atd: 750 }, FD: { atd: 750 }, UD: { rrtd: 0.5, atd: 509 }, asOf: '2026-10-11' },

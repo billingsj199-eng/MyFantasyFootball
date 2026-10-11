@@ -90,7 +90,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-11-tcvpos" as="script">
+<link rel="preload" href="app.js?v=2026-10-11-tcvpos2" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -1897,7 +1897,10 @@ body:has(#tierCardWrap.tcv-fullscreen) #modal{z-index:10010}
 body:has(#tierCardWrap.tcv-fullscreen) #mffDialog{z-index:10020}
 /* HIDE CONTROLS (recording): toolbar, header line, KEY strip and the fullscreen X go away; a faint ☰ tab (or H) brings them back */
 .tier-card-view{position:relative}
-.tier-card-view.tcv-hide-ui>.tcv-header,.tier-card-view.tcv-hide-ui>.tcv-reveal-controls,.tier-card-view.tcv-hide-ui>.tcv-key-card{display:none!important}
+.tier-card-view.tcv-hide-ui>.tcv-header,.tier-card-view.tcv-hide-ui>.tcv-key-card{display:none!important}
+/* position pills stay up when controls are hidden (Jack 2026-10-11) — everything else in the toolbar goes */
+.tier-card-view.tcv-hide-ui>.tcv-reveal-controls>:not(.tcv-pos-ctl){display:none!important}
+.tier-card-view.tcv-hide-ui>.tcv-reveal-controls:not(:has(.tcv-pos-ctl)){display:none!important}
 #tierCardWrap:has(.tier-card-view.tcv-hide-ui) .tcv-fs-close{display:none}
 .tcv-ui-pill{display:none;position:absolute;top:0;right:0;z-index:12;width:26px;height:22px;padding:0;border-radius:0 0 0 8px;border:1px solid rgba(255,255,255,.14);border-top:none;border-right:none;background:rgba(0,0,0,.55);color:#fff;font-size:13px;line-height:1;cursor:pointer;align-items:center;justify-content:center;opacity:.16;transition:opacity .15s}
 .tcv-ui-pill:hover,.tcv-ui-pill:focus-visible{opacity:1}
@@ -6316,7 +6319,7 @@ window.addEventListener('load', function() {
    Markup stays (app.js guards on its absence) but it never displays. */
 .bottom-nav{display:none!important}
 </style>
-<script defer src="app.js?v=2026-10-11-tcvpos"></script>
+<script defer src="app.js?v=2026-10-11-tcvpos2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

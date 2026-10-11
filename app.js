@@ -9579,7 +9579,7 @@ function _renderTierCardView(data, container) {
   const _tcvPosPills = Array.from(document.querySelectorAll('.pos-filters .pos-btn[data-pos]'))
     .filter(b => getComputedStyle(b).display !== 'none');   // FLEX shows via body.format-weekly CSS
   const _tcvPosHtml = _tcvPosPills.length
-    ? '<span class="tcv-move-ctl" title="Switch position — same as the Position filter above the board">' +
+    ? '<span class="tcv-move-ctl tcv-pos-ctl" title="Switch position — same as the Position filter above the board">' +
         _tcvPosPills.map(b => '<button class="tcv-reveal-btn tcv-zoom-btn' + (b.dataset.pos === filter ? ' tcv-primary' : '') + '" data-tcvaction="setPos" data-tcvpos="' + b.dataset.pos + '">' + b.textContent.trim() + '</button>').join('') +
       '</span>'
     : '';

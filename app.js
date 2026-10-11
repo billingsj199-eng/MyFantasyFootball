@@ -9573,7 +9573,17 @@ function _renderTierCardView(data, container) {
   // Reveal/hide controls (streaming-style tier reveal)
   const controls = document.createElement('div');
   controls.className = 'tcv-reveal-controls';
-  controls.innerHTML =
+  // Position switcher (Jack 2026-10-11): mirrors the main Position pills that
+  // are showing (ALL / QB / RB / WR / TE / FLEX / K / D/ST …) so the board can
+  // cycle positions without leaving the view. Clicking fires the real pill.
+  const _tcvPosPills = Array.from(document.querySelectorAll('.pos-filters .pos-btn[data-pos]'))
+    .filter(b => getComputedStyle(b).display !== 'none');   // FLEX shows via body.format-weekly CSS
+  const _tcvPosHtml = _tcvPosPills.length
+    ? '<span class="tcv-move-ctl" title="Switch position — same as the Position filter above the board">' +
+        _tcvPosPills.map(b => '<button class="tcv-reveal-btn tcv-zoom-btn' + (b.dataset.pos === filter ? ' tcv-primary' : '') + '" data-tcvaction="setPos" data-tcvpos="' + b.dataset.pos + '">' + b.textContent.trim() + '</button>').join('') +
+      '</span>'
+    : '';
+  controls.innerHTML = _tcvPosHtml +
     '<button class="tcv-reveal-btn" data-tcvaction="hideAll" title="Hide every player — start the reveal flow">⊘ HIDE ALL</button>' +
     '<button class="tcv-reveal-btn tcv-primary" data-tcvaction="revealNext" title="Reveal the next hidden player (Spacebar works too)">▶ REVEAL NEXT</button>' +
     '<button class="tcv-reveal-btn" data-tcvaction="toggleOrder" title="Flip the REVEAL NEXT direction — top of the board first (1→' + data.length + ') or countdown from the bottom (' + data.length + '→1)">⇅ ' + (_tcvCountdownPref() ? (data.length + ' → 1') : ('1 → ' + data.length)) + '</button>' +
@@ -9810,6 +9820,11 @@ function _renderTierCardView(data, container) {
   root.querySelectorAll('[data-tcvaction]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-tcvaction');
+      if (action === 'setPos') {
+        const real = document.querySelector('.pos-filters .pos-btn[data-pos="' + btn.getAttribute('data-tcvpos') + '"]');
+        if (real) real.click();
+        return;
+      }
       if (action === 'toggleRows') {
         // Card DOM differs per layout — persist the pref and rebuild the view
         try { localStorage.setItem('tcv_rows', _tcvRows ? '0' : '1'); } catch(_) {}

@@ -5183,24 +5183,6 @@ function _updateRnkMobCtlSummary() {
   _rnkMobCtlApply(open);
 })();
 
-// === Mobile bottom nav (≤600px) ===
-// Taps click the real .nav-btn tabs so switchPage gating stays in charge;
-// switchPage calls _syncBottomNav so any navigation path updates the bar.
-(function () {
-  const bar = document.getElementById('bottomNav');
-  if (!bar) return;
-  bar.addEventListener('click', e => {
-    const b = e.target.closest('[data-bnav]');
-    if (!b) return;
-    const nav = document.querySelector('.nav-btn[data-page="' + b.dataset.bnav + '"]');
-    if (nav) nav.click();
-    try { window.scrollTo({ top: 0 }); } catch (err) {}
-  });
-  window._syncBottomNav = function (page) {
-    bar.querySelectorAll('[data-bnav]').forEach(b => b.classList.toggle('active', b.dataset.bnav === page));
-  };
-})();
-
 // === Saved view presets ===
 // One-click chips snapshotting the rankings control state (board, format,
 // scoring, stats mode, position, ADP source, TOP-N). Applied by
@@ -10050,6 +10032,11 @@ function _syncPassCta() {
   try { if (show && hasPremium()) show = false; } catch (_) {}
   btn.style.display = show ? 'flex' : 'none';
 }
+// Global search button shortcut hint: ⌘K on Apple devices
+(function () {
+  const k = document.querySelector('#globalSearchBtn .gsb-kbd');
+  if (k && /Mac|iPhone|iPad/.test(navigator.platform || '')) k.textContent = '⌘K';
+})();
 window._openSeasonPass = function () {
   const nav = document.querySelector('[data-page=account]');
   if (nav) nav.click();
@@ -22905,7 +22892,6 @@ function switchPage(page) {
   if (target) target.classList.add('active');
   const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
   if (btn) btn.classList.add('active');
-  if (window._syncBottomNav) window._syncBottomNav(page);
   // Move auth bar into this page's anchor
   const authBar = document.getElementById('globalAuthBar');
   const anchor = document.getElementById(anchorMap[page]);

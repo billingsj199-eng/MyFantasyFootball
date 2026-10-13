@@ -23235,9 +23235,9 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     ['#navMoreBtn', () => ['nav_more_open', {}]],
     ['.nav-btn[data-nav-tier="2"][data-page]', b => ['nav_tool_tab', { page: b.dataset.page }]],
     ['#btnThemeToggle', () => ['theme_toggle', { theme: document.documentElement.dataset.theme === 'light' ? 'dark' : 'light' }]],
+    ['#btnDraftHelper', () => ['draft_helper_open', {}]],
     ['.export-menu-item', b => ['export', { format: ((b.id || '').replace(/^btnExport/, '') || 'csv').toLowerCase() }]],
     ['#btnColumnToggle', () => ['cols_menu_open', {}]],
-    ['#btnDraftHelper', () => ['draft_helper_open', {}]],
     ['#btnShareRanks', () => ['share_ranks', {}]],
     ['#btnSave', () => ['ranks_save', { version: typeof currentVersion === 'string' ? currentVersion : '' }]],
     ['#authGoogle', () => ['sign_in_start', { method: 'google' }]],
@@ -38124,6 +38124,8 @@ window.fmtHeight = fmtHeight;
       // Show the icon for the theme you'd switch TO (sun = currently dark, moon = currently light)
       if (_iconDark) _iconDark.style.display = (t === 'light') ? '' : 'none';
       if (_iconLight) _iconLight.style.display = (t === 'light') ? 'none' : '';
+      const _lbl = document.getElementById('btnThemeLabel');
+      if (_lbl) _lbl.textContent = (t === 'light') ? 'DARK MODE' : 'LIGHT MODE';
     }
     let saved = 'dark';
     try { saved = localStorage.getItem(KEY) || 'dark'; } catch (_e) {}
@@ -38291,10 +38293,10 @@ window.fmtHeight = fmtHeight;
     if (saveBtn) saveBtn.style.display = (currentUser && allowed) ? '' : 'none';
     const shareBtn = document.getElementById('btnShareRanks');
     if (shareBtn) shareBtn.style.display = (currentUser && allowed) ? '' : 'none';
-    // MORE dropdown only holds edit-mode actions (Import, Clear) — hide the
-    // button when neither is visible so guests don't see an empty dropdown.
-    const moreBtn = document.getElementById('btnMoreMenu');
-    if (moreBtn) moreBtn.style.display = allowed ? '' : 'none';
+    // MORE now also holds Export / Draft Helper / theme (2026-10-13), so it is
+    // always shown; only its edit-mode block (Import / Save View / Clear) hides.
+    const moreEdit = document.getElementById('moreEditItems');
+    if (moreEdit) moreEdit.style.display = allowed ? '' : 'none';
   }
   window.updateToolbarVisibility = updateToolbarVisibility;
 

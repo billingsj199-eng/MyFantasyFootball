@@ -626,6 +626,11 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:3px;backg
 .tb-btn:hover{border-color:var(--accent);color:var(--accent)}
 .tb-btn.active-mode{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .tb-btn svg{width:14px;height:14px}
+/* MORE ⋯ menu section header + divider (rankings toolbar) */
+.tb-menu-hdr{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);padding:4px 8px 6px}
+.tb-menu-sep{height:1px;background:var(--border);margin:5px 4px}
+#moreMenu .tb-btn{border-color:transparent;background:transparent}
+#moreMenu .tb-btn:hover{background:var(--surface);border-color:var(--border)}
 .tb-btn#btnSave.has-changes{border-color:var(--accent);color:var(--accent);background:rgba(245,158,11,.1);animation:saveGlow 2s ease-in-out infinite}
 .tb-btn#btnSave.saving{opacity:.6;pointer-events:none}
 .tb-btn#btnSave.saved{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.1)}
@@ -3357,4 +3362,11 @@ tbody td{font-size:.8125rem}
   #pageResearch #rsExplorerWrap thead th:first-child{z-index:4;background:#111827}
   #pageResearch .rs-adv-chip{min-height:30px}
   #pageResearch input[type="checkbox"]{width:18px;height:18px}
+}
+
+/* Phone page titles (2026-10-13): Trade / Mock Draft / Draft Strategy were
+   32-34px while My Teams, Prospect and Start/Sit use 25.6px — one size for all
+   so content starts higher on the screen. */
+@media(max-width:600px){
+  .trade-title,.md-title,.ds-title{font-size:1.6rem;letter-spacing:2px}
 }

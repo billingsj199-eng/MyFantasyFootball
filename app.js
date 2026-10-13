@@ -34529,8 +34529,8 @@ window.fmtHeight = fmtHeight;
     const { nameA, nameB } = _tradeSideNames();
     const lblA = barA.querySelector('.trade-result-bar-label');
     const lblB = barB.querySelector('.trade-result-bar-label');
-    if (lblA) lblA.textContent = nameA.toUpperCase();
-    if (lblB) lblB.textContent = nameB.toUpperCase();
+    if (lblA) lblA.textContent = nameA;
+    if (lblB) lblB.textContent = nameB;
     // Bars show value RECEIVED: Team A receives side B's total, so the bigger
     // bar is the winner. Symmetric widths clamped to [8, 92] so the losing
     // side always shows a sliver and swapping A↔B mirrors cleanly.
@@ -35928,13 +35928,13 @@ window.fmtHeight = fmtHeight;
         + '<div class="rt-sub">FantasyCalc · live Sleeper-league trades · priced with <b>' + _esc(tradeSource) + '</b> values · ' + all.length + ' in your pool'
         + (_rt.at ? ' · updated ' + _esc(ago(new Date(_rt.at).toISOString())) : '') + '</div></div>'
         + '<div class="rt-ctl">'
-        + (inCalc.size ? '<button class="rt-btn' + (showInvolving ? ' active' : '') + '" data-rt="involving" title="Only trades that include a player in this calculator">THIS TRADE\'S PLAYERS' + (involving.length ? ' <span class="rt-n">' + involving.length + '</span>' : '') + '</button>'
-            + '<button class="rt-btn' + (!showInvolving ? ' active' : '') + '" data-rt="all">ALL RECENT</button>' : '')
+        + (inCalc.size ? '<button class="rt-btn' + (showInvolving ? ' active' : '') + '" data-rt="involving" title="Only trades that include a player in this calculator">This trade\'s players' + (involving.length ? ' <span class="rt-n">' + involving.length + '</span>' : '') + '</button>'
+            + '<button class="rt-btn' + (!showInvolving ? ' active' : '') + '" data-rt="all">All recent</button>' : '')
         + '<button class="rt-btn rt-refresh" data-rt="refresh" title="Fetch the newest trades">' + (_rt.busy ? '…' : '↻') + '</button></div></div>';
       if (!all.length) {
         html += '<div class="rt-empty">' + (_rt.busy ? 'Loading trades…' : _esc(_rt.err || 'No trades loaded yet — tap ↻.')) + '</div>';
       } else if (!shown.length) {
-        html += '<div class="rt-empty">No trade in the pool includes ' + (names.length === 1 ? _esc(names[0]) : 'these players') + ' yet. The pool grows each visit (' + all.length + ' trades so far) — try ALL RECENT.</div>';
+        html += '<div class="rt-empty">No trade in the pool includes ' + (names.length === 1 ? _esc(names[0]) : 'these players') + ' yet. The pool grows each visit (' + all.length + ' trades so far) — try All recent.</div>';
       } else {
         html += '<div class="rt-list">' + shown.map(t => {
           const s1 = priceSide(t.s1, inCalc, t.s2), s2 = priceSide(t.s2, inCalc, t.s1);
@@ -35952,12 +35952,12 @@ window.fmtHeight = fmtHeight;
           return '<div class="rt-row' + (exact ? '' : ' rt-other-fmt') + '" data-rtid="' + _esc(t.id) + '">'
             + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + fcNote + '</div>'
             + '<div class="rt-sides">'
-            + '<div class="rt-side"><div class="rt-side-lbl">SIDE 1 GIVES <span class="rt-tot">' + (s1.total || '—') + '</span></div>' + s1.assets.map(chip).join('') + '</div>'
+            + '<div class="rt-side"><div class="rt-side-lbl">Side 1 gives <span class="rt-tot">' + (s1.total || '—') + '</span></div>' + s1.assets.map(chip).join('') + '</div>'
             + '<div class="rt-arrow">⇄</div>'
-            + '<div class="rt-side"><div class="rt-side-lbl">SIDE 2 GIVES <span class="rt-tot">' + (s2.total || '—') + '</span></div>' + s2.assets.map(chip).join('') + '</div>'
+            + '<div class="rt-side"><div class="rt-side-lbl">Side 2 gives <span class="rt-tot">' + (s2.total || '—') + '</span></div>' + s2.assets.map(chip).join('') + '</div>'
             + '</div>'
             + '<div class="rt-foot"><span class="rt-verdict rt-v-' + vcls + '" title="By OUR values (package-adjusted, same math as the calculator)">' + verdict + (unp ? ' <span class="rt-unp" title="' + unp + ' asset' + (unp === 1 ? '' : 's') + ' not on our board — left out of the totals">· ' + unp + ' unpriced</span>' : '') + '</span>'
-            + '<button class="rt-btn rt-load" data-rt="load" data-rtid="' + _esc(t.id) + '" title="Put this trade in the calculator (side 1 → Team A)">LOAD</button></div>'
+            + '<button class="rt-btn rt-load" data-rt="load" data-rtid="' + _esc(t.id) + '" title="Put this trade in the calculator (side 1 → Team A)">Load</button></div>'
             + '</div>';
         }).join('') + '</div>';
         if (list.length > shown.length) html += '<button class="rt-btn rt-more" data-rt="more">SHOW ' + Math.min(40, list.length) + ' OF ' + list.length + '</button>';
@@ -36194,7 +36194,7 @@ window.fmtHeight = fmtHeight;
         sub += ' · ' + sendF.idxSet.size + ' player' + (sendF.idxSet.size === 1 ? '' : 's') +
           (sendF.pickCount ? ' · ' + sendF.pickCount + ' pick' + (sendF.pickCount === 1 ? '' : 's') : '');
       }
-      return title + ' <span style="display:block;font-size:.6875rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">' + sub + '</span>' + (sendF ? archBadge(sendF.team, sendLetter) : '');
+      return title + ' <span class="sc-label" style="display:block;font-size:.75rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">' + sub + '</span>' + (sendF ? archBadge(sendF.team, sendLetter) : '');
     }
     if (labelA) labelA.innerHTML = fmt(_calcSideFilters.a, _calcSideFilters.b, 'a', 'Team A', 'TEAM B');
     if (labelB) labelB.innerHTML = fmt(_calcSideFilters.b, _calcSideFilters.a, 'b', 'Team B', 'TEAM A');
@@ -59496,7 +59496,7 @@ Rules:
     const status = document.getElementById('mtSleeperStatus');
     const btn = document.getElementById('mtSleeperImportBtn');
     btn.disabled = true;
-    btn.textContent = 'LOADING...';
+    btn.textContent = 'Loading…';
     status.textContent = 'Fetching league data...';
     status.style.color = '';
 
@@ -59563,7 +59563,7 @@ Rules:
       status.style.color = 'var(--red)';
     }
     btn.disabled = false;
-    btn.textContent = 'IMPORT';
+    btn.textContent = 'Import';
   };
 
   // ── Import ALL leagues by Sleeper username (Flock-audit item 3) ────────
@@ -59581,7 +59581,7 @@ Rules:
     const name = ((input && input.value) || '').trim().replace(/^@/, '');
     const say = (msg, color) => { if (status) { status.textContent = msg; status.style.color = color || ''; } };
     if (!name) { say('Enter your Sleeper username.', '#f59e0b'); return; }
-    if (btn) { btn.disabled = true; btn.textContent = 'LOADING…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
     try {
       say('Looking up ' + name + ' on Sleeper…');
       const uResp = await fetch('https://api.sleeper.app/v1/user/' + encodeURIComponent(name));
@@ -59619,7 +59619,7 @@ Rules:
     } catch (err) {
       say(err instanceof TypeError ? 'Couldn\'t reach Sleeper — check your connection and try again.' : 'Error: ' + err.message, '#ef4444');
     }
-    if (btn) { btn.disabled = false; btn.textContent = 'IMPORT ALL'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Import all'; }
   };
 
   // ─── ESPN League Import (via the MFF ESPN extension) ────────────────────
@@ -59935,7 +59935,7 @@ Rules:
       if (status) { status.textContent = 'Paste your ESPN league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
-    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
     if (status) { status.textContent = 'Fetching league from ESPN…'; status.style.color = 'var(--text2)'; }
     try {
       await _mtLoadEspnNormalizer();
@@ -59982,7 +59982,7 @@ Rules:
         status.style.color = 'var(--red)';
       }
     }
-    if (btn) { btn.disabled = false; btn.textContent = 'IMPORT'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Import'; }
   };
 
   window._mtResyncEspn = function (leagueId) {
@@ -60211,7 +60211,7 @@ Rules:
       if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
-    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
     const say = (msg) => { if (status) { status.textContent = msg; status.style.color = 'var(--text2)'; } };
     say('Fetching league from Yahoo…');
     try {
@@ -60249,7 +60249,7 @@ Rules:
         }
       }
     }
-    if (btn) { btn.disabled = false; btn.textContent = 'IMPORT'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Import'; }
   };
 
   window._mtResyncYahoo = function (leagueId) {
@@ -63239,7 +63239,9 @@ Rules:
   const _MT_SRC_NAMES = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS', mff: 'MFF VALUE', underdog: 'UNDERDOG ADP', espn: 'ESPN ADP', cbs: 'CBS ADP', sleeper: 'SLEEPER ADP', yahoo: 'YAHOO ADP', ktc: 'KTC' };
   function _mtUpdateValueSrcLabel() {
     const el = document.getElementById('mtValueSrcLabel');
-    if (el) el.textContent = _MT_SRC_NAMES[_mtValueSrc] || String(_mtValueSrc || '').toUpperCase();
+    // Sentence-case label (2026-10-13); _MT_SRC_NAMES stays caps for the canvas exports
+    const SC = { consensus: 'Consensus', jacks: "Jack's rankings", mine: 'My ranks', mff: 'MFF VALUE', underdog: 'Underdog ADP', espn: 'ESPN ADP', cbs: 'CBS ADP', sleeper: 'Sleeper ADP', yahoo: 'Yahoo ADP', ktc: 'KTC' };
+    if (el) el.textContent = SC[_mtValueSrc] || _MT_SRC_NAMES[_mtValueSrc] || String(_mtValueSrc || '').toUpperCase();
   }
   function _mtActiveLeagueKey() {
     if (_mtActiveSource === 'espn') return _mtActiveEspnId ? 'espn_' + _mtActiveEspnId : null;

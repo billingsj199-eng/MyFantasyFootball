@@ -85,12 +85,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-13-navgrp" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-13-sc2" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-13-navgrp" as="script">
+<link rel="preload" href="app.js?v=2026-10-13-sc2" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -100,7 +100,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-13" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-13" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-13-navgrp">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-13-sc2">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -3173,8 +3173,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div style="display:flex;align-items:center;gap:10px">
 <div class="mt-src-tabs" role="tablist">
-<button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" class="mt-src-btn active" role="tab">LEAGUES</button>
-<button onclick="window._mtSwitchSource('underdog')" id="mtSrcUnderdog" class="mt-src-btn" role="tab">UNDERDOG</button>
+<button onclick="window._mtSwitchSource('sleeper')" id="mtSrcSleeper" class="mt-src-btn sc-label active" role="tab">Leagues</button>
+<button onclick="window._mtSwitchSource('underdog')" id="mtSrcUnderdog" class="mt-src-btn sc-label" role="tab">Underdog</button>
 </div>
 <button class="help-btn" id="mtHelpBtn" title="How to read the My Teams dashboard">?</button>
 </div>
@@ -3260,26 +3260,26 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- Value source — one-line bar; the rankings/ADP tabs collapse underneath (2026-09-02 declutter) -->
 <div id="mtValueSrcBar" onclick="window._mtToggleValueSrc()" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 14px;margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text)">VALUE SOURCE</span>
-<span id="mtValueSrcLabel" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--accent)">CONSENSUS</span>
+<span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text)" class="sc-label">Value source</span>
+<span id="mtValueSrcLabel" class="sc-label" style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;color:var(--accent)">Consensus</span>
 <span class="mt-vs-hint" style="font-size:.6875rem;color:var(--text2)">team grades &amp; player values</span>
 <span id="mtValueSrcChevron" style="margin-left:auto;color:var(--text2);font-size:.8rem">▾</span>
 </div>
 <div id="mtValueSrcPanel" style="display:none;margin-top:6px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);margin-bottom:4px">RANKINGS</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;font-size:.75rem;color:var(--text2);margin-bottom:4px">Rankings</div>
 <div class="trade-mode-tabs" style="margin-bottom:.5rem;background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
-<button class="trade-src-tab mt-src-tab active" data-mtsrc="consensus">CONSENSUS</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
+<button class="trade-src-tab mt-src-tab active" data-mtsrc="consensus">Consensus</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Jack's</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="mff" style="display:none" title="MFF VALUE — our dynasty value score (FAIR VALUE + Dynasty SIM, rookie picks blended with KTC's pick price). Dynasty leagues only."><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>MFF VALUE</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="mine">MY RANKS</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="mine">My ranks</button>
 </div>
-<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);margin:6px 0 4px">ADP SOURCE</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;font-size:.75rem;color:var(--text2);margin:6px 0 4px">ADP source</div>
 <div class="trade-mode-tabs" style="background:var(--bg);padding:3px;border-radius:6px;display:inline-flex;flex-wrap:wrap">
-<button class="trade-src-tab mt-src-tab" data-mtsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Underdog</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="espn"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ESPN</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="cbs"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>CBS</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="sleeper">SLEEPER</button>
-<button class="trade-src-tab mt-src-tab" data-mtsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>YAHOO</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="sleeper">Sleeper</button>
+<button class="trade-src-tab mt-src-tab" data-mtsrc="yahoo"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Yahoo</button>
 <button class="trade-src-tab mt-src-tab" data-mtsrc="ktc">KTC</button>
 </div>
 <div class="mff-mode-bar" id="mffModeBarMt"><span class="mff-mode-lbl" title="Tilt MFF VALUE toward your team's window. BALANCED = the standard value. CONTENDER leans on this season and next; REBUILDER on the seasons after. Applies to the MFF VALUE board, trade calculator and My Teams.">TEAM MODE</span><button class="mff-mode-chip" data-mffmode="contender" title="Win now: weights the rest of this season and next most — producing veterans gain, picks and stashes lose">CONTENDER</button><button class="mff-mode-chip active" data-mffmode="balanced" title="The standard MFF VALUE">BALANCED</button><button class="mff-mode-chip" data-mffmode="rebuilder" title="Build for later: weights the seasons after next most — picks and young players gain, aging producers lose">REBUILDER</button></div>
@@ -3289,7 +3289,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- ADD A LEAGUE — explainer + import cards, collapsible (2026-09-02 declutter: auto-collapses once a league is saved or loaded; window._mtToggleSetup) -->
 <div id="mtSetup" style="margin-top:20px;margin-bottom:16px">
 <div onclick="window._mtToggleSetup()" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--accent)">ADD A LEAGUE</span>
+<span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--accent)" class="sc-label">Add a league</span>
 <span style="font-size:.6875rem;color:var(--text2)">Sleeper · ESPN · Yahoo · or every league from a Sleeper username</span>
 <span id="mtSetupChevron" style="margin-left:auto;color:var(--text2);font-size:.8rem">▾</span>
 </div>
@@ -3305,21 +3305,21 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div style="display:flex;gap:10px;align-items:flex-start">
 <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 5-9"/></svg>
 <div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px">PORTFOLIO OVERVIEW</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px" class="sc-label">Portfolio overview</div>
 <div style="font-size:.7rem;color:var(--text2);line-height:1.4">Total drafts, dollars invested, average team build, and your most-rostered players across every league.</div>
 </div>
 </div>
 <div style="display:flex;gap:10px;align-items:flex-start">
 <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
 <div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px">TEAM RANKINGS</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px" class="sc-label">Team rankings</div>
 <div style="font-size:.7rem;color:var(--text2);line-height:1.4">Every team in every pool ranked and graded. Click any roster for picks, VOR, and projection breakdown.</div>
 </div>
 </div>
 <div style="display:flex;gap:10px;align-items:flex-start">
 <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 <div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px">VALUE &amp; REACH ANALYSIS</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1px;color:var(--text);margin-bottom:2px" class="sc-label">Value &amp; reach analysis</div>
 <div style="font-size:.7rem;color:var(--text2);line-height:1.4">Find your steals (picked late vs. ADP) and reaches across every draft. Build-shape scoring (ZRO/HER/BAL) and stacking analysis included.</div>
 </div>
 </div>
@@ -3331,15 +3331,15 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- Sleeper League Import -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">SLEEPER LEAGUE</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px" class="sc-label">Sleeper league</div>
 <div style="font-size:.72rem;color:var(--text2);margin-bottom:10px"><b style="color:#22c55e">Free</b> — paste your Sleeper league ID to import all teams, or your username for every league. Private leagues work too, no extension needed.</div>
 <div style="display:flex;gap:6px">
 <input type="text" id="mtSleeperLeagueId" placeholder="League ID (e.g. 1312075626064134144)" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
-<button id="mtSleeperImportBtn" onclick="window._mtImportSleeper()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT</button>
+<button id="mtSleeperImportBtn" class="sc-label" onclick="window._mtImportSleeper()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">Import</button>
 </div>
 <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
 <input type="text" id="mtSleeperUser" placeholder="…or your Sleeper username (imports every league)" onkeydown="if(event.key==='Enter')window._mtImportSleeperUser()" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
-<button id="mtSleeperUserBtn" onclick="window._mtImportSleeperUser()" style="padding:8px 12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT ALL</button>
+<button id="mtSleeperUserBtn" class="sc-label" onclick="window._mtImportSleeperUser()" style="padding:8px 12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">Import all</button>
 </div>
 <div id="mtSleeperStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
 </div>
@@ -3347,11 +3347,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- ESPN League Import (direct API sync for public leagues; MFF ESPN extension for private) -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
 <div style="position:absolute;top:10px;right:10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">ESPN LEAGUE</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px" class="sc-label">ESPN league</div>
 <div id="mtEspnHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px"><b style="color:#22c55e">Free</b> — paste your ESPN league ID or league URL. Private leagues: install the free <a data-ext-store="espn" target="_blank" rel="noopener">MFF ESPN extension</a> and click <b>Export league to MFF</b> on your ESPN league page (no Premium needed).</div>
 <div style="display:flex;gap:6px">
 <input type="text" id="mtEspnLeagueId" placeholder="League ID or fantasy.espn.com URL" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
-<button id="mtEspnImportBtn" onclick="window._mtImportEspnById()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT</button>
+<button id="mtEspnImportBtn" class="sc-label" onclick="window._mtImportEspnById()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">Import</button>
 </div>
 <div id="mtEspnLeagueList" style="margin-top:8px"></div>
 <div id="mtEspnStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
@@ -3360,11 +3360,11 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- Yahoo League Import (direct proxy sync for publicly viewable leagues; MFF Yahoo extension for the rest) -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative">
 <div style="position:absolute;top:10px;right:10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;background:var(--surface2);border:1px solid var(--border);color:var(--accent);padding:2px 7px;border-radius:3px">BETA</div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">YAHOO LEAGUE</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px" class="sc-label">Yahoo league</div>
 <div id="mtYahooHint" style="font-size:.72rem;color:var(--text2);margin-bottom:10px"><b style="color:#22c55e">Free</b> — paste your Yahoo league ID or league URL (from football.fantasysports.yahoo.com — pasting your team's URL auto-selects your team). Private leagues: install the free <a data-ext-store="yahoo" target="_blank" rel="noopener">MFF Yahoo extension</a> and click <b>Export league to MFF</b> on your Yahoo league page (no Premium needed).</div>
 <div style="display:flex;gap:6px">
 <input type="text" id="mtYahooLeagueId" placeholder="League ID or football.fantasysports.yahoo.com URL" style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem">
-<button id="mtYahooImportBtn" onclick="window._mtImportYahooById()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">IMPORT</button>
+<button id="mtYahooImportBtn" class="sc-label" onclick="window._mtImportYahooById()" style="padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;white-space:nowrap">Import</button>
 </div>
 <div id="mtYahooLeagueList" style="margin-top:8px"></div>
 <div id="mtYahooStatus" style="font-size:.7rem;color:var(--text2);margin-top:6px"></div>
@@ -4107,17 +4107,17 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="trade-subtitle" id="tradeSubtitle">Add players and draft picks to each side to evaluate trades</div>
 </div>
 <div class="trade-mode-tabs">
-<button class="trade-mode-tab active" data-tmode="redraft">REDRAFT</button>
-<button class="trade-mode-tab" data-tmode="superflex">SUPERFLEX</button>
-<button class="trade-mode-tab" data-tmode="dynasty">DYNASTY 1QB</button>
-<button class="trade-mode-tab" data-tmode="dynastysf">DYNASTY SF</button>
+<button class="trade-mode-tab active" data-tmode="redraft">Redraft</button>
+<button class="trade-mode-tab" data-tmode="superflex">Superflex</button>
+<button class="trade-mode-tab" data-tmode="dynasty">Dynasty 1QB</button>
+<button class="trade-mode-tab" data-tmode="dynastysf">Dynasty SF</button>
 </div>
-<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:4px;text-align:center">RANKINGS</div>
+<div style="font-family:'DM Sans',sans-serif;font-weight:600;font-size:.75rem;color:var(--text2);margin-bottom:4px;text-align:center">Rankings</div>
 <div class="trade-mode-tabs" style="margin-bottom:1.25rem;flex-wrap:wrap">
-<button class="trade-src-tab active" data-tsrc="consensus">CONSENSUS</button>
-<button class="trade-src-tab" data-tsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>JACK'S</button>
+<button class="trade-src-tab active" data-tsrc="consensus">Consensus</button>
+<button class="trade-src-tab" data-tsrc="jacks"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Jack's</button>
 <button class="trade-src-tab" data-tsrc="mff" style="display:none" title="MFF VALUE — our dynasty value score: today's market price re-ordered by the Dynasty SIM and where the market is expected to move (FAIR VALUE), deeper players and rookie picks by Dynasty SIM value on the same scale. Dynasty only."><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>MFF VALUE</button>
-<button class="trade-src-tab" data-tsrc="mine">MY RANKS</button>
+<button class="trade-src-tab" data-tsrc="mine">My ranks</button>
 </div>
 <div class="mff-mode-bar" id="mffModeBarTrade"><span class="mff-mode-lbl" title="Tilt MFF VALUE toward your team's window. BALANCED = the standard value. CONTENDER leans on this season and next; REBUILDER on the seasons after. Applies to the MFF VALUE board, trade calculator and My Teams.">TEAM MODE</span><button class="mff-mode-chip" data-mffmode="contender" title="Win now: weights the rest of this season and next most — producing veterans gain, picks and stashes lose">CONTENDER</button><button class="mff-mode-chip active" data-mffmode="balanced" title="The standard MFF VALUE">BALANCED</button><button class="mff-mode-chip" data-mffmode="rebuilder" title="Build for later: weights the seasons after next most — picks and young players gain, aging producers lose">REBUILDER</button></div>
 <!-- ADP SOURCE row removed 2026-10-08 (Jack): the calculator prices on rankings only - consensus / Jack's / my ranks -->
@@ -4145,7 +4145,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="trade-layout">
 <!-- Side A -->
 <div class="trade-side">
-<div class="trade-side-label side-a">TEAM B RECEIVES<span style="display:block;font-size:.6875rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team A</span></div>
+<div class="trade-side-label side-a">TEAM B RECEIVES<span class="sc-label" style="display:block;font-size:.75rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team A</span></div>
 <div class="trade-search-wrap">
 <svg class="trade-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
 <input type="text" class="trade-search" id="tradeSearchA" placeholder="Search player..." autocomplete="off">
@@ -4176,7 +4176,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 
 <!-- Side B -->
 <div class="trade-side">
-<div class="trade-side-label side-b">TEAM A RECEIVES<span style="display:block;font-size:.6875rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team B</span></div>
+<div class="trade-side-label side-b">TEAM A RECEIVES<span class="sc-label" style="display:block;font-size:.75rem;color:var(--text2);font-weight:normal;letter-spacing:1px;margin-top:2px">from Team B</span></div>
 <div class="trade-search-wrap">
 <svg class="trade-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35"/></svg>
 <input type="text" class="trade-search" id="tradeSearchB" placeholder="Search player..." autocomplete="off">
@@ -4215,8 +4215,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- Result -->
 <div class="trade-result is-empty" id="tradeResult">
 <div class="trade-result-bar-wrap">
-<div class="trade-result-bar-a" id="tradeBarA" style="width:50%"><span class="trade-result-bar-label">TEAM A</span></div>
-<div class="trade-result-bar-b" id="tradeBarB" style="width:50%"><span class="trade-result-bar-label">TEAM B</span></div>
+<div class="trade-result-bar-a" id="tradeBarA" style="width:50%"><span class="trade-result-bar-label">Team A</span></div>
+<div class="trade-result-bar-b" id="tradeBarB" style="width:50%"><span class="trade-result-bar-label">Team B</span></div>
 </div>
 <div class="trade-verdict even" id="tradeVerdict"></div>
 <div class="trade-verdict-sub" id="tradeVerdictSub"></div>
@@ -6301,7 +6301,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-13-navgrp"></script>
+<script defer src="app.js?v=2026-10-13-sc2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

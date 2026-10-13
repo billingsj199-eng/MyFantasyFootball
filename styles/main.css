@@ -3407,3 +3407,14 @@ tbody td{font-size:.8125rem}
 #pageStartSit .sst-ps-lbl{font-size:.75rem}
 #pageStartSit #sstFmt button,
 #pageStartSit #sstClear{font-size:.78rem}
+
+/* Sentence-case rollout (2026-10-13), after the Start/Sit pilot: Trade + My Teams.
+   .sc-label = opt-in "no forced caps" for elements whose inline/attribute styles
+   (e.g. the My Teams inline-Bebas → DM Sans caps rule above) would re-uppercase them. */
+.sc-label{text-transform:none!important;letter-spacing:.01em!important}
+#pageTrade .trade-mode-tab,#pageTrade .trade-src-tab,
+#pageMyTeams .trade-src-tab,#pageMyTeams .mt-src-btn,
+#pageTrade .trade-result-bar-label,#pageTrade .rt-btn,#pageTrade .rt-side-lbl,
+#pageTrade .tvi-win{text-transform:none;letter-spacing:.01em}
+#pageTrade .trade-mode-tab,#pageTrade .trade-src-tab,#pageMyTeams .trade-src-tab{font-size:.78rem}
+#pageTrade .rt-btn,#pageTrade .rt-side-lbl{font-size:.75rem}

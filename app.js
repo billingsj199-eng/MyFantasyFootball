@@ -10050,6 +10050,8 @@ window._openSeasonPass = function () {
 
 function render() {
   _consRankCache.board = null;   // boards can be reordered in place — rebuild per paint
+  // Phone cards drop the drag-handle column on boards you can't reorder (main.css body.rnk-readonly)
+  document.body.classList.toggle('rnk-readonly', !canEdit());
   try { _syncConsColHeader(); _syncSeasonPpgHeader(); } catch (_) {}
   try { _syncDevyHeaders(); } catch (_) {}
   // POS LOCK toggle visibility tracks whatever render tracks (version /
@@ -11586,6 +11588,8 @@ document.getElementById('helpOverlay').addEventListener('click', e => {
 
 // Controls
 let _searchTimer = null;
+// Phones have no "/" shortcut and the long hint truncated mid-word
+if (window.matchMedia && matchMedia('(max-width:600px)').matches) document.getElementById('search').placeholder = 'Search players';
 document.getElementById('search').addEventListener('input', e => {
   query = e.target.value;
   if (_searchTimer) clearTimeout(_searchTimer);
@@ -21400,7 +21404,7 @@ function openPlayerCard(d, ctxMode) {
   try {
     if (d && d.n && typeof window._playerSlug === 'function') {
       const slug = window._playerSlug(d.n);
-      const newUrl = window.location.origin + window.location.pathname + '?player=' + slug;
+      const newUrl = window.location.origin + window.location.pathname + '?player=' + slug + window.location.hash;
       if (window.location.search !== '?player=' + slug) {
         window.history.pushState({ player: slug }, '', newUrl);
       }
@@ -21674,7 +21678,7 @@ function closeCard() {
   try {
     const params = new URLSearchParams(window.location.search);
     if (params.has('player')) {
-      const cleanUrl = window.location.origin + window.location.pathname;
+      const cleanUrl = window.location.origin + window.location.pathname + window.location.hash;
       window.history.pushState({}, document.title, cleanUrl);
     }
   } catch (_e) {}
@@ -22901,7 +22905,12 @@ function switchPage(page) {
   try {
     const targetHash = page && page !== 'rankings' ? '#' + page : '';
     if (location.hash !== targetHash) {
-      history.replaceState({}, '', location.pathname + location.search + targetHash);
+      // pushState (2026-10-13 mobile pass): the phone back button / back swipe
+      // returns to the previous page instead of leaving the site. Router-driven
+      // switches (load, back/forward) replace so they don't stack duplicates.
+      const url = location.pathname + location.search + targetHash;
+      if (window._mffRouterNav) history.replaceState({}, '', url);
+      else history.pushState({ page: page }, '', url);
     }
   } catch(_) {}
   // SPA page-view for GA4 (no-op until MFF_GA_ID is set in index.html) — hash
@@ -22983,8 +22992,13 @@ window.switchPage = switchPage;
 (function _initHashRouter() {
   function _applyHash() {
     const h = (location.hash || '').replace(/^#\/?/, '').toLowerCase();
-    if (h && pageMap[h]) switchPage(h);
-    else if (h) switchPage('rankings'); // unknown hash (e.g. #mock) → fall back to rankings landing + clean the URL
+    window._mffRouterNav = true;
+    try {
+      if (h && pageMap[h]) switchPage(h);
+      else if (h) switchPage('rankings'); // unknown hash (e.g. #mock) → fall back to rankings landing + clean the URL
+      // Back to the bare URL (Rankings has no hash) — only when another page is showing
+      else if (!document.getElementById(pageMap.rankings)?.classList.contains('active')) switchPage('rankings');
+    } finally { window._mffRouterNav = false; }
   }
   window.addEventListener('hashchange', _applyHash);
   // Defer to after DOMContentLoaded so the nav handlers exist.

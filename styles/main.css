@@ -3418,3 +3418,26 @@ tbody td{font-size:.8125rem}
 #pageTrade .tvi-win{text-transform:none;letter-spacing:.01em}
 #pageTrade .trade-mode-tab,#pageTrade .trade-src-tab,#pageMyTeams .trade-src-tab{font-size:.78rem}
 #pageTrade .rt-btn,#pageTrade .rt-side-lbl{font-size:.75rem}
+
+/* Mobile pass (2026-10-13), benchmarked on Amazon / YouTube / Airbnb / ESPN phone
+   layouts + the 44px (Apple) / 48dp (Google) touch-target and 11px+ text floors. */
+@media(max-width:600px){
+  /* Header controls were 28-29px tall */
+  .global-signin-btn,.global-pass-btn,.global-search-btn,.help-btn{min-height:40px}
+  .global-pass-btn,.global-search-btn{min-width:40px;justify-content:center}
+  /* Read-only boards (Consensus, SIM VOR, MFF VALUE, signed out): the drag handle
+     does nothing, so its column goes and the player name gets the room. */
+  body.rnk-readonly #pageRankings tbody tr[data-idx] td:first-child{display:none!important}
+  /* 9.9px position-rank tags and the 10px WEEKLY button → 11px floor */
+  #pageRankings tbody .mrk{font-size:.6875rem!important}
+  #tickerRow .ss-btn{font-size:.6875rem;min-height:32px}
+  /* Prospect filters were 26px tall */
+  .pm-pos-tab,.pm-cmp-btn,.pm-scoring-btn{min-height:36px}
+  /* Mock Draft: the ADP-source strip was 514px inside the 375px page and the page
+     clipped it — the last tabs were unreachable. Cap it so it scrolls instead. */
+  #mdAdpSrcTabs{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  /* Small glyph buttons keep their size but get a ~44px invisible hit area */
+  #pageRankings .watch-star,#pageStartSit .sst-x{position:relative}
+  #pageRankings .watch-star::after,#pageStartSit .sst-x::after{content:'';position:absolute;inset:-8px -8px}
+  .mt-src-btn,.games-tab,#pageTrade .rt-btn{min-height:36px}
+}

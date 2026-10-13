@@ -1,0 +1,9 @@
+{
+  "note": "Regression guard for `node perf/mobile-perf.js --check` (live site, slow 4G + 4x CPU, medians of in-page timings). Set 2026-10-13 just above the live baseline measured with this tool (rows ~14.5 s, CLS 0.006, ~1.9 MB before rows, ~0.7 MB after). Tighten after each phase of the app.js split plan ships.",
+  "max": {
+    "cls": 0.1,
+    "rowsVisible": 17000,
+    "kbBeforeRows": 2000,
+    "kbAfterRows": 1200
+  }
+}

@@ -90,11 +90,12 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-13-thumb2" as="script">
-<!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
+<link rel="preload" href="app.js?v=2026-10-13-fblate" as="script">
+<!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
+     Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
-<link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous">
+<link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous" media="(min-width:601px)">
 <link rel="preload" href="data/combine_data.js?v=2026-10-12" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-13" as="script">
@@ -265,7 +266,20 @@ document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth
       document.head.appendChild(s);
     });
   }
-  load(V + 'firebase-app-compat.js')
+  // Phones (≤600px) start this chain only after the first rankings paint (2026-10-13 mobile
+  // perf): the ~155 KB of SDK + Google auth iframe otherwise compete for a slow connection
+  // with the ~1.9 MB the first rows need, and the first rows never wait on Firebase (they
+  // render from bundled data). DOMContentLoaded fires right after app.js's first render();
+  // one rAF + timeout lets that paint land. This is the same order a slow network already
+  // produces today (SDK arriving after DCL): _fbBootAuth/_fbBoot no-op until it lands and
+  // parse-time auth listeners register through _whenFirebaseReady. Desktop unchanged.
+  var phone = window.matchMedia && matchMedia('(max-width:600px)').matches;
+  var gate = !phone ? Promise.resolve() : new Promise(function(res){
+    function afterPaint(){ requestAnimationFrame(function(){ setTimeout(res, 0); }); }
+    if (document.readyState !== 'loading') afterPaint();
+    else document.addEventListener('DOMContentLoaded', afterPaint);
+  });
+  gate.then(function(){ return load(V + 'firebase-app-compat.js'); })
     .then(function(){ return load(V + 'firebase-auth-compat.js'); })
     .then(function(){
       // Init + earliest possible auth listener: kicks off the token refresh now, in
@@ -6328,7 +6342,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-13-thumb2"></script>
+<script defer src="app.js?v=2026-10-13-fblate"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

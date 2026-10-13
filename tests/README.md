@@ -22,6 +22,22 @@ gotcha.
 Tests run signed-out on purpose: free-tier gates (Jack's board top-36 in the
 print test) are part of what's asserted.
 
+## Mobile performance
+
+```
+cd tests
+npm run perf                                   # live site, Lighthouse-mobile profile, 2 runs
+node perf/mobile-perf.js http://localhost:8899/ --no-network-throttle
+npm run perf:check                             # exit 1 if medians exceed perf/budget.json
+```
+
+Pixel 5 + 4x CPU + slow 4G (150 ms RTT, ~1.6 Mbps), cold cache, SW blocked.
+Prints FCP / LCP / CLS / TBT, when the first rankings rows exist, and KB
+downloaded before vs after them. Not part of `playwright test` — it hits the
+network and varies run to run, so compare medians. Local servers don't gzip,
+so use `--no-network-throttle` there and judge network time on the live site.
+Tighten `perf/budget.json` as each phase of the app.js split plan ships.
+
 ## Notes
 
 - `node_modules/`, `test-results/`, `playwright-report/` are gitignored;

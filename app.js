@@ -5366,7 +5366,8 @@ function _notesCloudInit(u) {
     }).catch(() => {});
   } catch (e) {}
 }
-try { firebase.auth().onAuthStateChanged(u => { if (u) _notesCloudInit(u); }); } catch (e) {}
+// Through the ready queue: Firebase may load after app.js runs (phones start it after first paint)
+_whenFirebaseReady(function(){ try { firebase.auth().onAuthStateChanged(u => { if (u) _notesCloudInit(u); }); } catch (e) {} });
 
 window._noteFor = function (name) {
   const e = window._playerNotes[name];
@@ -6121,7 +6122,7 @@ function _watchCloudInit(u) {
     }).catch(() => {});
   } catch (e) {}
 }
-try { firebase.auth().onAuthStateChanged(u => { if (u) _watchCloudInit(u); }); } catch (e) {}
+_whenFirebaseReady(function(){ try { firebase.auth().onAuthStateChanged(u => { if (u) _watchCloudInit(u); }); } catch (e) {} });
 
 window._watchToggleName = function (name) {
   if (!name) return;
@@ -9402,7 +9403,7 @@ function _tcvByeCutCloudInit(u) {
     }).catch(() => {});
   } catch(_) {}
 }
-try { firebase.auth().onAuthStateChanged(u => { if (u) _tcvByeCutCloudInit(u); }); } catch(_) {}
+_whenFirebaseReady(function(){ try { firebase.auth().onAuthStateChanged(u => { if (u) _tcvByeCutCloudInit(u); }); } catch(_) {} });
 // Why a player is not playing this week: { kind:'bye' } | { kind:'out', code } | null
 // (Jack 2026-10-07: the row is BYE / OUT — start-worthy players sitting out either way).
 function _tcvAwayWhy(d) {
@@ -23326,17 +23327,20 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     sst.addEventListener('focus', () => { fired = false; });
     sst.addEventListener('input', () => { if (!fired && sst.value.trim().length >= 2) { fired = true; track('startsit_search', {}); } });
   }
-  // Completed sign-ins: the first auth callback is the persisted state, not a login
-  try {
-    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
-      let first = true, signed = false;
-      firebase.auth().onAuthStateChanged(u => {
-        if (first) { first = false; signed = !!u; return; }
-        if (u && !signed) track('login', { method: ((u.providerData && u.providerData[0]) || {}).providerId || 'password' });
-        signed = !!u;
-      });
-    }
-  } catch (e) {}
+  // Completed sign-ins: the first auth callback is the persisted state, not a login.
+  // Through the ready queue — Firebase may not be loaded yet when app.js runs.
+  _whenFirebaseReady(function () {
+    try {
+      if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+        let first = true, signed = false;
+        firebase.auth().onAuthStateChanged(u => {
+          if (first) { first = false; signed = !!u; return; }
+          if (u && !signed) track('login', { method: ((u.providerData && u.providerData[0]) || {}).providerId || 'password' });
+          signed = !!u;
+        });
+      }
+    } catch (e) {}
+  });
 })();
 // === Phone MORE tab (≤600px) ===
 // Toggles .more-open on the sidebar so tier-2 tabs render as a grid sheet above

@@ -5,5 +5,10 @@
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "http-server": "^14.1.1"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "perf": "node perf/mobile-perf.js",
+    "perf:check": "node perf/mobile-perf.js --check"
   }
 }

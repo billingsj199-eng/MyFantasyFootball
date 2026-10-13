@@ -1,9 +1,9 @@
 {
-  "note": "Regression guard for `node perf/mobile-perf.js --check` (live site, slow 4G + 4x CPU, medians of in-page timings). Tightened 2026-10-13 after phase 2 (live: rows ~11.4 s, CLS 0.006, ~1.75 MB before rows, ~0.5 MB after). Tighten again after each phase of the app.js split plan ships.",
+  "note": "Regression guard for `node perf/mobile-perf.js --check` (live site, slow 4G + 4x CPU, medians of in-page timings). Tightened 2026-10-13 after phase 3 stage 3 (live: rows ~10.1 s, CLS 0.002, ~1.41 MB before rows, ~0.3 MB after). Tighten again as more of the split ships.",
   "max": {
     "cls": 0.1,
-    "rowsVisible": 14000,
-    "kbBeforeRows": 1850,
+    "rowsVisible": 12000,
+    "kbBeforeRows": 1500,
     "kbAfterRows": 900
   }
 }

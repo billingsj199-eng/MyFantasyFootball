@@ -350,6 +350,13 @@ window._fixHeadshotUrl = function(url) {
   if (!url.includes('a.espncdn.com/combiner')) return url;
   return url.replace(/&w=\d+&h=\d+/, '&w=350');
 };
+// Rankings-row avatars render at 24-28px: ask ESPN's combiner for a 96px-wide
+// image (3x for retina) instead of 350px — ~10x fewer pixels per headshot on
+// the phone list (2026-10-13 mobile perf). Width-only, so the ratio is kept.
+window._thumbHeadshotUrl = function(url) {
+  const u = window._fixHeadshotUrl(url);
+  return (typeof u === 'string' && u.includes('a.espncdn.com/combiner')) ? u.replace(/&w=350\b/, '&w=96') : u;
+};
 
 // === HEADSHOT NORMALIZER — square "floating heads" + tight 2026 crops ===
 // ESPN headshots are transparent PNG cutouts, but two newer templates render
@@ -10296,7 +10303,7 @@ function render() {
       h += `<tr class="bye-row${blur}" data-bye-name="${dn}">
         <td></td>
         <td class="myrank-cell"><span class="myrank-num bye-rank" title="On bye in week ${wk} — season ${d.s === 'DST' ? 'D/ST' : d.s} rank ${p.seasonRank} on the redraft board (not ranked this week)">${rankLbl}</span></td>
-        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
+        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.assumed ? 'Assumed out for week ' + wk + ' (Jack\'s call) — ' : ''}${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
         <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.assumed ? '<b class="bye-assumed" title="Jack assumes he sits this week — not yet ruled out">ASSUMED OUT</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}${p.assumed && typeof window.isAdmin === 'function' && window.isAdmin() ? ` <button class="bye-undo-btn" type="button" data-assume-undo="${dn}" title="Put ${dn} back in the week ${wk} rankings">UNDO</button>` : ''}</td>
@@ -10364,7 +10371,7 @@ function render() {
       html += `<tr class="devy-row${_dBlur ? ' premium-blur' : ''}${_dTier ? ' tierband-' + tierColor(_dTier) : ''}" data-devy-idx="${d._devyIdx}" data-devy-name="${_dn}">
         <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + _dn + '. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div>' : ''}</td>
         <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_dTier)}" title="${d._devyClsRank != null ? d._devyEligYr + ' class rank: ' + _dRank + ' · overall devy rank: ' + d.myRank : 'Devy rank: ' + _dRank}">${_dRank}</span></td>
-        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-devy-card="${_dn}">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div><span class="watch-star${_dw ? ' on' : ''}" data-watch="${_dn}" role="button" title="${_dw ? 'Remove from' : 'Add to'} watchlist">${_dw ? '★' : '☆'}</span></div></td>
+        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-devy-card="${_dn}">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div><span class="watch-star${_dw ? ' on' : ''}" data-watch="${_dn}" role="button" title="${_dw ? 'Remove from' : 'Add to'} watchlist">${_dw ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
         ${_devyJmCellHtml(d)}
@@ -10762,7 +10769,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._fixHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -18136,7 +18143,7 @@ _renderDataFreshness();
     const up = m.delta > 0;
     const color = up ? '#22c55e' : '#ef4444';
     const img = m.img
-      ? `<img class="amc-img" src="${esc(window._fixHeadshotUrl(m.img))}" alt="" loading="eager" onerror="this.style.display='none'">`
+      ? `<img class="amc-img" src="${esc(window._thumbHeadshotUrl(m.img))}" alt="" loading="eager" onerror="this.style.display='none'">`
       : `<span class="amc-img amc-initials">${esc(m.name.split(' ').map(w => w[0] || '').join('').slice(0, 2))}</span>`;
     const detail = m.parts.map(p => p.book + ' ' + LBL[p.st] + ' ' + fmtV(p.st, p.from) + '→' + fmtV(p.st, p.to)).join(' · ');
     return `<div class="adp-mover-chip" data-mover="${esc(m.name)}" style="border-left:2px solid ${color}">
@@ -18247,7 +18254,7 @@ _renderDataFreshness();
     const pctDen = m.kind === 'rank' ? Math.max(m.from, m.to) : m.from;
     const pct = pctDen > 0 ? Math.round(Math.abs(m.delta) / pctDen * 100) : null;
     const img = m.img
-      ? `<img class="amc-img" src="${esc(window._fixHeadshotUrl(m.img))}" alt="" loading="eager" onerror="this.style.display='none'">`
+      ? `<img class="amc-img" src="${esc(window._thumbHeadshotUrl(m.img))}" alt="" loading="eager" onerror="this.style.display='none'">`
       : `<span class="amc-img amc-initials">${esc(m.name.split(' ').map(w => w[0] || '').join('').slice(0, 2))}</span>`;
     return `<div class="adp-mover-chip" data-mover="${esc(m.name)}" style="border-left:2px solid ${color}">
       ${img}

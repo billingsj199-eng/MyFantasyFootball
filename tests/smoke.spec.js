@@ -27,8 +27,10 @@ test.describe('rankings page', () => {
     await page.goto('/');
     await page.waitForFunction(() => document.querySelectorAll('#tbody tr[data-idx]').length > 400);
     expect(await page.locator('#tbody .skel-row').count()).toBe(0);
-    // Roster churn moves the exact count — assert the ballpark, not 502.
-    expect(await page.locator('#tbody tr[data-idx]').count()).toBeGreaterThan(400);
+    // Roster churn moves the exact count — assert the ballpark, not 502. Polled: a
+    // re-render as data lands repaints the first ~120 rows and appends the tail on
+    // idle (≤1.2s) or scroll-near (2026-10-13), so the count can dip briefly.
+    await expect.poll(() => page.locator('#tbody tr[data-idx]').count(), { timeout: 15_000 }).toBeGreaterThan(400);
   });
 
   test('position filter + TOP-N cap the visible pool', async ({ page }) => {

@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-13-fblate" as="script">
+<link rel="preload" href="app.js?v=2026-10-13-late2" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -4861,9 +4861,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-10-13-0856" defer></script>
 <script src="data/sim_proj_2026.js?v=2026-10-13-1005" defer></script>
-<script src="data/matchup_edges_2026.js?v=2026-10-13-1005" defer></script>
-<script src="data/site_projections.js?v=2026-10-13" defer></script>
-<script src="data/ownership_2026.js?v=2026-10-13" defer></script>
+<!-- matchup_edges_2026 / site_projections / ownership_2026 load AFTER first paint via
+     window._loadLateData() (2026-10-13 mobile perf) — card / Start/Sit only, all typeof-guarded. -->
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
 <!-- hp.js (~838 KB) moved into the _loadRetiredData lazy bundle (2026-07-20) — feeds only retired-player surfaces (FG_POOL merge, GW era pools), all idempotent re-runs on mff:retireddata. -->
 <!-- ep_retired.js (~795 KB) + daily_retired_pool.js DEFERRED (2026-07-10). EP_RETIRED is
@@ -4906,17 +4905,15 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- Kicker stat history (nflverse 1999+, FG buckets/XP/finishes) + current FG
      distance splits (ESPN). Feed the kicker card career table + FG SPLITS
      section only — every reader is typeof-guarded. -->
-<script src="data/kicker_history.js?v=2026-10-13" defer></script>
-<script src="data/kicker_splits.js?v=2026-10-02" defer></script>
+<!-- kicker_history / kicker_splits / dst_history / dst_weekly / kicker_weekly / player_weekly_sigma
+     load AFTER first paint via window._loadLateData() (2026-10-13 mobile perf): K/DST card +
+     K/DST boards + Best-Ball sigma only, every reader typeof-guarded; the default board has no
+     K/DST rows (blocking each file left all 565 rows identical on phone + desktop). -->
 <!-- K/DST profile bundles (nflverse): D/ST season history 1999+ w/ finishes,
      plus kicker + D/ST game logs (2020+). Feed the K/DST card career table
      and GAME LOGS section only — every reader is typeof-guarded. -->
-<script src="data/dst_history.js?v=2026-10-13" defer></script>
-<script src="data/dst_weekly.js?v=2026-10-13" defer></script>
-<script src="data/kicker_weekly.js?v=2026-10-13" defer></script>
 <!-- defer: PLAYER_WEEKLY_SIGMA has a single on-demand consumer (_bbBlendSigma in the
      Best-Ball simulator, post-DOMContentLoaded) and no parse-time reader. -->
-<script src="data/player_weekly_sigma.js?v=2026-10-13" defer></script>
 <!-- injury_history.js tag removed 2026-07-23: its only consumer was the JS Model
      engine, which moved to the standalone js_model_site project. The data file
      stays in data/ — the standalone site loads it via a relative path. -->
@@ -6314,6 +6311,36 @@ window._loadRetiredData = function(opts) {
   return window._retiredDataPromise;
 };
 
+// === Post-first-paint data (2026-10-13 mobile perf) ===
+// Small bundles the default Rankings board never reads (verified: blocking each one left every
+// row identical on phone + desktop). They used to be static defer tags the first rows waited on;
+// now they load right after first paint on every device, in order, then dispatch 'mff:latedata'
+// (app.js repaints a K/DST board, Start/Sit or an open player card that rendered without them).
+// The ?v= strings stay in this file so the scheduled jobs' `name.js?v=` bumps still apply.
+window._LATE_DATA_FILES = [
+  'data/matchup_edges_2026.js?v=2026-10-13-1005',
+  'data/site_projections.js?v=2026-10-13',
+  'data/ownership_2026.js?v=2026-10-13',
+  'data/kicker_history.js?v=2026-10-13',
+  'data/kicker_splits.js?v=2026-10-02',
+  'data/dst_history.js?v=2026-10-13',
+  'data/dst_weekly.js?v=2026-10-13',
+  'data/kicker_weekly.js?v=2026-10-13',
+  'data/player_weekly_sigma.js?v=2026-10-13',
+];
+window._loadLateData = function(opts) {
+  if (window._lateDataPromise) return window._lateDataPromise;
+  window._lateDataPromise = _injectScripts(window._LATE_DATA_FILES, 'LateData', opts).then(function() {
+    window._lateDataLoaded = true;
+    try { document.dispatchEvent(new Event('mff:latedata')); } catch (e) {}
+  });
+  return window._lateDataPromise;
+};
+(function() {
+  function go() { requestAnimationFrame(function() { setTimeout(function() { window._loadLateData(); }, 0); }); }
+  if (document.readyState !== 'loading') go(); else document.addEventListener('DOMContentLoaded', go);
+})();
+
 // Idle preload: warm both lazy bundle sets after first paint so the common paths have data
 // ready without blocking the initial load. stagger:true spreads the ~28 MB parse across many
 // idle windows (one file each) instead of one ~640 ms burst, so it no longer freezes the UI
@@ -6343,7 +6370,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-13-fblate"></script>
+<script defer src="app.js?v=2026-10-13-late2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

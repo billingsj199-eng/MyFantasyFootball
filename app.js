@@ -10840,7 +10840,15 @@ function render() {
   // (setTimeout 0 after render) assume every row exists immediately.
   // _renderSeq discards a stale append when another render lands in the gap.
   window._renderSeq = (window._renderSeq || 0) + 1;
-  if (!editable && _chunkLen > 0 && (html.length - _chunkLen) > 20000) {
+  // Reader already at/past the ~120-row cut (scrolled deep, or a short list on a tall
+  // screen): render everything synchronously — truncating to the first chunk would
+  // collapse the page under them and clamp their scroll until the tail lands.
+  let _deep = false;
+  try {
+    const _cut = tbody.rows && tbody.rows[119];
+    _deep = !!(_cut && _cut.getBoundingClientRect().top < window.innerHeight + 1200);
+  } catch (e) {}
+  if (!editable && !_deep && _chunkLen > 0 && (html.length - _chunkLen) > 20000) {
     const _seq = window._renderSeq;
     tbody.innerHTML = html.slice(0, _chunkLen);
     const _rest = html.slice(_chunkLen);
@@ -22865,6 +22873,21 @@ document.addEventListener('mff:weeklydata', () => {
   const ae = document.activeElement;
   if (ae && ae.classList && ae.classList.contains('cmp-split-mate')) return;
   renderCompareGrid();
+});
+
+// Post-first-paint bundles (K/DST history + game logs, site projections, ownership,
+// matchup edges, BB sigma — index.html _loadLateData) landed: repaint whatever already
+// rendered without them. The default board never reads them, so it is left alone.
+document.addEventListener('mff:latedata', () => {
+  const active = id => { const p = document.getElementById(id); return !!(p && p.classList.contains('active')); };
+  try { if (active('pageRankings') && (filter === 'K' || filter === 'DST')) render(); } catch (e) {}
+  try { if (active('pageStartSit') && typeof window._sstRender === 'function') window._sstRender(); } catch (e) {}
+  try {
+    if (modal && modal.classList.contains('open') && window._cardOpenName && typeof window.openPlayerCard === 'function') {
+      const d = D.find(p => p.n === window._cardOpenName);
+      if (d) window.openPlayerCard(d);
+    }
+  } catch (e) {}
 });
 
 function renderSearchChips() {

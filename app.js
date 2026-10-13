@@ -37267,7 +37267,11 @@ window.fmtHeight = fmtHeight;
             const newTiers = data.jacks[m] && data.jacks[m]._posTiers ? Object.values(data.jacks[m]._posTiers).reduce((s,a) => s + (a?a.length:0), 0) : 0;
             const oldTiers = prev.jacks && prev.jacks[m] && prev.jacks[m]._posTiers ? Object.values(prev.jacks[m]._posTiers).reduce((s,a) => s + (a?a.length:0), 0) : 0;
             if (oldLen > 0 && (newLen === 0 || newLen / oldLen < SHRINK_THRESHOLD)) shrunk.push(m + ' players: ' + oldLen + '→' + newLen);
-            if (oldTiers > 0 && newTiers === 0) shrunk.push(m + ' tiers: ' + oldTiers + '→0');
+            // Weekly tiers belong to one week: a new week starts with no tiers
+            // by design (Jack 2026-09-28), so only compare same-week saves.
+            const _wkRoll = m === 'weekly' && prev.jacks && prev.jacks.weekly && prev.jacks.weekly._week != null
+              && prev.jacks.weekly._week !== data.jacks.weekly._week;
+            if (oldTiers > 0 && newTiers === 0 && !_wkRoll) shrunk.push(m + ' tiers: ' + oldTiers + '→0');
           });
           // Devy board: the order lives in this browser's localStorage between
           // saves, so a cleared / never-loaded browser would publish nothing.

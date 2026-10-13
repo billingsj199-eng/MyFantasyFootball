@@ -85,12 +85,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-13-mob3" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-13-perf2" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-13-mob3" as="script">
+<link rel="preload" href="app.js?v=2026-10-13-perf2" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -100,7 +100,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-13" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-13" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-13-mob3">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-13-perf2">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -6226,13 +6226,26 @@ function _injectScripts(files, tag, opts) {
   }, Promise.resolve());
 }
 
+// Core slice of the weekly bundle (2026-10-13 mobile perf): weekly_stats_active is the
+// only file the Rankings view reads (L4 PPG, the phone xFP chip), so phones warm just
+// this ~350 KB instead of the whole ~4.4 MB bundle. _loadWeeklyData chains through it,
+// so it is injected once and still lands before the rest of the bundle.
+window._loadWeeklyCore = function(opts) {
+  if (window._weeklyCorePromise) return window._weeklyCorePromise;
+  window._weeklyCorePromise = _injectScripts([
+    // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
+    // merge also still listens on mff:weeklydata (idempotent).
+    'data/weekly_stats_active.js?v=2026-10-13'
+  ], 'WeeklyCore', opts).then(function() {
+    try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
+  });
+  return window._weeklyCorePromise;
+};
+
 window._loadWeeklyData = function(opts) {
   if (window._weeklyDataPromise) return window._weeklyDataPromise;
   var files = [
-    // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer). First in
-    // the list so the L4 PPG column and active-player game logs fill soonest; the ACTIVE
-    // merge listens on the same mff:weeklydata event as the retired merges.
-    'data/weekly_stats_active.js?v=2026-10-13',
+    // (weekly_stats_active loads first via _loadWeeklyCore above)
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
     'data/fpa_2026.js?v=2026-10-13-0851',
@@ -6251,7 +6264,9 @@ window._loadWeeklyData = function(opts) {
     // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
     'data/team_usage_2026.js?v=2026-10-13-0856'
   ];
-  window._weeklyDataPromise = _injectScripts(files, 'WeeklyData', opts).then(function() {
+  window._weeklyDataPromise = window._loadWeeklyCore(opts).then(function() {
+    return _injectScripts(files, 'WeeklyData', opts);
+  }).then(function() {
     try { document.dispatchEvent(new Event('mff:weeklydata')); }
     catch (e) { console.warn('[WeeklyData] merge dispatch failed:', e); }
   });
@@ -6292,6 +6307,18 @@ window._loadRetiredData = function(opts) {
 // Games/Compare still calls these with no opts → fast parallel load (dedup'd if warm-up
 // already started them).
 window.addEventListener('load', function() {
+  // Phones / Data Saver skip the warm-up (2026-10-13 mobile perf): it is ~4.4 MB
+  // gzipped (~28 MB of JS to parse) for surfaces the phone Rankings view does not
+  // show, and parsing it froze the page for seconds right after first paint on a
+  // mid-range phone. Every consumer still loads on demand (player card open,
+  // switchPage to Games/Compare/etc.); phones warm only the ~350 KB core slice the
+  // Rankings cards read (xFP / L4 PPG).
+  var conn = navigator.connection || {};
+  if (conn.saveData || (window.matchMedia && matchMedia('(max-width:600px)').matches)) {
+    var core = function() { try { window._loadWeeklyCore({ stagger: true }); } catch (e) {} };
+    if (window.requestIdleCallback) requestIdleCallback(core, { timeout: 3000 }); else setTimeout(core, 1200);
+    return;
+  }
   var kick = function() {
     try { window._loadRetiredData({ stagger: true }); } catch (e) {}
     try { window._loadWeeklyData({ stagger: true }); } catch (e) {}
@@ -6301,7 +6328,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-13-mob3"></script>
+<script defer src="app.js?v=2026-10-13-perf2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -10013,9 +10013,12 @@ function _renderTierCardView(data, container) {
 }
 
 // Check if user has active premium
+var _premRaw, _premData;   // parse cache: hasPremium() runs per rankings row (var: callable before this line runs)
 function hasPremium() {
   if (typeof window.isAdmin === 'function' && window.isAdmin()) return true;
-  const data = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+  const raw = localStorage.getItem('jb_premium');
+  if (raw !== _premRaw) { _premRaw = raw; try { _premData = JSON.parse(raw || 'null'); } catch (e) { _premData = null; } }
+  const data = _premData;
   return data && data.expires > Date.now();
 }
 // Expose globally so external code (e.g. Jack's Teams panel) can check
@@ -10833,11 +10836,27 @@ function render() {
     const _seq = window._renderSeq;
     tbody.innerHTML = html.slice(0, _chunkLen);
     const _rest = html.slice(_chunkLen);
-    setTimeout(() => {
+    // Tail waits for idle (≤1.2s) or for the reader to scroll near row ~120,
+    // whichever is first (2026-10-13 mobile perf: a page load renders ~6 times
+    // as data arrives, and the old 30ms tail ran for every one — ~1.3s of main
+    // thread at mobile CPU speed for rows nobody had reached). A newer render
+    // bumps _renderSeq, so superseded tails are dropped without touching the DOM.
+    let _done = false, _io = null, _idle = 0;
+    const _append = () => {
+      if (_done) return; _done = true;
+      if (_io) _io.disconnect();
+      if (_idle && window.cancelIdleCallback) cancelIdleCallback(_idle);
       if (window._renderSeq !== _seq) return;
       tbody.insertAdjacentHTML('beforeend', _rest);
       if (typeof window._applyCellVisibility === 'function') window._applyCellVisibility();
-    }, 30);
+    };
+    const _last = tbody.lastElementChild;
+    if (_last && window.IntersectionObserver) {
+      _io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) _append(); }, { rootMargin: '0px 0px 1200px 0px' });
+      _io.observe(_last);
+    }
+    if (window.requestIdleCallback) _idle = requestIdleCallback(_append, { timeout: 1200 });
+    else setTimeout(_append, 300);
   } else {
     tbody.innerHTML = html;
   }
@@ -11588,8 +11607,8 @@ document.getElementById('helpOverlay').addEventListener('click', e => {
 
 // Controls
 let _searchTimer = null;
-// Phones have no "/" shortcut and the long hint truncated mid-word
-if (window.matchMedia && matchMedia('(max-width:600px)').matches) document.getElementById('search').placeholder = 'Search players';
+// Phones have no "/" shortcut; the box fits ~93px of 16px text, so even "Search players" truncated
+if (window.matchMedia && matchMedia('(max-width:600px)').matches) document.getElementById('search').placeholder = 'Search';
 document.getElementById('search').addEventListener('input', e => {
   query = e.target.value;
   if (_searchTimer) clearTimeout(_searchTimer);
@@ -17614,9 +17633,17 @@ function _getCollegeStats(name, pos) {
 // 404 (file not yet created) is silently tolerated: the strip just won't show.
 window.CAMP_NEWS = null;
 window._campNewsIdx = null;
+var _campNewsNormMemo;   // same few hundred names, normalized per row per render (var: callable before this line runs)
 function _campNewsNorm(n) {
-  return String(n).toLowerCase().replace(/[.'’-]/g, '')
-    .replace(/\s+(jr|sr|ii|iii|iv|v)$/, '').replace(/\s+/g, ' ').trim();
+  const k = String(n);
+  if (!_campNewsNormMemo) _campNewsNormMemo = new Map();
+  let v = _campNewsNormMemo.get(k);
+  if (v === undefined) {
+    v = k.toLowerCase().replace(/[.'’-]/g, '')
+      .replace(/\s+(jr|sr|ii|iii|iv|v)$/, '').replace(/\s+/g, ' ').trim();
+    _campNewsNormMemo.set(k, v);
+  }
+  return v;
 }
 (function _loadCampNews() {
   const now = new Date();

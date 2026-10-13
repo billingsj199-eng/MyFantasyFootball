@@ -1599,6 +1599,10 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 
 /* Global Top-Right Auth Bar — flows inside each page header */
 .global-auth-bar{display:flex;align-items:center;gap:8px;flex-shrink:0}
+/* Until app.js moves it into a page's .auth-anchor it sits at the top of
+   .main-content — take no space there, or the whole page jumps ~40px up when
+   it moves (CLS 0.16 on mobile, 2026-10-13). */
+.main-content > #globalAuthBar{position:absolute;visibility:hidden;pointer-events:none}
 .auth-anchor{display:flex;justify-content:flex-end}
 /* Rankings: sits inline in toolbar */
 .logo-row .auth-anchor{display:contents}
@@ -3440,4 +3444,7 @@ tbody td{font-size:.8125rem}
   #pageRankings .watch-star,#pageStartSit .sst-x{position:relative}
   #pageRankings .watch-star::after,#pageStartSit .sst-x::after{content:'';position:absolute;inset:-8px -8px}
   .mt-src-btn,.games-tab,#pageTrade .rt-btn{min-height:36px}
+  /* The ticker row is filled by JS (0 → 25 → 41px), pushing the search row and the
+     whole table down mid-load — reserve its final height up front. */
+  #tickerRow{min-height:41px}
 }

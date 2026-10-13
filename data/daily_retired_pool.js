@@ -1378,8 +1378,11 @@ const _RETIRED_TEAM_MAP = {
 // for retired players that aren't in HP
 window._RETIRED_TEAM_MAP = _RETIRED_TEAM_MAP;
 
-// Build the pool: only players with an ESPN ID and last season >= 2004
-const DAILY_RETIRED_POOL = EP_RETIRED
+// Build the pool: only players with an ESPN ID and last season >= 2004.
+// ep_retired.js loads AFTER first paint since 2026-10-13 (mobile perf), so EP_RETIRED is
+// usually not defined yet here: start empty — app.js _expandDailyRetiredPool() rebuilds
+// the whole pool from EP_RETIRED when it lands ('mff:epretired'), same final list as before.
+const DAILY_RETIRED_POOL = (typeof EP_RETIRED === 'undefined') ? [] : EP_RETIRED
   .filter(p => p.last >= 2004 && RETIRED_ESPN_IDS[p.name])
   .map(p => ({
     name: p.name,

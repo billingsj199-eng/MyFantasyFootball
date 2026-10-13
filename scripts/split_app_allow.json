@@ -1,11 +1,17 @@
 {
-  "note": "Outside references to lazy-chunk names that were reviewed as safe but that the scripts/split_app.js guard heuristic cannot prove (nested-block or early-return guards). Format \"<chunk>:<name>\"; every entry needs a reason. Re-review when the referencing code changes.",
+  "note": "Outside references to lazy-chunk names that were reviewed as safe but that the scripts/split_app.js guard heuristic cannot prove (nested-block or early-return guards, or a value passed along instead of called). Format \"<chunk>:<name>\"; every entry needs a reason. Re-review when the referencing code changes.",
   "allow": [
     "prospect:_jmClass",
-    "prospect:_pmBuiltData"
+    "prospect:_pmBuiltData",
+    "games:_gwGetPoolCurrent",
+    "games:_gwGetPool2000s",
+    "games:_gwGetPool2010s"
   ],
   "reasons": {
     "prospect:_jmClass": "openPlayerCard JM tile: the call sits inside `if (!d._retired && window._pmBuiltData && window._jmClass) {` (nested block guard).",
-    "prospect:_pmBuiltData": "card dynasty block: preceded by `if (!window._pmBuiltData) return '';` (early-return guard)."
+    "prospect:_pmBuiltData": "card dynasty block: preceded by `if (!window._pmBuiltData) return '';` (early-return guard).",
+    "games:_gwGetPoolCurrent": "cloud sync _restoreDaily: passed as a value; _verifyDailyTarget checks `typeof poolGetter === 'function'` and skips the legacy-doc restore when the pool isn't available (today's docs carry per-key dates and need no pool).",
+    "games:_gwGetPool2000s": "same as games:_gwGetPoolCurrent (also wrapped by _pool150R, which checks typeof getter === 'function').",
+    "games:_gwGetPool2010s": "same as games:_gwGetPoolCurrent (also wrapped by _pool150R, which checks typeof getter === 'function')."
   }
 }

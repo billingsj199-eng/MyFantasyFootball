@@ -215,6 +215,27 @@ function split(src, chunks) {
   return { core: manifest + '\n' + keep.join('\n'), chunks: out };
 }
 
+// index.html: <script>/<link rel=preload> tags carrying data-split-lazy="<key>" are eager in the
+// source (local dev = today's behaviour) but lazy in the split build: drop them and expose
+// their URLs as window._SPLIT_LAZY_DATA[<key>] (read by loaders like window._loadEpRetired).
+function transformIndex(file) {
+  let html = fs.readFileSync(file, 'utf8');
+  const map = {};
+  html = html.replace(/<(script|link)\b([^>]*\bdata-split-lazy="([a-z0-9-]+)"[^>]*)>(<\/script>)?\r?\n?/g, (m, tag, attrs, key) => {
+    const url = /\b(?:src|href)="([^"]+)"/.exec(attrs);
+    if (!url) throw new Error('data-split-lazy tag without src/href: ' + m.slice(0, 120));
+    if (tag === 'script') map[key] = url[1];
+    else if (!map[key]) map[key] = url[1];
+    return '';
+  });
+  if (!Object.keys(map).length) return {};
+  const inject = `<script>window._SPLIT_LAZY_DATA = ${JSON.stringify(map)};</script>\n`;
+  if (html.indexOf('</head>') < 0) throw new Error('index.html has no </head>');
+  html = html.replace('</head>', inject + '</head>');
+  fs.writeFileSync(file, html);
+  return map;
+}
+
 function main() {
   const src = readSource(SRC);
   if (mode === '--analyze') {
@@ -252,8 +273,10 @@ function main() {
   for (const [name, code] of Object.entries(parts)) {
     fs.writeFileSync(path.join(outDir, `app-chunk-${name}.js`), `// app-chunk-${name}.js — generated from app.js by scripts/split_app.js; edit app.js, not this file.\n` + code + '\n');
   }
+  const lazyData = transformIndex(path.join(outDir, 'index.html'));
   const kb = s => Math.round(Buffer.byteLength(s) / 1024);
   console.log(`split_app: core ${kb(core)} KB` + Object.entries(parts).map(([n, c]) => `, ${n} ${kb(c)} KB`).join('') + ` → ${outDir}`);
+  if (Object.keys(lazyData).length) console.log('split_app: index.html lazy data → ' + JSON.stringify(lazyData));
 }
 
 try { main(); } catch (e) { console.error('split_app: ' + e.message); process.exit(1); }

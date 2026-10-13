@@ -17,6 +17,8 @@ const _SOS_POS = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DST']);
 // Defined first so render() / openPlayerCard can call it during the first paint.
 (function () {
   const loaded = {}, pending = {};
+  // Data a chunk must find already loaded when its top-level code runs.
+  const PRE = { games: () => (typeof window._loadEpRetired === 'function' ? window._loadEpRetired() : null) };
   const lazy = n => Array.isArray(window._MFF_CHUNKS) && window._MFF_CHUNKS.indexOf(n) >= 0;
   window._chunkLoaded = n => !lazy(n) || loaded[n] === true;
   function ver() {
@@ -28,14 +30,14 @@ const _SOS_POS = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DST']);
     const need = [].concat(names || []).filter(n => !window._chunkLoaded(n));
     if (!need.length) return Promise.resolve();
     document.body.classList.add('mff-chunk-loading');
-    return Promise.all(need.map(n => pending[n] || (pending[n] = new Promise((res, rej) => {
+    return Promise.all(need.map(n => pending[n] || (pending[n] = Promise.resolve(PRE[n] ? PRE[n]() : null).then(() => new Promise((res, rej) => {
       const s = document.createElement('script');
       s.src = 'app-chunk-' + n + '.js?v=' + encodeURIComponent(ver());
       s.async = false;
       s.onload = () => { loaded[n] = true; res(); };
       s.onerror = () => { delete pending[n]; s.remove(); rej(new Error('chunk ' + n + ' failed to load')); };
       document.head.appendChild(s);
-    })))).finally(() => {
+    }), e => { delete pending[n]; throw e; })))).finally(() => {
       if (Object.keys(pending).every(k => loaded[k])) document.body.classList.remove('mff-chunk-loading');
     });
   };
@@ -199,6 +201,9 @@ function validateImportData(obj) {
   }
   _expandDailyRetiredPool();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _expandDailyRetiredPool);
+  // ep_retired.js loads after first paint (index.html _loadEpRetired) — expand on arrival.
+  // Registered before the D-append listener below, so the order matches the old eager path.
+  document.addEventListener('mff:epretired', _expandDailyRetiredPool);
 
   // D/ST rows: seed the team logo as the row/card image. They ship without
   // _slImg like kickers, but a roster lookup makes no sense for a unit — the
@@ -22987,7 +22992,7 @@ render();
 
 // Pages whose code lives in lazy app chunks (loader at the top of this file).
 // Mock + Research read the prospect model (_pmBuiltData / _attachJmScores), so they pull it too.
-const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['prospect', 'mock'], prospect: ['prospect'], backtest: ['prospect'] };
+const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['prospect', 'mock'], prospect: ['prospect'], backtest: ['prospect'], games: ['games'] };
 
 // === Page Navigation ===
 const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
@@ -23515,6 +23520,49 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// === Retired players → D (search/autocomplete, legend cards) + window._RETIRED_NAMES ===
+// Was inside the Guess Who module; core since the games code became a lazy app chunk
+// (2026-10-13) — the rankings ticker, Jack's save scrub and search rely on it.
+// Retired players pool for daily Guess Who (from NFL database)
+  // Add retired players to D array for autocomplete
+// Also track retired names in a global Set so the rankings/ticker code can
+// identify legend-pool entries even though `nameToIdx` was built earlier.
+window._RETIRED_NAMES = window._RETIRED_NAMES || new Set();
+// ep_retired.js (~795 KB) is deferred \u2014 EP_RETIRED may be undefined at parse.
+// Push retired players into D (for search/autocomplete + Guess Who) eagerly when
+// present, else on DOMContentLoaded once the deferred script parses. Idempotent:
+// the D.find guard + Set prevent duplicate pushes on re-run. Runs AFTER the initial
+// render(), so the main rankings table never depended on these entries.
+function _epAppendRetiredToD() {
+  if (typeof EP_RETIRED === 'undefined') return;
+  // O(n) dedup: build a name Set once instead of D.find() per retired player (was
+  // O(EP_RETIRED \u00d7 D) \u2248 3M ops / ~185ms at startup). Set is seeded from D so re-runs
+  // (DCL) stay idempotent \u2014 already-pushed retirees are in D \u2192 in the Set \u2192 skipped.
+  var _existingNames = new Set();
+  for (var _i = 0; _i < D.length; _i++) _existingNames.add(D[_i].n);
+  EP_RETIRED.forEach(p => {
+    if (!_existingNames.has(p.name) && !_dHasPlayerName(p.name)) {
+      const seasons = p.last - p.debut + 1;
+      D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
+      _existingNames.add(p.name);
+      window._RETIRED_NAMES.add(p.name);
+    }
+  });
+}
+_epAppendRetiredToD();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _epAppendRetiredToD);
+// ep_retired.js loads after first paint (index.html _loadEpRetired) — append on arrival.
+document.addEventListener('mff:epretired', _epAppendRetiredToD);
+
+// === Guess Who daily pool: active-player snapshot ===
+// The daily picture pick hashes over retired pool + active players WITH a headshot. The
+// games code is a lazy chunk now, and _slImg can still change after this point (async
+// roster headshot fixes), so capture the actives exactly as the module saw them when it
+// ran here at load — every visitor gets the same daily player as before the split.
+window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.n.includes('D/ST'))
+  .map(d => ({ n: d.n, s: d.s, t: d.t, img: d._slImg }));
+
+//#chunk games
 // === GUESS WHO — Daily Player Guessing Game (picture + type name) ===
 // NOTE: HTML IDs use ep* prefix and localStorage uses ep_* / ep_v3_* keys — legacy from pre-swap naming.
 (function() {
@@ -23595,34 +23643,8 @@ document.addEventListener('click', function(e) {
     return `https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${id}.png&w=350`;
   }
 
-  // Retired players pool for daily Guess Who (from NFL database)
-    // Add retired players to D array for autocomplete
-  // Also track retired names in a global Set so the rankings/ticker code can
-  // identify legend-pool entries even though `nameToIdx` was built earlier.
-  window._RETIRED_NAMES = window._RETIRED_NAMES || new Set();
-  // ep_retired.js (~795 KB) is deferred \u2014 EP_RETIRED may be undefined at parse.
-  // Push retired players into D (for search/autocomplete + Guess Who) eagerly when
-  // present, else on DOMContentLoaded once the deferred script parses. Idempotent:
-  // the D.find guard + Set prevent duplicate pushes on re-run. Runs AFTER the initial
-  // render(), so the main rankings table never depended on these entries.
-  function _epAppendRetiredToD() {
-    if (typeof EP_RETIRED === 'undefined') return;
-    // O(n) dedup: build a name Set once instead of D.find() per retired player (was
-    // O(EP_RETIRED \u00d7 D) \u2248 3M ops / ~185ms at startup). Set is seeded from D so re-runs
-    // (DCL) stay idempotent \u2014 already-pushed retirees are in D \u2192 in the Set \u2192 skipped.
-    var _existingNames = new Set();
-    for (var _i = 0; _i < D.length; _i++) _existingNames.add(D[_i].n);
-    EP_RETIRED.forEach(p => {
-      if (!_existingNames.has(p.name) && !_dHasPlayerName(p.name)) {
-        const seasons = p.last - p.debut + 1;
-        D.push({n:p.name,a:999,p:0,s:p.pos,r:p.pos+"\u2014",t:"Retired",p25:null,p24:null,p23:null,age:null,cyr:null,out:null,sal:null,dr:null,exp:seasons,role:null,inj:null,s25:null,career:p.career||[],da:999,sa:999,idx:D.length,myRank:D.length+1,round:99,notes:"",_retired:true,_debut:p.debut,_last:p.last});
-        _existingNames.add(p.name);
-        window._RETIRED_NAMES.add(p.name);
-      }
-    });
-  }
-  _epAppendRetiredToD();
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _epAppendRetiredToD);
+  // (EP_RETIRED → D append + window._RETIRED_NAMES moved to core above this module —
+  //  it must run whether or not this lazy chunk has loaded.)
 
   // Pre-audited set of ESPN IDs that return 404 — devy/college prospects whose NFL headshots
   // don't exist yet. Derived from a full HEAD-check of every image URL in the Guess Who pool.
@@ -23651,15 +23673,13 @@ document.addEventListener('click', function(e) {
   let DAILY_COMBINED_POOL = DAILY_RETIRED_POOL.filter(p => !window.BAD_IMAGE_IDS.has(String(p.id)));
   (function _buildDailyCombinedPool() {
     const retiredNames = new Set(DAILY_RETIRED_POOL.map(p => p.name.toLowerCase()));
-    const actives = D.filter(d =>
-      !d._retired &&
-      d._slImg &&
-      d.n &&
-      !d.n.includes('D/ST') &&
-      !retiredNames.has(d.n.toLowerCase())
-    );
+    // Actives from the load-time snapshot (core, just above this module) so a lazily
+    // loaded chunk picks from the same pool; falls back to live D if it's missing.
+    const snap = window._GW_ACTIVE_SNAPSHOT ||
+      D.filter(d => !d._retired && d._slImg && d.n && !d.n.includes('D/ST')).map(d => ({ n: d.n, s: d.s, t: d.t, img: d._slImg }));
+    const actives = snap.filter(d => !retiredNames.has(d.n.toLowerCase()));
     actives.forEach(d => {
-      const m = d._slImg && d._slImg.match(/full\/(\d+)\.png/);
+      const m = d.img && d.img.match(/full\/(\d+)\.png/);
       if (!m) return;
       if (window.BAD_IMAGE_IDS.has(m[1])) return;
       DAILY_COMBINED_POOL.push({
@@ -23754,6 +23774,9 @@ document.addEventListener('click', function(e) {
 
   const MAX_GUESSES = 1;
   let todayPlayer = getDailyPlayer();
+  // Diagnostic (read-only): today's daily pick + pool size — used to verify the pick is
+  // identical across the unsplit source and the deployed split build.
+  window._gwDailyPickInfo = () => ({ name: todayPlayer && todayPlayer.name, id: todayPlayer && todayPlayer.id, pool: DAILY_COMBINED_POOL.length, retired: DAILY_RETIRED_POOL.length });
   let guesses = [];
   let gameOver = false;
   let streak = parseInt(localStorage.getItem('ep_streak') || '0');
@@ -27386,6 +27409,7 @@ document.addEventListener('click', function(e) {
   // Init
   renderRoster();
 })();
+//#endchunk games
 
 // === CAREER-SOURCE TIE-BREAK HELPERS ===
 // Several passes below choose D[].career from competing sources (d.js,
@@ -33901,8 +33925,11 @@ window.fmtHeight = fmtHeight;
           _restoreDaily('gw10s150', keys.gw10s150, () => _pool150R(window._gwGetPool2010s), 31503);
         }
       }
-      // If we restored daily state that the games already initialized without, reload once
-      if (_dailyRestored && !sessionStorage.getItem('_dailySyncReloaded')) {
+      // If we restored daily state that the games already initialized without, reload once.
+      // The games code is a lazy app chunk in the split build — when it hasn't run yet it
+      // will read the restored keys itself, so no reload is needed (unsplit: always loaded).
+      const _gamesRan = !window._chunkLoaded || window._chunkLoaded('games');
+      if (_dailyRestored && _gamesRan && !sessionStorage.getItem('_dailySyncReloaded')) {
         sessionStorage.setItem('_dailySyncReloaded', '1');
         setTimeout(() => window.location.reload(), 300);
         return;

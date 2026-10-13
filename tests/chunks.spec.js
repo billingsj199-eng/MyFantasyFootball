@@ -91,6 +91,30 @@ test.describe('lazy app chunks', () => {
     expect(errors).toEqual([]);
   });
 
+  test('games: chunk loads after ep_retired; daily Guess Who pick is the pinned one', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => window.switchPage('games'));
+    await expect(page.locator('#pageGames')).toHaveClass(/active/);
+    await expect.poll(() => page.evaluate(() => typeof window._gwDailyPickInfo), { timeout: 30_000 }).toBe('function');
+    const info = await page.evaluate(() => window._gwDailyPickInfo());
+    expect(info.retired).toBeGreaterThan(400);          // expanded retired pool, not the empty/311 one
+    if (process.env.MFF_DAILY_PICK) expect(info.name + '|' + info.pool).toBe(process.env.MFF_DAILY_PICK);
+    console.log('daily pick', JSON.stringify(info));
+    if (SPLIT) {
+      const order = await page.evaluate(() => performance.getEntriesByType('resource').map(e => e.name.split('/').pop().split('?')[0]).filter(n => /ep_retired|app-chunk-games/.test(n)));
+      expect(order).toEqual(['ep_retired.js', 'app-chunk-games.js']);
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('retired players reach D (search) after first paint without visiting games', async ({ page }) => {
+    const errors = await boot(page);
+    await expect.poll(() => page.evaluate(() => window._RETIRED_NAMES ? window._RETIRED_NAMES.size : 0), { timeout: 30_000 }).toBeGreaterThan(400);
+    expect(await page.evaluate(() => !!D.find(d => d.n === 'Tom Brady' && d._retired))).toBe(true);
+    if (SPLIT) expect(await chunkRequests(page)).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
   test('research (admin) loads its chunk and renders', async ({ page }) => {
     const errors = await boot(page);
     await page.evaluate(() => { window.isAdmin = () => true; window.switchPage('research'); });

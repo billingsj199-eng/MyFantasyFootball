@@ -91,14 +91,14 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-13-split3" as="script">
+<link rel="preload" href="app.js?v=2026-10-13-split4" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous" media="(min-width:601px)">
 <link rel="preload" href="data/combine_data.js?v=2026-10-12" as="script">
-<link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script">
+<link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script" data-split-lazy="ep">
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-13" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-13" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -4871,7 +4871,10 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      Deferred scripts run in document order before DOMContentLoaded, so the chain
      ep_retired → daily_retired_pool → app.js is preserved, and none of this ~795 KB blocks
      the parser / first paint. Neither global feeds the default rankings view. -->
-<script src="data/ep_retired.js?v=2026-07-21" defer></script>
+<!-- data-split-lazy="ep": the deployed split build (scripts/split_app.js) drops this tag and loads
+     the file after first paint via window._loadEpRetired (it feeds Guess Who / retired search, not
+     the first rows). Local dev keeps loading it here, exactly as before the split. -->
+<script src="data/ep_retired.js?v=2026-07-21" defer data-split-lazy="ep"></script>
 <!-- legend_careers.js (~2.8 MB): now LAZY-loaded (not deferred) via window._loadRetiredData()
      — see the loader block below. Feeds retired-player careers (Compare, Trivia, retired cards,
      Games) — none of which is the default rankings view. Its binds re-run via
@@ -4882,7 +4885,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- ep_players_u.js removed: its global const EP_PLAYERS_U is shadowed by a local
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-10-13-0901" defer></script>
-<script src="data/daily_retired_pool.js?v=2026-04-21" defer></script>
+<script src="data/daily_retired_pool.js?v=2026-10-13-lazyep" defer></script>
 <!-- weekly_stats_active.js (~2.4 MB) moved into the _loadWeeklyData lazy bundle (2026-07-20)
      — it only feeds the L4 PPG column (repaints on merge) + on-demand game logs. -->
 <!-- WEEKLY_STATS_RETIRED (~10 MB): now LAZY-loaded (not deferred) via window._loadWeeklyData()
@@ -6294,6 +6297,20 @@ window._loadWeeklyData = function(opts) {
 // all_players enrichment reads LEGEND_CAREERS), async=false to keep order, then dispatch
 // 'mff:retireddata' — _enrichFromAllPlayers + _applyRetiredBioTeam + _applyLegendCareerBindings
 // listen for it (next to their DCL hooks) and enrich D idempotently.
+// ep_retired.js (~153 KB gz): an eager defer tag in the source, but tagged data-split-lazy="ep"
+// so the deployed split build drops it and records its URL in window._SPLIT_LAZY_DATA.ep.
+// Then it loads right after first paint (and before the games chunk / retired bundle), and
+// 'mff:epretired' re-runs the pool expansion + D append in app.js. Local dev: already loaded.
+window._loadEpRetired = function() {
+  if (window._epRetiredPromise) return window._epRetiredPromise;
+  var src = window._SPLIT_LAZY_DATA && window._SPLIT_LAZY_DATA.ep;
+  window._epRetiredPromise = (!src || typeof EP_RETIRED !== 'undefined') ? Promise.resolve() :
+    _injectScripts([src], 'EpRetired').then(function() {
+      try { document.dispatchEvent(new Event('mff:epretired')); } catch (e) {}
+    });
+  return window._epRetiredPromise;
+};
+
 window._loadRetiredData = function(opts) {
   if (window._retiredDataPromise) return window._retiredDataPromise;
   var files = [
@@ -6304,7 +6321,11 @@ window._loadRetiredData = function(opts) {
     // signature rebuild) re-run on the mff:retireddata event this loader dispatches.
     'data/hp.js?v=2026-07-22'
   ];
-  window._retiredDataPromise = _injectScripts(files, 'RetiredData', opts).then(function() {
+  // EP_RETIRED appends first (as when ep_retired.js was an eager tag), so the retired-player
+  // rows in D keep the same source/order — chain behind it (resolves at once in local dev).
+  window._retiredDataPromise = window._loadEpRetired().then(function() {
+    return _injectScripts(files, 'RetiredData', opts);
+  }).then(function() {
     try { document.dispatchEvent(new Event('mff:retireddata')); }
     catch (e) { console.warn('[RetiredData] enrich dispatch failed:', e); }
   });
@@ -6337,7 +6358,7 @@ window._loadLateData = function(opts) {
   return window._lateDataPromise;
 };
 (function() {
-  function go() { requestAnimationFrame(function() { setTimeout(function() { window._loadLateData(); }, 0); }); }
+  function go() { requestAnimationFrame(function() { setTimeout(function() { window._loadEpRetired(); window._loadLateData(); }, 0); }); }
   if (document.readyState !== 'loading') go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 
@@ -6370,7 +6391,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-13-split3"></script>
+<script defer src="app.js?v=2026-10-13-split4"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

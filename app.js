@@ -5131,12 +5131,12 @@ function _updateViewOptsSummary() {
   if (!el || !wrap) return;
   if (wrap.style.display !== 'none') { el.textContent = ''; return; }
   const _st = (typeof rnkStatMode !== 'undefined') ? rnkStatMode : 'fantasy';
-  const _ad = (typeof rnkAdpSrc !== 'undefined') ? rnkAdpSrc : 'consensus';
+  // ADP-source pills retired 2026-09-10 (#rnkAdpSrcRow hidden) — the summary no
+  // longer names an ADP source the user can't see or change.
   const sc = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' }[rankingScoringFmt] || rankingScoringFmt;
-  const st = { fantasy: 'Fantasy', sims: 'Sims', vor: 'VOR', proj: 'Projections', lines: 'Betting Lines', adp: 'ADP compare' }[_st] || _st;
-  const ad = { consensus: 'Consensus', underdog: 'Underdog', dk: 'DK', espn: 'ESPN', cbs: 'CBS', sleeper: 'Sleeper', ktc: 'KTC', yahoo: 'Yahoo' }[_ad] || _ad;
-  el.textContent = sc + ' · ' + st + ' · ' + ad + ' ADP';
-  el.style.color = (rankingScoringFmt !== 'ppr' || _st !== 'fantasy' || _ad !== 'consensus') ? 'var(--accent)' : 'var(--text2)';
+  const st = { fantasy: 'Fantasy', sims: 'Sims', vor: 'VOR', xfp: 'xFP', dyn: 'Raw Sim', trend: 'Trends', proj: 'Projections', lines: 'Betting Lines', adp: 'ADP compare' }[_st] || _st;
+  el.textContent = sc + ' · ' + st;
+  el.style.color = (rankingScoringFmt !== 'ppr' || _st !== 'fantasy') ? 'var(--accent)' : 'var(--text2)';
 }
 (function () {
   let open = false;

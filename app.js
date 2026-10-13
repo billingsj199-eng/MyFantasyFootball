@@ -22930,6 +22930,41 @@ function renderSearchChips() {
 
 render();
 
+// === Lazy app chunks (mobile perf phase 3, 2026-10-13) ===
+// Sections fenced with //#chunk <name> … //#endchunk <name> in this file are cut into
+// app-chunk-<name>.js at deploy (scripts/split_app.js) and the deployed core starts with
+// `window._MFF_CHUNKS = [...]`. Without that manifest (local dev / unsplit source) every
+// chunk is already inline and _ensureChunk resolves at once — so dev runs today's code.
+// Chunks are classic scripts: their top-level IIFEs run on load and see this file's
+// top-level let/const/functions (shared global scope). switchPage awaits a page's chunks
+// (PAGE_CHUNKS) and re-runs the page's enter hooks once they land.
+const PAGE_CHUNKS = { research: ['research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['mock'] };
+(function () {
+  const loaded = {}, pending = {};
+  const lazy = n => Array.isArray(window._MFF_CHUNKS) && window._MFF_CHUNKS.indexOf(n) >= 0;
+  window._chunkLoaded = n => !lazy(n) || loaded[n] === true;
+  function ver() {
+    const s = document.querySelector('script[src^="app.js"]');
+    const m = s && /[?&]v=([^&]+)/.exec(s.getAttribute('src') || '');
+    return m ? m[1] : '';
+  }
+  window._ensureChunk = function (names) {
+    const need = [].concat(names || []).filter(n => !window._chunkLoaded(n));
+    if (!need.length) return Promise.resolve();
+    document.body.classList.add('mff-chunk-loading');
+    return Promise.all(need.map(n => pending[n] || (pending[n] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'app-chunk-' + n + '.js?v=' + encodeURIComponent(ver());
+      s.async = false;
+      s.onload = () => { loaded[n] = true; res(); };
+      s.onerror = () => { delete pending[n]; s.remove(); rej(new Error('chunk ' + n + ' failed to load')); };
+      document.head.appendChild(s);
+    })))).finally(() => {
+      if (Object.keys(pending).every(k => loaded[k])) document.body.classList.remove('mff-chunk-loading');
+    });
+  };
+})();
+
 // === Page Navigation ===
 const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
 const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', startsit: 'authAnchorStartSit', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest', draftstrategy: 'authAnchorDraftStrategy', research: 'authAnchorResearch' };
@@ -22979,6 +23014,24 @@ function switchPage(page) {
       window.gtag('event', 'page_view', { page_path: '/' + (page || 'rankings'), page_title: page || 'rankings' });
     }
   } catch(_) {}
+  _pageEnterHooks(page);
+  // Lazy chunk(s) for this page not loaded yet: the page shell is already showing;
+  // load them, then re-run the (guarded, repeat-safe) enter hooks if still here.
+  const _needChunks = (PAGE_CHUNKS[page] || []).filter(n => !window._chunkLoaded(n));
+  if (_needChunks.length) {
+    window._ensureChunk(_needChunks).then(() => {
+      const el = document.getElementById(pageMap[page]);
+      if (el && el.classList.contains('active')) _pageEnterHooks(page);
+    }).catch(e => {
+      console.warn('[chunks]', e && e.message);
+      if (typeof toast === 'function') toast('Could not load this page — check your connection and try again.');
+    });
+  }
+}
+// Per-page work on entering a page (lazy data kicks + renders). Every call is
+// typeof-guarded and repeat-safe, so switchPage runs it again once a lazy app
+// chunk for the page lands.
+function _pageEnterHooks(page) {
   // Lazy-load PFF grades on first access of any page that consumes them.
   // pff_grades.js is ~121 KB; only buildProspectData reads it, so the rankings
   // page never pays for it.
@@ -39156,6 +39209,7 @@ window.fmtHeight = fmtHeight;
   }
 })();
 
+//#chunk mock
 // === MOCK DRAFT ENGINE ===
 (function() {
   let mdMode = 'redraft', mdTeams = 12, mdUserPick = 1;
@@ -41699,6 +41753,7 @@ window.fmtHeight = fmtHeight;
   document.getElementById('mdResetBtn').addEventListener('click', resetDraft);
   document.getElementById('mdNewDraftBtn').addEventListener('click', resetDraft);
 })();
+//#endchunk mock
 
 // ============ LEADERBOARD ============
 (function() {
@@ -53345,6 +53400,7 @@ window.fmtHeight = fmtHeight;
   };
 })();
 
+//#chunk trivia
 // =============================================
 // TRIVIA BOARD BUILDER (Admin Only)
 // =============================================
@@ -57799,6 +57855,7 @@ Rules:
 
   window._cfgUpdateRosterSummary();
 })();
+//#endchunk trivia
 
 // === MY TEAMS MODULE ===
 (function() {
@@ -71147,6 +71204,7 @@ Rules:
 
 })();
 
+//#chunk draftstrategy
 // ============================================================================
 // === DRAFT STRATEGY PAGE ====================================================
 // ============================================================================
@@ -71494,7 +71552,9 @@ Rules:
   };
 
 })();
+//#endchunk draftstrategy
 
+//#chunk research
 // === RESEARCH PAGE (admin-only) ===
 // Historical preseason ADP/expert ranks (window.RESEARCH_HIST, lazy) + contract
 // history (window.CONTRACTS_DB, lazy) joined against ALL_PLAYERS_DB actual
@@ -74832,6 +74892,7 @@ function _rsScatter(cfg) {
     apply();
   };
 })();
+//#endchunk research
 
 // === Ticker row: RANKINGS MOVERS | LINE MOVERS switch (2026-10-08) ===
 // Both bars still render on their own (_adpMovers / _lineMovers set display:flex

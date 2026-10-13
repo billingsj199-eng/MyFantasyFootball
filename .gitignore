@@ -25,6 +25,10 @@ scripts/_bbm_*.json
 # Obsolete pre-split data (replaced by weekly_stats_retired_1/2/3.js)
 *.REPLACED_BY_SPLITS
 
+# app.js split build: parser deps (npm i --prefix .build-tools) + local split preview copy
+.build-tools/
+.split-preview/
+
 # Playwright smoke tests — deps + artifacts stay local
 tests/node_modules/
 tests/test-results/

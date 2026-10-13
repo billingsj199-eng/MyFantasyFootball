@@ -42,12 +42,28 @@ jobs:
       # names (never mangled) and some code paths read fn.name — keep both safe.
       # If terser or the syntax check fails, the whole deploy fails and the site
       # keeps serving the previous build (never a broken artifact).
+      # Split app.js IN THE DEPLOY ARTIFACT ONLY (mobile perf phase 3, 2026-10-13):
+      # sections fenced with //#chunk <name> … //#endchunk <name> become
+      # app-chunk-<name>.js, loaded on demand by window._ensureChunk (switchPage);
+      # the core keeps the app.js name/?v= and gains `window._MFF_CHUNKS = [...]`.
+      # The script's acorn gate FAILS the deploy if code outside a chunk uses the
+      # chunk's names without a guard (see scripts/split_app.js). Chunk URLs carry
+      # the same ?v= as app.js, so the service worker caches them like app.js.
+      - name: Split app.js into core + lazy chunks
+        run: |
+          npm i --no-save --no-audit --no-fund --prefix .build-tools acorn@8.12.1 acorn-walk@8.3.4
+          node scripts/split_app.js --build
+          for n in $(node -e "const m=/window\._MFF_CHUNKS = (\[.*?\]);/.exec(require('fs').readFileSync('app.js','utf8'));console.log(m?JSON.parse(m[1]).join(' '):'')"); do test -s "app-chunk-$n.js"; done
+          rm -rf .build-tools
       - name: Minify app.js
         run: |
-          npx -y terser@5 app.js --compress "pure_funcs=['console.log','console.info','console.debug']" --mangle --keep-fnames --comments false -o app.min.tmp.js
-          node --check app.min.tmp.js
-          echo "app.js: $(wc -c < app.js) -> $(wc -c < app.min.tmp.js) bytes"
-          mv app.min.tmp.js app.js
+          for f in app.js app-chunk-*.js; do
+            [ -f "$f" ] || continue
+            npx -y terser@5 "$f" --compress "pure_funcs=['console.log','console.info','console.debug']" --mangle --keep-fnames --comments false -o app.min.tmp.js
+            node --check app.min.tmp.js
+            echo "$f: $(wc -c < "$f") -> $(wc -c < app.min.tmp.js) bytes"
+            mv app.min.tmp.js "$f"
+          done
       # Minify data/*.js IN THE DEPLOY ARTIFACT ONLY (same pattern as app.js).
       # esbuild in non-bundle script mode strips whitespace/comments but never
       # renames top-level identifiers (verified locally: `const D=` /

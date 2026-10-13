@@ -1,0 +1,75 @@
+// Lazy app chunks (scripts/split_app.js): each page whose code lives in a chunk must load
+// it on entry and work — via nav click, deep link and back/forward. Runs against the unsplit
+// checkout by default (chunks inline: everything must behave exactly the same) and against
+// the deploy-style split build with MFF_SPLIT=1 (see playwright.config.js).
+const { test, expect } = require('@playwright/test');
+
+const SPLIT = process.env.MFF_SPLIT === '1';
+
+async function boot(page, path = '/') {
+  await page.addInitScript(() => { try { localStorage.setItem('mff_seen_intro', '1'); } catch (e) {} });
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  await page.goto(path);
+  await expect(page.locator('#tbody tr[data-idx]').first()).toBeAttached({ timeout: 60_000 });
+  return errors;
+}
+const chunkRequests = page => page.evaluate(() =>
+  performance.getEntriesByType('resource').map(e => e.name).filter(n => /app-chunk-/.test(n)).map(n => n.split('/').pop().split('?')[0]));
+
+test.describe('lazy app chunks', () => {
+  test('first paint loads no chunk', async ({ page }) => {
+    const errors = await boot(page);
+    await page.waitForTimeout(1500);
+    expect(await chunkRequests(page)).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  test('mock draft: nav loads its chunk and the draft starts', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => window.switchPage('mockdraft'));
+    await expect(page.locator('#pageMockdraft')).toHaveClass(/active/);
+    await expect.poll(() => page.evaluate(() => window._chunkLoaded('mock'))).toBe(true);
+    if (SPLIT) expect(await chunkRequests(page)).toContain('app-chunk-mock.js');
+    // the mock IIFE wired the start button on load — clicking it starts a draft board
+    await page.locator('#mdStartBtn').click();
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('#pageMockdraft .md-pick, #pageMockdraft [class*="md-board"] *, #pageMockdraft table tr').length), { timeout: 20_000 }).toBeGreaterThan(5);
+    expect(errors).toEqual([]);
+  });
+
+  test('draft strategy: renders after its chunk loads', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => window.switchPage('draftstrategy'));
+    await expect.poll(() => page.evaluate(() => (document.getElementById('dsBody') || {}).innerText || ''), { timeout: 30_000 }).toMatch(/\w{20,}/);
+    if (SPLIT) expect(await chunkRequests(page)).toContain('app-chunk-draftstrategy.js');
+    expect(errors).toEqual([]);
+  });
+
+  test('deep link #mockdraft loads the chunk; back returns to it from another page', async ({ page }) => {
+    const errors = await boot(page, '/#mockdraft');
+    await expect(page.locator('#pageMockdraft')).toHaveClass(/active/);
+    await expect.poll(() => page.evaluate(() => window._chunkLoaded('mock'))).toBe(true);
+    await page.evaluate(() => window.switchPage('draftstrategy'));
+    await expect(page.locator('#pageDraftStrategy')).toHaveClass(/active/);
+    await page.goBack();
+    await expect(page.locator('#pageMockdraft')).toHaveClass(/active/);
+    expect(errors).toEqual([]);
+  });
+
+  test('trivia embed (public) loads the trivia chunk', async ({ page }) => {
+    const errors = await boot(page, '/?embed=trivia');
+    await expect.poll(() => page.evaluate(() => typeof window._triviaTabSwitch), { timeout: 30_000 }).toBe('function');
+    await expect(page.locator('#pageTrivia')).toHaveClass(/active/);
+    if (SPLIT) expect(await chunkRequests(page)).toContain('app-chunk-trivia.js');
+    expect(errors).toEqual([]);
+  });
+
+  test('research (admin) loads its chunk and renders', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => { window.isAdmin = () => true; window.switchPage('research'); });
+    await expect(page.locator('#pageResearch')).toHaveClass(/active/);
+    await expect.poll(() => page.evaluate(() => typeof window._renderResearch), { timeout: 30_000 }).toBe('function');
+    if (SPLIT) expect(await chunkRequests(page)).toContain('app-chunk-research.js');
+    expect(errors).toEqual([]);
+  });
+});

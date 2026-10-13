@@ -115,6 +115,67 @@ test.describe('lazy app chunks', () => {
     expect(errors).toEqual([]);
   });
 
+  test('rankings rows (incl. SOS) render without the my teams chunk', async ({ page }) => {
+    const errors = await boot(page);
+    await page.waitForTimeout(2500);
+    const sos = await page.evaluate(() => [...document.querySelectorAll('#tbody tr[data-idx] .psos-cell')].slice(0, 40).map(td => td.textContent.trim()));
+    expect(sos.filter(s => /^\d+$/.test(s)).length).toBeGreaterThan(30);
+    if (SPLIT) expect((await chunkRequests(page)).filter(n => /myteams|trade/.test(n))).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  test('my teams page loads trade + my teams and renders', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => window.switchPage('myteams'));
+    await expect(page.locator('#pageMyTeams')).toHaveClass(/active/);
+    await expect.poll(() => page.evaluate(() => window._chunkLoaded('myteams') && window._chunkLoaded('trade')), { timeout: 30_000 }).toBe(true);
+    await expect.poll(() => page.evaluate(() => typeof window._mtImportSleeper)).toBe('function');
+    await expect(page.locator('#mtSleeperImportBtn')).toBeVisible();
+    if (SPLIT) { const c = await chunkRequests(page); expect(c.indexOf('app-chunk-trade.js')).toBeLessThan(c.indexOf('app-chunk-myteams.js')); }
+    expect(errors).toEqual([]);
+  });
+
+  test('trade page loads its chunk and values a trade', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => window.switchPage('trade'));
+    await expect.poll(() => page.evaluate(() => typeof window._getTradeValue), { timeout: 30_000 }).toBe('function');
+    for (const [id, q] of [['tradeSearchA', 'Bijan'], ['tradeSearchB', 'Jahmyr']]) {
+      await page.fill('#' + id, q);
+      await page.locator('#' + id).locator('xpath=..').locator('.trade-dropdown > *').first().click();
+    }
+    await expect.poll(() => page.evaluate(() => (document.querySelector('.trade-verdict') || {}).textContent || '')).toMatch(/WINS|EVEN|FAIR/i);
+    if (SPLIT) expect(await chunkRequests(page)).toEqual(['app-chunk-trade.js']);
+    expect(errors).toEqual([]);
+  });
+
+  test('returning My Teams user: chunk auto-loads after first paint', async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem('mt_last_opened', String(Date.now())); } catch (e) {} });
+    const errors = await boot(page);
+    await expect.poll(() => page.evaluate(() => window._chunkLoaded('myteams')), { timeout: 30_000 }).toBe(true);
+    expect(await page.evaluate(() => document.getElementById('pageRankings').classList.contains('active'))).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  test('extension calls/events before my teams loads are replayed into it', async ({ page }) => {
+    const errors = await boot(page);
+    const res = await page.evaluate(async () => {
+      let seen = 0;
+      document.addEventListener('mff-espn-league-from-extension', () => { seen++; });
+      // what the Underdog page-bridge / ESPN mff-bridge do on an MFF tab
+      window._mffSetPortfolio({ drafts: { t1: { id: 't1', tournament: 'Test', fee: 5, picks: [{ name: 'Bijan Robinson', pos: 'RB', team: 'ATL', pick: 1 }] } }, syncedAt: Date.now() });
+      document.dispatchEvent(new CustomEvent('mff-espn-league-from-extension', { detail: { leagues: {}, pushedAt: Date.now() } }));
+      for (let i = 0; i < 100 && !window._chunkLoaded('myteams'); i++) await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 1000));
+      return { loaded: window._chunkLoaded('myteams'), realFn: !/calls\.push/.test(String(window._mffSetPortfolio)), seen,
+               portfolio: !!(window._udPortfolio && window._udPortfolio.drafts && Object.keys(window._udPortfolio.drafts).length) };
+    });
+    expect(res.loaded).toBe(true);
+    expect(res.realFn).toBe(true);
+    expect(res.portfolio).toBe(true);
+    if (SPLIT) expect(res.seen).toBe(2);   // original + replay after the chunk's listener exists
+    expect(errors).toEqual([]);
+  });
+
   test('research (admin) loads its chunk and renders', async ({ page }) => {
     const errors = await boot(page);
     await page.evaluate(() => { window.isAdmin = () => true; window.switchPage('research'); });

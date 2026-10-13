@@ -1,17 +1,29 @@
 {
-  "note": "Outside references to lazy-chunk names that were reviewed as safe but that the scripts/split_app.js guard heuristic cannot prove (nested-block or early-return guards, or a value passed along instead of called). Format \"<chunk>:<name>\"; every entry needs a reason. Re-review when the referencing code changes.",
+  "note": "Outside references to lazy-chunk names that were reviewed as safe but that the scripts/split_app.js guard heuristic cannot prove (nested-block or early-return guards, a value passed along instead of called, chunk-to-chunk refs where the loader guarantees order, or a same-named local). Format \"<chunk>:<name>\"; every entry needs a reason. Re-review when the referencing code changes.",
   "allow": [
     "prospect:_jmClass",
     "prospect:_pmBuiltData",
     "games:_gwGetPoolCurrent",
     "games:_gwGetPool2000s",
-    "games:_gwGetPool2010s"
+    "games:_gwGetPool2010s",
+    "trade:_getTradeValue",
+    "trade:_packageRosterCost",
+    "trade:_packageAdjustedTotal",
+    "myteams:_mtLeague",
+    "myteams:_udPortfolio",
+    "myteams:checkPremiumStatus"
   ],
   "reasons": {
     "prospect:_jmClass": "openPlayerCard JM tile: the call sits inside `if (!d._retired && window._pmBuiltData && window._jmClass) {` (nested block guard).",
     "prospect:_pmBuiltData": "card dynasty block: preceded by `if (!window._pmBuiltData) return '';` (early-return guard).",
     "games:_gwGetPoolCurrent": "cloud sync _restoreDaily: passed as a value; _verifyDailyTarget checks `typeof poolGetter === 'function'` and skips the legacy-doc restore when the pool isn't available (today's docs carry per-key dates and need no pool).",
     "games:_gwGetPool2000s": "same as games:_gwGetPoolCurrent (also wrapped by _pool150R, which checks typeof getter === 'function').",
-    "games:_gwGetPool2010s": "same as games:_gwGetPoolCurrent (also wrapped by _pool150R, which checks typeof getter === 'function')."
+    "games:_gwGetPool2010s": "same as games:_gwGetPoolCurrent (also wrapped by _pool150R, which checks typeof getter === 'function').",
+    "trade:_getTradeValue": "only referenced from the myteams chunk (trade finder); the loader's PRE makes myteams load trade first, and PAGE_CHUNKS lists trade before myteams.",
+    "trade:_packageRosterCost": "same as trade:_getTradeValue.",
+    "trade:_packageAdjustedTotal": "same as trade:_getTradeValue.",
+    "myteams:_mtLeague": "badges team-graphics picker: inside `if (window._mtTeams && window._mtTeams.length) {` and itself `window._mtLeague && window._mtLeague.name`.",
+    "myteams:_udPortfolio": "badges team-graphics picker: `(window._udPortfolio && window._udPortfolio.drafts) || {}` (left side of && is the guard).",
+    "myteams:checkPremiumStatus": "the flagged lines call the auth module's own LOCAL checkPremiumStatus function (same name); My Teams only wraps window.checkPremiumStatus, which can happen whenever the chunk loads."
   }
 }

@@ -18,7 +18,10 @@ const _SOS_POS = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DST']);
 (function () {
   const loaded = {}, pending = {};
   // Data a chunk must find already loaded when its top-level code runs.
-  const PRE = { games: () => (typeof window._loadEpRetired === 'function' ? window._loadEpRetired() : null) };
+  const PRE = {
+    games: () => (typeof window._loadEpRetired === 'function' ? window._loadEpRetired() : null),
+    myteams: () => window._ensureChunk('trade')   // the trade finder calls the trade value functions
+  };
   const lazy = n => Array.isArray(window._MFF_CHUNKS) && window._MFF_CHUNKS.indexOf(n) >= 0;
   window._chunkLoaded = n => !lazy(n) || loaded[n] === true;
   function ver() {
@@ -22992,7 +22995,62 @@ render();
 
 // Pages whose code lives in lazy app chunks (loader at the top of this file).
 // Mock + Research read the prospect model (_pmBuiltData / _attachJmScores), so they pull it too.
-const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['prospect', 'mock'], prospect: ['prospect'], backtest: ['prospect'], games: ['games'] };
+const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['prospect', 'mock'], prospect: ['prospect'], backtest: ['prospect'], games: ['games'], trade: ['trade'], myteams: ['trade', 'myteams'] };
+
+// === My Teams + Trade outside their pages (split build only) =================
+// The My Teams module does background work on every page for people who use it:
+// loads + silently refreshes saved leagues (rankings league bar, VOR / trade pickers),
+// records portfolio history, and is the landing point for the MFF browser extensions.
+// So the lazy myteams chunk (with trade, which it needs) loads right after first paint
+// for anyone signed in, anyone with the extension, or anyone who has used My Teams on
+// this browser — anonymous first-time visitors (most phone traffic) skip it until they
+// open the page. Extension calls/events that arrive before it loads are queued and
+// replayed. Unsplit source: the module is already running, so none of this applies.
+(function () {
+  if (!Array.isArray(window._MFF_CHUNKS) || window._MFF_CHUNKS.indexOf('myteams') < 0) return;
+  const calls = [];    // [fnName, arg] for window functions the chunk defines
+  const events = [];   // [type, detail] for extension CustomEvents the chunk listens for
+  let promise = null;
+  function drain() {
+    calls.splice(0).forEach(([fn, arg]) => { try { if (typeof window[fn] === 'function') window[fn](arg); } catch (e) { console.warn('[myteams replay]', fn, e); } });
+    events.splice(0).forEach(([type, detail]) => { try { document.dispatchEvent(new CustomEvent(type, { detail })); } catch (e) {} });
+  }
+  function load(why) {
+    if (!promise) {
+      promise = window._ensureChunk(['trade', 'myteams'])
+        .then(() => { console.log('[chunks] myteams loaded (' + why + ')'); drain(); })
+        .catch(e => { promise = null; console.warn('[chunks] myteams load failed (' + why + '):', e && e.message); });
+    } else if (window._chunkLoaded('myteams')) drain();
+    return promise;
+  }
+  window._mtEnsureLoaded = load;
+  // Stand-ins the chunk overwrites with the real functions when it runs.
+  const stand = (fn, why) => { window[fn] = function (arg) { calls.push([fn, arg]); load(why); }; };
+  stand('_mffSetPortfolio', 'extension portfolio');   // Underdog helper page-bridge
+  stand('_mtSwitchSource', 'switch source');          // page-bridge #mff-myteams deep link, My Teams tab buttons
+  window._mffSetAdpSnapshot = function (s) { window.__mffPendingAdpSnapshot = s; load('extension adp'); };  // real fn drains the pending slot on load
+  ['mff-espn-league-from-extension', 'mff-yahoo-league-from-extension'].forEach(type => {
+    document.addEventListener(type, e => {
+      if (window._chunkLoaded('myteams')) return;     // the chunk's own listener has it
+      events.push([type, e.detail]);
+      load(type);
+    });
+  });
+  function usedBefore() {
+    try { for (let i = 0; i < localStorage.length; i++) if (/^mt_/.test(localStorage.key(i) || '')) return true; } catch (e) {}
+    return false;
+  }
+  function afterPaint() {
+    if (usedBefore()) load('used My Teams before');
+    else if (window.__mffPageBridgeLoaded) load('extension present');
+    // content scripts can inject after DOMContentLoaded — look again shortly
+    setTimeout(() => { if (window.__mffPageBridgeLoaded) load('extension present'); }, 5000);
+  }
+  document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => setTimeout(afterPaint, 0)));
+  _whenFirebaseReady(function () {
+    try { firebase.auth().onAuthStateChanged(u => { if (u) load('signed in'); }); } catch (e) {}
+  });
+})();
 
 // === Page Navigation ===
 const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
@@ -33950,6 +34008,7 @@ window.fmtHeight = fmtHeight;
   }, 30000);
 })();
 
+//#chunk trade
 // === TRADE CALCULATOR ===
 (function() {
   let tradeMode = 'redraft';
@@ -36648,6 +36707,7 @@ window.fmtHeight = fmtHeight;
 
   renderAll();
 })();
+//#endchunk trade
 
 
 // =============================================
@@ -57915,6 +57975,934 @@ Rules:
 })();
 //#endchunk trivia
 
+// === PLAYOFF SOS ENGINE (core) =============================================
+// Lifted verbatim (dedented) out of the My Teams module on 2026-10-13 so the
+// rankings board (getFiltered / render SOS + P-SOS cells), the weekly opponent
+// blend and the player card keep working while My Teams loads as a lazy app chunk.
+// Same position in load order as before; My Teams still calls these by name.
+
+// ==== Playoff SOS (2026 weeks 15-17) ====
+// Per-position defensive signal blend. Four metrics z-scored across 32 teams:
+//   1. Clay weighted-unit grade — position-specific weighting of Mike Clay's
+//      DI/ED/LB/CB/S unit grades (PDF p.63). E.g. WR weights CB+S heavily;
+//      RB weights DI+LB.
+//   2. DST proj (p)  — projected DST fantasy points (team-wide signal).
+//   3. oppg (inv)    — points allowed per game (team-wide).
+//   4. Game O/U      — DK game total (team-wide; folded in if data exists).
+// Higher zBlend = stronger D = harder matchup for facing players at this pos.
+//
+// Position weights for Clay units (sum to ~1.0 per position):
+//   QB → ED 35% + CB 30% + S 20% + LB 10% + DI 5%  (pass rush + secondary)
+//   RB → DI 35% + LB 35% + ED 25% + S 5%           (run defense)
+//   WR → CB 50% + S 35% + LB 15%                   (secondary coverage)
+//   TE → LB 40% + S 35% + CB 20% + DI 5%           (middle of field)
+//   *  → defGr fallback (overall) for K, DST, OTHER
+const POSITION_DEF_WEIGHTS = {
+  QB: { ed: 0.35, cb: 0.30, s: 0.20, lb: 0.10, di: 0.05 },
+  RB: { di: 0.35, lb: 0.35, ed: 0.25, s: 0.05 },
+  WR: { cb: 0.50, s: 0.35, lb: 0.15 },
+  TE: { lb: 0.40, s: 0.35, cb: 0.20, di: 0.05 },
+};
+
+// Position-aware spread weighting for SOS. Game script affects positions
+// differently: favored RBs see clock-killer carries (big positive signal);
+// underdog WR/TE get garbage-time bumps (small positive); QBs of heavy
+// favorites can suppress (efficient game, fewer attempts). The weight
+// determines how much the team-relative spread folds into the SOS blend.
+// 0 = ignore spread; positive = favorite = easier; negative = inverse.
+//
+// Magnitudes calibrated to empirical fantasy data: RB sees ~10-15% lift
+// when favored ≥7; WR/TE bump is ~3-5%; QB effect is small + opposite.
+const POSITION_SPREAD_WEIGHT = {
+  QB: -0.10,  // slight underdog bias (more attempts to catch up)
+  RB:  0.25,  // favorites get clock-killer carries (strongest signal)
+  WR:  0.08,  // mild favorite bias; underdogs get garbage-time targets
+  TE:  0.08,  // similar to WR
+  // K/DST already get most of the favorite effect through the implied-total
+  // signal, so these are deliberately small — they only carry the RESIDUAL
+  // game-script effect on top of expected points.
+  K:   0.05,  // marginal: blowout leads trade late FGs for kneeldowns
+  DST: 0,     // was 0.15 until 2026-10-05: the opponent's implied total already carries it - no spread term
+              // scored .214 vs .203 with it, better in 8 of 10 seasons (scripts/research_sos_mix.py)
+};
+
+// How the two SOS axes are weighted per position: `def` = opponent-quality
+// signal, `tot` = implied-total (scoring environment) signal. Skill positions
+// keep the original 3:1 defense-led blend.
+//
+// K is inverted (1:3) because kicker scoring is driven by how many scoring
+// drives his own offense sustains far more than by opponent unit grades —
+// and a stiff defense partly cancels itself out for a kicker, converting
+// some opponent TDs into FG attempts.
+//
+// DST is 1:2 because its opponent-quality axis is a single Clay grade
+// (preseason roster opinion) while the implied total is a live market
+// estimate of the points the unit will actually face.
+const POSITION_SIGNAL_MIX = {
+  K:   { def: 1, tot: 3 },
+  DST: { def: 1, tot: 2 },
+};
+const _mtSignalMix = posKey => POSITION_SIGNAL_MIX[posKey] || { def: 3, tot: 1 };
+
+// Positions with their own SOS treatment. Anything else (IDP, FLEX rows,
+// unknown) falls back to the team-wide OVERALL blend.
+var _mtPosKey = function _mtPosKey(pos) {
+  return (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE'
+          || pos === 'K' || pos === 'DST') ? pos : 'OVERALL';
+};
+
+// The opponent-quality z for a given position (higher = tougher matchup).
+//   DST → the opposing OFFENSE (a defense's matchup is who it has to stop)
+//   K   → opponent's overall defense (no unit weighting fits FG kicking)
+//   else → the position-weighted defensive unit blend
+// === In-season observed FPA (fantasy points allowed per position group) ===
+// Jack's 2026-07-24 spec: once 2026 games are in the weekly stats, compute
+// fantasy points allowed to QB/RB/WR/TE per game from our own
+// WEEKLY_STATS_ACTIVE (each row has opp + fpts — no new data source) and
+// phase it into the SOS blend IN PLACE of the preseason defensive priors
+// (Clay unit grades / DST proj / opp PA). Ramp: observed share =
+// (weeksPlayed − 1) / 4 → W1 0%, W2 25%, W3 50%, W4 75%, W5+ 100% (priors
+// fully dropped). The Vegas layer (baseline-relative implied totals +
+// spreads) stays throughout — this replaces only the defensive signal.
+// Preseason: no 2026 rows → share 0 → behavior identical to today.
+// 2026-10-05 (Jack: "4 weeks feels like a pretty large sample size, there are
+// also injuries" - the preseason grades can't see them): the ramp is now
+// (weeksPlayed − 1) / 3 → W2 33%, W3 67%, W4+ 100%.
+// fpts basis (half-PPR) doesn't matter — the signal is z-scored per week.
+const _MT_FPA_POS = ['QB', 'RB', 'WR', 'TE'];
+// D/ST (Jack 2026-10-05: "for dst can we now use in season grades"): the DST
+// key on an FPA row is what the opposing D/ST scored AGAINST that team's
+// offense, so its z replaces the Clay preseason offense grade on the same
+// ramp. 2018-25 check (offense's D/ST points allowed through week N vs the
+// rest of its season): r .43 after 4 weeks / .45 after 5 against .24 for the
+// prior season's number, best in-season weight .75 / .80 - the ramp below.
+// Kept out of OVERALL (that is the four skill positions).
+const _MT_FPA_SRC = _MT_FPA_POS.concat('DST');
+// === THE OPPONENT GRADE (2026-10-05, Jack: "go and build it") ===
+// Supersedes the ramp above whenever data/fpa_prior_2025.js is loaded. For each
+// position the grade is  w x this season + (1 - w) x last season,
+// w = games / (games + k), both sides schedule-adjusted and TOUCHDOWN-NEUTRAL
+// (<POS>_tdn keys: actual TDs swapped for the league TD rate on the yards
+// allowed; D/ST: defensive / return TDs out). The Clay preseason grades are
+// out of the blend from the first final game. k = how many games last season
+// is worth: after 4 games this season carries QB 57% / RB 50% / WR 40% /
+// TE 67% / D/ST 67%, after 8 games 73 / 67 / 57 / 80 / 80.
+// Backtest (scripts/research_opp_grade_schemes.py, 2016-25, settings picked
+// leave-one-season-out, correlation with the next 4 weeks / rest of season):
+// this form QB .157 / RB .202 / WR .154 / TE .173 / D/ST .378 against .137 /
+// .194 / .113 / .169 / .357 for 100% in-season from week 4. Failed there:
+// volume allowed as the input, pooling the QB number into WR / TE.
+// Shared with the weekly OPP color (_wkOppBlendTable). Displayed points
+// allowed (OPP PPG, tooltips) stay ACTUAL points.
+// Off switches: window.MFF_OPP_PRIOR_OFF = true (old ramp + Clay),
+// window.MFF_OPP_TDN_OFF = true (actual points on the in-season side).
+// New season: build the prior with scripts/build_fpa_prior.py.
+const _MT_FPA_PRIOR_K = { QB: 3, RB: 4, WR: 6, TE: 2, DST: 2 };
+let _mtFpaCache = null;
+var _mtObservedFpa = function _mtObservedFpa() {
+  const _src = (window.FPA_2026 && window.FPA_2026.weeks) || null;
+  if (_mtFpaCache && _mtFpaCache.src === _src) return _mtFpaCache;
+  _mtFpaCache = { weeksPlayed: 0, share: 0, z: null, src: _src };
+  const useTdn = window.MFF_OPP_TDN_OFF !== true;
+  let tdn = false;
+  // 2026-09-14: prefer the COMPLETE-league table (data/fpa_2026.js, built by
+  // scripts/pull_postgame_stats.py from EVERY Sleeper QB/RB/WR/TE in FINAL
+  // games, half-PPR). The board-only sum below undercounts whenever a
+  // defense faced an untracked player (W1: PIT read 0.0 QB pts allowed
+  // because Cooper Rush isn't on the board; NE 0.5 because Drew Lock isn't).
+  const FP = window.FPA_2026;
+  const acc = {};
+  _MT_FPA_SRC.forEach(p => { acc[p] = {}; });
+  // SCHEDULE-ADJUSTED (Jack 2026-09-30: "adjust for SOS"): a defense that gave up
+  // 30 to the Bills is not as soft as one that gave up 30 to the Panthers. Same
+  // additive fit the weekly OPP color uses (_wkSchedAdjust: points = league avg +
+  // defense effect + offense effect, each shrunk by a one-game prior) - the SOS
+  // rank reads the DEFENSE effect instead of raw points allowed. Needs the
+  // offense on every row, so only the FPA_2026 path (not the board-only fallback).
+  const games = {};
+  _MT_FPA_SRC.forEach(p => { games[p] = []; });
+  let maxWk = 0;
+  if (FP && FP.weeks && Object.keys(FP.weeks).length) {
+    Object.keys(FP.weeks).forEach(wk => {
+      const w = +wk, teams = FP.weeks[wk];
+      Object.keys(teams).forEach(team => {
+        _MT_FPA_SRC.forEach(pos => {
+          let v = teams[team][pos];
+          if (typeof v !== 'number') return;
+          if (useTdn && typeof teams[team][pos + '_tdn'] === 'number') { v = teams[team][pos + '_tdn']; tdn = true; }
+          const slot = acc[pos][team] || (acc[pos][team] = { pts: 0, wks: new Set() });
+          slot.pts += v;
+          slot.wks.add(w);
+          const off = teams[team].opp ? String(teams[team].opp).toUpperCase() : null;
+          if (off) games[pos].push({ d: team, o: off, v });
+        });
+        if (w > maxWk) maxWk = w;
+      });
+    });
+  } else {
+    const WS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : window.WEEKLY_STATS_ACTIVE;
+    if (!WS) return _mtFpaCache; // lazy weekly bundle not landed yet
+    const YEAR = '2026';
+    for (const name in WS) {
+      const rec = WS[name];
+      if (!rec || _MT_FPA_POS.indexOf(rec.pos) < 0 || !rec.seasons) continue;
+      const rows = rec.seasons[YEAR];
+      if (!rows) continue;
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const opp = r && r.opp ? String(r.opp).toUpperCase() : '';
+        if (!opp || typeof r.fpts !== 'number') continue;
+        const slot = acc[rec.pos][opp] || (acc[rec.pos][opp] = { pts: 0, wks: new Set() });
+        slot.pts += r.fpts;
+        slot.wks.add(r.wk);
+        if (r.wk > maxWk) maxWk = r.wk;
+      }
+    }
+  }
+  if (!maxWk) return _mtFpaCache;
+  const share = Math.min(1, Math.max(0, (maxWk - 1) / 3));
+  // Per-position z across teams: MORE points allowed = weaker defense =
+  // EASIER, and in this system lower z = easier — so invert the sign
+  // (mirrors zO = -(oppg − mu)/sd in the preseason priors).
+  const z = {};
+  _MT_FPA_SRC.forEach(pos => {
+    const perGame = {};
+    Object.keys(acc[pos]).forEach(team => {
+      const s = acc[pos][team];
+      if (s.wks.size >= 1) perGame[team] = s.pts / s.wks.size;
+    });
+    // swap raw points allowed for the schedule-adjusted number when every row carried its offense
+    const S = (typeof window._wkSchedAdjust === 'function' && games[pos].length && window.MFF_SOS_RAW_FPA !== true)
+      ? window._wkSchedAdjust(games[pos]) : null;
+    if (S) Object.keys(perGame).forEach(team => { if (typeof S.dE[team] === 'number') perGame[team] = S.mu + S.dE[team]; });
+    if (S) _mtFpaCache.adjusted = true;
+    const vals = Object.values(perGame);
+    if (vals.length < 24) return; // need most of the league before z-scoring
+    const mu = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mu) * (b - mu), 0) / vals.length) || 1;
+    z[pos] = {};
+    Object.keys(perGame).forEach(team => { z[pos][team] = -(perGame[team] - mu) / sd; });
+  });
+  // Blend each position with last season's number (see THE OPPONENT GRADE above).
+  // The prior is the season before the points-allowed file's own season (FPA_PRIOR_2025 for 2026).
+  const _prObj = window['FPA_PRIOR_' + (((FP && +FP.season) || 2026) - 1)];
+  const PR = (window.MFF_OPP_PRIOR_OFF !== true && _prObj && _prObj.pos) || null;
+  const wIn = {};
+  if (PR) _MT_FPA_SRC.forEach(pos => {
+    const pv = PR[pos];
+    if (!z[pos] || !pv) return;
+    const pt = Object.keys(pv).filter(t => typeof pv[t] === 'number');
+    if (pt.length < 24) return;
+    const mu = pt.reduce((a, t) => a + pv[t], 0) / pt.length;
+    const sd = Math.sqrt(pt.reduce((a, t) => a + (pv[t] - mu) * (pv[t] - mu), 0) / pt.length) || 1;
+    const k = _MT_FPA_PRIOR_K[pos], out = {}, all = {};
+    wIn[pos] = {};
+    pt.forEach(t => { all[t] = 1; });
+    Object.keys(z[pos]).forEach(t => { all[t] = 1; });
+    Object.keys(all).forEach(t => {
+      const zi = z[pos][t];
+      const zp = typeof pv[t] === 'number' ? -(pv[t] - mu) / sd : null;   // same sign: more allowed = easier = lower
+      const g = acc[pos][t] ? acc[pos][t].wks.size : 0;
+      const w = typeof zi !== 'number' ? 0 : zp == null ? 1 : g / (g + k);
+      out[t] = w * (typeof zi === 'number' ? zi : 0) + (1 - w) * (zp == null ? 0 : zp);
+      wIn[pos][t] = w;
+    });
+    z[pos] = out;
+  });
+  const blended = _MT_FPA_POS.every(p => wIn[p]);
+  // OVERALL (K fallback + mixed views): mean of the four position z's.
+  if (_MT_FPA_POS.every(p => z[p])) {
+    z.OVERALL = {};
+    Object.keys(z.QB).forEach(team => {
+      let s = 0, n = 0;
+      _MT_FPA_POS.forEach(p => { if (typeof z[p][team] === 'number') { s += z[p][team]; n++; } });
+      if (n) z.OVERALL[team] = s / n;
+    });
+  }
+  // rank[pos][team]: 1 = softest grade (tooltips)
+  const rank = {};
+  _MT_FPA_SRC.forEach(pos => {
+    if (!z[pos]) return;
+    rank[pos] = {};
+    Object.keys(z[pos]).sort((a, b) => z[pos][a] - z[pos][b]).forEach((t, i) => { rank[pos][t] = i + 1; });
+  });
+  if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share: blended ? 1 : share, z, adjusted: !!_mtFpaCache.adjusted,
+                                             blended, w: wIn, rank, tdn, src: _src };
+  return _mtFpaCache;
+};
+window._mtObservedFpa = _mtObservedFpa; // console inspection / testing
+// Tooltip text for what an opponent has allowed per game to this position in
+// 2026 ("allows 21.3 to RBs, 5th most") - raw average in the board's scoring,
+// from the weekly OPP PPG table. null until the in-season share is on.
+const _mtOrd = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] || 'th'));
+var _mtAllowedNote = function _mtAllowedNote(abbr, posKey) {
+  if (!_mtObservedFpa().share || typeof window._oppAllowedFor !== 'function') return null;
+  if (_MT_FPA_SRC.indexOf(posKey) < 0) return null;
+  const a = window._oppAllowedFor(abbr, posKey);
+  if (!a || typeof a.v !== 'number') return null;
+  // Blended grade on: lead with the grade's own rank - it can sit far from the
+  // actual-points rank (one touchdown-heavy game, or a very different last season).
+  const f = _mtObservedFpa();
+  const gr = (f.blended && f.rank && f.rank[posKey]) ? f.rank[posKey][abbr] : null;
+  if (gr) return '#' + gr + ' softest vs ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', allows ' + a.v.toFixed(1) + '/gm';
+  return 'allows ' + a.v.toFixed(1) + ' to ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', ' + _mtOrd(a.rank) + ' most';
+};
+// true while the preseason grades still carry weight in the blend
+const _mtPriorLive = () => !(_mtObservedFpa().share >= 1);
+// the tooltip numbers follow the board's scoring, so the caches key on it
+const _mtFmtKey = () => (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
+
+var _mtMatchupZ = function _mtMatchupZ(oppRec, posKey) {
+  // DST matchup = the opposing OFFENSE: Clay preseason offense grade, replaced
+  // in-season by what D/STs have scored against it (z.DST, same ramp).
+  const isDst = posKey === 'DST';
+  const prior = isDst ? oppRec.zOff
+              : (posKey === 'K' || posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
+  const fpa = _mtObservedFpa();
+  if (!fpa.share || !fpa.z) return prior;
+  const zMap = fpa.z[isDst ? 'DST' : (posKey === 'K' || posKey === 'OVERALL') ? 'OVERALL' : posKey];
+  const zObs = zMap ? zMap[oppRec.abbr] : undefined;
+  if (typeof zObs !== 'number') return prior;
+  return prior * (1 - fpa.share) + zObs * fpa.share;
+};
+// Weekly stats land lazily (and refresh in-season): rebuild FPA + every SOS
+// cache downstream of _mtMatchupZ when the bundle arrives.
+document.addEventListener('mff:weeklydata', () => {
+  _mtFpaCache = null;
+  Object.keys(_mtPlayoffSosCache).forEach(k => { delete _mtPlayoffSosCache[k]; });
+  Object.keys(_mtPlayoffSosWeeklyCache).forEach(k => { delete _mtPlayoffSosWeeklyCache[k]; });
+});
+
+var _mtClayUnitGrade = function _mtClayUnitGrade(clayG, pos) {
+  if (!clayG) return null;
+  const w = POSITION_DEF_WEIGHTS[pos];
+  if (!w) return typeof clayG.defGr === 'number' ? clayG.defGr : null;
+  let sum = 0, totalW = 0;
+  for (const unit in w) {
+    if (typeof clayG[unit] === 'number') {
+      sum += clayG[unit] * w[unit];
+      totalW += w[unit];
+    }
+  }
+  return totalW > 0 ? sum / totalW : null;
+};
+
+let _mtDstByAbbrCache = null;
+var _mtBuildDstByAbbr = function _mtBuildDstByAbbr() {
+  if (_mtDstByAbbrCache) return _mtDstByAbbrCache;
+  _mtDstByAbbrCache = {};
+  if (!Array.isArray(window.D) || typeof TEAM_ABBR_MAP === 'undefined') return _mtDstByAbbrCache;
+  const dsts = window.D.filter(p => p && p.s === 'DST' && typeof p.p === 'number');
+  if (!dsts.length) return _mtDstByAbbrCache;
+  const clay = window.CLAY_TEAM_GRADES_2026 || {};
+  const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+  const std  = a => { const m = mean(a); return Math.sqrt(mean(a.map(v => (v-m)*(v-m)))) || 1; };
+  // Team-wide signals: DST proj + opp PA + Clay overall.
+  const ps    = dsts.map(d => d.p);
+  const oppgs = dsts.map(d => d.oppg).filter(v => typeof v === 'number');
+  const pMu = mean(ps), pSd = std(ps);
+  const oMu = oppgs.length ? mean(oppgs) : 0;
+  const oSd = oppgs.length ? std(oppgs) : 1;
+  // Position-specific Clay distributions (so each position z-scores against
+  // the right league mean for that unit weighting).
+  const POSITIONS = ['QB','RB','WR','TE'];
+  const posGradesArr = {};
+  POSITIONS.forEach(pos => { posGradesArr[pos] = []; });
+  const overallClayDefs = [];
+  const overallClayOffs = [];
+  Object.values(clay).forEach(g => {
+    if (typeof g.defGr === 'number') overallClayDefs.push(g.defGr);
+    if (typeof g.offGr === 'number') overallClayOffs.push(g.offGr);
+    POSITIONS.forEach(pos => {
+      const v = _mtClayUnitGrade(g, pos);
+      if (typeof v === 'number') posGradesArr[pos].push(v);
+    });
+  });
+  const offMu = overallClayOffs.length ? mean(overallClayOffs) : 0;
+  const offSd = overallClayOffs.length ? std(overallClayOffs)  : 1;
+  const cMuOverall = overallClayDefs.length ? mean(overallClayDefs) : 0;
+  const cSdOverall = overallClayDefs.length ? std(overallClayDefs)  : 1;
+  const cMuByPos = {}, cSdByPos = {};
+  POSITIONS.forEach(pos => {
+    cMuByPos[pos] = posGradesArr[pos].length ? mean(posGradesArr[pos]) : 0;
+    cSdByPos[pos] = posGradesArr[pos].length ? std(posGradesArr[pos])  : 1;
+  });
+  dsts.forEach(d => {
+    const abbr = TEAM_ABBR_MAP[d.t] || d.t;
+    if (!abbr) return;
+    const upper = String(abbr).toUpperCase();
+    const zP = (d.p - pMu) / pSd;
+    const zO = (typeof d.oppg === 'number') ? -(d.oppg - oMu) / oSd : 0;
+    const clayG = clay[upper] || null;
+    const zCByPos = {};
+    POSITIONS.forEach(pos => {
+      const g = _mtClayUnitGrade(clayG, pos);
+      zCByPos[pos] = (g != null) ? (g - cMuByPos[pos]) / cSdByPos[pos] : 0;
+    });
+    const zCOverall = clayG && typeof clayG.defGr === 'number'
+                      ? (clayG.defGr - cMuOverall) / cSdOverall
+                      : 0;
+    // Per-position defensive 3-signal blend (Clay-by-pos + DST proj + opp PA).
+    // Total signal (game O/U) gets folded in later in _mtBuildPlayoffSos.
+    const defZByPos = {};
+    POSITIONS.forEach(pos => {
+      defZByPos[pos] = (zP + zO + zCByPos[pos]) / 3;
+    });
+    const defZOverall = (zP + zO + zCOverall) / 3;
+    // Clay OFFENSE z — opponent-quality signal for DST SOS (a DST's
+    // "matchup" is the opposing offense, not the opposing defense).
+    const zOff = clayG && typeof clayG.offGr === 'number'
+                 ? (clayG.offGr - offMu) / offSd
+                 : 0;
+    _mtDstByAbbrCache[upper] = {
+      abbr: upper,
+      dst: d, clay: clayG, zP, zO, zOff,
+      zCByPos, zCOverall,
+      defZByPos, defZOverall,
+    };
+  });
+  return _mtDstByAbbrCache;
+};
+
+// Season baseline of implied team totals: median implied total per team
+// across all 18 weeks (byes skipped). Used so the SOS blend measures each
+// window's implied totals RELATIVE to the team's own norm — a raw implied
+// total mostly encodes "is this offense good" (roster quality, not
+// schedule). Median over mean: 17 games is a small sample and a couple of
+// outlier lines (Week 18 rest games) drag a mean around.
+let _mtImplBaseCache = null;
+var _mtImpliedBaselines = function _mtImpliedBaselines() {
+  if (_mtImplBaseCache) return _mtImplBaseCache;
+  _mtImplBaseCache = {};
+  if (typeof window.getNflScheduleForTeam !== 'function'
+      || typeof window.getNflTeamImpliedTotal !== 'function') return _mtImplBaseCache;
+  Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+    const sched = window.getNflScheduleForTeam(team);
+    if (!sched) return;
+    const vals = [];
+    for (let w = 1; w <= 18; w++) {
+      const g = sched[w];
+      if (!g || g.bye || !g.opp) continue;
+      const it = window.getNflTeamImpliedTotal(w, team, g.opp, g.home);
+      if (typeof it === 'number') vals.push(it);
+    }
+    // Need a meaningful season sample before we trust a baseline.
+    if (vals.length >= 6) {
+      vals.sort((a, b) => a - b);
+      const m = Math.floor(vals.length / 2);
+      _mtImplBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+    }
+  });
+  return _mtImplBaseCache;
+};
+
+// The DST mirror of _mtImpliedBaselines: for each team, the median implied
+// total of the OPPONENT across all 18 weeks — i.e. the points this defense
+// is normally priced to face.
+//
+// This baseline is not optional. A raw opponent implied total is heavily
+// contaminated by the defense's OWN quality, because the market prices
+// offenses down when they face a good defense. Measured on the 2026 lines,
+// a team's season-median opponent implied total correlates 0.74 with its
+// own Clay defensive rank — so ranking on the raw number scores "is this
+// defense good", not "is this schedule easy", and every elite defense
+// floats to the top of the easy list in every window. Subtracting each
+// team's own median cancels that constant and leaves the schedule effect,
+// exactly as _mtImpliedBaselines does for skill positions.
+// SPREAD VS THE TEAM'S OWN NORM (2026-10-05). A raw spread mostly says "this is
+// a good team" - roster quality, the same trap the implied total had - while
+// the SOS rank is about the schedule. For the positions listed here the spread
+// signal is the window's average spread MINUS the team's own season median.
+// scripts/research_sos_mix.py (2016-25, signals rebuilt as of each week): RB
+// .158 vs .143 raw at the same weight, better in 7 of 10 seasons. QB (-0.10),
+// WR, TE and K scored the same or worse relative, so they stay raw; the mix of
+// opponent grade vs implied total (3:1, K 1:3, D/ST 1:2) held up there as is.
+const POSITION_SPREAD_RELATIVE = { RB: true };
+let _mtSprBaseCache = null;
+var _mtSpreadBaselines = function _mtSpreadBaselines() {
+  if (_mtSprBaseCache) return _mtSprBaseCache;
+  _mtSprBaseCache = {};
+  if (typeof window.getNflScheduleForTeam !== 'function'
+      || typeof window.getNflTeamSpread !== 'function') return _mtSprBaseCache;
+  Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+    const sched = window.getNflScheduleForTeam(team);
+    if (!sched) return;
+    const vals = [];
+    for (let w = 1; w <= 18; w++) {
+      const g = sched[w];
+      if (!g || g.bye || !g.opp) continue;
+      const sp = window.getNflTeamSpread(w, team, g.opp, g.home);
+      if (typeof sp === 'number') vals.push(sp);
+    }
+    if (vals.length >= 6) {
+      vals.sort((a, b) => a - b);
+      const m = Math.floor(vals.length / 2);
+      _mtSprBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+    }
+  });
+  return _mtSprBaseCache;
+};
+
+let _mtOppImplBaseCache = null;
+var _mtOppImpliedBaselines = function _mtOppImpliedBaselines() {
+  if (_mtOppImplBaseCache) return _mtOppImplBaseCache;
+  _mtOppImplBaseCache = {};
+  if (typeof window.getNflScheduleForTeam !== 'function'
+      || typeof window.getNflTeamImpliedTotal !== 'function') return _mtOppImplBaseCache;
+  Object.keys(_mtBuildDstByAbbr()).forEach(team => {
+    const sched = window.getNflScheduleForTeam(team);
+    if (!sched) return;
+    const vals = [];
+    for (let w = 1; w <= 18; w++) {
+      const g = sched[w];
+      if (!g || g.bye || !g.opp) continue;
+      const oi = window.getNflTeamImpliedTotal(w, g.opp, team, !g.home);
+      if (typeof oi === 'number') vals.push(oi);
+    }
+    if (vals.length >= 6) {
+      vals.sort((a, b) => a - b);
+      const m = Math.floor(vals.length / 2);
+      _mtOppImplBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
+    }
+  });
+  return _mtOppImplBaseCache;
+};
+
+// === Adjustable SOS week window (rankings table) ===
+// null = the playoff default (W15-17); {from,to} = a custom range (e.g. 1-5).
+// Persisted to localStorage so the rankings view keeps your window.
+let _sosRange = null;
+try {
+  const _sr = localStorage.getItem('mff_sosRange');
+  if (_sr) { const p = JSON.parse(_sr); if (p && p.from >= 1 && p.to <= 18 && p.from <= p.to) _sosRange = { from: +p.from, to: +p.to }; }
+} catch (_) {}
+// Rest of season = this week through week 17 (week 18 excluded, most leagues are done).
+// Before kickoff that is 1-17; after week 17 it falls back to the playoff window.
+var _sosRosWeeks = function _sosRosWeeks() {
+  try {
+    const now = window._seasonStripNow || Date.now();
+    const wkEnd = kick => { const dd = new Date(kick + 2 * 86400000); while (dd.getUTCDay() !== 2) dd.setUTCDate(dd.getUTCDate() + 1); dd.setUTCHours(9, 0, 0, 0); return dd.getTime(); };
+    const cur = (typeof _SEASON_KICKS_2026 !== 'undefined') ? _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick)) : null;
+    const from = cur ? cur.wk : 1;
+    if (from > 17) return [15, 16, 17];
+    const out = []; for (let w = from; w <= 17; w++) out.push(w);
+    return out;
+  } catch (_) { return [15, 16, 17]; }
+};
+var _sosActiveWeeks = function _sosActiveWeeks() {
+  if (!_sosRange) return _sosRosWeeks();
+  const out = [];
+  for (let w = _sosRange.from; w <= _sosRange.to; w++) out.push(w);
+  return out;
+};
+window._sosActiveWeeks = _sosActiveWeeks;
+window._sosGetRange = function() { return _sosRange; };
+window._sosSetRange = function(range) {
+  _sosRange = range || null;
+  try {
+    if (_sosRange) localStorage.setItem('mff_sosRange', JSON.stringify(_sosRange));
+    else localStorage.removeItem('mff_sosRange');
+  } catch (_) {}
+  if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
+};
+
+// Cache keyed by position + week window. _mtPlayoffSosCache[posKey_wks][team]
+// -> { label, color, ... }. posKey in {'QB','RB','WR','TE','OVERALL'};
+// OVERALL is the fallback for K/DST/other. Default window is W15-17.
+const _mtPlayoffSosCache = {};
+var _mtBuildPlayoffSos = function _mtBuildPlayoffSos(pos, weeks) {
+  const wks = (Array.isArray(weeks) && weeks.length) ? weeks : [15, 16, 17];
+  const posKey = _mtPosKey(pos);
+  const isDstView = posKey === 'DST';
+  const mix = _mtSignalMix(posKey);
+  const key = posKey + '_' + wks.join('_') + '_' + _mtFmtKey();
+  if (_mtPlayoffSosCache[key]) return _mtPlayoffSosCache[key];
+  _mtPlayoffSosCache[key] = {};
+  if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosCache[key];
+  // Signal-blend guards were written for the 3-game playoff window (n >= 2);
+  // for shorter custom windows require at least min(2, window size) games so
+  // a 1-week window still blends totals/spreads.
+  const minN = Math.min(2, wks.length);
+  const isDefaultWindow = wks.length === 3 && wks[0] === 15 && wks[1] === 16 && wks[2] === 17;
+  const dstByAbbr = _mtBuildDstByAbbr();
+  const teamDef = {};
+  const teamTot = {};
+  const teamSpr = {};  // team -> { avg: avg team-relative spread, n }
+  Object.keys(dstByAbbr).forEach(team => {
+    const opps = window.getPlayoffOpponents(team, wks);
+    if (!opps.length) return;
+    let defSum = 0, defN = 0, totSum = 0, totN = 0, sprSum = 0, sprN = 0;
+    const detail = [];
+    opps.forEach(g => {
+      const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
+      const away = g.home ? g.opp : team;
+      const home = g.home ? team : g.opp;
+      const gt = (typeof window.getNflGameTotal === 'function')
+                 ? window.getNflGameTotal(g.wk, away, home)
+                 : null;
+      const teamSpread = (typeof window.getNflTeamSpread === 'function')
+                         ? window.getNflTeamSpread(g.wk, team, g.opp, g.home)
+                         : null;
+      // v0.10.31: implied team total replaces raw O/U in the SOS blend.
+      // implied = (total - team_spread) / 2 — captures THIS team's expected
+      // scoring, not just the combined game total. A 47-total game with a
+      // -7 favorite gives 27 implied (good) vs a -1 favorite gives 24
+      // implied (less good). Strictly better signal than O/U for skill
+      // players where what matters is YOUR team's scoring environment.
+      const impliedTot = (typeof window.getNflTeamImpliedTotal === 'function')
+                         ? window.getNflTeamImpliedTotal(g.wk, team, g.opp, g.home)
+                         : null;
+      // A DST's scoring environment is the points it must ALLOW, so its
+      // implied-total signal is the opponent's, not its own.
+      const oppImplied = (typeof window.getNflTeamImpliedTotal === 'function')
+                         ? window.getNflTeamImpliedTotal(g.wk, g.opp, team, !g.home)
+                         : null;
+      const envTot = isDstView ? oppImplied : impliedTot;
+      if (typeof envTot === 'number') { totSum += envTot; totN++; }
+      if (typeof teamSpread === 'number') { sprSum += teamSpread; sprN++; }
+      if (oppRec) {
+        const defZ = _mtMatchupZ(oppRec, posKey);
+        defSum += defZ; defN++;
+        const posUnits = (posKey !== 'OVERALL' && POSITION_DEF_WEIGHTS[posKey] && oppRec.clay)
+                         ? Object.keys(POSITION_DEF_WEIGHTS[posKey])
+                               .map(u => u.toUpperCase() + (oppRec.clay[u] != null ? oppRec.clay[u] : '?'))
+                               .join('/')
+                         : null;
+        detail.push({
+          wk: g.wk, opp: g.opp, home: g.home,
+          dstRank: oppRec.dst.r, oppg: oppRec.dst.oppg,
+          clayDefRk: oppRec.clay ? oppRec.clay.defRk : null,
+          clayDefGr: oppRec.clay ? oppRec.clay.defGr : null,
+          clayOffRk: oppRec.clay ? oppRec.clay.offRk : null,
+          posUnits, gameTotal: gt, teamSpread, impliedTotal: impliedTot,
+          oppImplied, allowedNote: _mtAllowedNote(oppRec.abbr, posKey),
+        });
+      }
+    });
+    if (defN > 0) teamDef[team] = { avg: defSum / defN, n: defN, opps: detail };
+    if (totN > 0) teamTot[team] = { avg: totSum / totN, n: totN };
+    if (sprN > 0) teamSpr[team] = { avg: sprSum / sprN, n: sprN };
+  });
+  const totalsPopulated = (typeof window.getNflTotalsCount === 'function')
+                           ? window.getNflTotalsCount() : 0;
+  const useTotals = totalsPopulated >= 8;
+  // 2026-07-24: the implied-total signal is now the DIFF between the
+  // window's avg implied total and the team's own season median
+  // (_mtImpliedBaselines) — isolates the schedule's effect on scoring
+  // environment instead of rewarding good offenses in every window.
+  // DST measures the same way against its own mirror baseline: the window's
+  // avg OPPONENT implied total minus the opponent implied total this defense
+  // normally faces (_mtOppImpliedBaselines). Same reason as above — the raw
+  // number mostly encodes the defense's own quality, not its schedule.
+  const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
+  const teamRel = {};
+  Object.keys(teamTot).forEach(t => {
+    if (teamTot[t].n < minN) return;
+    if (typeof _implBase[t] === 'number') teamRel[t] = teamTot[t].avg - _implBase[t];
+  });
+  let tMu = 0, tSd = 1, totalsReady = false;
+  if (useTotals) {
+    const relVals = Object.values(teamRel);
+    if (relVals.length >= 4) {
+      const m = relVals.reduce((s, v) => s + v, 0) / relVals.length;
+      const variance = relVals.reduce((s, v) => s + (v - m) * (v - m), 0) / relVals.length;
+      const sd = Math.sqrt(variance);
+      // Near-season-length windows: every team's window avg ≈ its own
+      // baseline, so the diffs collapse toward 0 — skip the adjustment
+      // rather than z-amplifying noise.
+      if (sd >= 0.5) { tMu = m; tSd = sd; totalsReady = true; }
+    }
+  }
+  // Spread z-score across teams (centered ~0 by construction — favored offset
+  // underdog, sums to 0 league-wide). Sd ~3-4 over 3-game playoff window.
+  let sMu = 0, sSd = 1, spreadsReady = false;
+  const sprRel = POSITION_SPREAD_RELATIVE[posKey] === true;
+  if (sprRel) {
+    const sprBase = _mtSpreadBaselines();
+    Object.keys(teamSpr).forEach(t => {
+      if (typeof sprBase[t] === 'number') teamSpr[t].avg -= sprBase[t];
+      else delete teamSpr[t];
+    });
+  }
+  const sprAvgs = Object.values(teamSpr).filter(t => t.n >= minN).map(t => t.avg);
+  if (sprAvgs.length >= 4) {
+    const m = sprAvgs.reduce((s, v) => s + v, 0) / sprAvgs.length;
+    const variance = sprAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / sprAvgs.length;
+    sMu = m; sSd = Math.sqrt(variance) || 1;
+    // relative spreads collapse toward 0 on near-season-length windows - skip, as the totals do
+    spreadsReady = !(sprRel && sSd < 0.5);
+  }
+  const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
+  const finalScores = Object.entries(teamDef).map(([team, d]) => {
+    let blendAvg = d.avg;
+    let totalAdjusted = false;
+    if (totalsReady && teamRel[team] != null) {
+      // Skill/K: implied total above the team's own norm = more expected
+      // scoring = EASIER, so invert. DST: opponent implied total above the
+      // league norm = more points to allow = HARDER, so don't.
+      const zRaw = (teamRel[team] - tMu) / tSd;
+      const zT = isDstView ? zRaw : -zRaw;
+      blendAvg = (d.avg * mix.def + zT * mix.tot) / (mix.def + mix.tot);
+      totalAdjusted = true;
+    }
+    // Add spread contribution. Favored teams have NEGATIVE spreads, so zS
+    // is negative when team is favored. For positions where favorites are
+    // easier (RB, WR, TE: positive weight), zS * weight is negative when
+    // favored → blendAvg decreases → EASIER rating. For QB (negative weight),
+    // favored team gets a small SOS bump (efficient game caps QB volume).
+    let spreadAdjusted = false;
+    let zS = null;
+    if (spreadsReady && sprWeight !== 0 && teamSpr[team] && teamSpr[team].n >= minN) {
+      zS = (teamSpr[team].avg - sMu) / sSd;
+      blendAvg += sprWeight * zS;
+      spreadAdjusted = true;
+    }
+    return { team, blendAvg, opps: d.opps, teamTot: teamTot[team] || null,
+             teamSpr: teamSpr[team] || null, zS, sprWeight,
+             totalAdjusted, spreadAdjusted };
+  });
+  finalScores.sort((a, b) => a.blendAvg - b.blendAvg);
+  // League thirds (32 teams → 11/21 cuts, matching the original buckets).
+  // Custom windows can drop bye-week teams below 32, so scale by count.
+  const _fsN = finalScores.length;
+  const _priorLive = _mtPriorLive();
+  const _easyCut = Math.round(_fsN / 3);
+  const _hardCut = _fsN - Math.round(_fsN / 3);
+  finalScores.forEach((data, i) => {
+    const rank = i + 1;
+    let label, color;
+    if (rank <= _easyCut)      { label = 'E'; color = '#22c55e'; }
+    else if (rank <= _hardCut) { label = 'M'; color = '#facc15'; }
+    else                       { label = 'H'; color = '#ef4444'; }
+    const posTag = (posKey === 'OVERALL') ? '' : (' (' + posKey + ')');
+    const tipPrefix = isDefaultWindow ? 'Playoff SOS' : 'SOS W' + wks[0] + (wks.length > 1 ? '-' + wks[wks.length - 1] : '');
+    const tip = tipPrefix + posTag + ' #' + rank + '/' + _fsN + ' (1 = easiest) · ' + data.opps.map(o => {
+      const parts = ['W' + o.wk + ' ' + (o.home ? 'vs ' : '@ ') + o.opp];
+      const sub = [];
+      // In-season points allowed first; the preseason grades (Clay units /
+      // projected PA) only while they still count in the blend.
+      if (o.allowedNote) sub.push(o.allowedNote);
+      if (isDstView) {
+        // A DST's matchup is the opposing OFFENSE — show offense rank and
+        // the points that offense is priced to score.
+        if (_priorLive && o.clayOffRk) sub.push('Clay O#' + o.clayOffRk);
+        if (typeof o.oppImplied === 'number') sub.push(o.oppImplied.toFixed(1) + ' opp impl');
+      } else {
+        if (_priorLive) {
+          if (o.posUnits) sub.push(o.posUnits);
+          else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
+          if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
+        }
+        if (typeof o.impliedTotal === 'number') sub.push('impl ' + o.impliedTotal.toFixed(1));
+      }
+      if (typeof o.gameTotal === 'number') sub.push('O/U ' + o.gameTotal.toFixed(1));
+      if (typeof o.teamSpread === 'number') sub.push((o.teamSpread > 0 ? '+' : '') + o.teamSpread + ' sprd');
+      if (sub.length) parts.push('(' + sub.join(', ') + ')');
+      return parts.join(' ');
+    }).join(', ')
+      + (data.totalAdjusted && data.teamTot && typeof _implBase[data.team] === 'number'
+          ? ' · ' + (isDstView ? 'opp impl ' : 'impl ') + data.teamTot.avg.toFixed(1)
+            + ' vs szn ' + _implBase[data.team].toFixed(1)
+            + ' (' + (teamRel[data.team] >= 0 ? '+' : '') + teamRel[data.team].toFixed(1) + ')'
+          : '')
+      + (data.spreadAdjusted ? ' · spread-blended' : (data.totalAdjusted ? ' · implied-blended' : ''));
+    _mtPlayoffSosCache[key][data.team] = { label, color, title: tip, rank, avg: data.blendAvg };
+  });
+  return _mtPlayoffSosCache[key];
+};
+
+var _mtGetPlayoffSos = function _mtGetPlayoffSos(teamRaw, pos, weeks) {
+  if (!teamRaw) return null;
+  let abbr = teamRaw;
+  if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
+  return _mtBuildPlayoffSos(pos, weeks)[String(abbr).toUpperCase()] || null;
+};
+
+// Per-week per-position SOS rating. Cache key is `${pos}_${week}`.
+// Same 4-signal blend as overall, but for a single week instead of averaging.
+// Returns null if the team has no opp this week (shouldn't happen in W15-17
+// for 2026 — no byes — but the fallback is here just in case).
+const _mtPlayoffSosWeeklyCache = {};
+var _mtBuildPlayoffSosWeekly = function _mtBuildPlayoffSosWeekly(pos, week) {
+  const posKey = _mtPosKey(pos);
+  const isDstView = posKey === 'DST';
+  const mix = _mtSignalMix(posKey);
+  const cacheKey = posKey + '_' + week + '_' + _mtFmtKey();
+  if (_mtPlayoffSosWeeklyCache[cacheKey]) return _mtPlayoffSosWeeklyCache[cacheKey];
+  _mtPlayoffSosWeeklyCache[cacheKey] = {};
+  if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosWeeklyCache[cacheKey];
+  const dstByAbbr = _mtBuildDstByAbbr();
+  const teamRows = {};
+  Object.keys(dstByAbbr).forEach(team => {
+    const opps = window.getPlayoffOpponents(team, [week]);
+    if (!opps.length) return;
+    const g = opps[0];
+    if (g.bye) return;
+    const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
+    if (!oppRec) return;
+    const defZ = _mtMatchupZ(oppRec, posKey);
+    const away = g.home ? g.opp : team;
+    const home = g.home ? team : g.opp;
+    const gt = (typeof window.getNflGameTotal === 'function')
+               ? window.getNflGameTotal(week, away, home) : null;
+    const sp = (typeof window.getNflTeamSpread === 'function')
+               ? window.getNflTeamSpread(week, team, g.opp, g.home) : null;
+    // v0.10.31: implied team total replaces raw O/U as the SOS signal.
+    const it = (typeof window.getNflTeamImpliedTotal === 'function')
+               ? window.getNflTeamImpliedTotal(week, team, g.opp, g.home) : null;
+    // For a DST, the points the OPPONENT is priced to score.
+    const oppIt = (typeof window.getNflTeamImpliedTotal === 'function')
+                  ? window.getNflTeamImpliedTotal(week, g.opp, team, !g.home) : null;
+    teamRows[team] = { defZ, gt, sp, it, oppIt, g, oppRec };
+  });
+  // z-score implied-total DIFFS (vs each team's season median baseline —
+  // see _mtImpliedBaselines) AND spreads across this week's matchups.
+  const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
+  const std  = a => { const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m))))||1; };
+  const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
+  Object.entries(teamRows).forEach(([t, x]) => {
+    // DST reads the OPPONENT's implied total against the opponent-implied
+    // baseline; skill/K read their own against their own. Both are diffs —
+    // the raw number encodes roster quality, not schedule.
+    const v = isDstView ? x.oppIt : x.it;
+    x.rel = (typeof v === 'number' && typeof _implBase[t] === 'number') ? v - _implBase[t] : null;
+  });
+  const rels = Object.values(teamRows).map(x => x.rel).filter(v => typeof v === 'number');
+  // spZ = the spread the blend reads: vs the team's own season norm where POSITION_SPREAD_RELATIVE says so
+  const sprBase = POSITION_SPREAD_RELATIVE[posKey] === true ? _mtSpreadBaselines() : null;
+  Object.entries(teamRows).forEach(([t, x]) => {
+    x.spZ = typeof x.sp !== 'number' ? null : !sprBase ? x.sp : typeof sprBase[t] === 'number' ? x.sp - sprBase[t] : null;
+  });
+  const spreads = Object.values(teamRows).map(x => x.spZ).filter(v => typeof v === 'number');
+  const useTotals = rels.length >= 4 && std(rels) >= 0.5;
+  const useSpreads = spreads.length >= 4;
+  const tMu = useTotals ? mean(rels) : 0;
+  const tSd = useTotals ? std(rels)  : 1;
+  const sMu = useSpreads ? mean(spreads) : 0;
+  const sSd = useSpreads ? std(spreads)  : 1;
+  const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
+  const scored = Object.entries(teamRows).map(([t, x]) => {
+    let blend = x.defZ;
+    if (useTotals && typeof x.rel === 'number') {
+      // Invert: implied total ABOVE the team's own season norm = more
+      // expected scoring than usual = EASIER for the player. DST is the
+      // exception — a higher opponent implied total is HARDER.
+      const zRaw = (x.rel - tMu) / tSd;
+      const zT = isDstView ? zRaw : -zRaw;
+      blend = (x.defZ * mix.def + zT * mix.tot) / (mix.def + mix.tot);
+    }
+    if (useSpreads && sprWeight !== 0 && typeof x.spZ === 'number') {
+      const zS = (x.spZ - sMu) / sSd;
+      blend += sprWeight * zS;
+    }
+    return { t, blend, ...x };
+  });
+  scored.sort((a, b) => a.blend - b.blend);
+  const n = scored.length;
+  // 1-11 E (~easiest third), 12-21 M, 22-32 H — same buckets as overall.
+  // For non-32-team weeks (e.g. if used outside playoffs), scale by thirds.
+  const easyCut = Math.round(n / 3);
+  const hardCut = n - Math.round(n / 3);
+  scored.forEach((d, i) => {
+    const rank = i + 1;
+    let label, color;
+    if (rank <= easyCut)        { label = 'E'; color = '#22c55e'; }
+    else if (rank > hardCut)    { label = 'H'; color = '#ef4444'; }
+    else                        { label = 'M'; color = '#facc15'; }
+    const c = d.oppRec.clay || {};
+    const posUnits = (posKey !== 'OVERALL' && POSITION_DEF_WEIGHTS[posKey])
+                     ? Object.keys(POSITION_DEF_WEIGHTS[posKey])
+                           .map(u => u.toUpperCase() + (c[u] != null ? c[u] : '?'))
+                           .join('/')
+                     : null;
+    _mtPlayoffSosWeeklyCache[cacheKey][d.t] = {
+      label, color, rank, n, isDst: isDstView,
+      blend: d.blend, // z-score (lower = easier) — My Teams PLAYOFFS tilt
+      opp: d.g.opp, home: d.g.home,
+      gameTotal: d.gt, teamSpread: d.sp, impliedTotal: d.it,
+      oppImplied: d.oppIt,
+      allowedNote: _mtAllowedNote(d.oppRec.abbr, posKey),
+      priorLive: _mtPriorLive(),   // false once the preseason grades no longer count
+      clayDefRk: c.defRk || null, clayOffRk: c.offRk || null,
+      posUnits, oppg: d.oppRec.dst.oppg,
+    };
+  });
+  return _mtPlayoffSosWeeklyCache[cacheKey];
+};
+var _mtGetPlayoffSosWeekly = function _mtGetPlayoffSosWeekly(teamRaw, pos, week) {
+  if (!teamRaw) return null;
+  let abbr = teamRaw;
+  if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
+  return _mtBuildPlayoffSosWeekly(pos, week)[String(abbr).toUpperCase()] || null;
+};
+
+// Expose for code paths outside this IIFE — rankings table, player card.
+window._mtGetPlayoffSos = _mtGetPlayoffSos;
+window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
+
+// === P-SOS week-range control (rankings header ▾) ===
+// Popover with presets (Playoff 15-17 default, Full 1-18) + custom from/to.
+// Applying re-renders the table; the header label reflects a custom window.
+(function _sosRangeControl() {
+  const btn = document.getElementById('psosRangeBtn');
+  const lbl = document.getElementById('psosHeaderLabel');
+  if (!btn) return;
+  let pop = null;
+  function _updateLabel() {
+    // Custom window → plain "SOS" (the popover + cell tooltips carry the
+    // exact week range); default playoff window → "P-SOS".
+    if (lbl) lbl.textContent = 'SOS'; // playoffs have their own P-SOS column now
+  }
+  function _close() {
+    if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', _outside); }
+  }
+  function _outside(e) { if (pop && !pop.contains(e.target) && e.target !== btn) _close(); }
+  function _apply(range) {
+    window._sosSetRange(range);
+    _updateLabel();
+    _close();
+    if (typeof render === 'function') render();
+  }
+  btn.addEventListener('keydown', e => e.stopPropagation()); // th Enter/Space sorts
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation(); // th click sorts
+    if (pop) { _close(); return; }
+    const r = _sosRange;
+    pop = document.createElement('div');
+    pop.className = 'sos-range-pop';
+    pop.innerHTML = '<div class="sos-pop-title">SOS WEEK RANGE</div>'
+      + '<div class="sos-range-row">'
+        + '<button class="cmp-split-chip' + (!r ? ' active' : '') + '" data-sospreset="playoff">PLAYOFF 15-17</button>'
+        + '<button class="cmp-split-chip' + (r && r.from === 1 && r.to === 18 ? ' active' : '') + '" data-sospreset="season">FULL 1-18</button>'
+      + '</div>'
+      + '<div class="sos-range-row"><span style="font-size:.6875rem;color:var(--text2)">WKS</span>'
+        + '<input type="number" class="cmp-split-wk" id="sosWkFrom" min="1" max="18" value="' + (r ? r.from : 15) + '">'
+        + '<span style="font-size:.6875rem;color:var(--text2)">to</span>'
+        + '<input type="number" class="cmp-split-wk" id="sosWkTo" min="1" max="18" value="' + (r ? r.to : 17) + '">'
+        + '<button class="cmp-split-chip" id="sosWkApply">APPLY</button>'
+      + '</div>';
+    document.body.appendChild(pop);
+    const rect = btn.getBoundingClientRect();
+    pop.style.top = (rect.bottom + 4) + 'px';
+    pop.style.left = Math.max(8, Math.min(rect.left - 70, window.innerWidth - pop.offsetWidth - 8)) + 'px';
+    pop.addEventListener('click', ev => ev.stopPropagation());
+    pop.querySelector('[data-sospreset="playoff"]').addEventListener('click', () => _apply(null));
+    pop.querySelector('[data-sospreset="season"]').addEventListener('click', () => _apply({ from: 1, to: 18 }));
+    pop.querySelector('#sosWkApply').addEventListener('click', () => {
+      let f = parseInt(pop.querySelector('#sosWkFrom').value, 10);
+      let t = parseInt(pop.querySelector('#sosWkTo').value, 10);
+      if (isNaN(f)) f = 15;
+      if (isNaN(t)) t = 17;
+      f = Math.max(1, Math.min(18, f));
+      t = Math.max(f, Math.min(18, t));
+      _apply(f === 15 && t === 17 ? null : { from: f, to: t });
+    });
+    document.addEventListener('mousedown', _outside);
+  });
+  _updateLabel(); // restore a persisted custom window's label on boot
+})();
+
+//#chunk myteams
 // === MY TEAMS MODULE ===
 (function() {
   'use strict';
@@ -58124,926 +59112,9 @@ Rules:
     return d && d.age ? d.age : null;
   }
 
-  // ==== Playoff SOS (2026 weeks 15-17) ====
-  // Per-position defensive signal blend. Four metrics z-scored across 32 teams:
-  //   1. Clay weighted-unit grade — position-specific weighting of Mike Clay's
-  //      DI/ED/LB/CB/S unit grades (PDF p.63). E.g. WR weights CB+S heavily;
-  //      RB weights DI+LB.
-  //   2. DST proj (p)  — projected DST fantasy points (team-wide signal).
-  //   3. oppg (inv)    — points allowed per game (team-wide).
-  //   4. Game O/U      — DK game total (team-wide; folded in if data exists).
-  // Higher zBlend = stronger D = harder matchup for facing players at this pos.
-  //
-  // Position weights for Clay units (sum to ~1.0 per position):
-  //   QB → ED 35% + CB 30% + S 20% + LB 10% + DI 5%  (pass rush + secondary)
-  //   RB → DI 35% + LB 35% + ED 25% + S 5%           (run defense)
-  //   WR → CB 50% + S 35% + LB 15%                   (secondary coverage)
-  //   TE → LB 40% + S 35% + CB 20% + DI 5%           (middle of field)
-  //   *  → defGr fallback (overall) for K, DST, OTHER
-  const POSITION_DEF_WEIGHTS = {
-    QB: { ed: 0.35, cb: 0.30, s: 0.20, lb: 0.10, di: 0.05 },
-    RB: { di: 0.35, lb: 0.35, ed: 0.25, s: 0.05 },
-    WR: { cb: 0.50, s: 0.35, lb: 0.15 },
-    TE: { lb: 0.40, s: 0.35, cb: 0.20, di: 0.05 },
-  };
-
-  // Position-aware spread weighting for SOS. Game script affects positions
-  // differently: favored RBs see clock-killer carries (big positive signal);
-  // underdog WR/TE get garbage-time bumps (small positive); QBs of heavy
-  // favorites can suppress (efficient game, fewer attempts). The weight
-  // determines how much the team-relative spread folds into the SOS blend.
-  // 0 = ignore spread; positive = favorite = easier; negative = inverse.
-  //
-  // Magnitudes calibrated to empirical fantasy data: RB sees ~10-15% lift
-  // when favored ≥7; WR/TE bump is ~3-5%; QB effect is small + opposite.
-  const POSITION_SPREAD_WEIGHT = {
-    QB: -0.10,  // slight underdog bias (more attempts to catch up)
-    RB:  0.25,  // favorites get clock-killer carries (strongest signal)
-    WR:  0.08,  // mild favorite bias; underdogs get garbage-time targets
-    TE:  0.08,  // similar to WR
-    // K/DST already get most of the favorite effect through the implied-total
-    // signal, so these are deliberately small — they only carry the RESIDUAL
-    // game-script effect on top of expected points.
-    K:   0.05,  // marginal: blowout leads trade late FGs for kneeldowns
-    DST: 0,     // was 0.15 until 2026-10-05: the opponent's implied total already carries it - no spread term
-                // scored .214 vs .203 with it, better in 8 of 10 seasons (scripts/research_sos_mix.py)
-  };
-
-  // How the two SOS axes are weighted per position: `def` = opponent-quality
-  // signal, `tot` = implied-total (scoring environment) signal. Skill positions
-  // keep the original 3:1 defense-led blend.
-  //
-  // K is inverted (1:3) because kicker scoring is driven by how many scoring
-  // drives his own offense sustains far more than by opponent unit grades —
-  // and a stiff defense partly cancels itself out for a kicker, converting
-  // some opponent TDs into FG attempts.
-  //
-  // DST is 1:2 because its opponent-quality axis is a single Clay grade
-  // (preseason roster opinion) while the implied total is a live market
-  // estimate of the points the unit will actually face.
-  const POSITION_SIGNAL_MIX = {
-    K:   { def: 1, tot: 3 },
-    DST: { def: 1, tot: 2 },
-  };
-  const _mtSignalMix = posKey => POSITION_SIGNAL_MIX[posKey] || { def: 3, tot: 1 };
-
-  // Positions with their own SOS treatment. Anything else (IDP, FLEX rows,
-  // unknown) falls back to the team-wide OVERALL blend.
-  function _mtPosKey(pos) {
-    return (pos === 'QB' || pos === 'RB' || pos === 'WR' || pos === 'TE'
-            || pos === 'K' || pos === 'DST') ? pos : 'OVERALL';
-  }
-
-  // The opponent-quality z for a given position (higher = tougher matchup).
-  //   DST → the opposing OFFENSE (a defense's matchup is who it has to stop)
-  //   K   → opponent's overall defense (no unit weighting fits FG kicking)
-  //   else → the position-weighted defensive unit blend
-  // === In-season observed FPA (fantasy points allowed per position group) ===
-  // Jack's 2026-07-24 spec: once 2026 games are in the weekly stats, compute
-  // fantasy points allowed to QB/RB/WR/TE per game from our own
-  // WEEKLY_STATS_ACTIVE (each row has opp + fpts — no new data source) and
-  // phase it into the SOS blend IN PLACE of the preseason defensive priors
-  // (Clay unit grades / DST proj / opp PA). Ramp: observed share =
-  // (weeksPlayed − 1) / 4 → W1 0%, W2 25%, W3 50%, W4 75%, W5+ 100% (priors
-  // fully dropped). The Vegas layer (baseline-relative implied totals +
-  // spreads) stays throughout — this replaces only the defensive signal.
-  // Preseason: no 2026 rows → share 0 → behavior identical to today.
-  // 2026-10-05 (Jack: "4 weeks feels like a pretty large sample size, there are
-  // also injuries" - the preseason grades can't see them): the ramp is now
-  // (weeksPlayed − 1) / 3 → W2 33%, W3 67%, W4+ 100%.
-  // fpts basis (half-PPR) doesn't matter — the signal is z-scored per week.
-  const _MT_FPA_POS = ['QB', 'RB', 'WR', 'TE'];
-  // D/ST (Jack 2026-10-05: "for dst can we now use in season grades"): the DST
-  // key on an FPA row is what the opposing D/ST scored AGAINST that team's
-  // offense, so its z replaces the Clay preseason offense grade on the same
-  // ramp. 2018-25 check (offense's D/ST points allowed through week N vs the
-  // rest of its season): r .43 after 4 weeks / .45 after 5 against .24 for the
-  // prior season's number, best in-season weight .75 / .80 - the ramp below.
-  // Kept out of OVERALL (that is the four skill positions).
-  const _MT_FPA_SRC = _MT_FPA_POS.concat('DST');
-  // === THE OPPONENT GRADE (2026-10-05, Jack: "go and build it") ===
-  // Supersedes the ramp above whenever data/fpa_prior_2025.js is loaded. For each
-  // position the grade is  w x this season + (1 - w) x last season,
-  // w = games / (games + k), both sides schedule-adjusted and TOUCHDOWN-NEUTRAL
-  // (<POS>_tdn keys: actual TDs swapped for the league TD rate on the yards
-  // allowed; D/ST: defensive / return TDs out). The Clay preseason grades are
-  // out of the blend from the first final game. k = how many games last season
-  // is worth: after 4 games this season carries QB 57% / RB 50% / WR 40% /
-  // TE 67% / D/ST 67%, after 8 games 73 / 67 / 57 / 80 / 80.
-  // Backtest (scripts/research_opp_grade_schemes.py, 2016-25, settings picked
-  // leave-one-season-out, correlation with the next 4 weeks / rest of season):
-  // this form QB .157 / RB .202 / WR .154 / TE .173 / D/ST .378 against .137 /
-  // .194 / .113 / .169 / .357 for 100% in-season from week 4. Failed there:
-  // volume allowed as the input, pooling the QB number into WR / TE.
-  // Shared with the weekly OPP color (_wkOppBlendTable). Displayed points
-  // allowed (OPP PPG, tooltips) stay ACTUAL points.
-  // Off switches: window.MFF_OPP_PRIOR_OFF = true (old ramp + Clay),
-  // window.MFF_OPP_TDN_OFF = true (actual points on the in-season side).
-  // New season: build the prior with scripts/build_fpa_prior.py.
-  const _MT_FPA_PRIOR_K = { QB: 3, RB: 4, WR: 6, TE: 2, DST: 2 };
-  let _mtFpaCache = null;
-  function _mtObservedFpa() {
-    const _src = (window.FPA_2026 && window.FPA_2026.weeks) || null;
-    if (_mtFpaCache && _mtFpaCache.src === _src) return _mtFpaCache;
-    _mtFpaCache = { weeksPlayed: 0, share: 0, z: null, src: _src };
-    const useTdn = window.MFF_OPP_TDN_OFF !== true;
-    let tdn = false;
-    // 2026-09-14: prefer the COMPLETE-league table (data/fpa_2026.js, built by
-    // scripts/pull_postgame_stats.py from EVERY Sleeper QB/RB/WR/TE in FINAL
-    // games, half-PPR). The board-only sum below undercounts whenever a
-    // defense faced an untracked player (W1: PIT read 0.0 QB pts allowed
-    // because Cooper Rush isn't on the board; NE 0.5 because Drew Lock isn't).
-    const FP = window.FPA_2026;
-    const acc = {};
-    _MT_FPA_SRC.forEach(p => { acc[p] = {}; });
-    // SCHEDULE-ADJUSTED (Jack 2026-09-30: "adjust for SOS"): a defense that gave up
-    // 30 to the Bills is not as soft as one that gave up 30 to the Panthers. Same
-    // additive fit the weekly OPP color uses (_wkSchedAdjust: points = league avg +
-    // defense effect + offense effect, each shrunk by a one-game prior) - the SOS
-    // rank reads the DEFENSE effect instead of raw points allowed. Needs the
-    // offense on every row, so only the FPA_2026 path (not the board-only fallback).
-    const games = {};
-    _MT_FPA_SRC.forEach(p => { games[p] = []; });
-    let maxWk = 0;
-    if (FP && FP.weeks && Object.keys(FP.weeks).length) {
-      Object.keys(FP.weeks).forEach(wk => {
-        const w = +wk, teams = FP.weeks[wk];
-        Object.keys(teams).forEach(team => {
-          _MT_FPA_SRC.forEach(pos => {
-            let v = teams[team][pos];
-            if (typeof v !== 'number') return;
-            if (useTdn && typeof teams[team][pos + '_tdn'] === 'number') { v = teams[team][pos + '_tdn']; tdn = true; }
-            const slot = acc[pos][team] || (acc[pos][team] = { pts: 0, wks: new Set() });
-            slot.pts += v;
-            slot.wks.add(w);
-            const off = teams[team].opp ? String(teams[team].opp).toUpperCase() : null;
-            if (off) games[pos].push({ d: team, o: off, v });
-          });
-          if (w > maxWk) maxWk = w;
-        });
-      });
-    } else {
-      const WS = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : window.WEEKLY_STATS_ACTIVE;
-      if (!WS) return _mtFpaCache; // lazy weekly bundle not landed yet
-      const YEAR = '2026';
-      for (const name in WS) {
-        const rec = WS[name];
-        if (!rec || _MT_FPA_POS.indexOf(rec.pos) < 0 || !rec.seasons) continue;
-        const rows = rec.seasons[YEAR];
-        if (!rows) continue;
-        for (let i = 0; i < rows.length; i++) {
-          const r = rows[i];
-          const opp = r && r.opp ? String(r.opp).toUpperCase() : '';
-          if (!opp || typeof r.fpts !== 'number') continue;
-          const slot = acc[rec.pos][opp] || (acc[rec.pos][opp] = { pts: 0, wks: new Set() });
-          slot.pts += r.fpts;
-          slot.wks.add(r.wk);
-          if (r.wk > maxWk) maxWk = r.wk;
-        }
-      }
-    }
-    if (!maxWk) return _mtFpaCache;
-    const share = Math.min(1, Math.max(0, (maxWk - 1) / 3));
-    // Per-position z across teams: MORE points allowed = weaker defense =
-    // EASIER, and in this system lower z = easier — so invert the sign
-    // (mirrors zO = -(oppg − mu)/sd in the preseason priors).
-    const z = {};
-    _MT_FPA_SRC.forEach(pos => {
-      const perGame = {};
-      Object.keys(acc[pos]).forEach(team => {
-        const s = acc[pos][team];
-        if (s.wks.size >= 1) perGame[team] = s.pts / s.wks.size;
-      });
-      // swap raw points allowed for the schedule-adjusted number when every row carried its offense
-      const S = (typeof window._wkSchedAdjust === 'function' && games[pos].length && window.MFF_SOS_RAW_FPA !== true)
-        ? window._wkSchedAdjust(games[pos]) : null;
-      if (S) Object.keys(perGame).forEach(team => { if (typeof S.dE[team] === 'number') perGame[team] = S.mu + S.dE[team]; });
-      if (S) _mtFpaCache.adjusted = true;
-      const vals = Object.values(perGame);
-      if (vals.length < 24) return; // need most of the league before z-scoring
-      const mu = vals.reduce((a, b) => a + b, 0) / vals.length;
-      const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mu) * (b - mu), 0) / vals.length) || 1;
-      z[pos] = {};
-      Object.keys(perGame).forEach(team => { z[pos][team] = -(perGame[team] - mu) / sd; });
-    });
-    // Blend each position with last season's number (see THE OPPONENT GRADE above).
-    // The prior is the season before the points-allowed file's own season (FPA_PRIOR_2025 for 2026).
-    const _prObj = window['FPA_PRIOR_' + (((FP && +FP.season) || 2026) - 1)];
-    const PR = (window.MFF_OPP_PRIOR_OFF !== true && _prObj && _prObj.pos) || null;
-    const wIn = {};
-    if (PR) _MT_FPA_SRC.forEach(pos => {
-      const pv = PR[pos];
-      if (!z[pos] || !pv) return;
-      const pt = Object.keys(pv).filter(t => typeof pv[t] === 'number');
-      if (pt.length < 24) return;
-      const mu = pt.reduce((a, t) => a + pv[t], 0) / pt.length;
-      const sd = Math.sqrt(pt.reduce((a, t) => a + (pv[t] - mu) * (pv[t] - mu), 0) / pt.length) || 1;
-      const k = _MT_FPA_PRIOR_K[pos], out = {}, all = {};
-      wIn[pos] = {};
-      pt.forEach(t => { all[t] = 1; });
-      Object.keys(z[pos]).forEach(t => { all[t] = 1; });
-      Object.keys(all).forEach(t => {
-        const zi = z[pos][t];
-        const zp = typeof pv[t] === 'number' ? -(pv[t] - mu) / sd : null;   // same sign: more allowed = easier = lower
-        const g = acc[pos][t] ? acc[pos][t].wks.size : 0;
-        const w = typeof zi !== 'number' ? 0 : zp == null ? 1 : g / (g + k);
-        out[t] = w * (typeof zi === 'number' ? zi : 0) + (1 - w) * (zp == null ? 0 : zp);
-        wIn[pos][t] = w;
-      });
-      z[pos] = out;
-    });
-    const blended = _MT_FPA_POS.every(p => wIn[p]);
-    // OVERALL (K fallback + mixed views): mean of the four position z's.
-    if (_MT_FPA_POS.every(p => z[p])) {
-      z.OVERALL = {};
-      Object.keys(z.QB).forEach(team => {
-        let s = 0, n = 0;
-        _MT_FPA_POS.forEach(p => { if (typeof z[p][team] === 'number') { s += z[p][team]; n++; } });
-        if (n) z.OVERALL[team] = s / n;
-      });
-    }
-    // rank[pos][team]: 1 = softest grade (tooltips)
-    const rank = {};
-    _MT_FPA_SRC.forEach(pos => {
-      if (!z[pos]) return;
-      rank[pos] = {};
-      Object.keys(z[pos]).sort((a, b) => z[pos][a] - z[pos][b]).forEach((t, i) => { rank[pos][t] = i + 1; });
-    });
-    if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share: blended ? 1 : share, z, adjusted: !!_mtFpaCache.adjusted,
-                                               blended, w: wIn, rank, tdn, src: _src };
-    return _mtFpaCache;
-  }
-  window._mtObservedFpa = _mtObservedFpa; // console inspection / testing
-  // Tooltip text for what an opponent has allowed per game to this position in
-  // 2026 ("allows 21.3 to RBs, 5th most") - raw average in the board's scoring,
-  // from the weekly OPP PPG table. null until the in-season share is on.
-  const _mtOrd = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] || 'th'));
-  function _mtAllowedNote(abbr, posKey) {
-    if (!_mtObservedFpa().share || typeof window._oppAllowedFor !== 'function') return null;
-    if (_MT_FPA_SRC.indexOf(posKey) < 0) return null;
-    const a = window._oppAllowedFor(abbr, posKey);
-    if (!a || typeof a.v !== 'number') return null;
-    // Blended grade on: lead with the grade's own rank - it can sit far from the
-    // actual-points rank (one touchdown-heavy game, or a very different last season).
-    const f = _mtObservedFpa();
-    const gr = (f.blended && f.rank && f.rank[posKey]) ? f.rank[posKey][abbr] : null;
-    if (gr) return '#' + gr + ' softest vs ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', allows ' + a.v.toFixed(1) + '/gm';
-    return 'allows ' + a.v.toFixed(1) + ' to ' + (posKey === 'DST' ? 'D/STs' : posKey + 's') + ', ' + _mtOrd(a.rank) + ' most';
-  }
-  // true while the preseason grades still carry weight in the blend
-  const _mtPriorLive = () => !(_mtObservedFpa().share >= 1);
-  // the tooltip numbers follow the board's scoring, so the caches key on it
-  const _mtFmtKey = () => (typeof rankingScoringFmt === 'string') ? rankingScoringFmt : 'half';
-
-  function _mtMatchupZ(oppRec, posKey) {
-    // DST matchup = the opposing OFFENSE: Clay preseason offense grade, replaced
-    // in-season by what D/STs have scored against it (z.DST, same ramp).
-    const isDst = posKey === 'DST';
-    const prior = isDst ? oppRec.zOff
-                : (posKey === 'K' || posKey === 'OVERALL') ? oppRec.defZOverall : oppRec.defZByPos[posKey];
-    const fpa = _mtObservedFpa();
-    if (!fpa.share || !fpa.z) return prior;
-    const zMap = fpa.z[isDst ? 'DST' : (posKey === 'K' || posKey === 'OVERALL') ? 'OVERALL' : posKey];
-    const zObs = zMap ? zMap[oppRec.abbr] : undefined;
-    if (typeof zObs !== 'number') return prior;
-    return prior * (1 - fpa.share) + zObs * fpa.share;
-  }
-  // Weekly stats land lazily (and refresh in-season): rebuild FPA + every SOS
-  // cache downstream of _mtMatchupZ when the bundle arrives.
-  document.addEventListener('mff:weeklydata', () => {
-    _mtFpaCache = null;
-    Object.keys(_mtPlayoffSosCache).forEach(k => { delete _mtPlayoffSosCache[k]; });
-    Object.keys(_mtPlayoffSosWeeklyCache).forEach(k => { delete _mtPlayoffSosWeeklyCache[k]; });
-  });
-
-  function _mtClayUnitGrade(clayG, pos) {
-    if (!clayG) return null;
-    const w = POSITION_DEF_WEIGHTS[pos];
-    if (!w) return typeof clayG.defGr === 'number' ? clayG.defGr : null;
-    let sum = 0, totalW = 0;
-    for (const unit in w) {
-      if (typeof clayG[unit] === 'number') {
-        sum += clayG[unit] * w[unit];
-        totalW += w[unit];
-      }
-    }
-    return totalW > 0 ? sum / totalW : null;
-  }
-
-  let _mtDstByAbbrCache = null;
-  function _mtBuildDstByAbbr() {
-    if (_mtDstByAbbrCache) return _mtDstByAbbrCache;
-    _mtDstByAbbrCache = {};
-    if (!Array.isArray(window.D) || typeof TEAM_ABBR_MAP === 'undefined') return _mtDstByAbbrCache;
-    const dsts = window.D.filter(p => p && p.s === 'DST' && typeof p.p === 'number');
-    if (!dsts.length) return _mtDstByAbbrCache;
-    const clay = window.CLAY_TEAM_GRADES_2026 || {};
-    const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
-    const std  = a => { const m = mean(a); return Math.sqrt(mean(a.map(v => (v-m)*(v-m)))) || 1; };
-    // Team-wide signals: DST proj + opp PA + Clay overall.
-    const ps    = dsts.map(d => d.p);
-    const oppgs = dsts.map(d => d.oppg).filter(v => typeof v === 'number');
-    const pMu = mean(ps), pSd = std(ps);
-    const oMu = oppgs.length ? mean(oppgs) : 0;
-    const oSd = oppgs.length ? std(oppgs) : 1;
-    // Position-specific Clay distributions (so each position z-scores against
-    // the right league mean for that unit weighting).
-    const POSITIONS = ['QB','RB','WR','TE'];
-    const posGradesArr = {};
-    POSITIONS.forEach(pos => { posGradesArr[pos] = []; });
-    const overallClayDefs = [];
-    const overallClayOffs = [];
-    Object.values(clay).forEach(g => {
-      if (typeof g.defGr === 'number') overallClayDefs.push(g.defGr);
-      if (typeof g.offGr === 'number') overallClayOffs.push(g.offGr);
-      POSITIONS.forEach(pos => {
-        const v = _mtClayUnitGrade(g, pos);
-        if (typeof v === 'number') posGradesArr[pos].push(v);
-      });
-    });
-    const offMu = overallClayOffs.length ? mean(overallClayOffs) : 0;
-    const offSd = overallClayOffs.length ? std(overallClayOffs)  : 1;
-    const cMuOverall = overallClayDefs.length ? mean(overallClayDefs) : 0;
-    const cSdOverall = overallClayDefs.length ? std(overallClayDefs)  : 1;
-    const cMuByPos = {}, cSdByPos = {};
-    POSITIONS.forEach(pos => {
-      cMuByPos[pos] = posGradesArr[pos].length ? mean(posGradesArr[pos]) : 0;
-      cSdByPos[pos] = posGradesArr[pos].length ? std(posGradesArr[pos])  : 1;
-    });
-    dsts.forEach(d => {
-      const abbr = TEAM_ABBR_MAP[d.t] || d.t;
-      if (!abbr) return;
-      const upper = String(abbr).toUpperCase();
-      const zP = (d.p - pMu) / pSd;
-      const zO = (typeof d.oppg === 'number') ? -(d.oppg - oMu) / oSd : 0;
-      const clayG = clay[upper] || null;
-      const zCByPos = {};
-      POSITIONS.forEach(pos => {
-        const g = _mtClayUnitGrade(clayG, pos);
-        zCByPos[pos] = (g != null) ? (g - cMuByPos[pos]) / cSdByPos[pos] : 0;
-      });
-      const zCOverall = clayG && typeof clayG.defGr === 'number'
-                        ? (clayG.defGr - cMuOverall) / cSdOverall
-                        : 0;
-      // Per-position defensive 3-signal blend (Clay-by-pos + DST proj + opp PA).
-      // Total signal (game O/U) gets folded in later in _mtBuildPlayoffSos.
-      const defZByPos = {};
-      POSITIONS.forEach(pos => {
-        defZByPos[pos] = (zP + zO + zCByPos[pos]) / 3;
-      });
-      const defZOverall = (zP + zO + zCOverall) / 3;
-      // Clay OFFENSE z — opponent-quality signal for DST SOS (a DST's
-      // "matchup" is the opposing offense, not the opposing defense).
-      const zOff = clayG && typeof clayG.offGr === 'number'
-                   ? (clayG.offGr - offMu) / offSd
-                   : 0;
-      _mtDstByAbbrCache[upper] = {
-        abbr: upper,
-        dst: d, clay: clayG, zP, zO, zOff,
-        zCByPos, zCOverall,
-        defZByPos, defZOverall,
-      };
-    });
-    return _mtDstByAbbrCache;
-  }
-
-  // Season baseline of implied team totals: median implied total per team
-  // across all 18 weeks (byes skipped). Used so the SOS blend measures each
-  // window's implied totals RELATIVE to the team's own norm — a raw implied
-  // total mostly encodes "is this offense good" (roster quality, not
-  // schedule). Median over mean: 17 games is a small sample and a couple of
-  // outlier lines (Week 18 rest games) drag a mean around.
-  let _mtImplBaseCache = null;
-  function _mtImpliedBaselines() {
-    if (_mtImplBaseCache) return _mtImplBaseCache;
-    _mtImplBaseCache = {};
-    if (typeof window.getNflScheduleForTeam !== 'function'
-        || typeof window.getNflTeamImpliedTotal !== 'function') return _mtImplBaseCache;
-    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
-      const sched = window.getNflScheduleForTeam(team);
-      if (!sched) return;
-      const vals = [];
-      for (let w = 1; w <= 18; w++) {
-        const g = sched[w];
-        if (!g || g.bye || !g.opp) continue;
-        const it = window.getNflTeamImpliedTotal(w, team, g.opp, g.home);
-        if (typeof it === 'number') vals.push(it);
-      }
-      // Need a meaningful season sample before we trust a baseline.
-      if (vals.length >= 6) {
-        vals.sort((a, b) => a - b);
-        const m = Math.floor(vals.length / 2);
-        _mtImplBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
-      }
-    });
-    return _mtImplBaseCache;
-  }
-
-  // The DST mirror of _mtImpliedBaselines: for each team, the median implied
-  // total of the OPPONENT across all 18 weeks — i.e. the points this defense
-  // is normally priced to face.
-  //
-  // This baseline is not optional. A raw opponent implied total is heavily
-  // contaminated by the defense's OWN quality, because the market prices
-  // offenses down when they face a good defense. Measured on the 2026 lines,
-  // a team's season-median opponent implied total correlates 0.74 with its
-  // own Clay defensive rank — so ranking on the raw number scores "is this
-  // defense good", not "is this schedule easy", and every elite defense
-  // floats to the top of the easy list in every window. Subtracting each
-  // team's own median cancels that constant and leaves the schedule effect,
-  // exactly as _mtImpliedBaselines does for skill positions.
-  // SPREAD VS THE TEAM'S OWN NORM (2026-10-05). A raw spread mostly says "this is
-  // a good team" - roster quality, the same trap the implied total had - while
-  // the SOS rank is about the schedule. For the positions listed here the spread
-  // signal is the window's average spread MINUS the team's own season median.
-  // scripts/research_sos_mix.py (2016-25, signals rebuilt as of each week): RB
-  // .158 vs .143 raw at the same weight, better in 7 of 10 seasons. QB (-0.10),
-  // WR, TE and K scored the same or worse relative, so they stay raw; the mix of
-  // opponent grade vs implied total (3:1, K 1:3, D/ST 1:2) held up there as is.
-  const POSITION_SPREAD_RELATIVE = { RB: true };
-  let _mtSprBaseCache = null;
-  function _mtSpreadBaselines() {
-    if (_mtSprBaseCache) return _mtSprBaseCache;
-    _mtSprBaseCache = {};
-    if (typeof window.getNflScheduleForTeam !== 'function'
-        || typeof window.getNflTeamSpread !== 'function') return _mtSprBaseCache;
-    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
-      const sched = window.getNflScheduleForTeam(team);
-      if (!sched) return;
-      const vals = [];
-      for (let w = 1; w <= 18; w++) {
-        const g = sched[w];
-        if (!g || g.bye || !g.opp) continue;
-        const sp = window.getNflTeamSpread(w, team, g.opp, g.home);
-        if (typeof sp === 'number') vals.push(sp);
-      }
-      if (vals.length >= 6) {
-        vals.sort((a, b) => a - b);
-        const m = Math.floor(vals.length / 2);
-        _mtSprBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
-      }
-    });
-    return _mtSprBaseCache;
-  }
-
-  let _mtOppImplBaseCache = null;
-  function _mtOppImpliedBaselines() {
-    if (_mtOppImplBaseCache) return _mtOppImplBaseCache;
-    _mtOppImplBaseCache = {};
-    if (typeof window.getNflScheduleForTeam !== 'function'
-        || typeof window.getNflTeamImpliedTotal !== 'function') return _mtOppImplBaseCache;
-    Object.keys(_mtBuildDstByAbbr()).forEach(team => {
-      const sched = window.getNflScheduleForTeam(team);
-      if (!sched) return;
-      const vals = [];
-      for (let w = 1; w <= 18; w++) {
-        const g = sched[w];
-        if (!g || g.bye || !g.opp) continue;
-        const oi = window.getNflTeamImpliedTotal(w, g.opp, team, !g.home);
-        if (typeof oi === 'number') vals.push(oi);
-      }
-      if (vals.length >= 6) {
-        vals.sort((a, b) => a - b);
-        const m = Math.floor(vals.length / 2);
-        _mtOppImplBaseCache[team] = vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2;
-      }
-    });
-    return _mtOppImplBaseCache;
-  }
-
-  // === Adjustable SOS week window (rankings table) ===
-  // null = the playoff default (W15-17); {from,to} = a custom range (e.g. 1-5).
-  // Persisted to localStorage so the rankings view keeps your window.
-  let _sosRange = null;
-  try {
-    const _sr = localStorage.getItem('mff_sosRange');
-    if (_sr) { const p = JSON.parse(_sr); if (p && p.from >= 1 && p.to <= 18 && p.from <= p.to) _sosRange = { from: +p.from, to: +p.to }; }
-  } catch (_) {}
-  // Rest of season = this week through week 17 (week 18 excluded, most leagues are done).
-  // Before kickoff that is 1-17; after week 17 it falls back to the playoff window.
-  function _sosRosWeeks() {
-    try {
-      const now = window._seasonStripNow || Date.now();
-      const wkEnd = kick => { const dd = new Date(kick + 2 * 86400000); while (dd.getUTCDay() !== 2) dd.setUTCDate(dd.getUTCDate() + 1); dd.setUTCHours(9, 0, 0, 0); return dd.getTime(); };
-      const cur = (typeof _SEASON_KICKS_2026 !== 'undefined') ? _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick)) : null;
-      const from = cur ? cur.wk : 1;
-      if (from > 17) return [15, 16, 17];
-      const out = []; for (let w = from; w <= 17; w++) out.push(w);
-      return out;
-    } catch (_) { return [15, 16, 17]; }
-  }
-  function _sosActiveWeeks() {
-    if (!_sosRange) return _sosRosWeeks();
-    const out = [];
-    for (let w = _sosRange.from; w <= _sosRange.to; w++) out.push(w);
-    return out;
-  }
-  window._sosActiveWeeks = _sosActiveWeeks;
-  window._sosGetRange = function() { return _sosRange; };
-  window._sosSetRange = function(range) {
-    _sosRange = range || null;
-    try {
-      if (_sosRange) localStorage.setItem('mff_sosRange', JSON.stringify(_sosRange));
-      else localStorage.removeItem('mff_sosRange');
-    } catch (_) {}
-    if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
-  };
-
-  // Cache keyed by position + week window. _mtPlayoffSosCache[posKey_wks][team]
-  // -> { label, color, ... }. posKey in {'QB','RB','WR','TE','OVERALL'};
-  // OVERALL is the fallback for K/DST/other. Default window is W15-17.
-  const _mtPlayoffSosCache = {};
-  function _mtBuildPlayoffSos(pos, weeks) {
-    const wks = (Array.isArray(weeks) && weeks.length) ? weeks : [15, 16, 17];
-    const posKey = _mtPosKey(pos);
-    const isDstView = posKey === 'DST';
-    const mix = _mtSignalMix(posKey);
-    const key = posKey + '_' + wks.join('_') + '_' + _mtFmtKey();
-    if (_mtPlayoffSosCache[key]) return _mtPlayoffSosCache[key];
-    _mtPlayoffSosCache[key] = {};
-    if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosCache[key];
-    // Signal-blend guards were written for the 3-game playoff window (n >= 2);
-    // for shorter custom windows require at least min(2, window size) games so
-    // a 1-week window still blends totals/spreads.
-    const minN = Math.min(2, wks.length);
-    const isDefaultWindow = wks.length === 3 && wks[0] === 15 && wks[1] === 16 && wks[2] === 17;
-    const dstByAbbr = _mtBuildDstByAbbr();
-    const teamDef = {};
-    const teamTot = {};
-    const teamSpr = {};  // team -> { avg: avg team-relative spread, n }
-    Object.keys(dstByAbbr).forEach(team => {
-      const opps = window.getPlayoffOpponents(team, wks);
-      if (!opps.length) return;
-      let defSum = 0, defN = 0, totSum = 0, totN = 0, sprSum = 0, sprN = 0;
-      const detail = [];
-      opps.forEach(g => {
-        const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
-        const away = g.home ? g.opp : team;
-        const home = g.home ? team : g.opp;
-        const gt = (typeof window.getNflGameTotal === 'function')
-                   ? window.getNflGameTotal(g.wk, away, home)
-                   : null;
-        const teamSpread = (typeof window.getNflTeamSpread === 'function')
-                           ? window.getNflTeamSpread(g.wk, team, g.opp, g.home)
-                           : null;
-        // v0.10.31: implied team total replaces raw O/U in the SOS blend.
-        // implied = (total - team_spread) / 2 — captures THIS team's expected
-        // scoring, not just the combined game total. A 47-total game with a
-        // -7 favorite gives 27 implied (good) vs a -1 favorite gives 24
-        // implied (less good). Strictly better signal than O/U for skill
-        // players where what matters is YOUR team's scoring environment.
-        const impliedTot = (typeof window.getNflTeamImpliedTotal === 'function')
-                           ? window.getNflTeamImpliedTotal(g.wk, team, g.opp, g.home)
-                           : null;
-        // A DST's scoring environment is the points it must ALLOW, so its
-        // implied-total signal is the opponent's, not its own.
-        const oppImplied = (typeof window.getNflTeamImpliedTotal === 'function')
-                           ? window.getNflTeamImpliedTotal(g.wk, g.opp, team, !g.home)
-                           : null;
-        const envTot = isDstView ? oppImplied : impliedTot;
-        if (typeof envTot === 'number') { totSum += envTot; totN++; }
-        if (typeof teamSpread === 'number') { sprSum += teamSpread; sprN++; }
-        if (oppRec) {
-          const defZ = _mtMatchupZ(oppRec, posKey);
-          defSum += defZ; defN++;
-          const posUnits = (posKey !== 'OVERALL' && POSITION_DEF_WEIGHTS[posKey] && oppRec.clay)
-                           ? Object.keys(POSITION_DEF_WEIGHTS[posKey])
-                                 .map(u => u.toUpperCase() + (oppRec.clay[u] != null ? oppRec.clay[u] : '?'))
-                                 .join('/')
-                           : null;
-          detail.push({
-            wk: g.wk, opp: g.opp, home: g.home,
-            dstRank: oppRec.dst.r, oppg: oppRec.dst.oppg,
-            clayDefRk: oppRec.clay ? oppRec.clay.defRk : null,
-            clayDefGr: oppRec.clay ? oppRec.clay.defGr : null,
-            clayOffRk: oppRec.clay ? oppRec.clay.offRk : null,
-            posUnits, gameTotal: gt, teamSpread, impliedTotal: impliedTot,
-            oppImplied, allowedNote: _mtAllowedNote(oppRec.abbr, posKey),
-          });
-        }
-      });
-      if (defN > 0) teamDef[team] = { avg: defSum / defN, n: defN, opps: detail };
-      if (totN > 0) teamTot[team] = { avg: totSum / totN, n: totN };
-      if (sprN > 0) teamSpr[team] = { avg: sprSum / sprN, n: sprN };
-    });
-    const totalsPopulated = (typeof window.getNflTotalsCount === 'function')
-                             ? window.getNflTotalsCount() : 0;
-    const useTotals = totalsPopulated >= 8;
-    // 2026-07-24: the implied-total signal is now the DIFF between the
-    // window's avg implied total and the team's own season median
-    // (_mtImpliedBaselines) — isolates the schedule's effect on scoring
-    // environment instead of rewarding good offenses in every window.
-    // DST measures the same way against its own mirror baseline: the window's
-    // avg OPPONENT implied total minus the opponent implied total this defense
-    // normally faces (_mtOppImpliedBaselines). Same reason as above — the raw
-    // number mostly encodes the defense's own quality, not its schedule.
-    const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
-    const teamRel = {};
-    Object.keys(teamTot).forEach(t => {
-      if (teamTot[t].n < minN) return;
-      if (typeof _implBase[t] === 'number') teamRel[t] = teamTot[t].avg - _implBase[t];
-    });
-    let tMu = 0, tSd = 1, totalsReady = false;
-    if (useTotals) {
-      const relVals = Object.values(teamRel);
-      if (relVals.length >= 4) {
-        const m = relVals.reduce((s, v) => s + v, 0) / relVals.length;
-        const variance = relVals.reduce((s, v) => s + (v - m) * (v - m), 0) / relVals.length;
-        const sd = Math.sqrt(variance);
-        // Near-season-length windows: every team's window avg ≈ its own
-        // baseline, so the diffs collapse toward 0 — skip the adjustment
-        // rather than z-amplifying noise.
-        if (sd >= 0.5) { tMu = m; tSd = sd; totalsReady = true; }
-      }
-    }
-    // Spread z-score across teams (centered ~0 by construction — favored offset
-    // underdog, sums to 0 league-wide). Sd ~3-4 over 3-game playoff window.
-    let sMu = 0, sSd = 1, spreadsReady = false;
-    const sprRel = POSITION_SPREAD_RELATIVE[posKey] === true;
-    if (sprRel) {
-      const sprBase = _mtSpreadBaselines();
-      Object.keys(teamSpr).forEach(t => {
-        if (typeof sprBase[t] === 'number') teamSpr[t].avg -= sprBase[t];
-        else delete teamSpr[t];
-      });
-    }
-    const sprAvgs = Object.values(teamSpr).filter(t => t.n >= minN).map(t => t.avg);
-    if (sprAvgs.length >= 4) {
-      const m = sprAvgs.reduce((s, v) => s + v, 0) / sprAvgs.length;
-      const variance = sprAvgs.reduce((s, v) => s + (v - m) * (v - m), 0) / sprAvgs.length;
-      sMu = m; sSd = Math.sqrt(variance) || 1;
-      // relative spreads collapse toward 0 on near-season-length windows - skip, as the totals do
-      spreadsReady = !(sprRel && sSd < 0.5);
-    }
-    const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
-    const finalScores = Object.entries(teamDef).map(([team, d]) => {
-      let blendAvg = d.avg;
-      let totalAdjusted = false;
-      if (totalsReady && teamRel[team] != null) {
-        // Skill/K: implied total above the team's own norm = more expected
-        // scoring = EASIER, so invert. DST: opponent implied total above the
-        // league norm = more points to allow = HARDER, so don't.
-        const zRaw = (teamRel[team] - tMu) / tSd;
-        const zT = isDstView ? zRaw : -zRaw;
-        blendAvg = (d.avg * mix.def + zT * mix.tot) / (mix.def + mix.tot);
-        totalAdjusted = true;
-      }
-      // Add spread contribution. Favored teams have NEGATIVE spreads, so zS
-      // is negative when team is favored. For positions where favorites are
-      // easier (RB, WR, TE: positive weight), zS * weight is negative when
-      // favored → blendAvg decreases → EASIER rating. For QB (negative weight),
-      // favored team gets a small SOS bump (efficient game caps QB volume).
-      let spreadAdjusted = false;
-      let zS = null;
-      if (spreadsReady && sprWeight !== 0 && teamSpr[team] && teamSpr[team].n >= minN) {
-        zS = (teamSpr[team].avg - sMu) / sSd;
-        blendAvg += sprWeight * zS;
-        spreadAdjusted = true;
-      }
-      return { team, blendAvg, opps: d.opps, teamTot: teamTot[team] || null,
-               teamSpr: teamSpr[team] || null, zS, sprWeight,
-               totalAdjusted, spreadAdjusted };
-    });
-    finalScores.sort((a, b) => a.blendAvg - b.blendAvg);
-    // League thirds (32 teams → 11/21 cuts, matching the original buckets).
-    // Custom windows can drop bye-week teams below 32, so scale by count.
-    const _fsN = finalScores.length;
-    const _priorLive = _mtPriorLive();
-    const _easyCut = Math.round(_fsN / 3);
-    const _hardCut = _fsN - Math.round(_fsN / 3);
-    finalScores.forEach((data, i) => {
-      const rank = i + 1;
-      let label, color;
-      if (rank <= _easyCut)      { label = 'E'; color = '#22c55e'; }
-      else if (rank <= _hardCut) { label = 'M'; color = '#facc15'; }
-      else                       { label = 'H'; color = '#ef4444'; }
-      const posTag = (posKey === 'OVERALL') ? '' : (' (' + posKey + ')');
-      const tipPrefix = isDefaultWindow ? 'Playoff SOS' : 'SOS W' + wks[0] + (wks.length > 1 ? '-' + wks[wks.length - 1] : '');
-      const tip = tipPrefix + posTag + ' #' + rank + '/' + _fsN + ' (1 = easiest) · ' + data.opps.map(o => {
-        const parts = ['W' + o.wk + ' ' + (o.home ? 'vs ' : '@ ') + o.opp];
-        const sub = [];
-        // In-season points allowed first; the preseason grades (Clay units /
-        // projected PA) only while they still count in the blend.
-        if (o.allowedNote) sub.push(o.allowedNote);
-        if (isDstView) {
-          // A DST's matchup is the opposing OFFENSE — show offense rank and
-          // the points that offense is priced to score.
-          if (_priorLive && o.clayOffRk) sub.push('Clay O#' + o.clayOffRk);
-          if (typeof o.oppImplied === 'number') sub.push(o.oppImplied.toFixed(1) + ' opp impl');
-        } else {
-          if (_priorLive) {
-            if (o.posUnits) sub.push(o.posUnits);
-            else if (o.clayDefRk) sub.push('Clay D#' + o.clayDefRk);
-            if (typeof o.oppg === 'number') sub.push(o.oppg.toFixed(1) + ' PA');
-          }
-          if (typeof o.impliedTotal === 'number') sub.push('impl ' + o.impliedTotal.toFixed(1));
-        }
-        if (typeof o.gameTotal === 'number') sub.push('O/U ' + o.gameTotal.toFixed(1));
-        if (typeof o.teamSpread === 'number') sub.push((o.teamSpread > 0 ? '+' : '') + o.teamSpread + ' sprd');
-        if (sub.length) parts.push('(' + sub.join(', ') + ')');
-        return parts.join(' ');
-      }).join(', ')
-        + (data.totalAdjusted && data.teamTot && typeof _implBase[data.team] === 'number'
-            ? ' · ' + (isDstView ? 'opp impl ' : 'impl ') + data.teamTot.avg.toFixed(1)
-              + ' vs szn ' + _implBase[data.team].toFixed(1)
-              + ' (' + (teamRel[data.team] >= 0 ? '+' : '') + teamRel[data.team].toFixed(1) + ')'
-            : '')
-        + (data.spreadAdjusted ? ' · spread-blended' : (data.totalAdjusted ? ' · implied-blended' : ''));
-      _mtPlayoffSosCache[key][data.team] = { label, color, title: tip, rank, avg: data.blendAvg };
-    });
-    return _mtPlayoffSosCache[key];
-  }
-
-  function _mtGetPlayoffSos(teamRaw, pos, weeks) {
-    if (!teamRaw) return null;
-    let abbr = teamRaw;
-    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
-    return _mtBuildPlayoffSos(pos, weeks)[String(abbr).toUpperCase()] || null;
-  }
-
-  // Per-week per-position SOS rating. Cache key is `${pos}_${week}`.
-  // Same 4-signal blend as overall, but for a single week instead of averaging.
-  // Returns null if the team has no opp this week (shouldn't happen in W15-17
-  // for 2026 — no byes — but the fallback is here just in case).
-  const _mtPlayoffSosWeeklyCache = {};
-  function _mtBuildPlayoffSosWeekly(pos, week) {
-    const posKey = _mtPosKey(pos);
-    const isDstView = posKey === 'DST';
-    const mix = _mtSignalMix(posKey);
-    const cacheKey = posKey + '_' + week + '_' + _mtFmtKey();
-    if (_mtPlayoffSosWeeklyCache[cacheKey]) return _mtPlayoffSosWeeklyCache[cacheKey];
-    _mtPlayoffSosWeeklyCache[cacheKey] = {};
-    if (typeof window.getPlayoffOpponents !== 'function') return _mtPlayoffSosWeeklyCache[cacheKey];
-    const dstByAbbr = _mtBuildDstByAbbr();
-    const teamRows = {};
-    Object.keys(dstByAbbr).forEach(team => {
-      const opps = window.getPlayoffOpponents(team, [week]);
-      if (!opps.length) return;
-      const g = opps[0];
-      if (g.bye) return;
-      const oppRec = dstByAbbr[String(g.opp).toUpperCase()];
-      if (!oppRec) return;
-      const defZ = _mtMatchupZ(oppRec, posKey);
-      const away = g.home ? g.opp : team;
-      const home = g.home ? team : g.opp;
-      const gt = (typeof window.getNflGameTotal === 'function')
-                 ? window.getNflGameTotal(week, away, home) : null;
-      const sp = (typeof window.getNflTeamSpread === 'function')
-                 ? window.getNflTeamSpread(week, team, g.opp, g.home) : null;
-      // v0.10.31: implied team total replaces raw O/U as the SOS signal.
-      const it = (typeof window.getNflTeamImpliedTotal === 'function')
-                 ? window.getNflTeamImpliedTotal(week, team, g.opp, g.home) : null;
-      // For a DST, the points the OPPONENT is priced to score.
-      const oppIt = (typeof window.getNflTeamImpliedTotal === 'function')
-                    ? window.getNflTeamImpliedTotal(week, g.opp, team, !g.home) : null;
-      teamRows[team] = { defZ, gt, sp, it, oppIt, g, oppRec };
-    });
-    // z-score implied-total DIFFS (vs each team's season median baseline —
-    // see _mtImpliedBaselines) AND spreads across this week's matchups.
-    const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
-    const std  = a => { const m=mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m))))||1; };
-    const _implBase = isDstView ? _mtOppImpliedBaselines() : _mtImpliedBaselines();
-    Object.entries(teamRows).forEach(([t, x]) => {
-      // DST reads the OPPONENT's implied total against the opponent-implied
-      // baseline; skill/K read their own against their own. Both are diffs —
-      // the raw number encodes roster quality, not schedule.
-      const v = isDstView ? x.oppIt : x.it;
-      x.rel = (typeof v === 'number' && typeof _implBase[t] === 'number') ? v - _implBase[t] : null;
-    });
-    const rels = Object.values(teamRows).map(x => x.rel).filter(v => typeof v === 'number');
-    // spZ = the spread the blend reads: vs the team's own season norm where POSITION_SPREAD_RELATIVE says so
-    const sprBase = POSITION_SPREAD_RELATIVE[posKey] === true ? _mtSpreadBaselines() : null;
-    Object.entries(teamRows).forEach(([t, x]) => {
-      x.spZ = typeof x.sp !== 'number' ? null : !sprBase ? x.sp : typeof sprBase[t] === 'number' ? x.sp - sprBase[t] : null;
-    });
-    const spreads = Object.values(teamRows).map(x => x.spZ).filter(v => typeof v === 'number');
-    const useTotals = rels.length >= 4 && std(rels) >= 0.5;
-    const useSpreads = spreads.length >= 4;
-    const tMu = useTotals ? mean(rels) : 0;
-    const tSd = useTotals ? std(rels)  : 1;
-    const sMu = useSpreads ? mean(spreads) : 0;
-    const sSd = useSpreads ? std(spreads)  : 1;
-    const sprWeight = (POSITION_SPREAD_WEIGHT[posKey] != null) ? POSITION_SPREAD_WEIGHT[posKey] : 0;
-    const scored = Object.entries(teamRows).map(([t, x]) => {
-      let blend = x.defZ;
-      if (useTotals && typeof x.rel === 'number') {
-        // Invert: implied total ABOVE the team's own season norm = more
-        // expected scoring than usual = EASIER for the player. DST is the
-        // exception — a higher opponent implied total is HARDER.
-        const zRaw = (x.rel - tMu) / tSd;
-        const zT = isDstView ? zRaw : -zRaw;
-        blend = (x.defZ * mix.def + zT * mix.tot) / (mix.def + mix.tot);
-      }
-      if (useSpreads && sprWeight !== 0 && typeof x.spZ === 'number') {
-        const zS = (x.spZ - sMu) / sSd;
-        blend += sprWeight * zS;
-      }
-      return { t, blend, ...x };
-    });
-    scored.sort((a, b) => a.blend - b.blend);
-    const n = scored.length;
-    // 1-11 E (~easiest third), 12-21 M, 22-32 H — same buckets as overall.
-    // For non-32-team weeks (e.g. if used outside playoffs), scale by thirds.
-    const easyCut = Math.round(n / 3);
-    const hardCut = n - Math.round(n / 3);
-    scored.forEach((d, i) => {
-      const rank = i + 1;
-      let label, color;
-      if (rank <= easyCut)        { label = 'E'; color = '#22c55e'; }
-      else if (rank > hardCut)    { label = 'H'; color = '#ef4444'; }
-      else                        { label = 'M'; color = '#facc15'; }
-      const c = d.oppRec.clay || {};
-      const posUnits = (posKey !== 'OVERALL' && POSITION_DEF_WEIGHTS[posKey])
-                       ? Object.keys(POSITION_DEF_WEIGHTS[posKey])
-                             .map(u => u.toUpperCase() + (c[u] != null ? c[u] : '?'))
-                             .join('/')
-                       : null;
-      _mtPlayoffSosWeeklyCache[cacheKey][d.t] = {
-        label, color, rank, n, isDst: isDstView,
-        blend: d.blend, // z-score (lower = easier) — My Teams PLAYOFFS tilt
-        opp: d.g.opp, home: d.g.home,
-        gameTotal: d.gt, teamSpread: d.sp, impliedTotal: d.it,
-        oppImplied: d.oppIt,
-        allowedNote: _mtAllowedNote(d.oppRec.abbr, posKey),
-        priorLive: _mtPriorLive(),   // false once the preseason grades no longer count
-        clayDefRk: c.defRk || null, clayOffRk: c.offRk || null,
-        posUnits, oppg: d.oppRec.dst.oppg,
-      };
-    });
-    return _mtPlayoffSosWeeklyCache[cacheKey];
-  }
-  function _mtGetPlayoffSosWeekly(teamRaw, pos, week) {
-    if (!teamRaw) return null;
-    let abbr = teamRaw;
-    if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[teamRaw]) abbr = TEAM_ABBR_MAP[teamRaw];
-    return _mtBuildPlayoffSosWeekly(pos, week)[String(abbr).toUpperCase()] || null;
-  }
-
-  // Expose for code paths outside this IIFE — rankings table, player card.
-  window._mtGetPlayoffSos = _mtGetPlayoffSos;
-  window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
-
-  // === P-SOS week-range control (rankings header ▾) ===
-  // Popover with presets (Playoff 15-17 default, Full 1-18) + custom from/to.
-  // Applying re-renders the table; the header label reflects a custom window.
-  (function _sosRangeControl() {
-    const btn = document.getElementById('psosRangeBtn');
-    const lbl = document.getElementById('psosHeaderLabel');
-    if (!btn) return;
-    let pop = null;
-    function _updateLabel() {
-      // Custom window → plain "SOS" (the popover + cell tooltips carry the
-      // exact week range); default playoff window → "P-SOS".
-      if (lbl) lbl.textContent = 'SOS'; // playoffs have their own P-SOS column now
-    }
-    function _close() {
-      if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', _outside); }
-    }
-    function _outside(e) { if (pop && !pop.contains(e.target) && e.target !== btn) _close(); }
-    function _apply(range) {
-      window._sosSetRange(range);
-      _updateLabel();
-      _close();
-      if (typeof render === 'function') render();
-    }
-    btn.addEventListener('keydown', e => e.stopPropagation()); // th Enter/Space sorts
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // th click sorts
-      if (pop) { _close(); return; }
-      const r = _sosRange;
-      pop = document.createElement('div');
-      pop.className = 'sos-range-pop';
-      pop.innerHTML = '<div class="sos-pop-title">SOS WEEK RANGE</div>'
-        + '<div class="sos-range-row">'
-          + '<button class="cmp-split-chip' + (!r ? ' active' : '') + '" data-sospreset="playoff">PLAYOFF 15-17</button>'
-          + '<button class="cmp-split-chip' + (r && r.from === 1 && r.to === 18 ? ' active' : '') + '" data-sospreset="season">FULL 1-18</button>'
-        + '</div>'
-        + '<div class="sos-range-row"><span style="font-size:.6875rem;color:var(--text2)">WKS</span>'
-          + '<input type="number" class="cmp-split-wk" id="sosWkFrom" min="1" max="18" value="' + (r ? r.from : 15) + '">'
-          + '<span style="font-size:.6875rem;color:var(--text2)">to</span>'
-          + '<input type="number" class="cmp-split-wk" id="sosWkTo" min="1" max="18" value="' + (r ? r.to : 17) + '">'
-          + '<button class="cmp-split-chip" id="sosWkApply">APPLY</button>'
-        + '</div>';
-      document.body.appendChild(pop);
-      const rect = btn.getBoundingClientRect();
-      pop.style.top = (rect.bottom + 4) + 'px';
-      pop.style.left = Math.max(8, Math.min(rect.left - 70, window.innerWidth - pop.offsetWidth - 8)) + 'px';
-      pop.addEventListener('click', ev => ev.stopPropagation());
-      pop.querySelector('[data-sospreset="playoff"]').addEventListener('click', () => _apply(null));
-      pop.querySelector('[data-sospreset="season"]').addEventListener('click', () => _apply({ from: 1, to: 18 }));
-      pop.querySelector('#sosWkApply').addEventListener('click', () => {
-        let f = parseInt(pop.querySelector('#sosWkFrom').value, 10);
-        let t = parseInt(pop.querySelector('#sosWkTo').value, 10);
-        if (isNaN(f)) f = 15;
-        if (isNaN(t)) t = 17;
-        f = Math.max(1, Math.min(18, f));
-        t = Math.max(f, Math.min(18, t));
-        _apply(f === 15 && t === 17 ? null : { from: f, to: t });
-      });
-      document.addEventListener('mousedown', _outside);
-    });
-    _updateLabel(); // restore a persisted custom window's label on boot
-  })();
+  // (Playoff SOS engine — _mtObservedFpa, _sosActiveWeeks, _mtGetPlayoffSos[Weekly],
+  //  the SOS range control — moved to core just above this module on 2026-10-13: the
+  //  rankings board renders SOS at first paint and this module is a lazy app chunk.)
 
   // Bringback Wave 1 "Playoff Matchups" panel removed 2026-07-21 at Jack's
   // request (was rendered under the team detail roster). Recover from git
@@ -71261,6 +71332,7 @@ Rules:
   _mtUpdateAdpSrcVisibility();
 
 })();
+//#endchunk myteams
 
 //#chunk draftstrategy
 // ============================================================================

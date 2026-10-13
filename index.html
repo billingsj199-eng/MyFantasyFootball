@@ -47,7 +47,8 @@
 <script>
 (function(){
   var MFF_GA_ID = 'G-EJSTRKFBXZ';
-  if (!MFF_GA_ID) return;
+  // Live site only: local previews (localhost, .claude/worktrees) must not count as visitors.
+  if (!MFF_GA_ID || !/(^|\.)myfantasyfootball\.co$/.test(location.hostname)) return;
   window.dataLayer = window.dataLayer || [];
   window.gtag = function(){ dataLayer.push(arguments); };
   gtag('js', new Date());
@@ -58,16 +59,16 @@
   document.head.appendChild(s);
 })();
 </script>
-<!-- Microsoft Clarity (click/scroll heatmaps + session recordings). INERT until
+<!-- Microsoft Clarity (click/scroll heatmaps + session recordings). ACTIVE since 2026-10-13 (project yx7e0cm0el). Inert whenever
      MFF_CLARITY_ID is set: create a project at clarity.microsoft.com for
-     www.myfantasyfootball.co, paste its project ID here and deploy. The CSP above
+     www.myfantasyfootball.co, paste its project ID here and deploy. Both tags skip non-prod hosts. The CSP above
      already allows www.clarity.ms / *.clarity.ms / c.bing.com. app.js's _mffTrack
      mirrors every GA4 feature event to Clarity as a custom event so recordings can
      be filtered by what the visitor did. -->
 <script>
 (function(){
-  var MFF_CLARITY_ID = '';
-  if (!MFF_CLARITY_ID) return;
+  var MFF_CLARITY_ID = 'yx7e0cm0el';
+  if (!MFF_CLARITY_ID || !/(^|\.)myfantasyfootball\.co$/.test(location.hostname)) return;
   window.clarity = window.clarity || function(){ (window.clarity.q = window.clarity.q || []).push(arguments); };
   var s = document.createElement('script'); s.async = true;
   s.src = 'https://www.clarity.ms/tag/' + MFF_CLARITY_ID;

@@ -10039,6 +10039,28 @@ function hasPremium() {
 // Expose globally so external code (e.g. Jack's Teams panel) can check
 window.hasPremium = hasPremium;
 
+// Season Pass CTA in the global auth bar (every page). Re-synced from
+// checkPremiumStatus(), which runs on load and on every premium/auth change.
+// Same end date as SEASON_GIFT_END / the functions' SEASON_PASS_END_MS.
+const SEASON_PASS_CTA_END = Date.parse('2027-01-16T04:59:59Z');   // Jan 15 2027 11:59pm ET
+function _syncPassCta() {
+  const btn = document.getElementById('globalPassBtn');
+  if (!btn) return;
+  let show = Date.now() < SEASON_PASS_CTA_END;
+  try { if (show && hasPremium()) show = false; } catch (_) {}
+  btn.style.display = show ? 'flex' : 'none';
+}
+window._openSeasonPass = function () {
+  const nav = document.querySelector('[data-page=account]');
+  if (nav) nav.click();
+  setTimeout(() => {
+    const tab = document.querySelector('[data-acct-tab=premium]');
+    if (tab) tab.click();
+    const card = document.getElementById('planSeason');
+    if (card && card.offsetParent) card.click();   // preselect the $24.99 plan
+  }, 150);
+};
+
 function render() {
   _consRankCache.board = null;   // boards can be reordered in place — rebuild per paint
   try { _syncConsColHeader(); _syncSeasonPpgHeader(); } catch (_) {}
@@ -23234,6 +23256,7 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     ['#btnSave', () => ['ranks_save', { version: typeof currentVersion === 'string' ? currentVersion : '' }]],
     ['#authGoogle', () => ['sign_in_start', { method: 'google' }]],
     ['#authSubmit', () => ['sign_in_start', { method: 'email' }]],
+    ['#globalPassBtn', () => ['premium_cta', { source: 'globalPassBtn', page: page() }]],
     ['#globalAuthBar button', b => /sign\s*in/i.test(b.textContent) ? ['sign_in_open', { page: page() }] : null],
     ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked', b => ['premium_cta', { source: b.id || (b.className || '').split(' ')[0], page: page() }]],
     ['#mtSleeperImportBtn, #mtEspnImportBtn, #mtYahooImportBtn', b => ['league_import', { platform: b.id.replace(/^mt|ImportBtn$/g, '').toLowerCase() }]],
@@ -38869,6 +38892,7 @@ window.fmtHeight = fmtHeight;
   const premiumBadge = document.getElementById('premiumBadge');
 
   function checkPremiumStatus() {
+    _syncPassCta();
     const freeView = document.getElementById('premiumFreeView');
     const proView = document.getElementById('premiumProView');
     const billingDetails = document.getElementById('premiumBillingDetails');

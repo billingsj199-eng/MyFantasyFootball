@@ -1588,6 +1588,16 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
 .global-signin-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
 .global-signin-btn svg{width:16px;height:16px}
 .global-acct-pill{display:none;align-items:center}
+/* Season Pass CTA — outline so the filled SIGN IN / avatar stays the primary action */
+.global-pass-btn{align-items:center;gap:5px;padding:6px 12px;background:transparent;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:1.2px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.global-pass-btn:hover{background:rgba(245,158,11,.12)}
+.global-pass-btn svg{width:13px;height:13px}
+@media(max-width:600px){
+  /* Phones: star only — the rankings search box shares this row */
+  .global-pass-btn{padding:6px 8px}
+  .global-pass-btn svg{width:15px;height:15px}
+  .global-pass-btn .gpb-full{display:none}
+}
 .global-acct-pill.show{display:flex}
 .global-acct-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:.9rem;flex-shrink:0;transition:all .15s;box-shadow:0 2px 12px rgba(245,158,11,.25)}
 .global-acct-avatar:hover{filter:brightness(1.15);transform:scale(1.05)}

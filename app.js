@@ -6,6 +6,41 @@ window._authCurrentUser = null;
 // but they are rated on the same 1-32 scale.
 const _SOS_POS = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DST']);
 
+// === Lazy app chunks (mobile perf phase 3, 2026-10-13) ===
+// Sections fenced with //#chunk <name> … //#endchunk <name> in this file are cut into
+// app-chunk-<name>.js at deploy (scripts/split_app.js) and the deployed core starts with
+// `window._MFF_CHUNKS = [...]`. Without that manifest (local dev / unsplit source) every
+// chunk is already inline and _ensureChunk resolves at once — so dev runs today's code.
+// Chunks are classic scripts: their top-level IIFEs run on load and see this file's
+// top-level let/const/functions (shared global scope). switchPage awaits a page's chunks
+// (PAGE_CHUNKS, beside switchPage) and re-runs the page's enter hooks once they land.
+// Defined first so render() / openPlayerCard can call it during the first paint.
+(function () {
+  const loaded = {}, pending = {};
+  const lazy = n => Array.isArray(window._MFF_CHUNKS) && window._MFF_CHUNKS.indexOf(n) >= 0;
+  window._chunkLoaded = n => !lazy(n) || loaded[n] === true;
+  function ver() {
+    const s = document.querySelector('script[src^="app.js"]');
+    const m = s && /[?&]v=([^&]+)/.exec(s.getAttribute('src') || '');
+    return m ? m[1] : '';
+  }
+  window._ensureChunk = function (names) {
+    const need = [].concat(names || []).filter(n => !window._chunkLoaded(n));
+    if (!need.length) return Promise.resolve();
+    document.body.classList.add('mff-chunk-loading');
+    return Promise.all(need.map(n => pending[n] || (pending[n] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'app-chunk-' + n + '.js?v=' + encodeURIComponent(ver());
+      s.async = false;
+      s.onload = () => { loaded[n] = true; res(); };
+      s.onerror = () => { delete pending[n]; s.remove(); rej(new Error('chunk ' + n + ' failed to load')); };
+      document.head.appendChild(s);
+    })))).finally(() => {
+      if (Object.keys(pending).every(k => loaded[k])) document.body.classList.remove('mff-chunk-loading');
+    });
+  };
+})();
+
 // === ADP HISTORY BACKUP TO FIRESTORE ===
 // The Underdog Draft Helper extension captures daily ADP snapshots into
 // chrome.storage.local.mff_adp_history. That storage can be wiped (extension
@@ -10078,6 +10113,13 @@ function render() {
     if (typeof window._ensureProspectStats === 'function') window._ensureProspectStats();
     if (typeof window._ensureBacktestOutcomes === 'function') window._ensureBacktestOutcomes();
     if (typeof window._ensureDraftPicksData === 'function') window._ensureDraftPicksData();
+    // Prospect model = lazy app chunk in the deployed split build: load it on the first
+    // dynasty render and paint again once it lands (the JM attach below needs it).
+    if (window._chunkLoaded && !window._chunkLoaded('prospect') && !window._prospectChunkKick) {
+      window._prospectChunkKick = true;
+      window._ensureChunk('prospect').then(function() { try { render(); } catch (e) {} })
+        .catch(function() { window._prospectChunkKick = false; });
+    }
     if (typeof window._attachJmScores === 'function' && !window._jmScoresAttached) {
       // _attachJmScores returns true if it attached synchronously (data already
       // loaded), false if it deferred behind the async loaders. In the deferred
@@ -20711,6 +20753,19 @@ function _usageTrendRow(d) {
 }
 window._usageTrendRow = _usageTrendRow;
 
+// Re-render an open card for the same player, keeping the active view tab + scroll.
+function _reopenCardInPlace(d, ctxMode) {
+  const _cardNow = document.getElementById('playerCard');
+  const _activeBtn = _cardNow && _cardNow.querySelector('.card-view-btn.active');
+  const _activeView = _activeBtn ? _activeBtn.dataset.cardview : null;
+  const _scrollNow = _cardNow ? _cardNow.scrollTop : 0;
+  openPlayerCard(d, ctxMode);
+  const _again = document.getElementById('playerCard');
+  const _btn = _activeView && _again && _again.querySelector('.card-view-btn[data-cardview="' + _activeView + '"]');
+  if (_btn && !_btn.classList.contains('active')) _btn.click();
+  if (_again) _again.scrollTop = _scrollNow;
+}
+
 function openPlayerCard(d, ctxMode) {
   // Compare-strip cycling (← →) needs to know which player is on screen
   window._cardOpenName = d && d.n ? d.n : null;
@@ -20744,6 +20799,16 @@ function openPlayerCard(d, ctxMode) {
       }
     });
   }
+  // The prospect model is a lazy app chunk in the deployed split build: load it on the
+  // first card open, then re-open this card in place so the JM / DYNASTY sections (and
+  // the build kicked below) run. No-op in the unsplit dev build (chunk already inline).
+  if (window._chunkLoaded && !window._chunkLoaded('prospect')) {
+    const _pcName = d && d.n;
+    window._ensureChunk('prospect').then(function() {
+      if (window._cardOpenName !== _pcName || !modal || !modal.classList.contains('open')) return;
+      try { _reopenCardInPlace(d, ctxMode); } catch (e) {}
+    }).catch(function() {});
+  }
   // DYNASTY tab (2026-10-08): the JM score + component breakdown come from the prospect
   // model, which is built lazily (prospect page / dynasty boards). Kick the build off on
   // the first card open and re-open this card in place once it lands, keeping the tab
@@ -20759,17 +20824,7 @@ function openPlayerCard(d, ctxMode) {
         clearInterval(_pmPoll);
         window._pmCardBuildPending = false;
         if (window._cardOpenName !== _pmName || !modal || !modal.classList.contains('open')) return;
-        try {
-          const _cardNow = document.getElementById('playerCard');
-          const _activeBtn = _cardNow && _cardNow.querySelector('.card-view-btn.active');
-          const _activeView = _activeBtn ? _activeBtn.dataset.cardview : null;
-          const _scrollNow = _cardNow ? _cardNow.scrollTop : 0;
-          openPlayerCard(d, ctxMode);
-          const _again = document.getElementById('playerCard');
-          const _btn = _activeView && _again && _again.querySelector('.card-view-btn[data-cardview="' + _activeView + '"]');
-          if (_btn && !_btn.classList.contains('active')) _btn.click();
-          if (_again) _again.scrollTop = _scrollNow;
-        } catch (e) {}
+        try { _reopenCardInPlace(d, ctxMode); } catch (e) {}
       }, 400);
       setTimeout(function() { clearInterval(_pmPoll); window._pmCardBuildPending = false; }, 30000);
     }
@@ -22930,40 +22985,9 @@ function renderSearchChips() {
 
 render();
 
-// === Lazy app chunks (mobile perf phase 3, 2026-10-13) ===
-// Sections fenced with //#chunk <name> … //#endchunk <name> in this file are cut into
-// app-chunk-<name>.js at deploy (scripts/split_app.js) and the deployed core starts with
-// `window._MFF_CHUNKS = [...]`. Without that manifest (local dev / unsplit source) every
-// chunk is already inline and _ensureChunk resolves at once — so dev runs today's code.
-// Chunks are classic scripts: their top-level IIFEs run on load and see this file's
-// top-level let/const/functions (shared global scope). switchPage awaits a page's chunks
-// (PAGE_CHUNKS) and re-runs the page's enter hooks once they land.
-const PAGE_CHUNKS = { research: ['research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['mock'] };
-(function () {
-  const loaded = {}, pending = {};
-  const lazy = n => Array.isArray(window._MFF_CHUNKS) && window._MFF_CHUNKS.indexOf(n) >= 0;
-  window._chunkLoaded = n => !lazy(n) || loaded[n] === true;
-  function ver() {
-    const s = document.querySelector('script[src^="app.js"]');
-    const m = s && /[?&]v=([^&]+)/.exec(s.getAttribute('src') || '');
-    return m ? m[1] : '';
-  }
-  window._ensureChunk = function (names) {
-    const need = [].concat(names || []).filter(n => !window._chunkLoaded(n));
-    if (!need.length) return Promise.resolve();
-    document.body.classList.add('mff-chunk-loading');
-    return Promise.all(need.map(n => pending[n] || (pending[n] = new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'app-chunk-' + n + '.js?v=' + encodeURIComponent(ver());
-      s.async = false;
-      s.onload = () => { loaded[n] = true; res(); };
-      s.onerror = () => { delete pending[n]; s.remove(); rej(new Error('chunk ' + n + ' failed to load')); };
-      document.head.appendChild(s);
-    })))).finally(() => {
-      if (Object.keys(pending).every(k => loaded[k])) document.body.classList.remove('mff-chunk-loading');
-    });
-  };
-})();
+// Pages whose code lives in lazy app chunks (loader at the top of this file).
+// Mock + Research read the prospect model (_pmBuiltData / _attachJmScores), so they pull it too.
+const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['prospect', 'mock'], prospect: ['prospect'], backtest: ['prospect'] };
 
 // === Page Navigation ===
 const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
@@ -42368,6 +42392,7 @@ window.fmtHeight = fmtHeight;
   }, 60000);
 })();
 
+//#chunk prospect
 // === PROSPECT MODEL PAGE ===
 (function() {
   if (typeof COMBINE_DATA === 'undefined' && typeof COLLEGE_STATS === 'undefined') return;
@@ -52149,7 +52174,7 @@ window.fmtHeight = fmtHeight;
   }
 
   let pmInitialized = false;
-  const pmObserver = new MutationObserver(function() {
+  function _pmOnPageClass() {
     if (prospectPage.classList.contains('active')) {
       _pmUpdateGate();
       if (!pmInitialized) {
@@ -52160,8 +52185,13 @@ window.fmtHeight = fmtHeight;
         renderTable();
       }
     }
-  });
+  }
+  const pmObserver = new MutationObserver(_pmOnPageClass);
   pmObserver.observe(prospectPage, { attributes: true, attributeFilter: ['class'] });
+  // This module is a lazy app chunk in the deployed split build — it can load AFTER the
+  // page was activated (switchPage shows the shell, then loads the chunk), when no class
+  // mutation is left to observe. Run the handler once for the current state.
+  _pmOnPageClass();
 
   // Re-render when auth state changes so admin edit icons appear (firebase is
   // deferred → register through the ready queue rather than at parse time)
@@ -53399,6 +53429,7 @@ window.fmtHeight = fmtHeight;
     }
   };
 })();
+//#endchunk prospect
 
 //#chunk trivia
 // =============================================

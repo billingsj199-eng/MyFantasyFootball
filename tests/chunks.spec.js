@@ -64,6 +64,33 @@ test.describe('lazy app chunks', () => {
     expect(errors).toEqual([]);
   });
 
+  test('prospect page loads its chunk and builds the model', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => window.switchPage('prospect'));
+    await expect(page.locator('#pageProspect')).toHaveClass(/active/);
+    await expect.poll(() => page.evaluate(() => window._pmBuiltData ? window._pmBuiltData().length : 0), { timeout: 60_000 }).toBeGreaterThan(100);
+    if (SPLIT) expect(await chunkRequests(page)).toContain('app-chunk-prospect.js');
+    expect(errors).toEqual([]);
+  });
+
+  test('dynasty board pulls the prospect chunk and attaches JM scores', async ({ page }) => {
+    const errors = await boot(page);
+    expect(await chunkRequests(page)).toEqual([]);
+    await page.click('.mode-tab[data-mode="dynasty"]');
+    await expect.poll(() => page.evaluate(() => D.filter(d => d._pmJm != null).length), { timeout: 60_000 }).toBeGreaterThan(50);
+    if (SPLIT) expect(await chunkRequests(page)).toContain('app-chunk-prospect.js');
+    expect(errors).toEqual([]);
+  });
+
+  test('player card pulls the prospect chunk and shows the JM tile', async ({ page }) => {
+    const errors = await boot(page);
+    await page.evaluate(() => window.openPlayerCard(D.find(d => d.n === 'Ashton Jeanty')));
+    await expect.poll(() => page.evaluate(() => window._chunkLoaded('prospect'))).toBe(true);
+    await expect.poll(() => page.evaluate(() => /\bJM\b/.test(document.getElementById('playerCard').innerText)), { timeout: 60_000 }).toBe(true);
+    expect(await page.evaluate(() => window._cardOpenName)).toBe('Ashton Jeanty');
+    expect(errors).toEqual([]);
+  });
+
   test('research (admin) loads its chunk and renders', async ({ page }) => {
     const errors = await boot(page);
     await page.evaluate(() => { window.isAdmin = () => true; window.switchPage('research'); });

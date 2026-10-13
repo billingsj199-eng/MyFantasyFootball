@@ -60,8 +60,12 @@ def main():
         print("loading", SITE)
         drv.get(SITE)
         # Wait for the app's inline script + deferred data chain to expose the hook.
+        # Since the 2026-10-13 app.js split the prospect model is a lazy chunk
+        # (app-chunk-prospect.js) — ask for it each poll (memoized, no-op when inline).
         for _ in range(60):
-            if drv.execute_script("return typeof window._attachJmScores === 'function'"):
+            if drv.execute_script(
+                    "if (typeof window._ensureChunk === 'function') window._ensureChunk('prospect').catch(function(){});"
+                    "return typeof window._attachJmScores === 'function'"):
                 break
             time.sleep(1)
         else:

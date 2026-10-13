@@ -162,7 +162,13 @@ function analyze(src, ranges) {
     // a chunk's own top-level declarations must not shadow/duplicate core ones
     const coreDecls = new Set(ast.body.filter(s => !ranges.some(q => inRange(s, q))).flatMap(declNames));
     const dupes = [...decls].filter(d => coreDecls.has(d));
-    report[r.name] = { range: `${r.start}-${r.end}`, bytes: src.split('\n').slice(r.start - 1, r.end).join('\n').length, topDecls: [...decls], exports: [...exports], refs, dupes };
+    const chunkLines = src.split('\n').slice(r.start - 1, r.end);
+    const timing = [];
+    chunkLines.forEach((l, i) => {
+      if (/addEventListener\(\s*['"](DOMContentLoaded|load)['"]/.test(l) && !/readyState/.test(chunkLines.slice(Math.max(0, i - 3), i + 1).join('\n'))) timing.push(`${l.match(/DOMContentLoaded|load/)[0]}@${r.start + i}`);
+      if (/new MutationObserver\(/.test(l)) timing.push(`MutationObserver@${r.start + i}`);
+    });
+    report[r.name] = { range: `${r.start}-${r.end}`, bytes: chunkLines.join('\n').length, topDecls: [...decls], exports: [...exports], refs, dupes, timing };
   }
   return { report, straddle };
 }
@@ -183,6 +189,10 @@ function printReport({ report, straddle }, allow) {
     // become no-ops, so a one-time init could be skipped. Informational — review by hand.
     const lt = r.refs.filter(x => x.guarded && !x.runtime);
     if (lt.length) console.log(`  note load-time guarded refs (no-op until the chunk loads): ${lt.map(x => x.name + '@' + x.line).slice(0, 12).join(', ')}`);
+    // Load-timing patterns inside the chunk: a lazy chunk runs after DOMContentLoaded and
+    // possibly after its page was activated, so DCL listeners / class-change observers can
+    // miss their only event. Informational — each needs an "already happened" fallback.
+    if (r.timing.length) console.log(`  note load-timing patterns (need a fallback for "already happened"): ${r.timing.slice(0, 8).join(', ')}`);
   }
   return bad;
 }

@@ -1,0 +1,11 @@
+{
+  "note": "Outside references to lazy-chunk names that were reviewed as safe but that the scripts/split_app.js guard heuristic cannot prove (nested-block or early-return guards). Format \"<chunk>:<name>\"; every entry needs a reason. Re-review when the referencing code changes.",
+  "allow": [
+    "prospect:_jmClass",
+    "prospect:_pmBuiltData"
+  ],
+  "reasons": {
+    "prospect:_jmClass": "openPlayerCard JM tile: the call sits inside `if (!d._retired && window._pmBuiltData && window._jmClass) {` (nested block guard).",
+    "prospect:_pmBuiltData": "card dynasty block: preceded by `if (!window._pmBuiltData) return '';` (early-return guard)."
+  }
+}

@@ -5134,7 +5134,7 @@ function _updateViewOptsSummary() {
   // ADP-source pills retired 2026-09-10 (#rnkAdpSrcRow hidden) — the summary no
   // longer names an ADP source the user can't see or change.
   const sc = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' }[rankingScoringFmt] || rankingScoringFmt;
-  const st = { fantasy: 'Fantasy', sims: 'Sims', vor: 'VOR', xfp: 'xFP', dyn: 'Raw Sim', trend: 'Trends', proj: 'Projections', lines: 'Betting Lines', adp: 'ADP compare' }[_st] || _st;
+  const st = { fantasy: 'Fantasy', sims: 'Boom/Bust', vor: 'VOR', xfp: 'xFP', dyn: 'Raw Sim', trend: 'Trends', proj: 'Projections', lines: 'Betting Lines', adp: 'ADP compare' }[_st] || _st;
   el.textContent = sc + ' · ' + st;
   el.style.color = (rankingScoringFmt !== 'ppr' || _st !== 'fantasy') ? 'var(--accent)' : 'var(--text2)';
 }
@@ -5168,7 +5168,7 @@ function _updateRnkMobCtlSummary() {
   const _st = (typeof rnkStatMode !== 'undefined') ? rnkStatMode : 'fantasy';
   parts.push({ ppr: 'PPR', half: 'Half', std: 'Std' }[rankingScoringFmt] || rankingScoringFmt);
   const extra = [];
-  if (_st !== 'fantasy') extra.push({ sims: 'Sims', vor: 'VOR', xfp: 'xFP', proj: 'Proj', lines: 'Lines', adp: 'ADP' }[_st] || _st);
+  if (_st !== 'fantasy') extra.push({ sims: 'Boom/Bust', vor: 'VOR', xfp: 'xFP', proj: 'Proj', lines: 'Lines', adp: 'ADP' }[_st] || _st);
   if (window._watchOnly) extra.push('★');
   if (window._teamFilter && window._teamFilter.size) extra.push(window._teamFilter.size + ' team' + (window._teamFilter.size > 1 ? 's' : ''));
   if (window._injOnly) extra.push('Injuries');
@@ -31402,8 +31402,8 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       return (typeof v === 'number' && v > 0) ? v : null;
     };
     const ST_COLS = {
-      QB: [['py', 'PASS YDS', 0], ['ptd', 'PASS TD', 1], ['int', 'INT', 1], ['ry', 'RUSH YDS', 0], ['rtd', 'RUSH TD', 1]],
-      FLEX: [['rec', 'REC', 1], ['rcy', 'REC YDS', 0], ['ry', 'RUSH YDS', 0], ['td', 'TD', 1]],
+      QB: [['py', 'Pass yds', 0], ['ptd', 'Pass TD', 1], ['int', 'INT', 1], ['ry', 'Rush yds', 0], ['rtd', 'Rush TD', 1]],
+      FLEX: [['rec', 'Rec', 1], ['rcy', 'Rec yds', 0], ['ry', 'Rush yds', 0], ['td', 'TD', 1]],
       K: [['fgm', 'FGM', 1], ['xpm', 'XPM', 1]],
     };
     // Column shows only when some card in the family projects a meaningful
@@ -31466,7 +31466,11 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const img = (d._slImg && !isDst)
       ? '<img src="' + esc(window._fixHeadshotUrl(d._slImg)) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
       : ((logoId || d._devyLogo) ? '<img src="' + window._logoSrc(d, logoId) + '" alt="" loading="lazy" style="object-fit:contain!important;padding:8px;background:var(--elev-1)">' : '');
-    const box = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
+    // Sentence-case pilot (2026-10-13): this page's box labels, including the
+    // shared TD / FG luck box that renders through this same box().
+    const SC_LBL = { 'OPP': 'Opp', 'SPREAD': 'Spread', 'OPP TOTAL': 'Opp total', 'TEAM TOTAL': 'Team total', 'WEATHER': 'Weather', 'TD LUCK': 'TD luck', 'FG LUCK': 'FG luck' };
+    const box = (lbl, ...a) => box0(SC_LBL[lbl] || lbl, ...a);
+    const box0 = (lbl, val, cls, tip) => '<div class="card-rank-box"' + (tip ? ' title="' + esc(tip) + '" style="cursor:help"' : '') + '><div class="lbl">' + lbl + '</div><div class="num ' + (cls || '') + '">' + val + '</div></div>';
     const bestCls = k => k ? 'sst-best' : '';
 
     const rkTag = r => r ? ' <span class="sst-rk" style="font-weight:700;color:var(--text);cursor:help" title="#' + r.rank + ' of ' + r.of + ' ' + (d.s === 'DST' ? 'D/STs' : d.s + 's') + ' this week">(' + r.rank + ')</span>' : '';
@@ -31522,7 +31526,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       const fin = c.live.st === 'post';
       const beat = (c.proj != null) ? (c.actual >= c.proj ? 'up' : 'down') : '';
       html += '<div class="sst-actual sst-actual-' + beat + '" title="' + esc(fin ? 'Final — actual points this week' : 'Points so far — game in progress (' + (c.live.tag || '') + ')') + '">'
-        + '<div class="sst-ps-lbl">' + (fin ? 'ACTUAL' : 'SO FAR') + '</div>'
+        + '<div class="sst-ps-lbl">' + (fin ? 'Actual' : 'So far') + '</div>'
         + '<div class="sst-actual-num">' + (c.actual != null ? fmt1(c.actual) : '—') + '</div></div>';
     }
     if (c.st && c.stCols && c.stCols.length) {
@@ -31542,7 +31546,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
     const statusChip = (!c.bye && typeof window._wkStatusChipHtml === 'function') ? window._wkStatusChipHtml(d, fmt) : '';
     html += '<div class="card-section"><div class="card-section-title" style="display:flex;align-items:center;gap:8px">Matchup' + (statusChip ? '<span style="margin-left:auto">' + statusChip + '</span>' : '') + '</div>';
     if (c.bye) {
-      html += '<div class="sst-bye"><b style="color:var(--accent)">BYE WEEK</b> — no game in Week ' + wk + '.</div>';
+      html += '<div class="sst-bye"><b style="color:var(--accent)">Bye week</b> — no game in Week ' + wk + '.</div>';
     } else if (!c.opp) {
       html += '<div class="sst-bye">No Week ' + wk + ' schedule data.</div>';
     } else {
@@ -31683,7 +31687,7 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       + '<div><div class="sst-edge-col-title" style="color:var(--red)">TOUGHEST MATCHUPS</div>' + (worst.length ? worst.map(rowHtml).join('') : '<div class="sst-edges-empty">No negative edges' + (ePos === 'ALL' ? '' : ' at ' + ePos) + ' this week.</div>') + '</div>'
       + '</div>';
     // Phones show the top 5 per column (CSS); this button opens the full 12.
-    if (best.length > 5 || worst.length > 5) html += '<button type="button" class="sst-edges-more">' + (el.classList.contains('sst-edges-all') ? 'SHOW TOP 5' : 'SHOW ALL ' + Math.max(best.length, worst.length)) + '</button>';
+    if (best.length > 5 || worst.length > 5) html += '<button type="button" class="sst-edges-more">' + (el.classList.contains('sst-edges-all') ? 'Show top 5' : 'Show all ' + Math.max(best.length, worst.length)) + '</button>';
     el.innerHTML = html;
     const more = el.querySelector('.sst-edges-more');
     if (more) more.onclick = () => { el.classList.toggle('sst-edges-all'); renderEdges(); };

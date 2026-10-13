@@ -300,6 +300,27 @@ button,input,select,textarea{font-family:inherit}
   .nav-btn[data-nav-tier="2"] svg{width:21px;height:21px}
   .nav-btn[data-nav-tier="2"] .nav-label{white-space:normal;text-align:center;line-height:1.1;max-width:78px}
   .nav-btn[data-nav-tier="2"]:hover,.nav-btn[data-nav-tier="2"].active{opacity:1}
+  /* Season-phase groups (2026-10-13, FantasyPros-style): Rankings, then IN-SEASON /
+     DRAFT / DYNASTY / MORE. Desktop-only `order` so the phone bottom bar keeps its
+     source order. The in-season group leads Sep-Jan; html.nav-draft-phase (inline
+     script after the <nav>) puts DRAFT first Feb-Aug and gives it full weight. */
+  .sidebar .nav-btn[data-page="rankings"]{order:1}
+  .sidebar [data-navgrp="inseason"]{order:10}
+  .sidebar [data-page="startsit"]{order:11}
+  .sidebar [data-page="myteams"]{order:12}
+  .sidebar [data-page="trade"]{order:13}
+  .sidebar [data-navgrp="draft"]{order:20}
+  .sidebar .nav-btn[data-navgrp="draft"]{order:21}
+  .sidebar [data-navgrp="dynasty"]{order:30}
+  .sidebar .nav-btn[data-navgrp="dynasty"]{order:31}
+  .sidebar [data-navgrp="more"]{order:40}
+  .sidebar .nav-btn[data-navgrp="more"]{order:41}
+  .sidebar .nav-spacer{order:90}
+  .sidebar #navAccountBtn{order:91}
+  .sidebar .nav-more{order:92}
+  .nav-draft-phase .sidebar [data-navgrp="draft"]{order:5}
+  .nav-draft-phase .sidebar .nav-btn[data-navgrp="draft"]{order:6;height:56px;min-height:0;padding:0;gap:4px;opacity:1}
+  .nav-draft-phase .sidebar .nav-btn[data-navgrp="draft"] svg{width:26px;height:26px}
 }
 .nav-more{display:none} /* phone-only MORE tab; shown in the ≤600px block */
 .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
@@ -3370,3 +3391,19 @@ tbody td{font-size:.8125rem}
 @media(max-width:600px){
   .trade-title,.md-title,.ds-title{font-size:1.6rem;letter-spacing:2px}
 }
+
+/* Sentence-case pilot on Start/Sit (2026-10-13): labels and buttons drop the
+   forced caps and step up from 11px. Bebas display headings (page title, START /
+   SIT verdicts, MATCHUP EDGES) and position tabs (ALL / QB / RB…) stay caps. If
+   this sticks, roll the same treatment out page by page. */
+#pageStartSit .card-section-title,
+#pageStartSit .card-rank-box .lbl,
+#pageStartSit .sst-ps-lbl,
+#pageStartSit #sstFmt button,
+#pageStartSit #sstClear,
+#pageStartSit .sst-edges-more{text-transform:none;letter-spacing:.01em}
+#pageStartSit .card-section-title{font-size:.8125rem}
+#pageStartSit .card-rank-box .lbl,
+#pageStartSit .sst-ps-lbl{font-size:.75rem}
+#pageStartSit #sstFmt button,
+#pageStartSit #sstClear{font-size:.78rem}

@@ -85,12 +85,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-13-tbar2" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-13-navgrp" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-13-tbar" as="script">
+<link rel="preload" href="app.js?v=2026-10-13-navgrp" as="script">
 <!-- Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
@@ -100,7 +100,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-13" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-13" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-13-tbar2">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-13-navgrp">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -379,53 +379,56 @@ Continue with Google
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
 <span class="nav-label">Rankings</span>
 </button>
-<button class="nav-btn" data-page="myteams" id="navMyTeamsBtn" title="My Teams" aria-label="My Teams">
+<div class="nav-divider" data-navgrp="inseason" role="separator" aria-label="In-Season"><span>In-Season</span></div>
+<button class="nav-btn" data-page="myteams" data-navgrp="inseason" id="navMyTeamsBtn" title="My Teams" aria-label="My Teams">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 <span class="nav-label">My Teams</span>
 </button>
-<button class="nav-btn" data-page="trade" title="Trade Calculator" aria-label="Trade Calculator">
+<button class="nav-btn" data-page="trade" data-navgrp="inseason" title="Trade Calculator" aria-label="Trade Calculator">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
 <span class="nav-label">Trade Calc</span>
 </button>
-<button class="nav-btn" data-page="startsit" title="Start/Sit" aria-label="Start / Sit">
+<button class="nav-btn" data-page="startsit" data-navgrp="inseason" title="Start/Sit" aria-label="Start / Sit">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h7l-3 10H3z"/><path d="M14 7h7v10h-7z"/><path d="M5.5 12l1.5 1.5 3-3"/><path d="M16 10l3 4M19 10l-3 4"/></svg>
 <span class="nav-label">Start/Sit</span>
 </button>
-<div class="nav-divider" role="separator" aria-label="Tools"><span>Tools</span></div>
-<button class="nav-btn" data-nav-tier="2" data-page="mockdraft" title="Mock Draft" aria-label="Mock Draft">
+<div class="nav-divider" data-navgrp="draft" role="separator" aria-label="Draft"><span>Draft</span></div>
+<button class="nav-btn" data-nav-tier="2" data-page="mockdraft" data-navgrp="draft" title="Mock Draft" aria-label="Mock Draft">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
 <span class="nav-label">Mock Draft</span>
 </button>
-<button class="nav-btn" data-nav-tier="2" data-page="draftstrategy" title="Draft Strategy" aria-label="Draft Strategy">
+<button class="nav-btn" data-nav-tier="2" data-page="draftstrategy" data-navgrp="draft" title="Draft Strategy" aria-label="Draft Strategy">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6"/><path d="M4 6c4-2.5 8 2.5 12 0v8c-4 2.5-8-2.5-12 0"/><circle cx="4" cy="20" r="1.5" fill="currentColor" stroke="none"/></svg>
 <span class="nav-label">Draft Strategy</span>
 </button>
-<button class="nav-btn" data-nav-tier="2" data-page="prospect" title="Prospect Model" aria-label="Prospect Model">
+<div class="nav-divider" data-navgrp="dynasty" role="separator" aria-label="Dynasty"><span>Dynasty</span></div>
+<button class="nav-btn" data-nav-tier="2" data-page="prospect" data-navgrp="dynasty" title="Prospect Model" aria-label="Prospect Model">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="2" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
 <span class="nav-label">Prospect</span>
 </button>
-<button class="nav-btn" data-nav-tier="2" data-page="backtest" id="navBacktestBtn" title="Model Backtest" aria-label="Model Backtest" style="display:none">
+<div class="nav-divider" data-navgrp="more" role="separator" aria-label="More"><span>More</span></div>
+<button class="nav-btn" data-nav-tier="2" data-page="backtest" data-navgrp="more" id="navBacktestBtn" title="Model Backtest" aria-label="Model Backtest" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
 <span class="nav-label">Backtest</span>
 </button>
-<button class="nav-btn" data-nav-tier="2" data-page="research" id="navResearchBtn" title="Research" aria-label="Research" style="display:none">
+<button class="nav-btn" data-nav-tier="2" data-page="research" data-navgrp="more" id="navResearchBtn" title="Research" aria-label="Research" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>
 <span class="nav-label">Research</span>
 </button>
 <!-- League Papers (invite-only, myfantasyfootball.co/paper/): shown to Jack and to people on his papers list (app.js _navAdminCheck) -->
-<a class="nav-btn" data-nav-tier="2" href="/paper/" id="navPapersBtn" title="League Papers" aria-label="League Papers" style="display:none;text-decoration:none">
+<a class="nav-btn" data-nav-tier="2" href="/paper/" data-navgrp="more" id="navPapersBtn" title="League Papers" aria-label="League Papers" style="display:none;text-decoration:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13a1 1 0 0 1 1 1v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z"/><path d="M18 8h2v11a2 2 0 0 1-2 2"/><path d="M8 8h6"/><path d="M8 12h6"/><path d="M8 16h4"/></svg>
 <span class="nav-label">Papers</span>
 </a>
-<button class="nav-btn" data-nav-tier="2" data-page="compare" title="Compare" aria-label="Compare Players">
+<button class="nav-btn" data-nav-tier="2" data-page="compare" data-navgrp="more" title="Compare" aria-label="Compare Players">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
 <span class="nav-label">Compare</span>
 </button>
-<button class="nav-btn" data-nav-tier="2" data-page="games" title="Games" aria-label="Games">
+<button class="nav-btn" data-nav-tier="2" data-page="games" data-navgrp="more" title="Games" aria-label="Games">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6-6 6 6"/><path d="M6 15l6 6 6-6"/><circle cx="12" cy="12" r="2"/></svg>
 <span class="nav-label">Games</span>
 </button>
-<button class="nav-btn" data-nav-tier="2" data-page="trivia" id="navTriviaBtn" title="Trivia" aria-label="Trivia" style="display:none">
+<button class="nav-btn" data-nav-tier="2" data-page="trivia" data-navgrp="more" id="navTriviaBtn" title="Trivia" aria-label="Trivia" style="display:none">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
 <span class="nav-label">Trivia</span>
 </button>
@@ -436,6 +439,7 @@ Continue with Google
 </button>
 <button class="nav-btn nav-more" id="navMoreBtn" type="button" title="More" aria-label="More pages" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span class="nav-label">More</span></button>
 </nav>
+<script>/* Sidebar phase order (2026-10-13): draft group first Feb-Aug, in-season group first Sep-Jan (main.css .nav-draft-phase) */(function(){var m=new Date().getMonth();document.documentElement.classList.toggle("nav-draft-phase",m>=1&&m<=7)})();</script>
 
 <!-- Main Content Area -->
 <div class="main-content">
@@ -1790,7 +1794,7 @@ tr:hover .watch-star{opacity:.55}
 <span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase">STATS:</span>
 <div class="career-log-toggle" id="rankingStatModeToggle">
 <button class="rnk-statmode-btn active" data-rnkstatmode="fantasy" title="Fantasy points per game columns (Proj PPG / season PPG / L4 PPG)">FANTASY</button>
-<button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">SIMS</button>
+<button class="rnk-statmode-btn" data-rnkstatmode="sims" title="Sim Lab Monte Carlo view — rest-of-season sim PPG (with preseason-original and actual-to-date once the season starts), boom %, bust %, and total yards. WEEKLY board shows this week's 1,000-sim numbers.">BOOM/BUST</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="vor" title="Value over replacement from the Sim Lab projection — sim PPG, points per game above the replacement-level player at the position, the rest-of-season total over the games he is projected to play, and those games. Standard 12-team lineup by default; set your own or pick a synced league in the VOR bar. Follows the PPR / Half / STD scoring toggle. WEEKLY board uses this week's sim.">VOR</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="xfp" title="Expected fantasy points view — actual PPG, expected PPG from usage (every target by completion probability and expected YAC, every carry by field position, league TD rates; QBs net expected INTs), points over expected, and the TD-luck part of the gap. WEEKLY board shows the active week once it has been played.">xFP</button>
 <button class="rnk-statmode-btn" data-rnkstatmode="dyn" title="RAW SIM — the Dynasty SIM on its own, a research input: expected points over replacement in the 3-season window plus a youth credit for the seasons after, from the most similar past players. It's about a third of MFF VALUE — our value (the MFF VALUE board tab) adds the market, team context and availability. Dynasty boards only.">RAW SIM</button>
@@ -2216,7 +2220,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div style="max-width:1600px;margin:0 auto;width:100%;padding:1.5rem;flex:1;overflow-y:auto">
 <div class="compare-header" style="margin-bottom:.35rem;flex-wrap:wrap;gap:.5rem">
 <span class="compare-title">START / SIT <span id="sstWeekLbl" class="sst-week"></span></span>
-<div class="career-log-toggle" id="sstFmt" title="Scoring format for the projection"><button data-fmt="ppr" class="active">PPR</button><button data-fmt="half">HALF</button><button data-fmt="std">STD</button></div>
+<div class="career-log-toggle" id="sstFmt" title="Scoring format for the projection"><button data-fmt="ppr" class="active">PPR</button><button data-fmt="half">Half</button><button data-fmt="std">Std</button></div>
 </div>
 <div class="sst-sub">Add the players you're deciding between. Every card shows our projection beside the sportsbook projection, plus matchup, spread, Vegas team total and this week's lines side by side — the top projection gets the START call and the best number in each row lights up green.</div>
 <div class="lg-controls" style="margin-bottom:.6rem">
@@ -2226,7 +2230,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="lg-dropdown" id="sstDropdown" style="display:none"></div>
 </div>
 <div class="lg-pos-btns" id="sstPosFilter"></div>
-<button class="lg-pos-btn" id="sstClear" title="Remove every player" style="margin-left:auto">CLEAR</button>
+<button class="lg-pos-btn" id="sstClear" title="Remove every player" style="margin-left:auto">Clear</button>
 </div>
 <div class="lg-chips" id="sstChips"></div>
 <div class="compare-grid" id="sstGrid"></div>
@@ -6297,7 +6301,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-13-tbar"></script>
+<script defer src="app.js?v=2026-10-13-navgrp"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

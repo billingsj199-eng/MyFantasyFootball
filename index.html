@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-14-pwa2" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-14-nav" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-14-ppg" as="script">
+<link rel="preload" href="app.js?v=2026-10-14-nav" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-14" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-14" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-14-pwa2">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-14-nav">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -466,7 +466,7 @@ Continue with Google
 <!-- Search (2026-10-13): opens the Cmd+K palette from every page; hidden on
      Rankings, which has its own search box (main.css #authAnchorRankings rule). -->
 <button type="button" class="global-search-btn" id="globalSearchBtn" aria-label="Search players and pages" title="Search players and pages (Ctrl+K)" onclick="window._openCmdK&&window._openCmdK()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="gsb-lbl">Search</span><kbd class="gsb-kbd">Ctrl K</kbd></button>
-<button type="button" class="global-pass-btn" id="globalPassBtn" aria-label="Season Pass" style="display:none" onclick="window._openSeasonPass()" title="Season Pass — every premium feature through Jan 15, 2027 for a one-time $24.99"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg><span class="gpb-full">SEASON PASS $24.99</span></button>
+<button type="button" class="global-pass-btn" id="globalPassBtn" aria-label="Season Pass" style="display:none" onclick="window._openSeasonPass()" title="Season Pass — every premium feature through Jan 15, 2027 for a one-time $24.99"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg><span class="gpb-full">SEASON PASS $24.99</span><span class="gpb-mid">SEASON PASS</span></button>
 <button class="global-signin-btn" id="globalSigninBtn">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 SIGN IN
@@ -1223,9 +1223,9 @@ COLS
 <label style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer"><input type="checkbox" data-coltoggle="ppsos" checked> Playoff SOS</label>
 </div></div>
 <div style="position:relative;display:inline-flex">
-<button class="tb-btn" id="btnMoreMenu" title="Export, draft helper, theme and more" aria-label="More actions" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();var m=document.getElementById('moreMenu');var open=m.style.display!=='none';m.style.display=open?'none':'block';this.setAttribute('aria-expanded',!open)">
+<button class="tb-btn" id="btnMoreMenu" title="Export, draft helper, theme and more" aria-label="Options" aria-haspopup="menu" aria-expanded="false" onclick="event.stopPropagation();var m=document.getElementById('moreMenu');var open=m.style.display!=='none';m.style.display=open?'none':'block';this.setAttribute('aria-expanded',!open)">
 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-MORE
+OPTIONS
 </button>
 <div id="moreMenu" role="menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;z-index:120;min-width:200px;box-shadow:0 12px 32px rgba(0,0,0,.5);font-family:'DM Sans',sans-serif">
 <div class="tb-menu-hdr">DOWNLOAD AS</div>
@@ -1653,7 +1653,7 @@ CLEAR ALL
 <span style="font-size:.6875rem;color:var(--text2);letter-spacing:.04em;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;white-space:nowrap;cursor:help" onclick="window._showSyncHelp()">SYNC<span class="gw-help-icon" style="width:14px;height:14px;font-size:.6875rem;margin-left:3px;vertical-align:middle">?<div class="gw-tooltip" style="width:260px;bottom:130%;left:50%;transform:translateX(-50%);white-space:normal"><b style="color:var(--accent)">Position Sync</b><br><br>When enabled, your positional rankings (RB1→RB2→RB3, WR1→WR2, etc.) and position-specific tiers automatically stay synced across these pairs:<br><br>• <b>Redraft ↔ Superflex</b><br>• <b>Dynasty 1QB ↔ Dynasty SF</b><br><br>Redraft and dynasty are different timelines, so the two pairs never mix. Only the <em>overall</em> interleaving changes within a pair (QBs rank higher in SF). Your within-position order and tiers stay identical across both paired modes.<br><br>Move any player or add/remove a tier in one mode and its pair updates instantly. Switching into Superflex or Dynasty SF re-pulls positional order from its 1QB board. Toggle ON to also do an initial sync from your current mode right now.</div></span></span>
 </div>
 </div>
-<div class="pos-filters">
+<div class="pos-filters x-scroll-fade">
 <span class="filter-row-label">Position</span>
 <button class="pos-btn active" data-pos="ALL">ALL</button>
 <button class="pos-btn" data-pos="QB">QB</button>
@@ -2263,7 +2263,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <!-- GAMES PAGE (Fantasy Game + Elite Pull + Guess Who) -->
 <div class="page page-games" id="pageGames">
 <div class="auth-anchor" id="authAnchorGames"></div>
-<div class="games-tabs">
+<div class="games-tabs x-scroll-fade">
 <!-- Tab data-attribute "guesswho" targets #gamesGuesswho (Elite Pull clue game); "elitepull" targets #gamesElitepull (Guess Who picture game). Names are swapped from the data attributes because of a pre-swap legacy in the IDs. -->
 <button class="games-tab active" data-games-tab="daily">DAILY</button>
 <button class="games-tab" data-games-tab="guesswho">ELITE PULL</button>
@@ -4416,7 +4416,7 @@ Jack's Rankings require a <span class="md-premium-link" id="mdPremiumLink">Premi
 </div>
 <div class="md-setup-row">
 <label class="md-label">ADP Source</label>
-<div class="md-rank-src-tabs" id="mdAdpSrcTabs">
+<div class="md-rank-src-tabs x-scroll-fade" id="mdAdpSrcTabs">
 <button class="md-rank-src-tab active" data-mdadp="consensus">CONSENSUS</button>
 <button class="md-rank-src-tab locked" data-mdadp="underdog"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>UNDERDOG</button>
 <button class="md-rank-src-tab" data-mdadp="espn">ESPN</button>
@@ -6398,7 +6398,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-14-ppg"></script>
+<script defer src="app.js?v=2026-10-14-nav"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

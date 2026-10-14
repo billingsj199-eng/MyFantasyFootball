@@ -20542,9 +20542,26 @@ function _adminInjectSnapButtons(playerName) {
 // KTC-style pinned-player tabs at the top of the card body: + ADD PLAYER
 // searches the same pool as the header search bar, each added player becomes a
 // chip, clicking a chip swaps the card to that player in place, × unpins.
-// Pins live for the page session only (deliberately not persisted — a stale
-// name after a data refresh would render a dead chip).
-var _cardPins = [];
+// Pins + their order persist per device (localStorage mff_card_pins) so the
+// strip survives reloads, new tabs and the next visit. Names that no longer
+// resolve in D after a data refresh are dropped at render, so a stale pin
+// can never render a dead chip. RESET clears the saved list too.
+var _CARD_PINS_LS = 'mff_card_pins';
+var _cardPins = (function () {
+  try {
+    const v = JSON.parse(localStorage.getItem(_CARD_PINS_LS) || '[]');
+    return Array.isArray(v) ? v.filter(n => typeof n === 'string').slice(0, 40) : [];
+  } catch (_e) { return []; }
+})();
+function _cardPinsSave() {
+  // Never overwrite the saved list from a half-loaded pool (a deep-linked card
+  // opening before a data refresh lands would prune every pin)
+  if (typeof D === 'undefined' || !Array.isArray(D) || D.length < 50) return;
+  try {
+    if (_cardPins.length) localStorage.setItem(_CARD_PINS_LS, JSON.stringify(_cardPins));
+    else localStorage.removeItem(_CARD_PINS_LS);
+  } catch (_e) {}
+}
 // Last SORT mode applied to the strip (null = manual / drag order)
 var _cardPinSort = null;
 var _CARD_PIN_POS_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DST: 5 };
@@ -20579,8 +20596,11 @@ function _cardPinLookup(name) {
 function _renderCardPinStrip(d, ctxMode) {
   const strip = document.getElementById('cardPinStrip');
   if (!strip) return;
-  // D rebuilds on data refreshes — drop pins that no longer resolve
+  // D rebuilds on data refreshes — drop pins that no longer resolve. Every
+  // change (add / unpin / drag / sort / reset) re-renders, so saving here
+  // covers all of them.
   _cardPins = _cardPins.filter(n => _cardPinLookup(n));
+  _cardPinsSave();
   const multi = _cardPins.length > 1;
   const chips = _cardPins.map(n => {
     const active = n === d.n;

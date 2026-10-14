@@ -3453,3 +3453,11 @@ tbody td{font-size:.8125rem}
 /* Lazy app chunk loading (window._ensureChunk): thin indeterminate bar at the top */
 body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;width:40%;z-index:10000;background:var(--accent);border-radius:0 2px 2px 0;animation:mffChunkBar 1s ease-in-out infinite;pointer-events:none}
 @keyframes mffChunkBar{0%{left:-40%}100%{left:100%}}
+
+/* Installed app (2026-10-14): with apple-mobile-web-app-status-bar-style=black-translucent
+   and viewport-fit=cover, the iOS home-screen app draws the page under the status bar /
+   notch; only the player card accounted for it. Pad the top by the safe area in standalone
+   mode (0 in a browser tab and on Android, where the status bar sits outside the viewport). */
+@media (display-mode: standalone){
+  .main-content{padding-top:env(safe-area-inset-top,0)}
+}

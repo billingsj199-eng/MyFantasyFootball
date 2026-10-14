@@ -38413,6 +38413,8 @@ window.fmtHeight = fmtHeight;
     function _applyTheme(t) {
       if (t === 'light') root.dataset.theme = 'light';
       else delete root.dataset.theme;
+      // Browser chrome / installed-app title bar follows the theme (meta theme-color)
+      try { const m = document.querySelector('meta[name="theme-color"]'); const bg = getComputedStyle(root).getPropertyValue('--bg').trim(); if (m && bg) m.content = bg; } catch (_e) {}
       // Show the icon for the theme you'd switch TO (sun = currently dark, moon = currently light)
       if (_iconDark) _iconDark.style.display = (t === 'light') ? '' : 'none';
       if (_iconLight) _iconLight.style.display = (t === 'light') ? 'none' : '';

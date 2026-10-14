@@ -3461,3 +3461,9 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 @media (display-mode: standalone){
   .main-content{padding-top:env(safe-area-inset-top,0)}
 }
+
+/* 2026-10-14 live phone audit: the last sub-32px tap targets */
+@media(max-width:600px){
+  .pm-cmp-btn{min-width:36px}                                                        /* Prospect "+" compare button was 26px wide */
+  #pageTrade .rt-asset .rt-name{display:inline-block;padding:7px 0;margin:-7px 0}    /* recent-trade name links were 16px tall */
+}

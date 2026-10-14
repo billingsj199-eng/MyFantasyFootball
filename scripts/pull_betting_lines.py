@@ -398,8 +398,10 @@ def pull_season_props():
 
 
 BOOK_ORDER = ('DK', 'FD', 'MGM', 'UD', 'PP')
-STAT_ORDER = ['py', 'ptd', 'ptdo', 'ptdu', 'int', 'into', 'intu', 'ry', 'rtd', 'ra', 'rec', 'rcy',
-              'rctd', 'rrtd', 'fgm', 'kpts', 'atd']
+STAT_ORDER = ['py', 'pyo', 'pyu', 'ptd', 'ptdo', 'ptdu', 'int', 'into', 'intu',
+              'ry', 'ryo', 'ryu', 'rl', 'rlo', 'rlu', 'rtd', 'ra',
+              'rec', 'reco', 'recu', 'rcy', 'rcyo', 'rcyu', 'rcl', 'rclo', 'rclu',
+              'rctd', 'rrtd', 'fgm', 'kpts', 'atd', 'atd2', 'atd3']
 
 # WEEKLY pass-TD / INT juice (added 2026-09-24). Nearly every QB's pass-TD
 # line is 1.5 and every INT line 0.5, so the number alone can't separate
@@ -407,7 +409,20 @@ STAT_ORDER = ['py', 'ptd', 'ptdo', 'ptdu', 'int', 'into', 'intu', 'ry', 'rtd', '
 # +157 = ~39%). Stored beside the line as <stat>o / <stat>u; the site turns
 # line + no-vig over probability into an expected count (Poisson).
 # PrizePicks posts no prices (standard squares) so it never carries them.
-PRICE_KEYS = {'ptd': ('ptdo', 'ptdu'), 'int': ('into', 'intu')}
+# 2026-10-14 (Jack: "factor in the actual odds for rec" / lines boom-bust):
+# every O/U stat line now carries both sides' prices where the book posts
+# them (UD exposes them on every line; DK/FD/MGM in their market payloads).
+# The site still scores lines at face value — the prices accumulate for
+# grading first (W1-5 lines had none). Also captured, same reason:
+#   rcl / rl   longest reception / longest rush O/U lines (+ prices)
+#   atd2 / atd3  2+ / 3+ TD odds (DK "2+ TDs", FD TO_SCORE_2+_TOUCHDOWNS,
+#               MGM "to score 2+ TDs", UD 1.5 / 2.5 rush+rec TD ladders)
+PRICE_KEYS = {'ptd': ('ptdo', 'ptdu'), 'int': ('into', 'intu'),
+              'py': ('pyo', 'pyu'), 'ry': ('ryo', 'ryu'),
+              'rec': ('reco', 'recu'), 'rcy': ('rcyo', 'rcyu'),
+              'rcl': ('rclo', 'rclu'), 'rl': ('rlo', 'rlu')}
+# TD-count ladders: which key a "N+ TDs" market lands in (1+ = anytime).
+TD_LADDER_KEYS = {1: 'atd', 2: 'atd2', 3: 'atd3'}
 
 
 def _american(v):
@@ -722,6 +737,7 @@ UD_WEEKLY_STAT_KEYS = {
     'passing_yds': 'py', 'passing_tds': 'ptd', 'passing_ints': 'int',
     'rushing_yds': 'ry', 'receiving_yds': 'rcy', 'rush_rec_tds': 'rrtd',
     'receptions': 'rec', 'receiving_rec': 'rec',  # UD renamed it receiving_rec (v1 board, 2026-09)
+    'receiving_long': 'rcl', 'rushing_long': 'rl',  # longest reception / rush (tail shape)
     'rushing_rec_yds': None, 'rush_rec_yds': None,  # combined yds: no clean key
     'kicking_points': 'kpts', 'field_goals_made': 'fgm',  # kicker boards, if/when UD posts them
 }
@@ -805,12 +821,20 @@ def pull_ud_weekly(week_by_matchup):
             val = float(line.get('stat_value'))
         except (TypeError, ValueError):
             continue
-        # TD ladder (2026-10-11): some players only get a 1.5/2.5 rrtd line
-        # (higher-only) — its price is 2+ TD odds, not anytime. 0.5 only.
-        if stat == 'rrtd' and val != 0.5:
-            continue
         name = f"{p.get('first_name', '')} {p.get('last_name', '')}".strip()
         wkd = out.setdefault(wk, {})
+        # TD ladder (2026-10-11): some players get a 1.5 / 2.5 rrtd line
+        # (higher-only) — its HIGHER price is the 2+ / 3+ TD odds, not
+        # anytime. Keep it under atd2 / atd3 (2026-10-14); rrtd stays 0.5.
+        if stat == 'rrtd' and val != 0.5:
+            lk = TD_LADDER_KEYS.get(int(val + 0.5)) if val in (1.5, 2.5) else None
+            if lk and lk not in wkd.get(name, {}):
+                for opt in line.get('options') or []:
+                    if opt.get('choice') == 'higher' and _american(opt.get('american_price')) is not None:
+                        wkd.setdefault(name, {})[lk] = _american(opt.get('american_price'))
+                        n += 1
+                        break
+            continue
         if stat in wkd.get(name, {}):
             continue
         wkd.setdefault(name, {})[stat] = val
@@ -930,6 +954,8 @@ DK_WEEKLY_OU_SUBS = {
     'rush yards o/u': 'ry', 'rushing yards o/u': 'ry',
     'rec yards o/u': 'rcy', 'receiving yards o/u': 'rcy',
     'receptions o/u': 'rec',
+    'longest reception o/u': 'rcl', 'longest reception': 'rcl',
+    'longest rush o/u': 'rl', 'longest rush': 'rl',
     'kicking points o/u': 'kpts', 'kicking pts o/u': 'kpts',
     'field goals o/u': 'fgm', 'field goals made o/u': 'fgm', 'fg made o/u': 'fgm',
 }
@@ -937,7 +963,8 @@ DK_WEEKLY_OU_SUBS = {
 # strip the stat suffix off a DK O/U market name to get the player name
 _DK_MKT_SUFFIX = re.compile(
     r'\s+(?:passing|rushing|receiving)\s+(?:yards|touchdowns)(?:\s+o/u)?$'
-    r'|\s+receptions(?:\s+o/u)?$|\s+kicking\s+(?:points|pts)(?:\s+o/u)?$'
+    r'|\s+receptions(?:\s+o/u)?$|\s+longest\s+(?:reception|rush)(?:\s+o/u)?$'
+    r'|\s+kicking\s+(?:points|pts)(?:\s+o/u)?$'
     r'|\s+field\s+goals(?:\s+made)?(?:\s+o/u)?$', re.I)
 
 
@@ -1012,6 +1039,22 @@ def pull_dk_weekly_stats(week_by_matchup):
         driver.quit()
 
 
+_DK_TD_LADDER_RE = re.compile(r'^(?:player\s+)?(?:to\s+score\s+)?([23])\s*\+?\s*(?:or\s+more\s+)?'
+                              r'(?:tds?|touchdowns?)(?:\s+scorer)?$')
+
+
+def _dk_td_market_key(name):
+    """'Anytime TD Scorer' -> atd; '2+ TDs' / 'To Score 2+ Touchdowns' ->
+    atd2; '3+ TDs' -> atd3; anything else (First TD, period variants) ->
+    None. The 2+/3+ spellings are tolerant because they were added before a
+    live DK payload confirmed them — the pull log prints how many hit."""
+    nm = (name or '').strip().lower()
+    if nm == 'anytime td scorer':
+        return 'atd'
+    m = _DK_TD_LADDER_RE.match(nm)
+    return TD_LADDER_KEYS.get(int(m.group(1))) if m else None
+
+
 def pull_dk_weekly_atd(week_by_matchup):
     """Return {wk: {player: {'atd': american_odds}}} from DK's Anytime TD
     Scorer market (per-event, posted a few days before games in season —
@@ -1041,6 +1084,7 @@ def pull_dk_weekly_atd(week_by_matchup):
             return {}
         out = {}
         n = 0
+        ladder_n = {}
         for s in subs:
             try:
                 body = _page_fetch(driver,
@@ -1054,8 +1098,9 @@ def pull_dk_weekly_atd(week_by_matchup):
                 mkt = markets.get(sel.get('marketId'))
                 if not mkt:
                     continue
-                if (mkt.get('name') or '').strip().lower() != 'anytime td scorer':
-                    continue  # skips First TD / 2+ TDs / period variants
+                key = _dk_td_market_key(mkt.get('name'))
+                if not key:
+                    continue  # skips First TD / period variants
                 wk = events.get(mkt.get('eventId'))
                 if wk is None:
                     continue
@@ -1070,13 +1115,15 @@ def pull_dk_weekly_atd(week_by_matchup):
                 except ValueError:
                     continue
                 wkd = out.setdefault(wk, {})
-                if 'atd' in wkd.get(player, {}):
+                if key in wkd.get(player, {}):
                     continue
-                wkd.setdefault(player, {})['atd'] = odds
+                wkd.setdefault(player, {})[key] = odds
                 n += 1
+                ladder_n[key] = ladder_n.get(key, 0) + 1
             time.sleep(1.0)
         print(f'  DK Anytime TD: {n} odds, weeks {sorted(out)}, '
-              f'{sum(len(v) for v in out.values())} player-weeks')
+              f'{sum(len(v) for v in out.values())} player-weeks '
+              f'(anytime {ladder_n.get("atd", 0)}, 2+ {ladder_n.get("atd2", 0)}, 3+ {ladder_n.get("atd3", 0)})')
         return out
     finally:
         driver.quit()
@@ -1411,12 +1458,14 @@ def pull_fd_weekly(week_by_matchup):
                 continue
             for m in (body.get('attachments') or {}).get('markets', {}).values():
                 mt = m.get('marketType') or ''
-                if mt == 'ANY_TIME_TOUCHDOWN_SCORER':
+                tdk = {'ANY_TIME_TOUCHDOWN_SCORER': 'atd', 'TO_SCORE_2+_TOUCHDOWNS': 'atd2',
+                       'TO_SCORE_3+_TOUCHDOWNS': 'atd3'}.get(mt)
+                if tdk:
                     for r in m.get('runners', []):
                         odds = _fd_american(r)
                         player = (r.get('runnerName') or '').strip()
-                        if player and odds is not None and 'atd' not in wkd.get(player, {}):
-                            wkd.setdefault(player, {})['atd'] = odds
+                        if player and odds is not None and tdk not in wkd.get(player, {}):
+                            wkd.setdefault(player, {})[tdk] = odds
                             n += 1
                     continue
                 t = re.match(r'^PLAYER_X_(PASSING_YARDS|PASSING_TOUCHDOWNS|INTERCEPTIONS|'
@@ -1462,6 +1511,7 @@ MGM_HEADERS = {'User-Agent': UA, 'Accept': 'application/json',
 MGM_NFL_PAGE = 'https://sports.nj.betmgm.com/en/sports/football-11/betting/usa-9/nfl-35'
 MGM_HAPPENING = {'PassingYards': 'py', 'TouchdownPass': 'ptd', 'InterceptionThrown': 'int',
                  'RushingYards': 'ry', 'ReceivingYards': 'rcy', 'Reception': 'rec',
+                 'LongestReception': 'rcl',
                  'KickingPoint': 'kpts', 'FieldGoal': 'fgm'}
 MGM_SEASON_STATS = {
     'passing yards': 'py', 'passing touchdowns': 'ptd', 'interceptions': 'int',
@@ -1642,14 +1692,16 @@ def pull_mgm_weekly(week_by_matchup):
                 continue
             name = _mgm_name(g)
             if p.get('Happening') == 'Touchdown':
-                mm = re.match(r'^(.+?) to score 1\+ TDs?$', name)
+                # "X to score 1+ TDs" (anytime), "2+ TDs", "3+ TDs" — Yes-only
+                mm = re.match(r'^(.+?) to score ([123])\+ TDs?$', name)
                 if not mm:
                     continue
+                tdk = TD_LADDER_KEYS[int(mm.group(2))]
                 for o in g.get('options') or []:
                     if _mgm_name(o).lower() == 'yes':
                         odds = (o.get('price') or {}).get('americanOdds')
-                        if odds is not None and 'atd' not in wkd.get(mm.group(1).strip(), {}):
-                            wkd.setdefault(mm.group(1).strip(), {})['atd'] = int(odds)
+                        if odds is not None and tdk not in wkd.get(mm.group(1).strip(), {}):
+                            wkd.setdefault(mm.group(1).strip(), {})[tdk] = int(odds)
                             n += 1
                 continue
             stat = MGM_HAPPENING.get(p.get('Happening'))

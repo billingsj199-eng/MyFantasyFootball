@@ -4601,7 +4601,15 @@ function _projStatLine(d) {
 // lines (0.5 at -265 vs 1.5 at +205 both land near 1.1). Unpriced books are
 // taken at even juice, and only count when no book posts prices.
 const _PROP_PRICE_KEYS = { ptd: ['ptdo', 'ptdu'], int: ['into', 'intu'] };
-const _PROP_PRICE_SET = { ptdo: 1, ptdu: 1, into: 1, intu: 1 };
+// Every O/U stat the pull stores two-sided prices for (2026-10-14: yards,
+// receptions, longest reception / rush joined pass TD / INT). Only ptd / int
+// are turned into expected counts (_PROP_PRICE_KEYS); the rest are shown on
+// the card and averaged as odds while they accumulate for grading.
+const _PROP_PRICE_ALL = { ptd: ['ptdo', 'ptdu'], int: ['into', 'intu'], py: ['pyo', 'pyu'], ry: ['ryo', 'ryu'],
+  rec: ['reco', 'recu'], rcy: ['rcyo', 'rcyu'], rcl: ['rclo', 'rclu'], rl: ['rlo', 'rlu'] };
+// Keys that hold american odds (averaged in probability space, never raw).
+const _PROP_PRICE_SET = { atd2: 1, atd3: 1 };
+Object.keys(_PROP_PRICE_ALL).forEach(k => { _PROP_PRICE_SET[_PROP_PRICE_ALL[k][0]] = 1; _PROP_PRICE_SET[_PROP_PRICE_ALL[k][1]] = 1; });
 function _amProb(o) { return o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100); }
 function _probAm(p) { return Math.round(p >= 0.5 ? -(p * 100) / (1 - p) : ((1 - p) * 100) / p); }
 // P(X > line) for X ~ Poisson(lam); a whole-number line pushes, so it's
@@ -19579,8 +19587,10 @@ function _buildWeeklyLinesSection(d) {
   const fmt0 = (v) => (typeof v === 'number') ? String(Math.round(v)) : '—';
   const fmtOdds = (v) => (typeof v === 'number') ? ((v > 0 ? '+' : '') + Math.round(v)) : '—';
   const ROWS = [['py', 'Pass Yds', fmt0], ['ptd', 'Pass TD', fmt1], ['int', 'INT', fmt1],
-                ['ry', 'Rush Yds', fmt0], ['rec', 'Rec', fmt1], ['rcy', 'Rec Yds', fmt0],
+                ['ry', 'Rush Yds', fmt0], ['rl', 'Longest Rush', fmt1],
+                ['rec', 'Rec', fmt1], ['rcy', 'Rec Yds', fmt0], ['rcl', 'Longest Rec', fmt1],
                 ['rrtd', 'Rush+Rec TD', fmt1], ['atd', 'Anytime TD odds', fmtOdds],
+                ['atd2', '2+ TD odds', fmtOdds], ['atd3', '3+ TD odds', fmtOdds],
                 // kicker boards (DK / BetMGM / Underdog / PrizePicks post them)
                 ['kpts', 'Kicking Pts', fmt1], ['fgm', 'FG Made', fmt1]];
   // Game context (matchup + Vegas numbers) from the same file's gameTotals.
@@ -19633,7 +19643,7 @@ function _buildWeeklyLinesSection(d) {
       // read +60): average the implied probabilities and convert back, the
       // same math _weeklyPropLinesFor uses for the projection.
       let avg;
-      if (k === 'atd') {
+      if (k === 'atd' || k === 'atd2' || k === 'atd3') {
         const ps = vals.map(o => o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100));
         const pr = ps.reduce((a, b) => a + b, 0) / ps.length;
         avg = Math.round(pr >= 0.5 ? -(pr * 100) / (1 - pr) : ((1 - pr) * 100) / pr);
@@ -19645,7 +19655,7 @@ function _buildWeeklyLinesSection(d) {
     html += '</tr>';
     // Pass TD / INT: the line is 1.5 / 0.5 for nearly everyone — show each
     // book's over price and what line + juice imply (_propExpFor).
-    const pk = _PROP_PRICE_KEYS[k];
+    const pk = _PROP_PRICE_ALL[k];
     if (pk && books.some(b => typeof rec[b][pk[0]] === 'number' && typeof rec[b][pk[1]] === 'number')) {
       const sub = (lbl, tip) => '<tr><td style="text-align:left;font-size:.6875rem;color:var(--text2);padding-left:10px;cursor:help" title="' + tip + '">↳ ' + lbl + '</td>';
       html += sub('Over odds', 'Price on the over (' + label + ' line above). More negative = books expect more.');
@@ -19658,21 +19668,25 @@ function _buildWeeklyLinesSection(d) {
       });
       if (books.length > 1) html += '<td style="font-size:.7rem;font-weight:700;color:var(--accent)">' + fmtOdds(_probAm(ov.reduce((a, o) => a + _amProb(o), 0) / ov.length)) + '</td>';
       html += '</tr>';
-      const fmt2 = v => (typeof v === 'number') ? v.toFixed(2) : '—';
-      html += sub('Expected', 'Line + no-vig over probability solved as a Poisson mean — e.g. 1.5 at even juice ≈ 1.68, -150 over ≈ 1.8. This is what BOOKS PPG scores.');
-      books.forEach(b => {
-        const e = _propExpFor(rec[b], k);
-        html += '<td style="font-size:.7rem">' + (e && e.priced ? fmt2(e.exp) : '—') + '</td>';
-      });
-      const ex = _propExpAcross(rec, k);
-      if (books.length > 1) html += '<td style="font-size:.7rem;font-weight:700;color:var(--accent)">' + fmt2(ex && ex.exp) + '</td>';
-      html += '</tr>';
+      // Expected-count row: pass TD / INT only (Poisson on a count line).
+      // Yardage / reception prices are shown, not converted, until graded.
+      if (_PROP_PRICE_KEYS[k]) {
+        const fmt2 = v => (typeof v === 'number') ? v.toFixed(2) : '—';
+        html += sub('Expected', 'Line + no-vig over probability solved as a Poisson mean — e.g. 1.5 at even juice ≈ 1.68, -150 over ≈ 1.8. This is what BOOKS PPG scores.');
+        books.forEach(b => {
+          const e = _propExpFor(rec[b], k);
+          html += '<td style="font-size:.7rem">' + (e && e.priced ? fmt2(e.exp) : '—') + '</td>';
+        });
+        const ex = _propExpAcross(rec, k);
+        if (books.length > 1) html += '<td style="font-size:.7rem;font-weight:700;color:var(--accent)">' + fmt2(ex && ex.exp) + '</td>';
+        html += '</tr>';
+      }
     }
   });
   html += '</tbody></table>';
   html += _lmMovesHtml(wk, d.n, books, Object.fromEntries(ROWS.map(r => [r[0], r[1]])));
   html += '<div style="font-size:.6875rem;color:var(--text2);margin-top:6px">'
-    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. Pass TD / INT Expected = line + juice as an average count. Hover a line for its open → now move.'
+    + 'Standard lines only (no boosts/alt ladders). Rush+Rec TD 0.5 ≈ anytime-TD line. Pass TD / INT Expected = line + juice as an average count. Over odds on yardage / receptions and the 2+ / 3+ TD prices are shown for reference — BOOKS PPG still scores lines at face value and the anytime odds. Hover a line for its open → now move.'
     + (rec.asOf ? ' As of ' + rec.asOf + '.' : '') + '</div>';
   html += '</div>';
   return html;

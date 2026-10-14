@@ -13819,6 +13819,22 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     (window._weeklySessionBoards[ver] = window._weeklySessionBoards[ver] || {})[wk] =
       versionBoards[ver].weekly.slice();
   };
+  // A NEWER cloud save for a week replaces this tab's session stash of it.
+  // The stash exists to keep THIS tab's edits ahead of older cloud data;
+  // once another tab/device has saved that week and this tab has nothing
+  // unsaved (callers check), the stash is just a stale copy — and because
+  // reconcile ranks it above the save, every later weekly save from
+  // elsewhere was invisible here until a reload (Jack 2026-10-14: weekly
+  // QB edits "not updating site wide right away"). Ownership for the week
+  // is re-read from the save by _weeklyStashSaved.
+  window._weeklyDropSessionStash = function(ver, saved) {
+    if (!saved || saved._week == null) return;
+    const wk = saved._week;
+    const sb = window._weeklySessionBoards && window._weeklySessionBoards[ver];
+    if (sb && sb[wk]) delete sb[wk];
+    if (window._weeklySessionOwned && window._weeklySessionOwned[ver] === wk) delete window._weeklySessionOwned[ver];
+    if (window._weeklyOwnedPos && window._weeklyOwnedPos[ver]) delete window._weeklyOwnedPos[ver][wk];
+  };
   window._weeklyReconcileBoard = function(ver) {
     ver = ver || 'jacks';
     if (!versionBoards[ver]) return;
@@ -37938,6 +37954,7 @@ window.fmtHeight = fmtHeight;
             _bypassEditCheck = false;
             // Weekly follows redraft unless this week was saved (see _weeklyReconcileBoard)
             if (typeof window._weeklyStashSaved === 'function') {
+              if (!_sameVer && typeof window._weeklyDropSessionStash === 'function') window._weeklyDropSessionStash('jacks', obj.jacks.weekly);
               if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
               else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
             }
@@ -38138,6 +38155,9 @@ window.fmtHeight = fmtHeight;
             _bypassEditCheck = false;
             // Weekly tracks the fresh redraft order unless this week was saved
             if (typeof window._weeklyStashSaved === 'function') {
+              // Newer doc than this tab's base (or no base yet): this tab's
+              // session copy of that week is stale — let the save through.
+              if ((_foreignNewer || !window._jacksBaseUpdatedAt) && typeof window._weeklyDropSessionStash === 'function') window._weeklyDropSessionStash('jacks', obj.jacks.weekly);
               if (obj.jacks.weekly) window._weeklyStashSaved(obj.jacks.weekly, 'jacks');
               else if (typeof window._weeklyReconcileBoard === 'function') window._weeklyReconcileBoard('jacks');
             }

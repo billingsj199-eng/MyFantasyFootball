@@ -3473,7 +3473,7 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 @media(max-width:600px){
   /* The Season Pass button was a bare ★ — read as a favorites toggle (the position row
      has a ★ watchlist filter too). Label it; the Rankings search box gives up the room. */
-  .global-pass-btn .gpb-mid{display:inline;font-size:.66rem;letter-spacing:.8px}
+  .global-pass-btn .gpb-mid{display:inline;font-size:.6875rem;letter-spacing:.8px}
   .global-pass-btn{padding:6px 7px;gap:4px}
   #pageRankings .controls .search-box{flex:1 1 90px;min-width:90px}
   /* SYNC (keeps positional order in step across paired formats) only means something

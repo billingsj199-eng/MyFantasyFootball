@@ -79,7 +79,16 @@ def _n(s):
 HEDGE = r"(could|may|might|fear\w*|possibl\w*|potential\w*|won'?t rule out|not rul\w+ out|hasn'?t ruled out|if |unless|avoid\w*|not |n't |no )"
 RX_SEASON = re.compile(r"(out|done|lost|finished|sidelined|shut down) for (the )?(rest|remainder) of (the )?(2026 )?(regular )?(season|year)|(out|done|lost|finished) for the (2026 )?(season|year)|season[- ]ending|season (is )?over|miss(es)? the (rest|remainder) of the (2026 )?(regular )?season|\btorn (acl|achilles)\b|ruptured achilles|tore (his )?(acl|achilles)", re.I)
 RX_RANGE = re.compile(_N + r"\s*(?:-|–|—|to)\s*" + _N + r"[- ]+(weeks?|games?)", re.I)
-RX_ATLEAST = re.compile(r"(?:at least|a minimum of|minimum|miss(?:es|ing)?(?: the next)?|out(?: for)?(?: the next| about| roughly| around| approximately)?|sidelined(?: for)?(?: about| roughly)?|next)\s+" + _N + r"(?: more)?[- ]+(weeks?|games?)", re.I)
+# 2026-10-14: "N+ weeks" (Brooks "out 6+ weeks") and "cost(s) him N weeks" were missed
+RX_ATLEAST = re.compile(r"(?:at least|a minimum of|minimum|miss(?:es|ing)?(?: the next)?|out(?: for)?(?: the next| about| roughly| around| approximately)?|sidelined(?: for)?(?: about| roughly)?|next|cost(?:s|ing)?(?: him)?)\s+" + _N + r"\+?(?: more)?[- ]+(weeks?|games?)\b(?! ago| earlier| before| back\b)", re.I)   # \b + lookahead: not a past absence ("cost him a few weeks earlier")
+# 2026-10-14 (Henderson "will cost him 'multiple weeks'" parsed to nothing): vague multi-week timelines.
+# multiple / a couple -> 2-4 weeks, a few / several -> 3-5, indefinitely -> 2-6. Hit rate inside timeline
+# windows was 8% played (news_status.log), so a window is the right read even when vague.
+RX_MULTI = re.compile(r"(?<!last )(?<!past )(?<!previous )(?<!recent )(?<!first )(?:multiple|several|a few|a couple(?: of)?|some)\s+(?:more\s+)?weeks(?! ago| back| earlier| before| of (?:camp|practice))|out indefinitely|sidelined indefinitely|indefinitely sidelined|\bindefinite(?:ly)?\b", re.I)
+MULTI_SPAN = {"multiple": (2, 4), "a couple": (2, 4), "some": (2, 4), "a few": (3, 5), "several": (3, 5)}
+# placed on IR = 4-game minimum (2026 rules); "designated to return / activated / back from IR" are returns (OTHER guard + RX_IR_BACK)
+RX_IR = re.compile(r"(?:plac(?:ed|es|ing)|land(?:s|ed)?|lands?|mov(?:ed|es)|head(?:ed|ing|s)?|go(?:es|ing)?|put|sent|going)\s+(?:him\s+)?(?:on|to)\s+(?:the\s+)?(?:injured reserve|ir)\b|\b(?:injured reserve|ir)(?:\s+stint)?\s+(?:is\s+)?(?:expected|likely|coming|looming|bound)|(?:remains|still|stays) on (?:injured reserve|ir)\b", re.I)   # no bare "to IR": "Chenal to IR opens the spot" is someone else
+RX_IR_BACK = re.compile(r"activat\w+|designat\w+ (?:him |\w+ )?(?:to|for) return|return\w* (?:from|off)|off (?:of )?(?:injured reserve|ir)\b|practice window|eligible to return|window (?:opened|opens)", re.I)
 RX_TIMELINE_N = re.compile(_N + r"[- ]week (?:timeline|absence|recovery|timetable)", re.I)
 RX_RET = re.compile(r"(?:out until|until at least|earliest (?:return )?(?:is |in )?|eligible (?:to return )?(?:in |for )?|expected back (?:in |by |for )?|targeting (?:a )?|return(?:s|ing)? (?:in |by |for )|back (?:in |by |for )|out through)\s*(?:at least )?week\s*(\d{1,2})", re.I)
 RX_OUT = re.compile(r"ruled out|will not play|won'?t play|not playing|inactive (?:for|vs|tonight|sunday|monday|thursday)|ruled inactive|declared (?:out|inactive)|is out (?:for|vs)|out for (?:week \d+|sunday|monday|thursday|saturday|tonight)|will sit|downgraded to out", re.I)
@@ -94,6 +103,11 @@ OTHER = r"(after|following|with|for|replac\w+|fill\w* in for|in place of|back fr
 def _hedged(text, m):
     pre = text[max(0, m.start() - 45):m.start()]
     return re.search(HEDGE + r"[^.;,]{0,30}$", pre, re.I) is not None
+OTHER_NOPOSS = r"(after|following|replac\w+|fill\w* in for|in place of|back from|return\w* from|recover\w* from|since|behind)\s+[^,;:]*$"
+def _other_np(text, m):
+    """_other without the possessive rule: "after Pierce's injury" is someone else, "Sunday's rout ... will cost him" is not"""
+    pre = text[max(0, m.start() - 60):m.start()]
+    return re.search(OTHER_NOPOSS, pre, re.I) is not None
 def _other(text, m):
     """the phrase describes someone else's injury or a past one ("after Dart's season-ending surgery", "back from torn ACL")"""
     pre = text[max(0, m.start() - 60):m.start()]
@@ -124,6 +138,15 @@ def parse_item(it):
         lo = _n(m.group(1))
         if lo and lo <= 16:
             return {"k": "weeks", "lo": lo, "hi": lo + 2, "unit": (m.group(2)[0].lower() if m.lastindex and m.lastindex >= 2 else "w")}
+    # 2026-10-14: injured reserve and vague multi-week timelines (no number in the headline)
+    m = RX_IR.search(text)
+    if ok(m) and not RX_IR_BACK.search(text):
+        return {"k": "weeks", "lo": 4, "hi": 6, "unit": "g"}
+    m = RX_MULTI.search(text)
+    if okh(m) and not _other_np(text, m):   # possessive-free someone-else guard ("from Sunday's rout ... will cost him multiple weeks" passes)
+        word = m.group(0).lower()
+        lo, hi = next((v for k, v in MULTI_SPAN.items() if word.startswith(k)), (2, 6))   # indefinitely -> 2-6
+        return {"k": "weeks", "lo": lo, "hi": hi, "unit": "w"}
     w = RX_WEEKNO.search(text); wk = {"wk": int(w.group(1))} if w and 1 <= int(w.group(1)) <= 18 else {}
     if ok(RX_OUT.search(text)):
         if RX_EXIT.search(text): return {"k": "exit"}            # hurt DURING the game: he played that week

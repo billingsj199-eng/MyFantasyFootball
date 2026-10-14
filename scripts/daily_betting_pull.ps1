@@ -112,6 +112,29 @@ $out = & $Python 'scripts\pull_depth_charts.py' 2>&1 | Out-String
 Write-Log ('depth pull: ' + $out.Trim().Split("`n")[-1])
 $depthChanged = git status --porcelain -- data/depth_charts_2026.js
 
+# Kicker board follows the chart (2026-10-14, Jack: "make sure to run depth chart
+# runs everyday, Mevis got cut"): the d.js K board = each team's depth-chart K1.
+# fix_kickers_k1_only.py adds a new K1 (add_pool_players.js: ESPN bio + headshot
+# id), moves a K1 whose team lags Sleeper, drops cut/backup kickers, renumbers,
+# and bumps the d.js (+ headshot ids) ?v= itself. Skipped - never clobbered -
+# when d.js / headshot_espn_ids.js carry another session's uncommitted edits.
+$KFiles = @('data/d.js', 'data/headshot_espn_ids.js')
+$kChanged = $null
+$kDirty = git status --porcelain -- @KFiles
+if ($kDirty) {
+    Write-Log "kicker sync SKIP: uncommitted d.js/headshot edits present:`n$kDirty"
+} else {
+    $out = & $Python 'scripts\fix_kickers_k1_only.py' 2>&1 | Out-String
+    Write-Log ('kicker sync: ' + $out.Trim().Split("`n")[-1])
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log ('kicker sync FAILED (exit ' + $LASTEXITCODE + '): ' + $out.Trim())
+        Send-MffAlert -Key 'kicker-sync-failed' -Message ('fix_kickers_k1_only.py failed (exit ' + $LASTEXITCODE + '): ' + $out.Trim().Split("`n")[-1])
+        git checkout -- @KFiles 2>&1 | Out-Null   # a half-applied board never ships
+    } else {
+        $kChanged = git status --porcelain -- @KFiles
+    }
+}
+
 # Game weather (ESPN roof/headline + Open-Meteo kickoff-hour forecast).
 # Bump its ?v= when changed - same read-from-disk rule as injuries.
 $out = & $Python 'scripts\pull_weather.py' 2>&1 | Out-String
@@ -125,14 +148,16 @@ if ($wxChanged) {
 }
 
 $changed = git status --porcelain -- @Files
-if (-not $changed) {
-    Write-Log 'no line movement, no injury/practice/depth/weather change - nothing to commit'
+if (-not $changed -and -not $kChanged) {
+    Write-Log 'no line movement, no injury/practice/depth/weather/kicker change - nothing to commit'
 } else {
     git add @Files
+    if ($kChanged) { git add @KFiles }
     $msg = ('Auto betting-lines scan {0} (game lines + UD season + weekly props)' -f (Get-Date -Format 'yyyy-MM-dd'))
     if ($injChanged) { $msg += ' + injuries' }
     if ($pracChanged) { $msg += ' + practice' }
     if ($depthChanged) { $msg += ' + depth' }
+    if ($kChanged) { $msg += ' + kickers (chart K1 sync)' }
     if ($wxChanged) { $msg += ' + weather' }
     if ($recPosted) { $msg = 'SEASON RECEPTIONS POSTED - ' + $msg }
     git commit -m $msg

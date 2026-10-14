@@ -49,7 +49,7 @@ const bare = (s) => norm(s).replace(SUFFIX_RE, '');
 const lastName = (s) => bare(s).split(' ').pop();
 
 const TEAM_IDS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,33,34];
-const POS_MAP = { QB: 'QB', RB: 'RB', FB: 'RB', WR: 'WR', TE: 'TE' };
+const POS_MAP = { QB: 'QB', RB: 'RB', FB: 'RB', WR: 'WR', TE: 'TE', PK: 'K', K: 'K' };   // PK -> K: chart K1s added daily by fix_kickers_k1_only.py (2026-10-14)
 
 async function loadRosters() {
   const out = {};   // bare name -> [{name,id,pos,team,abbr,age,exp}]
@@ -148,6 +148,7 @@ function suggest(D, rosters) {
     const e = hits[0];
     // Same last name + team + position + first initial already in D = a spelling alias (Kenny/Kenneth Gainwell).
     if (dTeamLast.has(lastName(e.name) + '|' + e.team + '|' + e.pos + '|' + norm(e.name)[0])) continue;
+    if (e.pos === 'K') continue;   // kickers never --suggest: the board is chart-K1-only (fix_kickers_k1_only.py adds them by name)
     const dcN = c.dc && c.dc.startsWith(e.pos) ? +c.dc.replace(/\D/g, '') : 99;
     const ok = e.pos === 'QB'
       ? dcN === 2 || (c.fpt || 0) >= 10

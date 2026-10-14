@@ -173,6 +173,8 @@ function kickoffMs(kicks, wk, tm) {
   // first kickoff (game-week statuses), never for August camp tags.
   const wkFirstKick = (() => { const w = kicks[currentWeek]; return w ? Math.min(...Object.values(w).map(d => new Date(d).getTime())) : weekFallbackStart(currentWeek); })();
   const injActive = now >= wkFirstKick - 4 * 24 * 3600 * 1000;
+  // P-20261014-2 (2026-10-14): the engine's out-unconfirmed tiers need each team's kickoff and this run's clock
+  global.SIM_KICKOFFS_2026 = kicks; global.SIM_NOW_MS = now;
   const injState = E.applyInSeasonInjuries(players, currentWeek, { active: injActive });
   if (injState.zeros.length) console.log('in-season injury layer (wk ' + currentWeek + ', active ' + injActive + '):', injState.zeros.map(z => z.name + ' wk' + z.from + '-' + z.to + (z.mult ? ' x' + z.mult : '') + ' [' + z.src + ']').join('; '));
   else console.log('in-season injury layer: ' + (injActive ? 'no designations' : 'inactive until ' + new Date(wkFirstKick - 4 * 24 * 3600 * 1000).toISOString()));

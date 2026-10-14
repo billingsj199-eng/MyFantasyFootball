@@ -3123,6 +3123,23 @@
           var swProj = swOK ? swk.p[p.norm] : null;
           if (!swOK || swProj == null || swProj <= 0 || gs === 'out') { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'out' }; return; }
           if (gs === 'doubtful') { putDock(p, 'D', 'nfl-doubtful', 0.5); return; }
+          // TIERED LEVEL (P-20261014-2, Jack approved 2026-10-14; research_out_unconfirmed.py, every committed Sleeper
+          // injury snapshot 09-01..10-14, W1-5 by snaps): this state played 34%, not 75%, and it is three states -
+          //   within 36 h of HIS kickoff -> 0 (the gameday inactive list: Sleeper tags Out ~90 min before kickoff before it
+          //     pulls the projection; 0 / 43 played - Puka W2, K. Allen W4, Addison / Dowdle W5 froze at x.75);
+          //   earlier, MISSED his previous game (Out lingering)  -> .50 (37 / 69 = .54);
+          //   earlier, PLAYED his previous game (new injury)    -> .20 (2 / 11 = .18).
+          // Brier .386 (flat .75) -> .180, leave-one-week-out 5/5. The 36-h tier needs window.SIM_KICKOFFS_2026 + SIM_NOW_MS
+          // (export_site_proj.js sets them); without them (Sim Lab page, helpers) only the two early tiers apply.
+          // Kill: window.SIM_OUTUNCONF_TIERS = false (flat x0.75).
+          if (wnd.SIM_OUTUNCONF_TIERS !== false) {
+            var KO = wnd.SIM_KICKOFFS_2026, kIso = KO && KO[currentWeek] ? (KO[currentWeek][normTeam(p.tm)] || KO[currentWeek][p.tm]) : null;
+            var nowMs = +wnd.SIM_NOW_MS || Date.now(), hrs = kIso ? (Date.parse(kIso) - nowMs) / 3600000 : null;
+            if (hrs != null && hrs < 36) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0, src: 'out-gameday', note: 'Sleeper Out ' + Math.max(0, Math.round(hrs)) + ' h before kickoff (inactive list)' }; return; }
+            var rec0 = jsData().players ? jsData().players[p.norm] : null;
+            var playedPrev = !!(rec0 && rec0.wks && rec0.wks.indexOf(currentWeek - 1) >= 0);   // bye / no record = missed, as measured
+            map[p.norm] = { from: currentWeek, to: currentWeek, mult: playedPrev ? 0.2 : 0.5, src: 'out-unconfirmed', note: playedPrev ? 'new injury (played last game)' : 'Out lingering (missed last game)' }; return;
+          }
           map[p.norm] = { from: currentWeek, to: currentWeek, mult: 0.75, src: 'out-unconfirmed' }; return;
         }
         if (/doubtful/.test(t)) {

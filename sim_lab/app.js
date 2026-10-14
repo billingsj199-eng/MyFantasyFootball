@@ -6357,10 +6357,10 @@
   function ntPlayerChips(p, wk, sc, slot, wp) {
     var chips = [];
     var iA = E.injAdj(p, wk);
-    if (iA === 0) chips.push('OUT');
+    if (iA === 0) { var im0 = E.injuryState() && E.injuryState().map ? E.injuryState().map[p.norm] : null; chips.push(im0 && im0.src === 'out-gameday' ? 'OUT (' + (im0.note || 'Sleeper Out on gameday') + ')' : 'OUT'); }
     else if (iA < 1) {
       var im = E.injuryState() && E.injuryState().map ? E.injuryState().map[p.norm] : null;
-      chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him) ×' : im && /^q-(dnp|lp|fp)$/.test(im.src || '') ? ('Q + ' + im.src.slice(2).toUpperCase() + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%, x' + im.cond.toFixed(2) + ' if he plays)' : '') + ' ×') : im && /doubtful/.test(im.src || '') ? ('DOUBTFUL' + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%)' : im.src === 'doubtful-unconfirmed' ? ' unconfirmed' : '') + ' ×') : 'docked ×') + ntF(iA, 2));
+      chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him' + (im.note ? '; ' + im.note : '') + ') ×' : im && /^q-(dnp|lp|fp)$/.test(im.src || '') ? ('Q + ' + im.src.slice(2).toUpperCase() + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%, x' + im.cond.toFixed(2) + ' if he plays)' : '') + ' ×') : im && /doubtful/.test(im.src || '') ? ('DOUBTFUL' + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%)' : im.src === 'doubtful-unconfirmed' ? ' unconfirmed' : '') + ' ×') : 'docked ×') + ntF(iA, 2));
     }
     else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
     if (wp && wp.balloc != null && Math.abs(wp.balloc - 1) >= 0.01) chips.push('budget allocation x' + ntF(wp.balloc, 2) + ' (group volume share vs the roster this week; P-20261013-1 test switch)');

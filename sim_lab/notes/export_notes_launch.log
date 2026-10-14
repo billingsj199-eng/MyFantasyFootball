@@ -1,4 +1,4 @@
-2026-10-14T12:55:39.330Z launched with: installed Edge
+2026-10-14T14:06:16.388Z launched with: installed Edge
 bundled headless shell: browserType.launch: Executable doesn't exist at C:\Users\billi\AppData\Local\ms-playwright\chromium_headless_shell-1234\chrome-headless-shell-win64\chrome-headless-shell.exe
 ╔════════════════════════════════════════════════════════════╗
 ║ Looks like Playwright was just installed or updated.       ║

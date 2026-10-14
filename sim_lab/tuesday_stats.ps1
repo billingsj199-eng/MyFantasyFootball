@@ -88,8 +88,12 @@ if (-not $changedStats) {
         [System.IO.File]::WriteAllText($idxPath, $html)
         git -C $SiteDir add data/weekly_stats_active.js data/player_weekly_sigma.js data/snap_counts.js data/route_pct.js index.html
         git -C $SiteDir commit -m ('Auto weekly-stats refresh {0} (weekly_stats_active + sigma + snaps + routes + ?v= bump)' -f $stamp)
-        git -C $SiteDir pull --rebase --autostash origin main
-        git -C $SiteDir push origin main
+        # 2026-10-14 repo guard: a conflicted pull --rebase is aborted + alerted, never left stuck
+        Push-Location $SiteDir
+        . (Join-Path $SiteDir 'scripts\repo_guard.ps1')
+        $ok = Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'weekly stats'
+        Pop-Location
+        $global:LASTEXITCODE = $(if ($ok) { 0 } else { 1 })
         if ($LASTEXITCODE -eq 0) { Write-Log 'site weekly stats committed + pushed' } else { Write-Log "SITE PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
     }
 }

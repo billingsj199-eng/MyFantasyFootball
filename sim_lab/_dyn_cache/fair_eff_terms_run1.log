@@ -1,0 +1,4 @@
+RB rb_yprr     k per fold [np.float64(-0.238), np.float64(-0.309), np.float64(-0.247), np.float64(-0.239)]  held-out vs FAIR: whole pool 3yr +0.0043 (3/4), RB-only 3yr +0.0221 (4/4), whole 5yr+y +0.0014 (1/2)
+RB rb_tprr     k per fold [np.float64(-0.195), np.float64(-0.247), np.float64(-0.175), np.float64(-0.192)]  held-out vs FAIR: whole pool 3yr +0.0003 (2/4), RB-only 3yr +0.0031 (3/4), whole 5yr+y -0.0024 (1/2)
+WR poxfp       k per fold [np.float64(-0.114), np.float64(-0.031), np.float64(-0.217), np.float64(-0.231)]  held-out vs FAIR: whole pool 3yr -0.0041 (3/4), WR-only 3yr -0.0005 (2/4), whole 5yr+y +0.0035 (2/2)
+WR separation  k per fold [np.float64(-0.037), np.float64(-0.068), np.float64(-0.198), np.float64(-0.171)]  held-out vs FAIR: whole pool 3yr -0.0072 (2/4), WR-only 3yr -0.0182 (2/4), whole 5yr+y +0.0051 (2/2)

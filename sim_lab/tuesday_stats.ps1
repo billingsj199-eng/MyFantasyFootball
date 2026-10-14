@@ -94,6 +94,12 @@ if (-not $changedStats) {
     }
 }
 
+# Dynasty SIM values (added 2026-10-09): rebuild data\dynasty_sim_2026.js from
+# the stats published above and bump its index.html meta version. Gated: it
+# skips itself until the DYN SIM view is merged into the site. Non-fatal.
+& powershell -NoProfile -ExecutionPolicy Bypass -File 'E:\MyFantasyFootball\sim_lab\dynasty_sim_refresh.ps1' -Log $Log
+if ($LASTEXITCODE -ne 0) { Write-Log "DYNASTY SIM REFRESH FAILED (exit $LASTEXITCODE) - continuing" }
+
 # Volume x share model inputs for the JS model (shares/team volumes update
 # as the season's weekly stats land). Non-fatal — local-only site.
 $out = & python 'E:\MyFantasyFootball\js_model_site\scripts\build_vs_model.py' 2>&1 | Out-String

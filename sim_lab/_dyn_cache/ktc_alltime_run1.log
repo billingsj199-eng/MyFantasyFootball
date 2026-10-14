@@ -1,0 +1,36 @@
+150 players with history; first date 2020-04-01
+
+=== 1. Overreaction vs momentum (monthly samples; slope of NEXT change on PAST change, log value) ===
+   SURVIVORSHIP: today's top players -> continuation reads too strong.
+past window   next 90d  next 180d  next 365d  n (365d)
+  30 days        +0.19      +0.14      +0.24      4299
+  90 days        +0.08      +0.09      +0.15      4128
+   by size of the past-90d move -> median next-180d change:
+     fell 30%+       next 180d   +10%   (n=31)
+     fell 10-30%     next 180d    +2%   (n=662)
+     flat (+/-10%)   next 180d    -2%   (n=3240)
+     rose 10-30%     next 180d    +1%   (n=581)
+     rose 30%+       next 180d    +4%   (n=394)
+   by position (past 90d -> next 180d slope):
+     QB: +0.17 (n=1033)
+     RB: -0.02 (n=1352)
+     WR: +0.14 (n=1970)
+     TE: +0.08 (n=553)
+
+=== 2. Season reactions: Sep 1 -> Feb 1 (the season re-price) vs the following year (Feb 1 -> Feb 1) ===
+   slope of next-year change on the season move: +0.03 (n=291; -1 = full reversal, 0 = holds, + = keeps going)
+     season move up 25%+    next year    +3% (n=69)
+     up 0-25%               next year    -6% (n=86)
+     down 0-25%             next year    -3% (n=111)
+     down 25%+              next year   +15% (n=25)
+
+=== 3. KTC aging: median yearly change (Feb 1 -> next Feb 1) by position x age on Feb 1 ===
+   SURVIVORSHIP: players who collapsed out of KTC are missing -> declines read too mild.
+pos           <=23        24-25        26-27        28-29          30+
+QB        +4% (12)     -1% (17)     -1% (15)     -2% (11)      +6% (7)
+RB        +1% (33)     -6% (30)     +8% (12)            —            —
+WR        +1% (60)     -3% (33)    -13% (14)     -15% (7)     -12% (5)
+TE         -8% (9)    +13% (11)            —            —     -14% (6)
+
+=== 4. Calendar: median month-over-month change by calendar month (all players, all years) ===
+   Jan -0.2%  Feb +0.9%  Mar -0.3%  Apr -0.3%  May -0.2%  Jun -0.1%  Jul -0.1%  Aug -0.0%  Sep -0.4%  Oct +0.0%  Nov -0.5%  Dec +0.1%

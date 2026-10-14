@@ -1,0 +1,32 @@
+=== 1. VOLUME MODEL: vol(y+1) ~ vol(y) + z(grade) + age + draft capital + changed team ===
+   grade coef = change in next-season volume per 1 SD of grade, at the same current volume
+   WR target share   g_route    n  365  grade coef +0.0177 (t +4.4) = +9.1% of avg volume per SD  | positive in 6/6 seasons
+   WR target share   g_off_rec  n  365  grade coef +0.0170 (t +4.3) = +8.8% of avg volume per SD  | positive in 6/6 seasons
+   WR routes / game  g_route    n  751  grade coef +2.7219 (t +8.7) = +11.3% of avg volume per SD  | positive in 6/6 seasons
+   WR routes / game  g_off_rec  n  751  grade coef +2.5780 (t +8.3) = +10.7% of avg volume per SD  | positive in 6/6 seasons
+   TE target share   g_route    n  181  grade coef +0.0140 (t +3.0) = +9.9% of avg volume per SD  | positive in 6/6 seasons
+   TE target share   g_off_rec  n  181  grade coef +0.0126 (t +2.8) = +8.9% of avg volume per SD  | positive in 5/6 seasons
+   TE routes / game  g_route    n  384  grade coef +2.0544 (t +5.5) = +11.6% of avg volume per SD  | positive in 6/6 seasons
+   TE routes / game  g_off_rec  n  384  grade coef +1.6499 (t +4.5) = +9.3% of avg volume per SD  | positive in 6/6 seasons
+   RB carry share    g_run      n  239  grade coef +0.0427 (t +4.1) = +8.9% of avg volume per SD  | positive in 4/6 seasons
+   RB carry share    g_off_rb   n  239  grade coef +0.0463 (t +4.5) = +9.7% of avg volume per SD  | positive in 6/6 seasons
+   RB carry share    g_route    n  239  grade coef +0.0206 (t +2.0) = +4.3% of avg volume per SD  | positive in 4/6 seasons
+   RB target share   g_run      n  239  grade coef +0.0060 (t +2.8) = +6.7% of avg volume per SD  | positive in 5/6 seasons
+   RB target share   g_off_rb   n  239  grade coef +0.0062 (t +2.9) = +6.9% of avg volume per SD  | positive in 6/6 seasons
+   RB target share   g_route    n  239  grade coef +0.0017 (t +0.7) = +1.9% of avg volume per SD  | positive in 2/6 seasons
+
+=== 2. UNDERUSED HIGH-GRADERS: below-median volume; top-third vs bottom-third grade ===
+   WR tgt_sh   by g_route  high grade: volume up 25%+ 34% (median +15%, n 61)   low grade: 38% (median +11%, n 61)
+   WR rpg      by g_route  high grade: volume up 25%+ 26% (median +4%, n 126)   low grade: 22% (median -19%, n 125)
+   TE tgt_sh   by g_route  high grade: volume up 25%+ 40% (median +3%, n 30)   low grade: 44% (median +10%, n 32)
+   TE rpg      by g_route  high grade: volume up 25%+ 41% (median +10%, n 64)   low grade: 22% (median -13%, n 64)
+   RB car_sh   by g_run    high grade: volume up 25%+ 50% (median +25%, n 40)   low grade: 35% (median -10%, n 40)
+   RB car_sh   by g_route  high grade: volume up 25%+ 45% (median +14%, n 40)   low grade: 44% (median +20%, n 41)
+   RB tgt_sh   by g_run    high grade: volume up 25%+ 60% (median +34%, n 40)   low grade: 38% (median +0%, n 40)
+   RB tgt_sh   by g_route  high grade: volume up 25%+ 39% (median +9%, n 41)   low grade: 48% (median +21%, n 40)
+
+=== 3. VALUE: underused high-graders (prior season) vs FAIR — mean log(realized 3yr rank / FAIR rank), + = worse ===
+   WR (low tgt_sh, high g_route): underused high-graders -0.25 (n 13)  vs everyone else +0.02 (n 150)
+   TE (low tgt_sh, high g_route): underused high-graders +0.06 (n 5)  vs everyone else +0.05 (n 55)
+   RB (low car_sh, high g_run): underused high-graders -0.11 (n 19)  vs everyone else +0.33 (n 110)
+   RB (low tgt_sh, high g_route): underused high-graders -0.16 (n 14)  vs everyone else +0.32 (n 114)

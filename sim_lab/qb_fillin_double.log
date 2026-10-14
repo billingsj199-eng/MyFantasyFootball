@@ -1,0 +1,38 @@
+single-absence fill-in starts: 156; double-absence (earlier fill-in also out): 7
+  actual mean 13.40 | starter S mean 14.84 | act/S 0.903 | fill-ins with a start record 114
+PART 1 - fill-in's number (MAE, half-PPR; all rows | rows with a start record):
+  .85 S                     5.93 |  6.16   bias -0.78
+  own O (else .85 S)        5.64 |  5.76   bias +0.19
+  max(O, .85 S) [engine]    5.81 |  6.00   bias +1.22
+  O + .85 S [additive]     10.86 | 12.91   bias +9.26
+  mean(O, .85 S)            5.47 |  5.52   bias -0.30
+  0.70 S                    5.99 |  6.38   bias -3.01
+  0.75 S                    5.88 |  6.22   bias -2.27
+  0.80 S                    5.87 |  6.15   bias -1.53
+  0.90 S                    6.05 |  6.23   bias -0.04
+PART 1b - ENGINE-LIKE own (all played games, relief included, as the shadow's l8 / hist):
+  max(OA, .85 S) [engine]          MAE  5.78  bias +0.72  seasons better than engine 0/7
+  w0.3 OA + (1-w) .85S, OA>=.5x    MAE  5.77  bias -0.65  seasons better than engine 4/7
+  w0.3 max-blend                   MAE  5.79  bias -0.33  seasons better than engine 3/7
+  w0.4 OA + (1-w) .85S, OA>=.5x    MAE  5.74  bias -0.60  seasons better than engine 4/7
+  w0.4 max-blend                   MAE  5.76  bias -0.18  seasons better than engine 3/7
+  w0.5 OA + (1-w) .85S, OA>=.5x    MAE  5.72  bias -0.56  seasons better than engine 4/7
+  w0.5 max-blend                   MAE  5.74  bias -0.03  seasons better than engine 5/7
+  w0.6 OA + (1-w) .85S, OA>=.5x    MAE  5.70  bias -0.52  seasons better than engine 4/7
+  w0.6 max-blend                   MAE  5.71  bias +0.12  seasons better than engine 5/7
+  LOYO: +0.9% MAE vs engine (3/7) picks ['w0.6 OA + (1-w) .85S, OA>=.5x', 'w0.6 max-blend', 'w0.6 OA + (1-w) .85S, OA>=.5x', 'w0.6 max-blend', 'w0.6 OA + (1-w) .85S, OA>=.5x', 'w0.6 max-blend', 'w0.6 OA + (1-w) .85S, OA>=.5x']
+  FORWARD: +0.3% MAE vs engine (3/4) picks ['w0.6 max-blend', 'w0.6 OA + (1-w) .85S, OA>=.5x', 'w0.6 max-blend', 'w0.6 OA + (1-w) .85S, OA>=.5x']
+  max rule beats .85 S in 4/7 seasons
+  max rule beats mean(O, .85 S) in 2/7 seasons
+
+PART 2 - double absence (n 7): actual mean 11.41, starter S 12.53, earlier fill-in's level 10.80
+  SUM .85 (S + P2) [engine]    MAE  9.02  bias +8.42
+  MAX .85 max(S, P2)           MAE  4.23  bias +1.49
+  .75 S                        MAE  3.55  bias -2.01
+    2022 CAR wk12 sam darnold          act  16.9  starter baker mayfield 10.8  also out pj walker  6.5
+    2023 CLE wk13 joe flacco           act  16.2  starter deshaun watson 16.7  also out pj walker  4.0
+    2023 CLE wk18 jeff driskel         act  13.9  starter joe flacco 16.9  also out deshaun watson 13.5
+    2023 LV wk 9 aidan oconnell       act   8.4  starter jimmy garoppolo 12.6  also out brian hoyer  2.5
+    2022 NYJ wk18 joe flacco           act   6.0  starter zach wilson 10.0  also out mike white 14.1
+    2022 ARI wk17 david blough         act  13.6  starter colt mccoy 10.3  also out kyler murray 17.5
+    2022 ARI wk18 david blough         act   5.0  starter colt mccoy 10.3  also out kyler murray 17.5

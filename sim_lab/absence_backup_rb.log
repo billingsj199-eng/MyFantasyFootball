@@ -1,0 +1,65 @@
+rows 14672 RB/WR/TE; direct backups with the trailing RB1 out: 150 (workhorse-out 97); WR/TE rows de-pooled (RB tgtOther 0): 546
+  direct backup actual / projection: harness pool (old) 1.230 | v2.13 flow, no WORKHORSE 1.103 | + WORKHORSE (TODAY) 1.089
+    workhorse out  n  97: old 1.202  v2.13 1.050  today 1.029  | mean act 9.26 today 9.01
+    committee out  n  53: old 1.272  v2.13 1.185  today 1.185  | mean act 12.21 today 10.30
+    by season (today): 2019:0.55(n15) 2020:0.99(n28) 2021:1.03(n25) 2022:1.47(n12) 2023:1.23(n30) 2024:1.26(n22) 2025:0.96(n18)
+    by projection level (today): 0-5: n 1 0.26 | 5-8: n 50 1.18 | 8-11: n 62 1.08 | 11-99: n 37 1.05
+    WR/TE de-pooled rows: actual / today 0.997 (old 0.971)
+    cell room share >= .30        n  82 actual/today 1.192  seasons under 5/7
+    cell room share < .30         n  68 actual/today 0.942  seasons under 3/7
+    cell tgt/g >= 2.5             n  47 actual/today 1.035  seasons under 3/7
+    cell tgt/g < 2.5              n 103 actual/today 1.117  seasons under 5/7
+    cell clear (gap >= 5 car)     n  64 actual/today 1.143  seasons under 5/6
+    cell not clear                n  86 actual/today 1.039  seasons under 4/7
+    cell round 1-2 (pick <= 64)   n   7 actual/today 1.371  seasons under 2/3
+    cell pick 65+ / UDFA          n 143 actual/today 1.074  seasons under 4/7
+
+=== (a) flat direct-backup multiplier, grid 1.00-1.20 picked per fold ===
+  LOYO: touched MSE +1.05% (3/7), MAE +1.62% (3/7) | board MAE +0.020%, RB board MAE +0.058%
+  FORWARD: touched MSE -2.48% (2/4), MAE -1.70% (2/4) | board MAE -0.020%, RB board MAE -0.057%
+  full-sample pick: x1.10
+
+=== (b) cells b1 role: room share >= .30 OR tgt/g >= 2.5 | rest ===
+  LOYO: touched MSE +0.49% (3/7), MAE +1.17% (2/7) | board MAE +0.014%, RB board MAE +0.042%
+  FORWARD: touched MSE -0.08% (2/4), MAE -1.15% (2/4) | board MAE -0.013%, RB board MAE -0.038%
+  full-sample cell mults: 1.108 (n 102), 0.991 (n 48)
+
+=== (b) cells b2 clear RB2 (gap >= 5) | not clear ===
+  LOYO: touched MSE +1.51% (3/7), MAE +1.72% (2/7) | board MAE +0.021%, RB board MAE +0.062%
+  FORWARD: touched MSE +0.36% (2/4), MAE -0.09% (1/4) | board MAE -0.001%, RB board MAE -0.003%
+  full-sample cell mults: 1.109 (n 64), 1.032 (n 86)
+
+=== (b) cells b3 round 1-2 | later/UDFA ===
+  LOYO: touched MSE +1.50% (3/7), MAE +1.47% (2/7) | board MAE +0.018%, RB board MAE +0.053%
+  FORWARD: touched MSE +1.48% (2/4), MAE -0.04% (1/4) | board MAE -0.000%, RB board MAE -0.001%
+  full-sample cell mults: 1.096 (n 7), 1.065 (n 143)
+
+=== (b) cells b4 one cell only: room >= .30 OR tgt >= 2.5 ===
+  LOYO: touched MSE -0.15% (3/7), MAE +0.84% (4/7) | board MAE +0.010%, RB board MAE +0.030%
+  FORWARD: touched MSE -0.74% (2/4), MAE -1.52% (3/4) | board MAE -0.017%, RB board MAE -0.051%
+  full-sample cell mults: 1.108 (n 102)
+
+=== (b) cells b5 one cell only: clear RB2 + tgt >= 2.5 ===
+  LOYO: touched MSE -0.21% (4/7), MAE -0.43% (4/7) | board MAE -0.005%, RB board MAE -0.016%
+  FORWARD: touched MSE -0.05% (2/4), MAE -0.64% (2/4) | board MAE -0.007%, RB board MAE -0.021%
+  full-sample cell mults: 1.087 (n 22)
+
+=== (c) cap max(own, C) + carry share s for EVERY direct backup, picked per fold ===
+  LOYO: touched MSE -1.67% (5/7), MAE +0.34% (3/7) | board MAE +0.004%, RB board MAE +0.012%
+  FORWARD: touched MSE -2.09% (3/4), MAE -1.06% (2/4) | board MAE -0.012%, RB board MAE -0.035%
+  full-sample pick: (8, 0.4); fixed: C0/s0.28 +0.0% C0/s0.34 -1.2% C0/s0.4 -1.7% C6/s0.28 +0.0% C6/s0.34 -1.2% C6/s0.4 -1.6% C8/s0.28 +0.0% C8/s0.34 -1.2% C8/s0.4 -1.8% C10/s0.28 +0.0% C10/s0.34 -1.2% C10/s0.4 -1.8%
+
+=== (d1) committee-out direct backup: shrunk ratio cell (K 20) ===
+  LOYO: touched MSE -0.46% (3/7), MAE +0.53% (3/7) | board MAE +0.006%, RB board MAE +0.019%
+  FORWARD: touched MSE -0.76% (1/4), MAE -1.61% (2/4) | board MAE -0.019%, RB board MAE -0.054%
+  full-sample mult 1.135 (n 53)
+
+=== (d2) committee-out carry share s (cap own), picked per fold ===
+  LOYO: touched MSE -1.85% (3/7), MAE -0.23% (4/7) | board MAE -0.003%, RB board MAE -0.008%
+  FORWARD: touched MSE -1.43% (1/4), MAE -1.10% (2/4) | board MAE -0.013%, RB board MAE -0.037%
+  full-sample pick s 0.46; fixed: s0.34 MSE -0.8% MAE -0.1% seasons 4/7 s0.4 MSE -1.4% MAE -0.2% seasons 4/7 s0.46 MSE -1.9% MAE -0.2% seasons 3/7
+
+=== (d3) committee-out carry share s + cap max(own, C), picked per fold ===
+  LOYO: touched MSE -1.85% (3/7), MAE -0.23% (4/7) | board MAE -0.003%, RB board MAE -0.008%
+  FORWARD: touched MSE -1.43% (1/4), MAE -1.10% (2/4) | board MAE -0.013%, RB board MAE -0.037%
+  full-sample pick (0.46, None)

@@ -1,0 +1,20 @@
+SF pool: 2021 42, 2022 61, 2023 85, 2024 103, 2025 130 | QBs 89
+order                                        next mkt    3yr  QB 3yr    avg
+market (KTC)                                    0.810  0.498   0.440  0.654
+sim                                             0.713  0.535   0.333  0.624
+SHIPPED FAIR (0.5/0.3/0.5, shipped M3)          0.807  0.473   0.425  0.640
+shipped weights, M3 refit on this pool (LOYO)    0.810  0.486   0.468  0.648
+--- best 6 weights (shipped M3) ---
+M3 0.0 sim 0.1 mkt 0.25                         0.800  0.523   0.435  0.662
+M3 0.0 sim 0.2 mkt 0.5                          0.800  0.523   0.435  0.662
+M3 0.0 sim 0.3 mkt 0.75                         0.800  0.523   0.435  0.662
+M3 0.0 sim 0.2 mkt 0.75                         0.804  0.518   0.433  0.661
+M3 0.0 sim 0.1 mkt 0.5                          0.806  0.513   0.447  0.660
+M3 0.0 sim 0.3 mkt 0.5                          0.793  0.524   0.416  0.658
+   2021: best 0.648 vs shipped 0.636
+   2022: best 0.659 vs shipped 0.608
+   2023: best 0.656 vs shipped 0.646
+   2024: best nan vs shipped nan
+   2025: best nan vs shipped nan
+best (0.0, 0.1, 0.25) beats shipped in 3 of 5 seasons
+LOYO-chosen weights vs shipped: +nan avg per season, wins 2/5

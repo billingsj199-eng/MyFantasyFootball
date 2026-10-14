@@ -1,0 +1,222 @@
+=== shadow fill-in / returning starter, rest of season (1+ games left): 9,795 checkpoints; 1,564 with fill-in games in the evidence; (checkpoint, future week) pairs 10,403 ===
+
+--- 1  FILL-IN RESCALE ON THE SHADOW (stale games' points + xFP / B; 2+ stale games) ---
+
+  1 RB: rescale on the shadow   (rows touched 215; actual 5.76, base 7.26)
+    pooled on touched rows (seasons better): engine values (RB 1.26 / WR 1.08 ADP>100): -8.48% lvl 6.90 (6)  B 1.1: -4.04% lvl 7.10 (6)  B 1.2: -7.04% lvl 6.97 (6)  B 1.3: -9.32% lvl 6.86 (6)  B 1.4: -11.08% lvl 6.76 (6)  B 1.5: -12.47% lvl 6.68 (6)  B 1.7: -14.47% lvl 6.55 (6)  B 2.0: -16.30% lvl 6.40 (5)  B 2.5: -17.83% lvl 6.22 (5)  B 3.0: -18.52% lvl 6.11 (5)  B 4.0: -19.03% lvl 5.96 (5)
+    whole position group: engine values (RB 1.26 / WR 1.08 ADP>100): -0.782%  B 1.1: -0.372%  B 1.2: -0.649%  B 1.3: -0.859%  B 1.4: -1.022%  B 1.5: -1.150%  B 1.7: -1.334%  B 2.0: -1.503%  B 2.5: -1.644%  B 3.0: -1.708%  B 4.0: -1.755%
+    LEAVE-ONE-SEASON-OUT  -19.03%  seasons better 6/7  | top-150 weighted -22.59%  rank order +nan  | picks ['B 4.0', 'B 4.0', 'B 4.0', 'B 4.0', 'B 4.0', 'B 4.0', 'B 4.0']
+    FORWARD 2022-25       -20.15%  seasons better 3/4  | top-150 weighted -33.17%  | picks ['B 4.0', 'B 4.0', 'B 4.0', 'B 4.0']
+    -> PASS: B 4.0
+
+  1 WR: rescale on the shadow   (rows touched 544; actual 5.90, base 6.42)
+    pooled on touched rows (seasons better): engine values (RB 1.26 / WR 1.08 ADP>100): -2.05% lvl 6.32 (6)  B 1.1: -2.47% lvl 6.30 (6)  B 1.2: -4.12% lvl 6.20 (6)  B 1.3: -5.23% lvl 6.12 (6)  B 1.4: -5.97% lvl 6.04 (6)  B 1.5: -6.46% lvl 5.98 (6)  B 1.7: -6.94% lvl 5.88 (6)  B 2.0: -7.00% lvl 5.76 (6)  B 2.5: -6.47% lvl 5.63 (6)  B 3.0: -5.75% lvl 5.54 (5)  B 4.0: -4.45% lvl 5.43 (5)
+    whole position group: engine values (RB 1.26 / WR 1.08 ADP>100): -0.218%  B 1.1: -0.262%  B 1.2: -0.438%  B 1.3: -0.556%  B 1.4: -0.634%  B 1.5: -0.686%  B 1.7: -0.736%  B 2.0: -0.743%  B 2.5: -0.686%  B 3.0: -0.610%  B 4.0: -0.473%
+    LEAVE-ONE-SEASON-OUT  -6.16%  seasons better 6/7  | top-150 weighted -19.84%  rank order +nan  | picks ['B 1.7', 'B 1.7', 'B 1.7', 'B 2.0', 'B 2.0', 'B 1.7', 'B 2.0']
+    FORWARD 2022-25       -1.89%  seasons better 3/4  | top-150 weighted -10.77%  | picks ['B 4.0', 'B 2.5', 'B 2.0', 'B 2.0']
+    -> PASS: B 2.0
+
+  1 WR all ADP (engine limits WR to ADP > 100)   (rows touched 627; actual 6.55, base 6.97)
+    pooled on touched rows (seasons better): B 1.08: -1.52% lvl 6.87 (6)  B 1.2: -2.91% lvl 6.74 (6)  B 1.3: -3.54% lvl 6.65 (6)
+    whole position group: B 1.08: -0.205%  B 1.2: -0.393%  B 1.3: -0.479%
+    LEAVE-ONE-SEASON-OUT  -3.54%  seasons better 6/7  | top-150 weighted -0.29%  rank order +nan  | picks ['B 1.3', 'B 1.3', 'B 1.3', 'B 1.3', 'B 1.3', 'B 1.3', 'B 1.3']
+    FORWARD 2022-25       -2.54%  seasons better 3/4  | top-150 weighted +1.37%  | picks ['B 1.3', 'B 1.3', 'B 1.3', 'B 1.3']
+    -> PASS: B 1.3
+
+  1 TE (not in the engine)   (rows touched 59; actual 3.96, base 4.61)
+    pooled on touched rows (seasons better): B 1.1: -3.34% lvl 4.53 (4)  B 1.15: -4.67% lvl 4.50 (4)  B 1.3: -7.74% lvl 4.42 (4)  B 1.5: -10.39% lvl 4.34 (4)
+    whole position group: B 1.1: -0.063%  B 1.15: -0.088%  B 1.3: -0.146%  B 1.5: -0.196%
+    LEAVE-ONE-SEASON-OUT  -10.39%  seasons better 5/7  | top-150 weighted +nan%  rank order +nan  | picks ['B 1.5', 'B 1.5', 'B 1.5', 'B 1.5', 'B 1.5', 'B 1.5', 'B 1.5']
+    FORWARD 2022-25       -7.78%  seasons better 3/4  | top-150 weighted +nan%  | picks ['B 1.5', 'B 1.5', 'B 1.5', 'B 1.5']
+    -> FAIL (best pooled: B 1.5)
+
+  1 RB + WR together, engine values   (rows touched 759; actual 5.86, base 6.66)
+    pooled on touched rows (seasons better): engine values: -4.75% lvl 6.49 (6)
+    whole position group: engine values: -0.474%
+    LEAVE-ONE-SEASON-OUT  -4.75%  seasons better 6/7  | top-150 weighted -8.97%  rank order +nan  | picks ['engine values', 'engine values', 'engine values', 'engine values', 'engine values', 'engine values', 'engine values']
+    FORWARD 2022-25       -4.88%  seasons better 3/4  | top-150 weighted -11.71%  | picks ['engine values', 'engine values', 'engine values', 'engine values']
+    -> PASS: engine values
+
+  1 RB + WR fixed RB 1.5 / WR 1.2 vs engine values   (rows touched 759; actual 5.86, base 6.49)
+    pooled on touched rows (seasons better): RB 1.5 / WR 1.2: -3.02% lvl 6.34 (6)
+    whole position group: RB 1.5 / WR 1.2: -0.289%
+    LEAVE-ONE-SEASON-OUT  -3.02%  seasons better 6/7  | top-150 weighted -5.45%  rank order +nan  | picks ['RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2']
+    FORWARD 2022-25       -2.85%  seasons better 3/4  | top-150 weighted -6.55%  | picks ['RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2', 'RB 1.5 / WR 1.2']
+    -> PASS: RB 1.5 / WR 1.2
+
+  1 RB + WR fixed RB 1.7 / WR 1.3 vs engine values   (rows touched 759; actual 5.86, base 6.49)
+    pooled on touched rows (seasons better): RB 1.7 / WR 1.3: -4.58% lvl 6.24 (6)
+    whole position group: RB 1.7 / WR 1.3: -0.438%
+    LEAVE-ONE-SEASON-OUT  -4.58%  seasons better 6/7  | top-150 weighted -8.30%  rank order +nan  | picks ['RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3']
+    FORWARD 2022-25       -4.20%  seasons better 3/4  | top-150 weighted -9.75%  | picks ['RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3', 'RB 1.7 / WR 1.3']
+    -> PASS: RB 1.7 / WR 1.3
+
+  1 RB + WR fixed RB 2.0 / WR 1.3 vs engine values   (rows touched 759; actual 5.86, base 6.49)
+    pooled on touched rows (seasons better): RB 2.0 / WR 1.3: -5.39% lvl 6.20 (6)
+    whole position group: RB 2.0 / WR 1.3: -0.515%
+    LEAVE-ONE-SEASON-OUT  -5.39%  seasons better 6/7  | top-150 weighted -9.88%  rank order +nan  | picks ['RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3']
+    FORWARD 2022-25       -4.97%  seasons better 3/4  | top-150 weighted -11.85%  | picks ['RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3', 'RB 2.0 / WR 1.3']
+    -> PASS: RB 2.0 / WR 1.3
+
+  1 RB + WR fixed RB 2.0 / WR 1.5 vs engine values   (rows touched 759; actual 5.86, base 6.49)
+    pooled on touched rows (seasons better): RB 2.0 / WR 1.5: -6.13% lvl 6.10 (6)
+    whole position group: RB 2.0 / WR 1.5: -0.586%
+    LEAVE-ONE-SEASON-OUT  -6.13%  seasons better 6/7  | top-150 weighted -11.33%  rank order +nan  | picks ['RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5']
+    FORWARD 2022-25       -5.34%  seasons better 3/4  | top-150 weighted -12.71%  | picks ['RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5', 'RB 2.0 / WR 1.5']
+    -> PASS: RB 2.0 / WR 1.5
+
+--- 2  RETURNING-STARTER LAYER on top of the engine rescale (rows with stale games in the evidence that week) ---
+
+  2a RB: flat dock when a regular returns   (rows touched 322; actual 6.31, base 6.92)
+    pooled on touched rows (seasons better): x0.97: -1.53% lvl 6.74 (4)  x0.94: -2.52% lvl 6.57 (4)  x0.9: -3.01% lvl 6.34 (4)  x0.85: -2.28% lvl 6.06 (4)  x0.8: -0.07% lvl 5.77 (4)
+    whole position group: x0.97: -0.182%  x0.94: -0.301%  x0.9: -0.359%  x0.85: -0.272%  x0.8: -0.008%
+    LEAVE-ONE-SEASON-OUT  +0.20%  seasons better 5/7  | top-150 weighted -0.74%  rank order +nan  | picks ['x0.9', 'x0.9', 'x0.94', 'x0.9', 'x0.94', 'x0.85', 'x0.85']
+    FORWARD 2022-25       +4.20%  seasons better 2/4  | top-150 weighted +13.49%  | picks ['x0.8', 'x0.8', 'x0.8', 'x0.85']
+    -> FAIL (best pooled: x0.9)
+
+  2b RB: dock x stale share of his games   (rows touched 322; actual 6.31, base 6.92)
+    pooled on touched rows (seasons better): 1-0.1 x stale game share: -3.82% lvl 6.71 (5)  1-0.2 x stale game share: -6.67% lvl 6.50 (5)  1-0.3 x stale game share: -8.53% lvl 6.29 (5)  1-0.4 x stale game share: -9.41% lvl 6.09 (5)  1-0.5 x stale game share: -9.31% lvl 5.88 (5)
+    whole position group: 1-0.1 x stale game share: -0.456%  1-0.2 x stale game share: -0.795%  1-0.3 x stale game share: -1.018%  1-0.4 x stale game share: -1.123%  1-0.5 x stale game share: -1.111%
+    LEAVE-ONE-SEASON-OUT  -8.49%  seasons better 6/7  | top-150 weighted -9.24%  rank order +nan  | picks ['1-0.4 x stale game share', '1-0.4 x stale game share', '1-0.4 x stale game share', '1-0.4 x stale game share', '1-0.4 x stale game share', '1-0.5 x stale game share', '1-0.5 x stale game share']
+    FORWARD 2022-25       -7.99%  seasons better 3/4  | top-150 weighted -10.29%  | picks ['1-0.5 x stale game share', '1-0.5 x stale game share', '1-0.5 x stale game share', '1-0.5 x stale game share']
+    -> PASS: 1-0.4 x stale game share
+
+  2c RB: divisor per absent regular back   (rows touched 215; actual 5.76, base 6.90)
+    pooled on touched rows (seasons better): B 1.26 per absent regular: -0.03% lvl 6.90 (1)  B 1.4 per absent regular: -2.88% lvl 6.76 (5)  B 1.6 per absent regular: -5.61% lvl 6.61 (5)
+    whole position group: B 1.26 per absent regular: -0.003%  B 1.4 per absent regular: -0.245%  B 1.6 per absent regular: -0.477%
+    LEAVE-ONE-SEASON-OUT  -5.61%  seasons better 6/7  | top-150 weighted -7.05%  rank order +nan  | picks ['B 1.6 per absent regular', 'B 1.6 per absent regular', 'B 1.6 per absent regular', 'B 1.6 per absent regular', 'B 1.6 per absent regular', 'B 1.6 per absent regular', 'B 1.6 per absent regular']
+    FORWARD 2022-25       -6.24%  seasons better 3/4  | top-150 weighted -11.34%  | picks ['B 1.6 per absent regular', 'B 1.6 per absent regular', 'B 1.6 per absent regular', 'B 1.6 per absent regular']
+    -> PASS: B 1.6 per absent regular
+
+  2d RB: dock per distinct regular back   (rows touched 322; actual 6.31, base 6.92)
+    pooled on touched rows (seasons better): 0.97^n back: -1.47% lvl 6.74 (4)  0.94^n back: -2.37% lvl 6.56 (4)  0.9^n back: -2.70% lvl 6.33 (4)  0.85^n back: -1.72% lvl 6.04 (4)
+    whole position group: 0.97^n back: -0.175%  0.94^n back: -0.283%  0.9^n back: -0.322%  0.85^n back: -0.206%
+    LEAVE-ONE-SEASON-OUT  +1.50%  seasons better 5/7  | top-150 weighted -1.34%  rank order +nan  | picks ['0.9^n back', '0.94^n back', '0.94^n back', '0.94^n back', '0.94^n back', '0.85^n back', '0.85^n back']
+    FORWARD 2022-25       +2.95%  seasons better 2/4  | top-150 weighted +6.03%  | picks ['0.85^n back', '0.85^n back', '0.85^n back', '0.85^n back']
+    -> FAIL (best pooled: 0.9^n back)
+
+  2e RB: dock only when 2+ regulars return (the Seattle case)   (rows 9) - too few rows
+
+  2a WR: flat dock when a regular returns   (rows touched 844; actual 5.84, base 6.16)
+    pooled on touched rows (seasons better): x0.97: -1.23% lvl 6.00 (6)  x0.94: -1.85% lvl 5.85 (6)  x0.9: -1.69% lvl 5.64 (6)  x0.85: +0.06% lvl 5.38 (4)  x0.8: +3.54% lvl 5.12 (1)
+    whole position group: x0.97: -0.215%  x0.94: -0.322%  x0.9: -0.295%  x0.85: +0.010%  x0.8: +0.617%
+    LEAVE-ONE-SEASON-OUT  -1.44%  seasons better 6/7  | top-150 weighted -10.56%  rank order +nan  | picks ['x0.94', 'x0.94', 'x0.94', 'x0.94', 'x0.94', 'x0.94', 'x0.9']
+    FORWARD 2022-25       -0.25%  seasons better 3/4  | top-150 weighted -7.61%  | picks ['x0.85', 'x0.9', 'x0.9', 'x0.9']
+    -> PASS: x0.94
+
+  2b WR: dock x stale share of his games   (rows touched 844; actual 5.84, base 6.16)
+    pooled on touched rows (seasons better): 1-0.1 x stale game share: -2.32% lvl 5.96 (6)  1-0.2 x stale game share: -3.16% lvl 5.76 (6)  1-0.3 x stale game share: -2.52% lvl 5.57 (5)  1-0.4 x stale game share: -0.40% lvl 5.37 (5)  1-0.5 x stale game share: +3.19% lvl 5.17 (4)
+    whole position group: 1-0.1 x stale game share: -0.404%  1-0.2 x stale game share: -0.551%  1-0.3 x stale game share: -0.439%  1-0.4 x stale game share: -0.070%  1-0.5 x stale game share: +0.556%
+    LEAVE-ONE-SEASON-OUT  -1.86%  seasons better 5/7  | top-150 weighted -15.97%  rank order +nan  | picks ['1-0.2 x stale game share', '1-0.2 x stale game share', '1-0.2 x stale game share', '1-0.2 x stale game share', '1-0.3 x stale game share', '1-0.2 x stale game share', '1-0.3 x stale game share']
+    FORWARD 2022-25       +0.53%  seasons better 2/4  | top-150 weighted -8.65%  | picks ['1-0.4 x stale game share', '1-0.3 x stale game share', '1-0.2 x stale game share', '1-0.3 x stale game share']
+    -> FAIL (best pooled: 1-0.2 x stale game share)
+
+  2c WR: divisor per absent regular back   (rows touched 544; actual 5.90, base 6.32)
+    pooled on touched rows (seasons better): B 1.08 per absent regular: -0.20% lvl 6.32 (3)  B 1.15 per absent regular: -1.63% lvl 6.24 (6)  B 1.25 per absent regular: -3.04% lvl 6.14 (6)
+    whole position group: B 1.08 per absent regular: -0.021%  B 1.15 per absent regular: -0.170%  B 1.25 per absent regular: -0.317%
+    LEAVE-ONE-SEASON-OUT  -3.04%  seasons better 6/7  | top-150 weighted -7.56%  rank order +nan  | picks ['B 1.25 per absent regular', 'B 1.25 per absent regular', 'B 1.25 per absent regular', 'B 1.25 per absent regular', 'B 1.25 per absent regular', 'B 1.25 per absent regular', 'B 1.25 per absent regular']
+    FORWARD 2022-25       -2.38%  seasons better 3/4  | top-150 weighted -4.20%  | picks ['B 1.25 per absent regular', 'B 1.25 per absent regular', 'B 1.25 per absent regular', 'B 1.25 per absent regular']
+    -> PASS: B 1.25 per absent regular
+
+  2d WR: dock per distinct regular back   (rows touched 844; actual 5.84, base 6.16)
+    pooled on touched rows (seasons better): 0.97^n back: -1.73% lvl 5.98 (6)  0.94^n back: -2.51% lvl 5.80 (6)  0.9^n back: -2.15% lvl 5.56 (6)  0.85^n back: +0.45% lvl 5.27 (4)
+    whole position group: 0.97^n back: -0.301%  0.94^n back: -0.437%  0.9^n back: -0.374%  0.85^n back: +0.079%
+    LEAVE-ONE-SEASON-OUT  -1.82%  seasons better 6/7  | top-150 weighted -11.96%  rank order +nan  | picks ['0.94^n back', '0.94^n back', '0.94^n back', '0.94^n back', '0.94^n back', '0.94^n back', '0.9^n back']
+    FORWARD 2022-25       -1.16%  seasons better 3/4  | top-150 weighted -7.92%  | picks ['0.9^n back', '0.9^n back', '0.9^n back', '0.9^n back']
+    -> PASS: 0.94^n back
+
+  2e WR: dock only when 2+ regulars return (the Seattle case)   (rows touched 170; actual 4.97, base 5.89)
+    pooled on touched rows (seasons better): x0.95 if 2+ back: -6.10% lvl 5.66 (3)  x0.9 if 2+ back: -10.50% lvl 5.44 (3)  x0.85 if 2+ back: -13.20% lvl 5.22 (3)  x0.8 if 2+ back: -14.20% lvl 5.00 (3)
+    whole position group: x0.95 if 2+ back: -0.169%  x0.9 if 2+ back: -0.290%  x0.85 if 2+ back: -0.365%  x0.8 if 2+ back: -0.392%
+    LEAVE-ONE-SEASON-OUT  -11.17%  seasons better 4/7  | top-150 weighted -28.90%  rank order +nan  | picks ['x0.8 if 2+ back', 'x0.8 if 2+ back', 'x0.8 if 2+ back', 'x0.8 if 2+ back', 'x0.85 if 2+ back', 'x0.85 if 2+ back', 'x0.8 if 2+ back']
+    FORWARD 2022-25       -12.83%  seasons better 3/4  | top-150 weighted -22.95%  | picks ['x0.85 if 2+ back', 'x0.85 if 2+ back', 'x0.8 if 2+ back', 'x0.8 if 2+ back']
+    -> FAIL (best pooled: x0.8 if 2+ back)
+
+--- level check: actual / prediction on rows where regulars return (rest of season, rows ok) ---
+    RB 1 regular back     n  320  actual  6.33  shadow  7.16 (0.884)  engine rescale  6.93 (0.914)
+    RB 2+ regulars back: n 9
+    WR 1 regular back     n  914  actual  6.73  shadow  7.02 (0.959)  engine rescale  6.97 (0.965)
+    WR 2+ regulars back   n  170  actual  4.97  shadow  5.98 (0.831)  engine rescale  5.89 (0.844)
+
+--- 3  NEXT GAME check (first remaining game) ---
+
+  3 RB: next game   (rows touched 161; actual 6.10, base 7.20)
+    pooled on touched rows (seasons better): engine rescale: -2.22% lvl 6.77 (4)  B 1.4: -2.72% lvl 6.60 (4)  B 1.6: -3.05% lvl 6.42 (4)
+    whole position group: engine rescale: -0.123%  B 1.4: -0.151%  B 1.6: -0.169%
+    LEAVE-ONE-SEASON-OUT  -2.56%  seasons better 5/7  | top-150 weighted -5.36%  rank order +nan  | picks ['B 1.6', 'B 1.6', 'B 1.6', 'B 1.6', 'B 1.6', 'B 1.4', 'B 1.6']
+    FORWARD 2022-25       -1.41%  seasons better 2/4  | top-150 weighted -4.86%  | picks ['B 1.6', 'B 1.6', 'B 1.6', 'B 1.6']
+    -> FAIL (best pooled: B 1.6)
+
+  3 WR: next game   (rows touched 440; actual 5.51, base 6.17)
+    pooled on touched rows (seasons better): engine rescale: -0.90% lvl 6.06 (6)  B 1.4: -2.58% lvl 5.72 (6)  B 1.6: -2.88% lvl 5.59 (6)
+    whole position group: engine rescale: -0.059%  B 1.4: -0.169%  B 1.6: -0.189%
+    LEAVE-ONE-SEASON-OUT  -2.88%  seasons better 6/7  | top-150 weighted -7.45%  rank order +nan  | picks ['B 1.6', 'B 1.6', 'B 1.6', 'B 1.6', 'B 1.6', 'B 1.6', 'B 1.6']
+    FORWARD 2022-25       -2.23%  seasons better 3/4  | top-150 weighted -5.37%  | picks ['B 1.6', 'B 1.6', 'B 1.6', 'B 1.6']
+    -> PASS: B 1.6
+
+--- 4  RB ROOM CAP: a team's RB projections summed vs what its RB room has scored so far (on top of fill-in RB 2.0 / WR 1.3) ---
+    league-average RB room per team-game: 2019 12.7  2020 13.9  2021 14.8  2022 14.5  2023 15.9  2024 17.1  2025 16.9
+    projected room / room so far: median 1.006  p75 1.156  p90 1.366  share > 1.2: 20.8%
+
+  4 ROS  room cap vs sofar, cut all   (rows touched 998; actual 9.14, base 8.79)
+    pooled on touched rows (seasons better): cap sofar +10% (all): +15.40% lvl 7.56 (0)  cap sofar +20% (all): +7.20% lvl 8.07 (1)  cap sofar +30% (all): +3.95% lvl 8.34 (1)  cap sofar +50% (all): +1.61% lvl 8.58 (2)
+    whole position group: cap sofar +10% (all): +6.271%  cap sofar +20% (all): +2.930%  cap sofar +30% (all): +1.607%  cap sofar +50% (all): +0.656%
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    -> FAIL (best pooled: fill-in RB 2.0 (wired))
+
+  4 NEXT room cap vs sofar, cut all   (rows touched 1,025; actual 8.91, base 8.85)
+    pooled on touched rows (seasons better): cap sofar +10% (all): +6.12% lvl 7.61 (0)  cap sofar +20% (all): +3.76% lvl 8.12 (1)  cap sofar +30% (all): +2.74% lvl 8.40 (2)  cap sofar +50% (all): +1.40% lvl 8.64 (2)
+    whole position group: cap sofar +10% (all): +2.211%  cap sofar +20% (all): +1.360%  cap sofar +30% (all): +0.991%  cap sofar +50% (all): +0.506%
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    -> FAIL (best pooled: fill-in RB 2.0 (wired))
+
+  4 ROS  room cap vs sofar, cut backups   (rows touched 414; actual 6.29, base 5.94)
+    pooled on touched rows (seasons better): cap sofar +10% (backups): +32.91% lvl 4.28 (0)  cap sofar +20% (backups): +11.61% lvl 5.03 (1)  cap sofar +30% (backups): +3.21% lvl 5.42 (3)  cap sofar +50% (backups): -0.38% lvl 5.69 (4)
+    whole position group: cap sofar +10% (backups): +4.486%  cap sofar +20% (backups): +1.583%  cap sofar +30% (backups): +0.438%  cap sofar +50% (backups): -0.052%
+    LEAVE-ONE-SEASON-OUT  +2.05%  seasons better 1/7  | top-150 weighted +1.39%  rank order +0.0000  | picks ['cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)']
+    FORWARD 2022-25       +0.25%  seasons better 2/4  | top-150 weighted -0.56%  | picks ['cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)']
+    -> FAIL (best pooled: cap sofar +50% (backups))
+
+  4 NEXT room cap vs sofar, cut backups   (rows touched 438; actual 5.47, base 5.87)
+    pooled on touched rows (seasons better): cap sofar +10% (backups): +6.48% lvl 4.22 (1)  cap sofar +20% (backups): +0.15% lvl 4.96 (3)  cap sofar +30% (backups): -1.45% lvl 5.36 (5)  cap sofar +50% (backups): -2.03% lvl 5.63 (5)
+    whole position group: cap sofar +10% (backups): +0.642%  cap sofar +20% (backups): +0.015%  cap sofar +30% (backups): -0.144%  cap sofar +50% (backups): -0.201%
+    LEAVE-ONE-SEASON-OUT  -2.03%  seasons better 5/7  | top-150 weighted -2.47%  rank order +0.0000  | picks ['cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)']
+    FORWARD 2022-25       -1.37%  seasons better 3/4  | top-150 weighted -1.08%  | picks ['cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)', 'cap sofar +50% (backups)']
+    -> PASS: cap sofar +50% (backups)
+
+  4 ROS  room cap vs league, cut all   (rows touched 928; actual 10.57, base 10.99)
+    pooled on touched rows (seasons better): cap league +20% (all): +28.95% lvl 9.03 (0)  cap league +35% (all): +8.58% lvl 9.94 (2)  cap league +50% (all): +0.83% lvl 10.46 (3)  cap league +75% (all): -1.89% lvl 10.86 (4)
+    whole position group: cap league +20% (all): +9.619%  cap league +35% (all): +2.852%  cap league +50% (all): +0.277%  cap league +75% (all): -0.629%
+    LEAVE-ONE-SEASON-OUT  -1.89%  seasons better 4/7  | top-150 weighted -1.83%  rank order -0.0033  | picks ['cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)']
+    FORWARD 2022-25       -2.38%  seasons better 2/4  | top-150 weighted -1.44%  | picks ['cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)']
+    -> FAIL (best pooled: cap league +75% (all))
+
+  4 NEXT room cap vs league, cut all   (rows touched 945; actual 10.60, base 10.97)
+    pooled on touched rows (seasons better): cap league +20% (all): +8.10% lvl 8.99 (2)  cap league +35% (all): +1.75% lvl 9.90 (3)  cap league +50% (all): -0.20% lvl 10.42 (5)  cap league +75% (all): -0.72% lvl 10.82 (4)
+    whole position group: cap league +20% (all): +3.199%  cap league +35% (all): +0.692%  cap league +50% (all): -0.078%  cap league +75% (all): -0.284%
+    LEAVE-ONE-SEASON-OUT  +0.02%  seasons better 4/7  | top-150 weighted +0.68%  rank order -0.0047  | picks ['cap league +50% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)']
+    FORWARD 2022-25       -0.90%  seasons better 2/4  | top-150 weighted -0.38%  | picks ['cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)', 'cap league +75% (all)']
+    -> FAIL (best pooled: cap league +75% (all))
+
+  4 ROS  room cap vs league, cut backups   (rows touched 458; actual 6.38, base 6.75)
+    pooled on touched rows (seasons better): cap league +20% (backups): +50.00% lvl 4.21 (0)  cap league +35% (backups): +30.00% lvl 5.16 (0)  cap league +50% (backups): +13.57% lvl 5.86 (0)  cap league +75% (backups): +4.73% lvl 6.51 (2)
+    whole position group: cap league +20% (backups): +7.239%  cap league +35% (backups): +4.343%  cap league +50% (backups): +1.965%  cap league +75% (backups): +0.685%
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +nan  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    -> FAIL (best pooled: fill-in RB 2.0 (wired))
+
+  4 NEXT room cap vs league, cut backups   (rows touched 475; actual 5.89, base 6.63)
+    pooled on touched rows (seasons better): cap league +20% (backups): +14.35% lvl 4.12 (0)  cap league +35% (backups): +10.62% lvl 5.06 (0)  cap league +50% (backups): +5.98% lvl 5.75 (1)  cap league +75% (backups): +1.21% lvl 6.39 (2)
+    whole position group: cap league +20% (backups): +1.689%  cap league +35% (backups): +1.250%  cap league +50% (backups): +0.704%  cap league +75% (backups): +0.142%
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +nan  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)', 'fill-in RB 2.0 (wired)']
+    -> FAIL (best pooled: fill-in RB 2.0 (wired))
+
+    level check, ROS rows by projected room / room so far (wired fill-in):
+      room x0.0-0.9: n   591  actual 11.16  pred 10.65  ratio 1.048
+      room x0.9-1.1: n   926  actual 10.40  pred 10.00  ratio 1.039
+      room x1.1-1.3: n   638  actual  9.83  pred  9.27  ratio 1.061
+      room x1.3-1.6: n   226  actual  8.51  pred  8.31  ratio 1.023
+      room x1.6-99.0: n   134  actual  6.87  pred  7.30  ratio 0.941

@@ -1,0 +1,16 @@
+{
+ "M": {
+  "RB|lead-lo|1": 1.055,
+  "RB|lead-up|1": 1.052,
+  "RB|other-lo|1": 0.815,
+  "RB|other-up|1": 0.993,
+  "TE|lead-lo|1": 1.21,
+  "TE|lead-up|1": 1.066,
+  "WR|lead-lo|1": 1.217,
+  "WR|lead-up|1": 1.07,
+  "WR|other-lo|1": 1.036,
+  "WR|other-up|1": 0.972
+ },
+ "K": 40,
+ "regMin": 5.0
+}

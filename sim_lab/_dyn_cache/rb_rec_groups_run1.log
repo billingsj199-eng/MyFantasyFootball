@@ -1,0 +1,38 @@
+pool 615; RBs with a prior-season YAC/route z: 148
+
+=== residual log(realized / predicted RB rank), 3yr  (+ = finished worse than ranked) ===
+  very low rec (z <= -1)     n 15  off: +0.04   on: -0.16   floor: -0.12
+  low rec (-1 < z <= 0)      n 53  off: +0.22   on: +0.14   floor: +0.13
+  good rec (z > 0)           n 80  off: -0.11   on: -0.01   floor: -0.02
+  age 28+                    n 24  off: -0.17   on: -0.11   floor: -0.11
+  age <= 25 AND z <= -1      n 6   off: +0.04   on: -0.19   floor: -0.15
+
+=== residual log(realized / predicted RB rank), 5yr+youth  (+ = finished worse than ranked) ===
+  very low rec (z <= -1)     n 6   off: -0.09   on: -0.27   floor: -0.25
+  low rec (-1 < z <= 0)      n 26  off: +0.19   on: +0.14   floor: +0.14
+  good rec (z > 0)           n 35  off: -0.06   on: +0.01   floor: +0.01
+  age 28+                    n 9   off: -0.06   on: -0.02   floor: -0.02
+  age <= 25 AND z <= -1      n 3   off: -0.01   on: -0.25   floor: -0.21
+
+=== per-year Spearman (held-out style: tilt fixed at shipped k) — RB-only and whole pool ===
+  3yr       RB-only  off 0.7318  on 0.7628 (4/4 vs off)  floor 0.7611 (1/4 vs on)
+  3yr       whole    off 0.6898  on 0.6971 (4/4 vs off)  floor 0.6965 (1/4 vs on)
+  5yr+youth RB-only  off 0.7540  on 0.7817 (2/2 vs off)  floor 0.7797 (0/2 vs on)
+  5yr+youth whole    off 0.6559  on 0.6615 (2/2 vs off)  floor 0.6604 (0/2 vs on)
+
+very low receivers (z <= -1): FAIR RB rank off / on -> realized 3yr RB rank
+   2020 david montgomery         age 23  z -1.01  RB#16  -> RB#23  realized RB#12
+   2020 todd gurley              age 26  z -1.42  RB#19  -> RB#25  realized RB#32
+   2020 marlon mack              age 24  z -1.52  RB#38  -> RB#50  realized RB#45
+   2020 carlos hyde              age 29  z -1.93  RB#55  -> RB#56  realized RB#55
+   2021 derrick henry            age 27  z -1.21  RB#6   -> RB#6   realized RB#4
+   2021 zack moss                age 23  z -1.33  RB#30  -> RB#33  realized RB#36
+   2022 ezekiel elliott          age 27  z -1.10  RB#22  -> RB#31  realized RB#28
+   2022 devin singletary         age 24  z -1.28  RB#36  -> RB#44  realized RB#30
+   2022 rashaad penny            age 26  z -1.28  RB#44  -> RB#53  realized RB#43
+   2022 darrell henderson        age 25  z -1.26  RB#47  -> RB#55  realized RB#49
+   2023 jk dobbins               age 24  z -1.24  RB#21  -> RB#27  realized RB#28
+   2023 miles sanders            age 26  z -1.58  RB#28  -> RB#38  realized RB#36
+   2023 jamaal williams          age 28  z -1.14  RB#38  -> RB#46  realized RB#41
+   2023 ezekiel elliott          age 28  z -1.60  RB#42  -> RB#49  realized RB#31
+   2023 donta foreman            age 27  z -1.87  RB#47  -> RB#51  realized RB#47

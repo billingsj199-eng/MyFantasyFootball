@@ -1,0 +1,44 @@
+Loading...
+5850 candidate rows (714 rookies)
+ADP pool: 1465 player-years matched (69 unmatched)
+
+=== A. 3-season window (T3), FFC dynasty pool, start years 2015-2023 ===
+model                              Spearman  top36 value
+MARKET (FFC dynasty ADP)              0.538        73.7%
+one-year projection (vets only)       0.350        75.4%
+SIM WIN3 sd0.25                       0.392        57.8%
+SIM WIN3 sd0.4                        0.409        59.6%
+SIM WIN3 sd0.6                        0.435        62.2%
+SIM WIN3 x MARKET rank 25% mkt        0.481        67.8%
+SIM WIN3 x MARKET rank 50% mkt        0.531        70.8%
+SIM WIN3 x MARKET rank 75% mkt        0.550        73.0%
+
+=== B. Youth credit: does YOUTH (Y+3..Y+4 projection) predict the TAIL? start 2015-2021 ===
+MARKET                                0.398        58.4%   (vs realized tail)
+SIM WIN3 alone                        0.370        52.9%   (vs realized tail)
+SIM YOUTH alone                       0.382        49.0%   (vs realized tail)
+
+=== C. SCORE = WIN3 + w x YOUTH  vs realized 3yr and 5yr value ===
+w          Sp T3  top36 T3   Sp T5  top36 T5
+MARKET     0.522     73.1%   0.531     71.7%
+0.0        0.394     56.9%   0.415     58.6%
+0.25       0.392     55.4%   0.413     57.1%
+0.5        0.387     54.2%   0.410     56.1%
+0.75       0.383     52.7%   0.406     54.4%
+1.0        0.379     51.4%   0.402     53.2%
+
+=== D. By position (Spearman vs T3, within position) ===
+pos      n   MARKET  SIM WIN3  SIM+.5Y
+QB     217    0.509     0.192    0.204
+RB     495    0.562     0.486    0.475
+WR     577    0.556     0.448    0.434
+TE     176    0.364     0.296    0.288
+
+=== E. By age band (Spearman vs T5 within band, start 2015-2021) ===
+age         n   MARKET    WIN3    +.5Y   +1.0Y
+<=23      343    0.484   0.368   0.354   0.337
+24-26     376    0.600   0.523   0.524   0.523
+27-29     236    0.556   0.498   0.499   0.501
+30+       192    0.418   0.336   0.340   0.343
+
+Rookies in pool: 185 — Spearman vs T3: MARKET 0.327, SIM (draft capital) 0.252

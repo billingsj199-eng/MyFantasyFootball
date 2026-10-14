@@ -1,0 +1,30 @@
+PRACTICE: 6373 starter injury-weeks, 337 concussion weeks
+  DNP          concussion  14.4% (n 180)   other  50.7% (n 2215)
+  DNP-DNP      concussion   5.3% (n 151)   other  25.1% (n 1357)
+  DNP-DNP-DNP  concussion   2.2% (n 134)   other  11.2% (n 1071)
+  DNP-DNP-LP   concussion  31.2% (n  16)   other  72.2% (n 205)
+  DNP-LP       concussion  59.3% (n  27)   other  85.4% (n 478)
+  DNP-LP-LP    concussion  41.7% (n  12)   other  82.3% (n 260)
+  DNP-LP-FP    concussion  84.6% (n  13)   other  98.4% (n 191)
+  LP           concussion  61.3% (n  93)   other  84.3% (n 2079)
+  LP-LP        concussion  38.9% (n  54)   other  82.4% (n 1435)
+  LP-LP-FP     concussion  81.2% (n  16)   other  96.9% (n 520)
+  LP-FP        concussion  94.6% (n  37)   other  97.0% (n 507)
+  DNP-DNP-FP   concussion   0.0% (n   1)   other  90.1% (n 81)
+  DNP-LP-FP    concussion  84.6% (n  13)   other  98.4% (n 191)
+  concussion weeks: final FULL 37%, Q 17%, Out 51%; other weeks: final FULL 48%, Out 15%
+  day 1     : + concussion shift 0.1501 -> 0.1467 (-2.25%, 7/7 seasons)
+  day 2     : + concussion shift 0.1105 -> 0.1085 (-1.76%, 6/7 seasons)
+  day 3     : + concussion shift 0.0814 -> 0.0797 (-2.07%, 7/7 seasons)
+  day 3 +des: + concussion shift 0.0631 -> 0.0628 (-0.47%, 7/7 seasons)
+  concussion shifts (all seasons): {'1': {'FP': -0.41, 'LP': -0.75, 'DNP': -1.13}, '2': {'FP': -0.22, 'LP': -1.0, 'DNP': -0.98}, '3': {'FP': -0.66, 'LP': -1.02, 'DNP': -1.01}, '3f': {'FP': -0.47, 'LP': -0.42, 'DNP': -0.3}}
+
+PRODUCTION WHEN HE PLAYS: 17541 player-weeks (played), 120 concussion-listed
+  Q-FP     concussion REL 0.886 (n  19)   other injuries REL 0.902 (n 178)
+  Q-LP     concussion REL 0.956 (n   9)   other injuries REL 0.877 (n 587)
+  Q-DNP    concussion REL 4.830 (n   1)   other injuries REL 0.757 (n 109)
+  none-LP  concussion REL 0.518 (n   5)   other injuries REL 0.951 (n 448)
+  none-DNP concussion REL   nan (n   0)   other injuries REL 0.881 (n 147)
+  any Q   concussion REL 0.979 (n  29)   other injuries REL 0.866 (n 874)
+  any listing with concussion (incl. full practice, no tag) REL 0.983 (n 120)
+  any-Q concussion REL by season: 2019: 0.87 (n 2), 2020: 0.90 (n 2), 2021: 1.24 (n 5), 2022: 0.75 (n 5), 2023: 1.19 (n 7), 2024: 0.73 (n 7), 2025: 1.01 (n 1)

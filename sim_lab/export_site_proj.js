@@ -76,6 +76,8 @@ global.window = global;
   'data/opp_prior_2026.js',
   'data/learned_shadow_model.js',
   'data/sim_depth.js',
+  'data/sim_depth_pool.js',
+  'data/sim_stat_shape.js',   // per-player stat split from own game logs (build_stat_shape.py, 2026-10-09)   // depth-chart players not on Clay's sheet (build_depth_pool.py, 2026-10-09)
   'data/sim_2026.js',
   'data/sim_actuals_2026.js',
   'data/pace_2026.js',
@@ -232,7 +234,7 @@ function kickoffMs(kicks, wk, tm) {
       }
       const mH = E.effMean(wpH);
       if (!(mH > (p.isDST ? 0 : 0.4))) return;
-      if (wk > currentWeek && !p.isDST) { const ra = rosAgg[p.name] || (rosAgg[p.name] = { pos: p.pos, tm: p.tm, w: {} }); ra.w[wk] = [+mH.toFixed(2), wpH.jsPre != null ? +wpH.jsPre.toFixed(2) : null, wpH.ncMean != null ? +wpH.ncMean.toFixed(2) : null]; }
+      if (wk > currentWeek && !p.isDST) { const ra = rosAgg[p.name] || (rosAgg[p.name] = { pos: p.pos, tm: p.tm, w: {} }); ra.w[wk] = [+mH.toFixed(2), wpH.jsPre != null ? +wpH.jsPre.toFixed(2) : null, wpH.ncMean != null ? +wpH.ncMean.toFixed(2) : null, wpH.ncQbf != null && wpH.ncQbf !== 1 ? +wpH.ncQbf.toFixed(4) : 1];   /* [3] = shadow QB floor multiplier inside ncMean (2026-10-09, grade_ros_lock.py) */ }
       const wpP = E.weeklyProjection(p, wk, scP, schedule);
       const wpS = E.weeklyProjection(p, wk, scS, schedule);
       pool.push({
@@ -331,6 +333,8 @@ function kickoffMs(kicks, wk, tm) {
     if (Object.keys(byTm).length) {
       const tms = Object.keys(byTm), maxK = Math.max(0, ...tms.map(t => byTm[t].length));
       const vals = {};   // tm -> name -> [mask][3]
+      const bbs = {};    // tm -> name -> [mask] = [boom%, bust%] | null (scenario sims)
+      const QS_SIMS = SIMS;
       for (let m = 0; m < (1 << maxK); m++) {
         const force = {}, live = [];
         tms.forEach(t => { const qs = byTm[t]; if (m >= (1 << qs.length)) return; live.push(t); qs.forEach((q, i) => { force[q.name] = (m >> i) & 1 ? 'out' : 'in'; }); });
@@ -338,10 +342,32 @@ function kickoffMs(kicks, wk, tm) {
         live.forEach(t => {
           const V = vals[t] || (vals[t] = {});
           players.list.forEach(p => { if (p.isDST || p.tm !== t || !SKILL[p.pos]) return; (V[p.name] || (V[p.name] = []))[m] = projOf(p); });
+          // SCENARIO SIMS (Jack 2026-10-08: "make sure it sims completely with and without - I don't want a player in between, I
+          // want the 2 or 3 etc different scenarios"): this combination simmed on its own - same correlated Monte Carlo as the
+          // weekly rows (team env from this game only), median-relative boom / bust per player. A player OUT in it gets null.
+          const BB = bbs[t] || (bbs[t] = {});
+          const team = players.list.filter(p => !p.isDST && p.tm === t && SKILL[p.pos]);
+          const wps = team.map(p => (E.injAdj(p, currentWeek) === 0) ? null : E.weeklyProjection(p, currentWeek, scH, schedule));
+          const g = (schedule.byWeek[currentWeek] || []).filter(x => x.home === t || x.away === t);
+          const rngQ = E.makeRng(20265000 + currentWeek * 1000 + m * 37 + t.charCodeAt(0) * 7 + (t.charCodeAt(1) || 0));
+          const dr = team.map(() => new Float64Array(QS_SIMS));
+          for (let s = 0; s < QS_SIMS; s++) {
+            const env = E.drawWeekEnv(g, rngQ, players);
+            for (let i = 0; i < team.length; i++) { const w = wps[i]; if (w && E.effMean(w) > 0) dr[i][s] = E.samplePlayerScore(team[i], w, env, rngQ, 1); }
+          }
+          team.forEach((p, i) => {
+            const arr = BB[p.name] || (BB[p.name] = []);
+            const w = wps[i];
+            if (!w || !(E.effMean(w) > 0)) { arr[m] = null; return; }
+            const a = dr[i].sort(), med = a[Math.floor(QS_SIMS / 2)];
+            let bo = 0, bu = 0;
+            if (med > 0) { const hi = med * 1.5, lo = med * 0.5; for (let s2 = 0; s2 < QS_SIMS; s2++) { if (a[s2] >= hi) bo++; if (a[s2] <= lo) bu++; } }
+            arr[m] = [Math.round(100 * bo / QS_SIMS), Math.round(100 * bu / QS_SIMS)];
+          });
         });
       }
       tms.forEach(t => {
-        const qs = byTm[t], n = 1 << qs.length, v = {};
+        const qs = byTm[t], n = 1 << qs.length, v = {}, bbv = {};
         Object.keys(vals[t] || {}).forEach(nm => {
           const a = vals[t][nm], self = qs.findIndex(q => q.name === nm);
           // MONOTONE GUARD: one more teammate out never lowers anyone. The pool shares are by rank among the HEALTHY
@@ -358,12 +384,110 @@ function kickoffMs(kicks, wk, tm) {
           if (hi < 1 || hi - lo < 0.15) return;   // nothing moves (or a deep reserve) - the weekly row stands
           const flat = []; for (let m = 0; m < n; m++) flat.push(round1(a[m][0]), round1(a[m][1]), round1(a[m][2]));
           v[nm] = flat;
+          const bq = (bbs[t] || {})[nm] || [], fb = [];
+          for (let m = 0; m < n; m++) { const x = bq[m]; fb.push(x ? x[0] : null, x ? x[1] : null); }
+          bbv[nm] = fb;
         });
-        if (Object.keys(v).length) qsOut.teams[t] = { q: qs.map(q => q.name), v };
+        if (Object.keys(v).length) qsOut.teams[t] = { q: qs.map(q => q.name), v, bb: bbv };
       });
       console.log('questionable scenarios wk ' + currentWeek + ': ' + Object.keys(qsOut.teams).map(t => t + ' [' + qsOut.teams[t].q.join(', ') + '] ' + Object.keys(qsOut.teams[t].v).length + ' rows').join('; '));
     } else console.log('questionable scenarios: no candidates');
   } catch (e) { console.log('questionable scenarios failed: ' + (e && e.stack || e)); qsOut.teams = {}; }
+  // ---------- SEASON SCENARIOS (2026-10-09, Jack) ----------
+  // "Season sims in and out for very weird situations like the Packers backfield so we can see Lloyd with and without Jacobs."
+  // overrides.js SEASON_SCENARIOS lists the players; each gets two full rest-of-season worlds through the same injury layer
+  // (E.applyInSeasonInjuries opts.force): WITH = out until `back`, full strength from then on; WITHOUT = out every remaining
+  // week. Per world, every same-team QB/RB/WR/TE/K whose numbers move (>= .15 half in some week) gets weekly [h,p,s] rows for
+  // the weeks his team has not kicked off yet + a full season-sim row (same layout as seasonSim). The site's player card reads
+  // seasonScen[name].players[player].in / .out; the normal rows stay the blended read.
+  const seasonScenOut = {};
+  try {
+    const SCN = global.SEASON_SCENARIOS || {};
+    const SKILLK = { QB: 1, RB: 1, WR: 1, TE: 1, K: 1 };
+    Object.keys(SCN).forEach(sName => {
+      const sp = players.list.find(p => !p.isDST && p.name === sName);
+      if (!sp) { console.log('season scenario: ' + sName + ' not in the pool - skipped'); return; }
+      const cfg = SCN[sName] || {}, tm = sp.tm;
+      E.applyInSeasonInjuries(players, currentWeek, { active: injActive });
+      let back = cfg.back != null ? +cfg.back : null;
+      if (back == null) { back = currentWeek; while (back <= WEEKS && E.injAdj(sp, back) === 0) back++; }
+      const open = wk => wk >= currentWeek && now < kickoffMs(kicks, wk, tm);
+      const team = players.list.filter(p => !p.isDST && p.tm === tm && SKILLK[p.pos]);
+      const world = {};
+      [['in', { [sName]: { back } }], ['out', { [sName]: 'season-out' }]].forEach(([lab, force]) => {
+        E.applyInSeasonInjuries(players, currentWeek, { active: true, force });
+        const W = {};
+        team.forEach(p => {
+          const w = {};
+          for (let wk = currentWeek; wk <= WEEKS; wk++) {
+            if (!open(wk) || !(schedule.byTeam[tm] && schedule.byTeam[tm][wk])) continue;
+            if (E.injAdj(p, wk) === 0) { w[wk] = [0, 0, 0]; continue; }
+            const h = E.weeklyProjection(p, wk, scH, schedule), pp = E.weeklyProjection(p, wk, scP, schedule), st = E.weeklyProjection(p, wk, scS, schedule);
+            w[wk] = [h ? round1(E.effMean(h)) : 0, pp ? round1(E.effMean(pp)) : 0, st ? round1(E.effMean(st)) : 0];
+          }
+          W[p.name] = { w };
+        });
+        const ss = E.simSeason({ schedule, players, sims: 400, seed: 20269999, scoring: scH });
+        ss.forEach(r => {
+          if (r.player.isDST || r.player.tm !== tm || !W[r.player.name]) return;
+          W[r.player.name].s = [Math.round(r.p50), Math.round(r.p10), Math.round(r.p90), r.seasonBoom != null ? Math.round(100 * r.seasonBoom) : null,
+            r.seasonBust != null ? Math.round(100 * r.seasonBust) : null, r.top12 != null ? Math.round(100 * r.top12) : null, r.games, Math.round(r.banked || 0), r.gamesSim != null ? r.gamesSim : null];
+        });
+        world[lab] = W;
+      });
+      const outP = {};
+      team.forEach(p => {
+        const a = world.in[p.name], b = world.out[p.name]; if (!a || !b) return;
+        let moved = p.name === sName, hi = 0;
+        Object.keys(a.w).forEach(wk => { const x = a.w[wk], y = b.w[wk] || [0, 0, 0]; hi = Math.max(hi, x[0], y[0]); if (Math.abs(x[0] - y[0]) >= 0.15) moved = true; });
+        if (!moved || hi < 1) return;
+        outP[p.name] = { in: a, out: b };
+      });
+      seasonScenOut[sName] = { tm, note: cfg.note || '', back, from: currentWeek, players: outP };
+      const lines = Object.keys(outP).filter(n => n !== sName).map(n => {
+        const si = outP[n].in.s, so = outP[n].out.s; return n + ' ' + (si ? si[0] - si[7] : '?') + '/' + (so ? so[0] - so[7] : '?');
+      });
+      console.log('season scenario ' + sName + ' (' + tm + ', back wk ' + back + '): rest-of-season median with/without - ' + lines.join('; '));
+    });
+  } catch (e) { console.log('season scenarios failed: ' + (e && e.stack || e)); }
+
+  // ---------- IF THE STARTER SITS (2026-10-09, Jack: "add the starter sits line") ----------
+  // Handcuff value is real (backups score ~1.6x their own projection in weeks the starter misses, backtest_option_vor.py) but
+  // which starter gets hurt is unpredictable, so it is not in any ranking value - the card shows it as information instead.
+  // Per team: starter = the RB with the highest rest-of-season half PPG (seasonAgg); his next 3 RBs get their per-game
+  // projection [h, p, s] over the open weeks in the world where he is out for the rest of the season (same injury layer as
+  // the season scenarios). Teams whose starter is already out for the season are skipped (the normal rows are that world).
+  const ifSitsOut = {};
+  try {
+    const byTm = {};
+    players.list.forEach(p => {
+      if (p.isDST || p.pos !== 'RB') return;
+      const ag = seasonAgg[p.name]; const ppg = ag && ag.n > 0 ? ag.h / ag.n : 0;
+      if (ppg > 0) (byTm[p.tm] || (byTm[p.tm] = [])).push({ p, ppg });
+    });
+    E.applyInSeasonInjuries(players, currentWeek, { active: injActive });
+    const openWks = tm => { const o = []; for (let wk = currentWeek; wk <= WEEKS; wk++) if (now < kickoffMs(kicks, wk, tm) && schedule.byTeam[tm] && schedule.byTeam[tm][wk]) o.push(wk); return o; };
+    const live = {};
+    Object.keys(byTm).forEach(tm => { live[tm] = openWks(tm).some(wk => E.injAdj(byTm[tm].slice().sort((a, b) => b.ppg - a.ppg)[0].p, wk) > 0); });
+    Object.keys(byTm).forEach(tm => {
+      const rbs = byTm[tm].sort((a, b) => b.ppg - a.ppg);
+      if (rbs.length < 2 || !live[tm]) return;
+      const S = rbs[0].p, wks = openWks(tm);
+      E.applyInSeasonInjuries(players, currentWeek, { active: true, force: { [S.name]: 'season-out' } });
+      rbs.slice(1, 4).forEach(x => {
+        const t = [0, 0, 0]; let n = 0;
+        wks.forEach(wk => {
+          if (E.injAdj(x.p, wk) === 0) return;
+          const h = E.weeklyProjection(x.p, wk, scH, schedule), pp = E.weeklyProjection(x.p, wk, scP, schedule), st = E.weeklyProjection(x.p, wk, scS, schedule);
+          if (!h) return;
+          t[0] += E.effMean(h); t[1] += pp ? E.effMean(pp) : 0; t[2] += st ? E.effMean(st) : 0; n++;
+        });
+        if (n) ifSitsOut[x.p.name] = { s: S.name, v: t.map(v => round1(v / n)), n };
+      });
+    });
+    console.log('if-starter-sits rows: ' + Object.keys(ifSitsOut).length + ' backups' + (ifSitsOut['Braelon Allen'] ? ' (Braelon Allen if ' + ifSitsOut['Braelon Allen'].s + ' sits: ' + ifSitsOut['Braelon Allen'].v[1] + ' PPR/g)' : ''));
+  } catch (e) { console.log('if-starter-sits failed: ' + (e && e.stack || e)); }
+
   // restore the live injury state for everything below (auto-lock, ROS lock)
   E.applyInSeasonInjuries(players, currentWeek, { active: injActive });
 
@@ -404,7 +528,7 @@ function kickoffMs(kicks, wk, tm) {
       if ((todo.length || process.argv.includes('--ros-lock-now')) && !fs.existsSync(rosPath)) {
         const rp = []; Object.keys(rosAgg).forEach(nm => { const ra = rosAgg[nm]; const wks = Object.keys(ra.w).map(Number).filter(w => w > lwk).sort((a, b) => a - b); if (!wks.length) return;
           const avg = i => { const v = wks.map(w => ra.w[w][i]).filter(x => typeof x === 'number'); return v.length ? +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(2) : null; };
-          const ros = avg(0); if (!(ros >= 1)) return; rp.push({ name: nm, pos: ra.pos, tm: ra.tm, n: wks.length, ros, rosClay: avg(1), rosShadow: avg(2), w: ra.w }); });
+          const ros = avg(0); if (!(ros >= 1)) return; rp.push({ name: nm, pos: ra.pos, tm: ra.tm, n: wks.length, ros, rosClay: avg(1), rosShadow: avg(2), rosQbf: avg(3), w: ra.w }); });
         fs.writeFileSync(rosPath, JSON.stringify({ week: lwk, from: lwk + 1, season: SEASON, preset: 'half', lockedAt: new Date(now).toISOString(), base: 'shadow', players: rp }));
         console.log('ros-lock wk ' + lwk + ': ' + rp.length + ' players, weeks ' + (lwk + 1) + '-' + WEEKS + ' -> ' + path.basename(rosPath));
       }
@@ -430,7 +554,7 @@ function kickoffMs(kicks, wk, tm) {
           propSrc: r.propSrc || null,
           luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live)
           useLam: r.useLam != null ? +r.useLam.toFixed(2) : undefined, usePg: r.usePg != null ? +r.usePg.toFixed(2) : undefined, jsNoUse: r.jsNoUse != null ? +r.jsNoUse.toFixed(2) : undefined,   // live usage evidence inside jsMean at lock (usage_scorecard.py)
-          peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined,   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
+          peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined, ncPeck: r.ncPeck != null && r.ncPeck !== 1 ? +r.ncPeck.toFixed(3) : undefined, compsSrc: r.player && r.player.compsSrc ? r.player.compsSrc : undefined,   /* 'gamelog' = comps split from own game logs (build_stat_shape.py), absent = Clay's sheet */ ncPeckRank: r.ncPeckRank != null ? r.ncPeckRank : undefined,   /* SHADOW pecking dock inside ncMean (shipped base) + rank, 2026-10-09 */   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
           vol: r.vol != null && r.vol !== 1 ? +r.vol.toFixed(3) : undefined, health: r.health ? +r.health.toFixed(2) : undefined, useHurt: r.useHurt || undefined,
           bb: r.bb || undefined, jsPre: r.jsPre != null ? +r.jsPre.toFixed(2) : undefined,   // weeks-ahead / all-weeks base blend: jsMean = bb x shadow + (1 - bb) x jsPre (the Clay-blend model before the blend)   // 2026-10-07 layers (volume context / banged-up prior / hurt usage games) for per-layer grading
           ret: r.ret != null && r.ret !== 1 ? +r.ret.toFixed(3) : undefined,   // return ramp inside the number at lock (return_scorecard.py)
@@ -624,7 +748,9 @@ function kickoffMs(kicks, wk, tm) {
     xfp: xfp,
     inj: inj,
     injKd: injKd,
-    injRes: injRes
+    injRes: injRes,
+    seasonScen: seasonScenOut,
+    ifSits: ifSitsOut
   };
   fs.writeFileSync(OUT_JSON, JSON.stringify(payload));
   const jsHeader =
@@ -635,7 +761,7 @@ function kickoffMs(kicks, wk, tm) {
     '// pre-kickoff values by the exporter (never recomputed).\n' +
     '// luck[name] = [pos, expectedTD|expectedKickPts, actual, games, adjThisWeekHalf|null, weekly xtd/td map|null] (card TD/FG LUCK box).\n' +
     '// xfp[name][wk] = expected components: RB/WR/TE tg,xrec,xrecyd,xrectd,car,xruyd,xrutd; QB att,xpyd,xptd,car,xruyd,xrutd,xint (card xFP column; targets via nflfastR cp/xYAC, xint = expected INTs).\n' +
-    '// qs = {wk, teams: {TM: {q: [questionable names], v: {name: [h,p,s per mask]}}}}: this week\'s in/out combinations (mask bit i = q[i] OUT) for the site ASSUMED OUT toggles.\n' +
+    '// qs = {wk, teams: {TM: {q: [questionable names], v: {name: [h,p,s per mask]}, bb: {name: [boom%,bust% per mask]}}}}: this week\'s in/out combinations (mask bit i = q[i] OUT), each simmed on its own, for the site ASSUMED OUT toggles.\n' +
     '// inj[name] = the injury layer\'s read (rankings INJ view): f,t window; m mult; pl P(plays); src; g group; c {wk: P(plays)} after the window; k / pm games missed; nx first game week back; rr first-game-back multiplier; sq practice; gs game status; nt news line; kd kicked off; pd played.\n';
   fs.writeFileSync(OUT_JS, jsHeader + 'window.SIM_PROJ_2026 = ' + JSON.stringify(payload) + ';\n');
   const kb = Math.round(fs.statSync(OUT_JS).size / 1024);

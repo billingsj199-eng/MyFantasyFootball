@@ -1,0 +1,36 @@
+slow-rookie WRs drafted 2018-22: 129, bounced back 8 (6%); picks 1-64: 28 (18% bounced)
+
+=== signal alone: AUC for bounce-back (all / picks 1-100) ===
+  pk        all 0.833   picks<=100 0.619   n 129
+  jm        all 0.815   picks<=100 0.678   n 119
+  vac       all 0.502   picks<=100 0.544   n 36
+  vac_same  all 0.414   picks<=100 0.430   n 36
+  new_hc    all 0.453   picks<=100 0.509   n 36
+  new_pc    all 0.579   picks<=100 0.702   n 36
+  moved     all 0.500   picks<=100 0.500   n 33
+  dc1       all 0.730   picks<=100 0.593   n 129
+  tgt4      all 0.846   picks<=100 0.782   n 129
+  snap4     all 0.816   picks<=100 0.712   n 129
+  xfp4      all 0.840   picks<=100 0.770   n 129
+  wopr4     all 0.845   picks<=100 0.774   n 129
+
+=== beyond pedigree: leave-one-year-out logistic AUC, base = pk + jm (jm missing -> group mean) ===
+  base pk+jm: 0.794
+  + vac       0.540
+  + vac_same  0.801
+  + new_hc    0.677
+  + new_pc    0.720
+  + moved     0.794
+  + dc1       0.804
+  + tgt4      0.871
+  + snap4     0.849
+  + xfp4      0.829
+  + wopr4     0.849
+  + early (tgt4+snap4+xfp4): 0.850
+  + preseason (vac+vac_same+new_pc+dc1): 0.579
+
+=== bounce-back rate by early target share (through week 4 of year 2) ===
+  tgt share 0.00-0.05: n 106 bounced 2%  dj chark 2019, jameson williams 2023
+  tgt share 0.05-0.12: n 9   bounced 0%  
+  tgt share 0.12-0.18: n 9   bounced 22%  nico collins 2022, wandale robinson 2023
+  tgt share 0.18-1.00: n 5   bounced 80%  courtland sutton 2019, michael pittman 2021, michael gallup 2019, darnell mooney 2021

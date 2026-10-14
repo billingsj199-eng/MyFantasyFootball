@@ -1,0 +1,71 @@
+rows 14672 RB/WR/TE; base = shadow x NMU x PROMO x TEAM_VAC (WR/TE absences)
+
+C1 read: RB rows getting TEAM_VAC / NMU: 1434, actual/base 0.965; same rows without those layers 1.011
+C1 read: TE rows when only WRs are out: 646, actual/base 1.056; without TV/NMU 1.104
+C1 read: WR rows with a WR/TE out: 1731, actual/base 0.985
+
+=== C1 RB/TE excluded from TEAM_VAC + NMU: touched rows 2080 ===
+  actual/base on touched rows by season: 2019:0.927 2020:0.942 2021:0.935 2022:0.973 2023:1.016 2024:0.974 2025:1.095 | all 0.985
+  LOYO: touched +0.31% (0/7), board +0.049% | picks ['off', 'RB half TV/NMU', 'off', 'RB half TV/NMU', 'RB no TV', 'off', 'RB no TV']
+  FORWARD: touched +0.64% (1/4), board +0.093% | picks ['RB+TE(WR out) no TV/NMU', 'RB no TV', 'RB half TV/NMU', 'RB no TV']
+  fixed, all seasons (touched MSE / seasons better): RB no TV +0.01% 3/7  RB no TV/NMU +0.27% 2/7  RB half TV/NMU -0.01% 3/7  RB+TE(WR out) no TV/NMU +0.68% 2/7
+
+=== C1a RB rows only: touched rows 1434 ===
+  actual/base on touched rows by season: 2019:0.926 2020:0.939 2021:0.937 2022:0.975 2023:0.983 2024:0.922 2025:1.059 | all 0.965
+  LOYO: touched +0.40% (0/7), board +0.049% | picks ['off', 'RB half TV/NMU', 'off', 'RB half TV/NMU', 'RB no TV', 'off', 'RB no TV']
+  FORWARD: touched +0.70% (1/4), board +0.083% | picks ['RB no TV/NMU', 'RB no TV', 'RB half TV/NMU', 'RB no TV']
+  fixed, all seasons (touched MSE / seasons better): RB no TV +0.02% 3/7  RB no TV/NMU +0.35% 2/7  RB half TV/NMU -0.01% 3/7
+C2 read: QB out, RB1: n 240 actual/base 1.021 (ADP<=60 share 0.50)
+C2 read: QB out, RB2: n 137 actual/base 0.955 (ADP<=60 share 0.11)
+C2 read: QB out, WR1: n 241 actual/base 0.991 (ADP<=60 share 0.41)
+C2 read: QB out, WR2: n 202 actual/base 0.945 (ADP<=60 share 0.14)
+C2 read: QB out, WR3: n 99 actual/base 0.864 (ADP<=60 share 0.03)
+C2 read: QB out, TE: n 279 actual/base 1.001 (ADP<=60 share 0.08)
+
+=== C2a QB out: WR dock by room rank (replaces ADP <= 60 tier): touched rows 619 ===
+  actual/base on touched rows by season: 2019:0.882 2020:0.908 2021:0.866 2022:1.003 2023:0.928 2024:1.063 2025:0.889 | all 0.941
+  LOYO: touched -0.46% (4/7), board -0.018% | picks ['WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15']
+  FORWARD: touched -0.02% (2/4), board -0.001% | picks ['WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15', 'WR1 -0.10 WR2+ -0.15']
+  fixed, all seasons (touched MSE / seasons better): WR1 -0.05 WR2+ -0.10 +0.67% 4/7  WR1 -0.05 WR2+ -0.15 +0.31% 3/7  WR1 -0.00 WR2+ -0.10 +2.12% 2/7  WR1 -0.00 WR2+ -0.15 +1.76% 3/7  WR1 -0.10 WR2+ -0.15 -0.46% 4/7  WR1 -0.05 WR2+ -0.20 +0.48% 3/7
+
+=== C2b QB out: RB1 lift: touched rows 240 ===
+  actual/base on touched rows by season: 2019:1.104 2020:0.830 2021:0.837 2022:1.217 2023:1.085 2024:0.853 2025:1.098 | all 1.021
+  LOYO: touched +1.54% (0/7), board +0.037% | picks ['off', 'RB1 x1.04', 'RB1 x1.04', 'off', 'off', 'RB1 x1.04', 'off']
+  FORWARD: touched +0.80% (0/4), board +0.023% | picks ['off', 'off', 'RB1 x1.04', 'off']
+  fixed, all seasons (touched MSE / seasons better): RB1 x1.04 +0.24% 4/7  RB1 x1.08 +1.25% 4/7  RB1 x1.12 +3.03% 4/7  RB1 x1.16 +5.58% 3/7
+C3 read: QB no WR/TE out: n 1598 actual/shadow 0.997
+C3 read: QB WR/TE out .10-.20: n 380 actual/shadow 1.013
+C3 read: QB WR/TE out .20+: n 292 actual/shadow 1.014
+C3 read: QB TE out only: n 192 actual/shadow 1.071
+C3 read: QB WR out only: n 430 actual/shadow 0.981
+
+=== C3 QB lift when WR/TE are out: touched rows 672 ===
+  actual/base on touched rows by season: 2019:1.055 2020:0.994 2021:0.927 2022:1.004 2023:0.973 2024:1.020 2025:1.099 | all 1.013
+  LOYO: touched -0.81% (5/7), board -0.231% | picks ['QB x1.06 if TE out', 'QB x1.06 if TE out', 'QB x1.06 if TE out', 'QB x1.06 if TE out', 'QB x1.06 if TE out', 'QB x1.06 if TE out', 'QB x1.06 if TE out']
+  FORWARD: touched -0.44% (3/4), board -0.121% | picks ['QB x1.06 if TE out', 'QB x1.06 if TE out', 'QB x1.03 if TE out', 'QB x1.06 if TE out']
+  fixed, all seasons (touched MSE / seasons better): QB x(1+0.05vac) -0.15% 5/7  QB x(1+0.1vac) -0.16% 5/7  QB x(1+0.2vac) +0.23% 3/7  QB x(1+0.3vac) +1.18% 3/7  QB x1.03 if TE out -0.57% 5/7  QB x1.06 if TE out -0.81% 5/7
+C5 read: direct backup, RB1 out (all)     n 158 actual/base 1.262 | 2019:0.84 2020:1.15 2021:1.17 2022:1.64 2023:1.39 2024:1.42 2025:1.11
+C5 read: clear RB2                        n  65 actual/base 1.265 | 2020:0.87 2021:1.49 2022:1.29 2023:1.37 2024:1.35 2025:1.23
+C5 read: clear RB2 + catches              n  22 actual/base 1.269 | 2020:0.64 2021:1.22 2022:1.12 2023:1.53 2024:1.21 2025:1.48
+C5 read: clear + catches + workhorse out  n  10 actual/base 1.146 | 2020:0.41 2021:1.25 2022:1.82 2023:1.01 2024:1.41 2025:1.53
+C5 read: not clear                        n  93 actual/base 1.258 | 2019:0.84 2020:1.39 2021:1.02 2022:2.30 2023:1.43 2024:1.48 2025:0.87
+C5 read: clear, no catching role          n  43 actual/base 1.263 | 2020:0.98 2021:1.83 2022:1.35 2023:1.22 2024:1.43 2025:1.16
+
+=== C5 clear RB2 with a receiving role, RB1 out: touched rows 22 ===
+  actual/base on touched rows by season: 2019:0.000 2020:0.615 2021:1.193 2022:1.086 2023:1.444 2024:1.198 2025:1.429 | all 1.222
+  LOYO: touched -6.43% (5/7), board -0.017% | picks ['x1.16', 'x1.16', 'x1.16', 'x1.16', 'x1.08', 'x1.16', 'x1.16']
+  FORWARD: touched -4.93% (2/4), board -0.013% | picks ['off', 'off', 'x1.16', 'x1.16']
+  fixed, all seasons (touched MSE / seasons better): x1.04 -4.02% 5/7  x1.08 -7.27% 5/7  x1.12 -9.75% 5/7  x1.16 -11.47% 5/7
+
+=== C5b ANY direct backup (trailing RB2) when the trailing RB1 is out: touched rows 158 ===
+  actual/base on touched rows by season: 2019:0.816 2020:1.091 2021:1.136 2022:1.577 2023:1.333 2024:1.373 2025:1.085 | all 1.214
+  LOYO: touched -3.20% (4/7), board -0.049% | picks ['x1.2', 'x1.2', 'x1.2', 'x1.15', 'x1.15', 'x1.15', 'x1.2']
+  FORWARD: touched -4.68% (2/4), board -0.074% | picks ['off', 'x1.1', 'x1.15', 'x1.2']
+  fixed, all seasons (touched MSE / seasons better): x1.05 -2.19% 5/7  x1.1 -3.64% 5/7  x1.15 -4.35% 4/7  x1.2 -4.33% 4/7  x1.25 -3.56% 3/7
+
+=== C5c direct backup split workhorse / committee: touched rows 158 ===
+  actual/base on touched rows by season: 2019:0.816 2020:1.091 2021:1.136 2022:1.577 2023:1.333 2024:1.373 2025:1.085 | all 1.214
+  LOYO: touched +0.91% (2/7), board +0.014% | picks ['comm x1.2', 'comm x1.2', 'comm x1.2', 'comm x1.2', 'wh x1.15', 'wh x1.15', 'comm x1.2']
+  FORWARD: touched -0.24% (1/4), board -0.004% | picks ['off', 'wh x1.15', 'wh x1.15', 'comm x1.2']
+  fixed, all seasons (touched MSE / seasons better): wh x1.05 -0.87% 5/7  comm x1.05 -1.32% 4/7  wh x1.1 -1.34% 5/7  comm x1.1 -2.30% 4/7  wh x1.15 -1.42% 3/7  comm x1.15 -2.93% 4/7  wh x1.2 -1.10% 3/7  comm x1.2 -3.23% 3/7
+C5 read by base level: base 0-5: n 22 2.01 | base 5-8: n 54 1.16 | base 8-11: n 57 1.20 | base 11-99: n 25 1.09

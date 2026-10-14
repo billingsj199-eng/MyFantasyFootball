@@ -14,6 +14,9 @@
 // Leave a team out to keep the automatic detection (vet opens the season,
 // games estimated from Clay's point split).
 // ============================================================================
+// 2026-10-09 (Jack: "use depth charts for the qb starters"): from the current week on the ESPN chart QB1 starts every
+// remaining game (engine qbChartWindows); these windows now only describe games ALREADY PLAYED. The LV / CLE future
+// handoffs below no longer apply unless the chart changes. Kill: window.SIM_QB_CHART = false (restores these windows).
 window.QB_ROOM_OVERRIDES = {
   ATL: [['Cooper Rush', 2], ['Michael Penix Jr.', 15], ['Tua Tagovailoa', 0]],   // 2026-09-23 (Jack): Rush started W1-2, Penix announced starter from W3 on; Tua 0 = benched (Penix keeps Clay's per-start rate). 2026-10-02 (Jack): Penix is the starter the rest of the season barring injury - unchanged
   // 2026-10-02 (Jack): "both browns and raiders starting qbs have played well so I would assume they go further into
@@ -83,7 +86,8 @@ window.IN_SEASON_OUT_OVERRIDES = {
   'Jayden Reed': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: neck surgery, season-ending (LaFleur 9/30)
   'Jayden Higgins': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: torn ACL in camp, season over (NFL Network)
   'Omar Cooper Jr.': [3, 5, '2026-10-05'],   // 2026-10-05 recheck: high ankle, IR-DTR 9/19; eligible W6, not expected to miss much beyond the minimum (med)
-  'Dallas Goedert': [3, 5, '2026-10-05', 7],   // 2026-10-05 recheck: MCL, 'a few weeks', no practice since; W6 likelier than W5 (low)
+  'TreVeyon Henderson': [6, 7, '2026-10-12', 9],   // 2026-10-12 (P-20261014-1, Jack approved 10-14): high ankle W5, no surgery, 'multiple weeks' (Schefter); 4 car W5 = hurt in game
+  'Dallas Goedert': [3, 4, '2026-10-11'],   // 2026-10-11: practiced LP/LP/FP, no game designation -> active W5 (was MCL, 'a few weeks')
   'Jonah Coleman': [3, 6, '2026-10-05'],   // 2026-10-05 recheck: high ankle, IR 9/26; expected back when first eligible, W7 vs ARI (ESPN / 9News, med)
   'Jonathon Brooks': [3, 8, '2026-10-05', 10],   // 2026-10-05 recheck: core muscle surgery, IR 9/23; 6-8 wks (Canales) = W9-W10
   'Isiah Pacheco': [3, 13, '2026-10-05', 15],   // 2026-10-05 recheck: back surgery 9/14, 12-wk recovery, 'chance' by early December (Rapoport); W13 is the optimistic end
@@ -121,4 +125,14 @@ window.ELITE_CBS_2026 = [
 //   'Bijan Robinson': 0,      // ruled out late — books pulled his lines
 //   'Puka Nacua': 0.4,        // trust the model more this week
 window.PROP_ANCHOR_OVERRIDES = {
+};
+
+// SEASON_SCENARIOS (2026-10-09, Jack: "season sims in and out for very weird situations like the Packers backfield so we can
+// see Lloyd with and without Jacobs"): every player listed here gets two extra full rest-of-season worlds in the site export -
+// WITH him (back at full strength from `back`, default = his first game week after the current window) and WITHOUT him (out
+// for the rest of the season). Each teammate whose numbers move gets weekly rows + a season sim in both, and the site's
+// player card shows a WITH / WITHOUT toggle. The normal projections stay the blended read (P(plays) per week).
+// Remove an entry once the situation resolves (ruling, return, IR to season-ending).
+window.SEASON_SCENARIOS = {
+  'Josh Jacobs': { note: "Commissioner's Exempt List - no ruling yet", back: 6 },   // 2026-10-09: WITH = plays from week 6
 };

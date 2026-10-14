@@ -1,0 +1,29 @@
+slow-rookie year-2 WRs valued at week 4: 129 (2019-2023), bounced back 8
+
+per-year Spearman within the group (mean over years) by k:
+  k 0     T3 0.440   T5 0.410   bounce AUC 0.959
+  k 0.05  T3 0.447   T5 0.416   bounce AUC 0.963
+  k 0.1   T3 0.446   T5 0.417   bounce AUC 0.962
+  k 0.2   T3 0.447   T5 0.425   bounce AUC 0.960
+  k 0.3   T3 0.463   T5 0.440   bounce AUC 0.962
+  k 0.4   T3 0.472   T5 0.440   bounce AUC 0.961
+  k 0.5   T3 0.476   T5 0.436   bounce AUC 0.957
+  k 0.75  T3 0.488   T5 0.444   bounce AUC 0.951
+  k 1.0   T3 0.495   T5 0.457   bounce AUC 0.951
+  k 1.5   T3 0.503   T5 0.456   bounce AUC 0.944
+  tgt4 alone: T3 0.568   bounce AUC 0.846
+
+LOYO (k picked on T3 of the other years): picks [1.5, 1.5, 1.5, 1.5, 1.0]
+  held-out T3 Spearman gain +0.0438 (3/5)
+  held-out T5 Spearman gain +0.0302 (2/3)
+  bounce AUC: SIM 0.959 -> SIM + tgt4 (held-out k) 0.950
+
+bounce-backs: SIM rank in group (held-out layer rank) — tgt4
+   2019 courtland sutton       pick 40   of 30  SIM #1    layer #2    tgt4 0.22
+   2019 michael gallup         pick 81   of 30  SIM #3    layer #1    tgt4 0.24
+   2019 dj chark               pick 61   of 30  SIM #2    layer #5    tgt4 0.00
+   2021 michael pittman        pick 34   of 28  SIM #2    layer #1    tgt4 0.26
+   2021 darnell mooney         pick 173  of 28  SIM #4    layer #2    tgt4 0.26
+   2022 nico collins           pick 89   of 29  SIM #3    layer #2    tgt4 0.15
+   2023 wandale robinson       pick 43   of 22  SIM #1    layer #2    tgt4 0.17
+   2023 jameson williams       pick 12   of 22  SIM #7    layer #8    tgt4 0.00

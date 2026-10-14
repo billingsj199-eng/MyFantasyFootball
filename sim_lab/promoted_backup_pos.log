@@ -1,0 +1,28 @@
+base = shadow x wired NMU (1630 rows moved)
+rows 15356 RB/WR/TE player-weeks (shadow >= 1); with a regular ahead absent: 1358
+
+actual / shadow by cell (reference = no regular absent)
+  RB reference 0.997 (n 4257)
+    own lo  (clay/g <4) regulars out 1 : 1.010 (n 96)
+    own lo  (clay/g <4) regulars out 2+: 0.838 (n 8)
+    own mid (clay/g 4-7) regulars out 1 : 1.135 (n 109)
+    own hi  (clay/g 7+) regulars out 1 : 1.001 (n 90)
+    lead regular out (any level): 1.062 (n 270)
+  WR reference 0.990 (n 6437)
+    own lo  (clay/g <4) regulars out 1 : 1.112 (n 260)
+    own lo  (clay/g <4) regulars out 2+: 1.515 (n 22)
+    own mid (clay/g 4-7) regulars out 1 : 1.058 (n 353)
+    own mid (clay/g 4-7) regulars out 2+: 0.866 (n 35)
+    own hi  (clay/g 7+) regulars out 1 : 1.044 (n 252)
+    own hi  (clay/g 7+) regulars out 2+: 0.850 (n 8)
+    lead regular out (any level): 1.096 (n 592)
+  TE reference 1.005 (n 3304)
+    own lo  (clay/g <4) regulars out 1 : 1.302 (n 101)
+    own mid (clay/g 4-7) regulars out 1 : 1.198 (n 21)
+    lead regular out (any level): 1.281 (n 122)
+
+LOYO: promoted rows MSE -0.43% (5/7 seasons better), whole board -0.035%
+
+FORWARD: promoted rows MSE -0.44% (3/4 seasons better), whole board -0.043%
+
+fitted multipliers (all seasons): RB any out1: 1.034, TE any out1: 1.207, WR any out1: 1.071

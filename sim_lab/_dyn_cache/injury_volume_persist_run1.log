@@ -1,0 +1,60 @@
+surge seasons (PPR/g >= 8 and >= 1.3x Clay projection, 6+ games), 2019-23: 137
+  INJURY    30  RB 8 WR 18 TE 4
+  MIXED     22  RB 9 WR 12 TE 1
+  ORGANIC   85  RB 25 WR 38 TE 22
+
+=== does it last? (means; next season = 4+ games) ===
+group              n  proj Y  PPR/g Y   w/ reg  fill-in  next PPR/g  keep %  next proj  opp/g Y fill  healthy   next
+ALL INJURY        30     4.8     10.4      7.2     13.5         8.1     76%        8.8           9.4      6.0    6.3
+ALL ORGANIC       85     8.1     13.3     13.3     13.4        11.4     89%       12.0          10.6      9.4    8.9
+RB INJURY          8     5.5     10.5      6.1     14.2         6.5     58%        8.0          17.0      9.0    8.4
+RB ORGANIC        25     7.8     13.1     13.1     13.0        10.7     90%       11.7          18.7     14.8   14.2
+WR INJURY         18     4.9     10.7      8.0     13.7         8.7     81%        9.3           6.7      4.9    5.5
+WR ORGANIC        38     8.8     14.1     14.3     13.9        12.8     90%       13.2           7.6      7.6    7.3
+TE ORGANIC        22     7.2     11.9     11.9     10.9         9.9     86%       10.4           6.8      6.3    5.7
+   proj = Clay preseason PPR/g; w/ reg = his games with every regular ahead active; keep % = next PPR/g / surge PPR/g; opp = targets + carries per game
+
+INJURY-driven: which surge-year split predicts next season? Spearman with next PPR/g
+  ppg     +0.448  (n 26)
+  ppg_F   +0.305  (n 26)
+  ppg_N   +0.310  (n 24)
+  cppr    +0.306  (n 26)
+  n_cppr  +0.685  (n 26)
+  next season: avg 1.7 of 11.9 games again as a fill-in
+
+=== does the Dynasty SIM / market over-credit it? log(realized 2-yr VOR pos rank / predicted pos rank), + = finished WORSE than predicted ===
+  INJURY   SIM: +0.19 (n 30)   FFC market: +0.32 (n 14)
+  MIXED    SIM: +0.29 (n 22)   FFC market: +0.41 (n 17)
+  ORGANIC  SIM: +0.25 (n 85)   FFC market: +0.42 (n 64)
+
+INJURY-driven surges (name, year, games as fill-in, PPR/g w/ regular -> fill-in -> next season):
+   RB 2021 Chuba Hubbard            fill-in 10/16   4.7 ->  10.8 | next   7.5 (12 g, 0 fill-in)  proj 3.9 -> 4.6
+   RB 2021 Darrel Williams          fill-in  7/17   6.5 ->  15.3 | next   3.8 (5 g, 1 fill-in)  proj 5.2 -> 4.6
+   RB 2021 Boston Scott             fill-in  4/9    7.2 ->  14.0 | next   3.4 (13 g, 0 fill-in)  proj 4.7 -> 4.5
+   RB 2021 Elijah Mitchell          fill-in  9/11   6.8 ->  15.8 | next   8.4 (5 g, 0 fill-in)  proj 3.9 -> 13.2
+   RB 2022 Eno Benjamin             fill-in  3/9    6.4 ->  11.9 | next   nan (0 g, 0 fill-in)  proj 4.3 -> nan
+   RB 2022 Jerick McKinnon          fill-in  7/17   5.3 ->  16.5 | next   6.0 (12 g, 2 fill-in)  proj 6.7 -> 9.7
+   RB 2022 Kenneth Walker III       fill-in 11/15   7.0 ->  15.9 | next  13.3 (15 g, 0 fill-in)  proj 9.1 -> 14.1
+   RB 2023 D'Onta Foreman           fill-in  5/9    4.6 ->  13.5 | next   3.0 (10 g, 10 fill-in)  proj 6.4 -> 5.5
+   TE 2019 Kaden Smith              fill-in  7/7    nan ->   8.6 | next   1.6 (13 g, 0 fill-in)  proj 0.2 -> 2.3
+   TE 2021 Pat Freiermuth           fill-in  8/16   7.0 ->  11.8 | next   9.9 (15 g, 0 fill-in)  proj 3.4 -> 9.0
+   TE 2022 Greg Dulcich             fill-in 10/10   nan ->   8.6 | next   nan (0 g, 0 fill-in)  proj 3.2 -> nan
+   TE 2023 Trey McBride             fill-in 10/17   4.6 ->  14.9 | next  15.2 (16 g, 0 fill-in)  proj 4.7 -> 12.1
+   WR 2019 Diontae Johnson          fill-in 13/16   9.2 ->  10.0 | next  14.8 (15 g, 0 fill-in)  proj 3.4 -> 11.9
+   WR 2019 Deebo Samuel             fill-in  7/15  10.0 ->  15.6 | next  11.5 (7 g, 0 fill-in)  proj 6.5 -> 14.0
+   WR 2019 Breshad Perriman         fill-in  3/14   4.8 ->  22.6 | next   7.0 (12 g, 2 fill-in)  proj 5.2 -> 10.5
+   WR 2020 Rashard Higgins          fill-in  8/12   8.4 ->   8.6 | next   3.8 (12 g, 0 fill-in)  proj 2.4 -> 3.2
+   WR 2020 Kendrick Bourne          fill-in  9/15   6.7 ->   9.9 | next  10.6 (17 g, 4 fill-in)  proj 3.1 -> 4.9
+   WR 2020 Richie James             fill-in  6/7    4.8 ->   8.7 | next   nan (0 g, 0 fill-in)  proj 0.8 -> nan
+   WR 2021 Cedrick Wilson           fill-in 10/14   6.1 ->  10.1 | next   2.3 (9 g, 0 fill-in)  proj 2.1 -> 9.0
+   WR 2021 Hunter Renfrow           fill-in 10/17  10.1 ->  13.7 | next   6.1 (10 g, 0 fill-in)  proj 6.3 -> 12.4
+   WR 2022 Greg Dortch              fill-in 11/11   nan ->  10.3 | next   7.2 (9 g, 8 fill-in)  proj 0.5 -> 3.3
+   WR 2022 Christian Watson         fill-in  6/14   7.1 ->  17.9 | next  11.3 (9 g, 0 fill-in)  proj 6.7 -> 13.9
+   WR 2022 Mack Hollins             fill-in  7/17   7.0 ->  12.0 | next   4.8 (9 g, 7 fill-in)  proj 5.1 -> 6.8
+   WR 2023 Jayden Reed              fill-in  7/16  11.3 ->  16.5 | next  11.6 (17 g, 3 fill-in)  proj 8.6 -> 12.1
+   WR 2023 Noah Brown               fill-in  5/10   2.9 ->  14.1 | next   6.3 (11 g, 0 fill-in)  proj 4.3 -> 4.5
+   WR 2023 Rashee Rice              fill-in 12/16  11.1 ->  14.0 | next   nan (0 g, 0 fill-in)  proj 6.3 -> nan
+   WR 2023 Puka Nacua               fill-in  8/17  14.1 ->  21.4 | next  18.8 (11 g, 0 fill-in)  proj 6.4 -> 17.2
+   WR 2023 Kendrick Bourne          fill-in  3/8    8.0 ->  20.0 | next   5.4 (12 g, 4 fill-in)  proj 7.4 -> 8.7
+   WR 2023 Darius Slayton           fill-in  9/17   6.0 ->  11.4 | next   6.9 (16 g, 2 fill-in)  proj 6.7 -> 7.9
+   WR 2023 Wan'Dale Robinson        fill-in  9/15   7.6 ->   9.8 | next  10.7 (17 g, 2 fill-in)  proj 6.6 -> 8.9

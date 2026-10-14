@@ -1,0 +1,66 @@
+2026 valuation after week 4 (year-0 share 0.78)
+1qb: 859 players valued
+sf: 859 players valued
+wrote E:/MyFantasyFootball/MyFantasyFootball Files/.claude/worktrees/dynasty-sim-proto/data/dynasty_sim_2026.js: 859 players
+--- 1qb top 30
+  1 Jaxon Smith-Njigba       WR  age24  g26 4 val   525  win3  282 youth  162  comp: Odell Beckham Jr. '16
+  2 Puka Nacua               WR  age25  g26 2 val   521  win3  286 youth  157  comp: Larry Fitzgerald '09
+  3 Jahmyr Gibbs             RB  age24  g26 4 val   510  win3  299 youth  140  comp: Christian McCaffrey '20
+  4 Amon-Ra St. Brown        WR  age26  g26 4 val   484  win3  272 youth  142  comp: Larry Fitzgerald '09
+  5 Ja'Marr Chase            WR  age26  g26 4 val   477  win3  275 youth  135  comp: Larry Fitzgerald '09
+  6 Bijan Robinson           RB  age24  g26 4 val   476  win3  278 youth  132  comp: Doug Martin '13
+  7 Chris Olave              WR  age26  g26 4 val   469  win3  270 youth  132  comp: Calvin Johnson '12
+  8 CeeDee Lamb              WR  age27  g26 4 val   458  win3  254 youth  136  comp: Randy Moss '04
+  9 Tetairoa McMillan        WR  age23  g26 4 val   457  win3  242 youth  143  comp: Puka Nacua '24
+ 10 Ashton Jeanty            RB  age22  g26 4 val   441  win3  228 youth  142  comp: Maurice Jones-Drew '07
+ 11 Nico Collins             WR  age27  g26 2 val   433  win3  253 youth  120  comp: Larry Fitzgerald '10
+ 12 Zay Flowers              WR  age25  g26 3 val   425  win3  247 youth  119  comp: Jarvis Landry '18
+ 13 Carnell Tate             WR  age21  g26 4 val   414  win3  197 youth  145  comp: Amari Cooper '16
+ 14 Drake London             WR  age25  g26 4 val   378  win3  213 youth  110  comp: Mike Evans '18
+ 15 Tee Higgins              WR  age27  g26 4 val   341  win3  219 youth   81  comp: Keenan Allen '19
+ 16 Josh Allen               QB  age30  g26 4 val   340  win3  194 youth   97  comp: Cam Newton '12
+ 17 Kenneth Walker III       RB  age25  g26 4 val   336  win3  217 youth   79  comp: Jamal Lewis '04
+ 18 De'Von Achane            RB  age24  g26 3 val   313  win3  195 youth   79  comp: Eddie Lacy '14
+ 19 Denzel Boston            WR  age22  g26 4 val   308  win3  153 youth  103  comp: Brandin Cooks '16
+ 20 Rashee Rice              WR  age26  g26 3 val   304  win3  187 youth   78  comp: Alshon Jeffery '16
+ 21 Luther Burden III        WR  age22  g26 4 val   295  win3  154 youth   94  comp: Sammy Watkins '15
+ 22 Justin Jefferson         WR  age27  g26 3 val   290  win3  194 youth   64  comp: Marques Colston '10
+ 23 Garrett Wilson           WR  age26  g26 4 val   285  win3  174 youth   74  comp: Alshon Jeffery '16
+ 24 Jeremiyah Love           RB  age21  g26 4 val   284  win3  155 youth   86  comp: Bijan Robinson '24
+ 25 George Pickens           WR  age25  g26 4 val   283  win3  168 youth   77  comp: Demaryius Thomas '13
+ 26 Kyren Williams           RB  age26  g26 4 val   274  win3  199 youth   50  comp: Adrian Peterson '11
+ 27 Emeka Egbuka             WR  age23  g26 4 val   268  win3  134 youth   89  comp: DeAndre Hopkins '15
+ 28 Jonathan Taylor          RB  age27  g26 4 val   262  win3  198 youth   42  comp: Maurice Jones-Drew '12
+ 29 Jordyn Tyson             WR  age22  g26 0 val   245  win3  109 youth   91  comp: Tetairoa McMillan '25
+ 30 James Cook               RB  age26  g26 4 val   242  win3  179 youth   42  comp: Jamaal Charles '13
+--- sf top 30
+  1 Josh Allen               QB  age30  g26 4 val   555  win3  294 youth  174  comp: Drew Brees '08
+  2 Jaxon Smith-Njigba       WR  age24  g26 4 val   525  win3  282 youth  162  comp: Odell Beckham Jr. '16
+  3 Puka Nacua               WR  age25  g26 2 val   521  win3  286 youth  157  comp: Larry Fitzgerald '09
+  4 Jahmyr Gibbs             RB  age24  g26 4 val   510  win3  299 youth  140  comp: Christian McCaffrey '20
+  5 Amon-Ra St. Brown        WR  age26  g26 4 val   484  win3  272 youth  142  comp: Larry Fitzgerald '09
+  6 Ja'Marr Chase            WR  age26  g26 4 val   477  win3  275 youth  135  comp: Larry Fitzgerald '09
+  7 Bijan Robinson           RB  age24  g26 4 val   476  win3  278 youth  132  comp: Doug Martin '13
+  8 Chris Olave              WR  age26  g26 4 val   469  win3  270 youth  132  comp: Calvin Johnson '12
+  9 CeeDee Lamb              WR  age27  g26 4 val   458  win3  254 youth  136  comp: Randy Moss '04
+ 10 Tetairoa McMillan        WR  age23  g26 4 val   457  win3  242 youth  143  comp: Puka Nacua '24
+ 11 Caleb Williams           QB  age24  g26 2 val   456  win3  234 youth  148  comp: Trevor Lawrence '24
+ 12 Ashton Jeanty            RB  age22  g26 4 val   441  win3  228 youth  142  comp: Maurice Jones-Drew '07
+ 13 Nico Collins             WR  age27  g26 2 val   433  win3  253 youth  120  comp: Larry Fitzgerald '10
+ 14 Jalen Hurts              QB  age28  g26 4 val   432  win3  232 youth  133  comp: Drew Brees '07
+ 15 Zay Flowers              WR  age25  g26 3 val   425  win3  247 youth  119  comp: Jarvis Landry '18
+ 16 Carnell Tate             WR  age21  g26 4 val   414  win3  197 youth  145  comp: Amari Cooper '16
+ 17 Trevor Lawrence          QB  age26  g26 4 val   413  win3  209 youth  136  comp: Jordan Love '24
+ 18 Jared Goff               QB  age31  g26 4 val   408  win3  212 youth  131  comp: Matt Ryan '15
+ 19 Drake Maye               QB  age24  g26 4 val   401  win3  204 youth  131  comp: Jared Goff '19
+ 20 Patrick Mahomes          QB  age30  g26 4 val   392  win3  213 youth  119  comp: Dak Prescott '23
+ 21 Lamar Jackson            QB  age29  g26 4 val   387  win3  210 youth  118  comp: Tony Romo '09
+ 22 Fernando Mendoza         QB  age22  g26 0 val   383  win3  201 youth  121  comp: Bryce Young '23
+ 23 Drake London             WR  age25  g26 4 val   378  win3  213 youth  110  comp: Mike Evans '18
+ 24 Bryce Young              QB  age25  g26 4 val   361  win3  186 youth  117  comp: Ben Roethlisberger '07
+ 25 Dak Prescott             QB  age33  g26 4 val   358  win3  195 youth  109  comp: Ryan Tannehill '21
+ 26 Bo Nix                   QB  age26  g26 4 val   358  win3  186 youth  115  comp: Daniel Jones '23
+ 27 Brock Purdy              QB  age26  g26 4 val   349  win3  208 youth   94  comp: Joe Burrow '24
+ 28 Jaxson Dart              QB  age23  g26 2 val   344  win3  177 youth  112  comp: Teddy Bridgewater '15
+ 29 Tee Higgins              WR  age27  g26 4 val   341  win3  219 youth   81  comp: Keenan Allen '19
+ 30 Kenneth Walker III       RB  age25  g26 4 val   336  win3  217 youth   79  comp: Jamal Lewis '04

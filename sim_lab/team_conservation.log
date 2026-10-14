@@ -1,0 +1,60 @@
+rows 14731; team-weeks with an absence 1158; absent regulars with no recent row 269 of 1405
+team-weeks graded (absence with a lost read, healthy rows): 820
+
+DIAGNOSTIC: share of the absent players' points the healthy rows actually gained vs what we gave them
+  (actual gain = sum act - sum unboosted shadow; given = sum shipped - sum unboosted)
+  vac .10-.20  team-weeks   445 lost   7.3/tw  actual gain  25.7%  given  42.3%  act/shipped 0.969
+  vac .20-.30  team-weeks   228 lost   9.7/tw  actual gain  39.1%  given  40.5%  act/shipped 0.996
+  vac .30-.40  team-weeks    93 lost  12.9/tw  actual gain  25.6%  given  33.2%  act/shipped 0.969
+  vac .40+     team-weeks    54 lost  18.1/tw  actual gain  48.6%  given  25.6%  act/shipped 1.160
+  ALL          team-weeks   820 lost   9.3/tw  actual gain  32.5%  given  38.2%  act/shipped 0.986
+  reference nobody out: act/unboosted 0.996  act/shipped 0.972
+
+touched rows 3491
+LOYO: touched rows +0.00% (3/7), board +0.000% | picks ['c0.3S40', 'c0.3S40', 'c0.3S40', 'c0.3S40', 'c0.3S40', 'c0.3S40', 'off']
+FORWARD: touched rows +0.01% (0/4), board +0.002% | picks ['off', 'off', 'c0.3S40', 'off']
+fixed (all seasons, touched rows):
+  c0.3p    +0.21%  seasons better 1/7  act/pred 0.974
+  c0.3t    +0.24%  seasons better 3/7  act/pred 0.974
+  c0.3pW   +0.22%  seasons better 4/7  act/pred 0.978
+  c0.3S30  +0.11%  seasons better 3/7  act/pred 0.981
+  c0.3S40  -0.04%  seasons better 4/7  act/pred 0.983
+  c0.4p    +0.62%  seasons better 2/7  act/pred 0.962
+  c0.4t    +0.65%  seasons better 3/7  act/pred 0.962
+  c0.4pW   +0.55%  seasons better 3/7  act/pred 0.968
+  c0.4S30  +0.34%  seasons better 2/7  act/pred 0.976
+  c0.4S40  +0.03%  seasons better 3/7  act/pred 0.981
+  c0.5p    +1.29%  seasons better 1/7  act/pred 0.946
+  c0.5t    +1.28%  seasons better 2/7  act/pred 0.946
+  c0.5pW   +1.12%  seasons better 1/7  act/pred 0.954
+  c0.5S30  +0.71%  seasons better 2/7  act/pred 0.970
+  c0.5S40  +0.14%  seasons better 2/7  act/pred 0.978
+  c0.6p    +2.39%  seasons better 1/7  act/pred 0.927
+  c0.6t    +2.37%  seasons better 2/7  act/pred 0.927
+  c0.6pW   +2.07%  seasons better 1/7  act/pred 0.938
+  c0.6S30  +1.29%  seasons better 1/7  act/pred 0.964
+  c0.6S40  +0.35%  seasons better 2/7  act/pred 0.975
+  c0.7p    +3.90%  seasons better 1/7  act/pred 0.908
+  c0.7t    +3.94%  seasons better 2/7  act/pred 0.908
+  c0.7pW   +3.36%  seasons better 1/7  act/pred 0.922
+  c0.7S30  +2.07%  seasons better 1/7  act/pred 0.957
+  c0.7S40  +0.68%  seasons better 2/7  act/pred 0.972
+  c0.8p    +5.88%  seasons better 0/7  act/pred 0.888
+  c0.8t    +6.05%  seasons better 2/7  act/pred 0.888
+  c0.8pW   +5.03%  seasons better 0/7  act/pred 0.905
+  c0.8S30  +3.07%  seasons better 1/7  act/pred 0.951
+  c0.8S40  +1.13%  seasons better 2/7  act/pred 0.968
+  c1.0p    +11.20%  seasons better 0/7  act/pred 0.851
+  c1.0t    +11.89%  seasons better 0/7  act/pred 0.851
+  c1.0pW   +9.48%  seasons better 0/7  act/pred 0.873
+  c1.0S30  +5.77%  seasons better 0/7  act/pred 0.938
+  c1.0S40  +2.39%  seasons better 1/7  act/pred 0.962
+  off      act/pred 0.986
+best fixed c0.3S40
+  RB n1154 -0.24%
+  WR n1599 +0.11%
+  TE n738 +0.01%
+  vac <.30 n2995 +0.00%
+  vac .30-.40 n322 +0.00%
+  vac .40+ n174 -0.46%
+  ADP<=150 n1855 -0.22%

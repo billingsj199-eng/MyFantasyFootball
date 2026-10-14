@@ -1,0 +1,29 @@
+rows 944 player-weeks with full lines, W1-4 (preset half)
+shipped vs market: median |gap| 11.3%, >15% off 35%, >25% off 14%
+
+  variant           MAE     rank rho  | by position MAE (QB RB WR TE) | per-week MAE vs shipped
+  shipped           4.765 (+0.000)  0.4838 (+0.0000) |  6.16  4.65  4.76  4.05 | better in 0/4 weeks
+  market            4.675 (-0.089)  0.4602 (-0.0235) |  6.03  4.69  4.57  4.04 | better in 3/4 weeks
+  clamp10%          4.725 (-0.040)  0.4757 (-0.0081) |  6.13  4.69  4.65  4.05 | better in 3/4 weeks
+  cap-above10%      4.709 (-0.056)  0.4792 (-0.0046) |  6.13  4.65  4.65  4.02 | better in 3/4 weeks
+  cap-below10%      4.781 (+0.016)  0.4814 (-0.0024) |  6.16  4.70  4.76  4.08 | better in 1/4 weeks
+  clamp15%          4.741 (-0.024)  0.4820 (-0.0017) |  6.14  4.69  4.69  4.06 | better in 3/4 weeks
+  cap-above15%      4.729 (-0.036)  0.4843 (+0.0005) |  6.14  4.65  4.69  4.03 | better in 3/4 weeks
+  cap-below15%      4.776 (+0.012)  0.4822 (-0.0016) |  6.16  4.69  4.75  4.08 | better in 1/4 weeks
+  clamp20%          4.754 (-0.011)  0.4838 (+0.0000) |  6.14  4.69  4.71  4.07 | better in 3/4 weeks
+  cap-above20%      4.744 (-0.020)  0.4861 (+0.0023) |  6.14  4.66  4.72  4.05 | better in 3/4 weeks
+  cap-below20%      4.774 (+0.009)  0.4817 (-0.0021) |  6.16  4.68  4.75  4.08 | better in 1/4 weeks
+  clamp30%          4.759 (-0.006)  0.4853 (+0.0015) |  6.13  4.67  4.74  4.06 | better in 3/4 weeks
+  cap-above30%      4.753 (-0.011)  0.4867 (+0.0029) |  6.13  4.66  4.74  4.05 | better in 3/4 weeks
+  cap-below30%      4.770 (+0.006)  0.4824 (-0.0014) |  6.16  4.66  4.76  4.07 | better in 1/4 weeks
+  clamp+-2pt        4.764 (-0.000)  0.4836 (-0.0002) |  6.15  4.67  4.75  4.06 | better in 3/4 weeks
+  clamp+-3pt        4.762 (-0.002)  0.4861 (+0.0023) |  6.14  4.65  4.76  4.06 | better in 2/4 weeks
+
+  far-off rows: who was closer to the actual?
+    ship > mkt +15%  QB n 15  ours closer  53%  | mean act 13.97 ours 15.93 mkt 12.83
+    ship > mkt +15%  RB n 49  ours closer  43%  | mean act  8.13 ours  7.99 mkt  6.41
+    ship > mkt +15%  WR n157  ours closer  38%  | mean act  6.00 ours  6.67 mkt  5.35
+    ship > mkt +15%  TE n 75  ours closer  44%  | mean act  5.35 ours  5.39 mkt  4.34
+    ship < mkt -15%  RB n 17  ours closer  71%  | mean act  5.09 ours  4.40 mkt  6.42
+    ship < mkt -15%  WR n  8  ours closer  62%  | mean act  7.52 ours  7.44 mkt  9.59
+    ship < mkt -15%  TE n  6  ours closer  83%  | mean act  1.53 ours  2.54 mkt  4.51

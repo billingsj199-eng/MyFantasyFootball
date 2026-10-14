@@ -1,0 +1,15 @@
+rows 14672 RB/WR/TE; direct backups with the trailing RB1 out: 150 (workhorse-out 97); WR/TE rows de-pooled (RB tgtOther 0): 546
+  direct backup actual / projection: harness pool (old) 1.230 | v2.13 flow, no WORKHORSE 1.103 | + WORKHORSE (TODAY) 1.089
+    workhorse out  n  97: old 1.202  v2.13 1.050  today 1.029  | mean act 9.26 today 9.01
+    committee out  n  53: old 1.272  v2.13 1.185  today 1.185  | mean act 12.21 today 10.30
+    by season (today): 2019:0.55(n15) 2020:0.99(n28) 2021:1.03(n25) 2022:1.47(n12) 2023:1.23(n30) 2024:1.26(n22) 2025:0.96(n18)
+    by projection level (today): 0-5: n 1 0.26 | 5-8: n 50 1.18 | 8-11: n 62 1.08 | 11-99: n 37 1.05
+    WR/TE de-pooled rows: actual / today 0.997 (old 0.971)
+    cell room share >= .30        n  82 actual/today 1.192  seasons under 5/7
+    cell room share < .30         n  68 actual/today 0.942  seasons under 3/7
+    cell tgt/g >= 2.5             n  47 actual/today 1.035  seasons under 3/7
+    cell tgt/g < 2.5              n 103 actual/today 1.117  seasons under 5/7
+    cell clear (gap >= 5 car)     n  64 actual/today 1.143  seasons under 5/6
+    cell not clear                n  86 actual/today 1.039  seasons under 4/7
+    cell round 1-2 (pick <= 64)   n   7 actual/today 1.371  seasons under 2/3
+    cell pick 65+ / UDFA          n 143 actual/today 1.074  seasons under 4/7

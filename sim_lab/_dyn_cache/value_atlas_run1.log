@@ -1,0 +1,146 @@
+1003 stat x position combos tested (3476 tests)
+
+=== MOVE: top 25 by significance  (coef < 0 = price ROSE more than typical) ===
+pos stat                                      n    coef      t      q  seasons
+TE  bio.pb                                   76  -0.205  -6.35  0.000      4/4  SURVIVES
+QB  rush.gapAttempts_pg                      99  -0.084  -4.34  0.007      3/5
+TE  tm.manDuoRate                            55  +0.139  +3.69  0.076      2/3
+QB  pass.bats_pg                             99  +0.141  +3.43  0.149      5/5
+QB  rush.gapAttempts_per_att                 99  -0.093  -3.35  0.165      4/5
+QB  rush.designedYards_pg                    99  -0.102  -3.11  0.297      4/5
+QB  rush.eluYco_pg                           99  -0.093  -3.04  0.297      4/5
+QB  rush.breakawayAttempts_per_att           99  -0.109  -2.98  0.297      4/5
+QB  tm.adot                                  67  -0.170  -2.96  0.297      4/4
+QB  ctx.snap_trend                           68  +0.186  +2.94  0.297      4/4
+QB  tm.passesDeepPct                         67  -0.192  -2.94  0.297      4/4
+QB  rush.eluRushMtf_pg                       99  -0.070  -2.89  0.325      4/5
+TE  ctx.vac_car                              60  -0.171  -2.85  0.334      3/4
+QB  rush.breakawayAttempts_pg                99  -0.096  -2.76  0.371      4/5
+QB  rush.breakawayPercent                    99  -0.110  -2.76  0.371      3/5
+TE  bio.games                               123  -0.110  -2.75  0.371      6/7
+WR  bio.games                               395  -0.088  -2.73  0.371      6/7
+RB  rec.gradesPassRoute                     187  -0.139  -2.63  0.435      4/5
+RB  rush.gradesPassRoute                    187  -0.139  -2.63  0.435      4/5
+QB  rush.explosive_per_att                   99  -0.124  -2.61  0.435      4/5
+RB  rec.gradesOffense                       187  -0.164  -2.57  0.435      3/5
+RB  rush.gradesOffense                      187  -0.164  -2.57  0.435      3/5
+QB  ctx.car_trend                            68  +0.226  +2.57  0.435      4/4
+QB  rush.ypa                                 99  -0.113  -2.56  0.435      3/5
+RB  tm.pressureRateAgainst                  142  +0.172  +2.55  0.435      3/4
+
+=== FAIR3: top 25 by significance  (coef < 0 = beat FAIR) ===
+pos stat                                      n    coef      t      q  seasons
+TE  bio.pb                                   76  -0.669  -9.29  0.000      4/4  SURVIVES
+RB  rec.yardsAfterCatch_per_route           187  -0.272  -4.47  0.004      5/5  SURVIVES
+RB  rec.yprr                                187  -0.250  -3.78  0.040      5/5  SURVIVES
+RB  rush.yprr                               187  -0.250  -3.78  0.040      5/5  SURVIVES
+WR  ctx.att_pg                              163  +0.218  +3.64  0.054      4/4  SURVIVES
+TE  bio.injured                             123  +0.094  +3.34  0.141      6/7
+WR  d.rush.carryShare                        64  +0.189  +3.25  0.166      2/3
+QB  rush.gapAttempts_pg                      99  -0.119  -3.14  0.212      3/5
+RB  ctx.ol_pb_full                          103  +0.275  +3.08  0.221      3/3
+TE  tm.counterRate                           55  -0.229  -3.06  0.221      3/3
+TE  bio.games                               123  -0.114  -3.00  0.248      6/7
+RB  rec.targets_per_route                   187  -0.198  -2.89  0.320      5/5
+WR  ctx.db_sh                               163  +0.174  +2.86  0.321      3/4
+QB  rush.gapAttempts_per_att                 99  -0.132  -2.83  0.321      3/5
+RB  rec.yardsAfterCatch_pg                  187  -0.202  -2.82  0.321      5/5
+WR  tm.passesBehindLosPct                   177  -0.198  -2.77  0.321      4/4
+QB  ctx.tgt_trend                            68  +0.188  +2.77  0.321      4/4
+RB  d.rec.yardsAfterCatch_per_route         105  -0.232  -2.76  0.321      3/4
+QB  rush.gradesRunBlock                      99  +0.107  +2.74  0.325      5/5
+RB  ctx.xfp_pg                              130  -0.314  -2.70  0.331      4/4
+TE  d.rec.gradesHandsDrop                    56  -0.084  -2.68  0.331      3/4
+RB  rec.yards_pg                            187  -0.190  -2.66  0.331      5/5
+TE  bio.rel_change                          100  -0.110  -2.66  0.331      3/6
+RB  rush.recYards_pg                        187  -0.190  -2.65  0.331      5/5
+WR  ngsR.catch_percentage                   361  -0.127  -2.63  0.331      6/7
+
+=== FAIR5: top 25 by significance  (coef < 0 = beat FAIR) ===
+pos stat                                      n    coef      t      q  seasons
+TE  bio.pb                                   58  -0.733  -5.30  0.000      4/4  SURVIVES
+QB  rush.gapAttempts_pg                      59  -0.117  -5.19  0.000      3/3  SURVIVES
+WR  rec.contestedTargets_pg                 157  +0.257  +3.80  0.018      3/3  SURVIVES
+QB  rush.gapAttempts_per_att                 59  -0.126  -3.79  0.018      3/3  SURVIVES
+WR  rec.contestedTargets_per_route          157  +0.213  +3.41  0.061      3/3  SURVIVES
+WR  rec.contestedReceptions_pg              157  +0.213  +3.32  0.071      3/3  SURVIVES
+TE  rec.interceptions_pg                     49  +0.180  +3.04  0.160      2/3
+RB  rec.interceptions_pg                    106  +0.163  +2.93  0.199      3/3
+TE  rec.touchdowns_pg                        49  +0.125  +2.87  0.213      3/3
+QB  pass.accuracyPercent                     59  +0.279  +2.83  0.217      3/3
+WR  bio.age                                 286  +0.119  +2.80  0.220      5/5
+WR  bio.exp                                 256  +0.126  +2.70  0.261      5/5
+QB  pass.completionPercent                   59  +0.325  +2.68  0.261      3/3
+WR  rush.yardsAfterContact_pg               111  -0.171  -2.59  0.287      2/3
+WR  rush.breakawayAttempts_pg               111  -0.164  -2.58  0.287      2/3
+TE  bio.exp                                  72  +0.155  +2.58  0.287      4/4
+QB  rush.receptions_pg                       59  +0.105  +2.54  0.295      2/3
+WR  ngsR.avg_separation                     261  -0.200  -2.53  0.295      5/5
+WR  bio.jm                                   64  -0.216  -2.47  0.314      3/3
+WR  rush.eluYco_pg                          110  -0.159  -2.47  0.314      2/3
+WR  rush.explosive_pg                       111  -0.148  -2.38  0.380      2/3
+QB  rush.gradesRunBlock                      59  +0.116  +2.36  0.388      3/3
+TE  ngsR.avg_yac                             71  -0.160  -2.32  0.391      4/4
+RB  bio.jm                                  103  -0.195  -2.32  0.391      3/4
+QB  bio.shuttle                              86  -0.235  -2.30  0.391      5/5
+
+=== MKT3: top 25 by significance  (coef < 0 = beat the price) ===
+pos stat                                      n    coef      t      q  seasons
+TE  bio.pb                                   76  -0.673  -9.40  0.000      4/4  SURVIVES
+RB  rec.yardsAfterCatch_per_route           187  -0.271  -4.57  0.002      5/5  SURVIVES
+RB  rec.yprr                                187  -0.250  -3.84  0.031      5/5  SURVIVES
+RB  rush.yprr                               187  -0.250  -3.84  0.031      5/5  SURVIVES
+WR  ctx.att_pg                              163  +0.218  +3.52  0.087      4/4  SURVIVES
+TE  bio.injured                             123  +0.102  +3.28  0.172      5/7
+RB  ctx.ol_pb_full                          103  +0.275  +3.22  0.184      3/3
+TE  tm.counterRate                           55  -0.250  -3.09  0.224      3/3
+WR  ngsR.catch_percentage                   361  -0.152  -3.08  0.224      6/7
+RB  rec.targets_per_route                   187  -0.200  -3.06  0.224      5/5
+QB  rush.gapAttempts_pg                      99  -0.114  -2.99  0.248      3/5
+TE  bio.games                               123  -0.127  -2.96  0.248      6/7
+RB  rec.yardsAfterCatch_pg                  187  -0.199  -2.95  0.248      5/5
+RB  bio.moved                               323  +0.086  +2.85  0.313      7/7
+QB  rush.gradesRunBlock                      99  +0.120  +2.80  0.320      5/5
+RB  rec.yards_pg                            187  -0.189  -2.80  0.320      5/5
+RB  rush.recYards_pg                        187  -0.189  -2.78  0.320      5/5
+QB  rush.gapAttempts_per_att                 99  -0.126  -2.72  0.357      3/5
+WR  ctx.db_sh                               163  +0.168  +2.71  0.357      4/4
+RB  ctx.xfp_pg                              130  -0.291  -2.65  0.398      4/4
+WR  tm.passesBehindLosPct                   177  -0.204  -2.63  0.398      4/4
+WR  d.rush.carryShare                        64  +0.161  +2.60  0.398      2/3
+WR  bio.injured                             395  +0.090  +2.57  0.398      6/7
+QB  ctx.tgt_trend                            68  +0.159  +2.57  0.398      4/4
+RB  d.rec.yardsAfterCatch_per_route         105  -0.218  -2.57  0.398      3/4
+
+=== LOYO for survivors ===
+FAIR5 QB  rush.gapAttempts_per_att               held-out gain vs FAIR mean +0.0010  1/5 years
+FAIR5 QB  rush.gapAttempts_pg                    held-out gain vs FAIR mean +0.0018  1/5 years
+FAIR3 RB  rec.yardsAfterCatch_per_route          held-out gain vs FAIR mean -0.0093  1/7 years
+MKT3  RB  rec.yardsAfterCatch_per_route          held-out gain vs FAIR mean -0.0037  3/7 years
+FAIR3 RB  rec.yprr                               held-out gain vs FAIR mean -0.0136  2/7 years
+MKT3  RB  rec.yprr                               held-out gain vs FAIR mean -0.0142  1/7 years
+FAIR3 RB  rush.yprr                              held-out gain vs FAIR mean -0.0136  2/7 years
+MKT3  RB  rush.yprr                              held-out gain vs FAIR mean -0.0142  1/7 years
+FAIR3 WR  ctx.att_pg                             held-out gain vs FAIR mean -0.0012  2/7 years
+MKT3  WR  ctx.att_pg                             held-out gain vs FAIR mean -0.0005  2/7 years
+FAIR5 WR  rec.contestedReceptions_pg             held-out gain vs FAIR mean +0.0003  2/5 years
+FAIR5 WR  rec.contestedTargets_per_route         held-out gain vs FAIR mean +0.0045  2/5 years
+FAIR5 WR  rec.contestedTargets_pg                held-out gain vs FAIR mean +0.0017  2/5 years
+MOVE  TE  bio.pb                                 held-out Spearman(pred, move) mean +0.1561  6/7 years
+FAIR3 TE  bio.pb                                 held-out gain vs FAIR mean -0.1613  1/7 years
+FAIR5 TE  bio.pb                                 held-out gain vs FAIR mean -0.1995  1/5 years
+MKT3  TE  bio.pb                                 held-out gain vs FAIR mean -0.1613  2/7 years
+
+=== Next-year price: top-fifth vs bottom-fifth of each surviving stat (rose = rank 20%+ better, fell = 25%+ worse) ===
+QB  rush.gapAttempts_per_att               top fifth rose   21% fell   63%  | bottom fifth rose   26% fell   58%  (n 19 each)
+QB  rush.gapAttempts_pg                    top fifth rose   21% fell   63%  | bottom fifth rose    5% fell   79%  (n 19 each)
+RB  rec.yardsAfterCatch_per_route          top fifth rose   19% fell   68%  | bottom fifth rose    3% fell   84%  (n 37 each)
+RB  rec.yprr                               top fifth rose   19% fell   73%  | bottom fifth rose    5% fell   78%  (n 37 each)
+RB  rush.yprr                              top fifth rose   19% fell   73%  | bottom fifth rose    5% fell   78%  (n 37 each)
+WR  ctx.att_pg                             top fifth rose   19% fell   75%  | bottom fifth rose   44% fell   44%  (n 32 each)
+WR  rec.contestedReceptions_pg             top fifth rose    8% fell   76%  | bottom fifth rose   16% fell   76%  (n 51 each)
+WR  rec.contestedTargets_per_route         top fifth rose   12% fell   73%  | bottom fifth rose   14% fell   76%  (n 51 each)
+WR  rec.contestedTargets_pg                top fifth rose   10% fell   75%  | bottom fifth rose   12% fell   76%  (n 51 each)
+TE  bio.pb                                 top fifth rose   33% fell   40%  | bottom fifth rose    0% fell   87%  (n 15 each)
+
+wrote _dyn_cache/value_atlas.csv

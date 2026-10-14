@@ -1,0 +1,27 @@
+2026 valuation after week 4 (year-0 share 0.78)
+1qb_ppr: 891 players valued
+sf_ppr: 891 players valued
+1qb_half: 891 players valued
+sf_half: 891 players valued
+1qb_std: 891 players valued
+sf_std: 891 players valued
+1qb_ppr_tep0.5: 180 players valued
+sf_ppr_tep0.5: 180 players valued
+1qb_half_tep0.5: 180 players valued
+sf_half_tep0.5: 180 players valued
+1qb_std_tep0.5: 180 players valued
+sf_std_tep0.5: 180 players valued
+1qb_ppr_tep1: 180 players valued
+sf_ppr_tep1: 180 players valued
+1qb_half_tep1: 180 players valued
+sf_half_tep1: 180 players valued
+1qb_std_tep1: 180 players valued
+sf_std_tep1: 180 players valued
+wrote _dyn_cache/dynasty_sim_2026_jmcond.js: 891 players, 772 KB
+--- 1qb_ppr top 15: Jaxon Smith-Njigba 525, Puka Nacua 521, Jahmyr Gibbs 510, Amon-Ra St. Brown 484, Ja'Marr Chase 477, Bijan Robinson 476, Chris Olave 469, Ashton Jeanty 460, CeeDee Lamb 458, Nico Collins 433, Zay Flowers 425, Carnell Tate 406, Tetairoa McMillan 396, Drake London 378, Tee Higgins 341
+--- 1qb_half top 15: Jaxon Smith-Njigba 442, Puka Nacua 431, Jahmyr Gibbs 425, Amon-Ra St. Brown 400, Bijan Robinson 398, Ashton Jeanty 387, CeeDee Lamb 385, Ja'Marr Chase 383, Chris Olave 361, Nico Collins 359, Zay Flowers 344, Josh Allen 339, Tetairoa McMillan 331, Carnell Tate 331, Kenneth Walker III 310
+--- 1qb_std top 15: Jaxon Smith-Njigba 359, Jahmyr Gibbs 347, Puka Nacua 340, Josh Allen 336, Bijan Robinson 334, Amon-Ra St. Brown 319, CeeDee Lamb 296, Nico Collins 284, Ashton Jeanty 280, Ja'Marr Chase 279, Zay Flowers 265, Tetairoa McMillan 250, Kenneth Walker III 249, Chris Olave 247, Carnell Tate 237
+--- sf_ppr top 15: Josh Allen 555, Jaxon Smith-Njigba 525, Puka Nacua 521, Jahmyr Gibbs 510, Amon-Ra St. Brown 484, Ja'Marr Chase 477, Bijan Robinson 476, Chris Olave 469, Caleb Williams 463, Ashton Jeanty 460, CeeDee Lamb 458, Nico Collins 433, Jalen Hurts 432, Zay Flowers 425, Trevor Lawrence 413
+--- TEs 1qb_ppr: Brock Bowers 211, Trey McBride 198, Harold Fannin 126, Kenyon Sadiq 122, Tyler Warren 121, George Kittle 89
+--- TEs 1qb_ppr_tep0.5: Trey McBride 272, Brock Bowers 271, Harold Fannin 169, Tyler Warren 166, Kenyon Sadiq 145, George Kittle 102
+--- TEs 1qb_ppr_tep1: Trey McBride 341, Brock Bowers 317, Harold Fannin 209, Tyler Warren 177, Kenyon Sadiq 172, Colston Loveland 120

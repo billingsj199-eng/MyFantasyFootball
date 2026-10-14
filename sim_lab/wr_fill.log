@@ -1,0 +1,94 @@
+=== WR FILL-INS 2019-25: 237 single-WR-absence team-weeks (WR1 61, WR2 90, WR3 86), 799 control ===
+##### 1. VOLUME - share of the absent WR's trailing targets gained (control-adjusted), by HEALTHY rank; engine share in [ ]
+
+  WR1 out: n 61, absent 7.4 tgt/g, 13.9 PPR/g | team keeps 0.31 of his targets, pass att -3.8
+    who           n share of V  [engine]  sgn   +PPR
+    WR h1        56      +0.05    [0.07] 5/7  +0.70
+    WR h2        45      +0.07    [0.11] 4/7  +0.25
+    WR h3        19      +0.00    [0.05] 3/7  -1.35
+    TE1          59      +0.01    [0.06] 5/7  +0.33
+    RB1          61      -0.10           4/7  -1.66
+    bodies WR    61      +0.14           7/7  +1.80
+    bodies TE    61      +0.01           4/7  +0.02
+
+  WR2 out: n 90, absent 5.2 tgt/g, 8.4 PPR/g | team keeps 0.39 of his targets, pass att -1.7
+    who           n share of V  [engine]  sgn   +PPR
+    WR h1        90      +0.08    [0.00] 5/7  +1.03
+    WR h2        68      +0.09    [0.09] 5/7  +1.03
+    WR h3        20      +0.04    [0.04] 7/7  +4.55
+    TE1          88      -0.08    [0.00] 5/7  -1.33
+    RB1          90      +0.06           4/7  +0.29
+    bodies WR    90      +0.15           6/7  +1.57
+    bodies TE    90      +0.01           3/7  -0.05
+
+  WR3 out: n 86, absent 3.7 tgt/g, 6.3 PPR/g | team keeps 0.04 of his targets, pass att -2.4
+    who           n share of V  [engine]  sgn   +PPR
+    WR h1        86      -0.12    [0.00] 4/7  +0.07
+    WR h2        86      -0.03    [0.11] 4/7  -0.63
+    WR h3        46      +0.01    [0.08] 3/7  +1.22
+    WR h4         9      -0.00    [0.01] 3/7  -0.96
+    TE1          80      -0.08           5/7  -0.41
+    RB1          86      -0.07           5/7  +0.66
+    bodies WR    86      +0.06           5/7  +0.18
+    bodies TE    86      -0.05           6/7  -0.46
+
+  LEAD target-getter out (engine 'lead'): n 46, absent 8.1 tgt/g, 15.6 PPR/g | team keeps 0.46 of his targets, pass att -3.2
+    who           n share of V  [engine]  sgn   +PPR
+    WR h1        44      +0.07    [0.09] 5/7  +1.91
+    WR h2        35      +0.10    [0.11] 4/7  -0.02
+    WR h3        15      +0.00    [0.05] 3/7  -1.72
+    TE1          44      +0.06    [0.08] 5/7  +1.11
+    RB1          46      -0.09           4/7  -2.51
+    bodies WR    46      +0.14           7/7  +2.13
+    bodies TE    46      -0.02           4/7  -0.32
+
+  not lead (engine 'sec'): n 191, absent 4.5 tgt/g, 7.5 PPR/g | team keeps 0.19 of his targets, pass att -2.3
+    who           n share of V  [engine]  sgn   +PPR
+    WR h1       188      -0.00    [0.00] 4/7  +0.29
+    WR h2       164      +0.03    [0.09] 5/7  +0.17
+    WR h3        70      +0.02    [0.06] 4/7  +2.10
+    WR h4        18      +0.00    [0.01] 4/7  -0.67
+    TE1         183      -0.09           6/7  -0.98
+    RB1         191      -0.01           4/7  +0.50
+    bodies WR   191      +0.11           7/7  +0.88
+    bodies TE   191      +0.00           3/7  -0.14
+
+  STAR out (>= 15 PPR/g): n 34, absent 8.7 tgt/g, 19.7 PPR/g | team keeps 0.47 of his targets, pass att -4.2
+    who           n share of V  [engine]  sgn   +PPR
+    WR h1        33      +0.09    [0.06] 5/7  +1.66
+    WR h2        29      +0.09    [0.12] 4/7  +1.38
+    WR h3         9      +0.01    [0.04] 2/7  -1.37
+    TE1          33      -0.03    [0.06] 4/7  +0.50
+    RB1          34      -0.01           3/7  +0.33
+    bodies WR    34      +0.11           4/7  +2.30
+    bodies TE    34      -0.03           5/7  -0.58
+
+  regular out (< 15): n 203, absent 4.6 tgt/g, 7.3 PPR/g | team keeps 0.21 of his targets, pass att -2.2
+    who           n share of V  [engine]  sgn   +PPR
+    WR h1       199      -0.00    [0.01] 4/7  +0.42
+    WR h2       170      +0.04    [0.09] 4/7  -0.08
+    WR h3        76      +0.02    [0.06] 4/7  +1.76
+    WR h4        19      +0.00    [0.01] 4/7  -1.04
+    TE1         194      -0.05    [0.01] 6/7  -0.76
+    RB1         203      -0.04           5/7  -0.15
+    bodies WR   203      +0.12           7/7  +0.93
+    bodies TE   203      +0.00           4/7  -0.11
+
+##### 2. EFFICIENCY (half-PPR receiving): fill-in = healthy WR rank 1-3 (or TE1) in single-WR-absence weeks
+  WR all weeks (n 9477): best shrink K 160 targets; week pts/tgt = -0.025 + 1.01 x shrunk own; actual / shrunk own 0.989
+  WR FILL-IN weeks (n 460): best shrink K 320 targets; week pts/tgt = -0.195 + 1.19 x shrunk own; actual / shrunk own 1.058
+  TE all weeks (n 4155): best shrink K 80 targets; week pts/tgt = 0.345 + 0.76 x shrunk own; actual / shrunk own 1.003
+  TE FILL-IN weeks (n 210): best shrink K 160 targets; week pts/tgt = -0.915 + 1.66 x shrunk own; actual / shrunk own 1.009
+
+  WR fill-in weeks n 460: 6.2 tgt (own prior 6.0/g)
+    half pts/target  FILL-IN 1.514 | own s-t-d 1.481 | ABSENT WR s-t-d 1.424 | league WR 1.421
+    catch rate       FILL-IN 0.632 | own s-t-d 0.654 | ABSENT WR s-t-d 0.620 | league WR 0.635
+    yds/target       FILL-IN 8.375 | own s-t-d 8.387 | ABSENT WR s-t-d 8.122 | league WR 8.057
+    TD/target        FILL-IN 0.060 | own s-t-d 0.053 | ABSENT WR s-t-d 0.050 | league WR 0.050
+  volume dependence: week pts/target / shrunk own (K 40), by targets this week / own prior targets per game
+    all WR weeks  0-0.8x: 1.038 (n 2831) | 0.8-1.25x: 0.990 (n 3211) | 1.25-1.75x: 0.964 (n 1930) | 1.75-2.5x: 0.946 (n 1036) | 2.5-99x: 0.938 (n 467)
+    WR fill-in    0-0.8x: 1.143 (n 123) | 0.8-1.25x: 1.020 (n 164) | 1.25-1.75x: 1.000 (n 97) | 1.75-2.5x: 1.045 (n 49) | 2.5-99x: 1.005 (n 27)
+    TE1 fill-in   0-0.8x: 1.105 (n 65) | 0.8-1.25x: 1.037 (n 77) | 1.25-1.75x: 1.007 (n 42) | 1.75-2.5x: 0.796 (n 25)
+    WR fill-in, own prior targets 0-20: n 107 actual 1.404 pts/tgt vs own raw 1.578 vs league 1.426
+    WR fill-in, own prior targets 20-50: n 179 actual 1.517 pts/tgt vs own raw 1.457 vs league 1.420
+    WR fill-in, own prior targets 50-999: n 174 actual 1.554 pts/tgt vs own raw 1.483 vs league 1.420

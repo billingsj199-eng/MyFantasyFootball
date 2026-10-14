@@ -1,0 +1,41 @@
+pool: 276 RB/WR/TE player-seasons 2020-23 with a team QB WR 125 TE 50 RB 101
+
+=== QB market rank (better QB = +) ===
+group       n  raw->season  raw->3yr  priced (mkt)        beyond MKT        beyond SIM       beyond FAIR   (season-Y truth; 95% CI)
+WR        125       +0.075    +0.093        +0.223+0.036 [-0.12,+0.19] +0.013 [-0.13,+0.16] +0.025 [-0.12,+0.17] 
+TE         50       +0.232    +0.194        +0.174-0.171 [-0.39,+0.05] -0.189 [-0.45,+0.10] -0.159 [-0.39,+0.06] 
+RB        101       +0.172    -0.007        -0.016-0.120 [-0.30,+0.02] -0.117 [-0.34,+0.01] -0.127 [-0.34,+0.01] 
+WR+TE     175       +0.110    +0.108        +0.206-0.013 [-0.15,+0.14] -0.033 [-0.15,+0.08] -0.021 [-0.15,+0.11] 
+WR+TE+RB  276       +0.132    +0.070        +0.123-0.082 [-0.20,+0.03] -0.074 [-0.18,+0.02] -0.085 [-0.19,+0.02] 
+   raw / priced = Spearman with a better rank; beyond X: coef on QB quality in log realized rank ~ log X rank + QB (< 0 = better-QB players BEAT that rank = QB under-priced; * = CI excludes 0)
+
+=== QB production entering the season ===
+group       n  raw->season  raw->3yr  priced (mkt)        beyond MKT        beyond SIM       beyond FAIR   (season-Y truth; 95% CI)
+WR        125       -0.022    +0.044        +0.142+0.048 [-0.06,+0.22] +0.034 [-0.07,+0.18] +0.050 [-0.05,+0.19] 
+TE         50       +0.050    -0.067        +0.115-0.046 [-0.17,+0.11] -0.044 [-0.15,+0.12] -0.032 [-0.13,+0.11] 
+RB        101       +0.091    -0.040        -0.042-0.152 [-0.29,-0.03]*-0.156 [-0.27,-0.06]*-0.158 [-0.30,-0.04]*
+WR+TE     175       +0.002    +0.022        +0.131+0.032 [-0.07,+0.14] +0.018 [-0.07,+0.12] +0.034 [-0.05,+0.14] 
+WR+TE+RB  276       +0.035    +0.003        +0.067-0.068 [-0.14,+0.01] -0.059 [-0.12,+0.01] -0.065 [-0.13,+0.01] 
+   raw / priced = Spearman with a better rank; beyond X: coef on QB quality in log realized rank ~ log X rank + QB (< 0 = better-QB players BEAT that rank = QB under-priced; * = CI excludes 0)
+
+=== leave-one-year-out: FAIR / SIM + k x QB quality (WR + TE + RB), per-year Spearman vs season-Y and 3-yr rank ===
+   FAIR + qb_mkt   vs season Y  0.610 -> 0.584 (0/4)
+   FAIR + qb_mkt   vs 3 years   0.659 -> 0.648 (0/4)
+   SIM + qb_mkt   vs season Y  0.579 -> 0.570 (1/4)
+   SIM + qb_mkt   vs 3 years   0.643 -> 0.637 (1/4)
+   FAIR + qb_prod  vs season Y  0.610 -> 0.596 (1/4)
+   FAIR + qb_prod  vs 3 years   0.659 -> 0.652 (0/4)
+   SIM + qb_prod  vs season Y  0.579 -> 0.569 (0/4)
+   SIM + qb_prod  vs 3 years   0.643 -> 0.642 (1/4)
+
+=== examples (season Y): best / worst QB situations among the market top 60 RB/WR/TE ===
+   2020 tyreek hill           WR  QB patrick mahomes    mkt #5    sim #4    -> season #2    3yr #2
+   2020 travis kelce          TE  QB patrick mahomes    mkt #10   sim #5    -> season #4    3yr #4
+   2020 clyde edwardshelaire  RB  QB patrick mahomes    mkt #19   sim #10   -> season #22   3yr #36
+   2020 mecole hardman        WR  QB patrick mahomes    mkt #23   sim #49   -> season #40   3yr #52
+   2021 travis kelce          TE  QB patrick mahomes    mkt #6    sim #11   -> season #10   3yr #7
+   2021 jakobi meyers         WR  QB mac jones          mkt #55   sim #45   -> season #30   3yr #27
+   2021 christian mccaffrey   RB  QB sam darnold        mkt #1    sim #4    -> season #39   3yr #5
+   2021 dj moore              WR  QB sam darnold        mkt #21   sim #19   -> season #17   3yr #12
+   2021 chuba hubbard         RB  QB sam darnold        mkt #42   sim #52   -> season #50   3yr #40
+   2021 terrace marshall      WR  QB sam darnold        mkt #50   sim #37   -> season #53   3yr #53

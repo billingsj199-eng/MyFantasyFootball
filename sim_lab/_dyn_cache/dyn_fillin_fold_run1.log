@@ -1,0 +1,50 @@
+
+================ WEEK 4: pool 1042 vet RB/WR/TE player-seasons, 165 with 1+ fill-in game by week 4 ================
+f       whole T3  whole T5  fill-in grp T3     T5  place err T3     T5
+1.0       0.6806    0.6671           0.378  0.403         0.303  0.322
+0.75      0.6805    0.6679           0.379  0.407         0.303  0.314
+0.5       0.6825    0.6675           0.403  0.416         0.289  0.302
+0.25      0.6825    0.6679           0.384  0.408         0.293  0.301
+0.0       0.6825    0.6682           0.391  0.414         0.302  0.303
+  LOYO T3: picks [0.5, 0.5, 0.5, 0.5, 0.5]  fill-in group placement gain +0.0141 (5/5)  whole-pool Spearman +0.0019 (4/5)
+  LOYO T5: picks [0.5, 0.25, 0.0]  fill-in group placement gain +0.0106 (2/3)  whole-pool Spearman +0.0015 (2/3)
+
+================ WEEK 8: pool 1042 vet RB/WR/TE player-seasons, 261 with 1+ fill-in game by week 8 ================
+f       whole T3  whole T5  fill-in grp T3     T5  place err T3     T5
+1.0       0.6847    0.6630           0.459  0.436         0.321  0.325
+0.75      0.6839    0.6621           0.451  0.424         0.316  0.325
+0.5       0.6846    0.6635           0.462  0.432         0.314  0.314
+0.25      0.6864    0.6662           0.460  0.455         0.309  0.303
+0.0       0.6854    0.6667           0.466  0.463         0.323  0.315
+  LOYO T3: picks [0.25, 0.25, 0.25, 0.25, 0.25]  fill-in group placement gain +0.0120 (3/5)  whole-pool Spearman +0.0017 (4/5)
+  LOYO T5: picks [0.25, 0.25, 0.25]  fill-in group placement gain +0.0217 (3/3)  whole-pool Spearman +0.0032 (3/3)
+
+  most fill-in games by week 8 (value pos-rank at f=1 -> f=.5 -> realized T3 pos rank):
+     2019 RB dontrell hilliard        fill-in g 4  #27 -> #32  realized #41
+     2019 RB wendell smallwood        fill-in g 6  #36 -> #33  realized #40
+     2019 RB cj prosise               fill-in g 4  #37 -> #37  realized #49
+     2019 WR auden tate               fill-in g 4  #27 -> #27  realized #85
+     2019 WR demarcus robinson        fill-in g 4  #33 -> #48  realized #41
+     2019 WR alex erickson            fill-in g 4  #57 -> #68  realized #74
+     2020 RB kareem hunt              fill-in g 4  #8 -> #8  realized #21
+     2020 RB darrell henderson        fill-in g 4  #14 -> #14  realized #19
+     2020 RB malcolm brown            fill-in g 4  #40 -> #40  realized #41
+     2020 WR darius slayton           fill-in g 4  #19 -> #18  realized #43
+     2020 WR kendrick bourne          fill-in g 4  #45 -> #47  realized #29
+     2020 WR braxton berrios          fill-in g 7  #53 -> #61  realized #66
+     2020 TE tyler kroft              fill-in g 4  #37 -> #51  realized #38
+     2021 RB cordarrelle patterson    fill-in g 4  #36 -> #41  realized #24
+     2021 RB alex collins             fill-in g 5  #55 -> #57  realized #42
+     2021 WR cedrick wilson           fill-in g 6  #54 -> #67  realized #64
+     2021 WR tim patrick              fill-in g 6  #59 -> #63  realized #61
+     2021 WR james washington         fill-in g 4  #67 -> #68  realized #75
+     2021 TE ricky sealsjones         fill-in g 5  #56 -> #54  realized #39
+     2022 RB kenyan drake             fill-in g 6  #40 -> #37  realized #29
+     2022 RB jd mckissic              fill-in g 4  #50 -> #51  realized #35
+     2022 WR marquise brown           fill-in g 6  #11 -> #15  realized #48
+     2022 WR rondale moore            fill-in g 5  #26 -> #30  realized #75
+     2022 WR josh palmer              fill-in g 5  #32 -> #35  realized #33
+     2023 RB craig reynolds           fill-in g 5  #55 -> #55  realized #58
+     2023 WR george pickens           fill-in g 4  #9 -> #11  realized #8
+     2023 WR tutu atwell              fill-in g 4  #37 -> #39  realized #81
+     2023 WR josh reynolds            fill-in g 6  #60 -> #73  realized #59

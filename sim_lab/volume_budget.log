@@ -1,0 +1,2 @@
+harness rows 20,739; rows with a game-table match 20,597; xFP/target {'RB': np.float64(1.12894389904461), 'WR': np.float64(1.4177116997792496), 'TE': np.float64(1.368277843262722)}; xFP/carry {'RB': np.float64(0.620591312995914), 'WR': np.float64(0.5585161582603444), 'TE': np.float64(0.7471784741144415)}
+skill rows (RB/WR/TE, g>=1, final week out) 15,582; with own history 15,582; top-150 8,712

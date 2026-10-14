@@ -1,0 +1,82 @@
+games: BAL@ATL
+tracking 24 players on ['ATL', 'BAL'], season 2026 week 5, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  ATL: pre PRE f=0.00 score 0.0-0.0
+  BAL: pre PRE f=0.00 score 0.0-0.0
+    Bijan Robinson        RB   proj  23.2  scored   0.0  live fit  23.2 | +exit  23.2 | v1  23.2 | naive  23.2
+    Drake London          WR   proj  17.0  scored   0.0  live fit  17.0 | +exit  17.0 | v1  17.0 | naive  17.0
+    Tyler Huntley         QB   proj  16.5  scored   0.0  live fit  16.5 | +exit  16.5 | v1  16.5 | naive  16.5
+    Michael Penix Jr.     QB   proj  15.2  scored   0.0  live fit  15.2 | +exit  15.2 | v1  15.2 | naive  15.2
+    Derrick Henry         RB   proj  15.0  scored   0.0  live fit  15.0 | +exit  15.0 | v1  15.0 | naive  15.0
+    Zay Flowers           WR   proj   9.1  scored   0.0  live fit   9.1 | +exit   9.1 | v1   9.1 | naive   9.1
+    Mark Andrews          TE   proj   8.5  scored   0.0  live fit   8.5 | +exit   8.5 | v1   8.5 | naive   8.5
+    Nick Folk             K    proj   8.5  scored   0.0  live fit   8.5 | +exit   8.5 | v1   8.5 | naive   8.5
+    Brian Robinson Jr.    RB   proj   8.0  scored   0.0  live fit   8.0 | +exit   8.0 | v1   8.0 | naive   8.0
+    Tyler Loop            K    proj   7.6  scored   0.0  live fit   7.6 | +exit   7.6 | v1   7.6 | naive   7.6
+    Atlanta Falcons D/ST  DST  proj   7.0  scored   0.0  live fit   7.0 | +exit   7.0 | v1   7.0 | naive   7.0
+    Kyle Pitts            TE   proj   6.7  scored   0.0  live fit   6.7 | +exit   6.7 | v1   6.7 | naive   6.7
+  ATL: in Q1 14:23 f=0.01 score 0.0-0.0
+  BAL: in Q1 14:23 f=0.01 score 0.0-0.0
+    Bijan Robinson        RB   proj  23.2  scored   0.0  live fit  21.6 | +exit  21.6 | v1  23.0 | naive  23.0
+    Drake London          WR   proj  17.0  scored   0.0  live fit  16.1 | +exit  16.1 | v1  16.8 | naive  16.8
+    Tyler Huntley         QB   proj  16.5  scored   0.0  live fit  16.2 | +exit  16.2 | v1  16.3 | naive  16.3
+    Michael Penix Jr.     QB   proj  15.2  scored   0.0  live fit  14.9 | +exit  14.9 | v1  15.0 | naive  15.0
+    Derrick Henry         RB   proj  15.0  scored   0.0  live fit  14.0 | +exit  14.0 | v1  14.8 | naive  14.8
+    Zay Flowers           WR   proj   9.1  scored   1.3  live fit  10.2 | +exit  10.2 | v1  10.3 | naive  10.3
+    Mark Andrews          TE   proj   8.5  scored   0.0  live fit   8.1 | +exit   8.1 | v1   8.4 | naive   8.4
+    Nick Folk             K    proj   8.5  scored   0.0  live fit   8.4 | +exit   8.4 | v1   8.4 | naive   8.4
+    Brian Robinson Jr.    RB   proj   8.0  scored   0.0  live fit   7.5 | +exit   7.5 | v1   7.9 | naive   7.9
+    Tyler Loop            K    proj   7.6  scored   0.0  live fit   7.5 | +exit   7.5 | v1   7.5 | naive   7.5
+    Atlanta Falcons D/ST  DST  proj   7.0  scored  10.0  live fit   6.5 | +exit   6.5 | v1  16.9 | naive  16.9
+    Kyle Pitts            TE   proj   6.7  scored   0.0  live fit   6.4 | +exit   6.4 | v1   6.6 | naive   6.6
+  ATL: in Q1 10:21 f=0.08 score 0.0-3.0
+  BAL: in Q1 10:21 f=0.08 score 3.0-0.0
+    Bijan Robinson        RB   proj  23.2  scored   0.0  live fit  20.5 | +exit  20.5 | v1  21.4 | naive  21.4
+    Drake London          WR   proj  17.0  scored   0.0  live fit  15.7 | +exit  15.7 | v1  15.7 | naive  15.7
+    Tyler Huntley         QB   proj  16.5  scored   0.4  live fit  14.8 | +exit  14.8 | v1  15.7 | naive  15.7
+    Michael Penix Jr.     QB   proj  15.2  scored   0.0  live fit  14.7 | +exit  14.7 | v1  14.0 | naive  14.0
+    Derrick Henry         RB   proj  15.0  scored   1.7  live fit  15.0 | +exit  15.0 | v1  15.5 | naive  15.5
+    Zay Flowers           WR   proj   9.1  scored   3.4  live fit  11.6 | +exit  11.6 | v1  11.8 | naive  11.8
+    Mark Andrews          TE   proj   8.5  scored   0.0  live fit   7.2 | +exit   7.2 | v1   7.8 | naive   7.8
+    Nick Folk             K    proj   8.5  scored   0.0  live fit   7.8 | +exit   7.8 | v1   7.8 | naive   7.8
+    Brian Robinson Jr.    RB   proj   8.0  scored   0.0  live fit   7.1 | +exit   7.1 | v1   7.4 | naive   7.4
+    Tyler Loop            K    proj   7.6  scored   3.0  live fit  10.0 | +exit  10.0 | v1  10.0 | naive  10.0
+    Atlanta Falcons D/ST  DST  proj   7.0  scored   7.0  live fit   5.5 | +exit   5.5 | v1  13.5 | naive  13.5
+    Kyle Pitts            TE   proj   6.7  scored   0.0  live fit   6.2 | +exit   6.2 | v1   6.2 | naive   6.2
+  ATL: in Q1 8:03 f=0.12 score 7.0-3.0
+  BAL: in Q1 8:03 f=0.12 score 3.0-7.0
+    Bijan Robinson        RB   proj  23.2  scored   0.4  live fit  19.3 | +exit  19.3 | v1  20.9 | naive  20.9
+    Drake London          WR   proj  17.0  scored   0.0  live fit  13.5 | +exit  13.5 | v1  15.0 | naive  15.0
+    Tyler Huntley         QB   proj  16.5  scored   0.8  live fit  16.5 | +exit  16.5 | v1  15.4 | naive  15.4
+    Michael Penix Jr.     QB   proj  15.2  scored   0.0  live fit  12.3 | +exit  12.3 | v1  13.4 | naive  13.4
+    Derrick Henry         RB   proj  15.0  scored   2.8  live fit  16.3 | +exit  16.3 | v1  16.1 | naive  16.1
+    Zay Flowers           WR   proj   9.1  scored   3.4  live fit  12.1 | +exit  12.1 | v1  11.4 | naive  11.4
+    Mark Andrews          TE   proj   8.5  scored  -0.1  live fit   7.5 | +exit   7.5 | v1   7.4 | naive   7.4
+    Nick Folk             K    proj   8.5  scored   1.0  live fit   8.5 | +exit   8.5 | v1   8.5 | naive   8.5
+    Brian Robinson Jr.    RB   proj   8.0  scored   0.0  live fit   6.5 | +exit   6.5 | v1   7.1 | naive   7.1
+    Tyler Loop            K    proj   7.6  scored   3.0  live fit   9.7 | +exit   9.7 | v1   9.7 | naive   9.7
+    Atlanta Falcons D/ST  DST  proj   7.0  scored  17.0  live fit  11.1 | +exit  11.1 | v1  23.2 | naive  23.2
+    Kyle Pitts            TE   proj   6.7  scored   0.0  live fit   5.3 | +exit   5.3 | v1   5.9 | naive   5.9
+  ATL: in Q1 4:47 f=0.17 score 7.0-3.0
+  BAL: in Q1 4:47 f=0.17 score 3.0-7.0
+    Bijan Robinson        RB   proj  23.2  scored   0.4  live fit  17.8 | +exit  17.8 | v1  18.9 | naive  19.6
+    Drake London          WR   proj  17.0  scored   0.0  live fit  12.7 | +exit  12.7 | v1  13.5 | naive  14.1
+    Tyler Huntley         QB   proj  16.5  scored   1.0  live fit  15.7 | +exit  15.7 | v1  14.3 | naive  14.7
+    Michael Penix Jr.     QB   proj  15.2  scored   0.0  live fit  11.5 | +exit  10.8 | v1  12.1 | naive  12.6  exit x0.94 (stale 0.17)
+    Derrick Henry         RB   proj  15.0  scored   3.7  live fit  16.5 | +exit  16.5 | v1  16.4 | naive  16.1
+    Zay Flowers           WR   proj   9.1  scored   3.4  live fit  11.6 | +exit  11.6 | v1  11.3 | naive  10.9
+    Mark Andrews          TE   proj   8.5  scored  -0.1  live fit   7.1 | +exit   7.1 | v1   6.6 | naive   7.0
+    Nick Folk             K    proj   8.5  scored   1.0  live fit   8.0 | +exit   8.0 | v1   8.0 | naive   8.1
+    Brian Robinson Jr.    RB   proj   8.0  scored   0.0  live fit   6.0 | +exit   6.0 | v1   6.4 | naive   6.6
+    Tyler Loop            K    proj   7.6  scored   3.0  live fit   9.7 | +exit   9.7 | v1   9.7 | naive   9.3
+    Atlanta Falcons D/ST  DST  proj   7.0  scored  17.0  live fit  11.8 | +exit  11.8 | v1  26.1 | naive  22.8
+    Kyle Pitts            TE   proj   6.7  scored   0.0  live fit   5.0 | +exit   5.0 | v1   5.3 | naive   5.6
+  ATL: in Q2 15:00 f=0.25 score 7.0-3.0
+  BAL: in Q2 15:00 f=0.25 score 3.0-7.0
+    Bijan Robinson        RB   proj  23.2  scored   2.7  live fit  18.6 | +exit  18.6 | v1  19.5 | naive  20.1
+    Drake London          WR   proj  17.0  scored   0.0  live fit  11.6 | +exit  11.6 | v1  11.9 | naive  12.8
+    Tyler Huntley         QB   proj  16.5  scored   1.3  live fit  14.5 | +exit  14.5 | v1  13.2 | naive  13.7
+    Michael Penix Jr.     QB   proj  15.2  scored   0.5  live fit  10.8 | +exit  10.8 | v1  11.3 | naive  11.9
+    Derrick Henry         RB   proj  15.0  scored   4.9  live fit  16.6 | +exit  16.6 | v1  16.4 | naive  16.1
+    Zay Flowers           WR   proj   9.1  scored   5.0  live fit  12.5 | +exit  12.5 | v1  12.3 | naive  11.8
+    Mark Andrews          TE   proj   8.5  scored  -0.1  live fit   6.4 | +exit   6.4 | v1   5.9 | naive   6.3
+    Nick Folk             K    proj   8.5  scored   1.0  live fit   7.2 | +exit   7.2 | v1   7.2 | naive   7.4

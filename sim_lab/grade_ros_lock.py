@@ -38,7 +38,12 @@ def main():
             k = norm(p["name"]); gl = logs.get(k, {})
             fut = [v for w, v in gl.items() if w > N]; past = [v for w, v in gl.items() if w <= N]
             if len(fut) < a.games: continue
-            rows.append(dict(name=p["name"], pos=p["pos"], act=float(np.mean(fut)), n=len(fut), ros=p["ros"], clay=p.get("rosClay"), shadow=p.get("rosShadow"), std=(float(np.mean(past)) if past else None), wkn=snap.get(k)))
+            # QB FLOOR (2026-10-09): w[wk][3] = shadow floor multiplier inside ncMean (locks from week 6 on); the number without it
+            sh0 = None; wv = [v for v in (p.get("w") or {}).values() if isinstance(v, list) and len(v) >= 4 and isinstance(v[2], (int, float)) and v[3]]
+            if wv: sh0 = float(np.mean([v[2] / v[3] for v in wv]))
+            qbf = p.get("rosQbf")
+            ros0 = (p["ros"] - (p["rosShadow"] - sh0)) if (sh0 is not None and isinstance(p.get("rosShadow"), (int, float))) else None
+            rows.append(dict(name=p["name"], pos=p["pos"], act=float(np.mean(fut)), n=len(fut), ros=p["ros"], clay=p.get("rosClay"), shadow=p.get("rosShadow"), std=(float(np.mean(past)) if past else None), wkn=snap.get(k), qbf=qbf, ros0=ros0))
         print(f"\n=== ROS lock week {N} (locked {L.get('lockedAt', '')[:16]}, base {L.get('base')}): {len(rows)} players with {a.games}+ games played since ===")
         if not rows: continue
         CANDS = [("model (ros)", "ros"), ("Clay form (rosClay)", "clay"), ("shadow (rosShadow)", "shadow"), ("season-to-date PPG at lock", "std"), ("week-N weekly number", "wkn")]
@@ -53,6 +58,18 @@ def main():
                 rho = spearmanr(pr, ac).correlation if pos != "ALL" else np.nan
                 line += f" {lab}: MAE {np.mean(np.abs(pr - ac)):.2f} bias {ac.sum()/pr.sum():.3f}" + (f" rho {rho:.3f}" if pos != "ALL" else "") + " |"
             print(line)
+        # QB FLOOR graded on the floored QBs: the locked number with vs without the floor
+        fq = [r for r in rows if r["pos"] == "QB" and isinstance(r.get("qbf"), (int, float)) and r["qbf"] > 1.0005 and r.get("ros0") is not None]
+        if any(isinstance(r.get("qbf"), (int, float)) for r in rows):
+            if fq:
+                ac = np.array([r["act"] for r in fq]); w1 = np.array([r["ros"] for r in fq]); w0 = np.array([r["ros0"] for r in fq])
+                print(f"  QB FLOOR (shadow, later weeks, k .70) n{len(fq)}: MAE with {np.mean(np.abs(w1 - ac)):.2f} vs without {np.mean(np.abs(w0 - ac)):.2f} "
+                      f"({np.mean(np.abs(w1 - ac)) - np.mean(np.abs(w0 - ac)):+.2f}) | bias with {ac.sum()/w1.sum():.3f}, without {ac.sum()/w0.sum():.3f} | "
+                      f"floor closer on {100*np.mean(np.abs(w1 - ac) < np.abs(w0 - ac)):.0f}%  (backtest: rest of season -3.1%, 6/7)")
+            else:
+                print("  QB FLOOR: no floored QBs with enough games played since this lock")
+        else:
+            print("  QB FLOOR: lock predates the floor fields (locks from week 6 on carry them)")
         # head-to-head model vs Clay form per player
         hh = [(abs(r["ros"] - r["act"]) < abs(r["clay"] - r["act"])) for r in rows if isinstance(r["clay"], (int, float))]
         if hh: print(f"  model closer than the Clay form on {100*np.mean(hh):.1f}% of {len(hh)} players")

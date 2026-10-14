@@ -1,0 +1,47 @@
+
+=== aR (shipped 0.5) — group cy0 ===
+  aR=0.2   whole season 0.6653 3yr 0.6683 5yr 0.6526 | cy0 season 0.704 3yr 0.501 5yr 0.409
+  aR=0.3   whole season 0.6652 3yr 0.6687 5yr 0.6531 | cy0 season 0.696 3yr 0.505 5yr 0.419
+  aR=0.4   whole season 0.6648 3yr 0.6686 5yr 0.6530 | cy0 season 0.688 3yr 0.495 5yr 0.413
+  aR=0.5   whole season 0.6642 3yr 0.6683 5yr 0.6526 | cy0 season 0.682 3yr 0.494 5yr 0.411
+  aR=0.6   whole season 0.6638 3yr 0.6680 5yr 0.6523 | cy0 season 0.680 3yr 0.486 5yr 0.405
+  aR=0.7   whole season 0.6634 3yr 0.6681 5yr 0.6526 | cy0 season 0.664 3yr 0.479 5yr 0.405
+  aR=0.8   whole season 0.6627 3yr 0.6673 5yr 0.6518 | cy0 season 0.660 3yr 0.474 5yr 0.398
+  LOYO picks [0.3, 0.3, 0.3, 0.2, 0.2, 0.3, 0.2, 0.3]  held-out gain season+3yr +0.0002 (3/8)  5yr -0.0009 (0/6)
+
+=== aS (shipped 0.5) — group cy1s ===
+  aS=0.2   whole season 0.6641 3yr 0.6680 5yr 0.6521 | cy1s season 0.651 3yr 0.414 5yr 0.346
+  aS=0.3   whole season 0.6641 3yr 0.6681 5yr 0.6522 | cy1s season 0.649 3yr 0.420 5yr 0.357
+  aS=0.4   whole season 0.6644 3yr 0.6683 5yr 0.6525 | cy1s season 0.658 3yr 0.409 5yr 0.366
+  aS=0.5   whole season 0.6642 3yr 0.6683 5yr 0.6526 | cy1s season 0.655 3yr 0.408 5yr 0.363
+  aS=0.6   whole season 0.6640 3yr 0.6682 5yr 0.6527 | cy1s season 0.651 3yr 0.406 5yr 0.357
+  aS=0.7   whole season 0.6639 3yr 0.6681 5yr 0.6526 | cy1s season 0.653 3yr 0.409 5yr 0.361
+  aS=0.8   whole season 0.6640 3yr 0.6684 5yr 0.6530 | cy1s season 0.659 3yr 0.398 5yr 0.372
+  LOYO picks [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.5, 0.8]  held-out gain season+3yr -0.0003 (1/8)  5yr +0.0003 (3/6)
+
+=== aF (shipped 0.2) — group cy1g ===
+  aF=0.0   whole season 0.6641 3yr 0.6680 5yr 0.6523 | cy1g season 0.637 3yr 0.584 5yr 0.594
+  aF=0.1   whole season 0.6641 3yr 0.6682 5yr 0.6526 | cy1g season 0.628 3yr 0.580 5yr 0.595
+  aF=0.2   whole season 0.6642 3yr 0.6683 5yr 0.6526 | cy1g season 0.622 3yr 0.576 5yr 0.600
+  aF=0.3   whole season 0.6639 3yr 0.6684 5yr 0.6527 | cy1g season 0.617 3yr 0.574 5yr 0.598
+  aF=0.4   whole season 0.6640 3yr 0.6684 5yr 0.6527 | cy1g season 0.614 3yr 0.571 5yr 0.598
+  LOYO picks [0.2, 0.2, 0.2, 0.2, 0.1, 0.3, 0.2, 0.4]  held-out gain season+3yr -0.0004 (0/8)  5yr -0.0002 (0/6)
+
+=== a3 (shipped 0.15) — group cy2 ===
+  a3=0.0   whole season 0.6637 3yr 0.6679 5yr 0.6527 | cy2 season 0.627 3yr 0.603 5yr 0.640
+  a3=0.05  whole season 0.6639 3yr 0.6680 5yr 0.6527 | cy2 season 0.629 3yr 0.605 5yr 0.643
+  a3=0.1   whole season 0.6642 3yr 0.6683 5yr 0.6527 | cy2 season 0.629 3yr 0.605 5yr 0.643
+  a3=0.15  whole season 0.6642 3yr 0.6683 5yr 0.6526 | cy2 season 0.631 3yr 0.607 5yr 0.643
+  a3=0.2   whole season 0.6640 3yr 0.6682 5yr 0.6526 | cy2 season 0.632 3yr 0.607 5yr 0.643
+  a3=0.3   whole season 0.6643 3yr 0.6682 5yr 0.6526 | cy2 season 0.642 3yr 0.610 5yr 0.646
+  a3=0.4   whole season 0.6643 3yr 0.6681 5yr 0.6523 | cy2 season 0.639 3yr 0.608 5yr 0.644
+  LOYO picks [0.3, 0.3, 0.3, 0.3, 0.3, 0.1, 0.1, 0.4]  held-out gain season+3yr -0.0005 (0/8)  5yr -0.0001 (0/6)
+
+=== a4 (shipped 0.0) — group cy3 ===
+  a4=0.0   whole season 0.6642 3yr 0.6683 5yr 0.6526 | cy3 season 0.653 3yr 0.755 5yr 0.683
+  a4=0.05  whole season 0.6643 3yr 0.6683 5yr 0.6526 | cy3 season 0.654 3yr 0.755 5yr 0.683
+  a4=0.1   whole season 0.6643 3yr 0.6683 5yr 0.6526 | cy3 season 0.654 3yr 0.755 5yr 0.683
+  a4=0.15  whole season 0.6642 3yr 0.6683 5yr 0.6526 | cy3 season 0.655 3yr 0.756 5yr 0.683
+  a4=0.2   whole season 0.6642 3yr 0.6681 5yr 0.6525 | cy3 season 0.655 3yr 0.756 5yr 0.683
+  a4=0.3   whole season 0.6641 3yr 0.6680 5yr 0.6525 | cy3 season 0.655 3yr 0.756 5yr 0.683
+  LOYO picks [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.0, 0.15]  held-out gain season+3yr -0.0001 (0/8)  5yr +0.0000 (0/6)

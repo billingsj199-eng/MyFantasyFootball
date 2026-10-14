@@ -16,8 +16,12 @@ import fnmatch, os, shutil, subprocess, sys, tempfile, time
 SRC = os.path.dirname(os.path.abspath(__file__))
 REPO = r"E:\MyFantasyFootball\MyFantasyFootball Files"
 BRANCH = "simlab-backup"
-EXCL_DIRS = {"__pycache__", "field_cache", "field_out", "salary_cache"}
+EXCL_DIRS = {"__pycache__", "field_cache", "field_out", "salary_cache",
+             "_tmp", "node_modules", ".build-tools"}   # 2026-10-14: _tmp held a whole repo worktree -> 16 GB copy filled C:
 EXCL_GLOBS = ("*.pkl", "*.parquet", "*.bak*", "*.pyc")
+MAX_BYTES = 50 * 1024 * 1024   # GitHub rejects > 100 MB; anything this big is a cache, not source
+# Temp worktree lives on E: (C: is nearly full); was tempfile.gettempdir() on C: before 2026-10-14.
+TMP_ROOT = r"E:\MyFantasyFootball\_tmp"
 
 def keep(rel, name):
     if any(fnmatch.fnmatch(name, g) for g in EXCL_GLOBS):
@@ -35,7 +39,8 @@ def git(*args, cwd=REPO, check=True):
 def main():
     msg = sys.argv[1] if len(sys.argv) > 1 else f"simlab-backup: sync {time.strftime('%Y-%m-%d %H:%M')}"
     git("fetch", "-q", "origin", BRANCH)
-    wt = os.path.join(tempfile.gettempdir(), f"simlab_wt_{int(time.time())}")
+    os.makedirs(TMP_ROOT, exist_ok=True)
+    wt = os.path.join(TMP_ROOT, f"simlab_wt_{int(time.time())}")
     git("worktree", "add", "--detach", wt, f"origin/{BRANCH}")
     try:
         dst = os.path.join(wt, "sim_lab")
@@ -43,10 +48,14 @@ def main():
             shutil.rmtree(dst)
         n = 0
         for root, dirs, files in os.walk(SRC):
-            dirs[:] = [d for d in dirs if d not in EXCL_DIRS]
+            # skip excluded dirs and nested git checkouts / worktrees (a .git file or dir inside)
+            dirs[:] = [d for d in dirs if d not in EXCL_DIRS and not os.path.exists(os.path.join(root, d, ".git"))]
             rel = os.path.relpath(root, SRC)
             for f in files:
                 if not keep(rel, f):
+                    continue
+                if os.path.getsize(os.path.join(root, f)) > MAX_BYTES:
+                    print("skip (>50 MB):", os.path.join(rel, f))
                     continue
                 d = os.path.join(dst, rel, f)
                 os.makedirs(os.path.dirname(d), exist_ok=True)

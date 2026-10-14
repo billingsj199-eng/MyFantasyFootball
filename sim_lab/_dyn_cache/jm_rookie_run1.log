@@ -1,0 +1,87 @@
+n = 486 drafted rookies 2017-23 with a JM score  QB:73 RB:138 WR:208 TE:67
+JM residual beta (all classes): +0.0126 per JM point  (+10 JM over the pick norm -> x1.13 value)
+
+=== PRESEASON rookie value vs T3 (rookie yr + 2) ===
+candidate                       pooled  per-class  top24 hit     MAE
+C  comps(pick,age) LIVE         +0.487     +0.491       65%    36.5
+J  JM kernel                    +0.498     +0.506       66%    36.4
+B  0.75C + 0.25J                +0.506     +0.512       65%    36.0
+B  0.50C + 0.50J                +0.510     +0.514       66%    35.8
+B  0.25C + 0.75J                +0.508     +0.514       66%    36.0
+R  C x JM residual              +0.498     +0.500       66%    36.1
+Jp past-only kernel             +0.448     +0.472       66%    40.4
+Bp 0.50C+0.50Jp past-only       +0.483     +0.488       66%    37.6
+Rp past-only residual           +0.491     +0.495       65%    36.4
+   n=486
+
+=== PRESEASON rookie value vs T5Y (T3 + 1.5 x yrs 4-5, classes 2017-21) ===
+candidate                       pooled  per-class  top24 hit     MAE
+C  comps(pick,age) LIVE         +0.511     +0.517       66%    74.0
+J  JM kernel                    +0.511     +0.525       66%    73.6
+B  0.75C + 0.25J                +0.524     +0.534       64%    73.0
+B  0.50C + 0.50J                +0.525     +0.531       66%    73.0
+B  0.25C + 0.75J                +0.523     +0.531       66%    73.2
+R  C x JM residual              +0.519     +0.523       63%    73.4
+Jp past-only kernel             +0.450     +0.479       64%    83.1
+Bp 0.50C+0.50Jp past-only       +0.502     +0.514       68%    77.3
+Rp past-only residual           +0.513     +0.516       65%    74.0
+   n=346
+
+=== By segment (T3 per-class Spearman unless n small -> pooled) — LIVE C vs J vs 50/50 vs R ===
+segment           n             C             J       B 0.50C       B 0.75C             RBp 0.50C+0.50Jp
+picks 1-32       70        +0.358        +0.511        +0.481        +0.473        +0.431        +0.318
+picks 33-64      71        +0.328        +0.375        +0.374        +0.383        +0.397        +0.387
+picks 1-64      141        +0.405        +0.505        +0.487        +0.472        +0.456        +0.424
+picks 65-128    126        +0.369        +0.307        +0.338        +0.346        +0.367        +0.275
+picks 129+      219        +0.172        +0.127        +0.148        +0.169        +0.184        +0.153
+QB               73        +0.367        +0.438        +0.415        +0.412        +0.390        +0.378
+RB              138        +0.598        +0.627        +0.609        +0.595        +0.597        +0.603
+WR              208        +0.486        +0.506        +0.508        +0.502        +0.502        +0.491
+TE               67        +0.547        +0.515        +0.543        +0.551        +0.593        +0.236
+QB 1-64          29        +0.025        +0.334        +0.251        +0.190        +0.125        +0.277  (pooled)
+RB 1-64          28        +0.506        +0.637        +0.604        +0.549        +0.530        +0.362  (pooled)
+WR 1-64          63        +0.457        +0.607        +0.586        +0.561        +0.570        +0.427
+TE 1-64          21        +0.402        +0.174        +0.306        +0.328        +0.564        +0.166  (pooled)
+
+=== WEEK 8 rookies: prior blended with own rate at g/(g+2) (as live) — prior = C vs 50/50 C+J vs R ===
+   280 of 486 played by week 8
+   prior C (LIVE)       pooled +0.568  per-class +0.568  picks 1-64 pooled +0.554
+   prior 0.50C+0.50J    pooled +0.570  per-class +0.570  picks 1-64 pooled +0.575
+   prior 0.75C+0.25J    pooled +0.572  per-class +0.574  picks 1-64 pooled +0.567
+   prior R              pooled +0.570  per-class +0.573  picks 1-64 pooled +0.558
+
+=== YEAR 2 (sophomore preseason): vet comps on rookie production vs blend with JM kernel (career yrs 2-4) ===
+   n=333 sophomores with a rookie-year row
+   JM weight 0.0 all          n=333  pooled +0.500  per-class +0.502
+   JM weight 0.0 picks 1-64   n=113  pooled +0.478
+   JM weight 0.0 rookie gp<8  n=67   pooled +0.368
+   JM weight 0.1 all          n=333  pooled +0.532  per-class +0.531
+   JM weight 0.1 picks 1-64   n=113  pooled +0.497
+   JM weight 0.1 rookie gp<8  n=67   pooled +0.497
+   JM weight 0.2 all          n=333  pooled +0.546  per-class +0.542
+   JM weight 0.2 picks 1-64   n=113  pooled +0.506
+   JM weight 0.2 rookie gp<8  n=67   pooled +0.526
+   JM weight 0.3 all          n=333  pooled +0.555  per-class +0.553
+   JM weight 0.3 picks 1-64   n=113  pooled +0.509
+   JM weight 0.3 rookie gp<8  n=67   pooled +0.534
+   JM weight 0.5 all          n=333  pooled +0.559  per-class +0.558
+   JM weight 0.5 picks 1-64   n=113  pooled +0.507
+   JM weight 0.5 rookie gp<8  n=67   pooled +0.546
+
+=== Biggest JM movers (50/50 vs live, T3 units), 2021-23 classes ===
+   velus jones             WR  2022 pick  71 JM  36.8  live   66.1 ->   42.4  actual    0.0
+   tyrion davisprice       RB  2022 pick  93 JM  31.9  live   50.1 ->   31.8  actual    0.0
+   josh palmer             WR  2021 pick  77 JM  23.8  live   42.9 ->   24.7  actual    7.9
+   james cook              RB  2022 pick  63 JM  52.2  live   71.9 ->   53.9  actual  176.4
+   dwayne eskridge         WR  2021 pick  56 JM  31.3  live   48.6 ->   30.7  actual    0.0
+   anthony schwartz        WR  2021 pick  91 JM  41.1  live   47.5 ->   34.8  actual    0.0
+   mac jones               QB  2021 pick  15 JM  47.7  live   23.2 ->   12.2  actual    0.0
+   brian robinson          RB  2022 pick  98 JM  41.0  live   38.1 ->   28.0  actual   32.9
+   trey lance              QB  2021 pick   3 JM  78.7  live   38.9 ->   79.6  actual    0.0
+   jaxon smithnjigba       WR  2023 pick  20 JM  92.0  live   81.7 ->  129.3  actual  313.8
+   drake london            WR  2022 pick   8 JM  92.9  live  120.1 ->  173.7  actual  151.9
+   chris olave             WR  2022 pick  11 JM  91.3  live  100.0 ->  154.6  actual  109.0
+   jahmyr gibbs            RB  2023 pick  12 JM  90.9  live  151.0 ->  220.1  actual  499.9
+   bijan robinson          RB  2023 pick   8 JM  93.9  live  172.0 ->  246.1  actual  488.8
+   najee harris            RB  2021 pick  24 JM  89.3  live  155.5 ->  259.4  actual  253.7
+   travis etienne          RB  2021 pick  25 JM  88.9  live  146.9 ->  251.3  actual  159.7

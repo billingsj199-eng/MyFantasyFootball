@@ -1,0 +1,16 @@
+  weight = competitive share (next)                          n  8712 MSE  -0.04% (5/7, fwd 3/4) MAE  +0.04% rho 0.4244->0.4226 | 2019 +0.12% 2020 -0.13% 2021 -0.00% 2022 -0.17% 2023 +0.01% 2024 -0.05% 2025 -0.03%
+  weight = competitive share (ROS)                           n  4665 MSE  -0.25% (5/7, fwd 4/4) MAE  -0.10% rho 0.6255->0.6238 | 2019 +0.78% 2020 -0.26% 2021 +0.43% 2022 -0.62% 2023 -0.46% 2024 -0.47% 2025 -0.86%
+     rows moved > 1%: 1816
+  weight = competitive share ^2 (next)                       n  8712 MSE  -0.05% (4/7, fwd 3/4) MAE  +0.08% rho 0.4244->0.4233 | 2019 +0.24% 2020 -0.23% 2021 +0.03% 2022 -0.27% 2023 +0.01% 2024 -0.08% 2025 -0.01%
+  weight = competitive share ^2 (ROS)                        n  4665 MSE  -0.38% (5/7, fwd 4/4) MAE  -0.15% rho 0.6255->0.6208 | 2019 +1.45% 2020 -0.41% 2021 +0.87% 2022 -0.96% 2023 -0.72% 2024 -0.83% 2025 -1.44%
+     rows moved > 1%: 3295
+  blowout games x.5 (next)                                   n  8712 MSE  -0.03% (4/7, fwd 2/4) MAE  +0.06% rho 0.4244->0.4243 | 2019 +0.33% 2020 -0.37% 2021 -0.10% 2022 -0.15% 2023 +0.07% 2024 -0.21% 2025 +0.19%
+  blowout games x.5 (ROS)                                    n  4665 MSE  -0.32% (6/7, fwd 4/4) MAE  -0.19% rho 0.6255->0.6224 | 2019 +3.28% 2020 -1.14% 2021 -1.13% 2022 -0.43% 2023 -0.43% 2024 -1.09% 2025 -0.67%
+     rows moved > 1%: 3397
+  blowout games x.25 (next)                                  n  8712 MSE  +0.04% (4/7, fwd 2/4) MAE  +0.14% rho 0.4244->0.4214 | 2019 +0.59% 2020 -0.50% 2021 -0.07% 2022 -0.14% 2023 +0.21% 2024 -0.24% 2025 +0.42%
+  blowout games x.25 (ROS)                                   n  4665 MSE  -0.12% (6/7, fwd 4/4) MAE  -0.18% rho 0.6255->0.6151 | 2019 +5.87% 2020 -1.63% 2021 -1.53% 2022 -0.31% 2023 -0.17% 2024 -1.37% 2025 -0.72%
+     rows moved > 1%: 4218
+  LOYO picks blowout evidence weight, next: ['weight = competitive share ^2', 'weight = competitive share', 'weight = competitive share ^2', 'weight = competitive share', 'weight = competitive share ^2', 'weight = competitive share ^2', 'blowout games x.5']
+  LOYO blowout evidence weight, next: MSE +0.01% (3/7) | forward 2022-25 +0.02% (2/4) | MAE +0.09% | rho 0.4244->0.4238
+  LOYO picks blowout evidence weight, ROS: ['blowout games x.25', 'weight = competitive share ^2', 'weight = competitive share ^2', 'blowout games x.5', 'weight = competitive share ^2', 'weight = competitive share ^2', 'blowout games x.5']
+  LOYO blowout evidence weight, ROS: MSE +0.35% (5/7) | forward 2022-25 -0.31% (2/4) | MAE +0.19% | rho 0.6255->0.6206

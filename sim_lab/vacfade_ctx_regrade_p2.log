@@ -1,0 +1,22 @@
+==============================================================================================================
+P-20261013-2 ENGINE FORM: later-week vacancy boost by actual future-week absences, faded by games already seen
+==============================================================================================================
+  checkpoints 4665; with a later-week vacancy boost 3304
+  fade max(0, 1 - seen/2) later weeks                        n  4665 MSE  -0.52% (5/7, fwd 2/4) MAE  -0.36% rho 0.6262->0.6309 | 2019 -0.07% 2020 -0.46% 2021 -1.81% 2022 -1.96% 2023 -0.32% 2024 +0.22% 2025 +0.11%
+  fade max(0, 1 - seen/4) later weeks                        n  4665 MSE  -0.48% (6/7, fwd 4/4) MAE  -0.33% rho 0.6262->0.6308 | 2019 +0.01% 2020 -0.26% 2021 -1.38% 2022 -1.85% 2023 -0.30% 2024 -0.04% 2025 -0.03%
+  fade max(0, 1 - seen/6) later weeks                        n  4665 MSE  -0.41% (6/7, fwd 4/4) MAE  -0.27% rho 0.6262->0.6302 | 2019 +0.05% 2020 -0.19% 2021 -1.06% 2022 -1.72% 2023 -0.22% 2024 -0.13% 2025 -0.04%
+  fade max(0, 1 - seen/8) later weeks                        n  4665 MSE  -0.36% (6/7, fwd 4/4) MAE  -0.23% rho 0.6262->0.6297 | 2019 +0.03% 2020 -0.16% 2021 -0.82% 2022 -1.51% 2023 -0.19% 2024 -0.17% 2025 -0.04%
+  no boost in later weeks                                    n  4665 MSE  +0.88% (5/7, fwd 2/4) MAE  +0.29% rho 0.6262->0.6291 | 2019 -0.05% 2020 -0.16% 2021 -1.78% 2022 -0.25% 2023 -0.23% 2024 +4.74% 2025 +2.47%
+  fade c 4, affected checkpoints only                        n  1666 MSE  -1.42% (6/7, fwd 4/4) MAE  -0.97% rho 0.5934->0.6043 | 2019 +0.03% 2020 -0.87% 2021 -2.52% 2022 -6.05% 2023 -1.05% 2024 -0.10% 2025 -0.09%
+  fade c 4, RB                                               n  1882 MSE  -0.73% (4/7, fwd 2/4) MAE  -0.53% rho 0.6758->0.6833 | 2019 +0.09% 2020 -0.76% 2021 -0.96% 2022 -3.68% 2023 -0.71% 2024 +0.12% 2025 +0.75%
+  fade c 4, WR                                               n  2165 MSE  -0.43% (4/7, fwd 3/4) MAE  -0.25% rho 0.6109->0.6162 | 2019 +0.05% 2020 +0.23% 2021 -2.30% 2022 +0.23% 2023 -0.12% 2024 -0.10% 2025 -0.96%
+  fade c 4, TE                                               n   618 MSE  +0.39% (3/7, fwd 1/4) MAE  +0.11% rho 0.5803->0.5802 | 2019 -0.60% 2020 +0.06% 2021 -0.30% 2022 +1.31% 2023 +0.37% 2024 -0.39% 2025 +2.28%
+  LOYO picks P-2 engine form: ['fade c 2', 'fade c 2', 'fade c 4', 'fade c 2', 'fade c 2', 'fade c 2', 'fade c 2']
+  LOYO P-2 engine form: MSE -0.47% (5/7) | forward 2022-25 -0.36% (2/4) | MAE -0.33% | rho 0.6262->0.6309
+  P-2 fade c4 LOST 2019 (+0.01%): top 6 rows = 2888% of the net loss
+     Christian McCaffrey      RB CAR wk 9 actual  25.6 base  18.3 cand  18.1 | later boost weeks 4/8 max seen 6 pm 1.03
+     James Washington         WR PIT wk11 actual   8.9 base   6.7 cand   6.2 | later boost weeks 5/6 max seen 5 pm 1.41
+     James Washington         WR PIT wk12 actual   9.7 base   7.2 cand   6.8 | later boost weeks 4/5 max seen 5 pm 1.41
+     Miles Sanders            RB PHI wk12 actual  18.9 base  11.9 cand  11.8 | later boost weeks 4/5 max seen 1 pm 1.07
+     James Washington         WR PIT wk10 actual   9.5 base   5.9 cand   5.6 | later boost weeks 6/7 max seen 5 pm 1.41
+     Anthony Miller           WR CHI wk12 actual  10.0 base   6.2 cand   5.9 | later boost weeks 4/5 max seen 2 pm 1.15

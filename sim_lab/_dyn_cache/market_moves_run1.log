@@ -1,0 +1,39 @@
+1464 player-years, start 2015-2023
+
+=== 1. Does the market drift toward the sim? (per-year Spearman, n-weighted) ===
+corr(gap, next-year market move)            +0.246   (+ = market moves toward the sim)
+corr(momentum, next-year market move)       -0.021   (+ = risers keep rising; - = they revert)
+   QB: gap->move +0.158
+   RB: gap->move +0.256
+   WR: gap->move +0.231
+   TE: gap->move +0.290
+   rookies: gap->move +0.165   vets: +0.235
+
+=== 2. Controlling for momentum, age, market rank (OLS on next move, vets with a prior-year ADP) ===
+   const         +0.4142  (t +2.3)
+   gap           +0.2948  (t +7.4)
+   momentum      +0.0540  (t +1.6)
+   age           +0.0137  (t +2.2)
+   log mkt rank  -0.1020  (t -3.9)
+
+=== 3. Buy / sell buckets by gap (within-year quintiles) ===
+bucket                        n avg mkt rank  next rank  mkt moved real T3 VOR T3 vs mkt-peers
+Q1 sim likes MOST (buy)     295           91        110        32%         108             +27
+Q2                          294          103        139        50%          76             +10
+Q3                          292          106        151        49%          61              -6
+Q4                          294           86        135        66%          66             -11
+Q5 sim likes LEAST (sell)   289           44         96       250%         124             -20
+
+=== 4. Biggest buy calls that hit / missed (Q1, top-100 market) ===
+   2017 mike williams         WR age37 mkt #52   sim #1    -> next yr mkt #99   T3 VOR 35
+   2021 davante adams         WR age28 mkt #21   sim #1    -> next yr mkt #14   T3 VOR 477
+   2021 james robinson        RB age23 mkt #68   sim #5    -> next yr mkt #113  T3 VOR 27
+   2019 kareem hunt           RB age24 mkt #95   sim #11   -> next yr mkt #58   T3 VOR 75
+   2018 alvin kamara          RB age23 mkt #8    sim #1    -> next yr mkt #3    T3 VOR 528
+   2020 todd gurley           RB age26 mkt #85   sim #12   -> next yr mkt #250  T3 VOR 20
+   2023 josh allen            QB age27 mkt #28   sim #4    -> next yr mkt #20   T3 VOR 355
+   2022 amonra st brown       WR age22 mkt #71   sim #11   -> next yr mkt #12   T3 VOR 437
+   2017 john ross             WR age21 mkt #89   sim #15   -> next yr mkt #159  T3 VOR 0
+   2023 cooper kupp           WR age30 mkt #29   sim #5    -> next yr mkt #48   T3 VOR 19
+   2021 tyreek hill           WR age27 mkt #20   sim #4    -> next yr mkt #22   T3 VOR 546
+   2023 davante adams         WR age30 mkt #32   sim #7    -> next yr mkt #24   T3 VOR 271

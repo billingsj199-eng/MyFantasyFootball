@@ -177,16 +177,67 @@ def load_weekly():
     for f in files:
         path = os.path.join(REPO, "data", f)
         raw = open(path, encoding="utf-8").read()
-        d, _ = json.JSONDecoder().raw_decode(raw, raw.index("{"))
+        # '{"' not '{': retired_1 opens with a `||{}` fallback before the payload
+        d, _ = json.JSONDecoder().raw_decode(raw, raw.index('{"'))
         for name, rec in d.items():
+            if f != "weekly_stats_active.js":
+                RETIRED_IDS.add(id(rec))
             k = norm(name)
             if k in by:
                 by[k].append(rec)
             else:
                 by[k] = [rec]
+    # stale duplicates: a retired-split copy whose seasons are a subset of a
+    # same-position record (e.g. Deshaun Watson retired_1 2017-23 vs active
+    # 2017-26) is the same player — keep the superset instead of going ambiguous
+    for k, cands in by.items():
+        if len(cands) > 1:
+            by[k] = [c for c in cands if not any(
+                o is not c and o.get("pos") == c.get("pos")
+                and set(c.get("seasons", {})) < set(o.get("seasons", {}))
+                for o in cands)]
     return by
 
+RETIRED_IDS = set()   # id() of records from the retired splits (season gaps)
 WEEKLY = load_weekly()
+
+PBP_CACHE = r"E:\MyFantasyFootball\pbp_cache"
+_TOUCH_IDS, _GSIS = {}, None
+
+def _touch_ids(Y):
+    """gsis ids with any REG-season pass / rush / target in Y (lazy, cached)."""
+    if Y not in _TOUCH_IDS:
+        import pandas as pd
+        cols = ["season_type", "passer_player_id", "rusher_player_id", "receiver_player_id"]
+        d = pd.read_csv(os.path.join(PBP_CACHE, f"play_by_play_{Y}.csv.gz"), usecols=cols, low_memory=False)
+        d = d[d.season_type == "REG"]
+        _TOUCH_IDS[Y] = set(pd.concat([d[c] for c in cols[1:]]).dropna())
+    return _TOUCH_IDS[Y]
+
+def _gsis(name, pos, Y):
+    global _GSIS
+    if _GSIS is None:
+        import pandas as pd
+        p = pd.read_csv(os.path.join(PBP_CACHE, "players.csv"), low_memory=False,
+                        usecols=["gsis_id", "display_name", "position", "rookie_season", "last_season"])
+        _GSIS = {}
+        for r in p[p.gsis_id.notna()].itertuples(index=False):
+            _GSIS.setdefault((norm(str(r.display_name)), r.position), []).append(
+                (r.gsis_id, r.rookie_season if r.rookie_season == r.rookie_season else 0,
+                 r.last_season if r.last_season == r.last_season else 9999))
+    c = [g for g, a, b in _GSIS.get((norm(name), pos), []) if a <= Y <= b + 1]
+    return c[0] if len(c) == 1 else None
+
+def season_known(rec, season, name, pos):
+    """A retired-split record that lacks season Y is ambiguous — those files
+    have gaps (Frank Gore 2019, A.J. Green 2022, Okonkwo 2023/25) next to
+    real lost seasons (Jordan Reed 2019, Tarik Cohen 2021). Settle it with
+    nflverse pbp: any touch/target in Y = data gap (False, drop as
+    unmatched); none = real zero season (True); unresolvable id = False."""
+    if id(rec) not in RETIRED_IDS or str(season) in rec.get("seasons", {}):
+        return True
+    g = _gsis(name, pos, season)
+    return g is not None and g not in _touch_ids(season)
 
 def weekly_rec(name, pos):
     """Resolve a player's weekly record; None if unmatched or ambiguous."""
@@ -279,7 +330,7 @@ def run_season(Y, clay):
             continue
         half = max(0.5, pts - rec_n / 2.0)
         wrec = weekly_rec(name, pos)
-        if wrec is None:
+        if wrec is None or not season_known(wrec, Y, name, pos):
             unmatched += 1
             continue
         actual = played_weeks(wrec, Y)          # [] = real zero season, kept

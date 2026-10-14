@@ -1,0 +1,24 @@
+=== in-sample fit (all seasons) — what each term WANTS ===
+RB_25_27 k=+0.00                      0.699  0.667  0.653  0.450  0.617                
+QB_U22 k=-0.15                        0.700  0.666  0.653  0.450  0.617                
+QB_30 k=-0.25                         0.698  0.667  0.655  0.449  0.617                
+WR_30 k=+0.15                         0.701  0.665  0.652  0.453  0.618                
+RB_SLOPE k=+0.00                      0.699  0.667  0.653  0.450  0.617                
+
+=== LEAVE-ONE-YEAR-OUT (k chosen on the other 7 seasons, scored on the held-out one) ===
+variant                            next mkt    3yr  5yr+y  top50    avg   beats shipped
+SHIPPED FAIR (no age terms)           0.699  0.667  0.653  0.450  0.617                
+RB_25_27                              0.700  0.668  0.653  0.450  0.612   0/8 (+0.0000)
+      k per fold: RB_25_27 +0.00..+0.00 (median +0.00)
+QB_U22                                0.701  0.665  0.651  0.450  0.611   3/8 (-0.0011)
+      k per fold: QB_U22 -0.25..+0.00 (median -0.15)
+QB_30                                 0.699  0.667  0.654  0.448  0.611   2/8 (-0.0014)
+      k per fold: QB_30 -0.25..+0.00 (median -0.25)
+WR_30                                 0.701  0.665  0.650  0.450  0.611   2/8 (-0.0014)
+      k per fold: WR_30 +0.00..+0.25 (median +0.15)
+RB_SLOPE                              0.700  0.668  0.653  0.450  0.612   0/8 (+0.0000)
+      k per fold: RB_SLOPE +0.00..+0.00 (median +0.00)
+RB_25_27+QB_U22+QB_30+WR_30           0.700  0.661  0.651  0.448  0.608   3/8 (-0.0037)
+      k per fold: RB_25_27 +0.00..+0.00 (median +0.00); QB_U22 -0.25..-0.15 (median -0.20); QB_30 -0.25..+0.00 (median -0.25); WR_30 +0.00..+0.25 (median +0.15)
+RB_SLOPE+QB_U22+QB_30+WR_30           0.699  0.661  0.651  0.448  0.608   3/8 (-0.0041)
+      k per fold: RB_SLOPE +0.00..+0.05 (median +0.00); QB_U22 -0.25..-0.15 (median -0.20); QB_30 -0.25..+0.00 (median -0.25); WR_30 +0.00..+0.25 (median +0.15)

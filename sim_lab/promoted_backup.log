@@ -1,0 +1,27 @@
+rows 15356 RB/WR/TE player-weeks (shadow >= 1); with a regular ahead absent: 1358
+
+actual / shadow by cell (reference = no regular absent)
+  RB reference 0.999 (n 4257)
+    own lo  (clay/g <4) regulars out 1 : 1.011 (n 96)
+    own lo  (clay/g <4) regulars out 2+: 0.838 (n 8)
+    own mid (clay/g 4-7) regulars out 1 : 1.141 (n 109)
+    own hi  (clay/g 7+) regulars out 1 : 1.009 (n 90)
+    lead regular out (any level): 1.067 (n 270)
+  WR reference 0.993 (n 6437)
+    own lo  (clay/g <4) regulars out 1 : 1.112 (n 260)
+    own lo  (clay/g <4) regulars out 2+: 1.515 (n 22)
+    own mid (clay/g 4-7) regulars out 1 : 1.058 (n 353)
+    own mid (clay/g 4-7) regulars out 2+: 0.868 (n 35)
+    own hi  (clay/g 7+) regulars out 1 : 1.049 (n 252)
+    own hi  (clay/g 7+) regulars out 2+: 0.852 (n 8)
+    lead regular out (any level): 1.099 (n 592)
+  TE reference 1.006 (n 3304)
+    own lo  (clay/g <4) regulars out 1 : 1.302 (n 101)
+    own mid (clay/g 4-7) regulars out 1 : 1.200 (n 21)
+    lead regular out (any level): 1.281 (n 122)
+
+LOYO: promoted rows MSE -0.41% (4/7 seasons better), whole board -0.033%
+
+FORWARD: promoted rows MSE -0.40% (3/4 seasons better), whole board -0.038%
+
+fitted multipliers (all seasons): RB hi out1: 1.007, RB lo out1: 1.009, RB lo out2+: 0.973, RB mid out1: 1.104, TE lo out1: 1.210, TE mid out1: 1.066, WR hi out1: 1.049, WR hi out2+: 0.976, WR lo out1: 1.104, WR lo out2+: 1.187, WR mid out1: 1.059, WR mid out2+: 0.941

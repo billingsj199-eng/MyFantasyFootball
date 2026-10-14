@@ -1,0 +1,276 @@
+(returning-regular weeks excluded: 332 of 1189 absence weeks, 147 of 946 control weeks)
+=== ABSENCE MAP 2019-25: 622 single-absence team-weeks, 235 double, 799 control (no meaningful absence) ===
+control (all slots, mean delta vs trailing, PPR): QB1 -0.47 QBB -0.18 RB1 -0.84 RB2 -0.09 RB3 -0.26 WR1 -1.19 WR2 +0.06 WR3 +0.25 WR4 -0.12 TE1 -0.13 TE2 -0.38 bQB +0.27 bRB +0.54 bWR +1.30 bTE +0.74
+
+##### ABSENT QB1: n=58 | he averaged 0.0 tgt, 3.7 car, 30.0 att, 13.6 PPR/g
+  TEAM (ctrl-adj): team carries -1.6 (4/7) | team targets +0.2 (3/7) | pass att -16.6 (7/7) | RB+WR+TE PPR -0.9 (3/7) | QB pts -8.2 (7/7)
+  team keeps n/a of his targets, 0.56 of his carries, skill-player PPR keeps 0.93 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  RB1     58     12.4  +0.61  +0.49  +0.16      .  +2.64  +2.8 5/7 |  +0.00  +2.64 UNDER (engine gives ~0)
+  RB2     49      5.9  +0.30  +0.31  +0.08      .  -0.26  -0.4 4/7 |  +0.00  -0.26 OK
+  RB3     12      2.6  +0.17  -0.39  +0.05      .  +0.16  -0.4 3/7 |  +0.00  +0.16 OK
+  WR1     58     13.4  -0.05  +0.34  -0.01      .  +0.56  +0.3 4/7 |  -1.41  +1.97 UNDER
+  WR2     58      9.1  -0.05  -0.80  -0.01      .  -2.72  -3.1 7/7 |  -0.64  -2.07 OVER
+  WR3     44      4.2  -0.17  -0.08  -0.04      .  -0.34  -0.4 5/7 |  -0.24  -0.10 OK
+  WR4     13      5.1  -0.04  -0.96  -0.01      .  -3.14  -2.2 5/7 |  -0.26  -2.89 OVER
+  TE1     54      8.0  -0.01  +0.08  -0.00      .  -0.12  -1.7 4/7 |  +0.00  -0.12 OK
+  TE2     21      2.2  -0.02  -0.21  -0.01      .  -0.57  -0.8 5/7 |  +0.00  -0.57 OK
+  bQB     20      0.0  +2.48  +0.00  +0.64      . +10.87 +10.5 7/7 | +12.52  -1.64 OVER
+  bRB      9      0.0  +5.18  +1.84  +1.92      .  +5.09  +4.4 4/7 |  +0.00  +5.09 UNDER (engine gives ~0)
+  bWR     15      0.0  +0.08  +2.31  +0.02      .  +2.58  +1.6 6/7 |  +0.00  +2.58 UNDER (engine gives ~0)
+  bTE     14      0.0  -0.01  +2.44  -0.00      .  +3.41  +2.1 6/7 |  +0.00  +3.41 UNDER (engine gives ~0)
+  level STAR (>= 20 PPR/g): n=5 (too few)
+  level regular n=53: RB1 +3.1 (eng +0.0), WR1 +0.4 (eng -1.4), WR2 -2.7 (eng -0.6), WR4 -2.2 (eng -0.2), bQB +10.0 (eng +11.4), bWR +2.6 (eng +0.0), bTE +3.4 (eng +0.0)
+
+##### ABSENT RB_WH: n=59 | he averaged 2.6 tgt, 13.7 car, 12.8 PPR/g
+  TEAM (ctrl-adj): team carries -1.8 (5/7) | team targets -0.1 (3/7) | pass att +1.1 (5/7) | RB+WR+TE PPR -5.2 (6/7) | QB pts -0.2 (4/7)
+  team keeps 0.97 of his targets, 0.87 of his carries, skill-player PPR keeps 0.60 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     59     16.9  +0.23  +0.00  +0.02  +0.00  -0.35  -1.6 2/7 |  +0.00  -0.35 OK
+  RB2     50      6.8  +7.59  +0.97  +0.53  +0.37  +5.66  +6.7 7/7 |  +3.10  +2.56 UNDER
+  RB3     12      3.5  +1.75  +0.59  +0.12  +0.28  -0.03  +0.1 3/7 |  +1.68  -1.71 OVER (wrong player: data ~0)
+  WR1     59     15.7  -0.01  +0.08  -0.00  +0.03  -0.92  -1.4 4/7 |  +0.00  -0.92 OK
+  WR2     56     10.5  -0.05  -0.01  -0.00  -0.00  -1.45  -0.9 6/7 |  +0.00  -1.45 OVER
+  WR3     48      5.6  +0.05  +0.34  +0.00  +0.13  -0.10  -0.2 4/7 |  +0.00  -0.10 OK
+  WR4     26      3.5  -0.15  +0.12  -0.01  +0.05  -0.11  -0.7 3/7 |  +0.00  -0.11 OK
+  TE1     56      8.9  -0.03  -0.14  -0.00  -0.05  -0.83  -1.1 4/7 |  +0.00  -0.83 OK
+  TE2     30      3.6  -0.02  +0.45  -0.00  +0.17  +0.82  -0.1 5/7 |  +0.00  +0.82 OK
+  bRB     28      0.0  +6.99  +1.22  +0.50  +0.47  +6.05  +4.4 6/7 |  +0.00  +6.05 UNDER (engine gives ~0)
+  bWR     18      0.0  +0.10  +1.79  +0.01  +0.62  +4.21  +0.8 7/7 |  +0.00  +4.21 UNDER (engine gives ~0)
+  bTE     12      0.0  -0.01  +1.21  -0.00  +0.45  +2.95  +1.6 5/7 |  +0.00  +2.95 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g) n=18: QB1 -0.9 (eng +0.0), RB2 +5.8 (eng +4.4), WR1 -1.1 (eng +0.0), WR2 -1.1 (eng +0.0), WR4 -2.4 (eng +0.0), TE2 +1.0 (eng +0.0)
+  level regular n=41: RB2 +5.6 (eng +2.4), WR1 -0.9 (eng +0.0), WR2 -1.6 (eng +0.0), WR4 +1.3 (eng +0.0), TE1 -1.1 (eng +0.0), TE2 +0.7 (eng +0.0), bRB +5.4 (eng +0.0), bWR +3.0 (eng +0.0)
+
+##### ABSENT RB_COMM: n=16 | he averaged 3.0 tgt, 11.5 car, 11.8 PPR/g
+  TEAM (ctrl-adj): team carries -1.5 (3/7) | team targets +0.6 (3/7) | pass att +3.2 (5/7) | RB+WR+TE PPR -0.7 (4/7) | QB pts +0.7 (5/7)
+  team keeps 1.21 of his targets, 0.87 of his carries, skill-player PPR keeps 0.94 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     16     18.6  -0.34  +0.00  -0.03  +0.00  +0.46  +1.2 4/7 |  +0.00  +0.46 OK
+  RB2     16      8.6  +3.49  +0.32  +0.30  +0.11  +1.90  +0.9 3/7 |  +2.64  -0.74 OK
+  WR1     16     15.4  -0.03  +0.16  -0.00  +0.05  -1.44  -2.0 4/7 |  +0.00  -1.44 OK
+  WR2     15      8.4  -0.17  +0.54  -0.01  +0.18  +1.44  -1.6 3/7 |  +0.00  +1.44 OK
+  WR3     11      5.3  -0.15  -1.02  -0.01  -0.29  -3.56  -2.9 5/7 |  +0.00  -3.56 OVER
+  TE1     16      7.4  -0.02  +0.99  -0.00  +0.33  +4.12  +3.0 7/7 |  +0.00  +4.12 UNDER (engine gives ~0)
+  TE2     12      3.2  +0.00  -0.31  +0.00  -0.09  -1.21  -1.2 3/7 |  +0.00  -1.21 OK
+  bRB     11      0.0  +7.77  +2.27  +0.66  +0.70  +6.79  +4.4 7/7 |  +0.00  +6.79 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g): n=2 (too few)
+  level regular: n=14 (too few)
+
+##### ABSENT RB2: n=84 | he averaged 1.7 tgt, 6.5 car, 5.9 PPR/g
+  TEAM (ctrl-adj): team carries -1.6 (5/7) | team targets +0.1 (3/7) | pass att +0.9 (4/7) | RB+WR+TE PPR +1.5 (3/7) | QB pts +1.0 (4/7)
+  team keeps 1.04 of his targets, 0.75 of his carries, skill-player PPR keeps 1.26 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     84     17.3  +0.14  +0.00  +0.02  +0.00  +0.88  -0.2 4/7 |  +0.00  +0.88 OK
+  RB1     84     14.4  +1.24  +0.47  +0.19  +0.29  +1.11  +1.6 5/7 |  +1.24  -0.12 OK
+  RB3     42      3.5  +1.10  +0.45  +0.15  +0.30  +4.29  +3.3 7/7 |  +0.79  +3.51 UNDER
+  WR1     84     15.7  -0.03  -0.01  -0.00  -0.00  -0.43  -2.1 4/7 |  +0.00  -0.43 OK
+  WR2     79     10.0  -0.00  -0.21  -0.00  -0.13  +0.58  -1.3 4/7 |  +0.00  +0.58 OK
+  WR3     66      5.5  +0.03  +0.05  +0.00  +0.03  +0.19  -0.8 4/7 |  +0.00  +0.19 OK
+  WR4     32      4.1  +0.37  +0.45  +0.05  +0.27  +1.20  +0.9 5/7 |  +0.00  +1.20 OK
+  TE1     78     10.1  -0.02  +0.05  -0.00  +0.03  -0.51  -0.4 4/7 |  +0.00  -0.51 OK
+  TE2     35      3.4  +0.02  -0.21  +0.00  -0.14  -0.47  -1.7 5/7 |  +0.00  -0.47 OK
+  bQB     11      0.0  +0.96  +0.00  +0.17  +0.00  +3.90  +0.4 5/7 |  +0.00  +3.90 UNDER (engine gives ~0)
+  bRB     19      0.0  +5.29  +0.95  +0.76  +0.45  +6.72  +2.6 5/7 |  +0.00  +6.72 UNDER (engine gives ~0)
+  bWR     23      0.0  +0.03  +1.91  +0.00  +1.14  +3.24  +0.9 6/7 |  +0.00  +3.24 UNDER (engine gives ~0)
+  bTE     19      0.0  -0.00  +1.75  -0.00  +1.01  +4.01  +1.3 6/7 |  +0.00  +4.01 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g): n=0 (too few)
+  level regular n=84: QB1 +0.9 (eng +0.0), RB1 +1.1 (eng +1.2), RB3 +4.3 (eng +0.8), WR1 -0.4 (eng +0.0), WR2 +0.6 (eng +0.0), WR4 +1.2 (eng +0.0), TE1 -0.5 (eng +0.0), TE2 -0.5 (eng +0.0), bQB +3.9 (eng +0.0), bRB +6.7 (eng +0.0), bWR +3.2 (eng +0.0), bTE +4.0 (eng +0.0)
+
+##### ABSENT WR1: n=61 | he averaged 7.4 tgt, 0.1 car, 13.9 PPR/g
+  TEAM (ctrl-adj): team carries +1.0 (4/7) | team targets -5.1 (6/7) | pass att -3.8 (6/7) | RB+WR+TE PPR -11.3 (6/7) | QB pts -1.6 (5/7)
+  team keeps 0.31 of his targets, n/a of his carries, skill-player PPR keeps 0.19 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     61     16.3  +0.22  +0.00      .  +0.00  -1.24  -0.9 4/7 |  +0.00  -1.24 OK
+  RB1     61     16.0  +0.00  -0.74      .  -0.10  -1.66  -2.4 5/7 |  +1.14  -2.80 OVER (wrong player: data ~0)
+  RB2     54      6.0  +0.59  +0.08      .  +0.01  +0.51  +0.3 5/7 |  +0.42  +0.09 OK
+  RB3     18      3.4  +0.48  -0.22      .  -0.03  -0.97  -0.5 2/7 |  +0.18  -1.15 OK
+  WR2     56      9.0  +0.01  +0.48      .  +0.06  +0.76  +0.0 3/7 |  +1.76  -1.01 OK
+  WR3     46      6.9  -0.03  +0.74      .  +0.10  +0.50  -2.0 3/7 |  +2.27  -1.78 OVER (wrong player: data ~0)
+  WR4     21      5.7  -0.07  +0.95      .  +0.13  -0.30  -0.7 5/7 |  +2.47  -2.77 OVER (wrong player: data ~0)
+  TE1     59      9.6  +0.00  +0.06      .  +0.01  +0.36  -0.9 3/7 |  +1.27  -0.91 OK
+  TE2     29      3.7  -0.03  -0.03      .  -0.00  +0.14  -1.0 4/7 |  +0.43  -0.28 OK
+  bWR     28      0.0  +0.20  +3.00      .  +0.39  +5.45  +5.0 7/7 |  +0.00  +5.45 UNDER (engine gives ~0)
+  bTE     14      0.0  -0.01  +1.73      .  +0.26  +2.57  +2.5 7/7 |  +0.00  +2.57 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g) n=24: QB1 -2.2 (eng +0.0), RB1 -0.0 (eng +1.2), RB2 +1.0 (eng +0.5), WR2 +3.5 (eng +2.6), WR3 +1.4 (eng +3.3), TE1 +1.4 (eng +1.7), TE2 +2.0 (eng +0.5), bWR +7.2 (eng +0.0)
+  level regular n=37: QB1 -0.6 (eng +0.0), RB1 -2.7 (eng +1.1), RB3 -0.9 (eng +0.2), WR2 -1.2 (eng +1.1), WR3 -0.2 (eng +1.5), WR4 -0.1 (eng +2.0), TE1 -0.3 (eng +1.0), TE2 -1.0 (eng +0.4), bWR +4.1 (eng +0.0), bTE +3.1 (eng +0.0)
+
+##### ABSENT WR2: n=90 | he averaged 5.2 tgt, 0.1 car, 8.4 PPR/g
+  TEAM (ctrl-adj): team carries +1.9 (5/7) | team targets -3.2 (6/7) | pass att -1.7 (5/7) | RB+WR+TE PPR -3.7 (4/7) | QB pts -0.5 (4/7)
+  team keeps 0.39 of his targets, n/a of his carries, skill-player PPR keeps 0.56 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     89     17.5  +0.43  +0.00      .  +0.00  -0.33  -1.4 3/7 |  +0.00  -0.33 OK
+  QBB      9      6.8  -0.34  +0.00      .  +0.00  -4.73  -2.2 4/7 |  +0.00  -4.73 OVER
+  RB1     90     13.9  -0.03  +0.30      .  +0.06  +0.28  -0.4 4/7 |  +0.72  -0.44 OK
+  RB2     80      6.7  +1.54  -0.50      .  -0.10  -0.31  -1.2 4/7 |  +0.31  -0.62 OK
+  RB3     23      3.1  -0.45  +0.26      .  +0.06  -0.26  -0.3 4/7 |  +0.13  -0.39 OK
+  WR1     90     16.0  +0.02  +0.39      .  +0.08  +1.03  -0.7 4/7 |  +1.19  -0.16 OK
+  WR3     70      6.2  +0.04  +0.75      .  +0.14  +1.26  +0.4 5/7 |  +1.26  -0.00 OK
+  WR4     24      5.2  -0.06  +0.91      .  +0.15  +3.73  +1.4 6/7 |  +1.74  +1.99 OK
+  TE1     89     10.2  -0.03  -0.40      .  -0.08  -1.34  -1.8 5/7 |  +0.48  -1.81 OVER
+  TE2     41      4.2  +0.02  -0.06      .  -0.01  +0.82  -0.1 4/7 |  +0.21  +0.61 OK
+  bQB      9      0.0  +1.19  +0.00      .  +0.00  +2.23  +0.8 2/7 |  +0.00  +2.23 UNDER (engine gives ~0)
+  bRB     16      0.0  +4.86  +0.71      .  +0.14  +4.74  +2.2 6/7 |  +0.00  +4.74 UNDER (engine gives ~0)
+  bWR     31      0.0  +0.20  +3.58      .  +0.66  +6.98  +5.1 6/7 |  +0.00  +6.98 UNDER (engine gives ~0)
+  bTE     15      0.0  -0.01  +2.22      .  +0.39  +3.47  +2.0 6/7 |  +0.00  +3.47 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g): n=9 (too few)
+  level regular n=81: RB1 +0.1 (eng +0.7), RB3 -0.5 (eng +0.1), WR1 +1.6 (eng +1.1), WR3 +1.4 (eng +1.1), WR4 +4.0 (eng +1.6), TE1 -1.4 (eng +0.5), TE2 +1.0 (eng +0.2), bRB +4.4 (eng +0.0), bWR +6.6 (eng +0.0), bTE +3.9 (eng +0.0)
+
+##### ABSENT WR3: n=86 | he averaged 3.7 tgt, 0.2 car, 6.3 PPR/g
+  TEAM (ctrl-adj): team carries +3.9 (7/7) | team targets -3.5 (7/7) | pass att -2.4 (5/7) | RB+WR+TE PPR -3.4 (6/7) | QB pts +1.1 (4/7)
+  team keeps 0.04 of his targets, n/a of his carries, skill-player PPR keeps 0.45 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     86     16.3  +0.63  +0.00      .  +0.00  +0.99  +1.2 5/7 |  +0.00  +0.99 OK
+  RB1     86     14.9  +2.40  -0.27      .  -0.07  +0.65  -0.5 5/7 |  +0.50  +0.15 OK
+  RB2     71      5.1  +1.04  -0.07      .  -0.02  +0.55  -0.4 5/7 |  +0.16  +0.39 OK
+  RB3     20      4.7  +0.05  -0.25      .  -0.06  +0.18  -0.3 5/7 |  +0.16  +0.02 OK
+  WR1     86     14.3  -0.04  -0.44      .  -0.12  +0.07  +0.2 3/7 |  +0.75  -0.67 OK
+  WR2     86     10.0  -0.00  -0.07      .  -0.02  -0.58  -2.0 4/7 |  +0.76  -1.34 OK
+  WR4     50      4.6  -0.09  +0.46      .  +0.12  +1.23  -0.2 4/7 |  +1.10  +0.13 OK
+  TE1     80      9.0  -0.01  -0.31      .  -0.08  -0.38  -1.9 5/7 |  +0.26  -0.65 OK
+  TE2     39      4.8  -0.03  +0.69      .  +0.18  +1.59  +0.8 5/7 |  +0.16  +1.43 UNDER
+  bRB     19      0.0  +1.40  +0.65      .  +0.17  +1.25  +0.8 5/7 |  +0.00  +1.25 UNDER (engine gives ~0)
+  bWR     25      0.0  +0.06  +2.37      .  +0.61  +3.64  +1.8 7/7 |  +0.00  +3.64 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g): n=1 (too few)
+  level regular n=85: QB1 +0.9 (eng +0.0), RB1 +0.8 (eng +0.5), RB2 +0.6 (eng +0.2), WR1 -0.1 (eng +0.7), WR2 -0.8 (eng +0.7), WR4 +1.2 (eng +1.1), TE2 +1.6 (eng +0.2), bRB +1.2 (eng +0.0), bWR +3.9 (eng +0.0)
+
+##### ABSENT TE1_TOP: n=10 | he averaged 6.9 tgt, 0.0 car, 11.2 PPR/g
+  TEAM (ctrl-adj): team carries -1.3 (4/7) | team targets +0.3 (3/7) | pass att +1.0 (2/7) | RB+WR+TE PPR -10.0 (5/7) | QB pts -5.1 (5/7)
+  team keeps 1.04 of his targets, n/a of his carries, skill-player PPR keeps 0.10 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     10     16.7  -1.07  +0.00      .  +0.00  -4.72  -6.3 5/7 |  +0.00  -4.72 OVER
+  RB1     10     11.8  -0.51  -0.51      .  -0.07  -3.93  -3.7 4/7 |  +0.93  -4.86 OVER
+  WR1     10     11.1  -0.11  +2.33      .  +0.34  +2.69  +1.2 3/7 |  +2.20  +0.49 OK
+  WR2      9      6.4  -0.08  +2.19      .  +0.35  +2.30  +1.2 3/7 |  +1.33  +0.97 OK
+  TE2     10      4.8  +0.00  +1.90      .  +0.28  +1.60  +0.2 3/7 |  +3.77  -2.16 OK
+  level STAR (>= 15 PPR/g): n=2 (too few)
+  level regular: n=8 (too few)
+
+##### ABSENT TE1: n=66 | he averaged 4.3 tgt, 0.0 car, 8.1 PPR/g
+  TEAM (ctrl-adj): team carries +2.5 (5/7) | team targets -2.3 (6/7) | pass att +0.4 (2/7) | RB+WR+TE PPR -2.2 (5/7) | QB pts +1.6 (5/7)
+  team keeps 0.46 of his targets, n/a of his carries, skill-player PPR keeps 0.73 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     66     16.0  +0.78  +0.00      .  +0.00  +1.83  +1.6 6/7 |  +0.00  +1.83 UNDER (engine gives ~0)
+  RB1     66     13.7  +0.70  -0.03      .  -0.01  +0.54  -1.7 4/7 |  +0.68  -0.14 OK
+  RB2     58      6.7  +0.73  +0.00      .  +0.00  +0.63  +0.2 5/7 |  +0.29  +0.35 OK
+  RB3     16      3.5  +0.88  -0.06      .  -0.01  +1.44  +0.5 2/7 |  +0.11  +1.33 OK
+  WR1     66     15.0  +0.03  +0.36      .  +0.08  +0.27  -0.2 5/7 |  +0.99  -0.72 OK
+  WR2     65     10.3  -0.03  +0.18      .  +0.04  +1.29  +0.5 6/7 |  +0.26  +1.04 OK
+  WR3     58      5.7  -0.06  +0.22      .  +0.05  -0.05  -0.4 4/7 |  +0.27  -0.31 OK
+  WR4     25      2.7  -0.02  -0.65      .  -0.15  -0.82  -1.4 6/7 |  +0.11  -0.93 OK
+  TE2     32      3.8  -0.02  +0.69      .  +0.15  +2.48  +1.3 6/7 |  +1.68  +0.80 OK
+  bRB     10      0.0  +4.31  +0.57      .  +0.14  +3.02  +0.2 4/7 |  +0.00  +3.02 UNDER (engine gives ~0)
+  bWR     20      0.0  +0.08  +2.03      .  +0.50  +3.04  +1.5 6/7 |  +0.00  +3.04 UNDER (engine gives ~0)
+  bTE     18      0.0  +0.05  +2.89      .  +0.69  +3.62  +3.1 6/7 |  +0.00  +3.62 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g): n=6 (too few)
+  level regular n=60: QB1 +2.0 (eng +0.0), RB1 -0.2 (eng +0.6), RB2 +0.6 (eng +0.3), RB3 +1.9 (eng +0.1), WR1 +0.4 (eng +1.0), WR2 +1.5 (eng +0.2), WR3 -0.9 (eng +0.3), WR4 -0.8 (eng +0.1), TE2 +2.5 (eng +1.5), bRB +3.0 (eng +0.0), bWR +3.3 (eng +0.0), bTE +3.6 (eng +0.0)
+
+##### ABSENT TE2: n=43 | he averaged 2.9 tgt, 0.1 car, 5.0 PPR/g
+  TEAM (ctrl-adj): team carries -0.6 (2/7) | team targets -0.7 (3/7) | pass att -0.2 (4/7) | RB+WR+TE PPR -1.5 (5/7) | QB pts +0.2 (4/7)
+  team keeps 0.77 of his targets, n/a of his carries, skill-player PPR keeps 0.71 of his PPR
+  slot     n base PPR   dCar   dTgt  %carV  %tgtV   dPPR   med  sgn | engine    gap verdict
+  QB1     42     17.5  +0.04  +0.00      .  +0.00  +0.17  +1.4 3/7 |  +0.00  +0.17 OK
+  RB1     43     13.8  -0.15  +0.41      .  +0.14  +0.34  -0.5 3/7 |  +0.33  +0.02 OK
+  RB2     38      8.2  +0.18  +0.11      .  +0.04  +0.04  -0.7 3/7 |  +0.20  -0.16 OK
+  RB3     13      3.0  -0.38  -0.08      .  -0.03  -0.77  -1.6 3/7 |  +0.07  -0.83 OK
+  WR1     43     13.9  -0.07  +0.20      .  +0.07  -0.52  +0.3 5/7 |  +0.52  -1.05 OK
+  WR2     40      8.3  -0.12  +0.23      .  +0.08  -0.18  -1.1 4/7 |  +0.09  -0.27 OK
+  WR3     25      4.2  +0.10  +0.15      .  +0.05  +1.57  +0.2 4/7 |  +0.09  +1.47 OK
+  WR4      9      1.3  -0.00  -0.29      .  -0.09  -0.88  -2.1 2/7 |  +0.01  -0.89 OK
+  TE1     43      8.4  -0.03  +0.31      .  +0.11  +1.23  -0.9 4/7 |  +0.49  +0.74 OK
+  TE2     14      4.4  +0.00  +0.87      .  +0.31  +2.48  -0.9 3/7 |  +0.85  +1.63 OK
+  bWR     14      0.0  -0.07  +2.37      .  +0.75  +2.58  +1.3 4/7 |  +0.00  +2.58 UNDER (engine gives ~0)
+  bTE      8      0.0  -0.01  +2.09      .  +0.73  +4.65  +1.1 5/7 |  +0.00  +4.65 UNDER (engine gives ~0)
+  level STAR (>= 15 PPR/g): n=0 (too few)
+  level regular n=43: RB3 -0.8 (eng +0.1), WR1 -0.5 (eng +0.5), WR3 +1.6 (eng +0.1), TE1 +1.2 (eng +0.5), TE2 +2.5 (eng +0.9), bWR +2.6 (eng +0.0)
+
+##### BACKUP QB (the QB who played, n=24): actual 11.29 pts vs starter's trailing 13.86 -> ratio 0.81 (engine .85 x starter = 11.78); median 10.9; with baseline: 4
+    2019: n=2 ratio 0.76
+    2020: n=3 ratio 0.60
+    2021: n=3 ratio 0.96
+    2022: n=4 ratio 0.77
+    2023: n=6 ratio 0.74
+    2024: n=4 ratio 1.08
+    2025: n=2 ratio 0.84
+    starter 0-16 pts/g: n=17 backup 9.47 ratio 0.84
+    starter 16-20 pts/g: n=5 backup 14.30 ratio 0.81
+    starter 20-99 pts/g: n=2 backup 19.20 ratio 0.73
+
+##### DOUBLE ABSENCES (two meaningful out; ctrl-adj dPPR by slot, engine in parens)
+  TE1+WR2            n=15
+  WR1+WR2            n=14
+  RB_WH+WR2          n=13
+  RB2+WR2            n=13
+  QB1+WR2            n=11
+  TE1+WR3            n=11
+  RB2+WR1            n=9
+  RB_WH+TE1          n=9
+  RB_WH+WR1          n=8
+  WR2+WR3            n=7
+  QB1+RB2            n=7
+  RB_WH+WR3          n=6
+  TE1+WR1            n=5
+  RB3++WR3           n=5
+  QB1+TE1            n=5
+  RB2+TE2            n=5
+  QB1+WR3            n=5
+  WR1+WR3            n=5
+  QB1+WR1            n=5
+  TE2+WR2            n=5
+  WR3+WR4+           n=4
+  WR2+WR4+           n=4
+  RB2+RB_WH          n=4
+  QB1+RB_WH          n=4
+  TE2+WR1            n=4
+  RB3++WR1           n=4
+  RB_WH+TE2          n=3
+  QB1+RB3+           n=3
+  RB_WH+WR4+         n=3
+  RB2+TE1            n=3
+  TE1+WR4+           n=3
+  RB2+RB3+           n=3
+  TE2+WR3            n=2
+  RB_COMM+TE2        n=2
+  TE1_TOP+WR1        n=2
+  RB3++TE1           n=2
+  RB_COMM+TE1        n=2
+  RB2+WR4+           n=2
+  RB3++RB_COMM       n=2
+  TE1_TOP+WR2        n=2
+  TE1+TE2            n=1
+  QB1+WR4+           n=1
+  RB3++TE1_TOP       n=1
+  TE2+TE2            n=1
+  RB3++RB_WH         n=1
+  QB1+TE1_TOP        n=1
+  RB_WH+TE1_TOP      n=1
+  RB2+WR3            n=1
+  RB_COMM+WR3        n=1
+  TE1_TOP+WR3        n=1
+  RB3++WR4+          n=1
+  WR1+WR4+           n=1
+  QB1+RB_COMM        n=1
+  QB1+TE2            n=1
+
+##### BIGGEST MISMATCHES (|data - engine| PPR per event x events per season)
+  WR1      -> RB1 : data -1.66 engine +1.14 gap -2.80 (se 1.28, n 61, sign 5/7) = 24.4 PPR/season mis-assigned
+  WR2      -> TE1 : data -1.34 engine +0.48 gap -1.81 (se 0.64, n 89, sign 5/7) = 23.1 PPR/season mis-assigned
+  QB1      -> RB1 : data +2.64 engine +0.00 gap +2.64 (se 1.26, n 58, sign 5/7) = 21.9 PPR/season mis-assigned
+  RB2      -> RB3 : data +4.29 engine +0.79 gap +3.51 (se 1.23, n 42, sign 7/7) = 21.0 PPR/season mis-assigned
+  RB_WH    -> RB2 : data +5.66 engine +3.10 gap +2.56 (se 1.16, n 50, sign 7/7) = 18.3 PPR/season mis-assigned
+  TE1      -> QB1 : data +1.83 engine +0.00 gap +1.83 (se 0.92, n 66, sign 6/7) = 17.3 PPR/season mis-assigned
+  QB1      -> WR2 : data -2.72 engine -0.64 gap -2.07 (se 0.81, n 58, sign 7/7) = 17.2 PPR/season mis-assigned
+  WR3      -> WR2 : data -0.58 engine +0.76 gap -1.34 (se 0.90, n 86, sign 4/7) = 16.4 PPR/season mis-assigned
+  QB1      -> WR1 : data +0.56 engine -1.41 gap +1.97 (se 1.05, n 58, sign 4/7) = 16.3 PPR/season mis-assigned
+  WR3      -> QB1 : data +0.99 engine +0.00 gap +0.99 (se 0.92, n 86, sign 5/7) = 12.2 PPR/season mis-assigned
+  WR1      -> WR3 : data +0.50 engine +2.27 gap -1.78 (se 1.09, n 46, sign 3/7) = 11.7 PPR/season mis-assigned
+  RB_WH    -> WR2 : data -1.45 engine +0.00 gap -1.45 (se 0.93, n 56, sign 6/7) = 11.6 PPR/season mis-assigned
+  WR1      -> QB1 : data -1.24 engine +0.00 gap -1.24 (se 0.89, n 61, sign 4/7) = 10.8 PPR/season mis-assigned
+  RB2      -> QB1 : data +0.88 engine +0.00 gap +0.88 (se 0.95, n 84, sign 4/7) = 10.5 PPR/season mis-assigned
+  TE1      -> WR2 : data +1.29 engine +0.26 gap +1.04 (se 1.01, n 65, sign 6/7) = 9.6 PPR/season mis-assigned
+  RB_COMM  -> TE1 : data +4.12 engine +0.00 gap +4.12 (se 1.56, n 16, sign 7/7) = 9.4 PPR/season mis-assigned
+  WR1      -> WR4 : data -0.30 engine +2.47 gap -2.77 (se 1.05, n 21, sign 5/7) = 8.3 PPR/season mis-assigned
+  WR3      -> WR1 : data +0.07 engine +0.75 gap -0.67 (se 0.97, n 86, sign 3/7) = 8.3 PPR/season mis-assigned
+  WR1      -> WR2 : data +0.76 engine +1.76 gap -1.01 (se 0.93, n 56, sign 3/7) = 8.0 PPR/season mis-assigned
+  WR3      -> TE2 : data +1.59 engine +0.16 gap +1.43 (se 0.81, n 39, sign 5/7) = 8.0 PPR/season mis-assigned
+
+wrote data/absence_all_positions.json, data/absence_events.pkl

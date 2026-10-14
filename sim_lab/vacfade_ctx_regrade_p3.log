@@ -1,0 +1,33 @@
+
+==============================================================================================================
+P-20261013-3 ENGINE FORM: snapMult (RB/TE) + snap level (WR/TE) with ctxShare as shipped / raw pct / off
+==============================================================================================================
+  built shipped (re-measure + weight): RB/TE snap mult != 1 on 14686 rows
+  built P-3 raw pct + weight: RB/TE snap mult != 1 on 14648 rows
+  built ctx off (raw, no weight): RB/TE snap mult != 1 on 14645 rows
+  P-3 raw pct + weight vs shipped (next game)                n  8712 MSE  -0.07% (5/7, fwd 2/4) MAE  -0.02% rho 0.4255->0.4250 | 2019 -0.11% 2020 -0.12% 2021 -0.52% 2022 +0.36% 2023 -0.05% 2024 +0.22% 2025 -0.29%
+     rows it moves                                           n  5567 MSE  -0.11% (5/7, fwd 2/4) MAE  -0.04% rho 0.3666->0.3660 | 2019 -0.18% 2020 -0.20% 2021 -0.79% 2022 +0.54% 2023 -0.07% 2024 +0.33% 2025 -0.38%
+     RB                                                      n  3530 MSE  -0.11% (4/7, fwd 1/4) MAE  -0.07% rho 0.5279->0.5267 | 2019 -0.06% 2020 -0.14% 2021 -0.72% 2022 +0.60% 2023 +0.06% 2024 +0.19% 2025 -0.56%
+     WR                                                      n  4025 MSE  -0.02% (5/7, fwd 2/4) MAE  +0.01% rho 0.3746->0.3749 | 2019 -0.08% 2020 -0.10% 2021 -0.34% 2022 +0.14% 2023 -0.06% 2024 +0.27% 2025 -0.12%
+     TE                                                      n  1157 MSE  -0.10% (5/7, fwd 2/4) MAE  +0.03% rho 0.3705->0.3700 | 2019 -0.58% 2020 -0.15% 2021 -0.29% 2022 +0.28% 2023 -0.42% 2024 -0.01% 2025 +0.39%
+  P-3 raw pct + weight vs shipped (ROS)                      n  4665 MSE  +0.02% (5/7, fwd 2/4) MAE  +0.15% rho 0.6237->0.6244 | 2019 -0.12% 2020 -0.05% 2021 -0.95% 2022 -0.43% 2023 +1.37% 2024 +0.54% 2025 -0.61%
+  ctx off (raw, no weight) vs shipped (next game)            n  8712 MSE  -0.08% (5/7, fwd 2/4) MAE  -0.02% rho 0.4255->0.4252 | 2019 -0.11% 2020 -0.16% 2021 -0.51% 2022 +0.33% 2023 -0.03% 2024 +0.24% 2025 -0.31%
+     rows it moves                                           n  7198 MSE  -0.09% (5/7, fwd 2/4) MAE  -0.03% rho 0.4133->0.4127 | 2019 -0.14% 2020 -0.21% 2021 -0.63% 2022 +0.38% 2023 -0.03% 2024 +0.30% 2025 -0.37%
+     RB                                                      n  3530 MSE  -0.13% (4/7, fwd 1/4) MAE  -0.07% rho 0.5279->0.5269 | 2019 -0.06% 2020 -0.22% 2021 -0.71% 2022 +0.53% 2023 +0.10% 2024 +0.26% 2025 -0.62%
+     WR                                                      n  4025 MSE  -0.02% (5/7, fwd 2/4) MAE  +0.01% rho 0.3746->0.3749 | 2019 -0.08% 2020 -0.10% 2021 -0.34% 2022 +0.14% 2023 -0.06% 2024 +0.27% 2025 -0.12%
+     TE                                                      n  1157 MSE  -0.09% (5/7, fwd 2/4) MAE  +0.04% rho 0.3705->0.3704 | 2019 -0.57% 2020 -0.15% 2021 -0.27% 2022 +0.22% 2023 -0.35% 2024 -0.04% 2025 +0.44%
+  ctx off (raw, no weight) vs shipped (ROS)                  n  4665 MSE  +0.14% (4/7, fwd 2/4) MAE  +0.20% rho 0.6237->0.6250 | 2019 -0.03% 2020 +0.07% 2021 -0.57% 2022 -0.28% 2023 +1.42% 2024 +0.68% 2025 -0.64%
+  P-3 raw LOST 2022 (+0.54%): top 6 rows = 141% of the net loss
+     Joe Mixon                RB CIN wk 9 actual  53.1 base  16.2 cand  15.3 | last game wk8 margin -19 garbage 11 his snaps 72% (comp 67%)
+     Alvin Kamara             RB NO wk 8 actual  38.3 base  15.9 cand  15.0 | last game wk7 margin -8 garbage 16 his snaps 72% (comp 69%)
+     D'Andre Swift            RB DET wk17 actual  25.7 base  15.1 cand  13.7 | last game wk16 margin -14 garbage 21 his snaps 56% (comp 42%)
+     Davante Adams            WR LV wk 9 actual  31.6 base  16.1 cand  15.4 | last game wk8 margin -24 garbage 17 his snaps 70% (comp 95%)
+     Derrick Henry            RB TEN wk15 actual  24.3 base  20.0 cand  18.7 | last game wk14 margin -14 garbage 11 his snaps 76% (comp 71%)
+     Jonathan Taylor          RB IND wk 4 actual   2.8 base  18.7 cand  18.9 | last game wk3 margin +3 garbage 0 his snaps 77% (comp 77%)
+  P-3 raw LOST 2024 (+0.33%): top 6 rows = 148% of the net loss
+     Ja'Marr Chase            WR CIN wk10 actual  49.9 base  17.1 cand  16.6 | last game wk9 margin +17 garbage 9 his snaps 87% (comp 92%)
+     Bijan Robinson           RB ATL wk13 actual  22.5 base  16.9 cand  15.6 | last game wk11 margin -32 garbage 16 his snaps 71% (comp 92%)
+     Bijan Robinson           RB ATL wk17 actual  23.3 base  17.6 cand  16.8 | last game wk16 margin +27 garbage 10 his snaps 74% (comp 82%)
+     Bijan Robinson           RB ATL wk10 actual  27.9 base  16.9 cand  16.6 | last game wk9 margin +6 garbage 0 his snaps 75% (comp 75%)
+     Tyreek Hill              WR MIA wk14 actual  23.1 base  13.1 cand  12.7 | last game wk13 margin -13 garbage 7 his snaps 80% (comp 78%)
+     Jonathan Taylor          RB IND wk17 actual  26.6 base  16.7 cand  16.2 | last game wk16 margin +8 garbage 7 his snaps 76% (comp 85%)

@@ -1,0 +1,63 @@
+rows: 252 healthy RBs in 172 single-RB-absence weeks
+engine replica mean 10.95 vs actual 11.72; MAE 6.340
+  absent RB_WH   healthy RB own < 4 : n  21 actual  7.94 engine  4.90 median act 5.3
+  absent RB_WH   healthy RB own 4-8 : n  21 actual 10.59 engine  8.79 median act 9.0
+  absent RB_WH   healthy RB own 8+  : n  18 actual 14.74 engine 14.85 median act 14.6
+  absent RB_COMM healthy RB own 4-8 : n   9 actual 11.39 engine  8.34 median act 10.9
+  absent RB_COMM healthy RB own 8+  : n   8 actual 10.34 engine 14.26 median act 9.0
+  absent RB2     healthy RB own < 4 : n  22 actual  8.26 engine  3.09 median act 6.5
+  absent RB2     healthy RB own 4-8 : n  26 actual  8.76 engine  6.49 median act 8.9
+  absent RB2     healthy RB own 8+  : n  74 actual 15.32 engine 17.00 median act 13.4
+  fixed cells (MAE vs engine, seasons better):
+    C 0 s 1.25: mean 11.19 MAE +0.42% 2/7
+    C 0 s 1.5: mean 11.42 MAE +0.94% 2/7
+    C 4 s 1.0: mean 10.96 MAE +0.03% 1/7
+    C 4 s 1.25: mean 11.20 MAE +0.42% 1/7
+    C 4 s 1.5: mean 11.44 MAE +0.97% 1/7
+    C 5 s 1.0: mean 10.96 MAE +0.03% 1/7
+    C 5 s 1.25: mean 11.20 MAE +0.42% 1/7
+    C 5 s 1.5: mean 11.44 MAE +0.97% 1/7
+    C 6 s 1.0: mean 10.96 MAE +0.03% 1/7
+    C 6 s 1.25: mean 11.20 MAE +0.42% 1/7
+    C 6 s 1.5: mean 11.44 MAE +0.97% 1/7
+    C 8 s 1.0: mean 10.96 MAE +0.03% 1/7
+    C 8 s 1.25: mean 11.21 MAE +0.42% 1/7
+    C 8 s 1.5: mean 11.45 MAE +0.85% 1/7
+  LOYO 2019: fit C 0 s 1.0  MAE 4.940 -> 4.940
+  LOYO 2020: fit C 0 s 1.0  MAE 5.064 -> 5.064
+  LOYO 2021: fit C 0 s 1.0  MAE 6.689 -> 6.689
+  LOYO 2022: fit C 4 s 1.0  MAE 7.770 -> 7.804
+  LOYO 2023: fit C 0 s 1.0  MAE 7.393 -> 7.393
+  LOYO 2024: fit C 0 s 1.0  MAE 6.267 -> 6.267
+  LOYO 2025: fit C 0 s 1.0  MAE 5.981 -> 5.981
+  LOYO 0/7 pooled +0.06%
+  forward 2022: fit C 0 s 1.0  MAE 7.770 -> 7.770
+  forward 2023: fit C 0 s 1.0  MAE 7.393 -> 7.393
+  forward 2024: fit C 0 s 1.0  MAE 6.267 -> 6.267
+  forward 2025: fit C 0 s 1.0  MAE 5.981 -> 5.981
+  forward 0/4; full fit (0, 1.0)
+  control regression by own level (RB rank 2+): 0-2: +2.31 2-4: +2.15 4-6: +0.75 6-8: -0.41 8-10: -1.70 10-13: -3.08 13-99: -4.64
+  regression-corrected engine replica: mean 9.80 vs actual 11.72
+    absent RB_WH   healthy RB own < 4 : n  21 actual  7.94 corrected engine  7.12
+    absent RB_WH   healthy RB own 4-8 : n  21 actual 10.59 corrected engine  9.04
+    absent RB_WH   healthy RB own 8+  : n  18 actual 14.74 corrected engine 12.03
+    absent RB_COMM healthy RB own 4-8 : n   9 actual 11.39 corrected engine  8.45
+    absent RB_COMM healthy RB own 8+  : n   8 actual 10.34 corrected engine 11.48
+    absent RB2     healthy RB own < 4 : n  22 actual  8.26 corrected engine  5.30
+    absent RB2     healthy RB own 4-8 : n  26 actual  8.76 corrected engine  6.93
+    absent RB2     healthy RB own 8+  : n  74 actual 15.32 corrected engine 13.08
+  C4b additive lift for low-baseline fill-ins (own < L, healthy RB rank 1-2): + c x absent PPR/g
+    c 0.1 L 4: touched 59 MSE -0.74% (4/7) MAE -0.01%
+    c 0.1 L 6: touched 98 MSE -1.76% (6/7) MAE -0.16%
+    c 0.1 L 8: touched 124 MSE -1.53% (5/7) MAE +0.25%
+    c 0.15 L 4: touched 59 MSE -0.82% (4/7) MAE +0.19%
+    c 0.15 L 6: touched 98 MSE -2.19% (6/7) MAE -0.00%
+    c 0.15 L 8: touched 124 MSE -1.69% (5/7) MAE +0.67%
+    c 0.2 L 4: touched 59 MSE -0.71% (3/7) MAE +0.48%
+    c 0.2 L 6: touched 98 MSE -2.31% (5/7) MAE +0.36%
+    c 0.2 L 8: touched 124 MSE -1.47% (5/7) MAE +1.38%
+    c 0.3 L 4: touched 59 MSE +0.08% (3/7) MAE +1.39%
+    c 0.3 L 6: touched 98 MSE -1.66% (3/7) MAE +1.64%
+    c 0.3 L 8: touched 124 MSE +0.18% (3/7) MAE +3.33%
+    MSE: LOYO 5/7 pooled -1.89% picks [(0.2, 6), (0.2, 6), (0.2, 6), (0.2, 6), (0.15, 6), (0.15, 6), (0.2, 6)]; forward 4/4 picks [(0.1, 6), (0.1, 8), (0.15, 6), (0.2, 6)]
+    MAE: LOYO 2/7 pooled +0.52% picks [(0.1, 6), (0.1, 4), (0.1, 6), (0.1, 6), (0.0, 4), (0.1, 6), (0.1, 6)]; forward 1/4 picks [(0.0, 4), (0.0, 4), (0.0, 4), (0.1, 6)]

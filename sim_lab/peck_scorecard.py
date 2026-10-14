@@ -47,10 +47,33 @@ def collect(week):
                     "ship": float(r["mean"]), "ship0": float(r["mean"]) + (1 - w) * (js0 - js)})
     return out
 
+def collect_shadow(week):
+    """SHADOW dock (2026-10-09): lock rows store ncPeck (multiplier inside ncMean, absent = 1) and ncPeckRank (rank among
+    teammates at the position by the pre-vacancy shadow number). Current week only, WR 3rd+ x0.92 / RB 2nd+ x0.94."""
+    p = os.path.join(HERE, "data", "snapshots", f"simlab_snapshot_w{week}.json")
+    if not os.path.exists(p):
+        return None
+    act = load_actuals(week)
+    if not act:
+        return None
+    out = []
+    for r in json.load(open(p, encoding="utf-8")).get("players", []):
+        if r.get("pos") not in POS or r.get("ncMean") is None or r.get("mean") is None or "ncPeckRank" not in r:
+            continue
+        a = act.get(norm(r["name"]))
+        if a is None:
+            continue
+        m = float(r.get("ncPeck") or 1.0)
+        w = (r.get("tun") or {}).get("wa") or 0.0
+        nc = float(r["ncMean"]); nc0 = nc / m if m > 0 else nc
+        out.append({"pos": r["pos"], "rank": r["ncPeckRank"], "peck": m, "act": float(a), "js": nc, "js0": nc0,
+                    "ship": float(r["mean"]), "ship0": float(r["mean"]) + (1 - w) * (nc0 - nc)})
+    return out
+
 def report(label, rows):
     print(f"--- {label} ---")
     if not rows:
-        print("  no instrumented rows (locks before 2026-09-29 carry no peckRank)"); return
+        print("  no instrumented rows (old dock: locks before 2026-09-29 carry no peckRank; shadow dock: locks before 2026-10-09 carry no ncPeckRank)"); return
     for pos in POS:
         d = [r for r in rows if r["pos"] == pos and r["peck"] < 0.9995]
         rest = [r for r in rows if r["pos"] == pos and r["peck"] >= 0.9995]
@@ -75,7 +98,20 @@ def main():
                    for f in glob.glob(os.path.join(HERE, "data", "snapshots", "simlab_snapshot_w*.json")))
     if a.week is not None:
         weeks = [w for w in weeks if w <= a.week]
-    print("=== PECKING-ORDER DOCK LIVE GRADING (WR 3rd+ x0.92, RB 2nd+ x0.97, fading in from 4 to 5 half-PPR) ===")
+    print("=== SHADOW PECKING-ORDER DOCK (shipped since 2026-10-09: current week only, WR 3rd+ x0.92, RB 2nd+ x0.94, fade 4-5 half) ===")
+    print("    'MAE js' below = the shadow number (ncMean) with vs without the dock; backtest_dormant_shadow.py: WR 3rd+ .873, RB 2nd+ .915 of the shadow")
+    alls = []
+    for w in weeks:
+        rows = collect_shadow(w)
+        if rows is None:
+            print(f"--- W{w}: no lock snapshot or no actuals yet ---"); continue
+        if a.week is None or w == a.week:
+            report(f"SHADOW W{w}", rows)
+        alls += rows
+    if len(weeks) > 1 and alls:
+        report(f"SHADOW CUMULATIVE W{weeks[0]}-W{weeks[-1]}", alls)
+    print()
+    print("=== OLD LIVE-CHAIN DOCK (WR 3rd+ x0.92, RB 2nd+ x0.97 inside jsPre - dormant since the shadow became the base 10-08; kept for history) ===")
     allr = []
     for w in weeks:
         rows = collect(w)

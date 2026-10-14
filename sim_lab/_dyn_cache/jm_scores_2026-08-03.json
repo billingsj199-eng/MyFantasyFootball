@@ -1,0 +1,9769 @@
+{
+ "exported_at": "2026-08-03 12:34:28",
+ "source": "https://www.myfantasyfootball.co",
+ "count": 1372,
+ "scores": {
+  "A.J. Brown": {
+   "jm": 75.8,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "AJ Dillon": {
+   "jm": 58.5,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "A.T. Perry": {
+   "jm": 32.1,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "A.J. Barner": {
+   "jm": 19.5,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Aaron Anderson": {
+   "jm": 30.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Aaron Fontes": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Aaron Jones": {
+   "jm": 38.8,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Adam Randall": {
+   "jm": 31.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Adonai Mitchell": {
+   "jm": 60.4,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ahmani Marshall": {
+   "jm": 13.1,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Aidan O'Connell": {
+   "jm": 0,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ainias Smith": {
+   "jm": 39.6,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Albert Okwuegbunam": {
+   "jm": 53.5,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Alec Pierce": {
+   "jm": 47.9,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Alex McGough": {
+   "jm": 26.5,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Alexander Mattison": {
+   "jm": 52.6,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Alize Mack": {
+   "jm": 5.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Allen Lazard": {
+   "jm": 51.6,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Alvin Kamara": {
+   "jm": 70.6,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Amara Darboh": {
+   "jm": 37.4,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Amari Rodgers": {
+   "jm": 47.8,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Amon-Ra St. Brown": {
+   "jm": 51.9,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Andrei Iosivas": {
+   "jm": 14.3,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Andrew Armstrong": {
+   "jm": 49,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Andy Isabella": {
+   "jm": 50.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Anthony Gould": {
+   "jm": 28.3,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Anthony McFarland": {
+   "jm": 40.5,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Anthony Miller": {
+   "jm": 17.4,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Anthony Richardson": {
+   "jm": 72.9,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Anthony Schwartz": {
+   "jm": 51.7,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Antoine Green": {
+   "jm": 29.1,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Antonio Callaway": {
+   "jm": 49.2,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Antonio Gandy-Golden": {
+   "jm": 39.1,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Antonio Gibson": {
+   "jm": 55.2,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Antonio Williams": {
+   "jm": 51.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "ArDarius Stewart": {
+   "jm": 46.8,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Arian Smith": {
+   "jm": 19.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ashton Jeanty": {
+   "jm": 93.5,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Auden Tate": {
+   "jm": 32.2,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Audric Estime": {
+   "jm": 37.8,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Austin Proehl": {
+   "jm": 8.8,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bailey Zappe": {
+   "jm": 35.7,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Baker Mayfield": {
+   "jm": 87.3,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Barion Brown": {
+   "jm": 14.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ben Mason": {
+   "jm": 3.1,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ben Sinnott": {
+   "jm": 54.7,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ben Skowronek": {
+   "jm": 22.4,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ben Yurosek": {
+   "jm": 32.6,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Benny Snell Jr.": {
+   "jm": 44.5,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Bhayshul Tuten": {
+   "jm": 55.8,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Bijan Robinson": {
+   "jm": 93.5,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Blake Corum": {
+   "jm": 59.1,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Blake Jarwin": {
+   "jm": 9.7,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bo Jackson": {
+   "jm": 52.6,
+   "yr": 2028,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Bo Melton": {
+   "jm": 35.8,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Bo Nix": {
+   "jm": 67,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Bo Scarbrough": {
+   "jm": 30,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Boston Scott": {
+   "jm": 34.3,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brad Anderson": {
+   "jm": 10,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brad Kaaya": {
+   "jm": 20.3,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brady Cook": {
+   "jm": 33.3,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Braelon Allen": {
+   "jm": 48.9,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Brandon Aiyuk": {
+   "jm": 61.4,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Brandon Johnson": {
+   "jm": 0,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brandon Powell": {
+   "jm": 1.3,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brant Kuithe": {
+   "jm": 35,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brashard Smith": {
+   "jm": 34.9,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Braxton Berrios": {
+   "jm": 23.9,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brayden Willis": {
+   "jm": 22.1,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Breece Hall": {
+   "jm": 84.1,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Brenden Rice": {
+   "jm": 33.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brenen Thompson": {
+   "jm": 41.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brenton Strange": {
+   "jm": 48.6,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Brevin Jordan": {
+   "jm": 37.6,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brian Hill": {
+   "jm": 28.9,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Brian Robinson Jr.": {
+   "jm": 39.6,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brian Thomas Jr.": {
+   "jm": 67.5,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Brian Williams": {
+   "jm": 8.9,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brittain Brown": {
+   "jm": 38.3,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brock Bowers": {
+   "jm": 95.1,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Brock Purdy": {
+   "jm": 39.8,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Brock Wright": {
+   "jm": 0,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bryan Edwards": {
+   "jm": 61.5,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Bryce Lance": {
+   "jm": 36.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Bryce Love": {
+   "jm": 48,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Bryce Young": {
+   "jm": 71.2,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Brycen Hopkins": {
+   "jm": 25.4,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bryson Nesbit": {
+   "jm": 28.5,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Bucky Hodges": {
+   "jm": 34.3,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Bucky Irving": {
+   "jm": 45.1,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Byron Pringle": {
+   "jm": 19.2,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "C.J. Beathard": {
+   "jm": 19.3,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "C.J. Stroud": {
+   "jm": 75.2,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "CJ Daniels": {
+   "jm": 39.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "CJ Donaldson": {
+   "jm": 34,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cade Klubnik": {
+   "jm": 40.3,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cade Otton": {
+   "jm": 42.2,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cade Stover": {
+   "jm": 42.6,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Caleb Douglas": {
+   "jm": 38.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Caleb Williams": {
+   "jm": 90.7,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Caleb Wilson": {
+   "jm": 34.1,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Calvin Austin III": {
+   "jm": 49.3,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Calvin Ridley": {
+   "jm": 66.6,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Cam Akers": {
+   "jm": 70.3,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Cam Miller": {
+   "jm": 32.4,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cam Sims": {
+   "jm": 0.4,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Cam Skattebo": {
+   "jm": 51.4,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Cam Ward": {
+   "jm": 83.5,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Cameron Latu": {
+   "jm": 30.3,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Carlos Henderson": {
+   "jm": 57.6,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Carnell Tate": {
+   "jm": 75.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Carson Beck": {
+   "jm": 42.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Casey Washington": {
+   "jm": 16.3,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Caullin Lacy": {
+   "jm": 43.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cedric Tillman": {
+   "jm": 52.7,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Cedrick Wilson Jr.": {
+   "jm": 35.1,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "CeeDee Lamb": {
+   "jm": 93.5,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Chad Hansen": {
+   "jm": 36,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Chad Williams": {
+   "jm": 0,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Chandler Cox": {
+   "jm": 0,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Charlie Jones Jr.": {
+   "jm": 19.4,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Charlie Kolar": {
+   "jm": 50.1,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Charlie Woerner": {
+   "jm": 0,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Chase Brown": {
+   "jm": 38.2,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Chase Claypool": {
+   "jm": 54,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Chase Edmonds": {
+   "jm": 18.6,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Chase Roberts": {
+   "jm": 29.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Chigoziem Okonkwo": {
+   "jm": 33,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Chig Okonkwo": {
+   "jm": 32.3,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Chimere Dike": {
+   "jm": 32.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Chip Trayanum": {
+   "jm": 42.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Chris Bell": {
+   "jm": 51.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Chris Carson": {
+   "jm": 32,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Chris Evans": {
+   "jm": 28.5,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Chris Godwin": {
+   "jm": 67,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Chris Oladokun": {
+   "jm": 0,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Chris Olave": {
+   "jm": 89.5,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Chris Rodriguez Jr.": {
+   "jm": 31.4,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Chris Smith": {
+   "jm": 26.6,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Christian Kirk": {
+   "jm": 63.8,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Christian McCaffrey": {
+   "jm": 91,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Christopher Brooks": {
+   "jm": 10,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Chuba Hubbard": {
+   "jm": 50.7,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Clayton Thorson": {
+   "jm": 18.4,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Clayton Tune": {
+   "jm": 46.5,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Clyde Edwards-Helaire": {
+   "jm": 73.9,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Colbie Young": {
+   "jm": 33.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Colby Parkinson": {
+   "jm": 46.5,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cole Kmet": {
+   "jm": 54,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Cole Payton": {
+   "jm": 29.8,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Cole Turner": {
+   "jm": 31.4,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Collin Johnson": {
+   "jm": 33.5,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Colston Loveland": {
+   "jm": 81.8,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Connor Bazelak": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Connor Heyward": {
+   "jm": 31.7,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Cooper Kupp": {
+   "jm": 54.9,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Cooper Rush": {
+   "jm": 6,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Corey Clement": {
+   "jm": 33.7,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Corey Davis": {
+   "jm": 86.8,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Corey Kiner": {
+   "jm": 28.6,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Cornelius Johnson": {
+   "jm": 35.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cornell Powell": {
+   "jm": 25.1,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Courtland Sutton": {
+   "jm": 68.4,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Curtis Samuel": {
+   "jm": 73.9,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "D'Andre Swift": {
+   "jm": 81.5,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "D'Onta Foreman": {
+   "jm": 61.8,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "D'Wayne Eskridge": {
+   "jm": 34.9,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "D.J. Moore": {
+   "jm": 77.9,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "DJ Giddens": {
+   "jm": 39.7,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "D'Ernest Johnson": {
+   "jm": 26.7,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "DaeSean Hamilton": {
+   "jm": 45,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dae'Quan Wright": {
+   "jm": 58.1,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dallas Goedert": {
+   "jm": 66.3,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dallen Bentley": {
+   "jm": 25.9,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Dalton Keene": {
+   "jm": 12.3,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dalton Kincaid": {
+   "jm": 72.7,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dalton Schultz": {
+   "jm": 11.7,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dalvin Cook": {
+   "jm": 71.8,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dameon Pierce": {
+   "jm": 42.8,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Damien Harris": {
+   "jm": 59,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Damien Martinez": {
+   "jm": 35.6,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Damion Ratley": {
+   "jm": 15,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Daniel Bellinger": {
+   "jm": 35.4,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Daniel Jones": {
+   "jm": 69,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Danny Etling": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Danny Gray": {
+   "jm": 43,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dante Pettis": {
+   "jm": 55.3,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dare Ogunbowale": {
+   "jm": 24,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Darius Cooper": {
+   "jm": 24.3,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Darius Slayton": {
+   "jm": 30.8,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Darnell Mooney": {
+   "jm": 35.1,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Darnell Washington": {
+   "jm": 52.4,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Darrel Williams": {
+   "jm": 23.5,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Darrell Henderson": {
+   "jm": 63.9,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Darrynton Evans": {
+   "jm": 49.1,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Darwin Thompson": {
+   "jm": 34.3,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "David Bell": {
+   "jm": 68.6,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "David Blough": {
+   "jm": 3.4,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "David Montgomery": {
+   "jm": 52,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "David Moore": {
+   "jm": 0,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "David Njoku": {
+   "jm": 76.7,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "David Williams": {
+   "jm": 15.5,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Davis Allen": {
+   "jm": 31.3,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Davis Mills": {
+   "jm": 25,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Davis Webb": {
+   "jm": 49.6,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dawson Knox": {
+   "jm": 27.1,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Dax Milne": {
+   "jm": 28.9,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Dazz Newsome": {
+   "jm": 36.4,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "De'Von Achane": {
+   "jm": 63.2,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "DeAndre Carter": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "DeAngelo Yancey": {
+   "jm": 34,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Demario Douglas": {
+   "jm": 31,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "DeShone Kizer": {
+   "jm": 29.6,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "DeVonta Smith": {
+   "jm": 87.8,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "De'Zhaun Stribling": {
+   "jm": 52.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dede Westbrook": {
+   "jm": 45.4,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "DeeJay Dallas": {
+   "jm": 33.6,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Deebo Samuel": {
+   "jm": 61.8,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Deion Burks": {
+   "jm": 24.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Demetric Felton": {
+   "jm": 31,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Demond Claiborne": {
+   "jm": 30.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Denzel Boston": {
+   "jm": 63.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Denzel Mims": {
+   "jm": 58.7,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Deon Cain": {
+   "jm": 37.9,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Deon Jackson": {
+   "jm": 25,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Derius Davis": {
+   "jm": 21.3,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Derrius Guice": {
+   "jm": 68.1,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Deshaun Watson": {
+   "jm": 76.6,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Desmond Reid": {
+   "jm": 45.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Desmond Ridder": {
+   "jm": 59.7,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Deuce Vaughn": {
+   "jm": 39.3,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Devante Mays": {
+   "jm": 13.2,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Devaughn Vele": {
+   "jm": 13.8,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Devin Asiasi": {
+   "jm": 30.1,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Devin Culp": {
+   "jm": 17.1,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Devin Duvernay": {
+   "jm": 46.9,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Devin Leary": {
+   "jm": 0,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Devin Neal": {
+   "jm": 38.7,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Devin Singletary": {
+   "jm": 55.3,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Devlin Hodges": {
+   "jm": 0,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Devontez Walker": {
+   "jm": 40.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dexter Williams": {
+   "jm": 33.6,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dez Fitzpatrick": {
+   "jm": 47,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dezmon Patmon": {
+   "jm": 35.5,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Diego Pavia": {
+   "jm": 19.1,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dillon Gabriel": {
+   "jm": 16.1,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dillon Mitchell": {
+   "jm": 35.6,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Diontae Johnson": {
+   "jm": 53.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dominic Lovett": {
+   "jm": 30.8,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Don Jones": {
+   "jm": 0,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Donnel Pumphrey": {
+   "jm": 43.9,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Donovan Edwards": {
+   "jm": 48.9,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Donovan Peoples-Jones": {
+   "jm": 36.3,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dontayvion Wicks": {
+   "jm": 38.9,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dontrell Hilliard": {
+   "jm": 42.8,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dorian Thompson-Robinson": {
+   "jm": 40.3,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Drake London": {
+   "jm": 94.5,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Drake Maye": {
+   "jm": 88.4,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Dresser Winn": {
+   "jm": 0,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Drew Allar": {
+   "jm": 35.3,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Drew Lock": {
+   "jm": 51.3,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Drew Plitt": {
+   "jm": 0,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Drew Sample": {
+   "jm": 24.6,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Durham Smythe": {
+   "jm": 1.9,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dwayne Haskins": {
+   "jm": 52.5,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dyami Brown": {
+   "jm": 63.8,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dylan Cantrell": {
+   "jm": 24.1,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dylan Laube": {
+   "jm": 41.1,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dylan Sampson": {
+   "jm": 50.6,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Eli Heidenreich": {
+   "jm": 33.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Eli Raridon": {
+   "jm": 51.5,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Eli Stowers": {
+   "jm": 62.4,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Elic Ayomanor": {
+   "jm": 44.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Elijah Arroyo": {
+   "jm": 45.8,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Elijah Higgins": {
+   "jm": 34.6,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Elijah Hood": {
+   "jm": 36.7,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Elijah McGuire": {
+   "jm": 35.5,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Elijah Mitchell": {
+   "jm": 32.2,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Elijah Moore": {
+   "jm": 82.7,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Elijah Sarratt": {
+   "jm": 51.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Elijhaa Penny": {
+   "jm": 20.5,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Emari Demercado": {
+   "jm": 24.8,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Emeka Egbuka": {
+   "jm": 82.3,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Emmett Johnson": {
+   "jm": 37.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Eno Benjamin": {
+   "jm": 39.1,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Equanimeous St. Brown": {
+   "jm": 37.4,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Eric Gray": {
+   "jm": 36.1,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Eric McAlister": {
+   "jm": 51.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Eric Rivers": {
+   "jm": 41.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Erick All": {
+   "jm": 40.4,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Erik Ezukanma": {
+   "jm": 43.8,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ethan Garbers": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Evan Engram": {
+   "jm": 87.6,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Evan Hull": {
+   "jm": 38.2,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Foster Moreau": {
+   "jm": 33.8,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Frank Darby": {
+   "jm": 21.6,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Freddie Swain": {
+   "jm": 31.1,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Gabriel Davis": {
+   "jm": 47.9,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Gardner Minshew": {
+   "jm": 18.5,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Garrett Nussmeier": {
+   "jm": 6.4,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Garrett Wilson": {
+   "jm": 81.1,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Gary Brightwell": {
+   "jm": 27.9,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Gary Jennings": {
+   "jm": 36.6,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Gavin Bartholomew": {
+   "jm": 12.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "George Holani": {
+   "jm": 51.6,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "George Kittle": {
+   "jm": 28.2,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "George Pickens": {
+   "jm": 68.2,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Gerald Everett": {
+   "jm": 49.2,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Germie Bernard": {
+   "jm": 44.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Gerrid Doaks": {
+   "jm": 34.8,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Graham Mertz": {
+   "jm": 2.9,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Grant Calcaterra": {
+   "jm": 26.7,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Greg Bell": {
+   "jm": 6.6,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Greg Dortch": {
+   "jm": 48.9,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Greg Dulcich": {
+   "jm": 62,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Greg Ward Jr.": {
+   "jm": 9.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Gunnar Helm": {
+   "jm": 27.3,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Gus Edwards": {
+   "jm": 29.1,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Hakeem Butler": {
+   "jm": 47.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Harrison Bryant": {
+   "jm": 53.7,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Hassan Haskins": {
+   "jm": 39.5,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Hayden Hurst": {
+   "jm": 53.2,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Hendon Hooker": {
+   "jm": 41.2,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Henry Ruggs III": {
+   "jm": 75.5,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Hunter Long": {
+   "jm": 57.4,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Hunter Renfrow": {
+   "jm": 29.3,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Ian Book": {
+   "jm": 40.5,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ian Thomas": {
+   "jm": 39.7,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ihmir Smith-Marsette": {
+   "jm": 30.4,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Irv Smith Jr.": {
+   "jm": 74,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Isaac Guerendo": {
+   "jm": 41.6,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Isaac Nauta": {
+   "jm": 8.7,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Isaac TeSlaa": {
+   "jm": 28.7,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Isaiah Bond": {
+   "jm": 23.8,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Isaiah Coulter": {
+   "jm": 0,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Isaiah Davis": {
+   "jm": 32.3,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Isaiah Ford": {
+   "jm": 40.5,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Isaiah Hodgins": {
+   "jm": 33.1,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Isaiah Likely": {
+   "jm": 50.5,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Isaiah McKenzie": {
+   "jm": 32.4,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Isaiah Spiller": {
+   "jm": 49.3,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Isaiah Williams": {
+   "jm": 46.8,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Isiah Pacheco": {
+   "jm": 28,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Israel Abanikanda": {
+   "jm": 42.9,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Ito Smith": {
+   "jm": 39.8,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "J. Michael Sturdivant": {
+   "jm": 39.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "J.J. Arcega-Whiteside": {
+   "jm": 67.2,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "J.J. McCarthy": {
+   "jm": 62.1,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "J.K. Dobbins": {
+   "jm": 72.7,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "J'Mari Taylor": {
+   "jm": 22,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ja'Lynn Polk": {
+   "jm": 66.4,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ja'Marr Chase": {
+   "jm": 95.2,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Ja'Tavion Sanders": {
+   "jm": 55.8,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ja'Kobi Lane": {
+   "jm": 52,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jace Sternberger": {
+   "jm": 39.7,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jack Bech": {
+   "jm": 43.8,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jack Endries": {
+   "jm": 31.8,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jackson Hawes": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jacob Cowing": {
+   "jm": 42,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jacob Eason": {
+   "jm": 0,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jacob Harris": {
+   "jm": 20.2,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jacob Hollister": {
+   "jm": 21.6,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jacolby George": {
+   "jm": 27,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jacory Croskey-Merritt": {
+   "jm": 31.3,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jadarian Price": {
+   "jm": 56.1,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jaelon Darden": {
+   "jm": 45.3,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jahan Dotson": {
+   "jm": 65,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jahdae Walker": {
+   "jm": 32.9,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaheim Bell": {
+   "jm": 40.2,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jahmyr Gibbs": {
+   "jm": 91.8,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Jake Bobo": {
+   "jm": 29.1,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jake Browning": {
+   "jm": 23,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jake Butt": {
+   "jm": 32,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jake Ferguson": {
+   "jm": 47.1,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jake Fromm": {
+   "jm": 7.8,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jake Funk": {
+   "jm": 33.5,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jake Haener": {
+   "jm": 26.6,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jake Kumerow": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jake Luton": {
+   "jm": 0,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jake Tonges": {
+   "jm": 20.5,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jakobi Meyers": {
+   "jm": 42.9,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaleel McLaughlin": {
+   "jm": 19.3,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jaleel Scott": {
+   "jm": 30.8,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jalen Brooks": {
+   "jm": 2.9,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jalen Camp": {
+   "jm": 19.8,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jalen Coker": {
+   "jm": 36,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jalen Guyton": {
+   "jm": 45.2,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jalen Hurd": {
+   "jm": 35.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jalen Hurts": {
+   "jm": 69.7,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jalen McMillan": {
+   "jm": 52.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jalen Milroe": {
+   "jm": 51.8,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jalen Nailor": {
+   "jm": 32.5,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jalen Reagor": {
+   "jm": 68.3,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jalen Royals": {
+   "jm": 43.5,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jalen Tolbert": {
+   "jm": 57.3,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jalen Walthall": {
+   "jm": 23.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jalin Hyatt": {
+   "jm": 62.7,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jalon Daniels": {
+   "jm": 32.4,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jam Miller": {
+   "jm": 15.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jamaal Williams": {
+   "jm": 41.1,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jamal Haynes": {
+   "jm": 32.2,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jamari Thrash": {
+   "jm": 35.1,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "James Conner": {
+   "jm": 51.6,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "James Cook": {
+   "jm": 60.6,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "James Mitchell": {
+   "jm": 30.4,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "James Morgan": {
+   "jm": 4.9,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "James Proche": {
+   "jm": 29.7,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "James Robinson": {
+   "jm": 3.9,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "James Washington": {
+   "jm": 44.8,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jameson Williams": {
+   "jm": 82.6,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jared Wiley": {
+   "jm": 35,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaren Hall": {
+   "jm": 18.9,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jaret Patterson": {
+   "jm": 45.4,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jarquez Hunter": {
+   "jm": 45.4,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jarrett Stidham": {
+   "jm": 4.9,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jase McClellan": {
+   "jm": 34.6,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jason Huntley": {
+   "jm": 32.4,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jauan Jennings": {
+   "jm": 37.6,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Javon Baker": {
+   "jm": 44.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Javon Wims": {
+   "jm": 25.6,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Javonte Williams": {
+   "jm": 82.8,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Jawhar Jordan": {
+   "jm": 30.1,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaxon Smith-Njigba": {
+   "jm": 89.5,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Jaxson Dart": {
+   "jm": 64.6,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jayden Daniels": {
+   "jm": 90.4,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Jayden Higgins": {
+   "jm": 57.6,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jayden Reed": {
+   "jm": 63.9,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jaydn Ott": {
+   "jm": 46.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jaydon Blue": {
+   "jm": 37.5,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaylen Samuels": {
+   "jm": 35.1,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaylen Waddle": {
+   "jm": 81.9,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jaylen Warren": {
+   "jm": 32.7,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaylen Wright": {
+   "jm": 45.3,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jaylin Lane": {
+   "jm": 33.5,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaylin Noel": {
+   "jm": 66.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jeff Caldwell": {
+   "jm": 44.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jehu Chesson": {
+   "jm": 34.5,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jelani Woods": {
+   "jm": 31.6,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jeremiyah Love": {
+   "jm": 89.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Jeremy McNichols": {
+   "jm": 41.8,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jeremy Ruckert": {
+   "jm": 46.2,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jeremy Sprinkle": {
+   "jm": 30,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jermaine Burton": {
+   "jm": 58.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jermar Jefferson": {
+   "jm": 35.5,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jerome Ford": {
+   "jm": 37.8,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jerry Jeudy": {
+   "jm": 90.1,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Jha'Quan Jackson": {
+   "jm": 21.4,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jimmy Horn Jr.": {
+   "jm": 28.6,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Joe Burrow": {
+   "jm": 83.9,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Joe Milton": {
+   "jm": 6.7,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Joe Mixon": {
+   "jm": 82.6,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Joe Reed": {
+   "jm": 27.7,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Joe Royer": {
+   "jm": 21.4,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Joe Williams": {
+   "jm": 32.6,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "John Bates": {
+   "jm": 9,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "John Hightower": {
+   "jm": 31,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "John Kelly": {
+   "jm": 18.6,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "John Metchie III": {
+   "jm": 67.7,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "John Michael Gyllenborg": {
+   "jm": 43.7,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "John Ross": {
+   "jm": 76.3,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Johnny Mundt": {
+   "jm": 20.1,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Johnny Wilson": {
+   "jm": 34.2,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jonah Coleman": {
+   "jm": 44.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jonathan Mingo": {
+   "jm": 54.9,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jonathan Taylor": {
+   "jm": 80.2,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Jonathon Brooks": {
+   "jm": 65.3,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jonnu Smith": {
+   "jm": 60.7,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jordan Addison": {
+   "jm": 74,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jordan Akins": {
+   "jm": 35.3,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan Hudson": {
+   "jm": 32.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan James": {
+   "jm": 38.9,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan Lasley": {
+   "jm": 39.4,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan Leggett": {
+   "jm": 17.5,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jordan Love": {
+   "jm": 58.7,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jordan Mason": {
+   "jm": 32.3,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan Scarlett": {
+   "jm": 29.4,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jordan Thomas": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jordan Travis": {
+   "jm": 40,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan Watkins": {
+   "jm": 35.2,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan Whittington": {
+   "jm": 32.8,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordan Wilkins": {
+   "jm": 31.4,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordyn Tyson": {
+   "jm": 75,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Josh Adams": {
+   "jm": 56.6,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Josh Allen": {
+   "jm": 68.7,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Josh Cameron": {
+   "jm": 30.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Josh Cuevas": {
+   "jm": 36.2,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Josh Downs": {
+   "jm": 62.2,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Josh Jacobs": {
+   "jm": 82.9,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Josh Malone": {
+   "jm": 31.2,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Josh Oliver": {
+   "jm": 54.1,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Josh Palmer": {
+   "jm": 30.4,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Josh Reynolds": {
+   "jm": 34,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Josh Rosen": {
+   "jm": 55.7,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Josh Whyle": {
+   "jm": 35.7,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Joshua Dobbs": {
+   "jm": 47.3,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Joshua Kelley": {
+   "jm": 40.3,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Josiah Deguara": {
+   "jm": 41.4,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "JuJu Smith-Schuster": {
+   "jm": 71.4,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Julian Fleming": {
+   "jm": 22.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Junior Bergen": {
+   "jm": 6,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Justice Hill": {
+   "jm": 48.2,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Justin Fields": {
+   "jm": 69.4,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Justin Herbert": {
+   "jm": 83.1,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Justin Jackson": {
+   "jm": 36.8,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Justin Jefferson": {
+   "jm": 89.8,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Justin Joly": {
+   "jm": 36.8,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Justin Shorter": {
+   "jm": 25.1,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Juwan Johnson": {
+   "jm": 45.8,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Juwann Winfree": {
+   "jm": 2.7,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "K.J. Hill": {
+   "jm": 28.6,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "K.J. Osborn": {
+   "jm": 30.9,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "KC Concepcion": {
+   "jm": 71.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "K.J. Hamler": {
+   "jm": 71.4,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "KaVontae Turpin": {
+   "jm": 54.3,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kadarius Toney": {
+   "jm": 70.9,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kaden Prather": {
+   "jm": 24.9,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kaden Smith": {
+   "jm": 31.2,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Kahale Warring": {
+   "jm": 17.9,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kaleb Johnson": {
+   "jm": 60.7,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kalel Mullings": {
+   "jm": 28.7,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Kalen Ballage": {
+   "jm": 43.7,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Kareem Hunt": {
+   "jm": 58.6,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kawaan Baker": {
+   "jm": 33,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kayshon Boutte": {
+   "jm": 39.6,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kaytron Allen": {
+   "jm": 33.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ke'Shawn Vaughn": {
+   "jm": 45.4,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "KeAndre Lambert-Smith": {
+   "jm": 33.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Keaontay Ingram": {
+   "jm": 32.4,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Keaton Mitchell": {
+   "jm": 49.8,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "KeeSean Johnson": {
+   "jm": 36.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Keilan Robinson": {
+   "jm": 19,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Keke Coutee": {
+   "jm": 50.2,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Keleki Latu": {
+   "jm": 0.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kelvin Harmon": {
+   "jm": 36.7,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kendre Miller": {
+   "jm": 58.3,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kendrick Bourne": {
+   "jm": 0,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kendrick Law": {
+   "jm": 20.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kene Nwangwu": {
+   "jm": 13.5,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kenneth Gainwell": {
+   "jm": 38.5,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kenneth Walker III": {
+   "jm": 75.3,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Kenny Golladay": {
+   "jm": 50.1,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Kenny McIntosh": {
+   "jm": 33.9,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kenny Pickett": {
+   "jm": 50.3,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Kentrel Bullock": {
+   "jm": 26.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Kenyon Sadiq": {
+   "jm": 67.9,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Keon Coleman": {
+   "jm": 60.4,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kerryon Johnson": {
+   "jm": 63.3,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kevin Harris": {
+   "jm": 35.9,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Khalfani Muhammad": {
+   "jm": 38.3,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Khalil Herbert": {
+   "jm": 28.2,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Khalil Shakir": {
+   "jm": 43.2,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kimani Vidal": {
+   "jm": 37.8,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ko Kieft": {
+   "jm": 0,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Konata Mumpfield": {
+   "jm": 32.2,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kurtis Rourke": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kyle Allen": {
+   "jm": 9.2,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kyle Lauletta": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kyle McCord": {
+   "jm": 16.4,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kyle Monangai": {
+   "jm": 25.5,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kyle Philips": {
+   "jm": 34.6,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kyle Pitts": {
+   "jm": 91.2,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Kyle Trask": {
+   "jm": 37.8,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kyle Williams": {
+   "jm": 68.6,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kylen Granson": {
+   "jm": 44.1,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kyler Murray": {
+   "jm": 82.6,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Kylin Hill": {
+   "jm": 37.4,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kyren Williams": {
+   "jm": 34.6,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "LaJohntay Wester": {
+   "jm": 27.8,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Ladd McConkey": {
+   "jm": 71.4,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Lake McRee": {
+   "jm": 7.7,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Lamar Jackson": {
+   "jm": 64.6,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Lan Larison": {
+   "jm": 35.3,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Larry Rountree": {
+   "jm": 24.7,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Laviska Shenault Jr.": {
+   "jm": 86.6,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Le'Veon Moss": {
+   "jm": 39.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Leonard Fournette": {
+   "jm": 82.2,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Leroy Watson": {
+   "jm": 0,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Lewis Bond": {
+   "jm": 32,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Lil'Jordan Humphrey": {
+   "jm": 26.3,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Logan Woodside": {
+   "jm": 27.8,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Lucas Krull": {
+   "jm": 9.3,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Luke Falk": {
+   "jm": 33.1,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Luke Farrell": {
+   "jm": 12.9,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Luke Grimm": {
+   "jm": 33.3,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Luke Lachey": {
+   "jm": 18.5,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Luke McCaffrey": {
+   "jm": 46,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Luke Musgrave": {
+   "jm": 40.5,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Luke Schoonmaker": {
+   "jm": 36.1,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Luther Burden III": {
+   "jm": 76.5,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Lynn Bowden Jr.": {
+   "jm": 28.5,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Mac Jones": {
+   "jm": 52,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Mack Hollins": {
+   "jm": 37.8,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Makai Lemon": {
+   "jm": 73.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Malachi Corley": {
+   "jm": 61.2,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Malachi Dupre": {
+   "jm": 34.2,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Malcolm Johnson": {
+   "jm": 2.8,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Malcolm Perry": {
+   "jm": 23.1,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Malik Benson": {
+   "jm": 17.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Malik Davis": {
+   "jm": 37.7,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Malik Flowers": {
+   "jm": 0,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Malik Nabers": {
+   "jm": 91.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Malik Washington": {
+   "jm": 37.4,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Malik Willis": {
+   "jm": 47.8,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "MarShawn Lloyd": {
+   "jm": 54.4,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Marcell Ateman": {
+   "jm": 34.7,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Marcus Green": {
+   "jm": 28.1,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Marcus Yarns": {
+   "jm": 36,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Mark Andrews": {
+   "jm": 69,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Mark Walton": {
+   "jm": 46.7,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Marlin Klein": {
+   "jm": 16.2,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Marlon Mack": {
+   "jm": 40.9,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Marquez Callaway": {
+   "jm": 31.3,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Marquez Stevenson": {
+   "jm": 34.1,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Marquez Valdes-Scantling": {
+   "jm": 25.6,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Marquise Brown": {
+   "jm": 78.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Marvin Hall": {
+   "jm": 0,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Marvin Harrison Jr.": {
+   "jm": 88.4,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Marvin Mims Jr.": {
+   "jm": 65.9,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Mason Rudolph": {
+   "jm": 45.4,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Mason Schreck": {
+   "jm": 15.3,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Mason Taylor": {
+   "jm": 57.4,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Matt Breida": {
+   "jm": 42.8,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Matt Corral": {
+   "jm": 48.3,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Matthew Dayes": {
+   "jm": 32.7,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Matthew Golden": {
+   "jm": 62.3,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Max Brosmer": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Max Duggan": {
+   "jm": 41.1,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Max Klare": {
+   "jm": 48.2,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Mecole Hardman": {
+   "jm": 34.7,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Michael Carter": {
+   "jm": 48,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Michael Gallup": {
+   "jm": 69.5,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Michael Jackson III": {
+   "jm": 25.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Michael Mayer": {
+   "jm": 74.6,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Michael Penix Jr.": {
+   "jm": 61.1,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Michael Pittman Jr.": {
+   "jm": 66.4,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Michael Pratt": {
+   "jm": 47.8,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Michael Roberts": {
+   "jm": 20,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Michael Trigg": {
+   "jm": 41.8,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Michael Wiley": {
+   "jm": 37.5,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Michael Wilson": {
+   "jm": 55.1,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Mike Boone": {
+   "jm": 25.6,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Mike Gesicki": {
+   "jm": 66.2,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Mike Washington Jr.": {
+   "jm": 47.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Mike Weber": {
+   "jm": 34.9,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Mike White": {
+   "jm": 14.5,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Mike Woods": {
+   "jm": 0,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Miles Boykin": {
+   "jm": 36.3,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Miles Sanders": {
+   "jm": 52.8,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Mitchell Evans": {
+   "jm": 33.7,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Mitchell Tinsley": {
+   "jm": 20.4,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Mitchell Trubisky": {
+   "jm": 67.3,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Moliki Matavao": {
+   "jm": 10.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Montrell Washington": {
+   "jm": 0,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Myles Gaskin": {
+   "jm": 36.7,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "N'Keal Harry": {
+   "jm": 87.5,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Najee Harris": {
+   "jm": 72.9,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Nathan Carter": {
+   "jm": 38.9,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Nathan Peterman": {
+   "jm": 21.5,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nathaniel Dell": {
+   "jm": 41,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Nicholas Singleton": {
+   "jm": 36.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Nick Bawden": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nick Chubb": {
+   "jm": 66.8,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Nick Mullens": {
+   "jm": 19.6,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nick Muse": {
+   "jm": 16.2,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nick Westbrook-Ikhine": {
+   "jm": 57.4,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Nico Collins": {
+   "jm": 55.5,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Noah Brown": {
+   "jm": 20.5,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Noah Fant": {
+   "jm": 81.8,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Noah Gray": {
+   "jm": 30.7,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Noah Whittington": {
+   "jm": 33.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Nyheim Hines": {
+   "jm": 51,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "O.J. Howard": {
+   "jm": 75.6,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Olabisi Johnson": {
+   "jm": 24.6,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Olamide Zaccheaus": {
+   "jm": 50.2,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Omarion Hampton": {
+   "jm": 86,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Oronde Gadsden II": {
+   "jm": 41.4,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Oscar Delp": {
+   "jm": 51.6,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Parker Washington": {
+   "jm": 40,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Parris Campbell": {
+   "jm": 70.1,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Pat Bryant": {
+   "jm": 54.5,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Pat Freiermuth": {
+   "jm": 59,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Patrick Laird": {
+   "jm": 44.5,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Patrick Mahomes": {
+   "jm": 74.4,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Patrick Taylor Jr.": {
+   "jm": 26.1,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Payne Durham": {
+   "jm": 31.5,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Payton Thorne": {
+   "jm": 24.1,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Pharaoh Brown": {
+   "jm": 16.2,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Phil Mafah": {
+   "jm": 30.8,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Phillip Lindsay": {
+   "jm": 31.9,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Pierre Strong": {
+   "jm": 28,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Preston Williams": {
+   "jm": 38.2,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Puka Nacua": {
+   "jm": 35.8,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Qadree Ollison": {
+   "jm": 33.1,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Quali Conley": {
+   "jm": 30.1,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Quentin Johnston": {
+   "jm": 70.7,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Quez Watkins": {
+   "jm": 36.8,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Quinn Ewers": {
+   "jm": 28.6,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Quinshon Judkins": {
+   "jm": 70,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Quintez Cephus": {
+   "jm": 39.5,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "RJ Harvey": {
+   "jm": 61,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "RJ Maryland": {
+   "jm": 49.4,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Racey McMath": {
+   "jm": 15.2,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Rachaad White": {
+   "jm": 67.7,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Raheem Blackshear": {
+   "jm": 26.2,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Raheim Sanders": {
+   "jm": 26.8,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Rahsul Faison": {
+   "jm": 36.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Rashaad Penny": {
+   "jm": 66.5,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Rashee Rice": {
+   "jm": 64.6,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Rasheen Ali": {
+   "jm": 34.5,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Rashod Bateman": {
+   "jm": 85.3,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ray Davis": {
+   "jm": 23.2,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ray-Ray McCloud": {
+   "jm": 2.8,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Raymond Calais": {
+   "jm": 31.8,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Reggie Virgil": {
+   "jm": 33,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Rhamondre Stevenson": {
+   "jm": 41.9,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Richie James": {
+   "jm": 36.8,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ricky Jones": {
+   "jm": 16.9,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ricky Pearsall": {
+   "jm": 49.3,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Ricky Seals-Jones": {
+   "jm": 41.3,
+   "yr": 2017,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Rico Dowdle": {
+   "jm": 43.8,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Riley Leonard": {
+   "jm": 27.9,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Riley Ridley": {
+   "jm": 28,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Robbie Ouzts": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Robert Davis": {
+   "jm": 26.4,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Robert Foster": {
+   "jm": 15.4,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Robert Henry Jr.": {
+   "jm": 36.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Rodney Adams": {
+   "jm": 32.2,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Rodney Anderson": {
+   "jm": 28.7,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Roman Hemby": {
+   "jm": 42.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Roman Wilson": {
+   "jm": 54,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Rome Odunze": {
+   "jm": 86.5,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Romeo Doubs": {
+   "jm": 49.6,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Ronald Jones II": {
+   "jm": 42.6,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Rondale Moore": {
+   "jm": 70,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ronnie Bell": {
+   "jm": 29.6,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Roschon Johnson": {
+   "jm": 47.7,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Royce Freeman": {
+   "jm": 65.6,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Russell Gage": {
+   "jm": 29.2,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Ryan Finley": {
+   "jm": 21.1,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ryan Flournoy": {
+   "jm": 27.2,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Ryan Izzo": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ryan Switzer": {
+   "jm": 43.2,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ryan Williams": {
+   "jm": 76.3,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ryquell Armstead": {
+   "jm": 38,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Salvon Ahmed": {
+   "jm": 45.9,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Sam Darnold": {
+   "jm": 73.3,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Sam Ehlinger": {
+   "jm": 44.7,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Sam Howell": {
+   "jm": 52.2,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Sam LaPorta": {
+   "jm": 69.1,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Sam Rogers": {
+   "jm": 0,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Sam Roush": {
+   "jm": 42.4,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Samaje Perine": {
+   "jm": 44.7,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Samori Toure": {
+   "jm": 23.7,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Saquon Barkley": {
+   "jm": 93.4,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Savion Williams": {
+   "jm": 44.6,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Scott Miller": {
+   "jm": 31.1,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Sean Clifford": {
+   "jm": 37,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Sean Tucker": {
+   "jm": 54.3,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Seth Henigan": {
+   "jm": 33.9,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Seth McGowan": {
+   "jm": 33.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Seth Williams": {
+   "jm": 38.1,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Shedeur Sanders": {
+   "jm": 34.6,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Shelton Gibson": {
+   "jm": 28.2,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Shi Smith": {
+   "jm": 36,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Silas Bolden": {
+   "jm": 31.5,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Simi Fehoko": {
+   "jm": 29.6,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Sione Vaki": {
+   "jm": 28.6,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Skylar Thompson": {
+   "jm": 16.6,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Skyler Bell": {
+   "jm": 40.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Skyy Moore": {
+   "jm": 57.1,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Snoop Conner": {
+   "jm": 35.1,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Sony Michel": {
+   "jm": 72.2,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Spencer Rattler": {
+   "jm": 36.3,
+   "yr": 2024,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Stacy Coley": {
+   "jm": 36,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Stephen Sullivan": {
+   "jm": 19.5,
+   "yr": 2020,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Stetson Bennett": {
+   "jm": 13.8,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "T.J. Hockenson": {
+   "jm": 82.8,
+   "yr": 2019,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "T.J. Logan": {
+   "jm": 34.2,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tahj Brooks": {
+   "jm": 38.8,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tahj Washington": {
+   "jm": 41.8,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tai Felton": {
+   "jm": 40.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tank Bigsby": {
+   "jm": 64.8,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tank Dell": {
+   "jm": 49.1,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Tanner Conner": {
+   "jm": 8.3,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tanner Koziol": {
+   "jm": 62.3,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tanner Lee": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tanner McKee": {
+   "jm": 10.6,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tanner McLachlan": {
+   "jm": 17.9,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tarik Cohen": {
+   "jm": 13.2,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Taylen Green": {
+   "jm": 46.7,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Taylor Heinicke": {
+   "jm": 18.7,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Taywan Taylor": {
+   "jm": 69,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Teagan Quitoriano": {
+   "jm": 6.1,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ted Hurst": {
+   "jm": 51.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Tee Higgins": {
+   "jm": 80.6,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tejhaun Palmer": {
+   "jm": 20.5,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Terrace Marshall Jr.": {
+   "jm": 56.2,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Terrance Ferguson": {
+   "jm": 55.3,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Terry Godwin": {
+   "jm": 4.4,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Terry McLaurin": {
+   "jm": 34.6,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tetairoa McMillan": {
+   "jm": 82.6,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tez Johnson": {
+   "jm": 33.9,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Theo Johnson": {
+   "jm": 43.6,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tim Patrick": {
+   "jm": 25.8,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tip Reiman": {
+   "jm": 15.8,
+   "yr": 2024,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tommy DeVito": {
+   "jm": 0,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tommy Mellott": {
+   "jm": 18.4,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tommy Sweeney": {
+   "jm": 12.8,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tommy Tremble": {
+   "jm": 27.1,
+   "yr": 2021,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Tony Jones Jr.": {
+   "jm": 18.3,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tony Pollard": {
+   "jm": 43.8,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Tory Horton": {
+   "jm": 42.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Trace McSorley": {
+   "jm": 31.6,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Traeshon Holden": {
+   "jm": 20.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Travis Etienne": {
+   "jm": 86.1,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Travis Fulgham": {
+   "jm": 29.4,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Travis Homer": {
+   "jm": 38.4,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Travis Hunter": {
+   "jm": 88.2,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Trayveon Williams": {
+   "jm": 30.2,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tre' Harris": {
+   "jm": 72.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tre' McKitty": {
+   "jm": 7.7,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tre Nixon": {
+   "jm": 18.8,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tre Tucker": {
+   "jm": 33.8,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tre'Quan Smith": {
+   "jm": 30.5,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "TreVeyon Henderson": {
+   "jm": 73.1,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Trent Sherfield": {
+   "jm": 28.4,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Trent Taylor": {
+   "jm": 31.7,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Trestan Ebner": {
+   "jm": 21.8,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Trevon Wesco": {
+   "jm": 20.2,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Trevor Etienne": {
+   "jm": 41.3,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Trevor Lawrence": {
+   "jm": 89.5,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Trey Benson": {
+   "jm": 57.1,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Trey Lance": {
+   "jm": 76.5,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Trey McBride": {
+   "jm": 74,
+   "yr": 2022,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Trey Palmer": {
+   "jm": 37.6,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Trey Quinn": {
+   "jm": 29.9,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Trey Sermon": {
+   "jm": 61.8,
+   "yr": 2021,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Treylon Burks": {
+   "jm": 72.4,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Troy Franklin": {
+   "jm": 61.9,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Troy Fumagalli": {
+   "jm": 24.2,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tua Tagovailoa": {
+   "jm": 76.4,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tucker Kraft": {
+   "jm": 53.8,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Tutu Atwell": {
+   "jm": 68.9,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ty Chandler": {
+   "jm": 29.5,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Ty Johnson": {
+   "jm": 36.6,
+   "yr": 2019,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ty Simpson": {
+   "jm": 44.8,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tyjae Spears": {
+   "jm": 62.2,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tylan Wallace": {
+   "jm": 49.5,
+   "yr": 2021,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Tyler Allgeier": {
+   "jm": 34.3,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tyler Badie": {
+   "jm": 32,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tyler Conklin": {
+   "jm": 32,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Tyler Johnson": {
+   "jm": 34.5,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tyler Scott": {
+   "jm": 34.7,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tyler Shough": {
+   "jm": 45.7,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tyler Warren": {
+   "jm": 83.3,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Tyquan Thornton": {
+   "jm": 60,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Tyrie Cleveland": {
+   "jm": 16.2,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tyrion Davis-Price": {
+   "jm": 40.3,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Tyron Johnson": {
+   "jm": 21.3,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tyrone Tracy Jr.": {
+   "jm": 30.4,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Van Jefferson": {
+   "jm": 30.8,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Velus Jones Jr.": {
+   "jm": 39.1,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Wan'Dale Robinson": {
+   "jm": 64.4,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Wayne Gallman": {
+   "jm": 32.7,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Will Dissly": {
+   "jm": 8.2,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Will Grier": {
+   "jm": 42.5,
+   "yr": 2019,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Will Howard": {
+   "jm": 25.9,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Will Levis": {
+   "jm": 37.4,
+   "yr": 2023,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Will Mallory": {
+   "jm": 20.1,
+   "yr": 2023,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Will Shipley": {
+   "jm": 48.5,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Woody Marks": {
+   "jm": 43.9,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Xavier Gipson": {
+   "jm": 23.1,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Xavier Hutchinson": {
+   "jm": 35.6,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Xavier Legette": {
+   "jm": 52.5,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Xavier Restrepo": {
+   "jm": 39.7,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Xavier Smith": {
+   "jm": 24.8,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Xavier Worthy": {
+   "jm": 74.7,
+   "yr": 2024,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Zach Charbonnet": {
+   "jm": 72.7,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Zach Gentry": {
+   "jm": 16.3,
+   "yr": 2019,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Zach Wilson": {
+   "jm": 78.4,
+   "yr": 2021,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Zachariah Branch": {
+   "jm": 52,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Zack Moss": {
+   "jm": 57.1,
+   "yr": 2020,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Zamir White": {
+   "jm": 41,
+   "yr": 2022,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Zavion Thomas": {
+   "jm": 25.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Zay Flowers": {
+   "jm": 63.7,
+   "yr": 2023,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Zay Jones": {
+   "jm": 50.4,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Omar Cooper Jr.": {
+   "jm": 59.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Chris Brazzell II": {
+   "jm": 55.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dean Connors": {
+   "jm": 74.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kaelon Black": {
+   "jm": 31,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kevin Coleman Jr.": {
+   "jm": 35.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Amare Thomas": {
+   "jm": 70.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Terion Stewart": {
+   "jm": 24.1,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Fernando Mendoza": {
+   "jm": 72,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jeremiah Smith": {
+   "jm": 91.9,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Generational",
+   "col": "#fbbf24"
+  },
+  "Brandon Inniss": {
+   "jm": 34.1,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dallas Wilson": {
+   "jm": 21.6,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Arch Manning": {
+   "jm": 64.2,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dante Moore": {
+   "jm": 59.9,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Julian Sayin": {
+   "jm": 67.6,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "LaNorris Sellers": {
+   "jm": 47.8,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jayden Maiava": {
+   "jm": 39.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Cam Coleman": {
+   "jm": 64.6,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Eric Singleton Jr.": {
+   "jm": 62.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Dakorien Moore": {
+   "jm": 33.7,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Bryant Wesco Jr.": {
+   "jm": 64.9,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jadan Baugh": {
+   "jm": 57.9,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Isaac Brown": {
+   "jm": 55.6,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Ahmad Hardy": {
+   "jm": 58,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Bryce Underwood": {
+   "jm": 40,
+   "yr": 2028,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Nate Boerkircher": {
+   "jm": 7.2,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Will Kacmarek": {
+   "jm": 16.6,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kaden Wetjen": {
+   "jm": 0.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Matthew Hibner": {
+   "jm": 21.1,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Riley Nowakowski": {
+   "jm": 16.1,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Cyrus Allen": {
+   "jm": 34.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Bauer Sharp": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Emmanuel Henderson Jr.": {
+   "jm": 22.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "C.J. Williams": {
+   "jm": 12.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Athan Kaliakmanis": {
+   "jm": 14.9,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jaren Kanak": {
+   "jm": 24.1,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Behren Morton": {
+   "jm": 3.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Carsen Ryan": {
+   "jm": 26.7,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Malachi Toney": {
+   "jm": 82.5,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kewan Lacy": {
+   "jm": 54.4,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Justice Haynes": {
+   "jm": 43,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Hollywood Smothers": {
+   "jm": 85.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Mark Fletcher Jr.": {
+   "jm": 35.9,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jordon Davison": {
+   "jm": 41.7,
+   "yr": 2028,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ryan Wingo": {
+   "jm": 59.3,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "LJ Martin": {
+   "jm": 61.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Eugene Wilson III": {
+   "jm": 46.3,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jayce Brown": {
+   "jm": 67.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Trey'Dez Green": {
+   "jm": 26,
+   "yr": 2027,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Nick Marsh": {
+   "jm": 52.8,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dierre Hill Jr.": {
+   "jm": 54.2,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Nyck Harbor": {
+   "jm": 37,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Caleb Hawkins": {
+   "jm": 81.5,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Brendan Sorsby": {
+   "jm": 66.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Terrance Carter Jr.": {
+   "jm": 52.5,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "CJ Baxter Jr.": {
+   "jm": 24.2,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jaron-Keawe Sagapolutele": {
+   "jm": 52.3,
+   "yr": 2028,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Sam Leavitt": {
+   "jm": 42.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Harlem Berry": {
+   "jm": 9.5,
+   "yr": 2028,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Isaiah Sategna III": {
+   "jm": 45.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dylan Raiola": {
+   "jm": 15.9,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nate Sheppard": {
+   "jm": 66.7,
+   "yr": 2028,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Luke Hasz": {
+   "jm": 70,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Raleek Brown": {
+   "jm": 52.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Marcel Reed": {
+   "jm": 69.1,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kaliq Lockett": {
+   "jm": 0.7,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "AK Dear": {
+   "jm": 0,
+   "yr": 2028,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tavien St. Clair": {
+   "jm": 24.9,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "T.J. Moore": {
+   "jm": 47.6,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Gideon Davidson": {
+   "jm": 1.1,
+   "yr": 2028,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Cam Cook": {
+   "jm": 60,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Bear Bachmeier": {
+   "jm": 31.3,
+   "yr": 2028,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Josh Hoover": {
+   "jm": 43.1,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Joshua Moore": {
+   "jm": 11.3,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Julian Lewis": {
+   "jm": 15.3,
+   "yr": 2028,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Luke Reynolds": {
+   "jm": 4.3,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Cam Edwards": {
+   "jm": 38.7,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Isaiah Horton": {
+   "jm": 36.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "DJ Lagway": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Caden Durham": {
+   "jm": 61.3,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Kaelan Chudzinski": {
+   "jm": 29.1,
+   "yr": 2028,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Darian Mensah": {
+   "jm": 69.1,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Caleb Cunningham": {
+   "jm": 0.6,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "John Mateer": {
+   "jm": 44.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "CJ Carr": {
+   "jm": 52.7,
+   "yr": 2028,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Byrum Brown": {
+   "jm": 71,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Jordan Marshall": {
+   "jm": 48.5,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Danny Scudero": {
+   "jm": 38.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Talyn Taylor": {
+   "jm": 0,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nico Iamaleava": {
+   "jm": 27.2,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Quinton Martin Jr.": {
+   "jm": 10,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Quinten Joyner": {
+   "jm": 33.1,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Linkon Cure": {
+   "jm": 0,
+   "yr": 2028,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nic Anderson": {
+   "jm": 34.9,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Naeem Burroughs": {
+   "jm": 0,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Andrew Marsh": {
+   "jm": 28.3,
+   "yr": 2028,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Elyiss Williams": {
+   "jm": 5,
+   "yr": 2028,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dilin Jones": {
+   "jm": 15.1,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ousmane Kromah": {
+   "jm": 29.9,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Kenny Johnson": {
+   "jm": 50.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Taylor Tatum": {
+   "jm": 6.9,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jerrick Gibson": {
+   "jm": 1.1,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Micah Hudson": {
+   "jm": 11.8,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Demond Williams Jr.": {
+   "jm": 76.3,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Perry Thompson": {
+   "jm": 0,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Nate Frazier": {
+   "jm": 43.1,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Kam Davis": {
+   "jm": 12.3,
+   "yr": 2027,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Joshisa Trader": {
+   "jm": 6.1,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "CJ Bailey": {
+   "jm": 62.4,
+   "yr": 2027,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Braylon Staley": {
+   "jm": 49.1,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Dane Key": {
+   "jm": 33.7,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ian Strong": {
+   "jm": 41.4,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Johntay Cook II": {
+   "jm": 10.6,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Mario Craver": {
+   "jm": 71.6,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Mike Matthews": {
+   "jm": 47.6,
+   "yr": 2027,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Keelon Russell": {
+   "jm": 24.3,
+   "yr": 2028,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Gunner Gray": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tyler Huntley": {
+   "jm": 40.3,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "P.J. Walker": {
+   "jm": 0,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bryce Perkins": {
+   "jm": 6.1,
+   "yr": 2020,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Harold Fannin Jr.": {
+   "jm": 77.3,
+   "yr": 2025,
+   "pos": "TE",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Dont'e Thornton Jr.": {
+   "jm": 37.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dillon Bell": {
+   "jm": 33.2,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Camden Brown": {
+   "jm": 30.2,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Ollie Gordon II": {
+   "jm": 37.7,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "LeQuint Allen Jr.": {
+   "jm": 36.4,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ricky White III": {
+   "jm": 35.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Theo Wease Jr.": {
+   "jm": 28.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Marcus Major Jr.": {
+   "jm": 11.7,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Chris Brooks": {
+   "jm": 11.1,
+   "yr": 2023,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Mitch Trubisky": {
+   "jm": 58.9,
+   "yr": 2017,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Aaron Blancas": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Aidan Quinn": {
+   "jm": 6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Alex Bauman": {
+   "jm": 14.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Alex Tecza": {
+   "jm": 31.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Amari Niblack": {
+   "jm": 22.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Anthony Frias II": {
+   "jm": 10.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Anthony Hankerson": {
+   "jm": 48.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Anthony Lowe": {
+   "jm": 23.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Ashtyn Hawkins": {
+   "jm": 50.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Austin Samaha": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Austin Smith": {
+   "jm": 20.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "BJ Alexander": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Barika Kpeenu": {
+   "jm": 33.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Bill Jackson": {
+   "jm": 36.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Blaine Green": {
+   "jm": 22.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Blake Bosma": {
+   "jm": 25.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Blake Horvath": {
+   "jm": 80.4,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Top Prospect",
+   "col": "#34d399"
+  },
+  "Boden Groen": {
+   "jm": 23.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bralon Brown": {
+   "jm": 6.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brandon Chatman": {
+   "jm": 29.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Brandon Frazier": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brandon Hayes": {
+   "jm": 27.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Brandon Nunez": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Braylin Presley": {
+   "jm": 2.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Braylon Braxton": {
+   "jm": 42.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Brendan Doyle": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brendon Lewis": {
+   "jm": 64.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Brett Seither": {
+   "jm": 5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brian Trobel": {
+   "jm": 36.2,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Broc Lane": {
+   "jm": 12.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brock Rechsteiner": {
+   "jm": 21.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Brody Dalton": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bronson Barron": {
+   "jm": 6.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Bryce Caufield": {
+   "jm": 0.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bryce Duke": {
+   "jm": 10.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Bryson Canty": {
+   "jm": 33.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Cade Harris": {
+   "jm": 54.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Caleb Burke": {
+   "jm": 33.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Cam Davis": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Cam Porter": {
+   "jm": 28.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Cameren Smith": {
+   "jm": 25.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Cameron Bonner": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Cameron Dorner": {
+   "jm": 44.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Cameron Peters": {
+   "jm": 24.4,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Carl Chester": {
+   "jm": 29.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Casey Cain": {
+   "jm": 8.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Cash Jones": {
+   "jm": 15.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Chance Miller": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Chase Belcher": {
+   "jm": 32.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Chase Curtis": {
+   "jm": 6.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Chase Wilson": {
+   "jm": 18.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Chavon Wright": {
+   "jm": 15,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Chaz Middleton": {
+   "jm": 12.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Chris Harris": {
+   "jm": 0.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Chris Hilton Jr.": {
+   "jm": 31.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Chris Mosley": {
+   "jm": 42.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa",
+   "lc": 1
+  },
+  "Christian Fitzpatrick": {
+   "jm": 22,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Christian Jourdain": {
+   "jm": 22.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Christian Leary": {
+   "jm": 26.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Christian Vaughn": {
+   "jm": 3.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Christian Veilleux": {
+   "jm": 1.9,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Cody Hardy": {
+   "jm": 17.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Coleman Bennett": {
+   "jm": 44.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Colin Weber": {
+   "jm": 24.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Colter May": {
+   "jm": 5.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Cooper Willman": {
+   "jm": 37,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Corey Rucker": {
+   "jm": 45.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Cortez Braham": {
+   "jm": 35.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "D.J. Chark": {
+   "jm": 49.1,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "DT Sheffield": {
+   "jm": 39.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dacari Collins": {
+   "jm": 24.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Daejon Reynolds": {
+   "jm": 33.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Dalen Cobb": {
+   "jm": 35.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dallas Payne": {
+   "jm": 17.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Damani Wilks": {
+   "jm": 0,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Damien Taylor": {
+   "jm": 36.2,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Damon Bankston": {
+   "jm": 33.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Dan Dishman": {
+   "jm": 6.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dan Villari": {
+   "jm": 41.6,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Daniel Sobkowicz": {
+   "jm": 57.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa",
+   "lc": 1
+  },
+  "Daniel Thomason": {
+   "jm": 1.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Dante Daniels": {
+   "jm": 4.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Darryle Evans": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Dean Patterson": {
+   "jm": 34.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Dekel Crowdus": {
+   "jm": 19.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Derek Robertson": {
+   "jm": 30.5,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Deuce Spann": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Deven Thompson": {
+   "jm": 14,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Devin Miles": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Devin Mockobee": {
+   "jm": 49.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Devin Voisin": {
+   "jm": 45.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Devonte Ross": {
+   "jm": 51,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Devyn Gibbs": {
+   "jm": 2.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Deyandre Ruffin": {
+   "jm": 6.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Dominic Kibby": {
+   "jm": 37.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Dominic Richardson": {
+   "jm": 39.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Donaven McCulley": {
+   "jm": 19.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Dontae McMillan": {
+   "jm": 44,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa",
+   "lc": 1
+  },
+  "Dylan Carson": {
+   "jm": 9.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Dylan Djete": {
+   "jm": 11.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Dylan Goffney": {
+   "jm": 23.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "E.J. Warner": {
+   "jm": 49.9,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Eli Green": {
+   "jm": 20.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Elijah Canion": {
+   "jm": 31.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Elijah Elliott": {
+   "jm": 47.1,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa",
+   "lc": 1
+  },
+  "Elijah Gilliam": {
+   "jm": 26.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Elijah Green": {
+   "jm": 54.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Elijah Howard": {
+   "jm": 55.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa",
+   "lc": 1
+  },
+  "Elijah Metcalf": {
+   "jm": 30,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Elijah Steward": {
+   "jm": 30.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Elijah Tau-Tolliver": {
+   "jm": 46.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Eni Falayi": {
+   "jm": 17.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Ethan Conner": {
+   "jm": 12.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Evan McCray": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Evan Simon": {
+   "jm": 18.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Evan Svoboda": {
+   "jm": 7.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Finn Hogan": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Frank Gore Jr.": {
+   "jm": 55.9,
+   "yr": 2024,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Fred Farrier II": {
+   "jm": 9.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Gary Bryant Jr.": {
+   "jm": 40.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Gavin Wimsatt": {
+   "jm": 47.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Geoffrey Jamiel": {
+   "jm": 40,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Grayson Barnes": {
+   "jm": 17.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Gunnar Gray": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Hank Beatty": {
+   "jm": 46.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Harlan Dixon": {
+   "jm": 28.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Harrison Wallace III": {
+   "jm": 52.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Harrison Waylee": {
+   "jm": 30.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Hayden Large": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Haynes King": {
+   "jm": 62.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Heinrich Haarberg": {
+   "jm": 12.1,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Hinckley Ropati": {
+   "jm": 12.2,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Hudson Habermehl": {
+   "jm": 7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Hunter Simmons": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Ian Simpson": {
+   "jm": 17.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Isaiah Eastman": {
+   "jm": 7.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Isaiah Jacobs": {
+   "jm": 26.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Jack Neri": {
+   "jm": 13.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jack Velling": {
+   "jm": 29.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jackson Acker": {
+   "jm": 17.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jackson Canaan": {
+   "jm": 7.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jacob Gill": {
+   "jm": 14,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jaden Bradley": {
+   "jm": 41.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jaden Nixon": {
+   "jm": 42.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jaden Richardson": {
+   "jm": 7.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jadon Thompson": {
+   "jm": 14.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jadon Turner": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jake McConnachie": {
+   "jm": 6.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jake Overman": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jalen Berger": {
+   "jm": 41.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jalen Johnson": {
+   "jm": 3.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jalen Montgomery": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jalynn Williams": {
+   "jm": 23.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jamarien Wheeler": {
+   "jm": 8.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "James Laubstein": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jameson Geers": {
+   "jm": 14.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jameson Tucker": {
+   "jm": 23.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jared Brown": {
+   "jm": 45.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jarvis Rush": {
+   "jm": 9.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jase Bauer": {
+   "jm": 50.1,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Javin Whatley": {
+   "jm": 29.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Javon Charles": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jawaun Northington": {
+   "jm": 17.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jaxson Isaac": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jay Fair": {
+   "jm": 13.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jayden Ballard": {
+   "jm": 5.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jayden Thomas": {
+   "jm": 34.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Jayleen Record": {
+   "jm": 5.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jaylen Laudermilk": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jaylen Sargent": {
+   "jm": 22.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jaylen White": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jayson Raines": {
+   "jm": 0.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jeff Weimer": {
+   "jm": 30.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jeffery Wilson": {
+   "jm": 24.9,
+   "yr": 2018,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jerand Bradley": {
+   "jm": 48.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Jeremiah Franklin": {
+   "jm": 24.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jevon Jackson": {
+   "jm": 36.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "JoJo Earle": {
+   "jm": 7.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Joe Fagnano": {
+   "jm": 33.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Joe Pesansky": {
+   "jm": 15.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Joey Isabella": {
+   "jm": 41.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Johnny Pascuzzi": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jonathan Harris": {
+   "jm": 12.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jordan Brown": {
+   "jm": 18.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jordan Brunson": {
+   "jm": 15.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jordan Dingle": {
+   "jm": 14.8,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jordan Nubin": {
+   "jm": 12.2,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Jordan Owens": {
+   "jm": 9.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Jordan Smart": {
+   "jm": 13.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Joseph Manjack": {
+   "jm": 31.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Julian Gray": {
+   "jm": 7.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Julien Stokes": {
+   "jm": 6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Justin Holmes": {
+   "jm": 20.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Justin Jones": {
+   "jm": 20.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Justin Pegues": {
+   "jm": 17.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Justin Smith-Brown": {
+   "jm": 21.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Justus Durant": {
+   "jm": 10.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Justus Ross-Simmons": {
+   "jm": 29.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jyrin Johnson": {
+   "jm": 25.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kadarius Calloway": {
+   "jm": 29.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Kai Horton": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Kajiya Hollawayne": {
+   "jm": 18,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kaleb Heatherly": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Kam Thomas": {
+   "jm": 25.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kamron Beachem": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Keagan Johnson": {
+   "jm": 35.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Keelan Marion": {
+   "jm": 30.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Kejon Owens": {
+   "jm": 45.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa",
+   "lc": 1
+  },
+  "Kelby Williams": {
+   "jm": 17.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kendall Hinton": {
+   "jm": 31.9,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Keontez Lewis": {
+   "jm": 34.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Kerien Charlo": {
+   "jm": 0.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Kevon King": {
+   "jm": 29,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Kevorian Barnes": {
+   "jm": 43.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Keyvone Lee": {
+   "jm": 21.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Khalil Dinkins": {
+   "jm": 5.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kiael Kelly": {
+   "jm": 24.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Kobe Paysour": {
+   "jm": 25.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kobe Prentice": {
+   "jm": 27.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Koby Gross": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kolbe Katsis": {
+   "jm": 38.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Kole Wilson": {
+   "jm": 35.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Koy Moore": {
+   "jm": 10,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Kris Hutson": {
+   "jm": 40.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Ky Thomas": {
+   "jm": 27.5,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Kyle Williams (WSU)": {
+   "jm": 43.4,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Kylon Harris": {
+   "jm": 41.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Kyndon Fuselier": {
+   "jm": 11.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Lamagea McDowell": {
+   "jm": 6.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Lance Mason": {
+   "jm": 32,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Landon Sims": {
+   "jm": 48.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa",
+   "lc": 1
+  },
+  "Latrell Caples": {
+   "jm": 22.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Lawson Albright": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Leshon Williams": {
+   "jm": 30.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Levi Wentz": {
+   "jm": 9.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Liam Clifford": {
+   "jm": 8.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Lincoln Pare": {
+   "jm": 54.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Starter",
+   "col": "#60a5fa",
+   "lc": 1
+  },
+  "Logan Diggs": {
+   "jm": 37.2,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Logan Kyle": {
+   "jm": 0.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Logan Loya": {
+   "jm": 33,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Louis Hansen": {
+   "jm": 12,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Luke Altmyer": {
+   "jm": 51.9,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Luke Colella": {
+   "jm": 34.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Luke Wysong": {
+   "jm": 43.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Malachi Thomas": {
+   "jm": 39.2,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Malcolm Gillie": {
+   "jm": 9.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Malick Meiga": {
+   "jm": 10.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Malik Phillips": {
+   "jm": 8.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Malik Rutherford": {
+   "jm": 44.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Malik Sherrod": {
+   "jm": 45.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa",
+   "lc": 1
+  },
+  "Malik Turner": {
+   "jm": 21.7,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Marcello Bussey": {
+   "jm": 11.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Marcus Burke": {
+   "jm": 15.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Marcus Johnson": {
+   "jm": 0,
+   "yr": 2017,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Marcus Sanders Jr.": {
+   "jm": 28.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Mareyohn Hrabowski": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Mark Gronowski": {
+   "jm": 68.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Marqui Johnson": {
+   "jm": 3.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Matt Colombo": {
+   "jm": 23.1,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Matt Lauter": {
+   "jm": 28.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Matthew Caldwell": {
+   "jm": 20,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Matthew Henry": {
+   "jm": 43.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Maverick McIvor": {
+   "jm": 35.9,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Max Bredeson": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Max Tomczak": {
+   "jm": 35.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Max White": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Maxwell James": {
+   "jm": 4.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Micah Davis": {
+   "jm": 38.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Michael Briscoe": {
+   "jm": 35.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Michael Buckley": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Michael Fitzgerald": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Mike Wright": {
+   "jm": 28.9,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Miles Davis": {
+   "jm": 37.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Miles Kitselman": {
+   "jm": 21.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Myles Montgomery": {
+   "jm": 37,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Nahree Biggins": {
+   "jm": 29,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Nicholas Laboy": {
+   "jm": 27,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Noah Short": {
+   "jm": 37.8,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Noah Thomas": {
+   "jm": 41.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "OJ Arnold": {
+   "jm": 49.1,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa",
+   "lc": 1
+  },
+  "Omari Evans": {
+   "jm": 22.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Omari Kelly": {
+   "jm": 43.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Omari Walker": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Oscar Adaway III": {
+   "jm": 21.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Otto Tia": {
+   "jm": 15.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Payton Rhoades": {
+   "jm": 9.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Peyton Higgins": {
+   "jm": 11.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Qian Magwood": {
+   "jm": 11.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Quentin Moore": {
+   "jm": 5.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Quincy Crittendon": {
+   "jm": 43.9,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Rashad Amos": {
+   "jm": 19.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Rashad Raymond": {
+   "jm": 27.5,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Rashad Rochelle": {
+   "jm": 39.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Rashid Shaheed": {
+   "jm": 12.4,
+   "yr": 2022,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Raylen Sharpe": {
+   "jm": 37.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Reymello Murphy": {
+   "jm": 19.9,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "River Cracraft": {
+   "jm": 23.3,
+   "yr": 2018,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Robby Ashford": {
+   "jm": 39.8,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Rohan Jones": {
+   "jm": 59.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa"
+  },
+  "Romello Brinson": {
+   "jm": 27,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Ross Dwelley": {
+   "jm": 0,
+   "yr": 2018,
+   "pos": "TE",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Ryan Stubblefield": {
+   "jm": 16.3,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Sage Ennis": {
+   "jm": 2.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Sam Franklin": {
+   "jm": 36.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Sam Scott": {
+   "jm": 19.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Sam Vidlak": {
+   "jm": 20.7,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Sawyer Robertson": {
+   "jm": 52.5,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Seth Anderson": {
+   "jm": 17.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Sieh Bangura": {
+   "jm": 44,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Simeon Evans": {
+   "jm": 31.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "TJ Harden": {
+   "jm": 51.6,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Tahj Bullock": {
+   "jm": 10.6,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tanaka Scott": {
+   "jm": 14.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tanner Arkin": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tariq Sims": {
+   "jm": 11.7,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tavierre Dunlap": {
+   "jm": 20.1,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tay Lanier": {
+   "jm": 10.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Terrill Davis": {
+   "jm": 4.3,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Thad Franklin": {
+   "jm": 28.9,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Timmy McClain": {
+   "jm": 16.2,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Titus Mokiao-Atimalala": {
+   "jm": 12.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tommy Rittenhouse": {
+   "jm": 41.8,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Depth",
+   "col": "#94a3b8",
+   "lc": 1
+  },
+  "Trace Bruckler": {
+   "jm": 7.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Travaunta Abner": {
+   "jm": 20.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tray Taylor": {
+   "jm": 34.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Trayvon Rudolph": {
+   "jm": 50,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Tre Shackelford": {
+   "jm": 25.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Trebor Pena": {
+   "jm": 42.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Trent Battle": {
+   "jm": 22.4,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Trent Hudson": {
+   "jm": 38.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Trenton Irwin": {
+   "jm": 19.1,
+   "yr": 2020,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Trenton Leary": {
+   "jm": 17.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Trevon Tate": {
+   "jm": 0.6,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Trey Miller": {
+   "jm": 5.3,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Truman Werremeyer": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tsion Nunnally": {
+   "jm": 27.8,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Tykeem Wallace": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Tyler Daniels": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tyler Kirkwood": {
+   "jm": 3.1,
+   "yr": 2025,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tyler Moore": {
+   "jm": 0,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Tyson Mobley": {
+   "jm": 16.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Vaughn Pemberton": {
+   "jm": 15.7,
+   "yr": 2025,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Walker Harris": {
+   "jm": 26.1,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171",
+   "lc": 1
+  },
+  "Wesley Grimes": {
+   "jm": 20.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Will Nixon": {
+   "jm": 14.2,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Will Pauling": {
+   "jm": 48.4,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "Xavier Leigh": {
+   "jm": 9.3,
+   "yr": 2026,
+   "pos": "RB",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Xavier Loyd": {
+   "jm": 23.2,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Zach Calzada": {
+   "jm": 53.4,
+   "yr": 2022,
+   "pos": "QB",
+   "tier": "Contributor",
+   "col": "#a78bfa"
+  },
+  "DJ Rogers": {
+   "jm": 22.4,
+   "yr": 2026,
+   "pos": "TE",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Jalil Farooq": {
+   "jm": 11.1,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569"
+  },
+  "Joey Aguilar": {
+   "jm": 29.8,
+   "yr": 2026,
+   "pos": "QB",
+   "tier": "Lottery Ticket",
+   "col": "#f87171"
+  },
+  "Rara Thomas": {
+   "jm": 57.7,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Starter",
+   "col": "#60a5fa",
+   "lc": 1
+  },
+  "Romelo Brinson": {
+   "jm": 5.5,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Long Shot",
+   "col": "#475569",
+   "lc": 1
+  },
+  "Vinny Anthony II": {
+   "jm": 40,
+   "yr": 2026,
+   "pos": "WR",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  },
+  "Austin Ekeler": {
+   "jm": 33,
+   "yr": 2017,
+   "pos": "RB",
+   "tier": "Depth",
+   "col": "#94a3b8"
+  }
+ }
+}

@@ -3590,3 +3590,47 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
   --elev-1:rgba(255,255,255,.04);--elev-2:rgba(255,255,255,.06);--elev-3:rgba(255,255,255,.1);
   color:var(--text)
 }
+
+/* Tablets / landscape phones (601-900px, 2026-10-14): trimmed rankings column set so the
+   table fits without sideways scroll — # · PLAYER · POS · POS RANK · PROJ PPG · '26 PPG ·
+   SOS (the same trio the phone cards show). Hidden here, all on the player card: drag
+   handle, JACK'S, xFP, L4 PPG, AGE, P-SOS, +/-; WEEKLY keeps Opp and drops Spread / Team
+   Total / Opp PPG / Boom / Bust as on phones. A column the user ticked in COLS comes back
+   (the toggle writes inline display:table-cell!important). */
+@media(min-width:601px) and (max-width:900px){
+  /* The bare table{min-width:1100px} would spread the seven columns across 1100px and push
+     PROJ / '26 PPG / SOS off-screen anyway. */
+  #pageRankings table{min-width:0}
+  #pageRankings table thead th:first-child,
+  #pageRankings table tbody td:first-child,
+  #pageRankings table #adpHeader,
+  #pageRankings table .adp-cell,
+  #pageRankings table .diff-cell,
+  #pageRankings table thead th[data-sort="diff"],
+  #pageRankings table .l4ppg-cell,
+  #pageRankings table #l4ppgHeaderTh,
+  #pageRankings table .age-cell,
+  #pageRankings table #ageHeader,
+  #pageRankings table #ppsosHeader,
+  #pageRankings table .ppsos-cell{display:none}
+  body.ssn-xfp-col:not(.format-weekly) #pageRankings th#xfpGHeader,
+  body.ssn-xfp-col:not(.format-weekly) #pageRankings td.xfpg-cell{display:none!important}
+  body.format-weekly #pageRankings th#spreadHeader,
+  body.format-weekly #pageRankings th#teamTotalHeader,
+  body.format-weekly #pageRankings th#oppPpgHeader,
+  body.format-weekly #pageRankings th#simBoomHeader,
+  body.format-weekly #pageRankings th#simBustHeader,
+  body.format-weekly #pageRankings td.spread-cell,
+  body.format-weekly #pageRankings td.teamtotal-cell,
+  body.format-weekly #pageRankings td.oppppg-cell,
+  body.format-weekly #pageRankings td.simboom-cell,
+  body.format-weekly #pageRankings td.simbust-cell{display:none!important}
+  body.ros-tt-col:not(.format-weekly) #pageRankings th#teamTotalHeader,
+  body.ros-tt-col:not(.format-weekly) #pageRankings td.teamtotal-cell{display:none!important}
+  /* WEEKLY still ran ~150px over at 768 (eight columns): cap the Player column and drop
+     the season '26 PPG there — the week's own numbers (PROJ, xFP, Opp) are the point. */
+  #pageRankings table tbody td:nth-child(3),
+  #pageRankings table thead th:nth-child(3){max-width:180px;width:180px}
+  body.format-weekly #pageRankings th#ppg25HeaderTh,
+  body.format-weekly #pageRankings td.ppg25-cell{display:none!important}
+}

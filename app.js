@@ -20548,7 +20548,9 @@ function _adminInjectSnapButtons(playerName) {
 // searches the same pool as the header search bar, each added player becomes a
 // chip, clicking a chip swaps the card to that player in place, × unpins.
 // Pins + their order persist per device (localStorage mff_card_pins) so the
-// strip survives reloads, new tabs and the next visit. Names that no longer
+// strip survives reloads, new tabs and the next visit, and sync across
+// devices when signed in (users/{uid}/data/card_pins — the existing per-user
+// rules, same newer-side-wins scheme as the watchlist). Names that no longer
 // resolve in D after a data refresh are dropped at render, so a stale pin
 // can never render a dead chip. RESET clears the saved list too.
 var _CARD_PINS_LS = 'mff_card_pins';
@@ -20558,15 +20560,73 @@ var _cardPins = (function () {
     return Array.isArray(v) ? v.filter(n => typeof n === 'string').slice(0, 40) : [];
   } catch (_e) { return []; }
 })();
+var _cardPinsLastJson = JSON.stringify(_cardPins);
+var _cardPinsPushTimer = null;
+var _cardPinsRenderArgs = null; // {d, ctxMode} of the last strip render, so a cloud pull can redraw it
 function _cardPinsSave() {
   // Never overwrite the saved list from a half-loaded pool (a deep-linked card
   // opening before a data refresh lands would prune every pin)
   if (typeof D === 'undefined' || !Array.isArray(D) || D.length < 50) return;
+  const json = JSON.stringify(_cardPins);
+  // Renders happen on every card open — only a real change bumps the local
+  // timestamp and pushes, so an untouched device never overwrites a list
+  // edited elsewhere
+  if (json === _cardPinsLastJson) return;
+  _cardPinsLastJson = json;
   try {
-    if (_cardPins.length) localStorage.setItem(_CARD_PINS_LS, JSON.stringify(_cardPins));
+    if (_cardPins.length) localStorage.setItem(_CARD_PINS_LS, json);
     else localStorage.removeItem(_CARD_PINS_LS);
+    localStorage.setItem(_CARD_PINS_LS + '_at', new Date().toISOString());
+  } catch (_e) {}
+  clearTimeout(_cardPinsPushTimer);
+  _cardPinsPushTimer = setTimeout(_cardPinsCloudPush, 1500);
+}
+function _cardPinsCloudDoc(uid) {
+  return firebase.firestore().collection('users').doc(uid).collection('data').doc('card_pins');
+}
+function _cardPinsCloudPush() {
+  try {
+    if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) return;
+    const u = firebase.auth().currentUser;
+    if (!u) return;
+    _cardPinsCloudDoc(u.uid).set({ names: _cardPins.slice(0, 40), updatedAt: new Date().toISOString() })
+      .then(() => { try { localStorage.setItem(_CARD_PINS_LS + '_uid', u.uid); } catch (_e) {} })
+      .catch(() => {});
   } catch (_e) {}
 }
+function _cardPinsCloudInit(u) {
+  if (!u) return;
+  try {
+    _cardPinsCloudDoc(u.uid).get().then(doc => {
+      const cloud = doc.exists ? doc.data() : null;
+      let lastUid = null, localAt = null;
+      try { lastUid = localStorage.getItem(_CARD_PINS_LS + '_uid'); localAt = localStorage.getItem(_CARD_PINS_LS + '_at'); } catch (_e) {}
+      if (cloud && Array.isArray(cloud.names)) {
+        const differentAccount = lastUid && lastUid !== u.uid;
+        const cloudNewer = !localAt || (cloud.updatedAt && cloud.updatedAt > localAt);
+        if (differentAccount || cloudNewer) {
+          _cardPins = cloud.names.filter(n => typeof n === 'string').slice(0, 40);
+          _cardPinsLastJson = JSON.stringify(_cardPins);
+          _cardPinSort = null;
+          try {
+            if (_cardPins.length) localStorage.setItem(_CARD_PINS_LS, _cardPinsLastJson);
+            else localStorage.removeItem(_CARD_PINS_LS);
+            localStorage.setItem(_CARD_PINS_LS + '_at', cloud.updatedAt || new Date().toISOString());
+            localStorage.setItem(_CARD_PINS_LS + '_uid', u.uid);
+          } catch (_e) {}
+          // A card already open gets the synced strip without a reopen
+          const a = _cardPinsRenderArgs;
+          if (a && document.getElementById('cardPinStrip')) { try { _renderCardPinStrip(a.d, a.ctxMode); } catch (_e) {} }
+          return;
+        }
+      }
+      // No cloud doc, or local is newer — push local up (also claims the uid)
+      if (_cardPins.length || cloud) _cardPinsCloudPush();
+      else { try { localStorage.setItem(_CARD_PINS_LS + '_uid', u.uid); } catch (_e) {} }
+    }).catch(() => {});
+  } catch (_e) {}
+}
+_whenFirebaseReady(function(){ try { firebase.auth().onAuthStateChanged(u => { if (u) _cardPinsCloudInit(u); }); } catch (_e) {} });
 // Last SORT mode applied to the strip (null = manual / drag order)
 var _cardPinSort = null;
 var _CARD_PIN_POS_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DST: 5 };
@@ -20605,6 +20665,7 @@ function _renderCardPinStrip(d, ctxMode) {
   // change (add / unpin / drag / sort / reset) re-renders, so saving here
   // covers all of them.
   _cardPins = _cardPins.filter(n => _cardPinLookup(n));
+  _cardPinsRenderArgs = { d, ctxMode };
   _cardPinsSave();
   const multi = _cardPins.length > 1;
   const chips = _cardPins.map(n => {

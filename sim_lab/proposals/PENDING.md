@@ -66,27 +66,3 @@
   4/4), flagged rows -2.6%; next game -0.13% (7/7, fwd 4/4) below the -0.3% bar. Down-weighting blowout games in the points
   evidence instead FAILS (LOYO ROS +0.35%). Mechanism unknown (win / loss both under) - may be a harness gap.
 - Confidence: low; needs an engine-form re-test before any number. Expiry: 2026-11-10.
-
-## P-20261014-2 - Out-unconfirmed level: tier it (0 near kickoff / .50 lingering / .20 new) instead of flat x0.75
-- What: the engine prices a Sleeper "Out" that Sleeper still projects and the NFL report hasn't called Out/Doubtful at
-  x0.75 ('out-unconfirmed', feedback_out_flag_guard). Measured, that state played 34% of the time, and it is really three states:
-  (a) within 36 h of HIS kickoff -> 0 (this is the gameday inactive list: Sleeper tags Out ~90 min before kickoff before it
-      pulls his projection, so the pre-kickoff export FROZE x0.75 rows for inactives - Puka Nacua W2, Keenan Allen W4,
-      Addison + Dowdle W5);
-  (b) earlier in the week, he MISSED his previous game (Out lingering from last week) -> 0.50;
-  (c) earlier in the week, he PLAYED his previous game (new injury, Sleeper tagged Out after it) -> 0.20.
-  Teammates follow automatically (vacancy = 1 - level, since the 10-14 shadowOut fix).
-- File / knob: engine.js applyInSeasonInjuries `out-unconfirmed` branch (~3115): mult from hours-to-kickoff (kickoffs are in the
-  exporter; engine needs them passed or read from SIM kick data) + played-previous-game (jsData wks / sim_2026). Keep the src
-  name + NOTES chip; add the tier to the chip text. Same for 'na-unconfirmed'? (not measured - leave).
-- Evidence (research_out_unconfirmed.py, _tmp/out_unconfirmed.log; every committed Sleeper injury snapshot 09-01..10-14 x weekly
-  Sleeper proj x NFL practice report, W1-W5 graded on snap counts): 115 player-weeks / 298 export-time states.
-    <36 h before kickoff: 0 / 43 played (CI 0-.08)        36-96 h: 0 / 4
-    >96 h, missed previous game: 37 / 69 = .54 (CI .42-.65)   >96 h, played previous game: 2 / 11 = .18 (CI .05-.48)
-  Brier (state level): flat .75 (live) .386 | flat .33 .229 | tiered .50/.10/0 .178.
-  Leave-one-week-out (rates fit on the other weeks, late tier 0): tiered beats flat .75 in 5/5 weeks, pooled .180 vs .386;
-  fitted rates stable: lingering .49-.53, new injury .14-.25.
-- Not graded: projection POINTS (only availability). Small cells: new-injury n=11. 2026 only (Sleeper tag history doesn't exist
-  for older seasons).
-- Confidence: high for (a) and for dropping .75; medium for the exact .50 / .20. Note (a) zeroes a player before an NFL "Out"
-  - but the inactive list IS out; this is Jack's never-zero-before-Out rule, so his call. Expiry: 2026-12-31.

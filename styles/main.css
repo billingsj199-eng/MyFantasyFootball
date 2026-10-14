@@ -753,6 +753,7 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 
 .rank-cell{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--text2);width:36px;letter-spacing:1px}
 .player-cell{display:flex;flex-direction:column;gap:1px}
+#pageRankings tbody .player-cell:has(.player-name-link){cursor:pointer}   /* whole cell opens the card */
 .player-name{font-weight:600;color:var(--text)}
 .player-team{font-size:.6875rem;color:var(--text2)}
 .last-saved-text{display:inline-flex;align-items:center;font-size:.6875rem;color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:0 6px;white-space:nowrap;cursor:default}

@@ -306,7 +306,7 @@ function validateImportData(obj) {
       if (!row) return;
       const nameEl = row.querySelector('.player-name, .card-name, h2');
       if (!nameEl) return;
-      const pName = nameEl.textContent.trim();
+      const pName = (nameEl.dataset && nameEl.dataset.name) || nameEl.textContent.trim();   // phones show short names
       if (cache[pName]) {
         const newSrc = IMG_BASE + cache[pName] + IMG_SUFFIX;
         if (img.src !== newSrc) img.src = newSrc;
@@ -10120,8 +10120,36 @@ window._openSeasonPass = function () {
   }, 150);
 };
 
+// === Phone names (2026-10-14, Jack: "D. Henry" instead of "Derrick Henry") ===
+// The ≤600px rankings card gives the name ~88px, which wrapped two thirds of names
+// onto two lines. On phones the board renders first-initial names; suffixes stay
+// ("K. Walker III"), initial-style first names stay ("CJ Stroud", "A.J. Brown"),
+// D/ST rows drop the city ("Texans D/ST"). The full name rides along in data-name
+// (headshot fixer reads it) and every other surface (card, search, exports) still
+// uses d.n. _shortNamesNow is set once per render() and re-rendered when the
+// viewport crosses the breakpoint.
+let _shortNamesNow = false;
+function _shortName(n) {
+  n = String(n || '');
+  const t = n.split(' ').filter(Boolean);
+  if (t.length < 2) return n;
+  if (t[t.length - 1] === 'D/ST') return t.slice(-2).join(' ');
+  const first = t[0];
+  if (!/[a-z]/.test(first) || first.indexOf('.') >= 0) return n;
+  return first.charAt(0) + '. ' + t.slice(1).join(' ');
+}
+window._shortName = _shortName;
+(function () {
+  if (!window.matchMedia) return;
+  const mq = matchMedia('(max-width:600px)');
+  const onChange = () => { try { render(); } catch (e) {} };
+  if (typeof mq.addEventListener === 'function') mq.addEventListener('change', onChange);
+  else if (typeof mq.addListener === 'function') mq.addListener(onChange);
+})();
+
 function render() {
   _consRankCache.board = null;   // boards can be reordered in place — rebuild per paint
+  _shortNamesNow = !!(window.matchMedia && matchMedia('(max-width:600px)').matches);
   // Phone cards drop the drag-handle column on boards you can't reorder (main.css body.rnk-readonly)
   document.body.classList.toggle('rnk-readonly', !canEdit());
   try { _syncConsColHeader(); _syncSeasonPpgHeader(); } catch (_) {}
@@ -10372,7 +10400,7 @@ function render() {
       h += `<tr class="bye-row${blur}" data-bye-name="${dn}">
         <td></td>
         <td class="myrank-cell"><span class="myrank-num bye-rank" title="On bye in week ${wk} — season ${d.s === 'DST' ? 'D/ST' : d.s} rank ${p.seasonRank} on the redraft board (not ranked this week)">${rankLbl}</span></td>
-        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
+        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}${_injPill(d)}</span><span class="player-team">${d.t}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.assumed ? 'Assumed out for week ' + wk + ' (Jack\'s call) — ' : ''}${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
         <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.assumed ? '<b class="bye-assumed" title="Jack assumes he sits this week — not yet ruled out">ASSUMED OUT</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}${p.assumed && typeof window.isAdmin === 'function' && window.isAdmin() ? ` <button class="bye-undo-btn" type="button" data-assume-undo="${dn}" title="Put ${dn} back in the week ${wk} rankings">UNDO</button>` : ''}</td>
@@ -10440,7 +10468,7 @@ function render() {
       html += `<tr class="devy-row${_dBlur ? ' premium-blur' : ''}${_dTier ? ' tierband-' + tierColor(_dTier) : ''}" data-devy-idx="${d._devyIdx}" data-devy-name="${_dn}">
         <td>${editable ? '<div class="drag-handle devy-drag" tabindex="0" role="button" aria-label="Reorder ' + _dn + '. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div>' : ''}</td>
         <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_dTier)}" title="${d._devyClsRank != null ? d._devyEligYr + ' class rank: ' + _dRank + ' · overall devy rank: ' + d.myRank : 'Devy rank: ' + _dRank}">${_dRank}</span></td>
-        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-devy-card="${_dn}">${d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div><span class="watch-star${_dw ? ' on' : ''}" data-watch="${_dn}" role="button" title="${_dw ? 'Remove from' : 'Add to'} watchlist">${_dw ? '★' : '☆'}</span></div></td>
+        <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-devy-card="${_dn}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span></div><span class="watch-star${_dw ? ' on' : ''}" data-watch="${_dn}" role="button" title="${_dw ? 'Remove from' : 'Add to'} watchlist">${_dw ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell">${d._devyEligYr}</td>
         ${_devyJmCellHtml(d)}
@@ -10838,7 +10866,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}">${d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${d.t}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -11115,7 +11143,10 @@ function attachTierListeners() {
       const prow = injPill.closest('tr[data-idx]');
       if (prow && D[+prow.dataset.idx]) { e.stopPropagation(); e.preventDefault(); _injShowDetail(D[+prow.dataset.idx], injPill); return; }
     }
-    const nameLink = e.target.closest('.player-name-link');
+    let nameLink = e.target.closest('.player-name-link');
+    // Whole player cell (headshot / name / team) opens the card — a far bigger tap
+    // target than the 14px name text on phones (2026-10-14).
+    if (!nameLink) { const cell = e.target.closest('.player-cell'); nameLink = cell ? cell.querySelector('.player-name-link') : null; }
     if (nameLink && nameLink.dataset.devyCard) {
       // DEVY row: college prospect, not in D[] — synthetic card entry
       e.stopPropagation();

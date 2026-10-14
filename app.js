@@ -5197,6 +5197,21 @@ function _updateViewOptsSummary() {
   _viewOptsApply(open);
 })();
 
+// === Sideways-scrolling chip rows: edge fade until scrolled to the end (2026-10-14) ===
+// Phone users had no hint that the position row / Games tabs / Mock ADP sources / Draft
+// Strategy jump links continue off-screen. index.html marks them .x-scroll-fade; the CSS
+// fades the right edge, and .x-at-end (set here) removes it once nothing is hidden.
+(function () {
+  function wire(el) {
+    const upd = () => el.classList.toggle('x-at-end', el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
+    el.addEventListener('scroll', upd, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(upd).observe(el);
+    upd();
+  }
+  const go = () => document.querySelectorAll('.x-scroll-fade').forEach(wire);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+
 // === Phone controls collapse (≤600px, 2026-10-09) ===
 // body.rnk-mob-ctl-open shows the full MODEL / FORMAT / toolbar / SCORING
 // drawer; collapsed, index.html CSS leaves search + #rnkMobCtlToggle + one
@@ -10332,6 +10347,7 @@ function render() {
   document.body.classList.toggle('trend-ok', _isTrendMode());          // TRENDS button
   // Phone cards label their one stat cell per STATS view (index.html M1 block).
   document.body.dataset.rnkStat = _statMode;   // also hides the AGE column (index.html)
+  document.body.dataset.rnkVersion = currentVersion;   // phone FILTERS drawer hides the SYNC toggle off MY RANKINGS
   // VOR bar (league + lineup + WAIVERS): SIM VOR board and the VOR stats view.
   document.body.classList.toggle('vor-bar-on', currentVersion === 'sims' || _statMode === 'vor' || _statMode === 'dyn');
   // INJURIES view: three extra columns in front of Cons (CSS keys off these classes).

@@ -5218,6 +5218,8 @@ function _updateViewOptsSummary() {
   }
   const go = () => document.querySelectorAll('.x-scroll-fade').forEach(wire);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+  // Rows built later by JS (Draft Strategy jump bar) add the class and call this.
+  window._xScrollFadeWire = wire;
 })();
 
 // === Phone controls collapse (≤600px, 2026-10-09) ===
@@ -71807,12 +71809,14 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const secs = [...host.querySelectorAll(':scope > .ds-section')];
     secs.forEach((s, i) => { s.id = 'dsSec' + i; });
     const nav = document.createElement('nav');
-    nav.className = 'ds-jump';
+    nav.className = 'ds-jump x-scroll-fade';
     nav.setAttribute('aria-label', 'Jump to section');
     nav.innerHTML = secs.map((s, i) => '<button type="button" data-i="' + i + '">'
       + (SHORT[i] || (s.querySelector('.ds-h2') || {}).textContent || ('Section ' + (i + 1))) + '</button>').join('');
     nav.querySelectorAll('button').forEach(b => { b.onclick = () => secs[+b.dataset.i].scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     host.insertBefore(nav, host.firstChild);
+    // Edge fade until scrolled to the end (core IIFE wires the static rows at load).
+    if (window._xScrollFadeWire) window._xScrollFadeWire(nav);
   };
 
 })();

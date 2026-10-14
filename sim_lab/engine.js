@@ -4411,6 +4411,77 @@
     return p._half;
   }
 
+  // TEAMMATE-COUPLED SEASON SHOCKS (Jack 2026-10-14, "fix the season sim teammate correlation").
+  // drawSeasonShock is one independent draw per player, so a QB's wrecked season never touched his receivers and an
+  // RB1's never lifted his RB2: teammate season correlations were 0. On 2019-25 (research_teammate_season_corr.py)
+  // QB1 moves with his WR1 / TE1 / RB1 (+.28 / +.21 / +.20) and rooms trade off (RB1-RB2 -.26, WR2-WR3 -.20).
+  // Coupling on top of the independent draws g (backtest_teammate_shock.py, _tmp/teammate_shock.log):
+  //   ROOM: a room-mate's lost (or extra) points pass to the rest of his room in proportion to projection:
+  //         g_j += s_pos * (1 - g_i) * v_i / sum(v of the room minus i)            (RB .25, WR .20, TE 0)
+  //   QB HUB: every RB / WR / TE on the team: g_j *= 1 + k * (g_QB1 - 1)             (k .35 pass catchers and RBs)
+  //   floor .05. Both terms are linear in (1 - g) of an independent mean-1 draw, so every player's mean is unchanged.
+  // Result: model pair corr QB1-WR1 / TE1 / RB1 +.22 / +.19 / +.22, RB1-RB2 -.29; team skill-total p10-p90 coverage
+  // 68% -> 83% (below-p10 28 -> 14), stacks 76-78 -> 83-84, player marginals unchanged (QB 81 / RB 79->81 / TE 87->88 /
+  // WR 85). Leave-one-year-out better 6/7, loss .073 -> .042, picked weights stable. Weak spot: WR2-WR3 -.04 vs -.20.
+  // v = the player's projected value the caller ranks rooms by (rest-of-season mean); rooms = top RB 3 / WR 4 / TE 2,
+  // QB1 = the team's top QB. Players outside a room still get the QB hub. Used by simSeason + simLeague (best-ball
+  // sims keep independent shocks). Kill: window.SIM_TEAM_SHOCK = false.
+  var TEAM_SHOCK = { k: { RB: 0.35, WR: 0.35, TE: 0.35 }, room: { RB: 0.25, WR: 0.20, TE: 0 }, roomN: { RB: 3, WR: 4, TE: 2 }, floor: 0.05 };
+  function teamShockOn() { return !(typeof window !== 'undefined' && window.SIM_TEAM_SHOCK === false); }
+  // list: [{p, v}] -> context {teams: {tm: {qb: entry|null, rooms: {RB: [entries], ...}}}, inRoom: {key: 1}}
+  function teamShockCtx(list) {
+    var by = {};
+    list.forEach(function (x) {
+      var p = x.p; if (!p || p.isDST || p.pos === 'K' || !p.tm || !(x.v > 0)) return;
+      var t = by[p.tm] = by[p.tm] || { QB: [], RB: [], WR: [], TE: [] };
+      if (t[p.pos]) t[p.pos].push({ key: p.sid || p.norm, p: p, v: x.v });
+    });
+    var teams = {}, inRoom = {};
+    Object.keys(by).forEach(function (tm) {
+      var t = by[tm], rooms = {};
+      ['RB', 'WR', 'TE'].forEach(function (pos) {
+        rooms[pos] = t[pos].sort(function (a, b) { return b.v - a.v; }).slice(0, TEAM_SHOCK.roomN[pos]);
+        rooms[pos].forEach(function (e) { inRoom[e.key] = 1; });
+      });
+      var qb = t.QB.sort(function (a, b) { return b.v - a.v; })[0] || null;
+      if (qb) inRoom[qb.key] = 1;
+      teams[tm] = { qb: qb, rooms: rooms };
+    });
+    return { teams: teams, inRoom: inRoom };
+  }
+  // one simulated season: {shock: {key: g}, hub: {tm: QB-hub factor}} for every context member
+  function drawTeamShocks(rng, ctx) {
+    var shock = {}, hub = {};
+    Object.keys(ctx.teams).forEach(function (tm) {
+      var t = ctx.teams[tm], raw = {};
+      if (t.qb) { raw[t.qb.key] = drawSeasonShock(rng, halfPtsOf(t.qb.p)); shock[t.qb.key] = raw[t.qb.key]; }
+      ['RB', 'WR', 'TE'].forEach(function (pos) { t.rooms[pos].forEach(function (e) { raw[e.key] = drawSeasonShock(rng, halfPtsOf(e.p)); }); });
+      var gq = t.qb ? raw[t.qb.key] : 1;
+      ['RB', 'WR', 'TE'].forEach(function (pos) {
+        var room = t.rooms[pos], s = TEAM_SHOCK.room[pos], k = TEAM_SHOCK.k[pos];
+        var tot = room.reduce(function (a, e) { return a + e.v; }, 0);
+        room.forEach(function (j) {
+          var g = raw[j.key];
+          if (s > 0 && room.length > 1) {
+            room.forEach(function (i) { if (i !== j) g += s * (1 - raw[i.key]) * i.v / (tot - i.v); });
+            g = Math.max(TEAM_SHOCK.floor, g);
+          }
+          shock[j.key] = g;
+        });
+        hub[tm + '|' + pos] = Math.max(TEAM_SHOCK.floor, 1 + k * (gq - 1));
+      });
+      ['RB', 'WR', 'TE'].forEach(function (pos) { t.rooms[pos].forEach(function (e) { shock[e.key] *= hub[tm + '|' + pos]; }); });
+    });
+    return { shock: shock, hub: hub };
+  }
+  // the shock for one player in a sim drawn by drawTeamShocks (players outside every room: independent draw x QB hub)
+  function coupledShock(rng, draw, p) {
+    var key = p.sid || p.norm;
+    if (draw.shock[key] != null) return draw.shock[key];
+    var g = drawSeasonShock(rng, halfPtsOf(p)), h = draw.hub[p.tm + '|' + p.pos];
+    return h != null ? g * h : g;
+  }
+
   function simSeason(opts) {
     var sims = opts.sims || 300, sc = opts.scoring || PRESETS.half;
     var rng = makeRng(opts.seed != null ? opts.seed : null);
@@ -4482,12 +4553,15 @@
     var nWks = wTo - wFrom + 1, envByWeek = new Array(nWks), sNow = 0;
     function cmpTotals(a, b) { return pool[b].totals[sNow] - pool[a].totals[sNow]; }
 
+    // teammate-coupled season shocks (see TEAM_SHOCK): rooms ranked by the rest-of-range mean being simulated
+    var tsCtx = teamShockOn() ? teamShockCtx(pool.filter(function (e) { return e.shocked; }).map(function (e) { return { p: e.p, v: e.seasonMean }; })) : null;
     for (var s = 0; s < sims; s++) {
       // one env draw per NFL game of this simulated season, shared league-wide
       for (var w2 = wFrom; w2 <= wTo; w2++) envByWeek[w2 - wFrom] = drawWeekEnv(schedule.byWeek[w2] || [], rng, players);
+      var tsDraw = tsCtx ? drawTeamShocks(rng, tsCtx) : null;
       for (var i = 0; i < pool.length; i++) {
         var e = pool[i], tot = e.banked, wks = e.wks;   // real points for the games already played
-        var scale = (e.shocked ? drawSeasonShock(rng, halfPtsOf(e.p)) : 1) * e.inf;
+        var scale = (e.shocked ? (tsDraw ? coupledShock(rng, tsDraw, e.p) : drawSeasonShock(rng, halfPtsOf(e.p))) : 1) * e.inf;
         for (var j = 0; j < wks.length; j++) {
           if (e.pPlay < 1 && rng.rand() >= e.pPlay) continue; // missed game
           tot += samplePlayerScore(e.p, wks[j].wp, envByWeek[wks[j].wi], rng, scale);
@@ -4769,10 +4843,20 @@
     });
 
     var curShocks; // per-sim {playerKey: seasonShock}, persists reg season + playoffs
+    // teammate-coupled shocks (TEAM_SHOCK): rooms over the WHOLE NFL pool (a rostered WR's QB is usually on another
+    // fantasy team or on waivers), ranked by the mean of the next 3 weeks of this league's schedule window
+    var tsCtx = null, tsDraw = null;
+    if (teamShockOn()) {
+      var tsWeeks = allWeeks.slice(0, 3);
+      tsCtx = teamShockCtx(players.list.filter(function (p) { return !p.isDST && p.pos !== 'K'; }).map(function (p) {
+        var v = 0; tsWeeks.forEach(function (wk) { var wp = weeklyProjection(p, wk, sc, schedule); if (wp) v += effMean(wp); });
+        return { p: p, v: v };
+      }));
+    }
     function getShock(p) {
       if (p.isDST || p.pos === 'K') return 1;
       var k = p.sid || p.norm;
-      if (!(k in curShocks)) curShocks[k] = drawSeasonShock(rng, halfPtsOf(p));
+      if (!(k in curShocks)) curShocks[k] = tsDraw ? coupledShock(rng, tsDraw, p) : drawSeasonShock(rng, halfPtsOf(p));
       return curShocks[k];
     }
 
@@ -4789,6 +4873,7 @@
 
     for (var s = 0; s < sims; s++) {
       curShocks = {};
+      tsDraw = tsCtx ? drawTeamShocks(rng, tsCtx) : null;
       var rec = {};
       teams.forEach(function (t) {
         rec[t.rosterId] = { w: t.record ? t.record.w : 0, l: t.record ? t.record.l : 0, pf: t.record ? t.record.pf : 0 };
@@ -5651,6 +5736,6 @@
     marketObsContaminated: marketObsContaminated,
     simWeek: simWeek, simSeason: simSeason, simLeague: simLeague, bracketRounds: bracketRounds, simBestBall: simBestBall, simBBField: simBBField, bbFieldRun: bbFieldRun, bbFieldAddWeek: bbFieldAddWeek, bbRosterOf: bbRosterOf, bbSleeperIndex: bbSleeperIndex, bbResolveSid: bbResolveSid, bbAliasNorm: bbAliasNorm, pickLineup: pickLineup,
     drawWeekEnv: drawWeekEnv, samplePlayerScore: samplePlayerScore, effMean: effMean, CORR: CORR,
-    drawSeasonShock: drawSeasonShock, SLOT_ELIGIBLE: SLOT_ELIGIBLE
+    drawSeasonShock: drawSeasonShock, teamShockCtx: teamShockCtx, drawTeamShocks: drawTeamShocks, coupledShock: coupledShock, SLOT_ELIGIBLE: SLOT_ELIGIBLE
   };
 })();

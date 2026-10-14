@@ -15,6 +15,9 @@ REM tasks already run export_sleeper_extension_data.py.
 REM ============================================================
 setlocal
 set LOG=E:\MyFantasyFootball\sim_lab\last_refresh.log
+REM 2026-10-14: firebase deploy (hosting public = all of sim_lab) ran out of the default
+REM Node heap ("JavaScript heap out of memory ... DEPLOY FAILED"); 8 GB fixed it.
+set NODE_OPTIONS=--max-old-space-size=8192
 
 echo ===== Sim Lab refresh %date% %time% ===== > "%LOG%"
 

@@ -1,0 +1,14 @@
+Tail-market backtest: 586 player-weeks with a prop board and a box score, weeks [4, 5]
+
+=== 1. TD COUNT — anytime-only Poisson vs two-point (anytime + 2+ market) ===
+rows with anytime odds 584; with a 2+ market 0 (weeks [])
+  heavy favorites (P>=.55, all weeks) n 30: actual 0.900 TD/g vs Poisson 0.823
+
+=== 2. STAT-LINE JUICE — face value vs price-skewed mean ===
+  residual sigma (actual - line): rec 2.2, rcy 29.3, ry 26.4, py 74.1
+  rec: 0 priced rows — not enough yet
+  rcy: 0 priced rows — not enough yet
+  ry: 0 priced rows — not enough yet
+  py: 0 priced rows — not enough yet
+
+  (adj diff < 0 with the CI below 0 = wire it; juiced-side rate near .50 = the price carries no extra information)

@@ -3515,9 +3515,10 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 @media(min-width:601px) and (max-width:700px){
   .page-compare{padding-top:56px}
 }
-/* Tablets ≤768px: the ticker's fixed label clips ("RANKINGS / Consensus rankings · la") —
+/* Tablets / landscape phones ≤900px (the icon-rail range): the ticker's fixed label clips or
+   squeezes the scroller to a sliver ("RANKINGS / Consensus rankings · la", "n War / :59") —
    hide it as on phones; the week strip + WEEKLY take the row. */
-@media(min-width:601px) and (max-width:768px){
+@media(min-width:601px) and (max-width:900px){
   #tickerRow .live-ticker{display:none!important}
   #tickerRow .season-strip{flex:1 1 auto;border-right:none;justify-content:space-between}
 }
@@ -3527,4 +3528,21 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
   body.rnk-mob-ctl-open .filter-row-top > .filter-row-label:not(:first-child){margin-left:0}
   body.rnk-mob-ctl-open #rankTopNLbl{margin-left:0!important;padding:0 8px;height:34px;display:inline-flex;align-items:center;border:1px solid var(--border);border-right:none;border-radius:6px 0 0 6px;background:var(--surface2);color:var(--text2)}
   body.rnk-mob-ctl-open #rankTopNInput{border-radius:0 6px 6px 0!important;height:34px;width:64px!important;font-size:.8rem!important}
+}
+
+/* 2026-10-14 tablets / landscape phones (601-900px): icon-only rail. The 102px labelled
+   sidebar left the rankings table ~1 stat column before sideways scroll at iPad width;
+   the rail is 56px, labels go, each button keeps its title= tooltip and aria-label, and
+   the group dividers stay as thin lines so the order still reads. */
+@media(min-width:601px) and (max-width:900px){
+  .sidebar{width:56px;min-width:56px;padding:10px 0;gap:4px}
+  .sidebar-logo{margin-bottom:4px}
+  .sidebar-logo svg{width:26px;height:26px}
+  .nav-btn,.nav-btn[data-nav-tier="2"],.nav-draft-phase .sidebar .nav-btn[data-navgrp="draft"]{width:44px;height:44px;min-height:44px;padding:0;gap:0}
+  .nav-btn svg,.nav-btn[data-nav-tier="2"] svg{width:22px;height:22px}
+  .nav-btn .nav-label{display:none}
+  .nav-divider{width:36px;margin:4px 0 2px}
+  .nav-divider span{display:none}
+  .nav-divider::before{flex:1}
+  .nav-divider::after{display:none}
 }

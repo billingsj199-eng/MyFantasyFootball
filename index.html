@@ -6257,7 +6257,7 @@ window._loadWeeklyCore = function(opts) {
   window._weeklyCorePromise = _injectScripts([
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
     // merge also still listens on mff:weeklydata (idempotent).
-    'data/weekly_stats_active.js?v=2026-10-14-0759'
+    'data/weekly_stats_active.js?v=2026-10-14-1000'
   ], 'WeeklyCore', opts).then(function() {
     try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
   });
@@ -6270,7 +6270,7 @@ window._loadWeeklyData = function(opts) {
     // (weekly_stats_active loads first via _loadWeeklyCore above)
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-10-14-0759',
+    'data/fpa_2026.js?v=2026-10-14-1000',
     'data/weekly_stats_retired_1.js?v=2026-07-21',
     'data/weekly_stats_retired_2.js?v=2026-07-21',
     'data/weekly_stats_retired_3.js?v=2026-07-21',

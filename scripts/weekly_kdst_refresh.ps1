@@ -49,8 +49,8 @@ if (-not $changed) {
     git add @Files
     git commit -m ('Auto K/DST data refresh {0} (kicker+DST logs/history/splits)' -f (Get-Date -Format 'yyyy-MM-dd'))
     # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
-    git pull --rebase --autostash origin main
-    git push origin main
+    . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
+    $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'K/DST refresh') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed K/DST refresh' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
 

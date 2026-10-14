@@ -56,8 +56,8 @@ if (-not $changed) {
     git push origin main
     if ($LASTEXITCODE -ne 0) {
         # main moved on (another session pushed): replay on top, same as the sim export task
-        git pull --rebase --autostash origin main
-        git push origin main
+        . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
+        $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'practice report') { 0 } else { 1 })
     }
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed practice report' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }

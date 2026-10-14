@@ -54,8 +54,8 @@ if ($rc -ne 0) {
 } elseif ((Test-Path $PriorFile) -and (git status --porcelain -- $PriorFile)) {
     git add $PriorFile
     git commit -m ('Opponent-grade prior for the {0} season (touchdown-neutral points allowed by position)' -f $Season)
-    git pull --rebase --autostash origin main
-    git push origin main
+    . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
+    $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'January outcomes') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'opponent-grade prior pushed' } else { Write-Log "opponent-grade prior PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
 
@@ -97,8 +97,8 @@ if (-not $changed) {
 } else {
     git add @commitFiles
     git commit -m ('JM backtest outcomes rolled to the {0} season + January tuner/experiment results' -f $Season)
-    git pull --rebase --autostash origin main
-    git push origin main
+    . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
+    $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'January outcomes') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
 Write-Log ('report: ' + $Report)

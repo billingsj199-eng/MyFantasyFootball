@@ -47,6 +47,11 @@ function Write-Log($msg) {
 Set-Location $Repo
 Write-Log '=== sim proj export start ==='
 
+# Repo guard (2026-10-14): never pull/commit on a stuck rebase, detached HEAD or
+# non-main branch (the 10-13 incident); alerts instead. See scripts\repo_guard.ps1.
+. (Join-Path $Repo 'scripts\repo_guard.ps1')
+if (Test-RepoBlocked -Log { param($m) Write-Log $m } -Job 'sim proj export') { exit 0 }
+
 # Refuse to run over uncommitted work on the target files.
 $Files = @('data/sim_proj_2026.js', 'data/sim_proj_2026.json', 'data/injury_updates.js', 'data/weather_2026.js', 'index.html', 'data/future_totals_2026.js',
            'data/practice_2026.js', 'data/depth_charts_2026.js', 'data/matchup_edges_2026.js', 'data/proj_why_2026.json')  # the .json twins are gitignored (local-only, like weather_2026.json)
@@ -151,9 +156,11 @@ if (-not $changed) {
 
     git add data/sim_proj_2026.js data/sim_proj_2026.json data/injury_updates.js data/weather_2026.js data/future_totals_2026.js index.html data/practice_2026.js data/depth_charts_2026.js data/matchup_edges_2026.js data/proj_why_2026.json   # proj_why: lazy-loaded with ?d= (no ?v= bump); tracked despite the local data/*.json exclude
     git commit -m ('Sim proj auto-export {0}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
-    git pull --rebase --autostash origin main
-    git push origin main
-    if ($LASTEXITCODE -eq 0) { Write-Log 'pushed updated sim projections' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - pre-commit guard or git error; nothing pushed"
+    } elseif (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'sim projections') {   # aborts a conflicted pull --rebase instead of leaving it stuck
+        Write-Log 'pushed updated sim projections'
+    }
 }
 
 $lines = Get-Content $Log

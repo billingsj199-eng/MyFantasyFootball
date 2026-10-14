@@ -47,8 +47,8 @@ function Commit-Push($paths, $msg) {
     git commit -m ('{0} {1}' -f $msg, (Get-Date -Format 'yyyy-MM-dd'))
     if ($LASTEXITCODE -ne 0) { Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - $msg left uncommitted"; return }
     # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
-    git pull --rebase --autostash origin main
-    git push origin main
+    . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
+    $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'devy refresh') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log "pushed: $msg" } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - $msg commit is local" }
 }
 

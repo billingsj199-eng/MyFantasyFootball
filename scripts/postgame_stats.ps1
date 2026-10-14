@@ -82,8 +82,8 @@ if (-not $changed) {
     git add data/weekly_stats_active.js data/fpa_2026.js data/fpa_2026.json index.html
     if ($accBuilt) { git add accuracy/data }
     git commit -m ('Auto postgame stats {0} (weekly_stats_active 2026 rows + fpa_2026 + accuracy regrade + ?v= bump)' -f $stamp)
-    git pull --rebase --autostash origin main
-    git push origin main
+    . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
+    $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'postgame stats') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'postgame stats committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
 

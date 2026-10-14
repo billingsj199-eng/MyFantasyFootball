@@ -121,8 +121,8 @@ if (-not $changed) {
     [System.IO.File]::WriteAllText($idxPath, $html)
     git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/team_usage_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js index.html
     git commit -m ('Auto snap share + route participation + player roles + adv stats + usage trend + coach profiles {0} (?v= bump)' -f $stamp)
-    git pull --rebase --autostash origin main
-    git push origin main
+    . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
+    $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'snap/route data') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'snap/route data committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
 

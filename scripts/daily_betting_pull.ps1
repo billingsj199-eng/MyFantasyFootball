@@ -46,6 +46,11 @@ function Write-Log($msg) {
 Set-Location $Repo
 Write-Log '=== daily betting pull start ==='
 
+# Repo guard (2026-10-14): never pull/commit on a stuck rebase, detached HEAD or
+# non-main branch (the 10-13 incident); alerts instead. See scripts\repo_guard.ps1.
+. (Join-Path $Repo 'scripts\repo_guard.ps1')
+if (Test-RepoBlocked -Log { param($m) Write-Log $m } -Job 'betting-lines pull') { exit 0 }
+
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
 $Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'data/practice_days_2026.js', 'data/depth_charts_2026.js', 'data/weather_2026.js', 'index.html')
 $dirty = git status --porcelain -- @Files
@@ -64,6 +69,7 @@ $out = & $Python 'scripts\pull_betting_lines.py' '--game-lines' '--season-props'
 Write-Log $out
 if ($LASTEXITCODE -ne 0) {
     Write-Log "PULL FAILED (exit $LASTEXITCODE) - nothing committed"
+    Send-MffAlert -Key 'betting-pull-failed' -Message "pull_betting_lines.py failed (exit $LASTEXITCODE): lines, injuries, practice, depth and weather were NOT refreshed this run."
     exit 1
 }
 
@@ -130,8 +136,11 @@ if (-not $changed) {
     if ($wxChanged) { $msg += ' + weather' }
     if ($recPosted) { $msg = 'SEASON RECEPTIONS POSTED - ' + $msg }
     git commit -m $msg
-    git push origin main
-    if ($LASTEXITCODE -eq 0) { Write-Log 'pushed updated lines' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - pre-commit guard or git error; nothing pushed"
+    } elseif (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'betting lines') {   # was a bare push (no pull) before 2026-10-14
+        Write-Log 'pushed updated lines'
+    }
 }
 
 # Draft-helper extension data (players.json x3 + sim packs) from the fresh

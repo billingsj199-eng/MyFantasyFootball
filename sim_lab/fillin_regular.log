@@ -1,0 +1,83 @@
+=== WHO COUNTS AS A REGULAR (Jack 2026-10-10, 'fix the fill-in rule for chuba'): Chuba Hubbard's games were filed as fill-in
+    for Jonathon Brooks because Brooks's Clay level was a hair above his. Variants on the regular definition, on top of the wired
+    shadow fill-in (RB 2.0 / WR 1.7 ADP > 100, 2+ stale games). Base = the wired rule (regular = Clay half PPG >= 5 and > his own). ===
+=== shadow fill-in / returning starter, rest of season (4+ games left): 9,215 checkpoints; 1,577 with fill-in games in the evidence; (checkpoint, future week) pairs 12,982 ===
+
+  ROS RB + WR: who counts as a regular   (rows touched 793; actual 6.00, base 6.00)
+    pooled on touched rows (seasons better): regular >= 1.1x his level: -0.75% lvl 6.02 (3)  regular >= 1.2x his level: +0.71% lvl 6.07 (3)  regular >= 1.3x his level: +0.36% lvl 6.10 (2)  regular >= 1.5x his level: +1.97% lvl 6.17 (2)  no regular if his own level >= 6.0: +4.73% lvl 6.25 (1)  no regular if his own level >= 7.0: +2.60% lvl 6.19 (3)  no regular if his own level >= 8.0: +1.63% lvl 6.10 (2)  no regular if his own level >= 9.0: +1.52% lvl 6.07 (1)  no fill-in rule at all: +9.64% lvl 6.61 (2)
+    whole position group: regular >= 1.1x his level: -0.071%  regular >= 1.2x his level: +0.067%  regular >= 1.3x his level: +0.035%  regular >= 1.5x his level: +0.186%  no regular if his own level >= 6.0: +0.448%  no regular if his own level >= 7.0: +0.246%  no regular if his own level >= 8.0: +0.154%  no regular if his own level >= 9.0: +0.144%  no fill-in rule at all: +0.913%
+    LEAVE-ONE-SEASON-OUT  +1.59%  seasons better 2/7  | top-150 weighted +5.79%  rank order +nan  | picks ['wired regular rule', 'regular >= 1.3x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level']
+    FORWARD 2022-25       +0.10%  seasons better 2/4  | top-150 weighted +1.29%  | picks ['regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level']
+    -> FAIL (best pooled: regular >= 1.1x his level)
+
+  NEXT GAME RB + WR: who counts as a regular   (rows touched 786; actual 5.58, base 5.47)
+    pooled on touched rows (seasons better): regular >= 1.1x his level: +0.07% lvl 5.51 (2)  regular >= 1.2x his level: +0.01% lvl 5.57 (3)  regular >= 1.3x his level: -0.12% lvl 5.62 (3)  regular >= 1.5x his level: +0.04% lvl 5.69 (3)  no regular if his own level >= 6.0: +0.81% lvl 5.77 (2)  no regular if his own level >= 7.0: +0.08% lvl 5.68 (2)  no regular if his own level >= 8.0: +0.84% lvl 5.59 (0)  no regular if his own level >= 9.0: +0.87% lvl 5.56 (1)  no fill-in rule at all: +2.09% lvl 6.21 (2)
+    whole position group: regular >= 1.1x his level: +0.005%  regular >= 1.2x his level: +0.000%  regular >= 1.3x his level: -0.009%  regular >= 1.5x his level: +0.003%  no regular if his own level >= 6.0: +0.058%  no regular if his own level >= 7.0: +0.006%  no regular if his own level >= 8.0: +0.061%  no regular if his own level >= 9.0: +0.063%  no fill-in rule at all: +0.151%
+    LEAVE-ONE-SEASON-OUT  +1.16%  seasons better 1/7  | top-150 weighted +3.27%  rank order +nan  | picks ['wired regular rule', 'regular >= 1.3x his level', 'regular >= 1.1x his level', 'regular >= 1.2x his level', 'regular >= 1.3x his level', 'regular >= 1.5x his level', 'regular >= 1.3x his level']
+    FORWARD 2022-25       +1.45%  seasons better 0/4  | top-150 weighted +4.17%  | picks ['regular >= 1.2x his level', 'no regular if his own level >= 7.0', 'regular >= 1.5x his level', 'regular >= 1.3x his level']
+    -> FAIL (best pooled: regular >= 1.3x his level)
+
+  ROS RB: who counts as a regular   (rows touched 242; actual 6.08, base 6.46)
+    pooled on touched rows (seasons better): regular >= 1.1x his level: +0.49% lvl 6.48 (0)  regular >= 1.2x his level: +0.53% lvl 6.51 (1)  regular >= 1.3x his level: -0.77% lvl 6.55 (2)  regular >= 1.5x his level: +2.95% lvl 6.70 (3)  no regular if his own level >= 6.0: +7.68% lvl 6.87 (2)  no regular if his own level >= 7.0: +5.20% lvl 6.79 (2)  no regular if his own level >= 8.0: -1.48% lvl 6.63 (2)  no regular if his own level >= 9.0: -0.68% lvl 6.62 (2)  no fill-in rule at all: +14.81% lvl 7.29 (2)
+    whole position group: regular >= 1.1x his level: +0.039%  regular >= 1.2x his level: +0.042%  regular >= 1.3x his level: -0.062%  regular >= 1.5x his level: +0.236%  no regular if his own level >= 6.0: +0.615%  no regular if his own level >= 7.0: +0.416%  no regular if his own level >= 8.0: -0.118%  no regular if his own level >= 9.0: -0.054%  no fill-in rule at all: +1.186%
+    LEAVE-ONE-SEASON-OUT  -0.41%  seasons better 1/7  | top-150 weighted -0.67%  rank order +nan  | picks ['no regular if his own level >= 8.0', 'no regular if his own level >= 8.0', 'no regular if his own level >= 8.0', 'no regular if his own level >= 8.0', 'no regular if his own level >= 8.0', 'regular >= 1.3x his level', 'no regular if his own level >= 8.0']
+    FORWARD 2022-25       +1.12%  seasons better 0/4  | top-150 weighted +4.23%  | picks ['regular >= 1.2x his level', 'regular >= 1.3x his level', 'regular >= 1.3x his level', 'no regular if his own level >= 8.0']
+    -> FAIL (best pooled: no regular if his own level >= 8.0)
+
+  NEXT GAME RB: who counts as a regular   (rows touched 229; actual 5.91, base 5.86)
+    pooled on touched rows (seasons better): regular >= 1.1x his level: +0.11% lvl 5.89 (0)  regular >= 1.2x his level: -1.79% lvl 5.97 (2)  regular >= 1.3x his level: -2.31% lvl 6.03 (3)  regular >= 1.5x his level: -1.45% lvl 6.18 (3)  no regular if his own level >= 6.0: +1.62% lvl 6.37 (1)  no regular if his own level >= 7.0: +0.17% lvl 6.23 (1)  no regular if his own level >= 8.0: +0.43% lvl 6.05 (1)  no regular if his own level >= 9.0: +0.50% lvl 6.04 (1)  no fill-in rule at all: +1.72% lvl 6.93 (3)
+    whole position group: regular >= 1.1x his level: +0.007%  regular >= 1.2x his level: -0.110%  regular >= 1.3x his level: -0.142%  regular >= 1.5x his level: -0.089%  no regular if his own level >= 6.0: +0.100%  no regular if his own level >= 7.0: +0.011%  no regular if his own level >= 8.0: +0.027%  no regular if his own level >= 9.0: +0.031%  no fill-in rule at all: +0.106%
+    LEAVE-ONE-SEASON-OUT  -1.52%  seasons better 2/7  | top-150 weighted +0.84%  rank order +nan  | picks ['regular >= 1.3x his level', 'regular >= 1.3x his level', 'regular >= 1.3x his level', 'regular >= 1.2x his level', 'regular >= 1.3x his level', 'regular >= 1.3x his level', 'regular >= 1.3x his level']
+    FORWARD 2022-25       +0.59%  seasons better 1/4  | top-150 weighted +1.36%  | picks ['regular >= 1.2x his level', 'regular >= 1.3x his level', 'regular >= 1.3x his level', 'regular >= 1.3x his level']
+    -> FAIL (best pooled: regular >= 1.3x his level)
+
+  ROS WR: who counts as a regular   (rows touched 551; actual 5.96, base 5.79)
+    pooled on touched rows (seasons better): regular >= 1.1x his level: -1.55% lvl 5.82 (3)  regular >= 1.2x his level: +0.82% lvl 5.87 (2)  regular >= 1.3x his level: +1.10% lvl 5.91 (2)  regular >= 1.5x his level: +1.33% lvl 5.93 (2)  no regular if his own level >= 6.0: +2.83% lvl 5.98 (2)  no regular if his own level >= 7.0: +0.92% lvl 5.93 (2)  no regular if his own level >= 8.0: +3.63% lvl 5.87 (1)  no regular if his own level >= 9.0: +2.93% lvl 5.83 (0)  no fill-in rule at all: +6.30% lvl 6.31 (1)
+    whole position group: regular >= 1.1x his level: -0.167%  regular >= 1.2x his level: +0.088%  regular >= 1.3x his level: +0.118%  regular >= 1.5x his level: +0.143%  no regular if his own level >= 6.0: +0.304%  no regular if his own level >= 7.0: +0.099%  no regular if his own level >= 8.0: +0.390%  no regular if his own level >= 9.0: +0.315%  no fill-in rule at all: +0.677%
+    LEAVE-ONE-SEASON-OUT  +0.03%  seasons better 2/7  | top-150 weighted -1.49%  rank order +nan  | picks ['wired regular rule', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level']
+    FORWARD 2022-25       -0.32%  seasons better 2/4  | top-150 weighted -2.28%  | picks ['regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'regular >= 1.1x his level']
+    -> FAIL (best pooled: regular >= 1.1x his level)
+
+  NEXT GAME WR: who counts as a regular   (rows touched 557; actual 5.45, base 5.32)
+    pooled on touched rows (seasons better): regular >= 1.1x his level: +0.05% lvl 5.35 (2)  regular >= 1.2x his level: +1.08% lvl 5.41 (2)  regular >= 1.3x his level: +1.19% lvl 5.45 (2)  regular >= 1.5x his level: +0.94% lvl 5.48 (3)  no regular if his own level >= 6.0: +0.32% lvl 5.53 (2)  no regular if his own level >= 7.0: +0.03% lvl 5.46 (4)  no regular if his own level >= 8.0: +1.08% lvl 5.40 (1)  no regular if his own level >= 9.0: +1.09% lvl 5.36 (0)  no fill-in rule at all: +2.31% lvl 5.92 (1)
+    whole position group: regular >= 1.1x his level: +0.004%  regular >= 1.2x his level: +0.087%  regular >= 1.3x his level: +0.096%  regular >= 1.5x his level: +0.076%  no regular if his own level >= 6.0: +0.026%  no regular if his own level >= 7.0: +0.002%  no regular if his own level >= 8.0: +0.087%  no regular if his own level >= 9.0: +0.088%  no fill-in rule at all: +0.186%
+    LEAVE-ONE-SEASON-OUT  +0.56%  seasons better 0/7  | top-150 weighted +3.62%  rank order +nan  | picks ['wired regular rule', 'no regular if his own level >= 7.0', 'regular >= 1.1x his level', 'regular >= 1.1x his level', 'wired regular rule', 'wired regular rule', 'wired regular rule']
+    FORWARD 2022-25       +0.28%  seasons better 0/4  | top-150 weighted +1.83%  | picks ['regular >= 1.1x his level', 'no regular if his own level >= 6.0', 'regular >= 1.1x his level', 'wired regular rule']
+    -> FAIL (best pooled: wired regular rule)
+
+--- level on the rows each variant gives back (wired rescaled them, variant does not), rest of season ---
+    regular >= 1.1x his level          n   48  actual  8.77  wired  7.15  variant  7.57   error  -6.81%
+    regular >= 1.2x his level          n   97  actual  7.85  wired  7.31  variant  7.90   error  +4.31%
+    regular >= 1.3x his level          n  155  actual  7.41  wired  6.91  variant  7.47   error  +1.59%
+    regular >= 1.5x his level          n  239  actual  6.76  wired  6.54  variant  7.11   error  +6.14%
+    no regular if his own level >= 6.0 n  275  actual  7.06  wired  7.14  variant  7.88   error +12.74%
+    no regular if his own level >= 7.0 n  197  actual  7.27  wired  7.24  variant  8.04   error  +8.71%
+    no regular if his own level >= 8.0 n  104  actual  7.35  wired  7.81  variant  8.61   error +14.69%
+    no regular if his own level >= 9.0 n   64  actual  7.56  wired  8.16  variant  9.11   error +21.56%
+    no fill-in rule at all             n  793  actual  6.00  wired  6.00  variant  6.61   error  +9.64%
+
+--- who the 1.2x rule releases (player-seasons, RB/WR) ---
+    2019 WR DeVante Parker           rows  8  actual 13.40  wired  6.29  variant  6.84
+    2019 WR James Washington         rows  2  actual  8.23  wired  5.15  variant  5.17
+    2020 WR Breshad Perriman         rows  4  actual  4.10  wired  6.38  variant  6.53
+    2020 WR Darius Slayton           rows  7  actual  5.11  wired  8.81  variant  9.69
+    2020 RB Devontae Booker          rows  2  actual  2.32  wired  4.37  variant  5.01
+    2020 RB James Robinson           rows  1  actual 13.54  wired 12.57  variant 12.79
+    2021 RB Cordarrelle Patterson    rows  7  actual 10.43  wired  8.28  variant  8.85
+    2021 WR Darius Slayton           rows  5  actual  1.97  wired  5.59  variant  5.82
+    2021 WR Michael Gallup           rows  2  actual  6.38  wired  8.45  variant  9.33
+    2022 WR Christian Watson         rows  3  actual 11.40  wired  6.76  variant  7.48
+    2022 WR Curtis Samuel            rows  5  actual  7.71  wired  7.14  variant  7.83
+    2022 WR DeVante Parker           rows  4  actual  3.39  wired  5.51  variant  6.09
+    2022 RB J.D. McKissic            rows  2  actual  2.38  wired  4.98  variant  6.03
+    2022 WR Marquise Brown           rows  5  actual  7.72  wired  9.40  variant 10.81
+    2023 WR Darius Slayton           rows  4  actual  9.63  wired  5.53  variant  5.62
+    2023 RB David Montgomery         rows  5  actual 12.24  wired 13.08  variant 14.07
+    2023 WR Isaiah Hodgins           rows  1  actual  4.30  wired  3.81  variant  3.84
+    2023 WR Wan'Dale Robinson        rows  6  actual  8.10  wired  5.58  variant  5.82
+    2023 WR Zay Flowers              rows  7  actual 11.62  wired  9.55  variant 10.01
+    2024 WR Kendrick Bourne          rows  2  actual  4.48  wired  5.44  variant  5.80
+    2024 WR Khalil Shakir            rows  4  actual  9.05  wired  7.77  variant  8.29
+    2024 WR Rome Odunze              rows  8  actual  7.28  wired  7.14  variant  8.00
+    2024 WR Trey Palmer              rows  2  actual  1.43  wired  3.35  variant  3.55
+    2025 WR Calvin Austin III        rows  1  actual  1.72  wired  4.76  variant  4.99

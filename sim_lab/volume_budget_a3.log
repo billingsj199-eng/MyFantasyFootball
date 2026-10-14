@@ -1,0 +1,23 @@
+=== A3a walk-forward by week bucket, next-game xFP (budget BEST vs engine read) ===
+  weeks 2-4                                                  n  1762 MSE -16.67% (7/7, fwd 4/4) MAE  -7.13% rho 0.3174->0.3355 | 2019 -9.89% 2020 -24.79% 2021 -17.58% 2022 -22.77% 2023 -13.53% 2024 -15.78% 2025 -9.98%
+  weeks 5-8                                                  n  2117 MSE  -6.11% (7/7, fwd 4/4) MAE  -3.52% rho 0.4076->0.4262 | 2019 -6.38% 2020 -8.57% 2021 -3.11% 2022 -11.75% 2023 -5.14% 2024 -6.68% 2025 -2.01%
+  weeks 9-13                                                 n  2613 MSE  -1.29% (5/7, fwd 3/4) MAE  -0.70% rho 0.4516->0.4720 | 2019 +1.74% 2020 -2.68% 2021 -4.94% 2022 -0.09% 2023 +0.63% 2024 -0.98% 2025 -2.70%
+  weeks 14-18                                                n  2015 MSE  -3.85% (6/7, fwd 3/4) MAE  -2.03% rho 0.4481->0.4812 | 2019 -9.81% 2020 -3.79% 2021 -1.87% 2022 +2.58% 2023 -4.35% 2024 -5.83% 2025 -4.38%
+  position RB                                                n  3464 MSE  -8.61% (7/7, fwd 4/4) MAE  -4.60% rho 0.5317->0.5760 | 2019 -7.40% 2020 -13.84% 2021 -8.23% 2022 -9.46% 2023 -8.69% 2024 -9.57% 2025 -2.38%
+  position WR                                                n  3896 MSE  -6.01% (7/7, fwd 4/4) MAE  -1.86% rho 0.3464->0.3613 | 2019 -3.49% 2020 -8.24% 2021 -5.87% 2022 -10.79% 2023 -2.41% 2024 -5.69% 2025 -6.41%
+  position TE                                                n  1147 MSE  -7.56% (7/7, fwd 4/4) MAE  -3.69% rho 0.3583->0.3654 | 2019 -7.95% 2020 -6.84% 2021 -11.96% 2022 -5.58% 2023 -9.75% 2024 -5.76% 2025 -3.60%
+
+=== A3b rest-of-season xFP/g (mean of remaining games) ===
+  budget BEST vs season-to-date xFP/g (ROS volume)           n  4560 MSE  -7.62% (6/7, fwd 4/4) MAE  -4.38% rho 0.5885->0.6038 | 2019 +12.32% 2020 -10.60% 2021 -7.08% 2022 -10.92% 2023 -7.20% 2024 -11.89% 2025 -13.06%
+  budget no-renorm vs season-to-date (ROS volume)            n  4560 MSE -11.07% (6/7, fwd 4/4) MAE  -6.01% rho 0.5885->0.6087 | 2019 +1.66% 2020 -17.31% 2021 -11.78% 2022 -16.03% 2023 -11.07% 2024 -9.46% 2025 -12.02%
+
+=== A3c game-script tilt on TEAM volume (fit on training seasons), next-game xFP vs BEST ===
+  fold 2019: targets b_spread -0.0016 b_total +0.0061 | carries b_spread -0.0041 b_total -0.0068
+  fold 2020: targets b_spread -0.0014 b_total +0.0058 | carries b_spread -0.0038 b_total -0.0068
+  fold 2021: targets b_spread -0.0020 b_total +0.0055 | carries b_spread -0.0029 b_total -0.0061
+  fold 2022: targets b_spread -0.0020 b_total +0.0060 | carries b_spread -0.0037 b_total -0.0065
+  fold 2023: targets b_spread -0.0020 b_total +0.0067 | carries b_spread -0.0034 b_total -0.0070
+  fold 2024: targets b_spread -0.0024 b_total +0.0065 | carries b_spread -0.0026 b_total -0.0067
+  fold 2025: targets b_spread -0.0019 b_total +0.0054 | carries b_spread -0.0034 b_total -0.0066
+  BEST + script tilt (LOYO-fit) vs BEST                      n  8507 MSE  +0.12% (3/7, fwd 2/4) MAE  +0.02% rho 0.4357->0.4388 | 2019 -0.07% 2020 +0.33% 2021 +0.45% 2022 +0.57% 2023 +0.50% 2024 -0.39% 2025 -0.53%
+  BEST + script tilt vs engine read                          n  8507 MSE  -7.10% (7/7, fwd 4/4) MAE  -3.19% rho 0.4133->0.4388 | 2019 -5.70% 2020 -10.38% 2021 -7.23% 2022 -9.25% 2023 -5.01% 2024 -7.33% 2025 -5.30%

@@ -1,0 +1,49 @@
+{
+ "names": [
+  "const",
+  "log market rank",
+  "log sim rank (quality)",
+  "RB",
+  "WR",
+  "TE",
+  "age x QB",
+  "age x RB",
+  "age x WR",
+  "age x TE",
+  "rookie",
+  "log rookie pick",
+  "breakout",
+  "injured",
+  "moved",
+  "deal_big",
+  "deal_small",
+  "deal_newteam",
+  "walk"
+ ],
+ "coef": [
+  1.67938,
+  0.37367,
+  0.21003,
+  0.14056,
+  -0.03577,
+  0.03156,
+  0.00424,
+  0.01571,
+  0.03502,
+  -0.0011,
+  -0.30607,
+  0.03667,
+  -0.07303,
+  0.11187,
+  -0.08933,
+  -0.15167,
+  -0.00297,
+  0.24708,
+  0.09553
+ ],
+ "years": [
+  2016,
+  2023
+ ],
+ "truth": "log rank of realized 5yr+youth VOR"
+}

@@ -1,0 +1,36 @@
+slow-rookie WRs drafted 2018-22: 68, bounced back 11 (16%); picks 1-64: 9 (78% bounced)
+
+=== signal alone: AUC for bounce-back (all / picks 1-100) ===
+  pk        all 0.882   picks<=100 0.819   n 68
+  jm        all 0.779   picks<=100 0.778   n 41
+  vac       all 0.418   picks<=100 0.667   n 21
+  vac_same  all 0.500   picks<=100 0.500   n 21
+  new_hc    all 0.468   picks<=100 0.500   n 21
+  new_pc    all 0.527   picks<=100 0.278   n 21
+  moved     all 0.500   picks<=100 0.500   n 20
+  dc1       all 0.703   picks<=100 0.736   n 68
+  tgt4      all 0.858   picks<=100 0.889   n 68
+  snap4     all 0.894   picks<=100 0.894   n 68
+  xfp4      all 0.921   picks<=100 0.926   n 68
+  wopr4     all 0.910   picks<=100 0.926   n 68
+
+=== beyond pedigree: leave-one-year-out logistic AUC, base = pk + jm (jm missing -> group mean) ===
+  base pk+jm: 0.836
+  + vac       0.665
+  + vac_same  0.836
+  + new_hc    0.841
+  + new_pc    0.788
+  + moved     0.836
+  + dc1       0.825
+  + tgt4      0.888
+  + snap4     0.887
+  + xfp4      0.909
+  + wopr4     0.904
+  + early (tgt4+snap4+xfp4): 0.893
+  + preseason (vac+vac_same+new_pc+dc1): 0.687
+
+=== bounce-back rate by early target share (through week 4 of year 2) ===
+  tgt share 0.00-0.05: n 45  bounced 2%  dalton schultz 2019
+  tgt share 0.05-0.12: n 15  bounced 33%  dallas goedert 2019, mike gesicki 2019, dawson knox 2020, hayden hurst 2019, trey mcbride 2023
+  tgt share 0.12-0.18: n 5   bounced 40%  tj hockenson 2020, cole kmet 2021
+  tgt share 0.18-1.00: n 3   bounced 100%  mark andrews 2019, noah fant 2020, jake ferguson 2023

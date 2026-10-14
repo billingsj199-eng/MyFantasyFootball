@@ -1,0 +1,47 @@
+=== QB x VACATED TARGET SHARE: 1,566 top-150 QB rows 2019-25, 1,423 with a receiver read ===
+
+--- 1  BIAS: actual / base (1.00 = the projection is right) ---
+  nobody out         n  995 act 19.08 base 19.07 -> 1.001 | under 1 in 2/7 | 2019:1.02(n122) 2020:1.02(n106) 2021:1.00(n138) 2022:1.03(n140) 2023:0.98(n148) 2024:1.01(n172) 2025:0.95(n169)
+  any regular out    n  428 act 18.74 base 18.58 -> 1.008 | under 1 in 3/7 | 2019:1.06(n50) 2020:1.05(n43) 2021:0.90(n59) 2022:0.92(n56) 2023:0.94(n53) 2024:1.06(n86) 2025:1.08(n81)
+  vacated .10-.20    n  232 act 18.40 base 18.66 -> 0.986 | under 1 in 4/7 | 2019:1.01(n24) 2020:0.95(n21) 2021:0.92(n33) 2022:0.84(n32) 2023:0.98(n33) 2024:1.08(n50) 2025:1.06(n39)
+  vacated .20-.30    n  116 act 19.34 base 18.86 -> 1.025 | under 1 in 2/7 | 2019:1.11(n14) 2020:1.18(n11) 2021:0.82(n14) 2022:1.00(n14) 2023:0.72(n13) 2024:1.05(n23) 2025:1.16(n27)
+  vacated .30-.40    n   49 act 18.48 base 17.85 -> 1.035 | under 1 in 1/7 | 2019:1.09(n6) 2020:1.15(n6) 2021:1.06(n4) 2022:1.04(n7) 2023:1.03(n5) 2024:0.94(n10) 2025:1.03(n11)
+  vacated .40+       n   31 act 19.42 base 18.07 -> 1.075 | under 1 in 2/4 | 2019:1.07(n6) 2020:1.04(n5) 2021:0.91(n8) 2025:0.98(n4)
+  2+ regulars out    n   63 act 19.47 base 18.49 -> 1.053 | under 1 in 3/7 | 2019:0.93(n7) 2020:0.93(n9) 2021:0.84(n11) 2022:1.11(n7) 2023:1.21(n4) 2024:1.28(n10) 2025:1.11(n15)
+  3+ regulars out    n4
+  vac .30+ QB ADP <= 60    n  16 -> 1.050
+  vac .30+ QB ADP 61-150   n  64 -> 1.051
+
+--- 1b  HEALTHY PASS CATCHERS (summed per team-week, all of them with base >= 1): actual / base ---
+  nobody out         team-weeks   995 -> receivers 0.991 | 2019:0.97 2020:1.01 2021:1.00 2022:0.99 2023:0.95 2024:0.99 2025:1.02
+  any regular out    team-weeks   427 -> receivers 1.054 | 2019:1.00 2020:1.07 2021:0.99 2022:1.07 2023:1.03 2024:1.07 2025:1.10
+  vacated .10-.20    team-weeks   232 -> receivers 1.025 | 2019:1.00 2020:1.05 2021:1.00 2022:1.03 2023:0.94 2024:1.06 2025:1.07
+  vacated .20-.30    team-weeks   116 -> receivers 1.075 | 2019:1.02 2020:1.05 2021:0.91 2022:1.10 2023:1.06 2024:1.10 2025:1.15
+  vacated .30-.40    team-weeks    49 -> receivers 1.085 | 2019:0.72 2020:1.20 2021:1.12 2022:1.11 2023:1.39 2024:1.02 2025:1.06
+  vacated .40+       team-weeks    30 -> receivers 1.234 | 2019:1.32 2020:1.00 2021:0.98 2022:1.50 2023:1.64 2024:1.34 2025:1.26
+  2+ regulars out    team-weeks    62 -> receivers 1.170 | 2019:1.02 2020:0.99 2021:0.96 2022:1.21 2023:1.72 2024:1.22 2025:1.20
+  vacated .30+       top remaining receiver 1.041 | everyone else 1.199
+  2+ regulars out    top remaining receiver 1.115 | everyone else 1.206
+
+--- 2  DOCKS on the event rows, graded on all top-150 QB rows; LOYO + forward, bar 5/7 + 3/4 ---
+
+  vacated >= .30 (touched 80, actual/base on them 1.051)
+    fixed: x0.97: +0.11%  x0.95: +0.21%  x0.92: +0.40%  x0.88: +0.72%  1-0.15xvac: +0.29%  1-0.25xvac: +0.59%  1-0.35xvac: +0.97%
+    rank vs off (rho 0.3391, pairs 61.50%): x0.97: rho -0.0018 pairs -0.04  x0.95: rho -0.0014 pairs +0.01  x0.92: rho -0.0061 pairs -0.20  x0.88: rho -0.0090 pairs -0.34  1-0.15xvac: rho -0.0038 pairs -0.11  1-0.25xvac: rho -0.0079 pairs -0.27  1-0.35xvac: rho -0.0115 pairs -0.46
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  vacated >= .40 (touched 31, actual/base on them 1.075)
+    fixed: x0.97: +0.06%  x0.95: +0.12%  x0.92: +0.21%  x0.88: +0.37%  1-0.15xvac: +0.19%  1-0.25xvac: +0.38%  1-0.35xvac: +0.61%
+    rank vs off (rho 0.3391, pairs 61.50%): x0.97: rho -0.0018 pairs -0.04  x0.95: rho -0.0014 pairs -0.01  x0.92: rho -0.0046 pairs -0.16  x0.88: rho -0.0052 pairs -0.18  1-0.15xvac: rho -0.0035 pairs -0.11  1-0.25xvac: rho -0.0061 pairs -0.22  1-0.35xvac: rho -0.0081 pairs -0.31
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.00% 0/4 | picks ['off', 'off', 'off', 'off']
+    -> FAIL
+
+  2+ regulars out (touched 63, actual/base on them 1.053)
+    fixed: x0.97: +0.14%  x0.95: +0.26%  x0.92: +0.47%  x0.88: +0.82%  1-0.15xvac: +0.29%  1-0.25xvac: +0.56%  1-0.35xvac: +0.89%
+    rank vs off (rho 0.3391, pairs 61.50%): x0.97: rho -0.0010 pairs -0.05  x0.95: rho -0.0013 pairs -0.06  x0.92: rho -0.0056 pairs -0.21  x0.88: rho -0.0095 pairs -0.44  1-0.15xvac: rho -0.0032 pairs -0.14  1-0.25xvac: rho -0.0068 pairs -0.27  1-0.35xvac: rho -0.0111 pairs -0.47
+    LOYO +0.00% 0/7 | board +0.000% | picks ['off', 'off', 'off', 'off', 'off', 'off', 'off']
+    FWD  +0.17% 0/4 | picks ['x0.92', 'off', 'off', 'off']
+    -> FAIL

@@ -1,0 +1,47 @@
+touched WR/TE rows (team had a WR out): 1844 (WR 1159, TE 685); WR board rows 6954
+  actual / projection: old harness pool 1.007 | engine v2.13 form 1.015
+    healthy WR rank 1 (h1)         n  551  act 10.03  engine 10.11 (gain over own +0.15)  act/eng 0.993  seasons under 3/7
+    h2                             n  337  act  7.99  engine  7.95 (gain over own +0.68)  act/eng 1.005  seasons under 4/7
+    h3                             n   99  act  6.11  engine  6.23 (gain over own +0.86)  act/eng 0.981  seasons under 4/7
+    h4+                            n   15  act  2.42  engine  5.07 (gain over own +0.54)  act/eng 0.477  seasons under 0/7
+    TE                             n  685  act  6.61  engine  6.24 (gain over own +0.10)  act/eng 1.060  seasons under 3/7
+      lead out: h1                 n  110  act  8.22  engine  9.19 (gain over own +0.75)  act/eng 0.894  seasons under 0/7
+      lead out: h2                 n   65  act  7.06  engine  7.94 (gain over own +1.28)  act/eng 0.889  seasons under 1/7
+      sec out: h1                  n  441  act 10.49  engine 10.33 (gain over own +0.00)  act/eng 1.015  seasons under 4/7
+      sec out: h2                  n  272  act  8.21  engine  7.96 (gain over own +0.53)  act/eng 1.032  seasons under 4/7
+      sec out: h3                  n   81  act  6.15  engine  6.17 (gain over own +0.76)  act/eng 0.996  seasons under 3/7
+    slides into the absent's slot  n  292  act  7.56  engine  7.66 (gain over own +0.57)  act/eng 0.986  seasons under 3/7
+    two+ WRs out                   n  105  act  7.79  engine  7.45 (gain over own +0.47)  act/eng 1.046  seasons under 4/7
+    reference: WR rows with no WR out  act/eng 0.967
+
+=== (a) data-fitted healthy-rank shares (training seasons) x scale ===
+  LOYO: touched MSE -0.04% (4/7), MAE -0.69% (6/7) | WR board MSE -0.010%, MAE -0.173% | picks [1.0, 0.5, 1.5, 1.0, 1.0, 0.5, 1.0]
+  FORWARD: touched MSE +0.11% (2/4), MAE -0.87% (3/4) | WR board MSE +0.029%, MAE -0.217% | picks [2.0, 0.5, 0.5, 1.0]
+  full-sample data shares: lead [0.07, 0.097, 0.003, 0.017]  sec [0.0, 0.033, 0.021, 0.004]
+
+=== (b) gain cap max(own, C) for healthy WR rank 1 ===
+  LOYO: touched MSE +0.00% (0/7), MAE +0.00% (0/7) | WR board MSE +0.000%, MAE +0.000% | picks [None, None, None, None, None, None, None]
+  FORWARD: touched MSE +0.00% (0/4), MAE +0.00% (0/4) | WR board MSE +0.000%, MAE +0.000% | picks [None, None, None, None]
+
+=== (c) WR who slides into the absent's slot: shrunk multiplier ===
+  LOYO: touched MSE +0.06% (4/7), MAE -0.02% (5/7) | WR board MSE +0.015%, MAE -0.005% | picks [0.994, 0.963, 0.998, 0.985, 1.002, 0.972, 0.994]
+  FORWARD: touched MSE +0.01% (1/4), MAE -0.02% (2/4) | WR board MSE +0.003%, MAE -0.005% | picks [1.001, 1.001, 0.979, 0.994]
+
+=== (c2) healthy WR rank 1 when the LEAD is out: shrunk multiplier ===
+  LOYO: touched MSE -0.09% (3/7), MAE -0.17% (6/7) | WR board MSE -0.022%, MAE -0.043% | picks [0.906, 0.904, 0.925, 0.933, 0.902, 0.913, 0.907]
+  FORWARD: touched MSE -0.12% (2/4), MAE -0.19% (4/4) | WR board MSE -0.031%, MAE -0.048% | picks [0.937, 0.897, 0.909, 0.907]
+
+=== (d) sec-rule h2/h3 shares cut (grid .11/.15, .05/.08, .03/.03, 0/0) ===
+  LOYO: touched MSE +0.20% (0/7), MAE -0.03% (2/7) | WR board MSE +0.050%, MAE -0.008% | picks [(0.05, 0.08), (0.05, 0.08), (0.11, 0.15), (0.11, 0.15), (0.11, 0.15), (0.03, 0.03), (0.11, 0.15)]
+  FORWARD: touched MSE +0.18% (0/4), MAE +0.00% (0/4) | WR board MSE +0.048%, MAE +0.001% | picks [(0.11, 0.15), (0.11, 0.15), (0.03, 0.03), (0.11, 0.15)]
+  fixed (touched MSE / MAE): (0.11, 0.15) +0.00%/+0.00%  (0.05, 0.08) -0.00%/-0.34%  (0.03, 0.03) +0.03%/-0.47%  (0.0, 0.0) +0.12%/-0.60%
+
+=== (e) lead out: healthy WR rank 1-2 shrunk multiplier (one cell) ===
+  LOYO: touched MSE -0.18% (4/7), MAE -0.37% (6/7) | WR board MSE -0.047%, MAE -0.093% | picks [0.903, 0.896, 0.919, 0.919, 0.894, 0.89, 0.916]
+  FORWARD: touched MSE -0.22% (3/4), MAE -0.44% (4/4) | WR board MSE -0.059%, MAE -0.109% | picks [0.914, 0.887, 0.903, 0.916]
+
+=== (f) lead-rule h1/h2 shares cut (.09/.15, .05/.08, 0/0) ===
+  LOYO: touched MSE -0.01% (5/7), MAE -0.24% (6/7) | WR board MSE -0.001%, MAE -0.060% | picks [(0.05, 0.08), (0.05, 0.08), (0.05, 0.08), (0.05, 0.08), (0.05, 0.08), (0.0, 0.0), (0.05, 0.08)]
+  FORWARD: touched MSE -0.08% (2/4), MAE -0.36% (4/4) | WR board MSE -0.023%, MAE -0.090% | picks [(0.05, 0.08), (0.0, 0.0), (0.05, 0.08), (0.05, 0.08)]
+  fixed (touched MSE / MAE): (0.09, 0.15) +0.00%/+0.00% seasons 0/7  (0.05, 0.08) -0.10%/-0.25% seasons 5/7  (0.0, 0.0) -0.03%/-0.42% seasons 4/7
+  lead-out h1/h2 act/eng by season: 2019:0.91(n12) 2020:0.98(n18) 2021:0.81(n27) 2022:0.81(n26) 2023:0.96(n29) 2024:0.97(n33) 2025:0.83(n30)

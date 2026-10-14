@@ -92,6 +92,12 @@ def main():
             f.write(f"##### {script} --week {wk}\n{r.stdout}\n{r.stderr}\n")
             if r.returncode != 0:
                 print(f"{script} exit {r.returncode}: {(r.stderr or '')[-300:]}")
+        # REST-OF-SEASON LOCKS (2026-10-09): every lock on disk vs the games played since (incl. the shadow QB floor line);
+        # no --week here - '--week N' would pick the lock frozen this week, which has no later games yet
+        r = subprocess.run([sys.executable, os.path.join(HERE, "grade_ros_lock.py")], capture_output=True, text=True, encoding="utf-8", env=env, cwd=HERE)
+        f.write(f"##### grade_ros_lock.py (all locks, 3+ games since)\n{r.stdout}\n{r.stderr}\n")
+        if r.returncode != 0:
+            print(f"grade_ros_lock.py exit {r.returncode}: {(r.stderr or '')[-300:]}")
     print(f"scorecard W{wk} -> {outdir}\\w{wk}.log")
     # slow weekly knob update (per-position market weight + sigma), shrunk to priors
     r = subprocess.run([sys.executable, os.path.join(HERE, "tune_weekly.py")], capture_output=True, text=True, encoding="utf-8", env=env, cwd=HERE)

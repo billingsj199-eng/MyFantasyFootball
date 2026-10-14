@@ -1,0 +1,13 @@
+league        method                      T3 Sp   top36  T5 Sp   top36  corr A,B
+12-team 1QB   A trained for the league    0.515   71.5%  0.506   66.0%
+12-team 1QB   B client-side (quintiles)   0.487   71.5%  0.462   66.0%     0.959
+12-team 1QB   H hybrid (12-team x ratio)  0.512   71.5%  0.497   65.6%     0.989
+12-team SF    A trained for the league    0.562   70.9%  0.558   67.7%
+12-team SF    B client-side (quintiles)   0.550   70.0%  0.537   67.7%     0.968
+12-team SF    H hybrid (12-team x ratio)  0.551   69.6%  0.549   67.4%     0.964
+10-team 1QB   A trained for the league    0.513   71.0%  0.501   66.5%
+10-team 1QB   B client-side (quintiles)   0.486   70.3%  0.457   65.4%     0.944
+10-team 1QB   H hybrid (12-team x ratio)  0.506   71.1%  0.484   66.2%     0.969
+14-team 1QB   A trained for the league    0.522   72.1%  0.507   67.9%
+14-team 1QB   B client-side (quintiles)   0.491   71.5%  0.464   66.8%     0.958
+14-team 1QB   H hybrid (12-team x ratio)  0.518   72.7%  0.503   67.1%     0.978

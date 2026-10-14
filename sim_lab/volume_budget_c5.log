@@ -1,0 +1,19 @@
+=== C5a big vacancy boosts (pool mult >= 1.3, Kamara-size) by games already seen without the absent regular, next game ===
+  seen 0-0: n49 pm 1.51 act/shadow 1.136 act/no-pool 1.519 act/alloc-e1 1.005
+  seen 1-2: n62 pm 1.47 act/shadow 1.190 act/no-pool 1.567 act/alloc-e1 1.190
+  seen 3-20: n54 pm 1.42 act/shadow 0.963 act/no-pool 1.243 act/alloc-e1 1.044
+
+=== C5b hybrid: allocation (budget renorm) for the NEXT game + pool faded by seen games for later weeks ===
+  allocation e1 replacing pool (next game)                   n  8507 MSE  -0.39% (5/7, fwd 3/4) MAE  -0.14% rho 0.4272->0.4320 | 2019 +0.02% 2020 -0.27% 2021 -0.22% 2022 +0.38% 2023 -1.18% 2024 -0.23% 2025 -0.99%
+    ADP 1-60 rows                                            n  4093 MSE  -0.23% (3/7, fwd 2/4) MAE  -0.00% rho 0.2728->0.2751 | 2019 +0.02% 2020 -0.04% 2021 +0.15% 2022 +0.63% 2023 -1.29% 2024 +0.24% 2025 -1.08%
+  pool faded max(0,1-seen/4) (ROS)                           n  4560 MSE  -0.63% (6/7, fwd 3/4) MAE  -0.42% rho 0.6287->0.6316 | 2019 -0.08% 2020 -0.61% 2021 -1.71% 2022 -1.69% 2023 -0.25% 2024 +0.16% 2025 -0.70%
+
+=== C5c forecastable-pattern multipliers (fit on training seasons, LOYO): blowout last game, QB change ===
+  blowout last game (any) next                       board -0.133% (7/7) fwd 4/4 | flagged rows -0.60% n1760
+  blowout last game (any) ROS                        board -0.576% (6/7) fwd 4/4 | flagged rows -2.61% n1002
+  blowout WIN last game next                         board -0.017% (5/7) fwd 3/4 | flagged rows -0.16% n912
+  blowout WIN last game ROS                          board -0.395% (6/7) fwd 3/4 | flagged rows -3.18% n529
+  blowout LOSS last game next                        board -0.112% (6/7) fwd 3/4 | flagged rows -0.92% n848
+  blowout LOSS last game ROS                         board -0.164% (6/7) fwd 4/4 | flagged rows -1.70% n473
+  QB change next game next                           board +0.008% (3/7) fwd 2/4 | flagged rows +0.05% n1420
+  QB change next game ROS                            board +0.033% (3/7) fwd 2/4 | flagged rows +0.21% n708

@@ -1,0 +1,18 @@
+pool with situation data: 483 player-seasons 2020-2023 (young 215); signal rates: vac 47%, new_hc 23%, new_pc 36%, team_change 8%, qb_chg 27%
+
+=== 1. residual log(realized rank / SIM rank) by signal (- = beat the sim) ===
+signal                                      T1 all            T1 young              T3 all            T3 young
+vacated share >= .15                -0.02  (n 149)       +0.10  (n 81)      -0.05  (n 149)       -0.06  (n 81)
+vacated share < .05                 +0.00  (n 272)      +0.11  (n 107)      +0.01  (n 272)      +0.02  (n 107)
+new head coach                      +0.06  (n 113)       +0.12  (n 54)      +0.04  (n 113)       +0.05  (n 54)
+new playcaller                      -0.06  (n 173)       +0.00  (n 84)      -0.03  (n 173)       -0.00  (n 84)
+changed teams                        -0.23  (n 38)                   —       -0.05  (n 38)                   —
+QB change (non-QB)                  +0.02  (n 129)       +0.23  (n 45)      +0.09  (n 129)       +0.32* (n 45)
+none of the above                   -0.05  (n 128)       +0.14  (n 51)      -0.10  (n 128)       -0.11  (n 51)
+
+=== 2. layer: adjusted sim = log sim rank - b . x, b by OLS on the residual, leave-one-year-out ===
+   season-Y VOR   all players  SIM 0.574 -> 0.557 (0/4)   FAIR 0.627 -> 0.624 (2/4)   b (vac, hc, pc, team, qb) median: +0.04, +0.17, -0.15, -0.33, +0.08
+   season-Y VOR   young only   SIM 0.574 -> 0.554 (0/4)   FAIR 0.627 -> 0.624 (1/4)   b (vac, hc, pc, team, qb) median: -0.04, +0.11, -0.26, -0.68, +0.13
+   3-season VOR   all players  SIM 0.629 -> 0.619 (0/4)   FAIR 0.656 -> 0.654 (2/4)   b (vac, hc, pc, team, qb) median: -0.25, +0.08, -0.07, -0.12, +0.14
+   3-season VOR   young only   SIM 0.629 -> 0.621 (1/4)   FAIR 0.656 -> 0.655 (1/4)   b (vac, hc, pc, team, qb) median: -0.26, +0.01, -0.11, -0.40, +0.37
+   b < 0 on a signal = it moves players UP (better than the sim ranked them)

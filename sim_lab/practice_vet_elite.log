@@ -1,0 +1,39 @@
+6328 report rows with age (regular starters 2019-25)
+
+Q1  how often listed starters sit WEDNESDAY (report day 1 = DNP), and how much of it is a rest tag
+  young <=25  Wed DNP  34.7% of 2051 listings; of those tagged rest   4.1%; Wed DNP then FULL by Friday  21.5%
+  26-29       Wed DNP  37.7% of 3076 listings; of those tagged rest  14.7%; Wed DNP then FULL by Friday  27.5%
+  vet 30+     Wed DNP  43.0% of 1201 listings; of those tagged rest  27.9%; Wed DNP then FULL by Friday  34.0%
+  elite       Wed DNP  36.4% of 2011 listings; of those tagged rest  14.8%; Wed DNP then FULL by Friday  27.5%
+  non-elite   Wed DNP  38.4% of 4317 listings; of those tagged rest  14.2%; Wed DNP then FULL by Friday  27.0%
+  elite vet   Wed DNP  37.6% of 354 listings; of those tagged rest  18.8%; Wed DNP then FULL by Friday  25.6%
+
+Q2  plays after a Wednesday DNP
+  young <=25  Wed DNP:  39.1% (n 711)   not rest:  37.1% (n 682)   DNP-LP-*:  85.1% (n 148)   DNP-DNP-*:  16.3% (n 491)
+  26-29       Wed DNP:  48.4% (n 1160)   not rest:  40.5% (n 990)   DNP-LP-*:  82.5% (n 263)   DNP-DNP-*:  23.5% (n 716)
+  vet 30+     Wed DNP:  58.8% (n 517)   not rest:  44.0% (n 373)   DNP-LP-*:  86.2% (n 94)   DNP-DNP-*:  32.8% (n 296)
+  elite       Wed DNP:  54.2% (n 732)   not rest:  47.1% (n 624)   DNP-LP-*:  87.7% (n 171)   DNP-DNP-*:  31.6% (n 453)
+  non-elite   Wed DNP:  45.1% (n 1656)   not rest:  36.9% (n 1421)   DNP-LP-*:  82.0% (n 334)   DNP-DNP-*:  19.2% (n 1050)
+  elite vet   Wed DNP:  65.4% (n 133)   not rest:  58.3% (n 108)   DNP-LP-*:  94.6% (n 37)   DNP-DNP-*:  44.2% (n 77)
+
+    final pattern x group (Questionable only)
+  DNP-LP-LP   Q: all  80.7% (n 171)  vet  69.6% (n 23)  young  89.1% (n 55)  elite  82.8% (n 64)
+  DNP-LP-FP   Q: all  90.9% (n 44)  vet 100.0% (n 9)  young  93.3% (n 15)  elite 100.0% (n 13)
+  DNP-DNP-LP  Q: all  75.6% (n 172)  vet  80.8% (n 26)  young  75.9% (n 58)  elite  77.6% (n 58)
+  DNP-DNP-DNP Q: all  29.8% (n 94)  vet  44.4% (n 9)  young  12.5% (n 24)  elite  42.9% (n 35)
+  LP-LP-LP    Q: all  70.6% (n 472)  vet  84.2% (n 76)  young  69.9% (n 173)  elite  72.1% (n 136)
+  LP-LP-FP    Q: all  93.6% (n 78)  vet  66.7% (n 6)  young  97.1% (n 34)  elite  95.5% (n 22)
+
+Q3  leave-one-season-out Brier: trajectory alone vs + group shift (shrunk K=60, by day and latest status)
+  vet 30+   day 1     : 0.1626 -> 0.1613 (-0.80%)
+  vet 30+   day 2     : 0.1187 -> 0.1177 (-0.86%)
+  vet 30+   day 3     : 0.0915 -> 0.0900 (-1.57%)
+  vet 30+   day 3 +des: 0.0649 -> 0.0647 (-0.35%)
+  elite     day 1     : 0.1626 -> 0.1617 (-0.54%)
+  elite     day 2     : 0.1187 -> 0.1174 (-1.14%)
+  elite     day 3     : 0.0915 -> 0.0900 (-1.64%)
+  elite     day 3 +des: 0.0649 -> 0.0645 (-0.57%)
+  rest tag  day 1     : 0.1626 -> 0.1507 (-7.32%)
+  rest tag  day 2     : 0.1187 -> 0.1113 (-6.31%)
+  rest tag  day 3     : 0.0915 -> 0.0823 (-10.01%)
+  rest tag  day 3 +des: 0.0649 -> 0.0633 (-2.44%)

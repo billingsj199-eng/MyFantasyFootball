@@ -1,0 +1,62 @@
+pool 1321 player-seasons 2016-2023
+variant                              n  beat FAIR (mean log rank resid, - = beat)     whole-board per-year Spearman
+strict age<=26 cap>=6% left>=2      42  r1 +0.42  r3 +0.34  r5 +0.44                  r1 k0 LOYO -0.0002 (0/8) | r3 k0 LOYO -0.0010 (0/8) | r5 k0 LOYO -0.0018 (0/6)
+strict age<=26 cap>=6% left>=1      42  r1 +0.42  r3 +0.34  r5 +0.44                  r1 k0 LOYO -0.0002 (0/8) | r3 k0 LOYO -0.0010 (0/8) | r5 k0 LOYO -0.0018 (0/6)
+strict age<=26 cap>=4% left>=2      50  r1 +0.28  r3 +0.22  r5 +0.31                  r1 k0.2 LOYO -0.0007 (5/8) | r3 k0.2 LOYO -0.0015 (5/8) | r5 k0.2 LOYO -0.0023 (4/6)
+strict age<=26 cap>=4% left>=1      50  r1 +0.28  r3 +0.22  r5 +0.31                  r1 k0.2 LOYO -0.0007 (5/8) | r3 k0.2 LOYO -0.0015 (5/8) | r5 k0.2 LOYO -0.0023 (4/6)
+strict age<=27 cap>=6% left>=2      77  r1 +0.39  r3 +0.31  r5 +0.43                  r1 k0.1 LOYO -0.0005 (1/8) | r3 k0.2 LOYO -0.0002 (4/8) | r5 k0 LOYO -0.0006 (0/6)
+strict age<=27 cap>=6% left>=1      87  r1 +0.30  r3 +0.24  r5 +0.37                  r1 k0.1 LOYO -0.0003 (2/8) | r3 k0.1 LOYO -0.0006 (1/8) | r5 k0 LOYO -0.0003 (0/6)
+strict age<=27 cap>=4% left>=2     100  r1 +0.19  r3 +0.17  r5 +0.25                  r1 k0.2 LOYO +0.0009 (4/8) | r3 k0.2 LOYO -0.0005 (2/8) | r5 k0.1 LOYO -0.0007 (0/6)
+strict age<=27 cap>=4% left>=1     111  r1 +0.12  r3 +0.12  r5 +0.23                  r1 k0.2 LOYO +0.0014 (5/8) | r3 k0.1 LOYO -0.0006 (2/8) | r5 k0.1 LOYO -0.0008 (0/6)
+loose age<=26 cap>=6% left>=2       97  r1 +0.37  r3 +0.32  r5 +0.27                  r1 k0 LOYO -0.0010 (0/8) | r3 k0 LOYO -0.0014 (0/8) | r5 k0.3 LOYO +0.0006 (4/6)
+loose age<=26 cap>=6% left>=1      103  r1 +0.38  r3 +0.35  r5 +0.36                  r1 k0.2 LOYO +0.0006 (5/8) | r3 k0.2 LOYO -0.0005 (3/8) | r5 k0.3 LOYO +0.0006 (4/6)
+loose age<=26 cap>=4% left>=2      125  r1 +0.22  r3 +0.17  r5 +0.14                  r1 k0.2 LOYO +0.0003 (5/8) | r3 k0.2 LOYO +0.0004 (5/8) | r5 k0.4 LOYO +0.0006 (5/6)
+loose age<=26 cap>=4% left>=1      140  r1 +0.24  r3 +0.20  r5 +0.21                  r1 k0.2 LOYO +0.0013 (4/8) | r3 k0.2 LOYO +0.0009 (5/8) | r5 k0.3 LOYO +0.0006 (5/6)
+loose age<=27 cap>=6% left>=2      136  r1 +0.35  r3 +0.29  r5 +0.28                  r1 k0.2 LOYO -0.0007 (0/8) | r3 k0.2 LOYO -0.0000 (3/8) | r5 k0.2 LOYO +0.0011 (4/6)
+loose age<=27 cap>=6% left>=1      151  r1 +0.32  r3 +0.27  r5 +0.32                  r1 k0.2 LOYO +0.0006 (5/8) | r3 k0.2 LOYO +0.0003 (4/8) | r5 k0.2 LOYO +0.0012 (4/6)
+loose age<=27 cap>=4% left>=2      186  r1 +0.16  r3 +0.14  r5 +0.13                  r1 k0.2 LOYO +0.0024 (5/8) | r3 k0.1 LOYO -0.0009 (2/8) | r5 k0.2 LOYO +0.0002 (3/6)
+loose age<=27 cap>=4% left>=1      213  r1 +0.15  r3 +0.13  r5 +0.17                  r1 k0.2 LOYO +0.0024 (4/8) | r3 k0.1 LOYO -0.0007 (3/8) | r5 k0.1 LOYO -0.0016 (1/6)
+
+strict age<=26 cap>=6% left>=2 — examples (FAIR rank in year -> realized season / 3yr rank):
+   2016 randall cobb          WR  age 26  deal 2015 4y 7.0% cap  FAIR #21   -> season #74   3yr #78
+   2016 ty hilton             WR  age 26  deal 2015 5y 9.1% cap  FAIR #22   -> season #12   3yr #20
+   2017 keenan allen          WR  age 25  deal 2016 4y 7.2% cap  FAIR #52   -> season #8    3yr #9
+   2018 deandre hopkins       WR  age 26  deal 2017 5y 9.7% cap  FAIR #5    -> season #5    3yr #5
+   2018 keenan allen          WR  age 26  deal 2016 4y 7.2% cap  FAIR #10   -> season #24   3yr #16
+   2018 davante adams         WR  age 25  deal 2017 4y 8.7% cap  FAIR #16   -> season #8    3yr #4
+   2018 allen hurns           WR  age 26  deal 2016 4y 6.4% cap  FAIR #141  -> season #142  3yr #149
+   2019 davante adams         WR  age 26  deal 2017 4y 8.7% cap  FAIR #7    -> season #49   3yr #2
+   2019 odell beckham         WR  age 26  deal 2018 5y 10.2% cap  FAIR #8    -> season #50   3yr #75
+   2019 mike evans            WR  age 26  deal 2018 5y 9.3% cap  FAIR #11   -> season #33   3yr #15
+   2019 todd gurley           RB  age 25  deal 2018 4y 8.1% cap  FAIR #12   -> season #42   3yr #60
+   2019 stefon diggs          WR  age 25  deal 2018 5y 8.1% cap  FAIR #20   -> season #48   3yr #9
+   2019 brandin cooks         WR  age 25  deal 2018 5y 9.1% cap  FAIR #29   -> season #92   3yr #41
+   2019 jarvis landry         WR  age 26  deal 2018 5y 8.5% cap  FAIR #37   -> season #29   3yr #52
+   2019 allen robinson        WR  age 26  deal 2018 3y 7.9% cap  FAIR #69   -> season #17   3yr #31
+   2019 sammy watkins         WR  age 26  deal 2018 3y 9.0% cap  FAIR #87   -> season #102  3yr #114
+   2019 tyler lockett         WR  age 26  deal 2018 3y 6.0% cap  FAIR #90   -> season #30   3yr #16
+   2020 ezekiel elliott       RB  age 25  deal 2019 6y 8.0% cap  FAIR #3    -> season #30   3yr #27
+   2020 tyreek hill           WR  age 26  deal 2019 3y 9.6% cap  FAIR #8    -> season #5    3yr #3
+   2020 stefon diggs          WR  age 26  deal 2018 5y 8.1% cap  FAIR #36   -> season #6    3yr #4
+   2020 todd gurley           RB  age 26  deal 2018 4y 8.1% cap  FAIR #46   -> season #68   3yr #89
+   2020 brandin cooks         WR  age 26  deal 2018 5y 9.1% cap  FAIR #78   -> season #34   3yr #44
+   2020 jared goff            QB  age 25  deal 2019 4y 17.8% cap  FAIR #99   -> season #114  3yr #79
+   2021 christian mccaffrey   RB  age 25  deal 2020 4y 8.1% cap  FAIR #1    -> season #73   3yr #7
+   2021 dalvin cook           RB  age 26  deal 2020 5y 6.4% cap  FAIR #2    -> season #43   3yr #44
+   2021 alvin kamara          RB  age 26  deal 2020 5y 7.6% cap  FAIR #4    -> season #26   3yr #28
+   2021 patrick mahomes       QB  age 25  deal 2020 10y 22.7% cap  FAIR #5    -> season #21   3yr #16
+   2021 ezekiel elliott       RB  age 26  deal 2019 6y 8.0% cap  FAIR #13   -> season #22   3yr #45
+   2021 joe mixon             RB  age 25  deal 2020 4y 6.1% cap  FAIR #30   -> season #11   3yr #13
+   2021 deshaun watson        QB  age 25  deal 2020 4y 19.7% cap  FAIR #78   -> season #112  3yr #112
+   2022 christian mccaffrey   RB  age 26  deal 2020 4y 8.1% cap  FAIR #5    -> season #3    3yr #5
+   2022 joe mixon             RB  age 26  deal 2020 4y 6.1% cap  FAIR #14   -> season #24   3yr #15
+   2022 mark andrews          TE  age 26  deal 2021 4y 7.7% cap  FAIR #24   -> season #47   3yr #59
+   2022 josh allen            QB  age 26  deal 2021 6y 23.6% cap  FAIR #26   -> season #10   3yr #8
+   2022 nick chubb            RB  age 26  deal 2021 3y 6.7% cap  FAIR #28   -> season #16   3yr #46
+   2022 patrick mahomes       QB  age 26  deal 2020 10y 22.7% cap  FAIR #32   -> season #6    3yr #25
+   2022 courtland sutton      WR  age 26  deal 2021 4y 8.2% cap  FAIR #76   -> season #96   3yr #53
+   2023 aj brown              WR  age 26  deal 2022 4y 12.0% cap  FAIR #6    -> season #4    3yr #15
+   2023 dk metcalf            WR  age 25  deal 2022 3y 11.5% cap  FAIR #25   -> season #32   3yr #41
+   2023 dj moore              WR  age 26  deal 2022 3y 9.9% cap  FAIR #39   -> season #6    3yr #20
+   2023 christian kirk        WR  age 26  deal 2022 4y 8.6% cap  FAIR #58   -> season #98   3yr #106
+   2023 dawson knox           TE  age 26  deal 2022 4y 6.2% cap  FAIR #132  -> season #139  3yr #139

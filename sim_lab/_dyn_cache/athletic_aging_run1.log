@@ -1,0 +1,34 @@
+athleticism matched for 3292 players (by position: QB 375, RB 1002, WR 1277, TE 638)
+
+=== 1. AGING CURVES 2000-25: median year-over-year PPG change (both seasons 8+ games) | collapse rate next season ===
+  QB: age 28-30 | age 31-33 | age 34-36 | age 37-40
+    high  RAS   -6% /  32% (n 40) |   -2% /  20% (n 30) |  -11% /  29% (n 21) |                      —
+    mid   RAS   -5% /  14% (n 43) |   -6% /  19% (n 26) |   -3% /  11% (n 19) |                      —
+    low   RAS   +1% /  33% (n 27) |   +1% /  46% (n 13) |                      — |                      —
+  RB: age 24-25 | age 26-27 | age 28-29 | age 30-33
+    high  RAS  -11% /  25% (n138) |  -18% /  24% (n101) |  -21% /  37% (n 70) |  -22% /  49% (n 53)
+    mid   RAS  -15% /  35% (n 89) |   -3% /  35% (n 66) |  -21% /  31% (n 36) |  -25% /  45% (n 20)
+    low   RAS   -8% /  26% (n 76) |  -19% /  32% (n 60) |  -22% /  48% (n 33) |                      —
+  WR: age 25-26 | age 27-28 | age 29-30 | age 31-34
+    high  RAS   -5% /  20% (n143) |  -14% /  28% (n104) |  -16% /  33% (n 67) |  -15% /  33% (n 63)
+    mid   RAS  -16% /  27% (n128) |   -9% /  28% (n 96) |  -17% /  41% (n 49) |  -22% /  34% (n 29)
+    low   RAS  -11% /  28% (n 85) |  -17% /  34% (n 59) |   -9% /  14% (n 37) |  -20% /  32% (n 41)
+  TE: age 26-27 | age 28-29 | age 30-31 | age 32-35
+    high  RAS   -9% /  18% (n 68) |  -13% /  34% (n 64) |   -9% /  41% (n 37) |   -1% /  39% (n 28)
+    mid   RAS  -14% /  27% (n 48) |  -37% /  49% (n 37) |   -6% /  36% (n 14) |  -11% /  25% (n 16)
+    low   RAS  -31% /  41% (n 17) |  -18% /  38% (n 13) |                      — |                      —
+   (PPG change among those still playing 8+ games; collapse = under 4 games or below 70% of a replacement starter next season)
+
+=== 2. VALUE: older veterans in the FFC pool 2016-23 (n 473), by RAS tercile ===
+group           n   MARKET      SIM     FAIR  FAIR 5y+   (mean log realized / predicted rank, + = worse)
+high RAS      202    +0.12    -0.06    +0.02     +0.19
+mid RAS       147    -0.08    -0.08    -0.13     -0.06
+low RAS       124    +0.03    -0.01    -0.05     +0.02
+   WR vs FAIR: high +0.03 (n 70)   low +0.08 (n 45)
+   RB vs FAIR: high +0.06 (n 83)   low -0.05 (n 65)
+   TE vs FAIR: high -0.18 (n 34)   low —
+   QB vs FAIR: high +0.13 (n 15)   low -0.53 (n 12)
+   beyond FAIR, z(RAS) x years over the age threshold: +0.014 [-0.002,+0.021]  (< 0 = athletic veterans beat FAIR as they age)
+
+=== 3. LOYO: FAIR + k * z(RAS) * years-over-threshold ===
+   k per fold [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; held-out vs FAIR: 3yr +0.0000 (wins 0/8), 5yr+youth +0.0000 (wins 0/6)

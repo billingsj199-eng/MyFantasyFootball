@@ -1,0 +1,45 @@
+=== Part 1: CALIBRATION — mean predicted WIN3 vs realized T3, by position x predicted tier ===
+pos tier          n    pred    real real/pred
+QB  top3         27      93     147      1.57
+QB  top4-8       45      68      72      1.06
+QB  top9-16      72      40      48      1.19
+QB  rest         73      16      43      2.76
+RB  top3         27     253     256      1.01
+RB  top4-8       45     205     177      0.86
+RB  top9-16      72     140     162      1.15
+RB  rest        351      48      51      1.08
+WR  top3         27     261     270      1.03
+WR  top4-8       45     209     257      1.23
+WR  top9-16      72     159     158      0.99
+WR  rest        433      59      66      1.13
+TE  top3         27     117     144      1.24
+TE  top4-8       45      60      63      1.05
+TE  top9-16      69      28      37      1.29
+TE  rest         35       9      15      1.71
+
+=== Part 2: WITHIN-TE ORDER (pooled Spearman, TE pool; per-year n-weighted in brackets) ===
+TE player-years: 176 (16 rookies)
+MARKET                            T3 0.428 [0.430]   T5 0.456 [0.458]
+SIM shipped (age/2, K30)          T3 0.359 [0.390]   T5 0.373 [0.403]
+age/2 K30 pick0.5                 T3 0.366 [0.369]   T5 0.392 [0.393]
+age/2 K60 pick                    T3 0.343 [0.382]   T5 0.360 [0.398]
+age/2 K60 pick0.5                 T3 0.372 [0.383]   T5 0.400 [0.410]
+age/3 K30 pick                    T3 0.363 [0.407]   T5 0.376 [0.414]
+age/3 K30 pick0.5                 T3 0.375 [0.378]   T5 0.401 [0.400]
+age/3 K60 pick                    T3 0.370 [0.411]   T5 0.385 [0.423]
+age/3 K60 pick0.5                 T3 0.373 [0.382]   T5 0.400 [0.401]
+age/4 K30 pick                    T3 0.367 [0.405]   T5 0.371 [0.404]
+age/4 K30 pick0.5                 T3 0.377 [0.389]   T5 0.406 [0.418]
+age/4 K60 pick                    T3 0.363 [0.393]   T5 0.378 [0.407]
+age/4 K60 pick0.5                 T3 0.372 [0.381]   T5 0.395 [0.400]
+age/6 K30 pick                    T3 0.372 [0.407]   T5 0.384 [0.425]
+age/6 K30 pick0.5                 T3 0.379 [0.397]   T5 0.402 [0.419]
+age/6 K60 pick                    T3 0.357 [0.387]   T5 0.368 [0.402]
+age/6 K60 pick0.5                 T3 0.374 [0.387]   T5 0.392 [0.401]
+
+=== Part 3: CROSS-POSITION — LOYO calibration multiplier per position (on WIN3 and YOUTH) ===
+full-data WIN3 multiplier: WR 1.10, RB 1.04, TE 1.20, QB 1.44
+MARKET             T3 Sp 0.538 top36 73.7%   T5 Sp 0.531 top36 71.7%   TEs in top-36: 2.1/yr
+SIM raw            T3 Sp 0.487 top36 69.5%   T5 Sp 0.459 top36 66.5%   TEs in top-36: 1.1/yr
+SIM calibrated     T3 Sp 0.480 top36 68.9%   T5 Sp 0.460 top36 65.9%   TEs in top-36: 1.2/yr
+REALIZED (truth)   TEs in top-36 by realized T3: 2.3/yr

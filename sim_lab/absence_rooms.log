@@ -1,0 +1,273 @@
+control regression RB (rank 2+, by own PPR): 0-2 +2.3 2-4 +2.1 4-6 +0.8 6-8 -0.4 8-10 -1.7 10-13 -3.1 13-99 -4.6
+control regression WR (rank 2+, by own PPR): 0-2 +3.3 2-4 +1.9 4-6 +1.7 6-8 -0.2 8-10 -0.4 10-13 -0.8 13-99 -3.3
+=== ROOM ARCHETYPES 2019-25: 199 RB1-out team-weeks, 162 WR1-out, 169 WR2-out (QB1 healthy) ===
+
+##### RB1 OUT: who got the job?  direct backup (trailing RB2) 60% | another RB with a baseline 3% | a no-baseline body 37%
+  ABSORBER (most carries that week): n 199  high  36%  low  23%  median  11.2  mean  12.9; 13.4 car 3.2 tgt
+  DIRECT BACKUP (pre-game RB2):      n 160  high  27%  low  34%  median   9.4  mean  10.8; engine replica mean 10.0
+    workhorse out (room >= .60)  direct backup n 117  high  27%  low  36%  median   9.0  mean  10.6 | engine 9.8
+    committee lead out           direct backup n  43  high  26%  low  28%  median   9.8  mean  11.3 | engine 10.4
+
+  FEATURE BINS - direct backup outcome (engine replica mean vs actual mean on the right):
+  by b2_own:
+    own < 3 PPR            n  25  high   8%  low  68%  median   3.6  mean   5.6 | engine   7.1 vs act   5.6 (n 25)
+    own 3-6                n  41  high  20%  low  29%  median   9.5  mean  10.4 | engine   8.6 vs act  10.4 (n 41)
+    own 6-9                n  50  high  28%  low  32%  median   8.9  mean  11.1 | engine   9.5 vs act  11.1 (n 50)
+    own 9+                 n  44  high  43%  low  20%  median  11.8  mean  13.7 | engine  13.4 vs act  13.7 (n 44)
+  by b2_room:
+    room share < .15       n  18  high  17%  low  56%  median   5.6  mean   7.5 | engine   7.8 vs act   7.5 (n 18)
+    .15-.30                n  43  high  14%  low  44%  median   7.7  mean   8.4 | engine   9.0 vs act   8.4 (n 43)
+    .30-.45                n  69  high  30%  low  32%  median   9.8  mean  11.6 | engine  10.3 vs act  11.6 (n 69)
+    .45+                   n  30  high  43%  low  10%  median  13.0  mean  14.2 | engine  11.8 vs act  14.2 (n 30)
+  by b2_tpg:
+    tgt/g < 1              n  29  high  14%  low  59%  median   4.7  mean   6.8 | engine   7.9 vs act   6.8 (n 29)
+    tgt/g 1-2.5            n  71  high  24%  low  35%  median   8.7  mean  10.8 | engine   9.5 vs act  10.8 (n 71)
+    tgt/g 2.5+             n  60  high  37%  low  20%  median  11.7  mean  12.6 | engine  11.5 vs act  12.6 (n 60)
+  by b2_rnd:
+    round 1                n  10  high  60%  low  10%  median  17.7  mean  17.1 | engine  11.3 vs act  17.1 (n 10)
+    round 2-3              n  43  high  26%  low  30%  median   9.2  mean  11.4 | engine  10.5 vs act  11.4 (n 43)
+    round 4-7              n  62  high  31%  low  27%  median   9.8  mean  11.0 | engine   9.9 vs act  11.0 (n 62)
+    undrafted              n  37  high  16%  low  49%  median   7.6  mean   8.9 | engine   9.0 vs act   8.9 (n 37)
+  by b2_exp:
+    rookie                 n  35  high  31%  low  31%  median   9.8  mean  11.7 | engine   9.1 vs act  11.7 (n 35)
+    yr 2-3                 n  41  high  17%  low  34%  median   8.6  mean  10.2 | engine   9.8 vs act  10.2 (n 41)
+    yr 4+                  n  76  high  32%  low  32%  median  10.2  mean  11.1 | engine  10.4 vs act  11.1 (n 76)
+  by gap23:
+    RB2~RB3 (gap < 2 car)  n  21  high  14%  low  57%  median   5.3  mean   7.9 | engine   8.1 vs act   7.9 (n 21)
+    gap 2-5                n  45  high  24%  low  40%  median   8.1  mean  10.0 | engine   8.6 vs act  10.0 (n 45)
+    clear RB2 (gap 5+)     n  94  high  31%  low  26%  median  10.0  mean  11.8 | engine  11.0 vs act  11.8 (n 94)
+  by n_rbs:
+    1 other RB w/ 2+ car   n 134  high  25%  low  35%  median   9.3  mean  10.6 | engine  10.0 vs act  10.6 (n 134)
+    2                      n  26  high  38%  low  27%  median   9.7  mean  11.8 | engine   9.9 vs act  11.8 (n 26)
+  by a_room:
+    starter < .50 room     n  10  high  20%  low  20%  median   8.5  mean  11.5 | engine  10.3 vs act  11.5 (n 10)
+    .50-.60                n  33  high  27%  low  30%  median   9.9  mean  11.3 | engine  10.5 vs act  11.3 (n 33)
+    .60-.70                n  47  high  32%  low  32%  median   9.6  mean  11.0 | engine  10.2 vs act  11.0 (n 47)
+    .70+ (bell cow)        n  60  high  27%  low  38%  median   8.7  mean  10.7 | engine   9.5 vs act  10.7 (n 60)
+  by a_ppr:
+    starter < 11 PPR       n  56  high  16%  low  43%  median   7.2  mean   8.8 | engine   8.5 vs act   8.8 (n 56)
+    11-15                  n  50  high  26%  low  38%  median   8.8  mean  10.7 | engine   9.6 vs act  10.7 (n 50)
+    15+                    n  54  high  39%  low  20%  median  10.9  mean  12.8 | engine  11.8 vs act  12.8 (n 54)
+  by a_recsh:
+    starter rec share < .25 n  52  high  31%  low  37%  median   8.9  mean  11.2 | engine  10.2 vs act  11.2 (n 52)
+    .25-.40                n  47  high  30%  low  30%  median   9.7  mean  11.8 | engine  10.1 vs act  11.8 (n 47)
+    .40+                   n  61  high  21%  low  34%  median   9.5  mean   9.6 | engine   9.7 vs act   9.6 (n 61)
+  by implied:
+    implied < 20           n  30  high  17%  low  33%  median   9.9  mean   9.5 | engine   8.9 vs act   9.5 (n 30)
+    20-24                  n  66  high  30%  low  33%  median   8.8  mean  11.1 | engine   9.6 vs act  11.1 (n 66)
+    24+                    n  63  high  29%  low  33%  median   9.2  mean  11.3 | engine  10.8 vs act  11.3 (n 63)
+  by spread:
+    favored by 3.5+        n  43  high  23%  low  26%  median   9.8  mean  10.9 | engine   9.3 vs act  10.9 (n 43)
+    within 3.5             n  68  high  29%  low  37%  median   8.9  mean  10.7 | engine  10.1 vs act  10.7 (n 68)
+    underdog 3.5+          n  48  high  27%  low  35%  median   8.4  mean  11.0 | engine  10.4 vs act  11.0 (n 48)
+  by team_skp:
+    team skill PPR < 50    n  31  high  13%  low  52%  median   5.1  mean   7.4 | engine   8.3 vs act   7.4 (n 31)
+    50-62                  n  57  high  28%  low  35%  median   9.8  mean  11.2 | engine   9.3 vs act  11.2 (n 57)
+    62+                    n  72  high  32%  low  25%  median  10.0  mean  11.9 | engine  11.1 vs act  11.9 (n 72)
+  by body_car:
+    no body carries (SAME-WEEK) n  81  high  28%  low  31%  median   9.8  mean  11.5 | engine   9.7 vs act  11.5 (n 81)
+    body 1-5 car           n  31  high  45%  low  16%  median  11.8  mean  14.0 | engine  10.9 vs act  14.0 (n 31)
+    body 6+ car            n  48  high  12%  low  50%  median   5.7  mean   7.6 | engine   9.7 vs act   7.6 (n 48)
+  by nabs:
+    only the RB1 out       n  89  high  30%  low  30%  median   9.7  mean  11.3 | engine   9.9 vs act  11.3 (n 89)
+    + another starter out  n  71  high  23%  low  38%  median   8.6  mean  10.1 | engine  10.0 vs act  10.1 (n 71)
+  RB direct backup HIGH >= 15: base rate 27% n 160 | held-out (LOYO) AUC logistic 0.658 tree 0.552; Brier vs base-rate -4.5% / +10.4%
+     logistic (std coefs, top 5): a_ppr +0.58, b2_room +0.38, a_recsh -0.33, n_rbs +0.29, b2_tpg +0.28
+     tree: |--- b2_own <= 7.3
+           |   |--- team_skp <= 59.1
+           |   |   |--- class: 0
+           |   |--- team_skp >  59.1
+           |   |   |--- class: 0
+           |--- b2_own >  7.3
+           |   |--- a_ppr <= 16.4
+           |   |   |--- class: 0
+           |   |--- a_ppr >  16.4
+           |   |   |--- class: 1
+  RB direct backup LOW <= 6: base rate 34% n 160 | held-out (LOYO) AUC logistic 0.659 tree 0.562; Brier vs base-rate -4.5% / +4.1%
+     logistic (std coefs, top 5): b2_tpg -0.47, a_ppr -0.34, n_rbs -0.27, gap23 -0.22, a_recsh -0.19
+     tree: |--- b2_own <= 3.4
+           |   |--- a_room <= 0.8
+           |   |   |--- class: 1
+           |   |--- a_room >  0.8
+           |   |   |--- class: 1
+           |--- b2_own >  3.4
+           |   |--- b2_own <= 12.3
+           |   |   |--- class: 0
+           |   |--- b2_own >  12.3
+           |   |   |--- class: 0
+  examples (direct backup PPR; team year wk: backup for absent starter):
+    HIGH end: SEA 2024 w14 zach charbonnet 38.3 (for kenneth walker; own 5.6, eng 9.0); DET 2025 w10 jahmyr gibbs 38.2 (for isiah pacheco; own 21.3, eng 18.7); LAC 2021 w16 justin jackson 34.2 (for austin ekeler; own 6.7, eng 10.5); MIA 2023 w6 raheem mostert 34.2 (for devon achane; own 22.2, eng 25.5); SEA 2022 w7 kenneth walker 28.7 (for rashaad penny; own 12.4, eng 13.7); NE 2025 w10 treveyon henderson 28.0 (for rhamondre stevenson; own 6.2, eng 8.6)
+    LOW end:  SF 2020 w7 jerick mckinnon -0.1 (for raheem mostert; own 10.0, eng 10.0); NYG 2019 w7 elijhaa penny 0.0 (for wayne gallman; own 2.1, eng 7.6); LAR 2019 w12 malcolm brown 0.0 (for darrell henderson; own 4.2, eng 6.0); JAX 2025 w17 lequint allen 0.3 (for devin neal; own 2.1, eng 7.3); IND 2023 w16 trey sermon 0.3 (for zack moss; own 3.4, eng 7.7); BAL 2022 w7 kenyan drake 0.5 (for jk dobbins; own 11.7, eng 10.5)
+  ABSORBER examples (whoever got the most carries):
+    HIGH end: SEA 2024 w14 zach charbonnet 38.3; DET 2025 w10 jahmyr gibbs 38.2; LAC 2021 w16 justin jackson 34.2; MIA 2023 w6 raheem mostert 34.2; SF 2020 w7 jeffery wilson 32.0; KC 2019 w17 damien williams 31.4 [body]
+    LOW end:  LAR 2019 w12 malcolm brown 0.0; JAX 2025 w17 lequint allen 0.3; KC 2025 w8 brashard smith 0.8; LAR 2022 w8 malcolm brown 1.0 [body]; SEA 2022 w14 tony jones 1.2 [body]; ATL 2025 w5 brian robinson 1.2
+
+  ARCHETYPE CELLS (direct backup, actual - engine replica):
+    clear RB2 (gap 5+) behind a workhorse        n  59: act  12.6 eng  11.1 gap +1.50 (median +0.1; under in 5/7 seasons) | cell ratio LOYO 5/7 MSE -0.9%, fwd 3/4
+    clear RB2 + catches (2.5+ tgt/g)             n  44: act  13.5 eng  12.2 gap +1.38 (median +1.0; under in 6/7 seasons) | cell ratio LOYO 6/7 MSE -1.3%, fwd 4/4
+    two similar backups (gap < 2)                n  21: act   7.9 eng   8.1 gap -0.14 (median -3.0; under in 4/7 seasons) | cell ratio LOYO 0/7 MSE +6.0%, fwd 2/4
+    low-level backup (own < 6) w/ workhorse out  n  58: act   8.5 eng   8.1 gap +0.41 (median -0.8; under in 5/7 seasons) | cell ratio LOYO 3/7 MSE +2.3%, fwd 2/4
+    day-3 / UDFA backup                          n  99: act  10.3 eng   9.6 gap +0.70 (median -0.2; under in 4/7 seasons) | cell ratio LOYO 4/7 MSE +0.9%, fwd 3/4
+    round 1-3 backup                             n  53: act  12.4 eng  10.6 gap +1.81 (median -0.1; under in 4/7 seasons) | cell ratio LOYO 4/7 MSE -2.1%, fwd 3/4
+    implied 24+                                  n  63: act  11.3 eng  10.8 gap +0.45 (median -1.8; under in 5/7 seasons) | cell ratio LOYO 5/7 MSE +0.4%, fwd 4/4
+    implied < 20                                 n  30: act   9.5 eng   8.9 gap +0.57 (median +1.2; under in 3/7 seasons) | cell ratio LOYO 1/7 MSE +6.3%, fwd 1/4
+
+##### WR1 OUT -> next man up WR2 (pre-game): n 162  high  21%  low  37%  median   8.9  mean  10.2; engine replica mean 10.1
+  post-hoc max target gainer (descriptive, selected on the outcome): n 162  high  29%  low  28%  median  10.1  mean  11.9
+  by ab_own:
+    own < 6 PPR            n  46  high   9%  low  61%  median   4.7  mean   6.2 | engine   6.8 vs act   6.2 (n 46)
+    6-9                    n  44  high  14%  low  27%  median   9.1  mean   9.7 | engine   8.6 vs act   9.7 (n 44)
+    9-12                   n  42  high  26%  low  36%  median  11.1  mean  12.0 | engine  11.3 vs act  12.0 (n 42)
+    12+                    n  30  high  43%  low  17%  median  13.4  mean  14.5 | engine  15.8 vs act  14.5 (n 30)
+  by ab_tsh:
+    tgt share < .12        n  29  high  10%  low  59%  median   4.6  mean   6.8 | engine   7.4 vs act   6.8 (n 29)
+    .12-.18                n  57  high  14%  low  49%  median   6.2  mean   8.3 | engine   9.1 vs act   8.3 (n 57)
+    .18+                   n  76  high  30%  low  20%  median  11.1  mean  12.9 | engine  11.9 vs act  12.9 (n 76)
+  by ab_ypt:
+    PPR/target < 1.6       n  86  high  19%  low  40%  median   7.7  mean   9.6 | engine   8.6 vs act   9.6 (n 86)
+    1.6-2.0                n  30  high  20%  low  23%  median   9.8  mean  11.6 | engine  10.9 vs act  11.6 (n 30)
+    2.0+ (big-play)        n  46  high  26%  low  41%  median   9.8  mean  10.3 | engine  12.5 vs act  10.3 (n 46)
+  by a_tsh:
+    absent share < .18     n   8  high  12%  low  75%  median   3.1  mean   5.2 | engine   6.5 vs act   5.2 (n 8)
+    .18-.24                n  58  high  17%  low  41%  median   7.4  mean   9.3 | engine   9.5 vs act   9.3 (n 58)
+    .24+ (alpha)           n  96  high  24%  low  31%  median   9.9  mean  11.2 | engine  10.8 vs act  11.2 (n 96)
+  by hhi:
+    targets spread (HHI < .17) n   5  high   0%  low  80%  median   4.8  mean   5.3 | engine   9.8 vs act   5.3 (n 5)
+    .17-.21                n  31  high  13%  low  35%  median   8.4  mean   9.0 | engine   9.3 vs act   9.0 (n 31)
+    concentrated .21+      n 125  high  24%  low  36%  median   9.1  mean  10.7 | engine  10.3 vs act  10.7 (n 125)
+  by te_lvl:
+    TE < 6 PPR             n  53  high  23%  low  38%  median   8.1  mean  10.7 | engine  11.1 vs act  10.7 (n 53)
+    TE 6-10                n  56  high  23%  low  32%  median   9.4  mean  10.4 | engine  10.1 vs act  10.4 (n 56)
+    TE 10+                 n  53  high  17%  low  42%  median   7.7  mean   9.5 | engine   9.2 vs act   9.5 (n 53)
+  by qb_pts:
+    QB < 15 pts            n  55  high  18%  low  40%  median   7.7  mean   9.1 | engine   9.0 vs act   9.1 (n 55)
+    QB 15-19               n  57  high  19%  low  35%  median  10.0  mean  10.5 | engine   9.8 vs act  10.5 (n 57)
+    QB 19+                 n  50  high  26%  low  36%  median  10.1  mean  11.2 | engine  11.7 vs act  11.2 (n 50)
+  by implied:
+    implied < 20           n  49  high  18%  low  41%  median   8.4  mean   9.0 | engine   8.8 vs act   9.0 (n 49)
+    20-24                  n  60  high  22%  low  38%  median   8.2  mean  10.4 | engine  10.2 vs act  10.4 (n 60)
+    24+                    n  51  high  24%  low  29%  median   9.9  mean  11.5 | engine  11.2 vs act  11.5 (n 51)
+  by ab_rnd:
+    round 1                n  32  high  31%  low  34%  median   9.9  mean  12.7 | engine  11.4 vs act  12.7 (n 32)
+    round 2-3              n  51  high  24%  low  22%  median  11.0  mean  12.3 | engine  11.0 vs act  12.3 (n 51)
+    round 4-7              n  50  high  14%  low  50%  median   6.0  mean   7.5 | engine   9.2 vs act   7.5 (n 50)
+    undrafted              n  27  high  19%  low  41%  median   7.0  mean   9.0 | engine   8.6 vs act   9.0 (n 27)
+  by ab_exp:
+    rookie                 n  30  high  20%  low  27%  median  10.2  mean  11.4 | engine  10.0 vs act  11.4 (n 30)
+    yr 2-3                 n  60  high  20%  low  40%  median   8.3  mean  10.3 | engine  10.1 vs act  10.3 (n 60)
+    yr 4+                  n  70  high  23%  low  37%  median   8.0  mean   9.8 | engine  10.2 vs act   9.8 (n 70)
+  WR2 with WR1 out HIGH >= 15: base rate 21% n 162 | held-out (LOYO) AUC logistic 0.626 tree 0.538; Brier vs base-rate +0.7% / +14.3%
+     logistic (std coefs, top 5): ab_own +0.75, ab_ypt -0.21, ab_rnd -0.17, te_lvl -0.15, hhi -0.13
+     tree: |--- ab_own <= 8.7
+           |   |--- ab_tsh <= 0.2
+           |   |   |--- class: 0
+           |   |--- ab_tsh >  0.2
+           |   |   |--- class: 0
+           |--- ab_own >  8.7
+           |   |--- ab_ypt <= 1.5
+           |   |   |--- class: 1
+           |   |--- ab_ypt >  1.5
+           |   |   |--- class: 0
+  WR2 with WR1 out LOW <= 6: base rate 37% n 162 | held-out (LOYO) AUC logistic 0.595 tree 0.560; Brier vs base-rate +2.6% / +6.9%
+     logistic (std coefs, top 5): ab_tsh -0.61, ab_own -0.26, qb_pts -0.13, ab_rnd +0.10, ab_ypt +0.07
+     tree: |--- ab_tsh <= 0.2
+           |   |--- ab_own <= 2.6
+           |   |   |--- class: 1
+           |   |--- ab_own >  2.6
+           |   |   |--- class: 0
+           |--- ab_tsh >  0.2
+           |   |--- hhi <= 0.3
+           |   |   |--- class: 0
+           |   |--- hhi >  0.3
+           |   |   |--- class: 0
+    HIGH end: SEA 2024 w9 jaxon smith njigba 37.0 (for dk metcalf; own 9.0, eng 10.6); HOU 2023 w13 nico collins 34.1 (for tank dell; own 18.4, eng 18.8); DAL 2025 w4 george pickens 33.4 (for ceedee lamb; own 13.9, eng 13.7); NYG 2021 w5 kadarius toney 29.6 (for sterling shepard; own 8.8, eng 10.1); NYJ 2024 w5 garrett wilson 29.1 (for davante adams; own 10.5, eng 12.2); MIA 2021 w6 jaylen waddle 29.0 (for devante parker; own 9.8, eng 10.4)
+    LOW end:  MIA 2020 w17 mack hollins -0.7 (for jakeem grant; own 7.2, eng 7.8); SF 2025 w7 demarcus robinson 0.0 (for christian kirk; own 5.4, eng 7.9); KC 2022 w11 kadarius toney 0.0 (for juju smith schuster; own 11.1, eng 12.0); HOU 2021 w4 chris conley 0.0 (for danny amendola; own 2.3, eng 5.1); NYG 2021 w17 pharoh cooper 0.0 (for sterling shepard; own 0.5, eng 4.1); NYG 2021 w9 darius slayton 0.0 (for sterling shepard; own 5.7, eng 9.2)
+  ARCHETYPE CELLS (actual - engine replica):
+    next man own 9+ (established)      n  72: act  13.1 eng  13.2 gap -0.14 (median -1.3; under in 4/7 seasons)
+    next man own < 6 (depth guy)       n  46: act   6.2 eng   6.8 gap -0.57 (median -1.7; under in 2/7 seasons)
+    alpha out (share .24+)             n  96: act  11.2 eng  10.8 gap +0.36 (median -0.5; under in 4/7 seasons)
+    concentrated room (HHI .21+)       n 126: act  10.7 eng  10.3 gap +0.35 (median -0.7; under in 4/7 seasons)
+    strong TE (10+)                    n  53: act   9.5 eng   9.2 gap +0.33 (median -0.4; under in 5/7 seasons)
+    good QB (19+)                      n  50: act  11.2 eng  11.7 gap -0.49 (median -1.3; under in 2/7 seasons)
+    implied 24+                        n  51: act  11.5 eng  11.2 gap +0.28 (median -0.8; under in 3/7 seasons)
+
+##### WR2 OUT -> next man up WR3 (pre-game): n 169  high  16%  low  53%  median   5.7  mean   7.7; engine replica mean 8.0
+  post-hoc max target gainer (descriptive, selected on the outcome): n 169  high  31%  low  29%  median  10.1  mean  11.8
+  healthy WR1 that week: n 149  high  42%  low  13%  median  11.8  mean  14.6
+  by ab_own:
+    own < 6 PPR            n  91  high   7%  low  63%  median   4.1  mean   6.2 | engine   6.4 vs act   6.2 (n 91)
+    6-9                    n  45  high  22%  low  47%  median   7.2  mean   8.2 | engine   8.5 vs act   8.2 (n 45)
+    9-12                   n  24  high  25%  low  42%  median   8.8  mean   9.9 | engine  11.6 vs act   9.9 (n 24)
+    12+                    n   9  high  56%  low  22%  median  17.2  mean  15.0 | engine  12.7 vs act  15.0 (n 9)
+  by ab_tsh:
+    tgt share < .12        n  96  high   7%  low  65%  median   3.8  mean   6.2 | engine   6.9 vs act   6.2 (n 96)
+    .12-.18                n  55  high  25%  low  40%  median   8.4  mean   9.0 | engine   9.1 vs act   9.0 (n 55)
+    .18+                   n  18  high  33%  low  33%  median   9.8  mean  11.7 | engine  10.5 vs act  11.7 (n 18)
+  by ab_ypt:
+    PPR/target < 1.6       n  71  high  21%  low  49%  median   6.2  mean   8.3 | engine   6.8 vs act   8.3 (n 71)
+    1.6-2.0                n  35  high   6%  low  51%  median   4.9  mean   6.9 | engine   8.3 vs act   6.9 (n 35)
+    2.0+ (big-play)        n  63  high  16%  low  59%  median   5.3  mean   7.6 | engine   9.3 vs act   7.6 (n 63)
+  by a_tsh:
+    absent share < .18     n  85  high   8%  low  59%  median   5.1  mean   6.7 | engine   7.5 vs act   6.7 (n 85)
+    .18-.24                n  63  high  25%  low  46%  median   6.3  mean   8.9 | engine   8.6 vs act   8.9 (n 63)
+    .24+ (alpha)           n  21  high  19%  low  52%  median   5.7  mean   8.0 | engine   8.4 vs act   8.0 (n 21)
+  by hhi:
+    .17-.21                n  22  high  23%  low  59%  median   4.2  mean   7.2 | engine   9.3 vs act   7.2 (n 22)
+    concentrated .21+      n 143  high  15%  low  52%  median   5.8  mean   7.9 | engine   7.9 vs act   7.9 (n 143)
+  by te_lvl:
+    TE < 6 PPR             n  57  high  18%  low  61%  median   4.9  mean   7.9 | engine   7.8 vs act   7.9 (n 57)
+    TE 6-10                n  43  high  21%  low  42%  median   8.1  mean   8.7 | engine   8.1 vs act   8.7 (n 43)
+    TE 10+                 n  69  high  12%  low  54%  median   5.7  mean   7.0 | engine   8.2 vs act   7.0 (n 69)
+  by qb_pts:
+    QB < 15 pts            n  66  high   9%  low  64%  median   4.2  mean   6.4 | engine   7.3 vs act   6.4 (n 66)
+    QB 15-19               n  48  high  15%  low  52%  median   5.8  mean   7.1 | engine   7.7 vs act   7.1 (n 48)
+    QB 19+                 n  55  high  25%  low  42%  median   8.4  mean   9.8 | engine   9.2 vs act   9.8 (n 55)
+  by implied:
+    implied < 20           n  45  high  11%  low  62%  median   4.1  mean   6.0 | engine   7.1 vs act   6.0 (n 45)
+    20-24                  n  58  high  17%  low  55%  median   5.8  mean   8.3 | engine   8.3 vs act   8.3 (n 58)
+    24+                    n  65  high  18%  low  45%  median   6.3  mean   8.5 | engine   8.5 vs act   8.5 (n 65)
+  by ab_rnd:
+    round 1                n  21  high  24%  low  52%  median   5.8  mean   8.4 | engine   8.4 vs act   8.4 (n 21)
+    round 2-3              n  53  high  15%  low  49%  median   6.1  mean   7.8 | engine   8.2 vs act   7.8 (n 53)
+    round 4-7              n  64  high  17%  low  53%  median   5.8  mean   7.8 | engine   7.8 vs act   7.8 (n 64)
+    undrafted              n  26  high   8%  low  62%  median   5.0  mean   7.2 | engine   7.6 vs act   7.2 (n 26)
+  by ab_exp:
+    rookie                 n  29  high  24%  low  41%  median   8.8  mean   9.7 | engine   7.6 vs act   9.7 (n 29)
+    yr 2-3                 n  49  high  18%  low  51%  median   5.8  mean   7.7 | engine   8.0 vs act   7.7 (n 49)
+    yr 4+                  n  86  high  12%  low  58%  median   5.0  mean   7.2 | engine   8.1 vs act   7.2 (n 86)
+  WR3 with WR2 out HIGH >= 15: base rate 16% n 169 | held-out (LOYO) AUC logistic 0.694 tree 0.571; Brier vs base-rate -2.8% / +7.9%
+     logistic (std coefs, top 5): ab_own +0.54, qb_pts +0.49, ab_exp -0.43, ab_tsh +0.39, ab_ypt -0.30
+     tree: |--- ab_tsh <= 0.1
+           |   |--- qb_pts <= 19.7
+           |   |   |--- class: 0
+           |   |--- qb_pts >  19.7
+           |   |   |--- class: 0
+           |--- ab_tsh >  0.1
+           |   |--- ab_ypt <= 1.5
+           |   |   |--- class: 1
+           |   |--- ab_ypt >  1.5
+           |   |   |--- class: 0
+  WR3 with WR2 out LOW <= 6: base rate 53% n 169 | held-out (LOYO) AUC logistic 0.608 tree 0.630; Brier vs base-rate +1.5% / -1.9%
+     logistic (std coefs, top 5): ab_tsh -0.52, ab_own -0.32, ab_exp +0.30, hhi -0.25, ab_ypt +0.24
+     tree: |--- ab_tsh <= 0.1
+           |   |--- te_lvl <= 4.5
+           |   |   |--- class: 1
+           |   |--- te_lvl >  4.5
+           |   |   |--- class: 1
+           |--- ab_tsh >  0.1
+           |   |--- hhi <= 0.3
+           |   |   |--- class: 0
+           |   |--- hhi >  0.3
+           |   |   |--- class: 0
+    HIGH end: GB 2022 w10 christian watson 32.7 (for romeo doubs; own 3.3, eng 6.1); BUF 2022 w5 gabe davis 32.1 (for isaiah mckenzie; own 4.5, eng 8.0); BUF 2021 w16 isaiah mckenzie 29.4 (for cole beasley; own 2.0, eng 4.9); BUF 2020 w13 cole beasley 28.0 (for john brown; own 13.1, eng 12.6); HOU 2023 w10 noah brown 24.2 (for nico collins; own 13.9, eng 12.5); BUF 2025 w12 dj moore 23.4 (for keon coleman; own 7.3, eng 8.9)
+    LOW end:  GB 2025 w12 savion williams 0.0 (for matthew golden; own 2.6, eng 4.9); CLE 2025 w10 jamari thrash 0.0 (for isaiah bond; own 3.9, eng 6.2); LV 2025 w17 jalen nailor 0.0 (for jack bech; own 8.5, eng 9.2); CIN 2025 w15 andrei iosivas 0.0 (for tee higgins; own 8.1, eng 10.6); BAL 2024 w13 nelson agholor 0.0 (for rashod bateman; own 3.8, eng 7.3); PIT 2024 w17 van jefferson 0.0 (for scott miller; own 4.6, eng 6.8)
+  ARCHETYPE CELLS (actual - engine replica):
+    next man own 9+ (established)      n  33: act  11.3 eng  11.9 gap -0.61 (median -2.5; under in 2/6 seasons)
+    next man own < 6 (depth guy)       n  91: act   6.2 eng   6.4 gap -0.20 (median -2.0; under in 4/7 seasons)
+    alpha out (share .24+)             n  21: act   8.0 eng   8.4 gap -0.36 (median -2.0; under in 3/7 seasons)
+    concentrated room (HHI .21+)       n 143: act   7.9 eng   7.9 gap +0.03 (median -1.6; under in 4/7 seasons)
+    strong TE (10+)                    n  69: act   7.0 eng   8.2 gap -1.21 (median -2.1; under in 2/7 seasons)
+    good QB (19+)                      n  55: act   9.8 eng   9.2 gap +0.65 (median -2.1; under in 4/7 seasons)
+    implied 24+                        n  65: act   8.5 eng   8.5 gap +0.02 (median -1.9; under in 5/7 seasons)
+
+wrote data/absence_rooms.json

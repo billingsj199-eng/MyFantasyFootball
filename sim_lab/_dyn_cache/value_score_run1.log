@@ -1,0 +1,44 @@
+1321 player-years, preseason 2016-2023
+driver frequency: breakout 918, injured 152, moved 186, deal_big 226, deal_small 481, deal_newteam 155, walk 213
+
+=== 1. Market reaction vs what the outcome justified (vets with a prior-year market rank, n=919) ===
+   log-rank effects (negative = better); controls: last year's market rank, sim quality, position x age
+driver          market moved    (t)  justified 3yr    (t)                           verdict
+breakout              -0.486  -10.6         -0.223   -3.0               overreaction (2.2x)
+injured               +0.022    0.4         +0.078    1.0                neither moves much
+moved                 +0.219    4.4         +0.217    2.8               overreaction (1.0x)
+deal_big              -0.103   -2.2         -0.069   -1.0       OVERREACTION (outcome flat)
+deal_small            +0.009    0.2         +0.079    1.3                neither moves much
+deal_newteam          +0.208    3.9         +0.269    3.2              UNDERREACTION (0.8x)
+walk                  +0.159    3.2         +0.110    1.5       OVERREACTION (outcome flat)
+
+=== 2. Mispriced at today's price? log truth rank ~ log market rank now + driver + quality + age x pos (all, n=1321) ===
+driver          3yr coef    (t)  5yr+youth    (t)   (negative = better than the price says)
+log market rank             +0.381   10.0     +0.374    8.4
+log sim rank (quality)      +0.250    6.4     +0.210    4.7
+RB                          +0.026    0.3     +0.141    1.5
+WR                          -0.065   -0.9     -0.036   -0.4
+TE                          +0.041    0.5     +0.032    0.3
+age x QB                    +0.002    0.2     +0.004    0.4
+age x RB                    -0.000   -0.0     +0.016    1.0
+age x WR                    +0.006    0.6     +0.035    3.1
+age x TE                    -0.014   -0.7     -0.001   -0.1
+rookie                      -0.190   -1.0     -0.306   -1.4
+log rookie pick             +0.024    0.5     +0.037    0.6
+breakout                    +0.003    0.1     -0.073   -1.0
+injured                     +0.098    1.5     +0.112    1.4
+moved                       +0.004    0.0     -0.089   -0.5
+deal_big                    -0.032   -0.5     -0.152   -1.9
+deal_small                  +0.049    0.9     -0.003   -0.0
+deal_newteam                +0.146    0.9     +0.247    1.3
+walk                        +0.053    0.8     +0.096    1.3
+
+=== 3. VALUE SCORE — LOYO OLS on long-term truth (5yr+youth), scored per year (Spearman) ===
+order                                           3yr  5yr+youth  top-50 3yr
+KTC-style market now                          0.650      0.629       0.396
+Dynasty SIM                                   0.585      0.559       0.412
+SIM x market 50/50                            0.657      0.633       0.458
+FAIR value (shipped)                          0.647      0.637       0.446
+VALUE SCORE: quality + upside only            0.559      0.555       0.393
+VALUE SCORE: market + quality                 0.634      0.635       0.429
+VALUE SCORE: market + quality + drivers       0.638      0.637       0.430

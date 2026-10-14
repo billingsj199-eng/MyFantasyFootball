@@ -1,0 +1,15 @@
+rows 13075 RB/WR/TE player-weeks with a team read; base = shadow x NMU x PROMO
+  nobody out   n  9327 actual / base 0.978 | RB 0.98 WR 0.97 TE 1.00
+  vac .01-.20  n  2119 actual / base 1.015 | RB 1.02 WR 0.99 TE 1.07
+  vac .20-.30  n   971 actual / base 1.050 | RB 1.02 WR 1.07 TE 1.08
+  vac .30-.40  n   412 actual / base 1.054 | RB 1.02 WR 1.06 TE 1.14
+  vac .40+     n   246 actual / base 1.160 | RB 1.13 WR 1.17 TE 1.20
+CARRY TEST: base = shipped (target tvac .2 on); RB rows with carry vacated > 0: 402
+  RB no RB out         n 3469 actual / base 0.975
+  RB cvac .10-.40      n  241 actual / base 1.014
+  RB cvac .40-.70      n  109 actual / base 1.175
+  RB cvac .70+         n   52 actual / base 1.021
+  WR/TE when RB out    n  682 actual / base 0.972
+LOYO: touched RB rows +1.12% (2/7), board +0.051% | picks ['rbk0.05', 'rbk0.1', 'rbk0.15', 'off', 'off', 'rbk0.05', 'rbk0.1']
+FORWARD: touched RB rows -0.02% (1/4), board -0.001% | picks ['off', 'off', 'rbk0.1', 'rbk0.1']
+fixed: rbk0.05 -0.18%  rbk0.1 -0.17%  rbk0.15 +0.03%  rbk0.2 +0.42%  rbk0.3 +1.78%

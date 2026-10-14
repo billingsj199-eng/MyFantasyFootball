@@ -1,0 +1,31 @@
+per-year Spearman means (wins vs shipped linear); very-low (z <= -1) residual, + = finished worse than ranked
+
+--- season ---
+shape             RB-only             whole  very-low resid
+linear             0.5599            0.5194           -0.23
+floor1       0.5573 (0/4)      0.5185 (1/4)           -0.19
+floor15      0.5591 (0/4)      0.5193 (0/4)           -0.23
+half1        0.5581 (0/4)      0.5188 (1/4)           -0.21
+negHalf      0.5546 (1/4)      0.5170 (1/4)           -0.15
+posOnly      0.5516 (1/4)      0.5144 (0/4)           -0.08
+off          0.5297 (0/4)      0.5096 (0/4)           -0.04
+
+--- 3yr ---
+shape             RB-only             whole  very-low resid
+linear             0.7628            0.6971           -0.16
+floor1       0.7611 (1/4)      0.6965 (1/4)           -0.12
+floor15      0.7624 (0/4)      0.6970 (0/4)           -0.15
+half1        0.7622 (0/4)      0.6968 (1/4)           -0.14
+negHalf      0.7605 (2/4)      0.6961 (1/4)           -0.08
+posOnly      0.7555 (1/4)      0.6945 (0/4)           -0.01
+off          0.7318 (0/4)      0.6898 (0/4)           +0.04
+
+--- 5yr ---
+shape             RB-only             whole  very-low resid
+linear             0.7817            0.6615           -0.27
+floor1       0.7797 (0/2)      0.6604 (0/2)           -0.25
+floor15      0.7817 (0/2)      0.6615 (0/2)           -0.27
+half1        0.7815 (0/2)      0.6610 (0/2)           -0.26
+negHalf      0.7813 (1/2)      0.6596 (0/2)           -0.21
+posOnly      0.7721 (0/2)      0.6577 (0/2)           -0.14
+off          0.7540 (0/2)      0.6559 (0/2)           -0.09

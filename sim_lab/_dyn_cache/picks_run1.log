@@ -1,0 +1,52 @@
+FFC-ordered depth per class: 2015:34, 2016:36, 2017:43, 2018:37, 2019:43, 2020:33, 2021:28, 2022:37, 2023:44, 2025:34
+
+=== Part 1: realized VOR by rookie-draft slot and career year (1QB PPR, kernel-smoothed) ===
+slot        yr1     yr2     yr3     yr4     yr5  n(yr1)  raw yr1-3
+1.01         53      66      74      46      45      10        277
+1.02         45      59      65      43      43      10        219
+1.03         36      50      55      42      43      10        111
+1.04         29      42      46      42      43      10         97
+1.06         20      33      37      46      40      10         97
+1.08         17      32      34      40      33      10        114
+1.10         14      28      29      27      27      10        122
+1.12         11      25      22      16      17      10         67
+2.03         12      22      13      15       7      10         65
+2.06          9      14      14      18      11      10         47
+2.09          4      15      14      18      17      10         56
+2.12          4      12      11       9       9      10         59
+3.06          2      12      17      13      11      10         64
+3.12          1       5       6       6       5      10          0
+4.06          3       4      10       2       1      10         23
+4.12          1       3       4       8       6      10          1
+
+=== Pick entries (SIM DYN units: window 2026-28 + 1.5 x 2029-30), 1QB PPR, historical baseline ===
+pick           2027    2028    2029    2030
+Early 1st       250     213     143      61
+Mid 1st         173     124      79      29
+Late 1st        119      96      61      20
+Early 2nd        78      67      50      17
+Mid 2nd          71      51      34      12
+Late 2nd         58      44      27       6
+3rd              40      32      17       3
+4th              23      18       8       3
+
+=== Part 2: JM vs NFL pick for drafted rookies 2017-23 with a JM score (n=486) ===
+   all         n=486  pick +0.455   JM +0.495   comps(pick,age) +0.487   50/50 +0.495   70/30 +0.484
+   QB          n=73   pick +0.394   JM +0.517   comps(pick,age) +0.431   50/50 +0.454   70/30 +0.420
+   RB          n=138  pick +0.552   JM +0.532   comps(pick,age) +0.536   50/50 +0.559   70/30 +0.561
+   WR          n=208  pick +0.498   JM +0.481   comps(pick,age) +0.471   50/50 +0.512   70/30 +0.512
+   TE          n=67   pick +0.500   JM +0.495   comps(pick,age) +0.503   50/50 +0.518   70/30 +0.512
+   picks 1-64  n=141  pick +0.232   JM +0.477   comps(pick,age) +0.398   50/50 +0.401   70/30 +0.328
+   picks 65+   n=345  pick +0.264   JM +0.279   comps(pick,age) +0.324   50/50 +0.302   70/30 +0.294
+   JM vs residual after comps: Spearman -0.117
+
+=== Part 3: class strength — top-24 comps value (actual picks) vs realized, by class ===
+class   pred top24 real top24  JM top24 mean
+2017          1517       3775           67.3
+2018          1444       1750           62.9
+2019          1109       2095           62.8
+2020          1639       2706           70.0
+2021          1571       2002           70.2
+2022          1442       1831           63.4
+2023          1398       3240           66.2
+   corr(pred, real) across 7 classes: +0.07   corr(JM mean, real): +0.36  (7 classes — weak evidence either way)

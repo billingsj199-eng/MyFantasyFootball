@@ -1,0 +1,163 @@
+games: PHI@JAX
+tracking 25 players on ['JAX', 'PHI'], season 2026 week 5, live model grid [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  JAX: pre PRE f=0.00 score 0.0-0.0
+  PHI: pre PRE f=0.00 score 0.0-0.0
+    Trevor Lawrence       QB   proj  17.8  scored   0.0  live fit  17.8 | +exit  17.8 | v1  17.8 | naive  17.8
+    Jalen Hurts           QB   proj  14.6  scored   0.0  live fit  14.6 | +exit  14.6 | v1  14.6 | naive  14.6
+    Bhayshul Tuten        RB   proj  13.1  scored   0.0  live fit  13.1 | +exit  13.1 | v1  13.1 | naive  13.1
+    Parker Washington     WR   proj  12.4  scored   0.0  live fit  12.4 | +exit  12.4 | v1  12.4 | naive  12.4
+    Dontayvion Wicks      WR   proj   9.8  scored   0.0  live fit   9.8 | +exit   9.8 | v1   9.8 | naive   9.8
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   9.7 | +exit   9.7 | v1   9.7 | naive   9.7
+    Brenton Strange       TE   proj   8.9  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.9 | naive   8.9
+    Cam Little            K    proj   8.7  scored   0.0  live fit   8.7 | +exit   8.7 | v1   8.7 | naive   8.7
+    Jacksonville Jaguars D/STDST  proj   8.4  scored   0.0  live fit   8.4 | +exit   8.4 | v1   8.4 | naive   8.4
+    Makai Lemon           WR   proj   8.0  scored   0.0  live fit   8.0 | +exit   8.0 | v1   8.0 | naive   8.0
+    Will Shipley          RB   proj   6.6  scored   0.0  live fit   6.6 | +exit   6.6 | v1   6.6 | naive   6.6
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   6.5 | +exit   6.5 | v1   6.5 | naive   6.5
+  JAX: pre PRE f=0.00 score 0.0-0.0
+  PHI: pre PRE f=0.00 score 0.0-0.0
+    Trevor Lawrence       QB   proj  17.8  scored   0.0  live fit  17.8 | +exit  17.8 | v1  17.8 | naive  17.8
+    Jalen Hurts           QB   proj  14.6  scored   0.0  live fit  14.6 | +exit  14.6 | v1  14.6 | naive  14.6
+    Bhayshul Tuten        RB   proj  13.1  scored   0.0  live fit  13.1 | +exit  13.1 | v1  13.1 | naive  13.1
+    Parker Washington     WR   proj  12.4  scored   0.0  live fit  12.4 | +exit  12.4 | v1  12.4 | naive  12.4
+    Dontayvion Wicks      WR   proj   9.8  scored   0.0  live fit   9.8 | +exit   9.8 | v1   9.8 | naive   9.8
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   9.7 | +exit   9.7 | v1   9.7 | naive   9.7
+    Brenton Strange       TE   proj   8.9  scored   0.0  live fit   8.9 | +exit   8.9 | v1   8.9 | naive   8.9
+    Cam Little            K    proj   8.7  scored   0.0  live fit   8.7 | +exit   8.7 | v1   8.7 | naive   8.7
+    Jacksonville Jaguars D/STDST  proj   8.4  scored   0.0  live fit   8.4 | +exit   8.4 | v1   8.4 | naive   8.4
+    Makai Lemon           WR   proj   8.0  scored   0.0  live fit   8.0 | +exit   8.0 | v1   8.0 | naive   8.0
+    Will Shipley          RB   proj   6.6  scored   0.0  live fit   6.6 | +exit   6.6 | v1   6.6 | naive   6.6
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   6.5 | +exit   6.5 | v1   6.5 | naive   6.5
+  JAX: in Q1 14:42 f=0.01 score 0.0-0.0
+  PHI: in Q1 14:42 f=0.01 score 0.0-0.0
+    Trevor Lawrence       QB   proj  17.8  scored   0.0  live fit  17.5 | +exit  17.5 | v1  17.6 | naive  17.6
+    Jalen Hurts           QB   proj  14.6  scored   0.0  live fit  14.3 | +exit  14.3 | v1  14.4 | naive  14.4
+    Bhayshul Tuten        RB   proj  13.1  scored   0.0  live fit  12.2 | +exit  12.2 | v1  13.0 | naive  13.0
+    Parker Washington     WR   proj  12.4  scored   0.0  live fit  11.8 | +exit  11.8 | v1  12.3 | naive  12.3
+    Dontayvion Wicks      WR   proj   9.8  scored   0.0  live fit   9.3 | +exit   9.3 | v1   9.7 | naive   9.7
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   9.2 | +exit   9.2 | v1   9.6 | naive   9.6
+    Brenton Strange       TE   proj   8.9  scored   0.0  live fit   8.4 | +exit   8.4 | v1   8.8 | naive   8.8
+    Cam Little            K    proj   8.7  scored   0.0  live fit   8.6 | +exit   8.6 | v1   8.6 | naive   8.6
+    Jacksonville Jaguars D/STDST  proj   8.4  scored  10.0  live fit   7.0 | +exit   7.0 | v1  18.3 | naive  18.3
+    Makai Lemon           WR   proj   8.0  scored   0.0  live fit   7.6 | +exit   7.6 | v1   7.9 | naive   7.9
+    Will Shipley          RB   proj   6.6  scored   0.0  live fit   6.2 | +exit   6.2 | v1   6.5 | naive   6.5
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   6.2 | +exit   6.2 | v1   6.4 | naive   6.4
+  JAX: in Q1 8:59 f=0.10 score 0.0-0.0
+  PHI: in Q1 8:59 f=0.10 score 0.0-0.0
+    Trevor Lawrence       QB   proj  17.8  scored   0.9  live fit  17.0 | +exit  17.0 | v1  16.9 | naive  16.9
+    Jalen Hurts           QB   proj  14.6  scored   0.4  live fit  13.5 | +exit  13.5 | v1  13.5 | naive  13.5
+    Bhayshul Tuten        RB   proj  13.1  scored   0.0  live fit  11.1 | +exit  11.1 | v1  11.8 | naive  11.8
+    Parker Washington     WR   proj  12.4  scored   1.7  live fit  12.7 | +exit  12.7 | v1  12.9 | naive  12.9
+    Dontayvion Wicks      WR   proj   9.8  scored   0.0  live fit   8.4 | +exit   8.4 | v1   8.8 | naive   8.8
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   8.4 | +exit   8.4 | v1   8.7 | naive   8.7
+    Brenton Strange       TE   proj   8.9  scored   1.3  live fit   9.2 | +exit   9.2 | v1   9.3 | naive   9.3
+    Cam Little            K    proj   8.7  scored   0.0  live fit   7.8 | +exit   7.8 | v1   7.8 | naive   7.8
+    Jacksonville Jaguars D/STDST  proj   8.4  scored  10.0  live fit   7.3 | +exit   7.3 | v1  17.6 | naive  17.6
+    Makai Lemon           WR   proj   8.0  scored   0.0  live fit   6.9 | +exit   6.9 | v1   7.2 | naive   7.2
+    Will Shipley          RB   proj   6.6  scored   0.3  live fit   6.0 | +exit   6.0 | v1   6.2 | naive   6.2
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   5.6 | +exit   5.6 | v1   5.8 | naive   5.8
+  JAX: in Q1 5:26 f=0.16 score 7.0-0.0
+  PHI: in Q1 5:26 f=0.16 score 0.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored   7.3  live fit  21.9 | +exit  21.9 | v1  23.2 | naive  22.2
+    Jalen Hurts           QB   proj  14.6  scored   0.8  live fit  14.7 | +exit  14.7 | v1  12.8 | naive  13.1
+    Bhayshul Tuten        RB   proj  13.1  scored   0.3  live fit  10.1 | +exit  10.1 | v1  10.9 | naive  11.3
+    Parker Washington     WR   proj  12.4  scored  13.8  live fit  24.7 | +exit  24.7 | v1  26.7 | naive  24.2
+    Dontayvion Wicks      WR   proj   9.8  scored   0.0  live fit   8.8 | +exit   8.8 | v1   7.9 | naive   8.2
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   7.0 | +exit   7.0 | v1   7.8 | naive   8.2
+    Brenton Strange       TE   proj   8.9  scored   1.3  live fit   7.9 | +exit   7.9 | v1   8.8 | naive   8.8
+    Cam Little            K    proj   8.7  scored   1.0  live fit   8.2 | +exit   8.2 | v1   8.2 | naive   8.3
+    Jacksonville Jaguars D/STDST  proj   8.4  scored  10.0  live fit   8.4 | +exit   8.4 | v1  18.9 | naive  17.1
+    Makai Lemon           WR   proj   8.0  scored   0.0  live fit   7.1 | +exit   7.1 | v1   6.5 | naive   6.7
+    Will Shipley          RB   proj   6.6  scored   2.0  live fit   7.9 | +exit   7.9 | v1   7.8 | naive   7.5
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   5.8 | +exit   5.8 | v1   5.2 | naive   5.5
+  JAX: in Q1 3:38 f=0.19 score 7.0-0.0
+  PHI: in Q1 3:38 f=0.19 score 0.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored   7.3  live fit  21.3 | +exit  21.3 | v1  22.5 | naive  21.7
+    Jalen Hurts           QB   proj  14.6  scored   0.8  live fit  14.1 | +exit  14.1 | v1  12.3 | naive  12.7
+    Bhayshul Tuten        RB   proj  13.1  scored   1.6  live fit  11.3 | +exit  11.3 | v1  12.0 | naive  12.2
+    Parker Washington     WR   proj  12.4  scored  13.8  live fit  24.3 | +exit  24.3 | v1  26.2 | naive  23.9
+    Dontayvion Wicks      WR   proj   9.8  scored   0.0  live fit   8.4 | +exit   8.4 | v1   7.6 | naive   7.9
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   6.8 | +exit   6.8 | v1   7.5 | naive   7.9
+    Brenton Strange       TE   proj   8.9  scored   1.3  live fit   7.7 | +exit   7.7 | v1   8.4 | naive   8.5
+    Cam Little            K    proj   8.7  scored   1.0  live fit   7.9 | +exit   7.9 | v1   7.9 | naive   8.1
+    Jacksonville Jaguars D/STDST  proj   8.4  scored  10.0  live fit   8.4 | +exit   8.4 | v1  18.5 | naive  16.8
+    Makai Lemon           WR   proj   8.0  scored   1.0  live fit   8.0 | +exit   8.0 | v1   7.4 | naive   7.5
+    Will Shipley          RB   proj   6.6  scored   2.0  live fit   7.7 | +exit   7.7 | v1   7.5 | naive   7.3
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   5.6 | +exit   5.6 | v1   5.0 | naive   5.3
+  JAX: in Q2 15:00 f=0.25 score 7.0-0.0
+  PHI: in Q2 15:00 f=0.25 score 0.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored   7.8  live fit  20.9 | +exit  20.9 | v1  21.8 | naive  21.1
+    Jalen Hurts           QB   proj  14.6  scored   1.3  live fit  13.6 | +exit  13.6 | v1  11.8 | naive  12.2
+    Bhayshul Tuten        RB   proj  13.1  scored   1.6  live fit  10.4 | +exit  10.4 | v1  11.1 | naive  11.4
+    Parker Washington     WR   proj  12.4  scored  13.8  live fit  23.5 | +exit  23.5 | v1  25.1 | naive  23.1
+    Dontayvion Wicks      WR   proj   9.8  scored   0.0  live fit   7.8 | +exit   7.8 | v1   6.9 | naive   7.3
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   6.3 | +exit   6.3 | v1   6.8 | naive   7.3
+    Brenton Strange       TE   proj   8.9  scored   4.6  live fit  10.9 | +exit  10.9 | v1  11.7 | naive  11.3
+    Cam Little            K    proj   8.7  scored   1.0  live fit   7.3 | +exit   7.3 | v1   7.3 | naive   7.5
+    Jacksonville Jaguars D/STDST  proj   8.4  scored  10.0  live fit   8.6 | +exit   8.6 | v1  17.8 | naive  16.3
+    Makai Lemon           WR   proj   8.0  scored   3.1  live fit   9.8 | +exit   9.8 | v1   9.3 | naive   9.1
+    Will Shipley          RB   proj   6.6  scored   2.0  live fit   7.2 | +exit   7.2 | v1   7.0 | naive   7.0
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   5.2 | +exit   5.2 | v1   4.6 | naive   4.9
+  JAX: in Q2 8:46 f=0.35 score 7.0-6.0
+  PHI: in Q2 8:46 f=0.35 score 6.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored   7.8  live fit  20.2 | +exit  20.2 | v1  19.5 | naive  19.3
+    Jalen Hurts           QB   proj  14.6  scored   2.6  live fit  12.3 | +exit  12.3 | v1  11.6 | naive  12.0
+    Bhayshul Tuten        RB   proj  13.1  scored   1.6  live fit   9.4 | +exit   9.4 | v1   9.6 | naive  10.1
+    Parker Washington     WR   proj  12.4  scored  13.8  live fit  22.9 | +exit  22.9 | v1  23.3 | naive  21.8
+    Dontayvion Wicks      WR   proj   9.8  scored   4.8  live fit  11.5 | +exit  11.5 | v1  11.3 | naive  11.1
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   6.0 | +exit   6.0 | v1   5.7 | naive   6.3
+    Brenton Strange       TE   proj   8.9  scored   4.5  live fit  10.4 | +exit  10.4 | v1  10.5 | naive  10.2
+    Cam Little            K    proj   8.7  scored   1.0  live fit   6.3 | +exit   6.3 | v1   6.3 | naive   6.6
+    Jacksonville Jaguars D/STDST  proj   8.4  scored  10.0  live fit   9.0 | +exit   9.0 | v1  16.6 | naive  15.4
+    Makai Lemon           WR   proj   8.0  scored   3.1  live fit   8.5 | +exit   8.5 | v1   8.3 | naive   8.3
+    Will Shipley          RB   proj   6.6  scored   2.1  live fit   6.3 | +exit   6.3 | v1   6.3 | naive   6.4
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   4.1 | +exit   4.1 | v1   3.8 | naive   4.2
+  JAX: in Q2 6:26 f=0.39 score 7.0-7.0
+  PHI: in Q2 6:26 f=0.39 score 7.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored   7.9  live fit  19.8 | +exit  19.8 | v1  18.9 | naive  18.7
+    Jalen Hurts           QB   proj  14.6  scored   2.6  live fit  11.6 | +exit  11.6 | v1  11.0 | naive  11.5
+    Bhayshul Tuten        RB   proj  13.1  scored   1.6  live fit   8.9 | +exit   8.9 | v1   9.0 | naive   9.6  exit x0.99 (stale 0.20)
+    Parker Washington     WR   proj  12.4  scored  13.8  live fit  22.5 | +exit  22.5 | v1  22.7 | naive  21.3
+    Dontayvion Wicks      WR   proj   9.8  scored   4.8  live fit  11.0 | +exit  11.0 | v1  10.9 | naive  10.8
+    Jakobi Meyers         WR   proj   9.7  scored   0.0  live fit   5.7 | +exit   5.7 | v1   5.3 | naive   5.9
+    Brenton Strange       TE   proj   8.9  scored   5.9  live fit  11.7 | +exit  11.7 | v1  11.7 | naive  11.3
+    Cam Little            K    proj   8.7  scored   1.0  live fit   5.9 | +exit   5.9 | v1   5.9 | naive   6.3
+    Jacksonville Jaguars D/STDST  proj   8.4  scored   4.0  live fit   4.8 | +exit   4.8 | v1   9.2 | naive   9.1
+    Makai Lemon           WR   proj   8.0  scored   3.1  live fit   8.1 | +exit   8.1 | v1   8.0 | naive   8.0
+    Will Shipley          RB   proj   6.6  scored   8.3  live fit  13.6 | +exit  13.6 | v1  13.2 | naive  12.3
+    Darius Cooper         WR   proj   6.5  scored   0.0  live fit   3.8 | +exit   3.8 | v1   3.6 | naive   4.0
+  JAX: in Q2 2:56 f=0.45 score 7.0-14.0
+  PHI: in Q2 2:56 f=0.45 score 14.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored   9.9  live fit  21.6 | +exit  21.6 | v1  19.9 | naive  19.6
+    Jalen Hurts           QB   proj  14.6  scored   9.1  live fit  16.6 | +exit  16.6 | v1  17.4 | naive  17.1
+    Bhayshul Tuten        RB   proj  13.1  scored   1.1  live fit   7.6 | +exit   7.6 | v1   7.6 | naive   8.3
+    Parker Washington     WR   proj  12.4  scored  16.4  live fit  24.8 | +exit  24.8 | v1  24.7 | naive  23.2
+    Dontayvion Wicks      WR   proj   9.8  scored   4.8  live fit   9.6 | +exit   9.6 | v1  10.2 | naive  10.2
+    Jakobi Meyers         WR   proj   9.7  scored   2.8  live fit   8.5 | +exit   8.5 | v1   7.9 | naive   8.1
+    Brenton Strange       TE   proj   8.9  scored   5.9  live fit  11.4 | +exit  11.4 | v1  11.0 | naive  10.8
+    Cam Little            K    proj   8.7  scored   1.0  live fit   5.4 | +exit   5.4 | v1   5.4 | naive   5.8
+    Jacksonville Jaguars D/STDST  proj   8.4  scored   1.0  live fit   2.1 | +exit   2.1 | v1   5.2 | naive   5.6
+    Makai Lemon           WR   proj   8.0  scored   3.1  live fit   6.9 | +exit   6.9 | v1   7.4 | naive   7.5
+    Will Shipley          RB   proj   6.6  scored   8.3  live fit  12.8 | +exit  12.8 | v1  12.7 | naive  11.9
+    Darius Cooper         WR   proj   6.5  scored  13.2  live fit  17.3 | +exit  17.3 | v1  18.2 | naive  16.8
+  JAX: in Q2 0:15 f=0.50 score 7.0-14.0
+  PHI: in Q2 0:15 f=0.50 score 14.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored  11.1  live fit  21.5 | +exit  21.5 | v1  20.3 | naive  20.0
+    Jalen Hurts           QB   proj  14.6  scored   9.1  live fit  15.6 | +exit  15.6 | v1  16.7 | naive  16.4
+    Bhayshul Tuten        RB   proj  13.1  scored   4.1  live fit  10.3 | +exit  10.3 | v1  10.4 | naive  10.7
+    Parker Washington     WR   proj  12.4  scored  16.4  live fit  23.8 | +exit  23.8 | v1  23.9 | naive  22.6
+    Dontayvion Wicks      WR   proj   9.8  scored   4.8  live fit   8.9 | +exit   8.9 | v1   9.7 | naive   9.7
+    Jakobi Meyers         WR   proj   9.7  scored   2.8  live fit   7.8 | +exit   7.8 | v1   7.4 | naive   7.7
+    Brenton Strange       TE   proj   8.9  scored   7.7  live fit  12.7 | +exit  12.7 | v1  12.6 | naive  12.2
+    Cam Little            K    proj   8.7  scored   1.0  live fit   5.0 | +exit   5.0 | v1   5.0 | naive   5.4
+    Jacksonville Jaguars D/STDST  proj   8.4  scored   1.0  live fit   1.9 | +exit   1.9 | v1   4.8 | naive   5.2
+    Makai Lemon           WR   proj   8.0  scored   3.1  live fit   6.4 | +exit   6.4 | v1   7.0 | naive   7.1
+    Will Shipley          RB   proj   6.6  scored   8.3  live fit  12.3 | +exit  12.3 | v1  12.3 | naive  11.6
+    Darius Cooper         WR   proj   6.5  scored  13.2  live fit  16.8 | +exit  16.8 | v1  17.7 | naive  16.5
+  JAX: in HALF f=0.50 score 7.0-14.0
+  PHI: in HALF f=0.50 score 14.0-7.0
+    Trevor Lawrence       QB   proj  17.8  scored  11.1  live fit  21.3 | +exit  21.3 | v1  20.2 | naive  20.0
+    Jalen Hurts           QB   proj  14.6  scored   9.1  live fit  15.5 | +exit  15.5 | v1  16.6 | naive  16.4
+    Bhayshul Tuten        RB   proj  13.1  scored   3.5  live fit   9.5 | +exit   9.5 | v1   9.7 | naive  10.1
+    Parker Washington     WR   proj  12.4  scored  16.4  live fit  23.8 | +exit  23.8 | v1  23.9 | naive  22.6
+    Dontayvion Wicks      WR   proj   9.8  scored   4.8  live fit   8.9 | +exit   8.9 | v1   9.7 | naive   9.7^C

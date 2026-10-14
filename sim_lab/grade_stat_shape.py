@@ -36,6 +36,31 @@ def main():
                 for s in STATS: acc[ps][s] += w[s]
                 ptsum[ps] += pts_of(w)
     shape = {ps: {s: acc[ps][s] / ptsum[ps] for s in STATS} for ps in POSSTATS if ptsum[ps] > 0}
+    # V2 (2026-10-09, Jack "build the stat lines from game logs"): 3-season own history from the weekly DB (2023-25, season
+    # weights .5 / .3 / .2) and TIERED position shapes (per half-PPR point, by the player's per-game level bin, 2023-25 pool)
+    HW = {2025: 0.5, 2024: 0.3, 2023: 0.2}; TIERS = (0, 6, 10, 14, 99)
+    tier_of = lambda v: max(i for i in range(len(TIERS) - 1) if v >= TIERS[i])
+    hist3 = {}; tacc = defaultdict(lambda: defaultdict(float)); tpts = defaultdict(float)
+    for nmk, recs in cal.WEEKLY.items():
+        for rec in recs:
+            ps = rec.get("pos")
+            if ps not in POSSTATS: continue
+            tot = defaultdict(float); wsum = 0.0
+            for Y, wY in HW.items():
+                gl = [w for w in (rec.get("seasons") or {}).get(str(Y), []) if cal.played(w)]
+                if len(gl) < 4: continue
+                pg = {s: float(np.mean([float(w.get(s) or 0) for w in gl])) for s in STATS}
+                for s in STATS: tot[s] += wY * pg[s]
+                wsum += wY
+                lv = pts_of(pg)
+                if lv > 0 and len(gl) >= 8:
+                    t = tier_of(lv)
+                    for w in gl:
+                        for s in STATS: tacc[(ps, t)][s] += float(w.get(s) or 0)
+                        tpts[(ps, t)] += pts_of({s: float(w.get(s) or 0) for s in STATS})
+            if wsum > 0: hist3[(nmk, ps)] = ({s: tot[s] / wsum for s in STATS}, wsum)
+    tshape = {k: {s: tacc[k][s] / tpts[k] for s in STATS} for k in tacc if tpts[k] > 0}
+    P(f"V2: 3-season histories {len(hist3):,}; tiered shapes {len(tshape)}")
     P("position shape per half-PPR point (2025 pool): " + " | ".join(f"{ps} " + " ".join(f"{s} {shape[ps][s]:.3f}" for s in POSSTATS[ps]) for ps in POSSTATS))
     # expected components per game (SIM_XFP_2026 in data/sim_routes.js): skill rows [tgt, xRec, xRecYds, xRecTD, car, xRushYds, xRushTD], QB rows [att, xPassYds, xPassTD, car, xRushYds, xRushTD, xInt]
     rj = open(os.path.join(HERE, "data", "sim_routes.js"), encoding="utf-8").read(); i0 = rj.index("SIM_XFP_2026 = ") + len("SIM_XFP_2026 = "); XF = json.JSONDecoder().raw_decode(rj, i0)[0]
@@ -54,7 +79,8 @@ def main():
             lm = LAM.get(k, 0.5); lm = lm[ps] if isinstance(lm, dict) else lm
             PP = PU if P is None else P; ev = lm * u[k] + (1 - lm) * A[k]; out[k] = (PP * CF[k] + len(A_rows) * ev) / (PP + len(A_rows)) if (PP + len(A_rows)) > 0 else CF[k]
         return out
-    CANDS = ("Clay (comps)", "Clay + usage (compsU)", "Clay + usage P5 rebuilt", "Clay + usage P2", "Clay + usage P1", "in-season only (P0, usage-blended)", "hybrid: Clay+usage <3 games, in-season only 3+", f"Clay-free K1 {a.k1:g} K2 {a.k2:g}", "Clay-free + usage (ry/rec/rcy)", "Clay-free A only (this season)")
+    V2C = ("V2 hist3 K1 4 + tier K2 1", "V2 hist3 K1 8 + tier K2 1", "V2 hist3 K1 16 + tier K2 1", "V2 hist3 K1 8 + tier K2 1 + usage", "V2 hist3 K1 16 + tier K2 1 + usage")
+    CANDS = V2C + ("Clay (comps)", "Clay + usage (compsU)", "Clay + usage P5 rebuilt", "Clay + usage P2", "Clay + usage P1", "in-season only (P0, usage-blended)", "hybrid: Clay+usage <3 games, in-season only 3+", f"Clay-free K1 {a.k1:g} K2 {a.k2:g}", "Clay-free + usage (ry/rec/rcy)", "Clay-free A only (this season)")
     E = {c: defaultdict(list) for c in CANDS}; EG = {c: defaultdict(list) for c in CANDS}   # EG keyed by (pos, stat, gbucket)
     calls = defaultdict(lambda: defaultdict(list))   # candidate -> stat -> hits
     nrows = 0
@@ -63,6 +89,7 @@ def main():
         for p in snap["players"]:
             ps = p.get("pos")
             if ps not in POSSTATS or not p.get("comps"): continue
+            if p.get("compsSrc") == "gamelog": continue   # 2026-10-09+: QB comps are the game-log split - not Clay's; graded separately once enough rows exist
             key = norm(p["name"]); w = actw.get(key)
             if not w: continue
             actual = {s: float(w.get(s) or 0) for s in STATS}; comps = p["comps"]; lvl0 = pts_of(comps)
@@ -93,7 +120,22 @@ def main():
             compsPG = {s_: float(comps.get(s_, 0) or 0) for s_ in STATS}   # Clay's per-game line at the lock (the compsU prior)
             CP5 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=5.0)); CP2 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=2.0)); CP1 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=1.0)); CP0 = scl(usage_update(key, ps, wkn, compsPG, A_rows, P=0.0))
             gA = len(A_rows); HYB = (CP0 if (gA >= 3 and CP0) else (CP5 or comps))
-            cands = {"Clay (comps)": comps, "Clay + usage (compsU)": p.get("compsU") or comps, "Clay + usage P5 rebuilt": CP5 or comps, "Clay + usage P2": CP2 or comps, "Clay + usage P1": CP1 or comps, "in-season only (P0, usage-blended)": CP0 or comps, "hybrid: Clay+usage <3 games, in-season only 3+": HYB, f"Clay-free K1 {a.k1:g} K2 {a.k2:g}": CF, "Clay-free + usage (ry/rec/rcy)": CU1 or CF, "Clay-free A only (this season)": AO}
+            h3 = hist3.get((cal.norm(p["name"]), ps)); H3 = h3[0] if h3 and pts_of(h3[0]) > 0 else None
+            TS = tshape.get((ps, tier_of(lvl))) or shape.get(ps); CT = {s: TS[s] * lvl for s in STATS} if TS else None
+            def v2(k1, use=False):
+                num2 = {s: 0.0 for s in STATS}; den2 = 0.0
+                for L_, w_ in ((A, len(A_rows)), (H3, k1 if H3 else 0), (CT, 1.0 if CT else 0)):
+                    if L_ is None or w_ <= 0: continue
+                    for s in STATS: num2[s] += w_ * L_[s]
+                    den2 += w_
+                if den2 <= 0: return None
+                base = {s: num2[s] / den2 for s in STATS}
+                if use:
+                    u = usage_update(key, ps, wkn, base, A_rows)
+                    if u: base = u
+                return scl(base)
+            V2L = {"V2 hist3 K1 4 + tier K2 1": v2(4), "V2 hist3 K1 8 + tier K2 1": v2(8), "V2 hist3 K1 16 + tier K2 1": v2(16), "V2 hist3 K1 8 + tier K2 1 + usage": v2(8, True), "V2 hist3 K1 16 + tier K2 1 + usage": v2(16, True)}
+            cands = {**{k: (v or comps) for k, v in V2L.items()}, "Clay (comps)": comps, "Clay + usage (compsU)": p.get("compsU") or comps, "Clay + usage P5 rebuilt": CP5 or comps, "Clay + usage P2": CP2 or comps, "Clay + usage P1": CP1 or comps, "in-season only (P0, usage-blended)": CP0 or comps, "hybrid: Clay+usage <3 games, in-season only 3+": HYB, f"Clay-free K1 {a.k1:g} K2 {a.k2:g}": CF, "Clay-free + usage (ry/rec/rcy)": CU1 or CF, "Clay-free A only (this season)": AO}
             gb = "g0" if gA == 0 else ("g1-2" if gA <= 2 else "g3+")
             nrows += 1
             for c, L_ in cands.items():

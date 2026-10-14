@@ -1,0 +1,59 @@
+
+=== AFTER A SLOW ROOKIE YEAR -> career yrs 2-4 (classes 2017-22) ===
+group                    n  breakout  VOR/yr  sim pred  act-pred  mkt n  mkt/real  sim/real  mkt 1y move
+ALL                    331       14%     5.6      11.0      +7.0     70     -0.04     +0.18         +49%
+JM 75+                  13       54%    20.5       7.8     +11.7     11     -0.05     +0.30         +89%
+JM 60-75                31       42%    19.5      10.7     +10.6     20     +0.04     +0.28          -2%
+JM <60                 287        9%     3.4      12.1      +3.9     39     -0.01     +0.08         +53%
+R1 pick                 29       41%    13.3       7.4      +6.3     23     -0.07     +0.15         +63%
+R2 pick                 38       32%    14.9      10.6      +9.2     17     -0.08     +0.26         +49%
+R3+ pick               264        8%     3.4      14.0      +6.4     30     +0.03     +0.11          +9%
+JM 75+ / top-64         13       54%    20.5       7.8     +11.7     11     -0.05     +0.30         +89%
+JM 60-75 / top-64       25       44%    18.8       8.6      +9.7     16     +0.04     +0.28          -2%
+JM <60 / top-64         29       21%     7.4       9.8      +1.3     13     -0.14     +0.08         +79%
+JM 60-75 / 65+           6       33%    22.2      19.2     +14.1      4     +0.07     +0.18          +5%
+JM <60 / 65+           258        7%     2.9      13.2      +5.2     26     +0.03     +0.11          +9%
+   breakout = a starter season (QB/TE top-12, RB/WR top-24) in the 3 seasons judged; VOR/yr = mean realized; sim pred = production-only Dynasty SIM at that preseason; mkt/real & sim/real = median log(rank / realized rank) in the FFC ADP pool (negative = rated better than they turned out); 1y move = median market-rank change over the next year (rank up = negative %).
+
+=== FAST ROOKIE YEAR (reference) -> career yrs 2-4 ===
+group                    n  breakout  VOR/yr  sim pred  act-pred  mkt n  mkt/real  sim/real  mkt 1y move
+ALL                     82       65%    43.1      42.3      +4.0     75     -0.18     -0.35         +42%
+JM 75+                  31       81%    60.1      50.9     +10.1     30     -0.56     -0.40         +17%
+JM 60-75                20       60%    41.7      42.5      +1.4     19     -0.16     -0.65         +49%
+JM <60                  31       52%    27.0      32.1      -1.3     26     -0.03     -0.20         +63%
+R1 pick                 31       77%    55.7      45.9     +10.6     30     -0.20     -0.34         +17%
+R2 pick                 22       64%    40.5      46.0      -1.5     20     -0.51     -0.65         +23%
+R3+ pick                29       52%    31.5      34.9      +0.3     25     -0.04     -0.17         +73%
+JM 75+ / top-64         31       81%    60.1      50.9     +10.1     30     -0.56     -0.40         +17%
+JM 60-75 / top-64       16       56%    36.3      38.3      +0.5     15     -0.06     -0.65         +21%
+JM <60 / top-64          6       67%    29.1      39.0      -4.1      5     -0.04     -0.41         +66%
+JM <60 / 65+            25       48%    26.5      30.4      -0.6     21     -0.03     -0.10         +60%
+   breakout = a starter season (QB/TE top-12, RB/WR top-24) in the 3 seasons judged; VOR/yr = mean realized; sim pred = production-only Dynasty SIM at that preseason; mkt/real & sim/real = median log(rank / realized rank) in the FFC ADP pool (negative = rated better than they turned out); 1y move = median market-rank change over the next year (rank up = negative %).
+
+=== SLOW YEARS 1 AND 2 -> career yrs 3-5 (classes 2017-21) ===
+group                    n  breakout  VOR/yr  sim pred  act-pred  mkt n  mkt/real  sim/real  mkt 1y move
+ALL                    242        5%     1.2       8.6      +1.3     15     -0.05     +0.10         +72%
+JM 60-75                14        7%     0.6       7.0      -5.7      3     -0.17     +0.09         +17%
+JM <60                 224        5%     1.3       9.1      +3.0     12     -0.03     +0.16         +76%
+R1 pick                 15       20%     1.8       5.6      -4.3      4     -0.01     +0.24         +55%
+R2 pick                 21        5%     0.9      11.0      -6.5      4     -0.12     -0.17         +75%
+R3+ pick               206        4%     1.3       9.1      +8.9      7     +0.00     +0.22         +72%
+JM 60-75 / top-64       11        9%     0.8       7.0      -5.7      3     -0.17     +0.09         +17%
+JM <60 / top-64         21       14%     1.7       9.1      -5.3      5     -0.05     -0.17         +79%
+JM <60 / 65+           203        4%     1.3       9.1      +8.9      7     +0.00     +0.22         +72%
+   breakout = a starter season (QB/TE top-12, RB/WR top-24) in the 3 seasons judged; VOR/yr = mean realized; sim pred = production-only Dynasty SIM at that preseason; mkt/real & sim/real = median log(rank / realized rank) in the FFC ADP pool (negative = rated better than they turned out); 1y move = median market-rank change over the next year (rank up = negative %).
+
+=== Named: JM 75+ slow rookie years, what happened (yrs 2-4 finishes) ===
+   corey davis           WR  2017 pick   5 JM  85.7 rel1 0.80 g1 11  finishes yr1-4: WR84 WR27 WR62 WR30   mkt rank next pre: 34 -> 118
+   patrick mahomes       QB  2017 pick  10 JM  75.5 rel1 0.75 g1  1  finishes yr1-4: QB52 QB1 QB8 QB4   mkt rank next pre: 81 -> 19
+   david njoku           TE  2017 pick  29 JM  80.7 rel1 0.76 g1 16  finishes yr1-4: TE25 TE9 TE85 TE48   mkt rank next pre: 72 -> 75
+   tj hockenson          TE  2019 pick   8 JM  82.8 rel1 0.92 g1 12  finishes yr1-4: TE32 TE5 TE15 TE2   mkt rank next pre: 73 -> 98
+   noah fant             TE  2019 pick  20 JM  86.0 rel1 0.95 g1 16  finishes yr1-4: TE16 TE11 TE12 TE17   mkt rank next pre: 90 -> —
+   nkeal harry           WR  2019 pick  32 JM  81.4 rel1 0.62 g1  7  finishes yr1-4: WR123 WR98 WR142 WR140   mkt rank next pre: 68 -> —
+   henry ruggs           WR  2020 pick  12 JM  77.2 rel1 0.68 g1 13  finishes yr1-4: WR92 WR85 — —   mkt rank next pre: 113 -> —
+   trevor lawrence       QB  2021 pick   1 JM  88.0 rel1 0.78 g1 17  finishes yr1-4: QB22 QB8 QB12 QB27   mkt rank next pre: 97 -> 57
+   zach wilson           QB  2021 pick   2 JM  76.9 rel1 0.77 g1 13  finishes yr1-4: QB30 QB34 QB29 —   mkt rank next pre: 154 -> —
+   trey lance            QB  2021 pick   3 JM  78.7 rel1 0.68 g1  6  finishes yr1-4: QB39 QB63 — QB59   mkt rank next pre: 87 -> —
+   travis etienne        RB  2021 pick  25 JM  88.9 rel1 0.00 g1  0  finishes yr1-4: — RB18 RB3 RB35   mkt rank next pre: — -> 11
+   terrace marshall      WR  2021 pick  59 JM  75.4 rel1 0.29 g1 12  finishes yr1-4: WR141 WR88 WR136 WR177   mkt rank next pre: — -> —
+   jameson williams      WR  2022 pick  12 JM  87.0 rel1 0.27 g1  6  finishes yr1-4: WR156 WR82 WR22 WR12   mkt rank next pre: 46 -> 87

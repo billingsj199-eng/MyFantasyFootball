@@ -1,0 +1,33 @@
+building OLD sim pool...
+building NEW sim pool (conditional JM)...
+
+=== sim alone + shipped FAIR, old vs new sim ===
+                                               next mkt    3yr  5yr+y  top50    avg
+market now                                        0.653  0.650  0.629  0.396  0.582
+OLD sim alone                                     0.610  0.585  0.559  0.412  0.541
+OLD sim, shipped FAIR (0.5/0.3/0.5)               0.697  0.667  0.651  0.447  0.616
+NEW sim alone                                     0.616  0.591  0.564  0.418  0.547
+NEW sim, shipped FAIR, shipped M3 (= site now)    0.699  0.667  0.653  0.450  0.617
+NEW sim, shipped FAIR, M3 refit (LOYO)            0.695  0.664  0.649  0.447  0.614
+   pool 1321 player-seasons, 563 rookies / age <= 24
+
+=== weight grid on NEW sim + refit M3 ===
+                                               next mkt    3yr  5yr+y  top50    avg
+M3 0.5 sim 0.5 mkt 0.7                            0.692  0.665  0.648  0.454  0.615
+M3 0.7 sim 0.6 mkt 0.7                            0.695  0.663  0.648  0.452  0.614
+M3 0.7 sim 0.4 mkt 0.7                            0.696  0.664  0.649  0.448  0.614
+M3 0.5 sim 0.4 mkt 0.5                            0.695  0.663  0.648  0.451  0.614
+M3 0.3 sim 0.3 mkt 0.5                            0.691  0.666  0.649  0.451  0.614
+M3 0.5 sim 0.4 mkt 0.7                            0.693  0.665  0.649  0.450  0.614
+M3 0.3 sim 0.2 mkt 0.35                           0.694  0.665  0.649  0.448  0.614
+M3 0.5 sim 0.3 mkt 0.35                           0.698  0.661  0.647  0.449  0.614
+   2016: best 0.647 vs shipped weights 0.646
+   2017: best 0.579 vs shipped weights 0.585
+   2018: best 0.630 vs shipped weights 0.628
+   2019: best 0.606 vs shipped weights 0.601
+   2020: best 0.591 vs shipped weights 0.594
+   2021: best 0.643 vs shipped weights 0.633
+   2022: best 0.552 vs shipped weights 0.549
+   2023: best 0.632 vs shipped weights 0.634
+best (0.5, 0.5, 0.7) beats shipped weights in 5 of 8 seasons (same new-sim inputs)
+   shipped-weight neighbourhood avg: (0.3, 0.3, 0.5) 0.614, (0.5, 0.3, 0.5) 0.614, (0.7, 0.3, 0.5) 0.613, (0.3, 0.2, 0.5) 0.612, (0.5, 0.2, 0.5) 0.612, (0.7, 0.2, 0.5) 0.610

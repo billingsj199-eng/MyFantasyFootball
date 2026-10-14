@@ -1,518 +1,346 @@
-=== FILL-IN USAGE backtest: 18,940 Clay-pool player-weeks 2019-25 (live form replicated, P 5) ===
-    RB/WR/TE rows with 1+ games: 15,005; evidence rebuilt for 14,813 (rest: game count mismatch / team unknown)
+=== FILL-IN USAGE backtest: 20,894 Clay-pool player-weeks 2019-25 (live form replicated, P 5) ===
+    RB/WR/TE rows with 1+ games: 16,753; evidence rebuilt for 16,561 (rest: game count mismatch / team unknown)
     replica check: rebuilt points-per-game vs harness ppg, max abs diff 1.8000
     regulars = same-team same-position players with a higher Clay per-game projection, >= 5.0 half-PPR a game
 
 --- 0a  RAW FILL-IN BOOST: a player's points in his fill-in games vs his own normal games, same season (2+ normal games) ---
-    RB: 134 player-seasons, 493 fill-in games | fill-in ppg  7.48 vs normal  4.84 -> ratio 1.547 | by season 1.45 1.45 1.57 1.72 1.68 1.91 1.21
-    WR: 337 player-seasons, 1316 fill-in games | fill-in ppg  6.72 vs normal  5.18 -> ratio 1.297 | by season 1.25 1.24 1.20 1.31 1.29 1.48 1.28
-    TE: 94 player-seasons, 287 fill-in games | fill-in ppg  4.85 vs normal  3.32 -> ratio 1.460 | by season 1.33 1.30 1.47 2.00 1.81 1.58 1.17
+    RB: 196 player-seasons, 770 fill-in games | fill-in ppg  7.42 vs normal  4.79 -> ratio 1.549 | by season 1.59 1.35 1.51 1.72 1.81 1.85 1.21
+    WR: 431 player-seasons, 1764 fill-in games | fill-in ppg  6.25 vs normal  4.86 -> ratio 1.287 | by season 1.31 1.33 1.21 1.15 1.28 1.50 1.28
+    TE: 113 player-seasons, 338 fill-in games | fill-in ppg  4.78 vs normal  3.46 -> ratio 1.382 | by season 1.22 1.31 1.22 1.37 1.88 1.57 1.17
 
 --- 0b  ROW COUNTS and LIVE-FORM BIAS (mean actual / mean projected) ---
     'starter back' = 1+ stale fill-in game in the evidence (an absentee from that game plays in the target week)
   NEXT GAME
-    RB  no fill-in evidence: n  3561 act 10.65 proj 10.90 -> 0.976 (under in 6/7)
-        starter BACK (stale): n   389 act  6.36 proj  7.30 -> 0.871 (under in 6/6)
-        starter still OUT   : n   181 act  7.71 proj  8.63 -> 0.893 (under in 4/6)
-        back, ADP<=60 n     9 | 61-150 n   171 act  7.62 proj  8.62 -> 0.885 (under in 5/6) | 151+ n   209 act  5.19 proj  5.99 -> 0.867 (under in 5/6)
-        back, lead was the absentee n   355 act  6.70 proj  7.59 -> 0.883 (under in 6/6) | back, 2+ stale games n   235 act  6.00 proj  7.39 -> 0.813 (under in 6/6) | stale share >= 50% n    85 act  4.54 proj  6.60 -> 0.688 (under in 5/5)
-    WR  no fill-in evidence: n  4978 act  9.34 proj  9.45 -> 0.988 (under in 5/7)
-        starter BACK (stale): n  1292 act  6.51 proj  7.10 -> 0.917 (under in 6/7)
-        starter still OUT   : n   445 act  7.55 proj  7.65 -> 0.987 (under in 3/7)
-        back, ADP<=60 n    59 act 10.95 proj 11.71 -> 0.935 (under in 1/2) | 61-150 n   341 act  8.48 proj  9.09 -> 0.933 (under in 6/7) | 151+ n   892 act  5.46 proj  6.03 -> 0.905 (under in 5/7)
-        back, lead was the absentee n   993 act  6.79 proj  7.43 -> 0.914 (under in 5/7) | back, 2+ stale games n   749 act  6.36 proj  7.05 -> 0.902 (under in 5/7) | stale share >= 50% n   295 act  5.80 proj  6.85 -> 0.846 (under in 7/7)
-    TE  no fill-in evidence: n  2894 act  6.66 proj  6.54 -> 1.018 (under in 3/7)
-        starter BACK (stale): n   174 act  3.43 proj  3.88 -> 0.883 (under in 6/7)
-        starter still OUT   : n    82 act  6.33 proj  4.54 -> 1.395 (under in 0/5)
-        back, ADP<=60 n     0 | 61-150 n     4 | 151+ n   170 act  3.41 proj  3.84 -> 0.888 (under in 6/7)
-        back, lead was the absentee n   174 act  3.43 proj  3.88 -> 0.883 (under in 6/7) | back, 2+ stale games n    78 act  3.52 proj  4.16 -> 0.846 (under in 5/5) | stale share >= 50% n    25 act  3.97 proj  3.70 -> 1.073 (under in 0/1)
+    RB  no fill-in evidence: n  4025 act 10.06 proj 10.50 -> 0.958 (under in 6/7)
+        starter BACK (stale): n   551 act  5.98 proj  7.05 -> 0.849 (under in 7/7)
+        starter still OUT   : n   307 act  8.14 proj  8.47 -> 0.961 (under in 5/7)
+        back, ADP<=60 n     9 | 61-150 n   240 act  7.19 proj  8.38 -> 0.859 (under in 5/6) | 151+ n   302 act  4.92 proj  5.83 -> 0.843 (under in 5/7)
+        back, lead was the absentee n   480 act  6.29 proj  7.41 -> 0.849 (under in 7/7) | back, 2+ stale games n   353 act  5.83 proj  7.21 -> 0.808 (under in 7/7) | stale share >= 50% n   133 act  4.87 proj  6.59 -> 0.739 (under in 6/6)
+    WR  no fill-in evidence: n  5273 act  9.05 proj  9.28 -> 0.975 (under in 5/7)
+        starter BACK (stale): n  1545 act  6.29 proj  6.90 -> 0.913 (under in 6/7)
+        starter still OUT   : n   554 act  6.91 proj  7.30 -> 0.948 (under in 4/7)
+        back, ADP<=60 n    59 act 10.95 proj 11.73 -> 0.933 (under in 1/2) | 61-150 n   375 act  8.19 proj  9.04 -> 0.907 (under in 6/7) | 151+ n  1111 act  5.40 proj  5.92 -> 0.913 (under in 5/7)
+        back, lead was the absentee n  1147 act  6.64 proj  7.28 -> 0.912 (under in 6/7) | back, 2+ stale games n   897 act  6.20 proj  6.81 -> 0.910 (under in 5/7) | stale share >= 50% n   389 act  5.60 proj  6.42 -> 0.872 (under in 7/7)
+    TE  no fill-in evidence: n  3071 act  6.44 proj  6.37 -> 1.011 (under in 3/7)
+        starter BACK (stale): n   219 act  3.25 proj  3.75 -> 0.867 (under in 6/7)
+        starter still OUT   : n    99 act  6.35 proj  4.69 -> 1.353 (under in 0/5)
+        back, ADP<=60 n     0 | 61-150 n     4 | 151+ n   215 act  3.24 proj  3.72 -> 0.870 (under in 6/7)
+        back, lead was the absentee n   219 act  3.25 proj  3.75 -> 0.867 (under in 6/7) | back, 2+ stale games n   104 act  3.27 proj  3.99 -> 0.820 (under in 5/6) | stale share >= 50% n    35 act  2.98 proj  3.29 -> 0.905 (under in 1/2)
   REST OF SEASON, 4+ games left
-    RB  no fill-in evidence: n  2567 act 10.65 proj 10.38 -> 1.025 (under in 2/7)
-        starter BACK (stale): n   191 act  6.60 proj  7.25 -> 0.910 (under in 4/6)
-        starter still OUT   : n   118 act  6.47 proj  7.00 -> 0.924 (under in 4/6)
-        back, ADP<=60 n     3 | 61-150 n    90 act  7.71 proj  8.40 -> 0.917 (under in 4/5) | 151+ n    98 act  5.45 proj  6.04 -> 0.902 (under in 1/3)
-        back, lead was the absentee n   170 act  7.07 proj  7.63 -> 0.927 (under in 4/6) | back, 2+ stale games n   112 act  5.82 proj  7.64 -> 0.762 (under in 5/6) | stale share >= 50% n    56 act  5.51 proj  7.05 -> 0.782 (under in 1/3)
-    WR  no fill-in evidence: n  3650 act  9.24 proj  9.25 -> 0.999 (under in 4/7)
-        starter BACK (stale): n   726 act  6.51 proj  6.76 -> 0.963 (under in 6/7)
-        starter still OUT   : n   290 act  6.69 proj  6.67 -> 1.003 (under in 3/7)
-        back, ADP<=60 n    26 act 10.76 proj 12.25 -> 0.879 (under in 1/1) | 61-150 n   190 act  8.46 proj  8.98 -> 0.943 (under in 5/6) | 151+ n   510 act  5.57 proj  5.66 -> 0.984 (under in 3/7)
-        back, lead was the absentee n   538 act  6.85 proj  7.07 -> 0.968 (under in 4/7) | back, 2+ stale games n   399 act  6.50 proj  6.73 -> 0.965 (under in 4/7) | stale share >= 50% n   215 act  6.05 proj  6.63 -> 0.912 (under in 5/7)
-    TE  no fill-in evidence: n  2055 act  6.73 proj  6.38 -> 1.056 (under in 1/7)
-        starter BACK (stale): n   104 act  3.62 proj  3.53 -> 1.024 (under in 2/5)
-        starter still OUT   : n    42 act  5.73 proj  3.74 -> 1.530 (under in 0/3)
-        back, ADP<=60 n     0 | 61-150 n     0 | 151+ n   104 act  3.62 proj  3.53 -> 1.024 (under in 2/5)
-        back, lead was the absentee n   104 act  3.62 proj  3.53 -> 1.024 (under in 2/5) | back, 2+ stale games n    39 act  3.32 proj  3.76 -> 0.883 (under in 1/2) | stale share >= 50% n    20 act  3.74 proj  3.26 -> 1.147 (under in 0/0)
+    RB  no fill-in evidence: n  2934 act 10.04 proj 10.02 -> 1.002 (under in 4/7)
+        starter BACK (stale): n   262 act  6.37 proj  6.97 -> 0.913 (under in 4/6)
+        starter still OUT   : n   195 act  6.53 proj  6.60 -> 0.989 (under in 4/7)
+        back, ADP<=60 n     3 | 61-150 n   117 act  7.32 proj  8.16 -> 0.896 (under in 4/6) | 151+ n   142 act  5.49 proj  5.88 -> 0.934 (under in 3/5)
+        back, lead was the absentee n   221 act  6.79 proj  7.43 -> 0.914 (under in 3/6) | back, 2+ stale games n   159 act  5.89 proj  7.36 -> 0.800 (under in 5/6) | stale share >= 50% n    88 act  5.81 proj  6.82 -> 0.852 (under in 2/4)
+    WR  no fill-in evidence: n  3882 act  8.94 proj  9.08 -> 0.985 (under in 5/7)
+        starter BACK (stale): n   878 act  6.30 proj  6.56 -> 0.960 (under in 6/7)
+        starter still OUT   : n   356 act  6.34 proj  6.39 -> 0.992 (under in 3/7)
+        back, ADP<=60 n    26 act 10.76 proj 12.27 -> 0.877 (under in 1/1) | 61-150 n   213 act  8.10 proj  8.94 -> 0.906 (under in 6/7) | 151+ n   639 act  5.52 proj  5.54 -> 0.997 (under in 4/7)
+        back, lead was the absentee n   629 act  6.67 proj  6.92 -> 0.963 (under in 5/7) | back, 2+ stale games n   483 act  6.35 proj  6.47 -> 0.981 (under in 4/7) | stale share >= 50% n   285 act  5.84 proj  6.17 -> 0.945 (under in 4/7)
+    TE  no fill-in evidence: n  2177 act  6.52 proj  6.22 -> 1.048 (under in 2/7)
+        starter BACK (stale): n   127 act  3.59 proj  3.49 -> 1.029 (under in 3/6)
+        starter still OUT   : n    53 act  5.57 proj  3.85 -> 1.447 (under in 0/4)
+        back, ADP<=60 n     0 | 61-150 n     0 | 151+ n   127 act  3.59 proj  3.49 -> 1.029 (under in 3/6)
+        back, lead was the absentee n   127 act  3.59 proj  3.49 -> 1.029 (under in 3/6) | back, 2+ stale games n    50 act  3.32 proj  3.60 -> 0.923 (under in 1/2) | stale share >= 50% n    26 act  3.37 proj  3.10 -> 1.089 (under in 0/0)
   REST OF SEASON, no survivor filter
-    RB  no fill-in evidence: n  2824 act 10.43 proj 10.25 -> 1.017 (under in 2/7)
-        starter BACK (stale): n   257 act  5.80 proj  6.89 -> 0.842 (under in 5/6)
-        starter still OUT   : n   144 act  6.76 proj  6.72 -> 1.006 (under in 3/6)
-        back, ADP<=60 n     5 | 61-150 n   117 act  7.19 proj  8.17 -> 0.880 (under in 4/5) | 151+ n   135 act  4.53 proj  5.57 -> 0.813 (under in 4/6)
-        back, lead was the absentee n   226 act  6.28 proj  7.30 -> 0.860 (under in 5/6) | back, 2+ stale games n   159 act  5.29 proj  7.20 -> 0.735 (under in 6/6) | stale share >= 50% n    75 act  4.72 proj  6.77 -> 0.698 (under in 4/5)
-    WR  no fill-in evidence: n  4043 act  8.97 proj  9.11 -> 0.985 (under in 5/7)
-        starter BACK (stale): n   875 act  6.25 proj  6.56 -> 0.953 (under in 6/7)
-        starter still OUT   : n   342 act  6.41 proj  6.51 -> 0.985 (under in 3/7)
-        back, ADP<=60 n    32 act 10.43 proj 12.20 -> 0.855 (under in 1/1) | 61-150 n   214 act  8.16 proj  8.85 -> 0.923 (under in 5/6) | 151+ n   629 act  5.39 proj  5.50 -> 0.980 (under in 3/7)
-        back, lead was the absentee n   648 act  6.65 proj  6.90 -> 0.964 (under in 5/7) | back, 2+ stale games n   492 act  6.23 proj  6.50 -> 0.958 (under in 4/7) | stale share >= 50% n   263 act  5.73 proj  6.37 -> 0.899 (under in 5/7)
-    TE  no fill-in evidence: n  2337 act  6.51 proj  6.27 -> 1.039 (under in 2/7)
-        starter BACK (stale): n   135 act  3.48 proj  3.68 -> 0.945 (under in 5/7)
-        starter still OUT   : n    56 act  5.81 proj  3.53 -> 1.646 (under in 0/3)
-        back, ADP<=60 n     0 | 61-150 n     4 | 151+ n   131 act  3.46 proj  3.62 -> 0.956 (under in 4/6)
-        back, lead was the absentee n   135 act  3.48 proj  3.68 -> 0.945 (under in 5/7) | back, 2+ stale games n    57 act  3.30 proj  3.95 -> 0.836 (under in 3/4) | stale share >= 50% n    25 act  3.59 proj  3.51 -> 1.022 (under in 1/1)
+    RB  no fill-in evidence: n  3257 act  9.80 proj  9.89 -> 0.992 (under in 4/7)
+        starter BACK (stale): n   368 act  5.56 proj  6.48 -> 0.858 (under in 7/7)
+        starter still OUT   : n   239 act  6.62 proj  6.33 -> 1.046 (under in 3/7)
+        back, ADP<=60 n     5 | 61-150 n   152 act  6.78 proj  7.94 -> 0.854 (under in 5/6) | 151+ n   211 act  4.63 proj  5.30 -> 0.874 (under in 5/7)
+        back, lead was the absentee n   303 act  6.04 proj  6.99 -> 0.865 (under in 6/7) | back, 2+ stale games n   237 act  5.17 proj  6.77 -> 0.764 (under in 7/7) | stale share >= 50% n   121 act  4.96 proj  6.50 -> 0.763 (under in 5/6)
+    WR  no fill-in evidence: n  4306 act  8.67 proj  8.93 -> 0.971 (under in 5/7)
+        starter BACK (stale): n  1091 act  5.94 proj  6.34 -> 0.937 (under in 6/7)
+        starter still OUT   : n   421 act  5.98 proj  6.20 -> 0.964 (under in 4/7)
+        back, ADP<=60 n    32 act 10.43 proj 12.22 -> 0.854 (under in 1/1) | 61-150 n   244 act  7.73 proj  8.79 -> 0.880 (under in 6/7) | 151+ n   815 act  5.23 proj  5.38 -> 0.971 (under in 4/7)
+        back, lead was the absentee n   779 act  6.35 proj  6.73 -> 0.944 (under in 5/7) | back, 2+ stale games n   614 act  5.96 proj  6.26 -> 0.952 (under in 4/7) | stale share >= 50% n   351 act  5.57 proj  6.00 -> 0.930 (under in 5/7)
+    TE  no fill-in evidence: n  2500 act  6.27 proj  6.09 -> 1.029 (under in 3/7)
+        starter BACK (stale): n   170 act  3.33 proj  3.54 -> 0.943 (under in 6/7)
+        starter still OUT   : n    68 act  5.63 proj  3.66 -> 1.540 (under in 0/5)
+        back, ADP<=60 n     0 | 61-150 n     4 | 151+ n   166 act  3.32 proj  3.48 -> 0.952 (under in 5/7)
+        back, lead was the absentee n   170 act  3.33 proj  3.54 -> 0.943 (under in 6/7) | back, 2+ stale games n    73 act  3.20 proj  3.72 -> 0.861 (under in 3/4) | stale share >= 50% n    35 act  3.02 proj  3.17 -> 0.955 (under in 2/2)
 
 --- 0c  NAMED EXAMPLES (next game, starter back): biggest over-projections summed over the player-season ---
+    2021 Chase Claypool         WR PIT  fill-in games 1 at   9.6 ppg vs   7.0 otherwise (absent: Diontae Johnson) | after return 11 games: proj  11.1 actual   6.5
     2021 Darius Slayton         WR NYG  fill-in games 10 at   4.5 ppg vs   3.1 otherwise (absent: Kadarius Toney, Sterling Shepard) | after return 7 games: proj   8.0 actual   1.2
     2023 Joshua Kelley          RB LAC  fill-in games 3 at   4.0 ppg vs   3.0 otherwise (absent: Austin Ekeler) | after return 12 games: proj   5.7 actual   2.2
     2024 Ja'Lynn Polk           WR NE   fill-in games 1 at   8.2 ppg vs   1.5 otherwise (absent: DeMario Douglas) | after return 11 games: proj   5.2 actual   1.6
+    2024 Tyler Lockett          WR SEA  fill-in games 2 at   7.6 ppg vs   5.4 otherwise (absent: DK Metcalf) | after return 7 games: proj   8.2 actual   2.6
     2023 Hunter Renfrow         WR LV   fill-in games 1 at   2.3 ppg vs   1.8 otherwise (absent: Jakobi Meyers) | after return 12 games: proj   5.0 actual   1.8
-    2024 Tyler Lockett          WR SEA  fill-in games 2 at   7.6 ppg vs   5.4 otherwise (absent: DK Metcalf) | after return 7 games: proj   8.1 actual   2.6
-    2023 Jamaal Williams        RB NO   fill-in games 3 at   5.8 ppg vs   2.5 otherwise (absent: Alvin Kamara) | after return 10 games: proj   6.3 actual   2.5
-    2020 Darius Slayton         WR NYG  fill-in games 4 at   9.4 ppg vs   6.4 otherwise (absent: Sterling Shepard) | after return 9 games: proj   8.8 actual   4.9
+    2023 Jamaal Williams        RB NO   fill-in games 3 at   5.8 ppg vs   2.5 otherwise (absent: Alvin Kamara) | after return 10 games: proj   6.4 actual   2.5
+    2020 Boston Scott           RB PHI  fill-in games 4 at   9.1 ppg vs   2.9 otherwise (absent: Miles Sanders) | after return 12 games: proj   6.0 actual   2.9
+    2020 Darius Slayton         WR NYG  fill-in games 4 at   9.4 ppg vs   6.4 otherwise (absent: Sterling Shepard) | after return 9 games: proj   8.9 actual   4.9
     2020 Joshua Kelley          RB LAC  fill-in games 11 at   4.1 ppg vs   6.7 otherwise (absent: Austin Ekeler, Justin Jackson) | after return 7 games: proj   8.3 actual   3.4
-    2024 Rome Odunze            WR CHI  fill-in games 2 at  12.3 ppg vs   6.2 otherwise (absent: Keenan Allen) | after return 13 games: proj   9.3 actual   6.8
-    2022 Nelson Agholor         WR NE   fill-in games 4 at   2.5 ppg vs   3.4 otherwise (absent: Jakobi Meyers, Kendrick Bourne) | after return 9 games: proj   5.6 actual   2.2
-    2020 Jerick McKinnon        RB SF   fill-in games 8 at   7.6 ppg vs   5.5 otherwise (absent: Raheem Mostert) | after return 4 games: proj   9.6 actual   2.2
-    2019 Geronimo Allison       WR GB   fill-in games 4 at   2.7 ppg vs   2.8 otherwise (absent: Davante Adams) | after return 7 games: proj   5.6 actual   1.5
+    2024 Rome Odunze            WR CHI  fill-in games 2 at  12.3 ppg vs   6.2 otherwise (absent: Keenan Allen) | after return 13 games: proj   9.4 actual   6.8
+    2022 Nelson Agholor         WR NE   fill-in games 7 at   1.5 ppg vs   4.9 otherwise (absent: DeVante Parker, Jakobi Meyers, Kendrick Bourne) | after return 9 games: proj   5.6 actual   2.2
     ...and the other side (kept producing after the starter returned):
     2021 Deebo Samuel           WR  fill-in games 1 at  27.4 ppg vs  18.2 otherwise | after return 14 games: proj  12.6 actual  17.6
-    2021 Ja'Marr Chase          WR  fill-in games 3 at  11.6 ppg vs  16.4 otherwise | after return 12 games: proj  12.1 actual  16.5
-    2020 Nelson Agholor         WR  fill-in games 3 at   6.2 ppg vs   9.2 otherwise | after return 10 games: proj   5.6 actual  10.3
-    2024 Marvin Mims            WR  fill-in games 1 at   2.8 ppg vs   7.1 otherwise | after return 9 games: proj   4.4 actual   9.1
-    2025 Parker Washington      WR  fill-in games 10 at  12.2 ppg vs   6.8 otherwise | after return 8 games: proj   6.9 actual  12.1
+    2021 Ja'Marr Chase          WR  fill-in games 3 at  11.6 ppg vs  16.4 otherwise | after return 12 games: proj  12.0 actual  16.5
+    2019 DeVante Parker         WR  fill-in games 3 at   6.2 ppg vs  12.0 otherwise | after return 11 games: proj   7.6 actual  12.2
+    2020 Nelson Agholor         WR  fill-in games 8 at   9.4 ppg vs   7.8 otherwise | after return 10 games: proj   5.7 actual  10.3
+    2022 Christian Watson       WR  fill-in games 6 at  16.4 ppg vs   5.6 otherwise | after return 11 games: proj   7.1 actual  11.2
 
 --- 1  FIXED SETTINGS, every RB/WR/TE (error vs live; seasons better of 7) ---
 
   NEXT GAME
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    b  w 0.00 (stale only)  = rule a (exclude)         +2.06% (2/7) n1855 |        +2.21% (1/6) n389       +2.07% (2/7) n1292        +0.99% (3/7) n174 |        +0.00% (0/7) n708 | all +0.163%  top150-wtd +0.073%  rank -0.0008
-    b  w 0.25 (stale only)                             +0.95% (2/7) n1855 |        +1.19% (1/6) n389       +0.92% (2/7) n1292        +0.08% (3/7) n174 |        +0.00% (0/7) n708 | all +0.075%  top150-wtd +0.047%  rank -0.0006
-    b  w 0.50 (stale only)                             +0.35% (3/7) n1855 |        +0.56% (1/6) n389       +0.32% (2/7) n1292        -0.27% (4/7) n174 |        +0.00% (0/7) n708 | all +0.028%  top150-wtd +0.027%  rank -0.0005
-    b  w 0.75 (stale only)                             +0.07% (3/7) n1855 |        +0.18% (1/6) n389       +0.06% (2/7) n1292        -0.27% (5/7) n174 |        +0.00% (0/7) n708 | all +0.006%  top150-wtd +0.012%  rank -0.0003
-    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -0.61% (7/7) n1855 |        -1.59% (5/6) n389       -0.33% (5/7) n1292        -0.46% (4/7) n174 |        +0.00% (0/7) n708 | all -0.048%  top150-wtd -0.014%  rank +0.0001
-    c  rescale 1/1.2 every position                    -0.76% (6/7) n1855 |        -1.35% (6/6) n389       -0.61% (5/7) n1292        -0.55% (4/7) n174 |        +0.00% (0/7) n708 | all -0.061%  top150-wtd -0.014%  rank +0.0000
-    c  rescale 1/1.4 every position                    -1.02% (5/7) n1855 |        -2.00% (5/6) n389       -0.75% (4/7) n1292        -0.72% (3/7) n174 |        +0.00% (0/7) n708 | all -0.081%  top150-wtd -0.017%  rank +0.0003
-    ctl w 0.00 ALL fill-in games, any target           +2.33% (3/7) n1855 |        +2.13% (1/6) n389       +2.45% (3/7) n1292        +0.99% (3/7) n174 |        +7.48% (1/7) n708 | all +0.437%  top150-wtd +0.076%  rank -0.0006
-    ctl w 0.50 ALL fill-in games, any target           +0.35% (3/7) n1855 |        +0.53% (1/6) n389       +0.32% (3/7) n1292        -0.27% (4/7) n174 |        +1.96% (2/7) n708 | all +0.093%  top150-wtd +0.020%  rank -0.0001
+    b  w 0.00 (stale only)  = rule a (exclude)         +1.64% (1/7) n2315 |        +1.68% (1/7) n551       +1.72% (3/7) n1545        -0.08% (4/7) n219 |        +0.00% (0/7) n960 | all +0.149%  top150-wtd +0.056%  rank -0.0008
+    b  w 0.25 (stale only)                             +0.61% (4/7) n2315 |        +0.67% (1/7) n551       +0.66% (3/7) n1545        -0.64% (4/7) n219 |        +0.00% (0/7) n960 | all +0.055%  top150-wtd +0.034%  rank -0.0006
+    b  w 0.50 (stale only)                             +0.13% (4/7) n2315 |        +0.17% (2/7) n551       +0.16% (4/7) n1545        -0.69% (5/7) n219 |        +0.00% (0/7) n960 | all +0.012%  top150-wtd +0.018%  rank -0.0004
+    b  w 0.75 (stale only)                             -0.04% (5/7) n2315 |        -0.02% (2/7) n551       -0.02% (4/7) n1545        -0.45% (6/7) n219 |        +0.00% (0/7) n960 | all -0.003%  top150-wtd +0.007%  rank -0.0000
+    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -0.73% (7/7) n2315 |        -1.95% (6/7) n551       -0.32% (6/7) n1545        -0.65% (5/7) n219 |        +0.00% (0/7) n960 | all -0.066%  top150-wtd -0.022%  rank +0.0001
+    c  rescale 1/1.2 every position                    -0.86% (6/7) n2315 |        -1.65% (6/7) n551       -0.61% (5/7) n1545        -0.80% (5/7) n219 |        +0.00% (0/7) n960 | all -0.078%  top150-wtd -0.023%  rank +0.0003
+    c  rescale 1/1.4 every position                    -1.20% (6/7) n2315 |        -2.46% (6/7) n551       -0.78% (5/7) n1545        -1.17% (5/7) n219 |        +0.00% (0/7) n960 | all -0.108%  top150-wtd -0.032%  rank +0.0003
+    ctl w 0.00 ALL fill-in games, any target           +2.52% (1/7) n2315 |        +1.82% (1/7) n551       +2.88% (3/7) n1545        -0.08% (4/7) n219 |        +6.21% (1/7) n960 | all +0.484%  top150-wtd +0.061%  rank -0.0006
+    ctl w 0.50 ALL fill-in games, any target           +0.35% (4/7) n2315 |        +0.20% (2/7) n551       +0.46% (3/7) n1545        -0.69% (5/7) n219 |        +1.44% (2/7) n960 | all +0.091%  top150-wtd +0.011%  rank -0.0001
     -- 2022-25 only --
-    b  w 0.00 (stale only)  = rule a (exclude)         +2.89% (0/4) n1377 |        +4.36% (0/4) n299        +2.48% (1/4) n970        +2.75% (1/4) n108 |        +0.00% (0/4) n485 | all +0.259%  top150-wtd +0.083%  rank -0.0008
-    b  w 0.25 (stale only)                             +1.47% (0/4) n1377 |        +2.70% (0/4) n299        +1.13% (1/4) n970        +1.18% (1/4) n108 |        +0.00% (0/4) n485 | all +0.131%  top150-wtd +0.051%  rank -0.0007
-    b  w 0.50 (stale only)                             +0.65% (1/4) n1377 |        +1.50% (0/4) n299        +0.42% (1/4) n970        +0.34% (2/4) n108 |        +0.00% (0/4) n485 | all +0.058%  top150-wtd +0.029%  rank -0.0005
-    b  w 0.75 (stale only)                             +0.20% (1/4) n1377 |        +0.62% (0/4) n299        +0.09% (1/4) n970        -0.00% (3/4) n108 |        +0.00% (0/4) n485 | all +0.018%  top150-wtd +0.012%  rank -0.0002
-    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -0.45% (4/4) n1377 |        -0.88% (3/4) n299        -0.35% (3/4) n970        +0.13% (1/4) n108 |        +0.00% (0/4) n485 | all -0.040%  top150-wtd -0.015%  rank +0.0001
-    c  rescale 1/1.2 every position                    -0.65% (3/4) n1377 |        -0.77% (4/4) n299        -0.65% (3/4) n970        +0.20% (1/4) n108 |        +0.00% (0/4) n485 | all -0.058%  top150-wtd -0.020%  rank +0.0002
-    c  rescale 1/1.4 every position                    -0.80% (2/4) n1377 |        -0.99% (3/4) n299        -0.80% (2/4) n970        +0.56% (1/4) n108 |        +0.00% (0/4) n485 | all -0.071%  top150-wtd -0.024%  rank +0.0004
-    ctl w 0.00 ALL fill-in games, any target           +3.36% (1/4) n1377 |        +4.21% (0/4) n299        +3.15% (1/4) n970        +2.75% (1/4) n108 |        +7.95% (0/4) n485 | all +0.607%  top150-wtd +0.094%  rank -0.0009
-    ctl w 0.50 ALL fill-in games, any target           +0.69% (1/4) n1377 |        +1.44% (0/4) n299        +0.49% (1/4) n970        +0.34% (2/4) n108 |        +2.31% (1/4) n485 | all +0.150%  top150-wtd +0.024%  rank -0.0003
+    b  w 0.00 (stale only)  = rule a (exclude)         +2.49% (0/4) n1543 |        +3.96% (0/4) n370       +2.13% (1/4) n1053        +0.83% (2/4) n120 |        +0.00% (0/4) n575 | all +0.241%  top150-wtd +0.079%  rank -0.0006
+    b  w 0.25 (stale only)                             +1.17% (1/4) n1543 |        +2.30% (0/4) n370       +0.90% (1/4) n1053        -0.27% (2/4) n120 |        +0.00% (0/4) n575 | all +0.113%  top150-wtd +0.048%  rank -0.0005
+    b  w 0.50 (stale only)                             +0.46% (1/4) n1543 |        +1.20% (0/4) n370       +0.29% (2/4) n1053        -0.59% (3/4) n120 |        +0.00% (0/4) n575 | all +0.045%  top150-wtd +0.026%  rank -0.0003
+    b  w 0.75 (stale only)                             +0.11% (2/4) n1543 |        +0.46% (0/4) n370       +0.04% (2/4) n1053        -0.46% (4/4) n120 |        +0.00% (0/4) n575 | all +0.011%  top150-wtd +0.011%  rank +0.0001
+    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -0.51% (4/4) n1543 |        -1.09% (3/4) n370       -0.35% (3/4) n1053        -0.29% (2/4) n120 |        +0.00% (0/4) n575 | all -0.050%  top150-wtd -0.015%  rank +0.0002
+    c  rescale 1/1.2 every position                    -0.71% (3/4) n1543 |        -0.95% (3/4) n370       -0.65% (2/4) n1053        -0.33% (2/4) n120 |        +0.00% (0/4) n575 | all -0.069%  top150-wtd -0.020%  rank +0.0006
+    c  rescale 1/1.4 every position                    -0.90% (3/4) n1543 |        -1.27% (3/4) n370       -0.81% (2/4) n1053        -0.34% (2/4) n120 |        +0.00% (0/4) n575 | all -0.087%  top150-wtd -0.025%  rank +0.0006
+    ctl w 0.00 ALL fill-in games, any target           +3.67% (0/4) n1543 |        +4.15% (0/4) n370       +3.65% (1/4) n1053        +0.83% (2/4) n120 |        +7.39% (0/4) n575 | all +0.673%  top150-wtd +0.094%  rank -0.0009
+    ctl w 0.50 ALL fill-in games, any target           +0.78% (1/4) n1543 |        +1.24% (0/4) n370       +0.70% (1/4) n1053        -0.59% (3/4) n120 |        +1.95% (1/4) n575 | all +0.159%  top150-wtd +0.021%  rank -0.0002
 
   REST OF SEASON, 4+ games left
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    b  w 0.00 (stale only)  = rule a (exclude)        +14.78% (1/7) n1021 |       +16.59% (1/6) n191       +14.31% (2/7) n726       +11.42% (2/5) n104 |        +0.00% (0/7) n450 | all +1.100%  top150-wtd +0.431%  rank -0.0019
-    b  w 0.25 (stale only)                             +8.38% (2/7) n1021 |       +10.54% (1/6) n191        +7.67% (2/7) n726        +6.66% (2/5) n104 |        +0.00% (0/7) n450 | all +0.624%  top150-wtd +0.281%  rank -0.0011
-    b  w 0.50 (stale only)                             +4.31% (2/7) n1021 |        +6.07% (1/6) n191        +3.69% (2/7) n726        +3.40% (2/5) n104 |        +0.00% (0/7) n450 | all +0.321%  top150-wtd +0.165%  rank -0.0008
-    b  w 0.75 (stale only)                             +1.67% (2/7) n1021 |        +2.65% (1/6) n191        +1.32% (2/7) n726        +1.26% (2/5) n104 |        +0.00% (0/7) n450 | all +0.124%  top150-wtd +0.073%  rank -0.0004
-    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -0.83% (5/7) n1021 |        -2.76% (3/6) n191        -0.19% (4/7) n726        +0.81% (1/5) n104 |        +0.00% (0/7) n450 | all -0.062%  top150-wtd -0.029%  rank +0.0004
-    c  rescale 1/1.2 every position                    -0.54% (4/7) n1021 |        -2.42% (3/6) n191        +0.07% (4/7) n726        +1.12% (1/5) n104 |        +0.00% (0/7) n450 | all -0.040%  top150-wtd -0.016%  rank +0.0003
-    c  rescale 1/1.4 every position                    +0.09% (3/7) n1021 |        -3.20% (3/6) n191        +1.21% (3/7) n726        +2.45% (1/5) n104 |        +0.00% (0/7) n450 | all +0.007%  top150-wtd +0.001%  rank +0.0005
-    ctl w 0.00 ALL fill-in games, any target          +17.02% (2/7) n1021 |       +16.72% (1/6) n191       +17.52% (2/7) n726       +11.42% (2/5) n104 |       +11.26% (2/7) n450 | all +1.741%  top150-wtd +0.457%  rank -0.0017
-    ctl w 0.50 ALL fill-in games, any target           +4.95% (2/7) n1021 |        +6.13% (1/6) n191        +4.60% (2/7) n726        +3.40% (2/5) n104 |        +2.83% (3/7) n450 | all +0.488%  top150-wtd +0.156%  rank -0.0008
+    b  w 0.00 (stale only)  = rule a (exclude)        +13.10% (1/7) n1267 |       +15.86% (1/6) n262       +12.26% (2/7) n878        +9.45% (3/6) n127 |        +0.00% (0/7) n604 | all +1.123%  top150-wtd +0.363%  rank -0.0014
+    b  w 0.25 (stale only)                             +7.27% (2/7) n1267 |        +9.81% (1/6) n262        +6.41% (2/7) n878        +5.27% (3/6) n127 |        +0.00% (0/7) n604 | all +0.623%  top150-wtd +0.232%  rank -0.0007
+    b  w 0.50 (stale only)                             +3.65% (2/7) n1267 |        +5.52% (1/6) n262        +3.00% (3/7) n878        +2.52% (3/6) n127 |        +0.00% (0/7) n604 | all +0.313%  top150-wtd +0.134%  rank -0.0006
+    b  w 0.75 (stale only)                             +1.38% (2/7) n1267 |        +2.36% (1/6) n262        +1.03% (3/7) n878        +0.84% (3/6) n127 |        +0.00% (0/7) n604 | all +0.118%  top150-wtd +0.058%  rank -0.0006
+    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -0.68% (5/7) n1267 |        -2.24% (3/6) n262        -0.16% (4/7) n878        +0.66% (3/6) n127 |        +0.00% (0/7) n604 | all -0.058%  top150-wtd -0.043%  rank +0.0003
+    c  rescale 1/1.2 every position                    -0.44% (4/7) n1267 |        -2.00% (3/6) n262        +0.07% (3/7) n878        +0.94% (3/6) n127 |        +0.00% (0/7) n604 | all -0.038%  top150-wtd -0.042%  rank +0.0007
+    c  rescale 1/1.4 every position                    +0.18% (2/7) n1267 |        -2.41% (3/6) n262        +1.05% (2/7) n878        +2.14% (3/6) n127 |        +0.00% (0/7) n604 | all +0.015%  top150-wtd -0.044%  rank +0.0009
+    ctl w 0.00 ALL fill-in games, any target          +16.70% (0/7) n1267 |       +15.96% (1/6) n262       +17.41% (0/7) n878        +9.45% (3/6) n127 |       +11.07% (2/7) n604 | all +1.956%  top150-wtd +0.402%  rank -0.0006
+    ctl w 0.50 ALL fill-in games, any target           +4.80% (1/7) n1267 |        +5.55% (1/6) n262        +4.65% (3/7) n878        +2.52% (3/6) n127 |        +2.69% (2/7) n604 | all +0.539%  top150-wtd +0.129%  rank -0.0002
     -- 2022-25 only --
-    b  w 0.00 (stale only)  = rule a (exclude)         +16.94% (0/4) n771 |       +16.45% (0/4) n154       +17.68% (1/4) n551        +10.44% (1/3) n66 |        +0.00% (0/4) n324 | all +1.457%  top150-wtd +0.511%  rank -0.0025
-    b  w 0.25 (stale only)                              +9.80% (1/4) n771 |       +10.58% (0/4) n154        +9.73% (1/4) n551         +6.16% (1/3) n66 |        +0.00% (0/4) n324 | all +0.842%  top150-wtd +0.330%  rank -0.0017
-    b  w 0.50 (stale only)                              +5.15% (1/4) n771 |        +6.17% (0/4) n154        +4.84% (1/4) n551         +3.22% (1/3) n66 |        +0.00% (0/4) n324 | all +0.443%  top150-wtd +0.191%  rank -0.0013
-    b  w 0.75 (stale only)                              +2.05% (1/4) n771 |        +2.73% (0/4) n154        +1.81% (1/4) n551         +1.24% (1/3) n66 |        +0.00% (0/4) n324 | all +0.176%  top150-wtd +0.084%  rank -0.0011
-    c  rescale 1/boost RB1.26 WR1.08 TE1.15             -0.82% (3/4) n771 |        -2.54% (2/4) n154        -0.25% (3/4) n551         +1.74% (0/3) n66 |        +0.00% (0/4) n324 | all -0.071%  top150-wtd -0.045%  rank +0.0001
-    c  rescale 1/1.2 every position                     -0.54% (2/4) n771 |        -2.23% (2/4) n154        -0.01% (3/4) n551         +2.30% (0/3) n66 |        +0.00% (0/4) n324 | all -0.046%  top150-wtd -0.048%  rank +0.0002
-    c  rescale 1/1.4 every position                     +0.17% (1/4) n771 |        -2.91% (2/4) n154        +1.22% (2/4) n551         +4.35% (0/3) n66 |        +0.00% (0/4) n324 | all +0.014%  top150-wtd -0.046%  rank +0.0005
-    ctl w 0.00 ALL fill-in games, any target           +19.60% (1/4) n771 |       +16.41% (0/4) n154       +21.76% (1/4) n551        +10.44% (1/3) n66 |        +8.46% (1/4) n324 | all +2.099%  top150-wtd +0.526%  rank -0.0022
-    ctl w 0.50 ALL fill-in games, any target            +5.90% (1/4) n771 |        +6.15% (0/4) n154        +6.01% (1/4) n551         +3.22% (1/3) n66 |        +1.74% (1/4) n324 | all +0.593%  top150-wtd +0.170%  rank -0.0012
+    b  w 0.00 (stale only)  = rule a (exclude)         +15.03% (0/4) n862 |       +16.20% (0/4) n183       +15.03% (1/4) n610         +8.07% (1/3) n69 |        +0.00% (0/4) n375 | all +1.402%  top150-wtd +0.504%  rank -0.0018
+    b  w 0.25 (stale only)                              +8.58% (1/4) n862 |       +10.33% (0/4) n183        +8.15% (1/4) n610         +4.45% (1/3) n69 |        +0.00% (0/4) n375 | all +0.801%  top150-wtd +0.325%  rank -0.0010
+    b  w 0.50 (stale only)                              +4.46% (1/4) n862 |        +5.97% (0/4) n183        +4.00% (1/4) n610         +2.11% (1/3) n69 |        +0.00% (0/4) n375 | all +0.416%  top150-wtd +0.188%  rank -0.0006
+    b  w 0.75 (stale only)                              +1.75% (1/4) n862 |        +2.62% (0/4) n183        +1.47% (1/4) n610         +0.70% (1/3) n69 |        +0.00% (0/4) n375 | all +0.164%  top150-wtd +0.082%  rank -0.0006
+    c  rescale 1/boost RB1.26 WR1.08 TE1.15             -0.57% (3/4) n862 |        -1.60% (2/4) n183        -0.27% (3/4) n610         +1.25% (1/3) n69 |        +0.00% (0/4) n375 | all -0.053%  top150-wtd -0.031%  rank +0.0006
+    c  rescale 1/1.2 every position                     -0.40% (3/4) n862 |        -1.47% (2/4) n183        -0.10% (3/4) n610         +1.68% (1/3) n69 |        +0.00% (0/4) n375 | all -0.037%  top150-wtd -0.042%  rank +0.0008
+    c  rescale 1/1.4 every position                     +0.33% (1/4) n862 |        -1.61% (2/4) n183        +0.92% (2/4) n610         +3.28% (1/3) n69 |        +0.00% (0/4) n375 | all +0.031%  top150-wtd -0.037%  rank +0.0012
+    ctl w 0.00 ALL fill-in games, any target           +18.60% (0/4) n862 |       +16.14% (0/4) n183       +20.36% (0/4) n610         +8.07% (1/3) n69 |        +7.62% (1/4) n375 | all +2.126%  top150-wtd +0.537%  rank -0.0006
+    ctl w 0.50 ALL fill-in games, any target            +5.59% (0/4) n862 |        +5.93% (0/4) n183        +5.69% (1/4) n610         +2.11% (1/3) n69 |        +1.15% (1/4) n375 | all +0.580%  top150-wtd +0.171%  rank +0.0001
 
   REST OF SEASON, no survivor filter
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    b  w 0.00 (stale only)  = rule a (exclude)        +10.11% (2/7) n1267 |        +7.46% (1/6) n257       +11.43% (2/7) n875        +7.92% (4/7) n135 |        +0.00% (0/7) n542 | all +0.875%  top150-wtd +0.365%  rank -0.0018
-    b  w 0.25 (stale only)                             +5.61% (2/7) n1267 |        +4.54% (1/6) n257        +6.17% (2/7) n875        +4.35% (4/7) n135 |        +0.00% (0/7) n542 | all +0.486%  top150-wtd +0.240%  rank -0.0008
-    b  w 0.50 (stale only)                             +2.83% (3/7) n1267 |        +2.52% (1/6) n257        +3.01% (2/7) n875        +2.05% (4/7) n135 |        +0.00% (0/7) n542 | all +0.244%  top150-wtd +0.142%  rank -0.0009
-    b  w 0.75 (stale only)                             +1.07% (3/7) n1267 |        +1.06% (1/6) n257        +1.10% (2/7) n875        +0.68% (4/7) n135 |        +0.00% (0/7) n542 | all +0.093%  top150-wtd +0.064%  rank -0.0007
-    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -1.37% (5/7) n1267 |        -4.06% (5/6) n257        -0.20% (3/7) n875        -0.90% (4/7) n135 |        +0.00% (0/7) n542 | all -0.118%  top150-wtd -0.054%  rank -0.0001
-    c  rescale 1/1.2 every position                    -1.09% (5/7) n1267 |        -3.42% (5/6) n257        -0.06% (3/7) n875        -1.04% (4/7) n135 |        +0.00% (0/7) n542 | all -0.095%  top150-wtd -0.040%  rank -0.0001
-    c  rescale 1/1.4 every position                    -1.09% (4/7) n1267 |        -5.16% (3/6) n257        +0.74% (3/7) n875        -1.19% (4/7) n135 |        +0.00% (0/7) n542 | all -0.094%  top150-wtd -0.045%  rank -0.0001
-    ctl w 0.00 ALL fill-in games, any target          +12.47% (2/7) n1267 |        +7.39% (1/6) n257       +15.03% (2/7) n875        +7.92% (4/7) n135 |       +13.35% (2/7) n542 | all +1.674%  top150-wtd +0.374%  rank -0.0018
-    ctl w 0.50 ALL fill-in games, any target           +3.46% (2/7) n1267 |        +2.49% (1/6) n257        +3.98% (2/7) n875        +2.05% (4/7) n135 |        +3.56% (3/7) n542 | all +0.458%  top150-wtd +0.131%  rank -0.0010
+    b  w 0.00 (stale only)  = rule a (exclude)         +8.51% (1/7) n1629 |        +7.01% (1/7) n368       +9.40% (1/7) n1091        +4.84% (4/7) n170 |        +0.00% (0/7) n728 | all +0.858%  top150-wtd +0.279%  rank -0.0007
+    b  w 0.25 (stale only)                             +4.51% (1/7) n1629 |        +4.08% (1/7) n368       +4.85% (2/7) n1091        +2.05% (4/7) n170 |        +0.00% (0/7) n728 | all +0.455%  top150-wtd +0.177%  rank -0.0002
+    b  w 0.50 (stale only)                             +2.16% (3/7) n1629 |        +2.17% (1/7) n368       +2.24% (2/7) n1091        +0.59% (4/7) n170 |        +0.00% (0/7) n728 | all +0.218%  top150-wtd +0.102%  rank -0.0003
+    b  w 0.75 (stale only)                             +0.77% (3/7) n1629 |        +0.88% (1/7) n368       +0.76% (2/7) n1091        -0.02% (4/7) n170 |        +0.00% (0/7) n728 | all +0.077%  top150-wtd +0.045%  rank -0.0003
+    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -1.33% (5/7) n1629 |        -3.66% (6/7) n368       -0.29% (4/7) n1091        -1.20% (5/7) n170 |        +0.00% (0/7) n728 | all -0.134%  top150-wtd -0.073%  rank +0.0003
+    c  rescale 1/1.2 every position                    -1.19% (4/7) n1629 |        -3.11% (6/7) n368       -0.31% (4/7) n1091        -1.43% (5/7) n170 |        +0.00% (0/7) n728 | all -0.119%  top150-wtd -0.070%  rank +0.0005
+    c  rescale 1/1.4 every position                    -1.29% (3/7) n1629 |        -4.56% (5/7) n368       +0.21% (4/7) n1091        -1.86% (5/7) n170 |        +0.00% (0/7) n728 | all -0.130%  top150-wtd -0.095%  rank +0.0006
+    ctl w 0.00 ALL fill-in games, any target          +11.55% (1/7) n1629 |        +7.09% (1/7) n368      +13.92% (1/7) n1091        +4.84% (4/7) n170 |       +11.85% (2/7) n728 | all +1.754%  top150-wtd +0.297%  rank +0.0000
+    ctl w 0.50 ALL fill-in games, any target           +3.06% (1/7) n1629 |        +2.15% (1/7) n368       +3.60% (1/7) n1091        +0.59% (4/7) n170 |        +2.99% (3/7) n728 | all +0.457%  top150-wtd +0.094%  rank +0.0001
     -- 2022-25 only --
-    b  w 0.00 (stale only)  = rule a (exclude)         +12.07% (1/4) n945 |        +9.32% (0/4) n199       +13.32% (1/4) n663         +8.62% (2/4) n83 |        +0.00% (0/4) n385 | all +1.152%  top150-wtd +0.425%  rank -0.0021
-    b  w 0.25 (stale only)                              +6.81% (1/4) n945 |        +5.77% (0/4) n199        +7.32% (1/4) n663         +4.90% (2/4) n83 |        +0.00% (0/4) n385 | all +0.650%  top150-wtd +0.276%  rank -0.0010
-    b  w 0.50 (stale only)                              +3.50% (1/4) n945 |        +3.26% (0/4) n199        +3.66% (1/4) n663         +2.44% (2/4) n83 |        +0.00% (0/4) n385 | all +0.334%  top150-wtd +0.162%  rank -0.0012
-    b  w 0.75 (stale only)                              +1.36% (1/4) n945 |        +1.40% (0/4) n199        +1.38% (1/4) n663         +0.88% (2/4) n83 |        +0.00% (0/4) n385 | all +0.130%  top150-wtd +0.072%  rank -0.0013
-    c  rescale 1/boost RB1.26 WR1.08 TE1.15             -1.36% (3/4) n945 |        -4.65% (4/4) n199        -0.23% (2/4) n663         +0.46% (2/4) n83 |        +0.00% (0/4) n385 | all -0.130%  top150-wtd -0.066%  rank -0.0003
-    c  rescale 1/1.2 every position                     -1.08% (3/4) n945 |        -3.93% (4/4) n199        -0.11% (2/4) n663         +0.67% (2/4) n83 |        +0.00% (0/4) n385 | all -0.103%  top150-wtd -0.062%  rank -0.0001
-    c  rescale 1/1.4 every position                     -0.97% (2/4) n945 |        -5.85% (2/4) n199        +0.71% (2/4) n663         +1.58% (2/4) n83 |        +0.00% (0/4) n385 | all -0.093%  top150-wtd -0.076%  rank -0.0001
-    ctl w 0.00 ALL fill-in games, any target           +15.22% (1/4) n945 |        +9.16% (0/4) n199       +17.94% (1/4) n663         +8.62% (2/4) n83 |        +7.55% (1/4) n385 | all +1.849%  top150-wtd +0.425%  rank -0.0021
-    ctl w 0.50 ALL fill-in games, any target            +4.35% (1/4) n945 |        +3.20% (0/4) n199        +4.91% (1/4) n663         +2.44% (2/4) n83 |        +1.80% (1/4) n385 | all +0.510%  top150-wtd +0.141%  rank -0.0013
+    b  w 0.00 (stale only)  = rule a (exclude)         +9.89% (1/4) n1082 |        +7.44% (0/4) n250       +11.13% (1/4) n738         +4.49% (2/4) n94 |        +0.00% (0/4) n449 | all +1.022%  top150-wtd +0.381%  rank -0.0004
+    b  w 0.25 (stale only)                             +5.33% (1/4) n1082 |        +4.37% (0/4) n250        +5.90% (1/4) n738         +1.75% (2/4) n94 |        +0.00% (0/4) n449 | all +0.550%  top150-wtd +0.243%  rank +0.0002
+    b  w 0.50 (stale only)                             +2.61% (1/4) n1082 |        +2.36% (0/4) n250        +2.84% (1/4) n738         +0.42% (2/4) n94 |        +0.00% (0/4) n449 | all +0.270%  top150-wtd +0.141%  rank +0.0001
+    b  w 0.75 (stale only)                             +0.96% (1/4) n1082 |        +0.97% (0/4) n250        +1.03% (1/4) n738         -0.10% (2/4) n94 |        +0.00% (0/4) n449 | all +0.100%  top150-wtd +0.062%  rank -0.0002
+    c  rescale 1/boost RB1.26 WR1.08 TE1.15            -1.42% (3/4) n1082 |        -4.52% (4/4) n250        -0.34% (2/4) n738         -0.37% (3/4) n94 |        +0.00% (0/4) n449 | all -0.147%  top150-wtd -0.070%  rank +0.0005
+    c  rescale 1/1.2 every position                    -1.26% (3/4) n1082 |        -3.83% (4/4) n250        -0.37% (2/4) n738         -0.39% (3/4) n94 |        +0.00% (0/4) n449 | all -0.131%  top150-wtd -0.072%  rank +0.0007
+    c  rescale 1/1.4 every position                    -1.31% (2/4) n1082 |        -5.64% (3/4) n250        +0.23% (2/4) n738         -0.22% (3/4) n94 |        +0.00% (0/4) n449 | all -0.135%  top150-wtd -0.092%  rank +0.0010
+    ctl w 0.00 ALL fill-in games, any target          +13.61% (1/4) n1082 |        +7.53% (0/4) n250       +16.42% (1/4) n738         +4.49% (2/4) n94 |        +6.52% (1/4) n449 | all +1.761%  top150-wtd +0.390%  rank +0.0008
+    ctl w 0.50 ALL fill-in games, any target           +3.69% (1/4) n1082 |        +2.29% (0/4) n250        +4.40% (1/4) n738         +0.42% (2/4) n94 |        +1.16% (1/4) n449 | all +0.444%  top150-wtd +0.122%  rank +0.0006
 
 --- 2  SCOPES: fixed w 0 / 0.5 and rescale-by-boost restricted to one cut; graded on that cut's starter-back rows ---
 
   NEXT GAME
-    RB only                w0: +2.21% (1/6) n389 fwd +4.36% (0/4) n299 | w.5: +0.56% (1/6) n389 fwd +1.50% (0/4) n299 | boost: -1.59% (5/6) n389 fwd -0.88% (3/4) n299
-    WR only                w0: +2.07% (2/7) n1292 fwd +2.48% (1/4) n970 | w.5: +0.32% (2/7) n1292 fwd +0.42% (1/4) n970 | boost: -0.33% (5/7) n1292 fwd -0.35% (3/4) n970
-    TE only                w0: +0.99% (3/7) n174 fwd +2.75% (1/4) n108 | w.5: -0.27% (4/7) n174 fwd +0.34% (2/4) n108 | boost: -0.46% (4/7) n174 fwd +0.13% (1/4) n108
-    lead absentee only     w0: +2.00% (2/7) n1522 fwd +2.65% (0/4) n1114 | w.5: +0.33% (3/7) n1522 fwd +0.55% (1/4) n1114 | boost: -0.62% (6/7) n1522 fwd -0.50% (3/4) n1114
-    2+ stale games         w0: +1.89% (3/7) n1062 fwd +3.44% (0/4) n783 | w.5: +0.02% (5/7) n1062 fwd +0.57% (2/4) n783 | boost: -1.01% (7/7) n1062 fwd -0.80% (4/4) n783
-    stale share >= 50%     w0: +1.23% (4/7) n405 fwd +2.60% (2/4) n299 | w.5: -0.86% (5/7) n405 fwd -0.26% (2/4) n299 | boost: -2.13% (7/7) n405 fwd -1.51% (4/4) n299
-    ADP <= 60              w0: +1.83% (0/2) n68 fwd +1.21% (0/2) n51 | w.5: +0.76% (0/2) n68 fwd +0.47% (0/2) n51 | boost: -0.70% (1/2) n68 fwd -0.16% (1/2) n51
-    ADP 61-150             w0: +2.28% (2/7) n516 fwd +2.74% (1/4) n397 | w.5: +0.78% (2/7) n516 fwd +0.92% (1/4) n397 | boost: -0.74% (5/7) n516 fwd -0.82% (3/4) n397
-    ADP 151+               w0: +1.96% (3/7) n1271 fwd +3.16% (1/4) n929 | w.5: +0.05% (3/7) n1271 fwd +0.53% (1/4) n929 | boost: -0.51% (5/7) n1271 fwd -0.29% (2/4) n929
-    RB lead absentee       w0: +2.35% (1/6) n355 fwd +4.37% (0/4) n275 | w.5: +0.61% (1/6) n355 fwd +1.50% (0/4) n275 | boost: -1.43% (5/6) n355 fwd -0.86% (3/4) n275
-    RB ADP 61+             w0: +2.14% (1/6) n380 fwd +4.36% (0/4) n299 | w.5: +0.50% (1/6) n380 fwd +1.50% (0/4) n299 | boost: -1.50% (4/6) n380 fwd -0.88% (3/4) n299
+    RB only                w0: +1.68% (1/7) n551 fwd +3.96% (0/4) n370 | w.5: +0.17% (2/7) n551 fwd +1.20% (0/4) n370 | boost: -1.95% (6/7) n551 fwd -1.09% (3/4) n370
+    WR only                w0: +1.72% (3/7) n1545 fwd +2.13% (1/4) n1053 | w.5: +0.16% (4/7) n1545 fwd +0.29% (2/4) n1053 | boost: -0.32% (6/7) n1545 fwd -0.35% (3/4) n1053
+    TE only                w0: -0.08% (4/7) n219 fwd +0.83% (2/4) n120 | w.5: -0.69% (5/7) n219 fwd -0.59% (3/4) n120 | boost: -0.65% (5/7) n219 fwd -0.29% (2/4) n120
+    lead absentee only     w0: +1.37% (3/7) n1846 fwd +2.24% (1/4) n1208 | w.5: +0.03% (4/7) n1846 fwd +0.37% (1/4) n1208 | boost: -0.84% (6/7) n1846 fwd -0.52% (3/4) n1208
+    2+ stale games         w0: +1.59% (1/7) n1354 fwd +2.74% (0/4) n884 | w.5: -0.13% (5/7) n1354 fwd +0.26% (2/4) n884 | boost: -1.09% (7/7) n1354 fwd -0.87% (4/4) n884
+    stale share >= 50%     w0: +1.63% (3/7) n557 fwd +1.55% (2/4) n357 | w.5: -0.74% (4/7) n557 fwd -0.85% (2/4) n357 | boost: -1.79% (7/7) n557 fwd -1.85% (4/4) n357
+    ADP <= 60              w0: +1.86% (0/2) n68 fwd +1.23% (0/2) n51 | w.5: +0.78% (0/2) n68 fwd +0.48% (0/2) n51 | boost: -0.74% (1/2) n68 fwd -0.16% (1/2) n51
+    ADP 61-150             w0: +1.22% (2/7) n619 fwd +2.37% (1/4) n447 | w.5: +0.25% (2/7) n619 fwd +0.71% (1/4) n447 | boost: -1.12% (6/7) n619 fwd -0.78% (3/4) n447
+    ADP 151+               w0: +1.85% (3/7) n1628 fwd +2.68% (1/4) n1045 | w.5: +0.01% (4/7) n1628 fwd +0.33% (2/4) n1045 | boost: -0.51% (5/7) n1628 fwd -0.41% (2/4) n1045
+    RB lead absentee       w0: +0.81% (2/7) n480 fwd +3.77% (0/4) n318 | w.5: -0.18% (2/7) n480 fwd +1.13% (0/4) n318 | boost: -2.26% (6/7) n480 fwd -0.93% (3/4) n318
+    RB ADP 61+             w0: +1.61% (1/7) n542 fwd +3.96% (0/4) n370 | w.5: +0.11% (2/7) n542 fwd +1.20% (0/4) n370 | boost: -1.89% (6/7) n542 fwd -1.09% (3/4) n370
 
   REST OF SEASON, 4+ games left
-    RB only                w0: +16.59% (1/6) n191 fwd +16.45% (0/4) n154 | w.5: +6.07% (1/6) n191 fwd +6.17% (0/4) n154 | boost: -2.76% (3/6) n191 fwd -2.54% (2/4) n154
-    WR only                w0: +14.31% (2/7) n726 fwd +17.68% (1/4) n551 | w.5: +3.69% (2/7) n726 fwd +4.84% (1/4) n551 | boost: -0.19% (4/7) n726 fwd -0.25% (3/4) n551
-    TE only                w0: +11.42% (2/5) n104 fwd +10.44% (1/3) n66 | w.5: +3.40% (2/5) n104 fwd +3.22% (1/3) n66 | boost: +0.81% (1/5) n104 fwd +1.74% (0/3) n66
-    lead absentee only     w0: +16.12% (1/7) n812 fwd +17.12% (0/4) n605 | w.5: +4.99% (2/7) n812 fwd +5.43% (1/4) n605 | boost: -0.73% (5/7) n812 fwd -0.97% (3/4) n605
-    2+ stale games         w0: +15.27% (1/7) n550 fwd +20.37% (0/4) n403 | w.5: +3.05% (2/7) n550 fwd +4.91% (1/4) n403 | boost: -2.98% (7/7) n550 fwd -2.74% (4/4) n403
-    stale share >= 50%     w0: +17.22% (2/7) n291 fwd +16.65% (1/4) n210 | w.5: +2.96% (3/7) n291 fwd +2.14% (2/4) n210 | boost: -3.04% (6/7) n291 fwd -4.36% (4/4) n210
+    RB only                w0: +15.86% (1/6) n262 fwd +16.20% (0/4) n183 | w.5: +5.52% (1/6) n262 fwd +5.97% (0/4) n183 | boost: -2.24% (3/6) n262 fwd -1.60% (2/4) n183
+    WR only                w0: +12.26% (2/7) n878 fwd +15.03% (1/4) n610 | w.5: +3.00% (3/7) n878 fwd +4.00% (1/4) n610 | boost: -0.16% (4/7) n878 fwd -0.27% (3/4) n610
+    TE only                w0: +9.45% (3/6) n127 fwd +8.07% (1/3) n69 | w.5: +2.52% (3/6) n127 fwd +2.11% (1/3) n69 | boost: +0.66% (3/6) n127 fwd +1.25% (1/3) n69
+    lead absentee only     w0: +13.93% (2/7) n977 fwd +15.42% (1/4) n653 | w.5: +4.14% (2/7) n977 fwd +4.81% (1/4) n653 | boost: -0.80% (5/7) n977 fwd -0.64% (3/4) n653
+    2+ stale games         w0: +14.29% (1/7) n692 fwd +16.11% (0/4) n450 | w.5: +2.88% (2/7) n692 fwd +3.46% (1/4) n450 | boost: -2.15% (6/7) n692 fwd -2.05% (4/4) n450
+    stale share >= 50%     w0: +18.75% (1/7) n399 fwd +14.23% (1/4) n251 | w.5: +3.66% (3/7) n399 fwd +1.34% (2/4) n251 | boost: -1.94% (6/7) n399 fwd -3.66% (4/4) n251
     ADP <= 60              w0: n/a (n29) fwd n/a (n24) | w.5: n/a (n29) fwd n/a (n24) | boost: n/a (n29) fwd n/a (n24)
-    ADP 61-150             w0: +18.02% (0/6) n280 fwd +19.61% (0/4) n218 | w.5: +6.47% (1/6) n280 fwd +6.81% (1/4) n218 | boost: -2.03% (3/6) n280 fwd -3.10% (2/4) n218
-    ADP 151+               w0: +13.35% (2/7) n712 fwd +16.00% (1/4) n529 | w.5: +3.33% (2/7) n712 fwd +4.46% (1/4) n529 | boost: -0.37% (4/7) n712 fwd -0.21% (2/4) n529
-    RB lead absentee       w0: +16.69% (1/6) n170 fwd +15.36% (0/4) n140 | w.5: +6.06% (1/6) n170 fwd +5.69% (0/4) n140 | boost: -2.57% (3/6) n170 fwd -2.77% (2/4) n140
-    RB ADP 61+             w0: +16.56% (1/6) n188 fwd +16.45% (0/4) n154 | w.5: +6.05% (1/6) n188 fwd +6.17% (0/4) n154 | boost: -2.61% (3/6) n188 fwd -2.54% (2/4) n154
+    ADP 61-150             w0: +12.32% (1/7) n330 fwd +18.49% (0/4) n239 | w.5: +4.05% (2/7) n330 fwd +6.34% (1/4) n239 | boost: -2.54% (4/7) n330 fwd -1.87% (2/4) n239
+    ADP 151+               w0: +13.06% (2/7) n908 fwd +13.81% (1/4) n599 | w.5: +3.28% (2/7) n908 fwd +3.72% (1/4) n599 | boost: +0.03% (3/7) n908 fwd -0.22% (2/4) n599
+    RB lead absentee       w0: +15.24% (1/6) n221 fwd +16.07% (0/4) n155 | w.5: +5.32% (1/6) n221 fwd +5.94% (0/4) n155 | boost: -2.92% (3/6) n221 fwd -1.75% (2/4) n155
+    RB ADP 61+             w0: +15.84% (1/6) n259 fwd +16.20% (0/4) n183 | w.5: +5.51% (1/6) n259 fwd +5.97% (0/4) n183 | boost: -2.09% (3/6) n259 fwd -1.60% (2/4) n183
 
   REST OF SEASON, no survivor filter
-    RB only                w0: +7.46% (1/6) n257 fwd +9.32% (0/4) n199 | w.5: +2.52% (1/6) n257 fwd +3.26% (0/4) n199 | boost: -4.06% (5/6) n257 fwd -4.65% (4/4) n199
-    WR only                w0: +11.43% (2/7) n875 fwd +13.32% (1/4) n663 | w.5: +3.01% (2/7) n875 fwd +3.66% (1/4) n663 | boost: -0.20% (3/7) n875 fwd -0.23% (2/4) n663
-    TE only                w0: +7.92% (4/7) n135 fwd +8.62% (2/4) n83 | w.5: +2.05% (4/7) n135 fwd +2.44% (2/4) n83 | boost: -0.90% (4/7) n135 fwd +0.46% (2/4) n83
-    lead absentee only     w0: +10.36% (2/7) n1009 fwd +11.70% (1/4) n737 | w.5: +3.04% (2/7) n1009 fwd +3.49% (1/4) n737 | boost: -1.38% (5/7) n1009 fwd -1.54% (3/4) n737
-    2+ stale games         w0: +9.18% (2/7) n708 fwd +13.60% (1/4) n515 | w.5: +1.41% (3/7) n708 fwd +2.84% (1/4) n515 | boost: -3.13% (6/7) n708 fwd -3.21% (3/4) n515
-    stale share >= 50%     w0: +12.36% (2/7) n363 fwd +11.83% (1/4) n264 | w.5: +1.64% (2/7) n363 fwd +1.14% (1/4) n264 | boost: -4.04% (6/7) n363 fwd -4.64% (4/4) n264
-    ADP <= 60              w0: +13.66% (0/1) n37 fwd +15.00% (0/1) n30 | w.5: +6.14% (0/1) n37 fwd +6.70% (0/1) n30 | boost: -1.03% (0/1) n37 fwd +0.14% (0/1) n30
-    ADP 61-150             w0: +8.71% (2/7) n335 fwd +10.54% (1/4) n259 | w.5: +2.96% (3/7) n335 fwd +3.34% (2/4) n259 | boost: -3.12% (6/7) n335 fwd -4.89% (4/4) n259
-    ADP 151+               w0: +10.36% (2/7) n895 fwd +12.23% (1/4) n656 | w.5: +2.46% (2/7) n895 fwd +3.26% (1/4) n656 | boost: -0.68% (4/7) n895 fwd -0.51% (2/4) n656
-    RB lead absentee       w0: +6.75% (1/6) n226 fwd +7.94% (0/4) n178 | w.5: +2.21% (1/6) n226 fwd +2.66% (0/4) n178 | boost: -4.01% (4/6) n226 fwd -4.93% (3/4) n178
-    RB ADP 61+             w0: +7.47% (1/6) n252 fwd +9.32% (0/4) n199 | w.5: +2.48% (1/6) n252 fwd +3.26% (0/4) n199 | boost: -4.02% (5/6) n252 fwd -4.65% (4/4) n199
+    RB only                w0: +7.01% (1/7) n368 fwd +7.44% (0/4) n250 | w.5: +2.17% (1/7) n368 fwd +2.36% (0/4) n250 | boost: -3.66% (6/7) n368 fwd -4.52% (4/4) n250
+    WR only                w0: +9.40% (1/7) n1091 fwd +11.13% (1/4) n738 | w.5: +2.24% (2/7) n1091 fwd +2.84% (1/4) n738 | boost: -0.29% (4/7) n1091 fwd -0.34% (2/4) n738
+    TE only                w0: +4.84% (4/7) n170 fwd +4.49% (2/4) n94 | w.5: +0.59% (4/7) n170 fwd +0.42% (2/4) n94 | boost: -1.20% (5/7) n170 fwd -0.37% (3/4) n94
+    lead absentee only     w0: +8.80% (2/7) n1252 fwd +9.88% (1/4) n811 | w.5: +2.41% (2/7) n1252 fwd +2.74% (1/4) n811 | boost: -1.40% (5/7) n1252 fwd -1.49% (3/4) n811
+    2+ stale games         w0: +8.20% (1/7) n924 fwd +8.86% (1/4) n595 | w.5: +1.17% (3/7) n924 fwd +1.00% (2/4) n595 | boost: -2.68% (5/7) n924 fwd -3.19% (3/4) n595
+    stale share >= 50%     w0: +11.14% (2/7) n507 fwd +6.38% (2/4) n319 | w.5: +1.26% (2/7) n507 fwd -1.18% (2/4) n319 | boost: -3.39% (6/7) n507 fwd -5.00% (4/4) n319
+    ADP <= 60              w0: +13.87% (0/1) n37 fwd +15.02% (0/1) n30 | w.5: +6.23% (0/1) n37 fwd +6.71% (0/1) n30 | boost: -1.07% (0/1) n37 fwd +0.12% (0/1) n30
+    ADP 61-150             w0: +4.28% (2/7) n400 fwd +6.98% (1/4) n290 | w.5: +0.97% (3/7) n400 fwd +1.78% (2/4) n290 | boost: -3.79% (6/7) n400 fwd -4.78% (4/4) n290
+    ADP 151+               w0: +9.79% (1/7) n1192 fwd +10.32% (1/4) n762 | w.5: +2.34% (2/7) n1192 fwd +2.53% (1/4) n762 | boost: -0.39% (4/7) n1192 fwd -0.58% (3/4) n762
+    RB lead absentee       w0: +5.70% (1/7) n303 fwd +6.08% (0/4) n204 | w.5: +1.68% (1/7) n303 fwd +1.81% (0/4) n204 | boost: -3.96% (6/7) n303 fwd -4.65% (4/4) n204
+    RB ADP 61+             w0: +6.99% (1/7) n363 fwd +7.44% (0/4) n250 | w.5: +2.13% (1/7) n363 fwd +2.36% (0/4) n250 | boost: -3.60% (6/7) n363 fwd -4.52% (4/4) n250
 
 --- 3  RULES PICKED LEAVE-ONE-SEASON-OUT (fit on the starter-back rows of the other six seasons) and FORWARD (fit on earlier seasons, graded 2022-25) ---
 
   NEXT GAME
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    a/b  w per position (grid 0 .25 .5 .75 1)          +0.26% (3/7) n1855 |        +0.67% (0/6) n389       +0.13% (0/7) n1292        +0.60% (3/7) n174 |        +0.00% (0/7) n708 | all +0.021%  top150-wtd +0.004%  rank +0.0000
-        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 0.75, 1.0, 0.75] | TE [0.75, 1.0, 0.5, 0.75, 0.5, 0.75, 0.5]
-       forward 2022-25                                 +0.69% (0/4) n1377 |        +2.16% (0/4) n299        +0.26% (1/4) n970        +1.02% (2/4) n108 |        +0.00% (0/4) n485 | all +0.061%  top150-wtd +0.040%  rank -0.0004
-        forward picks: RB [0.0, 0.5, 1.0, 1.0] | WR [0.75, 0.5, 0.75, 0.75] | TE [0.0, 0.0, 0.5, 0.5]
-    b    one w for RB/WR/TE                            +0.12% (0/7) n1855 |        +0.29% (0/6) n389       +0.06% (0/7) n1292        +0.19% (0/7) n174 |        +0.00% (0/7) n708 | all +0.009%  top150-wtd +0.001%  rank -0.0000
-        LOYO picks: all [1.0, 1.0, 1.0, 1.0, 0.75, 1.0, 1.0]
-       forward 2022-25                                 +0.37% (1/4) n1377 |        +1.38% (0/4) n299        +0.08% (1/4) n970        +0.39% (1/4) n108 |        +0.00% (0/4) n485 | all +0.033%  top150-wtd +0.020%  rank -0.0003
-        forward picks: all [0.5, 0.5, 1.0, 1.0]
-    c    divisor per position (grid 1.0-1.7)           -0.79% (5/7) n1855 |        -2.12% (4/6) n389       -0.45% (4/7) n1292        +0.37% (3/7) n174 |        +0.00% (0/7) n708 | all -0.062%  top150-wtd -0.016%  rank +0.0002
-        LOYO picks: RB [1.7, 1.5, 1.7, 1.7, 1.7, 1.7, 1.7] | WR [1.4, 1.5, 1.4, 1.3, 1.7, 1.3, 1.5] | TE [1.4, 1.1, 1.5, 1.4, 1.7, 1.7, 1.7]
-       forward 2022-25                                 -0.65% (2/4) n1377 |        -0.93% (2/4) n299        -0.65% (2/4) n970        +1.13% (1/4) n108 |        +0.00% (0/4) n485 | all -0.058%  top150-wtd -0.023%  rank +0.0003
+    a/b  w per position (grid 0 .25 .5 .75 1)          +0.25% (0/7) n2315 |        +0.54% (0/7) n551       +0.16% (0/7) n1545        +0.08% (4/7) n219 |        +0.00% (0/7) n960 | all +0.022%  top150-wtd +0.004%  rank +0.0001
+        LOYO picks: RB [0.75, 1.0, 1.0, 0.75, 0.5, 0.75, 0.75] | WR [1.0, 0.75, 1.0, 1.0, 0.75, 1.0, 0.75] | TE [0.5, 0.75, 0.25, 0.5, 0.5, 0.25, 0.25]
+       forward 2022-25                                 +0.59% (1/4) n1543 |        +1.85% (0/4) n370       +0.24% (2/4) n1053        +0.18% (2/4) n120 |        +0.00% (0/4) n575 | all +0.057%  top150-wtd +0.037%  rank -0.0003
+        forward picks: RB [0.0, 0.5, 0.75, 0.75] | WR [0.75, 0.5, 0.75, 0.75] | TE [0.0, 0.0, 0.0, 0.25]
+    b    one w for RB/WR/TE                            +0.07% (3/7) n2315 |        +0.16% (1/7) n551       +0.04% (3/7) n1545        -0.10% (4/7) n219 |        +0.00% (0/7) n960 | all +0.006%  top150-wtd +0.006%  rank -0.0000
+        LOYO picks: all [0.75, 1.0, 0.75, 1.0, 0.75, 0.75, 0.75]
+       forward 2022-25                                 +0.32% (2/4) n1543 |        +1.08% (0/4) n370       +0.14% (2/4) n1053        -0.71% (4/4) n120 |        +0.00% (0/4) n575 | all +0.031%  top150-wtd +0.020%  rank -0.0000
+        forward picks: all [0.5, 0.5, 0.75, 0.75]
+    c    divisor per position (grid 1.0-1.7)           -1.07% (5/7) n2315 |        -2.68% (5/7) n551       -0.54% (5/7) n1545        -1.11% (5/7) n219 |        +0.00% (0/7) n960 | all -0.097%  top150-wtd -0.034%  rank +0.0003
+        LOYO picks: RB [1.7, 1.5, 1.7, 1.7, 1.7, 1.7, 1.7] | WR [1.5, 1.5, 1.4, 1.3, 1.7, 1.4, 1.5] | TE [1.7, 1.4, 1.7, 1.7, 1.7, 1.7, 1.7]
+       forward 2022-25                                 -0.79% (2/4) n1543 |        -1.29% (2/4) n370       -0.67% (2/4) n1053        -0.15% (2/4) n120 |        +0.00% (0/4) n575 | all -0.077%  top150-wtd -0.023%  rank +0.0004
         forward picks: RB [1.7, 1.7, 1.7, 1.7] | WR [1.5, 1.7, 1.5, 1.5] | TE [1.7, 1.7, 1.7, 1.7]
-    d    w, RB only                                    +0.15% (0/7) n1855 |        +0.67% (0/6) n389       +0.00% (0/7) n1292        +0.00% (0/7) n174 |        +0.00% (0/7) n708 | all +0.012%  top150-wtd +0.002%  rank -0.0000
-        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0]
-       forward 2022-25                                 +0.46% (0/4) n1377 |        +2.16% (0/4) n299        +0.00% (0/4) n970        +0.00% (0/4) n108 |        +0.00% (0/4) n485 | all +0.041%  top150-wtd +0.031%  rank -0.0006
-        forward picks: RB [0.0, 0.5, 1.0, 1.0]
-    d    w, lead absentee only, per position           +0.21% (3/7) n1855 |        +0.29% (0/6) n389       +0.16% (0/7) n1292        +0.60% (3/7) n174 |        +0.00% (0/7) n708 | all +0.016%  top150-wtd +0.006%  rank -0.0002
-        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 0.75, 1.0, 1.0] | WR [1.0, 0.75, 0.75, 1.0, 1.0, 1.0, 0.75] | TE [0.75, 1.0, 0.5, 0.75, 0.5, 0.75, 0.5]
-       forward 2022-25                                 +0.61% (1/4) n1377 |        +2.16% (0/4) n299        +0.16% (1/4) n970        +1.02% (2/4) n108 |        +0.00% (0/4) n485 | all +0.055%  top150-wtd +0.038%  rank -0.0005
-        forward picks: RB [0.0, 0.5, 1.0, 1.0] | WR [1.0, 0.5, 0.75, 0.75] | TE [0.0, 0.0, 0.5, 0.5]
-    d    w, ADP <= 60 / 61+ per position               +0.31% (3/7) n1855 |        +0.67% (0/6) n389       +0.19% (0/7) n1292        +0.60% (3/7) n174 |        +0.00% (0/7) n708 | all +0.024%  top150-wtd +0.004%  rank +0.0000
-        LOYO picks: RB<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0] | WR61+ [1.0, 0.75, 1.0, 1.0, 0.75, 1.0, 0.75] | TE61+ [0.75, 1.0, 0.5, 0.75, 0.5, 0.75, 0.5]
-       forward 2022-25                                 +0.83% (1/4) n1377 |        +2.87% (0/4) n299        +0.25% (1/4) n970        +1.02% (2/4) n108 |        +0.00% (0/4) n485 | all +0.074%  top150-wtd +0.041%  rank -0.0005
-        forward picks: RB<=60 [1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0] | RB61+ [0.0, 0.25, 1.0, 1.0] | WR61+ [0.75, 0.5, 0.75, 0.75] | TE61+ [0.0, 0.0, 0.5, 0.5]
+    d    w, RB only                                    +0.13% (0/7) n2315 |        +0.54% (0/7) n551       +0.00% (0/7) n1545        +0.00% (0/7) n219 |        +0.00% (0/7) n960 | all +0.012%  top150-wtd +0.003%  rank -0.0000
+        LOYO picks: RB [0.75, 1.0, 1.0, 0.75, 0.5, 0.75, 0.75]
+       forward 2022-25                                 +0.41% (0/4) n1543 |        +1.85% (0/4) n370       +0.00% (0/4) n1053        +0.00% (0/4) n120 |        +0.00% (0/4) n575 | all +0.039%  top150-wtd +0.030%  rank -0.0004
+        forward picks: RB [0.0, 0.5, 0.75, 0.75]
+    d    w, lead absentee only, per position           +0.35% (0/7) n2315 |        +1.05% (0/7) n551       +0.13% (1/7) n1545        +0.08% (4/7) n219 |        +0.00% (0/7) n960 | all +0.031%  top150-wtd +0.014%  rank -0.0002
+        LOYO picks: RB [0.5, 1.0, 1.0, 0.5, 0.25, 0.5, 0.5] | WR [1.0, 0.75, 0.75, 1.0, 0.75, 0.75, 0.75] | TE [0.5, 0.75, 0.25, 0.5, 0.5, 0.25, 0.25]
+       forward 2022-25                                 +0.83% (0/4) n1543 |        +3.09% (0/4) n370       +0.19% (1/4) n1053        +0.18% (2/4) n120 |        +0.00% (0/4) n575 | all +0.080%  top150-wtd +0.038%  rank -0.0006
+        forward picks: RB [0.0, 0.0, 0.5, 0.5] | WR [1.0, 0.5, 0.75, 0.75] | TE [0.0, 0.0, 0.0, 0.25]
+    d    w, ADP <= 60 / 61+ per position               +0.21% (2/7) n2315 |        +0.54% (0/7) n551       +0.10% (2/7) n1545        +0.08% (4/7) n219 |        +0.00% (0/7) n960 | all +0.019%  top150-wtd +0.009%  rank +0.0000
+        LOYO picks: RB<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | RB61+ [0.75, 1.0, 1.0, 0.75, 0.5, 0.75, 0.75] | WR61+ [1.0, 0.75, 0.75, 1.0, 0.75, 0.75, 0.75] | TE61+ [0.5, 0.75, 0.25, 0.5, 0.5, 0.25, 0.25]
+       forward 2022-25                                 +0.63% (1/4) n1543 |        +2.44% (0/4) n370       +0.12% (2/4) n1053        +0.18% (2/4) n120 |        +0.00% (0/4) n575 | all +0.061%  top150-wtd +0.038%  rank -0.0004
+        forward picks: RB<=60 [1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0] | RB61+ [0.0, 0.25, 0.75, 0.75] | WR61+ [0.5, 0.5, 0.75, 0.75] | TE61+ [0.0, 0.0, 0.0, 0.25]
 
   REST OF SEASON, 4+ games left
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    a/b  w per position (grid 0 .25 .5 .75 1)          +0.00% (0/7) n1021 |        +0.00% (0/6) n191        +0.00% (0/7) n726        +0.00% (0/5) n104 |        +0.00% (0/7) n450 | all +0.000%  top150-wtd +0.000%  rank +0.0000
-        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-       forward 2022-25                                  +1.78% (0/4) n771 |        +0.00% (0/4) n154        +2.53% (0/4) n551         +2.45% (0/3) n66 |        +0.00% (0/4) n324 | all +0.153%  top150-wtd +0.031%  rank -0.0001
-        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.5, 1.0, 1.0] | TE [1.0, 1.0, 0.5, 1.0]
-    b    one w for RB/WR/TE                            +0.00% (0/7) n1021 |        +0.00% (0/6) n191        +0.00% (0/7) n726        +0.00% (0/5) n104 |        +0.00% (0/7) n450 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+    a/b  w per position (grid 0 .25 .5 .75 1)          +0.04% (0/7) n1267 |        +0.00% (0/6) n262        +0.00% (0/7) n878        +1.10% (0/6) n127 |        +0.00% (0/7) n604 | all +0.004%  top150-wtd +0.000%  rank +0.0000
+        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 0.75, 1.0, 1.0, 1.0, 1.0]
+       forward 2022-25                                  +0.96% (0/4) n862 |        +0.00% (0/4) n183        +1.14% (0/4) n610         +4.02% (0/3) n69 |        +0.00% (0/4) n375 | all +0.089%  top150-wtd +0.013%  rank -0.0001
+        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.75, 1.0, 1.0] | TE [1.0, 1.0, 0.25, 1.0]
+    b    one w for RB/WR/TE                            -0.00% (0/7) n1267 |        +0.00% (0/6) n262        +0.00% (0/7) n878        +0.00% (0/6) n127 |        +0.00% (0/7) n604 | all +0.000%  top150-wtd +0.000%  rank +0.0000
         LOYO picks: all [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-       forward 2022-25                                  +0.00% (0/4) n771 |        +0.00% (0/4) n154        +0.00% (0/4) n551         +0.00% (0/3) n66 |        +0.00% (0/4) n324 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+       forward 2022-25                                  +0.00% (0/4) n862 |        +0.00% (0/4) n183        +0.00% (0/4) n610         +0.00% (0/3) n69 |        +0.00% (0/4) n375 | all +0.000%  top150-wtd +0.000%  rank +0.0000
         forward picks: all [1.0, 1.0, 1.0, 1.0]
-    c    divisor per position (grid 1.0-1.7)           +2.53% (3/7) n1021 |        +4.13% (2/6) n191        +2.05% (1/7) n726        +0.59% (0/5) n104 |        +0.00% (0/7) n450 | all +0.188%  top150-wtd +0.028%  rank +0.0002
-        LOYO picks: RB [1.5, 1.3, 1.7, 1.7, 1.0, 1.7, 1.5] | WR [1.0, 1.1, 1.1, 1.0, 1.3, 1.0, 1.1] | TE [1.0, 1.0, 1.0, 1.0, 1.0, 1.1, 1.0]
-       forward 2022-25                                  +1.72% (2/4) n771 |        -0.80% (2/4) n154        +2.72% (2/4) n551         +3.30% (0/3) n66 |        +0.00% (0/4) n324 | all +0.148%  top150-wtd -0.002%  rank -0.0005
-        forward picks: RB [1.7, 1.4, 1.7, 1.5] | WR [1.1, 1.4, 1.0, 1.1] | TE [1.7, 1.7, 1.7, 1.0]
-    d    w, RB only                                    +0.00% (0/7) n1021 |        +0.00% (0/6) n191        +0.00% (0/7) n726        +0.00% (0/5) n104 |        +0.00% (0/7) n450 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+    c    divisor per position (grid 1.0-1.7)           +2.27% (3/7) n1267 |        +4.10% (3/6) n262        +1.65% (2/7) n878        +0.99% (0/6) n127 |        +0.00% (0/7) n604 | all +0.195%  top150-wtd +0.015%  rank -0.0003
+        LOYO picks: RB [1.4, 1.1, 1.7, 1.5, 1.1, 1.7, 1.4] | WR [1.1, 1.1, 1.1, 1.0, 1.3, 1.0, 1.1] | TE [1.0, 1.0, 1.0, 1.0, 1.0, 1.1, 1.1]
+       forward 2022-25                                  +2.35% (1/4) n862 |        +1.95% (2/4) n183        +2.47% (1/4) n610         +2.83% (1/3) n69 |        +0.00% (0/4) n375 | all +0.219%  top150-wtd +0.033%  rank -0.0004
+        forward picks: RB [1.5, 1.2, 1.7, 1.4] | WR [1.0, 1.3, 1.0, 1.1] | TE [1.4, 1.5, 1.7, 1.1]
+    d    w, RB only                                    +0.00% (0/7) n1267 |        +0.00% (0/6) n262        +0.00% (0/7) n878        +0.00% (0/6) n127 |        +0.00% (0/7) n604 | all +0.000%  top150-wtd +0.000%  rank +0.0000
         LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-       forward 2022-25                                  +0.00% (0/4) n771 |        +0.00% (0/4) n154        +0.00% (0/4) n551         +0.00% (0/3) n66 |        +0.00% (0/4) n324 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+       forward 2022-25                                  +0.00% (0/4) n862 |        +0.00% (0/4) n183        +0.00% (0/4) n610         +0.00% (0/3) n69 |        +0.00% (0/4) n375 | all +0.000%  top150-wtd +0.000%  rank +0.0000
         forward picks: RB [1.0, 1.0, 1.0, 1.0]
-    d    w, lead absentee only, per position           +0.00% (0/7) n1021 |        +0.00% (0/6) n191        +0.00% (0/7) n726        +0.00% (0/5) n104 |        +0.00% (0/7) n450 | all +0.000%  top150-wtd +0.000%  rank +0.0000
-        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-       forward 2022-25                                  +0.13% (0/4) n771 |        +0.00% (0/4) n154        +0.00% (0/4) n551         +2.45% (0/3) n66 |        +0.00% (0/4) n324 | all +0.011%  top150-wtd +0.000%  rank +0.0000
-        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 0.5, 1.0]
-    d    w, ADP <= 60 / 61+ per position               +0.17% (0/7) n1021 |        +0.07% (0/6) n191        +0.22% (0/7) n726        +0.00% (0/5) n104 |        +0.00% (0/7) n450 | all +0.012%  top150-wtd +0.024%  rank -0.0005
-        LOYO picks: RB<=60 [1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 0.75, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-       forward 2022-25                                  +1.78% (0/4) n771 |        +0.00% (0/4) n154        +2.53% (0/4) n551         +2.45% (0/3) n66 |        +0.00% (0/4) n324 | all +0.153%  top150-wtd +0.031%  rank -0.0001
-        forward picks: RB<=60 [1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 0.5, 1.0, 1.0] | TE61+ [1.0, 1.0, 0.5, 1.0]
+    d    w, lead absentee only, per position           +0.04% (0/7) n1267 |        +0.00% (0/6) n262        +0.00% (0/7) n878        +1.10% (0/6) n127 |        +0.00% (0/7) n604 | all +0.004%  top150-wtd +0.000%  rank +0.0000
+        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 0.75, 1.0, 1.0, 1.0, 1.0]
+       forward 2022-25                                  +0.71% (0/4) n862 |        +0.00% (0/4) n183        +0.77% (0/4) n610         +4.02% (0/3) n69 |        +0.00% (0/4) n375 | all +0.066%  top150-wtd +0.009%  rank -0.0001
+        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.75, 1.0, 1.0] | TE [1.0, 1.0, 0.25, 1.0]
+    d    w, ADP <= 60 / 61+ per position               +0.18% (0/7) n1267 |        +0.06% (0/6) n262        +0.17% (0/7) n878        +1.10% (0/6) n127 |        +0.00% (0/7) n604 | all +0.015%  top150-wtd +0.022%  rank -0.0003
+        LOYO picks: RB<=60 [1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 0.75, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE61+ [1.0, 1.0, 0.75, 1.0, 1.0, 1.0, 1.0]
+       forward 2022-25                                  +0.96% (0/4) n862 |        +0.00% (0/4) n183        +1.14% (0/4) n610         +4.02% (0/3) n69 |        +0.00% (0/4) n375 | all +0.089%  top150-wtd +0.013%  rank -0.0001
+        forward picks: RB<=60 [1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 0.75, 1.0, 1.0] | TE61+ [1.0, 1.0, 0.25, 1.0]
 
   REST OF SEASON, no survivor filter
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    a/b  w per position (grid 0 .25 .5 .75 1)          +0.07% (0/7) n1267 |        +0.00% (0/6) n257        +0.00% (0/7) n875        +1.71% (0/7) n135 |        +0.00% (0/7) n542 | all +0.006%  top150-wtd +0.000%  rank +0.0000
-        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 0.75, 1.0, 1.0, 1.0, 0.75]
-       forward 2022-25                                  +1.16% (0/4) n945 |        +0.00% (0/4) n199        +1.57% (0/4) n663         +1.67% (1/4) n83 |        +0.00% (0/4) n385 | all +0.111%  top150-wtd +0.022%  rank -0.0001
-        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.5, 1.0, 1.0] | TE [1.0, 0.75, 0.5, 0.75]
-    b    one w for RB/WR/TE                            +0.00% (0/7) n1267 |        +0.00% (0/6) n257        +0.00% (0/7) n875        +0.00% (0/7) n135 |        +0.00% (0/7) n542 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+    a/b  w per position (grid 0 .25 .5 .75 1)          +0.14% (0/7) n1629 |        +0.00% (0/7) n368       -0.00% (0/7) n1091        +3.90% (0/7) n170 |        +0.00% (0/7) n728 | all +0.014%  top150-wtd +0.000%  rank +0.0000
+        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 0.5, 1.0, 1.0, 0.75, 0.5]
+       forward 2022-25                                 +1.49% (0/4) n1082 |        +0.00% (0/4) n250        +1.95% (0/4) n738         +2.93% (1/4) n94 |        +0.00% (0/4) n449 | all +0.154%  top150-wtd +0.021%  rank -0.0001
+        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.5, 1.0, 1.0] | TE [1.0, 0.75, 0.25, 0.5]
+    b    one w for RB/WR/TE                            -0.00% (0/7) n1629 |        +0.00% (0/7) n368       -0.00% (0/7) n1091        +0.00% (0/7) n170 |        +0.00% (0/7) n728 | all +0.000%  top150-wtd +0.000%  rank +0.0000
         LOYO picks: all [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-       forward 2022-25                                  +0.54% (0/4) n945 |        +0.51% (0/4) n199        +0.61% (0/4) n663         -0.38% (1/4) n83 |        +0.00% (0/4) n385 | all +0.052%  top150-wtd +0.021%  rank -0.0000
-        forward picks: all [1.0, 0.75, 1.0, 1.0]
-    c    divisor per position (grid 1.0-1.7)           -1.13% (5/7) n1267 |        -6.37% (3/6) n257        +0.97% (2/7) n875        +2.63% (3/7) n135 |        +0.00% (0/7) n542 | all -0.098%  top150-wtd -0.080%  rank -0.0002
-        LOYO picks: RB [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7] | WR [1.1, 1.1, 1.1, 1.0, 1.3, 1.1, 1.1] | TE [1.3, 1.0, 1.5, 1.3, 1.4, 1.4, 1.7]
-       forward 2022-25                                  -0.54% (2/4) n945 |        -7.09% (2/4) n199        +1.72% (2/4) n663         +2.94% (2/4) n83 |        +0.00% (0/4) n385 | all -0.051%  top150-wtd -0.080%  rank -0.0007
-        forward picks: RB [1.7, 1.7, 1.7, 1.7] | WR [1.1, 1.5, 1.1, 1.1] | TE [1.7, 1.7, 1.7, 1.7]
-    d    w, RB only                                    +0.00% (0/7) n1267 |        +0.00% (0/6) n257        +0.00% (0/7) n875        +0.00% (0/7) n135 |        +0.00% (0/7) n542 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+       forward 2022-25                                 +0.00% (0/4) n1082 |        +0.00% (0/4) n250        +0.00% (0/4) n738         +0.00% (0/4) n94 |        +0.00% (0/4) n449 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+        forward picks: all [1.0, 1.0, 1.0, 1.0]
+    c    divisor per position (grid 1.0-1.7)           -0.41% (3/7) n1629 |        -4.42% (5/7) n368       +1.31% (3/7) n1091        +1.11% (5/7) n170 |        +0.00% (0/7) n728 | all -0.042%  top150-wtd -0.093%  rank -0.0001
+        LOYO picks: RB [1.7, 1.5, 1.7, 1.7, 1.5, 1.7, 1.7] | WR [1.2, 1.1, 1.1, 1.0, 1.4, 1.1, 1.2] | TE [1.5, 1.1, 1.7, 1.4, 1.3, 1.5, 1.7]
+       forward 2022-25                                 -0.44% (2/4) n1082 |        -6.72% (3/4) n250        +1.85% (2/4) n738         +0.37% (3/4) n94 |        +0.00% (0/4) n449 | all -0.045%  top150-wtd -0.085%  rank +0.0002
+        forward picks: RB [1.7, 1.7, 1.7, 1.7] | WR [1.1, 1.5, 1.1, 1.2] | TE [1.7, 1.7, 1.7, 1.7]
+    d    w, RB only                                    +0.00% (0/7) n1629 |        +0.00% (0/7) n368       +0.00% (0/7) n1091        +0.00% (0/7) n170 |        +0.00% (0/7) n728 | all +0.000%  top150-wtd +0.000%  rank +0.0000
         LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-       forward 2022-25                                  +0.00% (0/4) n945 |        +0.00% (0/4) n199        +0.00% (0/4) n663         +0.00% (0/4) n83 |        +0.00% (0/4) n385 | all +0.000%  top150-wtd +0.000%  rank +0.0000
+       forward 2022-25                                 +0.00% (0/4) n1082 |        +0.00% (0/4) n250        +0.00% (0/4) n738         +0.00% (0/4) n94 |        +0.00% (0/4) n449 | all +0.000%  top150-wtd +0.000%  rank +0.0000
         forward picks: RB [1.0, 1.0, 1.0, 1.0]
-    d    w, lead absentee only, per position           +0.07% (0/7) n1267 |        +0.00% (0/6) n257        +0.00% (0/7) n875        +1.71% (0/7) n135 |        +0.00% (0/7) n542 | all +0.006%  top150-wtd +0.000%  rank +0.0000
-        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 0.75, 1.0, 1.0, 1.0, 0.75]
-       forward 2022-25                                  +0.42% (0/4) n945 |        +0.00% (0/4) n199        +0.50% (0/4) n663         +1.67% (1/4) n83 |        +0.00% (0/4) n385 | all +0.040%  top150-wtd +0.007%  rank -0.0000
-        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.75, 1.0, 1.0] | TE [1.0, 0.75, 0.5, 0.75]
-    d    w, ADP <= 60 / 61+ per position               +0.07% (0/7) n1267 |        +0.00% (0/6) n257        +0.00% (0/7) n875        +1.71% (0/7) n135 |        +0.00% (0/7) n542 | all +0.006%  top150-wtd +0.000%  rank +0.0000
-        LOYO picks: RB<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE61+ [1.0, 1.0, 0.75, 1.0, 1.0, 1.0, 0.75]
-       forward 2022-25                                  +1.16% (0/4) n945 |        +0.00% (0/4) n199        +1.57% (0/4) n663         +1.67% (1/4) n83 |        +0.00% (0/4) n385 | all +0.111%  top150-wtd +0.022%  rank -0.0001
-        forward picks: RB<=60 [1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 0.5, 1.0, 1.0] | TE61+ [1.0, 0.75, 0.5, 0.75]
+    d    w, lead absentee only, per position           +0.14% (0/7) n1629 |        +0.00% (0/7) n368       -0.00% (0/7) n1091        +3.90% (0/7) n170 |        +0.00% (0/7) n728 | all +0.014%  top150-wtd +0.000%  rank +0.0000
+        LOYO picks: RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE [1.0, 1.0, 0.5, 1.0, 1.0, 0.75, 0.5]
+       forward 2022-25                                 +0.46% (0/4) n1082 |        +0.00% (0/4) n250        +0.48% (0/4) n738         +2.93% (1/4) n94 |        +0.00% (0/4) n449 | all +0.047%  top150-wtd +0.007%  rank -0.0001
+        forward picks: RB [1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.75, 1.0, 1.0] | TE [1.0, 0.75, 0.25, 0.5]
+    d    w, ADP <= 60 / 61+ per position               +0.14% (0/7) n1629 |        +0.00% (0/7) n368       -0.00% (0/7) n1091        +3.90% (0/7) n170 |        +0.00% (0/7) n728 | all +0.014%  top150-wtd +0.000%  rank +0.0000
+        LOYO picks: RB<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | TE61+ [1.0, 1.0, 0.5, 1.0, 1.0, 0.75, 0.5]
+       forward 2022-25                                 +1.49% (0/4) n1082 |        +0.00% (0/4) n250        +1.95% (0/4) n738         +2.93% (1/4) n94 |        +0.00% (0/4) n449 | all +0.154%  top150-wtd +0.021%  rank -0.0001
+        forward picks: RB<=60 [1.0, 1.0, 1.0, 1.0] | WR<=60 [1.0, 1.0, 1.0, 1.0] | TE<=60 [0.0, 0.0, 0.0, 0.0] | RB61+ [1.0, 1.0, 1.0, 1.0] | WR61+ [1.0, 0.5, 1.0, 1.0] | TE61+ [1.0, 0.75, 0.25, 0.5]
 
 --- 4  FIXED CANDIDATES the scans point to: all starter-back rows, by position, flip side, overall board; then by season ---
 
   NEXT GAME
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    c+d boost rescale, 2+ stale games                  -0.61% (7/7) n1855 |        -1.59% (4/6) n389       -0.33% (5/7) n1292        -0.55% (5/7) n174 |        +0.00% (0/7) n708 | all -0.049%  top150-wtd -0.013%  rank +0.0002
-    c+d boost rescale, stale share >= 50%              -0.44% (7/7) n1855 |        -1.09% (5/6) n389       -0.28% (7/7) n1292        +0.22% (3/7) n174 |        +0.00% (0/7) n708 | all -0.035%  top150-wtd -0.018%  rank +0.0003
-    c+d boost rescale, 2+ stale OR share >= 50%        -0.62% (7/7) n1855 |        -1.60% (4/6) n389       -0.33% (5/7) n1292        -0.60% (5/7) n174 |        +0.00% (0/7) n708 | all -0.049%  top150-wtd -0.013%  rank +0.0002
-    c   boost rescale, RB only (1.26)                  -0.35% (6/7) n1855 |        -1.59% (5/6) n389       +0.00% (0/7) n1292        +0.00% (0/7) n174 |        +0.00% (0/7) n708 | all -0.027%  top150-wtd -0.010%  rank +0.0001
-    c+d RB 1.26 all + WR/TE 2+ stale games             -0.61% (7/7) n1855 |        -1.59% (5/6) n389       -0.33% (5/7) n1292        -0.55% (5/7) n174 |        +0.00% (0/7) n708 | all -0.049%  top150-wtd -0.015%  rank +0.0002
-    c+d 1/1.2 every pos, 2+ stale games                -0.79% (7/7) n1855 |        -1.34% (4/6) n389       -0.63% (4/7) n1292        -0.67% (5/7) n174 |        +0.00% (0/7) n708 | all -0.062%  top150-wtd -0.015%  rank +0.0002
+    c+d boost rescale, 2+ stale games                  -0.68% (7/7) n2315 |        -1.86% (6/7) n551       -0.30% (5/7) n1545        -0.58% (5/7) n219 |        +0.00% (0/7) n960 | all -0.062%  top150-wtd -0.020%  rank +0.0001
+    c+d boost rescale, stale share >= 50%              -0.42% (7/7) n2315 |        -0.98% (6/7) n551       -0.26% (6/7) n1545        +0.05% (4/7) n219 |        +0.00% (0/7) n960 | all -0.038%  top150-wtd -0.019%  rank +0.0003
+    c+d boost rescale, 2+ stale OR share >= 50%        -0.69% (7/7) n2315 |        -1.88% (6/7) n551       -0.30% (5/7) n1545        -0.70% (6/7) n219 |        +0.00% (0/7) n960 | all -0.063%  top150-wtd -0.020%  rank +0.0001
+    c   boost rescale, RB only (1.26)                  -0.47% (6/7) n2315 |        -1.95% (6/7) n551       +0.00% (0/7) n1545        +0.00% (0/7) n219 |        +0.00% (0/7) n960 | all -0.042%  top150-wtd -0.017%  rank -0.0002
+    c+d RB 1.26 all + WR/TE 2+ stale games             -0.70% (7/7) n2315 |        -1.95% (6/7) n551       -0.30% (5/7) n1545        -0.58% (5/7) n219 |        +0.00% (0/7) n960 | all -0.064%  top150-wtd -0.022%  rank +0.0001
+    c+d 1/1.2 every pos, 2+ stale games                -0.80% (7/7) n2315 |        -1.56% (6/7) n551       -0.56% (4/7) n1545        -0.71% (5/7) n219 |        +0.00% (0/7) n960 | all -0.073%  top150-wtd -0.021%  rank +0.0002
     -- 2022-25 only --
-    c+d boost rescale, 2+ stale games                  -0.46% (4/4) n1377 |        -0.99% (3/4) n299        -0.33% (3/4) n970        -0.15% (2/4) n108 |        +0.00% (0/4) n485 | all -0.041%  top150-wtd -0.013%  rank +0.0002
-    c+d boost rescale, stale share >= 50%              -0.34% (4/4) n1377 |        -0.65% (3/4) n299        -0.28% (4/4) n970        +0.41% (1/4) n108 |        +0.00% (0/4) n485 | all -0.030%  top150-wtd -0.020%  rank +0.0004
-    c+d boost rescale, 2+ stale OR share >= 50%        -0.47% (4/4) n1377 |        -1.00% (3/4) n299        -0.33% (3/4) n970        -0.23% (2/4) n108 |        +0.00% (0/4) n485 | all -0.042%  top150-wtd -0.013%  rank +0.0002
-    c   boost rescale, RB only (1.26)                  -0.19% (3/4) n1377 |        -0.88% (3/4) n299        +0.00% (0/4) n970        +0.00% (0/4) n108 |        +0.00% (0/4) n485 | all -0.017%  top150-wtd -0.007%  rank -0.0001
-    c+d RB 1.26 all + WR/TE 2+ stale games             -0.44% (4/4) n1377 |        -0.88% (3/4) n299        -0.33% (3/4) n970        -0.15% (2/4) n108 |        +0.00% (0/4) n485 | all -0.039%  top150-wtd -0.013%  rank +0.0002
-    c+d 1/1.2 every pos, 2+ stale games                -0.64% (4/4) n1377 |        -0.86% (3/4) n299        -0.61% (2/4) n970        -0.16% (2/4) n108 |        +0.00% (0/4) n485 | all -0.058%  top150-wtd -0.017%  rank +0.0003
-    c+d boost rescale, 2+ stale games            touched 1062: actual 6.07 live 6.91 rule 6.74 | 2019: -1.2% n64  2020: -3.2% n100  2021: -0.4% n115  2022: -0.9% n150  2023: -0.4% n235  2024: -1.4% n282  2025: -0.3% n116
-    c+d boost rescale, stale share >= 50%        touched 405: actual 5.42 live 6.61 rule 6.40 | 2019: -4.7% n21  2020: -6.9% n38  2021: -2.4% n47  2022: -1.7% n52  2023: -0.1% n115  2024: -2.9% n93  2025: -2.3% n39
-    c+d boost rescale, 2+ stale OR share >= 50%  touched 1123: actual 6.03 live 6.85 rule 6.68 | 2019: -1.2% n66  2020: -3.1% n105  2021: -0.4% n126  2022: -0.9% n152  2023: -0.4% n255  2024: -1.3% n295  2025: -0.3% n124
-    c   boost rescale, RB only (1.26)            touched 389: actual 6.36 live 7.30 rule 7.02 | 2020: -6.0% n37  2021: -0.2% n49  2022: +0.1% n39  2023: -1.1% n101  2024: -1.5% n105  2025: -0.4% n54
-    c+d RB 1.26 all + WR/TE 2+ stale games       touched 1216: actual 6.18 live 6.94 rule 6.77 | 2019: -1.2% n65  2020: -3.0% n109  2021: -0.5% n137  2022: -0.9% n158  2023: -0.4% n265  2024: -1.0% n330  2025: -0.2% n152
-    c+d 1/1.2 every pos, 2+ stale games          touched 1062: actual 6.07 live 6.91 rule 6.64 | 2019: -2.3% n64  2020: -2.6% n100  2021: -0.9% n115  2022: -1.9% n150  2023: -0.2% n235  2024: -1.9% n282  2025: -0.1% n116
+    c+d boost rescale, 2+ stale games                  -0.51% (4/4) n1543 |        -1.14% (3/4) n370       -0.33% (3/4) n1053        -0.29% (2/4) n120 |        +0.00% (0/4) n575 | all -0.049%  top150-wtd -0.013%  rank +0.0003
+    c+d boost rescale, stale share >= 50%              -0.43% (4/4) n1543 |        -0.90% (3/4) n370       -0.32% (4/4) n1053        +0.20% (1/4) n120 |        +0.00% (0/4) n575 | all -0.041%  top150-wtd -0.020%  rank +0.0004
+    c+d boost rescale, 2+ stale OR share >= 50%        -0.51% (4/4) n1543 |        -1.14% (3/4) n370       -0.33% (3/4) n1053        -0.50% (3/4) n120 |        +0.00% (0/4) n575 | all -0.050%  top150-wtd -0.013%  rank +0.0003
+    c   boost rescale, RB only (1.26)                  -0.24% (3/4) n1543 |        -1.09% (3/4) n370       +0.00% (0/4) n1053        +0.00% (0/4) n120 |        +0.00% (0/4) n575 | all -0.023%  top150-wtd -0.007%  rank +0.0000
+    c+d RB 1.26 all + WR/TE 2+ stale games             -0.50% (4/4) n1543 |        -1.09% (3/4) n370       -0.33% (3/4) n1053        -0.29% (2/4) n120 |        +0.00% (0/4) n575 | all -0.048%  top150-wtd -0.013%  rank +0.0003
+    c+d 1/1.2 every pos, 2+ stale games                -0.70% (4/4) n1543 |        -0.98% (3/4) n370       -0.63% (2/4) n1053        -0.34% (2/4) n120 |        +0.00% (0/4) n575 | all -0.067%  top150-wtd -0.017%  rank +0.0005
+    c+d boost rescale, 2+ stale games            touched 1354: actual 5.88 live 6.70 rule 6.52 | 2019: -0.4% n120  2020: -3.0% n165  2021: -0.8% n185  2022: -0.5% n198  2023: -0.8% n271  2024: -1.6% n299  2025: -0.3% n116
+    c+d boost rescale, stale share >= 50%        touched 557: actual 5.26 live 6.26 rule 6.05 | 2019: -1.9% n60  2020: -2.7% n65  2021: -0.8% n75  2022: -1.8% n79  2023: -0.7% n139  2024: -3.4% n100  2025: -2.3% n39
+    c+d boost rescale, 2+ stale OR share >= 50%  touched 1442: actual 5.82 live 6.61 rule 6.44 | 2019: -0.5% n128  2020: -3.0% n174  2021: -0.8% n198  2022: -0.5% n206  2023: -0.7% n300  2024: -1.6% n312  2025: -0.3% n124
+    c   boost rescale, RB only (1.26)            touched 551: actual 5.98 live 7.05 rule 6.76 | 2019: -9.0% n13  2020: -5.4% n87  2021: -1.0% n81  2022: +0.5% n56  2023: -1.8% n125  2024: -1.8% n135  2025: -0.4% n54
+    c+d RB 1.26 all + WR/TE 2+ stale games       touched 1552: actual 5.92 live 6.71 rule 6.53 | 2019: -0.5% n122  2020: -2.9% n190  2021: -0.8% n211  2022: -0.6% n207  2023: -0.7% n305  2024: -1.2% n365  2025: -0.2% n152
+    c+d 1/1.2 every pos, 2+ stale games          touched 1354: actual 5.88 live 6.70 rule 6.44 | 2019: -0.4% n120  2020: -2.4% n165  2021: -1.2% n185  2022: -1.4% n198  2023: -0.5% n271  2024: -2.2% n299  2025: -0.1% n116
 
   REST OF SEASON, 4+ games left
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    c+d boost rescale, 2+ stale games                  -1.59% (7/7) n1021 |        -5.34% (4/6) n191        -0.27% (4/7) n726        +0.24% (2/5) n104 |        +0.00% (0/7) n450 | all -0.119%  top150-wtd -0.038%  rank +0.0005
-    c+d boost rescale, stale share >= 50%              -0.95% (6/7) n1021 |        -2.36% (4/6) n191        -0.51% (5/7) n726        +0.48% (3/5) n104 |        +0.00% (0/7) n450 | all -0.071%  top150-wtd -0.031%  rank +0.0008
-    c+d boost rescale, 2+ stale OR share >= 50%        -1.38% (6/7) n1021 |        -4.60% (3/6) n191        -0.27% (3/7) n726        +0.57% (3/5) n104 |        +0.00% (0/7) n450 | all -0.103%  top150-wtd -0.037%  rank +0.0005
-    c   boost rescale, RB only (1.26)                  -0.73% (4/7) n1021 |        -2.76% (3/6) n191        +0.00% (0/7) n726        +0.00% (0/5) n104 |        +0.00% (0/7) n450 | all -0.055%  top150-wtd -0.028%  rank -0.0000
-    c+d RB 1.26 all + WR/TE 2+ stale games             -0.91% (5/7) n1021 |        -2.76% (3/6) n191        -0.27% (4/7) n726        +0.24% (2/5) n104 |        +0.00% (0/7) n450 | all -0.068%  top150-wtd -0.029%  rank +0.0004
-    c+d 1/1.2 every pos, 2+ stale games                -1.29% (6/7) n1021 |        -4.47% (4/6) n191        -0.17% (3/7) n726        +0.37% (2/5) n104 |        +0.00% (0/7) n450 | all -0.096%  top150-wtd -0.026%  rank +0.0006
+    c+d boost rescale, 2+ stale games                  -1.19% (6/7) n1267 |        -4.22% (3/6) n262        -0.12% (3/7) n878        +0.30% (3/6) n127 |        +0.00% (0/7) n604 | all -0.102%  top150-wtd -0.042%  rank +0.0004
+    c+d boost rescale, stale share >= 50%              -0.61% (6/7) n1267 |        -1.52% (3/6) n262        -0.30% (5/7) n878        +0.24% (3/6) n127 |        +0.00% (0/7) n604 | all -0.052%  top150-wtd -0.032%  rank +0.0004
+    c+d boost rescale, 2+ stale OR share >= 50%        -1.03% (6/7) n1267 |        -3.70% (3/6) n262        -0.09% (3/7) n878        +0.39% (3/6) n127 |        +0.00% (0/7) n604 | all -0.088%  top150-wtd -0.042%  rank +0.0004
+    c   boost rescale, RB only (1.26)                  -0.59% (4/7) n1267 |        -2.24% (3/6) n262        +0.00% (0/7) n878        +0.00% (0/6) n127 |        +0.00% (0/7) n604 | all -0.051%  top150-wtd -0.033%  rank +0.0003
+    c+d RB 1.26 all + WR/TE 2+ stale games             -0.66% (5/7) n1267 |        -2.24% (3/6) n262        -0.12% (3/7) n878        +0.30% (3/6) n127 |        +0.00% (0/7) n604 | all -0.057%  top150-wtd -0.036%  rank +0.0004
+    c+d 1/1.2 every pos, 2+ stale games                -0.86% (4/7) n1267 |        -3.58% (3/6) n262        +0.11% (3/7) n878        +0.45% (3/6) n127 |        +0.00% (0/7) n604 | all -0.074%  top150-wtd -0.033%  rank +0.0008
     -- 2022-25 only --
-    c+d boost rescale, 2+ stale games                   -1.39% (4/4) n771 |        -4.45% (2/4) n154        -0.13% (2/4) n551         +0.21% (1/3) n66 |        +0.00% (0/4) n324 | all -0.119%  top150-wtd -0.040%  rank +0.0003
-    c+d boost rescale, stale share >= 50%               -1.26% (4/4) n771 |        -3.20% (3/4) n154        -0.55% (3/4) n551         +0.88% (1/3) n66 |        +0.00% (0/4) n324 | all -0.108%  top150-wtd -0.039%  rank +0.0005
-    c+d boost rescale, 2+ stale OR share >= 50%         -1.46% (4/4) n771 |        -4.63% (2/4) n154        -0.19% (2/4) n551         +0.62% (2/3) n66 |        +0.00% (0/4) n324 | all -0.125%  top150-wtd -0.043%  rank +0.0003
-    c   boost rescale, RB only (1.26)                   -0.75% (2/4) n771 |        -2.54% (2/4) n154        +0.00% (0/4) n551         +0.00% (0/3) n66 |        +0.00% (0/4) n324 | all -0.064%  top150-wtd -0.030%  rank -0.0001
-    c+d RB 1.26 all + WR/TE 2+ stale games              -0.82% (3/4) n771 |        -2.54% (2/4) n154        -0.13% (2/4) n551         +0.21% (1/3) n66 |        +0.00% (0/4) n324 | all -0.071%  top150-wtd -0.029%  rank +0.0001
-    c+d 1/1.2 every pos, 2+ stale games                 -0.96% (3/4) n771 |        -3.75% (2/4) n154        +0.19% (2/4) n551         +0.32% (1/3) n66 |        +0.00% (0/4) n324 | all -0.083%  top150-wtd -0.023%  rank +0.0003
-    c+d boost rescale, 2+ stale games            touched 550: actual 6.14 live 6.71 rule 6.53 | 2019: -6.6% n31  2020: -3.7% n56  2021: -1.7% n60  2022: -5.3% n68  2023: -3.7% n133  2024: -0.1% n145  2025: -5.7% n57
-    c+d boost rescale, stale share >= 50%        touched 291: actual 5.79 live 6.48 rule 6.28 | 2019: -7.9% n17  2020: -1.8% n28  2021: +3.6% n36  2022: -12.0% n30  2023: -3.7% n90  2024: -1.4% n66  2025: -10.7% n24
-    c+d boost rescale, 2+ stale OR share >= 50%  touched 610: actual 6.07 live 6.59 rule 6.42 | 2019: -6.5% n33  2020: -3.5% n61  2021: +2.4% n71  2022: -5.3% n70  2023: -3.5% n153  2024: -0.1% n157  2025: -6.4% n65
-    c   boost rescale, RB only (1.26)            touched 191: actual 6.60 live 7.25 rule 6.96 | 2020: -20.2% n12  2021: +6.2% n24  2022: +1.2% n14  2023: -10.2% n58  2024: +5.3% n52  2025: -2.5% n30
-    c+d RB 1.26 all + WR/TE 2+ stale games       touched 629: actual 6.33 live 6.71 rule 6.53 | 2019: -6.6% n31  2020: -3.7% n56  2021: +2.7% n74  2022: -5.6% n73  2023: -2.9% n149  2024: +1.5% n167  2025: -0.6% n79
-    c+d 1/1.2 every pos, 2+ stale games          touched 550: actual 6.14 live 6.71 rule 6.43 | 2019: -13.8% n31  2020: -2.3% n56  2021: -1.2% n60  2022: -13.4% n68  2023: +0.5% n133  2024: -2.1% n145  2025: -1.0% n57
+    c+d boost rescale, 2+ stale games                   -1.08% (4/4) n862 |        -3.30% (2/4) n183        -0.25% (2/4) n610         +0.21% (1/3) n69 |        +0.00% (0/4) n375 | all -0.101%  top150-wtd -0.025%  rank +0.0006
+    c+d boost rescale, stale share >= 50%               -1.03% (4/4) n862 |        -2.46% (2/4) n183        -0.56% (3/4) n610         +0.56% (1/3) n69 |        +0.00% (0/4) n375 | all -0.096%  top150-wtd -0.031%  rank +0.0005
+    c+d boost rescale, 2+ stale OR share >= 50%         -1.12% (4/4) n862 |        -3.45% (2/4) n183        -0.25% (2/4) n610         +0.32% (2/3) n69 |        +0.00% (0/4) n375 | all -0.104%  top150-wtd -0.027%  rank +0.0006
+    c   boost rescale, RB only (1.26)                   -0.45% (2/4) n862 |        -1.60% (2/4) n183        +0.00% (0/4) n610         +0.00% (0/3) n69 |        +0.00% (0/4) n375 | all -0.042%  top150-wtd -0.012%  rank +0.0002
+    c+d RB 1.26 all + WR/TE 2+ stale games              -0.61% (3/4) n862 |        -1.60% (2/4) n183        -0.25% (2/4) n610         +0.21% (1/3) n69 |        +0.00% (0/4) n375 | all -0.057%  top150-wtd -0.015%  rank +0.0005
+    c+d 1/1.2 every pos, 2+ stale games                 -0.86% (3/4) n862 |        -2.83% (2/4) n183        -0.13% (2/4) n610         +0.31% (1/3) n69 |        +0.00% (0/4) n375 | all -0.080%  top150-wtd -0.016%  rank +0.0009
+    c+d boost rescale, 2+ stale games            touched 692: actual 6.02 live 6.47 rule 6.29 | 2019: -0.4% n62  2020: -5.4% n84  2021: +2.1% n96  2022: -0.5% n96  2023: -3.0% n144  2024: -1.1% n153  2025: -5.7% n57
+    c+d boost rescale, stale share >= 50%        touched 399: actual 5.67 live 6.12 rule 5.93 | 2019: -1.1% n44  2020: -3.4% n48  2021: +6.5% n56  2022: -5.6% n53  2023: -2.9% n105  2024: -2.3% n69  2025: -10.7% n24
+    c+d boost rescale, 2+ stale OR share >= 50%  touched 778: actual 5.93 live 6.33 rule 6.16 | 2019: -0.4% n70  2020: -5.3% n93  2021: +4.3% n109  2022: -0.3% n104  2023: -2.8% n172  2024: -1.0% n165  2025: -6.4% n65
+    c   boost rescale, RB only (1.26)            touched 262: actual 6.37 live 6.97 rule 6.68 | 2020: -14.1% n37  2021: +9.1% n38  2022: +9.2% n20  2023: -8.7% n65  2024: +4.0% n68  2025: -2.5% n30
+    c+d RB 1.26 all + WR/TE 2+ stale games       touched 795: actual 6.16 live 6.46 rule 6.28 | 2019: -0.4% n62  2020: -5.0% n94  2021: +4.5% n112  2022: -0.9% n102  2023: -2.3% n161  2024: +0.4% n185  2025: -0.6% n79
+    c+d 1/1.2 every pos, 2+ stale games          touched 692: actual 6.02 live 6.47 rule 6.21 | 2019: +0.1% n62  2020: -3.5% n84  2021: +1.3% n96  2022: -4.4% n96  2023: +1.0% n144  2024: -3.3% n153  2025: -1.0% n57
 
   REST OF SEASON, no survivor filter
     rule                                                starter-back rows |                  RB back                  WR back                  TE back |         flip (still out) | overall board
-    c+d boost rescale, 2+ stale games                  -1.76% (6/7) n1267 |        -5.27% (6/6) n257        -0.23% (4/7) n875        -1.20% (3/7) n135 |        +0.00% (0/7) n542 | all -0.153%  top150-wtd -0.052%  rank +0.0000
-    c+d boost rescale, stale share >= 50%              -1.14% (6/7) n1267 |        -2.96% (5/6) n257        -0.39% (4/7) n875        -0.23% (3/7) n135 |        +0.00% (0/7) n542 | all -0.099%  top150-wtd -0.045%  rank +0.0003
-    c+d boost rescale, 2+ stale OR share >= 50%        -1.63% (6/7) n1267 |        -4.85% (5/6) n257        -0.23% (4/7) n875        -0.96% (3/7) n135 |        +0.00% (0/7) n542 | all -0.141%  top150-wtd -0.051%  rank +0.0000
-    c   boost rescale, RB only (1.26)                  -1.20% (6/7) n1267 |        -4.06% (5/6) n257        +0.00% (0/7) n875        +0.00% (0/7) n135 |        +0.00% (0/7) n542 | all -0.104%  top150-wtd -0.052%  rank -0.0000
-    c+d RB 1.26 all + WR/TE 2+ stale games             -1.41% (5/7) n1267 |        -4.06% (5/6) n257        -0.23% (4/7) n875        -1.20% (3/7) n135 |        +0.00% (0/7) n542 | all -0.122%  top150-wtd -0.050%  rank -0.0000
-    c+d 1/1.2 every pos, 2+ stale games                -1.48% (6/7) n1267 |        -4.38% (6/6) n257        -0.18% (4/7) n875        -1.45% (3/7) n135 |        +0.00% (0/7) n542 | all -0.128%  top150-wtd -0.035%  rank +0.0002
+    c+d boost rescale, 2+ stale games                  -1.57% (5/7) n1629 |        -4.60% (6/7) n368       -0.22% (4/7) n1091        -1.18% (4/7) n170 |        +0.00% (0/7) n728 | all -0.158%  top150-wtd -0.064%  rank +0.0003
+    c+d boost rescale, stale share >= 50%              -1.01% (6/7) n1629 |        -2.68% (6/7) n368       -0.28% (3/7) n1091        -0.51% (4/7) n170 |        +0.00% (0/7) n728 | all -0.102%  top150-wtd -0.053%  rank +0.0001
+    c+d boost rescale, 2+ stale OR share >= 50%        -1.47% (6/7) n1629 |        -4.31% (6/7) n368       -0.20% (4/7) n1091        -1.19% (4/7) n170 |        +0.00% (0/7) n728 | all -0.148%  top150-wtd -0.064%  rank +0.0003
+    c   boost rescale, RB only (1.26)                  -1.10% (6/7) n1629 |        -3.66% (6/7) n368       +0.00% (0/7) n1091        +0.00% (0/7) n170 |        +0.00% (0/7) n728 | all -0.110%  top150-wtd -0.062%  rank +0.0002
+    c+d RB 1.26 all + WR/TE 2+ stale games             -1.29% (5/7) n1629 |        -3.66% (6/7) n368       -0.22% (4/7) n1091        -1.18% (4/7) n170 |        +0.00% (0/7) n728 | all -0.129%  top150-wtd -0.064%  rank +0.0003
+    c+d 1/1.2 every pos, 2+ stale games                -1.34% (5/7) n1629 |        -3.85% (6/7) n368       -0.20% (3/7) n1091        -1.43% (4/7) n170 |        +0.00% (0/7) n728 | all -0.135%  top150-wtd -0.050%  rank +0.0006
     -- 2022-25 only --
-    c+d boost rescale, 2+ stale games                   -1.68% (3/4) n945 |        -5.88% (4/4) n199        -0.15% (2/4) n663         -0.63% (2/4) n83 |        +0.00% (0/4) n385 | all -0.160%  top150-wtd -0.057%  rank -0.0003
-    c+d boost rescale, stale share >= 50%               -1.35% (4/4) n945 |        -4.12% (4/4) n199        -0.40% (2/4) n663         +0.20% (1/4) n83 |        +0.00% (0/4) n385 | all -0.129%  top150-wtd -0.053%  rank -0.0000
-    c+d boost rescale, 2+ stale OR share >= 50%         -1.72% (4/4) n945 |        -6.01% (4/4) n199        -0.19% (2/4) n663         -0.31% (2/4) n83 |        +0.00% (0/4) n385 | all -0.164%  top150-wtd -0.059%  rank -0.0003
-    c   boost rescale, RB only (1.26)                   -1.22% (4/4) n945 |        -4.65% (4/4) n199        +0.00% (0/4) n663         +0.00% (0/4) n83 |        +0.00% (0/4) n385 | all -0.116%  top150-wtd -0.055%  rank -0.0001
-    c+d RB 1.26 all + WR/TE 2+ stale games              -1.35% (3/4) n945 |        -4.65% (4/4) n199        -0.15% (2/4) n663         -0.63% (2/4) n83 |        +0.00% (0/4) n385 | all -0.129%  top150-wtd -0.049%  rank -0.0004
-    c+d 1/1.2 every pos, 2+ stale games                 -1.30% (3/4) n945 |        -4.90% (4/4) n199        +0.02% (2/4) n663         -0.74% (2/4) n83 |        +0.00% (0/4) n385 | all -0.124%  top150-wtd -0.031%  rank -0.0000
-    c+d boost rescale, 2+ stale games            touched 708: actual 5.79 live 6.45 rule 6.28 | 2019: -2.9% n43  2020: -3.1% n72  2021: -2.6% n78  2022: -5.9% n100  2023: -3.4% n161  2024: -3.0% n174  2025: +0.4% n80
-    c+d boost rescale, stale share >= 50%        touched 363: actual 5.37 live 6.25 rule 6.06 | 2019: -7.7% n21  2020: -5.5% n34  2021: +2.8% n44  2022: -10.2% n46  2023: -3.3% n107  2024: -4.8% n79  2025: -1.6% n32
-    c+d boost rescale, 2+ stale OR share >= 50%  touched 769: actual 5.75 live 6.38 rule 6.21 | 2019: -2.8% n45  2020: -3.1% n77  2021: +1.0% n89  2022: -5.9% n102  2023: -3.2% n181  2024: -2.8% n187  2025: -0.2% n88
-    c   boost rescale, RB only (1.26)            touched 257: actual 5.80 live 6.89 rule 6.60 | 2020: -5.2% n22  2021: +1.0% n34  2022: -7.2% n26  2023: -10.1% n70  2024: -0.4% n64  2025: -0.2% n39
-    c+d RB 1.26 all + WR/TE 2+ stale games       touched 806: actual 5.89 live 6.45 rule 6.27 | 2019: -2.9% n43  2020: -3.1% n75  2021: +0.3% n94  2022: -5.9% n107  2023: -2.8% n181  2024: -1.5% n201  2025: +1.5% n105
-    c+d 1/1.2 every pos, 2+ stale games          touched 708: actual 5.79 live 6.45 rule 6.19 | 2019: -5.4% n43  2020: -2.2% n72  2021: -2.7% n78  2022: -9.2% n100  2023: -0.3% n161  2024: -4.1% n174  2025: +4.1% n80
+    c+d boost rescale, 2+ stale games                  -1.73% (3/4) n1082 |        -5.60% (4/4) n250        -0.34% (2/4) n738         -0.83% (3/4) n94 |        +0.00% (0/4) n449 | all -0.179%  top150-wtd -0.060%  rank +0.0005
+    c+d boost rescale, stale share >= 50%              -1.46% (4/4) n1082 |        -4.18% (4/4) n250        -0.53% (2/4) n738         -0.26% (2/4) n94 |        +0.00% (0/4) n449 | all -0.151%  top150-wtd -0.059%  rank -0.0000
+    c+d boost rescale, 2+ stale OR share >= 50%        -1.76% (4/4) n1082 |        -5.71% (4/4) n250        -0.35% (2/4) n738         -0.85% (3/4) n94 |        +0.00% (0/4) n449 | all -0.182%  top150-wtd -0.062%  rank +0.0005
+    c   boost rescale, RB only (1.26)                  -1.17% (4/4) n1082 |        -4.52% (4/4) n250        +0.00% (0/4) n738         +0.00% (0/4) n94 |        +0.00% (0/4) n449 | all -0.121%  top150-wtd -0.055%  rank +0.0001
+    c+d RB 1.26 all + WR/TE 2+ stale games             -1.45% (3/4) n1082 |        -4.52% (4/4) n250        -0.34% (2/4) n738         -0.83% (3/4) n94 |        +0.00% (0/4) n449 | all -0.150%  top150-wtd -0.054%  rank +0.0004
+    c+d 1/1.2 every pos, 2+ stale games                -1.56% (3/4) n1082 |        -4.69% (4/4) n250        -0.43% (2/4) n738         -1.00% (3/4) n94 |        +0.00% (0/4) n449 | all -0.161%  top150-wtd -0.041%  rank +0.0007
+    c+d boost rescale, 2+ stale games            touched 924: actual 5.54 live 6.19 rule 6.01 | 2019: -0.1% n88  2020: -3.9% n117  2021: +0.7% n124  2022: -3.2% n140  2023: -3.7% n184  2024: -3.9% n191  2025: +0.4% n80
+    c+d boost rescale, stale share >= 50%        touched 507: actual 5.25 live 5.92 rule 5.73 | 2019: -0.1% n58  2020: -5.5% n59  2021: +3.9% n71  2022: -7.8% n71  2023: -4.2% n130  2024: -5.9% n86  2025: -1.6% n32
+    c+d boost rescale, 2+ stale OR share >= 50%  touched 1012: actual 5.50 live 6.10 rule 5.93 | 2019: -0.1% n96  2020: -3.9% n126  2021: +2.4% n137  2022: -3.0% n148  2023: -3.4% n213  2024: -3.7% n204  2025: -0.2% n88
+    c   boost rescale, RB only (1.26)            touched 368: actual 5.56 live 6.48 rule 6.20 | 2019: -15.3% n10  2020: -6.8% n51  2021: +2.9% n57  2022: -3.5% n39  2023: -9.8% n84  2024: -1.4% n88  2025: -0.2% n39
+    c+d RB 1.26 all + WR/TE 2+ stale games       touched 1055: actual 5.63 live 6.16 rule 5.99 | 2019: -0.1% n89  2020: -3.8% n132  2021: +1.6% n144  2022: -3.4% n148  2023: -3.0% n207  2024: -2.5% n230  2025: +1.5% n105
+    c+d 1/1.2 every pos, 2+ stale games          touched 924: actual 5.54 live 6.19 rule 5.93 | 2019: +1.5% n88  2020: -3.2% n117  2021: -0.2% n124  2022: -5.7% n140  2023: -0.6% n184  2024: -5.7% n191  2025: +4.1% n80
 
-    replica rows with rebuilt ppg off by > 0.05: 15 of 14813
+    replica rows with rebuilt ppg off by > 0.05: 17 of 16561
 
 Limitations: route rate per game not reweighted (season-to-date kept); RB snap-volume mix (usage_half), TD-luck and the usage mix weight keep the
 real game count; regulars ranked by Clay per-game projection (ADP missing for many non-pool backups); team = season team (mid-season
 trades: games for another team never tagged); prop anchor / pecking-order dock / availability curves are not replayable (as in live_blend_pos).
-
---- 5  SHIPPED RULE BY ADP BAND (rescale RB 1.26 / WR 1.08, rows with 2+ stale fill-in games; TE untouched) ---
-    touched = rows the rule changes; 'band all' = every row of that position in the band; seasons better counted where a season has 5+ rows;
-    rank = change in within-position Spearman (actual vs projected) over week groups of 5+ rows inside the band (groups counted)
-
-  NEXT GAME
-    descriptive, starter back (1+ stale game) and 2+ stale games: actual / projected
-    RB ADP 1-30: n0 / n0 | ADP 31-60: 0.753 n9 / 0.902 n7 | ADP 61-100: 0.825 n91 / 0.859 n57 | top 30: n0 / n0 | top 60: 0.753 n9 / 0.902 n7 | top 100: 0.816 n100 / 0.865 n64 | ADP 101+ / none: 0.898 n289 / 0.783 n171
-    WR ADP 1-30: 0.966 n22 / n0 | ADP 31-60: 0.915 n37 / 1.045 n20 | ADP 61-100: 1.033 n170 / 1.011 n86 | top 30: 0.966 n22 / n0 | top 60: 0.935 n59 / 1.045 n20 | top 100: 1.005 n229 / 1.018 n106 | ADP 101+ / none: 0.886 n1063 / 0.870 n643
-    rule: shipped (all ADP)
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1060) fwd           no change (n675) | rank +0.0000 (109 groups)
-      RB ADP 31-60        touched    7 | touched:              -3.44% (1/1) n7 fwd                        n 0 | band all:            -0.05% (1/7) n589 fwd           no change (n374) | rank +0.0000 (76 groups)
-      RB ADP 61-100       touched   57 | touched:             -1.10% (3/4) n57 fwd           -2.25% (3/4) n53 | band all:            -0.07% (3/7) n705 fwd          -0.18% (3/4) n511 | rank -0.0037 (83 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1060) fwd           no change (n675) | rank +0.0000 (109 groups)
-      RB top 60           touched    7 | touched:              -3.44% (1/1) n7 fwd                        n 0 | band all:           -0.01% (1/7) n1649 fwd          no change (n1049) | rank -0.0002 (110 groups)
-      RB top 100          touched   64 | touched:             -1.56% (4/5) n64 fwd           -2.25% (3/4) n53 | band all:           -0.03% (4/7) n2354 fwd         -0.04% (3/4) n1560 | rank -0.0010 (110 groups)
-      RB ADP 101+ / none  touched  171 | touched:            -2.75% (4/6) n171 fwd          -1.36% (2/4) n124 | band all:           -0.25% (5/7) n1859 fwd         -0.10% (2/4) n1318 | rank +0.0012 (110 groups)
-      RB everyone         touched  235 | touched:            -2.43% (4/6) n235 fwd          -1.63% (3/4) n177 | band all:           -0.10% (5/7) n4213 fwd         -0.06% (3/4) n2878 | rank +0.0003 (110 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n936) fwd           no change (n652) | rank +0.0000 (101 groups)
-      WR ADP 31-60        touched   20 | touched:             -0.07% (1/1) n20 fwd           -0.12% (1/1) n18 | band all:           -0.00% (1/7) n1017 fwd          -0.00% (1/4) n596 | rank -0.0002 (109 groups)
-      WR ADP 61-100       touched   86 | touched:             -0.03% (3/5) n86 fwd           -0.29% (2/3) n55 | band all:            -0.00% (4/7) n983 fwd          -0.03% (3/4) n697 | rank +0.0017 (105 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n936) fwd           no change (n652) | rank +0.0000 (101 groups)
-      WR top 60           touched   20 | touched:             -0.07% (1/1) n20 fwd           -0.12% (1/1) n18 | band all:           -0.00% (1/7) n1953 fwd         -0.00% (1/4) n1248 | rank +0.0003 (110 groups)
-      WR top 100          touched  106 | touched:            -0.03% (4/6) n106 fwd           -0.24% (3/4) n73 | band all:           -0.00% (4/7) n2936 fwd         -0.01% (3/4) n1945 | rank +0.0001 (110 groups)
-      WR ADP 101+ / none  touched  643 | touched:            -0.77% (5/7) n643 fwd          -0.67% (3/4) n488 | band all:           -0.12% (5/7) n3859 fwd         -0.12% (3/4) n2516 | rank +0.0001 (110 groups)
-      WR everyone         touched  749 | touched:            -0.56% (5/7) n749 fwd          -0.57% (3/4) n561 | band all:           -0.05% (5/7) n6795 fwd         -0.05% (3/4) n4461 | rank +0.0001 (110 groups)
-    rule: restricted ADP > 30
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1060) fwd           no change (n675) | rank +0.0000 (109 groups)
-      RB ADP 31-60        touched    7 | touched:              -3.44% (1/1) n7 fwd                        n 0 | band all:            -0.05% (1/7) n589 fwd           no change (n374) | rank +0.0000 (76 groups)
-      RB ADP 61-100       touched   57 | touched:             -1.10% (3/4) n57 fwd           -2.25% (3/4) n53 | band all:            -0.07% (3/7) n705 fwd          -0.18% (3/4) n511 | rank -0.0037 (83 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1060) fwd           no change (n675) | rank +0.0000 (109 groups)
-      RB top 60           touched    7 | touched:              -3.44% (1/1) n7 fwd                        n 0 | band all:           -0.01% (1/7) n1649 fwd          no change (n1049) | rank -0.0002 (110 groups)
-      RB top 100          touched   64 | touched:             -1.56% (4/5) n64 fwd           -2.25% (3/4) n53 | band all:           -0.03% (4/7) n2354 fwd         -0.04% (3/4) n1560 | rank -0.0010 (110 groups)
-      RB ADP 101+ / none  touched  171 | touched:            -2.75% (4/6) n171 fwd          -1.36% (2/4) n124 | band all:           -0.25% (5/7) n1859 fwd         -0.10% (2/4) n1318 | rank +0.0012 (110 groups)
-      RB everyone         touched  235 | touched:            -2.43% (4/6) n235 fwd          -1.63% (3/4) n177 | band all:           -0.10% (5/7) n4213 fwd         -0.06% (3/4) n2878 | rank +0.0003 (110 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n936) fwd           no change (n652) | rank +0.0000 (101 groups)
-      WR ADP 31-60        touched   20 | touched:             -0.07% (1/1) n20 fwd           -0.12% (1/1) n18 | band all:           -0.00% (1/7) n1017 fwd          -0.00% (1/4) n596 | rank -0.0002 (109 groups)
-      WR ADP 61-100       touched   86 | touched:             -0.03% (3/5) n86 fwd           -0.29% (2/3) n55 | band all:            -0.00% (4/7) n983 fwd          -0.03% (3/4) n697 | rank +0.0017 (105 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n936) fwd           no change (n652) | rank +0.0000 (101 groups)
-      WR top 60           touched   20 | touched:             -0.07% (1/1) n20 fwd           -0.12% (1/1) n18 | band all:           -0.00% (1/7) n1953 fwd         -0.00% (1/4) n1248 | rank +0.0003 (110 groups)
-      WR top 100          touched  106 | touched:            -0.03% (4/6) n106 fwd           -0.24% (3/4) n73 | band all:           -0.00% (4/7) n2936 fwd         -0.01% (3/4) n1945 | rank +0.0001 (110 groups)
-      WR ADP 101+ / none  touched  643 | touched:            -0.77% (5/7) n643 fwd          -0.67% (3/4) n488 | band all:           -0.12% (5/7) n3859 fwd         -0.12% (3/4) n2516 | rank +0.0001 (110 groups)
-      WR everyone         touched  749 | touched:            -0.56% (5/7) n749 fwd          -0.57% (3/4) n561 | band all:           -0.05% (5/7) n6795 fwd         -0.05% (3/4) n4461 | rank +0.0001 (110 groups)
-    rule: restricted ADP > 60
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1060) fwd           no change (n675) | rank +0.0000 (109 groups)
-      RB ADP 31-60        touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n589) fwd           no change (n374) | rank +0.0000 (76 groups)
-      RB ADP 61-100       touched   57 | touched:             -1.10% (3/4) n57 fwd           -2.25% (3/4) n53 | band all:            -0.07% (3/7) n705 fwd          -0.18% (3/4) n511 | rank -0.0037 (83 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1060) fwd           no change (n675) | rank +0.0000 (109 groups)
-      RB top 60           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1649) fwd          no change (n1049) | rank +0.0000 (110 groups)
-      RB top 100          touched   57 | touched:             -1.10% (3/4) n57 fwd           -2.25% (3/4) n53 | band all:           -0.01% (3/7) n2354 fwd         -0.04% (3/4) n1560 | rank -0.0010 (110 groups)
-      RB ADP 101+ / none  touched  171 | touched:            -2.75% (4/6) n171 fwd          -1.36% (2/4) n124 | band all:           -0.25% (5/7) n1859 fwd         -0.10% (2/4) n1318 | rank +0.0012 (110 groups)
-      RB everyone         touched  228 | touched:            -2.37% (4/6) n228 fwd          -1.63% (3/4) n177 | band all:           -0.09% (5/7) n4213 fwd         -0.06% (3/4) n2878 | rank +0.0002 (110 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n936) fwd           no change (n652) | rank +0.0000 (101 groups)
-      WR ADP 31-60        touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1017) fwd           no change (n596) | rank +0.0000 (109 groups)
-      WR ADP 61-100       touched   86 | touched:             -0.03% (3/5) n86 fwd           -0.29% (2/3) n55 | band all:            -0.00% (4/7) n983 fwd          -0.03% (3/4) n697 | rank +0.0017 (105 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n936) fwd           no change (n652) | rank +0.0000 (101 groups)
-      WR top 60           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1953) fwd          no change (n1248) | rank +0.0000 (110 groups)
-      WR top 100          touched   86 | touched:             -0.03% (3/5) n86 fwd           -0.29% (2/3) n55 | band all:           -0.00% (4/7) n2936 fwd         -0.01% (3/4) n1945 | rank -0.0002 (110 groups)
-      WR ADP 101+ / none  touched  643 | touched:            -0.77% (5/7) n643 fwd          -0.67% (3/4) n488 | band all:           -0.12% (5/7) n3859 fwd         -0.12% (3/4) n2516 | rank +0.0001 (110 groups)
-      WR everyone         touched  729 | touched:            -0.58% (5/7) n729 fwd          -0.60% (3/4) n543 | band all:           -0.05% (5/7) n6795 fwd         -0.05% (3/4) n4461 | rank +0.0001 (110 groups)
-
-  REST OF SEASON, 4+ games left
-    descriptive, starter back (1+ stale game) and 2+ stale games: actual / projected
-    RB ADP 1-30: n0 / n0 | ADP 31-60: n3 / n3 | ADP 61-100: 0.864 n51 / 0.837 n30 | top 30: n0 / n0 | top 60: n3 / n3 | top 100: 0.867 n54 / 0.844 n33 | ADP 101+ / none: 0.933 n137 / 0.714 n79
-    WR ADP 1-30: 0.782 n11 / n0 | ADP 31-60: 0.960 n15 / 1.109 n9 | ADP 61-100: 1.032 n93 / 1.019 n41 | top 30: 0.782 n11 / n0 | top 60: 0.879 n26 / 1.109 n9 | top 100: 0.993 n119 / 1.036 n50 | ADP 101+ / none: 0.952 n607 / 0.948 n349
-    rule: shipped (all ADP)
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n732) fwd           no change (n460) | rank +0.0000 (79 groups)
-      RB ADP 31-60        touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:            -0.07% (1/7) n409 fwd           no change (n256) | rank +0.0000 (48 groups)
-      RB ADP 61-100       touched   30 | touched:             -5.86% (2/3) n30 fwd           -5.86% (2/3) n30 | band all:            -0.26% (2/7) n496 fwd          -0.39% (2/4) n359 | rank +0.0094 (58 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n732) fwd           no change (n460) | rank +0.0000 (79 groups)
-      RB top 60           touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:           -0.03% (1/7) n1141 fwd           no change (n716) | rank +0.0000 (80 groups)
-      RB top 100          touched   33 | touched:             -7.05% (2/3) n33 fwd           -5.86% (2/3) n30 | band all:           -0.10% (3/7) n1637 fwd         -0.13% (2/4) n1075 | rank +0.0000 (84 groups)
-      RB ADP 101+ / none  touched   79 | touched:             -8.77% (4/5) n79 fwd           -7.18% (2/3) n59 | band all:           -0.65% (6/7) n1276 fwd          -0.56% (3/4) n900 | rank +0.0016 (83 groups)
-      RB everyone         touched  112 | touched:            -8.42% (4/6) n112 fwd           -6.87% (2/4) n89 | band all:           -0.33% (5/7) n2913 fwd         -0.34% (2/4) n1975 | rank -0.0002 (89 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n649) fwd           no change (n452) | rank +0.0000 (71 groups)
-      WR ADP 31-60        touched    9 | touched:              +4.67% (0/1) n9 fwd            +4.67% (0/1) n9 | band all:            +0.06% (0/7) n714 fwd          +0.10% (0/4) n409 | rank +0.0000 (76 groups)
-      WR ADP 61-100       touched   41 | touched:             +2.34% (2/4) n41 fwd           +0.85% (2/3) n23 | band all:            +0.13% (3/7) n677 fwd          +0.03% (2/4) n477 | rank -0.0046 (71 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n649) fwd           no change (n452) | rank +0.0000 (71 groups)
-      WR top 60           touched    9 | touched:              +4.67% (0/1) n9 fwd            +4.67% (0/1) n9 | band all:           +0.02% (0/7) n1363 fwd          +0.04% (0/4) n861 | rank +0.0000 (81 groups)
-      WR top 100          touched   50 | touched:             +2.69% (1/4) n50 fwd           +2.09% (1/3) n32 | band all:           +0.06% (2/7) n2040 fwd         +0.03% (1/4) n1338 | rank -0.0008 (86 groups)
-      WR ADP 101+ / none  touched  349 | touched:            -1.04% (4/7) n349 fwd          -0.55% (2/4) n262 | band all:           -0.12% (4/7) n2658 fwd         -0.07% (2/4) n1736 | rank -0.0020 (89 groups)
-      WR everyone         touched  399 | touched:            -0.52% (4/7) n399 fwd          -0.28% (2/4) n294 | band all:           -0.04% (4/7) n4698 fwd         -0.02% (2/4) n3074 | rank -0.0004 (89 groups)
-    rule: restricted ADP > 30
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n732) fwd           no change (n460) | rank +0.0000 (79 groups)
-      RB ADP 31-60        touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:            -0.07% (1/7) n409 fwd           no change (n256) | rank +0.0000 (48 groups)
-      RB ADP 61-100       touched   30 | touched:             -5.86% (2/3) n30 fwd           -5.86% (2/3) n30 | band all:            -0.26% (2/7) n496 fwd          -0.39% (2/4) n359 | rank +0.0094 (58 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n732) fwd           no change (n460) | rank +0.0000 (79 groups)
-      RB top 60           touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:           -0.03% (1/7) n1141 fwd           no change (n716) | rank +0.0000 (80 groups)
-      RB top 100          touched   33 | touched:             -7.05% (2/3) n33 fwd           -5.86% (2/3) n30 | band all:           -0.10% (3/7) n1637 fwd         -0.13% (2/4) n1075 | rank +0.0000 (84 groups)
-      RB ADP 101+ / none  touched   79 | touched:             -8.77% (4/5) n79 fwd           -7.18% (2/3) n59 | band all:           -0.65% (6/7) n1276 fwd          -0.56% (3/4) n900 | rank +0.0016 (83 groups)
-      RB everyone         touched  112 | touched:            -8.42% (4/6) n112 fwd           -6.87% (2/4) n89 | band all:           -0.33% (5/7) n2913 fwd         -0.34% (2/4) n1975 | rank -0.0002 (89 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n649) fwd           no change (n452) | rank +0.0000 (71 groups)
-      WR ADP 31-60        touched    9 | touched:              +4.67% (0/1) n9 fwd            +4.67% (0/1) n9 | band all:            +0.06% (0/7) n714 fwd          +0.10% (0/4) n409 | rank +0.0000 (76 groups)
-      WR ADP 61-100       touched   41 | touched:             +2.34% (2/4) n41 fwd           +0.85% (2/3) n23 | band all:            +0.13% (3/7) n677 fwd          +0.03% (2/4) n477 | rank -0.0046 (71 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n649) fwd           no change (n452) | rank +0.0000 (71 groups)
-      WR top 60           touched    9 | touched:              +4.67% (0/1) n9 fwd            +4.67% (0/1) n9 | band all:           +0.02% (0/7) n1363 fwd          +0.04% (0/4) n861 | rank +0.0000 (81 groups)
-      WR top 100          touched   50 | touched:             +2.69% (1/4) n50 fwd           +2.09% (1/3) n32 | band all:           +0.06% (2/7) n2040 fwd         +0.03% (1/4) n1338 | rank -0.0008 (86 groups)
-      WR ADP 101+ / none  touched  349 | touched:            -1.04% (4/7) n349 fwd          -0.55% (2/4) n262 | band all:           -0.12% (4/7) n2658 fwd         -0.07% (2/4) n1736 | rank -0.0020 (89 groups)
-      WR everyone         touched  399 | touched:            -0.52% (4/7) n399 fwd          -0.28% (2/4) n294 | band all:           -0.04% (4/7) n4698 fwd         -0.02% (2/4) n3074 | rank -0.0004 (89 groups)
-    rule: restricted ADP > 60
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n732) fwd           no change (n460) | rank +0.0000 (79 groups)
-      RB ADP 31-60        touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n409) fwd           no change (n256) | rank +0.0000 (48 groups)
-      RB ADP 61-100       touched   30 | touched:             -5.86% (2/3) n30 fwd           -5.86% (2/3) n30 | band all:            -0.26% (2/7) n496 fwd          -0.39% (2/4) n359 | rank +0.0094 (58 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n732) fwd           no change (n460) | rank +0.0000 (79 groups)
-      RB top 60           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1141) fwd           no change (n716) | rank +0.0000 (80 groups)
-      RB top 100          touched   30 | touched:             -5.86% (2/3) n30 fwd           -5.86% (2/3) n30 | band all:           -0.08% (2/7) n1637 fwd         -0.13% (2/4) n1075 | rank +0.0000 (84 groups)
-      RB ADP 101+ / none  touched   79 | touched:             -8.77% (4/5) n79 fwd           -7.18% (2/3) n59 | band all:           -0.65% (6/7) n1276 fwd          -0.56% (3/4) n900 | rank +0.0016 (83 groups)
-      RB everyone         touched  109 | touched:            -8.20% (4/6) n109 fwd           -6.87% (2/4) n89 | band all:           -0.32% (5/7) n2913 fwd         -0.34% (2/4) n1975 | rank -0.0002 (89 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n649) fwd           no change (n452) | rank +0.0000 (71 groups)
-      WR ADP 31-60        touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n714) fwd           no change (n409) | rank +0.0000 (76 groups)
-      WR ADP 61-100       touched   41 | touched:             +2.34% (2/4) n41 fwd           +0.85% (2/3) n23 | band all:            +0.13% (3/7) n677 fwd          +0.03% (2/4) n477 | rank -0.0046 (71 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n649) fwd           no change (n452) | rank +0.0000 (71 groups)
-      WR top 60           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1363) fwd           no change (n861) | rank +0.0000 (81 groups)
-      WR top 100          touched   41 | touched:             +2.34% (2/4) n41 fwd           +0.85% (2/3) n23 | band all:           +0.04% (3/7) n2040 fwd         +0.01% (2/4) n1338 | rank -0.0010 (86 groups)
-      WR ADP 101+ / none  touched  349 | touched:            -1.04% (4/7) n349 fwd          -0.55% (2/4) n262 | band all:           -0.12% (4/7) n2658 fwd         -0.07% (2/4) n1736 | rank -0.0020 (89 groups)
-      WR everyone         touched  390 | touched:            -0.63% (4/7) n390 fwd          -0.45% (2/4) n285 | band all:           -0.04% (4/7) n4698 fwd         -0.03% (2/4) n3074 | rank -0.0005 (89 groups)
-
-  REST OF SEASON, no survivor filter
-    descriptive, starter back (1+ stale game) and 2+ stale games: actual / projected
-    RB ADP 1-30: n0 / n0 | ADP 31-60: 0.633 n5 / n3 | ADP 61-100: 0.827 n59 / 0.809 n35 | top 30: n0 / n0 | top 60: 0.633 n5 / n3 | top 100: 0.806 n64 / 0.818 n38 | ADP 101+ / none: 0.860 n193 / 0.696 n121
-    WR ADP 1-30: 0.702 n13 / n0 | ADP 31-60: 0.975 n19 / 1.186 n11 | ADP 61-100: 1.009 n101 / 1.023 n43 | top 30: 0.702 n13 / n0 | top 60: 0.855 n32 / 1.186 n11 | top 100: 0.966 n133 / 1.059 n54 | ADP 101+ / none: 0.948 n742 / 0.937 n438
-    rule: shipped (all ADP)
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n793) fwd           no change (n488) | rank +0.0000 (80 groups)
-      RB ADP 31-60        touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:            -0.06% (1/7) n443 fwd           no change (n279) | rank +0.0000 (53 groups)
-      RB ADP 61-100       touched   35 | touched:             -8.28% (2/3) n35 fwd           -8.28% (2/3) n35 | band all:            -0.40% (2/7) n556 fwd          -0.58% (2/4) n395 | rank +0.0065 (61 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n793) fwd           no change (n488) | rank +0.0000 (80 groups)
-      RB top 60           touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:           -0.02% (1/7) n1236 fwd           no change (n767) | rank +0.0000 (84 groups)
-      RB top 100          touched   38 | touched:             -9.12% (2/3) n38 fwd           -8.28% (2/3) n35 | band all:           -0.13% (3/7) n1792 fwd         -0.20% (2/4) n1162 | rank -0.0005 (98 groups)
-      RB ADP 101+ / none  touched  121 | touched:            -7.14% (5/6) n121 fwd           -8.62% (3/4) n85 | band all:           -0.83% (6/7) n1476 fwd         -0.82% (3/4) n1023 | rank +0.0025 (99 groups)
-      RB everyone         touched  159 | touched:            -7.41% (6/6) n159 fwd          -8.55% (4/4) n120 | band all:           -0.43% (7/7) n3268 fwd         -0.49% (4/4) n2185 | rank +0.0005 (107 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n708) fwd           no change (n486) | rank +0.0000 (72 groups)
-      WR ADP 31-60        touched   11 | touched:             +4.76% (0/1) n11 fwd           +4.76% (0/1) n11 | band all:            +0.10% (0/7) n763 fwd          +0.14% (0/4) n449 | rank +0.0000 (77 groups)
-      WR ADP 61-100       touched   43 | touched:             +2.42% (2/4) n43 fwd           +1.09% (2/3) n25 | band all:            +0.11% (3/7) n732 fwd          +0.03% (2/4) n516 | rank -0.0047 (73 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n708) fwd           no change (n486) | rank +0.0000 (72 groups)
-      WR top 60           touched   11 | touched:             +4.76% (0/1) n11 fwd           +4.76% (0/1) n11 | band all:           +0.04% (0/7) n1471 fwd          +0.06% (0/4) n935 | rank -0.0014 (84 groups)
-      WR top 100          touched   54 | touched:             +3.10% (1/4) n54 fwd           +3.01% (1/3) n36 | band all:           +0.06% (2/7) n2203 fwd         +0.05% (1/4) n1451 | rank -0.0012 (95 groups)
-      WR ADP 101+ / none  touched  438 | touched:            -0.91% (4/7) n438 fwd          -0.66% (2/4) n329 | band all:           -0.12% (4/7) n3094 fwd         -0.10% (2/4) n1994 | rank +0.0022 (109 groups)
-      WR everyone         touched  492 | touched:            -0.45% (4/7) n492 fwd          -0.32% (2/4) n365 | band all:           -0.04% (4/7) n5297 fwd         -0.03% (2/4) n3445 | rank +0.0011 (109 groups)
-    rule: restricted ADP > 30
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n793) fwd           no change (n488) | rank +0.0000 (80 groups)
-      RB ADP 31-60        touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:            -0.06% (1/7) n443 fwd           no change (n279) | rank +0.0000 (53 groups)
-      RB ADP 61-100       touched   35 | touched:             -8.28% (2/3) n35 fwd           -8.28% (2/3) n35 | band all:            -0.40% (2/7) n556 fwd          -0.58% (2/4) n395 | rank +0.0065 (61 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n793) fwd           no change (n488) | rank +0.0000 (80 groups)
-      RB top 60           touched    3 | touched:             -69.81% (0/0) n3 fwd                        n 0 | band all:           -0.02% (1/7) n1236 fwd           no change (n767) | rank +0.0000 (84 groups)
-      RB top 100          touched   38 | touched:             -9.12% (2/3) n38 fwd           -8.28% (2/3) n35 | band all:           -0.13% (3/7) n1792 fwd         -0.20% (2/4) n1162 | rank -0.0005 (98 groups)
-      RB ADP 101+ / none  touched  121 | touched:            -7.14% (5/6) n121 fwd           -8.62% (3/4) n85 | band all:           -0.83% (6/7) n1476 fwd         -0.82% (3/4) n1023 | rank +0.0025 (99 groups)
-      RB everyone         touched  159 | touched:            -7.41% (6/6) n159 fwd          -8.55% (4/4) n120 | band all:           -0.43% (7/7) n3268 fwd         -0.49% (4/4) n2185 | rank +0.0005 (107 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n708) fwd           no change (n486) | rank +0.0000 (72 groups)
-      WR ADP 31-60        touched   11 | touched:             +4.76% (0/1) n11 fwd           +4.76% (0/1) n11 | band all:            +0.10% (0/7) n763 fwd          +0.14% (0/4) n449 | rank +0.0000 (77 groups)
-      WR ADP 61-100       touched   43 | touched:             +2.42% (2/4) n43 fwd           +1.09% (2/3) n25 | band all:            +0.11% (3/7) n732 fwd          +0.03% (2/4) n516 | rank -0.0047 (73 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n708) fwd           no change (n486) | rank +0.0000 (72 groups)
-      WR top 60           touched   11 | touched:             +4.76% (0/1) n11 fwd           +4.76% (0/1) n11 | band all:           +0.04% (0/7) n1471 fwd          +0.06% (0/4) n935 | rank -0.0014 (84 groups)
-      WR top 100          touched   54 | touched:             +3.10% (1/4) n54 fwd           +3.01% (1/3) n36 | band all:           +0.06% (2/7) n2203 fwd         +0.05% (1/4) n1451 | rank -0.0012 (95 groups)
-      WR ADP 101+ / none  touched  438 | touched:            -0.91% (4/7) n438 fwd          -0.66% (2/4) n329 | band all:           -0.12% (4/7) n3094 fwd         -0.10% (2/4) n1994 | rank +0.0022 (109 groups)
-      WR everyone         touched  492 | touched:            -0.45% (4/7) n492 fwd          -0.32% (2/4) n365 | band all:           -0.04% (4/7) n5297 fwd         -0.03% (2/4) n3445 | rank +0.0011 (109 groups)
-    rule: restricted ADP > 60
-      RB ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n793) fwd           no change (n488) | rank +0.0000 (80 groups)
-      RB ADP 31-60        touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n443) fwd           no change (n279) | rank +0.0000 (53 groups)
-      RB ADP 61-100       touched   35 | touched:             -8.28% (2/3) n35 fwd           -8.28% (2/3) n35 | band all:            -0.40% (2/7) n556 fwd          -0.58% (2/4) n395 | rank +0.0065 (61 groups)
-      RB top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n793) fwd           no change (n488) | rank +0.0000 (80 groups)
-      RB top 60           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1236) fwd           no change (n767) | rank +0.0000 (84 groups)
-      RB top 100          touched   35 | touched:             -8.28% (2/3) n35 fwd           -8.28% (2/3) n35 | band all:           -0.12% (2/7) n1792 fwd         -0.20% (2/4) n1162 | rank -0.0005 (98 groups)
-      RB ADP 101+ / none  touched  121 | touched:            -7.14% (5/6) n121 fwd           -8.62% (3/4) n85 | band all:           -0.83% (6/7) n1476 fwd         -0.82% (3/4) n1023 | rank +0.0025 (99 groups)
-      RB everyone         touched  156 | touched:            -7.30% (6/6) n156 fwd          -8.55% (4/4) n120 | band all:           -0.43% (7/7) n3268 fwd         -0.49% (4/4) n2185 | rank +0.0005 (107 groups)
-      WR ADP 1-30         touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n708) fwd           no change (n486) | rank +0.0000 (72 groups)
-      WR ADP 31-60        touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n763) fwd           no change (n449) | rank +0.0000 (77 groups)
-      WR ADP 61-100       touched   43 | touched:             +2.42% (2/4) n43 fwd           +1.09% (2/3) n25 | band all:            +0.11% (3/7) n732 fwd          +0.03% (2/4) n516 | rank -0.0047 (73 groups)
-      WR top 30           touched    0 | touched:                          n 0 fwd                        n 0 | band all:             no change (n708) fwd           no change (n486) | rank +0.0000 (72 groups)
-      WR top 60           touched    0 | touched:                          n 0 fwd                        n 0 | band all:            no change (n1471) fwd           no change (n935) | rank +0.0000 (84 groups)
-      WR top 100          touched   43 | touched:             +2.42% (2/4) n43 fwd           +1.09% (2/3) n25 | band all:           +0.03% (3/7) n2203 fwd         +0.01% (2/4) n1451 | rank -0.0011 (95 groups)
-      WR ADP 101+ / none  touched  438 | touched:            -0.91% (4/7) n438 fwd          -0.66% (2/4) n329 | band all:           -0.12% (4/7) n3094 fwd         -0.10% (2/4) n1994 | rank +0.0022 (109 groups)
-      WR everyone         touched  481 | touched:            -0.63% (4/7) n481 fwd          -0.58% (2/4) n354 | band all:           -0.05% (4/7) n5297 fwd         -0.05% (2/4) n3445 | rank +0.0011 (109 groups)

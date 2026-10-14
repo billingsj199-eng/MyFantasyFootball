@@ -1,0 +1,70 @@
+Loading...
+pool 1465 player-years (185 rookies)
+
+================ WEEK 4 valuation (year-0 share 0.78); 325 rows had no weekly record (season-total fallback) ================
+
+VETS — current-season weight c (x games; last season = 0.5 x games)
+c          Sp T3   top36  Sp T5(+Y)
+0.0        0.496   69.6%      0.500
+0.25       0.513   71.5%      0.522
+0.5        0.525   71.3%      0.528
+1.0        0.547   73.8%      0.544
+2.0        0.567   74.0%      0.568
+4.0        0.572   71.5%      0.576
+
+ROOKIES — own-games weight g/(g+R), pooled Spearman (n=185)
+R          Sp T3  Sp T5(+Y)
+None       0.314      0.322
+8          0.407      0.404
+4          0.422      0.416
+2          0.428      0.426
+1          0.425      0.434
+
+WHOLE POOL (vets c x rookies R), T3 Spearman / top36 — market = PRESEASON ADP (stale by week 4)
+MARKET (preseason)           0.533   72.8%
+c=0.0 R=None                 0.470   67.5%
+c=0.0 R=4                    0.486   68.5%
+c=0.0 R=2                    0.487   68.5%
+c=0.5 R=None                 0.495   69.2%
+c=0.5 R=4                    0.511   70.0%
+c=0.5 R=2                    0.512   70.3%
+c=1.0 R=None                 0.514   71.2%
+c=1.0 R=4                    0.531   71.5%
+c=1.0 R=2                    0.532   71.2%
+c=2.0 R=None                 0.531   71.8%
+c=2.0 R=4                    0.547   72.2%
+c=2.0 R=2                    0.548   72.4%
+
+================ WEEK 8 valuation (year-0 share 0.56); 325 rows had no weekly record (season-total fallback) ================
+
+VETS — current-season weight c (x games; last season = 0.5 x games)
+c          Sp T3   top36  Sp T5(+Y)
+0.0        0.484   69.1%      0.489
+0.25       0.522   70.7%      0.523
+0.5        0.543   73.1%      0.540
+1.0        0.561   74.6%      0.558
+2.0        0.581   73.2%      0.576
+4.0        0.577   73.3%      0.569
+
+ROOKIES — own-games weight g/(g+R), pooled Spearman (n=185)
+R          Sp T3  Sp T5(+Y)
+None       0.295      0.306
+8          0.423      0.427
+4          0.441      0.443
+2          0.450      0.453
+1          0.455      0.457
+
+WHOLE POOL (vets c x rookies R), T3 Spearman / top36 — market = PRESEASON ADP (stale by week 8)
+MARKET (preseason)           0.522   71.6%
+c=0.0 R=None                 0.457   67.0%
+c=0.0 R=4                    0.477   69.1%
+c=0.0 R=2                    0.478   68.7%
+c=0.5 R=None                 0.508   70.4%
+c=0.5 R=4                    0.528   71.9%
+c=0.5 R=2                    0.529   71.4%
+c=1.0 R=None                 0.524   71.2%
+c=1.0 R=4                    0.543   72.5%
+c=1.0 R=2                    0.544   72.1%
+c=2.0 R=None                 0.542   70.3%
+c=2.0 R=4                    0.561   71.6%
+c=2.0 R=2                    0.563   71.4%

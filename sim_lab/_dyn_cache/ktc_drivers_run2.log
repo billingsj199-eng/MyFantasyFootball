@@ -1,0 +1,119 @@
+KTC panel: 381 QB/RB/WR/TE, 2026-04-14 .. 2026-10-09
+
+=== A. When does value move? (share of all absolute daily log changes, top-300 by value) ===
+phase                     days  share of movement  per-day intensity
+pre-draft                    9               3.2%              0.65x
+NFL draft week               6               8.8%              2.63x
+post-draft / OTAs           47              22.7%              0.86x
+summer dead zone            36               9.2%              0.46x
+training camp               17               9.4%              0.99x
+preseason                   33              23.6%              1.28x
+regular season wk1-5        31              23.0%              1.33x
+
+Dating events from the daily commits (d.js, injury_updates)...
+
+=== B. Event effects (abnormal log change, day before -> 7 days after, vs same-position same-tier peers) ===
+event                             n     mean   median  share up
+injury: questionable            226     0.1%    -0.4%       44%
+injury: ruled out               165    -1.9%    -1.9%       27%
+injury: return to healthy        85    -1.8%    -1.8%       26%
+injury: IR / long-term           42    -4.7%    -3.5%       14%
+team change                      38     4.0%    -0.5%       45%
+   biggest team change:
+     2026-09-22 Zach Ertz               +185%  (560 before) FA -> Philadelphia Eagles
+     2026-08-14 Darren Waller           +121%  (570 before) FA -> Carolina Panthers
+     2026-09-01 Jaydon Blue              -34%  (2,444 before) Dallas Cowboys -> Philadelphia Eagles
+     2026-08-28 Jonnu Smith              +47%  (704 before) FA -> Green Bay Packers
+     2026-09-01 Phil Mafah               -29%  (1,549 before) Dallas Cowboys -> FA
+     2026-08-05 Stefon Diggs             +32%  (2,603 before) FA -> Washington Commanders
+     2026-08-18 Keenan Allen             +29%  (1,432 before) FA -> Indianapolis Colts
+     2026-08-19 Najee Harris             +28%  (1,235 before) FA -> New York Giants
+
+=== B2. Does the reaction hold? abnormal change at +7d vs +30d / +60d / +90d (events with room to look ahead) ===
+event                             n     +7d    +30d    +60d    +90d   (median abnormal; same peers)
+injury: questionable            184   -0.4%   -4.4%       —       —   (n at +90d: 0)
+injury: ruled out               131   -1.9%   -6.4%       —       —   (n at +90d: 0)
+injury: return to healthy        67   -2.9%       —       —       —   (n at +90d: 0)
+injury: IR / long-term           37   -3.8%  -12.9%       —       —   (n at +90d: 0)
+team change                      37   -0.5%   -7.8%    6.7%       —   (n at +90d: 0)
+
+=== C. NFL draft week: 2026 rookies, KTC change Apr 22 -> Apr 28 by draft capital ===
+capital          n  median change                 range
+picks 1-32      10             2%        -3% .. +25%
+33-64            5            12%        -1% .. +8018%
+65-100          10            21%         6% .. +1780%
+101-160          7             2%        -2% .. +1678%
+161-257         10             0%        -9% .. +8%
+undrafted        1            -4%        -4% .. -4%
+   draft "surprise" (taken earlier than his pre-draft KTC rank) vs value change: Spearman +0.54 (n=42)
+
+=== D. In-season: weekly value change vs fantasy points over Clay's preseason expectation ===
+   player-weeks: 1274; R^2 = 0.31 (share of weekly value moves explained)
+   +10 PPR pts over expectation THIS week   -> +1.8% value
+   +5 pts/game over expectation PRIOR weeks -> +2.5% value (market still catching up)
+   did not play that week                    -> -2.7% value
+   value level (log)                         -> -0.022 per log unit (higher-valued players drift down)
+   value 6000+  +10 pts this week -> +1.1% (n=133)
+   4000-6000    +10 pts this week -> +1.8% (n=257)
+   <4000        +10 pts this week -> +3.5% (n=589)
+
+=== E. Drift with no event: 6-month change (Apr 14 -> Oct 9) for players with no team / contract / injury event ===
+pos    age <=24     25-27     28-30       31+   (median change, n)
+QB     -12% (4)   -2% (9)   -7% (7)   +9% (9)
+RB     +0% (19)  +3% (32)   +2% (6)         —
+WR    -14% (30)  -2% (33)  -17% (8)   +1% (7)
+TE     -13% (8)  -6% (22)   +8% (5)  +13% (7)
+
+=== F. Biggest 6-month movers (Apr 14 -> Oct 9, value >= 2000 at either end) and their events ===
+  RISERS
+    Bryce Lance             WR  age 24.1    245 -> 2,514 (+926%)  2026 rookie, pick 136
+    Kalif Raymond           WR  age 32.2    620 -> 2,124 (+243%)  
+    Ted Hurst               WR  age 22.3  1,446 -> 3,404 (+135%)  2026 rookie, pick 84
+    Antonio Williams        WR  age 22.2  1,777 -> 4,157 (+134%)  2026 rookie, pick 71
+    Seth McGowan            RB  age 25.0  1,257 -> 2,400 (+91%)  2026 rookie, pick 237
+    Demond Claiborne        RB  age 23.0  1,489 -> 2,664 (+79%)  2026 rookie, pick 198 | 09-13 injury: ruled out: healthy -> out | 09-16 injury: return to healthy: out -> healthy
+    Darren Waller           TE  age 34.1  1,365 -> 2,297 (+68%)  08-14 team change: FA -> Carolina Panthers
+    Devaughn Vele           WR  age 28.8  2,054 -> 3,407 (+66%)  
+    Kevin Coleman           WR  age 23.1  1,626 -> 2,636 (+62%)  2026 rookie, pick 177
+    Ja'Kobi Lane            WR  age 22.2  2,347 -> 3,793 (+62%)  2026 rookie, pick 80 | 09-13 injury: ruled out: healthy -> out | 09-16 injury: IR / long-term: out -> IR / long-term
+    Roman Wilson            WR  age 25.3  2,014 -> 3,142 (+56%)  
+    Malachi Fields          WR  age 23.1  2,460 -> 3,796 (+54%)  2026 rookie, pick 74
+    Chris Bell              WR  age 22.3  2,604 -> 3,963 (+52%)  2026 rookie, pick 94
+    Tyler Shough            QB  age 27.0  3,135 -> 4,729 (+51%)  
+    George Holani           RB  age 26.8  1,546 -> 2,332 (+51%)  
+    Germie Bernard          WR  age 22.8  2,377 -> 3,328 (+40%)  2026 rookie, pick 47
+    Emmett Johnson          RB  age 23.0  2,812 -> 3,933 (+40%)  2026 rookie, pick 161
+    Mike Gesicki            TE  age 31.0  1,733 -> 2,408 (+39%)  
+    Jalen Coker             WR  age 24.9  3,821 -> 5,304 (+39%)  09-27 injury: ruled out: questionable -> out | 10-04 injury: ruled out: questionable -> out
+    Raheim Sanders          RB  age 24.3  1,748 -> 2,404 (+38%)  
+    Parker Washington       WR  age 24.6  4,559 -> 6,166 (+35%)  
+    MarShawn Lloyd          RB  age 25.8  2,156 -> 2,902 (+35%)  
+    Max Klare               TE  age 23.2  1,801 -> 2,406 (+34%)  2026 rookie, pick 61 | 09-10 injury: ruled out: healthy -> out | 09-16 injury: return to healthy: out -> healthy
+    Denzel Boston           WR  age 22.8  4,248 -> 5,626 (+32%)  2026 rookie, pick 39
+    Will Shipley            RB  age 24.1  2,007 -> 2,627 (+31%)  
+  FALLERS
+    Brandon Aiyuk           WR  age 28.6  3,158 ->   546 (-83%)  
+    Marquise Brown          WR  age 29.4  2,360 -> 1,225 (-48%)  09-27 injury: ruled out: questionable -> out | 10-03 injury: ruled out: questionable -> out
+    Devin Neal              RB  age 23.2  2,866 -> 1,531 (-47%)  09-07 team change: New Orleans Saints -> FA | 09-30 team change: FA -> Minnesota Vikings | 10-08 team change: Minnesota Vikings -> FA
+    Trey Benson             RB  age 24.2  3,529 -> 1,898 (-46%)  08-26 injury: IR / long-term: questionable -> IR / long-term
+    Cedric Tillman          WR  age 26.5  2,650 -> 1,451 (-45%)  08-28 team change: Cleveland Browns -> FA | 09-02 team change: FA -> New Orleans Saints
+    Calvin Austin III       WR  age 27.5  2,010 -> 1,180 (-41%)  08-26 injury: ruled out: healthy -> out | 08-27 injury: IR / long-term: out -> IR / long-term
+    James Conner            RB  age 31.4  2,603 -> 1,542 (-41%)  08-31 injury: IR / long-term: questionable -> IR / long-term
+    Tyreek Hill             WR  age 32.6  2,664 -> 1,650 (-38%)  09-23 injury: ruled out: healthy -> out | 09-24 injury: return to healthy: out -> healthy
+    David Njoku             TE  age 30.2  3,248 -> 2,059 (-37%)  07-14 team change: FA -> Los Angeles Chargers | 09-20 injury: ruled out: healthy -> out | 09-24 injury: IR / long-term: out -> IR / long-term
+    Isaac Guerendo          RB  age 26.3  2,010 -> 1,278 (-36%)  
+    Calvin Ridley           WR  age 31.8  2,162 -> 1,412 (-35%)  
+    Jaydon Blue             RB  age 22.8  2,534 -> 1,659 (-35%)  09-01 team change: Dallas Cowboys -> Philadelphia Eagles
+    Tyrone Tracy            RB  age 26.9  3,239 -> 2,126 (-34%)  
+    Jauan Jennings          WR  age 29.2  3,481 -> 2,300 (-34%)  07-14 team change: FA -> Minnesota Vikings | 09-18 injury: ruled out: healthy -> out
+    Jake Tonges             TE  age 27.2  2,810 -> 1,872 (-33%)  09-16 injury: IR / long-term: questionable -> IR / long-term
+    J.J. McCarthy           QB  age 23.7  2,910 -> 1,945 (-33%)  09-29 team change: Minnesota Vikings -> New York Giants | 09-13 injury: ruled out: healthy -> out | 09-16 injury: return to healthy: out -> healthy
+    Josh Jacobs             RB  age 28.6  5,378 -> 3,646 (-32%)  
+    Ja'Tavion Sanders       TE  age 23.5  2,588 -> 1,766 (-32%)  09-13 injury: ruled out: healthy -> out | 09-16 injury: return to healthy: out -> healthy | 09-20 injury: ruled out: healthy -> out
+    Chimere Dike            WR  age 24.8  3,442 -> 2,361 (-31%)  
+    Isiah Pacheco           RB  age 27.6  2,832 -> 1,946 (-31%)  09-02 injury: IR / long-term: questionable -> IR / long-term
+    Travis Hunter           WR  age 23.4  3,930 -> 2,708 (-31%)  
+    Audric Estime           RB  age 23.1  2,001 -> 1,393 (-30%)  09-24 team change: New Orleans Saints -> FA | 10-01 team change: FA -> Minnesota Vikings | 09-12 injury: IR / long-term: questionable -> IR / long-term
+    Christian Kirk          WR  age 29.9  2,493 -> 1,743 (-30%)  08-31 injury: IR / long-term: questionable -> IR / long-term
+    Ricky Pearsall          WR  age 26.1  4,490 -> 3,143 (-30%)  
+    Mason Taylor            TE  age 22.4  3,606 -> 2,577 (-29%)  09-23 injury: ruled out: questionable -> out | 10-07 injury: return to healthy: out -> healthy

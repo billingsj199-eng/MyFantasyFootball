@@ -1,0 +1,30 @@
+32 suspension seasons (QB/RB/WR/TE, 2019-25), 29 players
+
+=== 1. VALUE: mean log(realized rank / predicted rank), + = finished worse than ranked ===
+group                                n       MKT Y       SIM Y      FAIR Y      MKT 3y      SIM 3y     FAIR 3y
+suspended this season                8       +0.06       +0.21       +0.05       -0.23       -0.09       -0.25
+suspended in the 2 seasons before    5       -0.52       -0.52       -0.60       -0.10       -0.11       -0.18
+never suspended (2019+)            604       +0.00       +0.00       +0.00       +0.00       +0.00       +0.00
+   will fuller         WR 2020 NOW 5wk   mkt #70   sim #98   FAIR #81   -> season-Y #59   3yr #84
+   antonio brown       WR 2021 NOW 3wk   mkt #107  sim #130  FAIR #132  -> season-Y #116  3yr #116
+   will fuller         WR 2021 NOW 1wk   mkt #106  sim #67   FAIR #104  -> season-Y #115  3yr #115
+   calvin ridley       WR 2022 NOW 11wk  mkt #109  sim #31   FAIR #75   -> season-Y #124  3yr #56
+   deandre hopkins     WR 2022 NOW 6wk   mkt #63   sim #61   FAIR #67   -> season-Y #97   3yr #69
+   mike evans          WR 2022 NOW 1wk   mkt #42   sim #34   FAIR #44   -> season-Y #37   3yr #16
+   alvin kamara        RB 2023 NOW 3wk   mkt #72   sim #43   FAIR #63   -> season-Y #41   3yr #35
+   deandre hopkins     WR 2023 prior     mkt #69   sim #84   FAIR #81   -> season-Y #34   3yr #73
+   deshaun watson      QB 2023 prior     mkt #73   sim #91   FAIR #76   -> season-Y #101  3yr #108
+   jameson williams    WR 2023 NOW 4wk   mkt #46   sim #103  FAIR #56   -> season-Y #88   3yr #48
+   mike evans          WR 2023 prior     mkt #74   sim #65   FAIR #75   -> season-Y #7    3yr #24
+
+=== 2. MARKET PATH: KTC excess change from Aug 1 of the suspension season (vs same-pos +-25% controls) ===
+   mike evans          2022 (1 wks)  +90d    -9%  +180d   -35%  +365d   -40%
+   jameson williams    2023 (4 wks)  +90d   -19%  +180d   -29%  +365d   -25%
+   jameson williams    2024 (2 wks)  +90d   +19%  +180d   +44%  +365d   +66%
+   dk metcalf          2025 (2 wks)  +90d    +1%  +180d   -13%  +365d   -18%
+   jamarr chase        2025 (1 wks)  +90d    +7%  +180d   +14%  +365d   +20%
+   jordan addison      2025 (3 wks)  +90d    +5%  +180d    -8%  +365d   -10%
+   rashee rice         2025 (6 wks)  +90d   +18%  +180d   +14%  +365d    -3%
+   median +90d: +4.7% (n 7)
+   median +180d: -8.4% (n 7)
+   median +365d: -9.8% (n 7)

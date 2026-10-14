@@ -57,6 +57,21 @@ for jname, out_name, var in (("practice_2026.json", "sim_practice.js", "SIM_PRAC
     n = len((payload.get("players") or payload.get("teams") or payload.get("items") or {}))
     print(f"wrapped {out_name}  ({n} entries, {str(payload.get('updated', ''))[:16]})")
 
+# DEPTH-CHART POOL (2026-10-09, Jack "just look at depth charts ideally"): depth-chart RB/WR/TE missing from Clay's sheet,
+# season line from their own games -> data/sim_depth_pool.js (engine buildPlayers merges; kill window.SIM_DEPTH_POOL_ON = false)
+try:
+    import build_depth_pool as _bdp
+    _bdp.main()
+except Exception as e_dp:
+    print(f"WARN build_depth_pool failed ({e_dp}) - previous sim_depth_pool.js kept")
+# GAME-LOG STAT LINES (2026-10-09, Jack "build the stat lines from game logs"): per-player split from own game logs ->
+# data/sim_stat_shape.js (engine applies it for SIM_STAT_SHAPE.on positions; kill window.SIM_STAT_SHAPE_ON = false)
+try:
+    import build_stat_shape as _bss
+    _bss.main()
+except Exception as e_ss:
+    print(f"WARN build_stat_shape failed ({e_ss}) - previous sim_stat_shape.js kept")
+
 # players.json (sleeper ids + ADP) -> JS global so file:// pages can load it
 pj = os.path.join(REPO, "sleeper-extension", "data", "players.json")
 with open(pj, encoding="utf-8") as f:

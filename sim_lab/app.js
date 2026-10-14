@@ -6363,6 +6363,8 @@
       chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him) ×' : im && /^q-(dnp|lp|fp)$/.test(im.src || '') ? ('Q + ' + im.src.slice(2).toUpperCase() + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%, x' + im.cond.toFixed(2) + ' if he plays)' : '') + ' ×') : im && /doubtful/.test(im.src || '') ? ('DOUBTFUL' + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%)' : im.src === 'doubtful-unconfirmed' ? ' unconfirmed' : '') + ' ×') : 'docked ×') + ntF(iA, 2));
     }
     else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
+    if (wp && wp.balloc != null && Math.abs(wp.balloc - 1) >= 0.01) chips.push('budget allocation x' + ntF(wp.balloc, 2) + ' (group volume share vs the roster this week; P-20261013-1 test switch)');
+    if (wp && wp.vfade >= 0.05) chips.push('vacancy fade (weeks ahead) -' + ntF(wp.vfade, 1) + ': already ' + (wp.why && wp.why.vfadeSeen != null ? wp.why.vfadeSeen : '?') + ' game(s) played without the injured teammate');   // P-20261013-2
     if (wp && /\+nmu\+/.test(wp.ncSrc || '')) chips.push('next man up: target-share teammate out (lift)');
     else if (wp && /\+nmu-/.test(wp.ncSrc || '')) chips.push('next man up: target-share teammate out (#2-3 trim)');
     if (p.isDST) return chips;
@@ -6449,7 +6451,9 @@
     push('luck', w.luck, 'TD luck (' + (lr ? lr.td + ' TD on ' + ntF(lr.xtd, 1) + ' expected' : 'regression') + ')',
       'TD regression (' + (lr ? lr.td + ' TD' + (lr.td === 1 ? '' : 's') + ' on ' + ntF(lr.xtd, 1) + ' expected from where he got the ball' : 'scoring back toward his usage') + ')');
     var modelPre = Math.max(0, run + w.luck);
-    if (w.bb) push('blend', w.jsMean - modelPre, Math.round(100 * w.bb) + '% Clay-free shadow (' + ntF(w.ncMean, 1) + ') for weeks ahead', 'blended with our history-based model for the weeks ahead');
+    var vfD = (w.bb && w.vfade > 0) ? w.bb * w.vfade : 0;   // P-20261013-2: later-week vacancy fade, split out of the shadow blend step (sum unchanged)
+    if (w.bb) push('blend', w.jsMean - modelPre + vfD, Math.round(100 * w.bb) + '% Clay-free shadow (' + ntF(w.ncMean + (w.vfade || 0), 1) + ') for weeks ahead', 'blended with our history-based model for the weeks ahead');
+    if (vfD > 0) push('vfade', -vfD, 'vacancy boost faded (already played ' + w.vfadeSeen + ' game' + (w.vfadeSeen === 1 ? '' : 's') + ' without the injured teammate)', 'less extra work from the injured teammate - he has already played ' + w.vfadeSeen + ' game' + (w.vfadeSeen === 1 ? '' : 's') + ' without him');
     var model = w.bb ? w.jsMean : modelPre, eff = E.effMean(wp);
     var mk = eff - model;
     var mkLab = wp.propSrc === 'line' ? 'books\' lines (' + ntF(wp.propMean, 1) + ', anchored ' + Math.round(100 * (wp.propW || 0.7)) + '%)' : wp.propSrc === 'rate' ? 'market rate from other weeks (' + ntF(wp.propMean, 1) + ')' : 'market / effective mean';
@@ -6800,7 +6804,7 @@
         propSrc: r.propSrc || null,
         luck: r.luck != null ? +r.luck.toFixed(3) : 0,   // TD-luck points inside jsMean at lock (luck_scorecard.py grades the layer live) // 'line' = direct anchor, 'rate' = market rate track
         useLam: r.useLam != null ? +r.useLam.toFixed(2) : undefined, usePg: r.usePg != null ? +r.usePg.toFixed(2) : undefined, jsNoUse: r.jsNoUse != null ? +r.jsNoUse.toFixed(2) : undefined,   // live usage evidence inside jsMean at lock (usage_scorecard.py)
-        peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined,   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
+        peck: r.peck != null && r.peck !== 1 ? +r.peck.toFixed(3) : undefined, peckRank: r.peckRank != null ? r.peckRank : undefined, ncPeck: r.ncPeck != null && r.ncPeck !== 1 ? +r.ncPeck.toFixed(3) : undefined, compsSrc: r.player && r.player.compsSrc ? r.player.compsSrc : undefined,   /* 'gamelog' = comps split from own game logs (build_stat_shape.py), absent = Clay's sheet */ ncPeckRank: r.ncPeckRank != null ? r.ncPeckRank : undefined,   /* SHADOW pecking dock inside ncMean (shipped base) + rank, 2026-10-09 */   // pecking-order dock inside jsMean at lock + rank on his team (peck_scorecard.py)
         vol: r.vol != null && r.vol !== 1 ? +r.vol.toFixed(3) : undefined, health: r.health ? +r.health.toFixed(2) : undefined, useHurt: r.useHurt || undefined,
         bb: r.bb || undefined, jsPre: r.jsPre != null ? +r.jsPre.toFixed(2) : undefined,   // weeks-ahead / all-weeks base blend: jsMean = bb x shadow + (1 - bb) x jsPre (the Clay-blend model before the blend)   // 2026-10-07 layers for per-layer grading
         ret: r.ret != null && r.ret !== 1 ? +r.ret.toFixed(3) : undefined,   // return ramp inside the number at lock (return_scorecard.py)

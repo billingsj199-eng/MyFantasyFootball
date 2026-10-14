@@ -1,0 +1,11 @@
+pool 1321; year-2 players 187 (with JM 145), slow rookie year 94
+
+=== YOUNG ===
+group              n  beat FAIR Sp (season / 3yr / 5yr)     whole board: LOYO gain (wins) per horizon
+all yr2          187  -0.204 / -0.196 / -0.197              r1 k-0.15 +0.0016 (6/8) | r3 k-0.15 -0.0020 (4/8) | r5 k-0.15 -0.0030 (2/6)
+slow rookie yr    94  -0.175 / -0.148 / -0.138              r1 k-0.05 +0.0005 (6/8) | r3 k0 -0.0018 (0/8) | r5 k0 -0.0037 (0/6)
+good rookie yr    93  -0.279 / -0.263 / -0.288              r1 k-0.3 +0.0027 (6/8) | r3 k-0.3 +0.0018 (6/8) | r5 k-0.3 +0.0009 (4/6)
+picks 1-64       114  -0.095 / -0.103 / -0.027              r1 k0 -0.0012 (0/8) | r3 k0 -0.0005 (0/8) | r5 k0 -0.0006 (0/6)
+picks 65+         73  -0.283 / -0.252 / -0.397              r1 k-0.2 +0.0008 (6/8) | r3 k-0.15 -0.0003 (6/8) | r5 k-0.15 -0.0009 (4/6)
+
+   beat FAIR Sp > 0 = better pedigree finished ABOVE its FAIR rank (FAIR under-credits pedigree).

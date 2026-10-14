@@ -1,0 +1,31 @@
+pool: 1321 player-seasons 2016-23 (1003 with 5yr+youth). Market model R2 0.58 (factors explain this much of the price); truth model R2 0.29 (3yr).
+
+Coefficients per 1 SD of the factor, log-rank units (negative = ranked BETTER):
+factor                                MARKET  TRUTH 3y TRUTH 5y+     BEYOND PRICE 3y (95%)             5y+ (95%)  verdict
+age (QB)                               +0.05     +0.02     +0.02      -0.001 [-0.05,+0.06]  -0.004 [-0.07,+0.08]  priced about right
+age (RB)                               +0.18     +0.14     +0.14      +0.048 [-0.01,+0.11]  +0.056 [-0.00,+0.11]  priced about right
+age (WR)                               +0.12     +0.10     +0.15      +0.041 [-0.01,+0.09]  +0.095 [+0.03,+0.16]  market OVERPAYS
+age (TE)                               +0.02     -0.01     -0.00      -0.016 [-0.08,+0.04]  -0.011 [-0.08,+0.03]  priced about right
+is RB                                  -0.37     -0.15     -0.12      +0.041 [-0.09,+0.16]  +0.064 [-0.07,+0.20]  priced about right
+is WR                                  -0.28     -0.19     -0.19      -0.043 [-0.15,+0.06]  -0.049 [-0.19,+0.08]  priced about right
+is TE                                  -0.09     -0.01     -0.03      +0.038 [-0.05,+0.12]  +0.024 [-0.10,+0.13]  priced about right
+rookie                                 -0.04     -0.16     -0.17      -0.140 [-0.31,+0.03]  -0.129 [-0.34,+0.09]  priced about right
+draft capital (rookies, -log pick)     -0.35     -0.21     -0.19      -0.031 [-0.20,+0.12]  -0.011 [-0.21,+0.20]  priced about right
+draft capital (vets, -log pick)        -0.23     -0.04     -0.03      +0.082 [-0.02,+0.18]  +0.082 [-0.03,+0.20]  priced about right
+production level (3-yr base)           -0.46     -0.34     -0.28      -0.100 [-0.15,-0.05]  -0.080 [-0.14,-0.02]  market UNDERPAYS *
+games played last season               -0.05     -0.07     -0.10      -0.049 [-0.16,+0.07]  -0.070 [-0.22,+0.06]  priced about right
+breakout last season                   +0.01     +0.01     -0.00      +0.001 [-0.04,+0.04]  -0.008 [-0.06,+0.04]  priced about right
+injury-shortened last season           -0.04     +0.01     -0.01      +0.032 [-0.02,+0.10]  +0.023 [-0.05,+0.09]  priced about right
+changed teams                          +0.07     +0.09     +0.07      +0.049 [+0.01,+0.08]  +0.041 [+0.00,+0.08]  market OVERPAYS *
+big new contract                       -0.17     -0.10     -0.16      -0.014 [-0.06,+0.03]  -0.060 [-0.13,+0.01]  priced about right
+walk year                              +0.04     +0.04     +0.06      +0.016 [-0.02,+0.05]  +0.034 [-0.01,+0.07]  priced about right
+JM prospect score                      -0.11     -0.14     -0.20      -0.085 [-0.16,-0.01]  -0.161 [-0.27,-0.07]  market UNDERPAYS *
+market momentum (rising)               -0.24     -0.11     -0.14      +0.019 [-0.04,+0.08]  -0.016 [-0.07,+0.04]  priced about right
+   BEYOND PRICE < 0 = players high on the factor finished better than their price said (under-paid); > 0 = over-paid.
+   verdict from the bootstrap interval excluding 0 (3yr or 5yr; * = both).
+
+=== leave-one-year-out: does price + factors rank outcomes better? (per-year Spearman, avg) ===
+   price alone                    3yr 0.650   5yr+youth 0.629
+   price + factors                3yr 0.661   5yr+youth 0.649
+   FAIR (shipped)                 3yr 0.668   5yr+youth 0.653
+   factors alone (truth model)    3yr 0.571   5yr+youth 0.564

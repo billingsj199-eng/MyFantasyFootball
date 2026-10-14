@@ -1,0 +1,66 @@
+cohort 418 rookies 2019-2024; with ctx yr1+yr2 rows: 149
+
+=== A. SLOW rookies: improved in year 2 vs not (n slow 339, improved 45) ===
+                                    improved      stayed
+snap % change                      17.861 (27)    2.323 ( 56)
+target share change                 0.058 (23)    0.007 ( 47)
+carry share change (RB)             0.190 ( 8)    0.018 ( 14)
+xFP/g change (volume)               3.397 (27)    0.341 ( 56)
+pts over xFP/g change (eff.)        0.312 (23)   -0.119 ( 47)
+PPG change                          4.404 (27)    0.325 ( 56)
+team implied total change           0.245 (27)    0.172 ( 56)
+new head coach                      0.447 (38)    0.337 ( 83)
+new playcaller                      0.553 (38)    0.470 ( 83)
+changed teams                       0.000 (38)    0.036 ( 83)
+QB change (non-QB)                  0.261 (23)    0.340 ( 47)
+vacated same-pos share              0.252 (23)    0.121 ( 47)
+late rel (wk 10+) yr 1              0.764 (38)    0.587 (113)
+full rel yr 1                       0.603 (45)    0.287 (294)
+JM                                 54.664 (45)   36.338 (294)
+   improvers: PPG gain split  volume (xFP) +3.40 / efficiency +nan  -> nan% volume
+      QB (n=4): volume +1.49, efficiency +nan
+      RB (n=8): volume +4.36, efficiency +0.34
+      WR (n=12): volume +3.66, efficiency +0.28
+      TE (n=3): volume +2.35, efficiency +0.35
+
+=== B. SLOW rookies — year-2 improvement rate with / without a pre-season-knowable signal ===
+signal                                      with         without
+new playcaller                        35% ( 60)      28% ( 61)
+new head coach                        38% ( 45)      28% ( 76)
+changed teams                          0% (  3)      32% (118)
+QB change (non-QB)                    27% ( 22)      35% ( 48)
+vacated same-pos share >= .15         43% ( 28)      26% ( 42)
+late surge: wk 10+ rel >= 1           62% ( 13)      22% (138)
+late rel > early rel by .3+           38% ( 26)      23% ( 96)
+JM 70+                                50% ( 26)      10% (313)
+top-64 pick                           30% ( 67)       9% (272)
+   within JM 70+ / top-64 slow rookies (the pedigree group):
+   new playcaller                     52% ( 27)      26% ( 23)
+   new head coach                     59% ( 22)      25% ( 28)
+   changed teams                       0% (  1)      41% ( 49)
+   QB change (non-QB)                 27% ( 11)      48% ( 21)
+   vacated same-pos share >= .15      50% ( 16)      31% ( 16)
+   late surge: wk 10+ rel >= 1        67% (  3)      35% ( 49)
+   late rel > early rel by .3+        50% ( 12)      33% ( 33)
+
+=== C. LATE-SEASON FORM (all rookies with 3+ games in weeks 10+) ===
+   n=216  Spearman yr-2 rel with: full yr-1 rel +0.649, late rel +0.613, early rel +0.523
+   log yr-2 rel ~ +0.48 log full + +0.02 log late   (late weight share 3%; the sim weights every rookie game equally)
+   late >= early + .3 (surged)    n= 57  yr-1 rel 1.07  yr-2 rel 1.16  improved/held 58%  sim yr-2 VOR  32.2 vs actual  33.7
+   flat (+/- .3)                  n=105  yr-1 rel 0.77  yr-2 rel 0.90  improved/held 38%  sim yr-2 VOR  16.7 vs actual  16.6
+   late <= early - .3 (faded)     n= 26  yr-1 rel 0.98  yr-2 rel 1.03  improved/held 50%  sim yr-2 VOR  27.5 vs actual  24.2
+   slow full season but late surge (late rel >= 1):
+      rachaad white           RB 2022 JM  68.2  full 0.99 late 1.26 (8g) -> yr2 1.60
+      isiah pacheco           RB 2022 JM   7.8  full 0.89 late 1.30 (9g) -> yr2 1.55
+      darnell mooney          WR 2020 JM  30.0  full 0.99 late 1.09 (7g) -> yr2 1.45
+      aj dillon               RB 2020 JM  56.7  full 0.43 late 1.10 (3g) -> yr2 1.27
+      ricky pearsall          WR 2024 JM  56.7  full 0.98 late 1.01 (8g) -> yr2 1.22
+      brock purdy             QB 2022 JM  41.7  full 0.84 late 1.07 (7g) -> yr2 1.19
+      tucker kraft            TE 2023 JM  50.4  full 0.57 late 1.05 (9g) -> yr2 1.14
+      tyjae spears            RB 2023 JM  58.8  full 0.92 late 1.03 (9g) -> yr2 1.04
+      theo johnson            TE 2024 JM  42.2  full 0.68 late 1.00 (3g) -> yr2 0.90
+      chig okonkwo            TE 2022 JM  33.7  full 0.00 late 1.01 (9g) -> yr2 0.83
+      dontayvion wicks        WR 2023 JM  30.8  full 0.86 late 1.27 (7g) -> yr2 0.68
+      michael mayer           TE 2023 JM  68.9  full 0.61 late 1.00 (5g) -> yr2 0.40
+      isaac guerendo          RB 2024 JM  38.1  full 0.66 late 1.12 (6g) -> yr2 0.00
+      improved in yr 2: 62% of 13 vs slow without a late surge 23%

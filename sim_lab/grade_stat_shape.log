@@ -1,79 +1,105 @@
+V2: 3-season histories 540; tiered shapes 16
 position shape per half-PPR point (2025 pool): QB py 12.494 ptd 0.085 ry 0.943 rtd 0.011 | RB ry 4.725 rtd 0.036 rec 0.205 rcy 1.540 rctd 0.010 | WR ry 0.143 rtd 0.001 rec 0.437 rcy 5.548 rctd 0.034 | TE rec 0.486 rcy 5.069 rctd 0.040
 
-=== 2026 weeks 1,2,3,4: 1,179 locked player-weeks with an actual line ===
+=== 2026 weeks 1,2,3,4,5: 1,196 locked player-weeks with an actual line ===
 
 --- QB: points-weighted abs error per stat (lower is better) ---
-  Clay (comps)                       n 131 | total 8.719 | py 2.454 ptd 3.637 ry 1.103 rtd 1.525
-  Clay + usage (compsU)              n 131 | total 8.796 | py 2.454 ptd 3.637 ry 1.180 rtd 1.525
-  Clay + usage P5 rebuilt            n 131 | total 8.698 | py 2.460 ptd 3.637 ry 1.076 rtd 1.525
-  Clay + usage P2                    n 131 | total 8.689 | py 2.465 ptd 3.638 ry 1.061 rtd 1.526
-  Clay + usage P1                    n 131 | total 8.692 | py 2.471 ptd 3.640 ry 1.055 rtd 1.526
-  in-season only (P0, usage-blended) n 131 | total 8.744 | py 2.489 ptd 3.645 ry 1.083 rtd 1.527
-  hybrid: Clay+usage <3 games, in-season only 3+ n 131 | total 8.705 | py 2.477 ptd 3.637 ry 1.066 rtd 1.525
-  Clay-free K1 4 K2 1                n 131 | total 8.856 | py 2.510 ptd 3.596 ry 1.104 rtd 1.646
-  Clay-free + usage (ry/rec/rcy)     n 131 | total 8.846 | py 2.518 ptd 3.596 ry 1.085 rtd 1.647
-  Clay-free A only (this season)     n  95 | total 9.841 | py 2.994 ptd 4.106 ry 1.306 rtd 1.435
+  V2 hist3 K1 4 + tier K2 1          n 133 | total 8.828 | py 2.449 ptd 3.567 ry 1.125 rtd 1.688
+  V2 hist3 K1 8 + tier K2 1          n 133 | total 8.786 | py 2.413 ptd 3.554 ry 1.133 rtd 1.685
+  V2 hist3 K1 16 + tier K2 1         n 133 | total 8.765 | py 2.392 ptd 3.545 ry 1.141 rtd 1.686
+  V2 hist3 K1 8 + tier K2 1 + usage  n 133 | total 8.779 | py 2.429 ptd 3.555 ry 1.108 rtd 1.687
+  V2 hist3 K1 16 + tier K2 1 + usage n 133 | total 8.756 | py 2.409 ptd 3.546 ry 1.113 rtd 1.688
+  Clay (comps)                       n 133 | total 8.686 | py 2.442 ptd 3.628 ry 1.108 rtd 1.508
+  Clay + usage (compsU)              n 133 | total 8.851 | py 2.442 ptd 3.628 ry 1.273 rtd 1.508
+  Clay + usage P5 rebuilt            n 133 | total 8.658 | py 2.445 ptd 3.626 ry 1.077 rtd 1.509
+  Clay + usage P2                    n 133 | total 8.644 | py 2.449 ptd 3.626 ry 1.060 rtd 1.509
+  Clay + usage P1                    n 133 | total 8.642 | py 2.454 ptd 3.626 ry 1.052 rtd 1.509
+  in-season only (P0, usage-blended) n 133 | total 8.689 | py 2.469 ptd 3.629 ry 1.081 rtd 1.510
+  hybrid: Clay+usage <3 games, in-season only 3+ n 133 | total 8.666 | py 2.463 ptd 3.626 ry 1.069 rtd 1.508
+  Clay-free K1 4 K2 1                n 133 | total 8.803 | py 2.491 ptd 3.574 ry 1.110 rtd 1.629
+  Clay-free + usage (ry/rec/rcy)     n 133 | total 8.795 | py 2.500 ptd 3.574 ry 1.093 rtd 1.629
+  Clay-free A only (this season)     n  97 | total 9.778 | py 2.971 ptd 4.067 ry 1.335 rtd 1.406
 
 --- RB: points-weighted abs error per stat (lower is better) ---
-  Clay (comps)                       n 308 | total 6.258 | ry 1.856 rtd 2.160 rec 0.546 rcy 1.003 rctd 0.693
-  Clay + usage (compsU)              n 308 | total 6.188 | ry 1.810 rtd 2.160 rec 0.536 rcy 0.989 rctd 0.693
-  Clay + usage P5 rebuilt            n 308 | total 6.266 | ry 1.857 rtd 2.163 rec 0.548 rcy 1.002 rctd 0.696
-  Clay + usage P2                    n 308 | total 6.296 | ry 1.868 rtd 2.168 rec 0.556 rcy 1.004 rctd 0.699
-  Clay + usage P1                    n 308 | total 6.332 | ry 1.882 rtd 2.174 rec 0.566 rcy 1.008 rctd 0.702
-  in-season only (P0, usage-blended) n 308 | total 6.482 | ry 1.925 rtd 2.203 rec 0.606 rcy 1.034 rctd 0.714
-  hybrid: Clay+usage <3 games, in-season only 3+ n 308 | total 6.261 | ry 1.839 rtd 2.174 rec 0.553 rcy 0.998 rctd 0.697
-  Clay-free K1 4 K2 1                n 308 | total 6.383 | ry 1.905 rtd 2.131 rec 0.569 rcy 1.023 rctd 0.755
-  Clay-free + usage (ry/rec/rcy)     n 308 | total 6.392 | ry 1.906 rtd 2.132 rec 0.575 rcy 1.023 rctd 0.755
-  Clay-free A only (this season)     n 198 | total 7.350 | ry 2.478 rtd 2.166 rec 0.774 rcy 1.243 rctd 0.689
+  V2 hist3 K1 4 + tier K2 1          n 312 | total 6.369 | ry 1.928 rtd 2.098 rec 0.571 rcy 1.011 rctd 0.762
+  V2 hist3 K1 8 + tier K2 1          n 312 | total 6.369 | ry 1.925 rtd 2.100 rec 0.570 rcy 1.010 rctd 0.764
+  V2 hist3 K1 16 + tier K2 1         n 312 | total 6.374 | ry 1.926 rtd 2.102 rec 0.570 rcy 1.010 rctd 0.765
+  V2 hist3 K1 8 + tier K2 1 + usage  n 312 | total 6.391 | ry 1.933 rtd 2.105 rec 0.576 rcy 1.014 rctd 0.764
+  V2 hist3 K1 16 + tier K2 1 + usage n 312 | total 6.395 | ry 1.935 rtd 2.109 rec 0.575 rcy 1.013 rctd 0.764
+  Clay (comps)                       n 312 | total 6.280 | ry 1.884 rtd 2.157 rec 0.542 rcy 0.993 rctd 0.705
+  Clay + usage (compsU)              n 312 | total 6.213 | ry 1.838 rtd 2.157 rec 0.534 rcy 0.980 rctd 0.705
+  Clay + usage P5 rebuilt            n 312 | total 6.288 | ry 1.883 rtd 2.160 rec 0.545 rcy 0.993 rctd 0.708
+  Clay + usage P2                    n 312 | total 6.318 | ry 1.893 rtd 2.165 rec 0.554 rcy 0.995 rctd 0.711
+  Clay + usage P1                    n 312 | total 6.354 | ry 1.906 rtd 2.170 rec 0.563 rcy 1.000 rctd 0.714
+  in-season only (P0, usage-blended) n 312 | total 6.503 | ry 1.948 rtd 2.199 rec 0.603 rcy 1.026 rctd 0.727
+  hybrid: Clay+usage <3 games, in-season only 3+ n 312 | total 6.284 | ry 1.863 rtd 2.170 rec 0.551 rcy 0.991 rctd 0.710
+  Clay-free K1 4 K2 1                n 312 | total 6.406 | ry 1.930 rtd 2.127 rec 0.566 rcy 1.014 rctd 0.769
+  Clay-free + usage (ry/rec/rcy)     n 312 | total 6.414 | ry 1.930 rtd 2.128 rec 0.573 rcy 1.014 rctd 0.769
+  Clay-free A only (this season)     n 202 | total 7.367 | ry 2.499 rtd 2.160 rec 0.766 rcy 1.222 rctd 0.721
 
 --- WR: points-weighted abs error per stat (lower is better) ---
-  Clay (comps)                       n 488 | total 5.280 | ry 0.128 rtd 0.053 rec 0.769 rcy 2.378 rctd 1.952
-  Clay + usage (compsU)              n 488 | total 5.151 | ry 0.124 rtd 0.053 rec 0.742 rcy 2.280 rctd 1.952
-  Clay + usage P5 rebuilt            n 488 | total 5.266 | ry 0.126 rtd 0.053 rec 0.772 rcy 2.362 rctd 1.952
-  Clay + usage P2                    n 488 | total 5.269 | ry 0.125 rtd 0.054 rec 0.775 rcy 2.355 rctd 1.960
-  Clay + usage P1                    n 488 | total 5.285 | ry 0.124 rtd 0.054 rec 0.780 rcy 2.353 rctd 1.972
-  in-season only (P0, usage-blended) n 488 | total 5.397 | ry 0.127 rtd 0.056 rec 0.805 rcy 2.373 rctd 2.037
-  hybrid: Clay+usage <3 games, in-season only 3+ n 488 | total 5.271 | ry 0.127 rtd 0.054 rec 0.774 rcy 2.361 rctd 1.955
-  Clay-free K1 4 K2 1                n 488 | total 5.344 | ry 0.139 rtd 0.065 rec 0.798 rcy 2.395 rctd 1.947
-  Clay-free + usage (ry/rec/rcy)     n 488 | total 5.344 | ry 0.137 rtd 0.066 rec 0.802 rcy 2.388 rctd 1.951
-  Clay-free A only (this season)     n 308 | total 6.034 | ry 0.225 rtd 0.065 rec 1.140 rcy 2.811 rctd 1.793
+  V2 hist3 K1 4 + tier K2 1          n 496 | total 5.347 | ry 0.144 rtd 0.082 rec 0.793 rcy 2.398 rctd 1.930
+  V2 hist3 K1 8 + tier K2 1          n 496 | total 5.359 | ry 0.145 rtd 0.083 rec 0.790 rcy 2.399 rctd 1.942
+  V2 hist3 K1 16 + tier K2 1         n 496 | total 5.369 | ry 0.146 rtd 0.084 rec 0.788 rcy 2.402 rctd 1.949
+  V2 hist3 K1 8 + tier K2 1 + usage  n 496 | total 5.355 | ry 0.141 rtd 0.084 rec 0.793 rcy 2.389 rctd 1.948
+  V2 hist3 K1 16 + tier K2 1 + usage n 496 | total 5.364 | ry 0.141 rtd 0.085 rec 0.792 rcy 2.391 rctd 1.954
+  Clay (comps)                       n 496 | total 5.321 | ry 0.132 rtd 0.064 rec 0.773 rcy 2.402 rctd 1.950
+  Clay + usage (compsU)              n 496 | total 5.198 | ry 0.127 rtd 0.064 rec 0.748 rcy 2.309 rctd 1.950
+  Clay + usage P5 rebuilt            n 496 | total 5.306 | ry 0.129 rtd 0.065 rec 0.776 rcy 2.387 rctd 1.949
+  Clay + usage P2                    n 496 | total 5.309 | ry 0.127 rtd 0.065 rec 0.779 rcy 2.381 rctd 1.957
+  Clay + usage P1                    n 496 | total 5.324 | ry 0.126 rtd 0.065 rec 0.784 rcy 2.380 rctd 1.968
+  in-season only (P0, usage-blended) n 496 | total 5.434 | ry 0.129 rtd 0.067 rec 0.808 rcy 2.399 rctd 2.032
+  hybrid: Clay+usage <3 games, in-season only 3+ n 496 | total 5.310 | ry 0.129 rtd 0.065 rec 0.778 rcy 2.387 rctd 1.951
+  Clay-free K1 4 K2 1                n 496 | total 5.380 | ry 0.141 rtd 0.077 rec 0.802 rcy 2.417 rctd 1.943
+  Clay-free + usage (ry/rec/rcy)     n 496 | total 5.380 | ry 0.139 rtd 0.078 rec 0.806 rcy 2.411 rctd 1.947
+  Clay-free A only (this season)     n 316 | total 6.066 | ry 0.226 rtd 0.086 rec 1.137 rcy 2.826 rctd 1.791
 
 --- TE: points-weighted abs error per stat (lower is better) ---
-  Clay (comps)                       n 252 | total 4.091 | rec 0.689 rcy 1.614 rctd 1.788
-  Clay + usage (compsU)              n 252 | total 4.073 | rec 0.679 rcy 1.605 rctd 1.788
-  Clay + usage P5 rebuilt            n 252 | total 4.089 | rec 0.686 rcy 1.613 rctd 1.790
-  Clay + usage P2                    n 252 | total 4.095 | rec 0.684 rcy 1.613 rctd 1.798
-  Clay + usage P1                    n 252 | total 4.105 | rec 0.684 rcy 1.613 rctd 1.808
-  in-season only (P0, usage-blended) n 252 | total 4.153 | rec 0.682 rcy 1.611 rctd 1.859
-  hybrid: Clay+usage <3 games, in-season only 3+ n 252 | total 4.130 | rec 0.685 rcy 1.631 rctd 1.814
-  Clay-free K1 4 K2 1                n 252 | total 4.115 | rec 0.689 rcy 1.610 rctd 1.815
-  Clay-free + usage (ry/rec/rcy)     n 252 | total 4.120 | rec 0.687 rcy 1.609 rctd 1.823
-  Clay-free A only (this season)     n 166 | total 4.511 | rec 0.900 rcy 1.744 rctd 1.867
+  V2 hist3 K1 4 + tier K2 1          n 255 | total 4.094 | rec 0.686 rcy 1.607 rctd 1.801
+  V2 hist3 K1 8 + tier K2 1          n 255 | total 4.094 | rec 0.689 rcy 1.611 rctd 1.794
+  V2 hist3 K1 16 + tier K2 1         n 255 | total 4.093 | rec 0.692 rcy 1.614 rctd 1.787
+  V2 hist3 K1 8 + tier K2 1 + usage  n 255 | total 4.098 | rec 0.686 rcy 1.608 rctd 1.804
+  V2 hist3 K1 16 + tier K2 1 + usage n 255 | total 4.097 | rec 0.688 rcy 1.613 rctd 1.797
+  Clay (comps)                       n 255 | total 4.069 | rec 0.684 rcy 1.603 rctd 1.782
+  Clay + usage (compsU)              n 255 | total 4.051 | rec 0.674 rcy 1.595 rctd 1.782
+  Clay + usage P5 rebuilt            n 255 | total 4.067 | rec 0.680 rcy 1.602 rctd 1.784
+  Clay + usage P2                    n 255 | total 4.073 | rec 0.678 rcy 1.602 rctd 1.792
+  Clay + usage P1                    n 255 | total 4.082 | rec 0.678 rcy 1.601 rctd 1.802
+  in-season only (P0, usage-blended) n 255 | total 4.129 | rec 0.676 rcy 1.599 rctd 1.853
+  hybrid: Clay+usage <3 games, in-season only 3+ n 255 | total 4.107 | rec 0.679 rcy 1.620 rctd 1.808
+  Clay-free K1 4 K2 1                n 255 | total 4.089 | rec 0.684 rcy 1.599 rctd 1.806
+  Clay-free + usage (ry/rec/rcy)     n 255 | total 4.094 | rec 0.681 rcy 1.598 rctd 1.816
+  Clay-free A only (this season)     n 169 | total 4.469 | rec 0.888 rcy 1.724 rctd 1.857
 
 --- by GAMES PLAYED at the lock (total points-weighted abs error per row), the Clay-prior question ---
-  g0    QB  | Clay (comps): 9.244 (n36) | Clay + usage (compsU): 9.244 (n36) | Clay + usage P5 rebuil: 9.244 (n36) | Clay + usage P2: 9.244 (n36) | Clay + usage P1: 9.244 (n36) | in-season only (P0, us: 9.244 (n36) | hybrid: Clay+usage <3 : 9.244 (n36) | Clay-free K1 4 K2 1: 9.383 (n36) | Clay-free + usage (ry/: 9.383 (n36)
-  g0    RB  | Clay (comps): 5.293 (n108) | Clay + usage (compsU): 5.246 (n108) | Clay + usage P5 rebuil: 5.293 (n108) | Clay + usage P2: 5.293 (n108) | Clay + usage P1: 5.293 (n108) | in-season only (P0, us: 5.293 (n108) | hybrid: Clay+usage <3 : 5.293 (n108) | Clay-free K1 4 K2 1: 5.459 (n108) | Clay-free + usage (ry/: 5.459 (n108)
-  g0    WR  | Clay (comps): 4.419 (n159) | Clay + usage (compsU): 4.410 (n159) | Clay + usage P5 rebuil: 4.419 (n159) | Clay + usage P2: 4.419 (n159) | Clay + usage P1: 4.419 (n159) | in-season only (P0, us: 4.419 (n159) | hybrid: Clay+usage <3 : 4.419 (n159) | Clay-free K1 4 K2 1: 4.525 (n159) | Clay-free + usage (ry/: 4.525 (n159)
-  g0    TE  | Clay (comps): 3.656 (n80) | Clay + usage (compsU): 3.650 (n80) | Clay + usage P5 rebuil: 3.656 (n80) | Clay + usage P2: 3.656 (n80) | Clay + usage P1: 3.656 (n80) | in-season only (P0, us: 3.656 (n80) | hybrid: Clay+usage <3 : 3.656 (n80) | Clay-free K1 4 K2 1: 3.714 (n80) | Clay-free + usage (ry/: 3.714 (n80)
-  g1-2  QB  | Clay (comps): 8.580 (n70) | Clay + usage (compsU): 8.778 (n70) | Clay + usage P5 rebuil: 8.548 (n70) | Clay + usage P2: 8.528 (n70) | Clay + usage P1: 8.531 (n70) | in-season only (P0, us: 8.621 (n70) | hybrid: Clay+usage <3 : 8.548 (n70) | Clay-free K1 4 K2 1: 8.779 (n70) | Clay-free + usage (ry/: 8.757 (n70) | Clay-free A only (this: 10.172 (n70)
-  g1-2  RB  | Clay (comps): 6.127 (n150) | Clay + usage (compsU): 6.172 (n150) | Clay + usage P5 rebuil: 6.169 (n150) | Clay + usage P2: 6.236 (n150) | Clay + usage P1: 6.314 (n150) | in-season only (P0, us: 6.623 (n150) | hybrid: Clay+usage <3 : 6.169 (n150) | Clay-free K1 4 K2 1: 6.283 (n150) | Clay-free + usage (ry/: 6.329 (n150) | Clay-free A only (this: 6.906 (n148)
-  g1-2  WR  | Clay (comps): 5.294 (n245) | Clay + usage (compsU): 5.172 (n245) | Clay + usage P5 rebuil: 5.278 (n245) | Clay + usage P2: 5.286 (n245) | Clay + usage P1: 5.314 (n245) | in-season only (P0, us: 5.530 (n245) | hybrid: Clay+usage <3 : 5.278 (n245) | Clay-free K1 4 K2 1: 5.344 (n245) | Clay-free + usage (ry/: 5.347 (n245) | Clay-free A only (this: 5.676 (n224)
-  g1-2  TE  | Clay (comps): 4.168 (n136) | Clay + usage (compsU): 4.141 (n136) | Clay + usage P5 rebuil: 4.157 (n136) | Clay + usage P2: 4.153 (n136) | Clay + usage P1: 4.154 (n136) | in-season only (P0, us: 4.199 (n136) | hybrid: Clay+usage <3 : 4.157 (n136) | Clay-free K1 4 K2 1: 4.193 (n136) | Clay-free + usage (ry/: 4.192 (n136) | Clay-free A only (this: 4.366 (n130)
-  g3+   QB  | Clay (comps): 8.351 (n25) | Clay + usage (compsU): 8.202 (n25) | Clay + usage P5 rebuil: 8.331 (n25) | Clay + usage P2: 8.341 (n25) | Clay + usage P1: 8.347 (n25) | in-season only (P0, us: 8.369 (n25) | hybrid: Clay+usage <3 : 8.369 (n25) | Clay-free K1 4 K2 1: 8.312 (n25) | Clay-free + usage (ry/: 8.323 (n25) | Clay-free A only (this: 8.914 (n25)
-  g3+   RB  | Clay (comps): 8.733 (n50) | Clay + usage (compsU): 8.272 (n50) | Clay + usage P5 rebuil: 8.660 (n50) | Clay + usage P2: 8.638 (n50) | Clay + usage P1: 8.628 (n50) | in-season only (P0, us: 8.627 (n50) | hybrid: Clay+usage <3 : 8.627 (n50) | Clay-free K1 4 K2 1: 8.680 (n50) | Clay-free + usage (ry/: 8.598 (n50) | Clay-free A only (this: 8.665 (n50)
-  g3+   WR  | Clay (comps): 6.870 (n84) | Clay + usage (compsU): 6.495 (n84) | Clay + usage P5 rebuil: 6.834 (n84) | Clay + usage P2: 6.830 (n84) | Clay + usage P1: 6.838 (n84) | in-season only (P0, us: 6.862 (n84) | hybrid: Clay+usage <3 : 6.862 (n84) | Clay-free K1 4 K2 1: 6.896 (n84) | Clay-free + usage (ry/: 6.885 (n84) | Clay-free A only (this: 6.989 (n84)
-  g3+   TE  | Clay (comps): 4.770 (n36) | Clay + usage (compsU): 4.756 (n36) | Clay + usage P5 rebuil: 4.796 (n36) | Clay + usage P2: 4.854 (n36) | Clay + usage P1: 4.916 (n36) | in-season only (P0, us: 5.079 (n36) | hybrid: Clay+usage <3 : 5.079 (n36) | Clay-free K1 4 K2 1: 4.711 (n36) | Clay-free + usage (ry/: 4.752 (n36) | Clay-free A only (this: 5.033 (n36)
+  g0    QB  | V2 hist3 K1 4 + tier K: 9.360 (n36) | V2 hist3 K1 8 + tier K: 9.353 (n36) | V2 hist3 K1 16 + tier : 9.348 (n36) | V2 hist3 K1 8 + tier K: 9.353 (n36) | V2 hist3 K1 16 + tier : 9.348 (n36) | Clay (comps): 9.244 (n36) | Clay + usage (compsU): 9.244 (n36) | Clay + usage P5 rebuil: 9.244 (n36) | Clay + usage P2: 9.244 (n36) | Clay + usage P1: 9.244 (n36) | in-season only (P0, us: 9.244 (n36) | hybrid: Clay+usage <3 : 9.244 (n36) | Clay-free K1 4 K2 1: 9.383 (n36) | Clay-free + usage (ry/: 9.383 (n36)
+  g0    RB  | V2 hist3 K1 4 + tier K: 5.405 (n108) | V2 hist3 K1 8 + tier K: 5.399 (n108) | V2 hist3 K1 16 + tier : 5.396 (n108) | V2 hist3 K1 8 + tier K: 5.399 (n108) | V2 hist3 K1 16 + tier : 5.396 (n108) | Clay (comps): 5.293 (n108) | Clay + usage (compsU): 5.246 (n108) | Clay + usage P5 rebuil: 5.293 (n108) | Clay + usage P2: 5.293 (n108) | Clay + usage P1: 5.293 (n108) | in-season only (P0, us: 5.293 (n108) | hybrid: Clay+usage <3 : 5.293 (n108) | Clay-free K1 4 K2 1: 5.459 (n108) | Clay-free + usage (ry/: 5.459 (n108)
+  g0    WR  | V2 hist3 K1 4 + tier K: 4.483 (n159) | V2 hist3 K1 8 + tier K: 4.481 (n159) | V2 hist3 K1 16 + tier : 4.480 (n159) | V2 hist3 K1 8 + tier K: 4.481 (n159) | V2 hist3 K1 16 + tier : 4.480 (n159) | Clay (comps): 4.419 (n159) | Clay + usage (compsU): 4.410 (n159) | Clay + usage P5 rebuil: 4.419 (n159) | Clay + usage P2: 4.419 (n159) | Clay + usage P1: 4.419 (n159) | in-season only (P0, us: 4.419 (n159) | hybrid: Clay+usage <3 : 4.419 (n159) | Clay-free K1 4 K2 1: 4.525 (n159) | Clay-free + usage (ry/: 4.525 (n159)
+  g0    TE  | V2 hist3 K1 4 + tier K: 3.682 (n80) | V2 hist3 K1 8 + tier K: 3.689 (n80) | V2 hist3 K1 16 + tier : 3.694 (n80) | V2 hist3 K1 8 + tier K: 3.689 (n80) | V2 hist3 K1 16 + tier : 3.694 (n80) | Clay (comps): 3.656 (n80) | Clay + usage (compsU): 3.650 (n80) | Clay + usage P5 rebuil: 3.656 (n80) | Clay + usage P2: 3.656 (n80) | Clay + usage P1: 3.656 (n80) | in-season only (P0, us: 3.656 (n80) | hybrid: Clay+usage <3 : 3.656 (n80) | Clay-free K1 4 K2 1: 3.714 (n80) | Clay-free + usage (ry/: 3.714 (n80)
+  g1-2  QB  | V2 hist3 K1 4 + tier K: 8.733 (n71) | V2 hist3 K1 8 + tier K: 8.680 (n71) | V2 hist3 K1 16 + tier : 8.651 (n71) | V2 hist3 K1 8 + tier K: 8.663 (n71) | V2 hist3 K1 16 + tier : 8.631 (n71) | Clay (comps): 8.526 (n71) | Clay + usage (compsU): 8.885 (n71) | Clay + usage P5 rebuil: 8.477 (n71) | Clay + usage P2: 8.446 (n71) | Clay + usage P1: 8.441 (n71) | in-season only (P0, us: 8.521 (n71) | hybrid: Clay+usage <3 : 8.477 (n71) | Clay-free K1 4 K2 1: 8.703 (n71) | Clay-free + usage (ry/: 8.684 (n71) | Clay-free A only (this: 10.113 (n71)
+  g1-2  RB  | V2 hist3 K1 4 + tier K: 6.268 (n151) | V2 hist3 K1 8 + tier K: 6.252 (n151) | V2 hist3 K1 16 + tier : 6.244 (n151) | V2 hist3 K1 8 + tier K: 6.312 (n151) | V2 hist3 K1 16 + tier : 6.309 (n151) | Clay (comps): 6.097 (n151) | Clay + usage (compsU): 6.144 (n151) | Clay + usage P5 rebuil: 6.139 (n151) | Clay + usage P2: 6.206 (n151) | Clay + usage P1: 6.283 (n151) | in-season only (P0, us: 6.591 (n151) | hybrid: Clay+usage <3 : 6.139 (n151) | Clay-free K1 4 K2 1: 6.259 (n151) | Clay-free + usage (ry/: 6.304 (n151) | Clay-free A only (this: 6.883 (n149)
+  g1-2  WR  | V2 hist3 K1 4 + tier K: 5.315 (n245) | V2 hist3 K1 8 + tier K: 5.324 (n245) | V2 hist3 K1 16 + tier : 5.332 (n245) | V2 hist3 K1 8 + tier K: 5.324 (n245) | V2 hist3 K1 16 + tier : 5.328 (n245) | Clay (comps): 5.294 (n245) | Clay + usage (compsU): 5.172 (n245) | Clay + usage P5 rebuil: 5.278 (n245) | Clay + usage P2: 5.286 (n245) | Clay + usage P1: 5.314 (n245) | in-season only (P0, us: 5.530 (n245) | hybrid: Clay+usage <3 : 5.278 (n245) | Clay-free K1 4 K2 1: 5.344 (n245) | Clay-free + usage (ry/: 5.347 (n245) | Clay-free A only (this: 5.676 (n224)
+  g1-2  TE  | V2 hist3 K1 4 + tier K: 4.194 (n137) | V2 hist3 K1 8 + tier K: 4.199 (n137) | V2 hist3 K1 16 + tier : 4.203 (n137) | V2 hist3 K1 8 + tier K: 4.198 (n137) | V2 hist3 K1 16 + tier : 4.203 (n137) | Clay (comps): 4.144 (n137) | Clay + usage (compsU): 4.118 (n137) | Clay + usage P5 rebuil: 4.132 (n137) | Clay + usage P2: 4.128 (n137) | Clay + usage P1: 4.129 (n137) | in-season only (P0, us: 4.174 (n137) | hybrid: Clay+usage <3 : 4.132 (n137) | Clay-free K1 4 K2 1: 4.163 (n137) | Clay-free + usage (ry/: 4.162 (n137) | Clay-free A only (this: 4.334 (n131)
+  g3+   QB  | V2 hist3 K1 4 + tier K: 8.351 (n26) | V2 hist3 K1 8 + tier K: 8.288 (n26) | V2 hist3 K1 16 + tier : 8.268 (n26) | V2 hist3 K1 8 + tier K: 8.299 (n26) | V2 hist3 K1 16 + tier : 8.279 (n26) | Clay (comps): 8.350 (n26) | Clay + usage (compsU): 8.216 (n26) | Clay + usage P5 rebuil: 8.338 (n26) | Clay + usage P2: 8.351 (n26) | Clay + usage P1: 8.358 (n26) | in-season only (P0, us: 8.381 (n26) | hybrid: Clay+usage <3 : 8.381 (n26) | Clay-free K1 4 K2 1: 8.273 (n26) | Clay-free + usage (ry/: 8.286 (n26) | Clay-free A only (this: 8.864 (n26)
+  g3+   RB  | V2 hist3 K1 4 + tier K: 8.621 (n53) | V2 hist3 K1 8 + tier K: 8.681 (n53) | V2 hist3 K1 16 + tier : 8.737 (n53) | V2 hist3 K1 8 + tier K: 8.637 (n53) | V2 hist3 K1 16 + tier : 8.677 (n53) | Clay (comps): 8.814 (n53) | Clay + usage (compsU): 8.382 (n53) | Clay + usage P5 rebuil: 8.741 (n53) | Clay + usage P2: 8.724 (n53) | Clay + usage P1: 8.716 (n53) | in-season only (P0, us: 8.717 (n53) | hybrid: Clay+usage <3 : 8.717 (n53) | Clay-free K1 4 K2 1: 8.755 (n53) | Clay-free + usage (ry/: 8.674 (n53) | Clay-free A only (this: 8.730 (n53)
+  g3+   WR  | V2 hist3 K1 4 + tier K: 6.926 (n92) | V2 hist3 K1 8 + tier K: 6.968 (n92) | V2 hist3 K1 16 + tier : 7.007 (n92) | V2 hist3 K1 8 + tier K: 6.950 (n92) | V2 hist3 K1 16 + tier : 6.985 (n92) | Clay (comps): 6.951 (n92) | Clay + usage (compsU): 6.628 (n92) | Clay + usage P5 rebuil: 6.912 (n92) | Clay + usage P2: 6.907 (n92) | Clay + usage P1: 6.914 (n92) | in-season only (P0, us: 6.936 (n92) | hybrid: Clay+usage <3 : 6.936 (n92) | Clay-free K1 4 K2 1: 6.952 (n92) | Clay-free + usage (ry/: 6.943 (n92) | Clay-free A only (this: 7.016 (n92)
+  g3+   TE  | V2 hist3 K1 4 + tier K: 4.601 (n38) | V2 hist3 K1 8 + tier K: 4.567 (n38) | V2 hist3 K1 16 + tier : 4.536 (n38) | V2 hist3 K1 8 + tier K: 4.598 (n38) | V2 hist3 K1 16 + tier : 4.567 (n38) | Clay (comps): 4.670 (n38) | Clay + usage (compsU): 4.654 (n38) | Clay + usage P5 rebuil: 4.695 (n38) | Clay + usage P2: 4.749 (n38) | Clay + usage P1: 4.808 (n38) | in-season only (P0, us: 4.963 (n38) | hybrid: Clay+usage <3 : 4.963 (n38) | Clay-free K1 4 K2 1: 4.613 (n38) | Clay-free + usage (ry/: 4.652 (n38) | Clay-free A only (this: 4.936 (n38)
 
 --- vs the books: stat-prop call hit rate (raw mean vs line), by candidate ---
-  Clay (comps)                       all 53.1% (n1935) | py 51.2% (n123) ptd 54.9% (n122) ry 51.7% (n302) rec 55.5% (n739) rcy 51.2% (n649)
-  Clay + usage (compsU)              all 54.1% (n1935) | py 51.2% (n123) ptd 54.9% (n122) ry 53.0% (n302) rec 56.8% (n739) rcy 51.9% (n649)
-  Clay + usage P5 rebuilt            all 52.7% (n1936) | py 50.4% (n123) ptd 56.9% (n123) ry 51.3% (n302) rec 54.8% (n739) rcy 50.7% (n649)
-  Clay + usage P2                    all 52.1% (n1936) | py 50.4% (n123) ptd 57.7% (n123) ry 49.0% (n302) rec 53.9% (n739) rcy 50.7% (n649)
-  Clay + usage P1                    all 50.8% (n1936) | py 49.6% (n123) ptd 56.9% (n123) ry 48.0% (n302) rec 52.2% (n739) rcy 49.6% (n649)
-  in-season only (P0, usage-blended) all 50.8% (n1936) | py 48.8% (n123) ptd 56.9% (n123) ry 49.3% (n302) rec 51.7% (n739) rcy 49.6% (n649)
-  hybrid: Clay+usage <3 games, in-season only 3+ all 52.4% (n1936) | py 50.4% (n123) ptd 56.9% (n123) ry 51.0% (n302) rec 54.8% (n739) rcy 49.8% (n649)
-  Clay-free K1 4 K2 1                all 51.5% (n1936) | py 48.8% (n123) ptd 55.3% (n123) ry 52.0% (n302) rec 52.4% (n739) rcy 50.2% (n649)
-  Clay-free + usage (ry/rec/rcy)     all 50.8% (n1936) | py 47.2% (n123) ptd 56.1% (n123) ry 51.0% (n302) rec 51.6% (n739) rcy 49.5% (n649)
-  Clay-free A only (this season)     all 50.5% (n1382) | py 46.7% (n92) ptd 52.2% (n92) ry 48.0% (n225) rec 51.6% (n519) rcy 50.9% (n454)
+  V2 hist3 K1 4 + tier K2 1          all 51.8% (n1967) | py 47.2% (n125) ptd 58.1% (n124) ry 50.7% (n306) rec 53.3% (n751) rcy 50.4% (n661)
+  V2 hist3 K1 8 + tier K2 1          all 51.3% (n1967) | py 48.8% (n125) ptd 58.1% (n124) ry 49.3% (n306) rec 52.7% (n751) rcy 49.8% (n661)
+  V2 hist3 K1 16 + tier K2 1         all 51.3% (n1967) | py 52.0% (n125) ptd 56.5% (n124) ry 48.4% (n306) rec 53.0% (n751) rcy 49.6% (n661)
+  V2 hist3 K1 8 + tier K2 1 + usage  all 51.0% (n1967) | py 48.0% (n125) ptd 58.1% (n124) ry 49.0% (n306) rec 52.5% (n751) rcy 49.5% (n661)
+  V2 hist3 K1 16 + tier K2 1 + usage all 51.0% (n1967) | py 49.6% (n125) ptd 57.3% (n124) ry 49.0% (n306) rec 52.5% (n751) rcy 49.3% (n661)
+  Clay (comps)                       all 53.2% (n1966) | py 51.2% (n125) ptd 55.3% (n123) ry 51.6% (n306) rec 55.7% (n751) rcy 51.1% (n661)
+  Clay + usage (compsU)              all 54.1% (n1966) | py 51.2% (n125) ptd 55.3% (n123) ry 52.9% (n306) rec 56.9% (n751) rcy 51.9% (n661)
+  Clay + usage P5 rebuilt            all 52.9% (n1967) | py 50.4% (n125) ptd 57.3% (n124) ry 51.3% (n306) rec 55.1% (n751) rcy 50.7% (n661)
+  Clay + usage P2                    all 52.1% (n1967) | py 50.4% (n125) ptd 58.1% (n124) ry 48.7% (n306) rec 54.1% (n751) rcy 50.7% (n661)
+  Clay + usage P1                    all 50.7% (n1967) | py 49.6% (n125) ptd 57.3% (n124) ry 47.7% (n306) rec 52.2% (n751) rcy 49.5% (n661)
+  in-season only (P0, usage-blended) all 50.7% (n1967) | py 48.8% (n125) ptd 57.3% (n124) ry 49.3% (n306) rec 51.7% (n751) rcy 49.5% (n661)
+  hybrid: Clay+usage <3 games, in-season only 3+ all 52.3% (n1967) | py 50.4% (n125) ptd 57.3% (n124) ry 51.0% (n306) rec 54.7% (n751) rcy 49.6% (n661)
+  Clay-free K1 4 K2 1                all 51.6% (n1967) | py 48.8% (n125) ptd 55.6% (n124) ry 52.0% (n306) rec 52.2% (n751) rcy 50.4% (n661)
+  Clay-free + usage (ry/rec/rcy)     all 50.8% (n1967) | py 47.2% (n125) ptd 56.5% (n124) ry 51.0% (n306) rec 51.4% (n751) rcy 49.6% (n661)
+  Clay-free A only (this season)     all 50.5% (n1413) | py 46.8% (n94) ptd 52.7% (n93) ry 48.0% (n229) rec 51.4% (n531) rcy 51.1% (n466)
 
 Limitations: 4 weeks; every candidate scaled to the lock's Clay points (split only); compsU only updates ry / rec / rcy; raw mean-vs-median calls (no skew adjustment).

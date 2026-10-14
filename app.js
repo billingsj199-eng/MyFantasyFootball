@@ -2886,9 +2886,12 @@ function adjSeasonPpg(d) {
 function _seasonPpgLabel() { return "'" + _seasonPpgYear() + ' PPG'; }
 // Keep the '25/'26 header in step with the flip (called from render()).
 function _syncSeasonPpgHeader() {
+  const want = _seasonPpgLabel();
+  // Phone card chip label for this cell ("'26 PPG") — index.html mobile CSS reads the var,
+  // so the '25 → '26 flip reaches the cards too.
+  try { document.body.style.setProperty('--ssn-ppg-lbl', JSON.stringify(want)); } catch (_) {}
   const lab = document.querySelector('#ppg25Header [data-gloss]');
   if (!lab || rnkStatMode !== 'fantasy') return;
-  const want = _seasonPpgLabel();
   if (lab.textContent === want) return;
   lab.textContent = want;
   const fmtLabel = (typeof _scoringLabelsRnk !== 'undefined' && _scoringLabelsRnk[rankingScoringFmt]) || 'PPR';

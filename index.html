@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-14-pwa" as="script">
+<link rel="preload" href="app.js?v=2026-10-14-ppg" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -1386,6 +1386,13 @@ CLEAR ALL
     #pageRankings tbody td.xfpg-cell::after{content:"xFP";display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
     body.wk-xfp-col #pageRankings tbody tr:is(:has(.pos-badge.K),:has(.pos-badge.DST)) td.xfpg-cell,
     body.ssn-xfp-col #pageRankings tbody tr:is(:has(.pos-badge.K),:has(.pos-badge.DST)) td.xfpg-cell{display:none!important}
+    /* 2026-10-14 (Jack): the season boards' phone card shows this season's actual PPG
+       instead of xFP — PROJ · '26 PPG · SOS. WEEKLY keeps xFP (its ppg25 slot is Yds);
+       the xFP STATS view keeps its own ppg25 rule below. Label = --ssn-ppg-lbl, set by
+       _syncSeasonPpgHeader so the '25 → '26 flip reaches the cards. */
+    body.ssn-xfp-col:not(.inj-view) #pageRankings tbody tr:not(.devy-row) td.xfpg-cell{display:none!important}
+    body.ssn-xfp-col:not(.inj-view) #pageRankings tbody tr:not(.devy-row) td.ppg25-cell{display:block!important;flex:0 0 auto;text-align:center!important;font-size:.82rem;font-weight:600;padding:0 3px!important;min-width:40px!important;line-height:1.05}
+    body.ssn-xfp-col:not(.inj-view) #pageRankings tbody tr:not(.devy-row) td.ppg25-cell::after{content:var(--ssn-ppg-lbl,"'26 PPG");display:block;font-size:.6875rem;opacity:.55;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.04em;font-weight:400;margin-top:1px;color:var(--text2)}
     /* The STATS-view tail columns (TD luck, JM, site ADPs, book yards, sim
        totals…) rendered as bare unlabeled numbers squeezed to 2-25px at the
        end of each card. The card keeps one stat cell; the rest live on desktop
@@ -6391,7 +6398,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-14-pwa"></script>
+<script defer src="app.js?v=2026-10-14-ppg"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

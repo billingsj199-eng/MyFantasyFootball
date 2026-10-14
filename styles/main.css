@@ -3492,3 +3492,15 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
   #tickerRow .live-ticker{display:none!important}
   #tickerRow .season-strip{flex:1 1 auto;border-right:none;justify-content:space-between}
 }
+
+/* Jack 2026-10-14: plain-English line under the MODEL tabs (phones — the drawer stacks the
+   rows there; desktop keeps the tab tooltips). Keyed on body[data-rnk-version]. */
+.model-hint{display:none}
+@media(max-width:600px){
+  .model-hint{display:block;flex-basis:100%;font-size:.75rem;line-height:1.3;color:var(--text2);margin:-2px 0 8px 2px}
+  body[data-rnk-version="consensus"] .model-hint::before{content:"The average of the major expert sites' rankings."}
+  body[data-rnk-version="jacks"] .model-hint::before{content:"Jack's own board, updated through the week."}
+  body[data-rnk-version="sims"] .model-hint::before{content:"Our projection model: players ordered by rest-of-season value over a replacement starter."}
+  body[data-rnk-version="mffv"] .model-hint::before{content:"Our dynasty value: today's market price, adjusted by the Dynasty SIM."}
+  body[data-rnk-version="mine"] .model-hint::before{content:"Your own board. Sign in to drag players and save it."}
+}

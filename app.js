@@ -20486,7 +20486,7 @@ function _renderCardPinStrip(d, ctxMode) {
     + '<span class="card-pin-search" id="cardPinSearch" hidden>'
     + '<input type="text" class="card-pin-input" id="cardPinInput" placeholder="Search player…" autocomplete="off" aria-label="Add player to compare strip">'
     + '<div class="card-pin-suggest" id="cardPinSuggest" hidden></div></span>'
-    + '<button class="card-pin-add" id="cardPinAdd" title="Pin players to this card — click a chip to swap between them">+ ADD PLAYER</button>';
+    + '<button class="card-pin-add" id="cardPinAdd" title="Compare: pin other players to this card and tap a name to switch between them">+ COMPARE</button>';
 
   const addBtn = strip.querySelector('#cardPinAdd');
   const searchWrap = strip.querySelector('#cardPinSearch');

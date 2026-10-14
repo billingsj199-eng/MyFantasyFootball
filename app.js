@@ -9478,14 +9478,31 @@ function _tcvByeRowPlayers(data, belowCut) {
   const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
   const season = (vb && vb[currentVersion] && vb[currentVersion].redraft) || (vb && vb.jacks && vb.jacks.redraft) || null;
   if (!season) return null;
+  // Team QB1s always ride along (Jack 2026-10-13: "always show the qb1 in byes
+  // and injuries" — Malik Willis MIA past the top-N cutoff). QB1 = ESPN depth
+  // chart (keeps a hurt starter at QB1); the ~11 KB chart lazy-loads, re-renders.
+  const qb1 = new Set();
+  if (posSet.QB) {
+    const DC = window.DEPTH_2026 && window.DEPTH_2026.teams;
+    if (DC && typeof TEAM_ABBR_MAP !== 'undefined') {
+      Object.keys(TEAM_ABBR_MAP).forEach(full => { const c = DC[TEAM_ABBR_MAP[full]]; if (c && c.QB && c.QB[0]) qb1.add(full + '|' + _dynSimNorm(c.QB[0])); });
+    } else if (!DC && !window._byeDepthLoading) {
+      window._byeDepthLoading = true;
+      const s = document.createElement('script');
+      s.src = 'data/depth_charts_2026.js?v=' + new Date().toISOString().slice(0, 10);   // pulled daily
+      s.onload = () => { if (currentMode === 'weekly') render(); };
+      document.head.appendChild(s);
+    }
+  }
   const out = [], names = new Set();
-  let rank = 0;
+  let rank = 0, qb1Extra = 0;
   for (let i = 0; i < season.length; i++) {
     const d = D[season[i]];
     if (!d || d._retired || d._isFuturePick || !posSet[d.s]) continue;
     rank++;
     const assumed = window._weeklyAssumedOut(d.n);
-    if (rank > limit && !assumed) continue;                // past the cutoff (an assumed-out always rides along)
+    const isQb1 = d.s === 'QB' && qb1.has(d.t + '|' + _dynSimNorm(d.n));
+    if (rank > limit && !assumed && !isQb1) continue;      // past the cutoff (an assumed-out / team QB1 always rides along)
     if (visible.has(d.n)) continue;                        // above the cut — Jack's placement wins
     const why = _tcvAwayWhy(d);
     if (!why) continue;
@@ -9493,8 +9510,9 @@ function _tcvByeRowPlayers(data, belowCut) {
     if (narrowed && !inData.has(d.n)) continue;
     out.push({ d: d, seasonRank: rank, why: why.kind, code: why.code, assumed: assumed });
     names.add(d.n);
+    if (rank > limit && !assumed) qb1Extra++;
   }
-  return out.length ? { players: out, names: names, limit: limit, custom: customCut != null } : null;
+  return out.length ? { players: out, names: names, limit: limit, custom: customCut != null, qb1Extra: qb1Extra } : null;
 }
 
 function _renderTierCardView(data, container) {
@@ -10340,10 +10358,10 @@ function render() {
     _byeBlkDone = true;
     const wk = window._weeklyActiveWeek || 1;
     const posLbl = filter === 'FLEX' ? 'FLEX' : filter === 'ALL' ? 'OVERALL' : filter === 'DST' ? 'D/ST' : filter;
-    const n = _byeBlk.players.length;
+    const n = _byeBlk.players.length - (_byeBlk.qb1Extra || 0);
     let h = `<tr class="tier-row bye-line-row"><td colspan="17"><div class="tier-inner" style="border-color:rgba(148,163,184,.45)">
       <span class="tier-badge bye-badge">BYE</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} ${(() => { const b = _byeBlk.players.some(p => p.why !== 'out'), o = _byeBlk.players.some(p => p.why === 'out'), a = o && _byeBlk.players.every(p => p.why !== 'out' || p.assumed); return b && o ? 'BYES &amp; OUT' : a ? 'ASSUMED OUT' : o ? 'RULED OUT' : 'BYES'; })()} · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''} · SEASON RANK SHOWN</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:#cbd5e1">WEEK ${wk} ${(() => { const b = _byeBlk.players.some(p => p.why !== 'out'), o = _byeBlk.players.some(p => p.why === 'out'), a = o && _byeBlk.players.every(p => p.why !== 'out' || p.assumed); return b && o ? 'BYES &amp; OUT' : a ? 'ASSUMED OUT' : o ? 'RULED OUT' : 'BYES'; })()} · ${n} ${posLbl} PLAYER${n === 1 ? '' : 'S'} IN THE SEASON TOP ${_byeBlk.limit}${_byeBlk.custom ? ' (YOUR BYE ≤ CUTOFF)' : ''}${_byeBlk.qb1Extra ? ` + ${_byeBlk.qb1Extra} TEAM QB1` : ''} · SEASON RANK SHOWN</span>
     </div></td></tr>`;
     _byeBlk.players.forEach(p => {
       const d = p.d, dn = (d.n || '').replace(/"/g, '&quot;');

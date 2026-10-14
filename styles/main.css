@@ -3558,3 +3558,17 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
   body.rnk-mob-ctl-open #rankTopNLbl{margin-left:0!important;padding:0 8px;height:34px;display:inline-flex;align-items:center;border:1px solid var(--border);border-right:none;border-radius:6px 0 0 6px;background:var(--surface2);color:var(--text2)}
   body.rnk-mob-ctl-open #rankTopNInput{border-radius:0 6px 6px 0!important;height:34px;width:64px!important;font-size:.8rem!important}
 }
+
+/* Add-to-home-screen hint (2026-10-14): a card above the phone bottom bar. Phones only;
+   app.js decides when (2nd visit, not installed, not snoozed). */
+.a2hs-hint{display:none}
+@media(max-width:600px){
+  .a2hs-hint:not([hidden]){display:flex;align-items:center;gap:10px;position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom,0));z-index:190;padding:10px 10px 10px 12px;background:var(--surface2);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);animation:slideUp .25s ease}
+  .a2hs-icon{width:36px;height:36px;border-radius:9px;flex:0 0 auto}
+  .a2hs-text{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.25}
+  .a2hs-text strong{font-size:.82rem;color:var(--text)}
+  .a2hs-text span{font-size:.72rem;color:var(--text2)}
+  .a2hs-btn{flex:0 0 auto;min-height:36px;padding:0 12px;border:none;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.2px;cursor:pointer}
+  .a2hs-x{flex:0 0 auto;width:32px;height:36px;border:none;background:none;color:var(--text2);font-size:1.3rem;line-height:1;cursor:pointer}
+}
+@media(display-mode:standalone){.a2hs-hint{display:none!important}}

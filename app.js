@@ -5222,6 +5222,55 @@ function _updateViewOptsSummary() {
   window._xScrollFadeWire = wire;
 })();
 
+// === Add to home screen hint (2026-10-14) ===
+// Phones only (≤600px), never inside the installed app, from the 2nd visit on,
+// 8s after load so it never sits over the first-visit tour, dismissable for 90
+// days. Android Chrome: a real INSTALL button (beforeinstallprompt, deferred).
+// iPhone Safari has no install event: the Share -> Add to Home Screen steps.
+// Anything else (desktop, in-app browsers with neither) shows nothing.
+(function () {
+  const KEY = 'mff_a2hs', VISITS = 'mff_visits';
+  const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const standalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  let visits = +ls.get(VISITS) || 0;
+  try { if (!sessionStorage.getItem('mff_visit')) { sessionStorage.setItem('mff_visit', '1'); ls.set(VISITS, String(++visits)); } } catch (e) { visits++; }
+  const state = ls.get(KEY) || '';
+  const snoozed = /^snooze:(\d+)$/.exec(state);
+  if (state === 'done' || standalone() || (snoozed && Date.now() - +snoozed[1] < 90 * 864e5)) return;
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
+  window.addEventListener('appinstalled', () => { ls.set(KEY, 'done'); hide(); });
+  const box = () => document.getElementById('a2hsHint');
+  function hide() { const b = box(); if (b) b.hidden = true; }
+  function show(ios) {
+    const b = box(); if (!b || !b.hidden) return;
+    const act = document.getElementById('a2hsAct'), sub = document.getElementById('a2hsSub');
+    if (ios) {
+      sub.textContent = 'Tap Share, then "Add to Home Screen".';
+      act.textContent = 'GOT IT';
+      act.onclick = () => { ls.set(KEY, 'done'); hide(); };
+    } else {
+      act.textContent = 'INSTALL';
+      act.onclick = async () => {
+        if (!deferred) { hide(); return; }
+        deferred.prompt();
+        const r = await deferred.userChoice.catch(() => null);
+        deferred = null;
+        ls.set(KEY, r && r.outcome === 'accepted' ? 'done' : 'snooze:' + Date.now());
+        hide();
+      };
+    }
+    document.getElementById('a2hsClose').onclick = () => { ls.set(KEY, 'snooze:' + Date.now()); hide(); };
+    b.hidden = false;
+  }
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  window._a2hsCheck = function () {
+    if (visits < 2 || standalone() || !ls.get('mff_seen_intro') || innerWidth > 600) return;
+    if (deferred) show(false); else if (ios) show(true);
+  };
+  setTimeout(window._a2hsCheck, 8000);
+})();
+
 // === Phone controls collapse (≤600px, 2026-10-09) ===
 // body.rnk-mob-ctl-open shows the full MODEL / FORMAT / toolbar / SCORING
 // drawer; collapsed, index.html CSS leaves search + #rnkMobCtlToggle + one

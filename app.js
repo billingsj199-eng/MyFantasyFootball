@@ -9547,7 +9547,7 @@ function _renderTierCardView(data, container) {
       groups.push(currentGroup);
     }
     // cutRank null = this card can't host the line (a K/DST card in an overall view — those groups run their own line)
-    const cutRank = d._isDevy ? null : _tcvCutPos ? (i + 1) : ((_tcvCutGroups.includes(d.s)) ? null : d.myRank); // devy: no cut line (it would cut the dynasty board)
+    const cutRank = d._isDevy ? null : _tcvCutPos ? (window._posCutRankOf(d) || (i + 1)) : ((_tcvCutGroups.includes(d.s)) ? null : d.myRank); // devy: no cut line (it would cut the dynasty board)
     currentGroup.players.push({ d: d, displayRank: i + 1, tierRank: rankForTier, cutRank: cutRank });
   });
   // Drop a ✂ group the BYE row emptied, then the BYE row itself goes last
@@ -10384,7 +10384,7 @@ function render() {
   // no line). Bye players already sitting below the cut are skipped in the
   // tail so they appear once. Rows carry no data-idx: not draggable.
   const _byeBlk = (currentMode === 'weekly' && filter !== 'DEVY' && typeof _tcvByeRowPlayers === 'function') ? _tcvByeRowPlayers(data, window._rankBelowCut || null) : null;
-  let _byeBlkDone = false, _cutLineDone = false;
+  let _byeBlkDone = false, _cutLineDone = false, _cutPrevRank = 0;
   const _byeBlockHtml = () => {
     _byeBlkDone = true;
     const wk = window._weeklyActiveWeek || 1;
@@ -10503,8 +10503,14 @@ function render() {
       if (_cutN != null && !(!_isPosCutView && _cutGroups.includes(d.s))) {
         // Positional views are filtered to one position, so i+1 IS the
         // position rank; overall views cross on d.myRank.
-        const _rowRank = _isPosCutView ? (i + 1) : d.myRank;
-        const _prevRank = i > 0 ? (_isPosCutView ? i : data[i - 1].myRank) : 0;
+        // Position views count from the board (window._posCutRankOf), not
+        // the row index — assumed-out players are parked off the table but
+        // keep their slot. Previous = the last row this line governs that
+        // was actually drawn (bye-block players skipped from the tail and
+        // other groups' rows don't count), so ▲ always cuts exactly one
+        // visible player.
+        const _rowRank = _isPosCutView ? (window._posCutRankOf(d) || (i + 1)) : d.myRank;
+        const _prevRank = _cutPrevRank;
         // Editor view: getFiltered pins below-cut players to the tail under
         // any sort, so the divider goes at the first below-cut row (the rank
         // compare alone misfires once rows are out of board order).
@@ -10528,12 +10534,13 @@ function render() {
               <span style="font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;color:var(--red)">${_cutName} · ${_cutLbl}</span>
               ${_cutCtrls ? `<div class="tier-controls">
                 ${_prevRank > 0 ? `<button class="tier-btn" data-cut-set="${_cutUp}"${_cutPosAttr} title="Move line up (cut one more player)">▲</button>` : ''}
-                <button class="tier-btn" data-cut-set="${_isPosCutView ? _rowRank : _cutN + 1}"${_cutPosAttr} title="Move line down (keep one more player)">▼</button>
+                <button class="tier-btn" data-cut-set="${_rowRank}"${_cutPosAttr} title="Move line down (keep one more player${!_isPosCutView && _rowRank > _cutN + 1 ? ' — overall line to #' + _rowRank : ''})">▼</button>
                 <button class="tier-btn del" data-cut-clear="1"${_cutPosAttr} title="Remove the cut line (everyone visible)">✕</button>
               </div>` : ''}
             </div></td>
           </tr>`;
         }
+        _cutPrevRank = _rowRank;
       }
     }
     // Insert tier row before this player if a tier sits between previous rank and this rank
@@ -13454,6 +13461,29 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   };
   window._weeklyPosCutoffFor = function(ver, pos) { return window._posCutoffFor(ver, 'weekly', pos); };
   window._weeklySetPosCutoff = function(ver, pos, n) { window._setPosCutoff(ver, 'weekly', pos, n); };
+  // Position rank the way the position-group cut line counts it (board
+  // order; retired + out-for-season players skipped — mirrors getFiltered's
+  // _keep). The table and card cut controls use this instead of the row
+  // index: assumed-out players leave the table but keep their slot, so the
+  // row index ran one short per parked player and ▼ re-set the same cut
+  // (nothing moved) while ▲ cut two (2026-10-14).
+  window._posCutRankOf = function(d) {
+    if (!d || typeof board === 'undefined' || !board) return null;
+    const gen = window._consRankGen || 0;
+    const irN = (typeof window._irFlagged === 'function') ? window._irFlagged().length : 0;
+    let c = window._posCutRankCache;
+    if (!c || c.gen !== gen || c.board !== board || c.len !== board.length || c.irN !== irN) {
+      const map = new Map(), cnt = {};
+      board.forEach(idx => {
+        const q = D[idx];
+        if (!q || q._retired || (typeof window._irIsOut === 'function' && window._irIsOut(q.n))) return;
+        cnt[q.s] = (cnt[q.s] || 0) + 1;
+        map.set(q.n, cnt[q.s]);
+      });
+      c = window._posCutRankCache = { gen: gen, board: board, len: board.length, irN: irN, map: map };
+    }
+    return c.map.get(d.n) || null;
+  };
 
   window._weeklySaved = window._weeklySaved || {};           // ver -> {_order,_posTiers,_week,_ownedPos,_cut} (persisted snapshot)
   window._weeklySessionBoards = window._weeklySessionBoards || {}; // ver -> { wk: [board indices] } (this session's edits)

@@ -1358,6 +1358,17 @@
     var ov = (typeof window !== 'undefined' && window.IN_SEASON_OUT_OVERRIDES) ? window.IN_SEASON_OUT_OVERRIDES[p.name] : null;
     if (ov && ov.length >= 2 && !(_inj && _inj.week > ov[1])) return (wk >= ov[0] && wk <= ov[1]) ? 'override' : null;   // a running window speaks; an expired one falls through to the status (as the live layer does)
     var f = String(p.injFlag || '').split('|'), inj = f[0] || '', st = f[1] || '';
+    // UNCONFIRMED OUT (Jack 2026-10-14, "fix the unconfirmed Out double count"). A Sleeper "Out" that the injury layer
+    // could not confirm for this week (no NFL Out, Sleeper still projects him) is priced x0.75 'out-unconfirmed'
+    // (feedback_out_flag_guard). Holding the shadow at 0 here as well made the blend skip the shadow (published number
+    // = Clay chain x0.75) while every teammate's pool / vacancy layer treated him as fully absent (cap 0) - his 75%
+    // counted for him AND his 100% absence counted for them. Now the shadow follows the injury layer for that week:
+    // own cap .75, teammates see 25% vacated. Confirmed Out / IR / PUP / overrides unchanged.
+    // Kill: window.SIM_NC_OUTUNCONF = false.
+    if (/^(Out|NA)$/i.test(inj) && _inj && wk === _inj.week && !(typeof window !== 'undefined' && window.SIM_NC_OUTUNCONF === false)) {
+      var im = _inj.map[p.norm];
+      if (im && /-unconfirmed$/.test(im.src || '') && im.mult > 0) return null;
+    }
     if (/^(IR|PUP|NFI|Out|Sus|DNR|COV)$/i.test(inj)) return inj.toLowerCase();
     if (st && !/^Active$/i.test(st)) return st.toLowerCase();
     if (/^NA$/i.test(inj) && injAdj(p, wk) === 0) return 'na';

@@ -3634,3 +3634,23 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
   body.format-weekly #pageRankings th#ppg25HeaderTh,
   body.format-weekly #pageRankings td.ppg25-cell{display:none!important}
 }
+
+/* My Teams quick add (2026-10-14): one box above the import cards; phones fold the three
+   cards behind ALL IMPORT OPTIONS. */
+.mt-quick{margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--accent);border-radius:12px}
+.mt-quick-row{display:flex;gap:8px}
+.mt-quick-row input{flex:1 1 auto;min-width:0;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none}
+.mt-quick-row input:focus{border-color:var(--accent)}
+.mt-quick-row button{flex:0 0 auto;padding:0 18px;min-height:40px;background:var(--accent);color:var(--accent-ink);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer}
+.mt-quick-pick{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.78rem;color:var(--text2);flex-wrap:wrap}
+.mt-quick-pick[hidden]{display:none}
+.mt-quick-pick button{padding:6px 14px;min-height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.2px;cursor:pointer}
+.mt-quick-status{font-size:.74rem;color:var(--text2);margin-top:8px;min-height:1em}
+.mt-quick-status:empty{display:none}
+.mt-quick-hint{font-size:.7rem;color:var(--text2);margin-top:8px;line-height:1.4}
+.mt-quick-more{display:none}
+@media(max-width:600px){
+  .mt-quick-more{display:block;width:100%;margin-bottom:12px;padding:10px;min-height:40px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;cursor:pointer}
+  body:not(.mt-import-all) #mtImportGrid{display:none!important}
+  body.mt-import-all .mt-quick-more{color:var(--text)}
+}

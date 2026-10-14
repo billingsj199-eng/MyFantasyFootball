@@ -5222,6 +5222,48 @@ function _updateViewOptsSummary() {
   window._xScrollFadeWire = wire;
 })();
 
+// === My Teams quick add (2026-10-14) ===
+// One box on the My Teams empty state: a Sleeper / ESPN / Yahoo league ID, a league
+// URL, or a Sleeper username. Detects the site, fills the matching import card's
+// input and calls its existing importer (all the gates, extension hints and status
+// messages stay there); that card's status line is mirrored under the box. A short
+// run of digits is ESPN or Yahoo — the picker asks. Core, not the myteams chunk, so
+// the onclick works before the chunk lands (it waits for _mtEnsureLoaded).
+window._mtQuickImport = async function (force) {
+  const input = document.getElementById('mtQuickInput'), st = document.getElementById('mtQuickStatus'), pick = document.getElementById('mtQuickPick');
+  if (!input) return;
+  const raw = input.value.trim();
+  const say = (m, c) => { if (st) { st.textContent = m; st.style.color = c || ''; } };
+  if (pick) pick.hidden = true;
+  if (!raw) { say('Paste a league ID, a league URL, or a Sleeper username.', 'var(--accent)'); return; }
+  let p = force || null, value = raw;
+  if (!p) {
+    if (/espn\.com/i.test(raw) || /leagueId=\d+/i.test(raw)) p = 'espn';
+    else if (/yahoo\.com/i.test(raw) || /^\d+\.l\.\d+$/i.test(raw)) p = 'yahoo';
+    else if (/^\d{15,}$/.test(raw)) p = 'sleeper';
+    else if (/^\d+$/.test(raw)) { if (pick) pick.hidden = false; say(''); return; }
+    else if (/^@?[A-Za-z0-9_.-]{2,32}$/.test(raw)) p = 'sleeperUser';
+    else { say('That doesn\'t look like a league ID, league URL or Sleeper username.', 'var(--accent)'); return; }
+  }
+  if (p === 'yahoo') { const m = raw.match(/^\d+\.l\.(\d+)$/i); if (m) value = m[1]; }
+  const T = {
+    sleeper: ['mtSleeperLeagueId', 'mtSleeperStatus', '_mtImportSleeper'],
+    sleeperUser: ['mtSleeperUser', 'mtSleeperStatus', '_mtImportSleeperUser'],
+    espn: ['mtEspnLeagueId', 'mtEspnStatus', '_mtImportEspnById'],
+    yahoo: ['mtYahooLeagueId', 'mtYahooStatus', '_mtImportYahooById']
+  }[p];
+  say('Loading…');
+  try { if (window._mtEnsureLoaded) await window._mtEnsureLoaded(); } catch (e) {}
+  const target = document.getElementById(T[0]), status = document.getElementById(T[1]), fn = window[T[2]];
+  if (!target || typeof fn !== 'function') { say('Import isn\'t ready yet — try again in a moment.', 'var(--accent)'); return; }
+  target.value = value;
+  if (status && window.MutationObserver && !status._mtQuickMirror) {
+    status._mtQuickMirror = new MutationObserver(() => say(status.textContent, status.style.color));
+    status._mtQuickMirror.observe(status, { childList: true, characterData: true, subtree: true });
+  }
+  fn();
+};
+
 // === Add to home screen hint (2026-10-14) ===
 // Phones only (≤600px), never inside the installed app, from the 2nd visit on,
 // 8s after load so it never sits over the first-visit tour, dismissable for 90
@@ -31885,8 +31927,9 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
       renderSummary([]);
       gridEl.innerHTML = '<div class="sst-empty">'
         + '<div style="font-size:2rem;margin-bottom:8px;opacity:.25">&#9878;</div>'
-        + '<p>Search above to add the players you\'re deciding between.<br>'
-        + '<span style="font-size:.74rem">Each card shows our Week ' + wk + ' projection beside the sportsbook projection, matchup, spread, Vegas team total and this week\'s sportsbook lines — best number in each row lights up green.</span></p>'
+        // The intro (.sst-sub above the search box) already says what a card shows —
+        // the empty state only says what to do (2026-10-14: the same sentence ran twice).
+        + '<p>Search above to add the Week ' + wk + ' players you\'re deciding between.</p>'
         + '</div>';
       return;
     }

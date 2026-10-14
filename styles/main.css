@@ -3577,3 +3577,16 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
   .a2hs-x{flex:0 0 auto;width:32px;height:36px;border:none;background:none;color:var(--text2);font-size:1.3rem;line-height:1;cursor:pointer}
 }
 @media(display-mode:standalone){.a2hs-hint{display:none!important}}
+
+/* Light theme (2026-10-14): the movers ticker and the week strip keep their dark bar
+   (--ticker-bg) by design, but their text inherited the light theme's dark tokens —
+   "WEEK 6" / "Kickoff …" / "RANKINGS MOVERS" were near-invisible. Re-scope the tokens
+   inside the two bars to the dark palette. */
+:root[data-theme="light"] .live-ticker,
+:root[data-theme="light"] .season-strip{
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;--border:#1e293b;--border-strong:#334155;
+  --surface:#0f172a;--surface2:#1e293b;--accent:#f59e0b;--accent2:#fbbf24;--accent-ink:#0f172a;
+  --chip-active-bg:#1e293b;--chip-active-fg:#f1f5f9;--chip-active-border:#334155;
+  --elev-1:rgba(255,255,255,.04);--elev-2:rgba(255,255,255,.06);--elev-3:rgba(255,255,255,.1);
+  color:var(--text)
+}

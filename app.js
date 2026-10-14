@@ -11808,7 +11808,12 @@ document.getElementById('helpOverlay').addEventListener('click', e => {
 // Controls
 let _searchTimer = null;
 // Phones have no "/" shortcut; the box fits ~93px of 16px text, so even "Search players" truncated
-if (window.matchMedia && matchMedia('(max-width:600px)').matches) document.getElementById('search').placeholder = 'Search';
+// Placeholder by width: phones "Search"; tablets / landscape phones (the icon-rail range,
+// where the box shares its row with the toolbar) drop the "( / to focus )" keyboard hint.
+if (window.matchMedia) {
+  if (matchMedia('(max-width:600px)').matches) document.getElementById('search').placeholder = 'Search';
+  else if (matchMedia('(max-width:900px)').matches) document.getElementById('search').placeholder = 'Search player or team';
+}
 document.getElementById('search').addEventListener('input', e => {
   query = e.target.value;
   if (_searchTimer) clearTimeout(_searchTimer);

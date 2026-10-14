@@ -20545,6 +20545,30 @@ function _adminInjectSnapButtons(playerName) {
 // Pins live for the page session only (deliberately not persisted — a stale
 // name after a data refresh would render a dead chip).
 var _cardPins = [];
+// Last SORT mode applied to the strip (null = manual / drag order)
+var _cardPinSort = null;
+var _CARD_PIN_POS_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DST: 5 };
+// Sort rows are { n, p, r } — r is the rank in the card's context mode (same
+// lookup as the card's YOUR RANK tile: the mode's board when the card was
+// opened from another mode, else d.myRank); unranked players sort last.
+var _CARD_PIN_SORTS = {
+  rank: { label: 'RANK', cmp: (a, b) => a.r - b.r || a.n.localeCompare(b.n) },
+  pos:  { label: 'POS',  cmp: (a, b) => {
+    const pa = _CARD_PIN_POS_ORDER[a.p && a.p.s] ?? 9, pb = _CARD_PIN_POS_ORDER[b.p && b.p.s] ?? 9;
+    return pa - pb || a.r - b.r || a.n.localeCompare(b.n);
+  } },
+  az:   { label: 'A-Z',  cmp: (a, b) => a.n.localeCompare(b.n) }
+};
+function _cardPinRank(p, ctxMode) {
+  if (!p) return 9999;
+  const m = ctxMode || currentMode;
+  let r = p.myRank;
+  if (m !== currentMode && p.idx != null) {
+    const board = (typeof versionBoards !== 'undefined' && versionBoards[currentVersion] && versionBoards[currentVersion][m]) || null;
+    if (board) { const i = board.indexOf(p.idx); r = i >= 0 ? i + 1 : null; }
+  }
+  return r || 9999;
+}
 
 function _cardPinEsc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
@@ -20557,17 +20581,40 @@ function _renderCardPinStrip(d, ctxMode) {
   if (!strip) return;
   // D rebuilds on data refreshes — drop pins that no longer resolve
   _cardPins = _cardPins.filter(n => _cardPinLookup(n));
+  const multi = _cardPins.length > 1;
   const chips = _cardPins.map(n => {
     const active = n === d.n;
     const esc = _cardPinEsc(n);
-    return '<span class="card-pin-chip' + (active ? ' active' : '') + '" data-pin="' + esc + '" title="' + (active ? 'Currently viewing — drag to reorder' : 'View ' + esc + ' — drag to reorder, cycle with &larr; &rarr;') + '">' + esc
+    return '<span class="card-pin-chip' + (active ? ' active' : '') + '" data-pin="' + esc + '" title="' + (active ? 'Currently viewing — drag to reorder' : 'View ' + esc + ' — drag to reorder, cycle with &larr; &rarr;') + '">'
+      + (multi ? '<span class="card-pin-grip" aria-hidden="true">&#8942;&#8942;</span>' : '') + esc
       + '<button class="card-pin-x" data-unpin="' + esc + '" aria-label="Remove ' + esc + ' from this card">&times;</button></span>';
   }).join('');
+  // SORT cycles rank → position → A-Z (label shows the mode last applied; any
+  // drag / add / remove clears it since the order is manual again). RESET
+  // wipes every chip — the strip goes back to a bare + COMPARE.
+  const sortLabel = _cardPinSort ? 'SORT: ' + _CARD_PIN_SORTS[_cardPinSort].label : 'SORT &#8597;';
   strip.innerHTML = chips
     + '<span class="card-pin-search" id="cardPinSearch" hidden>'
     + '<input type="text" class="card-pin-input" id="cardPinInput" placeholder="Search player…" autocomplete="off" aria-label="Add player to compare strip">'
     + '<div class="card-pin-suggest" id="cardPinSuggest" hidden></div></span>'
-    + '<button class="card-pin-add" id="cardPinAdd" title="Compare: pin other players to this card and tap a name to switch between them">+ COMPARE</button>';
+    + '<button class="card-pin-add" id="cardPinAdd" title="Compare: pin other players to this card and tap a name to switch between them">+ COMPARE</button>'
+    + (multi ? '<button class="card-pin-sort" id="cardPinSort" title="Sort the pinned players: rank → position → A-Z (click again to cycle). Drag a chip to fine-tune.">' + sortLabel + '</button>' : '')
+    + (_cardPins.length ? '<button class="card-pin-reset" id="cardPinReset" title="Clear every pinned player from this card">RESET</button>' : '');
+
+  const sortBtn = strip.querySelector('#cardPinSort');
+  if (sortBtn) sortBtn.addEventListener('click', () => {
+    const keys = Object.keys(_CARD_PIN_SORTS);
+    _cardPinSort = keys[(keys.indexOf(_cardPinSort) + 1) % keys.length];
+    const cmp = _CARD_PIN_SORTS[_cardPinSort].cmp;
+    _cardPins = _cardPins.map(n => { const p = _cardPinLookup(n); return { n, p, r: _cardPinRank(p, ctxMode) }; }).sort(cmp).map(x => x.n);
+    _renderCardPinStrip(d, ctxMode);
+  });
+  const resetBtn = strip.querySelector('#cardPinReset');
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    _cardPins = [];
+    _cardPinSort = null;
+    _renderCardPinStrip(d, ctxMode);
+  });
 
   const addBtn = strip.querySelector('#cardPinAdd');
   const searchWrap = strip.querySelector('#cardPinSearch');
@@ -20626,6 +20673,7 @@ function _renderCardPinStrip(d, ctxMode) {
         // _didDrag stays true so the trailing click on this (now replaced)
         // chip is swallowed by the guard above instead of swapping the card
         _cardPins = Array.from(strip.querySelectorAll('.card-pin-chip')).map(c => c.dataset.pin);
+        _cardPinSort = null;
         _renderCardPinStrip(d, ctxMode);
       }
     };
@@ -20636,6 +20684,7 @@ function _renderCardPinStrip(d, ctxMode) {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       _cardPins = _cardPins.filter(n => n !== btn.dataset.unpin);
+      _cardPinSort = null;
       _renderCardPinStrip(d, ctxMode);
     });
   });
@@ -20685,6 +20734,7 @@ function _renderCardPinStrip(d, ctxMode) {
     // The player being viewed joins the strip too, so there's a chip to come back to
     if (!_cardPins.includes(d.n)) _cardPins.push(d.n);
     if (!_cardPins.includes(p.n)) _cardPins.push(p.n);
+    _cardPinSort = null;
     _renderCardPinStrip(d, ctxMode);
   }
   input.addEventListener('input', () => { items = buildItems(input.value); activeIdx = items.length ? 0 : -1; draw(); });

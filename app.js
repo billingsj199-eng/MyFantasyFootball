@@ -34119,11 +34119,24 @@ window.fmtHeight = fmtHeight;
         if (attempts < maxAttempts) {
           setTimeout(poll, 5000);
         } else {
-          const signedIn = !!(typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+          const cur = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+          const signedIn = !!cur;
           if (typeof toast === 'function') toast(signedIn
-            ? 'Premium not yet active. If charged, refresh in a minute or contact support.'
+            ? 'Premium not yet active. If charged, refresh in a minute or email support.'
             : 'Payment received — sign in with the account you used at checkout to activate premium.');
           if (!signedIn && typeof window.openAuthModal === 'function') window.openAuthModal();
+          if (signedIn) {
+            // Toasts can't hold a link: open Premium and show the persistent
+            // "paid but still free?" note with a mailto that carries the account.
+            if (typeof window._openPremiumUpgrade === 'function') window._openPremiumUpgrade();
+            setTimeout(() => {
+              const note = document.getElementById('premiumSupportNote');
+              const link = document.getElementById('premiumSupportLink');
+              if (note) note.style.display = 'block';
+              if (link) link.href = 'mailto:jackbillings16@gmail.com?subject=' + encodeURIComponent('Premium not active') +
+                '&body=' + encodeURIComponent('Paid for premium but the site still shows the free plan.\nAccount: ' + (cur.email || '') + ' (' + cur.uid + ')\n');
+            }, 400);
+          }
         }
       };
       setTimeout(poll, 2000); // Initial 2-second delay so the webhook has a chance to write
@@ -39438,7 +39451,7 @@ window.fmtHeight = fmtHeight;
         else if (e.code === 'auth/email-already-in-use') msg = 'That email is already in use by another account.';
         else if (e.code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
         else if (e.code === 'auth/requires-recent-login') msg = 'Please sign out and sign back in, then try again.';
-        else if (e.code === 'auth/operation-not-allowed') msg = 'Email change is not enabled. Please contact support.';
+        else if (e.code === 'auth/operation-not-allowed') msg = 'Email change is not enabled. Email jackbillings16@gmail.com and we will change it for you.';
         showMsg(acctEmailMsg, msg, 'error');
       }
       acctChangeEmailBtn.disabled = false;

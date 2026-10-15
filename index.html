@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-15-checkout" as="script">
+<link rel="preload" href="app.js?v=2026-10-15-contact" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -630,7 +630,7 @@ SIGN IN
 </button>
 </div>
 <div style="text-align:center;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.7rem;color:var(--text2)">
-<a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Privacy Policy</a>
+<a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Privacy Policy</a> &nbsp;·&nbsp; <a href="mailto:jackbillings16@gmail.com?subject=MyFantasyFootball%20support" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Contact</a>
 </div>
 </div>
 
@@ -727,6 +727,7 @@ Ask Jack — weekly start/sit &amp; trade Q&amp;A
 <button class="premium-btn" id="premiumUpgradeBtn">UPGRADE NOW</button>
 </div>
 <div id="premiumPlanNote" style="font-size:.6875rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
+<div id="premiumSupportNote" style="display:none;margin-top:.6rem;padding:.6rem .8rem;border-radius:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);font-size:.75rem;color:var(--text);line-height:1.5">Paid but still on the free plan? <a id="premiumSupportLink" href="mailto:jackbillings16@gmail.com?subject=Premium%20not%20active" style="color:var(--accent);font-weight:600">Email support</a> with the email you used at checkout and it gets sorted.</div>
 
 <!-- Redeem free-premium code -->
 <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
@@ -786,6 +787,7 @@ PREMIUM ACTIVE
 <div id="premiumManageWrap" style="margin-top:.75rem;display:none">
 <button type="button" id="premiumManageBtn" style="padding:.5rem .9rem;border-radius:6px;border:1px solid var(--border);background:var(--elev-1);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:1.5px;cursor:pointer">MANAGE SUBSCRIPTION</button>
 </div>
+<div style="margin-top:.6rem;font-size:.7rem;color:var(--text2)">Billing question or need a receipt? <a href="mailto:jackbillings16@gmail.com?subject=Premium%20billing" style="color:var(--text2);border-bottom:1px dotted var(--text2);text-decoration:none">Email support</a>.</div>
 </div>
 </div>
 
@@ -4744,7 +4746,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 
 </div>
 <div style="text-align:center;margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--border);font-size:.7rem;color:var(--text2)">
-<a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Privacy Policy</a>
+<a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Privacy Policy</a> &nbsp;·&nbsp; <a href="mailto:jackbillings16@gmail.com?subject=MyFantasyFootball%20support" style="color:var(--text2);text-decoration:none;border-bottom:1px dotted var(--text2)">Contact</a>
 </div>
 </div>
 </div>
@@ -6457,7 +6459,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-15-checkout"></script>
+<script defer src="app.js?v=2026-10-15-contact"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

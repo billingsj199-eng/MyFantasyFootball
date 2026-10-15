@@ -7860,6 +7860,42 @@ function _tcvRowBandCss(band) {
 function _tcvIsAdminViewer() {
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
+// Premium blur policy for the current board + filter — ONE source for the
+// table (blurred rows past `cutoff`) and TIER CARDS (cards past `cutoff` are
+// dropped and an upgrade card takes their place).
+//   Jack's / SIM / MFF VALUE: non-premium see top 36 (ALL) or top 12 (position/rookie);
+//   My Rankings: signed out = nothing (can't edit at all); signed-in non-premium = same top-N.
+//   Consensus is never blurred. hasPremium() is true for admin.
+function _rankBlurPolicy() {
+  const isPremium = hasPremium();
+  const signedIn = !!window._authCurrentUser;
+  const v = (typeof currentVersion === 'string') ? currentVersion : '';
+  const isMine = v === 'mine';
+  const cutoff = (isMine && !signedIn) ? 0
+               : v === 'sims' ? _VOR_FREE_N(filter)
+               : v === 'mffv' ? (filter === 'ALL' ? _MFFV_FREE_N : 12)
+               : (filter === 'ALL') ? 36
+               : 12;
+  const blur = v !== 'consensus' && (
+    ((v === 'sims' || v === 'mffv' || v === 'jacks' || isMine) && !isPremium) ||
+    (isMine && !signedIn)
+  );
+  return { cutoff, blur, isPremium, signedIn, isMine, isSims: v === 'sims' };
+}
+// The premium wall card (sign-in / upgrade) as a plain div — the table wraps
+// it in a <tr>, TIER CARDS drops it in after the last free tier.
+function _premiumWallCardHtml(pol) {
+  const n = pol.cutoff;
+  const signInBtn = '<button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button>';
+  const upgradeBtn = '<button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button>';
+  const card = (icon, title, body, btn) =>
+    '<div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">' + icon + '</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">' + title + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">' + body + '</div>' + btn + '</div></div>';
+  const what = pol.isSims ? 'the full SIM VOR board' : 'all of Jack\'s rankings';
+  if (pol.isMine && !pol.signedIn) return card('&#128221;', 'SIGN IN TO CREATE YOUR RANKINGS', 'Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.', signInBtn);
+  if (pol.isMine) return card('&#128274;', 'UPGRADE TO EDIT BEYOND TOP ' + n, 'Free accounts can rank the top ' + n + ' players in this filter. Upgrade to PRO to build full personalized rankings across every position.', upgradeBtn);
+  if (!pol.signedIn) return card('&#128274;', 'UNLOCK FULL RANKINGS', 'The top ' + n + ' are free. Create a free account, then upgrade to PRO to see ' + what + '.', signInBtn);
+  return card('&#128274;', 'UNLOCK FULL RANKINGS', 'The top ' + n + ' are free. Upgrade to PRO to see ' + what + '.', upgradeBtn);
+}
 // Season boards have no weekly matchup, so the row card's matchup slot shows
 // the player's BYE week instead (draft-graphic friendly). null in weekly mode
 // or when the schedule has no bye for the team.
@@ -9732,7 +9768,7 @@ function _renderTierCardView(data, container) {
     : filter;
   function _tcvHeaderText() {
     const n = (root.classList.contains('tcv-hide-cut') ? (data.length - _tcvCutCount) : data.length) + _tcvByeExtra;
-    return 'TIER CARDS — ' + filterLabel + ' · ' + n + ' PLAYERS' + (_tcvBye ? ' · ' + _tcvBye.players.length + ' ON BYE' : '') + (_tcvCutCount && root.classList.contains('tcv-hide-cut') ? ' · ' + _tcvCutCount + ' CUT HIDDEN' : '');
+    return 'TIER CARDS — ' + filterLabel + ' · ' + n + ' PLAYERS' + (window._tcvWall ? ' · TOP ' + window._tcvWall.cutoff + ' FREE' : '') + (_tcvBye ? ' · ' + _tcvBye.players.length + ' ON BYE' : '') + (_tcvCutCount && root.classList.contains('tcv-hide-cut') ? ' · ' + _tcvCutCount + ' CUT HIDDEN' : '');
   }
   ctx.textContent = _tcvHeaderText();
   header.appendChild(ctx);
@@ -10190,6 +10226,14 @@ function _renderTierCardView(data, container) {
   }
   container.innerHTML = '';
   container.appendChild(root);
+  if (window._tcvWall) {
+    // Non-premium: the cards past the free top-N were dropped in render() — the
+    // sign-in / upgrade card takes their place (same card the table shows).
+    const wall = document.createElement('div');
+    wall.className = 'tcv-wall';
+    wall.innerHTML = window._tcvWall.html;
+    container.appendChild(wall);
+  }
   if (_tcvVideoPref() && _tcvIsAdminViewer()) _tcvVideoMount(root);
   // Site watermark: quiet bottom-right tag so screenshots / recordings of the
   // board say where it came from. pointer-events:none → never blocks a card.
@@ -10331,21 +10375,34 @@ function render() {
   const empty = document.getElementById('empty');
   const editable = canEdit();
 
-  // Admin tier-card view: render to a separate container and skip the table render
+  // Tier-card view (2026-10-15: every viewer, not just admin): render to a
+  // separate container and skip the table render. Non-premium viewers get the
+  // same top-N the table leaves unblurred (_rankBlurPolicy) and an upgrade
+  // card where the rest would be; premium / admin see the whole board.
   const _tierCardWrap = document.getElementById('tierCardWrap');
-  const _isAdminViewer = (typeof window.isAdmin === 'function' && window.isAdmin());
-  const _useTierCardView = (viewMode === 'tierCard' && _isAdminViewer);
+  const _useTierCardView = (viewMode === 'tierCard');
   const _rankingsTable = _tierCardWrap ? _tierCardWrap.parentElement.querySelector('table') : null;
   if (_useTierCardView) {
     if (_rankingsTable) _rankingsTable.style.display = 'none';
     if (_tierCardWrap) _tierCardWrap.style.display = '';
+    const _tcvPol = _rankBlurPolicy();
+    const _tcvCapped = _tcvPol.blur && data.length > _tcvPol.cutoff;
+    const _tcvData = _tcvCapped ? data.slice(0, _tcvPol.cutoff) : data;
+    window._tcvWall = _tcvCapped ? { cutoff: _tcvPol.cutoff, html: _premiumWallCardHtml(_tcvPol) } : null;
     if (!data.length) {
       if (_tierCardWrap) _tierCardWrap.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text2)">No players match your filters.</div>';
       empty.style.display = 'none';
       updateStats(data);
       return;
     }
-    if (_tierCardWrap) _renderTierCardView(data, _tierCardWrap);
+    if (!_tcvData.length) {
+      // Signed-out MY RANKS: nothing to show but the sign-in card
+      if (_tierCardWrap) _tierCardWrap.innerHTML = '<div class="tcv-wall">' + window._tcvWall.html + '</div>';
+      empty.style.display = 'none';
+      updateStats(data);
+      return;
+    }
+    if (_tierCardWrap) _renderTierCardView(_tcvData, _tierCardWrap);
     empty.style.display = 'none';
     updateStats(data);
     return;
@@ -10367,18 +10424,10 @@ function render() {
   const isSignedOut = !window._authCurrentUser;
   const isSims = currentVersion === 'sims';
   const isMffv = currentVersion === 'mffv';
-  const blurCutoff = (isMine && isSignedOut) ? 0
-                   : isSims ? _VOR_FREE_N(filter)
-                   : isMffv ? (filter === 'ALL' ? _MFFV_FREE_N : 12)
-                   : (filter === 'ALL') ? 36
-                   : 12;
-  const shouldBlur = !isConsensus && (
-    (isSims && !isPremium) ||
-    (isMffv && !isPremium) ||
-    (isJacks && !isPremium) ||
-    (isMine && isSignedOut) ||
-    (isMine && !isPremium)
-  );
+  // Cutoff + whether to blur live in _rankBlurPolicy (shared with TIER CARDS)
+  const _blurPol = _rankBlurPolicy();
+  const blurCutoff = _blurPol.cutoff;
+  const shouldBlur = _blurPol.blur;
 
   // Build a map of afterRank -> tier for tier rows (only in default sort, no search, ALL/position filter)
   const showTiers = (sortKey === 'myrank' && sortDir === 1); // search keeps tiers (empties are skipped)
@@ -10552,20 +10601,7 @@ function render() {
     return html;
   };
   // Premium wall row (sign-in / upgrade card) — goes right above the first blurred row.
-  const _premiumWallHtml = () => {
-    let html = '';
-    const _isSignedIn = !!window._authCurrentUser;
-    if (isMine && !_isSignedIn) {
-      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128221;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">SIGN IN TO CREATE YOUR RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
-    } else if (isMine && !isPremium) {
-      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UPGRADE TO EDIT BEYOND TOP ' + blurCutoff + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">Free accounts can rank the top ' + blurCutoff + ' players in this filter. Upgrade to PRO to build full personalized rankings across every position.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
-    } else if (!_isSignedIn) {
-      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Create a free account, then upgrade to PRO to see ' + (isSims ? 'the full SIM VOR board' : 'all of Jack\'s rankings') + '.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button></div></div></td></tr>';
-    } else {
-      html += '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal"><div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">&#128274;</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">UNLOCK FULL RANKINGS</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">The top ' + blurCutoff + ' are free. Upgrade to PRO to see ' + (isSims ? 'the full SIM VOR board' : 'all of Jack\'s rankings') + '.</div><button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button></div></div></td></tr>';
-    }
-    return html;
-  };
+  const _premiumWallHtml = () => '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal">' + _premiumWallCardHtml(_blurPol) + '</td></tr>';
   let html = '';
   let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
   let _devyWallDone = false; // DEVY rows: premium wall emitted once, above the first blurred row
@@ -11984,7 +12020,7 @@ document.querySelectorAll('.rookie-sub-btn[data-rookiepos]').forEach(btn => {
   });
 });
 
-// Admin-only view-mode toggle (TABLE / TIER CARDS)
+// View-mode toggle (TABLE / TIER CARDS)
 document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(b => b.classList.remove('active'));
@@ -12079,17 +12115,14 @@ document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(btn => {
   });
 })();
 
-// Show admin view-mode toggle on auth/admin status change
+// VIEW: TABLE / TIER CARDS toggle — every viewer since 2026-10-15 (was admin
+// only). Still re-run on auth changes: premium status decides how many cards
+// the tier view shows, so a sign-in / sign-out while in it needs a re-render.
 function _refreshAdminViewToggle() {
   const wrap = document.getElementById('adminViewToggle');
   if (!wrap) return;
-  const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin());
-  wrap.style.display = isAdm ? 'flex' : 'none';
-  if (!isAdm && viewMode === 'tierCard') {
-    viewMode = 'all';
-    document.querySelectorAll('.view-mode-btn[data-viewmode]').forEach(b => b.classList.toggle('active', b.dataset.viewmode === 'all'));
-    if (typeof render === 'function') render();
-  }
+  wrap.style.display = 'flex';
+  if (viewMode === 'tierCard' && typeof render === 'function') { try { render(); } catch (_) {} }
 }
 _refreshAdminViewToggle();
 // Re-check on auth state changes (admin status may flip after login). Firebase is
@@ -23799,6 +23832,7 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   const page = () => { const a = document.querySelector('.page.active'); return a ? a.id.replace(/^page/, '').toLowerCase() : ''; };
   const CLICK = [
     ['.version-tab[data-version]', b => ['board_version', { version: b.dataset.version }]],
+    ['.view-mode-btn[data-viewmode]', b => ['view_mode', { view: b.dataset.viewmode, version: typeof currentVersion === 'string' ? currentVersion : '', premium: (typeof hasPremium === 'function' && hasPremium()) ? 1 : 0 }]],
     ['.mode-tab[data-mode]', b => ['board_mode', { mode: b.dataset.mode }]],
     ['.pos-btn[data-pos]', b => ['pos_filter', { pos: b.dataset.pos, page: page() }]],
     ['#navMoreBtn', () => ['nav_more_open', {}]],

@@ -34198,9 +34198,7 @@ window.fmtHeight = fmtHeight;
                 const link = document.getElementById('premiumSupportLink');
                 if (note) note.style.display = 'block';
                 if (link && cur) link.href = 'mailto:jackbillings16@gmail.com?subject=' + encodeURIComponent('Premium not active') +
-                  '&body=' + encodeURIComponent('Paid for premium but the site still shows the free plan.
-Account: ' + (cur.email || '') + ' (' + cur.uid + ')
-');
+                  '&body=' + encodeURIComponent('Paid for premium but the site still shows the free plan.\nAccount: ' + (cur.email || '') + ' (' + cur.uid + ')\n');
               }, 400);
             }
           });

@@ -34035,7 +34035,7 @@ window.fmtHeight = fmtHeight;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
     const myUid = user.uid;
-    db.collection('users').doc(myUid).get().then(doc => {
+    return db.collection('users').doc(myUid).get().then(doc => {
       // Bail if the user has switched accounts since this query started
       const stillCurrent = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
       if (!stillCurrent || stillCurrent.uid !== myUid) return;
@@ -34085,62 +34085,129 @@ window.fmtHeight = fmtHeight;
   window._loadStripePremium = loadStripePremium;
 
   // Detect ?premium_success=1 on page load — happens when Stripe redirects back after checkout.
-  // The webhook may take a few seconds to fire, so we poll Firestore briefly.
+  // Activation has two paths (2026-10-15): the `verifyCheckoutSession` callable (reads the
+  // Checkout Session straight from Stripe and writes premium — no webhook needed) and, as the
+  // fallback, polling Firestore for the stripeWebhook write. The session id is stashed in
+  // sessionStorage so a buyer who returns signed out still gets verified right after sign-in.
+  const PENDING_VERIFY_KEY = 'mff_pending_verify';
+  function _readPendingVerify() {
+    try {
+      const p = JSON.parse(sessionStorage.getItem(PENDING_VERIFY_KEY) || 'null');
+      if (p && p.sessionId && (Date.now() - (p.at || 0)) < 60 * 60 * 1000) return p.sessionId;
+    } catch (_) {}
+    return '';
+  }
+  function _clearPendingVerify() { try { sessionStorage.removeItem(PENDING_VERIFY_KEY); } catch (_) {} }
+  let _premiumSuccessRunning = false;
   function handlePremiumSuccess() {
     try {
       const params = new URLSearchParams(window.location.search);
       const success = params.get('premium_success') === '1';
       const canceled = params.get('premium_cancel') === '1';
-      if (!success && !canceled) return;
-      // Clean the URL so refreshing doesn't re-trigger
-      const cleanUrl = window.location.pathname + (window.location.hash || '');
-      window.history.replaceState({}, '', cleanUrl);
+      let sessionId = success ? (params.get('session_id') || '') : '';
+      const signedIn = () => !!(typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+      if (!success && !canceled) {
+        // No params: maybe a stashed session id from a signed-out return that just signed in.
+        sessionId = _readPendingVerify();
+        if (!sessionId || !signedIn() || _premiumSuccessRunning) return;
+      } else {
+        // Clean the URL so refreshing doesn't re-trigger
+        const cleanUrl = window.location.pathname + (window.location.hash || '');
+        window.history.replaceState({}, '', cleanUrl);
+      }
       if (canceled) {
         // Backed out of Stripe: land them back on the plan picker, not the home page.
         if (typeof toast === 'function') toast('Checkout canceled — your plan is here whenever you\'re ready.');
         if (typeof window._openPremiumUpgrade === 'function') setTimeout(() => window._openPremiumUpgrade(), 400);
         return;
       }
+      if (sessionId) {
+        try { sessionStorage.setItem(PENDING_VERIFY_KEY, JSON.stringify({ sessionId: sessionId, at: Date.now() })); } catch (_) {}
+      }
+      _premiumSuccessRunning = true;
       if (typeof toast === 'function') toast('Payment received — activating premium…');
-      // Poll Firestore up to 6 times over ~30 seconds for the webhook to land
+
+      // Path 1: ask the server to verify the Stripe session and activate premium directly.
+      let verifyTries = 0, verifyPending = false, verifyDone = false;
+      const verifyWithStripe = () => {
+        if (!sessionId || verifyDone || verifyPending || verifyTries >= 2 || !signedIn()) return Promise.resolve(false);
+        if (typeof firebase === 'undefined' || !firebase.functions) return Promise.resolve(false);
+        verifyPending = true; verifyTries++;
+        let call;
+        try { call = firebase.app().functions('us-central1').httpsCallable('verifyCheckoutSession')({ sessionId: sessionId }); }
+        catch (e) { verifyPending = false; return Promise.resolve(false); }
+        return call.then(res => {
+          verifyPending = false;
+          const d = res && res.data;
+          if (d && d.ok) {
+            verifyDone = true;
+            console.log('[Premium] verifyCheckoutSession ok — plan ' + d.plan + (d.currentPeriodEnd ? ', ends ' + new Date(d.currentPeriodEnd).toLocaleDateString() : ''));
+            return true;
+          }
+          return false;
+        }).catch(err => {
+          verifyPending = false;
+          const code = (err && err.code) || '';
+          console.warn('[Premium] verifyCheckoutSession failed:', code, err && err.message);
+          // Permanent answers (wrong account, bad id, unpaid, stale) — stop retrying; the webhook poll continues.
+          if (/permission-denied|invalid-argument|not-found|failed-precondition/.test(code)) verifyDone = true;
+          return false;
+        });
+      };
+
+      const isActive = () => {
+        const data = JSON.parse(localStorage.getItem('jb_premium') || 'null');
+        return !!(data && data.expires > Date.now() && data.source === 'stripe');
+      };
+      const finish = () => {
+        _premiumSuccessRunning = false;
+        _clearPendingVerify();
+        if (typeof toast === 'function') toast('Welcome to Premium! Enjoy full access.');
+        // Show them the PRO panel (plan + access date) instead of leaving them on the home page.
+        if (typeof window._openPremiumUpgrade === 'function') window._openPremiumUpgrade();
+      };
+
+      // Path 2 (fallback): poll Firestore up to 6 times over ~30 seconds for the webhook to land.
       let attempts = 0;
       const maxAttempts = 6;
       const poll = () => {
         attempts++;
-        loadStripePremium();
-        const data = JSON.parse(localStorage.getItem('jb_premium') || 'null');
-        const active = data && data.expires > Date.now() && data.source === 'stripe';
-        if (active) {
-          if (typeof toast === 'function') toast('Welcome to Premium! Enjoy full access.');
-          // Show them the PRO panel (plan + access date) instead of leaving them on the home page.
-          if (typeof window._openPremiumUpgrade === 'function') window._openPremiumUpgrade();
-          return;
-        }
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 5000);
-        } else {
-          const cur = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-          const signedIn = !!cur;
-          if (typeof toast === 'function') toast(signedIn
-            ? 'Premium not yet active. If charged, refresh in a minute or email support.'
-            : 'Payment received — sign in with the account you used at checkout to activate premium.');
-          if (!signedIn && typeof window.openAuthModal === 'function') window.openAuthModal();
-          if (signedIn) {
-            // Toasts can't hold a link: open Premium and show the persistent
-            // "paid but still free?" note with a mailto that carries the account.
-            if (typeof window._openPremiumUpgrade === 'function') window._openPremiumUpgrade();
-            setTimeout(() => {
-              const note = document.getElementById('premiumSupportNote');
-              const link = document.getElementById('premiumSupportLink');
-              if (note) note.style.display = 'block';
-              if (link) link.href = 'mailto:jackbillings16@gmail.com?subject=' + encodeURIComponent('Premium not active') +
-                '&body=' + encodeURIComponent('Paid for premium but the site still shows the free plan.\nAccount: ' + (cur.email || '') + ' (' + cur.uid + ')\n');
-            }, 400);
-          }
-        }
+        verifyWithStripe()
+          .then(() => loadStripePremium() || Promise.resolve())
+          .catch(() => {})
+          .then(() => {
+            if (isActive()) { finish(); return; }
+            if (attempts < maxAttempts) {
+              setTimeout(poll, 5000);
+              return;
+            }
+            _premiumSuccessRunning = false;
+            const si = signedIn();
+            if (si) _clearPendingVerify(); // signed in and still nothing after 30s: don't loop forever on later sign-ins
+            if (typeof toast === 'function') toast(si
+              ? 'Premium not yet active. If charged, refresh in a minute or email support.'
+              : 'Payment received — sign in with the account you used at checkout to activate premium.');
+            if (!si && typeof window.openAuthModal === 'function') window.openAuthModal();
+            if (si) {
+              // Toasts can't hold a link: open Premium and show the persistent
+              // "paid but still free?" note with a mailto that carries the account.
+              const cur = firebase.auth().currentUser;
+              if (typeof window._openPremiumUpgrade === 'function') window._openPremiumUpgrade();
+              setTimeout(() => {
+                const note = document.getElementById('premiumSupportNote');
+                const link = document.getElementById('premiumSupportLink');
+                if (note) note.style.display = 'block';
+                if (link && cur) link.href = 'mailto:jackbillings16@gmail.com?subject=' + encodeURIComponent('Premium not active') +
+                  '&body=' + encodeURIComponent('Paid for premium but the site still shows the free plan.
+Account: ' + (cur.email || '') + ' (' + cur.uid + ')
+');
+              }, 400);
+            }
+          });
       };
-      setTimeout(poll, 2000); // Initial 2-second delay so the webhook has a chance to write
-    } catch(e) { console.warn('[Premium] success handler error:', e); }
+      // With a session id + signed in, verify right away; otherwise give the webhook a 2s head start.
+      setTimeout(poll, (sessionId && signedIn()) ? 300 : 2000);
+    } catch(e) { _premiumSuccessRunning = false; console.warn('[Premium] success handler error:', e); }
   }
   // Expose so it can be triggered from the main auth listener after Firebase initializes
   window._handlePremiumSuccess = handlePremiumSuccess;

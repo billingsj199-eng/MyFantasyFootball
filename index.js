@@ -313,6 +313,138 @@ exports.redeemCode = onCall(
 );
 
 // ============================================================
+// activateFromCheckoutSession
+// Grants premium from a completed Checkout Session. Shared by the
+// stripeWebhook checkout.session.completed branch and the client-driven
+// verifyCheckoutSession callable (webhook-independent activation, 2026-10-15)
+// so both paths write users/{uid}.premium identically.
+// `session.subscription` / `session.customer` may be ids or expanded objects.
+// Returns { ok, plan, currentPeriodEnd, kept? } or { ok:false, reason }.
+// ============================================================
+async function activateFromCheckoutSession(db, stripe, session, source) {
+  const uid = session.client_reference_id;
+  const customerId = typeof session.customer === "string"
+    ? session.customer
+    : (session.customer && session.customer.id) || null;
+
+  // Season Pass — one-time payment, no subscription object. Grant premium
+  // with the fixed season end date regardless of purchase date.
+  const isSeasonPass = session.mode === "payment" &&
+    session.metadata && session.metadata.plan === "season";
+  if (isSeasonPass && uid) {
+    const userRef = db.collection("users").doc(uid);
+    const snap = await userRef.get();
+    const existing = snap.exists ? (snap.data().premium || null) : null;
+    const existingActive = existing &&
+      (existing.status === "active" || existing.status === "trialing") &&
+      existing.currentPeriodEnd > Date.now();
+    if (existingActive && existing.currentPeriodEnd >= SEASON_PASS_END_MS) {
+      // They already have premium running past the season end — don't downgrade it.
+      console.log(source + ": Season Pass bought by", uid, "— kept existing longer premium");
+      return { ok: true, plan: existing.plan || "season", currentPeriodEnd: existing.currentPeriodEnd, kept: true };
+    }
+    await userRef.set({
+      stripeCustomerId: customerId,
+      premium: {
+        plan: "season",
+        status: "active",
+        stripeSubscriptionId: null, // one-time payment — nothing to renew or cancel
+        stripePriceId: SEASON_PASS_PRICE_ID,
+        currentPeriodEnd: SEASON_PASS_END_MS,
+        cancelAtPeriodEnd: true,
+        activatedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+    }, { merge: true });
+    console.log(source + ": Season Pass activated for", uid, "— ends", new Date(SEASON_PASS_END_MS).toISOString());
+    return { ok: true, plan: "season", currentPeriodEnd: SEASON_PASS_END_MS };
+  }
+
+  const subscriptionId = typeof session.subscription === "string"
+    ? session.subscription
+    : (session.subscription && session.subscription.id) || null;
+  if (!uid || !subscriptionId) {
+    console.warn(source + ": skipping incomplete session:", session.id);
+    return { ok: false, reason: "incomplete" };
+  }
+
+  const subscription = (session.subscription && typeof session.subscription === "object")
+    ? session.subscription
+    : await stripe.subscriptions.retrieve(subscriptionId);
+  const priceId = subscription.items.data[0].price.id;
+  const plan = planFromPriceId(priceId);
+  const periodEndMs = getPeriodEnd(subscription) * 1000;
+
+  await db.collection("users").doc(uid).set({
+    stripeCustomerId: customerId,
+    premium: {
+      plan: plan,
+      status: subscription.status, // "active" or "trialing"
+      stripeSubscriptionId: subscriptionId,
+      stripePriceId: priceId,
+      currentPeriodEnd: periodEndMs, // ms
+      cancelAtPeriodEnd: isCanceling(subscription),
+      activatedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+  }, { merge: true });
+
+  console.log(source + ": Premium activated for", uid, "plan", plan);
+  return { ok: true, plan: plan, currentPeriodEnd: periodEndMs, status: subscription.status };
+}
+
+// ============================================================
+// verifyCheckoutSession
+// Webhook-independent activation. Stripe sends the buyer back to
+// /?premium_success=1&session_id=cs_… and the client calls this right away,
+// so premium lands even when stripeWebhook is late or fails. Auth-gated: the
+// session must belong to the caller (client_reference_id) and be paid.
+// Idempotent with the webhook — same helper, same writes, same guards.
+// ============================================================
+const VERIFY_SESSION_MAX_AGE_S = 7 * 24 * 3600; // ignore stale session ids (refund replay guard)
+exports.verifyCheckoutSession = onCall(
+  { secrets: [STRIPE_SECRET_KEY], cors: ALLOWED_ORIGINS },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in with the account you used at checkout to activate premium.");
+    }
+    const uid = request.auth.uid;
+    const raw = request.data && request.data.sessionId;
+    const sessionId = typeof raw === "string" ? raw.trim() : "";
+    if (!sessionId || sessionId.length > 200 || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(sessionId)) {
+      throw new HttpsError("invalid-argument", "Invalid checkout session id.");
+    }
+
+    const stripe = new Stripe(STRIPE_SECRET_KEY.value());
+    let session;
+    try {
+      session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ["subscription"] });
+    } catch (err) {
+      console.warn("verifyCheckoutSession: retrieve failed for", uid, sessionId, "—", err && err.message);
+      throw new HttpsError("not-found", "Checkout session not found.");
+    }
+
+    if (session.client_reference_id !== uid) {
+      console.warn("verifyCheckoutSession: uid mismatch", uid, "vs", session.client_reference_id, sessionId);
+      throw new HttpsError("permission-denied", "This checkout belongs to a different account.");
+    }
+    if (session.payment_status !== "paid") {
+      throw new HttpsError("failed-precondition", "Payment not completed yet (" + session.payment_status + ").");
+    }
+    if (typeof session.created === "number" && (Date.now() / 1000 - session.created) > VERIFY_SESSION_MAX_AGE_S) {
+      throw new HttpsError("failed-precondition", "This checkout session is too old to activate — contact support.");
+    }
+
+    const result = await activateFromCheckoutSession(getFirestore(), stripe, session, "verifyCheckoutSession");
+    if (!result.ok) {
+      throw new HttpsError("failed-precondition", "Checkout session is incomplete.");
+    }
+    return { ok: true, plan: result.plan, currentPeriodEnd: result.currentPeriodEnd, kept: !!result.kept };
+  }
+);
+
+// ============================================================
+// ============================================================
 // stripeWebhook
 // Stripe POSTs subscription lifecycle events here.
 // We verify the signature, then mirror the subscription state
@@ -343,68 +475,9 @@ exports.stripeWebhook = onRequest(
       switch (event.type) {
         // Initial purchase — fires when checkout completes successfully.
         case "checkout.session.completed": {
-          const session = event.data.object;
-          const uid = session.client_reference_id;
-          const customerId = session.customer;
-          const subscriptionId = session.subscription;
-
-          // Season Pass — one-time payment, no subscription object. Grant
-          // premium with the fixed season end date regardless of purchase date.
-          const isSeasonPass = session.mode === "payment" &&
-            session.metadata && session.metadata.plan === "season";
-          if (isSeasonPass && uid) {
-            const userRef = db.collection("users").doc(uid);
-            const snap = await userRef.get();
-            const existing = snap.exists ? (snap.data().premium || null) : null;
-            const existingActive = existing &&
-              (existing.status === "active" || existing.status === "trialing") &&
-              existing.currentPeriodEnd > Date.now();
-            if (existingActive && existing.currentPeriodEnd >= SEASON_PASS_END_MS) {
-              // They already have premium running past the season end — don't downgrade it.
-              console.log("Season Pass bought by", uid, "— kept existing longer premium");
-              break;
-            }
-            await userRef.set({
-              stripeCustomerId: customerId,
-              premium: {
-                plan: "season",
-                status: "active",
-                stripeSubscriptionId: null, // one-time payment — nothing to renew or cancel
-                stripePriceId: SEASON_PASS_PRICE_ID,
-                currentPeriodEnd: SEASON_PASS_END_MS,
-                cancelAtPeriodEnd: true,
-                activatedAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp(),
-              },
-            }, { merge: true });
-            console.log("Season Pass activated for", uid, "— ends", new Date(SEASON_PASS_END_MS).toISOString());
-            break;
-          }
-
-          if (!uid || !subscriptionId) {
-            console.warn("Skipping incomplete session:", session.id);
-            break;
-          }
-
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const priceId = subscription.items.data[0].price.id;
-          const plan = planFromPriceId(priceId);
-
-          await db.collection("users").doc(uid).set({
-            stripeCustomerId: customerId,
-            premium: {
-              plan: plan,
-              status: subscription.status, // "active" or "trialing"
-              stripeSubscriptionId: subscriptionId,
-              stripePriceId: priceId,
-              currentPeriodEnd: getPeriodEnd(subscription) * 1000, // ms
-              cancelAtPeriodEnd: isCanceling(subscription),
-              activatedAt: FieldValue.serverTimestamp(),
-              updatedAt: FieldValue.serverTimestamp(),
-            },
-          }, { merge: true });
-
-          console.log("Premium activated for", uid, "plan", plan);
+          // Shared with verifyCheckoutSession (client-driven fallback) so both
+          // paths write users/{uid}.premium identically.
+          await activateFromCheckoutSession(db, stripe, event.data.object, "stripeWebhook");
           break;
         }
 

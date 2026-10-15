@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-15-tiercards" as="script">
+<link rel="preload" href="app.js?v=2026-10-15-checkout" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -726,7 +726,7 @@ Ask Jack — weekly start/sit &amp; trade Q&amp;A
 <div style="margin-top:.75rem">
 <button class="premium-btn" id="premiumUpgradeBtn">UPGRADE NOW</button>
 </div>
-<div style="font-size:.6875rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
+<div id="premiumPlanNote" style="font-size:.6875rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
 
 <!-- Redeem free-premium code -->
 <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
@@ -6457,7 +6457,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-15-tiercards"></script>
+<script defer src="app.js?v=2026-10-15-checkout"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

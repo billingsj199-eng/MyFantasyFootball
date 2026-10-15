@@ -7887,7 +7887,7 @@ function _rankBlurPolicy() {
 function _premiumWallCardHtml(pol) {
   const n = pol.cutoff;
   const signInBtn = '<button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button>';
-  const upgradeBtn = '<button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{document.querySelector(\'[data-acct-tab=premium]\').click();},150)">UNLOCK WITH PREMIUM</button>';
+  const upgradeBtn = '<button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="window._openPremiumUpgrade()">UNLOCK WITH PREMIUM</button>';
   const card = (icon, title, body, btn) =>
     '<div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">' + icon + '</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">' + title + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">' + body + '</div>' + btn + '</div></div>';
   const what = pol.isSims ? 'the full SIM VOR board' : 'all of Jack\'s rankings';
@@ -10272,16 +10272,25 @@ function _syncPassCta() {
   const k = document.querySelector('#globalSearchBtn .gsb-kbd');
   if (k && /Mac|iPhone|iPad/.test(navigator.platform || '')) k.textContent = '⌘K';
 })();
-window._openSeasonPass = function () {
+// Open Account › Premium with a plan preselected and the plan row scrolled
+// into view (2026-10-15 checkout pass: the UPGRADE NOW button sat ~2000px
+// below the fold behind the hero + feature list, so CTA clicks landed on a
+// page that looked unchanged). Every upsell entry point lands here. For a
+// premium viewer the free view is hidden, so nothing is clicked or scrolled.
+window._openPremiumUpgrade = function (plan) {
   const nav = document.querySelector('[data-page=account]');
   if (nav) nav.click();
   setTimeout(() => {
     const tab = document.querySelector('[data-acct-tab=premium]');
     if (tab) tab.click();
-    const card = document.getElementById('planSeason');
-    if (card && card.offsetParent) card.click();   // preselect the $24.99 plan
+    const id = plan === 'season' ? 'planSeason' : plan === 'monthly' ? 'planMonthly' : plan === 'yearly' ? 'planYearly' : null;
+    const card = id ? document.getElementById(id) : null;
+    if (card && card.offsetParent) card.click();   // preselect the plan
+    const anchor = (card && card.offsetParent) ? card : document.getElementById('premiumUpgradeBtn');
+    if (anchor && anchor.offsetParent) { try { anchor.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {} }
   }, 150);
 };
+window._openSeasonPass = function () { window._openPremiumUpgrade('season'); };
 
 // === Phone names (2026-10-14, Jack: "D. Henry" instead of "Derrick Henry") ===
 // The ≤600px rankings card gives the name ~88px, which wrapped two thirds of names
@@ -23847,7 +23856,7 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     ['#authSubmit', () => ['sign_in_start', { method: 'email' }]],
     ['#globalPassBtn', () => ['premium_cta', { source: 'globalPassBtn', page: page() }]],
     ['#globalAuthBar button', b => /sign\s*in/i.test(b.textContent) ? ['sign_in_open', { page: page() }] : null],
-    ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked', b => ['premium_cta', { source: b.id || (b.className || '').split(' ')[0], page: page() }]],
+    ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked, .premium-wall-btn', b => ['premium_cta', { source: b.id || (b.className || '').split(' ')[0], page: page() }]],
     ['#mtSleeperImportBtn, #mtEspnImportBtn, #mtYahooImportBtn', b => ['league_import', { platform: b.id.replace(/^mt|ImportBtn$/g, '').toLowerCase() }]],
     ['#tcvFullscreenBtn', () => ['tier_cards_fullscreen', {}]],
     ['#sstDropdown', () => ['startsit_add', {}]],
@@ -34080,10 +34089,18 @@ window.fmtHeight = fmtHeight;
   function handlePremiumSuccess() {
     try {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('premium_success') !== '1') return;
+      const success = params.get('premium_success') === '1';
+      const canceled = params.get('premium_cancel') === '1';
+      if (!success && !canceled) return;
       // Clean the URL so refreshing doesn't re-trigger
       const cleanUrl = window.location.pathname + (window.location.hash || '');
       window.history.replaceState({}, '', cleanUrl);
+      if (canceled) {
+        // Backed out of Stripe: land them back on the plan picker, not the home page.
+        if (typeof toast === 'function') toast('Checkout canceled — your plan is here whenever you\'re ready.');
+        if (typeof window._openPremiumUpgrade === 'function') setTimeout(() => window._openPremiumUpgrade(), 400);
+        return;
+      }
       if (typeof toast === 'function') toast('Payment received — activating premium…');
       // Poll Firestore up to 6 times over ~30 seconds for the webhook to land
       let attempts = 0;
@@ -34095,12 +34112,18 @@ window.fmtHeight = fmtHeight;
         const active = data && data.expires > Date.now() && data.source === 'stripe';
         if (active) {
           if (typeof toast === 'function') toast('Welcome to Premium! Enjoy full access.');
+          // Show them the PRO panel (plan + access date) instead of leaving them on the home page.
+          if (typeof window._openPremiumUpgrade === 'function') window._openPremiumUpgrade();
           return;
         }
         if (attempts < maxAttempts) {
           setTimeout(poll, 5000);
         } else {
-          if (typeof toast === 'function') toast('Premium not yet active. If charged, refresh in a minute or contact support.');
+          const signedIn = !!(typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+          if (typeof toast === 'function') toast(signedIn
+            ? 'Premium not yet active. If charged, refresh in a minute or contact support.'
+            : 'Payment received — sign in with the account you used at checkout to activate premium.');
+          if (!signedIn && typeof window.openAuthModal === 'function') window.openAuthModal();
         }
       };
       setTimeout(poll, 2000); // Initial 2-second delay so the webhook has a chance to write
@@ -38953,6 +38976,25 @@ window.fmtHeight = fmtHeight;
       updateAccountUI(user);
       if (user) {
         console.log('[Auth] Signed in as', user.email);
+        // Finish an upgrade the sign-in gate interrupted (UPGRADE NOW while
+        // signed out): reopen Premium on the same plan and go straight to
+        // checkout. Consumed once; a gifted/premium account has no free view,
+        // so the button is not there to click and nothing happens.
+        try {
+          const raw = sessionStorage.getItem('mff_pending_upgrade');
+          if (raw) {
+            sessionStorage.removeItem('mff_pending_upgrade');
+            const pend = JSON.parse(raw);
+            if (pend && pend.plan && Date.now() - (pend.at || 0) < 10 * 60 * 1000) {
+              if (typeof window._openPremiumUpgrade === 'function') window._openPremiumUpgrade(pend.plan);
+              if (typeof toast === 'function') toast('Signed in — taking you to checkout…');
+              setTimeout(() => {
+                const b = document.getElementById('premiumUpgradeBtn');
+                if (b && b.offsetParent && !b.disabled) b.click();
+              }, 1200);
+            }
+          }
+        } catch (_) {}
         // If localStorage premium was set for a different user, clear it before
         // load functions repopulate for the current user.
         try {
@@ -39176,6 +39218,11 @@ window.fmtHeight = fmtHeight;
     } else {
       priceEl.innerHTML = '$' + basePrice.toFixed(2) + ' <span>/ ' + planLabel + '</span>';
     }
+    // The line under UPGRADE NOW: "Cancel anytime" is wrong for the one-time Season Pass.
+    const note = document.getElementById('premiumPlanNote');
+    if (note) note.textContent = seasonSelected
+      ? 'One-time payment, nothing renews. Have a promo code? Enter it on the next step.'
+      : 'Cancel anytime. Have a promo code? Enter it on the next step.';
   }
   window._updatePriceDisplay = updatePriceDisplay;
 
@@ -39562,7 +39609,12 @@ window.fmtHeight = fmtHeight;
 
       let billingHtml = '<strong style="color:var(--text1)">Plan:</strong> Pro (' + (data.plan || 'Premium Access') + ')';
       billingHtml += '<br><strong style="color:var(--text1)">Activated:</strong> ' + actDate;
-      if (data.source === 'stripe' && data.cancelAtPeriodEnd) {
+      // Season Pass is a one-time payment stored with cancelAtPeriodEnd:true —
+      // say so instead of "canceled", which read like something went wrong.
+      const isSeasonPass = data.source === 'stripe' && data.plan === 'Season Pass';
+      if (isSeasonPass) {
+        billingHtml += '<br><strong style="color:var(--text1)">Access through:</strong> ' + expDate + ' <span style="color:var(--green)">(one-time pass — nothing renews)</span>';
+      } else if (data.source === 'stripe' && data.cancelAtPeriodEnd) {
         billingHtml += '<br><strong style="color:var(--text1)">Access ends:</strong> ' + expDate + ' <span style="color:var(--accent)">(canceled — won’t renew)</span>';
       } else if (data.source === 'stripe') {
         billingHtml += '<br><strong style="color:var(--text1)">Renews:</strong> ' + expDate + ' <span style="color:var(--green)">(auto-renew on)</span>';
@@ -39573,7 +39625,7 @@ window.fmtHeight = fmtHeight;
 
       // Show "Manage Subscription" only for Stripe-purchased premium
       const manageWrap = document.getElementById('premiumManageWrap');
-      if (manageWrap) manageWrap.style.display = (data.source === 'stripe') ? 'block' : 'none';
+      if (manageWrap) manageWrap.style.display = (data.source === 'stripe' && !isSeasonPass) ? 'block' : 'none';   // no subscription to manage on a one-time pass
 
       if (premiumBadge) {
         premiumBadge.className = 'premium-badge pro';
@@ -39642,26 +39694,28 @@ window.fmtHeight = fmtHeight;
   }
 
   // Premium upgrade button — real Stripe Checkout
+  function _selectedPlan() {
+    if (document.querySelector('#planYearly.selected')) return 'yearly';
+    if (document.querySelector('#planSeason.selected')) return 'season';
+    return 'monthly';
+  }
   premiumUpgradeBtn.addEventListener('click', async () => {
     // Must be signed in to upgrade (we need a UID to attach to the Stripe customer)
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!user) {
-      toast('Please sign in or create an account first to upgrade.');
-      // Bounce them to account page so they can sign in
-      try {
-        const acctTab = document.querySelector('[data-page="account"]');
-        if (acctTab) acctTab.click();
-      } catch(e) {}
+      // Remember the plan and open the sign-in modal right here; the auth
+      // listener finishes the upgrade the moment they sign in (this tab only,
+      // 10-minute window). Before 2026-10-15 this only toasted and re-clicked
+      // the Account nav they were already on, so nothing visibly happened.
+      try { sessionStorage.setItem('mff_pending_upgrade', JSON.stringify({ plan: _selectedPlan(), at: Date.now() })); } catch (_) {}
+      toast('Sign in or create a free account — checkout continues right after.');
+      if (typeof window.openAuthModal === 'function') window.openAuthModal();
+      else { try { const acctTab = document.querySelector('[data-page="account"]'); if (acctTab) acctTab.click(); } catch(e) {} }
       return;
     }
 
     // Determine selected plan
-    const yearlySelected = document.querySelector('#planYearly.selected');
-    const seasonSelected = document.querySelector('#planSeason.selected');
-    let plan;
-    if (yearlySelected) plan = 'yearly';
-    else if (seasonSelected) plan = 'season';
-    else plan = 'monthly';
+    const plan = _selectedPlan();
 
     // Log promo usage if a promo code is active (independent of Stripe — Stripe Checkout
     // handles its own promo codes via allow_promotion_codes in the function).

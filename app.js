@@ -71346,7 +71346,19 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const firstPick = d.picks[0] ? d.picks[0].pick : null;
       const slot = firstPick != null ? firstPick : null;
       const round = d.size ? Math.ceil(myPick.pick / d.size) : null;
-      rows.push({ draftId: d.id, tournament: d.tournament || 'Underdog', date: d.date, pickNum: myPick.pick, round, slot, size: d.size });
+      // 2026-10-16 (Jack): drafts are done — the table shows live standing
+      // in each pool (place, points, cushion / gap to the advance line) plus
+      // where you drafted him, instead of slot/ADP/round.
+      let L = null;
+      try { L = _udLiveDraft(d); } catch (_) { L = null; }
+      const live = (L && L.scored && L.fieldComplete) ? L : null;
+      const _la = live && live.h2h && live.h2h.latest && live.h2h.latest.round !== 1 ? live.h2h.latest : null;
+      rows.push({ draftId: d.id, tournament: d.tournament || 'Underdog', date: d.date, pickNum: myPick.pick, round, slot, size: d.size,
+        place: live ? live.myRank : null,
+        of: live ? (_la ? _la.of : live.teams.length) : null,
+        pts: live ? live.myPts : null,
+        cushion: live ? live.cushion : null,
+        out: !!(live && live.h2h && !live.h2h.alive) });
       // Aggregate co-drafts
       d.picks.forEach(p => {
         if (p.name === name) return;
@@ -71354,8 +71366,13 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       });
     });
     if (!rows.length) return `<div style="color:var(--text2);font-size:.7rem">No drafts found for this player.</div>`;
-    // Sort drafts by earliest pick first (you got them earliest in these drafts)
-    rows.sort((a, b) => a.pickNum - b.pickNum);
+    // Same order as the TEAMS tab: place, then gap to the advance line, then
+    // points; unscored drafts last, by pick.
+    rows.sort((a, b) =>
+      ((a.place != null ? a.place : 999) - (b.place != null ? b.place : 999))
+      || ((b.cushion != null ? b.cushion : -9999) - (a.cushion != null ? a.cushion : -9999))
+      || ((b.pts != null ? b.pts : -1) - (a.pts != null ? a.pts : -1))
+      || (a.pickNum - b.pickNum));
     const topCo = Object.entries(coDraftCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const totalDraftsWithPlayer = rows.length;
 
@@ -71379,18 +71396,14 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
     // === DRAFTS list ===
     h += `<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:6px">${scope.adv ? 'ADVANCING ' : ''}DRAFTS WITH THIS PLAYER (${totalDraftsWithPlayer})</div>`;
-    // Column layout: tournament | slot | pick | (adp+delta if available) | round
-    const _withAdp = marketAdp != null;
-    const _cols = _withAdp ? '1fr auto auto auto auto auto' : '1fr auto auto auto';
-    h += `<div style="display:grid;grid-template-columns:${_cols};gap:4px 12px;font-size:.7rem;align-items:center;margin-bottom:14px;max-width:680px">`;
+    // Column layout: tournament | place | points | advance | pick
+    const _hd = 'font-size:.6875rem;color:var(--text2);letter-spacing:1px;text-align:right';
+    h += `<div style="display:grid;grid-template-columns:1fr auto auto auto auto;gap:4px 14px;font-size:.7rem;align-items:center;margin-bottom:14px;max-width:680px">`;
     h += `<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">TOURNAMENT</div>`;
-    h += `<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px;text-align:right">SLOT</div>`;
-    h += `<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px;text-align:right">PICK</div>`;
-    if (_withAdp) {
-      h += `<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px;text-align:right" title="Market ADP (Underdog Best Ball preferred, consensus fallback)">ADP</div>`;
-      h += `<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px;text-align:right" title="Pick − ADP. Positive = you got them later than market (value). Negative = reached.">Δ</div>`;
-    }
-    h += `<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px;text-align:right">RD</div>`;
+    h += `<div style="${_hd}" title="Your live place in this pool">PLACE</div>`;
+    h += `<div style="${_hd}" title="Your live best-ball points">POINTS</div>`;
+    h += `<div style="${_hd}" title="Cushion over the first team out (+) or points needed to reach the advance line (−)">ADVANCE</div>`;
+    h += `<div style="${_hd}" title="Overall pick where you drafted him">PICK</div>`;
     // Tournament links open the draft-roster POPUP (with this player's row
     // highlighted) instead of deep-linking to the TEAMS tab — the popup's
     // own "OPEN IN TEAMS TAB →" link still covers the full-field view.
@@ -71398,17 +71411,13 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     rows.forEach(r => {
       const safeDraftId = String(r.draftId).replace(/[^\w-]/g, '');
       h += `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#" onclick="event.preventDefault();event.stopPropagation();window._vpOpenDraft('${safeDraftId}','${_expNmSafe}')" style="color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer" title="Click to view this team">${_esc(r.tournament)}</a></div>`;
-      h += `<div style="text-align:right;color:var(--text)">${r.slot != null ? r.slot : '—'}${r.size ? '/' + r.size : ''}</div>`;
-      h += `<div style="text-align:right;color:var(--text);font-weight:600">${r.pickNum}</div>`;
-      if (_withAdp) {
-        const delta = r.pickNum - marketAdp;
-        const dColor = delta > 6 ? '#22c55e' : delta > 2 ? '#4ade80' : delta < -6 ? '#ef4444' : delta < -2 ? '#f59e0b' : 'var(--text2)';
-        const dArrow = delta > 2 ? '▲' : delta < -2 ? '▼' : '–';
-        const dSign = delta > 0 ? '+' : '';
-        h += `<div style="text-align:right;color:var(--text2)">${marketAdp.toFixed(0)}</div>`;
-        h += `<div style="text-align:right;color:${dColor};font-weight:700" title="Pick ${r.pickNum} − ADP ${marketAdp.toFixed(1)} = ${dSign}${delta.toFixed(1)}">${dArrow} ${dSign}${Math.round(delta)}</div>`;
-      }
-      h += `<div style="text-align:right;color:var(--text2)">${r.round || '—'}</div>`;
+      const pCol = r.out ? '#ef4444' : r.place == null ? 'var(--text2)' : (r.cushion != null && r.cushion >= 0) ? '#22c55e' : 'var(--text)';
+      h += `<div style="text-align:right;color:${pCol};font-weight:700">${r.out ? 'OUT' : r.place != null ? r.place + (r.of ? '/' + r.of : '') : '—'}</div>`;
+      h += `<div style="text-align:right;color:var(--text);font-weight:600">${r.pts != null ? r.pts.toFixed(1) : '—'}</div>`;
+      const c = r.cushion;
+      h += c == null ? `<div style="text-align:right;color:var(--text2)">—</div>`
+        : `<div style="text-align:right;color:${c >= 0 ? '#22c55e' : '#ef4444'};font-weight:700">${c >= 0 ? '+' : ''}${c.toFixed(1)}</div>`;
+      h += `<div style="text-align:right;color:var(--text2)">${r.pickNum}</div>`;
     });
     h += `</div>`;
 

@@ -70448,11 +70448,35 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     // across re-renders so changing tabs doesn't reset it.
     if (!window._udTeamsSortBy) window._udTeamsSortBy = 'rank';
     const _sortKey = window._udTeamsSortBy;
+    // 2026-10-16 (Jack): "My Teams value" = the Leagues power-rankings
+    // roster value (_mtScoreRoster, current board + value source) for my
+    // roster in each pool — redraft board, superflex board for SF pools.
+    // _mtFormat is swapped for the call (same pattern as the league
+    // snapshot paths) so a dynasty league left open doesn't leak its board
+    // in. Cached per row on value source + SF.
+    function _udMtValue(r) {
+      const my = r.myEntry;
+      if (!my || !my.picks || !my.picks.length) return null;
+      const sf = !!(r.d && (r.d.phase === 'superflex' || /super\s*flex/i.test(r.d.tournament || '')));
+      const sig = (typeof _mtValueSrc !== 'undefined' ? _mtValueSrc : '') + ':' + sf;
+      if (my._mtVal != null && my._mtValSig === sig) return my._mtVal;
+      const names = my.picks.map(p => { const m = _udMatchPlayer(p.name); return m ? m.n : null; }).filter(Boolean);
+      const prevFormat = _mtFormat;
+      let v = null;
+      try {
+        _mtFormat = { type: 'redraft', sf: sf, ppr: 0.5, starters: sf ? 8 : 7, bestBall: true };
+        v = _mtScoreRoster(names, []).total;
+      } catch (_) { v = null; }
+      finally { _mtFormat = prevFormat; }
+      my._mtVal = v; my._mtValSig = sig;
+      return v;
+    }
     const _sortOptions = [
       { key: 'rank',    label: 'Live rank',        metric: r => (r.myRank != null ? r.myRank : 999), dir: 'asc' },
       { key: 'pts',     label: 'Live points',      metric: r => (r.live && r.live.myPts != null ? r.live.myPts : -1), dir: 'desc' },
       { key: 'cushion', label: 'Cushion / gap to cut', metric: r => (r.live && r.live.cushion != null ? r.live.cushion : -9999), dir: 'desc' },
       { key: 'wk',      label: 'This week points', metric: r => (r.live && r.live.myWk != null ? r.live.myWk : -1), dir: 'desc' },
+      { key: 'mtval',   label: 'My Teams value',   metric: r => { const v = _udMtValue(r); return v != null ? v : -1; }, dir: 'desc' },
       { key: 'ppg',     label: 'BB Proj PPG',      metric: r => (r.myEntry && r.myEntry.weeklyPPG)  || 0, dir: 'desc' },
       { key: 'season',  label: 'Season total',     metric: r => (r.myEntry && r.myEntry.seasonMean) || 0, dir: 'desc' },
       { key: 'build',   label: 'Build score',      metric: r => (r.myEntry && r.myEntry.construction && r.myEntry.construction.score) || 0, dir: 'desc' },
@@ -70474,8 +70498,13 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const bv = _activeSort.metric(b);
       const cmp = _activeSort.dir === 'asc' ? (av - bv) : (bv - av);
       if (cmp !== 0) return cmp;
-      // Tie-break on rank so the secondary order is always sensible.
-      return ((a.myRank != null ? a.myRank : 999) - (b.myRank != null ? b.myRank : 999));
+      // Tie-break: place, then gap to the advance line (cushion above /
+      // distance below — bigger is better), then total live points.
+      // 2026-10-16 (Jack): many pools share a place once the season runs,
+      // so 1st-place teams order by lead, then points.
+      return ((a.myRank != null ? a.myRank : 999) - (b.myRank != null ? b.myRank : 999))
+        || ((b.live && b.live.cushion != null ? b.live.cushion : -9999) - (a.live && a.live.cushion != null ? a.live.cushion : -9999))
+        || ((b.live && b.live.myPts != null ? b.live.myPts : -1) - (a.live && a.live.myPts != null ? a.live.myPts : -1));
     });
     if (!_sortedRows.length) {
       html += `<div style="text-align:center;padding:30px;color:var(--text2);font-size:.8rem">No drafts to compare yet.</div>`;
@@ -70567,6 +70596,10 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
           } else {
             html += `<div style="font-size:.6875rem;color:var(--text2)"><span style="color:var(--text);font-weight:700;font-size:.78rem">${L.myPts.toFixed(1)}</span> PTS${wkStr}${cushStr}${payStr}</div>`;
           }
+        }
+        if (_sortKey === 'mtval') {
+          const _mv = _udMtValue(row);
+          if (_mv != null) html += `<div style="font-size:.6875rem;color:var(--text2)" title="Roster value from the My Teams power rankings (current board + value source)">My Teams value <span style="color:var(--accent);font-weight:700">${Math.round(_mv)}</span></div>`;
         }
         if (my && !_isLive) {
           // v0.9.91: include Roster Construction Score in header context line.

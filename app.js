@@ -70448,24 +70448,29 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     // across re-renders so changing tabs doesn't reset it.
     if (!window._udTeamsSortBy) window._udTeamsSortBy = 'rank';
     const _sortKey = window._udTeamsSortBy;
-    // 2026-10-16 (Jack): "My Teams value" = the Leagues power-rankings
-    // roster value (_mtScoreRoster, current board + value source) for my
-    // roster in each pool — redraft board, superflex board for SF pools.
-    // _mtFormat is swapped for the call (same pattern as the league
+    // 2026-10-16 (Jack): "My Teams value" = the My Teams REDRAFT player
+    // values (_mtScoreRoster: linear rank basis × tier factor, current
+    // board + value source) summed over all 18 picks at FULL weight — no
+    // starter bonus and no bench discount ("bench actually matters since
+    // you don't have to select your starters"), no cap — × the Leagues
+    // TOTAL display scale (1.5) so the numbers read on the same scale as
+    // the redraft power rankings. Redraft board, superflex board for SF
+    // pools. _mtFormat is swapped for the call (same pattern as the league
     // snapshot paths) so a dynasty league left open doesn't leak its board
     // in. Cached per row on value source + SF.
     function _udMtValue(r) {
       const my = r.myEntry;
       if (!my || !my.picks || !my.picks.length) return null;
       const sf = !!(r.d && (r.d.phase === 'superflex' || /super\s*flex/i.test(r.d.tournament || '')));
-      const sig = (typeof _mtValueSrc !== 'undefined' ? _mtValueSrc : '') + ':' + sf;
+      const sig = 'flat:' + (typeof _mtValueSrc !== 'undefined' ? _mtValueSrc : '') + ':' + sf;
       if (my._mtVal != null && my._mtValSig === sig) return my._mtVal;
       const names = my.picks.map(p => { const m = _udMatchPlayer(p.name); return m ? m.n : null; }).filter(Boolean);
       const prevFormat = _mtFormat;
       let v = null;
       try {
-        _mtFormat = { type: 'redraft', sf: sf, ppr: 0.5, starters: sf ? 8 : 7, bestBall: true };
-        v = _mtScoreRoster(names, []).total;
+        _mtFormat = { type: 'redraft', sf: sf, ppr: 0.5, starters: 8, bestBall: true };
+        const sc = _mtScoreRoster(names, []);
+        v = Math.round(sc.players.reduce((s, p) => s + Math.max(p.val || 0, 0), 0) * 1.5);
       } catch (_) { v = null; }
       finally { _mtFormat = prevFormat; }
       my._mtVal = v; my._mtValSig = sig;
@@ -71206,7 +71211,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         }
 
         const own = ownershipMap[player.name] || 0;
-        let ownColor, ownBg, cellVal = own + '%', cellSub = player.pos, cellTip = 'Open player card';
+        let ownColor, ownBg, cellVal = own + '%', cellSub = player.pos, cellTip = 'Click for your teams with him';
         let ownBorder = null;
         if (adv) {
           const r = adv.map[player.name];
@@ -71229,7 +71234,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         else { ownColor = '#22c55e'; ownBg = 'rgba(34,197,94,.18)'; }
 
         html += `<td style="padding:2px;border:1px solid var(--border)">`;
-        html += `<div onclick="window._mtOpenCardByName('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="${cellTip}" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownBorder || ownColor}30;min-height:32px;cursor:pointer">`;
+        html += `<div onclick="window._udOpenBoardPlayer('${String(player.name).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'")}')" title="${_esc(cellTip.replace('click for the player card', 'click for your teams with him'))}" style="padding:3px 4px;background:${ownBg};border-radius:3px;border:1px solid ${ownBorder || ownColor}30;min-height:32px;cursor:pointer">`;
         html += `<div style="font-size:.6875rem;font-weight:600;color:${ownColor};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(player.name)}</div>`;
         html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:1px">`;
         html += `<span style="font-size:.6875rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;margin-right:3px">${cellSub}</span>`;
@@ -71243,6 +71248,55 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     html += `</tbody></table></div>`;
     return html;
   }
+
+  // DRAFT BOARD cell click (Jack 2026-10-16): pop up every draft of yours
+  // with the player — the exposure tab's expand panel (place / points /
+  // advance / pick; tournament links open the team pop-up on top of this
+  // one) over ALL drafts in the current contest filter, ignoring the
+  // exposure tab's ADVANCING toggle. Board names are D names; portfolio
+  // picks keep Underdog spellings, so resolve back through _udMatchPlayer.
+  window._udCloseBoardPlayer = function() {
+    const m = document.getElementById('udBoardPlayerModal');
+    if (m) m.remove();
+    document.removeEventListener('keydown', _udBoardPlayerEsc);
+  };
+  function _udBoardPlayerEsc(e) {
+    // The team pop-up stacks above this one and closes first on its own Esc.
+    if (e.key === 'Escape' && !document.getElementById('vpDraftModal')) window._udCloseBoardPlayer();
+  }
+  window._udOpenBoardPlayer = function(boardName) {
+    window._udCloseBoardPlayer();
+    const data = window._udData;
+    if (!data) return;
+    let name = data.players && data.players[boardName] ? boardName : null;
+    if (!name && data.players) {
+      name = Object.keys(data.players).find(k => { const m = _udMatchPlayer(k); return m && m.n === boardName; }) || null;
+    }
+    const nmSafe = String(boardName).replace(/\\/g, '').replace(/"/g, '').replace(/'/g, "\\'");
+    const info = name ? data.players[name] : null;
+    const pct = info ? Math.round(info.exposure * 100) : 0;
+    const overlay = document.createElement('div');
+    overlay.id = 'udBoardPlayerModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:299;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);padding:20px;overflow:auto';
+    overlay.addEventListener('click', e => { if (e.target === overlay) window._udCloseBoardPlayer(); });
+    document.addEventListener('keydown', _udBoardPlayerEsc);
+    overlay.innerHTML =
+      `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:16px" onclick="event.stopPropagation()">` +
+        `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">` +
+          `<span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent)">${_esc(boardName)}</span>` +
+          `<span style="font-size:.6875rem;color:var(--text2)">${info ? (info.pos ? _esc(info.pos) + ' · ' : '') + pct + '% · ' + info.count + ' of ' + data.numDrafts + ' drafts' : 'not on any of your teams'}</span>` +
+          `<a href="#" onclick="event.preventDefault();window._udCloseBoardPlayer();window._mtOpenCardByName('${nmSafe}')" style="margin-left:auto;font-size:.6875rem;color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px">PLAYER CARD →</a>` +
+          `<button onclick="window._udCloseBoardPlayer()" style="padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.7rem">✕</button>` +
+        `</div>` +
+        (name ? _udBuildExpRowPanel(name, { adv: false, data: data }) : `<div style="color:var(--text2);font-size:.75rem;padding:12px 0">You haven't drafted him in the drafts in this filter.</div>`) +
+      `</div>`;
+    // Co-draft chips drill within the pop-up (the exposure tab's drill would
+    // navigate behind it).
+    overlay.querySelectorAll('[onclick*="_udDrillToPlayer("]').forEach(b => {
+      b.setAttribute('onclick', b.getAttribute('onclick').replace('window._udDrillToPlayer(', 'window._udOpenBoardPlayer('));
+    });
+    document.body.appendChild(overlay);
+  };
 
   // allPlayers (ADVANCING view only) = the whole portfolio's player aggregates,
   // so each row can say how many of the player's teams are the advancing ones.
@@ -71323,8 +71377,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   // top 5 most-common players you draft alongside him (aggregated across all those
   // drafts). The CSV import is the user's portfolio export, so every pick in a draft
   // belongs to the user — co-drafts are simply the other 17 picks per draft.
-  function _udBuildExpRowPanel(name) {
-    const scope = _udExpScope();
+  function _udBuildExpRowPanel(name, scopeOverride) {
+    const scope = scopeOverride || _udExpScope();
     const data = scope && scope.data;
     if (!data) return `<div style="color:var(--text2);font-size:.7rem">Portfolio data not loaded.</div>`;
     // Resolve market ADP for this player once (Underdog BB preferred, consensus fallback).

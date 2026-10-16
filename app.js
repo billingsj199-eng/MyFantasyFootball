@@ -68404,8 +68404,28 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       sig.push(id + (mine ? '+' : '-'));
       count(by, d.picks, mine);
     });
-    return { by, fby, drafts, nBbm: Object.keys(drafts).length,
-             fPools, fTeams, fAdv, mTeams, mAdv, sig: sig.join(','), fsig: fsig.join(',') };
+    const out = { by, fby, drafts, nBbm: Object.keys(drafts).length,
+             fPools, fTeams, fAdv, mTeams, mAdv, sig: sig.join(','), fsig: fsig.join(','), full: null };
+    // FULL FIELD (Jack 2026-10-16: "not just my pods?"): when the weekly
+    // data/bbm_field_adv.js is loaded (scripts/bbm_field_adv.py — all 672k
+    // BBM VII teams, standings rebuilt from Sleeper stats, top 2 of each
+    // 12-team draft group), OVERALL ADV RATE reads the whole contest
+    // instead of the sample from my own pools. Keys are Underdog spellings
+    // → re-keyed to site names like everything else here.
+    const F = window.BBM_FIELD_ADV;
+    if (F && F.p && F.teams) {
+      const ffby = {};
+      Object.keys(F.p).forEach(nm => {
+        const m = _udMatchPlayer(nm);
+        const key = m ? m.n : nm;
+        const r = ffby[key] || (ffby[key] = { n: 0, adv: 0 });
+        r.n += F.p[nm][0]; r.adv += F.p[nm][1];
+      });
+      out.fby = ffby; out.fTeams = F.teams; out.fAdv = F.adv; out.fPools = F.pools;
+      out.fsig = 'full:' + F.asOf + ':' + (F.weeks || []).join('.');
+      out.full = { asOf: F.asOf, weeks: F.weeks || [] };
+    }
+    return out;
   }
   function _udKpiWinHtml(sum) {
     if (!sum || !sum.n) return { val: '—', sub: 'no games scored yet' };
@@ -71064,7 +71084,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const cut = k => Math.round(100 * base * k);
       const intro = 'Players sorted by raw Underdog Best Ball ADP in a 12-team grid. ';
       const r1 = 'an advancing spot (top 2 of 12 in the Round 1 pool, Weeks 1–14)';
-      html += `<div style="font-size:.6875rem;color:var(--text2);margin-bottom:10px">` + intro + (field
+      html += `<div style="font-size:.6875rem;color:var(--text2);margin-bottom:10px">` + intro + (field && st.full
+        ? `Color = how often a team rostering that player holds ${r1}, across ALL ${strong(st.fTeams.toLocaleString('en-US'))} Best Ball Mania VII teams (${strong(st.fPools.toLocaleString('en-US'))} draft groups) — standings rebuilt from real stats thru ${strong('W' + (st.full.weeks.length ? st.full.weeks[st.full.weeks.length - 1] : '—'))}, updated every Tuesday. The small count is advancing teams / teams that drafted the player (at most one per draft group) · field avg ${strong((100 * base).toFixed(1) + '%')}.`
+        : field
         ? `Color = how often a team rostering that player holds ${r1}, across the ${strong(st.fTeams.toLocaleString('en-US'))} teams in your ${strong(st.fPools)} Best Ball Mania pools — you plus the 11 opponents in each; Underdog doesn't publish the rest of the contest's rosters, so this is a sample of the full field. The small count is advancing teams / teams in those pools that drafted the player (at most one per pool) · field avg ${strong((100 * base).toFixed(1) + '%')}.`
         : cnt
         ? `Color = how many of your ${strong(st.mAdv)} advancing Best Ball Mania teams (top 2 of 12 in the Round 1 pool, Weeks 1–14) roster that player — your most-advancing players, exposure and advance rate combined. The small count is advancing teams / your teams with the player.`
@@ -71093,7 +71115,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
           .sort((x, y) => (y.rate - x.rate) || (y.r.n - x.r.n));
         const edgeRow = (lbl, col, list) => callout(lbl, col, list, e => Math.round(100 * e.rate) + '%', e => st.tier(e.rate), e => {
           const edge = 100 * (e.rate - base);
-          return `Advancing on ${e.r.adv} of ${e.r.n} teams in your pools · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg`;
+          return `Advancing on ${e.r.adv.toLocaleString('en-US')} of ${e.r.n.toLocaleString('en-US')} teams ${st.full ? 'in the full BBM VII field' : 'in your pools'} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg`;
         });
         if (ranked.length >= 16) {
           html += edgeRow('BIGGEST EDGE', '#22c55e', ranked.slice(0, 8));
@@ -71216,16 +71238,20 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         if (adv) {
           const r = adv.map[player.name];
           const mine = adv.by[player.name], all = adv.fby[player.name];
-          const part = (x, who) => x ? `${who}: ${x.adv} of ${x.n} (${Math.round(100 * x.adv / x.n)}%)` : `${who}: none`;
+          const fmtN = v => v.toLocaleString('en-US');
+          const part = (x, who) => x ? `${who}: ${fmtN(x.adv)} of ${fmtN(x.n)} (${Math.round(100 * x.adv / x.n)}%)` : `${who}: none`;
+          const allLbl = adv.full ? 'all BBM VII teams' : 'all teams in your pools';
+          // Full-field counts run to 56k — compact them so the cell fits.
+          const kN = v => v >= 10000 ? Math.round(v / 1000) + 'k' : v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(v);
           if (!r) {
             ownColor = '#64748b'; ownBg = 'rgba(100,116,139,.08)'; cellVal = '—';
-            cellTip = (adv.field ? 'Not drafted in your scored Best Ball Mania pools' : 'On none of your scored Best Ball Mania teams · ' + part(all, 'all teams in your pools')) + ' — click for the player card';
+            cellTip = (adv.field ? (adv.full ? 'Not drafted in Best Ball Mania VII' : 'Not drafted in your scored Best Ball Mania pools') : 'On none of your scored Best Ball Mania teams · ' + part(all, allLbl)) + ' — click for your teams with him';
           } else {
             const rate = r.adv / r.n, t = adv.view === 'cnt' ? adv.cntTier(r.adv) : adv.tier(rate), edge = 100 * (rate - adv.base);
             ownColor = t.c; ownBg = t.bg; ownBorder = t.bd;
             cellVal = adv.view === 'cnt' ? String(r.adv) : Math.round(100 * rate) + '%';
-            cellSub = player.pos + ' · ' + r.adv + '/' + r.n;
-            cellTip = `Teams advancing with this player — ${part(mine, 'yours')} · ${part(all, 'all teams in your pools')} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for the player card`;
+            cellSub = player.pos + ' · ' + (adv.field && adv.full ? kN(r.adv) + '/' + kN(r.n) : r.adv + '/' + r.n);
+            cellTip = `Teams advancing with this player — ${part(mine, 'yours')} · ${part(all, allLbl)} · ${edge >= 0 ? '+' : ''}${edge.toFixed(1)} vs field avg — click for your teams with him`;
           }
         }
         else if (own === 0) { ownColor = '#ef4444'; ownBg = 'rgba(239,68,68,.1)'; }

@@ -70901,10 +70901,10 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">PLAYER</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">POS</th>
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">TEAM</th>
-              ${_liveOn ? `<th style="text-align:right;padding:3px 6px;color:var(--green)"><span data-gloss="2026 half-PPR points so far (FINAL games from the stats feed + live scoring for games in progress).">PTS</span></th>
+              ${_liveOn ? `<th style="text-align:right;padding:3px 6px;color:var(--green)"><span data-gloss="2026 half-PPR points so far (FINAL games from the stats feed + live scoring for games in progress).">SZN PTS</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--green)"><span data-gloss="Points in the current scoring week.">${_wkHdr}</span></th>` : ''}
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected fantasy points per game.">PROJ PPG</span></th>
-              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected total season points.">SZN PTS</span></th>
+              <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Projected total season points.">${_liveOn ? 'PROJ SZN' : 'SZN PTS'}</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Value Over Replacement — season pts above the BBM 12-team starter cutoff (QB12/RB30/WR42/TE13).">VOR</span></th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)"><span data-gloss="Pick number minus ADP. Positive = took player later than ADP (got value). Negative = reached.">vs ADP</span></th>
             </tr></thead><tbody>`;
@@ -71538,11 +71538,43 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const row = cached && cached.row;
       const me = row && (row.myEntry || (row.teams || []).find(t => t.isMine));
       if (me) {
-        if (row.myRank && row.fieldComplete) {
-          const rk = document.getElementById('vpDraftModalRank');
-          if (rk) rk.textContent = '· build rank ' + row.myRank + ' of ' + row.teams.length;
+        // 2026-10-16 (Jack): in-season the pop-up shows live standing — my
+        // place, points and cushion / gap to the advance line in the header,
+        // the pool's current standings, and actual season points per player
+        // (the roster table's live PTS + week columns).
+        let L = null;
+        try { L = _udLiveDraft(d); } catch (_) { L = null; }
+        const live = (L && L.scored && L.fieldComplete) ? L : null;
+        const rk = document.getElementById('vpDraftModalRank');
+        if (rk && live && live.me) {
+          const c = live.cushion;
+          const _ord = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'));
+          const cStr = c == null ? '' : (c >= 0
+            ? ` · <span style="color:var(--green);font-weight:700">+${c.toFixed(1)}</span> cushion`
+            : ` · <span style="color:var(--red);font-weight:700">${c.toFixed(1)}</span> to advance`);
+          rk.innerHTML = `· <span style="color:${live.me.adv ? 'var(--green)' : 'var(--text)'};font-weight:700">${_ord(live.me.rank)} of ${live.teams.length}</span> · <span style="color:var(--text);font-weight:700">${live.me.pts.toFixed(1)}</span> pts${cStr}`;
+        } else if (rk && row.myRank && row.fieldComplete) {
+          rk.textContent = '· build rank ' + row.myRank + ' of ' + row.teams.length;
         }
-        body.innerHTML = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">` + _udBuildTeamsRosterHtml(me) + `</div>`;
+        let standHtml = '';
+        if (live) {
+          const advN = live.rule.adv;
+          const cutT = live.teams[advN - 1], outT = live.teams[advN];
+          standHtml += `<div style="font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:var(--text2);margin-bottom:6px">STANDINGS <span style="text-transform:none;letter-spacing:0;font-weight:400">· top ${advN} advance${live.weeksScored ? ' · thru W' + live.weeksScored : ''}</span></div>`;
+          standHtml += `<div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:3px 14px;font-size:.7rem;align-items:center;margin-bottom:14px;max-width:520px">`;
+          live.teams.forEach((t, ti) => {
+            const gap = t.adv ? (outT ? t.pts - outT.pts : null) : (cutT ? t.pts - cutT.pts : null);
+            const bg = t.isMine ? 'background:rgba(245,158,11,.12);' : '';
+            const cell = 'padding:2px 4px;' + bg;
+            standHtml += `<div style="${cell}text-align:right;font-weight:700;color:${t.adv ? '#22c55e' : 'var(--text2)'}">${t.rank}</div>`;
+            standHtml += `<div style="${cell}color:${t.isMine ? 'var(--accent)' : 'var(--text)'};font-weight:${t.isMine ? 700 : 400};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.isMine ? 'YOU' : _esc(t.username || 'Team ' + (ti + 1))}</div>`;
+            standHtml += `<div style="${cell}text-align:right;color:var(--text);font-weight:600">${t.pts.toFixed(1)}</div>`;
+            standHtml += `<div style="${cell}text-align:right;font-weight:700;color:${gap == null ? 'var(--text2)' : gap >= 0 ? '#22c55e' : '#ef4444'}">${gap == null ? '—' : (gap >= 0 ? '+' : '') + (Math.round(gap * 10) / 10).toFixed(1)}</div>`;
+            if (ti === advN - 1 && ti < live.teams.length - 1) standHtml += `<div style="grid-column:1/-1;border-top:1px dashed #22c55e;opacity:.6;margin:1px 0"></div>`;
+          });
+          standHtml += `</div>`;
+        }
+        body.innerHTML = standHtml + `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">` + _udBuildTeamsRosterHtml(me, live) + `</div>`;
       } else {
         // Fallback (cache miss / sim failure): plain pick list from the draft.
         const rows = (d.picks || []).slice().sort((a, b) => (a.pick || 0) - (b.pick || 0)).map(p =>

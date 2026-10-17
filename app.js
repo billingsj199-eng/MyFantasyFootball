@@ -11769,14 +11769,31 @@ function attachTierListeners() {
       if (rk) toast('Moved to #' + rk.textContent.trim());
     }
   }
+  // Edit mode (phones): boards open for browsing — no grips, tier controls or
+  // tap-to-move — until ✎ EDIT is on, so a stray tap on a rank never picks anyone up.
+  const _edBtn = document.createElement('button');
+  _edBtn.type = 'button';
+  _edBtn.id = 'rnkEditToggle';
+  _edBtn.addEventListener('click', () => _edSet(!document.body.classList.contains('rnk-edit')));
+  document.body.appendChild(_edBtn);
+  function _edSet(on) {
+    document.body.classList.toggle('rnk-edit', on);
+    _edBtn.textContent = on ? '✓ Done' : '✎ Edit';
+    _edBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!on) _mvExit();
+  }
+  _edSet(false);
   window._mvAfterRender = () => {
+    const can = canEdit();
+    document.body.classList.toggle('rnk-can-edit', can);
+    if (!can && document.body.classList.contains('rnk-edit')) _edSet(false);
     if (_mvIdx == null) return;
     if (window._rnkFlushTail) window._rnkFlushTail();
     _mvPaint();
   };
   // Capture phase so it runs before the player-card click handler above.
   tbody.addEventListener('click', e => {
-    if (!_mvPhone() || !canEdit()) return;
+    if (!_mvPhone() || !canEdit() || !document.body.classList.contains('rnk-edit')) return;
     const slotEl = e.target.closest('tr.mv-slot');
     if (slotEl) { e.stopPropagation(); e.preventDefault(); _mvPlace(+slotEl.dataset.target, slotEl.dataset.side === 'below'); return; }
     const row = e.target.closest('tr[data-idx]');

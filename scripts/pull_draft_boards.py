@@ -1,6 +1,11 @@
 """pull_draft_boards.py - keep the NEXT draft class's projected draft capital current.
 
-Sources (both refreshed on every run):
+Sources (all refreshed on every run):
+  * NFL Mock Draft Database CONSENSUS MOCK DRAFT (default 1-week window), round 1
+    only - round 2+ is behind their Mock+ paywall:
+    https://www.nflmockdraftdatabase.com/mock-drafts/<yr>/consensus-mock-draft-<yr>
+    Jack (2026-10-17): the mock pick is the projected pick - more accurate for
+    draft slot than the big board rank.
   * NFL Mock Draft Database consensus big board (49 boards + 185 mocks, daily):
     https://www.nflmockdraftdatabase.com/big-boards/<yr>/consensus-big-board-<yr>
     The site 403s plain HTTP clients, so it is read through the PFF Chrome
@@ -12,8 +17,10 @@ Writes scripts/draft_boards_<yr>.json (per-player ranks from each source,
 for the audit) and patches data/combine_data.js:
 
   * draftProj for every skill-position (QB/RB/WR/TE) entry in the class
-    (yr == <draft year>): consensus rank when inside the consensus top 100,
-    otherwise max(101, PFF rank) - i.e. "outside the first ~3 rounds".
+    (yr == <draft year>): consensus MOCK pick when the player goes in round 1;
+    otherwise max(33, big-board rank) when inside the big-board top 100 (the mock
+    has him out of round 1); otherwise max(101, PFF rank) - "outside ~3 rounds".
+    If the mock page can't be read, the big-board rank is used unfloored.
     Entries with a real `draft` pick are never touched.
   * Universe = the RUNTIME devy board (combine_data.js + the stubs/overrides in
    data/combine_d_patches.js, via refresh_devy_stats.load_combine()). Stub entries
@@ -59,6 +66,12 @@ INDEX_HTML = "index.html"
 SKILL = {"QB", "RB", "HB", "WR", "TE"}
 PFF_API = "https://www.pff.com/api/college/big_board?season=%d&version=2"
 CONS_URL = "https://www.nflmockdraftdatabase.com/big-boards/%d/consensus-big-board-%d"
+MOCK_URL = "https://www.nflmockdraftdatabase.com/mock-drafts/%d/consensus-mock-draft-%d"
+# Primary window first. The page shows one player per pick and each player once, so a
+# round-1 player can vanish when he loses a slot (10-17: Moore/Mensah both at pick 6 -
+# Moore only shows in the 2-week window). Players missing from the primary window take
+# their pick from the next window that has them.
+MOCK_PERIODS = ["1_week", "2_weeks", "1_month", "all_time"]
 UA = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 
 # PFF / mock-site school spelling -> combine_data.js spelling
@@ -125,6 +138,32 @@ def pull_consensus(year):
     return out, updated
 
 
+def pull_mock(year, period=None):
+    """-> ({name: {pick,pos,school,pct}} for skill players, picks_shown, n_mocks).
+    Consensus mock draft page; each pick card: pick-number span, /players/ link,
+    position pill, optional /colleges/ link, share bar 'NN%'. Only round 1 is
+    public (round 2+ cards are locked placeholders with no player link)."""
+    url = MOCK_URL % (year, year) + ("?period=%s" % period if period else "")
+    r = requests.get(url, headers=BROWSER_UA, timeout=40)
+    r.raise_for_status()
+    html = r.text
+    m = re.search(r"Aggregated from\s*<strong>\s*(\d+)\s*mock", html)
+    n_mocks = int(m.group(1)) if m else None
+    card = re.compile(
+        r'font-black leading-none"[^>]*>\s*(\d{1,3})\s*</span>.*?href="/players/%d/[^"]+">\s*([^<]+?)\s*</a>'
+        r'\s*<div[^>]*>\s*<span[^>]*>\s*([A-Z]{1,4})\s*</span>'
+        r'(?:(?:(?!font-black leading-none).)*?href="/colleges/%d/[^"]+".*?<span[^>]*>\s*([^<]+?)\s*</span>)?'
+        r'.*?(\d{1,3})%%</span>' % (year, year), re.S)
+    out, picks = {}, 0
+    for pick, name, pos, school, pct in card.findall(html):
+        picks = max(picks, int(pick))
+        name = htmlmod.unescape(re.sub(r"\s+", " ", name))
+        pos = "RB" if pos == "HB" else pos
+        if pos in SKILL and name not in out:
+            out[name] = {"pick": int(pick), "pos": pos, "school": htmlmod.unescape(school or ""), "pct": int(pct)}
+    return out, picks, n_mocks
+
+
 def ht_str(h):
     """PFF "6' 4\"" -> "6-4"."""
     m = re.match(r"(\d)'\s*(\d{1,2})", str(h or ""))
@@ -180,6 +219,32 @@ def main():
         # every top-100 player to 101+. Snapshot nothing, change nothing.
         log("consensus board unavailable - no draftProj changes this run (exit 3)")
         return 3
+    mock, mock_picks, n_mocks = {}, 0, None
+    for attempt in range(3):
+        try:
+            mock, mock_picks, n_mocks = pull_mock(year, MOCK_PERIODS[0])
+            if mock_picks >= 20:
+                break
+        except Exception as e:  # noqa: BLE001
+            log("consensus mock attempt %d failed: %s" % (attempt + 1, e))
+            time.sleep(5)
+    if mock_picks < 20:
+        # Without the mock, keep the old big-board behaviour rather than flooring
+        # every big-board player to pick 33.
+        log("consensus mock unavailable (%d picks parsed) - big-board ranks only this run" % mock_picks)
+        mock, mock_picks = {}, 0
+    else:
+        log("consensus mock (%s): %d picks from %s mocks, %d skill players" % (MOCK_PERIODS[0], mock_picks, n_mocks, len(mock)))
+        for per in MOCK_PERIODS[1:]:
+            try:
+                extra, _, n_ex = pull_mock(year, per)
+            except Exception as e:  # noqa: BLE001
+                log("  mock window %s failed: %s" % (per, e))
+                continue
+            for n, v in extra.items():
+                if n not in mock:
+                    mock[n] = dict(v, window=per)
+                    log("  mock fill-in (%s, %s mocks): %s pick %d (%d%%)" % (per, n_ex, n, v["pick"], v["pct"]))
 
     with open(COMBINE_JS, encoding="utf-8", newline="") as f:
         raw = f.read()
@@ -208,26 +273,34 @@ def main():
     def site_name(n):
         return n if n in cb else by_norm.get(norm(n))
 
-    snapshot = {"year": year, "pulled": today.isoformat(), "pff_updated": pff_upd, "consensus_updated": cons_upd, "players": {}}
-    for n in set(pff) | set(cons):
-        snapshot["players"][n] = {"consensus": cons.get(n, {}).get("rank"), "pff": pff.get(n, {}).get("rank"),
-                                  "pos": (cons.get(n) or pff.get(n))["pos"], "school": (pff.get(n) or cons.get(n))["school"],
+    snapshot = {"year": year, "pulled": today.isoformat(), "pff_updated": pff_upd, "consensus_updated": cons_upd,
+                "mock_picks": mock_picks, "mock_n": n_mocks, "players": {}}
+    for n in set(pff) | set(cons) | set(mock):
+        info = cons.get(n) or pff.get(n) or mock.get(n)
+        snapshot["players"][n] = {"mock": mock.get(n, {}).get("pick"), "mock_pct": mock.get(n, {}).get("pct"),
+                                  "mock_window": mock.get(n, {}).get("window", MOCK_PERIODS[0]) if n in mock else None,
+                                  "consensus": cons.get(n, {}).get("rank"), "pff": pff.get(n, {}).get("rank"),
+                                  "pos": info["pos"], "school": (pff.get(n) or cons.get(n) or mock.get(n))["school"],
                                   "site": site_name(n)}
 
     changes, added = [], []
 
     def proj_for(n):
+        k = mock.get(n, {}).get("pick")
         c = cons.get(n, {}).get("rank")
         p = pff.get(n, {}).get("rank")
+        if k:
+            return k
         if c:
-            return c
+            # Not taken in the mock's public rounds -> no earlier than the next pick.
+            return max(mock_picks + 1, c) if mock_picks else c
         if p:
             return max(101, p)
         return None
 
     def proj_site(name):
-        """consensus -> PFF -> manual (Draft Buzz) -> None, for one site name."""
-        src = next((n for n in list(cons) + list(pff) if site_name(n) == name), None)
+        """mock -> consensus -> PFF -> manual (Draft Buzz) -> None, for one site name."""
+        src = next((n for n in list(mock) + list(cons) + list(pff) if site_name(n) == name), None)
         v = proj_for(src) if src else None
         if v is None and name in manual:
             v = min(262, max(101, int(round(manual[name]))))   # Draft Buzz ranks run past 600; 262 = last pick
@@ -308,7 +381,7 @@ def main():
     # data/draft_proj.js - self-applying map for the runtime board (covers the stubs).
     # Loaded after combine_d_patches.js; never touches a real `draft`.
     dp_lines = ["// GENERATED by scripts/pull_draft_boards.py - projected draft capital for the runtime devy board",
-                "// sources: NFL Mock Draft Database consensus (top 100) -> PFF big board (101+) -> NFL Draft Buzz avg overall rank (101+)",
+                "// sources: NFL Mock Draft Database consensus mock (round 1 pick) -> consensus big board (top 100, 33+) -> PFF big board (101+) -> NFL Draft Buzz avg overall rank (101+)",
                 "// 'U' = on no board (projected UDFA, scores as pick 300); null = beyond the draft year (draftProj removed). Generated %s for the %d class." % (today.isoformat(), year),
                 "window.DRAFT_PROJ = " + json.dumps(dict(sorted(proj_map.items())), ensure_ascii=False, separators=(",", ":")) + ";",
                 "(function () {",

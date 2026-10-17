@@ -1,9 +1,14 @@
 {
  "consensus_updated": "October 17, 2026",
+ "mock_n": 32,
+ "mock_picks": 32,
  "pff_updated": "2026-10-06T15:59:15",
  "players": {
   "Ahmad Hardy": {
    "consensus": 71,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 25,
    "pos": "RB",
    "school": "Missouri",
@@ -11,6 +16,9 @@
   },
   "Andrew Rappleyea": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 110,
    "pos": "TE",
    "school": "Penn State",
@@ -18,6 +26,9 @@
   },
   "Arch Manning": {
    "consensus": 2,
+   "mock": 13,
+   "mock_pct": 28,
+   "mock_window": "1_week",
    "pff": 2,
    "pos": "QB",
    "school": "Texas",
@@ -25,6 +36,9 @@
   },
   "Austin Simmons": {
    "consensus": 31,
+   "mock": 13,
+   "mock_pct": 22,
+   "mock_window": "1_month",
    "pff": null,
    "pos": "QB",
    "school": "Missouri",
@@ -32,6 +46,9 @@
   },
   "Brandon Inniss": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 146,
    "pos": "WR",
    "school": "Ohio State",
@@ -39,6 +56,9 @@
   },
   "Brendan Sorsby": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 66,
    "pos": "QB",
    "school": "Cincinnati",
@@ -46,6 +66,9 @@
   },
   "Brett Norfleet": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 125,
    "pos": "TE",
    "school": "Missouri",
@@ -53,6 +76,9 @@
   },
   "Bryant Wesco": {
    "consensus": 82,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": null,
    "pos": "WR",
    "school": "Clemson",
@@ -60,6 +86,9 @@
   },
   "Bryant Wesco Jr.": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 103,
    "pos": "WR",
    "school": "Clemson",
@@ -67,6 +96,9 @@
   },
   "CJ Carr": {
    "consensus": 15,
+   "mock": 9,
+   "mock_pct": 33,
+   "mock_window": "1_week",
    "pff": 21,
    "pos": "QB",
    "school": "Notre Dame",
@@ -74,6 +106,9 @@
   },
   "Cam Coleman": {
    "consensus": 11,
+   "mock": 8,
+   "mock_pct": 45,
+   "mock_window": "1_week",
    "pff": 8,
    "pos": "WR",
    "school": "Texas",
@@ -81,6 +116,9 @@
   },
   "Charlie Becker": {
    "consensus": 10,
+   "mock": 15,
+   "mock_pct": 50,
+   "mock_window": "1_month",
    "pff": 44,
    "pos": "WR",
    "school": "Indiana",
@@ -88,6 +126,9 @@
   },
   "Cooper Barkate": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 96,
    "pos": "WR",
    "school": "Miami (FL)",
@@ -95,6 +136,9 @@
   },
   "DJ Lagway": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 150,
    "pos": "QB",
    "school": "Baylor",
@@ -102,6 +146,9 @@
   },
   "Dante Moore": {
    "consensus": 6,
+   "mock": 6,
+   "mock_pct": 20,
+   "mock_window": "2_weeks",
    "pff": 3,
    "pos": "QB",
    "school": "Oregon",
@@ -109,6 +156,9 @@
   },
   "Darian Mensah": {
    "consensus": 7,
+   "mock": 6,
+   "mock_pct": 28,
+   "mock_window": "1_week",
    "pff": 45,
    "pos": "QB",
    "school": "Miami (FL)",
@@ -116,6 +166,9 @@
   },
   "Deuce Alexander": {
    "consensus": 55,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": null,
    "pos": "WR",
    "school": "Mississippi",
@@ -123,6 +176,9 @@
   },
   "Drake Lindsey": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 106,
    "pos": "QB",
    "school": "Minnesota",
@@ -130,6 +186,9 @@
   },
   "Drew Mestemaker": {
    "consensus": 5,
+   "mock": 3,
+   "mock_pct": 37,
+   "mock_window": "1_week",
    "pff": 23,
    "pos": "QB",
    "school": "Oklahoma State",
@@ -137,6 +196,9 @@
   },
   "Duce Robinson": {
    "consensus": 72,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 42,
    "pos": "WR",
    "school": "Florida State",
@@ -144,6 +206,9 @@
   },
   "Eli Finley": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 139,
    "pos": "TE",
    "school": "Louisiana Tech",
@@ -151,6 +216,9 @@
   },
   "Eric Singleton Jr.": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 127,
    "pos": "WR",
    "school": "Florida",
@@ -158,6 +226,9 @@
   },
   "Isaac Brown": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 113,
    "pos": "RB",
    "school": "Louisville",
@@ -165,6 +236,9 @@
   },
   "Isaiah Sategna III": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 142,
    "pos": "WR",
    "school": "Oklahoma",
@@ -172,6 +246,9 @@
   },
   "Jadan Baugh": {
    "consensus": 19,
+   "mock": 27,
+   "mock_pct": 50,
+   "mock_window": "1_week",
    "pff": 54,
    "pos": "RB",
    "school": "Florida",
@@ -179,6 +256,9 @@
   },
   "Jamari Johnson": {
    "consensus": 22,
+   "mock": 19,
+   "mock_pct": 30,
+   "mock_window": "1_week",
    "pff": 30,
    "pos": "TE",
    "school": "Oregon",
@@ -186,6 +266,9 @@
   },
   "Jayden Maiava": {
    "consensus": 61,
+   "mock": 30,
+   "mock_pct": 5,
+   "mock_window": "1_month",
    "pff": 57,
    "pos": "QB",
    "school": "USC",
@@ -193,6 +276,9 @@
   },
   "Jeremiah Smith": {
    "consensus": 1,
+   "mock": 1,
+   "mock_pct": 72,
+   "mock_window": "1_week",
    "pff": 1,
    "pos": "WR",
    "school": "Ohio State",
@@ -200,6 +286,9 @@
   },
   "Jordan Faison": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 117,
    "pos": "WR",
    "school": "Notre Dame",
@@ -207,6 +296,9 @@
   },
   "Julian Sayin": {
    "consensus": 50,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 31,
    "pos": "QB",
    "school": "Ohio State",
@@ -214,6 +306,9 @@
   },
   "KJ Duff": {
    "consensus": 37,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 28,
    "pos": "WR",
    "school": "Rutgers",
@@ -221,6 +316,9 @@
   },
   "Kewan Lacy": {
    "consensus": 51,
+   "mock": 29,
+   "mock_pct": 6,
+   "mock_window": "all_time",
    "pff": 50,
    "pos": "RB",
    "school": "Mississippi",
@@ -228,6 +326,9 @@
   },
   "LJ Martin": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 145,
    "pos": "RB",
    "school": "BYU",
@@ -235,6 +336,9 @@
   },
   "LaNorris Sellers": {
    "consensus": 70,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 60,
    "pos": "QB",
    "school": "South Carolina",
@@ -242,6 +346,9 @@
   },
   "Luke Reynolds": {
    "consensus": 65,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 144,
    "pos": "TE",
    "school": "Virginia Tech",
@@ -249,6 +356,9 @@
   },
   "Mario Craver": {
    "consensus": 64,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 77,
    "pos": "WR",
    "school": "Texas A&M",
@@ -256,6 +366,9 @@
   },
   "Mark Fletcher Jr.": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 33,
    "pos": "RB",
    "school": "Miami (FL)",
@@ -263,6 +376,9 @@
   },
   "Nate Frazier": {
    "consensus": 96,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 111,
    "pos": "RB",
    "school": "Georgia",
@@ -270,6 +386,9 @@
   },
   "Nick Marsh": {
    "consensus": 30,
+   "mock": 20,
+   "mock_pct": 37,
+   "mock_window": "1_week",
    "pff": 88,
    "pos": "WR",
    "school": "Indiana",
@@ -277,6 +396,9 @@
   },
   "Nico Iamaleava": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 118,
    "pos": "QB",
    "school": "UCLA",
@@ -284,6 +406,9 @@
   },
   "Nyck Harbor": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 90,
    "pos": "WR",
    "school": "South Carolina",
@@ -291,6 +416,9 @@
   },
   "Omarion Miller": {
    "consensus": 57,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 95,
    "pos": "WR",
    "school": "Arizona State",
@@ -298,6 +426,9 @@
   },
   "Peter Clarke": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 102,
    "pos": "TE",
    "school": "Temple",
@@ -305,6 +436,9 @@
   },
   "Reed Harris": {
    "consensus": 52,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 75,
    "pos": "WR",
    "school": "Arizona State",
@@ -312,6 +446,9 @@
   },
   "Ryan Coleman-Williams": {
    "consensus": 33,
+   "mock": 26,
+   "mock_pct": 25,
+   "mock_window": "1_week",
    "pff": 49,
    "pos": "WR",
    "school": "Alabama",
@@ -319,6 +456,9 @@
   },
   "Ryan Wingo": {
    "consensus": 69,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 56,
    "pos": "WR",
    "school": "Texas",
@@ -326,6 +466,9 @@
   },
   "Sam Leavitt": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 65,
    "pos": "QB",
    "school": "LSU",
@@ -333,6 +476,9 @@
   },
   "Terrance Carter Jr.": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 71,
    "pos": "TE",
    "school": "Texas Tech",
@@ -340,6 +486,9 @@
   },
   "Trey'Dez Green": {
    "consensus": 25,
+   "mock": 29,
+   "mock_pct": 15,
+   "mock_window": "1_week",
    "pff": 41,
    "pos": "TE",
    "school": "LSU",
@@ -347,6 +496,9 @@
   },
   "Trinidad Chambliss": {
    "consensus": 13,
+   "mock": 18,
+   "mock_pct": 50,
+   "mock_window": "1_week",
    "pff": 52,
    "pos": "QB",
    "school": "Mississippi",
@@ -354,6 +506,9 @@
   },
   "Wyatt Young": {
    "consensus": 97,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 64,
    "pos": "WR",
    "school": "Oklahoma State",
@@ -361,6 +516,9 @@
   },
   "Yannick Smith": {
    "consensus": null,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pff": 141,
    "pos": "WR",
    "school": "SMU",

@@ -1442,6 +1442,10 @@ CLEAR ALL
     /* Team line → abbreviation on phones (DET, not Detroit Lions); app.js _ptTeam. */
     #pageRankings tbody .pt-full{display:none}
     #pageRankings tbody .pc-namecol .pt-abbr{display:inline}
+    /* Edit-mode "+ ADD TIER" rows (hover-only, opacity:0) picked up the card padding,
+       border, margin and 88px intrinsic size here — blank gaps between players. Hover
+       never fires on phones, so drop them. */
+    #pageRankings tbody tr.add-tier-row{display:none!important}
     /* === Controls collapse (2026-10-09): ~590px of controls above the first
        card -> search + one summary bar + one swipeable position row. === */
     #rnkMobCtlToggle{display:flex;align-items:center;gap:8px;width:100%;order:1;margin:2px 0 0;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;min-height:38px}

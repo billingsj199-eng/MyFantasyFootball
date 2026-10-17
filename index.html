@@ -1432,6 +1432,11 @@ CLEAR ALL
     #pageRankings tbody .ppg-proj-cell{min-width:36px!important}
     body.wk-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell,
     body.ssn-xfp-col:not(.inj-view) #pageRankings tbody td.xfpg-cell{min-width:32px!important}
+    /* 2026-10-17 (Jack): season-board phone cards drop CONS · PROJ · '26 PPG ·
+       SOS (and xFP) so the name gets the width — the numbers live on desktop
+       and the player card. WEEKLY keeps OPP/PROJ; devy rows keep their cells. */
+    body:not(.format-weekly) #pageRankings tbody tr:not(.devy-row):not(.tier-row) td:is(.adp-cell,.ppg-proj-cell,.ppg25-cell,.xfpg-cell,.psos-cell){display:none!important}
+    body:not(.format-weekly) #pageRankings tbody .pc-namecol .player-name{font-size:.95rem}
     /* === Controls collapse (2026-10-09): ~590px of controls above the first
        card -> search + one summary bar + one swipeable position row. === */
     #rnkMobCtlToggle{display:flex;align-items:center;gap:8px;width:100%;order:1;margin:2px 0 0;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;min-height:38px}

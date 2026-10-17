@@ -2,26 +2,50 @@
  "consensus_updated": "October 17, 2026",
  "mock_n": "32",
  "mock_picks": 64,
- "pff_updated": "2026-10-06T15:59:15",
  "players": {
   "Ahmad Hardy": {
    "consensus": 71,
    "mock": 38,
    "mock_pct": 50,
    "mock_window": "1_month",
-   "pff": 25,
    "pos": "RB",
    "school": "Missouri",
    "site": "Ahmad Hardy"
   },
-  "Andrew Rappleyea": {
-   "consensus": null,
+  "Amare Thomas": {
+   "consensus": 213,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 110,
+   "pos": "WR",
+   "school": "",
+   "site": "Amare Thomas"
+  },
+  "Andrew Rappleyea": {
+   "consensus": 194,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pos": "TE",
-   "school": "Penn State",
+   "school": "",
+   "site": null
+  },
+  "Anthony Evans III": {
+   "consensus": 203,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
+  },
+  "Antwan Raymond": {
+   "consensus": 296,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
    "site": null
   },
   "Arch Manning": {
@@ -29,7 +53,6 @@
    "mock": 13,
    "mock_pct": 28,
    "mock_window": "1_week",
-   "pff": 2,
    "pos": "QB",
    "school": "Texas",
    "site": "Arch Manning"
@@ -39,39 +62,53 @@
    "mock": 45,
    "mock_pct": 100,
    "mock_window": "1_week",
-   "pff": null,
    "pos": "QB",
    "school": "Missouri",
    "site": "Austin Simmons"
   },
-  "Brandon Inniss": {
-   "consensus": null,
+  "Benjamin Brahmer": {
+   "consensus": 176,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 146,
+   "pos": "TE",
+   "school": "",
+   "site": null
+  },
+  "Brandon Inniss": {
+   "consensus": 271,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pos": "WR",
-   "school": "Ohio State",
+   "school": "",
    "site": "Brandon Inniss"
   },
-  "Brendan Sorsby": {
-   "consensus": null,
+  "Braylon Staley": {
+   "consensus": 262,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 66,
+   "pos": "WR",
+   "school": "",
+   "site": "Braylon Staley"
+  },
+  "Brendan Sorsby": {
+   "consensus": 133,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pos": "QB",
-   "school": "Cincinnati",
+   "school": "",
    "site": "Brendan Sorsby"
   },
   "Brett Norfleet": {
-   "consensus": null,
+   "consensus": 278,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 125,
    "pos": "TE",
-   "school": "Missouri",
+   "school": "",
    "site": null
   },
   "Bryant Wesco": {
@@ -79,77 +116,141 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": null,
    "pos": "WR",
    "school": "Clemson",
    "site": "Bryant Wesco Jr."
   },
-  "Bryant Wesco Jr.": {
-   "consensus": null,
+  "C.J. Baxter": {
+   "consensus": 235,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 103,
-   "pos": "WR",
-   "school": "Clemson",
-   "site": "Bryant Wesco Jr."
+   "pos": "RB",
+   "school": "",
+   "site": "CJ Baxter Jr."
   },
   "CJ Carr": {
    "consensus": 15,
    "mock": 9,
    "mock_pct": 33,
    "mock_window": "1_week",
-   "pff": 21,
    "pos": "QB",
    "school": "Notre Dame",
    "site": "CJ Carr"
+  },
+  "Caleb Komolafe": {
+   "consensus": 256,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": null
+  },
+  "Caleb Odom": {
+   "consensus": 267,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": null
   },
   "Cam Coleman": {
    "consensus": 11,
    "mock": 8,
    "mock_pct": 45,
    "mock_window": "1_week",
-   "pff": 8,
    "pos": "WR",
    "school": "Texas",
    "site": "Cam Coleman"
+  },
+  "Cam Cook": {
+   "consensus": 277,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": "Cam Cook"
+  },
+  "Carlos Hernandez": {
+   "consensus": 169,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
   },
   "Charlie Becker": {
    "consensus": 10,
    "mock": 15,
    "mock_pct": 50,
    "mock_window": "1_month",
-   "pff": 44,
    "pos": "WR",
    "school": "Indiana",
    "site": "Charlie Becker"
   },
-  "Cooper Barkate": {
-   "consensus": null,
+  "Chris Marshall": {
+   "consensus": 186,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 96,
    "pos": "WR",
-   "school": "Miami (FL)",
+   "school": "",
+   "site": null
+  },
+  "Collin Dixon": {
+   "consensus": 187,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
+  },
+  "Conner Weigman": {
+   "consensus": 233,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "QB",
+   "school": "",
+   "site": null
+  },
+  "Cooper Barkate": {
+   "consensus": 147,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
    "site": "Cooper Barkate"
   },
   "DJ Lagway": {
-   "consensus": null,
+   "consensus": 229,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 150,
    "pos": "QB",
-   "school": "Baylor",
+   "school": "",
    "site": "DJ Lagway"
+  },
+  "DJ Vonnahme": {
+   "consensus": 175,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": "DJ Vonnahme"
   },
   "Dante Moore": {
    "consensus": 6,
    "mock": 6,
    "mock_pct": 20,
    "mock_window": "2_weeks",
-   "pff": 3,
    "pos": "QB",
    "school": "Oregon",
    "site": "Dante Moore"
@@ -159,7 +260,6 @@
    "mock": 6,
    "mock_pct": 28,
    "mock_window": "1_week",
-   "pff": 45,
    "pos": "QB",
    "school": "Miami (FL)",
    "site": "Darian Mensah"
@@ -169,19 +269,26 @@
    "mock": 49,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": null,
    "pos": "WR",
    "school": "Mississippi",
    "site": "Deuce Alexander"
   },
-  "Drake Lindsey": {
-   "consensus": null,
+  "Devin McCuin": {
+   "consensus": 222,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 106,
+   "pos": "WR",
+   "school": "",
+   "site": null
+  },
+  "Drake Lindsey": {
+   "consensus": 118,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pos": "QB",
-   "school": "Minnesota",
+   "school": "",
    "site": "Drake Lindsey"
   },
   "Drew Mestemaker": {
@@ -189,7 +296,6 @@
    "mock": 3,
    "mock_pct": 37,
    "mock_window": "1_week",
-   "pff": 23,
    "pos": "QB",
    "school": "Oklahoma State",
    "site": "Drew Mestemaker"
@@ -199,49 +305,107 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 42,
    "pos": "WR",
    "school": "Florida State",
    "site": "Duce Robinson"
   },
-  "Eli Finley": {
-   "consensus": null,
+  "Dylan Raiola": {
+   "consensus": 129,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 139,
-   "pos": "TE",
-   "school": "Louisiana Tech",
-   "site": null
+   "pos": "QB",
+   "school": "",
+   "site": "Dylan Raiola"
   },
   "Eric Singleton Jr.": {
-   "consensus": null,
+   "consensus": 184,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 127,
    "pos": "WR",
-   "school": "Florida",
+   "school": "",
    "site": "Eric Singleton Jr."
   },
-  "Isaac Brown": {
-   "consensus": null,
+  "Eugene Wilson III": {
+   "consensus": 238,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 113,
+   "pos": "WR",
+   "school": "",
+   "site": "Eugene Wilson III"
+  },
+  "Evan Stewart": {
+   "consensus": 241,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
+  },
+  "Fluff Bothwell": {
+   "consensus": 236,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pos": "RB",
-   "school": "Louisville",
+   "school": "",
+   "site": null
+  },
+  "Gabe Burkle": {
+   "consensus": 289,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": null
+  },
+  "Griffin Wilde": {
+   "consensus": 139,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
+  },
+  "Hollywood Smothers": {
+   "consensus": 127,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": "Hollywood Smothers"
+  },
+  "Ian Strong": {
+   "consensus": 165,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": "Ian Strong"
+  },
+  "Isaac Brown": {
+   "consensus": 135,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
    "site": "Isaac Brown"
   },
-  "Isaiah Sategna III": {
-   "consensus": null,
+  "Isaiah Sategna": {
+   "consensus": 149,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 142,
    "pos": "WR",
-   "school": "Oklahoma",
+   "school": "",
    "site": "Isaiah Sategna III"
   },
   "Jadan Baugh": {
@@ -249,7 +413,6 @@
    "mock": 27,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": 54,
    "pos": "RB",
    "school": "Florida",
    "site": "Jadan Baugh"
@@ -259,57 +422,123 @@
    "mock": 19,
    "mock_pct": 30,
    "mock_window": "1_week",
-   "pff": 30,
    "pos": "TE",
    "school": "Oregon",
    "site": "Jamari Johnson"
+  },
+  "Javon Tracy": {
+   "consensus": 251,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
   },
   "Jayden Maiava": {
    "consensus": 61,
    "mock": 30,
    "mock_pct": 5,
    "mock_window": "1_month",
-   "pff": 57,
    "pos": "QB",
    "school": "USC",
    "site": "Jayden Maiava"
+  },
+  "Jelani Thurman": {
+   "consensus": 255,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": null
+  },
+  "Jeremiah Hasley": {
+   "consensus": 215,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": null
   },
   "Jeremiah Smith": {
    "consensus": 1,
    "mock": 1,
    "mock_pct": 72,
    "mock_window": "1_week",
-   "pff": 1,
    "pos": "WR",
    "school": "Ohio State",
    "site": "Jeremiah Smith"
   },
-  "Jordan Faison": {
-   "consensus": null,
+  "John Mateer": {
+   "consensus": 237,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 117,
+   "pos": "QB",
+   "school": "",
+   "site": "John Mateer"
+  },
+  "Jordan Faison": {
+   "consensus": 120,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pos": "WR",
-   "school": "Notre Dame",
+   "school": "",
    "site": null
+  },
+  "Jordan Marshall": {
+   "consensus": 297,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": "Jordan Marshall"
+  },
+  "Josh Hoover": {
+   "consensus": 204,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "QB",
+   "school": "",
+   "site": "Josh Hoover"
   },
   "Julian Sayin": {
    "consensus": 50,
    "mock": 62,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": 31,
    "pos": "QB",
    "school": "Ohio State",
    "site": "Julian Sayin"
+  },
+  "Junior Sherrill": {
+   "consensus": 106,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
+  },
+  "Justice Haynes": {
+   "consensus": 153,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": "Justice Haynes"
   },
   "KJ Duff": {
    "consensus": 37,
    "mock": 41,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": 28,
    "pos": "WR",
    "school": "Rutgers",
    "site": "KJ Duff"
@@ -319,19 +548,26 @@
    "mock": 49,
    "mock_pct": 50,
    "mock_window": "1_month",
-   "pff": 50,
    "pos": "RB",
    "school": "Mississippi",
    "site": "Kewan Lacy"
   },
-  "LJ Martin": {
-   "consensus": null,
+  "Keyjuan Brown": {
+   "consensus": 270,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 145,
    "pos": "RB",
-   "school": "BYU",
+   "school": "",
+   "site": null
+  },
+  "LJ Martin": {
+   "consensus": 119,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
    "site": "LJ Martin"
   },
   "LaNorris Sellers": {
@@ -339,79 +575,107 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 60,
    "pos": "QB",
    "school": "South Carolina",
    "site": "LaNorris Sellers"
+  },
+  "Lawson Luckie": {
+   "consensus": 138,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": null
   },
   "Luke Reynolds": {
    "consensus": 65,
    "mock": 63,
    "mock_pct": 33,
    "mock_window": "1_month",
-   "pff": 144,
    "pos": "TE",
    "school": "Virginia Tech",
    "site": "Luke Reynolds"
+  },
+  "Makhi Hughes": {
+   "consensus": 232,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": null
   },
   "Mario Craver": {
    "consensus": 64,
    "mock": 58,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": 77,
    "pos": "WR",
    "school": "Texas A&M",
    "site": "Mario Craver"
   },
-  "Mark Fletcher Jr.": {
-   "consensus": null,
+  "Mark Fletcher": {
+   "consensus": 112,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 33,
    "pos": "RB",
-   "school": "Miami (FL)",
+   "school": "",
    "site": "Mark Fletcher Jr."
+  },
+  "Mike Matthews": {
+   "consensus": 137,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": "Mike Matthews"
   },
   "Nate Frazier": {
    "consensus": 96,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 111,
    "pos": "RB",
    "school": "Georgia",
    "site": "Nate Frazier"
+  },
+  "Nic Anderson": {
+   "consensus": 234,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": "Nic Anderson"
   },
   "Nick Marsh": {
    "consensus": 30,
    "mock": 20,
    "mock_pct": 37,
    "mock_window": "1_week",
-   "pff": 88,
    "pos": "WR",
    "school": "Indiana",
    "site": "Nick Marsh"
   },
   "Nico Iamaleava": {
-   "consensus": null,
+   "consensus": 140,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 118,
    "pos": "QB",
-   "school": "UCLA",
+   "school": "",
    "site": "Nico Iamaleava"
   },
   "Nyck Harbor": {
-   "consensus": null,
+   "consensus": 161,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 90,
    "pos": "WR",
-   "school": "South Carolina",
+   "school": "",
    "site": "Nyck Harbor"
   },
   "Omarion Miller": {
@@ -419,37 +683,69 @@
    "mock": 55,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": 95,
    "pos": "WR",
    "school": "Arizona State",
    "site": "Omarion Miller"
   },
   "Peter Clarke": {
-   "consensus": null,
+   "consensus": 150,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 102,
    "pos": "TE",
-   "school": "Temple",
+   "school": "",
    "site": null
+  },
+  "Quintrevion Wisner": {
+   "consensus": 231,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": null
+  },
+  "Raleek Brown": {
+   "consensus": 298,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": "Raleek Brown"
   },
   "Reed Harris": {
    "consensus": 52,
    "mock": 54,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": 75,
    "pos": "WR",
    "school": "Arizona State",
    "site": "Reed Harris"
+  },
+  "Rocky Beers": {
+   "consensus": 199,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": null
+  },
+  "Rueben Owens": {
+   "consensus": 279,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": null
   },
   "Ryan Coleman-Williams": {
    "consensus": 33,
    "mock": 26,
    "mock_pct": 25,
    "mock_window": "1_week",
-   "pff": 49,
    "pos": "WR",
    "school": "Alabama",
    "site": "Ryan Coleman-Williams"
@@ -459,37 +755,69 @@
    "mock": 61,
    "mock_pct": 33,
    "mock_window": "1_week",
-   "pff": 56,
    "pos": "WR",
    "school": "Texas",
    "site": "Ryan Wingo"
   },
   "Sam Leavitt": {
-   "consensus": null,
+   "consensus": 116,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 65,
    "pos": "QB",
-   "school": "LSU",
+   "school": "",
    "site": "Sam Leavitt"
   },
-  "Terrance Carter Jr.": {
-   "consensus": null,
+  "TJ Moore": {
+   "consensus": 155,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 71,
+   "pos": "WR",
+   "school": "",
+   "site": "T.J. Moore"
+  },
+  "Terrance Carter": {
+   "consensus": 105,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
    "pos": "TE",
-   "school": "Texas Tech",
+   "school": "",
    "site": "Terrance Carter Jr."
+  },
+  "Theo Melin Ohrstrom": {
+   "consensus": 299,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "TE",
+   "school": "",
+   "site": null
+  },
+  "Tony Diaz": {
+   "consensus": 211,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
+  },
+  "Tre Richardson": {
+   "consensus": 300,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "WR",
+   "school": "",
+   "site": null
   },
   "Trey'Dez Green": {
    "consensus": 25,
    "mock": 29,
    "mock_pct": 15,
    "mock_window": "1_week",
-   "pff": 41,
    "pos": "TE",
    "school": "LSU",
    "site": "Trey'Dez Green"
@@ -499,30 +827,36 @@
    "mock": 18,
    "mock_pct": 50,
    "mock_window": "1_week",
-   "pff": 52,
    "pos": "QB",
    "school": "Mississippi",
    "site": "Trinidad Chambliss"
+  },
+  "Walker Eget": {
+   "consensus": 167,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "QB",
+   "school": "",
+   "site": null
+  },
+  "Wayshawn Parker": {
+   "consensus": 162,
+   "mock": null,
+   "mock_pct": null,
+   "mock_window": null,
+   "pos": "RB",
+   "school": "",
+   "site": null
   },
   "Wyatt Young": {
    "consensus": 97,
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
-   "pff": 64,
    "pos": "WR",
    "school": "Oklahoma State",
    "site": "Wyatt Young"
-  },
-  "Yannick Smith": {
-   "consensus": null,
-   "mock": null,
-   "mock_pct": null,
-   "mock_window": null,
-   "pff": 141,
-   "pos": "WR",
-   "school": "SMU",
-   "site": null
   }
  },
  "pulled": "2026-10-17",

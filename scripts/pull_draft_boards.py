@@ -8,36 +8,34 @@ Sources (all refreshed on every run):
     https://www.nflmockdraftdatabase.com/mock-drafts/<yr>/consensus-mock-draft-<yr>
     Jack (2026-10-17): the mock pick is the projected pick - more accurate for
     draft slot than the big board rank.
-  * NFL Mock Draft Database consensus big board (49 boards + 185 mocks, daily):
+  * NFL Mock Draft Database consensus BIG BOARD (daily). Public page = top 100;
+    signed in (Mock+) it runs ~1000 deep:
     https://www.nflmockdraftdatabase.com/big-boards/<yr>/consensus-big-board-<yr>
-    The site 403s plain HTTP clients, so it is read through the PFF Chrome
-    profile (scripts/pull_pff_weekly.py._make_driver) - no login needed there.
-  * PFF big board JSON (150 players, ranks + height/weight/class):
-    https://www.pff.com/api/college/big_board?season=<yr>&version=2
+  Jack (2026-10-17): ONLY nflmockdraftdatabase - PFF big board and NFL Draft Buzz
+  are no longer draftProj sources (NFLMDD is more up to date).
+  Mock+ pages the headless fetch can't see (signed out) come from CSVs Jack's
+  Chrome pulls by hand (Claude in Chrome): Site Rankings/mock_draft_<yr>.csv and
+  Site Rankings/big_board_<yr>.csv - used for 10 days while deeper than the live page.
 
 Writes scripts/draft_boards_<yr>.json (per-player ranks from each source,
 for the audit) and patches data/combine_data.js:
 
   * draftProj for every skill-position (QB/RB/WR/TE) entry in the class
-    (yr == <draft year>): consensus MOCK pick when the player goes in round 1;
-    otherwise max(33, big-board rank) when inside the big-board top 100 (the mock
-    has him out of round 1); otherwise max(101, PFF rank) - "outside ~3 rounds".
+    (yr == <draft year>): consensus MOCK pick when the player is in the mock;
+    otherwise max(last mock pick + 1, big-board rank) while the big-board rank is
+    a draftable slot (<= 262); otherwise projected UDFA.
     If the mock page can't be read, the big-board rank is used unfloored.
     Entries with a real `draft` pick are never touched.
   * Universe = the RUNTIME devy board (combine_data.js + the stubs/overrides in
    data/combine_d_patches.js, via refresh_devy_stats.load_combine()). Stub entries
    get their draftProj through data/draft_proj.js (self-applying, loaded after the
    patches); combine_data.js entries are edited in place.
- * Third source: Site Rankings/projected_dc_<year>.csv (name,rank,...) - NFL Draft
-   Buzz average overall rank, read by hand through Jack's Chrome (the site's bot
-   check blocks scripts) -> max(101, rank) when consensus and PFF have nothing.
- * A class player on no source becomes a projected UDFA (draftProj 'U' -> pick 300),
-   so stale April projections go away but every class player still carries draft
-   capital. eligYr > draft year (2028+) is always cleared - too far out.
- * --add: any skill player in the consensus top 100 or PFF top 100 who is
-    not in COMBINE_DATA gets a devy entry {yr, devy:true, eligYr, school,
-    pos, ht, wt, draftProj} (school/ht/wt from PFF). The weekly devy stats
-    refresh then backfills their college seasons.
+ * A class player on no NFLMDD board (or ranked past 262) becomes a projected UDFA
+   (draftProj 'U' -> pick 300), so stale April projections go away but every class
+   player still carries draft capital. eligYr > draft year (2028+) is always cleared.
+ * --add: any skill player in the public big-board top 100 who is not in
+    COMBINE_DATA gets a devy entry {yr, devy:true, eligYr, school, pos, draftProj}.
+    The weekly devy stats refresh then backfills their college seasons + ht/wt.
 
 Only the NEXT class is touched (Jack: "anything beyond that is too far out").
 Bumps combine_data.js ?v= (both index.html tags) only when the file changed.
@@ -63,10 +61,8 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 COMBINE_JS = "data/combine_data.js"
 DRAFT_PROJ_JS = "data/draft_proj.js"
-MANUAL_DC = "Site Rankings/projected_dc_%d.csv"
 INDEX_HTML = "index.html"
 SKILL = {"QB", "RB", "HB", "WR", "TE"}
-PFF_API = "https://www.pff.com/api/college/big_board?season=%d&version=2"
 CONS_URL = "https://www.nflmockdraftdatabase.com/big-boards/%d/consensus-big-board-%d"
 MOCK_URL = "https://www.nflmockdraftdatabase.com/mock-drafts/%d/consensus-mock-draft-%d"
 # Primary window first. The page shows one player per pick and each player once, so a
@@ -74,9 +70,9 @@ MOCK_URL = "https://www.nflmockdraftdatabase.com/mock-drafts/%d/consensus-mock-d
 # Moore only shows in the 2-week window). Players missing from the primary window take
 # their pick from the next window that has them.
 MOCK_PERIODS = ["1_week", "2_weeks", "1_month", "all_time"]
-UA = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+LAST_PICK = 262   # big-board rank past the last draft slot -> projected UDFA
 
-# PFF / mock-site school spelling -> combine_data.js spelling
+# mock-site school spelling -> combine_data.js spelling
 SCHOOL_FIX = {
     "Ohio State": "Ohio St.", "Penn State": "Penn St.", "Michigan State": "Michigan St.",
     "Arizona State": "Arizona St.", "Kansas State": "Kansas St.", "Oklahoma State": "Oklahoma St.",
@@ -96,24 +92,6 @@ def norm(n):
     n = re.sub(r"\s+(jr\.?|sr\.?|ii|iii|iv|v)$", "", n)
     return re.sub(r"[.'’\-\s]", "", n)
 
-
-def pull_pff(year):
-    r = requests.get(PFF_API % year, headers=UA, timeout=40)
-    r.raise_for_status()
-    j = r.json()
-    out = {}
-    for x in j.get("players", []):
-        pos = x.get("position")
-        if pos not in SKILL:
-            continue
-        team = x.get("team") or {}
-        out[x["name"]] = {
-            "rank": x.get("pff_rank"), "pos": "RB" if pos == "HB" else pos,
-            "school": x.get("college") or team.get("city") or "",
-            "ht": x.get("height"), "wt": x.get("weight"), "cls": x.get("class"),
-            "age": x.get("age"), "g1": x.get("grade_1"), "g2": x.get("grade_2"), "g3": x.get("grade_3"),
-        }
-    return out, j.get("last_updated_at")
 
 
 BROWSER_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
@@ -198,6 +176,28 @@ def fetch_mock_html(url):
     return r.text
 
 
+BOARD_CSV = "Site Rankings/big_board_%d.csv"   # signed-in big board (Jack's Chrome), skill rows through 300
+
+
+def load_board_csv(year, today):
+    """-> ({name: {rank,pos}}, depth, updated, pulled) when <= MOCK_CSV_MAX_AGE days old, else ({}, 0, ...)."""
+    import csv
+    path = BOARD_CSV % year
+    out, depth, upd, pulled = {}, 0, None, None
+    if not os.path.exists(path):
+        return out, depth, upd, pulled
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            try:
+                pulled = datetime.date.fromisoformat(row["pulled"])
+                if (today - pulled).days > MOCK_CSV_MAX_AGE:
+                    return {}, 0, None, pulled
+                depth, upd = int(row["depth"]), row["updated"]
+                out.setdefault(row["name"].strip(), {"rank": int(row["rank"]), "pos": row["pos"]})
+            except (KeyError, ValueError):
+                continue
+    return out, depth, upd, pulled
+
 def pull_mock(year, period=None):
     """-> ({name: {pick,pos,school,pct}} for skill players, picks_shown, n_mocks).
     Consensus mock draft page; each pick card: pick-number span, /players/ link,
@@ -221,11 +221,6 @@ def pull_mock(year, period=None):
             out[name] = {"pick": int(pick), "pos": pos, "school": htmlmod.unescape(school or ""), "pct": int(pct)}
     return out, picks, n_mocks
 
-
-def ht_str(h):
-    """PFF "6' 4\"" -> "6-4"."""
-    m = re.match(r"(\d)'\s*(\d{1,2})", str(h or ""))
-    return "%s-%s" % (m.group(1), m.group(2)) if m else None
 
 
 def digest(path):
@@ -260,21 +255,27 @@ def main():
     year = a.year or (today.year + 1 if today.month >= 5 else today.year)
     log("=== draft boards %d (%s) ===" % (year, today))
 
-    pff, pff_upd = pull_pff(year)
-    log("PFF big board: %d skill players (updated %s)" % (len(pff), pff_upd))
-    cons, cons_upd = {}, None
+    cons_live, cons_upd = {}, None
     for attempt in range(3):
         try:
-            cons, cons_upd = pull_consensus(year)
-            if cons:
+            cons_live, cons_upd = pull_consensus(year)
+            if cons_live:
                 break
         except Exception as e:  # noqa: BLE001
             log("consensus board attempt %d failed: %s" % (attempt + 1, e))
             time.sleep(5)
-    log("consensus board: %d skill players in top 100 (updated %s)" % (len(cons), cons_upd))
+    live_depth = max((v["rank"] for v in cons_live.values()), default=0)
+    log("consensus board (live): %d skill players through rank %d (updated %s)" % (len(cons_live), live_depth, cons_upd))
+    cons = dict(cons_live)
+    bb, bb_depth, bb_upd, bb_pulled = load_board_csv(year, today)
+    if bb and bb_depth > live_depth:
+        # Signed-in board from Jack's Chrome: ranks from the CSV, school from the live page.
+        cons = {n: dict(v, school=cons_live.get(n, {}).get("school", "")) for n, v in bb.items()}
+        cons_upd = bb_upd
+        log("  big board: CSV from Jack's Chrome (%s, %d deep, %d skill through 300) beats live page" % (bb_pulled, bb_depth, len(bb)))
     if len(cons) < 10:
-        # The consensus rank is the anchor for draftProj; PFF alone would demote
-        # every top-100 player to 101+. Snapshot nothing, change nothing.
+        # The consensus rank is the anchor for draftProj; without it every player
+        # would go UDFA. Snapshot nothing, change nothing.
         log("consensus board unavailable - no draftProj changes this run (exit 3)")
         return 3
     mock_csv = load_mock_csv(year, today)
@@ -322,54 +323,34 @@ def main():
     by_norm = {norm(n): n for n in cb}
     for n in rt:
         by_norm.setdefault(norm(n), n)
-    # Manual third source (NFL Draft Buzz avg overall rank, by hand through Jack's Chrome)
-    manual = {}
-    mpath = MANUAL_DC % year
-    if os.path.exists(mpath):
-        import csv
-        with open(mpath, encoding="utf-8", newline="") as f:
-            for row in csv.DictReader(f):
-                try:
-                    manual[row["name"].strip()] = float(row["rank"])
-                except (KeyError, ValueError):
-                    continue
-        log("manual DC rows (%s): %d" % (mpath, len(manual)))
-
     def site_name(n):
         return n if n in cb else by_norm.get(norm(n))
 
-    snapshot = {"year": year, "pulled": today.isoformat(), "pff_updated": pff_upd, "consensus_updated": cons_upd,
+    snapshot = {"year": year, "pulled": today.isoformat(), "consensus_updated": cons_upd,
                 "mock_picks": mock_picks, "mock_n": n_mocks, "players": {}}
-    for n in set(pff) | set(cons) | set(mock):
-        info = cons.get(n) or pff.get(n) or mock.get(n)
+    for n in set(cons) | set(mock):
+        info = cons.get(n) or mock.get(n)
         snapshot["players"][n] = {"mock": mock.get(n, {}).get("pick"), "mock_pct": mock.get(n, {}).get("pct"),
                                   "mock_window": mock.get(n, {}).get("window", MOCK_PERIODS[0]) if n in mock else None,
-                                  "consensus": cons.get(n, {}).get("rank"), "pff": pff.get(n, {}).get("rank"),
-                                  "pos": info["pos"], "school": (pff.get(n) or cons.get(n) or mock.get(n))["school"],
-                                  "site": site_name(n)}
+                                  "consensus": cons.get(n, {}).get("rank"),
+                                  "pos": info["pos"], "school": info.get("school", ""), "site": site_name(n)}
 
     changes, added = [], []
 
     def proj_for(n):
         k = mock.get(n, {}).get("pick")
         c = cons.get(n, {}).get("rank")
-        p = pff.get(n, {}).get("rank")
         if k:
             return k
-        if c:
-            # Not taken in the mock's public rounds -> no earlier than the next pick.
+        if c and c <= LAST_PICK:
+            # Not in the mock's rounds -> no earlier than the next pick.
             return max(mock_picks + 1, c) if mock_picks else c
-        if p:
-            return max(101, p)
-        return None
+        return None   # ranked past the last pick -> projected UDFA
 
     def proj_site(name):
-        """mock -> consensus -> PFF -> manual (Draft Buzz) -> None, for one site name."""
-        src = next((n for n in list(mock) + list(cons) + list(pff) if site_name(n) == name), None)
-        v = proj_for(src) if src else None
-        if v is None and name in manual:
-            v = min(262, max(101, int(round(manual[name]))))   # Draft Buzz ranks run past 600; 262 = last pick
-        return v
+        """mock -> consensus big board -> None (UDFA), for one site name."""
+        src = next((n for n in list(mock) + list(cons) if site_name(n) == name), None)
+        return proj_for(src) if src else None
 
     # 1) draftProj for the whole runtime class (combine_data.js entries edited in
     #    place, stub entries through data/draft_proj.js). No source -> CLEAR.
@@ -414,21 +395,14 @@ def main():
                 cb[name]["draftProj"] = new
     # 2) new names
     if a.add:
-        for n in sorted(set(cons) | set(pff), key=lambda x: proj_for(x) or 999):
-            if site_name(n):
+        # Public top 100 only - those cards carry the school.
+        for n in sorted(cons_live, key=lambda x: proj_for(x) or 999):
+            if site_name(n) or cons_live[n]["rank"] > 100:
                 continue
-            c, p = cons.get(n, {}).get("rank"), pff.get(n, {}).get("rank")
-            if not ((c and c <= 100) or (p and p <= 100)):
-                continue
-            info = pff.get(n) or cons.get(n)
+            info = cons_live[n]
             school = SCHOOL_FIX.get(info["school"], info["school"])
             ent = {"yr": year, "devy": True, "eligYr": year, "school": school, "pos": info["pos"]}
-            if pff.get(n):
-                if ht_str(pff[n]["ht"]):
-                    ent["ht"] = ht_str(pff[n]["ht"])
-                if pff[n].get("wt"):
-                    ent["wt"] = int(pff[n]["wt"])
-            ent["draftProj"] = proj_for(n)
+            ent["draftProj"] = proj_for(n) or "U"
             cb[n] = ent
             added.append((n, ent))
 
@@ -446,7 +420,7 @@ def main():
     # data/draft_proj.js - self-applying map for the runtime board (covers the stubs).
     # Loaded after combine_d_patches.js; never touches a real `draft`.
     dp_lines = ["// GENERATED by scripts/pull_draft_boards.py - projected draft capital for the runtime devy board",
-                "// sources: NFL Mock Draft Database consensus mock (round 1 pick) -> consensus big board (top 100, 33+) -> PFF big board (101+) -> NFL Draft Buzz avg overall rank (101+)",
+                "// source: NFL Mock Draft Database only - consensus mock pick -> consensus big board rank (after the last mock pick, <= 262) -> projected UDFA",
                 "// 'U' = on no board (projected UDFA, scores as pick 300); null = beyond the draft year (draftProj removed). Generated %s for the %d class." % (today.isoformat(), year),
                 "window.DRAFT_PROJ = " + json.dumps(dict(sorted(proj_map.items())), ensure_ascii=False, separators=(",", ":")) + ";",
                 "(function () {",

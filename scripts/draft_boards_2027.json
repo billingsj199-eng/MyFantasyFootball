@@ -28,7 +28,7 @@
    "mock_window": null,
    "pos": "TE",
    "school": "Penn State",
-   "site": null
+   "site": "Andrew Rappleyea"
   },
   "Anthony Evans III": {
    "consensus": 203,
@@ -37,7 +37,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Mississippi State",
-   "site": null
+   "site": "Anthony Evans III"
   },
   "Antwan Raymond": {
    "consensus": 296,
@@ -73,7 +73,7 @@
    "mock_window": null,
    "pos": "TE",
    "school": "Penn State",
-   "site": null
+   "site": "Benjamin Brahmer"
   },
   "Brandon Inniss": {
    "consensus": 271,
@@ -145,7 +145,7 @@
    "mock_window": null,
    "pos": "RB",
    "school": "Northwestern",
-   "site": null
+   "site": "Caleb Komolafe"
   },
   "Caleb Odom": {
    "consensus": 267,
@@ -181,7 +181,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Wake Forest",
-   "site": null
+   "site": "Carlos Hernandez"
   },
   "Charlie Becker": {
    "consensus": 10,
@@ -199,7 +199,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Arkansas",
-   "site": null
+   "site": "Chris Marshall"
   },
   "Collin Dixon": {
    "consensus": 187,
@@ -208,7 +208,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Illinois",
-   "site": null
+   "site": "Collin Dixon"
   },
   "Conner Weigman": {
    "consensus": 233,
@@ -217,7 +217,7 @@
    "mock_window": null,
    "pos": "QB",
    "school": "Houston",
-   "site": null
+   "site": "Conner Weigman"
   },
   "Cooper Barkate": {
    "consensus": 147,
@@ -280,7 +280,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Ohio State",
-   "site": null
+   "site": "Devin McCuin"
   },
   "Drake Lindsey": {
    "consensus": 118,
@@ -343,7 +343,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Oregon",
-   "site": null
+   "site": "Evan Stewart"
   },
   "Fluff Bothwell": {
    "consensus": 236,
@@ -352,7 +352,7 @@
    "mock_window": null,
    "pos": "RB",
    "school": "Mississippi State",
-   "site": null
+   "site": "Fluff Bothwell"
   },
   "Gabe Burkle": {
    "consensus": 289,
@@ -370,7 +370,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Northwestern",
-   "site": null
+   "site": "Griffin Wilde"
   },
   "Hollywood Smothers": {
    "consensus": 127,
@@ -433,7 +433,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Minnesota",
-   "site": null
+   "site": "Javon Tracy"
   },
   "Jayden Maiava": {
    "consensus": 61,
@@ -451,7 +451,7 @@
    "mock_window": null,
    "pos": "TE",
    "school": "North Carolina",
-   "site": null
+   "site": "Jelani Thurman"
   },
   "Jeremiah Hasley": {
    "consensus": 215,
@@ -460,7 +460,7 @@
    "mock_window": null,
    "pos": "TE",
    "school": "Duke",
-   "site": null
+   "site": "Jeremiah Hasley"
   },
   "Jeremiah Smith": {
    "consensus": 1,
@@ -487,7 +487,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Notre Dame",
-   "site": null
+   "site": "Jordan Faison"
   },
   "Jordan Marshall": {
    "consensus": 297,
@@ -523,7 +523,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Vanderbilt",
-   "site": null
+   "site": "Junior Sherrill"
   },
   "Justice Haynes": {
    "consensus": 153,
@@ -586,7 +586,7 @@
    "mock_window": null,
    "pos": "TE",
    "school": "Georgia",
-   "site": null
+   "site": "Lawson Luckie"
   },
   "Luke Reynolds": {
    "consensus": 65,
@@ -604,7 +604,7 @@
    "mock_window": null,
    "pos": "RB",
    "school": "Houston",
-   "site": null
+   "site": "Makhi Hughes"
   },
   "Mario Craver": {
    "consensus": 64,
@@ -694,7 +694,7 @@
    "mock_window": null,
    "pos": "TE",
    "school": "Temple",
-   "site": null
+   "site": "Peter Clarke"
   },
   "Quintrevion Wisner": {
    "consensus": 231,
@@ -703,7 +703,7 @@
    "mock_window": null,
    "pos": "RB",
    "school": "Florida State",
-   "site": null
+   "site": "Quintrevion Wisner"
   },
   "Raleek Brown": {
    "consensus": 298,
@@ -730,7 +730,7 @@
    "mock_window": null,
    "pos": "TE",
    "school": "Oklahoma",
-   "site": null
+   "site": "Rocky Beers"
   },
   "Rueben Owens": {
    "consensus": 279,
@@ -802,7 +802,7 @@
    "mock_window": null,
    "pos": "WR",
    "school": "Iowa",
-   "site": null
+   "site": "Tony Diaz"
   },
   "Tre Richardson": {
    "consensus": 300,
@@ -838,7 +838,7 @@
    "mock_window": null,
    "pos": "QB",
    "school": "Duke",
-   "site": null
+   "site": "Walker Eget"
   },
   "Wayshawn Parker": {
    "consensus": 162,
@@ -847,7 +847,7 @@
    "mock_window": null,
    "pos": "RB",
    "school": "Utah",
-   "site": null
+   "site": "Wayshawn Parker"
   },
   "Wyatt Young": {
    "consensus": 97,

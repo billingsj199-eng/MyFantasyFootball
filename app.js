@@ -10613,6 +10613,7 @@ function render() {
   const _premiumWallHtml = () => '<tr id="premiumWallRow"><td colspan="17" style="padding:0;border:none;white-space:normal">' + _premiumWallCardHtml(_blurPol) + '</td></tr>';
   let html = '';
   let _chunkLen = 0; // progressive render: html length at the ~120-row boundary
+  const _marks = [];  // …and every 100 rows after it (phones append the tail in these batches)
   let _devyWallDone = false; // DEVY rows: premium wall emitted once, above the first blurred row
   let _injWallDone = false;  // INJURIES view: same, above the first row ranked past the free window
   data.forEach((d, i) => {
@@ -10644,7 +10645,7 @@ function render() {
       if (editable && showTiers && !_dBlur && !tierMap[_dRank]) {
         html += `<tr class="add-tier-row" data-after-rank="${_dRank}"><td colspan="17"><button class="add-tier-btn" data-add-tier="${_dRank}">+ ADD TIER</button></td></tr>`;
       }
-      if (_chunkLen === 0 && i >= 119) _chunkLen = html.length;
+      if (i >= 119 && (i - 119) % 100 === 0) { _marks.push(html.length); if (!_chunkLen) _chunkLen = html.length; }
       return;
     }
     // Bye players the BYE block already shows (they sit below the cut) — once only
@@ -11075,7 +11076,7 @@ function render() {
     }
     // Progressive-render chunk boundary: snapshot at end of an iteration so
     // the split always lands between complete <tr>s (tier/cut rows included).
-    if (_chunkLen === 0 && i >= 119) _chunkLen = html.length;
+    if (i >= 119 && (i - 119) % 100 === 0) { _marks.push(html.length); if (!_chunkLen) _chunkLen = html.length; }
   });
   // No cut line on this board → the BYE block closes the list
   if (_byeBlk && !_byeBlkDone) html += _byeBlockHtml();
@@ -11126,6 +11127,35 @@ function render() {
     const _seq = window._renderSeq;
     tbody.innerHTML = html.slice(0, _chunkLen);
     const _rest = html.slice(_chunkLen);
+    // Phones: hand the tail out 100 rows at a time as the reader nears the end of
+    // what's built, instead of all ~450 at once.
+    const _bounds = _marks.concat(html.length);
+    let _bi = 1;
+    if (_phoneTail && window.IntersectionObserver && _bounds.length > 2) {
+      let _pio = null;
+      const _next = () => {
+        if (_pio) _pio.disconnect();
+        if (window._renderSeq !== _seq || _bi >= _bounds.length) { if (window._rnkFlushTail === _flushAll) window._rnkFlushTail = null; return; }
+        tbody.insertAdjacentHTML('beforeend', html.slice(_bounds[_bi - 1], _bounds[_bi]));
+        _bi++;
+        if (typeof window._applyCellVisibility === 'function') window._applyCellVisibility();
+        if (_bi >= _bounds.length) { if (window._rnkFlushTail === _flushAll) window._rnkFlushTail = null; return; }
+        _pio = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) _next(); }, { rootMargin: '0px 0px 1200px 0px' });
+        _pio.observe(tbody.lastElementChild);
+      };
+      const _flushAll = () => {
+        if (_pio) _pio.disconnect();
+        if (window._renderSeq === _seq && _bi < _bounds.length) {
+          tbody.insertAdjacentHTML('beforeend', html.slice(_bounds[_bi - 1]));
+          _bi = _bounds.length;
+          if (typeof window._applyCellVisibility === 'function') window._applyCellVisibility();
+        }
+        if (window._rnkFlushTail === _flushAll) window._rnkFlushTail = null;
+      };
+      window._rnkFlushTail = _flushAll;
+      _pio = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) _next(); }, { rootMargin: '0px 0px 1200px 0px' });
+      _pio.observe(tbody.lastElementChild);
+    } else {
     // Tail waits for idle (≤1.2s) or for the reader to scroll near row ~120,
     // whichever is first (2026-10-13 mobile perf: a page load renders ~6 times
     // as data arrives, and the old 30ms tail ran for every one — ~1.3s of main
@@ -11150,6 +11180,7 @@ function render() {
     if (_phoneTail && _io) { /* scroll-triggered only */ }
     else if (window.requestIdleCallback) _idle = requestIdleCallback(_append, { timeout: 1200 });
     else setTimeout(_append, 300);
+    }
   } else {
     tbody.innerHTML = html;
   }
@@ -11157,6 +11188,7 @@ function render() {
   updateStats(data);
   attachRowListeners();
   attachTierListeners();
+  if (typeof window._mvAfterRender === 'function') window._mvAfterRender();
   // WEEKLY board just painted — make sure the kickoff / LIVE / FINAL chips
   // have fresh scoreboard data (no-op when the last fetch is recent).
   if ((currentMode === 'weekly' || currentVersion === 'sims' || _statMode === 'vor') && typeof window._liveWeekPoke === 'function') window._liveWeekPoke();
@@ -11531,6 +11563,8 @@ function attachTierListeners() {
     if (!handle) return;
     const row = handle.closest('tr[data-idx]') || handle.closest('tr[data-devy-idx]');
     if (!row) return;
+    // Phones reorder by tap-to-move (click handler below), not drag.
+    if (_mvPhone() && row.dataset.idx != null) return;
     // Block drag on blurred rows (non-premium users past the top cutoff)
     if (row.classList.contains('premium-blur')) {
       if (currentVersion === 'mine' && window._authCurrentUser) {
@@ -11671,6 +11705,105 @@ function attachTierListeners() {
   }
 
   tbody.addEventListener('pointerdown', onPointerDown);
+
+  // === Phone tap-to-move (2026-10-17) ===
+  // Drag on a 50px card was slow and hard to aim. On phones: tap a player's rank or
+  // grip to pick them up, then tap a MOVE HERE slot (or another player — lands above
+  // them). Same movePlayer / movePositionGroup + position math as the pointer drop.
+  const _mvPhone = () => !!(window.matchMedia && window.matchMedia('(max-width:600px)').matches);
+  let _mvIdx = null;
+  const _mvBar = document.createElement('div');
+  _mvBar.id = 'rnkMoveBar';
+  _mvBar.innerHTML = '<span class="mv-txt"></span><button type="button" class="mv-cancel">Cancel</button>';
+  document.body.appendChild(_mvBar);
+  _mvBar.querySelector('.mv-cancel').addEventListener('click', () => _mvExit());
+  function _mvClear() {
+    tbody.querySelectorAll('tr.mv-slot').forEach(r => r.remove());
+    tbody.querySelectorAll('tr.mv-picked').forEach(r => r.classList.remove('mv-picked'));
+  }
+  function _mvExit() { _mvIdx = null; _mvClear(); document.body.classList.remove('rnk-moving'); }
+  function _mvSlot(targetIdx, side) {
+    const tr = document.createElement('tr');
+    tr.className = 'mv-slot';
+    tr.dataset.target = targetIdx;
+    tr.dataset.side = side;
+    tr.innerHTML = '<td colspan="17"><span>▸ MOVE HERE</span></td>';
+    return tr;
+  }
+  function _mvPaint() {
+    _mvClear();
+    if (_mvIdx == null) return;
+    const pick = tbody.querySelector('tr[data-idx="' + _mvIdx + '"]');
+    if (!pick) { _mvExit(); return; }   // a re-render took the player out of view (search / filter)
+    pick.classList.add('mv-picked');
+    const rows = Array.from(tbody.querySelectorAll('tr[data-idx]'));
+    rows.forEach((r, i) => {
+      // No slot that would leave the player where they are, or above a locked row.
+      if (r === pick || rows[i - 1] === pick || r.classList.contains('premium-blur')) return;
+      r.before(_mvSlot(r.dataset.idx, 'above'));
+    });
+    const last = rows[rows.length - 1];
+    if (last && last !== pick && !last.classList.contains('premium-blur')) last.after(_mvSlot(last.dataset.idx, 'below'));
+    const nm = pick.querySelector('.player-name');
+    const txt = _mvBar.querySelector('.mv-txt'), b = document.createElement('b');
+    b.textContent = nm ? nm.firstChild.textContent : '';
+    txt.replaceChildren('Moving ', b, ' — tap where to place');
+  }
+  function _mvPlace(targetIdx, below) {
+    const from = _mvIdx;
+    _mvExit();
+    const cur = board.indexOf(from);
+    let pos = board.indexOf(targetIdx);
+    if (cur < 0 || pos < 0) return;
+    if (below) { if (cur > pos) pos += 1; }
+    else if (cur < pos) pos -= 1;
+    if (pos === cur) return;
+    if (window._posLockEnabled && (filter === 'ALL' || filter === 'FLEX')) movePositionGroup(from, pos);
+    else movePlayer(from, pos);
+    render();
+    const r = tbody.querySelector('tr[data-idx="' + from + '"]');
+    if (r) {
+      r.classList.add('just-dropped');
+      r.addEventListener('animationend', () => r.classList.remove('just-dropped'), {once:true});
+      const rk = r.querySelector('.myrank-num');
+      if (rk) toast('Moved to #' + rk.textContent.trim());
+    }
+  }
+  window._mvAfterRender = () => {
+    if (_mvIdx == null) return;
+    if (window._rnkFlushTail) window._rnkFlushTail();
+    _mvPaint();
+  };
+  // Capture phase so it runs before the player-card click handler above.
+  tbody.addEventListener('click', e => {
+    if (!_mvPhone() || !canEdit()) return;
+    const slotEl = e.target.closest('tr.mv-slot');
+    if (slotEl) { e.stopPropagation(); e.preventDefault(); _mvPlace(+slotEl.dataset.target, slotEl.dataset.side === 'below'); return; }
+    const row = e.target.closest('tr[data-idx]');
+    if (!row) return;
+    if (row.classList.contains('premium-blur')) {
+      if (_mvIdx != null || e.target.closest('td:first-child, .myrank-cell')) {
+        e.stopPropagation(); e.preventDefault();
+        toast('Upgrade to PRO to rank beyond the top ' + (filter === 'ALL' ? 36 : 12));
+      }
+      return;
+    }
+    const idx = +row.dataset.idx;
+    if (e.target.closest('td:first-child, .myrank-cell')) {
+      e.stopPropagation(); e.preventDefault();
+      if (_mvIdx === idx) { _mvExit(); return; }
+      if (window._rnkFlushTail) window._rnkFlushTail();   // slots need every row
+      _mvIdx = idx;
+      document.body.classList.add('rnk-moving');
+      _mvPaint();
+      return;
+    }
+    if (_mvIdx != null) {
+      e.stopPropagation(); e.preventDefault();
+      if (idx === _mvIdx) { _mvExit(); return; }
+      _mvPlace(idx, false);
+    }
+  }, true);
 
   // === Keyboard reorder (a11y) ===
   // Tab onto a drag handle, Space to grab, ↑/↓ to move, Space to drop, Esc to cancel.

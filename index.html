@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-17-phonetail" as="script">
+<link rel="preload" href="app.js?v=2026-10-17-tapmove" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -1446,6 +1446,16 @@ CLEAR ALL
        border, margin and 88px intrinsic size here — blank gaps between players. Hover
        never fires on phones, so drop them. */
     #pageRankings tbody tr.add-tier-row{display:none!important}
+    /* Tap-to-move (app.js _mvPaint): picked card, MOVE HERE slots, top banner. */
+    #pageRankings tbody tr.mv-picked{border-color:var(--accent)!important;box-shadow:0 0 0 2px var(--accent);background:rgba(245,158,11,.12)!important}
+    body.rnk-moving #pageRankings tbody tr[data-idx]:not(.mv-picked){opacity:.85}
+    #pageRankings tbody tr.mv-slot{display:flex;justify-content:center;align-items:center;min-height:34px;padding:0!important;margin:0 0 5px;background:transparent!important;border:1.5px dashed rgba(245,158,11,.6)!important;border-radius:10px;content-visibility:visible;cursor:pointer}
+    #pageRankings tbody tr.mv-slot td:first-child{flex:1 1 auto;margin:0!important;align-self:center;justify-content:center;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.08em}
+    #pageRankings tbody tr.mv-slot:active{background:rgba(245,158,11,.18)!important}
+    body.rnk-moving #rnkMoveBar{display:flex}
+    #rnkMoveBar{position:fixed;top:0;left:0;right:0;z-index:9000;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0)) 14px 10px;background:var(--surface2);border-bottom:2px solid var(--accent);font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--text);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+    #rnkMoveBar .mv-txt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #rnkMoveBar .mv-cancel{flex:0 0 auto;min-height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600}
     /* === Controls collapse (2026-10-09): ~590px of controls above the first
        card -> search + one summary bar + one swipeable position row. === */
     #rnkMobCtlToggle{display:flex;align-items:center;gap:8px;width:100%;order:1;margin:2px 0 0;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;min-height:38px}
@@ -1651,6 +1661,7 @@ CLEAR ALL
      cell's overflow:hidden on narrow/mobile card rows — elide with … instead. */
   #pageRankings tbody .pc-namecol .player-team{overflow:hidden;text-overflow:ellipsis}
   #pageRankings tbody .pt-abbr{display:none}
+  #rnkMoveBar{display:none}
 </style>
 <!-- Shared drag-handle glyph: defined once, referenced via <use href="#dragDots"> in every
      ranking row. Previously the full 6-circle SVG (~215 B) was inlined per row (~500 rows =
@@ -6477,7 +6488,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-17-phonetail"></script>
+<script defer src="app.js?v=2026-10-17-tapmove"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

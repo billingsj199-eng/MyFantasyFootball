@@ -42993,26 +42993,67 @@ window.fmtHeight = fmtHeight;
     midnightEastern.setHours(0, 0, 0, 0);
     var msUntilMidnight = midnightEastern.getTime() - eastern.getTime();
     // Add a small buffer (2 seconds) to ensure we're past midnight
-    setTimeout(function() { window.location.reload(); }, Math.max(msUntilMidnight + 2000, 1000));
+    setTimeout(reloadIfNewDay, Math.max(msUntilMidnight + 2000, 1000));
+  }
+  // Only the daily games need the new day — reloading rankings mid-scroll at 11pm
+  // Central read as a random refresh on phones. Elsewhere the 60s check below picks
+  // it up once the user opens Games.
+  function reloadIfNewDay() {
+    if (easternDateStr(getEasternNow()) === pageLoadDate) return;
+    const games = document.getElementById('pageGames');
+    if (games && games.classList.contains('active')) window.location.reload();
   }
   scheduleRefresh();
 
   // Also check on visibility change (user returns to tab after midnight)
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-      if (easternDateStr(getEasternNow()) !== pageLoadDate) {
-        window.location.reload();
-      }
-    }
+    if (document.visibilityState === 'visible') reloadIfNewDay();
   });
 
   // Periodic check every 60s — catches cases where the tab stays visible
   // but the midnight setTimeout was throttled by the browser
-  setInterval(function() {
-    if (easternDateStr(getEasternNow()) !== pageLoadDate) {
-      window.location.reload();
+  setInterval(reloadIfNewDay, 60000);
+})();
+
+// === RANKINGS SCROLL RESTORE ===
+// iOS Safari discards a backgrounded heavy tab and reloads it on return; the board
+// then came back at the top, which read as a random refresh. Remember the rankings
+// scroll offset per URL (this tab only) and put it back once the rows render.
+(function() {
+  const KEY = 'mffRnkScroll';
+  const pane = document.getElementById('pageRankings');
+  if (!pane) return;
+  const urlKey = () => location.pathname + location.search;
+  let saveT = 0;
+  function save() {
+    if (!pane.classList.contains('active')) return;
+    try { sessionStorage.setItem(KEY, JSON.stringify({ u: urlKey(), y: pane.scrollTop, t: Date.now() })); } catch (e) {}
+  }
+  pane.addEventListener('scroll', function() {
+    clearTimeout(saveT);
+    saveT = setTimeout(save, 250);
+  }, { passive: true });
+  window.addEventListener('pagehide', save);
+  document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') save(); });
+
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (!saved || saved.u !== urlKey() || !(saved.y > 0) || Date.now() - saved.t > 30 * 60000) return;
+  // Rows render progressively — wait for enough height, and give up the moment
+  // the user touches the board so we never yank it out from under them.
+  let done = false;
+  const stop = () => { done = true; };
+  pane.addEventListener('touchstart', stop, { passive: true, once: true });
+  pane.addEventListener('wheel', stop, { passive: true, once: true });
+  const t0 = Date.now();
+  (function tryRestore() {
+    if (done) return;
+    if (pane.classList.contains('active') && pane.scrollHeight >= saved.y + pane.clientHeight) {
+      pane.scrollTop = saved.y;
+      return;
     }
-  }, 60000);
+    if (Date.now() - t0 < 8000) setTimeout(tryRestore, 150);
+  })();
 })();
 
 //#chunk prospect

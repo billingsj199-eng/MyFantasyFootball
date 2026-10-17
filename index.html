@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-17-editmode" as="script">
+<link rel="preload" href="app.js?v=2026-10-17-lazylines" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -1446,6 +1446,9 @@ CLEAR ALL
        border, margin and 88px intrinsic size here — blank gaps between players. Hover
        never fires on phones, so drop them. */
     #pageRankings tbody tr.add-tier-row{display:none!important}
+    /* Footer Privacy Policy / Contact links were 15px tall: invisible 44px-ish hit area. */
+    a[href="/privacy.html"],a[href^="mailto:jackbillings16"]{position:relative}
+    a[href="/privacy.html"]::after,a[href^="mailto:jackbillings16"]::after{content:"";position:absolute;inset:-14px -8px}
     /* Edit mode (app.js _edSet): browsing hides the grip column and tier controls;
        the floating ✎ EDIT / ✓ DONE pill shows on boards the user can edit. */
     body:not(.rnk-edit) #pageRankings tbody tr:is([data-idx],[data-devy-idx]) td:first-child{display:none!important}
@@ -6496,7 +6499,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-17-editmode"></script>
+<script defer src="app.js?v=2026-10-17-lazylines"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

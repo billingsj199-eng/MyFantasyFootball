@@ -18696,12 +18696,16 @@ _renderDataFreshness();
     if (navigator.share) navigator.share({ text }).catch(() => copy()); else copy();
   });
 
-  // Fetch the history at idle after load so the bar renders without a card
-  // open; the same promise feeds the card's LINES tab later.
+  // The history is 3.6 MB of JSON (~430 KB gz). Warm it at idle only when LINE MOVERS
+  // is the chosen ticker (mff_ticker); otherwise the ticker switch (_tickerSwitch) or
+  // the card's LINES / WEEKLY tabs load it on demand — both repaint when it lands.
+  window._lineMoversLoad = () => { try { return _loadLinesHistory().then(render); } catch (e) { return Promise.resolve(); } };
   window.addEventListener('load', () => {
+    let want = null;
+    try { want = localStorage.getItem('mff_ticker'); } catch (_) {}
+    if (want !== 'lines') return;
     setTimeout(() => {
-      const go = () => { try { _loadLinesHistory().then(render); } catch (e) {} };
-      if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 4000 }); else go();
+      if ('requestIdleCallback' in window) requestIdleCallback(window._lineMoversLoad, { timeout: 4000 }); else window._lineMoversLoad();
     }, 3000);
   });
 })();
@@ -75933,9 +75937,13 @@ function _rsScatter(cfg) {
   let want = 'adp';
   try { const s = localStorage.getItem('mff_ticker'); if (s === 'adp' || s === 'lines') want = s; } catch (_) {}
   const has = k => !!(bars[k] && bars[k].style.display !== 'none');
+  // LINE MOVERS loads on demand (see _lineMovers), so its switch shows until a load
+  // comes back empty rather than only once the data is in.
+  let linesTried = false;
+  const offer = k => has(k) || (k === 'lines' && !linesTried && typeof window._lineMoversLoad === 'function');
   const apply = () => {
     row.dataset.ticker = has(want) || !has(other(want)) ? want : other(want);
-    row.querySelectorAll('.amb-switch').forEach(b => { b.style.display = has(b.dataset.ticker) ? '' : 'none'; });
+    row.querySelectorAll('.amb-switch').forEach(b => { b.style.display = offer(b.dataset.ticker) ? '' : 'none'; });
   };
   row.addEventListener('click', e => {
     // Phones hide the title row, so the bar's icon is the switch (index.html .amb-icon).
@@ -75944,6 +75952,9 @@ function _rsScatter(cfg) {
     if (!b || b.style.display === 'none') return;
     want = b.dataset.ticker;
     try { localStorage.setItem('mff_ticker', want); } catch (_) {}
+    if (want === 'lines' && !has('lines') && typeof window._lineMoversLoad === 'function') {
+      window._lineMoversLoad().then(() => { linesTried = true; apply(); });
+    }
     apply();
   });
   if (typeof MutationObserver === 'function') {

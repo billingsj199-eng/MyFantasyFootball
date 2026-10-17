@@ -9,6 +9,16 @@
   "birth": "2005-11-18",
   "src": "wikipedia:Amare_Thomas"
  },
+ "Andrew Rappleyea": {
+  "at": "2026-10-17",
+  "birth": "2004-02-22",
+  "src": "wikipedia:Andrew_Rappleyea"
+ },
+ "Anthony Evans III": {
+  "at": "2026-10-17",
+  "birth": "2005-06-20",
+  "src": "wikidata:Q136787882"
+ },
  "Austin Simmons": {
   "at": "2026-09-30",
   "birth": "2005-11-08",
@@ -19,11 +29,39 @@
   "birth": "2006-09-21",
   "src": "wikipedia:Bear_Bachmeier"
  },
+ "Benjamin Brahmer": {
+  "at": "2026-10-17",
+  "birth": "2004-11-19",
+  "src": "wikipedia:Benjamin_Brahmer"
+ },
+ "Caleb Komolafe": {
+  "miss": "2026-10-17"
+ },
  "Cam Edwards": {
   "miss": "2026-09-30"
  },
+ "Carlos Hernandez": {
+  "at": "2026-10-17",
+  "birth": "2005-05-06",
+  "src": "wikipedia:Carlos_Hernandez_(American_football)"
+ },
  "Charlie Becker": {
   "miss": "2026-09-30"
+ },
+ "Chris Marshall": {
+  "at": "2026-10-17",
+  "birth": "2003-11-07",
+  "src": "wikipedia:Chris_Marshall_(American_football)"
+ },
+ "Collin Dixon": {
+  "at": "2026-10-17",
+  "birth": "2004-11-22",
+  "src": "wikidata:Q141441228"
+ },
+ "Conner Weigman": {
+  "at": "2026-10-17",
+  "birth": "2003-08-08",
+  "src": "wikidata:Q115492036"
  },
  "Cooper Barkate": {
   "at": "2026-09-30",
@@ -48,6 +86,11 @@
   "birth": "2005-07-27",
   "src": "wikidata:Q141252861"
  },
+ "Devin McCuin": {
+  "at": "2026-10-17",
+  "birth": "2005-05-21",
+  "src": "wikidata:Q137739705"
+ },
  "Dilin Jones": {
   "at": "2026-09-30",
   "birth": "2005-11-04",
@@ -70,6 +113,17 @@
   "at": "2026-09-30",
   "birth": "2006-09-07",
   "src": "on3:elyiss-williams-154112"
+ },
+ "Evan Stewart": {
+  "at": "2026-10-17",
+  "birth": "2003-09-04",
+  "src": "wikipedia:Evan_Stewart_(American_football)"
+ },
+ "Fluff Bothwell": {
+  "miss": "2026-10-17"
+ },
+ "Griffin Wilde": {
+  "miss": "2026-10-17"
  },
  "Husan Longstreet": {
   "at": "2026-09-30",
@@ -94,6 +148,22 @@
   "birth": "2006-08-02",
   "src": "wikipedia:Jaron-Keawe_Sagapolutele"
  },
+ "Javon Tracy": {
+  "at": "2026-10-17",
+  "birth": "2003-09-21",
+  "src": "wikipedia:Javon_Tracy"
+ },
+ "Jelani Thurman": {
+  "miss": "2026-10-17"
+ },
+ "Jeremiah Hasley": {
+  "miss": "2026-10-17"
+ },
+ "Jordan Faison": {
+  "at": "2026-10-17",
+  "birth": "2004-04-07",
+  "src": "wikipedia:Jordan_Faison"
+ },
  "Joshisa Trader": {
   "at": "2026-09-30",
   "birth": "2005-08-02",
@@ -101,6 +171,11 @@
  },
  "Joshua Moore": {
   "miss": "2026-09-30"
+ },
+ "Junior Sherrill": {
+  "at": "2026-10-17",
+  "birth": "2005-06-24",
+  "src": "wikidata:Q141138305"
  },
  "KJ Duff": {
   "at": "2026-09-30",
@@ -125,6 +200,11 @@
   "birth": "2005-03-28",
   "src": "wikidata:Q129408837"
  },
+ "Lawson Luckie": {
+  "at": "2026-10-17",
+  "birth": "2004-10-21",
+  "src": "wikipedia:Lawson_Luckie"
+ },
  "Linkon Cure": {
   "at": "2026-09-30",
   "birth": "2006-05-12",
@@ -137,6 +217,9 @@
  },
  "Luke Reynolds": {
   "miss": "2026-09-30"
+ },
+ "Makhi Hughes": {
+  "miss": "2026-10-17"
  },
  "Naeem Burroughs": {
   "at": "2026-09-30",
@@ -153,19 +236,35 @@
   "birth": "2005-10-23",
   "src": "on3:perry-thompson-152416"
  },
+ "Peter Clarke": {
+  "miss": "2026-10-17"
+ },
  "Quinton Martin Jr.": {
   "at": "2026-09-30",
   "birth": "2006-08-31",
   "src": "on3:quinton-martin-97681"
  },
+ "Quintrevion Wisner": {
+  "at": "2026-10-17",
+  "birth": "2005-05-09",
+  "src": "wikipedia:Quintrevion_Wisner"
+ },
  "Reed Harris": {
   "miss": "2026-09-30"
+ },
+ "Rocky Beers": {
+  "miss": "2026-10-17"
  },
  "Ryan Coleman-Williams": {
   "miss": "2026-09-30"
  },
  "Terrance Carter Jr.": {
   "miss": "2026-09-30"
+ },
+ "Tony Diaz": {
+  "at": "2026-10-17",
+  "birth": "2006-07-11",
+  "src": "wikipedia:Tony_Diaz_(American_football)"
  },
  "Trey'Dez Green": {
   "at": "2026-09-30",
@@ -176,6 +275,14 @@
   "at": "2026-09-30",
   "birth": "2002-08-24",
   "src": "wikidata:Q136260093"
+ },
+ "Walker Eget": {
+  "at": "2026-10-17",
+  "birth": "2003-07-05",
+  "src": "wikipedia:Walker_Eget"
+ },
+ "Wayshawn Parker": {
+  "miss": "2026-10-17"
  },
  "Wyatt Young": {
   "miss": "2026-09-30"

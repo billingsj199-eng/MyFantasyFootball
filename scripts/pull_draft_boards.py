@@ -33,8 +33,9 @@ for the audit) and patches data/combine_data.js:
  * A class player on no NFLMDD board (or ranked past 262) becomes a projected UDFA
    (draftProj 'U' -> pick 300), so stale April projections go away but every class
    player still carries draft capital. eligYr > draft year (2028+) is always cleared.
- * --add: any skill player in the public big-board top 100 who is not in
-    COMBINE_DATA gets a devy entry {yr, devy:true, eligYr, school, pos, draftProj}.
+ * --add: any skill player NFLMDD ranks <= 262 (public top 100, or the signed-in
+    board CSV) who is not in COMBINE_DATA gets a devy entry {yr, devy:true, eligYr,
+    school, pos, draftProj}.
     The weekly devy stats refresh then backfills their college seasons + ht/wt.
 
 Only the NEXT class is touched (Jack: "anything beyond that is too far out").
@@ -176,11 +177,11 @@ def fetch_mock_html(url):
     return r.text
 
 
-BOARD_CSV = "Site Rankings/big_board_%d.csv"   # signed-in big board (Jack's Chrome), skill rows through 300
+BOARD_CSV = "Site Rankings/big_board_%d.csv"   # signed-in big board (Jack's Chrome via nflmdd_extract_chrome.js + save_nflmdd_csv.py), skill rows through 300
 
 
 def load_board_csv(year, today):
-    """-> ({name: {rank,pos}}, depth, updated, pulled) when <= MOCK_CSV_MAX_AGE days old, else ({}, 0, ...)."""
+    """-> ({name: {rank,pos,school}}, depth, updated, pulled) when <= MOCK_CSV_MAX_AGE days old, else ({}, 0, ...)."""
     import csv
     path = BOARD_CSV % year
     out, depth, upd, pulled = {}, 0, None, None
@@ -193,7 +194,7 @@ def load_board_csv(year, today):
                 if (today - pulled).days > MOCK_CSV_MAX_AGE:
                     return {}, 0, None, pulled
                 depth, upd = int(row["depth"]), row["updated"]
-                out.setdefault(row["name"].strip(), {"rank": int(row["rank"]), "pos": row["pos"]})
+                out.setdefault(row["name"].strip(), {"rank": int(row["rank"]), "pos": row["pos"], "school": (row.get("school") or "").strip()})
             except (KeyError, ValueError):
                 continue
     return out, depth, upd, pulled
@@ -270,7 +271,7 @@ def main():
     bb, bb_depth, bb_upd, bb_pulled = load_board_csv(year, today)
     if bb and bb_depth > live_depth:
         # Signed-in board from Jack's Chrome: ranks from the CSV, school from the live page.
-        cons = {n: dict(v, school=cons_live.get(n, {}).get("school", "")) for n, v in bb.items()}
+        cons = {n: dict(v, school=v.get("school") or cons_live.get(n, {}).get("school", "")) for n, v in bb.items()}
         cons_upd = bb_upd
         log("  big board: CSV from Jack's Chrome (%s, %d deep, %d skill through 300) beats live page" % (bb_pulled, bb_depth, len(bb)))
     if len(cons) < 10:
@@ -395,11 +396,12 @@ def main():
                 cb[name]["draftProj"] = new
     # 2) new names
     if a.add:
-        # Public top 100 only - those cards carry the school.
-        for n in sorted(cons_live, key=lambda x: proj_for(x) or 999):
-            if site_name(n) or cons_live[n]["rank"] > 100:
+        # Every skill player NFLMDD ranks in the draftable range (Jack 10-17: profiles for
+        # anyone who can get drafted) - public top 100, or the signed-in board through 262.
+        for n in sorted(cons, key=lambda x: proj_for(x) or 999):
+            info = cons[n]
+            if site_name(n) or info["rank"] > LAST_PICK or not info.get("school"):
                 continue
-            info = cons_live[n]
             school = SCHOOL_FIX.get(info["school"], info["school"])
             ent = {"yr": year, "devy": True, "eligYr": year, "school": school, "pos": info["pos"]}
             ent["draftProj"] = proj_for(n) or "U"

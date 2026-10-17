@@ -1,8 +1,10 @@
 """pull_draft_boards.py - keep the NEXT draft class's projected draft capital current.
 
 Sources (all refreshed on every run):
-  * NFL Mock Draft Database CONSENSUS MOCK DRAFT (default 1-week window), round 1
-    only - round 2+ is behind their Mock+ paywall:
+  * NFL Mock Draft Database CONSENSUS MOCK DRAFT (default 1-week window). Round 1
+    is public; rounds 2+ need Jack's Mock+ login, read through scripts/fetch_mockdb.js
+    (dedicated Chrome profile E:\\MyFantasyFootball\\mockdb_chrome_profile; re-sign-in
+    with `node scripts/fetch_mockdb.js --login` when the log says SIGNED OUT):
     https://www.nflmockdraftdatabase.com/mock-drafts/<yr>/consensus-mock-draft-<yr>
     Jack (2026-10-17): the mock pick is the projected pick - more accurate for
     draft slot than the big board rank.
@@ -138,15 +140,71 @@ def pull_consensus(year):
     return out, updated
 
 
+MOCK_LOCK_WARNED = []
+# Full mock (every unlocked round) pulled by hand through Jack's Chrome (Claude in Chrome,
+# same-origin fetch of each ?period= page) when the headless profile is signed out.
+# period,n_mocks,picks,pick,name,pos,pct,pulled - skill rows only; picks = page depth.
+MOCK_CSV = "Site Rankings/mock_draft_%d.csv"
+MOCK_CSV_MAX_AGE = 10   # days; older -> ignored (the live page wins)
+
+
+def load_mock_csv(year, today):
+    """-> {period: (skill rows {name: {...}}, picks, n_mocks, pulled)} when fresh, else {}."""
+    import csv
+    path = MOCK_CSV % year
+    if not os.path.exists(path):
+        return {}
+    out = {}
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            try:
+                pulled = datetime.date.fromisoformat(row["pulled"])
+                if (today - pulled).days > MOCK_CSV_MAX_AGE:
+                    continue
+                rows, picks, n, _ = out.setdefault(row["period"], ({}, int(row["picks"]), row["n_mocks"], pulled))
+                rows.setdefault(row["name"].strip(), {"pick": int(row["pick"]), "pos": row["pos"], "school": "", "pct": int(row["pct"] or 0)})
+            except (KeyError, ValueError):
+                continue
+    return out
+
+
+def fetch_mock_html(url):
+    """Signed-in fetch through scripts/fetch_mockdb.js (Jack's Mock+ session in a
+    dedicated Chrome profile -> every round); plain HTTP (round 1 only) when that
+    fails. A signed-out profile still returns round 1 and logs a one-time warning."""
+    import subprocess
+    import tempfile
+    fd, out = tempfile.mkstemp(suffix=".html")
+    os.close(fd)
+    try:
+        p = subprocess.run(["node", os.path.join("scripts", "fetch_mockdb.js"), url, out],
+                           capture_output=True, text=True, timeout=150)
+        if p.returncode in (0, 4) and os.path.getsize(out) > 10000:
+            if p.returncode == 4 and not MOCK_LOCK_WARNED:
+                MOCK_LOCK_WARNED.append(1)
+                log("MOCK+ SIGNED OUT - round 1 only; run: node scripts/fetch_mockdb.js --login")
+            with open(out, encoding="utf-8") as f:
+                return f.read()
+        log("signed-in mock fetch failed (exit %s): %s" % (p.returncode, (p.stderr or p.stdout).strip()[-300:]))
+    except Exception as e:  # noqa: BLE001
+        log("signed-in mock fetch failed: %s" % e)
+    finally:
+        try:
+            os.remove(out)
+        except OSError:
+            pass
+    r = requests.get(url, headers=BROWSER_UA, timeout=40)
+    r.raise_for_status()
+    return r.text
+
+
 def pull_mock(year, period=None):
     """-> ({name: {pick,pos,school,pct}} for skill players, picks_shown, n_mocks).
     Consensus mock draft page; each pick card: pick-number span, /players/ link,
     position pill, optional /colleges/ link, share bar 'NN%'. Only round 1 is
     public (round 2+ cards are locked placeholders with no player link)."""
     url = MOCK_URL % (year, year) + ("?period=%s" % period if period else "")
-    r = requests.get(url, headers=BROWSER_UA, timeout=40)
-    r.raise_for_status()
-    html = r.text
+    html = fetch_mock_html(url)
     m = re.search(r"Aggregated from\s*<strong>\s*(\d+)\s*mock", html)
     n_mocks = int(m.group(1)) if m else None
     card = re.compile(
@@ -219,15 +277,26 @@ def main():
         # every top-100 player to 101+. Snapshot nothing, change nothing.
         log("consensus board unavailable - no draftProj changes this run (exit 3)")
         return 3
-    mock, mock_picks, n_mocks = {}, 0, None
-    for attempt in range(3):
-        try:
-            mock, mock_picks, n_mocks = pull_mock(year, MOCK_PERIODS[0])
-            if mock_picks >= 20:
-                break
-        except Exception as e:  # noqa: BLE001
-            log("consensus mock attempt %d failed: %s" % (attempt + 1, e))
-            time.sleep(5)
+    mock_csv = load_mock_csv(year, today)
+
+    def mock_window(per, attempts=1):
+        """Live page vs the hand-pulled CSV: whichever shows more picks (rounds) wins."""
+        live = ({}, 0, None)
+        for attempt in range(attempts):
+            try:
+                live = pull_mock(year, per)
+                if live[1] >= 20:
+                    break
+            except Exception as e:  # noqa: BLE001
+                log("consensus mock %s attempt %d failed: %s" % (per, attempt + 1, e))
+                time.sleep(5)
+        if per in mock_csv and mock_csv[per][1] > live[1]:
+            rows, picks, n, pulled = mock_csv[per]
+            log("  mock %s: CSV from Jack's Chrome (%s, %d picks) beats live page (%d picks)" % (per, pulled, picks, live[1]))
+            return dict(rows), picks, n
+        return live
+
+    mock, mock_picks, n_mocks = mock_window(MOCK_PERIODS[0], attempts=3)
     if mock_picks < 20:
         # Without the mock, keep the old big-board behaviour rather than flooring
         # every big-board player to pick 33.
@@ -236,11 +305,7 @@ def main():
     else:
         log("consensus mock (%s): %d picks from %s mocks, %d skill players" % (MOCK_PERIODS[0], mock_picks, n_mocks, len(mock)))
         for per in MOCK_PERIODS[1:]:
-            try:
-                extra, _, n_ex = pull_mock(year, per)
-            except Exception as e:  # noqa: BLE001
-                log("  mock window %s failed: %s" % (per, e))
-                continue
+            extra, _, n_ex = mock_window(per)
             for n, v in extra.items():
                 if n not in mock:
                     mock[n] = dict(v, window=per)

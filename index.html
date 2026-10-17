@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-17-lazylines" as="script">
+<link rel="preload" href="app.js?v=2026-10-17-devyppg" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -2101,6 +2101,9 @@ tr:hover .ao-chip,.ao-chip:focus{opacity:1}
 .tcv-card-stats .tcv-stat-blank{opacity:.25}
 .tcv-card-stats.tcv-card-stats-solo{top:3px;right:3px;padding:2px 6px 1px;border-radius:6px;background:rgba(0,0,0,.62);font-family:'Bebas Neue',Impact,'Arial Narrow',sans-serif;font-weight:400;font-size:28px;line-height:.95;text-align:center;letter-spacing:.3px}
 .tcv-card-stats.tcv-card-stats-solo::after{content:attr(data-lbl);display:block;font-family:Inter,Arial,sans-serif;font-size:8px;font-weight:800;letter-spacing:.6px;line-height:1.1;color:#cbd5e1;opacity:.85}
+/* Devy cards (Jack 2026-10-17): the college PPG floats in the corner like the rank - no box, no '26 PPG label, outlined, sized to clear the face */
+.tcv-card-stats.tcv-card-stats-solo.tcv-card-stats-devy{top:2px;right:4px;padding:0;border-radius:0;background:none;font-size:23px;line-height:1;letter-spacing:.4px;-webkit-text-stroke:1.3px #0a0a0a;paint-order:stroke fill;text-shadow:0 2px 4px rgba(0,0,0,.7);z-index:3}
+.tcv-card-stats.tcv-card-stats-solo.tcv-card-stats-devy::after{content:none;display:none}
 /* Photo area: team logo watermark behind an oversized headshot (wider than the card, shoulders crop at the edges) */
 .tcv-card-photo{position:relative;height:110px;overflow:hidden}
 .tcv-card-bg-logo{position:absolute;left:50%;top:50%;width:128px;height:128px;max-width:none;transform:translate(-50%,-50%);object-fit:contain;opacity:.3;pointer-events:none}
@@ -6499,7 +6502,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-17-lazylines"></script>
+<script defer src="app.js?v=2026-10-17-devyppg"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -7684,7 +7684,7 @@ function _tcvBuildCard(d, displayRank, tierLabel, glowRgb, prevRank) {
 
   card.innerHTML =
     _tcvRankHtml('tcv-card-rank', displayRank, prevRank) +
-    '<div class="tcv-card-stats' + (_statSlots.length === 1 ? ' tcv-card-stats-solo" data-lbl="' + _statSlots[0].short : '') + '" title="' + _statsTitle + '">' +
+    '<div class="tcv-card-stats' + (_statSlots.length === 1 ? ' tcv-card-stats-solo' + (d._isDevy ? ' tcv-card-stats-devy' : '') + '" data-lbl="' + _statSlots[0].short : '') + '" title="' + _statsTitle + '">' +
       _statsHtml +
     '</div>' +
     '<div class="tcv-card-photo">' + logoHtml + headshotHtml + '</div>' +

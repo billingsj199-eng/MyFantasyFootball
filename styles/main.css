@@ -60,6 +60,9 @@ body.mff-embed .main-content{padding-bottom:0!important}
    CSS-only; works on any inline/block element. */
 [data-gloss]{position:relative;cursor:help;text-decoration:underline dotted rgba(245,158,11,.55);text-underline-offset:3px}
 [data-gloss]::after{content:attr(data-gloss);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.7rem;font-weight:400;letter-spacing:0;line-height:1.45;width:max-content;max-width:260px;white-space:normal;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .12s ease-out .08s;z-index:9999;font-family:'DM Sans',sans-serif;text-transform:none}
+/* Not rendered until shown: an opacity:0 tip still counts toward its scroller's width, so a
+   gloss label near a card's right edge made the phone player card side-scroll into blank space. */
+[data-gloss]:not(:hover):not(:focus-visible)::after{display:none}
 [data-gloss]:hover::after,[data-gloss]:focus-visible::after{opacity:1}
 /* When used inside a sticky table header, fall back to render below the cell so it isn't clipped above */
 thead [data-gloss]::after{bottom:auto;top:calc(100% + 6px)}

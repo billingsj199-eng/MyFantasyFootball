@@ -1,9 +1,9 @@
 {
- "consensus_updated": "October 12, 2026",
+ "consensus_updated": "October 17, 2026",
  "pff_updated": "2026-10-06T15:59:15",
  "players": {
   "Ahmad Hardy": {
-   "consensus": 68,
+   "consensus": 71,
    "pff": 25,
    "pos": "RB",
    "school": "Missouri",
@@ -24,7 +24,7 @@
    "site": "Arch Manning"
   },
   "Austin Simmons": {
-   "consensus": 30,
+   "consensus": 31,
    "pff": null,
    "pos": "QB",
    "school": "Missouri",
@@ -52,7 +52,7 @@
    "site": null
   },
   "Bryant Wesco": {
-   "consensus": 91,
+   "consensus": 82,
    "pff": null,
    "pos": "WR",
    "school": "Clemson",
@@ -66,7 +66,7 @@
    "site": "Bryant Wesco Jr."
   },
   "CJ Carr": {
-   "consensus": 14,
+   "consensus": 15,
    "pff": 21,
    "pos": "QB",
    "school": "Notre Dame",
@@ -80,7 +80,7 @@
    "site": "Cam Coleman"
   },
   "Charlie Becker": {
-   "consensus": 7,
+   "consensus": 10,
    "pff": 44,
    "pos": "WR",
    "school": "Indiana",
@@ -108,35 +108,35 @@
    "site": "Dante Moore"
   },
   "Darian Mensah": {
-   "consensus": 5,
+   "consensus": 7,
    "pff": 45,
    "pos": "QB",
    "school": "Miami (FL)",
    "site": "Darian Mensah"
   },
   "Deuce Alexander": {
-   "consensus": 77,
+   "consensus": 55,
    "pff": null,
    "pos": "WR",
    "school": "Mississippi",
    "site": "Deuce Alexander"
   },
   "Drake Lindsey": {
-   "consensus": 97,
+   "consensus": null,
    "pff": 106,
    "pos": "QB",
    "school": "Minnesota",
    "site": "Drake Lindsey"
   },
   "Drew Mestemaker": {
-   "consensus": 15,
+   "consensus": 5,
    "pff": 23,
    "pos": "QB",
    "school": "Oklahoma State",
    "site": "Drew Mestemaker"
   },
   "Duce Robinson": {
-   "consensus": 84,
+   "consensus": 72,
    "pff": 42,
    "pos": "WR",
    "school": "Florida State",
@@ -171,21 +171,21 @@
    "site": "Isaiah Sategna III"
   },
   "Jadan Baugh": {
-   "consensus": 20,
+   "consensus": 19,
    "pff": 54,
    "pos": "RB",
    "school": "Florida",
    "site": "Jadan Baugh"
   },
   "Jamari Johnson": {
-   "consensus": 21,
+   "consensus": 22,
    "pff": 30,
    "pos": "TE",
    "school": "Oregon",
    "site": "Jamari Johnson"
   },
   "Jayden Maiava": {
-   "consensus": 54,
+   "consensus": 61,
    "pff": 57,
    "pos": "QB",
    "school": "USC",
@@ -206,21 +206,21 @@
    "site": null
   },
   "Julian Sayin": {
-   "consensus": 46,
+   "consensus": 50,
    "pff": 31,
    "pos": "QB",
    "school": "Ohio State",
    "site": "Julian Sayin"
   },
   "KJ Duff": {
-   "consensus": 36,
+   "consensus": 37,
    "pff": 28,
    "pos": "WR",
    "school": "Rutgers",
    "site": "KJ Duff"
   },
   "Kewan Lacy": {
-   "consensus": 45,
+   "consensus": 51,
    "pff": 50,
    "pos": "RB",
    "school": "Mississippi",
@@ -234,32 +234,25 @@
    "site": "LJ Martin"
   },
   "LaNorris Sellers": {
-   "consensus": 55,
+   "consensus": 70,
    "pff": 60,
    "pos": "QB",
    "school": "South Carolina",
    "site": "LaNorris Sellers"
   },
   "Luke Reynolds": {
-   "consensus": 63,
+   "consensus": 65,
    "pff": 144,
    "pos": "TE",
    "school": "Virginia Tech",
    "site": "Luke Reynolds"
   },
   "Mario Craver": {
-   "consensus": 59,
+   "consensus": 64,
    "pff": 77,
    "pos": "WR",
    "school": "Texas A&M",
    "site": "Mario Craver"
-  },
-  "Mark Fletcher": {
-   "consensus": 95,
-   "pff": null,
-   "pos": "RB",
-   "school": "Miami (FL)",
-   "site": "Mark Fletcher Jr."
   },
   "Mark Fletcher Jr.": {
    "consensus": null,
@@ -269,14 +262,14 @@
    "site": "Mark Fletcher Jr."
   },
   "Nate Frazier": {
-   "consensus": 82,
+   "consensus": 96,
    "pff": 111,
    "pos": "RB",
    "school": "Georgia",
    "site": "Nate Frazier"
   },
   "Nick Marsh": {
-   "consensus": 33,
+   "consensus": 30,
    "pff": 88,
    "pos": "WR",
    "school": "Indiana",
@@ -297,7 +290,7 @@
    "site": "Nyck Harbor"
   },
   "Omarion Miller": {
-   "consensus": 60,
+   "consensus": 57,
    "pff": 95,
    "pos": "WR",
    "school": "Arizona State",
@@ -311,28 +304,28 @@
    "site": null
   },
   "Reed Harris": {
-   "consensus": 43,
+   "consensus": 52,
    "pff": 75,
    "pos": "WR",
    "school": "Arizona State",
    "site": "Reed Harris"
   },
   "Ryan Coleman-Williams": {
-   "consensus": 32,
+   "consensus": 33,
    "pff": 49,
    "pos": "WR",
    "school": "Alabama",
    "site": "Ryan Coleman-Williams"
   },
   "Ryan Wingo": {
-   "consensus": 64,
+   "consensus": 69,
    "pff": 56,
    "pos": "WR",
    "school": "Texas",
    "site": "Ryan Wingo"
   },
   "Sam Leavitt": {
-   "consensus": 96,
+   "consensus": null,
    "pff": 65,
    "pos": "QB",
    "school": "LSU",
@@ -346,21 +339,21 @@
    "site": "Terrance Carter Jr."
   },
   "Trey'Dez Green": {
-   "consensus": 22,
+   "consensus": 25,
    "pff": 41,
    "pos": "TE",
    "school": "LSU",
    "site": "Trey'Dez Green"
   },
   "Trinidad Chambliss": {
-   "consensus": 9,
+   "consensus": 13,
    "pff": 52,
    "pos": "QB",
    "school": "Mississippi",
    "site": "Trinidad Chambliss"
   },
   "Wyatt Young": {
-   "consensus": null,
+   "consensus": 97,
    "pff": 64,
    "pos": "WR",
    "school": "Oklahoma State",
@@ -374,6 +367,6 @@
    "site": null
   }
  },
- "pulled": "2026-10-12",
+ "pulled": "2026-10-17",
  "year": 2027
 }

@@ -16,7 +16,9 @@
     //   RAS 7.0 vs 9.05. Chosen in all eight leave-one-year-out folds; vs graded career outcome, top-100
     //   picks .664 -> .703, all QBs .731 -> .738. CEILING track.
     // (previous) QB:  { dc: 0.27, ras: 0.13, qbRush: 0.13, breakout: 0.13, prod: 0.09, qbAccuracy: 0.06, bigTime: 0.07, pff: 0.08, age: 0.02, turnoverRate: 0.02 },  // sum=1.00
-    QB:  { dc: 0.23894, qbRush: 0.23009, ras: 0.11504, breakout: 0.11504, prod: 0.07965, pff: 0.0708, bigTime: 0.06195, qbAccuracy: 0.0531, age: 0.0177, turnoverRate: 0.0177 },  // sum=1.00
+    // v10.3 (Oct 17 2026): QB big-time throw % and turnover-worthy play rate set to 0 (see jm_weights.js). CEILING track.
+    // (previous) QB: { dc: 0.23894, qbRush: 0.23009, ras: 0.11504, breakout: 0.11504, prod: 0.07965, pff: 0.0708, bigTime: 0.06195, qbAccuracy: 0.0531, age: 0.0177, turnoverRate: 0.0177 }  // sum=1.00
+    QB:  { dc: 0.25963, qbRush: 0.25, ras: 0.12499, breakout: 0.12499, prod: 0.08654, pff: 0.07693, qbAccuracy: 0.05769, age: 0.01923 },  // sum=1.00
     // RB v6: dropped dominator (dead, ridge -2.0), redistributed to rbRec (+2) and pffRecv (+2, was 0)
     // RB v7 ceiling (Apr 24 2026): pff (rush grade) ADDED at 0.05 — was missing
     //   from ceiling entirely despite r=0.21/0.27 signal. pffRecv doubled 0.02→0.04.

@@ -2121,7 +2121,9 @@ window.JM_CAREER_GRADES = {"A.J. Brown|2019":[83.9,2,7,0],"A.T. Perry|2023":[0.0
     //   RAS 7.0 vs 9.05. Chosen in all eight leave-one-year-out folds; vs graded career outcome, top-100
     //   picks .664 -> .703, all QBs .731 -> .738. CEILING track.
     // (previous) QB:  { dc: 0.27, ras: 0.13, qbRush: 0.13, breakout: 0.13, prod: 0.09, qbAccuracy: 0.06, bigTime: 0.07, pff: 0.08, age: 0.02, turnoverRate: 0.02 },  // sum=1.00
-    QB:  { dc: 0.23894, qbRush: 0.23009, ras: 0.11504, breakout: 0.11504, prod: 0.07965, pff: 0.0708, bigTime: 0.06195, qbAccuracy: 0.0531, age: 0.0177, turnoverRate: 0.0177 },  // sum=1.00
+    // v10.3 (Oct 17 2026): QB big-time throw % and turnover-worthy play rate set to 0 (see jm_weights.js). CEILING track.
+    // (previous) QB: { dc: 0.23894, qbRush: 0.23009, ras: 0.11504, breakout: 0.11504, prod: 0.07965, pff: 0.0708, bigTime: 0.06195, qbAccuracy: 0.0531, age: 0.0177, turnoverRate: 0.0177 }  // sum=1.00
+    QB:  { dc: 0.25963, qbRush: 0.25, ras: 0.12499, breakout: 0.12499, prod: 0.08654, pff: 0.07693, qbAccuracy: 0.05769, age: 0.01923 },  // sum=1.00
     // RB v6: dropped dominator (dead, ridge -2.0), redistributed to rbRec (+2) and pffRecv (+2, was 0)
     // RB v7 ceiling (Apr 24 2026): pff (rush grade) ADDED at 0.05 — was missing
     //   from ceiling entirely despite r=0.21/0.27 signal. pffRecv doubled 0.02→0.04.
@@ -2176,7 +2178,10 @@ window.JM_CAREER_GRADES = {"A.J. Brown|2019":[83.9,2,7,0],"A.T. Perry|2023":[0.0
 // ===== jm_devy_ceiling.js =====
 /* JM_DEVY_CEILING — extracted from index.html for performance */
   var JM_DEVY_CEILING = {
-    QB:  { breakout: 0.22, prod: 0.18, qbRush: 0.10, improve: 0.10, qbIntRate: 0.08, conf: 0.06, age: 0.05, qbAccuracy: 0.05, eff: 0.05, size: 0.03, bigTime: 0.03, turnoverRate: 0.03, pff: 0.02 },  // sum=1.00
+    // Oct 17 2026: QB bigTime + turnoverRate set to 0, others re-spread proportionally (no backtest support; TWP points
+    //   the wrong way on the 2017-24 QBs - see jm_weights.js v10.3).
+    // (previous) QB: { breakout: 0.22, prod: 0.18, qbRush: 0.10, improve: 0.10, qbIntRate: 0.08, conf: 0.06, age: 0.05, qbAccuracy: 0.05, eff: 0.05, size: 0.03, bigTime: 0.03, turnoverRate: 0.03, pff: 0.02 }  // sum=1.00
+    QB:  { breakout: 0.23405, prod: 0.19149, qbRush: 0.10638, improve: 0.10638, qbIntRate: 0.08511, conf: 0.06383, age: 0.05319, qbAccuracy: 0.05319, eff: 0.05319, size: 0.03191, pff: 0.02128 },  // sum=1.00
     RB:  { breakout: 0.24, prod: 0.20, breakaway: 0.09, rbRec: 0.06, conf: 0.06, yaco: 0.06, improve: 0.06, elusive: 0.06, mktShare: 0.05, age: 0.05, forcedMissed: 0.05, size: 0.02 },  // sum=1.00
     WR:  { breakout: 0.27, prod: 0.22, yprr: 0.10, routeGrade: 0.10, age: 0.05, contested: 0.05, yac: 0.05, conf: 0.04, dominator: 0.04, qbCtx: 0.04, dropRate: 0.04 },  // sum=1.00
     TE:  { breakout: 0.22, prod: 0.15, teRec: 0.10, improve: 0.07, age: 0.05, qbCtx: 0.05, eff: 0.05, routeGrade: 0.05, yprr: 0.05, conf: 0.04, contested: 0.04, dominator: 0.04, size: 0.03, yac: 0.03, dropRate: 0.03 }  // sum=1.00
@@ -2187,7 +2192,10 @@ window.JM_CAREER_GRADES = {"A.J. Brown|2019":[83.9,2,7,0],"A.T. Perry|2023":[0.0
 // ===== jm_devy_floor.js =====
 /* JM_DEVY_FLOOR — extracted from index.html for performance */
   var JM_DEVY_FLOOR = {
-    QB:  { prod: 0.20, breakout: 0.18, qbRush: 0.10, age: 0.08, conf: 0.08, improve: 0.08, qbIntRate: 0.08, size: 0.05, eff: 0.05, qbAccuracy: 0.05, bigTime: 0.02, turnoverRate: 0.02, pff: 0.01 },  // sum=1.00
+    // Oct 17 2026: QB bigTime + turnoverRate set to 0, others re-spread proportionally (no backtest support; TWP points
+    //   the wrong way on the 2017-24 QBs - see jm_weights.js v10.3).
+    // (previous) QB: { prod: 0.20, breakout: 0.18, qbRush: 0.10, age: 0.08, conf: 0.08, improve: 0.08, qbIntRate: 0.08, size: 0.05, eff: 0.05, qbAccuracy: 0.05, bigTime: 0.02, turnoverRate: 0.02, pff: 0.01 }  // sum=1.00
+    QB:  { prod: 0.20835, breakout: 0.1875, qbRush: 0.10417, age: 0.08333, conf: 0.08333, improve: 0.08333, qbIntRate: 0.08333, size: 0.05208, eff: 0.05208, qbAccuracy: 0.05208, pff: 0.01042 },  // sum=1.00
     RB:  { prod: 0.22, breakout: 0.20, rbRec: 0.08, age: 0.08, conf: 0.08, yaco: 0.06, mktShare: 0.05, improve: 0.05, forcedMissed: 0.05, elusive: 0.05, breakaway: 0.05, size: 0.03 },  // sum=1.00
     WR:  { prod: 0.24, breakout: 0.24, yprr: 0.10, age: 0.08, routeGrade: 0.07, conf: 0.06, contested: 0.05, dominator: 0.04, qbCtx: 0.04, dropRate: 0.04, yac: 0.04 },  // sum=1.00
     TE:  { breakout: 0.20, prod: 0.17, teRec: 0.10, age: 0.08, improve: 0.07, conf: 0.06, size: 0.05, eff: 0.05, qbCtx: 0.05, yprr: 0.04, dominator: 0.04, contested: 0.03, dropRate: 0.02, routeGrade: 0.02, yac: 0.02 }  // sum=1.00
@@ -2234,7 +2242,13 @@ window.JM_CAREER_GRADES = {"A.J. Brown|2019":[83.9,2,7,0],"A.T. Perry|2023":[0.0
     //   RAS 7.0 vs 9.05. Chosen in all eight leave-one-year-out folds; vs graded career outcome, top-100
     //   picks .664 -> .703, all QBs .731 -> .738. FLOOR track.
     // (previous) QB:  { dc: 0.300, breakout: 0.134, prod: 0.125, pff: 0.077, ras: 0.077, qbRush: 0.067, age: 0.067, bigTime: 0.058, qbAccuracy: 0.038, turnoverRate: 0.029, totalColFpts: 0.029, conf: 0, colTrajectory: 0, size: 0 },  // sum=1.00
-    QB:  { dc: 0.2809, breakout: 0.12547, qbRush: 0.12547, prod: 0.11704, pff: 0.0721, ras: 0.0721, age: 0.06273, bigTime: 0.05431, qbAccuracy: 0.03558, turnoverRate: 0.02715, totalColFpts: 0.02715 },  // sum=1.00
+    // v10.3 (Oct 17 2026): QB big-time throw % and turnover-worthy play rate set to 0, others re-spread proportionally.
+    //   Both were live only for 24 current college QBs - no backtest QB had them. Backfilled for all 73 2017-24 QBs from
+    //   PFF pressure splits: BTT adds nothing beyond the pick (-.07) and TWP points the wrong way (low TWP scored good,
+    //   beyond pick -.12, top-100 -.31). In-model with the data: all .738 -> .732, top-100 .703 -> .683. At 0 the
+    //   backtest is unchanged by construction. FLOOR track.
+    // (previous) QB: { dc: 0.2809, breakout: 0.12547, qbRush: 0.12547, prod: 0.11704, pff: 0.0721, ras: 0.0721, age: 0.06273, bigTime: 0.05431, qbAccuracy: 0.03558, turnoverRate: 0.02715, totalColFpts: 0.02715 }  // sum=1.00
+    QB:  { dc: 0.30581, breakout: 0.1366, qbRush: 0.1366, prod: 0.12742, pff: 0.07849, ras: 0.07849, age: 0.06829, qbAccuracy: 0.03874, totalColFpts: 0.02956 },  // sum=1.00
     // RB v6 (Apr 2026): regression-driven cleanup — dominator dead (raw 0.09, ridge -2.0), totalColFpts redundant, colTrajectory zero
     // Redistributed to rbRec (raw 0.29, ridge +6.8), breakout (raw 0.39, ridge +6.9), pffRecv (raw 0.26, ridge +5.3)
     // RB v8 (Apr 24 2026): further data-driven tuning from PFF metric correlations.

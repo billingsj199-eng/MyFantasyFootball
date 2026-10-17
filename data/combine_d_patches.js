@@ -767,7 +767,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   _sd25('Terrance Ferguson', 46, 'LAR', 'TE', 'Oregon');
   _sd25('Elijah Arroyo', 50, 'SEA', 'TE', 'Miami (FL)');
   _sd25('Tre Harris', 55, 'LAC', 'WR', 'Ole Miss');
-  _sd25('Josh Hoover', 58, 'LV', 'WR', 'TCU');
+  _sd25('Jack Bech', 58, 'LV', 'WR', 'TCU');   // was 'Josh Hoover' (TCU QB, now an Indiana 2027 devy) - stamped him as drafted (fixed 2026-10-17)
   _sd25('RJ Harvey', 60, 'DEN', 'RB', 'UCF');
   // Round 3
   _sd25('Harold Fannin Jr.', 67, 'CLE', 'TE', 'Bowling Green');

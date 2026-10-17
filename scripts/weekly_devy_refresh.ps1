@@ -65,7 +65,7 @@ if ($dirty) {
     Write-Log ('draft boards: ' + $out.Trim())
     if ($LASTEXITCODE -eq 3) { Write-Log 'consensus board unavailable - draftProj unchanged this week' }
     elseif ($LASTEXITCODE -ne 0) { Write-Log "draft boards FAILED (exit $LASTEXITCODE) - continuing" }
-    Commit-Push $BoardFiles 'Auto draft boards (consensus + PFF -> 2027 draftProj)'
+    Commit-Push $BoardFiles 'Auto draft boards (NFLMDD mock + big board -> 2027 draftProj)'
 }
 
 # Refuse to run the rest on dirty target files so a half-finished manual session isn't

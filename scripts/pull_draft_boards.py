@@ -21,7 +21,9 @@ Writes scripts/draft_boards_<yr>.json (per-player ranks from each source,
 for the audit) and patches data/combine_data.js:
 
   * draftProj for every skill-position (QB/RB/WR/TE) entry in the class
-    (yr == <draft year>): consensus MOCK pick when the player is in the mock;
+    (yr == <draft year>): consensus MOCK pick when the player is in the mock
+    (rounds 1-2); otherwise his Official MDDB 7-round mock pick (Site Rankings/
+    official_mock_<yr>.csv), floored at the pick after the consensus mock's last;
     otherwise max(last mock pick + 1, big-board rank) while the big-board rank is
     a draftable slot (<= 262); otherwise projected UDFA.
     If the mock page can't be read, the big-board rank is used unfloored.
@@ -177,7 +179,27 @@ def fetch_mock_html(url):
     return r.text
 
 
+OFFICIAL_CSV = "Site Rankings/official_mock_%d.csv"   # Official MDDB 7-round staff mock (Jack 10-17: use it past the consensus rounds)
 BOARD_CSV = "Site Rankings/big_board_%d.csv"   # signed-in big board (Jack's Chrome via nflmdd_extract_chrome.js + save_nflmdd_csv.py), skill rows through 300
+
+
+def load_official_csv(year, today):
+    """-> ({name: pick}, date, picks) for the Official MDDB mock when <= MOCK_CSV_MAX_AGE days old."""
+    import csv
+    path = OFFICIAL_CSV % year
+    out, dt, picks = {}, None, 0
+    if not os.path.exists(path):
+        return out, dt, picks
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            try:
+                if (today - datetime.date.fromisoformat(row["pulled"])).days > MOCK_CSV_MAX_AGE:
+                    return {}, None, 0
+                dt, picks = row["date"], int(row["picks"])
+                out.setdefault(row["name"].strip(), int(row["pick"]))
+            except (KeyError, ValueError):
+                continue
+    return out, dt, picks
 
 
 def load_board_csv(year, today):
@@ -268,6 +290,9 @@ def main():
     live_depth = max((v["rank"] for v in cons_live.values()), default=0)
     log("consensus board (live): %d skill players through rank %d (updated %s)" % (len(cons_live), live_depth, cons_upd))
     cons = dict(cons_live)
+    official, off_date, off_picks = load_official_csv(year, today)
+    if official:
+        log("official MDDB mock (%s): %d picks, %d skill players" % (off_date, off_picks, len(official)))
     bb, bb_depth, bb_upd, bb_pulled = load_board_csv(year, today)
     if bb and bb_depth > live_depth:
         # Signed-in board from Jack's Chrome: ranks from the CSV, school from the live page.
@@ -306,12 +331,21 @@ def main():
         mock, mock_picks = {}, 0
     else:
         log("consensus mock (%s): %d picks from %s mocks, %d skill players" % (MOCK_PERIODS[0], mock_picks, n_mocks, len(mock)))
+        # The primary window owns its slots: a fill-in whose pick a skill player already
+        # holds slides to the next free pick (10-17: Moore 6 in the 2-week window, but
+        # Mensah holds 6 in the 1-week one -> Moore 7, not a tie at 6).
+        taken = {v["pick"] for v in mock.values()}
         for per in MOCK_PERIODS[1:]:
             extra, _, n_ex = mock_window(per)
-            for n, v in extra.items():
+            for n, v in sorted(extra.items(), key=lambda kv: kv[1]["pick"]):
                 if n not in mock:
-                    mock[n] = dict(v, window=per)
-                    log("  mock fill-in (%s, %s mocks): %s pick %d (%d%%)" % (per, n_ex, n, v["pick"], v["pct"]))
+                    pick = v["pick"]
+                    while pick in taken:
+                        pick += 1
+                    taken.add(pick)
+                    mock[n] = dict(v, pick=pick, window=per)
+                    log("  mock fill-in (%s, %s mocks): %s pick %d (%d%%)%s" % (
+                        per, n_ex, n, pick, v["pct"], "" if pick == v["pick"] else " - slot %d taken" % v["pick"]))
 
     with open(COMBINE_JS, encoding="utf-8", newline="") as f:
         raw = f.read()
@@ -328,29 +362,33 @@ def main():
         return n if n in cb else by_norm.get(norm(n))
 
     snapshot = {"year": year, "pulled": today.isoformat(), "consensus_updated": cons_upd,
-                "mock_picks": mock_picks, "mock_n": n_mocks, "players": {}}
+                "mock_picks": mock_picks, "mock_n": n_mocks, "official_date": off_date, "players": {}}
     for n in set(cons) | set(mock):
         info = cons.get(n) or mock.get(n)
         snapshot["players"][n] = {"mock": mock.get(n, {}).get("pick"), "mock_pct": mock.get(n, {}).get("pct"),
                                   "mock_window": mock.get(n, {}).get("window", MOCK_PERIODS[0]) if n in mock else None,
-                                  "consensus": cons.get(n, {}).get("rank"),
+                                  "official": official.get(n), "consensus": cons.get(n, {}).get("rank"),
                                   "pos": info["pos"], "school": info.get("school", ""), "site": site_name(n)}
 
     changes, added = [], []
 
     def proj_for(n):
         k = mock.get(n, {}).get("pick")
+        o = official.get(n)
         c = cons.get(n, {}).get("rank")
         if k:
             return k
+        if o:
+            # Official 7-round mock fills the rounds the consensus mock doesn't cover.
+            return max(mock_picks + 1, o) if mock_picks else o
         if c and c <= LAST_PICK:
             # Not in the mock's rounds -> no earlier than the next pick.
             return max(mock_picks + 1, c) if mock_picks else c
         return None   # ranked past the last pick -> projected UDFA
 
     def proj_site(name):
-        """mock -> consensus big board -> None (UDFA), for one site name."""
-        src = next((n for n in list(mock) + list(cons) if site_name(n) == name), None)
+        """consensus mock -> official 7-round mock -> big board -> None (UDFA), for one site name."""
+        src = next((n for n in list(mock) + list(official) + list(cons) if site_name(n) == name), None)
         return proj_for(src) if src else None
 
     # 1) draftProj for the whole runtime class (combine_data.js entries edited in

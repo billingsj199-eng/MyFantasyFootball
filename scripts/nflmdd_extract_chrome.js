@@ -4,6 +4,8 @@
 // QB/RB/WR/TE rows, and stores compact pipe text in window.__nflmdd:
 //   P|period|n_mocks|picks         header for the M rows that follow
 //   M|pick|name|pos|pct
+//   O|date|picks                    header for the Official MDDB 7-round mock
+//   K|pick|name|pos
 //   D|depth|updated                 header for the big board
 //   B|rank|name|pos|school          (skill rows through rank 300)
 // Evaluates to a summary; read the text back in 900-char slices (the tool cuts
@@ -35,6 +37,25 @@
     lines.push(['P', per, n, picks].join('|'));
     rows.forEach((r) => lines.push(['M', ...r].join('|')));
     summary.mock[per] = { n, picks, skill: rows.length, locked: /Unlock Round \d+ with Mock\+/.test(html) };
+  }
+  // Official MDDB Mock Draft - one staff mock, all 7 rounds (used for picks 65+, where the
+  // consensus mock stops).
+  {
+    const html = await fetch(`/mock-drafts/${yr}/mddb-mock-draft-${yr}`, { credentials: 'include' }).then((r) => r.text());
+    const d = new DOMParser().parseFromString(html, 'text/html');
+    const dt = (html.match(/(\d{1,2}\/\d{1,2}\/\d{4})/) || [])[1] || '';
+    let picks = 0; const rows = [];
+    d.querySelectorAll('span.font-black.leading-none').forEach((s) => {
+      const card = s.closest('div.flex.items-stretch'); if (!card) return;
+      const a = card.querySelector(`a[href^="/players/${yr}/"]`); if (!a) return;
+      const pick = +s.textContent.trim(); picks = Math.max(picks, pick);
+      let pos = clean((a.parentElement.querySelector('span') || {}).textContent || '');
+      if (pos === 'HB') pos = 'RB';
+      if (S.has(pos)) rows.push([pick, clean(a.textContent), pos]);
+    });
+    lines.push(['O', dt, picks].join('|'));
+    rows.forEach((r) => lines.push(['K', ...r].join('|')));
+    summary.official = { date: dt, picks, skill: rows.length };
   }
   const bh = await fetch(`/big-boards/${yr}/consensus-big-board-${yr}`, { credentials: 'include' }).then((r) => r.text());
   const upd = (bh.match(/Updated\W+(?:<[^>]*>\W*)*([A-Z][a-z]+ \d{1,2}, \d{4})/) || [])[1] || '';

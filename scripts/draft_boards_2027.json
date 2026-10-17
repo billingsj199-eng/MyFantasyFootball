@@ -2,12 +2,14 @@
  "consensus_updated": "October 17, 2026",
  "mock_n": "32",
  "mock_picks": 64,
+ "official_date": "10/17/2026",
  "players": {
   "Ahmad Hardy": {
    "consensus": 71,
    "mock": 38,
    "mock_pct": 50,
    "mock_window": "1_month",
+   "official": 94,
    "pos": "RB",
    "school": "Missouri",
    "site": "Ahmad Hardy"
@@ -17,6 +19,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 210,
    "pos": "WR",
    "school": "Houston",
    "site": "Amare Thomas"
@@ -26,6 +29,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 177,
    "pos": "TE",
    "school": "Penn State",
    "site": "Andrew Rappleyea"
@@ -35,6 +39,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 216,
    "pos": "WR",
    "school": "Mississippi State",
    "site": "Anthony Evans III"
@@ -44,6 +49,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "RB",
    "school": "Rutgers",
    "site": null
@@ -53,6 +59,7 @@
    "mock": 13,
    "mock_pct": 28,
    "mock_window": "1_week",
+   "official": 3,
    "pos": "QB",
    "school": "Texas",
    "site": "Arch Manning"
@@ -62,6 +69,7 @@
    "mock": 45,
    "mock_pct": 100,
    "mock_window": "1_week",
+   "official": 45,
    "pos": "QB",
    "school": "Missouri",
    "site": "Austin Simmons"
@@ -71,6 +79,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 168,
    "pos": "TE",
    "school": "Penn State",
    "site": "Benjamin Brahmer"
@@ -80,6 +89,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "WR",
    "school": "Ohio State",
    "site": "Brandon Inniss"
@@ -89,6 +99,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "WR",
    "school": "Tennessee",
    "site": "Braylon Staley"
@@ -98,6 +109,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 194,
    "pos": "QB",
    "school": "Texas Tech",
    "site": "Brendan Sorsby"
@@ -107,6 +119,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "TE",
    "school": "Missouri",
    "site": null
@@ -116,6 +129,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 79,
    "pos": "WR",
    "school": "Clemson",
    "site": "Bryant Wesco Jr."
@@ -125,6 +139,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 223,
    "pos": "RB",
    "school": "Kentucky",
    "site": "CJ Baxter Jr."
@@ -134,6 +149,7 @@
    "mock": 9,
    "mock_pct": 33,
    "mock_window": "1_week",
+   "official": 18,
    "pos": "QB",
    "school": "Notre Dame",
    "site": "CJ Carr"
@@ -143,6 +159,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 256,
    "pos": "RB",
    "school": "Northwestern",
    "site": "Caleb Komolafe"
@@ -152,6 +169,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "TE",
    "school": "Mississippi",
    "site": null
@@ -161,6 +179,7 @@
    "mock": 8,
    "mock_pct": 45,
    "mock_window": "1_week",
+   "official": 11,
    "pos": "WR",
    "school": "Texas",
    "site": "Cam Coleman"
@@ -170,6 +189,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "RB",
    "school": "West Virginia",
    "site": "Cam Cook"
@@ -179,6 +199,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 150,
    "pos": "WR",
    "school": "Wake Forest",
    "site": "Carlos Hernandez"
@@ -188,6 +209,7 @@
    "mock": 15,
    "mock_pct": 50,
    "mock_window": "1_month",
+   "official": 8,
    "pos": "WR",
    "school": "Indiana",
    "site": "Charlie Becker"
@@ -197,6 +219,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 184,
    "pos": "WR",
    "school": "Arkansas",
    "site": "Chris Marshall"
@@ -206,6 +229,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 179,
    "pos": "WR",
    "school": "Illinois",
    "site": "Collin Dixon"
@@ -215,6 +239,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 246,
    "pos": "QB",
    "school": "Houston",
    "site": "Conner Weigman"
@@ -224,6 +249,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 144,
    "pos": "WR",
    "school": "Miami (FL)",
    "site": "Cooper Barkate"
@@ -233,6 +259,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 250,
    "pos": "QB",
    "school": "Baylor",
    "site": "DJ Lagway"
@@ -242,15 +269,17 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 172,
    "pos": "TE",
    "school": "Iowa",
    "site": "DJ Vonnahme"
   },
   "Dante Moore": {
    "consensus": 6,
-   "mock": 6,
+   "mock": 7,
    "mock_pct": 20,
    "mock_window": "2_weeks",
+   "official": 9,
    "pos": "QB",
    "school": "Oregon",
    "site": "Dante Moore"
@@ -260,6 +289,7 @@
    "mock": 6,
    "mock_pct": 28,
    "mock_window": "1_week",
+   "official": 6,
    "pos": "QB",
    "school": "Miami (FL)",
    "site": "Darian Mensah"
@@ -269,6 +299,7 @@
    "mock": 49,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 49,
    "pos": "WR",
    "school": "Mississippi",
    "site": "Deuce Alexander"
@@ -278,6 +309,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 225,
    "pos": "WR",
    "school": "Ohio State",
    "site": "Devin McCuin"
@@ -287,6 +319,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 192,
    "pos": "QB",
    "school": "Minnesota",
    "site": "Drake Lindsey"
@@ -296,6 +329,7 @@
    "mock": 3,
    "mock_pct": 37,
    "mock_window": "1_week",
+   "official": 4,
    "pos": "QB",
    "school": "Oklahoma State",
    "site": "Drew Mestemaker"
@@ -305,6 +339,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 65,
    "pos": "WR",
    "school": "Florida State",
    "site": "Duce Robinson"
@@ -314,6 +349,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 188,
    "pos": "QB",
    "school": "Oregon",
    "site": "Dylan Raiola"
@@ -323,6 +359,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 170,
    "pos": "WR",
    "school": "Florida",
    "site": "Eric Singleton Jr."
@@ -332,6 +369,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 232,
    "pos": "WR",
    "school": "LSU",
    "site": "Eugene Wilson III"
@@ -341,6 +379,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "WR",
    "school": "Oregon",
    "site": "Evan Stewart"
@@ -350,6 +389,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 227,
    "pos": "RB",
    "school": "Mississippi State",
    "site": "Fluff Bothwell"
@@ -359,6 +399,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "TE",
    "school": "Penn State",
    "site": null
@@ -368,6 +409,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 132,
    "pos": "WR",
    "school": "Northwestern",
    "site": "Griffin Wilde"
@@ -377,6 +419,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 143,
    "pos": "RB",
    "school": "Texas",
    "site": "Hollywood Smothers"
@@ -386,6 +429,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 163,
    "pos": "WR",
    "school": "California",
    "site": "Ian Strong"
@@ -395,6 +439,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 139,
    "pos": "RB",
    "school": "Louisville",
    "site": "Isaac Brown"
@@ -404,6 +449,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 130,
    "pos": "WR",
    "school": "Oklahoma",
    "site": "Isaiah Sategna III"
@@ -413,6 +459,7 @@
    "mock": 27,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 27,
    "pos": "RB",
    "school": "Florida",
    "site": "Jadan Baugh"
@@ -422,6 +469,7 @@
    "mock": 19,
    "mock_pct": 30,
    "mock_window": "1_week",
+   "official": 31,
    "pos": "TE",
    "school": "Oregon",
    "site": "Jamari Johnson"
@@ -431,6 +479,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 248,
    "pos": "WR",
    "school": "Minnesota",
    "site": "Javon Tracy"
@@ -440,6 +489,7 @@
    "mock": 30,
    "mock_pct": 5,
    "mock_window": "1_month",
+   "official": 71,
    "pos": "QB",
    "school": "USC",
    "site": "Jayden Maiava"
@@ -449,6 +499,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 235,
    "pos": "TE",
    "school": "North Carolina",
    "site": "Jelani Thurman"
@@ -458,6 +509,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 214,
    "pos": "TE",
    "school": "Duke",
    "site": "Jeremiah Hasley"
@@ -467,6 +519,7 @@
    "mock": 1,
    "mock_pct": 72,
    "mock_window": "1_week",
+   "official": 1,
    "pos": "WR",
    "school": "Ohio State",
    "site": "Jeremiah Smith"
@@ -476,6 +529,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 230,
    "pos": "QB",
    "school": "Oklahoma",
    "site": "John Mateer"
@@ -485,6 +539,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 134,
    "pos": "WR",
    "school": "Notre Dame",
    "site": "Jordan Faison"
@@ -494,6 +549,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "RB",
    "school": "Michigan",
    "site": "Jordan Marshall"
@@ -503,6 +559,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 209,
    "pos": "QB",
    "school": "Indiana",
    "site": "Josh Hoover"
@@ -512,6 +569,7 @@
    "mock": 62,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 62,
    "pos": "QB",
    "school": "Ohio State",
    "site": "Julian Sayin"
@@ -521,6 +579,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 103,
    "pos": "WR",
    "school": "Vanderbilt",
    "site": "Junior Sherrill"
@@ -530,6 +589,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 148,
    "pos": "RB",
    "school": "Georgia Tech",
    "site": "Justice Haynes"
@@ -539,15 +599,17 @@
    "mock": 41,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 41,
    "pos": "WR",
    "school": "Rutgers",
    "site": "KJ Duff"
   },
   "Kewan Lacy": {
    "consensus": 51,
-   "mock": 49,
+   "mock": 50,
    "mock_pct": 50,
    "mock_window": "1_month",
+   "official": 70,
    "pos": "RB",
    "school": "Mississippi",
    "site": "Kewan Lacy"
@@ -557,6 +619,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "RB",
    "school": "Louisville",
    "site": null
@@ -566,6 +629,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 107,
    "pos": "RB",
    "school": "BYU",
    "site": "LJ Martin"
@@ -575,6 +639,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 186,
    "pos": "QB",
    "school": "South Carolina",
    "site": "LaNorris Sellers"
@@ -584,6 +649,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 140,
    "pos": "TE",
    "school": "Georgia",
    "site": "Lawson Luckie"
@@ -593,6 +659,7 @@
    "mock": 63,
    "mock_pct": 33,
    "mock_window": "1_month",
+   "official": 85,
    "pos": "TE",
    "school": "Virginia Tech",
    "site": "Luke Reynolds"
@@ -602,6 +669,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 241,
    "pos": "RB",
    "school": "Houston",
    "site": "Makhi Hughes"
@@ -611,6 +679,7 @@
    "mock": 58,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 58,
    "pos": "WR",
    "school": "Texas A&M",
    "site": "Mario Craver"
@@ -620,6 +689,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 127,
    "pos": "RB",
    "school": "Miami (FL)",
    "site": "Mark Fletcher Jr."
@@ -629,6 +699,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 121,
    "pos": "WR",
    "school": "Tennessee",
    "site": "Mike Matthews"
@@ -638,6 +709,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 88,
    "pos": "RB",
    "school": "Georgia",
    "site": "Nate Frazier"
@@ -647,6 +719,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 240,
    "pos": "WR",
    "school": "Kentucky",
    "site": "Nic Anderson"
@@ -656,6 +729,7 @@
    "mock": 20,
    "mock_pct": 37,
    "mock_window": "1_week",
+   "official": 33,
    "pos": "WR",
    "school": "Indiana",
    "site": "Nick Marsh"
@@ -665,6 +739,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 183,
    "pos": "QB",
    "school": "UCLA",
    "site": "Nico Iamaleava"
@@ -674,6 +749,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 159,
    "pos": "WR",
    "school": "South Carolina",
    "site": "Nyck Harbor"
@@ -683,6 +759,7 @@
    "mock": 55,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 55,
    "pos": "WR",
    "school": "Arizona State",
    "site": "Omarion Miller"
@@ -692,6 +769,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 147,
    "pos": "TE",
    "school": "Temple",
    "site": "Peter Clarke"
@@ -701,6 +779,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 224,
    "pos": "RB",
    "school": "Florida State",
    "site": "Quintrevion Wisner"
@@ -710,6 +789,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "RB",
    "school": "Texas",
    "site": "Raleek Brown"
@@ -719,6 +799,7 @@
    "mock": 54,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 54,
    "pos": "WR",
    "school": "Arizona State",
    "site": "Reed Harris"
@@ -728,6 +809,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 195,
    "pos": "TE",
    "school": "Oklahoma",
    "site": "Rocky Beers"
@@ -737,6 +819,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "RB",
    "school": "Texas A&M",
    "site": null
@@ -746,6 +829,7 @@
    "mock": 26,
    "mock_pct": 25,
    "mock_window": "1_week",
+   "official": 26,
    "pos": "WR",
    "school": "Alabama",
    "site": "Ryan Coleman-Williams"
@@ -755,6 +839,7 @@
    "mock": 61,
    "mock_pct": 33,
    "mock_window": "1_week",
+   "official": 61,
    "pos": "WR",
    "school": "Texas",
    "site": "Ryan Wingo"
@@ -764,6 +849,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 182,
    "pos": "QB",
    "school": "LSU",
    "site": "Sam Leavitt"
@@ -773,6 +859,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 151,
    "pos": "WR",
    "school": "Clemson",
    "site": "T.J. Moore"
@@ -782,6 +869,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 146,
    "pos": "TE",
    "school": "Texas Tech",
    "site": "Terrance Carter Jr."
@@ -791,6 +879,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "TE",
    "school": "SMU",
    "site": null
@@ -800,6 +889,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 229,
    "pos": "WR",
    "school": "Iowa",
    "site": "Tony Diaz"
@@ -809,6 +899,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": null,
    "pos": "WR",
    "school": "Louisville",
    "site": null
@@ -818,6 +909,7 @@
    "mock": 29,
    "mock_pct": 15,
    "mock_window": "1_week",
+   "official": 36,
    "pos": "TE",
    "school": "LSU",
    "site": "Trey'Dez Green"
@@ -827,6 +919,7 @@
    "mock": 18,
    "mock_pct": 50,
    "mock_window": "1_week",
+   "official": 13,
    "pos": "QB",
    "school": "Mississippi",
    "site": "Trinidad Chambliss"
@@ -836,6 +929,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 201,
    "pos": "QB",
    "school": "Duke",
    "site": "Walker Eget"
@@ -845,6 +939,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 155,
    "pos": "RB",
    "school": "Utah",
    "site": "Wayshawn Parker"
@@ -854,6 +949,7 @@
    "mock": null,
    "mock_pct": null,
    "mock_window": null,
+   "official": 95,
    "pos": "WR",
    "school": "Oklahoma State",
    "site": "Wyatt Young"

@@ -1,0 +1,221 @@
+transitions: 21935  moves: 3761  (pre 502, portal 3259)
+
+=== 1. VOLUME: how many skill players move, by era ===
+  2017:   54 of  1647 moved ( 3.3%)  | of last-year STARTERS:   4 of  398 ( 1.0%)
+  2018:  124 of  1952 moved ( 6.4%)  | of last-year STARTERS:  16 of  453 ( 3.5%)
+  2019:  174 of  2079 moved ( 8.4%)  | of last-year STARTERS:  27 of  451 ( 6.0%)
+  2020:  150 of  1560 moved ( 9.6%)  | of last-year STARTERS:  21 of  323 ( 6.5%)
+  2021:  313 of  2137 moved (14.6%)  | of last-year STARTERS:  69 of  525 (13.1%)
+  2022:  478 of  2517 moved (19.0%)  | of last-year STARTERS:  90 of  569 (15.8%)
+  2023:  640 of  3324 moved (19.3%)  | of last-year STARTERS: 157 of  664 (23.6%)
+  2024:  852 of  3370 moved (25.3%)  | of last-year STARTERS: 226 of  716 (31.6%)
+  2025:  976 of  3349 moved (29.1%)  | of last-year STARTERS: 263 of  618 (42.6%)
+
+=== 2. WHERE THEY GO: tier paths (portal era, players with a role before vs not) ===
+  pre    had a role n   68: G5->P4 24%, P4->P4 22%, G5->G5 13%, FCS->G5 12%, FCS->FCS 9%, FCS->P4 7%, P4->G5 6%, G5->FCS 4%, P4->FCS 3%
+  pre    no role    n  434: P4->P4 31%, P4->G5 26%, G5->FCS 17%, P4->FCS 11%, G5->G5 7%, G5->P4 5%, FCS->G5 2%, FCS->FCS 1%, FCS->P4 1%
+  portal had a role n  805: G5->P4 22%, P4->P4 19%, FCS->G5 17%, FCS->FCS 15%, FCS->P4 12%, G5->G5 9%, P4->G5 4%, G5->FCS 3%, P4->FCS 1%
+  portal no role    n 2454: P4->P4 21%, P4->G5 20%, G5->FCS 15%, FCS->FCS 13%, G5->G5 10%, P4->FCS 8%, G5->P4 6%, FCS->G5 5%, FCS->P4 1%
+
+=== 3. WHAT HAPPENS: production change vs matched stayers (same pos, era, tier, starting share) ===
+ PRE
+  QB                                 n   149  role after  45.6%  share vs stayers  +7.5 pts (t  +2.4)  ppg vs stayers -0.07 (t  -0.1) 
+  RB                                 n   109  role after  21.1%  share vs stayers  +4.2 pts (t  +3.8)  ppg vs stayers +0.44 (t  +0.9) 
+  WR                                 n   196  role after  33.7%  share vs stayers  +1.5 pts (t  +1.5)  ppg vs stayers -0.55 (t  -1.8) 
+  TE                                 n    48  role after  25.0%  share vs stayers  -0.2 pts (t  -0.2)  ppg vs stayers +0.18 (t  +0.4) 
+ PORTAL
+  QB                                 n   648  role after  41.0%  share vs stayers  -0.2 pts (t  -0.2)  ppg vs stayers -0.64 (t  -2.1) 
+  RB                                 n   811  role after  14.9%  share vs stayers  +0.4 pts (t  +1.2)  ppg vs stayers -0.16 (t  -0.8) 
+  WR                                 n  1404  role after  30.7%  share vs stayers  -0.8 pts (t  -2.3)  ppg vs stayers -0.57 (t  -4.5) 
+  TE                                 n   396  role after  24.0%  share vs stayers  -0.5 pts (t  -1.6)  ppg vs stayers -0.39 (t  -2.9) 
+ PORTAL era by path and prior role
+  role / up                          n   405  role after  36.5%  share vs stayers -12.3 pts (t -12.5)  ppg vs stayers -5.14 (t -15.7) 
+  role / same                        n   345  role after  47.2%  share vs stayers  -6.7 pts (t  -5.1)  ppg vs stayers -1.22 (t  -3.5) 
+  role / down                        n    55  role after  56.4%  share vs stayers  -6.4 pts (t  -1.7)  ppg vs stayers -0.66 (t  -0.7) 
+  no role / up                       n   294  role after  14.3%  share vs stayers  -4.2 pts (t  -5.2)  ppg vs stayers -1.77 (t  -6.4) 
+  no role / same                     n  1094  role after  24.0%  share vs stayers  +2.2 pts (t  +4.2)  ppg vs stayers +0.23 (t  +1.7) 
+  no role / down                     n  1066  role after  25.0%  share vs stayers  +5.0 pts (t  +9.0)  ppg vs stayers +1.21 (t  +8.1) 
+ PORTAL era, transfers with a role who moved UP to P4, by position
+  QB G5/FCS -> P4 starters           n    48  role after  37.5%  share vs stayers -27.1 pts (t  -5.2)  ppg vs stayers -6.02 (t  -5.0) 
+  RB G5/FCS -> P4 starters           n    44  role after  22.7%  share vs stayers  -9.8 pts (t  -6.6)  ppg vs stayers -8.40 (t  -8.1) 
+  WR G5/FCS -> P4 starters           n   142  role after  39.4%  share vs stayers -10.4 pts (t -11.7)  ppg vs stayers -5.18 (t -11.8) 
+  TE G5/FCS -> P4 starters           n    36  role after  47.2%  share vs stayers  -1.9 pts (t  -1.4)  ppg vs stayers -2.69 (t  -3.9) 
+ PRE era same split (comparison)
+  role / up                          n    29  role after  41.4%  share vs stayers -21.0 pts (t  -3.8)  ppg vs stayers +0.73 (t  +0.6) 
+  role / same                        n    30  role after  36.7%  share vs stayers  -8.7 pts (t  -2.0)  ppg vs stayers -2.57 (t  -2.5) 
+  role / down                        n     9  role after  55.6%  share vs stayers +11.4 pts (t  +1.5)  ppg vs stayers -4.23 (t  -2.8) 
+  no role / up                       n    32  role after  18.8%  share vs stayers  -3.6 pts (t  -1.1)  ppg vs stayers +1.80 (t  +1.7) 
+  no role / same                     n   171  role after  24.0%  share vs stayers  +1.8 pts (t  +1.3)  ppg vs stayers +0.44 (t  +1.1) 
+  no role / down                     n   231  role after  40.7%  share vs stayers +10.4 pts (t  +7.0)  ppg vs stayers -0.43 (t  -1.2) 
+
+=== 4. WHICH DESTINATIONS WORK: destination features (portal era, all moves) ===
+  vacated share at pos 0-0.15        n   905  role after  22.0%  share vs stayers  +0.4 pts (t  +0.6)  ppg vs stayers -0.54 (t  -3.1) 
+  vacated share at pos 0.15-0.35     n   815  role after  19.3%  share vs stayers  -2.4 pts (t  -5.4)  ppg vs stayers -0.88 (t  -4.8) 
+  vacated share at pos 0.35-0.6      n   840  role after  28.8%  share vs stayers  -0.7 pts (t  -1.4)  ppg vs stayers -0.30 (t  -1.6) 
+  vacated share at pos 0.6-1.01      n   696  role after  45.0%  share vs stayers  +1.5 pts (t  +1.4)  ppg vs stayers -0.06 (t  -0.2) 
+  team-strength jump (SP+) -99--10   n   562  role after  29.2%  share vs stayers  +4.0 pts (t  +5.6)  ppg vs stayers +1.15 (t  +5.6) 
+  team-strength jump (SP+) -10--3    n   288  role after  26.4%  share vs stayers  +0.9 pts (t  +0.9)  ppg vs stayers +0.47 (t  +1.6) 
+  team-strength jump (SP+) -3-3      n   254  role after  29.5%  share vs stayers  -0.6 pts (t  -0.5)  ppg vs stayers -0.15 (t  -0.5) 
+  team-strength jump (SP+) 3-10      n   285  role after  23.9%  share vs stayers  -5.5 pts (t  -5.4)  ppg vs stayers -1.56 (t  -5.1) 
+  team-strength jump (SP+) 10-99     n   436  role after  23.6%  share vs stayers  -7.0 pts (t  -9.0)  ppg vs stayers -1.79 (t  -7.0) 
+  dest offense SP+ 0-25              n   890  role after  30.3%  share vs stayers  -0.6 pts (t  -1.0)  ppg vs stayers -0.46 (t  -2.5) 
+  dest offense SP+ 25-32             n   686  role after  24.5%  share vs stayers  -3.7 pts (t  -5.3)  ppg vs stayers -1.32 (t  -6.2) 
+  dest offense SP+ 32-38             n   457  role after  23.2%  share vs stayers  -4.1 pts (t  -5.3)  ppg vs stayers -1.24 (t  -4.4) 
+  dest offense SP+ 38-99             n   165  role after  24.8%  share vs stayers  -4.8 pts (t  -4.0)  ppg vs stayers -1.35 (t  -3.3) 
+ portal recruit stars (portal entries matched)
+  2-star                             n   128  role after  24.2%  share vs stayers  +3.2 pts (t  +1.8)  ppg vs stayers -0.22 (t  -0.5) 
+  3-star                             n  1802  role after  25.6%  share vs stayers  -0.7 pts (t  -1.7)  ppg vs stayers -0.46 (t  -3.5) 
+  4-star                             n   312  role after  38.5%  share vs stayers  -0.4 pts (t  -0.4)  ppg vs stayers -0.60 (t  -1.8) 
+  5-star                             n     9  role after  77.8%  share vs stayers  +4.2 pts (t  +0.7)  ppg vs stayers +2.35 (t  +1.2) 
+  stars unknown / not matched        n  1004  role after  28.9%  share vs stayers  -0.2 pts (t  -0.3)  ppg vs stayers -0.46 (t  -2.7) 
+ OLS: share change vs stayers (in units of a starter-level share) on destination features, n 1825
+   const          +0.025  (t +0.8)
+   prior share    -0.254  (t -9.9)
+   vacated share  +0.241  (t +5.0)
+   SP+ jump /10   -0.074  (t -7.8)
+   tier up        -0.150  (t -3.8)
+   tier down      +0.029  (t +0.9)
+   sat a year     -0.144  (t -3.3)
+
+=== 5. TOP DESTINATIONS (portal era, skill transfers IN; n>=10) ===
+  Western Kentucky       in  34  had a role before  47%  role after  18%  share vs stayers -12.0
+  Ole Miss               in  34  had a role before  38%  role after  21%  share vs stayers  -5.0
+  Indiana                in  33  had a role before  27%  role after  21%  share vs stayers  +0.3
+  Massachusetts          in  31  had a role before  19%  role after  26%  share vs stayers  +1.9
+  Marshall               in  31  had a role before  23%  role after  19%  share vs stayers  -1.9
+  UCF                    in  30  had a role before  33%  role after  23%  share vs stayers  -2.3
+  Texas State            in  30  had a role before  23%  role after  27%  share vs stayers  -0.5
+  Louisville             in  28  had a role before  25%  role after  21%  share vs stayers  -4.2
+  Houston                in  26  had a role before  27%  role after  23%  share vs stayers  +1.3
+  Cincinnati             in  26  had a role before  50%  role after  38%  share vs stayers  -0.6
+  California             in  26  had a role before  31%  role after  15%  share vs stayers  -6.6
+  UNLV                   in  25  had a role before  12%  role after  16%  share vs stayers  -1.6
+  Jackson State          in  24  had a role before  17%  role after  25%  share vs stayers  -0.9
+  Middle Tennessee       in  24  had a role before  21%  role after  12%  share vs stayers  -7.3
+  James Madison          in  24  had a role before  33%  role after  33%  share vs stayers  -0.8
+  Colorado               in  24  had a role before  46%  role after  42%  share vs stayers  -6.2
+  Arizona State          in  24  had a role before  42%  role after  21%  share vs stayers  -5.3
+  Arkansas               in  24  had a role before  42%  role after  38%  share vs stayers  -1.1
+  Georgia State          in  24  had a role before  25%  role after  12%  share vs stayers  -2.3
+  USC                    in  23  had a role before  48%  role after  22%  share vs stayers  -7.1
+ best / worst landing spots for skill transfers (n>=10, share vs stayers)
+   best : Alcorn State +12.8 (n 12), Northwestern +11.4 (n 10), Montana State +11.3 (n 11), Gardner-Webb +11.2 (n 17), Old Dominion +11.1 (n 11), UAlbany +10.9 (n 14), Northern Colorado +9.7 (n 13), Eastern Michigan +9.3 (n 18)
+   worst: UTSA -10.0 (n 12), Texas -10.7 (n 15), BYU -10.8 (n 13), Texas Tech -11.1 (n 14), Western Kentucky -12.0 (n 34), Baylor -12.1 (n 12), LSU -13.5 (n 12), Maryland -15.3 (n 10)
+
+=== 6. DRAFT: final college season -> drafted within 1 yr, transfers vs one-school (final seasons 2017-2024) ===
+ final season 2017-2020
+  P4 final-yr starters: transfers   44 drafted 36.4% (avg pick   122)  | one school  345 drafted 47.5% (avg pick   107)
+  G5 final-yr starters: transfers   31 drafted  6.5% (avg pick   126)  | one school  318 drafted 16.4% (avg pick   143)
+  FCS final-yr starters: transfers   63 drafted  1.6% (avg pick   231)  | one school  483 drafted  0.2% (avg pick   171)
+ final season 2021-2024
+  P4 final-yr starters: transfers  182 drafted 39.0% (avg pick   125)  | one school  243 drafted 53.5% (avg pick   108)
+  G5 final-yr starters: transfers  158 drafted  5.7% (avg pick   143)  | one school  200 drafted 15.5% (avg pick   128)
+  FCS final-yr starters: transfers  208 drafted  0.5% (avg pick   241)  | one school  452 drafted  2.4% (avg pick   189)
+ drafted rate within production terciles (P4 final-yr starters, 2021-2024 finals)
+  QB ppg tercile 1: transfer  13 -> 15.4% drafted | one school  10 -> 20.0%
+  QB ppg tercile 2: transfer  15 -> 33.3% drafted | one school   8 -> 50.0%
+  QB ppg tercile 3: transfer  12 -> 83.3% drafted | one school  13 -> 92.3%
+  RB ppg tercile 1: transfer   9 -> 33.3% drafted | one school  14 -> 64.3%
+  RB ppg tercile 2: transfer   7 -> 57.1% drafted | one school  16 -> 68.8%
+  RB ppg tercile 3: transfer   7 -> 57.1% drafted | one school  16 -> 87.5%
+  WR ppg tercile 1: transfer  31 -> 16.1% drafted | one school  37 -> 18.9%
+  WR ppg tercile 2: transfer  32 -> 34.4% drafted | one school  36 -> 38.9%
+  WR ppg tercile 3: transfer  32 -> 62.5% drafted | one school  36 -> 72.2%
+  TE ppg tercile 1: transfer   9 -> 22.2% drafted | one school  18 -> 22.2%
+  TE ppg tercile 2: transfer  11 -> 18.2% drafted | one school  16 -> 62.5%
+  TE ppg tercile 3: transfer   4 -> 75.0% drafted | one school  23 -> 73.9%
+
+=== 7. NFL: graded career vs draft slot, college transfers vs one-school (2017-2024 classes) ===
+  transferred (any era)        n  66  career grade vs pick  +0.2 (t +0.1)
+  transferred in portal era    n  43  career grade vs pick  -0.7 (t -0.3)
+  one school                   n 385  career grade vs pick  -0.0 (t -0.0)
+ notable drafted transfers (portal era), best and worst vs their draft slot:
+   over : Puka Nacua (WR 2023 #177, Washington->BYU) +90; Jayden Daniels (QB 2024 #2, Arizona State->LSU) +19; Jahmyr Gibbs (RB 2023 #12, Georgia Tech->Alabama) +19; Kenneth Walker III (RB 2022 #41, Wake Forest->Michigan State) +18; Jaheim Bell (TE 2024 #231, South Carolina->Florida State) +12; Jordan Addison (WR 2023 #23, Pittsburgh->USC) +10; Jawhar Jordan (RB 2024 #205, Syracuse->Louisville) +7; Joe Milton (QB 2024 #193, Michigan->Tennessee) +6
+   under: Ricky Pearsall (WR 2024 #31, Arizona State->Florida) -15; Adonai Mitchell (WR 2024 #52, Georgia->Texas) -15; Keon Coleman (WR 2024 #33, Michigan State->Florida State) -17; Will Levis (QB 2023 #33, Penn State->Kentucky) -18; Jelani Woods (TE 2022 #73, Oklahoma State->Virginia) -18; Trey Benson (RB 2024 #66, Oregon->Florida State) -19; Ja'Lynn Polk (WR 2024 #37, Texas Tech->Washington) -21; Michael Penix Jr. (QB 2024 #8, Indiana->Washington) -22
+
+=== 8. BREAKOUT AFTER A MOVE: portal-era movers with no role before -> a role after ===
+  571 of 2454 (23.3%) earned a role; stayers with no role: 18.5%
+  down a tier       25.0% earn a role (n 1066)
+  same tier         24.0% earn a role (n 1094)
+  up a tier         14.3% earn a role (n 294)
+  vacated >= .35    30.9% earn a role (n 1065)
+  vacated < .15     19.1% earn a role (n 761)
+
+=== 9. MOVED UP AS A STARTER (G5/FCS -> P4, portal era, moves 2021-2023): did keeping the role get them drafted? ===
+  QB  n  16: kept a role   5 -> 20.0% drafted | lost it  11 ->  0.0% drafted
+  RB  n  10: kept a role   3 -> 33.3% drafted | lost it   7 ->  0.0% drafted
+  WR  n  46: kept a role  22 -> 50.0% drafted | lost it  24 ->  0.0% drafted
+  TE  n   9: kept a role   4 ->  0.0% drafted | lost it   5 -> 20.0% drafted
+  ALL n  81: kept a role  34 -> 38.2% drafted | lost it  47 ->  2.1% drafted
+ compare: G5 one-school starters (final yr 2021-24) drafted 15.5%
+
+=== 10. 2026 SO FAR (through week 7): this year's movers vs what the history says ===
+  2026 role / up                     n   178  role after  34.3%  share vs stayers -10.7 pts (t  -6.4)  ppg vs stayers  +nan (t  +nan) 
+  2026 role / same                   n   116  role after  44.8%  share vs stayers -10.3 pts (t  -3.9)  ppg vs stayers  +nan (t  +nan) 
+  2026 role / down                   n     8  role after  62.5%  share vs stayers  +7.9 pts (t  +1.2)  ppg vs stayers  +nan (t  +nan) 
+  2026 no role / up                  n   121  role after   9.1%  share vs stayers  -6.0 pts (t  -5.9)  ppg vs stayers  +nan (t  +nan) 
+  2026 no role / same                n   371  role after  25.6%  share vs stayers  +3.7 pts (t  +3.2)  ppg vs stayers  +nan (t  +nan) 
+  2026 no role / down                n   268  role after  34.3%  share vs stayers +10.1 pts (t  +7.2)  ppg vs stayers  +nan (t  +nan) 
+ devy-board players who transferred for 2026 (113 names on the board):
+   Reed Harris              WR Boston College (P4) -> Arizona State (P4)  share 20.0% -> 46.1%  ROLE
+   Luke Reynolds            TE Penn State (P4) -> Virginia Tech (P4)  share 10.5% -> 23.2%  ROLE
+   Nick Marsh               WR Michigan State (P4) -> Indiana (P4)  share 24.8% -> 36.5%  ROLE
+   Byrum Brown              QB South Florida (G5) -> Auburn (P4)  share 84.4% -> 96.9%  ROLE
+   Drew Mestemaker          QB North Texas (G5) -> Oklahoma State (P4)  share 97.9% -> 96.6%  ROLE
+   Wyatt Young              WR North Texas (G5) -> Oklahoma State (P4)  share 28.5% -> 28.7%  ROLE
+   Josh Hoover              QB TCU (P4) -> Indiana (P4)  share 89.8% -> 94.2%  ROLE
+   Austin Simmons           QB Ole Miss (P4) -> Missouri (P4)  share 14.4% -> 91.1%  ROLE
+   Kenny Johnson            WR Pittsburgh (P4) -> Texas Tech (P4)  share 18.5% -> 26.2%  ROLE
+   Cam Coleman              WR Auburn (P4) -> Texas (P4)  share 30.7% -> 25.6%  ROLE
+   Darian Mensah            QB Duke (P4) -> Miami (P4)  share 98.8% -> 83.6%  ROLE
+   Omarion Miller           WR Colorado (P4) -> Arizona State (P4)  share 33.2% -> 24.4%  ROLE
+   Sam Leavitt              QB Arizona State (P4) -> LSU (P4)  share 55.7% -> 80.5%  ROLE
+   Isaiah Horton            WR Alabama (P4) -> Texas A&M (P4)  share 12.9% -> 23.9%  ROLE
+   Cam Cook                 RB Jacksonville State (G5) -> West Virginia (P4)  share 33.9% -> 29.6%  ROLE
+   Ian Strong               WR Rutgers (P4) -> California (P4)  share 23.9% -> 21.7%  ROLE
+   Justice Haynes           RB Michigan (P4) -> Georgia Tech (P4)  share 17.5% -> 27.1%  ROLE
+   D.J. Lagway              QB Florida (P4) -> Baylor (P4)  share 90.6% -> 66.5%  ROLE
+   Caleb Hawkins            RB North Texas (G5) -> Oklahoma State (P4)  share 25.0% -> 22.8%  ROLE
+   CJ Baxter Jr.            RB Texas (P4) -> Kentucky (P4)  share  4.7% -> 21.9%  ROLE
+   Kam Davis                RB Florida State (P4) -> Liberty (G5)  share  1.7% -> 21.1%  ROLE
+   Dilin Jones              RB Wisconsin (P4) -> LSU (P4)  share 10.4% -> 19.4%  no role
+   Cooper Barkate           WR Duke (P4) -> Miami (P4)  share 27.7% -> 14.4%  no role
+   Joshisa Trader           WR Miami (P4) -> NC State (P4)  share  4.4% -> 14.3%  no role
+   Eugene Wilson            WR Florida (P4) -> LSU (P4)  share  9.7% -> 11.5%  no role
+   Nic Anderson             WR LSU (P4) -> Kentucky (P4)  share  3.6% -> 10.7%  no role
+   Raleek Brown             RB Arizona State (P4) -> Texas (P4)  share 25.3% -> 12.9%  no role
+   Dylan Raiola             QB Nebraska (P4) -> Oregon (P4)  share 66.1% -> 30.7%  no role
+   Quinten Joyner           RB USC (P4) -> Texas Tech (P4)  share  9.9% ->  7.6%  no role
+   Johntay Cook II          WR Syracuse (P4) -> Ole Miss (P4)  share 21.4% ->  4.9%  no role
+   Jayce Brown              WR Kansas State (P4) -> LSU (P4)  share 29.9% ->  4.8%  no role
+   Eric Singleton Jr.       WR Auburn (P4) -> Florida (P4)  share 22.6% ->  3.0%  no role
+   Danny Scudero            WR San José State (G5) -> Colorado (P4)  share 38.2% ->  2.0%  no role
+   Jerrick Gibson           RB Texas (P4) -> Purdue (P4)  share  3.0% ->  2.5%  no role
+   Husan Longstreet         QB USC (P4) -> LSU (P4)  share  3.6% ->  4.7%  no role
+   Deuce Knight             QB Auburn (P4) -> Ole Miss (P4)  share  6.9% ->  4.4%  no role
+ G5/FCS starters who moved up to P4 for 2026 and are HOLDING a role (history: these get drafted most):
+   Rocky Beers              TE Colorado State -> Oklahoma  share 15.0% -> 27.2%
+   Patrick Overmyer         TE UTSA -> Houston  share 10.7% -> 26.4%
+   Chris Marshall           WR Boise State -> Arkansas  share 16.7% -> 41.9%
+   Jacob Harris             TE Bowling Green -> Wisconsin  share 10.0% -> 21.0%
+   DJ Epps                  WR Troy -> West Virginia  share 17.0% -> 35.4%
+   Chris Durr Jr.           WR Wyoming -> Maryland  share 23.4% -> 32.8%
+   Colton Joseph            QB Old Dominion -> Wisconsin  share 87.3% -> 100.0%
+   Asaad Waseem             WR Florida Atlantic -> Purdue  share 17.8% -> 29.9%
+   Jaden Craig              QB Harvard -> TCU  share 94.3% -> 99.4%
+   Mason McKenzie           QB Saginaw Valley State -> Boston College  share 100.0% -> 99.3%
+   Keshaun Singleton        WR South Florida -> Auburn  share 24.4% -> 29.4%
+   Jaylen Raynor            QB Arkansas State -> Iowa State  share 98.8% -> 97.4%
+   Byrum Brown              QB South Florida -> Auburn  share 84.4% -> 96.9%
+   Drew Mestemaker          QB North Texas -> Oklahoma State  share 97.9% -> 96.6%
+   Katin Houser             QB East Carolina -> Illinois  share 92.7% -> 95.8%
+   Wyatt Young              WR North Texas -> Oklahoma State  share 28.5% -> 28.7%
+   JC French                QB Georgia Southern -> Cincinnati  share 90.9% -> 93.9%
+   Anthony Colandrea        QB UNLV -> Nebraska  share 98.6% -> 93.5%
+   Walker Eget              QB San José State -> Duke  share 80.9% -> 90.5%
+   Nik McMillan             WR Buffalo -> Kansas  share 35.5% -> 26.5%
+   Joshua Derry             WR Monmouth -> UCF  share 29.0% -> 26.3%
+   Tony Diaz                WR UT Rio Grande Valley -> Iowa  share 30.7% -> 26.2%
+   Braden Pegan             WR Utah State -> Utah  share 28.8% -> 25.5%
+   Noah Bennee              TE Weber State -> Utah  share 13.4% -> 13.4%
+   Cam Cook                 RB Jacksonville State -> West Virginia  share 33.9% -> 29.6%

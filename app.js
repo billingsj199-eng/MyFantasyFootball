@@ -11116,7 +11116,13 @@ function render() {
     const _cut = tbody.rows && tbody.rows[119];
     _deep = !!(_cut && _cut.getBoundingClientRect().top < window.innerHeight + 1200);
   } catch (e) {}
-  if (!editable && !_deep && _chunkLen > 0 && (html.length - _chunkLen) > 20000) {
+  // Phones (2026-10-17): the tail waits for the reader to scroll near it — no idle
+  // timeout — and editors chunk too. All 570 rows were ~25k elements, enough for iOS
+  // Safari to discard the backgrounded tab (a "random" reload on return). Drag and
+  // scroll-restore call window._rnkFlushTail() first so every row exists when needed.
+  const _phoneTail = window.matchMedia && window.matchMedia('(max-width:600px)').matches;
+  window._rnkFlushTail = null;
+  if ((!editable || _phoneTail) && !_deep && _chunkLen > 0 && (html.length - _chunkLen) > 20000) {
     const _seq = window._renderSeq;
     tbody.innerHTML = html.slice(0, _chunkLen);
     const _rest = html.slice(_chunkLen);
@@ -11128,6 +11134,7 @@ function render() {
     let _done = false, _io = null, _idle = 0;
     const _append = () => {
       if (_done) return; _done = true;
+      if (window._rnkFlushTail === _append) window._rnkFlushTail = null;
       if (_io) _io.disconnect();
       if (_idle && window.cancelIdleCallback) cancelIdleCallback(_idle);
       if (window._renderSeq !== _seq) return;
@@ -11139,7 +11146,9 @@ function render() {
       _io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) _append(); }, { rootMargin: '0px 0px 1200px 0px' });
       _io.observe(_last);
     }
-    if (window.requestIdleCallback) _idle = requestIdleCallback(_append, { timeout: 1200 });
+    window._rnkFlushTail = _append;
+    if (_phoneTail && _io) { /* scroll-triggered only */ }
+    else if (window.requestIdleCallback) _idle = requestIdleCallback(_append, { timeout: 1200 });
     else setTimeout(_append, 300);
   } else {
     tbody.innerHTML = html;
@@ -11554,6 +11563,7 @@ function attachTierListeners() {
     row.classList.add('dragging');
     tbody.classList.add('is-dragging');
     row.setPointerCapture(e.pointerId);
+    if (window._rnkFlushTail) window._rnkFlushTail();   // phone tail: every row must exist for rect caching
 
     // POS LOCK: collect the position-mates on each side of the dragged row.
     // tick() tints only the ones the pointer has crossed.
@@ -43048,6 +43058,7 @@ window.fmtHeight = fmtHeight;
   const t0 = Date.now();
   (function tryRestore() {
     if (done) return;
+    if (window._rnkFlushTail && pane.classList.contains('active') && pane.scrollHeight < saved.y + pane.clientHeight) window._rnkFlushTail();
     if (pane.classList.contains('active') && pane.scrollHeight >= saved.y + pane.clientHeight) {
       pane.scrollTop = saved.y;
       return;

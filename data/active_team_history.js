@@ -374,7 +374,7 @@ const ACTIVE_TEAM_HISTORY = {
     'Mark Andrews': [{t:'Baltimore Ravens',y1:2018,y2:2099}],
     'Mark Gronowski': [{t:'Houston Texans',y1:2026,y2:2099}],
     'Marlin Klein': [{t:'Houston Texans',y1:2026,y2:2099}],
-    'Marquez Valdes-Scantling': [{t:'Green Bay Packers',y1:2018,y2:2021},{t:'Kansas City Chiefs',y1:2022,y2:2023},{t:'New Orleans Saints',y1:2024,y2:2024},{t:'Pittsburgh Steelers',y1:2025,y2:2025},{t:'Los Angeles Chargers',y1:2026,y2:2099}],
+    'Marquez Valdes-Scantling': [{t:'Green Bay Packers',y1:2018,y2:2021},{t:'Kansas City Chiefs',y1:2022,y2:2023},{t:'New Orleans Saints',y1:2024,y2:2024},{t:'Pittsburgh Steelers',y1:2025,y2:2025}],
     'Marquise Brown': [{t:'Baltimore Ravens',y1:2019,y2:2021},{t:'Arizona Cardinals',y1:2022,y2:2023},{t:'Kansas City Chiefs',y1:2024,y2:2025},{t:'Philadelphia Eagles',y1:2026,y2:2099}],
     'MarShawn Lloyd': [{t:'Green Bay Packers',y1:2024,y2:2099}],
     'Marvin Harrison Jr.': [{t:'Arizona Cardinals',y1:2024,y2:2025},{t:'Houston Texans',y1:2026,y2:2099}],

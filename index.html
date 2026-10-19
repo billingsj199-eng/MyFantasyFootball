@@ -97,9 +97,9 @@
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous" media="(min-width:601px)">
-<link rel="preload" href="data/combine_data.js?v=2026-10-17db6" as="script">
+<link rel="preload" href="data/combine_data.js?v=2026-10-19" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script" data-split-lazy="ep">
-<link rel="preload" href="data/_bundle_lookups.js?v=2026-10-17-qbbtt" as="script">
+<link rel="preload" href="data/_bundle_lookups.js?v=2026-10-19" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-18" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/main.css?v=2026-10-17-glossfix">
@@ -4959,9 +4959,9 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
-<script src="data/_bundle_lookups.js?v=2026-10-17-qbbtt" defer></script>
+<script src="data/_bundle_lookups.js?v=2026-10-19" defer></script>
 <script src="data/d.js?v=2026-10-18" defer></script>
-<script src="data/injury_updates.js?v=2026-10-18-20" defer></script>
+<script src="data/injury_updates.js?v=2026-10-19" defer></script>
 <script src="data/injury_recent.js?v=2026-10-09" defer></script>
 <script src="data/practice_days_2026.js?v=2026-10-18-2018" defer></script>
 <script src="data/weekly_projections.js?v=2026-10-18" defer></script>
@@ -5006,7 +5006,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      players are filtered out of it). _enrichFromAllPlayers + _applyRetiredBioTeam re-run on
      the 'mff:retireddata' event the loader dispatches. -->
 
-<script src="data/combine_data.js?v=2026-10-17db6" defer></script>
+<script src="data/combine_data.js?v=2026-10-19" defer></script>
 <!-- historical_draft_picks.js (~92 KB) LAZY since 2026-08-04 via window._ensureDraftPicksData()
      — HISTORICAL_DRAFT_PICKS is consumed only inside the prospect-model build
      (buildProspectData nflTeam fallback + _pmComputeRoomAdj) and admin console studies,
@@ -5106,7 +5106,7 @@ window.clayLookup = clayLookup;
 <script src="data/combine_d_patches.js?v=2026-10-17hoover" defer></script>
 <script src="data/devy_headshots.js?v=2026-10-17hs2" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
 <script src="data/projected_testing.js?v=2026-10-17" defer></script>
-<script defer src="data/draft_proj.js?v=2026-10-17db6"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
+<script defer src="data/draft_proj.js?v=2026-10-19"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
@@ -6453,11 +6453,11 @@ window._LATE_DATA_FILES = [
   'data/matchup_edges_2026.js?v=2026-10-18-2020',
   'data/site_projections.js?v=2026-10-18',
   'data/ownership_2026.js?v=2026-10-18',
-  'data/kicker_history.js?v=2026-10-16',
+  'data/kicker_history.js?v=2026-10-19',
   'data/kicker_splits.js?v=2026-10-14',
-  'data/dst_history.js?v=2026-10-16',
-  'data/dst_weekly.js?v=2026-10-16',
-  'data/kicker_weekly.js?v=2026-10-16',
+  'data/dst_history.js?v=2026-10-19',
+  'data/dst_weekly.js?v=2026-10-19',
+  'data/kicker_weekly.js?v=2026-10-19',
   'data/player_weekly_sigma.js?v=2026-10-13',
 ];
 window._loadLateData = function(opts) {

@@ -16,11 +16,11 @@ from scipy.stats import rankdata
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import backtest_shadow_next as SN
 from bt_common import load_games
-cal = SN.cal; YEARS = SN.YEARS; NW = SN.NW; CACHE = r"E:\MyFantasyFootball\pbp_cache"
+cal = SN.cal; YEARS = SN.YEARS; NW = SN.NW; BX = SN.BX; NY, FWD, FWL = SN.NY, SN.FWD, SN.FWL; CACHE = r"E:\MyFantasyFootball\pbp_cache"
 
 def main():
     TOPN = int(os.environ.get("ABL_TOP", "150")); WPOW = float(os.environ.get("ABL_WPOW", "2"))   # 2026-10-08 Jack: top-100 focus, steeper weights (ABL_TOP=100 ABL_WPOW=3)
-    log = open(os.path.join(HERE, "ablate_shadow_next.log" if TOPN == 150 and WPOW == 2 else f"ablate_shadow_next_top{TOPN}_p{WPOW:g}.log"), "w", encoding="utf-8")
+    log = open(BX.ext_path("ablate_shadow_next.log" if TOPN == 150 and WPOW == 2 else f"ablate_shadow_next_top{TOPN}_p{WPOW:g}.log"), "w", encoding="utf-8")
     def P(s=""): print(s); log.write(s + "\n"); log.flush()
     X = SN.setup(); n = X["n"]; F = X["F"]
     act, year, wk, pos, g, adp, name, team = X["act"], X["year"], X["wk"], X["pos"], X["g"], X["adp"], X["name"], X["team"]
@@ -49,7 +49,7 @@ def main():
             mk = m & (b_ == k)
             if mk.sum() >= 30: dev[mk] = l1[mk] - np.nanmean(l1[mk])
     low = np.maximum(0, 19 - np.nan_to_num(X["implied"], nan=19)) / 19
-    C = pd.read_parquet(os.path.join(HERE, "ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
+    C = pd.read_parquet(BX.ext_path("ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
     pid = X["A"]["pid"]; idx = np.array([ck.get((int(year[i]), pid[i], int(wk[i])), -1) if pid[i] else -1 for i in range(n)]); has = idx >= 0
     colv = lambda c: np.where(has, C[c].values[np.maximum(idx, 0)], np.nan).astype(float)
     smx = colv("snapmult"); smx = np.where(np.isnan(smx) | (pos == "QB"), 1.0, smx)   # the engine snap-trend multiplier (in the live chain the shadow shares)
@@ -99,7 +99,7 @@ def main():
         tr = 100 * (ms(FULL, tt) / ms(WO, tt) - 1) if tt.any() else 0.0
         bad = (a > 0) + (b > 0) + (r < 0)
         m30 = base & (adpx <= 30); m31 = base & (adpx > 30) & (adpx <= 100); b30 = 100 * (wm(FULL, m30) / wm(WO, m30) - 1); b31 = 100 * (wm(FULL, m31) / wm(WO, m31) - 1)
-        P(f"    {k:46s} {int(tt.sum()):5d} | {a:+6.2f}% ({sa}/7)            | {b:+6.2f}% ({sb}/7)            | {r:+.4f}    | {b30:+6.2f}% | {b31:+6.2f}% | {'HURTS' if bad >= 2 else 'mixed' if bad == 1 else 'helps'}   (its own rows {tr:+.2f}%)")
+        P(f"    {k:46s} {int(tt.sum()):5d} | {a:+6.2f}% ({sa}/{NY})            | {b:+6.2f}% ({sb}/{NY})            | {r:+.4f}    | {b30:+6.2f}% | {b31:+6.2f}% | {'HURTS' if bad >= 2 else 'mixed' if bad == 1 else 'helps'}   (its own rows {tr:+.2f}%)")
 
     P(); P("  snap TREND (engine layer) vs snap LEVEL (v2.25), by position - the four combinations, on that position's rows (vs neither):")
     for ps_ in ("WR", "TE"):
@@ -107,7 +107,7 @@ def main():
         NEI = full((tk, lk))
         for lab, off in (("trend only", (lk,)), ("level only", (tk,)), ("both (wired)", ())):
             V = full(off); sw = sum(1 for y in YEARS if wm(V, mb & (year == y)) < wm(NEI, mb & (year == y)) - 1e-12)
-            P(f"    {ps_} {lab:13s} all rows {100*(ms(V, m)/ms(NEI, m)-1):+.2f}%  top-150 weighted {100*(wm(V, mb)/wm(NEI, mb)-1):+.2f}% ({sw}/7)  rank order {rho(V, mb) - rho(NEI, mb):+.4f}")
+            P(f"    {ps_} {lab:13s} all rows {100*(ms(V, m)/ms(NEI, m)-1):+.2f}%  top-150 weighted {100*(wm(V, mb)/wm(NEI, mb)-1):+.2f}% ({sw}/{NY})  rank order {rho(V, mb) - rho(NEI, mb):+.4f}")
     # ---------------- next-game leads ----------------
     P("\n=== next-game leads on top of the full model (touched rows; LOSO + forward; whole-board top-150 weighted as the guard) ===")
     def test(title, fam):
@@ -121,13 +121,13 @@ def main():
                 k = pick(tr_); picks.append(k); m = year == te; pr[m] = fam[k][m]; wins += ms(fam[k], tm & m) < ms(b, tm & m) - 1e-12
             tem = np.isin(year, [te for _, te in folds])
             return pr, 100 * (ms(pr, tm & tem) / ms(b, tm & tem) - 1), 100 * (wm(pr, base & tem) / wm(b, base & tem) - 1), wins, picks
-        lo = run([([y for y in YEARS if y != t], t) for t in YEARS]); fw = run([([y for y in YEARS if y < t], t) for t in (2022, 2023, 2024, 2025)])
+        lo = run([([y for y in YEARS if y != t], t) for t in YEARS]); fw = run([([y for y in YEARS if y < t], t) for t in FWD])
         sbk = lambda k: sum(1 for y in YEARS if (tm & (year == y)).sum() >= 8 and ms(fam[k], tm & (year == y)) < ms(b, tm & (year == y)) - 1e-12)
         best = pick(YEARS); okk = best != names[0] and lo[1] < -0.3 and lo[3] >= 5 and fw[1] < 0 and fw[3] >= 3 and lo[2] <= 0.02
         P(f"\n  {title}   (rows {int(tm.sum()):,}; actual / projected {act[tm].sum()/max(1e-9, b[tm].sum()):.3f})")
         P("    fixed settings (seasons better): " + "  ".join(f"{k}: {100*(ms(fam[k], tm)/ms(b, tm)-1):+.2f}% ({sbk(k)})" for k in names[1:]))
-        P(f"    LEAVE-ONE-SEASON-OUT {lo[1]:+.2f}% {lo[3]}/7 | whole board top-150 weighted {lo[2]:+.3f}%, rank order {rho(lo[0], base) - rho(b, base):+.4f} | picks {lo[4]}")
-        P(f"    FORWARD 2022-25      {fw[1]:+.2f}% {fw[3]}/4 | whole board top-150 weighted {fw[2]:+.3f}% | picks {fw[4]}")
+        P(f"    LEAVE-ONE-SEASON-OUT {lo[1]:+.2f}% {lo[3]}/{NY} | whole board top-150 weighted {lo[2]:+.3f}%, rank order {rho(lo[0], base) - rho(b, base):+.4f} | picks {lo[4]}")
+        P(f"    FORWARD {FWL}      {fw[1]:+.2f}% {fw[3]}/{len(FWD)} | whole board top-150 weighted {fw[2]:+.3f}% | picks {fw[4]}")
         P(f"    -> {'PASS: ' + str(best) if okk else 'FAIL'}")
     mult = lambda m, k, b_=None: np.where(m, (FULL if b_ is None else b_) * k, (FULL if b_ is None else b_))
     # early exit: last game under 60% of the share he had before it (50%+ before)

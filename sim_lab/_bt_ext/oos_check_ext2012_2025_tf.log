@@ -1,0 +1,79 @@
+=== OOS check of the wired shadow: years 2012-2025 | pool ext | team fix on | EXTENDED | 49,521 player-weeks ===
+    2012-18 (out of sample)      rows 23,722
+    2013-18 (no 2012 warm-up)    rows 20,415
+    2019-25 (tuned on)           rows 25,799
+  prior rebuild check: max |rebuilt - harness| = 0.00e+00
+  ctx coverage of harness rows: 0.913 (week-1 rows have none by design)
+
+=== A  NEXT GAME: each wired piece removed (negative = it helps) ===
+  2012-18 (out of sample): full model rows 21,090 (top-150 12,361) | MSE 40.426 MAE 4.896 | top-150 wtd MSE 55.280 | rank order 0.4011 | act/proj 0.972
+  2013-18 (no 2012 warm-up): full model rows 18,223 (top-150 10,644) | MSE 40.474 MAE 4.908 | top-150 wtd MSE 55.366 | rank order 0.4004 | act/proj 0.971
+  2019-25 (tuned on): full model rows 23,328 (top-150 13,235) | MSE 40.169 MAE 4.862 | top-150 wtd MSE 55.269 | rank order 0.3918 | act/proj 0.986
+    piece                                          | 2012-18: all / top-150 wtd / MAE / rank (seasons wtd) | 2013-18: all / top-150 wtd / MAE / rank (seasons wtd) | 2019-25: all / top-150 wtd / MAE / rank (seasons wtd)
+    usage evidence, WR                             |  +0.18%  +0.00%  +0.39% +0.0001 (4/7) HURTS |  +0.19%  +0.05%  +0.40% -0.0000 (3/6) HURTS |  +0.06%  -0.03%  +0.12% +0.0007 (3/7) mixed  [rows touched 16,418]
+    usage evidence, RB                             |  +0.18%  +0.31%  +0.21% -0.0003 (2/7) HURTS |  +0.15%  +0.14%  +0.21% -0.0004 (2/6) HURTS |  -0.04%  -0.05%  +0.06% +0.0000 (4/7) helps  [rows touched 11,130]
+    Vegas-cleaned evidence                         |  -0.22%  -0.38%  -0.11% +0.0022 (6/7) helps |  -0.17%  -0.25%  -0.08% +0.0016 (5/6) helps |  -0.20%  -0.28%  -0.11% -0.0006 (6/7) mixed  [rows touched 37,917]
+    WR one-game prior x5                           |  +0.02%  -0.00%  -0.01% +0.0000 (3/7) mixed |  +0.02%  -0.01%  -0.01% +0.0001 (3/6) mixed |  -0.01%  -0.05%  -0.00% +0.0001 (7/7) helps  [rows touched 1,496]
+    rookie ramp (not first string, weeks 1-2)      |  -0.06%  -0.01%  -0.11% -0.0000 (4/7) mixed |  -0.07%  -0.01%  -0.11% -0.0001 (3/6) mixed |  -0.06%  -0.03%  -0.11% -0.0004 (4/7) mixed  [rows touched 416]
+    vacated-role pool                              |  +0.28%  +0.13%  +0.66% -0.0016 (2/7) HURTS |  +0.31%  +0.12%  +0.69% -0.0017 (2/6) HURTS |  -0.26%  -0.25%  +0.52% +0.0018 (5/7) helps  [rows touched 13,682]
+    QB game-total tilt                             |  +0.14%  +0.15%  +0.07% -0.0016 (1/7) HURTS |  +0.11%  +0.09%  +0.06% -0.0018 (1/6) HURTS |  -0.02%  -0.01%  -0.02% +0.0020 (5/7) helps  [rows touched 5,634]
+    WR dock when the QB is out                     |  -0.10%  -0.23%  -0.13% +0.0004 (6/7) helps |  -0.10%  -0.24%  -0.13% +0.0002 (5/6) helps |  -0.08%  -0.26%  -0.11% -0.0002 (5/7) mixed  [rows touched 1,443]
+    snap trend (engine layer), RB                  |  -0.46%  -0.27%  -0.24% +0.0028 (5/7) helps |  -0.53%  -0.31%  -0.28% +0.0033 (5/6) helps |  -0.24%  -0.07%  -0.11% +0.0024 (4/7) helps  [rows touched 9,173]
+    snap trend (engine layer), TE                  |  +0.03%  +0.00%  +0.01% -0.0007 (3/7) HURTS |  +0.03%  +0.00%  +0.01% -0.0008 (3/6) HURTS |  -0.01%  +0.06%  +0.04% -0.0035 (3/7) HURTS  [rows touched 6,084]
+    v2.25 snap-share level, WR                     |  -0.19%  -0.14%  -0.08% +0.0011 (5/7) helps |  -0.22%  -0.16%  -0.09% +0.0012 (5/6) helps |  -0.27%  -0.13%  -0.18% +0.0022 (5/7) helps  [rows touched 15,238]
+    v2.25 snap-share level, TE                     |  -0.00%  -0.03%  +0.02% +0.0007 (4/7) helps |  -0.00%  -0.04%  +0.02% +0.0008 (4/6) helps |  -0.06%  +0.00%  -0.07% -0.0025 (4/7) HURTS  [rows touched 6,729]
+    v2.25 QB changed teams x.90                    |  -0.04%  +0.00%  -0.03% +0.0007 (1/7) mixed |  -0.04%  +0.00%  -0.04% +0.0009 (1/6) mixed |  -0.08%  -0.02%  -0.04% +0.0013 (4/7) helps  [rows touched 774]
+    v2.25 QB low team total                        |  -0.07%  -0.02%  -0.06% +0.0002 (4/7) helps |  -0.06%  -0.03%  -0.06% +0.0003 (4/6) helps |  -0.02%  -0.01%  -0.02% +0.0000 (4/7) helps  [rows touched 713]
+    v2.25 RB under 30% of carries, games 2-5 x.90  |  -0.07%  -0.01%  -0.14% +0.0002 (4/7) helps |  -0.06%  +0.00%  -0.14% +0.0001 (3/6) mixed |  -0.06%  -0.02%  -0.13% -0.0001 (6/7) mixed  [rows touched 1,356]
+    ADP market blend .75                           |  -0.14%  +0.11%  +0.11% -0.0011 (4/7) HURTS |  -0.26%  -0.11%  +0.06% -0.0031 (4/6) mixed |  -0.37%  -0.36%  -0.10% +0.0027 (6/7) helps  [rows touched 26,862]
+    depth-string docks (vets)                      |  -0.44%  -0.10%  -0.76% +0.0005 (6/7) helps |  -0.44%  -0.08%  -0.77% +0.0004 (5/6) helps |  -0.37%  -0.11%  -0.65% +0.0011 (7/7) helps  [rows touched 8,753]
+    2nd-year low-snap x1.2                         |  -0.01%  -0.01%  +0.02% +0.0004 (3/7) helps |  -0.01%  -0.01%  +0.03% +0.0005 (3/6) helps |  +0.01%  +0.01%  +0.03% +0.0001 (3/7) HURTS  [rows touched 1,149]
+    shrink toward position mean .8                 |  -0.11%  -0.38%  +0.26% +0.0003 (5/7) helps |  -0.08%  -0.27%  +0.26% +0.0003 (4/6) helps |  +0.02%  -0.18%  +0.33% -0.0004 (6/7) HURTS  [rows touched 44,259]
+    ridge season prior mix                         |  -1.35%  -1.05%  -0.65% +0.0104 (6/7) helps |  -1.41%  -1.09%  -0.62% +0.0115 (5/6) helps |  -0.99%  -0.55%  -0.17% +0.0053 (7/7) helps  [rows touched 37,907]
+
+=== B  REST OF SEASON (3-10 games played, 4+ left): each wired piece removed (negative = it helps) ===
+  2012-18 (out of sample): full model rows 10,102 (top-150 6,161) | MSE 10.450 MAE 2.482 | top-150 wtd MSE 13.399 | rank order 0.6240 | act/proj 0.984
+  2013-18 (no 2012 warm-up): full model rows 8,720 (top-150 5,300) | MSE 10.323 MAE 2.477 | top-150 wtd MSE 12.860 | rank order 0.6253 | act/proj 0.983
+  2019-25 (tuned on): full model rows 11,055 (top-150 6,491) | MSE 10.114 MAE 2.482 | top-150 wtd MSE 11.787 | rank order 0.6218 | act/proj 1.013
+    piece                                          | 2012-18: all / top-150 wtd / MAE / rank (seasons wtd) | 2013-18: all / top-150 wtd / MAE / rank (seasons wtd) | 2019-25: all / top-150 wtd / MAE / rank (seasons wtd)
+    usage evidence (all positions)                 |  +1.42%  +1.17%  +1.12% -0.0059 (2/7) HURTS |  +1.07%  +0.37%  +1.04% -0.0041 (2/6) HURTS |  -0.28%  -0.06%  +0.12% +0.0016 (3/7) helps  [rows touched 14,410]
+    Vegas-cleaned evidence                         |  -0.68%  -1.37%  -0.28% +0.0035 (6/7) helps |  -0.44%  -0.73%  -0.17% +0.0031 (5/6) helps |  -0.59%  -0.88%  -0.21% +0.0029 (5/7) helps  [rows touched 21,143]
+    RB snap trend carried                          |  -0.76%  -0.31%  -0.36% +0.0006 (3/7) helps |  -0.89%  -0.38%  -0.42% +0.0007 (3/6) helps |  -0.54%  -0.20%  -0.13% +0.0021 (3/7) helps  [rows touched 5,279]
+    QB changed teams x.84                          |  +0.22%  -0.01%  +0.11% +0.0009 (1/7) mixed |  +0.25%  -0.01%  +0.13% +0.0010 (1/6) mixed |  +0.04%  -0.37%  -0.09% +0.0029 (3/7) mixed  [rows touched 329]
+    TE snap-share level e .3                       |  +0.20%  +0.23%  +0.17% -0.0017 (2/7) HURTS |  +0.24%  +0.28%  +0.20% -0.0020 (2/6) HURTS |  -0.15%  -0.18%  -0.22% +0.0051 (5/7) helps  [rows touched 3,457]
+    TE team pass-rate tilt e .04                   |  -0.05%  -0.08%  -0.08% +0.0010 (3/7) helps |  +0.01%  +0.07%  -0.03% +0.0025 (2/6) HURTS |  -0.32%  -0.36%  -0.19% -0.0002 (4/7) mixed  [rows touched 3,755]
+    RB 61-100 prior weight x2.5                    |  -0.03%  -0.03%  +0.02% -0.0014 (3/7) mixed |  -0.06%  -0.05%  -0.03% -0.0013 (3/6) mixed |  +0.06%  +0.05%  +0.04% +0.0013 (4/7) HURTS  [rows touched 1,093]
+    WR 61-100 prior weight x0.6                    |  +0.05%  +0.05%  +0.19% -0.0009 (1/7) HURTS |  +0.02%  +0.03%  +0.15% -0.0004 (1/6) HURTS |  -0.20%  -0.22%  -0.10% +0.0005 (6/7) helps  [rows touched 1,354]
+    second-year QB prior weight x0.75              |  -0.02%  +0.00%  -0.02% -0.0005 (2/7) HURTS |  -0.03%  -0.02%  -0.02% -0.0004 (2/6) mixed |  -0.06%  -0.08%  -0.03% +0.0014 (5/7) helps  [rows touched 363]
+    WR 101-150 usage cap .25                       |  -0.39%  -0.28%  -0.30% +0.0015 (7/7) helps |  -0.45%  -0.33%  -0.33% +0.0016 (6/6) helps |  -0.21%  -0.15%  -0.16% +0.0008 (5/7) helps  [rows touched 1,440]
+    TE 31-60 x1.10                                 |  +0.24%  +0.33%  +0.15% -0.0011 (2/7) HURTS |  +0.14%  +0.18%  +0.12% +0.0012 (2/6) HURTS |  -0.31%  -0.58%  -0.19% +0.0022 (6/7) helps  [rows touched 260]
+    WR 101-150 cold prior weight x0.4              |  -0.16%  -0.12%  -0.20% +0.0003 (6/7) helps |  -0.17%  -0.14%  -0.20% +0.0003 (5/6) helps |  -0.20%  -0.17%  -0.21% -0.0003 (4/7) mixed  [rows touched 753]
+    RB team play-volume tilt e .04                 |  -0.49%  -0.75%  -0.15% +0.0024 (4/7) helps |  -0.11%  +0.24%  -0.05% +0.0021 (3/6) mixed |  -0.47%  -0.95%  -0.18% +0.0017 (6/7) helps  [rows touched 5,747]
+    RB backup (top 150) x1.04                      |  -0.03%  +0.02%  +0.02% -0.0000 (4/7) HURTS |  -0.09%  -0.02%  +0.02% +0.0001 (4/6) helps |  -0.17%  -0.20%  -0.02% +0.0001 (4/7) helps  [rows touched 1,379]
+    rookie prior weight RB 1.6 / TE 2.5 (v2.33)    |  -0.03%  -0.01%  +0.00% -0.0002 (3/7) mixed |  -0.05%  -0.01%  -0.01% +0.0000 (3/6) helps |  -0.08%  -0.12%  -0.04% +0.0002 (6/7) helps  [rows touched 1,096]
+    ADP market blend .75                           |  -0.14%  +0.11%  +0.19% -0.0009 (4/7) HURTS |  -0.42%  -0.50%  +0.07% -0.0013 (4/6) mixed |  -1.36%  -1.33%  -0.64% +0.0032 (3/7) helps  [rows touched 13,300]
+    depth-string docks (vets)                      |  -0.98%  -0.26%  -1.03% +0.0021 (6/7) helps |  -1.13%  -0.26%  -1.20% +0.0022 (5/6) helps |  -0.22%  -0.22%  -0.52% +0.0007 (4/7) helps  [rows touched 3,956]
+    2nd-year low-snap x1.2                         |  -0.00%  -0.05%  +0.03% +0.0001 (2/7) helps |  -0.00%  -0.05%  +0.04% +0.0001 (2/6) helps |  -0.08%  -0.04%  -0.01% +0.0006 (4/7) helps  [rows touched 566]
+    shrink toward position mean .8                 |  -1.01%  -1.38%  -0.24% +0.0001 (6/7) helps |  -1.02%  -1.26%  -0.11% +0.0001 (5/6) helps |  -1.00%  -0.99%  -0.05% +0.0014 (5/7) helps  [rows touched 21,140]
+    ridge season prior mix                         |  -2.24%  -2.19%  -0.91% +0.0090 (5/7) helps |  -2.33%  -1.88%  -0.97% +0.0104 (4/6) helps |  -2.81%  -2.41%  -1.45% +0.0095 (6/7) helps  [rows touched 18,222]
+
+=== SUMMARY: pieces that help on 2019-25 (where they were tuned) but NOT out of sample ===
+  next game       usage evidence, WR                             OOS HURTS (all +0.18%, top-150 wtd +0.00%, rank +0.0001, seasons 4/7) | tuned era mixed (wtd -0.03%, 3/7)
+  next game       usage evidence, RB                             OOS HURTS (all +0.18%, top-150 wtd +0.31%, rank -0.0003, seasons 2/7) | tuned era helps (wtd -0.05%, 4/7)
+  next game       WR one-game prior x5                           OOS mixed (all +0.02%, top-150 wtd -0.00%, rank +0.0000, seasons 3/7) | tuned era helps (wtd -0.05%, 7/7)
+  next game       rookie ramp (not first string, weeks 1-2)      OOS mixed (all -0.06%, top-150 wtd -0.01%, rank -0.0000, seasons 4/7) | tuned era mixed (wtd -0.03%, 4/7)
+  next game       vacated-role pool                              OOS HURTS (all +0.28%, top-150 wtd +0.13%, rank -0.0016, seasons 2/7) | tuned era helps (wtd -0.25%, 5/7)
+  next game       QB game-total tilt                             OOS HURTS (all +0.14%, top-150 wtd +0.15%, rank -0.0016, seasons 1/7) | tuned era helps (wtd -0.01%, 5/7)
+  next game       snap trend (engine layer), TE                  OOS HURTS (all +0.03%, top-150 wtd +0.00%, rank -0.0007, seasons 3/7) | tuned era HURTS (wtd +0.06%, 3/7)
+  next game       v2.25 QB changed teams x.90                    OOS mixed (all -0.04%, top-150 wtd +0.00%, rank +0.0007, seasons 1/7) | tuned era helps (wtd -0.02%, 4/7)
+  next game       ADP market blend .75                           OOS HURTS (all -0.14%, top-150 wtd +0.11%, rank -0.0011, seasons 4/7) | tuned era helps (wtd -0.36%, 6/7)
+  rest of season  usage evidence (all positions)                 OOS HURTS (all +1.42%, top-150 wtd +1.17%, rank -0.0059, seasons 2/7) | tuned era helps (wtd -0.06%, 3/7)
+  rest of season  QB changed teams x.84                          OOS mixed (all +0.22%, top-150 wtd -0.01%, rank +0.0009, seasons 1/7) | tuned era mixed (wtd -0.37%, 3/7)
+  rest of season  TE snap-share level e .3                       OOS HURTS (all +0.20%, top-150 wtd +0.23%, rank -0.0017, seasons 2/7) | tuned era helps (wtd -0.18%, 5/7)
+  rest of season  RB 61-100 prior weight x2.5                    OOS mixed (all -0.03%, top-150 wtd -0.03%, rank -0.0014, seasons 3/7) | tuned era HURTS (wtd +0.05%, 4/7)
+  rest of season  WR 61-100 prior weight x0.6                    OOS HURTS (all +0.05%, top-150 wtd +0.05%, rank -0.0009, seasons 1/7) | tuned era helps (wtd -0.22%, 6/7)
+  rest of season  second-year QB prior weight x0.75              OOS HURTS (all -0.02%, top-150 wtd +0.00%, rank -0.0005, seasons 2/7) | tuned era helps (wtd -0.08%, 5/7)
+  rest of season  TE 31-60 x1.10                                 OOS HURTS (all +0.24%, top-150 wtd +0.33%, rank -0.0011, seasons 2/7) | tuned era helps (wtd -0.58%, 6/7)
+  rest of season  RB backup (top 150) x1.04                      OOS HURTS (all -0.03%, top-150 wtd +0.02%, rank -0.0000, seasons 4/7) | tuned era helps (wtd -0.20%, 4/7)
+  rest of season  rookie prior weight RB 1.6 / TE 2.5 (v2.33)    OOS mixed (all -0.03%, top-150 wtd -0.01%, rank -0.0002, seasons 3/7) | tuned era helps (wtd -0.12%, 6/7)
+  rest of season  ADP market blend .75                           OOS HURTS (all -0.14%, top-150 wtd +0.11%, rank -0.0009, seasons 4/7) | tuned era helps (wtd -1.33%, 3/7)

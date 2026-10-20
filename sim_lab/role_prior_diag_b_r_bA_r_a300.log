@@ -1,0 +1,80 @@
+=== ROLE PRIOR / ADP IN SEASON: 10,595 rest-of-season checkpoints (2-10 games played, 4+ games left), 6,300 top-150; next game rows 12,150 ===
+
+--- Q1  the 10-10 no-ADP variants by games played at the checkpoint (vs the wired shadow; negative = better than wired) ---
+  check: rebuilt ridge mix matches the wired prior on 100.0% of rows
+
+--- role features built: 19,058 rows; rows with an injury-exit / ramp game dropped 2,232, fill-in games dropped 1,966, other-QB games dropped 3,489, RB rooms depleted now 660 ---
+    RB tgt_sh   raw 0.090 clean 0.091  corr 0.961  |diff| 0.008
+    WR tgt_sh   raw 0.184 clean 0.184  corr 0.968  |diff| 0.012
+    TE tgt_sh   raw 0.144 clean 0.146  corr 0.967  |diff| 0.009
+    RB car_sh   raw 0.463 clean 0.467  corr 0.973  |diff| 0.034
+    WR car_sh   raw 0.010 clean 0.010  corr 0.953  |diff| 0.002
+    TE car_sh   raw 0.002 clean 0.002  corr 0.942  |diff| 0.000
+    RB snap     raw 48.375 clean 49.024  corr 0.971  |diff| 3.180
+    WR snap     raw 71.339 clean 71.895  corr 0.964  |diff| 2.928
+    TE snap     raw 67.769 clean 68.915  corr 0.971  |diff| 2.529
+    RB route    raw 0.479 clean 0.484  corr 0.970  |diff| 0.028
+    WR route    raw 0.767 clean 0.770  corr 0.964  |diff| 0.026
+    TE route    raw 0.703 clean 0.713  corr 0.973  |diff| 0.022
+    RB xfp_pg   raw 9.795 clean 9.849  corr 0.976  |diff| 0.397
+    WR xfp_pg   raw 8.618 clean 8.627  corr 0.964  |diff| 0.404
+    TE xfp_pg   raw 6.381 clean 6.397  corr 0.973  |diff| 0.223
+    leak check: raw tgt_sh vs ctx_features tgt_sh corr 0.9967, mean abs diff 0.0020
+
+--- Q2  ROLE PRIOR (fit end-to-end through the blend, per position x checkpoint; vs the wired shadow; negative = better) ---
+
+  [b_r] P-scale picks (LOYO by season): QB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [1.0, 0.75, 1.0, 0.75, 1.0, 0.75, 0.75] | TE [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    fixed P x1.0   ROS n 10595 err  +1.96% (1/7, fwd 0/4) MAE  +1.45% top150-w  +0.60% rank +0.0015  || NEXT err +0.54% (1/7)
+    fixed P x0.75  ROS n 10595 err  +2.54% (1/7, fwd 0/4) MAE  +1.73% top150-w  +1.51% rank -0.0023  || NEXT err +0.64% (1/7)
+    fixed P x0.5   ROS n 10595 err  +4.55% (1/7, fwd 0/4) MAE  +2.62% top150-w  +4.03% rank -0.0116  || NEXT err +1.04% (0/7)
+    fixed P x0.33  ROS n 10595 err  +8.06% (0/7, fwd 0/4) MAE  +4.18% top150-w  +8.05% rank -0.0237  || NEXT err +1.77% (0/7)
+    picked P, rest of season:
+    ROS all 2-10           n 10595 LOYO err  +2.03% (1/7)  MAE  +1.48%  top150-w  +0.75%  rank +0.0011  | FORWARD err  +2.41% (0/4)
+    ROS after 2-3          n  2846 LOYO err  +2.89% (1/7)  MAE  +1.52%  top150-w  +1.34%  rank +0.0094  | FORWARD err  +2.24% (0/4)
+    ROS after 4-5          n  2611 LOYO err  +3.43% (2/7)  MAE  +2.25%  top150-w  +1.75%  rank -0.0089  | FORWARD err  +4.42% (0/4)
+    ROS after 6-7          n  2341 LOYO err  +1.64% (3/7)  MAE  +1.26%  top150-w  +0.64%  rank -0.0099  | FORWARD err  +2.48% (1/4)
+    ROS after 8-10         n  2797 LOYO err  +0.62% (5/7)  MAE  +0.98%  top150-w  -0.29%  rank +0.0114  | FORWARD err  +0.95% (2/4)
+    ROS QB                 n  1451 LOYO err  +4.33% (2/7)  MAE  +2.57%  top150-w  +1.43%  rank +0.0075  | FORWARD err  +3.23% (0/4)
+    ROS RB                 n  2887 LOYO err  +1.70% (3/7)  MAE  +1.70%  top150-w  +0.54%  rank -0.0051  | FORWARD err  +2.77% (1/4)
+    ROS WR                 n  4428 LOYO err  +2.57% (1/7)  MAE  +1.27%  top150-w  +1.77%  rank -0.0046  | FORWARD err  +2.57% (1/4)
+    ROS TE                 n  1829 LOYO err  -2.62% (5/7)  MAE  +0.38%  top150-w  -4.05%  rank +0.0087  | FORWARD err  -0.63% (2/4)
+    ROS top-150            n  6300 LOYO err  +1.35% (2/7)  MAE  +1.25%  top150-w  +0.75%  rank +0.0011  | FORWARD err  +3.07% (1/4)
+    level act/pred ROS: QB 1.000 (wired 1.004) RB 0.999 (wired 1.027) WR 1.000 (wired 1.008) TE 0.999 (wired 1.057)
+    picked P, next game:
+    NEXT all 2-10          n 12150 LOYO err  +0.57% (1/7)  MAE  +0.91%  top150-w  +0.23%  rank -0.0004  | FORWARD err  +0.54% (0/4)
+    NEXT after 2-3         n  2973 LOYO err  +0.58% (1/7)  MAE  +0.75%  top150-w  +0.11%  rank -0.0050  | FORWARD err  -0.37% (2/4)
+    NEXT after 4-5         n  2848 LOYO err  +0.60% (3/7)  MAE  +0.58%  top150-w  +0.66%  rank +0.0025  | FORWARD err  +0.63% (1/4)
+    NEXT after 6-7         n  2716 LOYO err  +0.91% (1/7)  MAE  +1.06%  top150-w  +0.95%  rank -0.0006  | FORWARD err  +1.52% (0/4)
+    NEXT after 8-10        n  3613 LOYO err  +0.30% (2/7)  MAE  +1.20%  top150-w  -0.47%  rank +0.0011  | FORWARD err  +0.47% (1/4)
+    NEXT QB                n  1670 LOYO err  +1.74% (2/7)  MAE  +0.98%  top150-w  +0.66%  rank -0.0008  | FORWARD err  +2.00% (0/4)
+    NEXT RB                n  3299 LOYO err  +0.20% (2/7)  MAE  +1.50%  top150-w  -0.11%  rank -0.0012  | FORWARD err  +0.19% (2/4)
+    NEXT WR                n  5043 LOYO err  +0.47% (0/7)  MAE  +0.25%  top150-w  +0.55%  rank -0.0030  | FORWARD err  +0.28% (1/4)
+    NEXT TE                n  2138 LOYO err  -0.05% (4/7)  MAE  +1.56%  top150-w  -0.53%  rank +0.0045  | FORWARD err  +0.04% (2/4)
+
+  [bA_r] P-scale picks (LOYO by season): QB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | RB [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | WR [0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75] | TE [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    fixed P x1.0   ROS n 10595 err  +1.78% (2/7, fwd 1/4) MAE  +1.28% top150-w  +0.50% rank +0.0016  || NEXT err +0.47% (2/7)
+    fixed P x0.75  ROS n 10595 err  +2.22% (1/7, fwd 0/4) MAE  +1.48% top150-w  +1.24% rank -0.0018  || NEXT err +0.55% (1/7)
+    fixed P x0.5   ROS n 10595 err  +4.07% (1/7, fwd 0/4) MAE  +2.28% top150-w  +3.58% rank -0.0105  || NEXT err +0.93% (1/7)
+    fixed P x0.33  ROS n 10595 err  +7.51% (0/7, fwd 0/4) MAE  +3.82% top150-w  +7.51% rank -0.0232  || NEXT err +1.65% (0/7)
+    picked P, rest of season:
+    ROS all 2-10           n 10595 LOYO err  +1.67% (2/7)  MAE  +1.20%  top150-w  +0.53%  rank +0.0008  | FORWARD err  +2.14% (0/4)
+    ROS after 2-3          n  2846 LOYO err  +2.34% (2/7)  MAE  +1.16%  top150-w  +0.72%  rank +0.0088  | FORWARD err  +1.88% (1/4)
+    ROS after 4-5          n  2611 LOYO err  +2.75% (2/7)  MAE  +1.79%  top150-w  +1.18%  rank -0.0106  | FORWARD err  +3.89% (0/4)
+    ROS after 6-7          n  2341 LOYO err  +1.22% (2/7)  MAE  +0.91%  top150-w  +0.47%  rank -0.0093  | FORWARD err  +2.10% (1/4)
+    ROS after 8-10         n  2797 LOYO err  +0.67% (5/7)  MAE  +0.95%  top150-w  -0.01%  rank +0.0113  | FORWARD err  +1.02% (2/4)
+    ROS QB                 n  1451 LOYO err  +4.92% (2/7)  MAE  +2.85%  top150-w  +2.15%  rank +0.0045  | FORWARD err  +3.71% (0/4)
+    ROS RB                 n  2887 LOYO err  +1.46% (3/7)  MAE  +1.47%  top150-w  +0.09%  rank -0.0031  | FORWARD err  +2.61% (1/4)
+    ROS WR                 n  4428 LOYO err  +1.42% (1/7)  MAE  +0.55%  top150-w  +1.16%  rank -0.0042  | FORWARD err  +1.63% (1/4)
+    ROS TE                 n  1829 LOYO err  -2.24% (5/7)  MAE  +0.58%  top150-w  -3.32%  rank +0.0078  | FORWARD err  -0.32% (2/4)
+    ROS top-150            n  6300 LOYO err  +1.11% (3/7)  MAE  +1.12%  top150-w  +0.53%  rank +0.0008  | FORWARD err  +2.65% (1/4)
+    level act/pred ROS: QB 1.000 (wired 1.004) RB 0.999 (wired 1.027) WR 1.000 (wired 1.008) TE 0.999 (wired 1.057)
+    picked P, next game:
+    NEXT all 2-10          n 12150 LOYO err  +0.47% (2/7)  MAE  +0.79%  top150-w  +0.16%  rank -0.0012  | FORWARD err  +0.52% (0/4)
+    NEXT after 2-3         n  2973 LOYO err  +0.59% (1/7)  MAE  +0.66%  top150-w  +0.17%  rank -0.0034  | FORWARD err  -0.24% (2/4)
+    NEXT after 4-5         n  2848 LOYO err  +0.36% (3/7)  MAE  +0.36%  top150-w  +0.36%  rank +0.0031  | FORWARD err  +0.52% (1/4)
+    NEXT after 6-7         n  2716 LOYO err  +0.74% (1/7)  MAE  +0.88%  top150-w  +0.72%  rank -0.0010  | FORWARD err  +1.39% (0/4)
+    NEXT after 8-10        n  3613 LOYO err  +0.26% (2/7)  MAE  +1.15%  top150-w  -0.36%  rank -0.0014  | FORWARD err  +0.47% (1/4)
+    NEXT QB                n  1670 LOYO err  +1.68% (2/7)  MAE  +0.91%  top150-w  +0.76%  rank -0.0020  | FORWARD err  +1.88% (0/4)
+    NEXT RB                n  3299 LOYO err  +0.16% (2/7)  MAE  +1.41%  top150-w  -0.20%  rank -0.0009  | FORWARD err  +0.21% (2/4)
+    NEXT WR                n  5043 LOYO err  +0.25% (2/7)  MAE  +0.02%  top150-w  +0.38%  rank -0.0044  | FORWARD err  +0.27% (1/4)
+    NEXT TE                n  2138 LOYO err  +0.01% (3/7)  MAE  +1.57%  top150-w  -0.36%  rank +0.0036  | FORWARD err  +0.06% (2/4)

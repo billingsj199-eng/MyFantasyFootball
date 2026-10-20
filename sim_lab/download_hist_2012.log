@@ -1,0 +1,42 @@
+=== download_hist_2012 2026-10-20 11:41 ===
+  OK   play_by_play_2012.csv.gz   18.20 MB  rows 5000
+  OK   play_by_play_2013.csv.gz   18.34 MB  rows 5000
+  OK   play_by_play_2014.csv.gz   18.20 MB  rows 5000
+  OK   play_by_play_2015.csv.gz   18.39 MB  rows 5000
+  OK   snap_counts_2012.parquet    0.00 MB  rows 0
+  OK   snap_counts_2013.parquet    0.21 MB  rows 23799
+  OK   snap_counts_2014.parquet    0.21 MB  rows 23864
+  OK   snap_counts_2015.parquet    0.21 MB  rows 23842
+  OK   snap_counts_2016.parquet    0.21 MB  rows 23890
+  OK   snap_counts_2017.parquet    0.21 MB  rows 23862
+  OK   depth_charts_2012.parquet    0.48 MB  rows 37312
+  OK   depth_charts_2013.parquet    0.48 MB  rows 37066
+  OK   depth_charts_2014.parquet    0.44 MB  rows 32542
+  OK   depth_charts_2015.parquet    0.48 MB  rows 37058
+  OK   depth_charts_2016.parquet    0.47 MB  rows 36612
+  OK   depth_charts_2017.parquet    0.50 MB  rows 36620
+  OK   injuries_2012.parquet    0.12 MB  rows 5533
+  OK   injuries_2013.parquet    0.11 MB  rows 5070
+  OK   injuries_2014.parquet    0.12 MB  rows 5078
+  OK   injuries_2015.parquet    0.12 MB  rows 5232
+  OK   injuries_2016.parquet    0.11 MB  rows 5115
+  OK   injuries_2017.parquet    0.11 MB  rows 5104
+  OK   injuries_2018.parquet    0.11 MB  rows 5133
+  OK   roster_weekly_2012.parquet    0.44 MB  rows 31431
+  OK   roster_weekly_2013.parquet    0.46 MB  rows 31901
+  OK   roster_weekly_2014.parquet    0.49 MB  rows 31964
+  OK   roster_weekly_2015.parquet    0.51 MB  rows 32098
+  OK   roster_weekly_2016.parquet    0.75 MB  rows 35020
+  OK   roster_weekly_2017.parquet    0.73 MB  rows 51321
+  OK   roster_weekly_2018.parquet    0.76 MB  rows 52238
+  OK   schedules_games.csv    2.19 MB  rows 7548
+  OK   trades.csv    0.29 MB  rows 4975
+  nflverse total downloaded 84.5 MB; failures []
+  ADP 2012: 148 players, meta {'ppr': 93, 'standard': 145}
+  ADP 2013: 204 players, meta {'ppr': 191, 'standard': 194}
+  ADP 2014: 194 players, meta {'ppr': 194, 'standard': 163}
+  ADP 2015: 202 players, meta {'ppr': 201, 'standard': 194}
+  ADP 2016: 188 players, meta {'ppr': 188, 'standard': 168}
+  ADP 2017: 211 players, meta {'ppr': 184, 'standard': 211}
+  ADP 2018: 225 players, meta {'half-ppr': 222, 'ppr': 197, 'standard': 217}
+  ffc_adp_hist.json: +7 years (['2012', '2013', '2014', '2015', '2016', '2017', '2018']); old blocks byte-identical (prefix check passed); backup ffc_adp_hist.json.bak_pre_2012ext_20261020

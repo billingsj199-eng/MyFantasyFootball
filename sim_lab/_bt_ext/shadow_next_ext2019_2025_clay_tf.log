@@ -1,0 +1,147 @@
+=== next layers for the Clay-free model: 23,201 player-weeks (13,235 top-150), baseline = shadow v2.24 form, rank rho 0.3910 ===
+
+--- 1 BACKUP QUARTERBACK (a quarterback playing while the team's regular one is out) ---
+  fill-in starts with a known regular starter: 145; actual 14.77 a game
+    his own number (harness)           predicts 14.67  typical miss 6.59  error vs his own number +0.0%  seasons better 0/7
+    starter's x .85                    predicts 12.48  typical miss 6.99  error vs his own number +12.5%  seasons better 3/7
+    the larger of the two              predicts 15.11  typical miss 6.48  error vs his own number -3.2%  seasons better 5/7
+    the average                        predicts 13.58  typical miss 6.51  error vs his own number -2.3%  seasons better 3/7
+    the smaller                        predicts 12.05  typical miss 7.09  error vs his own number +15.6%  seasons better 2/7
+    BOTH ADDED (live engine today)     predicts 27.16  typical miss 14.17  error vs his own number +362.3%  seasons better 0/7
+    fill-ins with a real number of their own (10+): n 133, actual 15.09, own 15.25, starter x .85 12.61, added 27.86
+
+--- 2 USAGE LEVEL ---
+
+  2a tight-end usage evidence   (rows touched 3,824, 1,259 of them top-150; actual / shadow on them 1.031)
+    pooled, touched rows: TE xFP weight 0.25: -0.11%  TE xFP weight 0.5: -0.02%  TE xFP weight 0.75: +0.29%  TE xFP like WR (1 fading to .25): -0.12%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.02%  seasons better 5/7  | whole board, top-150 weighted -0.02%  rank rho -0.0003  | picks ['TE xFP weight 0.25', 'TE xFP weight 0.25', 'TE xFP like WR (1 fading to .25)', 'TE xFP like WR (1 fading to .25)', 'TE xFP like WR (1 fading to .25)', 'TE xFP weight 0.25', 'TE xFP weight 0.25']
+    FORWARD 2022-25       touched rows +0.05%  seasons better 2/4  | whole board, top-150 weighted -0.01%  | picks ['TE xFP like WR (1 fading to .25)', 'TE xFP weight 0.25', 'TE xFP weight 0.25', 'TE xFP weight 0.25']
+    -> FAIL
+
+  2b snap-share LEVEL, WR + TE (last game vs players at the same projection)   (rows touched 11,189, 5,997 of them top-150; actual / shadow on them 0.995)
+    pooled, touched rows: snap level e=0.15: -0.51%  snap level e=0.3: -0.77%  snap level e=0.5: -0.77%  snap level e=0.75: -0.36%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.68%  seasons better 7/7  | whole board, top-150 weighted -0.03%  rank rho +0.0020  | picks ['snap level e=0.3', 'snap level e=0.5', 'snap level e=0.5', 'snap level e=0.5', 'snap level e=0.3', 'snap level e=0.3', 'snap level e=0.5']
+    FORWARD 2022-25       touched rows -0.62%  seasons better 4/4  | whole board, top-150 weighted +0.15%  | picks ['snap level e=0.5', 'snap level e=0.3', 'snap level e=0.5', 'snap level e=0.5']
+    -> PASS: snap level e=0.5
+
+  2b' snap-share level, TE only   (rows touched 3,295, 1,245 of them top-150; actual / shadow on them 1.038)
+    pooled, touched rows: snap level e=0.15: -0.60%  snap level e=0.3: -0.99%  snap level e=0.5: -1.17%  snap level e=0.75: -1.11%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.98%  seasons better 4/7  | whole board, top-150 weighted -0.00%  rank rho -0.0013  | picks ['snap level e=0.75', 'snap level e=0.5', 'snap level e=0.75', 'snap level e=0.5', 'snap level e=0.5', 'snap level e=0.5', 'snap level e=0.5']
+    FORWARD 2022-25       touched rows -1.51%  seasons better 4/4  | whole board, top-150 weighted -0.08%  | picks ['snap level e=0.3', 'snap level e=0.3', 'snap level e=0.5', 'snap level e=0.5']
+    -> FAIL
+
+  2c target-share LEVEL, WR + TE   (rows touched 11,189, 5,997 of them top-150; actual / shadow on them 0.995)
+    pooled, touched rows: target level e=0.5: -0.13%  target level e=1.0: -0.03%  target level e=1.5: +0.29%  target level e=2.5: +1.49%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.13%  seasons better 6/7  | whole board, top-150 weighted +0.08%  rank rho +0.0030  | picks ['target level e=0.5', 'target level e=0.5', 'target level e=0.5', 'target level e=0.5', 'target level e=0.5', 'target level e=0.5', 'target level e=0.5']
+    FORWARD 2022-25       touched rows -0.14%  seasons better 4/4  | whole board, top-150 weighted +0.13%  | picks ['target level e=0.5', 'target level e=0.5', 'target level e=0.5', 'target level e=0.5']
+    -> FAIL
+
+  2c' target-share level, TE only   (rows touched 3,295, 1,245 of them top-150; actual / shadow on them 1.038)
+    pooled, touched rows: target level e=0.5: -0.22%  target level e=1.0: -0.29%  target level e=1.5: -0.20%  target level e=2.5: +0.36%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.06%  seasons better 5/7  | whole board, top-150 weighted +0.04%  rank rho -0.0004  | picks ['target level e=1.0', 'target level e=1.0', 'target level e=1.0', 'target level e=1.5', 'target level e=1.0', 'target level e=1.0', 'target level e=0.5']
+    FORWARD 2022-25       touched rows -0.06%  seasons better 3/4  | whole board, top-150 weighted +0.02%  | picks ['target level e=1.0', 'target level e=0.5', 'target level e=0.5', 'target level e=0.5']
+    -> FAIL
+
+--- 3 QUARTERBACKS ---
+
+  3a QB usage / rushing evidence (xFP blend)   (rows touched 2,904, 1,765 of them top-150; actual / shadow on them 0.985)
+    pooled, touched rows: QB xFP weight 0.15: +0.35%  QB xFP weight 0.3: +3.20%  QB xFP weight 0.5: +10.88%  QB xFP weight 0.75: +26.73%
+    LEAVE-ONE-SEASON-OUT  touched rows +0.00%  seasons better 0/7  | whole board, top-150 weighted +0.00%  rank rho +0.0000  | picks ['0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    FORWARD 2022-25       touched rows +0.00%  seasons better 0/4  | whole board, top-150 weighted +0.00%  | picks ['0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    -> FAIL
+
+  3b QB who changed teams   (rows touched 523, 136 of them top-150; actual / shadow on them 0.919)
+    pooled, touched rows: x0.97: -1.60%  x0.94: -2.53%  x0.9: -2.70%  x0.86: -1.67%
+    LEAVE-ONE-SEASON-OUT  touched rows -2.44%  seasons better 6/7  | whole board, top-150 weighted -0.02%  rank rho +0.0010  | picks ['x0.9', 'x0.9', 'x0.94', 'x0.9', 'x0.9', 'x0.9', 'x0.9']
+    FORWARD 2022-25       touched rows -3.44%  seasons better 4/4  | whole board, top-150 weighted -0.06%  | picks ['x0.94', 'x0.94', 'x0.94', 'x0.9']
+    -> PASS: x0.9
+
+  3c QB with no ADP   (rows touched 789, 0 of them top-150; actual / shadow on them 0.916)
+    pooled, touched rows: x0.97: -1.56%  x0.94: -2.52%  x0.9: -2.84%  x0.86: -2.07%
+    LEAVE-ONE-SEASON-OUT  touched rows -2.84%  seasons better 5/7  | whole board, top-150 weighted +0.00%  rank rho +0.0000  | picks ['x0.9', 'x0.9', 'x0.9', 'x0.9', 'x0.9', 'x0.9', 'x0.9']
+    FORWARD 2022-25       touched rows -2.43%  seasons better 3/4  | whole board, top-150 weighted +0.00%  | picks ['x0.9', 'x0.94', 'x0.9', 'x0.9']
+    -> PASS: x0.9
+
+  3d team implied under 19: QB   (rows touched 354, 101 of them top-150; actual / shadow on them 0.920)
+    pooled, touched rows: e=0.25: -1.27%  e=0.5: -1.95%  e=0.75: -2.06%  e=1.0: -1.60%
+    LEAVE-ONE-SEASON-OUT  touched rows -1.82%  seasons better 5/7  | whole board, top-150 weighted -0.02%  rank rho -0.0001  | picks ['e=0.5', 'e=0.75', 'e=0.75', 'e=0.75', 'e=0.75', 'e=0.75', 'e=0.75']
+    FORWARD 2022-25       touched rows -0.07%  seasons better 1/4  | whole board, top-150 weighted -0.02%  | picks ['e=1.0', 'e=0.75', 'e=0.75', 'e=0.75']
+    -> FAIL
+
+  3d' team implied under 19: WR   (rows touched 1,222, 638 of them top-150; actual / shadow on them 0.928)
+    pooled, touched rows: e=0.25: -0.53%  e=0.5: -0.67%  e=0.75: -0.41%  e=1.0: +0.25%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.01%  seasons better 5/7  | whole board, top-150 weighted +0.03%  rank rho -0.0003  | picks ['e=0.5', 'e=0.5', 'e=0.5', 'e=0.5', 'e=0.5', 'e=0.75', 'e=0.25']
+    FORWARD 2022-25       touched rows +0.27%  seasons better 2/4  | whole board, top-150 weighted +0.04%  | picks ['e=0.75', 'e=0.5', 'e=0.5', 'e=0.25']
+    -> FAIL
+
+--- 4 RECEIVERS AND BACKS ---
+
+  4a WR evidence mix (usage weight: start, fade per game)   (rows touched 8,711, 4,845 of them top-150; actual / shadow on them 0.979)
+    pooled, touched rows: 0.75 fading .08: -0.07%  0.5 fading .05: -0.06%  flat 0.25: -0.04%  1.0 fading .15: -0.05%  0 (points only): +0.02%
+    LEAVE-ONE-SEASON-OUT  touched rows +0.07%  seasons better 3/7  | whole board, top-150 weighted +0.07%  rank rho -0.0008  | picks ['0 (points only)', '0.75 fading .08', '0.75 fading .08', '0.5 fading .05', '0.75 fading .08', '0.5 fading .05', '0.75 fading .08']
+    FORWARD 2022-25       touched rows +0.21%  seasons better 1/4  | whole board, top-150 weighted +0.10%  | picks ['0 (points only)', '1.0 fading .15', '0 (points only)', '0.75 fading .08']
+    -> FAIL
+
+  4b WR under 12% of targets   (rows touched 1,474, 288 of them top-150; actual / shadow on them 0.853)
+    pooled, touched rows: x0.95: -1.64%  x0.9: -2.64%  x0.85: -3.00%  x0.8: -2.73%
+    LEAVE-ONE-SEASON-OUT  touched rows -1.82%  seasons better 4/7  | whole board, top-150 weighted -0.03%  rank rho +0.0001  | picks ['x0.85', 'x0.85', 'x0.85', 'x0.8', 'x0.9', 'x0.8', 'x0.85']
+    FORWARD 2022-25       touched rows -1.63%  seasons better 2/4  | whole board, top-150 weighted -0.02%  | picks ['x0.85', 'x0.9', 'x0.8', 'x0.85']
+    -> FAIL
+
+  4c rookie WR, games 2-5   (rows touched 354, 132 of them top-150; actual / shadow on them 0.911)
+    pooled, touched rows: x0.95: -1.05%  x0.9: -1.16%  x0.85: -0.34%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.52%  seasons better 5/7  | whole board, top-150 weighted +0.01%  rank rho -0.0003  | picks ['x0.9', 'x0.9', 'x0.9', 'x0.95', 'x0.9', 'x0.9', 'x0.95']
+    FORWARD 2022-25       touched rows -1.35%  seasons better 3/4  | whole board, top-150 weighted -0.00%  | picks ['1.00 (shipped)', 'x0.95', 'x0.95', 'x0.95']
+    -> PASS: x0.9
+
+  4d WR target share trending up (last three +4 points)   (rows touched 784, 479 of them top-150; actual / shadow on them 1.060)
+    pooled, touched rows: x1.03: -0.43%  x1.06: -0.51%  x1.09: -0.23%
+    LEAVE-ONE-SEASON-OUT  touched rows -0.19%  seasons better 3/7  | whole board, top-150 weighted +0.02%  rank rho -0.0001  | picks ['x1.06', 'x1.06', 'x1.06', 'x1.06', 'x1.06', 'x1.03', 'x1.06']
+    FORWARD 2022-25       touched rows -0.15%  seasons better 2/4  | whole board, top-150 weighted +0.04%  | picks ['x1.06', 'x1.03', 'x1.03', 'x1.06']
+    -> FAIL
+
+  4e RB under 30% of carries, games 2-5   (rows touched 577, 306 of them top-150; actual / shadow on them 0.839)
+    pooled, touched rows: x0.95: -1.91%  x0.9: -3.04%  x0.85: -3.39%
+    LEAVE-ONE-SEASON-OUT  touched rows -3.39%  seasons better 6/7  | whole board, top-150 weighted -0.03%  rank rho +0.0001  | picks ['x0.85', 'x0.85', 'x0.85', 'x0.85', 'x0.85', 'x0.85', 'x0.85']
+    FORWARD 2022-25       touched rows -5.18%  seasons better 4/4  | whole board, top-150 weighted -0.03%  | picks ['x0.9', 'x0.85', 'x0.85', 'x0.85']
+    -> PASS: x0.85
+
+--- 5 TEAM SHIFT (this season's lines vs the preseason view, known before kickoff) ---
+
+  5 team shift -> all positions   (rows touched 21,540, 12,253 of them top-150; actual / shadow on them 0.983)
+    pooled, touched rows: e=0.15: +0.08%  e=0.3: +0.29%  e=0.5: +0.80%  e=0.75: +1.75%
+    LEAVE-ONE-SEASON-OUT  touched rows +0.00%  seasons better 0/7  | whole board, top-150 weighted +0.00%  rank rho +0.0000  | picks ['0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    FORWARD 2022-25       touched rows +0.00%  seasons better 0/4  | whole board, top-150 weighted +0.00%  | picks ['0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    -> FAIL
+
+  5 team shift -> QB + WR + TE   (rows touched 15,710, 7,903 of them top-150; actual / shadow on them 0.984)
+    pooled, touched rows: e=0.15: +0.00%  e=0.3: +0.15%  e=0.5: +0.57%  e=0.75: +1.44%
+    LEAVE-ONE-SEASON-OUT  touched rows +0.04%  seasons better 0/7  | whole board, top-150 weighted +0.03%  rank rho -0.0011  | picks ['e=0.15', '0 (shipped)', '0 (shipped)', '0 (shipped)', 'e=0.15', '0 (shipped)', '0 (shipped)']
+    FORWARD 2022-25       touched rows +0.03%  seasons better 1/4  | whole board, top-150 weighted +0.03%  | picks ['e=0.15', 'e=0.15', '0 (shipped)', '0 (shipped)']
+    -> FAIL
+
+  5 team shift -> RB   (rows touched 5,830, 4,350 of them top-150; actual / shadow on them 0.981)
+    pooled, touched rows: e=0.15: +0.26%  e=0.3: +0.64%  e=0.5: +1.34%  e=0.75: +2.49%
+    LEAVE-ONE-SEASON-OUT  touched rows +0.00%  seasons better 0/7  | whole board, top-150 weighted +0.00%  rank rho +0.0000  | picks ['0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    FORWARD 2022-25       touched rows +0.00%  seasons better 0/4  | whole board, top-150 weighted +0.00%  | picks ['0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    -> FAIL
+
+  5 team shift -> all positions, games 1-5 only   (rows touched 9,480, 5,035 of them top-150; actual / shadow on them 0.972)
+    pooled, touched rows: e=0.15: +0.04%  e=0.3: +0.19%  e=0.5: +0.56%  e=0.75: +1.29%
+    LEAVE-ONE-SEASON-OUT  touched rows +0.00%  seasons better 0/7  | whole board, top-150 weighted +0.00%  rank rho +0.0000  | picks ['0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    FORWARD 2022-25       touched rows +0.04%  seasons better 0/4  | whole board, top-150 weighted +0.01%  | picks ['e=0.15', '0 (shipped)', '0 (shipped)', '0 (shipped)']
+    -> FAIL
+
+=== COMBINED: every layer that passed, stacked (each at its all-seasons setting) ===
+  layers: snap_lvl = snap level e=0.5; qb_mover = x0.9; qb_noadp = x0.9; wr_rookie = x0.9; rb_lowcar = x0.85
+  top-150 weighted -0.08% (4/7 seasons)   all rows -0.51%   rank rho 0.3929 vs 0.3910
+    QB           -0.14% (4/7)
+    RB           -0.07% (6/7)
+    WR           -0.00% (4/7)
+    TE           -0.38% (4/7)
+    ADP 1-30     +0.38% (2/7)
+    ADP 31-60    -0.43% (5/7)
+    ADP 61-100   -0.53% (6/7)
+    ADP 101-150  -0.74% (5/7)
+    games 1-5    +0.11% (3/7)
+    games 6+     -0.22% (5/7)

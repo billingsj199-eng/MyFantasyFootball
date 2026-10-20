@@ -35,6 +35,8 @@ import pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import bt_common as B
+import bt_ext as BX   # 2026-10-20: SIM_BT_YEARS season range (default 2019-25 = unchanged)
+import bt_teams as TM   # 2026-10-20: team per game, only when BX.TEAMFIX
 import backtest_sim_calibration as cal
 from backtest_snap_defense import build_fpa
 from backtest_target_area import mse
@@ -46,10 +48,10 @@ class _Tee:
 
 
 if __name__ == "__main__":   # importable by backtest_rookie_prior.py without truncating this log
-    sys.stdout = _Tee(sys.stdout, open(os.path.join(HERE, "noclay_weekly_backtest.log"), "w", encoding="utf-8"))
+    sys.stdout = _Tee(sys.stdout, open(BX.ext_path("noclay_weekly_backtest.log"), "w", encoding="utf-8"))
 def P(*a): print(" ".join(str(x) for x in a))
 
-YEARS = list(range(2019, 2026))
+YEARS = list(BX.YEARS)   # default list(range(2019, 2026))
 PRIOR_P = 5
 W3 = (0.5, 0.3, 0.2)
 MIN_SEASON_G, MIN_H3_G, MIN_L8_G = 4, 8, 4
@@ -134,9 +136,11 @@ def build_samples():
     rook = {r.gsis_id: (int(r.rookie_season) if pd.notna(r.rookie_season) else None) for r in pl.itertuples(index=False) if isinstance(r.gsis_id, str)}
     dp = pd.read_parquet(os.path.join(B.CACHE, "draft_picks.parquet"), columns=["season", "round", "pick", "gsis_id"])
     draft = {r.gsis_id: (int(r.season), int(r.round), int(r.pick)) for r in dp.itertuples(index=False) if isinstance(r.gsis_id, str)}
-    preds = json.load(open(os.path.join(HERE, "opp_prior_preds.json"), encoding="utf-8"))
+    preds = json.load(open(BX.ext_path("opp_prior_preds.json"), encoding="utf-8")) if (not BX.EXT or os.path.exists(BX.ext_path("opp_prior_preds.json"))) else {}
     clay_hist = json.load(open(os.path.join(cal.REPO, "data", "clay_history.json"), encoding="utf-8"))
-    weekly_fpa, season_fpa, lg_fpa = build_fpa()
+    if BX.EXT:   # Clay-free pool (build_bt_pool_ext.py); Clay numbers n/a
+        clay_hist = {y: {nm: {"pos": v["pos"], "pts": None} for nm, v in blk.items()} for y, blk in json.load(open(os.path.join(HERE, "data", "bt_pool_ext.json"), encoding="utf-8"))["years"].items()}
+    weekly_fpa, season_fpa, lg_fpa = build_fpa() if not BX.TEAMFIX else TM.build_fpa_tf(resolve, B.load_games)
     out = []; miss = defaultdict(int)
     for Y in YEARS:
         games = B.load_games(Y)
@@ -144,15 +148,22 @@ def build_samples():
         avg = float(np.mean(imps)); W = 16 if Y <= 2020 else 17
         for name, c in clay_hist[str(Y)].items():
             pos = c.get("pos")
-            if pos not in POS4 or (c.get("pts") or 0) < cal.POOL_MIN_PTS:
+            if pos not in POS4 or (not BX.EXT and (c.get("pts") or 0) < cal.POOL_MIN_PTS):
                 continue
             wrec = cal.weekly_rec(name, pos)
             if wrec is None: miss["weekly"] += 1; continue
-            team = cal.infer_team(wrec, Y)
-            if not team: miss["team"] += 1; continue
-            team_prev = cal.infer_team(wrec, Y - 1)
-            pid = resolve(name, pos, Y)
-            clay_pg = max(0.2, (c["pts"] or 0) - (c.get("rec") or 0) / 2.0) / W
+            if BX.TEAMFIX:   # team of his first game this season / last game last season (per-game data), else the old inference
+                pid = resolve(name, pos, Y)
+                _wk = lambda yy: [int(w["wk"]) for w in wrec.get("seasons", {}).get(str(yy), []) if cal.played(w)]
+                team = TM.first_last_team(pid, Y, _wk(Y)) or cal.infer_team(wrec, Y)
+                if not team: miss["team"] += 1; continue
+                team_prev = TM.first_last_team(pid, Y - 1, _wk(Y - 1), last=True) or cal.infer_team(wrec, Y - 1)
+            else:
+                team = cal.infer_team(wrec, Y)
+                if not team: miss["team"] += 1; continue
+                team_prev = cal.infer_team(wrec, Y - 1)
+                pid = resolve(name, pos, Y)
+            clay_pg = max(0.2, (c["pts"] or 0) - (c.get("rec") or 0) / 2.0) / W if not BX.EXT else np.nan
             # H3: 3-yr weighted PPG, walk-forward (seasons before Y only)
             num = den = 0.0; h3g = 0
             for i, yy in enumerate((Y - 1, Y - 2, Y - 3)):
@@ -182,7 +193,12 @@ def build_samples():
                            for w in wrec.get("seasons", {}).get(str(Y), []) if cal.played(w) and isinstance(w.get("fpts"), (int, float))])
             hist = []
             for wk, fpts, opp in rows:
-                gm = games.get((team, wk))
+                tw_ = team
+                if BX.TEAMFIX:   # this game's team, and the opponent from that team's schedule
+                    t_ = TM.team_at(pid, Y, wk)
+                    if t_ and games.get((t_, wk)): tw_ = t_
+                    if games.get((tw_, wk)): opp = games[(tw_, wk)]["opp"]
+                gm = games.get((tw_, wk))
                 if gm and gm["implied"] is not None and opp:
                     g = len(hist); ppg = (sum(hist) / g) if g else 0.0
                     veg = min(1.35, max(0.7, 1 + B.VEG[pos] * (gm["implied"] - avg) / avg))
@@ -193,7 +209,7 @@ def build_samples():
                         fpa = 1 + B.FPA_E * (ratio - 1) * min(1, len(past) / B.FPA_TRUST_G)
                     tail = [f for (yy, ww, f) in prior_games if (yy, ww) < (Y, wk)][-8:]
                     l8 = (sum(tail) / len(tail)) if len(tail) >= MIN_L8_G else None
-                    out.append({"year": Y, "name": name, "pos": pos, "team": team, "pid": pid, "wk": wk, "act": fpts, "g": g, "ppg": ppg,
+                    out.append({"year": Y, "name": name, "pos": pos, "team": tw_, "pid": pid, "wk": wk, "act": fpts, "g": g, "ppg": ppg,
                                 "clay": clay_pg, "layers": veg * fpa, "h3": h3, "h3g": h3g, "l8": l8, "l8g": len(tail), "age": age,
                                 "rookie": is_rookie, "exp": exp, "rnd": rnd, "mover": bool(team_prev and team_prev != team),
                                 "oppcal": opp_cal, "seg": seg, "pick": pick, "nahead": nah})
@@ -504,7 +520,7 @@ def main():
     RES["summary"] = (f"Live shadow (Clay fallback) {RES['variants'][4]['pct']:+.2f}% vs shipped; fully Clay-free {RES['variants'][7]['pct']:+.2f}%; "
                       f"combined candidate (rookie pick + depth fallback, shrink {K}, per-position P) {pc:+.2f}% ({w}/{ny}), forward {fp:+.2f}% ({fw}/{fy}).")
     P("\n" + RES["summary"])
-    with open(os.path.join(HERE, "data", "noclay_weekly_backtest.js"), "w", encoding="utf-8") as f:
+    with open(BX.data_path("noclay_weekly_backtest.js"), "w", encoding="utf-8") as f:
         f.write("window.SIM_NOCLAY_BT = " + json.dumps(RES) + ";\n")
     P(f"wrote data/noclay_weekly_backtest.js ({time.time()-t0:.0f}s)")
 

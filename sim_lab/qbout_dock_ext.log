@@ -1,0 +1,138 @@
+seasons loaded [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+WR mean half PPG (6+ g seasons) 6.86
+WR player-weeks 18,491; QB-out weeks 2,722 (707 team-weeks)
+global level on QB-in rows: next game 0.985, ROS 0.996 (applied)
+
+=== 1  LEVEL with the regular QB out, undocked base (QB-unaware), 2017-25 ===
+  --- NEXT GAME ---
+    QB in (reference)                                        n  7615 (795 p-s)  act/undocked 1.000  seasons under 6/9
+    QB out, all WRs                                          n  1217 (368 p-s)  act/undocked 0.940  seasons under 8/9
+    QB out, 2019+ injury-confirmed                           n   827 (265 p-s)  act/undocked 0.949  seasons under 6/7
+    QB out, 2017-18 only                                     n   239 ( 72 p-s)  act/undocked 0.902  seasons under 2/2
+    QB out, prior rank 1-25, 2019+                           n   234 ( 70 p-s)  act/undocked 0.963  seasons under 6/7
+    QB out, prior rank 1-25, 2019+ injury-confirmed          n   194 ( 63 p-s)  act/undocked 0.981  seasons under 4/7
+    QB out, prior rank 1-25, 2017-18                         n    60 ( 20 p-s)  act/undocked 0.767  seasons under 2/2
+    QB out, prior rank 1-25, 2+ backup games, 2019+ injury-confirmed n   100 ( 34 p-s)  act/undocked 0.989  seasons under 2/6
+    QB out, tsh 22%+, 2+ backup games, 2019+ injury-confirmed n   125 ( 47 p-s)  act/undocked 0.982  seasons under 4/7
+    QB out, prior rank 1-25 (= engine star)                  n   294 ( 90 p-s)  act/undocked 0.926  seasons under 8/9
+    QB out, prior rank 26-60                                 n   516 (155 p-s)  act/undocked 0.964  seasons under 6/9
+    QB out, target share to date 25%+                        n   230 ( 81 p-s)  act/undocked 0.993  seasons under 4/9
+    QB out, target share 20-25%                              n   229 (102 p-s)  act/undocked 0.957  seasons under 5/9
+    QB out, target share 15-20%                              n   310 (121 p-s)  act/undocked 1.000  seasons under 6/9
+    QB out, target share <15%                                n   448 (150 p-s)  act/undocked 0.819  seasons under 8/9
+    QB out, xFP/g rank 1-24 this week                        n   415 (135 p-s)  act/undocked 0.951  seasons under 6/9
+    QB out, xFP/g rank 25-48                                 n   497 (191 p-s)  act/undocked 0.988  seasons under 5/9
+    QB out, 0 backup games in evidence                       n   363 (363 p-s)  act/undocked 0.884  seasons under 7/9
+    QB out, target share 22%+, 0 backup games in evidence    n   102 (102 p-s)  act/undocked 0.929  seasons under 6/9
+    QB out, 1                                                n   266 (266 p-s)  act/undocked 0.927  seasons under 7/9
+    QB out, target share 22%+, 1                             n    75 ( 75 p-s)  act/undocked 0.973  seasons under 6/9
+    QB out, 2-3                                              n   355 (201 p-s)  act/undocked 0.939  seasons under 8/9
+    QB out, target share 22%+, 2-3                           n   103 ( 60 p-s)  act/undocked 1.015  seasons under 4/9
+    QB out, 4+                                               n   233 (107 p-s)  act/undocked 1.042  seasons under 6/9
+    QB out, target share 22%+, 4+                            n    71 ( 32 p-s)  act/undocked 1.059  seasons under 3/7
+  --- REST OF SEASON (regular out now, 75%+ of the rest) ---
+    QB in (reference)                                        n  3956 (712 p-s)  act/undocked 0.983  seasons under 7/9
+    QB out, all WRs                                          n   157 ( 66 p-s)  act/undocked 0.959  seasons under 7/9
+    QB out, 2019+ injury-confirmed                           n   109 ( 48 p-s)  act/undocked 0.980  seasons under 6/7
+    QB out, 2017-18 only                                     n    38 ( 15 p-s)  act/undocked 0.936  seasons under 1/2
+    QB out, prior rank 1-25, 2019+                           n    20 (  9 p-s)  act/undocked 1.072  seasons under 1/3
+    QB out, prior rank 1-25, 2019+ injury-confirmed          n    20 (  9 p-s)  act/undocked 1.072  seasons under 1/3
+    QB out, prior rank 1-25 (= engine star)                  n    27 ( 12 p-s)  act/undocked 1.034  seasons under 2/5
+    QB out, prior rank 26-60                                 n    65 ( 26 p-s)  act/undocked 0.943  seasons under 6/8
+    QB out, target share to date 25%+                        n    21 ( 11 p-s)  act/undocked 1.050  seasons under 2/4
+    QB out, target share 20-25%                              n    25 ( 15 p-s)  act/undocked 1.075  seasons under 1/4
+    QB out, target share 15-20%                              n    47 ( 23 p-s)  act/undocked 0.952  seasons under 5/6
+    QB out, target share <15%                                n    64 ( 32 p-s)  act/undocked 0.833  seasons under 7/8
+    QB out, xFP/g rank 1-24 this week                        n    54 ( 25 p-s)  act/undocked 1.050  seasons under 4/7
+    QB out, xFP/g rank 25-48                                 n    63 ( 31 p-s)  act/undocked 0.905  seasons under 8/9
+    QB out, 0 backup games in evidence                       n    54 ( 54 p-s)  act/undocked 0.889  seasons under 6/7
+    QB out, target share 22%+, 0 backup games in evidence    n    13 ( 13 p-s)  act/undocked 0.991  seasons under 2/2
+    QB out, 1                                                n    45 ( 45 p-s)  act/undocked 0.936  seasons under 6/8
+    QB out, target share 22%+, 1                             n     9 (  9 p-s)  act/undocked 1.118  seasons under 0/0
+    QB out, 2-3                                              n    50 ( 31 p-s)  act/undocked 1.045  seasons under 3/6
+    QB out, target share 22%+, 2-3                           n    10 (  6 p-s)  act/undocked 1.217  seasons under 0/1
+    QB out, 4+                                               n     8 (  6 p-s)  act/undocked 1.070  seasons under 1/2
+
+=== 2-4  DOCK FORMS, NEXT GAME (baseline = engine dock: .15 prior-top-25 / .05 others) ===
+  2a flat dock size (all WRs)   (rows 1217, act/base 1.025)
+    pooled: d 0.0: +0.33%  d 0.05: -0.38%  d 0.1: -0.01%  d 0.15: +1.43%  d 0.2: +3.95%
+    LOYO -0.38% 6/9 | top-60 WR -0.48% | picks ['d 0.05', 'd 0.05', 'd 0.05', 'd 0.05', 'd 0.05', 'd 0.05', 'd 0.05', 'd 0.05', 'd 0.05']
+    FWD  +0.15% 1/4 | picks ['d 0.1', 'engine', 'd 0.1', 'd 0.05']
+    -> FAIL (best pooled: d 0.05)
+  2b dock size by target-share band (25%+ / 18-25% / under 18%)   (rows 1217, act/base 1.025)
+    pooled: tsh25+ 0.0 / 18-25 0.0 / <18 0.0: +0.33%  tsh25+ 0.0 / 18-25 0.0 / <18 0.05: -0.28%  tsh25+ 0.0 / 18-25 0.0 / <18 0.1: -0.55%  tsh25+ 0.0 / 18-25 0.0 / <18 0.15: -0.49%  tsh25+ 0.0 / 18-25 0.05 / <18 0.0: +0.26%  tsh25+ 0.0 / 18-25 0.05 / <18 0.05: -0.34%  tsh25+ 0.0 / 18-25 0.05 / <18 0.1: -0.61%  tsh25+ 0.0 / 18-25 0.05 / <18 0.15: -0.55%  tsh25+ 0.0 / 18-25 0.1 / <18 0.0: +0.56%  tsh25+ 0.0 / 18-25 0.1 / <18 0.05: -0.04%  tsh25+ 0.0 / 18-25 0.1 / <18 0.1: -0.31%  tsh25+ 0.0 / 18-25 0.1 / <18 0.15: -0.25%  tsh25+ 0.0 / 18-25 0.15 / <18 0.0: +1.23%  tsh25+ 0.0 / 18-25 0.15 / <18 0.05: +0.63%  tsh25+ 0.0 / 18-25 0.15 / <18 0.1: +0.36%  tsh25+ 0.0 / 18-25 0.15 / <18 0.15: +0.42%  tsh25+ 0.0 / 18-25 0.2 / <18 0.0: +2.26%  tsh25+ 0.0 / 18-25 0.2 / <18 0.05: +1.66%  tsh25+ 0.0 / 18-25 0.2 / <18 0.1: +1.39%  tsh25+ 0.0 / 18-25 0.2 / <18 0.15: +1.45%  tsh25+ 0.05 / 18-25 0.0 / <18 0.0: +0.29%  tsh25+ 0.05 / 18-25 0.0 / <18 0.05: -0.31%  tsh25+ 0.05 / 18-25 0.0 / <18 0.1: -0.58%  tsh25+ 0.05 / 18-25 0.0 / <18 0.15: -0.52%  tsh25+ 0.05 / 18-25 0.05 / <18 0.0: +0.23%  tsh25+ 0.05 / 18-25 0.05 / <18 0.05: -0.38%  tsh25+ 0.05 / 18-25 0.05 / <18 0.1: -0.65%  tsh25+ 0.05 / 18-25 0.05 / <18 0.15: -0.59%  tsh25+ 0.05 / 18-25 0.1 / <18 0.0: +0.53%  tsh25+ 0.05 / 18-25 0.1 / <18 0.05: -0.07%  tsh25+ 0.05 / 18-25 0.1 / <18 0.1: -0.35%  tsh25+ 0.05 / 18-25 0.1 / <18 0.15: -0.29%  tsh25+ 0.05 / 18-25 0.15 / <18 0.0: +1.20%  tsh25+ 0.05 / 18-25 0.15 / <18 0.05: +0.59%  tsh25+ 0.05 / 18-25 0.15 / <18 0.1: +0.32%  tsh25+ 0.05 / 18-25 0.15 / <18 0.15: +0.38%  tsh25+ 0.05 / 18-25 0.2 / <18 0.0: +2.23%  tsh25+ 0.05 / 18-25 0.2 / <18 0.05: +1.63%  tsh25+ 0.05 / 18-25 0.2 / <18 0.1: +1.36%  tsh25+ 0.05 / 18-25 0.2 / <18 0.15: +1.42%  tsh25+ 0.1 / 18-25 0.0 / <18 0.0: +0.63%  tsh25+ 0.1 / 18-25 0.0 / <18 0.05: +0.03%  tsh25+ 0.1 / 18-25 0.0 / <18 0.1: -0.24%  tsh25+ 0.1 / 18-25 0.0 / <18 0.15: -0.18%  tsh25+ 0.1 / 18-25 0.05 / <18 0.0: +0.57%  tsh25+ 0.1 / 18-25 0.05 / <18 0.05: -0.04%  tsh25+ 0.1 / 18-25 0.05 / <18 0.1: -0.31%  tsh25+ 0.1 / 18-25 0.05 / <18 0.15: -0.25%  tsh25+ 0.1 / 18-25 0.1 / <18 0.0: +0.87%  tsh25+ 0.1 / 18-25 0.1 / <18 0.05: +0.27%  tsh25+ 0.1 / 18-25 0.1 / <18 0.1: -0.01%  tsh25+ 0.1 / 18-25 0.1 / <18 0.15: +0.05%  tsh25+ 0.1 / 18-25 0.15 / <18 0.0: +1.54%  tsh25+ 0.1 / 18-25 0.15 / <18 0.05: +0.93%  tsh25+ 0.1 / 18-25 0.15 / <18 0.1: +0.66%  tsh25+ 0.1 / 18-25 0.15 / <18 0.15: +0.72%  tsh25+ 0.1 / 18-25 0.2 / <18 0.0: +2.57%  tsh25+ 0.1 / 18-25 0.2 / <18 0.05: +1.97%  tsh25+ 0.1 / 18-25 0.2 / <18 0.1: +1.70%  tsh25+ 0.1 / 18-25 0.2 / <18 0.15: +1.76%  tsh25+ 0.15 / 18-25 0.0 / <18 0.0: +1.34%  tsh25+ 0.15 / 18-25 0.0 / <18 0.05: +0.74%  tsh25+ 0.15 / 18-25 0.0 / <18 0.1: +0.47%  tsh25+ 0.15 / 18-25 0.0 / <18 0.15: +0.53%  tsh25+ 0.15 / 18-25 0.05 / <18 0.0: +1.28%  tsh25+ 0.15 / 18-25 0.05 / <18 0.05: +0.68%  tsh25+ 0.15 / 18-25 0.05 / <18 0.1: +0.41%  tsh25+ 0.15 / 18-25 0.05 / <18 0.15: +0.47%  tsh25+ 0.15 / 18-25 0.1 / <18 0.0: +1.58%  tsh25+ 0.15 / 18-25 0.1 / <18 0.05: +0.98%  tsh25+ 0.15 / 18-25 0.1 / <18 0.1: +0.71%  tsh25+ 0.15 / 18-25 0.1 / <18 0.15: +0.77%  tsh25+ 0.15 / 18-25 0.15 / <18 0.0: +2.25%  tsh25+ 0.15 / 18-25 0.15 / <18 0.05: +1.65%  tsh25+ 0.15 / 18-25 0.15 / <18 0.1: +1.37%  tsh25+ 0.15 / 18-25 0.15 / <18 0.15: +1.43%  tsh25+ 0.15 / 18-25 0.2 / <18 0.0: +3.28%  tsh25+ 0.15 / 18-25 0.2 / <18 0.05: +2.68%  tsh25+ 0.15 / 18-25 0.2 / <18 0.1: +2.41%  tsh25+ 0.15 / 18-25 0.2 / <18 0.15: +2.47%  tsh25+ 0.2 / 18-25 0.0 / <18 0.0: +2.43%  tsh25+ 0.2 / 18-25 0.0 / <18 0.05: +1.83%  tsh25+ 0.2 / 18-25 0.0 / <18 0.1: +1.56%  tsh25+ 0.2 / 18-25 0.0 / <18 0.15: +1.62%  tsh25+ 0.2 / 18-25 0.05 / <18 0.0: +2.36%  tsh25+ 0.2 / 18-25 0.05 / <18 0.05: +1.76%  tsh25+ 0.2 / 18-25 0.05 / <18 0.1: +1.49%  tsh25+ 0.2 / 18-25 0.05 / <18 0.15: +1.55%  tsh25+ 0.2 / 18-25 0.1 / <18 0.0: +2.66%  tsh25+ 0.2 / 18-25 0.1 / <18 0.05: +2.06%  tsh25+ 0.2 / 18-25 0.1 / <18 0.1: +1.79%  tsh25+ 0.2 / 18-25 0.1 / <18 0.15: +1.85%  tsh25+ 0.2 / 18-25 0.15 / <18 0.0: +3.33%  tsh25+ 0.2 / 18-25 0.15 / <18 0.05: +2.73%  tsh25+ 0.2 / 18-25 0.15 / <18 0.1: +2.46%  tsh25+ 0.2 / 18-25 0.15 / <18 0.15: +2.52%  tsh25+ 0.2 / 18-25 0.2 / <18 0.0: +4.37%  tsh25+ 0.2 / 18-25 0.2 / <18 0.05: +3.77%  tsh25+ 0.2 / 18-25 0.2 / <18 0.1: +3.49%  tsh25+ 0.2 / 18-25 0.2 / <18 0.15: +3.55%
+    LOYO +0.18% 4/9 | top-60 WR +0.17% | picks ['tsh25+ 0.05 / 18-25 0.0 / <18 0.1', 'tsh25+ 0.05 / 18-25 0.0 / <18 0.15', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.1', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.1', 'tsh25+ 0.0 / 18-25 0.05 / <18 0.1', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.1', 'tsh25+ 0.0 / 18-25 0.05 / <18 0.1', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.15', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.1']
+    FWD  -0.09% 2/4 | picks ['tsh25+ 0.05 / 18-25 0.1 / <18 0.1', 'tsh25+ 0.0 / 18-25 0.1 / <18 0.15', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.15', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.1']
+    -> FAIL (best pooled: tsh25+ 0.05 / 18-25 0.05 / <18 0.1)
+  2c dock size by preseason star level (prior rank 25)   (rows 1217, act/base 1.025)
+    pooled: prior-top25 0.0 / other 0.0: +0.33%  prior-top25 0.0 / other 0.05: +0.14%  prior-top25 0.0 / other 0.1: +0.56%  prior-top25 0.0 / other 0.15: +1.58%  prior-top25 0.05 / other 0.0: -0.19%  prior-top25 0.05 / other 0.05: -0.38%  prior-top25 0.05 / other 0.1: +0.04%  prior-top25 0.05 / other 0.15: +1.06%  prior-top25 0.1 / other 0.0: -0.24%  prior-top25 0.1 / other 0.05: -0.42%  prior-top25 0.1 / other 0.1: -0.01%  prior-top25 0.1 / other 0.15: +1.01%  prior-top25 0.15 / other 0.0: +0.18%  prior-top25 0.15 / other 0.05: +0.00%  prior-top25 0.15 / other 0.1: +0.42%  prior-top25 0.15 / other 0.15: +1.43%  prior-top25 0.2 / other 0.0: +1.08%  prior-top25 0.2 / other 0.05: +0.89%  prior-top25 0.2 / other 0.1: +1.31%  prior-top25 0.2 / other 0.15: +2.33%
+    LOYO -0.21% 8/9 | top-60 WR -0.27% | picks ['prior-top25 0.1 / other 0.05', 'prior-top25 0.05 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05']
+    FWD  -0.60% 4/4 | picks ['prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.1 / other 0.05']
+    -> FAIL (best pooled: prior-top25 0.1 / other 0.05)
+  3  double counting: engine dock x c / (k backup games in evidence + c)   (rows 854, act/base 1.051)
+    pooled: fade c 0.5: -1.39%  fade c 1: -1.41%  fade c 2: -1.34%  fade c 4: -1.15%  fade c 8: -0.86%
+    LOYO -1.28% 7/9 | top-60 WR -1.70% | picks ['fade c 1', 'fade c 0.5', 'fade c 1', 'fade c 0.5', 'fade c 1', 'fade c 1', 'fade c 0.5', 'fade c 1', 'fade c 1']
+    FWD  -1.78% 4/4 | picks ['fade c 4', 'fade c 2', 'fade c 2', 'fade c 1']
+    -> PASS: fade c 1
+  4  backup quality: dock scaled by the EPA/dropback drop regular -> starter (prior season)   (rows 1217, act/base 1.025)
+    pooled: engine x (dEPA / mean)^ 0.25: -0.85%  engine x (dEPA / mean)^ 0.5: -0.81%  engine x (dEPA / mean)^ 0.75: -0.46%  engine x (dEPA / mean)^ 1.0: +0.41%  dock = 0.3 x dEPA/db (star x1.0, other x.33): -0.73%  dock = 0.5 x dEPA/db (star x1.0, other x.33): -1.11%  dock = 0.8 x dEPA/db (star x1.0, other x.33): -1.18%
+    LOYO -0.98% 6/9 | top-60 WR -1.39% | picks ['dock = 0.8 x dEPA/db (star x1.0, other x.33)', 'dock = 0.8 x dEPA/db (star x1.0, other x.33)', 'dock = 0.8 x dEPA/db (star x1.0, other x.33)', 'dock = 0.8 x dEPA/db (star x1.0, other x.33)', 'dock = 0.8 x dEPA/db (star x1.0, other x.33)', 'dock = 0.5 x dEPA/db (star x1.0, other x.33)', 'dock = 0.8 x dEPA/db (star x1.0, other x.33)', 'dock = 0.5 x dEPA/db (star x1.0, other x.33)', 'dock = 0.8 x dEPA/db (star x1.0, other x.33)']
+    FWD  -1.68% 3/4 | picks ['engine', 'engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'dock = 0.8 x dEPA/db (star x1.0, other x.33)']
+    -> PASS: dock = 0.8 x dEPA/db (star x1.0, other x.33)
+  4b backup quality ON TOP of the k-fade (c 1)   (rows 1217, act/base 0.983)
+    pooled: fade c 1 x (dEPA / mean)^ 0.25: -0.11%  fade c 1 x (dEPA / mean)^ 0.5: -0.33%
+    LOYO +0.09% 4/9 | top-60 WR +0.01% | picks ['fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1', 'fade c 1 x (dEPA / mean)^ 0.5']
+    FWD  +0.06% 0/4 | picks ['fade c 1', 'fade c 1', 'fade c 1', 'fade c 1 x (dEPA / mean)^ 0.5']
+    -> FAIL (best pooled: fade c 1 x (dEPA / mean)^ 0.5)
+  2d star split ON TOP of the k-fade (c 1)   (rows 1217, act/base 0.983)
+    pooled: fade c 1, top25 0.1 / other 0.05: +0.16%  fade c 1, top25 0.1 / other 0.1: +0.10%  fade c 1, top25 0.15 / other 0.1: -0.06%  fade c 1, top25 0.2 / other 0.05: +0.03%  fade c 1, top25 0.2 / other 0.1: -0.03%
+    LOYO +0.41% 1/9 | top-60 WR +0.49% | picks ['fade c 1, top25 0.15 / other 0.1', 'fade c 1, top25 0.15 / other 0.1', 'fade c 1, top25 0.2 / other 0.1', 'fade c 1, top25 0.2 / other 0.1', 'fade c 1', 'fade c 1, top25 0.15 / other 0.1', 'fade c 1', 'fade c 1, top25 0.15 / other 0.1', 'fade c 1, top25 0.2 / other 0.05']
+    FWD  +0.35% 1/4 | picks ['fade c 1, top25 0.2 / other 0.1', 'fade c 1, top25 0.2 / other 0.05', 'fade c 1, top25 0.2 / other 0.1', 'fade c 1, top25 0.2 / other 0.05']
+    -> FAIL (best pooled: fade c 1, top25 0.15 / other 0.1)
+    prior top 25         n  294  error vs engine: fade c 1 -2.55%  no dock +0.41%  act/engine 1.090 act/fade 1.006
+    target share 22%+    n  351  error vs engine: fade c 1 -2.18%  no dock -0.74%  act/engine 1.113 act/fade 1.050
+    others               n  764  error vs engine: fade c 1 +0.20%  no dock +0.99%  act/engine 0.958 act/fade 0.935
+
+=== 2-4  DOCK FORMS, ROS (baseline = engine dock: .15 prior-top-25 / .05 others) ===
+  2a flat dock size (all WRs)   (rows 418, act/base 0.996)
+    pooled: d 0.0: +0.15%  d 0.05: -1.99%  d 0.1: -1.79%  d 0.15: +0.75%  d 0.2: +5.61%
+    LOYO +0.46% 3/9 | top-60 WR +0.03% | picks ['d 0.1', 'd 0.05', 'd 0.1', 'd 0.05', 'd 0.05', 'd 0.05', 'd 0.1', 'd 0.1', 'd 0.05']
+    FWD  +0.81% 2/4 | picks ['d 0.1', 'd 0.1', 'd 0.1', 'd 0.05']
+    -> FAIL (best pooled: d 0.05)
+  2b dock size by target-share band (25%+ / 18-25% / under 18%)   (rows 418, act/base 0.996)
+    pooled: tsh25+ 0.0 / 18-25 0.0 / <18 0.0: +0.15%  tsh25+ 0.0 / 18-25 0.0 / <18 0.05: -1.92%  tsh25+ 0.0 / 18-25 0.0 / <18 0.1: -3.27%  tsh25+ 0.0 / 18-25 0.0 / <18 0.15: -3.90%  tsh25+ 0.0 / 18-25 0.05 / <18 0.0: -0.26%  tsh25+ 0.0 / 18-25 0.05 / <18 0.05: -2.34%  tsh25+ 0.0 / 18-25 0.05 / <18 0.1: -3.68%  tsh25+ 0.0 / 18-25 0.05 / <18 0.15: -4.31%  tsh25+ 0.0 / 18-25 0.1 / <18 0.0: +0.15%  tsh25+ 0.0 / 18-25 0.1 / <18 0.05: -1.92%  tsh25+ 0.0 / 18-25 0.1 / <18 0.1: -3.27%  tsh25+ 0.0 / 18-25 0.1 / <18 0.15: -3.90%  tsh25+ 0.0 / 18-25 0.15 / <18 0.0: +1.39%  tsh25+ 0.0 / 18-25 0.15 / <18 0.05: -0.68%  tsh25+ 0.0 / 18-25 0.15 / <18 0.1: -2.03%  tsh25+ 0.0 / 18-25 0.15 / <18 0.15: -2.66%  tsh25+ 0.0 / 18-25 0.2 / <18 0.0: +3.45%  tsh25+ 0.0 / 18-25 0.2 / <18 0.05: +1.38%  tsh25+ 0.0 / 18-25 0.2 / <18 0.1: +0.03%  tsh25+ 0.0 / 18-25 0.2 / <18 0.15: -0.60%  tsh25+ 0.05 / 18-25 0.0 / <18 0.0: +0.50%  tsh25+ 0.05 / 18-25 0.0 / <18 0.05: -1.57%  tsh25+ 0.05 / 18-25 0.0 / <18 0.1: -2.92%  tsh25+ 0.05 / 18-25 0.0 / <18 0.15: -3.55%  tsh25+ 0.05 / 18-25 0.05 / <18 0.0: +0.09%  tsh25+ 0.05 / 18-25 0.05 / <18 0.05: -1.99%  tsh25+ 0.05 / 18-25 0.05 / <18 0.1: -3.33%  tsh25+ 0.05 / 18-25 0.05 / <18 0.15: -3.96%  tsh25+ 0.05 / 18-25 0.1 / <18 0.0: +0.50%  tsh25+ 0.05 / 18-25 0.1 / <18 0.05: -1.57%  tsh25+ 0.05 / 18-25 0.1 / <18 0.1: -2.92%  tsh25+ 0.05 / 18-25 0.1 / <18 0.15: -3.55%  tsh25+ 0.05 / 18-25 0.15 / <18 0.0: +1.74%  tsh25+ 0.05 / 18-25 0.15 / <18 0.05: -0.33%  tsh25+ 0.05 / 18-25 0.15 / <18 0.1: -1.68%  tsh25+ 0.05 / 18-25 0.15 / <18 0.15: -2.31%  tsh25+ 0.05 / 18-25 0.2 / <18 0.0: +3.80%  tsh25+ 0.05 / 18-25 0.2 / <18 0.05: +1.73%  tsh25+ 0.05 / 18-25 0.2 / <18 0.1: +0.38%  tsh25+ 0.05 / 18-25 0.2 / <18 0.15: -0.25%  tsh25+ 0.1 / 18-25 0.0 / <18 0.0: +1.63%  tsh25+ 0.1 / 18-25 0.0 / <18 0.05: -0.44%  tsh25+ 0.1 / 18-25 0.0 / <18 0.1: -1.79%  tsh25+ 0.1 / 18-25 0.0 / <18 0.15: -2.41%  tsh25+ 0.1 / 18-25 0.05 / <18 0.0: +1.22%  tsh25+ 0.1 / 18-25 0.05 / <18 0.05: -0.85%  tsh25+ 0.1 / 18-25 0.05 / <18 0.1: -2.20%  tsh25+ 0.1 / 18-25 0.05 / <18 0.15: -2.82%  tsh25+ 0.1 / 18-25 0.1 / <18 0.0: +1.63%  tsh25+ 0.1 / 18-25 0.1 / <18 0.05: -0.44%  tsh25+ 0.1 / 18-25 0.1 / <18 0.1: -1.79%  tsh25+ 0.1 / 18-25 0.1 / <18 0.15: -2.41%  tsh25+ 0.1 / 18-25 0.15 / <18 0.0: +2.87%  tsh25+ 0.1 / 18-25 0.15 / <18 0.05: +0.80%  tsh25+ 0.1 / 18-25 0.15 / <18 0.1: -0.55%  tsh25+ 0.1 / 18-25 0.15 / <18 0.15: -1.17%  tsh25+ 0.1 / 18-25 0.2 / <18 0.0: +4.93%  tsh25+ 0.1 / 18-25 0.2 / <18 0.05: +2.86%  tsh25+ 0.1 / 18-25 0.2 / <18 0.1: +1.51%  tsh25+ 0.1 / 18-25 0.2 / <18 0.15: +0.89%  tsh25+ 0.15 / 18-25 0.0 / <18 0.0: +3.55%  tsh25+ 0.15 / 18-25 0.0 / <18 0.05: +1.48%  tsh25+ 0.15 / 18-25 0.0 / <18 0.1: +0.13%  tsh25+ 0.15 / 18-25 0.0 / <18 0.15: -0.49%  tsh25+ 0.15 / 18-25 0.05 / <18 0.0: +3.14%  tsh25+ 0.15 / 18-25 0.05 / <18 0.05: +1.07%  tsh25+ 0.15 / 18-25 0.05 / <18 0.1: -0.28%  tsh25+ 0.15 / 18-25 0.05 / <18 0.15: -0.91%  tsh25+ 0.15 / 18-25 0.1 / <18 0.0: +3.55%  tsh25+ 0.15 / 18-25 0.1 / <18 0.05: +1.48%  tsh25+ 0.15 / 18-25 0.1 / <18 0.1: +0.13%  tsh25+ 0.15 / 18-25 0.1 / <18 0.15: -0.49%  tsh25+ 0.15 / 18-25 0.15 / <18 0.0: +4.79%  tsh25+ 0.15 / 18-25 0.15 / <18 0.05: +2.72%  tsh25+ 0.15 / 18-25 0.15 / <18 0.1: +1.37%  tsh25+ 0.15 / 18-25 0.15 / <18 0.15: +0.75%  tsh25+ 0.15 / 18-25 0.2 / <18 0.0: +6.85%  tsh25+ 0.15 / 18-25 0.2 / <18 0.05: +4.78%  tsh25+ 0.15 / 18-25 0.2 / <18 0.1: +3.43%  tsh25+ 0.15 / 18-25 0.2 / <18 0.15: +2.81%  tsh25+ 0.2 / 18-25 0.0 / <18 0.0: +6.26%  tsh25+ 0.2 / 18-25 0.0 / <18 0.05: +4.18%  tsh25+ 0.2 / 18-25 0.0 / <18 0.1: +2.84%  tsh25+ 0.2 / 18-25 0.0 / <18 0.15: +2.21%  tsh25+ 0.2 / 18-25 0.05 / <18 0.0: +5.84%  tsh25+ 0.2 / 18-25 0.05 / <18 0.05: +3.77%  tsh25+ 0.2 / 18-25 0.05 / <18 0.1: +2.42%  tsh25+ 0.2 / 18-25 0.05 / <18 0.15: +1.80%  tsh25+ 0.2 / 18-25 0.1 / <18 0.0: +6.26%  tsh25+ 0.2 / 18-25 0.1 / <18 0.05: +4.19%  tsh25+ 0.2 / 18-25 0.1 / <18 0.1: +2.84%  tsh25+ 0.2 / 18-25 0.1 / <18 0.15: +2.21%  tsh25+ 0.2 / 18-25 0.15 / <18 0.0: +7.49%  tsh25+ 0.2 / 18-25 0.15 / <18 0.05: +5.42%  tsh25+ 0.2 / 18-25 0.15 / <18 0.1: +4.07%  tsh25+ 0.2 / 18-25 0.15 / <18 0.15: +3.45%  tsh25+ 0.2 / 18-25 0.2 / <18 0.0: +9.56%  tsh25+ 0.2 / 18-25 0.2 / <18 0.05: +7.49%  tsh25+ 0.2 / 18-25 0.2 / <18 0.1: +6.14%  tsh25+ 0.2 / 18-25 0.2 / <18 0.15: +5.51%
+    LOYO -1.37% 6/9 | top-60 WR -1.53% | picks ['tsh25+ 0.05 / 18-25 0.05 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.05 / <18 0.15', 'tsh25+ 0.05 / 18-25 0.05 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.0 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.05 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.05 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.1 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.1 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.05 / <18 0.15']
+    FWD  +3.10% 1/4 | picks ['tsh25+ 0.0 / 18-25 0.15 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.15 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.1 / <18 0.15', 'tsh25+ 0.0 / 18-25 0.05 / <18 0.15']
+    -> FAIL (best pooled: tsh25+ 0.0 / 18-25 0.05 / <18 0.15)
+  2c dock size by preseason star level (prior rank 25)   (rows 418, act/base 0.996)
+    pooled: prior-top25 0.0 / other 0.0: +0.15%  prior-top25 0.0 / other 0.05: -1.47%  prior-top25 0.0 / other 0.1: -1.77%  prior-top25 0.0 / other 0.15: -0.73%  prior-top25 0.05 / other 0.0: -0.36%  prior-top25 0.05 / other 0.05: -1.99%  prior-top25 0.05 / other 0.1: -2.28%  prior-top25 0.05 / other 0.15: -1.24%  prior-top25 0.1 / other 0.0: +0.13%  prior-top25 0.1 / other 0.05: -1.49%  prior-top25 0.1 / other 0.1: -1.79%  prior-top25 0.1 / other 0.15: -0.75%  prior-top25 0.15 / other 0.0: +1.62%  prior-top25 0.15 / other 0.05: +0.00%  prior-top25 0.15 / other 0.1: -0.29%  prior-top25 0.15 / other 0.15: +0.75%  prior-top25 0.2 / other 0.0: +4.12%  prior-top25 0.2 / other 0.05: +2.50%  prior-top25 0.2 / other 0.1: +2.21%  prior-top25 0.2 / other 0.15: +3.24%
+    LOYO +1.98% 4/9 | top-60 WR +1.82% | picks ['prior-top25 0.05 / other 0.1', 'prior-top25 0.05 / other 0.05', 'prior-top25 0.1 / other 0.1', 'prior-top25 0.05 / other 0.05', 'prior-top25 0.05 / other 0.1', 'prior-top25 0.05 / other 0.1', 'prior-top25 0.1 / other 0.05', 'prior-top25 0.05 / other 0.15', 'prior-top25 0.0 / other 0.1']
+    FWD  +3.21% 1/4 | picks ['prior-top25 0.0 / other 0.15', 'prior-top25 0.05 / other 0.15', 'prior-top25 0.0 / other 0.15', 'prior-top25 0.0 / other 0.1']
+    -> FAIL (best pooled: prior-top25 0.05 / other 0.1)
+  3  double counting: engine dock x c / (k backup games in evidence + c)   (rows 289, act/base 1.007)
+    pooled: fade c 0.5: -2.74%  fade c 1: -2.74%  fade c 2: -2.48%  fade c 4: -1.96%  fade c 8: -1.36%
+    LOYO -1.38% 4/9 | top-60 WR -2.07% | picks ['fade c 1', 'fade c 0.5', 'fade c 2', 'fade c 0.5', 'fade c 0.5', 'fade c 0.5', 'fade c 2', 'fade c 1', 'fade c 0.5']
+    FWD  -1.68% 2/4 | picks ['fade c 0.5', 'fade c 0.5', 'fade c 0.5', 'fade c 0.5']
+    -> FAIL (best pooled: fade c 0.5)
+  4  backup quality: dock scaled by the EPA/dropback drop regular -> starter (prior season)   (rows 418, act/base 0.996)
+    pooled: engine x (dEPA / mean)^ 0.25: -2.59%  engine x (dEPA / mean)^ 0.5: -1.98%  engine x (dEPA / mean)^ 0.75: -0.70%  engine x (dEPA / mean)^ 1.0: +1.61%  dock = 0.3 x dEPA/db (star x1.0, other x.33): -1.52%  dock = 0.5 x dEPA/db (star x1.0, other x.33): -2.00%  dock = 0.8 x dEPA/db (star x1.0, other x.33): -1.77%
+    LOYO -1.53% 4/9 | top-60 WR -2.39% | picks ['engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'engine x (dEPA / mean)^ 0.25', 'dock = 0.5 x dEPA/db (star x1.0, other x.33)']
+    FWD  -1.61% 2/4 | picks ['dock = 0.3 x dEPA/db (star x1.0, other x.33)', 'engine x (dEPA / mean)^ 0.25', 'dock = 0.5 x dEPA/db (star x1.0, other x.33)', 'dock = 0.5 x dEPA/db (star x1.0, other x.33)']
+    -> FAIL (best pooled: engine x (dEPA / mean)^ 0.25)
+  4b backup quality ON TOP of the k-fade (c 1)   (rows 418, act/base 0.971)
+    pooled: fade c 1 x (dEPA / mean)^ 0.25: -0.83%  fade c 1 x (dEPA / mean)^ 0.5: -0.88%
+    LOYO -0.73% 5/9 | top-60 WR -1.27% | picks ['fade c 1 x (dEPA / mean)^ 0.25', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.25', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5']
+    FWD  -0.65% 2/4 | picks ['fade c 1 x (dEPA / mean)^ 0.25', 'fade c 1', 'fade c 1 x (dEPA / mean)^ 0.5', 'fade c 1 x (dEPA / mean)^ 0.5']
+    -> FAIL (best pooled: fade c 1 x (dEPA / mean)^ 0.5)
+  2d star split ON TOP of the k-fade (c 1)   (rows 418, act/base 0.971)
+    pooled: fade c 1, top25 0.1 / other 0.05: -0.25%  fade c 1, top25 0.1 / other 0.1: -1.04%  fade c 1, top25 0.15 / other 0.1: -0.79%  fade c 1, top25 0.2 / other 0.05: +0.73%  fade c 1, top25 0.2 / other 0.1: -0.05%
+    LOYO -0.60% 7/9 | top-60 WR -0.43% | picks ['fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.15 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1']
+    FWD  -0.28% 3/4 | picks ['fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1', 'fade c 1, top25 0.1 / other 0.1']
+    -> PASS: fade c 1, top25 0.1 / other 0.1
+    prior top 25         n  108  error vs engine: fade c 1 -6.17%  no dock -4.18%  act/engine 1.067 act/fade 1.022
+    target share 22%+    n  116  error vs engine: fade c 1 -8.11%  no dock -10.80%  act/engine 1.100 act/fade 1.063
+    others               n  260  error vs engine: fade c 1 +1.33%  no dock +5.18%  act/engine 0.914 act/fade 0.900
+
+=== 5  STAR WRs WITH THE BACKUP: target share and per-target value, same player-season, QB-in games vs QB-out games ===
+  prior rank 1-25: 95 player-seasons with both | target share 0.239 -> 0.224 (up in 36/95) | team targets/g 33.0 -> 32.9 | his targets/g 7.78 -> 7.26 | pts/target 1.460 -> 1.379 | xFP/target 1.420 -> 1.379 | pts/g 11.37 -> 9.89
+  prior rank 26-60: 165 player-seasons with both | target share 0.182 -> 0.184 (up in 74/165) | team targets/g 32.2 -> 32.2 | his targets/g 5.82 -> 5.77 | pts/target 1.341 -> 1.331 | xFP/target 1.401 -> 1.396 | pts/g 7.96 -> 7.64

@@ -57,6 +57,11 @@ def snap_mult(snaps, wk):
 def build_fpa():
     """fpa[Y][def][pos] = mean pooled pts allowed per game; also per-week map."""
     weekly_fpa = defaultdict(lambda: defaultdict(float))  # (Y, def, pos, wk) sums
+    try:   # 2026-10-20 extended backtest (bt_ext): reach back to the first extended season; default stays 2018
+        import bt_ext as _BX
+        y0 = min(2018, _BX.YEARS[0] - 1) if _BX.EXT else 2018
+    except ImportError:
+        y0 = 2018
     for recs in WEEKLY.values():
         for rec in recs:
             pos = rec.get("pos")
@@ -64,7 +69,7 @@ def build_fpa():
                 continue
             for y, rows in rec.get("seasons", {}).items():
                 Y = int(y)
-                if Y < 2018:
+                if Y < y0:
                     continue
                 for w in rows:
                     if not played(w) or not w.get("opp"):

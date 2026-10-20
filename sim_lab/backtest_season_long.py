@@ -32,10 +32,11 @@ sys.path.insert(0, HERE)
 import backtest_noclay_weekly as NW
 import research_clay_vs_shadow as CS
 import bt_common as B
+import bt_ext as BX   # 2026-10-20 season range; default unchanged
 warnings.filterwarnings("ignore")
 
 if __name__ == "__main__":
-    sys.stdout = NW._Tee(sys.stdout, open(os.path.join(HERE, "season_long_backtest.log"), "w", encoding="utf-8"))
+    sys.stdout = NW._Tee(sys.stdout, open(BX.ext_path("season_long_backtest.log"), "w", encoding="utf-8"))
 def P(*a): print(" ".join(str(x) for x in a))
 
 YEARS, POS4 = NW.YEARS, NW.POS4
@@ -82,15 +83,16 @@ def build_table(return_F=False):
     T = first.merge(seas, on=["year", "name", "pos"]); T = T[T.games >= MIN_G].copy()
     # Clay: fair per-game (pts / projected games), half-PPR; and the /17 form the weekly harness uses
     def clay_of(y, nm, key):
+        if BX.EXT: return np.nan   # extended mode: Clay pool not used, Clay numbers n/a
         c = clay_hist[str(int(y))].get(nm) or {}
         pts = max(0.2, (c.get("pts") or 0) - (c.get("rec") or 0) / 2.0)
         if key == "gm": gm = c.get("gm") or 0; return pts / gm if gm >= 4 else np.nan
         return pts / (16 if y <= 2020 else 17)
     T["clay"] = [clay_of(y, nm, "gm") for y, nm in zip(T.year, T.name)]
     T["clay17"] = [clay_of(y, nm, "17") for y, nm in zip(T.year, T.name)]
-    T = T[~T.clay.isna()].copy()
+    if not BX.EXT: T = T[~T.clay.isna()].copy()
     # context features (week-2 row of ctx_features = prior-year / coach / OL / prospect vars, all preseason-known)
-    C = pd.read_parquet(os.path.join(HERE, "ctx_features.parquet"), columns=["year", "name", "pos"] + CTX)
+    C = pd.read_parquet(BX.ext_path("ctx_features.parquet"), columns=["year", "name", "pos"] + CTX)
     C = C.sort_values("year").groupby(["year", "name", "pos"]).first().reset_index()
     T = T.merge(C, on=["year", "name", "pos"], how="left")
     # PFF prior year
@@ -249,9 +251,9 @@ def main():
     RES["summary"] = (f"Season-long, {n} player-seasons: Clay games-weighted MSE {RES['models'][0]['mseClay']:.2f}. Best Clay-free = {best_free['label']} {best_free['pct']:+.1f}% vs Clay ({best_free['wins']}/{best_free['years']} seasons), rho {best_free['rho']:.3f} vs {best_free['rhoClay']:.3f}. "
                       + "; ".join(f"{r['label']} {r['pct']:+.1f}%" for r in RES["forward"]) + " (forward).")
     P("\n" + RES["summary"])
-    with open(os.path.join(HERE, "data", "season_long_backtest.js"), "w", encoding="utf-8") as f:
+    with open(BX.data_path("season_long_backtest.js"), "w", encoding="utf-8") as f:
         f.write("window.SIM_SEASON_BT = " + json.dumps(RES) + ";\n")
-    T.to_parquet(os.path.join(HERE, "season_long_table.parquet"), index=False)
+    T.to_parquet(BX.ext_path("season_long_table.parquet"), index=False)
     P(f"wrote data/season_long_backtest.js + season_long_table.parquet ({time.time()-t0:.0f}s)")
 
 

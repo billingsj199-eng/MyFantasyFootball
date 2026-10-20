@@ -1,0 +1,115 @@
+{
+ "base": [
+  "pos_qb",
+  "pos_rb",
+  "pos_wr",
+  "pos_te",
+  "wk",
+  "g",
+  "ppg",
+  "clay",
+  "base2",
+  "veg",
+  "fpa_mult",
+  "ppg_over_clay",
+  "snapmult"
+ ],
+ "usage": [
+  "tgt_sh",
+  "car_sh",
+  "rz_tgt_sh",
+  "rz_car_sh",
+  "gl_car_sh",
+  "ay_sh",
+  "wopr",
+  "xfp_pg",
+  "pts_over_xfp",
+  "tgt_sh_l3",
+  "car_sh_l3",
+  "tgt_trend",
+  "car_trend",
+  "snap_std",
+  "snap_l1",
+  "snap_trend",
+  "db_sh",
+  "att_pg"
+ ],
+ "prior": [
+  "tgt_sh_py",
+  "car_sh_py",
+  "xfp_pg_py",
+  "ppg_py",
+  "g_py",
+  "team_change"
+ ],
+ "team": [
+  "proe_std",
+  "proe_py",
+  "plays_pg_std",
+  "plays_pg_py"
+ ],
+ "coach": [
+  "new_hc",
+  "new_pc",
+  "pc_seasons",
+  "pc_proe",
+  "pc_rb_tgt",
+  "pc_te_tgt",
+  "pc_rb1_car",
+  "pc_plays_pg"
+ ],
+ "vacancy": [
+  "vac_tgt",
+  "vac_car",
+  "vac_tgt_same",
+  "vac_car_same",
+  "inherit_tgt",
+  "inherit_car",
+  "qb_out"
+ ],
+ "own_injury": [
+  "rep_q",
+  "rep_d",
+  "prac_dnp",
+  "prac_lim"
+ ],
+ "prospect": [
+  "draft_pick",
+  "undrafted",
+  "exp",
+  "age",
+  "jm",
+  "rookie",
+  "yr2"
+ ],
+ "env": [
+  "implied",
+  "opp_implied",
+  "spread",
+  "game_total",
+  "dome",
+  "precip",
+  "wind",
+  "temp",
+  "hour"
+ ],
+ "matchup": [
+  "opp_man_std",
+  "opp_man_py",
+  "yprr_man",
+  "yprr_zone",
+  "man_gap_x_opp"
+ ],
+ "oline": [
+  "ol_pb_full",
+  "ol_rb_full",
+  "ol_pb_now",
+  "ol_rb_now",
+  "ol_pb_drop",
+  "ol_rb_drop",
+  "ol_best_pb",
+  "ol_worst_pb_now",
+  "ol_out_n",
+  "ol_q_n"
+ ]
+}

@@ -2773,6 +2773,24 @@
     return out;
   }
   function cwOf(p) { return (_inj && _inj.teamCw && p && _inj.teamCw[p.tm]) || (_inj ? _inj.week : 0); }
+  // NEW-TEAM DEBUT DOCK (2026-10-20, Jack on Marvin Harrison Jr.). A player's FIRST game for a new team after a mid-season move
+  // runs .65 of the projection (snaps x.74 of his old-team level; research_midseason_trade.py, 46 debuts 2019-25); game 2 is
+  // back to 1.08 and nothing later needs a fix. Dock x.7 on RB/WR/TE (QB debuts ran 1.40, n 3): LOYO -35% next-game error
+  // (5/6), forward -54% (4/4); real trades only x.7 -26% (4/4). Debut = his last 2026 game was for another team and he has no
+  // game for p.tm yet (data/sim_team_weeks.js, from nflverse snap counts); the dock sits on his new team's next scheduled game
+  // and follows him until he plays one. Kill: window.SIM_NEW_TEAM_DEBUT = false. Backup engine.js.bak_pre_debutdock_20261020.
+  var NEW_TEAM_DEBUT = { mult: 0.7, pos: { RB: 1, WR: 1, TE: 1 } };
+  function newTeamDebutMult(p, wk, schedule) {
+    var wnd = typeof window !== 'undefined' ? window : null;
+    if (!wnd || wnd.SIM_NEW_TEAM_DEBUT === false || !_inj || !p || p.isDST || !NEW_TEAM_DEBUT.pos[p.pos]) return 1;
+    var TW = wnd.SIM_TEAM_WEEKS_2026, tw = TW && TW[p.name]; if (!tw) return 1;
+    var mine = normTeam(p.tm), cw = cwOf(p), lastW = 0, lastT = null, onNew = false;
+    Object.keys(tw).forEach(function (k) { var w = +k, t = normTeam(tw[k]); if (!(w < cw)) return; if (t === mine) onNew = true; if (w > lastW) { lastW = w; lastT = t; } });
+    if (!lastT || onNew || lastT === mine) return 1;
+    var bt = schedule && schedule.byTeam && schedule.byTeam[p.tm]; if (!bt) return 1;
+    for (var w = cw; w <= WEEKS; w++) if (bt[w]) return wk === w ? NEW_TEAM_DEBUT.mult : 1;
+    return 1;
+  }
   var INJ_SHARE = { QB: 0.85, RB: 0.60, WR: 0.60, TE: 0.60 };
   // BANGED-UP DOCKS (backtest_banged_up.py, 2026-09-15). Final-report designation x latest practice:
   //   play = P(plays) by position, nflverse injuries x snap counts 2019-25, players averaging 40%+ of
@@ -4078,6 +4096,7 @@
       var qfSc = scale > 0 ? scale : 1, qfMu = (ncMean / qfSc >= 5) ? qbShadowMu(wk, sc, schedule) : null;
       if (qfMu != null && ncMean < qfMu) { var qf0 = ncMean; ncMean = qfMu + 0.70 * (ncMean - qfMu); ncQbfM = qf0 > 0 ? ncMean / qf0 : 1; ncSrc += '+qbfl'; }
     }
+    if (ncMean != null && ncMean > 0 && !ncOut) { var dbM = newTeamDebutMult(p, wk, schedule); if (dbM !== 1) { ncMean *= dbM; ncSrc += '+debut'; } }   // new-team debut dock (see newTeamDebutMult)
     if (ncOut) { ncMean = 0; ncSrc += '+out:' + ncOut; }
     // BASE BLEND (weeks ahead): the shadow joins the model number before the market steps
     var bbW = 0, jsPre = jsMean, bbRatio = 1;

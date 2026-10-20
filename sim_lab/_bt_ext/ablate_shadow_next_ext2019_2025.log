@@ -1,0 +1,109 @@
+=== ablation, next game: 19,589 player-weeks (11,266 top-150); full model rank order 0.3982 ===
+    top 150, weights ADP-curve^2. Full model by band (rank order / pairs / level act/proj):
+      ADP 1-12   n  972 | pairs right 59.9% | level 0.995 | RB 1.001 WR 0.993 TE 0.879
+      13-30      n 1562 | pairs right 56.8% | level 1.009 | QB 0.951 RB 1.019 WR 1.020 TE 1.058
+      31-60      n 2488 | pairs right 55.0% | level 1.027 | QB 0.984 RB 1.019 WR 1.047 TE 1.076
+      61-100     n 2893 | pairs right 61.9% | level 1.011 | QB 1.026 RB 0.995 WR 1.019 TE 0.975
+    piece                                          rows  | all rows (seasons it helps) | top-150 weighted (seasons) | rank order | top-30 wtd | 31-100 wtd | verdict
+    usage evidence, WR                              7479 |  +0.00% (4/7)            |  -0.10% (4/7)            | +0.0002    |  -0.26% |  +0.04% | mixed   (its own rows +0.00%)
+    usage evidence, RB                              4730 |  -0.05% (4/7)            |  -0.11% (4/7)            | +0.0003    |  -0.17% |  -0.10% | helps   (its own rows -0.17%)
+    Vegas-cleaned evidence                         16901 |  -0.21% (6/7)            |  -0.32% (6/7)            | +0.0005    |  -0.46% |  -0.14% | helps   (its own rows -0.24%)
+    ridge season prior mix                         16888 |  -1.13% (7/7)            |  -0.59% (7/7)            | +0.0076    |  -0.24% |  -0.86% | helps   (its own rows -1.40%)
+    WR one-game prior x5                             652 |  -0.01% (5/7)            |  -0.06% (7/7)            | +0.0003    |  -0.12% |  -0.00% | helps   (its own rows -0.45%)
+    rookie ramp (not first string, weeks 1-2)        218 |  -0.07% (5/7)            |  -0.03% (5/7)            | -0.0003    |  +0.00% |  -0.00% | mixed   (its own rows -8.90%)
+    vacated-role pool                               6005 |  -0.16% (4/7)            |  -0.25% (6/7)            | +0.0012    |  -0.19% |  -0.30% | helps   (its own rows -0.56%)
+    QB game-total tilt                              2484 |  -0.01% (4/7)            |  +0.01% (3/7)            | +0.0032    |  +0.12% |  -0.15% | mixed   (its own rows -0.04%)
+    WR dock when the QB is out                       613 |  -0.11% (6/7)            |  -0.30% (6/7)            | +0.0001    |  -0.62% |  +0.07% | helps   (its own rows -3.86%)
+    snap trend (engine layer), RB                   4027 |  -0.30% (6/7)            |  -0.16% (4/7)            | +0.0023    |  +0.06% |  -0.40% | helps   (its own rows -1.27%)
+    snap trend (engine layer), WR                   6486 |  +0.25% (1/7)            |  +0.26% (2/7)            | -0.0025    |  +0.19% |  +0.38% | HURTS   (its own rows +0.76%)
+    snap trend (engine layer), TE                   2925 |  -0.02% (4/7)            |  +0.04% (3/7)            | -0.0009    |  +0.12% |  -0.07% | HURTS   (its own rows -0.17%)
+    v2.25 snap-share level, WR                      7161 |  +0.03% (4/7)            |  +0.14% (4/7)            | -0.0004    |  +0.32% |  -0.07% | HURTS   (its own rows +0.10%)
+    v2.25 snap-share level, TE                      3209 |  -0.08% (6/7)            |  -0.00% (4/7)            | -0.0003    |  +0.04% |  -0.06% | mixed   (its own rows -0.72%)
+    v2.25 QB changed teams x.90                      338 |  -0.08% (4/7)            |  -0.05% (4/7)            | +0.0019    |  +0.00% |  -0.01% | helps   (its own rows -3.20%)
+    v2.25 QB low team total                          313 |  +0.02% (4/7)            |  -0.00% (4/7)            | -0.0003    |  +0.00% |  -0.02% | HURTS   (its own rows +0.98%)
+    v2.25 rookie WR games 2-5 x.90                   341 |  -0.02% (5/7)            |  +0.01% (2/7)            | -0.0002    |  +0.00% |  +0.01% | HURTS   (its own rows -1.12%)
+    v2.25 RB under 30% of carries, games 2-5 x.90    529 |  -0.03% (6/7)            |  -0.01% (5/7)            | -0.0003    |  -0.01% |  -0.02% | mixed   (its own rows -2.05%)
+
+  snap TREND (engine layer) vs snap LEVEL (v2.25), by position - the four combinations, on that position's rows (vs neither):
+    WR trend only    all rows +0.03%  top-150 weighted +0.09% (4/7)  rank order -0.0019
+    WR level only    all rows -0.50%  top-150 weighted -0.22% (5/7)  rank order +0.0064
+    WR both (wired)  all rows +0.11%  top-150 weighted +0.45% (4/7)  rank order -0.0034
+    TE trend only    all rows -0.56%  top-150 weighted +0.07% (3/7)  rank order +0.0075
+    TE level only    all rows -1.08%  top-150 weighted -0.49% (5/7)  rank order +0.0100
+    TE both (wired)  all rows -1.22%  top-150 weighted +0.03% (3/7)  rank order +0.0062
+
+=== next-game leads on top of the full model (touched rows; LOSO + forward; whole-board top-150 weighted as the guard) ===
+
+  the game after an early exit, RB   (rows 135; actual / projected 0.880)
+    fixed settings (seasons better): x0.95: -1.95% (5)  x0.9: -2.33% (5)  x0.85: -1.13% (5)  x0.8: +1.65% (4)
+    LEAVE-ONE-SEASON-OUT -1.63% 5/7 | whole board top-150 weighted +0.007%, rank order -0.0000 | picks ['x0.95', 'x0.9', 'x0.9', 'x0.9', 'x0.9', 'x0.9', 'x0.9']
+    FORWARD 2022-25      -0.64% 3/4 | whole board top-150 weighted +0.019% | picks ['x0.9', 'x0.95', 'x0.9', 'x0.9']
+    -> PASS: x0.9
+
+  the game after an early exit, WR   (rows 247; actual / projected 1.021)
+    fixed settings (seasons better): x0.95: +0.79% (3)  x0.9: +2.33% (3)  x0.85: +4.60% (3)  x0.8: +7.62% (1)
+    LEAVE-ONE-SEASON-OUT +0.00% 0/7 | whole board top-150 weighted +0.000%, rank order +0.0000 | picks ['1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)']
+    FORWARD 2022-25      +2.09% 0/4 | whole board top-150 weighted +0.014% | picks ['x0.95', '1.00 (as is)', 'x0.95', '1.00 (as is)']
+    -> FAIL
+
+  the game after an early exit, TE   (rows 93; actual / projected 1.028)
+    fixed settings (seasons better): x0.95: +0.91% (2)  x0.9: +2.43% (1)  x0.85: +4.57% (1)  x0.8: +7.33% (1)
+    LEAVE-ONE-SEASON-OUT +0.00% 0/7 | whole board top-150 weighted +0.000%, rank order +0.0000 | picks ['1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)']
+    FORWARD 2022-25      +0.00% 0/4 | whole board top-150 weighted +0.000% | picks ['1.00 (as is)', '1.00 (as is)', '1.00 (as is)', '1.00 (as is)']
+    -> FAIL
+
+  first game after the bye, WR   (rows 533; actual / projected 0.913)
+    fixed settings (seasons better): x0.97: -0.79% (7)  x0.94: -1.18% (4)  x0.91: -1.18% (3)
+    LEAVE-ONE-SEASON-OUT -0.82% 3/7 | whole board top-150 weighted -0.014%, rank order +0.0003 | picks ['x0.94', 'x0.91', 'x0.94', 'x0.94', 'x0.91', 'x0.91', 'x0.91']
+    FORWARD 2022-25      +0.20% 1/4 | whole board top-150 weighted +0.022% | picks ['x0.91', 'x0.91', 'x0.91', 'x0.91']
+    -> FAIL
+
+  first game after the bye, QB   (rows 175; actual / projected 0.963)
+    fixed settings (seasons better): x0.97: -0.80% (4)  x0.94: -0.44% (4)  x0.91: +1.09% (4)
+    LEAVE-ONE-SEASON-OUT -0.23% 4/7 | whole board top-150 weighted -0.006%, rank order +0.0005 | picks ['x0.97', 'x0.97', 'x0.97', 'x0.97', 'x0.97', 'x0.97', 'x0.94']
+    FORWARD 2022-25      +2.44% 1/4 | whole board top-150 weighted +0.031% | picks ['x0.91', 'x0.94', 'x0.94', 'x0.94']
+    -> FAIL
+
+  first game after the bye, TE   (rows 236; actual / projected 0.910)
+    fixed settings (seasons better): x0.97: -0.34% (5)  x0.94: -0.37% (5)  x0.91: -0.09% (4)
+    LEAVE-ONE-SEASON-OUT +0.57% 5/7 | whole board top-150 weighted +0.018%, rank order -0.0003 | picks ['x0.94', 'x0.94', 'x0.97', 'x0.97', 'x0.97', 'x0.94', 'x0.91']
+    FORWARD 2022-25      +0.41% 3/4 | whole board top-150 weighted +0.026% | picks ['x0.94', 'x0.91', 'x0.91', 'x0.91']
+    -> FAIL
+
+  (the next ones are on top of a flat x.90 for every Questionable RB / WR / TE - the engine already docks those)
+
+  hamstring, Questionable: EXTRA on top of the generic dock   (rows 103; actual / projected 0.867)
+    fixed settings (seasons better): x0.92: -7.00% (6)  x0.85: -9.72% (6)  x0.8: -9.72% (6)  x0.75: -8.10% (4)
+    LEAVE-ONE-SEASON-OUT -8.06% 6/7 | whole board top-150 weighted -0.035%, rank order -0.0003 | picks ['x0.85', 'x0.85', 'x0.8', 'x0.8', 'x0.8', 'x0.8', 'x0.85']
+    FORWARD 2022-25      +0.28% 3/4 | whole board top-150 weighted +0.002% | picks ['x0.75', 'x0.8', 'x0.8', 'x0.85']
+    -> FAIL
+
+  illness, Questionable: EXTRA on top of the generic dock   (rows 50; actual / projected 0.844)
+    fixed settings (seasons better): x0.92: -4.34% (2)  x0.85: -4.94% (2)
+    LEAVE-ONE-SEASON-OUT +0.09% 3/7 | whole board top-150 weighted +0.023%, rank order -0.0002 | picks ['x0.92', 'x0.85', 'x0.92', 'x0.92', 'x0.85', 'x0.85', 'x0.85']
+    FORWARD 2022-25      +2.99% 1/4 | whole board top-150 weighted +0.030% | picks ['x0.85', 'x0.85', 'x0.85', 'x0.85']
+    -> FAIL
+
+  groin / hip / quad / foot / back, Questionable: give the generic dock BACK   (rows 236; actual / projected 1.080)
+    fixed settings (seasons better): x1.05: -1.12% (5)  x1.11: -1.15% (4)
+    LEAVE-ONE-SEASON-OUT +0.36% 4/7 | whole board top-150 weighted -0.004%, rank order +0.0006 | picks ['x1.05', 'x1.11', 'x1.11', 'x1.11', 'x1.05', 'x1.05', 'x1.05']
+    FORWARD 2022-25      +1.14% 2/4 | whole board top-150 weighted +0.022% | picks ['x1.11', '1.00 (as is)', 'x1.05', 'x1.05']
+    -> FAIL
+
+  hamstring on the report, Questionable, no generic dock (for scale)   (rows 103; actual / projected 0.780)
+    fixed settings (seasons better): x0.9: -14.24% (6)  x0.8: -21.61% (6)  x0.72: -22.57% (6)
+    LEAVE-ONE-SEASON-OUT -19.92% 6/7 | whole board top-150 weighted -0.085%, rank order -0.0001 | picks ['x0.8', 'x0.8', 'x0.72', 'x0.72', 'x0.72', 'x0.72', 'x0.72']
+    FORWARD 2022-25      -10.10% 3/4 | whole board top-150 weighted -0.028% | picks ['x0.72', 'x0.72', 'x0.72', 'x0.72']
+    -> PASS: x0.72
+
+  hamstring on the report, any status   (rows 298; actual / projected 0.906)
+    fixed settings (seasons better): x0.95: -1.98% (6)  x0.9: -2.70% (5)  x0.85: -2.16% (4)
+    LEAVE-ONE-SEASON-OUT -1.85% 5/7 | whole board top-150 weighted -0.029%, rank order -0.0002 | picks ['x0.9', 'x0.9', 'x0.9', 'x0.9', 'x0.9', 'x0.85', 'x0.9']
+    FORWARD 2022-25      -2.06% 3/4 | whole board top-150 weighted -0.030% | picks ['x0.9', 'x0.9', 'x0.9', 'x0.9']
+    -> PASS: x0.9
+
+  Questionable, any injury (RB / WR / TE) - for scale   (rows 919; actual / projected 0.887)
+    fixed settings (seasons better): x0.95: -2.43% (7)  x0.9: -3.63% (6)  x0.85: -3.61% (5)
+    LEAVE-ONE-SEASON-OUT -3.01% 5/7 | whole board top-150 weighted -0.177%, rank order -0.0002 | picks ['x0.85', 'x0.9', 'x0.9', 'x0.9', 'x0.85', 'x0.85', 'x0.85']
+    FORWARD 2022-25      -1.72% 2/4 | whole board top-150 weighted -0.123% | picks ['x0.85', 'x0.85', 'x0.85', 'x0.85']
+    -> FAIL

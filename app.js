@@ -5324,7 +5324,26 @@ function _rnkMobCtlApply(open) {
   if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   if (window._stickyFilterSync) window._stickyFilterSync();
 }
+// Laptop / desktop (2026-10-20): the same button folds the stack there too, but
+// open by default — body.rnk-desk-ctl-closed, localStorage mff_rnk_desk_ctl.
+// The query mirrors the two phone @media blocks in index.html.
+const _RNK_MOB_CTL_MQ = '(max-width:600px), (min-width:601px) and (max-width:900px) and (max-height:520px)';
+function _rnkDeskCtlApply(closed) {
+  document.body.classList.toggle('rnk-desk-ctl-closed', closed);
+  const btn = document.getElementById('rnkMobCtlToggle');
+  if (btn) {
+    btn.setAttribute('aria-expanded', closed ? 'false' : 'true');
+    btn.title = closed ? 'Show model, format, view and scoring controls' : 'Hide the controls to fit more players';
+  }
+  if (window._stickyFilterSync) window._stickyFilterSync();
+}
 window._toggleRnkMobCtl = function () {
+  if (!window.matchMedia(_RNK_MOB_CTL_MQ).matches) {
+    const closed = !document.body.classList.contains('rnk-desk-ctl-closed');
+    try { localStorage.setItem('mff_rnk_desk_ctl', closed ? '1' : '0'); } catch (e) {}
+    _rnkDeskCtlApply(closed);
+    return;
+  }
   const open = !document.body.classList.contains('rnk-mob-ctl-open');
   try { localStorage.setItem('mff_rnk_mob_ctl', open ? '1' : '0'); } catch (e) {}
   _rnkMobCtlApply(open);
@@ -5350,6 +5369,9 @@ function _updateRnkMobCtlSummary() {
   let open = false;
   try { open = localStorage.getItem('mff_rnk_mob_ctl') === '1'; } catch (e) {}
   _rnkMobCtlApply(open);
+  let closed = false;
+  try { closed = localStorage.getItem('mff_rnk_desk_ctl') === '1'; } catch (e) {}
+  _rnkDeskCtlApply(closed);
 })();
 
 // === Saved view presets ===
@@ -7193,7 +7215,9 @@ window._weeklyAssumeOutToggle = function(name, wk) {
 // PROJ, start/sit, My Teams — treats him as available. The sim exports an IR player as 0, so his PROJ
 // falls back to the sim's rest-of-season per-game rate (seasonPpg, see _simProjRow). Teammates'
 // sim rows still assume him out until the next sim run. Undo restores the feed tag.
-const _ACT_RE = /\bir\b|\bpup\b|suspend/;
+// 2026-10-20 (Jack: Baker Mayfield sat in BYE / OUT on a stale "Thumb, Out" tag with no
+// way back): plain feed "Out" players can be activated the same way.
+const _ACT_RE = /\bir\b|\bpup\b|suspend|\bout\b/;
 window._weeklyActivatedMap = {};
 try { window._weeklyActivatedMap = JSON.parse(localStorage.getItem('mff_activated') || '{}') || {}; } catch(_e) { window._weeklyActivatedMap = {}; }
 window._weeklyActivated = function(name, wk) {
@@ -7230,7 +7254,7 @@ window._weeklyActivatedSync = function() {
     if (!d || d._injPreAct !== undefined) return;
     const tag = String(d.inj || '');
     if (!_ACT_RE.test(tag.toLowerCase())) return;          // the feed already shows him back
-    const body = (tag.match(/^(.*?),\s*(?:IR|PUP|Suspended)\b/i) || [])[1] || '';
+    const body = (tag.match(/^(.*?),\s*(?:IR|PUP|Suspended|Out)\b/i) || [])[1] || '';
     const gs = (SP && +SP.currentWeek === +wk && SP.inj && SP.inj[nm] && SP.inj[nm].gs) || '';
     d._injPreAct = d.inj;
     d.inj = /questionable|doubtful/i.test(gs) ? (body ? body + ', ' : '') + gs + ' (activated)' : null;
@@ -7264,7 +7288,7 @@ window._weeklyActivateToggle = function(name, wk) {
     }
   } catch(e) { console.warn('[Weekly] activate sync failed:', e); }
   window._weeklyActivatedSync();
-  if (typeof toast === 'function') toast(i >= 0 ? name + ' back on IR for Week ' + wk : name + ' activated for Week ' + wk + ' — back in the rankings pool');
+  if (typeof toast === 'function') toast(i >= 0 ? name + ' back out for Week ' + wk : name + ' activated for Week ' + wk + ' — back in the rankings pool');
   try {
     if (typeof currentMode !== 'undefined' && currentMode === 'weekly' && typeof window._weeklyReconcileBoard === 'function') {
       window._weeklyReconcileBoard('jacks');
@@ -7337,7 +7361,7 @@ function _assumeOutChip(d) {
   if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return '';
   // Activated off IR this week (Jack's ACTIVATE): chip puts him back on IR
   const act = d._injPreAct !== undefined
-    ? '<button class="ao-chip ao-act" type="button" data-activate="' + String(d.n).replace(/"/g, '&quot;') + '" title="Activated for week ' + (window._weeklyActiveWeek || 1) + ' (feed still says ' + String(d._injPreAct || '').replace(/"/g, '&quot;') + ') — click to put him back on IR">ACTIVE ✕</button>'
+    ? '<button class="ao-chip ao-act" type="button" data-activate="' + String(d.n).replace(/"/g, '&quot;') + '" title="Activated for week ' + (window._weeklyActiveWeek || 1) + ' (feed still says ' + String(d._injPreAct || '').replace(/"/g, '&quot;') + ') — click to put him back out">ACTIVE ✕</button>'
     : '';
   if (!d.inj) return act;
   return act + _assumeOutChipCore(d);
@@ -10697,7 +10721,7 @@ function render() {
         <td><div class="player-cell pc-row">${d._slImg ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol"><span class="player-name player-name-link" data-cidx="${d.idx}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}${_injPill(d)}</span><span class="player-team">${_ptTeam(d.t)}</span></div><span class="watch-star${w ? ' on' : ''}" data-watch="${dn}" role="button" title="${w ? 'Remove from' : 'Add to'} watchlist">${w ? '★' : '☆'}</span></div></td>
         <td><span class="pos-badge ${d.s}">${d.s}</span></td>
         <td class="pos-rank-cell bye-cell${p.why === 'out' ? ' out-cell' : ''}" title="${p.assumed ? 'Assumed out for week ' + wk + ' (Jack\'s call) — ' : ''}${p.why === 'out' ? String(d.inj || '').replace(/"/g, '&quot;') : 'Bye week'}">${p.code || 'BYE'}</td>
-        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.assumed ? '<b class="bye-assumed" title="Jack assumes he sits this week — not yet ruled out">ASSUMED OUT</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}${p.assumed && typeof window.isAdmin === 'function' && window.isAdmin() ? ` <button class="bye-undo-btn" type="button" data-assume-undo="${dn}" title="Put ${dn} back in the week ${wk} rankings">UNDO</button>` : ''}${!p.assumed && p.why === 'out' && (p.code === 'IR' || p.code === 'PUP' || p.code === 'SUS') && typeof window.isAdmin === 'function' && window.isAdmin() && window._weeklyCanActivate(d) ? ` <button class="bye-undo-btn" type="button" data-activate="${dn}" title="Coming off ${p.code}? Put ${dn} back in the week ${wk} rankings pool (PROJ from the sim's per-game rate; undo from the ACTIVE chip on his row)">ACTIVATE</button>` : ''}</td>
+        <td colspan="12" class="bye-note">${sp.v != null ? sp.lbl + ' <b>' + sp.v + '</b> · ' : ''}${p.assumed ? '<b class="bye-assumed" title="Jack assumes he sits this week — not yet ruled out">ASSUMED OUT</b> · ' : ''}${p.why === 'out' ? String(d.inj || 'ruled out').replace(/</g, '&lt;') : 'back for week ' + (wk + 1)}${p.assumed && typeof window.isAdmin === 'function' && window.isAdmin() ? ` <button class="bye-undo-btn" type="button" data-assume-undo="${dn}" title="Put ${dn} back in the week ${wk} rankings">UNDO</button>` : ''}${!p.assumed && p.why === 'out' && (p.code === 'IR' || p.code === 'PUP' || p.code === 'SUS' || p.code === 'OUT') && typeof window.isAdmin === 'function' && window.isAdmin() && window._weeklyCanActivate(d) ? ` <button class="bye-undo-btn" type="button" data-activate="${dn}" title="${p.code === 'OUT' ? 'Playing after all?' : 'Coming off ' + p.code + '?'} Put ${dn} back in the week ${wk} rankings pool (PROJ from the sim's per-game rate; undo from the ACTIVE chip on his row)">ACTIVATE</button>` : ''}</td>
       </tr>`;
     });
     return h;
@@ -14477,6 +14501,21 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     });
   }
   window.addEventListener('resize', sync);
+  // Sideways scroll (2026-10-20, Jack): #pageRankings is the X scroller too, so on a
+  // laptop a wide board dragged the viewport-wide ticker / controls / stats rows left
+  // with the table and the rows showed through the gap on the right. Counter-shift
+  // everything above the table by scrollLeft. Cleared at 0 so the transform never
+  // re-parents fixed popovers (TEAMS sheet on phones) in the normal case.
+  let _xLast = 0;
+  page.addEventListener('scroll', () => {
+    const x = page.scrollLeft;
+    if (x === _xLast) return;
+    _xLast = x;
+    for (const el of page.children) {
+      if (el.classList.contains('table-wrap') || el.tagName === 'STYLE') continue;
+      el.style.transform = x ? 'translateX(' + x + 'px)' : '';
+    }
+  }, { passive: true });
   // Breakpoint crossings flip the bar between sticky and static WITHOUT changing
   // its height, so neither the observer nor (in some embedded/emulated viewports)
   // a resize event necessarily lands. matchMedia fires on the flip itself.
@@ -21712,7 +21751,7 @@ function openPlayerCard(d, ctxMode) {
             ${(() => { const _of = window._offRisk ? window._offRisk(d) : null; return _of && _of.src === 'flag' ? `<span class="inj-pill" data-status="SUS" title="${String('Off-field risk: ' + _of.note + (_of.at ? ' (flagged ' + _of.at + ')' : '')).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">OFF-FIELD</span>` : ''; })()}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && ['QB', 'RB', 'WR', 'TE'].includes(d.s)) ? `<button id="cardOffToggle" title="${window._offMap[d.n] ? 'Clear the off-field risk flag' : 'Flag off-field risk (pending legal case, suspension risk, holdout...) — the card cautions that the market may be discounting risk the model cannot see and holds back BUY LOW. Applies for every user immediately.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${window._offMap[d.n] ? 'var(--green)' : '#f59e0b'};background:transparent;color:${window._offMap[d.n] ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${window._offMap[d.n] ? 'CLEAR OFF-FIELD' : 'FLAG OFF-FIELD'}</button>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026 && d.s !== 'DST' && !window._irIsOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow() && typeof window._weeklyAssumeOutToggle === 'function') ? (() => { const _aw = window._weeklyActiveWeek || 1, _on = window._weeklyAssumedOut(d.n, _aw);
-              if (typeof window._weeklyCanActivate === 'function' && window._weeklyCanActivate(d)) { const _ac = d._injPreAct !== undefined; return `<button id="cardAssumeOutToggle" data-act="1" title="${_ac ? 'Put him back on IR for Week ' + _aw + ' (the feed still says ' + String(d._injPreAct || '').replace(/"/g, '&quot;') + ')' : 'He is being activated: back in the Week ' + _aw + ' rankings pool (out of the BYE / OUT row, PROJ from the sim per-game rate). Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_ac ? '#f59e0b' : 'var(--green)'};background:transparent;color:${_ac ? '#f59e0b' : 'var(--green)'};white-space:nowrap">${_ac ? 'BACK TO IR WEEK ' + _aw : 'ACTIVATE WEEK ' + _aw}</button>`; }
+              if (typeof window._weeklyCanActivate === 'function' && window._weeklyCanActivate(d)) { const _ac = d._injPreAct !== undefined; return `<button id="cardAssumeOutToggle" data-act="1" title="${_ac ? 'Put him back out for Week ' + _aw + ' (the feed still says ' + String(d._injPreAct || '').replace(/"/g, '&quot;') + ')' : 'He is being activated: back in the Week ' + _aw + ' rankings pool (out of the BYE / OUT row, PROJ from the sim per-game rate). Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_ac ? '#f59e0b' : 'var(--green)'};background:transparent;color:${_ac ? '#f59e0b' : 'var(--green)'};white-space:nowrap">${_ac ? 'BACK OUT WEEK ' + _aw : 'ACTIVATE WEEK ' + _aw}</button>`; }
               return `<button id="cardAssumeOutToggle" title="${_on ? 'Put him back on the Week ' + _aw + ' board' : 'Treat him as out for Week ' + _aw + ' before the designation lands: pulled off the weekly board into the BYE / OUT row, weekly PROJ 0, OPP reads OUT. Weekly slot kept — undo any time. Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_on ? 'var(--green)' : '#f59e0b'};background:transparent;color:${_on ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${_on ? 'BACK IN WEEK ' + _aw : 'ASSUME OUT WEEK ' + _aw}</button>`; })() : ''}
           </div>
           ${_playerRoleRow(d)}

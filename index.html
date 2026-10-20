@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-20-dxstrict" as="script">
+<link rel="preload" href="app.js?v=2026-10-20-ctlfold" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -1196,7 +1196,9 @@ body.mff-embed .season-strip{display:none!important}
 <!-- Phone controls collapse (2026-10-09, Jack): ≤600px the MODEL / FORMAT rows,
      toolbar, SCORING row and the extra position filters fold behind this bar;
      the summary mirrors the live state (accent when a filter is on). State in
-     localStorage mff_rnk_mob_ctl. Hidden on desktop. -->
+     localStorage mff_rnk_mob_ctl. Laptop / desktop (2026-10-20, Jack): the same
+     button folds MODEL / FORMAT / week / VIEW / SCORING and the stats line, open
+     by default (body.rnk-desk-ctl-closed, localStorage mff_rnk_desk_ctl). -->
 <button type="button" id="rnkMobCtlToggle" class="rnk-mob-ctl" onclick="window._toggleRnkMobCtl()" aria-expanded="false" aria-controls="rnkFilterRows"><span class="rmc-lbl">FILTERS</span><span id="rnkMobCtlSummary" class="rmc-sum"></span><span id="rnkMobCtlArrow" class="rmc-arrow">▾</span></button>
 <div class="toolbar">
 <button class="tb-btn" id="btnSave" title="Save rankings & tiers to cloud" style="display:none">
@@ -1560,6 +1562,23 @@ CLEAR ALL
     body:not(.rnk-mob-ctl-open) #rnkFilterRows #rookiePickToggle,
     body:not(.rnk-mob-ctl-open) #rnkFilterRows #posLockToggle{display:none!important}
     body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters:not(#rookieSubPosFilter) .pos-btn{flex:0 0 auto}
+  }
+  /* Laptop / desktop collapse (2026-10-20, Jack): the whole control stack is sticky,
+     ~460px pinned over the table on a laptop. Collapsed leaves search + toolbar +
+     this FILTERS pill (summary of the hidden state) + the position row. Everything
+     outside the two phone queries above; app.js _toggleRnkMobCtl picks the mode. */
+  @media (min-width:901px), (min-width:601px) and (min-height:521px){
+    #rnkMobCtlToggle{display:inline-flex;align-items:center;gap:8px;max-width:440px;padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+    #rnkMobCtlToggle:hover{border-color:var(--accent)}
+    #rnkMobCtlToggle .rmc-lbl{color:var(--text2);flex:0 0 auto}
+    #rnkMobCtlToggle .rmc-sum{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #rnkMobCtlToggle .rmc-arrow{flex:0 0 auto;color:var(--text2);transition:transform .15s}
+    body:not(.rnk-desk-ctl-closed) #rnkMobCtlToggle .rmc-sum{display:none}
+    body:not(.rnk-desk-ctl-closed) #rnkMobCtlToggle .rmc-arrow{transform:rotate(180deg)}
+    body.rnk-desk-ctl-closed #pageRankings .filter-row-top,
+    body.rnk-desk-ctl-closed #pageRankings #adminViewToggle,
+    body.rnk-desk-ctl-closed #pageRankings #viewOptsWrap,
+    body.rnk-desk-ctl-closed #pageRankings #statsRow{display:none!important}
   }
   /* === WEEKLY FORMAT (admin-only) column swap ===
      Default state: OPP + TEAM TOTAL columns hidden, ADP/AGE/P-SOS visible.
@@ -6548,7 +6567,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-20-dxstrict"></script>
+<script defer src="app.js?v=2026-10-20-ctlfold"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -220,6 +220,7 @@ function kickoffMs(kicks, wk, tm) {
   const seasonAgg = {};
   const rosAgg = {};   // REST-OF-SEASON LOCK (2026-10-08): per player, every future week's model mean / Clay-form (jsPre) / shadow (ncMean), half frame
 
+  const debutOut = {};   // {player: {wk, tm}}: the week his first game for a new team is docked x.7 (site NEW TEAM DEBUT label)
   for (let wk = 1; wk <= WEEKS; wk++) {
     const rows = {};
     // per-player weekly projections in all three formats
@@ -237,6 +238,7 @@ function kickoffMs(kicks, wk, tm) {
       }
       const mH = E.effMean(wpH);
       if (!(mH > (p.isDST ? 0 : 0.4))) return;
+      if (!p.isDST && /\+debut/.test(wpH.ncSrc || '') && debutOut[p.name] == null) debutOut[p.name] = { wk, tm: p.tm };   // NEW TEAM DEBUT label (engine newTeamDebutMult)
       if (wk > currentWeek && !p.isDST) { const ra = rosAgg[p.name] || (rosAgg[p.name] = { pos: p.pos, tm: p.tm, w: {} }); ra.w[wk] = [+mH.toFixed(2), wpH.jsPre != null ? +wpH.jsPre.toFixed(2) : null, wpH.ncMean != null ? +wpH.ncMean.toFixed(2) : null, wpH.ncQbf != null && wpH.ncQbf !== 1 ? +wpH.ncQbf.toFixed(4) : 1];   /* [3] = shadow QB floor multiplier inside ncMean (2026-10-09, grade_ros_lock.py) */ }
       const wpP = E.weeklyProjection(p, wk, scP, schedule);
       const wpS = E.weeklyProjection(p, wk, scS, schedule);
@@ -753,7 +755,8 @@ function kickoffMs(kicks, wk, tm) {
     injKd: injKd,
     injRes: injRes,
     seasonScen: seasonScenOut,
-    ifSits: ifSitsOut
+    ifSits: ifSitsOut,
+    debut: debutOut
   };
   fs.writeFileSync(OUT_JSON, JSON.stringify(payload));
   const jsHeader =

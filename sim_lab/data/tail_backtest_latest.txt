@@ -1,14 +1,34 @@
-Tail-market backtest: 586 player-weeks with a prop board and a box score, weeks [4, 5]
+W7: no actuals yet — skipped
+Tail-market backtest: 1758 player-weeks with a prop board and a box score, weeks [1, 2, 3, 4, 5, 6]
 
 === 1. TD COUNT — anytime-only Poisson vs two-point (anytime + 2+ market) ===
-rows with anytime odds 584; with a 2+ market 0 (weeks [])
-  heavy favorites (P>=.55, all weeks) n 30: actual 0.900 TD/g vs Poisson 0.823
+rows with anytime odds 1756; with a 2+ market 264 (weeks [6])
+  ALL                    n  264  actual TD/g 0.223 | Poisson 0.261  two-pt 0.273 | MAE pts Poisson 2.060 two-pt 2.102 (diff +0.042 [+0.034,+0.050]) | 2+ rate actual 0.034 Poisson 0.039 market 0.043
+  implied 0.00-0.30      n  195  actual TD/g 0.169 | Poisson 0.160  two-pt 0.172 | MAE pts Poisson 1.628 two-pt 1.680 (diff +0.052 [+0.045,+0.060]) | 2+ rate actual 0.026 Poisson 0.014 market 0.018
+  implied 0.30-0.45      n   39  actual TD/g 0.333 | Poisson 0.407  two-pt 0.415 | MAE pts Poisson 2.929 two-pt 2.941 (diff +0.013 [-0.003,+0.027]) | 2+ rate actual 0.026 Poisson 0.064 market 0.066
+  implied 0.45-0.55      n   15  actual TD/g 0.200 | Poisson 0.585  two-pt 0.595 | MAE pts Poisson 3.229 two-pt 3.254 (diff +0.026 [-0.005,+0.055]) | 2+ rate actual 0.000 Poisson 0.117 market 0.122
+  implied 0.55-1.01      n   15  actual TD/g 0.667 | Poisson 0.878  two-pt 0.898 | MAE pts Poisson 4.254 two-pt 4.259 (diff +0.005 [-0.062,+0.076]) | 2+ rate actual 0.200 Poisson 0.220 market 0.233
+  QB                     n   28  actual TD/g 0.071 | Poisson 0.201  two-pt 0.212 | MAE pts Poisson 1.472 two-pt 1.526 (diff +0.055 [+0.032,+0.075]) | 2+ rate actual 0.000 Poisson 0.023 market 0.026
+  RB                     n   65  actual TD/g 0.369 | Poisson 0.384  two-pt 0.398 | MAE pts Poisson 2.564 two-pt 2.590 (diff +0.026 [+0.006,+0.045]) | 2+ rate actual 0.077 Poisson 0.073 market 0.080
+  WR                     n  111  actual TD/g 0.171 | Poisson 0.231  two-pt 0.242 | MAE pts Poisson 1.910 two-pt 1.960 (diff +0.050 [+0.040,+0.059]) | 2+ rate actual 0.009 Poisson 0.029 market 0.033
+  TE                     n   60  actual TD/g 0.233 | Poisson 0.212  two-pt 0.222 | MAE pts Poisson 2.065 two-pt 2.107 (diff +0.042 [+0.028,+0.055]) | 2+ rate actual 0.050 Poisson 0.026 market 0.028
+  (two-pt diff < 0 = the 2+ market read beat Poisson; CI excluding 0 = trust it)
+  heavy favorites (P>=.55, all weeks) n 82: actual 1.012 TD/g vs Poisson 0.839
 
 === 2. STAT-LINE JUICE — face value vs price-skewed mean ===
-  residual sigma (actual - line): rec 2.2, rcy 29.3, ry 26.4, py 74.1
-  rec: 0 priced rows — not enough yet
-  rcy: 0 priced rows — not enough yet
-  ry: 0 priced rows — not enough yet
-  py: 0 priced rows — not enough yet
+  residual sigma (actual - line): rec 2.1, rcy 27.3, ry 23.6, py 72.6
+  rec n  172  bias face -0.33 adj -0.17 | MAE face 1.65 adj 1.62 (diff -0.030 [-0.069,+0.007]) | juiced side (|p-.5|>=.04, n 104) landed 0.606 | pts/g swing 0.12
+      RB: n 47 MAE face 1.24 adj 1.28
+      WR: n 84 MAE face 1.82 adj 1.77
+      TE: n 41 MAE face 1.78 adj 1.70
+  rcy n  173  bias face -5.20 adj -5.70 | MAE face 18.08 adj 18.29 (diff +0.205 [-0.050,+0.457]) | juiced side (|p-.5|>=.04, n 15) landed 0.600 | pts/g swing 0.14
+      RB: n 48 MAE face 11.48 adj 12.30
+      WR: n 84 MAE face 22.13 adj 22.21
+      TE: n 41 MAE face 17.51 adj 17.25
+  ry  n   81  bias face +2.54 adj +2.02 | MAE face 14.59 adj 14.99 (diff +0.401 [+0.052,+0.837]) | juiced side (|p-.5|>=.04, n 5) landed 0.800 | pts/g swing 0.11
+      QB: n 28 MAE face 8.43 adj 8.71
+      RB: n 51 MAE face 18.53 adj 18.68
+  py  n   27  bias face -5.09 adj -5.10 | MAE face 42.94 adj 42.95 (diff +0.007 [-0.656,+0.633]) | juiced side (|p-.5|>=.04, n 0) landed nan | pts/g swing 0.07
+      QB: n 27 MAE face 42.94 adj 42.95
 
   (adj diff < 0 with the CI below 0 = wire it; juiced-side rate near .50 = the price carries no extra information)

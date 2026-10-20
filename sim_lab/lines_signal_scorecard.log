@@ -1,11 +1,11 @@
-=== lines-up + practice-trend scorecard: 388 designated player-weeks, weeks [1, 2, 3, 4, 5] (pre-inactives state) ===
+=== lines-up + practice-trend scorecard: 516 designated player-weeks, weeks [1, 2, 3, 4, 5, 6] (pre-inactives state) ===
 
   game status: Questionable
-    all                                            played  45/ 73  ( 62%)
-    lines up at 2+ books                           played  30/ 35  ( 86%)
-    lines up at 1 book                             played   1/  4  ( 25%)
-    no lines, usually has them                     played   7/ 17  ( 41%)
-    no lines, never lined                          played   7/ 17  ( 41%)
+    all                                            played  61/ 97  ( 63%)
+    lines up at 2+ books                           played  40/ 49  ( 82%)
+    lines up at 1 book                             played   2/  5  ( 40%)
+    no lines, usually has them                     played   9/ 21  ( 43%)
+    no lines, never lined                          played  10/ 22  ( 45%)
 
   game status: Doubtful
     all                                            played   0/  9  (  0%)
@@ -13,57 +13,61 @@
     no lines, never lined                          played   0/  6  (  0%)
 
   game status: Out
-    all                                            played   0/ 75  (  0%)
-    no lines, usually has them                     played   0/ 52  (  0%)
-    no lines, never lined                          played   0/ 23  (  0%)
+    all                                            played   0/102  (  0%)
+    lines up at 2+ books                           played   0/  1  (  0%)
+    no lines, usually has them                     played   0/ 73  (  0%)
+    no lines, never lined                          played   0/ 28  (  0%)
 
   game status: none (on the report, no designation)
-    all                                            played 208/231  ( 90%)
-    lines up at 2+ books                           played 159/159  (100%)
+    all                                            played 254/308  ( 82%)
+    lines up at 2+ books                           played 200/206  ( 97%)
     lines up at 1 book                             played   1/  1  (100%)
-    no lines, usually has them                     played  11/ 24  ( 46%)
-    no lines, never lined                          played  37/ 47  ( 79%)
+    no lines, usually has them                     played  13/ 33  ( 39%)
+    no lines, never lined                          played  40/ 68  ( 59%)
 
   Questionable by the week's practice sequence:
-    last FP, upgraded                              played   8/ 11  ( 73%)
-    last FP, flat                                  played   2/  2  (100%)
-    last LP, upgraded                              played  10/ 17  ( 59%)
-    last LP, flat                                  played  20/ 31  ( 65%)
+    last FP, upgraded                              played  13/ 16  ( 81%)
+    last FP, flat                                  played   5/  6  ( 83%)
+    last LP, upgraded                              played  11/ 22  ( 50%)
+    last LP, flat                                  played  26/ 38  ( 68%)
     last LP, downgraded                            played   1/  1  (100%)
-    last LP, one day                               played   0/  1  (  0%)
-    last DNP, flat                                 played   2/  5  ( 40%)
+    last LP, one day                               played   0/  2  (  0%)
+    last DNP, flat                                 played   2/  6  ( 33%)
     last DNP, downgraded                           played   2/  5  ( 40%)
+    last DNP, one day                              played   1/  1  (100%)
 
   Questionable, lines x last practice:
-    last FP, lines at 2+ books                     played   7/  7  (100%)
-    last FP, no lines                              played   3/  6  ( 50%)
-    last LP, lines at 2+ books                     played  21/ 26  ( 81%)
-    last LP, no lines                              played  10/ 22  ( 45%)
-    last DNP, lines at 2+ books                    played   2/  2  (100%)
+    last FP, lines at 2+ books                     played  13/ 13  (100%)
+    last FP, no lines                              played   5/  9  ( 56%)
+    last LP, lines at 2+ books                     played  24/ 32  ( 75%)
+    last LP, no lines                              played  13/ 28  ( 46%)
+    last DNP, lines at 2+ books                    played   3/  4  ( 75%)
     last DNP, no lines                             played   1/  6  ( 17%)
 
-  sample for a weight: 73 Questionable player-weeks so far (target ~100 before the lines signal moves a projection)
+  sample for a weight: 97 Questionable player-weeks so far (target ~100 before the lines signal moves a projection)
 
-  week 5 Questionable detail:
-    Alvin Kamara           RB NO  DNP-LP-LP      5 books  PLAYED
-    Keenan Allen           WR IND LP-LP-FP       5 books  PLAYED
-    Rhamondre Stevenson    RB NE  LP-LP-LP       5 books  PLAYED
-    Zay Flowers            WR BAL LP-LP-LP-LP    5 books  PLAYED
-    George Holani          RB SEA LP-LP          5 books  PLAYED
-    Jaylen Wright          RB MIA LP-LP          5 books  PLAYED
-    Ja'Marr Chase          WR CIN DNP-LP-FP      4 books  PLAYED
-    Justin Jefferson       WR MIN LP-LP-LP       4 books  PLAYED
-    Tee Higgins            WR CIN DNP-DNP-FP     4 books  PLAYED
-    Terry McLaurin         WR WAS DNP-DNP-LP     4 books  PLAYED
-    Jordan Addison         WR MIN DNP-LP-LP      4 books  sat
-    Carnell Tate           WR TEN LP-LP          4 books  PLAYED
-    Ladd McConkey          WR LAC DNP-DNP        1 books  PLAYED
-    Caleb Williams         QB CHI DNP-DNP-LP     0 books  sat
-    Charlie Kolar          TE LAC LP-LP          0 books  PLAYED
-    Colbie Young           WR CIN LP-FP-LP       0 books  sat
-    Darius Slayton         WR IND LP             0 books  sat
-    DJ Moore               WR BUF DNP-LP-LP      0 books  sat
-    Rico Dowdle            RB PIT LP-LP-LP       0 books  sat
-    Barion Brown           WR NO  DNP-LP-FP      0 books  PLAYED
-    Jeremy McNichols       RB WAS LP-LP-LP       0 books  sat
-    Ashton Jeanty          RB LV  LP-DNP         0 books  PLAYED
+  week 6 Questionable detail:
+    Caleb Williams         QB CHI FP-FP-FP       5 books  PLAYED
+    Kenyon Sadiq           TE NYJ LP-LP-FP       5 books  PLAYED
+    Rico Dowdle            RB PIT LP-FP-FP       5 books  PLAYED
+    Stefon Diggs           WR WAS DNP-LP-LP      5 books  sat
+    Alvin Kamara           RB NO  LP-LP-LP       5 books  PLAYED
+    Chris Olave            WR NO  DNP-DNP-LP     5 books  PLAYED
+    Omar Cooper Jr.        WR NYJ LP-LP-FP       5 books  PLAYED
+    Mike Evans             WR SF  DNP-DNP-DNP    5 books  sat
+    DK Metcalf             WR PIT DNP            5 books  PLAYED
+    Tyler Warren           TE IND LP             5 books  sat
+    DJ Moore               WR BUF DNP-DNP-LP     4 books  sat
+    Ja'Kobi Lane           WR BAL FP-FP-FP       3 books  PLAYED
+    A.J. Brown             WR NE  LP-LP-LP       2 books  PLAYED
+    Tyjae Spears           RB TEN LP-DNP-FP      2 books  PLAYED
+    Savion Williams        WR GB  LP-LP-LP-LP    1 books  PLAYED
+    Brenen Thompson        WR LAC LP-LP-LP       0 books  PLAYED
+    Quinshon Judkins       RB CLE DNP-DNP-LP     0 books  sat
+    TreVeyon Henderson     RB NE  LP-LP-LP       0 books  PLAYED
+    KeAndre Lambert-Smith  WR LAC LP-LP-FP       0 books  PLAYED
+    Sean Tucker            RB TB  DNP-LP-LP      0 books  sat
+    Trevor Etienne         RB CAR FP-FP-FP       0 books  PLAYED
+    Josh Palmer            WR BUF LP-LP-LP       0 books  PLAYED
+    Christian Kirk         WR SF  LP-LP-LP       0 books  sat
+    Jeremy McNichols       RB WAS FP-FP-FP       0 books  sat

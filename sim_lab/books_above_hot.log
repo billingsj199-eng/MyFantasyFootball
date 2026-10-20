@@ -1,0 +1,51 @@
+rows 705 RB/WR/TE player-weeks with full lines and 2+ prior games, weeks [1, 2, 3, 4, 5, 6]
+  ALL                                                  n 705  actual  7.94  ours  7.78 (model  7.55)  market  7.56  | act/ours 1.020  act/mkt 1.051  | ours closer  49%  MAE ours 4.53 mkt 4.52  best blend w_mkt 0.6  weeks act>ours 2/4
+     RB                                                n 196  actual  9.67  ours  9.71 (model  9.37)  market  9.69  | act/ours 0.997  act/mkt 0.998  | ours closer  51%  MAE ours 4.91 mkt 5.02  best blend w_mkt 0.1  weeks act>ours 2/4
+     WR                                                n 332  actual  8.02  ours  7.61 (model  7.49)  market  7.31  | act/ours 1.054  act/mkt 1.097  | ours closer  48%  MAE ours 4.53 mkt 4.46  best blend w_mkt 0.8  weeks act>ours 3/4
+     TE                                                n 177  actual  5.86  ours  5.96 (model  5.67)  market  5.66  | act/ours 0.983  act/mkt 1.036  | ours closer  47%  MAE ours 4.09 mkt 4.07  best blend w_mkt 0.9  weeks act>ours 1/4
+  market 10%+ above ours                               n 110  actual  6.87  ours  6.22 (model  5.86)  market  7.96  | act/ours 1.105  act/mkt 0.863  | ours closer  59%  MAE ours 4.41 mkt 4.61  best blend w_mkt 0.1  weeks act>ours 2/4
+     RB                                                n  51  actual  6.63  ours  6.21 (model  5.89)  market  8.10  | act/ours 1.067  act/mkt 0.818  | ours closer  63%  MAE ours 4.14 mkt 4.59  best blend w_mkt 0.0  weeks act>ours 1/4
+     WR                                                n  34  actual  8.41  ours  6.68 (model  6.06)  market  8.50  | act/ours 1.260  act/mkt 0.990  | ours closer  44%  MAE ours 5.19 mkt 4.84  best blend w_mkt 0.7  weeks act>ours 3/4
+     TE                                                n  25  actual  5.29  ours  5.63 (model  5.50)  market  6.97  | act/ours 0.940  act/mkt 0.759  | ours closer  72%  MAE ours 3.88 mkt 4.34  best blend w_mkt 0.0  weeks act>ours 1/4
+  hot                                                  n 238  actual  7.96  ours  8.07 (model  7.77)  market  8.10  | act/ours 0.987  act/mkt 0.983  | ours closer  48%  MAE ours 4.58 mkt 4.58  best blend w_mkt 0.5  weeks act>ours 1/4
+     RB                                                n  54  actual  9.84  ours  9.91 (model  9.71)  market 10.18  | act/ours 0.993  act/mkt 0.967  | ours closer  52%  MAE ours 4.84 mkt 5.02  best blend w_mkt 0.2  weeks act>ours 1/4
+     WR                                                n 118  actual  8.24  ours  8.13 (model  7.76)  market  8.21  | act/ours 1.013  act/mkt 1.003  | ours closer  44%  MAE ours 4.52 mkt 4.38  best blend w_mkt 0.7  weeks act>ours 3/4
+     TE                                                n  66  actual  5.92  ours  6.44 (model  6.20)  market  6.19  | act/ours 0.919  act/mkt 0.956  | ours closer  53%  MAE ours 4.47 mkt 4.58  best blend w_mkt 0.0  weeks act>ours 1/4
+  heavy usage                                          n 132  actual 12.33  ours 13.09 (model 12.36)  market 12.98  | act/ours 0.942  act/mkt 0.950  | ours closer  56%  MAE ours 5.72 mkt 5.86  best blend w_mkt 0.0  weeks act>ours 1/4
+     RB                                                n  46  actual 15.20  ours 15.67 (model 15.14)  market 15.35  | act/ours 0.970  act/mkt 0.990  | ours closer  50%  MAE ours 5.82 mkt 5.82  best blend w_mkt 0.5  weeks act>ours 1/4
+     WR                                                n  53  actual 11.96  ours 12.95 (model 12.07)  market 12.98  | act/ours 0.923  act/mkt 0.922  | ours closer  64%  MAE ours 5.98 mkt 6.31  best blend w_mkt 0.0  weeks act>ours 1/4
+     TE                                                n  33  actual  8.94  ours  9.71 (model  8.94)  market  9.69  | act/ours 0.921  act/mkt 0.922  | ours closer  52%  MAE ours 5.16 mkt 5.18  best blend w_mkt 0.0  weeks act>ours 1/4
+  hot + heavy usage                                    n  73  actual 11.97  ours 12.92 (model 12.10)  market 12.94  | act/ours 0.926  act/mkt 0.925  | ours closer  59%  MAE ours 5.67 mkt 5.89  best blend w_mkt 0.0  weeks act>ours 1/4
+     RB                                                n  17  actual 15.86  ours 16.55 (model 16.05)  market 16.40  | act/ours 0.959  act/mkt 0.967  | ours closer  47%  MAE ours 5.63 mkt 5.81  best blend w_mkt 0.5  weeks act>ours 2/4
+     WR                                                n  35  actual 12.09  ours 13.06 (model 11.99)  market 13.16  | act/ours 0.926  act/mkt 0.919  | ours closer  69%  MAE ours 5.77 mkt 6.04  best blend w_mkt 0.0  weeks act>ours 1/4
+     TE                                                n  21  actual  8.60  ours  9.75 (model  9.11)  market  9.78  | act/ours 0.882  act/mkt 0.879  | ours closer  52%  MAE ours 5.55 mkt 5.70  best blend w_mkt 0.0  weeks act>ours 1/4
+  hot + heavy usage, market 10%+ above ours            n  16  actual  9.84  ours  9.55 (model  8.97)  market 11.30  | act/ours 1.031  act/mkt 0.871  | ours closer  69%  MAE ours 6.81 mkt 7.56  best blend w_mkt 0.0  weeks act>ours 1/4
+     RB                                                n 3
+     WR                                                n   8  actual  9.74  ours  9.99 (model  9.05)  market 11.55  | act/ours 0.975  act/mkt 0.843  | ours closer  75%  MAE ours 7.12 mkt 8.17  best blend w_mkt 0.0  weeks act>ours 1/3
+     TE                                                n   5  actual  8.42  ours  8.02 (model  7.69)  market  9.15  | act/ours 1.049  act/mkt 0.921  | ours closer  80%  MAE ours 7.39 mkt 8.12  best blend w_mkt 0.0  weeks act>ours 1/3
+  heavy usage, market 10%+ above ours                  n  23  actual 10.13  ours 10.20 (model  9.63)  market 12.11  | act/ours 0.994  act/mkt 0.837  | ours closer  61%  MAE ours 5.97 mkt 6.53  best blend w_mkt 0.0  weeks act>ours 1/4
+     RB                                                n   7  actual 11.81  ours 11.59 (model 11.17)  market 14.08  | act/ours 1.020  act/mkt 0.839  | ours closer  43%  MAE ours 4.31 mkt 4.42  best blend w_mkt 0.5  weeks act>ours 1/3
+     WR                                                n   9  actual  9.12  ours 10.25 (model  9.41)  market 12.08  | act/ours 0.890  act/mkt 0.755  | ours closer  78%  MAE ours 7.23 mkt 8.61  best blend w_mkt 0.0  weeks act>ours 1/4
+     TE                                                n   7  actual  9.76  ours  8.74 (model  8.39)  market 10.17  | act/ours 1.116  act/mkt 0.959  | ours closer  57%  MAE ours 6.01 mkt 5.97  best blend w_mkt 0.7  weeks act>ours 1/3
+  hot, market 10%+ above ours                          n  54  actual  7.66  ours  6.66 (model  6.37)  market  8.52  | act/ours 1.151  act/mkt 0.899  | ours closer  57%  MAE ours 5.59 mkt 5.71  best blend w_mkt 0.5  weeks act>ours 2/4
+     RB                                                n  20  actual  7.16  ours  6.03 (model  6.01)  market  7.87  | act/ours 1.187  act/mkt 0.909  | ours closer  60%  MAE ours 5.12 mkt 5.43  best blend w_mkt 0.2  weeks act>ours 2/4
+     WR                                                n  23  actual  9.39  ours  7.50 (model  6.87)  market  9.56  | act/ours 1.251  act/mkt 0.982  | ours closer  43%  MAE ours 5.99 mkt 5.59  best blend w_mkt 0.7  weeks act>ours 3/4
+     TE                                                n  11  actual  4.96  ours  6.04 (model  5.97)  market  7.55  | act/ours 0.822  act/mkt 0.657  | ours closer  82%  MAE ours 5.58 mkt 6.47  best blend w_mkt 0.0  weeks act>ours 1/3
+
+  rows: hot + heavy usage with the market 10%+ above us
+    W3 WR Jalen Coker              so far  20.2 | ours   8.8 model   6.4 mkt  10.6 | actual   2.8
+    W4 TE Dalton Schultz           so far  10.0 | ours   7.6 model   6.9 mkt   8.5 | actual   1.9
+    W5 RB Ashton Jeanty            so far  16.1 | ours   5.7 model   5.7 mkt  12.4 | actual   9.2
+    W5 WR Carnell Tate             so far   8.9 | ours   6.7 model   6.3 mkt   8.4 | actual   1.1
+    W5 WR Chris Olave              so far  18.1 | ours  11.7 model  10.5 mkt  13.8 | actual   6.6
+    W5 WR Christian Watson         so far  16.8 | ours   9.9 model   8.8 mkt  11.0 | actual  29.3
+    W5 TE Dalton Schultz           so far   8.0 | ours   6.3 model   6.3 mkt   7.3 | actual   4.5
+    W5 TE Isaiah Likely            so far  10.5 | ours   7.4 model   7.0 mkt   8.4 | actual  26.9
+    W5 RB Jonathan Taylor          so far  20.3 | ours  14.8 model  14.8 mkt  16.5 | actual   9.7
+    W5 WR Matthew Golden           so far  12.2 | ours   9.2 model   7.8 mkt  10.2 | actual  17.3
+    W5 WR Michael Wilson           so far  11.1 | ours  12.7 model  12.4 mkt  14.5 | actual   5.3
+    W5 WR Tee Higgins              so far  14.6 | ours   8.6 model   9.2 mkt   9.8 | actual   3.2
+    W6 WR Chris Olave              so far  15.8 | ours  12.3 model  11.1 mkt  14.1 | actual  12.3
+    W6 RB Chuba Hubbard            so far  18.5 | ours  12.2 model  12.3 mkt  13.7 | actual  18.6
+    W6 TE Juwan Johnson            so far  10.7 | ours   7.5 model   7.3 mkt   8.4 | actual   0.0
+    W6 TE Trey McBride             so far  14.0 | ours  11.2 model  10.8 mkt  13.1 | actual   8.8

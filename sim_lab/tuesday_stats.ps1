@@ -22,6 +22,12 @@ function Write-Log($msg) {
 Set-Content -Path $Log -Value '' -Encoding utf8
 Write-Log '=== tuesday stats chain start ==='
 
+# Repo turn (2026-10-20): the fetch below already writes site data files, so the
+# chain holds the turn from here through the dynasty SIM publish, then hands it back
+# before the git-free tail (JS model, Sim Lab deploy, extensions, field scoring).
+. 'E:\MyFantasyFootball\MyFantasyFootball Files\scripts\repo_guard.ps1'
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'Tuesday stats chain')) { exit 0 }
+
 Set-Location $DataDir
 $out = & python 'fetch_weekly_stats.py' 2>&1 | Out-String
 Write-Log $out
@@ -103,6 +109,7 @@ if (-not $changedStats) {
 # skips itself until the DYN SIM view is merged into the site. Non-fatal.
 & powershell -NoProfile -ExecutionPolicy Bypass -File 'E:\MyFantasyFootball\sim_lab\dynasty_sim_refresh.ps1' -Log $Log
 if ($LASTEXITCODE -ne 0) { Write-Log "DYNASTY SIM REFRESH FAILED (exit $LASTEXITCODE) - continuing" }
+Exit-RepoTurn
 
 # Volume x share model inputs for the JS model (shares/team volumes update
 # as the season's weekly stats land). Non-fatal — local-only site.

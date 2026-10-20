@@ -5894,7 +5894,7 @@ function _ivReportTone(d) {
 function _ivOwnEstimate(d, x, raw, ahead) {
   const R = window.SIM_PROJ_2026 && window.SIM_PROJ_2026.injRes;
   if (!R || !R.cont || !ahead.length) return null;
-  if (x.grp === 'acl' || x.grp === 'achilles') return null;   // no week guessed for a likely season-ender
+  if ((x.grp === 'acl' || x.grp === 'achilles') && (x.code === 'IR' || x.code === 'PUP')) return null;   // no week guessed for a likely season-ender (reserve list only, see _ivTypical)
   const tone = _ivReportTone(d);
   const serious = !!tone && tone.t === 'serious', minor = !!tone && tone.t === 'minor';
   const cum = _ivCum(R, d.s, x.grp, _ivK0(raw, x.cw), serious ? 1 : 0);
@@ -6022,7 +6022,10 @@ function _ivTypical(d, x, raw, ahead) {
     if (sh) pp = _ivSgm(_ivLgt(pp) + sh);
     return { play: pp, cls: cls, byInj: !!sh };
   }
-  if (g === 'acl' || g === 'achilles') return { season: true };
+  // ACL / Achilles reads as season-ending only once he is on a reserve list (2026-10-20, Mike Evans: an aggravated
+  // Achilles tagged Out is not a tear). sim_lab backtest_dx_season.py: Out / Doubtful + Achilles still on the active
+  // roster the next week = season over 1 of 8; moved to IR = 7 of 7. Out alone falls through to the curve below.
+  if ((g === 'acl' || g === 'achilles') && (x.code === 'IR' || x.code === 'PUP')) return { season: true };
   const k0 = _ivK0(raw, x.cw);
   const need = (x.code === 'IR' || x.code === 'PUP') ? Math.max(1, 4 - k0) : 1;   // reserve lists: four games minimum
   const cum = _ivCum(R, pos, g, k0, need);

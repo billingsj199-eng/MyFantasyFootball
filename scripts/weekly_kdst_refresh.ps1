@@ -26,6 +26,8 @@ function Write-Log($msg) {
 
 Set-Location $Repo
 Write-Log '=== weekly K/DST refresh start ==='
+. (Join-Path $PSScriptRoot 'repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'K/DST refresh')) { exit 0 }   # one job at a time (2026-10-20)
 
 # Refuse to run on dirty target files so a half-finished manual session isn't clobbered.
 $Files = @('data/kicker_history.js', 'data/kicker_weekly.js', 'data/dst_history.js', 'data/dst_weekly.js', 'data/kicker_splits.js', 'index.html')
@@ -53,6 +55,7 @@ if (-not $changed) {
     $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'K/DST refresh') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'pushed K/DST refresh' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
+Exit-RepoTurn   # the extension export below writes git-excluded dirs only
 
 # Draft-helper extension data (players.json x3 + sim packs) from the fresh
 # K/DST tables + d.js + Jack's live Firestore boards. Extension dirs are

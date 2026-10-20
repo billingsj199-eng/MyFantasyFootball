@@ -39,6 +39,8 @@ function Run-Step($label, $exe, $argList) {
 
 Set-Location $Repo
 Write-Log ('=== January outcomes refresh start (season {0}) ===' -f $Season)
+. (Join-Path $PSScriptRoot 'repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'January outcomes')) { exit 0 }   # one job at a time (2026-10-20)
 Set-Content -Path $Report -Value ("JM January refresh {0} - completed season {1}" -f (Get-Date -Format 'yyyy-MM-dd'), $Season) -Encoding utf8
 
 # 0. Opponent-grade prior (added 2026-10-05): the completed season's touchdown-neutral

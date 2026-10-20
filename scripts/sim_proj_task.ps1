@@ -50,6 +50,7 @@ Write-Log '=== sim proj export start ==='
 # Repo guard (2026-10-14): never pull/commit on a stuck rebase, detached HEAD or
 # non-main branch (the 10-13 incident); alerts instead. See scripts\repo_guard.ps1.
 . (Join-Path $Repo 'scripts\repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'sim proj export')) { exit 0 }   # one job at a time (2026-10-20); the nested betting pull runs inside this turn
 if (Test-RepoBlocked -Log { param($m) Write-Log $m } -Job 'sim proj export') { exit 0 }
 
 # Refuse to run over uncommitted work on the target files.

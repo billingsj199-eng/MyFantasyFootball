@@ -36,6 +36,8 @@ function Write-Log($msg) {
 
 Set-Location $Repo
 Write-Log '=== postgame stats start ==='
+. (Join-Path $PSScriptRoot 'repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'postgame stats')) { exit 0 }   # one job at a time (2026-10-20)
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
 $Files = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json', 'index.html')

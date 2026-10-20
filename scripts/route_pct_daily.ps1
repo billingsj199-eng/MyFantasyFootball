@@ -47,6 +47,8 @@ function Write-Log($msg) {
 
 Set-Location $Repo
 Write-Log '=== route pct start ==='
+. (Join-Path $PSScriptRoot 'repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'route pct')) { exit 0 }   # one job at a time (2026-10-20)
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
 $Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/team_usage_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'data/usage_trend.js', 'data/coach_profiles.js', 'data/contracts_history.js', 'index.html')

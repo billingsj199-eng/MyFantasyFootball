@@ -38,18 +38,24 @@ Write-Log '=== weekly devy refresh start ==='
 # Commit + push exactly $paths (data files) plus ONLY their ?v= tags in index.html
 # (scripts/stage_vbump.py stages HEAD's index.html with just those tags swapped), so
 # another session's uncommitted index.html edits never block or ride along.
+. (Join-Path $PSScriptRoot 'repo_guard.ps1')
+# Repo turn (2026-10-20) only around each commit, not the whole run: a PFF login wait
+# can hold this job for up to an hour, and its files never overlap the other jobs'
+# (index.html goes through stage_vbump, never the working copy).
 function Commit-Push($paths, $msg) {
-    $chg = git status --porcelain -- @paths
-    if (-not $chg) { Write-Log "$msg - no movement, nothing to commit"; return }
-    git add -- @($paths | Where-Object { Test-Path $_ })
-    $o = & $Python 'scripts\stage_vbump.py' @paths 2>&1 | Out-String
-    Write-Log $o.Trim()
-    git commit -m ('{0} {1}' -f $msg, (Get-Date -Format 'yyyy-MM-dd'))
-    if ($LASTEXITCODE -ne 0) { Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - $msg left uncommitted"; return }
-    # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
-    . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
-    $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'devy refresh') { 0 } else { 1 })
-    if ($LASTEXITCODE -eq 0) { Write-Log "pushed: $msg" } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - $msg commit is local" }
+    if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'devy refresh')) { Write-Log "$msg left uncommitted (no repo turn)"; return }
+    try {
+        $chg = git status --porcelain -- @paths
+        if (-not $chg) { Write-Log "$msg - no movement, nothing to commit"; return }
+        git add -- @($paths | Where-Object { Test-Path $_ })
+        $o = & $Python 'scripts\stage_vbump.py' @paths 2>&1 | Out-String
+        Write-Log $o.Trim()
+        git commit -m ('{0} {1}' -f $msg, (Get-Date -Format 'yyyy-MM-dd'))
+        if ($LASTEXITCODE -ne 0) { Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - $msg left uncommitted"; return }
+        # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
+        $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'devy refresh') { 0 } else { 1 })   # aborts + alerts a conflicted pull --rebase (2026-10-14)
+        if ($LASTEXITCODE -eq 0) { Write-Log "pushed: $msg" } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - $msg commit is local" }
+    } finally { Exit-RepoTurn }
 }
 
 # 1. draft boards -> draftProj (+ new 2027-class adds). Runs FIRST and commits on its

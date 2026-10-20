@@ -46,6 +46,8 @@ if (-not ($force -or $inWindow -or $ageDays -ge 28)) {
     exit 0
 }
 Write-Log ('due: ' + $(if ($force) { 'forced' } elseif ($inWindow) { 'signing window' } else { ('last build {0:N1} days ago' -f $ageDays) }))
+. (Join-Path $PSScriptRoot 'repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'player contracts')) { exit 0 }   # one job at a time (2026-10-20)
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
 $dirty = git status --porcelain -- data/d.js index.html

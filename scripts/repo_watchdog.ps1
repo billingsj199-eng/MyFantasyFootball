@@ -5,6 +5,7 @@
 #
 # Checks (each alert has its own key + 3 h cooldown, see mff_alert.ps1):
 #   repo-unhealthy   rebase / merge in progress (older than 10 min), detached HEAD, not on main
+#   stale-index-lock .git/index.lock older than 10 min with no git process running
 #   unpushed         local main has commits not on origin, oldest > 45 min
 #   conflict-markers committed <<<<<<< / >>>>>>> lines in index.html / app.js / sw.js
 #   stale-sim-export live myfantasyfootball.co sim_proj_2026.json `updated` > 16 h old (Sep-Jan)
@@ -30,6 +31,17 @@ foreach ($op in 'rebase-merge', 'rebase-apply', 'MERGE_HEAD', 'CHERRY_PICK_HEAD'
             $problems += "git $op in progress for $([int]$age) min"
             Send-MffAlert -Key 'repo-unhealthy' -Message "Main checkout stuck: git $op in progress for $([int]$age) min. Automations cannot publish."
         }
+    }
+}
+# 1b. leftover index.lock (2026-10-20: a git that died at 08:32 left one and every
+#     commit failed while this check said "ok"). The next job's Enter-RepoTurn
+#     removes it; this only alerts when it sits with no git running.
+$idxLock = Join-Path $gitDir 'index.lock'
+if (Test-Path $idxLock) {
+    $age = ((Get-Date) - (Get-Item $idxLock).LastWriteTime).TotalMinutes
+    if ($age -gt 10 -and -not (Get-Process git -ErrorAction SilentlyContinue)) {
+        $problems += "stale index.lock $([int]$age) min"
+        Send-MffAlert -Key 'stale-index-lock' -Message "Main checkout has a stale .git/index.lock ($([int]$age) min, no git running) - every commit fails until it is removed."
     }
 }
 $branch = (git symbolic-ref --short -q HEAD 2>$null)

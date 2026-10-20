@@ -26,6 +26,8 @@ function Write-Log($msg) {
 
 Set-Location $Repo
 Write-Log '=== practice pull start ==='
+. (Join-Path $PSScriptRoot 'repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'practice pull')) { exit 0 }   # one job at a time (2026-10-20)
 
 # Refuse to run over uncommitted work on the files this job writes.
 $Files = @('data/practice_2026.js', 'data/practice_days_2026.js', 'index.html')
@@ -53,13 +55,18 @@ if (-not $changed) {
     git add -- @Files
     # pathspec commit: only these files, whatever else happens to be staged
     git commit -m ('Auto practice report {0}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm')) -- @Files
-    git push origin main
     if ($LASTEXITCODE -ne 0) {
-        # main moved on (another session pushed): replay on top, same as the sim export task
-        . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
-        $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'practice report') { 0 } else { 1 })
+        # a bare push after a failed commit says "Everything up-to-date" (exit 0) - never log that as pushed
+        Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - nothing pushed"
+        Send-MffAlert -Key 'commit-failed' -Message 'git commit failed for practice report - changes left uncommitted, site not updated.'
+    } else {
+        git push origin main
+        if ($LASTEXITCODE -ne 0) {
+            # main moved on (another session pushed): replay on top, same as the sim export task
+            $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'practice report') { 0 } else { 1 })   # aborts + alerts a conflicted pull --rebase (2026-10-14)
+        }
+        if ($LASTEXITCODE -eq 0) { Write-Log 'pushed practice report' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
     }
-    if ($LASTEXITCODE -eq 0) { Write-Log 'pushed practice report' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }
 
 $lines = Get-Content $Log

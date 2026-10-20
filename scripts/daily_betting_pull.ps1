@@ -49,6 +49,7 @@ Write-Log '=== daily betting pull start ==='
 # Repo guard (2026-10-14): never pull/commit on a stuck rebase, detached HEAD or
 # non-main branch (the 10-13 incident); alerts instead. See scripts\repo_guard.ps1.
 . (Join-Path $Repo 'scripts\repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'betting-lines pull')) { exit 0 }   # one job at a time (2026-10-20)
 if (Test-RepoBlocked -Log { param($m) Write-Log $m } -Job 'betting-lines pull') { exit 0 }
 
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
@@ -167,6 +168,7 @@ if (-not $changed -and -not $kChanged) {
         Write-Log 'pushed updated lines'
     }
 }
+Exit-RepoTurn   # the export + Sim Lab deploy below never touch git (no-op when nested in sim proj)
 
 # Draft-helper extension data (players.json x3 + sim packs) from the fresh
 # betting lines + d.js + Jack's live Firestore boards. Extension dirs are

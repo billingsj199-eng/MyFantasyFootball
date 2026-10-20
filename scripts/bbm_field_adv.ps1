@@ -30,6 +30,7 @@ Set-Location $Repo
 Write-Log '=== bbm field adv start ==='
 
 . (Join-Path $PSScriptRoot 'repo_guard.ps1')
+if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'BBM field adv')) { exit 0 }   # one job at a time (2026-10-20)
 if (Test-RepoBlocked -Log { param($m) Write-Log $m } -Job 'BBM field adv') { exit 1 }
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.

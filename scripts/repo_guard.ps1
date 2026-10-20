@@ -9,8 +9,90 @@
 #   Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'sim projections'
 #
 # The .git/hooks/pre-commit hook enforces the same rules for every committer.
+#
+# Repo turn (2026-10-20): the PC slept to 08:26, nine missed tasks all started at
+# 08:32, their git calls collided, one died holding .git/index.lock, and every
+# commit after it failed (three logs still said "committed + pushed"). Each job
+# now takes the repo turn before its dirty-file check and keeps it through its
+# push, so jobs run one at a time and never trip over each other's uncommitted
+# files or ?v= bumps:
+#   if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'my job')) { exit 0 }
+# The turn is an exclusive handle on _alerts\repo_turn.lock, so Windows releases
+# it when the process exits, even on a crash. Child jobs (betting -> postgame,
+# sim proj -> betting, Tuesday -> dynasty) inherit MFF_REPO_TURN and run inside
+# the parent's turn. Exit-RepoTurn hands it back early before a long tail that
+# never touches git.
 
 . (Join-Path $PSScriptRoot 'mff_alert.ps1')
+
+$script:RepoTurnLock = 'E:\MyFantasyFootball\_alerts\repo_turn.lock'
+$script:RepoTurnRepo = Split-Path $PSScriptRoot -Parent
+
+# Waits for the repo turn. $true = this job may touch git; $false = timed out (logged + alerted).
+function Enter-RepoTurn {
+    param([scriptblock]$Log = { param($m) Write-Host $m }, [string]$Job = 'job', [int]$TimeoutMin = 60)
+    if ($global:MffRepoTurn) { return $true }
+    if ($env:MFF_REPO_TURN) { & $Log "repo turn: running inside $env:MFF_REPO_TURN" | Out-Host; return $true }
+    $ownerFile = "$RepoTurnLock.owner"
+    $lockDir = Split-Path $RepoTurnLock -Parent
+    if (-not (Test-Path $lockDir)) { New-Item -ItemType Directory -Force -Path $lockDir | Out-Null }   # else Open throws DirectoryNotFound (an IOException) and we'd wait forever
+    $start = Get-Date
+    $waitLogged = $false
+    while ($true) {
+        try {
+            $fs = [System.IO.File]::Open($RepoTurnLock, 'OpenOrCreate', 'ReadWrite', 'None')
+            break
+        } catch [System.IO.IOException] {
+            if (-not $waitLogged) {
+                $owner = try { (Get-Content $ownerFile -Raw -ErrorAction Stop).Trim() } catch { 'unknown' }
+                & $Log "repo turn: waiting - held by $owner" | Out-Host
+                $waitLogged = $true
+            }
+            if (((Get-Date) - $start).TotalMinutes -ge $TimeoutMin) {
+                & $Log "SKIP: no repo turn after $TimeoutMin min" | Out-Host
+                Send-MffAlert -Key 'repo-turn-timeout' -Message "$Job waited $TimeoutMin min for the repo turn and skipped. Held by: $(try { (Get-Content $ownerFile -Raw).Trim() } catch { 'unknown' })"
+                return $false
+            }
+            Start-Sleep -Seconds 10
+        } catch {
+            # lock infrastructure broken (permissions, missing drive): never block publishing on it
+            & $Log "repo turn unavailable ($($_.Exception.Message)) - running without it" | Out-Host
+            return $true
+        }
+    }
+    $global:MffRepoTurn = $fs
+    $env:MFF_REPO_TURN = "$Job (pid $PID)"
+    try { Set-Content -Path $ownerFile -Value "$Job (pid $PID) since $(Get-Date -Format 'HH:mm:ss')" -Encoding utf8 } catch {}
+    if ($waitLogged) { & $Log ("repo turn: got it after {0:N0}s" -f ((Get-Date) - $start).TotalSeconds) | Out-Host }
+    Clear-StaleIndexLock -Log $Log
+    return $true
+}
+
+function Exit-RepoTurn {
+    if (-not $global:MffRepoTurn) { return }   # not the owner (nested job) - the parent releases
+    try { Remove-Item "$RepoTurnLock.owner" -ErrorAction SilentlyContinue } catch {}
+    $global:MffRepoTurn.Dispose()
+    $global:MffRepoTurn = $null
+    Remove-Item Env:\MFF_REPO_TURN -ErrorAction SilentlyContinue
+}
+
+# Called while holding the turn: an index.lock with no git process running is
+# debris from a git that died, and blocks every commit until removed.
+function Clear-StaleIndexLock {
+    param([scriptblock]$Log = { param($m) Write-Host $m })
+    $gitDir = (git -C $RepoTurnRepo rev-parse --absolute-git-dir 2>$null)
+    if (-not $gitDir) { return }
+    $lock = Join-Path $gitDir 'index.lock'
+    if (-not (Test-Path $lock)) { return }
+    $age = ((Get-Date) - (Get-Item $lock).LastWriteTime).TotalSeconds
+    if ($age -lt 30 -or (Get-Process git -ErrorAction SilentlyContinue)) {
+        & $Log ("repo turn: index.lock present ({0:N0}s old) but git is running or it is fresh - left alone" -f $age) | Out-Host
+        return
+    }
+    Remove-Item $lock -Force -ErrorAction SilentlyContinue
+    & $Log ("repo turn: removed stale index.lock ({0:N0} min old, no git running)" -f ($age / 60)) | Out-Host
+    Send-MffAlert -Key 'stale-index-lock' -Message ("Removed a stale .git/index.lock ({0:N0} min old) left by a git that died; commits resume." -f ($age / 60))
+}
 
 # Returns $null when the checkout is safe to commit on, else a short reason.
 function Get-RepoProblem {
@@ -32,6 +114,15 @@ function Get-RepoProblem {
 # commit kept locally, and an alert fires. Returns $true when pushed.
 function Invoke-SafePullPush {
     param([scriptblock]$Log = { param($m) Write-Host $m }, [string]$What = 'data')
+    # Every caller has just run git commit. Nothing ahead of origin/main means that
+    # commit never landed (10-20: index.lock), and pushing "Everything up-to-date"
+    # used to be logged as success.
+    $ahead = [int](git rev-list --count 'origin/main..HEAD' 2>$null)
+    if ($ahead -lt 1) {
+        & $Log "COMMIT DID NOT LAND - nothing new to push ($What); see the git error above" | Out-Host
+        Send-MffAlert -Key 'commit-failed' -Message "git commit failed for $What - changes left uncommitted, site not updated."
+        return $false
+    }
     git pull --rebase --autostash origin main | Out-Host   # Out-Host: keep git's stdout out of the return value
     if ($LASTEXITCODE -ne 0) {
         git rebase --abort 2>$null | Out-Host

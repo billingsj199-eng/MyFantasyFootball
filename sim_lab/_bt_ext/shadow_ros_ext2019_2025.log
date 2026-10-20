@@ -1,0 +1,1331 @@
+=== rest-of-season, in season: 9,417 checkpoints 2019-25 (3-10 games played, 4+ games left), 5,556 top-150 ===
+
+--- 0  WHERE WE STAND: Clay-free rate vs the Clay blend, rest-of-season per-game ---
+    everyone                   n  9417  actual  9.78  Clay-free  9.58  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.594 vs nan
+    QB                         n  1274  actual 17.57  Clay-free 17.69  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.482 vs nan
+    RB                         n  2490  actual  9.98  Clay-free  9.61  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.648 vs nan
+    WR                         n  3931  actual  8.45  Clay-free  8.40  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.639 vs nan
+    TE                         n  1722  actual  6.77  Clay-free  6.23  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.595 vs nan
+    after 3-4 games            n  2834  actual  9.37  Clay-free  9.23  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.643 vs nan
+    after 5-7 games            n  3730  actual  9.67  Clay-free  9.53  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.599 vs nan
+    after 8-10 games           n  2853  actual 10.32  Clay-free  9.99  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.561 vs nan
+    ADP 1-30                   n  1262  actual 14.93  Clay-free 14.87  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.361 vs nan
+    ADP 31-60                  n  1200  actual 12.92  Clay-free 12.35  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.270 vs nan
+    ADP 61-100                 n  1399  actual 10.97  Clay-free 10.55  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.493 vs nan
+    ADP 101-150                n  1583  actual  9.45  Clay-free  9.41  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.449 vs nan
+    QB after 3-4 games         n   380  actual 17.08  Clay-free 17.21  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.510 vs nan
+    QB after 5-7 games         n   500  actual 17.48  Clay-free 17.65  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.491 vs nan
+    QB after 8-10 games        n   394  actual 18.16  Clay-free 18.22  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.491 vs nan
+    RB after 3-4 games         n   742  actual  9.56  Clay-free  9.30  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.731 vs nan
+    RB after 5-7 games         n  1000  actual  9.79  Clay-free  9.53  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.659 vs nan
+    RB after 8-10 games        n   748  actual 10.64  Clay-free 10.03  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.640 vs nan
+    WR after 3-4 games         n  1182  actual  8.08  Clay-free  8.09  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.657 vs nan
+    WR after 5-7 games         n  1541  actual  8.39  Clay-free  8.37  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.616 vs nan
+    WR after 8-10 games        n  1208  actual  8.88  Clay-free  8.73  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.576 vs nan
+    TE after 3-4 games         n   530  actual  6.47  Clay-free  5.96  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.640 vs nan
+    TE after 5-7 games         n   689  actual  6.71  Clay-free  6.20  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.572 vs nan
+    TE after 8-10 games        n   503  actual  7.17  Clay-free  6.54  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.432 vs nan
+
+--- 1  HOW MUCH THE SEASON SO FAR COUNTS (prior weight in games; shipped QB 12, RB 5, WR 8, TE 8) ---
+
+  1 QB: prior weight   (rows 1,274)
+    pooled (seasons better at that fixed setting): P 4: +8.15% (1)  P 6: +3.56% (2)  P 8: +1.44% (2)  P 16: -0.13% (3)  P 24: +0.51% (2)
+    LEAVE-ONE-SEASON-OUT  +0.65%  seasons better 1/7  | top-150 weighted +0.14%  rank order -0.0020  | picks ['P 16', 'P 16', 'P 12 (shipped)', 'P 16', 'P 16', 'P 16', 'P 12 (shipped)']
+    FORWARD 2022-25       +1.54%  seasons better 0/4  | top-150 weighted +0.62%  | picks ['P 24', 'P 16', 'P 12 (shipped)', 'P 12 (shipped)']
+    rank order with P 16: better in 4/7 seasons (pooled -0.0046)
+    -> FAIL (best pooled: P 16)
+      by stage, 3-4 games: P 4: +10.89%  P 6: +4.31%  P 8: +1.61%  P 16: -0.08%  P 24: +0.61%
+      by stage, 5-7 games: P 4: +9.51%  P 6: +4.52%  P 8: +2.01%  P 16: -0.49%  P 24: -0.27%
+      by stage, 8-10 games: P 4: +4.26%  P 6: +1.82%  P 8: +0.65%  P 16: +0.25%  P 24: +1.36%
+
+  1 RB: prior weight   (rows 2,490)
+    pooled (seasons better at that fixed setting): P 2: +7.36% (0)  P 3: +3.40% (1)  P 8: -0.91% (5)  P 12: -0.05% (5)  P 16: +1.25% (3)
+    LEAVE-ONE-SEASON-OUT  -0.91%  seasons better 5/7  | top-150 weighted -0.36%  rank order +0.0039  | picks ['P 8', 'P 8', 'P 8', 'P 8', 'P 8', 'P 8', 'P 8']
+    FORWARD 2022-25       -1.26%  seasons better 3/4  | top-150 weighted -1.02%  | picks ['P 8', 'P 8', 'P 8', 'P 8']
+    rank order with P 8: better in 5/7 seasons (pooled +0.0039)
+    -> PASS: P 8
+      by stage, 3-4 games: P 2: +10.94%  P 3: +4.80%  P 8: -1.30%  P 12: -0.65%  P 16: +0.37%
+      by stage, 5-7 games: P 2: +7.55%  P 3: +3.56%  P 8: -0.98%  P 12: -0.04%  P 16: +1.38%
+      by stage, 8-10 games: P 2: +4.09%  P 3: +2.01%  P 8: -0.50%  P 12: +0.45%  P 16: +1.83%
+
+  1 WR: prior weight   (rows 3,931)
+    pooled (seasons better at that fixed setting): P 3: +3.05% (2)  P 5: +0.49% (3)  P 12: +0.92% (1)  P 16: +2.12% (1)  P 24: +4.19% (1)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)']
+    FORWARD 2022-25       +0.57%  seasons better 0/4  | top-150 weighted +0.47%  | picks ['P 5', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)']
+    -> FAIL (best pooled: P 8 (shipped))
+      by stage, 3-4 games: P 3: +5.26%  P 5: +0.84%  P 12: +1.06%  P 16: +2.35%  P 24: +4.38%
+      by stage, 5-7 games: P 3: +3.29%  P 5: +0.63%  P 12: +0.87%  P 16: +2.06%  P 24: +4.14%
+      by stage, 8-10 games: P 3: +1.34%  P 5: +0.12%  P 12: +0.89%  P 16: +2.03%  P 24: +4.10%
+
+  1 TE: prior weight   (rows 1,722)
+    pooled (seasons better at that fixed setting): P 3: +6.00% (1)  P 5: +1.69% (1)  P 12: +0.24% (3)  P 16: +1.11% (2)  P 24: +2.91% (2)
+    LEAVE-ONE-SEASON-OUT  +0.62%  seasons better 0/7  | top-150 weighted +1.24%  rank order -0.0007  | picks ['P 8 (shipped)', 'P 12', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)']
+    FORWARD 2022-25       +1.36%  seasons better 0/4  | top-150 weighted +2.80%  | picks ['P 5', 'P 8 (shipped)', 'P 8 (shipped)', 'P 8 (shipped)']
+    -> FAIL (best pooled: P 8 (shipped))
+      by stage, 3-4 games: P 3: +14.09%  P 5: +4.50%  P 12: -1.21%  P 16: -1.11%  P 24: -0.27%
+      by stage, 5-7 games: P 3: +6.23%  P 5: +1.94%  P 12: -0.02%  P 16: +0.69%  P 24: +2.28%
+      by stage, 8-10 games: P 3: +0.23%  P 5: -0.49%  P 12: +1.49%  P 16: +3.07%  P 24: +5.74%
+
+--- 2  WHAT COUNTS AS EVIDENCE: points vs usage (xFP), on top of the picks above ---
+
+  2 QB: usage weight in the evidence (shipped: 0)   (rows 1,274)
+    pooled (seasons better at that fixed setting): usage weight 0.25: +8.10% (2)  usage weight 0.5: +41.58% (0)  usage weight 0.75: +100.45% (0)  usage weight 1.0: +184.70% (0)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  2 RB: usage weight in the evidence (shipped: fades to .25)   (rows 2,490)
+    pooled (seasons better at that fixed setting): usage weight 0.0: -0.68% (6)  usage weight 0.25: -0.05% (5)  usage weight 0.5: +1.97% (1)  usage weight 0.75: +5.37% (1)  usage weight 1.0: +10.17% (1)
+    LEAVE-ONE-SEASON-OUT  -0.68%  seasons better 6/7  | top-150 weighted -1.68%  rank order +0.0019  | picks ['usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0']
+    FORWARD 2022-25       -0.11%  seasons better 3/4  | top-150 weighted -0.59%  | picks ['usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0']
+    rank order with usage weight 0.0: better in 6/7 seasons (pooled +0.0019)
+    -> PASS: usage weight 0.0
+
+  2 WR: usage weight in the evidence (shipped: fades to .25)   (rows 3,931)
+    pooled (seasons better at that fixed setting): usage weight 0.0: -0.56% (4)  usage weight 0.25: -1.22% (5)  usage weight 0.5: -0.25% (4)  usage weight 0.75: +2.37% (1)  usage weight 1.0: +6.64% (1)
+    LEAVE-ONE-SEASON-OUT  -1.22%  seasons better 5/7  | top-150 weighted -1.12%  rank order +0.0081  | picks ['usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25']
+    FORWARD 2022-25       -0.31%  seasons better 3/4  | top-150 weighted -0.43%  | picks ['usage weight 0.0', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25']
+    rank order with usage weight 0.25: better in 5/7 seasons (pooled +0.0081)
+    -> PASS: usage weight 0.25
+
+  2 TE: usage weight in the evidence (shipped: 0)   (rows 1,722)
+    pooled (seasons better at that fixed setting): usage weight 0.25: -0.42% (5)  usage weight 0.5: +0.09% (4)  usage weight 0.75: +1.53% (4)  usage weight 1.0: +3.90% (0)
+    LEAVE-ONE-SEASON-OUT  -0.42%  seasons better 5/7  | top-150 weighted -0.28%  rank order +0.0043  | picks ['usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25']
+    FORWARD 2022-25       -0.27%  seasons better 2/4  | top-150 weighted -0.97%  | picks ['usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25']
+    rank order with usage weight 0.25: better in 5/7 seasons (pooled +0.0043)
+    -> FAIL (best pooled: usage weight 0.25)
+
+--- 3  LEVEL: toward / away from the position average (k < 1 pulls in) ---
+
+  3 QB: level   (rows 1,274)
+    pooled (seasons better at that fixed setting): k 0.8: -0.58% (4)  k 0.9: -0.96% (4)  k 0.95: -0.64% (4)  k 1.05: +0.98% (3)  k 1.1: +2.29% (2)
+    LEAVE-ONE-SEASON-OUT  +0.44%  seasons better 4/7  | top-150 weighted -0.71%  rank order +0.0000  | picks ['k 0.9', 'k 0.9', 'k 0.9', 'k 0.8', 'k 0.8', 'k 0.9', 'k 0.95']
+    FORWARD 2022-25       +1.15%  seasons better 1/4  | top-150 weighted +0.06%  | picks ['k 0.8', 'k 0.9', 'k 0.9', 'k 0.95']
+    rank order with k 0.9: better in 0/7 seasons (pooled +0.0000)
+    -> FAIL (best pooled: k 0.9)
+      top third     n   425  actual / projected 0.994
+      middle        n   424  actual / projected 0.976
+      bottom third  n   425  actual / projected 1.012
+
+  3 RB: level   (rows 2,490)
+    pooled (seasons better at that fixed setting): k 0.8: +2.77% (3)  k 0.9: +0.01% (4)  k 0.95: -0.34% (4)  k 1.05: +1.02% (2)  k 1.1: +2.73% (2)
+    LEAVE-ONE-SEASON-OUT  +0.04%  seasons better 4/7  | top-150 weighted +0.67%  rank order +0.0000  | picks ['k 0.95', 'k 0.95', 'k 0.95', 'k 0.95', 'k 0.95', 'k 0.9', 'k 0.95']
+    FORWARD 2022-25       +0.13%  seasons better 2/4  | top-150 weighted +1.09%  | picks ['k 0.95', 'k 0.9', 'k 0.9', 'k 0.95']
+    rank order with k 0.95: better in 0/7 seasons (pooled +0.0000)
+    -> FAIL (best pooled: k 0.95)
+      top third     n   830  actual / projected 1.001
+      middle        n   830  actual / projected 1.073
+      bottom third  n   830  actual / projected 1.088
+
+  3 WR: level   (rows 3,931)
+    pooled (seasons better at that fixed setting): k 0.8: +5.37% (2)  k 0.9: +1.42% (2)  k 0.95: +0.40% (2)  k 1.05: +0.23% (4)  k 1.1: +1.10% (2)
+    LEAVE-ONE-SEASON-OUT  +0.35%  seasons better 0/7  | top-150 weighted +0.78%  rank order +0.0000  | picks ['k 1.00 (shipped)', 'k 1.00 (shipped)', 'k 1.00 (shipped)', 'k 1.00 (shipped)', 'k 1.00 (shipped)', 'k 1.00 (shipped)', 'k 1.05']
+    FORWARD 2022-25       +0.53%  seasons better 2/4  | top-150 weighted +1.51%  | picks ['k 1.05', 'k 1.05', 'k 1.05', 'k 1.05']
+    -> FAIL (best pooled: k 1.00 (shipped))
+      top third     n  1311  actual / projected 1.010
+      middle        n  1310  actual / projected 0.979
+      bottom third  n  1310  actual / projected 1.009
+
+  3 TE: level   (rows 1,722)
+    pooled (seasons better at that fixed setting): k 0.8: +3.63% (1)  k 0.9: +0.98% (2)  k 0.95: +0.28% (3)  k 1.05: +0.13% (2)  k 1.1: +0.68% (2)
+    LEAVE-ONE-SEASON-OUT  +0.76%  seasons better 0/7  | top-150 weighted +3.21%  rank order +0.0000  | picks ['k 1.00 (shipped)', 'k 0.95', 'k 1.00 (shipped)', 'k 1.05', 'k 1.05', 'k 1.00 (shipped)', 'k 1.00 (shipped)']
+    FORWARD 2022-25       +1.02%  seasons better 0/4  | top-150 weighted +4.72%  | picks ['k 1.1', 'k 1.05', 'k 1.00 (shipped)', 'k 1.00 (shipped)']
+    -> FAIL (best pooled: k 1.00 (shipped))
+      top third     n   574  actual / projected 1.067
+      middle        n   574  actual / projected 1.106
+      bottom third  n   574  actual / projected 1.110
+
+--- 5  REST-OF-SEASON LAYERS on the Clay-free rate (each judged on the rows it touches, stacked on what passed before it) ---
+
+  5a RB: snap-trend multiplier carried through the rest of the season   (rows 2,334)
+    pooled (seasons better at that fixed setting): strength 0.5: -2.78% (7)  strength 1.0: -3.48% (6)  strength 1.5: -2.06% (5)
+    LEAVE-ONE-SEASON-OUT  -3.48%  seasons better 6/7  | top-150 weighted -2.37%  rank order +0.0155  | picks ['strength 1.0', 'strength 1.0', 'strength 1.0', 'strength 1.0', 'strength 1.0', 'strength 1.0', 'strength 1.0']
+    FORWARD 2022-25       -4.28%  seasons better 4/4  | top-150 weighted -0.43%  | picks ['strength 1.0', 'strength 1.0', 'strength 1.0', 'strength 1.0']
+    rank order with strength 1.0: better in 6/7 seasons (pooled +0.0155)
+    -> PASS: strength 1.0
+
+  5a WR: snap-trend multiplier carried through the rest of the season   (rows 3,714)
+    pooled (seasons better at that fixed setting): strength 0.5: -0.05% (5)  strength 1.0: +1.86% (1)  strength 1.5: +5.81% (0)
+    LEAVE-ONE-SEASON-OUT  +0.50%  seasons better 0/7  | top-150 weighted +0.37%  rank order -0.0044  | picks ['off (shipped)', 'strength 0.5', 'off (shipped)', 'strength 0.5', 'off (shipped)', 'off (shipped)', 'off (shipped)']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['off (shipped)', 'off (shipped)', 'off (shipped)', 'off (shipped)']
+    rank order with strength 0.5: better in 4/7 seasons (pooled -0.0031)
+    -> FAIL (best pooled: strength 0.5)
+
+  5a TE: snap-trend multiplier carried through the rest of the season   (rows 1,645)
+    pooled (seasons better at that fixed setting): strength 0.5: -0.78% (5)  strength 1.0: -0.47% (3)  strength 1.5: +0.96% (3)
+    LEAVE-ONE-SEASON-OUT  -0.26%  seasons better 5/7  | top-150 weighted +2.08%  rank order -0.0019  | picks ['strength 0.5', 'strength 0.5', 'strength 1.0', 'strength 0.5', 'strength 0.5', 'strength 0.5', 'strength 0.5']
+    FORWARD 2022-25       -0.47%  seasons better 1/4  | top-150 weighted -0.97%  | picks ['off (shipped)', 'off (shipped)', 'off (shipped)', 'strength 0.5']
+    rank order with strength 0.5: better in 4/7 seasons (pooled +0.0069)
+    -> FAIL (best pooled: strength 0.5)
+
+  5b RB rookies   (rows 386)
+    pooled (seasons better at that fixed setting): x1.05: -2.84% (5)  x1.1: -2.50% (5)  x1.15: +1.01% (4)
+    LEAVE-ONE-SEASON-OUT  -0.36%  seasons better 5/7  | top-150 weighted +2.26%  rank order +0.0000  | picks ['x1.1', 'x1.05', 'x1.05', 'x1.05', 'x1.1', 'x1.05', 'x1.05']
+    FORWARD 2022-25       -1.37%  seasons better 3/4  | top-150 weighted -0.06%  | picks ['x1.1', 'x1.1', 'x1.05', 'x1.05']
+    rank order with x1.05: better in 0/1 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.05)
+
+  5b RB second year   (rows 381)
+    pooled (seasons better at that fixed setting): x1.04: -4.44% (4)  x1.08: -6.69% (3)  x1.12: -6.74% (2)
+    LEAVE-ONE-SEASON-OUT  -0.02%  seasons better 2/7  | top-150 weighted -4.50%  rank order +0.0000  | picks ['x1.12', 'x1.12', 'x1.12', 'x1.12', 'x1.04', 'x1.08', 'x1.12']
+    FORWARD 2022-25       -7.93%  seasons better 1/4  | top-150 weighted -19.10%  | picks ['off (shipped)', 'off (shipped)', 'x1.08', 'x1.12']
+    rank order with x1.12: better in 0/1 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.12)
+
+  5b RB age slope (per year from 26)   (rows 2,466)
+    pooled (seasons better at that fixed setting): 0.01 a year: -0.87% (5)  0.02 a year: -0.66% (5)  0.03 a year: +0.54% (3)
+    LEAVE-ONE-SEASON-OUT  -0.65%  seasons better 5/7  | top-150 weighted -0.94%  rank order +0.0104  | picks ['0.01 a year', '0.01 a year', '0.01 a year', '0.01 a year', '0.01 a year', '0.01 a year', '0.02 a year']
+    FORWARD 2022-25       -0.64%  seasons better 3/4  | top-150 weighted -0.82%  | picks ['0.01 a year', '0.01 a year', '0.01 a year', '0.02 a year']
+    rank order with 0.01 a year: better in 7/7 seasons (pooled +0.0109)
+    -> PASS: 0.01 a year
+
+  5c TE second year   (rows 223)
+    pooled (seasons better at that fixed setting): x1.05: -6.45% (6)  x1.1: -10.62% (5)  x1.15: -12.53% (5)  x1.2: -12.16% (4)
+    LEAVE-ONE-SEASON-OUT  -4.62%  seasons better 4/7  | top-150 weighted +12.37%  rank order +nan  | picks ['x1.1', 'x1.2', 'x1.15', 'x1.2', 'x1.1', 'x1.2', 'x1.15']
+    FORWARD 2022-25       -5.45%  seasons better 2/4  | top-150 weighted +16.82%  | picks ['x1.2', 'x1.2', 'x1.2', 'x1.15']
+    -> FAIL (best pooled: x1.15)
+
+  5c TE rookies   (rows 170)
+    pooled (seasons better at that fixed setting): x1.05: -2.71% (3)  x1.1: -2.68% (2)
+    LEAVE-ONE-SEASON-OUT  +0.81%  seasons better 2/7  | top-150 weighted +17.94%  rank order +nan  | picks ['x1.1', 'x1.1', 'x1.1', 'x1.1', 'x1.05', 'x1.05', 'x1.1']
+    FORWARD 2022-25       -2.58%  seasons better 1/4  | top-150 weighted +5.76%  | picks ['off (shipped)', 'off (shipped)', 'x1.05', 'x1.1']
+    -> FAIL (best pooled: x1.05)
+
+  5c TE: snap-share level, rest of season (wired: .15 for later weeks)   (rows 1,668)
+    pooled (seasons better at that fixed setting): e 0.15: -1.52% (6)  e 0.3: -2.38% (6)  e 0.5: -2.55% (6)
+    LEAVE-ONE-SEASON-OUT  -2.15%  seasons better 6/7  | top-150 weighted -2.88%  rank order +0.0006  | picks ['e 0.3', 'e 0.5', 'e 0.5', 'e 0.3', 'e 0.5', 'e 0.5', 'e 0.5']
+    FORWARD 2022-25       -3.34%  seasons better 4/4  | top-150 weighted -7.45%  | picks ['e 0.3', 'e 0.5', 'e 0.5', 'e 0.5']
+    rank order with e 0.5: better in 4/7 seasons (pooled +0.0035)
+    -> PASS: e 0.5
+
+  5c WR: snap-share level, rest of season (wired: .15 for later weeks)   (rows 3,768)
+    pooled (seasons better at that fixed setting): e 0.15: -0.14% (4)  e 0.3: +0.69% (3)  e 0.5: +3.16% (1)
+    LEAVE-ONE-SEASON-OUT  +0.06%  seasons better 3/7  | top-150 weighted +0.91%  rank order -0.0034  | picks ['e 0.15', 'e 0.15', 'e 0.15', 'e 0.15', 'e 0.15', 'off (shipped)', 'e 0.15']
+    FORWARD 2022-25       +0.11%  seasons better 1/4  | top-150 weighted +1.11%  | picks ['e 0.15', 'e 0.15', 'e 0.15', 'e 0.15']
+    rank order with e 0.15: better in 4/7 seasons (pooled -0.0005)
+    -> FAIL (best pooled: e 0.15)
+
+  5c TE: team pass-rate tilt (pass-heavy teams' tight ends come down)   (rows 1,710)
+    pooled (seasons better at that fixed setting): e 0.04: -2.24% (5)  e 0.08: -2.31% (5)  e 0.12: -0.20% (4)
+    LEAVE-ONE-SEASON-OUT  -0.70%  seasons better 5/7  | top-150 weighted +0.23%  rank order +0.0134  | picks ['e 0.08', 'e 0.08', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.08']
+    FORWARD 2022-25       -3.00%  seasons better 3/4  | top-150 weighted -6.78%  | picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.08']
+    rank order with e 0.08: better in 4/7 seasons (pooled +0.0209)
+    -> FAIL (best pooled: e 0.08)
+
+  5d QB who changed teams (wired today: x.90)   (rows 151)
+    pooled (seasons better at that fixed setting): x0.95: -14.65% (5)  x0.9: -23.20% (5)  x0.86: -25.65% (5)  x0.82: -24.19% (5)  x0.78: -18.82% (5)
+    LEAVE-ONE-SEASON-OUT  -25.65%  seasons better 6/7  | top-150 weighted -45.34%  rank order +nan  | picks ['x0.86', 'x0.86', 'x0.86', 'x0.86', 'x0.86', 'x0.86', 'x0.86']
+    FORWARD 2022-25       -22.95%  seasons better 4/4  | top-150 weighted -45.63%  | picks ['x0.86', 'x0.86', 'x0.86', 'x0.86']
+    -> PASS: x0.86
+
+  5d QB: pass-attempt tilt (high-volume passers come down)   (rows 1,274)
+    pooled (seasons better at that fixed setting): e 0.03: -2.71% (6)  e 0.06: -3.14% (6)  e 0.09: -1.31% (6)
+    LEAVE-ONE-SEASON-OUT  -2.42%  seasons better 6/7  | top-150 weighted +0.55%  rank order -0.0011  | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.03', 'e 0.06']
+    FORWARD 2022-25       -1.36%  seasons better 3/4  | top-150 weighted +1.56%  | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    rank order with e 0.06: better in 3/7 seasons (pooled +0.0028)
+    -> FAIL (best pooled: e 0.06)
+
+  5d QB: rushing-share tilt (running quarterbacks go up)   (rows 1,253)
+    pooled (seasons better at that fixed setting): e 0.02: -0.39% (5)  e 0.04: +0.99% (4)  e 0.06: +4.13% (3)
+    LEAVE-ONE-SEASON-OUT  +1.09%  seasons better 2/7  | top-150 weighted +1.75%  rank order +0.0052  | picks ['off (shipped)', 'e 0.02', 'e 0.02', 'off (shipped)', 'e 0.02', 'off (shipped)', 'e 0.02']
+    FORWARD 2022-25       +0.16%  seasons better 2/4  | top-150 weighted +0.81%  | picks ['off (shipped)', 'e 0.02', 'e 0.02', 'e 0.02']
+    rank order with e 0.02: better in 5/7 seasons (pooled +0.0132)
+    -> FAIL (best pooled: e 0.02)
+
+  5e WR: yards per route vs man tilt   (rows 3,383)
+    pooled (seasons better at that fixed setting): e 0.02: -0.66% (5)  e 0.04: -0.47% (5)  e 0.06: +0.55% (3)
+    LEAVE-ONE-SEASON-OUT  -0.03%  seasons better 5/7  | top-150 weighted +1.58%  rank order -0.0020  | picks ['e 0.04', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.04', 'e 0.02']
+    FORWARD 2022-25       -0.97%  seasons better 3/4  | top-150 weighted +0.81%  | picks ['e 0.02', 'e 0.02', 'e 0.02', 'e 0.02']
+    rank order with e 0.02: better in 4/7 seasons (pooled -0.0015)
+    -> FAIL (best pooled: e 0.02)
+
+  5e WR: scoring over usage tilt   (rows 3,930)
+    pooled (seasons better at that fixed setting): e 0.02: +0.42% (2)  e 0.04: +1.54% (2)  e 0.06: +3.37% (2)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['off (shipped)', 'off (shipped)', 'off (shipped)', 'off (shipped)', 'off (shipped)', 'off (shipped)', 'off (shipped)']
+    FORWARD 2022-25       +0.28%  seasons better 0/4  | top-150 weighted +0.47%  | picks ['e 0.02', 'off (shipped)', 'off (shipped)', 'off (shipped)']
+    -> FAIL (best pooled: off (shipped))
+
+  5e WR scoring 25%+ under his prior   (rows 923)
+    pooled (seasons better at that fixed setting): x0.97: -1.17% (5)  x0.94: -1.31% (5)  x0.9: +0.14% (3)
+    LEAVE-ONE-SEASON-OUT  -0.55%  seasons better 5/7  | top-150 weighted -1.41%  rank order +0.0000  | picks ['x0.94', 'x0.94', 'x0.94', 'x0.94', 'x0.97', 'x0.94', 'x0.94']
+    FORWARD 2022-25       -0.04%  seasons better 2/4  | top-150 weighted -1.13%  | picks ['x0.94', 'x0.97', 'x0.94', 'x0.94']
+    rank order with x0.94: better in 0/4 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x0.94)
+
+  5e WR rookies   (rows 536)
+    pooled (seasons better at that fixed setting): x1.03: +0.33% (3)  x1.06: +1.59% (3)
+    LEAVE-ONE-SEASON-OUT  +1.47%  seasons better 0/7  | top-150 weighted +4.25%  rank order +nan  | picks ['off (shipped)', 'x1.03', 'off (shipped)', 'x1.03', 'off (shipped)', 'off (shipped)', 'x1.03']
+    FORWARD 2022-25       +0.61%  seasons better 1/4  | top-150 weighted +1.75%  | picks ['off (shipped)', 'off (shipped)', 'x1.03', 'x1.03']
+    -> FAIL (best pooled: off (shipped))
+
+  level check before any level layer (actual / projected): 4+ games left | any games left | next game only
+    QB: 1.008 | 0.966 (shipped rate) | 0.983 (shipped rate)
+    RB: 1.029 | 1.022 (shipped rate) | 1.021 (shipped rate)
+    WR: 1.000 | 0.987 (shipped rate) | 0.999 (shipped rate)
+    TE: 1.087 | 1.071 (shipped rate) | 1.054 (shipped rate)
+
+  5f RB level   (rows 2,490)
+    pooled (seasons better at that fixed setting): x1.02: -0.24% (3)  x1.04: +0.28% (2)  x1.06: +1.56% (2)
+    LEAVE-ONE-SEASON-OUT  +0.13%  seasons better 2/7  | top-150 weighted +0.97%  rank order +0.0000  | picks ['x1.02', 'x1.02', 'x1.02', 'x1.02', 'x1.02', 'x1.02', 'off (shipped)']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['off (shipped)', 'off (shipped)', 'off (shipped)', 'off (shipped)']
+    rank order with x1.02: better in 0/7 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.02)
+
+  5f TE level   (rows 1,722)
+    pooled (seasons better at that fixed setting): x1.03: -2.34% (5)  x1.06: -3.52% (5)  x1.09: -3.54% (5)  x1.12: -2.40% (5)
+    LEAVE-ONE-SEASON-OUT  -2.67%  seasons better 5/7  | top-150 weighted +1.87%  rank order +0.0000  | picks ['x1.06', 'x1.06', 'x1.09', 'x1.09', 'x1.09', 'x1.06', 'x1.06']
+    FORWARD 2022-25       -3.88%  seasons better 3/4  | top-150 weighted +2.12%  | picks ['x1.06', 'x1.06', 'x1.06', 'x1.06']
+    rank order with x1.09: better in 0/7 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.09)
+
+--- STACKED: everything that passed vs the shipped Clay-free rate and vs the Clay blend ---
+  picks: {'P_RB': 'P 8', 'lam_RB': 'usage weight 0.0', 'lam_WR': 'usage weight 0.25', 'snapmult_RB': 'strength 1.0', 'rb_age': '0.01 a year', 'snaplv_TE': 'e 0.5', 'qb_mover': 'x0.86'}
+    everyone   vs shipped Clay-free -3.39% (7/7)  vs Clay blend +nan% (0/7)  | weighted -3.41% / +nan%  | rank order 0.609 (shipped 0.594, Clay blend nan)
+    QB         vs shipped Clay-free -4.48% (6/7)  vs Clay blend +nan% (0/7)  | weighted -3.44% / +nan%  | rank order 0.507 (shipped 0.482, Clay blend nan)
+    RB         vs shipped Clay-free -5.69% (7/7)  vs Clay blend +nan% (0/7)  | weighted -5.54% / +nan%  | rank order 0.678 (shipped 0.648, Clay blend nan)
+    WR         vs shipped Clay-free -1.22% (5/7)  vs Clay blend +nan% (0/7)  | weighted -1.12% / +nan%  | rank order 0.647 (shipped 0.639, Clay blend nan)
+    TE         vs shipped Clay-free -2.52% (6/7)  vs Clay blend +nan% (0/7)  | weighted -3.09% / +nan%  | rank order 0.589 (shipped 0.595, Clay blend nan)
+    top-150    vs shipped Clay-free -3.73% (7/7)  vs Clay blend +nan% (0/7)  | weighted -3.41% / +nan%  | rank order 0.609 (shipped 0.594, Clay blend nan)
+
+--- 4  WHAT THE REST-OF-SEASON MISS STILL CORRELATES WITH (after the picks above; r of the miss, seasons same sign) ---
+  QB:
+    att_pg                       r -0.153  seasons same sign 5/7  n 1274
+    ppg_py                       r -0.122  seasons same sign 3/6  n 906
+    jm                           r +0.121  seasons same sign 5/7  n 826
+    snap_trend                   r +0.113  seasons same sign 6/7  n 1251
+    db_sh                        r -0.107  seasons same sign 6/7  n 1253
+    plays_pg_std                 r -0.094  seasons same sign 5/7  n 1274
+    snap_std                     r -0.093  seasons same sign 5/7  n 1253
+    xfp_pg                       r +0.083  seasons same sign 5/7  n 1274
+    new_hc                       r +0.075  seasons same sign 3/7  n 1274
+    ADP (log)                    r +0.075  seasons same sign 4/7  n 1274
+  RB:
+    plays_pg_std                 r -0.095  seasons same sign 6/7  n 2466
+    rz_tgt_sh                    r -0.094  seasons same sign 6/7  n 2390
+    tgt_sh                       r -0.068  seasons same sign 5/7  n 2390
+    ol_pb_now                    r +0.064  seasons same sign 5/6  n 2156
+    xfp_pg_py                    r -0.064  seasons same sign 4/7  n 2036
+    yr2                          r +0.063  seasons same sign 2/7  n 2466
+    xfp_pg                       r -0.062  seasons same sign 4/7  n 2466
+    ol_pb_full                   r +0.059  seasons same sign 5/6  n 2156
+    tgt_sh_py                    r -0.058  seasons same sign 6/7  n 2036
+    wopr                         r -0.058  seasons same sign 5/7  n 2466
+  WR:
+    yprr_man                     r +0.075  seasons same sign 5/7  n 3383
+    ppg_py                       r +0.071  seasons same sign 4/6  n 2517
+    tgt_sh_py                    r +0.061  seasons same sign 5/7  n 3346
+    snap_l1                      r +0.054  seasons same sign 6/7  n 3768
+    new_hc                       r +0.053  seasons same sign 6/7  n 3930
+    age                          r -0.052  seasons same sign 5/7  n 3930
+    snap_trend                   r +0.050  seasons same sign 5/7  n 3755
+    tgt_sh                       r +0.049  seasons same sign 6/7  n 3795
+    wopr                         r +0.046  seasons same sign 6/7  n 3930
+    car_trend                    r +0.044  seasons same sign 4/7  n 3795
+  TE:
+    proe_std                     r -0.160  seasons same sign 6/7  n 1710
+    ol_rb_now                    r -0.124  seasons same sign 4/6  n 1448
+    ol_rb_full                   r -0.115  seasons same sign 4/6  n 1448
+    tgt_sh_py                    r +0.111  seasons same sign 6/7  n 1534
+    ppg_py                       r +0.109  seasons same sign 5/6  n 1175
+    wopr                         r +0.109  seasons same sign 5/7  n 1710
+    tgt_sh                       r +0.101  seasons same sign 5/7  n 1680
+    yr2                          r +0.096  seasons same sign 6/7  n 1710
+    pts_over_xfp                 r -0.096  seasons same sign 7/7  n 1710
+    gl_car_sh                    r -0.094  seasons same sign 5/7  n 1664
+
+  segments (actual / projected rest of season, after the picks):
+    QB: all                                      n  1274  1.008  (4/7 seasons)
+    QB: rookies                                  n   142  1.046  (4/6 seasons)
+    QB: second year                              n   191  1.023  (3/7 seasons)
+    QB: age 30+                                  n   284  0.988  (5/7 seasons)
+    QB: changed teams (off-season)               n   160  1.009  (3/5 seasons)
+    QB: scoring 25%+ over his prior              n   164  1.010  (4/6 seasons)
+    QB: scoring 25%+ under his prior             n   146  1.118  (6/7 seasons)
+    QB: ADP 1-60                                 n   266  0.961  (4/7 seasons)
+    QB: ADP 61-150                               n   567  1.031  (7/7 seasons)
+    QB: ADP 151+ / none                          n   441  1.013  (4/7 seasons)
+    RB: all                                      n  2490  1.029  (4/7 seasons)
+    RB: rookies                                  n   386  1.076  (4/7 seasons)
+    RB: second year                              n   381  1.079  (3/7 seasons)
+    RB: age 30+                                  n   107  1.101  (4/5 seasons)
+    RB: changed teams (off-season)               n   413  1.018  (3/6 seasons)
+    RB: scoring 25%+ over his prior              n   637  0.995  (3/7 seasons)
+    RB: scoring 25%+ under his prior             n   659  1.073  (6/7 seasons)
+    RB: ADP 1-60                                 n   978  1.025  (6/7 seasons)
+    RB: ADP 61-150                               n   921  1.036  (4/7 seasons)
+    RB: ADP 151+ / none                          n   591  1.026  (5/7 seasons)
+    WR: all                                      n  3931  1.000  (3/7 seasons)
+    WR: rookies                                  n   536  1.034  (4/7 seasons)
+    WR: second year                              n   568  1.031  (4/7 seasons)
+    WR: age 30+                                  n   315  0.986  (4/7 seasons)
+    WR: changed teams (off-season)               n   678  1.004  (4/7 seasons)
+    WR: scoring 25%+ over his prior              n   990  0.991  (3/7 seasons)
+    WR: scoring 25%+ under his prior             n   923  0.955  (5/7 seasons)
+    WR: ADP 1-60                                 n  1060  1.018  (4/7 seasons)
+    WR: ADP 61-150                               n  1138  0.996  (4/7 seasons)
+    WR: ADP 151+ / none                          n  1733  0.981  (4/7 seasons)
+    TE: all                                      n  1722  1.087  (6/7 seasons)
+    TE: rookies                                  n   170  1.114  (5/7 seasons)
+    TE: second year                              n   223  1.214  (6/7 seasons)
+    TE: age 30+                                  n   181  1.007  (3/6 seasons)
+    TE: changed teams (off-season)               n   249  1.098  (5/7 seasons)
+    TE: scoring 25%+ over his prior              n   433  1.048  (4/7 seasons)
+    TE: scoring 25%+ under his prior             n   442  1.137  (6/7 seasons)
+    TE: ADP 1-60                                 n   199  1.131  (5/7 seasons)
+    TE: ADP 61-150                               n   427  1.020  (4/7 seasons)
+    TE: ADP 151+ / none                          n  1096  1.111  (6/7 seasons)
+
+--- 6  WEAKNESS MAP, model as wired (Jack: 'what is our current weakness what type of player') ---
+
+  A  most over- or under-projected (level off by 4%+ and the same side in 5+ seasons)
+    type of player                                     n  act/proj (seasons)  miss as % of avg  error vs Clay blend (seasons better)  rank order ours / Clay
+    TE: ADP 31-60                                    139  1.198 (6/6)         29.8%              +nan% (0/6)                    nan / nan
+    TE: second year                                  223  1.194 (6/7)         40.9%              +nan% (0/7)                    nan / nan
+    TE: listed second string or lower                467  1.171 (6/7)         48.1%              +nan% (0/7)                    0.419 / nan
+    TE: team implied under 19                        252  1.144 (5/7)         41.7%              +nan% (0/7)                    0.535 / nan
+    TE: scoring 25%+ under his preseason level       442  1.125 (6/7)         42.3%              +nan% (0/7)                    0.554 / nan
+    RB: rookies                                      386  1.123 (6/7)         38.6%              +nan% (0/7)                    0.621 / nan
+    QB: scoring 25%+ under his preseason level       146  1.120 (6/7)         27.7%              +nan% (0/7)                    0.905 / nan
+    RB: scoring 25%+ under his preseason level       659  1.119 (6/7)         48.6%              +nan% (0/7)                    0.511 / nan
+    RB: no passing role (under 5% of targets)        544  1.115 (5/7)         48.8%              +nan% (0/7)                    0.573 / nan
+    TE: ADP 151+ / undrafted                        1096  1.113 (6/7)         43.8%              +nan% (0/7)                    0.550 / nan
+    RB: listed second string or lower               1054  1.104 (7/7)         46.1%              +nan% (0/7)                    0.581 / nan
+    TE: 18%+ of targets                              433  1.103 (6/7)         30.2%              +nan% (0/7)                    0.529 / nan
+    TE: changed teams in the off-season              249  1.092 (5/7)         44.4%              +nan% (0/7)                    nan / nan
+    TE: all                                         1722  1.089 (7/7)         38.6%              +nan% (0/7)                    0.683 / nan
+    TE: team implied 25+                             548  1.079 (7/7)         36.7%              +nan% (0/7)                    0.724 / nan
+    WR: listed second string or lower                796  1.077 (7/7)         50.1%              +nan% (0/7)                    0.494 / nan
+    RB: committee (under 40% of carries)             937  1.073 (5/7)         50.8%              +nan% (0/7)                    0.513 / nan
+    RB: team implied under 19                        418  1.071 (5/7)         36.4%              +nan% (0/7)                    0.668 / nan
+    RB: ADP 31-60                                    353  1.070 (5/7)         34.6%              +nan% (0/7)                    0.261 / nan
+    WR: scoring 25%+ under his preseason level       923  0.932 (5/7)         47.6%              +nan% (0/7)                    0.532 / nan
+    TE: listed first string                         1206  1.060 (7/7)         35.5%              +nan% (0/7)                    0.683 / nan
+    QB: team implied under 19                        146  1.057 (5/7)         27.0%              +nan% (0/7)                    nan / nan
+    QB: ADP 61-100                                   229  1.056 (5/7)         17.7%              +nan% (0/7)                    nan / nan
+    WR: scoring 2+ a game under his usage            616  0.946 (5/7)         37.8%              +nan% (0/7)                    0.657 / nan
+    RB: ADP 61-100                                   413  1.053 (6/7)         37.6%              +nan% (0/7)                    0.641 / nan
+    TE: under 60% of snaps                           536  1.050 (5/7)         50.4%              +nan% (0/7)                    0.478 / nan
+    WR: scoring 2+ a game over his usage             910  1.047 (5/7)         31.0%              +nan% (0/7)                    0.695 / nan
+    WR: ADP 31-60                                    529  1.046 (7/7)         22.9%              +nan% (0/7)                    0.296 / nan
+
+  B  where the Clay blend is closer than we are, or orders them better
+    type of player                                     n  act/proj (seasons)  miss as % of avg  error vs Clay blend (seasons better)  rank order ours / Clay
+
+  C  hardest to project (largest miss relative to what they score), top 12
+    type of player                                     n  act/proj (seasons)  miss as % of avg  error vs Clay blend (seasons better)  rank order ours / Clay
+    TE: under 10% of targets                         523  1.049 (4/7)         57.1%              +nan% (0/7)                    0.220 / nan
+    WR: under 12% of targets                         887  0.980 (4/7)         55.8%              +nan% (0/7)                    0.266 / nan
+    RB: committee (under 40% of carries)             937  1.073 (5/7)         50.8%              +nan% (0/7)                    0.513 / nan
+    TE: under 60% of snaps                           536  1.050 (5/7)         50.4%              +nan% (0/7)                    0.478 / nan
+    WR: listed second string or lower                796  1.077 (7/7)         50.1%              +nan% (0/7)                    0.494 / nan
+    WR: ADP 151+ / undrafted                        1733  0.984 (4/7)         49.9%              +nan% (0/7)                    0.468 / nan
+    RB: ADP 151+ / undrafted                         591  1.030 (5/7)         49.5%              +nan% (0/7)                    0.502 / nan
+    RB: no passing role (under 5% of targets)        544  1.115 (5/7)         48.8%              +nan% (0/7)                    0.573 / nan
+    RB: scoring 25%+ under his preseason level       659  1.119 (6/7)         48.6%              +nan% (0/7)                    0.511 / nan
+    TE: listed second string or lower                467  1.171 (6/7)         48.1%              +nan% (0/7)                    0.419 / nan
+    WR: scoring 25%+ under his preseason level       923  0.932 (5/7)         47.6%              +nan% (0/7)                    0.532 / nan
+    RB: listed second string or lower               1054  1.104 (7/7)         46.1%              +nan% (0/7)                    0.581 / nan
+
+  D  every type
+    type of player                                     n  act/proj (seasons)  miss as % of avg  error vs Clay blend (seasons better)  rank order ours / Clay
+    QB: all                                         1274  1.010 (4/7)         20.8%              +nan% (0/7)                    0.581 / nan
+    QB: ADP 31-60                                    179  0.961 (4/6)         19.4%              +nan% (0/6)                    nan / nan
+    QB: ADP 61-100                                   229  1.056 (5/7)         17.7%              +nan% (0/7)                    nan / nan
+    QB: ADP 101-150                                  316  1.027 (4/7)         19.8%              +nan% (0/7)                    0.643 / nan
+    QB: ADP 151+ / undrafted                         441  1.018 (4/7)         24.5%              +nan% (0/7)                    0.486 / nan
+    QB: rookies                                      142  1.046 (4/6)         24.9%              +nan% (0/6)                    nan / nan
+    QB: second year                                  191  1.023 (3/7)         22.7%              +nan% (0/7)                    nan / nan
+    QB: age 30+                                      284  0.991 (5/7)         18.1%              +nan% (0/7)                    nan / nan
+    QB: changed teams in the off-season              160  1.032 (3/5)         28.4%              +nan% (0/5)                    nan / nan
+    QB: scoring 25%+ over his preseason level        164  1.013 (4/6)         21.9%              +nan% (0/6)                    0.762 / nan
+    QB: scoring 25%+ under his preseason level       146  1.120 (6/7)         27.7%              +nan% (0/7)                    0.905 / nan
+    QB: team implied under 19                        146  1.057 (5/7)         27.0%              +nan% (0/7)                    nan / nan
+    QB: team implied 25+                             452  1.004 (3/7)         18.8%              +nan% (0/7)                    0.446 / nan
+    RB: all                                         2490  1.033 (4/7)         34.7%              +nan% (0/7)                    0.711 / nan
+    RB: ADP 1-30                                     609  1.015 (5/7)         23.7%              +nan% (0/7)                    0.336 / nan
+    RB: ADP 31-60                                    353  1.070 (5/7)         34.6%              +nan% (0/7)                    0.261 / nan
+    RB: ADP 61-100                                   413  1.053 (6/7)         37.6%              +nan% (0/7)                    0.641 / nan
+    RB: ADP 101-150                                  482  1.024 (4/7)         42.3%              +nan% (0/7)                    0.618 / nan
+    RB: ADP 151+ / undrafted                         591  1.030 (5/7)         49.5%              +nan% (0/7)                    0.502 / nan
+    RB: rookies                                      386  1.123 (6/7)         38.6%              +nan% (0/7)                    0.621 / nan
+    RB: second year                                  381  1.102 (3/7)         37.0%              +nan% (0/7)                    0.610 / nan
+    RB: changed teams in the off-season              413  1.015 (4/6)         37.6%              +nan% (0/6)                    0.765 / nan
+    RB: scoring 25%+ over his preseason level        637  0.972 (5/7)         28.6%              +nan% (0/7)                    0.684 / nan
+    RB: scoring 25%+ under his preseason level       659  1.119 (6/7)         48.6%              +nan% (0/7)                    0.511 / nan
+    RB: scoring 2+ a game over his usage             465  1.037 (6/7)         24.5%              +nan% (0/7)                    0.731 / nan
+    RB: scoring 2+ a game under his usage            477  1.019 (3/7)         39.2%              +nan% (0/7)                    0.662 / nan
+    RB: team implied under 19                        418  1.071 (5/7)         36.4%              +nan% (0/7)                    0.668 / nan
+    RB: team implied 25+                             748  1.015 (3/7)         32.7%              +nan% (0/7)                    0.737 / nan
+    RB: listed first string                         1238  1.002 (2/7)         28.0%              +nan% (0/7)                    0.614 / nan
+    RB: listed second string or lower               1054  1.104 (7/7)         46.1%              +nan% (0/7)                    0.581 / nan
+    RB: starting quarterback out that week           207  1.052 (3/6)         38.1%              +nan% (0/6)                    0.550 / nan
+    WR: all                                         3931  1.006 (4/7)         36.0%              +nan% (0/7)                    0.730 / nan
+    WR: ADP 1-30                                     506  1.009 (3/7)         26.4%              +nan% (0/7)                    0.406 / nan
+    WR: ADP 31-60                                    529  1.046 (7/7)         22.9%              +nan% (0/7)                    0.296 / nan
+    WR: ADP 61-100                                   579  1.040 (4/7)         34.2%              +nan% (0/7)                    0.439 / nan
+    WR: ADP 101-150                                  536  0.949 (4/7)         41.4%              +nan% (0/7)                    0.337 / nan
+    WR: ADP 151+ / undrafted                        1733  0.984 (4/7)         49.9%              +nan% (0/7)                    0.468 / nan
+    WR: rookies                                      536  1.041 (4/7)         45.8%              +nan% (0/7)                    0.609 / nan
+    WR: second year                                  568  1.031 (4/7)         34.8%              +nan% (0/7)                    0.669 / nan
+    WR: age 30+                                      315  0.980 (5/7)         35.4%              +nan% (0/7)                    0.797 / nan
+    WR: changed teams in the off-season              678  1.023 (4/7)         39.5%              +nan% (0/7)                    0.731 / nan
+    WR: scoring 25%+ over his preseason level        990  1.020 (4/7)         31.5%              +nan% (0/7)                    0.711 / nan
+    WR: scoring 25%+ under his preseason level       923  0.932 (5/7)         47.6%              +nan% (0/7)                    0.532 / nan
+    WR: scoring 2+ a game over his usage             910  1.047 (5/7)         31.0%              +nan% (0/7)                    0.695 / nan
+    WR: scoring 2+ a game under his usage            616  0.946 (5/7)         37.8%              +nan% (0/7)                    0.657 / nan
+    WR: team implied under 19                        595  1.022 (3/7)         38.3%              +nan% (0/7)                    0.644 / nan
+    WR: team implied 25+                            1276  1.010 (3/7)         33.7%              +nan% (0/7)                    0.765 / nan
+    WR: listed first string                         3036  0.995 (4/7)         33.6%              +nan% (0/7)                    0.733 / nan
+    WR: listed second string or lower                796  1.077 (7/7)         50.1%              +nan% (0/7)                    0.494 / nan
+    WR: starting quarterback out that week           284  0.966 (5/7)         38.9%              +nan% (0/7)                    0.571 / nan
+    TE: all                                         1722  1.089 (7/7)         38.6%              +nan% (0/7)                    0.683 / nan
+    TE: ADP 31-60                                    139  1.198 (6/6)         29.8%              +nan% (0/6)                    nan / nan
+    TE: ADP 61-100                                   178  0.956 (4/7)         32.0%              +nan% (0/7)                    nan / nan
+    TE: ADP 101-150                                  249  1.061 (4/7)         35.2%              +nan% (0/7)                    nan / nan
+    TE: ADP 151+ / undrafted                        1096  1.113 (6/7)         43.8%              +nan% (0/7)                    0.550 / nan
+    TE: rookies                                      170  1.103 (4/5)         40.0%              +nan% (0/5)                    nan / nan
+    TE: second year                                  223  1.194 (6/7)         40.9%              +nan% (0/7)                    nan / nan
+    TE: age 30+                                      181  1.042 (4/6)         33.5%              +nan% (0/6)                    nan / nan
+    TE: changed teams in the off-season              249  1.092 (5/7)         44.4%              +nan% (0/7)                    nan / nan
+    TE: scoring 25%+ over his preseason level        433  1.054 (4/7)         35.5%              +nan% (0/7)                    0.684 / nan
+    TE: scoring 25%+ under his preseason level       442  1.125 (6/7)         42.3%              +nan% (0/7)                    0.554 / nan
+    TE: scoring 2+ a game over his usage             292  0.997 (4/7)         29.7%              +nan% (0/7)                    0.801 / nan
+    TE: scoring 2+ a game under his usage            141  1.078 (4/5)         39.5%              +nan% (0/5)                    0.455 / nan
+    TE: team implied under 19                        252  1.144 (5/7)         41.7%              +nan% (0/7)                    0.535 / nan
+    TE: team implied 25+                             548  1.079 (7/7)         36.7%              +nan% (0/7)                    0.724 / nan
+    TE: listed first string                         1206  1.060 (7/7)         35.5%              +nan% (0/7)                    0.683 / nan
+    TE: listed second string or lower                467  1.171 (6/7)         48.1%              +nan% (0/7)                    0.419 / nan
+    RB: committee (under 40% of carries)             937  1.073 (5/7)         50.8%              +nan% (0/7)                    0.513 / nan
+    RB: workhorse (65%+ of carries)                  617  1.004 (4/7)         27.0%              +nan% (0/7)                    0.440 / nan
+    RB: pass-catching (12%+ of targets)              611  0.966 (6/7)         26.6%              +nan% (0/7)                    0.697 / nan
+    RB: no passing role (under 5% of targets)        544  1.115 (5/7)         48.8%              +nan% (0/7)                    0.573 / nan
+    WR: alpha (27%+ of targets)                      504  1.025 (5/7)         25.3%              +nan% (0/7)                    0.486 / nan
+    WR: 18-27% of targets                           1372  1.019 (4/7)         29.4%              +nan% (0/7)                    0.544 / nan
+    WR: under 12% of targets                         887  0.980 (4/7)         55.8%              +nan% (0/7)                    0.266 / nan
+    TE: 18%+ of targets                              433  1.103 (6/7)         30.2%              +nan% (0/7)                    0.529 / nan
+    TE: under 10% of targets                         523  1.049 (4/7)         57.1%              +nan% (0/7)                    0.220 / nan
+    TE: under 60% of snaps                           536  1.050 (5/7)         50.4%              +nan% (0/7)                    0.478 / nan
+
+--- 7  STRUCTURAL (on top of the model as wired; judged on the rows touched, stacked in order) ---
+
+  7a  prior weight by draft slot (x under 1 = believe the season faster)
+
+  7a QB ADP 1-60: prior weight   (rows 266)
+    pooled (seasons better at that fixed setting): x0.25: +14.34% (1)  x0.4: +7.33% (2)  x0.6: +2.97% (2)  x0.8: +0.97% (2)  x1.25: -0.53% (5)  x1.6: -0.69% (5)  x2.5: -0.27% (5)  x4.0: +0.63% (5)
+    LEAVE-ONE-SEASON-OUT  +3.48%  seasons better 4/7  | top-150 weighted +3.06%  rank order +0.0595  | picks ['x1.6', 'x1.6', 'shipped', 'x4.0', 'x1.6', 'x2.5', 'x1.25']
+    FORWARD 2022-25       +4.15%  seasons better 2/4  | top-150 weighted +3.73%  | picks ['x4.0', 'x1.6', 'x1.6', 'x1.25']
+    rank order with x1.6: better in 1/1 seasons (pooled +0.0595)
+    -> FAIL (best pooled: x1.6)
+
+  7a QB ADP 61-100: prior weight   (rows 245)
+    pooled (seasons better at that fixed setting): x0.25: +13.39% (1)  x0.4: +4.86% (1)  x0.6: +0.74% (3)  x0.8: -0.23% (3)  x1.25: +0.93% (3)  x1.6: +2.55% (3)  x2.5: +6.33% (3)  x4.0: +10.43% (3)
+    LEAVE-ONE-SEASON-OUT  +2.37%  seasons better 1/7  | top-150 weighted +2.33%  rank order +nan  | picks ['x1.25', 'shipped', 'x0.8', 'x0.8', 'x0.8', 'x0.8', 'x0.8']
+    FORWARD 2022-25       +6.98%  seasons better 1/4  | top-150 weighted +7.18%  | picks ['x0.6', 'x0.6', 'x0.6', 'x0.8']
+    -> FAIL (best pooled: x0.8)
+
+  7a QB ADP 101-150: prior weight   (rows 322)
+    pooled (seasons better at that fixed setting): x0.25: +17.88% (0)  x0.4: +9.90% (2)  x0.6: +4.48% (2)  x0.8: +1.63% (2)  x1.25: -1.18% (5)  x1.6: -2.04% (5)  x2.5: -2.72% (5)  x4.0: -2.73% (4)
+    LEAVE-ONE-SEASON-OUT  -1.79%  seasons better 4/7  | top-150 weighted -1.66%  rank order -0.0635  | picks ['x2.5', 'x2.5', 'x4.0', 'x2.5', 'x2.5', 'x4.0', 'x4.0']
+    FORWARD 2022-25       -2.01%  seasons better 2/4  | top-150 weighted -2.00%  | picks ['x2.5', 'x4.0', 'x4.0', 'x4.0']
+    rank order with x4.0: better in 0/2 seasons (pooled -0.0635)
+    -> FAIL (best pooled: x4.0)
+
+  7a QB ADP 151+: prior weight   (rows 441)
+    pooled (seasons better at that fixed setting): x0.25: +7.01% (3)  x0.4: +2.77% (3)  x0.6: +0.66% (3)  x0.8: +0.05% (3)  x1.25: +0.24% (4)  x1.6: +0.75% (4)  x2.5: +2.02% (4)  x4.0: +3.40% (4)
+    LEAVE-ONE-SEASON-OUT  +9.87%  seasons better 0/7  | top-150 weighted +nan%  rank order +nan  | picks ['x0.8', 'x0.8', 'x0.6', 'x1.25', 'x4.0', 'x1.25', 'x0.6']
+    FORWARD 2022-25       +12.96%  seasons better 1/4  | top-150 weighted +nan%  | picks ['x4.0', 'x4.0', 'x0.6', 'x0.6']
+    -> FAIL (best pooled: shipped)
+
+  7a RB ADP 1-60: prior weight   (rows 978)
+    pooled (seasons better at that fixed setting): x0.25: +13.51% (1)  x0.4: +8.31% (1)  x0.6: +4.05% (1)  x0.8: +1.53% (1)  x1.25: -1.09% (6)  x1.6: -1.75% (6)  x2.5: -1.63% (4)  x4.0: -0.16% (3)
+    LEAVE-ONE-SEASON-OUT  -0.50%  seasons better 4/7  | top-150 weighted +1.12%  rank order +0.0064  | picks ['x2.5', 'x1.6', 'x2.5', 'x1.6', 'x1.6', 'x1.6', 'x2.5']
+    FORWARD 2022-25       -1.43%  seasons better 2/4  | top-150 weighted +0.19%  | picks ['shipped', 'x1.6', 'x1.6', 'x2.5']
+    rank order with x1.6: better in 5/7 seasons (pooled +0.0092)
+    -> FAIL (best pooled: x1.6)
+
+  7a RB ADP 61-100: prior weight   (rows 421)
+    pooled (seasons better at that fixed setting): x0.25: +12.98% (1)  x0.4: +8.09% (1)  x0.6: +4.03% (1)  x0.8: +1.56% (1)  x1.25: -1.18% (6)  x1.6: -2.04% (6)  x2.5: -2.43% (6)  x4.0: -1.67% (5)
+    LEAVE-ONE-SEASON-OUT  -2.03%  seasons better 6/7  | top-150 weighted -2.16%  rank order +0.0085  | picks ['x2.5', 'x2.5', 'x2.5', 'x2.5', 'x2.5', 'x1.6', 'x2.5']
+    FORWARD 2022-25       -3.37%  seasons better 4/4  | top-150 weighted -3.30%  | picks ['x1.6', 'x1.6', 'x1.6', 'x2.5']
+    rank order with x2.5: better in 2/3 seasons (pooled +0.0102)
+    -> PASS: x2.5
+
+  7a RB ADP 101-150: prior weight   (rows 500)
+    pooled (seasons better at that fixed setting): x0.25: +13.82% (1)  x0.4: +7.90% (1)  x0.6: +3.45% (3)  x0.8: +1.14% (3)  x1.25: -0.51% (4)  x1.6: -0.33% (3)  x2.5: +1.69% (2)  x4.0: +5.34% (2)
+    LEAVE-ONE-SEASON-OUT  +1.04%  seasons better 3/7  | top-150 weighted +1.09%  rank order -0.0093  | picks ['x1.25', 'shipped', 'x1.25', 'x1.6', 'x1.25', 'x1.6', 'x1.25']
+    FORWARD 2022-25       +5.77%  seasons better 1/4  | top-150 weighted +5.92%  | picks ['x4.0', 'x2.5', 'x1.6', 'x1.25']
+    rank order with x1.25: better in 2/6 seasons (pooled -0.0016)
+    -> FAIL (best pooled: x1.25)
+
+  7a RB ADP 151+: prior weight   (rows 591)
+    pooled (seasons better at that fixed setting): x0.25: +17.87% (1)  x0.4: +10.53% (1)  x0.6: +4.83% (1)  x0.8: +1.70% (1)  x1.25: -0.99% (5)  x1.6: -1.25% (5)  x2.5: +0.23% (5)  x4.0: +3.59% (5)
+    LEAVE-ONE-SEASON-OUT  +2.83%  seasons better 5/7  | top-150 weighted +nan%  rank order +nan  | picks ['x1.6', 'x1.6', 'x1.6', 'x1.25', 'x2.5', 'x1.25', 'x1.25']
+    FORWARD 2022-25       +4.23%  seasons better 3/4  | top-150 weighted +nan%  | picks ['x1.6', 'x2.5', 'x1.25', 'x1.25']
+    -> FAIL (best pooled: x1.6)
+
+  7a WR ADP 1-60: prior weight   (rows 1,060)
+    pooled (seasons better at that fixed setting): x0.25: +10.22% (0)  x0.4: +5.20% (2)  x0.6: +1.96% (2)  x0.8: +0.55% (3)  x1.25: -0.09% (4)  x1.6: +0.27% (4)  x2.5: +1.80% (3)  x4.0: +3.99% (2)
+    LEAVE-ONE-SEASON-OUT  +0.85%  seasons better 1/7  | top-150 weighted +1.35%  rank order +0.0026  | picks ['x1.25', 'x1.25', 'x1.25', 'shipped', 'shipped', 'shipped', 'x1.6']
+    FORWARD 2022-25       +0.95%  seasons better 2/4  | top-150 weighted +1.25%  | picks ['x0.8', 'x1.25', 'x1.25', 'x1.6']
+    rank order with x1.25: better in 4/7 seasons (pooled +0.0065)
+    -> FAIL (best pooled: x1.25)
+
+  7a WR ADP 61-100: prior weight   (rows 587)
+    pooled (seasons better at that fixed setting): x0.25: -2.66% (4)  x0.4: -3.25% (4)  x0.6: -2.59% (4)  x0.8: -1.36% (6)  x1.25: +1.65% (1)  x1.6: +3.74% (1)  x2.5: +7.80% (0)  x4.0: +11.90% (0)
+    LEAVE-ONE-SEASON-OUT  -1.21%  seasons better 4/7  | top-150 weighted -1.12%  rank order +0.0108  | picks ['x0.4', 'x0.4', 'x0.4', 'x0.4', 'x0.6', 'x0.4', 'x0.25']
+    FORWARD 2022-25       -0.54%  seasons better 2/4  | top-150 weighted -0.16%  | picks ['x0.25', 'x0.4', 'x0.25', 'x0.25']
+    rank order with x0.4: better in 4/6 seasons (pooled +0.0118)
+    -> FAIL (best pooled: x0.4)
+
+  7a WR ADP 101-150: prior weight   (rows 551)
+    pooled (seasons better at that fixed setting): x0.25: +4.12% (3)  x0.4: +1.07% (3)  x0.6: -0.31% (4)  x0.8: -0.42% (4)  x1.25: +0.80% (3)  x1.6: +2.05% (3)  x2.5: +4.86% (3)  x4.0: +7.99% (1)
+    LEAVE-ONE-SEASON-OUT  +1.26%  seasons better 3/7  | top-150 weighted +1.03%  rank order +0.0160  | picks ['x0.8', 'x0.6', 'x0.6', 'x0.8', 'shipped', 'x0.8', 'x0.6']
+    FORWARD 2022-25       +1.21%  seasons better 1/4  | top-150 weighted +1.01%  | picks ['x1.6', 'shipped', 'x0.6', 'x0.6']
+    rank order with x0.8: better in 3/5 seasons (pooled +0.0139)
+    -> FAIL (best pooled: x0.8)
+
+  7a WR ADP 151+: prior weight   (rows 1,733)
+    pooled (seasons better at that fixed setting): x0.25: +7.95% (1)  x0.4: +3.92% (1)  x0.6: +1.41% (1)  x0.8: +0.37% (3)  x1.25: -0.01% (3)  x1.6: +0.33% (3)  x2.5: +1.60% (2)  x4.0: +3.33% (1)
+    LEAVE-ONE-SEASON-OUT  +0.32%  seasons better 0/7  | top-150 weighted +nan%  rank order +nan  | picks ['x1.25', 'x1.25', 'shipped', 'shipped', 'x1.25', 'x1.25', 'shipped']
+    FORWARD 2022-25       +0.29%  seasons better 0/4  | top-150 weighted +nan%  | picks ['x0.8', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: x1.25)
+
+  7a TE ADP 1-60: prior weight   (rows 199)
+    pooled (seasons better at that fixed setting): x0.25: +11.14% (2)  x0.4: +5.78% (3)  x0.6: +2.28% (3)  x0.8: +0.69% (3)  x1.25: -0.25% (4)  x1.6: -0.08% (4)  x2.5: +1.08% (4)  x4.0: +2.85% (4)
+    LEAVE-ONE-SEASON-OUT  +4.83%  seasons better 2/7  | top-150 weighted +4.63%  rank order +nan  | picks ['x1.25', 'x2.5', 'x1.6', 'shipped', 'x1.25', 'x0.8', 'x1.6']
+    FORWARD 2022-25       +8.38%  seasons better 0/4  | top-150 weighted +8.12%  | picks ['x0.4', 'x0.8', 'x0.8', 'x1.6']
+    -> FAIL (best pooled: x1.25)
+
+  7a TE ADP 61-100: prior weight   (rows 178)
+    pooled (seasons better at that fixed setting): x0.25: +4.62% (4)  x0.4: +0.64% (4)  x0.6: -0.95% (4)  x0.8: -0.81% (4)  x1.25: +1.35% (3)  x1.6: +3.33% (3)  x2.5: +7.64% (3)  x4.0: +12.30% (3)
+    LEAVE-ONE-SEASON-OUT  +3.57%  seasons better 4/7  | top-150 weighted +4.24%  rank order +nan  | picks ['x0.6', 'x0.8', 'x0.6', 'x0.4', 'x0.6', 'x0.8', 'x0.8']
+    FORWARD 2022-25       +4.78%  seasons better 2/4  | top-150 weighted +5.98%  | picks ['x0.6', 'x1.25', 'x1.25', 'x0.8']
+    -> FAIL (best pooled: x0.6)
+
+  7a TE ADP 101-150: prior weight   (rows 249)
+    pooled (seasons better at that fixed setting): x0.25: +13.83% (1)  x0.4: +6.90% (2)  x0.6: +2.52% (2)  x0.8: +0.67% (2)  x1.25: -0.05% (5)  x1.6: +0.52% (3)  x2.5: +2.71% (3)  x4.0: +5.72% (3)
+    LEAVE-ONE-SEASON-OUT  +5.80%  seasons better 2/7  | top-150 weighted +5.36%  rank order +nan  | picks ['x2.5', 'x1.25', 'x1.25', 'shipped', 'shipped', 'x1.25', 'x0.8']
+    FORWARD 2022-25       +5.78%  seasons better 0/4  | top-150 weighted +5.75%  | picks ['x0.4', 'x0.6', 'x0.8', 'x0.8']
+    -> FAIL (best pooled: x1.25)
+
+  7a TE ADP 151+: prior weight   (rows 1,096)
+    pooled (seasons better at that fixed setting): x0.25: +10.92% (0)  x0.4: +5.51% (0)  x0.6: +2.06% (2)  x0.8: +0.57% (3)  x1.25: -0.10% (3)  x1.6: +0.27% (2)  x2.5: +1.83% (2)  x4.0: +4.03% (2)
+    LEAVE-ONE-SEASON-OUT  +0.33%  seasons better 1/7  | top-150 weighted +nan%  rank order +nan  | picks ['x1.25', 'x1.25', 'x1.25', 'shipped', 'shipped', 'x1.25', 'x1.25']
+    FORWARD 2022-25       -0.15%  seasons better 1/4  | top-150 weighted +nan%  | picks ['shipped', 'x1.25', 'x1.25', 'x1.25']
+    -> FAIL (best pooled: x1.25)
+
+  7b  prior weight when the season so far is above (hot) / below (cold) the preseason level
+
+  7b QB: hot / cold prior weight   (rows 1,274)
+    pooled (seasons better at that fixed setting): hot x0.5 / cold x0.5: +3.52% (2)  hot x0.5 / cold x0.75: +1.69% (4)  hot x0.5 / cold x1.0: +0.89% (3)  hot x0.5 / cold x1.5: +0.34% (2)  hot x0.5 / cold x2.0: +0.24% (2)  hot x0.75 / cold x0.5: +2.65% (2)  hot x0.75 / cold x0.75: +0.83% (2)  hot x0.75 / cold x1.0: +0.03% (4)  hot x0.75 / cold x1.5: -0.52% (4)  hot x0.75 / cold x2.0: -0.63% (4)  hot x1.0 / cold x0.5: +2.63% (2)  hot x1.0 / cold x0.75: +0.80% (2)  hot x1.0 / cold x1.5: -0.55% (5)  hot x1.0 / cold x2.0: -0.65% (5)  hot x1.5 / cold x0.5: +3.20% (2)  hot x1.5 / cold x0.75: +1.37% (2)  hot x1.5 / cold x1.0: +0.57% (2)  hot x1.5 / cold x1.5: +0.02% (2)  hot x1.5 / cold x2.0: -0.08% (5)  hot x2.0 / cold x0.5: +3.87% (2)  hot x2.0 / cold x0.75: +2.04% (2)  hot x2.0 / cold x1.0: +1.24% (2)  hot x2.0 / cold x1.5: +0.69% (2)  hot x2.0 / cold x2.0: +0.59% (2)
+    LEAVE-ONE-SEASON-OUT  +0.42%  seasons better 4/7  | top-150 weighted +0.10%  rank order -0.0016  | picks ['hot x1.0 / cold x1.5', 'hot x0.75 / cold x2.0', 'hot x0.75 / cold x2.0', 'hot x1.0 / cold x2.0', 'hot x1.0 / cold x2.0', 'hot x1.0 / cold x1.5', 'hot x0.75 / cold x1.5']
+    FORWARD 2022-25       +1.46%  seasons better 1/4  | top-150 weighted +0.58%  | picks ['hot x1.5 / cold x2.0', 'hot x1.0 / cold x2.0', 'shipped', 'hot x0.75 / cold x1.5']
+    rank order with hot x1.0 / cold x2.0: better in 3/7 seasons (pooled -0.0049)
+    -> FAIL (best pooled: hot x1.0 / cold x2.0)
+
+  7b RB: hot / cold prior weight   (rows 2,490)
+    pooled (seasons better at that fixed setting): hot x0.5 / cold x0.5: +5.23% (1)  hot x0.5 / cold x0.75: +3.47% (2)  hot x0.5 / cold x1.0: +2.47% (2)  hot x0.5 / cold x1.5: +1.50% (5)  hot x0.5 / cold x2.0: +1.12% (5)  hot x0.75 / cold x0.5: +3.44% (1)  hot x0.75 / cold x0.75: +1.67% (2)  hot x0.75 / cold x1.0: +0.67% (3)  hot x0.75 / cold x1.5: -0.30% (5)  hot x0.75 / cold x2.0: -0.67% (5)  hot x1.0 / cold x0.5: +2.76% (1)  hot x1.0 / cold x0.75: +1.00% (1)  hot x1.0 / cold x1.5: -0.97% (5)  hot x1.0 / cold x2.0: -1.35% (5)  hot x1.5 / cold x0.5: +2.78% (2)  hot x1.5 / cold x0.75: +1.01% (2)  hot x1.5 / cold x1.0: +0.01% (3)  hot x1.5 / cold x1.5: -0.96% (5)  hot x1.5 / cold x2.0: -1.33% (5)  hot x2.0 / cold x0.5: +3.42% (2)  hot x2.0 / cold x0.75: +1.65% (2)  hot x2.0 / cold x1.0: +0.65% (3)  hot x2.0 / cold x1.5: -0.32% (5)  hot x2.0 / cold x2.0: -0.69% (5)
+    LEAVE-ONE-SEASON-OUT  -0.52%  seasons better 4/7  | top-150 weighted +0.11%  rank order +0.0020  | picks ['hot x1.5 / cold x2.0', 'hot x1.0 / cold x2.0', 'hot x1.0 / cold x2.0', 'hot x1.0 / cold x2.0', 'hot x1.5 / cold x2.0', 'hot x1.0 / cold x2.0', 'hot x1.5 / cold x2.0']
+    FORWARD 2022-25       -0.57%  seasons better 2/4  | top-150 weighted -0.61%  | picks ['hot x1.0 / cold x2.0', 'hot x1.5 / cold x2.0', 'hot x1.0 / cold x2.0', 'hot x1.5 / cold x2.0']
+    rank order with hot x1.0 / cold x2.0: better in 5/7 seasons (pooled +0.0035)
+    -> FAIL (best pooled: hot x1.0 / cold x2.0)
+
+  7b WR: hot / cold prior weight   (rows 3,931)
+    pooled (seasons better at that fixed setting): hot x0.5 / cold x0.5: +1.37% (2)  hot x0.5 / cold x0.75: +0.69% (2)  hot x0.5 / cold x1.0: +0.60% (4)  hot x0.5 / cold x1.5: +0.95% (4)  hot x0.5 / cold x2.0: +1.45% (3)  hot x0.75 / cold x0.5: +0.76% (3)  hot x0.75 / cold x0.75: +0.08% (3)  hot x0.75 / cold x1.0: -0.01% (4)  hot x0.75 / cold x1.5: +0.34% (4)  hot x0.75 / cold x2.0: +0.84% (4)  hot x1.0 / cold x0.5: +0.77% (2)  hot x1.0 / cold x0.75: +0.09% (2)  hot x1.0 / cold x1.5: +0.35% (3)  hot x1.0 / cold x2.0: +0.85% (3)  hot x1.5 / cold x0.5: +1.34% (2)  hot x1.5 / cold x0.75: +0.66% (3)  hot x1.5 / cold x1.0: +0.57% (3)  hot x1.5 / cold x1.5: +0.92% (1)  hot x1.5 / cold x2.0: +1.42% (1)  hot x2.0 / cold x0.5: +2.04% (2)  hot x2.0 / cold x0.75: +1.36% (3)  hot x2.0 / cold x1.0: +1.27% (2)  hot x2.0 / cold x1.5: +1.62% (1)  hot x2.0 / cold x2.0: +2.12% (1)
+    LEAVE-ONE-SEASON-OUT  +1.05%  seasons better 0/7  | top-150 weighted +0.69%  rank order -0.0015  | picks ['hot x0.75 / cold x1.0', 'shipped', 'shipped', 'hot x0.75 / cold x1.0', 'hot x0.75 / cold x1.5', 'hot x1.0 / cold x0.75', 'hot x1.0 / cold x0.75']
+    FORWARD 2022-25       +1.31%  seasons better 0/4  | top-150 weighted +1.56%  | picks ['hot x0.75 / cold x0.75', 'shipped', 'hot x1.0 / cold x0.5', 'hot x1.0 / cold x0.75']
+    rank order with hot x0.75 / cold x1.0: better in 3/7 seasons (pooled +0.0007)
+    -> FAIL (best pooled: hot x0.75 / cold x1.0)
+
+  7b TE: hot / cold prior weight   (rows 1,722)
+    pooled (seasons better at that fixed setting): hot x0.5 / cold x0.5: +3.25% (1)  hot x0.5 / cold x0.75: +0.76% (3)  hot x0.5 / cold x1.0: -0.57% (4)  hot x0.5 / cold x1.5: -1.81% (5)  hot x0.5 / cold x2.0: -2.31% (5)  hot x0.75 / cold x0.5: +3.22% (1)  hot x0.75 / cold x0.75: +0.73% (3)  hot x0.75 / cold x1.0: -0.60% (4)  hot x0.75 / cold x1.5: -1.84% (6)  hot x0.75 / cold x2.0: -2.34% (6)  hot x1.0 / cold x0.5: +3.82% (1)  hot x1.0 / cold x0.75: +1.32% (1)  hot x1.0 / cold x1.5: -1.24% (5)  hot x1.0 / cold x2.0: -1.75% (5)  hot x1.5 / cold x0.5: +5.40% (0)  hot x1.5 / cold x0.75: +2.91% (0)  hot x1.5 / cold x1.0: +1.58% (1)  hot x1.5 / cold x1.5: +0.34% (3)  hot x1.5 / cold x2.0: -0.16% (3)  hot x2.0 / cold x0.5: +6.88% (0)  hot x2.0 / cold x0.75: +4.39% (0)  hot x2.0 / cold x1.0: +3.06% (1)  hot x2.0 / cold x1.5: +1.82% (2)  hot x2.0 / cold x2.0: +1.32% (2)
+    LEAVE-ONE-SEASON-OUT  -1.80%  seasons better 5/7  | top-150 weighted -1.74%  rank order -0.0012  | picks ['hot x0.5 / cold x2.0', 'hot x0.75 / cold x2.0', 'hot x0.5 / cold x2.0', 'hot x0.5 / cold x2.0', 'hot x0.5 / cold x2.0', 'hot x0.75 / cold x2.0', 'hot x0.75 / cold x2.0']
+    FORWARD 2022-25       -2.44%  seasons better 3/4  | top-150 weighted -1.81%  | picks ['hot x0.5 / cold x1.0', 'hot x0.75 / cold x2.0', 'hot x0.75 / cold x2.0', 'hot x0.75 / cold x2.0']
+    rank order with hot x0.75 / cold x2.0: better in 3/7 seasons (pooled +0.0047)
+    -> PASS: hot x0.75 / cold x2.0
+
+  7c  late-round receivers (ADP 101+): what the number is built from
+
+  7c WR ADP 101-150: usage weight in the evidence   (rows 551)
+    pooled (seasons better at that fixed setting): usage weight 0.0: -3.68% (4)  usage weight 0.25: -2.99% (5)  usage weight 0.5: -0.30% (5)  usage weight 0.75: +4.38% (1)  usage weight 1.0: +11.06% (1)
+    LEAVE-ONE-SEASON-OUT  -2.87%  seasons better 4/7  | top-150 weighted -2.23%  rank order +0.1014  | picks ['usage weight 0.0', 'usage weight 0.25', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0']
+    FORWARD 2022-25       -3.12%  seasons better 2/4  | top-150 weighted -2.34%  | picks ['usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0', 'usage weight 0.0']
+    rank order with usage weight 0.0: better in 3/5 seasons (pooled +0.1048)
+    -> FAIL (best pooled: usage weight 0.0)
+
+  7c WR ADP 101-150: target share tilt   (rows 520)
+    pooled (seasons better at that fixed setting): e 0.03: -1.15% (5)  e 0.06: -1.16% (5)  e 0.1: +0.59% (5)
+    LEAVE-ONE-SEASON-OUT  +2.23%  seasons better 5/7  | top-150 weighted +2.32%  rank order -0.0135  | picks ['e 0.03', 'e 0.03', 'e 0.03', 'e 0.1', 'e 0.03', 'e 0.03', 'e 0.06']
+    FORWARD 2022-25       +4.71%  seasons better 2/4  | top-150 weighted +4.81%  | picks ['e 0.1', 'e 0.03', 'e 0.03', 'e 0.06']
+    rank order with e 0.06: better in 3/5 seasons (pooled -0.0016)
+    -> FAIL (best pooled: e 0.06)
+
+  7c WR ADP 101-150: season snap share tilt   (rows 520)
+    pooled (seasons better at that fixed setting): e 0.03: +0.16% (3)  e 0.06: +1.21% (2)  e 0.1: +3.99% (2)
+    LEAVE-ONE-SEASON-OUT  +1.02%  seasons better 0/7  | top-150 weighted +1.08%  rank order -0.0028  | picks ['shipped', 'e 0.03', 'shipped', 'shipped', 'e 0.03', 'shipped', 'e 0.03']
+    FORWARD 2022-25       +0.72%  seasons better 0/4  | top-150 weighted +0.72%  | picks ['shipped', 'shipped', 'shipped', 'e 0.03']
+    -> FAIL (best pooled: shipped)
+
+  7c WR ADP 101-150: air-yard share tilt   (rows 520)
+    pooled (seasons better at that fixed setting): e 0.03: -0.44% (3)  e 0.06: +0.30% (3)  e 0.1: +3.13% (2)
+    LEAVE-ONE-SEASON-OUT  +3.16%  seasons better 1/7  | top-150 weighted +3.39%  rank order +0.0054  | picks ['e 0.03', 'e 0.06', 'e 0.03', 'e 0.06', 'shipped', 'shipped', 'e 0.03']
+    FORWARD 2022-25       +0.62%  seasons better 0/4  | top-150 weighted +0.64%  | picks ['shipped', 'shipped', 'shipped', 'e 0.03']
+    rank order with e 0.03: better in 2/5 seasons (pooled +0.0129)
+    -> FAIL (best pooled: e 0.03)
+
+  7c WR ADP 101-150: listed first string   (rows 449)
+    pooled (seasons better at that fixed setting): x1.04: +3.49% (1)  x1.08: +9.07% (1)  x0.96: -1.39% (4)
+    LEAVE-ONE-SEASON-OUT  -1.39%  seasons better 4/7  | top-150 weighted -1.50%  rank order +0.0000  | picks ['x0.96', 'x0.96', 'x0.96', 'x0.96', 'x0.96', 'x0.96', 'x0.96']
+    FORWARD 2022-25       -0.97%  seasons better 3/4  | top-150 weighted -1.13%  | picks ['x0.96', 'x0.96', 'x0.96', 'x0.96']
+    rank order with x0.96: better in 0/5 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x0.96)
+
+  7c WR ADP 101-150: listed second string or lower   (rows 79)
+    pooled (seasons better at that fixed setting): x0.92: -4.81% (3)  x0.96: -4.03% (3)  x1.04: +7.28% (2)
+    LEAVE-ONE-SEASON-OUT  +3.74%  seasons better 2/7  | top-150 weighted +3.37%  rank order +nan  | picks ['x0.96', 'x0.92', 'x0.92', 'shipped', 'x0.92', 'x0.92', 'x0.92']
+    FORWARD 2022-25       -2.82%  seasons better 2/4  | top-150 weighted -3.42%  | picks ['x0.96', 'x0.92', 'x0.92', 'x0.92']
+    -> FAIL (best pooled: x0.92)
+
+  7c WR ADP 151+: usage weight in the evidence   (rows 1,733)
+    pooled (seasons better at that fixed setting): usage weight 0.0: +0.60% (3)  usage weight 0.25: -0.49% (4)  usage weight 0.5: -0.37% (5)  usage weight 0.75: +0.97% (2)  usage weight 1.0: +3.51% (2)
+    LEAVE-ONE-SEASON-OUT  +0.65%  seasons better 4/7  | top-150 weighted +nan%  rank order +nan  | picks ['usage weight 0.25', 'usage weight 0.25', 'usage weight 0.5', 'usage weight 0.25', 'usage weight 0.5', 'usage weight 0.5', 'usage weight 0.25']
+    FORWARD 2022-25       +1.37%  seasons better 2/4  | top-150 weighted +nan%  | picks ['usage weight 0.0', 'usage weight 0.25', 'usage weight 0.25', 'usage weight 0.25']
+    -> FAIL (best pooled: usage weight 0.25)
+
+  7c WR ADP 151+: target share tilt   (rows 1,665)
+    pooled (seasons better at that fixed setting): e 0.03: +1.46% (1)  e 0.06: +3.84% (0)  e 0.1: +8.43% (0)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +nan%  rank order +nan  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +nan%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  7c WR ADP 151+: season snap share tilt   (rows 1,654)
+    pooled (seasons better at that fixed setting): e 0.03: +1.42% (1)  e 0.06: +3.56% (1)  e 0.1: +7.56% (1)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +nan%  rank order +nan  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +nan%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  7c WR ADP 151+: air-yard share tilt   (rows 1,665)
+    pooled (seasons better at that fixed setting): e 0.03: +1.28% (0)  e 0.06: +3.42% (0)  e 0.1: +7.61% (0)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +nan%  rank order +nan  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +nan%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  7c WR ADP 151+: listed first string   (rows 1,031)
+    pooled (seasons better at that fixed setting): x1.04: +4.10% (1)  x1.08: +9.94% (1)  x0.96: -2.36% (5)
+    LEAVE-ONE-SEASON-OUT  -2.36%  seasons better 5/7  | top-150 weighted +nan%  rank order +nan  | picks ['x0.96', 'x0.96', 'x0.96', 'x0.96', 'x0.96', 'x0.96', 'x0.96']
+    FORWARD 2022-25       -0.81%  seasons better 2/4  | top-150 weighted +nan%  | picks ['x0.96', 'x0.96', 'x0.96', 'x0.96']
+    -> FAIL (best pooled: x0.96)
+
+  7c WR ADP 151+: listed second string or lower   (rows 663)
+    pooled (seasons better at that fixed setting): x0.92: +7.06% (1)  x0.96: +3.02% (1)  x1.04: -2.01% (6)
+    LEAVE-ONE-SEASON-OUT  -2.01%  seasons better 6/7  | top-150 weighted +nan%  rank order +nan  | picks ['x1.04', 'x1.04', 'x1.04', 'x1.04', 'x1.04', 'x1.04', 'x1.04']
+    FORWARD 2022-25       -2.40%  seasons better 3/4  | top-150 weighted +nan%  | picks ['x1.04', 'x1.04', 'x1.04', 'x1.04']
+    -> FAIL (best pooled: x1.04)
+
+  7d  quarterbacks
+
+  7d second-year QB: prior weight   (rows 191)
+    pooled (seasons better at that fixed setting): x0.5: -4.57% (3)  x0.75: -2.53% (5)  x1.5: +4.51% (2)  x2.0: +7.96% (2)
+    LEAVE-ONE-SEASON-OUT  -1.98%  seasons better 3/7  | top-150 weighted -2.58%  rank order +nan  | picks ['x0.75', 'x0.5', 'x0.5', 'x0.5', 'x0.5', 'x0.5', 'x0.5']
+    FORWARD 2022-25       -0.45%  seasons better 2/4  | top-150 weighted +0.07%  | picks ['x0.5', 'x0.5', 'x0.5', 'x0.5']
+    -> FAIL (best pooled: x0.5)
+
+  7d second-year QB: prior pulled toward the ADP curve   (rows 164)
+    pooled (seasons better at that fixed setting): w 0.25: +1.52% (3)  w 0.5: +3.31% (3)  w 0.75: +5.37% (3)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +nan  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +2.05%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['shipped', 'w 0.75', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  7d QB ADP 31-60: level   (rows 179)
+    pooled (seasons better at that fixed setting): x0.97: -4.04% (3)  x0.94: -2.85% (3)
+    LEAVE-ONE-SEASON-OUT  -0.69%  seasons better 3/7  | top-150 weighted -0.78%  rank order +nan  | picks ['x0.97', 'x0.97', 'x0.97', 'x0.94', 'x0.97', 'x0.97', 'x0.97']
+    FORWARD 2022-25       +2.50%  seasons better 1/4  | top-150 weighted +2.05%  | picks ['x0.94', 'x0.97', 'x0.97', 'x0.97']
+    -> FAIL (best pooled: x0.97)
+
+  7e  tight ends ADP 31-60, small-role running backs
+
+  7e TE ADP 31-60: level   (rows 139)
+    pooled (seasons better at that fixed setting): x1.05: -12.86% (6)  x1.1: -21.23% (6)  x1.15: -25.12% (5)  x1.2: -24.51% (4)
+    LEAVE-ONE-SEASON-OUT  -16.79%  seasons better 4/7  | top-150 weighted -18.17%  rank order +nan  | picks ['x1.2', 'x1.2', 'x1.15', 'x1.15', 'x1.2', 'x1.15', 'x1.1']
+    FORWARD 2022-25       -31.70%  seasons better 4/4  | top-150 weighted -30.79%  | picks ['x1.1', 'x1.1', 'x1.1', 'x1.1']
+    -> FAIL (best pooled: x1.15)
+
+  7e RB listed second string or lower: level   (rows 1,054)
+    pooled (seasons better at that fixed setting): x1.03: -1.88% (4)  x1.06: -2.96% (4)  x1.09: -3.24% (4)
+    LEAVE-ONE-SEASON-OUT  -2.13%  seasons better 4/7  | top-150 weighted -6.71%  rank order +0.0000  | picks ['x1.09', 'x1.09', 'x1.06', 'x1.06', 'x1.09', 'x1.09', 'x1.06']
+    FORWARD 2022-25       -2.97%  seasons better 3/4  | top-150 weighted -7.57%  | picks ['x1.06', 'x1.09', 'x1.06', 'x1.06']
+    rank order with x1.09: better in 0/7 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.09)
+
+  7e RB committee (under 40% of carries): level   (rows 937)
+    pooled (seasons better at that fixed setting): x1.03: -0.53% (4)  x1.06: -0.36% (3)
+    LEAVE-ONE-SEASON-OUT  +1.26%  seasons better 3/7  | top-150 weighted +0.01%  rank order +0.0000  | picks ['x1.06', 'x1.06', 'x1.03', 'x1.03', 'x1.03', 'x1.06', 'shipped']
+    FORWARD 2022-25       +0.65%  seasons better 1/4  | top-150 weighted +0.07%  | picks ['shipped', 'x1.03', 'x1.03', 'shipped']
+    rank order with x1.03: better in 0/6 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.03)
+
+  STACKED after section 7 (vs the model as wired | vs the Clay blend):
+  picks: {'P_RB_ADP 61-100': 'x2.5', 'hc_TE': 'hot x0.75 / cold x2.0'}
+    everyone                       n  9417   -0.43% (6/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.021 (was 1.024)  | rank order 0.683 (was 0.680, Clay blend nan)
+    top-150                        n  5556   -0.42% (5/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.021 (was 1.023)  | rank order 0.612 (was 0.609, Clay blend nan)
+    QB                             n  1274   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.010 (was 1.010)  | rank order 0.581 (was 0.581, Clay blend nan)
+    RB                             n  2490   -0.44% (6/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.034 (was 1.033)  | rank order 0.716 (was 0.711, Clay blend nan)
+    WR                             n  3931   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.006 (was 1.006)  | rank order 0.730 (was 0.730, Clay blend nan)
+    TE                             n  1722   -2.34% (6/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.056 (was 1.089)  | rank order 0.687 (was 0.683, Clay blend nan)
+    WR ADP 101-150                 n   551   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 0.954 (was 0.954)  | rank order 0.325 (was 0.325, Clay blend nan)
+    WR ADP 61-100                  n   587   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.036 (was 1.036)  | rank order 0.440 (was 0.440, Clay blend nan)
+    RB 25%+ over preseason level   n   637   -0.92% (5/7) |   +nan% (0/7; was   +nan%)  | act/proj 0.984 (was 0.972)  | rank order 0.681 (was 0.684, Clay blend nan)
+    RB scoring 2+ over usage       n   465   +0.87% (2/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.040 (was 1.037)  | rank order 0.728 (was 0.731, Clay blend nan)
+    second-year QB                 n   191   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.023 (was 1.023)  | rank order nan (was nan, Clay blend nan)
+    WR 25%+ under preseason level  n   923   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 0.932 (was 0.932)  | rank order 0.532 (was 0.532, Clay blend nan)
+    RB rookies                     n   386   -2.04% (5/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.118 (was 1.123)  | rank order 0.624 (was 0.621, Clay blend nan)
+    TE ADP 31-60                   n   139   -6.09% (5/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.164 (was 1.198)  | rank order nan (was nan, Clay blend nan)
+
+--- 8  INSIDE THE WEAK SPOTS (model as wired through v2.27) ---
+
+  RB running 25%+ over preseason level: n 637, actual / projected 0.984, error vs Clay blend +nan% (better 0/7), rank order 0.681 vs nan
+    lines up with the miss (+ = scored more than projected): points minus usage evidence +0.18 (5/7); pts_over_xfp +0.16 (6/7); pc_rb1_car +0.15 (6/7); yprr_zone +0.12 (6/7); tgt_sh_py +0.11 (6/7); snap_trend -0.11 (6/7); ol_rb_now +0.11 (4/6); ol_rb_full +0.10 (4/6); ol_pb_full +0.10 (4/6)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/7); gl_car_sh +nan (0/7); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  RB rookies: n 386, actual / projected 1.118, error vs Clay blend +nan% (better 0/7), rank order 0.624 vs nan
+    lines up with the miss (+ = scored more than projected): yprr_man +0.38 (4/4); gl_car_sh -0.26 (6/7); pc_te_tgt +0.23 (5/6); rz_car_sh -0.23 (6/7); ol_rb_now +0.20 (5/6); preseason level (prior) -0.18 (6/7); age +0.18 (4/7); ol_pb_now +0.18 (5/6); depth string +0.17 (7/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/7); gl_car_sh +nan (0/7); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  RB listed second string or lower: n 1054, actual / projected 1.099, error vs Clay blend +nan% (better 0/7), rank order 0.585 vs nan
+    lines up with the miss (+ = scored more than projected): exp -0.17 (7/7); ADP (log) -0.17 (6/7); rookie +0.15 (6/7); age -0.14 (6/7); season so far / preseason level -0.14 (6/7); rz_tgt_sh -0.13 (5/7); draft_pick -0.13 (7/7); evidence minus prior (pts) -0.13 (5/7); yprr_zone +0.12 (6/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/7); gl_car_sh +nan (0/7); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  RB all: n 2490, actual / projected 1.034, error vs Clay blend +nan% (better 0/7), rank order 0.716 vs nan
+    lines up with the miss (+ = scored more than projected): rz_tgt_sh -0.12 (6/7); exp -0.12 (7/7); plays_pg_std -0.11 (6/7); xfp_pg -0.11 (6/7); pc_rb1_car +0.10 (6/7); wopr -0.10 (5/7); tgt_sh -0.10 (5/7); season so far / preseason level -0.10 (5/7); evidence minus prior (pts) -0.10 (5/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/7); gl_car_sh +nan (0/7); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  second-year QB: n 191, actual / projected 1.023, error vs Clay blend +nan% (better 0/7), rank order nan vs nan
+    lines up with the miss (+ = scored more than projected): car_sh_py +0.40 (4/5); xfp_pg_py +0.39 (5/5); att_pg -0.35 (4/5); age -0.34 (4/5); xfp_pg +0.32 (4/5); jm +0.30 (4/5); car_sh +0.24 (4/5); new_pc +0.23 (2/4); rz_car_sh +0.22 (4/5)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/3); car_sh +nan (0/5); rz_tgt_sh +nan (0/3); rz_car_sh +nan (0/5); gl_car_sh +nan (0/4); ay_sh +nan (0/3); wopr +nan (0/3); xfp_pg +nan (0/5); tgt_trend +nan (0/3)
+
+  QB all: n 1274, actual / projected 1.010, error vs Clay blend +nan% (better 0/7), rank order 0.586 vs nan
+    lines up with the miss (+ = scored more than projected): preseason level (prior) -0.19 (6/7); points minus usage evidence -0.18 (5/7); att_pg -0.16 (5/7); ppg_py -0.13 (3/6); jm +0.11 (5/7); snap_trend +0.11 (6/7); pc_rb_tgt +0.11 (5/7); db_sh -0.11 (6/7); plays_pg_std -0.10 (5/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/6); car_sh +nan (0/7); rz_tgt_sh +nan (0/5); rz_car_sh +nan (0/7); gl_car_sh +nan (0/7); ay_sh +nan (0/6); wopr +nan (0/6); xfp_pg +nan (0/7); tgt_trend +nan (0/6)
+
+  WR running 25%+ under preseason level: n 923, actual / projected 0.942, error vs Clay blend +nan% (better 0/7), rank order 0.525 vs nan
+    lines up with the miss (+ = scored more than projected): jm -0.20 (4/7); db_sh -0.16 (6/7); depth string +0.14 (5/7); draft_pick +0.14 (5/7); att_pg -0.14 (5/6); car_sh -0.13 (6/7); snap_trend +0.11 (4/7); pts_over_xfp +0.10 (4/7); points minus usage evidence +0.10 (4/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/6); gl_car_sh +nan (0/2); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  WR ADP 101-150: n 551, actual / projected 0.952, error vs Clay blend +nan% (better 0/7), rank order 0.402 vs nan
+    lines up with the miss (+ = scored more than projected): pc_te_tgt -0.22 (5/7); jm +0.20 (5/7); ol_pb_now -0.19 (4/6); ol_pb_full -0.18 (4/6); yr2 +0.16 (5/7); pc_rb1_car +0.15 (6/7); ppg_py +0.15 (4/5); draft_pick -0.14 (5/7); car_sh_py -0.12 (4/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/7); gl_car_sh +nan (0/2); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  WR all: n 3931, actual / projected 1.006, error vs Clay blend +nan% (better 0/7), rank order 0.732 vs nan
+    lines up with the miss (+ = scored more than projected): points minus usage evidence +0.10 (5/7); pts_over_xfp +0.10 (5/7); yprr_man +0.09 (5/7); ppg_py +0.08 (4/6); tgt_sh_py +0.07 (5/7); evidence minus prior (pts) +0.06 (5/7); season so far / preseason level +0.06 (4/7); yprr_zone +0.06 (5/7); snap_trend +0.06 (5/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/7); gl_car_sh +nan (0/7); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  TE all: n 1722, actual / projected 1.076, error vs Clay blend +nan% (better 0/7), rank order 0.686 vs nan
+    lines up with the miss (+ = scored more than projected): ol_rb_now -0.14 (4/6); ol_rb_full -0.14 (4/6); pc_rb1_car -0.12 (6/7); pts_over_xfp -0.10 (6/7); points minus usage evidence -0.10 (7/7); gl_car_sh -0.10 (4/7); ppg_py +0.10 (4/6); wopr +0.09 (5/7); tgt_sh +0.08 (5/7)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/7); gl_car_sh +nan (0/7); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+  TE ADP 61-150: n 427, actual / projected 1.014, error vs Clay blend +nan% (better 0/7), rank order 0.420 vs nan
+    lines up with the miss (+ = scored more than projected): pc_te_tgt +0.29 (5/6); ol_rb_now -0.22 (4/6); pc_proe -0.21 (4/6); ol_rb_full -0.20 (4/6); team_change -0.18 (4/4); plays_pg_std +0.18 (4/7); gl_car_sh -0.18 (3/3); car_sh -0.17 (4/7); att_pg -0.17 (1/1)
+    lines up with the Clay blend being closer: tgt_sh +nan (0/7); car_sh +nan (0/7); rz_tgt_sh +nan (0/7); rz_car_sh +nan (0/4); gl_car_sh +nan (0/3); ay_sh +nan (0/7); wopr +nan (0/7); xfp_pg +nan (0/7); pts_over_xfp +nan (0/7)
+
+--- 9  LEADS FROM SECTION 8, tested on top of the model as wired through v2.27 ---
+
+  9a  running backs: talent grade (JM), draft capital, coach's lead-back history, team play volume
+
+  9a RB: JM talent-grade tilt   (rows 2,112)
+    pooled (seasons better at that fixed setting): e 0.02: -0.50% (5)  e 0.04: -0.13% (4)  e 0.06: +1.10% (3)  e 0.09: +4.55% (1)
+    LEAVE-ONE-SEASON-OUT  -0.50%  seasons better 5/7  | top-150 weighted -1.96%  rank order +0.0051  | picks ['e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02']
+    FORWARD 2022-25       +0.18%  seasons better 2/4  | top-150 weighted -0.70%  | picks ['e 0.04', 'e 0.02', 'e 0.02', 'e 0.02']
+    rank order with e 0.02: better in 6/7 seasons (pooled +0.0051)
+    -> FAIL (best pooled: e 0.02)
+
+  9a RB rookies: JM tilt   (rows 386)
+    pooled (seasons better at that fixed setting): e 0.04: +1.90% (3)  e 0.08: +6.43% (1)  e 0.12: +12.55% (0)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  9a RB rookies, top-40 pick: level   (rows 80)
+    pooled (seasons better at that fixed setting): x1.05: +1.96% (3)  x1.1: +9.46% (1)  x1.15: +22.48% (1)  x1.2: +41.03% (0)
+    LEAVE-ONE-SEASON-OUT  +5.27%  seasons better 0/7  | top-150 weighted +10.19%  rank order +nan  | picks ['x1.05', 'x1.05', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  9a RB rookies, top-75 pick: level   (rows 170)
+    pooled (seasons better at that fixed setting): x1.05: -5.54% (5)  x1.1: -7.56% (4)  x1.15: -6.06% (4)  x1.2: -1.05% (3)
+    LEAVE-ONE-SEASON-OUT  -7.56%  seasons better 4/7  | top-150 weighted +2.42%  rank order +nan  | picks ['x1.1', 'x1.1', 'x1.1', 'x1.1', 'x1.1', 'x1.1', 'x1.1']
+    FORWARD 2022-25       -8.25%  seasons better 2/4  | top-150 weighted -5.26%  | picks ['x1.1', 'x1.1', 'x1.1', 'x1.1']
+    -> FAIL (best pooled: x1.1)
+
+  9a RB backups drafted in the top 150: level   (rows 609)
+    pooled (seasons better at that fixed setting): x1.04: -4.09% (6)  x1.08: -6.62% (6)  x1.12: -7.60% (4)
+    LEAVE-ONE-SEASON-OUT  -7.60%  seasons better 4/7  | top-150 weighted -8.30%  rank order +0.0000  | picks ['x1.12', 'x1.12', 'x1.12', 'x1.12', 'x1.12', 'x1.12', 'x1.12']
+    FORWARD 2022-25       -9.59%  seasons better 3/4  | top-150 weighted -11.32%  | picks ['x1.12', 'x1.12', 'x1.12', 'x1.12']
+    rank order with x1.12: better in 0/7 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.12)
+
+  9a RB: coach's lead-back carry history tilt   (rows 1,750)
+    pooled (seasons better at that fixed setting): e 0.02: -0.96% (5)  e 0.04: -1.15% (4)  e 0.06: -0.57% (3)
+    LEAVE-ONE-SEASON-OUT  -0.56%  seasons better 4/7  | top-150 weighted -0.20%  rank order +0.0016  | picks ['e 0.04', 'e 0.02', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.02']
+    FORWARD 2022-25       -0.52%  seasons better 2/4  | top-150 weighted +2.05%  | picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.02']
+    rank order with e 0.04: better in 3/7 seasons (pooled +0.0029)
+    -> FAIL (best pooled: e 0.04)
+
+  9a RB running hot: coach's lead-back carry history tilt   (rows 456)
+    pooled (seasons better at that fixed setting): e 0.03: -1.55% (3)  e 0.06: -0.71% (3)  e 0.09: +2.50% (3)
+    LEAVE-ONE-SEASON-OUT  -1.55%  seasons better 3/7  | top-150 weighted -0.58%  rank order +0.0058  | picks ['e 0.03', 'e 0.03', 'e 0.03', 'e 0.03', 'e 0.03', 'e 0.03', 'e 0.03']
+    FORWARD 2022-25       -0.75%  seasons better 2/4  | top-150 weighted +5.85%  | picks ['e 0.03', 'e 0.06', 'e 0.06', 'e 0.03']
+    rank order with e 0.03: better in 1/2 seasons (pooled +0.0058)
+    -> FAIL (best pooled: e 0.03)
+
+  9a RB: team plays-per-game tilt (high-volume offenses come down)   (rows 2,466)
+    pooled (seasons better at that fixed setting): e 0.02: -1.06% (6)  e 0.04: -1.49% (6)  e 0.06: -1.30% (5)
+    LEAVE-ONE-SEASON-OUT  -1.49%  seasons better 6/7  | top-150 weighted -2.27%  rank order +0.0062  | picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04', 'e 0.04']
+    FORWARD 2022-25       -1.90%  seasons better 4/4  | top-150 weighted -3.01%  | picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.04']
+    rank order with e 0.04: better in 6/7 seasons (pooled +0.0062)
+    -> PASS: e 0.04
+
+  9a RB running hot: scoring over usage tilt   (rows 636)
+    pooled (seasons better at that fixed setting): e 0.03: -1.34% (4)  e 0.06: -0.54% (4)
+    LEAVE-ONE-SEASON-OUT  +0.57%  seasons better 4/7  | top-150 weighted +2.61%  rank order +0.0148  | picks ['e 0.03', 'e 0.03', 'e 0.03', 'e 0.03', 'e 0.06', 'e 0.03', 'e 0.06']
+    FORWARD 2022-25       +4.09%  seasons better 1/4  | top-150 weighted +13.70%  | picks ['e 0.06', 'e 0.06', 'e 0.03', 'e 0.06']
+    rank order with e 0.03: better in 3/6 seasons (pooled +0.0118)
+    -> FAIL (best pooled: e 0.03)
+
+  9b  receivers who started cold
+
+  9b WR cold and under 50% of snaps last game: level   (rows 281)
+    pooled (seasons better at that fixed setting): x0.92: -3.34% (5)  x0.85: -2.96% (4)  x0.78: +0.52% (2)
+    LEAVE-ONE-SEASON-OUT  +4.02%  seasons better 3/7  | top-150 weighted +20.41%  rank order +nan  | picks ['x0.92', 'x0.92', 'x0.92', 'x0.85', 'shipped', 'x0.85', 'x0.85']
+    FORWARD 2022-25       +2.25%  seasons better 1/4  | top-150 weighted +18.01%  | picks ['x0.85', 'x0.92', 'x0.85', 'x0.85']
+    -> FAIL (best pooled: x0.92)
+
+  9b WR cold and under 65% of snaps last game: level   (rows 433)
+    pooled (seasons better at that fixed setting): x0.92: -5.22% (5)  x0.85: -5.52% (5)  x0.78: -1.85% (3)
+    LEAVE-ONE-SEASON-OUT  -3.70%  seasons better 5/7  | top-150 weighted +3.67%  rank order +nan  | picks ['x0.85', 'x0.85', 'x0.85', 'x0.85', 'x0.92', 'x0.85', 'x0.85']
+    FORWARD 2022-25       -2.48%  seasons better 2/4  | top-150 weighted +2.98%  | picks ['x0.85', 'x0.92', 'x0.85', 'x0.85']
+    -> FAIL (best pooled: x0.85)
+
+  9b WR cold: snap trend carried   (rows 843)
+    pooled (seasons better at that fixed setting): strength 0.5: -0.74% (5)  strength 1.0: +0.16% (2)
+    LEAVE-ONE-SEASON-OUT  -0.74%  seasons better 5/7  | top-150 weighted +1.97%  rank order -0.0053  | picks ['strength 0.5', 'strength 0.5', 'strength 0.5', 'strength 0.5', 'strength 0.5', 'strength 0.5', 'strength 0.5']
+    FORWARD 2022-25       -0.21%  seasons better 1/4  | top-150 weighted +1.58%  | picks ['shipped', 'shipped', 'shipped', 'strength 0.5']
+    rank order with strength 0.5: better in 1/4 seasons (pooled -0.0053)
+    -> FAIL (best pooled: strength 0.5)
+
+  9b WR ADP 101-150 below his preseason level: prior weight   (rows 316)
+    pooled (seasons better at that fixed setting): x0.25: -6.98% (5)  x0.4: -6.25% (5)  x0.6: -4.28% (5)  x0.8: -2.09% (5)
+    LEAVE-ONE-SEASON-OUT  -5.54%  seasons better 5/7  | top-150 weighted -6.40%  rank order +0.0429  | picks ['x0.25', 'x0.25', 'x0.25', 'x0.25', 'x0.4', 'x0.25', 'x0.25']
+    FORWARD 2022-25       -7.79%  seasons better 3/4  | top-150 weighted -8.57%  | picks ['x0.6', 'x0.4', 'x0.25', 'x0.25']
+    rank order with x0.25: better in 2/3 seasons (pooled +0.0535)
+    -> PASS: x0.25
+
+  9b WR ADP 151+ below his preseason level: prior weight   (rows 906)
+    pooled (seasons better at that fixed setting): x0.25: +3.53% (3)  x0.4: +1.14% (5)  x0.6: -0.01% (5)  x0.8: -0.20% (5)
+    LEAVE-ONE-SEASON-OUT  +2.37%  seasons better 4/7  | top-150 weighted +nan%  rank order +nan  | picks ['x0.8', 'x0.8', 'x0.8', 'x0.8', 'shipped', 'x0.8', 'x0.4']
+    FORWARD 2022-25       +3.48%  seasons better 2/4  | top-150 weighted +nan%  | picks ['x0.4', 'x0.4', 'x0.4', 'x0.4']
+    -> FAIL (best pooled: x0.8)
+
+  9c  tight ends: coach's tight-end target history, run-blocking line, scoring over usage
+
+  9c TE: coach's tight-end target history tilt   (rows 1,196)
+    pooled (seasons better at that fixed setting): e 0.02: -0.69% (4)  e 0.04: -0.77% (4)  e 0.06: -0.26% (4)
+    LEAVE-ONE-SEASON-OUT  +0.99%  seasons better 4/7  | top-150 weighted +0.66%  rank order +0.0075  | picks ['e 0.02', 'e 0.02', 'e 0.02', 'e 0.06', 'e 0.04', 'e 0.04', 'e 0.02']
+    FORWARD 2022-25       +4.07%  seasons better 1/4  | top-150 weighted +8.69%  | picks ['e 0.06', 'e 0.06', 'e 0.04', 'e 0.02']
+    rank order with e 0.04: better in 2/4 seasons (pooled +0.0024)
+    -> FAIL (best pooled: e 0.04)
+
+  9c TE: run-blocking line tilt (good run lines' tight ends come down)   (rows 1,448)
+    pooled (seasons better at that fixed setting): e 0.02: -1.11% (3)  e 0.04: -1.62% (2)  e 0.06: -1.53% (2)
+    LEAVE-ONE-SEASON-OUT  +0.25%  seasons better 2/7  | top-150 weighted +3.76%  rank order -0.0175  | picks ['e 0.04', 'e 0.02', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.04', 'e 0.06']
+    FORWARD 2022-25       +0.78%  seasons better 1/4  | top-150 weighted +6.93%  | picks ['e 0.06', 'e 0.06', 'e 0.04', 'e 0.06']
+    rank order with e 0.04: better in 2/6 seasons (pooled -0.0080)
+    -> FAIL (best pooled: e 0.04)
+
+  9c TE: scoring over usage comes back   (rows 1,710)
+    pooled (seasons better at that fixed setting): e 0.02: -0.46% (5)  e 0.04: -0.35% (4)  e 0.06: +0.33% (3)
+    LEAVE-ONE-SEASON-OUT  -0.03%  seasons better 5/7  | top-150 weighted +1.83%  rank order -0.0090  | picks ['e 0.02', 'e 0.04', 'e 0.04', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.02']
+    FORWARD 2022-25       -0.48%  seasons better 2/4  | top-150 weighted -0.23%  | picks ['shipped', 'shipped', 'e 0.02', 'e 0.02']
+    rank order with e 0.02: better in 2/7 seasons (pooled -0.0095)
+    -> FAIL (best pooled: e 0.02)
+
+  9d  quarterbacks: talent grade (JM)
+
+  9d QB: JM talent-grade tilt   (rows 826)
+    pooled (seasons better at that fixed setting): e 0.01: -0.68% (5)  e 0.02: -1.11% (4)  e 0.04: -1.24% (4)
+    LEAVE-ONE-SEASON-OUT  -0.10%  seasons better 4/7  | top-150 weighted +1.46%  rank order +0.0041  | picks ['e 0.04', 'e 0.04', 'e 0.04', 'e 0.02', 'e 0.02', 'e 0.02', 'e 0.04']
+    FORWARD 2022-25       -0.99%  seasons better 2/4  | top-150 weighted +0.03%  | picks ['shipped', 'e 0.01', 'e 0.02', 'e 0.04']
+    rank order with e 0.04: better in 2/6 seasons (pooled +0.0009)
+    -> FAIL (best pooled: e 0.04)
+
+  STACKED after section 9, fold-picked settings (vs wired through v2.27 | vs the Clay blend):
+    everyone           n  9417   -0.69% (6/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.025 (was 1.023)  | rank order 0.684 (was 0.684, Clay blend nan)
+    top-150            n  5556   -1.10% (6/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.024 (was 1.021)  | rank order 0.620 (was 0.618, Clay blend nan)
+    QB                 n  1274   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.010 (was 1.010)  | rank order 0.586 (was 0.586, Clay blend nan)
+    RB                 n  2490   -1.49% (6/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.034 (was 1.034)  | rank order 0.718 (was 0.716, Clay blend nan)
+    WR                 n  3931   -0.57% (5/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.012 (was 1.006)  | rank order 0.730 (was 0.732, Clay blend nan)
+    TE                 n  1722   +0.00% (0/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.076 (was 1.076)  | rank order 0.686 (was 0.686, Clay blend nan)
+    RB running hot     n   637   -0.23% (3/7) |   +nan% (0/7; was   +nan%)  | act/proj 0.992 (was 0.984)  | rank order 0.689 (was 0.681, Clay blend nan)
+    RB rookies         n   386   +0.79% (4/7) |   +nan% (0/7; was   +nan%)  | act/proj 1.119 (was 1.118)  | rank order 0.616 (was 0.624, Clay blend nan)
+    WR cold            n   923   -2.66% (6/7) |   +nan% (0/7; was   +nan%)  | act/proj 0.969 (was 0.942)  | rank order 0.513 (was 0.525, Clay blend nan)
+    WR ADP 101-150     n   551   -4.00% (5/7) |   +nan% (0/7; was   +nan%)  | act/proj 0.998 (was 0.952)  | rank order 0.447 (was 0.402, Clay blend nan)
+
+--- 10  ABLATION: each wired piece removed, whole-board effect of HAVING it (negative = it helps) ---
+  full model: all rows vs Clay blend +nan%, top-150 weighted +nan%, rank order 0.6211 (Clay blend nan)
+    piece                                  rows  | all rows (seasons it helps) | top-150 weighted (seasons) | rank order | verdict
+    usage evidence (all positions)          6421 |  -0.40% (4/7)            |  +0.03% (4/7)            | +0.0004    | mixed   (its own rows -0.57%)
+    Vegas-cleaned evidence                  9409 |  -0.66% (6/7)            |  -1.01% (5/7)            | +0.0057    | helps   (its own rows -0.66%)
+    ridge season prior mix                  8143 |  -3.12% (7/7)            |  -2.62% (7/7)            | +0.0086    | helps   (its own rows -3.79%)
+    RB snap trend carried                   2334 |  -0.95% (6/7)            |  -0.82% (4/7)            | +0.0026    | helps   (its own rows -3.14%)
+    QB changed teams x.84                    151 |  -0.84% (6/7)            |  -0.61% (3/7)            | +0.0062    | helps   (its own rows -25.41%)
+    TE snap-share level e .3                1668 |  -0.32% (6/7)            |  -0.27% (5/7)            | +0.0068    | helps   (its own rows -2.57%)
+    TE team pass-rate tilt e .04            1710 |  -0.26% (5/7)            |  -0.34% (4/7)            | +0.0045    | helps   (its own rows -2.06%)
+    RB 61-100 prior weight x2.5              421 |  -0.10% (5/7)            |  -0.09% (5/7)            | +0.0019    | helps   (its own rows -1.85%)
+    WR 61-100 prior weight x0.6              587 |  -0.18% (4/7)            |  -0.17% (5/7)            | +0.0002    | helps   (its own rows -2.59%)
+    second-year QB prior weight x0.75        191 |  -0.08% (5/7)            |  -0.09% (4/7)            | +0.0014    | helps   (its own rows -2.53%)
+    WR 101-150 usage cap .25                 551 |  -0.29% (5/7)            |  -0.19% (5/7)            | +0.0009    | helps   (its own rows -5.16%)
+    TE 31-60 x1.10                           139 |  -0.42% (6/7)            |  -0.75% (6/7)            | +0.0044    | helps   (its own rows -24.32%)
+    WR 101-150 cold prior weight x0.4        316 |  -0.20% (5/7)            |  -0.16% (5/7)            | +0.0003    | helps   (its own rows -6.25%)
+    RB team play-volume tilt e .04          2466 |  -0.49% (6/7)            |  -0.94% (6/7)            | +0.0018    | helps   (its own rows -1.58%)
+    RB backup (top 150) x1.04                609 |  -0.37% (7/7)            |  -0.40% (7/7)            | +0.0008    | helps   (its own rows -4.36%)
+
+--- 12  SEASON BLEND: w x full shadow + (1 - w) x Clay blend, rest of season, per position (w 1 = shadow alone) ---
+  all rows: w 0.0: +nan% (0/7) rho nan | w 0.3: +nan% (0/7) rho nan | w 0.5: +nan% (0/7) rho nan | w 0.7: +nan% (0/7) rho nan | w 0.8: +nan% (0/7) rho nan | w 0.9: +nan% (0/7) rho nan | shadow alone rho 0.6844 | wired weights +nan% rho nan
+  top 150: w 0.0: +nan% (0/7) rho nan | w 0.3: +nan% (0/7) rho nan | w 0.5: +nan% (0/7) rho nan | w 0.7: +nan% (0/7) rho nan | w 0.8: +nan% (0/7) rho nan | w 0.9: +nan% (0/7) rho nan | shadow alone rho 0.6211 | wired weights +nan% rho nan
+  QB (n833): best fixed w 0.0 (+nan% vs shadow alone) | wired w 0.5: +nan% (0/7) | Clay blend alone +nan% | rank shadow 0.5125 wired nan Clay nan
+  RB (n1899): best fixed w 0.0 (+nan% vs shadow alone) | wired w 0.8: +nan% (0/7) | Clay blend alone +nan% | rank shadow 0.6775 wired nan Clay nan
+  WR (n2198): best fixed w 0.0 (+nan% vs shadow alone) | wired w 0.7: +nan% (0/7) | Clay blend alone +nan% | rank shadow 0.6446 wired nan Clay nan
+  TE (n626): best fixed w 0.0 (+nan% vs shadow alone) | wired w 0.0: +nan% (0/7) | Clay blend alone +nan% | rank shadow 0.6449 wired nan Clay nan
+  LOYO     per-position pick: vs shadow alone +nan% (0/7), vs wired weights +nan% | rank nan (shadow 0.6211, wired nan) | picks QB [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | RB [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | WR [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] | TE [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  forward  per-position pick: vs shadow alone +nan% (0/4), vs wired weights +nan% | rank nan (shadow 0.5953, wired nan) | picks QB [0.0, 0.0, 0.0, 0.0] | RB [0.0, 0.0, 0.0, 0.0] | WR [0.0, 0.0, 0.0, 0.0] | TE [0.0, 0.0, 0.0, 0.0]
+
+--- 11  WEIGHTS: this season vs the preseason level, model vs best fit (model as wired through v2.28) ---
+    group                              rows   model's weight on this season   best-fit weight   level (sum of the two fitted weights)
+    QB all                              1274          34%                        25%            1.007
+    QB 3-4 games                         380          23%                        19%            1.006
+    QB 5-7 games                         500          34%                        24%            1.002
+    QB 8-10 games                        394          44%                        41%            1.010
+    QB rookie                            142          32%                         6%            1.006
+    QB second year                       191          39%                        50%            1.026
+    QB years 3-5                         369          33%                        11%            1.002
+    QB 6+ years                          572          33%                        29%            1.005
+    QB ADP 1-60                          266          33%                        23%            0.964
+    QB ADP 61-150                        567          35%                        24%            1.033
+    QB ADP 151+ / undrafted              441          33%                        30%            1.011
+    RB all                              2490          50%                        40%            1.024
+    RB 3-4 games                         742          38%                        31%            1.014
+    RB 5-7 games                        1000          50%                        42%            1.012
+    RB 8-10 games                        748          60%                        48%            1.044
+    RB rookie                            386          48%                        21%            1.060
+    RB second year                       381          48%                        39%            1.094
+    RB years 3-5                        1062          50%                        44%            1.002
+    RB 6+ years                          637          50%                        39%            1.004
+    RB ADP 1-60                          978          54%                        37%            1.026
+    RB ADP 61-150                        921          43%                        40%            1.023
+    RB ADP 151+ / undrafted              591          53%                        42%            1.021
+    WR all                              3931          45%                        43%            1.008
+    WR 3-4 games                        1182          34%                        32%            1.002
+    WR 5-7 games                        1541          46%                        45%            1.003
+    WR 8-10 games                       1208          56%                        56%            1.014
+    WR rookie                            536          47%                        30%            1.008
+    WR second year                       568          46%                        39%            1.034
+    WR years 3-5                        1586          45%                        50%            1.011
+    WR 6+ years                         1240          45%                        36%            0.992
+    WR ADP 1-60                         1060          42%                        36%            1.025
+    WR ADP 61-150                       1138          55%                        57%            1.001
+    WR ADP 151+ / undrafted             1733          41%                        37%            0.976
+    TE all                              1722          42%                        34%            1.071
+    TE 3-4 games                         530          30%                        23%            1.068
+    TE 5-7 games                         689          42%                        37%            1.056
+    TE 8-10 games                        503          53%                        55%            1.070
+    TE rookie                            170          41%                        26%            1.073
+    TE second year                       223          42%                        32%            1.153
+    TE years 3-5                         673          41%                        32%            1.036
+    TE 6+ years                          644          42%                        43%            1.083
+    TE ADP 1-60                          199          42%                        32%            1.069
+    TE ADP 61-150                        427          42%                        41%            1.011
+    TE ADP 151+ / undrafted             1096          41%                        30%            1.126
+
+  11b  prior-weight multipliers, tested (x under 1 = believe the season faster)
+
+  11b QB second year: prior weight   (rows 191)
+    pooled (seasons better at that fixed setting): x0.4: -1.60% (3)  x0.6: -2.28% (3)  x0.8: -1.41% (3)  x1.25: +1.95% (2)  x1.6: +4.58% (2)  x2.5: +9.97% (2)
+    LEAVE-ONE-SEASON-OUT  +4.09%  seasons better 2/7  | top-150 weighted +3.98%  rank order +nan  | picks ['shipped', 'x0.4', 'x0.6', 'x0.4', 'x0.6', 'x0.4', 'x0.6']
+    FORWARD 2022-25       +4.10%  seasons better 2/4  | top-150 weighted +2.75%  | picks ['x0.4', 'x0.6', 'x0.4', 'x0.6']
+    -> FAIL (best pooled: x0.6)
+
+  11b QB years 3-5: prior weight   (rows 369)
+    pooled (seasons better at that fixed setting): x0.4: +10.55% (1)  x0.6: +4.53% (2)  x0.8: +1.58% (2)  x1.25: -1.04% (5)  x1.6: -1.67% (5)  x2.5: -1.87% (5)
+    LEAVE-ONE-SEASON-OUT  -0.31%  seasons better 5/7  | top-150 weighted -1.26%  rank order +nan  | picks ['x1.6', 'x2.5', 'x1.6', 'x2.5', 'x2.5', 'x1.6', 'x2.5']
+    FORWARD 2022-25       -0.20%  seasons better 3/4  | top-150 weighted -1.14%  | picks ['x2.5', 'x1.6', 'x1.6', 'x2.5']
+    -> PASS: x2.5
+
+  11b QB 6+ years: prior weight   (rows 572)
+    pooled (seasons better at that fixed setting): x0.4: +5.10% (3)  x0.6: +1.80% (3)  x0.8: +0.48% (3)  x1.25: -0.09% (4)  x1.6: +0.16% (4)  x2.5: +1.19% (4)
+    LEAVE-ONE-SEASON-OUT  +1.71%  seasons better 0/7  | top-150 weighted +0.41%  rank order +0.0063  | picks ['shipped', 'shipped', 'shipped', 'x1.6', 'x1.25', 'x1.6', 'shipped']
+    FORWARD 2022-25       +3.85%  seasons better 0/4  | top-150 weighted +1.28%  | picks ['x2.5', 'x2.5', 'x1.6', 'shipped']
+    rank order with x1.25: better in 2/3 seasons (pooled +0.0014)
+    -> FAIL (best pooled: x1.25)
+
+  11b QB after 3-4 games: prior weight   (rows 380)
+    pooled (seasons better at that fixed setting): x0.4: +3.70% (4)  x0.6: +0.62% (4)  x0.8: -0.07% (5)  x1.25: +0.44% (2)  x1.6: +1.19% (2)  x2.5: +2.80% (2)
+    LEAVE-ONE-SEASON-OUT  +1.84%  seasons better 1/7  | top-150 weighted +1.43%  rank order +0.0011  | picks ['shipped', 'shipped', 'x0.8', 'x0.8', 'shipped', 'shipped', 'x0.6']
+    FORWARD 2022-25       +1.22%  seasons better 3/4  | top-150 weighted +2.08%  | picks ['x0.8', 'x0.8', 'x0.6', 'x0.6']
+    rank order with x0.8: better in 5/7 seasons (pooled +0.0081)
+    -> FAIL (best pooled: x0.8)
+
+  11b QB after 5-7 games: prior weight   (rows 500)
+    pooled (seasons better at that fixed setting): x0.4: +5.07% (2)  x0.6: +1.81% (2)  x0.8: +0.50% (2)  x1.25: -0.12% (5)  x1.6: +0.10% (4)  x2.5: +1.05% (2)
+    LEAVE-ONE-SEASON-OUT  +0.61%  seasons better 3/7  | top-150 weighted +0.01%  rank order -0.0056  | picks ['x1.25', 'x1.25', 'shipped', 'x1.25', 'x1.6', 'x1.25', 'shipped']
+    FORWARD 2022-25       +0.94%  seasons better 0/4  | top-150 weighted +0.11%  | picks ['x1.6', 'x1.25', 'shipped', 'shipped']
+    rank order with x1.25: better in 3/7 seasons (pooled -0.0021)
+    -> FAIL (best pooled: x1.25)
+
+  11b QB after 8-10 games: prior weight   (rows 394)
+    pooled (seasons better at that fixed setting): x0.4: +2.01% (3)  x0.6: +0.50% (3)  x0.8: +0.02% (3)  x1.25: +0.28% (3)  x1.6: +0.88% (3)  x2.5: +2.49% (2)
+    LEAVE-ONE-SEASON-OUT  +1.59%  seasons better 0/7  | top-150 weighted +1.55%  rank order -0.0023  | picks ['x0.8', 'x0.6', 'x0.8', 'x1.25', 'shipped', 'shipped', 'x0.8']
+    FORWARD 2022-25       +1.42%  seasons better 1/4  | top-150 weighted +1.40%  | picks ['x1.6', 'shipped', 'x0.8', 'x0.8']
+    -> FAIL (best pooled: shipped)
+
+  11b RB rookie: prior weight   (rows 386)
+    pooled (seasons better at that fixed setting): x0.4: +5.37% (1)  x0.6: +2.72% (2)  x0.8: +1.08% (2)  x1.25: -0.89% (5)  x1.6: -1.66% (5)  x2.5: -2.50% (5)
+    LEAVE-ONE-SEASON-OUT  -2.50%  seasons better 5/7  | top-150 weighted -4.15%  rank order +0.0000  | picks ['x2.5', 'x2.5', 'x2.5', 'x2.5', 'x2.5', 'x2.5', 'x2.5']
+    FORWARD 2022-25       -2.31%  seasons better 2/4  | top-150 weighted -5.56%  | picks ['x2.5', 'x2.5', 'x2.5', 'x2.5']
+    rank order with x2.5: better in 0/1 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x2.5)
+
+  11b RB second year: prior weight   (rows 381)
+    pooled (seasons better at that fixed setting): x0.4: +4.05% (1)  x0.6: +1.53% (1)  x0.8: +0.41% (1)  x1.25: +0.01% (6)  x1.6: +0.48% (5)  x2.5: +2.34% (4)
+    LEAVE-ONE-SEASON-OUT  +5.98%  seasons better 0/7  | top-150 weighted -0.35%  rank order +0.0238  | picks ['shipped', 'shipped', 'shipped', 'x0.8', 'x2.5', 'shipped', 'shipped']
+    FORWARD 2022-25       +6.25%  seasons better 1/4  | top-150 weighted -4.04%  | picks ['x2.5', 'x2.5', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  11b RB years 3-5: prior weight   (rows 1,062)
+    pooled (seasons better at that fixed setting): x0.4: +6.38% (1)  x0.6: +2.65% (2)  x0.8: +0.82% (2)  x1.25: -0.27% (5)  x1.6: +0.08% (4)  x2.5: +2.12% (4)
+    LEAVE-ONE-SEASON-OUT  +0.72%  seasons better 4/7  | top-150 weighted +1.92%  rank order -0.0029  | picks ['x1.6', 'x1.25', 'x1.25', 'x1.25', 'shipped', 'x1.25', 'x1.25']
+    FORWARD 2022-25       -0.44%  seasons better 2/4  | top-150 weighted -0.49%  | picks ['shipped', 'shipped', 'x1.25', 'x1.25']
+    rank order with x1.25: better in 4/7 seasons (pooled -0.0038)
+    -> FAIL (best pooled: x1.25)
+
+  11b RB 6+ years: prior weight   (rows 637)
+    pooled (seasons better at that fixed setting): x0.4: +12.86% (1)  x0.6: +6.13% (1)  x0.8: +2.27% (1)  x1.25: -1.54% (5)  x1.6: -2.38% (5)  x2.5: -1.82% (4)
+    LEAVE-ONE-SEASON-OUT  -0.26%  seasons better 5/7  | top-150 weighted +5.81%  rank order -0.0008  | picks ['x1.6', 'x1.6', 'x1.6', 'x1.6', 'x2.5', 'x1.6', 'x2.5']
+    FORWARD 2022-25       +0.30%  seasons better 2/4  | top-150 weighted +6.18%  | picks ['x1.6', 'x2.5', 'x1.6', 'x2.5']
+    rank order with x1.6: better in 3/4 seasons (pooled +0.0111)
+    -> FAIL (best pooled: x1.6)
+
+  11b RB after 3-4 games: prior weight   (rows 742)
+    pooled (seasons better at that fixed setting): x0.4: +9.56% (0)  x0.6: +3.99% (2)  x0.8: +1.30% (2)  x1.25: -0.64% (4)  x1.6: -0.70% (4)  x2.5: +0.45% (4)
+    LEAVE-ONE-SEASON-OUT  +0.05%  seasons better 4/7  | top-150 weighted +0.77%  rank order -0.0046  | picks ['x1.6', 'x1.25', 'x1.25', 'x1.25', 'x1.6', 'x1.25', 'x1.6']
+    FORWARD 2022-25       +1.20%  seasons better 2/4  | top-150 weighted +1.06%  | picks ['x1.6', 'x2.5', 'x1.6', 'x1.6']
+    rank order with x1.6: better in 5/7 seasons (pooled -0.0027)
+    -> FAIL (best pooled: x1.6)
+
+  11b RB after 5-7 games: prior weight   (rows 1,000)
+    pooled (seasons better at that fixed setting): x0.4: +7.54% (1)  x0.6: +3.47% (2)  x0.8: +1.22% (2)  x1.25: -0.69% (5)  x1.6: -0.84% (5)  x2.5: +0.38% (4)
+    LEAVE-ONE-SEASON-OUT  -0.20%  seasons better 5/7  | top-150 weighted +0.39%  rank order -0.0025  | picks ['x1.6', 'x1.6', 'x1.25', 'x1.25', 'x1.6', 'x1.25', 'x1.6']
+    FORWARD 2022-25       -0.47%  seasons better 3/4  | top-150 weighted -0.46%  | picks ['x1.6', 'x1.6', 'x1.25', 'x1.6']
+    rank order with x1.6: better in 3/7 seasons (pooled -0.0044)
+    -> FAIL (best pooled: x1.6)
+
+  11b RB after 8-10 games: prior weight   (rows 748)
+    pooled (seasons better at that fixed setting): x0.4: +4.71% (2)  x0.6: +2.25% (2)  x0.8: +0.81% (3)  x1.25: -0.46% (4)  x1.6: -0.49% (4)  x2.5: +0.72% (2)
+    LEAVE-ONE-SEASON-OUT  +0.09%  seasons better 4/7  | top-150 weighted +0.90%  rank order +0.0052  | picks ['x1.6', 'x1.6', 'x1.6', 'x1.25', 'x1.6', 'x1.6', 'x1.25']
+    FORWARD 2022-25       +0.83%  seasons better 2/4  | top-150 weighted +1.10%  | picks ['x0.8', 'x1.6', 'x1.25', 'x1.25']
+    rank order with x1.6: better in 5/7 seasons (pooled +0.0091)
+    -> FAIL (best pooled: x1.6)
+
+  11b WR rookie: prior weight   (rows 536)
+    pooled (seasons better at that fixed setting): x0.4: +1.46% (2)  x0.6: +0.60% (2)  x0.8: +0.20% (2)  x1.25: -0.10% (5)  x1.6: -0.13% (5)  x2.5: +0.02% (4)
+    LEAVE-ONE-SEASON-OUT  +1.14%  seasons better 4/7  | top-150 weighted +0.42%  rank order +nan  | picks ['x1.25', 'x2.5', 'x1.6', 'x0.8', 'x2.5', 'x1.25', 'x1.6']
+    FORWARD 2022-25       +0.95%  seasons better 2/4  | top-150 weighted +0.35%  | picks ['x0.8', 'x2.5', 'x1.25', 'x1.6']
+    -> FAIL (best pooled: x1.6)
+
+  11b WR second year: prior weight   (rows 568)
+    pooled (seasons better at that fixed setting): x0.4: +4.24% (1)  x0.6: +1.69% (1)  x0.8: +0.51% (3)  x1.25: -0.14% (3)  x1.6: +0.10% (2)  x2.5: +1.36% (2)
+    LEAVE-ONE-SEASON-OUT  +0.17%  seasons better 2/7  | top-150 weighted +0.11%  rank order +0.0238  | picks ['x1.25', 'x1.25', 'x1.25', 'x1.25', 'x1.25', 'shipped', 'x1.25']
+    FORWARD 2022-25       +0.51%  seasons better 2/4  | top-150 weighted +0.67%  | picks ['shipped', 'x0.8', 'x0.8', 'x1.25']
+    rank order with x1.25: better in 1/2 seasons (pooled +0.0238)
+    -> FAIL (best pooled: x1.25)
+
+  11b WR years 3-5: prior weight   (rows 1,586)
+    pooled (seasons better at that fixed setting): x0.4: +1.38% (3)  x0.6: -0.26% (4)  x0.8: -0.45% (4)  x1.25: +0.94% (1)  x1.6: +2.48% (1)  x2.5: +6.17% (1)
+    LEAVE-ONE-SEASON-OUT  +0.01%  seasons better 4/7  | top-150 weighted +0.08%  rank order -0.0021  | picks ['x0.8', 'x0.8', 'x0.8', 'x0.6', 'x0.8', 'x0.8', 'x0.8']
+    FORWARD 2022-25       -0.06%  seasons better 2/4  | top-150 weighted +0.33%  | picks ['x0.8', 'shipped', 'x0.8', 'x0.8']
+    rank order with x0.8: better in 5/7 seasons (pooled +0.0011)
+    -> FAIL (best pooled: x0.8)
+
+  11b WR 6+ years: prior weight   (rows 1,240)
+    pooled (seasons better at that fixed setting): x0.4: +7.32% (1)  x0.6: +3.10% (1)  x0.8: +1.02% (1)  x1.25: -0.50% (6)  x1.6: -0.49% (4)  x2.5: +0.69% (3)
+    LEAVE-ONE-SEASON-OUT  -0.07%  seasons better 4/7  | top-150 weighted +0.41%  rank order +0.0097  | picks ['x1.25', 'x1.6', 'x1.25', 'x1.6', 'x1.6', 'x1.6', 'x1.25']
+    FORWARD 2022-25       -0.69%  seasons better 3/4  | top-150 weighted +0.04%  | picks ['shipped', 'x1.25', 'x1.25', 'x1.25']
+    rank order with x1.25: better in 4/7 seasons (pooled +0.0071)
+    -> FAIL (best pooled: x1.25)
+
+  11b WR after 3-4 games: prior weight   (rows 1,182)
+    pooled (seasons better at that fixed setting): x0.4: +5.76% (1)  x0.6: +1.72% (2)  x0.8: +0.32% (3)  x1.25: +0.25% (2)  x1.6: +1.04% (2)  x2.5: +3.27% (1)
+    LEAVE-ONE-SEASON-OUT  +0.30%  seasons better 0/7  | top-150 weighted +0.17%  rank order -0.0011  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'x1.25', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.95%  seasons better 0/4  | top-150 weighted +0.52%  | picks ['x0.8', 'x1.25', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  11b WR after 5-7 games: prior weight   (rows 1,541)
+    pooled (seasons better at that fixed setting): x0.4: +3.66% (1)  x0.6: +1.27% (2)  x0.8: +0.28% (3)  x1.25: +0.14% (2)  x1.6: +0.75% (2)  x2.5: +2.73% (1)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.35%  seasons better 0/4  | top-150 weighted +0.27%  | picks ['x0.8', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  11b WR after 8-10 games: prior weight   (rows 1,208)
+    pooled (seasons better at that fixed setting): x0.4: +1.77% (1)  x0.6: +0.58% (3)  x0.8: +0.09% (4)  x1.25: +0.19% (2)  x1.6: +0.74% (2)  x2.5: +2.52% (2)
+    LEAVE-ONE-SEASON-OUT  +0.15%  seasons better 0/7  | top-150 weighted +0.21%  rank order -0.0002  | picks ['x0.8', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  11b TE rookie: prior weight   (rows 170)
+    pooled (seasons better at that fixed setting): x0.4: +2.35% (2)  x0.6: +0.88% (2)  x0.8: +0.25% (2)  x1.25: -0.05% (5)  x1.6: +0.07% (5)  x2.5: +0.65% (4)
+    LEAVE-ONE-SEASON-OUT  +1.47%  seasons better 1/7  | top-150 weighted +3.31%  rank order +nan  | picks ['x1.25', 'shipped', 'shipped', 'shipped', 'x1.6', 'x2.5', 'shipped']
+    FORWARD 2022-25       +1.82%  seasons better 1/4  | top-150 weighted +3.57%  | picks ['x2.5', 'x2.5', 'x2.5', 'shipped']
+    -> FAIL (best pooled: x1.25)
+
+  11b TE second year: prior weight   (rows 223)
+    pooled (seasons better at that fixed setting): x0.4: +6.72% (2)  x0.6: +2.63% (2)  x0.8: +0.78% (2)  x1.25: -0.24% (4)  x1.6: +0.03% (3)  x2.5: +1.57% (3)
+    LEAVE-ONE-SEASON-OUT  +7.30%  seasons better 3/7  | top-150 weighted +24.42%  rank order +nan  | picks ['x2.5', 'x1.25', 'x1.25', 'x1.25', 'x0.6', 'x1.25', 'x1.25']
+    FORWARD 2022-25       +9.52%  seasons better 2/4  | top-150 weighted -6.09%  | picks ['x0.4', 'x0.4', 'x1.25', 'x1.25']
+    -> FAIL (best pooled: x1.25)
+
+  11b TE years 3-5: prior weight   (rows 673)
+    pooled (seasons better at that fixed setting): x0.4: +8.40% (0)  x0.6: +3.16% (2)  x0.8: +0.89% (2)  x1.25: -0.18% (4)  x1.6: +0.32% (3)  x2.5: +2.55% (2)
+    LEAVE-ONE-SEASON-OUT  +0.38%  seasons better 3/7  | top-150 weighted +0.34%  rank order +0.0000  | picks ['x1.25', 'x1.25', 'x1.25', 'shipped', 'x1.25', 'x1.25', 'x1.25']
+    FORWARD 2022-25       -0.07%  seasons better 2/4  | top-150 weighted +0.68%  | picks ['shipped', 'x1.25', 'x1.25', 'x1.25']
+    rank order with x1.25: better in 0/1 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x1.25)
+
+  11b TE 6+ years: prior weight   (rows 644)
+    pooled (seasons better at that fixed setting): x0.4: +2.88% (1)  x0.6: +0.64% (2)  x0.8: -0.02% (2)  x1.25: +0.45% (4)  x1.6: +1.37% (4)  x2.5: +3.76% (3)
+    LEAVE-ONE-SEASON-OUT  +2.93%  seasons better 0/7  | top-150 weighted +4.95%  rank order +0.0000  | picks ['x0.8', 'x1.6', 'x0.8', 'x0.8', 'x0.8', 'x0.8', 'shipped']
+    FORWARD 2022-25       +3.54%  seasons better 0/4  | top-150 weighted +5.94%  | picks ['x0.4', 'x0.6', 'shipped', 'shipped']
+    rank order with x0.8: better in 0/1 seasons (pooled +0.0000)
+    -> FAIL (best pooled: x0.8)
+
+  11b TE after 3-4 games: prior weight   (rows 530)
+    pooled (seasons better at that fixed setting): x0.4: +13.15% (0)  x0.6: +5.23% (0)  x0.8: +1.68% (0)  x1.25: -0.88% (5)  x1.6: -1.14% (4)  x2.5: -0.42% (4)
+    LEAVE-ONE-SEASON-OUT  -0.87%  seasons better 4/7  | top-150 weighted -1.94%  rank order -0.0181  | picks ['x1.6', 'x1.6', 'x1.6', 'x1.6', 'x1.25', 'x1.6', 'x1.6']
+    FORWARD 2022-25       -1.55%  seasons better 3/4  | top-150 weighted -2.50%  | picks ['shipped', 'x1.25', 'x1.6', 'x1.6']
+    rank order with x1.6: better in 2/7 seasons (pooled -0.0248)
+    -> FAIL (best pooled: x1.6)
+
+  11b TE after 5-7 games: prior weight   (rows 689)
+    pooled (seasons better at that fixed setting): x0.4: +5.29% (1)  x0.6: +1.93% (1)  x0.8: +0.50% (3)  x1.25: +0.01% (3)  x1.6: +0.55% (2)  x2.5: +2.47% (2)
+    LEAVE-ONE-SEASON-OUT  +0.66%  seasons better 0/7  | top-150 weighted +1.23%  rank order -0.0002  | picks ['x1.25', 'x1.25', 'x1.25', 'shipped', 'shipped', 'x1.25', 'shipped']
+    FORWARD 2022-25       +2.26%  seasons better 0/4  | top-150 weighted +3.65%  | picks ['x0.6', 'x0.8', 'x1.25', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  11b TE after 8-10 games: prior weight   (rows 503)
+    pooled (seasons better at that fixed setting): x0.4: +0.31% (3)  x0.6: -0.41% (3)  x0.8: -0.39% (4)  x1.25: +0.74% (2)  x1.6: +1.94% (2)  x2.5: +4.87% (2)
+    LEAVE-ONE-SEASON-OUT  +0.81%  seasons better 2/7  | top-150 weighted +1.37%  rank order -0.0129  | picks ['x0.8', 'shipped', 'x0.6', 'x0.6', 'x0.6', 'x0.6', 'x0.8']
+    FORWARD 2022-25       +1.97%  seasons better 2/4  | top-150 weighted +4.81%  | picks ['x0.4', 'x0.6', 'x0.8', 'x0.8']
+    rank order with x0.6: better in 1/5 seasons (pooled -0.0083)
+    -> FAIL (best pooled: x0.6)
+
+--- 13  ROOKIE EVIDENCE: usage weight and prior weight by stage, rookie rows only (model as wired through section 11) ---
+
+  13a QB rookies: usage weight in the evidence (flat)   (rows 142)
+    pooled (seasons better at that fixed setting): lam 0.25: +5.40% (3)  lam 0.5: +25.49% (3)
+    LEAVE-ONE-SEASON-OUT  +9.26%  seasons better 0/7  | top-150 weighted +21.93%  rank order +nan  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'lam 0.25', 'shipped']
+    FORWARD 2022-25       +7.68%  seasons better 2/4  | top-150 weighted +56.54%  | picks ['lam 0.25', 'lam 0.25', 'lam 0.25', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  13b QB rookies: prior weight by stage (3-4 games / 5+)   (rows 142)
+    pooled (seasons better at that fixed setting): early x1.0 / late x0.6: +4.33% (2)  early x1.0 / late x1.6: -2.72% (4)  early x1.0 / late x2.5: -4.35% (4)  early x1.6 / late x0.6: +4.28% (1)  early x1.6 / late x1.0: -0.05% (3)  early x1.6 / late x1.6: -2.77% (4)  early x1.6 / late x2.5: -4.40% (4)  early x2.5 / late x0.6: +4.49% (1)  early x2.5 / late x1.0: +0.16% (3)  early x2.5 / late x1.6: -2.56% (4)  early x2.5 / late x2.5: -4.19% (4)  early x4.0 / late x0.6: +4.77% (1)  early x4.0 / late x1.0: +0.44% (3)  early x4.0 / late x1.6: -2.28% (4)  early x4.0 / late x2.5: -3.91% (4)
+    LEAVE-ONE-SEASON-OUT  -3.04%  seasons better 4/7  | top-150 weighted +2.07%  rank order +nan  | picks ['early x1.0 / late x2.5', 'early x1.6 / late x2.5', 'early x1.0 / late x2.5', 'early x2.5 / late x2.5', 'early x2.5 / late x2.5', 'early x1.6 / late x2.5', 'early x1.0 / late x2.5']
+    FORWARD 2022-25       +0.16%  seasons better 1/4  | top-150 weighted +4.32%  | picks ['early x1.6 / late x2.5', 'early x1.0 / late x2.5', 'early x1.0 / late x2.5', 'early x1.0 / late x2.5']
+    -> FAIL (best pooled: early x1.6 / late x2.5)
+
+  13a RB rookies: usage weight in the evidence (flat)   (rows 386)
+    pooled (seasons better at that fixed setting): lam 0.0: +3.07% (1)  lam 0.25: +0.33% (1)  lam 0.5: -1.35% (6)  lam 0.75: -1.99% (6)  lam 1.0: -1.57% (6)
+    LEAVE-ONE-SEASON-OUT  +3.14%  seasons better 5/7  | top-150 weighted +11.55%  rank order +0.0238  | picks ['lam 0.75', 'lam 1.0', 'lam 0.75', 'lam 0.75', 'shipped', 'lam 0.75', 'lam 0.75']
+    FORWARD 2022-25       -0.23%  seasons better 2/4  | top-150 weighted +0.94%  | picks ['lam 0.0', 'lam 0.25', 'lam 0.75', 'lam 0.75']
+    rank order with lam 0.75: better in 1/1 seasons (pooled +0.0238)
+    -> FAIL (best pooled: lam 0.75)
+
+  13b RB rookies: prior weight by stage (3-4 games / 5+)   (rows 386)
+    pooled (seasons better at that fixed setting): early x1.0 / late x0.6: +1.83% (2)  early x1.0 / late x1.6: -1.24% (5)  early x1.0 / late x2.5: -1.95% (5)  early x1.6 / late x0.6: +1.41% (3)  early x1.6 / late x1.0: -0.42% (5)  early x1.6 / late x1.6: -1.66% (5)  early x1.6 / late x2.5: -2.36% (5)  early x2.5 / late x0.6: +1.28% (4)  early x2.5 / late x1.0: -0.55% (5)  early x2.5 / late x1.6: -1.79% (5)  early x2.5 / late x2.5: -2.50% (5)  early x4.0 / late x0.6: +1.29% (4)  early x4.0 / late x1.0: -0.54% (5)  early x4.0 / late x1.6: -1.78% (5)  early x4.0 / late x2.5: -2.48% (5)
+    LEAVE-ONE-SEASON-OUT  -1.38%  seasons better 5/7  | top-150 weighted -3.27%  rank order +0.0000  | picks ['early x4.0 / late x2.5', 'early x1.6 / late x2.5', 'early x2.5 / late x2.5', 'early x2.5 / late x1.6', 'early x2.5 / late x2.5', 'early x4.0 / late x2.5', 'early x2.5 / late x2.5']
+    FORWARD 2022-25       -2.02%  seasons better 2/4  | top-150 weighted -5.16%  | picks ['early x4.0 / late x2.5', 'early x4.0 / late x2.5', 'early x4.0 / late x2.5', 'early x2.5 / late x2.5']
+    rank order with early x2.5 / late x2.5: better in 0/1 seasons (pooled +0.0000)
+    -> FAIL (best pooled: early x2.5 / late x2.5)
+
+  13a WR rookies: usage weight in the evidence (flat)   (rows 536)
+    pooled (seasons better at that fixed setting): lam 0.0: +1.04% (5)  lam 0.25: +0.51% (4)  lam 0.5: +1.01% (3)  lam 0.75: +2.55% (2)  lam 1.0: +5.13% (2)
+    LEAVE-ONE-SEASON-OUT  +0.83%  seasons better 0/7  | top-150 weighted +3.86%  rank order +nan  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'lam 0.25']
+    FORWARD 2022-25       +2.73%  seasons better 2/4  | top-150 weighted +9.03%  | picks ['lam 0.0', 'lam 0.0', 'lam 0.25', 'lam 0.25']
+    -> FAIL (best pooled: shipped)
+
+  13b WR rookies: prior weight by stage (3-4 games / 5+)   (rows 536)
+    pooled (seasons better at that fixed setting): early x1.0 / late x0.6: +0.16% (4)  early x1.0 / late x1.6: +0.01% (3)  early x1.0 / late x2.5: +0.13% (3)  early x1.6 / late x0.6: +0.03% (3)  early x1.6 / late x1.0: -0.13% (4)  early x1.6 / late x1.6: -0.13% (5)  early x1.6 / late x2.5: -0.00% (4)  early x2.5 / late x0.6: +0.05% (3)  early x2.5 / late x1.0: -0.11% (4)  early x2.5 / late x1.6: -0.11% (4)  early x2.5 / late x2.5: +0.02% (4)  early x4.0 / late x0.6: +0.14% (3)  early x4.0 / late x1.0: -0.02% (4)  early x4.0 / late x1.6: -0.02% (4)  early x4.0 / late x2.5: +0.10% (4)
+    LEAVE-ONE-SEASON-OUT  +1.61%  seasons better 2/7  | top-150 weighted -0.04%  rank order +nan  | picks ['early x1.6 / late x0.6', 'early x4.0 / late x2.5', 'early x1.6 / late x1.6', 'early x1.0 / late x0.6', 'early x4.0 / late x1.6', 'early x1.6 / late x1.6', 'early x2.5 / late x1.0']
+    FORWARD 2022-25       +1.06%  seasons better 1/4  | top-150 weighted -0.19%  | picks ['early x1.0 / late x0.6', 'early x4.0 / late x1.6', 'early x1.6 / late x1.0', 'early x2.5 / late x1.0']
+    -> FAIL (best pooled: early x1.6 / late x1.0)
+
+  13a TE rookies: usage weight in the evidence (flat)   (rows 170)
+    pooled (seasons better at that fixed setting): lam 0.25: +1.08% (3)  lam 0.5: +2.58% (3)
+    LEAVE-ONE-SEASON-OUT  +1.13%  seasons better 0/7  | top-150 weighted -0.30%  rank order +nan  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'lam 0.25', 'shipped', 'shipped']
+    FORWARD 2022-25       +1.48%  seasons better 0/4  | top-150 weighted -0.39%  | picks ['shipped', 'lam 0.25', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  13b TE rookies: prior weight by stage (3-4 games / 5+)   (rows 170)
+    pooled (seasons better at that fixed setting): early x1.0 / late x0.6: -0.23% (3)  early x1.0 / late x1.6: +0.63% (2)  early x1.0 / late x2.5: +1.47% (2)  early x1.6 / late x0.6: -0.78% (4)  early x1.6 / late x1.0: -0.56% (5)  early x1.6 / late x1.6: +0.07% (5)  early x1.6 / late x2.5: +0.91% (3)  early x2.5 / late x0.6: -1.04% (3)  early x2.5 / late x1.0: -0.81% (5)  early x2.5 / late x1.6: -0.18% (5)  early x2.5 / late x2.5: +0.65% (4)  early x4.0 / late x0.6: -1.16% (3)  early x4.0 / late x1.0: -0.93% (4)  early x4.0 / late x1.6: -0.30% (4)  early x4.0 / late x2.5: +0.54% (4)
+    LEAVE-ONE-SEASON-OUT  -0.47%  seasons better 2/7  | top-150 weighted +1.46%  rank order +nan  | picks ['early x4.0 / late x0.6', 'early x4.0 / late x0.6', 'early x4.0 / late x0.6', 'early x2.5 / late x0.6', 'early x4.0 / late x0.6', 'early x4.0 / late x1.0', 'early x4.0 / late x0.6']
+    FORWARD 2022-25       +0.49%  seasons better 2/4  | top-150 weighted +1.78%  | picks ['early x4.0 / late x2.5', 'early x4.0 / late x2.5', 'early x4.0 / late x1.6', 'early x4.0 / late x0.6']
+    -> FAIL (best pooled: early x4.0 / late x0.6)
+
+  STACKED after section 13 (vs wired through section 11 | vs the Clay blend):
+    ALL rows       n  9417  vs wired  -1.14% (6/7) | vs Clay blend   +nan% | top-150 wtd  -1.61% | rank order 0.6210 (wired 0.6183)
+    top 150        n  5556  vs wired  -1.77% (6/7) | vs Clay blend   +nan% | top-150 wtd  -1.61% | rank order 0.6210 (wired 0.6183)
+    rookies        n  1234  vs wired  -1.11% (5/7) | vs Clay blend   +nan% | top-150 wtd  -2.41% | rank order 0.8095 (wired 0.8571)
+    RB rookies     n   386  vs wired  -4.03% (5/7) | vs Clay blend   +nan% | top-150 wtd  -4.44% | rank order 0.8095 (wired 0.8571)
+    WR rookies     n   536  vs wired  +0.50% (2/7) | vs Clay blend   +nan% | top-150 wtd  +1.19% | rank order nan (wired nan)
+    non-rookies    n  8183  vs wired  -1.15% (6/7) | vs Clay blend   +nan% | top-150 wtd  -1.54% | rank order 0.6212 (wired 0.6187)
+
+--- 14  TIGHT ENDS: TD floor for role players, snap-level lift strength, run-heavy offense tilt (model as wired through section 13) ---
+
+  14a TE with a role and few touchdowns so far: lift per missing TD point   (rows 519)
+    pooled (seasons better at that fixed setting): e 0.02: -5.06% (6)  e 0.04: -9.18% (6)  e 0.06: -12.34% (6)  e 0.08: -14.54% (6)
+    LEAVE-ONE-SEASON-OUT  -14.54%  seasons better 6/7  | top-150 weighted -12.07%  rank order -0.0897  | picks ['e 0.08', 'e 0.08', 'e 0.08', 'e 0.08', 'e 0.08', 'e 0.08', 'e 0.08']
+    FORWARD 2022-25       -16.07%  seasons better 4/4  | top-150 weighted -15.18%  | picks ['e 0.08', 'e 0.08', 'e 0.08', 'e 0.08']
+    rank order with e 0.08: better in 0/2 seasons (pooled -0.0897)
+    -> PASS: e 0.08
+
+  14a' same, no role gate   (rows 1,113)
+    pooled (seasons better at that fixed setting): e 0.02: -2.02% (5)  e 0.04: -3.18% (5)  e 0.06: -3.49% (5)
+    LEAVE-ONE-SEASON-OUT  -3.49%  seasons better 5/7  | top-150 weighted +5.48%  rank order +0.0144  | picks ['e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    FORWARD 2022-25       -4.19%  seasons better 4/4  | top-150 weighted +3.45%  | picks ['e 0.04', 'e 0.04', 'e 0.06', 'e 0.06']
+    rank order with e 0.06: better in 3/4 seasons (pooled +0.0144)
+    -> FAIL (best pooled: e 0.06)
+
+  14b TE snap-share level: lift / dock strength (wired e .3 both ways)   (rows 1,668)
+    pooled (seasons better at that fixed setting): lift ^1.0 / dock ^0.5: -0.21% (5)  lift ^1.5 / dock ^0.5: -0.78% (6)  lift ^1.5 / dock ^1.0: -0.57% (6)  lift ^2.0 / dock ^0.5: -0.99% (5)  lift ^2.0 / dock ^1.0: -0.78% (5)
+    LEAVE-ONE-SEASON-OUT  -0.99%  seasons better 5/7  | top-150 weighted +0.62%  rank order -0.0001  | picks ['lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5']
+    FORWARD 2022-25       -0.61%  seasons better 3/4  | top-150 weighted +1.93%  | picks ['lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5', 'lift ^2.0 / dock ^0.5']
+    rank order with lift ^2.0 / dock ^0.5: better in 4/7 seasons (pooled -0.0001)
+    -> FAIL (best pooled: lift ^2.0 / dock ^0.5)
+
+  14c TE run-heavy offense tilt (wired e .04 symmetric): run-heavy side only   (rows 917)
+    pooled (seasons better at that fixed setting): e 0.03: -2.15% (5)  e 0.06: -2.98% (5)  e 0.09: -2.48% (5)  e 0.12: -0.67% (5)
+    LEAVE-ONE-SEASON-OUT  -2.19%  seasons better 5/7  | top-150 weighted -2.03%  rank order +0.0456  | picks ['e 0.06', 'e 0.09', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06', 'e 0.06']
+    FORWARD 2022-25       -3.45%  seasons better 3/4  | top-150 weighted -1.11%  | picks ['e 0.03', 'e 0.06', 'e 0.06', 'e 0.06']
+    rank order with e 0.06: better in 2/2 seasons (pooled +0.0456)
+    -> PASS: e 0.06
+
+  14c' TE pass-rate tilt symmetric, stronger (on top of the wired .04)   (rows 1,710)
+    pooled (seasons better at that fixed setting): e 0.03: +1.50% (3)  e 0.06: +4.52% (1)
+    LEAVE-ONE-SEASON-OUT  +0.00%  seasons better 0/7  | top-150 weighted +0.00%  rank order +0.0000  | picks ['shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped', 'shipped']
+    FORWARD 2022-25       +0.00%  seasons better 0/4  | top-150 weighted +0.00%  | picks ['shipped', 'shipped', 'shipped', 'shipped']
+    -> FAIL (best pooled: shipped)
+
+  STACKED after section 14 (vs wired through section 13 | vs the Clay blend):
+    ALL rows     n  9417  vs section 13  -0.73% (6/7) | vs Clay blend   +nan% | act/proj 1.016 (was 1.023) | rank order 0.6213 (was 0.6210)
+    top 150      n  5556  vs section 13  -0.41% (6/7) | vs Clay blend   +nan% | act/proj 1.016 (was 1.021) | rank order 0.6213 (was 0.6210)
+    TE           n  1722  vs section 13  -5.99% (6/7) | vs Clay blend   +nan% | act/proj 1.019 (was 1.076) | rank order 0.6462 (was 0.6449)
+    TE top 150   n   626  vs section 13  -5.00% (6/7) | vs Clay blend   +nan% | act/proj 0.980 (was 1.038) | rank order 0.6462 (was 0.6449)
+    non-TE       n  7695  vs section 13  +0.00% (0/7) | vs Clay blend   +nan% | act/proj 1.016 (was 1.016) | rank order 0.6149 (was 0.6149)
+
+--- 15  STRENGTH OF SCHEDULE: skipped in extended mode ---

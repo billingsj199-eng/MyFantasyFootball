@@ -36,8 +36,9 @@ sys.path.insert(0, HERE)
 import bt_common as B
 from backtest_target_area import mse
 from pull_pace_tracker import _xfp_ab, _xtd_rec, _xfp_rush, _xtd, XFP_CATCH, XFP_TGT_YDS
+import bt_ext as BX   # 2026-10-20 extended mode (SIM_BT_YEARS): ext years + ext output files; default unchanged
 
-LOG = open(os.path.join(HERE, "opp_prior_backtest.log"), "w", encoding="utf-8")
+LOG = open(BX.ext_path("opp_prior_backtest.log"), "w", encoding="utf-8")
 
 
 class _Tee:
@@ -52,6 +53,10 @@ def P(*a): print(" ".join(str(x) for x in a))
 LOAD = list(range(2016, 2026))
 BUILD = list(range(2017, 2026))
 TEST = list(range(2019, 2026))
+if BX.EXT:   # pbp exists 2012+ -> features from 2013 on (2012 rows would need 2011 usage)
+    LOAD = [y for y in range(min(2016, BX.YEARS[0] - 1), 2026) if os.path.exists(os.path.join(B.CACHE, f"play_by_play_{y}.csv.gz"))]
+    BUILD = [y for y in range(LOAD[0] + 1, 2026)]
+    TEST = [y for y in BX.YEARS if y in BUILD]
 SKILL = ("RB", "WR", "TE")
 K_VAL, K_EFF = 60.0, 150.0
 RES = {"segments": [], "coef": {}, "n": 0}
@@ -305,8 +310,10 @@ def main():
         pr = preds.get(id(r))
         if pr and r["Y"] in TEST:
             dump[f"{r['Y']}|{r['pid']}"] = {"seg": r["seg"], "pos": r["pos"], **{m: (round(pr[m], 4) if pr.get(m) is not None else None) for m in ("CLAY", "CLAYCAL", "OPPCAL", "CLAY+OPP", "SHADOWCAL", "OPP", "HIST", "HISTREG")}}   # + raw OPP / HIST / HISTREG (2026-09-17, decayed-history refit)
-    with open(os.path.join(HERE, "opp_prior_preds.json"), "w", encoding="utf-8") as fh:
-        json.dump(dump, fh)
+    if BX.EXT: BX.atomic_text(BX.ext_path("opp_prior_preds.json"), json.dumps(dump))
+    else:
+        with open(os.path.join(HERE, "opp_prior_preds.json"), "w", encoding="utf-8") as fh:
+            json.dump(dump, fh)
     P(f"  wrote opp_prior_preds.json: {len(dump)} player-seasons")
     models = ["CLAY", "CLAYCAL", "HIST", "HISTREG", "HISTCAL", "OPP", "OPPCAL", "HIST+OPP", "CLAY+OPP", "SHADOW", "SHADOWCAL"]
     P("\n=== season PPG prediction, test seasons 2019-2025 (every model on the same rows per segment; parenthesis = seasons better than CALIBRATED Clay) ===")
@@ -372,7 +379,7 @@ def main():
         b = min(s["models"].items(), key=lambda kv: kv[1]["mse"])
         return f"{seg}: best {b[0]} MSE {b[1]['mse']} (calibrated Clay {s['models'].get('CLAYCAL', {}).get('mse')}, Clay-free SHADOWCAL {s['models'].get('SHADOWCAL', {}).get('mse')})"
     RES["summary"] = "Opportunity prior, season PPG 2019-25 LOYO - " + "; ".join(x for x in (seg_best("stay"), seg_best("mover"), seg_best("rookie"), seg_best("all")) if x)
-    with open(os.path.join(HERE, "data", "opp_prior_backtest.js"), "w", encoding="utf-8") as fh:
+    with open(BX.data_path("opp_prior_backtest.js"), "w", encoding="utf-8") as fh:
         fh.write("// built by backtest_opp_prior.py - opportunity prior (shares x team volume x value per opportunity) vs Clay and the history prior; shown on the ZONES tab\n")
         fh.write("window.SIM_OPPPRIOR_BT = "); json.dump(RES, fh, separators=(",", ":")); fh.write(";\n")
     P(f"\nwrote data/opp_prior_backtest.js: {RES['summary']}")

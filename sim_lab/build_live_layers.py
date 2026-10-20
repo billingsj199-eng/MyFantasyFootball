@@ -33,8 +33,9 @@ sys.path.insert(0, HERE)
 import bt_common as B
 from pull_pace_tracker import _xtd, _xtd_rec
 import build_context_features as CF
+import bt_ext as BX   # 2026-10-20 extended mode: ext ctx in, ext live layers out; default unchanged
 
-YEARS = list(range(2019, 2026))
+YEARS = list(range(2019, 2026)) if not BX.EXT else list(BX.YEARS)
 BANGED_COND = {"Q-FP": {"QB": 0.951, "RB": 0.952, "WR": 0.961, "TE": 0.955},
                "Q-LP": {"QB": 0.941, "RB": 0.942, "WR": 0.943, "TE": 0.933},
                "Q-DNP": {"QB": 0.891, "RB": 0.877, "WR": 0.884, "TE": 0.891}}
@@ -104,7 +105,7 @@ CACHE = B.CACHE
 def main():
     t0 = time.time()
     pos_of, bd_of, rook_of = CF.load_positions()
-    df = pd.read_parquet(os.path.join(HERE, "ctx_features.parquet"))
+    df = pd.read_parquet(BX.ext_path("ctx_features.parquet"))
     out = []
     for Y in YEARS:
         W, T = pbp_week_tables(Y, pos_of)
@@ -242,7 +243,8 @@ def main():
             out.append(rec)
         P(f"  {Y}: {len(out)} rows ({time.time()-t0:.0f}s)")
     L = pd.DataFrame(out)
-    L.to_parquet(os.path.join(HERE, "ctx_live_layers.parquet"), index=False)
+    if BX.EXT: BX.atomic_parquet(L, BX.ext_path("ctx_live_layers.parquet"))
+    else: L.to_parquet(os.path.join(HERE, "ctx_live_layers.parquet"), index=False)
     P(f"wrote ctx_live_layers.parquet: {len(L)} rows")
     P("layer activity: " + ", ".join([
         f"td luck nonzero {(L.td_luck_adj != 0).mean():.2f} (mean |adj| {L.td_luck_adj.abs().mean():.2f})",

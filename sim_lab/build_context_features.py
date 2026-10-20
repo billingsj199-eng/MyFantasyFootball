@@ -39,10 +39,12 @@ import bt_common as B
 from bt_common import iter_samples, POS4
 from pull_pace_tracker import _xfp_ab, _xtd_rec, _xfp_rush, _xtd, XFP_CATCH, XFP_TGT_YDS
 import build_scheme as BS
+import bt_ext as BX   # 2026-10-20: SIM_BT_YEARS extended mode -> ext pool rows, ext output file; default unchanged
+import bt_teams as TM   # team per game (BX.TEAMFIX only)
 
 CACHE = B.CACHE
-YEARS = list(range(2019, 2026))
-OUT = os.path.join(HERE, "ctx_features.parquet")
+YEARS = list(range(2019, 2026)) if not BX.EXT else list(BX.YEARS)
+OUT = BX.ext_path("ctx_features.parquet")
 SNAP_W = [0.5, 0.3, 0.2]
 ABSENT_ROSTER = {"RES", "CUT", "DEV", "RET", "EXE", "PUP", "NFI", "SUS", "TRC", "TRD", "TRT"}
 REPO = r"E:\MyFantasyFootball\MyFantasyFootball Files"
@@ -82,6 +84,58 @@ def load_positions():
         bd[r.gsis_id] = pd.to_datetime(r.birth_date, errors="coerce") if isinstance(r.birth_date, str) else pd.NaT
         rook[r.gsis_id] = int(r.rookie_season) if pd.notna(r.rookie_season) else None
     return pos, bd, rook
+
+
+def iter_samples_ext():
+    """EXTENDED mode only: bt_common.iter_samples rows (week 2+ of the player's season, played, game lined) for the
+    Clay-free pool (data/bt_pool_ext.json); Clay numbers NaN. Same fields and Vegas / FPA math as bt_common."""
+    from backtest_sim_calibration import played, weekly_rec, infer_team, OPP_ALIAS
+    from backtest_snap_defense import build_fpa
+    resolve = B.player_ids()
+    if BX.POOL == "ext":
+        pool = json.load(open(os.path.join(HERE, "data", "bt_pool_ext.json"), encoding="utf-8"))["years"]
+    else:   # Clay pool with the team fix (SIM_BT_TEAMFIX=1 on 2019-25): same members as bt_common.iter_samples
+        ch = json.load(open(os.path.join(REPO, "data", "clay_history.json"), encoding="utf-8"))
+        pool = {y: {nm: c for nm, c in blk.items() if (c.get("pts") or 0) >= B.POOL_MIN_PTS} for y, blk in ch.items()}
+    weekly_fpa, season_fpa, lg_fpa = build_fpa() if not BX.TEAMFIX else TM.build_fpa_tf(resolve, B.load_games)
+    out = []
+    for Y in YEARS:
+        games = B.load_games(Y)
+        imps = [v["implied"] for v in games.values() if v["implied"] is not None]
+        avg = float(np.mean(imps))
+        for name, c in pool[str(Y)].items():
+            pos = c.get("pos")
+            if pos not in POS4: continue
+            wrec = weekly_rec(name, pos)
+            if wrec is None: continue
+            pid = resolve(name, pos, Y)
+            if BX.TEAMFIX:
+                team = TM.first_last_team(pid, Y, [int(w["wk"]) for w in wrec.get("seasons", {}).get(str(Y), []) if played(w)]) or infer_team(wrec, Y)
+            else:
+                team = infer_team(wrec, Y)
+            if not team: continue
+            rows = sorted([(w["wk"], w["fpts"], OPP_ALIAS.get(w.get("opp"), w.get("opp"))) for w in wrec.get("seasons", {}).get(str(Y), [])
+                           if played(w) and isinstance(w.get("fpts"), (int, float))])
+            hist = []
+            for wk, fpts, opp in rows:
+                tw_ = team
+                if BX.TEAMFIX:
+                    t_ = TM.team_at(pid, Y, wk)
+                    if t_ and games.get((t_, wk)): tw_ = t_
+                    if games.get((tw_, wk)): opp = games[(tw_, wk)]["opp"]
+                gm = games.get((tw_, wk))
+                if gm and gm["implied"] is not None and hist and opp:
+                    g = len(hist); ppg = sum(hist) / g
+                    veg = min(1.35, max(0.7, 1 + B.VEG[pos] * (gm["implied"] - avg) / avg))
+                    cur = weekly_fpa.get((Y, opp, pos), {}); past = [w for w in cur if w < wk]
+                    fpa = 1.0
+                    if past and lg_fpa.get((Y, pos)):
+                        ratio = min(1.25, max(0.8, (sum(cur[w] for w in past) / len(past)) / lg_fpa[(Y, pos)]))
+                        fpa = 1 + B.FPA_E * (ratio - 1) * min(1, len(past) / B.FPA_TRUST_G)
+                    out.append({"year": Y, "name": name, "pos": pos, "team": tw_, "opp": gm["opp"], "pid": pid, "wk": wk, "act": fpts,
+                                "g": g, "ppg": ppg, "clay": np.nan, "base": np.nan, "veg": veg, "fpa": fpa, "shipped": np.nan, "home": gm["home"]})
+                hist.append(fpts)
+    return out
 
 
 # ---------------- pbp: player-week and team-week tables ----------------
@@ -300,8 +354,8 @@ def main():
     dp = pd.read_parquet(os.path.join(CACHE, "draft_picks.parquet"), columns=["season", "pick", "gsis_id"])
     draft = {r.gsis_id: (int(r.season), int(r.pick)) for r in dp.itertuples(index=False) if isinstance(r.gsis_id, str)}
 
-    P("loading pbp 2017-2025 ...")
-    PB = {Y: pbp_tables(Y, pos_of) for Y in range(2017, 2026)}
+    P("loading pbp ...")
+    PB = {Y: pbp_tables(Y, pos_of) for Y in range(min(2017, YEARS[0] - 1), 2026) if os.path.exists(os.path.join(CACHE, f"play_by_play_{Y}.csv.gz"))}
     P(f"  pbp done {time.time()-t0:.0f}s")
 
     # team-season summaries (for prior season team + playcaller history)
@@ -348,12 +402,12 @@ def main():
         return {"n": len(rows), **{k: float(np.nanmean([r[k] for r in rows])) for k in ("proe", "rb_tgt", "te_tgt", "rb1_car", "plays_pg")}}
 
     P("loading bt_common samples ...")
-    S = iter_samples(POS4, verbose=False)
+    S = iter_samples(POS4, verbose=False) if not BX.EXT else iter_samples_ext()
     P(f"  {len(S)} player-weeks ({time.time()-t0:.0f}s)")
 
     rows = []
     for Y in YEARS:
-        pw, ptm, tw = PB[Y]; pwp, ptmp, twp = PB[Y - 1]
+        pw, ptm, tw = PB[Y]; pwp, ptmp, twp = PB[Y - 1] if (Y - 1) in PB else ({}, {}, {})   # ext: no pbp before the first season -> prior-year usage missing
         snaps = load_snaps(Y); inj, inj_name = injuries(Y); ros, ros_have, pff2g = rosters(Y)
         olc = ol_context(Y, inj_name)
         _, _, pff2g_p = rosters(Y - 1) if Y - 1 >= 2019 else (None, None, {})
@@ -374,17 +428,26 @@ def main():
             pid, t, wk, p = s["pid"], s["team"], s["wk"], s["pos"]
             f = {"year": Y, "name": s["name"], "pos": p, "team": t, "opp": s["opp"], "pid": pid, "wk": wk, "act": s["act"], "shipped": s["shipped"]}
             sn = snaps.get((norm(s["name"]), t), {})
+            tf = BX.TEAMFIX and bool(pid)
+            if tf:   # team fix: his snaps and usage over ALL his games this season, each week with the team he played for
+                _tof = lambda w: ptm.get((pid, w)) or TM.team_at(pid, Y, w) or t
+                sn = {}
+                for T_ in {TM.team_at(pid, Y, w) for w in range(1, 19)} | {t}:
+                    for w, v in snaps.get((norm(s["name"]), T_), {}).items():
+                        if (TM.team_at(pid, Y, w) or t) == T_: sn[w] = v
+            else:
+                _tof = lambda w: t
             sm = snap_mult(sn, wk) if sn else 1.0
             f.update({"pos_qb": p == "QB", "pos_rb": p == "RB", "pos_wr": p == "WR", "pos_te": p == "TE", "g": s["g"], "ppg": s["ppg"], "clay": s["clay"],
                       "base2": s["shipped"] * sm, "veg": s["veg"], "fpa_mult": s["fpa"], "ppg_over_clay": s["ppg"] / s["clay"] if s["clay"] else np.nan, "snapmult": sm})
             # ---- usage to date ----
             mine = by_pid.get(pid, {}) if pid else {}
-            played = sorted({w for w in sn if w < wk} | {w for w in mine if w < wk and ptm.get((pid, w)) == t})
+            played = sorted({w for w in sn if w < wk} | {w for w in mine if w < wk and (tf or ptm.get((pid, w)) == t)})
             tot = defaultdict(float); ttot = defaultdict(float)
             for w in played:
                 for k, x in mine.get(w, {}).items():
                     tot[k] += x
-                for k, x in tw.get((t, w), {}).items():
+                for k, x in tw.get((_tof(w), w), {}).items():
                     ttot[k] += x
             ng = max(len(played), 1)
             sh = lambda a, b: tot[a] / ttot[b] if ttot[b] else np.nan
@@ -397,7 +460,7 @@ def main():
             for w in l3:
                 for k, x in mine.get(w, {}).items():
                     l3t[k] += x
-                for k, x in tw.get((t, w), {}).items():
+                for k, x in tw.get((_tof(w), w), {}).items():
                     l3tt[k] += x
             f["tgt_sh_l3"] = l3t["tg"] / l3tt["tg"] if l3tt["tg"] else np.nan
             f["car_sh_l3"] = l3t["car"] / l3tt["car"] if l3tt["car"] else np.nan
@@ -539,8 +602,9 @@ def main():
     for c in df.columns:
         if df[c].dtype == bool:
             df[c] = df[c].astype(float)
-    df.to_parquet(OUT, index=False)
-    json.dump(GROUPS, open(os.path.join(HERE, "ctx_features_groups.json"), "w"), indent=1)
+    if BX.EXT: BX.atomic_parquet(df, OUT)
+    else: df.to_parquet(OUT, index=False)
+    json.dump(GROUPS, open(BX.ext_path("ctx_features_groups.json"), "w"), indent=1)
     feats = [c for g in GROUPS.values() for c in g]
     P(f"\nwrote {OUT}: {len(df)} rows x {len(feats)} features ({time.time()-t0:.0f}s)")
     cov = df[feats].notna().mean().sort_values()

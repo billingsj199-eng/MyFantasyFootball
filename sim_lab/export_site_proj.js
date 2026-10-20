@@ -67,6 +67,7 @@ global.window = global;
   'data/sleeper_players.js',
   'data/sleeper_meta.js', 'data/ridge_prior.js', 'data/jm_scores.js',
   'data/sim_snaps.js',
+  'data/sim_team_weeks.js',
   'data/sim_routes.js',
   'data/sim_weather.js',
   'data/sim_practice.js',

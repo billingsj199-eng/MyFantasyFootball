@@ -146,6 +146,37 @@ COACH_PATH = r"E:\MyFantasyFootball\pbp_cache\coach_research.json"
 COACH = json.load(open(COACH_PATH, encoding="utf-8"))
 CHANGES = {int(y): set(ts) for y, ts in COACH["changes"].items()}
 SCHEDULES = {int(y): s for y, s in COACH["schedules"].items()}
+
+
+def _extend_schedules():
+    """2026-10-20 extended backtest (bt_ext.EXT only): seasons coach_research.json lacks (pre-2018) come from the
+    nflverse games file, team codes aliased like the weekly DB (STL/LA -> LAR, SD -> LAC, OAK -> LV). Default mode
+    never calls this, so SCHEDULES stays exactly the coach_research copy."""
+    import pandas as _pd
+    p = os.path.join(r"E:\MyFantasyFootball\pbp_cache", "schedules_games.csv")
+    if not os.path.exists(p):
+        return
+    g = _pd.read_csv(p, usecols=["season", "game_type", "week", "home_team", "away_team"])
+    g = g[g.game_type == "REG"]
+    al = lambda t: {"LA": "LAR", "OAK": "LV", "SD": "LAC", "STL": "LAR", "WSH": "WAS", "JAC": "JAX"}.get(t, t)
+    for Y, gy in g.groupby("season"):
+        Y = int(Y)
+        if Y in SCHEDULES:
+            continue
+        s = {}
+        for r in gy.itertuples(index=False):
+            h, a = al(r.home_team), al(r.away_team)
+            s.setdefault(h, {})[str(int(r.week))] = a
+            s.setdefault(a, {})[str(int(r.week))] = h
+        SCHEDULES[Y] = s
+
+
+try:
+    import bt_ext as _BX
+    if _BX.EXT:
+        _extend_schedules()
+except ImportError:
+    pass
 OPP_ALIAS = {"LA": "LAR", "OAK": "LV", "SD": "LAC", "STL": "LAR", "WSH": "WAS",
              "JAC": "JAX", "ARZ": "ARI", "BLT": "BAL", "CLV": "CLE", "HST": "HOU"}
 

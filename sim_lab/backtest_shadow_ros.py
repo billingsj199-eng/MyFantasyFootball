@@ -25,7 +25,8 @@ from scipy.stats import rankdata
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import backtest_shadow_next as SN
 NW = SN.NW; YEARS = SN.YEARS; POS4 = ("QB", "RB", "WR", "TE")
-FWD = (2022, 2023, 2024, 2025)
+BX = SN.BX; NY, FWL, YL = SN.NY, SN.FWL, SN.YL
+FWD = SN.FWD   # default (2022, 2023, 2024, 2025)
 MINF = int(os.environ.get("ROS_MINF", "4"))   # games left needed for a checkpoint (1 = no survivor filter, noisier)
 
 def base_lam(pos, g):
@@ -42,7 +43,7 @@ def rate(X, pscale=None, lam=None, evid=None):
     return (Pw * X["prior"] + g * ev) / np.maximum(Pw + g, 1e-9)
 
 def main():
-    log = open(os.path.join(HERE, "shadow_ros.log" if MINF == 4 else f"shadow_ros_minf{MINF}.log"), "w", encoding="utf-8")
+    log = open(BX.ext_path("shadow_ros.log" if MINF == 4 else f"shadow_ros_minf{MINF}.log"), "w", encoding="utf-8")
     def P(s=""): print(s); log.write(s + "\n"); log.flush()
     X = SN.setup(); n = X["n"]; F = X["F"]; A = X["A"]
     act, year, wk, pos, g, name, adp, layers = X["act"], X["year"], X["wk"], X["pos"], X["g"], X["name"], X["adp"], X["layers"]
@@ -74,7 +75,7 @@ def main():
         return float(np.mean(rh)) if rh else np.nan
     pred = lambda r: r * ctx
     SH = pred(R0); CL = pred(clay_rate)
-    P(f"=== rest-of-season, in season: {int(ok.sum()):,} checkpoints 2019-25 (3-10 games played, {MINF}+ games left), {int((ok & top150).sum()):,} top-150 ===")
+    P(f"=== rest-of-season, in season: {int(ok.sum()):,} checkpoints {YL} (3-10 games played, {MINF}+ games left), {int((ok & top150).sum()):,} top-150 ===")
 
     # ---------------- 0 where we stand ----------------
     P("\n--- 0  WHERE WE STAND: Clay-free rate vs the Clay blend, rest-of-season per-game ---")
@@ -82,7 +83,7 @@ def main():
         m = m & ok
         if m.sum() < 100: return
         w = sum(1 for y in YEARS if ms(SH, m & (year == y)) < ms(CL, m & (year == y)))
-        P(f"    {lab:26s} n {int(m.sum()):5d}  actual {T[m].mean():5.2f}  Clay-free {SH[m].mean():5.2f}  Clay blend {CL[m].mean():5.2f}  | Clay-free error vs Clay blend {100*(ms(SH, m)/ms(CL, m)-1):+6.2f}%  seasons better {w}/7"
+        P(f"    {lab:26s} n {int(m.sum()):5d}  actual {T[m].mean():5.2f}  Clay-free {SH[m].mean():5.2f}  Clay blend {CL[m].mean():5.2f}  | Clay-free error vs Clay blend {100*(ms(SH, m)/ms(CL, m)-1):+6.2f}%  seasons better {w}/{NY}"
           f"  top-150 weighted {100*(wm(SH, m & top150)/wm(CL, m & top150)-1):+6.2f}%  | rank order {rho(SH, m & top150):.3f} vs {rho(CL, m & top150):.3f}")
     stand("everyone", np.ones(n, bool))
     for ps in POS4: stand(ps, pos == ps)
@@ -110,8 +111,8 @@ def main():
         P(f"\n  {title}   (rows {int(tm.sum()):,})")
         sb = lambda k: sum(1 for y in YEARS if (tm & (year == y)).sum() >= 8 and ms(fam[k], tm & (year == y)) < ms(b, tm & (year == y)) - 1e-12)
         P("    pooled (seasons better at that fixed setting): " + "  ".join(f"{k}: {100*(ms(fam[k], tm)/ms(b, tm)-1):+.2f}% ({sb(k)})" for k in names[1:]))
-        P(f"    LEAVE-ONE-SEASON-OUT  {lo[1]:+.2f}%  seasons better {lo[3]}/7  | top-150 weighted {lo[2]:+.2f}%  rank order {rho(lo[0], tm & top150) - rho(b, tm & top150):+.4f}  | picks {lo[4]}")
-        P(f"    FORWARD 2022-25       {fw[1]:+.2f}%  seasons better {fw[3]}/4  | top-150 weighted {fw[2]:+.2f}%  | picks {fw[4]}")
+        P(f"    LEAVE-ONE-SEASON-OUT  {lo[1]:+.2f}%  seasons better {lo[3]}/{NY}  | top-150 weighted {lo[2]:+.2f}%  rank order {rho(lo[0], tm & top150) - rho(b, tm & top150):+.4f}  | picks {lo[4]}")
+        P(f"    FORWARD {FWL}       {fw[1]:+.2f}%  seasons better {fw[3]}/{len(FWD)}  | top-150 weighted {fw[2]:+.2f}%  | picks {fw[4]}")
         if best != names[0]:
             rs = [(rho(fam[best], tm & top150 & (year == y)), rho(b, tm & top150 & (year == y))) for y in YEARS]; rs = [q for q in rs if not (np.isnan(q[0]) or np.isnan(q[1]))]
             if rs: P(f"    rank order with {best}: better in {sum(1 for q in rs if q[0] > q[1] + 1e-9)}/{len(rs)} seasons (pooled {rho(fam[best], tm & top150) - rho(b, tm & top150):+.4f})")
@@ -161,7 +162,7 @@ def main():
 
     # ---------------- 5 rest-of-season layers ----------------
     P(); P("--- 5  REST-OF-SEASON LAYERS on the Clay-free rate (each judged on the rows it touches, stacked on what passed before it) ---")
-    C = pd.read_parquet(os.path.join(HERE, "ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
+    C = pd.read_parquet(BX.ext_path("ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
     pid = A["pid"]; idx = np.array([ck.get((int(year[i]), pid[i], int(wk[i])), -1) if pid[i] else -1 for i in range(n)]); has = idx >= 0
     colv = lambda c: np.where(has, C[c].values[np.maximum(idx, 0)], np.nan).astype(float)
     S5 = S3.copy()
@@ -218,7 +219,7 @@ def main():
     P(f"  picks: {PICK}")
     for lab, m in [("everyone", ok)] + [(ps, ok & (pos == ps)) for ps in POS4] + [("top-150", ok & top150)]:
         w1 = sum(1 for y in YEARS if ms(S5, m & (year == y)) < ms(SH, m & (year == y))); w2 = sum(1 for y in YEARS if ms(S5, m & (year == y)) < ms(CL, m & (year == y)))
-        P(f"    {lab:10s} vs shipped Clay-free {100*(ms(S5, m)/ms(SH, m)-1):+.2f}% ({w1}/7)  vs Clay blend {100*(ms(S5, m)/ms(CL, m)-1):+.2f}% ({w2}/7)  | weighted {100*(wm(S5, m & top150)/wm(SH, m & top150)-1):+.2f}% / {100*(wm(S5, m & top150)/wm(CL, m & top150)-1):+.2f}%"
+        P(f"    {lab:10s} vs shipped Clay-free {100*(ms(S5, m)/ms(SH, m)-1):+.2f}% ({w1}/{NY})  vs Clay blend {100*(ms(S5, m)/ms(CL, m)-1):+.2f}% ({w2}/{NY})  | weighted {100*(wm(S5, m & top150)/wm(SH, m & top150)-1):+.2f}% / {100*(wm(S5, m & top150)/wm(CL, m & top150)-1):+.2f}%"
           f"  | rank order {rho(S5, m & top150):.3f} (shipped {rho(SH, m & top150):.3f}, Clay blend {rho(CL, m & top150):.3f})")
 
     # ---------------- 4 screen ----------------
@@ -367,7 +368,7 @@ def main():
         m = m & ok
         if m.sum() < 100: continue
         w1 = sum(1 for y in YEARS if ms(S7, m & (year == y)) < ms(W, m & (year == y)) - 1e-12); w2 = sum(1 for y in YEARS if ms(S7, m & (year == y)) < ms(CL, m & (year == y)))
-        P(f"    {lab:30s} n {int(m.sum()):5d}  {100*(ms(S7, m)/ms(W, m)-1):+6.2f}% ({w1}/7) | {100*(ms(S7, m)/ms(CL, m)-1):+6.2f}% ({w2}/7; was {100*(ms(W, m)/ms(CL, m)-1):+6.2f}%)  | act/proj {T[m].sum()/S7[m].sum():.3f} (was {T[m].sum()/W[m].sum():.3f})"
+        P(f"    {lab:30s} n {int(m.sum()):5d}  {100*(ms(S7, m)/ms(W, m)-1):+6.2f}% ({w1}/{NY}) | {100*(ms(S7, m)/ms(CL, m)-1):+6.2f}% ({w2}/{NY}; was {100*(ms(W, m)/ms(CL, m)-1):+6.2f}%)  | act/proj {T[m].sum()/S7[m].sum():.3f} (was {T[m].sum()/W[m].sum():.3f})"
           f"  | rank order {rho(S7, m):.3f} (was {rho(W, m):.3f}, Clay blend {rho(CL, m):.3f})")
 
     # ---------------- 8 inside the weak spots ----------------
@@ -387,7 +388,7 @@ def main():
         m = m & ok
         if m.sum() < 150: continue
         wins = sum(1 for y in YEARS if (m & (year == y)).sum() >= 12 and ms(M, m & (year == y)) < ms(CL, m & (year == y)))
-        P(); P(f"  {lab}: n {int(m.sum())}, actual / projected {T[m].sum()/M[m].sum():.3f}, error vs Clay blend {100*(ms(M, m)/ms(CL, m)-1):+.2f}% (better {wins}/7), rank order {rho(M, m):.3f} vs {rho(CL, m):.3f}")
+        P(); P(f"  {lab}: n {int(m.sum())}, actual / projected {T[m].sum()/M[m].sum():.3f}, error vs Clay blend {100*(ms(M, m)/ms(CL, m)-1):+.2f}% (better {wins}/{NY}), rank order {rho(M, m):.3f} vs {rho(CL, m):.3f}")
         for what, tgt in (("the miss (+ = scored more than projected)", miss), ("the Clay blend being closer", cedge)):
             out = []
             for f_, v in F8.items():
@@ -434,7 +435,7 @@ def main():
     for lab, m in [("everyone", np.ones(n, bool)), ("top-150", top150)] + [(ps, pos == ps) for ps in POS4] + [("RB running hot", hotR), ("RB rookies", RBm & rk), ("WR cold", coldW), ("WR ADP 101-150", WRm & band["ADP 101-150"])]:
         m = m & ok
         w1 = sum(1 for y in YEARS if ms(S9, m & (year == y)) < ms(M, m & (year == y)) - 1e-12); w2 = sum(1 for y in YEARS if ms(S9, m & (year == y)) < ms(CL, m & (year == y)))
-        P(f"    {lab:18s} n {int(m.sum()):5d}  {100*(ms(S9, m)/ms(M, m)-1):+6.2f}% ({w1}/7) | {100*(ms(S9, m)/ms(CL, m)-1):+6.2f}% ({w2}/7; was {100*(ms(M, m)/ms(CL, m)-1):+6.2f}%)  | act/proj {T[m].sum()/S9[m].sum():.3f} (was {T[m].sum()/M[m].sum():.3f})  | rank order {rho(S9, m):.3f} (was {rho(M, m):.3f}, Clay blend {rho(CL, m):.3f})")
+        P(f"    {lab:18s} n {int(m.sum()):5d}  {100*(ms(S9, m)/ms(M, m)-1):+6.2f}% ({w1}/{NY}) | {100*(ms(S9, m)/ms(CL, m)-1):+6.2f}% ({w2}/{NY}; was {100*(ms(M, m)/ms(CL, m)-1):+6.2f}%)  | act/proj {T[m].sum()/S9[m].sum():.3f} (was {T[m].sum()/M[m].sum():.3f})  | rank order {rho(S9, m):.3f} (was {rho(M, m):.3f}, Clay blend {rho(CL, m):.3f})")
 
     # ---------------- 10 ablation ----------------
     # Jack 2026-10-02 "take out anything that overall hurts the backtest". The model as wired (through v2.28), one piece removed at
@@ -475,7 +476,7 @@ def main():
         sa = sum(1 for y in YEARS if ms(FULL, ok & (year == y)) < ms(WO, ok & (year == y)) - 1e-12); sb_ = sum(1 for y in YEARS if wm(FULL, t150 & (year == y)) < wm(WO, t150 & (year == y)) - 1e-12)
         tt = ok & touched; tr = 100 * (ms(FULL, tt) / ms(WO, tt) - 1) if tt.any() else 0.0
         bad = (a > 0) + (b > 0) + (r < 0)
-        P(f"    {k:38s} {int(tt.sum()):5d} | {a:+6.2f}% ({sa}/7)            | {b:+6.2f}% ({sb_}/7)            | {r:+.4f}    | {'HURTS' if bad >= 2 else 'mixed' if bad == 1 else 'helps'}   (its own rows {tr:+.2f}%)")
+        P(f"    {k:38s} {int(tt.sum()):5d} | {a:+6.2f}% ({sa}/{NY})            | {b:+6.2f}% ({sb_}/{NY})            | {r:+.4f}    | {'HURTS' if bad >= 2 else 'mixed' if bad == 1 else 'helps'}   (its own rows {tr:+.2f}%)")
 
     # ---------------- 12 THE SEASON BLEND (Jack 2026-10-08: "what else can we test to get rid of the season blend") ----------------
     # The live later-week number is w x shadow + (1 - w) x Clay form per position (QB .5 / RB .8 / WR .7 / TE 0), weights fit on
@@ -486,10 +487,10 @@ def main():
     bl12 = lambda w: w * FULL + (1 - w) * CL
     bw12 = np.array([WIRED12[p_] for p_ in pos]); WB12 = bw12 * FULL + (1 - bw12) * CL
     for lab12, m12 in (("all rows", ok), ("top 150", t150)):
-        P(f"  {lab12}: " + " | ".join(f"w {w:.1f}: {100*(wm(bl12(w), m12)/wm(FULL, m12)-1):+.2f}% ({sum(1 for y in YEARS if wm(bl12(w), m12 & (year == y)) < wm(FULL, m12 & (year == y)) - 1e-12)}/7) rho {rho(bl12(w), m12):.4f}" for w in WG12 if w != 1.0) + f" | shadow alone rho {rho(FULL, m12):.4f} | wired weights {100*(wm(WB12, m12)/wm(FULL, m12)-1):+.2f}% rho {rho(WB12, m12):.4f}")
+        P(f"  {lab12}: " + " | ".join(f"w {w:.1f}: {100*(wm(bl12(w), m12)/wm(FULL, m12)-1):+.2f}% ({sum(1 for y in YEARS if wm(bl12(w), m12 & (year == y)) < wm(FULL, m12 & (year == y)) - 1e-12)}/{NY}) rho {rho(bl12(w), m12):.4f}" for w in WG12 if w != 1.0) + f" | shadow alone rho {rho(FULL, m12):.4f} | wired weights {100*(wm(WB12, m12)/wm(FULL, m12)-1):+.2f}% rho {rho(WB12, m12):.4f}")
     for ps in POS4:
         m12 = t150 & (pos == ps); best = min(WG12, key=lambda w: wm(bl12(w), m12))
-        P(f"  {ps} (n{int(m12.sum())}): best fixed w {best:.1f} ({100*(wm(bl12(best), m12)/wm(FULL, m12)-1):+.2f}% vs shadow alone) | wired w {WIRED12[ps]:.1f}: {100*(wm(bl12(WIRED12[ps]), m12)/wm(FULL, m12)-1):+.2f}% ({sum(1 for y in YEARS if wm(bl12(WIRED12[ps]), m12 & (year == y)) < wm(FULL, m12 & (year == y)) - 1e-12)}/7) | Clay blend alone {100*(wm(CL, m12)/wm(FULL, m12)-1):+.2f}% | rank shadow {rho(FULL, m12):.4f} wired {rho(WB12, m12):.4f} Clay {rho(CL, m12):.4f}")
+        P(f"  {ps} (n{int(m12.sum())}): best fixed w {best:.1f} ({100*(wm(bl12(best), m12)/wm(FULL, m12)-1):+.2f}% vs shadow alone) | wired w {WIRED12[ps]:.1f}: {100*(wm(bl12(WIRED12[ps]), m12)/wm(FULL, m12)-1):+.2f}% ({sum(1 for y in YEARS if wm(bl12(WIRED12[ps]), m12 & (year == y)) < wm(FULL, m12 & (year == y)) - 1e-12)}/{NY}) | Clay blend alone {100*(wm(CL, m12)/wm(FULL, m12)-1):+.2f}% | rank shadow {rho(FULL, m12):.4f} wired {rho(WB12, m12):.4f} Clay {rho(CL, m12):.4f}")
     LOSO12 = [([y for y in YEARS if y != t], t) for t in YEARS]; FORW12 = [([y for y in YEARS if y < t], t) for t in FWD]
     for flab, folds in (("LOYO", LOSO12), ("forward", FORW12)):
         out = FULL.copy(); picks = {ps: [] for ps in POS4}
@@ -555,7 +556,7 @@ def main():
     for lab, m in (("ALL rows", ok), ("top 150", t150), ("rookies", ok & rk13), ("RB rookies", ok & rk13 & (pos == "RB")), ("WR rookies", ok & rk13 & (pos == "WR")), ("non-rookies", ok & ~rk13)):
         if m.sum() < 60: continue
         w1 = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and ms(S13, m & (year == y)) < ms(M, m & (year == y)) - 1e-12)
-        P(f"    {lab:14s} n {int(m.sum()):5d}  vs wired {100*(ms(S13, m)/ms(M, m)-1):+6.2f}% ({w1}/7) | vs Clay blend {100*(ms(S13, m)/ms(CL, m)-1):+6.2f}% | top-150 wtd {100*(wm(S13, m & top150)/wm(M, m & top150)-1):+6.2f}% | rank order {rho(S13, m & top150):.4f} (wired {rho(M, m & top150):.4f})")
+        P(f"    {lab:14s} n {int(m.sum()):5d}  vs wired {100*(ms(S13, m)/ms(M, m)-1):+6.2f}% ({w1}/{NY}) | vs Clay blend {100*(ms(S13, m)/ms(CL, m)-1):+6.2f}% | top-150 wtd {100*(wm(S13, m & top150)/wm(M, m & top150)-1):+6.2f}% | rank order {rho(S13, m & top150):.4f} (wired {rho(M, m & top150):.4f})")
 
     # ---------------- 14 TIGHT ENDS (Jack 2026-10-08: "run all three and wire what passes") ----------------
     # research_te_bias.py: the shadow's TE under-projection sits in (1) tight ends with a real role and no touchdowns yet,
@@ -589,13 +590,15 @@ def main():
     P(); P("  STACKED after section 14 (vs wired through section 13 | vs the Clay blend):")
     for lab, m in (("ALL rows", ok), ("top 150", t150), ("TE", ok & te14), ("TE top 150", t150 & te14), ("non-TE", ok & ~te14)):
         w1 = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and ms(S14, m & (year == y)) < ms(S13, m & (year == y)) - 1e-12)
-        P(f"    {lab:12s} n {int(m.sum()):5d}  vs section 13 {100*(ms(S14, m)/ms(S13, m)-1):+6.2f}% ({w1}/7) | vs Clay blend {100*(ms(S14, m)/ms(CL, m)-1):+6.2f}% | act/proj {T[m].sum()/S14[m].sum():.3f} (was {T[m].sum()/S13[m].sum():.3f}) | rank order {rho(S14, m & top150):.4f} (was {rho(S13, m & top150):.4f})")
+        P(f"    {lab:12s} n {int(m.sum()):5d}  vs section 13 {100*(ms(S14, m)/ms(S13, m)-1):+6.2f}% ({w1}/{NY}) | vs Clay blend {100*(ms(S14, m)/ms(CL, m)-1):+6.2f}% | act/proj {T[m].sum()/S14[m].sum():.3f} (was {T[m].sum()/S13[m].sum():.3f}) | rank order {rho(S14, m & top150):.4f} (was {rho(S13, m & top150):.4f})")
 
     # ---------------- 15 STRENGTH OF SCHEDULE (Jack 2026-10-08: "anything else to change our ROS projections?" after "adjust by
     # how good the opponents were"). ctx above = mean of each future game's layers (Vegas x opponent FPA), but that FPA is read AS
     # OF each future week (a peek ahead). The engine only knows the defense's numbers today. Rebuild the future opponent factor
     # from what is known at the checkpoint: raw (= the engine), opponent-adjusted, adjusted + last-season adjusted prior early,
     # stronger, or none; Vegas part kept as is.
+    if BX.EXT:   # 2026-10-20: backtest_opp_adjusted is 2019-25 only and truncates its own default log on import
+        P(); P("--- 15  STRENGTH OF SCHEDULE: skipped in extended mode ---"); log.close(); return
     import backtest_opp_adjusted as OA
     from backtest_snap_defense import OPP_ALIAS as _OA_ALIAS
     P(); P("--- 15  STRENGTH OF SCHEDULE: the future opponents' points allowed as known at the checkpoint (model as wired through section 14) ---")

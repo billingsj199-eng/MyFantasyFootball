@@ -1,0 +1,47 @@
+loading pbp 2016-2025 (targets, carries, site xFP, half-PPR points) ...
+  2012: 479 RB/WR/TE player-seasons, 32 teams
+  2013: 475 RB/WR/TE player-seasons, 32 teams
+  2014: 469 RB/WR/TE player-seasons, 32 teams
+  2015: 482 RB/WR/TE player-seasons, 32 teams
+  2016: 491 RB/WR/TE player-seasons, 32 teams
+  2017: 480 RB/WR/TE player-seasons, 32 teams
+  2018: 494 RB/WR/TE player-seasons, 32 teams
+  2019: 495 RB/WR/TE player-seasons, 32 teams
+  2020: 513 RB/WR/TE player-seasons, 32 teams
+  2021: 529 RB/WR/TE player-seasons, 32 teams
+  2022: 506 RB/WR/TE player-seasons, 32 teams
+  2023: 477 RB/WR/TE player-seasons, 32 teams
+  2024: 489 RB/WR/TE player-seasons, 32 teams
+  2025: 499 RB/WR/TE player-seasons, 32 teams
+  3585 player-seasons 2017-2025: stay 2376, mover 678, rookie 531
+  efficiency lambda picks per test season: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  wrote opp_prior_preds.json: 3585 player-seasons
+
+=== season PPG prediction, test seasons 2019-2025 (every model on the same rows per segment; parenthesis = seasons better than CALIBRATED Clay) ===
+  stay     ALL n 1216 | CLAY MSE 8.94 r 0.80 (0/7) | CLAYCAL MSE 7.07 r 0.80 (0/7) | HIST MSE 9.12 r 0.76 (0/7) | HISTREG MSE 8.68 r 0.75 (0/7) | HISTCAL MSE 8.71 r 0.75 (0/7) | OPP MSE 8.46 r 0.76 (1/7) | OPPCAL MSE 8.45 r 0.76 (1/7) | HIST+OPP MSE 8.27 r 0.77 (1/7) | CLAY+OPP MSE 6.98 r 0.81 (5/7) | SHADOW MSE 8.32 r 0.77 (1/7) | SHADOWCAL MSE 8.27 r 0.77 (1/7)
+  stay     RB  n  350 | CLAY MSE 11.87 r 0.80 (0/7) | CLAYCAL MSE 9.73 r 0.80 (0/7) | HIST MSE 13.90 r 0.72 (0/7) | HISTREG MSE 13.02 r 0.71 (0/7) | HISTCAL MSE 13.20 r 0.71 (0/7) | OPP MSE 12.41 r 0.73 (0/7) | OPPCAL MSE 12.42 r 0.73 (0/7) | HIST+OPP MSE 12.36 r 0.73 (0/7) | CLAY+OPP MSE 9.74 r 0.80 (5/7) | SHADOW MSE 12.34 r 0.73 (0/7) | SHADOWCAL MSE 12.36 r 0.73 (0/7)
+  stay     WR  n  555 | CLAY MSE 9.29 r 0.76 (0/7) | CLAYCAL MSE 7.32 r 0.75 (0/7) | HIST MSE 8.41 r 0.73 (1/7) | HISTREG MSE 8.15 r 0.72 (1/7) | HISTCAL MSE 8.11 r 0.72 (1/7) | OPP MSE 8.17 r 0.72 (1/7) | OPPCAL MSE 8.14 r 0.72 (2/7) | HIST+OPP MSE 7.85 r 0.73 (2/7) | CLAY+OPP MSE 7.11 r 0.76 (5/7) | SHADOW MSE 7.95 r 0.73 (2/7) | SHADOWCAL MSE 7.85 r 0.73 (2/7)
+  stay     TE  n  311 | CLAY MSE 5.00 r 0.81 (0/7) | CLAYCAL MSE 3.63 r 0.81 (0/7) | HIST MSE 5.01 r 0.74 (1/7) | HISTREG MSE 4.75 r 0.74 (1/7) | HISTCAL MSE 4.75 r 0.74 (1/7) | OPP MSE 4.53 r 0.76 (1/7) | OPPCAL MSE 4.52 r 0.75 (1/7) | HIST+OPP MSE 4.43 r 0.76 (1/7) | CLAY+OPP MSE 3.63 r 0.81 (4/7) | SHADOW MSE 4.46 r 0.76 (1/7) | SHADOWCAL MSE 4.43 r 0.76 (1/7)
+  mover    ALL n  354 | CLAY MSE 8.40 r 0.71 (1/7) | CLAYCAL MSE 7.14 r 0.71 (0/7) | HIST MSE 11.29 r 0.64 (0/7) | HISTREG MSE 10.45 r 0.62 (0/7) | HISTCAL MSE 10.13 r 0.63 (0/7) | OPP MSE 8.49 r 0.63 (0/7) | OPPCAL MSE 8.44 r 0.63 (1/7) | HIST+OPP MSE 8.36 r 0.64 (1/7) | CLAY+OPP MSE 6.89 r 0.72 (6/7) | SHADOW MSE 8.47 r 0.65 (0/7) | SHADOWCAL MSE 8.36 r 0.64 (1/7)
+  mover    RB  n  107 | CLAY MSE 11.64 r 0.67 (2/7) | CLAYCAL MSE 10.34 r 0.67 (0/7) | HIST MSE 16.92 r 0.60 (1/7) | HISTREG MSE 15.50 r 0.59 (0/7) | HISTCAL MSE 14.59 r 0.58 (0/7) | OPP MSE 12.66 r 0.55 (2/7) | OPPCAL MSE 12.63 r 0.55 (2/7) | HIST+OPP MSE 12.35 r 0.58 (1/7) | CLAY+OPP MSE 10.06 r 0.67 (5/7) | SHADOW MSE 12.49 r 0.58 (1/7) | SHADOWCAL MSE 12.35 r 0.58 (1/7)
+  mover    WR  n  165 | CLAY MSE 7.85 r 0.72 (2/7) | CLAYCAL MSE 6.62 r 0.71 (0/7) | HIST MSE 10.54 r 0.63 (1/7) | HISTREG MSE 9.84 r 0.61 (1/7) | HISTCAL MSE 9.77 r 0.61 (1/7) | OPP MSE 7.87 r 0.64 (0/7) | OPPCAL MSE 7.76 r 0.64 (2/7) | HIST+OPP MSE 7.79 r 0.64 (0/7) | CLAY+OPP MSE 6.35 r 0.72 (4/7) | SHADOW MSE 7.94 r 0.65 (0/7) | SHADOWCAL MSE 7.79 r 0.64 (0/7)
+  mover    TE  n   82 | CLAY MSE 5.27 r 0.63 (1/7) | CLAYCAL MSE 4.01 r 0.63 (0/7) | HIST MSE 5.47 r 0.54 (2/7) | HISTREG MSE 5.11 r 0.53 (2/7) | HISTCAL MSE 5.06 r 0.53 (2/7) | OPP MSE 4.31 r 0.56 (5/7) | OPPCAL MSE 4.33 r 0.56 (5/7) | HIST+OPP MSE 4.28 r 0.57 (4/7) | CLAY+OPP MSE 3.84 r 0.63 (6/7) | SHADOW MSE 4.29 r 0.57 (4/7) | SHADOWCAL MSE 4.28 r 0.57 (4/7)
+  rookie   ALL n  281 | CLAY MSE 10.99 r 0.69 (0/7) | CLAYCAL MSE 7.49 r 0.69 (0/7) | OPP MSE 9.15 r 0.59 (0/7) | OPPCAL MSE 9.17 r 0.59 (0/7) | CLAY+OPP MSE 7.54 r 0.68 (4/7) | SHADOW MSE 9.15 r 0.59 (0/7) | SHADOWCAL MSE 9.20 r 0.59 (0/7)
+  rookie   RB  n   92 | CLAY MSE 12.06 r 0.74 (0/7) | CLAYCAL MSE 8.73 r 0.74 (0/7) | OPP MSE 11.84 r 0.62 (0/7) | OPPCAL MSE 11.78 r 0.62 (1/7) | CLAY+OPP MSE 8.80 r 0.73 (4/7) | SHADOW MSE 11.84 r 0.62 (0/7) | SHADOWCAL MSE 11.68 r 0.62 (1/7)
+  rookie   WR  n  135 | CLAY MSE 11.00 r 0.61 (2/7) | CLAYCAL MSE 7.86 r 0.61 (0/7) | OPP MSE 9.02 r 0.53 (1/7) | OPPCAL MSE 9.08 r 0.52 (2/7) | CLAY+OPP MSE 7.94 r 0.60 (3/7) | SHADOW MSE 9.02 r 0.53 (1/7) | SHADOWCAL MSE 9.18 r 0.52 (1/7)
+  rookie   TE  n   54 | CLAY MSE 9.17 r 0.63 (0/6) | CLAYCAL MSE 4.45 r 0.62 (0/6) | OPP MSE 4.89 r 0.48 (3/6) | OPPCAL MSE 4.95 r 0.48 (3/6) | CLAY+OPP MSE 4.42 r 0.61 (3/6) | SHADOW MSE 4.89 r 0.48 (3/6) | SHADOWCAL MSE 5.03 r 0.46 (3/6)
+  all vets ALL n 1570 | CLAY MSE 8.81 r 0.79 (0/7) | CLAYCAL MSE 7.08 r 0.79 (0/7) | HIST MSE 9.61 r 0.73 (0/7) | HISTREG MSE 9.08 r 0.73 (0/7) | HISTCAL MSE 9.03 r 0.73 (0/7) | OPP MSE 8.47 r 0.75 (0/7) | OPPCAL MSE 8.44 r 0.75 (0/7) | HIST+OPP MSE 8.29 r 0.75 (0/7) | CLAY+OPP MSE 6.96 r 0.80 (4/7) | SHADOW MSE 8.36 r 0.75 (0/7) | SHADOWCAL MSE 8.29 r 0.75 (0/7)
+  all vets RB  n  457 | CLAY MSE 11.82 r 0.78 (0/7) | CLAYCAL MSE 9.87 r 0.78 (0/7) | HIST MSE 14.61 r 0.69 (0/7) | HISTREG MSE 13.60 r 0.68 (0/7) | HISTCAL MSE 13.52 r 0.68 (0/7) | OPP MSE 12.47 r 0.71 (0/7) | OPPCAL MSE 12.47 r 0.71 (0/7) | HIST+OPP MSE 12.36 r 0.71 (0/7) | CLAY+OPP MSE 9.82 r 0.78 (6/7) | SHADOW MSE 12.38 r 0.72 (0/7) | SHADOWCAL MSE 12.36 r 0.71 (0/7)
+  all vets WR  n  720 | CLAY MSE 8.96 r 0.76 (1/7) | CLAYCAL MSE 7.16 r 0.76 (0/7) | HIST MSE 8.89 r 0.71 (1/7) | HISTREG MSE 8.54 r 0.70 (1/7) | HISTCAL MSE 8.49 r 0.70 (1/7) | OPP MSE 8.10 r 0.72 (1/7) | OPPCAL MSE 8.05 r 0.72 (2/7) | HIST+OPP MSE 7.84 r 0.73 (2/7) | CLAY+OPP MSE 6.94 r 0.76 (5/7) | SHADOW MSE 7.95 r 0.73 (1/7) | SHADOWCAL MSE 7.84 r 0.73 (2/7)
+  all vets TE  n  393 | CLAY MSE 5.05 r 0.79 (0/7) | CLAYCAL MSE 3.71 r 0.79 (0/7) | HIST MSE 5.10 r 0.72 (1/7) | HISTREG MSE 4.82 r 0.71 (1/7) | HISTCAL MSE 4.82 r 0.71 (1/7) | OPP MSE 4.49 r 0.74 (1/7) | OPPCAL MSE 4.48 r 0.74 (1/7) | HIST+OPP MSE 4.39 r 0.74 (1/7) | CLAY+OPP MSE 3.67 r 0.79 (5/7) | SHADOW MSE 4.42 r 0.74 (1/7) | SHADOWCAL MSE 4.39 r 0.74 (1/7)
+  all      ALL n 1851 | CLAY MSE 9.14 r 0.78 (0/7) | CLAYCAL MSE 7.14 r 0.78 (0/7) | OPP MSE 8.57 r 0.73 (0/7) | OPPCAL MSE 8.55 r 0.73 (0/7) | CLAY+OPP MSE 7.05 r 0.79 (5/7) | SHADOW MSE 8.47 r 0.74 (0/7) | SHADOWCAL MSE 8.43 r 0.74 (0/7)
+  all      RB  n  549 | CLAY MSE 11.86 r 0.78 (0/7) | CLAYCAL MSE 9.68 r 0.78 (0/7) | OPP MSE 12.37 r 0.71 (0/7) | OPPCAL MSE 12.36 r 0.71 (0/7) | CLAY+OPP MSE 9.65 r 0.78 (5/7) | SHADOW MSE 12.29 r 0.71 (0/7) | SHADOWCAL MSE 12.24 r 0.71 (0/7)
+  all      WR  n  855 | CLAY MSE 9.28 r 0.75 (0/7) | CLAYCAL MSE 7.27 r 0.74 (0/7) | OPP MSE 8.24 r 0.71 (1/7) | OPPCAL MSE 8.21 r 0.71 (1/7) | CLAY+OPP MSE 7.10 r 0.75 (5/7) | SHADOW MSE 8.12 r 0.71 (1/7) | SHADOWCAL MSE 8.05 r 0.71 (1/7)
+  all      TE  n  447 | CLAY MSE 5.55 r 0.77 (0/7) | CLAYCAL MSE 3.80 r 0.77 (0/7) | OPP MSE 4.54 r 0.72 (1/7) | OPPCAL MSE 4.53 r 0.72 (1/7) | CLAY+OPP MSE 3.76 r 0.77 (6/7) | SHADOW MSE 4.48 r 0.73 (1/7) | SHADOWCAL MSE 4.47 r 0.72 (1/7)
+  RB share models (all seasons): vet target share [1, prev, alloc, mover x prev, age-27] [0.0252, 0.6604, 0.0384, -0.127, -0.0018] | rookie target share [1, log pick, vacated] [0.1748, -0.0271, 0.0174] | value/target 1.129 /carry 0.619
+  WR share models (all seasons): vet target share [1, prev, alloc, mover x prev, age-27] [0.0355, 0.7632, 0.0364, -0.084, -0.0027] | rookie target share [1, log pick, vacated] [0.2616, -0.0378, 0.0452] | value/target 1.427 /carry 0.563
+  TE share models (all seasons): vet target share [1, prev, alloc, mover x prev, age-27] [0.0277, 0.7748, 0.0146, -0.1324, -0.0014] | rookie target share [1, log pick, vacated] [0.2278, -0.0313, 0.0096] | value/target 1.386 /carry 0.754
+  full-fit HIST + OPP calibration [a, b hist, c opp]: RB [-0.3596, 0.2557, 0.7691]; WR [-0.9197, 0.3981, 0.7015]; TE [-0.4055, 0.3862, 0.6788]
+
+wrote data/opp_prior_backtest.js: Opportunity prior, season PPG 2019-25 LOYO - stay: best CLAY+OPP MSE 6.98 (calibrated Clay 7.067, Clay-free SHADOWCAL 8.274); mover: best CLAY+OPP MSE 6.892 (calibrated Clay 7.141, Clay-free SHADOWCAL 8.356); rookie: best CLAYCAL MSE 7.488 (calibrated Clay 7.488, Clay-free SHADOWCAL 9.2); all: best CLAY+OPP MSE 7.049 (calibrated Clay 7.145, Clay-free SHADOWCAL 8.43)
+done

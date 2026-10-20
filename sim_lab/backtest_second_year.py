@@ -62,8 +62,11 @@ def load_snaps():
     pl = pd.read_csv(os.path.join(B.CACHE, "players.csv"), low_memory=False, usecols=["gsis_id", "pfr_id"])
     g2p = {r.pfr_id: r.gsis_id for r in pl.itertuples(index=False) if isinstance(r.pfr_id, str) and isinstance(r.gsis_id, str)}
     out = {}
-    for Y in range(2018, 2025):
+    import bt_ext as _BX   # 2026-10-20: extended backtest reaches back to the season before the first one (files that exist)
+    for Y in (range(2018, 2025) if not _BX.EXT else range(min(2018, _BX.YEARS[0] - 1), 2025)):
+        if not os.path.exists(os.path.join(B.CACHE, f"snap_counts_{Y}.parquet")): continue
         d = pd.read_parquet(os.path.join(B.CACHE, f"snap_counts_{Y}.parquet"))
+        if not len(d): continue
         d = d[(d.game_type == "REG") & d.position.isin(POS4) & (d.offense_snaps > 0)]
         for pid_, grp in d.groupby("pfr_player_id"):
             gid = g2p.get(pid_)

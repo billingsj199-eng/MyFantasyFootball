@@ -1,0 +1,44 @@
+=== rest-of-season, in season: 11,026 checkpoints 2019-25 (3-10 games played, 4+ games left), 6,487 top-150 ===
+
+--- 0  WHERE WE STAND: Clay-free rate vs the Clay blend, rest-of-season per-game ---
+    everyone                   n 11026  actual  9.65  Clay-free  9.54  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.601 vs nan
+    QB                         n  1484  actual 17.40  Clay-free 17.50  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.518 vs nan
+    RB                         n  2997  actual  9.78  Clay-free  9.56  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.651 vs nan
+    WR                         n  4550  actual  8.33  Clay-free  8.42  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.642 vs nan
+    TE                         n  1995  actual  6.69  Clay-free  6.14  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.578 vs nan
+    after 3-4 games            n  3340  actual  9.27  Clay-free  9.21  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.641 vs nan
+    after 5-7 games            n  4393  actual  9.53  Clay-free  9.49  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.613 vs nan
+    after 8-10 games           n  3293  actual 10.20  Clay-free  9.94  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.568 vs nan
+    ADP 1-30                   n  1385  actual 14.91  Clay-free 14.84  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.398 vs nan
+    ADP 31-60                  n  1390  actual 12.53  Clay-free 12.16  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.353 vs nan
+    ADP 61-100                 n  1717  actual 10.94  Clay-free 10.54  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.493 vs nan
+    ADP 101-150                n  1882  actual  9.23  Clay-free  9.41  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.479 vs nan
+    QB after 3-4 games         n   446  actual 16.94  Clay-free 17.02  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.542 vs nan
+    QB after 5-7 games         n   586  actual 17.34  Clay-free 17.44  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.527 vs nan
+    QB after 8-10 games        n   452  actual 17.93  Clay-free 18.05  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.518 vs nan
+    RB after 3-4 games         n   901  actual  9.36  Clay-free  9.20  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.706 vs nan
+    RB after 5-7 games         n  1206  actual  9.60  Clay-free  9.50  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.675 vs nan
+    RB after 8-10 games        n   890  actual 10.46  Clay-free 10.00  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.619 vs nan
+    WR after 3-4 games         n  1380  actual  7.99  Clay-free  8.15  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.683 vs nan
+    WR after 5-7 games         n  1793  actual  8.26  Clay-free  8.41  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.621 vs nan
+    WR after 8-10 games        n  1377  actual  8.77  Clay-free  8.69  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.595 vs nan
+    TE after 3-4 games         n   613  actual  6.43  Clay-free  5.91  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.585 vs nan
+    TE after 5-7 games         n   808  actual  6.58  Clay-free  6.09  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.577 vs nan
+    TE after 8-10 games        n   574  actual  7.12  Clay-free  6.44  Clay blend   nan  | Clay-free error vs Clay blend   +nan%  seasons better 0/7  top-150 weighted   +nan%  | rank order 0.419 vs nan
+
+--- 1  HOW MUCH THE SEASON SO FAR COUNTS (prior weight in games; shipped QB 12, RB 5, WR 8, TE 8) ---
+
+  1 QB: prior weight   (rows 1,484)
+    pooled (seasons better at that fixed setting): P 4: +9.90% (1)  P 6: +4.65% (2)  P 8: +2.07% (2)  P 16: -0.53% (4)  P 24: -0.38% (4)
+    LEAVE-ONE-SEASON-OUT  +0.49%  seasons better 4/7  | top-150 weighted -0.17%  rank order +0.0008  | picks ['P 16', 'P 16', 'P 16', 'P 24', 'P 24', 'P 24', 'P 16']
+    FORWARD 2022-25       +2.04%  seasons better 1/4  | top-150 weighted +0.20%  | picks ['P 24', 'P 24', 'P 16', 'P 16']
+    rank order with P 16: better in 5/7 seasons (pooled +0.0011)
+    -> FAIL (best pooled: P 16)
+      by stage, 3-4 games: P 4: +13.77%  P 6: +6.03%  P 8: +2.56%  P 16: -0.65%  P 24: -0.61%
+      by stage, 5-7 games: P 4: +11.34%  P 6: +5.68%  P 8: +2.68%  P 16: -0.92%  P 24: -1.24%
+      by stage, 8-10 games: P 4: +4.82%  P 6: +2.23%  P 8: +0.91%  P 16: +0.04%  P 24: +0.86%
+
+  1 RB: prior weight   (rows 2,997)
+    pooled (seasons better at that fixed setting): P 2: +6.79% (0)  P 3: +3.05% (0)  P 8: -0.53% (6)  P 12: +0.68% (1)  P 16: +2.21% (1)
+    LEAVE-ONE-SEASON-OUT  -0.53%  seasons better 6/7  | top-150 weighted -0.32%  rank order +0.0001  | picks ['P 8', 'P 8', 'P 8', 'P 8', 'P 8', 'P 8', 'P 8']
+    FORWARD 2022-25       -0.60%  seasons better 3/4  | top-150 weighted -0.63%  | picks ['P 8', 'P 8', 'P 8', 'P 8']

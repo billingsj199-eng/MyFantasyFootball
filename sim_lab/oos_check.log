@@ -1,0 +1,97 @@
+=== OOS check of the wired shadow: years 2019-2025 | pool clay | team fix off | default | 20,739 player-weeks ===
+    2019-18 (out of sample)      rows 0
+    2019-25 (tuned on)           rows 20,739
+  prior rebuild check: max |rebuilt - harness| = 0.00e+00
+  ctx coverage of harness rows: 0.919 (week-1 rows have none by design)
+
+=== A  NEXT GAME: each wired piece removed (negative = it helps) ===
+  2019-18 (out of sample): full model rows 0 (top-150 0) | MSE nan MAE nan | top-150 wtd MSE nan | rank order nan | act/proj nan
+  2019-25 (tuned on): full model rows 18,984 (top-150 11,123) | MSE 41.054 MAE 4.907 | top-150 wtd MSE 56.203 | rank order 0.3980 | act/proj 0.995
+    piece                                          | 2019-18: all / top-150 wtd / MAE / rank (seasons wtd) | 2019-25: all / top-150 wtd / MAE / rank (seasons wtd)
+    usage evidence, WR                             |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.05%  -0.10%  -0.00% +0.0012 (5/7) helps  [rows touched 7,273]
+      by season, top-150 wtd %: 19:-0.31 20:+0.22 21:-0.06 22:-0.22 23:-0.04 24:-0.36 25:+0.06
+    usage evidence, RB                             |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.03%  -0.10%  +0.02% -0.0000 (4/7) mixed  [rows touched 4,749]
+      by season, top-150 wtd %: 19:-0.30 20:+0.22 21:-0.53 22:-0.06 23:+0.09 24:+0.24 25:-0.37
+    Vegas-cleaned evidence                         |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.20%  -0.31%  -0.11% +0.0003 (6/7) helps  [rows touched 16,405]
+      by season, top-150 wtd %: 19:-0.24 20:-0.21 21:-0.43 22:-0.20 23:-1.00 24:+0.24 25:-0.30
+    WR one-game prior x5                           |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.01%  -0.06%  +0.01% +0.0003 (7/7) helps  [rows touched 624]
+      by season, top-150 wtd %: 19:-0.04 20:-0.04 21:-0.07 22:-0.07 23:-0.03 24:-0.09 25:-0.09
+    rookie ramp (not first string, weeks 1-2)      |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.08%  -0.04%  -0.14% -0.0000 (5/7) mixed  [rows touched 231]
+      by season, top-150 wtd %: 19:-0.04 20:+0.06 21:-0.21 22:-0.01 23:-0.01 24:+0.00 25:-0.05
+    vacated-role pool                              |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.36%  -0.29%  +0.42% +0.0016 (6/7) helps  [rows touched 5,764]
+      by season, top-150 wtd %: 19:-0.08 20:+0.08 21:-0.36 22:-0.16 23:-0.33 24:-0.77 25:-0.29
+    QB game-total tilt                             |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.00%  +0.01%  -0.00% +0.0033 (2/7) mixed  [rows touched 2,425]
+      by season, top-150 wtd %: 19:+0.22 20:-0.25 21:+0.13 22:-0.08 23:+0.04 24:+0.00 25:+0.03
+    WR dock when the QB is out                     |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.09%  -0.29%  -0.12% +0.0003 (6/7) helps  [rows touched 600]
+      by season, top-150 wtd %: 19:-0.16 20:-0.01 21:-0.08 22:+0.12 23:-0.34 24:-0.57 25:-0.79
+    snap trend (engine layer), RB                  |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.32%  -0.18%  -0.15% +0.0024 (4/7) helps  [rows touched 4,062]
+      by season, top-150 wtd %: 19:-1.17 20:-0.34 21:-0.15 22:-0.61 23:+0.26 24:+0.22 25:+0.21
+    snap trend (engine layer), TE                  |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.01%  +0.04%  +0.01% -0.0010 (3/7) HURTS  [rows touched 2,697]
+      by season, top-150 wtd %: 19:+0.08 20:-0.04 21:+0.04 22:+0.10 23:+0.27 24:-0.13 25:-0.02
+    v2.25 snap-share level, WR                     |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.22%  -0.09%  -0.10% +0.0020 (5/7) helps  [rows touched 7,063]
+      by season, top-150 wtd %: 19:-0.39 20:-0.14 21:-0.31 22:+0.18 23:-0.45 24:-0.08 25:+0.42
+    v2.25 snap-share level, TE                     |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.07%  -0.00%  -0.05% -0.0002 (4/7) mixed  [rows touched 2,974]
+      by season, top-150 wtd %: 19:+0.06 20:-0.08 21:+0.10 22:+0.10 23:-0.02 24:-0.06 25:-0.09
+    v2.25 QB changed teams x.90                    |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.07%  -0.05%  -0.03% +0.0019 (4/7) helps  [rows touched 330]
+      by season, top-150 wtd %: 19:+0.00 20:+0.00 21:+0.03 22:-0.04 23:-0.02 24:-0.17 25:-0.14
+    v2.25 QB low team total                        |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.02%  -0.01%  -0.02% -0.0001 (4/7) mixed  [rows touched 298]
+      by season, top-150 wtd %: 19:+0.03 20:+0.01 21:-0.01 22:+0.07 23:-0.06 24:-0.04 25:-0.01
+    v2.25 RB under 30% of carries, games 2-5 x.90  |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.03%  -0.01%  -0.10% -0.0002 (4/7) mixed  [rows touched 548]
+      by season, top-150 wtd %: 19:-0.04 20:+0.01 21:+0.05 22:-0.03 23:-0.05 24:+0.00 25:-0.01
+    ADP market blend .75                           |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.34%  -0.32%  -0.04% +0.0036 (4/7) helps  [rows touched 11,453]
+      by season, top-150 wtd %: 19:+0.24 20:-1.46 21:-0.40 22:-0.68 23:+0.04 24:-0.64 25:+0.46
+    depth-string docks (vets)                      |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.28%  -0.07%  -0.56% +0.0004 (7/7) helps  [rows touched 3,369]
+      by season, top-150 wtd %: 19:-0.12 20:-0.08 21:-0.07 22:-0.15 23:-0.07 24:-0.01 25:-0.04
+    2nd-year low-snap x1.2                         |   +nan%   +nan%   +nan% +nan (0/0) helps |  +0.00%  +0.00%  +0.03% +0.0001 (3/7) no rows  [rows touched 648]
+      by season, top-150 wtd %: 19:+0.00 20:+0.03 21:-0.00 22:+0.01 23:-0.02 24:-0.01 25:+0.00
+    shrink toward position mean .8                 |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.15%  -0.30%  +0.28% -0.0004 (6/7) mixed  [rows touched 18,933]
+      by season, top-150 wtd %: 19:-0.37 20:+0.75 21:-0.18 22:-0.19 23:-0.59 24:-0.56 25:-0.67
+    ridge season prior mix                         |   +nan%   +nan%   +nan% +nan (0/0) helps |  -1.13%  -0.59%  -0.27% +0.0063 (7/7) helps  [rows touched 16,353]
+      by season, top-150 wtd %: 19:-0.59 20:-1.13 21:-0.45 22:-0.46 23:-0.62 24:-0.47 25:-0.52
+
+=== B  REST OF SEASON (3-10 games played, 4+ left): each wired piece removed (negative = it helps) ===
+  2019-18 (out of sample): full model rows 0 (top-150 0) | MSE nan MAE nan | top-150 wtd MSE nan | rank order nan | act/proj nan
+  2019-25 (tuned on): full model rows 9,185 (top-150 5,490) | MSE 9.919 MAE 2.471 | top-150 wtd MSE 11.730 | rank order 0.6191 | act/proj 1.018
+    piece                                          | 2019-18: all / top-150 wtd / MAE / rank (seasons wtd) | 2019-25: all / top-150 wtd / MAE / rank (seasons wtd)
+    usage evidence (all positions)                 |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.57%  +0.16%  -0.09% -0.0006 (4/7) HURTS  [rows touched 6,335]
+      by season, top-150 wtd %: 19:-1.93 20:+5.78 21:+0.47 22:-4.00 23:-0.24 24:+1.92 25:-0.88
+    Vegas-cleaned evidence                         |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.57%  -0.98%  -0.16% +0.0068 (5/7) helps  [rows touched 9,177]
+      by season, top-150 wtd %: 19:-0.18 20:+0.31 21:-2.39 22:-0.42 23:-4.88 24:+1.77 25:-1.30
+    RB snap trend carried                          |   +nan%   +nan%   +nan% +nan (0/0) helps |  -1.03%  -0.88%  -0.29% +0.0027 (4/7) helps  [rows touched 2,351]
+      by season, top-150 wtd %: 19:-3.72 20:+0.98 21:-3.14 22:-2.18 23:+1.69 24:+2.76 25:-3.35
+    QB changed teams x.84                          |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.94%  -0.64%  -0.42% +0.0062 (3/7) helps  [rows touched 148]
+      by season, top-150 wtd %: 19:+0.00 20:+0.00 21:-0.05 22:+0.02 23:+0.38 24:-2.27 25:-1.53
+    TE snap-share level e .3                       |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.28%  -0.27%  -0.22% +0.0079 (5/7) helps  [rows touched 1,571]
+      by season, top-150 wtd %: 19:-0.46 20:+0.11 21:+0.50 22:-0.43 23:-0.59 24:-0.20 25:-0.63
+    TE team pass-rate tilt e .04                   |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.27%  -0.35%  -0.19% +0.0059 (4/7) helps  [rows touched 1,593]
+      by season, top-150 wtd %: 19:+0.26 20:+1.86 21:-1.48 22:-0.71 23:-2.14 24:-0.42 25:+0.27
+    RB 61-100 prior weight x2.5                    |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.06%  -0.05%  -0.04% +0.0018 (5/7) helps  [rows touched 423]
+      by season, top-150 wtd %: 19:-0.01 20:+0.40 21:-0.27 22:-0.09 23:+0.26 24:-0.33 25:-0.17
+    WR 61-100 prior weight x0.6                    |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.18%  -0.18%  -0.10% +0.0006 (5/7) helps  [rows touched 555]
+      by season, top-150 wtd %: 19:-0.10 20:-0.41 21:-0.14 22:+0.06 23:-0.56 24:-0.22 25:+0.09
+    second-year QB prior weight x0.75              |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.08%  -0.09%  -0.04% +0.0012 (4/7) helps  [rows touched 191]
+      by season, top-150 wtd %: 19:-0.66 20:+0.01 21:-0.01 22:+0.19 23:+0.00 24:-0.12 25:-0.04
+    WR 101-150 usage cap .25                       |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.30%  -0.19%  -0.17% +0.0009 (5/7) helps  [rows touched 551]
+      by season, top-150 wtd %: 19:+0.39 20:-0.30 21:-0.32 22:+0.12 23:-0.14 24:-0.05 25:-0.87
+    TE 31-60 x1.10                                 |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.43%  -0.76%  -0.25% +0.0047 (6/7) helps  [rows touched 139]
+      by season, top-150 wtd %: 19:-0.84 20:+0.27 21:-0.96 22:-0.43 23:-0.16 24:-1.05 25:-1.72
+    WR 101-150 cold prior weight x0.4              |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.21%  -0.17%  -0.20% +0.0004 (5/7) helps  [rows touched 314]
+      by season, top-150 wtd %: 19:+0.18 20:-0.09 21:-0.10 22:-0.17 23:-0.77 24:+0.03 25:-0.21
+    RB team play-volume tilt e .04                 |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.48%  -0.91%  -0.24% +0.0014 (6/7) helps  [rows touched 2,464]
+      by season, top-150 wtd %: 19:+1.64 20:-2.95 21:-0.23 22:-0.98 23:-1.59 24:-0.09 25:-1.86
+    RB backup (top 150) x1.04                      |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.37%  -0.40%  -0.11% +0.0012 (7/7) helps  [rows touched 603]
+      by season, top-150 wtd %: 19:-0.07 20:-0.19 21:-0.66 22:-0.66 23:-0.13 24:-0.75 25:-0.25
+    rookie prior weight RB 1.6 / TE 2.5 (v2.33)    |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.15%  -0.13%  -0.07% +0.0003 (6/7) helps  [rows touched 569]
+      by season, top-150 wtd %: 19:-0.18 20:-0.09 21:-0.18 22:-0.25 23:-0.03 24:+0.19 25:-0.44
+    ADP market blend .75                           |   +nan%   +nan%   +nan% +nan (0/0) helps |  -1.24%  -1.04%  -0.63% +0.0006 (3/7) helps  [rows touched 5,658]
+      by season, top-150 wtd %: 19:+2.88 20:-4.08 21:+1.77 22:-4.05 23:+4.51 24:-9.54 25:+4.63
+    depth-string docks (vets)                      |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.11%  +0.01%  -0.41% -0.0005 (5/7) HURTS  [rows touched 1,574]
+      by season, top-150 wtd %: 19:-0.03 20:-0.35 21:+0.24 22:-0.14 23:-0.19 24:+0.63 25:-0.24
+    2nd-year low-snap x1.2                         |   +nan%   +nan%   +nan% +nan (0/0) helps |  -0.11%  -0.09%  -0.02% +0.0005 (5/7) helps  [rows touched 305]
+      by season, top-150 wtd %: 19:-0.08 20:+0.25 21:-0.19 22:-0.01 23:-0.34 24:-0.20 25:+0.00
+    shrink toward position mean .8                 |   +nan%   +nan%   +nan% +nan (0/0) helps |  -1.29%  -1.31%  -0.11% +0.0032 (5/7) helps  [rows touched 9,177]
+      by season, top-150 wtd %: 19:-2.25 20:+2.50 21:-2.05 22:-0.55 23:-5.55 24:+2.03 25:-3.05
+    ridge season prior mix                         |   +nan%   +nan%   +nan% +nan (0/0) helps |  -3.33%  -2.88%  -1.72% +0.0096 (7/7) helps  [rows touched 7,931]
+      by season, top-150 wtd %: 19:-0.56 20:-3.55 21:-4.48 22:-4.43 23:-2.03 24:-3.50 25:-1.76
+
+=== SUMMARY: pieces that help on 2019-25 (where they were tuned) but NOT out of sample ===

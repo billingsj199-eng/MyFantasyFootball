@@ -24,10 +24,11 @@ import backtest_rookie_depth_live as RD
 import backtest_nochart_vets as NC
 import backtest_second_year as SY
 import bt_common as B
+import bt_ext as BX   # 2026-10-20 season range; default unchanged
 from backtest_target_area import mse
 
 if __name__ == "__main__":
-    sys.stdout = NW._Tee(sys.stdout, open(os.path.join(HERE, "clay_vs_shadow_research.log"), "w", encoding="utf-8"))
+    sys.stdout = NW._Tee(sys.stdout, open(BX.ext_path("clay_vs_shadow_research.log"), "w", encoding="utf-8"))
 def P(*a): print(" ".join(str(x) for x in a))
 
 YEARS, POS4 = NW.YEARS, NW.POS4
@@ -97,11 +98,12 @@ def build_harness():
     prior = fb_pos + 0.8 * (pr - fb_pos)
     ref = NW.blend(prior, g, ppg, Pvec) * layers
     for gi, m_ in enumerate(RAMP, start=1): ref = np.where(buried_rk & (wk == gi), ref * m_, ref)
-    L = pd.read_parquet(os.path.join(HERE, "ctx_live_layers.parquet"), columns=["year", "pid", "wk", "pool_mult"])
+    L = pd.read_parquet(BX.ext_path("ctx_live_layers.parquet"), columns=["year", "pid", "wk", "pool_mult"])
     key = {(int(r.year), r.pid, int(r.wk)): float(r.pool_mult) for r in L.itertuples(index=False) if isinstance(r.pid, str)}
     pm = np.array([key.get((year[i], pid[i], wk[i]), np.nan) if pid[i] else np.nan for i in range(n)])
     on = ~np.isnan(pm) & (pm > 1.0); shadow = np.where(on, ref * np.power(pm, POOL_K), ref)
-    F = dict(A=A, n=n, shipped=shipped, shadow=shadow, prior=prior, hist=hist_raw, adp=adp, strb=strb, late=late, mkt_ok=mkt_ok, vet_opp=vet_opp, on=on, pm=pm, has_h3=has_h3, has_l8=has_l8, adp_curve=adp_curve, fb_pos=fb_pos, layers=layers, Pvec=Pvec, buried_rk=buried_rk)
+    F = dict(A=A, n=n, shipped=shipped, shadow=shadow, prior=prior, hist=hist_raw, adp=adp, strb=strb, late=late, mkt_ok=mkt_ok, vet_opp=vet_opp, on=on, pm=pm, has_h3=has_h3, has_l8=has_l8, adp_curve=adp_curve, fb_pos=fb_pos, layers=layers, Pvec=Pvec, buried_rk=buried_rk,
+             hist_adj=hist, fb=fb, yr2lo=yr2lo, vet=vet, wv=wv)   # 2026-10-20: prior pieces exposed for bt_ext_oos.py ablation (read-only extras)
     return F
 
 
@@ -191,7 +193,7 @@ def main():
     RES["summary"] = (f"Harness shadow vs Clay blend {pc:+.2f}% ({w}/{ny}). Clay's repeatable edges: " + "; ".join(f"{r['label']} {r['pct']:+.1f}% (n{r['n']}, shadow {r['wins']}/{r['years']})" for r in clay_edge[:5]) +
                       ". Shadow's: " + "; ".join(f"{r['label']} {r['pct']:+.1f}% (n{r['n']}, {r['wins']}/{r['years']})" for r in shad_edge[:5]) + ".")
     P("\n" + RES["summary"])
-    with open(os.path.join(HERE, "data", "clay_vs_shadow_research.js"), "w", encoding="utf-8") as f:
+    with open(BX.data_path("clay_vs_shadow_research.js"), "w", encoding="utf-8") as f:
         f.write("window.SIM_CLAYSEG = " + json.dumps(RES) + ";\n")
     P(f"wrote data/clay_vs_shadow_research.js ({time.time()-t0:.0f}s)")
 

@@ -29,6 +29,8 @@ import research_clay_vs_shadow as CS
 import backtest_season_long as SL
 import backtest_future_totals as FT
 cal = NW.cal; YEARS = NW.YEARS
+import bt_ext as BX   # 2026-10-20 season range (SIM_BT_YEARS); default 2019-25 = unchanged
+NY = len(BX.YEARS); FWD = BX.FWD; FWL = f"{FWD[0]}-{str(FWD[-1])[2:]}"; YL = f"{BX.YEARS[0]}-{str(BX.YEARS[-1])[2:]}"
 warnings.filterwarnings("ignore")
 
 def setup():
@@ -37,7 +39,7 @@ def setup():
     T = SL.build_table(); LIVE = [f for f in SL.BASIC if f != "mover"] + ["jm"]
     v = SL.loyo(T, LIVE, "ridge", 10.0); key = {(int(y), nm, ps): x for y, nm, ps, x in zip(T.year, T.name, T.pos, v)}
     ridge = np.array([key.get((year[i], name[i], pos[i]), np.nan) for i in range(n)])
-    C = pd.read_parquet(os.path.join(HERE, "ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
+    C = pd.read_parquet(BX.ext_path("ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
     idx = np.array([ck.get((int(year[i]), pid[i], int(wk[i])), -1) if pid[i] else -1 for i in range(n)]); has = idx >= 0
     colv = lambda c: np.where(has, C[c].values[np.maximum(idx, 0)], np.nan).astype(float)
     xfp = colv("xfp_pg"); ev = has & (g >= 1) & ~np.isnan(xfp); xf = np.where(ev, xfp, ppg); veg = colv("veg")
@@ -82,7 +84,7 @@ def shadow(X, lam=None):
     return np.where((pos == "WR") & X["qbo"], out * np.where(X["adp"] <= 60, 0.85, 0.95), out)
 
 def main():
-    log = open(os.path.join(HERE, "shadow_next.log"), "w", encoding="utf-8")
+    log = open(BX.ext_path("shadow_next.log"), "w", encoding="utf-8")
     def P(s=""): print(s); log.write(s + "\n"); log.flush()
     X = setup(); n = X["n"]; act, year, wk, pos, g, adp = X["act"], X["year"], X["wk"], X["pos"], X["g"], X["adp"]
     F = X["F"]; SH = shadow(X)
@@ -118,14 +120,14 @@ def main():
                     ny += 1; wins += ms(fam[k], tm & m) < ms(b, tm & m) - 1e-12
             tem = np.isin(year, [te for _, te in folds])
             return pred, 100 * (wm(pred, base & tem) / wm(b, base & tem) - 1), 100 * (ms(pred, tm & tem) / ms(b, tm & tem) - 1) if (tm & tem).any() else np.nan, wins, picks, ny
-        lo = run([([y for y in YEARS if y != t], t) for t in YEARS]); fw = run([([y for y in YEARS if y < t], t) for t in (2022, 2023, 2024, 2025)])
+        lo = run([([y for y in YEARS if y != t], t) for t in YEARS]); fw = run([([y for y in YEARS if y < t], t) for t in FWD])
         best = pick(YEARS)
         ok = best != names[0] and lo[2] < -0.3 and lo[3] >= max(5, lo[5] - 2) and fw[2] < 0 and fw[3] >= 3 and lo[1] <= 0.02
         P()
         P(f"  {title}   (rows touched {int(tm.sum()):,}, {int((tm & top150).sum()):,} of them top-150; actual / shadow on them {act[tm].sum()/max(1e-9, b[tm].sum()):.3f})")
         P("    pooled, touched rows: " + "  ".join(f"{k}: {100*(ms(fam[k], tm)/ms(b, tm)-1):+.2f}%" for k in names[1:]))
         P(f"    LEAVE-ONE-SEASON-OUT  touched rows {lo[2]:+.2f}%  seasons better {lo[3]}/{lo[5]}  | whole board, top-150 weighted {lo[1]:+.2f}%  rank rho {rho(lo[0], base) - rho0:+.4f}  | picks {lo[4]}")
-        P(f"    FORWARD 2022-25       touched rows {fw[2]:+.2f}%  seasons better {fw[3]}/{fw[5]}  | whole board, top-150 weighted {fw[1]:+.2f}%  | picks {fw[4]}")
+        P(f"    FORWARD {FWL}       touched rows {fw[2]:+.2f}%  seasons better {fw[3]}/{fw[5]}  | whole board, top-150 weighted {fw[1]:+.2f}%  | picks {fw[4]}")
         P(f"    -> {'PASS: ' + str(best) if ok else 'FAIL'}")
         if ok and key: PASS[key] = (best, fam[best])
         return ok
@@ -205,8 +207,9 @@ def main():
 
     # ---------------- 5 team shift ----------------
     P("\n--- 5 TEAM SHIFT (this season's lines vs the preseason view, known before kickoff) ---")
-    L = {Y: FT.long(FT.load_year(Y)) for Y in range(2018, 2026)}; sh_map = {}
+    L = {Y: FT.long(FT.load_year(Y)) for Y in range(min(2018, YEARS[0] - 1), 2026) if os.path.exists(os.path.join(FT.HERE, "data", f"_lines_{Y}.pkl")) or os.path.exists(os.path.join(FT.CACHE, f"play_by_play_{Y}.csv.gz"))}; sh_map = {}
     for Y in YEARS:
+        if Y - 1 not in L: continue   # extended mode: no lines for the season before the first one
         cur, prev = L[Y], L[Y - 1]; teams = sorted(set(cur.team))
         tr = pd.concat([prev[prev.wk >= 10].assign(w=0.35), cur[cur.wk == 1].assign(w=1.0)], ignore_index=True); tr = tr[tr.team.isin(teams) & tr.opp.isin(teams)]
         m_ = FT.ridge_od(tr, tr.imp.values, tr.w.values, teams, 1.5)
@@ -227,11 +230,11 @@ def main():
         for k, (best, p) in PASS.items(): comb = comb * np.where(SH > 0, p / np.maximum(SH, 1e-9), 1.0)
         wins = sum(wm(comb, base & (year == y)) < wm(SH, base & (year == y)) for y in YEARS)
         P("  layers: " + "; ".join(f"{k} = {b}" for k, (b, _) in PASS.items()))
-        P(f"  top-150 weighted {100*(wm(comb, base)/wm(SH, base)-1):+.2f}% ({wins}/7 seasons)   all rows {100*(ms(comb, allr)/ms(SH, allr)-1):+.2f}%   rank rho {rho(comb, base):.4f} vs {rho0:.4f}")
+        P(f"  top-150 weighted {100*(wm(comb, base)/wm(SH, base)-1):+.2f}% ({wins}/{NY} seasons)   all rows {100*(ms(comb, allr)/ms(SH, allr)-1):+.2f}%   rank rho {rho(comb, base):.4f} vs {rho0:.4f}")
         for lab, cm in (("QB", pos == "QB"), ("RB", pos == "RB"), ("WR", pos == "WR"), ("TE", pos == "TE"), ("ADP 1-30", adp <= 30), ("ADP 31-60", (adp > 30) & (adp <= 60)), ("ADP 61-100", (adp > 60) & (adp <= 100)), ("ADP 101-150", (adp > 100) & (adp <= 150)),
                         ("games 1-5", g <= 5), ("games 6+", g >= 6)):
             m = base & cm; w = sum(wm(comb, m & (year == y)) < wm(SH, m & (year == y)) for y in YEARS)
-            P(f"    {lab:12s} {100*(wm(comb, m)/wm(SH, m)-1):+.2f}% ({w}/7)")
+            P(f"    {lab:12s} {100*(wm(comb, m)/wm(SH, m)-1):+.2f}% ({w}/{NY})")
     else:
         P("\n=== nothing passed the bar ===")
     log.close()

@@ -6404,7 +6404,7 @@ window._loadWeeklyCore = function(opts) {
   window._weeklyCorePromise = _injectScripts([
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
     // merge also still listens on mff:weeklydata (idempotent).
-    'data/weekly_stats_active.js?v=2026-10-20-1000'
+    'data/weekly_stats_active.js?v=2026-10-20-1509'
   ], 'WeeklyCore', opts).then(function() {
     try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
   });
@@ -6417,7 +6417,7 @@ window._loadWeeklyData = function(opts) {
     // (weekly_stats_active loads first via _loadWeeklyCore above)
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-10-20-1000',
+    'data/fpa_2026.js?v=2026-10-20-1509',
     // Full-field Best Ball Mania VII advance rate by player (scripts/bbm_field_adv.py, Tue) —
     // My Teams > Underdog > DRAFT BOARD "OVERALL ADV RATE".
     'data/bbm_field_adv.js?v=2026-10-20-0832',

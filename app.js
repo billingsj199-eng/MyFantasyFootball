@@ -35496,6 +35496,98 @@ window.fmtHeight = fmtHeight;
       + '<div class="tvi-note">Each picked team’s best legal lineup every ' + (W ? 'week in the window' : 'remaining week') + ' from the Sim Lab projection, before vs after; a starter never scores below a free agent at that spot, so depth you can’t start adds nothing. Bars = weekly change (gold weeks = fantasy playoffs).' + (r.teams[0] && r.teams[1] ? '' : ' Pick the other team too to simulate both lineups.') + '</div>';
   }
 
+  // ── LINEUP AFTER TRADE (2026-10-20, Jack: "if we have teams synced can we
+  // get a view of what your best lineup would be after the trade"). For each
+  // team picked in the League row: its best legal lineup with the trade made
+  // (My Teams optimizer under that league's roster slots + scoring), the
+  // projected PPG change vs today's best lineup, who moves into / out of the
+  // starting lineup, and incoming players who land on the bench. Basis =
+  // rest-of-season PPG or this week (My Teams injury rule), remembered.
+  let _tlBasis = (() => { try { return localStorage.getItem('mff_trade_lu_basis') === 'week' ? 'week' : 'ppg'; } catch (e) { return 'ppg'; } })();
+  (function () {
+    const el = document.getElementById('tradeLineupAfter');
+    if (!el) return;
+    el.addEventListener('click', e => {
+      const b = e.target.closest('[data-tlb]');
+      if (b) {
+        _tlBasis = b.dataset.tlb === 'week' ? 'week' : 'ppg';
+        try { localStorage.setItem('mff_trade_lu_basis', _tlBasis); } catch (_) {}
+        _tradeLineupRender();
+        return;
+      }
+      const c = e.target.closest('[data-tlcard]');
+      if (c && typeof openPlayerCard === 'function') { const d = D[+c.dataset.tlcard]; if (d) openPlayerCard(d, tradeMode); }
+    });
+  })();
+  function _tradeLineupRender() {
+    const el = document.getElementById('tradeLineupAfter');
+    if (!el) return;
+    const hide = () => { el.style.display = 'none'; el.innerHTML = ''; };
+    const fA = _calcSideFilters.a, fB = _calcSideFilters.b;
+    const lg = (window._mtSavedLeagues || [])[_finderState.leagueIdx];
+    if ((!fA && !fB) || !lg || !lg.format || typeof window._mtLineupForLeague !== 'function') return hide();
+    if (!sideA.players.length && !sideB.players.length) return hide();
+    const wkNum = typeof window._mtLineupWeekNum === 'function' ? window._mtLineupWeekNum() : 0;
+    const basis = (_tlBasis === 'week' && wkNum) ? 'weekppg' : 'ppg';
+    const { nameA, nameB } = _tradeSideNames();
+    const r1 = v => Math.round(v * 10) / 10;
+    const f1 = v => (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(r1(v)).toFixed(1);
+    const cls = v => v > 0.05 ? 'pos' : v < -0.05 ? 'neg' : '';
+    const slotLbl = { FLEX: 'FLX', SUPER_FLEX: 'SF', REC_FLEX: 'RF', WRRB_FLEX: 'WF', DEF: 'DST' };
+    const nameKey = n => String(n || '').toLowerCase().replace(/[.\-'’\s]/g, '').replace(/(jr|sr|ii|iii|iv|v)$/, '');
+    const card = (f, give, get, owner) => {
+      if (!f || !f.team) return '';
+      const roster = (f.team.players || []).filter(Boolean);
+      const outIdx = new Set(give), inIdx = new Set(get);
+      const after = roster.filter(n => { const d = _finderLookupD(n); return !d || !outIdx.has(d.idx); });
+      const have = new Set(after.map(nameKey));
+      get.forEach(i => { const d = D[i]; if (d && !d._isFuturePick && !have.has(nameKey(d.n))) { after.push(d.n); have.add(nameKey(d.n)); } });
+      const lb = window._mtLineupForLeague(lg, roster, basis);
+      const la = window._mtLineupForLeague(lg, after, basis);
+      if (!lb || !la) return '';
+      const startB = new Set(lb.slots.map(s => s.player && nameKey(s.player.name)).filter(Boolean));
+      const startA = new Set(la.slots.map(s => s.player && nameKey(s.player.name)).filter(Boolean));
+      const isIn = p => p && p.d && inIdx.has(p.d.idx);
+      const dPpg = la.totalPpg - lb.totalPpg;
+      const rows = la.slots.map(s => {
+        const p = s.player;
+        if (!p) return '<div class="tla-row empty"><span class="tla-slot">' + (slotLbl[s.slot] || s.slot) + '</span><span class="tla-name">EMPTY' + (basis === 'weekppg' ? ' · bye / out' : '') + '</span><span class="tla-ppg">—</span></div>';
+        const tag = isIn(p) ? '<span class="tla-tag in">NEW</span>' : !startB.has(nameKey(p.name)) ? '<span class="tla-tag up">FROM BENCH</span>' : '';
+        return '<div class="tla-row' + (isIn(p) ? ' is-in' : '') + '"><span class="tla-slot">' + (slotLbl[s.slot] || s.slot) + '</span>'
+          + '<span class="tla-pos ' + _esc(p.pos) + '">' + _esc(p.pos) + '</span>'
+          + '<span class="tla-name"' + (p.d ? ' data-tlcard="' + p.d.idx + '"' : '') + '>' + _esc(p.name) + '</span>' + tag
+          + (p.out ? '<span class="tla-out">' + _esc(p.out) + '</span>' : '')
+          + '<span class="tla-ppg">' + (p.ppg > 0 ? p.ppg.toFixed(1) : '—') + '</span></div>';
+      }).join('');
+      // Who leaves the starting lineup: traded away, or pushed to the bench.
+      const leaving = lb.slots.map(s => s.player).filter(p => p && !startA.has(nameKey(p.name)));
+      const leaveTxt = leaving.map(p => _esc(p.name) + ' <span class="tla-dim">' + (p.d && outIdx.has(p.d.idx) ? 'traded' : 'to bench') + ' · ' + p.ppg.toFixed(1) + '</span>').join(', ');
+      const benchIn = la.bench.filter(isIn);
+      // Players this team sends away that were not starting anyway.
+      const benchOut = lb.bench.filter(p => p.d && outIdx.has(p.d.idx));
+      const over = after.length - roster.length;
+      return '<div class="tla-team"><div class="tla-name-h">' + _esc(owner) + '</div>'
+        + '<div class="tla-big ' + cls(dPpg) + '">' + f1(dPpg) + ' <span>PPG</span></div>'
+        + '<div class="tla-line">best lineup ' + r1(lb.totalPpg).toFixed(1) + ' → ' + r1(la.totalPpg).toFixed(1) + ' proj PPG' + (basis === 'weekppg' ? ' in week ' + wkNum : '') + '</div>'
+        + '<div class="tla-rows">' + rows + '</div>'
+        + (leaving.length ? '<div class="tla-line tla-leave">Out of the lineup: ' + leaveTxt + '</div>' : '<div class="tla-line">Same starters as today.</div>')
+        + (benchIn.length ? '<div class="tla-line tla-benchin">Gets but would bench: ' + benchIn.map(p => _esc(p.name) + ' <span class="tla-dim">' + (p.ppg > 0 ? p.ppg.toFixed(1) : '—') + (p.out ? ' · ' + _esc(p.out) : '') + '</span>').join(', ') + '</div>' : '')
+        + (benchOut.length ? '<div class="tla-line">Sends from the bench (no lineup cost): ' + benchOut.map(p => _esc(p.name)).join(', ') + '</div>' : '')
+        + (over > 0 ? '<div class="tla-line tla-dim">Takes back ' + over + ' more player' + (over > 1 ? 's' : '') + ' than it sends — a bench spot has to open up.</div>' : '')
+        + '</div>';
+    };
+    const cA = card(fA, sideA.players, sideB.players, nameA);
+    const cB = card(fB, sideB.players, sideA.players, nameB);
+    if (!cA && !cB) return hide();
+    const tabs = '<div class="tla-basis"><button type="button" data-tlb="ppg" class="' + (basis === 'ppg' ? 'on' : '') + '" title="Rest-of-season projected points per game (Sim Lab), this league\'s scoring">ROS PPG</button>'
+      + (wkNum ? '<button type="button" data-tlb="week" class="' + (basis === 'weekppg' ? 'on' : '') + '" title="This week\'s projection: matchup, props and byes; Questionable = playing, Doubtful / Out = 0">WEEK ' + wkNum + '</button>' : '') + '</div>';
+    el.style.display = '';
+    el.innerHTML = '<div class="tla-head"><span class="tla-title">LINEUP AFTER TRADE</span>' + tabs
+      + '<span class="tla-sub">' + _esc(lg.name || 'League') + ' · best legal lineup, this league\'s roster spots + scoring</span></div>'
+      + '<div class="tla-teams">' + cA + cB + '</div>'
+      + ((fA && fB) ? '' : '<div class="tla-line tla-dim" style="margin-top:6px">Pick the other team in the League row to see its lineup too.</div>');
+  }
+
   // Each panel holds what that team GIVES UP, so Team A receives side B's
   // total and vice versa — the winner is whoever receives the bigger package.
   function _tradeSideNames() {
@@ -35564,6 +35656,7 @@ window.fmtHeight = fmtHeight;
       if (resultEl) resultEl.classList.add('is-empty');
       if (insightsEl) { insightsEl.style.display = 'none'; insightsEl.innerHTML = ''; }
       _tradeVorRender();
+      _tradeLineupRender();
       if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
       _tradeStickySync();
       return;
@@ -35639,6 +35732,7 @@ window.fmtHeight = fmtHeight;
       }
     }
     _tradeVorRender();
+    _tradeLineupRender();
     if (typeof _realTradesRefresh === 'function') _realTradesRefresh();
   }
 
@@ -64702,6 +64796,16 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       return info;
     } catch (_) { return null; }
   }
+  // Trade calc LINEUP AFTER TRADE (2026-10-20): best lineup for any roster
+  // (name list) under a saved league's format — same optimizer, scoring and
+  // My Teams injury rule as the lineup check. basis 'ppg' | 'weekppg'.
+  window._mtLineupForLeague = function (lg, names, basis) {
+    if (!lg || !lg.format || typeof D === 'undefined' || !D.length) return null;
+    const prevFormat = _mtFormat;
+    _mtFormat = { ...lg.format };
+    try { return _mtBestLineup(names || [], basis || 'ppg'); } finally { _mtFormat = prevFormat; }
+  };
+  window._mtLineupWeekNum = () => _mtLineupWeek();
   function _mtSavedLeagueMyTier(lg) {
     const info = _mtSavedLeagueInfo(lg);
     return info ? info.tier : null;

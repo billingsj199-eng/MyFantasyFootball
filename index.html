@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-20-debut" as="script">
+<link rel="preload" href="app.js?v=2026-10-20-tradelineup" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -4341,6 +4341,41 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trade-reset-btn" id="tradeResetBtn">RESET TRADE</button>
 </div>
 </div>
+<!-- LINEUP AFTER TRADE (2026-10-20): each picked team's best lineup with the
+     trade made, vs today. Rendered by _tradeLineupRender in app.js. -->
+<div class="trade-lineup" id="tradeLineupAfter" style="display:none"></div>
+<style>
+.trade-lineup{margin-top:1rem;padding:12px 14px;border:1px solid rgba(34,197,94,.35);border-radius:8px;background:rgba(34,197,94,.04)}
+.tla-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-bottom:10px}
+.tla-title{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#22c55e}
+.tla-sub{font-size:.6875rem;color:var(--text2)}
+.tla-basis{display:inline-flex;border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.tla-basis button{padding:2px 8px;background:transparent;border:0;color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.6875rem;letter-spacing:.04em;cursor:pointer}
+.tla-basis button.on{background:#22c55e;color:#000}
+.tla-teams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tla-team{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);min-width:0}
+.tla-name-h{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1px;color:var(--text)}
+.tla-big{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;line-height:1.1;color:var(--text2)}
+.tla-big span{font-size:.8rem;color:var(--text2)}
+.tla-big.pos{color:#22c55e}.tla-big.neg{color:#ef4444}
+.tla-line{font-size:.6875rem;color:var(--text2);margin-top:4px;line-height:1.4}
+.tla-dim{color:var(--text2);opacity:.75}
+.tla-leave{color:#f59e0b}.tla-benchin{color:#58a7ff}
+.tla-rows{display:flex;flex-direction:column;gap:3px;margin-top:8px}
+.tla-row{display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);font-size:.75rem;min-width:0}
+.tla-row.is-in{border-color:rgba(34,197,94,.55);background:rgba(34,197,94,.08)}
+.tla-row.empty .tla-name{opacity:.5}
+.tla-slot{min-width:28px;text-align:center;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.6875rem;color:var(--text2)}
+.tla-pos{font-size:.6875rem;font-weight:700;padding:0 4px;border-radius:3px;color:var(--text2);background:rgba(148,163,184,.12)}
+.tla-pos.QB{color:#ef4444;background:rgba(239,68,68,.12)}.tla-pos.RB{color:#22c55e;background:rgba(34,197,94,.12)}.tla-pos.WR{color:#3b82f6;background:rgba(59,130,246,.12)}.tla-pos.TE{color:#f59e0b;background:rgba(245,158,11,.12)}.tla-pos.K{color:#a855f7;background:rgba(168,85,247,.12)}
+.tla-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text)}
+.tla-name[data-tlcard]{cursor:pointer}
+.tla-tag{font-size:.625rem;font-weight:700;letter-spacing:.04em;padding:0 4px;border-radius:3px;white-space:nowrap}
+.tla-tag.in{color:#000;background:#22c55e}.tla-tag.up{color:#58a7ff;border:1px solid rgba(88,167,255,.5)}
+.tla-out{font-size:.625rem;font-weight:700;color:#ef4444}
+.tla-ppg{font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--text);min-width:30px;text-align:right}
+@media (max-width:600px){.tla-teams{grid-template-columns:1fr}.tla-row{min-height:32px}}
+</style>
 <!-- VOR TRADE IMPACT (2026-10-05): rest-of-season lineup simulation for both
      teams (Sim Lab VOR). Rendered by _tradeVorRender in app.js. -->
 <div class="trade-vor" id="tradeVorImpact" style="display:none"></div>
@@ -6502,7 +6537,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-20-debut"></script>
+<script defer src="app.js?v=2026-10-20-tradelineup"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

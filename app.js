@@ -35519,6 +35519,22 @@ window.fmtHeight = fmtHeight;
       if (c && typeof openPlayerCard === 'function') { const d = D[+c.dataset.tlcard]; if (d) openPlayerCard(d, tradeMode); }
     });
   })();
+  // "1 QB · 2 RB · 2 WR · 1 TE · 1 FLEX · 1 K · 1 DST · 7 BN · PPR · TE +0.5" from a My Teams league format.
+  function _tlLeagueSettings(f) {
+    if (!f) return '';
+    const nm = { QB: 'QB', RB: 'RB', WR: 'WR', TE: 'TE', FLEX: 'FLEX', SUPER_FLEX: 'SF', REC_FLEX: 'WR/TE', WRRB_FLEX: 'W/R', K: 'K', DEF: 'DST', DST: 'DST' };
+    const order = ['QB', 'RB', 'WR', 'TE', 'FLEX', 'WRRB_FLEX', 'REC_FLEX', 'SUPER_FLEX', 'K', 'DEF', 'DST'];
+    const cnt = {};
+    let bn = 0;
+    (f.rosterPositions || []).forEach(p => { if (p === 'BN') bn++; else if (nm[p]) cnt[p] = (cnt[p] || 0) + 1; });
+    const parts = order.filter(p => cnt[p]).map(p => cnt[p] + ' ' + nm[p]);
+    if (bn) parts.push(bn + ' BN');
+    const ppr = f.bestBall ? 1 : f.ppr;
+    parts.push(ppr === 1 ? 'PPR' : ppr === 0 ? 'Standard' : ppr === 0.5 || ppr == null ? 'Half PPR' : ppr + ' PPR');
+    if (f.tep) parts.push('TE +' + f.tep);
+    if (f.passTd != null && f.passTd !== 4) parts.push(f.passTd + '-pt pass TD');
+    return parts.join(' · ');
+  }
   function _tradeLineupRender() {
     const el = document.getElementById('tradeLineupAfter');
     if (!el) return;
@@ -35542,35 +35558,76 @@ window.fmtHeight = fmtHeight;
       const after = roster.filter(n => { const d = _finderLookupD(n); return !d || !outIdx.has(d.idx); });
       const have = new Set(after.map(nameKey));
       get.forEach(i => { const d = D[i]; if (d && !d._isFuturePick && !have.has(nameKey(d.n))) { after.push(d.n); have.add(nameKey(d.n)); } });
-      const lb = window._mtLineupForLeague(lg, roster, basis);
-      const la = window._mtLineupForLeague(lg, after, basis);
+      const luFor = names => typeof window._mtLineupForLeague === 'function' ? window._mtLineupForLeague(lg, names, basis) : null;
+      const lb = luFor(roster), la = luFor(after);
       if (!lb || !la) return '';
       const startB = new Set(lb.slots.map(s => s.player && nameKey(s.player.name)).filter(Boolean));
       const startA = new Set(la.slots.map(s => s.player && nameKey(s.player.name)).filter(Boolean));
       const isIn = p => p && p.d && inIdx.has(p.d.idx);
       const dPpg = la.totalPpg - lb.totalPpg;
-      const rows = la.slots.map(s => {
-        const p = s.player;
-        if (!p) return '<div class="tla-row empty"><span class="tla-slot">' + (slotLbl[s.slot] || s.slot) + '</span><span class="tla-name">EMPTY' + (basis === 'weekppg' ? ' · bye / out' : '') + '</span><span class="tla-ppg">—</span></div>';
-        const tag = isIn(p) ? '<span class="tla-tag in">NEW</span>' : !startB.has(nameKey(p.name)) ? '<span class="tla-tag up">FROM BENCH</span>' : '';
-        return '<div class="tla-row' + (isIn(p) ? ' is-in' : '') + '"><span class="tla-slot">' + (slotLbl[s.slot] || s.slot) + '</span>'
-          + '<span class="tla-pos ' + _esc(p.pos) + '">' + _esc(p.pos) + '</span>'
+      // Line AFTER up against BEFORE slot by slot: a starter who keeps his
+      // job stays in his old spot whenever it is legal there (WR in FLEX
+      // stays in FLEX), new starters fill the rest — dedicated spots first,
+      // best PPG first — so only the spots that actually change light up.
+      // Falls back to the optimizer's own layout if that ever leaves someone out.
+      const fits = (slot, pos) => slot === pos || (slot === 'DEF' && pos === 'DST')
+        || (slot === 'FLEX' && /^(RB|WR|TE)$/.test(pos)) || (slot === 'SUPER_FLEX' && /^(QB|RB|WR|TE)$/.test(pos))
+        || (slot === 'REC_FLEX' && /^(WR|TE)$/.test(pos)) || (slot === 'WRRB_FLEX' && /^(WR|RB)$/.test(pos));
+      let aSlots = la.slots.map(s => ({ slot: s.slot, player: s.player }));
+      const dedicated = sl => ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DST'].includes(sl);
+      // Pass 1 keeps every returning starter in his old spot; pass 2 only the
+      // dedicated-spot ones (a FLEX WR may have to slide into an emptied WR spot).
+      for (const keepFlex of [true, false]) {
+        const stA = la.slots.map(s => s.player).filter(Boolean);
+        const used = new Set(), res = aSlots.map(() => undefined);
+        lb.slots.forEach((s, i) => {
+          const bp = s.player;
+          if (!bp || (!keepFlex && !dedicated(s.slot))) return;
+          const p = stA.find(x => !used.has(x) && nameKey(x.name) === nameKey(bp.name));
+          if (p && aSlots[i] && fits(aSlots[i].slot, p.pos)) { res[i] = p; used.add(p); }
+        });
+        const rem = stA.filter(p => !used.has(p)).sort((a, b) => b.ppg - a.ppg);
+        const order = aSlots.map((x, i) => i).sort((a, b) => (dedicated(aSlots[b].slot) ? 1 : 0) - (dedicated(aSlots[a].slot) ? 1 : 0) || a - b);
+        order.forEach(i => {
+          if (res[i] !== undefined) return;
+          const j = rem.findIndex(p => fits(aSlots[i].slot, p.pos));
+          res[i] = j >= 0 ? rem.splice(j, 1)[0] : null;
+        });
+        if (!rem.length) { aSlots = aSlots.map((x, i) => ({ slot: x.slot, player: res[i] })); break; }
+      }
+      const cell = (p, side) => {
+        if (!p) return '<span class="tla-cell empty"><span class="tla-name">EMPTY' + (basis === 'weekppg' ? ' · bye / out' : '') + '</span><span class="tla-ppg">—</span></span>';
+        // k = change kind; phones hide the tag text and color the name by it.
+        let k = '';
+        if (side === 'b' && !startA.has(nameKey(p.name))) k = p.d && outIdx.has(p.d.idx) ? 'out' : 'dn';
+        if (side === 'a') k = isIn(p) ? 'in' : !startB.has(nameKey(p.name)) ? 'up' : '';
+        const tag = k ? '<span class="tla-tag ' + k + '">' + { out: 'TRADED', dn: 'TO BENCH', in: 'NEW', up: 'FROM BENCH' }[k] + '</span>' : '';
+        return '<span class="tla-cell' + (k ? ' k-' + k : '') + '"><span class="tla-pos ' + _esc(p.pos) + '">' + _esc(p.pos) + '</span>'
           + '<span class="tla-name"' + (p.d ? ' data-tlcard="' + p.d.idx + '"' : '') + '>' + _esc(p.name) + '</span>' + tag
           + (p.out ? '<span class="tla-out">' + _esc(p.out) + '</span>' : '')
-          + '<span class="tla-ppg">' + (p.ppg > 0 ? p.ppg.toFixed(1) : '—') + '</span></div>';
+          + '<span class="tla-ppg">' + (p.ppg > 0 ? p.ppg.toFixed(1) : '—') + '</span></span>';
+      };
+      const chg = aSlots.map((s, i) => nameKey(lb.slots[i] && lb.slots[i].player && lb.slots[i].player.name) !== nameKey(s.player && s.player.name));
+      const rows = aSlots.map((s, i) => {
+        const pb = lb.slots[i] && lb.slots[i].player, pa = s.player;
+        const dv = (pa ? pa.ppg : 0) - (pb ? pb.ppg : 0);
+        return '<div class="tla-row' + (chg[i] ? ' chg' : '') + '"><span class="tla-slot">' + (slotLbl[s.slot] || s.slot) + '</span>'
+          + cell(pb, 'b') + cell(pa, 'a')
+          + '<span class="tla-dv ' + (chg[i] ? cls(dv) : '') + '">' + (chg[i] ? f1(dv) : '') + '</span></div>';
       }).join('');
-      // Who leaves the starting lineup: traded away, or pushed to the bench.
-      const leaving = lb.slots.map(s => s.player).filter(p => p && !startA.has(nameKey(p.name)));
-      const leaveTxt = leaving.map(p => _esc(p.name) + ' <span class="tla-dim">' + (p.d && outIdx.has(p.d.idx) ? 'traded' : 'to bench') + ' · ' + p.ppg.toFixed(1) + '</span>').join(', ');
       const benchIn = la.bench.filter(isIn);
       // Players this team sends away that were not starting anyway.
       const benchOut = lb.bench.filter(p => p.d && outIdx.has(p.d.idx));
       const over = after.length - roster.length;
-      return '<div class="tla-team"><div class="tla-name-h">' + _esc(owner) + '</div>'
-        + '<div class="tla-big ' + cls(dPpg) + '">' + f1(dPpg) + ' <span>PPG</span></div>'
-        + '<div class="tla-line">best lineup ' + r1(lb.totalPpg).toFixed(1) + ' → ' + r1(la.totalPpg).toFixed(1) + ' proj PPG' + (basis === 'weekppg' ? ' in week ' + wkNum : '') + '</div>'
-        + '<div class="tla-rows">' + rows + '</div>'
-        + (leaving.length ? '<div class="tla-line tla-leave">Out of the lineup: ' + leaveTxt + '</div>' : '<div class="tla-line">Same starters as today.</div>')
+      // Changes = players new to the starting lineup (a starter sliding WR -> FLEX is not one).
+      const nChg = la.slots.filter(x => x.player && !startB.has(nameKey(x.player.name))).length;
+      return '<div class="tla-team"><div class="tla-team-h"><span class="tla-name-h">' + _esc(owner) + '</span>'
+        + '<span class="tla-big ' + cls(dPpg) + '">' + f1(dPpg) + ' <span>PPG' + (basis === 'weekppg' ? ' wk ' + wkNum : '') + '</span></span>'
+        + '<span class="tla-line">' + (nChg ? nChg + ' new starter' + (nChg > 1 ? 's' : '') : 'same starters as today') + '</span></div>'
+        + '<div class="tla-grid"><div class="tla-row tla-hd"><span class="tla-slot"></span><span class="tla-cell">BEFORE</span><span class="tla-cell">AFTER</span><span class="tla-dv">+/-</span></div>'
+        + rows
+        + '<div class="tla-row tla-tot"><span class="tla-slot">TOT</span><span class="tla-cell"><span class="tla-name">Proj PPG</span><span class="tla-ppg">' + r1(lb.totalPpg).toFixed(1) + '</span></span>'
+        + '<span class="tla-cell"><span class="tla-name">Proj PPG</span><span class="tla-ppg">' + r1(la.totalPpg).toFixed(1) + '</span></span><span class="tla-dv ' + cls(dPpg) + '">' + f1(dPpg) + '</span></div></div>'
         + (benchIn.length ? '<div class="tla-line tla-benchin">Gets but would bench: ' + benchIn.map(p => _esc(p.name) + ' <span class="tla-dim">' + (p.ppg > 0 ? p.ppg.toFixed(1) : '—') + (p.out ? ' · ' + _esc(p.out) : '') + '</span>').join(', ') + '</div>' : '')
         + (benchOut.length ? '<div class="tla-line">Sends from the bench (no lineup cost): ' + benchOut.map(p => _esc(p.name)).join(', ') + '</div>' : '')
         + (over > 0 ? '<div class="tla-line tla-dim">Takes back ' + over + ' more player' + (over > 1 ? 's' : '') + ' than it sends — a bench spot has to open up.</div>' : '')
@@ -35582,8 +35639,9 @@ window.fmtHeight = fmtHeight;
     const tabs = '<div class="tla-basis"><button type="button" data-tlb="ppg" class="' + (basis === 'ppg' ? 'on' : '') + '" title="Rest-of-season projected points per game (Sim Lab), this league\'s scoring">ROS PPG</button>'
       + (wkNum ? '<button type="button" data-tlb="week" class="' + (basis === 'weekppg' ? 'on' : '') + '" title="This week\'s projection: matchup, props and byes; Questionable = playing, Doubtful / Out = 0">WEEK ' + wkNum + '</button>' : '') + '</div>';
     el.style.display = '';
-    el.innerHTML = '<div class="tla-head"><span class="tla-title">LINEUP AFTER TRADE</span>' + tabs
-      + '<span class="tla-sub">' + _esc(lg.name || 'League') + ' · best legal lineup, this league\'s roster spots + scoring</span></div>'
+    el.innerHTML = '<div class="tla-head"><span class="tla-title">LINEUP BEFORE / AFTER</span>' + tabs
+      + '<span class="tla-sub">' + _esc(lg.name || 'League') + ' · ' + _esc(_tlLeagueSettings(lg.format)) + ' · best legal lineup before vs after</span>'
+      + '<span class="tla-legend"><b class="k-out">traded</b> · <b class="k-dn">to bench</b> · <b class="k-in">new</b> · <b class="k-up">from bench</b></span></div>'
       + '<div class="tla-teams">' + cA + cB + '</div>'
       + ((fA && fB) ? '' : '<div class="tla-line tla-dim" style="margin-top:6px">Pick the other team in the League row to see its lineup too.</div>');
   }

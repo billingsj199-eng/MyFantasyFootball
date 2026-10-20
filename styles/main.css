@@ -763,6 +763,7 @@ tbody td{padding:.55rem .4rem;font-size:.8rem;white-space:nowrap}
 .inj-pill{display:inline-block;margin-left:5px;padding:0 5px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;font-weight:700;letter-spacing:.04em;border-radius:3px;line-height:14px;vertical-align:1px;cursor:help;background:rgba(239,68,68,.15);color:var(--red)}
 .inj-pill[data-status="Q"]{background:rgba(245,158,11,.15);color:var(--accent)}
 .inj-pill[data-status="D"]{background:rgba(249,115,22,.15);color:#f97316}
+.nt-pill{display:inline-block;margin-left:5px;padding:0 5px;font-family:'DM Sans',sans-serif;font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-radius:3px;line-height:1.5;vertical-align:middle;white-space:nowrap;background:rgba(20,184,166,.15);color:#14b8a6;cursor:help}   /* NEW TEAM DEBUT (sim debut dock) */
 .pos-badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:.6875rem;font-weight:700;letter-spacing:.5px;width:fit-content}
 .pos-badge.QB{background:var(--qb-bg);color:var(--qb)}
 .pos-badge.RB{background:var(--rb-bg);color:var(--rb)}

@@ -7313,6 +7313,20 @@ window._weeklyAssumeOutSeed = function(wk) {
 // Doubtful / unconfirmed-Out player in the BYE / OUT row — the UNDO on that
 // row brings him back (Jack 2026-10-08: "allow me to move them out of
 // injuries to rank them and a way to put them back in if they are out").
+// NEW TEAM DEBUT (2026-10-20, Jack): the sim docks a player's FIRST game for a new team after a mid-season move x0.7
+// (history 2019-25: debuts ran .65 of projection, snaps x.74; game 2 back to normal). SIM_PROJ_2026.debut = {name: {wk, tm}}
+// from export_site_proj.js. Own class (not .inj-pill) so a click doesn't open the injury popover.
+function _debutInfo(name) {
+  const SP = window.SIM_PROJ_2026, D = SP && SP.debut, r = D && D[name];
+  if (!r || !(r.wk >= (SP.currentWeek || 1))) return null;
+  return r;
+}
+function _debutChip(d, wk) {
+  const r = d && d.s !== 'DST' ? _debutInfo(d.n) : null;
+  if (!r || (wk != null && wk !== r.wk)) return '';
+  const tt = 'First game for ' + r.tm + ' after a mid-season move (Week ' + r.wk + '). Debuts run about two-thirds of normal while he learns the playbook (snaps down ~25%), so the sim docks this one game x0.7. Back to normal from his second game.';
+  return '<span class="nt-pill" title="' + tt.replace(/"/g, '&quot;') + '">NEW TEAM DEBUT' + (wk == null ? ' · W' + r.wk : '') + '</span>';
+}
 function _assumeOutChip(d) {
   if (!d || d.s === 'DST') return '';
   if (typeof currentMode === 'undefined' || currentMode !== 'weekly') return '';
@@ -11138,7 +11152,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}${_injPill(d)}${_assumeOutChip(d)}${_rnkLgChip(d)}</span><span class="player-team">${_ptTeam(d.t)}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}${_injPill(d)}${_assumeOutChip(d)}${(typeof currentMode !== 'undefined' && currentMode === 'weekly') ? _debutChip(d, window._weeklyActiveWeek || 1) : ''}${_rnkLgChip(d)}</span><span class="player-team">${_ptTeam(d.t)}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -21688,6 +21702,7 @@ function openPlayerCard(d, ctxMode) {
             ${d.s==='DST' ? (d.oppg!=null ? `<span class="card-team">Opp PPG ${d.oppg}</span>` : '') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? `<span class="card-team">Age ${_ad.str}</span>` : '';})()}
             ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
             ${_buildInjuryBadge(d)}
+            ${_debutChip(d)}
             ${(typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow()) ? `<span class="inj-pill" data-status="O" title="Jack assumes he sits in Week ${window._weeklyActiveWeek || 1} — pulled from the weekly board into the BYE / OUT row until he is cleared or ruled out">ASSUMED OUT WK ${window._weeklyActiveWeek || 1}</span>` : ''}
             ${window._irIsOut(d.n) ? `<span class="inj-pill" data-status="OUT" title="Out for season — hidden from the ${IR_SEASON} Redraft / Best Ball / Superflex / Weekly rankings. Dynasty boards and this card are unaffected; the flag clears automatically next season.">OUT FOR SEASON</span>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026) ? `<button id="cardIrToggle" title="${window._irIsOut(d.n) ? 'Restore this player to the season rankings (their board slot was kept)' : 'Hide this player from the ' + IR_SEASON + ' Redraft / Best Ball / Superflex / Weekly rankings — board slot, dynasty ranks, card and search are kept, and the flag auto-clears next season'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};background:transparent;color:${window._irIsOut(d.n) ? 'var(--green)' : '#ef4444'};white-space:nowrap">${window._irIsOut(d.n) ? 'RESTORE TO RANKINGS' : 'MARK OUT FOR SEASON'}</button>` : ''}
@@ -23401,6 +23416,7 @@ function renderCompareGrid() {
               ${d._number != null ? `<span class="card-team">#${d._number}</span>` : ''}
               ${activeTag}
               ${_buildInjuryBadge(d)}
+              ${_debutChip(d)}
             </div>
           </div>
         </div>

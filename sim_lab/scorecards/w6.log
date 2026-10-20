@@ -1,0 +1,470 @@
+##### score_week.py --week 6
+W6 lock: 333 players, 14 games, preset half, sims 2000
+actuals: 308 game rows | consensus file: yes (2026-10-19T13:22:21.145205+00:00)
+scored: 149 played (shipped mean >= 5.0) | DNP/unmatched: 9
+  No-Clay shadow: 149 rows on a Clay-free prior, 0 on the Clay fallback | prior sources: hist 134, l8 15
+  Learned shadow: 149 rows, avg correction +0.27, closer than shipped 57-70 (MAE shipped 4.98 vs learned 5.09)
+  shadow REPORTS riser (rep>0): n=12 actual/shipped 0.802, MAE shipped 6.58
+  shadow REPORTS faller (rep<0): n=0 (too few to read)
+  shadow ASCENDING flag: n=1 (too few to read)
+
+=== ALL positions (same rows for every model where available) ===
+  model               n    MAE   bias   RMSE
+  SHIPPED mean      149   4.98  +0.56   5.99
+  JS Weekly         149   5.02  +0.52   6.03
+  No-Clay shadow    149   5.02  +0.52   6.03
+  Learned shadow    149   5.09  +0.82   6.01
+  Learned centered  149   5.03  +0.56   5.98
+  Clay stack        149   5.09  -0.03   6.27
+  prop-anchored     143   4.94  +0.42   5.95
+  site consensus    148   4.87  +0.47   5.99
+  ESPN              148   4.72  +0.54   5.78
+  CBS               149   5.10  +0.84   6.16
+  FantasyPros       149   4.93  +0.65   5.91
+
+=== by position (MAE) ===
+  pos    n    mean     js     nc    mix   mixb     lc    lcc   clay   prop   cons   espn    cbs     fp
+  QB    28    5.05   5.14   5.14      -      -   5.42   5.27   5.94   5.10   4.30   4.38   4.96   4.69 
+  RB    33    5.58   5.59   5.59      -      -   5.54   5.57   5.68   5.59   5.64   5.67   5.86   5.64 
+  WR    61    4.64   4.69   4.69      -      -   4.67   4.66   4.63   4.54   4.63   4.36   4.64   4.70 
+  TE    27    4.97   4.95   4.95      -      -   5.15   4.95   4.51   4.89   5.06   4.71   5.37   4.85 
+
+=== head-to-head, row-level |error| (wins-losses-ties, tie = within 0.1) ===
+  SHIPPED    vs consensus : 76-62-10  (55% of decided)
+  SHIPPED    vs ESPN      : 61-79-8  (44% of decided)
+  JS Weekly  vs consensus : 73-71-4  (51% of decided)
+  JS Weekly  vs ESPN      : 61-84-3  (42% of decided)
+  No-Clay shadow vs consensus : 73-71-4  (51% of decided)
+  No-Clay shadow vs ESPN      : 61-84-3  (42% of decided)
+  Learned shadow vs consensus : 68-76-4  (47% of decided)
+  Learned shadow vs ESPN      : 62-76-10  (45% of decided)
+  Clay stack vs consensus : 72-72-4  (50% of decided)
+  Clay stack vs ESPN      : 65-78-5  (45% of decided)
+
+=== p10-p90 band (target 80% inside / 10% / 10%) ===
+  n=149 inside 85.9%  below p10 7.4%  above p90 6.7%
+    QB: n=28 inside 86% below 7% above 7%
+    RB: n=33 inside 82% below 15% above 3%
+    WR: n=61 inside 89% below 3% above 8%
+    TE: n=27 inside 85% below 7% above 7%
+  prop anchor source mix: {'line': 127, None: 6, 'rate': 16}
+
+=== biggest misses, shipped mean (top 12) ===
+  Tre Tucker             WR LV  vs BUF  proj   8.1  act  24.2  (-16.1)  js  8.38 clay  7.08 cons   7.6
+  Bijan Robinson         RB ATL vs CHI  proj  21.9  act   6.3  (+15.6)  js 21.69 clay  20.6 cons  22.7
+  Kyle Pitts             TE ATL vs CHI  proj   6.3  act  20.5  (-14.2)  js  6.32 clay  9.68 cons   6.2
+  Germie Bernard         WR PIT vs TB   proj   6.8  act  20.2  (-13.4)  js  6.61 clay  7.96 cons   8.2
+  Isaiah Likely          TE NYG vs NO   proj   9.0  act  20.9  (-11.9)  js  8.78 clay  8.22 cons   9.9
+  Derrick Henry          RB BAL vs CLE  proj  16.3  act   4.5  (+11.8)  js 16.27 clay 16.36 cons  16.9
+  Bo Nix                 QB DEN vs SEA  proj  16.2  act   4.5  (+11.8)  js 14.69 clay 17.08 cons  14.3
+  Cam Skattebo           RB NYG vs NO   proj  11.7  act   0.0  (+11.7)  js 11.61 clay 12.31 cons  10.9
+  Rhamondre Stevenson    RB NE  vs NYJ  proj  15.0  act   3.6  (+11.4)  js 14.79 clay 15.89 cons  13.7
+  Trevor Lawrence        QB JAX vs HOU  proj  17.0  act  28.3  (-11.3)  js 16.49 clay 16.68 cons  18.3
+  Bhayshul Tuten         RB JAX vs HOU  proj  11.7  act  22.7  (-11.0)  js 11.94 clay 11.78 cons  11.0
+  Jahan Dotson           WR ATL vs CHI  proj   5.2  act  16.2  (-11.0)  js  5.01 clay  4.56 cons   3.0
+
+=== locked but no game row (9) ===
+  Jalen Hurts (QB 19.1), Saquon Barkley (RB 13.4), Quinshon Judkins (RB 11.0), Breece Hall (RB 10.4), Kyle Monangai (RB 10.4), Lamar Jackson (QB 10.2), Tyler Warren (TE 9.7), Adonai Mitchell (WR 6.3), Josh Jacobs (RB 5.1)
+
+
+##### diagnose_week.py --week 6
+W6: 149 skill rows scored (mean >= 5.0)
+
+=== 1. bias (proj − act) and MAE by position ===
+  pos   n         SHIPPED              JS            Clay            prop       consensus            ESPN
+  QB   28    +0.99 /  5.05  +0.59 /  5.14  +0.04 /  5.94  +0.67 /  5.10  +0.53 /  4.30  +0.59 /  4.38
+  RB   33    +1.36 /  5.58  +1.35 /  5.59  +0.88 /  5.68  +1.21 /  5.59  +1.51 /  5.64  +1.91 /  5.67
+  WR   61    -0.16 /  4.64  -0.03 /  4.69  -0.73 /  4.63  -0.20 /  4.54  -0.23 /  4.63  -0.20 /  4.36
+  TE   27    +0.75 /  4.97  +0.67 /  4.95  +0.34 /  4.51  +0.61 /  4.89  +0.71 /  5.06  +0.46 /  4.71
+  ALL 149    +0.56 /  4.98  +0.52 /  5.02  -0.03 /  5.09  +0.42 /  4.94  +0.47 /  4.87  +0.54 /  4.72
+
+=== 2. K + DST (fitted Vegas models, first live grade) ===
+  K   n=28  SHIPPED bias -1.61 MAE  4.48 | model bias -1.06 MAE  4.40 | prop bias -1.64 MAE  4.45 | consensus bias -1.91 MAE  4.32 | band inside 71%
+    proj mean 8.11 vs actual mean 9.71; Spearman -0.27
+  DST n=27  SHIPPED bias -0.30 MAE  3.89 | model bias -0.31 MAE  3.92 | band inside 93%
+    proj mean 5.93 vs actual mean 6.22; Spearman +0.07
+
+=== 3. PROP_W sweep (market anchor weight; shipped .70) ===
+  111 rows with a direct-line anchor that moved the mean
+  market-implied MAE 5.122 | model base MAE 5.234
+  w:   0.00  0.30  0.50  0.60  0.70  0.80  0.90  1.00
+  MAE: 5.23  5.19  5.16  5.14  5.13  5.12  5.12  5.12
+    QB n= 24: 5.48  5.44  5.42  5.41  5.41  5.42
+    RB n= 22: 6.08  6.06  6.04  6.02  6.01  6.00
+    WR n= 47: 4.51  4.43  4.39  4.35  4.34  4.35
+    TE n= 18: 5.78  5.75  5.72  5.70  5.68  5.67
+
+=== 4. JS × consensus blend (MAE) ===
+  w(cons): 0.0  0.2  0.5  0.8  1.0   | shipped
+  MAE:     5.00  4.92  4.85  4.83  4.87   | 4.96
+
+=== 5. tier buckets by shipped mean: bias / MAE / act÷proj ===
+  [ 5, 9) n= 70  bias -0.33  MAE  4.62  act/proj 1.049
+  [ 9,13) n= 39  bias +0.62  MAE  4.65  act/proj 0.944
+  [13,17) n= 21  bias +2.07  MAE  5.61  act/proj 0.866
+  [17,99) n= 19  bias +2.01  MAE  6.31  act/proj 0.897
+
+=== 6. team implied-total terciles: act÷proj (Vegas elasticity check) ===
+  low  implied (n= 45, avg 18.8): act/proj 0.837  bias +1.53
+  mid  implied (n= 53, avg 22.6): act/proj 1.036  bias -0.38
+  high implied (n= 51, avg 27.7): act/proj 0.944  bias +0.67
+
+=== 7. rank accuracy per position: Spearman | top-12 overlap (of 12) ===
+  pos          SHIPPED              JS            Clay            prop       consensus            ESPN
+  QB      +0.49 |  8/12     +0.49 |  8/12     +0.20 |  6/12     +0.45 |  8/12     +0.57 |  9/12     +0.50 |  8/12   
+  RB      +0.42 |  6/12     +0.44 |  6/12     +0.35 |  5/12     +0.42 |  6/12     +0.39 |  5/12     +0.40 |  6/12   
+  WR      +0.30 |  2/12     +0.28 |  2/12     +0.27 |  3/12     +0.31 |  1/12     +0.39 |  2/12     +0.46 |  3/12   
+  TE      +0.33 |  7/12     +0.24 |  6/12     +0.41 |  8/12     +0.29 |  6/12     +0.24 |  7/12     +0.31 |  7/12   
+
+=== 8. stat-component bias: projected comps vs actual stat line (per game, played rows) ===
+  QB: py 217.7→224.9 (+3%) | ptd 1.4→1.4 (-1%) | ry 16.8→12.1 (-28%) | rtd 0.2→0.1 (-60%)
+  RB: ry 53.9→45.3 (-16%) | rtd 0.4→0.4 (-13%) | rec 2.3→2.2 (-3%) | rcy 17.7→16.1 (-9%) | rctd 0.1→0.2 (+82%)
+  WR: ry 1.9→0.6 (-70%) | rec 3.8→4.4 (+14%) | rcy 49.3→53.8 (+9%) | rctd 0.3→0.2 (-22%)
+  TE: rec 3.7→3.7 (+1%) | rcy 38.3→36.4 (-5%) | rctd 0.3→0.3 (-16%)
+
+=== 9. band calibration by tier (inside / below p10 / above p90) ===
+  [ 5, 9) n= 70  inside   81%  below    9%  above   10%   avg (p90−p10)/mean 1.93
+  [ 9,13) n= 39  inside   90%  below    5%  above    5%   avg (p90−p10)/mean 1.72
+  [13,17) n= 21  inside   86%  below   10%  above    5%   avg (p90−p10)/mean 1.37
+  [17,99) n= 19  inside   95%  below    5%  above    0%   avg (p90−p10)/mean 1.14
+
+
+##### vs_books_week.py --week 6
+W6: 340 stat-prop calls, 247 anytime-TD calls, 169 market-vs-model means
+
+=== 1. stat props: model vs consensus line (RAW mean-vs-line) ===
+  all: 169/337 = 50.1%  (p vs coin 1.000) | model called OVER 53%, actual went OVER 47%
+  per-stat table (raw):  stat   n   hit%   p     over-call%  over-act%   median line/model
+    py     25   36.0%  0.230       48%        64%      1.003
+    ptd    23   43.5%  0.677       48%        43%      1.041
+    ry     53   47.2%  0.784       58%        36%      0.925
+    rec   119   55.5%  0.271       44%        51%      1.019
+    rcy   117   50.4%  1.000       63%        44%      0.922
+
+=== 1b. stat props, MEDIAN-ADJUSTED (model scaled by the median line/model ratio per stat) ===
+  all: 164/334 = 49.1%  (p 0.784) | OVER calls 50%
+    QB: 23/61 = 37.7%  (p 0.073)
+    RB: 50/88 = 56.8%  (p 0.241)
+    WR: 59/121 = 48.8%  (p 0.856)
+    TE: 32/64 = 50.0%  (p 1.000)
+
+=== 2. does a bigger disagreement win more? (median-adjusted, |model−line|/line) ===
+  edge [0.00,0.05) n= 61  hit  47.5%  p 0.798
+  edge [0.05,0.10) n= 43  hit  34.9%  p 0.067
+  edge [0.10,0.20) n= 99  hit  52.5%  p 0.688
+  edge [0.20,0.35) n= 67  hit  52.2%  p 0.807
+  edge [0.35,9.00) n= 64  hit  51.6%  p 0.901
+  biggest 12 disagreements:
+    Justin Herbert       QB ptd  line    0.5 model    1.4 -> O  act    0.0  miss
+    Seth McGowan         RB ry   line   11.5 model   27.8 -> O  act   27.0  HIT
+    Brian Thomas Jr.     WR rcy  line   17.5 model   41.2 -> O  act    0.0  miss
+    Oronde Gadsden II    TE rcy  line   13.5 model   31.0 -> O  act   17.0  HIT
+    Oronde Gadsden II    TE rec  line    1.5 model    3.2 -> O  act    3.0  HIT
+    Colby Parkinson      TE rcy  line   13.5 model   27.5 -> O  act   31.0  HIT
+    Brian Thomas Jr.     WR rec  line    1.5 model    3.0 -> O  act    0.0  miss
+    Colby Parkinson      TE rec  line    1.5 model    2.9 -> O  act    5.0  HIT
+    Cameron Ward         QB ptd  line    0.5 model    1.0 -> O  act    1.0  HIT
+    Josh Cameron         WR rec  line    1.5 model    0.2 -> U  act    0.0  HIT
+    Josh Cameron         WR rcy  line   15.5 model    2.4 -> U  act    0.0  HIT
+    Cam Skattebo         RB rec  line    1.5 model    2.5 -> O  act    0.0  miss
+
+=== 3. anytime-TD: model P(TD) vs devigged book P(TD) ===
+  n=247  scored 19% | model avg P 19%  book avg P 23%
+  Brier: model 0.1437  book 0.1475  (lower = better)
+  disagreements >=5pts: 117; model side right 76 (65%) -- BASE-RATE TRAP: split by direction:
+    model HIGHER than book: n= 22  scored 18%  vs book avg P 20%  model avg P 29%
+    model LOWER than book : n= 95  scored 24%  vs book avg P 28%  model avg P 17%
+    |ΔP| [0.05,0.10) n= 74 model right 55%
+    |ΔP| [0.10,0.20) n= 36 model right 78%
+    |ΔP| [0.20,1.00) n=  7 model right 100%
+
+=== 4. fantasy points: JS model vs market-implied mean ===
+  n=169  MAE model 4.580  market 4.555 | bias model +0.73 market +0.42
+  model closer on 83/169 rows (49%, p 0.878)
+  by |model − market| bucket: who was closer, and did the actual land on the model's side of the market?
+  (a) ABSOLUTE gap, half-PPR fantasy points
+    Δ [0,1) pts  n= 88  model closer   52%  actual on model's side   55%  MAE model 4.30 mkt 4.34
+    Δ [1,2) pts  n= 50  model closer   42%  actual on model's side   48%  MAE model 4.87 mkt 4.68
+    Δ [2,3) pts  n= 17  model closer   41%  actual on model's side   41%  MAE model 5.32 mkt 4.68
+    Δ [3,99) pts  n= 14  model closer   64%  actual on model's side   71%  MAE model 4.44 mkt 5.30
+  (b) RELATIVE gap, |model − market| / market
+    Δ [  0%,  5%) n= 33  model closer   55%  actual on model's side   55%  MAE model 4.51 mkt 4.54  avg mkt 11.4
+    Δ [  5%, 10%) n= 44  model closer   43%  actual on model's side   45%  MAE model 5.46 mkt 5.41  avg mkt 10.9
+    Δ [ 10%, 20%) n= 45  model closer   56%  actual on model's side   60%  MAE model 4.89 mkt 5.04  avg mkt 9.1
+    Δ [ 20%, 30%) n= 22  model closer   41%  actual on model's side   45%  MAE model 3.55 mkt 3.24  avg mkt 7.3
+    Δ [ 30%,900%) n= 23  model closer   43%  actual on model's side   52%  MAE model 3.47 mkt 2.83  avg mkt 4.0
+    abs >=3 pts  model ABOVE market: n= 11  actual on model's side   64%  avg model  10.4 mkt   4.6 actual   7.4
+    rel >=30%    model ABOVE market: n= 21  actual on model's side   57%  avg model   6.2 mkt   2.6 actual   4.2
+    rel >=30%    model BELOW market: n=  4  actual on model's side   50%  avg model   3.8 mkt   6.6 actual   5.5
+  players in either tail (>=3 pts or >=30%):
+    A.J. Barner            TE  model   7.1  market  -6.0 (+1310%)  actual   3.1  -> model side
+    Omarion Hampton        RB  model   8.8  market  -3.7 (+1250%)  actual   5.9  -> model side
+    Jonnu Smith            TE  model   2.7  market  -4.9 (+760%)  actual   0.0  -> model side
+    Oronde Gadsden II      TE  model   7.3  market   2.8 (+160%)  actual   3.2  -> model side
+    Brian Thomas Jr.       WR  model   7.6  market   3.5 (+118%)  actual   0.0  -> market side
+    Cyrus Allen            WR  model   0.0  market   2.6 ( -98%)  actual   3.7  -> market side
+    Elijah Higgins         TE  model   3.3  market   1.7 ( +96%)  actual   4.3  -> model side
+    Colby Parkinson        TE  model   6.7  market   3.6 ( +86%)  actual  11.6  -> model side
+    John Bates             TE  model   1.8  market   1.0 ( +80%)  actual   0.9  -> market side
+    Tory Horton            WR  model   2.5  market   1.4 ( +77%)  actual   1.8  -> model side
+    Tyler Higbee           TE  model  11.1  market   6.4 ( +73%)  actual   2.2  -> market side
+    Cody White             WR  model   4.9  market   2.9 ( +69%)  actual   0.0  -> market side
+    Elic Ayomanor          WR  model   5.4  market   3.2 ( +69%)  actual   0.8  -> market side
+    Marvin Harrison Jr.    WR  model   7.8  market   5.0 ( +57%)  actual   4.9  -> market side
+    Josh Cameron           WR  model   4.6  market   3.0 ( +56%)  actual   0.0  -> market side
+    Rome Odunze            WR  model  11.9  market   7.8 ( +52%)  actual   5.4  -> market side
+    Savion Williams        WR  model   1.6  market   1.1 ( +50%)  actual   6.1  -> model side
+    Troy Franklin          WR  model   4.8  market   3.2 ( +50%)  actual   0.7  -> market side
+    Kimani Vidal           RB  model   2.4  market   4.4 ( -46%)  actual   5.5  -> market side
+    Kaleb Johnson          RB  model   1.8  market   3.1 ( -42%)  actual  -0.2  -> model side
+    Khalil Shakir          WR  model  11.1  market   7.9 ( +40%)  actual  11.4  -> model side
+    Mike Washington Jr.    RB  model   4.4  market   3.2 ( +38%)  actual   5.5  -> model side
+    Geno Smith             QB  model  11.1  market  16.3 ( -32%)  actual  13.0  -> model side
+    Jakobi Meyers          WR  model   8.9  market   6.8 ( +31%)  actual  10.8  -> model side
+    Rashid Shaheed         WR  model   6.8  market   5.2 ( +31%)  actual   9.3  -> model side
+    Tyler Allgeier         RB  model   7.4  market  10.5 ( -29%)  actual   5.3  -> model side
+    Javonte Williams       RB  model  18.5  market  14.5 ( +28%)  actual  12.0  -> market side
+    Deshaun Watson         QB  model  13.5  market  18.5 ( -27%)  actual   9.5  -> model side
+    Ken Walker III         RB  model  21.4  market  18.3 ( +17%)  actual  26.9  -> model side
+
+=== 5. randomness of the stat-prop outcomes (median-adjusted) ===
+  observed hit 49.1% | coin-flip 90% band [45.5, 54.5] (n=334)
+  players with >=3 calls: 28; all-hit 4, all-miss 5 (coin-flip expectation ~3.5 each)
+
+
+##### luck_scorecard.py --week 6
+=== LUCK LAYER LIVE GRADING (RB k .75 / WR-TE 1.0 / QB pass .5; rows with |luck| >= 0.05) ===
+--- W6 ---
+  pos     n  |luck|  MAE js  js-luck   delta | MAE ship ship-luck   delta |  wins
+  QB     21    0.40   5.138    5.140  -0.003 |    4.946     4.922  +0.024 |   52%
+  RB     48    0.41   4.898    4.873  +0.025 |    4.899     4.888  +0.010 |   42%
+  WR     84    0.22   4.094    4.113  -0.020 |    3.950     3.962  -0.013 |   46%
+  TE     43    0.38   4.225    4.343  -0.118 |    4.277     4.365  -0.089 |   60%
+  (delta < 0 = the luck layer helped; 'wins' = share of rows where the with-luck model mean was closer)
+--- CUMULATIVE W1-W6 ---
+  pos     n  |luck|  MAE js  js-luck   delta | MAE ship ship-luck   delta |  wins
+  QB    120    0.35   6.099    6.140  -0.040 |    6.167     6.179  -0.012 |   54%
+  RB    266    0.39   4.642    4.666  -0.025 |    4.724     4.741  -0.017 |   48%
+  WR    396    0.31   4.610    4.621  -0.011 |    4.585     4.595  -0.010 |   50%
+  TE    213    0.39   3.993    4.071  -0.078 |    4.094     4.140  -0.046 |   55%
+  (delta < 0 = the luck layer helped; 'wins' = share of rows where the with-luck model mean was closer)
+
+
+##### peck_scorecard.py --week 6
+=== SHADOW PECKING-ORDER DOCK (shipped since 2026-10-09: current week only, WR 3rd+ x0.92, RB 2nd+ x0.94, fade 4-5 half) ===
+    'MAE js' below = the shadow number (ncMean) with vs without the dock; backtest_dormant_shadow.py: WR 3rd+ .873, RB 2nd+ .915 of the shadow
+--- SHADOW W6 ---
+  WR docked n= 17  actual/model with dock 1.078, without 1.007 | MAE js 4.888 vs 4.952 without (-0.065) | MAE ship 4.252 vs 4.220 (+0.032) | wins 59%
+  WR undocked n= 87  actual/model 0.969
+  RB docked n= 15  actual/model with dock 0.973, without 0.924 | MAE js 3.243 vs 3.239 without (+0.005) | MAE ship 3.219 vs 3.214 (+0.006) | wins 53%
+  RB undocked n= 46  actual/model 0.954
+  (negative MAE change = the dock helped; backtest: WR 3rd+ .888 of projection, RB 2nd .953)
+--- SHADOW CUMULATIVE W1-W6 ---
+  WR docked n= 30  actual/model with dock 0.951, without 0.888 | MAE js 4.375 vs 4.526 without (-0.151) | MAE ship 3.889 vs 3.908 (-0.019) | wins 63%
+  WR undocked n=176  actual/model 1.025
+  RB docked n= 27  actual/model with dock 0.938, without 0.891 | MAE js 4.007 vs 4.056 without (-0.048) | MAE ship 4.014 vs 4.056 (-0.042) | wins 59%
+  RB undocked n=106  actual/model 1.009
+  (negative MAE change = the dock helped; backtest: WR 3rd+ .888 of projection, RB 2nd .953)
+
+=== OLD LIVE-CHAIN DOCK (WR 3rd+ x0.92, RB 2nd+ x0.97 inside jsPre - dormant since the shadow became the base 10-08; kept for history) ===
+--- W6 ---
+  WR docked n= 19  actual/model with dock 1.034, without 0.959 | MAE js 4.411 vs 4.493 without (-0.082) | MAE ship 4.210 vs 4.237 (-0.027) | wins 58%
+  WR undocked n= 88  actual/model 1.009
+  RB docked n= 21  actual/model with dock 1.278, without 1.247 | MAE js 3.891 vs 3.888 without (+0.003) | MAE ship 3.876 vs 3.873 (+0.003) | wins 43%
+  RB undocked n= 40  actual/model 0.868
+  (negative MAE change = the dock helped; backtest: WR 3rd+ .888 of projection, RB 2nd .953)
+--- CUMULATIVE W1-W6 ---
+  WR docked n= 61  actual/model with dock 1.107, without 1.034 | MAE js 4.406 vs 4.477 without (-0.072) | MAE ship 4.188 vs 4.217 (-0.029) | wins 54%
+  WR undocked n=277  actual/model 1.070
+  RB docked n= 61  actual/model with dock 1.281, without 1.249 | MAE js 4.302 vs 4.290 without (+0.012) | MAE ship 4.320 vs 4.309 (+0.011) | wins 48%
+  RB undocked n=149  actual/model 1.013
+  (negative MAE change = the dock helped; backtest: WR 3rd+ .888 of projection, RB 2nd .953)
+
+
+##### layers_scorecard.py --week 6
+--- week 6 ---
+  BASE BLEND (252 rows locked with the blend)   pos    n | MAE ship MAE blend MAE Clay-model MAE shadow | bias blend bias Clay bias shadow | blend beats Clay-model
+      QB    28 |     5.05      5.14           5.93       5.14 |      +0.59     +0.79       +0.59 | 61%
+      RB    61 |     4.38      4.38           4.50       4.38 |      +0.32     +0.81       +0.32 | 59%
+      WR   104 |     3.89      4.02           3.92       4.02 |      +0.11     +0.27       +0.11 | 43%
+      TE    59 |     4.03      3.99           3.86       3.99 |      -0.14     -0.34       -0.14 | 41%
+      ALL  252 |     4.17      4.22           4.27       4.22 |      +0.15     +0.32       +0.15 | 48%
+  VOLUME CONTEXT (166 rows with a multiplier)
+      WR: act/model with 1.012 without 1.015 | MAE with 4.09 without 4.11 | closer with: 50% | docked rows 47 act/model 1.009 | boosted rows 60 act/model 1.016
+      TE: act/model with 1.030 without 1.029 | MAE with 3.99 without 4.03 | closer with: 47% | docked rows 22 act/model 0.857 | boosted rows 37 act/model 1.149
+  HEALTH LIFT (28 lifted rows; descriptive - the lift sits inside the prior)
+      WR: lifted n17 act/model 0.862 (mean lift 0.74/g) | rest n90 act/model 1.041
+      TE: lifted n11 act/model 0.816 (mean lift 0.44/g) | rest n48 act/model 1.093
+  HURT GAMES IN USAGE (57 rows; descriptive)
+      WR: n38 act/model 1.001 | rest n69 act/model 1.019
+      TE: n19 act/model 0.974 | rest n40 act/model 1.062
+
+
+##### usage_scorecard.py --week 6
+=== LIVE USAGE EVIDENCE GRADING (targets + routes + snaps as part of the evidence; WR from game 1, TE from game 4) ===
+--- W6 ---
+  WR n= 91 avg |move| 0.96 | model MAE 4.207 vs 4.060 without (+0.148) MSE +5.17% | shipped MAE 4.068 vs 3.984 (+0.084) | wins 44%
+      raised by usage   n= 53  actual 5.04  with 6.49  without 5.54
+      lowered by usage  n= 38  actual 8.76  with 7.56  without 8.54
+  TE n= 49 avg |move| 0.75 | model MAE 4.142 vs 4.015 without (+0.128) MSE +2.64% | shipped MAE 4.202 vs 4.054 (+0.148) | wins 37%
+      raised by usage   n= 32  actual 4.57  with 4.54  without 3.78
+      lowered by usage  n= 17  actual 7.59  with 5.90  without 6.63
+  (negative change = the usage evidence helped)
+--- CUMULATIVE W1-W6 ---
+  WR n=280 avg |move| 0.88 | model MAE 4.414 vs 4.232 without (+0.182) MSE +6.31% | shipped MAE 4.332 vs 4.240 (+0.092) | wins 38%
+      raised by usage   n=168  actual 5.26  with 6.01  without 5.20
+      lowered by usage  n=112  actual 9.98  with 7.84  without 8.83
+  TE n=128 avg |move| 0.65 | model MAE 3.704 vs 3.549 without (+0.155) MSE +8.10% | shipped MAE 3.714 vs 3.558 (+0.156) | wins 36%
+      raised by usage   n= 77  actual 3.34  with 4.36  without 3.67
+      lowered by usage  n= 51  actual 7.75  with 5.96  without 6.55
+  (negative change = the usage evidence helped)
+
+
+##### return_scorecard.py --week 6
+=== RETURN RAMP LIVE GRADING ===
+--- W6 ---
+  n=6  actual/model with ramp 1.284, without 1.141 | model MAE 3.368 vs 3.089 (+0.279) | shipped MAE 3.012 vs 2.813 (+0.199) | wins 33%
+    Caleb Williams         QB x0.90  model 10.3 -> 9.3  actual 16.5
+    Jalen Coker            WR x0.90  model 9.5 -> 8.6  actual 12.7
+    Jalen Nailor           WR x0.90  model 6.6 -> 5.9  actual 1.4
+    Rico Dowdle            RB x0.90  model 5.6 -> 5.0  actual 6.4
+    A.J. Brown             WR x0.85  model 5.4 -> 4.6  actual 4.2
+    Ja'Kobi Lane           WR x0.85  model 4.0 -> 3.4  actual 6.0
+  (negative MAE change = the return ramp helped; backtest: ramp -2.8% MSE on its rows 7/7, floor -2.33% on QB rows 7/7)
+--- CUMULATIVE W1-W6 ---
+  n=10  actual/model with ramp 1.696, without 1.518 | model MAE 6.962 vs 6.248 (+0.714) | shipped MAE 6.285 vs 5.927 (+0.358) | wins 20%
+    Jayden Daniels         QB x0.90  model 17.9 -> 16.1  actual 32.3
+    Puka Nacua             WR x0.90  model 14.6 -> 13.1  actual 23.2
+    Nico Collins           WR x0.90  model 12.3 -> 11.1  actual 27.3
+    Caleb Williams         QB x0.90  model 10.3 -> 9.3  actual 16.5
+    Justin Jefferson       WR x0.90  model 9.8 -> 8.8  actual 15.8
+    Jalen Coker            WR x0.90  model 9.5 -> 8.6  actual 12.7
+    Jalen Nailor           WR x0.90  model 6.6 -> 5.9  actual 1.4
+    Rico Dowdle            RB x0.90  model 5.6 -> 5.0  actual 6.4
+    A.J. Brown             WR x0.85  model 5.4 -> 4.6  actual 4.2
+    Ja'Kobi Lane           WR x0.85  model 4.0 -> 3.4  actual 6.0
+  (negative MAE change = the return ramp helped; backtest: ramp -2.8% MSE on its rows 7/7, floor -2.33% on QB rows 7/7)
+=== QB STARTER FLOOR LIVE GRADING ===
+--- W6 ---
+  n=9  actual/model with ramp 0.927, without 0.964 | model MAE 4.499 vs 4.618 (-0.119) | shipped MAE 4.288 vs 4.236 (+0.052) | wins 56%
+    Sam Darnold            QB x1.01  model 16.3 -> 16.4  actual 13.0
+    Kirk Cousins           QB x1.01  model 16.2 -> 16.5  actual 19.5
+    Daniel Jones           QB x1.07  model 14.6 -> 15.6  actual 15.8
+    Bo Nix                 QB x1.01  model 14.6 -> 14.7  actual 4.5
+    Michael Penix Jr.      QB x1.07  model 14.3 -> 15.3  actual 23.1
+    Aaron Rodgers          QB x1.02  model 14.2 -> 14.5  actual 17.0
+    Cameron Ward           QB x1.07  model 14.2 -> 15.2  actual 7.8
+    Deshaun Watson         QB x1.05  model 12.8 -> 13.5  actual 9.5
+    Geno Smith             QB x1.05  model 10.6 -> 11.1  actual 13.0
+  (negative MAE change = the qb starter floor helped; backtest: ramp -2.8% MSE on its rows 7/7, floor -2.33% on QB rows 7/7)
+--- CUMULATIVE W1-W6 ---
+  n=27  actual/model with ramp 0.966, without 1.005 | model MAE 4.244 vs 4.170 (+0.074) | shipped MAE 4.494 vs 4.424 (+0.069) | wins 44%
+    C.J. Stroud            QB x1.02  model 17.6 -> 17.9  actual 23.1
+    Sam Darnold            QB x1.01  model 16.3 -> 16.4  actual 13.0
+    Kirk Cousins           QB x1.01  model 16.2 -> 16.5  actual 19.5
+    C.J. Stroud            QB x1.01  model 15.7 -> 15.8  actual 20.9
+    Jordan Love            QB x1.01  model 15.7 -> 15.8  actual 14.1
+    Kirk Cousins           QB x1.01  model 15.3 -> 15.5  actual 13.7
+    Sam Darnold            QB x1.04  model 15.1 -> 15.7  actual 14.3
+    Kyler Murray           QB x1.06  model 14.7 -> 15.6  actual 11.5
+    Daniel Jones           QB x1.07  model 14.6 -> 15.6  actual 15.8
+    Bo Nix                 QB x1.01  model 14.6 -> 14.7  actual 4.5
+  (negative MAE change = the qb starter floor helped; backtest: ramp -2.8% MSE on its rows 7/7, floor -2.33% on QB rows 7/7)
+
+
+##### lines_signal_scorecard.py --week 6
+=== lines-up + practice-trend scorecard: 516 designated player-weeks, weeks [1, 2, 3, 4, 5, 6] (pre-inactives state) ===
+
+  game status: Questionable
+    all                                            played  61/ 97  ( 63%)
+    lines up at 2+ books                           played  40/ 49  ( 82%)
+    lines up at 1 book                             played   2/  5  ( 40%)
+    no lines, usually has them                     played   9/ 21  ( 43%)
+    no lines, never lined                          played  10/ 22  ( 45%)
+
+  game status: Doubtful
+    all                                            played   0/  9  (  0%)
+    no lines, usually has them                     played   0/  3  (  0%)
+    no lines, never lined                          played   0/  6  (  0%)
+
+  game status: Out
+    all                                            played   0/102  (  0%)
+    lines up at 2+ books                           played   0/  1  (  0%)
+    no lines, usually has them                     played   0/ 73  (  0%)
+    no lines, never lined                          played   0/ 28  (  0%)
+
+  game status: none (on the report, no designation)
+    all                                            played 254/308  ( 82%)
+    lines up at 2+ books                           played 200/206  ( 97%)
+    lines up at 1 book                             played   1/  1  (100%)
+    no lines, usually has them                     played  13/ 33  ( 39%)
+    no lines, never lined                          played  40/ 68  ( 59%)
+
+  Questionable by the week's practice sequence:
+    last FP, upgraded                              played  13/ 16  ( 81%)
+    last FP, flat                                  played   5/  6  ( 83%)
+    last LP, upgraded                              played  11/ 22  ( 50%)
+    last LP, flat                                  played  26/ 38  ( 68%)
+    last LP, downgraded                            played   1/  1  (100%)
+    last LP, one day                               played   0/  2  (  0%)
+    last DNP, flat                                 played   2/  6  ( 33%)
+    last DNP, downgraded                           played   2/  5  ( 40%)
+    last DNP, one day                              played   1/  1  (100%)
+
+  Questionable, lines x last practice:
+    last FP, lines at 2+ books                     played  13/ 13  (100%)
+    last FP, no lines                              played   5/  9  ( 56%)
+    last LP, lines at 2+ books                     played  24/ 32  ( 75%)
+    last LP, no lines                              played  13/ 28  ( 46%)
+    last DNP, lines at 2+ books                    played   3/  4  ( 75%)
+    last DNP, no lines                             played   1/  6  ( 17%)
+
+  sample for a weight: 97 Questionable player-weeks so far (target ~100 before the lines signal moves a projection)
+
+  week 6 Questionable detail:
+    Caleb Williams         QB CHI FP-FP-FP       5 books  PLAYED
+    Kenyon Sadiq           TE NYJ LP-LP-FP       5 books  PLAYED
+    Rico Dowdle            RB PIT LP-FP-FP       5 books  PLAYED
+    Stefon Diggs           WR WAS DNP-LP-LP      5 books  sat
+    Alvin Kamara           RB NO  LP-LP-LP       5 books  PLAYED
+    Chris Olave            WR NO  DNP-DNP-LP     5 books  PLAYED
+    Omar Cooper Jr.        WR NYJ LP-LP-FP       5 books  PLAYED
+    Mike Evans             WR SF  DNP-DNP-DNP    5 books  sat
+    DK Metcalf             WR PIT DNP            5 books  PLAYED
+    Tyler Warren           TE IND LP             5 books  sat
+    DJ Moore               WR BUF DNP-DNP-LP     4 books  sat
+    Ja'Kobi Lane           WR BAL FP-FP-FP       3 books  PLAYED
+    A.J. Brown             WR NE  LP-LP-LP       2 books  PLAYED
+    Tyjae Spears           RB TEN LP-DNP-FP      2 books  PLAYED
+    Savion Williams        WR GB  LP-LP-LP-LP    1 books  PLAYED
+    Brenen Thompson        WR LAC LP-LP-LP       0 books  PLAYED
+    Quinshon Judkins       RB CLE DNP-DNP-LP     0 books  sat
+    TreVeyon Henderson     RB NE  LP-LP-LP       0 books  PLAYED
+    KeAndre Lambert-Smith  WR LAC LP-LP-FP       0 books  PLAYED
+    Sean Tucker            RB TB  DNP-LP-LP      0 books  sat
+    Trevor Etienne         RB CAR FP-FP-FP       0 books  PLAYED
+    Josh Palmer            WR BUF LP-LP-LP       0 books  PLAYED
+    Christian Kirk         WR SF  LP-LP-LP       0 books  sat
+    Jeremy McNichols       RB WAS FP-FP-FP       0 books  sat
+
+
+##### backtest_news_status.py --week 6
+=== news availability reads, weeks 1-6 (headline parser) ===
+  ruled out                    played 1/35 (3%)
+      miss: wk 4 Ja'Marr Chase - Ruled out vs. Jaguars (concussion) after a facemask pull slams his head into the turf
+  doubtful / unlikely          played 0/8 (0%)
+  game-time decision           played 12/17 (71%)
+  expected to play / cleared   played 20/20 (100%)
+  timelines: 34 items, 74 player-games inside the stated window already played out -> he played 7 (9%)
+      early return: TreVeyon Henderson played 1 of 1 games inside wk6-7 (weeks, 2026-10-12) - Schefter: high ankle sprain from Sunday's rout of Raiders will cost him "multiple weeks"; no surgery needed
+      early return: Keenan Allen played 2 of 3 games inside wk4-6 (weeks, 2026-10-02) - Reportedly facing a minimum 3-game NFL suspension after an Aug. 30 DUI arrest (.224 BAC)
+      early return: Christian McCaffrey played 4 of 4 games inside wk2-5 (weeks, 2026-09-17) - Placed on IR with calf/Achilles injury, out at least 4 games
+
+
+##### grade_ros_lock.py (all locks, 3+ games since)
+
+=== ROS lock week 5 (locked 2026-10-08T13:52, base shadow): 0 players with 3+ games played since ===
+
+=== ROS lock week 6 (locked 2026-10-18T16:00, base shadow): 0 players with 3+ games played since ===
+
+

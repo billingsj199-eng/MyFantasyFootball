@@ -32,6 +32,11 @@ if (-not (Select-String -Path $appJs -Pattern '_dynSimSrc' -SimpleMatch -Quiet))
     exit 0
 }
 
+# Repo turn (2026-10-20): one automation at a time in the site checkout. Nested in
+# tuesday_stats.ps1 this runs inside the chain's turn; standalone it waits its own.
+. (Join-Path $SiteDir 'scripts\repo_guard.ps1')
+if (-not $DryRun -and -not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'dynasty SIM refresh')) { exit 0 }
+
 # Fresh JM prospect scores for the rookie-pick class read (dyn_picks.py):
 # headless Chrome on the live site via the scheduler Python (has selenium).
 # data/jm_scores.json is git-excluded. Non-fatal: keeps the last snapshot.
@@ -82,7 +87,10 @@ if ($histOk) { $new = [regex]::Replace($new, '(<meta name="mff-dyn-hist-v" conte
 git -C $SiteDir add $dataRel index.html
 if ($histOk) { git -C $SiteDir add $histRel }
 git -C $SiteDir commit -m ('Auto dynasty SIM refresh {0} (data/dynasty_sim_2026.js + weekly history + meta version bumps)' -f $stamp)
-git -C $SiteDir pull --rebase --autostash origin main
-git -C $SiteDir push origin main
-if ($LASTEXITCODE -eq 0) { Write-Log 'committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
+# 2026-10-20: was a bare pull + push that logged "committed + pushed" even when the
+# commit failed; Invoke-SafePullPush checks it landed and aborts a conflicted rebase.
+Push-Location $SiteDir
+$ok = Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'dynasty SIM refresh'
+Pop-Location
+if ($ok) { Write-Log 'committed + pushed' } else { Write-Log 'NOT PUBLISHED - see the line above (commit failed or push failed)' }
 exit 0

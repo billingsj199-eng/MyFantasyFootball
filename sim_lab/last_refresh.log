@@ -1,105 +1,108 @@
-===== Sim Lab refresh Wed 10/14/2026 11:27:17.98 ===== 
+===== Sim Lab refresh Tue 10/20/2026 10:03:59.94 ===== 
 copied mike_clay_projections.js  (36 KB)
 copied player_weekly_sigma.js  (61 KB)
-copied betting_lines_2026.js  (508 KB)
+copied betting_lines_2026.js  (644 KB)
 copied clay_team_grades_2026.js  (4 KB)
 copied yahoo_normalize.js  (15 KB)
-wrapped sim_practice.js  (15 entries, 2026-10-14T14:03)
-wrapped sim_depth.js  (32 entries, 2026-10-14T14:03)
-wrapped sim_news.js  (299 entries, 2026-10-13T22:30)
-slot priors (PPR per team game): QB1 16.0 (n32), QB2 0.2 (n31), QB3 0.0 (n5), RB1 14.7 (n32), RB2 5.2 (n30), RB3 1.4 (n25), TE1 9.0 (n32), TE2 3.7 (n26), WR1 13.7 (n32), WR2 8.8 (n32), WR3 4.7 (n30), WR4 3.1 (n25)
-depth-chart pool: 47 extras not on Clay's sheet (QB top 3 on the slot line, RB top 3, WR top 4, TE top 2; own line with >= 4 games, else slot prior)
-  ARI Simi Fehoko                depth WR4, slot prior (25 players, 117 team g)   season-line PPR   52  (3.1/g)
+wrapped sim_practice.js  (376 entries, 2026-10-20T14:03)
+wrapped sim_depth.js  (32 entries, 2026-10-20T14:03)
+wrapped sim_news.js  (233 entries, 2026-10-19T22:14)
+slot priors (PPR per team game): QB1 15.7 (n32), QB2 0.1 (n32), QB3 -0.1 (n5), RB1 14.1 (n32), RB2 5.4 (n30), RB3 1.4 (n27), TE1 8.9 (n32), TE2 3.9 (n26), WR1 13.2 (n32), WR2 8.4 (n32), WR3 4.9 (n31), WR4 2.9 (n27)
+depth-chart pool: 51 extras not on Clay's sheet (QB top 3 on the slot line, RB top 3, WR top 4, TE top 2; own line with >= 4 games, else slot prior)
+  ATL Andy Dalton                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
   ATL Trey Sermon                depth RB3, own 14 g 2024-26                      season-line PPR   65  (3.8/g)
-  BAL Joe Fagnano                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  CAR Haynes King                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
+  BAL Joe Fagnano                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  CAR Haynes King                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
   CAR AJ Dillon                  depth RB2, own 10 g 2024-26                      season-line PPR   30  (1.8/g)
-  CAR Trevor Etienne             depth RB3, own 9 g 2024-26                       season-line PPR   26  (1.5/g)
-  CAR John Metchie III           depth WR4, own 24 g 2024-26                      season-line PPR  102  (6.0/g)
-  CHI Case Keenum                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  CHI Roschon Johnson            depth RB3, own 16 g 2024-26                      season-line PPR   97  (5.7/g)
-  CLE Taylen Green               depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  CLE Jaleel McLaughlin          depth RB2, own 27 g 2024-26                      season-line PPR   89  (5.2/g)
-  CLE Audric Estime              depth RB3, own 18 g 2024-26                      season-line PPR   93  (5.5/g)
-  DAL Tyler Goodson              depth RB2, own 18 g 2024-26                      season-line PPR   50  (2.9/g)
-  DEN Sam Ehlinger               depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
+  CAR Trevor Etienne             depth RB3, own 10 g 2024-26                      season-line PPR   23  (1.4/g)
+  CAR John Metchie III           depth WR4, own 25 g 2024-26                      season-line PPR  101  (5.9/g)
+  CHI Case Keenum                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  CHI Roschon Johnson            depth RB3, own 17 g 2024-26                      season-line PPR  108  (6.4/g)
+  CLE Taylen Green               depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  CLE Jaleel McLaughlin          depth RB2, own 28 g 2024-26                      season-line PPR   90  (5.3/g)
+  CLE Audric Estime              depth RB3, own 19 g 2024-26                      season-line PPR   95  (5.6/g)
+  DAL Tyler Goodson              depth RB2, own 19 g 2024-26                      season-line PPR   49  (2.9/g)
+  DEN Sam Ehlinger               depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
   GB  Pierre Strong Jr.          depth RB2, own 11 g 2024-26                      season-line PPR   55  (3.2/g)
-  HOU Graham Mertz               depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
+  HOU Graham Mertz               depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
   HOU Dare Ogunbowale            depth RB3, own 24 g 2024-26                      season-line PPR   58  (3.4/g)
-  IND Anthony Richardson Sr.     depth QB2, slot prior (31 players, 106 team g)   season-line PPR    3  (0.2/g)
-  KC  Garrett Nussmeier          depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  LAC DJ Uiagalelei              depth QB2, slot prior (31 players, 106 team g)   season-line PPR    3  (0.2/g)
-  LAR Stetson Bennett IV         depth QB2, slot prior (31 players, 106 team g)   season-line PPR    3  (0.2/g)
-  LAR Dean Connors               depth RB3, slot prior (25 players, 103 team g)   season-line PPR   23  (1.4/g)
-  LV  Aidan O'Connell            depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  LV  Cody White                 depth WR3, own 9 g 2024-26                       season-line PPR  114  (6.7/g)
-  MIN Carson Wentz               depth QB2, slot prior (31 players, 106 team g)   season-line PPR    3  (0.2/g)
-  MIN Max Brosmer                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
+  IND Anthony Richardson Sr.     depth QB2, slot prior (32 players, 135 team g)   season-line PPR    2  (0.1/g)
+  IND Will Mallory               depth TE2, slot prior (26 players, 150 team g)   season-line PPR   67  (3.9/g)
+  KC  Garrett Nussmeier          depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  LAC DJ Uiagalelei              depth QB2, slot prior (32 players, 135 team g)   season-line PPR    2  (0.1/g)
+  LAR Stetson Bennett IV         depth QB2, slot prior (32 players, 135 team g)   season-line PPR    2  (0.1/g)
+  LAR Dean Connors               depth RB3, slot prior (27 players, 127 team g)   season-line PPR   24  (1.4/g)
+  LV  Aidan O'Connell            depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  LV  Cody White                 depth WR3, own 10 g 2024-26                      season-line PPR  102  (6.0/g)
+  MIN Carson Wentz               depth QB2, slot prior (32 players, 135 team g)   season-line PPR    2  (0.1/g)
+  MIN Max Brosmer                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
   MIN DeeJay Dallas              depth RB2, own 14 g 2024-26                      season-line PPR   30  (1.8/g)
-  MIN Gavin Bartholomew          depth TE2, slot prior (26 players, 128 team g)   season-line PPR   64  (3.8/g)
-  NE  Behren Morton              depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  NO  Zach Wilson                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  NO  CJ Donaldson               depth RB3, own 5 g 2024-26                       season-line PPR   32  (1.9/g)
-  NYG Jake Haener                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  NYG Charlie Jones              depth WR4, own 4 g 2024-26                       season-line PPR    6  (0.4/g)
-  NYJ Tim Patrick                depth WR3, own 15 g 2024-26                      season-line PPR  102  (6.0/g)
-  PHI Cole Payton                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  PHI Dameon Pierce              depth RB3, own 13 g 2024-26                      season-line PPR   66  (3.9/g)
-  PIT Mason Rudolph              depth QB2, slot prior (31 players, 106 team g)   season-line PPR    3  (0.2/g)
-  PIT Will Howard                depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
+  MIN Gavin Bartholomew          depth TE2, slot prior (26 players, 150 team g)   season-line PPR   67  (3.9/g)
+  NE  Behren Morton              depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  NO  Zach Wilson                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  NO  CJ Donaldson               depth RB3, own 6 g 2024-26                       season-line PPR   37  (2.2/g)
+  NYG Jake Haener                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  NYG Charlie Jones              depth WR4, own 5 g 2024-26                       season-line PPR   34  (2.0/g)
+  NYJ Tim Patrick                depth WR4, own 15 g 2024-26                      season-line PPR  102  (6.0/g)
+  PHI Cole Payton                depth QB2, slot prior (32 players, 135 team g)   season-line PPR    2  (0.1/g)
+  PHI Joe Milton                 depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  PHI Dameon Pierce              depth RB2, own 14 g 2024-26                      season-line PPR   79  (4.6/g)
+  PHI Carson Steele              depth RB3, slot prior (27 players, 127 team g)   season-line PPR   24  (1.4/g)
+  PIT Mason Rudolph              depth QB2, slot prior (32 players, 135 team g)   season-line PPR    2  (0.1/g)
+  PIT Will Howard                depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
   PIT Travis Homer               depth RB3, own 8 g 2024-26                       season-line PPR   16  (0.9/g)
-  SEA Jalen Milroe               depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  SEA Robert Henry Jr.           depth RB3, slot prior (25 players, 103 team g)   season-line PPR   23  (1.4/g)
-  SF  Kurtis Rourke              depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  SF  Brandin Cooks              depth WR3, own 25 g 2024-26                      season-line PPR   88  (5.2/g)
-  TEN Julius Chestnut            depth RB3, slot prior (25 players, 103 team g)   season-line PPR   23  (1.4/g)
-  WAS Athan Kaliakmanis          depth QB3, slot prior (5 players, 15 team g)     season-line PPR    0  (0.0/g)
-  WAS Austin Ekeler              depth RB3, own 16 g 2024-26                      season-line PPR  162  (9.5/g)
+  SEA Jalen Milroe               depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  SEA Velus Jones Jr.            depth RB3, own 4 g 2024-26                       season-line PPR   38  (2.2/g)
+  SF  Kurtis Rourke              depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  SF  Brandin Cooks              depth WR3, own 26 g 2024-26                      season-line PPR   86  (5.1/g)
+  TEN Julius Chestnut            depth RB3, slot prior (27 players, 127 team g)   season-line PPR   24  (1.4/g)
+  WAS Athan Kaliakmanis          depth QB3, slot prior (5 players, 17 team g)     season-line PPR    0  (0.0/g)
+  WAS Austin Ekeler              depth RB2, own 17 g 2024-26                      season-line PPR  156  (9.2/g)
+  WAS Jeremy McNichols           depth RB3, own 31 g 2024-26                      season-line PPR   74  (4.4/g)
   NYJ Jason Sanders              depth K1, team Vegas kicker line
 skipped (no history): 0: 
 wrote data/sim_depth_pool.js
-stat shapes: 610 players ({'TE': 108, 'WR': 253, 'RB': 160, 'QB': 89}); engine uses positions ['QB']
-  josh allen       g26 5 lvl  25.8/g  per half-pt: py 9.406 ptd 0.063 ry 1.434 rtd 0.038
+stat shapes: 613 players ({'TE': 109, 'WR': 255, 'RB': 160, 'QB': 89}); engine uses positions ['QB']
+  josh allen       g26 6 lvl  25.4/g  per half-pt: py 9.546 ptd 0.064 ry 1.391 rtd 0.037
   lamar jackson    g26 4 lvl  21.2/g  per half-pt: py 10.596 ptd 0.083 ry 1.806 rtd 0.010
   jalen hurts      g26 5 lvl  20.4/g  per half-pt: py 9.942 ptd 0.072 ry 1.460 rtd 0.028
   jared goff       g26 5 lvl  20.1/g  per half-pt: py 13.673 ptd 0.103 ry 0.175 rtd 0.004
-  cam ward         g26 5 lvl  12.8/g  per half-pt: py 14.488 ptd 0.064 ry 0.778 rtd 0.014
+  cam ward         g26 6 lvl  12.6/g  per half-pt: py 14.401 ptd 0.066 ry 0.779 rtd 0.014
 wrote data/sim_stat_shape.js
-wrapped sleeper_players.js  (634 players, exported 2026-10-14 11:16:36)
-wrapped sim_snaps.js  (413 players with 2026 snaps, 378 with a 2025 late snap share)
-wrapped sim_2026.js  (512 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
-defense availability: 32 teams, 421 regular defenders, 75 with a status
-OL availability: 32 teams (7 with a starter out: ARI 1, BAL 1, JAX 1, LAC 1, MIN 2, NE 1, TEN 1); unmatched linemen assumed available: LV Delmar Glaze, BAL Olaivavega Ioane
+wrapped sleeper_players.js  (634 players, exported 2026-10-20 10:03:59)
+wrapped sim_snaps.js  (422 players with 2026 snaps, 378 with a 2025 late snap share)
+wrapped sim_2026.js  (515 players with 2026 games, 32 defenses; FPA fpa_2026.js (complete league))
+defense availability: 32 teams, 412 regular defenders, 98 with a status
+OL availability: 32 teams (8 with a starter out: ARI 1, BAL 1, CAR 1, JAX 1, LAC 2, MIN 2, NYG 1, PHI 2); unmatched linemen assumed available: LV Delmar Glaze, BAL Olaivavega Ioane
 wrapped sleeper_meta.js  (626 players, 130 true rookies, 6 elite CBs)
-wrapped sim_weather.js  (19 outdoor kickoffs in forecast window Â· site weather_2026.json (2026-10-14T14:04))
-own team totals: current week 6, 107 in-season lines observed, 79 results, 165 future games built from our ratings, 14 fresh book lines kept, quarterback context ON -> sim_future_totals.js
-wrapped sim_actuals_2026.js  (wk 1: 32 teams final / 330 stat lines, wk 2: 32 teams final / 346 stat lines, wk 3: 32 teams final / 338 stat lines, wk 4: 32 teams final / 330 stat lines, wk 5: 30 teams final / 305 stat lines)
-wrapped sim_injury_signals.js  (week 6: 162 diagnoses, 5 on the practice report, news: 29 timelines / 0 ruled out / 0 play-or-doubt flags, 0 lines-log rows, 53 pre-injury chart spots)
-cache-busted index.html scripts (?v=1791991642)
-stamped 2026-10-14 11:27
-wrote E:\MyFantasyFootball\sim_lab\data\sim_context.js - 158 team-weeks, 39 with 6+ garbage plays
-wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js â€” 329 players with 2026 route data (329 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 108 RBs + 282 WR/TEs + 51 QBs with TD-luck data, 38 kickers with FG-luck data, 32 DSTs, 445 players with xFP components
-wrote E:\MyFantasyFootball\sim_lab\data\zones_2026.js - 32 defenses, 382 receivers with 2026 targets, 249 with 2025 priors
-wrote E:\MyFantasyFootball\sim_lab\data\scheme_2026.js - 2026 weeks [1, 2, 3, 4, 5], 32 defenses, 380 receivers, 213 rushers, 61 QBs; prior 2025 (32 D, coach-aware: same 17, coach 5, new-no-history 10, team (no coach data) 0); W-vs-prior r: man 0.54, blitz 0.7, prs 0.37, prwr 0.32, sBox 0.47, dbRush 0.7, mtRate 0.47, slotYd -0.12, screenTg 0.23, grCov 0.29, grRun 0.2, grPrsh 0.18, run.ypc 0.25, run.yco 0.09, run.gap 0.14, run.edge 0.3, run.exp 0.17, run.mtf 0.22; same-DC (17) vs new-DC (15) r: man 0.41/0.58, blitz 0.87/0.16, dbRush 0.82/0.23, sBox 0.74/-0.22
-pace vol injected for 32 teams (32 with box): ARI att 42.0 exc 3.19 box 6.234, ATL att 29.2 exc 0.28 box 6.544, BAL att 29.4 exc -1.87 box 6.431, BUF att 30.2 exc -1.8 box 6.59, CAR att 43.0 exc 0.32 box 6.275 ...
-wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js â€” 32 teams, 32 with 2026 data
-wrote E:\MyFantasyFootball\sim_lab\notes\notes_w6_half.txt (246473 chars, 14 games) + notes_latest.txt
+wrapped sim_weather.js  (8 outdoor kickoffs in forecast window · site weather_2026.json (2026-10-20T14:03))
+own team totals: current week 7, 107 in-season lines observed, 93 results, 165 future games built from our ratings, 0 fresh book lines kept, quarterback context ON -> sim_future_totals.js
+wrapped sim_actuals_2026.js  (wk 1: 32 teams final / 330 stat lines, wk 2: 32 teams final / 346 stat lines, wk 3: 32 teams final / 338 stat lines, wk 4: 32 teams final / 330 stat lines, wk 5: 30 teams final / 305 stat lines, wk 6: 28 teams final / 288 stat lines)
+wrapped sim_injury_signals.js  (week 7: 196 diagnoses, 0 on the practice report, news: 27 timelines / 0 ruled out / 0 play-or-doubt flags, 0 lines-log rows, 83 pre-injury chart spots)
+cache-busted index.html scripts (?v=1792505044)
+stamped 2026-10-20 10:04
+wrote E:\MyFantasyFootball\sim_lab\data\sim_context.js - 186 team-weeks, 42 with 6+ garbage plays
+wrote E:\MyFantasyFootball\sim_lab\data\sim_routes.js — 336 players with 2026 route data (336 from repo route_pct.js / PFF weekly), 32 defenses with pressure data, 114 RBs + 292 WR/TEs + 53 QBs with TD-luck data, 39 kickers with FG-luck data, 32 DSTs, 462 players with xFP components
+wrote E:\MyFantasyFootball\sim_lab\data\zones_2026.js - 32 defenses, 398 receivers with 2026 targets, 249 with 2025 priors
+wrote E:\MyFantasyFootball\sim_lab\data\scheme_2026.js - 2026 weeks [1, 2, 3, 4, 5, 6], 32 defenses, 394 receivers, 227 rushers, 64 QBs; prior 2025 (32 D, coach-aware: same 17, coach 5, new-no-history 10, team (no coach data) 0); W-vs-prior r: man 0.51, blitz 0.69, prs 0.34, prwr 0.29, sBox 0.5, dbRush 0.64, mtRate 0.42, slotYd -0.05, screenTg 0.18, grCov 0.28, grRun 0.23, grPrsh 0.19, run.ypc 0.26, run.yco 0.07, run.gap 0.13, run.edge 0.37, run.exp 0.15, run.mtf 0.16; same-DC (17) vs new-DC (15) r: man 0.39/0.52, blitz 0.86/0.13, dbRush 0.76/0.12, sBox 0.74/-0.15
+pace vol injected for 32 teams (32 with box): ARI att 40.83 exc 3.08 box 6.291, ATL att 31.0 exc 2.6 box 6.546, BAL att 30.17 exc -0.67 box 6.438, BUF att 31.0 exc -1.68 box 6.5, CAR att 42.8 exc -0.49 box 6.29 ...
+wrote E:\MyFantasyFootball\sim_lab\data\pace_2026.js — 32 teams, 32 with 2026 data
+browser: installed Edge (fallback; first choice failed - see notes/export_notes_launch.log)
+wrote E:\MyFantasyFootball\sim_lab\notes\notes_w7_half.txt (254770 chars, 14 games) + notes_latest.txt | page errors: console: Failed to load resource: the server responded with a status of 404 (Not Found)
 
-=== Deploying to 'jackb933-website'...
+[1m[37m===[39m Deploying to 'jackb933-website'...[22m
 
-i  deploying hosting
-i  hosting[jb-simlab-2026]: beginning deploy...
-i  hosting[jb-simlab-2026]: found 1404 files in sim_lab
-i  hosting: uploading new files [13/14] (92%)
-i  hosting: upload complete
-+  hosting[jb-simlab-2026]: file upload complete
-i  hosting[jb-simlab-2026]: finalizing version...
-+  hosting[jb-simlab-2026]: version finalized
-i  hosting[jb-simlab-2026]: releasing new version...
-+  hosting[jb-simlab-2026]: release complete
+[36m[1mi [22m[39m deploying [1mhosting[22m
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m beginning deploy...
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m found 1443 files in [1msim_lab[22m
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m file upload complete
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m finalizing version...
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m version finalized
+[36m[1mi  hosting[jb-simlab-2026]:[22m[39m releasing new version...
+[32m[1m+  hosting[jb-simlab-2026]:[22m[39m release complete
 
-+  Deploy complete!
+[32m[1m+ [22m[39m [1m[4mDeploy complete![24m[22m
 
-Project Console: https://console.firebase.google.com/project/jackb933-website/overview
-Hosting URL: https://jb-simlab-2026.web.app
-===== done Wed 10/14/2026 11:28:00.39 ===== 
+[1mProject Console:[22m https://console.firebase.google.com/project/jackb933-website/overview
+[1mHosting URL:[22m https://jb-simlab-2026.web.app
+===== done Tue 10/20/2026 10:05:11.42 ===== 

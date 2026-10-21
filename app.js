@@ -21154,6 +21154,9 @@ function _renderCardPinStrip(d, ctxMode) {
   // and touch alike — HTML5 drag-and-drop never fires on touch). A drag past
   // the 6px threshold live-moves the chip in the DOM; on release the DOM order
   // becomes the new _cardPins order (which is also the ← → cycle order).
+  // Move / up listen on window (2026-10-21, Jack: "drag to reorder doesn't work
+  // easily"): re-inserting the chip drops its pointer capture, so chip-level
+  // listeners went deaf after the first swap and the release never saved.
   let _dragEl = null, _dragX = 0, _dragY = 0, _didDrag = false;
   strip.querySelectorAll('.card-pin-chip').forEach(chip => {
     chip.addEventListener('click', e => {
@@ -21165,14 +21168,7 @@ function _renderCardPinStrip(d, ctxMode) {
       if (pd) openPlayerCard(pd, ctxMode);
     });
     chip.style.touchAction = 'none';
-    chip.addEventListener('pointerdown', e => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      if (e.target.closest('.card-pin-x')) return;
-      if (strip.querySelectorAll('.card-pin-chip').length < 2) return;
-      _dragEl = chip; _dragX = e.clientX; _dragY = e.clientY; _didDrag = false;
-      try { chip.setPointerCapture(e.pointerId); } catch (_e) {}
-    });
-    chip.addEventListener('pointermove', e => {
+    const _dragMove = e => {
       if (_dragEl !== chip) return;
       if (!_didDrag) {
         if (Math.abs(e.clientX - _dragX) + Math.abs(e.clientY - _dragY) < 6) return;
@@ -21191,10 +21187,16 @@ function _renderCardPinStrip(d, ctxMode) {
       }
       if (!best) return;
       const b = best.getBoundingClientRect();
-      if (e.clientX < b.left + b.width / 2) strip.insertBefore(chip, best);
-      else strip.insertBefore(chip, best.nextSibling);
-    });
+      const before = e.clientX < b.left + b.width / 2;
+      // Skip no-op moves — each insert re-lays out the strip
+      if (before ? chip.nextElementSibling !== best : best.nextElementSibling !== chip) {
+        strip.insertBefore(chip, before ? best : best.nextSibling);
+      }
+    };
     const _dragFinish = () => {
+      window.removeEventListener('pointermove', _dragMove);
+      window.removeEventListener('pointerup', _dragFinish);
+      window.removeEventListener('pointercancel', _dragFinish);
       if (_dragEl !== chip) return;
       chip.classList.remove('dragging');
       _dragEl = null;
@@ -21206,8 +21208,16 @@ function _renderCardPinStrip(d, ctxMode) {
         _renderCardPinStrip(d, ctxMode);
       }
     };
-    chip.addEventListener('pointerup', _dragFinish);
-    chip.addEventListener('pointercancel', _dragFinish);
+    chip.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('.card-pin-x')) return;
+      if (strip.querySelectorAll('.card-pin-chip').length < 2) return;
+      e.preventDefault();   // no text selection while dragging
+      _dragEl = chip; _dragX = e.clientX; _dragY = e.clientY; _didDrag = false;
+      window.addEventListener('pointermove', _dragMove);
+      window.addEventListener('pointerup', _dragFinish);
+      window.addEventListener('pointercancel', _dragFinish);
+    });
   });
   strip.querySelectorAll('.card-pin-x').forEach(btn => {
     btn.addEventListener('click', e => {

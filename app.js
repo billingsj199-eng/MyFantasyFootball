@@ -14476,14 +14476,16 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     .map(sel => page.querySelector(sel))
     .filter(Boolean);
   if (!rows.length) return;
+  // Writes only on change — the scroll re-check below calls this every frame.
+  const _set = (k, v) => { if (page.style.getPropertyValue(k) !== v) page.style.setProperty(k, v); };
   const sync = () => {
     let offset = 0;
     rows.forEach((el, i) => {
-      page.style.setProperty('--rnk-sticky-' + (i + 1), offset + 'px');
+      _set('--rnk-sticky-' + (i + 1), offset + 'px');
       if (getComputedStyle(el).position !== 'sticky') return;
       offset += Math.round(el.getBoundingClientRect().height);
     });
-    page.style.setProperty('--rnk-sticky-top', offset + 'px');
+    _set('--rnk-sticky-top', offset + 'px');
   };
   sync();
   // The view-options collapse (2026-08-27) hides .rnk-scoring-row by toggling
@@ -14506,6 +14508,15 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   // with the table and the rows showed through the gap on the right. Counter-shift
   // everything above the table by scrollLeft. Cleared at 0 so the transform never
   // re-parents fixed popovers (TEAMS sheet on phones) in the normal case.
+  // Scroll re-check (2026-10-20, Jack): the observer still missed some reflows on a
+  // laptop (stats line wrapping / un-wrapping, board switches) and thead docked ~12px
+  // below the stack with rows showing through the gap. Re-measure once per frame
+  // while scrolling — the only time a stale offset is visible.
+  let _syncRaf = 0;
+  page.addEventListener('scroll', () => {
+    if (_syncRaf) return;
+    _syncRaf = requestAnimationFrame(() => { _syncRaf = 0; sync(); });
+  }, { passive: true });
   let _xLast = 0;
   page.addEventListener('scroll', () => {
     const x = page.scrollLeft;

@@ -100,6 +100,7 @@ window.IN_SEASON_OUT_OVERRIDES = {
   'Tank Dell': [3, 5, '2026-10-05', 7],   // 2026-10-05 recheck: knee, IR-DTR, window opens Wed 10/7 (Ryans 10/5); unlikely W5, W6-W7
   'Chris Brazzell II': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: torn LCL, July surgery, season over (ESPN)
   'David Njoku': [3, 6, '2026-10-05', 9],   // 2026-10-05 recheck: fibula, IR ~9/21; eligible W7, no timeline beyond the minimum (low)
+  'Mike Evans': [6, 6, '2026-10-20', 9],   // 2026-10-20 (Jack: "he doesnt have a torn achille"): aggravated Achilles MNF W6 (played 2 qtrs, 3-94), NOT a tear - ESPN: "could put him in danger of missing his first game". Sleeper's "Achilles, Out" tripped dx-season (out thru W18). Landing form: W7 = partial play odds (NFL report Out -> 0), W8 SF bye, ~90% by W9.
 };
 
 // ELITE_CBS_2026: the shadow-corner list (backtest_cb_shadow.py — an elite

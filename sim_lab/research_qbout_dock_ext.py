@@ -22,9 +22,10 @@ from collections import defaultdict
 import numpy as np, pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__)); PBP = r"E:/MyFantasyFootball/pbp_cache"
 CACHE = os.path.join(HERE, "_tmp", "qbx_cache"); os.makedirs(CACHE, exist_ok=True)
-LOG = open(os.path.join(HERE, "qbout_dock_ext.log"), "w", encoding="utf-8")
+LOG = open(os.path.join(HERE, "qbout_dock_ext.log" if int(os.environ.get("QBX_Y0", "2016")) >= 2016 else f"qbout_dock_ext_{os.environ.get('QBX_Y0')}.log"), "w", encoding="utf-8")
 def P(s=""): print(s); LOG.write(s + "\n"); LOG.flush()
-YRS_ALL = list(range(2016, 2026)); YEARS = list(range(2017, 2026)); FWD = (2022, 2023, 2024, 2025)
+Y0 = int(os.environ.get("QBX_Y0", "2016"))   # 2026-10-20: QBX_Y0=2012 -> priors from 2012, graded 2013-25, forward 2016-25
+YRS_ALL = list(range(Y0, 2026)); YEARS = list(range(Y0 + 1, 2026)); FWD = (2022, 2023, 2024, 2025) if Y0 >= 2016 else tuple(range(2016, 2026))
 COLS = ["game_id", "season", "week", "season_type", "posteam", "home_team", "away_team", "spread_line", "total_line", "passer_player_id", "passer_player_name",
         "receiver_player_id", "receiver_player_name", "rusher_player_id", "pass_attempt", "sack", "complete_pass", "receiving_yards", "rushing_yards", "pass_touchdown",
         "rush_touchdown", "air_yards", "yardline_100", "cp", "xyac_mean_yardage", "fumble_lost", "fumbled_1_player_id", "two_point_attempt", "epa", "qb_dropback", "play_type"]
@@ -86,7 +87,7 @@ def main():
         return e / db if db >= 100 else -0.10
     # injury reports (2019+)
     inj = set()
-    for y in range(2019, 2026):
+    for y in range(max(2012, Y0), 2026):
         fp = os.path.join(PBP, f"injuries_{y}.parquet")
         if os.path.exists(fp):
             ii = pd.read_parquet(fp)
@@ -137,7 +138,7 @@ def main():
                 k_b = sum(1 for b in range(a) if out.get((tms[b], wks[b]), False))
                 stq = starters.get((tm, w), (None, None))[0]
                 injc = None
-                if o and y >= 2019:
+                if o and y >= 2012:
                     injc = ((rq, y, w) in inj) or not ever_start_after(tm, rq, w)
                 rows.append(dict(year=y, wk=w, pid=pid, name=grp.pname.values[a], tm=tm, g=a, act=pts[a], tgt=tgt[a], ttg=ttg[a], xfp=xf[a],
                                  ppg=float(pts[:a].mean()) if a else np.nan, xpg=float(xf[:a].mean()) if a else np.nan,
@@ -145,7 +146,7 @@ def main():
                                  out=o, kb=k_b, reg=rq, stq=stq, injc=injc, dq=(qb_quality(rq, y) - qb_quality(stq, y)) if (o and rq and stq) else np.nan))
     R = pd.DataFrame(rows)
     tw = R.drop_duplicates(["year", "tm", "wk"])[["year", "tm", "wk", "out", "reg", "stq", "dq", "injc"]].copy(); tw["tm"] = tw.tm.replace({"LA": "LAR"})
-    pd.to_pickle(tw, os.path.join(CACHE, "teamweek.pkl"))
+    pd.to_pickle(tw, os.path.join(CACHE, "teamweek.pkl" if Y0 >= 2016 else f"teamweek_{Y0}.pkl"))
     P(f"WR player-weeks {len(R):,}; QB-out weeks {int(R.out.sum()):,} ({R[R.out].groupby(['year', 'tm', 'wk']).ngroups} team-weeks)")
     # ---------- base rate ----------
     g = R.g.values.astype(float); lam = np.maximum(0.25, 1 - 0.08 * np.maximum(g - 1, 0))
@@ -215,6 +216,10 @@ def main():
         tab("QB out, all WRs", m0, tt, pr, okm)
         tab("QB out, 2019+ injury-confirmed", m0 & (R.injc.values == True), tt, pr, okm)
         tab("QB out, 2017-18 only", m0 & (year <= 2018), tt, pr, okm)
+        for e0, e1 in ((2013, 2015), (2016, 2018), (2013, 2018), (2016, 2025), (2019, 2025)):
+            em = (year >= e0) & (year <= e1)
+            tab(f"QB out, all WRs, {e0}-{e1}", m0 & em, tt, pr, okm); tab(f"QB out, prior rank 1-25, {e0}-{e1}", m0 & star_prior & em, tt, pr, okm)
+            tab(f"QB out, tsh 22%+, {e0}-{e1}", m0 & (tsh >= 0.22) & em, tt, pr, okm); tab(f"QB out, prior top 25, 2+ backup games, {e0}-{e1}", m0 & star_prior & (kb >= 2) & em, tt, pr, okm)
         tab("QB out, prior rank 1-25, 2019+", m0 & star_prior & (year >= 2019), tt, pr, okm)
         tab("QB out, prior rank 1-25, 2019+ injury-confirmed", m0 & star_prior & (R.injc.values == True), tt, pr, okm)
         tab("QB out, prior rank 1-25, 2017-18", m0 & star_prior & (year <= 2018), tt, pr, okm)

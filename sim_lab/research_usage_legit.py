@@ -23,16 +23,26 @@ import numpy as np, pandas as pd
 from scipy.stats import rankdata
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import backtest_shadow_next as SN
-YEARS = list(range(2019, 2026)); FWD = (2022, 2023, 2024, 2025); POS4 = ("QB", "RB", "WR", "TE")
+import bt_ext as BX   # 2026-10-20: SIM_BT_YEARS aware (2012 = warm-up, graded 2013+)
+ALLY = list(BX.YEARS); TRAINY = [y for y in ALLY if y >= 2013] if BX.EXT else ALLY
+# era-drift options (Jack 10-20 "adp has gotten sharper"): GRADE_FROM = first graded season; RECENCY = weight per season back in the picks
+GRADE_FROM = int(os.environ.get("GRADE_FROM", "0")); RECENCY = float(os.environ.get("RECENCY", "1"))
+YEARS = [y for y in TRAINY if y >= GRADE_FROM]; FWD = tuple(y for y in BX.FWD if y in YEARS) if BX.EXT else (2022, 2023, 2024, 2025)
+RW = {y: RECENCY ** (max(TRAINY) - y) for y in TRAINY}
+SUFFIX = ("_dump0" if os.environ.get("DUMP0") else "") + ("_skip3" if os.environ.get("SKIP3") else "") + (f"_from{GRADE_FROM}" if GRADE_FROM else "") + (f"_rec{RECENCY}" if RECENCY != 1 else "")
+NY, NF = len(YEARS), len(FWD); NEED7, NEED4 = int(np.ceil(0.70 * NY)), int(np.ceil(0.75 * NF))   # ship bar 5/7 + 3/4 scaled
+ERAS = [("2013-18", range(2013, 2019)), ("2019-25", range(2019, 2026)), ("ADP PPR/std 2013-17", range(2013, 2018)), ("ADP half 2018-25", range(2018, 2026))] if BX.EXT else []
+POS4 = ("QB", "RB", "WR", "TE")
 MINF = int(os.environ.get("ROS_MINF", "4"))
 ABSENT_ROSTER = {"RES", "CUT", "DEV", "RET", "EXE", "PUP", "NFI", "SUS", "TRC", "TRD", "TRT"}
 CGRID = (2, 4, 6, 8, 12, 16, 999)
 
 
 def main():
-    log = open(os.path.join(HERE, "usage_legit.log" if MINF != 1 else "usage_legit_minf1.log"), "w", encoding="utf-8")
+    log = open(BX.ext_path(("usage_legit" if MINF != 1 else "usage_legit_minf1") + SUFFIX + ".log"), "w", encoding="utf-8")
     def P(s=""): print(s, flush=True); log.write(s + "\n"); log.flush()
-    X = pickle.load(open(os.path.join(HERE, "_tmp", "X_cache.pkl"), "rb"))
+    X = pickle.load(open(BX.ext_path("X_cache.pkl") if BX.EXT else os.path.join(HERE, "_tmp", "X_cache.pkl"), "rb"))
+    P(f"harness: {BX.describe()} | graded seasons {YEARS[0]}-{YEARS[-1]} ({NY}), forward folds {FWD[0]}-{FWD[-1]} ({NF}); bar LOYO {NEED7}/{NY}, fwd {NEED4}/{NF}")
     n = X["n"]; F = X["F"]; A = X["A"]
     act, year, wk, pos, g, name, adp, layers, team = X["act"], X["year"], X["wk"], X["pos"], X["g"], X["name"], X["adp"], X["layers"], X["team"]
     pid = A["pid"]; finw = np.where(year <= 2020, 17, 18)
@@ -45,7 +55,7 @@ def main():
         for a, i in enumerate(ix):
             if len(ix) - a >= MINF: T[i] = a_[a:].mean(); ctx[i] = l_[a:].mean()
     lay = np.clip(layers, 0.5, 1.8)
-    C = pd.read_parquet(os.path.join(HERE, "ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
+    C = pd.read_parquet(BX.ext_path("ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
     idx = np.array([ck.get((int(year[i]), pid[i], int(wk[i])), -1) if pid[i] else -1 for i in range(n)]); has = idx >= 0
     colv = lambda c: np.where(has, C[c].values[np.maximum(idx, 0)], np.nan).astype(float)
     bl = np.where(pos == "WR", np.maximum(.25, 1 - .08 * np.maximum(g - 1, 0)), np.where(pos == "RB", np.maximum(.25, 1 - .3 * np.maximum(g - 1, 0)), 0.0))
@@ -100,7 +110,8 @@ def main():
     def nxt(prior, off=()):
         Pw, ev, mu = parts(prior, tuple(set(LATER) | set(off))); return blend(Pw, ev, prior) * mu * lay
     WPRIOR = X["prior"]; FULL = ros(WPRIOR); FULLN = nxt(WPRIOR)
-    ok = base_ok & (FULL >= 3); okN = (g >= 1) & (g <= 11) & (wk != finw) & (FULLN >= 3)
+    ok = base_ok & (FULL >= 3) & np.isin(year, TRAINY); okN = (g >= 1) & (g <= 11) & (wk != finw) & (FULLN >= 3) & np.isin(year, TRAINY)
+    GRD = np.isin(year, YEARS)   # graded seasons (all of TRAINY unless GRADE_FROM)
     # ---- priors: market blend weight scaled by k (array), ridge with / without ADP ----
     yr2a = A["exp"] == 1; fb = F["fb_pos"]; ac = F["adp_curve"]; mk = F["mkt_ok"]; late_ = F["late"]
     mdock = np.ones(n)
@@ -119,7 +130,7 @@ def main():
     P(f"  check: prior_k(1) == wired on {100*np.mean(np.isclose(prior_k(1.0), WPRIOR, equal_nan=True)):.1f}% of rows; prior_k(0)+noAdp ridge == variant B prior on {100*np.mean(np.isclose(prior_k(0.0,'no'), mix(X['r_no'], np.where(mk, fb + 0.8*(hm - fb), F['prior'])), equal_nan=True)):.1f}%")
 
     # ---------------- per-game data + cleaning ----------------
-    RG = pickle.load(open(os.path.join(HERE, "_tmp", "role_games.pkl"), "rb"))
+    RG = pickle.load(open(BX.ext_path("role_games.pkl") if BX.EXT else os.path.join(HERE, "_tmp", "role_games.pkl"), "rb"))
     pg = RG["pg"].rename(columns={"year_x": "year"}); tg = RG["tg"]; INJ, ROS_, HAVE = RG["inj"], RG["ros"], RG["ros_have"]
     PGD = {(int(r.year), r.pid, int(r.wk)): r for r in pg.itertuples(index=False)}
     TGD = {(int(r.year), r.team, int(r.wk)): r for r in tg.itertuples(index=False)}
@@ -129,7 +140,9 @@ def main():
     games_of = defaultdict(list); clay_of = {}; room = defaultdict(set)
     for i in range(n):
         k = (int(year[i]), pid[i]); games_of[k].append(int(wk[i]))
-        if k not in clay_of: clay_of[k] = float(A["clay"][i]) if not np.isnan(A["clay"][i]) else 0.0
+        if k not in clay_of:   # regular-teammate level: Clay half PPG (default) / preseason prior (EXT: Clay-free pool, Clay is NaN)
+            lv_ = X["prior"][i] if BX.EXT else A["clay"][i]
+            clay_of[k] = float(lv_) if not np.isnan(lv_) else 0.0
         room[(int(year[i]), team[i], pos[i])].add(pid[i])
     for k in games_of: games_of[k] = sorted(set(games_of[k]))
     gset = {k: set(v) for k, v in games_of.items()}
@@ -142,14 +155,17 @@ def main():
     def snap_raw(r, q):
         if r is None: return np.nan
         sp = r.snap_pct
-        if isinstance(sp, float) and np.isnan(sp): sp = 100.0 * r.on / q.ppl if (q is not None and q.ppl) else np.nan
+        if pd.isna(sp): sp = 100.0 * r.on / q.ppl if (q is not None and not pd.isna(q.ppl) and q.ppl and not pd.isna(r.on)) else np.nan
         return sp
     def game_vals(Y_, P_, w_, t_):
         """clean (competitive-play) per-game role values"""
         r = PGD.get((Y_, P_, w_)); q = TGD.get((Y_, t_, w_))
         if r is None or q is None: return None
         d = lambda a, b: a / b if b > 0 else np.nan
-        return {"tgt_sh": d(r.tg_c, q.tg_c), "car_sh": d(r.car_c, q.car_c), "snap": 100 * d(r.on_c, q.ppl_c), "route": d(r.ondb_c, q.pdb_c),
+        snc = 100 * d(r.on_c, q.ppl_c) if not (pd.isna(r.on_c) or pd.isna(q.ppl_c)) else np.nan
+        if np.isnan(snc): snc = snap_raw(r, q)   # pre-2016: no participation -> raw snap share (2013+), else missing
+        rt = d(r.ondb_c, q.pdb_c) if not (pd.isna(r.ondb_c) or pd.isna(q.pdb_c)) else np.nan
+        return {"tgt_sh": d(r.tg_c, q.tg_c), "car_sh": d(r.car_c, q.car_c), "snap": snc, "route": rt,
                 "xfp": r.xfp, "db_sh": d(r.db_c, q.db_c)}
     SHARE = {"QB": "db_sh", "RB": "car_sh", "WR": "tgt_sh", "TE": "tgt_sh"}
     def exit_ramp(Y_, P_, gl, W_lim):
@@ -267,6 +283,7 @@ def main():
         rh = [np.corrcoef(rankdata(tgt[ix]), rankdata(q[ix]))[0, 1] for ix in (np.array(v) for v in grp.values()) if len(ix) >= 8]
         return float(np.mean(rh)) if rh else np.nan
     def gr(Q, B_, m, tgt):
+        m = m & GRD
         if m.sum() < 30: return None
         e = lambda q, mm: float(np.mean((q[mm] - tgt[mm]) ** 2))
         s7 = sum(1 for y in YEARS if (m & (year == y)).sum() >= 8 and e(Q, m & (year == y)) < e(B_, m & (year == y)) - 1e-12)
@@ -276,21 +293,46 @@ def main():
         return dict(n=int(m.sum()), err=100 * (e(Q, m) / e(B_, m) - 1), fe=100 * (e(Q, mf) / e(B_, mf) - 1) if mf.sum() > 20 else np.nan,
                     mae=100 * (np.mean(np.abs(Q[m] - tgt[m])) / np.mean(np.abs(B_[m] - tgt[m])) - 1), w=100 * (w_(Q, mt) / w_(B_, mt) - 1) if mt.sum() > 20 else np.nan,
                     rk=rho(Q, mt, tgt) - rho(B_, mt, tgt), s7=s7, s4=s4)
-    def passes(r): return r is not None and r["err"] < -0.3 and r["s7"] >= 5 and r["fe"] < 0 and r["s4"] >= 3 and r["w"] <= 0.1
-    fmt = lambda r: "n/a" if r is None else f"n {r['n']:5d} err {r['err']:+6.2f}% ({r['s7']}/7) fwd {r['fe']:+6.2f}% ({r['s4']}/4) MAE {r['mae']:+6.2f}% top150-w {r['w']:+6.2f}% rank {r['rk']:+.4f}{'  PASS' if passes(r) else ''}"
+    def passes(r): return r is not None and r["err"] < -0.3 and r["s7"] >= NEED7 and r["fe"] < 0 and r["s4"] >= NEED4 and r["w"] <= 0.1
+    def era(Q, B_, m, tgt):
+        if not ERAS: return ""
+        e = lambda q, mm: float(np.mean((q[mm] - tgt[mm]) ** 2))
+        return "  | eras " + " ".join(f"{lab} {100*(e(Q, m & np.isin(year, list(yy)))/e(B_, m & np.isin(year, list(yy)))-1):+.2f}%" for lab, yy in ERAS if (m & np.isin(year, list(yy))).sum() > 30)
+    fmt = lambda r: "n/a" if r is None else f"n {r['n']:5d} err {r['err']:+6.2f}% ({r['s7']}/{NY}) fwd {r['fe']:+6.2f}% ({r['s4']}/{NF}) MAE {r['mae']:+6.2f}% top150-w {r['w']:+6.2f}% rank {r['rk']:+.4f}{'  PASS' if passes(r) else ''}"
 
     # ---------------- 3 flagged rows ----------------
     PB = prior_k(0.0, "no"); PH = prior_k(0.5)
     VAR = [("B  no market blend + noAdp ridge", PB, ()), ("E  no ADP anywhere", PB, BANDW + GATES), ("H  market blend weight x.5", PH, ())]
+    P("\n--- 0  NO-ADP VARIANTS ON EVERY ROW, by games played and by week (vs wired; negative = better than wired) ---")
+    for vlab, pr_, off_ in VAR:
+        Q = ros(pr_, off_); QN = nxt(pr_, off_); P(f"\n  {vlab}")
+        P("    ROS  all       " + fmt(gr(Q, FULL, ok, T)) + era(Q, FULL, ok, T))
+        for p_ in POS4: P(f"    ROS  {p_:9s} " + fmt(gr(Q, FULL, ok & (pos == p_), T)) + era(Q, FULL, ok & (pos == p_), T))
+        P("    NEXT all       " + fmt(gr(QN, FULLN, okN, act)) + era(QN, FULLN, okN, act))
+        for lo, hi in ((1, 1), (2, 3), (4, 5), (6, 7), (8, 11)):
+            m = (g >= lo) & (g <= hi)
+            P(f"    games {lo}-{hi:<2d}  ROS " + fmt(gr(Q, FULL, ok & m, T)) + " || NEXT " + fmt(gr(QN, FULLN, okN & m, act)))
+            P("                 ROS by pos " + " ".join(f"{p_} {r_['err']:+.2f}% ({r_['s7']}/{NY})" for p_ in POS4 for r_ in [gr(Q, FULL, ok & m & (pos == p_), T)] if r_))
+        for w_ in range(2, 13):
+            m = wk == w_; r = gr(Q, FULL, ok & m, T); rn = gr(QN, FULLN, okN & m, act)
+            if r is None or rn is None: continue
+            P(f"    week {w_:2d}: ROS err {r['err']:+6.2f}% ({r['s7']}/{NY}) top150-w {r['w']:+6.2f}% | NEXT {rn['err']:+6.2f}% ({rn['s7']}/{NY}) | ROS by pos " +
+              " ".join(f"{p_} {rr['err']:+.1f}" for p_ in POS4 for rr in [gr(Q, FULL, ok & m & (pos == p_), T)] if rr) + era(Q, FULL, ok & m, T))
+    if os.environ.get("DUMP0"):
+        pickle.dump(dict(FULL=FULL, FULLN=FULLN, QB=ros(PB), QBN=nxt(PB), QH=ros(PH), QE=ros(PB, BANDW + GATES), ok=ok, okN=okN, T=T, act=act, year=year, pos=pos, wk=wk, g=g, adp=adp, wt=wt,
+                         name=name, pid=pid, PRB=PB, WPRIOR=WPRIOR, ladp=X["T_ladp"], ctx=ctx), open(BX.ext_path("adp_variants_dump.pkl"), "wb"))
+        P("dumped adp_variants_dump"); return
+    if os.environ.get("SKIP3"): FLAGS_ = {}
+    else: FLAGS_ = FLAGS
     P("\n--- 3  ADP OFF ON USAGE-LEGIT ROWS (variant applied only to the rows graded; vs wired; negative = better than wired) ---")
-    for flab, fl in FLAGS.items():
+    for flab, fl in FLAGS_.items():
         P(f"\n  FLAG {flab}")
         for vlab, pr_, off_ in VAR:
             Q = ros(pr_, off_); QN = nxt(pr_, off_)
             for side, msk in (("FLAGGED", fl), ("NOT yet", ~fl)):
                 P(f"    {vlab} | {side}")
-                P(f"      ROS  all  " + fmt(gr(Q, FULL, ok & msk, T)))
-                for p_ in POS4: P(f"      ROS  {p_:3s}  " + fmt(gr(Q, FULL, ok & msk & (pos == p_), T)))
+                P(f"      ROS  all  " + fmt(gr(Q, FULL, ok & msk, T)) + era(Q, FULL, ok & msk, T))
+                for p_ in POS4: P(f"      ROS  {p_:3s}  " + fmt(gr(Q, FULL, ok & msk & (pos == p_), T)) + era(Q, FULL, ok & msk & (pos == p_), T))
                 P(f"      NEXT all  " + fmt(gr(QN, FULLN, okN & msk, act)))
                 for p_ in POS4: P(f"      NEXT {p_:3s}  " + fmt(gr(QN, FULLN, okN & msk & (pos == p_), act)))
 
@@ -320,8 +362,10 @@ def main():
         rg = np.where(np.isnan(X["r_no"]), X["r_adp"], kk * X["r_adp"] + (1 - kk) * X["r_no"])
         return mix(rg, pf)
     e2 = lambda q, m, tgt: float(np.sum((q[m] - tgt[m]) ** 2))
+    PIX = np.array([POS4.index(p_) for p_ in pos]); YIX = {y: k for k, y in enumerate(ALLY)}; GI = PIX * len(ALLY) + np.array([YIX[int(y)] for y in year]); NG = 4 * len(ALLY)
     def sse_tab(Q, mrow, tgt):
-        return {(p_, y): (e2(Q, mrow & (pos == p_) & (year == y), tgt), int((mrow & (pos == p_) & (year == y)).sum())) for p_ in POS4 for y in YEARS}
+        mm = mrow & ~np.isnan(Q) & ~np.isnan(tgt); se = np.bincount(GI[mm], weights=(Q[mm] - tgt[mm]) ** 2, minlength=NG); cn = np.bincount(GI[mm], minlength=NG)
+        return {(p_, y): (float(se[POS4.index(p_) * len(ALLY) + YIX[y]]), int(cn[POS4.index(p_) * len(ALLY) + YIX[y]])) for p_ in POS4 for y in TRAINY}
     BEST = {}
     for clab, G in CLOCKS.items():
         cands = []
@@ -330,8 +374,8 @@ def main():
                 if spec is None and scope == "MR": continue
                 pr_ = prior_sched(kof(spec, G), scope) if spec is not None else WPRIOR
                 cands.append((f"{scope} {slab}", spec, scope, sse_tab(ros(pr_), ok, T)))
-        def pick(p_, yrs):
-            return min(cands, key=lambda c_: sum(c_[3][(p_, y)][0] for y in yrs) / max(1, sum(c_[3][(p_, y)][1] for y in yrs)))
+        def pick(p_, yrs):   # recency-weighted (RW = 1 everywhere by default)
+            return min(cands, key=lambda c_: sum(RW[y] * c_[3][(p_, y)][0] for y in yrs) / max(1e-9, sum(RW[y] * c_[3][(p_, y)][1] for y in yrs)))
         L = FULL.copy(); Fw = FULL.copy(); LN = FULLN.copy(); FN = FULLN.copy(); pk = defaultdict(list); best_all = {}
         cache = {}
         def preds(c_):
@@ -339,11 +383,11 @@ def main():
                 pr_ = prior_sched(kof(c_[1], G), c_[2]) if c_[1] is not None else WPRIOR; cache[c_[0]] = (ros(pr_), nxt(pr_))
             return cache[c_[0]]
         for p_ in POS4:
-            best_all[p_] = pick(p_, YEARS)[0]
+            best_all[p_] = pick(p_, TRAINY)[0]
             for ty in YEARS:
-                c_ = pick(p_, [y for y in YEARS if y != ty]); pk[p_].append(c_[0]); sel = (pos == p_) & (year == ty); r_, n_ = preds(c_); L[sel] = r_[sel]; LN[sel] = n_[sel]
+                c_ = pick(p_, [y for y in TRAINY if y != ty]); pk[p_].append(c_[0]); sel = (pos == p_) & (year == ty); r_, n_ = preds(c_); L[sel] = r_[sel]; LN[sel] = n_[sel]
             for ty in FWD:
-                c_ = pick(p_, [y for y in YEARS if y < ty]); sel = (pos == p_) & (year == ty); r_, n_ = preds(c_); Fw[sel] = r_[sel]; FN[sel] = n_[sel]
+                c_ = pick(p_, [y for y in TRAINY if y < ty]); sel = (pos == p_) & (year == ty); r_, n_ = preds(c_); Fw[sel] = r_[sel]; FN[sel] = n_[sel]
         BEST[clab] = best_all
         P(f"\n  CLOCK: {clab}  | best schedule on all seasons: {best_all}")
         P("    LOYO picks: " + " | ".join(f"{p_} " + ", ".join(sorted(set(pk[p_]), key=pk[p_].count, reverse=True)[:3]) for p_ in POS4))
@@ -351,8 +395,8 @@ def main():
             for lab, m in [("all", mrow), ("top150", mrow & top150)] + [(p_, mrow & (pos == p_)) for p_ in POS4]:
                 r = gr(Lq, BASE, m, tgt); rf = gr(Fq, BASE, m & np.isin(year, FWD), tgt)
                 if r is None: continue
-                ok_ = r['err'] < -0.3 and r['s7'] >= 5 and rf['err'] < 0 and rf['s4'] >= 3 and r['w'] <= 0.1
-                P(f"    {hz} {lab:6s} n {r['n']:5d} LOYO err {r['err']:+6.2f}% ({r['s7']}/7) MAE {r['mae']:+6.2f}% top150-w {r['w']:+6.2f}% rank {r['rk']:+.4f} | FORWARD err {rf['err']:+6.2f}% ({rf['s4']}/4){'  PASS' if ok_ else ''}")
+                ok_ = r['err'] < -0.3 and r['s7'] >= NEED7 and rf['err'] < 0 and rf['s4'] >= NEED4 and r['w'] <= 0.1
+                P(f"    {hz} {lab:6s} n {r['n']:5d} LOYO err {r['err']:+6.2f}% ({r['s7']}/{NY}) MAE {r['mae']:+6.2f}% top150-w {r['w']:+6.2f}% rank {r['rk']:+.4f} | FORWARD err {rf['err']:+6.2f}% ({rf['s4']}/{NF}){'  PASS' if ok_ else ''}" + era(Lq, BASE, m, tgt))
     # ---- error-by-week curves: ADP fully off (B) and the best clean-clock schedule, vs wired ----
     P("\n--- 4b  WHERE ADP STOPS EARNING ITS KEEP: error vs wired by checkpoint week (negative = better without / with less ADP) ---")
     QB_ = ros(PB); QBN = nxt(PB)
@@ -368,7 +412,7 @@ def main():
             mw = ok & (wk == w_); mn = okN & (wk == w_)
             r = gr(Q, FULL, mw, T); rn = gr(QN, FULLN, mn, act)
             if r is None or rn is None: continue
-            P(f"    week {w_:2d}: ROS n {r['n']:4d} err {r['err']:+6.2f}% ({r['s7']}/7) top150-w {r['w']:+6.2f}% | NEXT err {rn['err']:+6.2f}% ({rn['s7']}/7) | ROS by pos " +
+            P(f"    week {w_:2d}: ROS n {r['n']:4d} err {r['err']:+6.2f}% ({r['s7']}/{NY}) top150-w {r['w']:+6.2f}% | NEXT err {rn['err']:+6.2f}% ({rn['s7']}/{NY}) | ROS by pos " +
               " ".join(f"{p_} {rr['err']:+.1f}" for p_ in POS4 for rr in [gr(Q, FULL, mw & (pos == p_), T)] if rr))
     log.close()
 

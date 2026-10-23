@@ -6384,6 +6384,7 @@
     }
     var l = E.tdLuckAdj(p, sc) * Math.min(1, iA);
     if (Math.abs(l) >= 0.05) chips.push('TD luck ' + ntSigned(l, 1));
+    if (wp && wp.why && wp.why.vegTeamAvg != null && Math.abs(wp.why.veg - 1) >= 0.005) chips.push('VEG game ' + ntSigned(100 * (wp.why.veg - 1), 0) + '% (' + p.tm + ' ' + ntF(wp.why.implied, 1) + ' vs own avg ' + ntF(wp.why.vegTeamAvg, 1) + '; team level in base)');   // P-20261023-1
     var w = E.weatherMult(p, wk, slot); if (w !== 1) chips.push('weather ×' + ntF(w, 2));
     var pr = E.pressureMult(slot.opp, p.pos); if (pr !== 1) chips.push('soft rush ×' + ntF(pr, 2));
     var cs = E.cbShadowMult(slot.opp, p.pos, p); if (cs !== 1) chips.push('CB shadow ×' + ntF(cs, 2));
@@ -6439,7 +6440,12 @@
     var avPub = w.iA > 1 ? (p.pos === 'QB' ? 'starting QB out - he takes over the job' : 'extra targets / carries from injured teammates') : 'injury status (' + (im && im.src ? String(im.src).replace(/-/g, ' ') : 'designated') + ')';
     var sn = window.SIM_SNAPS_2026 ? window.SIM_SNAPS_2026[p.name] : null, snLab = 'snap trend', snPub = 'snap share trend';
     if (sn && sn.w) { var sw = Object.keys(sn.w).map(Number).filter(function (x) { return x < wk; }).sort(function (x, y) { return x - y; }); if (sw.length >= 2) { var sLast = ntF(sn.w[sw[sw.length - 1]], 0), sAvg = ntF(sw.reduce(function (t, x) { return t + sn.w[x]; }, 0) / sw.length, 0); snLab += ' (last ' + sLast + '% vs avg ' + sAvg + '%)'; snPub += ' (last game ' + sLast + '% vs ' + sAvg + '% season)'; } }
-    [['vegas', w.veg, 'Vegas (' + p.tm + ' implied ' + ntF(w.implied, 1) + ' vs avg ' + ntF(w.avgImplied, 1) + ')', 'Vegas team total (' + p.tm + ' ' + ntF(w.implied, 1) + ' vs ' + ntF(w.avgImplied, 1) + ' league avg)'],
+    // P-20261023-1 (2026-10-23): from week 2 the Vegas factor reads the GAME deviation (this game's implied vs the team's own
+    // walk-forward average); the team level is already in the base, so its step is 0 (listed in `all`, never a visible step)
+    var vegSplit = w.vegTeamAvg != null;
+    if (vegSplit) push('vegasTeam', 0, 'Vegas team level (in base: ' + p.tm + ' avg ' + ntF(w.vegTeamAvg, 1) + ' vs league ' + ntF(w.avgImplied, 1) + ')', 'team scoring level (already in his base: ' + p.tm + ' averages ' + ntF(w.vegTeamAvg, 1) + ' implied vs ' + ntF(w.avgImplied, 1) + ' league)');
+    [['vegas', w.veg, vegSplit ? 'Vegas game vs team avg (' + p.tm + ' ' + ntF(w.implied, 1) + ' this game vs own avg ' + ntF(w.vegTeamAvg, 1) + ')' : 'Vegas (' + p.tm + ' implied ' + ntF(w.implied, 1) + ' vs avg ' + ntF(w.avgImplied, 1) + ')',
+      vegSplit ? 'Vegas game total vs his team\'s usual (' + p.tm + ' ' + ntF(w.implied, 1) + ' implied this game vs ' + ntF(w.vegTeamAvg, 1) + ' season avg)' : 'Vegas team total (' + p.tm + ' ' + ntF(w.implied, 1) + ' vs ' + ntF(w.avgImplied, 1) + ' league avg)'],
      ['opp', w.opp, oppLab, oppPub], ['cbShadow', w.cbShadow, 'CB shadow', 'shadowed by a top cornerback'],
      ['cb1Out', w.cb1Out, slot.opp + ' CB1 out', slot.opp + ' top cornerback out'], ['olOut', w.olOut, p.tm + ' OL starters out', p.tm + ' offensive line starters out'],
      ['pressure', w.pressure, 'soft pass rush', slot.opp + ' soft pass rush'], ['weather', w.weather, 'wind', 'wind forecast'],

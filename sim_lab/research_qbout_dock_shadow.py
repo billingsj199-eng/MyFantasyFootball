@@ -18,14 +18,15 @@ Picked leave-one-season-out and forward (earlier seasons only, 2022-25). Error =
 being tuned; the top-150 importance-weighted error and the within-position rank order are reported beside it.
 Log shadow_ros.log.
 """
-import os, sys
+import os, sys, math
 from collections import defaultdict
 import numpy as np, pandas as pd
 from scipy.stats import rankdata
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import backtest_shadow_next as SN
 NW = SN.NW; YEARS = SN.YEARS; POS4 = ("QB", "RB", "WR", "TE")
-FWD = (2022, 2023, 2024, 2025)
+FWD = SN.FWD   # 2026-10-20 ext-aware (default 2022-25)
+BX = SN.BX
 MINF = int(os.environ.get("ROS_MINF", "4"))   # games left needed for a checkpoint (1 = no survivor filter, noisier)
 
 def base_lam(pos, g):
@@ -42,7 +43,7 @@ def rate(X, pscale=None, lam=None, evid=None):
     return (Pw * X["prior"] + g * ev) / np.maximum(Pw + g, 1e-9)
 
 def main():
-    log = open(os.path.join(HERE, "qbout_dock_shadow.log"), "w", encoding="utf-8")
+    log = open(BX.ext_path("qbout_dock_shadow.log"), "w", encoding="utf-8")
     def P(s=""): print(s); log.write(s + "\n"); log.flush()
     X = SN.setup(); n = X["n"]; F = X["F"]; A = X["A"]
     act, year, wk, pos, g, name, adp, layers = X["act"], X["year"], X["wk"], X["pos"], X["g"], X["name"], X["adp"], X["layers"]
@@ -161,7 +162,7 @@ def main():
 
     # ---------------- 5 rest-of-season layers ----------------
     P(); P("--- 5  REST-OF-SEASON LAYERS on the Clay-free rate (each judged on the rows it touches, stacked on what passed before it) ---")
-    C = pd.read_parquet(os.path.join(HERE, "ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
+    C = pd.read_parquet(BX.ext_path("ctx_features.parquet")); ck = {(int(a), b, int(c)): i for i, (a, b, c) in enumerate(zip(C.year, C.pid, C.wk)) if isinstance(b, str)}
     pid = A["pid"]; idx = np.array([ck.get((int(year[i]), pid[i], int(wk[i])), -1) if pid[i] else -1 for i in range(n)]); has = idx >= 0
     colv = lambda c: np.where(has, C[c].values[np.maximum(idx, 0)], np.nan).astype(float)
     S5 = S3.copy()
@@ -719,14 +720,43 @@ def main():
     # k = backup-QB games already in the WR's evidence this season. Quality = EPA/dropback drop regular -> starter (pbp, prior season),
     # joined from research_qbout_dock_ext.py's team-week table.
     # =====================================================================================================================
-    P(); P("=" * 110); P("--- QB-OUT WR DOCK on the shadow harness (2019-25) ---")
+    P(); P("=" * 110); P(f"--- QB-OUT WR DOCK on the shadow harness ({BX.describe()}) ---")
+    LOY = [y for y in YEARS if y >= 2013]; FWY = tuple(y for y in YEARS if y >= 2016) if BX.EXT else FWD
+    ERAS = [(e0, e1) for e0, e1 in ((2013, 2015), (2016, 2018), (2013, 2018), (2016, 2025), (2019, 2025)) if any(e0 <= y <= e1 for y in YEARS)]
+    def gtest(title, fam, m_rows, tt, okm):
+        """LOYO over LOY, forward over FWY, bar: pooled < -0.3%, 70% of folds better, forward < 0 and 70% better, top-150 <= +0.1%"""
+        mse = lambda q, m: float(np.mean((q[m] - tt[m]) ** 2)) if m.any() else np.nan
+        wms = lambda q, m: float(np.average((q[m] - tt[m]) ** 2, weights=wt[m])) if m.any() else np.nan
+        names = list(fam); b0 = fam[names[0]]; touched = np.zeros(n, bool)
+        for k_ in names[1:]: touched |= np.abs(fam[k_] - b0) > 1e-9
+        tm = m_rows & okm & touched
+        if tm.sum() < 20: P(f"  {title}: too few rows"); return None
+        pick = lambda ys: min(names, key=lambda k: mse(fam[k], tm & np.isin(year, ys)))
+        def run(folds):
+            pr = b0.copy(); wins = ny = 0; picks = []
+            for tr, te in folds:
+                k = pick(tr); picks.append(k); mm = year == te; pr[mm] = fam[k][mm]
+                if (tm & mm).sum() >= 5: ny += 1; wins += mse(fam[k], tm & mm) < mse(b0, tm & mm) - 1e-12
+            tem = np.isin(year, [te for _, te in folds])
+            return 100 * (mse(pr, tm & tem) / mse(b0, tm & tem) - 1), wins, ny, picks, 100 * (wms(pr, tm & tem & top150) / wms(b0, tm & tem & top150) - 1), pr
+        lo = run([([y for y in YEARS if y != t], t) for t in LOY]); fw = run([([y for y in YEARS if y < t], t) for t in FWY])
+        best = pick(YEARS)
+        okk = best != names[0] and lo[0] < -0.3 and lo[1] >= math.ceil(0.7 * lo[2]) and fw[0] < 0 and fw[1] >= math.ceil(0.7 * fw[2]) and lo[4] <= 0.1
+        from collections import Counter
+        P(f"  {title}   (rows {int(tm.sum())}, act/engine {tt[tm].sum()/b0[tm].sum():.3f})")
+        P("    pooled fixed: " + "  ".join(f"{k}: {100*(mse(fam[k], tm)/mse(b0, tm)-1):+.2f}%" for k in names[1:]))
+        P(f"    LOYO {LOY[0]}-{LOY[-1]} {lo[0]:+.2f}% {lo[1]}/{lo[2]} | top-150 wtd {lo[4]:+.2f}% | picks {dict(Counter(lo[3]))}")
+        P(f"    FWD  {FWY[0]}-{FWY[-1]} {fw[0]:+.2f}% {fw[1]}/{fw[2]} | top-150 wtd {fw[4]:+.2f}% | picks {dict(Counter(fw[3]))}")
+        P("    LOYO by era: " + " | ".join(f"{e0}-{e1} {100*(mse(lo[5], tm & (year >= e0) & (year <= e1))/mse(b0, tm & (year >= e0) & (year <= e1))-1):+.2f}% (n {int((tm & (year >= e0) & (year <= e1)).sum())})" for e0, e1 in ERAS if (tm & (year >= e0) & (year <= e1)).sum() >= 10))
+        P(f"    -> {'PASS: ' + best if okk else 'FAIL (best pooled: ' + best + ')'}")
+        return best if okk else None
     qbo_c = colv("qb_out") == 1; qbN = X["qbo"]
     kb = np.zeros(n); futq = np.full(n, np.nan)
     for k_, ix in seqA.items():
         ixs = sorted([i for i in ix if wk[i] != finw[i]], key=lambda i: wk[i])
         for a, i in enumerate(ixs): futq[i] = float(np.mean(qbo_c[ixs[a:]]))
         for i in ix: kb[i] = sum(1 for q in prev_games.get(i, []) if qbo_c[q["i"]])
-    tw = pd.read_pickle(os.path.join(HERE, "_tmp", "qbx_cache", "teamweek.pkl")); twd = {(int(a), str(b), int(c)): d for a, b, c, d in zip(tw.year, tw.tm, tw.wk, tw.dq)}
+    _twp = os.path.join(HERE, "_tmp", "qbx_cache", "teamweek_2012.pkl"); tw = pd.read_pickle(_twp if os.path.exists(_twp) else os.path.join(HERE, "_tmp", "qbx_cache", "teamweek.pkl")); twd = {(int(a), str(b), int(c)): d for a, b, c, d in zip(tw.year, tw.tm, tw.wk, tw.dq)}
     team_ = X["team"]; dq = np.array([twd.get((int(year[i]), str(team_[i]), int(wk[i])), np.nan) for i in range(n)], float)
     WR = pos == "WR"; tsh = colv("tgt_sh"); star = adp <= 60
     d_eng = np.where(star, 0.15, 0.05)
@@ -743,14 +773,20 @@ def main():
     for tlab, mrow, tt, pr, und, okm in (("NEXT GAME", WR & qbN, act, N14, undN, okN), ("ROS (out now, 40%+ of rest)", WR & qbo_c & (np.nan_to_num(futq) >= 0.4), T, baseR, S14, ok)):
         P(f"  --- {tlab} ---")
         lv("all WRs", mrow, tt, pr, und, okm)
+        for e0, e1 in ERAS:
+            em = (year >= e0) & (year <= e1)
+            lv(f"all WRs {e0}-{e1}", mrow & em, tt, pr, und, okm); lv(f"ADP 1-60 {e0}-{e1}", mrow & star & em, tt, pr, und, okm); lv(f"target share 22%+ {e0}-{e1}", mrow & (tsh >= 0.22) & em, tt, pr, und, okm)
+            lv(f"ADP 1-60, 2+ backup games {e0}-{e1}", mrow & star & (kb >= 2) & em, tt, pr, und, okm)
+        P("    stars (ADP 1-60 or target share 22%+) by season: " + "  ".join(f"{y}: n {int((mrow & (star | (tsh >= 0.22)) & okm & (year == y)).sum())} und {tt[mrow & (star | (tsh >= 0.22)) & okm & (year == y)].sum()/max(1e-9, und[mrow & (star | (tsh >= 0.22)) & okm & (year == y)].sum()):.2f} eng {tt[mrow & (star | (tsh >= 0.22)) & okm & (year == y)].sum()/max(1e-9, pr[mrow & (star | (tsh >= 0.22)) & okm & (year == y)].sum()):.2f}" for y in YEARS if (mrow & (star | (tsh >= 0.22)) & okm & (year == y)).sum()))
         for lab, sm in (("ADP 1-60 (engine star)", star), ("ADP 61+", ~star), ("target share 25%+", tsh >= 0.25), ("target share 20-25%", (tsh >= 0.2) & (tsh < 0.25)), ("target share <20%", ~(tsh >= 0.2))):
             lv(lab, mrow & sm, tt, pr, und, okm)
         for lab, km in (("0 backup games in evidence", kb == 0), ("1", kb == 1), ("2-3", (kb >= 2) & (kb <= 3)), ("4+", kb >= 4)):
             lv(lab, mrow & km, tt, pr, und, okm); lv(f"ADP 1-60, {lab}", mrow & km & star, tt, pr, und, okm); lv(f"target share 22%+, {lab}", mrow & km & (tsh >= 0.22), tt, pr, und, okm)
-    for tlab, F_, mrow, tester in (("NEXT GAME", FN, WR & qbN, lambda t_, f_, m_: test_next(t_, f_, m_)), ("ROS", FR, WR & qbo_c & (np.nan_to_num(futq) >= 0.4), lambda t_, f_, m_: test(t_ + " [ROS]", f_, m_))):
+    for tlab, F_, mrow, tester in (("NEXT GAME", FN, WR & qbN, lambda t_, f_, m_: gtest(t_, f_, m_, act, okN)), ("ROS", FR, WR & qbo_c & (np.nan_to_num(futq) >= 0.4), lambda t_, f_, m_: gtest(t_ + " [ROS]", f_, m_, T, ok))):
         P(); P(f"  ===== {tlab} tests (baseline = engine dock) =====")
         b0 = F_(d_eng)
         tester("D3 double counting: engine dock x c / (k + c)", {"engine": b0, **{f"fade c {c}": F_(d_eng * c / (kb + c)) for c in (0.5, 1, 2, 4, 8)}}, mrow)
+        tester("D3b harness (A)'s passing fade alone (c 1 on 2017-25, c 2 on 2013-25)", {"engine": b0, "fade c 1": F_(d_eng / (kb + 1.0)), "fade c 2": F_(d_eng * 2 / (kb + 2.0))}, mrow)
         fam = {"engine": b0}
         for e1 in (0.0, 0.05, 0.10, 0.15):
             for e2 in (0.0, 0.05, 0.10, 0.15):
@@ -766,6 +802,11 @@ def main():
         tester("D4 backup quality: engine dock x (dEPA / mean)^a", {"engine": b0, **{f"a {a_}": F_(d_eng * np.clip(np.maximum(dqf, 0) / mdq, 0, 3) ** a_) for a_ in (0.25, 0.5, 1.0)}}, mrow)
         f1 = d_eng / (kb + 1.0)
         tester("D4b backup quality on top of the k-fade c 1", {"fade c 1": F_(f1), **{f"a {a_}": F_(f1 * np.clip(np.maximum(dqf, 0) / mdq, 0, 3) ** a_) for a_ in (0.25, 0.5)}}, mrow)
+        tester("D5 vs ENGINE: bigger first-week dock that fades (ADP<=60 e1 / other e2) / (k + 1), and fade c 1 x dEPA^.5", {"engine": b0, **{f"ADP<=60 {e1} / other {e2}, /(k+1)": F_(np.where(star, e1, e2) / (kb + 1.0)) for e1, e2 in ((0.15, 0.10), (0.20, 0.10), (0.25, 0.10), (0.20, 0.15))},
+                "fade c 1 x (dEPA/mean)^.5": F_(f1 * np.clip(np.maximum(dqf, 0) / mdq, 0, 3) ** 0.5)}, mrow)
+        if BX.EXT:
+            m16 = mrow & (year >= 2016)
+            tester("D6 MODERN ERA ONLY (2016-25 rows): ADP<=60 dock size (others .05 kept)", {"engine": b0, **{f"ADP<=60 {e1}": F_(np.where(star, e1, 0.05)) for e1 in (0.0, 0.05, 0.10)}}, m16)
         tester("D2d ADP star split on top of the k-fade c 1", {"fade c 1": F_(f1), **{f"ADP<=60 {e1} / other {e2}": F_(np.where(star, e1, e2) / (kb + 1.0)) for e1, e2 in ((0.10, 0.05), (0.10, 0.10), (0.15, 0.10), (0.20, 0.05), (0.20, 0.10))}}, mrow)
     log.close()
 

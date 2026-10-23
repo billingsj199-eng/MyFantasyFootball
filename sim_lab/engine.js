@@ -2181,7 +2181,7 @@
     var raw = 0, adj = 0, n = 0;
     Object.keys(rec.wf).forEach(function (w) {
       if (+w >= wk) return; var pts = +rec.wf[w]; if (!isFinite(pts)) return;
-      var s0 = bt[w] || bt[+w], m = s0 && s0.implied != null ? vegasMult(s0.implied, schedule.avgImplied, p.pos) : 1;
+      var s0 = bt[w] || bt[+w], m = s0 && s0.implied != null ? vegasMult(s0.implied, schedule.avgImplied, p.pos, vegasTeamAvg(p, schedule)) : 1;   // game-deviation form (P-20261023-1)
       raw += pts; adj += pts / Math.pow(Math.max(0.6, Math.min(1.6, m)), k); n++;
     });
     if (!n || !(raw > 0)) return null;
@@ -2327,10 +2327,42 @@
   // slope ~0.20-0.25. RB is the exception at 0.50: game script is real
   // (favorites feed their backs, trailing teams abandon the run). K kept at
   // 0.5 untested — kicker points are nearly a direct share of team points.
-  var VEGAS_ELAS = { QB: 0.25, RB: 0.50, WR: 0.25, TE: 0.25, K: 0.50 };
-  function vegasMult(implied, avgImplied, pos) {
-    var e = VEGAS_ELAS[pos] != null ? VEGAS_ELAS[pos] : VEGAS_ELASTICITY;
-    var m = 1 + e * ((implied - avgImplied) / avgImplied);
+  var VEGAS_ELAS = { QB: 0.25, RB: 0.50, WR: 0.25, TE: 0.25, K: 0.50 };   // league-relative form (week 1 / kill switch)
+  // VEGAS GAME / TEAM SPLIT (P-20261023-1, Jack approved 2026-10-23; research_matchup_swing_calibration.py, memory
+  // project_matchup_swing_calibration.md). The league-relative multiplier above prices (implied - league avg) every week, but the
+  // base already carries the team's scoring level once season-to-date PPG is in it: calibration regression act - baseline = a + b x
+  // swing on the Vegas part split into TEAM level (team's walk-forward avg implied vs league) and GAME deviation (this game vs the
+  // team's own avg) gives b TEAM -0.29 (double counted) and b GAME 1.35 (QB 2.26: under-moved). From week 2 on the multiplier reads
+  // the GAME deviation only: m = 1 + e'[pos] x (implied - teamAvg) / lgAvg, teamAvg = mean of the team's BOOK implied totals over
+  // its played weeks (w < the team's current week, cwOf) shrunk 2 games toward the league average; the same teamAvg for every future
+  // week (future weeks use their re-rated implied minus it). e' QB .50 / WR .375 / TE .375 (RB .50 unchanged). K stays on the
+  // league-relative form (not in the backtest, Jack's call 10-23). Week 1 / no played games = the old form, identical. LOYO top-150 next game 2019-25 vs shipped: MAE -0.31% (6/7), rank rho +.0060 (6/7),
+  // MSE -0.48% (6/7), forward 2022-25 -0.28% (3/4) rho 4/4; 2012-25 pool -0.32% (13/14); ROS proxy rho .546 -> .552.
+  // Kill: window.SIM_VEGAS_SPLIT = false (old form everywhere). Backup engine.js.bak_pre_vegassplit_20261023.
+  var VEGAS_ELAS_SPLIT = { QB: 0.50, RB: 0.50, WR: 0.375, TE: 0.375, K: 0.50 };
+  var VEGAS_SPLIT_K = 2;   // games of league-average shrink on the team's walk-forward average
+  function vegasSplitOn() { return !(typeof window !== 'undefined' && window.SIM_VEGAS_SPLIT === false); }
+  // The team's walk-forward average BOOK implied total (null = no played games / switch off -> league-relative form).
+  function vegasTeamAvg(p, schedule) {
+    // K held on the league-relative form (Jack 2026-10-23: kickers were not in the backtest).
+    if (!vegasSplitOn() || !p || p.isDST || p.pos === 'K' || !schedule || !schedule.byTeam) return null;
+    var cw = cwOf(p); if (!(cw >= 2)) return null;
+    var bt = schedule.byTeam[p.tm]; if (!bt) return null;
+    var cache = _inj ? (_inj.vegTA = _inj.vegTA || {}) : null, key = p.tm + '|' + cw;
+    if (cache && cache[key] && cache[key].s === schedule) return cache[key].v;
+    var lg = schedule.avgImplied || 22.5, sum = 0, n = 0;
+    Object.keys(bt).forEach(function (w) {
+      if (!(+w < cw)) return; var s0 = bt[w], v = s0 ? (s0.bookImplied != null ? s0.bookImplied : s0.implied) : null;
+      if (typeof v === 'number' && isFinite(v)) { sum += v; n++; }
+    });
+    var v = n ? (sum + VEGAS_SPLIT_K * lg) / (n + VEGAS_SPLIT_K) : null;
+    if (cache) cache[key] = { s: schedule, v: v };
+    return v;
+  }
+  function vegasMult(implied, avgImplied, pos, teamAvg) {
+    var split = teamAvg != null && vegasSplitOn();
+    var E_ = split ? VEGAS_ELAS_SPLIT : VEGAS_ELAS, e = E_[pos] != null ? E_[pos] : VEGAS_ELASTICITY;
+    var m = 1 + e * ((implied - (split ? teamAvg : avgImplied)) / avgImplied);
     return Math.min(1.35, Math.max(0.7, m));
   }
   function dstWeeklyMean(oppImplied) {
@@ -2703,7 +2735,7 @@
         var R = RAMP[p.ramp];
         rampF = (gi > 0 && gi <= R.head.length) ? R.head[gi - 1] : R.tail;
       }
-      var f = vegasMult(slot.implied, schedule.avgImplied, p.pos)
+      var f = vegasMult(slot.implied, schedule.avgImplied, p.pos, vegasTeamAvg(p, schedule))
         * ((defenseAdj()[slot.opp] || {})[p.pos] || 1)
         * cbShadowMult(slot.opp, p.pos, p) * cb1OutBoost(slot.opp, p.pos, p)
         * olOutDock(p.tm, p.pos) * pressureMult(slot.opp, p.pos)
@@ -2826,7 +2858,9 @@
   //     newer than the entry's date. Kill: window.SIM_NEWS_WINDOWS = false.
   //  4. SEASON-ENDING DIAGNOSIS: Sleeper body part ACL / Achilles on a player who has played this season and is
   //     on a reserve list or Out = out through week 18 (the generic rule gave Achane four weeks and a ramp).
-  //     Kill: window.SIM_DX_SEASON = false.
+  //     2026-10-20: also needs a TEAR signal (reserve list, Sleeper note surgery/torn/rupture, or a torn/rupture
+  //     headline) - Mike Evans' aggravated Achilles tagged Out had been zeroed W7-W18. backtest_dx_season.py.
+  //     Kill: window.SIM_DX_SEASON = false (whole rule); window.SIM_DX_STRICT = false (old body-part-only rule).
   var INJ_PLAY = { 'Q-FP': { QB: 0.830, RB: 0.898, WR: 0.868, TE: 0.857 }, 'Q-LP': { QB: 0.528, RB: 0.715, WR: 0.737, TE: 0.750 }, 'Q-DNP': { QB: 0.466, RB: 0.481, WR: 0.537, TE: 0.523 } };
   var INJ_TYPE = { 'Q-FP': { knee: 0.24, concussion: -0.26 },
                    'Q-LP': { calf: 0.38, quad: 0.27, back: 0.26, groin: 0.23, hip: 0.21, hamstring: -0.22, shoulder: -0.26, concussion: -0.30 },
@@ -3139,7 +3173,19 @@
         }
       }
       // ---- season-ending diagnosis from Sleeper's body part (INJURY SIGNALS 4) ----
-      if (wnd.SIM_DX_SEASON !== false && SIG && SIG.body && SIG.body[p.norm] && outish && wks0.length && /\b(acl|achilles)\b/i.test(SIG.body[p.norm].b || '')) {
+      // 2026-10-20 (Jack: Mike Evans "doesnt have a torn achille" - an aggravation tagged "Achilles, Out" was zeroed
+      // W7-W18): the body part alone is not a tear. Season-ending now also needs a tear signal - a reserve list
+      // (IR / PUP ...), Sleeper's injury note (surgery / torn / rupture), or a news headline tying a tear to the
+      // Achilles / ACL ("torn ACL", "Achilles rupture"; NOT "torn meniscus and MCL (ACL intact)"). Out / Doubtful
+      // without one falls through to the designation + availability curve. backtest_dx_season.py (2019-25, n 15):
+      // Out/Doubtful + Achilles still on the weekly report the next week = season over 1 of 8; moved off it (IR) = 7 of 7.
+      // WIRED 2026-10-20 (Jack approved). Kill (old body-part-only rule): window.SIM_DX_STRICT = false.
+      // check_dx_strict.js [week] shows who changes between the two.
+      var dxB = SIG && SIG.body ? SIG.body[p.norm] : null;
+      var dxHl = nws && nws.win && nws.win.hl ? String(nws.win.hl) : '';
+      var dxTear = !!dxB && (reserve || /surg|\btorn\b|\btear\b|ruptur/i.test(dxB.n || '')
+        || /\b(torn|tore|tears?|ruptured?)\s+(?:(?:his|her|the|a|left|right|full|complete|partial(?:ly)?)\s+)*(achilles|acl)\b|\b(achilles|acl)(?:\s+tendon)?\s+(tear|rupture)/i.test(dxHl));
+      if (wnd.SIM_DX_SEASON !== false && dxB && outish && wks0.length && /\b(acl|achilles)\b/i.test(dxB.b || '') && (wnd.SIM_DX_STRICT === false || dxTear)) {
         map[p.norm] = { from: currentWeek, to: WEEKS, mult: 0, src: 'dx-season', note: SIG.body[p.norm].b + (SIG.body[p.norm].n ? ' (' + SIG.body[p.norm].n + ')' : '') };
         return;
       }
@@ -3502,7 +3548,8 @@
       mean = dstWeeklyMean(slot.oppImplied);
       return { mean: mean, mult: mult, slot: slot, comps: {} };
     }
-    mult = vegasMult(slot.implied, schedule.avgImplied, p.pos);
+    var vegTA = vegasTeamAvg(p, schedule);   // P-20261023-1: null = league-relative form (week 1 / kill switch)
+    mult = vegasMult(slot.implied, schedule.avgImplied, p.pos, vegTA);
     var perGameDiv = p.qbWindow ? p.qbWindow.games : clayDiv(p);
     var dAdj = (defenseAdj()[slot.opp] || {})[p.pos] || 1;
     var mCbS = cbShadowMult(slot.opp, p.pos, p), mCb1 = cb1OutBoost(slot.opp, p.pos, p), mOl = olOutDock(p.tm, p.pos),
@@ -4199,7 +4246,7 @@
     }
     return { balloc: ncBalloc, vfade: ncVfadeD > 0 && ncAtVac > 0 ? ncVfadeD * ncMean / ncAtVac : 0, ncPeck: ncPeckM, ncPeckRank: ncPeckRk, ncQbf: ncQbfM, qb2: qb2Tag, mean: mean, mult: mult, slot: slot, comps: compsWk, compsU: compsU, gameIdx: gameIdx, jsMean: jsMean, propMean: propMean, propSrc: propSrc, propW: propWUsed, luckAdj: luckAdj, ncMean: ncMean, ncSrc: ncSrc, rmMean: rmMean, rmFinal: rmFinal, espnPts: espnPts, lcCorr: lcCorr, peck: mPeck, peckRank: peckR.rank, use: lvU, jsNoUse: jsNoUse, ret: mRet, qbf: mQbf, health: hLift, vol: mVol, bb: bbW, jsPre: jsPre,
       // WHY (2026-09-16, NOTES per-player why notes): every factor of the JS model in engine order - app.js ntWhy turns it into a points waterfall
-      why: { clayPg: clayPg, clayPg0: clayPg0, health: hLift, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: qbInh > 0 ? jsPgOwn : jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied,
+      why: { clayPg: clayPg, clayPg0: clayPg0, health: hLift, jsBase: jsBase0, rook: mRook, jsPgRook: jsPgRook, usage: rbU, jsPg: qbInh > 0 ? jsPgOwn : jsPg, veg: mult, implied: slot.implied, avgImplied: schedule.avgImplied, vegTeamAvg: vegTA,
              opp: oppM, dAdj: dAdj, cbShadow: mCbS, cb1Out: mCb1, olOut: mOl, pressure: mPr, weather: mWx, ret: mRet, avail: injAvail(p, wk), qbFloor: mQbf, rosTilt: mRos, snap: mSnap, route: mRoute, ramp: rampF, iA: (qbInh > 0 && jsPgOwn > 0) ? jsPg / jsPgOwn : iA,
              luck: luckAdj, jsMean: jsMean, jsPre: jsPre, bb: bbW, ncMean: ncMean, perGameDiv: perGameDiv, peck: mPeck, peckRank: peckR.rank, vol: mVol, vfade: ncVfadeD > 0 && ncAtVac > 0 ? ncVfadeD * ncMean / ncAtVac : 0, vfadeSeen: ncVfadeSeen, balloc: ncBalloc } };
   }
@@ -5774,7 +5821,7 @@
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
     applyInSeasonInjuries: applyInSeasonInjuries, qsCandidates: qsCandidates, qsForce: qsForce, injAdj: injAdj, injAvail: injAvail, injGroup: injGroup, linesUp: linesUp, injSignalInfo: injSignalInfo, bangedDock: bangedDock, returnDock: returnDock, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, lgbExplain: lgbExplain, learnedShadowExplain: learnedShadowExplain, ctxNote: ctxNote,
     scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
-    weeklyProjection: weeklyProjection, vegasMult: vegasMult, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
+    weeklyProjection: weeklyProjection, vegasMult: vegasMult, vegasTeamAvg: vegasTeamAvg, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult, ncCacheReset: ncCacheReset,
     propAnchorMean: propAnchorMean, gammaMedRatio: gammaMedRatio, marketRate: marketRate, propImpliedFp: propImpliedFp, propCacheReset: propCacheReset,
     marketObsContaminated: marketObsContaminated,

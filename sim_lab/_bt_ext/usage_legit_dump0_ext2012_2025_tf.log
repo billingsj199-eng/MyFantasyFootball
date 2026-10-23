@@ -1,0 +1,121 @@
+harness: years 2012-2025 | pool ext | team fix on | EXTENDED | graded seasons 2013-2025 (13), forward folds 2015-2025 (11); bar LOYO 10/13, fwd 9/11
+=== USAGE-LEGIT ADP TEST: 27,378 ROS checkpoints (2-10 games, 4+ left), next-game rows 32,517 ===
+  check: prior_k(1) == wired on 100.0% of rows; prior_k(0)+noAdp ridge == variant B prior on 100.0%
+
+--- 1  STABILIZATION: split-half reliability of the N-clean-game mean (odd vs even clean games), r by N; N* = first N with r >= .70 ---
+  QB (488 player-seasons with clean games)
+    db_sh   N1 0.66(488)  N2 0.76(481)  N3 0.73(445)  N4 0.81(408)  N5 0.78(374)  N6 0.84(333)  N7 0.89(289)  N8 0.61(205)   -> N* 2
+    snap    N1 0.66(456)  N2 0.76(449)  N3 0.76(414)  N4 0.82(379)  N5 0.80(347)  N6 0.81(308)  N7 0.87(265)  N8 0.22(185)   -> N* 2
+    xfp     N1 0.40(488)  N2 0.55(481)  N3 0.63(445)  N4 0.72(408)  N5 0.76(374)  N6 0.82(333)  N7 0.83(289)  N8 0.82(205)   -> N* 4
+  RB (932 player-seasons with clean games)
+    car_sh  N1 0.77(900)  N2 0.88(819)  N3 0.91(714)  N4 0.93(615)  N5 0.95(494)  N6 0.96(346)  N7 0.96(224)  N8 0.96(90)   -> N* 1
+    tgt_sh  N1 0.49(900)  N2 0.62(819)  N3 0.70(714)  N4 0.76(615)  N5 0.79(494)  N6 0.83(346)  N7 0.85(224)  N8 0.83(90)   -> N* 4
+    snap    N1 0.78(838)  N2 0.88(763)  N3 0.91(663)  N4 0.94(566)  N5 0.96(454)  N6 0.96(321)  N7 0.96(203)  N8 0.97(82)   -> N* 1
+    route   N1 0.79(639)  N2 0.87(584)  N3 0.90(507)  N4 0.93(439)  N5 0.95(346)  N6 0.96(245)  N7 0.96(151)  N8 0.97(61)   -> N* 1
+    xfp     N1 0.54(900)  N2 0.71(819)  N3 0.79(714)  N4 0.83(615)  N5 0.85(494)  N6 0.87(346)  N7 0.88(224)  N8 0.88(90)   -> N* 2
+  WR (1400 player-seasons with clean games)
+    tgt_sh  N1 0.49(1340)  N2 0.64(1227)  N3 0.72(1049)  N4 0.75(873)  N5 0.79(653)  N6 0.80(502)  N7 0.81(322)  N8 0.79(127)   -> N* 3
+    snap    N1 0.79(1249)  N2 0.88(1139)  N3 0.90(976)  N4 0.93(807)  N5 0.94(607)  N6 0.95(464)  N7 0.95(296)  N8 0.94(116)   -> N* 1
+    route   N1 0.79(976)  N2 0.89(890)  N3 0.91(763)  N4 0.93(637)  N5 0.94(480)  N6 0.95(361)  N7 0.96(231)  N8 0.94(91)   -> N* 1
+    xfp     N1 0.40(1340)  N2 0.57(1227)  N3 0.64(1049)  N4 0.69(873)  N5 0.71(653)  N6 0.73(502)  N7 0.75(322)  N8 0.73(127)   -> N* 5
+  TE (814 player-seasons with clean games)
+    tgt_sh  N1 0.48(801)  N2 0.66(741)  N3 0.74(641)  N4 0.76(522)  N5 0.78(401)  N6 0.81(290)  N7 0.78(188)  N8 0.77(75)   -> N* 3
+    snap    N1 0.75(743)  N2 0.86(684)  N3 0.90(588)  N4 0.93(481)  N5 0.94(365)  N6 0.95(258)  N7 0.95(166)  N8 0.95(66)   -> N* 1
+    route   N1 0.80(572)  N2 0.89(529)  N3 0.92(459)  N4 0.94(377)  N5 0.95(285)  N6 0.96(203)  N7 0.96(130)  N8 0.94(53)   -> N* 1
+    xfp     N1 0.44(801)  N2 0.59(741)  N3 0.68(641)  N4 0.70(522)  N5 0.73(401)  N6 0.75(290)  N7 0.74(188)  N8 0.70(75)   -> N* 5
+  N_pos (base / strict = all metrics incl xFP at .70): {'QB': 4, 'RB': 4, 'WR': 5, 'TE': 5}; loose N (snap + primary share {'QB': 'db_sh', 'RB': 'car_sh', 'WR': 'tgt_sh', 'TE': 'tgt_sh'}): {'QB': 2, 'RB': 1, 'WR': 3, 'TE': 3}
+
+--- 2  USAGE-LEGIT FLAG: share of checkpoints flagged, by position x games played ---
+  base (N all metrics, +-8 snap, +-.04 share): ROS rows flagged 33%  | QB 0/88/89/88  RB 0/50/43/37  WR 0/24/54/49  TE 0/28/60/57  (% at 2-3/4-5/6-7/8-10 games)
+  loose (N snap+share, +-12, +-.06): ROS rows flagged 71%  | QB 98/94/93/95  RB 99/85/72/63  WR 39/84/83/80  TE 41/87/85/83  (% at 2-3/4-5/6-7/8-10 games)
+  strict (N+1, +-5, +-.025): ROS rows flagged 16%  | QB 0/38/77/75  RB 0/11/22/17  WR 0/0/26/25  TE 0/0/32/32  (% at 2-3/4-5/6-7/8-10 games)
+
+--- 0  NO-ADP VARIANTS ON EVERY ROW, by games played and by week (vs wired; negative = better than wired) ---
+
+  B  no market blend + noAdp ridge
+    ROS  all       n 27378 err  +2.31% (2/13) fwd  +2.65% (2/11) MAE  +1.08% top150-w  +2.29% rank -0.0033  | eras 2013-18 +2.01% 2019-25 +2.56% ADP PPR/std 2013-17 +1.59% ADP half 2018-25 +2.75%
+    ROS  QB        n  3795 err  +3.63% (2/13) fwd  +4.03% (2/11) MAE  +1.73% top150-w  +4.06% rank -0.0023  | eras 2013-18 +1.48% 2019-25 +5.29% ADP PPR/std 2013-17 +1.59% ADP half 2018-25 +4.78%
+    ROS  RB        n  7506 err  +2.88% (4/13) fwd  +3.68% (2/11) MAE  +1.45% top150-w  +3.17% rank -0.0145  | eras 2013-18 +2.93% 2019-25 +2.84% ADP PPR/std 2013-17 +2.25% ADP half 2018-25 +3.28%
+    ROS  WR        n 11220 err  +1.96% (3/13) fwd  +1.95% (3/11) MAE  +0.99% top150-w  +1.52% rank -0.0047  | eras 2013-18 +1.96% 2019-25 +1.97% ADP PPR/std 2013-17 +1.27% ADP half 2018-25 +2.41%
+    ROS  TE        n  4857 err  -0.43% (7/13) fwd  -0.28% (6/11) MAE  -0.26% top150-w  -1.91% rank +0.0095  | eras 2013-18 -0.24% 2019-25 -0.55% ADP PPR/std 2013-17 +0.54% ADP half 2018-25 -0.91%
+    NEXT all       n 32517 err  +0.48% (1/13) fwd  +0.56% (0/11) MAE  +0.18% top150-w  +0.49% rank -0.0011  | eras 2013-18 +0.53% 2019-25 +0.44% ADP PPR/std 2013-17 +0.40% ADP half 2018-25 +0.53%
+    games 1-1   ROS n  3288 err  +4.81% (1/13) fwd  +5.73% (0/11) MAE  +2.26% top150-w  +4.52% rank -0.0033 || NEXT n  3512 err  +0.91% (5/13) fwd  +1.10% (4/11) MAE  +0.55% top150-w  +0.60% rank -0.0048
+                 ROS by pos QB +8.42% (2/13) RB +3.68% (3/13) WR +4.97% (4/13) TE +2.30% (5/13)
+    games 2-3   ROS n  6233 err  +3.33% (1/13) fwd  +3.70% (1/11) MAE  +1.58% top150-w  +3.73% rank -0.0067 || NEXT n  6736 err  +0.64% (3/13) fwd  +0.74% (2/11) MAE  +0.22% top150-w  +0.72% rank -0.0039
+                 ROS by pos QB +5.62% (2/13) RB +3.96% (3/13) WR +2.22% (3/13) TE +0.90% (4/13)
+    games 4-5   ROS n  5648 err  +2.60% (2/13) fwd  +2.92% (1/11) MAE  +1.36% top150-w  +2.74% rank -0.0103 || NEXT n  6319 err  +0.47% (4/13) fwd  +0.59% (3/11) MAE  +0.14% top150-w  +0.69% rank -0.0030
+                 ROS by pos QB +4.12% (2/13) RB +3.33% (4/13) WR +2.19% (3/13) TE -0.81% (8/13)
+    games 6-7   ROS n  5039 err  +1.92% (4/13) fwd  +2.05% (3/11) MAE  +0.89% top150-w  +2.14% rank -0.0078 || NEXT n  5882 err  +0.68% (4/13) fwd  +0.78% (3/11) MAE  +0.27% top150-w  +0.75% rank -0.0021
+                 ROS by pos QB +2.90% (5/13) RB +2.35% (5/13) WR +2.12% (2/13) TE -1.48% (8/13)
+    games 8-11  ROS n  7170 err  +0.86% (5/13) fwd  +1.12% (4/11) MAE  +0.15% top150-w  +0.71% rank -0.0013 || NEXT n 10068 err  +0.14% (6/13) fwd  +0.12% (5/11) MAE  -0.01% top150-w  +0.07% rank +0.0014
+                 ROS by pos QB +0.86% (3/13) RB +1.79% (5/13) WR +0.71% (6/13) TE -1.27% (8/13)
+    week  2: ROS err  +5.23% (2/13) top150-w  +5.57% | NEXT  +0.78% (4/13) | ROS by pos QB +10.2 RB +3.5 WR +5.3 TE +3.1  | eras 2013-18 +5.29% 2019-25 +5.18% ADP PPR/std 2013-17 +4.15% ADP half 2018-25 +5.98%
+    week  3: ROS err  +3.80% (2/13) top150-w  +4.79% | NEXT  +0.70% (4/13) | ROS by pos QB +5.8 RB +4.6 WR +2.8 TE +1.1  | eras 2013-18 +3.77% 2019-25 +3.83% ADP PPR/std 2013-17 +3.28% ADP half 2018-25 +4.15%
+    week  4: ROS err  +3.00% (2/13) top150-w  +3.48% | NEXT  +0.84% (4/13) | ROS by pos QB +4.9 RB +3.8 WR +1.7 TE +1.1  | eras 2013-18 +2.44% 2019-25 +3.45% ADP PPR/std 2013-17 +1.75% ADP half 2018-25 +3.75%
+    week  5: ROS err  +2.88% (3/13) top150-w  +3.65% | NEXT  +0.68% (3/13) | ROS by pos QB +4.6 RB +3.1 WR +2.7 TE -0.1  | eras 2013-18 +2.48% 2019-25 +3.21% ADP PPR/std 2013-17 +1.87% ADP half 2018-25 +3.49%
+    week  6: ROS err  +2.83% (3/13) top150-w  +3.40% | NEXT  +0.66% (3/13) | ROS by pos QB +4.1 RB +2.7 WR +2.9 TE +0.7  | eras 2013-18 +1.94% 2019-25 +3.70% ADP PPR/std 2013-17 +1.53% ADP half 2018-25 +3.73%
+    week  7: ROS err  +2.76% (1/13) top150-w  +3.32% | NEXT  +0.48% (4/13) | ROS by pos QB +5.0 RB +2.7 WR +3.0 TE -1.6  | eras 2013-18 +2.20% 2019-25 +3.24% ADP PPR/std 2013-17 +1.97% ADP half 2018-25 +3.26%
+    week  8: ROS err  +2.39% (3/13) top150-w  +2.79% | NEXT  +0.82% (2/13) | ROS by pos QB +4.9 RB +3.1 WR +2.1 TE -2.2  | eras 2013-18 +2.31% 2019-25 +2.44% ADP PPR/std 2013-17 +2.32% ADP half 2018-25 +2.42%
+    week  9: ROS err  +1.15% (6/13) top150-w  +0.30% | NEXT  +0.25% (5/13) | ROS by pos QB +1.6 RB +2.1 WR +1.3 TE -2.1  | eras 2013-18 +1.38% 2019-25 +0.97% ADP PPR/std 2013-17 +1.29% ADP half 2018-25 +1.07%
+    week 10: ROS err  +1.23% (5/13) top150-w  +0.96% | NEXT  +0.49% (4/13) | ROS by pos QB +1.9 RB +0.8 WR +2.1 TE -1.9  | eras 2013-18 +0.62% 2019-25 +1.72% ADP PPR/std 2013-17 +0.48% ADP half 2018-25 +1.66%
+    week 11: ROS err  +1.29% (5/13) top150-w  +0.17% | NEXT  +0.03% (8/13) | ROS by pos QB +1.7 RB +2.5 WR +0.9 TE -1.1  | eras 2013-18 +0.77% 2019-25 +1.73% ADP PPR/std 2013-17 +0.33% ADP half 2018-25 +1.88%
+    week 12: ROS err  +1.02% (4/13) top150-w  +0.81% | NEXT  +0.47% (3/13) | ROS by pos QB -0.0 RB +3.2 WR +0.5 TE -0.7  | eras 2013-18 +0.84% 2019-25 +1.18% ADP PPR/std 2013-17 +0.51% ADP half 2018-25 +1.36%
+
+  E  no ADP anywhere
+    ROS  all       n 27378 err  +2.91% (1/13) fwd  +3.17% (1/11) MAE  +1.35% top150-w  +2.94% rank -0.0058  | eras 2013-18 +2.36% 2019-25 +3.36% ADP PPR/std 2013-17 +1.87% ADP half 2018-25 +3.54%
+    ROS  QB        n  3795 err  +3.63% (2/13) fwd  +4.03% (2/11) MAE  +1.73% top150-w  +4.06% rank -0.0023  | eras 2013-18 +1.48% 2019-25 +5.29% ADP PPR/std 2013-17 +1.59% ADP half 2018-25 +4.78%
+    ROS  RB        n  7506 err  +2.97% (4/13) fwd  +3.93% (2/11) MAE  +1.23% top150-w  +3.27% rank -0.0129  | eras 2013-18 +2.90% 2019-25 +3.05% ADP PPR/std 2013-17 +2.36% ADP half 2018-25 +3.36%
+    ROS  WR        n 11220 err  +3.11% (1/13) fwd  +2.70% (1/11) MAE  +1.71% top150-w  +2.42% rank -0.0099  | eras 2013-18 +3.08% 2019-25 +3.12% ADP PPR/std 2013-17 +2.31% ADP half 2018-25 +3.62%
+    ROS  TE        n  4857 err  +0.80% (4/13) fwd  +1.10% (3/11) MAE  +0.16% top150-w  +1.72% rank +0.0028  | eras 2013-18 -0.90% 2019-25 +1.91% ADP PPR/std 2013-17 -1.18% ADP half 2018-25 +1.78%
+    NEXT all       n 32517 err  +0.48% (1/13) fwd  +0.56% (0/11) MAE  +0.18% top150-w  +0.49% rank -0.0011  | eras 2013-18 +0.53% 2019-25 +0.44% ADP PPR/std 2013-17 +0.40% ADP half 2018-25 +0.53%
+    games 1-1   ROS n  3288 err  +4.81% (1/13) fwd  +5.73% (0/11) MAE  +2.26% top150-w  +4.52% rank -0.0033 || NEXT n  3512 err  +0.91% (5/13) fwd  +1.10% (4/11) MAE  +0.55% top150-w  +0.60% rank -0.0048
+                 ROS by pos QB +8.42% (2/13) RB +3.68% (3/13) WR +4.97% (4/13) TE +2.30% (5/13)
+    games 2-3   ROS n  6233 err  +3.73% (0/13) fwd  +4.04% (0/11) MAE  +1.80% top150-w  +4.26% rank -0.0076 || NEXT n  6736 err  +0.64% (3/13) fwd  +0.74% (2/11) MAE  +0.22% top150-w  +0.72% rank -0.0039
+                 ROS by pos QB +5.62% (2/13) RB +3.70% (4/13) WR +3.25% (3/13) TE +2.12% (6/13)
+    games 4-5   ROS n  5648 err  +3.47% (1/13) fwd  +3.67% (1/11) MAE  +1.71% top150-w  +3.68% rank -0.0188 || NEXT n  6319 err  +0.47% (4/13) fwd  +0.59% (3/11) MAE  +0.14% top150-w  +0.69% rank -0.0030
+                 ROS by pos QB +4.12% (2/13) RB +3.27% (5/13) WR +4.16% (2/13) TE +0.70% (6/13)
+    games 6-7   ROS n  5039 err  +2.80% (2/13) fwd  +2.76% (2/11) MAE  +1.34% top150-w  +3.03% rank -0.0142 || NEXT n  5882 err  +0.68% (4/13) fwd  +0.78% (3/11) MAE  +0.27% top150-w  +0.75% rank -0.0021
+                 ROS by pos QB +2.90% (5/13) RB +2.52% (7/13) WR +3.82% (2/13) TE -0.08% (7/13)
+    games 8-11  ROS n  7170 err  +1.45% (4/13) fwd  +1.69% (3/11) MAE  +0.43% top150-w  +1.33% rank -0.0025 || NEXT n 10068 err  +0.14% (6/13) fwd  +0.12% (5/11) MAE  -0.01% top150-w  +0.07% rank +0.0014
+                 ROS by pos QB +0.86% (3/13) RB +2.23% (5/13) WR +1.48% (3/13) TE +0.08% (7/13)
+    week  2: ROS err  +5.23% (2/13) top150-w  +5.57% | NEXT  +0.78% (4/13) | ROS by pos QB +10.2 RB +3.5 WR +5.3 TE +3.1  | eras 2013-18 +5.29% 2019-25 +5.18% ADP PPR/std 2013-17 +4.15% ADP half 2018-25 +5.98%
+    week  3: ROS err  +3.80% (2/13) top150-w  +4.79% | NEXT  +0.70% (4/13) | ROS by pos QB +5.8 RB +4.6 WR +2.8 TE +1.1  | eras 2013-18 +3.77% 2019-25 +3.83% ADP PPR/std 2013-17 +3.28% ADP half 2018-25 +4.15%
+    week  4: ROS err  +3.75% (1/13) top150-w  +4.49% | NEXT  +0.84% (4/13) | ROS by pos QB +4.9 RB +4.2 WR +3.0 TE +2.8  | eras 2013-18 +2.87% 2019-25 +4.47% ADP PPR/std 2013-17 +1.86% ADP half 2018-25 +4.90%
+    week  5: ROS err  +3.48% (3/13) top150-w  +4.37% | NEXT  +0.68% (3/13) | ROS by pos QB +4.6 RB +2.9 WR +4.0 TE +1.9  | eras 2013-18 +2.34% 2019-25 +4.42% ADP PPR/std 2013-17 +1.68% ADP half 2018-25 +4.56%
+    week  6: ROS err  +3.71% (1/13) top150-w  +4.35% | NEXT  +0.66% (3/13) | ROS by pos QB +4.1 RB +2.6 WR +4.8 TE +2.5  | eras 2013-18 +2.32% 2019-25 +5.05% ADP PPR/std 2013-17 +1.67% ADP half 2018-25 +5.11%
+    week  7: ROS err  +4.01% (1/13) top150-w  +4.74% | NEXT  +0.48% (4/13) | ROS by pos QB +5.0 RB +2.9 WR +5.5 TE +0.9  | eras 2013-18 +3.06% 2019-25 +4.84% ADP PPR/std 2013-17 +2.66% ADP half 2018-25 +4.88%
+    week  8: ROS err  +2.97% (1/13) top150-w  +3.47% | NEXT  +0.82% (2/13) | ROS by pos QB +4.9 RB +2.7 WR +3.7 TE -1.5  | eras 2013-18 +2.75% 2019-25 +3.15% ADP PPR/std 2013-17 +2.72% ADP half 2018-25 +3.12%
+    week  9: ROS err  +2.50% (3/13) top150-w  +1.74% | NEXT  +0.25% (5/13) | ROS by pos QB +1.6 RB +2.6 WR +3.4 TE +0.6  | eras 2013-18 +2.79% 2019-25 +2.28% ADP PPR/std 2013-17 +2.52% ADP half 2018-25 +2.50%
+    week 10: ROS err  +1.83% (3/13) top150-w  +1.49% | NEXT  +0.49% (4/13) | ROS by pos QB +1.9 RB +0.7 WR +3.4 TE -0.9  | eras 2013-18 +1.12% 2019-25 +2.41% ADP PPR/std 2013-17 +0.85% ADP half 2018-25 +2.39%
+    week 11: ROS err  +1.82% (4/13) top150-w  +0.69% | NEXT  +0.03% (8/13) | ROS by pos QB +1.7 RB +2.8 WR +1.7 TE -0.2  | eras 2013-18 +1.23% 2019-25 +2.31% ADP PPR/std 2013-17 +1.04% ADP half 2018-25 +2.30%
+    week 12: ROS err  +1.53% (3/13) top150-w  +1.33% | NEXT  +0.47% (3/13) | ROS by pos QB -0.0 RB +3.4 WR +1.3 TE +0.3  | eras 2013-18 +1.28% 2019-25 +1.76% ADP PPR/std 2013-17 +0.90% ADP half 2018-25 +1.94%
+
+  H  market blend weight x.5
+    ROS  all       n 27378 err  +0.30% (5/13) fwd  +0.42% (4/11) MAE  +0.08% top150-w  +0.11% rank +0.0011  | eras 2013-18 +0.05% 2019-25 +0.51% ADP PPR/std 2013-17 -0.09% ADP half 2018-25 +0.54%
+    ROS  QB        n  3795 err  +1.01% (4/13) fwd  +1.25% (2/11) MAE  +0.47% top150-w  +0.67% rank +0.0020  | eras 2013-18 -0.08% 2019-25 +1.84% ADP PPR/std 2013-17 -0.10% ADP half 2018-25 +1.63%
+    ROS  RB        n  7506 err  +0.41% (4/13) fwd  +0.59% (3/11) MAE  +0.13% top150-w  +0.47% rank -0.0024  | eras 2013-18 +0.37% 2019-25 +0.45% ADP PPR/std 2013-17 +0.11% ADP half 2018-25 +0.60%
+    ROS  WR        n 11220 err  +0.06% (5/13) fwd  +0.05% (5/11) MAE  -0.00% top150-w  -0.25% rank -0.0002  | eras 2013-18 +0.03% 2019-25 +0.09% ADP PPR/std 2013-17 -0.16% ADP half 2018-25 +0.20%
+    ROS  TE        n  4857 err  -0.35% (8/13) fwd  -0.26% (7/11) MAE  -0.24% top150-w  -1.04% rank +0.0053  | eras 2013-18 -0.77% 2019-25 -0.07% ADP PPR/std 2013-17 -0.53% ADP half 2018-25 -0.26%
+    NEXT all       n 32517 err  +0.07% (4/13) fwd  +0.09% (2/11) MAE  -0.03% top150-w  +0.04% rank +0.0013  | eras 2013-18 +0.05% 2019-25 +0.08% ADP PPR/std 2013-17 +0.00% ADP half 2018-25 +0.10%
+    games 1-1   ROS n  3288 err  +0.68% (5/13) fwd  +0.98% (3/11) MAE  +0.18% top150-w  +0.17% rank +0.0105 || NEXT n  3512 err  +0.12% (5/13) fwd  +0.20% (3/11) MAE  +0.03% top150-w  -0.15% rank -0.0029
+                 ROS by pos QB +2.72% (3/13) RB +0.35% (5/13) WR +0.32% (5/13) TE -0.26% (7/13)
+    games 2-3   ROS n  6233 err  +0.49% (4/13) fwd  +0.59% (3/11) MAE  +0.17% top150-w  +0.32% rank +0.0000 || NEXT n  6736 err  +0.13% (4/13) fwd  +0.18% (2/11) MAE  -0.02% top150-w  +0.13% rank +0.0043
+                 ROS by pos QB +1.70% (2/13) RB +0.63% (5/13) WR -0.04% (8/13) TE -0.29% (8/13)
+    games 4-5   ROS n  5648 err  +0.39% (6/13) fwd  +0.50% (4/11) MAE  +0.21% top150-w  +0.23% rank -0.0005 || NEXT n  6319 err  +0.01% (7/13) fwd  +0.05% (5/11) MAE  -0.06% top150-w  +0.02% rank +0.0013
+                 ROS by pos QB +1.23% (4/13) RB +0.54% (5/13) WR +0.09% (7/13) TE -0.46% (8/13)
+    games 6-7   ROS n  5039 err  +0.27% (6/13) fwd  +0.32% (5/11) MAE  +0.07% top150-w  +0.22% rank -0.0016 || NEXT n  5882 err  +0.18% (5/13) fwd  +0.20% (5/11) MAE  +0.05% top150-w  +0.23% rank +0.0015
+                 ROS by pos QB +0.78% (5/13) RB +0.30% (6/13) WR +0.20% (6/13) TE -0.37% (7/13)
+    games 8-11  ROS n  7170 err  +0.02% (6/13) fwd  +0.13% (5/11) MAE  -0.11% top150-w  -0.14% rank +0.0017 || NEXT n 10068 err  -0.03% (8/13) fwd  -0.04% (7/11) MAE  -0.07% top150-w  -0.05% rank -0.0007
+                 ROS by pos QB -0.02% (5/13) RB +0.25% (4/13) WR -0.05% (8/13) TE -0.32% (8/13)
+    week  2: ROS err  +0.79% (4/13) top150-w  +0.40% | NEXT  +0.09% (5/13) | ROS by pos QB +3.3 RB +0.2 WR +0.4 TE +0.2  | eras 2013-18 +0.54% 2019-25 +1.03% ADP PPR/std 2013-17 +0.17% ADP half 2018-25 +1.23%
+    week  3: ROS err  +0.58% (5/13) top150-w  +0.53% | NEXT  +0.13% (5/13) | ROS by pos QB +1.6 RB +0.8 WR +0.1 TE -0.3  | eras 2013-18 +0.34% 2019-25 +0.78% ADP PPR/std 2013-17 +0.17% ADP half 2018-25 +0.84%
+    week  4: ROS err  +0.37% (4/13) top150-w  +0.14% | NEXT  +0.25% (5/13) | ROS by pos QB +1.4 RB +0.5 WR -0.2 TE -0.2  | eras 2013-18 -0.07% 2019-25 +0.72% ADP PPR/std 2013-17 -0.25% ADP half 2018-25 +0.75%
+    week  5: ROS err  +0.44% (5/13) top150-w  +0.45% | NEXT  +0.12% (6/13) | ROS by pos QB +1.3 RB +0.5 WR +0.2 TE -0.5  | eras 2013-18 +0.18% 2019-25 +0.65% ADP PPR/std 2013-17 -0.01% ADP half 2018-25 +0.70%
+    week  6: ROS err  +0.47% (4/13) top150-w  +0.58% | NEXT  +0.08% (4/13) | ROS by pos QB +1.2 RB +0.4 WR +0.3 TE -0.3  | eras 2013-18 +0.13% 2019-25 +0.78% ADP PPR/std 2013-17 +0.06% ADP half 2018-25 +0.74%
+    week  7: ROS err  +0.58% (4/13) top150-w  +0.65% | NEXT  +0.12% (6/13) | ROS by pos QB +1.7 RB +0.5 WR +0.4 TE -0.6  | eras 2013-18 +0.40% 2019-25 +0.73% ADP PPR/std 2013-17 +0.40% ADP half 2018-25 +0.69%
+    week  8: ROS err  +0.40% (4/13) top150-w  +0.35% | NEXT  +0.19% (6/13) | ROS by pos QB +1.7 RB +0.4 WR +0.2 TE -0.7  | eras 2013-18 +0.28% 2019-25 +0.49% ADP PPR/std 2013-17 +0.31% ADP half 2018-25 +0.45%
+    week  9: ROS err  +0.03% (7/13) top150-w  -0.31% | NEXT  +0.01% (5/13) | ROS by pos QB +0.2 RB +0.3 WR -0.1 TE -0.6  | eras 2013-18 -0.09% 2019-25 +0.12% ADP PPR/std 2013-17 -0.15% ADP half 2018-25 +0.13%
+    week 10: ROS err  +0.09% (5/13) top150-w  -0.11% | NEXT  +0.04% (5/13) | ROS by pos QB +0.5 RB -0.1 WR +0.2 TE -0.4  | eras 2013-18 -0.29% 2019-25 +0.39% ADP PPR/std 2013-17 -0.40% ADP half 2018-25 +0.37%
+    week 11: ROS err  +0.10% (7/13) top150-w  -0.30% | NEXT  -0.06% (9/13) | ROS by pos QB +0.4 RB +0.3 WR -0.1 TE -0.3  | eras 2013-18 -0.17% 2019-25 +0.31% ADP PPR/std 2013-17 -0.35% ADP half 2018-25 +0.37%
+    week 12: ROS err  -0.01% (5/13) top150-w  -0.15% | NEXT  +0.07% (5/13) | ROS by pos QB -0.4 RB +0.6 WR -0.2 TE -0.3  | eras 2013-18 -0.19% 2019-25 +0.15% ADP PPR/std 2013-17 -0.35% ADP half 2018-25 +0.21%
+dumped adp_variants_dump

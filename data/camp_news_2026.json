@@ -1,6 +1,151 @@
 {
-  "updated": "2026-10-22T22:13:36Z",
+  "updated": "2026-10-23T22:17:21Z",
   "items": [
+    {
+      "player": "Cole Kmet",
+      "team": "CHI",
+      "pos": "TE",
+      "date": "2026-10-23",
+      "headline": "Placed on IR with season-ending knee injury suffered vs. Patriots",
+      "take": "Done for 2026 \u2014 Colston Loveland becomes the clear TE1 in Chicago's passing game, with rookie Sam Roush the No. 2.",
+      "url": "https://chicago.suntimes.com/bears/2026/10/23/bears-lose-te-cole-kmet-for-the-season-with-knee-injury",
+      "tag": "injury",
+      "avail": {
+        "k": "season"
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Colston Loveland",
+      "team": "CHI",
+      "pos": "TE",
+      "date": "2026-10-23",
+      "headline": "Set to take over as Bears' lead TE after Cole Kmet's season-ending injury",
+      "take": "Immediate streaming/waiver add at TE with Kmet on IR for the rest of the year.",
+      "url": "https://atozsports.com/nfl/chicago-bears-news/bears-confirm-suspicions-cole-kmet-injury-out-for-season-sam-roush/",
+      "tag": "role",
+      "src_type": "report"
+    },
+    {
+      "player": "Theo Johnson",
+      "team": "NYG",
+      "pos": "TE",
+      "date": "2026-10-23",
+      "headline": "Downgraded to DNP Friday, doubtful for Week 7 at Houston with neck injury",
+      "take": "Trending toward a second straight missed game \u2014 plan for a replacement TE vs. the Texans.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-23/theo-johnson-neck-doubtful-for-week-7-vs-texans",
+      "tag": "injury",
+      "avail": {
+        "k": "doubt",
+        "wk": 7
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Rashee Rice",
+      "team": "KC",
+      "pos": "WR",
+      "date": "2026-10-23",
+      "headline": "Ruled out for Week 7 vs. Seahawks with hamstring injury",
+      "take": "Second straight week out \u2014 Jalen Royals and Xavier Worthy stay the top beneficiaries in Kansas City's passing game.",
+      "url": "https://sports.yahoo.com/articles/chiefs-seahawks-week-7-final-194500481.html",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 7
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Brashard Smith",
+      "team": "KC",
+      "pos": "RB",
+      "date": "2026-10-23",
+      "headline": "Listed out for Week 7 vs. Seahawks with hamstring injury",
+      "take": "Out of the Chiefs' backfield mix this week; monitor Friday inactives for confirmation.",
+      "url": "https://sports.yahoo.com/articles/chiefs-seahawks-week-7-final-194500481.html",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 7
+      },
+      "src_type": "report"
+    },
+    {
+      "player": "Lamar Jackson",
+      "team": "BAL",
+      "pos": "QB",
+      "date": "2026-10-23",
+      "headline": "Officially questionable for Sunday vs. Bengals after a third straight limited practice",
+      "take": "Real game-time decision on the ankle \u2014 have a Cooper Rush/Josh Johnson contingency ready if you stream Ravens pieces.",
+      "url": "https://www.cbssports.com/nfl/news/nfl-week-7-injury-report-baker-mayfield-lamar-jackson-questionable/",
+      "tag": "injury",
+      "avail": {
+        "k": "gtd",
+        "wk": 7
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Baker Mayfield",
+      "team": "TB",
+      "pos": "QB",
+      "date": "2026-10-23",
+      "headline": "Listed questionable for Week 7 vs. Panthers after clearing thumb to practice",
+      "take": "No clean start/sit call yet \u2014 if he's out, Jalon Daniels starts a fourth straight game.",
+      "url": "https://www.buccaneers.com/news/buccaneers-panthers-injury-report-oct-23-week-7-2026",
+      "tag": "injury",
+      "avail": {
+        "k": "gtd",
+        "wk": 7
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Emeka Egbuka",
+      "team": "TB",
+      "pos": "WR",
+      "date": "2026-10-23",
+      "headline": "Ruled out for Week 7 vs. Panthers with concussion/foot injury",
+      "take": "Out again \u2014 expanded target share for whoever starts at QB to throw to among Tampa Bay's remaining WRs.",
+      "url": "https://www.buccaneers.com/news/buccaneers-panthers-injury-report-oct-23-week-7-2026",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 7
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Puka Nacua",
+      "team": "LAR",
+      "pos": "WR",
+      "date": "2026-10-23",
+      "headline": "Ruled out for Week 7 vs. Jaguars in London with ankle sprain",
+      "take": "Will miss a second game; McVay optimistic for a return after the Rams' Week 8 bye. Tutu Atwell expected back and is the clear beneficiary.",
+      "url": "https://www.cbssports.com/nfl/news/puka-nacua-injury-update-rams-receiver-ruled-out-for-week-7-game-against-jaguars-in-london",
+      "tag": "injury",
+      "avail": {
+        "k": "out",
+        "wk": 7
+      },
+      "src_type": "team"
+    },
+    {
+      "player": "Alvin Kamara",
+      "team": "NO",
+      "pos": "RB",
+      "date": "2026-10-23",
+      "headline": "Off the injury report for Week 7 vs. Steelers in Paris",
+      "take": "Trending toward a full workload after a back issue limited him in practice; locks back in as a top-24 RB play.",
+      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-23/kamara-back-off-injury-report-for-week-7",
+      "tag": "injury",
+      "avail": {
+        "k": "play",
+        "wk": 7
+      },
+      "src_type": "team"
+    },
     {
       "player": "J.J. McCarthy",
       "team": "NYG",
@@ -2389,28 +2534,6 @@
       "src_type": "team"
     },
     {
-      "player": "Jaleel McLaughlin",
-      "team": "CLE",
-      "pos": "RB",
-      "date": "2026-10-01",
-      "headline": "Scores a 28-yard TD in Thursday night's win over the Steelers, cutting into Quinshon Judkins' workload",
-      "take": "Worth a speculative add as the clear backup/change-of-pace back in a run-heavy Cleveland offense",
-      "url": "https://sports.yahoo.com/articles/pittsburgh-steelers-vs-cleveland-browns-034519253.html",
-      "tag": "riser",
-      "src_type": "report"
-    },
-    {
-      "player": "Harold Fannin Jr.",
-      "team": "CLE",
-      "pos": "TE",
-      "date": "2026-10-01",
-      "headline": "Catches his 3rd TD in 2 games, a clutch 2-yarder with 1:22 left, in Thursday's win over Pittsburgh",
-      "take": "Emerging as a legit streaming TE option in Cleveland's red-zone offense",
-      "url": "https://www.espn.com/nfl/recap?gameId=401872964",
-      "tag": "riser",
-      "src_type": "report"
-    },
-    {
       "player": "Jayden Daniels",
       "team": "WAS",
       "pos": "QB",
@@ -2616,61 +2739,6 @@
       "src_type": "report"
     },
     {
-      "player": "Breece Hall",
-      "team": "NYJ",
-      "pos": "RB",
-      "date": "2026-10-01",
-      "headline": "DNP again Thursday (quad); Glenn calls him week-to-week ahead of Bears",
-      "take": "Braelon Allen is the clear top RB play in Week 4 if Hall sits Sunday.",
-      "url": "https://www.newyorkjets.com/news/jets-injury-report-week-4-vs-bears-thursday-10-01-2026",
-      "tag": "injury",
-      "src_type": "team"
-    },
-    {
-      "player": "Mason Taylor",
-      "team": "NYJ",
-      "pos": "TE",
-      "date": "2026-10-01",
-      "headline": "DNP again Thursday (thumb); Glenn lists him week-to-week for Bears game",
-      "take": "Kenyon Sadiq remains the Jets' top receiving-TE option in Week 4.",
-      "url": "https://www.newyorkjets.com/news/jets-injury-report-week-4-vs-bears-thursday-10-01-2026",
-      "tag": "injury",
-      "src_type": "team"
-    },
-    {
-      "player": "Adonai Mitchell",
-      "team": "NYJ",
-      "pos": "WR",
-      "date": "2026-10-01",
-      "headline": "Added back to injury report Thursday (finger); week-to-week per Glenn",
-      "take": "Clouds his Week 4 outlook behind Garrett Wilson in the Jets' passing game.",
-      "url": "https://www.newyorkjets.com/news/jets-injury-report-week-4-vs-bears-thursday-10-01-2026",
-      "tag": "injury",
-      "src_type": "team"
-    },
-    {
-      "player": "Chig Okonkwo",
-      "team": "WAS",
-      "pos": "TE",
-      "date": "2026-10-01",
-      "headline": "Limited for a 2nd straight day Thursday (hamstring) in London",
-      "take": "Needs a Friday upgrade to play Sunday vs. Colts -- hold him until the final tag.",
-      "url": "https://www.hogshaven.com/washington-commanders-injuries/445274/commanders-vs-colts-thursday-injury-report-chig-okonkwo-frankie-luvu-rachaad-white",
-      "tag": "injury",
-      "src_type": "team"
-    },
-    {
-      "player": "Jadarian Price",
-      "team": "SEA",
-      "pos": "RB",
-      "date": "2026-10-01",
-      "headline": "Stuck in a 3-way Seattle committee, under 8 PPR points in 3 straight games",
-      "take": "Fading flex value even before Zach Charbonnet re-enters the backfield mix.",
-      "url": "https://www.fantasylife.com/articles/fantasy/nfl-snap-counts-report-for-week-4-fantasy-football",
-      "tag": "faller",
-      "src_type": "report"
-    },
-    {
       "player": "Zach Charbonnet",
       "team": "SEA",
       "pos": "RB",
@@ -2683,50 +2751,6 @@
         "k": "ret",
         "wk": 5
       },
-      "src_type": "report"
-    },
-    {
-      "player": "DeVonta Smith",
-      "team": "PHI",
-      "pos": "WR",
-      "date": "2026-10-01",
-      "headline": "DNP again Thursday (hamstring) ahead of Sunday's game vs. Rams",
-      "take": "Short week, same management pattern as last week when he ramped up Fri/Sat -- watch Friday's tag before trusting him as a confident Week 4 start.",
-      "url": "https://sports.yahoo.com/articles/eagles-injury-report-devonta-smith-232740749.html",
-      "tag": "injury",
-      "src_type": "team"
-    },
-    {
-      "player": "Rachaad White",
-      "team": "WAS",
-      "pos": "RB",
-      "date": "2026-10-01",
-      "headline": "DNP for a 2nd straight day (shoulder) in London, trending toward sitting Week 4",
-      "take": "Two DNPs to open the week make him a real fade risk vs. Colts; Jacory Croskey-Merritt stays the lead back, with newly-signed Austin Ekeler addable change-of-pace option.",
-      "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-01/rachaad-white-shoulder-not-practicing-thursday",
-      "tag": "injury",
-      "src_type": "team"
-    },
-    {
-      "player": "Mike Evans",
-      "team": "SF",
-      "pos": "WR",
-      "date": "2026-10-01",
-      "headline": "Misses 2nd straight practice (ribs); GM Lynch says he'll 'make every attempt' to play Sunday",
-      "take": "Trending toward a Friday game-time-decision tag vs. Denver -- have a contingency plan ready in case he sits.",
-      "url": "https://www.prizepicks.com/playbook-article/mike-evans-injury-update-is-49ers-wr-playing-this-week-vs-broncos",
-      "tag": "injury",
-      "src_type": "team"
-    },
-    {
-      "player": "Ollie Gordon II",
-      "team": "MIA",
-      "pos": "RB",
-      "date": "2026-10-01",
-      "headline": "Projected for a lead Miami backfield role now that Achane's season-ending ACL tear is confirmed",
-      "take": "No longer just a fill-in -- Gordon is a top Week 4 waiver priority with Miami's backfield now fully open.",
-      "url": "https://sports.yahoo.com/articles/week-4-fantasy-football-rookie-215252279.html",
-      "tag": "riser",
       "src_type": "report"
     },
     {

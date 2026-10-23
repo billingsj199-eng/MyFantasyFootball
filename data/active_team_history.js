@@ -259,7 +259,7 @@ const ACTIVE_TEAM_HISTORY = {
     'Jayden Higgins': [{t:'Houston Texans',y1:2025,y2:2099}],
     'Jayden Reed': [{t:'Green Bay Packers',y1:2023,y2:2099}],
     'Jaydn Ott': [{t:'Kansas City Chiefs',y1:2026,y2:2099}],
-    'Jaydon Blue': [{t:'Dallas Cowboys',y1:2025,y2:2025}],
+    'Jaydon Blue': [{t:'Dallas Cowboys',y1:2025,y2:2025},{t:'Philadelphia Eagles',y1:2026,y2:2099}],
     'Jaylen Waddle': [{t:'Miami Dolphins',y1:2021,y2:2025},{t:'Denver Broncos',y1:2026,y2:2099}],
     'Jaylen Warren': [{t:'Pittsburgh Steelers',y1:2022,y2:2099}],
     'Jaylen Wright': [{t:'Miami Dolphins',y1:2024,y2:2099}],

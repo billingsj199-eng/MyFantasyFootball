@@ -1,0 +1,23 @@
+=== OOS layer re-test with era drift: years 2012-2025 | pool ext | team fix on | EXTENDED | 49,521 player-weeks | graded 2013-25 | recency 0.85 ===
+  prior rebuild check: max |rebuilt - harness| = 0.00e+00
+  NEXT wired model 2013-25: rows 41,551 MSE 40.299 top-150 wtd 1412345 rank 0.3957
+  ROS wired model 2013-25: rows 19,775 MSE 10.206 top-150 wtd 155501 rank 0.6234
+  check vs bt_ext_oos: next 2012-18 MSE 40.426 (log 40.426; engine top-30 QB exemption on: 40.413); ROS 2012-18 MSE 10.450 (log 10.450)
+
+=== D  JOINT PULL [NEXT]: ['usage evidence, WR']  rows touched 15,392 ===
+    by season, % MSE all rows (pulled vs wired; neg = pulling helps): 13:-0.24 14:-0.29 15:-0.17 16:-0.08 17:-0.19 18:-0.08 19:+0.08 20:-0.20 21:-0.23 22:-0.01 23:-0.27 24:+0.01 25:+0.01
+    by season, top-150 wtd %: 13:-0.09 14:-0.20 15:-0.49 16:+0.13 17:-0.08 18:+0.08 19:+0.09 20:-0.20 21:-0.08 22:+0.05 23:-0.07 24:+0.04 25:-0.08
+    trend slope +0.014 [-0.004, +0.033]
+    ALL 13-25 pulled together: err -0.125% (touched -0.35%) wtd -0.069% MAE -0.150% rank +0.0001 | better 10/13 fwd 7/10
+    16-25     pulled together: err -0.094% (touched -0.26%) wtd -0.013% MAE -0.115% rank -0.0002 | better 7/10 fwd 4/7
+    RECENCY   pulled together: err -0.095% (touched -0.26%) wtd -0.047% MAE -0.108% rank -0.0001 | better 10/13 fwd 7/10
+      alone: usage evidence, WR                       s=0.5 err -0.125% wtd -0.069% rank +0.0001
+
+=== D  JOINT PULL [ROS]: ['usage evidence, WR (ROS)']  rows touched 7,162 ===
+    by season, % MSE all rows (pulled vs wired; neg = pulling helps): 13:-0.93 14:-1.21 15:-1.01 16:-1.18 17:-0.02 18:-0.70 19:+0.48 20:-1.21 21:-1.34 22:+0.03 23:-0.74 24:-0.47 25:+0.69
+    by season, top-150 wtd %: 13:+0.06 14:-2.37 15:-3.64 16:-0.24 17:+1.46 18:-0.09 19:+0.56 20:-2.31 21:-0.67 22:-0.04 23:+0.23 24:-1.23 25:+0.33
+    trend slope +0.083 [-0.019, +0.184]
+    ALL 13-25 pulled together: err -0.572% (touched -1.66%) wtd -0.573% MAE -0.377% rank +0.0008 | better 10/13 fwd 7/10
+    16-25     pulled together: err -0.434% (touched -1.27%) wtd -0.195% MAE -0.302% rank +0.0006 | better 7/10 fwd 4/7
+    RECENCY   pulled together: err -0.387% (touched -1.12%) wtd -0.417% MAE -0.264% rank +0.0003 | better 10/13 fwd 7/10
+      alone: usage evidence, WR (ROS)                 s=0.5 err -0.572% wtd -0.573% rank +0.0008

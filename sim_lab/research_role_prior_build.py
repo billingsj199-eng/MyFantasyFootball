@@ -19,8 +19,9 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import bt_common as B
 import build_context_features as BC
 from pull_pace_tracker import _xfp_ab, _xtd_rec, _xfp_rush, _xtd, XFP_CATCH, XFP_TGT_YDS
-CACHE = B.CACHE; YEARS = list(range(2019, 2026))
-OUT = os.path.join(HERE, "_tmp", "role_games.pkl")
+import bt_ext as BX
+CACHE = B.CACHE; YEARS = list(BX.YEARS)
+OUT = BX.ext_path("role_games.pkl") if BX.EXT else os.path.join(HERE, "_tmp", "role_games.pkl")   # 2026-10-20: SIM_BT_YEARS aware
 
 
 def year_tables(Y, pos_of):
@@ -80,7 +81,8 @@ def year_tables(Y, pos_of):
     gameqb = {k: max(v, key=v.get) for k, v in qbdb.items()}
     # participation: on-field plays + on-field dropbacks (all / competitive)
     pp = os.path.join(CACHE, f"pbp_participation_{Y}.parquet")
-    part = pd.read_parquet(pp, columns=["nflverse_game_id", "play_id", "offense_players"])
+    HASPART = os.path.exists(pp)
+    part = pd.read_parquet(pp, columns=["nflverse_game_id", "play_id", "offense_players"]) if HASPART else pd.DataFrame(columns=["nflverse_game_id", "play_id", "offense_players"])
     part = part[part.offense_players.fillna("") != ""]
     key = pl[["game_id", "play_id", "tm", "week", "gar", "qb_dropback"]].rename(columns={"game_id": "nflverse_game_id"})
     m = key.merge(part, on=["nflverse_game_id", "play_id"], how="inner")
@@ -99,13 +101,21 @@ def year_tables(Y, pos_of):
     for (pid, wk), v in P.items():
         t = ptm.get((pid, wk))
         rows.append(dict(year=Y, pid=pid, wk=int(wk), team=t, pos=pos_of.get(pid), **v))
-    pg = pd.DataFrame(rows).fillna(0.0)
+    pg = pd.DataFrame(rows)
+    for c_ in ("on", "on_c", "ondb", "ondb_c"):
+        if c_ not in pg.columns: pg[c_] = np.nan
+    cnt = [c_ for c_ in pg.columns if c_ not in ("year", "pid", "wk", "team", "pos", "on", "on_c", "ondb", "ondb_c")]
+    pg[cnt] = pg[cnt].fillna(0.0)
+    if HASPART: pg[["on", "on_c", "ondb", "ondb_c"]] = pg[["on", "on_c", "ondb", "ondb_c"]].fillna(0.0)   # no participation year -> stays NaN
     trows = []
     for (t, wk), v in T.items():
         trows.append(dict(year=Y, team=t, wk=int(wk), qb=gameqb.get((t, wk)), margin=margin.get((t, wk), np.nan), **v))
     tg = pd.DataFrame(trows)
+    for c_ in ("ppl", "ppl_c", "pdb", "pdb_c"):
+        if c_ not in tg.columns or not HASPART: tg[c_] = np.nan
     # nflverse snap share (the raw snap_std source)
-    sc = pd.read_parquet(os.path.join(CACHE, f"snap_counts_{Y}.parquet"), columns=["week", "game_type", "player", "pfr_player_id", "team", "offense_pct", "offense_snaps"])
+    sp_ = os.path.join(CACHE, f"snap_counts_{Y}.parquet")
+    sc = pd.read_parquet(sp_, columns=["week", "game_type", "player", "pfr_player_id", "team", "offense_pct", "offense_snaps"]) if os.path.exists(sp_) else pd.DataFrame(columns=["week", "game_type", "player", "pfr_player_id", "team", "offense_pct", "offense_snaps"])
     sc = sc[(sc.game_type == "REG") & (sc.offense_snaps > 0)]
     sn = pd.DataFrame({"nm": sc.player.map(BC.norm), "team": sc.team.map(lambda x: B.tm(str(x))), "wk": sc.week.astype(int), "snap_pct": 100 * sc.offense_pct.astype(float)})
     return pg, tg, sn
@@ -127,7 +137,7 @@ def main():
         for k, v in inj.items(): INJ[(Y,) + k] = v
         for k, v in ros.items(): ROS[(Y,) + k] = v
         for k in have: HAVE.add((Y,) + k)
-        print(f"  {Y}: player-games {len(pg):,}  with participation {(pg.on > 0).mean():.2f}  snap pct matched {pg.snap_pct.notna().mean():.2f}  ({time.time()-t0:.0f}s)", flush=True)
+        print(f"  {Y}: player-games {len(pg):,}  with participation {(pg.on.fillna(0) > 0).mean():.2f}  snap pct matched {pg.snap_pct.notna().mean():.2f}  ({time.time()-t0:.0f}s)", flush=True)
     out = {"pg": pd.concat(PG, ignore_index=True), "tg": pd.concat(TG, ignore_index=True), "inj": INJ, "ros": ROS, "ros_have": HAVE, "pos_of": pos_of}
     pickle.dump(out, open(OUT, "wb"))
     print("wrote", OUT, f"{time.time()-t0:.0f}s")

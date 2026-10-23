@@ -1,0 +1,291 @@
+=== OOS layer re-test with era drift: years 2012-2025 | pool ext | team fix on | EXTENDED | 49,521 player-weeks | graded 2013-25 | recency 0.85 ===
+  prior rebuild check: max |rebuilt - harness| = 0.00e+00
+  NEXT wired model 2013-25: rows 41,551 MSE 40.299 top-150 wtd 1412345 rank 0.3957
+  ROS wired model 2013-25: rows 19,775 MSE 10.206 top-150 wtd 155501 rank 0.6234
+  check vs bt_ext_oos: next 2012-18 MSE 40.426 (log 40.426; engine top-30 QB exemption on: 40.413); ROS 2012-18 MSE 10.450 (log 10.450)
+
+=== A  NEXT GAME ===
+
+  [NEXT] vacated-role pool   rows touched 12,734 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.15 14:+0.40 15:+0.35 16:+0.16 17:+0.60 18:+0.25 19:-0.06 20:+0.28 21:-0.11 22:-0.08 23:-0.48 24:-0.95 25:-0.41
+    layer effect by season, top-150 wtd %:                     13:+0.14 14:-0.01 15:+0.32 16:-0.34 17:+0.42 18:+0.18 19:+0.02 20:+0.27 21:-0.20 22:-0.44 23:-0.34 24:-0.80 25:-0.22
+    layer effect by season, rank order (RB/WR/TE groups, + = helps): 13:-0.0052 14:+0.0007 15:+0.0003 16:+0.0020 17:-0.0087 18:-0.0029 19:-0.0022 20:+0.0098 21:+0.0003 22:-0.0007 23:+0.0051 24:+0.0016 25:+0.0034 | slope +0.00054 [-0.00016, +0.00124] | 13-18 -0.0023 19-25 +0.0025
+    trend slope (all rows) -0.085%/season [95% CI -0.130, -0.041] | top-150 wtd -0.056 [-0.103, -0.009] | era mean 13-18 +0.318%  19-25 -0.259%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.01% (touched  -0.04%) wtd  -0.09% MAE  +0.60% rank +0.0003 | helps 6/13 seasons (wtd share 0.46), fwd 6/10 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.14% touched -0.48% wtd -0.04% rank +0.0004) | LOYO picks {0.5: 13} err -0.14% touched -0.48% wtd -0.04% rank +0.0004 better 10/13 | FWD err -0.09% better 7/10  ** RESIZE PASSES
+    16-25     LAYER: err  -0.10% (touched  -0.34%) wtd  -0.16% MAE  +0.58% rank +0.0008 | helps 6/10 seasons (wtd share 0.60), fwd 6/7 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.10% touched -0.33% wtd -0.00% rank +0.0001) | LOYO picks {0.5: 10} err -0.10% touched -0.33% wtd -0.00% rank +0.0001 better 7/10 | FWD err -0.00% better 4/7
+    RECENCY   LAYER: err  -0.21% (touched  -0.70%) wtd  -0.22% MAE  +0.52% rank +0.0014 | helps 6/13 seasons (wtd share 0.70), fwd 6/10 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.03% touched -0.11% wtd +0.03% rank -0.0004) | LOYO picks {0.5: 13} err -0.03% touched -0.11% wtd +0.03% rank -0.0004 better 10/13 | FWD err -0.00% better 7/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.14 / -0.10 / -0.03 | x1.5: +0.58 / +0.53 / +0.45
+
+  [NEXT] QB game-total tilt   rows touched 4,991 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.18 14:+0.22 15:+0.13 16:+0.00 17:+0.31 18:-0.19 19:+0.06 20:-0.22 21:+0.05 22:-0.14 23:-0.05 24:+0.01 25:+0.03
+    layer effect by season, top-150 wtd %:                     13:+0.16 14:+0.17 15:+0.01 16:+0.06 17:+0.31 18:-0.22 19:+0.08 20:-0.18 21:+0.00 22:-0.12 23:+0.00 24:+0.02 25:-0.05
+    layer effect by season, rank order (QB groups, + = helps): 13:-0.0161 14:-0.0056 15:-0.0230 16:+0.0146 17:-0.0308 18:+0.0146 19:-0.0112 20:+0.0144 21:+0.0017 22:+0.0058 23:+0.0078 24:+0.0082 25:+0.0334 | slope +0.00290 [+0.00056, +0.00524] | 13-18 -0.0077 19-25 +0.0086
+    trend slope (all rows) -0.020%/season [95% CI -0.043, +0.003] | top-150 wtd -0.017 [-0.039, +0.005] | era mean 13-18 +0.107%  19-25 -0.037%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.03% (touched  +0.15%) wtd  +0.02% MAE  +0.01% rank +0.0013 | helps 4/13 seasons (wtd share 0.31), fwd 4/10 -> HURTS
+              RESIZE: best s on all 0.5 (in-sample err -0.03% touched -0.19% wtd -0.02% rank +0.0007) | LOYO picks {0.0: 3, 0.5: 10} err -0.01% touched -0.03% wtd -0.00% rank -0.0008 better 9/13 | FWD err +0.01% better 6/10
+    16-25     LAYER: err  -0.02% (touched  -0.10%) wtd  -0.01% MAE  -0.01% rank +0.0060 | helps 4/10 seasons (wtd share 0.40), fwd 3/7 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.01% touched -0.06% wtd -0.01% rank -0.0015) | LOYO picks {0.5: 9, 1.0: 1} err +0.00% touched +0.03% wtd +0.01% rank -0.0041 better 5/10 | FWD err +0.00% better 4/7
+    RECENCY   LAYER: err  -0.01% (touched  -0.03%) wtd  -0.01% MAE  -0.00% rank +0.0078 | helps 4/13 seasons (wtd share 0.36), fwd 4/10 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.02% touched -0.09% wtd -0.01% rank -0.0034) | LOYO picks {0.5: 13} err -0.02% touched -0.09% wtd -0.01% rank -0.0034 better 9/13 | FWD err +0.00% better 6/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.03 / -0.01 / -0.02 | x1.5: +0.07 / +0.05 / +0.05
+
+  [NEXT] usage evidence, RB   rows touched 10,408 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.34 14:+0.04 15:+0.20 16:+0.21 17:-0.04 18:+0.12 19:+0.01 20:+0.15 21:-0.14 22:-0.07 23:-0.00 24:+0.11 25:-0.34
+    layer effect by season, top-150 wtd %:                     13:+0.50 14:+0.41 15:-0.04 16:+0.22 17:-0.33 18:+0.03 19:-0.22 20:+0.56 21:-0.48 22:-0.04 23:+0.16 24:+0.22 25:-0.46
+    layer effect by season, rank order (RB groups, + = helps): 13:-0.0032 14:-0.0053 15:+0.0072 16:-0.0012 17:-0.0026 18:-0.0044 19:+0.0015 20:+0.0021 21:-0.0043 22:-0.0022 23:+0.0032 24:-0.0069 25:+0.0070 | slope +0.00020 [-0.00056, +0.00097] | 13-18 -0.0016 19-25 +0.0001
+    trend slope (all rows) -0.030%/season [95% CI -0.052, -0.008] | top-150 wtd -0.036 [-0.089, +0.018] | era mean 13-18 +0.145%  19-25 -0.039%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.04% (touched  +0.16%) wtd  +0.03% MAE  +0.13% rank -0.0007 | helps 5/13 seasons (wtd share 0.38), fwd 5/10 -> HURTS
+              RESIZE: best s on all 0.5 (in-sample err -0.05% touched -0.20% wtd -0.06% rank +0.0011) | LOYO picks {0.0: 1, 0.5: 12} err -0.04% touched -0.14% wtd -0.04% rank +0.0009 better 10/13 | FWD err +0.00% better 5/10
+    16-25     LAYER: err  -0.00% (touched  -0.01%) wtd  -0.04% MAE  +0.10% rank -0.0008 | helps 5/10 seasons (wtd share 0.50), fwd 4/7 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.03% touched -0.10% wtd -0.02% rank +0.0011) | LOYO picks {0.5: 10} err -0.03% touched -0.10% wtd -0.02% rank +0.0011 better 7/10 | FWD err +0.00% better 4/7
+    RECENCY   LAYER: err  -0.02% (touched  -0.09%) wtd  -0.04% MAE  +0.07% rank -0.0002 | helps 5/13 seasons (wtd share 0.53), fwd 5/10 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.02% touched -0.06% wtd -0.02% rank +0.0006) | LOYO picks {0.5: 13} err -0.02% touched -0.06% wtd -0.02% rank +0.0006 better 10/13 | FWD err +0.00% better 6/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.05 / -0.03 / -0.02 | x1.5: +0.07 / +0.04 / +0.04
+
+  [NEXT] usage evidence, WR   rows touched 15,392 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.31 14:+0.43 15:+0.15 16:+0.03 17:+0.20 18:+0.01 19:-0.25 20:+0.28 21:+0.34 22:-0.09 23:+0.43 24:-0.14 25:-0.12
+    layer effect by season, top-150 wtd %:                     13:+0.06 14:+0.25 15:+0.69 16:-0.40 17:-0.03 18:-0.29 19:-0.26 20:+0.31 21:+0.07 22:-0.18 23:+0.03 24:-0.21 25:+0.07
+    layer effect by season, rank order (WR groups, + = helps): 13:-0.0097 14:-0.0043 15:+0.0007 16:+0.0025 17:+0.0082 18:+0.0021 19:+0.0085 20:+0.0045 21:-0.0096 22:-0.0006 23:-0.0018 24:+0.0176 25:+0.0003 | slope +0.00064 [-0.00055, +0.00184] | 13-18 -0.0001 19-25 +0.0027
+    trend slope (all rows) -0.023%/season [95% CI -0.059, +0.013] | top-150 wtd -0.019 [-0.067, +0.029] | era mean 13-18 +0.189%  19-25 +0.065%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.12% (touched  +0.33%) wtd  +0.01% MAE  +0.24% rank +0.0014 | helps 4/13 seasons (wtd share 0.31), fwd 4/10 -> HURTS
+              RESIZE: best s on all 0.5 (in-sample err -0.13% touched -0.35% wtd -0.07% rank +0.0003) | LOYO picks {0.0: 4, 0.5: 9} err -0.08% touched -0.23% wtd -0.03% rank -0.0006 better 9/13 | FWD err -0.05% better 6/10
+    16-25     LAYER: err  +0.07% (touched  +0.18%) wtd  -0.09% MAE  +0.18% rank +0.0031 | helps 4/10 seasons (wtd share 0.40), fwd 4/7 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.09% touched -0.26% wtd -0.01% rank -0.0009) | LOYO picks {0.5: 10} err -0.09% touched -0.26% wtd -0.01% rank -0.0009 better 7/10 | FWD err -0.09% better 4/7
+    RECENCY   LAYER: err  +0.07% (touched  +0.19%) wtd  -0.02% MAE  +0.16% rank +0.0026 | helps 4/13 seasons (wtd share 0.48), fwd 4/10 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.10% touched -0.26% wtd -0.05% rank -0.0006) | LOYO picks {0.5: 13} err -0.10% touched -0.26% wtd -0.05% rank -0.0006 better 10/13 | FWD err -0.04% better 6/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.13 / -0.09 / -0.10 | x1.5: +0.19 / +0.16 / +0.15
+
+  [NEXT] QB changed teams x.90   rows touched 774 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.07 14:-0.17 15:+0.21 16:-0.12 17:-0.13 18:-0.15 19:+0.04 20:+0.13 21:-0.24 22:-0.02 23:-0.16 24:-0.11 25:-0.17
+    layer effect by season, top-150 wtd %:                     13:+0.01 14:+0.00 15:+0.00 16:+0.00 17:+0.00 18:-0.00 19:+0.00 20:+0.15 21:+0.04 22:-0.06 23:-0.07 24:-0.17 25:-0.02
+    layer effect by season, rank order (QB groups, + = helps): 13:-0.0009 14:+0.0000 15:+0.0000 16:+0.0000 17:+0.0000 18:+0.0214 19:+0.0000 20:+0.0013 21:-0.0005 22:+0.0023 23:+0.0053 24:+0.0136 25:+0.0152 | slope +0.00094 [-0.00015, +0.00204] | 13-18 +0.0034 19-25 +0.0053
+    trend slope (all rows) -0.012%/season [95% CI -0.034, +0.009] | top-150 wtd -0.007 [-0.018, +0.004] | era mean 13-18 -0.049%  19-25 -0.075%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.06% (touched  -2.17%) wtd  -0.01% MAE  -0.04% rank +0.0045 | helps 9/13 seasons (wtd share 0.69), fwd 8/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {0.5: 6, 1.0: 7} err +0.02% touched +0.89% wtd -0.00% rank -0.0001 better 0/13 | FWD err +0.03% better 2/10
+    16-25     LAYER: err  -0.09% (touched  -2.98%) wtd  -0.01% MAE  -0.04% rank +0.0059 | helps 8/10 seasons (wtd share 0.80), fwd 5/7 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 10} err +0.00% touched +0.00% wtd +0.00% rank +0.0000 better 0/10 | FWD err +0.02% better 0/7
+    RECENCY   LAYER: err  -0.09% (touched  -2.75%) wtd  -0.03% MAE  -0.05% rank +0.0067 | helps 9/13 seasons (wtd share 0.80), fwd 8/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 13} err +0.00% touched +0.00% wtd +0.00% rank +0.0000 better 0/13 | FWD err +0.01% better 2/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.00 / +0.02 / +0.01 | x1.5: +0.05 / +0.04 / +0.04
+
+  [NEXT] WR one-game prior x5   rows touched 1,400 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.03 14:-0.06 15:+0.07 16:+0.03 17:+0.03 18:+0.02 19:+0.01 20:-0.04 21:-0.02 22:+0.03 23:+0.02 24:-0.06 25:+0.01
+    layer effect by season, top-150 wtd %:                     13:+0.01 14:-0.04 15:+0.01 16:+0.03 17:-0.04 18:-0.01 19:-0.01 20:-0.04 21:-0.07 22:-0.08 23:-0.03 24:-0.08 25:-0.06
+    layer effect by season, rank order (WR groups, + = helps): 13:+0.0007 14:+0.0020 15:+0.0001 16:-0.0006 17:+0.0010 18:-0.0005 19:-0.0023 20:+0.0004 21:+0.0020 22:+0.0001 23:+0.0009 24:+0.0027 25:-0.0005 | slope +0.00002 [-0.00020, +0.00025] | 13-18 +0.0005 19-25 +0.0005
+    trend slope (all rows) -0.003%/season [95% CI -0.009, +0.004] | top-150 wtd -0.006 [-0.011, -0.002] | era mean 13-18 +0.020%  19-25 -0.008%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.00% (touched  +0.14%) wtd  -0.03% MAE  -0.00% rank +0.0005 | helps 4/13 seasons (wtd share 0.31), fwd 3/10 -> wash
+              RESIZE: best s on all 0 (in-sample err -0.00% touched -0.14% wtd +0.03% rank -0.0005) | LOYO picks {0.0: 4, 0.5: 9} err +0.01% touched +0.20% wtd +0.02% rank -0.0004 better 9/13 | FWD err -0.00% better 7/10
+    16-25     LAYER: err  +0.00% (touched  +0.05%) wtd  -0.04% MAE  +0.00% rank +0.0003 | helps 3/10 seasons (wtd share 0.30), fwd 3/7 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.00% touched -0.11% wtd +0.01% rank +0.0002) | LOYO picks {0.0: 3, 0.5: 7} err +0.01% touched +0.21% wtd +0.02% rank -0.0003 better 7/10 | FWD err +0.01% better 4/7
+    RECENCY   LAYER: err  -0.00% (touched  -0.06%) wtd  -0.05% MAE  -0.00% rank +0.0006 | helps 4/13 seasons (wtd share 0.34), fwd 3/10 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.00% touched -0.07% wtd +0.01% rank +0.0001) | LOYO picks {0.0: 1, 0.5: 12} err +0.00% touched +0.15% wtd +0.02% rank -0.0003 better 9/13 | FWD err +0.01% better 7/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.00 / -0.00 / -0.00 | x1.5: +0.00 / +0.00 / +0.00
+
+  [NEXT] rookie ramp (weeks 1-2)   rows touched 398 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:-0.04 14:-0.08 15:-0.00 16:-0.07 17:+0.01 18:-0.22 19:-0.02 20:+0.06 21:-0.22 22:-0.03 23:+0.02 24:-0.04 25:-0.17
+    layer effect by season, top-150 wtd %:                     13:+0.00 14:+0.03 15:+0.00 16:-0.01 17:-0.01 18:-0.07 19:-0.03 20:+0.04 21:-0.17 22:+0.00 23:-0.02 24:+0.01 25:-0.02
+    layer effect by season, rank order (QB/RB/WR/TE groups, + = helps): 13:-0.0003 14:-0.0003 15:-0.0002 16:+0.0001 17:-0.0012 18:+0.0013 19:-0.0020 20:-0.0007 21:+0.0005 22:-0.0004 23:-0.0006 24:+0.0002 25:+0.0001 | slope +0.00002 [-0.00012, +0.00016] | 13-18 -0.0001 19-25 -0.0004
+    trend slope (all rows) -0.003%/season [95% CI -0.018, +0.012] | top-150 wtd -0.003 [-0.012, +0.006] | era mean 13-18 -0.066%  19-25 -0.056%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.06% (touched  -9.90%) wtd  -0.02% MAE  -0.11% rank -0.0002 | helps 10/13 seasons (wtd share 0.77), fwd 7/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 13} err +0.00% touched +0.00% wtd +0.00% rank +0.0000 better 0/13 | FWD err +0.00% better 0/10
+    16-25     LAYER: err  -0.07% (touched -10.25%) wtd  -0.03% MAE  -0.12% rank -0.0002 | helps 7/10 seasons (wtd share 0.70), fwd 5/7 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 10} err +0.00% touched +0.00% wtd +0.00% rank +0.0000 better 0/10 | FWD err +0.01% better 0/7
+    RECENCY   LAYER: err  -0.07% (touched -10.85%) wtd  -0.02% MAE  -0.12% rank -0.0002 | helps 10/13 seasons (wtd share 0.75), fwd 7/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 13} err +0.00% touched +0.00% wtd +0.00% rank +0.0000 better 0/13 | FWD err +0.01% better 0/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.01 / +0.01 / +0.01 | x1.5: +0.02 / +0.02 / +0.01
+
+  [NEXT] depth-string docks (vets)   rows touched 8,195 of 41,551
+    layer effect by season, % MSE all rows (neg = layer helps): 13:-0.25 14:-0.60 15:-0.51 16:-0.43 17:-0.78 18:-0.10 19:-0.55 20:-0.24 21:-0.40 22:-0.58 23:-0.31 24:-0.13 25:-0.39
+    layer effect by season, top-150 wtd %:                     13:-0.11 14:-0.07 15:-0.08 16:-0.07 17:-0.22 18:+0.05 19:-0.14 20:-0.21 21:-0.05 22:-0.20 23:-0.09 24:-0.05 25:-0.05
+    layer effect by season, rank order (RB/WR/TE groups, + = helps): 13:-0.0001 14:+0.0024 15:+0.0048 16:-0.0040 17:+0.0013 18:-0.0014 19:-0.0058 20:+0.0087 21:+0.0003 22:+0.0052 23:+0.0006 24:+0.0018 25:-0.0001 | slope +0.00008 [-0.00056, +0.00073] | 13-18 +0.0005 19-25 +0.0015
+    trend slope (all rows) +0.013%/season [95% CI -0.019, +0.046] | top-150 wtd +0.001 [-0.012, +0.014] | era mean 13-18 -0.444%  19-25 -0.372%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.40% (touched  -3.10%) wtd  -0.10% MAE  -0.70% rank +0.0011 | helps 13/13 seasons (wtd share 1.00), fwd 10/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.06% touched -0.46% wtd -0.01% rank -0.0006) | LOYO picks {1.5: 13} err -0.06% touched -0.46% wtd -0.01% rank -0.0006 better 11/13 | FWD err -0.06% better 8/10
+    16-25     LAYER: err  -0.39% (touched  -3.09%) wtd  -0.10% MAE  -0.67% rank +0.0007 | helps 10/10 seasons (wtd share 1.00), fwd 7/7 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.06% touched -0.47% wtd -0.01% rank -0.0001) | LOYO picks {1.5: 10} err -0.06% touched -0.47% wtd -0.01% rank -0.0001 better 8/10 | FWD err -0.06% better 6/7  ** RESIZE PASSES
+    RECENCY   LAYER: err  -0.37% (touched  -2.99%) wtd  -0.09% MAE  -0.65% rank +0.0012 | helps 13/13 seasons (wtd share 1.00), fwd 10/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.05% touched -0.45% wtd -0.01% rank -0.0002) | LOYO picks {1.5: 13} err -0.05% touched -0.45% wtd -0.01% rank -0.0002 better 11/13 | FWD err -0.05% better 8/10  ** RESIZE PASSES
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.13 / +0.13 / +0.12 | x1.5: -0.06 / -0.06 / -0.05
+
+=== B  REST OF SEASON ===
+
+  [ROS] usage evidence (all positions)   rows touched 13,501 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+2.37 14:+2.56 15:+1.09 16:+1.96 17:-2.53 18:+1.09 19:-2.11 20:+1.85 21:+1.29 22:-2.24 23:+1.53 24:+0.36 25:-2.44
+    layer effect by season, top-150 wtd %:                     13:+0.98 14:+4.80 15:+5.41 16:+0.38 17:-7.27 18:-0.76 19:-2.47 20:+4.55 21:+0.22 22:-3.19 23:+0.43 24:+1.89 25:-1.52
+    layer effect by season, rank order (RB/WR groups, + = helps): 13:-0.0032 14:-0.0071 15:-0.0128 16:-0.0082 17:-0.0071 18:-0.0066 19:+0.0123 20:-0.0055 21:-0.0007 22:+0.0039 23:-0.0121 24:+0.0110 25:+0.0123 | slope +0.00130 [+0.00005, +0.00255] | 13-18 -0.0075 19-25 +0.0030
+    trend slope (all rows) -0.232%/season [95% CI -0.528, +0.063] | top-150 wtd -0.219 [-0.802, +0.363] | era mean 13-18 +1.091%  19-25 -0.253%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.32% (touched  +0.45%) wtd  +0.14% MAE  +0.52% rank -0.0018 | helps 4/13 seasons (wtd share 0.31), fwd 4/10 -> HURTS
+              RESIZE: best s on all 0.5 (in-sample err -0.55% touched -0.77% wtd -0.58% rank +0.0015) | LOYO picks {0.5: 13} err -0.55% touched -0.77% wtd -0.58% rank +0.0015 better 9/13 | FWD err -0.03% better 6/10
+    16-25     LAYER: err  -0.16% (touched  -0.22%) wtd  -0.81% MAE  +0.31% rank -0.0000 | helps 4/10 seasons (wtd share 0.40), fwd 3/7 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.30% touched -0.43% wtd -0.06% rank +0.0016) | LOYO picks {0.5: 10} err -0.30% touched -0.43% wtd -0.06% rank +0.0016 better 6/10 | FWD err -0.22% better 4/7
+    RECENCY   LAYER: err  -0.14% (touched  -0.19%) wtd  -0.14% MAE  +0.27% rank +0.0013 | helps 4/13 seasons (wtd share 0.39), fwd 4/10 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.29% touched -0.41% wtd -0.41% rank +0.0007) | LOYO picks {0.5: 13} err -0.29% touched -0.41% wtd -0.41% rank +0.0007 better 9/13 | FWD err -0.13% better 6/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.55 / -0.30 / -0.29 | x1.5: +1.02 / +0.76 / +0.75
+
+  [ROS] usage evidence, RB (ROS)   rows touched 5,407 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+1.19 14:+0.37 15:-0.10 16:+0.07 17:-1.58 18:+0.45 19:-0.38 20:-0.07 21:-0.66 22:-1.60 23:+0.56 24:-0.08 25:-0.72
+    layer effect by season, top-150 wtd %:                     13:+1.63 14:+0.47 15:-0.00 16:+0.45 17:-3.56 18:-0.26 19:-0.67 20:+0.37 21:-0.35 22:-2.67 23:+1.64 24:+0.14 25:-0.30
+    layer effect by season, rank order (RB groups, + = helps): 13:-0.0091 14:+0.0027 15:-0.0021 16:+0.0025 17:-0.0095 18:-0.0062 19:+0.0075 20:-0.0026 21:+0.0000 22:+0.0204 23:-0.0189 24:-0.0021 25:+0.0094 | slope +0.00053 [-0.00110, +0.00216] | 13-18 -0.0036 19-25 +0.0020
+    trend slope (all rows) -0.081%/season [95% CI -0.207, +0.045] | top-150 wtd -0.049 [-0.296, +0.198] | era mean 13-18 +0.065%  19-25 -0.422%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.19% (touched  -0.59%) wtd  -0.21% MAE  +0.00% rank -0.0008 | helps 8/13 seasons (wtd share 0.62), fwd 7/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {0.5: 3, 1.0: 10} err +0.13% touched +0.39% wtd +0.21% rank -0.0002 better 0/13 | FWD err +0.25% better 3/10
+    16-25     LAYER: err  -0.39% (touched  -1.19%) wtd  -0.48% MAE  -0.05% rank -0.0002 | helps 7/10 seasons (wtd share 0.70), fwd 6/7 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 5, 1.5: 5} err +0.15% touched +0.46% wtd +0.27% rank -0.0012 better 0/10 | FWD err +0.07% better 0/7
+    RECENCY   LAYER: err  -0.32% (touched  -1.02%) wtd  -0.23% MAE  -0.03% rank +0.0002 | helps 8/13 seasons (wtd share 0.73), fwd 7/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 12, 1.5: 1} err +0.06% touched +0.21% wtd +0.14% rank -0.0009 better 0/13 | FWD err +0.18% better 2/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.02 / +0.13 / +0.09 | x1.5: +0.12 / +0.00 / +0.04
+
+  [ROS] usage evidence, WR (ROS)   rows touched 8,094 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+1.15 14:+2.18 15:+1.19 16:+1.89 17:-0.98 18:+0.63 19:-1.74 20:+1.92 21:+1.97 22:-0.67 23:+0.96 24:+0.44 25:-1.74
+    layer effect by season, top-150 wtd %:                     13:-0.62 14:+4.29 15:+5.41 16:-0.07 17:-3.99 18:-0.49 19:-1.83 20:+4.15 21:+0.57 22:-0.54 23:-1.17 24:+1.74 25:-1.23
+    layer effect by season, rank order (WR groups, + = helps): 13:+0.0027 14:-0.0169 15:-0.0234 16:-0.0189 17:-0.0047 18:-0.0071 19:+0.0170 20:-0.0085 21:-0.0014 22:-0.0127 23:-0.0052 24:+0.0242 25:+0.0150 | slope +0.00207 [+0.00002, +0.00411] | 13-18 -0.0114 19-25 +0.0041
+    trend slope (all rows) -0.151%/season [95% CI -0.368, +0.066] | top-150 wtd -0.167 [-0.616, +0.282] | era mean 13-18 +1.012%  19-25 +0.163%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.51% (touched  +1.34%) wtd  +0.35% MAE  +0.52% rank -0.0027 | helps 4/13 seasons (wtd share 0.31), fwd 4/10 -> HURTS
+              RESIZE: best s on all 0.5 (in-sample err -0.57% touched -1.48% wtd -0.57% rank +0.0028) | LOYO picks {0.0: 3, 0.5: 10} err -0.31% touched -0.80% wtd -0.19% rank +0.0018 better 9/13 | FWD err -0.17% better 6/10
+    16-25     LAYER: err  +0.23% (touched  +0.61%) wtd  -0.33% MAE  +0.36% rank +0.0001 | helps 4/10 seasons (wtd share 0.40), fwd 3/7 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.43% touched -1.14% wtd -0.19% rank +0.0023) | LOYO picks {0.5: 10} err -0.43% touched -1.14% wtd -0.19% rank +0.0023 better 7/10 | FWD err -0.36% better 4/7
+    RECENCY   LAYER: err  +0.19% (touched  +0.49%) wtd  +0.09% MAE  +0.31% rank +0.0023 | helps 4/13 seasons (wtd share 0.39), fwd 4/10 -> HURTS
+              RESIZE: best s on all 0.5 (in-sample err -0.39% touched -1.00% wtd -0.42% rank +0.0010) | LOYO picks {0.5: 13} err -0.39% touched -1.00% wtd -0.42% rank +0.0010 better 10/13 | FWD err -0.14% better 6/10  ** RESIZE PASSES
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.57 / -0.43 / -0.39 | x1.5: +0.90 / +0.76 / +0.71
+
+  [ROS] TE snap-share level e .3   rows touched 3,457 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.24 14:+0.30 15:+0.81 16:+0.30 17:-0.17 18:-0.08 19:-0.29 20:+0.15 21:+0.52 22:-0.48 23:-0.29 24:+0.06 25:-0.77
+    layer effect by season, top-150 wtd %:                     13:+0.41 14:+0.52 15:+0.81 16:+0.35 17:-0.22 18:-0.19 19:-0.17 20:+0.12 21:+0.49 22:-0.40 23:-0.65 24:-0.01 25:-0.60
+    layer effect by season, rank order (TE groups, + = helps): 13:-0.0300 14:+0.0160 15:+0.0023 16:+0.0023 17:-0.0015 18:-0.0502 19:+0.0232 20:+0.0272 21:-0.0126 22:+0.0391 23:+0.0356 24:+0.0090 25:+0.0415 | slope +0.00380 [-0.00009, +0.00770] | 13-18 -0.0102 19-25 +0.0233
+    trend slope (all rows) -0.068%/season [95% CI -0.125, -0.010] | top-150 wtd -0.083 [-0.138, -0.028] | era mean 13-18 +0.232%  19-25 -0.158%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.02% (touched  +0.21%) wtd  +0.03% MAE  -0.04% rank +0.0085 | helps 6/13 seasons (wtd share 0.46), fwd 6/10 -> HURTS
+              RESIZE: best s on all 0.5 (in-sample err -0.07% touched -0.62% wtd -0.06% rank -0.0032) | LOYO picks {0.5: 13} err -0.07% touched -0.62% wtd -0.06% rank -0.0032 better 8/13 | FWD err +0.06% better 4/10
+    16-25     LAYER: err  -0.11% (touched  -0.94%) wtd  -0.12% MAE  -0.14% rank +0.0125 | helps 6/10 seasons (wtd share 0.60), fwd 4/7 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {0.5: 5, 1.0: 5} err +0.07% touched +0.66% wtd +0.08% rank -0.0060 better 0/10 | FWD err +0.03% better 3/7
+    RECENCY   LAYER: err  -0.13% (touched  -1.10%) wtd  -0.14% MAE  -0.17% rank +0.0171 | helps 6/13 seasons (wtd share 0.56), fwd 6/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {0.5: 3, 1.0: 10} err +0.08% touched +0.75% wtd +0.10% rank -0.0081 better 0/13 | FWD err +0.09% better 4/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.07 / +0.00 / +0.01 | x1.5: +0.18 / +0.10 / +0.10
+
+  [ROS] TE 31-60 x1.10   rows touched 241 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.06 14:+0.11 15:+0.48 16:+0.81 17:-0.13 18:-0.47 19:-0.17 20:+0.16 21:-0.34 22:-0.19 23:-0.07 24:-0.55 25:-0.94
+    layer effect by season, top-150 wtd %:                     13:+0.11 14:+0.16 15:+0.99 16:+1.03 17:-0.23 18:-1.11 19:-0.50 20:+0.24 21:-0.64 22:-0.33 23:-0.07 24:-0.92 25:-1.64
+    layer effect by season, rank order (TE groups, + = helps): 13:+0.0523 14:-0.0075 15:+0.0000 16:+0.0000 17:+0.0082 18:-0.0284 19:-0.0246 20:-0.0180 21:+0.0362 22:-0.0119 23:-0.0006 24:+0.0479 25:+0.0261 | slope +0.00081 [-0.00370, +0.00533] | 13-18 +0.0041 19-25 +0.0079
+    trend slope (all rows) -0.078%/season [95% CI -0.134, -0.023] | top-150 wtd -0.130 [-0.228, -0.032] | era mean 13-18 +0.142%  19-25 -0.302%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.11% (touched -10.10%) wtd  -0.23% MAE  -0.06% rank +0.0079 | helps 8/13 seasons (wtd share 0.62), fwd 8/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {0.5: 1, 1.0: 12} err +0.04% touched +3.58% wtd +0.07% rank -0.0023 better 0/13 | FWD err +0.11% better 2/10
+    16-25     LAYER: err  -0.21% (touched -15.81%) wtd  -0.41% MAE  -0.14% rank +0.0054 | helps 8/10 seasons (wtd share 0.80), fwd 6/7 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.01% touched -0.83% wtd -0.03% rank -0.0045) | LOYO picks {1.0: 3, 1.5: 7} err +0.06% touched +5.54% wtd +0.10% rank -0.0032 better 2/10 | FWD err +0.03% better 1/7
+    RECENCY   LAYER: err  -0.30% (touched -21.19%) wtd  -0.54% MAE  -0.17% rank +0.0119 | helps 8/13 seasons (wtd share 0.80), fwd 8/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.06% touched -5.03% wtd -0.10% rank -0.0029) | LOYO picks {1.0: 1, 1.5: 12} err +0.02% touched +1.38% wtd +0.03% rank -0.0036 better 4/13 | FWD err +0.03% better 2/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.03 / +0.08 / +0.12 | x1.5: +0.04 / -0.01 / -0.06
+
+  [ROS] WR 61-100 prior weight x0.6   rows touched 1,234 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:-1.48 14:+0.29 15:+0.45 16:+0.81 17:+0.13 18:+0.10 19:+0.15 20:-0.25 21:-0.22 22:-0.03 23:-0.44 24:-0.18 25:-0.42
+    layer effect by season, top-150 wtd %:                     13:-1.45 14:+0.28 15:+0.54 16:+0.65 17:+0.16 18:+0.12 19:+0.11 20:-0.31 21:-0.23 22:-0.04 23:-0.46 24:-0.15 25:-0.44
+    layer effect by season, rank order (WR groups, + = helps): 13:+0.0178 14:-0.0072 15:-0.0180 16:-0.0057 17:+0.0046 18:-0.0013 19:-0.0101 20:+0.0035 21:+0.0022 22:-0.0004 23:+0.0027 24:+0.0082 25:+0.0049 | slope +0.00054 [-0.00094, +0.00203] | 13-18 -0.0016 19-25 +0.0016
+    trend slope (all rows) -0.017%/season [95% CI -0.110, +0.075] | top-150 wtd -0.019 [-0.108, +0.071] | era mean 13-18 +0.052%  19-25 -0.199%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.10% (touched  -1.35%) wtd  -0.10% MAE  +0.01% rank +0.0002 | helps 7/13 seasons (wtd share 0.54), fwd 6/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {0.5: 1, 1.0: 6, 1.5: 6} err +0.15% touched +2.09% wtd +0.16% rank -0.0020 better 0/13 | FWD err +0.06% better 3/10
+    16-25     LAYER: err  -0.05% (touched  -0.77%) wtd  -0.05% MAE  -0.01% rank +0.0010 | helps 6/10 seasons (wtd share 0.60), fwd 6/7 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {0.5: 5, 1.0: 4, 1.5: 1} err +0.11% touched +1.84% wtd +0.12% rank -0.0015 better 0/10 | FWD err +0.15% better 1/7
+    RECENCY   LAYER: err  -0.16% (touched  -2.35%) wtd  -0.17% MAE  -0.07% rank +0.0018 | helps 7/13 seasons (wtd share 0.73), fwd 6/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.03% touched -0.50% wtd -0.03% rank +0.0008) | LOYO picks {1.5: 13} err -0.03% touched -0.50% wtd -0.03% rank +0.0008 better 6/13 | FWD err +0.02% better 4/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.03 / +0.01 / +0.07 | x1.5: +0.00 / +0.02 / -0.03
+
+  [ROS] second-year QB prior weight x0.75   rows touched 331 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.01 14:-0.08 15:-0.10 16:+0.07 17:+0.05 18:-0.12 19:-0.37 20:+0.05 21:-0.01 22:+0.06 23:-0.15 24:+0.08 25:-0.03
+    layer effect by season, top-150 wtd %:                     13:+0.01 14:+0.00 15:-0.02 16:+0.05 17:+0.06 18:-0.23 19:-0.48 20:-0.01 21:-0.03 22:+0.17 23:+0.00 24:-0.07 25:-0.03
+    layer effect by season, rank order (QB groups, + = helps): 13:-0.0007 14:+0.0000 15:-0.0010 16:-0.0105 17:+0.0012 18:+0.0003 19:+0.0099 20:+0.0079 21:-0.0001 22:+0.0102 23:+0.0000 24:+0.0033 25:+0.0105 | slope +0.00085 [+0.00001, +0.00169] | 13-18 -0.0018 19-25 +0.0060
+    trend slope (all rows) +0.002%/season [95% CI -0.019, +0.023] | top-150 wtd -0.000 [-0.027, +0.026] | era mean 13-18 -0.028%  19-25 -0.053%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.04% (touched  -1.99%) wtd  -0.05% MAE  -0.03% rank +0.0024 | helps 7/13 seasons (wtd share 0.54), fwd 5/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.02% touched -0.69% wtd -0.02% rank +0.0008) | LOYO picks {1.5: 13} err -0.02% touched -0.69% wtd -0.02% rank +0.0008 better 6/13 | FWD err -0.01% better 4/10
+    16-25     LAYER: err  -0.04% (touched  -1.64%) wtd  -0.06% MAE  -0.02% rank +0.0033 | helps 5/10 seasons (wtd share 0.50), fwd 4/7 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.01% touched -0.48% wtd -0.03% rank +0.0018) | LOYO picks {0.5: 1, 1.5: 9} err +0.03% touched +1.08% wtd +0.03% rank +0.0005 better 3/10 | FWD err +0.04% better 2/7
+    RECENCY   LAYER: err  -0.04% (touched  -1.41%) wtd  -0.05% MAE  -0.03% rank +0.0042 | helps 7/13 seasons (wtd share 0.56), fwd 5/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.01% touched -0.39% wtd -0.02% rank +0.0018) | LOYO picks {1.0: 1, 1.5: 12} err +0.00% touched +0.10% wtd -0.00% rank +0.0015 better 5/13 | FWD err -0.01% better 3/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.02 / +0.02 / +0.02 | x1.5: -0.02 / -0.01 / -0.01
+
+  [ROS] RB backup (top 150) x1.04   rows touched 1,283 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:-0.25 14:+0.15 15:-0.17 16:-0.10 17:-0.34 18:+0.21 19:+0.28 20:+0.02 21:-0.76 22:-0.51 23:+0.11 24:-0.36 25:+0.02
+    layer effect by season, top-150 wtd %:                     13:-0.19 14:+0.07 15:-0.15 16:-0.02 17:-0.22 18:+0.41 19:+0.33 20:+0.03 21:-0.71 22:-0.49 23:+0.06 24:-0.66 25:-0.06
+    layer effect by season, rank order (RB groups, + = helps): 13:+0.0023 14:+0.0021 15:+0.0035 16:-0.0002 17:-0.0036 18:-0.0021 19:-0.0077 20:-0.0006 21:+0.0039 22:+0.0064 23:-0.0023 24:+0.0054 25:-0.0020 | slope +0.00002 [-0.00066, +0.00071] | 13-18 +0.0003 19-25 +0.0005
+    trend slope (all rows) -0.012%/season [95% CI -0.063, +0.040] | top-150 wtd -0.026 [-0.081, +0.028] | era mean 13-18 -0.083%  19-25 -0.173%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.14% (touched  -1.67%) wtd  -0.12% MAE  +0.00% rank +0.0004 | helps 7/13 seasons (wtd share 0.54), fwd 5/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.02% touched -0.26% wtd -0.01% rank -0.0011) | LOYO picks {1.0: 1, 1.5: 12} err +0.01% touched +0.09% wtd +0.01% rank -0.0014 better 6/13 | FWD err +0.04% better 4/10
+    16-25     LAYER: err  -0.14% (touched  -1.75%) wtd  -0.12% MAE  -0.01% rank -0.0002 | helps 5/10 seasons (wtd share 0.50), fwd 3/7 -> wash
+              RESIZE: best s on all 1.5 (in-sample err -0.02% touched -0.29% wtd -0.01% rank -0.0012) | LOYO picks {1.0: 1, 1.5: 9} err +0.01% touched +0.16% wtd +0.02% rank -0.0016 better 4/10 | FWD err +0.02% better 3/7
+    RECENCY   LAYER: err  -0.16% (touched  -1.95%) wtd  -0.18% MAE  -0.02% rank +0.0006 | helps 7/13 seasons (wtd share 0.48), fwd 5/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.03% touched -0.40% wtd -0.04% rank -0.0010) | LOYO picks {1.0: 1, 1.5: 12} err +0.00% touched +0.00% wtd -0.02% rank -0.0014 better 6/13 | FWD err +0.02% better 5/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.05 / +0.06 / +0.06 | x1.5: -0.02 / -0.02 / -0.03
+
+  [ROS] QB changed teams x.84   rows touched 329 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.85 14:+0.23 15:+1.65 16:-0.81 17:+0.29 18:-0.86 19:+2.29 20:+2.57 21:-1.86 22:-0.87 23:+1.21 24:-0.61 25:-2.10
+    layer effect by season, top-150 wtd %:                     13:+0.48 14:+0.00 15:+0.00 16:+0.00 17:+0.00 18:-0.60 19:+0.00 20:+0.52 21:+0.06 22:-0.15 23:+0.33 24:-2.26 25:-0.66
+    layer effect by season, rank order (QB groups, + = helps): 13:+0.0000 14:+0.0000 15:+0.0000 16:+0.0000 17:+0.0000 18:+0.0255 19:+0.0000 20:-0.0519 21:+0.0096 22:+0.0433 23:+0.0000 24:+0.0769 25:+0.0093 | slope +0.00281 [-0.00183, +0.00745] | 13-18 +0.0042 19-25 +0.0124
+    trend slope (all rows) -0.136%/season [95% CI -0.375, +0.103] | top-150 wtd -0.088 [-0.195, +0.019] | era mean 13-18 +0.226%  19-25 +0.090%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.14% (touched  +4.37%) wtd  -0.20% MAE  +0.00% rank +0.0087 | helps 6/13 seasons (wtd share 0.46), fwd 6/10 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.33% touched -10.03% wtd +0.00% rank +0.0024) | LOYO picks {0.5: 13} err -0.33% touched -10.03% wtd +0.00% rank +0.0024 better 7/13 | FWD err +0.03% better 4/10
+    16-25     LAYER: err  -0.10% (touched  -2.91%) wtd  -0.31% MAE  -0.14% rank +0.0113 | helps 6/10 seasons (wtd share 0.60), fwd 4/7 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.24% touched -6.82% wtd +0.04% rank +0.0031) | LOYO picks {0.5: 10} err -0.24% touched -6.82% wtd +0.04% rank +0.0031 better 4/10 | FWD err +0.05% better 2/7
+    RECENCY   LAYER: err  -0.23% (touched  -6.41%) wtd  -0.45% MAE  -0.20% rank +0.0156 | helps 6/13 seasons (wtd share 0.60), fwd 6/10 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.19% touched -5.53% wtd +0.10% rank -0.0001) | LOYO picks {0.5: 13} err -0.19% touched -5.53% wtd +0.10% rank -0.0001 better 7/13 | FWD err -0.00% better 4/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.33 / -0.24 / -0.19 | x1.5: +0.72 / +0.67 / +0.65
+
+  [ROS] rookie prior weight RB 1.6 / TE 2.5 (v2.33)   rows touched 1,038 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:-0.01 14:+0.17 15:-0.07 16:-0.04 17:-0.32 18:-0.03 19:-0.06 20:-0.16 21:-0.11 22:-0.38 23:-0.00 24:+0.35 25:-0.29
+    layer effect by season, top-150 wtd %:                     13:-0.06 14:+0.02 15:-0.05 16:+0.09 17:-0.27 18:+0.16 19:-0.12 20:-0.09 21:-0.14 22:-0.27 23:-0.05 24:+0.20 25:-0.41
+    layer effect by season, rank order (RB/TE groups, + = helps): 13:+0.0000 14:-0.0002 15:+0.0001 16:-0.0000 17:+0.0009 18:-0.0005 19:-0.0066 20:+0.0010 21:+0.0009 22:+0.0036 23:+0.0055 24:-0.0071 25:+0.0046 | slope +0.00015 [-0.00047, +0.00076] | 13-18 +0.0001 19-25 +0.0003
+    trend slope (all rows) -0.007%/season [95% CI -0.040, +0.026] | top-150 wtd -0.013 [-0.041, +0.016] | era mean 13-18 -0.051%  19-25 -0.094%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.07% (touched  -1.23%) wtd  -0.07% MAE  -0.02% rank +0.0002 | helps 11/13 seasons (wtd share 0.85), fwd 9/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.02% touched -0.32% wtd -0.02% rank -0.0005) | LOYO picks {1.5: 13} err -0.02% touched -0.32% wtd -0.02% rank -0.0005 better 8/13 | FWD err +0.00% better 5/10
+    16-25     LAYER: err  -0.09% (touched  -1.59%) wtd  -0.08% MAE  -0.04% rank +0.0003 | helps 9/10 seasons (wtd share 0.90), fwd 6/7 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.03% touched -0.47% wtd -0.02% rank -0.0006) | LOYO picks {1.5: 10} err -0.03% touched -0.47% wtd -0.02% rank -0.0006 better 7/10 | FWD err -0.02% better 5/7
+    RECENCY   LAYER: err  -0.07% (touched  -1.23%) wtd  -0.10% MAE  -0.03% rank +0.0006 | helps 11/13 seasons (wtd share 0.83), fwd 9/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.02% touched -0.29% wtd -0.03% rank -0.0011) | LOYO picks {1.0: 1, 1.5: 12} err +0.00% touched +0.05% wtd -0.00% rank -0.0010 better 7/13 | FWD err +0.02% better 4/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.03 / +0.04 / +0.03 | x1.5: -0.02 / -0.03 / -0.02
+
+  [ROS] RB 61-100 prior weight x2.5   rows touched 1,023 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:+0.49 14:+0.28 15:-0.24 16:-1.13 17:+0.28 18:-0.06 19:-0.31 20:+0.62 21:+0.29 22:-0.04 23:+0.82 24:-0.52 25:-0.29
+    layer effect by season, top-150 wtd %:                     13:+0.39 14:+0.29 15:-0.27 16:-0.74 17:+0.20 18:-0.04 19:-0.30 20:+0.51 21:+0.27 22:-0.02 23:+0.79 24:-0.45 25:-0.24
+    layer effect by season, rank order (RB groups, + = helps): 13:-0.0063 14:-0.0101 15:-0.0034 16:+0.0175 17:-0.0260 18:-0.0015 19:-0.0017 20:-0.0101 21:+0.0025 22:+0.0048 23:+0.0144 24:+0.0181 25:+0.0034 | slope +0.00154 [-0.00029, +0.00338] | 13-18 -0.0050 19-25 +0.0045
+    trend slope (all rows) -0.003%/season [95% CI -0.092, +0.087] | top-150 wtd -0.002 [-0.075, +0.070] | era mean 13-18 -0.063%  19-25 +0.082%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  +0.01% (touched  +0.13%) wtd  +0.00% MAE  +0.01% rank +0.0004 | helps 7/13 seasons (wtd share 0.54), fwd 6/10 -> wash
+              RESIZE: best s on all 0.5 (in-sample err -0.06% touched -1.22% wtd -0.05% rank +0.0018) | LOYO picks {0.5: 13} err -0.06% touched -1.22% wtd -0.05% rank +0.0018 better 9/13 | FWD err +0.03% better 6/10
+    16-25     LAYER: err  -0.04% (touched  -0.67%) wtd  -0.04% MAE  -0.00% rank +0.0024 | helps 6/10 seasons (wtd share 0.60), fwd 4/7 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.04% touched -0.62% wtd -0.03% rank +0.0008) | LOYO picks {0.5: 9, 1.0: 1} err +0.01% touched +0.22% wtd +0.02% rank +0.0016 better 5/10 | FWD err -0.03% better 2/7
+    RECENCY   LAYER: err  -0.01% (touched  -0.23%) wtd  -0.01% MAE  -0.01% rank +0.0040 | helps 7/13 seasons (wtd share 0.61), fwd 6/10 -> HELPS
+              RESIZE: best s on all 0.5 (in-sample err -0.05% touched -0.91% wtd -0.04% rank -0.0010) | LOYO picks {0.5: 12, 1.0: 1} err +0.01% touched +0.17% wtd +0.01% rank -0.0000 better 8/13 | FWD err +0.05% better 4/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: -0.06 / -0.04 / -0.05 | x1.5: +0.15 / +0.11 / +0.12
+
+  [ROS] depth-string docks (vets)   rows touched 3,698 of 19,775
+    layer effect by season, % MSE all rows (neg = layer helps): 13:-0.50 14:-2.24 15:-1.13 16:-0.93 17:-2.24 18:+0.07 19:-0.92 20:-0.37 21:+0.70 22:-0.53 23:+0.04 24:-0.39 25:-0.09
+    layer effect by season, top-150 wtd %:                     13:-0.37 14:-0.57 15:-0.39 16:-0.34 17:+0.16 18:-0.07 19:-0.48 20:-1.02 21:+0.14 22:-0.50 23:+0.26 24:+0.39 25:-0.36
+    layer effect by season, rank order (RB/WR/TE groups, + = helps): 13:-0.0007 14:+0.0046 15:+0.0032 16:+0.0074 17:+0.0031 18:+0.0001 19:+0.0051 20:-0.0003 21:-0.0042 22:+0.0014 23:+0.0002 24:+0.0041 25:+0.0005 | slope -0.00022 [-0.00072, +0.00028] | 13-18 +0.0029 19-25 +0.0010
+    trend slope (all rows) +0.127%/season [95% CI +0.008, +0.246] | top-150 wtd +0.032 [-0.032, +0.096] | era mean 13-18 -1.163%  19-25 -0.223%  (neg slope = helps more lately)
+    ALL 13-25 LAYER: err  -0.63% (touched  -4.00%) wtd  -0.24% MAE  -0.82% rank +0.0018 | helps 10/13 seasons (wtd share 0.77), fwd 7/10 -> HELPS
+              RESIZE: best s on all 1.5 (in-sample err -0.01% touched -0.06% wtd +0.02% rank +0.0005) | LOYO picks {1.0: 3, 1.5: 10} err +0.08% touched +0.52% wtd +0.03% rank -0.0001 better 2/13 | FWD err +0.04% better 3/10
+    16-25     LAYER: err  -0.45% (touched  -2.85%) wtd  -0.18% MAE  -0.67% rank +0.0017 | helps 7/10 seasons (wtd share 0.70), fwd 5/7 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 9, 1.5: 1} err +0.06% touched +0.37% wtd +0.02% rank -0.0000 better 0/10 | FWD err +0.07% better 1/7
+    RECENCY   LAYER: err  -0.38% (touched  -2.49%) wtd  -0.16% MAE  -0.62% rank +0.0014 | helps 10/13 seasons (wtd share 0.73), fwd 7/10 -> HELPS
+              RESIZE: best s on all 1 | LOYO picks {1.0: 13} err +0.00% touched +0.00% wtd +0.00% rank +0.0000 better 0/13 | FWD err +0.03% better 3/10
+    fixed resizes vs wired (ALL 13-25 / 16-25 / RECENCY err%): x0.5: +0.16 / +0.09 / +0.07 | x1.5: -0.01 / +0.04 / +0.06
+
+=== C  SUMMARY (layer effect: neg = helps; reads ALL 13-25 | 16-25 | RECENCY .85) ===
+  NEXT vacated-role pool                            | ALL 13-25: -0.01%/w-0.09% 6/13 HELPS rz0.5* | 16-25: -0.10%/w-0.16% 6/10 HELPS rz0.5 | RECENCY: -0.21%/w-0.22% 6/13 HELPS rz0.5 | slope -0.085 [-0.130,-0.041] CI<0 | 13-18 +0.32 19-25 -0.26
+  NEXT QB game-total tilt                           | ALL 13-25: +0.03%/w+0.02% 4/13 HURTS rz0.5 | 16-25: -0.02%/w-0.01% 4/10 HELPS rz0.5 | RECENCY: -0.01%/w-0.01% 4/13 HELPS rz0.5 | slope -0.020 [-0.043,+0.003] ns | 13-18 +0.11 19-25 -0.04
+  NEXT usage evidence, RB                           | ALL 13-25: +0.04%/w+0.03% 5/13 HURTS rz0.5 | 16-25: -0.00%/w-0.04% 5/10 wash rz0.5 | RECENCY: -0.02%/w-0.04% 5/13 wash rz0.5 | slope -0.030 [-0.052,-0.008] CI<0 | 13-18 +0.15 19-25 -0.04
+  NEXT usage evidence, WR                           | ALL 13-25: +0.12%/w+0.01% 4/13 HURTS rz0.5 | 16-25: +0.07%/w-0.09% 4/10 wash rz0.5 | RECENCY: +0.07%/w-0.02% 4/13 wash rz0.5 | slope -0.023 [-0.059,+0.013] ns | 13-18 +0.19 19-25 +0.06
+  NEXT QB changed teams x.90                        | ALL 13-25: -0.06%/w-0.01% 9/13 HELPS rz1 | 16-25: -0.09%/w-0.01% 8/10 HELPS rz1 | RECENCY: -0.09%/w-0.03% 9/13 HELPS rz1 | slope -0.012 [-0.034,+0.009] ns | 13-18 -0.05 19-25 -0.08
+  NEXT WR one-game prior x5                         | ALL 13-25: +0.00%/w-0.03% 4/13 wash rz0 | 16-25: +0.00%/w-0.04% 3/10 wash rz0.5 | RECENCY: -0.00%/w-0.05% 4/13 HELPS rz0.5 | slope -0.003 [-0.009,+0.004] ns | 13-18 +0.02 19-25 -0.01
+  NEXT rookie ramp (weeks 1-2)                      | ALL 13-25: -0.06%/w-0.02% 10/13 HELPS rz1 | 16-25: -0.07%/w-0.03% 7/10 HELPS rz1 | RECENCY: -0.07%/w-0.02% 10/13 HELPS rz1 | slope -0.003 [-0.018,+0.012] ns | 13-18 -0.07 19-25 -0.06
+  NEXT depth-string docks (vets)                    | ALL 13-25: -0.40%/w-0.10% 13/13 HELPS rz1.5 | 16-25: -0.39%/w-0.10% 10/10 HELPS rz1.5* | RECENCY: -0.37%/w-0.09% 13/13 HELPS rz1.5* | slope +0.013 [-0.019,+0.046] ns | 13-18 -0.44 19-25 -0.37
+  ROS  usage evidence (all positions)               | ALL 13-25: +0.32%/w+0.14% 4/13 HURTS rz0.5 | 16-25: -0.16%/w-0.81% 4/10 wash rz0.5 | RECENCY: -0.14%/w-0.14% 4/13 HELPS rz0.5 | slope -0.232 [-0.528,+0.063] ns | 13-18 +1.09 19-25 -0.25
+  ROS  usage evidence, RB (ROS)                     | ALL 13-25: -0.19%/w-0.21% 8/13 HELPS rz1 | 16-25: -0.39%/w-0.48% 7/10 HELPS rz1 | RECENCY: -0.32%/w-0.23% 8/13 HELPS rz1 | slope -0.081 [-0.207,+0.045] ns | 13-18 +0.07 19-25 -0.42
+  ROS  usage evidence, WR (ROS)                     | ALL 13-25: +0.51%/w+0.35% 4/13 HURTS rz0.5 | 16-25: +0.23%/w-0.33% 4/10 wash rz0.5 | RECENCY: +0.19%/w+0.09% 4/13 HURTS rz0.5* | slope -0.151 [-0.368,+0.066] ns | 13-18 +1.01 19-25 +0.16
+  ROS  TE snap-share level e .3                     | ALL 13-25: +0.02%/w+0.03% 6/13 HURTS rz0.5 | 16-25: -0.11%/w-0.12% 6/10 HELPS rz1 | RECENCY: -0.13%/w-0.14% 6/13 HELPS rz1 | slope -0.068 [-0.125,-0.010] CI<0 | 13-18 +0.23 19-25 -0.16
+  ROS  TE 31-60 x1.10                               | ALL 13-25: -0.11%/w-0.23% 8/13 HELPS rz1 | 16-25: -0.21%/w-0.41% 8/10 HELPS rz1.5 | RECENCY: -0.30%/w-0.54% 8/13 HELPS rz1.5 | slope -0.078 [-0.134,-0.023] CI<0 | 13-18 +0.14 19-25 -0.30
+  ROS  WR 61-100 prior weight x0.6                  | ALL 13-25: -0.10%/w-0.10% 7/13 HELPS rz1 | 16-25: -0.05%/w-0.05% 6/10 HELPS rz1 | RECENCY: -0.16%/w-0.17% 7/13 HELPS rz1.5 | slope -0.017 [-0.110,+0.075] ns | 13-18 +0.05 19-25 -0.20
+  ROS  second-year QB prior weight x0.75            | ALL 13-25: -0.04%/w-0.05% 7/13 HELPS rz1.5 | 16-25: -0.04%/w-0.06% 5/10 HELPS rz1.5 | RECENCY: -0.04%/w-0.05% 7/13 HELPS rz1.5 | slope +0.002 [-0.019,+0.023] ns | 13-18 -0.03 19-25 -0.05
+  ROS  RB backup (top 150) x1.04                    | ALL 13-25: -0.14%/w-0.12% 7/13 HELPS rz1.5 | 16-25: -0.14%/w-0.12% 5/10 wash rz1.5 | RECENCY: -0.16%/w-0.18% 7/13 HELPS rz1.5 | slope -0.012 [-0.063,+0.040] ns | 13-18 -0.08 19-25 -0.17
+  ROS  QB changed teams x.84                        | ALL 13-25: +0.14%/w-0.20% 6/13 wash rz0.5 | 16-25: -0.10%/w-0.31% 6/10 HELPS rz0.5 | RECENCY: -0.23%/w-0.45% 6/13 HELPS rz0.5 | slope -0.136 [-0.375,+0.103] ns | 13-18 +0.23 19-25 +0.09
+  ROS  rookie prior weight RB 1.6 / TE 2.5 (v2.33)  | ALL 13-25: -0.07%/w-0.07% 11/13 HELPS rz1.5 | 16-25: -0.09%/w-0.08% 9/10 HELPS rz1.5 | RECENCY: -0.07%/w-0.10% 11/13 HELPS rz1.5 | slope -0.007 [-0.040,+0.026] ns | 13-18 -0.05 19-25 -0.09
+  ROS  RB 61-100 prior weight x2.5                  | ALL 13-25: +0.01%/w+0.00% 7/13 wash rz0.5 | 16-25: -0.04%/w-0.04% 6/10 HELPS rz0.5 | RECENCY: -0.01%/w-0.01% 7/13 HELPS rz0.5 | slope -0.003 [-0.092,+0.087] ns | 13-18 -0.06 19-25 +0.08
+  ROS  depth-string docks (vets)                    | ALL 13-25: -0.63%/w-0.24% 10/13 HELPS rz1.5 | 16-25: -0.45%/w-0.18% 7/10 HELPS rz1 | RECENCY: -0.38%/w-0.16% 10/13 HELPS rz1 | slope +0.127 [+0.008,+0.246] CI>0 | 13-18 -1.16 19-25 -0.22

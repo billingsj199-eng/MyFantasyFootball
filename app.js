@@ -74139,6 +74139,21 @@ function _rsScatter(cfg) {
     c('d3ls', '3rd & Long Snap%', SITG, 1, '3rd down with 7+ to go.' + SIT_SNAP),
     c('sys', 'Short-Yd Snap%', SITG, 1, '3rd or 4th down with 2 or fewer to go.' + SIT_SNAP)
   ];
+  // Red zone usage (RB and WR/TE): the same opportunity / snap split by field position, plus
+  // carries, targets and TDs inside the 20 and the 5. Snap shares are participation (thru 2025).
+  const RZG = 'Red Zone';
+  const RZ_OPP = ' Share of the team\'s carries + targets there, over games played (team view: share of the team\'s season).';
+  const RZ_COLS = [
+    c('rzo', 'RZ Opp%', RZG, 1, 'Inside the opponent 20.' + RZ_OPP),
+    c('rzs', 'RZ Snap%', RZG, 1, 'Plays inside the opponent 20.' + SIT_SNAP),
+    n('rzc', 'RZ Car', 'RZ Car/G', RZG, 0, 2, 'Carries inside the opponent 20'),
+    n('rz', 'RZ Tgt', 'RZ Tgt/G', RZG, 0, 2, 'Targets inside the opponent 20'),
+    n('rztd', 'RZ TD', 'RZ TD/G', RZG, 0, 2, 'Rushing + receiving touchdowns on plays inside the opponent 20'),
+    c('g5o', 'I5 Opp%', RZG, 1, 'Inside the opponent 5.' + RZ_OPP),
+    c('g5s', 'I5 Snap%', RZG, 1, 'Plays inside the opponent 5.' + SIT_SNAP),
+    n('i5', 'I5 Car', 'I5 Car/G', RZG, 0, 2, 'Carries inside the opponent 5'),
+    n('g5g', 'I5 Tgt', 'I5 Tgt/G', RZG, 0, 2, 'Targets inside the opponent 5')
+  ];
   const RB_COLS = [
     c('g', 'G', VOL, 0, 'Games played (nflverse snap counts)', N),
     c('snp', 'Snap%', VOL, 1, 'Share of team offensive snaps in games played'),
@@ -74153,9 +74168,9 @@ function _rsScatter(cfg) {
     c('car', 'Carry%', 'Usage', 1, 'Share of team carries in games played (designed runs; scrambles and kneels out)'),
     c('tsh', 'Tgt%', 'Usage', 1, 'Share of team targets in games played'),
     c('rtp', 'Route%', 'Usage', 1, 'Pass plays on the field / team dropbacks in games played (the card RT%)'),
-    n('i5', 'Inside 5', 'I5/G', 'Usage', 0, 2, 'Carries inside the opponent 5'),
     c('i10s', 'I10 Car%', 'Usage', 1, 'Share of team carries inside the opponent 10'),
     n('hvt', 'HVT', 'HVT/G', 'Usage', 0, 1, 'High-value touches: receptions + carries inside the 10'),
+    ...RZ_COLS,
     c('ypc', 'YPC', 'Rushing', 2, 'Yards per carry'),
     c('yco', 'YCO/A', 'Rushing', 2, 'Yards after contact per attempt (PFF)'),
     c('mtf', 'MTF/A', 'Rushing', 2, 'Missed tackles forced per rush (PFF)'),
@@ -74188,12 +74203,12 @@ function _rsScatter(cfg) {
     c('ays', 'AY%', 'Usage', 1, 'Share of team air yards in games played (nflverse)'),
     c('wopr', 'WOPR', 'Usage', 2, 'Weighted opportunity: 1.5 × target share + 0.7 × air-yards share'),
     c('tprr', 'TPRR', 'Usage', 2, 'Targets per route run'),
-    n('rz', 'RZ Tgt', 'RZ/G', 'Usage', 0, 2, 'Targets inside the opponent 20'),
     n('ez', 'EZ Tgt', 'EZ/G', 'Usage', 0, 2, 'End-zone targets (air yards reach the goal line)'),
     c('slot', 'Slot%', 'Usage', 1, 'Share of snaps lined up in the slot (PFF)', N),
     c('wide', 'Wide%', 'Usage', 1, 'Share of snaps lined up out wide (PFF)', N),
     c('inl', 'Inline%', 'Usage', 1, 'Share of snaps lined up in-line (PFF)', N),
     c('pbr', 'PBlk%', 'Usage', 1, 'Pass-block snaps / pass plays on the field (PFF)', N),
+    ...RZ_COLS,
     c('yprr', 'YPRR', 'Efficiency', 2, 'Receiving yards per route run'),
     c('grd', 'Route Grd', 'Efficiency', 1, 'PFF receiving grade'),
     c('adot', 'aDOT', 'Efficiency', 1, 'Average depth of target (PFF)', N),
@@ -74486,6 +74501,7 @@ function _rsScatter(cfg) {
       tprr: 'rts', yprr: 'rts', recg: 'rts', pbg: 'rpl',
       edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
       eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 },
+      rzo: { r: ['orz', 'trz'], pct: 1 }, rzs: { r: ['srz', 'nrz'], pct: 1 }, g5o: { r: ['og5', 'tg5'], pct: 1 }, g5s: { r: ['sg5', 'ng5'], pct: 1 },
       pats: { r: ['fpa', 'tfpa'], pct: 1 }, pap: { r: ['fpa', 'ftg'], pct: 1 }, r1p: { r: ['fr1', 'frd'], pct: 1 }, chkp: { r: ['fchk', 'frd'], pct: 1 },
       motp: { r: ['fmot', 'ftg'], pct: 1 }, rpop: { r: ['frpo', 'fopp'], pct: 1 }, sgcp: { r: ['fsg', 'fcar'], pct: 1 },
       boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 },
@@ -74497,6 +74513,7 @@ function _rsScatter(cfg) {
       scr: 'cbt', deep: 'dbt', dyd: 'dy', dctch: 'dtg', blos: 'dbt',
       edo: { r: ['oed', 'ted'], pct: 1 }, d3o: { r: ['od3', 'td3'], pct: 1 }, d3lo: { r: ['od3l', 'td3l'], pct: 1 }, syo: { r: ['osy', 'tsy'], pct: 1 },
       eds: { r: ['sed', 'ned'], pct: 1 }, d3s: { r: ['sd3', 'nd3'], pct: 1 }, d3ls: { r: ['sd3l', 'nd3l'], pct: 1 }, sys: { r: ['ssy', 'nsy'], pct: 1 },
+      rzo: { r: ['orz', 'trz'], pct: 1 }, rzs: { r: ['srz', 'nrz'], pct: 1 }, g5o: { r: ['og5', 'tg5'], pct: 1 }, g5s: { r: ['sg5', 'ng5'], pct: 1 },
       pats: { r: ['fpa', 'tfpa'], pct: 1 }, pap: { r: ['fpa', 'ftg'], pct: 1 }, r1p: { r: ['fr1', 'frd'], pct: 1 }, chkp: { r: ['fchk', 'frd'], pct: 1 },
       motp: { r: ['fmot', 'ftg'], pct: 1 }, rpop: { r: ['frpo', 'fopp'], pct: 1 }, sgcp: { r: ['fsg', 'fcar'], pct: 1 },
       boxa: { r: ['fbox', 'fbxn'] }, lbxp: { r: ['flbx', 'fbxn'], pct: 1 }, catp: { r: ['fcat', 'ftg'], pct: 1 },
@@ -74604,6 +74621,10 @@ function _rsScatter(cfg) {
     { k: 'eds', l: 'Early-down snap % (thru 2025)', d: 0, pct: true },
     { k: 'd3s', l: '3rd-down snap % (thru 2025)', d: 0, pct: true },
     { k: 'sys', l: 'Short-yardage snap % (thru 2025)', d: 0, pct: true },
+    { k: 'rzo', l: 'Red-zone opp share', d: 0, pct: true },
+    { k: 'g5o', l: 'Inside-5 opp share', d: 0, pct: true },
+    { k: 'rzs', l: 'Red-zone snap % (thru 2025)', d: 0, pct: true },
+    { k: 'g5s', l: 'Inside-5 snap % (thru 2025)', d: 0, pct: true },
     { k: 'pats', l: 'Play-action target share (2022 on)', d: 0, pct: true },
     { k: 'r1p', l: '1st-read share of targets (2022 on)', d: 0, pct: true }
   ];
@@ -75064,7 +75085,7 @@ function _rsScatter(cfg) {
     const pctOf = (x, i) => (x == null || !teamTot[i] ? null : 100 * x / teamTot[i]);
     const TEAM_SHARE = { tsh: r => pctOf(r.xt, 0), car: r => pctOf(r.xc, 1), ays: r => pctOf(r.xa, 2), i10s: r => pctOf(r.xi, 3),
       edo: r => pctOf(r.xed, 5), d3o: r => pctOf(r.xd3, 6), d3lo: r => pctOf(r.xd3l, 7), syo: r => pctOf(r.xsy, 8),
-      pats: r => (r.xfpa == null ? null : pctOf(r.xfpa, 9)) };
+      pats: r => (r.xfpa == null ? null : pctOf(r.xfpa, 9)), rzo: r => pctOf(r.xrz, 10), g5o: r => pctOf(r.xg5, 11) };
     const calcs = {};   // computed columns (Usage) read the row's own per-game-played shares
     COLS[_pos].forEach(col => { if (col.calc) calcs[col.k] = col.calc; });
     const val = (r, k) => {
@@ -75120,7 +75141,7 @@ function _rsScatter(cfg) {
     cols.forEach((col, i) => {
       const TEAM_TIP = { tsh: 'targets', car: 'carries', ays: 'air yards', i10s: 'carries inside the 10', wopr: 'targets (×1.5) and air yards (×0.7)',
         edo: 'early-down carries + targets', d3o: '3rd-down carries + targets', d3lo: '3rd-and-long (7+) carries + targets', syo: 'short-yardage (3rd/4th and 2 or less) carries + targets',
-        pats: 'play-action targets (FTN charting)' };
+        pats: 'play-action targets (FTN charting)', rzo: 'carries + targets inside the 20', g5o: 'carries + targets inside the 5' };
       const tip = teamTot && TEAM_TIP[col.k]
         ? 'Share of ' + tm1 + '\'s ' + (_scope() || 'full-season') + ' ' + TEAM_TIP[col.k] + ' (volume while on ' + tm1 + ')'
         : col.t + (col.cnt ? (pg ? ' per game' : ', season total') : '');
@@ -75166,7 +75187,7 @@ function _rsScatter(cfg) {
     const combined = _yrs.length > 1 || _wks.length > 1;
     if (cnt) cnt.textContent = rows.length + ' of ' + all.length + ' ' + _pos + 's · ' + _yrLabel() + (scope ? ' ' + scope : thru && thru < 17 ? ' thru Week ' + thru : '') + (_pos === 'TM' ? '' : ' · ' + FMT_NAME[_fmt]);
     if (foot) foot.textContent = NOTES[_pos] + (teamTot
-      ? ' Team view: Tgt%, Carry%, AY%, I10 Car% and WOPR are shares of ' + tm1 + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tm1 + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
+      ? ' Team view: Tgt%, Carry%, AY%, I10 Car%, RZ / I5 Opp% and WOPR are shares of ' + tm1 + '\'s ' + (scope || 'full-season') + ' totals (volume while on ' + tm1 + '), so the room adds up; the total row sums the players shown. Route% stays per game played. '
       : ' Shares (Carry%, Tgt%, AY%, Route%) are measured over the team games the player played; pick one team to see its season split. ') +
       'Sources: PFF Premium, nflverse play-by-play + snap counts; Charting columns are FTN charting (2022 on, refreshed in season); Graded Plays, the over-expected columns, Run Game, PBWR and Prs% OE are PFF Pro (2019 on).' + (!scope && cur ? ' ' + YEARS[0] + ' updates daily as PFF posts each week.' : '') +
       (scope && _yrs.some(y => y < 2026) && _pos !== 'QB' ? ' Week views before 2026: PFF\'s weekly receiving table only lists players targeted that week, so a receiver\'s zero-target weeks are missing.' : '') +
@@ -75465,6 +75486,8 @@ function _rsScatter(cfg) {
     { k: 'edo', l: 'Early-down opp share', d: 0, pct: true },
     { k: 'syo', l: 'Short-yardage opp share', d: 0, pct: true },
     { k: 'd3o', l: '3rd-down opp share', d: 0, pct: true },
+    { k: 'rzo', l: 'Red-zone opp share', d: 0, pct: true },
+    { k: 'g5o', l: 'Inside-5 opp share', d: 0, pct: true },
     { k: 'pats', l: 'Play-action target share', d: 0, pct: true },
     { k: 'r1p', l: '1st-read share of targets', d: 0, pct: true },
     { k: 'tgt', l: 'Targets', d: 1 },

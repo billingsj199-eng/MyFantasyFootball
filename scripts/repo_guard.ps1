@@ -23,6 +23,14 @@
 # the parent's turn. Exit-RepoTurn hands it back early before a long tail that
 # never touches git.
 
+#
+# The logger parameter is $LogFn (callers still pass -Log via the alias), NEVER $Log:
+# every task script keeps its log FILE path in $Log and its Write-Log reads it through
+# PowerShell's dynamic scope, so a function-local $Log scriptblock shadowed the path and
+# Add-Content threw - each job that had to WAIT for the turn (or hit a stale index.lock /
+# failed push) died at its first message with exit 1 and nothing logged (2026-10-26:
+# the 09:55 wake-up burst killed consensus ADP, K/DST, route pct, betting, postgame, sim proj).
+
 . (Join-Path $PSScriptRoot 'mff_alert.ps1')
 
 $script:RepoTurnLock = 'E:\MyFantasyFootball\_alerts\repo_turn.lock'
@@ -30,9 +38,9 @@ $script:RepoTurnRepo = Split-Path $PSScriptRoot -Parent
 
 # Waits for the repo turn. $true = this job may touch git; $false = timed out (logged + alerted).
 function Enter-RepoTurn {
-    param([scriptblock]$Log = { param($m) Write-Host $m }, [string]$Job = 'job', [int]$TimeoutMin = 60)
+    param([Alias('Log')][scriptblock]$LogFn = { param($m) Write-Host $m }, [string]$Job = 'job', [int]$TimeoutMin = 60)
     if ($global:MffRepoTurn) { return $true }
-    if ($env:MFF_REPO_TURN) { & $Log "repo turn: running inside $env:MFF_REPO_TURN" | Out-Host; return $true }
+    if ($env:MFF_REPO_TURN) { & $LogFn "repo turn: running inside $env:MFF_REPO_TURN" | Out-Host; return $true }
     $ownerFile = "$RepoTurnLock.owner"
     $lockDir = Split-Path $RepoTurnLock -Parent
     if (-not (Test-Path $lockDir)) { New-Item -ItemType Directory -Force -Path $lockDir | Out-Null }   # else Open throws DirectoryNotFound (an IOException) and we'd wait forever
@@ -45,26 +53,26 @@ function Enter-RepoTurn {
         } catch [System.IO.IOException] {
             if (-not $waitLogged) {
                 $owner = try { (Get-Content $ownerFile -Raw -ErrorAction Stop).Trim() } catch { 'unknown' }
-                & $Log "repo turn: waiting - held by $owner" | Out-Host
+                & $LogFn "repo turn: waiting - held by $owner" | Out-Host
                 $waitLogged = $true
             }
             if (((Get-Date) - $start).TotalMinutes -ge $TimeoutMin) {
-                & $Log "SKIP: no repo turn after $TimeoutMin min" | Out-Host
+                & $LogFn "SKIP: no repo turn after $TimeoutMin min" | Out-Host
                 Send-MffAlert -Key 'repo-turn-timeout' -Message "$Job waited $TimeoutMin min for the repo turn and skipped. Held by: $(try { (Get-Content $ownerFile -Raw).Trim() } catch { 'unknown' })"
                 return $false
             }
             Start-Sleep -Seconds 10
         } catch {
             # lock infrastructure broken (permissions, missing drive): never block publishing on it
-            & $Log "repo turn unavailable ($($_.Exception.Message)) - running without it" | Out-Host
+            & $LogFn "repo turn unavailable ($($_.Exception.Message)) - running without it" | Out-Host
             return $true
         }
     }
     $global:MffRepoTurn = $fs
     $env:MFF_REPO_TURN = "$Job (pid $PID)"
     try { Set-Content -Path $ownerFile -Value "$Job (pid $PID) since $(Get-Date -Format 'HH:mm:ss')" -Encoding utf8 } catch {}
-    if ($waitLogged) { & $Log ("repo turn: got it after {0:N0}s" -f ((Get-Date) - $start).TotalSeconds) | Out-Host }
-    Clear-StaleIndexLock -Log $Log
+    if ($waitLogged) { & $LogFn ("repo turn: got it after {0:N0}s" -f ((Get-Date) - $start).TotalSeconds) | Out-Host }
+    Clear-StaleIndexLock -Log $LogFn
     return $true
 }
 
@@ -79,18 +87,18 @@ function Exit-RepoTurn {
 # Called while holding the turn: an index.lock with no git process running is
 # debris from a git that died, and blocks every commit until removed.
 function Clear-StaleIndexLock {
-    param([scriptblock]$Log = { param($m) Write-Host $m })
+    param([Alias('Log')][scriptblock]$LogFn = { param($m) Write-Host $m })
     $gitDir = (git -C $RepoTurnRepo rev-parse --absolute-git-dir 2>$null)
     if (-not $gitDir) { return }
     $lock = Join-Path $gitDir 'index.lock'
     if (-not (Test-Path $lock)) { return }
     $age = ((Get-Date) - (Get-Item $lock).LastWriteTime).TotalSeconds
     if ($age -lt 30 -or (Get-Process git -ErrorAction SilentlyContinue)) {
-        & $Log ("repo turn: index.lock present ({0:N0}s old) but git is running or it is fresh - left alone" -f $age) | Out-Host
+        & $LogFn ("repo turn: index.lock present ({0:N0}s old) but git is running or it is fresh - left alone" -f $age) | Out-Host
         return
     }
     Remove-Item $lock -Force -ErrorAction SilentlyContinue
-    & $Log ("repo turn: removed stale index.lock ({0:N0} min old, no git running)" -f ($age / 60)) | Out-Host
+    & $LogFn ("repo turn: removed stale index.lock ({0:N0} min old, no git running)" -f ($age / 60)) | Out-Host
     Send-MffAlert -Key 'stale-index-lock' -Message ("Removed a stale .git/index.lock ({0:N0} min old) left by a git that died; commits resume." -f ($age / 60))
 }
 
@@ -113,13 +121,13 @@ function Get-RepoProblem {
 # script's own seconds-old rebase), so the checkout returns to main with the
 # commit kept locally, and an alert fires. Returns $true when pushed.
 function Invoke-SafePullPush {
-    param([scriptblock]$Log = { param($m) Write-Host $m }, [string]$What = 'data')
+    param([Alias('Log')][scriptblock]$LogFn = { param($m) Write-Host $m }, [string]$What = 'data')
     # Every caller has just run git commit. Nothing ahead of origin/main means that
     # commit never landed (10-20: index.lock), and pushing "Everything up-to-date"
     # used to be logged as success.
     $ahead = [int](git rev-list --count 'origin/main..HEAD' 2>$null)
     if ($ahead -lt 1) {
-        & $Log "COMMIT DID NOT LAND - nothing new to push ($What); see the git error above" | Out-Host
+        & $LogFn "COMMIT DID NOT LAND - nothing new to push ($What); see the git error above" | Out-Host
         Send-MffAlert -Key 'commit-failed' -Message "git commit failed for $What - changes left uncommitted, site not updated."
         return $false
     }
@@ -127,13 +135,13 @@ function Invoke-SafePullPush {
     if ($LASTEXITCODE -ne 0) {
         git rebase --abort 2>$null | Out-Host
         $after = Get-RepoProblem
-        & $Log "PULL --REBASE FAILED - rebase aborted, commit kept local ($What); repo now: $(if ($after) { $after } else { 'ok on main' })" | Out-Host
+        & $LogFn "PULL --REBASE FAILED - rebase aborted, commit kept local ($What); repo now: $(if ($after) { $after } else { 'ok on main' })" | Out-Host
         Send-MffAlert -Key 'pull-rebase-conflict' -Message "pull --rebase conflicted while pushing $What; aborted, commit is local. Resolve by hand (see E:\MyFantasyFootball\_alerts\alerts_log.txt)."
         return $false
     }
     git push origin main | Out-Host
     if ($LASTEXITCODE -ne 0) {
-        & $Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local ($What)" | Out-Host
+        & $LogFn "PUSH FAILED (exit $LASTEXITCODE) - commit is local ($What)" | Out-Host
         Send-MffAlert -Key 'push-failed' -Message "git push failed for $What - commit is local, site not updated."
         return $false
     }
@@ -142,10 +150,10 @@ function Invoke-SafePullPush {
 
 # Pre-run gate: log + alert + $true when the job must not run.
 function Test-RepoBlocked {
-    param([scriptblock]$Log = { param($m) Write-Host $m }, [string]$Job = 'job')
+    param([Alias('Log')][scriptblock]$LogFn = { param($m) Write-Host $m }, [string]$Job = 'job')
     $bad = Get-RepoProblem
     if ($bad) {
-        & $Log "SKIP: repo unhealthy - $bad" | Out-Host
+        & $LogFn "SKIP: repo unhealthy - $bad" | Out-Host
         Send-MffAlert -Key 'repo-unhealthy' -Message "$Job skipped: $bad in the main checkout. Nothing will publish until it is fixed."
         return $true
     }

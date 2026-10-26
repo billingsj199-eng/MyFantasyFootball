@@ -7389,6 +7389,11 @@ window._weeklyActivatedSig = function() {
 window._weeklyCanActivate = function(d) {
   if (!d || d.s === 'DST' || d._retired || d._isDevy) return false;
   if (d._injPreAct !== undefined) return true;
+  // under 50% to play this week (the sim's 50% rule called him out): ACTIVATE = assume he plays a full workload
+  const wk = window._weeklyActiveWeek || 1;
+  if (window._weeklyActivated(d.n, wk)) return true;
+  const ru = typeof window._simAvailFor === 'function' ? window._simAvailFor(d.n, wk) : null;
+  if (ru && ru.out) return true;
   return _ACT_RE.test(String(d.inj || '').toLowerCase()) && !(window._irIsOut && window._irIsOut(d.n));
 };
 window._actApplied = window._actApplied || new Set();
@@ -15614,11 +15619,15 @@ function _foldSimAliases(idx) {
   const SP = window.SIM_PROJ_2026;
   if (!SP || !SP.weeks || !SP.inj) return;
   const cur = +SP.currentWeek || 1;
+  // _simAvailRule[name][wk] = {out, full}: which rows this rule decided and the full if-active row, so ACTIVATE can put
+  // a rule-out player in at full workload and the questionable combos (_qsMask) default to the same call.
+  const R = window._simAvailRule = {};
   const fix = (k, w, q) => {
     const row = SP.weeks[w] && SP.weeks[w][k];
     if (!row || !(q > 0 && q < 1)) return;
-    if (q < 0.5) { SP.weeks[w][k] = [0, 0, 0, null, null]; return; }
-    SP.weeks[w][k] = [0, 1, 2].map(i => Math.round(row[i] / q * 10) / 10).concat([row[3], row[4]]);
+    const full = [0, 1, 2].map(i => Math.round(row[i] / q * 10) / 10).concat([row[3], row[4]]);
+    (R[k] = R[k] || {})[w] = { out: q < 0.5, full: full };
+    SP.weeks[w][k] = q < 0.5 ? [0, 0, 0, null, null] : full;
   };
   Object.keys(SP.inj).forEach(k => {
     const r = SP.inj[k];
@@ -15628,6 +15637,21 @@ function _foldSimAliases(idx) {
   });
   window._simBinaryAvail = true;
 })();
+// The 50%-rule entry for a player's week ({out, full}) or null; site names are matched to sim keys like _simProjRowRaw.
+window._simAvailFor = function(name, wk) {
+  const R = window._simAvailRule;
+  if (!R || !name) return null;
+  let e = R[name];
+  if (!e && typeof _campNewsNorm === 'function') {
+    if (!window._simAvailIdx) {
+      const idx = {};
+      Object.keys(R).forEach(k => { idx[_campNewsNorm(k)] = R[k]; });
+      window._simAvailIdx = _foldSimAliases(idx);
+    }
+    e = window._simAvailIdx[_campNewsNorm(name)];
+  }
+  return (e && e[String(wk)]) || null;
+};
 
 // Sim Lab per-week projection row for the 2026 LOGS view (data/sim_proj_2026.js,
 // exported offline by sim_lab/export_site_proj.js — no sims run on the site).
@@ -15658,12 +15682,16 @@ function _qsIndex() {
 function _qsMask(T, wk, flip) {
   const map = window._weeklyAssumeOutMap || {}, list = map[String(wk)] || [];
   const outSet = new Set(list.map(_qsNorm));
+  const actSet = new Set(((window._weeklyActivatedMap || {})[String(wk)] || []).map(_qsNorm));
   const AL = window._CLAY_ALIASES || {};
   let m = 0;
   (T.q || []).forEach((nm, i) => {
     const k = _qsNorm(nm), alias = AL[k];
     let out = outSet.has(k) || (alias != null && outSet.has(alias));
     if (!out) Object.keys(AL).forEach(a => { if (AL[a] === k && outSet.has(a)) out = true; });
+    // under 50% to play = out by default (_binarySimAvailability) until ACTIVATE puts him in
+    const ru = !out && typeof window._simAvailFor === 'function' ? window._simAvailFor(nm, wk) : null;
+    if (ru && ru.out && !actSet.has(k) && !(alias != null && actSet.has(alias))) out = true;
     if (flip && Object.prototype.hasOwnProperty.call(flip, k)) out = !!flip[k];
     if (out) m |= (1 << i);
   });
@@ -15776,6 +15804,11 @@ function _simProjRow(d, wk, flip) {
   const r0 = _simProjRowRaw(d, wk);
   // Activated off IR (Jack's ACTIVATE): the sim still has him at 0 this week —
   // use its rest-of-season per-game rate (availability-scaled, so a per-game level)
+  // Put back in after the 50% rule called him out (_binarySimAvailability): his full if-active row for that week —
+  // unless the export ran his team both ways (qs), whose IN combination below also moves his teammates.
+  const ru = d && d.s !== 'DST' && typeof window._simAvailFor === 'function' ? window._simAvailFor(d.n, wk) : null;
+  if (ru && ru.out && typeof window._weeklyActivated === 'function' && window._weeklyActivated(d.n, wk)
+      && !(typeof window._qsValue === 'function' && window._qsValue(d.n, wk, flip))) return ru.full.slice();
   if (d && d.s !== 'DST' && (!r0 || !(r0[0] || r0[1] || r0[2])) && d._injPreAct !== undefined
       && typeof window._weeklyActivated === 'function' && window._weeklyActivated(d.n, wk)) {
     const SP = window.SIM_PROJ_2026, sp = SP && SP.seasonPpg;
@@ -21981,7 +22014,7 @@ function openPlayerCard(d, ctxMode) {
             ${(() => { const _of = window._offRisk ? window._offRisk(d) : null; return _of && _of.src === 'flag' ? `<span class="inj-pill" data-status="SUS" title="${String('Off-field risk: ' + _of.note + (_of.at ? ' (flagged ' + _of.at + ')' : '')).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">OFF-FIELD</span>` : ''; })()}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && ['QB', 'RB', 'WR', 'TE'].includes(d.s)) ? `<button id="cardOffToggle" title="${window._offMap[d.n] ? 'Clear the off-field risk flag' : 'Flag off-field risk (pending legal case, suspension risk, holdout...) — the card cautions that the market may be discounting risk the model cannot see and holds back BUY LOW. Applies for every user immediately.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${window._offMap[d.n] ? 'var(--green)' : '#f59e0b'};background:transparent;color:${window._offMap[d.n] ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${window._offMap[d.n] ? 'CLEAR OFF-FIELD' : 'FLAG OFF-FIELD'}</button>` : ''}
             ${(typeof window.isAdmin === 'function' && window.isAdmin() && !d._retired && !d._isDevy && !_is2026 && d.s !== 'DST' && !window._irIsOut(d.n) && typeof _isOffseasonNow === 'function' && !_isOffseasonNow() && typeof window._weeklyAssumeOutToggle === 'function') ? (() => { const _aw = window._weeklyActiveWeek || 1, _on = window._weeklyAssumedOut(d.n, _aw);
-              if (typeof window._weeklyCanActivate === 'function' && window._weeklyCanActivate(d)) { const _ac = d._injPreAct !== undefined; return `<button id="cardAssumeOutToggle" data-act="1" title="${_ac ? 'Put him back out for Week ' + _aw + ' (the feed still says ' + String(d._injPreAct || '').replace(/"/g, '&quot;') + ')' : 'He is being activated: back in the Week ' + _aw + ' rankings pool (out of the BYE / OUT row, PROJ from the sim per-game rate). Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_ac ? '#f59e0b' : 'var(--green)'};background:transparent;color:${_ac ? '#f59e0b' : 'var(--green)'};white-space:nowrap">${_ac ? 'BACK OUT WEEK ' + _aw : 'ACTIVATE WEEK ' + _aw}</button>`; }
+              if (typeof window._weeklyCanActivate === 'function' && window._weeklyCanActivate(d)) { const _ac = d._injPreAct !== undefined || window._weeklyActivated(d.n, _aw); return `<button id="cardAssumeOutToggle" data-act="1" title="${_ac ? 'Put him back out for Week ' + _aw + (d._injPreAct !== undefined ? ' (the feed still says ' + String(d._injPreAct || '').replace(/"/g, '&quot;') + ')' : ' (under 50% to play in the sim)') : 'He is being activated: back in the Week ' + _aw + ' rankings pool (out of the BYE / OUT row, PROJ from the sim per-game rate). Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_ac ? '#f59e0b' : 'var(--green)'};background:transparent;color:${_ac ? '#f59e0b' : 'var(--green)'};white-space:nowrap">${_ac ? 'BACK OUT WEEK ' + _aw : 'ACTIVATE WEEK ' + _aw}</button>`; }
               return `<button id="cardAssumeOutToggle" title="${_on ? 'Put him back on the Week ' + _aw + ' board' : 'Treat him as out for Week ' + _aw + ' before the designation lands: pulled off the weekly board into the BYE / OUT row, weekly PROJ 0, OPP reads OUT. Weekly slot kept — undo any time. Syncs to every user.'}" style="padding:2px 8px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;border-radius:4px;cursor:pointer;border:1px solid ${_on ? 'var(--green)' : '#f59e0b'};background:transparent;color:${_on ? 'var(--green)' : '#f59e0b'};white-space:nowrap">${_on ? 'BACK IN WEEK ' + _aw : 'ASSUME OUT WEEK ' + _aw}</button>`; })() : ''}
           </div>
           ${_playerRoleRow(d)}

@@ -5360,6 +5360,7 @@ function _updateRnkMobCtlSummary() {
   if (window._watchOnly) extra.push('★');
   if (window._teamFilter && window._teamFilter.size) extra.push(window._teamFilter.size + ' team' + (window._teamFilter.size > 1 ? 's' : ''));
   if (window._injOnly) extra.push('Injuries');
+  if (window._ownMax != null) extra.push('Rostered ' + window._ownSummary());
   const topN = document.getElementById('rankTopNInput');
   if (topN && topN.value) extra.push('Top ' + topN.value);
   el.textContent = parts.concat(extra).filter(Boolean).join(' · ');
@@ -5397,6 +5398,7 @@ function _viewPresetDefaultName(s) {
   if (s.topN) parts.push('Top ' + s.topN);
   if (Array.isArray(s.teams) && s.teams.length) parts.push(s.teams.length <= 3 ? s.teams.map(_tfAbbr).join('+') : s.teams.length + ' teams');
   if (s.inj) parts.push('Injured');
+  if (s.own && s.own.max != null) parts.push('Rostered ' + window._ownSummary(s.own.site, s.own.max));
   return parts.join(' · ');
 }
 window._saveViewPreset = function () {
@@ -5407,7 +5409,8 @@ window._saveViewPreset = function () {
     adp: (typeof rnkAdpSrc !== 'undefined' ? rnkAdpSrc : 'consensus'),
     topN: (typeof rankTopN !== 'undefined' && rankTopN != null) ? rankTopN : null,
     teams: (window._teamFilter && window._teamFilter.size) ? [...window._teamFilter] : [],
-    inj: !!window._injOnly
+    inj: !!window._injOnly,
+    own: window._ownMax != null ? { site: window._ownSite, max: window._ownMax } : null
   };
   const list = _viewPresetsLoad();
   if (list.length >= 8) { if (typeof toast === 'function') toast('Preset limit reached (8) — remove one first'); return; }
@@ -5442,6 +5445,7 @@ window._applyViewPreset = function (i) {
   // Teams: presets saved before this field existed carry none → clears the pill.
   if (typeof window._setTeamFilter === 'function') window._setTeamFilter(Array.isArray(s.teams) ? s.teams : [], true);
   if (typeof window._toggleInjOnly === 'function') window._toggleInjOnly(!!s.inj);
+  if (typeof window._setOwnFilter === 'function') window._setOwnFilter(s.own ? s.own.site : null, s.own ? s.own.max : null);
   _renderViewPresets(i);
 };
 window._deleteViewPreset = function (i) {
@@ -5735,6 +5739,156 @@ window._toggleTeamFilterPop = function (force) {
     _tfBadge();
     _tfRenderPop();
     render();
+  });
+})();
+
+// ── ROSTERED % filter (rankings, Jack 2026-10-26: "filter by ownership percentages
+// by site or all sites ... show all players owned 60% or less in all leagues") ──
+// ROSTERED % pill beside INJURIES: keeps players rostered in at most MAX% of
+// leagues, read from data/ownership_2026.js (OWNERSHIP_2026, Phase P of the 9am
+// job, loaded post-first-paint by _loadLateData). SITE picks the read: ALL SITES =
+// at or under the cap on every site that lists him (max of the three), AVG = their
+// mean, or one site. Sleeper under ~1% is already 0 in the file; a player with no
+// ownership row at all is left out while the filter is on. While on, each row's
+// team line gains the per-site % (_ownTag). ANDs with position / ★ / TEAMS /
+// INJURIES / search, after the TOP-N cap like TEAMS. Session-only, saved into
+// view presets (s.own).
+window._ownSite = 'all';
+window._ownMax = null;
+const _OWN_SITES = [
+  ['all', 'ALL SITES', 'At or under the cap on ESPN, Sleeper AND Yahoo'],
+  ['avg', 'AVG', 'Average of ESPN, Sleeper and Yahoo at or under the cap'],
+  ['espn', 'ESPN', 'ESPN % rostered only'],
+  ['sleeper', 'SLEEPER', 'Sleeper % rostered only'],
+  ['yahoo', 'YAHOO', 'Yahoo % rostered only'],
+];
+const _OWN_QUICK = [10, 25, 40, 50, 60, 75];
+function _ownRow(d) { const O = window.OWNERSHIP_2026; return (O && O.players && d) ? (O.players[d.n] || null) : null; }
+function _ownVal(d, site) {
+  const o = _ownRow(d);
+  if (!o) return null;
+  site = site || window._ownSite;
+  if (site !== 'all' && site !== 'avg') return typeof o[site] === 'number' ? o[site] : null;
+  const vs = ['espn', 'sleeper', 'yahoo'].map(k => o[k]).filter(v => typeof v === 'number');
+  if (!vs.length) return null;
+  return site === 'all' ? Math.max(...vs) : vs.reduce((a, b) => a + b, 0) / vs.length;
+}
+function _ownPass(d) { const v = _ownVal(d); return v != null && v <= window._ownMax; }
+function _ownSiteLbl(s) { const x = _OWN_SITES.find(r => r[0] === s); return x ? x[1] : s; }
+// "≤60% · all sites" for chips, the phone FILTERS summary and preset names.
+window._ownSummary = function (site, max) {
+  site = site || window._ownSite; max = max != null ? max : window._ownMax;
+  return '≤' + max + '% ' + (site === 'all' ? 'all sites' : site === 'avg' ? 'avg' : _ownSiteLbl(site));
+};
+// Row tag on the team line: "E 42 · S 38 · Y 51", the site being filtered on in green.
+function _ownTag(d) {
+  if (window._ownMax == null) return '';
+  const o = _ownRow(d);
+  if (!o) return '';
+  const pct = v => typeof v === 'number' ? (v >= 10 || v === 0 ? Math.round(v) : v.toFixed(1)) : '—';
+  const s = window._ownSite;
+  const bit = (k, l) => '<span class="own-b' + (s === k || s === 'all' && _ownVal(d, 'all') === o[k] ? ' hit' : '') + '">' + l + ' ' + pct(o[k]) + '</span>';
+  return '<span class="own-tag" title="% of leagues rostering him: ESPN / Sleeper / Yahoo' + (s === 'avg' ? ' (avg ' + pct(_ownVal(d, 'avg')) + ')' : '') + '">'
+    + bit('espn', 'E') + bit('sleeper', 'S') + bit('yahoo', 'Y') + '</span>';
+}
+function _ownBadge() {
+  const on = window._ownMax != null;
+  const b = document.getElementById('ownFilterBtn');
+  if (b) { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  const l = document.getElementById('ownFilterLbl');
+  if (l) l.textContent = on ? window._ownSummary().replace(/^≤/, '≤ ').replace(' all sites', '') : '';
+}
+function _ownRenderPop() {
+  const pop = document.getElementById('ownFilterPop');
+  if (!pop) return;
+  const on = window._ownMax != null;
+  const O = window.OWNERSHIP_2026;
+  const asOf = (O && O.updated) ? new Date(O.updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+  let h = '<div class="tfp-head"><span class="tfp-title">ROSTERED %</span><span class="tfp-sub">'
+    + (on ? 'showing ' + window._ownSummary() : 'pick a max %') + '</span>'
+    + '<div class="tfp-act"><button type="button" data-ofact="clear"' + (on ? '' : ' disabled style="opacity:.45;cursor:default"') + '>CLEAR</button>'
+    + '<button type="button" data-tfact="close" data-ofact="close">DONE</button></div></div>';
+  h += '<div class="ofp-row"><span class="ofp-lbl">Site</span>' + _OWN_SITES.map(([k, l, tip]) =>
+    '<button type="button" class="ofp-btn' + (window._ownSite === k ? ' on' : '') + '" data-ofsite="' + k + '" title="' + tip + '">' + l + '</button>').join('') + '</div>';
+  h += '<div class="ofp-row"><span class="ofp-lbl">Max</span><input type="number" id="ownMaxInput" min="0" max="100" step="1" inputmode="numeric" placeholder="%" value="' + (on ? window._ownMax : '') + '" aria-label="Max % rostered">'
+    + _OWN_QUICK.map(v => '<button type="button" class="ofp-btn' + (window._ownMax === v ? ' on' : '') + '" data-ofmax="' + v + '">' + v + '%</button>').join('') + '</div>';
+  h += '<div class="ofp-note">' + (O
+    ? '% of leagues rostering each player' + (asOf ? ', updated ' + asOf : '') + (O.sleeperWeek ? ' (Sleeper week ' + O.sleeperWeek + ')' : '') + '. ALL SITES = at or under the max on every site. Combine with TOP N for waiver targets inside your top 150.'
+    : 'Loading ownership data…') + '</div>';
+  pop.innerHTML = h;
+}
+// Set wholesale (presets, chip ✕): max null = off.
+window._setOwnFilter = function (site, max, rerender) {
+  if (site && _OWN_SITES.some(r => r[0] === site)) window._ownSite = site;
+  window._ownMax = (max != null && !isNaN(max)) ? Math.max(0, Math.min(100, Math.round(max))) : null;
+  if (window._ownMax != null && !window.OWNERSHIP_2026 && typeof window._loadLateData === 'function') window._loadLateData();
+  _ownBadge();
+  const pop = document.getElementById('ownFilterPop');
+  if (pop && pop.style.display !== 'none') _ownRenderPop();
+  if (rerender !== false && typeof render === 'function') render();
+};
+function _ofCloseOnOutside(e) {
+  const wrap = document.getElementById('ownFilterWrap');
+  if (wrap && wrap.contains(e.target)) return;
+  window._toggleOwnFilterPop(false);
+}
+function _ofEsc(e) { if (e.key === 'Escape') { window._toggleOwnFilterPop(false); e.stopPropagation(); } }
+window._toggleOwnFilterPop = function (force) {
+  const pop = document.getElementById('ownFilterPop');
+  if (!pop) return;
+  const open = (typeof force === 'boolean') ? force : pop.style.display === 'none';
+  if (open) {
+    if (!window.OWNERSHIP_2026 && typeof window._loadLateData === 'function') window._loadLateData().then(() => { if (pop.style.display !== 'none') _ownRenderPop(); });
+    _ownRenderPop();
+    pop.style.left = '';
+    pop.style.display = '';
+    // The pill sits near the end of the position row: pull the popover back inside
+    // the viewport (phones use the fixed bottom sheet from the CSS instead).
+    if (window.innerWidth > 600) {
+      const over = pop.getBoundingClientRect().right - (document.documentElement.clientWidth - 8);
+      if (over > 0) pop.style.left = (-over) + 'px';
+    }
+    setTimeout(() => { document.addEventListener('mousedown', _ofCloseOnOutside, true); document.addEventListener('keydown', _ofEsc, true); }, 0);
+  } else {
+    pop.style.display = 'none';
+    document.removeEventListener('mousedown', _ofCloseOnOutside, true);
+    document.removeEventListener('keydown', _ofEsc, true);
+  }
+};
+(function _wireOwnFilterPop() {
+  const pop = document.getElementById('ownFilterPop');
+  if (!pop) return;
+  pop.addEventListener('click', e => {
+    const t = e.target.closest('[data-ofsite],[data-ofmax],[data-ofact]');
+    if (!t) return;
+    if (t.dataset.ofact === 'close') { window._toggleOwnFilterPop(false); return; }
+    if (t.dataset.ofact === 'clear') { if (window._ownMax != null) window._setOwnFilter(null, null); return; }
+    if (t.dataset.ofsite) {
+      // Picking a site with no max yet starts at 60% (Jack's example) so the click does something.
+      window._setOwnFilter(t.dataset.ofsite, window._ownMax != null ? window._ownMax : 60);
+      return;
+    }
+    if (t.dataset.ofmax) {
+      const v = +t.dataset.ofmax;
+      window._setOwnFilter(null, window._ownMax === v ? null : v);
+    }
+  });
+  // Typed max: debounced, and the popover is NOT re-rendered (keeps the caret) —
+  // only the chips' on-state and the header line follow.
+  let _t = null;
+  pop.addEventListener('input', e => {
+    if (e.target.id !== 'ownMaxInput') return;
+    clearTimeout(_t);
+    _t = setTimeout(() => {
+      const v = parseInt(e.target.value, 10);
+      window._ownMax = (!isNaN(v) && v >= 0) ? Math.min(100, v) : null;
+      if (window._ownMax != null && !window.OWNERSHIP_2026 && typeof window._loadLateData === 'function') window._loadLateData();
+      _ownBadge();
+      pop.querySelectorAll('[data-ofmax]').forEach(b => b.classList.toggle('on', +b.dataset.ofmax === window._ownMax));
+      const sub = pop.querySelector('.tfp-sub');
+      if (sub) sub.textContent = window._ownMax != null ? 'showing ' + window._ownSummary() : 'pick a max %';
+      render();
+    }, 250);
   });
 })();
 
@@ -6859,6 +7013,8 @@ function getFiltered(applyTopN) {
   if (window._teamFilter && window._teamFilter.size && !window._rankBaseMode) f = f.filter(d => window._teamFilter.has(d.t));
   // INJURIES filter (pill): injured players only, same after-the-cap rule as TEAMS.
   if (window._injOnly && !window._rankBaseMode) f = f.filter(d => !!_ivInfo(d));
+  // ROSTERED % filter (pill): same after-the-cap rule as TEAMS / INJURIES.
+  if (window._ownMax != null && !window._rankBaseMode) f = f.filter(_ownPass);
   // Secondary sorts (non-myrank)
   if (sortKey !== 'myrank') {
     // STATS view repurposes the three PPG sort keys: pts → yards, fpts25 → TDs,
@@ -10501,7 +10657,7 @@ function render() {
   // keep the player's REAL rank in the # column and his real tier: a base pass of
   // getFiltered with those filters off gives rank = index in the un-narrowed board
   // (overall on ALL, positional on a position view, same for K / DST / ROOKIES).
-  const _narrowed = !!(query || window._watchOnly || (window._teamFilter && window._teamFilter.size) || window._injOnly
+  const _narrowed = !!(query || window._watchOnly || (window._teamFilter && window._teamFilter.size) || window._injOnly || window._ownMax != null
     || (typeof _rnkLgShow !== 'undefined' && _rnkLgShow !== 'all' && typeof _rnkLg === 'function' && _rnkLg()));
   let _baseRanks = null;
   if (_narrowed && filter !== 'DEVY') {
@@ -11179,7 +11335,7 @@ function render() {
     html += `<tr data-idx="${d.idx}" class="${moved?'ranked-row':''} ${checked?'cmp-selected':''} ${blurred}${_rnkLgRowCls(d)}${showTiers && _displayTierLabel ? ' tierband-' + tierColor(_displayTierLabel) : ''}">
       <td><div class="drag-handle" tabindex="0" role="button" aria-label="Reorder ${d.n}. Press Space to grab, then arrow keys to move, Space to drop."><svg aria-hidden="true"><use href="#dragDots"/></svg></div></td>
       <td class="myrank-cell"><span class="myrank-num tier-${tierColor(_displayTierLabel)}" title="${(d.s === 'K' || d.s === 'DST') ? 'Position rank: ' + _rankOf(d, i) : 'Overall rank: ' + d.myRank}">${(currentMode === 'weekly' || filter === 'ALL' || filter === 'ROOKIE' || d.s === 'K' || d.s === 'DST') ? ((_injView && d._ivRank) || _rankOf(d, i)) : d.myRank}</span></td>
-      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}${_injPill(d)}${_assumeOutChip(d)}${(typeof currentMode !== 'undefined' && currentMode === 'weekly') ? _debutChip(d, window._weeklyActiveWeek || 1) : ''}${_rnkLgChip(d)}</span><span class="player-team">${_ptTeam(d.t)}${_kStarterBadge(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
+      <td><div class="player-cell pc-row">${d._slImg && !rookiePickMap[d.idx] ? `<img class="player-headshot-sm" src="${window._thumbHeadshotUrl(d._slImg)}" alt="" loading="lazy" decoding="async" fetchpriority="low" onerror="this.style.display='none'">` : ''}<div class="pc-namecol">${rookiePickMap[d.idx] ? `<span class="player-name" style="color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">${rookiePickMap[d.idx]}</span><span class="player-team" style="font-size:.6875rem">${d.n}</span>` : `<span class="player-name player-name-link" data-cidx="${d.idx}" data-name="${d.n}">${_shortNamesNow ? _shortName(d.n) : d.n}${_injPill(d)}${_assumeOutChip(d)}${(typeof currentMode !== 'undefined' && currentMode === 'weekly') ? _debutChip(d, window._weeklyActiveWeek || 1) : ''}${_rnkLgChip(d)}</span><span class="player-team">${_ptTeam(d.t)}${_kStarterBadge(d)}${_ownTag(d)}</span>`}</div>${(() => { const w = window._watchSet && window._watchSet.has(d.n); return '<span class="watch-star' + (w ? ' on' : '') + '" data-watch="' + d.n.replace(/"/g, '&quot;') + '" role="button" title="' + (w ? 'Remove from' : 'Add to') + ' watchlist">' + (w ? '★' : '☆') + '</span>'; })()}</div></td>
       <td><span class="pos-badge ${d.s}">${d.s}</span></td>
       <td class="pos-rank-cell">${d.myPosRank || d.r}</td>
       ${_injView ? _ivCellsHtml(d) : ''}
@@ -11433,6 +11589,7 @@ function updateStats(data) {
     <span class="stat-chip">Showing <strong>${data.length}</strong></span>
     ${(window._teamFilter && window._teamFilter.size) ? `<span class="stat-chip" style="color:#58a7ff;cursor:pointer" onclick="window._toggleTeamFilterPop(true)" title="Team filter is on — click to change">Teams <strong>${window._tfSummary()}</strong></span>` : ''}
     ${window._injOnly ? `<span class="stat-chip" style="color:#f87171;cursor:pointer" onclick="window._toggleInjOnly(false)" title="Injured players only — click to show everyone">Injured only <strong>✕</strong></span>` : ''}
+    ${window._ownMax != null ? `<span class="stat-chip" style="color:#4ade80;cursor:pointer" onclick="window._setOwnFilter(null, null)" title="ROSTERED % filter is on — click to show everyone">Rostered ${window._ownSummary()} <strong>✕</strong></span>` : ''}
     <span class="stat-chip">QB <strong>${qbs}</strong></span>
     <span class="stat-chip">RB <strong>${rbs}</strong></span>
     <span class="stat-chip">WR <strong>${wrs}</strong></span>
@@ -23715,7 +23872,7 @@ document.addEventListener('mff:weeklydata', () => {
 // rendered without them. The default board never reads them, so it is left alone.
 document.addEventListener('mff:latedata', () => {
   const active = id => { const p = document.getElementById(id); return !!(p && p.classList.contains('active')); };
-  try { if (active('pageRankings') && (filter === 'K' || filter === 'DST')) render(); } catch (e) {}
+  try { if (active('pageRankings') && (filter === 'K' || filter === 'DST' || window._ownMax != null)) render(); } catch (e) {}
   try { if (active('pageStartSit') && typeof window._sstRender === 'function') window._sstRender(); } catch (e) {}
   try {
     if (modal && modal.classList.contains('open') && window._cardOpenName && typeof window.openPlayerCard === 'function') {

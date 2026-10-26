@@ -15605,6 +15605,30 @@ function _foldSimAliases(idx) {
   window._simFaScrubbed = Array.from(keys);
 })();
 
+// IN OR OUT, NEVER HALF A GAME (2026-10-26, Jack on DJ Moore / Rashee Rice: "they should either be assumed playing or
+// not"). The Sim Lab export scales an injured player's weekly row by his play odds (inj.c[wk] after an out-window,
+// inj.pl for this week's game-status read when m === pl), so a 40% week showed 40% of a game. Un-blend each such row
+// at load: odds >= 50% = assumed playing at his full if-active projection (row / odds), below = out (0, no boom/bust).
+// Boom/bust on a playing row still carries the engine's blended odds. Rows for games already kicked off are left alone.
+(function _binarySimAvailability() {
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !SP.weeks || !SP.inj) return;
+  const cur = +SP.currentWeek || 1;
+  const fix = (k, w, q) => {
+    const row = SP.weeks[w] && SP.weeks[w][k];
+    if (!row || !(q > 0 && q < 1)) return;
+    if (q < 0.5) { SP.weeks[w][k] = [0, 0, 0, null, null]; return; }
+    SP.weeks[w][k] = [0, 1, 2].map(i => Math.round(row[i] / q * 10) / 10).concat([row[3], row[4]]);
+  };
+  Object.keys(SP.inj).forEach(k => {
+    const r = SP.inj[k];
+    if (!r) return;
+    if (r.c) Object.keys(r.c).forEach(w => { if (+w >= cur) fix(k, w, r.c[w]); });
+    if (!r.kd && r.pl > 0 && r.pl < 1 && r.m === r.pl && r.f != null) fix(k, String(r.f), r.pl);
+  });
+  window._simBinaryAvail = true;
+})();
+
 // Sim Lab per-week projection row for the 2026 LOGS view (data/sim_proj_2026.js,
 // exported offline by sim_lab/export_site_proj.js — no sims run on the site).
 // Row = [half, ppr, std, boom%, bust%]; null boom/bust = player ruled out that
@@ -16249,8 +16273,10 @@ function _vorTable() {
       // odds). The sim row is already scaled by it, so a 50% week reads as half a
       // game; the gap over replacement is priced inside the odds instead —
       // q x max(0, row / q - R) — because he either plays (full gap) or sits (0).
+      // Since _binarySimAvailability (2026-10-26) the rows are no longer scaled — he plays the full row or 0 — so the
+      // odds only apply when that un-blend did not run.
       let q = 1;
-      if (inj && p > 0) {
+      if (inj && p > 0 && !window._simBinaryAvail) {
         if (inj.c && inj.c[w] > 0 && inj.c[w] < 1) q = inj.c[w];
         else if (w === weeks[0] && inj.pl > 0 && inj.pl < 1 && inj.m === inj.pl) q = inj.pl;
       }

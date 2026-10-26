@@ -163,6 +163,46 @@ def _next_game(games, d):
         if gd >= d: return wk, gd
     return None, None
 
+# ---- STALE "RULED OUT" GUARD (2026-10-26) ----
+# The 10-23 scan filed CBS's 2025 story "Ruled out for Week 7 vs. Jaguars in London" as 2026 Puka Nacua news (2026 W7
+# was LAR-LV and he played): news-out zeroed W7 and the availability curve docked W8-16 (ROS 18.5 -> 13.8 ppg).
+# An 'out' read is now dropped when the headline names an opponent that is not his 2026 opponent that week, or when
+# he already has a game row for that week. Dropped items are listed in the build summary (STALE_SKIPS).
+NICK = {"cardinals": "ARI", "falcons": "ATL", "ravens": "BAL", "bills": "BUF", "panthers": "CAR", "bears": "CHI", "bengals": "CIN",
+        "browns": "CLE", "cowboys": "DAL", "broncos": "DEN", "lions": "DET", "packers": "GB", "texans": "HOU", "colts": "IND",
+        "jaguars": "JAX", "jags": "JAX", "chiefs": "KC", "chargers": "LAC", "rams": "LAR", "raiders": "LV", "dolphins": "MIA",
+        "vikings": "MIN", "patriots": "NE", "pats": "NE", "saints": "NO", "giants": "NYG", "jets": "NYJ", "eagles": "PHI",
+        "steelers": "PIT", "seahawks": "SEA", "49ers": "SF", "niners": "SF", "buccaneers": "TB", "bucs": "TB", "titans": "TEN",
+        "commanders": "WAS"}
+RX_OPP = re.compile(r"\b(?:vs\.?|versus|against|at|@)\s+(?:the\s+)?(" + "|".join(NICK) + r")\b", re.I)
+STALE_SKIPS = []
+
+def load_opponents():
+    """{team: {week: opponent}} from the repo's data/nfl_schedule_2026.js ({} if unreadable: the opponent check is then off)"""
+    try:
+        src = open(os.path.join(REPO, "data", "nfl_schedule_2026.js"), encoding="utf-8").read()
+        body = src[src.index("window.NFL_SCHEDULE_2026"):]
+        body = body[:body.index("\n};")]
+        opp = {}
+        for m in re.finditer(r"^\s*(\d{1,2}):\s*\[(.*?)\n\s*\]", body, re.S | re.M):
+            wk = int(m.group(1))
+            for a, h in re.findall(r"\['([A-Z]{2,3})',\s*'([A-Z]{2,3})'\]", m.group(2)):
+                opp.setdefault(a, {})[wk] = h; opp.setdefault(h, {})[wk] = a
+        return opp
+    except Exception as e:
+        print(f"  WARN schedule unreadable, stale-news opponent check off ({e})")
+        return {}
+
+def stale_out(it, wk, played, opps):
+    """why an 'out' read for week wk can't be about 2026 (wrong opponent / he played that week), else None"""
+    if wk in (played or {}).get(norm(it.get("player")), ()):
+        return f"played wk{wk}"
+    m = RX_OPP.search(str(it.get("headline") or ""))
+    real = (opps.get(it.get("team")) or {}).get(wk) if opps else None
+    if m and real and NICK[m.group(1).lower()] != real:
+        return f"names {m.group(1)}, 2026 wk{wk} opponent is {real}"
+    return None
+
 def played_weeks():
     """{norm: set(weeks with a 2026 game row)} from data/sim_2026.js"""
     try:
@@ -172,9 +212,10 @@ def played_weeks():
     except Exception:
         return {}
 
-def news_state(items, kicks, cur, played=None):
+def news_state(items, kicks, cur, played=None, opps=None):
     """Walk each player's items oldest -> newest and keep the standing availability read."""
     by = {}
+    del STALE_SKIPS[:]
     order = sorted(range(len(items)), key=lambda i: (str(items[i].get("date") or ""), -i))   # file is newest-first within a day
     for i in order:
         it = items[i]
@@ -228,6 +269,9 @@ def news_state(items, kicks, cur, played=None):
                 if span and len(span) == 1 and nxt: curve[str(nxt[0])] = 0.85
             if to >= w0: s["win"] = dict(meta, k=k, curve=curve, **{"from": w0, "to": min(18, to)})
         elif k == "out":
+            why = stale_out(it, wk_named or w0, played, opps)
+            if why:
+                STALE_SKIPS.append(f"{it.get('player')} [{d}] {why}: {meta['hl']}"); continue
             s["out"][str(wk_named or w0)] = meta
         elif k in ("play", "doubt", "gtd"):
             wk = wk_named or w0
@@ -433,7 +477,8 @@ def build(allp=None, now=None):
     news = {}
     try:
         items = json.load(open(os.path.join(REPO, "data", "camp_news_2026.json"), encoding="utf-8")).get("items", [])
-        news = news_state(items, kicks, cur, played_weeks())
+        news = news_state(items, kicks, cur, played_weeks(), load_opponents())
+        for s in STALE_SKIPS: print("  stale 'ruled out' dropped:", s)
     except Exception as e:
         print(f"  WARN news feed unreadable ({e})")
     # --- pre-injury depth-chart spot for players who are out now ---

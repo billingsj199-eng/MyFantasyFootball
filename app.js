@@ -15579,6 +15579,32 @@ function _foldSimAliases(idx) {
   return idx;
 }
 
+// FREE AGENTS GET NO SIM (2026-10-26, Jack: "najee shouldnt be projected any points"). The Sim Lab engine takes
+// rosters from Clay's preseason teams, so a released player (Najee: cut by NYG after week 6) kept being simmed as
+// a Giants backup every remaining week. Until the engine drops him itself, any player the site lists as FA loses his
+// weekly rows after his last 2026 game (last xFP week; frozen history before that stays), his ROS PPG is pinned to 0
+// (so adjProjPpg doesn't fall back to Clay's line) and his season sim / IF-SITS / TD-luck adjustment are cleared.
+(function _scrubFreeAgentSims() {
+  const SP = window.SIM_PROJ_2026;
+  if (!SP || !SP.weeks || typeof D === 'undefined' || !Array.isArray(D)) return;
+  const norm = n => String(n || '').toLowerCase().replace(/[.'’-]/g, '').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/\s+/g, ' ').trim();
+  const fa = new Set(D.filter(d => d && d.t === 'FA' && d.s !== 'DST').map(d => norm(d.n)));
+  if (!fa.size) return;
+  const keys = new Set();
+  Object.keys(SP.weeks).forEach(w => Object.keys(SP.weeks[w] || {}).forEach(k => { if (fa.has(norm(k))) keys.add(k); }));
+  Object.keys(SP.seasonPpg || {}).forEach(k => { if (fa.has(norm(k))) keys.add(k); });
+  keys.forEach(k => {
+    const xw = Object.keys((SP.xfp && SP.xfp[k]) || {}).map(Number).filter(isFinite);
+    const last = xw.length ? Math.max.apply(null, xw) : (+SP.currentWeek || 1) - 1;
+    Object.keys(SP.weeks).forEach(w => { if (+w > last && SP.weeks[w]) delete SP.weeks[w][k]; });
+    if (SP.seasonPpg && SP.seasonPpg[k]) SP.seasonPpg[k] = [0, 0, 0];
+    if (SP.seasonSim) delete SP.seasonSim[k];
+    if (SP.ifSits) delete SP.ifSits[k];
+    if (SP.luck && SP.luck[k]) SP.luck[k][4] = null;
+  });
+  window._simFaScrubbed = Array.from(keys);
+})();
+
 // Sim Lab per-week projection row for the 2026 LOGS view (data/sim_proj_2026.js,
 // exported offline by sim_lab/export_site_proj.js — no sims run on the site).
 // Row = [half, ppr, std, boom%, bust%]; null boom/bust = player ruled out that

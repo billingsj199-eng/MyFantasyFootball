@@ -237,3 +237,77 @@ On the long harness the EV form fails outright (10 of 13, rank negative). The FU
 - The leg's five shrink constants were fitted on 2017-25 as-of rows; 2013-16 are a true out-of-sample check and the leg wins all four on error and three of four on rank.
 - Both harnesses grade the shadow without the market anchor (no prop lines before 2026); the 2026 check in the first section is the only look at the leg next to the anchored number, and there it helped by the same margin.
 - Blend weights were compared on the training seasons with the all-season leg (the per-fold legs differ only in the OLS rows and league rates); the held-out season always used its own fold's leg.
+
+
+## Tests 3 and 4 (2026-10-27, Jack approved after the QB / TE replay)
+
+*Script `E:\MyFantasyFootball\sim_lab\backtest_tail_team.py` (default 2019-25 harness for both tests; `SIM_BT_YEARS=2012-2025` reruns test 4 on 2013-25). Logs `sim_lab/scratch_model/out/tail_team.log` and `tail_team_ext2012_2025_tf.log`. Both DON'T SHIP.*
+
+### Test 3 — upside tail calibration: DON'T SHIP (nothing to fix on history; the mean should not move by band)
+
+**Prior work checked.** `project_shadow_coverage` (10-08): sigma x1.0 is the coverage optimum, band-specific sigma and a dud mixture on the low band REJECTED. That cut by projection size, not ADP band, and never looked at the top side by band, so this is a new cut.
+
+**History (2019-25, 11,100 top-150 player-weeks, engine sampler replica around the engine-parity shadow, 1,000 draws each; target 80% in band, 10 below p10, 10 above p90):**
+
+| ADP band | n | p10-p90 | below p10 | above p90 | act/mean | boom P / real |
+|---|---|---|---|---|---|---|
+| 1-12 | 972 | 81.2% | 9.8 | 9.1 | 0.997 | 28.4 / 28.6 |
+| 13-30 | 1551 | 82.7% | 8.4 | 8.9 | 1.007 | 22.9 / 21.7 |
+| 31-60 | 2473 | 81.9% | 7.8 | 10.3 | 1.028 | 15.9 / 17.0 |
+| 61-100 | 2829 | 81.3% | 9.4 | 9.3 | 1.013 | 11.6 / 11.3 |
+| 101-150 | 3275 | 78.4% | 12.0 | 9.5 | 0.975 | 8.5 / 7.7 |
+
+By position inside 31-60: QB 7.0% above p90 (level .983), RB 10.4 (1.015), WR 10.8 (1.052), TE 11.8 (1.081); inside 61-100 WR 10.2 (1.029), TE 9.3 (.973). The top side of the 31-100 band is covered at 9-11% on history, i.e. where it should be; the only real cells are 13-30 TE (15.4% above, n=91) and 31-60 TE (11.8%), both small and both a LEVEL lean (act/mean 1.07-1.08), not a tail shape. The boom rates (P(act >= QB 25 / RB WR 20 / TE 15)) are calibrated in every band within a point.
+
+**2026 W1-7 from the live locks' own p10/p90 (top-150):** 31-60 above p90 13.3% (WR 14.4%, n=97; RB 11.7), 61-100 8.9%, 101-150 14.2% (TE 20.6%, n=63). This is the cut the miss study saw. On the same bands history says 10.3 / 9.3 / 9.5, so the 2026 read is 181 rows of noise plus a handful of names (Nabers, Jameson Williams, Evans, Flowers, Pitts, Likely, Higgins), consistent with `project_segment_misses_w1_3` (repeat-miss names do not persist).
+
+**Fix candidates on ADP 31-100 only (history, LOSO on CRPS):**
+
+| variant | p10-p90 | above p90 | CRPS | pinball | boom Brier | MAE (mean) |
+|---|---|---|---|---|---|---|
+| as is | 81.6% | 9.8 | 3.852 | 2.400 | .1130 | 5.431 |
+| upper-tail stretch x1.10 / x1.20 / x1.30 | 83.1 / 84.6 / 85.7 | 8.2 / 6.7 / 5.7 | 3.858 / 3.870 / 3.887 | 2.420 / 2.455 / 2.501 | .1131 / .1135 / .1143 | unchanged |
+| band sigma x1.10 / x1.20 | 86.0 / 89.7 | 8.2 / 6.7 | 3.884 / 3.931 | 2.445 / 2.518 | .1131 / .1135 | unchanged |
+| band mean x1.02 / x1.04 | 82.2 / 82.5 | 9.0 / 8.4 | 3.849 / 3.850 | 2.406 / 2.415 | .1130 / .1132 | 5.454 / 5.482 |
+
+Every tail widening over-covers (coverage 83-90% vs the 80% target), worsens CRPS and pinball, and makes the boom probability run above the realized rate. The LOSO pick on CRPS is "band mean x1.02" in all seven folds, but CRPS is better in only 4 of 7 seasons by 0.001-0.02, and on the mean's own grade it is a loss: whole-board weighted MAE 5.849 -> 5.858, rank rho .3881 -> .3882 (flat). It is also exactly the band x level multiplier `project_tier_treatment` rejected as overfit.
+
+**Answer to the question:** neither the distribution nor the mean should move for the band. The distribution's top side is calibrated on 11,100 rows; the 2026 top-side misses in 31-60 are 181 rows and a few names. If anything is real it is a TE level lean (act/mean 1.07-1.08 at ADP 13-60 on history, +1.03 at 101-150), which is the TE under-read already on file (`project_clay_free_roadmap` TE core, teDockK) and not a tail problem. No engine change proposed.
+
+### Test 4 — team-level offense drift: DON'T SHIP (no persistence to chase)
+
+**Prior work checked.** Nothing identical. `backtest_shadow_next` item 5 "team shift" (this season's LINES vs the preseason view, elasticity on every player) FAILED 0/7 on all cuts; `project_team_conservation` (absent player's points redistributed) REJECTED; `project_team_vacated_boost` is an absence layer, not drift; `project_own_team_totals` already feeds the scoring surprise into the FUTURE implied totals (results x .10-.20), and the current week's line is the book's; `project_segment_misses_w1_3` found team offense act/proj persistence of -0.10 on 2026 W1-3 and said "don't chase cold teams". This test is the fantasy-points residual form (actual vs the engine-parity number for the team's QB/RB/WR/TE), season to date or trailing 3-4 team games, applied to everyone on the team, on 2013-25.
+
+**Persistence (the thing the layer needs):** correlation between the team's as-of ratio (actual / shadow, 3+ games) and this week's act/shadow = -0.013 on 2019-25 and ~0 on 2013-25; trailing-3 +0.009, trailing-4 +0.002. By bucket, 2019-25: teams running under .85 of projection score 1.004 of it the next week, .85-.95 -> 1.031, .95-1.05 -> .987, 1.05-1.15 -> .999, over 1.15 -> .994. Cold offenses bounce back, hot ones do not stay hot. The 2026 team biases in the miss cut (NYG -5.6, NE -4.3, NO +3.5, IND +2.9 over W4-7) are what a zero-persistence process looks like in 4-week windows of 10-15 rows.
+
+**Layer grid:** mult = 1 + f (R - 1) x games / (games + s), f .25 / .50, s 2 / 4, after 3 or 4 team games, R season-to-date or trailing 3 / 4, clipped .80-1.25. 16 settings + the shadow.
+
+| harness | LOSO touched rows | seasons better | forward | seasons better | guard | rank rho | pick |
+|---|---|---|---|---|---|---|---|
+| 2019-25 | +0.05% | 0/7 | +0.00% | 0/4 | +0.07% | -.0004 | shadow in 5 of 7 folds |
+| 2013-25 | +0.04% | 5/14 | +0.01% | 6/11 | +0.08% | -.0014 | trail-3 f .25 s 4 (the smallest nudge) |
+
+Pooled on the touched rows every setting is worse: f .25 +0.0 to +0.3%, f .50 +0.2 to +0.8%; by position QB is hurt most (f .50 +1.4 to +1.8%), WR is the only flat one (-0.1 to +0.1%).
+
+Per season, 2013-25, top-150, weighted MAE / Spearman / pair accuracy:
+
+| season | n | shadow | N3 to date f .25 s 2 | N3 to date f .50 s 2 | N4 to date f .25 s 4 | N4 trail-4 f .50 s 4 |
+|---|---|---|---|---|---|---|
+| 2013 | 1781 | 6.021 / .425 / .635 | 6.029 / .419 / .635 | 6.041 / .415 / .637 | 6.027 / .422 / .635 | 6.033 / .419 / .637 |
+| 2014 | 1820 | 5.833 / .405 / .641 | 5.823 / .403 / .640 | 5.818 / .397 / .642 | 5.826 / .402 / .640 | 5.828 / .399 / .646 |
+| 2015 | 1767 | 5.893 / .420 / .615 | 5.881 / .421 / .617 | 5.881 / .417 / .620 | 5.879 / .422 / .620 | 5.882 / .419 / .614 |
+| 2016 | 1761 | 5.717 / .339 / .621 | 5.716 / .339 / .619 | 5.720 / .334 / .627 | 5.717 / .340 / .616 | 5.712 / .338 / .619 |
+| 2017 | 1740 | 5.697 / .375 / .622 | 5.676 / .377 / .624 | 5.660 / .376 / .621 | 5.681 / .378 / .623 | 5.689 / .376 / .624 |
+| 2018 | 1768 | 5.849 / .414 / .657 | 5.843 / .407 / .654 | 5.846 / .404 / .649 | 5.843 / .408 / .656 | 5.853 / .411 / .653 |
+| 2019 | 1782 | 5.997 / .388 / .599 | 6.010 / .383 / .597 | 6.029 / .377 / .592 | 6.004 / .384 / .599 | 6.010 / .379 / .595 |
+| 2020 | 1743 | 5.936 / .379 / .628 | 5.941 / .382 / .624 | 5.953 / .378 / .626 | 5.940 / .384 / .624 | 5.947 / .384 / .624 |
+| 2021 | 1837 | 5.885 / .394 / .601 | 5.879 / .391 / .594 | 5.878 / .388 / .593 | 5.878 / .394 / .598 | 5.878 / .392 / .594 |
+| 2022 | 1913 | 5.739 / .441 / .612 | 5.744 / .440 / .608 | 5.751 / .433 / .606 | 5.739 / .441 / .609 | 5.739 / .441 / .600 |
+| 2023 | 2002 | 5.610 / .397 / .608 | 5.590 / .391 / .612 | 5.580 / .376 / .614 | 5.593 / .393 / .611 | 5.591 / .385 / .613 |
+| 2024 | 1961 | 5.680 / .347 / .605 | 5.676 / .350 / .599 | 5.676 / .348 / .600 | 5.678 / .348 / .600 | 5.677 / .338 / .603 |
+| 2025 | 1974 | 5.827 / .362 / .610 | 5.821 / .361 / .607 | 5.821 / .360 / .607 | 5.825 / .361 / .609 | 5.835 / .362 / .609 |
+| **wins (MAE / rho / pair)** | | | 9 / 6 / 4 of 14 | 8 / 2 / 6 of 14 | 10 / 7 / 4 of 14 | 9 / 3 / 5 of 14 |
+
+The MAE "wins" are 0.00-0.02 coin flips; rank order gets worse in 7-12 of 14 seasons at every setting, and the in-season objective is rank. Verdict: DON'T SHIP, and do not re-pitch a team fantasy-residual layer in any window or shrink: the signal it needs does not exist on 13 seasons. What a team-level miss should trigger is a QB-status or role check on that team (the drifts that persist are a changed quarterback or a changed role, both already modelled), not a multiplier.
+
+**Caveat for both tests:** the harness grades the engine-parity shadow without the market anchor; the live 2026 numbers carry the anchor and BOOK_CAP, which can only make a residual layer less useful (the books already price team drift).

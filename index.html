@@ -6446,7 +6446,7 @@ window._loadWeeklyCore = function(opts) {
   window._weeklyCorePromise = _injectScripts([
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
     // merge also still listens on mff:weeklydata (idempotent).
-    'data/weekly_stats_active.js?v=2026-10-27-0925'
+    'data/weekly_stats_active.js?v=2026-10-27'
   ], 'WeeklyCore', opts).then(function() {
     try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
   });
@@ -6472,9 +6472,9 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-10-26-1149',
+    'data/snap_counts.js?v=2026-10-27',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-10-26-1149',
+    'data/route_pct.js?v=2026-10-27',
     // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
     'data/team_usage_2026.js?v=2026-10-26-1149'
   ];
@@ -6546,7 +6546,7 @@ window._LATE_DATA_FILES = [
   'data/dst_history.js?v=2026-10-27',
   'data/dst_weekly.js?v=2026-10-27',
   'data/kicker_weekly.js?v=2026-10-27',
-  'data/player_weekly_sigma.js?v=2026-10-13',
+  'data/player_weekly_sigma.js?v=2026-10-27',
 ];
 window._loadLateData = function(opts) {
   if (window._lateDataPromise) return window._lateDataPromise;

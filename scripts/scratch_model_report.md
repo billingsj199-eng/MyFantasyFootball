@@ -366,3 +366,37 @@ if (p.pos === 'WR' && ncMean > 0 && teamPrimaryQbOut(p.tm, wk)) {
   ncMean *= (1 - (qStar ? qod.star : qod.other) * dockF); ncSrc += '+qbout' + (qStar ? 'S' : '') + (dockF > 1 ? 'R' : '');
 }
 ```
+
+
+### Test 5 addendum — the grade updated weekly from team performance with the backup: DON'T SHIP
+
+*Jack: "make sure it changes quickly based on current team performance". Script `sim_lab\research_qbout_dyngrade.py`, log `sim_lab\_tmp\qbout_dyngrade.log`, same harness B rows (1,111 QB-out WR next-game rows 2013-25; 328 are the backup's first start, 783 his second or later).*
+
+**The layer.** Grade = w x observed + (1 - w) x prior, w = n / (n + k), n = the backup's starts this season for this team before the game, k in {1, 2, 3}. Observed ratio r (1 = the offense with him looks like the offense with the primary), all environment-neutral and known before kickoff: OBS1 = his fantasy points per dropback in his starts over the primary's rate this season (league rate when the primary has under 60 dropbacks); OBS2 = team points scored over the Vegas implied total in his starts; OBS3 = team receiving fantasy points per dropback in his starts over the team's rate in the primary's starts. Dock multiplier f = prior x clip(1 + b (1 - r_shrunk), .25, 2), b in {.5, 1, 1.5, 2}, prior = 1 (flat dock) or the test-5 draft tier (round 1-2 = 1, else 1.25). k and b picked leave-one-season-out and forward, like every other layer.
+
+**How it differs from what failed on 10-27.** The 10-27 gates were binary (lift the dock after N starts if a production bar was cleared) and one of them read the receiver's own xFP; this is a continuous dock size, driven by team-level output, with no gate and no games-played fade. It is also not the 10-23 ridge rating, which was a learned linear score on season-decayed QB stats.
+
+**Result: the observation carries no signal for the next game.** Across the 783 second-or-later-start rows the correlation between the observed ratio and the receivers' next-game actual / undocked is +0.020 (OBS1), +0.019 (OBS2), +0.038 (OBS3). The buckets are flat or inverted: with OBS1 the offenses that looked worst with the backup (r under .7) produced .920 of undocked the next week, the .7-.9 bucket .815, the 1.1-1.3 bucket .919; only r over 1.3 clears 1.0 (1.041, n 121). OBS2's middle bucket (.9-1.1, the backup matching the implied total) is the worst at .849. A backup's offense looking good or bad in its first two or three games does not say what the receivers do in the next one.
+
+| candidate | LOSO out-row MSE | folds | forward | folds | all top-150 WR wtd | rank rho | bar |
+|---|---|---|---|---|---|---|---|
+| OBS1 dynamic only, LOSO/forward-picked k, b | +0.17% | 5/13 | +0.06% | 6/10 | +0.30% | +.0001 | fails |
+| OBS2 dynamic only, picked | +0.09% | 5/13 | -0.04% | 5/10 | +0.06% | -.0003 | fails |
+| OBS3 dynamic only, picked | +0.22% | 4/13 | +0.09% | 4/10 | +0.45% | +.0001 | fails |
+| OBS1 on the draft prior, picked | -0.14% | 8/13 | -0.39% | 7/10 | -0.56% | -.0001 | fails |
+| OBS2 on the draft prior, picked | -0.24% | 10/13 | -0.54% | 8/10 | -0.83% | -.0001 | fails (-0.3% bar) |
+| OBS3 on the draft prior, picked | -0.22% | 8/13 | -0.48% | 8/10 | -0.60% | -.0002 | fails |
+| OBS1 / OBS2 / OBS3 on the draft prior, all-season fixed k, b | -0.37 / -0.35 / -0.36% | 10/13 | -0.54 / -0.55 / -0.56% | 8/10 | -0.94 / -0.95 / -0.90% | 0 | pass on paper |
+| static draft tier alone (test 5) | -0.35% | 10/13 | -0.50% | 8/10 | -0.89% | -.0001 | pass on paper |
+
+The three fixed-constant versions that clear the bar are the static draft tier wearing a small dynamic term: they beat it by 0.00 to 0.02 points of MSE, their honest picked versions fail, and the picks wander between b .5 and b 2 from fold to fold with k = 3 (the slowest update offered) chosen almost everywhere, which is the data asking for the smallest possible dynamic term. By start number the dynamic part is worth +0.0% on second starts and +0.0 to +0.3% worse on third-plus starts, where it has the most information; every bit of the gain sits in the first-start rows (-0.94%), which is the prior, not the update. Per season the picked OBS2-on-prior version wins 10 of 13 on the out rows by 0.3-1.2% and is flat on rank everywhere.
+
+**What k does the data pick?** k = 3 in 9-13 of 13 folds for every observation, and k = 1 only for OBS2 without the prior, where the layer fails. A fast update is not what the history wants.
+
+**Checks.**
+1. Cooper Rush list: with the prior, every one of the 10 worst backup weeks is docked at least as hard as today; without the prior the dynamic term UNDOCKS Foles 2017 W16 (r 1.19-1.42 after his first start; receivers then scored 4.5 on 26.4 undocked) and Cassel 2015 W8 (r 1.25), the two cases where a hot first start preceded a dud. Six of the ten are first starts, where no update exists at all.
+2. 2026 path (prior = draft tier, b 1): McCarthy (round 1, prior 1.0): after his first NYG start r1 1.55 / r2 1.20 -> star dock .109-.130 (k 1-3); after the second r1 1.11 / r2 1.39 -> .139-.144 by QB production, .111-.126 by team points. Winston (NYG W2-W6, round 1): .20 after W2 (r .29), .17 by W4, .15-.16 by W6 as the offense recovered. McKee (round 6, prior 1.25): .20-.22 after two starts (r1 .66-.71). Cooper Rush W2 ATL: .21-.23 after his 100-yard first start, .23-.26 after the second, i.e. the brief's behaviour, but the history above says that movement does not predict the receivers' next game.
+3. In-house vs acquired: the dynamic terms are -0.4 to -1.6% on the 131 acquired rows and +0.1 to +0.3% on the 980 in-house rows; the acquired gain is the same one the static tier already has.
+4. 2026 W1-7 lock rows: unchanged from test 5 (67 rows at 1.23 of the docked number at every tier); a dock that moves with team output would have docked the Bears, Bucs and Commanders harder in W4-6 and been wrong each time.
+
+**Verdict: DON'T SHIP**, and record it as the sixth form of backup-QB grading to fail (10-07, 10-08, 10-20, 10-23, 10-27 static, 10-27 dynamic). A weekly-updating grade behaves as asked on the 2026 names but has zero out-of-sample value on 13 seasons; what passes on paper is the static draft tier, already not recommended on rank and on the 2026 direction. No engine change proposed.

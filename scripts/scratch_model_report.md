@@ -311,3 +311,58 @@ Per season, 2013-25, top-150, weighted MAE / Spearman / pair accuracy:
 The MAE "wins" are 0.00-0.02 coin flips; rank order gets worse in 7-12 of 14 seasons at every setting, and the in-season objective is rank. Verdict: DON'T SHIP, and do not re-pitch a team fantasy-residual layer in any window or shrink: the signal it needs does not exist on 13 seasons. What a team-level miss should trigger is a QB-status or role check on that team (the drifts that persist are a changed quarterback or a changed role, both already modelled), not a multiplier.
 
 **Caveat for both tests:** the harness grades the engine-parity shadow without the market anchor; the live 2026 numbers carry the anchor and BOOK_CAP, which can only make a residual layer less useful (the books already price team drift).
+
+
+## Test 5 — backup-QB GRADE dock (2026-10-27; the games-played fade was cancelled by Jack and not run)
+
+*Script `E:\MyFantasyFootball\sim_lab\research_qbout_grade.py`, log `sim_lab\_tmp\qbout_grade.log`. Harness (B) = the 10-27 study's rows: engine base 2012-25, next game = `backtest_shadow_next.shadow` (carries the flat dock), undocked = / (1 - d), 1,111 WR QB-out next-game rows (131 with an acquired starter), plus the 67 QB-out WR rows in the 2026 W1-7 live locks. Bar as in the 10-27 study: LOSO < -0.3%, 70% of folds, forward < 0 and 70%, all top-150 WR rows <= +0.1%.*
+
+**Verdict: DON'T SHIP.** No grade that eases the dock for a good backup survives; the one shape that clears the numeric bar docks replacement-level backups harder, is flat-to-negative on rank, and runs the wrong way on 2026.
+
+**Which grades were run and which were not.**
+
+- (a) backup fantasy points or EPA per dropback vs the primary, (b) career yards/attempt + TD rate vs replacement: **not re-run.** These are the ridge rating, backup-absolute, gap-only and flat x rating-tilt forms rejected on this harness on 10-23 (`project_backup_qb_rating`: 0-8 of 13 LOSO, forward fails) and the dEPA scaling rejected 10-20; four failures, and the descriptive finding there stands: once shrunk, backups are all near replacement, it is the lost STARTER's quality that moves the receivers.
+- (c) preseason per-start projection ratio (Clay seasonPoints, the version the 2026 pool carries): **ungradeable as a general rule.** Clay exists only 2019-25 (669 rows); the sheet projects pure backups as roster scraps (gm 17, median 27 pts vs 253 for the primary), so there is no per-start rate to grade, and the engine's QB window already treats a backup as 85% of the leader. Only 123 rows have a backup at 40+ pts and those cells point both ways (40-100 pts: WRs .769 of undocked; 100+: .889; under 20: .887). Nothing to fit.
+- (d) draft capital + career starts tier, known before kickoff: **run in full** (starts = 15+ dropback games in 2012+ play-by-play, a floor for older veterans).
+
+**What (d) shows descriptively (act / undocked, 2013-25):** day-1/2 pick backups .967 (n 364, over-docked by the flat rule: act/engine 1.053), later/undrafted .835 (n 485, act/engine .908); 16+ career starts .939 vs under 16 .838; 0-3 starts .798; 48+ starts 1.044. ADP 1-60 receivers with a day-1/2 or 16+-start backup land at .995 of undocked (act/engine 1.171, over-docked), with a replacement-level backup .800. In-house vs acquired: acquired replacement-level .740 (n 77), acquired real .955 (n 54). Jack's premise is right descriptively: backups are not equal, and the flat dock over-docks the credentialed ones and under-docks the rest.
+
+**But as a layer it does not pass the way the premise wants it to.** The relief shapes (real backup = half or three-quarter dock) fail: best of them -0.96% on the out rows but only 7 of 13 seasons and forward 7 of 10, and they dock the Cooper Rush list LESS (Manziel 2015, Pickett 2025, Murray 2023 are all first-round picks). Only the "keep the flat dock, dock replacement-level backups harder" shapes clear the bar:
+
+| candidate (real = day-1/2 pick) | rows changed | LOSO out-row MSE | folds | forward | folds | all top-150 WR wtd | rank rho | pair acc on out rows | bar |
+|---|---|---|---|---|---|---|---|---|---|
+| flat (engine) | - | - | - | - | - | - | - | .715 / Spearman .455 | - |
+| real x1.00, replacement x1.25 | 747 | -0.35% | 10/13 | -0.50% | 8/10 | -0.89% | -.0001 | .717 / .448 | passes |
+| real (rd 1-2 AND 16+ starts) x1.00, rep x1.25 | 859 | -0.31% | 10/13 | -0.50% | 8/10 | -0.92% | -.0002 | .718 / .447 | passes |
+| real x0.50, rep x1.25 (LOSO best on error) | 1111 | -0.96% | 7/13 | -1.52% | 7/10 | -1.28% | +.0011 | .722 / .456 | fails |
+| real x0.50, rep x1.00 (the grade relief) | 364 | -0.61% | 7/13 | -1.02% | 6/10 | -0.38% | +.0012 | - | fails |
+| linear in starts (rep x1.25 -> 48-start vet x.75) | 1093 | -0.53% | 9/13 | -0.78% | 7/10 | -1.19% | +.0006 | - | fails |
+| no dock (reference) | 1111 | +2.73% | 2/13 | +2.57% | 1/10 | +8.71% | +.0002 | .715 / .459 | fails |
+
+Per season for the passing shape (out-row MSE vs engine / all top-150 WR weighted MSE / rank rho delta): 2013 +1.0 / +.13 / -.001, 2014 -0.6 / +.05 / 0, 2015 -0.8 / -.13 / 0, 2016 +0.3 / +.04 / -.001, 2017 -0.6 / -.10 / -.001, 2018 -0.8 / -.04 / 0, 2019 +0.3 / -.01 / 0, 2020 -0.6 / -.02 / 0, 2021 -0.6 / -.06 / +.001, 2022 -0.1 / +.07 / -.002, 2023 -0.6 / -.18 / 0, 2024 -0.7 / -.22 / +.003, 2025 -0.8 / -.35 / +.001. Gains of half a percent of MSE on ~750 rows a season; rank order among the out rows moves from .455 to .448 Spearman.
+
+**Required checks.**
+
+1. Cooper Rush list (the 10 worst backup team-weeks 2012-25): under the passing shape every one docks at least as hard as today (first-round backups keep the flat dock, DeVito / Hodges / Landry Jones get x1.25). 2026 W2 ATL Cooper Rush: undrafted but 18 prior starts, so he is "real" under the OR-tier and "replacement" under the draft-only tier that passes, i.e. the passing shape docks him harder; fine either way.
+2. 2026 NYG / PHI: J.J. McCarthy is a first-round pick with 12 starts -> real -> flat dock, Nabers unchanged (W7 lock 10.62 shadow, 11.20 live; a half-dock relief would have given 11.56). Tanner McKee (PHI) is a sixth-round pick with 4 starts -> replacement -> x1.25, i.e. DeVonta Smith and the PHI receivers would be docked HARDER than today (.1875 star / .0625 other), the opposite of what the W9 complaint wants.
+3. In-house vs acquired: the passing shape is -0.23% on in-house rows (n 980) and -1.24% on acquired rows (n 131); the acquired replacement-level cell (.740 of undocked) is where the extra dock earns, and it is 77 rows.
+4. 2026 W1-7 live locks (67 QB-out WR rows, QBs Wentz, Lock, Keenum, Winston, Mariota, Bagent, Daniels, Kaliakmanis, Huntley, McCarthy): receivers ran at **1.109 of the undocked shadow and 1.231 of the flat-docked number** - the dock cost points at every tier this season (real 1.287, replacement 1.184), and the passing shape makes it worse (out-row MSE 34.1 -> 34.4). Seven weeks is not evidence against 13 seasons, but it is the sanity check going the wrong way.
+
+**Why DON'T SHIP.** Jack's objective is rank order inside the position; the passing shape is flat-to-negative on rank everywhere it is measured (board -.0001, out rows -.007 Spearman) and buys 0.35% of out-row MSE. It is also not a grade: it never eases the dock, it only adds to it for day-3 / undrafted backups, and the one season of live data points the other way. If Jack overrules on the error bar, the change is small and is given below; otherwise the flat dock stays and backup-QB grading has now failed five times (10-07, 10-08, 10-20, 10-23, 10-27) - do not re-pitch it without new seasons. The real NYG fix remains the primary-QB identity (Dart on IR all year), an engine-definition question, as the 10-27 study said.
+
+**If overruled (pseudo-code at the qbOutWrDock site, ~engine.js line 4097; not applied):**
+
+```
+// backup-QB WR dock, draft-capital tier (harness replay 2026-10-27: LOSO -0.35% 10/13, fwd -0.50% 8/10, rank flat)
+var QBOUT_TIER = { repMult: 1.25, realRound: 2 };   // replacement-level backup = drafted round 3+ or undrafted -> dock x1.25
+function qbOutDockMult(tm, wk) {
+  var q = teamStartingQb(tm, wk);                     // the QB the engine projects to start this week (dump_qb_state / chart x availability)
+  var rd = q && q.draftRound;                         // SIM_SLEEPER_META[sid].dy/dp -> round (dp <= 64 -> rounds 1-2); undrafted = none
+  return (rd != null && rd <= QBOUT_TIER.realRound) ? 1.0 : QBOUT_TIER.repMult;
+}
+// in weeklyProjection:
+if (p.pos === 'WR' && ncMean > 0 && teamPrimaryQbOut(p.tm, wk)) {
+  var dockF = (window.SIM_QBOUT_TIER === false) ? 1.0 : qbOutDockMult(p.tm, wk);
+  ncMean *= (1 - (qStar ? qod.star : qod.other) * dockF); ncSrc += '+qbout' + (qStar ? 'S' : '') + (dockF > 1 ? 'R' : '');
+}
+```

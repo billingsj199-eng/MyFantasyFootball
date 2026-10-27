@@ -20002,6 +20002,186 @@ function _wireTeamCardView(d) {
   });
 }
 
+// MATCHUP tab (Jack 2026-10-27): this week's opponent defense as a field heat map — fantasy
+// points it allows per game in eight zones (QB passing / rushing, RB rushing / receiving, WR
+// targets under 10 / 10-19 / 20+ air yards, TE), with this offense's starters dropped into
+// their lanes (WRs by aDOT). Zone colors + ranks are schedule-adjusted with the same
+// defense / offense fit SOS and the weekly OPP color use (window._wkSchedAdjust); the
+// FP/G label is the raw number. Data: data/def_zones_2026.js (scripts/build_def_zones.py,
+// nflverse pbp) in the lazy weekly bundle. Rank 1 = gives up the most = easiest.
+const _MZ_ZONES = [
+  { k: 'QB_PASS', lbl: 'QB passing', pos: 'QB' },
+  { k: 'QB_RUSH', lbl: 'QB rushing', pos: 'QB' },
+  { k: 'RB_RUSH', lbl: 'RB rushing', pos: 'RB' },
+  { k: 'RB_REC', lbl: 'RB receiving', pos: 'RB' },
+  { k: 'WR_SHORT', lbl: 'WR · under 10 air yds', pos: 'WR' },
+  { k: 'WR_MID', lbl: 'WR · 10-19 air yds', pos: 'WR' },
+  { k: 'WR_DEEP', lbl: 'WR · 20+ air yds', pos: 'WR' },
+  { k: 'TE', lbl: 'TE', pos: 'TE' },
+];
+const _MZ_POS_COLORS = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+let _mzCache = null;
+// per-zone table for the board scoring: raw per game, schedule-adjusted per game, adj rank
+function _mzTable() {
+  const Z = window.DEF_ZONES_2026;
+  if (!Z || !Z.g) return null;
+  const fmt = rankingScoringFmt;
+  if (_mzCache && _mzCache.src === Z && _mzCache.fmt === fmt) return _mzCache;
+  const recAdj = fmt === 'ppr' ? 0.5 : fmt === 'std' ? -0.5 : 0;
+  const zones = _MZ_ZONES.map((z, i) => {
+    const games = [], raw = {};
+    Object.keys(Z.g).forEach(def => {
+      Object.keys(Z.g[def]).forEach(wk => {
+        const r = Z.g[def][wk];
+        const v = r[1 + i] + r[9 + i] * recAdj;
+        games.push({ d: def, o: r[0], v });
+        const a = raw[def] || (raw[def] = { s: 0, n: 0 });
+        a.s += v; a.n++;
+      });
+    });
+    const S = (typeof window._wkSchedAdjust === 'function' && games.length) ? window._wkSchedAdjust(games) : null;
+    const rows = Object.keys(raw).map(def => ({
+      def, raw: raw[def].s / raw[def].n, g: raw[def].n,
+      adj: S && typeof S.dE[def] === 'number' ? S.mu + S.dE[def] : raw[def].s / raw[def].n,
+      faced: S ? (S.facedE[def] || 0) : 0,
+    }));
+    const lg = rows.reduce((s, r) => s + r.raw, 0) / (rows.length || 1);
+    const mu = rows.reduce((s, r) => s + r.adj, 0) / (rows.length || 1);
+    const sd = Math.sqrt(rows.reduce((s, r) => s + (r.adj - mu) * (r.adj - mu), 0) / (rows.length || 1)) || 1;
+    const by = {};
+    rows.slice().sort((a, b) => b.adj - a.adj).forEach((r, k) => { r.rank = k + 1; r.z = (r.adj - mu) / sd; by[r.def] = r; });
+    rows.slice().sort((a, b) => b.raw - a.raw).forEach((r, k) => { r.rawRank = k + 1; });
+    return { by, lg, n: rows.length };
+  });
+  _mzCache = { src: Z, fmt, zones };
+  return _mzCache;
+}
+function buildMatchupCardView(d) {
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fmt1 = v => (typeof v === 'number' && isFinite(v)) ? (Math.round(v * 10) / 10).toFixed(1) : '—';
+  const wk = window._weeklyActiveWeek || 1;
+  const abbr = teamAbbr(d.t);
+  const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+  const entry = sched ? sched[wk] : null;
+  const Z = window.DEF_ZONES_2026;
+  const msg = t => '<div class="card-section"><div style="text-align:center;padding:1rem;color:var(--text2);font-size:.75rem">' + t + '</div></div>';
+  if (!entry) return msg('No Week ' + wk + ' game found for ' + esc(abbr) + '.');
+  if (entry.bye) return msg(esc(abbr) + ' is on bye in Week ' + wk + '.');
+  if (!Z) return msg('Loading defense data…');
+  const T = _mzTable();
+  const opp = String(entry.opp || '').toUpperCase();
+  if (!T || !T.zones[0].by[opp]) return msg('No ' + esc(opp) + ' games yet this season.');
+  const fmtLbl = rankingScoringFmt === 'ppr' ? 'PPR' : rankingScoringFmt === 'std' ? 'STD' : 'HALF';
+
+  // this offense's likely starters: QB1, RB1-2, WR1-3, TE1 by this week's Sim Lab projection (+ the card's player)
+  const fi = rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0;
+  const take = { QB: 1, RB: 2, WR: 3, TE: 1 };
+  const pool = {};
+  D.forEach(p => {
+    if (!p || p._retired || p._isDevy || !take[p.s] || !p.t || teamAbbr(p.t) !== abbr) return;
+    const r = (typeof _simProjRow === 'function') ? _simProjRow(p, wk) : null;
+    const v = r ? r[fi] : null;
+    if (p.n !== d.n && v != null && v <= 0) return;   // ruled out this week
+    (pool[p.s] || (pool[p.s] = [])).push({ p, v: v == null ? -1 : v });
+  });
+  const starters = [];
+  Object.keys(take).forEach(pos => {
+    const g = (pool[pos] || []).sort((a, b) => b.v - a.v);
+    g.slice(0, take[pos]).forEach(x => starters.push(x.p));
+    if (d.s === pos && !starters.includes(d) && g.some(x => x.p === d)) starters.push(d);
+  });
+  // WR lane from aDOT (pbp targets): under 9 short, 9-13 intermediate, 13+ deep
+  const zp = Z.p || {};
+  const wrLane = p => {
+    const r = zp[p.n];
+    const tg = r ? r[2] + r[3] + r[4] : 0;
+    const adot = tg ? r[5] / tg : null;
+    return { i: adot == null ? 4 : adot < 9 ? 4 : adot < 13 ? 5 : 6, adot, tg, mix: tg ? [r[2] / tg, r[3] / tg, r[4] / tg] : null };
+  };
+  const lanes = {};   // zone index -> players
+  const put = (i, p, note) => (lanes[i] || (lanes[i] = [])).push({ p, note });
+  starters.forEach(p => {
+    if (p.s === 'QB') { put(0, p); put(1, p); }
+    else if (p.s === 'RB') { put(2, p); put(3, p); }
+    else if (p.s === 'TE') put(7, p);
+    else if (p.s === 'WR') { const L = wrLane(p); put(L.i, p, L.adot != null ? 'aDOT ' + fmt1(L.adot) : 'no targets yet'); }
+  });
+
+  // heat: adjusted rank 1 (most allowed, easiest) -> green, 32 -> red
+  const heat = rank => {
+    const n = T.zones[0].n || 32, t = (rank - 1) / Math.max(1, n - 1);   // 0 easy .. 1 hard
+    const a = Math.abs(t - 0.5) * 2;
+    return t < 0.5 ? 'rgba(34,197,94,' + (0.10 + 0.32 * a).toFixed(2) + ')' : 'rgba(239,68,68,' + (0.10 + 0.32 * a).toFixed(2) + ')';
+  };
+  const rankCol = rank => { const n = T.zones[0].n || 32; return rank <= Math.round(n / 3) ? '#22c55e' : rank > Math.round(2 * n / 3) ? '#ef4444' : 'var(--text2)'; };
+  const myZones = new Set();
+  Object.keys(lanes).forEach(i => lanes[i].forEach(x => { if (x.p === d) myZones.add(+i); }));
+  const cell = (i, area) => {
+    const z = _MZ_ZONES[i], r = T.zones[i].by[opp];
+    const tip = z.lbl + ': ' + opp + ' allows ' + fmt1(r.raw) + ' ' + fmtLbl + ' pts per game (league ' + fmt1(T.zones[i].lg) + '; raw rank #' + r.rawRank + ').'
+      + ' Schedule-adjusted ' + fmt1(r.adj) + ' (#' + r.rank + ') - offenses faced ' + (r.faced >= 0 ? '+' : '') + fmt1(r.faced) + ' per game vs average. #1 = gives up the most.';
+    const mine = myZones.has(i);
+    const chips = (lanes[i] || []).map(x => {
+      const me = x.p === d, c = _MZ_POS_COLORS[x.p.s] || '#94a3b8';
+      return '<a href="#" data-mzplayer="' + esc(x.p.n) + '" title="' + esc(x.p.n + (x.note ? ' · ' + x.note : '')) + '" style="display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 7px;border-radius:999px;text-decoration:none;font-size:.6875rem;font-weight:' + (me ? 800 : 600) + ';color:var(--text);background:var(--surface,#111827);border:1px solid ' + (me ? '#facc15' : 'var(--border)') + (me ? ';box-shadow:0 0 0 1px #facc15' : '') + '">'
+        + '<span style="width:6px;height:6px;border-radius:50%;flex:none;background:' + c + '"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.p.n) + '</span></a>';
+    }).join('');
+    return '<div title="' + esc(tip) + '" style="grid-area:' + area + ';cursor:help;min-width:0;padding:7px 8px;border-radius:8px;background:' + heat(r.rank) + ';border:' + (mine ? '2px solid #facc15' : '1px solid var(--border)') + ';display:flex;flex-direction:column;gap:5px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px">'
+      + '<span style="font-size:.625rem;letter-spacing:.4px;color:var(--text2);font-weight:700;text-transform:uppercase">' + esc(z.lbl) + '</span>'
+      + '<span style="font-size:.6875rem;font-weight:800;color:' + rankCol(r.rank) + '">#' + r.rank + '</span></div>'
+      + '<div style="font-size:1rem;font-weight:800;font-variant-numeric:tabular-nums">' + fmt1(r.raw) + ' <span style="font-size:.625rem;font-weight:600;color:var(--text2)">FP/G</span></div>'
+      + (chips ? '<div style="display:flex;flex-wrap:wrap;gap:4px">' + chips + '</div>' : '')
+      + '</div>';
+  };
+
+  // the card player's own read: WR = target-depth mix of the three WR zones; others = their zone(s)
+  let mine = '';
+  const zr = i => T.zones[i].by[opp];
+  if (d.s === 'WR') {
+    const L = wrLane(d);
+    if (L.mix) {
+      const sc = {};
+      Object.keys(T.zones[4].by).forEach(def => { sc[def] = L.mix[0] * T.zones[4].by[def].z + L.mix[1] * T.zones[5].by[def].z + L.mix[2] * T.zones[6].by[def].z; });
+      const rk = Object.keys(sc).sort((a, b) => sc[b] - sc[a]).indexOf(opp) + 1;
+      mine = 'His targets: <b>' + Math.round(L.mix[0] * 100) + '%</b> under 10 · <b>' + Math.round(L.mix[1] * 100) + '%</b> 10-19 · <b>' + Math.round(L.mix[2] * 100) + '%</b> 20+ air yds (aDOT ' + fmt1(L.adot) + ', ' + L.tg + ' tgts). Weighted by that mix, ' + esc(opp) + ' ranks <b style="color:' + rankCol(rk) + '">#' + rk + '</b> for him.';
+    } else mine = 'No 2026 targets yet, so he sits in the short lane.';
+  } else if (d.s === 'QB') mine = esc(opp) + ': <b style="color:' + rankCol(zr(0).rank) + '">#' + zr(0).rank + '</b> vs QB passing, <b style="color:' + rankCol(zr(1).rank) + '">#' + zr(1).rank + '</b> vs QB rushing.';
+  else if (d.s === 'RB') mine = esc(opp) + ': <b style="color:' + rankCol(zr(2).rank) + '">#' + zr(2).rank + '</b> vs RB rushing, <b style="color:' + rankCol(zr(3).rank) + '">#' + zr(3).rank + '</b> vs RB receiving.';
+  else if (d.s === 'TE') mine = esc(opp) + ': <b style="color:' + rankCol(zr(7).rank) + '">#' + zr(7).rank + '</b> vs TEs.';
+
+  let html = '<div class="card-section"><div class="card-section-title">' + esc(abbr) + ' offense ' + (entry.home ? 'vs ' : '@ ') + esc(opp) + ' defense · Week ' + wk
+    + ' <span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + fmtLbl + ' · thru W' + (Z.thru || '') + '</span></div>';
+  if (mine) html += '<div style="font-size:.75rem;line-height:1.45;margin:2px 0 8px">' + mine + '</div>';
+  // field: deep / intermediate across, TE + short, line of scrimmage, backfield (2 x 2 on phones)
+  html += '<style>@media (max-width:520px){.mz-field{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-areas:"deep deep" "mid mid" "te short" "los los" "qbp qbr" "rbr rbc"!important}}</style>';
+  html += '<div class="mz-field"style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;grid-template-areas:\'deep deep deep deep\' \'mid mid mid mid\' \'te te short short\' \'los los los los\' \'qbp qbr rbr rbc\'">'
+    + cell(6, 'deep') + cell(5, 'mid') + cell(7, 'te') + cell(4, 'short')
+    + '<div style="grid-area:los;height:0;border-top:2px dashed var(--text2);opacity:.45;margin:3px 0" title="Line of scrimmage"></div>'
+    + cell(0, 'qbp') + cell(1, 'qbr') + cell(2, 'rbr') + cell(3, 'rbc')
+    + '</div>';
+  html += '<div style="margin-top:7px;font-size:.6875rem;color:var(--text2);line-height:1.4">FP/G = fantasy points ' + esc(opp) + ' gives up per game in that zone. Color and # are schedule-adjusted for the offenses it has faced (#1 = gives up the most; green easier, red tougher); hover a zone for the raw rank. WRs sit in the lane of their average target depth. Source: nflverse play-by-play; fumbles not counted.</div>';
+  html += '</div>';
+  return html;
+}
+function _wireMatchupCardView(d) {
+  const host = document.getElementById('cardMatchupView');
+  if (!host) return;
+  const paint = () => { if (host.isConnected) { try { host.innerHTML = buildMatchupCardView(d); } catch (e) { console.warn('[Card] matchup view failed:', e); } } };
+  host._paint = paint;
+  host.addEventListener('click', e => {
+    const a = e.target.closest('[data-mzplayer]');
+    if (!a) return;
+    e.preventDefault();
+    const p = _teamDByName()[a.dataset.mzplayer];
+    if (p && p !== d && typeof openPlayerCard === 'function') openPlayerCard(p);
+  });
+  document.addEventListener('mff:weeklydata', function _mzRepaint() {
+    document.removeEventListener('mff:weeklydata', _mzRepaint);
+    if (host.dataset.ready === '1') paint();
+  });
+}
+
 function buildWeeklyCardView(d) {
   window._weeklyCardD = d;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -22027,6 +22207,7 @@ function openPlayerCard(d, ctxMode) {
         ${!d._isDevy ? `<button class="card-view-btn${_is2026 ? '' : ' active'}" data-cardview="fantasy">FANTASY</button>` : ''}
         ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? `<button class="card-view-btn" data-cardview="weekly">WEEKLY</button>` : ''}
         ${(!d._isDevy && !_is2026 && !d._retired && d.t && d.s !== 'K' && d.s !== 'DST') ? `<button class="card-view-btn" data-cardview="team">TEAM</button>` : ''}
+        ${(!d._isDevy && !_is2026 && !d._retired && d.t && d.s !== 'K' && d.s !== 'DST') ? `<button class="card-view-btn" data-cardview="matchup">MATCHUP</button>` : ''}
         <button class="card-view-btn${(d._isDevy || _is2026) ? ' active' : ''}" data-cardview="prospect">DYNASTY</button>
         ${_newsHtml ? `<button class="card-view-btn" data-cardview="news">NEWS</button>` : ''}
       </div>` : ''}
@@ -22426,6 +22607,7 @@ function openPlayerCard(d, ctxMode) {
       ${(!d._isDevy && !_is2026 && !d._retired && d.t) ? buildWeeklyCardView(d) : ''}
       </div>
       <div class="card-prospect-view" id="cardTeamView" style="display:none"></div>
+      <div class="card-prospect-view" id="cardMatchupView" style="display:none"></div>
       ${d.s !== 'K' && d.s !== 'DST' && _showLogs ? `
       <div class="card-prospect-view card-fantasy-extra" id="cardLogsView" data-ready="${hasWeeklyData(d) ? '1' : '0'}" style="display:${(!(d._isDevy || _is2026) && hasWeeklyData(d)) ? 'block' : 'none'}">
       ${_logsSectionHtml(d)}
@@ -22531,6 +22713,7 @@ function openPlayerCard(d, ctxMode) {
   } catch (_e) {}
 
   try { _wireTeamCardView(d); } catch (_e) { console.warn('[Card] team tab wiring failed:', _e); }
+  try { _wireMatchupCardView(d); } catch (_e) { console.warn('[Card] matchup tab wiring failed:', _e); }
 
   // Fantasy/Prospect/Comps/Info view toggle
   const _cvToggle = document.getElementById('cardViewToggle');
@@ -22550,6 +22733,7 @@ function openPlayerCard(d, ctxMode) {
         const lgv = document.getElementById('cardLogsView');
         const nv = document.getElementById('cardNewsView');
         const tmv = document.getElementById('cardTeamView');
+        const mzv = document.getElementById('cardMatchupView');
         const rsv = document.getElementById('cardRosteredView');
         fv.classList.add('hidden');
         pv.classList.remove('active');
@@ -22560,6 +22744,7 @@ function openPlayerCard(d, ctxMode) {
         if (lgv) lgv.style.display = 'none';
         if (nv) nv.style.display = 'none';
         if (tmv) tmv.style.display = 'none';
+        if (mzv) mzv.style.display = 'none';
         if (rsv) rsv.style.display = 'none';
         if (view === 'prospect') {
           pv.classList.add('active');
@@ -22581,6 +22766,12 @@ function openPlayerCard(d, ctxMode) {
             tmv.style.display = 'block';
             // usage counts + snaps / routes / game logs ride the lazy weekly bundle
             if (tmv.dataset.ready !== '1') { tmv.dataset.ready = '1'; if (tmv._paint) tmv._paint(); if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData(); }
+          }
+        } else if (view === 'matchup') {
+          if (mzv) {
+            mzv.style.display = 'block';
+            // defense zone file rides the lazy weekly bundle
+            if (mzv.dataset.ready !== '1') { mzv.dataset.ready = '1'; if (mzv._paint) mzv._paint(); if (typeof window._loadWeeklyData === 'function') window._loadWeeklyData(); }
           }
         } else {
           fv.classList.remove('hidden');

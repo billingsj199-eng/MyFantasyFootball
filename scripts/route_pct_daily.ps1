@@ -16,6 +16,9 @@
 #   4b. scripts/build_team_usage.py card TEAM tab usage counts (targets, air yards, carries,
 #                                     red zone per player-week and team-week, nflverse pbp)
 #                                     -> data/team_usage_2026.js
+#   4c. scripts/build_def_zones.py  card MATCHUP tab: fantasy points each defense allows in 8
+#                                     zones (QB pass / rush, RB rush / rec, WR by air yards, TE)
+#                                     -> data/def_zones_2026.js
 #   5. scripts/build_adv_stats.py    admin Research page Advanced Stats tables (PFF weekly
 #                                     facets + nflverse pbp + snap counts), current season only
 #                                     -> data/adv_stats_2026.js + data/adv_stats_2026_w<N>.js
@@ -51,7 +54,7 @@ Write-Log '=== route pct start ==='
 if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'route pct')) { exit 0 }   # one job at a time (2026-10-20)
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
-$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/team_usage_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'data/usage_trend.js', 'data/coach_profiles.js', 'data/contracts_history.js', 'index.html')
+$Files = @('data/snap_counts.js', 'data/route_pct.js', 'data/player_roles_2026.js', 'data/team_usage_2026.js', 'data/def_zones_2026.js', 'data/adv_stats_2026.js', 'data/adv_stats_2026_w*.js', 'data/usage_trend.js', 'data/coach_profiles.js', 'data/contracts_history.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -82,6 +85,10 @@ $out = & $Python 'scripts\build_team_usage.py' 2>&1 | Out-String
 Write-Log ('team usage: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "TEAM USAGE BUILD FAILED (exit $LASTEXITCODE) - team usage file left as is" }
 
+$out = & $Python 'scripts\build_def_zones.py' 2>&1 | Out-String
+Write-Log ('def zones: ' + ($out -split "`n" | Select-Object -Last 3 | Out-String).Trim())
+if ($LASTEXITCODE -ne 0) { Write-Log "DEF ZONES BUILD FAILED (exit $LASTEXITCODE) - def zones file left as is" }
+
 $out = & $Python 'scripts\build_adv_stats.py' '--years' '2026' 2>&1 | Out-String
 Write-Log ('adv stats: ' + ($out -split "`n" | Select-Object -Last 2 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) { Write-Log "ADV STATS BUILD FAILED (exit $LASTEXITCODE) - adv stats file left as is" }
@@ -103,7 +110,7 @@ if ($contractsDue) {
     else { Write-Log "CONTRACTS BUILD FAILED (exit $LASTEXITCODE) - contracts file left as is, retry tomorrow" }
 }
 
-$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/team_usage_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js
+$changed = git status --porcelain -- data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/team_usage_2026.js data/def_zones_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js
 if (-not $changed) {
     Write-Log 'no snap / route changes - nothing to commit'
 } else {
@@ -114,6 +121,7 @@ if (-not $changed) {
     $html = $html -replace 'route_pct\.js\?v=[0-9A-Za-z.-]+', ('route_pct.js?v=' + $stamp)
     $html = $html -replace 'player_roles_2026\.js\?v=[0-9A-Za-z.-]+', ('player_roles_2026.js?v=' + $stamp)
     $html = $html -replace 'team_usage_2026\.js\?v=[0-9A-Za-z.-]+', ('team_usage_2026.js?v=' + $stamp)
+    $html = $html -replace 'def_zones_2026\.js\?v=[0-9A-Za-z.-]+', ('def_zones_2026.js?v=' + $stamp)
     $html = $html -replace "_ADV_STATS_V = '[0-9A-Za-z.-]+'", ("_ADV_STATS_V = '" + $stamp + "'")
     $html = $html -replace "_COACH_V = '[0-9A-Za-z.-]+'", ("_COACH_V = '" + $stamp + "'")
     $html = $html -replace "_USAGE_TREND_V = '[0-9A-Za-z.-]+'", ("_USAGE_TREND_V = '" + $stamp + "'")
@@ -121,8 +129,8 @@ if (-not $changed) {
         $html = $html -replace 'contracts_history\.js\?v=[0-9A-Za-z.-]+', ('contracts_history.js?v=' + $stamp)
     }
     [System.IO.File]::WriteAllText($idxPath, $html)
-    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/team_usage_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js index.html
-    git commit -m ('Auto snap share + route participation + player roles + adv stats + usage trend + coach profiles {0} (?v= bump)' -f $stamp)
+    git add data/snap_counts.js data/route_pct.js data/player_roles_2026.js data/team_usage_2026.js data/def_zones_2026.js data/adv_stats_2026.js 'data/adv_stats_2026_w*.js' data/usage_trend.js data/coach_profiles.js data/contracts_history.js index.html
+    git commit -m ('Auto snap share + route participation + player roles + def zones + adv stats + usage trend + coach profiles {0} (?v= bump)' -f $stamp)
     . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
     $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'snap/route data') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'snap/route data committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

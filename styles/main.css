@@ -3372,6 +3372,8 @@ tbody td{font-size:.8125rem}
   /* right gap = room for the floating ✕ when the tab bar sticks to the top */
   #playerCard .card-view-toggle{flex-wrap:nowrap;padding-right:42px}
   #playerCard .card-view-toggle > .card-view-btn{flex:1 1 0;min-width:0;padding-left:2px;padding-right:2px;font-size:.68rem;letter-spacing:.02em}
+  /* six tabs (MATCHUP + NEWS, 2026-10-27): smaller labels so FANTASY / MATCHUP / DYNASTY don't touch */
+  #playerCard .card-view-toggle:has(> .card-view-btn:nth-child(6)) > .card-view-btn{font-size:.57rem;letter-spacing:0;padding-left:0;padding-right:0}
   #playerCard .career-table-wrap > table :is(th,td):first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:4px 0 6px -4px rgba(0,0,0,.6)}
   #playerCard #cardPinAdd{min-height:32px}
   #playerCard .cmp-split-chip{min-height:28px;padding-left:9px;padding-right:9px}

@@ -21,6 +21,15 @@ What it does
      REPLACES the existing row for that player-week (stat corrections land;
      the Tuesday script's merge is existing-wins and never touches this).
      Every other season is passed through byte-for-byte.
+  4. (2026-10-27) Provisional usage denominators -> data/snap_counts.js, so the
+     card's SNP% / TS% / CAR% (and RT%, re-estimated from snaps by the wrapper)
+     land with the box score instead of waiting a day for nflverse: Sleeper
+     off_snp / tm_off_snp per board player-week, and team targets / carries
+     summed over EVERY Sleeper player on a final team. Fills only what
+     nflverse has not posted yet; player-weeks written here are listed in the
+     season's `p` and replaced by the morning nflverse rebuild
+     (pull_snap_counts.py). W1-7 check: snap % identical in 2107/2146
+     player-weeks (max 5 pts), team targets exact in 180/212 (max 6, trades).
 
 Usage
   python scripts/pull_postgame_stats.py            # import + write
@@ -52,6 +61,8 @@ WS_JS = os.path.join(ROOT, 'data', 'weekly_stats_active.js')
 # W1 because Cooper Rush isn't on the board).
 FPA_JS = os.path.join(ROOT, 'data', 'fpa_2026.js')
 FPA_JSON = os.path.join(ROOT, 'data', 'fpa_2026.json')   # same object, fetched by the Sleeper/ESPN/Yahoo helpers
+SNAP_JS = os.path.join(ROOT, 'data', 'snap_counts.js')     # nflverse build (pull_snap_counts.py) + provisional weeks (step 4)
+SNAP_VARS = ('SNAP_COUNTS', 'TEAM_TGT', 'TEAM_CAR')
 FPA_POS = ('QB', 'RB', 'WR', 'TE')
 # 2026-09-15: the rankings WEEKLY board's OPP PPG column reads this table too,
 # so every defense-week also carries PPR / STD variants of the four skill
@@ -291,6 +302,13 @@ def main():
     # week -> {name: row}
     new_rows = defaultdict(dict)
     fpa_weeks = {}   # week -> {DEF: {'opp': TM, 'QB': pts, 'RB': .., 'WR': .., 'TE': ..}}
+    snaps = defaultdict(dict)                         # name -> {wk: (off_snp, tm_off_snp)}
+    team_tgt, team_car = defaultdict(dict), defaultdict(dict)   # team -> {wk: total}
+    # Sleeper's tm_off_snp runs short some games (PHI W7 2026: 62 while McKee and
+    # the line played 66 = nflverse's team total), so the denominator is the most
+    # snaps anyone on that team-game played, OL included, when that is higher.
+    # Keyed by tm_off_snp as well: a traded player's row carries his old team's game.
+    snap_max = {}                                     # (wk, team, tm_off_snp) -> max off_snp
     for wk in range(1, last_week + 1):
         sb = cur if wk == cur_week else scoreboard(wk)
         finals, total = final_games(sb, wk)
@@ -307,6 +325,16 @@ def main():
             if pos == 'DEF' and not team:
                 team = sid   # Sleeper D/ST ids ARE the team abbr
             team = ABBR_FIX.get(team, team)
+            if pos != 'DEF' and team in finals:
+                # complete-league team targets / carries (TS% / CAR% denominators)
+                t, c = s.get('rec_tgt') or 0, s.get('rush_att') or 0
+                if t:
+                    team_tgt[team][wk] = team_tgt[team].get(wk, 0) + t
+                if c:
+                    team_car[team][wk] = team_car[team].get(wk, 0) + c
+                if s.get('off_snp') and s.get('tm_off_snp'):
+                    k = (wk, team, s['tm_off_snp'])
+                    snap_max[k] = max(snap_max.get(k, 0), s['off_snp'])
             if (pos not in FPA_POS and pos not in FPA_EXTRA_POS) or team not in finals:
                 continue
             pts = s.get('pts_half_ppr') or s.get('pts_std') or 0
@@ -336,6 +364,11 @@ def main():
                 continue
             new_rows[wk][name] = build_row(targets[name], wk, team, finals[team], s)
             kept += 1
+            if (s.get('off_snp') or 0) > 0 and (s.get('tm_off_snp') or 0) > 0:
+                sp_tm = (SLEEPER_DB.get(sid) or {}).get('team') or ''
+                tm_snaps = max(s['tm_off_snp'], s['off_snp'],
+                               snap_max.get((wk, ABBR_FIX.get(sp_tm, sp_tm), s['tm_off_snp']), 0))
+                snaps[name][wk] = (s['off_snp'], tm_snaps)
         log('  W%d: %d/%d games final - %d player rows kept, %d held (game not final)' % (wk, n_final, total, kept, skipped_live))
         time.sleep(0.2)
 
@@ -369,14 +402,74 @@ def main():
     log('merge: %d rows added, %d replaced (corrections), %d unchanged -> %s' % (
         added, replaced, unchanged, 'FILE CHANGED' if changed else 'no change'))
     if args.dry_run:
-        log('dry run - not written (fpa_2026.js also skipped)')
+        write_snaps(snaps, team_tgt, team_car, dry_run=True)
+        log('dry run - not written (fpa_2026.js / snap_counts.js also skipped)')
         return 0
     if changed:
         with open(WS_JS, 'w', encoding='utf-8') as f:
             f.write(js)
         log('wrote %s (%.1f MB)' % (WS_JS, len(js) / 1048576))
     write_fpa(fpa_weeks)
+    write_snaps(snaps, team_tgt, team_car)
     return 0
+
+
+def write_snaps(snaps, team_tgt, team_car, dry_run=False):
+    """Fill data/snap_counts.js with the player-weeks / team-weeks nflverse has not
+    posted yet (step 4 in the module doc). A player-week already from nflverse is
+    never touched; one this script wrote before (listed in the season's `p`) is
+    rewritten, so Sleeper stat corrections land until nflverse takes over. The
+    season share `s` of a player with a provisional week is the Sleeper
+    season-to-date (same numbers nflverse posts, see the W1-7 check)."""
+    if not os.path.exists(SNAP_JS):
+        log('snap_counts.js missing - provisional usage skipped')
+        return
+    raw = open(SNAP_JS, 'r', encoding='utf-8').read()
+    objs = {}
+    for var in SNAP_VARS:
+        i = raw.index('window.%s=' % var) + len('window.%s=' % var)
+        objs[var] = json.JSONDecoder().raw_decode(raw, i)[0]
+    yr = str(SEASON)
+    n_snap = n_tgt = n_car = 0
+    for name, wks in snaps.items():
+        cur = objs['SNAP_COUNTS'].setdefault(name, {}).setdefault(yr, {'s': None, 'w': {}})
+        prov = set(cur.get('p') or [])
+        for wk, (off, tm) in wks.items():
+            k = str(wk)
+            if k in cur['w'] and k not in prov:
+                continue   # nflverse already has it
+            v = round(100.0 * off / tm)
+            if cur['w'].get(k) != v:
+                n_snap += 1
+            cur['w'][k] = v
+            prov.add(k)
+        if prov:
+            cur['w'] = {k: cur['w'][k] for k in sorted(cur['w'], key=int)}
+            cur['p'] = sorted(prov, key=int)
+            off_tot, tm_tot = sum(o for o, _ in wks.values()), sum(t for _, t in wks.values())
+            cur['s'] = round(100.0 * off_tot / tm_tot, 1)
+    for var, src in (('TEAM_TGT', team_tgt), ('TEAM_CAR', team_car)):
+        season = objs[var].setdefault(yr, {})
+        for team, wks in src.items():
+            for wk, tot in wks.items():
+                if str(wk) in season.get(team, {}):
+                    continue
+                season.setdefault(team, {})[str(wk)] = int(tot)
+                if var == 'TEAM_TGT':
+                    n_tgt += 1
+                else:
+                    n_car += 1
+        for team in season:
+            season[team] = {k: season[team][k] for k in sorted(season[team], key=int)}
+    js = ''.join('window.%s=%s;\n' % (var, json.dumps(objs[var], separators=(',', ':'))) for var in SNAP_VARS)
+    n_prov = sum(1 for p in objs['SNAP_COUNTS'].values() for w in (p.get(yr) or {}).get('p') or [])
+    log('snap_counts.js: %d provisional snap weeks changed (%d on file), %d team target weeks + %d team carry weeks added%s' % (
+        n_snap, n_prov, n_tgt, n_car, '' if js != raw else ' - no change'))
+    if dry_run or js == raw:
+        return
+    with open(SNAP_JS, 'w', encoding='utf-8') as f:
+        f.write(js)
+    log('wrote %s' % SNAP_JS)
 
 
 def load_prior():

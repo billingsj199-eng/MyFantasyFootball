@@ -17,7 +17,12 @@
 # Since 2026-09-14 the importer ALSO writes data/fpa_2026.js (+ .json twin for the extensions) (complete-league
 # fantasy points allowed per defense/week -> SOS in-season blend + Sim Lab
 # opponent layer); it is staged + ?v=-bumped here alongside the stats file.
-# Commits + pushes ONLY when weekly_stats_active.js / fpa_2026.js changed, bumping ?v=
+# Since 2026-10-27 the importer ALSO fills data/snap_counts.js with the weeks nflverse
+# has not posted yet (Sleeper snaps + team target / carry totals -> card SNP% / TS% /
+# CAR%), and this wrapper then re-runs scripts/pull_route_pct.py --years 2026 so RT%
+# gets its snap-share estimate for the new week (real PFF routes replace it in the
+# 06:15 "MFF Route Pct Daily" run, which also swaps in the nflverse snaps).
+# Commits + pushes ONLY when weekly_stats_active.js / fpa_2026.js / snap_counts.js changed, bumping ?v=
 # in index.html in the same commit (sw.js serves versioned URLs cache-first).
 # Mirrors scripts/weekly_kdst_refresh.ps1 / tuesday_stats.ps1 guards.
 #
@@ -40,7 +45,7 @@ Write-Log '=== postgame stats start ==='
 if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'postgame stats')) { exit 0 }   # one job at a time (2026-10-20)
 
 # Refuse to run on dirty target files so another session's work isn't clobbered.
-$Files = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json', 'index.html')
+$Files = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json', 'data/snap_counts.js', 'data/route_pct.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -52,6 +57,20 @@ Write-Log $out
 if ($LASTEXITCODE -ne 0) {
     Write-Log "IMPORT FAILED (exit $LASTEXITCODE) - nothing committed"
     exit 1
+}
+
+# RT% estimate for the new snap weeks. Best-effort: on failure route_pct.js is
+# put back so a half-built file is never published.
+$rtBuilt = $false
+if (git status --porcelain -- data/snap_counts.js) {
+    $rtOut = & $Python 'scripts\pull_route_pct.py' '--years' '2026' 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "route pct FAILED (exit $LASTEXITCODE) - route_pct.js left as is: $rtOut"
+        git checkout -- data/route_pct.js
+    } else {
+        $rtBuilt = $true
+        Write-Log ('route pct: ' + (($rtOut -split "`n" | Where-Object { $_ -match '2026: \d+ players|^wrote' }) -join ' | '))
+    }
 }
 
 # Accuracy tracker (admin page /accuracy/): archive today's weekly_projections.json
@@ -68,7 +87,8 @@ if ($accDirty) {
     else { $accBuilt = $true; Write-Log ('accuracy: ' + (($accOut -split "`n" | Where-Object { $_ -match '^(week|season_|locks:)' }) -join ' | ')) }
 }
 
-$changedPaths = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json')
+$changedPaths = @('data/weekly_stats_active.js', 'data/fpa_2026.js', 'data/fpa_2026.json', 'data/snap_counts.js')
+if ($rtBuilt) { $changedPaths += 'data/route_pct.js' }
 if ($accBuilt) { $changedPaths += 'accuracy/data' }
 $changed = git status --porcelain -- @changedPaths
 if (-not $changed) {
@@ -80,10 +100,13 @@ if (-not $changed) {
     $html = [System.IO.File]::ReadAllText($idxPath)
     $html = $html -replace 'weekly_stats_active\.js\?v=[0-9A-Za-z.-]+', ('weekly_stats_active.js?v=' + $stamp)
     $html = $html -replace 'fpa_2026\.js\?v=[0-9A-Za-z.-]+', ('fpa_2026.js?v=' + $stamp)
+    $html = $html -replace 'snap_counts\.js\?v=[0-9A-Za-z.-]+', ('snap_counts.js?v=' + $stamp)
+    $html = $html -replace 'route_pct\.js\?v=[0-9A-Za-z.-]+', ('route_pct.js?v=' + $stamp)
     [System.IO.File]::WriteAllText($idxPath, $html)
-    git add data/weekly_stats_active.js data/fpa_2026.js data/fpa_2026.json index.html
+    git add data/weekly_stats_active.js data/fpa_2026.js data/fpa_2026.json data/snap_counts.js index.html
+    if ($rtBuilt) { git add data/route_pct.js }
     if ($accBuilt) { git add accuracy/data }
-    git commit -m ('Auto postgame stats {0} (weekly_stats_active 2026 rows + fpa_2026 + accuracy regrade + ?v= bump)' -f $stamp)
+    git commit -m ('Auto postgame stats {0} (weekly_stats_active 2026 rows + fpa_2026 + provisional snaps/TS/RT + accuracy regrade + ?v= bump)' -f $stamp)
     . (Join-Path $PSScriptRoot 'repo_guard.ps1')   # 2026-10-14: a conflicted pull --rebase is aborted + alerted, never left stuck
     $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'postgame stats') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'postgame stats committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }

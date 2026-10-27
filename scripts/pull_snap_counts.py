@@ -103,6 +103,49 @@ def load_d_names():
     return lookup
 
 
+def keep_provisional(out, team_tgt, team_car):
+    """Carry over the current season's weeks that scripts/pull_postgame_stats.py
+    wrote from Sleeper right after the game (player weeks listed in the season's
+    `p`; any team week) while nflverse has not posted that game yet. Once
+    nflverse has a week, its number wins and the week leaves `p`."""
+    if not os.path.exists(OUT):
+        return
+    yr = str(max(YEARS))
+    raw = open(OUT, encoding='utf-8').read()
+    old = {}
+    for var in ('SNAP_COUNTS', 'TEAM_TGT', 'TEAM_CAR'):
+        try:
+            i = raw.index(f'window.{var}=') + len(f'window.{var}=')
+            old[var] = json.JSONDecoder().raw_decode(raw, i)[0]
+        except ValueError:
+            old[var] = {}
+    n = 0
+    for name, years in old['SNAP_COUNTS'].items():
+        prev = years.get(yr) or {}
+        prov = [wk for wk in prev.get('p') or [] if wk in prev.get('w', {})]
+        cur = out.get(name, {}).get(yr)
+        missing = [wk for wk in prov if not cur or wk not in cur['w']]
+        if not missing:
+            continue
+        if not cur:
+            out.setdefault(name, {})[yr] = cur = {'s': prev.get('s'), 'w': {}}
+        for wk in missing:
+            cur['w'][wk] = prev['w'][wk]
+        cur['w'] = {k: cur['w'][k] for k in sorted(cur['w'], key=int)}
+        cur['p'] = missing
+        n += len(missing)
+    nt = 0
+    for var, new in (('TEAM_TGT', team_tgt), ('TEAM_CAR', team_car)):
+        for tm, wks in (old[var].get(yr) or {}).items():
+            for wk, v in wks.items():
+                if wk not in new.setdefault(yr, {}).setdefault(tm, {}):
+                    new[yr][tm][wk] = v
+                    nt += 1
+            new[yr][tm] = {k: new[yr][tm][k] for k in sorted(new[yr][tm], key=int)}
+    if n or nt:
+        print(f'{yr}: kept {n} provisional player-weeks + {nt} team-weeks nflverse has not posted yet')
+
+
 def main():
     lookup = load_d_names()
     result = {}   # canonical name -> {year: {'off': int, 'team': float, 'w': {wk: pct}}}
@@ -166,6 +209,7 @@ def main():
         print(f'team {yr}: {len(y)} teams')
         time.sleep(0.3)
 
+    keep_provisional(out, team_tgt, team_car)
     js = ('window.SNAP_COUNTS=' + json.dumps(out, separators=(',', ':')) + ';\n'
           + 'window.TEAM_TGT=' + json.dumps(team_tgt, separators=(',', ':')) + ';\n'
           + 'window.TEAM_CAR=' + json.dumps(team_car, separators=(',', ':')) + ';\n')

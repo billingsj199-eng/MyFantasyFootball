@@ -133,3 +133,107 @@ RB/WR ordering (roles, pecking order, usage evidence, injury/news handling) is t
 
 - `sim_lab/scratch_model/features.py` (pbp -> tables), `asof.py` (leak-free rows), `model.py` (STRUCT, GBM, Jack's grading), `fit_history.py`, `refit_gbm.py`, `backtest.py` (2026), `layers.py` (ablations + layers on the live number), `run_all.py`.
 - Outputs: `out/fit_history.log` (history fit + 2025 forward), `out/bt_tables.md` (all 2026 tables), `out/layers.md` (ablations, layer-on-live tests, QB deep dive, RB/WR edge), `out/bt_rows.csv` (every graded row, every model), `out/disagree.csv`, `out/params.json`.
+
+
+---
+
+# Harness replay (2026-10-27, Jack approved replaying proposals 1 and 3)
+
+*Still proposal only. Script: `E:\MyFantasyFootball\sim_lab\backtest_scratch_legs.py` (default = the 2019-25 engine-parity harness; `SIM_BT_YEARS=2012-2025` = the extended 2013-25 harness from `_bt_ext/X_cache_ext2012_2025_tf.pkl`; `SCRATCH_QB_OPP=fpa` = the engine-available opponent input). Logs: `sim_lab/scratch_model/out/harness_legs.log`, `harness_legs_ext2012_2025_tf.log` and their `_fpaopp` twins.*
+
+**Method.** Baseline = `backtest_shadow_next.shadow(X)`, the engine-parity next-game number every other layer was graded against. Each leg is joined to the harness rows by gsis id and week (100% of QB rows, 99% of TE rows) and blended `w x leg + (1 - w) x shadow`, w = .25 / .50 / .75, in two forms: **EV** = the opportunity formula alone (rows with 1+ games of evidence) and **FULL** = the scratch model's calibrated number (its ADP prior blended in). The team-volume OLS and the league rates are refit on the training seasons of every fold; the five shrink constants (k_ypa 328, k_int 249, k_ypc 22, k_ypt 33, e_def .76) are the 2017-25 fit, so they are in-sample for 2017-25 and out-of-sample for 2013-16 (the leg still wins there). Grading = the house `test()` rules: leave-one-season-out pick, forward pick (earlier seasons only), error on the rows the leg touches, whole-board top-150 weighted guard, top-100 cubed, weekly within-position rank rho, final week out, no elite dock possible (a blend never pushes a player below the lower of the two numbers). Ship bar: LOSO better in 5+ of 7 (ext 11+ of 13) AND forward 3+, touched-row error -0.3%+, guard <= +0.02%.
+
+**Rejected-knob check.** The leg has no market input, so it does not reduce to the 10-23 QB market knobs (propW, belowW, INT/FL/2-pt devig, ESPN or Vegas-only blends, shrink). It is not the 10-08 "QB ridge prior / share-scaled evidence" (rejected 0/7) either: that scaled the points evidence by target or route share; this reconstructs attempts x efficiency from the team's pace and the Vegas line and sits next to the shadow as a second number.
+
+## QB leg: SHIP at 50/50, EV form
+
+| harness | opponent input | form | LOSO touched | seasons better | forward | seasons better | guard | top-100 cubed | QB rank rho | pick |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2019-25 | pbp yards/attempt | EV | -1.79% | 7/7 | -2.02% | 4/4 | -0.22% | -0.16% | +.010 | w .50 every fold |
+| 2019-25 | pbp yards/attempt | FULL | -1.44% | 7/7 | -1.82% | 4/4 | -0.25% | -0.18% | +.012 | w .50 |
+| 2013-25 | pbp yards/attempt | EV | -1.89% | 12/13 | -1.95% | 11/11 | -0.15% | -0.07% | +.013 | w .50 |
+| 2013-25 | pbp yards/attempt | FULL | -2.63% | 12/13 | -2.61% | 10/11 | -0.20% | -0.12% | +.018 | w .50 |
+| 2019-25 | **FPA QB points allowed (engine input)** | EV | -1.85% | 7/7 | -2.30% | 4/4 | -0.24% | -0.17% | +.018 | w .50 |
+| 2013-25 | **FPA QB points allowed (engine input)** | EV | -1.80% | 12/13 | -1.85% | 10/11 | -0.14% | -0.06% | +.017 | w .50 |
+
+Per season on the 2013-25 harness, QB top-150 rows, weighted MAE / within-week Spearman / pair accuracy (EV form, pbp opponent; each season's leg built from the other seasons):
+
+| season | n | shadow | w .25 | w .50 | w .75 | leg alone |
+|---|---|---|---|---|---|---|
+| 2013 | 270 | 5.888 / .277 / .635 | 5.830 / .303 / .616 | 5.796 / .296 / .608 | 5.800 / .303 / .596 | 5.841 / .292 / .571 |
+| 2014 | 250 | 5.996 / .166 / .638 | 5.971 / .184 / .629 | 5.985 / .183 / .636 | 6.023 / .198 / .645 | 6.100 / .192 / .612 |
+| 2015 | 242 | 5.866 / .285 / .532 | 5.845 / .309 / .549 | 5.847 / .297 / .566 | 5.875 / .299 / .591 | 5.931 / .289 / .608 |
+| 2016 | 292 | 5.441 / .184 / .548 | 5.406 / .203 / .555 | 5.389 / .212 / .567 | 5.397 / .211 / .558 | 5.421 / .210 / .583 |
+| 2017 | 246 | 5.582 / .180 / .555 | 5.474 / .210 / .603 | 5.395 / .252 / .666 | 5.346 / .286 / .663 | 5.318 / .286 / .656 |
+| 2018 | 262 | 6.213 / .273 / .576 | 6.189 / .279 / .543 | 6.180 / .275 / .567 | 6.214 / .300 / .536 | 6.286 / .293 / .537 |
+| 2019 | 265 | 6.450 / .251 / .590 | 6.391 / .264 / .582 | 6.360 / .261 / .607 | 6.349 / .270 / .596 | 6.370 / .247 / .589 |
+| 2020 | 259 | 6.524 / .328 / .592 | 6.487 / .333 / .640 | 6.466 / .342 / .626 | 6.466 / .331 / .641 | 6.485 / .323 / .623 |
+| 2021 | 282 | 6.277 / .428 / .464 | 6.258 / .431 / .518 | 6.268 / .418 / .500 | 6.300 / .406 / .515 | 6.384 / .393 / .525 |
+| 2022 | 259 | 5.670 / .408 / .713 | 5.650 / .392 / .717 | 5.661 / .387 / .693 | 5.686 / .366 / .673 | 5.757 / .346 / .642 |
+| 2023 | 239 | 5.978 / .293 / .597 | 5.946 / .306 / .612 | 5.923 / .318 / .607 | 5.934 / .306 / .630 | 5.970 / .293 / .615 |
+| 2024 | 300 | 6.314 / .291 / .615 | 6.245 / .312 / .615 | 6.197 / .328 / .617 | 6.164 / .328 / .633 | 6.160 / .338 / .627 |
+| 2025 | 304 | 6.177 / .235 / .571 | 6.168 / .250 / .588 | 6.172 / .258 / .573 | 6.194 / .244 / .538 | 6.225 / .247 / .527 |
+| **wins (MAE / rho / pair)** | | | 13 / 12 / 7 of 13 | 13 / 11 / 10 of 13 | 8 / 10 / 8 of 13 | 7 / 7 / 7 of 13 |
+| ALL | 3730 | 6.054 / .279 / .584 | 6.014 / .291 / .592 | 5.997 / .297 / .598 | 6.007 / .297 / .593 | 6.044 / .293 / .582 |
+
+2019-25 default harness, same layout: shadow 6.213 / .330 / .567 -> w .50 6.149 / .340 / .592 (MAE better 6 of 7, rho 4 of 7, pair 4 of 7; w .25 MAE better 7 of 7). With the FPA opponent input: w .50 6.153 / .348 / .599, MAE 6 of 7, rho 6 of 7, pair 5 of 7.
+
+**Is 50/50 the right split?** Yes. The leave-one-season-out pick is w .50 in every fold on both harnesses, both forms and both opponent inputs; the forward pick is .25 in the earliest folds (three training seasons) and .50 from 2018 on. w .75 and the leg alone give back the rank and pair gains (the leg alone is +1.3% to +2.0% worse than the shadow on error): it is a second opinion, not a replacement. **EV over FULL:** FULL wins more error on the touched rows (-2.6% vs -1.9% on 2013-25) but carries a second ADP prior next to the engine's own; EV is the clean formula and passes everything. FULL at .50 is the alternative if Jack wants the extra error.
+
+**Opponent input:** nothing is missing. The harness ran the leg with the pbp yards-per-attempt rate allowed (not an engine input) and with the FPA points-allowed-to-QBs relative level the engine already loads (`fpa_2026.js` QB_tdn over `fpa_prior_2025.js`), and the FPA version passes the same bar with the better QB rank (+.017 / +.018). Ship with the FPA input.
+
+**2026 sanity check only (not the decision):** QB MAE 6.68 -> 6.52 at 50/50 with the live number, better 6 of 7 weeks, pair accuracy .516 -> .577, rank flat.
+
+**The engine.js change (pseudo-code, not applied).** A QB opportunity leg next to the Clay-free shadow, averaged in before the market anchor; everything downstream (prop anchor, BOOK_CAP, QB floor, in/out scenarios, extensions sync) runs on the averaged number as today.
+
+```
+// --- QB OPPORTUNITY LEG (scratch_model harness replay 2026-10-27: LOSO 7/7 + 12/13, forward 4/4 + 10/11, w .50 every fold)
+var QB_OPP_LEG = { w: 0.50, kYpa: 328, kInt: 249, kYpc: 22, eDef: 0.76, minGames: 1,
+                   attOls: [8.8, 0.441, -0.029, 0.222],     // team pass attempts ~ a + b x EWMA attempts (hl 4 games) + c x team spread + d x total (refit each season)
+                   ptdOls: [-0.483, 0.088],                 // team pass TDs ~ a + b x implied total
+                   rtdOls: [-0.098, 0.045],                 // team rush TDs ~ a + b x implied total
+                   lg: { ypa: 7.1, intr: 0.023, ypc: 4.4 } };   // league per-attempt / per-carry rates, refreshed from the pbp cache each season
+function qbOppLeg(p, wk, sc, schedule) {
+  if (p.pos !== 'QB' || gamesPlayed(p, wk) < QB_OPP_LEG.minGames) return null;
+  var line = gameLine(p.tm, wk);                                           // BETTING_2026 / FUTURE_TOTALS: team spread, total, implied
+  var paceAtt = teamAttemptsEwma(p.tm, wk);                                // SIM_PACE_2026.teams[tm].cur.vol (att per game, season to date)
+  var A = QB_OPP_LEG.attOls, teamAtt = Math.max(5, A[0] + A[1] * paceAtt + A[2] * line.spread + A[3] * line.total);
+  var teamPtd = Math.max(0.2, QB_OPP_LEG.ptdOls[0] + QB_OPP_LEG.ptdOls[1] * line.implied);
+  var teamRtd = Math.max(0.1, QB_OPP_LEG.rtdOls[0] + QB_OPP_LEG.rtdOls[1] * line.implied);
+  var S = seasonToDate(p, wk);                                             // att, py, int, car, ry, i10 carries from the game logs, weeks < wk
+  var attSh = 0.40 * S.attShare_hl3 + 0.60 * S.attShare_hl10;              // his share of team attempts, short + long EWMA
+  var ypa  = (S.py  + QB_OPP_LEG.kYpa * QB_OPP_LEG.lg.ypa)  / (S.att + QB_OPP_LEG.kYpa);
+  var intr = (S.int + QB_OPP_LEG.kInt * QB_OPP_LEG.lg.intr) / (S.att + QB_OPP_LEG.kInt);
+  var ypc  = (S.ry  + QB_OPP_LEG.kYpc * QB_OPP_LEG.lg.ypc)  / (S.car + QB_OPP_LEG.kYpc);
+  var opp = Math.pow(fpaQbRelative(p.opp, wk), QB_OPP_LEG.eDef);           // (FPA QB_tdn as-of + 4 games of last season's prior) / league
+  var att = attSh * teamAtt;
+  return att * (sc.pass_yd * ypa * opp - 2 * intr)                         // yards and INTs
+       + sc.pass_td * attSh * teamPtd                                      // pass TDs = team expected x his attempt share
+       + S.carEwma * sc.rush_yd * ypc                                      // rushing yards
+       + sc.rush_td * S.rushTdShare * teamRtd;                             // rush TDs: .56 x goal-line carry share + .44 x carry share, shrunk by i10 carries seen
+}
+// weeklyProjection, after the shadow is final (after the '+debut' line) and before propAnchorMean():
+if (p.pos === 'QB' && ncMean > 0 && !ncOut && !(typeof window !== 'undefined' && window.SIM_QB_OPP_LEG === false)) {
+  var qbLeg = qbOppLeg(p, wk, sc, schedule);
+  if (qbLeg != null) { ncMean = QB_OPP_LEG.w * qbLeg + (1 - QB_OPP_LEG.w) * ncMean; ncSrc += '+qbopp'; }
+}
+```
+
+Kill switch `window.SIM_QB_OPP_LEG = false`; the export must be byte-identical with it off. The three OLS rows and the league rates are season-start fits (the harness refit them per season and the picks did not move); `fpaQbRelative` is the same read the opponent grade already does. Fill-in and window QBs: `gamesPlayed` counts his own starts, so a backup with no games gets no leg (shadow only), matching the harness rows that were untouched.
+
+## TE leg: DON'T SHIP
+
+| harness | form | LOSO touched | seasons better | forward | seasons better | guard | TE rank rho | per-season MAE / rho / pair wins | bar |
+|---|---|---|---|---|---|---|---|---|---|
+| 2019-25 | EV | -0.98% | 6/7 | -0.89% | 3/4 | -0.04% | +.014 | 5 / 5 / 3 of 7 (w .25) | passes, barely |
+| 2019-25 | FULL | -1.14% | 7/7 | -0.62% | 3/4 | -0.09% | +.007 | 4 / 5 / 3 of 7 (w .50) | passes, barely |
+| 2013-25 | EV | -0.94% | 10/13 | -0.95% | 8/11 | -0.03% | **-.003** | 7 / 4 / 6 of 13 (w .25) | **FAIL** |
+| 2013-25 | FULL | -0.97% | 12/13 | -0.99% | 11/11 | -0.08% | **-.006** | 6 / 5 / 7 of 13 (w .50) | error bar only |
+
+On the long harness the EV form fails outright (10 of 13, rank negative). The FULL form clears the error bar (12/13, 11/11) but every rank measure goes the wrong way: TE rank rho -.006, Spearman better in only 5 of 13 seasons, 2016-17 and 2022 clearly worse, and the leg alone is +5.7% worse than the shadow. The error gain is a small MSE improvement on deep TEs the shadow runs high on, not a better TE1-TE12 order, and the in-season objective is rank order inside the position. Verdict: DON'T SHIP. The 2026 TE lead in the first section (better error 5 of 7 weeks, n=100) does not survive the long sample as a ranking layer; do not re-pitch it as one.
+
+## Caveats
+
+- The leg's five shrink constants were fitted on 2017-25 as-of rows; 2013-16 are a true out-of-sample check and the leg wins all four on error and three of four on rank.
+- Both harnesses grade the shadow without the market anchor (no prop lines before 2026); the 2026 check in the first section is the only look at the leg next to the anchored number, and there it helped by the same margin.
+- Blend weights were compared on the training seasons with the all-season leg (the per-fold legs differ only in the OLS rows and league rates); the held-out season always used its own fold's leg.

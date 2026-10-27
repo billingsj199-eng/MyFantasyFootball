@@ -1,0 +1,129 @@
+=== tail + team tests  years 2019-2025 | pool clay | team fix off | default  rows 20,739  top-150 graded 11,100 ===
+
+====================================================================================================
+TEST 3  UPSIDE TAIL CALIBRATION (engine sampler replica around the shadow; sigma = entering-season CV)
+
+--- A. coverage by ADP band x position, 2019-25 top-150 (11,100 rows, 1000 draws each; target 80 / 10 / 10) ---
+
+ ADP 1-12
+  ALL                        n  972 | p10-p90  81.2% (below  9.8 / above  9.1) | act/mean 0.997 | CRPS 4.863 pinball 3.079 | boom P 28.4% real 28.6% Brier 0.1939 | MAE 6.876
+  RB                         n  615 | p10-p90  82.9% (below  8.5 / above  8.6) | act/mean 1.000 | CRPS 4.949 pinball 3.160 | boom P 29.5% real 28.6% Brier 0.1921 | MAE 6.959
+  WR                         n  327 | p10-p90  78.6% (below 11.3 / above 10.1) | act/mean 1.002 | CRPS 4.755 pinball 2.931 | boom P 25.3% real 28.1% Brier 0.1938 | MAE 6.794
+
+ ADP 13-30
+  ALL                        n 1551 | p10-p90  82.7% (below  8.4 / above  8.9) | act/mean 1.007 | CRPS 4.404 pinball 2.767 | boom P 22.9% real 21.7% Brier 0.1634 | MAE 6.142
+  QB                         n  179 | p10-p90  78.8% (below 14.0 / above  7.3) | act/mean 0.952 | CRPS 4.709 pinball 3.057 | boom P 39.4% real 35.8% Brier 0.2272 | MAE 6.469
+  RB                         n  599 | p10-p90  88.5% (below  4.8 / above  6.7) | act/mean 1.016 | CRPS 4.264 pinball 2.636 | boom P 21.5% real 19.5% Brier 0.1545 | MAE 5.950
+  WR                         n  682 | p10-p90  79.5% (below 10.1 / above 10.4) | act/mean 1.016 | CRPS 4.476 pinball 2.843 | boom P 18.5% real 17.7% Brier 0.1446 | MAE 6.249
+  TE                         n   91 | p10-p90  76.9% (below  7.7 / above 15.4) | act/mean 1.068 | CRPS 4.181 pinball 2.486 | boom P 32.3% real 38.5% Brier 0.2377 | MAE 5.950
+
+ ADP 31-60
+  ALL                        n 2473 | p10-p90  81.9% (below  7.8 / above 10.3) | act/mean 1.028 | CRPS 4.093 pinball 2.557 | boom P 15.9% real 17.0% Brier 0.1355 | MAE 5.759
+  QB                         n  358 | p10-p90  83.2% (below  9.8 / above  7.0) | act/mean 0.983 | CRPS 4.577 pinball 2.849 | boom P 28.8% real 28.8% Brier 0.1977 | MAE 6.432
+  RB                         n  731 | p10-p90  82.4% (below  7.3 / above 10.4) | act/mean 1.015 | CRPS 3.925 pinball 2.487 | boom P 12.9% real 13.1% Brier 0.1122 | MAE 5.587
+  WR                         n 1097 | p10-p90  81.0% (below  8.1 / above 10.8) | act/mean 1.052 | CRPS 4.137 pinball 2.581 | boom P 12.9% real 14.1% Brier 0.1206 | MAE 5.774
+  TE                         n  287 | p10-p90  82.2% (below  5.9 / above 11.8) | act/mean 1.081 | CRPS 3.746 pinball 2.279 | boom P 19.1% real 23.0% Brier 0.1737 | MAE 5.297
+
+ ADP 61-100
+  ALL                        n 2829 | p10-p90  81.3% (below  9.4 / above  9.3) | act/mean 1.013 | CRPS 3.642 pinball 2.263 | boom P 11.6% real 11.3% Brier 0.0933 | MAE 5.144
+  QB                         n  503 | p10-p90  83.1% (below  9.1 / above  7.8) | act/mean 1.016 | CRPS 4.500 pinball 2.802 | boom P 23.2% real 24.9% Brier 0.1792 | MAE 6.125
+  RB                         n  846 | p10-p90  81.6% (below  9.3 / above  9.1) | act/mean 1.002 | CRPS 3.392 pinball 2.144 | boom P  8.2% real  7.0% Brier 0.0642 | MAE 4.818
+  WR                         n 1115 | p10-p90  80.8% (below  9.0 / above 10.2) | act/mean 1.029 | CRPS 3.653 pinball 2.227 | boom P  8.9% real  9.0% Brier 0.0779 | MAE 5.223
+  TE                         n  365 | p10-p90  79.5% (below 11.2 / above  9.3) | act/mean 0.973 | CRPS 3.006 pinball 1.908 | boom P 11.9% real 10.1% Brier 0.0890 | MAE 4.305
+
+ ADP 101-150
+  ALL                        n 3275 | p10-p90  78.4% (below 12.0 / above  9.5) | act/mean 0.975 | CRPS 3.391 pinball 2.139 | boom P  8.5% real  7.7% Brier 0.0679 | MAE 4.887
+  QB                         n  658 | p10-p90  78.9% (below 12.8 / above  8.4) | act/mean 0.988 | CRPS 4.267 pinball 2.654 | boom P 14.7% real 13.7% Brier 0.1163 | MAE 6.003
+  RB                         n 1006 | p10-p90  75.6% (below 13.4 / above 10.9) | act/mean 0.967 | CRPS 3.270 pinball 2.061 | boom P  6.5% real  6.1% Brier 0.0535 | MAE 4.770
+  WR                         n 1132 | p10-p90  79.5% (below 12.2 / above  8.3) | act/mean 0.945 | CRPS 3.143 pinball 1.988 | boom P  5.8% real  4.2% Brier 0.0402 | MAE 4.616
+  TE                         n  479 | p10-p90  81.2% (below  7.7 / above 11.1) | act/mean 1.033 | CRPS 3.026 pinball 1.952 | boom P 10.8% real 11.1% Brier 0.0970 | MAE 4.240
+
+--- B. 2026 W1-7 from the live locks' own p10 / p90 (scratch_model/out/bt_rows.csv, top-150) ---
+  ADP 1-12     ALL  n  66 | p10-p90  86.4% (below  4.5 / above  9.1) | act/mean 1.067 bias -1.17 | boom real 43.9%
+  ADP 1-12     RB   n  32 | p10-p90  93.8% (below  3.1 / above  3.1) | act/mean 1.023 bias -0.45 | boom real 46.9%
+  ADP 1-12     WR   n  34 | p10-p90  79.4% (below  5.9 / above 14.7) | act/mean 1.118 bias -1.85 | boom real 41.2%
+  ADP 13-30    ALL  n  91 | p10-p90  83.5% (below  7.7 / above  8.8) | act/mean 0.931 bias +0.94 | boom real 22.0%
+  ADP 13-30    RB   n  44 | p10-p90  84.1% (below 11.4 / above  4.5) | act/mean 0.878 bias +1.78 | boom real 20.5%
+  ADP 13-30    WR   n  42 | p10-p90  81.0% (below  4.8 / above 14.3) | act/mean 0.972 bias +0.35 | boom real 19.0%
+  ADP 31-60    ALL  n 181 | p10-p90  80.7% (below  6.1 / above 13.3) | act/mean 1.037 bias -0.45 | boom real 18.2%
+  ADP 31-60    RB   n  60 | p10-p90  78.3% (below 10.0 / above 11.7) | act/mean 0.979 bias +0.27 | boom real 16.7%
+  ADP 31-60    WR   n  97 | p10-p90  81.4% (below  4.1 / above 14.4) | act/mean 1.088 bias -0.93 | boom real 14.4%
+  ADP 31-60    TE   n  14 | p10-p90  85.7% (below  7.1 / above  7.1) | act/mean 0.995 bias +0.05 | boom real 35.7%
+  ADP 61-100   ALL  n 213 | p10-p90  81.7% (below  9.4 / above  8.9) | act/mean 0.938 bias +0.70 | boom real 8.0%
+  ADP 61-100   QB   n  50 | p10-p90  72.0% (below 14.0 / above 14.0) | act/mean 0.987 bias +0.24 | boom real 20.0%
+  ADP 61-100   RB   n  59 | p10-p90  81.4% (below  6.8 / above 11.9) | act/mean 1.019 bias -0.19 | boom real 5.1%
+  ADP 61-100   WR   n  86 | p10-p90  86.0% (below  9.3 / above  4.7) | act/mean 0.796 bias +1.74 | boom real 1.2%
+  ADP 61-100   TE   n  18 | p10-p90  88.9% (below  5.6 / above  5.6) | act/mean 1.009 bias -0.09 | boom real 16.7%
+  ADP 101-150  ALL  n 281 | p10-p90  75.8% (below 10.0 / above 14.2) | act/mean 0.962 bias +0.41 | boom real 12.1%
+  ADP 101-150  QB   n  78 | p10-p90  78.2% (below 11.5 / above 10.3) | act/mean 0.901 bias +1.75 | boom real 15.4%
+  ADP 101-150  RB   n  64 | p10-p90  79.7% (below  6.2 / above 14.1) | act/mean 1.060 bias -0.46 | boom real 4.7%
+  ADP 101-150  WR   n  76 | p10-p90  77.6% (below  9.2 / above 13.2) | act/mean 0.963 bias +0.30 | boom real 5.3%
+  ADP 101-150  TE   n  63 | p10-p90  66.7% (below 12.7 / above 20.6) | act/mean 1.026 bias -0.23 | boom real 23.8%
+
+--- C. fix candidates on ADP 31-100 only (other rows untouched); LOSO pick on CRPS, guard = coverage / boom Brier / MAE ---
+
+ pooled, ADP 31-100 rows:
+  as is                      n 5302 | p10-p90  81.6% (below  8.7 / above  9.8) | act/mean 1.020 | CRPS 3.852 pinball 2.400 | boom P 13.6% real 14.0% Brier 0.1130 | MAE 5.431
+  upper stretch x1.10        n 5302 | p10-p90  83.1% (below  8.7 / above  8.2) | act/mean 1.020 | CRPS 3.858 pinball 2.420 | boom P 15.0% real 14.0% Brier 0.1131 | MAE 5.431
+  upper stretch x1.20        n 5302 | p10-p90  84.6% (below  8.7 / above  6.7) | act/mean 1.020 | CRPS 3.870 pinball 2.455 | boom P 16.3% real 14.0% Brier 0.1135 | MAE 5.431
+  upper stretch x1.30        n 5302 | p10-p90  85.7% (below  8.7 / above  5.7) | act/mean 1.020 | CRPS 3.887 pinball 2.501 | boom P 17.4% real 14.0% Brier 0.1143 | MAE 5.431
+  band sigma x1.10           n 5302 | p10-p90  86.0% (below  5.7 / above  8.2) | act/mean 1.020 | CRPS 3.884 pinball 2.445 | boom P 15.0% real 14.0% Brier 0.1131 | MAE 5.431
+  band sigma x1.20           n 5302 | p10-p90  89.7% (below  3.6 / above  6.7) | act/mean 1.020 | CRPS 3.931 pinball 2.518 | boom P 16.3% real 14.0% Brier 0.1135 | MAE 5.431
+  band mean x1.02            n 5302 | p10-p90  82.2% (below  8.9 / above  9.0) | act/mean 1.000 | CRPS 3.849 pinball 2.406 | boom P 14.4% real 14.0% Brier 0.1130 | MAE 5.454
+  band mean x1.04            n 5302 | p10-p90  82.5% (below  9.1 / above  8.4) | act/mean 0.981 | CRPS 3.850 pinball 2.415 | boom P 15.2% real 14.0% Brier 0.1132 | MAE 5.482
+
+ pooled, ADP 31-100 rows, top side only = WR + TE (the under-covered cells if any):
+  as is                      n 2864 | p10-p90  80.9% (below  8.6 / above 10.5) | act/mean 1.038 | CRPS 3.765 pinball 2.327 | boom P 11.9% real 12.5% Brier 0.1053 | MAE 5.325
+  upper stretch x1.10        n 2864 | p10-p90  82.5% (below  8.6 / above  8.9) | act/mean 1.038 | CRPS 3.767 pinball 2.337 | boom P 13.3% real 12.5% Brier 0.1053 | MAE 5.325
+  upper stretch x1.20        n 2864 | p10-p90  84.1% (below  8.6 / above  7.3) | act/mean 1.038 | CRPS 3.774 pinball 2.363 | boom P 14.6% real 12.5% Brier 0.1057 | MAE 5.325
+  upper stretch x1.30        n 2864 | p10-p90  85.4% (below  8.6 / above  6.0) | act/mean 1.038 | CRPS 3.787 pinball 2.400 | boom P 15.8% real 12.5% Brier 0.1064 | MAE 5.325
+  band sigma x1.10           n 2864 | p10-p90  85.5% (below  5.6 / above  8.9) | act/mean 1.038 | CRPS 3.790 pinball 2.361 | boom P 13.3% real 12.5% Brier 0.1053 | MAE 5.325
+  band sigma x1.20           n 2864 | p10-p90  89.6% (below  3.2 / above  7.3) | act/mean 1.038 | CRPS 3.832 pinball 2.425 | boom P 14.6% real 12.5% Brier 0.1057 | MAE 5.325
+  band mean x1.02            n 2864 | p10-p90  81.6% (below  8.8 / above  9.7) | act/mean 1.018 | CRPS 3.759 pinball 2.328 | boom P 12.5% real 12.5% Brier 0.1052 | MAE 5.344
+  band mean x1.04            n 2864 | p10-p90  81.9% (below  8.9 / above  9.3) | act/mean 0.998 | CRPS 3.756 pinball 2.331 | boom P 13.2% real 12.5% Brier 0.1053 | MAE 5.368
+
+ leave-one-season-out on CRPS (31-100 rows): season -> pick, CRPS as-is vs pick, coverage above p90 as-is vs pick
+   2019: band mean x1.02        CRPS 4.161 -> 4.159  above p90 9.5 -> 9.3  boom Brier 0.1300 -> 0.1297
+   2020: band mean x1.02        CRPS 3.986 -> 3.967  above p90 11.3 -> 10.1  boom Brier 0.1273 -> 0.1268
+   2021: band mean x1.02        CRPS 4.100 -> 4.093  above p90 10.8 -> 9.2  boom Brier 0.1310 -> 0.1310
+   2022: band mean x1.02        CRPS 3.789 -> 3.789  above p90 9.8 -> 9.7  boom Brier 0.1004 -> 0.1008
+   2023: band mean x1.02        CRPS 3.716 -> 3.717  above p90 8.9 -> 8.2  boom Brier 0.1036 -> 0.1038
+   2024: band mean x1.02        CRPS 3.778 -> 3.776  above p90 8.6 -> 7.9  boom Brier 0.1103 -> 0.1107
+   2025: band mean x1.02        CRPS 3.618 -> 3.619  above p90 10.0 -> 9.0  boom Brier 0.0994 -> 0.0993
+   seasons CRPS better 4/7  picks ['band mean x1.02', 'band mean x1.02', 'band mean x1.02', 'band mean x1.02', 'band mean x1.02', 'band mean x1.02', 'band mean x1.02']
+
+ mean-multiplier guard (whole top-150 board, weighted MAE / rank rho):
+   band mean x1.00: MAE 5.8489  rank rho 0.3881  31-100 bias -0.238
+   band mean x1.02: MAE 5.8583  rank rho 0.3882  31-100 bias -0.006
+   band mean x1.04: MAE 5.8700  rank rho 0.3867  31-100 bias +0.226
+
+====================================================================================================
+TEST 4  TEAM-LEVEL OFFENSE DRIFT  (years 2019-2025 | pool clay | team fix off | default)
+  persistence check (top-150 rows): corr(team ratio to date, this week's act/SH) = -0.013 (3+ games); trailing-3 +0.009; trailing-4 +0.002
+    team ratio to date 0.00-0.85: n   684  next-week act/SH 1.004
+    team ratio to date 0.85-0.95: n  2267  next-week act/SH 1.031
+    team ratio to date 0.95-1.05: n  3346  next-week act/SH 0.987
+    team ratio to date 1.05-1.15: n  1940  next-week act/SH 0.999
+    team ratio to date 1.15-9.00: n   604  next-week act/SH 0.994
+
+  rows touched 15,082 (8,841 top-150); actual / shadow on them 0.990
+  pooled touched rows: N3 to date f0.25 s2: +0.26%  N3 to date f0.25 s4: +0.18%  N3 to date f0.50 s2: +0.77%  N3 to date f0.50 s4: +0.53%  N4 to date f0.25 s2: +0.21%  N4 to date f0.25 s4: +0.15%  N4 to date f0.50 s2: +0.64%  N4 to date f0.50 s4: +0.45%  N3 trail3 f0.25 s2: +0.08%  N3 trail3 f0.25 s4: +0.01%  N3 trail3 f0.50 s2: +0.59%  N3 trail3 f0.50 s4: +0.25%  N4 trail4 f0.25 s2: +0.17%  N4 trail4 f0.25 s4: +0.09%  N4 trail4 f0.50 s2: +0.70%  N4 trail4 f0.50 s4: +0.39%
+  LEAVE-ONE-SEASON-OUT  touched +0.05%  seasons better 0/7  | whole board top-150 wtd +0.07%  rank rho -0.0004  | picks ['N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'shadow', 'shadow', 'shadow', 'shadow', 'shadow']
+  FORWARD 2022-2025       touched +0.00%  seasons better 0/4  | whole board top-150 wtd +0.00%  | picks ['shadow', 'shadow', 'shadow', 'shadow']
+  -> FAIL  (bar: LOSO 5+/7 and forward 3+/4, touched -0.3%+, guard <= +0.02%)
+
+  per season, top-150 rows, final week out: wtd MAE / Spearman / pair acc
+  | season | n | shadow | N3 to date f0.25 s2 | N3 to date f0.50 s2 | N4 to date f0.25 s4 | N4 trail4 f0.50 s4 |
+  |---|---|---|---|---|---|---|
+  | 2019 | 1194 | 6.131 / 0.414 / 0.578 | 6.141 / 0.413 / 0.584 | 6.159 / 0.405 / 0.572 | 6.130 / 0.416 / 0.579 | 6.136 / 0.403 / 0.573 |
+  | 2020 | 1285 | 6.022 / 0.429 / 0.621 | 6.056 / 0.425 / 0.606 | 6.094 / 0.414 / 0.607 | 6.044 / 0.429 / 0.612 | 6.056 / 0.423 / 0.618 |
+  | 2021 | 1504 | 5.928 / 0.394 / 0.585 | 5.927 / 0.383 / 0.585 | 5.933 / 0.376 / 0.585 | 5.924 / 0.388 / 0.583 | 5.933 / 0.393 / 0.583 |
+  | 2022 | 1597 | 5.830 / 0.418 / 0.597 | 5.837 / 0.412 / 0.593 | 5.849 / 0.407 / 0.590 | 5.833 / 0.415 / 0.595 | 5.825 / 0.421 / 0.588 |
+  | 2023 | 1861 | 5.647 / 0.368 / 0.588 | 5.630 / 0.366 / 0.591 | 5.622 / 0.357 / 0.601 | 5.631 / 0.366 / 0.590 | 5.632 / 0.362 / 0.596 |
+  | 2024 | 1841 | 5.698 / 0.347 / 0.605 | 5.688 / 0.349 / 0.608 | 5.686 / 0.344 / 0.604 | 5.690 / 0.349 / 0.608 | 5.701 / 0.341 / 0.606 |
+  | 2025 | 1818 | 5.853 / 0.353 / 0.612 | 5.845 / 0.358 / 0.614 | 5.845 / 0.360 / 0.613 | 5.849 / 0.358 / 0.615 | 5.860 / 0.356 / 0.607 |
+  | wins (MAE/rho/pair) | | | 4/2/4 of 7 | 3/1/3 of 7 | 5/4/4 of 7 | 2/2/2 of 7 |
+
+  by position (touched rows, pooled error vs shadow): QB: N3 to date f0.25 +0.64%, N3 to date f0.50 +1.76%; RB: N3 to date f0.25 +0.27%, N3 to date f0.50 +0.74%; WR: N3 to date f0.25 +0.08%, N3 to date f0.50 +0.38%; TE: N3 to date f0.25 +0.20%, N3 to date f0.50 +0.54%
+
+log: E:\MyFantasyFootball\sim_lab\scratch_model\out\tail_team.log

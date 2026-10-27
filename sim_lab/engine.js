@@ -1195,6 +1195,12 @@
     qRet: { mult: 0.85 },
     noChart: { mult: 0.8, games: 4 },   // v2.14 no-chart veterans, first 4 games (kill: window.SIM_NC_NOCHART = false)
     qbOutWrDock: { star: 0.15, other: 0.05, starAdp: 60 },   // v2.20 WRs when the team's projected starting QB is unavailable: MSE -9.3% on those weeks (7/7 seasons), calibrated 9.20 vs actual 9.22 (kill: window.SIM_NC_QBOUT = false)
+    // v2.34 QB OPPORTUNITY LEG (2026-10-27, scripts/scratch_model_report.md "Harness replay" + sim_lab/backtest_scratch_legs.py; Jack: "wire the QB
+    // opportunity leg at 50/50 with the FPA opponent input and kill switch"): team attempts (pace x spread x total OLS) x his attempt share x shrunk YPA
+    // x opponent FPA level ^ eDef + team expected TDs x attempt share + rushing - league INTs, averaged w/(1-w) with the shadow (see qbOppLeg below).
+    // Harness: 2019-25 LOSO -1.8% 7/7, fwd 4/4; 2013-25 LOSO -1.8% 12/13, fwd 10/11; QB rank rho +.017; w .50 picked every fold. Kill: window.SIM_QB_OPP_LEG = false.
+    qbOppLeg: { w: 0.5, kYpa: 328, kYpc: 22, eDef: 0.76, fpaPriorG: 4, minStarts: 1, startAtt: 10, intPts: -2, shortW: 0.4, hlShort: 3, hlLong: 10,
+                attOls: [8.8, 0.441, -0.029, 0.222], ptdOls: [-0.483, 0.088], rtdOls: [-0.098, 0.045], lg: { ypa: 7.28, ypc: 6.02, intr: 0.0216, att: 34, plays: 62 } },
     earlyP: { WR: { mult: 5, games: 1 } },   // v2.21 prior strength x5 for a WR's projection after exactly one game (kill: window.SIM_NC_EARLYP = false)
     vegEvK: 1,   // v2.24 Vegas-adjusted points evidence: each past game / its own Vegas multiplier ^ k (kill: window.SIM_NC_VEGEV = false)
     rankMixW: 0.5,                      // rank mix: weight on the shadow vs the ESPN weekly projection (kill: window.SIM_RANKMIX = false)
@@ -1286,6 +1292,50 @@
   var _ncCache = {}, _ncPass = false;
   // QB FLOOR MEAN (2026-10-09, see the shadow's DORMANT LAYERS block): mean of the week's top-32 QB shadow numbers, cached per (week,
   // scoring); filled by a guarded pass (no floor inside the pass, so no recursion).
+  // v2.34 QB OPPORTUNITY LEG (NC_SHADOW.qbOppLeg). Inputs: SIM_XFP_2026 (his pass attempts / carries by week), SIM_2026 (his season
+  // pass / rush yards per game), SIM_PACE_2026 cur.vol (team attempts + plays per game, season to date), the schedule slot (implied
+  // totals -> spread, total), SIM_2026.fpa (points allowed to QBs in season) blended with SIM_FPA_PRIOR (last season) as the opponent
+  // read. Weeks before `wk` only; null = no leg (keeps the shadow).
+  function qbOppLeg(p, wk, sc, schedule, slot) {
+    var Q = NC_SHADOW.qbOppLeg, wnd = typeof window !== 'undefined' ? window : null;
+    if (!Q || !wnd || !p || p.pos !== 'QB' || p.isDST || !slot || !sc) return null;
+    var XF = wnd.SIM_XFP_2026 || {}, x = XF[p.norm], J = jsData(), rec = J.players && J.players[p.norm];
+    if (!x || !x.w || !rec || !rec.pg || !(rec.g > 0)) return null;
+    var weeks = Object.keys(x.w).map(Number).filter(function (w) { return w < wk && x.w[w] && (x.w[w][0] > 0 || x.w[w][3] > 0); }).sort(function (a, b) { return a - b; });
+    if (!weeks.length) return null;
+    var teamAttWk = function (w) {   // the team's pass attempts that week = every pool QB on the team (dedup by norm)
+      var t = 0, seen = {};
+      if (_poolByNorm) Object.keys(_poolByNorm).forEach(function (k) { var q = _poolByNorm[k]; if (!q || q.pos !== 'QB' || q.tm !== p.tm || seen[q.norm]) return; seen[q.norm] = 1; var xq = XF[q.norm]; if (xq && xq.w && xq.w[w]) t += xq.w[w][0] || 0; });
+      return t;
+    };
+    var attTot = 0, carTot = 0, starts = 0, nS = 0, dS = 0, nL = 0, dL = 0, n = weeks.length;
+    weeks.forEach(function (w, i) {
+      var r = x.w[w], a = r[0] || 0, c = r[3] || 0, ta = Math.max(a, teamAttWk(w));
+      attTot += a; carTot += c; if (a >= Q.startAtt) starts++;
+      var ago = n - 1 - i, wS = Math.pow(0.5, ago / Q.hlShort), wL = Math.pow(0.5, ago / Q.hlLong);
+      if (ta > 0) { nS += wS * a; dS += wS * ta; nL += wL * a; dL += wL * ta; }
+    });
+    if (starts < Q.minStarts) return null;
+    var shS = dS > 0 ? nS / dS : 1, shL = dL > 0 ? nL / dL : 1, attSh = Math.max(0, Math.min(1, Q.shortW * shS + (1 - Q.shortW) * shL));
+    var pyTot = (rec.pg.py || 0) * rec.g, ryTot = (rec.pg.ry || 0) * rec.g;
+    var ypa = (pyTot + Q.kYpa * Q.lg.ypa) / (attTot + Q.kYpa), ypc = (ryTot + Q.kYpc * Q.lg.ypc) / (carTot + Q.kYpc), carPg = carTot / n;
+    var pv = wnd.SIM_PACE_2026 && wnd.SIM_PACE_2026.teams && wnd.SIM_PACE_2026.teams[p.tm], vol = pv && pv.cur && pv.cur.vol;
+    var paceAtt = (vol && vol.games >= 1 && vol.att != null) ? vol.att : Q.lg.att, plays = (vol && vol.games >= 1 && vol.plays != null) ? vol.plays : Q.lg.plays;
+    var imp = slot.implied, oimp = slot.oppImplied; if (!(typeof imp === 'number' && typeof oimp === 'number')) return null;
+    var tspread = oimp - imp, total = imp + oimp, A = Q.attOls;
+    var teamAtt = Math.max(5, A[0] + A[1] * paceAtt + A[2] * tspread + A[3] * total);
+    var teamPtd = Math.max(0.2, Q.ptdOls[0] + Q.ptdOls[1] * imp), teamRtd = Math.max(0.1, Q.rtdOls[0] + Q.rtdOls[1] * imp);
+    // opponent: in-season points allowed to QBs (relative to league) blended with last season's level (relative to its own league mean)
+    var fp = J.fpa && J.fpa[slot.opp], lg = J.lgFpa && J.lgFpa.QB, relIn = 1, gIn = 0;
+    if (fp && lg > 0 && fp.QB != null && fp._g > 0) { relIn = fp.QB / lg; gIn = fp._g; }
+    var relPr = 1, PR = wnd.SIM_FPA_PRIOR && wnd.SIM_FPA_PRIOR.pos && wnd.SIM_FPA_PRIOR.pos.QB;
+    if (PR && PR[slot.opp] != null) { var ks = Object.keys(PR), sm = 0; ks.forEach(function (t) { sm += PR[t]; }); if (ks.length && sm > 0) relPr = PR[slot.opp] / (sm / ks.length); }
+    var rel = (relIn * gIn + relPr * Q.fpaPriorG) / (gIn + Q.fpaPriorG), opp = Math.pow(Math.max(0.5, Math.min(1.5, rel)), Q.eDef);
+    var att = attSh * teamAtt, csh = carPg / Math.max(5, plays - paceAtt);
+    var leg = att * ((sc.pass_yd || 0) * ypa * opp + Q.intPts * Q.lg.intr) + (sc.pass_td || 0) * attSh * teamPtd
+            + carPg * (sc.rush_yd || 0) * ypc + (sc.rush_td || 0) * Math.min(1, csh) * teamRtd;
+    return leg > 0 ? leg : null;
+  }
   var _qbfMu = {}, _qbfPass = false;
   function qbShadowMu(wk, sc, schedule) {
     var ck = ncCacheKey(wk, sc);
@@ -4144,6 +4194,15 @@
       if (qfMu != null && ncMean < qfMu) { var qf0 = ncMean; ncMean = qfMu + 0.70 * (ncMean - qfMu); ncQbfM = qf0 > 0 ? ncMean / qf0 : 1; ncSrc += '+qbfl'; }
     }
     if (ncMean != null && ncMean > 0 && !ncOut) { var dbM = newTeamDebutMult(p, wk, schedule); if (dbM !== 1) { ncMean *= dbM; ncSrc += '+debut'; } }   // new-team debut dock (see newTeamDebutMult)
+    // v2.34 QB OPPORTUNITY LEG (NC_SHADOW.qbOppLeg): averaged 50/50 into the final shadow, before the market anchor. Kill: window.SIM_QB_OPP_LEG = false.
+    // Starters only (the harness graded the week's starter): no leg for a chart backup (effective string 2+) or a held backup (+qb2 / +qbx cap) -
+    // otherwise a benched backup's earlier starts would hand him a starter-sized number (Wentz / Rush W8 dry run). A starter with a vacated
+    // boost or a fill-in starting this week (iA != 1) keeps the leg, as in the harness rows.
+    if (p.pos === 'QB' && ncMean != null && ncMean > 0 && !ncOut && !(effectiveString(p, wk) >= 2) && !/\+qb[0-9x]/.test(ncSrc)
+        && !(typeof window !== 'undefined' && window.SIM_QB_OPP_LEG === false)) {
+      var qbLeg = qbOppLeg(p, wk, sc, schedule, slot);
+      if (qbLeg != null && qbLeg > 0) { var qoW = NC_SHADOW.qbOppLeg.w; ncMean = qoW * qbLeg + (1 - qoW) * ncMean; ncSrc += '+qbopp'; }
+    }
     if (ncOut) { ncMean = 0; ncSrc += '+out:' + ncOut; }
     // BASE BLEND (weeks ahead): the shadow joins the model number before the market steps
     var bbW = 0, jsPre = jsMean, bbRatio = 1;

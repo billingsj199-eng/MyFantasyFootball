@@ -84,6 +84,7 @@ global.window = global;
   'data/pace_2026.js',
   'data/sim_tuning.js',
   'data/sim_prior_health.js',
+  'data/sim_fpa_prior.js',   // last season's FPA by position (refresh_data.py) - QB opportunity leg opponent prior (2026-10-27)
   'overrides.js',
   'engine.js'
 ].forEach(f => {

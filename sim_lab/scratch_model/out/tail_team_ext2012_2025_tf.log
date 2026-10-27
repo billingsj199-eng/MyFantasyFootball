@@ -1,0 +1,39 @@
+=== tail + team tests  years 2012-2025 | pool ext | team fix on | EXTENDED  rows 49,521  top-150 graded 25,561 ===
+
+====================================================================================================
+TEST 4  TEAM-LEVEL OFFENSE DRIFT  (years 2012-2025 | pool ext | team fix on | EXTENDED)
+  persistence check (top-150 rows): corr(team ratio to date, this week's act/SH) = +0.003 (3+ games); trailing-3 +0.010; trailing-4 +0.009
+    team ratio to date 0.00-0.85: n  2032  next-week act/SH 1.011
+    team ratio to date 0.85-0.95: n  5493  next-week act/SH 0.975
+    team ratio to date 0.95-1.05: n  7341  next-week act/SH 0.986
+    team ratio to date 1.05-1.15: n  3957  next-week act/SH 0.995
+    team ratio to date 1.15-9.00: n  1348  next-week act/SH 0.982
+
+  rows touched 35,058 (20,171 top-150); actual / shadow on them 0.970
+  pooled touched rows: N3 to date f0.25 s2: +0.10%  N3 to date f0.25 s4: +0.05%  N3 to date f0.50 s2: +0.46%  N3 to date f0.50 s4: +0.28%  N4 to date f0.25 s2: +0.07%  N4 to date f0.25 s4: +0.03%  N4 to date f0.50 s2: +0.36%  N4 to date f0.50 s4: +0.22%  N3 trail3 f0.25 s2: +0.04%  N3 trail3 f0.25 s4: -0.01%  N3 trail3 f0.50 s2: +0.48%  N3 trail3 f0.50 s4: +0.18%  N4 trail4 f0.25 s2: +0.04%  N4 trail4 f0.25 s4: -0.00%  N4 trail4 f0.50 s2: +0.42%  N4 trail4 f0.50 s4: +0.19%
+  LEAVE-ONE-SEASON-OUT  touched +0.04%  seasons better 5/14  | whole board top-150 wtd +0.08%  rank rho -0.0014  | picks ['shadow', 'N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'N4 trail4 f0.25 s4', 'shadow', 'N3 trail3 f0.25 s4', 'N3 trail3 f0.25 s4', 'N4 trail4 f0.25 s4', 'N3 trail3 f0.25 s4']
+  FORWARD 2015-2025       touched +0.01%  seasons better 6/11  | whole board top-150 wtd +0.06%  | picks ['N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N4 trail4 f0.25 s4', 'N3 trail3 f0.25 s4']
+  -> FAIL  (bar: LOSO 12+/14 and forward 3+/11, touched -0.3%+, guard <= +0.02%)
+
+  per season, top-150 rows, final week out: wtd MAE / Spearman / pair acc
+  | season | n | shadow | N3 to date f0.25 s2 | N3 to date f0.50 s2 | N4 to date f0.25 s4 | N4 trail4 f0.50 s4 |
+  |---|---|---|---|---|---|---|
+  | 2012 | 1712 | 5.734 / 0.406 / 0.620 | 5.740 / 0.407 / 0.624 | 5.752 / 0.400 / 0.631 | 5.734 / 0.406 / 0.622 | 5.717 / 0.406 / 0.626 |
+  | 2013 | 1781 | 6.021 / 0.425 / 0.635 | 6.029 / 0.419 / 0.635 | 6.041 / 0.415 / 0.637 | 6.027 / 0.422 / 0.635 | 6.033 / 0.419 / 0.637 |
+  | 2014 | 1820 | 5.833 / 0.405 / 0.641 | 5.823 / 0.403 / 0.640 | 5.818 / 0.397 / 0.642 | 5.826 / 0.402 / 0.640 | 5.828 / 0.399 / 0.646 |
+  | 2015 | 1767 | 5.893 / 0.420 / 0.615 | 5.881 / 0.421 / 0.617 | 5.881 / 0.417 / 0.620 | 5.879 / 0.422 / 0.620 | 5.882 / 0.419 / 0.614 |
+  | 2016 | 1761 | 5.717 / 0.339 / 0.621 | 5.716 / 0.339 / 0.619 | 5.720 / 0.334 / 0.627 | 5.717 / 0.340 / 0.616 | 5.712 / 0.338 / 0.619 |
+  | 2017 | 1740 | 5.697 / 0.375 / 0.622 | 5.676 / 0.377 / 0.624 | 5.660 / 0.376 / 0.621 | 5.681 / 0.378 / 0.623 | 5.689 / 0.376 / 0.624 |
+  | 2018 | 1768 | 5.849 / 0.414 / 0.657 | 5.843 / 0.407 / 0.654 | 5.846 / 0.404 / 0.649 | 5.843 / 0.408 / 0.656 | 5.853 / 0.411 / 0.653 |
+  | 2019 | 1782 | 5.997 / 0.388 / 0.599 | 6.010 / 0.383 / 0.597 | 6.029 / 0.377 / 0.592 | 6.004 / 0.384 / 0.599 | 6.010 / 0.379 / 0.595 |
+  | 2020 | 1743 | 5.936 / 0.379 / 0.628 | 5.941 / 0.382 / 0.624 | 5.953 / 0.378 / 0.626 | 5.940 / 0.384 / 0.624 | 5.947 / 0.384 / 0.624 |
+  | 2021 | 1837 | 5.885 / 0.394 / 0.601 | 5.879 / 0.391 / 0.594 | 5.878 / 0.388 / 0.593 | 5.878 / 0.394 / 0.598 | 5.878 / 0.392 / 0.594 |
+  | 2022 | 1913 | 5.739 / 0.441 / 0.612 | 5.744 / 0.440 / 0.608 | 5.751 / 0.433 / 0.606 | 5.739 / 0.441 / 0.609 | 5.739 / 0.441 / 0.600 |
+  | 2023 | 2002 | 5.610 / 0.397 / 0.608 | 5.590 / 0.391 / 0.612 | 5.580 / 0.376 / 0.614 | 5.593 / 0.393 / 0.611 | 5.591 / 0.385 / 0.613 |
+  | 2024 | 1961 | 5.680 / 0.347 / 0.605 | 5.676 / 0.350 / 0.599 | 5.676 / 0.348 / 0.600 | 5.678 / 0.348 / 0.600 | 5.677 / 0.338 / 0.603 |
+  | 2025 | 1974 | 5.827 / 0.362 / 0.610 | 5.821 / 0.361 / 0.607 | 5.821 / 0.360 / 0.607 | 5.825 / 0.361 / 0.609 | 5.835 / 0.362 / 0.609 |
+  | wins (MAE/rho/pair) | | | 9/6/4 of 14 | 8/2/6 of 14 | 10/7/4 of 14 | 9/3/5 of 14 |
+
+  by position (touched rows, pooled error vs shadow): QB: N3 to date f0.25 +0.48%, N3 to date f0.50 +1.43%; RB: N3 to date f0.25 +0.07%, N3 to date f0.50 +0.36%; WR: N3 to date f0.25 -0.08%, N3 to date f0.50 +0.04%; TE: N3 to date f0.25 +0.14%, N3 to date f0.50 +0.42%
+
+log: E:\MyFantasyFootball\sim_lab\scratch_model\out\tail_team_ext2012_2025_tf.log

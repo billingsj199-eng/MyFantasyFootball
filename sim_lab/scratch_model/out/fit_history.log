@@ -1,0 +1,105 @@
+train rows 46704 (2017-24)  forward rows 6123 (2025)
+ADP curve {"QB": [32.324, -3.265, 9.228], "RB": [21.937, -3.015, 3.601], "WR": [22.089, -2.945, 3.318], "TE": [20.659, -2.777, 2.271]}
+team volume OLS {"t_tgt": [8.425, 0.449, -0.045, 0.212], "t_car": [21.932, 0.366, -0.119, -0.121], "t_att": [9.51, 0.437, -0.035, 0.213], "t_ptd": [-0.483, 0.088], "t_rtd": [-0.072, 0.043]}
+STRUCT params (155s): {"a_short": 0.642, "a_vac": 0.0, "k_cr": 0.0, "k_ypt": 35.772, "k_ypc": 17.419, "k_ypa": 252.352, "k_int": 0.0, "w_ez": 0.511, "w_gl": 0.329, "k_td": 10.924, "e_def": 0.848, "e_td": 0.0, "P_QB": 1.945, "P_RB": 2.354, "P_WR": 4.489, "P_TE": 3.445, "w_prev": 0.164, "m_q": 0.856, "m_lp": 1.0, "qb_rush_k": 30.0}
+calibration {"QB": [-0.157, 1.024], "RB": [0.223, 0.955], "WR": [0.756, 0.95], "TE": [0.476, 0.969]}
+
+=== FORWARD 2025 (fit on 2017-24), top-150 importance-weighted ===
+-- QB
+   STRUCT       n   304 MAE  6.464 raw  6.346 bias  +0.64 rho 0.232 top6 0.422 top12 0.706 top24 nan pair 0.561
+   STRUCT_raw   n   304 MAE  6.445 raw  6.335 bias  +0.35 rho 0.232 top6 0.422 top12 0.706 top24 nan pair 0.560
+   GBM          n   304 MAE  6.715 raw  6.550 bias  +1.21 rho 0.191 top6 0.412 top12 0.721 top24 nan pair 0.594
+   STACK        n   304 MAE  6.698 raw  6.591 bias  +1.15 rho 0.179 top6 0.422 top12 0.716 top24 nan pair 0.622
+   BLEND        n   304 MAE  6.527 raw  6.395 bias  +0.93 rho 0.234 top6 0.431 top12 0.725 top24 nan pair 0.588
+   naive_ppg    n   304 MAE  7.075 raw  6.974 bias  +0.75 rho 0.163 top6 0.402 top12 0.725 top24 nan pair 0.526
+   prior_only   n   304 MAE  6.745 raw  6.643 bias  +0.75 rho 0.115 top6 0.343 top12 0.701 top24 nan pair 0.487
+-- RB
+   STRUCT       n   638 MAE  6.509 raw  5.523 bias  -0.53 rho 0.532 top6 0.363 top12 0.534 top24 0.784 pair 0.645
+   STRUCT_raw   n   638 MAE  6.563 raw  5.563 bias  -0.09 rho 0.532 top6 0.363 top12 0.534 top24 0.784 pair 0.645
+   GBM          n   638 MAE  6.782 raw  5.609 bias  -0.36 rho 0.519 top6 0.333 top12 0.529 top24 0.777 pair 0.617
+   STACK        n   638 MAE  6.762 raw  5.602 bias  -0.34 rho 0.517 top6 0.343 top12 0.515 top24 0.779 pair 0.609
+   BLEND        n   638 MAE  6.570 raw  5.513 bias  -0.45 rho 0.534 top6 0.363 top12 0.539 top24 0.782 pair 0.631
+   naive_ppg    n   638 MAE  6.852 raw  5.672 bias  -0.37 rho 0.495 top6 0.382 top12 0.515 top24 0.772 pair 0.622
+   prior_only   n   638 MAE  6.928 raw  5.854 bias  -0.31 rho 0.422 top6 0.353 top12 0.525 top24 0.748 pair 0.644
+-- WR
+   STRUCT       n   837 MAE  5.967 raw  5.385 bias  +1.26 rho 0.375 top6 0.245 top12 0.397 top24 0.627 pair 0.613
+   STRUCT_raw   n   837 MAE  5.936 raw  5.319 bias  +1.12 rho 0.375 top6 0.245 top12 0.397 top24 0.627 pair 0.612
+   GBM          n   837 MAE  6.359 raw  5.454 bias  +1.61 rho 0.355 top6 0.245 top12 0.377 top24 0.620 pair 0.558
+   STACK        n   837 MAE  6.303 raw  5.424 bias  +1.63 rho 0.377 top6 0.225 top12 0.368 top24 0.630 pair 0.558
+   BLEND        n   837 MAE  6.107 raw  5.396 bias  +1.44 rho 0.377 top6 0.235 top12 0.402 top24 0.618 pair 0.590
+   naive_ppg    n   837 MAE  6.191 raw  5.554 bias  +0.16 rho 0.311 top6 0.235 top12 0.397 top24 0.605 pair 0.600
+   prior_only   n   837 MAE  6.262 raw  5.539 bias  +1.79 rho 0.335 top6 0.245 top12 0.387 top24 0.615 pair 0.581
+-- TE
+   STRUCT       n   215 MAE  4.923 raw  4.708 bias  -0.77 rho 0.334 top6 0.618 top12 0.944 top24 nan pair 0.692
+   STRUCT_raw   n   215 MAE  4.904 raw  4.685 bias  -0.96 rho 0.334 top6 0.618 top12 0.944 top24 nan pair 0.687
+   GBM          n   215 MAE  5.111 raw  4.866 bias  -0.76 rho 0.314 top6 0.588 top12 0.939 top24 nan pair 0.593
+   STACK        n   215 MAE  5.155 raw  4.902 bias  -0.87 rho 0.302 top6 0.588 top12 0.939 top24 nan pair 0.589
+   BLEND        n   215 MAE  4.940 raw  4.734 bias  -0.76 rho 0.355 top6 0.608 top12 0.944 top24 nan pair 0.662
+   naive_ppg    n   215 MAE  5.160 raw  4.953 bias  -0.45 rho 0.303 top6 0.618 top12 0.944 top24 nan pair 0.505
+   prior_only   n   215 MAE  5.074 raw  4.855 bias  -0.95 rho 0.145 top6 0.539 top12 0.928 top24 nan pair 0.741
+-- ALL
+   STRUCT       n  1994 MAE  6.126 raw  5.503 bias  +0.35 rho 0.368 top6 0.412 top12 0.636 top24 0.706 pair 0.624
+   STRUCT_raw   n  1994 MAE  6.128 raw  5.484 bias  +0.40 rho 0.368 top6 0.412 top12 0.636 top24 0.706 pair 0.623
+   GBM          n  1994 MAE  6.438 raw  5.607 bias  +0.63 rho 0.345 top6 0.395 top12 0.633 top24 0.699 pair 0.582
+   STACK        n  1994 MAE  6.409 raw  5.603 bias  +0.63 rho 0.344 top6 0.395 top12 0.625 top24 0.705 pair 0.581
+   BLEND        n  1994 MAE  6.216 raw  5.514 bias  +0.49 rho 0.375 top6 0.409 top12 0.644 top24 0.700 pair 0.606
+   naive_ppg    n  1994 MAE  6.444 raw  5.743 bias  -0.01 rho 0.318 top6 0.409 top12 0.636 top24 0.689 pair 0.600
+   prior_only   n  1994 MAE  6.450 raw  5.734 bias  +0.65 rho 0.254 top6 0.370 top12 0.626 top24 0.681 pair 0.601
+
+=== FORWARD 2025 by ADP band (ALL positions) ===
+-- 1-12
+   STRUCT       n   159 MAE  7.235 bias  +0.91 rho 0.196 pair 0.600
+   STRUCT_raw   n   159 MAE  7.283 bias  +1.26 rho 0.196 pair 0.600
+   GBM          n   159 MAE  7.928 bias  +1.31 rho 0.066 pair 0.588
+   STACK        n   159 MAE  7.916 bias  +1.32 rho 0.065 pair 0.605
+   BLEND        n   159 MAE  7.479 bias  +1.11 rho 0.136 pair 0.545
+   naive_ppg    n   159 MAE  7.586 bias  -0.27 rho 0.154 pair 0.488
+   prior_only   n   159 MAE  7.821 bias  +2.39 rho -0.018 pair 0.632
+-- 13-30
+   STRUCT       n   264 MAE  6.522 bias  -0.24 rho 0.267 pair 0.559
+   STRUCT_raw   n   264 MAE  6.515 bias  -0.15 rho 0.267 pair 0.567
+   GBM          n   264 MAE  6.759 bias  +0.34 rho 0.193 pair 0.659
+   STACK        n   264 MAE  6.621 bias  +0.39 rho 0.226 pair 0.583
+   BLEND        n   264 MAE  6.564 bias  +0.05 rho 0.228 pair 0.682
+   naive_ppg    n   264 MAE  6.957 bias  +0.08 rho 0.172 pair 0.582
+   prior_only   n   264 MAE  6.798 bias  -0.38 rho 0.116 pair 0.571
+-- 31-60
+   STRUCT       n   383 MAE  5.516 bias  +0.18 rho 0.129 pair 0.695
+   STRUCT_raw   n   383 MAE  5.509 bias  +0.10 rho 0.129 pair 0.673
+   GBM          n   383 MAE  5.852 bias  +0.45 rho 0.067 pair 0.489
+   STACK        n   383 MAE  5.831 bias  +0.38 rho 0.042 pair 0.504
+   BLEND        n   383 MAE  5.628 bias  +0.32 rho 0.095 pair 0.612
+   naive_ppg    n   383 MAE  5.799 bias  +0.03 rho 0.155 pair 0.572
+   prior_only   n   383 MAE  5.754 bias  +0.14 rho 0.014 pair 0.421
+-- 61-100
+   STRUCT       n   532 MAE  5.143 bias  +0.30 rho 0.178 pair 0.507
+   STRUCT_raw   n   532 MAE  5.125 bias  +0.11 rho 0.178 pair 0.512
+   GBM          n   532 MAE  5.142 bias  +0.38 rho 0.217 pair 0.518
+   STACK        n   532 MAE  5.125 bias  +0.35 rho 0.219 pair 0.551
+   BLEND        n   532 MAE  5.112 bias  +0.34 rho 0.242 pair 0.481
+   naive_ppg    n   532 MAE  5.330 bias  +0.09 rho 0.187 pair 0.614
+   prior_only   n   532 MAE  5.209 bias  +0.00 rho -0.022 pair 0.500
+-- 101-150
+   STRUCT       n   656 MAE  5.177 bias  +0.36 rho 0.319 pair 0.667
+   STRUCT_raw   n   656 MAE  5.132 bias  +0.16 rho 0.319 pair 0.671
+   GBM          n   656 MAE  5.147 bias  +0.21 rho 0.298 pair 0.627
+   STACK        n   656 MAE  5.226 bias  +0.20 rho 0.291 pair 0.676
+   BLEND        n   656 MAE  5.137 bias  +0.29 rho 0.326 pair 0.632
+   naive_ppg    n   656 MAE  5.450 bias  +0.23 rho 0.258 pair 0.571
+   prior_only   n   656 MAE  5.447 bias  +0.00 rho 0.091 pair 0.761
+
+=== IN-SAMPLE 2017-24 top150 (reference only) ===
+   STRUCT       MAE  6.010 rho 0.379 pair 0.613
+   STRUCT_raw   MAE  6.016 rho 0.379 pair 0.611
+   GBM          MAE  3.649 rho 0.776 pair 0.796
+   STACK        MAE  3.630 rho 0.778 pair 0.795
+   BLEND        MAE  4.774 rho 0.663 pair 0.743
+   naive_ppg    MAE  6.408 rho 0.315 pair 0.572
+   prior_only   MAE  6.231 rho 0.287 pair 0.605
+
+=== refit on 2017-25 for the 2026 backtest ===
+ADP curve {"QB": [31.669, -3.141, 9.098], "RB": [22.112, -3.049, 3.527], "WR": [21.812, -2.915, 3.242], "TE": [21.031, -2.849, 2.26]}
+team volume OLS {"t_tgt": [7.662, 0.456, -0.039, 0.221], "t_car": [22.199, 0.356, -0.122, -0.121], "t_att": [8.8, 0.441, -0.029, 0.222], "t_ptd": [-0.483, 0.088], "t_rtd": [-0.098, 0.045]}
+STRUCT params (286s): {"a_short": 0.396, "a_vac": 0.0, "k_cr": 0.0, "k_ypt": 32.509, "k_ypc": 22.391, "k_ypa": 328.092, "k_int": 248.631, "w_ez": 0.41, "w_gl": 0.556, "k_td": 5.947, "e_def": 0.764, "e_td": 0.0, "P_QB": 1.513, "P_RB": 2.071, "P_WR": 4.163, "P_TE": 3.399, "w_prev": 0.193, "m_q": 0.858, "m_lp": 0.967, "qb_rush_k": 30.0}
+calibration {"QB": [-0.194, 1.028], "RB": [0.166, 0.959], "WR": [1.039, 0.922], "TE": [0.522, 0.97]}
+saved out/params.json + gbm models

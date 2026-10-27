@@ -5055,7 +5055,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <script src="data/weekly_projections.js?v=2026-10-27" defer></script>
 <script src="data/weather_2026.js?v=2026-10-27-09" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
-<script src="data/player_roles_2026.js?v=2026-10-26-1149" defer></script>
+<script src="data/player_roles_2026.js?v=2026-10-27-0935" defer></script>
 <script src="data/sim_proj_2026.js?v=2026-10-27-0922" defer></script>
 <!-- matchup_edges_2026 / site_projections / ownership_2026 load AFTER first paint via
      window._loadLateData() (2026-10-13 mobile perf) — card / Start/Sit only, all typeof-guarded. -->
@@ -6236,7 +6236,7 @@ window._ensureResearchData = (function() {
     if (promise) return promise;
     promise = Promise.all([
       _loadScript('data/research_history.js?v=2026-08-06b'),
-      _loadScript('data/contracts_history.js?v=2026-10-20-0834')
+      _loadScript('data/contracts_history.js?v=2026-10-27-0935')
     ]);
     return promise;
   };
@@ -6246,7 +6246,7 @@ window._ensureResearchData = (function() {
 // season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
 // that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
 // section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-10-26-redzone';
+window._ADV_STATS_V = '2026-10-27-0935';
 window._ensureAdvStats = (function() {
   const cache = {};
   return function _ensureAdvStats(yr, wk) {
@@ -6266,7 +6266,7 @@ window._ensureAdvStats = (function() {
 // Research page Coach Profiles: data/coach_profiles.js (window.COACH_PROFILES, one row per
 // team-season, scripts/build_coach_profiles.py), loaded when the section opens.
 // route_pct_daily.ps1 bumps _COACH_V.
-window._COACH_V = '2026-10-26-1149';
+window._COACH_V = '2026-10-27-0935';
 window._ensureCoachProfiles = (function() {
   let promise = null;
   return function _ensureCoachProfiles() {
@@ -6311,7 +6311,7 @@ window._ensureCardExtras = (function() {
 // Player-card USAGE row (everyone): data/usage_trend.js (window.USAGE_TREND, built daily by
 // scripts/build_usage_trend.py). openPlayerCard loads it on the first card open and re-renders once.
 // route_pct_daily.ps1 bumps _USAGE_TREND_V.
-window._USAGE_TREND_V = '2026-10-26-1149';
+window._USAGE_TREND_V = '2026-10-27-0935';
 window._ensureUsageTrend = (function() {
   let promise = null;
   return function _ensureUsageTrend() {
@@ -6472,11 +6472,11 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-10-27',
+    'data/snap_counts.js?v=2026-10-27-0935',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-10-27',
+    'data/route_pct.js?v=2026-10-27-0935',
     // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
-    'data/team_usage_2026.js?v=2026-10-26-1149'
+    'data/team_usage_2026.js?v=2026-10-27-0935'
   ];
   window._weeklyDataPromise = window._loadWeeklyCore(opts).then(function() {
     return _injectScripts(files, 'WeeklyData', opts);

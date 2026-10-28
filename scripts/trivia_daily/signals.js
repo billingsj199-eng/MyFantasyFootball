@@ -218,11 +218,18 @@ async function collectSignals(opts) {
   const recentNews = news.items.filter(i => i && i.date && i.date >= since && i.date <= date);
   const bigGames = calendar.postGameDays ? loadBigGames(repoDir, calendar.seasonYear, players) : { week: null, games: [] };
   const mostTraded = calendar.inSeason ? loadMostTraded(repoDir, players) : null;
+  // NFL trade + draft history (nflverse, cached 24 h outside the repo) for
+  // the list boards; a known-name test keeps undrafted real players.
+  let nfl = null;
+  try {
+    const { loadNflTrades } = require('./trades');
+    nfl = await loadNflTrades({ log: opts.log, isKnownPlayer: (n) => !!players.find(n) });
+  } catch (e) { opts.log && opts.log('nflverse trades unavailable: ' + e.message); }
   let history = [];
   if (!opts.offline) {
     try { history = await loadLockHistory(30); } catch (e) { history = []; opts.log && opts.log('history unavailable: ' + e.message); }
   }
-  return { date, repoDir, players, calendar, news: { source: news.source, updated: news.updated, recent: recentNews }, bigGames, mostTraded, history };
+  return { date, repoDir, players, calendar, news: { source: news.source, updated: news.updated, recent: recentNews }, bigGames, mostTraded, nfl, history };
 }
 
 module.exports = { collectSignals, loadPlayers, loadNews, loadBigGames, loadMostTraded, loadLockHistory, evalDataFile, BIG_GAME_RULES, LIVE_BASE };

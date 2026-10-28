@@ -47,7 +47,8 @@ function summarize(sig, themes) {
   log('candidates:');
   themes.forEach((t, i) => {
     log('  ' + (i + 1) + '. [' + t.score + '] ' + t.kind + ' — ' + t.reason + (t.skipped ? ' — SKIPPED: ' + t.skipped : ''));
-    t.variants.forEach(v => log('       · ' + v.key + ' → "' + v.title + '"'));
+    if (t.mustInclude) log('       must include: ' + t.mustInclude);
+    t.variants.forEach(v => log('       · ' + v.key + ' → "' + v.title + '"' + (v.kind === 'list' ? ' (' + v.items.length + ' rows)' : '')));
   });
 }
 
@@ -83,7 +84,7 @@ async function main() {
   const doc = {
     date,
     title: result.title || variant.title,
-    desc: theme.desc || '',
+    desc: (variant.kind === 'list' && theme.kind !== 'trade' && variant.desc) ? variant.desc : (theme.desc || ''),
     items: result.items,
     itemCount: result.items.length,
     colorway: theme.colorway || 'purple',

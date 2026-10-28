@@ -180,9 +180,26 @@ async function pageBuild(spec) {
   return { title: data.title || '', items, filter: data._filter || null, topN: (data._topN || []).slice(0, 12), bannerStatus, bannerText, alt, layout: lo ? lo.value : 'auto' };
 }
 
-function judge(variant, r) {
+const normName = n => String(n || '').split(/[\(\,]/)[0].replace(/\s+(Sr\.?|Jr\.?|II|III|IV)$/i, '').replace(/[^a-z ]/gi, '').replace(/\s+/g, ' ').trim().toLowerCase();
+function hasPlayer(items, name) {
+  const k = normName(name);
+  return !!k && items.some(it => normName(it.answer) === k);
+}
+
+function judge(variant, r, mustInclude) {
   if (r.error) return { ok: false, why: r.error };
   if (r.items.length < 16) return { ok: false, why: 'only ' + r.items.length + ' items' };
+  // News boards must carry the player in the news (Jack 2026-10-28).
+  if (mustInclude && !hasPlayer(r.items, mustInclude)) return { ok: false, why: mustInclude + ' is not on the board', missingPlayer: true };
+  if (variant.kind === 'list') return { ok: true, status: 'list' };
+  // A single-game board where one player owns a quarter of the cells
+  // (a franchise list of Derrick Henry games) is a bad guessing game.
+  if (variant.kind === 'game') {
+    const counts = {};
+    r.items.forEach(it => { const k = normName(it.answer); counts[k] = (counts[k] || 0) + 1; });
+    const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+    if (top && counts[top] > r.items.length / 4) return { ok: false, why: top + ' holds ' + counts[top] + ' of ' + r.items.length + ' cells' };
+  }
   if (r.bannerStatus === 'flagged' && variant.kind !== 'team') return { ok: false, why: 'verifier flagged: ' + r.bannerText.slice(0, 200) };
   if (variant.kind === 'team') {
     if (!r.alt) return { ok: false, why: 'team cross-check did not run' };
@@ -203,14 +220,18 @@ function judge(variant, r) {
 async function buildFirstPassing(themes, opts) {
   const log = opts.log || (() => {});
   const siteDir = path.resolve(opts.siteDir);
-  const { chromium } = requirePlaywright(siteDir);
-  const browser = await launchBrowser(chromium, log);
   const tried = [];
+  let browser = null, page = null;
+  // List-only candidates need no browser at all.
+  const needSite = themes.some(t => !t.skipped && t.variants.some(v => v.kind !== 'list'));
   try {
+    if (needSite) {
+    const { chromium } = requirePlaywright(siteDir);
+    browser = await launchBrowser(chromium, log);
     const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width: 1400, height: 900 } });
     await context.addInitScript(() => { try { localStorage.setItem('mff_seen_intro', '1'); } catch (_) {} });
     await routeSite(context, siteDir);
-    const page = await context.newPage();
+    page = await context.newPage();
     const pageErrors = [];
     page.on('pageerror', e => pageErrors.push(String(e).split('\n')[0]));
     await page.goto(ORIGIN + '/index.html?r=' + Date.now() + '#trivia', { waitUntil: 'load', timeout: 120000 });
@@ -227,22 +248,48 @@ async function buildFirstPassing(themes, opts) {
     const stats = await page.evaluate(() => ({ D: D.length, legends: Object.keys(LEGEND_CAREERS).length, weekly: Object.keys(WEEKLY_STATS).length, seasonLeaders: typeof SEASON_LEADERS !== 'undefined' }));
     log('site data: D=' + stats.D + ' legends=' + stats.legends + ' weekly=' + stats.weekly + ' seasonLeaders=' + stats.seasonLeaders);
     if (pageErrors.length) log('page errors (' + pageErrors.length + '): ' + pageErrors.slice(0, 3).join(' | '));
+    }
 
     for (const theme of themes) {
       if (theme.skipped) { log('skip ' + theme.kind + ' (' + theme.reason + '): ' + theme.skipped); continue; }
+      // Pass 1 requires the news player on the board; themes marked
+      // includeSoft (big game, record) get a second pass without him
+      // rather than losing the theme altogether.
+      const passes = theme.mustInclude ? (theme.includeSoft ? [theme.mustInclude, null] : [theme.mustInclude]) : [null];
+      for (const mustInclude of passes) {
+      if (mustInclude === null && passes.length > 1) log('no board carried ' + theme.mustInclude + ' — retrying without him');
       for (const variant of theme.variants) {
-        log('build ' + variant.key + ' — "' + variant.title + '"');
-        const result = await page.evaluate(pageBuild, { filters: variant.filters, title: variant.title, colorway: theme.colorway || 'purple' });
-        const judged = judge(variant, result);
-        tried.push({ theme: theme.kind, variant: variant.key, ok: judged.ok, why: judged.why || judged.status, items: result.items ? result.items.length : 0, banner: result.bannerStatus });
-        log('  → ' + (judged.ok ? 'OK (' + judged.status + ', ' + result.items.length + ' items)' : 'rejected: ' + judged.why + (result.topN ? ' | rendered top: ' + result.topN.slice(0, 10).map(x => x.name + ' ' + Math.round(x.val)).join(', ') : '')));
-        if (judged.ok) return { theme, variant, result, judged, tried };
+        if (variant.kind === 'list') {
+          // Built in Node from nflverse data; no site generator involved.
+          log('list ' + variant.key + ' — "' + variant.title + '" (' + variant.items.length + ' items)');
+          const result = { title: variant.title, items: variant.items, filter: null, topN: [], bannerStatus: 'none', bannerText: '', alt: null, layout: 'auto' };
+          const judged = judge(variant, result, mustInclude);
+          tried.push({ theme: theme.kind, variant: variant.key, ok: judged.ok, why: judged.why || judged.status, items: result.items.length, banner: 'none' });
+          log('  → ' + (judged.ok ? 'OK (list, ' + result.items.length + ' items)' : 'rejected: ' + judged.why));
+          if (judged.ok) return { theme, variant, result, judged, tried };
+          continue;
+        }
+        if (!page) { log('skip ' + variant.key + ': no browser for site boards'); continue; }
+        // A news player outside the top 20 gets the board widened to 25,
+        // then 30 (the site's count options) before the variant is dropped.
+        const counts = mustInclude ? [variant.filters.count || 20, 25, 30] : [variant.filters.count || 20];
+        for (const count of counts) {
+          const filters = Object.assign({}, variant.filters, { count });
+          log('build ' + variant.key + (count !== (variant.filters.count || 20) ? ' (top ' + count + ')' : '') + ' — "' + variant.title + '"');
+          const result = await page.evaluate(pageBuild, { filters, title: variant.title, colorway: theme.colorway || 'purple' });
+          const judged = judge(variant, result, mustInclude);
+          tried.push({ theme: theme.kind, variant: variant.key, count, ok: judged.ok, why: judged.why || judged.status, items: result.items ? result.items.length : 0, banner: result.bannerStatus });
+          log('  → ' + (judged.ok ? 'OK (' + judged.status + ', ' + result.items.length + ' items)' : 'rejected: ' + judged.why + (result.topN ? ' | rendered top: ' + result.topN.slice(0, 10).map(x => x.name + ' ' + Math.round(x.val)).join(', ') : '')));
+          if (judged.ok) return { theme, variant: Object.assign({}, variant, { filters }), result, judged, tried };
+          if (!judged.missingPlayer) break; // widening only helps the missing-player case
+        }
+      }
       }
     }
     return { theme: null, variant: null, result: null, judged: null, tried };
   } finally {
-    await browser.close().catch(() => {});
+    if (browser) await browser.close().catch(() => {});
   }
 }
 
-module.exports = { buildFirstPassing, judge, ORIGIN };
+module.exports = { buildFirstPassing, judge, hasPlayer, normName, ORIGIN };

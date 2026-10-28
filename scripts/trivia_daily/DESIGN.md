@@ -55,6 +55,28 @@ Priority (highest score wins; a key locked in the last 10 days is skipped):
 Each theme carries fallback variants (team board → team all-positions fantasy points
 → all-NFL board for the stat) so a thin franchise history still yields 16+ cells.
 
+**Two rules added the same evening (Jack):**
+- **The player in the news must be on the board.** Every news theme (trade, signing,
+  record, big game, season-ending injury, most-traded) carries `mustInclude`; a stat
+  board that misses him is widened to top 25, then 30 (the site's count options), then
+  the next variant is tried. Trades and injuries are strict (a plain trade falls back to
+  his OLD team's all-time list, where he actually is); big games and records retry once
+  without him rather than lose the theme. A calendar board has no such rule. Single-game
+  boards also reject any player holding more than a quarter of the cells.
+- **Boards don't have to be stats.** `trades.js` pulls nflverse's free trade + draft
+  history (2002+ trades, 1980+ picks, all positions, cached 24 h outside the repo) and
+  builds list boards: **"Traded for a First-Round Pick"** (a real player one way, a
+  round-1 pick back the other way, newest first; Waddle, McDuffie, Gardner, Parsons,
+  Rodgers, D.J. Moore, A.J. Brown, Hill, Watson, Stafford, Ramsey, Mack…) and **"Top-10
+  Picks Who Got Traded"** (drafted ≤ #10, later dealt). A trade headline that mentions a
+  first-round pick leads with the first list; a traded top-10 pick leads with the second;
+  tonight's trade is injected on top when nflverse (which lags by days) lacks it. Trade-
+  deadline week rotates the two lists with no news needed. nflverse encodes a later-used
+  pick as the player it became, so an asset counts as a pick when the player's draft
+  came after the trade. Answers match on the full name in the one search bar, so
+  non-skill players (linemen, defenders) work; the autocomplete only suggests
+  fantasy-position names.
+
 ## 2. Board builder (`build_board.js`)
 
 The board is built by **the site's own generator**, not a re-implementation: Playwright

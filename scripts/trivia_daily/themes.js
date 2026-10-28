@@ -64,6 +64,15 @@ function gameBoard(pos, stat) {
     filters: Object.assign({}, BASE, { type: 'game', stat, positions }),
   };
 }
+function teamGameBoard(abbr, full, pos, stat) {
+  const nick = nickname(full) || abbr;
+  const positions = pos ? POS_GROUP[pos] : ALL_POS;
+  return {
+    kind: 'game', key: 'teamgame|' + abbr + '|' + stat + '|' + positions.join(''),
+    title: nick + ' Best Single-Game ' + STAT_LABEL[stat] + ' Ever' + (pos ? ' · ' + POS_LABEL[pos] : ''),
+    filters: Object.assign({}, BASE, { type: 'game', stat, team: abbr, positions }),
+  };
+}
 function weekBoard(week) {
   return {
     kind: 'week', key: 'week|' + week,
@@ -89,14 +98,49 @@ function draftBoard(year) {
   };
 }
 
+// --- list boards (nflverse trade history, not stats) ---
+// inject = {name, from, to} adds tonight's trade on top when nflverse does
+// not have it yet (it lags real trades by days).
+function listBoard(kind, nfl, inject) {
+  if (!nfl) return null;
+  const T = require('./trades');
+  let items, title, desc;
+  if (kind === 'tradedForFirst') {
+    items = T.itemsTradedForFirst(nfl.tradedForFirst, 20);
+    title = 'Traded for a First-Round Pick';
+    desc = 'NFL players dealt for a 1st since 2002 — name them';
+  } else if (kind === 'top10Traded') {
+    items = T.itemsTop10Traded(nfl.top10Traded, 20);
+    title = 'Top-10 Picks Who Got Traded';
+    desc = 'Drafted in the top 10, then dealt — name them';
+  } else return null;
+  if (inject && inject.name && !items.some(it => sameName(it.answer, inject.name))) {
+    const yr = String(inject.year || new Date().getFullYear());
+    const route = inject.from && inject.to && inject.from !== inject.to ? inject.from + ' → ' + inject.to : (inject.to ? 'to ' + inject.to : '');
+    items.unshift(kind === 'tradedForFirst'
+      ? { rank: '', value: '', headshot: '', answer: inject.name, category: yr, hint: (route ? route + ' ' : '') + 'for a 1st', team: inject.to || inject.from || '' }
+      : { rank: '', value: '', headshot: '', answer: inject.name, category: 'Pick #' + inject.pick + ' · ' + inject.draftYear, hint: (route || 'traded') + ' (' + yr + ')', team: inject.to || inject.from || '' });
+    items = items.slice(0, 20);
+  }
+  if (items.length < 16) return null;
+  return { kind: 'list', key: 'list|' + kind, title, desc, items };
+}
+function sameName(a, b) {
+  const n = x => String(x || '').split(/[\(\,]/)[0].replace(/\s+(Sr\.?|Jr\.?|II|III|IV)$/i, '').replace(/[^a-z ]/gi, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return n(a) === n(b);
+}
+
 // A theme = ordered variants (first that builds + verifies wins) + metadata.
+// mustInclude: the player in the news has to be on the board (Jack 10-28).
 function theme(kind, score, variants, meta) {
+  variants = variants.filter(Boolean);
+  if (!variants.length) return null;
   return Object.assign({ kind, score, variants, key: variants[0].key }, meta);
 }
 
 // --- news classification (general rules, no player lists) ---
 const RX = {
-  trade: /\b(traded|trade[sd]?\s+(to|for|with)|acquire[sd]?|acquiring|dealt|in exchange for|lands? (with|in)|sent to)\b/i,
+  trade: /\b(trad(e|es|ed|ing)|acquire[sd]?|acquiring|dealt|in exchange for|lands? (with|in)|sent to|swap(s|ped)?)\b/i,
   signing: /\b(sign(s|ed)?|agree[sd]? to (terms|a deal)|extension|contract)\b/i,
   record: /\b(record|nfl history|franchise history|all-time|most ever|most in (nfl|league|franchise)|first (player|qb|quarterback|rb|running back|wr|receiver|te|tight end)|milestone|surpass(es|ed)?|passes [A-Z][a-z]+ .*(list|all-time)|becomes the)\b/i,
   seasonEnding: /\b(out for the season|season-ending|season ending|torn (acl|achilles|patellar)|tore (his )?(acl|achilles|patellar|pectoral)|ruptured|placed on (season-ending )?ir|will miss the (rest of the|remainder of the) season)\b/i,
@@ -159,20 +203,35 @@ function pickThemes(sig) {
     const abbr = (it.team && it.team.length <= 3 ? it.team : '') || P.teamAbbr(d);
     const full = P.abbrToFull[abbr] || '';
     const hook = { player: it.player, headline: it.headline, url: it.url || '', date: it.date, tag: it.tag };
-    if (it.tag === 'transaction' && RX.trade.test(h) && star) {
-      newsThemes.push(theme('trade', 90, [teamBoard(abbr, full, pos, POS_YARDS[pos]), teamBoard(abbr, full, null, 'fpts'), careerBoard(pos, POS_YARDS[pos])],
-        { reason: 'trade: ' + it.player, hook, desc: short(it.player + ' on the move — where would he rank among the ' + (nickname(full) || abbr) + ' greats?', 110), colorway: 'orange' }));
-    } else if (it.tag === 'transaction' && RX.signing.test(h) && star) {
+    if (it.tag === 'transaction' && RX.trade.test(h)) {
+      // Trade: a list board when the deal fits one ("for a first-round
+      // pick", or the player was a top-10 pick), then the new team's
+      // all-time list at his position. He must be on whichever wins.
+      const nfl = sig.nfl;
+      const draft = nfl && nfl.draftByName[it.player];
+      const fromAbbr = P.teamAbbr(d);
+      const inject = { name: it.player, year: (it.date || '').slice(0, 4), from: fromAbbr !== abbr ? fromAbbr : '', to: abbr, pick: draft && draft.pick, draftYear: draft && draft.year };
+      const mentionsFirst = /\b(first|1st)[- ]round(er| pick| selection)?s?\b|\bfor a (first|1st)\b/i.test(h);
+      const variants = [];
+      if (mentionsFirst) variants.push(listBoard('tradedForFirst', nfl, inject));
+      if (draft && draft.pick <= 10) variants.push(listBoard('top10Traded', nfl, inject));
+      // He is on his OLD team's all-time list, not (yet) the new one's.
+      const oldFull = P.abbrToFull[fromAbbr] || '';
+      if (fromAbbr && fromAbbr !== abbr) variants.push(teamBoard(fromAbbr, oldFull, pos, POS_YARDS[pos]), teamBoard(fromAbbr, oldFull, null, 'fpts'));
+      variants.push(teamBoard(abbr, full, pos, POS_YARDS[pos]), teamBoard(abbr, full, null, 'fpts'), careerBoard(pos, POS_YARDS[pos]));
+      newsThemes.push(theme('trade', 90, variants,
+        { reason: 'trade: ' + it.player, hook, mustInclude: it.player, desc: short(it.player + ' on the move — ' + h, 110), colorway: 'orange' }));
+    } else if (it.tag === 'transaction' && RX.signing.test(h)) {
       newsThemes.push(theme('signing', 88, [teamBoard(abbr, full, pos, POS_YARDS[pos]), teamBoard(abbr, full, null, 'fpts')],
-        { reason: 'signing: ' + it.player, hook, desc: short(it.player + ' · ' + h, 110), colorway: 'orange' }));
+        { reason: 'signing: ' + it.player, hook, mustInclude: it.player, desc: short(it.player + ' · ' + h, 110), colorway: 'orange' }));
     } else if (RX.record.test(h) && it.tag !== 'injury') {
       const stat = statFromHeadline(h, pos) || POS_YARDS[pos];
       const single = /\b(single-game|in a game|one game|in a single game)\b/i.test(h);
       const variants = single ? [gameBoard(pos, stat), careerBoard(pos, stat)] : [careerBoard(pos, stat), gameBoard(pos, stat)];
-      newsThemes.push(theme('record', 85, variants, { reason: 'record/milestone: ' + it.player, hook, desc: short(it.player + ' · ' + h, 110), colorway: 'yellow' }));
+      newsThemes.push(theme('record', 85, variants, { reason: 'record/milestone: ' + it.player, hook, mustInclude: it.player, includeSoft: true, desc: short(it.player + ' · ' + h, 110), colorway: 'yellow' }));
     } else if (it.tag === 'injury' && RX.seasonEnding.test(h) && star) {
       newsThemes.push(theme('injury', 70, [teamBoard(abbr, full, pos, POS_YARDS[pos]), teamBoard(abbr, full, null, 'fpts'), careerBoard(pos, POS_YARDS[pos])],
-        { reason: 'season-ending injury: ' + it.player, hook, desc: short(it.player + ' is done for the year — the ' + (nickname(full) || abbr) + ' greats at ' + POS_LABEL[pos], 110), colorway: 'blue' }));
+        { reason: 'season-ending injury: ' + it.player, hook, mustInclude: it.player, desc: short(it.player + ' is done for the year — the ' + (nickname(full) || abbr) + ' greats at ' + POS_LABEL[pos], 110), colorway: 'blue' }));
     }
   });
   // Newest first inside the same score so tonight's story beats Monday's.
@@ -185,8 +244,9 @@ function pickThemes(sig) {
     const g = bg.games[0];
     const stat = g.stat === 'fpts' ? 'fpts' : g.stat;
     const pos = g.pos;
-    push(theme('biggame', 80, [gameBoard(POS_GROUP[pos] ? pos : null, stat), gameBoard(null, 'fpts')],
-      { reason: 'big game: ' + g.name + ' ' + g.value + ' ' + g.label + ' (Wk ' + g.week + ')', hook: { player: g.name, headline: g.name + ' had ' + g.value + ' ' + g.label + (g.opp ? ' vs ' + g.opp : '') + ' in Week ' + g.week, date: sig.date },
+    const gFull = P.abbrToFull[g.team] || '';
+    push(theme('biggame', 80, [gameBoard(POS_GROUP[pos] ? pos : null, stat), g.team ? teamGameBoard(g.team, gFull, POS_GROUP[pos] ? pos : null, stat) : null, g.team ? teamGameBoard(g.team, gFull, null, 'fpts') : null, gameBoard(null, 'fpts')],
+      { reason: 'big game: ' + g.name + ' ' + g.value + ' ' + g.label + ' (Wk ' + g.week + ')', mustInclude: g.name, includeSoft: true, hook: { player: g.name, headline: g.name + ' had ' + g.value + ' ' + g.label + (g.opp ? ' vs ' + g.opp : '') + ' in Week ' + g.week, date: sig.date },
         desc: short(g.name + ' went off for ' + g.value + ' ' + g.label + ' in Week ' + g.week + ' — the best single games ever', 110), colorway: 'red' }));
   }
 
@@ -198,12 +258,12 @@ function pickThemes(sig) {
     const y = rot([2025, 2024, 2023, 2022]);
     push(theme('combine', 60, [draftBoard(y)], { reason: 'combine week', desc: 'Combine week · the first 20 skill-position picks of the ' + y + ' class, pick by pick', colorway: 'green' }));
   }
-  if (c.tradeDeadlineWeek && sig.mostTraded && sig.mostTraded.count >= 10 && POS_GROUP[sig.mostTraded.pos]) {
-    const mt = sig.mostTraded;
-    const full = P.abbrToFull[mt.team] || '';
-    push(theme('deadline', 60, [teamBoard(mt.team, full, mt.pos, POS_YARDS[mt.pos]), teamBoard(mt.team, full, null, 'fpts')],
-      { reason: 'trade deadline week · most-traded in fantasy: ' + mt.name, hook: { player: mt.name, headline: mt.name + ' is the most-traded player in fantasy leagues this week (' + mt.count + ' trades)', date: sig.date },
-        desc: short('Trade deadline week · ' + mt.name + ' is the most-traded player in fantasy leagues — the ' + (nickname(full) || mt.team) + ' greats', 110), colorway: 'orange' }));
+  if (c.tradeDeadlineWeek) {
+    // Deadline week: real NFL trade history, rotating between the two lists.
+    const first = rot(['tradedForFirst', 'top10Traded']);
+    const other = first === 'tradedForFirst' ? 'top10Traded' : 'tradedForFirst';
+    const a = listBoard(first, sig.nfl), b = listBoard(other, sig.nfl);
+    push(theme('deadline', 60, [a, b], { reason: 'trade deadline week', desc: (a || b || {}).desc ? 'Trade deadline week · ' + (a || b).desc : 'Trade deadline week', colorway: 'orange' }));
   }
 
   // ---- 50: fantasy trade market ----
@@ -211,7 +271,7 @@ function pickThemes(sig) {
     const mt = sig.mostTraded;
     const full = P.abbrToFull[mt.team] || '';
     push(theme('mosttraded', 50, [teamBoard(mt.team, full, mt.pos, POS_YARDS[mt.pos]), teamBoard(mt.team, full, null, 'fpts')],
-      { reason: 'most-traded in fantasy: ' + mt.name, hook: { player: mt.name, headline: mt.name + ' is the most-traded player in fantasy leagues this week (' + mt.count + ' trades)', date: sig.date },
+      { reason: 'most-traded in fantasy: ' + mt.name, mustInclude: mt.name, hook: { player: mt.name, headline: mt.name + ' is the most-traded player in fantasy leagues this week (' + mt.count + ' trades)', date: sig.date },
         desc: short(mt.name + ' is the most-traded player in fantasy leagues this week — the ' + (nickname(full) || mt.team) + ' greats', 110), colorway: 'purple' }));
   }
 
@@ -237,4 +297,4 @@ function pickThemes(sig) {
   return out;
 }
 
-module.exports = { pickThemes, STAT_LABEL, POS_GROUP, teamBoard, careerBoard, gameBoard, weekBoard, postBoard, draftBoard, REPEAT_DAYS };
+module.exports = { pickThemes, STAT_LABEL, POS_GROUP, teamBoard, careerBoard, gameBoard, teamGameBoard, weekBoard, postBoard, draftBoard, listBoard, REPEAT_DAYS };

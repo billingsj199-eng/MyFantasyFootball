@@ -55995,12 +55995,13 @@ window.fmtHeight = fmtHeight;
       if (norm(part) === g) return true;
     }
 
-    // Last name match: if guess is a single word, check if it matches the last name
+    // Last name match: a single-word guess counts only as the LAST name.
+    // It used to match any word, so a first name ("Josh") was accepted.
     const gWords = g.split(' ');
     const aWords = a.split(' ');
     if (gWords.length === 1 && aWords.length >= 2) {
-      // Single word guess = last name match
-      if (aWords.some(w => w === gWords[0])) return true;
+      if (gWords[0].length >= 3 && gWords[0] === aWords[aWords.length - 1]) return true;
+      return false; // no typo fallback for one word: "Jsoh" isn't "Josh Allen"
     }
 
     // First + last name: check if first and last name are both present
@@ -56420,8 +56421,13 @@ window.fmtHeight = fmtHeight;
     if (!item) return;
 
     const maxWrong = cell.dataset.stealAttempt ? 1 : (_triviaGame.active ? _triviaGame.maxWrong : 3);
+    const correct = _triviaNameMatch(guess, item.answer);
+    // Another square's player, for the solo near-miss below (team game
+    // nights keep the normal penalty).
+    const _elsewhere = (correct || (_triviaGame.active && _triviaGame.teams > 1)) ? -1
+      : _triviaData.items.findIndex((it, j) => j !== idx && it && _triviaNameMatch(guess, it.answer));
 
-    if (_triviaNameMatch(guess, item.answer)) {
+    if (correct) {
       // Correct!
       _triviaClearTimer();
       const teamIdx = _triviaGame.active ? _triviaGame.currentTeam : null;
@@ -56441,6 +56447,13 @@ window.fmtHeight = fmtHeight;
       }
       _triviaUpdateScore();
       _triviaCheckGameOver();
+    } else if (_elsewhere >= 0) {
+      // Right player, wrong square (solo play): say so and don't burn a try.
+      const _solved = document.querySelector(`.trivia-cell[data-idx="${_elsewhere}"]`);
+      input.value = '';
+      input.placeholder = (_solved && _solved.classList.contains('revealed')) ? 'already on the board' : 'on the board — different spot';
+      input.style.borderColor = 'var(--accent)';
+      setTimeout(() => { input.style.borderColor = ''; }, 900);
     } else {
       // Wrong — shake the input
       input.classList.remove('shake');
@@ -57200,6 +57213,16 @@ window.fmtHeight = fmtHeight;
     if (dateLabelEl) dateLabelEl.textContent = '· ' + dateStr;
     titleEl.textContent = tpl.title;
     metaEl.textContent = tpl.desc;
+    // A board locked for this date replaces the template, so show its title.
+    // Deferred a tick: the first call runs before the lock cache is declared.
+    setTimeout(() => {
+      _triviaFetchLockedDaily(dateStr).then(snap => {
+        if (!snap || !snap.title || _triviaResolveDailyDate() !== dateStr) return;
+        titleEl.textContent = snap.title;
+        const n = snap.itemCount || (snap.items && snap.items.length);
+        metaEl.textContent = snap.desc || (n ? n + ' answers' : '');
+      });
+    }, 0);
     streakEl.textContent = String(state.streak || 0);
 
     const todayResult = state.completed[dateStr];
@@ -57410,10 +57433,13 @@ window.fmtHeight = fmtHeight;
     const accuracy = total ? Math.round((score / total) * 100) : 0;
     const tpl = _triviaPickDailyTemplate(date);
     const contentHash = _triviaContentHash(_triviaData && _triviaData.items);
+    // Locked boards carry their own title; the template's would be wrong.
+    const _locked = _triviaDailyArchiveCache[date];
+    const boardTitle = (_locked && _locked.title) || tpl.title;
 
     const shareText =
       'MFF Daily · ' + date + '\n' +
-      tpl.title + '\n' +
+      boardTitle + '\n' +
       lines.join('\n') + '\n' +
       score + '/' + total + ' · ' + timeStr + '\n' +
       location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash;
@@ -57425,7 +57451,7 @@ window.fmtHeight = fmtHeight;
       ? '(admin preview · not for sharing)\n' + shareText
       : shareText;
     modal.dataset.isPreview = isPreview ? '1' : '';
-    dateEl.textContent = (isPreview ? '🔒 PREVIEW · ' : '') + date + ' · ' + tpl.title;
+    dateEl.textContent = (isPreview ? '🔒 PREVIEW · ' : '') + date + ' · ' + boardTitle;
     gridEl.textContent = lines.join('\n');
     statsEl.innerHTML =
       '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + score + '/' + total + '</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">SCORE · ' + accuracy + '%</div></div>' +
@@ -58156,12 +58182,17 @@ window.fmtHeight = fmtHeight;
         return;
       }
       let html = '';
+      const _today = _triviaTodayStr();
       snap.forEach(doc => {
         const d = doc.data();
         const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin());
+        // Boards locked for future dates are spoilers for players; the admin
+        // sees them marked as scheduled.
+        const _future = d.date > _today;
+        if (_future && !isAdm) return;
         html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);transition:border-color .2s" onmouseenter="this.style.borderColor=\'var(--accent)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">';
         html += '<div style="flex:1;min-width:0;cursor:pointer" onclick="window._triviaPlayArchived(\'' + d.date + '\')">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#ffd166">' + _esc(d.date) + '</div>';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#ffd166">' + _esc(d.date) + (_future ? ' <span style="color:var(--text2)">· SCHEDULED</span>' : '') + '</div>';
         html += '<div style="font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _esc(d.title || 'Daily Board') + '</div>';
         html += '<div style="font-size:.6875rem;color:var(--text2)">' + (d.itemCount || (d.items && d.items.length) || '?') + ' cells</div>';
         html += '</div>';

@@ -48,10 +48,16 @@ service cloud.firestore {
             && _lbNum(m.get('streak', 0), 5000)
             && _lbNum(m.get('bestStreak', 0), 5000);
       }
+      // Score maps also carry the current day/week/month bests (dayKey+dayBest,
+      // wkKey+wkBest, moKey+moBest) for the leaderboard's time filters.
       function _lbScoreOk(m, cap) {
         return m is map
             && _lbNum(m.get('highScore', 0), cap)
-            && m.get('date', '') is string && m.get('date', '').size() <= 32;
+            && m.get('date', '') is string && m.get('date', '').size() <= 32
+            && _lbNum(m.get('dayBest', 0), cap) && _lbNum(m.get('wkBest', 0), cap) && _lbNum(m.get('moBest', 0), cap)
+            && m.get('dayKey', '') is string && m.get('dayKey', '').size() <= 16
+            && m.get('wkKey', '') is string && m.get('wkKey', '').size() <= 16
+            && m.get('moKey', '') is string && m.get('moKey', '').size() <= 16;
       }
       // ks = keys being written; a key that is being deleted needs no check.
       function _lbStatsOk(ks) {

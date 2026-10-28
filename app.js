@@ -43643,7 +43643,10 @@ window.fmtHeight = fmtHeight;
 (function() {
   // Wait for Firebase to be ready
   function getDb() { return window.firebase && firebase.firestore ? firebase.firestore() : null; }
-  function getUser() { return window._authCurrentUser || null; }
+  function getUser() {
+    if (window._authCurrentUser) return window._authCurrentUser;
+    try { return (window.firebase && firebase.auth) ? firebase.auth().currentUser : null; } catch (e) { return null; }
+  }
   function getLbBadge() { var b=localStorage.getItem('jb_active_badge')||'default'; var icons={'default':null,'creator':'🛠️','founder':'⭐','first_game':'🏈','century':'💯','1k_club':'🔥','goat':'🐐','weekly_warrior':'⚡','streak_7':'🔥','streak_30':'🌟','streak_100':'💎','sharpshooter':'🎯','elite_mind':'🏆','big_brain':'🧠','premium':'👑','mock_master':'📋','gw_first_win':'🔍','gw_streak_7':'🕵️','gw_streak_30':'🔮','gw_master':'🧩'}; return {activeBadge:b, activeBadgeIcon:icons[b]||null}; }
 
   function todayKey() {
@@ -43695,70 +43698,35 @@ window.fmtHeight = fmtHeight;
     }).catch(e => console.warn('[LB] unlimited read error:', e));
   };
 
-  window._lbUpdateFantasyGame = function(score) {
+  // Score games keep the all-time best (highScore + date) plus the best of the
+  // current day / week / month (dayKey+dayBest, wkKey+wkBest, moKey+moBest), so
+  // the TODAY / WEEK / MONTH filters rank real period bests. Before, they only
+  // showed all-time bests that happened to be set inside the period.
+  function _lbSaveScore(field, score) {
     const user = getUser(); const db = getDb();
-    if (!user || !db) return;
+    if (!user || !db || !(score > 0)) return;
     const name = user.displayName || user.email.split('@')[0];
-    // Only update if it's a new high score
-    db.collection('leaderboard').doc(user.uid).get().then(doc => {
-      const existing = doc.exists && doc.data().fantasygame ? doc.data().fantasygame.highScore : 0;
-      if (score > existing) {
-        db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: _lbNoEmail(), ...getLbBadge(),
-          fantasygame: { highScore: score, date: todayKey() },
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(e => console.warn('[LB] fg save error:', e));
-      }
-    }).catch(e => console.warn('[LB] fg read error:', e));
-  };
-
-  window._lbUpdateFantasyGameWeek = function(score) {
-    const user = getUser(); const db = getDb();
-    if (!user || !db) return;
-    const name = user.displayName || user.email.split('@')[0];
-    db.collection('leaderboard').doc(user.uid).get().then(doc => {
-      const existing = doc.exists && doc.data().fantasygameWeek ? doc.data().fantasygameWeek.highScore : 0;
-      if (score > existing) {
-        db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: _lbNoEmail(), ...getLbBadge(),
-          fantasygameWeek: { highScore: score, date: todayKey() },
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(e => console.warn('[LB] fg week save error:', e));
-      }
-    }).catch(e => console.warn('[LB] fg week read error:', e));
-  };
-
-  window._lbUpdateCollegeSeason = function(score) {
-    const user = getUser(); const db = getDb();
-    if (!user || !db) return;
-    const name = user.displayName || user.email.split('@')[0];
-    db.collection('leaderboard').doc(user.uid).get().then(doc => {
-      const existing = doc.exists && doc.data().collegeSeason ? doc.data().collegeSeason.highScore : 0;
-      if (score > existing) {
-        db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: _lbNoEmail(), ...getLbBadge(),
-          collegeSeason: { highScore: score, date: todayKey() },
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(e => console.warn('[LB] college season save error:', e));
-      }
-    }).catch(e => console.warn('[LB] college season read error:', e));
-  };
-
-  window._lbUpdateCollegeWeek = function(score) {
-    const user = getUser(); const db = getDb();
-    if (!user || !db) return;
-    const name = user.displayName || user.email.split('@')[0];
-    db.collection('leaderboard').doc(user.uid).get().then(doc => {
-      const existing = doc.exists && doc.data().collegeWeek ? doc.data().collegeWeek.highScore : 0;
-      if (score > existing) {
-        db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: _lbNoEmail(), ...getLbBadge(),
-          collegeWeek: { highScore: score, date: todayKey() },
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(e => console.warn('[LB] college week save error:', e));
-      }
-    }).catch(e => console.warn('[LB] college week read error:', e));
-  };
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const old = (doc.exists && doc.data()[field]) || {};
+      const k = _lbPeriodKeys();
+      const m = Object.assign({}, old);
+      let changed = false;
+      if (score > (old.highScore || 0)) { m.highScore = score; m.date = k.day; changed = true; }
+      [['dayKey', 'dayBest', k.day], ['wkKey', 'wkBest', k.wk], ['moKey', 'moBest', k.mo]].forEach(([kk, bk, cur]) => {
+        const best = old[kk] === cur ? (old[bk] || 0) : 0;
+        if (score > best) { m[kk] = cur; m[bk] = score; changed = true; }
+      });
+      if (!changed) return;
+      const update = { name: name, email: _lbNoEmail(), ...getLbBadge(), updatedAt: new Date().toISOString() };
+      update[field] = m;
+      docRef.set(update, { merge: true }).catch(e => console.warn('[LB] ' + field + ' save error:', e));
+    }).catch(e => console.warn('[LB] ' + field + ' read error:', e));
+  }
+  window._lbUpdateFantasyGame = function(score) { _lbSaveScore('fantasygame', score); };
+  window._lbUpdateFantasyGameWeek = function(score) { _lbSaveScore('fantasygameWeek', score); };
+  window._lbUpdateCollegeSeason = function(score) { _lbSaveScore('collegeSeason', score); };
+  window._lbUpdateCollegeWeek = function(score) { _lbSaveScore('collegeWeek', score); };
 
   // Elite Pull — Current daily (Firestore field name "gwDaily" is legacy from pre-swap naming)
   window._lbUpdateGwDaily = function(won, streak) {
@@ -43870,14 +43838,15 @@ window.fmtHeight = fmtHeight;
     </div>`;
   }
 
-  // Render top 3 + user's own rank if not in top 3
+  // Render the top 5 + the user's own rank if they're below it
+  const LB_TOP_N = 5;
   function renderTop3(sortedList, uid, statFn) {
-    const top3 = sortedList.slice(0, 3);
+    const top3 = sortedList.slice(0, LB_TOP_N);
     let html = top3.map((u, i) => renderRow(i + 1, u.name, statFn(u), u.id === uid, u.activeBadgeIcon)).join('');
-    // Find user's position if not in top 3
+    // Find user's position if not in the top N
     if (uid) {
       const userIdx = sortedList.findIndex(u => u.id === uid);
-      if (userIdx >= 3) {
+      if (userIdx >= LB_TOP_N) {
         html += '<div style="text-align:center;color:var(--text2);font-size:.6875rem;letter-spacing:1px;padding:4px 0;margin:2px 0">• • •</div>';
         html += renderRow(userIdx + 1, sortedList[userIdx].name, statFn(sortedList[userIdx]), true, sortedList[userIdx].activeBadgeIcon);
       }
@@ -43886,6 +43855,7 @@ window.fmtHeight = fmtHeight;
   }
 
   let lbTimeFilter = 'alltime';
+  let _lbLastLoad = 0;
 
   // Date helpers for time filtering
   function getMonday() {
@@ -43907,6 +43877,42 @@ window.fmtHeight = fmtHeight;
     if (filter === 'alltime' || !dateStr) return true;
     const cutoff = filter === 'today' ? todayKey() : filter === 'week' ? getMonday() : getFirstOfMonth();
     return dateStr >= cutoff;
+  }
+
+  // ET period keys for the score-game period bests (see _lbSaveScore).
+  function _lbPeriodKeys() {
+    const day = todayKey();
+    return { day: day, wk: getMonday(), mo: day.slice(0, 7) };
+  }
+  // A player's score for the selected period. Docs written before period bests
+  // existed still count when their all-time best was set inside the period.
+  function _lbPeriodScore(m, tf) {
+    if (!m) return 0;
+    if (tf === 'alltime') return m.highScore || 0;
+    const k = _lbPeriodKeys();
+    const f = { today: ['dayKey', 'dayBest', k.day], week: ['wkKey', 'wkBest', k.wk], month: ['moKey', 'moBest', k.mo] }[tf];
+    if (!f) return m.highScore || 0;
+    let v = m[f[0]] === f[2] ? (m[f[1]] || 0) : 0;
+    if (m.date && isWithinTimeFilter(m.date, tf)) v = Math.max(v, m.highScore || 0);
+    return v;
+  }
+  // Ranked players for one score field in the selected period.
+  function _lbScoreBoard(all, field, tf) {
+    return all.map(u => ({ u: u, s: _lbPeriodScore(u[field], tf) }))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .map(x => Object.assign({}, x.u, { _score: x.s }));
+  }
+  function _lbRenderScoreSection(all, uid, field, tf, ids) {
+    const list = document.getElementById(ids[0]), loading = document.getElementById(ids[1]), empty = document.getElementById(ids[2]);
+    if (loading) loading.style.display = 'none';
+    if (!list) return [];
+    const players = _lbScoreBoard(all, field, tf);
+    if (empty) empty.style.display = 'none';
+    list.innerHTML = players.length
+      ? renderTop3(players, uid, u => u._score.toFixed(1) + ' PTS')
+      : '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">' + (tf === 'alltime' ? 'No scores yet' : tf === 'today' ? 'No scores yet today' : 'No scores yet this ' + tf) + '</div>';
+    return players;
   }
 
   // Time filter click handlers
@@ -43983,10 +43989,13 @@ window.fmtHeight = fmtHeight;
   function loadLeaderboards() {
     const db = getDb();
     if (!db) {
+      // Leaderboards are public-read; no db here means Firebase didn't load
+      // (offline / blocked), not that the visitor needs to sign in.
       document.querySelectorAll('.lb-loading').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.lb-empty').forEach(el => { el.style.display = 'block'; el.textContent = 'Sign in to see leaderboards'; });
+      document.querySelectorAll('.lb-empty').forEach(el => { el.style.display = 'block'; el.textContent = "Leaderboards couldn't load — check your connection"; });
       return;
     }
+    _lbLastLoad = Date.now();
     const user = getUser();
     const uid = user ? user.uid : null;
     const today = todayKey();
@@ -43997,49 +44006,14 @@ window.fmtHeight = fmtHeight;
       snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
       _lbPurgeLegacyEmails(db, all);
 
-      // --- FANTASY GAME SEASON ---
-      const fgPlayers = all.filter(u => u.fantasygame && u.fantasygame.highScore > 0 && isWithinTimeFilter(u.fantasygame.date, tf))
-        .sort((a, b) => b.fantasygame.highScore - a.fantasygame.highScore);
-      const lbFgList = document.getElementById('lbFantasygameList');
-      const lbFgLoading = document.getElementById('lbFantasygameLoading');
-      const lbFgEmpty = document.getElementById('lbFantasygameEmpty');
-      lbFgLoading.style.display = 'none';
-      if (fgPlayers.length === 0) { lbFgEmpty.style.display = 'block'; lbFgList.innerHTML = ''; }
-      else { lbFgEmpty.style.display = 'none'; lbFgList.innerHTML = renderTop3(fgPlayers, uid, u => u.fantasygame.highScore.toFixed(1) + ' PTS'); }
-
-      // --- FANTASY GAME WEEK ---
-      const fgWeekPlayers = all.filter(u => u.fantasygameWeek && u.fantasygameWeek.highScore > 0 && isWithinTimeFilter(u.fantasygameWeek.date, tf))
-        .sort((a, b) => b.fantasygameWeek.highScore - a.fantasygameWeek.highScore);
-      const lbFgWeekList = document.getElementById('lbFantasygameWeekList');
-      const lbFgWeekLoading = document.getElementById('lbFantasygameWeekLoading');
-      const lbFgWeekEmpty = document.getElementById('lbFantasygameWeekEmpty');
-      lbFgWeekLoading.style.display = 'none';
-      if (fgWeekPlayers.length === 0) { lbFgWeekEmpty.style.display = 'none'; lbFgWeekList.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No scores yet</div>'; }
-      else { lbFgWeekEmpty.style.display = 'none'; lbFgWeekList.innerHTML = renderTop3(fgWeekPlayers, uid, u => u.fantasygameWeek.highScore.toFixed(1) + ' PTS'); }
-
-      // --- COLLEGE FANTASY SEASON ---
-      const colSeasonPlayers = all.filter(u => u.collegeSeason && u.collegeSeason.highScore > 0 && isWithinTimeFilter(u.collegeSeason.date, tf))
-        .sort((a, b) => b.collegeSeason.highScore - a.collegeSeason.highScore);
-      const lbColSeasonList = document.getElementById('lbCollegeSeasonList');
-      const lbColSeasonLoading = document.getElementById('lbCollegeSeasonLoading');
-      const lbColSeasonEmpty = document.getElementById('lbCollegeSeasonEmpty');
-      if (lbColSeasonLoading) lbColSeasonLoading.style.display = 'none';
-      if (lbColSeasonList) {
-        if (colSeasonPlayers.length === 0) { if (lbColSeasonEmpty) lbColSeasonEmpty.style.display = 'none'; lbColSeasonList.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No scores yet</div>'; }
-        else { if (lbColSeasonEmpty) lbColSeasonEmpty.style.display = 'none'; lbColSeasonList.innerHTML = renderTop3(colSeasonPlayers, uid, u => u.collegeSeason.highScore.toFixed(1) + ' PTS'); }
-      }
-
-      // --- COLLEGE FANTASY WEEK ---
-      const colWeekPlayers = all.filter(u => u.collegeWeek && u.collegeWeek.highScore > 0 && isWithinTimeFilter(u.collegeWeek.date, tf))
-        .sort((a, b) => b.collegeWeek.highScore - a.collegeWeek.highScore);
-      const lbColWeekList = document.getElementById('lbCollegeWeekList');
-      const lbColWeekLoading = document.getElementById('lbCollegeWeekLoading');
-      const lbColWeekEmpty = document.getElementById('lbCollegeWeekEmpty');
-      if (lbColWeekLoading) lbColWeekLoading.style.display = 'none';
-      if (lbColWeekList) {
-        if (colWeekPlayers.length === 0) { if (lbColWeekEmpty) lbColWeekEmpty.style.display = 'none'; lbColWeekList.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No scores yet</div>'; }
-        else { if (lbColWeekEmpty) lbColWeekEmpty.style.display = 'none'; lbColWeekList.innerHTML = renderTop3(colWeekPlayers, uid, u => u.collegeWeek.highScore.toFixed(1) + ' PTS'); }
-      }
+      // --- FANTASY GAME / COLLEGE FANTASY (period bests for the time filter) ---
+      _lbRenderScoreSection(all, uid, 'fantasygame', tf, ['lbFantasygameList', 'lbFantasygameLoading', 'lbFantasygameEmpty']);
+      _lbRenderScoreSection(all, uid, 'fantasygameWeek', tf, ['lbFantasygameWeekList', 'lbFantasygameWeekLoading', 'lbFantasygameWeekEmpty']);
+      _lbRenderScoreSection(all, uid, 'collegeSeason', tf, ['lbCollegeSeasonList', 'lbCollegeSeasonLoading', 'lbCollegeSeasonEmpty']);
+      _lbRenderScoreSection(all, uid, 'collegeWeek', tf, ['lbCollegeWeekList', 'lbCollegeWeekLoading', 'lbCollegeWeekEmpty']);
+      // Badge #1 detection below is all-time, whatever filter is showing.
+      const fgPlayers = _lbScoreBoard(all, 'fantasygame', 'alltime');
+      const fgWeekPlayers = _lbScoreBoard(all, 'fantasygameWeek', 'alltime');
 
       // --- DAILY STREAK DATA (rendering moved to Daily tab, kept for badge detection) ---
       const dailyPlayers2 = all.filter(u => u.daily && (u.daily.bestStreak > 0 || u.daily.streak > 0))
@@ -44115,7 +44089,7 @@ window.fmtHeight = fmtHeight;
     const db = getDb();
     if (!db) {
       document.querySelectorAll('#lbPanelDaily .lb-loading').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('#lbPanelDaily .lb-empty').forEach(el => { el.style.display = 'block'; el.textContent = 'Sign in to see leaderboards'; });
+      document.querySelectorAll('#lbPanelDaily .lb-empty').forEach(el => { el.style.display = 'block'; el.textContent = "Leaderboards couldn't load — check your connection"; });
       return;
     }
     const uid = getUser() ? getUser().uid : null;
@@ -44239,6 +44213,11 @@ window.fmtHeight = fmtHeight;
       tab.classList.add('active');
       const target = document.getElementById('games' + tab.dataset.gamesTab.charAt(0).toUpperCase() + tab.dataset.gamesTab.slice(1));
       if (target) target.classList.add('active');
+      // Opening LEADERBOARD shows fresh scores (it used to load once at startup).
+      if (tab.dataset.gamesTab === 'leaderboard' && Date.now() - _lbLastLoad > 15000) {
+        loadLeaderboards();
+        if (lbActiveTab === 'daily') loadDailyLeaderboards();
+      }
     });
   });
   // Daily Challenge sub-tab switching (CURRENT / 2000s / 2010s / PHOTO).
@@ -44254,8 +44233,16 @@ window.fmtHeight = fmtHeight;
       if (pane) pane.classList.add('active');
     });
   });
-  // Initial load after a delay for Firebase to init
-  setTimeout(loadLeaderboards, 2500);
+  // Initial load once Firebase is up (a fixed 2.5s timer could beat it and show
+  // an error), and again whenever auth resolves or changes so the signed-in
+  // player's own rank row appears.
+  window._whenFirebaseReady(function() {
+    let _lbAuthSeen = false;
+    try {
+      firebase.auth().onAuthStateChanged(function() { _lbAuthSeen = true; loadLeaderboards(); });
+    } catch (e) { /* offline / auth unavailable: load anonymously below */ }
+    setTimeout(function() { if (!_lbAuthSeen) loadLeaderboards(); }, 4000);
+  });
 })();
 
 // === MIDNIGHT EASTERN AUTO-REFRESH ===

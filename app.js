@@ -15469,6 +15469,10 @@ function _triviaFixItemTeams(items) {
   if (!items) return;
   items.forEach(item => {
     if (!item.answer) return;
+    // Career answers carry a year range ("John Riggins (1976–1984)"): the
+    // generator already picked the team where most of the stat came from,
+    // and the first year's team would undo it (Riggins → NYJ, Faulk → IND).
+    if (item.team && /\b(?:19|20)\d{2}\s*[–-]\s*(?:19|20)\d{2}\b/.test(item.answer)) return;
     const nameMatch = item.answer.match(/^(.+?)\s*[\(\,]/);
     const yearMatch = item.answer.match(/\b((?:19|20)\d{2})\b/);
     const pName = nameMatch ? nameMatch[1].trim() : item.answer.trim();
@@ -24826,6 +24830,93 @@ document.addEventListener('mff:epretired', _epAppendRetiredToD);
 window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.n.includes('D/ST'))
   .map(d => ({ n: d.n, s: d.s, t: d.t, img: d._slImg }));
 
+// === Daily answer pick (Elite Pull + Guess Who dailies, from 2026-10-29 ET) ===
+// The old pick was pool[hash(date) % pool.length]: the answer moved whenever the
+// live pool changed size or order (daily data refreshes, the lazy retired-stats
+// merge), and the hash only ever landed on multiples of 8 (a float overflow).
+// This is rendezvous hashing: the answer is the player whose hash(mode, date,
+// name) is lowest, so it ignores pool order and only changes if that player
+// leaves the pool or a newly added player happens to hash lower. Winners of
+// the previous `avoidDays` days are skipped so answers don't repeat soon.
+window._MFF_DAILY_CUTOVER = 20261029; // ET yyyymmdd; earlier dates keep the legacy pick
+window._mffDailyHash = function(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return h >>> 0;
+};
+// ymd = [year, month (1-12), day] of the ET date being played.
+window._mffDailyPick = function(pool, mode, ymd, avoidDays) {
+  if (!pool || !pool.length) return null;
+  const dayStr = off => new Date(Date.UTC(ymd[0], ymd[1] - 1, ymd[2] - off)).toISOString().slice(0, 10);
+  const best = (ds, skip) => {
+    let win = null, winH = Infinity;
+    for (const p of pool) {
+      if (!p || !p.name || (skip && skip.has(p.name))) continue;
+      const h = window._mffDailyHash(mode + '|' + ds + '|' + p.name);
+      if (h < winH) { winH = h; win = p; }
+    }
+    return win;
+  };
+  const recent = new Set();
+  const n = Math.min(avoidDays == null ? 45 : avoidDays, Math.floor(pool.length / 2));
+  for (let off = 1; off <= n; off++) { const w = best(dayStr(off)); if (w) recent.add(w.name); }
+  return best(dayStr(0), recent) || best(dayStr(0));
+};
+// Guess matching for the Elite Pull games: ignores case, accents, spaces and
+// punctuation ("aj brown" = "A.J. Brown", a curly apostrophe in "Ja’Marr"), and
+// Enter on a partial name ("Puka") counts when exactly one player matches.
+window._mffGuessNorm = function(s) {
+  if (!s) return '';
+  try { s = String(s).normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) { s = String(s); }
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+window._mffGuessMatches = function(pool, val, guessed, limit) {
+  const q = window._mffGuessNorm(val);
+  if (!q) return [];
+  const used = new Set((guessed || []).map(window._mffGuessNorm));
+  const out = [];
+  for (const p of pool || []) {
+    const n = window._mffGuessNorm(p.name);
+    if (n.includes(q) && !used.has(n)) { out.push(p); if (limit && out.length >= limit) break; }
+  }
+  return out;
+};
+window._mffFindGuess = function(pool, val, guessed) {
+  const q = window._mffGuessNorm(val);
+  if (!q) return null;
+  const exact = (pool || []).find(p => window._mffGuessNorm(p.name) === q);
+  if (exact) return exact;
+  const m = window._mffGuessMatches(pool, val, guessed, 2);
+  return m.length === 1 ? m[0] : null;
+};
+// Brief red flash on a guess box when the input matches no single player.
+window._mffGuessMiss = function(input) {
+  if (!input) return;
+  input.style.borderColor = 'var(--red)';
+  setTimeout(() => { input.style.borderColor = ''; }, 600);
+};
+
+// Today's Elite Pull daily target for a mode's pool. One function for the game
+// itself and the cloud-sync "is this today's game?" checks, so they agree.
+// seedOffset doubles as the mode key (each daily already has a unique one).
+window._mffEliteDailyTarget = function(pool, seedOffset) {
+  if (!pool || !pool.length) return null;
+  const t = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const ymd = [t.getFullYear(), t.getMonth() + 1, t.getDate()];
+  const seed = ymd[0] * 10000 + ymd[1] * 100 + ymd[2];
+  if (seed >= window._MFF_DAILY_CUTOVER) {
+    // Answers come from recognizable players only (best season >= 150, the
+    // 150+ variants' bar); the full pool stays guessable.
+    const curated = pool.filter(p => p.bestSzn != null && p.bestSzn >= 150);
+    if (curated.length >= 30) {
+      const w = window._mffDailyPick(curated, 'ep' + (seedOffset || 0), ymd);
+      if (w) return w;
+    }
+  }
+  return pool[Math.abs((seed + (seedOffset || 0)) * 2654435761 >>> 0) % pool.length];
+};
+
 //#chunk games
 // === GUESS WHO — Daily Player Guessing Game (picture + type name) ===
 // NOTE: HTML IDs use ep* prefix and localStorage uses ep_* / ep_v3_* keys — legacy from pre-swap naming.
@@ -24926,6 +25017,9 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
     "4917427","5077060","5081508","5081999","5082269","5083315","5084180","5085189","5088338",
     "5089535","5091739","5092508","5150247","5151317","5156933","5159802","5220680"
   ]);
+  // The daily pick must not depend on this browser's own failed loads (the
+  // localStorage union below), or visitors get different players.
+  const _EP_STATIC_BAD_IDS = new Set(window.BAD_IMAGE_IDS);
   // Union in any runtime-flagged bad IDs from prior sessions (localStorage).
   try {
     const extra = JSON.parse(localStorage.getItem('ep_bad_imgs') || '[]');
@@ -24964,8 +25058,48 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
 
   // Deterministic daily pick — golden-ratio hash spreads consecutive days far apart
   function _epHash(n) { return Math.abs((n * 2654435761) >>> 0); }
+
+  // Recognizable faces only (2026-10-29+): best fantasy season >= 150 pts,
+  // from D[].career or the retired-player careers. The old pool was every
+  // active player with a headshot, so practice-squad backups came up.
+  function _epBestSeason(name) {
+    let best = 0;
+    const d = (typeof D !== 'undefined') ? D.find(p => p.n === name) : null;
+    if (d && d.career) d.career.forEach(s => { if ((s.fpts || 0) > best) best = s.fpts; });
+    if (typeof EP_RETIRED !== 'undefined') {
+      const r = EP_RETIRED.find(p => p.name === name);
+      if (r && r.career) r.career.forEach(s => { if ((s.fpts || 0) > best) best = s.fpts; });
+    }
+    return best;
+  }
+  let _epDailyCandidates = null;
+  function _epDailyPool() {
+    if (_epDailyCandidates) return _epDailyCandidates;
+    const seen = new Set(), out = [];
+    const add = (name, pos, team, id) => {
+      if (!name || !id || seen.has(name) || _EP_STATIC_BAD_IDS.has(String(id))) return;
+      seen.add(name);
+      out.push({ name, pos, team, id: String(id) });
+    };
+    DAILY_RETIRED_POOL.forEach(p => add(p.name, p.pos, p.team, p.id));
+    (window._GW_ACTIVE_SNAPSHOT || []).forEach(d => {
+      const m = d.img && d.img.match(/full\/(\d+)\.png/);
+      if (m) add(d.n, d.s, d.t || 'NFL', m[1]);
+    });
+    _epDailyCandidates = out.filter(p => _epBestSeason(p.name) >= 150);
+    return _epDailyCandidates;
+  }
+  function _epNewDaily() {
+    const t = getEasternDate();
+    return t.getFullYear() * 10000 + (t.getMonth() + 1) * 100 + t.getDate() >= window._MFF_DAILY_CUTOVER;
+  }
+
     function getDailyPlayer() {
     const today = getEasternDate();
+    if (_epNewDaily()) {
+      const pick = window._mffDailyPick(_epDailyPool(), 'photo', [today.getFullYear(), today.getMonth() + 1, today.getDate()]);
+      if (pick) return pick;
+    }
     const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
     return DAILY_COMBINED_POOL[_epHash(seed) % DAILY_COMBINED_POOL.length];
   }
@@ -25102,6 +25236,13 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
   }
 
   function renderStreak() {
+    // A streak is only alive if the last win was today or yesterday — the
+    // stored counter isn't reset until the next play after a missed day.
+    const _t = getEasternDate();
+    const _y = new Date(_t); _y.setDate(_y.getDate() - 1);
+    const _alive = lastWinDate === `${_t.getFullYear()}-${_t.getMonth()+1}-${_t.getDate()}`
+      || lastWinDate === `${_y.getFullYear()}-${_y.getMonth()+1}-${_y.getDate()}`;
+    if (!_alive) streak = 0;
     if (streak > 0) {
       const _bestSuffix = (longestStreak > streak) ? ` <span style="opacity:.6;font-weight:400">· best ${longestStreak}</span>` : '';
       epStreak.innerHTML = `🔥 ${streak} DAY STREAK${_bestSuffix}`;
@@ -25162,7 +25303,7 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
       ? '✅ Got it in ' + guesses.length + '/' + MAX_GUESSES
       : '❌ Missed (' + guesses.length + '/' + MAX_GUESSES + ')';
     const streakLine = streak > 0 ? '\n🔥 ' + streak + '-day streak' + (longestStreak > streak ? ' (best ' + longestStreak + ')' : '') : '';
-    const text = 'Daily Elite Pull · ' + dateStr + '\n' + resultLine + '\n' + squares + blanks + streakLine + '\nhttps://myfantasyfootball.co';
+    const text = 'Daily Guess Who · ' + dateStr + '\n' + resultLine + '\n' + squares + blanks + streakLine + '\nhttps://myfantasyfootball.co';
     const ok = (m) => { if (typeof toast === 'function') toast(m); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => ok('Result copied — paste it anywhere')).catch(() => { window.prompt('Copy your result:', text); });
@@ -25177,7 +25318,9 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
 
     // Check if it matches a real player name from our database (forgiving of punctuation/accents/spacing)
     const _normVal = window._normalizeGuessWhoName(val);
-    const matched = allNames.find(p => window._normalizeGuessWhoName(p.name) === _normVal);
+    // Exact name, or a partial that matches exactly one player (Enter on "Puka").
+    const matched = allNames.find(p => window._normalizeGuessWhoName(p.name) === _normVal)
+      || window._mffFindGuess(allNames, val, guesses);
     if (!matched) {
       // Flash the input red briefly
       epInput.style.borderColor = 'var(--red)';
@@ -25321,8 +25464,20 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
     }
     _epTryLoadImage._attemptSeq = 0;
 
+    const _epTried = new Set();
     function _epSkipToNext() {
       _epSkipAttempts++;
+      if (_epNewDaily()) {
+        // Same rendezvous order for everyone: the next-lowest hash among the
+        // recognizable pool, skipping players whose image failed here.
+        _epTried.add(todayPlayer.name);
+        const t = getEasternDate();
+        const pool = _epDailyPool().filter(p => !_epTried.has(p.name));
+        const next = window._mffDailyPick(pool, 'photo', [t.getFullYear(), t.getMonth() + 1, t.getDate()], 0);
+        if (next) { todayPlayer = next; _epTryLoadImage(); }
+        else epPlaceholder.textContent = 'No player image available';
+        return;
+      }
       if (_epSkipAttempts < DAILY_COMBINED_POOL.length) {
         const today = getEasternDate();
         const baseSeed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
@@ -25354,7 +25509,23 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
     }
   }
 
-  initElitePull();
+  // The recognizable pool needs the retired careers (ep_retired.js loads after
+  // first paint). Pick once they're in so every visitor sees the same player;
+  // fall back after 8s rather than leaving the card on "Loading…".
+  if (_epNewDaily() && typeof EP_RETIRED === 'undefined') {
+    let _epStarted = false;
+    const _epStart = () => {
+      if (_epStarted) return;
+      _epStarted = true;
+      _epDailyCandidates = null;
+      todayPlayer = getDailyPlayer();
+      initElitePull();
+    };
+    document.addEventListener('mff:epretired', () => setTimeout(_epStart, 0), { once: true });
+    setTimeout(_epStart, 8000);
+  } else {
+    initElitePull();
+  }
 })();
 
 // === UNLIMITED GUESS WHO — Trivia Tab (picture + type name) ===
@@ -25746,6 +25917,10 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
   // Helper: look up WEEKLY_STATS with name normalization
   // Handles mismatches like "AJ Brown" vs "A.J. Brown", "TJ Hockenson" vs "T.J. Hockenson", etc.
   const _gwWsCache = {};
+  // Regular-season weeks only: a few retired records carry playoff weeks
+  // (wk 18-21), which inflated "best season" for deep playoff runs.
+  function gwIsRegWeek(szn, w) { return (w.wk || 0) <= (parseInt(szn) >= 2021 ? 18 : 17); }
+
   function gwLookupWeekly(name) {
     if (typeof WEEKLY_STATS === 'undefined') return null;
     if (WEEKLY_STATS[name]) return WEEKLY_STATS[name];
@@ -25888,15 +26063,23 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
       if (_ws1) {
         for (const [szn, weeks] of Object.entries(_ws1.seasons)) {
           for (const w of weeks) {
-            if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+            if (gwIsRegWeek(szn, w) && w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
           }
         }
       }
       // Fallback: if career data is stubby (only current partial season), aggregate weekly stats by season
       // and use that as bestSzn if it beats the career-derived value. This fixes players whose career[]
       // only contains a 4-game stub while weekly_stats has their full multi-year history.
+      // Only seasons the career line is missing or has as a stub (fewer games than
+      // the weekly log): where both cover a full season the career total is the
+      // trusted one (name-collision merges in the weekly data inflated sums).
       if (_ws1 && _ws1.seasons) {
-        for (const [szn, weeks] of Object.entries(_ws1.seasons)) {
+        const _careerGp = {};
+        career.forEach(s => { if (s.yr) _careerGp[s.yr] = s.gp || 0; });
+        for (const [szn, allWeeks] of Object.entries(_ws1.seasons)) {
+          const weeks = allWeeks.filter(w => gwIsRegWeek(szn, w));
+          const _yr = parseInt(szn);
+          if (_careerGp[_yr] != null && weeks.length <= _careerGp[_yr] + 1) continue;
           const seasonTotal = weeks.reduce((a, w) => a + (w.fpts || 0), 0);
           if (seasonTotal > 0 && (!bestSznFpts || seasonTotal > bestSznFpts)) {
             bestSznFpts = seasonTotal;
@@ -26023,7 +26206,7 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
         if (_ws2) {
           for (const [szn, weeks] of Object.entries(_ws2.seasons)) {
             for (const w of weeks) {
-              if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+              if (gwIsRegWeek(szn, w) && w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
             }
           }
         }
@@ -26083,7 +26266,7 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
         if (_ws3) {
           for (const [szn, weeks] of Object.entries(_ws3.seasons)) {
             for (const w of weeks) {
-              if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+              if (gwIsRegWeek(szn, w) && w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
             }
           }
         }
@@ -26119,10 +26302,31 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
       if (mSr && _byName[mSr[1]]) { _toDelete.add(p.name); continue; }
       const mJr = p.name.match(/^(.+?)\s+(Jr\.?|II|III|IV|V)$/i);
       if (mJr) {
+        // Same position + best-season year = same player under two spellings
+        // ("Mark Ingram" / "Mark Ingram II"). Team and total aren't compared: the
+        // sources disagree on both for the same player; a father/son pair never
+        // shares a best-season year.
         const c = _byName[mJr[1]];
-        if (c && c.bestSzn === p.bestSzn && c.bestSznYear === p.bestSznYear && c.team === p.team) {
+        if (c && c.pos === p.pos && c.bestSznYear != null && c.bestSznYear === p.bestSznYear) {
           _toDelete.add(p.name);
         }
+      }
+    }
+    // (4) Short/long first names for one player ("Ben Watson" / "Benjamin
+    //     Watson"): same last name, position and best-season year, one first
+    //     name a prefix of the other — keep the full first name.
+    const _byLast = {};
+    allPool.forEach(p => {
+      const parts = p.name.split(' ');
+      if (parts.length < 2 || p.bestSznYear == null) return;
+      const k = parts.slice(1).join(' ').toLowerCase() + '|' + p.pos + '|' + p.bestSznYear;
+      (_byLast[k] = _byLast[k] || []).push(p);
+    });
+    for (const grp of Object.values(_byLast)) {
+      if (grp.length < 2) continue;
+      for (const a of grp) for (const b of grp) {
+        const fa = a.name.split(' ')[0].toLowerCase(), fb = b.name.split(' ')[0].toLowerCase();
+        if (fa.length < fb.length && fa.length >= 3 && fb.startsWith(fa)) _toDelete.add(a.name);
       }
     }
     const _byNoDots = {};
@@ -26560,11 +26764,11 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
     if (!val) return;
 
     initGwPool();
-    const matched = getGwPool().find(p => p.name.toLowerCase() === val.toLowerCase());
-    if (!matched) return;
+    const matched = window._mffFindGuess(getGwPool(), val, gwGuesses);
+    if (!matched) { window._mffGuessMiss(gwInput); return; }
 
     // Don't allow duplicate guesses
-    if (gwGuesses.some(g => g.toLowerCase() === matched.name.toLowerCase())) return;
+    if (gwGuesses.some(g => g.toLowerCase() === matched.name.toLowerCase())) { window._mffGuessMiss(gwInput); return; }
 
     gwGuesses.push(matched.name);
     gwInput.value = '';
@@ -26649,12 +26853,10 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
   gwInput.addEventListener('input', () => {
     initGwPool();
     const pool = getGwPool();
-    const val = gwInput.value.trim().toLowerCase();
+    const val = gwInput.value.trim();
     // Pool can be null while lazy-loaded data (college) is still fetching.
     if (!pool || val.length < 2) { gwSuggestions.classList.remove('show'); return; }
-    const matches = pool.filter(p =>
-      p.name.toLowerCase().includes(val) && !gwGuesses.some(g => g.toLowerCase() === p.name.toLowerCase())
-    ).slice(0, 8);
+    const matches = window._mffGuessMatches(pool, val, gwGuesses, 8);
     if (!matches.length) { gwSuggestions.classList.remove('show'); return; }
     gwSuggestions.innerHTML = matches.map(p =>
       `<div class="ep-sug-item" data-name="${p.name}"><span class="ep-sug-pos ${p.pos}">${p.pos}</span> ${p.name} <span class="ep-sug-team">${gwMode === 'college' ? (p.team || '') : gwModernTeamAbbr(p.team)}</span></div>`
@@ -26795,10 +26997,10 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
   // Custom mode: player search autocomplete
   gwCustomInput.addEventListener('input', () => {
     initGwPool();
-    const val = gwCustomInput.value.trim().toLowerCase();
+    const val = gwCustomInput.value.trim();
     if (val.length < 2) { gwCustomSuggestions.classList.remove('show'); return; }
     const pool = getGwPool();
-    const matches = pool.filter(p => p.name.toLowerCase().includes(val)).slice(0, 8);
+    const matches = window._mffGuessMatches(pool, val, [], 8);
     if (!matches.length) { gwCustomSuggestions.classList.remove('show'); return; }
     gwCustomSuggestions.innerHTML = matches.map(p =>
       '<div class="ep-sug-item" data-name="' + p.name + '"><span class="ep-sug-pos ' + p.pos + '">' + p.pos + '</span> ' + p.name + ' <span class="ep-sug-team">' + gwModernTeamAbbr(p.team) + '</span></div>'
@@ -27001,12 +27203,6 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
   function getDailyDateStr() {
     const d = getEasternDate();
     return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-  }
-
-  function pickDailyTarget(pool, offset) {
-    const d = getEasternDate();
-    const seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate() + (offset || 0);
-    return pool[Math.abs(seed * 2654435761 >>> 0) % pool.length]; // Better hash spread
   }
 
   // Generic daily GW game factory
@@ -27226,9 +27422,9 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
       const val = input.value.trim();
       if (!val) return;
       const pool = getPool();
-      const matched = pool.find(p => p.name.toLowerCase() === val.toLowerCase());
-      if (!matched) return;
-      if (guesses.some(g => g.toLowerCase() === matched.name.toLowerCase())) return;
+      const matched = window._mffFindGuess(pool, val, guesses);
+      if (!matched) { window._mffGuessMiss(input); return; }
+      if (guesses.some(g => g.toLowerCase() === matched.name.toLowerCase())) { window._mffGuessMiss(input); return; }
       guesses.push(matched.name);
       input.value = '';
       suggestions.classList.remove('show');
@@ -27243,7 +27439,7 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
     function init() {
       const pool = getPool();
       if (!pool || !pool.length) return;
-      target = pickDailyTarget(pool, config.seedOffset || 0);
+      target = window._mffEliteDailyTarget(pool, config.seedOffset || 0);
       loadState();
 
       // ALWAYS reset UI first — prevents stale completed state from prior day
@@ -27305,12 +27501,12 @@ window._GW_ACTIVE_SNAPSHOT = D.filter(d => !d._retired && d._slImg && d.n && !d.
     // Autocomplete
     input.addEventListener('input', () => {
       const pool = getPool();
-      const val = input.value.trim().toLowerCase();
+      const val = input.value.trim();
       if (val.length < 2) { suggestions.classList.remove('show'); return; }
-      const matches = pool.filter(p => p.name.toLowerCase().includes(val) && !guesses.some(g => g.toLowerCase() === p.name.toLowerCase())).slice(0, 8);
+      const matches = window._mffGuessMatches(pool, val, guesses, 8);
       if (!matches.length) { suggestions.classList.remove('show'); return; }
       function a(t) { return (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) ? TEAM_ABBR_MAP[t] : t; }
-      suggestions.innerHTML = matches.map(p => '<div class="ep-sug-item" data-name="' + p.name + '"><span class="ep-sug-pos ' + p.pos + '">' + p.pos + '</span> ' + p.name + ' <span class="ep-sug-team">' + (config.modeLabel === 'College' ? (p.team || '') : a(p.team)) + '</span></div>').join('');
+      suggestions.innerHTML = matches.map(p => '<div class="ep-sug-item" data-name="' + p.name.replace(/"/g, '&quot;') + '"><span class="ep-sug-pos ' + p.pos + '">' + p.pos + '</span> ' + p.name + ' <span class="ep-sug-team">' + (config.modeLabel === 'College' ? (p.team || '') : a(p.team)) + '</span></div>').join('');
       suggestions.classList.add('show');
       suggestions.querySelectorAll('.ep-sug-item').forEach(el => {
         el.addEventListener('click', () => { input.value = el.dataset.name; suggestions.classList.remove('show'); submitGuess(); });
@@ -35148,9 +35344,7 @@ window.fmtHeight = fmtHeight;
         if (!state.targetName) return true;
         const pool = (typeof poolGetter === 'function') ? poolGetter() : null;
         if (!pool || !pool.length) return false; // can't verify, don't sync
-        const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-        const seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate() + (seedOffset || 0);
-        const todayTarget = pool[Math.abs(seed * 2654435761 >>> 0) % pool.length];
+        const todayTarget = window._mffEliteDailyTarget(pool, seedOffset);
         return todayTarget && state.targetName === todayTarget.name;
       } catch(e) { return false; }
     }
@@ -35246,9 +35440,7 @@ window.fmtHeight = fmtHeight;
               if (!state.targetName) return true; // no target to verify
               const pool = (typeof poolGetter === 'function') ? poolGetter() : null;
               if (!pool || !pool.length) return false; // can't verify without pool — skip
-              const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-              const seed = d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate() + (seedOffset || 0);
-              const todayTarget = pool[Math.abs(seed * 2654435761 >>> 0) % pool.length];
+              const todayTarget = window._mffEliteDailyTarget(pool, seedOffset);
               return todayTarget && state.targetName === todayTarget.name;
             } catch(e) { return false; }
           }
@@ -56682,19 +56874,22 @@ window.fmtHeight = fmtHeight;
   // ===== Quick-start Templates =====
   // Each template = a preset of board-filter values. Clicking a card fills the
   // filter dropdowns + position checkboxes, then triggers generation.
+  // Last completed NFL season (it ends in February), so the "last season"
+  // templates roll forward on their own instead of going stale.
+  const _TRIVIA_LAST_SEASON = (() => { const d = new Date(); return d.getMonth() >= 2 ? d.getFullYear() - 1 : d.getFullYear() - 2; })();
   const _TRIVIA_TEMPLATES = [
     { title: 'All-Time Receiving Yds', desc: 'Top 20 careers · WR/TE',
       filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
-    { title: '2024 Rushing TDs', desc: 'Top 20 last season · RB',
-      filters: { type: 'season', stat: 'rtd', year: '2024', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: _TRIVIA_LAST_SEASON + ' Rushing TDs', desc: 'Top 20 last season · RB',
+      filters: { type: 'season', stat: 'rtd', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
     { title: 'All-Time Passing TDs', desc: 'QB career leaders',
       filters: { type: 'career', stat: 'ptd', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB'] } },
     { title: 'Best Single-Game Fpts', desc: 'Highest one-game scores · all pos',
       filters: { type: 'game', stat: 'fpts', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
-    { title: '2025 Fantasy PPG Leaders', desc: 'Top 20 by PPG last year',
-      filters: { type: 'season', stat: 'ppg', year: '2025', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
-    { title: '2024 First-Round Picks', desc: 'Round 1 · skill positions',
-      filters: { type: 'draft', stat: 'fpts', year: '2024', count: 20, conf: 'all', team: 'all', draftRound: '1', positions: ['QB','RB','WR','TE'] } },
+    { title: _TRIVIA_LAST_SEASON + ' Fantasy PPG Leaders', desc: 'Top 20 by PPG last year',
+      filters: { type: 'season', stat: 'ppg', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
+    { title: _TRIVIA_LAST_SEASON + ' First-Round Picks', desc: 'Round 1 · skill positions',
+      filters: { type: 'draft', stat: 'fpts', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', draftRound: '1', positions: ['QB','RB','WR','TE'] } },
     // Postseason templates — read each season's nested 'post' field.
     { title: 'Career Playoff Pass Yds', desc: 'Top 20 all-time postseason · QB',
       filters: { type: 'career', stat: 'py', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB'], seasonType: 'post' } },
@@ -56803,16 +56998,16 @@ window.fmtHeight = fmtHeight;
   const _TRIVIA_DAILY_POOL = [
     { title: 'All-Time Receiving Yds', desc: 'Top 20 careers · WR/TE',
       filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
-    { title: '2024 Rushing TDs', desc: 'Top 20 last season · RB',
-      filters: { type: 'season', stat: 'rtd', year: '2024', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
+    { title: _TRIVIA_LAST_SEASON + ' Rushing TDs', desc: 'Top 20 last season · RB',
+      filters: { type: 'season', stat: 'rtd', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
     { title: 'All-Time Passing TDs', desc: 'QB career leaders',
       filters: { type: 'career', stat: 'ptd', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB'] } },
     { title: 'Best Single-Game Fpts', desc: 'Highest one-game scores',
       filters: { type: 'game', stat: 'fpts', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
-    { title: '2025 Fantasy PPG Leaders', desc: 'Top 20 by PPG last year',
-      filters: { type: 'season', stat: 'ppg', year: '2025', count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
-    { title: '2024 First-Round Picks', desc: 'Round 1 · skill positions',
-      filters: { type: 'draft', stat: 'fpts', year: '2024', count: 20, conf: 'all', team: 'all', draftRound: '1', positions: ['QB','RB','WR','TE'] } },
+    { title: _TRIVIA_LAST_SEASON + ' Fantasy PPG Leaders', desc: 'Top 20 by PPG last year',
+      filters: { type: 'season', stat: 'ppg', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', positions: ['QB','RB','WR','TE'] } },
+    { title: _TRIVIA_LAST_SEASON + ' First-Round Picks', desc: 'Round 1 · skill positions',
+      filters: { type: 'draft', stat: 'fpts', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', draftRound: '1', positions: ['QB','RB','WR','TE'] } },
     { title: 'All-Time Rushing Yds', desc: 'RB career leaders',
       filters: { type: 'career', stat: 'ry', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
     { title: '2025 Receiving TDs', desc: 'Top 20 last season · WR/TE',
@@ -56855,15 +57050,16 @@ window.fmtHeight = fmtHeight;
 
   const _TRIVIA_DAILY_KEY = 'mff_triviaDaily';
 
-  // Returns YYYY-MM-DD in local time. We use local time so "today" matches
-  // the user's clock, not UTC — this is fine because the seed is derived
-  // from the date string itself, not a UTC timestamp.
+  // Returns YYYY-MM-DD in US Eastern time — the same day boundary as the
+  // Games dailies, so every visitor (and the admin's LOCK) shares one date.
+  // Local time used to hand visitors in other timezones a different board.
   function _triviaTodayStr() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + day;
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    } catch (_) {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
   }
 
   // Stable string hash → unsigned int. Same dateStr always produces same
@@ -56933,13 +57129,14 @@ window.fmtHeight = fmtHeight;
     return y + '-' + m + '-' + day;
   }
 
-  // Days since the Unix epoch in local time. Used as the cycle counter so
-  // a "12-day cycle" advances by exactly 1 each day regardless of year
-  // boundaries. dayOfYear had a wrap-around bug at year-end (Dec 31 →
-  // Jan 1 reset the cycle index) which this avoids.
+  // Days since the Unix epoch for a YYYY-MM-DD date. Used as the cycle
+  // counter so a "12-day cycle" advances by exactly 1 each day regardless of
+  // year boundaries. Computed in UTC so the same date maps to the same day
+  // number in every timezone (local midnight shifted it a day east of UTC;
+  // US visitors get the same number they always did).
   function _triviaDayNumber(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
-    return Math.floor(d.getTime() / 86400000);
+    const p = String(dateStr).split('-').map(Number);
+    return Math.floor(Date.UTC(p[0], p[1] - 1, p[2]) / 86400000);
   }
 
   // Mulberry32 PRNG — small, fast, decent distribution. Seeded by the
@@ -57801,10 +57998,8 @@ window.fmtHeight = fmtHeight;
     // Default the date input to tomorrow when first showing for admins,
     // so the most common QA flow (preview tomorrow) is one click away.
     if (isAdm && dateInput && !dateInput.value) {
-      const t = new Date();
-      t.setDate(t.getDate() + 1);
-      const y = t.getFullYear(), m = String(t.getMonth()+1).padStart(2,'0'), d = String(t.getDate()).padStart(2,'0');
-      dateInput.value = y + '-' + m + '-' + d;
+      const p = _triviaTodayStr().split('-').map(Number);
+      dateInput.value = new Date(Date.UTC(p[0], p[1] - 1, p[2] + 1)).toISOString().slice(0, 10);
     }
   }
 

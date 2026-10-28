@@ -451,7 +451,10 @@ button,input,select,textarea{font-family:inherit}
 .gw-tooltip{display:none;position:fixed;width:270px;max-height:70vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:.72rem;font-weight:400;color:var(--text);line-height:1.6;z-index:9999;box-shadow:0 12px 40px rgba(0,0,0,.7);text-align:left;letter-spacing:0;font-family:'DM Sans',sans-serif}
 
 /* Trivia page */
-.page-games{align-items:center;justify-content:center;padding:2rem}
+/* Vertical centering must be "safe": a tab taller than the page (Fantasy Game)
+   otherwise overflows above the scroll origin and the games tab bar is lost.
+   flex-start is the fallback for browsers without the safe keyword. */
+.page-games{align-items:center;justify-content:flex-start;justify-content:safe center;padding:2rem}
 .trivia-container{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;max-width:600px;width:100%}
 .trivia-header{text-align:center;margin-bottom:1.5rem}
 .trivia-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;color:var(--accent)}

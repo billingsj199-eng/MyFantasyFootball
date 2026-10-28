@@ -694,12 +694,19 @@ def xcheck(n=50, seed=7, years=YEARS, min_fpts=40.0):
              (('py', 'py'), ('ptd', 'ptd'), ('int', 'int'), ('ry', 'ry'), ('rtd', 'rtd'), ('rc', 'rec'), ('rcy', 'rcy'), ('rctd', 'rctd'), ('fl', 'fl'))}
         mine = fpts_totals_basis(s)
         diff = round(mine - t['fpts'], 1)
-        flag = 'MISMATCH' if abs(diff) > 2.0 else 'ok'
-        if flag != 'ok':
+        # Known, explainable gaps: box scores of the era carry no fumbles-lost column (season
+        # totals do), and the LEGEND_CAREERS QB rows carry no rushing line. Everything else is real.
+        explained = round((t.get('fl', 0) - s['fl']) * 2.0
+                          + (s['ry'] - t.get('ry', 0)) * 0.1 + (s['rtd'] - t.get('rtd', 0)) * 6, 1)
+        resid = round(diff - explained, 1)
+        flag = 'MISMATCH' if abs(resid) > 2.0 else ('ok*' if abs(diff) > 2.0 else 'ok')
+        if flag == 'MISMATCH':
             bad.append((pid, y, diff))
         log(f'  {flag:8} {players[pid]["n"]:24} {y} games {len(reg):2} (totals gp {t.get("gp", "?")}): weekly-sum {mine:6.1f} vs totals {t["fpts"]:6.1f} diff {diff:+.1f}'
             f'  [py {s["py"]}/{t.get("py", 0)} ry {s["ry"]}/{t.get("ry", 0)} rcy {s["rcy"]}/{t.get("rcy", 0)} fl {s["fl"]}/{t.get("fl", 0)}]')
-    log(f'xcheck: {len(bad)} of {len(sample)} differ by more than 2 fpts')
+    log(f'xcheck: {len(bad)} of {len(sample)} differ by more than 2 fpts after the known gaps '
+        f'(fumbles-lost column absent in the box scores, QB rushing absent in legend_careers); '
+        f'"ok*" = differs only by those gaps')
     return bad
 
 

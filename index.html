@@ -6490,9 +6490,17 @@ function _mergeWeeklyStatsLegacy() {
     var cur = WEEKLY_STATS[name];
     if (cur && cur._pfr && cur._pfr !== ids[0]) { skipped++; continue; }
     if (cur && !cur._pfr) {
-      var curMin = Math.min.apply(null, Object.keys(cur.seasons).map(Number));
-      var legMax = Math.max.apply(null, yrs(rec));
-      if (!(legMax >= curMin - 1)) { skipped++; continue; }
+      // Same player as the 1999+ record? The legend career line decides when it spans both
+      // sides (Marino 1983-1999); otherwise the years must be contiguous. A QB on one side
+      // and a RB/WR/TE on the other is always a different player.
+      var curYrs = Object.keys(cur.seasons).map(Number);
+      var legYrs = yrs(rec);
+      var lc = (legends[name] || []).map(function(s) { return s.yr; });
+      var spans = function(a) { return a.some(function(y) { return lc.indexOf(y) >= 0; }); };
+      var same = lc.length ? (spans(curYrs) && spans(legYrs))
+        : (Math.max.apply(null, legYrs) >= Math.min.apply(null, curYrs) - 1);
+      if (!same) { skipped++; continue; }
+      if (cur.pos && rec.pos && ((cur.pos === 'QB') !== (rec.pos === 'QB'))) { skipped++; continue; }
     }
     if (!cur) cur = WEEKLY_STATS[name] = { pos: rec.pos, seasons: {} };
     cur._pfr = ids[0];

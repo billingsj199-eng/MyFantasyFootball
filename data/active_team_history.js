@@ -63,7 +63,6 @@ const ACTIVE_TEAM_HISTORY = {
     'Cam Skattebo': [{t:'New York Giants',y1:2025,y2:2099}],
     'Cam Ward': [{t:'Tennessee Titans',y1:2025,y2:2099}],
     'Carnell Tate': [{t:'Tennessee Titans',y1:2026,y2:2099}],
-    'Carsen Ryan': [{t:'Cleveland Browns',y1:2026,y2:2099}],
     'Carson Beck': [{t:'Arizona Cardinals',y1:2026,y2:2099}],
     'Carson Wentz': [{t:'Philadelphia Eagles',y1:2016,y2:2020},{t:'Indianapolis Colts',y1:2021,y2:2021},{t:'Washington Commanders',y1:2022,y2:2022},{t:'Los Angeles Rams',y1:2023,y2:2023},{t:'Kansas City Chiefs',y1:2024,y2:2024},{t:'Minnesota Vikings',y1:2025,y2:2099}],
     'Case Keenum': [{t:'Chicago Bears',y1:2026,y2:2099}],

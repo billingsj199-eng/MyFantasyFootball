@@ -25917,6 +25917,10 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // Helper: look up WEEKLY_STATS with name normalization
   // Handles mismatches like "AJ Brown" vs "A.J. Brown", "TJ Hockenson" vs "T.J. Hockenson", etc.
   const _gwWsCache = {};
+  // Regular-season weeks only: a few retired records carry playoff weeks
+  // (wk 18-21), which inflated "best season" for deep playoff runs.
+  function gwIsRegWeek(szn, w) { return (w.wk || 0) <= (parseInt(szn) >= 2021 ? 18 : 17); }
+
   function gwLookupWeekly(name) {
     if (typeof WEEKLY_STATS === 'undefined') return null;
     if (WEEKLY_STATS[name]) return WEEKLY_STATS[name];
@@ -26059,15 +26063,23 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (_ws1) {
         for (const [szn, weeks] of Object.entries(_ws1.seasons)) {
           for (const w of weeks) {
-            if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+            if (gwIsRegWeek(szn, w) && w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
           }
         }
       }
       // Fallback: if career data is stubby (only current partial season), aggregate weekly stats by season
       // and use that as bestSzn if it beats the career-derived value. This fixes players whose career[]
       // only contains a 4-game stub while weekly_stats has their full multi-year history.
+      // Only seasons the career line is missing or has as a stub (fewer games than
+      // the weekly log): where both cover a full season the career total is the
+      // trusted one (name-collision merges in the weekly data inflated sums).
       if (_ws1 && _ws1.seasons) {
-        for (const [szn, weeks] of Object.entries(_ws1.seasons)) {
+        const _careerGp = {};
+        career.forEach(s => { if (s.yr) _careerGp[s.yr] = s.gp || 0; });
+        for (const [szn, allWeeks] of Object.entries(_ws1.seasons)) {
+          const weeks = allWeeks.filter(w => gwIsRegWeek(szn, w));
+          const _yr = parseInt(szn);
+          if (_careerGp[_yr] != null && weeks.length <= _careerGp[_yr] + 1) continue;
           const seasonTotal = weeks.reduce((a, w) => a + (w.fpts || 0), 0);
           if (seasonTotal > 0 && (!bestSznFpts || seasonTotal > bestSznFpts)) {
             bestSznFpts = seasonTotal;
@@ -26194,7 +26206,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         if (_ws2) {
           for (const [szn, weeks] of Object.entries(_ws2.seasons)) {
             for (const w of weeks) {
-              if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+              if (gwIsRegWeek(szn, w) && w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
             }
           }
         }
@@ -26254,7 +26266,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         if (_ws3) {
           for (const [szn, weeks] of Object.entries(_ws3.seasons)) {
             for (const w of weeks) {
-              if (w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
+              if (gwIsRegWeek(szn, w) && w.fpts && (!bestWkFpts || w.fpts > bestWkFpts)) bestWkFpts = w.fpts;
             }
           }
         }
@@ -26290,10 +26302,31 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (mSr && _byName[mSr[1]]) { _toDelete.add(p.name); continue; }
       const mJr = p.name.match(/^(.+?)\s+(Jr\.?|II|III|IV|V)$/i);
       if (mJr) {
+        // Same position + best-season year = same player under two spellings
+        // ("Mark Ingram" / "Mark Ingram II"). Team and total aren't compared: the
+        // sources disagree on both for the same player; a father/son pair never
+        // shares a best-season year.
         const c = _byName[mJr[1]];
-        if (c && c.bestSzn === p.bestSzn && c.bestSznYear === p.bestSznYear && c.team === p.team) {
+        if (c && c.pos === p.pos && c.bestSznYear != null && c.bestSznYear === p.bestSznYear) {
           _toDelete.add(p.name);
         }
+      }
+    }
+    // (4) Short/long first names for one player ("Ben Watson" / "Benjamin
+    //     Watson"): same last name, position and best-season year, one first
+    //     name a prefix of the other — keep the full first name.
+    const _byLast = {};
+    allPool.forEach(p => {
+      const parts = p.name.split(' ');
+      if (parts.length < 2 || p.bestSznYear == null) return;
+      const k = parts.slice(1).join(' ').toLowerCase() + '|' + p.pos + '|' + p.bestSznYear;
+      (_byLast[k] = _byLast[k] || []).push(p);
+    });
+    for (const grp of Object.values(_byLast)) {
+      if (grp.length < 2) continue;
+      for (const a of grp) for (const b of grp) {
+        const fa = a.name.split(' ')[0].toLowerCase(), fb = b.name.split(' ')[0].toLowerCase();
+        if (fa.length < fb.length && fa.length >= 3 && fb.startsWith(fa)) _toDelete.add(a.name);
       }
     }
     const _byNoDots = {};

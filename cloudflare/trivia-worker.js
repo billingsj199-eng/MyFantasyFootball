@@ -18,7 +18,7 @@
 const FIREBASE_PROJECT = 'jackb933-website';
 const ADMIN_EMAIL = 'billingsj199@gmail.com';
 const ALLOWED_ORIGINS = ['https://www.myfantasyfootball.co', 'https://myfantasyfootball.co'];
-const ALLOWED_MODELS = ['claude-sonnet-4-20250514', 'claude-sonnet-5-5', 'claude-opus-5-5'];
+const ALLOWED_MODELS = ['claude-sonnet-5-5', 'claude-opus-5-5'];
 const ALLOWED_TOOL_TYPES = ['web_search_20250305', 'web_search_20260209'];
 const MAX_TOKENS_CAP = 16000;
 const WEB_SEARCH_MAX_USES = 8;

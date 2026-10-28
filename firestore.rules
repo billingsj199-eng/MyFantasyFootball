@@ -13,7 +13,7 @@ service cloud.firestore {
         return ['name', 'email', 'activeBadge', 'activeBadgeIcon', 'updatedAt',
                 'daily', 'unlimited', 'fantasygame', 'fantasygameWeek',
                 'collegeSeason', 'collegeWeek', 'gwDaily', 'gwDaily00s',
-                'gwDaily10s', 'gwDaily00s150', 'gwDaily10s150'];
+                'gwDaily10s', 'gwDaily00s150', 'gwDaily10s150', 'trivia'];
       }
       // email: no longer stored (leaderboard is public-read). Clients delete
       // the legacy field on every write, so it must be absent afterwards.
@@ -40,6 +40,13 @@ service cloud.firestore {
             && _lbNum(m.get('bestStreak', 0), _lbDays())
             && m.get('won', false) is bool
             && m.get('date', '') is string && m.get('date', '').size() <= 32;
+      }
+      // Daily Trivia: streak map plus today's board score (boards top out
+      // around 30 squares; 200 leaves room for bigger boards).
+      function _lbTriviaOk(m) {
+        return _lbStreakOk(m)
+            && _lbNum(m.get('score', 0), 200)
+            && _lbNum(m.get('total', 0), 200);
       }
       function _lbUnlimitedOk(m) {
         return m is map
@@ -68,6 +75,7 @@ service cloud.firestore {
             && (!ks.hasAny(['gwDaily10s']) || !('gwDaily10s' in d) || _lbStreakOk(d.gwDaily10s))
             && (!ks.hasAny(['gwDaily00s150']) || !('gwDaily00s150' in d) || _lbStreakOk(d.gwDaily00s150))
             && (!ks.hasAny(['gwDaily10s150']) || !('gwDaily10s150' in d) || _lbStreakOk(d.gwDaily10s150))
+            && (!ks.hasAny(['trivia']) || !('trivia' in d) || _lbTriviaOk(d.trivia))
             && (!ks.hasAny(['unlimited']) || !('unlimited' in d) || _lbUnlimitedOk(d.unlimited))
             && (!ks.hasAny(['fantasygame']) || !('fantasygame' in d) || _lbScoreOk(d.fantasygame, 6000))
             && (!ks.hasAny(['fantasygameWeek']) || !('fantasygameWeek' in d) || _lbScoreOk(d.fantasygameWeek, 1000))

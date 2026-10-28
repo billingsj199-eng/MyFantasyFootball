@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-28-followups" as="script">
+<link rel="preload" href="app.js?v=2026-10-28-searchbar" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -2672,6 +2672,12 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <!-- DAILY TAB -->
 <div id="lbPanelDaily" style="display:none">
 
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Trivia</div>
+<div class="lb-list" id="lbDailyTriviaList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyTriviaLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyTriviaEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — Current</div>
 <div class="lb-list" id="lbDailyEpCurrentList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyEpCurrentLoading">Loading...</div>
@@ -3658,7 +3664,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-28-public">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-10-28-searchbar">
 <div class="trivia-wrap">
 <!-- Player header (non-admin). The builder tab strip below it is admin-only. -->
 <div class="trivia-player-only" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
@@ -4065,6 +4071,13 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <option value="15">15 seconds</option>
 <option value="30" selected>30 seconds</option>
 <option value="60">60 seconds</option>
+</select>
+</label>
+
+<label style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Guess Style (Solo)
+<select id="triviaGuessStyle" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
+<option value="bar">One search bar (any square)</option>
+<option value="cell">Per square</option>
 </select>
 </label>
 
@@ -6649,7 +6662,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-28-followups"></script>
+<script defer src="app.js?v=2026-10-28-searchbar"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

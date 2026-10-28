@@ -43851,6 +43851,22 @@ window.fmtHeight = fmtHeight;
       docRef.set(update, { merge: true }).catch(e => console.warn('[LB] ' + field + ' save error:', e));
     }).catch(e => console.warn('[LB] ' + field + ' read error:', e));
   }
+  // Daily Trivia: first completion of today's board. Streak is the trivia
+  // page's own play streak (consecutive days); score/total is today's board.
+  window._lbUpdateTrivia = function(score, total, streak) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const existing = doc.exists && doc.data().trivia ? (doc.data().trivia.bestStreak || 0) : 0;
+      docRef.set({
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
+        trivia: { date: todayKey(), won: true, streak: streak || 0, bestStreak: Math.max(existing, streak || 0), score: score || 0, total: total || 0 },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('[LB] trivia save error:', e));
+    }).catch(e => console.warn('[LB] trivia read error:', e));
+  };
   window._lbUpdateFantasyGame = function(score) { _lbSaveScore('fantasygame', score); };
   window._lbUpdateFantasyGameWeek = function(score) { _lbSaveScore('fantasygameWeek', score); };
   window._lbUpdateCollegeSeason = function(score) { _lbSaveScore('collegeSeason', score); };
@@ -44227,7 +44243,8 @@ window.fmtHeight = fmtHeight;
       const all = [];
       snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
 
-      function renderStreakSection(listId, loadingId, emptyId, fieldName) {
+      // extraFn(u) may add a trailing stat (e.g. today's trivia score).
+      function renderStreakSection(listId, loadingId, emptyId, fieldName, extraFn) {
         const list = document.getElementById(listId);
         const loading = document.getElementById(loadingId);
         const empty = document.getElementById(emptyId);
@@ -44249,10 +44266,17 @@ window.fmtHeight = fmtHeight;
         } else {
           if (empty) empty.style.display = 'none';
           list.innerHTML = renderTop3(players, uid, u => {
-            return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '');
+            return '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : '')
+              + (extraFn ? (extraFn(u) || '') : '');
           });
         }
       }
+
+      // Daily Trivia (trivia) — streak plus today's board score
+      renderStreakSection('lbDailyTriviaList', 'lbDailyTriviaLoading', 'lbDailyTriviaEmpty', 'trivia', u => {
+        const t = u.trivia || {};
+        return (t.date === today && t.total > 0) ? '<span class="lb-sub" style="margin-left:6px">' + (t.score || 0) + '/' + t.total + ' today</span>' : '';
+      });
 
       // Daily Elite Pull — Current (gwDaily)
       renderStreakSection('lbDailyEpCurrentList', 'lbDailyEpCurrentLoading', 'lbDailyEpCurrentEmpty', 'gwDaily');
@@ -55596,7 +55620,8 @@ window.fmtHeight = fmtHeight;
     const titleText = gameName || data.title || 'TRIVIA BOARD';
 
     // Reset score
-    _triviaScore = { correct: 0, wrong: 0, total: items.length };
+    _triviaScore = { correct: 0, wrong: 0, misses: 0, total: items.length };
+    const freeBar = mode === 'guess' && _triviaFreeBarOn();
     const scoreBar = document.getElementById('triviaScoreBar');
     if (mode === 'guess') {
       scoreBar.style.display = '';
@@ -55605,8 +55630,13 @@ window.fmtHeight = fmtHeight;
       scoreBar.style.display = 'none';
     }
 
-    let html = `<div class="trivia-board-outer" style="background:${boardBg};border-color:${boardBorder}">`;
+    let html = `<div class="trivia-board-outer${freeBar ? ' trivia-freebar-board' : ''}" style="background:${boardBg};border-color:${boardBorder}">`;
     html += `<div class="trivia-board-title" contenteditable="true" id="triviaBoardTitle" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(titleText)}</div>`;
+    if (freeBar) {
+      // One search bar for the whole board: a hit lands on whichever square
+      // holds that player (see _triviaFreeGuess).
+      html += `<div class="trivia-freebar-wrap"><input type="text" id="triviaFreeInput" class="trivia-freebar" placeholder="Type any player on the board…" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="window._triviaOnInput(-1,this)" onfocus="window._triviaOnInput(-1,this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(-1)}"><div class="trivia-freebar-note" id="triviaFreeNote"></div></div>`;
+    }
     html += `<div class="trivia-grid" style="grid-template-columns:repeat(${cols},1fr);background:${boardBg}">`;
 
     const cellHeaderMode = document.getElementById('triviaCellHeader').value;
@@ -55650,7 +55680,7 @@ window.fmtHeight = fmtHeight;
         html += `</div>`;
         html += `<div class="trivia-cell-hint">${_esc(it.hint || '')}</div>`;
         html += `<div class="trivia-cell-answer">${_esc(it.answer || '')}</div>`;
-        if (mode === 'guess') {
+        if (mode === 'guess' && !freeBar) {
           html += `<input type="text" class="trivia-guess-input" data-idx="${i}" placeholder="guess..." autocomplete="off" oninput="window._triviaOnInput(${i},this)" onfocus="window._triviaOnInput(${i},this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(${i})}">`;
         }
         html += `</div>`;
@@ -55770,7 +55800,7 @@ window.fmtHeight = fmtHeight;
 
   function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  let _triviaScore = { correct: 0, wrong: 0, total: 0 };
+  let _triviaScore = { correct: 0, wrong: 0, misses: 0, total: 0 };
   const TEAM_COLORS_DEFAULT = ['#a855f7','#3b82f6','#ef4444','#22c55e','#f59e0b','#ec4899'];
   const TEAM_NAMES_DEFAULT = ['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6'];
 
@@ -55902,6 +55932,7 @@ window.fmtHeight = fmtHeight;
       maxWrong: parseInt(document.getElementById('triviaMaxWrong').value),
       timer: parseInt(document.getElementById('triviaTimer').value) || 0,
       cellSelect: document.getElementById('triviaCellSelect').value,
+      guessStyle: (document.getElementById('triviaGuessStyle') || {}).value || 'bar',
       scoring: document.getElementById('triviaScoring').value,
       steal: document.getElementById('triviaSteal').value === 'yes',
       hintsVisible: document.getElementById('triviaHintsVisible').value,
@@ -55914,10 +55945,13 @@ window.fmtHeight = fmtHeight;
     const s = _triviaGetSettings();
     const remaining = _triviaScore.total - _triviaScore.correct - _triviaScore.wrong;
 
-    if (s.mode === 'reveal' || !_triviaGame.active) {
+    if (s.mode === 'reveal' || !_triviaGame.active || _triviaFreeInput()) {
       if (s.teams <= 1) {
         bar.style.display = '';
-        bar.innerHTML = `<div class="trivia-score-bar"><span class="correct">✓ ${_triviaScore.correct}</span><span class="wrong">✗ ${_triviaScore.wrong}</span><span class="remaining">${remaining} remaining</span></div>`;
+        // The board-wide search bar counts misses (names not on the board)
+        // instead of per-square strikes.
+        const missHtml = _triviaFreeInput() ? `<span class="wrong">✗ ${_triviaScore.misses || 0} missed</span>` : `<span class="wrong">✗ ${_triviaScore.wrong}</span>`;
+        bar.innerHTML = `<div class="trivia-score-bar"><span class="correct">✓ ${_triviaScore.correct}</span>${missHtml}<span class="remaining">${remaining} remaining</span></div>`;
       } else {
         bar.style.display = 'none';
       }
@@ -56090,7 +56124,9 @@ window.fmtHeight = fmtHeight;
     _triviaGame.scores = [0,0,0,0,0,0];
     _triviaGame.maxWrong = s.maxWrong;
     _triviaGame.timer = s.timer;
-    _triviaGame.cellSelect = s.cellSelect;
+    // The board-wide search bar takes names in any order, so sequential /
+    // random square order (and its per-square timer) doesn't apply.
+    _triviaGame.cellSelect = _triviaFreeInput() ? 'free' : s.cellSelect;
     _triviaGame.scoring = s.scoring;
     _triviaGame.steal = s.steal;
     _triviaGame.hintsVisible = s.hintsVisible;
@@ -56118,7 +56154,13 @@ window.fmtHeight = fmtHeight;
     _triviaUpdateScore();
 
     // Start first cell if sequential/random
-    if (s.cellSelect !== 'free') _triviaHighlightNext();
+    if (_triviaGame.cellSelect !== 'free') _triviaHighlightNext();
+    const _fi = _triviaFreeInput();
+    if (_fi) {
+      _triviaFreeBarReset();
+      // Desktop only: a focused input pops the keyboard on phones.
+      if (!(window.matchMedia && window.matchMedia('(pointer:coarse)').matches)) _fi.focus({ preventScroll: true });
+    }
     } catch(err) { console.error('[Trivia] StartGame error:', err); }
   };
 
@@ -56376,16 +56418,19 @@ window.fmtHeight = fmtHeight;
 
     // Append dropdown to document.body with position:fixed so it escapes the
     // cell's `overflow:hidden`. Position is computed from the cell's bounding
-    // rect so it floats just above the input.
-    const cell = inputEl.closest('.trivia-cell');
-    if (!cell) return;
-    const r = cell.getBoundingClientRect();
+    // rect so it floats just above the input. The board-wide search bar
+    // (idx -1) drops down below itself instead.
+    const cell = idx < 0 ? null : inputEl.closest('.trivia-cell');
+    if (idx >= 0 && !cell) return;
     const inputR = inputEl.getBoundingClientRect();
+    const r = cell ? cell.getBoundingClientRect() : inputR;
     const dropdown = document.createElement('div');
     dropdown.className = 'trivia-ac-dropdown';
     const dropdownWidth = Math.max(180, r.width);
     const left = Math.max(4, Math.min(window.innerWidth - dropdownWidth - 4, r.left + (r.width - dropdownWidth) / 2));
-    dropdown.style.cssText = `position:fixed;left:${left}px;top:auto;bottom:${window.innerHeight - inputR.top}px;width:${dropdownWidth}px;background:var(--surface);border:1px solid var(--border);border-radius:6px 6px 0 0;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,.4)`;
+    dropdown.style.cssText = cell
+      ? `position:fixed;left:${left}px;top:auto;bottom:${window.innerHeight - inputR.top}px;width:${dropdownWidth}px;background:var(--surface);border:1px solid var(--border);border-radius:6px 6px 0 0;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,.4)`
+      : `position:fixed;left:${inputR.left}px;top:${inputR.bottom}px;width:${inputR.width}px;background:var(--surface);border:1px solid var(--border);border-radius:0 0 6px 6px;max-height:240px;overflow-y:auto;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.4)`;
 
     matches.slice(0, 8).forEach(p => {
       const opt = document.createElement('div');
@@ -56549,9 +56594,80 @@ window.fmtHeight = fmtHeight;
   window._triviaCellFocus = function(idx) {
     const cell = document.querySelector(`.trivia-cell[data-idx="${idx}"]`);
     if (!cell || cell.classList.contains('revealed') || cell.classList.contains('wrong')) return;
-    const input = cell.querySelector('.trivia-guess-input');
-    if (input) input.focus();
+    const input = cell.querySelector('.trivia-guess-input') || _triviaFreeInput();
+    if (input && !input.disabled) input.focus();
   };
+
+  // One search bar for solo play: any player on the board can be named in
+  // any order and a hit reveals its square wherever it sits. Team nights
+  // keep the per-square inputs (turns, steals and timers need a target).
+  function _triviaFreeBarOn() {
+    const s = _triviaGetSettings();
+    return s.mode === 'guess' && s.teams <= 1 && s.guessStyle !== 'cell';
+  }
+  function _triviaFreeInput() { return document.getElementById('triviaFreeInput'); }
+  function _triviaFreeNote(msg, color) {
+    const n = document.getElementById('triviaFreeNote');
+    if (!n) return;
+    n.textContent = msg || '';
+    n.style.color = color || 'var(--text2)';
+  }
+  function _triviaFreeGuess() {
+    _triviaHideAutocomplete();
+    const input = _triviaFreeInput();
+    if (!input || input.disabled || !_triviaData || _triviaGame.gameOver) return;
+    const guess = input.value.trim();
+    if (!guess) return;
+    const items = _triviaData.items;
+    const cellOf = i => document.querySelector(`.trivia-cell[data-idx="${i}"]`);
+    const open = i => { const c = cellOf(i); return !!c && !c.classList.contains('revealed') && !c.classList.contains('wrong'); };
+    const idx = items.findIndex((it, i) => it && open(i) && _triviaNameMatch(guess, it.answer));
+    input.value = '';
+    if (idx >= 0) {
+      const cell = cellOf(idx);
+      cell.dataset.lastGuess = guess;
+      _triviaClearTimer();
+      _triviaRevealCell(cell, idx, 'correct', null);
+      _triviaPlayCorrect();
+      cell.classList.add('hit');
+      setTimeout(() => cell.classList.remove('hit'), 900);
+      cell.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      _triviaScore.correct++;
+      if (typeof window._triviaRecordDailyResult === 'function') window._triviaRecordDailyResult(idx, 'correct');
+      if (_triviaGame.active) _triviaGame.scores[0] += _triviaGetPointValue(idx);
+      _triviaFreeNote('✓ ' + (items[idx].answer || '').split(/[\(\,]/)[0].trim(), '#22c55e');
+      _triviaUpdateScore();
+      _triviaCheckGameOver();
+    } else if (items.some((it, i) => it && !open(i) && _triviaNameMatch(guess, it.answer))) {
+      _triviaFreeNote('Already on the board', 'var(--accent)');
+    } else {
+      input.classList.remove('shake');
+      void input.offsetWidth;
+      input.classList.add('shake');
+      _triviaPlayIncorrect();
+      _triviaScore.misses = (_triviaScore.misses || 0) + 1;
+      _triviaFreeNote('✗ ' + guess + ' — not on the board', '#ef4444');
+      _triviaUpdateScore();
+    }
+    if (!_triviaGame.gameOver) input.focus();
+  }
+  // Game over / give up: the bar stays put but stops taking guesses.
+  function _triviaFreeBarFinish(msg) {
+    const input = _triviaFreeInput();
+    if (!input) return;
+    input.disabled = true;
+    input.value = '';
+    input.placeholder = msg || 'Game over';
+    _triviaFreeNote('');
+  }
+  function _triviaFreeBarReset() {
+    const input = _triviaFreeInput();
+    if (!input) return;
+    input.disabled = false;
+    input.value = '';
+    input.placeholder = 'Type any player on the board…';
+    _triviaFreeNote('');
+  }
 
   window._triviaOnInput = function(idx, inputEl) {
     _triviaShowAutocomplete(inputEl, idx);
@@ -56561,6 +56677,7 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaGuess = function(idx) {
+    if (idx === -1) return _triviaFreeGuess();
     _triviaHideAutocomplete();
     const cell = document.querySelector(`.trivia-cell[data-idx="${idx}"]`);
     if (!cell || !_triviaData || cell.classList.contains('revealed') || cell.classList.contains('wrong')) return;
@@ -56717,6 +56834,7 @@ window.fmtHeight = fmtHeight;
       _triviaGame.active = false;
       _triviaGame.gameOver = true;
       document.getElementById('triviaGiveUpBtn').style.display = 'none';
+      _triviaFreeBarFinish(_triviaScore.correct >= total ? 'Board cleared!' : 'Game over');
       // Daily-mode finalize: solo runs only (multi-team daily would need
       // its own scoring contract). The function no-ops when not a daily.
       if (typeof window._triviaFinalizeDaily === 'function' && _triviaGame.teams <= 1) {
@@ -56914,6 +57032,7 @@ window.fmtHeight = fmtHeight;
     _triviaGame.active = false;
     _triviaGame.gameOver = true;
     document.getElementById('triviaGiveUpBtn').style.display = 'none';
+    _triviaFreeBarFinish('Gave up — tap a square to see the answer');
 
     // Mark all unanswered cells as wrong (text-only) for scoring
     document.querySelectorAll('.trivia-cell[data-idx]').forEach(c => {
@@ -57009,7 +57128,8 @@ window.fmtHeight = fmtHeight;
       const inp = c.querySelector('.trivia-guess-input');
       if (inp) { inp.style.display = ''; inp.value = ''; inp.placeholder = 'guess...'; }
     });
-    _triviaScore = { correct: 0, wrong: 0, total: _triviaData ? _triviaData.items.length : 0 };
+    _triviaFreeBarReset();
+    _triviaScore = { correct: 0, wrong: 0, misses: 0, total: _triviaData ? _triviaData.items.length : 0 };
     _triviaUpdateScore();
   };
 
@@ -57513,9 +57633,14 @@ window.fmtHeight = fmtHeight;
 
     const isPreview = !!run.preview;
     const state = _triviaLoadDailyState();
+    let lbNote = '';
 
     if (!isPreview) {
       const alreadyDone = !!state.completed[run.date];
+      if (!alreadyDone && run.date === _triviaTodayStr()) {
+        const _signedIn = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+        lbNote = _signedIn ? 'Posted to the Daily Trivia leaderboard' : 'Sign in to post your streak to the leaderboard';
+      }
       // Streak rule: only update if this is the user's first completion for
       // this date. Replays don't bump streak (and don't reset it either).
       if (!alreadyDone) {
@@ -57533,9 +57658,14 @@ window.fmtHeight = fmtHeight;
         results: run.results.slice()
       };
       _triviaSaveDailyState(state);
+      // Leaderboard: first completion of TODAY's board only (replays and
+      // archive permalinks don't post).
+      if (!alreadyDone && run.date === _triviaTodayStr() && typeof window._lbUpdateTrivia === 'function') {
+        try { window._lbUpdateTrivia(score, total, state.streak); } catch (_) {}
+      }
     }
     _triviaUpdateDailyPanel();
-    _triviaShowDailyResult(run.date, score, total, elapsedMs, run.results, state.streak, isPreview);
+    _triviaShowDailyResult(run.date, score, total, elapsedMs, run.results, state.streak, isPreview, lbNote);
     _triviaDailyRun = null;
   };
 
@@ -57564,7 +57694,7 @@ window.fmtHeight = fmtHeight;
   // board columns so the grid visually mirrors what the player saw. The
   // isPreview flag tags admin QA runs visually + omits the share text so
   // a preview result can't be accidentally shared as an "official" run.
-  function _triviaShowDailyResult(date, score, total, ms, results, streak, isPreview) {
+  function _triviaShowDailyResult(date, score, total, ms, results, streak, isPreview, lbNote) {
     const modal = document.getElementById('triviaDailyModal');
     const gridEl = document.getElementById('triviaDailyModalGrid');
     const dateEl = document.getElementById('triviaDailyModalDate');
@@ -57612,7 +57742,9 @@ window.fmtHeight = fmtHeight;
     statsEl.innerHTML =
       '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + score + '/' + total + '</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">SCORE · ' + accuracy + '%</div></div>' +
       '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + timeStr + '</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">TIME</div></div>' +
-      '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + (streak || 0) + '🔥</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">STREAK</div></div>';
+      '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + (streak || 0) + '🔥</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">STREAK</div></div>' +
+      (lbNote ? '<div style="flex-basis:100%;text-align:center;font-size:.7rem;color:var(--text2);margin-top:8px">' + _esc(lbNote) + '</div>' : '');
+    statsEl.style.flexWrap = 'wrap';
 
     const confirmEl = document.getElementById('triviaDailyShareConfirm');
     if (confirmEl) confirmEl.textContent = '';
@@ -58118,7 +58250,7 @@ window.fmtHeight = fmtHeight;
       '<div style="font-size:1.4rem;line-height:1;flex-shrink:0;margin-top:1px">👋</div>' +
       '<div style="flex:1">' +
         '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent-blue);margin-bottom:4px">HOW IT WORKS</div>' +
-        '<div style="margin-bottom:6px">A new fantasy-football trivia board drops every day — same one for everyone. Hit <strong style="color:#ffd166">PLAY TODAY</strong>, type guesses for each cell, and share your result grid when you finish.</div>' +
+        '<div style="margin-bottom:6px">A new fantasy-football trivia board drops every day — same one for everyone. Hit <strong style="color:#ffd166">PLAY TODAY</strong>, type any player you think is on the board — a hit lands on its square — and share your result grid when you finish.</div>' +
         '<div class="trivia-admin-only" style="font-size:.72rem;color:var(--text2)">Want variety? Try<strong style="color:var(--accent-purple)">🎲 Surprise Me</strong> for an AI-generated random board, or pick a quick-start template below.</div>' +
       '</div>' +
       '<button onclick="window._triviaDismissIntro()" title="Dismiss" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1;padding:0;flex-shrink:0">✕</button>';
@@ -59568,7 +59700,7 @@ Rules:
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _aiToken },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-5-5',
           max_tokens: 16000,
           system: sysPrompt,
           tools: [{ type: 'web_search_20250305', name: 'web_search' }],

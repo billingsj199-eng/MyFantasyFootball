@@ -15,21 +15,72 @@ service cloud.firestore {
                 'collegeSeason', 'collegeWeek', 'gwDaily', 'gwDaily00s',
                 'gwDaily10s', 'gwDaily00s150', 'gwDaily10s150'];
       }
+      // email: no longer stored (leaderboard is public-read). Clients delete
+      // the legacy field on every write, so it must be absent afterwards.
       function _lbIdentityOk() {
         return (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 120))
-            && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 254))
+            && !('email' in request.resource.data)
             && (!('activeBadge' in request.resource.data) || (request.resource.data.activeBadge is string && request.resource.data.activeBadge.size() <= 40))
             && (!('activeBadgeIcon' in request.resource.data) || request.resource.data.activeBadgeIcon == null
                 || (request.resource.data.activeBadgeIcon is string && request.resource.data.activeBadgeIcon.size() <= 16))
             && (!('updatedAt' in request.resource.data) || (request.resource.data.updatedAt is string && request.resource.data.updatedAt.size() <= 32));
       }
+      // Score/streak sanity (2026-10-28): stats are client-reported, so these
+      // only stop absurd values. A daily streak can't exceed the days since
+      // 2025-01-01; game scores are capped well above the real maximums.
+      function _lbNum(v, cap) {
+        return (v is int || v is float) && v >= 0 && v <= cap;
+      }
+      function _lbDays() {
+        return (request.time.toMillis() - 1735689600000) / 86400000 + 2;
+      }
+      function _lbStreakOk(m) {
+        return m is map
+            && _lbNum(m.get('streak', 0), _lbDays())
+            && _lbNum(m.get('bestStreak', 0), _lbDays())
+            && m.get('won', false) is bool
+            && m.get('date', '') is string && m.get('date', '').size() <= 32;
+      }
+      function _lbUnlimitedOk(m) {
+        return m is map
+            && _lbNum(m.get('played', 0), 1000000)
+            && _lbNum(m.get('correct', 0), 1000000)
+            && _lbNum(m.get('streak', 0), 5000)
+            && _lbNum(m.get('bestStreak', 0), 5000);
+      }
+      function _lbScoreOk(m, cap) {
+        return m is map
+            && _lbNum(m.get('highScore', 0), cap)
+            && m.get('date', '') is string && m.get('date', '').size() <= 32;
+      }
+      // ks = keys being written; a key that is being deleted needs no check.
+      function _lbStatsOk(ks) {
+        let d = request.resource.data;
+        return (!ks.hasAny(['daily']) || !('daily' in d) || _lbStreakOk(d.daily))
+            && (!ks.hasAny(['gwDaily']) || !('gwDaily' in d) || _lbStreakOk(d.gwDaily))
+            && (!ks.hasAny(['gwDaily00s']) || !('gwDaily00s' in d) || _lbStreakOk(d.gwDaily00s))
+            && (!ks.hasAny(['gwDaily10s']) || !('gwDaily10s' in d) || _lbStreakOk(d.gwDaily10s))
+            && (!ks.hasAny(['gwDaily00s150']) || !('gwDaily00s150' in d) || _lbStreakOk(d.gwDaily00s150))
+            && (!ks.hasAny(['gwDaily10s150']) || !('gwDaily10s150' in d) || _lbStreakOk(d.gwDaily10s150))
+            && (!ks.hasAny(['unlimited']) || !('unlimited' in d) || _lbUnlimitedOk(d.unlimited))
+            && (!ks.hasAny(['fantasygame']) || !('fantasygame' in d) || _lbScoreOk(d.fantasygame, 6000))
+            && (!ks.hasAny(['fantasygameWeek']) || !('fantasygameWeek' in d) || _lbScoreOk(d.fantasygameWeek, 1000))
+            && (!ks.hasAny(['collegeSeason']) || !('collegeSeason' in d) || _lbScoreOk(d.collegeSeason, 8000))
+            && (!ks.hasAny(['collegeWeek']) || !('collegeWeek' in d) || _lbScoreOk(d.collegeWeek, 1500));
+      }
       allow read: if true;
       allow create: if request.auth != null && request.auth.uid == userId
                     && request.resource.data.keys().hasOnly(_lbKeys())
-                    && _lbIdentityOk();
+                    && _lbIdentityOk()
+                    && _lbStatsOk(request.resource.data.keys());
       allow update: if request.auth != null && request.auth.uid == userId
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(_lbKeys())
-                    && _lbIdentityOk();
+                    && _lbIdentityOk()
+                    && _lbStatsOk(request.resource.data.diff(resource.data).affectedKeys());
+      // Admin one-time cleanup: may only strip the legacy email field.
+      allow update: if isJack()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email'])
+                    && !('email' in request.resource.data);
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
     // ---- Premium helpers (board-gating Phase C) ----
@@ -97,6 +148,19 @@ service cloud.firestore {
                        || (docId != 'jacks-official'
                            && docId != 'jacks-public'
                            && request.auth.uid == docId));
+    }
+    // user_index/{uid} = {email}: admin-only email -> uid lookup for the gift
+    // panel (emails used to live in the public leaderboard docs). Each user
+    // writes only their own doc, holding only their own token email.
+    match /user_index/{userId} {
+      allow read: if isJack();
+      allow create, update: if request.resource.data.keys().hasOnly(['email'])
+                            && ((request.auth != null && request.auth.uid == userId
+                                 && 'email' in request.auth.token
+                                 && request.resource.data.email == request.auth.token.email.lower())
+                                || (isJack() && request.resource.data.email is string
+                                    && request.resource.data.email.size() <= 254));
+      allow delete: if request.auth != null && (request.auth.uid == userId || isJack());
     }
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;

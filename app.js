@@ -33271,7 +33271,8 @@ window.fmtHeight = fmtHeight;
         const badge = getBadgeById(id);
         db.collection('leaderboard').doc(user.uid).set({
           activeBadge: id,
-          activeBadgeIcon: badge ? badge.icon : null
+          activeBadgeIcon: badge ? badge.icon : null,
+          email: firebase.firestore.FieldValue.delete() // legacy field; leaderboard is public-read
         }, { merge: true }).then(function() {
           console.log('[Badge] Saved badge to leaderboard:', id);
         }).catch(function(e) { console.warn('[Badge] save error:', e); });
@@ -33366,12 +33367,9 @@ window.fmtHeight = fmtHeight;
 
   // === ADMIN PANEL LOGIC ===
   function findUserUid(db, email) {
-    return db.collection('leaderboard').get().then(snap => {
-      let uid = null;
-      snap.forEach(doc => {
-        const data = doc.data();
-        if (data.email && data.email.toLowerCase() === email) uid = doc.id;
-      });
+    // user_index is admin-read only; leaderboard docs no longer carry emails.
+    return db.collection('user_index').where('email', '==', email).limit(1).get().then(snap => {
+      let uid = snap.empty ? null : snap.docs[0].id;
       if (uid) return uid;
       return db.collection('gifted_badges').get().then(gbSnap => {
         gbSnap.forEach(doc => {
@@ -39854,6 +39852,13 @@ window.fmtHeight = fmtHeight;
       if (!embed) return;
       document.body.classList.add('mff-embed');
       if (embed === 'trivia') {
+        // Embeds are public: hide the AI entry points unless the viewer is
+        // the admin (body.mff-admin is toggled on auth state change).
+        const st = document.createElement('style');
+        st.textContent = 'body.mff-embed:not(.mff-admin) #triviaSurpriseBtn,'
+          + 'body.mff-embed:not(.mff-admin) #triviaCustomPromptWrap,'
+          + 'body.mff-embed:not(.mff-admin) label:has(> #triviaCustomPromptToggle){display:none!important}';
+        document.head.appendChild(st);
         const id = params.get('id');
         // Navigate to trivia page first (force-show even if normally admin-gated)
         const triviaBtn = document.querySelector('.nav-btn[data-page="trivia"]');
@@ -40006,12 +40011,29 @@ window.fmtHeight = fmtHeight;
     if (_hasUnsavedChanges && currentUser) { e.preventDefault(); e.returnValue = ''; }
   });
 
+  // user_index/{uid} = {email}: admin-only lookup for the gift panel's
+  // email -> uid search (emails used to sit in the public leaderboard docs).
+  // Written once per account per browser.
+  function _indexUserEmail(user) {
+    try {
+      const key = 'mff_uidx_' + user.uid;
+      if (localStorage.getItem(key) === '1') return;
+      firebase.firestore().collection('user_index').doc(user.uid)
+        .set({ email: user.email.toLowerCase() })
+        .then(() => { try { localStorage.setItem(key, '1'); } catch (_) {} })
+        .catch(e => console.warn('[Auth] user_index write failed:', e.code || e.message));
+    } catch (_) {}
+  }
+
   // Deferred firebase: register the definitive auth listener + public-data load once the
   // SDK has booted (`auth` is null until _fbBoot runs). Guarded so offline mode no-ops.
   _whenFirebaseReady(function() {
    if (isConfigured && auth) {
     auth.onAuthStateChanged(user => {
       updateAccountUI(user);
+      document.body.classList.toggle('mff-admin', !!user && isAdmin());
+      if (user && isAdmin()) setTimeout(() => { if (typeof window._lbAdminPurge === 'function') window._lbAdminPurge(); }, 4000);
+      if (user && user.email) _indexUserEmail(user);
       if (user) {
         console.log('[Auth] Signed in as', user.email);
         // Finish an upgrade the sign-in gate interrupted (UPGRADE NOW while
@@ -40548,6 +40570,7 @@ window.fmtHeight = fmtHeight;
             fdb.collection('rankings').doc(uid),
             fdb.collection('creator_attributions').doc(uid),
             fdb.collection('leaderboard').doc(uid),
+            fdb.collection('user_index').doc(uid),
             fdb.collection('user_game_data').doc(uid),
             fdb.collection('gifted_badges').doc(uid),
           ];
@@ -43370,6 +43393,9 @@ window.fmtHeight = fmtHeight;
   }
 
   // === SAVE STATS TO FIRESTORE ===
+  // Leaderboard docs are public-read, so never store the email there; this
+  // also strips the email legacy docs still carry (rules reject it).
+  function _lbNoEmail() { return firebase.firestore.FieldValue.delete(); }
   window._lbUpdateDaily = function(won, streak) {
     const user = getUser(); const db = getDb();
     if (!user || !db) return;
@@ -43380,14 +43406,14 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().daily ? (doc.data().daily.bestStreak || 0) : 0;
       const newBest = Math.max(existing, streak);
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         daily: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }).catch(e => {
       // Fallback: just save without checking best
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         daily: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e2 => console.warn('[LB] daily save error:', e2));
@@ -43402,7 +43428,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().unlimited ? (doc.data().unlimited.bestStreak || 0) : 0;
       const bestStreak = Math.max(existing, streak);
       db.collection('leaderboard').doc(user.uid).set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         unlimited: { played: played, correct: correct, streak: streak, bestStreak: bestStreak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e => console.warn('[LB] unlimited save error:', e));
@@ -43418,7 +43444,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().fantasygame ? doc.data().fantasygame.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: (user.email||''), ...getLbBadge(),
+          name: name, email: _lbNoEmail(), ...getLbBadge(),
           fantasygame: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] fg save error:', e));
@@ -43434,7 +43460,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().fantasygameWeek ? doc.data().fantasygameWeek.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: (user.email||''), ...getLbBadge(),
+          name: name, email: _lbNoEmail(), ...getLbBadge(),
           fantasygameWeek: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] fg week save error:', e));
@@ -43450,7 +43476,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().collegeSeason ? doc.data().collegeSeason.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: (user.email||''), ...getLbBadge(),
+          name: name, email: _lbNoEmail(), ...getLbBadge(),
           collegeSeason: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] college season save error:', e));
@@ -43466,7 +43492,7 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().collegeWeek ? doc.data().collegeWeek.highScore : 0;
       if (score > existing) {
         db.collection('leaderboard').doc(user.uid).set({
-          name: name, email: (user.email||''), ...getLbBadge(),
+          name: name, email: _lbNoEmail(), ...getLbBadge(),
           collegeWeek: { highScore: score, date: todayKey() },
           updatedAt: new Date().toISOString()
         }, { merge: true }).catch(e => console.warn('[LB] college week save error:', e));
@@ -43484,13 +43510,13 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().gwDaily ? (doc.data().gwDaily.bestStreak || 0) : 0;
       const newBest = Math.max(existing, streak);
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         gwDaily: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }).catch(() => {
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         gwDaily: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e => console.warn('[LB] gw daily save error:', e));
@@ -43507,13 +43533,13 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().gwDaily00s ? (doc.data().gwDaily00s.bestStreak || 0) : 0;
       const newBest = Math.max(existing, streak);
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         gwDaily00s: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }).catch(() => {
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         gwDaily00s: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e => console.warn('[LB] gw daily 00s save error:', e));
@@ -43530,13 +43556,13 @@ window.fmtHeight = fmtHeight;
       const existing = doc.exists && doc.data().gwDaily10s ? (doc.data().gwDaily10s.bestStreak || 0) : 0;
       const newBest = Math.max(existing, streak);
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         gwDaily10s: { date: todayKey(), won: won, streak: streak, bestStreak: newBest },
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }).catch(() => {
       docRef.set({
-        name: name, email: (user.email||''), ...getLbBadge(),
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
         gwDaily10s: { date: todayKey(), won: won, streak: streak, bestStreak: streak },
         updatedAt: new Date().toISOString()
       }, { merge: true }).catch(e => console.warn('[LB] gw daily 10s save error:', e));
@@ -43552,11 +43578,11 @@ window.fmtHeight = fmtHeight;
     docRef.get().then(doc => {
       const existing = doc.exists && doc.data()[fieldName] ? (doc.data()[fieldName].bestStreak || 0) : 0;
       const newBest = Math.max(existing, streak);
-      const update = { name: name, email: (user.email||''), ...getLbBadge(), updatedAt: new Date().toISOString() };
+      const update = { name: name, email: _lbNoEmail(), ...getLbBadge(), updatedAt: new Date().toISOString() };
       update[fieldName] = { date: todayKey(), won: won, streak: streak, bestStreak: newBest };
       docRef.set(update, { merge: true });
     }).catch(() => {
-      const update = { name: name, email: (user.email||''), ...getLbBadge(), updatedAt: new Date().toISOString() };
+      const update = { name: name, email: _lbNoEmail(), ...getLbBadge(), updatedAt: new Date().toISOString() };
       update[fieldName] = { date: todayKey(), won: won, streak: streak, bestStreak: streak };
       docRef.set(update, { merge: true }).catch(e => console.warn('[LB] ' + fieldName + ' save error:', e));
     });
@@ -43566,6 +43592,10 @@ window.fmtHeight = fmtHeight;
 
   // === LOAD & RENDER LEADERBOARDS ===
   function renderRow(rank, name, statHtml, isMe, badgeIcon) {
+    // name + badge come from other users' leaderboard docs — escape before innerHTML.
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    name = esc(name);
+    badgeIcon = badgeIcon == null ? badgeIcon : esc(badgeIcon);
     const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
     const rankDisplay = medals[rank] || rank;
     const rankClass = rank <= 3 ? ' lb-rank-' + rank : '';
@@ -43651,6 +43681,45 @@ window.fmtHeight = fmtHeight;
     });
   }
 
+  // One-time cleanup (admin only): legacy leaderboard docs carry the player's
+  // email in a public-read collection. Copy each to the admin-only user_index
+  // (findUserUid's lookup) and delete it from the leaderboard doc.
+  let _lbPurgeRan = false;
+  function _lbPurgeLegacyEmails(db, all) {
+    if (_lbPurgeRan || typeof window.isAdmin !== 'function' || !window.isAdmin()) return;
+    const withEmail = all.filter(u => typeof u.email === 'string' && u.email);
+    if (!withEmail.length) return;
+    _lbPurgeRan = true;
+    const del = firebase.firestore.FieldValue.delete();
+    const chunks = [];
+    for (let i = 0; i < withEmail.length; i += 200) chunks.push(withEmail.slice(i, i + 200));
+    chunks.reduce((p, chunk) => p.then(() => {
+      const batch = db.batch();
+      chunk.forEach(u => {
+        batch.set(db.collection('user_index').doc(u.id), { email: u.email.toLowerCase() }, { merge: true });
+        batch.update(db.collection('leaderboard').doc(u.id), { email: del });
+      });
+      return batch.commit();
+    }), Promise.resolve())
+      .then(() => {
+        console.log('[LB] purged legacy emails from', withEmail.length, 'leaderboard docs');
+        try { localStorage.setItem('mff_lb_email_purged', '1'); } catch (_) {}
+      })
+      .catch(e => { _lbPurgeRan = false; console.warn('[LB] email purge failed:', e); });
+  }
+  // Called on admin sign-in; the 2.5s leaderboard load can beat auth.
+  window._lbAdminPurge = function() {
+    try { if (localStorage.getItem('mff_lb_email_purged') === '1') return; } catch (_) {}
+    const db = getDb();
+    if (!db || typeof window.isAdmin !== 'function' || !window.isAdmin()) return;
+    db.collection('leaderboard').get().then(snap => {
+      const all = [];
+      snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
+      if (!all.some(u => u.email)) { try { localStorage.setItem('mff_lb_email_purged', '1'); } catch (_) {} return; }
+      _lbPurgeLegacyEmails(db, all);
+    }).catch(e => console.warn('[LB] purge read failed:', e));
+  };
+
   function loadLeaderboards() {
     const db = getDb();
     if (!db) {
@@ -43666,6 +43735,7 @@ window.fmtHeight = fmtHeight;
     db.collection('leaderboard').get().then(snap => {
       const all = [];
       snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
+      _lbPurgeLegacyEmails(db, all);
 
       // --- FANTASY GAME SEASON ---
       const fgPlayers = all.filter(u => u.fantasygame && u.fantasygame.highScore > 0 && isWithinTimeFilter(u.fantasygame.date, tf))
@@ -59042,10 +59112,19 @@ Rules:
     // Log context size for debugging
     console.log('[Trivia] Data context size:', dataCtx.length, 'chars');
 
+    // AI boards are admin-only (the ?embed=trivia path shows the builder to
+    // anyone). The worker verifies this Firebase ID token server-side too.
+    const _aiUser = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!_aiUser || typeof window.isAdmin !== 'function' || !window.isAdmin()) {
+      area.innerHTML = '<div class="trivia-loading">Custom AI boards are admin-only.</div>';
+      btn.disabled = false; btn.textContent = 'GENERATE';
+      return;
+    }
     try {
+      const _aiToken = await _aiUser.getIdToken();
       const resp = await fetch(TRIVIA_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _aiToken },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 16000,

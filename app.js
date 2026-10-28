@@ -37474,13 +37474,18 @@ window.fmtHeight = fmtHeight;
   // fetched (100 trades per refresh); the calculator's exact format sorts
   // first. Refresh: on entering the trade page or a calc render, at most
   // every 10 minutes, plus the ↻ button.
+  // REDRAFT also merges data/real_trades_redraft.json (2026-10-28) — every
+  // completed 2-team trade from a few thousand public Sleeper redraft leagues
+  // over the last 8 days (scripts/pull_sleeper_trades.py, scheduled). Kept in
+  // memory, not the localStorage pool. Drives the MOST TRADED SINCE MNF chip
+  // strip; tapping a chip filters the list to that player.
   var _rt = null;
   (function _realTradesInit() {
     const box = document.getElementById('tradeRealTrades');
     if (!box) return;
     const LS_KEY = 'mff_fc_trades_v1';
     const MAX_AGE = 14 * 86400000, MAX_N = 600, REFRESH_MS = 10 * 60 * 1000;
-    _rt = { pool: {}, at: 0, busy: false, showAll: false, expanded: false, err: null, lastFmt: null };
+    _rt = { pool: {}, at: 0, busy: false, showAll: false, expanded: false, err: null, lastFmt: null, sl: null, slAt: 0, player: null };
     try {
       const j = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
       if (j && j.pool && typeof j.pool === 'object') { _rt.pool = j.pool; _rt.at = +j.at || 0; }
@@ -37524,10 +37529,52 @@ window.fmtHeight = fmtHeight;
       _rt.pool = keep;
     }
     function save() { try { localStorage.setItem(LS_KEY, JSON.stringify({ at: _rt.at, pool: _rt.pool })); } catch (_) {} }
+    // Most recent Tuesday 04:00 UTC (= midnight ET in EDT) — "since MNF".
+    function mnfCutoff() {
+      const d = new Date();
+      const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 4));
+      t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() - 2 + 7) % 7));
+      if (t > d) t.setUTCDate(t.getUTCDate() - 7);
+      return t.getTime();
+    }
+    function byId(id) { return _rt.pool[id] || (_rt.sl && _rt.sl.byId[id]) || null; }
+    function hasPlayer(t, name) { return t.s1.concat(t.s2).some(a => a.p !== 'PICK' && a.p !== 'FAAB' && norm(a.n) === name); }
+    async function loadSleeper(force) {
+      const now = Date.now();
+      if (!force && now - _rt.slAt < REFRESH_MS * 3) return;
+      _rt.slAt = now;
+      const d = new Date();
+      const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + String(d.getHours()).padStart(2, '0');
+      try {
+        const r = await fetch('data/real_trades_redraft.json?d=' + stamp);
+        const j = r && r.ok ? await r.json() : null;
+        if (!j || !Array.isArray(j.trades)) return;
+        const list = j.trades.map(t => ({ id: t.id, date: t.date, dyn: false, qbs: +t.qbs || 1, ppr: t.ppr == null ? 1 : +t.ppr, tep: +t.tep || 0,
+          teams: +t.teams || 12, s1: t.s1 || [], s2: t.s2 || [], diff: null, src: 'sl' }));
+        const byIdMap = {};
+        list.forEach(t => { byIdMap[t.id] = t; });
+        // Player trade counts since MNF (players only; a player appears once per trade)
+        const cut = mnfCutoff(), cnt = {};
+        list.forEach(t => {
+          if (Date.parse(t.date) < cut) return;
+          const seen = new Set();
+          t.s1.concat(t.s2).forEach(a => {
+            if (a.p === 'PICK' || a.p === 'FAAB' || seen.has(a.n)) return;
+            seen.add(a.n);
+            (cnt[a.n] = cnt[a.n] || { n: a.n, p: a.p, c: 0 }).c++;
+          });
+        });
+        const top = Object.values(cnt).sort((a, b) => b.c - a.c).slice(0, 15);
+        _rt.sl = { list, byId: byIdMap, top, gen: j.generated || null, leagues: +j.leagues || 0,
+          sinceMnf: list.filter(t => Date.parse(t.date) >= cut).length };
+      } catch (_) {}
+      finally { render(); }
+    }
     async function fetchFeed(force) {
       const now = Date.now();
       const f = fmtOf();
       const key = (f.dyn ? 'd' : 'r');
+      if (!f.dyn) loadSleeper(force);
       if (_rt.busy) return;
       if (!force && _rt.lastFmt === key && now - _rt.at < REFRESH_MS) return;
       _rt.busy = true; _rt.err = null;
@@ -37565,6 +37612,7 @@ window.fmtHeight = fmtHeight;
           out.push({ kind: 'k', pick: pk, name: a.n, pos: 'PICK', val: v, inCalc: false });
           return;
         }
+        if (a.p === 'FAAB') { out.push({ kind: 'f', name: a.n, pos: 'FAAB', val: null, inCalc: false }); return; }
         const idx = lookupIdx(a.n);
         const d = idx != null ? D[idx] : null;
         const v = d ? getPlayerValue(d) : null;
@@ -37572,7 +37620,7 @@ window.fmtHeight = fmtHeight;
         out.push({ kind: 'p', idx: idx, name: d ? d.n : a.n, pos: a.p || (d && d.s) || '', val: v, inCalc: idx != null && inCalc.has(idx) });
       });
       const total = vals.length ? window._packageAdjustedTotal(vals, tradeMode, vsAssets ? vsAssets.length : 1) : 0;
-      return { assets: out, total: total, unpriced: out.filter(x => x.val == null).length };
+      return { assets: out, total: total, unpriced: out.filter(x => x.val == null && x.kind !== 'f').length };
     }
     function ago(iso) {
       const ms = Date.now() - Date.parse(iso);
@@ -37589,13 +37637,14 @@ window.fmtHeight = fmtHeight;
         + (t.tep ? ' · TEP ' + t.tep : '') + (t.teams && t.teams !== 12 ? ' · ' + t.teams + 'tm' : '');
     }
     function chip(a) {
-      const cls = a.kind === 'k' ? 'style="background:rgba(245,158,11,.12);color:var(--accent)"' : 'class="td-pos ' + _esc(a.pos) + '"';
-      const posHtml = a.kind === 'k' ? '<span class="td-pos" ' + cls + '>PICK</span>' : '<span ' + cls + '>' + _esc(a.pos) + '</span>';
+      const side = a.kind === 'k' || a.kind === 'f';
+      const cls = side ? 'style="background:rgba(245,158,11,.12);color:var(--accent)"' : 'class="td-pos ' + _esc(a.pos) + '"';
+      const posHtml = side ? '<span class="td-pos" ' + cls + '>' + (a.kind === 'f' ? 'FAAB' : 'PICK') + '</span>' : '<span ' + cls + '>' + _esc(a.pos) + '</span>';
       const nameHtml = a.kind === 'p' && a.idx != null
         ? '<a href="javascript:void(0)" class="rt-name rt-card" data-didx="' + a.idx + '">' + _esc(a.name) + '</a>'
         : '<span class="rt-name' + (a.kind === 'p' ? ' rt-unknown" title="Not on our board — not priced' : '') + '">' + _esc(a.name) + '</span>';
       return '<div class="finder-asset rt-asset' + (a.inCalc ? ' rt-in-calc' : '') + '">' + posHtml + nameHtml
-        + '<span class="td-val" title="Our value (' + _esc(tradeSource) + ' · ' + _esc(tradeMode) + ')">' + (a.val == null ? '?' : a.val) + '</span></div>';
+        + (a.kind === 'f' ? '' : '<span class="td-val" title="Our value (' + _esc(tradeSource) + ' · ' + _esc(tradeMode) + ')">' + (a.val == null ? '?' : a.val) + '</span>') + '</div>';
     }
     function render() {
       if (!box) return;
@@ -37603,25 +37652,42 @@ window.fmtHeight = fmtHeight;
       if (!pg || !pg.classList.contains('active')) return;
       const inCalc = calcIdxSet();
       const f = fmtOf();
+      const sl = !f.dyn && _rt.sl ? _rt.sl : null;
       const all = Object.keys(_rt.pool).map(id => _rt.pool[id]).filter(t => t && t.date)
+        .concat(sl ? sl.list : [])
         .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
-      const involving = inCalc.size ? all.filter(t => t.s1.concat(t.s2).some(a => a.p !== 'PICK' && inCalc.has(lookupIdx(a.n)))) : [];
+      const involving = inCalc.size ? all.filter(t => t.s1.concat(t.s2).some(a => a.p !== 'PICK' && a.p !== 'FAAB' && inCalc.has(lookupIdx(a.n)))) : [];
       const showInvolving = inCalc.size > 0 && !_rt.showAll;
-      let list = showInvolving ? involving : all;
+      const player = sl && _rt.player ? _rt.player : null;
+      let list = player ? all.filter(t => hasPlayer(t, norm(player))) : showInvolving ? involving : all;
       // Exact calc format first, then the sibling QB format, newest within each.
       list = list.slice().sort((a, b) => ((a.dyn === f.dyn && a.qbs === f.qbs) ? 0 : 1) - ((b.dyn === f.dyn && b.qbs === f.qbs) ? 0 : 1) || (Date.parse(b.date) - Date.parse(a.date)));
       const cap = _rt.expanded ? 40 : 10;
       const shown = list.slice(0, cap);
       const names = [...inCalc].map(i => D[i] && D[i].n).filter(Boolean);
       let html = '<div class="rt-head"><div><div class="rt-title">RECENT REAL TRADES</div>'
-        + '<div class="rt-sub">FantasyCalc · live Sleeper-league trades · priced with <b>' + _esc(tradeSource) + '</b> values · ' + all.length + ' in your pool'
+        + '<div class="rt-sub">' + (sl
+          ? 'Sleeper · ' + sl.list.length.toLocaleString() + ' redraft trades from ' + sl.leagues.toLocaleString() + ' public leagues' + (sl.gen ? ' (scanned ' + _esc(ago(sl.gen)) + ')' : '') + ' + FantasyCalc live feed'
+          : 'FantasyCalc · live Sleeper-league trades')
+        + ' · priced with <b>' + _esc(tradeSource) + '</b> values · ' + all.length.toLocaleString() + ' trades'
         + (_rt.at ? ' · updated ' + _esc(ago(new Date(_rt.at).toISOString())) : '') + '</div></div>'
         + '<div class="rt-ctl">'
         + (inCalc.size ? '<button class="rt-btn' + (showInvolving ? ' active' : '') + '" data-rt="involving" title="Only trades that include a player in this calculator">This trade\'s players' + (involving.length ? ' <span class="rt-n">' + involving.length + '</span>' : '') + '</button>'
             + '<button class="rt-btn' + (!showInvolving ? ' active' : '') + '" data-rt="all">All recent</button>' : '')
         + '<button class="rt-btn rt-refresh" data-rt="refresh" title="Fetch the newest trades">' + (_rt.busy ? '…' : '↻') + '</button></div></div>';
+      if (sl && sl.top.length) {
+        html += '<div class="rt-hot"><div class="rt-hot-lbl">MOST TRADED SINCE MNF <span class="rt-n">' + sl.sinceMnf.toLocaleString() + ' trades</span></div><div class="rt-hot-chips">'
+          + sl.top.map(p => '<button class="rt-btn rt-hot-chip' + (player === p.n ? ' active' : '') + '" data-rt="player" data-rtp="' + _esc(p.n) + '" title="Show trades involving ' + _esc(p.n) + '">'
+            + _esc(p.n) + ' <span class="rt-n">' + p.c + '</span></button>').join('')
+          + '</div></div>';
+      }
+      if (player) {
+        html += '<div class="rt-filter">Trades involving <b>' + _esc(player) + '</b> · ' + list.length + ' found <button class="rt-btn" data-rt="player" data-rtp="' + _esc(player) + '">Clear</button></div>';
+      }
       if (!all.length) {
         html += '<div class="rt-empty">' + (_rt.busy ? 'Loading trades…' : _esc(_rt.err || 'No trades loaded yet — tap ↻.')) + '</div>';
+      } else if (!shown.length && player) {
+        html += '<div class="rt-empty">No trades with ' + _esc(player) + ' yet.</div>';
       } else if (!shown.length) {
         html += '<div class="rt-empty">No trade in the pool includes ' + (names.length === 1 ? _esc(names[0]) : 'these players') + ' yet. The pool grows each visit (' + all.length + ' trades so far) — try All recent.</div>';
       } else {
@@ -37639,7 +37705,7 @@ window.fmtHeight = fmtHeight;
           const fcNote = t.diff != null ? '<span class="rt-fc" title="FantasyCalc\'s own value gap for this trade (positive = side 1 received more by their numbers)">FC ' + (t.diff > 0 ? '+' : '') + t.diff + '</span>' : '';
           const exact = t.dyn === f.dyn && t.qbs === f.qbs;
           return '<div class="rt-row' + (exact ? '' : ' rt-other-fmt') + '" data-rtid="' + _esc(t.id) + '">'
-            + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + fcNote + '</div>'
+            + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + (t.src === 'sl' ? '<span class="rt-src" title="From our scan of public Sleeper redraft leagues">SLEEPER</span>' : '') + fcNote + '</div>'
             + '<div class="rt-sides">'
             + '<div class="rt-side"><div class="rt-side-lbl">Side 1 gives <span class="rt-tot">' + (s1.total || '—') + '</span></div>' + s1.assets.map(chip).join('') + '</div>'
             + '<div class="rt-arrow">⇄</div>'
@@ -37662,17 +37728,19 @@ window.fmtHeight = fmtHeight;
       if (!b) return;
       const act = b.dataset.rt;
       if (act === 'refresh') { fetchFeed(true); return; }
-      if (act === 'involving') { _rt.showAll = false; render(); return; }
-      if (act === 'all') { _rt.showAll = true; render(); return; }
+      if (act === 'involving') { _rt.showAll = false; _rt.player = null; render(); return; }
+      if (act === 'all') { _rt.showAll = true; _rt.player = null; render(); return; }
+      if (act === 'player') { _rt.player = _rt.player === b.dataset.rtp ? null : b.dataset.rtp; _rt.expanded = false; render(); return; }
       if (act === 'more') { _rt.expanded = true; render(); return; }
       if (act === 'less') { _rt.expanded = false; render(); return; }
       if (act === 'load') {
-        const t = _rt.pool[b.dataset.rtid];
+        const t = byId(b.dataset.rtid);
         if (!t) return;
         const fill = (assets, side) => {
           side.players = []; side.picks = [];
           assets.forEach(a => {
             if (a.p === 'PICK') { const pk = parsePick(a.n); if (pk) side.picks.push(pk); return; }
+            if (a.p === 'FAAB') return;
             const idx = lookupIdx(a.n);
             if (idx != null && side.players.indexOf(idx) < 0) side.players.push(idx);
           });
@@ -37681,7 +37749,7 @@ window.fmtHeight = fmtHeight;
         _rt.showAll = false;
         renderAll();
         if (typeof _calcRenderRealPicks === 'function') { _calcRenderRealPicks('a'); _calcRenderRealPicks('b'); }
-        const missing = t.s1.concat(t.s2).filter(a => a.p !== 'PICK' && lookupIdx(a.n) == null).map(a => a.n);
+        const missing = t.s1.concat(t.s2).filter(a => a.p !== 'PICK' && a.p !== 'FAAB' && lookupIdx(a.n) == null).map(a => a.n);
         if (typeof toast === 'function') toast(missing.length ? 'Loaded — not on our board: ' + missing.join(', ') : 'Loaded real trade — tweak as needed');
         const res = document.getElementById('tradeResult');
         if (res && res.scrollIntoView) res.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-28-legends2" as="script">
+<link rel="preload" href="app.js?v=2026-10-28-7098" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -6615,6 +6615,16 @@ window._loadLegendHeadshots = function(opts) {
   return window._legendHeadshotsPromise;
 };
 
+// 1970-98 full-league fantasy season totals (2026-10-28): the Fantasy Game's ERA / YEAR
+// picks before 1999 used to draw on legends only. Loaded by the games chunk the first time
+// such a window is picked (_fgPrep7098), never in the warm-up. Keyed by PFR id.
+// Regenerate: scripts/pull_pfr_season_totals.py.
+window._loadSeasonTotals7098 = function(opts) {
+  if (window._seasonTotals7098Promise) return window._seasonTotals7098Promise;
+  window._seasonTotals7098Promise = _injectScripts(['data/season_totals_1970_1998.js?v=2026-10-28'], 'SeasonTotals7098', opts);
+  return window._seasonTotals7098Promise;
+};
+
 // === Post-first-paint data (2026-10-13 mobile perf) ===
 // Small bundles the default Rankings board never reads (verified: blocking each one left every
 // row identical on phone + desktop). They used to be static defer tags the first rows waited on;
@@ -6674,7 +6684,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-28-legends2"></script>
+<script defer src="app.js?v=2026-10-28-7098"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

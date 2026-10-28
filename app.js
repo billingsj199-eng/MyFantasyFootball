@@ -27709,7 +27709,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     'St. Louis Cardinals': 'Arizona Cardinals',
     'Los Angeles Raiders': 'Las Vegas Raiders',
     'Baltimore Colts': 'Indianapolis Colts',
-    'Boston Patriots': 'New England Patriots'
+    'Boston Patriots': 'New England Patriots',
+    // franchise names on the 1970-98 PFR season pages (SEASON_TOTALS_7098_TEAMS)
+    'Tennessee Oilers': 'Tennessee Titans',
+    'Washington Redskins': 'Washington Commanders',
+    'Washington Football Team': 'Washington Commanders'
   };
 
   // Build reverse abbreviation -> full name lookup
@@ -27870,6 +27874,123 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   _fgAppendHpPlayers();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _fgAppendHpPlayers);
   document.addEventListener('mff:retireddata', _fgAppendHpPlayers);
+
+  // === 1970-1998 full-league season totals (data/season_totals_1970_1998.js, 2026-10-28) ===
+  // Pre-1999 careers were legends-only (LEGEND_CAREERS / HP), so a single-year draft from
+  // the 70s-90s gave a random team only 2-3 scoring players. The PFR season totals are keyed
+  // by PFR id (same-name players stay separate) and load the first time the ERA / YEAR
+  // filter targets a year before 1999 (_fgPrep7098, after the retired bundle so LDB / HP
+  // entries exist to merge into). A player already in the pool (same name + position, career
+  // span overlapping these years) keeps their entry: they gain only the seasons it is
+  // missing (_x7098) plus a year -> franchise map (_tmByYr) so getBestSeason can filter the
+  // old seasons by team. Everyone else joins as a new entry whose seasons carry _mt.
+  let _fg7098Promise = null, _fg7098Applied = false;
+  function _fgWindowPre1999() {
+    if (fgLeague !== 'nfl') return false;
+    if (fgYear !== 'best') return +fgYear < 1999;
+    if (fgEra !== 'all') return +fgEra < 1999;
+    return false;
+  }
+  function _fgEnsure7098() {
+    if (_fg7098Promise) return _fg7098Promise;
+    const retired = (typeof window._loadRetiredData === 'function') ? window._loadRetiredData() : Promise.resolve();
+    const totals = (typeof window._loadSeasonTotals7098 === 'function') ? window._loadSeasonTotals7098() : Promise.resolve();
+    _fg7098Promise = Promise.all([retired, totals]).then(() => { _fgAppendHpPlayers(); _fgAppend7098Players(); });
+    return _fg7098Promise;
+  }
+  // Loading gate: disable START until the file is in (cb runs after the append).
+  function _fgPrep7098(cb) {
+    if (_fg7098Applied || typeof window._loadSeasonTotals7098 !== 'function') { if (cb) cb(); return; }
+    if (fgDraftEmptyText) fgDraftEmptyText.textContent = 'Loading 1970\u201398 seasons\u2026';
+    startBtn.disabled = true;
+    _fgEnsure7098().then(() => {
+      startBtn.disabled = false;
+      if (fgDraftEmptyText) fgDraftEmptyText.textContent = fgLeague === 'college' ? 'Press START to get a random college conference' : 'Press START to get a random NFL team';
+      if (cb) cb();
+    });
+  }
+  // PFR team code + season -> modern franchise name (BAL / STL / HOU changed franchise).
+  function _fg7098Franchise(code, yr) {
+    if (!code) return null;
+    const spans = (typeof SEASON_TOTALS_7098_TEAMS !== 'undefined') ? SEASON_TOTALS_7098_TEAMS[code] : null;
+    if (!spans) return toFullTeamName(code);
+    for (const sp of spans) { if (yr >= sp[0] && yr <= sp[1]) return TEAM_ALIASES[sp[2]] || sp[2]; }
+    return TEAM_ALIASES[spans[0][2]] || spans[0][2];
+  }
+  function _fgCareerOf(x) {
+    const base = (x._dRef && x._dRef.career) ? x._dRef.career : (x.career || []);
+    return x._x7098 ? base.concat(x._x7098) : base;
+  }
+  function _fgAppend7098Players() {
+    if (_fg7098Applied || typeof SEASON_TOTALS_7098 === 'undefined') return;
+    _fg7098Applied = true;
+    let added = 0, merged = 0;
+    Object.entries(SEASON_TOTALS_7098).forEach(([pid, rec]) => {
+      const pos = rec.pos;
+      if (!['QB', 'RB', 'WR', 'TE'].includes(pos) || !rec.seasons || !rec.seasons.length) return;
+      // Each season's franchise (modern name); a multi-team season (2TM) counts for the
+      // franchises of the neighbouring seasons.
+      const seasons = rec.seasons.map(s => Object.assign({}, s));
+      seasons.forEach(s => { const f = /TM$/.test(s.tm || '') ? null : _fg7098Franchise(s.tm, s.yr); s._mt = f ? [f] : []; });
+      seasons.forEach((s, i) => {
+        if (s._mt.length) return;
+        const near = new Set();
+        if (seasons[i - 1]) seasons[i - 1]._mt.forEach(t => near.add(t));
+        if (seasons[i + 1]) seasons[i + 1]._mt.forEach(t => near.add(t));
+        s._mt = [...near];
+      });
+      const teams = [...new Set(seasons.flatMap(s => s._mt))];
+      // rec.y = first/last PFR season incl. years below the file's points floor
+      const y0 = rec.y ? rec.y[0] : seasons[0].yr, y1 = rec.y ? rec.y[1] : seasons[seasons.length - 1].yr;
+      const yrsLabel = y0 === y1 ? String(y0) : y0 + '\u2013' + y1;
+      // Same person already in the pool? Same name + position and a career span that
+      // overlaps these years (1-yr slack); a namesake from another era stays separate.
+      const existing = FG_POOL.find(x => {
+        if (x.n !== rec.n || x.s !== pos || x._src7098) return false;
+        const yrs = [];
+        _fgCareerOf(x).forEach(s => { if (s.yr) yrs.push(+s.yr); });
+        if (x._bestByTeam) Object.values(x._bestByTeam).forEach(s => { if (s && s.yr) yrs.push(+s.yr); });
+        const m = String(x._yrs || '').match(/(\d{4})\D+(\d{4})/);
+        if (m) yrs.push(+m[1], +m[2]);
+        if (!yrs.length) return false;
+        let a = Math.min(...yrs);
+        const b = Math.max(...yrs);
+        // all_players.js careers start at 1999, so a retired player whose record begins
+        // 1999-2001 may have earlier seasons that exist only here; allow a few
+        // low-scoring (dropped) years before that floor.
+        if (a >= 1999 && a <= 2001 && x._retired) a = 1994;
+        return y0 <= b + 1 && y1 >= a - 1;
+      });
+      if (existing) {
+        const have = new Set(_fgCareerOf(existing).map(s => +s.yr));
+        const extra = seasons.filter(s => !have.has(+s.yr));
+        if (extra.length) existing._x7098 = (existing._x7098 || []).concat(extra);
+        existing._tmByYr = existing._tmByYr || {};
+        seasons.forEach(s => { if (s._mt.length) existing._tmByYr[s.yr] = s._mt; });
+        const tSet = new Set(existing._fgTeams || []);
+        teams.forEach(t => tSet.add(t));
+        existing._fgTeams = [...tSet];
+        if (!existing._yrs) existing._yrs = yrsLabel;
+        merged++;
+        return;
+      }
+      FG_POOL.push({
+        n: rec.n, s: pos, _fgTeams: teams, _fgIdx: FG_POOL.length,
+        _yrs: yrsLabel, _retired: true,
+        career: seasons, _src7098: true, _pfr: pid
+      });
+      added++;
+    });
+    console.log('[FantasyGame] 1970-98 season totals: +' + added + ' players, ' + merged + ' merged into existing entries');
+  }
+  window._fgPoolSnapshot = () => FG_POOL; // debug: inspect the draft pool from the console
+  // Which franchise(s) a career season belongs to, when the season (PFR 1970-98) or the
+  // player's PFR year map says; null = unknown (callers fall back to the history tables).
+  function _fgSeasonTeams(player, s) {
+    if (s._mt) return s._mt;
+    if (player._tmByYr && player._tmByYr[s.yr]) return player._tmByYr[s.yr];
+    return null;
+  }
 
   // Build the complete NFL teams list (all 32)
   // ALL_NFL_TEAMS moved to data/all_nfl_teams.js
@@ -28065,6 +28186,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (era !== 'all') { fgYear = 'best'; document.getElementById('fgYearSelect').value = 'best'; }
     _fgPaintEra();
     _fgSyncType();
+    if (_fgWindowPre1999()) _fgPrep7098();
     updateFgSubtitle();
     resetGame();
   }
@@ -28202,6 +28324,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     fgYear = this.value;
     if (fgYear !== 'best' && fgEra !== 'all') { fgEra = 'all'; _fgPaintEra(); }
     _fgSyncType();
+    if (_fgWindowPre1999()) _fgPrep7098();
     updateFgSubtitle();
     resetGame();
   });
@@ -28276,7 +28399,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     }
 
     // If player has year-by-year career data (from D or LDB), use it for team-specific filtering
-    const career = (player._dRef && player._dRef.career) ? player._dRef.career : (player.career || []);
+    // (_fgCareerOf also appends the 1970-98 PFR seasons the career was missing).
+    const career = _fgCareerOf(player);
     if (career.length && modernTeam) {
       let best = null;
       const activeHist = ACTIVE_TEAM_HISTORY[player.n];
@@ -28288,7 +28412,12 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
         let onTeam = true; // default: include season
 
-        if (activeHist) {
+        const seasonTeams = _fgSeasonTeams(player, s);
+        if (seasonTeams) {
+          // PFR 1970-98 seasons know their franchise; an empty list (multi-team season
+          // with no neighbours) keeps the default.
+          if (seasonTeams.length && !seasonTeams.includes(modernTeam)) onTeam = false;
+        } else if (activeHist) {
           const st = getTeamForYear(player.n, s.yr);
           if (st) {
             const stModern = TEAM_ALIASES[st] || st;
@@ -28375,6 +28504,13 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const currentYear = new Date().getFullYear();
     let minYr = Infinity, maxYr = -Infinity;
 
+    // Seed with the PFR 1970-98 seasons that know their franchise, so a legend whose
+    // history tables start with the 1999 weekly data shows the whole stint.
+    _fgCareerOf(player).forEach(s => {
+      const st = _fgSeasonTeams(player, s);
+      if (st && st.includes(modernTeam)) { if (s.yr < minYr) minYr = s.yr; if (s.yr > maxYr) maxYr = s.yr; }
+    });
+
     // Check ACTIVE_TEAM_HISTORY (full team names)
     if (typeof ACTIVE_TEAM_HISTORY !== 'undefined') {
       const hist = ACTIVE_TEAM_HISTORY[player.n];
@@ -28415,18 +28551,22 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       }
     }
 
-    // Fallback: scan career array for seasons on this team
-    const career = (player._dRef && player._dRef.career) ? player._dRef.career : (player.career || []);
+    // Fallback: scan career array for seasons on this team (PFR 1970-98 seasons carry
+    // their franchise; the rest go through the active-history table).
+    const career = _fgCareerOf(player);
     if (career.length && modernTeam) {
       career.forEach(s => {
         const yr = s.yr;
-        const sTeam = getTeamForYear(player.n, yr);
-        if (sTeam) {
-          const sModern = TEAM_ALIASES[sTeam] || sTeam;
-          if (sModern === modernTeam) {
-            if (yr < minYr) minYr = yr;
-            if (yr > maxYr) maxYr = yr;
-          }
+        const seasonTeams = _fgSeasonTeams(player, s);
+        let on = false;
+        if (seasonTeams) on = seasonTeams.includes(modernTeam);
+        else {
+          const sTeam = getTeamForYear(player.n, yr);
+          if (sTeam) on = (TEAM_ALIASES[sTeam] || sTeam) === modernTeam;
+        }
+        if (on) {
+          if (yr < minYr) minYr = yr;
+          if (yr > maxYr) maxYr = yr;
         }
       });
       if (minYr !== Infinity) {
@@ -28545,6 +28685,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         `;
         div.style.cursor = 'pointer';
         div.addEventListener('click', () => {
+          if (filled.player._src7098) return; // 1970-98 PFR-only player: no card (a same-name D row is someone else)
           const d = D.find(dd => dd.n === filled.player.n);
           if (d && typeof openPlayerCard === 'function') openPlayerCard(d);
         });
@@ -28586,13 +28727,21 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (!available.length) return COLLEGE_CONFS[Math.floor(Math.random()*COLLEGE_CONFS.length)];
       return available[Math.floor(Math.random()*available.length)];
     }
-    const available = NFL_TEAMS.filter(t => !usedTeams.includes(t));
+    let available = NFL_TEAMS.filter(t => !usedTeams.includes(t));
+    if (fgType === 'custom') {
+      // Filtered games: skip franchises with nobody to draft in the window (the Jaguars
+      // in 1988, the Seahawks in 1975) instead of burning the player's skips on them.
+      const stocked = available.filter(t => FG_POOL.some(p => !usedPlayers.has(p._fgIdx) && getOpenSlotsForPos(p.s).length && playerPlaysForTeam(p, t) && getScore(p, t)));
+      if (stocked.length) available = stocked;
+    }
     if (!available.length) return NFL_TEAMS[Math.floor(Math.random()*NFL_TEAMS.length)];
     return available[Math.floor(Math.random()*available.length)];
   }
 
   function startDraft() {
     if (gameOver) return;
+    // A 1970-98 window needs the season-totals file in the pool first.
+    if (_fgWindowPre1999() && !_fg7098Applied) { _fgPrep7098(startDraft); return; }
     // Cancel any in-flight spinner loop before starting a new one. Without this a
     // re-entrant call (double-click on Start Draft, or starting a round while a
     // prior spin is still decelerating) leaves an orphaned requestAnimationFrame

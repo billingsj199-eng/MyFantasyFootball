@@ -56413,13 +56413,14 @@ window.fmtHeight = fmtHeight;
     const _fix = (typeof window._fixHeadshotUrl === 'function') ? window._fixHeadshotUrl : (u => u);
 
     // LEGEND_HEADSHOTS record → reveal info, preferring the cell team's jersey photo.
-    const _tUp = String(team || '').toUpperCase();
-    const _tCanon = (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[_tUp]) || _tUp;
     const _fromLegend = (lh) => {
       const bt = _tCanon && lh.byTeam && lh.byTeam[_tCanon];
       if (bt && bt.url) return { url: bt.url, credit: bt.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' };
       return { url: lh.url, credit: lh.credit || 'Wikimedia Commons', page: lh.page || '' };
     };
+
+    const _tUp = String(team || '').toUpperCase();
+    const _tCanon = (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[_tUp]) || _tUp;
 
     // 00. LEGEND_HEADSHOTS_LOCAL — hand-picked cutouts in data/legend_hs/ (Jack's own
     // photos, ESPN framing, transparent PNG). Wins over every other source; no credit
@@ -56427,7 +56428,9 @@ window.fmtHeight = fmtHeight;
     if (window.LEGEND_HEADSHOTS_LOCAL) {
       for (const v of nameVariants) {
         const lo = window.LEGEND_HEADSHOTS_LOCAL[v];
-        if (lo && lo.url) return { url: lo.url, credit: '', page: '' };
+        if (!lo || !lo.url) continue;
+        const lbt = _tCanon && lo.byTeam && lo.byTeam[_tCanon];   // cut from that team's folder
+        return { url: (lbt && lbt.url) || lo.url, credit: '', page: '' };
       }
     }
 

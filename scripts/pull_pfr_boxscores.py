@@ -584,10 +584,28 @@ def infer_pos(tot):
     return 'RB'
 
 
-def collect(years):
+def complete_seasons(years, st=None):
+    """Seasons whose every scheduled game is parsed (a partial season would give wrong best weeks)."""
+    st = st or load_state()
+    out = []
+    for season in years:
+        games = st['schedules'].get(str(season))
+        if not games:
+            continue
+        parsed = load_parsed(season)
+        if all(g['gid'] in parsed for g in games):
+            out.append(season)
+    return out
+
+
+def collect(years, complete_only=False):
     """players[id] = {n, seasons:{yr:[rows]}, tot:{...}} from the parsed games."""
     players = {}
     missing_years = []
+    if complete_only:
+        done = set(complete_seasons(years))
+        missing_years = [y for y in years if y not in done]
+        years = [y for y in years if y in done]
     for season in years:
         parsed = load_parsed(season)
         if not parsed:
@@ -622,8 +640,8 @@ def collect(years):
     return players, missing_years
 
 
-def build(years=YEARS, write=True):
-    players, missing_years = collect(years)
+def build(years=YEARS, write=True, complete_only=False):
+    players, missing_years = collect(years, complete_only)
     totals = season_totals()
     pos_of = {}
     for pid, pl in players.items():
@@ -636,8 +654,7 @@ def build(years=YEARS, write=True):
             seasons = {y: rows for y, rows in pl['seasons'].items() if y1 <= int(y) <= y2}
             if seasons:
                 db[pid] = {'n': pl['n'], 'pos': pos_of[pid], 'seasons': seasons}
-        if not db:
-            continue
+        # an era with nothing complete yet still gets its (empty) file so the loader never 404s
         js = ('// Per-game stat lines ' + f'{y1}-{y2}' + ' for every NFL skill player (Pro-Football-Reference box\n'
               '// scores; built by scripts/pull_pfr_boxscores.py). Keyed by PFR player id; the merge into\n'
               '// WEEKLY_STATS (index.html _mergeWeeklyStatsLegacy) resolves display names. fpts = half-PPR,\n'
@@ -653,7 +670,7 @@ def build(years=YEARS, write=True):
         out.append((label, path, len(db), nrows, len(js.encode('utf-8'))))
         log(f'{"wrote" if write else "would write"} {os.path.relpath(path, ROOT)}: {len(db)} players, {nrows} rows, {len(js.encode("utf-8")) / 1024 / 1024:.2f} MB')
     if missing_years:
-        log('seasons with no parsed games yet:', missing_years)
+        log(('seasons left out (incomplete):' if complete_only else 'seasons with no parsed games yet:'), missing_years)
     return out
 
 
@@ -665,8 +682,8 @@ def fpts_totals_basis(s):
     return round(v + 1e-9, 1)
 
 
-def xcheck(n=50, seed=7, years=YEARS, min_fpts=40.0):
-    players, _ = collect(years)
+def xcheck(n=50, seed=7, years=YEARS, min_fpts=40.0, complete_only=False):
+    players, _ = collect(years, complete_only)
     totals = season_totals()
     legends = load_js_json(os.path.join(DATA_DIR, 'legend_careers.js'), 'LEGEND_CAREERS') or {}
     src = 'season_totals_1970_1998.js' if totals else 'legend_careers.js'
@@ -756,6 +773,8 @@ def main():
     ap.add_argument('--until', default='06:30', help='nightly: stop fetching at this local time')
     ap.add_argument('--max-minutes', type=float, default=None)
     ap.add_argument('--no-write', action='store_true')
+    ap.add_argument('--complete-only', action='store_true',
+                    help='build/xcheck only seasons whose every scheduled game is parsed (default for --nightly)')
     args = ap.parse_args()
     st = load_state()
     os.makedirs(CACHE, exist_ok=True)
@@ -797,12 +816,12 @@ def _run(args, st):
         st['runs'].append({'at': dt.datetime.now().isoformat(timespec='minutes'), 'fetched': n, 'parsed': parsed, 'left': left})
         save_state(st)
         if n:
-            build(args.years, write=not args.no_write)
+            build(args.years, write=not args.no_write, complete_only=True)
         log(f'nightly run end: fetched {n}, {left} left' + ('; ALL DONE' if left <= 0 else ''))
     if args.build:
-        build(args.years, write=not args.no_write)
+        build(args.years, write=not args.no_write, complete_only=args.complete_only)
     if args.xcheck:
-        xcheck(args.n, years=args.years)
+        xcheck(args.n, years=args.years, complete_only=args.complete_only)
     if not any((args.status, args.schedules, args.fetch, args.build, args.xcheck, args.nightly)):
         ap.print_help()
 

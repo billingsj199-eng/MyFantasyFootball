@@ -219,8 +219,11 @@ function pickThemes(sig) {
   const recentKeys = new Set();
   (sig.history || []).forEach(hx => {
     if (!hx.date) return;
+    // The target date's own earlier auto lock is what a re-run replaces —
+    // it must not push the picker onto a weaker variant.
+    if (hx.date === sig.date) return;
     const age = require('./calendar').diffDays(sig.date, hx.date);
-    if (age >= 0 && age <= REPEAT_DAYS) {
+    if (age > 0 && age <= REPEAT_DAYS) {
       if (hx.auto && hx.auto.key) recentKeys.add(hx.auto.key);
       if (hx.title) recentKeys.add('title|' + hx.title);
     }

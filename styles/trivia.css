@@ -71,3 +71,20 @@
 .trivia-logo-picker{position:absolute;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:grid;grid-template-columns:repeat(8,36px);gap:4px;max-height:240px;overflow-y:auto}
 .trivia-logo-picker img{width:32px;height:32px;object-fit:contain;cursor:pointer;border-radius:4px;padding:2px;border:2px solid transparent}
 .trivia-logo-picker img:hover{border-color:var(--accent);background:rgba(168,85,247,.1)}
+/* Player mode (2026-10-28): the page is public. Builder/admin controls carry
+   .trivia-admin-only and show only when body.mff-admin is set (toggled on auth
+   state in app.js); .trivia-player-only is the reverse. */
+body:not(.mff-admin) .trivia-admin-only{display:none!important}
+body.mff-admin .trivia-player-only{display:none!important}
+/* Phones: five cells across came out ~65px wide. Fewer columns and bigger
+   cells; the guess input is 16px so iOS doesn't zoom the page on focus. */
+@media (max-width:640px){
+  .trivia-wrap{padding:12px 8px}
+  .trivia-board-title{font-size:1.25rem;letter-spacing:2px;padding:10px 12px 8px}
+  .trivia-grid{grid-template-columns:repeat(3,1fr)!important}
+  .trivia-guess-input{font-size:16px;padding:7px 4px}
+  .trivia-guess-input::placeholder{font-size:13px}
+}
+@media (max-width:420px){
+  .trivia-grid{grid-template-columns:repeat(2,1fr)!important}
+}

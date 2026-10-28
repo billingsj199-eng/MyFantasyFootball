@@ -24265,16 +24265,13 @@ const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draft
 const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
 const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', startsit: 'authAnchorStartSit', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest', draftstrategy: 'authAnchorDraftStrategy', research: 'authAnchorResearch' };
 function switchPage(page) {
-  // Admin-only pages — silently redirect non-admins to home
-  const ADMIN_ONLY_PAGES = ['backtest', 'trivia', 'research'];
+  // Admin-only pages — silently redirect non-admins to home. Trivia is public
+  // since 2026-10-28: players get the daily board, the builder controls carry
+  // class trivia-admin-only and hide unless body.mff-admin is set.
+  const ADMIN_ONLY_PAGES = ['backtest', 'research'];
   if (ADMIN_ONLY_PAGES.includes(page)) {
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
-    // ?embed=trivia is a deliberate PUBLIC share surface (iframe embeds of
-    // catalog boards — trivia_catalog is public-read). The builder page stays
-    // admin-only; embed mode strips the chrome and the admin affordances are
-    // already gated inside the trivia code itself.
-    const triviaEmbed = page === 'trivia' && document.body.classList.contains('mff-embed');
-    if (!admin && !triviaEmbed) { page = 'rankings'; } // 'home' isn't in pageMap — it renders a blank page
+    if (!admin) { page = 'rankings'; } // 'home' isn't in pageMap — it renders a blank page
   }
   Object.values(pageMap).forEach(id => {
     const el = document.getElementById(id);
@@ -24526,8 +24523,7 @@ window.switchPage = switchPage;
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
     const btBtn = document.getElementById('navBacktestBtn');
     if (btBtn) btBtn.style.display = admin ? '' : 'none';
-    const tvBtn = document.getElementById('navTriviaBtn');
-    if (tvBtn) tvBtn.style.display = admin ? '' : 'none';
+    // (Trivia nav is public since 2026-10-28.)
     const rsBtn = document.getElementById('navResearchBtn');
     if (rsBtn) rsBtn.style.display = admin ? '' : 'none';
     _navPapersCheck(admin);
@@ -40112,13 +40108,7 @@ window.fmtHeight = fmtHeight;
       if (!embed) return;
       document.body.classList.add('mff-embed');
       if (embed === 'trivia') {
-        // Embeds are public: hide the AI entry points unless the viewer is
-        // the admin (body.mff-admin is toggled on auth state change).
-        const st = document.createElement('style');
-        st.textContent = 'body.mff-embed:not(.mff-admin) #triviaSurpriseBtn,'
-          + 'body.mff-embed:not(.mff-admin) #triviaCustomPromptWrap,'
-          + 'body.mff-embed:not(.mff-admin) label:has(> #triviaCustomPromptToggle){display:none!important}';
-        document.head.appendChild(st);
+        // Embeds are public; the builder/AI controls hide via .trivia-admin-only.
         const id = params.get('id');
         // Navigate to trivia page first (force-show even if normally admin-gated)
         const triviaBtn = document.querySelector('.nav-btn[data-page="trivia"]');
@@ -44231,8 +44221,32 @@ window.fmtHeight = fmtHeight;
       tab.classList.add('active');
       const pane = document.querySelector('.dc-pane[data-dc="' + key + '"]');
       if (pane) pane.classList.add('active');
+      if (key === 'trivia') window._mffTriviaCardRefresh();
     });
   });
+  // Games → DAILY → TRIVIA card. The board plays on the Trivia page (it needs
+  // the full width), so the card opens it and starts today's board once the
+  // trivia chunk is in. Streak/today come from the same localStorage state the
+  // trivia page keeps (mff_triviaDaily), so no chunk load is needed here.
+  window._mffOpenDailyTrivia = function() {
+    switchPage('trivia');
+    window._ensureChunk(['trivia'])
+      .then(() => { if (typeof window._triviaPlayDaily === 'function') window._triviaPlayDaily(); })
+      .catch(() => {});
+  };
+  window._mffTriviaCardRefresh = function() {
+    const sEl = document.getElementById('dcTriviaStreak'), tEl = document.getElementById('dcTriviaToday'), btn = document.getElementById('dcTriviaPlayBtn');
+    if (!sEl || !tEl) return;
+    let st = null;
+    try { st = JSON.parse(localStorage.getItem('mff_triviaDaily') || 'null'); } catch (_) {}
+    let today = '';
+    try { today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); } catch (_) {}
+    const done = st && st.completed && st.completed[today];
+    sEl.textContent = String((st && st.streak) || 0);
+    tEl.textContent = done ? done.score + '/' + done.total : '—';
+    if (btn) btn.textContent = done ? 'PLAY AGAIN' : 'PLAY TODAY';
+  };
+  window._mffTriviaCardRefresh();
   // Initial load once Firebase is up (a fixed 2.5s timer could beat it and show
   // an error), and again whenever auth resolves or changes so the signed-in
   // player's own rank row appears.
@@ -57442,7 +57456,7 @@ window.fmtHeight = fmtHeight;
       boardTitle + '\n' +
       lines.join('\n') + '\n' +
       score + '/' + total + ' · ' + timeStr + '\n' +
-      location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash;
+      location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash + '#trivia';
 
     // Stash on the modal so the share button can grab it without rebuild.
     // Preview runs get a marked share text so an accidental share is
@@ -57963,7 +57977,7 @@ window.fmtHeight = fmtHeight;
       '<div style="flex:1">' +
         '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent-blue);margin-bottom:4px">HOW IT WORKS</div>' +
         '<div style="margin-bottom:6px">A new fantasy-football trivia board drops every day — same one for everyone. Hit <strong style="color:#ffd166">PLAY TODAY</strong>, type guesses for each cell, and share your result grid when you finish.</div>' +
-        '<div style="font-size:.72rem;color:var(--text2)">Want variety? Try <strong style="color:var(--accent-purple)">🎲 Surprise Me</strong> for an AI-generated random board, or pick a quick-start template below.</div>' +
+        '<div class="trivia-admin-only" style="font-size:.72rem;color:var(--text2)">Want variety? Try<strong style="color:var(--accent-purple)">🎲 Surprise Me</strong> for an AI-generated random board, or pick a quick-start template below.</div>' +
       '</div>' +
       '<button onclick="window._triviaDismissIntro()" title="Dismiss" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1;padding:0;flex-shrink:0">✕</button>';
     panel.parentNode.insertBefore(tip, panel);
@@ -57974,6 +57988,11 @@ window.fmtHeight = fmtHeight;
     if (tip && tip.remove) tip.remove();
   };
   _triviaShowFirstVisitTooltip();
+  // Shared permalink (?daily=YYYY-MM-DD#trivia): start that board right away
+  // instead of landing on the panel.
+  if (/[?&]daily=\d{4}-\d{2}-\d{2}/.test(location.search || '')) {
+    setTimeout(() => { if (typeof window._triviaPlayDaily === 'function') window._triviaPlayDaily(); }, 400);
+  }
 
   // ===== ADMIN PREVIEW =====
   // Lets admins QA tomorrow's (or any future) daily before it goes live.

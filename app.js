@@ -55626,6 +55626,7 @@ window.fmtHeight = fmtHeight;
     // Reset score
     _triviaScore = { correct: 0, wrong: 0, misses: 0, total: items.length };
     const freeBar = mode === 'guess' && _triviaFreeBarOn();
+    const _adm = (typeof window.isAdmin === 'function' && window.isAdmin());
     const scoreBar = document.getElementById('triviaScoreBar');
     if (mode === 'guess') {
       scoreBar.style.display = '';
@@ -55635,7 +55636,7 @@ window.fmtHeight = fmtHeight;
     }
 
     let html = `<div class="trivia-board-outer${freeBar ? ' trivia-freebar-board' : ''}" style="background:${boardBg};border-color:${boardBorder}">`;
-    html += `<div class="trivia-board-title" contenteditable="true" id="triviaBoardTitle" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(titleText)}</div>`;
+    html += `<div class="trivia-board-title"${_adm ? ' contenteditable="true"' : ''} id="triviaBoardTitle" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(titleText)}</div>`;
     if (freeBar) {
       // One search bar for the whole board: a hit lands on whichever square
       // holds that player (see _triviaFreeGuess).
@@ -55698,7 +55699,7 @@ window.fmtHeight = fmtHeight;
     // Missing players panel
     const missing = data.missing || [];
     if (missing.length > 0) {
-      html += '<div style="margin-top:12px;padding:14px 16px;border-radius:10px;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25)">';
+      html += '<div class="trivia-admin-only" style="margin-top:12px;padding:14px 16px;border-radius:10px;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25)">';
       html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1px;color:#fb923c;margin-bottom:8px">⚠ DATABASE GAPS DETECTED (' + missing.length + ')</div>';
       html += '<div style="font-size:.75rem;color:var(--text2);margin-bottom:8px">These players should be on the board but are missing or have incorrect data in your database:</div>';
       missing.forEach(m => {
@@ -57587,6 +57588,8 @@ window.fmtHeight = fmtHeight;
     const dateStr = _triviaResolveDailyDate();
     const chain = _triviaPickDailyChain(dateStr);
     if (!chain.length) return;
+    // First play = the intro has done its job; clear it for good.
+    if (typeof window._triviaDismissIntro === 'function') window._triviaDismissIntro();
     // Capture start time + initialize per-cell results array so the share
     // grid can reflect actual cell-by-cell outcomes. The preview flag
     // travels with the run so finalize knows to skip localStorage.
@@ -58134,6 +58137,8 @@ window.fmtHeight = fmtHeight;
     const stale = document.getElementById('triviaVerifyBanner');
     if (stale) stale.remove();
     if (!result || (!result.ref && !result.cross)) return;
+    // Builder QA only — players get the board, not the data audit.
+    if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
 
     const refOk = result.ref ? result.ref.ok : true;
     const crossOk = result.cross ? result.cross.ok : true;

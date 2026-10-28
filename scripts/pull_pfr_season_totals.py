@@ -10,6 +10,7 @@ scripts/_cache/pfr_fantasy/ (git-ignored); re-runs parse from the cache.
 
 Output: data/season_totals_1970_1998.js
     const SEASON_TOTALS_7098 = { "<pfr_id>": { n, pos, y: [firstYr, lastYr], by: birthYr?,
+        tms: {"<yr>": "<team code>"}?,   // seasons dropped by --min-fpts: franchise only
         seasons: [ {yr, gp, tm, py, ptd, int, ra, ry, rtd, rc, rcy, rctd, fl, fpts} ] } };
     // zero stats omitted; y spans every PFR row 1970-98 (seasons below --min-fpts are dropped)
     const SEASON_TOTALS_7098_NAMES = { "<name>": ["<pfr_id>", ...] };
@@ -285,6 +286,7 @@ def parse_year(y, html, stats):
 def build(years, min_fpts, allow_fetch):
     players = {}
     all_years = {}  # every PFR row, including seasons below min_fpts (career span)
+    low_tm = {}  # pid -> {yr: team code} for seasons dropped by min_fpts
     stats = {'skipped_pos': {}, 'inferred_pos': 0, 'rows': 0, 'kept': 0, 'missing_years': [], 'teams': {}, 'fl_estimated_years': []}
     per_year = {}
     for y in years:
@@ -298,6 +300,7 @@ def build(years, min_fpts, allow_fetch):
             stats['rows'] += 1
             all_years.setdefault(pid, set()).add(y)
             if s['fpts'] < min_fpts:
+                low_tm.setdefault(pid, {})[y] = s['tm']  # franchise only, for the team filter
                 continue
             stats['kept'] += 1
             pl = players.setdefault(pid, {'n': name, 'pos': {}, 'seasons': [], '_ages': []})
@@ -307,6 +310,8 @@ def build(years, min_fpts, allow_fetch):
             pl['seasons'].append(s)
     for pid, pl in players.items():
         pl['y'] = [min(all_years[pid]), max(all_years[pid])]
+        if pid in low_tm:
+            pl['tms'] = {str(y): t for y, t in sorted(low_tm[pid].items())}
     return players, stats, per_year
 
 
@@ -338,6 +343,8 @@ def write_js(players, teams):
         pos = max(pl['pos'].items(), key=lambda kv: kv[1])[0]  # position with the most points
         seasons = sorted(pl['seasons'], key=lambda s: s['yr'])
         entry = {'n': pl['n'], 'pos': pos, 'y': pl['y'], 'seasons': [compact(s) for s in seasons]}
+        if pl.get('tms'):
+            entry['tms'] = pl['tms']  # team codes of the seasons below the points floor
         if pl['_ages']:
             y0, a0 = pl['_ages'][0]
             entry['by'] = y0 - a0  # approximate birth year (season year - listed age)

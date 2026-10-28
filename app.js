@@ -27967,6 +27967,12 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         if (extra.length) existing._x7098 = (existing._x7098 || []).concat(extra);
         existing._tmByYr = existing._tmByYr || {};
         seasons.forEach(s => { if (s._mt.length) existing._tmByYr[s.yr] = s._mt; });
+        // rec.tms = seasons under the file's points floor (franchise only): without them a
+        // legend's 6-point year would count for whichever team drew him.
+        Object.entries(rec.tms || {}).forEach(([yr, tm]) => {
+          const f = /TM$/.test(tm) ? null : _fg7098Franchise(tm, +yr);
+          if (f && !existing._tmByYr[yr]) existing._tmByYr[yr] = [f];
+        });
         const tSet = new Set(existing._fgTeams || []);
         teams.forEach(t => tSet.add(t));
         existing._fgTeams = [...tSet];
@@ -28721,6 +28727,23 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     highScoreEl.textContent = hs > 0 ? `HIGH SCORE: ${hs.toFixed(1)}` : '';
   }
 
+  // Filtered games: the positions each franchise can field inside the window, computed
+  // once per game from the players who score in it (resetGame clears the cache; a drawn
+  // team leaves through usedTeams, so used players need no re-scan).
+  let _fgStockCache = null;
+  function _fgStockedTeams(available) {
+    if (!_fgStockCache) {
+      _fgStockCache = {};
+      const inWindow = FG_POOL.filter(p => getScore(p, null));
+      NFL_TEAMS.forEach(t => {
+        const pos = new Set();
+        inWindow.forEach(p => { if (!pos.has(p.s) && playerPlaysForTeam(p, t) && getScore(p, t)) pos.add(p.s); });
+        _fgStockCache[t] = pos;
+      });
+    }
+    return available.filter(t => [...(_fgStockCache[t] || [])].some(ps => getOpenSlotsForPos(ps).length));
+  }
+
   function getRandomTeam() {
     if (fgLeague === 'college') {
       const available = COLLEGE_CONFS.filter(c => !usedTeams.includes(c));
@@ -28731,7 +28754,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (fgType === 'custom') {
       // Filtered games: skip franchises with nobody to draft in the window (the Jaguars
       // in 1988, the Seahawks in 1975) instead of burning the player's skips on them.
-      const stocked = available.filter(t => FG_POOL.some(p => !usedPlayers.has(p._fgIdx) && getOpenSlotsForPos(p.s).length && playerPlaysForTeam(p, t) && getScore(p, t)));
+      const stocked = _fgStockedTeams(available);
       if (stocked.length) available = stocked;
     }
     if (!available.length) return NFL_TEAMS[Math.floor(Math.random()*NFL_TEAMS.length)];
@@ -29101,6 +29124,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     currentTeamPlayers = [];
     pendingPlayer = null;
     skipsLeft = 2;
+    _fgStockCache = null;
     searchInput.value = '';
     if (spinnerInterval) { cancelAnimationFrame(spinnerInterval); spinnerInterval = null; }
     spinnerWrap.style.display = 'none';

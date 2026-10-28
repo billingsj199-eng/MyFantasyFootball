@@ -134,3 +134,11 @@ Job failure → `mff_alert.ps1` toast `trivia-daily-failed`; log at
   use all-time single-game boards instead.
 - AI phrasing (worker `late-wind-6322`, admin-credentialed) is deliberately not used; the
   hook headline from the news feed is the desc. Easy to add later in `themes.js` if wanted.
+
+## Next ideas (Jack, 2026-10-28)
+- **College football boards**: the site already holds plenty of college stats (college_stats.js,
+  college_weekly_*.js, devy), so the picker can add CFB season leaders, a school's all-time
+  greats, a conference, Heisman / award winners, draft classes by school. Boards don't have
+  to be stats — team- or awards-based lists are fine.
+- **College player images**: when more headshots are needed, add a college image pipeline
+  (free sources only, same as the Wikimedia legend headshots) alongside those boards.

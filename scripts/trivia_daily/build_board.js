@@ -191,15 +191,15 @@ function judge(variant, r, mustInclude) {
   if (r.items.length < 16) return { ok: false, why: 'only ' + r.items.length + ' items' };
   // News boards must carry the player in the news (Jack 2026-10-28).
   if (mustInclude && !hasPlayer(r.items, mustInclude)) return { ok: false, why: mustInclude + ' is not on the board', missingPlayer: true };
-  if (variant.kind === 'list') return { ok: true, status: 'list' };
   // A single-game board where one player owns a quarter of the cells
   // (a franchise list of Derrick Henry games) is a bad guessing game.
-  if (variant.kind === 'game') {
+  if (variant.kind === 'game' || variant.repeatRule) {
     const counts = {};
     r.items.forEach(it => { const k = normName(it.answer); counts[k] = (counts[k] || 0) + 1; });
     const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
     if (top && counts[top] > r.items.length / 4) return { ok: false, why: top + ' holds ' + counts[top] + ' of ' + r.items.length + ' cells' };
   }
+  if (variant.kind === 'list') return { ok: true, status: 'list' };
   if (r.bannerStatus === 'flagged' && variant.kind !== 'team') return { ok: false, why: 'verifier flagged: ' + r.bannerText.slice(0, 200) };
   if (variant.kind === 'team') {
     if (!r.alt) return { ok: false, why: 'team cross-check did not run' };
@@ -259,6 +259,13 @@ async function buildFirstPassing(themes, opts) {
       for (const mustInclude of passes) {
       if (mustInclude === null && passes.length > 1) log('no board carried ' + theme.mustInclude + ' — retrying without him');
       for (const variant of theme.variants) {
+        if (variant.lazy && !variant.items) {
+          // College boards: built on demand (cached Wikipedia / ESPN fetches).
+          let b = null;
+          try { b = await variant.lazy(); } catch (e) { log('  ' + variant.key + ' failed: ' + (e && e.message)); }
+          if (!b) { log('skip ' + variant.key + ': no board (too few rows or source unavailable)'); tried.push({ theme: theme.kind, variant: variant.key, ok: false, why: 'no board', items: 0 }); continue; }
+          Object.assign(variant, { key: b.key || variant.key, title: b.title, desc: b.desc, items: b.items, repeatRule: !!b.repeatRule });
+        }
         if (variant.kind === 'list') {
           // Built in Node from nflverse data; no site generator involved.
           log('list ' + variant.key + ' — "' + variant.title + '" (' + variant.items.length + ' items)');

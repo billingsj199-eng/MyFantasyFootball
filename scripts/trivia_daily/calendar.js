@@ -106,6 +106,11 @@ function calendarContext(dateStr) {
     fantasyPlayoffs: wk != null && wk >= 15 && wk <= 17,
     // Mon/Tue/Wed after a Sunday slate: the "big game" window.
     postGameDays: wk != null && (wd === 1 || wd === 2 || wd === 3),
+    // College football: Saturdays Sep 1 – Dec 7, the Heisman ceremony week
+    // (second Saturday of December, Mon–Sun), and bowl / playoff season.
+    cfbSaturday: wd === 6 && ((p.m >= 9 && p.m <= 11) || (p.m === 12 && p.d <= 7)),
+    heismanWeek: (() => { const sat = nthWeekday(p.y, 12, 6, 2); const dd = diffDays(sat, dateStr); return p.m === 12 && dd >= 0 && dd <= 6; })(),
+    bowlSeason: (p.m === 12 && p.d >= 15) || (p.m === 1 && p.d <= 20),
   };
   // Day index inside a multi-day window so rotations are deterministic.
   ctx.dayIndex = dayNumber(dateStr);

@@ -130,6 +130,33 @@ function sameName(a, b) {
   return n(a) === n(b);
 }
 
+// --- college boards (scripts/trivia_daily/college.js) ---
+// Built lazily (Wikipedia / ESPN fetches, cached) by build_board when the
+// variant's turn comes; `lazy()` returns {title, desc, items} or null.
+const CFB_SCHOOLS = ['Alabama', 'Ohio State', 'Georgia', 'LSU', 'Oklahoma', 'Texas', 'USC', 'Michigan', 'Clemson', 'Notre Dame', 'Oregon', 'Penn State', 'Florida', 'Florida State', 'Auburn', 'Wisconsin', 'Tennessee', 'Texas A&M', 'Oklahoma State', 'Miami'];
+const CFB_CONFS = ['SEC', 'Big Ten', 'Big 12', 'ACC', 'Pac-12'];
+const CFB_STATS = ['ry', 'rcy', 'py']; // yards only: TD / reception columns are too sparse for 16-row boards
+function cfbVariant(key, title, lazy) {
+  return { kind: 'list', key, title, lazy };
+}
+// Rotation of college boards for a day index: returns [primary, fallback, fallback].
+function cfbRotation(cfb, dayIndex) {
+  const C = require('./college');
+  const stat = CFB_STATS[dayIndex % CFB_STATS.length];
+  const school = CFB_SCHOOLS[dayIndex % CFB_SCHOOLS.length];
+  const conf = CFB_CONFS[dayIndex % CFB_CONFS.length];
+  const yr = () => cfb().college.maxYear;
+  const all = [
+    () => cfbVariant('cfb|season|' + stat, 'College season leaders', () => C.seasonLeaders(cfb(), yr(), stat)),
+    () => cfbVariant('cfb|school|' + school + '|' + stat, school + ' leaders', () => C.schoolLeaders(cfb(), school, stat)),
+    () => cfbVariant('cfb|conf|' + conf + '|' + stat, conf + ' season leaders', () => C.conferenceSeason(cfb(), conf, yr(), stat)),
+    () => cfbVariant('cfb|game|' + stat, 'Best college games', () => C.bestGames(cfb(), stat)),
+    () => cfbVariant('cfb|career|' + stat, 'College career leaders', () => C.careerLeaders(cfb(), stat)),
+  ];
+  const n = all.length;
+  return [all[dayIndex % n](), all[(dayIndex + 1) % n](), all[(dayIndex + 2) % n]()];
+}
+
 // A theme = ordered variants (first that builds + verifies wins) + metadata.
 // mustInclude: the player in the news has to be on the board (Jack 10-28).
 function theme(kind, score, variants, meta) {
@@ -170,12 +197,30 @@ function pickThemes(sig) {
   const seenKeys = new Set();
   const push = (t) => { if (t && !seenKeys.has(t.key)) { seenKeys.add(t.key); out.push(t); } };
   const rot = (arr) => arr[((c.dayIndex % arr.length) + arr.length) % arr.length];
+  // College context is loaded only when a college variant is actually built.
+  let _cfbCtx = null;
+  const cfb = () => (_cfbCtx = _cfbCtx || require('./college').context(sig.repoDir, sig.log));
+  const C = require('./college');
 
   // ---- 100: hard calendar windows ----
   if (c.draftWindow) {
     const years = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
     const y = rot(years);
-    push(theme('draft', 100, [draftBoard(y), draftBoard(2025)], { reason: 'NFL Draft window', desc: 'Draft week · the first 20 skill-position picks of the ' + y + ' class, pick by pick', colorway: 'green' }));
+    const stat = CFB_STATS[c.dayIndex % 3]; // ry / rcy / py
+    const classYear = c.seasonYear; // draft in April 2027 = the 2027 class
+    const classBoard = cfbVariant('cfb|class|' + classYear + '|' + stat, classYear + ' class college ' + stat, () => C.draftClassCollege(cfb(), classYear, stat));
+    const variants = (c.dayIndex % 2 === 0) ? [draftBoard(y), classBoard, draftBoard(2025)] : [classBoard, draftBoard(y), draftBoard(2025)];
+    push(theme('draft', 100, variants, { reason: 'NFL Draft window', desc: 'Draft week · the ' + classYear + ' class by college numbers, and past classes pick by pick', colorway: 'green' }));
+  }
+  // Heisman week: the ceremony is the second Saturday of December.
+  if (c.heismanWeek) {
+    push(theme('heisman', 100, [cfbVariant('cfb|heisman', 'Heisman winners', () => C.heismanBoard(cfb(), 20))], { reason: 'Heisman week', desc: 'Heisman week · name the winner for each year', colorway: 'yellow' }));
+  }
+  // College Saturdays in season, and bowl / playoff season: one college board.
+  if (c.cfbSaturday || c.bowlSeason) {
+    const v = cfbRotation(cfb, c.dayIndex);
+    if (c.bowlSeason && c.dayIndex % 3 === 0) v.unshift(cfbVariant('cfb|heisman', 'Heisman winners', () => C.heismanBoard(cfb(), 20)));
+    push(theme('college', c.bowlSeason ? 60 : 55, v, { reason: c.bowlSeason ? 'bowl season' : 'college Saturday', desc: c.bowlSeason ? 'Bowl season · college football board' : 'College Saturday · a college football board', colorway: 'green' }));
   }
   if (c.superBowlWeek || c.playoffWindow) {
     const v = rot([postBoard('QB', 'py'), postBoard('RB', 'ry'), postBoard('WR', 'rcy'), postBoard(null, 'fpts'), postBoard('QB', 'ptd')]);

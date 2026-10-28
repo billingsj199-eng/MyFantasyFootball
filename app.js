@@ -55663,7 +55663,9 @@ window.fmtHeight = fmtHeight;
             }
           }
         }
-        const logoUrl = _triviaLogoUrl(it.team || '');
+        // A locked board may carry its own logo URL (college boards from the
+        // nightly job: ESPN NCAA logos for schools the site map lacks).
+        const logoUrl = it.logo || _triviaLogoUrl(it.team || '');
         if (mode === 'reveal') {
           html += `<div class="trivia-cell" data-idx="${i}" onclick="window._triviaCellClick(${i})">`;
         } else {
@@ -56530,7 +56532,10 @@ window.fmtHeight = fmtHeight;
     // value stays prominent; the team color shows only around the headshot.
 
     // Build reveal content with headshot
-    const headshot = _triviaGetHeadshot(item.answer);
+    // A locked board may carry its own headshot (college players the NFL id
+    // maps never see — the nightly news job resolves them from ESPN's college
+    // roster photos); the name lookup stays the fallback.
+    const headshot = item.headshot || _triviaGetHeadshot(item.answer);
     const answerName = (item.answer || '').split(/[\(\,]/)[0].trim();
     const answerDetail = (item.answer || '').replace(answerName, '').trim().replace(/^[\(\,\-–—\s]+|[\)\s]+$/g, '');
 

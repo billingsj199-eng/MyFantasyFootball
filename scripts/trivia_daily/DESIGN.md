@@ -135,10 +135,37 @@ Job failure → `mff_alert.ps1` toast `trivia-daily-failed`; log at
 - AI phrasing (worker `late-wind-6322`, admin-credentialed) is deliberately not used; the
   hook headline from the news feed is the desc. Easy to add later in `themes.js` if wanted.
 
-## Next ideas (Jack, 2026-10-28)
-- **College football boards**: the site already holds plenty of college stats (college_stats.js,
-  college_weekly_*.js, devy), so the picker can add CFB season leaders, a school's all-time
-  greats, a conference, Heisman / award winners, draft classes by school. Boards don't have
-  to be stats — team- or awards-based lists are fine.
-- **College player images**: when more headshots are needed, add a college image pipeline
-  (free sources only, same as the Wikimedia legend headshots) alongside those boards.
+## College boards + college images (`college.js`, built the same evening)
+
+Jack: "we can also add college football since we have plenty of stats … team or awards
+based … I would like college images."
+
+| board | source | example |
+|---|---|---|
+| `cfb\|season\|YEAR\|stat` | COLLEGE_STATS season rows | 2025 College Rushing Yards Leaders (Ahmad Hardy 1,649…) |
+| `cfb\|school\|School\|stat` | season rows at that school, summed | Alabama Rushing Yards Leaders · Since 2007 (Najee, Henry, Yeldon…) |
+| `cfb\|conf\|Conf\|YEAR\|stat` | season rows by conference | 2024 SEC Receiving Yards Leaders |
+| `cfb\|game\|stat` | COLLEGE_WEEKLY game logs | Best Single-Game College Rushing Yards (Perine 427, Penny 418…) |
+| `cfb\|career\|stat` | career sums, first season ≥ 2007 | College Career Receiving Yards (Corey Davis 5,285…) |
+| `cfb\|class\|YEAR\|stat` | COMBINE_DATA draft year × careers | 2026 NFL Draft Class · College Receiving Yards |
+| `cfb\|heisman` | Wikipedia "List of Heisman Trophy winners" (free, cached 7 d) | Heisman Trophy Winners · 2006–2025 (year → name) |
+
+The college pool is the college years of NFL / draft-pool players (dense from 2007), so
+"all-time" means that pool; titles say "Since 2007". Boards are built in Node (no site
+generator), ≥ 16 rows, single-game boards reject one player holding > ¼ of the cells.
+
+**When**: college Saturdays Sep 1 – Dec 7 (score 55, rotating season / school / conference /
+game / career boards over 20 schools, 5 conferences, yards stats), Heisman week (the second
+Saturday of December, score 100), bowl season Dec 15 – Jan 20 (60, Heisman mixed in), and
+draft week alternates the pick lists with "the class by college numbers".
+
+**Images**: every cell carries `logo` (ESPN NCAA logo by school, keyless teams API — the
+site's own college logo map covers only 63 of the 273 schools) and, for names the NFL id
+maps never see, `headshot`: a Wikimedia Commons photo when the Heisman table has one, else
+ESPN's keyless player search — a college-football hit counts only when ESPN's subtitle names
+one of the player's schools (same name at another school = different person; "Mike Williams"
+stays blank), an NFL hit only when it is the single football result. NFL names are left
+blank on purpose: the site resolves them at reveal. app.js: a cell uses `it.logo` before the
+team map and the reveal uses `item.headshot` before the name lookup; the Cloud Function
+whitelists `logo` (redeploy needed). Cache: `trivia_daily_cache\college_headshots_v2.json`,
+`espn_cfb_teams.json`, `heisman.json`.

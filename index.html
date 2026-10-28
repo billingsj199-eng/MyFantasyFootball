@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-28-legends2" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-weekly70s" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -6465,6 +6465,45 @@ _mergeWeeklyStatsRetired();
 document.addEventListener('DOMContentLoaded', _mergeWeeklyStatsRetired);
 // Also merge once the lazy weekly bundles arrive (see _loadWeeklyData below). Idempotent.
 document.addEventListener('mff:weeklydata', _mergeWeeklyStatsRetired);
+// 1970-1998 per-game logs (scripts/pull_pfr_boxscores.py): WEEKLY_STATS_LEGACY is keyed by PFR id.
+// Merge into WEEKLY_STATS by display name. A straddling career (Jerry Rice 1985-2004) extends the
+// 1999+ record when the years are contiguous; a legacy name that collides with an unrelated modern
+// player (gap in years) or a second same-name legacy id is skipped, never merged (the 2026-10-28
+// name-collision bug). Runs after the main bundle: _loadWeeklyLegacy chains behind _loadWeeklyData.
+function _mergeWeeklyStatsLegacy() {
+  if (typeof WEEKLY_STATS_LEGACY === 'undefined' || typeof WEEKLY_STATS === 'undefined') return;
+  var legends = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS : {};
+  var byName = {};
+  for (var id in WEEKLY_STATS_LEGACY) { var nm = WEEKLY_STATS_LEGACY[id].n; (byName[nm] = byName[nm] || []).push(id); }
+  function yrs(rec) { return Object.keys(rec.seasons).map(Number); }
+  function sumF(rec) { var s = 0; for (var y in rec.seasons) rec.seasons[y].forEach(function(w) { s += w.fpts || 0; }); return s; }
+  var merged = 0, skipped = 0;
+  for (var name in byName) {
+    var ids = byName[name];
+    if (ids.length > 1) {
+      var ly = (legends[name] || []).map(function(s) { return s.yr; });
+      var ov = function(i) { return yrs(WEEKLY_STATS_LEGACY[i]).filter(function(y) { return ly.indexOf(y) >= 0; }).length; };
+      ids.sort(function(a, b) { return (ov(b) - ov(a)) || (sumF(WEEKLY_STATS_LEGACY[b]) - sumF(WEEKLY_STATS_LEGACY[a])); });
+      skipped += ids.length - 1;
+    }
+    var rec = WEEKLY_STATS_LEGACY[ids[0]];
+    var cur = WEEKLY_STATS[name];
+    if (cur && cur._pfr && cur._pfr !== ids[0]) { skipped++; continue; }
+    if (cur && !cur._pfr) {
+      var curMin = Math.min.apply(null, Object.keys(cur.seasons).map(Number));
+      var legMax = Math.max.apply(null, yrs(rec));
+      if (!(legMax >= curMin - 1)) { skipped++; continue; }
+    }
+    if (!cur) cur = WEEKLY_STATS[name] = { pos: rec.pos, seasons: {} };
+    cur._pfr = ids[0];
+    for (var y in rec.seasons) { if (!cur.seasons[y]) { cur.seasons[y] = rec.seasons[y]; merged++; } }
+  }
+  window._weeklyLegacyMerged = { merged: merged, skipped: skipped };
+  if (!merged) return;
+  if (typeof window._gwInitPool === 'function') { try { window._gwInitPool(); } catch(e) { console.warn('[GW] legacy pool rebuild failed:', e); } }
+  if (typeof window._gwDailyReinit === 'function') { try { window._gwDailyReinit(); } catch(e) {} }
+}
+document.addEventListener('mff:weeklylegacy', _mergeWeeklyStatsLegacy);
 
 // === Lazy-load heavy retired weekly-stats bundles (~22.5 MB) ===
 // weekly_stats_retired_1-3 (~10 MB) + all_players_weekly_1-5 (~12.5 MB) used to load via
@@ -6558,6 +6597,27 @@ window._loadWeeklyData = function(opts) {
     catch (e) { console.warn('[WeeklyData] merge dispatch failed:', e); }
   });
   return window._weeklyDataPromise;
+};
+
+// 1970-1998 per-game logs (scripts/pull_pfr_boxscores.py, three era files): WEEKLY_STATS_LEGACY,
+// keyed by PFR id. Pulled only when the Fantasy Game gets a pre-1999 YEAR / ERA or the WEEK mode,
+// or Elite Pull switches to ALL-TIME (app.js _fgEnsureLegacy / _gwSetMode). Chained behind the
+// main weekly bundle so _mergeWeeklyStatsLegacy always sees the 1999+ records first.
+window._loadWeeklyLegacy = function(opts) {
+  if (window._weeklyLegacyPromise) return window._weeklyLegacyPromise;
+  var files = [
+    'data/weekly_stats_1970s.js?v=2026-10-29',
+    'data/weekly_stats_1980s.js?v=2026-10-29',
+    'data/weekly_stats_1990s.js?v=2026-10-29'
+  ];
+  window._weeklyLegacyPromise = window._loadWeeklyData(opts).then(function() {
+    return _injectScripts(files, 'WeeklyLegacy', opts);
+  }).then(function() {
+    window._weeklyLegacyDone = true;
+    try { document.dispatchEvent(new Event('mff:weeklylegacy')); }
+    catch (e) { console.warn('[WeeklyLegacy] merge dispatch failed:', e); }
+  });
+  return window._weeklyLegacyPromise;
 };
 
 // === Lazy-load retired-player enrichment bundles (~5.3 MB) ===
@@ -6674,7 +6734,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-28-legends2"></script>
+<script defer src="app.js?v=2026-10-29-weekly70s"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

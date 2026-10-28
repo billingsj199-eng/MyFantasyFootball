@@ -805,6 +805,7 @@ exports.lockTriviaDaily = onRequest(
         team: str(it.team, 6),
         category: str(it.category, 40),
         headshot: str(it.headshot, 300),
+        logo: str(it.logo, 300),
       }));
       if (items.some((it) => !it.answer)) return bad("every item needs an answer");
       const colorway = /^[a-z]{3,12}$/.test(String(doc.colorway || "")) ? doc.colorway : "purple";

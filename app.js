@@ -58485,9 +58485,13 @@ window.fmtHeight = fmtHeight;
         if (_future && !isAdm) return;
         html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);transition:border-color .2s" onmouseenter="this.style.borderColor=\'var(--accent)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">';
         html += '<div style="flex:1;min-width:0;cursor:pointer" onclick="window._triviaPlayArchived(\'' + d.date + '\')">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#ffd166">' + _esc(d.date) + (_future ? ' <span style="color:var(--text2)">· SCHEDULED</span>' : '') + '</div>';
+        // Boards written by the nightly news job (scripts/trivia_daily) carry
+        // source:'auto' + the reason they were picked; admins see both so a
+        // weak pick can be replaced with LOCK AS DAILY (hand locks always win).
+        const _auto = d.source === 'auto';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#ffd166">' + _esc(d.date) + (_future ? ' <span style="color:var(--text2)">· SCHEDULED</span>' : '') + (_auto && isAdm ? ' <span style="color:var(--accent)">· AUTO</span>' : '') + '</div>';
         html += '<div style="font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _esc(d.title || 'Daily Board') + '</div>';
-        html += '<div style="font-size:.6875rem;color:var(--text2)">' + (d.itemCount || (d.items && d.items.length) || '?') + ' cells</div>';
+        html += '<div style="font-size:.6875rem;color:var(--text2)">' + (d.itemCount || (d.items && d.items.length) || '?') + ' cells' + (_auto && isAdm && d.auto && d.auto.reason ? ' · ' + _esc(String(d.auto.reason).slice(0, 80)) : '') + '</div>';
         html += '</div>';
         if (isAdm) {
           html += '<button onclick="window._triviaDeleteArchived(\'' + d.date + '\',this)" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.7rem;padding:2px 6px;opacity:.5" title="Delete locked daily">✕</button>';

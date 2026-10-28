@@ -6473,8 +6473,16 @@ document.addEventListener('mff:weeklydata', _mergeWeeklyStatsRetired);
 function _mergeWeeklyStatsLegacy() {
   if (typeof WEEKLY_STATS_LEGACY === 'undefined' || typeof WEEKLY_STATS === 'undefined') return;
   var legends = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS : {};
+  // Key by the site's spelling when it differs only in dots/spaces ("O.J. Simpson" -> "O. J. Simpson").
+  var normKey = function(n) { return n.toLowerCase().replace(/\s+(jr|sr|ii|iii|iv)\.?$/, '').replace(/[^a-z]/g, ''); };
+  var siteName = {};
+  for (var ln in legends) { var k = normKey(ln); if (!siteName[k]) siteName[k] = ln; }
   var byName = {};
-  for (var id in WEEKLY_STATS_LEGACY) { var nm = WEEKLY_STATS_LEGACY[id].n; (byName[nm] = byName[nm] || []).push(id); }
+  for (var id in WEEKLY_STATS_LEGACY) {
+    var nm = WEEKLY_STATS_LEGACY[id].n;
+    if (!legends[nm] && !WEEKLY_STATS[nm]) { var alt = siteName[normKey(nm)]; if (alt) nm = alt; }
+    (byName[nm] = byName[nm] || []).push(id);
+  }
   function yrs(rec) { return Object.keys(rec.seasons).map(Number); }
   function sumF(rec) { var s = 0; for (var y in rec.seasons) rec.seasons[y].forEach(function(w) { s += w.fpts || 0; }); return s; }
   var merged = 0, skipped = 0;
@@ -6506,7 +6514,19 @@ function _mergeWeeklyStatsLegacy() {
     cur._pfr = ids[0];
     for (var y in rec.seasons) { if (!cur.seasons[y]) { cur.seasons[y] = rec.seasons[y]; merged++; } }
   }
-  window._weeklyLegacyMerged = { merged: merged, skipped: skipped };
+  // LEGEND_CAREERS carries some names in two spellings ("O. J. Simpson" and "O.J. Simpson");
+  // point every spelling without its own weekly record at the merged one.
+  // (dots/spaces only here: "Michael Pittman" 1998 and "Michael Pittman Jr." are different players)
+  var strictKey = function(n) { return n.toLowerCase().replace(/[^a-z]/g, ''); };
+  var byNormWS = {};
+  for (var wn in WEEKLY_STATS) { if (WEEKLY_STATS[wn]._pfr) byNormWS[strictKey(wn)] = WEEKLY_STATS[wn]; }
+  var aliased = 0;
+  for (var ln2 in legends) {
+    if (WEEKLY_STATS[ln2]) continue;
+    var v = byNormWS[strictKey(ln2)];
+    if (v) { WEEKLY_STATS[ln2] = v; aliased++; }
+  }
+  window._weeklyLegacyMerged = { merged: merged, skipped: skipped, aliased: aliased };
   if (!merged) return;
   if (typeof window._gwInitPool === 'function') { try { window._gwInitPool(); } catch(e) { console.warn('[GW] legacy pool rebuild failed:', e); } }
   if (typeof window._gwDailyReinit === 'function') { try { window._gwDailyReinit(); } catch(e) {} }

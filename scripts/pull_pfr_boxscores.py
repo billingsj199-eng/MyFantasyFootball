@@ -727,6 +727,51 @@ def xcheck(n=50, seed=7, years=YEARS, min_fpts=40.0, complete_only=False):
     return bad
 
 
+# ---------------------------------------------------------------- audit
+def audit(years=YEARS, min_fpts=10.0):
+    """Every LEGEND_CAREERS season inside the complete years vs the box-score records:
+    legends with no record under their name (alias needed / USFL seasons), names shared by
+    several PFR ids (the site merge picks by legend-year overlap, then points), and seasons
+    whose passing/receiving sums disagree with the career line (multi-team seasons show the
+    per-team row, so a 2TM player can look off here; check the team rows before worrying)."""
+    done = complete_seasons(years)
+    players, _ = collect(done, complete_only=True)
+    legends = load_js_json(os.path.join(DATA_DIR, 'legend_careers.js'), 'LEGEND_CAREERS') or {}
+    norm = lambda n: re.sub(r'[^a-z]', '', re.sub(r'\s+(jr|sr|ii|iii|iv)\.?$', '', n.lower()))
+    by_name, by_norm = {}, {}
+    for pid, pl in players.items():
+        by_name.setdefault(pl['n'], []).append(pid)
+        by_norm.setdefault(norm(pl['n']), []).append(pid)
+    missing, alias, off, checked = [], [], [], 0
+    for name, seasons in legends.items():
+        for s in seasons:
+            y = s.get('yr')
+            if y not in done or s.get('fpts', 0) < min_fpts:
+                continue
+            ids = by_name.get(name) or []
+            if not ids:
+                alt = by_norm.get(norm(name)) or []
+                (alias if alt else missing).append((name, y, s['fpts'], [players[i]['n'] for i in alt] or s.get('tm')))
+                continue
+            cands = [i for i in ids if str(y) in players[i]['seasons']]
+            if not cands:
+                missing.append((name, y, s['fpts'], 'id has no ' + str(y)))
+                continue
+            checked += 1
+            if str(s.get('tm', '')).endswith('TM') or sum(1 for t in seasons if t.get('yr') == y) > 1:
+                continue  # multi-team season: the career line is split per team
+            reg = [r for r in players[cands[0]]['seasons'][str(y)] if not r.get('po')]
+            tot = {k: sum(r.get(k, 0) for r in reg) for k in ('py', 'rcy', 'rec', 'rctd')}
+            if s.get('rcy', 0) and tot['rcy'] != s['rcy'] or s.get('py', 0) and tot['py'] != s['py']:
+                off.append((name, y, f"py {tot['py']}/{s.get('py', 0)} rcy {tot['rcy']}/{s.get('rcy', 0)}"))
+    multi = {n: ids for n, ids in by_name.items() if len(ids) > 1}
+    log(f'audit over complete seasons {done}: {checked} legend player-seasons matched by name')
+    log(f'  needs alias ({len(alias)}): {alias}')
+    log(f'  no box-score record ({len(missing)}): {missing}')
+    log(f'  passing/receiving sums off ({len(off)}): {off}')
+    log(f'  names shared by 2+ PFR ids ({len(multi)}): ' + ', '.join(f'{n} {ids}' for n, ids in sorted(multi.items())))
+
+
 # ---------------------------------------------------------------- main
 LOCK_PATH = os.path.join(CACHE, 'boxscores.lock')
 
@@ -766,6 +811,7 @@ def main():
     ap.add_argument('--build', action='store_true')
     ap.add_argument('--xcheck', action='store_true')
     ap.add_argument('--status', action='store_true')
+    ap.add_argument('--audit', action='store_true', help='legend seasons vs box-score records (complete seasons)')
     ap.add_argument('--nightly', action='store_true')
     ap.add_argument('--years', nargs='*', type=int, default=YEARS)
     ap.add_argument('--limit', type=int, default=None, help='max pages to fetch this run')
@@ -822,7 +868,9 @@ def _run(args, st):
         build(args.years, write=not args.no_write, complete_only=args.complete_only)
     if args.xcheck:
         xcheck(args.n, years=args.years, complete_only=args.complete_only)
-    if not any((args.status, args.schedules, args.fetch, args.build, args.xcheck, args.nightly)):
+    if args.audit:
+        audit(args.years)
+    if not any((args.status, args.schedules, args.fetch, args.build, args.xcheck, args.nightly, args.audit)):
         ap.print_help()
 
 

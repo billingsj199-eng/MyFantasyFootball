@@ -1,6 +1,135 @@
 {
- "updated": "2026-10-27T22:19:33Z",
+ "updated": "2026-10-28T22:17:01Z",
  "items": [
+  {
+   "player": "Ja'Marr Chase",
+   "team": "CIN",
+   "pos": "WR",
+   "date": "2026-10-28",
+   "headline": "DNP Wednesday with 'rest/ankle' tag; Bengals not worried about Sunday",
+   "take": "Trending toward playing Week 8 vs. Titans; Higgins would benefit if he sits.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/jamarr-chase-nir-rest-ankle-sits-out-wednesday",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Jahmyr Gibbs",
+   "team": "DET",
+   "pos": "RB",
+   "date": "2026-10-28",
+   "headline": "DNP Wednesday with shoulder injury ahead of Week 8 vs. Vikings",
+   "take": "Monitor Thursday's report; Sione Vaki is next up if Gibbs can't go.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/gibbs-shoulder-does-not-practice-on-wednesday",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Rashee Rice",
+   "team": "KC",
+   "pos": "WR",
+   "date": "2026-10-28",
+   "headline": "Set to practice Wednesday as hamstring recovery continues",
+   "take": "First real step back since the Week 4 hamstring injury; trending toward a Week 8 return vs. Broncos.",
+   "url": "https://nbcsports.com/fantasy/football/player-news/2026-10-28/rashee-rice-hamstring-to-practice-wednesday",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Lamar Jackson",
+   "team": "BAL",
+   "pos": "QB",
+   "date": "2026-10-28",
+   "headline": "Practicing Wednesday on ankle; Hensley says only Jackson knows when he's back",
+   "take": "Good sign for Week 8 vs. Bills, but the lingering ankle keeps him a game-time-decision risk.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/lamar-jackson-ankle-practicing-wednesday",
+   "tag": "injury",
+   "avail": {
+    "k": "gtd",
+    "wk": 8
+   },
+   "src_type": "report"
+  },
+  {
+   "player": "Tyler Warren",
+   "team": "IND",
+   "pos": "TE",
+   "date": "2026-10-28",
+   "headline": "Limited in Wednesday practice with groin injury",
+   "take": "Positive step after missing Week 7; Colts need him back as their top red-zone target.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/tyler-warren-groin-limited-in-wednesday-practice",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Tre' Harris",
+   "team": "LAC",
+   "pos": "WR",
+   "date": "2026-10-28",
+   "headline": "Will practice Wednesday after missing time with hamstring injury",
+   "take": "Rookie has a real shot to play Week 8 vs. Rams; speculative add if he's cleared Friday.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/tre-harris-hamstring-will-practice-on-wednesday",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Matthew Golden",
+   "team": "GB",
+   "pos": "WR",
+   "date": "2026-10-28",
+   "headline": "Packers list him questionable for Week 8 vs. Panthers (shoulder/foot)",
+   "take": "True game-time decision; have a contingency plan ready in lineups.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/gb-lists-golden-shoulder-foot-as-questionable",
+   "tag": "injury",
+   "avail": {
+    "k": "gtd",
+    "wk": 8
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Jaylen Waddle",
+   "team": "DEN",
+   "pos": "WR",
+   "date": "2026-10-28",
+   "headline": "Broncos unsure about Waddle's Week 8 availability",
+   "take": "Chest/rib issue lingering; check Thursday-Friday reports before trusting him vs. Chiefs.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/broncos-unsure-about-waddle-for-week-8",
+   "tag": "injury",
+   "src_type": "team"
+  },
+  {
+   "player": "Garrett Wilson",
+   "team": "NYJ",
+   "pos": "WR",
+   "date": "2026-10-28",
+   "headline": "Says he has not requested a trade out of New York",
+   "take": "Removes trade-deadline uncertainty for now; stays the clear WR1 in the Jets' offense.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/garrett-wilson-says-he-has-not-requested-a-trade",
+   "tag": "other",
+   "src_type": "report"
+  },
+  {
+   "player": "Harrison Butker",
+   "team": "KC",
+   "pos": "K",
+   "date": "2026-10-28",
+   "headline": "Chiefs sign Justin Tucker to practice squad after Butker misses two kicks",
+   "take": "Not an immediate change, but a shot across the bow \u2014 watch Butker's role if the misses continue.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/kc-inks-justin-tucker-amid-butker-struggles",
+   "tag": "role",
+   "src_type": "team"
+  },
+  {
+   "player": "Jaylin Noel",
+   "team": "HOU",
+   "pos": "WR",
+   "date": "2026-10-26",
+   "headline": "Diagnosed with turf toe after Week 7 exit; in walking boot, not on IR",
+   "take": "Texans' Week 8 bye buys him recovery time; next game is Nov. 8 at the Chargers.",
+   "url": "https://www.rotoballer.com/?p=1975528",
+   "tag": "injury",
+   "src_type": "report"
+  },
   {
    "player": "Dak Prescott",
    "team": "DAL",
@@ -1673,17 +1802,6 @@
    "src_type": "team"
   },
   {
-   "player": "Ladd McConkey",
-   "team": "LAC",
-   "pos": "WR",
-   "date": "2026-10-06",
-   "headline": "Harbaugh calls foot injury 'week-to-week' after re-aggravation vs. Seahawks",
-   "take": "Real downgrade from last week's clean clearance -- Tre' Harris and Quentin Johnston are the top beneficiaries in LA's passing game if McConkey sits vs. Denver.",
-   "url": "https://www.thefantasyfootballers.com/news/640907/ladd-mcconkey-termed-week-to-week/",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
    "player": "Saquon Barkley",
    "team": "PHI",
    "pos": "RB",
@@ -1722,17 +1840,6 @@
     "k": "doubt",
     "wk": 5
    },
-   "src_type": "insider"
-  },
-  {
-   "player": "Joe Mixon",
-   "team": "SEA",
-   "pos": "RB",
-   "date": "2026-10-06",
-   "headline": "Seahawks back out of practice-squad deal after Mixon fails his physical",
-   "take": "Foot injury that cost him all of 2025 resurfaces as a red flag -- off add/stash radar again; Seattle turns to Robert Henry Jr. instead.",
-   "url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/report-seahawks-opt-not-to-sign-joe-mixon-to-practice-squad-after-a-physical",
-   "tag": "transaction",
    "src_type": "insider"
   },
   {

@@ -24346,6 +24346,10 @@ function _pageEnterHooks(page) {
   // season_leaders.js (~744 KB) — only the admin Trivia generator reads SEASON_LEADERS.
   // Fire the load on trivia-page open so it's ready by the time a board is generated.
   if (page === 'trivia' && typeof window._ensureSeasonLeaders === 'function') window._ensureSeasonLeaders();
+  // legend_headshots.js (Wikimedia photos for retired legends, 2026-10-28) — the Trivia
+  // reveal reads LEGEND_HEADSHOTS after the ESPN tables miss; fetch it on page open so the
+  // first Give Up / reveal already has photos (the reveal also self-loads + upgrades late).
+  if (page === 'trivia' && typeof window._loadLegendHeadshots === 'function') window._loadLegendHeadshots();
   // Retired weekly game-log bundles (~22.5 MB, lazy) — Games (Elite Pull era pools) and
   // Compare (legend weekly rows) read them. Force the load on open so they're ready; the
   // idle preload after `load` usually beats this, but this covers a fast navigator.
@@ -56387,10 +56391,17 @@ window.fmtHeight = fmtHeight;
     document.querySelectorAll('.trivia-ac-dropdown').forEach(d => d.remove());
   }
 
-  // Look up ESPN headshot for a player name
-  function _triviaGetHeadshot(answerText) {
+  // Look up ESPN headshot for a player name (string URL, '' = show initials).
+  function _triviaGetHeadshot(answerText, team) { return _triviaGetHeadshotInfo(answerText, team).url; }
+  // Same lookup with attribution: {url, credit, page}. `credit` is set only for
+  // LEGEND_HEADSHOTS (Wikimedia Commons) photos — the reveal puts it in the img title.
+  // `team` (the cell's team abbreviation, any legacy spelling) picks that team's jersey
+  // photo from LEGEND_HEADSHOTS[name].byTeam when the builder found one (Jack 10-28:
+  // Marcus Allen as a Raider on a Raiders cell); ESPN headshots ignore it (latest team).
+  function _triviaGetHeadshotInfo(answerText, team) {
+    const none = { url: '', credit: '', page: '' };
     const name = (answerText || '').split(/[\(\,\-–—]/)[0].trim();
-    if (!name) return '';
+    if (!name) return none;
     // Try name plus common suffix variants
     const nameVariants = [name, name + ' Jr.', name + ' III', name + ' II', name + ' Sr.',
                           name.replace(/ Jr\.?$/i,'').replace(/ III$/i,'').replace(/ II$/i,'').replace(/ Sr\.?$/i,'').trim()];
@@ -56401,11 +56412,30 @@ window.fmtHeight = fmtHeight;
     // route through _fixHeadshotUrl (forces width-only &w=350, ratio-safe).
     const _fix = (typeof window._fixHeadshotUrl === 'function') ? window._fixHeadshotUrl : (u => u);
 
+    // LEGEND_HEADSHOTS record → reveal info, preferring the cell team's jersey photo.
+    const _tUp = String(team || '').toUpperCase();
+    const _tCanon = (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[_tUp]) || _tUp;
+    const _fromLegend = (lh) => {
+      const bt = _tCanon && lh.byTeam && lh.byTeam[_tCanon];
+      if (bt && bt.url) return { url: bt.url, credit: bt.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' };
+      return { url: lh.url, credit: lh.credit || 'Wikimedia Commons', page: lh.page || '' };
+    };
+
+    // 0. preferCommons — the name's ESPN id failed the builder's audit (namesake such as
+    // the Marcus Allen LB, wrong position, too young: scripts/_suspect_espn_ids.json), so
+    // the Commons photo wins over the ESPN tables for that name.
+    if (window.LEGEND_HEADSHOTS) {
+      for (const v of nameVariants) {
+        const lh = window.LEGEND_HEADSHOTS[v];
+        if (lh && lh.url && lh.preferCommons) return _fromLegend(lh);
+      }
+    }
+
     // 1. FALLBACK_IDS (manually verified active/recent players)
     if (window.FALLBACK_IDS) {
       for (const v of nameVariants) {
         if (window.FALLBACK_IDS[v]) {
-          return _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=350`);
+          return { url: _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=350`), credit: '', page: '' };
         }
       }
     }
@@ -56414,19 +56444,31 @@ window.fmtHeight = fmtHeight;
     if (window.RETIRED_ESPN_IDS) {
       for (const v of nameVariants) {
         if (window.RETIRED_ESPN_IDS[v]) {
-          return _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=350`);
+          return { url: _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=350`), credit: '', page: '' };
         }
       }
     }
 
-    // 3. D array _slImg (active players with Sleeper/ESPN headshots — these are reliable)
-    if (typeof D !== 'undefined') {
-      const d = D.find(p => nameVariants.indexOf(p.n) !== -1);
-      if (d && d._slImg) return _fix(d._slImg);
+    // 3. LEGEND_HEADSHOTS (2026-10-28) — Wikipedia/Wikimedia Commons lead images for
+    // retired legends ESPN has no headshot for (pre-2000 players: Emmitt Smith, Thurman
+    // Thomas, Bart Starr …). Built by scripts/build_legend_headshots.py, lazy-loaded by
+    // index.html _loadLegendHeadshots (on trivia-page open). Free-licensed images; the
+    // credit rides along for the tooltip. Missing file → falls through to initials.
+    if (window.LEGEND_HEADSHOTS) {
+      for (const v of nameVariants) {
+        const lh = window.LEGEND_HEADSHOTS[v];
+        if (lh && lh.url) return _fromLegend(lh);
+      }
     }
 
-    // 4. Return empty — shows clean initials (better than wrong photo)
-    return '';
+    // 4. D array _slImg (active players with Sleeper/ESPN headshots — these are reliable)
+    if (typeof D !== 'undefined') {
+      const d = D.find(p => nameVariants.indexOf(p.n) !== -1);
+      if (d && d._slImg) return { url: _fix(d._slImg), credit: '', page: '' };
+    }
+
+    // 5. Return empty — shows clean initials (better than wrong photo)
+    return none;
   }
 
   // Reveal a cell with player headshot swap
@@ -56455,7 +56497,8 @@ window.fmtHeight = fmtHeight;
     // value stays prominent; the team color shows only around the headshot.
 
     // Build reveal content with headshot
-    const headshot = _triviaGetHeadshot(item.answer);
+    const _hsInfo = _triviaGetHeadshotInfo(item.answer, item.team);
+    const headshot = _hsInfo.url;
     const answerName = (item.answer || '').split(/[\(\,]/)[0].trim();
     const answerDetail = (item.answer || '').replace(answerName, '').trim().replace(/^[\(\,\-–—\s]+|[\)\s]+$/g, '');
 
@@ -56465,12 +56508,30 @@ window.fmtHeight = fmtHeight;
 
     let revealHtml = `<div class="trivia-cell-reveal" style="--team-outline-filter:${_outlineFilter}">`;
     if (headshot) {
-      revealHtml += `<img src="${headshot}" alt="" loading="lazy" onerror="this.style.display='none'">`;
+      // Wikimedia photos are rectangular (no transparent silhouette): class swaps the
+      // drop-shadow outline for a plain team-color frame; title = CC attribution.
+      const _wiki = _hsInfo.credit ? ` class="trivia-wiki-photo" title="${_esc('Photo: ' + _hsInfo.credit + ' (via Wikimedia Commons)')}" style="border-color:${borderColor}"` : '';
+      revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_wiki} onerror="this.style.display='none'">`;
     } else {
+      // No photo yet: if the legend-photo file is still loading, upgrade this cell
+      // once it lands (the reveal never waits on it — initials show at once).
+      if (!window.LEGEND_HEADSHOTS && typeof window._loadLegendHeadshots === 'function') {
+        window._loadLegendHeadshots().then(() => {
+          if (!cell.isConnected || !cell.classList.contains('revealed')) return;
+          const late = _triviaGetHeadshotInfo(item.answer, item.team);
+          const box = cell.querySelector('.trivia-cell-reveal .trivia-initials');
+          if (!late.url || !box) return;
+          const img = document.createElement('img');
+          img.src = late.url; img.alt = ''; img.loading = 'lazy';
+          if (late.credit) { img.className = 'trivia-wiki-photo'; img.title = 'Photo: ' + late.credit + ' (via Wikimedia Commons)'; img.style.borderColor = borderColor; }
+          img.onerror = function() { this.style.display = 'none'; };
+          box.replaceWith(img);
+        }).catch(() => {});
+      }
       // No transparent silhouette to outline for the placeholder — fall back to
       // a simple border around the initials box.
       const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
-      revealHtml += `<div style="width:100%;flex:1 1 0;min-height:0;border-radius:4px;border:2px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${borderColor};letter-spacing:1px;filter:none">${initials}</div>`;
+      revealHtml += `<div class="trivia-initials" style="width:100%;flex:1 1 0;min-height:0;border-radius:4px;border:2px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${borderColor};letter-spacing:1px;filter:none">${initials}</div>`;
     }
     revealHtml += `<div class="reveal-name">${_esc(answerName)}</div>`;
     if (answerDetail) revealHtml += `<div style="font-size:.6875rem;color:var(--text2);text-align:center">${_esc(answerDetail)}</div>`;

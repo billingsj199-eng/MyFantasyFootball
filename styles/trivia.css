@@ -35,6 +35,11 @@
    drop-shadow filters (works because ESPN headshots have transparent BGs).
    The actual outline color is set inline per cell via the `--team-outline` var. */
 .trivia-cell-reveal img{width:100%;flex:1 1 0;min-height:0;object-fit:contain;object-position:center;display:block;filter:var(--team-outline-filter,drop-shadow(1.5px 0 0 #22c55e) drop-shadow(-1.5px 0 0 #22c55e) drop-shadow(0 1.5px 0 #22c55e) drop-shadow(0 -1.5px 0 #22c55e))}
+/* Wikimedia Commons legend photos (LEGEND_HEADSHOTS, 2026-10-28) are rectangular JPGs
+   with no transparent silhouette, so the drop-shadow outline would just draw a box:
+   swap it for a plain team-color frame (border-color set inline per cell) and crop to
+   fill like a card headshot. The img title carries the CC attribution. */
+.trivia-cell-reveal img.trivia-wiki-photo{filter:none;object-fit:cover;object-position:center 20%;border:2px solid #22c55e;border-radius:4px;box-sizing:border-box}
 /* Name wraps to 2 lines if needed so the full name is visible. */
 .trivia-cell-reveal .reveal-name{font-family:'DM Sans',sans-serif;font-weight:800;font-size:.6875rem;color:#0f172a;text-align:center;line-height:1.05;letter-spacing:0;width:100%;word-break:break-word;white-space:normal;flex:0 0 auto;padding:1px 2px}
 .trivia-cell.revealed .trivia-cell-body,.trivia-cell.revealed .trivia-cell-hint{display:none}

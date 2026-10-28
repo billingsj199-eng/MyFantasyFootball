@@ -1,0 +1,233 @@
+{
+ "generated": "2026-10-28",
+ "rule": "last season < 2005; suspect if age < 45, position group mismatch, or name mismatch",
+ "checked": 25,
+ "suspects": [
+  {
+   "name": "Anthony Johnson",
+   "id": "4049301",
+   "file": "retired_espn_ids.js",
+   "displayName": "Anthony Johnson",
+   "age": 31,
+   "position": "WR",
+   "legendGroup": "RB",
+   "reasons": [
+    "age 31 < 45",
+    "position WR vs legend RB"
+   ]
+  },
+  {
+   "name": "Charles Johnson",
+   "id": "15885",
+   "file": "retired_espn_ids.js",
+   "displayName": "Charles Johnson",
+   "age": 37,
+   "position": "WR",
+   "legendGroup": "REC",
+   "reasons": [
+    "age 37 < 45"
+   ]
+  },
+  {
+   "name": "Chris Warren",
+   "id": "3929855",
+   "file": "retired_espn_ids.js",
+   "displayName": "Chris Warren",
+   "age": 30,
+   "position": "RB",
+   "legendGroup": "RB",
+   "reasons": [
+    "age 30 < 45"
+   ]
+  },
+  {
+   "name": "Derek Brown",
+   "id": "282",
+   "file": "retired_espn_ids.js",
+   "displayName": "Derek Brown",
+   "age": 56,
+   "position": "TE",
+   "legendGroup": "RB",
+   "reasons": [
+    "position TE vs legend RB"
+   ]
+  },
+  {
+   "name": "George Farmer",
+   "id": "2570993",
+   "file": "retired_espn_ids.js",
+   "displayName": "George Farmer",
+   "age": 33,
+   "position": "RB",
+   "legendGroup": "REC",
+   "reasons": [
+    "age 33 < 45",
+    "position RB vs legend REC"
+   ]
+  },
+  {
+   "name": "Jake Reed",
+   "id": "2578314",
+   "file": "retired_espn_ids.js",
+   "displayName": "Jake Reed",
+   "age": 34,
+   "position": "C",
+   "legendGroup": "REC",
+   "reasons": [
+    "age 34 < 45",
+    "position C vs legend REC"
+   ]
+  },
+  {
+   "name": "Joe Reed",
+   "id": "4037591",
+   "file": "retired_espn_ids.js",
+   "displayName": "Joe Reed",
+   "age": 28,
+   "position": "WR",
+   "legendGroup": "QB",
+   "reasons": [
+    "age 28 < 45",
+    "position WR vs legend QB"
+   ]
+  },
+  {
+   "name": "Karl Williams",
+   "id": "17376",
+   "file": "retired_espn_ids.js",
+   "displayName": "Karl Williams",
+   "age": 36,
+   "position": "RB",
+   "legendGroup": "REC",
+   "reasons": [
+    "age 36 < 45",
+    "position RB vs legend REC"
+   ]
+  },
+  {
+   "name": "Leon Johnson",
+   "id": "5151145",
+   "file": "retired_espn_ids.js",
+   "displayName": "Leon Johnson III",
+   "age": 25,
+   "position": "WR",
+   "legendGroup": "RB",
+   "reasons": [
+    "age 25 < 45",
+    "position WR vs legend RB"
+   ]
+  },
+  {
+   "name": "Marcus Allen",
+   "id": "3116149",
+   "file": "retired_espn_ids.js",
+   "displayName": "Marcus Allen",
+   "age": 30,
+   "position": "LB",
+   "legendGroup": "RB",
+   "reasons": [
+    "age 30 < 45",
+    "position LB vs legend RB"
+   ]
+  },
+  {
+   "name": "Mark Clayton",
+   "id": "8437",
+   "file": "retired_espn_ids.js",
+   "displayName": "Mark Clayton",
+   "age": 44,
+   "position": "WR",
+   "legendGroup": "REC",
+   "reasons": [
+    "age 44 < 45"
+   ]
+  },
+  {
+   "name": "Maurice Smith",
+   "id": "3054859",
+   "file": "retired_espn_ids.js",
+   "displayName": "Maurice Smith",
+   "age": 31,
+   "position": "S",
+   "legendGroup": "RB",
+   "reasons": [
+    "age 31 < 45",
+    "position S vs legend RB"
+   ]
+  },
+  {
+   "name": "Michael Wiley",
+   "id": "4569156",
+   "file": "retired_espn_ids.js",
+   "displayName": "Michael Wiley",
+   "age": 24,
+   "position": "RB",
+   "legendGroup": "RB",
+   "reasons": [
+    "age 24 < 45"
+   ]
+  },
+  {
+   "name": "Mickey Shuler",
+   "id": "13456",
+   "file": "retired_espn_ids.js",
+   "displayName": "Mickey Charles Shuler",
+   "age": 40,
+   "position": "TE",
+   "legendGroup": "REC",
+   "reasons": [
+    "age 40 < 45",
+    "name 'Mickey Charles Shuler'"
+   ]
+  },
+  {
+   "name": "Richie Anderson",
+   "id": "458",
+   "file": "daily_retired_pool.js",
+   "displayName": "Richie Anderson",
+   "age": 55,
+   "position": "FB",
+   "legendGroup": "REC",
+   "reasons": [
+    "position FB vs legend REC"
+   ]
+  },
+  {
+   "name": "Sam Gash",
+   "id": "362",
+   "file": "daily_retired_pool.js",
+   "displayName": "Sam Gash",
+   "age": 57,
+   "position": "FB",
+   "legendGroup": "REC",
+   "reasons": [
+    "position FB vs legend REC"
+   ]
+  },
+  {
+   "name": "Stanley Morgan",
+   "id": "3699902",
+   "file": "retired_espn_ids.js",
+   "displayName": "Stanley Morgan Jr.",
+   "age": 30,
+   "position": "WR",
+   "legendGroup": "REC",
+   "reasons": [
+    "age 30 < 45"
+   ]
+  },
+  {
+   "name": "Tom Kennedy",
+   "id": "3126997",
+   "file": "headshot_espn_ids.js",
+   "displayName": "Tom Kennedy",
+   "age": 30,
+   "position": "WR",
+   "legendGroup": "QB",
+   "reasons": [
+    "age 30 < 45",
+    "position WR vs legend QB"
+   ]
+  }
+ ]
+}

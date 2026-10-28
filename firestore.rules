@@ -260,9 +260,18 @@ service cloud.firestore {
                     && request.resource.data.createdAt.size() <= 32;
       allow update: if false;
     }
+    // promo_uses: one log row per checkout with a promo code (app.js promo
+    // handler). 2026-10-28: shape pinned — it took any keys/sizes.
     match /promo_uses/{docId} {
       allow read: if isJack();
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['uid','email','code','ref','pct','plan','at'])
+                    && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 254))
+                    && (!('code' in request.resource.data) || (request.resource.data.code is string && request.resource.data.code.size() <= 40))
+                    && (!('ref' in request.resource.data) || (request.resource.data.ref is string && request.resource.data.ref.size() <= 120))
+                    && (!('plan' in request.resource.data) || (request.resource.data.plan is string && request.resource.data.plan.size() <= 40))
+                    && (!('at' in request.resource.data) || (request.resource.data.at is string && request.resource.data.at.size() <= 32))
+                    && (!('pct' in request.resource.data) || ((request.resource.data.pct is int || request.resource.data.pct is float) && request.resource.data.pct >= 0 && request.resource.data.pct <= 100));
       allow update, delete: if isJack();
     }
     // premium_codes/{CODE}: admin-created redeem codes. The admin panel does
@@ -283,15 +292,18 @@ service cloud.firestore {
     // Written once by the user at signup, then locked. Admin can read/edit/delete.
     match /creator_attributions/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || isJack());
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.keys().hasOnly(['creator','signedUpAt'])
+                    && request.resource.data.creator is string && request.resource.data.creator.size() <= 80
+                    && (!('signedUpAt' in request.resource.data) || (request.resource.data.signedUpAt is string && request.resource.data.signedUpAt.size() <= 32));
       allow update, delete: if isJack();
     }
     // shared/jacks_portfolio: mirror of Jack's Underdog portfolio so premium
-    // members can view it. Read by any authed user (premium gating done
-    // client-side, matching gifted_badges / gifted_premium pattern). Write
-    // only by Jack so other accounts can't overwrite the shared portfolio.
+    // members can view it. 2026-10-28: read gated server-side (Stripe or gifted
+    // premium, or Jack) — it was any signed-in user with the premium check
+    // only in the client. Write only by Jack.
     match /shared/jacks_portfolio {
-      allow read: if request.auth != null;
+      allow read: if isJack() || hasStripePremium() || hasGiftedPremium();
       allow write: if isJack();
     }
     // shared/ud_adp_latest: latest Underdog ADP snapshot (per-player BBM +
@@ -333,6 +345,8 @@ service cloud.firestore {
                       || isJack());
       allow create: if request.auth != null
                     && request.resource.data.uid == request.auth.uid
+                    // 2026-10-28: premium is checked here too, not only in the client.
+                    && (isJack() || hasStripePremium() || hasGiftedPremium())
                     && request.resource.data.type in ['startsit', 'trade']
                     && request.resource.data.weekIdx is int
                     && request.resource.data.weekIdx == (request.time.toMillis() - 1767675600000) / 604800000
@@ -385,7 +399,11 @@ service cloud.firestore {
                     && request.resource.data.keys().hasOnly(['v','mode','order','posTiers','ownerUid','ownerName','createdAt'])
                     && request.resource.data.order is list
                     && request.resource.data.order.size() > 0
-                    && request.resource.data.order.size() <= 600;
+                    && request.resource.data.order.size() <= 600
+                    && (!('mode' in request.resource.data) || (request.resource.data.mode is string && request.resource.data.mode.size() <= 40))
+                    && (!('ownerName' in request.resource.data) || (request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 120))
+                    && (!('createdAt' in request.resource.data) || (request.resource.data.createdAt is string && request.resource.data.createdAt.size() <= 32))
+                    && (!('posTiers' in request.resource.data) || request.resource.data.posTiers is map);
       allow delete: if request.auth != null
                     && request.auth.uid == resource.data.ownerUid;
     }

@@ -10549,7 +10549,10 @@ function _renderTierCardView(data, container) {
 var _premRaw, _premData;   // parse cache: hasPremium() runs per rankings row (var: callable before this line runs)
 function hasPremium() {
   if (typeof window.isAdmin === 'function' && window.isAdmin()) return true;
-  const raw = localStorage.getItem('jb_premium');
+  // localStorage throws when site data is blocked (Safari/Brave strict modes);
+  // this runs per rankings row, so a throw here killed the whole render.
+  let raw = null;
+  try { raw = localStorage.getItem('jb_premium'); } catch (e) { raw = null; }
   if (raw !== _premRaw) { _premRaw = raw; try { _premData = JSON.parse(raw || 'null'); } catch (e) { _premData = null; } }
   const data = _premData;
   return data && data.expires > Date.now();
@@ -13885,7 +13888,8 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
   }
 
   function _weeklyLoadActiveWeek() {
-    const stored = parseInt(localStorage.getItem('mff_active_week') || '1', 10);
+    let stored = 1;
+    try { stored = parseInt(localStorage.getItem('mff_active_week') || '1', 10); } catch (e) { stored = 1; }
     if (stored >= 1 && stored <= 18) window._weeklyActiveWeek = stored;
     const sel = document.getElementById('activeWeekSelect');
     if (sel) sel.value = String(window._weeklyActiveWeek);
@@ -38562,7 +38566,11 @@ window.fmtHeight = fmtHeight;
     'billingsj199@gmail.com',
   ];
   function isAdmin() {
-    return currentUser && ADMIN_EMAILS.includes((currentUser.email || '').toLowerCase());
+    // Verified email only (Google sign-in always is): the rules already require
+    // it, so an unverified email/password signup with the admin address never
+    // had write access, but it got the admin UI and hasPremium().
+    return !!(currentUser && currentUser.emailVerified === true
+      && ADMIN_EMAILS.includes((currentUser.email || '').toLowerCase()));
   }
   // Expose globally so rankings code can check
   window.isAdmin = isAdmin;
@@ -61495,6 +61503,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   // back to the firebase-name auto-detect captured while processing users).
   async function _mtFetchSleeperLeague(leagueId, opts) {
     const say = (opts && opts.say) || function () {};
+    // Sleeper league ids are long digit strings; anything else goes straight
+    // into the API URL path (ESPN / Yahoo already validate theirs).
+    if (!/^\d{6,30}$/.test(String(leagueId || ''))) throw new Error('League ID should be the long number from your Sleeper league URL');
       // 1. Get league info
       const leagueResp = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
       if (!leagueResp.ok) throw new Error('League not found');

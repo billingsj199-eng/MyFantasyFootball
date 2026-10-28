@@ -2396,10 +2396,11 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="fg-wrapper">
 <div class="fg-header">
 <div class="fg-title">FANTASY GAME</div>
-<div class="fg-mode-toggle" style="display:flex;gap:0;margin:8px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
-<button class="fg-mode-btn active" id="fgTypeRegular" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">REGULAR</button>
-<button class="fg-mode-btn" id="fgTypeCustom" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">CUSTOM</button>
-</div>
+<!-- Settings fold (2026-10-28): the toggle rows collapse behind a one-line summary so
+     the roster/draft panels sit higher once a mode is picked. Open/closed persists in
+     localStorage (fg_settings_open). -->
+<button class="fg-settings-summary open" id="fgSettingsToggle" type="button" aria-expanded="true" aria-controls="fgSettingsPanel"><span id="fgSettingsSummary">NFL · BEST SEASON · PPR · ALL-TIME</span><span class="fg-settings-chevron" aria-hidden="true">&#9662;</span></button>
+<div id="fgSettingsPanel">
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="fgLeagueNFL" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">NFL</button>
 <button class="fg-mode-btn" id="fgLeagueCollege" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">COLLEGE</button>
@@ -2412,17 +2413,41 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <button class="fg-mode-btn" id="fgScoringHalf" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">HALF PPR</button>
 <button class="fg-mode-btn active" id="fgScoringPpr" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">PPR</button>
 </div>
-<div id="fgCustomSettings" style="display:none;margin:2px 0 4px">
+<!-- ERA (decades): a player scores their best season / week inside the decade and
+     the team pool only lists players with stats for that team in it. Picking a
+     YEAR below clears the era, and vice versa. -->
+<div class="fg-mode-toggle" id="fgEraRow" style="display:flex;gap:0;margin:8px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" data-era="all" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">ALL-TIME</button>
+<button class="fg-mode-btn" data-era="2020" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">2020s</button>
+<button class="fg-mode-btn" data-era="2010" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">2010s</button>
+<button class="fg-mode-btn" data-era="2000" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">2000s</button>
+<button class="fg-mode-btn fg-era-nfl" data-era="1990" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">1990s</button>
+<button class="fg-mode-btn fg-era-nfl" data-era="1980" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">1980s</button>
+<button class="fg-mode-btn fg-era-nfl" data-era="1970" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">1970s</button>
+</div>
+<div id="fgCustomSettings" style="margin:2px 0 4px">
 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
 <select id="fgYearSelect" aria-label="Season year" style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
-<option value="best">BEST (ALL-TIME)</option>
-<option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
-<option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option>
-<option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option>
-<option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option>
-<option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option>
-<option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option>
-<option value="2007">2007</option><option value="2006">2006</option>
+<option value="best">ANY YEAR</option>
+<option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+<option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option>
+<option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option>
+<option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option>
+<option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option>
+<option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option>
+<option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option>
+<option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option>
+<option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option>
+<option value="1999">1999</option><option value="1998">1998</option><option value="1997">1997</option>
+<option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option>
+<option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option>
+<option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option>
+<option value="1987">1987</option><option value="1986">1986</option><option value="1985">1985</option>
+<option value="1984">1984</option><option value="1983">1983</option><option value="1982">1982</option>
+<option value="1981">1981</option><option value="1980">1980</option><option value="1979">1979</option>
+<option value="1978">1978</option><option value="1977">1977</option><option value="1976">1976</option>
+<option value="1975">1975</option><option value="1974">1974</option><option value="1973">1973</option>
+<option value="1972">1972</option><option value="1971">1971</option><option value="1970">1970</option>
 </select>
 <select id="fgWeekSelect" aria-label="Week" style="display:none;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:1px;cursor:pointer">
 <option value="best">BEST WEEK</option>
@@ -2434,8 +2459,9 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <option value="16">WK 16</option><option value="17">WK 17</option><option value="18">WK 18</option>
 </select>
 </div>
-<div style="font-size:.6875rem;color:var(--text2);margin-top:3px;font-style:italic">Custom games do not save to the leaderboard</div>
+<div id="fgFilterNote" style="display:none;font-size:.6875rem;color:var(--text2);margin-top:3px;font-style:italic">Filtered games keep their own high score and don't post to the leaderboard</div>
 </div>
+</div><!-- end fgSettingsPanel -->
 <div class="fg-subtitle" id="fgSubtitle">A random NFL team appears — pick from their ALL-TIME roster of players across every era. Their best career fantasy season scores for you. Can you draft the legends?</div>
 </div>
 <div class="fg-layout">

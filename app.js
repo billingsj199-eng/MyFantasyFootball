@@ -27902,7 +27902,12 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
 
   const CFG_POOL = [];
-  if (typeof COLLEGE_STATS !== 'undefined') {
+  // college_stats.js is lazy (window._ensureCollegeStatsData, pulled in by the
+  // prospect/compare pages), so the pool is built here when the data is
+  // already present and otherwise the first time COLLEGE is picked
+  // (setFgLeague). Before that, COLLEGE mode drafted from an empty pool.
+  function _fgBuildCollegePool() {
+    if (CFG_POOL.length || typeof COLLEGE_STATS === 'undefined') return;
     const _getPos = (name) => {
       if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].pos) return COMBINE_DATA[name].pos;
       const dp = D.find(p => p.n === name);
@@ -27924,8 +27929,23 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       CFG_POOL.push({ n:name, s:pos, _cfgConfs:[...playerConfs], _cfgIdx:CFG_POOL.length, _bestByConf:bestByConf, _yrs:seasons.map(s=>s.yr).sort((a,b)=>a-b), _teams:[...new Set(seasons.map(s=>s.tm))] });
     });
   }
+  _fgBuildCollegePool();
 
+  function _cfgSeasonPts(s) { return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*0.5 + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2)*10)/10; }
   function getCollegeBestSeason(player, forConf) {
+    // YEAR / ERA filters: _bestByConf only holds the all-time best per
+    // conference, so rescore the raw seasons inside the window.
+    if ((fgYear !== 'best' || fgEra !== 'all') && typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[player.n]) {
+      let b = null;
+      COLLEGE_STATS[player.n].forEach(s => {
+        const c = CONF_ALIASES[s.conf] || s.conf || '';
+        if (forConf && c !== forConf) return;
+        if (!_fgYearOk(s.yr)) return;
+        const fp = _cfgSeasonPts(s);
+        if (!b || fp > b.fpts) b = { fpts: fp, yr: s.yr, tm: s.tm, conf: c };
+      });
+      return b;
+    }
     if (player._bestByConf && forConf && player._bestByConf[forConf]) return player._bestByConf[forConf];
     if (player._bestByConf) { let b=null; Object.values(player._bestByConf).forEach(s=>{if(!b||s.fpts>b.fpts)b=s;}); return b; }
     return null;
@@ -27941,6 +27961,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     let best=null;
     for(const[szn,weeks]of Object.entries(weekly)){
       if(forConf&&validSeasons.size&&!validSeasons.has(szn))continue;
+      if(!_fgYearOk(+szn))continue;
       for(const w of weeks){const fp=_cfpW(w);if(!best||fp>best.fpts)best={fpts:fp,yr:+szn,wk:w.wk,tm:w.tm,opp:w.opp||'',rec:w.rec||0,rc:w.rc||0};}
     }
     return best;
@@ -27981,38 +28002,75 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   let pendingPlayer = null; // player waiting for slot assignment
   let skipsLeft = 2;
   let fgMode = 'season'; // 'season' or 'week'
-  let fgYear = 'best'; // 'best' or a year like '2024'
+  let fgYear = 'best'; // 'best' (any year) or a year like '2024'
   let fgWeekFilter = 'best'; // 'best' or a week number like '1'
-  let fgType = 'regular'; // 'regular' or 'custom'
+  let fgEra = 'all'; // 'all' or a decade start like '2010' (= 2010-2019)
+  // Derived: 'regular' (no filters: leaderboard + high score) or 'custom'
+  // (era / year / week filtered: own local high score, no leaderboard).
+  let fgType = 'regular';
 
-  // REGULAR/CUSTOM toggle
-  const fgTypeRegular = document.getElementById('fgTypeRegular');
-  const fgTypeCustom = document.getElementById('fgTypeCustom');
-  function setFgType(type) {
-    if (fgType === type) return;
+  // Does a season year pass the YEAR / ERA filters? YEAR wins when set.
+  function _fgYearOk(yr) {
+    if (fgYear !== 'best') return +yr === +fgYear;
+    if (fgEra !== 'all') { const d = +fgEra; return yr >= d && yr <= d + 9; }
+    return true;
+  }
+  function _fgFilterLabel() {
+    if (fgYear !== 'best') return String(fgYear);
+    if (fgEra !== 'all') return fgEra + 's';
+    return 'ALL-TIME';
+  }
+  function _fgFilterTag() { return _fgFilterLabel() + (fgWeekFilter !== 'best' ? ' Wk ' + fgWeekFilter : ''); }
+  function _fgLocalHsKey() {
+    return 'fg_hs_' + fgLeague + '_' + fgMode + '_' + fgScoring + '_' + (fgYear !== 'best' ? 'y' + fgYear : 'e' + fgEra) + (fgWeekFilter !== 'best' ? '_w' + fgWeekFilter : '');
+  }
+  function _fgSyncType() {
+    fgType = (fgEra === 'all' && fgYear === 'best' && fgWeekFilter === 'best') ? 'regular' : 'custom';
+    document.getElementById('fgModeSeason').textContent = fgYear !== 'best' ? 'SEASON' : 'BEST SEASON';
+    document.getElementById('fgModeWeek').textContent = fgWeekFilter !== 'best' ? 'WEEK' : 'BEST WEEK';
+    const note = document.getElementById('fgFilterNote');
+    if (note) note.style.display = fgType === 'custom' ? '' : 'none';
+  }
+
+  // ERA row (decades). Picking one clears a YEAR pick, and vice versa.
+  const fgEraRow = document.getElementById('fgEraRow');
+  function _fgPaintEra() {
+    if (fgEraRow) fgEraRow.querySelectorAll('[data-era]').forEach(b => b.classList.toggle('active', b.dataset.era === fgEra));
+  }
+  function setFgEra(era) {
+    if (fgEra === era) return;
     if (Object.keys(roster).length > 0 && !gameOver) return; // don't switch mid-game
-    fgType = type;
-    fgTypeRegular.classList.toggle('active', type === 'regular');
-    fgTypeCustom.classList.toggle('active', type === 'custom');
-    const customPanel = document.getElementById('fgCustomSettings');
-    customPanel.style.display = type === 'custom' ? '' : 'none';
-    // Update mode button labels
-    const seasonBtn = document.getElementById('fgModeSeason');
-    const weekBtn = document.getElementById('fgModeWeek');
-    seasonBtn.textContent = type === 'custom' ? 'SEASON' : 'BEST SEASON';
-    weekBtn.textContent = type === 'custom' ? 'WEEK' : 'BEST WEEK';
-    // Reset custom filters when switching back to regular
-    if (type === 'regular') {
-      fgYear = 'best';
-      fgWeekFilter = 'best';
-      document.getElementById('fgYearSelect').value = 'best';
-      document.getElementById('fgWeekSelect').value = 'best';
-    }
+    fgEra = era;
+    if (era !== 'all') { fgYear = 'best'; document.getElementById('fgYearSelect').value = 'best'; }
+    _fgPaintEra();
+    _fgSyncType();
     updateFgSubtitle();
     resetGame();
   }
-  fgTypeRegular.addEventListener('click', () => setFgType('regular'));
-  fgTypeCustom.addEventListener('click', () => setFgType('custom'));
+  if (fgEraRow) fgEraRow.querySelectorAll('[data-era]').forEach(b => b.addEventListener('click', () => setFgEra(b.dataset.era)));
+
+  // Settings fold: the toggle rows collapse behind a one-line summary.
+  const fgSettingsToggle = document.getElementById('fgSettingsToggle');
+  const fgSettingsPanel = document.getElementById('fgSettingsPanel');
+  function _fgUpdateSettingsSummary() {
+    const el = document.getElementById('fgSettingsSummary');
+    if (!el) return;
+    const modeLbl = fgMode === 'week' ? (fgWeekFilter !== 'best' ? 'WEEK ' + fgWeekFilter : 'BEST WEEK') : (fgYear !== 'best' ? 'SEASON' : 'BEST SEASON');
+    el.textContent = [fgLeague === 'college' ? 'COLLEGE' : 'NFL', modeLbl, fgScoring === 'half' ? 'HALF PPR' : 'PPR', _fgFilterLabel()].join(' · ');
+  }
+  function _fgSetSettingsOpen(open) {
+    if (!fgSettingsPanel || !fgSettingsToggle) return;
+    fgSettingsPanel.style.display = open ? '' : 'none';
+    fgSettingsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    fgSettingsToggle.classList.toggle('open', open);
+    try { localStorage.setItem('fg_settings_open', open ? '1' : '0'); } catch (_) {}
+  }
+  if (fgSettingsToggle) {
+    fgSettingsToggle.addEventListener('click', () => _fgSetSettingsOpen(fgSettingsPanel.style.display === 'none'));
+    let _open = true;
+    try { _open = localStorage.getItem('fg_settings_open') !== '0'; } catch (_) {}
+    _fgSetSettingsOpen(_open);
+  }
 
   // Abbreviation -> modern full team name mapping for weekly stats
   const ABBR_TO_FULL = {};
@@ -28036,8 +28094,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
     let best = null;
     for (const [szn, weeks] of Object.entries(ws.seasons)) {
-      // Year filter
-      if (fgYear !== 'best' && +szn !== +fgYear) continue;
+      // YEAR / ERA filters
+      if (!_fgYearOk(+szn)) continue;
       for (const w of weeks) {
         // Week filter
         if (fgWeekFilter !== 'best' && +w.wk !== +fgWeekFilter) continue;
@@ -28069,6 +28127,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // mode adds another 0.5 per reception on the fly. The leaderboard tracks
   // PPR; Half PPR is the alternate "fun" view and doesn't save.
   let fgScoring = localStorage.getItem('fg_scoring') || 'ppr';
+  _fgUpdateSettingsSummary();
   function _fgScore(season) {
     if (!season) return 0;
     const base = season.fpts || 0;
@@ -28092,31 +28151,25 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
 
   function updateFgSubtitle() {
-    if (fgType === 'regular') {
-      // Original subtitles
-      if (fgLeague === 'college') {
-        fgSubtitle.textContent = fgMode === 'season'
-          ? "A random college conference appears — pick from ALL-TIME players who played in that conference. Their best college fantasy season scores for you!"
-          : "A random college conference appears — pick from ALL-TIME players. Their single best college fantasy WEEK scores for you. One monster game is all it takes!";
-      } else {
-        fgSubtitle.textContent = fgMode === 'season'
-          ? "A random NFL team appears — pick from their ALL-TIME roster of players across every era. Their best career fantasy season scores for you. Can you draft the legends?"
-          : "A random NFL team appears — pick from their ALL-TIME roster. Their single best fantasy WEEK scores for you. One monster game is all it takes!";
-      }
-      return;
-    }
-    // Custom subtitles
-    const yearLabel = fgYear === 'best' ? 'ALL-TIME' : fgYear;
-    const weekLabel = fgWeekFilter === 'best' ? 'best' : 'Week ' + fgWeekFilter;
-    if (fgLeague === 'college') {
-      fgSubtitle.textContent = fgMode === 'season'
-        ? `CUSTOM — Pick from ${yearLabel} college players. Their ${fgYear === 'best' ? 'best career fantasy season' : fgYear + ' fantasy season'} scores for you!`
-        : `CUSTOM — Pick from ${yearLabel} college players. Their ${weekLabel} fantasy performance scores for you!`;
+    _fgUpdateSettingsSummary();
+    const lbl = _fgFilterLabel();
+    const windowed = fgYear !== 'best' || fgEra !== 'all';
+    const yearPicked = fgYear !== 'best';
+    const weekLbl = fgWeekFilter === 'best' ? 'single best WEEK' : 'Week ' + fgWeekFilter;
+    const who = fgLeague === 'college' ? 'A random college conference appears' : 'A random NFL team appears';
+    const pool = fgLeague === 'college'
+      ? (windowed ? 'pick from its ' + lbl + ' players' : 'pick from ALL-TIME players who played in that conference')
+      : (windowed ? 'pick from its ' + lbl + ' roster' : 'pick from their ALL-TIME roster of players across every era');
+    let scores;
+    if (fgMode === 'season') {
+      scores = yearPicked ? 'Their ' + lbl + ' fantasy season scores for you.'
+        : windowed ? 'Their best ' + lbl + ' fantasy season scores for you.'
+        : 'Their best career fantasy season scores for you.';
     } else {
-      fgSubtitle.textContent = fgMode === 'season'
-        ? `CUSTOM — Pick from ${yearLabel} NFL rosters. ${fgYear === 'best' ? 'Their best career fantasy season' : 'Their ' + fgYear + ' fantasy season'} scores for you.`
-        : `CUSTOM — Pick from ${yearLabel} NFL rosters. Their ${weekLabel} fantasy performance scores for you!`;
+      scores = 'Their ' + weekLbl + (windowed && !yearPicked ? ' of the ' + lbl : (yearPicked ? ' of ' + lbl : '')) + ' scores for you.';
     }
+    const tail = fgMode === 'season' ? (windowed ? '' : ' Can you draft the legends?') : ' One monster game is all it takes!';
+    fgSubtitle.textContent = who + ' \u2014 ' + pool + '. ' + scores + tail;
   }
 
   fgModeSeason.addEventListener('click', () => { if (fgMode !== 'season' && (Object.keys(roster).length === 0 || gameOver)) setFgMode('season'); });
@@ -28124,16 +28177,19 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
   // Year select
   document.getElementById('fgYearSelect').addEventListener('change', function() {
-    if (Object.keys(roster).length > 0 && !gameOver) return; // don't change mid-game
+    if (Object.keys(roster).length > 0 && !gameOver) { this.value = fgYear; return; } // don't change mid-game
     fgYear = this.value;
+    if (fgYear !== 'best' && fgEra !== 'all') { fgEra = 'all'; _fgPaintEra(); }
+    _fgSyncType();
     updateFgSubtitle();
     resetGame();
   });
 
   // Week select
   document.getElementById('fgWeekSelect').addEventListener('change', function() {
-    if (Object.keys(roster).length > 0 && !gameOver) return;
+    if (Object.keys(roster).length > 0 && !gameOver) { this.value = fgWeekFilter; return; }
     fgWeekFilter = this.value;
+    _fgSyncType();
     updateFgSubtitle();
     resetGame();
   });
@@ -28147,7 +28203,22 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     fgLeague = league;
     fgLeagueNFL.classList.toggle('active', league === 'nfl');
     fgLeagueCollege.classList.toggle('active', league === 'college');
+    // College stats start in the 2000s: hide the older decades, drop a stale pick.
+    if (fgEraRow) fgEraRow.querySelectorAll('.fg-era-nfl').forEach(b => { b.style.display = league === 'college' ? 'none' : ''; });
+    if (league === 'college' && fgEra !== 'all' && +fgEra < 2000) { fgEra = 'all'; _fgPaintEra(); _fgSyncType(); }
     if (fgDraftEmptyText) fgDraftEmptyText.textContent = league === 'college' ? 'Press START to get a random college conference' : 'Press START to get a random NFL team';
+    // First COLLEGE pick: fetch the lazy college stats, then build the pool.
+    if (league === 'college' && !CFG_POOL.length && typeof window._ensureCollegeStatsData === 'function') {
+      if (fgDraftEmptyText) fgDraftEmptyText.textContent = 'Loading college data…';
+      startBtn.disabled = true;
+      window._ensureCollegeStatsData().then(() => {
+        _fgBuildCollegePool();
+        startBtn.disabled = false;
+        if (fgLeague === 'college' && fgDraftEmptyText) {
+          fgDraftEmptyText.textContent = CFG_POOL.length ? 'Press START to get a random college conference' : 'College data unavailable — try again later';
+        }
+      });
+    }
     updateFgSubtitle();
     resetGame();
   }
@@ -28174,7 +28245,6 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
   function getBestSeason(player, forTeam) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
-    const yearFilter = fgYear !== 'best' ? +fgYear : null;
 
     // Build reverse lookup: abbreviation -> modern full name
     const _abbrToModern = {};
@@ -28193,7 +28263,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
       career.forEach(s => {
         // Year filter
-        if (yearFilter && s.yr !== yearFilter) return;
+        if (!_fgYearOk(s.yr)) return;
 
         let onTeam = true; // default: include season
 
@@ -28220,22 +28290,46 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     } else if (career.length && !modernTeam) {
       let best = null;
       career.forEach(s => {
-        if (yearFilter && s.yr !== yearFilter) return;
+        if (!_fgYearOk(s.yr)) return;
         if (!best || s.fpts > best.fpts) best = s;
       });
       if (best) return best;
     }
 
+    // YEAR / ERA filters: the career arrays end with the last completed
+    // season, so an in-progress year (2026) only exists in the weekly log.
+    // Sum the regular-season weeks played for this team per year inside the
+    // window and use the best of those for years the career doesn't cover.
+    if ((fgYear !== 'best' || fgEra !== 'all') && typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[player.n] && WEEKLY_STATS[player.n].seasons) {
+      const careerYrs = new Set(career.map(s => s.yr));
+      let best = null;
+      for (const [szn, weeks] of Object.entries(WEEKLY_STATS[player.n].seasons)) {
+        const yr = +szn;
+        if (!_fgYearOk(yr) || careerYrs.has(yr)) continue;
+        const maxWk = yr >= 2021 ? 18 : 17;
+        let sum = 0, gp = 0, tm = null;
+        for (const w of weeks) {
+          if ((w.wk || 0) > maxWk) continue;
+          if (modernTeam && w.tm && (ABBR_TO_FULL[w.tm] || w.tm) !== modernTeam) continue;
+          sum += w.fpts || 0; gp++; tm = w.tm || tm;
+        }
+        if (gp && (!best || sum > best.fpts)) best = { yr: yr, fpts: Math.round(sum * 10) / 10, gp: gp, tm: tm, inProgress: yr >= new Date().getFullYear() };
+      }
+      if (best) return best;
+    }
+
     // Historical/HP players: use per-team lookup
     if (player._bestByTeam && Object.keys(player._bestByTeam).length > 0) {
-      // For year filter on HP players, check if the stored year matches
-      if (yearFilter) {
+      // YEAR / ERA filters: HP only stores one best season per team, so a
+      // legend counts when that season sits inside the window.
+      if (fgYear !== 'best' || fgEra !== 'all') {
         let best = null;
-        Object.values(player._bestByTeam).forEach(s => {
-          if (s.yr === yearFilter && (!best || s.fpts > best.fpts)) best = s;
+        Object.entries(player._bestByTeam).forEach(([tk, s]) => {
+          if (!_fgYearOk(s.yr)) return;
+          if (modernTeam && (TEAM_ALIASES[tk] || tk) !== modernTeam) return;
+          if (!best || s.fpts > best.fpts) best = s;
         });
-        if (best) return best;
-        return null; // no matching year for this HP player
+        return best;
       }
       if (modernTeam && player._bestByTeam[modernTeam]) {
         return player._bestByTeam[modernTeam];
@@ -28451,7 +28545,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
 
   function renderHighScore() {
-    if (fgType === 'custom') { highScoreEl.textContent = ''; return; }
+    if (fgType === 'custom') {
+      const fhs = parseFloat(localStorage.getItem(_fgLocalHsKey())) || 0;
+      highScoreEl.textContent = fhs > 0 ? 'HIGH SCORE (' + _fgFilterTag() + '): ' + fhs.toFixed(1) : '';
+      return;
+    }
     let hs;
     if (fgLeague === 'college') {
       hs = fgMode === 'week' ? highScoreCollegeWeek : highScoreCollegeSeason;
@@ -28591,6 +28689,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       }
     }
 
+    // Filtered games: only players who have a score inside the window.
+    if (fgType === 'custom') currentTeamPlayers = currentTeamPlayers.filter(p => getScore(p, currentTeam));
+
     // Hide spinner, show team reveal
     spinnerWrap.style.display = 'none';
     teamReveal.style.display = 'block';
@@ -28608,7 +28709,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       resultLogo.alt = currentTeam;
       teamNameEl.textContent = currentTeam.toUpperCase();
     }
-    teamSubEl.textContent = currentTeamPlayers.length + ' all-time players available — pick one' + (fgMode === 'week' ? ' (best single week scores)' : '');
+    teamSubEl.textContent = currentTeamPlayers.length + ' ' + (fgType === 'custom' ? _fgFilterTag() : 'all-time') + ' players available — pick one' + (fgMode === 'week' && fgWeekFilter === 'best' ? ' (best single week scores)' : '');
 
     renderPlayerList('');
     updateSkipBtn();
@@ -28753,9 +28854,18 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     finalScoreEl.textContent = total.toFixed(1) + ' PTS';
 
     if (fgType === 'custom') {
-      // Custom games: show score but no high score tracking or leaderboard save
-      goSubEl.textContent = 'Custom Game (not saved to leaderboard)';
-      goSubEl.style.color = 'var(--text2)';
+      // Filtered game (era / year / week): its own local high score per
+      // filter; never saved to the leaderboard.
+      const key = _fgLocalHsKey();
+      const prev = parseFloat(localStorage.getItem(key)) || 0;
+      if (total > prev) {
+        localStorage.setItem(key, String(total));
+        goSubEl.textContent = 'NEW HIGH SCORE (' + _fgFilterTag() + ')! Filtered games don\'t post to the leaderboard';
+        goSubEl.style.color = 'var(--green)';
+      } else {
+        goSubEl.textContent = 'High Score (' + _fgFilterTag() + '): ' + prev.toFixed(1) + ' · filtered games don\'t post to the leaderboard';
+        goSubEl.style.color = 'var(--text2)';
+      }
     } else if (fgScoring === 'half') {
       // Half PPR is the alternate view; leaderboard tracks PPR
       goSubEl.textContent = 'Half PPR mode (leaderboard tracks PPR only)';
@@ -28845,6 +28955,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (fgScoring === 'half') return;
       fgScoring = 'half';
       localStorage.setItem('fg_scoring', 'half');
+      _fgUpdateSettingsSummary();
       if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
       fgScoringHalfBtn.classList.add('active');
       fgScoringPprBtn.classList.remove('active');
@@ -28854,6 +28965,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (fgScoring === 'ppr') return;
       fgScoring = 'ppr';
       localStorage.setItem('fg_scoring', 'ppr');
+      _fgUpdateSettingsSummary();
       if (typeof window._saveGameDataToCloud === 'function') window._saveGameDataToCloud();
       fgScoringPprBtn.classList.add('active');
       fgScoringHalfBtn.classList.remove('active');

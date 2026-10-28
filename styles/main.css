@@ -477,6 +477,11 @@ button,input,select,textarea{font-family:inherit}
 .fg-mode-toggle{margin:8px auto 4px!important}
 .fg-mode-btn{background:var(--surface2);color:var(--text2)}
 .fg-mode-btn.active{background:var(--chip-active-bg);color:var(--chip-active-fg);font-weight:700;box-shadow:inset 0 0 0 1px var(--chip-active-border)}
+/* Settings fold: one-line summary pill that opens/closes the toggle rows */
+.fg-settings-summary{display:inline-flex;align-items:center;gap:8px;margin:6px auto 2px;padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.06em;cursor:pointer}
+.fg-settings-summary:hover{color:var(--text);border-color:var(--border-strong)}
+.fg-settings-chevron{display:inline-block;transition:transform .15s}
+.fg-settings-summary.open .fg-settings-chevron{transform:rotate(180deg)}
 .fg-title{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
 .fg-subtitle{color:var(--text2);font-size:.82rem;margin-top:4px;max-width:500px;margin-left:auto;margin-right:auto}
 .fg-layout{display:flex;gap:1.5rem;align-items:flex-start}

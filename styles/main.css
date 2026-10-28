@@ -486,6 +486,9 @@ button,input,select,textarea{font-family:inherit}
 .fg-mode-toggle{margin:8px auto 4px!important}
 .fg-mode-btn{background:var(--surface2);color:var(--text2)}
 .fg-mode-btn.active{background:var(--chip-active-bg);color:var(--chip-active-fg);font-weight:700;box-shadow:inset 0 0 0 1px var(--chip-active-border)}
+/* Account page signed out (2026-10-28): sign-in prompt instead of dead settings forms */
+body:not(.mff-signed-in) #pageAccount .acct-tabs,body:not(.mff-signed-in) #pageAccount .acct-panel{display:none!important}
+body.mff-signed-in #acctSignedOutNote{display:none!important}
 /* Settings fold: one-line summary pill that opens/closes the toggle rows */
 .fg-settings-summary{display:inline-flex;align-items:center;gap:8px;margin:6px auto 2px;padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.06em;cursor:pointer}
 .fg-settings-summary:hover{color:var(--text);border-color:var(--border-strong)}

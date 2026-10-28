@@ -3451,7 +3451,8 @@ function _cdMffSeries(d, fmt, now) {
     if (s) H.dates.forEach((dt, j) => { const x = s[j]; if (x) out.push({ d: dt, val: x[0], ovr: x[1], pos: x[2] }); });
   }
   if (now) {
-    const today = new Date().toISOString().slice(0, 10);
+    // ET date, like the history's own dates (UTC flipped the day at 8pm ET).
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     if (out.length && out[out.length - 1].d === today) out.pop();
     out.push({ d: today, val: now.val, ovr: now.ovr, pos: now.pos });
   }
@@ -6122,8 +6123,11 @@ function _ivReturn(d, r, raw, code, cw, det, x) {
     else {
       const ex = SP && SP.updated ? new Date(SP.updated) : null;
       if (ex && !isNaN(ex)) {
-        const exDay = ex.getFullYear() + '-' + String(ex.getMonth() + 1).padStart(2, '0') + '-' + String(ex.getDate()).padStart(2, '0');
-        useNews = nt.date > exDay || (nt.date === exDay && ex.getHours() < 12);
+        // Compare on the Eastern calendar (nt.date is an ET date); the viewer's
+        // local clock shifted the "same day, before noon" test abroad.
+        const _etP = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', hour12: false }).formatToParts(ex).reduce((o, p) => { o[p.type] = p.value; return o; }, {});
+        const exDay = _etP.year + '-' + _etP.month + '-' + _etP.day;
+        useNews = nt.date > exDay || (nt.date === exDay && (parseInt(_etP.hour, 10) % 24) < 12);
       }
     }
     // a timeline that has already run out says nothing about the weeks ahead
@@ -25369,9 +25373,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       div.className = 'ep-sug-item';
       div.innerHTML = `<span class="ep-sug-pos ${m.pos}">${m.pos}</span> ${m.name} <span class="ep-sug-team">${m.team}</span>`;
       div.addEventListener('click', () => {
+        // One attempt per day: a tap fills the box, GUESS / Enter submits,
+        // so a mis-tap on the list doesn't end the game.
         epInput.value = m.name;
         epSuggestions.classList.remove('show');
-        submitGuess();
+        epInput.focus();
       });
       epSuggestions.appendChild(div);
     });
@@ -26716,7 +26722,10 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // Generate a challenge URL that encodes the target player for sharing
   function gwChallengeUrl(target, mode) {
     if (!target || !target.name) return null;
-    const payload = JSON.stringify({ n: target.name, m: mode });
+    // The link carries a hash of the name, not the name: the old base64 of
+    // {n: "Player"} could be decoded by anyone to read the answer. The
+    // receiver matches the hash against the pool (gwCheckChallenge).
+    const payload = JSON.stringify({ h: window._mffDailyHash('ep|' + target.name), m: mode });
     const encoded = btoa(unescape(encodeURIComponent(payload)));
     return 'https://myfantasyfootball.co?ep=' + encodeURIComponent(encoded);
   }
@@ -27071,7 +27080,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (!epParam) return false;
       const decoded = decodeURIComponent(epParam);
       const json = JSON.parse(decodeURIComponent(escape(atob(decoded))));
-      if (json && json.n) {
+      if (json && (json.n || json.h != null)) {
         // Set mode from challenge link
         const validModes = ['current', 'alltime', '2000s', '2010s', 'college'];
         if (json.m && validModes.includes(json.m) && gwMode !== json.m) {
@@ -27086,7 +27095,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         }
         initGwPool();
         const pool = getGwPool();
-        const found = pool.find(p => p.name === json.n);
+        // New links carry a name hash; old ones (json.n) still resolve.
+        const found = json.n ? pool.find(p => p.name === json.n)
+          : pool.find(p => window._mffDailyHash('ep|' + p.name) === json.h);
         if (found) {
           gwGuesses = [];
           gwResultRows = [];
@@ -27772,7 +27783,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const teams = getActivePlayerTeams(p.n, p.t);
     FG_POOL.push({
       n: p.n, s: p.s, _fgTeams: teams, _fgIdx: FG_POOL.length,
-      _yrs: p._yrs || '', _retired: false,
+      // D also carries the retired legends appended from EP_RETIRED; flagging
+      // them all as active showed "2004–pres" style year ranges for retirees.
+      _yrs: p._yrs || '', _retired: !!(p._retired || p.t === 'Retired'),
       career: p.career || [], _srcD: true, _dRef: p
     });
     poolNameSet.add(p.n + '|' + p.s);
@@ -28946,6 +28959,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
 
   resetBtn.addEventListener('click', resetGame);
+  // Read by the midnight auto-reload so it doesn't wipe a draft mid-game.
+  window._fgDraftInProgress = () => Object.keys(roster).length > 0 && !gameOver;
 
   // Half PPR / PPR scoring toggle
   const fgScoringHalfBtn = document.getElementById('fgScoringHalf');
@@ -40284,6 +40299,9 @@ window.fmtHeight = fmtHeight;
   function updateAccountUI(user) {
     currentUser = user;
     window._authCurrentUser = user;
+    // The Account page swaps its settings panels for a sign-in prompt when
+    // signed out (CSS on this class); they used to show and just error.
+    document.body.classList.toggle('mff-signed-in', !!user);
     // Re-check admin gating for the WEEKLY format tab — its IIFE-internal auth listener fails to
     // register because firebase.auth() throws when called before initializeApp.
     if (typeof window._weeklyAdminCheck === 'function') {
@@ -44406,7 +44424,11 @@ window.fmtHeight = fmtHeight;
   function reloadIfNewDay() {
     if (easternDateStr(getEasternNow()) === pageLoadDate) return;
     const games = document.getElementById('pageGames');
-    if (games && games.classList.contains('active')) window.location.reload();
+    if (!games || !games.classList.contains('active')) return;
+    // Don't wipe a Fantasy Game draft in progress; the dailies refresh on
+    // the next visit instead.
+    if (typeof window._fgDraftInProgress === 'function' && window._fgDraftInProgress()) return;
+    window.location.reload();
   }
   scheduleRefresh();
 
@@ -61882,7 +61904,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const uResp = await fetch('https://api.sleeper.app/v1/user/' + encodeURIComponent(name));
       const user = uResp.ok ? await uResp.json() : null;
       if (!user || !user.user_id) throw new Error('Sleeper user "' + name + '" not found');
-      let season = new Date().getFullYear();
+      let season = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric' }).format(new Date()), 10) || new Date().getFullYear();
       let leagues = [];
       for (let tries = 0; tries < 2 && !leagues.length; tries++, season--) {
         const lResp = await fetch('https://api.sleeper.app/v1/user/' + user.user_id + '/leagues/nfl/' + season);

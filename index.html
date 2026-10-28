@@ -509,6 +509,13 @@ SIGN IN
 <div class="acct-hero-email" id="acctPageEmail">Not signed in</div>
 </div>
 
+<!-- Signed-out view (body without .mff-signed-in): the tabs/panels below hide. -->
+<div id="acctSignedOutNote" style="margin:12px auto 0;max-width:420px;padding:18px 20px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);text-align:center">
+<div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--accent);margin-bottom:6px">SIGN IN TO MANAGE YOUR ACCOUNT</div>
+<div style="font-size:.82rem;color:var(--text2);margin-bottom:12px">Rankings cloud sync, badges, Season Pass and settings live here once you're signed in.</div>
+<button onclick="var b=document.getElementById('globalSigninBtn'); if(b) b.click();" style="padding:9px 22px;background:var(--accent);color:#000;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer">SIGN IN</button>
+</div>
+
 <div class="acct-tabs">
 <button class="acct-tab active" data-acct-tab="settings">Settings</button>
 <button class="acct-tab" data-acct-tab="badges">Badges</button>

@@ -296,6 +296,15 @@ button,input,select,textarea{font-family:inherit}
 .nav-divider{display:flex;align-items:center;gap:6px;width:86px;margin:6px 0 2px;color:var(--text2);opacity:.75}
 .nav-divider::before,.nav-divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .nav-divider span{font-family:'DM Sans',sans-serif;font-size:.6875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1}
+/* Short windows (2026-10-28): the admin rail has 12 rows (Backtest + Research), which
+   put the last item (Trivia) below the fold while the rail's scrollbar is hidden.
+   Tighten the rail so every row fits at 768px tall. */
+@media (min-width:601px) and (max-height:840px){
+  .sidebar{gap:3px;padding-top:8px}
+  .sidebar-logo{margin-bottom:4px}
+  .nav-divider{margin:3px 0 1px}
+  .nav-btn[data-nav-tier="2"]{min-height:44px;padding:3px 4px;gap:2px}
+}
 @media(min-width:601px){
   .sidebar{overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
   .sidebar::-webkit-scrollbar{display:none}

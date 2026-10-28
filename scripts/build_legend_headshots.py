@@ -33,6 +33,13 @@ STL/HOU/BAL resolved by year). The best candidate per team lands in `byTeam`
 (team = site abbreviation: LV, LAR, LAC, TEN, ARI, IND … like TEAM_ABBR_MAP).
 Teams with no tagged photo are left out — the reveal falls back to `url`.
 
+Stage C — Commons file search for names stage A could not place (article has no
+free lead image): list=search in the File namespace for "<Name>"; a hit counts
+only when the full name appears in the filename/description AND the file is
+dated inside the career, names one of the player's teams, or says football/NFL/
+Topps. Best hit becomes the default (`page` = the Commons file page), team-tagged
+hits fill byTeam. --skip-file-search turns it off.
+
 Credits (Artist + LicenseShortName) come from prop=imageinfo extmetadata.
 
 Usage (stdlib + `requests` if installed, else curl):
@@ -491,6 +498,68 @@ def image_info(file_titles):
     return out
 
 
+# Namesake / not-a-headshot guards for loose Commons files (stage C) and article images.
+RELATIVE_RE = re.compile(r'(daughter|son|father|mother|wife|husband|brother|sister|nephew|niece|grandson|granddaughter|widow)\s+of', re.I)
+MEMORIAL_RE = re.compile(r'(memorial|plaque|statue|bust|grave|headstone|ring of honor|ring of honour|tombstone)', re.I)
+OTHER_SPORT_RE = re.compile(r'(rugby|soccer|baseball|basketball|cricket|hockey|outfielder|infielder|pitcher|shortstop|nrl|second rower|prop forward|australian rules|golfer|boxer|wrestler)', re.I)
+FOOTBALL_WORD_RE = re.compile(r'\b(football|nfl|quarterback|running back|halfback|fullback|wide receiver|tight end|topps|fleer|bowman|philadelphia gum|trading card)\b', re.I)
+
+
+def commons_file_search(name, limit=10):
+    """Commons File: namespace search for an exact name phrase -> [File:... titles]."""
+    data = api({'action': 'query', 'list': 'search', 'srnamespace': 6, 'srlimit': limit,
+                'srsearch': '"%s"' % name}, COMMONS)
+    return [h['title'] for h in data.get('query', {}).get('search', [])]
+
+
+def pick_from_search(name, seasons, files, info):
+    """Namesake-guarded pick from loose Commons files: (default {url, credit, file}, byTeam)."""
+    by_year = team_by_year(seasons)
+    my_teams = set(by_year.values())
+    years = {s.get('yr') for s in seasons if s.get('yr')}
+    full = name.lower()
+    best = None
+    by_team = {}
+    for ft in files:
+        fi = info.get(ft)
+        if not fi or not fi['thumb'] or not fi['shared']:
+            continue
+        if not fi['mime'].startswith('image/') or 'svg' in fi['mime'] or 'gif' in fi['mime']:
+            continue
+        fname = ft[5:].replace('_', ' ')
+        if JUNK_FILE_RE.search(fname):
+            continue
+        text = (fname + ' ' + fi['desc']).lower()
+        if full not in text and _name_key(name) not in _name_key(text):
+            continue
+        if RELATIVE_RE.search(text) or MEMORIAL_RE.search(text):
+            continue                       # "daughter of Brent Jones", Joe Delaney's memorial plaque
+        if OTHER_SPORT_RE.search(text) and not FOOTBALL_WORD_RE.search(text):
+            continue                       # rugby second-rower / baseball outfielder namesakes
+        tags = {}
+        for m in TEAM_WORD_RE.finditer(text):
+            t = TEAM_WORDS[m.group(1).lower()]
+            if t in my_teams:
+                tags[t] = tags.get(t, 0) + 2
+        in_career = bool(fi['year'] and fi['year'] in years)
+        if fi['year'] and fi['year'] not in years and not tags:
+            continue                       # dated outside the career and no team word
+        if not tags and not FOOTBALL_WORD_RE.search(text):
+            continue                       # same name, nothing football about it (a date inside
+                                           # the career is not enough: drummers and actors share names)
+        if in_career and by_year.get(fi['year']):
+            t = by_year[fi['year']]
+            tags[t] = tags.get(t, 0) + 1
+        score = sum(tags.values()) + (1 if in_career else 0) + (1 if FOOTBALL_WORD_RE.search(text) else 0)
+        if best is None or score > best['score']:
+            best = {'url': fi['thumb'], 'credit': fi['credit'], 'file': ft, 'score': score}
+        for t, sc in tags.items():
+            cur = by_team.get(t)
+            if cur is None or sc > cur['score']:
+                by_team[t] = {'url': fi['thumb'], 'credit': fi['credit'], 'score': sc}
+    return best, {t: {'url': b['url'], 'credit': b['credit']} for t, b in by_team.items()}
+
+
 def file_from_thumb(url):
     m = re.search(r'/commons/thumb/[0-9a-f]/[0-9a-f]{2}/([^/]+)/', url or '')
     return 'File:' + urllib.parse.unquote(m.group(1)).replace('_', ' ') if m else None
@@ -520,6 +589,8 @@ def tag_candidates(name, seasons, files, info):
         text = (fname + ' ' + fi['desc']).lower()
         if sn not in text and full not in text:
             continue                     # someone / something else pictured
+        if RELATIVE_RE.search(text) or MEMORIAL_RE.search(text):
+            continue                     # a relative, or a plaque / statue of the player
         if fi['year'] and fi['year'] not in by_year:
             continue                     # dated outside the career (alumni events, rallies) → never a jersey shot
         tags = {}
@@ -548,6 +619,7 @@ def main():
     ap.add_argument('--limit', type=int, default=0, help='stop after N candidates (testing)')
     ap.add_argument('--skip-teams', action='store_true', help='stage A only (no per-team candidates)')
     ap.add_argument('--skip-audit', action='store_true', help='skip the ESPN id sanity pass')
+    ap.add_argument('--skip-file-search', action='store_true', help='skip stage C (Commons file search)')
     ap.add_argument('--dry-run', action='store_true', help='list candidates, no requests')
     args = ap.parse_args()
 
@@ -636,6 +708,50 @@ def main():
     refresh_meta()
     write_out(table, meta)
     save_state(state)
+
+    # ---- Stage C: Commons file search for the names stage A could not place --
+    c_searched = state.setdefault('commons_searched', {})
+    if args.names:
+        todo_c = [n for n in args.names if n not in table and (args.force or n not in espn or n in suspects)]
+    else:
+        todo_c = [n for n in no_id if n not in table and n not in c_searched]
+        todo_c += [n for n in sorted(suspects) if n not in table and n not in todo_c and n not in c_searched]
+    if args.skip_file_search:
+        todo_c = []
+    print('stage C: Commons file search for %d names (%d searched before)' % (len(todo_c), len(c_searched)), flush=True)
+    c_hits = 0
+    for i in range(0, len(todo_c), IMG_BATCH):
+        chunk = todo_c[i:i + IMG_BATCH]
+        files = {}
+        for n in chunk:
+            sn = surname(n)
+            hits = commons_file_search(n)
+            files[n] = [f for f in hits if re.search(r'\.(jpe?g|png|webp)$', f, re.I)
+                        and sn in f.lower() and not JUNK_FILE_RE.search(f.replace('_', ' '))][:10]
+        all_files = sorted({f for lst in files.values() for f in lst})
+        info = image_info(all_files) if all_files else {}
+        for n in chunk:
+            c_searched[n] = meta['date']
+            best, by_team = pick_from_search(n, careers.get(n, []), files[n], info)
+            if not best:
+                continue
+            table[n] = {
+                'url': best['url'], 'credit': best['credit'],
+                'page': 'https://commons.wikimedia.org/wiki/' + urllib.parse.quote(best['file'].replace(' ', '_')),
+            }
+            bt = {t: b for t, b in by_team.items() if b['url'] != best['url']}
+            if bt:
+                table[n]['byTeam'] = bt
+            if n in suspects:
+                table[n]['preferCommons'] = True
+            teams_done[n] = meta['date']     # stage B reads Wikipedia titles; these are Commons files
+            c_hits += 1
+        refresh_meta()
+        write_out(table, meta)
+        save_state(state)
+        print('  %d/%d  hits so far %d' % (min(i + IMG_BATCH, len(todo_c)), len(todo_c), c_hits), flush=True)
+    if todo_c:
+        print('stage C: matched %d of %d' % (c_hits, len(todo_c)))
 
     # ---- Stage B: candidates per team + credits ---------------------------
     todo = [n for n in sorted(table) if not args.skip_teams and n not in teams_done]

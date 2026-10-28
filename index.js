@@ -761,3 +761,84 @@ exports.yahooProxy = onRequest(
     }
   }
 );
+
+// === lockTriviaDaily: news-driven Daily Trivia board (scheduled job on Jack's PC) ===
+// scripts/trivia_daily/run.js (site repo) picks tomorrow's theme from the
+// news feed / calendar, builds the board with the site's own trivia generator
+// headlessly, and POSTs the lock doc here. This endpoint is the only writer
+// of trivia_daily/* outside the admin UI: the PC sends the export feed key
+// (outside the repo, E:\MyFantasyFootball\secrets\export_feed_key.txt, the same
+// file the Jack's-board exporters use) and it is matched against the
+// EXPORT_FEED_KEY secret, so no Google credential ever lives on disk.
+// Rules: an admin-locked board for the date is never overwritten (409);
+// an earlier auto board for the same date is replaced; the date must be
+// today (ET) or later; the doc shape is validated and size-capped.
+
+exports.lockTriviaDaily = onRequest(
+  { secrets: [EXPORT_FEED_KEY], memory: "256MiB", timeoutSeconds: 60 },
+  async (req, res) => {
+    try {
+      const supplied = req.get("x-export-key") || "";
+      if (!supplied || supplied !== EXPORT_FEED_KEY.value()) {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
+      const doc = req.body && req.body.doc;
+      const bad = (msg) => { res.status(400).json({ error: msg }); };
+      if (!doc || typeof doc !== "object") return bad("doc required");
+      const date = String(doc.date || "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad("bad date");
+      const todayET = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      if (date < todayET) return bad("date is in the past (ET)");
+      if (doc.source !== "auto") return bad("source must be 'auto'");
+      const title = String(doc.title || "").trim();
+      if (!title || title.length > 120) return bad("bad title");
+      const desc = String(doc.desc || "").slice(0, 200);
+      if (!Array.isArray(doc.items) || doc.items.length < 16 || doc.items.length > 40) return bad("items must be 16-40");
+      const str = (v, n) => (v == null ? "" : String(v)).slice(0, n);
+      const items = doc.items.map((it) => ({
+        rank: (typeof it.rank === "number") ? it.rank : str(it.rank, 8),
+        answer: str(it.answer, 80),
+        value: (typeof it.value === "number") ? it.value : str(it.value, 40),
+        hint: str(it.hint, 80),
+        team: str(it.team, 6),
+        category: str(it.category, 40),
+        headshot: str(it.headshot, 300),
+      }));
+      if (items.some((it) => !it.answer)) return bad("every item needs an answer");
+      const colorway = /^[a-z]{3,12}$/.test(String(doc.colorway || "")) ? doc.colorway : "purple";
+      const layout = /^(auto|\dx\d)$/.test(String(doc.layout || "")) ? doc.layout : "auto";
+      let auto = null;
+      if (doc.auto && typeof doc.auto === "object") {
+        const raw = JSON.stringify(doc.auto);
+        if (raw.length > 40000) return bad("auto payload too large");
+        auto = JSON.parse(raw);
+      }
+      const out = {
+        date, title, desc, items, itemCount: items.length,
+        colorway, customColor: null, layout,
+        lockedBy: "auto-trivia-daily", lockedByEmail: "",
+        lockedAt: new Date().toISOString(),
+        source: "auto",
+        auto,
+      };
+      const ref = getFirestore().collection("trivia_daily").doc(date);
+      const prev = await ref.get();
+      let replaced = false;
+      if (prev.exists) {
+        const p = prev.data() || {};
+        if (p.source !== "auto") {
+          res.status(409).json({ error: "locked-by-admin", title: p.title || "", lockedBy: p.lockedByEmail || p.lockedBy || "" });
+          return;
+        }
+        replaced = true;
+      }
+      await ref.set(out);
+      res.json({ ok: true, date, title, itemCount: items.length, replaced });
+    } catch (err) {
+      console.error("lockTriviaDaily error:", err);
+      res.status(500).json({ error: "internal" });
+    }
+  }
+);

@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-28-legends" as="script">
+<link rel="preload" href="app.js?v=2026-10-28-legends3" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -6591,7 +6591,7 @@ window._loadRetiredData = function(opts) {
 // initials until it lands, then upgrades the cell. Regenerate: scripts/build_legend_headshots.py.
 window._loadLegendHeadshots = function(opts) {
   if (window._legendHeadshotsPromise) return window._legendHeadshotsPromise;
-  window._legendHeadshotsPromise = _injectScripts(['data/legend_headshots.js?v=2026-10-28-legends2'], 'LegendHeadshots', opts);
+  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28', 'data/legend_headshots.js?v=2026-10-28-legends2'], 'LegendHeadshots', opts);
   return window._legendHeadshotsPromise;
 };
 
@@ -6654,7 +6654,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-28-legends"></script>
+<script defer src="app.js?v=2026-10-28-legends3"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

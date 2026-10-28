@@ -56421,6 +56421,16 @@ window.fmtHeight = fmtHeight;
       return { url: lh.url, credit: lh.credit || 'Wikimedia Commons', page: lh.page || '' };
     };
 
+    // 00. LEGEND_HEADSHOTS_LOCAL — hand-picked cutouts in data/legend_hs/ (Jack's own
+    // photos, ESPN framing, transparent PNG). Wins over every other source; no credit
+    // tooltip, so the reveal styles it like an ESPN headshot (silhouette outline).
+    if (window.LEGEND_HEADSHOTS_LOCAL) {
+      for (const v of nameVariants) {
+        const lo = window.LEGEND_HEADSHOTS_LOCAL[v];
+        if (lo && lo.url) return { url: lo.url, credit: '', page: '' };
+      }
+    }
+
     // 0. preferCommons — the name's ESPN id failed the builder's audit (namesake such as
     // the Marcus Allen LB, wrong position, too young: scripts/_suspect_espn_ids.json), so
     // the Commons photo wins over the ESPN tables for that name.

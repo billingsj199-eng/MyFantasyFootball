@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-29-polish" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-hub" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -3669,13 +3669,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-28-sprint2">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-10-29-hub">
 <div class="trivia-wrap">
-<!-- Player header (non-admin). The builder tab strip below it is admin-only. -->
-<div class="trivia-player-only" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;color:var(--accent);line-height:1">DAILY TRIVIA</div>
-<button onclick="switchPage('games')" style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer">&larr; Games</button>
-</div>
 <!-- Tabs -->
 <div class="trivia-admin-only" style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
 <button class="trivia-tab active" data-tab="builder" onclick="window._triviaTabSwitch('builder')" style="padding:8px 18px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);background:none;border:none;border-bottom:2px solid var(--accent);margin-bottom:-2px;cursor:pointer">Trivia</button>
@@ -3684,37 +3679,39 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- Board Builder Tab -->
 <div id="triviaTabBuilder">
 
-<!-- DAILY BOARD — deterministic-by-date challenge, same for everyone.
-     Pool of templates is hashed by today's date (or ?daily=YYYY-MM-DD).
-     Streak + per-day completion tracked in localStorage. Post-game modal
-     in #triviaDailyModal (below) emits a Wordle-style emoji share. -->
-<div id="triviaDailyPanel" style="margin-bottom:12px;padding:14px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(255,209,102,.10),rgba(168,85,247,.08));border:1px solid rgba(255,209,102,.35);position:relative;overflow:hidden">
-<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-<div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:2px;color:#ffd166;line-height:1">DAILY BOARD <span id="triviaDailyDateLabel" style="font-size:.7rem;color:var(--text2);letter-spacing:1px;margin-left:6px"></span> <span id="triviaDailyPreviewBadge" style="display:none;font-size:.6875rem;background:#a855f7;color:#fff;padding:2px 7px;border-radius:4px;letter-spacing:1.5px;margin-left:6px;vertical-align:2px">PREVIEW</span></div>
-<div id="triviaDailyTitle" style="margin-top:4px;font-size:.85rem;color:var(--text)">—</div>
-<div id="triviaDailyMeta" style="margin-top:2px;font-size:.7rem;color:var(--text2)">Same board for everyone, every day.</div>
+<!-- TRIVIA HUB (2026-10-29, survey R1). Above the fold on a phone: today's
+     board card (number, date, title, era chip, your state, the clock to
+     midnight ET), then the other dailies with their state (MORE TODAY),
+     YESTERDAY (the ?daily= permalink in archive mode: no streak change),
+     YOUR STATS, then the BOARD LIBRARY below. One column, no horizontal
+     scroll at 375px. The DAILY BOARD is deterministic-by-date, the same for
+     everyone (template cycle or the locked trivia_daily/{date} snapshot);
+     streak + per-day completion live in localStorage (mff_triviaDaily); the
+     post-game modal is #triviaDailyModal below. The element ids the trivia
+     chunk writes to are unchanged; the rows are filled by _triviaRenderHub. -->
+<div class="trivia-hub" id="triviaHub">
+<div class="trivia-hub-head">
+<div class="trivia-hub-brand">DAILY TRIVIA</div>
+<div class="trivia-hub-clock" data-trivia-countdown></div>
 </div>
-<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-<div style="display:flex;flex-direction:column;align-items:center;min-width:54px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#ffd166;line-height:1" id="triviaDailyStreak">0</div>
-<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">STREAK 🔥</div>
+
+<div id="triviaDailyPanel" class="trivia-today">
+<div class="trivia-today-top">
+<div class="trivia-today-num"><span id="triviaDailyDateLabel">BOARD</span><span id="triviaDailyPreviewBadge" class="trivia-today-badge preview" style="display:none">PREVIEW</span><span id="triviaDailyArchiveBadge" class="trivia-today-badge" style="display:none">ARCHIVE · NO STREAK</span></div>
+<span class="trivia-era-chip" id="triviaDailyEra"></span>
 </div>
-<div style="display:flex;flex-direction:column;align-items:center;min-width:60px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--text);line-height:1" id="triviaDailyBest">—</div>
-<div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">TODAY</div>
+<div id="triviaDailyTitle" class="trivia-today-title">—</div>
+<div id="triviaDailyMeta" class="trivia-today-meta">Same board for everyone, every day.</div>
+<div class="trivia-today-row">
+<div class="trivia-today-stat"><div class="trivia-today-v" id="triviaDailyStreak">0</div><div class="trivia-today-l">STREAK 🔥</div></div>
+<div class="trivia-today-stat"><div class="trivia-today-v dim" id="triviaDailyBest">—</div><div class="trivia-today-l" id="triviaDailyBestLbl">TODAY</div></div>
+<div class="trivia-today-pool" id="triviaDailyPool"></div>
+<div class="trivia-today-btns">
+<button id="triviaDailyPlayBtn" class="trivia-today-play" onclick="window._triviaTodayClick()">PLAY TODAY</button>
+<button id="triviaSurpriseBtn" class="trivia-admin-only trivia-today-surprise" onclick="window._triviaSurpriseMe()" title="Random AI-generated trivia · not the daily, no streak">🎲 SURPRISE ME</button>
 </div>
-<div style="display:flex;flex-direction:column;gap:6px">
-<button id="triviaDailyPlayBtn" onclick="window._triviaPlayDaily()" style="padding:10px 22px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;cursor:pointer;font-weight:700">PLAY TODAY</button>
-<button id="triviaSurpriseBtn" class="trivia-admin-only" onclick="window._triviaSurpriseMe()" title="Random AI-generated trivia · not the daily, no streak" style="padding:7px 18px;background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.45);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer">🎲 SURPRISE ME</button>
 </div>
-</div>
-</div>
-<!-- Daily panel footer: next-board clock + how-to + stats (2026-10-28 survey R2/R3/R4) -->
-<div class="trivia-daily-foot">
-<span class="trivia-daily-clock" data-trivia-countdown></span>
-<button type="button" class="trivia-daily-foot-btn" onclick="window._triviaShowHowTo()">? HOW TO PLAY</button>
-<button type="button" class="trivia-daily-foot-btn" onclick="window._triviaShowStats()">📊 STATS</button>
+<a id="triviaDailyBackToday" class="trivia-today-back" href="#trivia" style="display:none" onclick="return window._triviaBackToToday()">◂ Back to today's board</a>
 <!-- Admin preview row — lets admins QA tomorrow's (or any future) daily
      before it goes live. Hidden by default; shown when window.isAdmin()
      returns true. Preview runs DON'T write to localStorage so streaks +
@@ -3730,7 +3727,27 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button onclick="window._triviaOpenReportsPanel()" title="Triage user-submitted cell reports" style="padding:5px 12px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.5);border-radius:6px;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:600">🚩 REPORTS</button>
 <span id="triviaDailyLockStatus" style="font-size:.6875rem;color:var(--text2)"></span>
 </div>
+</div><!-- /triviaDailyPanel -->
+
+<div class="trivia-hub-sec">MORE TODAY</div>
+<div class="trivia-modes" id="triviaModeRow"></div>
+
+<button type="button" class="trivia-hub-row" id="triviaHubYesterday" onclick="window._triviaOpenYesterday()">
+<span class="trivia-hub-row-l">YESTERDAY</span>
+<span class="trivia-hub-row-v" id="triviaHubYesterdayV">—</span>
+<span class="trivia-hub-row-a" id="triviaHubYesterdayA">▸ play (no streak)</span>
+</button>
+<button type="button" class="trivia-hub-row" id="triviaHubStats" onclick="window._triviaShowStats()">
+<span class="trivia-hub-row-l">YOUR STATS</span>
+<span class="trivia-hub-row-v" id="triviaHubStatsV">—</span>
+<span class="trivia-hub-row-a">▸</span>
+</button>
+<div class="trivia-hub-links">
+<a href="#games" onclick="return window._triviaGoGames('leaderboard')">LEADERBOARD ▸</a>
+<a href="#trivia" onclick="window._triviaShowHowTo();return false">HOW TO PLAY ▸</a>
+<a href="#games" onclick="return window._triviaGoGames('daily')">ALL GAMES ▸</a>
 </div>
+</div><!-- /triviaHub -->
 
 <!-- Archive list — shows all saved dailies, click to replay. Hidden by
      default; toggled via the ARCHIVE button in the admin row. -->
@@ -4311,18 +4328,22 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      Built dynamically by _triviaShowDailyResult(); the wrapper here is the
      fixed overlay + visibility gate. Hidden by default. -->
 <div id="triviaDailyModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
-<div style="background:var(--surface2);border:1px solid rgba(255,209,102,.4);border-radius:14px;padding:22px 24px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif">
+<!-- Survey R11 order: BOARD #N COMPLETE · score/time/streak · emoji grid ·
+     pooled block (rarity · beats % · avg today · your best · 5-bucket
+     distribution, filled by _triviaFillPool once triviaResult answers) ·
+     SHARE RESULT / VIEW ANSWERS · up-next links · next-board clock. -->
+<div class="trivia-result-card" style="background:var(--surface2);border:1px solid rgba(255,209,102,.4);border-radius:14px;padding:22px 24px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ffd166">DAILY COMPLETE</div>
-<button onclick="document.getElementById('triviaDailyModal').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+<div id="triviaDailyModalTitle" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ffd166">DAILY COMPLETE</div>
+<button onclick="document.getElementById('triviaDailyModal').style.display='none'" aria-label="Close" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;line-height:1;padding:4px 6px">✕</button>
 </div>
-<div id="triviaDailyModalDate" style="font-size:.72rem;color:var(--text2);letter-spacing:1px;margin-bottom:14px">—</div>
-<div id="triviaDailyModalStats" style="display:flex;justify-content:space-around;margin-bottom:14px"></div>
-<pre id="triviaDailyModalGrid" style="font-family:'DM Mono','Courier New',monospace;font-size:1.05rem;line-height:1.25;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin:0 0 14px;white-space:pre;overflow:auto"></pre>
+<div id="triviaDailyModalDate" style="font-size:.72rem;color:var(--text2);letter-spacing:1px;margin-bottom:12px">—</div>
+<div id="triviaDailyModalStats" style="display:flex;justify-content:space-around;margin-bottom:12px"></div>
+<pre id="triviaDailyModalGrid" style="font-family:'DM Mono','Courier New',monospace;font-size:1.05rem;line-height:1.25;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin:0 0 12px;white-space:pre;overflow:auto"></pre>
+<div id="triviaDailyModalPool" class="trivia-pool"></div>
 <div style="display:flex;gap:8px">
-<button id="triviaDailyShareBtn" onclick="window._triviaShareDaily()" style="flex:1;padding:10px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;font-weight:700">SHARE RESULT</button>
-<button onclick="window._triviaShowStats()" title="Your daily stats" style="padding:10px 14px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer">STATS</button>
-<button onclick="document.getElementById('triviaDailyModal').style.display='none'" style="padding:10px 16px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer">CLOSE</button>
+<button id="triviaDailyShareBtn" onclick="window._triviaShareDaily()" style="flex:1;padding:10px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;font-weight:700;min-height:40px">SHARE RESULT</button>
+<button id="triviaDailyAnswersBtn" onclick="window._triviaShowAnswers()" title="Every square: who found it, how rare your finds were" style="flex:1;padding:10px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;cursor:pointer;min-height:40px">VIEW ANSWERS</button>
 </div>
 <div id="triviaDailyModalNext"></div>
 <div id="triviaDailyShareConfirm" style="font-size:.7rem;color:#22c55e;text-align:center;margin-top:8px;min-height:14px"></div>
@@ -6812,7 +6833,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-29-polish"></script>
+<script defer src="app.js?v=2026-10-29-hub"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -251,3 +251,87 @@ body.mff-admin .trivia-player-only{display:none!important}
 .trivia-hist-row.today .trivia-hist-bar i{background:#ffd166;opacity:1}
 .trivia-hist-row.today{color:var(--text)}
 .trivia-hist-n{text-align:right}
+
+/* ===== TRIVIA HUB + pooled result modal (2026-10-29 survey R1 / R11 / R13) =====
+   Phone-first: one column, 3 compact mode cards across at 375px, 40px+ targets. */
+.trivia-hub{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.trivia-hub-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px}
+.trivia-hub-brand{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;color:var(--accent);line-height:1}
+.trivia-hub-clock{font-size:.72rem;color:var(--text2);letter-spacing:.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.trivia-today{padding:14px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(255,209,102,.12),rgba(168,85,247,.09));border:1px solid rgba(255,209,102,.38);position:relative;overflow:hidden}
+.trivia-today-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.trivia-today-num{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:#ffd166;line-height:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.trivia-today-badge{font-family:'DM Sans',sans-serif;font-size:.6rem;letter-spacing:1.5px;padding:2px 7px;border-radius:4px;background:rgba(56,189,248,.18);color:#38bdf8;border:1px solid rgba(56,189,248,.45)}
+.trivia-today-badge.preview{background:#a855f7;color:#fff;border-color:#a855f7}
+.trivia-era-chip{display:inline-block;padding:3px 9px;border-radius:999px;background:rgba(255,209,102,.16);border:1px solid rgba(255,209,102,.4);color:#ffd166;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:1.5px;line-height:1.1;white-space:nowrap}
+.trivia-era-chip:empty{display:none}
+.trivia-today-title{margin-top:8px;font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:1px;color:var(--text);line-height:1.1}
+.trivia-today-meta{margin-top:3px;font-size:.74rem;color:var(--text2)}
+.trivia-today-row{display:flex;align-items:center;gap:14px 18px;flex-wrap:wrap;margin-top:12px}
+.trivia-today-stat{display:flex;flex-direction:column;align-items:center;min-width:54px}
+.trivia-today-v{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1}
+.trivia-today-v.dim{color:var(--text)}
+.trivia-today-l{font-size:.62rem;color:var(--text2);letter-spacing:1px;margin-top:2px;white-space:nowrap}
+.trivia-today-pool{flex:1 1 120px;font-size:.7rem;color:var(--text2);line-height:1.35;min-width:0}
+.trivia-today-pool:empty{display:none}
+.trivia-today-btns{display:flex;flex-direction:column;gap:6px;margin-left:auto}
+.trivia-today-play{padding:11px 22px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;cursor:pointer;font-weight:700;min-height:42px;white-space:nowrap}
+.trivia-today-play.resume{background:#22c55e;color:#06220f}
+.trivia-today-play.done{background:rgba(255,209,102,.22);color:#ffd166;border:1px solid rgba(255,209,102,.5)}
+.trivia-today-surprise{padding:7px 14px;background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.45);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer}
+.trivia-today-back{display:inline-block;margin-top:10px;font-size:.74rem;color:#38bdf8;text-decoration:none}
+.trivia-hub-sec{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:2px;color:var(--text2);margin:2px 0 -4px;line-height:1}
+.trivia-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.trivia-mode{display:flex;flex-direction:column;gap:4px;padding:10px 10px 9px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);text-align:left;cursor:pointer;min-height:66px;font-family:'DM Sans',sans-serif;min-width:0}
+.trivia-mode:hover{border-color:rgba(255,209,102,.5)}
+.trivia-mode-t{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.2px;line-height:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trivia-mode-s{font-size:.7rem;color:var(--text2);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trivia-mode-s.ok{color:#22c55e}
+.trivia-mode-s.live{color:#ffd166}
+.trivia-mode-s.miss{color:#ef4444}
+.trivia-mode-a{font-size:.68rem;color:#ffd166;letter-spacing:.5px;margin-top:auto}
+.trivia-hub-row{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;min-height:44px;font-family:'DM Sans',sans-serif;text-align:left}
+.trivia-hub-row:hover{border-color:rgba(255,209,102,.5)}
+.trivia-hub-row-l{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2);flex:0 0 auto;white-space:nowrap}
+.trivia-hub-row-v{flex:1 1 auto;font-size:.78rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trivia-hub-row-a{flex:0 0 auto;color:#ffd166;font-size:.74rem;white-space:nowrap}
+.trivia-hub-links{display:flex;gap:6px 16px;flex-wrap:wrap;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;padding:2px 2px 0}
+.trivia-hub-links a{color:var(--text2);text-decoration:none;padding:6px 0;min-height:28px}
+.trivia-hub-links a:hover{color:#ffd166}
+@media (max-width:420px){
+  .trivia-hub-brand{font-size:1.35rem;letter-spacing:2px}
+  .trivia-today{padding:12px 12px}
+  .trivia-today-title{font-size:1.2rem}
+  .trivia-today-row{gap:10px 14px}
+  .trivia-mode{padding:8px 8px 7px}
+  .trivia-mode-t{font-size:.85rem;letter-spacing:1px}
+  .trivia-mode-s{font-size:.66rem}
+  .trivia-hub-row-l{font-size:.78rem;letter-spacing:1px}
+}
+/* result modal */
+.trivia-result-card{max-height:calc(100vh - 40px);overflow:auto}
+.trivia-pool{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);font-size:.78rem;color:var(--text);text-align:center}
+.trivia-pool:empty{display:none}
+.trivia-pool-l1{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;color:#ffd166;line-height:1.15}
+.trivia-pool-l1 b{color:#fff;font-weight:400}
+.trivia-pool-l2{font-size:.72rem;color:var(--text2);margin-top:3px}
+.trivia-pool-note{font-size:.72rem;color:var(--text2);line-height:1.4}
+.trivia-dist{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;align-items:end;height:44px;margin-top:10px}
+.trivia-dist-col{display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.trivia-dist-bar{background:var(--border);border-radius:3px 3px 0 0;min-height:2px}
+.trivia-dist-col.me .trivia-dist-bar{background:#ffd166}
+.trivia-dist-lbls{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:.6rem;color:var(--text2);text-align:center;margin-top:3px;font-variant-numeric:tabular-nums}
+.trivia-dist-lbls span.me{color:#ffd166}
+.trivia-dist-cap{font-size:.64rem;color:var(--text2);margin-top:5px;letter-spacing:.5px}
+/* VIEW ANSWERS (R13) */
+.trivia-ans-head{display:flex;justify-content:space-between;gap:8px;font-size:.72rem;color:var(--text2);margin-bottom:8px;flex-wrap:wrap}
+.trivia-ans-rare{font-size:.78rem;color:#ffd166;margin-bottom:8px}
+.trivia-ans-row{display:grid;grid-template-columns:20px 1fr 64px;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.trivia-ans-row:last-child{border-bottom:none}
+.trivia-ans-mark{text-align:center;font-size:.85rem}
+.trivia-ans-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trivia-ans-name small{color:var(--text2);font-size:.68rem;margin-left:4px}
+.trivia-ans-row.miss .trivia-ans-name{color:var(--text2)}
+.trivia-ans-pct{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--text2);font-variant-numeric:tabular-nums;justify-content:flex-end}
+.trivia-ans-bar{width:32px;height:6px;border-radius:3px;background:var(--border);overflow:hidden}
+.trivia-ans-bar i{display:block;height:100%;background:#ffd166}

@@ -56433,6 +56433,7 @@ window.fmtHeight = fmtHeight;
   }
 
   function _triviaUpdateScore() {
+    if (typeof window._triviaHubLiveScore === 'function') window._triviaHubLiveScore();
     const bar = document.getElementById('triviaScoreBar');
     if (!bar) return;
     const s = _triviaGetSettings();
@@ -58367,12 +58368,21 @@ window.fmtHeight = fmtHeight;
     const metaEl = document.getElementById('triviaDailyMeta');
     const streakEl = document.getElementById('triviaDailyStreak');
     const bestEl = document.getElementById('triviaDailyBest');
+    const bestLblEl = document.getElementById('triviaDailyBestLbl');
+    const eraEl = document.getElementById('triviaDailyEra');
     const playBtn = document.getElementById('triviaDailyPlayBtn');
+    const archBadge = document.getElementById('triviaDailyArchiveBadge');
+    const backEl = document.getElementById('triviaDailyBackToday');
     if (!titleEl) return;
-    if (dateLabelEl) dateLabelEl.textContent = '#' + _triviaBoardNumber(dateStr) + ' · ' + dateStr;
+    const isToday = dateStr === _triviaTodayStr();
+    const isArchive = !isToday && !_triviaPreviewDate;
+    if (dateLabelEl) dateLabelEl.textContent = 'BOARD #' + _triviaBoardNumber(dateStr) + ' · ' + _triviaFmtDate(dateStr);
+    if (archBadge) archBadge.style.display = isArchive ? '' : 'none';
+    if (backEl) backEl.style.display = isArchive ? '' : 'none';
     _triviaTickCountdown();
     titleEl.textContent = tpl.title;
     metaEl.textContent = tpl.desc;
+    if (eraEl) eraEl.textContent = _triviaEraChip(tpl);
     // A board locked for this date replaces the template, so show its title.
     // Deferred a tick: the first call runs before the lock cache is declared.
     setTimeout(() => {
@@ -58381,25 +58391,78 @@ window.fmtHeight = fmtHeight;
         titleEl.textContent = snap.title;
         const n = snap.itemCount || (snap.items && snap.items.length);
         metaEl.textContent = snap.desc || (n ? n + ' answers' : '');
+        if (eraEl) eraEl.textContent = _triviaEraChip(snap) || _triviaEraChip(tpl);
       });
+      // "41 played · avg 11.2" on the card, from the public aggregate.
+      _triviaHubPoolLine(dateStr);
     }, 0);
     streakEl.textContent = String(state.streak || 0);
 
+    // Your state (survey R1): RESUME while this date's board is in play below,
+    // COMPLETED n/t with PLAY AGAIN once it is done, else PLAY TODAY (an
+    // archive date says so: no streak).
     const todayResult = state.completed[dateStr];
-    if (todayResult) {
+    // _triviaDailyRun is null between runs (finalize / chain failure clear it).
+    const live = !!(_triviaDailyRun && _triviaDailyRun.date === dateStr);
+    if (playBtn) playBtn.className = 'trivia-today-play';
+    if (live) {
+      const t = (_triviaScore && _triviaScore.total) || (_triviaDailyRun.results || []).length;
+      bestEl.textContent = ((_triviaScore && _triviaScore.correct) || 0) + '/' + t;
+      if (bestLblEl) bestLblEl.textContent = 'IN PLAY';
+      if (playBtn) { playBtn.textContent = 'RESUME'; playBtn.classList.add('resume'); }
+    } else if (todayResult) {
       bestEl.textContent = todayResult.score + '/' + todayResult.total;
-      if (playBtn) {
-        playBtn.textContent = 'PLAY AGAIN';
-        playBtn.style.opacity = '0.85';
-      }
+      if (bestLblEl) bestLblEl.textContent = 'COMPLETED';
+      if (playBtn) { playBtn.textContent = 'PLAY AGAIN'; playBtn.classList.add('done'); }
     } else {
       bestEl.textContent = '—';
-      if (playBtn) {
-        playBtn.textContent = 'PLAY TODAY';
-        playBtn.style.opacity = '1';
-      }
+      if (bestLblEl) bestLblEl.textContent = isToday ? 'TODAY' : 'YOUR RESULT';
+      if (playBtn) playBtn.textContent = isToday ? 'PLAY TODAY' : 'PLAY · NO STREAK';
     }
+    _triviaRenderHub(state);
   }
+  // "Tue Oct 28" for the card and the yesterday row.
+  function _triviaFmtDate(dateStr) {
+    try { return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', ''); }
+    catch (_) { return dateStr; }
+  }
+  // Era chip for a board: the template filter's year / era / type, or for a
+  // locked snapshot (no filters) the year, decade or "all-time" in its title.
+  function _triviaEraChip(obj) {
+    if (!obj) return '';
+    const f = obj.filters;
+    if (f) {
+      if (f.year && f.year !== 'all') return String(f.year);
+      if (f.era && f.era !== 'all') return String(f.era).replace(/^(\d{3})\d-\d{4}$/, (m, d) => d + '0s');
+      if (f.type === 'career') return 'ALL-TIME';
+      if (f.type === 'game') return 'SINGLE GAME';
+      return '';
+    }
+    const s = (obj.title || '') + ' ' + (obj.desc || '');
+    let m = /\b((?:19|20)\d{2})s\b/.exec(s); if (m) return m[1] + 's';
+    m = /\b((?:19|20)\d{2})\b/.exec(s); if (m) return m[1];
+    if (/all[- ]time|career/i.test(s)) return 'ALL-TIME';
+    if (/single[- ]game|one[- ]game/i.test(s)) return 'SINGLE GAME';
+    return '';
+  }
+  // PLAY TODAY / RESUME / PLAY AGAIN button.
+  window._triviaTodayClick = function() {
+    const live = _triviaDailyRun && _triviaDailyRun.date === _triviaResolveDailyDate();
+    if (live) window._triviaResumeDaily(); else window._triviaPlayDaily();
+  };
+  // Live score on the hub card while a daily is in play (from _triviaUpdateScore).
+  window._triviaHubLiveScore = function() {
+    if (!_triviaDailyRun || !_triviaScore) return;
+    const bestEl = document.getElementById('triviaDailyBest');
+    const lbl = document.getElementById('triviaDailyBestLbl');
+    if (bestEl && lbl && lbl.textContent === 'IN PLAY') bestEl.textContent = (_triviaScore.correct || 0) + '/' + (_triviaScore.total || (_triviaDailyRun.results || []).length);
+  };
+  window._triviaResumeDaily = function() {
+    const area = document.getElementById('triviaBoardArea');
+    if (area) { try { area.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) { area.scrollIntoView(); } }
+    const inp = _triviaFreeInput();
+    if (inp) setTimeout(() => { try { inp.focus({ preventScroll: true }); } catch (_) {} }, 350);
+  };
 
   // Minimum item count for a daily board to be considered "playable". A
   // 4×4 grid is the smallest layout we render, so 16 items is the floor.
@@ -58694,6 +58757,7 @@ window.fmtHeight = fmtHeight;
       results: [],
       preview: !!_triviaPreviewDate
     };
+    _triviaUpdateDailyPanel(); // hub card flips to RESUME
 
     // Fast path: if a locked snapshot exists for this date, render it
     // verbatim and skip the cycle-shuffle + filter pipeline. Players see
@@ -58832,9 +58896,21 @@ window.fmtHeight = fmtHeight;
         try { window._lbUpdateTrivia(score, total, state.streak); } catch (_) {}
       }
     }
-    _triviaUpdateDailyPanel();
-    _triviaShowDailyResult(run.date, score, total, elapsedMs, run.results, state.streak, isPreview, lbNote, !isToday);
+    // Pooled results (survey R11/R13): today's first-or-replay run goes to the
+    // triviaResult function (counted once per player per date); an archive
+    // run only reads that day's aggregate; a preview run is never pooled.
+    let pool = null;
+    if (!isPreview && isToday) {
+      pool = _triviaSubmitResult(run, elapsedMs).then(res => {
+        if (res && res.agg) return { agg: res.agg, counted: !!(res.recorded || res.already), myStored: (typeof res.yourScore === 'number') ? res.yourScore : null };
+        return _triviaFetchAggregate(run.date, 0).then(agg => ({ agg: agg, counted: false, myStored: null, failed: !res }));
+      });
+    } else if (!isPreview) {
+      pool = _triviaFetchAggregate(run.date, 0).then(agg => ({ agg: agg, counted: false, myStored: null, archive: true }));
+    }
     _triviaDailyRun = null;
+    _triviaUpdateDailyPanel();
+    _triviaShowDailyResult(run.date, score, total, elapsedMs, run.results, state.streak, isPreview, lbNote, !isToday, pool);
   };
 
   // v0.10.3 (daily fix #3): content hash for permalink stability. Hashes
@@ -58862,12 +58938,16 @@ window.fmtHeight = fmtHeight;
   // board columns so the grid visually mirrors what the player saw. The
   // isPreview flag tags admin QA runs visually + omits the share text so
   // a preview result can't be accidentally shared as an "official" run.
-  function _triviaShowDailyResult(date, score, total, ms, results, streak, isPreview, lbNote, isArchive) {
+  // pool: Promise<{agg, counted, myStored, archive?, failed?}> | null (preview).
+  let _triviaLastResult = null; // what VIEW ANSWERS and the share hook read
+  function _triviaShowDailyResult(date, score, total, ms, results, streak, isPreview, lbNote, isArchive, pool) {
     const modal = document.getElementById('triviaDailyModal');
     const gridEl = document.getElementById('triviaDailyModalGrid');
     const dateEl = document.getElementById('triviaDailyModalDate');
+    const titleEl = document.getElementById('triviaDailyModalTitle');
     const statsEl = document.getElementById('triviaDailyModalStats');
     const nextEl = document.getElementById('triviaDailyModalNext');
+    const poolEl = document.getElementById('triviaDailyModalPool');
     if (!modal || !gridEl) return;
     const boardNum = _triviaBoardNumber(date);
 
@@ -58901,35 +58981,39 @@ window.fmtHeight = fmtHeight;
     const boardTitle = (_locked && _locked.title) || tpl.title;
 
     // Share text (survey R12): the board number up top like Wordle / Framed,
-    // then the grid, then the permalink. Archive runs say so.
-    const shareText =
-      'MFF Daily #' + boardNum + ' · ' + score + '/' + total + ' · ' + timeStr + (isArchive ? ' (archive)' : '') + '\n' +
-      boardTitle + '\n' +
-      lines.join('\n') + '\n' +
-      location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash + '#trivia';
-
-    // Stash on the modal so the share button can grab it without rebuild.
-    // Preview runs get a marked share text so an accidental share is
-    // obvious; the share button itself is also disabled visually below.
-    modal.dataset.shareText = isPreview
-      ? '(admin preview · not for sharing)\n' + shareText
-      : shareText;
+    // the title, the grid, the rarity hook once the pool answers, then the
+    // permalink. Archive runs say so. Kept in parts so the hook line can be
+    // added after the modal is already up.
+    const shareParts = {
+      head: 'MFF Daily #' + boardNum + ' · ' + score + '/' + total + ' · ' + timeStr + (isArchive ? ' (archive)' : ''),
+      title: boardTitle,
+      grid: lines.join('\n'),
+      hook: '',
+      link: location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash + '#trivia'
+    };
+    const setShare = () => {
+      const text = [shareParts.head, shareParts.title, shareParts.grid, shareParts.hook, shareParts.link].filter(Boolean).join('\n');
+      // Preview runs get a marked share text so an accidental share is obvious.
+      modal.dataset.shareText = isPreview ? '(admin preview · not for sharing)\n' + text : text;
+    };
+    setShare();
     modal.dataset.isPreview = isPreview ? '1' : '';
-    dateEl.textContent = (isPreview ? '🔒 PREVIEW · ' : '') + 'BOARD #' + boardNum + ' · ' + date + ' · ' + boardTitle + (isArchive ? ' · archive (no streak)' : '');
+    if (titleEl) titleEl.textContent = (isPreview ? '🔒 PREVIEW · ' : '') + 'BOARD #' + boardNum + ' COMPLETE';
+    dateEl.textContent = _triviaFmtDate(date) + ' · ' + boardTitle + (isArchive ? ' · archive (no streak)' : '');
     gridEl.textContent = lines.join('\n');
-    // Play-next row (survey R11): never leave the player with only Share /
-    // Close. Yesterday's board is an archive permalink (streak-safe); the
-    // other games live on the Games page.
+    // Play-next row (survey R11): never leave the player with only Share.
+    // Yesterday's board opens in archive mode (streak-safe); the other
+    // dailies live on the Games page.
     if (nextEl) {
       const prev = _triviaPrevDay(date);
       const prevNum = _triviaBoardNumber(prev);
-      const prevLink = location.origin + location.pathname + '?daily=' + prev + '#trivia';
       nextEl.innerHTML =
         '<div class="trivia-next-row">' +
           '<span class="trivia-next-lbl">UP NEXT</span>' +
-          (prevNum >= 1 ? '<a class="trivia-next-link" href="' + prevLink + '">Board #' + prevNum + ' (yesterday) ▸</a>' : '') +
-          '<a class="trivia-next-link" href="#games" onclick="document.getElementById(\'triviaDailyModal\').style.display=\'none\'">Daily Elite Pull ▸</a>' +
-          '<a class="trivia-next-link" href="#games" onclick="document.getElementById(\'triviaDailyModal\').style.display=\'none\'">Fantasy Game ▸</a>' +
+          '<a class="trivia-next-link" href="#games" onclick="document.getElementById(\'triviaDailyModal\').style.display=\'none\';return window._triviaGoGames(\'daily\',\'current\')">Daily Elite Pull ▸</a>' +
+          (prevNum >= 1
+            ? '<a class="trivia-next-link" href="#trivia" onclick="document.getElementById(\'triviaDailyModal\').style.display=\'none\';return window._triviaOpenArchive(\'' + prev + '\')">Board #' + prevNum + ' (yesterday) ▸</a>'
+            : '<a class="trivia-next-link" href="#games" onclick="document.getElementById(\'triviaDailyModal\').style.display=\'none\';return window._triviaGoGames(\'fantasygame\')">Fantasy Game ▸</a>') +
         '</div>' +
         '<div class="trivia-next-clock" data-trivia-countdown></div>';
       _triviaTickCountdown();
@@ -58941,10 +59025,324 @@ window.fmtHeight = fmtHeight;
       (lbNote ? '<div style="flex-basis:100%;text-align:center;font-size:.7rem;color:var(--text2);margin-top:8px">' + _esc(lbNote) + '</div>' : '');
     statsEl.style.flexWrap = 'wrap';
 
+    // Pooled block: rarity · beats % · avg today · your best · distribution.
+    const best = _triviaBestResult(_triviaLoadDailyState());
+    const items = (_triviaData && _triviaData.items) ? _triviaData.items.slice() : [];
+    _triviaLastResult = { date: date, boardNum: boardNum, results: (results || []).slice(), items: items, agg: null, counted: false, myStored: null, archive: !!isArchive, preview: !!isPreview };
+    if (poolEl) {
+      if (isPreview) {
+        poolEl.innerHTML = '<div class="trivia-pool-note">Admin preview · not pooled with today\'s players.</div>';
+      } else {
+        poolEl.innerHTML = '<div class="trivia-pool-note">Comparing with today\'s players…</div>';
+        const ticket = _triviaLastResult;
+        (pool || Promise.resolve({ agg: null, counted: false, myStored: null, failed: true })).then(r => {
+          if (_triviaLastResult !== ticket) return; // a newer result replaced this modal
+          ticket.agg = r && r.agg || null; ticket.counted = !!(r && r.counted); ticket.myStored = r ? r.myStored : null;
+          const st = _triviaPoolStats(ticket.agg, ticket.results, ticket.counted ? ticket.myStored : null);
+          _triviaRenderPool(poolEl, st, { boardNum: boardNum, best: best, archive: !!isArchive, failed: !!(r && r.failed) });
+          // Share hook (R12): "Rarity 412 · top 37%" once at least one other player is in.
+          if (st.count >= 2) shareParts.hook = 'Rarity ' + st.rarity + (st.beats != null ? ' · top ' + Math.max(1, 100 - st.beats) + '%' : '');
+          setShare();
+          _triviaHubPoolLine(date, ticket.agg);
+        });
+      }
+    }
+
     const confirmEl = document.getElementById('triviaDailyShareConfirm');
     if (confirmEl) confirmEl.textContent = '';
     modal.style.display = 'flex';
   }
+
+  // ===== RESULTS POOLING (2026-10-29, survey R11 / R13) =====
+  // One completed run per player per date goes to the triviaResult Cloud
+  // Function, which keeps trivia_results/{date}: count, exact-score histogram,
+  // 5 buckets, per-square found counts. Clients can only read that doc.
+  const _TRIVIA_RESULT_URL = 'https://us-central1-jackb933-website.cloudfunctions.net/triviaResult';
+  const _triviaAggCache = {}; // date → { at, agg }
+  // Anonymous players count once per device: a random id kept in localStorage.
+  function _triviaDeviceId() {
+    let id = '';
+    try { id = localStorage.getItem('mff_triviaDevice') || ''; } catch (_) {}
+    if (!/^[a-z0-9]{8,40}$/.test(id)) {
+      try { const a = new Uint8Array(12); crypto.getRandomValues(a); id = Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
+      catch (_) { id = (Math.random().toString(36).slice(2, 14) + Date.now().toString(36)).replace(/[^a-z0-9]/g, ''); }
+      try { localStorage.setItem('mff_triviaDevice', id); } catch (_) {}
+    }
+    return id;
+  }
+  function _triviaCurrentUser() {
+    try { return (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null; } catch (_) { return null; }
+  }
+  // Resolves to the function's response ({ok, recorded, already, yourScore,
+  // agg}) or null when offline / blocked. Uses the functions SDK when its
+  // compat script is in; otherwise speaks the callable wire protocol by hand
+  // ({data} in, {result} out) with the id token so the function sees the uid.
+  function _triviaSubmitResult(run, timeMs) {
+    const payload = { date: run.date, timeMs: Math.max(0, Math.round(timeMs || 0)), results: (run.results || []).map(r => r === 'correct' ? 'correct' : r === 'wrong' ? 'wrong' : null) };
+    const user = _triviaCurrentUser();
+    if (!user) payload.deviceId = _triviaDeviceId();
+    const viaSdk = () => firebase.app().functions('us-central1').httpsCallable('triviaResult')(payload).then(r => r && r.data);
+    const viaFetch = () => (user ? user.getIdToken() : Promise.resolve('')).then(tok =>
+      fetch(_TRIVIA_RESULT_URL, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { Authorization: 'Bearer ' + tok } : {}), body: JSON.stringify({ data: payload }) })
+        .then(r => r.json()).then(j => { if (j && j.error) throw new Error(j.error.message || 'triviaResult failed'); return j && j.result; }));
+    let p;
+    try { p = (typeof firebase !== 'undefined' && firebase.app && typeof firebase.functions === 'function') ? viaSdk() : viaFetch(); }
+    catch (_) { p = viaFetch(); }
+    return p.then(res => { if (res && res.agg) _triviaAggCache[run.date] = { at: Date.now(), agg: res.agg }; return res; })
+      .catch(err => { console.warn('[Trivia] result pool:', err && err.message); return null; });
+  }
+  // Public aggregate for a date (cached maxAgeMs, default 60 s).
+  function _triviaFetchAggregate(date, maxAgeMs) {
+    const c = _triviaAggCache[date];
+    if (c && (Date.now() - c.at) < (maxAgeMs == null ? 60000 : maxAgeMs)) return Promise.resolve(c.agg);
+    const startedAt = Date.now();
+    // A triviaResult answer that lands while this read is in flight is newer
+    // than whatever the read returns (and beats a denied / missing read).
+    const newer = () => { const c2 = _triviaAggCache[date]; return (c2 && c2.at >= startedAt && c2.agg) ? c2.agg : null; };
+    return new Promise(res => { try { _whenFirebaseReady(res); } catch (_) { res(); } }).then(() => {
+      if (typeof firebase === 'undefined' || !firebase.firestore) return newer() || (c ? c.agg : null);
+      return firebase.firestore().collection('trivia_results').doc(date).get().then(snap => {
+        const agg = snap && snap.exists ? snap.data() : null;
+        const n = newer();
+        if (n) return n;
+        _triviaAggCache[date] = { at: Date.now(), agg: agg };
+        return agg;
+      }).catch(() => newer() || (c ? c.agg : null));
+    });
+  }
+  // One run against the day's pool. Rarity is Immaculate Grid's rule: every
+  // square costs the % of players who found it and an unsolved square costs
+  // 100, so lower is rarer (a 20-square board runs 0-2000). "beats" counts
+  // only OTHER players with a lower score: myStored is the score the pool
+  // holds for me (so it is taken out of the histogram first) or null.
+  function _triviaPoolStats(agg, results, myStored) {
+    const total = (results || []).length;
+    const count = (agg && agg.count) || 0;
+    const hist = (agg && agg.hist) || {};
+    const foundM = (agg && agg.found) || {};
+    const score = (results || []).filter(r => r === 'correct').length;
+    const foundPct = [];
+    let rarity = 0;
+    for (let i = 0; i < total; i++) {
+      const pct = count ? Math.round(100 * ((foundM['i' + i] || 0) / count)) : 0;
+      foundPct.push(pct);
+      rarity += results[i] === 'correct' ? pct : 100;
+    }
+    const others = {};
+    let nOthers = 0;
+    Object.keys(hist).forEach(k => { const s = +k.slice(1); if (!isNaN(s) && hist[k] > 0) { others[s] = hist[k]; nOthers += hist[k]; } });
+    if (myStored != null && others[myStored]) { others[myStored]--; nOthers--; }
+    let below = 0;
+    Object.keys(others).forEach(s => { if (+s < score) below += others[s]; });
+    const beats = nOthers > 0 ? Math.round(100 * below / nOthers) : null;
+    const bucketOf = s => (s >= 20 ? 4 : Math.floor(s / 5));
+    const buckets = [0, 0, 0, 0, 0];
+    if (agg && agg.buckets) { for (let b = 0; b < 5; b++) buckets[b] = agg.buckets['b' + b] || 0; }
+    else Object.keys(hist).forEach(k => { const s = +k.slice(1); if (!isNaN(s)) buckets[bucketOf(s)] += hist[k]; });
+    let rarest = null;
+    for (let i = 0; i < total; i++) if (results[i] === 'correct' && (rarest == null || foundPct[i] < foundPct[rarest])) rarest = i;
+    return {
+      count: count, nOthers: nOthers, score: score, total: total, rarity: rarity, beats: beats,
+      buckets: buckets, myBucket: bucketOf(score),
+      avg: count ? (agg.scoreSum || 0) / count : null, avgTime: count ? (agg.timeSum || 0) / count : null,
+      foundPct: foundPct, rarest: rarest
+    };
+  }
+  function _triviaBestResult(state) {
+    let b = null;
+    Object.keys((state && state.completed) || {}).forEach(d => {
+      const r = state.completed[d];
+      if (r && r.total && (!b || r.score / r.total > b.score / b.total)) b = r;
+    });
+    return b;
+  }
+  const _TRIVIA_BUCKET_LBLS = ['0-4', '5-9', '10-14', '15-19', '20+'];
+  function _triviaDistHtml(buckets, myBucket, caption) {
+    const maxB = Math.max(1, ...buckets);
+    return '<div class="trivia-dist">' +
+      buckets.map((n, i) => '<div class="trivia-dist-col' + (i === myBucket ? ' me' : '') + '" title="' + n + ' player' + (n === 1 ? '' : 's') + '"><div class="trivia-dist-bar" style="height:' + Math.max(n ? 8 : 2, Math.round(n / maxB * 100)) + '%"></div></div>').join('') +
+      '</div><div class="trivia-dist-lbls">' +
+      _TRIVIA_BUCKET_LBLS.map((l, i) => '<span' + (i === myBucket ? ' class="me"' : '') + '>' + l + '</span>').join('') +
+      '</div>' + (caption ? '<div class="trivia-dist-cap">' + caption + '</div>' : '');
+  }
+  // Degrades: no aggregate (offline / first player) → a note and your best;
+  // only you so far → "first to finish"; otherwise the full block.
+  function _triviaRenderPool(poolEl, st, o) {
+    const bestTxt = o.best ? ' · your best ' + o.best.score + '/' + o.best.total : '';
+    const played = st.count + ' played';
+    if (!st.count) {
+      const why = o.archive ? 'No pooled results for this board (archive run, not counted)'
+        : o.failed ? 'Pooled results unavailable right now — rarity and "beats %" appear once they load'
+        : 'You\'re the first to finish Board #' + o.boardNum + ' today — rarity and "beats %" appear as more players finish';
+      poolEl.innerHTML = '<div class="trivia-pool-note">' + why + '.' + (bestTxt ? '<br>' + bestTxt.slice(3) : '') + '</div>';
+      return;
+    }
+    if (st.nOthers < 1) {
+      poolEl.innerHTML =
+        '<div class="trivia-pool-l1">First to finish today</div>' +
+        '<div class="trivia-pool-l2">Rarity ' + st.rarity + ' · beats % shows once another player finishes' + bestTxt + '</div>' +
+        _triviaDistHtml(st.buckets, st.myBucket, 'score distribution (' + played + ')');
+      return;
+    }
+    poolEl.innerHTML =
+      '<div class="trivia-pool-l1" title="Rarity: each square costs the % of players who found it, a missed square costs 100 — lower is rarer. Beats: players with a lower score.">Rarity <b>' + st.rarity + '</b>' + (st.beats != null ? ' · beats <b>' + st.beats + '%</b> of players' : '') + '</div>' +
+      '<div class="trivia-pool-l2">avg today ' + (st.avg != null ? st.avg.toFixed(1) : '—') + '/' + st.total + bestTxt + (o.archive ? ' · archive run, not counted' : o.failed ? ' · this run could not be pooled' : '') + '</div>' +
+      _triviaDistHtml(st.buckets, st.myBucket, 'score distribution (' + played + ')');
+  }
+  // "41 played · avg 11.2" on the hub card.
+  function _triviaHubPoolLine(dateStr, aggNow) {
+    const el = document.getElementById('triviaDailyPool');
+    if (!el) return;
+    const show = agg => {
+      if (_triviaResolveDailyDate() !== dateStr) return;
+      if (!agg || !agg.count) { el.textContent = ''; return; }
+      el.textContent = agg.count + ' played · avg ' + ((agg.scoreSum || 0) / agg.count).toFixed(1) + '/' + (agg.total || '?') + (agg.timeSum ? ' · ' + _triviaFormatMs(agg.timeSum / agg.count) + ' avg' : '');
+    };
+    if (aggNow) { show(aggNow); return; }
+    _triviaFetchAggregate(dateStr).then(show);
+  }
+  // VIEW ANSWERS (survey R13): every square with who found it, your mark and
+  // the rarest correct answer of the day. Reads the last result modal's data.
+  window._triviaShowAnswers = function() {
+    const r = _triviaLastResult;
+    if (!r) return;
+    const st = _triviaPoolStats(r.agg, r.results, r.counted ? r.myStored : null);
+    const items = r.items || [];
+    let rarestAll = null;
+    if (st.count) for (let i = 0; i < items.length; i++) if (st.foundPct[i] > 0 && (rarestAll == null || st.foundPct[i] < st.foundPct[rarestAll])) rarestAll = i;
+    const head = st.count
+      ? '<div class="trivia-ans-head"><span>' + st.count + ' played</span><span>avg ' + (st.avg != null ? st.avg.toFixed(1) : '—') + '/' + st.total + '</span>' + (st.avgTime ? '<span>avg time ' + _triviaFormatMs(st.avgTime) + '</span>' : '') + '</div>'
+      : '<div class="trivia-ans-head"><span>No pooled results yet — the found-% fills in as players finish.</span></div>';
+    const rare = (rarestAll != null && items[rarestAll])
+      ? '<div class="trivia-ans-rare">Rarest find: ' + _esc(items[rarestAll].answer) + ' · ' + st.foundPct[rarestAll] + '% found it' + (r.results[rarestAll] === 'correct' ? ' · you did' : '') + '</div>'
+      : '';
+    const rows = items.map((it, i) => {
+      const res = r.results[i];
+      const mark = res === 'correct' ? '<span style="color:#22c55e">✓</span>' : res === 'wrong' ? '<span style="color:#ef4444">✗</span>' : '<span style="color:var(--text2)">—</span>';
+      const rank = (it.rank != null && it.rank !== '') ? String(it.rank).replace(/^#/, '') : String(i + 1);
+      const val = (it.value != null && it.value !== '') ? String(it.value) : '';
+      const pct = st.count ? st.foundPct[i] : null;
+      return '<div class="trivia-ans-row' + (res === 'correct' ? '' : ' miss') + '">' +
+        '<span class="trivia-ans-mark">' + mark + '</span>' +
+        '<span class="trivia-ans-name">' + rank + '. ' + _esc(it.answer) + (val ? '<small>' + _esc(val) + '</small>' : '') + '</span>' +
+        '<span class="trivia-ans-pct">' + (pct != null ? '<span class="trivia-ans-bar"><i style="width:' + pct + '%"></i></span>' + pct + '%' : '—') + '</span>' +
+      '</div>';
+    }).join('');
+    _triviaSideModal('triviaAnswersModal', 'BOARD #' + r.boardNum + ' · ANSWERS', head + rare + rows, '');
+  };
+
+  // ===== HUB rows (survey R1): MORE TODAY mode cards, YESTERDAY, YOUR STATS =====
+  // The Games page keeps each daily's state in localStorage; the keys and the
+  // non-padded "Y_M_D" date suffix are its own (see createDailyGW / the photo
+  // game). Names are the swapped legacy: gwd_c_* + gw_daily_* = Daily Elite
+  // Pull (clue game, 6 tries); ep_v3_* + ep_* = Guess Who (photo, one guess).
+  function _triviaGamesState() {
+    const p = _triviaTodayStr().split('-').map(Number);
+    const k = p[0] + '_' + p[1] + '_' + p[2];
+    const dayShort = p[0] + '-' + p[1] + '-' + p[2];
+    const y = new Date(Date.UTC(p[0], p[1] - 1, p[2] - 1));
+    const yShort = y.getUTCFullYear() + '-' + (y.getUTCMonth() + 1) + '-' + y.getUTCDate();
+    const g = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) { return null; } };
+    const s = key => { try { return localStorage.getItem(key) || ''; } catch (_) { return ''; } };
+    const n = key => { const v = parseInt(s(key), 10); return isNaN(v) ? 0 : v; };
+    const daily = (stateKey, lastWinKey, streakKey, max) => {
+      const st = g(stateKey) || {};
+      const lw = s(lastWinKey);
+      const guesses = (st.guesses || []).length;
+      const won = lw === dayShort;
+      const streak = (lw === dayShort || lw === yShort) ? n(streakKey) : 0;
+      let txt, cls;
+      if (won) { txt = '✔ Solved' + (max > 1 ? ' in ' + guesses + '/' + max : ''); cls = 'ok'; }
+      else if (st.gameOver) { txt = '✗ Missed today'; cls = 'miss'; }
+      else if (guesses) { txt = 'Resume · ' + guesses + '/' + max + ' used'; cls = 'live'; }
+      else { txt = '▶ Play'; cls = ''; }
+      return { txt: txt, cls: cls, streak: streak };
+    };
+    return {
+      ep: daily('gwd_c_' + k, 'gw_daily_last_win', 'gw_daily_streak', 6),
+      gw: daily('ep_v3_' + k, 'ep_last_win', 'ep_streak', 1),
+      fg: { best: parseFloat(s('fg_highscore')) || 0, played: n('fg_games_played') }
+    };
+  }
+  function _triviaLocalStats(state) {
+    const rows = Object.keys((state && state.completed) || {}).map(d => state.completed[d]).filter(r => r && r.total);
+    const played = rows.length;
+    const pct = r => Math.round((r.score / r.total) * 100);
+    const avg = played ? Math.round(rows.reduce((a, r) => a + pct(r), 0) / played) : 0;
+    const maxStreak = Math.max(state.maxStreak || 0, state.streak || 0);
+    return { played: played, avg: avg, maxStreak: maxStreak };
+  }
+  function _triviaRenderHub(state) {
+    const modes = document.getElementById('triviaModeRow');
+    if (modes) {
+      const gs = _triviaGamesState();
+      const card = (t, st, cls, extra, onclick) =>
+        '<button type="button" class="trivia-mode" onclick="' + onclick + '">' +
+          '<span class="trivia-mode-t">' + t + '</span>' +
+          '<span class="trivia-mode-s ' + cls + '">' + st + '</span>' +
+          (extra ? '<span class="trivia-mode-a">' + extra + '</span>' : '') +
+        '</button>';
+      modes.innerHTML =
+        card('DAILY ELITE PULL', gs.ep.txt, gs.ep.cls, gs.ep.streak ? '🔥 ' + gs.ep.streak : 'clue game', "return window._triviaGoGames('daily','current')") +
+        card('GUESS WHO', gs.gw.txt, gs.gw.cls, gs.gw.streak ? '🔥 ' + gs.gw.streak : 'photo daily', "return window._triviaGoGames('daily','guesswho')") +
+        card('FANTASY GAME', '▶ Play', '', gs.fg.best ? 'best ' + Math.round(gs.fg.best) : 'draft a team', "return window._triviaGoGames('fantasygame')");
+    }
+    // YESTERDAY: always the day before today ET (not the permalink date), in
+    // archive mode. Hidden before board #1 existed.
+    const yRow = document.getElementById('triviaHubYesterday');
+    if (yRow) {
+      const prev = _triviaPrevDay(_triviaTodayStr());
+      const prevNum = _triviaBoardNumber(prev);
+      const vEl = document.getElementById('triviaHubYesterdayV');
+      const aEl = document.getElementById('triviaHubYesterdayA');
+      if (prevNum < 1) yRow.style.display = 'none';
+      else {
+        yRow.style.display = '';
+        const tpl = _triviaPickDailyTemplate(prev);
+        const done = state.completed[prev];
+        if (vEl) vEl.textContent = '#' + prevNum + ' · ' + (tpl ? tpl.title : prev);
+        if (aEl) aEl.textContent = done ? '✔ ' + done.score + '/' + done.total + ' · replay' : '▸ play (no streak)';
+        setTimeout(() => { _triviaFetchLockedDaily(prev).then(snap => { if (snap && snap.title && vEl) vEl.textContent = '#' + prevNum + ' · ' + snap.title; }); }, 0);
+      }
+    }
+    const sEl = document.getElementById('triviaHubStatsV');
+    if (sEl) {
+      const ls = _triviaLocalStats(state);
+      sEl.textContent = ls.played ? 'played ' + ls.played + ' · avg ' + ls.avg + '% · best streak ' + ls.maxStreak : 'No boards yet — play today\'s';
+    }
+  }
+  // Games page by sub-tab ('daily' | 'fantasygame' | 'leaderboard' …) and,
+  // inside DAILY, the dc tab ('current' = Daily Elite Pull, 'guesswho' = photo).
+  window._triviaGoGames = function(sub, dc) {
+    try {
+      switchPage('games');
+      const tab = document.querySelector('.games-tab[data-games-tab="' + sub + '"]');
+      if (tab) tab.click();
+      if (dc) { const t = document.querySelector('.dc-tab[data-dc="' + dc + '"]'); if (t) t.click(); }
+      if (sub === 'leaderboard') { const d = document.getElementById('lbTabDaily'); if (d) d.click(); }
+      window.scrollTo(0, 0);
+    } catch (_) {}
+    return false;
+  };
+  // Archive mode: the ?daily=DATE permalink without a reload (pushState), so
+  // the card, the board and the share text all read that date; the streak
+  // rules in _triviaFinalizeDaily already ignore any date but today.
+  window._triviaOpenArchive = function(date) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return false;
+    _triviaPreviewDate = null;
+    try { history.pushState(null, '', location.pathname + '?daily=' + date + '#trivia'); } catch (_) {}
+    _triviaUpdateDailyPanel();
+    window._triviaPlayDaily();
+    return false;
+  };
+  window._triviaOpenYesterday = function() { return window._triviaOpenArchive(_triviaPrevDay(_triviaTodayStr())); };
+  window._triviaBackToToday = function() {
+    try { history.pushState(null, '', location.pathname + '#trivia'); } catch (_) {}
+    _triviaDailyRun = null;
+    _triviaUpdateDailyPanel();
+    try { window.scrollTo(0, 0); } catch (_) {}
+    return false;
+  };
 
   function _triviaFormatMs(ms) {
     const totalSec = Math.max(0, Math.floor(ms / 1000));

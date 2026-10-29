@@ -250,6 +250,18 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isJack();
     }
+    // trivia_results/{YYYY-MM-DD}: pooled Daily Trivia results (count, score
+    // histogram, per-square found counts), written only by the triviaResult
+    // Cloud Function (admin SDK bypasses rules). Public read so the result
+    // modal and the hub can show "avg today" / rarity to anyone.
+    match /trivia_results/{date} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // trivia_runs/{date_who}: one row per player per date, function-only.
+    match /trivia_runs/{runId} {
+      allow read, write: if false;
+    }
     // trivia_reports/{reportId}: user-submitted "this cell looks wrong"
     // flags. Anyone can create (no auth required so anonymous players
     // can report) with strict shape validation; admin reads + deletes

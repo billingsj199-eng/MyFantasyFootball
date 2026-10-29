@@ -49,7 +49,7 @@
 .trivia-cell.next-up{box-shadow:0 0 0 3px var(--accent),0 0 12px rgba(168,85,247,.4);z-index:1}
 .trivia-cell-cat{width:100%;text-align:center;padding:4px 2px;background:linear-gradient(135deg,#a855f7,#7c3aed);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:#fff;text-shadow:1px 1px 0 #000;line-height:1.2}
 .trivia-cell-body{flex:1;display:flex;align-items:center;justify-content:center;padding:4px;width:100%}
-.trivia-cell-logo{width:52%;max-width:60px;aspect-ratio:1;object-fit:contain;opacity:.85}
+.trivia-cell-logo{width:78%;max-width:110px;aspect-ratio:1;object-fit:contain;opacity:.9}
 .trivia-cell-hint{font-size:.6875rem;color:var(--text2);text-align:center;padding:0 2px 3px;line-height:1.2}
 .trivia-cell.guessing{cursor:default}
 .trivia-guess-input{position:absolute;bottom:0;left:0;right:0;padding:5px 4px;border:none;background:rgba(255,255,255,.97);font-family:'DM Sans',sans-serif;font-size:.6875rem;text-align:center;outline:none;color:#111;z-index:2}
@@ -70,7 +70,34 @@
 .trivia-freebar-note{min-height:16px;margin-top:4px;font-size:.72rem;letter-spacing:.5px;text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trivia-cell.hit{animation:triviaHit .9s ease}
 @keyframes triviaHit{0%{box-shadow:0 0 0 0 rgba(34,197,94,.9)}100%{box-shadow:0 0 0 14px rgba(34,197,94,0)}}
+/* Trivia is admin-only until the Board Library audit is done (Jack 10-28): nav button, Games
+   card and leaderboard section hide for everyone else. */
+body:not(.mff-admin) #navTriviaBtn{display:none!important}
+/* Board Library panel */
+.trivia-library{margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)}
+.trivia-library-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--text);line-height:1}
+.trivia-library-sub{margin-top:3px;font-size:.72rem;color:var(--text2)}
+.trivia-library-presets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+.trivia-library-chip{padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.72rem;cursor:pointer;white-space:nowrap}
+.trivia-library-chip:hover{border-color:#ffd166;color:#ffd166}
+.trivia-library-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.trivia-library-grid label{display:flex;flex-direction:column;gap:3px;font-size:.72rem;color:var(--text2)}
+.trivia-library-grid select{padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem}
+.trivia-library-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px}
+.trivia-library-pos{display:flex;gap:4px}
+.trivia-library-pos button{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:.75rem;font-weight:700;cursor:pointer}
+.trivia-library-pos button.on{background:var(--accent);border-color:var(--accent);color:#000}
+.trivia-library-play{padding:9px 20px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer;font-weight:700}
+.trivia-library-play:disabled{opacity:.6;cursor:default}
+.trivia-library-note{min-height:14px;margin-top:6px;font-size:.72rem;color:var(--text2)}
+.trivia-library-index{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.trivia-library-index button{padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer}
+.trivia-library-index select{flex:1;min-width:180px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem}
+.trivia-library-index span{font-size:.72rem;color:var(--text2);white-space:nowrap}
 .trivia-score-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px;margin-bottom:8px;border-radius:8px;background:var(--surface2);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;color:var(--text)}
+/* Inside the #triviaScoreBar wrapper (which already draws the box) the bar is just a row. */
+#triviaScoreBar .trivia-score-bar{margin-bottom:0;padding:2px 0;background:transparent;border-radius:0}
+#triviaScoreBar .trivia-score-bar[style*="border"]{padding:8px 10px}
 .trivia-score-bar .correct{color:#22c55e}
 .trivia-score-bar .wrong{color:#ef4444}
 .trivia-score-bar .remaining{color:var(--text2)}
@@ -106,4 +133,66 @@ body.mff-admin .trivia-player-only{display:none!important}
 }
 @media (max-width:420px){
   .trivia-grid{grid-template-columns:repeat(2,1fr)!important}
+}
+/* ── TIER BOARD layout (2026-10-28, Jack: "replicate our fantasy rankings tiers
+   boards"). Reuses the rankings tier-card classes from index.html (.tcv-tier-row,
+   .tcv-letter, .tcv-cards, .tcv-card, .tcv-card-rank, .tcv-card-stats,
+   .tcv-card-photo, .tcv-card-bg-logo, .tcv-card-name) and their palette; the
+   rules here only undo the square-cell styling .trivia-cell brings along and
+   place the reveal / wrong overlays inside the 118px card. */
+.trivia-tierboard{padding:6px 4px 8px}
+.trivia-tierboard .trivia-tier-row{margin-bottom:4px}
+.trivia-tierboard .trivia-tier-letter{flex:0 0 46px;flex-direction:column;gap:1px;line-height:1;border-radius:4px;cursor:default}
+.trivia-tierboard .trivia-tier-letter::after{content:none}
+.trivia-tierboard .trivia-tier-word{font-size:10px;letter-spacing:2px;opacity:.85}
+.trivia-tierboard .trivia-tier-num{font-size:28px}
+.trivia-tierboard .trivia-tier-rng{font-size:10px;letter-spacing:1px;opacity:.8}
+.trivia-tierboard .trivia-tier-cards{gap:7px;padding:6px 8px}
+/* chip = tier card: fixed box, square-cell rules off, 2px border carries the
+   reveal color the cell code sets inline (green, or the team's color on team nights) */
+.trivia-tierboard .trivia-cell{--chip-p:#1f2937;--chip-ring:100,116,139;width:118px;height:141px;aspect-ratio:auto;flex:0 0 auto;display:block;border:2px solid transparent;box-sizing:border-box;border-radius:5px;padding:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.18) 52%,rgba(0,0,0,.66) 100%),var(--chip-p);box-shadow:0 0 0 1.5px rgba(var(--chip-ring),.9),0 2px 7px rgba(var(--chip-ring),.3);overflow:hidden;transition:transform .15s,border-color .15s}
+.trivia-tierboard .trivia-cell.wrong{background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.18) 52%,rgba(0,0,0,.66) 100%),var(--chip-p)!important}
+.trivia-tierboard .trivia-cell:hover{transform:translateY(-2px)}
+.trivia-tierboard .trivia-cell.guessing:hover,.trivia-tierboard .trivia-cell.revealed:hover,.trivia-tierboard .trivia-cell.wrong:hover{transform:none}
+.trivia-tierboard .trivia-cell.wrong{border-width:2px}
+.trivia-tierboard .tcv-card-rank{font-size:22px;z-index:5}
+.trivia-tierboard .trivia-chip-stat{z-index:4;max-width:84px;font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:12px;letter-spacing:.4px;line-height:1.1;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trivia-tierboard .trivia-cell-body{display:block;height:106px;width:auto;padding:0}
+.trivia-tierboard .trivia-cell-logo{width:96px;height:96px;max-width:none;opacity:.92;transition:opacity .25s}
+.trivia-tierboard .trivia-chip-noteam{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;color:rgba(255,255,255,.35)}
+.trivia-tierboard .trivia-chip-sub{height:27px;line-height:27px;font-size:15px;color:rgba(255,255,255,.75)}
+/* revealed: the logo dims to the rankings-card watermark, the headshot + name take the card; the stat stays */
+.trivia-tierboard .trivia-cell.revealed .trivia-cell-body{display:block}
+.trivia-tierboard .trivia-cell.revealed .trivia-cell-logo{opacity:.3}
+.trivia-tierboard .trivia-cell.revealed .trivia-cell-hint{display:block}
+.trivia-tierboard .trivia-cell.revealed .trivia-chip-sub,.trivia-tierboard .trivia-cell.wrong .trivia-chip-sub{visibility:hidden}
+.trivia-tierboard .trivia-cell-reveal{position:absolute;inset:0;z-index:3;padding:0;gap:0;background:transparent;border-radius:0;justify-content:flex-end;overflow:visible}
+.trivia-tierboard .trivia-cell-reveal img{position:absolute;left:50%;bottom:27px;width:150px;height:104px;max-width:none;transform:translateX(-50%);object-fit:contain;object-position:center bottom;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.trivia-tierboard .trivia-cell-reveal img.trivia-wiki-photo{width:92px;height:96px;bottom:30px;object-fit:cover;object-position:center 20%;border-width:2px;border-radius:4px}
+.trivia-tierboard .trivia-cell-reveal .trivia-initials{position:absolute;left:50%;bottom:32px;transform:translateX(-50%);width:84px!important;height:84px!important;flex:none!important;font-size:1.6rem!important}
+.trivia-tierboard .trivia-cell-reveal .reveal-name{position:absolute;left:0;right:0;bottom:0;height:27px;line-height:27px;padding:0 3px;font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:16px;letter-spacing:.5px;color:#fff;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;word-break:normal;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.35))}
+/* the "(2019)" / year-range detail under the name in grid cells → a small tag above the name strip */
+.trivia-tierboard .trivia-cell-reveal>div:not(.reveal-name):not(.trivia-initials){position:absolute;left:0;right:0;bottom:27px;font-size:9px!important;line-height:1.1;color:#e2e8f0!important;text-shadow:0 1px 2px #000;background:rgba(0,0,0,.35);padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* wrong: the red answer overlay fills the card, centred */
+.trivia-tierboard .trivia-cell.wrong .trivia-cell-reveal{justify-content:center;align-items:center;padding:6px 4px;border-radius:3px}
+.trivia-tierboard .trivia-cell.wrong .trivia-cell-reveal>div{position:static;background:none;font-size:11px!important;text-align:center}
+.trivia-tierboard .trivia-cell.wrong .trivia-cell-reveal .reveal-name{position:static;height:auto;line-height:1.1;white-space:normal;word-break:break-word;font-size:14px!important;text-transform:none;background:none}
+/* report flag: off the stat box, beside the name strip */
+.trivia-tierboard .trivia-report-flag{top:auto!important;bottom:30px!important;right:2px!important;opacity:.7}
+.trivia-tierboard .trivia-guess-input{font-size:.625rem;padding:4px 3px}
+/* Phones: the tier strip rides above its cards (as on the rankings page);
+   app.js zooms the board so three chips fit a row — no horizontal scroll. */
+@media (max-width:600px){
+  .trivia-tierboard{padding:4px 2px 6px}
+  .trivia-tierboard .trivia-tier-row{flex-direction:column}
+  .trivia-tierboard .trivia-tier-letter{flex:0 0 auto;flex-direction:row;justify-content:flex-start;align-items:baseline;gap:8px;padding:3px 10px;min-height:26px}
+  .trivia-tierboard .trivia-tier-word{font-size:12px}
+  .trivia-tierboard .trivia-tier-num{font-size:20px}
+  .trivia-tierboard .trivia-tier-cards{justify-content:flex-start;padding:6px 4px}
+  /* main.css shrinks grid-cell logos / reveal photos to 40px on phones (!important); the chips keep card sizes */
+  .trivia-tierboard .trivia-cell{border-radius:5px!important}
+  .trivia-tierboard .trivia-cell-logo{max-width:none!important}
+  .trivia-tierboard .trivia-cell-hint{font-size:12px!important;padding:2px 5px!important}
+  .trivia-tierboard .trivia-cell-reveal img{max-width:none!important}
+  .trivia-tierboard .trivia-cell-reveal .reveal-name{font-size:16px!important}
 }

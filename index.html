@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-28-followups" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-28-cheat" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-28-7098" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-7098" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-28-allen" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-28" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-28-followups">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-28-cheat">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2506,7 +2506,10 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 <div class="fg-team-name" id="fgTeamName"></div>
 <div class="fg-team-sub" id="fgTeamSub">Pick any player from this team — choose a roster slot to place them</div>
-<input type="text" id="fgSearchInput" placeholder="Search players..." style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;margin-bottom:8px;outline:none">
+<div class="fg-search-row">
+<input type="text" id="fgSearchInput" placeholder="Search players..." style="flex:1;min-width:0;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;outline:none">
+<button type="button" class="fg-cheat-btn" id="fgCheatBtn" title="Sort this team's list by the points each player would score (any position). Cheat games keep their own high score and don't post to the leaderboard.">CHEAT · SORT BY BEST</button>
+</div>
 <div class="fg-player-list" id="fgPlayerList"></div>
 <button class="fg-btn fg-btn-skip" id="fgSkipBtn">SKIP TEAM (0 PTS)</button>
 </div>
@@ -2672,11 +2675,13 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <!-- DAILY TAB -->
 <div id="lbPanelDaily" style="display:none">
 
+<div class="trivia-admin-only">
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Trivia</div>
 <div class="lb-list" id="lbDailyTriviaList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyTriviaLoading">Loading...</div>
 <div class="lb-empty" id="lbDailyTriviaEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+</div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — Current</div>
 <div class="lb-list" id="lbDailyEpCurrentList" style="margin-bottom:4px"></div>
@@ -2727,7 +2732,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <button class="dc-tab" data-dc="2000s">2000s</button>
 <button class="dc-tab" data-dc="2010s">2010s</button>
 <button class="dc-tab" data-dc="guesswho">PHOTO</button>
-<button class="dc-tab" data-dc="trivia">TRIVIA</button>
+<button class="dc-tab trivia-admin-only" data-dc="trivia">TRIVIA</button>
 </div>
 <!-- Daily ELITE PULL — Current -->
 <div class="dc-pane active" data-dc="current" style="max-width:480px">
@@ -2897,7 +2902,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 <!-- Daily TRIVIA — the board plays on the Trivia page (it needs the full width);
      this card is the Games entry point. Streak/today filled by _mffTriviaCardRefresh. -->
-<div class="dc-pane" data-dc="trivia" style="max-width:480px">
+<div class="dc-pane trivia-admin-only" data-dc="trivia" style="max-width:480px">
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY TRIVIA</div>
@@ -3664,7 +3669,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-28-legends2">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-10-28-boards">
 <div class="trivia-wrap">
 <!-- Player header (non-admin). The builder tab strip below it is admin-only. -->
 <div class="trivia-player-only" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
@@ -3731,11 +3736,85 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="triviaDailyArchiveList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"><div style="color:var(--text2);font-size:.78rem;padding:6px">Loading…</div></div>
 </div>
 
+<!-- BOARD LIBRARY (players): every category board, built live from the current
+     data files — nothing stored, so boards update as the weekly pulls land.
+     Admin keeps the full builder below instead (Jack 10-28). -->
+<div id="triviaLibrary" class="trivia-library">
+<div class="trivia-library-head">
+<div class="trivia-library-title">BOARD LIBRARY</div>
+<div class="trivia-library-sub">Any category, any era. Boards build from the latest stats, so this season's boards grow every week.</div>
+</div>
+<div class="trivia-library-presets" id="libPresets"></div>
+<div class="trivia-library-grid">
+<label>Type
+<select id="libType">
+<option value="season" selected>Season totals</option>
+<option value="career">Career totals</option>
+<option value="game">Single game</option>
+</select>
+</label>
+<label>Stat
+<select id="libStat">
+<option value="fpts" selected>Fantasy Pts</option>
+<option value="ppg">Fantasy PPG</option>
+<option value="rcy">Receiving Yards</option>
+<option value="rec">Receptions</option>
+<option value="rctd">Receiving TDs</option>
+<option value="ry">Rushing Yards</option>
+<option value="rtd">Rushing TDs</option>
+<option value="py">Passing Yards</option>
+<option value="ptd">Passing TDs</option>
+<option value="totalTd">Total TDs</option>
+</select>
+</label>
+<label>Era
+<select id="libEra">
+<option value="all" selected>All-Time</option>
+<option value="since-2020">Since 2020</option>
+<option value="2020-2029">2020s</option>
+<option value="2010-2019">2010s</option>
+<option value="2000-2009">2000s</option>
+<option value="1990-1999">1990s</option>
+<option value="1980-1989">1980s</option>
+<option value="1970-1979">1970s</option>
+</select>
+</label>
+<label>Year
+<select id="libYear"><option value="all" selected>Any year</option></select>
+</label>
+<label>Size
+<select id="libCount">
+<option value="16">Top 16</option>
+<option value="20" selected>Top 20</option>
+<option value="25">Top 25</option>
+<option value="30">Top 30</option>
+</select>
+</label>
+</div>
+<div class="trivia-library-row">
+<div class="trivia-library-pos" id="libPos">
+<button type="button" data-pos="QB" class="on">QB</button>
+<button type="button" data-pos="RB" class="on">RB</button>
+<button type="button" data-pos="WR" class="on">WR</button>
+<button type="button" data-pos="TE" class="on">TE</button>
+</div>
+<button type="button" class="trivia-library-play" id="libPlayBtn" onclick="window._triviaLibraryPlay()">BUILD &amp; PLAY</button>
+</div>
+<div class="trivia-library-note" id="libNote"></div>
+<!-- Board index: walk every library combination in order (admin review) -->
+<div class="trivia-library-index">
+<button type="button" id="libPrevBtn" onclick="window._triviaLibraryGo(-1,true)">&#9664; PREV</button>
+<select id="libIndexSel" onchange="window._triviaLibraryGo(+this.value)"><option value="-1">Board index — jump to any board…</option></select>
+<button type="button" id="libNextBtn" onclick="window._triviaLibraryGo(1,true)">NEXT &#9654;</button>
+<span id="libIndexPos"></span>
+</div>
+</div>
+
 <!-- Quick-start Templates -->
 <div id="triviaTemplates" class="trivia-admin-only" style="margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">QUICK-START TEMPLATES</div>
-<div style="font-size:.6875rem;color:var(--text2)">Click any card to play instantly</div>
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:.6875rem;color:var(--text2)">Click any card to play instantly</span><button type="button" onclick="window._triviaLibraryAudit()" title="Build every Board Library combination once and download a report: thin boards, players with no photo, squares with no team" style="padding:4px 10px;background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.45);border-radius:6px;font-size:.68rem;letter-spacing:1px;cursor:pointer">🔎 AUDIT LIBRARY</button><span id="libAuditStatus" style="font-size:.68rem;color:var(--text2)"></span></div>
 </div>
 <div id="triviaTemplateGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"></div>
 </div>
@@ -3948,8 +4027,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
     // Hide year for career mode (era selector takes its slot instead)
     var yearEl = document.getElementById('triviaFilterYear').closest('label');
     if (yearEl) yearEl.style.display = t === 'career' ? 'none' : '';
+    // Era: the only range picker in career mode; in season / game mode it
+    // narrows "All-Time" to a span (2010-2019, since 2020 …) — Jack 10-28.
     var eraEl = document.getElementById('triviaFilterEraLabel');
-    if (eraEl) eraEl.style.display = t === 'career' ? 'flex' : 'none';
+    if (eraEl) eraEl.style.display = t === 'draft' ? 'none' : 'flex';
     // Hide stat category for draft mode (not needed)
     var statEl = document.getElementById('triviaFilterStat').closest('label');
     if (statEl) statEl.style.display = t === 'draft' ? 'none' : '';
@@ -3991,6 +4072,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <label>Layout:
 <select id="triviaLayout">
 <option value="auto">Auto</option>
+<option value="tiers">Tiers (rankings board)</option>
 <option value="5x4">5 × 4</option>
 <option value="4x5">4 × 5</option>
 <option value="6x4">6 × 4</option>
@@ -4166,7 +4248,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button class="trivia-export-btn" id="triviaSaveCatalogBtn" onclick="window._triviaSaveToCatalog()" style="display:none;background:rgba(34,197,94,.15);border-color:#22c55e;color:#22c55e">💾 Save to Catalog</button>
 <button class="trivia-export-btn trivia-admin-only" id="triviaStartGameBtn" onclick="window._triviaStartGame()" style="background:var(--accent);color:#000;font-weight:700">START GAME</button>
 </div>
-<div id="triviaPhotoCredit" style="margin-top:8px;font-size:.6875rem;color:var(--text2);text-align:center;opacity:.8">Legend photos via <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Wikimedia Commons</a> · credits on hover</div>
+<div id="triviaPhotoCredit" style="margin-top:8px;font-size:.6875rem;color:var(--text2);text-align:center;opacity:.8">Player photos via <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Wikimedia Commons</a> · credits on hover · <a href="img/cutouts/credits.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">all photo credits</a></div>
 </div><!-- end triviaDailyPanel -->
 
 <!-- Catalog Panel -->
@@ -5120,14 +5202,14 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
 <script src="data/_bundle_lookups.js?v=2026-10-28-allen" defer></script>
 <script src="data/d.js?v=2026-10-28" defer></script>
-<script src="data/injury_updates.js?v=2026-10-28-10" defer></script>
+<script src="data/injury_updates.js?v=2026-10-28-20" defer></script>
 <script src="data/injury_recent.js?v=2026-10-09" defer></script>
-<script src="data/practice_days_2026.js?v=2026-10-28-1605" defer></script>
+<script src="data/practice_days_2026.js?v=2026-10-28-2019" defer></script>
 <script src="data/weekly_projections.js?v=2026-10-28" defer></script>
-<script src="data/weather_2026.js?v=2026-10-28-10" defer></script>
+<script src="data/weather_2026.js?v=2026-10-28-20" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
 <script src="data/player_roles_2026.js?v=2026-10-28-0932" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-28-1006" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-10-28-2022" defer></script>
 <!-- matchup_edges_2026 / site_projections / ownership_2026 load AFTER first paint via
      window._loadLateData() (2026-10-13 mobile perf) — card / Start/Sit only, all typeof-guarded. -->
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -5192,8 +5274,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-10-28b:" defer></script>
-<script src="data/future_totals_2026.js?v=2026-10-28-1006" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-10-28d:" defer></script>
+<script src="data/future_totals_2026.js?v=2026-10-28-2022" defer></script>
 <script src="data/fpa_prior_2025.js?v=2026-10-05" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-10-09qb" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
@@ -6465,6 +6547,73 @@ _mergeWeeklyStatsRetired();
 document.addEventListener('DOMContentLoaded', _mergeWeeklyStatsRetired);
 // Also merge once the lazy weekly bundles arrive (see _loadWeeklyData below). Idempotent.
 document.addEventListener('mff:weeklydata', _mergeWeeklyStatsRetired);
+// 1970-1998 per-game logs (scripts/pull_pfr_boxscores.py): WEEKLY_STATS_LEGACY is keyed by PFR id.
+// Merge into WEEKLY_STATS by display name. A straddling career (Jerry Rice 1985-2004) extends the
+// 1999+ record when the years are contiguous; a legacy name that collides with an unrelated modern
+// player (gap in years) or a second same-name legacy id is skipped, never merged (the 2026-10-28
+// name-collision bug). Runs after the main bundle: _loadWeeklyLegacy chains behind _loadWeeklyData.
+function _mergeWeeklyStatsLegacy() {
+  if (typeof WEEKLY_STATS_LEGACY === 'undefined' || typeof WEEKLY_STATS === 'undefined') return;
+  var legends = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS : {};
+  // Key by the site's spelling when it differs only in dots/spaces ("O.J. Simpson" -> "O. J. Simpson").
+  var normKey = function(n) { return n.toLowerCase().replace(/\s+(jr|sr|ii|iii|iv)\.?$/, '').replace(/[^a-z]/g, ''); };
+  var siteName = {};
+  for (var ln in legends) { var k = normKey(ln); if (!siteName[k]) siteName[k] = ln; }
+  var byName = {};
+  for (var id in WEEKLY_STATS_LEGACY) {
+    var nm = WEEKLY_STATS_LEGACY[id].n;
+    if (!legends[nm] && !WEEKLY_STATS[nm]) { var alt = siteName[normKey(nm)]; if (alt) nm = alt; }
+    (byName[nm] = byName[nm] || []).push(id);
+  }
+  function yrs(rec) { return Object.keys(rec.seasons).map(Number); }
+  function sumF(rec) { var s = 0; for (var y in rec.seasons) rec.seasons[y].forEach(function(w) { s += w.fpts || 0; }); return s; }
+  var merged = 0, skipped = 0;
+  for (var name in byName) {
+    var ids = byName[name];
+    if (ids.length > 1) {
+      var ly = (legends[name] || []).map(function(s) { return s.yr; });
+      var ov = function(i) { return yrs(WEEKLY_STATS_LEGACY[i]).filter(function(y) { return ly.indexOf(y) >= 0; }).length; };
+      ids.sort(function(a, b) { return (ov(b) - ov(a)) || (sumF(WEEKLY_STATS_LEGACY[b]) - sumF(WEEKLY_STATS_LEGACY[a])); });
+      skipped += ids.length - 1;
+    }
+    var rec = WEEKLY_STATS_LEGACY[ids[0]];
+    var cur = WEEKLY_STATS[name];
+    if (cur && cur._pfr && cur._pfr !== ids[0]) { skipped++; continue; }
+    if (cur && !cur._pfr) {
+      // Same player as the 1999+ record? The legend career line decides when it spans both
+      // sides (Marino 1983-1999); otherwise the years must be contiguous. A QB on one side
+      // and a RB/WR/TE on the other is always a different player.
+      var curYrs = Object.keys(cur.seasons).map(Number);
+      var legYrs = yrs(rec);
+      var lc = (legends[name] || []).map(function(s) { return s.yr; });
+      var spans = function(a) { return a.some(function(y) { return lc.indexOf(y) >= 0; }); };
+      var same = lc.length ? (spans(curYrs) && spans(legYrs))
+        : (Math.max.apply(null, legYrs) >= Math.min.apply(null, curYrs) - 1);
+      if (!same) { skipped++; continue; }
+      if (cur.pos && rec.pos && ((cur.pos === 'QB') !== (rec.pos === 'QB'))) { skipped++; continue; }
+    }
+    if (!cur) cur = WEEKLY_STATS[name] = { pos: rec.pos, seasons: {} };
+    cur._pfr = ids[0];
+    for (var y in rec.seasons) { if (!cur.seasons[y]) { cur.seasons[y] = rec.seasons[y]; merged++; } }
+  }
+  // LEGEND_CAREERS carries some names in two spellings ("O. J. Simpson" and "O.J. Simpson");
+  // point every spelling without its own weekly record at the merged one.
+  // (dots/spaces only here: "Michael Pittman" 1998 and "Michael Pittman Jr." are different players)
+  var strictKey = function(n) { return n.toLowerCase().replace(/[^a-z]/g, ''); };
+  var byNormWS = {};
+  for (var wn in WEEKLY_STATS) { if (WEEKLY_STATS[wn]._pfr) byNormWS[strictKey(wn)] = WEEKLY_STATS[wn]; }
+  var aliased = 0;
+  for (var ln2 in legends) {
+    if (WEEKLY_STATS[ln2]) continue;
+    var v = byNormWS[strictKey(ln2)];
+    if (v) { WEEKLY_STATS[ln2] = v; aliased++; }
+  }
+  window._weeklyLegacyMerged = { merged: merged, skipped: skipped, aliased: aliased };
+  if (!merged) return;
+  if (typeof window._gwInitPool === 'function') { try { window._gwInitPool(); } catch(e) { console.warn('[GW] legacy pool rebuild failed:', e); } }
+  if (typeof window._gwDailyReinit === 'function') { try { window._gwDailyReinit(); } catch(e) {} }
+}
+document.addEventListener('mff:weeklylegacy', _mergeWeeklyStatsLegacy);
 
 // === Lazy-load heavy retired weekly-stats bundles (~22.5 MB) ===
 // weekly_stats_retired_1-3 (~10 MB) + all_players_weekly_1-5 (~12.5 MB) used to load via
@@ -6517,7 +6666,7 @@ window._loadWeeklyCore = function(opts) {
   window._weeklyCorePromise = _injectScripts([
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
     // merge also still listens on mff:weeklydata (idempotent).
-    'data/weekly_stats_active.js?v=2026-10-28-1000'
+    'data/weekly_stats_active.js?v=2026-10-28-2015'
   ], 'WeeklyCore', opts).then(function() {
     try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
   });
@@ -6530,7 +6679,7 @@ window._loadWeeklyData = function(opts) {
     // (weekly_stats_active loads first via _loadWeeklyCore above)
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-10-28-1000',
+    'data/fpa_2026.js?v=2026-10-28-2015',
     // Full-field Best Ball Mania VII advance rate by player (scripts/bbm_field_adv.py, Tue) —
     // My Teams > Underdog > DRAFT BOARD "OVERALL ADV RATE".
     'data/bbm_field_adv.js?v=2026-10-27-0929',
@@ -6543,9 +6692,9 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-10-28-1000',
+    'data/snap_counts.js?v=2026-10-28-2015',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-10-28-1000',
+    'data/route_pct.js?v=2026-10-28-2015',
     // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
     'data/team_usage_2026.js?v=2026-10-28-0932',
     // Defense zone heat map for the card MATCHUP tab (scripts/build_def_zones.py, nflverse pbp)
@@ -6558,6 +6707,27 @@ window._loadWeeklyData = function(opts) {
     catch (e) { console.warn('[WeeklyData] merge dispatch failed:', e); }
   });
   return window._weeklyDataPromise;
+};
+
+// 1970-1998 per-game logs (scripts/pull_pfr_boxscores.py, three era files): WEEKLY_STATS_LEGACY,
+// keyed by PFR id. Pulled only when the Fantasy Game gets a pre-1999 YEAR / ERA or the WEEK mode,
+// or Elite Pull switches to ALL-TIME (app.js _fgEnsureLegacy / _gwSetMode). Chained behind the
+// main weekly bundle so _mergeWeeklyStatsLegacy always sees the 1999+ records first.
+window._loadWeeklyLegacy = function(opts) {
+  if (window._weeklyLegacyPromise) return window._weeklyLegacyPromise;
+  var files = [
+    'data/weekly_stats_1970s.js?v=2026-10-29',
+    'data/weekly_stats_1980s.js?v=2026-10-29',
+    'data/weekly_stats_1990s.js?v=2026-10-29'
+  ];
+  window._weeklyLegacyPromise = window._loadWeeklyData(opts).then(function() {
+    return _injectScripts(files, 'WeeklyLegacy', opts);
+  }).then(function() {
+    window._weeklyLegacyDone = true;
+    try { document.dispatchEvent(new Event('mff:weeklylegacy')); }
+    catch (e) { console.warn('[WeeklyLegacy] merge dispatch failed:', e); }
+  });
+  return window._weeklyLegacyPromise;
 };
 
 // === Lazy-load retired-player enrichment bundles (~5.3 MB) ===
@@ -6611,14 +6781,15 @@ window._loadRetiredData = function(opts) {
 // initials until it lands, then upgrades the cell. Regenerate: scripts/build_legend_headshots.py.
 window._loadLegendHeadshots = function(opts) {
   if (window._legendHeadshotsPromise) return window._legendHeadshotsPromise;
-  window._legendHeadshotsPromise = _injectScripts(['data/legend_headshots.js?v=2026-10-28-legends2'], 'LegendHeadshots', opts);
+  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-28-cutouts'], 'LegendHeadshots', opts);
   return window._legendHeadshotsPromise;
 };
 
 // 1970-98 full-league fantasy season totals (2026-10-28): the Fantasy Game's ERA / YEAR
-// picks before 1999 used to draw on legends only. Loaded by the games chunk the first time
-// such a window is picked (_fgPrep7098), never in the warm-up. Keyed by PFR id.
-// Regenerate: scripts/pull_pfr_season_totals.py.
+// picks before 1999 used to draw on legends only, and the trivia generator's 1970s-90s
+// season / career boards on the legend tables. Loaded by the games chunk the first time
+// such a window is picked (_fgPrep7098) and by _triviaGenerate for a pre-1999 board —
+// never in the warm-up. Keyed by PFR id. Regenerate: scripts/pull_pfr_season_totals.py.
 window._loadSeasonTotals7098 = function(opts) {
   if (window._seasonTotals7098Promise) return window._seasonTotals7098Promise;
   window._seasonTotals7098Promise = _injectScripts(['data/season_totals_1970_1998.js?v=2026-10-28'], 'SeasonTotals7098', opts);
@@ -6632,7 +6803,7 @@ window._loadSeasonTotals7098 = function(opts) {
 // (app.js repaints a K/DST board, Start/Sit or an open player card that rendered without them).
 // The ?v= strings stay in this file so the scheduled jobs' `name.js?v=` bumps still apply.
 window._LATE_DATA_FILES = [
-  'data/matchup_edges_2026.js?v=2026-10-28-1006',
+  'data/matchup_edges_2026.js?v=2026-10-28-2022',
   'data/site_projections.js?v=2026-10-28',
   'data/ownership_2026.js?v=2026-10-28',
   'data/kicker_history.js?v=2026-10-27',
@@ -6684,7 +6855,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-28-7098"></script>
+<script defer src="app.js?v=2026-10-29-7098"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

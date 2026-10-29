@@ -15439,14 +15439,18 @@ function bestPpg(d) {
 // Checks: _2025_TEAM_FIX → ACTIVE_TEAM_HISTORY → PLAYER_TEAM_HISTORY → WEEKLY_STATS → D array
 function _getTeamForPlayerYear(playerName, yr) {
   if (!playerName || !yr) return null;
-  // 1. Hardcoded 2025 overrides
-  if (yr === 2025 && _2025_TEAM_FIX[playerName]) return _2025_TEAM_FIX[playerName];
-  // 2. ACTIVE_TEAM_HISTORY (full team names → convert to abbr)
+  // 1. ACTIVE_TEAM_HISTORY (curated y1..y2 ranges, full team names → abbr). Checked
+  // FIRST (10-28): it is the only table that still holds LAST season's team after
+  // an offseason move — the 2025 override map, PLAYER_TEAM_HISTORY, the active
+  // weekly tm and career tm were all re-stamped with 2026 teams, which put 2025
+  // boards on new-team logos (Etienne/NO, Dowdle/PIT, Walker/KC).
   if (typeof ACTIVE_TEAM_HISTORY !== 'undefined' && ACTIVE_TEAM_HISTORY[playerName]) {
     for (const h of ACTIVE_TEAM_HISTORY[playerName]) {
       if (yr >= h.y1 && yr <= h.y2) return TEAM_ABBR_MAP[h.t] || h.t;
     }
   }
+  // 2. Hardcoded 2025 overrides (players the history table doesn't cover)
+  if (yr === 2025 && _2025_TEAM_FIX[playerName]) return _2025_TEAM_FIX[playerName];
   // 3. PLAYER_TEAM_HISTORY (abbreviations)
   if (typeof PLAYER_TEAM_HISTORY !== 'undefined' && PLAYER_TEAM_HISTORY[playerName]) {
     for (const h of PLAYER_TEAM_HISTORY[playerName]) {
@@ -15461,15 +15465,34 @@ function _getTeamForPlayerYear(playerName, yr) {
       if (played.length > 0 && played[0].tm) return played[0].tm;
     }
   }
-  // 5. D array career data
+  // 5. D array career data — that season's tm, else the nearest season that
+  // has one (381 legend rows lack tm: Marcus Allen 1985 sits between RAI
+  // years; falling to d.t handed it a namesake's Steelers).
   if (typeof D !== 'undefined') {
     const d = D.find(p => p.n === playerName);
     if (d && d.career) {
-      const szn = d.career.find(s => s.yr === yr);
-      if (szn && szn.tm) return szn.tm;
+      const near = _careerTmNear(d.career, yr);
+      if (near) return near;
     }
   }
   return null;
+}
+// Team label for a season from a career array: the row's own tm, else the
+// closest row (by year) that carries one — only within the same stint, i.e.
+// the previous and next labelled rows must agree, so a gap between two
+// different teams stays unknown rather than guessed.
+function _careerTmNear(career, yr) {
+  if (!career || !career.length) return null;
+  const row = career.find(s => s.yr === yr);
+  if (row && row.tm) return row.tm;
+  let prev = null, next = null;
+  career.forEach(s => {
+    if (!s.tm || !s.yr) return;
+    if (s.yr < yr && (!prev || s.yr > prev.yr)) prev = s;
+    if (s.yr > yr && (!next || s.yr < next.yr)) next = s;
+  });
+  if (prev && next) return prev.tm === next.tm ? prev.tm : null;
+  return (prev || next) ? (prev || next).tm : null;
 }
 
 // Helper used in trivia: fix team for all items on a board
@@ -15558,6 +15581,7 @@ function getWeeklySeasons(d) {
 function _seasonWeekCount(yr) {
   yr = +yr;
   if (yr >= 2021) return 18;
+  if (yr === 1993) return 18; // two bye weeks
   if (yr >= 1990) return 17;
   if (yr >= 1978) return 16;
   return 14;
@@ -24276,7 +24300,10 @@ function switchPage(page) {
   // Admin-only pages — silently redirect non-admins to home. Trivia is public
   // since 2026-10-28: players get the daily board, the builder controls carry
   // class trivia-admin-only and hide unless body.mff-admin is set.
-  const ADMIN_ONLY_PAGES = ['backtest', 'research'];
+  // trivia: back behind admin until the Board Library audit is done and the
+  // boards are built (Jack 10-28); the nav button, Games card and leaderboard
+  // section hide via CSS (trivia.css, body:not(.mff-admin)).
+  const ADMIN_ONLY_PAGES = ['backtest', 'research', 'trivia'];
   if (ADMIN_ONLY_PAGES.includes(page)) {
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
     if (!admin) { page = 'rankings'; } // 'home' isn't in pageMap — it renders a blank page
@@ -25929,7 +25956,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   const _gwWsCache = {};
   // Regular-season weeks only: a few retired records carry playoff weeks
   // (wk 18-21), which inflated "best season" for deep playoff runs.
-  function gwIsRegWeek(szn, w) { return (w.wk || 0) <= (parseInt(szn) >= 2021 ? 18 : 17); }
+  // 1993 ran 18 weeks (two byes); the 1970-1998 legacy rows flag playoffs with po:1 (wk 19-22).
+  function gwIsRegWeek(szn, w) { if (w.po) return false; const y = parseInt(szn); return (w.wk || 0) <= (y >= 2021 || y === 1993 ? 18 : 17); }
 
   function gwLookupWeekly(name) {
     if (typeof WEEKLY_STATS === 'undefined') return null;
@@ -26917,6 +26945,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   function _gwSetMode(mode) {
     if (gwMode === mode) return;
     gwMode = mode;
+    // ALL-TIME pool: 1970-1998 game logs make the pre-1999 legends eligible (needs a best week).
+    if (mode === 'alltime' && typeof window._loadWeeklyLegacy === 'function') { try { window._loadWeeklyLegacy(); } catch (_) {} }
     gwModeCurrent.classList.toggle('active', mode === 'current');
     gwMode2000sBtn.classList.toggle('active', mode === '2000s');
     gwMode2010sBtn.classList.toggle('active', mode === '2010s');
@@ -27880,10 +27910,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // the 70s-90s gave a random team only 2-3 scoring players. The PFR season totals are keyed
   // by PFR id (same-name players stay separate) and load the first time the ERA / YEAR
   // filter targets a year before 1999 (_fgPrep7098, after the retired bundle so LDB / HP
-  // entries exist to merge into). A player already in the pool (same name + position, career
-  // span overlapping these years) keeps their entry: they gain only the seasons it is
-  // missing (_x7098) plus a year -> franchise map (_tmByYr) so getBestSeason can filter the
-  // old seasons by team. Everyone else joins as a new entry whose seasons carry _mt.
+  // entries exist to merge into, and with the 1970-98 game logs so START opens once both
+  // are in). A player already in the pool (same name + position, career span overlapping
+  // these years) keeps their entry: they gain only the seasons it is missing (_x7098) plus a
+  // year -> franchise map (_tmByYr) that _fgSeasonTeams reads first. Everyone else joins as
+  // a new entry (_src7098, _pfr = PFR id for the legacy game logs) with the same map.
   let _fg7098Promise = null, _fg7098Applied = false;
   function _fgWindowPre1999() {
     if (fgLeague !== 'nfl') return false;
@@ -27895,17 +27926,19 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (_fg7098Promise) return _fg7098Promise;
     const retired = (typeof window._loadRetiredData === 'function') ? window._loadRetiredData() : Promise.resolve();
     const totals = (typeof window._loadSeasonTotals7098 === 'function') ? window._loadSeasonTotals7098() : Promise.resolve();
-    _fg7098Promise = Promise.all([retired, totals]).then(() => { _fgAppendHpPlayers(); _fgAppend7098Players(); });
+    const legacy = (typeof window._loadWeeklyLegacy === 'function') ? window._loadWeeklyLegacy() : Promise.resolve();
+    _fg7098Promise = Promise.all([retired, totals, legacy]).then(() => { _fgAppendHpPlayers(); _fgAppend7098Players(); });
     return _fg7098Promise;
   }
   // Loading gate: disable START until the file is in (cb runs after the append).
   function _fgPrep7098(cb) {
     if (_fg7098Applied || typeof window._loadSeasonTotals7098 !== 'function') { if (cb) cb(); return; }
-    if (fgDraftEmptyText) fgDraftEmptyText.textContent = 'Loading 1970\u201398 seasons\u2026';
-    startBtn.disabled = true;
+    const sb = document.getElementById('fgStartBtn'), et = document.getElementById('fgDraftEmptyText');
+    if (et) et.textContent = 'Loading 1970\u201398 seasons\u2026';
+    if (sb) sb.disabled = true;
     _fgEnsure7098().then(() => {
-      startBtn.disabled = false;
-      if (fgDraftEmptyText) fgDraftEmptyText.textContent = fgLeague === 'college' ? 'Press START to get a random college conference' : 'Press START to get a random NFL team';
+      if (sb) sb.disabled = false;
+      if (et) et.textContent = fgLeague === 'college' ? 'Press START to get a random college conference' : 'Press START to get a random NFL team';
       if (cb) cb();
     });
   }
@@ -27917,6 +27950,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     for (const sp of spans) { if (yr >= sp[0] && yr <= sp[1]) return TEAM_ALIASES[sp[2]] || sp[2]; }
     return TEAM_ALIASES[spans[0][2]] || spans[0][2];
   }
+  // Career rows for a pool entry, plus the 1970-98 PFR seasons it was missing.
   function _fgCareerOf(x) {
     const base = (x._dRef && x._dRef.career) ? x._dRef.career : (x.career || []);
     return x._x7098 ? base.concat(x._x7098) : base;
@@ -27940,6 +27974,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         s._mt = [...near];
       });
       const teams = [...new Set(seasons.flatMap(s => s._mt))];
+      const tmByYr = {};
+      seasons.forEach(s => { if (s._mt.length) tmByYr[s.yr] = s._mt; });
       // rec.y = first/last PFR season incl. years below the file's points floor
       const y0 = rec.y ? rec.y[0] : seasons[0].yr, y1 = rec.y ? rec.y[1] : seasons[seasons.length - 1].yr;
       const yrsLabel = y0 === y1 ? String(y0) : y0 + '\u2013' + y1;
@@ -27965,8 +28001,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         const have = new Set(_fgCareerOf(existing).map(s => +s.yr));
         const extra = seasons.filter(s => !have.has(+s.yr));
         if (extra.length) existing._x7098 = (existing._x7098 || []).concat(extra);
-        existing._tmByYr = existing._tmByYr || {};
-        seasons.forEach(s => { if (s._mt.length) existing._tmByYr[s.yr] = s._mt; });
+        existing._tmByYr = Object.assign(existing._tmByYr || {}, tmByYr);
         // rec.tms = seasons under the file's points floor (franchise only): without them a
         // legend's 6-point year would count for whichever team drew him.
         Object.entries(rec.tms || {}).forEach(([yr, tm]) => {
@@ -27977,26 +28012,20 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         teams.forEach(t => tSet.add(t));
         existing._fgTeams = [...tSet];
         if (!existing._yrs) existing._yrs = yrsLabel;
+        if (!existing._pfr) existing._pfr = pid;
         merged++;
         return;
       }
       FG_POOL.push({
         n: rec.n, s: pos, _fgTeams: teams, _fgIdx: FG_POOL.length,
         _yrs: yrsLabel, _retired: true,
-        career: seasons, _src7098: true, _pfr: pid
+        career: seasons, _tmByYr: tmByYr, _src7098: true, _pfr: pid
       });
       added++;
     });
     console.log('[FantasyGame] 1970-98 season totals: +' + added + ' players, ' + merged + ' merged into existing entries');
   }
   window._fgPoolSnapshot = () => FG_POOL; // debug: inspect the draft pool from the console
-  // Which franchise(s) a career season belongs to, when the season (PFR 1970-98) or the
-  // player's PFR year map says; null = unknown (callers fall back to the history tables).
-  function _fgSeasonTeams(player, s) {
-    if (s._mt) return s._mt;
-    if (player._tmByYr && player._tmByYr[s.yr]) return player._tmByYr[s.yr];
-    return null;
-  }
 
   // Build the complete NFL teams list (all 32)
   // ALL_NFL_TEAMS moved to data/all_nfl_teams.js
@@ -28056,7 +28085,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // (setFgLeague). Before that, COLLEGE mode drafted from an empty pool.
   function _fgBuildCollegePool() {
     if (CFG_POOL.length || typeof COLLEGE_STATS === 'undefined') return;
-    const _getPos = (name) => {
+    // NFL/combine position tables say what a player became, not what he
+    // played in college (Tebow drafted at TE, Malik Cunningham / Greg Ward
+    // Jr. at WR — Jack 10-28). The college stat line decides first: a
+    // passer is a QB, a carrier an RB; a receiver keeps the table's WR/TE.
+    const _tablePos = (name) => {
       if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].pos) return COMBINE_DATA[name].pos;
       const dp = D.find(p => p.n === name);
       if (dp && dp.s) return dp.s;
@@ -28064,6 +28097,16 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (typeof HP !== 'undefined') { const hp = HP.find(p => p.n === name); if (hp && hp.s) return hp.s; }
       if (typeof LDB !== 'undefined') { const lb = LDB.find(p => p.n === name); if (lb && lb.s) return lb.s; }
       return null;
+    };
+    const _getPos = (name) => {
+      const seasons = COLLEGE_STATS[name] || [];
+      let pa = 0, ra = 0, rec = 0;
+      seasons.forEach(s => { pa += s.pa || 0; ra += s.ra || 0; rec += s.rec || 0; });
+      const tp = _tablePos(name);
+      if (pa >= 100 && pa >= ra && pa >= rec) return 'QB';
+      if (ra >= 100 && ra > rec * 2) return 'RB';
+      if (rec >= 20 && rec > ra) return (tp === 'TE') ? 'TE' : 'WR';
+      return tp;
     };
     const _cfpts = (s) => { return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*0.5 + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2)*10)/10; };
     Object.entries(COLLEGE_STATS).forEach(([name, seasons]) => {
@@ -28073,7 +28116,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       seasons.forEach(s => { let c = CONF_ALIASES[s.conf] || s.conf || ''; if (COLLEGE_CONFS.includes(c)) playerConfs.add(c); });
       if (!playerConfs.size) return;
       const bestByConf = {};
-      seasons.forEach(s => { let c = CONF_ALIASES[s.conf] || s.conf || ''; if (!COLLEGE_CONFS.includes(c)) return; const fp = _cfpts(s); if (!bestByConf[c] || fp > bestByConf[c].fpts) bestByConf[c] = {fpts:fp,yr:s.yr,tm:s.tm,conf:c}; });
+      seasons.forEach(s => { let c = CONF_ALIASES[s.conf] || s.conf || ''; if (!COLLEGE_CONFS.includes(c)) return; const fp = _cfpts(s); if (!bestByConf[c] || fp > bestByConf[c].fpts) bestByConf[c] = {fpts:fp,yr:s.yr,tm:s.tm,conf:c,rc:s.rec||0}; });
       CFG_POOL.push({ n:name, s:pos, _cfgConfs:[...playerConfs], _cfgIdx:CFG_POOL.length, _bestByConf:bestByConf, _yrs:seasons.map(s=>s.yr).sort((a,b)=>a-b), _teams:[...new Set(seasons.map(s=>s.tm))] });
     });
   }
@@ -28081,21 +28124,21 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
   function _cfgSeasonPts(s) { return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*0.5 + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2)*10)/10; }
   function getCollegeBestSeason(player, forConf) {
-    // YEAR / ERA filters: _bestByConf only holds the all-time best per
-    // conference, so rescore the raw seasons inside the window.
-    if ((fgYear !== 'best' || fgEra !== 'all') && typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[player.n]) {
+    // Rescore the raw seasons: _bestByConf only holds the all-time Half PPR
+    // best per conference (wrong for YEAR / ERA windows and for PPR).
+    if (typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[player.n]) {
       let b = null;
       COLLEGE_STATS[player.n].forEach(s => {
         const c = CONF_ALIASES[s.conf] || s.conf || '';
         if (forConf && c !== forConf) return;
         if (!_fgYearOk(s.yr)) return;
-        const fp = _cfgSeasonPts(s);
-        if (!b || fp > b.fpts) b = { fpts: fp, yr: s.yr, tm: s.tm, conf: c };
+        const row = { fpts: _cfgSeasonPts(s), yr: s.yr, tm: s.tm, conf: c, rc: s.rec || 0 };
+        if (!b || _fgScore(row) > _fgScore(b)) b = row;
       });
       return b;
     }
     if (player._bestByConf && forConf && player._bestByConf[forConf]) return player._bestByConf[forConf];
-    if (player._bestByConf) { let b=null; Object.values(player._bestByConf).forEach(s=>{if(!b||s.fpts>b.fpts)b=s;}); return b; }
+    if (player._bestByConf) { let b=null; Object.values(player._bestByConf).forEach(s=>{if(!b||_fgScore(s)>_fgScore(b))b=s;}); return b; }
     return null;
   }
   function getCollegeBestWeek(player, forConf) {
@@ -28108,9 +28151,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     }
     let best=null;
     for(const[szn,weeks]of Object.entries(weekly)){
-      if(forConf&&validSeasons.size&&!validSeasons.has(szn))continue;
+      if(forConf&&!validSeasons.has(szn))continue; // season not played in this conference (or unknown)
       if(!_fgYearOk(+szn))continue;
-      for(const w of weeks){const fp=_cfpW(w);if(!best||fp>best.fpts)best={fpts:fp,yr:+szn,wk:w.wk,tm:w.tm,opp:w.opp||'',rec:w.rec||0,rc:w.rc||0};}
+      for(const w of weeks){const row={fpts:_cfpW(w),yr:+szn,wk:w.wk,tm:w.tm,opp:w.opp||'',rec:w.rec||0,rc:w.rec||0};if(!best||_fgScore(row)>_fgScore(best))best=row;}
     }
     return best;
   }
@@ -28157,6 +28200,40 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // (era / year / week filtered: own local high score, no leaderboard).
   let fgType = 'regular';
 
+  // 1970-1998 per-game logs (data/weekly_stats_1970s/80s/90s.js, ~10 MB, scripts/pull_pfr_boxscores.py)
+  // are lazy: fetched the first time a pre-1999 YEAR / ERA or the WEEK mode is picked (NFL only).
+  // START waits for the merge (index.html _mergeWeeklyStatsLegacy) so the first spin already has
+  // the Payton/Marino-era game logs; getBestWeek reads WEEKLY_STATS live after that.
+  function _fgNeedsLegacy() {
+    if (fgLeague !== 'nfl') return false;
+    if (fgYear !== 'best') return +fgYear <= 1998;
+    if (fgEra !== 'all') return +fgEra <= 1990;
+    return fgMode === 'week';
+  }
+  function _fgEnsureLegacy() {
+    if (!_fgNeedsLegacy() || typeof window._loadWeeklyLegacy !== 'function') return;
+    if (window._weeklyLegacyDone) return;
+    const sb = document.getElementById('fgStartBtn');
+    const et = document.getElementById('fgDraftEmptyText');
+    if (sb) sb.disabled = true;
+    if (et) et.textContent = 'Loading 1970\u20131998 game logs\u2026';
+    window._loadWeeklyLegacy().then(() => {
+      if (sb) sb.disabled = false;
+      if (et && fgLeague === 'nfl') et.textContent = 'Press START to get a random NFL team';
+    });
+  }
+  // Legacy (1970-1998) log for a pool entry that carries a PFR id (season-totals pool rows), or
+  // whose display name maps to exactly one PFR id, when WEEKLY_STATS has nothing under the name.
+  function _fgLegacyWeekly(player) {
+    const L = window.WEEKLY_STATS_LEGACY;
+    if (!L || !player) return null;
+    const id = player.pfr || player.pid || player._pfr;
+    if (id && L[id]) return L[id];
+    const ids = (typeof SEASON_TOTALS_7098_NAMES !== 'undefined' && SEASON_TOTALS_7098_NAMES[player.n]) || null;
+    if (ids && ids.length === 1 && L[ids[0]]) return L[ids[0]];
+    return null;
+  }
+
   // Does a season year pass the YEAR / ERA filters? YEAR wins when set.
   function _fgYearOk(yr) {
     if (fgYear !== 'best') return +yr === +fgYear;
@@ -28168,12 +28245,16 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (fgEra !== 'all') return fgEra + 's';
     return 'ALL-TIME';
   }
-  function _fgFilterTag() { return _fgFilterLabel() + (fgWeekFilter !== 'best' ? ' Wk ' + fgWeekFilter : ''); }
+  function _fgFilterTag() { return _fgFilterLabel() + (fgWeekFilter !== 'best' ? ' Wk ' + fgWeekFilter : '') + (fgCheat ? ' CHEAT' : ''); }
   function _fgLocalHsKey() {
-    return 'fg_hs_' + fgLeague + '_' + fgMode + '_' + fgScoring + '_' + (fgYear !== 'best' ? 'y' + fgYear : 'e' + fgEra) + (fgWeekFilter !== 'best' ? '_w' + fgWeekFilter : '');
+    return 'fg_hs_' + fgLeague + '_' + fgMode + '_' + fgScoring + '_' + (fgYear !== 'best' ? 'y' + fgYear : 'e' + fgEra) + (fgWeekFilter !== 'best' ? '_w' + fgWeekFilter : '') + (fgCheat ? '_cheat' : '');
   }
+  // CHEAT (Jack 10-28): the team list sorts by the points each player would
+  // score, any position, with the score shown. Session-only; a cheat game is
+  // a "custom" game (own local high score, never posts to the leaderboard).
+  let fgCheat = false;
   function _fgSyncType() {
-    fgType = (fgEra === 'all' && fgYear === 'best' && fgWeekFilter === 'best') ? 'regular' : 'custom';
+    fgType = (!fgCheat && fgEra === 'all' && fgYear === 'best' && fgWeekFilter === 'best') ? 'regular' : 'custom';
     document.getElementById('fgModeSeason').textContent = fgYear !== 'best' ? 'SEASON' : 'BEST SEASON';
     document.getElementById('fgModeWeek').textContent = fgWeekFilter !== 'best' ? 'WEEK' : 'BEST WEEK';
     const note = document.getElementById('fgFilterNote');
@@ -28192,6 +28273,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (era !== 'all') { fgYear = 'best'; document.getElementById('fgYearSelect').value = 'best'; }
     _fgPaintEra();
     _fgSyncType();
+    _fgEnsureLegacy();
     if (_fgWindowPre1999()) _fgPrep7098();
     updateFgSubtitle();
     resetGame();
@@ -28205,7 +28287,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const el = document.getElementById('fgSettingsSummary');
     if (!el) return;
     const modeLbl = fgMode === 'week' ? (fgWeekFilter !== 'best' ? 'WEEK ' + fgWeekFilter : 'BEST WEEK') : (fgYear !== 'best' ? 'SEASON' : 'BEST SEASON');
-    el.textContent = [fgLeague === 'college' ? 'COLLEGE' : 'NFL', modeLbl, fgScoring === 'half' ? 'HALF PPR' : 'PPR', _fgFilterLabel()].join(' · ');
+    el.textContent = [fgLeague === 'college' ? 'COLLEGE' : 'NFL', modeLbl, fgScoring === 'half' ? 'HALF PPR' : 'PPR', _fgFilterLabel()].concat(fgCheat ? ['CHEAT'] : []).join(' · ');
   }
   function _fgSetSettingsOpen(open) {
     if (!fgSettingsPanel || !fgSettingsToggle) return;
@@ -28236,26 +28318,117 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   ABBR_TO_FULL['OAK'] = 'Las Vegas Raiders';
   ABBR_TO_FULL['STL'] = 'Los Angeles Rams';
 
+  // ---- Which team was a player on? ----
+  // The weekly logs can't answer this alone: weekly_stats_active.js rows carry
+  // no team for 2018-2024, and its 2025 rows were stamped with the player's
+  // CURRENT team (Geno Smith "NYJ", Emanuel Wilson "SEA"). A game or season
+  // with no team source at all is treated as NOT on the drafted team.
+  // PFR-style / relocated-franchise abbreviations in the career + weekly logs.
+  const _FG_OLD_ABBR = {
+    GNB:'GB', KAN:'KC', NOR:'NO', NWE:'NE', SDG:'LAC', SD:'LAC', SFO:'SF', TAM:'TB',
+    LVR:'LV', OAK:'LV', RAI:'LV', PHO:'ARI', PHX:'ARI', CRD:'ARI', RAM:'LAR', LARams:'LAR',
+    LA:'LAR', BOS:'NE', NYT:'NYJ'
+  };
+  // Modern full team name for a team string; yr resolves the reused codes
+  // (HOU = Oilers before 2002, BAL = Colts before 1996, STL = Cardinals before 1988).
+  function _fgModern(t, yr) {
+    if (!t) return null;
+    if (yr) {
+      if (t === 'HOU' && yr < 2002) return 'Tennessee Titans';
+      if (t === 'BAL' && yr < 1996) return 'Indianapolis Colts';
+      if (t === 'STL') return yr < 1988 ? 'Arizona Cardinals' : 'Los Angeles Rams';
+    }
+    const a = _FG_OLD_ABBR[t] || t;
+    const full = ABBR_TO_FULL[a] || toFullTeamName(a) || a;
+    return TEAM_ALIASES[full] || full;
+  }
+  // weekly_stats_active.js AND all_players.js stamped their 2025 rows with
+  // each player's 2026 team (Austin Hooper "ATL", Charlie Kolar "LAC"), so a
+  // 2025 team code from those files only counts when ACTIVE_TEAM_HISTORY agrees.
+  const _FG_STAMPED_YR = 2025;
+  function _fgAthTeams(name, yr) {
+    const out = new Set();
+    const hist = (typeof ACTIVE_TEAM_HISTORY !== 'undefined') ? ACTIVE_TEAM_HISTORY[name] : null;
+    if (hist) hist.forEach(h => { if (yr >= h.y1 && yr <= h.y2) out.add(_fgModern(h.t)); });
+    return out;
+  }
+  // Team for one game row, or null when the row can't tell. ALL_PLAYERS_WEEKLY
+  // (through 2024) has a team on every row and splits trade years by week; a
+  // row's own tm only counts when ACTIVE_TEAM_HISTORY agrees for that year.
+  function _fgWeekTeam(name, yr, w) {
+    const apw = (typeof ALL_PLAYERS_WEEKLY !== 'undefined' && ALL_PLAYERS_WEEKLY[name]) ? ALL_PLAYERS_WEEKLY[name].seasons[yr] : null;
+    if (apw) {
+      const m = apw.find(x => x.wk === w.wk && Math.abs((x.fpts || 0) - (w.fpts || 0)) < 0.2);
+      if (m && m.tm) return _fgModern(m.tm, yr);
+    }
+    if (w.tm) {
+      const t = _fgModern(w.tm, yr), ath = _fgAthTeams(name, yr);
+      if (ath.has(t) || (!ath.size && yr !== _FG_STAMPED_YR)) return t;
+    }
+    return null;
+  }
+  // Season team code from the raw career sources (D's merged career rows drop
+  // tm — Warren Moon's 1984-2000 rows have none). LEGEND_CAREERS first.
+  let _fgCareerTmIdx = null;
+  function _fgCareerTm(name, yr) {
+    // LEGEND_CAREERS rides the lazy retired bundle: rebuild once it lands.
+    if (!_fgCareerTmIdx || (!_fgCareerTmIdx._lc && typeof LEGEND_CAREERS !== 'undefined')) {
+      _fgCareerTmIdx = { _lc: typeof LEGEND_CAREERS !== 'undefined' };
+      if (typeof ALL_PLAYERS_DB !== 'undefined') ALL_PLAYERS_DB.forEach(p => {
+        (p.career || []).forEach(s => { if (s.tm && s.yr !== _FG_STAMPED_YR) (_fgCareerTmIdx[p.name] = _fgCareerTmIdx[p.name] || {})[s.yr] = s.tm; });
+      });
+      if (typeof LEGEND_CAREERS !== 'undefined') Object.entries(LEGEND_CAREERS).forEach(([n, rows]) => {
+        (rows || []).forEach(s => { if (s.tm) (_fgCareerTmIdx[n] = _fgCareerTmIdx[n] || {})[s.yr] = s.tm; });
+      });
+    }
+    const m = _fgCareerTmIdx[name];
+    return m ? m[yr] : null;
+  }
+  // Team(s) for a season: ACTIVE_TEAM_HISTORY plus the game-level teams above
+  // (so a mid-season trade counts for both clubs), then the career row's own
+  // tm, then PLAYER_TEAM_HISTORY. (No "only ever had one team" guess: those
+  // lists go stale — Tyler Lockett's says SEA only, he was a Titan in 2025.)
+  function _fgSeasonTeams(player, yr, careerTm) {
+    // 1970-98 PFR seasons know their franchise (_fgAppend7098Players): that map wins.
+    if (player._tmByYr && player._tmByYr[yr]) return new Set(player._tmByYr[yr]);
+    const out = _fgAthTeams(player.n, yr);
+    const ws = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[player.n]) ? WEEKLY_STATS[player.n].seasons[yr] : null;
+    if (ws) ws.forEach(w => { const t = _fgWeekTeam(player.n, yr, w); if (t) out.add(t); });
+    if (out.size || yr === _FG_STAMPED_YR) return out; // PLAYER_TEAM_HISTORY is stamped the same way
+    const ct = _fgModern(careerTm || _fgCareerTm(player.n, yr), yr);
+    if (ct && NFL_TEAMS.includes(ct)) { out.add(ct); return out; }
+    const pHist = (typeof PLAYER_TEAM_HISTORY !== 'undefined') ? PLAYER_TEAM_HISTORY[player.n] : null;
+    if (pHist) pHist.forEach(h => { if (yr >= h.y1 && yr <= h.y2) out.add(_fgModern(h.t, yr)); });
+    return out;
+  }
+  // Was this game played for modernTeam? seasonCache memoizes the fallback.
+  function _fgGameOnTeam(player, yr, w, modernTeam, seasonCache) {
+    const t = _fgWeekTeam(player.n, yr, w);
+    if (t) return t === modernTeam;
+    if (!seasonCache[yr]) seasonCache[yr] = _fgSeasonTeams(player, yr);
+    return seasonCache[yr].has(modernTeam);
+  }
+
   // Get best single-week game for a player on a given team from WEEKLY_STATS
   function getBestWeek(player, forTeam) {
-    const ws = (typeof WEEKLY_STATS !== 'undefined') ? WEEKLY_STATS[player.n] : null;
+    const ws = ((typeof WEEKLY_STATS !== 'undefined') ? WEEKLY_STATS[player.n] : null) || _fgLegacyWeekly(player);
     if (!ws) return null;
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
-    let best = null;
+    const seasonCache = {};
+    let best = null, bestPts = -Infinity;
     for (const [szn, weeks] of Object.entries(ws.seasons)) {
+      const yr = +szn;
       // YEAR / ERA filters
-      if (!_fgYearOk(+szn)) continue;
+      if (!_fgYearOk(yr)) continue;
       for (const w of weeks) {
         // Week filter
         if (fgWeekFilter !== 'best' && +w.wk !== +fgWeekFilter) continue;
-        // Check if this week was played for the matching team
-        if (modernTeam && w.tm) {
-          const weekTeam = ABBR_TO_FULL[w.tm] || w.tm;
-          if (weekTeam !== modernTeam) continue;
-        }
-        if (!best || w.fpts > best.fpts) {
-          best = { fpts: w.fpts, yr: +szn, wk: w.wk, tm: w.tm, opp: w.opp || '', rc: w.rc || 0, rec: w.rec || 0 };
-        }
+        if (modernTeam && !_fgGameOnTeam(player, yr, w, modernTeam, seasonCache)) continue;
+        // Weekly rows store receptions as `rec` (no `rc`); without it PPR
+        // added nothing and Best Week showed Half PPR totals.
+        const row = { fpts: w.fpts, yr: yr, wk: w.wk, tm: w.tm, opp: w.opp || '', rc: w.rc != null ? w.rc : (w.rec || 0), rec: w.rec || 0 };
+        const pts = _fgScore(row);
+        if (pts > bestPts) { best = row; bestPts = pts; }
       }
     }
     return best;
@@ -28295,6 +28468,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     fgModeWeek.classList.toggle('active', mode === 'week');
     // Show/hide week select
     document.getElementById('fgWeekSelect').style.display = mode === 'week' ? '' : 'none';
+    _fgEnsureLegacy();
     updateFgSubtitle();
     resetGame();
   }
@@ -28330,6 +28504,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     fgYear = this.value;
     if (fgYear !== 'best' && fgEra !== 'all') { fgEra = 'all'; _fgPaintEra(); }
     _fgSyncType();
+    _fgEnsureLegacy();
     if (_fgWindowPre1999()) _fgPrep7098();
     updateFgSubtitle();
     resetGame();
@@ -28340,6 +28515,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (Object.keys(roster).length > 0 && !gameOver) { this.value = fgWeekFilter; return; }
     fgWeekFilter = this.value;
     _fgSyncType();
+    _fgEnsureLegacy();
     updateFgSubtitle();
     resetGame();
   });
@@ -28369,6 +28545,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         }
       });
     }
+    _fgEnsureLegacy();
+    if (_fgWindowPre1999()) _fgPrep7098();
     updateFgSubtitle();
     resetGame();
   }
@@ -28396,58 +28574,24 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   function getBestSeason(player, forTeam) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
 
-    // Build reverse lookup: abbreviation -> modern full name
-    const _abbrToModern = {};
-    if (typeof TEAM_ABBR_MAP !== 'undefined') {
-      Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
-        _abbrToModern[abbr] = TEAM_ALIASES[full] || full;
-      });
-    }
-
-    // If player has year-by-year career data (from D or LDB), use it for team-specific filtering
-    // (_fgCareerOf also appends the 1970-98 PFR seasons the career was missing).
+    // If player has year-by-year career data (from D or LDB), use it for team-specific filtering.
+    // A season only counts when a source puts the player on this team that
+    // year (_fgSeasonTeams) — unknown seasons used to count for every team.
+    // (_fgCareerOf also appends the 1970-98 PFR seasons the career was missing.)
     const career = _fgCareerOf(player);
     if (career.length && modernTeam) {
       let best = null;
-      const activeHist = ACTIVE_TEAM_HISTORY[player.n];
-      const playerHist = (typeof PLAYER_TEAM_HISTORY !== 'undefined') ? PLAYER_TEAM_HISTORY[player.n] : null;
-
       career.forEach(s => {
-        // Year filter
         if (!_fgYearOk(s.yr)) return;
-
-        let onTeam = true; // default: include season
-
-        const seasonTeams = _fgSeasonTeams(player, s);
-        if (seasonTeams) {
-          // PFR 1970-98 seasons know their franchise; an empty list (multi-team season
-          // with no neighbours) keeps the default.
-          if (seasonTeams.length && !seasonTeams.includes(modernTeam)) onTeam = false;
-        } else if (activeHist) {
-          const st = getTeamForYear(player.n, s.yr);
-          if (st) {
-            const stModern = TEAM_ALIASES[st] || st;
-            if (stModern !== modernTeam) onTeam = false;
-          }
-        } else if (playerHist) {
-          let abbr = null;
-          for (const h of playerHist) {
-            if (s.yr >= h.y1 && s.yr <= h.y2) { abbr = h.t; break; }
-          }
-          if (abbr) {
-            const fullModern = _abbrToModern[abbr] || abbr;
-            if (fullModern !== modernTeam) onTeam = false;
-          }
-        }
-
-        if (onTeam && (!best || s.fpts > best.fpts)) best = s;
+        if (!_fgSeasonTeams(player, s.yr, s.tm).has(modernTeam)) return;
+        if (!best || _fgScore(s) > _fgScore(best)) best = s;
       });
       if (best) return best;
     } else if (career.length && !modernTeam) {
       let best = null;
       career.forEach(s => {
         if (!_fgYearOk(s.yr)) return;
-        if (!best || s.fpts > best.fpts) best = s;
+        if (!best || _fgScore(s) > _fgScore(best)) best = s;
       });
       if (best) return best;
     }
@@ -28458,52 +28602,76 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     // window and use the best of those for years the career doesn't cover.
     if ((fgYear !== 'best' || fgEra !== 'all') && typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[player.n] && WEEKLY_STATS[player.n].seasons) {
       const careerYrs = new Set(career.map(s => s.yr));
+      const seasonCache = {};
       let best = null;
       for (const [szn, weeks] of Object.entries(WEEKLY_STATS[player.n].seasons)) {
         const yr = +szn;
         if (!_fgYearOk(yr) || careerYrs.has(yr)) continue;
         const maxWk = yr >= 2021 ? 18 : 17;
-        let sum = 0, gp = 0, tm = null;
+        let sum = 0, rc = 0, gp = 0, tm = null;
         for (const w of weeks) {
           if ((w.wk || 0) > maxWk) continue;
-          if (modernTeam && w.tm && (ABBR_TO_FULL[w.tm] || w.tm) !== modernTeam) continue;
-          sum += w.fpts || 0; gp++; tm = w.tm || tm;
+          if (modernTeam && !_fgGameOnTeam(player, yr, w, modernTeam, seasonCache)) continue;
+          sum += w.fpts || 0; rc += w.rc != null ? w.rc : (w.rec || 0); gp++; tm = w.tm || tm;
         }
-        if (gp && (!best || sum > best.fpts)) best = { yr: yr, fpts: Math.round(sum * 10) / 10, gp: gp, tm: tm, inProgress: yr >= new Date().getFullYear() };
+        const row = { yr: yr, fpts: Math.round(sum * 10) / 10, rc: rc, gp: gp, tm: tm, inProgress: yr >= new Date().getFullYear() };
+        if (gp && (!best || _fgScore(row) > _fgScore(best))) best = row;
       }
       if (best) return best;
     }
 
     // Historical/HP players: use per-team lookup
-    if (player._bestByTeam && Object.keys(player._bestByTeam).length > 0) {
+    // HP's per-team keys for 2025 inherit the same 2026-team stamp — keep
+    // those only when ACTIVE_TEAM_HISTORY agrees.
+    const hpBest = player._bestByTeam ? Object.entries(player._bestByTeam).filter(([tk, s]) =>
+      s && (s.yr !== _FG_STAMPED_YR || _fgAthTeams(player.n, s.yr).has(TEAM_ALIASES[tk] || tk))) : [];
+    if (hpBest.length) {
       // YEAR / ERA filters: HP only stores one best season per team, so a
       // legend counts when that season sits inside the window.
       if (fgYear !== 'best' || fgEra !== 'all') {
         let best = null;
-        Object.entries(player._bestByTeam).forEach(([tk, s]) => {
+        hpBest.forEach(([tk, s]) => {
           if (!_fgYearOk(s.yr)) return;
           if (modernTeam && (TEAM_ALIASES[tk] || tk) !== modernTeam) return;
-          if (!best || s.fpts > best.fpts) best = s;
+          if (!best || _fgScore(s) > _fgScore(best)) best = s;
         });
         return best;
       }
-      if (modernTeam && player._bestByTeam[modernTeam]) {
-        return player._bestByTeam[modernTeam];
-      }
       if (modernTeam) {
-        for (const [tk, tv] of Object.entries(player._bestByTeam)) {
-          const tkModern = TEAM_ALIASES[tk] || tk;
-          if (tkModern === modernTeam) return tv;
-        }
+        const hit = hpBest.find(([tk]) => (TEAM_ALIASES[tk] || tk) === modernTeam);
+        return hit ? hit[1] : null; // no season for this team — don't borrow another team's
       }
-      const vals = Object.values(player._bestByTeam);
-      return vals.length ? vals[0] : null;
+      return hpBest[0][1];
     }
 
     return null;
   }
 
   // Get the year range a player was on a specific team
+  // Year span on a team from the stats themselves, for players the team
+  // history maps don't cover (list label fallback).
+  function _fgDataTeamYears(player, forTeam) {
+    const modernTeam = TEAM_ALIASES[forTeam] || forTeam;
+    const yrs = [];
+    _fgCareerOf(player).forEach(s => { if (_fgSeasonTeams(player, s.yr, s.tm).has(modernTeam)) yrs.push(+s.yr); });
+    // 1970-98 PFR year map, incl. seasons under the file's points floor (franchise only).
+    if (player._tmByYr) Object.entries(player._tmByYr).forEach(([yr, ts]) => { if (ts.includes(modernTeam)) yrs.push(+yr); });
+    const ws = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[player.n]) ? WEEKLY_STATS[player.n].seasons : null;
+    if (ws) {
+      const seasonCache = {};
+      Object.entries(ws).forEach(([szn, weeks]) => {
+        if (weeks.some(w => _fgGameOnTeam(player, +szn, w, modernTeam, seasonCache))) yrs.push(+szn);
+      });
+    }
+    if (player._bestByTeam) Object.entries(player._bestByTeam).forEach(([tk, s]) => {
+      if ((TEAM_ALIASES[tk] || tk) === modernTeam && s && s.yr && (s.yr !== _FG_STAMPED_YR || _fgAthTeams(player.n, s.yr).has(modernTeam))) yrs.push(+s.yr);
+    });
+    if (!yrs.length) return '';
+    const lo = Math.min.apply(null, yrs), hi = Math.max.apply(null, yrs);
+    if (!player._retired && hi >= new Date().getFullYear()) return lo + '–pres';
+    return lo === hi ? String(lo) : lo + '–' + hi;
+  }
+
   function getTeamYears(player, forTeam) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
     if (!modernTeam) return player._yrs || '';
@@ -28512,9 +28680,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
     // Seed with the PFR 1970-98 seasons that know their franchise, so a legend whose
     // history tables start with the 1999 weekly data shows the whole stint.
-    _fgCareerOf(player).forEach(s => {
-      const st = _fgSeasonTeams(player, s);
-      if (st && st.includes(modernTeam)) { if (s.yr < minYr) minYr = s.yr; if (s.yr > maxYr) maxYr = s.yr; }
+    if (player._tmByYr) Object.entries(player._tmByYr).forEach(([yr, ts]) => {
+      if (ts.includes(modernTeam)) { if (+yr < minYr) minYr = +yr; if (+yr > maxYr) maxYr = +yr; }
     });
 
     // Check ACTIVE_TEAM_HISTORY (full team names)
@@ -28557,22 +28724,24 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       }
     }
 
-    // Fallback: scan career array for seasons on this team (PFR 1970-98 seasons carry
-    // their franchise; the rest go through the active-history table).
+    // Years the stats themselves put him on this team — ahead of the
+    // single-team / career-span guesses below (Blaine Gabbert showed his
+    // whole 2011-2023 career on the Jaguars).
+    const dataYrs = _fgDataTeamYears(player, forTeam);
+    if (dataYrs) return dataYrs;
+
+    // Fallback: scan career array for seasons on this team
     const career = _fgCareerOf(player);
     if (career.length && modernTeam) {
       career.forEach(s => {
         const yr = s.yr;
-        const seasonTeams = _fgSeasonTeams(player, s);
-        let on = false;
-        if (seasonTeams) on = seasonTeams.includes(modernTeam);
-        else {
-          const sTeam = getTeamForYear(player.n, yr);
-          if (sTeam) on = (TEAM_ALIASES[sTeam] || sTeam) === modernTeam;
-        }
-        if (on) {
-          if (yr < minYr) minYr = yr;
-          if (yr > maxYr) maxYr = yr;
+        const sTeam = getTeamForYear(player.n, yr);
+        if (sTeam) {
+          const sModern = TEAM_ALIASES[sTeam] || sTeam;
+          if (sModern === modernTeam) {
+            if (yr < minYr) minYr = yr;
+            if (yr > maxYr) maxYr = yr;
+          }
         }
       });
       if (minYr !== Infinity) {
@@ -28727,8 +28896,24 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     highScoreEl.textContent = hs > 0 ? `HIGH SCORE: ${hs.toFixed(1)}` : '';
   }
 
-  // Filtered games: the positions each franchise can field inside the window, computed
-  // once per game from the players who score in it (resetGame clears the cache; a drawn
+  function getRandomTeam() {
+    if (fgLeague === 'college') {
+      const available = COLLEGE_CONFS.filter(c => !usedTeams.includes(c));
+      if (!available.length) return COLLEGE_CONFS[Math.floor(Math.random()*COLLEGE_CONFS.length)];
+      return available[Math.floor(Math.random()*available.length)];
+    }
+    let available = NFL_TEAMS.filter(t => !usedTeams.includes(t));
+    if (fgType === 'custom' && (fgYear !== 'best' || fgEra !== 'all')) {
+      // YEAR / ERA games: skip franchises with nobody to draft in the window (the
+      // Jaguars in 1988, the Seahawks in 1975) instead of burning the player's skips.
+      const stocked = _fgStockedTeams(available);
+      if (stocked.length) available = stocked;
+    }
+    if (!available.length) return NFL_TEAMS[Math.floor(Math.random()*NFL_TEAMS.length)];
+    return available[Math.floor(Math.random()*available.length)];
+  }
+  // The positions each franchise can field inside the YEAR / ERA window, computed once
+  // per game from the players who score in it (resetGame clears the cache; a drawn
   // team leaves through usedTeams, so used players need no re-scan).
   let _fgStockCache = null;
   function _fgStockedTeams(available) {
@@ -28744,26 +28929,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     return available.filter(t => [...(_fgStockCache[t] || [])].some(ps => getOpenSlotsForPos(ps).length));
   }
 
-  function getRandomTeam() {
-    if (fgLeague === 'college') {
-      const available = COLLEGE_CONFS.filter(c => !usedTeams.includes(c));
-      if (!available.length) return COLLEGE_CONFS[Math.floor(Math.random()*COLLEGE_CONFS.length)];
-      return available[Math.floor(Math.random()*available.length)];
-    }
-    let available = NFL_TEAMS.filter(t => !usedTeams.includes(t));
-    if (fgType === 'custom') {
-      // Filtered games: skip franchises with nobody to draft in the window (the Jaguars
-      // in 1988, the Seahawks in 1975) instead of burning the player's skips on them.
-      const stocked = _fgStockedTeams(available);
-      if (stocked.length) available = stocked;
-    }
-    if (!available.length) return NFL_TEAMS[Math.floor(Math.random()*NFL_TEAMS.length)];
-    return available[Math.floor(Math.random()*available.length)];
-  }
-
   function startDraft() {
     if (gameOver) return;
-    // A 1970-98 window needs the season-totals file in the pool first.
+    // A 1970-98 window needs the season-totals file (and the game logs) in the pool first.
     if (_fgWindowPre1999() && !_fg7098Applied) { _fgPrep7098(startDraft); return; }
     // Cancel any in-flight spinner loop before starting a new one. Without this a
     // re-entrant call (double-click on Start Draft, or starting a round while a
@@ -28862,28 +29030,14 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
     if (fgLeague === 'college') {
       currentTeamPlayers = CFG_POOL.filter(p => p._cfgConfs.includes(currentTeam) && !usedPlayers.has(p._cfgIdx));
-      if (fgMode === 'week') {
-        const withData = currentTeamPlayers.filter(p => typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[p.n]);
-        const positionsWithData = new Set(withData.map(p => p.s));
-        currentTeamPlayers = currentTeamPlayers.filter(p => {
-          if (typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[p.n]) return true;
-          return !positionsWithData.has(p.s);
-        });
-      }
     } else {
       currentTeamPlayers = FG_POOL.filter(p => playerPlaysForTeam(p, currentTeam) && !usedPlayers.has(p._fgIdx));
-      if (fgMode === 'week') {
-        const withData = currentTeamPlayers.filter(p => typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]);
-        const positionsWithData = new Set(withData.map(p => p.s));
-        currentTeamPlayers = currentTeamPlayers.filter(p => {
-          if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]) return true;
-          return !positionsWithData.has(p.s);
-        });
-      }
     }
 
-    // Filtered games: only players who have a score inside the window.
-    if (fgType === 'custom') currentTeamPlayers = currentTeamPlayers.filter(p => getScore(p, currentTeam));
+    // Only players with a real season / game for THIS team inside the YEAR /
+    // ERA window. Covers every mode: a Best Week pool drops players with no
+    // weekly logs (too old for the box-score data) instead of listing them at 0.
+    currentTeamPlayers = currentTeamPlayers.filter(p => getScore(p, currentTeam));
 
     // Hide spinner, show team reveal
     spinnerWrap.style.display = 'none';
@@ -28917,11 +29071,17 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       players = players.filter(p => p.n.toLowerCase().includes(lower));
     }
     const posOrder = {QB:0, RB:1, WR:2, TE:3};
-    players.sort((a,b) => {
-      const pa = posOrder[a.s] ?? 9, pb = posOrder[b.s] ?? 9;
-      if (pa !== pb) return pa - pb;
-      return a.n.localeCompare(b.n);
-    });
+    if (fgCheat) {
+      // Cheat: highest points first, any position.
+      const pts = new Map(players.map(p => [p, _fgScore(getScore(p, currentTeam))]));
+      players.sort((a, b) => (pts.get(b) - pts.get(a)) || a.n.localeCompare(b.n));
+    } else {
+      players.sort((a,b) => {
+        const pa = posOrder[a.s] ?? 9, pb = posOrder[b.s] ?? 9;
+        if (pa !== pb) return pa - pb;
+        return a.n.localeCompare(b.n);
+      });
+    }
 
     if (!players.length) {
       playerListEl.innerHTML = '<div style="text-align:center;color:var(--text2);padding:2rem;font-size:.85rem">' + (query ? 'No matching players.' : (fgLeague === 'college' ? 'No available players in this conference. Skip to next.' : 'No available players on this team. Skip to next team.')) + '</div>';
@@ -28943,8 +29103,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       card.className = 'fg-player-card' + (!fits ? ' no-fit' : '');
       let metaText;
       if (fgLeague === 'college') {
-        const schools = p._teams ? p._teams.join(', ') : '';
-        const yrRange = p._yrs && p._yrs.length ? p._yrs[0] + '–' + p._yrs[p._yrs.length-1] : '';
+        // Schools + years inside the drafted conference only.
+        const inConf = (typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[p.n] ? COLLEGE_STATS[p.n] : []).filter(s => (CONF_ALIASES[s.conf] || s.conf) === currentTeam);
+        const confYrs = inConf.map(s => +s.yr).sort((a, b) => a - b);
+        const schools = inConf.length ? [...new Set(inConf.map(s => s.tm))].join(', ') : (p._teams ? p._teams.join(', ') : '');
+        const yrRange = confYrs.length ? (confYrs[0] === confYrs[confYrs.length-1] ? String(confYrs[0]) : confYrs[0] + '–' + confYrs[confYrs.length-1]) : (p._yrs && p._yrs.length ? p._yrs[0] + '–' + p._yrs[p._yrs.length-1] : '');
         metaText = schools + (yrRange ? ' (' + yrRange + ')' : '');
       } else {
         metaText = getTeamYears(p, currentTeam) || (p._yrs || '');
@@ -28955,6 +29118,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
           <div class="fg-pc-name">${p.n}</div>
           <div class="fg-pc-meta">${metaText}</div>
         </div>
+        ${fgCheat ? '<span class="fg-pc-score">' + _fgScore(best).toFixed(1) + '</span>' : ''}
         ${!fits ? '<span class="fg-pc-nobest">No open slot</span>' : ''}
       `;
       if (fits) {
@@ -28967,6 +29131,16 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   searchInput.addEventListener('input', () => {
     renderPlayerList(searchInput.value.trim());
   });
+  const fgCheatBtn = document.getElementById('fgCheatBtn');
+  if (fgCheatBtn) {
+    fgCheatBtn.addEventListener('click', () => {
+      fgCheat = !fgCheat;
+      fgCheatBtn.classList.toggle('active', fgCheat);
+      _fgSyncType();
+      updateFgSubtitle();
+      renderPlayerList(searchInput.value.trim());
+    });
+  }
 
   function selectPlayer(player) {
     const fittingSlots = getOpenSlotsForPos(player.s);
@@ -55762,10 +55936,149 @@ window.fmtHeight = fmtHeight;
 
   function _getLayout(count) {
     const sel = document.getElementById('triviaLayout').value;
-    if (sel === 'auto') return _autoLayout(count);
+    if (sel === 'auto' || sel === 'tiers') return _autoLayout(count);
     const parts = sel.split('x');
     return [parseInt(parts[0]), parseInt(parts[1])];
   }
+
+  // ── TIER BOARD (Jack 2026-10-28: "for our trivia boards can we also replicate
+  // our fantasy rankings tiers boards") ──────────────────────────────────────
+  // Layout "tiers": the items sit in rank tiers like the rankings page's tier
+  // cards — a colored tier strip, then one tcv-card-style chip per item (rank
+  // top-left, stat top-right, team logo, and after the reveal the headshot +
+  // name strip). Chips keep the .trivia-cell class and data-idx, so reveal /
+  // wrong / give-up / the one search bar / the daily results array and share
+  // grid all work unchanged. Breaks default to 1-3 / 4-8 / 9-14 / 15-20 /
+  // 21-25 (then fives); a board can carry its own via data.tiers = [3,5,6,…],
+  // which the daily lock saves and restores.
+  const _TRIVIA_TIER_DEFAULT = [3, 5, 6, 6, 5];
+  function _triviaLayoutSel() { const el = document.getElementById('triviaLayout'); return (el && el.value) || 'auto'; }
+  function _triviaIsTierLayout() { return _triviaLayoutSel() === 'tiers'; }
+  function _triviaTierSizes(n, data) {
+    const own = (data && Array.isArray(data.tiers)) ? data.tiers.map(x => parseInt(x, 10)).filter(x => x > 0) : [];
+    const src = own.length ? own : _TRIVIA_TIER_DEFAULT;
+    const out = [];
+    let used = 0, k = 0;
+    while (used < n) {
+      let sz = k < src.length ? src[k] : 5;
+      if (used + sz > n) sz = n - used;
+      out.push(sz); used += sz; k++;
+    }
+    return out;
+  }
+  // Same palette as the rankings tier letters (_TCV_VB_TIER_COLORS in core
+  // app.js); the local copy only covers a split build where that const is absent.
+  const _TRIVIA_TIER_PALETTE = [
+    { a: '#dc2626', b: '#f87171', light: false }, { a: '#ea580c', b: '#fb923c', light: false },
+    { a: '#ca8a04', b: '#facc15', light: true },  { a: '#16a34a', b: '#4ade80', light: false },
+    { a: '#0284c7', b: '#38bdf8', light: false }, { a: '#7c3aed', b: '#a78bfa', light: false },
+    { a: '#475569', b: '#94a3b8', light: false }
+  ];
+  function _triviaTierColor(t) {
+    const pal = (typeof _TCV_VB_TIER_COLORS !== 'undefined' && _TCV_VB_TIER_COLORS.length) ? _TCV_VB_TIER_COLORS : _TRIVIA_TIER_PALETTE;
+    return pal[t % pal.length];
+  }
+  const _TRIVIA_ABBR_TO_TEAM = {
+    ARI: 'Arizona Cardinals', ATL: 'Atlanta Falcons', BAL: 'Baltimore Ravens', BUF: 'Buffalo Bills',
+    CAR: 'Carolina Panthers', CHI: 'Chicago Bears', CIN: 'Cincinnati Bengals', CLE: 'Cleveland Browns',
+    DAL: 'Dallas Cowboys', DEN: 'Denver Broncos', DET: 'Detroit Lions', GB: 'Green Bay Packers',
+    HOU: 'Houston Texans', IND: 'Indianapolis Colts', JAX: 'Jacksonville Jaguars', KC: 'Kansas City Chiefs',
+    LAC: 'Los Angeles Chargers', LAR: 'Los Angeles Rams', LV: 'Las Vegas Raiders', MIA: 'Miami Dolphins',
+    MIN: 'Minnesota Vikings', NE: 'New England Patriots', NO: 'New Orleans Saints', NYG: 'New York Giants',
+    NYJ: 'New York Jets', PHI: 'Philadelphia Eagles', PIT: 'Pittsburgh Steelers', SF: 'San Francisco 49ers',
+    SEA: 'Seattle Seahawks', TB: 'Tampa Bay Buccaneers', TEN: 'Tennessee Titans', WAS: 'Washington Commanders'
+  };
+  // Chip colors = the NFL team's primary fill + secondary ring, as on the
+  // rankings cards. Items carry abbreviations; colleges / unknown teams get the
+  // neutral card gradient.
+  function _triviaTeamColors(team) {
+    const neutral = { p: '#1f2937', s: '#64748b' };
+    if (!team) return neutral;
+    const up = String(team).toUpperCase();
+    const canon = _TEAM_ABBR_ALIASES[up] || up;
+    const full = _TRIVIA_ABBR_TO_TEAM[canon] || team;
+    const c = (typeof _tcvTC === 'function') ? _tcvTC(full) : null;
+    return c || neutral;
+  }
+  function _triviaChipRing(tc) {
+    // secondary color ring unless it is too dark to read on the fill (rankings-card rule)
+    const hex = (typeof _tcvLum === 'function' && _tcvLum(tc.s) < 0.16) ? tc.p : tc.s;
+    const m = String(hex).replace('#', '');
+    if (m.length < 6) return '148,163,184';
+    return parseInt(m.slice(0, 2), 16) + ',' + parseInt(m.slice(2, 4), 16) + ',' + parseInt(m.slice(4, 6), 16);
+  }
+  // Last-resort team lookup for an item with no team (both layouts)
+  function _triviaFillTeam(it) {
+    if (!it || it.team) return;
+    const nameMatch = (it.answer || '').match(/^(.+?)\s*[\(\,]/);
+    const yearMatch = (it.answer || '').match(/\b((?:19|20)\d{2})\b/);
+    const pName = nameMatch ? nameMatch[1].trim() : (it.answer || '').trim();
+    const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
+    if (!pName) return;
+    // Try _getTeamForPlayerYear
+    const tm = pYear ? (typeof _getTeamForPlayerYear === 'function' ? _getTeamForPlayerYear(pName, pYear) : null) : null;
+    if (tm) { it.team = tm; return; }
+    // Try D array current team as absolute last resort
+    if (typeof D !== 'undefined') {
+      const dEntry = D.find(p => p.n === pName);
+      if (dEntry && dEntry.t) it.team = dEntry.t;
+    }
+  }
+  // One chip. Same DOM hooks as a grid cell: .trivia-cell[data-idx], the
+  // .trivia-cell-body / .trivia-cell-hint pair the reveal code hides and
+  // restores, .trivia-cell-answer, and the per-square input for team nights.
+  function _triviaTierChipHtml(it, i, mode, freeBar) {
+    const logoUrl = it.logo || _triviaLogoUrl(it.team || '');
+    const tc = _triviaTeamColors(it.team);
+    const ring = _triviaChipRing(tc);
+    const cat = it.category || '';
+    const rankTxt = (it.rank != null && it.rank !== '') ? String(it.rank) : (/^#\d+$/.test(cat) ? cat.slice(1) : String(i + 1));
+    const stat = it.hint || '';
+    const sub = /^#\d+$/.test(cat) ? '' : cat;   // "Pick #3"-style categories ride the bottom strip; "#rank" is already the badge
+    const up = String(it.team || '').toUpperCase();
+    const teamTxt = _TEAM_ABBR_ALIASES[up] || up;
+    const click = mode === 'reveal' ? `window._triviaCellClick(${i})` : `window._triviaCellFocus(${i})`;
+    // Team fill + ring ride CSS custom properties (trivia.css paints them): the
+    // reset / post-game paths clear style.background on every cell, which
+    // would wipe an inline gradient but leaves the variables alone.
+    let h = `<div class="trivia-cell tcv-card trivia-tier-chip" data-idx="${i}" onclick="${click}" style="--chip-p:${tc.p};--chip-ring:${ring}">`;
+    h += `<div class="tcv-card-rank">${_esc(rankTxt)}</div>`;
+    if (stat) h += `<div class="tcv-card-stats trivia-chip-stat trivia-cell-hint" title="${_esc(stat)}">${_esc(stat)}</div>`;
+    h += '<div class="tcv-card-photo trivia-cell-body">';
+    if (logoUrl) h += `<img class="tcv-card-bg-logo trivia-cell-logo" src="${logoUrl}" alt="${_esc(it.team || '')}" loading="lazy" onerror="this.style.display='none'">`;
+    else h += `<div class="trivia-chip-noteam">${_esc(teamTxt || '?')}</div>`;
+    h += '</div>';
+    h += `<div class="tcv-card-name trivia-chip-sub" title="${_esc(sub || teamTxt)}">${_esc(sub || teamTxt || '?')}</div>`;
+    h += `<div class="trivia-cell-answer">${_esc(it.answer || '')}</div>`;
+    if (mode === 'guess' && !freeBar) {
+      h += `<input type="text" class="trivia-guess-input" data-idx="${i}" placeholder="guess..." autocomplete="off" oninput="window._triviaOnInput(${i},this)" onfocus="window._triviaOnInput(${i},this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(${i})}">`;
+    }
+    h += '</div>';
+    return h;
+  }
+  function _triviaTierBoardHtml(items, data, mode, freeBar, boardBg) {
+    const sizes = _triviaTierSizes(items.length, data);
+    let html = `<div class="trivia-tierboard" style="background:${boardBg}">`;
+    let p = 0;
+    sizes.forEach((sz, t) => {
+      const c = _triviaTierColor(t);
+      const lo = p + 1, hi = p + sz;
+      html += `<div class="tcv-tier-row trivia-tier-row" data-tier="${t}">`;
+      html += `<div class="tcv-letter trivia-tier-letter${c.light ? ' tcv-letter-light' : ''}" style="background:linear-gradient(135deg,${c.a},${c.b})" title="Tier ${t + 1} · ranks ${lo}–${hi}${mode === 'reveal' ? ' · click to reveal the whole tier' : ''}" onclick="window._triviaTierClick(${t})"><span class="trivia-tier-word">TIER</span><span class="trivia-tier-num">${t + 1}</span><span class="trivia-tier-rng">${lo}–${hi}</span></div>`;
+      html += '<div class="tcv-cards trivia-tier-cards">';
+      for (let i = p; i < p + sz; i++) html += _triviaTierChipHtml(items[i], i, mode, freeBar);
+      html += '</div></div>';
+      p += sz;
+    });
+    html += '</div>';
+    return html;
+  }
+  // Host mode: a tier strip reveals its whole tier (guess games ignore it)
+  window._triviaTierClick = function(t) {
+    const modeEl = document.getElementById('triviaMode');
+    if (!modeEl || modeEl.value !== 'reveal') return;
+    document.querySelectorAll(`.trivia-tier-row[data-tier="${t}"] .trivia-cell[data-idx]`).forEach(c => window._triviaCellClick(parseInt(c.dataset.idx, 10)));
+  };
 
   function _renderBoard(data) {
     _triviaData = data;
@@ -55799,6 +56112,7 @@ window.fmtHeight = fmtHeight;
     // Reset score
     _triviaScore = { correct: 0, wrong: 0, misses: 0, total: items.length };
     const freeBar = mode === 'guess' && _triviaFreeBarOn();
+    const _adm = (typeof window.isAdmin === 'function' && window.isAdmin());
     const scoreBar = document.getElementById('triviaScoreBar');
     if (mode === 'guess') {
       scoreBar.style.display = '';
@@ -55808,39 +56122,29 @@ window.fmtHeight = fmtHeight;
     }
 
     let html = `<div class="trivia-board-outer${freeBar ? ' trivia-freebar-board' : ''}" style="background:${boardBg};border-color:${boardBorder}">`;
-    html += `<div class="trivia-board-title" contenteditable="true" id="triviaBoardTitle" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(titleText)}</div>`;
+    html += `<div class="trivia-board-title"${_adm ? ' contenteditable="true"' : ''} id="triviaBoardTitle" style="background:linear-gradient(135deg,${color},${_darken(color,.2)})">${_esc(titleText)}</div>`;
     if (freeBar) {
       // One search bar for the whole board: a hit lands on whichever square
       // holds that player (see _triviaFreeGuess).
       html += `<div class="trivia-freebar-wrap"><input type="text" id="triviaFreeInput" class="trivia-freebar" placeholder="Type any player on the board…" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="window._triviaOnInput(-1,this)" onfocus="window._triviaOnInput(-1,this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(-1)}"><div class="trivia-freebar-note" id="triviaFreeNote"></div></div>`;
     }
-    html += `<div class="trivia-grid" style="grid-template-columns:repeat(${cols},1fr);background:${boardBg}">`;
-
     const cellHeaderMode = document.getElementById('triviaCellHeader').value;
+    // Last-resort team lookup if team is empty (both layouts)
+    items.forEach(_triviaFillTeam);
+    // TIER BOARD layout (see _triviaTierBoardHtml) or the classic grid
+    const tierMode = _triviaIsTierLayout();
+    data.layout = tierMode ? 'tiers' : _triviaLayoutSel();
+    if (tierMode) {
+      html += _triviaTierBoardHtml(items, data, mode, freeBar, boardBg);
+    } else {
+    html += `<div class="trivia-grid" style="grid-template-columns:repeat(${cols},1fr);background:${boardBg}">`;
 
     for (let i = 0; i < totalCells; i++) {
       if (i < items.length) {
         const it = items[i];
-        // Last-resort team lookup if team is empty
-        if (!it.team) {
-          const nameMatch = (it.answer || '').match(/^(.+?)\s*[\(\,]/);
-          const yearMatch = (it.answer || '').match(/\b((?:19|20)\d{2})\b/);
-          const pName = nameMatch ? nameMatch[1].trim() : (it.answer || '').trim();
-          const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
-          if (pName) {
-            // Try _getTeamForPlayerYear
-            const tm = pYear ? (typeof _getTeamForPlayerYear === 'function' ? _getTeamForPlayerYear(pName, pYear) : null) : null;
-            if (tm) { it.team = tm; }
-            else {
-              // Try D array current team as absolute last resort
-              if (typeof D !== 'undefined') {
-                const dEntry = D.find(p => p.n === pName);
-                if (dEntry && dEntry.t) it.team = dEntry.t;
-              }
-            }
-          }
-        }
-        const logoUrl = _triviaLogoUrl(it.team || '');
+        // A locked board may carry its own logo URL (college boards from the
+        // nightly job: ESPN NCAA logos for schools the site map lacks).
+        const logoUrl = it.logo || _triviaLogoUrl(it.team || '');
         if (mode === 'reveal') {
           html += `<div class="trivia-cell" data-idx="${i}" onclick="window._triviaCellClick(${i})">`;
         } else {
@@ -55866,12 +56170,14 @@ window.fmtHeight = fmtHeight;
       }
     }
 
-    html += '</div></div>';
+    html += '</div>';
+    }
+    html += '</div>';
 
     // Missing players panel
     const missing = data.missing || [];
     if (missing.length > 0) {
-      html += '<div style="margin-top:12px;padding:14px 16px;border-radius:10px;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25)">';
+      html += '<div class="trivia-admin-only" style="margin-top:12px;padding:14px 16px;border-radius:10px;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25)">';
       html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1px;color:#fb923c;margin-bottom:8px">⚠ DATABASE GAPS DETECTED (' + missing.length + ')</div>';
       html += '<div style="font-size:.75rem;color:var(--text2);margin-bottom:8px">These players should be on the board but are missing or have incorrect data in your database:</div>';
       missing.forEach(m => {
@@ -55888,6 +56194,13 @@ window.fmtHeight = fmtHeight;
     }
 
     area.innerHTML = html;
+    // TIER BOARD on phones: scale the fixed-width chips so three fit a row
+    // (the rankings page does the same); zoom keeps the card proportions.
+    const _tierEl = area.querySelector('.trivia-tierboard');
+    if (_tierEl && window.matchMedia && window.matchMedia('(max-width:600px)').matches) {
+      const _w = _tierEl.clientWidth || (window.innerWidth - 60);
+      if (_w > 100) _tierEl.style.zoom = String(Math.min(1, _w / 384));
+    }
     // Apply board size
     const sizePct = document.getElementById('triviaBoardSize').value;
     const boardEl = area.querySelector('.trivia-board-outer');
@@ -56365,7 +56678,9 @@ window.fmtHeight = fmtHeight;
 
     // Check if guess matches just the player name (answer might be "Player Name (Year)")
     // Split answer on common separators
-    const answerParts = answer.split(/[\(\,\-–—]/);
+    // (a dash splits only with spaces around it — "Amon-Ra" is one name, and
+    // "Amon" alone must not count as a hit)
+    const answerParts = answer.split(/\s*[\(,]|\s[-–—]\s/);
     for (const part of answerParts) {
       if (norm(part) === g) return true;
     }
@@ -56388,14 +56703,18 @@ window.fmtHeight = fmtHeight;
       if (gFirst === aFirst && gLast === aLast) return true;
     }
 
-    // Levenshtein distance for typo tolerance (only for longer names)
-    if (g.length >= 5 && a.length >= 5) {
-      const dist = _levenshtein(g, a);
-      if (dist <= 2) return true;
+    // Typo tolerance, word by word: every word of the guess must be within
+    // an edit or two of the matching word (short words get none). A whole-
+    // string distance let "St. Brown" hit "A.J. Brown" (2 edits apart).
+    const _tol = (w) => w.length >= 8 ? 2 : w.length >= 5 ? 1 : 0;
+    const _closeWords = (gw, aw) => gw.length === aw.length && gw.length > 0
+      && gw.every((w, i) => w === aw[i] || _levenshtein(w, aw[i]) <= _tol(aw[i]));
+    if (g.length >= 5) {
+      if (_closeWords(gWords, aWords)) return true;
       // Also check against just the name part
       for (const part of answerParts) {
         const np = norm(part);
-        if (np.length >= 5 && _levenshtein(g, np) <= 2) return true;
+        if (np.length >= 5 && _closeWords(gWords, np.split(' '))) return true;
       }
     }
 
@@ -56640,15 +56959,95 @@ window.fmtHeight = fmtHeight;
   }
 
   // Look up ESPN headshot for a player name (string URL, '' = show initials).
-  function _triviaGetHeadshot(answerText, team) { return _triviaGetHeadshotInfo(answerText, team).url; }
-  // Same lookup with attribution: {url, credit, page}. `credit` is set only for
-  // LEGEND_HEADSHOTS (Wikimedia Commons) photos — the reveal puts it in the img title.
-  // `team` (the cell's team abbreviation, any legacy spelling) picks that team's jersey
-  // photo from LEGEND_HEADSHOTS[name].byTeam when the builder found one (Jack 10-28:
-  // Marcus Allen as a Raider on a Raiders cell); ESPN headshots ignore it (latest team).
-  function _triviaGetHeadshotInfo(answerText, team) {
+  function _triviaGetHeadshot(answerText, team, yr) { return _triviaGetHeadshotInfo(answerText, team, yr).url; }
+
+  // Board year for a reveal: the item's own `yr` (set by the generator: the season, or the
+  // career range's midpoint), else a year in the answer text ("(2008)", "(1976–1984)" →
+  // midpoint, "(2008 Wk5 vs DAL)"), else the board's year filter, else a year in its title.
+  function _triviaYearOf(answerText, yr) {
+    if (yr != null && isFinite(+yr) && +yr > 1900) return +yr;
+    const s = String(answerText || '');
+    const range = s.match(/\b((?:19|20)\d{2})\s*[–\-]\s*((?:19|20)\d{2})\b/);
+    if (range) return Math.round((+range[1] + +range[2]) / 2);
+    const one = s.match(/\b((?:19|20)\d{2})\b/);
+    if (one) return +one[1];
+    const f = _triviaData && _triviaData._filter;
+    if (f && f.year && f.year !== 'all' && isFinite(+f.year)) return +f.year;
+    const t = _triviaData && _triviaData.title ? String(_triviaData.title).match(/\b((?:19|20)\d{2})\b/) : null;
+    return t ? +t[1] : null;
+  }
+
+  // Era-correct transparent cutout for a reveal, or null: {url, credit, page, cutout:true}.
+  // PLAYER_CUTOUTS (data/player_cutouts.js, lazy with the legend photos; img/cutouts/<slug>/
+  // <TEAM>.webp built by scripts/build_player_cutouts.py from free Commons photos) plus
+  // LEGEND_HEADSHOTS_LOCAL (Jack's hand-cut PNGs, same byTeam shape) when that map exists.
+  // Order: the cell team's jersey → the team he had in the board's year → (strict=false,
+  // retired players only, after the ESPN tables miss) the cutout nearest the board's year,
+  // else his default team. Active players never take an other-team cutout: their roster
+  // headshot is current, and a mis-stamped team must not show an old jersey.
+  function _triviaCutoutFor(nameVariants, teamCanon, yr, isActive, strict) {
+    const mk = (b, credit) => ({
+      url: b.src || b.url, credit: credit || '',
+      page: b.file ? 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(String(b.file).replace(/ /g, '_')) : '',
+      cutout: true
+    });
+    const yrTeam = () => {
+      if (!yr || typeof _getTeamForPlayerYear !== 'function') return '';
+      const t0 = _getTeamForPlayerYear(nameVariants[0], yr);
+      if (!t0) return '';
+      const up = String(t0).toUpperCase();
+      return (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[up]) || up;
+    };
+    const loc = window.LEGEND_HEADSHOTS_LOCAL;
+    if (loc) {
+      for (const v of nameVariants) {
+        const lo = loc[v];
+        if (!lo || !lo.url) continue;
+        const bt = lo.byTeam || {};
+        if (teamCanon && bt[teamCanon] && bt[teamCanon].url) return mk(bt[teamCanon], '');
+        const ty = yrTeam();
+        if (ty && bt[ty] && bt[ty].url) return mk(bt[ty], '');
+        if (!strict && !isActive) return mk(lo, '');
+        break;
+      }
+    }
+    const tab = window.PLAYER_CUTOUTS;
+    if (!tab) return null;
+    let ent = null;
+    for (const v of nameVariants) { if (tab[v] && tab[v].byTeam) { ent = tab[v]; break; } }
+    if (!ent) return null;
+    const by = ent.byTeam;
+    const teams = Object.keys(by);
+    if (!teams.length) return null;
+    if (teamCanon && by[teamCanon]) return mk(by[teamCanon], by[teamCanon].credit);            // 1. that jersey
+    const ty = yrTeam();
+    if (ty && by[ty]) return mk(by[ty], by[ty].credit);                                          // 2. his team that year
+    if (strict || isActive) return null;
+    let best = null, bd = Infinity;                                                              // 3. nearest era
+    teams.forEach(t => {
+      const d = (yr && by[t].yr) ? Math.abs(by[t].yr - yr) : 60;
+      if (d < bd) { bd = d; best = t; }
+    });
+    const t = (bd < 60 && best) ? best : ((ent.default && by[ent.default]) ? ent.default : teams[0]);
+    return mk(by[t], by[t].credit);
+  }
+
+  // Same lookup with attribution: {url, credit, page, cutout?}. `credit` is set for
+  // Commons-sourced images (cutouts + LEGEND_HEADSHOTS lead photos) — the reveal puts it
+  // in the img title; `cutout` marks a transparent PNG/WebP (silhouette outline, not frame).
+  // `team` (the cell's team abbreviation, any legacy spelling) picks that team's jersey;
+  // `yr` (the board's season / career midpoint) picks the era when the team can't.
+  // Order (Jack 10-28): cutout for that team+era → cutout for that team → ESPN headshot
+  // (active / retired id) → cutout nearest the era (retired only) → Commons lead photo → initials.
+  // Only in-uniform photos on the board (Jack 10-28): cutouts, hand-picked PNGs
+  // and ESPN headshots always are; Commons photos only when jersey-matched.
+  const _TRIVIA_UNIFORM_ONLY = true;
+  function _triviaGetHeadshotInfo(answerText, team, yr) {
     const none = { url: '', credit: '', page: '' };
-    const name = (answerText || '').split(/[\(\,\-–—]/)[0].trim();
+    // Strip "(1991–1999)" / ", 2004" / " - Wk 4" suffixes. A dash counts only
+    // with spaces around it: "Amon-Ra St. Brown" must not become "Amon"
+    // (hyphenated names had no photo — Jack 10-28).
+    const name = (answerText || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
     if (!name) return none;
     // Try name plus common suffix variants
     const nameVariants = [name, name + ' Jr.', name + ' III', name + ' II', name + ' Sr.',
@@ -56660,14 +57059,55 @@ window.fmtHeight = fmtHeight;
     // route through _fixHeadshotUrl (forces width-only &w=350, ratio-safe).
     const _fix = (typeof window._fixHeadshotUrl === 'function') ? window._fixHeadshotUrl : (u => u);
 
-    // LEGEND_HEADSHOTS record → reveal info, preferring the cell team's jersey photo.
+    // Cell team → canonical site abbreviation (legacy spellings aliased).
     const _tUp = String(team || '').toUpperCase();
     const _tCanon = (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[_tUp]) || _tUp;
+
+    // LEGEND_HEADSHOTS record → reveal info, preferring the cell team's jersey photo.
+    // Uniform only (Jack 10-28): a Commons photo counts only when the builder matched
+    // it to a team jersey (byTeam); the generic lead photo is usually post-career
+    // (suits, banners), so it is skipped and the square shows initials instead.
+    // Flip _TRIVIA_UNIFORM_ONLY to false to allow lead photos again.
     const _fromLegend = (lh) => {
       const bt = _tCanon && lh.byTeam && lh.byTeam[_tCanon];
       if (bt && bt.url) return { url: bt.url, credit: bt.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' };
+      if (_TRIVIA_UNIFORM_ONLY) {
+        // Any jersey photo beats no photo: take the first team's cut if the cell's
+        // team has none (still in uniform, just a different stint).
+        const anyTeam = lh.byTeam && Object.values(lh.byTeam).find(b => b && b.url);
+        return anyTeam ? { url: anyTeam.url, credit: anyTeam.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' } : null;
+      }
       return { url: lh.url, credit: lh.credit || 'Wikimedia Commons', page: lh.page || '' };
     };
+
+    // Active players first: D carries the roster headshot (_slImg, ESPN NFL). The
+    // Commons table can hold a college-era photo for a current player (Travis
+    // Etienne at Clemson on an NFL board, Jack 10-28), so an active player never
+    // falls through to it — no roster photo yet means initials.
+    const _dAct = (typeof D !== 'undefined') ? D.find(p => nameVariants.indexOf(p.n) !== -1) : null;
+    const _isActive = !!(_dAct && !_dAct._retired && _dAct.t !== 'Retired');
+
+    // 000. LEGEND_HEADSHOTS_LOCAL — hand-picked cutouts in data/legend_hs/ (Jack's own
+    // photos, ESPN framing, transparent PNG). Wins over every other source; no credit
+    // tooltip, so the reveal styles it like an ESPN headshot (silhouette outline).
+    if (window.LEGEND_HEADSHOTS_LOCAL) {
+      for (const v of nameVariants) {
+        const lo = window.LEGEND_HEADSHOTS_LOCAL[v];
+        if (!lo || !lo.url) continue;
+        const lbt = _tCanon && lo.byTeam && lo.byTeam[_tCanon];   // cut from that team's folder
+        return { url: (lbt && lbt.url) || lo.url, credit: '', page: '' };
+      }
+    }
+
+    // 00. PLAYER_CUTOUTS — era-correct transparent cutout in the cell team's jersey (or the
+    // team he had in the board's year). Beats every other source when it matches the team.
+    const _yr = _triviaYearOf(answerText, yr);
+    const _cut = _triviaCutoutFor(nameVariants, _tCanon, _yr, _isActive, true);
+    if (_cut) return _cut;
+
+    if (_isActive) {
+      return _dAct._slImg ? { url: _fix(_dAct._slImg), credit: '', page: '' } : none;
+    }
 
     // 0. preferCommons — the name's ESPN id failed the builder's audit (namesake such as
     // the Marcus Allen LB, wrong position, too young: scripts/_suspect_espn_ids.json), so
@@ -56675,7 +57115,7 @@ window.fmtHeight = fmtHeight;
     if (window.LEGEND_HEADSHOTS) {
       for (const v of nameVariants) {
         const lh = window.LEGEND_HEADSHOTS[v];
-        if (lh && lh.url && lh.preferCommons) return _fromLegend(lh);
+        if (lh && lh.url && lh.preferCommons) { const r = _fromLegend(lh); if (r) return r; }
       }
     }
 
@@ -56697,6 +57137,11 @@ window.fmtHeight = fmtHeight;
       }
     }
 
+    // 2b. Cutout in another jersey, nearest the board's era (retired players with no ESPN
+    // headshot): a transparent in-uniform cut beats the rectangular Commons lead photo.
+    const _cutAny = _triviaCutoutFor(nameVariants, _tCanon, _yr, false, false);
+    if (_cutAny) return _cutAny;
+
     // 3. LEGEND_HEADSHOTS (2026-10-28) — Wikipedia/Wikimedia Commons lead images for
     // retired legends ESPN has no headshot for (pre-2000 players: Emmitt Smith, Thurman
     // Thomas, Bart Starr …). Built by scripts/build_legend_headshots.py, lazy-loaded by
@@ -56705,7 +57150,7 @@ window.fmtHeight = fmtHeight;
     if (window.LEGEND_HEADSHOTS) {
       for (const v of nameVariants) {
         const lh = window.LEGEND_HEADSHOTS[v];
-        if (lh && lh.url) return _fromLegend(lh);
+        if (lh && lh.url) { const r = _fromLegend(lh); if (r) return r; }
       }
     }
 
@@ -56745,7 +57190,10 @@ window.fmtHeight = fmtHeight;
     // value stays prominent; the team color shows only around the headshot.
 
     // Build reveal content with headshot
-    const _hsInfo = _triviaGetHeadshotInfo(item.answer, item.team);
+    // A locked board may carry its own headshot (college players the NFL id
+    // maps never see — the nightly news job resolves them from ESPN's college
+    // roster photos); the name/team/year lookup stays the fallback.
+    const _hsInfo = item.headshot ? { url: item.headshot, credit: '', page: '' } : _triviaGetHeadshotInfo(item.answer, item.team, item.yr);
     const headshot = _hsInfo.url;
     const answerName = (item.answer || '').split(/[\(\,]/)[0].trim();
     const answerDetail = (item.answer || '').replace(answerName, '').trim().replace(/^[\(\,\-–—\s]+|[\)\s]+$/g, '');
@@ -56755,27 +57203,34 @@ window.fmtHeight = fmtHeight;
     const _outlineFilter = `drop-shadow(1.5px 0 0 ${borderColor}) drop-shadow(-1.5px 0 0 ${borderColor}) drop-shadow(0 1.5px 0 ${borderColor}) drop-shadow(0 -1.5px 0 ${borderColor})`;
 
     let revealHtml = `<div class="trivia-cell-reveal" style="--team-outline-filter:${_outlineFilter}">`;
+    // Photo attributes: Commons credit → title tooltip. Cutouts are transparent, so they
+    // keep the silhouette outline; a rectangular Commons lead photo gets the framed class.
+    const _photoAttrs = (info) => {
+      const t = info.credit ? ` title="${_esc('Photo: ' + info.credit + ' (via Wikimedia Commons)')}"` : '';
+      return (info.credit && !info.cutout) ? ` class="trivia-wiki-photo"${t} style="border-color:${borderColor}"` : t;
+    };
+    // The cutout / legend-photo files load lazily: when either is still missing, re-resolve
+    // once they land and upgrade the cell (initials → photo, or ESPN/lead photo → cutout).
+    // The reveal never waits on them.
+    if ((!window.PLAYER_CUTOUTS || !window.LEGEND_HEADSHOTS) && typeof window._loadLegendHeadshots === 'function') {
+      window._loadLegendHeadshots().then(() => {
+        if (!cell.isConnected || !cell.classList.contains('revealed')) return;
+        const late = _triviaGetHeadshotInfo(item.answer, item.team, item.yr);
+        if (!late.url || late.url === headshot) return;
+        if (headshot && !late.cutout) return;
+        const box = cell.querySelector('.trivia-cell-reveal .trivia-initials') || cell.querySelector('.trivia-cell-reveal img');
+        if (!box) return;
+        const img = document.createElement('img');
+        img.src = late.url; img.alt = ''; img.loading = 'lazy';
+        if (late.credit) img.title = 'Photo: ' + late.credit + ' (via Wikimedia Commons)';
+        if (late.credit && !late.cutout) { img.className = 'trivia-wiki-photo'; img.style.borderColor = borderColor; }
+        img.onerror = function() { this.style.display = 'none'; };
+        box.replaceWith(img);
+      }).catch(() => {});
+    }
     if (headshot) {
-      // Wikimedia photos are rectangular (no transparent silhouette): class swaps the
-      // drop-shadow outline for a plain team-color frame; title = CC attribution.
-      const _wiki = _hsInfo.credit ? ` class="trivia-wiki-photo" title="${_esc('Photo: ' + _hsInfo.credit + ' (via Wikimedia Commons)')}" style="border-color:${borderColor}"` : '';
-      revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_wiki} onerror="this.style.display='none'">`;
+      revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_photoAttrs(_hsInfo)} onerror="this.style.display='none'">`;
     } else {
-      // No photo yet: if the legend-photo file is still loading, upgrade this cell
-      // once it lands (the reveal never waits on it — initials show at once).
-      if (!window.LEGEND_HEADSHOTS && typeof window._loadLegendHeadshots === 'function') {
-        window._loadLegendHeadshots().then(() => {
-          if (!cell.isConnected || !cell.classList.contains('revealed')) return;
-          const late = _triviaGetHeadshotInfo(item.answer, item.team);
-          const box = cell.querySelector('.trivia-cell-reveal .trivia-initials');
-          if (!late.url || !box) return;
-          const img = document.createElement('img');
-          img.src = late.url; img.alt = ''; img.loading = 'lazy';
-          if (late.credit) { img.className = 'trivia-wiki-photo'; img.title = 'Photo: ' + late.credit + ' (via Wikimedia Commons)'; img.style.borderColor = borderColor; }
-          img.onerror = function() { this.style.display = 'none'; };
-          box.replaceWith(img);
-        }).catch(() => {});
-      }
       // No transparent silhouette to outline for the placeholder — fall back to
       // a simple border around the initials box.
       const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
@@ -56790,6 +57245,13 @@ window.fmtHeight = fmtHeight;
     revealHtml += `<button class="trivia-report-flag" onclick="event.stopPropagation();window._triviaOpenReport(${idx})" title="Report this cell" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.35);border:none;color:rgba(255,255,255,.7);font-size:.75rem;width:18px;height:18px;border-radius:4px;cursor:pointer;line-height:1;padding:0;z-index:5">🚩</button>`;
     revealHtml += '</div>';
     cell.insertAdjacentHTML('beforeend', revealHtml);
+    // TIER BOARD chip: the name strip is 114px of Bebas — shrink long names so
+    // the whole answer shows ("CHRISTIAN MCCAFFREY" at 16px would clip).
+    if (cell.classList.contains('trivia-tier-chip')) {
+      const nm = cell.querySelector('.trivia-cell-reveal .reveal-name');
+      const L = nm ? nm.textContent.length : 0;
+      if (nm && L > 13) nm.style.setProperty('font-size', (L > 21 ? 10.5 : L > 18 ? 12 : L > 15 ? 13.5 : 14.5) + 'px', 'important');   // beats main.css's phone !important
+    }
 
     const inp = cell.querySelector('.trivia-guess-input');
     if (inp) inp.style.display = 'none';
@@ -57152,6 +57614,7 @@ window.fmtHeight = fmtHeight;
         hint: it.hint || '',
         team: it.team || '',
         category: it.category || '',
+        yr: it.yr || null,
       })),
       itemCount: _triviaData.items.length,
       createdBy: user.uid,
@@ -57390,6 +57853,9 @@ window.fmtHeight = fmtHeight;
   const _TRIVIA_TEMPLATES = [
     { title: 'All-Time Receiving Yds', desc: 'Top 20 careers · WR/TE',
       filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
+    // TIER BOARD template (2026-10-28): same look as the rankings tier cards
+    { title: _TRIVIA_LAST_SEASON + ' Top 25 RB Fantasy Pts', desc: 'TIER BOARD · tiers 1-3 / 4-8 / 9-14 / 15-20 / 21-25 · RB', layout: 'tiers',
+      filters: { type: 'season', stat: 'fpts', year: String(_TRIVIA_LAST_SEASON), count: 25, conf: 'all', team: 'all', positions: ['RB'] } },
     { title: _TRIVIA_LAST_SEASON + ' Rushing TDs', desc: 'Top 20 last season · RB',
       filters: { type: 'season', stat: 'rtd', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
     { title: 'All-Time Passing TDs', desc: 'QB career leaders',
@@ -57446,6 +57912,13 @@ window.fmtHeight = fmtHeight;
     if (f.draftRound != null) setVal('triviaFilterDraftRound', f.draftRound);
     // Default to regular season unless the template explicitly says postseason.
     setVal('triviaFilterSeasonType', f.seasonType || 'reg');
+    // Board layout: a template can ask for the TIER BOARD; otherwise a leftover
+    // tier layout goes back to Auto so grid templates render as grids. Set
+    // without firing change (that would re-render the previous board).
+    {
+      const lo = document.getElementById('triviaLayout');
+      if (lo) { if (t.layout) lo.value = t.layout; else if (lo.value === 'tiers') lo.value = 'auto'; }
+    }
 
     // Position checkboxes — sync each one's checked state and fire change so the
     // existing label-styling handler updates ✓/✗ visuals.
@@ -57756,10 +58229,209 @@ window.fmtHeight = fmtHeight;
   // Templates yielding fewer items get bypassed via the chain.
   const _TRIVIA_DAILY_MIN_ITEMS = 16;
 
+  // ===== BOARD LIBRARY =====
+  // Every category board, built live from the current data files (the weekly
+  // pulls refresh them, so a "2026 Top 20 WR" board grows with the season).
+  // Nothing is stored: the panel's controls drive the builder's own filter
+  // pipeline (_triviaGenerate). Jack 10-28: viewers sort through it
+  // themselves; a one-time audit (below) flags thin boards and missing photos.
+  const _LIB_PRESETS = [
+    { t: 'All-Time Rushers',      f: { type: 'career', stat: 'ry',   era: 'all',       pos: ['RB'] } },
+    { t: 'All-Time Receivers',    f: { type: 'career', stat: 'rcy',  era: 'all',       pos: ['WR', 'TE'] } },
+    { t: 'All-Time Passers',      f: { type: 'career', stat: 'py',   era: 'all',       pos: ['QB'] } },
+    { t: '2025 Fantasy Pts',      f: { type: 'season', stat: 'fpts', year: '2025',     pos: ['QB', 'RB', 'WR', 'TE'] } },
+    { t: '2010s WR Rec Yds',      f: { type: 'season', stat: 'rcy',  era: '2010-2019', pos: ['WR'] } },
+    { t: '1990s QB Pass TDs',     f: { type: 'season', stat: 'ptd',  era: '1990-1999', pos: ['QB'] } },
+    { t: 'Best Rushing Games',    f: { type: 'game',   stat: 'ry',   era: 'all',       pos: ['RB'] } },
+    { t: 'Best Fantasy Games',    f: { type: 'game',   stat: 'fpts', era: 'all',       pos: ['QB', 'RB', 'WR', 'TE'] } }
+  ];
+  const _LIB_ERAS = ['all', '2020-2029', '2010-2019', '2000-2009', '1990-1999', '1980-1989', '1970-1979'];
+  const _LIB_STATS = ['fpts', 'ppg', 'rcy', 'rec', 'rctd', 'ry', 'rtd', 'py', 'ptd', 'totalTd'];
+  const _LIB_POS_SETS = [['QB'], ['RB'], ['WR'], ['TE'], ['QB', 'RB', 'WR', 'TE']];
+  function _libNote(msg, color) {
+    const n = document.getElementById('libNote');
+    if (n) { n.textContent = msg || ''; n.style.color = color || 'var(--text2)'; }
+  }
+  // Single-game logs start in 1999; anything earlier can't build a game board.
+  function _libGameTooOld(type, year, era) {
+    if (type !== 'game') return false;
+    if (year && year !== 'all') return +year < 1999;
+    const m = /^(\d{4})-(\d{4})$/.exec(era || '');
+    return !!(m && +m[2] < 1999);
+  }
+  function _triviaLibInit() {
+    const ySel = document.getElementById('libYear');
+    if (ySel && ySel.options.length <= 1) {
+      const last = (typeof _TRIVIA_LAST_SEASON !== 'undefined' && _TRIVIA_LAST_SEASON) || 2025;
+      for (let y = last + 1; y >= 1970; y--) { const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); ySel.appendChild(o); }
+    }
+    const pre = document.getElementById('libPresets');
+    if (pre && !pre.children.length) {
+      _LIB_PRESETS.forEach(p => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'trivia-library-chip'; b.textContent = p.t;
+        b.addEventListener('click', () => window._triviaLibraryPlay(p.f));
+        pre.appendChild(b);
+      });
+    }
+    document.querySelectorAll('#libPos button').forEach(b => {
+      b.addEventListener('click', () => {
+        b.classList.toggle('on');
+        if (!document.querySelector('#libPos button.on')) b.classList.add('on');
+      });
+    });
+    // Board index jump list, grouped by type · stat.
+    const sel = document.getElementById('libIndexSel');
+    if (sel && sel.options.length <= 1) {
+      let grp = null, grpKey = '';
+      _libCombos().forEach((c, i) => {
+        const key = _LIB_TYPE_LBL[c.type] + ' · ' + _LIB_STAT_LBL[c.stat];
+        if (key !== grpKey) { grp = document.createElement('optgroup'); grp.label = key; sel.appendChild(grp); grpKey = key; }
+        const o = document.createElement('option');
+        o.value = String(i); o.textContent = _LIB_ERA_LBL[c.era] + ' · ' + (c.pos.length === 4 ? 'All pos' : c.pos.join('/'));
+        grp.appendChild(o);
+      });
+      _libIndexSync();
+    }
+  }
+  // Push a filter set into the builder and run it. Returns the item count.
+  async function _libBuild(f) {
+    const q = id => document.getElementById(id);
+    const type = f.type || 'season';
+    const year = type === 'career' ? 'all' : (f.year || 'all');
+    const era = f.era || 'all';
+    q('triviaCustomPromptToggle').checked = false;
+    q('triviaFilterType').value = type;
+    q('triviaFilterType').dispatchEvent(new Event('change', { bubbles: true }));
+    q('triviaFilterSeasonType').value = 'reg';
+    q('triviaFilterStat').value = f.stat || 'fpts';
+    q('triviaFilterYear').value = year;
+    q('triviaFilterEra').value = year !== 'all' ? 'all' : era;
+    q('triviaFilterCount').value = String(f.count || 20);
+    q('triviaFilterConf').value = 'all';
+    q('triviaFilterTeam').value = 'all';
+    if (q('triviaFilterWeek')) q('triviaFilterWeek').value = 'all';
+    const pos = f.pos && f.pos.length ? f.pos : ['QB', 'RB', 'WR', 'TE'];
+    document.querySelectorAll('#triviaFilterPos input[type="checkbox"]').forEach(cb => { cb.checked = pos.includes(cb.value); });
+    _triviaDailyRun = null; // a library board is never a daily
+    await window._triviaGenerate();
+    return (window._triviaData && window._triviaData.items) ? window._triviaData.items.length : 0;
+  }
+  window._triviaLibraryPlay = async function(preset) {
+    const q = id => document.getElementById(id);
+    const f = preset || {
+      type: q('libType').value, stat: q('libStat').value, era: q('libEra').value,
+      year: q('libYear').value, count: +q('libCount').value,
+      pos: [...document.querySelectorAll('#libPos button.on')].map(b => b.dataset.pos)
+    };
+    if (_libGameTooOld(f.type, f.year, f.era)) { _libNote('Single-game boards start in 1999.', '#ef4444'); return; }
+    const btn = q('libPlayBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'BUILDING…'; }
+    _libNote('');
+    try {
+      const n = await _libBuild(f);
+      if (n) {
+        if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
+        const area = q('triviaBoardArea');
+        if (area) area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        _libNote('No board for that combination — try a wider era or more positions.', '#ef4444');
+      }
+    } catch (e) {
+      console.warn('[Trivia] library build failed:', e);
+      _libNote('That board could not be built.', '#ef4444');
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'BUILD & PLAY'; }
+  };
+  // Every library combination in a fixed order — the board index Jack walks
+  // with PREV / NEXT (or the jump list) and the audit's work list.
+  const _LIB_STAT_LBL = { fpts: 'Fantasy Pts', ppg: 'Fantasy PPG', rcy: 'Rec Yds', rec: 'Receptions', rctd: 'Rec TDs', ry: 'Rush Yds', rtd: 'Rush TDs', py: 'Pass Yds', ptd: 'Pass TDs', totalTd: 'Total TDs' };
+  const _LIB_ERA_LBL = { all: 'All-Time', '2020-2029': '2020s', '2010-2019': '2010s', '2000-2009': '2000s', '1990-1999': '1990s', '1980-1989': '1980s', '1970-1979': '1970s' };
+  const _LIB_TYPE_LBL = { season: 'Season', career: 'Career', game: 'Single Game' };
+  // Which single positions a stat makes sense for (a "QB Rec Yds" board is all
+  // zeros); the all-positions set always stays.
+  const _LIB_STAT_POS = { rcy: ['RB', 'WR', 'TE'], rec: ['RB', 'WR', 'TE'], rctd: ['RB', 'WR', 'TE'], ry: ['QB', 'RB', 'WR'], rtd: ['QB', 'RB', 'WR'], py: ['QB'], ptd: ['QB'] };
+  let _libComboCache = null, _libIdx = -1;
+  function _libCombos() {
+    if (_libComboCache) return _libComboCache;
+    const combos = [];
+    ['season', 'career', 'game'].forEach(type => _LIB_STATS.forEach(stat => _LIB_ERAS.forEach(era => _LIB_POS_SETS.forEach(pos => {
+      if (_libGameTooOld(type, 'all', era)) return;
+      if (type === 'career' && stat === 'ppg') return;
+      if (pos.length === 1 && _LIB_STAT_POS[stat] && !_LIB_STAT_POS[stat].includes(pos[0])) return;
+      combos.push({ type, stat, era, pos, count: 25,
+        label: _LIB_TYPE_LBL[type] + ' · ' + _LIB_STAT_LBL[stat] + ' · ' + _LIB_ERA_LBL[era] + ' · ' + (pos.length === 4 ? 'All pos' : pos.join('/')) });
+    }))));
+    _libComboCache = combos;
+    return combos;
+  }
+  function _libIndexSync() {
+    const combos = _libCombos();
+    const sel = document.getElementById('libIndexSel'), pos = document.getElementById('libIndexPos');
+    if (sel) sel.value = String(_libIdx);
+    if (pos) pos.textContent = _libIdx >= 0 ? (_libIdx + 1) + ' / ' + combos.length : combos.length + ' boards';
+  }
+  // Open board #i of the index (rel = step from the current one).
+  window._triviaLibraryGo = async function(i, rel) {
+    const combos = _libCombos();
+    let idx = rel ? (_libIdx < 0 ? (i > 0 ? 0 : combos.length - 1) : _libIdx + i) : i;
+    if (idx < 0) idx = combos.length - 1;
+    if (idx >= combos.length) idx = 0;
+    if (!combos[idx]) return;
+    _libIdx = idx;
+    _libIndexSync();
+    await window._triviaLibraryPlay(combos[idx]);
+  };
+
+  // Admin, one-time: build every library combination for closed seasons and
+  // download a report — thin boards (<16), players with no photo, squares
+  // with no team. Re-run only when the data pipelines change.
+  window._triviaLibraryAudit = async function() {
+    if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
+    const st = document.getElementById('libAuditStatus');
+    const say = m => { if (st) st.textContent = m; };
+    const combos = _libCombos();
+    const rows = [], noPhoto = {}, noTeam = {};
+    let done = 0;
+    for (const f of combos) {
+      let n = 0;
+      try { n = await _libBuild(f); } catch (_) {}
+      const items = (window._triviaData && window._triviaData.items) || [];
+      const label = [f.type, f.stat, f.era, f.pos.join('/')].join(' · ');
+      const missing = [], teamless = [];
+      items.forEach(it => {
+        const nm = (it.answer || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
+        if (!it.team) { teamless.push(nm); noTeam[nm] = (noTeam[nm] || 0) + 1; }
+        if (!_triviaGetHeadshotInfo(it.answer, it.team).url) { missing.push(nm); noPhoto[nm] = (noPhoto[nm] || 0) + 1; }
+      });
+      rows.push({ board: label, items: n, thin: n < 16, noPhoto: missing, noTeam: teamless });
+      done++;
+      if (done % 10 === 0) { say('Auditing ' + done + '/' + combos.length + '…'); await new Promise(r => setTimeout(r, 0)); }
+    }
+    const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]);
+    const thin = rows.filter(r => r.thin);
+    const md = ['# Trivia Board Library audit · ' + _triviaTodayStr(), '',
+      'Boards: ' + rows.length + ' · thin (<16): ' + thin.length + ' · players without a photo: ' + Object.keys(noPhoto).length + ' · squares without a team: ' + Object.keys(noTeam).length, '',
+      '## Thin boards', ...thin.map(r => '- ' + r.board + ' — ' + r.items + ' items'), '',
+      '## Players with no photo (boards they appear on)', ...top(noPhoto).map(([n, c]) => '- ' + n + ' (' + c + ')'), '',
+      '## Players with no team label (boards)', ...top(noTeam).map(([n, c]) => '- ' + n + ' (' + c + ')')].join('\n');
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'trivia_library_audit_' + _triviaTodayStr() + '.md'; a.click();
+    const json = new Blob([JSON.stringify({ date: _triviaTodayStr(), rows, noPhoto, noTeam }, null, 1)], { type: 'application/json' });
+    const b = document.createElement('a');
+    b.href = URL.createObjectURL(json); b.download = 'trivia_library_audit_' + _triviaTodayStr() + '.json'; b.click();
+    say('Done: ' + rows.length + ' boards, ' + thin.length + ' thin, ' + Object.keys(noPhoto).length + ' players without a photo — report downloaded.');
+    window._triviaLibraryAuditResult = { rows, noPhoto, noTeam };
+  };
+  _triviaLibInit();
+
   window._triviaPlayDaily = function() {
     const dateStr = _triviaResolveDailyDate();
     const chain = _triviaPickDailyChain(dateStr);
     if (!chain.length) return;
+    // First play = the intro has done its job; clear it for good.
+    if (typeof window._triviaDismissIntro === 'function') window._triviaDismissIntro();
     // Capture start time + initialize per-cell results array so the share
     // grid can reflect actual cell-by-cell outcomes. The preview flag
     // travels with the run so finalize knows to skip localStorage.
@@ -57946,8 +58618,15 @@ window.fmtHeight = fmtHeight;
       r === 'correct' ? '🟩' : r === 'wrong' ? '🟥' : '⬜'
     );
     const lines = [];
-    for (let i = 0; i < cells.length; i += cols) {
-      lines.push(cells.slice(i, i + cols).join(''));
+    // TIER BOARD: one emoji row per tier, so the grid reads like the board did.
+    const tierSizes = (_triviaData && _triviaData.layout === 'tiers') ? _triviaTierSizes(cells.length, _triviaData) : null;
+    if (tierSizes) {
+      let p = 0;
+      tierSizes.forEach(sz => { lines.push(cells.slice(p, p + sz).join('')); p += sz; });
+    } else {
+      for (let i = 0; i < cells.length; i += cols) {
+        lines.push(cells.slice(i, i + cols).join(''));
+      }
     }
     const timeStr = _triviaFormatMs(ms);
     const accuracy = total ? Math.round((score / total) * 100) : 0;
@@ -58080,6 +58759,299 @@ window.fmtHeight = fmtHeight;
     return f.type + '|' + f.stat + '|' + f.year + '|' + posKey + '|' + era;
   }
 
+  // ===== Franchise + legend-pool helpers (shared by the generator and the verifier) =====
+  // Team codes differ across sources: the site's 32 abbreviations in d.js / weekly
+  // files, PFR 3-letter codes in LEGEND_CAREERS and SEASON_LEADERS (SFO, GNB, RAI…),
+  // and relocation-era codes (SD, STL, OAK). Map any of them onto the abbreviation
+  // the team select uses. Codes that meant two franchises over time resolve by
+  // season: STL = Cardinals ≤1987 / Rams 1995-2015, HOU = Oilers ≤1996 / Texans,
+  // BAL = Colts ≤1983 / Ravens. Multi-team rows ("2TM") and non-NFL leagues → ''.
+  const _TRIVIA_FRANCHISE_BY_YEAR = {
+    STL: (yr) => (yr && yr <= 1987) ? 'ARI' : 'LAR',
+    HOU: (yr) => (yr && yr <= 1996) ? 'TEN' : 'HOU',
+    BAL: (yr) => (yr && yr <= 1983) ? 'IND' : 'BAL'
+  };
+  const _TRIVIA_FRANCHISE_CODES = {
+    ARZ: 'ARI', CRD: 'ARI', PHO: 'ARI', PHX: 'ARI',
+    BLT: 'BAL', RAV: 'BAL', CLV: 'CLE', HST: 'HOU', HOI: 'HOU', JAC: 'JAX',
+    KAN: 'KC', KCC: 'KC', LA: 'LAR', RAM: 'LAR', LARAMS: 'LAR',
+    SDG: 'LAC', SD: 'LAC', SAN: 'LAC', OAK: 'LV', OAR: 'LV', RAI: 'LV', LVR: 'LV',
+    NEP: 'NE', NWE: 'NE', BOS: 'NE', NOS: 'NO', NOR: 'NO', NYT: 'NYJ',
+    SFO: 'SF', TAM: 'TB', TBB: 'TB', OTI: 'TEN', TENN: 'TEN', WSH: 'WAS', RED: 'WAS', GNB: 'GB'
+  };
+  const _TRIVIA_TEAMS_32 = new Set(['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LAC','LAR','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SF','SEA','TB','TEN','WAS']);
+  // First NFL/AFL season of each current franchise (All-Time label is only
+  // defensible when the data floor reaches back this far).
+  const _TRIVIA_FRANCHISE_FIRST = {
+    ARI: 1920, CHI: 1920, GB: 1921, NYG: 1925, DET: 1930, WAS: 1932, PHI: 1933, PIT: 1933,
+    LAR: 1937, CLE: 1946, SF: 1946, IND: 1953, BUF: 1960, DAL: 1960, DEN: 1960, KC: 1960,
+    LAC: 1960, LV: 1960, NE: 1960, NYJ: 1960, TEN: 1960, MIN: 1961, ATL: 1966, MIA: 1966,
+    NO: 1967, CIN: 1968, SEA: 1976, TB: 1976, CAR: 1995, JAX: 1995, BAL: 1996, HOU: 2002
+  };
+  // SEASON_LEADERS (PFR year leaders) lists NFL teams only before the 1970 merger.
+  const _TRIVIA_AFL_FRANCHISES = new Set(['BUF','DEN','KC','LAC','LV','NE','NYJ','TEN','MIA','CIN']);
+  function _triviaFranchise(code, yr) {
+    if (!code) return '';
+    const raw = String(code).toUpperCase().trim();
+    if (/^\dTM$/.test(raw)) return '';
+    const u = raw.replace(/[^A-Z]/g, '');
+    if (!u) return '';
+    if (_TRIVIA_FRANCHISE_BY_YEAR[u]) return _TRIVIA_FRANCHISE_BY_YEAR[u](yr);
+    const c = _TRIVIA_FRANCHISE_CODES[u] || u;
+    return _TRIVIA_TEAMS_32.has(c) ? c : '';
+  }
+  // Franchise per season for a career array: s.tm first; for a blank season the
+  // history tables and the same year's LEGEND_CAREERS row (_triviaSeasonTeam);
+  // finally an interior blank season whose nearest resolved neighbours on BOTH
+  // sides agree takes that team (PFR career rows for a number of 1980s/90s
+  // legends carry no team: Csonka 1972 sits between Dolphins seasons). A blank
+  // season at the edge of a career, or between two different teams, stays
+  // unattributed — Hunter Renfrow's team-less 2025 row must not become Raiders
+  // yards. Multi-team rows keep '' (they cannot be credited to one franchise).
+  function _triviaCareerTeams(name, career) {
+    const out = new Array(career.length);
+    for (let i = 0; i < career.length; i++) {
+      const s = career[i];
+      if (!s) { out[i] = ''; continue; }
+      let t = _triviaFranchise(s.tm, s.yr);
+      if (!t && !s.tm && s.yr) t = _triviaSeasonTeam(name, s.yr, null);
+      out[i] = t;
+    }
+    for (let i = 0; i < career.length; i++) {
+      if (out[i] || !career[i] || career[i].tm) continue;
+      let prev = '', next = '';
+      for (let j = i - 1; j >= 0 && !prev; j--) prev = out[j];
+      for (let j = i + 1; j < career.length && !next; j++) next = out[j];
+      if (prev && prev === next) out[i] = prev;
+    }
+    return out;
+  }
+  // Franchise for one (player, season) when a weekly row carries no team —
+  // 433 players' 2017-2024 game logs in weekly_stats_active have tm '' (De'Von
+  // Achane's 2023-24 rows): history tables → that season's career row (D[] or
+  // LEGEND_CAREERS) → the player's current team, for the running season only.
+  function _triviaCurrentSeason() {
+    const now = new Date();
+    return now.getFullYear() - (now.getMonth() < 2 ? 1 : 0);
+  }
+  function _triviaSeasonTeam(name, yr, d) {
+    let t = '';
+    if (typeof getCareerTeamAbbr === 'function') t = _triviaFranchise(getCareerTeamAbbr(name, yr, ''), yr);
+    if (!t && typeof ACTIVE_TEAM_HISTORY !== 'undefined' && ACTIVE_TEAM_HISTORY[name]) {
+      for (const h of ACTIVE_TEAM_HISTORY[name]) {
+        if (yr >= h.y1 && yr <= h.y2) {
+          t = _triviaFranchise((typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[h.t]) || h.t, yr);
+          break;
+        }
+      }
+    }
+    if (!t && d && d.career) {
+      const s = d.career.find(x => x && x.yr === yr);
+      if (s && s.tm) t = _triviaFranchise(s.tm, yr);
+    }
+    if (!t && typeof LEGEND_CAREERS !== 'undefined' && LEGEND_CAREERS[name]) {
+      const s = LEGEND_CAREERS[name].find(x => x && x.yr === yr);
+      if (s && s.tm) t = _triviaFranchise(s.tm, yr);
+    }
+    if (!t && d && d.t && yr >= _triviaCurrentSeason()) {
+      t = _triviaFranchise((typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t, yr);
+    }
+    return t;
+  }
+  const _triviaCollapseName = (n) => String(n || '').toLowerCase().replace(/[.\-'\s]/g, '');
+  const _triviaStripSuffix = (n) => String(n || '').replace(/\s+(Sr\.?|Jr\.?|II|III|IV|V)$/i, '');
+  // Names that exist only in LEGEND_CAREERS (neither in D[] nor WEEKLY_STATS) had
+  // no position, so no board could ever list them — Mercury Morris, Jim Kiick and
+  // Tony Nathan were missing from a Dolphins rushing board. Give each a position:
+  // D[].s (never set for these by construction) → COMBINE_DATA pos → inferred from
+  // the career line (passing yards dominant → QB; otherwise touches decide — a back
+  // carries far more than he catches even when his receiving yards run ahead, as
+  // with Tony Nathan's 3,543 rush / 3,592 receiving yards on 1,000+ carries vs
+  // 383 catches — so carries ≥ catches → RB, else WR; no touch data → yards).
+  // Suffix / punctuation variants of a player the pool already carries are
+  // dropped when their seasons overlap (same person); a non-overlapping era is a
+  // namesake (Michael Pittman the RB vs Michael Pittman Jr.) and stays.
+  // Cached per data-load signature (D, WEEKLY_STATS and LEGEND_CAREERS all
+  // arrive lazily).
+  let _triviaLegendPoolCache = null;
+  function _triviaLegendOnlyPool() {
+    if (typeof LEGEND_CAREERS === 'undefined') return {};
+    const legendNames = Object.keys(LEGEND_CAREERS);
+    const sig = ((typeof D !== 'undefined') ? D.length : 0) + '|' +
+      ((typeof WEEKLY_STATS !== 'undefined') ? Object.keys(WEEKLY_STATS).length : 0) + '|' + legendNames.length;
+    if (_triviaLegendPoolCache && _triviaLegendPoolCache.sig === sig) return _triviaLegendPoolCache.pool;
+    const exact = new Set();
+    const spans = {};
+    const addSpan = (name, yrs) => {
+      if (!yrs.length) return;
+      const k = _triviaCollapseName(_triviaStripSuffix(name));
+      (spans[k] = spans[k] || []).push({ lo: Math.min.apply(null, yrs), hi: Math.max.apply(null, yrs) });
+    };
+    if (typeof D !== 'undefined') D.forEach(d => {
+      if (!d || !d.n) return;
+      exact.add(_triviaCollapseName(d.n));
+      const yrs = (d.career || []).map(s => s && s.yr).filter(Boolean);
+      if (d.s25 && d.s25.yr) yrs.push(d.s25.yr);
+      addSpan(d.n, yrs);
+    });
+    if (typeof WEEKLY_STATS !== 'undefined') for (const k in WEEKLY_STATS) {
+      exact.add(_triviaCollapseName(k));
+      const ws = WEEKLY_STATS[k];
+      addSpan(k, Object.keys((ws && ws.seasons) || {}).map(Number).filter(Boolean));
+    }
+    const legendSpan = {};
+    const legendByKey = {};
+    legendNames.forEach(n => {
+      const c = LEGEND_CAREERS[n] || [];
+      const yrs = c.map(s => s && s.yr).filter(Boolean);
+      if (!yrs.length) return;
+      legendSpan[n] = { lo: Math.min.apply(null, yrs), hi: Math.max.apply(null, yrs), len: c.length };
+      const k = _triviaCollapseName(_triviaStripSuffix(n));
+      (legendByKey[k] = legendByKey[k] || []).push(n);
+    });
+    const overlaps = (a, b) => !!(a && b && a.lo <= b.hi + 1 && b.lo <= a.hi + 1);
+    const pool = {};
+    for (const name of legendNames) {
+      const career = LEGEND_CAREERS[name];
+      const span = legendSpan[name];
+      if (!career || !career.length || !span) continue;
+      if (exact.has(_triviaCollapseName(name))) continue;
+      const k = _triviaCollapseName(_triviaStripSuffix(name));
+      if ((spans[k] || []).some(s => overlaps(s, span))) continue;
+      // Two LEGEND keys for one player ("Mark Ingram" / "Mark Ingram II"): keep
+      // the longer career, the suffixed key on a tie.
+      const twin = (legendByKey[k] || []).find(o => o !== name && overlaps(legendSpan[o], span));
+      if (twin) {
+        const a = span, b = legendSpan[twin];
+        const keep = a.len > b.len || (a.len === b.len && /\s(Sr\.?|Jr\.?|II|III|IV|V)$/i.test(name));
+        if (!keep) continue;
+      }
+      let pos = '';
+      if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].pos) {
+        pos = String(COMBINE_DATA[name].pos).toUpperCase();
+      }
+      if (!['QB','RB','WR','TE'].includes(pos)) {
+        let py = 0, ry = 0, rcy = 0, ra = 0, rc = 0;
+        career.forEach(s => { if (!s) return; py += s.py || 0; ry += s.ry || 0; rcy += s.rcy || 0; ra += s.ra || 0; rc += s.rc || 0; });
+        if (py > ry + rcy) pos = 'QB';
+        else if (ra || rc) pos = ra >= rc ? 'RB' : 'WR';
+        else pos = ry > rcy ? 'RB' : 'WR';
+      }
+      pool[name] = { pos, career, teams: _triviaCareerTeams(name, career) };
+    }
+    _triviaLegendPoolCache = { sig, pool };
+    return pool;
+  }
+  // 1970-98 full-league seasons (SEASON_TOTALS_7098: PFR season totals keyed by PFR
+  // id, lazy — window._loadSeasonTotals7098) that the legend tables lack. For each PFR
+  // player: the site entry that is the same person (same collapsed name, career years
+  // overlapping or adjoining, QB-ness agreeing) gets only the seasons it is missing,
+  // under its own name and position; a PFR player the site has never heard of comes
+  // in whole as a new name; a same-name entry from another era is a namesake and
+  // keeps a key of its own (name#id) so the two careers never add up. Rows:
+  // { id, name, pos, key, s (PFR season row, rc = receptions), team (site abbr or '') }.
+  // Cached per data-load signature (D, WEEKLY_STATS and LEGEND_CAREERS all arrive lazily).
+  let _trivia7098Cache = null;
+  function _trivia7098Seasons() {
+    if (typeof SEASON_TOTALS_7098 === 'undefined') return [];
+    const legends = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS : {};
+    const sig = ((typeof D !== 'undefined') ? D.length : 0) + '|' +
+      ((typeof WEEKLY_STATS !== 'undefined') ? Object.keys(WEEKLY_STATS).length : 0) + '|' + Object.keys(legends).length;
+    if (_trivia7098Cache && _trivia7098Cache.sig === sig) return _trivia7098Cache.rows;
+    const keyOf = n => _triviaCollapseName(_triviaStripSuffix(n));
+    const idx = {}; // collapsed name -> [{ name, pos, lo, hi, yrs, d }]
+    const add = (name, pos, yrs, d) => {
+      yrs = yrs.filter(Boolean);
+      if (!yrs.length) return;
+      (idx[keyOf(name)] = idx[keyOf(name)] || []).push({ name, pos: pos || '', lo: Math.min.apply(null, yrs), hi: Math.max.apply(null, yrs), yrs: new Set(yrs), d: !!d });
+    };
+    if (typeof D !== 'undefined') D.forEach(d => { if (d && d.n) add(d.n, d.s, (d.career || []).map(s => s && s.yr), true); });
+    if (typeof WEEKLY_STATS !== 'undefined') for (const k in WEEKLY_STATS) {
+      const ws = WEEKLY_STATS[k];
+      add(k, ws && ws.pos, Object.keys((ws && ws.seasons) || {}).map(Number), false);
+    }
+    for (const n in legends) add(n, '', (legends[n] || []).map(s => s && s.yr), false);
+    const rows = [];
+    Object.entries(SEASON_TOTALS_7098).forEach(([pid, rec]) => {
+      if (!rec || !['QB', 'RB', 'WR', 'TE'].includes(rec.pos) || !rec.seasons || !rec.seasons.length) return;
+      const y0 = rec.y ? rec.y[0] : rec.seasons[0].yr, y1 = rec.y ? rec.y[1] : rec.seasons[rec.seasons.length - 1].yr;
+      const same = (idx[keyOf(rec.n)] || []).filter(e => e.lo <= y1 + 1 && y0 <= e.hi + 1 && (!e.pos || ((e.pos === 'QB') === (rec.pos === 'QB'))));
+      if (same.length) {
+        const have = new Set();
+        same.forEach(e => e.yrs.forEach(y => have.add(y)));
+        const lead = same.find(e => e.d) || same[0];
+        const pos = (same.find(e => e.d && e.pos) || same.find(e => e.pos) || {}).pos || rec.pos;
+        rec.seasons.forEach(s => { if (!have.has(s.yr)) rows.push({ id: pid, name: lead.name, pos, key: lead.name, s, team: _triviaFranchise(s.tm, s.yr) }); });
+        return;
+      }
+      const key = idx[keyOf(rec.n)] ? rec.n + '#' + pid : rec.n;
+      rec.seasons.forEach(s => rows.push({ id: pid, name: rec.n, pos: rec.pos, key, s, team: _triviaFranchise(s.tm, s.yr) }));
+    });
+    _trivia7098Cache = { sig, rows };
+    return rows;
+  }
+  // Can a franchise board claim "All-Time"? ALL_PLAYERS_DB is complete from 1999;
+  // before that the pool is LEGEND_CAREERS (≈2,400 qualifying careers). Probe
+  // SEASON_LEADERS — PFR's top-25 per category per year, 1966+ (NFL-only before
+  // the 1970 merger) — for franchise players the pool has never heard of. If one
+  // of them out-produces the board's last spot, the all-time claim fails and the
+  // caller cuts the board to 1999+. Otherwise the defensible floor is the probe
+  // window's start; a franchise founded inside the window gets a true all-time
+  // board. Returns { ok, floor, missing (names ≥ cutoff), unpooled (all) }.
+  function _triviaTeamCoverageProbe(team, stat, cutoff) {
+    const floor = _TRIVIA_AFL_FRANCHISES.has(team) ? 1970 : 1966;
+    const res = { ok: true, floor, missing: [], unpooled: [] };
+    if (typeof SEASON_LEADERS === 'undefined') return res;
+    const known = new Set();
+    const add = (n) => { if (n) known.add(_triviaCollapseName(_triviaStripSuffix(n))); };
+    if (typeof D !== 'undefined') D.forEach(d => add(d && d.n));
+    if (typeof WEEKLY_STATS !== 'undefined') for (const k in WEEKLY_STATS) add(k);
+    if (typeof LEGEND_CAREERS !== 'undefined') for (const k in LEGEND_CAREERS) add(k);
+    const rowVal = (r) => {
+      switch (stat) {
+        case 'py': return r.pass_yds || 0;
+        case 'ptd': return r.pass_td || 0;
+        case 'int': return r.pass_int || 0;
+        case 'ry': return r.rush_yds || 0;
+        case 'rtd': return r.rush_td || 0;
+        case 'ra': return r.rush_att || 0;
+        case 'rec': return r.rec || 0;
+        case 'rcy': return r.rec_yds || 0;
+        case 'rctd': return r.rec_td || 0;
+        case 'tgt': return r.targets || 0;
+        case 'totalTd': return (r.pass_td || 0) + (r.rush_td || 0) + (r.rec_td || 0);
+        default: // fpts / ppg — the category's share of the season (a lower bound)
+          return (r.pass_yds || 0) * 0.04 + (r.pass_td || 0) * 4 - (r.pass_int || 0) +
+            (r.rush_yds || 0) * 0.1 + (r.rush_td || 0) * 6 +
+            (r.rec || 0) * 0.5 + (r.rec_yds || 0) * 0.1 + (r.rec_td || 0) * 6;
+      }
+    };
+    const partial = {};
+    const games = {};
+    Object.keys(SEASON_LEADERS).forEach(y => {
+      const yr = parseInt(y, 10);
+      if (!yr || yr < floor) return;
+      const yd = SEASON_LEADERS[y];
+      ['passing','rushing','receiving'].forEach(cat => {
+        (yd[cat] || []).forEach(r => {
+          if (!r || !r.name) return;
+          if (_triviaFranchise(r.team, yr) !== team) return;
+          if (known.has(_triviaCollapseName(_triviaStripSuffix(r.name)))) return;
+          partial[r.name] = (partial[r.name] || 0) + rowVal(r);
+          games[r.name] = Math.max(games[r.name] || 0, r.g || 0);
+        });
+      });
+    });
+    Object.keys(partial).forEach(n => {
+      const v = stat === 'ppg' ? (games[n] ? partial[n] / games[n] : 0) : partial[n];
+      if (v <= 0) return;
+      res.unpooled.push(n + ' ' + Math.round(v * 10) / 10);
+      if (v >= cutoff) res.missing.push(n);
+    });
+    if (res.missing.length) res.ok = false;
+    return res;
+  }
+
   // Aggregate the same career query from LEGEND_CAREERS directly, with
   // active players from D[].career to cover modern names like Derrick
   // Henry who aren't in LEGEND_CAREERS. After the 2026-05-07 fix, retired
@@ -58092,9 +59064,18 @@ window.fmtHeight = fmtHeight;
     if (f.type !== 'career') return null;
     const stat = f.stat;
     const isPost = !!f.isPost;
+    // Team boards rank WITH-team totals — the cross-check applies the same
+    // franchise filter per season (postseason splits aren't tracked per team).
+    const team = (f.team && f.team !== 'all') ? f.team : '';
+    if (isPost && team) return null;
     const positions = new Set(f.positions || []);
     const dPos = {};
-    if (typeof D !== 'undefined') D.forEach(d => { if (d.n && d.s) dPos[d.n] = d.s; });
+    const dByName = {};
+    if (typeof D !== 'undefined') D.forEach(d => {
+      if (d.n && d.s) dPos[d.n] = d.s;
+      if (d.n && !dByName[d.n]) dByName[d.n] = d;
+    });
+    const legendOnly = _triviaLegendOnlyPool();
 
     // Era bounds — apply per-season filtering during aggregation so the
     // cross-check matches an era-scoped board.
@@ -58116,11 +59097,59 @@ window.fmtHeight = fmtHeight;
         if (!p) return 0;
         if (stat === 'totalTd') return (p.ptd||0) + (p.rtd||0) + (p.rctd||0);
         if (stat === 'rec') return (p.rc||0);
+        if (stat === 'ppg') return (p.fpts||0);
         return (p[stat]||0);
       }
       if (stat === 'totalTd') return (s.ptd||0) + (s.rtd||0) + (s.rctd||0);
       if (stat === 'rec') return (s.rc||0);
+      if (stat === 'ppg') return (s.fpts||0);
       return (s[stat]||0);
+    }
+    function gpOf(s) {
+      if (isPost) return (s.post && s.post.gp) || 0;
+      return s.gp || 0;
+    }
+    function statOfWeek(w) {
+      if (stat === 'totalTd') return (w.ptd||0) + (w.rtd||0) + (w.rctd||0);
+      if (stat === 'ppg') return (w.fpts||0);
+      return (w[stat]||0);
+    }
+    // One player's value from a career array: per-season franchise filter,
+    // then an in-season top-up from WEEKLY_STATS for seasons the career rows
+    // don't carry yet (the running season of active players), so the rendered
+    // board (weekly-first) and this aggregation see the same games.
+    function aggregate(name, career) {
+      const teams = team ? _triviaCareerTeams(name, career) : null;
+      let v = 0, gp = 0, lastYr = 0;
+      career.forEach((s, i) => {
+        if (!s) return;
+        if (s.yr && s.yr > lastYr) lastYr = s.yr;
+        if (eraActive && s.yr && !eraOk(s.yr)) return;
+        if (team && teams[i] !== team) return;
+        v += statOf(s);
+        gp += gpOf(s);
+      });
+      if (!isPost && typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[name] && WEEKLY_STATS[name].seasons) {
+        const seasons = WEEKLY_STATS[name].seasons;
+        for (const y in seasons) {
+          const yr = parseInt(y, 10);
+          if (!yr || yr <= lastYr) continue;
+          if (eraActive && !eraOk(yr)) continue;
+          let sznTeam = null;
+          const sznTeamOf = () => {
+            if (sznTeam == null) sznTeam = _triviaSeasonTeam(name, yr, dByName[name]);
+            return sznTeam;
+          };
+          (seasons[y] || []).forEach(w => {
+            if (!w) return;
+            if (team && (_triviaFranchise(w.tm, yr) || sznTeamOf()) !== team) return;
+            v += statOfWeek(w);
+            if (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0) gp++;
+          });
+        }
+      }
+      if (stat === 'ppg') return gp > 0 ? Math.round((v / gp) * 10) / 10 : 0;
+      return v;
     }
 
     const out = [];
@@ -58128,13 +59157,9 @@ window.fmtHeight = fmtHeight;
     for (const name in LEGEND_CAREERS) {
       const career = LEGEND_CAREERS[name];
       if (!career || !career.length) continue;
-      const pos = dPos[name] || '';
+      const pos = dPos[name] || (legendOnly[name] && legendOnly[name].pos) || '';
       if (positions.size && !positions.has(pos)) continue;
-      let v = 0;
-      for (const s of career) {
-        if (eraActive && s && s.yr && !eraOk(s.yr)) continue;
-        v += statOf(s);
-      }
+      const v = aggregate(name, career);
       if (v > 0) out.push({ name, val: v });
       seenNames.add(name);
     }
@@ -58147,11 +59172,7 @@ window.fmtHeight = fmtHeight;
         if (seenNames.has(d.n)) continue;
         const pos = d.s || '';
         if (positions.size && !positions.has(pos)) continue;
-        let v = 0;
-        for (const s of d.career) {
-          if (eraActive && s && s.yr && !eraOk(s.yr)) continue;
-          v += statOf(s);
-        }
+        const v = aggregate(d.n, d.career);
         if (v > 0) out.push({ name: d.n, val: v });
       }
     }
@@ -58307,6 +59328,8 @@ window.fmtHeight = fmtHeight;
     const stale = document.getElementById('triviaVerifyBanner');
     if (stale) stale.remove();
     if (!result || (!result.ref && !result.cross)) return;
+    // Builder QA only — players get the board, not the data audit.
+    if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
 
     const refOk = result.ref ? result.ref.ok : true;
     const crossOk = result.cross ? result.cross.ok : true;
@@ -58612,6 +59635,8 @@ window.fmtHeight = fmtHeight;
       colorway: cwSel,
       customColor: customColor,
       layout: layoutSel,
+      // TIER BOARD: custom breaks travel with the lock (null = default 3/5/6/6/5)
+      tiers: (Array.isArray(_triviaData.tiers) && _triviaData.tiers.length) ? _triviaData.tiers.map(Number) : null,
       lockedBy: user.uid,
       lockedByEmail: user.email || '',
       lockedAt: new Date().toISOString()
@@ -58676,6 +59701,8 @@ window.fmtHeight = fmtHeight;
     const data = {
       title: snap.title || 'Daily Board',
       items: snap.items || [],
+      layout: snap.layout || 'auto',
+      tiers: Array.isArray(snap.tiers) ? snap.tiers : null,
       _locked: true,
       _lockedDate: snap.date
     };
@@ -58719,9 +59746,13 @@ window.fmtHeight = fmtHeight;
         if (_future && !isAdm) return;
         html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);transition:border-color .2s" onmouseenter="this.style.borderColor=\'var(--accent)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">';
         html += '<div style="flex:1;min-width:0;cursor:pointer" onclick="window._triviaPlayArchived(\'' + d.date + '\')">';
-        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#ffd166">' + _esc(d.date) + (_future ? ' <span style="color:var(--text2)">· SCHEDULED</span>' : '') + '</div>';
+        // Boards written by the nightly news job (scripts/trivia_daily) carry
+        // source:'auto' + the reason they were picked; admins see both so a
+        // weak pick can be replaced with LOCK AS DAILY (hand locks always win).
+        const _auto = d.source === 'auto';
+        html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:#ffd166">' + _esc(d.date) + (_future ? ' <span style="color:var(--text2)">· SCHEDULED</span>' : '') + (_auto && isAdm ? ' <span style="color:var(--accent)">· AUTO</span>' : '') + '</div>';
         html += '<div style="font-size:.78rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _esc(d.title || 'Daily Board') + '</div>';
-        html += '<div style="font-size:.6875rem;color:var(--text2)">' + (d.itemCount || (d.items && d.items.length) || '?') + ' cells</div>';
+        html += '<div style="font-size:.6875rem;color:var(--text2)">' + (d.itemCount || (d.items && d.items.length) || '?') + ' cells' + (_auto && isAdm && d.auto && d.auto.reason ? ' · ' + _esc(String(d.auto.reason).slice(0, 80)) : '') + '</div>';
         html += '</div>';
         if (isAdm) {
           html += '<button onclick="window._triviaDeleteArchived(\'' + d.date + '\',this)" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.7rem;padding:2px 6px;opacity:.5" title="Delete locked daily">✕</button>';
@@ -58967,8 +59998,19 @@ window.fmtHeight = fmtHeight;
       }
       const _eraBounds = _parseEra(era);
       const _eraMin = _eraBounds[0], _eraMax = _eraBounds[1];
+      // Season / game modes: a single Year, or "All-Time" narrowed by the era
+      // range (2010-2019, since 2020 …) — Jack 10-28.
+      const _yrOk = (y) => year !== 'all' ? y === parseInt(year)
+        : ((_eraMin == null || y >= _eraMin) && (_eraMax == null || y <= _eraMax));
       const _eraOk = (yr) => (_eraMin == null || yr >= _eraMin) && (_eraMax == null || yr <= _eraMax);
       const _eraActive = (filterType === 'career') && (era !== 'all');
+      // 1970-98 full-league season totals (data/season_totals_1970_1998.js, PFR, keyed by
+      // id): pulled when the board's window reaches before 1999, so season and career
+      // boards get every qualifying player, not just the legend tables' (the 1970s/80s
+      // career TE boards had 6-8 names). All-time boards keep to the legend tables.
+      const _pre1999 = (filterType === 'season' || filterType === 'career') && !isPost &&
+        (year !== 'all' ? parseInt(year) < 1999 : (_eraMin != null && _eraMin < 1999));
+      if (_pre1999 && typeof window._loadSeasonTotals7098 === 'function') await window._loadSeasonTotals7098();
 
       if (!positions.length) { mffAlert('Select at least one position'); return; }
 
@@ -58992,6 +60034,10 @@ window.fmtHeight = fmtHeight;
       // Build all data entries
       const allEntries = [];
       const _seenKey = new Set();
+      // Career team boards: the data floor the title can defend (null = all-time)
+      // and its label — set by the career branch, read by the title builder.
+      let _teamFloor = null;
+      let _teamEraLabel = '';
 
       // v0.10.6: postseason short-circuit. Reads exclusively from
       // LEGEND_CAREERS (and falls through to D[].career.post if present)
@@ -59076,7 +60122,7 @@ window.fmtHeight = fmtHeight;
               const p = s && s.post;
               if (!p) continue;
               if (!s.yr) continue;
-              if (year !== 'all' && s.yr !== parseInt(year)) continue;
+              if (!_yrOk(s.yr)) continue;
               const tm = s.tm || '';
               if (conf !== 'all' && _teamConf[tm] !== conf) continue;
               if (team !== 'all' && tm !== team) continue;
@@ -59173,25 +60219,57 @@ window.fmtHeight = fmtHeight;
         // === CAREER TOTALS MODE — aggregate all seasons per player ===
         const _careerMap = {}; // name -> aggregated stats
 
-        // Map the user's selected stat to the per-week / per-season field
-        // we should accumulate when scoring the "primary team" for the
-        // career-team logo. For ppg we use fpts (team where they scored
-        // most fantasy points); totalTd sums ptd+rtd+rctd.
+        // Stat field used when scoring a season/week against a team: ppg and
+        // fpts both use fpts, totalTd sums the three TD columns.
         function _statValueWeek(w) {
           if (stat === 'totalTd') return (w.ptd||0) + (w.rtd||0) + (w.rctd||0);
           if (stat === 'ppg' || stat === 'fpts') return (w.fpts||0);
           return (w[stat] || 0);
         }
-        function _statValueSeason(s) {
-          if (stat === 'totalTd') return (s.ptd||0) + (s.rtd||0) + (s.rctd||0);
-          if (stat === 'ppg' || stat === 'fpts') return (s.fpts||0);
-          // D[].career uses 'rc' for receptions where weekly uses 'rec';
-          // remap so the team-attribution lookup doesn't undercount.
-          if (stat === 'rec') return (s.rc||0);
-          return (s[stat] || 0);
-        }
 
-        // From WEEKLY_STATS
+        // Every source (WEEKLY_STATS weeks, D[].career seasons, LEGEND_CAREERS-only
+        // legends) feeds one row per (season, franchise) through _addSeasonRow.
+        //   team === 'all'  → full-career totals; per-team stat tallies pick the
+        //                     primary team (most of the stat) for the logo.
+        //   team !== 'all'  → WITH-team totals only: rows for other franchises are
+        //                     dropped, so yards, games, fantasy points and the
+        //                     year range all describe the player's time there
+        //                     (Ricky Williams: 6,436 Dolphins yards, not 9,978).
+        const _isTeamBoard = team !== 'all';
+        const _dByName = {};
+        if (typeof D !== 'undefined') D.forEach(d => { if (d && d.n && !_dByName[d.n]) _dByName[d.n] = d; });
+        const _newCareer = (name, pos) => ({ name, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[], _teamStat:{}, _rows:[] });
+        const _seasonRow = (s, tm) => ({
+          yr: s.yr, team: tm || '', gp: s.gp||0,
+          py: s.py||0, ptd: s.ptd||0, 'int': s.int||0, ry: s.ry||0, rtd: s.rtd||0, ra: s.ra||0,
+          rec: s.rc||0, rcy: s.rcy||0, rctd: s.rctd||0, tgt: s.tgt||0, fl: s.fl||0, fpts: s.fpts||0
+        });
+        const _sumRow = (c, r) => {
+          c.py += r.py; c.ptd += r.ptd; c['int'] += r['int'];
+          c.ry += r.ry; c.rtd += r.rtd; c.ra += r.ra;
+          c.rec += r.rec; c.rcy += r.rcy; c.rctd += r.rctd;
+          c.tgt += r.tgt; c.fl += r.fl; c.fpts += r.fpts; c.gp += r.gp;
+          if (c._yrs.indexOf(r.yr) < 0) { c._yrs.push(r.yr); c.seasons++; }
+        };
+        const _addSeasonRow = (c, r) => {
+          if (_isTeamBoard) { if (r.team === team) c._rows.push(r); return; }
+          _sumRow(c, r);
+          if (r.team) c._teamStat[r.team] = (c._teamStat[r.team] || 0) + _statValueWeek(r);
+        };
+        // Team boards: (re)build the totals from the kept rows, optionally from a
+        // data floor year on (see the coverage probe below).
+        const _finalizeTeamRows = (c, floor) => {
+          c.py = c.ptd = c['int'] = c.ry = c.rtd = c.ra = c.rec = c.rcy = c.rctd = c.tgt = c.fl = c.fpts = c.gp = 0;
+          c._yrs = []; c.seasons = 0;
+          c._rows.forEach(r => { if (floor == null || r.yr >= floor) _sumRow(c, r); });
+          c.fpts = Math.round(c.fpts * 10) / 10;
+          c.ppg = c.gp > 0 ? Math.round((c.fpts / c.gp) * 10) / 10 : 0;
+          c.totalTd = c.ptd + c.rtd + c.rctd;
+          c.team = team;
+        };
+
+        // From WEEKLY_STATS — one row per franchise the player suited up for in
+        // the season (a mid-season trade splits the year between two teams).
         if (typeof WEEKLY_STATS !== 'undefined') {
           Object.keys(WEEKLY_STATS).forEach(name => {
             const ws = WEEKLY_STATS[name];
@@ -59204,86 +60282,130 @@ window.fmtHeight = fmtHeight;
               if (!weeks || !weeks.length) return;
               const _sznYr = parseInt(szn);
               if (_eraActive && !_eraOk(_sznYr)) return;
-              if (!_careerMap[name]) _careerMap[name] = { name, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[], _teamStat:{} };
-              const c = _careerMap[name];
+              // Season-level team — the fallback when w.tm is missing (older
+              // seasons and the blank-tm active logs); resolved only if needed.
+              let _sznTeam = null;
+              const _sznTeamOf = () => {
+                if (_sznTeam == null) _sznTeam = _triviaSeasonTeam(name, _sznYr, _dByName[name]);
+                return _sznTeam;
+              };
+              const byTeam = {};
               let sznGp = 0;
-              // Resolve the season's primary team once (used as fallback
-              // when w.tm is missing — happens on some older seasons).
-              const _sznTeam = (typeof getCareerTeamAbbr === 'function')
-                ? getCareerTeamAbbr(name, _sznYr, '')
-                : '';
               weeks.forEach(w => {
-                if (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0) { c.gp++; sznGp++; }
-                c.py += w.py||0; c.ptd += w.ptd||0; c['int'] += w.int||0;
-                c.ry += w.ry||0; c.rtd += w.rtd||0; c.ra += w.ra||0;
-                c.rec += w.rec||0; c.rcy += w.rcy||0; c.rctd += w.rctd||0;
-                c.tgt += w.tgt||0; c.fl += w.fl||0; c.fpts += w.fpts||0;
-                // Per-team accumulation for primary-team logo selection.
-                const _wkTeam = w.tm || _sznTeam;
-                if (_wkTeam) {
-                  c._teamStat[_wkTeam] = (c._teamStat[_wkTeam] || 0) + _statValueWeek(w);
-                }
+                const played = (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
+                const tm = _triviaFranchise(w.tm, _sznYr) || _sznTeamOf();
+                const r = byTeam[tm] || (byTeam[tm] = { yr: _sznYr, team: tm, gp:0, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0 });
+                if (played) { r.gp++; sznGp++; }
+                r.py += w.py||0; r.ptd += w.ptd||0; r['int'] += w.int||0;
+                r.ry += w.ry||0; r.rtd += w.rtd||0; r.ra += w.ra||0;
+                r.rec += w.rec||0; r.rcy += w.rcy||0; r.rctd += w.rctd||0;
+                r.tgt += w.tgt||0; r.fl += w.fl||0; r.fpts += w.fpts||0;
               });
-              if (sznGp > 0) { c.seasons++; c._yrs.push(_sznYr); }
               _seenKey.add(name + '|' + szn);
+              if (sznGp === 0) return;
+              const c = _careerMap[name] || (_careerMap[name] = _newCareer(name, pos));
+              Object.values(byTeam).forEach(r => {
+                if (r.gp > 0 || r.py || r.ry || r.rec || r.fpts) _addSeasonRow(c, r);
+              });
             });
           });
         }
 
-        // Fill from D[].career for missing seasons
+        // Fill from D[].career for missing seasons (franchise per season from
+        // s.tm, the history table, or the nearest resolved season).
         if (typeof D !== 'undefined') {
           D.forEach(d => {
             if (!d.career || !d.career.length) return;
             const pos = d.s || '';
             if (!positions.includes(pos)) return;
-            d.career.forEach(s => {
-              if (!s.yr) return;
+            const teams = _triviaCareerTeams(d.n, d.career);
+            d.career.forEach((s, i) => {
+              if (!s || !s.yr) return;
               if (_eraActive && !_eraOk(s.yr)) return;
-              const key = d.n + '|' + s.yr;
-              if (_seenKey.has(key)) return;
-              if (!_careerMap[d.n]) _careerMap[d.n] = { name: d.n, pos, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0, gp:0, seasons:0, totalTd:0, _yrs:[], _teamStat:{} };
-              const c = _careerMap[d.n];
-              c.py += s.py||0; c.ptd += s.ptd||0; c['int'] += s.int||0;
-              c.ry += s.ry||0; c.rtd += s.rtd||0; c.ra += s.ra||0;
-              c.rec += s.rc||0; c.rcy += s.rcy||0; c.rctd += s.rctd||0;
-              c.tgt += s.tgt||0; c.fl += s.fl||0; c.fpts += s.fpts||0;
-              c.gp += s.gp||0;
-              c.seasons++;
-              c._yrs.push(s.yr);
-              // Per-team accumulation for primary-team logo selection.
-              // D[].career may carry s.tm; if not, look up via team history.
-              const _seasonTeam = s.tm || (typeof getCareerTeamAbbr === 'function'
-                ? getCareerTeamAbbr(d.n, s.yr, '') : '');
-              if (_seasonTeam) {
-                c._teamStat[_seasonTeam] = (c._teamStat[_seasonTeam] || 0) + _statValueSeason(s);
-              }
+              if (_seenKey.has(d.n + '|' + s.yr)) return;
+              const c = _careerMap[d.n] || (_careerMap[d.n] = _newCareer(d.n, pos));
+              _addSeasonRow(c, _seasonRow(s, teams[i]));
             });
           });
         }
 
+        // Legends that exist only in LEGEND_CAREERS (position inferred — see
+        // _triviaLegendOnlyPool).
+        const _legendOnly = _triviaLegendOnlyPool();
+        Object.keys(_legendOnly).forEach(name => {
+          const L = _legendOnly[name];
+          if (!positions.includes(L.pos)) return;
+          L.career.forEach((s, i) => {
+            if (!s || !s.yr) return;
+            if (_eraActive && !_eraOk(s.yr)) return;
+            if (_seenKey.has(name + '|' + s.yr)) return;
+            const c = _careerMap[name] || (_careerMap[name] = _newCareer(name, L.pos));
+            _addSeasonRow(c, _seasonRow(s, L.teams[i]));
+          });
+        });
+
+        // 1970-98 PFR season totals: the seasons the sources above lack (see
+        // _trivia7098Seasons for the same-person / namesake rule).
+        if (_pre1999) _trivia7098Seasons().forEach(r => {
+          if (!positions.includes(r.pos)) return;
+          if (_eraActive && !_eraOk(r.s.yr)) return;
+          if (_seenKey.has(r.name + '|' + r.s.yr)) return;
+          const c = _careerMap[r.key] || (_careerMap[r.key] = _newCareer(r.name, r.pos));
+          _addSeasonRow(c, _seasonRow(r.s, r.team));
+        });
+
+        // Team boards: settle the with-team totals and the era the title can
+        // defend. With an explicit era filter the user already scoped the
+        // board; otherwise run the coverage probe (see _triviaTeamCoverageProbe)
+        // and cut to 1999+ when a franchise player the pool lacks would make
+        // the board.
+        if (_isTeamBoard) {
+          const _finalizeAll = (floor) => Object.values(_careerMap).forEach(c => _finalizeTeamRows(c, floor));
+          _finalizeAll(null);
+          if (!_eraActive) {
+            const ranked = Object.values(_careerMap).filter(c => (c[stat]||0) > 0).sort((a, b) => (b[stat]||0) - (a[stat]||0));
+            const cutoff = ranked.length >= count ? (ranked[count - 1][stat] || 0) : 0;
+            const probe = _triviaTeamCoverageProbe(team, stat, cutoff);
+            if (!probe.ok) {
+              _teamFloor = 1999;
+            } else {
+              const first = _TRIVIA_FRANCHISE_FIRST[team] || 1920;
+              _teamFloor = probe.floor > first ? probe.floor : null;
+            }
+            if (_teamFloor) _finalizeAll(_teamFloor);
+            _teamEraLabel = _teamFloor ? ('Since ' + _teamFloor) : 'All-Time';
+            console.info('[Trivia] ' + team + ' ' + stat + ' coverage probe: ' + (probe.ok ? 'ok' : 'INCOMPLETE (cut to 1999+)') +
+              ' · cutoff ' + cutoff + ' · floor ' + (_teamFloor || 'none') +
+              (probe.unpooled.length ? ' · SEASON_LEADERS names not in pool: ' + probe.unpooled.join(', ') : ''));
+          }
+        }
+
         // Finalize and filter
         Object.values(_careerMap).forEach(c => {
+          if (_isTeamBoard && !c.seasons) return;
           c.fpts = Math.round(c.fpts * 10) / 10;
           c.ppg = c.gp > 0 ? Math.round((c.fpts / c.gp) * 10) / 10 : 0;
           c.totalTd = c.ptd + c.rtd + c.rctd;
-          // v0.10.5: pick the team where the player accumulated the MOST of
-          // the active stat (Vikings for Peterson rushing, Cowboys for
-          // Smith, etc.). Falls back to latest-season team only if the
-          // per-team table is empty (older players, dataset gaps).
-          let bestTeam = '', bestVal = -1;
-          if (c._teamStat) {
-            for (const tm in c._teamStat) {
-              if (c._teamStat[tm] > bestVal) { bestVal = c._teamStat[tm]; bestTeam = tm; }
+          if (!_isTeamBoard) {
+            // v0.10.5: pick the team where the player accumulated the MOST of
+            // the active stat (Vikings for Peterson rushing, Cowboys for
+            // Smith, etc.). Falls back to latest-season team only if the
+            // per-team table is empty (older players, dataset gaps).
+            let bestTeam = '', bestVal = -1;
+            if (c._teamStat) {
+              for (const tm in c._teamStat) {
+                if (c._teamStat[tm] > bestVal) { bestVal = c._teamStat[tm]; bestTeam = tm; }
+              }
             }
-          }
-          if (bestTeam) {
-            c.team = bestTeam;
-          } else {
-            const latestYr = c._yrs.length ? Math.max(...c._yrs) : null;
-            c.team = latestYr ? (_getTeamForPlayerYear(c.name, latestYr) || '') : '';
-            if (!c.team && typeof D !== 'undefined') {
-              const dEntry = D.find(p => p.n === c.name);
-              if (dEntry) c.team = dEntry.t || '';
+            if (bestTeam) {
+              c.team = bestTeam;
+            } else {
+              const latestYr = c._yrs.length ? Math.max(...c._yrs) : null;
+              c.team = latestYr ? (_getTeamForPlayerYear(c.name, latestYr) || '') : '';
+              if (!c.team && typeof D !== 'undefined') {
+                const dEntry = D.find(p => p.n === c.name);
+                if (dEntry) c.team = dEntry.t || '';
+              }
             }
           }
           // Conference filter
@@ -59291,7 +60413,6 @@ window.fmtHeight = fmtHeight;
             const tmConf = _teamConf[c.team];
             if (tmConf !== conf) return;
           }
-          if (team !== 'all' && c.team !== team) return;
           c._isCareer = true;
           allEntries.push(c);
         });
@@ -59307,7 +60428,7 @@ window.fmtHeight = fmtHeight;
 
             Object.keys(ws.seasons).forEach(szn => {
               const yr = parseInt(szn);
-              if (year !== 'all' && yr !== parseInt(year)) return;
+              if (!_yrOk(yr)) return;
               const weeks = ws.seasons[szn];
               if (!weeks || !weeks.length) return;
 
@@ -59354,7 +60475,7 @@ window.fmtHeight = fmtHeight;
 
             Object.keys(ws.seasons).forEach(szn => {
               const yr = parseInt(szn);
-              if (year !== 'all' && yr !== parseInt(year)) return;
+              if (!_yrOk(yr)) return;
               const weeks = ws.seasons[szn];
               if (!weeks || !weeks.length) return;
 
@@ -59409,12 +60530,12 @@ window.fmtHeight = fmtHeight;
             if (!positions.includes(pos)) return;
             d.career.forEach(s => {
               if (!s.yr) return;
-              if (year !== 'all' && s.yr !== parseInt(year)) return;
+              if (!_yrOk(s.yr)) return;
               const key = d.n + '|' + s.yr;
               if (_seenKey.has(key)) return;
               const fpts = s.fpts || 0;
               if (fpts <= 0 && stat === 'fpts') return;
-              const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || d.t || '';
+              const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || _careerTmNear(d.career, s.yr) || d.t || '';
               if (conf !== 'all') {
                 const tmConf = _teamConf[correctTeam];
                 if (tmConf !== conf) return;
@@ -59432,6 +60553,32 @@ window.fmtHeight = fmtHeight;
             });
           });
         }
+
+        // 3. 1970-98 PFR season totals: every qualifying season in the window, not
+        // just the legends' (and the top-25 SEASON_LEADERS rows that follow). A
+        // multi-team season carries no team label (same as the career rows).
+        if (_pre1999) {
+          const _emitted = new Set(allEntries.map(e => e.name + '|' + e.yr));
+          _trivia7098Seasons().forEach(r => {
+            if (!positions.includes(r.pos) || !_yrOk(r.s.yr)) return;
+            const k = r.name + '|' + r.s.yr;
+            if (_seenKey.has(k) || _emitted.has(k)) return;
+            const s = r.s, fpts = s.fpts || 0;
+            if (fpts <= 0 && stat === 'fpts') return;
+            const correctTeam = r.team || '';
+            if (conf !== 'all' && _teamConf[correctTeam] !== conf) return;
+            if (team !== 'all' && correctTeam !== team) return;
+            _emitted.add(k);
+            allEntries.push({
+              name: r.name, pos: r.pos, team: correctTeam, yr: s.yr, gp: s.gp || 0,
+              fpts: Math.round(fpts*10)/10, ppg: s.gp > 0 ? Math.round((fpts / s.gp) * 10) / 10 : 0,
+              py: s.py||0, ptd: s.ptd||0, 'int': s.int||0,
+              ry: s.ry||0, rtd: s.rtd||0, rec: s.rc||0, rcy: s.rcy||0, rctd: s.rctd||0,
+              ra: s.ra||0, tgt: 0, fl: s.fl||0,
+              totalTd: (s.ptd||0) + (s.rtd||0) + (s.rctd||0), _pfr: r.id
+            });
+          });
+        }
       }
 
       // SEASON_LEADERS fallback — covers 1966-2025 top-25 per category
@@ -59443,8 +60590,17 @@ window.fmtHeight = fmtHeight;
       // entries (not just _seenKey) because the D[].career fill block
       // doesn't update _seenKey, and merged retired players from the
       // legend backfill can now appear in D[] with old-year careers.
-      if (filterType === 'season' && year !== 'all' && typeof SEASON_LEADERS !== 'undefined') {
-        const _slYr = SEASON_LEADERS[String(year)];
+      // One year, or every year of an era range (pre-1999 ranges need it: only
+      // legends have careers there).
+      let _slYears = [];
+      if (filterType === 'season' && typeof SEASON_LEADERS !== 'undefined') {
+        if (year !== 'all') _slYears = [parseInt(year)];
+        else if (_eraMin != null || _eraMax != null) {
+          for (let _y = (_eraMin || 1966); _y <= (_eraMax || 2025); _y++) _slYears.push(_y);
+        }
+      }
+      _slYears.forEach(_slYear => {
+        const _slYr = SEASON_LEADERS[String(_slYear)];
         if (_slYr) {
           // PFR uses some non-standard 3-letter abbreviations; map to
           // the user's canonical set so conf/team filters work.
@@ -59453,7 +60609,7 @@ window.fmtHeight = fmtHeight;
             'TAM':'TB','NOR':'NO','LVR':'LV','RAM':'LAR'
           };
           const _normTm = (t) => _PFR_TM[t] || t || '';
-          const _slYrInt = parseInt(year);
+          const _slYrInt = _slYear;
           const _slEmitted = new Set(allEntries.map(e => e.name + '|' + e.yr));
           // Position resolution: prefer D[]'s modern unified label
           // (RB/WR/TE/QB) over PFR's (which kept FB/HB through the 80s).
@@ -59508,7 +60664,7 @@ window.fmtHeight = fmtHeight;
             allEntries.push(m);
           });
         }
-      }
+      });
 
       // Sort by selected stat
       allEntries.sort((a, b) => (b[stat]||0) - (a[stat]||0));
@@ -59547,7 +60703,8 @@ window.fmtHeight = fmtHeight;
         }
         return '';
       }
-      const yearLabel = filterType === 'career' ? ('Career' + _eraTitleSuffix(era)) : (year === 'all' ? 'All-Time' : year);
+      const yearLabel = filterType === 'career' ? ('Career' + _eraTitleSuffix(era))
+        : (year !== 'all' ? year : (_eraTitleSuffix(era).trim() || 'All-Time'));
       const weekLabel = week !== 'all' && filterType === 'game' ? ' Wk ' + week : '';
       const confLabel = conf === 'all' ? 'NFL' : conf;
       const teamLabel = team === 'all' ? '' : ' ' + team;
@@ -59557,7 +60714,24 @@ window.fmtHeight = fmtHeight;
       // players immediately see this is a playoff board, not regular season.
       const postLabel = isPost ? 'Postseason ' : '';
       const gameName = document.getElementById('triviaGameName').value.trim();
-      const title = gameName || `${yearLabel}${weekLabel} Top ${topN.length}${posLabel} ${typeLabel} ${postLabel}${statLabel.toUpperCase()} in ${confLabel}${teamLabel}`.replace(/\s+/g,' ').trim();
+      let title = gameName || `${yearLabel}${weekLabel} Top ${topN.length}${posLabel} ${typeLabel} ${postLabel}${statLabel.toUpperCase()} in ${confLabel}${teamLabel}`.replace(/\s+/g,' ').trim();
+      // Career team boards name the franchise and the era the data covers:
+      // "Dolphins All-Time Rushing Yards Leaders · RB" when the pool reaches the
+      // franchise's first season, else "Commanders Receiving Yards Leaders Since 1966 · WR/TE".
+      if (!gameName && filterType === 'career' && team !== 'all' && _teamEraLabel) {
+        const _statWords = {
+          fpts: 'Fantasy Points', ppg: 'Fantasy PPG', rcy: 'Receiving Yards', rec: 'Receptions', rctd: 'Receiving TDs',
+          ry: 'Rushing Yards', rtd: 'Rushing TDs', py: 'Passing Yards', ptd: 'Passing TDs', totalTd: 'Total TDs',
+          tgt: 'Targets', 'int': 'Interceptions', ra: 'Rush Attempts'
+        }[stat] || statLabel;
+        const _teamSel = document.getElementById('triviaFilterTeam');
+        const _teamNick = (_teamSel && _teamSel.selectedIndex >= 0 && _teamSel.options[_teamSel.selectedIndex].value === team)
+          ? _teamSel.options[_teamSel.selectedIndex].text : team;
+        const _posWords = positions.length === 4 ? 'All Positions' : positions.join('/');
+        title = (_teamEraLabel === 'All-Time')
+          ? `${_teamNick} All-Time ${_statWords} Leaders · ${_posWords}`
+          : `${_teamNick} ${_statWords} Leaders ${_teamEraLabel} · ${_posWords}`;
+      }
 
       // Build items
       const items = topN.map((s, i) => {
@@ -59573,11 +60747,16 @@ window.fmtHeight = fmtHeight;
         } else if (year === 'all') {
           answerText += ' (' + s.yr + ')';
         }
+        // Board year for the era-correct reveal photo: the season, or the career range's midpoint
+        const _itemYr = s._isCareer
+          ? ((s._yrs && s._yrs.length) ? Math.round((Math.min(...s._yrs) + Math.max(...s._yrs)) / 2) : null)
+          : (s.yr || null);
         return {
           answer: answerText,
           team: s.team,
           category: '#' + (i + 1),
-          hint: hint
+          hint: hint,
+          yr: _itemYr
         };
       });
 
@@ -59586,7 +60765,7 @@ window.fmtHeight = fmtHeight;
         // v0.10.7: capture filter params + raw top-N entries so the
         // verifier (called from _renderBoard) can cross-check against
         // a direct LEGEND_CAREERS aggregation and the reference table.
-        _filter: { type: filterType, stat, year, era, positions, isPost, count, conf, team },
+        _filter: { type: filterType, stat, year, era: _teamFloor ? ('since-' + _teamFloor) : era, positions, isPost, count, conf, team },
         _topN: topN.map(s => ({ name: s.name, val: s[stat] || 0, pos: s.pos, team: s.team }))
       };
       _triviaFixItemTeams(parsed.items);

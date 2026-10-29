@@ -56126,7 +56126,7 @@ window.fmtHeight = fmtHeight;
     if (freeBar) {
       // One search bar for the whole board: a hit lands on whichever square
       // holds that player (see _triviaFreeGuess).
-      html += `<div class="trivia-freebar-wrap"><input type="text" id="triviaFreeInput" class="trivia-freebar" placeholder="Type any player on the board…" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="window._triviaOnInput(-1,this)" onfocus="window._triviaOnInput(-1,this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(-1)}"><div class="trivia-freebar-note" id="triviaFreeNote"></div></div>`;
+      html += `<div class="trivia-freebar-wrap"><input type="text" id="triviaFreeInput" class="trivia-freebar" placeholder="Type any player on the board…" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="window._triviaOnInput(-1,this)" onfocus="window._triviaOnInput(-1,this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(-1)}"><button type="button" class="trivia-hint-btn" id="triviaHintBtn" onclick="window._triviaHint()" title="Show the initials on one unsolved square. Costs a miss (free in overtime).">HINT · −1 miss</button><div class="trivia-freebar-note" id="triviaFreeNote"></div></div>`;
     }
     const cellHeaderMode = document.getElementById('triviaCellHeader').value;
     // Last-resort team lookup if team is empty (both layouts)
@@ -57037,7 +57037,23 @@ window.fmtHeight = fmtHeight;
   // retired players only, after the ESPN tables miss) the cutout nearest the board's year,
   // else his default team. Active players never take an other-team cutout: their roster
   // headshot is current, and a mis-stamped team must not show an old jersey.
-  function _triviaCutoutFor(nameVariants, teamCanon, yr, isActive, strict) {
+  function _triviaCutoutFor(nameVariants, teamRaw, yr, isActive, strict) {
+    // Legacy codes that mean a different franchise by year (same rule as the builder's
+    // canon_tm): STL before 1995 = Cardinals, HOU through 1996 = Oilers, BAL through 1983 = Colts.
+    const _canonByYear = (t) => {
+      const up = String(t || '').toUpperCase();
+      if (!up) return '';
+      if (yr) {
+        if (up === 'STL' && yr < 1995) return 'ARI';
+        if (up === 'HOU' && yr <= 1996) return 'TEN';
+        if (up === 'BAL' && yr <= 1983) return 'IND';
+      }
+      if (up === 'PHO' || up === 'PHX') return 'ARI';
+      if (up === 'BOS') return 'NE';
+      if (up === 'NYT') return 'NYJ';
+      return (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[up]) || up;
+    };
+    const teamCanon = _canonByYear(teamRaw);
     const mk = (b, credit) => ({
       url: b.src || b.url, credit: credit || '',
       page: b.file ? 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(String(b.file).replace(/ /g, '_')) : '',
@@ -57045,10 +57061,7 @@ window.fmtHeight = fmtHeight;
     });
     const yrTeam = () => {
       if (!yr || typeof _getTeamForPlayerYear !== 'function') return '';
-      const t0 = _getTeamForPlayerYear(nameVariants[0], yr);
-      if (!t0) return '';
-      const up = String(t0).toUpperCase();
-      return (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[up]) || up;
+      return _canonByYear(_getTeamForPlayerYear(nameVariants[0], yr));
     };
     const loc = window.LEGEND_HEADSHOTS_LOCAL;
     if (loc) {
@@ -57154,7 +57167,7 @@ window.fmtHeight = fmtHeight;
     // 00. PLAYER_CUTOUTS — era-correct transparent cutout in the cell team's jersey (or the
     // team he had in the board's year). Beats every other source when it matches the team.
     const _yr = _triviaYearOf(answerText, yr);
-    const _cut = _triviaCutoutFor(nameVariants, _tCanon, _yr, _isActive, true);
+    const _cut = _triviaCutoutFor(nameVariants, _tUp, _yr, _isActive, true);
     if (_cut) return _cut;
 
     if (_isActive) {
@@ -57191,7 +57204,7 @@ window.fmtHeight = fmtHeight;
 
     // 2b. Cutout in another jersey, nearest the board's era (retired players with no ESPN
     // headshot): a transparent in-uniform cut beats the rectangular Commons lead photo.
-    const _cutAny = _triviaCutoutFor(nameVariants, _tCanon, _yr, false, false);
+    const _cutAny = _triviaCutoutFor(nameVariants, _tUp, _yr, false, false);
     if (_cutAny) return _cutAny;
 
     // 3. LEGEND_HEADSHOTS (2026-10-28) — Wikipedia/Wikimedia Commons lead images for
@@ -57402,6 +57415,34 @@ window.fmtHeight = fmtHeight;
     _triviaFreeNote('Out of misses · overtime: hits still reveal, misses are free · Give Up shows the answers', 'var(--accent)');
     _triviaUpdateScore();
   }
+  // HINT with a price (survey R8): shows the initials on the highest-ranked
+  // unsolved square that has none yet, and costs one miss (free once the
+  // board is in overtime). The price keeps the share grid honest.
+  window._triviaHint = function() {
+    if (!_triviaData || !_triviaData.items) return;
+    if (_triviaGame.gameOver && !_triviaGame.overtime) return;
+    const cells = [...document.querySelectorAll('.trivia-cell[data-idx]')];
+    const target = cells.find(c => !c.classList.contains('revealed') && !c.classList.contains('wrong') && !c.dataset.hinted);
+    if (!target) { _triviaFreeNote('No squares left to hint', 'var(--text2)'); return; }
+    const idx = +target.dataset.idx;
+    const item = _triviaData.items[idx] || {};
+    const name = (item.answer || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
+    const parts = name.split(/\s+/).filter(Boolean);
+    const initials = parts.length >= 2 ? parts[0][0] + '. ' + parts[parts.length - 1][0] + '.' : (parts[0] || '?')[0] + '.';
+    target.dataset.hinted = '1';
+    const line = target.querySelector('.trivia-cell-hint') || target.querySelector('.trivia-chip-sub');
+    if (line) { line.textContent = initials.toUpperCase(); line.classList.add('trivia-hinted'); }
+    target.classList.add('hit');
+    setTimeout(() => target.classList.remove('hit'), 900);
+    target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (_triviaGame.overtime) { _triviaFreeNote('Hint: ' + initials.toUpperCase() + ' (overtime, free)', 'var(--accent)'); return; }
+    _triviaScore.misses = (_triviaScore.misses || 0) + 1;
+    const budget = _triviaBudgetActive() ? _triviaMissBudget(_triviaScore.total) : 0;
+    const left = budget ? budget - _triviaScore.misses : 0;
+    _triviaFreeNote('Hint: ' + initials.toUpperCase() + ' · −1 miss' + (budget ? (left > 0 ? ' · ' + left + ' left' : '') : ''), 'var(--accent)');
+    _triviaUpdateScore();
+    if (budget && _triviaScore.misses >= budget) _triviaMissBudgetOut();
+  };
   // Why a miss missed (survey R7): a real player's position and years held
   // against the board's filter, so a wrong guess still teaches something —
   // "RB · 1989–1998 — the board is 2010s" instead of a bare "not on the board".

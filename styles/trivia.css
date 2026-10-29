@@ -67,7 +67,13 @@
 .trivia-freebar:focus{border-color:#ffd166}
 .trivia-freebar:disabled{opacity:.65}
 .trivia-freebar.shake{animation:triviaShake .4s ease}
-.trivia-freebar-note{min-height:16px;margin-top:4px;font-size:.72rem;letter-spacing:.5px;text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trivia-freebar-note{flex-basis:100%;min-height:16px;margin-top:4px;font-size:.72rem;letter-spacing:.5px;text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Search bar + HINT button on one row; the note wraps underneath */
+.trivia-freebar-wrap{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+.trivia-freebar-wrap .trivia-freebar{flex:1 1 200px;width:auto}
+.trivia-hint-btn{flex:0 0 auto;padding:0 12px;border-radius:8px;border:2px solid rgba(255,209,102,.5);background:rgba(255,209,102,.12);color:#ffd166;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+.trivia-hint-btn:hover{background:rgba(255,209,102,.22)}
+.trivia-cell-hint.trivia-hinted,.trivia-chip-sub.trivia-hinted{color:#ffd166;font-weight:700;letter-spacing:2px}
 .trivia-cell.hit{animation:triviaHit .9s ease}
 @keyframes triviaHit{0%{box-shadow:0 0 0 0 rgba(34,197,94,.9)}100%{box-shadow:0 0 0 14px rgba(34,197,94,0)}}
 /* Trivia is admin-only until the Board Library audit is done (Jack 10-28): nav button, Games

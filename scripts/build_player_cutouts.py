@@ -454,6 +454,8 @@ def segment(src_path, log):
     bh, bw = ys.max() - ys.min(), xs.max() - xs.min()
     if bh < 0.55 * bw:
         return None, 'lying-subject'
+    if bh < 0.9 * bw:
+        return None, 'wide-subject'    # a pile of players / a sitting figure read as one matte
     if not profile_ok(a2, 0.04, 0.14, 0.20, 0.65):
         return None, 'no-head-profile'   # a limb / ball / torso fragment, not a head on shoulders
     return rgba, None
@@ -479,27 +481,42 @@ def profile_ok(a, h0, h1, s0, s1, ratio=1.3):
     return hw > 0 and float(sh.max()) >= ratio * hw
 
 
+def seg_ok(seg_png):
+    """Gates that can be re-run on a cached segmentation (no rembg): the kept matte
+    must be taller than it is wide (a pile of helmets or a sitting figure is not a head)."""
+    import numpy as np
+    from PIL import Image
+    a = np.array(Image.open(seg_png).convert('RGBA').split()[-1])
+    ys, xs = np.where(a > 128)
+    if not len(ys):
+        return 'empty-matte'
+    bh, bw = ys.max() - ys.min(), xs.max() - xs.min()
+    if bh < 0.9 * bw:
+        return 'wide-subject'
+    return None
+
+
 def check_cut(png_path):
-    """Post-crop sanity: coverage 10-90 %, head present in the upper-middle box,
-    shoulders wider than the head, nothing running off the top."""
+    """Post-crop sanity: coverage 8-92 %, something in the centre column (the cutter centres
+    on the head, so an off-centre blob is a limb / jersey fragment), nothing running off the
+    top, and shoulders wider than the head once the head band is measured where the cutter
+    puts it (crown at ~10 %, shoulders from ~55 %; the bottom 20 % is faded)."""
     import numpy as np
     from PIL import Image
     im = Image.open(png_path).convert('RGBA')
     a8 = np.array(im.split()[-1])
     a = a8.astype(np.float32) / 255.0
     cov = a.mean()
-    if cov < 0.10 or cov > 0.92:
+    if cov < 0.08 or cov > 0.92:
         return 'coverage-%.2f' % cov
     h, w = a.shape
-    head = a[int(h * 0.06):int(h * 0.40), int(w * 0.30):int(w * 0.70)].mean()
-    if head < 0.40:
-        return 'headless-%.2f' % head
+    centre = a[int(h * 0.10):int(h * 0.60), int(w * 0.40):int(w * 0.60)].mean()
+    if centre < 0.30:
+        return 'off-centre-%.2f' % centre
     top_edge = a[:int(h * 0.02)].mean()
     if top_edge > 0.6:
         return 'cropped-top'   # subject runs off the top: crown not found
-    # ESPN framing: head in the top ~25 %, shoulders through the middle band (the
-    # cutter fades the bottom 20 %, so measure above it)
-    if not profile_ok(a8, 0.05, 0.22, 0.42, 0.78, ratio=1.35):
+    if not profile_ok(a8, 0.08, 0.30, 0.55, 0.79, ratio=1.2):
         return 'no-shoulders'
     return None
 
@@ -525,6 +542,10 @@ def make_cutout(name, team, cand, log):
             how = mlh.cut(seg_png, master)        # already transparent → the cutter skips rembg
         else:
             how = 'cached'
+        if os.path.exists(seg_png):
+            bad = seg_ok(seg_png)
+            if bad:
+                return False, bad
     except Exception as e:
         return False, 'cut-error:%s' % str(e)[:60]
     bad = check_cut(master)
@@ -548,6 +569,8 @@ def cut_player(name, p, cands, cuts, log):
         if done and done.get('ok'):
             continue
         tried = set((done or {}).get('tried') or [])
+        if cuts.get('_skip_' + team):
+            tried.add(cuts.pop('_skip_' + team))
         pool = [c for c in cands if team in c['teams'] and c['file'] not in tried]
         # closest era to the stint wins ties; portraits first
         pool.sort(key=lambda c: (-c['teams'][team], abs((c.get('year') or st['mid']) - st['mid'])))
@@ -607,6 +630,8 @@ def write_index(players, state):
         cuts = state['cuts'].get(name) or {}
         by = {}
         for team, rec in cuts.items():
+            if team.startswith('_') or not isinstance(rec, dict):
+                continue
             if rec.get('ok') and os.path.exists(os.path.join(ROOT, rec['src'])):
                 by[team] = {'src': rec['src'], 'credit': rec['credit'], 'yr': rec.get('yr'), 'file': rec['file']}
                 total_bytes += rec.get('bytes') or os.path.getsize(os.path.join(ROOT, rec['src']))
@@ -617,7 +642,7 @@ def write_index(players, state):
         default = prim if prim in by else max(by, key=lambda t: sum(1 for s in players[name]['stints'] if s['tm'] == t))
         table[name] = {'byTeam': by, 'default': default}
         # sidecar credits next to the images
-        with open(os.path.join(IMG_DIR, lt.slug(name), 'credits.json'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(IMG_DIR, lt.slug(name), 'credits.json'), 'w', encoding='utf-8', newline='\n') as f:
             json.dump({t: {'file': b['file'], 'credit': b['credit'], 'yr': b['yr'],
                            'page': (cuts[t].get('page') or '')} for t, b in by.items()}, f, ensure_ascii=False, indent=1)
     lines = ['/* PLAYER_CUTOUTS — era-correct transparent player cutouts for the Trivia reveal',
@@ -686,8 +711,8 @@ def coverage_report(players, table, espn_names, state):
                 d['team'] += 1
             elif ent:
                 d['any'] += 1
-            elif name in espn_names:
-                d['espn'] += 1
+            elif name in espn_names or players[name]['last'] >= 2024:
+                d['espn'] += 1          # id files, or an active roster headshot (D._slImg)
             else:
                 m = misses.setdefault(name, {'best': 0, 'seasons': 0, 'teams': set(), 'why': None, 'yr': yr})
                 m['best'] = max(m['best'], fp)
@@ -705,11 +730,12 @@ def coverage_report(players, table, espn_names, state):
             dec, d['n'], d['team'], 100.0 * d['team'] / d['n'], d['any'], 100.0 * d['any'] / d['n'],
             d['espn'], 100.0 * d['espn'] / d['n'], none, 100.0 * none / d['n']))
     lines += ['', '"in-uniform cutout" = img/cutouts/<player>/<that season\'s team>.webp exists. "ESPN headshot only" = the',
-              'reveal still shows the (current-team, era-agnostic) ESPN cutout. "nothing" = initials.', '']
+              'reveal still shows the (current-team, era-agnostic) ESPN cutout (id files, or an active roster photo).',
+              '"nothing" = initials.', '']
     # why the misses missed
     for name, m in misses.items():
         cuts = state['cuts'].get(name) or {}
-        whys = sorted({(r.get('why') or 'no-candidate') for r in cuts.values() if not r.get('ok')})
+        whys = sorted({(r.get('why') or 'no-candidate') for k, r in cuts.items() if not k.startswith('_') and not r.get('ok')})
         m['why'] = ', '.join(w.split(':')[0] for w in whys)[:80] if whys else ('not searched' if name not in state['searched'] else 'no-candidate')
     lines += ['## Notable players with NO free in-uniform photo (top-150 seasons, best season first)', '',
               'No Commons file could be placed on a team (or every candidate failed the cutter). These need',
@@ -739,6 +765,7 @@ def main():
     ap.add_argument('--report', action='store_true', help='coverage report only')
     ap.add_argument('--refresh', action='store_true', help='re-search the selected names')
     ap.add_argument('--retry-failed', action='store_true', help='re-try teams whose cut failed')
+    ap.add_argument('--recheck', action='store_true', help='re-run the gates on accepted cuts (cached masters); failures are re-tried')
     ap.add_argument('--flickr-key', default=os.environ.get('FLICKR_API_KEY') or None)
     ap.add_argument('--sleep', type=float, default=0.5, help='seconds between Commons API calls')
     ap.add_argument('--chunk', type=int, default=40, help='players per search batch (state saved after each)')
@@ -793,6 +820,28 @@ def main():
             for t, r in list((state['cuts'].get(n) or {}).items()):
                 if not r.get('ok'):
                     state['cuts'][n].pop(t)
+    if args.recheck:
+        dropped = 0
+        for n in order:
+            cands = {c['file']: c for c in (state['cands'].get(n) or [])}
+            for t, r in list((state['cuts'].get(n) or {}).items()):
+                if not r.get('ok') or r.get('file') not in cands:
+                    continue
+                key = hashlib.sha1(cands[r['file']]['url'].encode('utf-8')).hexdigest()[:16]
+                seg_png = os.path.join(PNG_DIR, key + '_seg.png')
+                master = os.path.join(PNG_DIR, key + '_cut.png')
+                bad = (seg_ok(seg_png) if os.path.exists(seg_png) else None) or (check_cut(master) if os.path.exists(master) else None)
+                if bad:
+                    dropped += 1
+                    log('  recheck %-22s %-3s drop %s  %s' % (n, t, bad, r['file'][5:60]))
+                    out = os.path.join(ROOT, r['src'])
+                    if os.path.exists(out):
+                        os.remove(out)
+                    state['cuts'][n][t] = {'ok': False, 'tried': [r['file']], 'why': bad}
+                    state['cuts'][n].pop(t)      # re-tried below with the next candidates
+                    state['cuts'][n]['_skip_' + t] = r['file']
+        log('recheck: dropped %d cuts' % dropped)
+        save_state(state, 'cut')
 
     # ---- stage S: search
     if not args.cut_only:

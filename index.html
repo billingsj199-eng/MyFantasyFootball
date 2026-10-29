@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-29-hub" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-hub2" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -3669,7 +3669,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-29-hub">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-10-29-hub2">
 <div class="trivia-wrap">
 <!-- Tabs -->
 <div class="trivia-admin-only" style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
@@ -6759,7 +6759,7 @@ window._loadRetiredData = function(opts) {
 // initials until it lands, then upgrades the cell. Regenerate: scripts/build_legend_headshots.py.
 window._loadLegendHeadshots = function(opts) {
   if (window._legendHeadshotsPromise) return window._legendHeadshotsPromise;
-  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-28-cutouts'], 'LegendHeadshots', opts);
+  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-29-cutouts2'], 'LegendHeadshots', opts);
   return window._legendHeadshotsPromise;
 };
 
@@ -6833,7 +6833,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-29-hub"></script>
+<script defer src="app.js?v=2026-10-29-hub2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

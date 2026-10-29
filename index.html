@@ -3669,7 +3669,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-28-boards">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-10-28-drill">
 <div class="trivia-wrap">
 <!-- Player header (non-admin). The builder tab strip below it is admin-only. -->
 <div class="trivia-player-only" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
@@ -3745,61 +3745,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div class="trivia-library-sub">Any category, any era. Boards build from the latest stats, so this season's boards grow every week.</div>
 </div>
 <div class="trivia-library-presets" id="libPresets"></div>
-<div class="trivia-library-grid">
-<label>Type
-<select id="libType">
-<option value="season" selected>Season totals</option>
-<option value="career">Career totals</option>
-<option value="game">Single game</option>
-</select>
-</label>
-<label>Stat
-<select id="libStat">
-<option value="fpts" selected>Fantasy Pts</option>
-<option value="ppg">Fantasy PPG</option>
-<option value="rcy">Receiving Yards</option>
-<option value="rec">Receptions</option>
-<option value="rctd">Receiving TDs</option>
-<option value="ry">Rushing Yards</option>
-<option value="rtd">Rushing TDs</option>
-<option value="py">Passing Yards</option>
-<option value="ptd">Passing TDs</option>
-<option value="totalTd">Total TDs</option>
-</select>
-</label>
-<label>Era
-<select id="libEra">
-<option value="all" selected>All-Time</option>
-<option value="since-2020">Since 2020</option>
-<option value="2020-2029">2020s</option>
-<option value="2010-2019">2010s</option>
-<option value="2000-2009">2000s</option>
-<option value="1990-1999">1990s</option>
-<option value="1980-1989">1980s</option>
-<option value="1970-1979">1970s</option>
-</select>
-</label>
-<label>Year
-<select id="libYear"><option value="all" selected>Any year</option></select>
-</label>
-<label>Size
-<select id="libCount">
-<option value="16">Top 16</option>
-<option value="20" selected>Top 20</option>
-<option value="25">Top 25</option>
-<option value="30">Top 30</option>
-</select>
-</label>
-</div>
-<div class="trivia-library-row">
-<div class="trivia-library-pos" id="libPos">
-<button type="button" data-pos="QB" class="on">QB</button>
-<button type="button" data-pos="RB" class="on">RB</button>
-<button type="button" data-pos="WR" class="on">WR</button>
-<button type="button" data-pos="TE" class="on">TE</button>
-</div>
-<button type="button" class="trivia-library-play" id="libPlayBtn" onclick="window._triviaLibraryPlay()">BUILD &amp; PLAY</button>
-</div>
+<!-- Drill-down: one question at a time (type → stat → era/year → team → positions),
+     breadcrumbs to step back. Rendered by _libWizRender (trivia chunk). -->
+<div class="trivia-library-crumbs" id="libCrumbs"></div>
+<div class="trivia-library-wizard" id="libWizard"></div>
 <div class="trivia-library-note" id="libNote"></div>
 <!-- Board index: walk every library combination in order (admin review) -->
 <div class="trivia-library-index">

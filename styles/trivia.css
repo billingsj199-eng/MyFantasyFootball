@@ -90,9 +90,23 @@ body:not(.mff-admin) #navTriviaBtn{display:none!important}
 .trivia-library-play{padding:9px 20px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer;font-weight:700}
 .trivia-library-play:disabled{opacity:.6;cursor:default}
 .trivia-library-note{min-height:14px;margin-top:6px;font-size:.72rem;color:var(--text2)}
+/* Drill-down (type → stat → era → team → positions) */
+.trivia-library-crumbs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.trivia-crumb{padding:4px 10px;border-radius:999px;border:1px solid #ffd166;background:rgba(255,209,102,.12);color:#ffd166;font-size:.72rem;cursor:pointer}
+.trivia-crumb-reset{border-color:var(--border);background:transparent;color:var(--text2)}
+.trivia-wiz-q{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;color:var(--text);margin:6px 0 8px}
+.trivia-wiz-choices{display:flex;flex-wrap:wrap;gap:6px}
+.trivia-wiz-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.8rem;cursor:pointer;line-height:1.2}
+.trivia-wiz-chip:hover{border-color:#ffd166;color:#ffd166}
+.trivia-wiz-chip small{display:block;width:100%;font-size:.66rem;color:var(--text2);margin-top:2px}
+.trivia-wiz-card{flex:1 1 150px;flex-direction:column;align-items:flex-start;padding:12px 14px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1px}
+.trivia-wiz-teams .trivia-wiz-chip{padding:6px 10px 6px 6px}
+.trivia-wiz-teams img{width:22px;height:22px;object-fit:contain}
+.trivia-wiz-years .trivia-wiz-chip{padding:6px 9px;font-variant-numeric:tabular-nums}
 .trivia-library-index{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
 .trivia-library-index button{padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer}
-.trivia-library-index select{flex:1;min-width:180px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem}
+.trivia-library-index select{flex:1 1 140px;min-width:0;max-width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem}
+.trivia-library{overflow:hidden}
 .trivia-library-index span{font-size:.72rem;color:var(--text2);white-space:nowrap}
 .trivia-score-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px;margin-bottom:8px;border-radius:8px;background:var(--surface2);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;color:var(--text)}
 /* Inside the #triviaScoreBar wrapper (which already draws the box) the bar is just a row. */

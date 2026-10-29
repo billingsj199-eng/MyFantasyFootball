@@ -58260,11 +58260,7 @@ window.fmtHeight = fmtHeight;
     return !!(m && +m[2] < 1999);
   }
   function _triviaLibInit() {
-    const ySel = document.getElementById('libYear');
-    if (ySel && ySel.options.length <= 1) {
-      const last = (typeof _TRIVIA_LAST_SEASON !== 'undefined' && _TRIVIA_LAST_SEASON) || 2025;
-      for (let y = last + 1; y >= 1970; y--) { const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); ySel.appendChild(o); }
-    }
+    _libWizRender();
     const pre = document.getElementById('libPresets');
     if (pre && !pre.children.length) {
       _LIB_PRESETS.forEach(p => {
@@ -58274,12 +58270,6 @@ window.fmtHeight = fmtHeight;
         pre.appendChild(b);
       });
     }
-    document.querySelectorAll('#libPos button').forEach(b => {
-      b.addEventListener('click', () => {
-        b.classList.toggle('on');
-        if (!document.querySelector('#libPos button.on')) b.classList.add('on');
-      });
-    });
     // Board index jump list, grouped by type · stat.
     const sel = document.getElementById('libIndexSel');
     if (sel && sel.options.length <= 1) {
@@ -58309,7 +58299,7 @@ window.fmtHeight = fmtHeight;
     q('triviaFilterEra').value = year !== 'all' ? 'all' : era;
     q('triviaFilterCount').value = String(f.count || 20);
     q('triviaFilterConf').value = 'all';
-    q('triviaFilterTeam').value = 'all';
+    q('triviaFilterTeam').value = f.team || 'all';
     if (q('triviaFilterWeek')) q('triviaFilterWeek').value = 'all';
     const pos = f.pos && f.pos.length ? f.pos : ['QB', 'RB', 'WR', 'TE'];
     document.querySelectorAll('#triviaFilterPos input[type="checkbox"]').forEach(cb => { cb.checked = pos.includes(cb.value); });
@@ -58317,20 +58307,106 @@ window.fmtHeight = fmtHeight;
     await window._triviaGenerate();
     return (window._triviaData && window._triviaData.items) ? window._triviaData.items.length : 0;
   }
+  // ---- Drill-down (one question at a time; Jack 10-28) ----
+  // Steps: type → stat → era (or a year) → team → positions → board.
+  const _LIB_WIZ_STEPS = ['type', 'stat', 'era', 'team', 'pos'];
+  const _LIB_WIZ_Q = { type: 'What kind of board?', stat: 'Which stat?', era: 'Which era?', team: 'Which team?', pos: 'Which positions?' };
+  let _libWiz = { type: null, stat: null, era: null, year: null, team: null, pos: null };
+  // "Pick a year…" keeps the era step open until a year is chosen.
+  function _libWizStep() { return _LIB_WIZ_STEPS.find(s => _libWiz[s] == null || (s === 'era' && _libWiz.era === 'year' && _libWiz.year == null)) || 'done'; }
+  function _libWizLabel(step) {
+    const w = _libWiz;
+    if (step === 'type') return _LIB_TYPE_LBL[w.type];
+    if (step === 'stat') return _LIB_STAT_LBL[w.stat];
+    if (step === 'era') return w.year && w.year !== 'all' ? String(w.year) : (_LIB_ERA_LBL[w.era] || (w.era === 'since-2020' ? 'Since 2020' : w.era));
+    if (step === 'team') return w.team === 'all' ? 'All teams' : _libTeamName(w.team);
+    if (step === 'pos') return w.pos && w.pos.length === 4 ? 'All positions' : (w.pos || []).join(' / ');
+    return '';
+  }
+  function _libTeamOptions() {
+    const sel = document.getElementById('triviaFilterTeam');
+    return sel ? [...sel.options].map(o => ({ v: o.value, t: o.textContent })) : [{ v: 'all', t: 'All Teams' }];
+  }
+  function _libTeamName(abbr) { const o = _libTeamOptions().find(x => x.v === abbr); return o ? o.t : abbr; }
+  function _libWizChoices(step) {
+    const w = _libWiz;
+    if (step === 'type') return [['season', 'Season totals', 'Best single seasons'], ['career', 'Career totals', 'Whole careers'], ['game', 'Single game', 'Best games (1999+)']];
+    if (step === 'stat') return _LIB_STATS.filter(s => !(w.type === 'career' && s === 'ppg')).map(s => [s, _LIB_STAT_LBL[s], '']);
+    if (step === 'era') {
+      const eras = [['all', 'All-Time', '']];
+      if (w.type !== 'career') eras.push(['since-2020', 'Since 2020', '']);
+      ['2020-2029', '2010-2019', '2000-2009', '1990-1999', '1980-1989', '1970-1979'].forEach(e => { if (!_libGameTooOld(w.type, 'all', e)) eras.push([e, _LIB_ERA_LBL[e], '']); });
+      if (w.type !== 'career') eras.push(['year', 'Pick a year…', '']);
+      return eras;
+    }
+    if (step === 'team') return _libTeamOptions().map(o => [o.v, o.v === 'all' ? 'All teams' : o.t, o.v === 'all' ? '' : o.v]);
+    if (step === 'pos') {
+      const ok = p => !_LIB_STAT_POS[w.stat] || _LIB_STAT_POS[w.stat].includes(p);
+      return [['ALL', 'All positions', '']].concat(['QB', 'RB', 'WR', 'TE'].filter(ok).map(p => [p, p, '']));
+    }
+    return [];
+  }
+  function _libWizRender() {
+    const crumbs = document.getElementById('libCrumbs'), box = document.getElementById('libWizard');
+    if (!crumbs || !box) return;
+    const step = _libWizStep();
+    // Breadcrumbs: every answered step is a button that reopens that step.
+    let ch = '';
+    _LIB_WIZ_STEPS.forEach(s => {
+      if (_libWiz[s] == null) return;
+      if (s === 'era' && _libWiz.era === 'year' && _libWiz.year == null) return; // year not picked yet
+      ch += `<button type="button" class="trivia-crumb" onclick="window._triviaLibBack('${s}')">${_esc(_libWizLabel(s))} ✕</button>`;
+    });
+    if (ch) ch += `<button type="button" class="trivia-crumb trivia-crumb-reset" onclick="window._triviaLibBack('type')">Start over</button>`;
+    crumbs.innerHTML = ch;
+    if (step === 'done') { box.innerHTML = ''; return; }
+    // Year picker: a second row inside the era step.
+    if (step === 'era' && _libWiz.era === 'year') {
+      const last = (typeof _TRIVIA_LAST_SEASON !== 'undefined' && _TRIVIA_LAST_SEASON) || 2025;
+      let h = `<div class="trivia-wiz-q">Which year?</div><div class="trivia-wiz-choices trivia-wiz-years">`;
+      for (let y = last + 1; y >= (_libWiz.type === 'game' ? 1999 : 1970); y--) h += `<button type="button" class="trivia-wiz-chip" onclick="window._triviaLibPick('year','${y}')">${y}</button>`;
+      box.innerHTML = h + '</div>';
+      return;
+    }
+    const choices = _libWizChoices(step);
+    let h = `<div class="trivia-wiz-q">${_LIB_WIZ_Q[step]}</div><div class="trivia-wiz-choices${step === 'team' ? ' trivia-wiz-teams' : ''}">`;
+    choices.forEach(([v, label, sub]) => {
+      const logo = (step === 'team' && v !== 'all') ? `<img src="${_triviaLogoUrl(v)}" alt="" loading="lazy">` : '';
+      h += `<button type="button" class="trivia-wiz-chip${step === 'type' ? ' trivia-wiz-card' : ''}" onclick="window._triviaLibPick('${step}','${v}')">${logo}<span>${_esc(label)}</span>${sub ? `<small>${_esc(sub)}</small>` : ''}</button>`;
+    });
+    box.innerHTML = h + '</div>';
+  }
+  window._triviaLibPick = function(step, v) {
+    if (step === 'year') { _libWiz.year = v; _libWiz.era = 'all'; }
+    else if (step === 'era') { _libWiz.era = v; _libWiz.year = v === 'year' ? null : 'all'; if (v === 'year') { _libWiz.era = 'year'; _libWizRender(); return; } }
+    else if (step === 'pos') { _libWiz.pos = v === 'ALL' ? ['QB', 'RB', 'WR', 'TE'] : [v]; }
+    else _libWiz[step] = v;
+    _libWizRender();
+    if (_libWizStep() === 'done') window._triviaLibraryPlay();
+  };
+  // Reopen a step: clear it and everything after it.
+  window._triviaLibBack = function(step) {
+    let clear = false;
+    _LIB_WIZ_STEPS.forEach(s => { if (s === step) clear = true; if (clear) _libWiz[s] = null; });
+    if (clear && (step === 'era' || step === 'type' || step === 'stat')) _libWiz.year = null;
+    _libNote('');
+    _libWizRender();
+    const panel = document.getElementById('triviaLibrary');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   window._triviaLibraryPlay = async function(preset) {
     const q = id => document.getElementById(id);
-    const f = preset || {
-      type: q('libType').value, stat: q('libStat').value, era: q('libEra').value,
-      year: q('libYear').value, count: +q('libCount').value,
-      pos: [...document.querySelectorAll('#libPos button.on')].map(b => b.dataset.pos)
-    };
+    const w = _libWiz;
+    const f = preset || { type: w.type, stat: w.stat, era: w.era === 'year' ? 'all' : w.era, year: w.year || 'all', team: w.team, count: 20, pos: w.pos };
     if (_libGameTooOld(f.type, f.year, f.era)) { _libNote('Single-game boards start in 1999.', '#ef4444'); return; }
     const btn = q('libPlayBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'BUILDING…'; }
-    _libNote('');
+    _libNote('Building…');
     try {
       const n = await _libBuild(f);
       if (n) {
+        _libNote('');
         if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
         const area = q('triviaBoardArea');
         if (area) area.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -60667,6 +60743,16 @@ window.fmtHeight = fmtHeight;
       });
 
       // Sort by selected stat
+      // One row per player (Jack 10-28): the sources spell the same man two
+      // ways ("Mark Ingram" in the PFR tables, "Mark Ingram II" in D), which
+      // put him on a board twice. Key = suffix-stripped name + position +
+      // season (or week); the higher-stat row wins. Different positions stay
+      // apart, so the father (WR) and the son (RB) are not merged.
+      const _dupKey = (e) => (e.name || '').toLowerCase().replace(/\./g, '').replace(/\s+(jr|sr|ii|iii|iv|v)$/, '').replace(/\s+/g, ' ').trim()
+        + '|' + (e.pos || '') + '|' + (e._isGame ? e.yr + 'w' + e.wk : (e._isCareer ? 'c' : e.yr));
+      const _best = new Map();
+      allEntries.forEach(e => { const k = _dupKey(e); const p = _best.get(k); if (!p || (e[stat] || 0) > (p[stat] || 0)) _best.set(k, e); });
+      if (_best.size < allEntries.length) allEntries.splice(0, allEntries.length, ..._best.values());
       allEntries.sort((a, b) => (b[stat]||0) - (a[stat]||0));
 
       // Take top N
@@ -60714,7 +60800,10 @@ window.fmtHeight = fmtHeight;
       // players immediately see this is a playoff board, not regular season.
       const postLabel = isPost ? 'Postseason ' : '';
       const gameName = document.getElementById('triviaGameName').value.trim();
-      let title = gameName || `${yearLabel}${weekLabel} Top ${topN.length}${posLabel} ${typeLabel} ${postLabel}${statLabel.toUpperCase()} in ${confLabel}${teamLabel}`.replace(/\s+/g,' ').trim();
+      // Team boards read "… for the Cowboys", not "in NFL DAL".
+      const _teamOpt = team !== 'all' ? [...(document.getElementById('triviaFilterTeam') || { options: [] }).options].find(o => o.value === team) : null;
+      const inLabel = _teamOpt ? 'for the ' + _teamOpt.textContent.trim() : 'in ' + confLabel + teamLabel;
+      let title = gameName || `${yearLabel}${weekLabel} Top ${topN.length}${posLabel} ${typeLabel} ${postLabel}${statLabel.toUpperCase()} ${inLabel}`.replace(/\s+/g,' ').trim();
       // Career team boards name the franchise and the era the data covers:
       // "Dolphins All-Time Rushing Yards Leaders · RB" when the pool reaches the
       // franchise's first season, else "Commanders Receiving Yards Leaders Since 1966 · WR/TE".

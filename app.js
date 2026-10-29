@@ -57036,7 +57036,23 @@ window.fmtHeight = fmtHeight;
   // retired players only, after the ESPN tables miss) the cutout nearest the board's year,
   // else his default team. Active players never take an other-team cutout: their roster
   // headshot is current, and a mis-stamped team must not show an old jersey.
-  function _triviaCutoutFor(nameVariants, teamCanon, yr, isActive, strict) {
+  function _triviaCutoutFor(nameVariants, teamRaw, yr, isActive, strict) {
+    // Legacy codes that mean a different franchise by year (same rule as the builder's
+    // canon_tm): STL before 1995 = Cardinals, HOU through 1996 = Oilers, BAL through 1983 = Colts.
+    const _canonByYear = (t) => {
+      const up = String(t || '').toUpperCase();
+      if (!up) return '';
+      if (yr) {
+        if (up === 'STL' && yr < 1995) return 'ARI';
+        if (up === 'HOU' && yr <= 1996) return 'TEN';
+        if (up === 'BAL' && yr <= 1983) return 'IND';
+      }
+      if (up === 'PHO' || up === 'PHX') return 'ARI';
+      if (up === 'BOS') return 'NE';
+      if (up === 'NYT') return 'NYJ';
+      return (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[up]) || up;
+    };
+    const teamCanon = _canonByYear(teamRaw);
     const mk = (b, credit) => ({
       url: b.src || b.url, credit: credit || '',
       page: b.file ? 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(String(b.file).replace(/ /g, '_')) : '',
@@ -57044,10 +57060,7 @@ window.fmtHeight = fmtHeight;
     });
     const yrTeam = () => {
       if (!yr || typeof _getTeamForPlayerYear !== 'function') return '';
-      const t0 = _getTeamForPlayerYear(nameVariants[0], yr);
-      if (!t0) return '';
-      const up = String(t0).toUpperCase();
-      return (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[up]) || up;
+      return _canonByYear(_getTeamForPlayerYear(nameVariants[0], yr));
     };
     const loc = window.LEGEND_HEADSHOTS_LOCAL;
     if (loc) {
@@ -57153,7 +57166,7 @@ window.fmtHeight = fmtHeight;
     // 00. PLAYER_CUTOUTS — era-correct transparent cutout in the cell team's jersey (or the
     // team he had in the board's year). Beats every other source when it matches the team.
     const _yr = _triviaYearOf(answerText, yr);
-    const _cut = _triviaCutoutFor(nameVariants, _tCanon, _yr, _isActive, true);
+    const _cut = _triviaCutoutFor(nameVariants, _tUp, _yr, _isActive, true);
     if (_cut) return _cut;
 
     if (_isActive) {
@@ -57190,7 +57203,7 @@ window.fmtHeight = fmtHeight;
 
     // 2b. Cutout in another jersey, nearest the board's era (retired players with no ESPN
     // headshot): a transparent in-uniform cut beats the rectangular Commons lead photo.
-    const _cutAny = _triviaCutoutFor(nameVariants, _tCanon, _yr, false, false);
+    const _cutAny = _triviaCutoutFor(nameVariants, _tUp, _yr, false, false);
     if (_cutAny) return _cutAny;
 
     // 3. LEGEND_HEADSHOTS (2026-10-28) — Wikipedia/Wikimedia Commons lead images for

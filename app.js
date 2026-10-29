@@ -27969,7 +27969,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       seasons.forEach(s => { let c = CONF_ALIASES[s.conf] || s.conf || ''; if (COLLEGE_CONFS.includes(c)) playerConfs.add(c); });
       if (!playerConfs.size) return;
       const bestByConf = {};
-      seasons.forEach(s => { let c = CONF_ALIASES[s.conf] || s.conf || ''; if (!COLLEGE_CONFS.includes(c)) return; const fp = _cfpts(s); if (!bestByConf[c] || fp > bestByConf[c].fpts) bestByConf[c] = {fpts:fp,yr:s.yr,tm:s.tm,conf:c}; });
+      seasons.forEach(s => { let c = CONF_ALIASES[s.conf] || s.conf || ''; if (!COLLEGE_CONFS.includes(c)) return; const fp = _cfpts(s); if (!bestByConf[c] || fp > bestByConf[c].fpts) bestByConf[c] = {fpts:fp,yr:s.yr,tm:s.tm,conf:c,rc:s.rec||0}; });
       CFG_POOL.push({ n:name, s:pos, _cfgConfs:[...playerConfs], _cfgIdx:CFG_POOL.length, _bestByConf:bestByConf, _yrs:seasons.map(s=>s.yr).sort((a,b)=>a-b), _teams:[...new Set(seasons.map(s=>s.tm))] });
     });
   }
@@ -27977,21 +27977,21 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
   function _cfgSeasonPts(s) { return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*0.5 + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2)*10)/10; }
   function getCollegeBestSeason(player, forConf) {
-    // YEAR / ERA filters: _bestByConf only holds the all-time best per
-    // conference, so rescore the raw seasons inside the window.
-    if ((fgYear !== 'best' || fgEra !== 'all') && typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[player.n]) {
+    // Rescore the raw seasons: _bestByConf only holds the all-time Half PPR
+    // best per conference (wrong for YEAR / ERA windows and for PPR).
+    if (typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[player.n]) {
       let b = null;
       COLLEGE_STATS[player.n].forEach(s => {
         const c = CONF_ALIASES[s.conf] || s.conf || '';
         if (forConf && c !== forConf) return;
         if (!_fgYearOk(s.yr)) return;
-        const fp = _cfgSeasonPts(s);
-        if (!b || fp > b.fpts) b = { fpts: fp, yr: s.yr, tm: s.tm, conf: c };
+        const row = { fpts: _cfgSeasonPts(s), yr: s.yr, tm: s.tm, conf: c, rc: s.rec || 0 };
+        if (!b || _fgScore(row) > _fgScore(b)) b = row;
       });
       return b;
     }
     if (player._bestByConf && forConf && player._bestByConf[forConf]) return player._bestByConf[forConf];
-    if (player._bestByConf) { let b=null; Object.values(player._bestByConf).forEach(s=>{if(!b||s.fpts>b.fpts)b=s;}); return b; }
+    if (player._bestByConf) { let b=null; Object.values(player._bestByConf).forEach(s=>{if(!b||_fgScore(s)>_fgScore(b))b=s;}); return b; }
     return null;
   }
   function getCollegeBestWeek(player, forConf) {
@@ -28004,9 +28004,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     }
     let best=null;
     for(const[szn,weeks]of Object.entries(weekly)){
-      if(forConf&&validSeasons.size&&!validSeasons.has(szn))continue;
+      if(forConf&&!validSeasons.has(szn))continue; // season not played in this conference (or unknown)
       if(!_fgYearOk(+szn))continue;
-      for(const w of weeks){const fp=_cfpW(w);if(!best||fp>best.fpts)best={fpts:fp,yr:+szn,wk:w.wk,tm:w.tm,opp:w.opp||'',rec:w.rec||0,rc:w.rc||0};}
+      for(const w of weeks){const row={fpts:_cfpW(w),yr:+szn,wk:w.wk,tm:w.tm,opp:w.opp||'',rec:w.rec||0,rc:w.rec||0};if(!best||_fgScore(row)>_fgScore(best))best=row;}
     }
     return best;
   }
@@ -28135,41 +28135,115 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   ABBR_TO_FULL['OAK'] = 'Las Vegas Raiders';
   ABBR_TO_FULL['STL'] = 'Los Angeles Rams';
 
+  // ---- Which team was a player on? ----
+  // The weekly logs can't answer this alone: weekly_stats_active.js rows carry
+  // no team for 2018-2024, and its 2025 rows were stamped with the player's
+  // CURRENT team (Geno Smith "NYJ", Emanuel Wilson "SEA"). A game or season
+  // with no team source at all is treated as NOT on the drafted team.
+  // PFR-style / relocated-franchise abbreviations in the career + weekly logs.
+  const _FG_OLD_ABBR = {
+    GNB:'GB', KAN:'KC', NOR:'NO', NWE:'NE', SDG:'LAC', SD:'LAC', SFO:'SF', TAM:'TB',
+    LVR:'LV', OAK:'LV', RAI:'LV', PHO:'ARI', PHX:'ARI', CRD:'ARI', RAM:'LAR', LARams:'LAR',
+    LA:'LAR', BOS:'NE', NYT:'NYJ'
+  };
+  // Modern full team name for a team string; yr resolves the reused codes
+  // (HOU = Oilers before 2002, BAL = Colts before 1996, STL = Cardinals before 1988).
+  function _fgModern(t, yr) {
+    if (!t) return null;
+    if (yr) {
+      if (t === 'HOU' && yr < 2002) return 'Tennessee Titans';
+      if (t === 'BAL' && yr < 1996) return 'Indianapolis Colts';
+      if (t === 'STL') return yr < 1988 ? 'Arizona Cardinals' : 'Los Angeles Rams';
+    }
+    const a = _FG_OLD_ABBR[t] || t;
+    const full = ABBR_TO_FULL[a] || toFullTeamName(a) || a;
+    return TEAM_ALIASES[full] || full;
+  }
+  // weekly_stats_active.js AND all_players.js stamped their 2025 rows with
+  // each player's 2026 team (Austin Hooper "ATL", Charlie Kolar "LAC"), so a
+  // 2025 team code from those files only counts when ACTIVE_TEAM_HISTORY agrees.
+  const _FG_STAMPED_YR = 2025;
+  function _fgAthTeams(name, yr) {
+    const out = new Set();
+    const hist = (typeof ACTIVE_TEAM_HISTORY !== 'undefined') ? ACTIVE_TEAM_HISTORY[name] : null;
+    if (hist) hist.forEach(h => { if (yr >= h.y1 && yr <= h.y2) out.add(_fgModern(h.t)); });
+    return out;
+  }
+  // Team for one game row, or null when the row can't tell. ALL_PLAYERS_WEEKLY
+  // (through 2024) has a team on every row and splits trade years by week; a
+  // row's own tm only counts when ACTIVE_TEAM_HISTORY agrees for that year.
+  function _fgWeekTeam(name, yr, w) {
+    const apw = (typeof ALL_PLAYERS_WEEKLY !== 'undefined' && ALL_PLAYERS_WEEKLY[name]) ? ALL_PLAYERS_WEEKLY[name].seasons[yr] : null;
+    if (apw) {
+      const m = apw.find(x => x.wk === w.wk && Math.abs((x.fpts || 0) - (w.fpts || 0)) < 0.2);
+      if (m && m.tm) return _fgModern(m.tm, yr);
+    }
+    if (w.tm) {
+      const t = _fgModern(w.tm, yr), ath = _fgAthTeams(name, yr);
+      if (ath.has(t) || (!ath.size && yr !== _FG_STAMPED_YR)) return t;
+    }
+    return null;
+  }
+  // Season team code from the raw career sources (D's merged career rows drop
+  // tm — Warren Moon's 1984-2000 rows have none). LEGEND_CAREERS first.
+  let _fgCareerTmIdx = null;
+  function _fgCareerTm(name, yr) {
+    // LEGEND_CAREERS rides the lazy retired bundle: rebuild once it lands.
+    if (!_fgCareerTmIdx || (!_fgCareerTmIdx._lc && typeof LEGEND_CAREERS !== 'undefined')) {
+      _fgCareerTmIdx = { _lc: typeof LEGEND_CAREERS !== 'undefined' };
+      if (typeof ALL_PLAYERS_DB !== 'undefined') ALL_PLAYERS_DB.forEach(p => {
+        (p.career || []).forEach(s => { if (s.tm && s.yr !== _FG_STAMPED_YR) (_fgCareerTmIdx[p.name] = _fgCareerTmIdx[p.name] || {})[s.yr] = s.tm; });
+      });
+      if (typeof LEGEND_CAREERS !== 'undefined') Object.entries(LEGEND_CAREERS).forEach(([n, rows]) => {
+        (rows || []).forEach(s => { if (s.tm) (_fgCareerTmIdx[n] = _fgCareerTmIdx[n] || {})[s.yr] = s.tm; });
+      });
+    }
+    const m = _fgCareerTmIdx[name];
+    return m ? m[yr] : null;
+  }
+  // Team(s) for a season: ACTIVE_TEAM_HISTORY plus the game-level teams above
+  // (so a mid-season trade counts for both clubs), then the career row's own
+  // tm, then PLAYER_TEAM_HISTORY. (No "only ever had one team" guess: those
+  // lists go stale — Tyler Lockett's says SEA only, he was a Titan in 2025.)
+  function _fgSeasonTeams(player, yr, careerTm) {
+    const out = _fgAthTeams(player.n, yr);
+    const ws = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[player.n]) ? WEEKLY_STATS[player.n].seasons[yr] : null;
+    if (ws) ws.forEach(w => { const t = _fgWeekTeam(player.n, yr, w); if (t) out.add(t); });
+    if (out.size || yr === _FG_STAMPED_YR) return out; // PLAYER_TEAM_HISTORY is stamped the same way
+    const ct = _fgModern(careerTm || _fgCareerTm(player.n, yr), yr);
+    if (ct && NFL_TEAMS.includes(ct)) { out.add(ct); return out; }
+    const pHist = (typeof PLAYER_TEAM_HISTORY !== 'undefined') ? PLAYER_TEAM_HISTORY[player.n] : null;
+    if (pHist) pHist.forEach(h => { if (yr >= h.y1 && yr <= h.y2) out.add(_fgModern(h.t, yr)); });
+    return out;
+  }
+  // Was this game played for modernTeam? seasonCache memoizes the fallback.
+  function _fgGameOnTeam(player, yr, w, modernTeam, seasonCache) {
+    const t = _fgWeekTeam(player.n, yr, w);
+    if (t) return t === modernTeam;
+    if (!seasonCache[yr]) seasonCache[yr] = _fgSeasonTeams(player, yr);
+    return seasonCache[yr].has(modernTeam);
+  }
+
   // Get best single-week game for a player on a given team from WEEKLY_STATS
   function getBestWeek(player, forTeam) {
     const ws = (typeof WEEKLY_STATS !== 'undefined') ? WEEKLY_STATS[player.n] : null;
     if (!ws) return null;
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
+    const seasonCache = {};
     let best = null, bestPts = -Infinity;
     for (const [szn, weeks] of Object.entries(ws.seasons)) {
+      const yr = +szn;
       // YEAR / ERA filters
-      if (!_fgYearOk(+szn)) continue;
-      // Team for that season from the curated history first: the active weekly
-      // rows carry a player's CURRENT team on last season's games once he moves
-      // (Dowdle listed as a 2025 Steeler), so w.tm is only the fallback.
-      const histTeam = modernTeam ? getTeamForYear(player.n, +szn) : null;
-      const histModern = histTeam ? (TEAM_ALIASES[histTeam] || histTeam) : null;
-      if (histModern && histModern !== modernTeam) continue;
+      if (!_fgYearOk(yr)) continue;
       for (const w of weeks) {
         // Week filter
         if (fgWeekFilter !== 'best' && +w.wk !== +fgWeekFilter) continue;
-        // Check if this week was played for the matching team; a row with no
-        // team at all can't be credited to this team (it put 2026 signings
-        // with empty 2025 rows on last year's roster).
-        if (modernTeam && !histModern) {
-          if (!w.tm) continue;
-          const weekTeam = ABBR_TO_FULL[w.tm] || w.tm;
-          if (weekTeam !== modernTeam) continue;
-        }
-        // Weekly rows store receptions as `rec`; keep it under `rc` too so
-        // _fgScore adds the PPR half-point (it read rc=0 before → half-PPR
-        // totals under the PPR toggle: Pickens Wk4 29.4 instead of 33.4).
-        const rec = w.rc != null ? w.rc : (w.rec || 0);
-        const pts = (w.fpts || 0) + (fgScoring === 'ppr' ? 0.5 * rec : 0);
-        if (pts > bestPts) {
-          bestPts = pts;
-          best = { fpts: w.fpts, yr: +szn, wk: w.wk, tm: w.tm, opp: w.opp || '', rc: rec, rec: rec };
-        }
+        if (modernTeam && !_fgGameOnTeam(player, yr, w, modernTeam, seasonCache)) continue;
+        // Weekly rows store receptions as `rec` (no `rc`); without it PPR
+        // added nothing and Best Week showed Half PPR totals.
+        const row = { fpts: w.fpts, yr: yr, wk: w.wk, tm: w.tm, opp: w.opp || '', rc: w.rc != null ? w.rc : (w.rec || 0), rec: w.rec || 0 };
+        const pts = _fgScore(row);
+        if (pts > bestPts) { best = row; bestPts = pts; }
       }
     }
     return best;
@@ -28309,52 +28383,23 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   function getBestSeason(player, forTeam) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
 
-    // Build reverse lookup: abbreviation -> modern full name
-    const _abbrToModern = {};
-    if (typeof TEAM_ABBR_MAP !== 'undefined') {
-      Object.entries(TEAM_ABBR_MAP).forEach(([full, abbr]) => {
-        _abbrToModern[abbr] = TEAM_ALIASES[full] || full;
-      });
-    }
-
-    // If player has year-by-year career data (from D or LDB), use it for team-specific filtering
+    // If player has year-by-year career data (from D or LDB), use it for team-specific filtering.
+    // A season only counts when a source puts the player on this team that
+    // year (_fgSeasonTeams) — unknown seasons used to count for every team.
     const career = (player._dRef && player._dRef.career) ? player._dRef.career : (player.career || []);
     if (career.length && modernTeam) {
       let best = null;
-      const activeHist = ACTIVE_TEAM_HISTORY[player.n];
-      const playerHist = (typeof PLAYER_TEAM_HISTORY !== 'undefined') ? PLAYER_TEAM_HISTORY[player.n] : null;
-
       career.forEach(s => {
-        // Year filter
         if (!_fgYearOk(s.yr)) return;
-
-        let onTeam = true; // default: include season
-
-        if (activeHist) {
-          const st = getTeamForYear(player.n, s.yr);
-          if (st) {
-            const stModern = TEAM_ALIASES[st] || st;
-            if (stModern !== modernTeam) onTeam = false;
-          }
-        } else if (playerHist) {
-          let abbr = null;
-          for (const h of playerHist) {
-            if (s.yr >= h.y1 && s.yr <= h.y2) { abbr = h.t; break; }
-          }
-          if (abbr) {
-            const fullModern = _abbrToModern[abbr] || abbr;
-            if (fullModern !== modernTeam) onTeam = false;
-          }
-        }
-
-        if (onTeam && (!best || s.fpts > best.fpts)) best = s;
+        if (!_fgSeasonTeams(player, s.yr, s.tm).has(modernTeam)) return;
+        if (!best || _fgScore(s) > _fgScore(best)) best = s;
       });
       if (best) return best;
     } else if (career.length && !modernTeam) {
       let best = null;
       career.forEach(s => {
         if (!_fgYearOk(s.yr)) return;
-        if (!best || s.fpts > best.fpts) best = s;
+        if (!best || _fgScore(s) > _fgScore(best)) best = s;
       });
       if (best) return best;
     }
@@ -28365,52 +28410,75 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     // window and use the best of those for years the career doesn't cover.
     if ((fgYear !== 'best' || fgEra !== 'all') && typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[player.n] && WEEKLY_STATS[player.n].seasons) {
       const careerYrs = new Set(career.map(s => s.yr));
+      const seasonCache = {};
       let best = null;
       for (const [szn, weeks] of Object.entries(WEEKLY_STATS[player.n].seasons)) {
         const yr = +szn;
         if (!_fgYearOk(yr) || careerYrs.has(yr)) continue;
         const maxWk = yr >= 2021 ? 18 : 17;
-        let sum = 0, gp = 0, tm = null;
+        let sum = 0, rc = 0, gp = 0, tm = null;
         for (const w of weeks) {
           if ((w.wk || 0) > maxWk) continue;
-          if (modernTeam && w.tm && (ABBR_TO_FULL[w.tm] || w.tm) !== modernTeam) continue;
-          sum += w.fpts || 0; gp++; tm = w.tm || tm;
+          if (modernTeam && !_fgGameOnTeam(player, yr, w, modernTeam, seasonCache)) continue;
+          sum += w.fpts || 0; rc += w.rc != null ? w.rc : (w.rec || 0); gp++; tm = w.tm || tm;
         }
-        if (gp && (!best || sum > best.fpts)) best = { yr: yr, fpts: Math.round(sum * 10) / 10, gp: gp, tm: tm, inProgress: yr >= new Date().getFullYear() };
+        const row = { yr: yr, fpts: Math.round(sum * 10) / 10, rc: rc, gp: gp, tm: tm, inProgress: yr >= new Date().getFullYear() };
+        if (gp && (!best || _fgScore(row) > _fgScore(best))) best = row;
       }
       if (best) return best;
     }
 
     // Historical/HP players: use per-team lookup
-    if (player._bestByTeam && Object.keys(player._bestByTeam).length > 0) {
+    // HP's per-team keys for 2025 inherit the same 2026-team stamp — keep
+    // those only when ACTIVE_TEAM_HISTORY agrees.
+    const hpBest = player._bestByTeam ? Object.entries(player._bestByTeam).filter(([tk, s]) =>
+      s && (s.yr !== _FG_STAMPED_YR || _fgAthTeams(player.n, s.yr).has(TEAM_ALIASES[tk] || tk))) : [];
+    if (hpBest.length) {
       // YEAR / ERA filters: HP only stores one best season per team, so a
       // legend counts when that season sits inside the window.
       if (fgYear !== 'best' || fgEra !== 'all') {
         let best = null;
-        Object.entries(player._bestByTeam).forEach(([tk, s]) => {
+        hpBest.forEach(([tk, s]) => {
           if (!_fgYearOk(s.yr)) return;
           if (modernTeam && (TEAM_ALIASES[tk] || tk) !== modernTeam) return;
-          if (!best || s.fpts > best.fpts) best = s;
+          if (!best || _fgScore(s) > _fgScore(best)) best = s;
         });
         return best;
       }
-      if (modernTeam && player._bestByTeam[modernTeam]) {
-        return player._bestByTeam[modernTeam];
-      }
       if (modernTeam) {
-        for (const [tk, tv] of Object.entries(player._bestByTeam)) {
-          const tkModern = TEAM_ALIASES[tk] || tk;
-          if (tkModern === modernTeam) return tv;
-        }
+        const hit = hpBest.find(([tk]) => (TEAM_ALIASES[tk] || tk) === modernTeam);
+        return hit ? hit[1] : null; // no season for this team — don't borrow another team's
       }
-      const vals = Object.values(player._bestByTeam);
-      return vals.length ? vals[0] : null;
+      return hpBest[0][1];
     }
 
     return null;
   }
 
   // Get the year range a player was on a specific team
+  // Year span on a team from the stats themselves, for players the team
+  // history maps don't cover (list label fallback).
+  function _fgDataTeamYears(player, forTeam) {
+    const modernTeam = TEAM_ALIASES[forTeam] || forTeam;
+    const yrs = [];
+    const career = (player._dRef && player._dRef.career) ? player._dRef.career : (player.career || []);
+    career.forEach(s => { if (_fgSeasonTeams(player, s.yr, s.tm).has(modernTeam)) yrs.push(+s.yr); });
+    const ws = (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[player.n]) ? WEEKLY_STATS[player.n].seasons : null;
+    if (ws) {
+      const seasonCache = {};
+      Object.entries(ws).forEach(([szn, weeks]) => {
+        if (weeks.some(w => _fgGameOnTeam(player, +szn, w, modernTeam, seasonCache))) yrs.push(+szn);
+      });
+    }
+    if (player._bestByTeam) Object.entries(player._bestByTeam).forEach(([tk, s]) => {
+      if ((TEAM_ALIASES[tk] || tk) === modernTeam && s && s.yr && (s.yr !== _FG_STAMPED_YR || _fgAthTeams(player.n, s.yr).has(modernTeam))) yrs.push(+s.yr);
+    });
+    if (!yrs.length) return '';
+    const lo = Math.min.apply(null, yrs), hi = Math.max.apply(null, yrs);
+    if (!player._retired && hi >= new Date().getFullYear()) return lo + '–pres';
+    return lo === hi ? String(lo) : lo + '–' + hi;
+  }
+
   function getTeamYears(player, forTeam) {
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
     if (!modernTeam) return player._yrs || '';
@@ -28456,6 +28524,12 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         }
       }
     }
+
+    // Years the stats themselves put him on this team — ahead of the
+    // single-team / career-span guesses below (Blaine Gabbert showed his
+    // whole 2011-2023 career on the Jaguars).
+    const dataYrs = _fgDataTeamYears(player, forTeam);
+    if (dataYrs) return dataYrs;
 
     // Fallback: scan career array for seasons on this team
     const career = (player._dRef && player._dRef.career) ? player._dRef.career : (player.career || []);
@@ -28732,28 +28806,14 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
     if (fgLeague === 'college') {
       currentTeamPlayers = CFG_POOL.filter(p => p._cfgConfs.includes(currentTeam) && !usedPlayers.has(p._cfgIdx));
-      if (fgMode === 'week') {
-        const withData = currentTeamPlayers.filter(p => typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[p.n]);
-        const positionsWithData = new Set(withData.map(p => p.s));
-        currentTeamPlayers = currentTeamPlayers.filter(p => {
-          if (typeof COLLEGE_WEEKLY !== 'undefined' && COLLEGE_WEEKLY[p.n]) return true;
-          return !positionsWithData.has(p.s);
-        });
-      }
     } else {
       currentTeamPlayers = FG_POOL.filter(p => playerPlaysForTeam(p, currentTeam) && !usedPlayers.has(p._fgIdx));
-      if (fgMode === 'week') {
-        const withData = currentTeamPlayers.filter(p => typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]);
-        const positionsWithData = new Set(withData.map(p => p.s));
-        currentTeamPlayers = currentTeamPlayers.filter(p => {
-          if (typeof WEEKLY_STATS !== 'undefined' && WEEKLY_STATS[p.n]) return true;
-          return !positionsWithData.has(p.s);
-        });
-      }
     }
 
-    // Filtered games: only players who have a score inside the window.
-    if (fgType === 'custom') currentTeamPlayers = currentTeamPlayers.filter(p => getScore(p, currentTeam));
+    // Only players with a real season / game for THIS team inside the YEAR /
+    // ERA window. Covers every mode: a Best Week pool drops players with no
+    // weekly logs (too old for the box-score data) instead of listing them at 0.
+    currentTeamPlayers = currentTeamPlayers.filter(p => getScore(p, currentTeam));
 
     // Hide spinner, show team reveal
     spinnerWrap.style.display = 'none';
@@ -28819,8 +28879,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       card.className = 'fg-player-card' + (!fits ? ' no-fit' : '');
       let metaText;
       if (fgLeague === 'college') {
-        const schools = p._teams ? p._teams.join(', ') : '';
-        const yrRange = p._yrs && p._yrs.length ? p._yrs[0] + '–' + p._yrs[p._yrs.length-1] : '';
+        // Schools + years inside the drafted conference only.
+        const inConf = (typeof COLLEGE_STATS !== 'undefined' && COLLEGE_STATS[p.n] ? COLLEGE_STATS[p.n] : []).filter(s => (CONF_ALIASES[s.conf] || s.conf) === currentTeam);
+        const confYrs = inConf.map(s => +s.yr).sort((a, b) => a - b);
+        const schools = inConf.length ? [...new Set(inConf.map(s => s.tm))].join(', ') : (p._teams ? p._teams.join(', ') : '');
+        const yrRange = confYrs.length ? (confYrs[0] === confYrs[confYrs.length-1] ? String(confYrs[0]) : confYrs[0] + '–' + confYrs[confYrs.length-1]) : (p._yrs && p._yrs.length ? p._yrs[0] + '–' + p._yrs[p._yrs.length-1] : '');
         metaText = schools + (yrRange ? ' (' + yrRange + ')' : '');
       } else {
         metaText = getTeamYears(p, currentTeam) || (p._yrs || '');

@@ -29502,8 +29502,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (!(lh && lh.preferCommons)) {
       const fb = recent && window.FALLBACK_IDS && window.FALLBACK_IDS[r.name];
       if (fb) return { url: espnUrl(fb) };
+      // ESPN ids run roughly in order of entry: the 4-million range starts around 2017,
+      // so such an id cannot belong to a player whose last season was 2014 or earlier
+      // (RETIRED_ESPN_IDS["Joe Horn"] is Joe Horn Jr., debut 2019).
       const rid = window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[r.name];
-      if (rid) return { url: espnUrl(rid) };
+      if (rid && !(+rid >= 4000000 && r.last && r.last <= 2014)) return { url: espnUrl(rid) };
     }
     if (!active) { const c2 = cutoutFor(r, true); if (c2) return c2; }
     if (lh && lh.byTeam) {

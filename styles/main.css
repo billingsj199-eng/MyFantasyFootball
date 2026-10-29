@@ -3699,3 +3699,17 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 @media(min-width:601px) and (max-width:1100px){
   .page-games > .auth-anchor{position:relative;top:auto;right:auto;align-self:flex-end;margin-bottom:8px;z-index:50}
 }
+/* DRAFT DAY (survey G9, 2026-10-28): daily seeded Fantasy Game — settings lock, result card */
+.fg-locked{opacity:.4;pointer-events:none}
+.fg-daily-btn.active{background:#ffd166;color:#1a1a2e;box-shadow:none}
+.fg-dd-card{margin:4px auto 12px;max-width:420px;padding:14px 16px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+.fg-dd-head{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--text2)}
+.fg-dd-line{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:1.5px;color:var(--accent);margin:2px 0;line-height:1.2}
+.fg-dd-squares{font-size:1.25rem;letter-spacing:2px;margin:4px 0 6px;line-height:1.4}
+.fg-dd-state{font-size:.75rem;color:var(--text2);margin-bottom:10px;line-height:1.4}
+.fg-dd-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.fg-dd-share{background:var(--accent);color:#000;font-weight:700}
+.fg-dd-confirm{font-size:.72rem;color:var(--green);min-height:1em;margin-top:6px}
+@media (max-width:480px){.fg-dd-card{padding:12px}.fg-dd-line{font-size:1.3rem}.fg-dd-actions .fg-btn{flex:1;min-width:0;padding:10px 8px;font-size:.85rem}}
+/* Phones: the 7-button ERA row (517px) pushed the whole Fantasy Game header past 375px, cutting the subtitle off both sides. */
+@media (max-width:540px){#fgEraRow{flex-wrap:wrap;max-width:100%}#fgEraRow .fg-mode-btn{flex:1 1 auto}}

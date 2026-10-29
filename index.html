@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-28-sprint1" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-29-draftday" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-29-entry" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-games" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-28-allen" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-28" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-28-sprint1">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-29-draftday">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2408,6 +2408,15 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
      localStorage (fg_settings_open). -->
 <button class="fg-settings-summary open" id="fgSettingsToggle" type="button" aria-expanded="true" aria-controls="fgSettingsPanel"><span id="fgSettingsSummary">NFL · BEST SEASON · PPR · ALL-TIME</span><span class="fg-settings-chevron" aria-hidden="true">&#9662;</span></button>
 <div id="fgSettingsPanel">
+<!-- DRAFT DAY (survey G9, 2026-10-28): the same seeded team order for everyone each Eastern-time day.
+     Locks the rows below (#fgFreeSettings) to NFL · BEST SEASON · PPR · ALL-TIME, no cheat; the first
+     finished draft of the day counts, replays are practice. Permalink: ?draftday=YYYY-MM-DD#games -->
+<div class="fg-mode-toggle" id="fgDailyRow" style="display:flex;gap:0;margin:2px 0 6px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
+<button class="fg-mode-btn active" id="fgDailyOff" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">FREE PLAY</button>
+<button class="fg-mode-btn fg-daily-btn" id="fgDailyOn" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem" title="Everyone drafts the same NFL teams in the same order today. Your first finished draft is your score for the day.">DRAFT DAY</button>
+</div>
+<div id="fgDailyNote" style="display:none;font-size:.6875rem;color:var(--text2);margin:-2px 0 6px;font-style:italic">Same teams, same order, for everyone today &middot; NFL &middot; best season &middot; PPR &middot; all-time. First finished draft counts; replays are practice.</div>
+<div id="fgFreeSettings">
 <div class="fg-mode-toggle" style="display:flex;gap:0;margin:2px 0 2px;border-radius:6px;overflow:hidden;border:1px solid var(--border);width:fit-content">
 <button class="fg-mode-btn active" id="fgLeagueNFL" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">NFL</button>
 <button class="fg-mode-btn" id="fgLeagueCollege" style="padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.85rem">COLLEGE</button>
@@ -2468,6 +2477,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 <div id="fgFilterNote" style="display:none;font-size:.6875rem;color:var(--text2);margin-top:3px;font-style:italic">Filtered games keep their own high score and don't post to the leaderboard</div>
 </div>
+</div><!-- end fgFreeSettings -->
 </div><!-- end fgSettingsPanel -->
 <div class="fg-subtitle" id="fgSubtitle">A random NFL team appears — pick from their ALL-TIME roster of players across every era. Their best career fantasy season scores for you. Can you draft the legends?</div>
 </div>
@@ -2517,6 +2527,18 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="fg-go-title">ROSTER COMPLETE!</div>
 <div class="fg-go-score" id="fgFinalScore"></div>
 <div class="fg-go-sub" id="fgGoSub"></div>
+<!-- DRAFT DAY result card (app.js _fgDraftDayFinish): "#N · pts · beats X% today", emoji row, share -->
+<div class="fg-dd-card" id="fgDraftDayCard" style="display:none">
+<div class="fg-dd-head" id="fgDdHead"></div>
+<div class="fg-dd-line" id="fgDdLine"></div>
+<div class="fg-dd-squares" id="fgDdSquares"></div>
+<div class="fg-dd-state" id="fgDdState"></div>
+<div class="fg-dd-actions">
+<button type="button" class="fg-btn fg-dd-share" id="fgDdShareBtn">SHARE RESULT</button>
+<button type="button" class="fg-btn fg-btn-reset" id="fgDdLbBtn">TODAY&#39;S LEADERBOARD</button>
+</div>
+<div class="fg-dd-confirm" id="fgDdShareConfirm"></div>
+</div>
 <div class="fg-lb-wrap" id="fgLeaderboard" style="margin:16px auto;max-width:400px"></div>
 <button class="fg-btn fg-btn-reset" id="fgPlayAgainBtn">PLAY AGAIN</button>
 </div>
@@ -2675,6 +2697,13 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <!-- DAILY TAB -->
 <div id="lbPanelDaily" style="display:none">
 
+<div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Draft Day &mdash; today</div>
+<div class="lb-list" id="lbDailyDraftDayList" style="margin-bottom:4px"></div>
+<div class="lb-loading" id="lbDailyDraftDayLoading">Loading...</div>
+<div class="lb-empty" id="lbDailyDraftDayEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+
 <div class="trivia-admin-only">
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Trivia</div>
 <div class="lb-list" id="lbDailyTriviaList" style="margin-bottom:4px"></div>
@@ -2732,6 +2761,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <button class="dc-tab" data-dc="2000s">2000s</button>
 <button class="dc-tab" data-dc="2010s">2010s</button>
 <button class="dc-tab" data-dc="guesswho">PHOTO</button>
+<button class="dc-tab" data-dc="draftday">DRAFT DAY</button>
 <button class="dc-tab trivia-admin-only" data-dc="trivia">TRIVIA</button>
 </div>
 <!-- Daily ELITE PULL — Current -->
@@ -2902,6 +2932,24 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 <!-- Daily TRIVIA — the board plays on the Trivia page (it needs the full width);
      this card is the Games entry point. Streak/today filled by _mffTriviaCardRefresh. -->
+<!-- DRAFT DAY (survey G9): the daily seeded Fantasy Game. Plays on the Fantasy Game tab
+     (window._fgOpenDraftDay); state from localStorage fg_draftday (window._fgDraftDayCardRefresh). -->
+<div class="dc-pane" data-dc="draftday" style="max-width:480px">
+<div class="gw-card">
+<div class="gw-header" style="padding:1rem 1.25rem .5rem">
+<div class="gw-title" style="font-size:1.5rem">DRAFT DAY <span id="dcDdNum">#1</span></div>
+<div style="font-size:.7rem;color:var(--text2);margin-top:2px">The Fantasy Game, same NFL teams in the same order for everyone &middot; best season &middot; PPR &middot; one draft a day counts</div>
+</div>
+<div style="padding:16px 20px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="display:flex;gap:32px">
+<div style="text-align:center"><div id="dcDdToday" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--text);line-height:1">&mdash;</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">TODAY</div></div>
+<div style="text-align:center"><div id="dcDdBest" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#ffd166;line-height:1">&mdash;</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">BEST 🏆</div></div>
+</div>
+<button id="dcDdPlayBtn" onclick="if(window._fgOpenDraftDay)window._fgOpenDraftDay()" style="padding:10px 28px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;cursor:pointer">PLAY TODAY</button>
+<div id="dcDdSub" style="font-size:.7rem;color:var(--text2);text-align:center">Same teams, same order, for everyone &middot; best season &middot; PPR &middot; all-time</div>
+</div>
+</div>
+</div>
 <div class="dc-pane trivia-admin-only" data-dc="trivia" style="max-width:480px">
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
@@ -6848,7 +6896,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-29-entry"></script>
+<script defer src="app.js?v=2026-10-29-games"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -13,7 +13,7 @@ service cloud.firestore {
         return ['name', 'email', 'activeBadge', 'activeBadgeIcon', 'updatedAt',
                 'daily', 'unlimited', 'fantasygame', 'fantasygameWeek',
                 'collegeSeason', 'collegeWeek', 'gwDaily', 'gwDaily00s',
-                'gwDaily10s', 'gwDaily00s150', 'gwDaily10s150', 'trivia'];
+                'gwDaily10s', 'gwDaily00s150', 'gwDaily10s150', 'trivia', 'draftDay'];
       }
       // email: no longer stored (leaderboard is public-read). Clients delete
       // the legacy field on every write, so it must be absent afterwards.
@@ -66,6 +66,18 @@ service cloud.firestore {
             && m.get('wkKey', '') is string && m.get('wkKey', '').size() <= 16
             && m.get('moKey', '') is string && m.get('moKey', '').size() <= 16;
       }
+      // DRAFT DAY (2026-10-29): one Fantasy Game score per ET day (dayKey +
+      // score), the all-time best (best + bestDay), days played. Same cap as
+      // the Fantasy Game season board.
+      function _lbDraftDayOk(m) {
+        return m is map
+            && _lbNum(m.get('score', 0), 6000)
+            && _lbNum(m.get('best', 0), 6000)
+            && _lbNum(m.get('played', 0), _lbDays())
+            && m.get('dayKey', '') is string && m.get('dayKey', '').size() <= 16
+            && m.get('bestDay', '') is string && m.get('bestDay', '').size() <= 16
+            && m.get('date', '') is string && m.get('date', '').size() <= 32;
+      }
       // ks = keys being written; a key that is being deleted needs no check.
       function _lbStatsOk(ks) {
         let d = request.resource.data;
@@ -80,7 +92,8 @@ service cloud.firestore {
             && (!ks.hasAny(['fantasygame']) || !('fantasygame' in d) || _lbScoreOk(d.fantasygame, 6000))
             && (!ks.hasAny(['fantasygameWeek']) || !('fantasygameWeek' in d) || _lbScoreOk(d.fantasygameWeek, 1000))
             && (!ks.hasAny(['collegeSeason']) || !('collegeSeason' in d) || _lbScoreOk(d.collegeSeason, 8000))
-            && (!ks.hasAny(['collegeWeek']) || !('collegeWeek' in d) || _lbScoreOk(d.collegeWeek, 1500));
+            && (!ks.hasAny(['collegeWeek']) || !('collegeWeek' in d) || _lbScoreOk(d.collegeWeek, 1500))
+            && (!ks.hasAny(['draftDay']) || !('draftDay' in d) || _lbDraftDayOk(d.draftDay));
       }
       allow read: if true;
       allow create: if request.auth != null && request.auth.uid == userId

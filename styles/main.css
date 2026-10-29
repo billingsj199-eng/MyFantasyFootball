@@ -3693,3 +3693,9 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
   body:not(.mt-import-all) #mtImportGrid{display:none!important}
   body.mt-import-all .mt-quick-more{color:var(--text)}
 }
+
+/* Games page, tablet widths: the absolute auth bar (search / pass / sign in)
+   sat on top of the centered tab row and covered LEADERBOARD (2026-10-28). */
+@media(min-width:601px) and (max-width:1100px){
+  .page-games > .auth-anchor{position:relative;top:auto;right:auto;align-self:flex-end;margin-bottom:8px;z-index:50}
+}

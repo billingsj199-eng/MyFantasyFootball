@@ -1,6 +1,32 @@
 {
- "updated": "2026-10-28T22:17:01Z",
+ "updated": "2026-10-29T22:30:00Z",
  "items": [
+  {
+   "player": "Aaron Jones",
+   "team": "MIN",
+   "pos": "RB",
+   "date": "2026-10-25",
+   "headline": "Officially questionable for Week 8 vs. Lions after aggravating his MCL vs. Colts",
+   "take": "He played through the same sprained MCL since Week 2 and tweaked it again Sunday; treat as a true game-time call, with Jordan Mason the handcuff if he sits.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-25/aaron-jones-knee-questionable-to-return",
+   "tag": "injury",
+   "avail": {
+    "k": "gtd",
+    "wk": 8
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Jonah Coleman",
+   "team": "DEN",
+   "pos": "RB",
+   "date": "2026-10-29",
+   "headline": "Led Broncos RBs with 49% snap share in Week 7 return, reignites Week 8 waiver buzz",
+   "take": "Rookie out-touched RJ Harvey and J.K. Dobbins (9 carries/2 catches) in his first game back; Dobbins kept the goal-line work but Coleman looks like the early-down lead if the split holds -- priority Week 8 add.",
+   "url": "https://www.rotoballer.com/?p=1976147",
+   "tag": "riser",
+   "src_type": "report"
+  },
   {
    "player": "Ja'Marr Chase",
    "team": "CIN",
@@ -1464,17 +1490,6 @@
    "src_type": "team"
   },
   {
-   "player": "Odell Beckham Jr.",
-   "team": "MIN",
-   "pos": "WR",
-   "date": "2026-10-07",
-   "headline": "Signs with Vikings' practice squad, could be elevated at Saints with Jefferson/Addison banged up",
-   "take": "Deep-league speculative add only -- O'Connell hasn't ruled out using him Sunday but he has zero chemistry reps",
-   "url": "https://www.vikings.com/news/odell-beckham-jr-practice-squad-roster-moves",
-   "tag": "transaction",
-   "src_type": "team"
-  },
-  {
    "player": "Ashton Jeanty",
    "team": "LV",
    "pos": "RB",
@@ -1754,95 +1769,6 @@
    "src_type": "team"
   },
   {
-   "player": "Jayden Daniels",
-   "team": "WAS",
-   "pos": "QB",
-   "date": "2026-10-07",
-   "headline": "Full participant in Wednesday's practice (elbow); Quinn targeting him to start Sunday vs. Giants",
-   "take": "Biggest positive step yet in his return -- QB1 trust at home vs. NYG barring a Friday setback, though he'll wear a brace.",
-   "url": "https://www.espn.com/nfl/story/_/id/50112842/mcl-sprain-sidelines-mariota-daniels-preps-practice",
-   "tag": "injury",
-   "avail": {
-    "k": "play",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Marcus Mariota",
-   "team": "WAS",
-   "pos": "QB",
-   "date": "2026-10-07",
-   "headline": "DNP Wednesday with right knee MCL sprain; Quinn optimistic it won't require IR",
-   "take": "Daniels' full practice makes Mariota's own timeline a non-issue for fantasy -- Kaliakmanis is the emergency QB3 if Daniels has a setback.",
-   "url": "https://www.espn.com/nfl/story/_/id/50112842/mcl-sprain-sidelines-mariota-daniels-preps-practice",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Terry McLaurin",
-   "team": "WAS",
-   "pos": "WR",
-   "date": "2026-10-07",
-   "headline": "DNP again Wednesday (hamstring) ahead of Sunday's game vs. Giants",
-   "take": "Still unresolved into Week 5 -- treat as a real risk; would be a 2nd straight missed game if Friday doesn't bring an upgrade.",
-   "url": "https://www.hogshaven.com/washington-commanders-injuries/447192/commanders-vs-giants-wednesday-injury-report-stefon-diggs-terry-mclaurin-croskey-merritt",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Stefon Diggs",
-   "team": "WAS",
-   "pos": "WR",
-   "date": "2026-10-07",
-   "headline": "Listed unavailable on Wednesday's injury report with a hamstring injury suffered vs. Colts",
-   "take": "Led Washington with 9 targets in Week 4 -- if he and McLaurin both sit Sunday, Daniels' return leans on Noah Brown/Antonio Williams and the TEs. Confirm Friday before fading or trusting either WR.",
-   "url": "https://www.hogshaven.com/washington-commanders-injuries/447192/commanders-vs-giants-wednesday-injury-report-stefon-diggs-terry-mclaurin-croskey-merritt",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Saquon Barkley",
-   "team": "PHI",
-   "pos": "RB",
-   "date": "2026-10-07",
-   "headline": "DNP again Wednesday (hamstring); Rapoport has him week-to-week, trending toward sitting Week 5 in London",
-   "take": "Upgrade from pure uncertainty to a real lean-out vs. Jacksonville -- Will Shipley is the Week 5 lead-back priority if Barkley sits.",
-   "url": "https://www.cbssports.com/fantasy/football/news/eagles-saquon-barkley-absent-from-practice-wednesday/",
-   "tag": "injury",
-   "avail": {
-    "k": "doubt",
-    "wk": 5
-   },
-   "src_type": "insider"
-  },
-  {
-   "player": "DeVonta Smith",
-   "team": "PHI",
-   "pos": "WR",
-   "date": "2026-10-07",
-   "headline": "DNP again Wednesday (hamstring), risking a 2nd straight missed game vs. Jaguars in London",
-   "take": "No progress reported since last week's absence -- treat as a bench/drop until Friday's tag clears him.",
-   "url": "https://www.bleedinggreennation.com/philadelphia-eagles-injuries/186017/eagles-injury-report-saquon-barkley-devonta-smith-among-7-players-who-did-not-practice",
-   "tag": "injury",
-   "src_type": "report"
-  },
-  {
-   "player": "Lamar Jackson",
-   "team": "BAL",
-   "pos": "QB",
-   "date": "2026-10-07",
-   "headline": "DNP Wednesday; Rapoport says ankle sprain leaves him only an 'outside chance' to play Week 5, could cost multiple games",
-   "take": "Real downgrade from Monday's day-to-day framing -- plan for Tyler Huntley at Atlanta barring a big Friday jump.",
-   "url": "https://www.baltimoreravens.com/news/lamar-jackson-not-at-first-practice-following-ankle-injury-ravens-falcons-week-5",
-   "tag": "injury",
-   "avail": {
-    "k": "doubt",
-    "wk": 5
-   },
-   "src_type": "insider"
-  },
-  {
    "player": "Tank Bigsby",
    "team": "PHI",
    "pos": "RB",
@@ -2001,38 +1927,6 @@
    "avail": {
     "k": "ret",
     "wk": 8
-   }
-  },
-  {
-   "player": "Christian McCaffrey",
-   "team": "SF",
-   "pos": "RB",
-   "date": "2026-09-17",
-   "headline": "Placed on IR with calf/Achilles injury, out at least 4 games",
-   "take": "Drop from lineups now \u2014 Kaelon Black inherits the 49ers backfield",
-   "url": "https://www.nfl.com/news/niners-placing-christian-mccaffrey-calf-achilles-on-injured-reserve-rb-to-miss-at-least-four-games",
-   "tag": "injury",
-   "avail": {
-    "k": "weeks",
-    "lo": 4,
-    "hi": 6,
-    "unit": "g"
-   }
-  },
-  {
-   "player": "Jordan Mason",
-   "team": "MIN",
-   "pos": "RB",
-   "date": "2026-09-17",
-   "headline": "Placed on IR after surgery for a fractured thumb, out at least 4 weeks",
-   "take": "Aaron Jones Sr. becomes Minnesota's clear lead back",
-   "url": "https://www.nfl.com/news/vikings-rb-jordan-mason-heads-to-ir-with-fractured-thumb",
-   "tag": "injury",
-   "avail": {
-    "k": "weeks",
-    "lo": 4,
-    "hi": 6,
-    "unit": "w"
    }
   }
  ]

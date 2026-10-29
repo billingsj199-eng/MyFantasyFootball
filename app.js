@@ -15581,6 +15581,7 @@ function getWeeklySeasons(d) {
 function _seasonWeekCount(yr) {
   yr = +yr;
   if (yr >= 2021) return 18;
+  if (yr === 1993) return 18; // two bye weeks
   if (yr >= 1990) return 17;
   if (yr >= 1978) return 16;
   return 14;
@@ -25955,7 +25956,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   const _gwWsCache = {};
   // Regular-season weeks only: a few retired records carry playoff weeks
   // (wk 18-21), which inflated "best season" for deep playoff runs.
-  function gwIsRegWeek(szn, w) { return (w.wk || 0) <= (parseInt(szn) >= 2021 ? 18 : 17); }
+  // 1993 ran 18 weeks (two byes); the 1970-1998 legacy rows flag playoffs with po:1 (wk 19-22).
+  function gwIsRegWeek(szn, w) { if (w.po) return false; const y = parseInt(szn); return (w.wk || 0) <= (y >= 2021 || y === 1993 ? 18 : 17); }
 
   function gwLookupWeekly(name) {
     if (typeof WEEKLY_STATS === 'undefined') return null;
@@ -26943,6 +26945,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   function _gwSetMode(mode) {
     if (gwMode === mode) return;
     gwMode = mode;
+    // ALL-TIME pool: 1970-1998 game logs make the pre-1999 legends eligible (needs a best week).
+    if (mode === 'alltime' && typeof window._loadWeeklyLegacy === 'function') { try { window._loadWeeklyLegacy(); } catch (_) {} }
     gwModeCurrent.classList.toggle('active', mode === 'current');
     gwMode2000sBtn.classList.toggle('active', mode === '2000s');
     gwMode2010sBtn.classList.toggle('active', mode === '2010s');
@@ -28070,6 +28074,40 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // (era / year / week filtered: own local high score, no leaderboard).
   let fgType = 'regular';
 
+  // 1970-1998 per-game logs (data/weekly_stats_1970s/80s/90s.js, ~10 MB, scripts/pull_pfr_boxscores.py)
+  // are lazy: fetched the first time a pre-1999 YEAR / ERA or the WEEK mode is picked (NFL only).
+  // START waits for the merge (index.html _mergeWeeklyStatsLegacy) so the first spin already has
+  // the Payton/Marino-era game logs; getBestWeek reads WEEKLY_STATS live after that.
+  function _fgNeedsLegacy() {
+    if (fgLeague !== 'nfl') return false;
+    if (fgYear !== 'best') return +fgYear <= 1998;
+    if (fgEra !== 'all') return +fgEra <= 1990;
+    return fgMode === 'week';
+  }
+  function _fgEnsureLegacy() {
+    if (!_fgNeedsLegacy() || typeof window._loadWeeklyLegacy !== 'function') return;
+    if (window._weeklyLegacyDone) return;
+    const sb = document.getElementById('fgStartBtn');
+    const et = document.getElementById('fgDraftEmptyText');
+    if (sb) sb.disabled = true;
+    if (et) et.textContent = 'Loading 1970\u20131998 game logs\u2026';
+    window._loadWeeklyLegacy().then(() => {
+      if (sb) sb.disabled = false;
+      if (et && fgLeague === 'nfl') et.textContent = 'Press START to get a random NFL team';
+    });
+  }
+  // Legacy (1970-1998) log for a pool entry that carries a PFR id (season-totals pool rows), or
+  // whose display name maps to exactly one PFR id, when WEEKLY_STATS has nothing under the name.
+  function _fgLegacyWeekly(player) {
+    const L = window.WEEKLY_STATS_LEGACY;
+    if (!L || !player) return null;
+    const id = player.pfr || player.pid || player._pfr;
+    if (id && L[id]) return L[id];
+    const ids = (typeof SEASON_TOTALS_7098_NAMES !== 'undefined' && SEASON_TOTALS_7098_NAMES[player.n]) || null;
+    if (ids && ids.length === 1 && L[ids[0]]) return L[ids[0]];
+    return null;
+  }
+
   // Does a season year pass the YEAR / ERA filters? YEAR wins when set.
   function _fgYearOk(yr) {
     if (fgYear !== 'best') return +yr === +fgYear;
@@ -28109,6 +28147,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (era !== 'all') { fgYear = 'best'; document.getElementById('fgYearSelect').value = 'best'; }
     _fgPaintEra();
     _fgSyncType();
+    _fgEnsureLegacy();
     updateFgSubtitle();
     resetGame();
   }
@@ -28243,7 +28282,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
   // Get best single-week game for a player on a given team from WEEKLY_STATS
   function getBestWeek(player, forTeam) {
-    const ws = (typeof WEEKLY_STATS !== 'undefined') ? WEEKLY_STATS[player.n] : null;
+    const ws = ((typeof WEEKLY_STATS !== 'undefined') ? WEEKLY_STATS[player.n] : null) || _fgLegacyWeekly(player);
     if (!ws) return null;
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
     const seasonCache = {};
@@ -28300,6 +28339,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     fgModeWeek.classList.toggle('active', mode === 'week');
     // Show/hide week select
     document.getElementById('fgWeekSelect').style.display = mode === 'week' ? '' : 'none';
+    _fgEnsureLegacy();
     updateFgSubtitle();
     resetGame();
   }
@@ -28335,6 +28375,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     fgYear = this.value;
     if (fgYear !== 'best' && fgEra !== 'all') { fgEra = 'all'; _fgPaintEra(); }
     _fgSyncType();
+    _fgEnsureLegacy();
     updateFgSubtitle();
     resetGame();
   });
@@ -28344,6 +28385,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (Object.keys(roster).length > 0 && !gameOver) { this.value = fgWeekFilter; return; }
     fgWeekFilter = this.value;
     _fgSyncType();
+    _fgEnsureLegacy();
     updateFgSubtitle();
     resetGame();
   });
@@ -28373,6 +28415,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
         }
       });
     }
+    _fgEnsureLegacy();
     updateFgSubtitle();
     resetGame();
   }
